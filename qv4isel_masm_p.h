@@ -280,6 +280,11 @@ private:
             move(imm32, dest);
     }
 
+    void loadArgument(VoidType, RegisterID)
+    {
+        // Nothing to do.
+    }
+
     void storeArgument(RegisterID src, IR::Temp *temp)
     {
         if (temp) {
@@ -353,91 +358,6 @@ private:
     #define generateFunctionCall(t, function, ...) \
         generateFunctionCallImp(t, isel_stringIfy(function), function, __VA_ARGS__)
 
-#if CPU(X86)
-    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
-    {
-        callFunctionPrologue();
-        // Reverse order
-        push(arg6);
-        push(arg5);
-        push(arg4);
-        push(arg3);
-        push(arg2);
-        push(arg1);
-        callAbsolute(functionName, function);
-        add32(TrustedImm32(6 * sizeof(void*)), StackPointerRegister);
-        callFunctionEpilogue();
-    }
-    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
-    {
-        callFunctionPrologue();
-        // Reverse order
-        push(arg5);
-        push(arg4);
-        push(arg3);
-        push(arg2);
-        push(arg1);
-        callAbsolute(functionName, function);
-        add32(TrustedImm32(5 * sizeof(void*)), StackPointerRegister);
-        callFunctionEpilogue();
-    }
-
-
-    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
-    {
-        callFunctionPrologue();
-        // Reverse order
-        push(arg4);
-        push(arg3);
-        push(arg2);
-        push(arg1);
-        callAbsolute(functionName, function);
-        add32(TrustedImm32(4 * sizeof(void*)), StackPointerRegister);
-        callFunctionEpilogue();
-    }
-
-
-    template <typename Arg1, typename Arg2, typename Arg3>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
-    {
-        callFunctionPrologue();
-        // Reverse order
-        push(arg3);
-        push(arg2);
-        push(arg1);
-        callAbsolute(functionName, function);
-        add32(TrustedImm32(3 * sizeof(void*)), StackPointerRegister);
-        callFunctionEpilogue();
-    }
-
-    template <typename Arg1, typename Arg2>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2)
-    {
-        callFunctionPrologue();
-        // Reverse order
-        push(arg2);
-        push(arg1);
-        callAbsolute(functionName, function);
-        add32(TrustedImm32(2 * sizeof(void*)), StackPointerRegister);
-        callFunctionEpilogue();
-    }
-#elif CPU(X86_64)
-    template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
-    {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        loadArgument(arg3, RegisterArgument3);
-        loadArgument(arg4, RegisterArgument4);
-        callAbsolute(functionName, function);
-        storeArgument(ReturnValueRegister, r);
-        callFunctionEpilogue();
-    }
-
     template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
     void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
@@ -452,105 +372,29 @@ private:
         callFunctionEpilogue();
     }
 
+    template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
+    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+    {
+        generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, arg4, VoidType());
+    }
+
     template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3>
     void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        loadArgument(arg3, RegisterArgument3);
-        callAbsolute(functionName, function);
-        storeArgument(ReturnValueRegister, r);
-        callFunctionEpilogue();
+        generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, VoidType(), VoidType());
     }
 
     template <typename ArgRet, typename Arg1, typename Arg2>
     void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2)
     {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        callAbsolute(functionName, function);
-        storeArgument(ReturnValueRegister, r);
-        callFunctionEpilogue();
+        generateFunctionCallImp(r, functionName, function, arg1, arg2, VoidType(), VoidType(), VoidType());
     }
 
     template <typename ArgRet, typename Arg1>
     void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1)
     {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        callAbsolute(functionName, function);
-        storeArgument(ReturnValueRegister, r);
-        callFunctionEpilogue();
+        generateFunctionCallImp(r, functionName, function, arg1, VoidType(), VoidType(), VoidType(), VoidType());
     }
-
-#elif CPU(ARM)
-
-    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
-    {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        loadArgument(arg3, RegisterArgument3);
-        loadArgument(arg4, RegisterArgument4);
-        push(arg5);
-        push(arg6);
-        callAbsolute(functionName, function);
-        add32(TrustedImm32(2 * sizeof(void*)), StackPointerRegister);
-        callFunctionEpilogue();
-    }
-    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
-    {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        loadArgument(arg3, RegisterArgument3);
-        loadArgument(arg4, RegisterArgument4);
-        push(arg5);
-        callAbsolute(functionName, function);
-        add32(TrustedImm32(1 * sizeof(void*)), StackPointerRegister);
-        callFunctionEpilogue();
-    }
-
-
-    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
-    {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        loadArgument(arg3, RegisterArgument3);
-        loadArgument(arg4, RegisterArgument4);
-        callAbsolute(functionName, function);
-        callFunctionEpilogue();
-    }
-
-
-    template <typename Arg1, typename Arg2, typename Arg3>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
-    {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        loadArgument(arg3, RegisterArgument3);
-        callAbsolute(functionName, function);
-        callFunctionEpilogue();
-    }
-
-    template <typename Arg1, typename Arg2>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2)
-    {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        callAbsolute(functionName, function);
-        callFunctionEpilogue();
-    }
-
-#endif
 
     int prepareVariableArguments(IR::ExprList* args);
 
