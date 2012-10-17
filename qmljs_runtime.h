@@ -589,27 +589,6 @@ inline Value ValueBase<8>::fromObject(Object *o)
     return v;
 }
 
-template <Value::ValueType> struct ValueOffsetHelper;
-template <> struct ValueOffsetHelper<Value::Boolean_Type>
-{
-    enum { DataOffset = offsetof(ValueData, int_32) };
-};
-
-template <> struct ValueOffsetHelper<Value::Undefined_Type>
-{
-    enum { DataOffset = offsetof(ValueData, uint_32) };
-};
-
-template <> struct ValueOffsetHelper<Value::Null_Type>
-{
-    enum { DataOffset = offsetof(ValueData, uint_32) };
-};
-
-template <> struct ValueOffsetHelper<Value::Integer_Type>
-{
-    enum { DataOffset = offsetof(ValueData, uint_32) };
-};
-
 #include <qmljs_math.h>
 
 struct Context {

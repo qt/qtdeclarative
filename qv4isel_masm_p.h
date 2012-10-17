@@ -324,6 +324,11 @@ private:
         }
     }
 
+    void storeArgument(RegisterID src, const Pointer &dest)
+    {
+        storePtr(src, dest);
+    }
+
     void storeArgument(RegisterID src, RegisterID dest)
     {
         move(src, dest);
@@ -678,15 +683,21 @@ private:
         const char* functionName;
     };
 
-    template <VM::Value::ValueType type>
-    void storeValue(TrustedImm32 value, Address destination)
+    void storeValue(VM::Value value, Address destination)
     {
+#if CPU(X86_64)
+        storePtr(TrustedImmPtr((void *)value.val), destination);
+#elif CPU(X86)
         destination.offset += offsetof(VM::ValueData, tag);
-        store32(TrustedImm32(type), destination);
+        store32(value.tag, destination);
         destination.offset -= offsetof(VM::ValueData, tag);
-        destination.offset += VM::ValueOffsetHelper<type>::DataOffset;
-        store32(value, destination);
+        destination.offset += offsetof(VM::ValueData, int_32);
+        store32(value.int_32, destination);
+#else
+#error "Missing implementation"
+#endif
     }
+
 
     VM::ExecutionEngine *_engine;
     IR::Module *_module;

@@ -337,23 +337,23 @@ void InstructionSelection::visitMove(IR::Move *s)
                 return;
             } else if (IR::Const *c = s->source->asConst()) {
                 Address dest = loadTempAddress(Gpr0, t);
+                Value v;
                 switch (c->type) {
                 case IR::NullType:
-                    storeValue<Value::Null_Type>(TrustedImm32(0), dest);
+                    v = Value::nullValue();
                     break;
                 case IR::UndefinedType:
-                    storeValue<Value::Undefined_Type>(TrustedImm32(0), dest);
+                    v = Value::undefinedValue();
                     break;
                 case IR::BoolType:
-                    storeValue<Value::Boolean_Type>(TrustedImm32(c->value != 0), dest);
+                    v = Value::fromBoolean(c->value != 0);
                     break;
                 case IR::NumberType: {
                     int ival = (int)c->value;
                     if (ival == c->value) {
-                        storeValue<Value::Integer_Type>(TrustedImm32(ival), dest);
+                        v = Value::fromInt32(ival);
                     } else {
-                        // ### Taking address of pointer inside IR.
-                        copyValue(dest, &c->value);
+                        v = Value::fromDouble(c->value);
                     }
                 }
                     break;
@@ -361,6 +361,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     Q_UNIMPLEMENTED();
                     assert(!"TODO");
                 }
+                storeValue(v, dest);
                 return;
             } else if (IR::Temp *t2 = s->source->asTemp()) {
                 copyValue(t, t2);
@@ -732,6 +733,11 @@ void InstructionSelection::callRuntimeMethodImp(IR::Temp *result, const char* na
 template <typename Result, typename Source>
 void InstructionSelection::copyValue(Result result, Source source)
 {
+#if CPU(X86_64)
+    loadArgument1(source, Gpr0);
+    storeArgument(Gpr0, result);
+#else
     loadDouble(source, FPGpr0);
     storeDouble(FPGpr0, result);
+#endif
 }
