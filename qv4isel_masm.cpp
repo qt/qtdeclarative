@@ -676,7 +676,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             case IR::OpIn: setOp(op, opName, __qmljs_cmp_in); break;
             } // switch
 
-            generateFunctionCall(ReturnValueRegister, op, l, r, ContextRegister);
+            generateFunctionCallImp(ReturnValueRegister, opName, op, l, r, ContextRegister);
             move(ReturnValueRegister, Gpr0);
 
             Jump target = branch32(NotEqual, Gpr0, TrustedImm32(0));
