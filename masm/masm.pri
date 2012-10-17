@@ -39,6 +39,7 @@ SOURCES += $$PWD/disassembler/udis86/udis86_syn-intel.c
 ITAB = $$PWD/disassembler/udis86/optable.xml
 udis86.output = udis86_itab.h
 udis86.input = ITAB
+udis86.CONFIG += no_link
 udis86.commands = python $$PWD/disassembler/udis86/itab.py ${QMAKE_FILE_IN}
 QMAKE_EXTRA_COMPILERS += udis86
 
