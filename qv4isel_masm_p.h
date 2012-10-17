@@ -247,53 +247,17 @@ private:
         move(source, dest);
     }
 
+    void loadArgument(TrustedImmPtr ptr, RegisterID dest)
+    {
+        move(TrustedImmPtr(ptr), dest);
+    }
+
     void loadArgument(const Pointer& ptr, RegisterID dest)
     {
         addPtr(TrustedImm32(ptr.offset), ptr.base, dest);
     }
 
     void loadArgument(IR::Temp* temp, RegisterID dest)
-    {
-        if (temp) {
-            Pointer addr = loadTempAddress(dest, temp);
-            loadArgument(addr, dest);
-        } else {
-            xorPtr(dest, dest);
-        }
-    }
-
-    void loadArgument(TrustedImmPtr ptr, RegisterID dest)
-    {
-        move(TrustedImmPtr(ptr), dest);
-    }
-
-    void loadArgument(VM::String* string, RegisterID dest)
-    {
-        loadArgument(TrustedImmPtr(string), dest);
-    }
-
-    void loadArgument(TrustedImm32 imm32, RegisterID dest)
-    {
-        xorPtr(dest, dest);
-        move(imm32, dest);
-    }
-
-    void loadArgument1(RegisterID source, RegisterID dest)
-    {
-        move(source, dest);
-    }
-
-    void loadArgument1(TrustedImmPtr ptr, RegisterID dest)
-    {
-        move(TrustedImmPtr(ptr), dest);
-    }
-
-    void loadArgument1(const Pointer& ptr, RegisterID dest)
-    {
-        addPtr(TrustedImm32(ptr.offset), ptr.base, dest);
-    }
-
-    void loadArgument1(IR::Temp* temp, RegisterID dest)
     {
         if (!temp) {
             VM::Value undefined = VM::Value::undefinedValue();
@@ -304,12 +268,12 @@ private:
         }
     }
 
-    void loadArgument1(VM::String* string, RegisterID dest)
+    void loadArgument(VM::String* string, RegisterID dest)
     {
-        loadArgument1(TrustedImmPtr(string), dest);
+        loadArgument(TrustedImmPtr(string), dest);
     }
 
-    void loadArgument1(TrustedImm32 imm32, RegisterID dest)
+    void loadArgument(TrustedImm32 imm32, RegisterID dest)
     {
         xorPtr(dest, dest);
         move(imm32, dest);
@@ -385,10 +349,8 @@ private:
     #define isel_stringIfyx(s) #s
     #define isel_stringIfy(s) isel_stringIfyx(s)
 
-    #define generateFunctionCall(function, ...) \
-        generateFunctionCallImp(isel_stringIfy(function), function, __VA_ARGS__)
-    #define generateFunctionCall2(t, function, ...) \
-        generateFunctionCallImp2(t, isel_stringIfy(function), function, __VA_ARGS__)
+    #define generateFunctionCall(t, function, ...) \
+        generateFunctionCallImp(t, isel_stringIfy(function), function, __VA_ARGS__)
 
 #if CPU(X86)
     template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
@@ -462,123 +424,61 @@ private:
         callFunctionEpilogue();
     }
 #elif CPU(X86_64)
-
-    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
-    {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        loadArgument(arg3, RegisterArgument3);
-        loadArgument(arg4, RegisterArgument4);
-        loadArgument(arg5, RegisterArgument5);
-        loadArgument(arg6, RegisterArgument6);
-        callAbsolute(functionName, function);
-        callFunctionEpilogue();
-    }
-    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
-    {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        loadArgument(arg3, RegisterArgument3);
-        loadArgument(arg4, RegisterArgument4);
-        loadArgument(arg5, RegisterArgument5);
-        callAbsolute(functionName, function);
-        callFunctionEpilogue();
-    }
-
-
-    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
-    {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        loadArgument(arg3, RegisterArgument3);
-        loadArgument(arg4, RegisterArgument4);
-        callAbsolute(functionName, function);
-        callFunctionEpilogue();
-    }
-
-
-    template <typename Arg1, typename Arg2, typename Arg3>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
-    {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        loadArgument(arg3, RegisterArgument3);
-        callAbsolute(functionName, function);
-        callFunctionEpilogue();
-    }
-
-    template <typename Arg1, typename Arg2>
-    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2)
-    {
-        callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        callAbsolute(functionName, function);
-        callFunctionEpilogue();
-    }
-
     template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    void generateFunctionCallImp2(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
         callFunctionPrologue();
-        loadArgument1(arg1, RegisterArgument1);
-        loadArgument1(arg2, RegisterArgument2);
-        loadArgument1(arg3, RegisterArgument3);
-        loadArgument1(arg4, RegisterArgument4);
+        loadArgument(arg1, RegisterArgument1);
+        loadArgument(arg2, RegisterArgument2);
+        loadArgument(arg3, RegisterArgument3);
+        loadArgument(arg4, RegisterArgument4);
         callAbsolute(functionName, function);
         storeArgument(ReturnValueRegister, r);
         callFunctionEpilogue();
     }
 
     template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-    void generateFunctionCallImp2(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
         callFunctionPrologue();
-        loadArgument1(arg1, RegisterArgument1);
-        loadArgument1(arg2, RegisterArgument2);
-        loadArgument1(arg3, RegisterArgument3);
-        loadArgument1(arg4, RegisterArgument4);
-        loadArgument1(arg5, RegisterArgument5);
+        loadArgument(arg1, RegisterArgument1);
+        loadArgument(arg2, RegisterArgument2);
+        loadArgument(arg3, RegisterArgument3);
+        loadArgument(arg4, RegisterArgument4);
+        loadArgument(arg5, RegisterArgument5);
         callAbsolute(functionName, function);
         storeArgument(ReturnValueRegister, r);
         callFunctionEpilogue();
     }
 
     template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3>
-    void generateFunctionCallImp2(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
         callFunctionPrologue();
-        loadArgument1(arg1, RegisterArgument1);
-        loadArgument1(arg2, RegisterArgument2);
-        loadArgument1(arg3, RegisterArgument3);
+        loadArgument(arg1, RegisterArgument1);
+        loadArgument(arg2, RegisterArgument2);
+        loadArgument(arg3, RegisterArgument3);
         callAbsolute(functionName, function);
         storeArgument(ReturnValueRegister, r);
         callFunctionEpilogue();
     }
 
     template <typename ArgRet, typename Arg1, typename Arg2>
-    void generateFunctionCallImp2(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2)
+    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2)
     {
         callFunctionPrologue();
-        loadArgument1(arg1, RegisterArgument1);
-        loadArgument1(arg2, RegisterArgument2);
+        loadArgument(arg1, RegisterArgument1);
+        loadArgument(arg2, RegisterArgument2);
         callAbsolute(functionName, function);
         storeArgument(ReturnValueRegister, r);
         callFunctionEpilogue();
     }
 
     template <typename ArgRet, typename Arg1>
-    void generateFunctionCallImp2(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1)
+    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1)
     {
         callFunctionPrologue();
-        loadArgument1(arg1, RegisterArgument1);
+        loadArgument(arg1, RegisterArgument1);
         callAbsolute(functionName, function);
         storeArgument(ReturnValueRegister, r);
         callFunctionEpilogue();

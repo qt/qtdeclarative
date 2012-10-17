@@ -213,7 +213,7 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
             break;
         case IR::Name::builtin_rethrow: {
             int argc = prepareVariableArguments(call->args);
-            generateFunctionCall2(result, __qmljs_builtin_rethrow, ContextRegister, baseAddressForCallArguments(), TrustedImm32(argc));
+            generateFunctionCall(result, __qmljs_builtin_rethrow, ContextRegister, baseAddressForCallArguments(), TrustedImm32(argc));
             return; // we need to return to avoid checking the exceptions
         }
         }
@@ -228,7 +228,7 @@ void InstructionSelection::callValue(IR::Call *call, IR::Temp *result)
 
     int argc = prepareVariableArguments(call->args);
     IR::Temp* thisObject = 0;
-    generateFunctionCall2(result, __qmljs_call_value, ContextRegister, thisObject, baseTemp, baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCall(result, __qmljs_call_value, ContextRegister, thisObject, baseTemp, baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 
@@ -239,7 +239,7 @@ void InstructionSelection::callProperty(IR::Call *call, IR::Temp *result)
     assert(member->base->asTemp() != 0);
 
     int argc = prepareVariableArguments(call->args);
-    generateFunctionCall2(result, __qmljs_call_property, ContextRegister, member->base->asTemp(), identifier(*member->name), baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCall(result, __qmljs_call_property, ContextRegister, member->base->asTemp(), identifier(*member->name), baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 
@@ -258,7 +258,7 @@ void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
     assert(member->base->asTemp() != 0);
 
     int argc = prepareVariableArguments(call->args);
-    generateFunctionCall2(result, __qmljs_construct_property, ContextRegister, member->base->asTemp(), identifier(*member->name), baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCall(result, __qmljs_construct_property, ContextRegister, member->base->asTemp(), identifier(*member->name), baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 
@@ -268,7 +268,7 @@ void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
     assert(baseTemp != 0);
 
     int argc = prepareVariableArguments(call->args);
-    generateFunctionCall2(result, __qmljs_construct_value, ContextRegister, baseTemp, baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCall(result, __qmljs_construct_value, ContextRegister, baseTemp, baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 
@@ -319,7 +319,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             String *propertyName = identifier(*n->id);
 
             if (IR::Temp *t = s->source->asTemp()) {
-                generateFunctionCall2(Void, __qmljs_set_activation_property, ContextRegister, propertyName, t);
+                generateFunctionCall(Void, __qmljs_set_activation_property, ContextRegister, propertyName, t);
                 checkExceptions();
                 return;
             } else {
@@ -328,10 +328,10 @@ void InstructionSelection::visitMove(IR::Move *s)
         } else if (IR::Temp *t = s->target->asTemp()) {
             if (IR::Name *n = s->source->asName()) {
                 if (*n->id == QStringLiteral("this")) { // ### `this' should be a builtin.
-                    generateFunctionCall2(t, __qmljs_get_thisObject, ContextRegister);
+                    generateFunctionCall(t, __qmljs_get_thisObject, ContextRegister);
                 } else {
                     String *propertyName = identifier(*n->id);
-                    generateFunctionCall2(t, __qmljs_get_activation_property, ContextRegister, propertyName);
+                    generateFunctionCall(t, __qmljs_get_activation_property, ContextRegister, propertyName);
                     checkExceptions();
                 }
                 return;
@@ -368,10 +368,10 @@ void InstructionSelection::visitMove(IR::Move *s)
                 return;
             } else if (IR::String *str = s->source->asString()) {
                 // ### inline
-                generateFunctionCall2(t, __qmljs_init_string, _engine->newString(*str->value));
+                generateFunctionCall(t, __qmljs_init_string, _engine->newString(*str->value));
                 return;
             } else if (IR::Closure *clos = s->source->asClosure()) {
-                generateFunctionCall2(t, __qmljs_init_closure, TrustedImmPtr(clos->value), ContextRegister);
+                generateFunctionCall(t, __qmljs_init_closure, TrustedImmPtr(clos->value), ContextRegister);
                 return;
             } else if (IR::New *ctor = s->source->asNew()) {
                 if (ctor->base->asName()) {
@@ -387,14 +387,14 @@ void InstructionSelection::visitMove(IR::Move *s)
             } else if (IR::Member *m = s->source->asMember()) {
                 //__qmljs_get_property(ctx, result, object, name);
                 if (IR::Temp *base = m->base->asTemp()) {
-                    generateFunctionCall2(t, __qmljs_get_property, ContextRegister, base, identifier(*m->name));
+                    generateFunctionCall(t, __qmljs_get_property, ContextRegister, base, identifier(*m->name));
                     checkExceptions();
                     return;
                 }
                 assert(!"wip");
                 return;
             } else if (IR::Subscript *ss = s->source->asSubscript()) {
-                generateFunctionCall2(t, __qmljs_get_element, ContextRegister, ss->base->asTemp(), ss->index->asTemp());
+                generateFunctionCall(t, __qmljs_get_element, ContextRegister, ss->base->asTemp(), ss->index->asTemp());
                 checkExceptions();
                 return;
             } else if (IR::Unop *u = s->source->asUnop()) {
@@ -411,7 +411,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     } // switch
 
                     if (op)
-                        generateFunctionCallImp2(t, opName, op, e, ContextRegister);
+                        generateFunctionCallImp(t, opName, op, e, ContextRegister);
                     return;
                 }
             } else if (IR::Binop *b = s->source->asBinop()) {
@@ -460,7 +460,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     }
 
                     if (op) {
-                        generateFunctionCallImp2(t, opName, op, l, r, ContextRegister);
+                        generateFunctionCallImp(t, opName, op, l, r, ContextRegister);
                     }
                     return;
                 }
@@ -479,7 +479,7 @@ void InstructionSelection::visitMove(IR::Move *s)
         } else if (IR::Member *m = s->target->asMember()) {
             if (IR::Temp *base = m->base->asTemp()) {
                 if (IR::Temp *t = s->source->asTemp()) {
-                    generateFunctionCall2(Void, __qmljs_set_property, ContextRegister, base, identifier(*m->name), t);
+                    generateFunctionCall(Void, __qmljs_set_property, ContextRegister, base, identifier(*m->name), t);
                     checkExceptions();
                     return;
                 } else {
@@ -488,7 +488,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
             if (IR::Temp *t2 = s->source->asTemp()) {
-                generateFunctionCall2(Void, __qmljs_set_element, ContextRegister, ss->base->asTemp(), ss->index->asTemp(), t2);
+                generateFunctionCall(Void, __qmljs_set_element, ContextRegister, ss->base->asTemp(), ss->index->asTemp(), t2);
                 checkExceptions();
                 return;
             } else {
@@ -518,7 +518,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
                 }
                 if (op)
-                    generateFunctionCallImp2(t, opName, op, t, t2, ContextRegister);
+                    generateFunctionCallImp(t, opName, op, t, t2, ContextRegister);
                 return;
             }
         } else if (IR::Name *n = s->target->asName()) {
@@ -542,7 +542,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
                 }
                 if (op) {
-                    generateFunctionCallImp2(Void, opName, op, t, identifier(*n->id), ContextRegister);
+                    generateFunctionCallImp(Void, opName, op, t, identifier(*n->id), ContextRegister);
                     checkExceptions();
                 }
                 return;
@@ -571,7 +571,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 if (op) {
                     IR::Temp* base = ss->base->asTemp();
                     IR::Temp* index = ss->index->asTemp();
-                    generateFunctionCallImp2(Void, opName, op, base, index, t, ContextRegister);
+                    generateFunctionCallImp(Void, opName, op, base, index, t, ContextRegister);
                     checkExceptions();
                 }
                 return;
@@ -600,7 +600,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 if (op) {
                     IR::Temp* base = m->base->asTemp();
                     String* member = identifier(*m->name);
-                    generateFunctionCallImp2(Void, opName, op, t, base, member, ContextRegister);
+                    generateFunctionCallImp(Void, opName, op, t, base, member, ContextRegister);
                     checkExceptions();
                 }
                 return;
@@ -640,7 +640,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
         booleanConversion.link(this);
         {
-            generateFunctionCall2(Gpr0, __qmljs_to_boolean, t, ContextRegister);
+            generateFunctionCall(Gpr0, __qmljs_to_boolean, t, ContextRegister);
         }
 
         testBoolean.link(this);
@@ -669,7 +669,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             case IR::OpIn: setOp(op, opName, __qmljs_cmp_in); break;
             } // switch
 
-            generateFunctionCall2(ReturnValueRegister, op, l, r, ContextRegister);
+            generateFunctionCall(ReturnValueRegister, op, l, r, ContextRegister);
             move(ReturnValueRegister, Gpr0);
 
             Jump target = branch32(NotEqual, Gpr0, TrustedImm32(0));
@@ -719,14 +719,14 @@ void InstructionSelection::callRuntimeMethodImp(IR::Temp *result, const char* na
     assert(baseName != 0);
 
     int argc = prepareVariableArguments(args);
-    generateFunctionCallImp2(result, name, method, ContextRegister, identifier(*baseName->id), baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCallImp(result, name, method, ContextRegister, identifier(*baseName->id), baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 
 void InstructionSelection::callRuntimeMethodImp(IR::Temp *result, const char* name, BuiltinMethod method, IR::ExprList *args)
 {
     int argc = prepareVariableArguments(args);
-    generateFunctionCallImp2(result, name, method, ContextRegister, baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCallImp(result, name, method, ContextRegister, baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 
@@ -734,7 +734,7 @@ template <typename Result, typename Source>
 void InstructionSelection::copyValue(Result result, Source source)
 {
 #if CPU(X86_64)
-    loadArgument1(source, Gpr0);
+    loadArgument(source, Gpr0);
     storeArgument(Gpr0, result);
 #else
     loadDouble(source, FPGpr0);
