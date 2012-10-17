@@ -52,7 +52,7 @@ static inline Value add_int32(int a, int b)
 
     asm ("addl %2, %1\n"
          "seto %0"
-    : "=r" (overflow), "=r" (a)
+    : "=q" (overflow), "=r" (a)
          : "r" (b), "1" (a)
          :
     );
@@ -67,7 +67,7 @@ static inline Value sub_int32(int a, int b)
 
     asm ("subl %2, %1\n"
          "seto %0"
-    : "=r" (overflow), "=r" (a)
+    : "=q" (overflow), "=r" (a)
          : "r" (b), "1" (a)
          :
     );
@@ -82,7 +82,7 @@ static inline Value mul_int32(int a, int b)
 
     asm ("imul %2, %1\n"
          "seto %0"
-    : "=r" (overflow), "=r" (a)
+    : "=q" (overflow), "=r" (a)
          : "r" (b), "1" (a)
          :
     );
