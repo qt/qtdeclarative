@@ -131,48 +131,6 @@ int Value::toInteger(double number)
     return std::signbit(number) ? -v : v;
 }
 
-int Value::toUInt16(Context *ctx)
-{
-    return __qmljs_to_uint16(*this, ctx);
-}
-
-int Value::toInt32(Context *ctx)
-{
-    return __qmljs_to_int32(*this, ctx);
-}
-
-unsigned int Value::toUInt32(Context *ctx)
-{
-    return __qmljs_to_uint32(*this, ctx);
-}
-
-Bool Value::toBoolean(Context *ctx) const
-{
-    return __qmljs_to_boolean(*this, ctx);
-}
-
-double Value::toInteger(Context *ctx) const
-{
-    return __qmljs_to_integer(*this, ctx);
-}
-
-double Value::toNumber(Context *ctx) const
-{
-    return __qmljs_to_number(*this, ctx);
-}
-
-String *Value::toString(Context *ctx) const
-{
-    Value v = __qmljs_to_string(*this, ctx);
-    assert(v.is(Value::String_Type));
-    return v.stringValue();
-}
-
-Value Value::toObject(Context *ctx) const
-{
-    return __qmljs_to_object(*this, ctx);
-}
-
 bool Value::isFunctionObject() const
 {
     return isObject() ? objectValue()->asFunctionObject() != 0 : false;

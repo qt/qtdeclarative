@@ -438,14 +438,14 @@ struct Value : public ValueBase<sizeof(void *)>
     static int toInt32(double value);
     static unsigned int toUInt32(double value);
 
-    int toUInt16(Context *ctx);
-    int toInt32(Context *ctx);
-    unsigned int toUInt32(Context *ctx);
-    Bool toBoolean(Context *ctx) const;
-    double toInteger(Context *ctx) const;
+    inline int toUInt16(Context *ctx);
+    inline int toInt32(Context *ctx);
+    inline unsigned int toUInt32(Context *ctx);
+    inline Bool toBoolean(Context *ctx) const;
+    inline double toInteger(Context *ctx) const;
     double toNumber(Context *ctx) const;
-    String *toString(Context *ctx) const;
-    Value toObject(Context *ctx) const;
+    inline String *toString(Context *ctx) const;
+    inline Value toObject(Context *ctx) const;
 
     inline bool isUndefined() const { return is(Value::Undefined_Type); }
     inline bool isNull() const { return is(Value::Null_Type); }
@@ -479,6 +479,49 @@ struct Value : public ValueBase<sizeof(void *)>
     Value property(Context *ctx, String *name) const;
     Value *getPropertyDescriptor(Context *ctx, String *name) const;
 };
+
+inline int Value::toUInt16(Context *ctx)
+{
+    return __qmljs_to_uint16(*this, ctx);
+}
+
+inline int Value::toInt32(Context *ctx)
+{
+    return __qmljs_to_int32(*this, ctx);
+}
+
+inline unsigned int Value::toUInt32(Context *ctx)
+{
+    return __qmljs_to_uint32(*this, ctx);
+}
+
+inline Bool Value::toBoolean(Context *ctx) const
+{
+    return __qmljs_to_boolean(*this, ctx);
+}
+
+inline double Value::toInteger(Context *ctx) const
+{
+    return __qmljs_to_integer(*this, ctx);
+}
+
+inline double Value::toNumber(Context *ctx) const
+{
+    return __qmljs_to_number(*this, ctx);
+}
+
+inline String *Value::toString(Context *ctx) const
+{
+    Value v = __qmljs_to_string(*this, ctx);
+    assert(v.is(Value::String_Type));
+    return v.stringValue();
+}
+
+inline Value Value::toObject(Context *ctx) const
+{
+    return __qmljs_to_object(*this, ctx);
+}
+
 
 inline Value ValueBase<4>::undefinedValue()
 {
