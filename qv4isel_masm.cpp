@@ -202,20 +202,27 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
         case IR::Name::builtin_invalid:
             Q_UNREACHABLE();
             break;
-        case IR::Name::builtin_typeof:
-            callRuntimeMethod(result, __qmljs_builtin_typeof, call->args);
+        case IR::Name::builtin_typeof: {
+            IR::Temp *arg = call->args->expr->asTemp();
+            assert(arg != 0);
+            generateFunctionCall(result, __qmljs_builtin_typeof, arg, ContextRegister);
+            checkExceptions();
+        }
             break;
         case IR::Name::builtin_delete:
             Q_UNREACHABLE();
             break;
-        case IR::Name::builtin_throw:
-            callRuntimeMethod(result, __qmljs_builtin_throw, call->args);
-            break;
-        case IR::Name::builtin_rethrow: {
-            int argc = prepareVariableArguments(call->args);
-            generateFunctionCall(result, __qmljs_builtin_rethrow, ContextRegister, baseAddressForCallArguments(), TrustedImm32(argc));
-            return; // we need to return to avoid checking the exceptions
+        case IR::Name::builtin_throw: {
+            IR::Temp *arg = call->args->expr->asTemp();
+            assert(arg != 0);
+            generateFunctionCall(Void, __qmljs_builtin_throw, arg, ContextRegister);
+            checkExceptions();
         }
+            break;
+        case IR::Name::builtin_rethrow:
+            // don't use callRuntimeMethod, as we need to return to avoid checking the exceptions
+            generateFunctionCall(result, __qmljs_builtin_rethrow, ContextRegister);
+            return;
         }
     }
 }
@@ -275,7 +282,7 @@ void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
 void InstructionSelection::checkExceptions()
 {
     Address addr(ContextRegister, offsetof(Context, hasUncaughtException));
-    Jump jmp = branch8(Equal, addr, TrustedImm32(1));
+    Jump jmp = branch8(NotEqual, addr, TrustedImm32(0));
     _patches[_function->handlersBlock].append(jmp);
 }
 

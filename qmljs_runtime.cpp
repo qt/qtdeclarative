@@ -1283,21 +1283,17 @@ Value __qmljs_rethrow(Context *context)
     return context->result;
 }
 
-Value __qmljs_builtin_typeof(Context *context, Value *args, int argc)
+Value __qmljs_builtin_typeof(Value val, Context *context)
 {
-    Q_UNUSED(argc);
-    return __qmljs_typeof(args[0], context);
+    return __qmljs_typeof(val, context);
 }
 
-Value __qmljs_builtin_throw(Context *context, Value *args, int argc)
+void __qmljs_builtin_throw(Value val, Context *context)
 {
-    Q_UNUSED(argc);
-    __qmljs_throw(args[0], context);
-    // ### change to void return value
-    return Value::undefinedValue();
+    __qmljs_throw(val, context);
 }
 
-Value __qmljs_builtin_rethrow(Context *context, Value *, int)
+Value __qmljs_builtin_rethrow(Context *context)
 {
     return context->result;
 }

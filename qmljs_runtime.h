@@ -99,9 +99,9 @@ Value __qmljs_construct_activation_property(Context *, String *name, Value *args
 Value __qmljs_construct_property(Context *context, Value base, String *name, Value *args, int argc);
 Value __qmljs_construct_value(Context *context, Value func, Value *args, int argc);
 
-Value __qmljs_builtin_typeof(Context *context, Value *args, int argc);
-Value __qmljs_builtin_throw(Context *context, Value *args, int argc);
-Value __qmljs_builtin_rethrow(Context *context, Value *args, int argc);
+Value __qmljs_builtin_typeof(Value val, Context *context);
+void __qmljs_builtin_throw(Value val, Context *context);
+Value __qmljs_builtin_rethrow(Context *context);
 
 // constructors
 Value __qmljs_init_string(String *string);
