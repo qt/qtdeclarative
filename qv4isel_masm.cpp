@@ -548,7 +548,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
             if (IR::Temp *t = s->source->asTemp()) {
-                void (*op)(Context *ctx, Value *base, Value *index, Value *value) = 0;
+                void (*op)(Value base, Value index, Value value, Context *ctx) = 0;
                 const char *opName = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_element); break;
@@ -570,14 +570,14 @@ void InstructionSelection::visitMove(IR::Move *s)
                 if (op) {
                     IR::Temp* base = ss->base->asTemp();
                     IR::Temp* index = ss->index->asTemp();
-                    generateFunctionCallImp(opName, op, ContextRegister, base, index, t);
+                    generateFunctionCallImp2(Void, opName, op, base, index, t, ContextRegister);
                     checkExceptions();
                 }
                 return;
             }
         } else if (IR::Member *m = s->target->asMember()) {
             if (IR::Temp *t = s->source->asTemp()) {
-                void (*op)(Context *ctx, Value *base, String *name, Value *value) = 0;
+                void (*op)(Value value, Value base, String *name, Context *ctx) = 0;
                 const char *opName = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_member); break;
@@ -599,7 +599,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 if (op) {
                     IR::Temp* base = m->base->asTemp();
                     String* member = identifier(*m->name);
-                    generateFunctionCallImp(opName, op, ContextRegister, base, member, t);
+                    generateFunctionCallImp2(Void, opName, op, t, base, member, ContextRegister);
                     checkExceptions();
                 }
                 return;
