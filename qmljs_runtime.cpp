@@ -137,7 +137,7 @@ unsigned int Value::toUInt32(double number)
 {
     const double D32 = 4294967296.0;
     if ((number >= 0 && number < D32))
-        return static_cast<int>(number);
+        return static_cast<uint>(number);
 
     if (!std::isfinite(number))
         return +0;

@@ -777,15 +777,23 @@ inline unsigned __qmljs_to_uint32(Value value, Context *ctx)
 
 inline unsigned short __qmljs_to_uint16(Value value, Context *ctx)
 {
-    double number = __qmljs_to_number(value, ctx);
-    if (! number || qIsNaN(number) || std::isinf(number))
-        return +0;
+    if (value.isInteger())
+        return (ushort)(uint)value.integerValue();
 
-    double sign = (number < 0) ? -1.0 : 1.0;
-    double abs_n = ::fabs(number);
+    double number = __qmljs_to_number(value, ctx);
 
     double D16 = 65536.0;
-    number = ::fmod(sign * ::floor(abs_n), D16);
+    if ((number >= 0 && number < D16))
+        return static_cast<ushort>(number);
+
+    if (!std::isfinite(number))
+        return +0;
+
+    double d = ::floor(::fabs(number));
+    if (std::signbit(number))
+        d = -d;
+
+    number = ::fmod(d , D16);
 
     if (number < 0)
         number += D16;
