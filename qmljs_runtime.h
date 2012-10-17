@@ -434,7 +434,7 @@ struct Value : public ValueBase<sizeof(void *)>
     using ValueBase<sizeof(void *)>::fromString;
 #endif
 
-    static int toInteger(double fromNumber);
+    static double toInteger(double fromNumber);
     static int toInt32(double value);
     static unsigned int toUInt32(double value);
 
@@ -755,42 +755,16 @@ inline double __qmljs_to_integer(Value value, Context *ctx)
 {
     if (value.isInteger())
         return value.int_32;
-    const double number = __qmljs_to_number(value, ctx);
-    if (qIsNaN(number))
-        return +0;
-    else if (! number || std::isinf(number))
-        return number;
-    const double v = floor(fabs(number));
-    return std::signbit(number) ? -v : v;
+
+    return Value::toInteger(__qmljs_to_number(value, ctx));
 }
 
 inline int __qmljs_to_int32(Value value, Context *ctx)
 {
     if (value.isInteger())
         return value.int_32;
-    double number = __qmljs_to_number(value, ctx);
 
-    if ((number >= -2147483648.0 && number < 2147483648.0)) {
-        return static_cast<int>(number);
-    }
-
-    if (! number || qIsNaN(number) || std::isinf(number))
-        return 0;
-
-    double D32 = 4294967296.0;
-    double sign = (number < 0) ? -1.0 : 1.0;
-    double abs_n = fabs(number);
-
-    number = ::fmod(sign * ::floor(abs_n), D32);
-    const double D31 = D32 / 2.0;
-
-    if (sign == -1 && number < -D31)
-        number += D32;
-
-    else if (sign != -1 && number >= D31)
-        number -= D32;
-
-    return int(number);
+    return Value::toInt32(__qmljs_to_number(value, ctx));
 }
 
 inline unsigned __qmljs_to_uint32(Value value, Context *ctx)
@@ -798,20 +772,7 @@ inline unsigned __qmljs_to_uint32(Value value, Context *ctx)
     if (value.isInteger())
         return (unsigned) value.int_32;
 
-    double number = __qmljs_to_number(value, ctx);
-    if (! number || qIsNaN(number) || std::isinf(number))
-        return +0;
-
-    double sign = (number < 0) ? -1.0 : 1.0;
-    double abs_n = ::fabs(number);
-
-    const double D32 = 4294967296.0;
-    number = ::fmod(sign * ::floor(abs_n), D32);
-
-    if (number < 0)
-        number += D32;
-
-    return unsigned(number);
+    return Value::toUInt32(__qmljs_to_number(value, ctx));
 }
 
 inline unsigned short __qmljs_to_uint16(Value value, Context *ctx)
@@ -1061,10 +1022,10 @@ inline void __qmljs_inplace_ushr(Context *ctx, Value *result, Value *value)
 
 inline Value __qmljs_add(Value left, Value right, Context *ctx)
 {
-    if (left.isInteger() && right.isInteger())
+    if (left.isInteger() & right.isInteger())
         return add_int32(left.integerValue(), right.integerValue());
 
-    if (left.isNumber() && right.isNumber())
+    if (left.isNumber() & right.isNumber())
         return Value::fromDouble(left.asDouble() + right.asDouble());
     else
         return __qmljs_add_helper(left, right, ctx);

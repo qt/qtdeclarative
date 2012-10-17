@@ -109,19 +109,52 @@ Value Value::fromString(Context *ctx, const QString &s)
 
 int Value::toInt32(double number)
 {
-    if (! number || std::isnan(number) || std::isinf(number))
-        return +0;
-    return (int) trunc(number); // ###
+    const double D32 = 4294967296.0;
+    const double D31 = D32 / 2.0;
+
+    if ((number >= -D31 && number < D31))
+        return static_cast<int>(number);
+
+
+    if (!std::isfinite(number))
+        return 0;
+
+    double d = ::floor(::fabs(number));
+    if (std::signbit(number))
+        d = -d;
+
+    number = ::fmod(d , D32);
+
+    if (number < -D31)
+        number += D32;
+    else if (number >= D31)
+        number -= D32;
+
+    return int(number);
 }
 
 unsigned int Value::toUInt32(double number)
 {
-    if (! number || std::isnan(number) || std::isinf(number))
+    const double D32 = 4294967296.0;
+    if ((number >= 0 && number < D32))
+        return static_cast<int>(number);
+
+    if (!std::isfinite(number))
         return +0;
-    return (uint) trunc(number); // ###
+
+    double d = ::floor(::fabs(number));
+    if (std::signbit(number))
+        d = -d;
+
+    number = ::fmod(d , D32);
+
+    if (number < 0)
+        number += D32;
+
+    return unsigned(number);
 }
 
-int Value::toInteger(double number)
+double Value::toInteger(double number)
 {
     if (std::isnan(number))
         return +0;
