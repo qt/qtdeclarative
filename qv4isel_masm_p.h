@@ -74,6 +74,14 @@ protected:
     static const RegisterID CalleeSavedFirstRegister = Gpr3;
     static const RegisterID CalleeSavedLastRegister = Gpr3;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
+
+    static const int RegisterArgumentCount = 0;
+    static RegisterID registerForArgument(int)
+    {
+        assert(false);
+        // Not reached.
+        return JSC::X86Registers::eax;
+    }
 #elif CPU(X86_64)
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
     static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
@@ -85,12 +93,20 @@ protected:
     static const RegisterID Gpr3 = JSC::X86Registers::esi;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 
-    static const RegisterID RegisterArgument1 = JSC::X86Registers::edi;
-    static const RegisterID RegisterArgument2 = JSC::X86Registers::esi;
-    static const RegisterID RegisterArgument3 = JSC::X86Registers::edx;
-    static const RegisterID RegisterArgument4 = JSC::X86Registers::ecx;
-    static const RegisterID RegisterArgument5 = JSC::X86Registers::r8;
-    static const RegisterID RegisterArgument6 = JSC::X86Registers::r9;
+    static const int RegisterArgumentCount = 6;
+    static RegisterID registerForArgument(int index)
+    {
+        static RegisterID regs[RegisterArgumentCount] = {
+            JSC::X86Registers::edi,
+            JSC::X86Registers::esi,
+            JSC::X86Registers::edx,
+            JSC::X86Registers::ecx,
+            JSC::X86Registers::r8,
+            JSC::X86Registers::r9
+        };
+        assert(index >= 0 && index < RegisterArgumentCount);
+        return regs[index];
+    };
 #elif CPU(ARM)
     static const RegisterID StackFrameRegister = JSC::ARMRegisters::r4;
     static const RegisterID StackPointerRegister = JSC::ARMRegisters::sp;
@@ -108,6 +124,13 @@ protected:
     static const RegisterID RegisterArgument2 = JSC::ARMRegisters::r1;
     static const RegisterID RegisterArgument3 = JSC::ARMRegisters::r2;
     static const RegisterID RegisterArgument4 = JSC::ARMRegisters::r3;
+
+    static const int RegisterArgumentCount = 4;
+    static RegisterID registerForArgument(int index)
+    {
+        assert(index >= 0 && index < RegisterArgumentCount);
+        return static_cast<RegisterID>(JSC::ARMRegisters::r0 + index);
+    };
 #else
 #error Argh.
 #endif
@@ -153,49 +176,16 @@ protected:
 #endif
     }
 
-    Address stackAddressForArgument(int index) const
+    Address addressForArgument(int index) const
     {
+        if (index < RegisterArgumentCount)
+            return Address(registerForArgument(index), 0);
+
         // StackFrameRegister points to its old value on the stack, and above
         // it we have the return address, hence the need to step over two
         // values before reaching the first argument.
-        return Address(StackFrameRegister, (index + 2) * sizeof(void*));
+        return Address(StackFrameRegister, (index - RegisterArgumentCount + 2) * sizeof(void*));
     }
-#if CPU(X86)
-    Address addressForArgument(int index) const
-    {
-        return stackAddressForArgument(index);
-    }
-#elif CPU(X86_64)
-    Address addressForArgument(int index) const
-    {
-        static RegisterID args[6] = {
-            RegisterArgument1,
-            RegisterArgument2,
-            RegisterArgument3,
-            RegisterArgument4,
-            RegisterArgument5,
-            RegisterArgument6
-        };
-        if (index < 6)
-            return Address(args[index], 0);
-        else
-            return stackAddressForArgument(index - 6);
-    }
-#elif CPU(ARM)
-    Address addressForArgument(int index) const
-    {
-        static RegisterID args[4] = {
-            RegisterArgument1,
-            RegisterArgument2,
-            RegisterArgument3,
-            RegisterArgument4,
-        };
-        if (index < 4)
-            return Address(args[index], 0);
-        else
-            return stackAddressForArgument(index - 4);
-    }
-#endif
 
     // Some run-time functions take (Value* args, int argc). This function is for populating
     // the args.
@@ -280,11 +270,6 @@ private:
             move(imm32, dest);
     }
 
-    void loadArgument(VoidType, RegisterID)
-    {
-        // Nothing to do.
-    }
-
     void storeArgument(RegisterID src, IR::Temp *temp)
     {
         if (temp) {
@@ -358,16 +343,51 @@ private:
     #define generateFunctionCall(t, function, ...) \
         generateFunctionCallImp(t, isel_stringIfy(function), function, __VA_ARGS__)
 
+    struct ArgumentLoader
+    {
+        ArgumentLoader(InstructionSelection* instructionSelection, int totalNumberOfArguments)
+            : isel(instructionSelection)
+            , stackArgumentCount(0)
+            , currentRegisterIndex(qMin(totalNumberOfArguments - 1, RegisterArgumentCount - 1))
+        {
+        }
+
+        template <typename T>
+        void load(T argument)
+        {
+            if (currentRegisterIndex >= 0) {
+                isel->loadArgument(argument, registerForArgument(currentRegisterIndex));
+                --currentRegisterIndex;
+            } else {
+                isel->push(argument);
+                ++stackArgumentCount;
+            }
+        }
+
+        void load(VoidType)
+        {
+            if (currentRegisterIndex >= 0)
+                --currentRegisterIndex;
+        }
+
+        InstructionSelection *isel;
+        int stackArgumentCount;
+        int currentRegisterIndex;
+    };
+
     template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
     void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
         callFunctionPrologue();
-        loadArgument(arg1, RegisterArgument1);
-        loadArgument(arg2, RegisterArgument2);
-        loadArgument(arg3, RegisterArgument3);
-        loadArgument(arg4, RegisterArgument4);
-        loadArgument(arg5, RegisterArgument5);
+        ArgumentLoader l(this, 5);
+        l.load(arg5);
+        l.load(arg4);
+        l.load(arg3);
+        l.load(arg2);
+        l.load(arg1);
         callAbsolute(functionName, function);
+        if (l.stackArgumentCount)
+            add32(TrustedImm32(l.stackArgumentCount * sizeof(void*)), StackPointerRegister);
         storeArgument(ReturnValueRegister, r);
         callFunctionEpilogue();
     }

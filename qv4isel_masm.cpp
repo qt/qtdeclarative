@@ -103,7 +103,7 @@ void InstructionSelection::operator()(IR::Function *function)
 #if CPU(X86)
     loadPtr(addressForArgument(0), ContextRegister);
 #elif CPU(X86_64) || CPU(ARM)
-    move(RegisterArgument1, ContextRegister);
+    move(registerForArgument(0), ContextRegister);
 #else
     assert(!"TODO");
 #endif
