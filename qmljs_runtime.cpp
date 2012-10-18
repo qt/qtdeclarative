@@ -1109,32 +1109,6 @@ Value __qmljs_get_thisObject(Context *ctx)
     return ctx->engine->globalObject;
 }
 
-Value __qmljs_compare(Value x, Value y, Context *ctx, bool leftFirst)
-{
-    Value px, py;
-
-    if (leftFirst) {
-        px = __qmljs_to_primitive(x, ctx, NUMBER_HINT);
-        py = __qmljs_to_primitive(y, ctx, NUMBER_HINT);
-    } else {
-        px = __qmljs_to_primitive(x, ctx, NUMBER_HINT);
-        py = __qmljs_to_primitive(y, ctx, NUMBER_HINT);
-    }
-
-    if (px.isString() && py.isString()) {
-        bool r = __qmljs_string_compare(ctx, px.stringValue(), py.stringValue());
-        return Value::fromBoolean(r);
-    } else {
-        double nx = __qmljs_to_number(px, ctx);
-        double ny = __qmljs_to_number(py, ctx);
-        if (std::isnan(nx) || std::isnan(ny)) {
-            return Value::undefinedValue();
-        } else {
-            return Value::fromBoolean(nx < ny);
-        }
-    }
-}
-
 uint __qmljs_equal(Value x, Value y, Context *ctx)
 {
     if (x.type() == y.type()) {
