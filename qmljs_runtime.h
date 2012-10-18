@@ -296,14 +296,18 @@ template <> struct ValueBase<4> : public ValueData
         Double_Type = 0
     };
 
-    inline bool is(ValueType type) const {
-        if (type == Double_Type)
-            return (tag & NaN_Mask) != NaN_Mask;
-        return tag == type;
-    }
     inline ValueType type() const {
         return (ValueType)tag;
     }
+
+    inline bool isUndefined() const { return tag == Undefined_Type; }
+    inline bool isNull() const { return tag == Null_Type; }
+    inline bool isBoolean() const { return tag == Boolean_Type; }
+    inline bool isInteger() const { return tag == Integer_Type; }
+    inline bool isDouble() const { return tag == Double_Type; }
+    inline bool isNumber() const { return tag == Integer_Type || tag == Double_Type; }
+    inline bool isString() const { return tag == String_Type; }
+    inline bool isObject() const { return tag == Object_Type; }
 
     bool booleanValue() const {
         return int_32;
@@ -359,17 +363,18 @@ template <> struct ValueBase<8> : public ValueData
         Double_Type = 0
     };
 
-    inline bool is(ValueType type) const {
-        if (type == Double_Type)
-            return (tag & NaN_Mask) != NaN_Mask;
-        return (tag & Type_Mask) == type;
-    }
-    inline bool isNot(ValueType type) {
-        return !is(type);
-    }
     inline ValueType type() const {
         return (ValueType)(tag & Type_Mask);
     }
+
+    inline bool isUndefined() const { return tag == Undefined_Type; }
+    inline bool isNull() const { return tag == Null_Type; }
+    inline bool isBoolean() const { return tag == Boolean_Type; }
+    inline bool isInteger() const { return tag == Integer_Type; }
+    inline bool isDouble() const { return (tag & NaN_Mask) != NaN_Mask; }
+    inline bool isNumber() const { return tag == Integer_Type || (tag & NaN_Mask) != NaN_Mask; }
+    inline bool isString() const { return (tag & Type_Mask) == String_Type; }
+    inline bool isObject() const { return (tag & Type_Mask) == Object_Type; }
 
     Bool booleanValue() const {
         return int_32;
@@ -430,15 +435,6 @@ struct Value : public ValueBase<sizeof(void *)>
     inline String *toString(Context *ctx) const;
     inline Value toObject(Context *ctx) const;
 
-    inline bool isUndefined() const { return is(Value::Undefined_Type); }
-    inline bool isNull() const { return is(Value::Null_Type); }
-    inline bool isString() const { return is(Value::String_Type); }
-    inline bool isBoolean() const { return type() == Value::Boolean_Type; }
-    inline bool isNumber() const { return is(Value::Integer_Type) || is(Value::Double_Type); }
-    inline bool isDouble() const { return is(Value::Double_Type); }
-    inline bool isInteger() const { return type() == Value::Integer_Type; }
-    inline bool isObject() const { return type() == Value::Object_Type; }
-
     inline bool isPrimitive() const { return type() != Value::Object_Type; }
     bool isFunctionObject() const;
     bool isBooleanObject() const;
@@ -496,7 +492,7 @@ inline double Value::toNumber(Context *ctx) const
 inline String *Value::toString(Context *ctx) const
 {
     Value v = __qmljs_to_string(*this, ctx);
-    assert(v.is(Value::String_Type));
+    assert(v.isString());
     return v.stringValue();
 }
 

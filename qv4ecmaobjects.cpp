@@ -711,7 +711,7 @@ void StringCtor::construct(Context *ctx)
 void StringCtor::call(Context *ctx)
 {
     const Value arg = ctx->argument(0);
-    if (arg.is(Value::Undefined_Type))
+    if (arg.isUndefined())
         ctx->result = Value::fromString(ctx->engine->newString(QString()));
     else
         ctx->result = __qmljs_to_string(arg, ctx);
@@ -809,7 +809,7 @@ void StringPrototype::method_concat(Context *ctx)
 
     for (unsigned i = 0; i < ctx->argumentCount; ++i) {
         Value v = __qmljs_to_string(ctx->arguments[i], ctx);
-        assert(v.is(Value::String_Type));
+        assert(v.isString());
         value += v.stringValue()->toQString();
     }
 

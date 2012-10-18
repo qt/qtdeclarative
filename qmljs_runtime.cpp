@@ -372,7 +372,7 @@ void Context::initConstructorContext(ExecutionEngine *e, Value *object, Function
 
 void Context::leaveConstructorContext(FunctionObject *f)
 {
-    assert(thisObject.is(Value::Object_Type));
+    assert(thisObject.isObject());
     result = thisObject;
 
     Value proto = f->getProperty(this, engine->id_prototype);
