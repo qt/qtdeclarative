@@ -327,7 +327,7 @@ void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionO
     result = Value::undefinedValue();
 
     if (f->needsActivation)
-        activation = __qmljs_init_object(engine->newActivationObject(this));
+        activation = Value::fromObject(engine->newActivationObject(this));
     else
         activation = Value::nullValue();
 
@@ -387,12 +387,12 @@ extern "C" {
 
 Value __qmljs_init_closure(IR::Function *clos, Context *ctx)
 {
-    return __qmljs_init_object(ctx->engine->newScriptFunction(ctx, clos));
+    return Value::fromObject(ctx->engine->newScriptFunction(ctx, clos));
 }
 
 Value __qmljs_init_native_function(void (*code)(Context *), Context *ctx)
 {
-    return __qmljs_init_object(ctx->engine->newNativeFunction(ctx, code));
+    return Value::fromObject(ctx->engine->newNativeFunction(ctx, code));
 }
 
 Value __qmljs_string_literal_undefined(Context *ctx)
@@ -952,25 +952,25 @@ Value __qmljs_throw_type_error(Context *ctx)
 
 Value __qmljs_new_object(Context *ctx)
 {
-    return __qmljs_init_object(ctx->engine->newObject());
+    return Value::fromObject(ctx->engine->newObject());
 }
 
 Value __qmljs_new_boolean_object(Context *ctx, bool boolean)
 {
     Value value = Value::fromBoolean(boolean);
-    return __qmljs_init_object(ctx->engine->newBooleanObject(value));
+    return Value::fromObject(ctx->engine->newBooleanObject(value));
 }
 
 Value __qmljs_new_number_object(Context *ctx, double number)
 {
     Value value = Value::fromDouble(number);
-    return __qmljs_init_object(ctx->engine->newNumberObject(value));
+    return Value::fromObject(ctx->engine->newNumberObject(value));
 }
 
 Value __qmljs_new_string_object(Context *ctx, String *string)
 {
     Value value = Value::fromString(string);
-    return __qmljs_init_object(ctx->engine->newStringObject(value));
+    return Value::fromObject(ctx->engine->newStringObject(value));
 }
 
 void __qmljs_set_property(Context *ctx, Value object, String *name, Value value)

@@ -104,7 +104,6 @@ void __qmljs_builtin_throw(Value val, Context *context);
 Value __qmljs_builtin_rethrow(Context *context);
 
 // constructors
-Value __qmljs_init_object(Object *object);
 Value __qmljs_init_closure(IR::Function *clos, Context *ctx);
 Value __qmljs_init_native_function(void (*code)(Context *), Context *ctx);
 
@@ -687,13 +686,6 @@ struct Context {
 
 
 extern "C" {
-
-// constructors
-
-inline Value __qmljs_init_object(Object *object)
-{
-    return Value::fromObject(object);
-}
 
 // type conversion and testing
 inline Value __qmljs_to_primitive(Value value, Context *ctx, int typeHint)

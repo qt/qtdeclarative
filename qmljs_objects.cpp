@@ -190,7 +190,7 @@ void FunctionObject::call(Context *ctx)
 
 void FunctionObject::construct(Context *ctx)
 {
-    ctx->thisObject = __qmljs_init_object(ctx->engine->newObject());
+    ctx->thisObject = Value::fromObject(ctx->engine->newObject());
     call(ctx);
 }
 
@@ -235,7 +235,7 @@ void ScriptFunction::construct(VM::Context *ctx)
     Value proto = getProperty(ctx, ctx->engine->id_prototype);
     if (proto.isObject())
         obj->prototype = proto.objectValue();
-    ctx->thisObject = __qmljs_init_object(obj);
+    ctx->thisObject = Value::fromObject(obj);
     function->code(ctx, function->codeData);
 }
 
@@ -347,8 +347,8 @@ ExecutionEngine::ExecutionEngine()
     // set up the global object
     //
     VM::Object *glo = newObject(/*rootContext*/);
-    globalObject = __qmljs_init_object(glo);
-    rootContext->activation = __qmljs_init_object(glo);
+    globalObject = Value::fromObject(glo);
+    rootContext->activation = Value::fromObject(glo);
 
     glo->setProperty(rootContext, identifier(QStringLiteral("Object")), objectCtor);
     glo->setProperty(rootContext, identifier(QStringLiteral("String")), stringCtor);
