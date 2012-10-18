@@ -374,8 +374,9 @@ void InstructionSelection::visitMove(IR::Move *s)
                 copyValue(t, t2);
                 return;
             } else if (IR::String *str = s->source->asString()) {
-                // ### inline
-                generateFunctionCall(t, __qmljs_init_string, _engine->newString(*str->value));
+                Address dest = loadTempAddress(Gpr0, t);
+                Value v = Value::fromString(_engine->newString(*str->value));
+                storeValue(v, dest);
                 return;
             } else if (IR::Closure *clos = s->source->asClosure()) {
                 generateFunctionCall(t, __qmljs_init_closure, TrustedImmPtr(clos->value), ContextRegister);
