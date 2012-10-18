@@ -147,9 +147,7 @@ void InstructionSelection::operator()(IR::Function *function)
 #endif
 
     QByteArray name = _function->name->toUtf8();
-    if (name.startsWith('%'))
-        name.prepend('%');
-    _function->codeRef = linkBuffer.finalizeCodeWithDisassembly(name.data());
+    _function->codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
 
     WTF::setDataFile(stderr);
 #if OS(LINUX)
