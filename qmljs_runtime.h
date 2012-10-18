@@ -162,7 +162,6 @@ Value __qmljs_to_object(Value value, Context *ctx);
 Bool __qmljs_is_callable(Value value, Context *ctx);
 Value __qmljs_default_value(Value value, Context *ctx, int typeHint);
 
-Value __qmljs_compare(Value left, Value right, Context *ctx, bool leftFlag);
 Bool __qmljs_equal(Value x, Value y, Context *ctx);
 Bool __qmljs_strict_equal(Value x, Value y, Context *ctx);
 
@@ -334,7 +333,7 @@ template <> struct ValueBase<4> : public ValueData
             return int_32;
         return dbl;
     }
-    double integerValue() const {
+    int integerValue() const {
         return int_32;
     }
 
@@ -400,7 +399,7 @@ template <> struct ValueBase<8> : public ValueData
             return int_32;
         return dbl;
     }
-    double integerValue() const {
+    int integerValue() const {
         return int_32;
     }
 
@@ -939,8 +938,7 @@ inline Value __qmljs_bit_or(Value left, Value right, Context *ctx)
 {
     int lval = __qmljs_to_int32(left, ctx);
     int rval = __qmljs_to_int32(right, ctx);
-    // ### changing this to fromInt32() breaks crypto.js
-    return Value::fromDouble(lval | rval);
+    return Value::fromInt32(lval | rval);
 }
 
 inline Value __qmljs_bit_xor(Value left, Value right, Context *ctx)
@@ -1054,6 +1052,9 @@ inline Value __qmljs_div(Value left, Value right, Context *ctx)
 
 inline Value __qmljs_mod(Value left, Value right, Context *ctx)
 {
+    if (left.isInteger() && right.isInteger())
+        return Value::fromInt32(left.integerValue() % right.integerValue());
+
     double lval = __qmljs_to_number(left, ctx);
     double rval = __qmljs_to_number(right, ctx);
     return Value::fromDouble(fmod(lval, rval));

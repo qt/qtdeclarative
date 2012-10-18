@@ -51,45 +51,48 @@
 static inline Value add_int32(int a, int b)
 {
     quint8 overflow = 0;
+    int aa = a;
 
     asm ("addl %2, %1\n"
          "seto %0"
-    : "=q" (overflow), "=r" (a)
-         : "r" (b), "1" (a)
+    : "=q" (overflow), "=r" (aa)
+         : "r" (b), "1" (aa)
          :
     );
     if (!overflow)
-        return Value::fromInt32(a);
+        return Value::fromInt32(aa);
     return Value::fromDouble((double)a + (double)b);
 }
 
 static inline Value sub_int32(int a, int b)
 {
     quint8 overflow = 0;
+    int aa = a;
 
     asm ("subl %2, %1\n"
          "seto %0"
-    : "=q" (overflow), "=r" (a)
-         : "r" (b), "1" (a)
+    : "=q" (overflow), "=r" (aa)
+         : "r" (b), "1" (aa)
          :
     );
     if (!overflow)
-        return Value::fromInt32(a);
+        return Value::fromInt32(aa);
     return Value::fromDouble((double)a - (double)b);
 }
 
 static inline Value mul_int32(int a, int b)
 {
     quint8 overflow = 0;
+    int aa = a;
 
-    asm ("imul %2, %1\n"
-         "seto %0"
-    : "=q" (overflow), "=r" (a)
-         : "r" (b), "1" (a)
-         :
+    asm ("imul %2\n"
+         "setc %0"
+         : "=q" (overflow), "=a" (aa)
+         : "r" (b), "1" (aa)
+         : "edx"
     );
     if (!overflow)
-        return Value::fromInt32(a);
+        return Value::fromInt32(aa);
     return Value::fromDouble((double)a * (double)b);
 }
 #endif
