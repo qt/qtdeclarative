@@ -38,7 +38,8 @@ SOURCES += \
     qv4isel_llvm.cpp
 
 HEADERS += \
-    qv4isel_llvm_p.h
+    qv4isel_llvm_p.h \
+    qv4_llvm_p.h
 
 INCLUDEPATH += \
     $$system($$LLVM_CONFIG --includedir)

@@ -40,22 +40,7 @@
 ****************************************************************************/
 
 #ifndef QMLJS_NO_LLVM
-// These includes have to come first, because WTF/Platform.h defines some macros
-// with very unfriendly names that collide with class fields in LLVM.
-#  include <llvm/PassManager.h>
-#  include <llvm/Analysis/Passes.h>
-#  include <llvm/Transforms/Scalar.h>
-#  include <llvm/Transforms/IPO.h>
-#  include <llvm/Assembly/PrintModulePass.h>
-#  include <llvm/Support/raw_ostream.h>
-#  include <llvm/Support/FormattedStream.h>
-#  include <llvm/Support/Host.h>
-#  include <llvm/Support/TargetRegistry.h>
-#  include <llvm/Support/TargetSelect.h>
-#  include <llvm/Target/TargetMachine.h>
-#  include <llvm/Target/TargetData.h>
-
-#  include "qv4isel_llvm_p.h"
+#  include "qv4_llvm_p.h"
 #endif
 
 #include "qmljs_objects.h"
@@ -138,50 +123,16 @@ void compile(const QString &fileName, const QString &source)
                   << ": error: " << qPrintable(m.message) << std::endl;
     }
 
-    if (parsed) {
-        using namespace AST;
-        Program *program = AST::cast<Program *>(parser.rootNode());
+    if (!parsed)
+        return;
 
-        Codegen cg;
-        /*IR::Function *globalCode =*/ cg(program, &module);
+    using namespace AST;
+    Program *program = AST::cast<Program *>(parser.rootNode());
 
-        LLVMInstructionSelection llvmIsel(llvm::getGlobalContext());
-        if (llvm::Module *llvmModule = llvmIsel.getLLVMModule(&module)) {
-            llvm::PassManager PM;
+    Codegen cg;
+    /*IR::Function *globalCode =*/ cg(program, &module);
 
-            const std::string triple = llvm::sys::getDefaultTargetTriple();
-
-            LLVMInitializeX86TargetInfo();
-            LLVMInitializeX86Target();
-            LLVMInitializeX86AsmPrinter();
-            LLVMInitializeX86AsmParser();
-            LLVMInitializeX86Disassembler();
-            LLVMInitializeX86TargetMC();
-
-            std::string err;
-            const llvm::Target *target = llvm::TargetRegistry::lookupTarget(triple, err);
-            if (! err.empty()) {
-                std::cerr << err << ", triple: " << triple << std::endl;
-                assert(!"cannot create target for the host triple");
-            }
-
-
-            std::string cpu;
-            std::string features;
-            llvm::TargetOptions options;
-            llvm::TargetMachine *targetMachine = target->createTargetMachine(triple, cpu, features, options, llvm::Reloc::PIC_);
-            assert(targetMachine);
-
-            llvm::formatted_raw_ostream out(llvm::outs());
-            PM.add(llvm::createScalarReplAggregatesPass());
-            PM.add(llvm::createInstructionCombiningPass());
-            PM.add(llvm::createGlobalOptimizerPass());
-            PM.add(llvm::createFunctionInliningPass(25));
-            targetMachine->addPassesToEmitFile(PM, out, llvm::TargetMachine::CGFT_AssemblyFile);
-            PM.run(*llvmModule);
-            delete llvmModule;
-        }
-    }
+    compileWithLLVM(&module, fileName);
 }
 
 int compileFiles(const QStringList &files)

@@ -41,9 +41,19 @@
 #ifndef QV4ISEL_LLVM_P_H
 #define QV4ISEL_LLVM_P_H
 
-#include "qv4ir_p.h"
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wunused-parameter"
+#endif // __clang__
+
 #include <llvm/Module.h>
 #include <llvm/IRBuilder.h>
+
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif // __clang__
+
+#include "qv4ir_p.h"
 
 namespace QQmlJS {
 
@@ -55,7 +65,7 @@ class LLVMInstructionSelection:
 public:
     LLVMInstructionSelection(llvm::LLVMContext &context);
 
-    llvm::Module *getLLVMModule(IR::Module *module);
+    llvm::Module *getLLVMModule(IR::Module *module, const QString &moduleName);
     llvm::Function *getLLVMFunction(IR::Function *function);
     llvm::Function *compileLLVMFunction(IR::Function *function);
     llvm::BasicBlock *getLLVMBasicBlock(IR::BasicBlock *block);

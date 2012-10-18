@@ -39,16 +39,117 @@
 **
 ****************************************************************************/
 
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wunused-parameter"
+#endif // __clang__
+
+#include <llvm/Analysis/Passes.h>
+#include <llvm/Assembly/PrintModulePass.h>
+#include <llvm/Bitcode/ReaderWriter.h>
+#include <llvm/PassManager.h>
+#include <llvm/Support/FormattedStream.h>
+#include <llvm/Support/Host.h>
+#include <llvm/Support/MemoryBuffer.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/system_error.h>
+#include <llvm/Support/TargetRegistry.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/Target/TargetData.h>
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/IPO.h>
+#include <llvm/Linker.h>
+
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif // __clang__
+
+#include <QtCore/QFileInfo>
+#include <QtCore/QLibrary>
+#include <QtCore/QStringList>
+#include <QtCore/QTextStream>
+#include <cstdio>
+#include <iostream>
+
+// These includes have to come last, because WTF/Platform.h defines some macros
+// with very unfriendly names that collide with class fields in LLVM.
 #include "qv4isel_llvm_p.h"
 #include "qv4ir_p.h"
 
-#include <QtCore/QTextStream>
+namespace QQmlJS {
 
-#include <llvm/Support/system_error.h>
-#include <llvm/Support/MemoryBuffer.h>
-#include <llvm/Bitcode/ReaderWriter.h>
-#include <llvm/Linker.h>
-#include <cstdio>
+void compileWithLLVM(IR::Module *module, const QString &fileName)
+{
+    Q_ASSERT(module);
+
+    const QString moduleName = QFileInfo(fileName).fileName();
+
+    LLVMInstructionSelection llvmIsel(llvm::getGlobalContext());
+    llvm::Module *llvmModule = llvmIsel.getLLVMModule(module, moduleName);
+    if (!llvmModule)
+        return;
+
+    // TODO: if output type is .ll, print the module to file
+
+    llvm::PassManager PM;
+
+    const std::string triple = llvm::sys::getDefaultTargetTriple();
+
+    LLVMInitializeX86TargetInfo();
+    LLVMInitializeX86Target();
+    LLVMInitializeX86AsmPrinter();
+    LLVMInitializeX86AsmParser();
+    LLVMInitializeX86Disassembler();
+    LLVMInitializeX86TargetMC();
+
+    std::string err;
+    const llvm::Target *target = llvm::TargetRegistry::lookupTarget(triple, err);
+    if (! err.empty()) {
+        std::cerr << err << ", triple: " << triple << std::endl;
+        assert(!"cannot create target for the host triple");
+    }
+
+    std::string cpu;
+    std::string features;
+    llvm::TargetOptions options;
+    llvm::TargetMachine *targetMachine = target->createTargetMachine(triple, cpu, features, options, llvm::Reloc::PIC_);
+    assert(targetMachine);
+
+    llvm::TargetMachine::CodeGenFileType ft;
+    QString ofName;
+
+    ft = llvm::TargetMachine::CGFT_ObjectFile;
+    ofName = fileName + QLatin1String(".o");
+
+    // TODO:
+//    ft = llvm::TargetMachine::CGFT_AssemblyFile;
+//    ofName = fileName + QLatin1String(".s");
+
+    llvm::raw_fd_ostream dest(ofName.toUtf8().constData(), err, llvm::raw_fd_ostream::F_Binary);
+    llvm::formatted_raw_ostream destf(dest);
+    if (!err.empty()) {
+        std::cerr << err << std::endl;
+        delete llvmModule;
+    }
+
+    PM.add(llvm::createScalarReplAggregatesPass());
+    PM.add(llvm::createInstructionCombiningPass());
+    PM.add(llvm::createGlobalOptimizerPass());
+    PM.add(llvm::createFunctionInliningPass(25));
+    if (targetMachine->addPassesToEmitFile(PM, destf, ft)) {
+        std::cerr << err << " (probably no DataLayout in TargetMachine)" << std::endl;
+    } else {
+        PM.run(*llvmModule);
+
+        destf.flush();
+        dest.flush();
+    }
+
+    delete llvmModule;
+}
+
+} // QQmlJS
 
 using namespace QQmlJS;
 
@@ -72,9 +173,10 @@ LLVMInstructionSelection::LLVMInstructionSelection(llvm::LLVMContext &context)
 {
 }
 
-llvm::Module *LLVMInstructionSelection::getLLVMModule(IR::Module *module)
+llvm::Module *LLVMInstructionSelection::getLLVMModule(IR::Module *module, const QString &moduleName)
 {
-    llvm::Module *llvmModule = new llvm::Module("a.out", getContext());
+    llvm::StringRef moduleId(moduleName.toUtf8().constData());
+    llvm::Module *llvmModule = new llvm::Module(moduleId, getContext());
     qSwap(_llvmModule, llvmModule);
 
     _numberTy = getDoubleTy();
