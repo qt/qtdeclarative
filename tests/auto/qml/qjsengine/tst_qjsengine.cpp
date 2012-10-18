@@ -1955,8 +1955,6 @@ void tst_QJSEngine::stringObjects()
 {
     // See ECMA-262 Section 15.5, "String Objects".
 
-    QSKIP("This test is temporarily skipped until fix is not landed: https://codereview.qt-project.org/#change,37284");
-
     QJSEngine eng;
     QString str("ciao");
     // in C++
@@ -1967,7 +1965,6 @@ void tst_QJSEngine::stringObjects()
             QString pname = QString::number(i);
             QVERIFY(obj.property(pname).isString());
             QCOMPARE(obj.property(pname).toString(), QString(str.at(i)));
-            QEXPECT_FAIL("", "FIXME: This is V8 issue 862. ECMA script standard 15.5.5.2 compliance.", Continue);
             QVERIFY(!obj.deleteProperty(pname));
             obj.setProperty(pname, 123);
             QVERIFY(obj.property(pname).isString());
@@ -2006,7 +2003,6 @@ void tst_QJSEngine::stringObjects()
 
         QJSValue ret5 = eng.evaluate("delete s[0]");
         QVERIFY(ret5.isBool());
-        QEXPECT_FAIL("", "FIXME: This is V8 bug, please report it! ECMA script standard 15.5.5.2", Abort);
         QVERIFY(!ret5.toBool());
 
         QJSValue ret6 = eng.evaluate("delete s[-1]");
