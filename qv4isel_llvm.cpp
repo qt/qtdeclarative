@@ -409,7 +409,7 @@ void LLVMInstructionSelection::visitName(IR::Name *e)
                     _llvmFunction->arg_begin(), result);
     } else {
         llvm::Value *name = getIdentifier(*e->id);
-        CreateCall3(_llvmModule->getFunction("__qmljs_get_activation_property"),
+        CreateCall3(_llvmModule->getFunction("__qmljs_llvm_get_activation_property"),
                     _llvmFunction->arg_begin(), result, name);
     }
     _llvmValue = CreateLoad(result);
@@ -427,7 +427,7 @@ void LLVMInstructionSelection::visitClosure(IR::Closure *e)
 {
     llvm::Value *tmp = newLLVMTemp(_valueTy);
     llvm::Value *clos = getLLVMFunction(e->value);
-    CreateCall3(_llvmModule->getFunction("__qmljs_init_native_function"),
+    CreateCall3(_llvmModule->getFunction("__qmljs_llvm_init_native_function"),
                 _llvmFunction->arg_begin(), tmp, clos);
     _llvmValue = CreateLoad(tmp);
 }
@@ -719,7 +719,7 @@ void LLVMInstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
         int argc = 0;
         llvm::Value *args = genArguments(e->args, argc);
 
-        CreateCall5(_llvmModule->getFunction("__qmljs_call_activation_property"),
+        CreateCall5(_llvmModule->getFunction("__qmljs_llvm_call_activation_property"),
                     _llvmFunction->arg_begin(), result, name, args, getInt32(argc));
 
         _llvmValue = CreateLoad(result);
