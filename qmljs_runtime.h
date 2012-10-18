@@ -862,7 +862,7 @@ inline uint __qmljs_check_object_coercible(Context *ctx, Value *result, Value *v
 }
 */
 
-inline Bool __qmljs_is_callable(Value value, Context *ctx)
+inline Bool __qmljs_is_callable(Value value, Context * /*ctx*/)
 {
     if (value.isObject())
         return __qmljs_is_function(value);

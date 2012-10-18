@@ -1282,7 +1282,7 @@ bool Codegen::visit(VoidExpression *ast)
     return false;
 }
 
-bool Codegen::visit(FunctionDeclaration *ast)
+bool Codegen::visit(FunctionDeclaration * /*ast*/)
 {
     _expr.accept(nx);
     return false;

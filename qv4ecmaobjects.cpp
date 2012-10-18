@@ -1606,7 +1606,7 @@ void ArrayPrototype::method_forEach(Context *ctx)
                 args[0] = v;
                 args[1] = Value::fromDouble(k);
                 args[2] = ctx->thisObject;
-                Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
+                /*Value r =*/ __qmljs_call_value(ctx, thisArg, callback, args, 3);
             }
         }
     } else {
@@ -1777,7 +1777,7 @@ void FunctionPrototype::method_toString(Context *ctx)
 
 void FunctionPrototype::method_apply(Context *ctx)
 {
-    if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
+    if (/*FunctionObject *fun =*/ ctx->thisObject.asFunctionObject()) {
 
         Value thisObject = ctx->argument(0).toObject(ctx);
         if (thisObject.isNull() || thisObject.isUndefined())

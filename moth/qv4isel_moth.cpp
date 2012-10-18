@@ -4,7 +4,7 @@
 using namespace QQmlJS;
 using namespace QQmlJS::Moth;
 
-InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module,
+InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module * /*module*/,
                                            uchar *code)
 : _engine(engine), _code(code), _ccode(code)
 {
@@ -64,6 +64,7 @@ void InstructionSelection::visitExp(IR::Exp *s)
                 Q_UNIMPLEMENTED();
             }
         } else if (IR::Member *m = c->base->asMember()) {
+            Q_UNUSED(m);
             Q_UNIMPLEMENTED();
         } else if (IR::Temp *t = c->base->asTemp()) {
             Instruction::LoadTemp load;
@@ -202,10 +203,12 @@ ALUFunction aluOpFunction(IR::AluOp op)
 void InstructionSelection::simpleMove(IR::Move *s)
 {
     if (IR::Name *n = s->target->asName()) {
+        Q_UNUSED(n);
         qWarning("NAME");
     } else if (IR::Temp *t = s->target->asTemp()) {
 
         if (IR::Name *n = s->source->asName()) {
+            Q_UNUSED(n);
             qWarning("  NAME");
         } else if (IR::Const *c = s->source->asConst()) {
             switch (c->type) {
@@ -241,12 +244,16 @@ void InstructionSelection::simpleMove(IR::Move *s)
             load.value = clos->value;
             addInstruction(load);
         } else if (IR::New *ctor = s->source->asNew()) {
+            Q_UNUSED(ctor);
             qWarning("  NEW");
         } else if (IR::Member *m = s->source->asMember()) {
+            Q_UNUSED(m);
             qWarning("  MEMBER");
         } else if (IR::Subscript *ss = s->source->asSubscript()) {
+            Q_UNUSED(ss);
             qWarning("  SUBSCRIPT");
         } else if (IR::Unop *u = s->source->asUnop()) {
+            Q_UNUSED(u);
             qWarning("  UNOP");
         } else if (IR::Binop *b = s->source->asBinop()) {
             Instruction::Binop binop;
@@ -255,6 +262,7 @@ void InstructionSelection::simpleMove(IR::Move *s)
             binop.rhsTempIndex = b->right->index;
             addInstruction(binop);
         } else if (IR::Call *c = s->source->asCall()) {
+            Q_UNUSED(c);
             qWarning("  CALL");
         }
 
@@ -263,8 +271,10 @@ void InstructionSelection::simpleMove(IR::Move *s)
         addInstruction(st);
 
     } else if (IR::Member *m = s->target->asMember()) {
+        Q_UNUSED(m);
         qWarning("MEMBER");
     } else if (IR::Subscript *ss = s->target->asSubscript()) {
+        Q_UNUSED(ss);
         qWarning("SUBSCRIPT");
     } else {
         Q_UNREACHABLE();

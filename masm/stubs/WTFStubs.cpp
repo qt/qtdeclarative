@@ -101,7 +101,7 @@ void dataLogString(const char* str)
 
 extern "C" {
 
-void WTFReportAssertionFailure(const char* file, int line, const char* function, const char* assertion)
+void WTFReportAssertionFailure(const char* /*file*/, int /*line*/, const char* /*function*/, const char* /*assertion*/)
 {
 }
 
