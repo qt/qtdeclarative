@@ -206,21 +206,6 @@ Value __qmljs_sne(Value left, Value right, Context *ctx);
 
 Value __qmljs_add_helper(Value left, Value right, Context *ctx);
 
-/*
- unused and probably don't make sense with the new calling convention
-void __qmljs_inplace_bit_and(Context *ctx, Value *result, Value *value);
-void __qmljs_inplace_bit_or(Context *ctx, Value *result, Value *value);
-void __qmljs_inplace_bit_xor(Context *ctx, Value *result, Value *value);
-void __qmljs_inplace_add(Context *ctx, Value *result, Value *value);
-void __qmljs_inplace_sub(Context *ctx, Value *result, Value *value);
-void __qmljs_inplace_mul(Context *ctx, Value *result, Value *value);
-void __qmljs_inplace_div(Context *ctx, Value *result, Value *value);
-void __qmljs_inplace_mod(Context *ctx, Value *result, Value *value);
-void __qmljs_inplace_shl(Context *ctx, Value *result, Value *value);
-void __qmljs_inplace_shr(Context *ctx, Value *result, Value *value);
-void __qmljs_inplace_ushr(Context *ctx, Value *result, Value *value);
-*/
-
 void __qmljs_inplace_bit_and_name(Value value, String *name, Context *ctx);
 void __qmljs_inplace_bit_or_name(Value value, String *name, Context *ctx);
 void __qmljs_inplace_bit_xor_name(Value value, String *name, Context *ctx);
@@ -954,63 +939,6 @@ inline Value __qmljs_bit_and(Value left, Value right, Context *ctx)
     int rval = __qmljs_to_int32(right, ctx);
     return Value::fromInt32(lval & rval);
 }
-
-/*
-inline void __qmljs_inplace_bit_and(Context *ctx, Value *result, Value *value)
-{
-    *result = __qmljs_bit_and(*result, *value, ctx);
-}
-
-inline void __qmljs_inplace_bit_or(Context *ctx, Value *result, Value *value)
-{
-    *result = __qmljs_bit_or(*result, *value, ctx);
-}
-
-inline void __qmljs_inplace_bit_xor(Context *ctx, Value *result, Value *value)
-{
-    *result = __qmljs_bit_xor(*result, *value, ctx);
-}
-
-inline void __qmljs_inplace_add(Context *ctx, Value *result, Value *value)
-{
-    *result = __qmljs_add(*result, *value, ctx);
-}
-
-inline void __qmljs_inplace_sub(Context *ctx, Value *result, Value *value)
-{
-    *result = __qmljs_sub(*result, *value, ctx);
-}
-
-inline void __qmljs_inplace_mul(Context *ctx, Value *result, Value *value)
-{
-    *result = __qmljs_mul(*result, *value, ctx);
-}
-
-inline void __qmljs_inplace_div(Context *ctx, Value *result, Value *value)
-{
-    *result = __qmljs_div(*result, *value, ctx);
-}
-
-inline void __qmljs_inplace_mod(Context *ctx, Value *result, Value *value)
-{
-    *result = __qmljs_mod(*result, *value, ctx);
-}
-
-inline void __qmljs_inplace_shl(Context *ctx, Value *result, Value *value)
-{
-    *result = __qmljs_shl(*result, *value, ctx);
-}
-
-inline void __qmljs_inplace_shr(Context *ctx, Value *result, Value *value)
-{
-    *result = __qmljs_shr(*result, *value, ctx);
-}
-
-inline void __qmljs_inplace_ushr(Context *ctx, Value *result, Value *value)
-{
-    *result = __qmljs_ushr(*result, *value, ctx);
-}
-*/
 
 inline Value __qmljs_add(Value left, Value right, Context *ctx)
 {
