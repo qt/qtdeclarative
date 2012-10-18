@@ -534,14 +534,12 @@ private:
 
     void storeValue(VM::Value value, Address destination)
     {
-#if CPU(X86_64)
+#ifdef VALUE_FITS_IN_REGISTER
         storePtr(TrustedImmPtr((void *)value.val), destination);
-#elif CPU(X86)
+#else
         store32(TrustedImm32(value.int_32), destination);
         destination.offset += 4;
         store32(TrustedImm32(value.tag), destination);
-#else
-#error "Missing implementation"
 #endif
     }
 
