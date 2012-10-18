@@ -636,11 +636,11 @@ void InstructionSelection::visitCJump(IR::CJump *s)
     if (IR::Temp *t = s->cond->asTemp()) {
         Address temp = loadTempAddress(Gpr0, t);
         Address tag = temp;
-        tag.offset += offsetof(VM::ValueData, tag);
+        tag.offset += offsetof(VM::Value, tag);
         Jump booleanConversion = branch32(NotEqual, tag, TrustedImm32(VM::Value::Boolean_Type));
 
         Address data = temp;
-        data.offset += offsetof(VM::ValueData, int_32);
+        data.offset += offsetof(VM::Value, int_32);
         load32(data, Gpr0);
         Jump testBoolean = jump();
 

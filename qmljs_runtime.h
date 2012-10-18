@@ -47,6 +47,8 @@
 #  include <QtCore/QDebug>
 #endif
 
+#include <wtf/Platform.h>
+
 #include <cmath>
 #include <cassert>
 
@@ -256,7 +258,9 @@ Bool __qmljs_cmp_in(Value left, Value right, Context *ctx);
 
 } // extern "C"
 
-struct ValueData {
+
+struct Value
+{
     union {
         quint64 val;
         double dbl;
@@ -267,86 +271,18 @@ struct ValueData {
             union {
                 uint uint_32;
                 int int_32;
+#if CPU(X86_64)
+#else
+                Object *o;
+                String *s;
+#endif
             };
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
             uint tag;
 #endif
         };
     };
-};
 
-struct Value;
-template <int> struct ValueBase;
-template <> struct ValueBase<4> : public ValueData
-{
-    // we have all 4 bytes on 32 bit to specify the type
-    enum Masks {
-        NaN_Mask = 0xfff80000,
-        Type_Mask = 0xffffffff
-    };
-
-    enum ValueType {
-        Undefined_Type = NaN_Mask | 0x7ffff, // all 1's
-        Null_Type = NaN_Mask | 0x0,
-        Boolean_Type = NaN_Mask | 0x1,
-        Integer_Type = NaN_Mask | 0x2,
-        Object_Type = NaN_Mask | 0x2d59b, // give it randomness to avoid accidental collisions (for gc)
-        String_Type = NaN_Mask | 0x2d5ba,
-        Double_Type = 0
-    };
-
-    inline ValueType type() const {
-        return (ValueType)tag;
-    }
-
-    inline bool isUndefined() const { return tag == Undefined_Type; }
-    inline bool isNull() const { return tag == Null_Type; }
-    inline bool isBoolean() const { return tag == Boolean_Type; }
-    inline bool isInteger() const { return tag == Integer_Type; }
-    inline bool isDouble() const { return tag == Double_Type; }
-    inline bool isNumber() const { return tag == Integer_Type || tag == Double_Type; }
-    inline bool isString() const { return tag == String_Type; }
-    inline bool isObject() const { return tag == Object_Type; }
-
-    bool booleanValue() const {
-        return int_32;
-    }
-    double doubleValue() const {
-        return dbl;
-    }
-    void setDouble(double d) {
-        dbl = d;
-    }
-    double asDouble() const {
-        if (tag == Integer_Type)
-            return int_32;
-        return dbl;
-    }
-    int integerValue() const {
-        return int_32;
-    }
-
-    String *stringValue() const {
-        return (String *)(quintptr) uint_32;
-    }
-    Object *objectValue() const {
-        return (Object *)(quintptr) uint_32;
-    }
-    quint64 rawValue() const {
-        return val;
-    }
-
-    static inline Value undefinedValue();
-    static inline Value nullValue();
-    static inline Value fromBoolean(Bool b);
-    static inline Value fromDouble(double d);
-    static inline Value fromInt32(int i);
-    static inline Value fromString(String *s);
-    static inline Value fromObject(Object *o);
-};
-
-template <> struct ValueBase<8> : public ValueData
-{
     enum Masks {
         NotDouble_Mask = 0xfff80000,
         Type_Mask = 0xffff0000,
@@ -386,8 +322,13 @@ template <> struct ValueBase<8> : public ValueData
     inline bool isInteger() const { return tag == _Integer_Type; }
     inline bool isDouble() const { return (tag & NotDouble_Mask) != NotDouble_Mask; }
     inline bool isNumber() const { return tag == _Integer_Type || (tag & NotDouble_Mask) != NotDouble_Mask; }
+#if CPU(X86_64)
     inline bool isString() const { return (tag & Type_Mask) == String_Type; }
     inline bool isObject() const { return (tag & Type_Mask) == Object_Type; }
+#else
+    inline bool isString() const { return tag == String_Type; }
+    inline bool isObject() const { return tag == Object_Type; }
+#endif
     inline bool isConvertibleToInt() const { return (tag & ConvertibleToInt) == ConvertibleToInt; }
 
     Bool booleanValue() const {
@@ -408,12 +349,22 @@ template <> struct ValueBase<8> : public ValueData
         return int_32;
     }
 
+#if CPU(X86_64)
     String *stringValue() const {
         return (String *)(val & ~(quint64(Type_Mask) << Tag_Shift));
     }
     Object *objectValue() const {
         return (Object *)(val & ~(quint64(Type_Mask) << Tag_Shift));
     }
+#else
+    String *stringValue() const {
+        return s;
+    }
+    Object *objectValue() const {
+        return o;
+    }
+#endif
+
     quint64 rawValue() const {
         return val;
     }
@@ -425,15 +376,9 @@ template <> struct ValueBase<8> : public ValueData
     static Value fromInt32(int i);
     static Value fromString(String *s);
     static Value fromObject(Object *o);
-};
-
-
-struct Value : public ValueBase<sizeof(void *)>
-{
 
 #ifndef QMLJS_LLVM_RUNTIME
     static Value fromString(Context *ctx, const QString &fromString);
-    using ValueBase<sizeof(void *)>::fromString;
 #endif
 
     static double toInteger(double fromNumber);
@@ -533,78 +478,31 @@ inline Value Value::toObject(Context *ctx) const
     return __qmljs_to_object(*this, ctx);
 }
 
-
-inline Value ValueBase<4>::undefinedValue()
+inline Value Value::undefinedValue()
 {
     Value v;
-    v.tag = Undefined_Type;
-    v.uint_32 = 0;
-    return v;
-}
-
-inline Value ValueBase<4>::nullValue()
-{
-    Value v;
-    v.tag = Null_Type;
-    v.uint_32 = 0;
-    return v;
-}
-
-inline Value ValueBase<4>::fromBoolean(Bool b)
-{
-    Value v;
-    v.tag = Boolean_Type;
-    v.int_32 = (bool)b;
-    return v;
-}
-
-inline Value ValueBase<4>::fromDouble(double d)
-{
-    Value v;
-    v.dbl = d;
-    return v;
-}
-
-inline Value ValueBase<4>::fromInt32(int i)
-{
-    Value v;
-    v.tag = Integer_Type;
-    v.int_32 = i;
-    return v;
-}
-
-inline Value ValueBase<4>::fromString(String *s)
-{
-    Value v;
-    v.tag = String_Type;
-    v.uint_32 = (quint32)(quintptr) s;
-    return v;
-}
-
-inline Value ValueBase<4>::fromObject(Object *o)
-{
-    Value v;
-    v.tag = Object_Type;
-    v.uint_32 = (quint32)(quintptr) o;
-    return v;
-}
-
-
-inline Value ValueBase<8>::undefinedValue()
-{
-    Value v;
+#if CPU(X86_64)
     v.val = quint64(_Undefined_Type) << Tag_Shift;
+#else
+    v.tag = _Undefined_Type;
+    v.int_32 = (bool)b;
+#endif
     return v;
 }
 
-inline Value ValueBase<8>::nullValue()
+inline Value Value::nullValue()
 {
     Value v;
+#if CPU(X86_64)
     v.val = quint64(_Null_Type) << Tag_Shift;
+#else
+    v.tag = _Null_Type;
+    v.int_32 = (bool)b;
+#endif
     return v;
 }
 
-inline Value ValueBase<8>::fromBoolean(Bool b)
+inline Value Value::fromBoolean(Bool b)
 {
     Value v;
     v.tag = _Boolean_Type;
@@ -612,14 +510,14 @@ inline Value ValueBase<8>::fromBoolean(Bool b)
     return v;
 }
 
-inline Value ValueBase<8>::fromDouble(double d)
+inline Value Value::fromDouble(double d)
 {
     Value v;
     v.dbl = d;
     return v;
 }
 
-inline Value ValueBase<8>::fromInt32(int i)
+inline Value Value::fromInt32(int i)
 {
     Value v;
     v.tag = _Integer_Type;
@@ -627,19 +525,29 @@ inline Value ValueBase<8>::fromInt32(int i)
     return v;
 }
 
-inline Value ValueBase<8>::fromString(String *s)
+inline Value Value::fromString(String *s)
 {
     Value v;
+#if CPU(X86_64)
     v.val = (quint64)s;
     v.val |= quint64(_String_Type) << Tag_Shift;
+#else
+    v.tag = _String_Type;
+    v.s = s;
+#endif
     return v;
 }
 
-inline Value ValueBase<8>::fromObject(Object *o)
+inline Value Value::fromObject(Object *o)
 {
     Value v;
+#if CPU(X86_64)
     v.val = (quint64)o;
     v.val |= quint64(_Object_Type) << Tag_Shift;
+#else
+    v.tag = _Object_Type;
+    v.o = o;
+#endif
     return v;
 }
 
