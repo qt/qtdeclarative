@@ -449,7 +449,7 @@ Value __qmljs_delete_subscript(Context *ctx, Value base, Value index)
         else if (index.isDouble())
             n = index.doubleValue();
         if (n >= 0) {
-            if (n < a->value.size()) {
+            if (n < (int) a->value.size()) {
                 a->value.assign(n, Value::undefinedValue());
                 return Value::fromBoolean(true);
             }
