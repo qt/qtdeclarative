@@ -1084,81 +1084,32 @@ inline Value __qmljs_ushr(Value left, Value right, Context *ctx)
 
 inline Value __qmljs_gt(Value left, Value right, Context *ctx)
 {
-    if (left.isInteger() && right.isInteger())
-        return Value::fromBoolean(left.integerValue() > right.integerValue());
-    if (left.isNumber() && right.isNumber()) {
-        return Value::fromBoolean(left.asDouble() > right.asDouble());
-    } else {
-        Value result = __qmljs_compare(left, right, ctx, false);
-
-        if (result.isUndefined())
-            result = Value::fromBoolean(false);
-        return result;
-    }
+    return Value::fromBoolean(__qmljs_cmp_gt(left, right, ctx));
 }
 
 inline Value __qmljs_lt(Value left, Value right, Context *ctx)
 {
-    if (left.isInteger() && right.isInteger())
-        return Value::fromBoolean(left.integerValue() < right.integerValue());
-    if (left.isNumber() && right.isNumber()) {
-        return Value::fromBoolean(left.asDouble() < right.asDouble());
-    } else {
-        Value result = __qmljs_compare(left, right, ctx, true);
-
-        if (result.isUndefined())
-            result = Value::fromBoolean(false);
-        return result;
-    }
+    return Value::fromBoolean(__qmljs_cmp_lt(left, right, ctx));
 }
 
 inline Value __qmljs_ge(Value left, Value right, Context *ctx)
 {
-    if (left.isInteger() && right.isInteger())
-        return Value::fromBoolean(left.integerValue() >= right.integerValue());
-    if (left.isNumber() && right.isNumber()) {
-        return Value::fromBoolean(left.asDouble() >= right.asDouble());
-    } else {
-        Value result = __qmljs_compare(right, left, ctx, false);
-
-        bool r = ! (result.isUndefined() || (result.isBoolean() && result.booleanValue()));
-        return Value::fromBoolean(r);
-    }
+    return Value::fromBoolean(__qmljs_cmp_ge(left, right, ctx));
 }
 
 inline Value __qmljs_le(Value left, Value right, Context *ctx)
 {
-    if (left.isInteger() && right.isInteger())
-        return Value::fromBoolean(left.integerValue() <= right.integerValue());
-    if (left.isNumber() && right.isNumber()) {
-        return Value::fromBoolean(left.asDouble() <= right.asDouble());
-    } else {
-        Value result = __qmljs_compare(right, left, ctx, true);
-
-        bool r = ! (result.isUndefined() || (result.isBoolean() && result.booleanValue()));
-        return Value::fromBoolean(r);
-    }
+    return Value::fromBoolean(__qmljs_cmp_le(left, right, ctx));
 }
 
 inline Value __qmljs_eq(Value left, Value right, Context *ctx)
 {
-    if (left.val == right.val)
-        return Value::fromBoolean(true);
-    if (left.isNumber() && right.isNumber()) {
-        return Value::fromBoolean(left.asDouble() == right.asDouble());
-    } else if (left.isString() && right.isString()) {
-        return Value::fromBoolean(__qmljs_string_equal(ctx, left.stringValue(), right.stringValue()));
-    } else {
-        bool r = __qmljs_equal(left, right, ctx);
-        return Value::fromBoolean(r);
-    }
+    return Value::fromBoolean(__qmljs_cmp_eq(left, right, ctx));
 }
 
 inline Value __qmljs_ne(Value left, Value right, Context *ctx)
 {
-    Value result = __qmljs_eq(left, right, ctx);
-    result.int_32 = !(bool)result.int_32;
-    return result;
+    return Value::fromBoolean(!__qmljs_cmp_eq(left, right, ctx));
 }
 
 inline Value __qmljs_se(Value left, Value right, Context *ctx)
@@ -1175,38 +1126,92 @@ inline Value __qmljs_sne(Value left, Value right, Context *ctx)
 
 inline Bool __qmljs_cmp_gt(Value left, Value right, Context *ctx)
 {
-    Value v = __qmljs_gt(left, right, ctx);
-    return v.booleanValue();
+    left = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
+    right = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
+
+    if (left.isInteger() && right.isInteger())
+        return left.integerValue() > right.integerValue();
+    if (left.isNumber() && right.isNumber()) {
+        return left.asDouble() > right.asDouble();
+    } else if (left.isString() && right.isString()) {
+        return __qmljs_string_compare(ctx, right.stringValue(), left.stringValue());
+    } else {
+        double l = __qmljs_to_number(left, ctx);
+        double r = __qmljs_to_number(right, ctx);
+        return l > r;
+    }
 }
 
 inline Bool __qmljs_cmp_lt(Value left, Value right, Context *ctx)
 {
-    Value v = __qmljs_lt(left, right, ctx);
-    return v.booleanValue();
+    left = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
+    right = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
+
+    if (left.isInteger() && right.isInteger())
+        return left.integerValue() < right.integerValue();
+    if (left.isNumber() && right.isNumber()) {
+        return left.asDouble() < right.asDouble();
+    } else if (left.isString() && right.isString()) {
+        return __qmljs_string_compare(ctx, left.stringValue(), right.stringValue());
+    } else {
+        double l = __qmljs_to_number(left, ctx);
+        double r = __qmljs_to_number(right, ctx);
+        return l < r;
+    }
 }
 
 inline Bool __qmljs_cmp_ge(Value left, Value right, Context *ctx)
 {
-    Value v = __qmljs_ge(left, right, ctx);
-    return v.booleanValue();
+    left = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
+    right = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
+
+    if (left.isInteger() && right.isInteger())
+        return left.integerValue() >= right.integerValue();
+    if (left.isNumber() && right.isNumber()) {
+        return left.asDouble() >= right.asDouble();
+    } else if (left.isString() && right.isString()) {
+        return !__qmljs_string_compare(ctx, left.stringValue(), right.stringValue());
+    } else {
+        double l = __qmljs_to_number(left, ctx);
+        double r = __qmljs_to_number(right, ctx);
+        return l >= r;
+    }
 }
 
 inline Bool __qmljs_cmp_le(Value left, Value right, Context *ctx)
 {
-    Value v = __qmljs_le(left, right, ctx);
-    return v.booleanValue();
+    left = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
+    right = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
+
+    if (left.isInteger() && right.isInteger())
+        return left.integerValue() <= right.integerValue();
+    if (left.isNumber() && right.isNumber()) {
+        return left.asDouble() <= right.asDouble();
+    } else if (left.isString() && right.isString()) {
+        return !__qmljs_string_compare(ctx, right.stringValue(), left.stringValue());
+    } else {
+        double l = __qmljs_to_number(left, ctx);
+        double r = __qmljs_to_number(right, ctx);
+        return l <= r;
+    }
 }
 
 inline Bool __qmljs_cmp_eq(Value left, Value right, Context *ctx)
 {
-    Value v = __qmljs_eq(left, right, ctx);
-    return v.booleanValue();
+    // need to test for doubles first as NaN != NaN
+    if (left.isDouble() && right.isDouble())
+        return left.doubleValue() == right.doubleValue();
+    if (left.val == right.val)
+        return true;
+    if (left.isString() && right.isString())
+        return __qmljs_string_equal(ctx, left.stringValue(), right.stringValue());
+
+    return __qmljs_equal(left, right, ctx);
 }
 
 inline Bool __qmljs_cmp_ne(Value left, Value right, Context *ctx)
 {
-    Value v = __qmljs_ne(left, right, ctx);
-    return v.booleanValue();
+    return !__qmljs_cmp_eq(left, right, ctx);
 }
 
 inline Bool __qmljs_cmp_se(Value left, Value right, Context *ctx)
