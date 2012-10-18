@@ -118,7 +118,7 @@ void handleCompileErrors(const QFileInfo &fi, QQuickView *view)
     foreach (const QQmlError &e, errors) {
         str << "    ";
         if (e.url().isLocalFile()) {
-            str << e.url().toLocalFile();
+            str << QDir::toNativeSeparators(e.url().toLocalFile());
         } else {
             str << e.url().toString();
         }
@@ -269,6 +269,9 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
     // Scan through all of the "tst_*.qml" files and run each of them
     // in turn with a QQuickView.
     QQuickView *view = new QQuickView;
+    view->setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint
+                         | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint
+                         | Qt::WindowCloseButtonHint);
     QTestRootObject rootobj;
     QEventLoop eventLoop;
     QObject::connect(view->engine(), SIGNAL(quit()),
@@ -279,12 +282,13 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
         (QLatin1String("qtest"), &rootobj);
     foreach (const QString &path, imports)
         view->engine()->addImportPath(path);
-
-    foreach (QString file, files) {
-        QFileInfo fi(file);
+    foreach (const QString &file, files) {
+        const QFileInfo fi(file);
         if (!fi.exists())
             continue;
 
+        view->setObjectName(fi.baseName());
+        view->setWindowTitle(view->objectName());
         rootobj.setHasTestCase(false);
         rootobj.setWindowShown(false);
         rootobj.hasQuit = false;
@@ -306,11 +310,19 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
             // an asynchronous test and we need to show the window
             // and wait for the first frame to be rendered
             // and then wait for quit indication.
+            view->setFramePos(QPoint(50, 50));
+            if (view->size().isEmpty()) { // Avoid hangs with empty windows.
+                qWarning().nospace()
+                    << "Test '" << QDir::toNativeSeparators(path) << "' has invalid size "
+                    << view->size() << ", resizing.";
+                view->resize(200, 200);
+            }
             view->show();
             if (qWaitForSignal(view, SIGNAL(frameSwapped())))
                 rootobj.setWindowShown(true);
             if (!rootobj.hasQuit && rootobj.hasTestCase())
                 eventLoop.exec();
+            view->hide();
         }
     }
 
