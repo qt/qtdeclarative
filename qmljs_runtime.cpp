@@ -280,7 +280,7 @@ void Context::init(ExecutionEngine *eng)
 Value *Context::lookupPropertyDescriptor(String *name)
 {
     for (Context *ctx = this; ctx; ctx = ctx->parent) {
-        if (ctx->activation.is(Value::Object_Type)) {
+        if (ctx->activation.isObject()) {
             if (Value *prop = ctx->activation.objectValue()->getPropertyDescriptor(this, name)) {
                 return prop;
             }
@@ -1028,7 +1028,7 @@ Value __qmljs_get_element(Context *ctx, Value object, Value index)
     if (! object.isObject())
         object = __qmljs_to_object(object, ctx);
 
-    return object.property(ctx, name);
+    return object.objectValue()->getProperty(ctx, name);
 }
 
 void __qmljs_set_element(Context *ctx, Value object, Value index, Value value)
@@ -1268,8 +1268,7 @@ Value __qmljs_construct_property(Context *context, Value base, String *name, Val
     if (!thisObject.isObject())
         thisObject = __qmljs_to_object(base, context);
 
-    assert(thisObject.isObject());
-    Value func = thisObject.property(context, name);
+    Value func = thisObject.objectValue()->getProperty(context, name);
     if (FunctionObject *f = func.asFunctionObject()) {
         Context k;
         Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
