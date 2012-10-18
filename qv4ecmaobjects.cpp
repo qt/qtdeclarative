@@ -1536,7 +1536,7 @@ void ArrayPrototype::method_every(Context *ctx)
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
         Value callback = ctx->argument(0);
-        if (callback.isFunctionObject()) {
+        if (FunctionObject *f = callback.asFunctionObject()) {
             Value thisArg = ctx->argument(1);
             bool ok = true;
             for (uint k = 0; ok && k < instance->value.size(); ++k) {
@@ -1548,7 +1548,7 @@ void ArrayPrototype::method_every(Context *ctx)
                 args[0] = v;
                 args[1] = Value::fromDouble(k);
                 args[2] = ctx->thisObject;
-                Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
+                Value r = __qmljs_call_function(ctx, thisArg, f, args, 3);
                 ok = __qmljs_to_boolean(r, ctx);
             }
             ctx->result = Value::fromBoolean(ok);
@@ -1565,7 +1565,7 @@ void ArrayPrototype::method_some(Context *ctx)
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
         Value callback = ctx->argument(0);
-        if (callback.isFunctionObject()) {
+        if (FunctionObject *f = callback.asFunctionObject()) {
             Value thisArg = ctx->argument(1);
             bool ok = false;
             for (uint k = 0; !ok && k < instance->value.size(); ++k) {
@@ -1577,7 +1577,7 @@ void ArrayPrototype::method_some(Context *ctx)
                 args[0] = v;
                 args[1] = Value::fromDouble(k);
                 args[2] = ctx->thisObject;
-                Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
+                Value r = __qmljs_call_function(ctx, thisArg, f, args, 3);
                 ok = __qmljs_to_boolean(r, ctx);
             }
             ctx->result = Value::fromBoolean(ok);
@@ -1594,9 +1594,7 @@ void ArrayPrototype::method_forEach(Context *ctx)
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
         Value callback = ctx->argument(0);
-        if (! callback.isFunctionObject())
-            ctx->throwTypeError();
-        else {
+        if (FunctionObject *f = callback.asFunctionObject()) {
             Value thisArg = ctx->argument(1);
             for (quint32 k = 0; k < instance->value.size(); ++k) {
                 Value v = instance->value.at(k);
@@ -1606,8 +1604,10 @@ void ArrayPrototype::method_forEach(Context *ctx)
                 args[0] = v;
                 args[1] = Value::fromDouble(k);
                 args[2] = ctx->thisObject;
-                /*Value r =*/ __qmljs_call_value(ctx, thisArg, callback, args, 3);
+                /*Value r =*/ __qmljs_call_function(ctx, thisArg, f, args, 3);
             }
+        } else {
+            ctx->throwTypeError();
         }
     } else {
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.forEach"));
@@ -1619,9 +1619,7 @@ void ArrayPrototype::method_map(Context *ctx)
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
         Value callback = ctx->argument(0);
-        if (! callback.isFunctionObject())
-            ctx->throwTypeError();
-        else {
+        if (FunctionObject *f = callback.asFunctionObject()) {
             Value thisArg = ctx->argument(1);
             ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
             a->value.resize(instance->value.size());
@@ -1633,10 +1631,12 @@ void ArrayPrototype::method_map(Context *ctx)
                 args[0] = v;
                 args[1] = Value::fromDouble(k);
                 args[2] = ctx->thisObject;
-                Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
+                Value r = __qmljs_call_function(ctx, thisArg, f, args, 3);
                 a->value.assign(k, r);
             }
             ctx->result = Value::fromObject(a);
+        } else {
+            ctx->throwTypeError();
         }
     } else {
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.map"));
@@ -1648,9 +1648,7 @@ void ArrayPrototype::method_filter(Context *ctx)
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
         Value callback = ctx->argument(0);
-        if (! callback.isFunctionObject())
-            ctx->throwTypeError();
-        else {
+        if (FunctionObject *f = callback.asFunctionObject()) {
             Value thisArg = ctx->argument(1);
             ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
             for (quint32 k = 0; k < instance->value.size(); ++k) {
@@ -1661,7 +1659,7 @@ void ArrayPrototype::method_filter(Context *ctx)
                 args[0] = v;
                 args[1] = Value::fromDouble(k);
                 args[2] = ctx->thisObject;
-                Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
+                Value r = __qmljs_call_function(ctx, thisArg, f, args, 3);
                 if (__qmljs_to_boolean(r, ctx)) {
                     const uint index = a->value.size();
                     a->value.resize(index + 1);
@@ -1669,6 +1667,8 @@ void ArrayPrototype::method_filter(Context *ctx)
                 }
             }
             ctx->result = Value::fromObject(a);
+        } else {
+            ctx->throwTypeError();
         }
     } else {
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.filter"));
@@ -1680,27 +1680,31 @@ void ArrayPrototype::method_reduce(Context *ctx)
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
         Value callback = ctx->argument(0);
-        Value initialValue = ctx->argument(1);
-        Value acc = initialValue;
-        for (quint32 k = 0; k < instance->value.size(); ++k) {
-            Value v = instance->value.at(k);
-            if (v.isUndefined())
-                continue;
+        if (FunctionObject *f = callback.asFunctionObject()) {
+            Value initialValue = ctx->argument(1);
+            Value acc = initialValue;
+            for (quint32 k = 0; k < instance->value.size(); ++k) {
+                Value v = instance->value.at(k);
+                if (v.isUndefined())
+                    continue;
 
-            if (acc.isUndefined()) {
-                acc = v;
-                continue;
+                if (acc.isUndefined()) {
+                    acc = v;
+                    continue;
+                }
+
+                Value args[4];
+                args[0] = acc;
+                args[1] = v;
+                args[2] = Value::fromDouble(k);
+                args[3] = ctx->thisObject;
+                Value r = __qmljs_call_function(ctx, Value::undefinedValue(), f, args, 4);
+                acc = r;
             }
-
-            Value args[4];
-            args[0] = acc;
-            args[1] = v;
-            args[2] = Value::fromDouble(k);
-            args[3] = ctx->thisObject;
-            Value r = __qmljs_call_value(ctx, Value::undefinedValue(), callback, args, 4);
-            acc = r;
+            ctx->result = acc;
+        } else {
+            ctx->throwTypeError();
         }
-        ctx->result = acc;
     } else {
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.reduce"));
     }
@@ -1711,27 +1715,31 @@ void ArrayPrototype::method_reduceRight(Context *ctx)
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
         Value callback = ctx->argument(0);
-        Value initialValue = ctx->argument(1);
-        Value acc = initialValue;
-        for (int k = instance->value.size() - 1; k != -1; --k) {
-            Value v = instance->value.at(k);
-            if (v.isUndefined())
-                continue;
+        if (FunctionObject *f = callback.asFunctionObject()) {
+            Value initialValue = ctx->argument(1);
+            Value acc = initialValue;
+            for (int k = instance->value.size() - 1; k != -1; --k) {
+                Value v = instance->value.at(k);
+                if (v.isUndefined())
+                    continue;
 
-            if (acc.isUndefined()) {
-                acc = v;
-                continue;
+                if (acc.isUndefined()) {
+                    acc = v;
+                    continue;
+                }
+
+                Value args[4];
+                args[0] = acc;
+                args[1] = v;
+                args[2] = Value::fromDouble(k);
+                args[3] = ctx->thisObject;
+                Value r = __qmljs_call_function(ctx, Value::undefinedValue(), f, args, 4);
+                acc = r;
             }
-
-            Value args[4];
-            args[0] = acc;
-            args[1] = v;
-            args[2] = Value::fromDouble(k);
-            args[3] = ctx->thisObject;
-            Value r = __qmljs_call_value(ctx, Value::undefinedValue(), callback, args, 4);
-            acc = r;
+            ctx->result = acc;
+        } else {
+            ctx->throwTypeError();
         }
-        ctx->result = acc;
     } else {
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.reduceRight"));
     }
@@ -1777,7 +1785,7 @@ void FunctionPrototype::method_toString(Context *ctx)
 
 void FunctionPrototype::method_apply(Context *ctx)
 {
-    if (/*FunctionObject *fun =*/ ctx->thisObject.asFunctionObject()) {
+    if (FunctionObject *f = ctx->thisObject.asFunctionObject()) {
 
         Value thisObject = ctx->argument(0).toObject(ctx);
         if (thisObject.isNull() || thisObject.isUndefined())
@@ -1798,7 +1806,7 @@ void FunctionPrototype::method_apply(Context *ctx)
             return;
         }
 
-        ctx->result = __qmljs_call_value(ctx, thisObject, ctx->thisObject, args.data(), args.size());
+        ctx->result = __qmljs_call_function(ctx, thisObject, f, args.data(), args.size());
     } else {
         ctx->throwTypeError();
     }
@@ -1806,13 +1814,12 @@ void FunctionPrototype::method_apply(Context *ctx)
 
 void FunctionPrototype::method_call(Context *ctx)
 {
-    if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
-        Q_UNUSED(fun);
+    if (FunctionObject *f = ctx->thisObject.asFunctionObject()) {
         Value thisArg = ctx->argument(0);
         QVector<Value> args(ctx->argumentCount ? ctx->argumentCount - 1 : 0);
         if (ctx->argumentCount)
             qCopy(ctx->arguments + 1, ctx->arguments + ctx->argumentCount, args.begin());
-        ctx->result = __qmljs_call_value(ctx, thisArg, ctx->thisObject, args.data(), args.size());
+        ctx->result = __qmljs_call_function(ctx, thisArg, f, args.data(), args.size());
     } else {
         ctx->throwTypeError();
     }

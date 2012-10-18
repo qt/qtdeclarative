@@ -924,21 +924,25 @@ Value __qmljs_object_default_value(Context *ctx, Value object, int typeHint)
     if (typeHint == NUMBER_HINT)
         qSwap(meth1, meth2);
 
-    Object *oo = object.asObject();
-    assert(oo != 0);
+    assert(object.isObject());
+    Object *oo = object.objectValue();
 
     Value conv = oo->getProperty(ctx, meth1);
-    if (!conv.isUndefined() && conv.isFunctionObject()) {
-        Value r = __qmljs_call_value(ctx, object, conv, 0, 0);
-        if (r.isPrimitive())
-            return r;
+    if (!conv.isUndefined()) {
+        if (FunctionObject *f = conv.asFunctionObject()) {
+            Value r = __qmljs_call_function(ctx, object, f, 0, 0);
+            if (r.isPrimitive())
+                return r;
+        }
     }
 
     conv = oo->getProperty(ctx, meth2);
-    if (!conv.isUndefined() && conv.isFunctionObject()) {
-        Value r = __qmljs_call_value(ctx, object, conv, 0, 0);
-        if (r.isPrimitive())
-            return r;
+    if (!conv.isUndefined()) {
+        if (FunctionObject *f = conv.asFunctionObject()) {
+            Value r = __qmljs_call_function(ctx, object, f, 0, 0);
+            if (r.isPrimitive())
+                return r;
+        }
     }
 
     return Value::undefinedValue();
@@ -1006,42 +1010,42 @@ void __qmljs_set_property_closure(Context *ctx, Value *object, String *name, IR:
 
 Value __qmljs_get_element(Context *ctx, Value object, Value index)
 {
-    if (object.isString() && index.isNumber()) {
-        const QString s = object.stringValue()->toQString().mid(index.toUInt32(ctx), 1);
-        if (s.isNull())
-            return Value::undefinedValue();
-        else
-            return Value::fromString(ctx, s);
-    } else if (object.isArrayObject() && index.isNumber()) {
-        return object.asArrayObject()->value.at(index.toUInt32(ctx));
-    } else {
-        String *name = index.toString(ctx);
+    if (index.isNumber()) {
+        if (object.isString()) {
+            const QString s = object.stringValue()->toQString().mid(index.toUInt32(ctx), 1);
+            if (s.isNull())
+                return Value::undefinedValue();
+            else
+                return Value::fromString(ctx, s);
+        }
 
-        if (! object.isObject())
-            object = __qmljs_to_object(object, ctx);
-
-        return object.property(ctx, name);
+        if (ArrayObject *a = object.asArrayObject())
+            return a->value.at(index.toUInt32(ctx));
     }
+
+    String *name = index.toString(ctx);
+
+    if (! object.isObject())
+        object = __qmljs_to_object(object, ctx);
+
+    return object.property(ctx, name);
 }
 
 void __qmljs_set_element(Context *ctx, Value object, Value index, Value value)
 {
-    if (object.isArrayObject() && index.isNumber()) {
-        object.asArrayObject()->value.assign(index.toUInt32(ctx), value);
-    } else {
-        String *name = index.toString(ctx);
-
-        if (! object.isObject())
-            object = __qmljs_to_object(object, ctx);
-
-        object.objectValue()->setProperty(ctx, name, value, /*flags*/ 0);
+    if (index.isNumber()) {
+        if (ArrayObject *a = object.asArrayObject()) {
+            a->value.assign(index.toUInt32(ctx), value);
+            return;
+        }
     }
-}
 
-void __qmljs_set_element_number(Context *ctx, Value *object, Value *index, double number)
-{
-    Value v = Value::fromDouble(number);
-    __qmljs_set_element(ctx, *object, *index, v);
+    String *name = index.toString(ctx);
+
+    if (! object.isObject())
+        object = __qmljs_to_object(object, ctx);
+
+    object.objectValue()->setProperty(ctx, name, value, /*flags*/ 0);
 }
 
 void __qmljs_set_activation_property(Context *ctx, String *name, Value value)
@@ -1079,14 +1083,14 @@ void __qmljs_set_activation_property_closure(Context *ctx, String *name, IR::Fun
 Value __qmljs_get_property(Context *ctx, Value object, String *name)
 {
     if (object.isObject()) {
-        return object.property(ctx, name);
+        return object.objectValue()->getProperty(ctx, name);
     } else if (object.isString() && name->isEqualTo(ctx->engine->id_length)) {
-        return Value::fromDouble(object.stringValue()->toQString().length());
+        return Value::fromInt32(object.stringValue()->toQString().length());
     } else {
         object = __qmljs_to_object(object, ctx);
 
         if (object.isObject()) {
-            return __qmljs_get_property(ctx, object, name);
+            return object.objectValue()->getProperty(ctx, name);
         } else {
             ctx->throwTypeError(); // ### not necessary.
             return Value::undefinedValue();
@@ -1205,25 +1209,29 @@ Value __qmljs_call_property(Context *context, Value base, String *name, Value *a
     return result;
 }
 
+Value __qmljs_call_function(Context *context, Value thisObject, FunctionObject *f, Value *args, int argc)
+{
+    Context k;
+    Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
+    const Value *that = thisObject.isUndefined() ? 0 : &thisObject;
+    ctx->initCallContext(context->engine, that, f, args, argc);
+    f->call(ctx);
+    if (ctx->hasUncaughtException) {
+        context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
+        context->result = ctx->result;
+    }
+    ctx->leaveCallContext(f);
+    return ctx->result;
+}
+
 Value __qmljs_call_value(Context *context, Value thisObject, Value func, Value *args, int argc)
 {
-    Value result;
     if (FunctionObject *f = func.asFunctionObject()) {
-        Context k;
-        Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-        const Value *that = thisObject.isUndefined() ? 0 : &thisObject;
-        ctx->initCallContext(context->engine, that, f, args, argc);
-        f->call(ctx);
-        if (ctx->hasUncaughtException) {
-            context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
-            context->result = ctx->result;
-        }
-        ctx->leaveCallContext(f);
-        result = ctx->result;
+        return __qmljs_call_function(context, thisObject, f, args, argc);
     } else {
         context->throwTypeError();
+        return Value::undefinedValue();
     }
-    return result;
 }
 
 Value __qmljs_construct_activation_property(Context *context, String *name, Value *args, int argc)
