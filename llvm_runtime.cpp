@@ -216,6 +216,61 @@ void __qmljs_llvm_not(Context *ctx, Value *result, const Value *value)
     *result = __qmljs_not(*value, ctx);
 }
 
+void __qmljs_llvm_inplace_bit_and_name(Context *ctx, String *dest, Value *src)
+{
+    __qmljs_inplace_bit_and_name(*src, dest, ctx);
+}
+
+void __qmljs_llvm_inplace_bit_or_name(Context *ctx, String *dest, Value *src)
+{
+    __qmljs_inplace_bit_or_name(*src, dest, ctx);
+}
+
+void __qmljs_llvm_inplace_bit_xor_name(Context *ctx, String *dest, Value *src)
+{
+    __qmljs_inplace_bit_xor_name(*src, dest, ctx);
+}
+
+void __qmljs_llvm_inplace_add_name(Context *ctx, String *dest, Value *src)
+{
+    __qmljs_inplace_add_name(*src, dest, ctx);
+}
+
+void __qmljs_llvm_inplace_sub_name(Context *ctx, String *dest, Value *src)
+{
+    __qmljs_inplace_sub_name(*src, dest, ctx);
+}
+
+void __qmljs_llvm_inplace_mul_name(Context *ctx, String *dest, Value *src)
+{
+    __qmljs_inplace_mul_name(*src, dest, ctx);
+}
+
+void __qmljs_llvm_inplace_div_name(Context *ctx, String *dest, Value *src)
+{
+    __qmljs_inplace_div_name(*src, dest, ctx);
+}
+
+void __qmljs_llvm_inplace_mod_name(Context *ctx, String *dest, Value *src)
+{
+    __qmljs_inplace_mod_name(*src, dest, ctx);
+}
+
+void __qmljs_llvm_inplace_shl_name(Context *ctx, String *dest, Value *src)
+{
+    __qmljs_inplace_shl_name(*src, dest, ctx);
+}
+
+void __qmljs_llvm_inplace_shr_name(Context *ctx, String *dest, Value *src)
+{
+    __qmljs_inplace_shr_name(*src, dest, ctx);
+}
+
+void __qmljs_llvm_inplace_ushr_name(Context *ctx, String *dest, Value *src)
+{
+    __qmljs_inplace_ushr_name(*src, dest, ctx);
+}
+
 String *__qmljs_llvm_identifier_from_utf8(Context *ctx, const char *str)
 {
     return __qmljs_identifier_from_utf8(ctx, str); // ### make it unique

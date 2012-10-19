@@ -56,7 +56,6 @@
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
-#include <llvm/Target/TargetData.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/IPO.h>
 #include <llvm/Linker.h>
@@ -413,31 +412,153 @@ void LLVMInstructionSelection::genMoveMember(IR::Move *s)
 
 void LLVMInstructionSelection::visitMove(IR::Move *s)
 {
-    if (s->op != IR::OpInvalid) {
-        s->dump(qerr, IR::Stmt::HIR);
-        qerr << endl;
-        Q_UNIMPLEMENTED();
-        return;
+    if (s->op == IR::OpInvalid) {
+        if (s->target->asSubscript()) {
+            genMoveSubscript(s);
+            return;
+        } else if (s->target->asMember()) {
+            genMoveMember(s);
+            return;
+        } else if (IR::Name *n = s->target->asName()) {
+            llvm::Value *name = getIdentifier(*n->id);
+            llvm::Value *source = getLLVMTempReference(s->source);
+            CreateCall3(_llvmModule->getFunction("__qmljs_llvm_set_activation_property"),
+                        _llvmFunction->arg_begin(), name, source);
+            return;
+        } else if (IR::Temp *t = s->target->asTemp()) {
+            llvm::Value *target = getLLVMTemp(t);
+            llvm::Value *source = getLLVMValue(s->source);
+            CreateStore(source, target);
+            return;
+        }
+    } else {
+        // inplace assignment, e.g. x += 1, ++x, ...
+        if (IR::Temp *t = s->target->asTemp()) {
+            if (IR::Temp *t2 = s->source->asTemp()) {
+                const char *opName = 0;
+                switch (s->op) {
+//                case IR::OpBitAnd: setOp(op, opName, __qmljs_bit_and); break;
+//                case IR::OpBitOr: setOp(op, opName, __qmljs_bit_or); break;
+//                case IR::OpBitXor: setOp(op, opName, __qmljs_bit_xor); break;
+                case IR::OpAdd: opName = "__qmljs_llvm_add"; break;
+//                case IR::OpSub: setOp(op, opName, __qmljs_sub); break;
+//                case IR::OpMul: setOp(op, opName, __qmljs_mul); break;
+//                case IR::OpDiv: setOp(op, opName, __qmljs_div); break;
+//                case IR::OpMod: setOp(op, opName, __qmljs_mod); break;
+//                case IR::OpLShift: setOp(op, opName, __qmljs_shl); break;
+//                case IR::OpRShift: setOp(op, opName, __qmljs_shr); break;
+//                case IR::OpURShift: setOp(op, opName, __qmljs_ushr); break;
+                default:
+                    Q_UNREACHABLE();
+                    break;
+                }
+
+                if (opName) {
+                    llvm::Value *target = getLLVMTemp(t);
+                    llvm::Value *s1 = getLLVMTemp(t);
+                    llvm::Value *s2 = getLLVMTemp(t2);
+                    CreateCall4(_llvmModule->getFunction(opName),
+                                _llvmFunction->arg_begin(), target, s1, s2);
+                    return;
+                }
+            }
+        } else if (IR::Name *n = s->target->asName()) {
+            qDebug()<<__FILE__<<__LINE__;
+            if (IR::Temp *t = s->source->asTemp()) {
+                const char *opName = 0;
+                switch (s->op) {
+                case IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_name"; break;
+                case IR::OpBitOr: opName = "__qmljs_llvm_inplace_bit_or_name"; break;
+                case IR::OpBitXor: opName = "__qmljs_llvm_inplace_bit_xor_name"; break;
+                case IR::OpAdd: opName = "__qmljs_llvm_inplace_add_name"; break;
+                case IR::OpSub: opName = "__qmljs_llvm_inplace_sub_name"; break;
+                case IR::OpMul: opName = "__qmljs_llvm_inplace_mul_name"; break;
+                case IR::OpDiv: opName = "__qmljs_llvm_inplace_div_name"; break;
+                case IR::OpMod: opName = "__qmljs_llvm_inplace_mod_name"; break;
+                case IR::OpLShift: opName = "__qmljs_llvm_inplace_shl_name"; break;
+                case IR::OpRShift: opName = "__qmljs_llvm_inplace_shr_name"; break;
+                case IR::OpURShift: opName = "__qmljs_llvm_inplace_ushr_name"; break;
+                default:
+                    Q_UNREACHABLE();
+                    break;
+                }
+
+                if (opName) {
+                    llvm::Value *dst = getIdentifier(*n->id);
+                    llvm::Value *src = getLLVMTemp(t);
+                    CreateCall3(_llvmModule->getFunction(opName),
+                                _llvmFunction->arg_begin(), dst, src);
+                    return;
+                }
+            }
+        } else if (IR::Subscript *ss = s->target->asSubscript()) {
+            qDebug()<<__FILE__<<__LINE__;
+//            if (IR::Temp *t = s->source->asTemp()) {
+//                void (*op)(Value base, Value index, Value value, Context *ctx) = 0;
+//                const char *opName = 0;
+//                switch (s->op) {
+//                case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_element); break;
+//                case IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_element); break;
+//                case IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_element); break;
+//                case IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_element); break;
+//                case IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_element); break;
+//                case IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_element); break;
+//                case IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_element); break;
+//                case IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_element); break;
+//                case IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_element); break;
+//                case IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_element); break;
+//                case IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_element); break;
+//                default:
+//                    Q_UNREACHABLE();
+//                    break;
+//                }
+
+//                if (op) {
+//                    IR::Temp* base = ss->base->asTemp();
+//                    IR::Temp* index = ss->index->asTemp();
+//                    generateFunctionCallImp(Void, opName, op, base, index, t, ContextRegister);
+//                    checkExceptions();
+//                }
+//                return;
+//            }
+        } else if (IR::Member *m = s->target->asMember()) {
+            qDebug()<<__FILE__<<__LINE__;
+//            if (IR::Temp *t = s->source->asTemp()) {
+//                void (*op)(Value value, Value base, String *name, Context *ctx) = 0;
+//                const char *opName = 0;
+//                switch (s->op) {
+//                case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_member); break;
+//                case IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_member); break;
+//                case IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_member); break;
+//                case IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_member); break;
+//                case IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_member); break;
+//                case IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_member); break;
+//                case IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_member); break;
+//                case IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_member); break;
+//                case IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_member); break;
+//                case IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_member); break;
+//                case IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_member); break;
+//                default:
+//                    Q_UNREACHABLE();
+//                    break;
+//                }
+
+//                if (op) {
+//                    IR::Temp* base = m->base->asTemp();
+//                    String* member = identifier(*m->name);
+//                    generateFunctionCallImp(Void, opName, op, t, base, member, ContextRegister);
+//                    checkExceptions();
+//                }
+//                return;
+//            }
+        }
     }
 
-    if (s->target->asSubscript()) {
-        genMoveSubscript(s);
-    } else if (s->target->asMember()) {
-        genMoveMember(s);
-    } else if (IR::Name *n = s->target->asName()) {
-        llvm::Value *name = getIdentifier(*n->id);
-        llvm::Value *source = getLLVMTempReference(s->source);
-        CreateCall3(_llvmModule->getFunction("__qmljs_llvm_set_activation_property"),
-                    _llvmFunction->arg_begin(), name, source);
-    } else if (IR::Temp *t = s->target->asTemp()) {
-        llvm::Value *target = getLLVMTemp(t);
-        llvm::Value *source = getLLVMValue(s->source);
-        CreateStore(source, target);
-    } else {
-        s->dump(qerr, IR::Stmt::HIR);
-        qerr << endl;
-        Q_UNIMPLEMENTED();
-    }
+    // For anything else:
+    s->dump(qerr, IR::Stmt::HIR);
+    qerr << endl;
+    Q_UNIMPLEMENTED();
+    return;
 }
 
 void LLVMInstructionSelection::visitJump(IR::Jump *s)
@@ -843,7 +964,7 @@ void LLVMInstructionSelection::genConstructName(IR::New *e, llvm::Value *result)
         int argc = 0;
         llvm::Value *args = genArguments(e->args, argc);
 
-        CreateCall5(_llvmModule->getFunction("__qmljs_construct_activation_property"),
+        CreateCall5(_llvmModule->getFunction("__qmljs_llvm_construct_activation_property"),
                     _llvmFunction->arg_begin(), result, name, args, getInt32(argc));
 
         _llvmValue = CreateLoad(result);

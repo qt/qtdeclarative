@@ -155,7 +155,10 @@ int evaluateCompiledCode(const QStringList &files)
         QFileInfo libInfo(libName);
         QLibrary lib(libInfo.absoluteFilePath());
         lib.load();
-        QFunctionPointer ptr = lib.resolve("_25_entry");
+        QFunctionPointer ptr = lib.resolve("%entry");
+//        qDebug("_%%entry resolved to address %p", ptr);
+        if (!ptr)
+            return -1;
         void (*code)(VM::Context *) = (void (*)(VM::Context *)) ptr;
 
         VM::ExecutionEngine vm;
