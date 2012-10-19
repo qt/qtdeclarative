@@ -69,6 +69,10 @@ public:
     int propertyOffset() const;
     int signalOffset() const;
 
+    int propertyCount() const;
+    QByteArray propertyName(int) const;
+    QMetaObject *metaObject() const;
+
 protected:
     virtual void propertyCreated(int, QMetaPropertyBuilder &);
     virtual void clear();

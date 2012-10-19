@@ -96,6 +96,23 @@ int QQmlOpenMetaObjectType::signalOffset() const
     return d->signalOffset;
 }
 
+int QQmlOpenMetaObjectType::propertyCount() const
+{
+    return d->names.count();
+}
+
+QByteArray QQmlOpenMetaObjectType::propertyName(int idx) const
+{
+    Q_ASSERT(idx >= 0 && idx < d->names.count());
+
+    return d->mob.property(idx).name();
+}
+
+QMetaObject *QQmlOpenMetaObjectType::metaObject() const
+{
+    return d->mem;
+}
+
 int QQmlOpenMetaObjectType::createProperty(const QByteArray &name)
 {
     int id = d->mob.propertyCount();
