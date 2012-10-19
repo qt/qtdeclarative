@@ -81,15 +81,19 @@ FILE* dataFile()
 
 void dataLogV(const char* format, va_list args)
 {
-    qDebug(format, args);
+    char buffer[1024];
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    qDebug("%s", buffer);
 }
 
 void dataLog(const char* format, ...)
 {
+    char buffer[1024];
     va_list args;
     va_start(args, format);
-    qDebug(format, args);
+    vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
+    qDebug("%s", buffer);
 }
 
 void dataLogString(const char* str)
