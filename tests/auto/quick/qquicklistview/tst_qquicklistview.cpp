@@ -2179,7 +2179,7 @@ void tst_QQuickListView::sectionsDelegate_headerVisibility()
     window->rootContext()->setContextProperty("testModel", &model);
     window->setSource(testFileUrl("listview-sections_delegate.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QTest::qWaitForWindowActive(window);
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
@@ -2669,7 +2669,7 @@ void tst_QQuickListView::keyNavigation()
     listview->setVerticalLayoutDirection(verticalLayoutDirection);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
-    window->requestActivateWindow();
+    window->requestActivate();
     QTest::qWaitForWindowActive(window);
     QTRY_VERIFY(qGuiApp->focusWindow() == window);
 

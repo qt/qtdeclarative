@@ -93,7 +93,7 @@ void tst_qquickanimatedsprite::test_frameChangedSignal()
 
     window->setSource(testFileUrl("frameChange.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QVERIFY(window->rootObject());

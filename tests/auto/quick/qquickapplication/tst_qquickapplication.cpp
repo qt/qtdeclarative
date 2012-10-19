@@ -89,7 +89,7 @@ void tst_qquickapplication::active()
 
     // active
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
     QVERIFY(QGuiApplication::focusWindow() == &window);
     QVERIFY(item->property("active").toBool());

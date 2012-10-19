@@ -107,7 +107,7 @@ QString QAccessibleQuickView::text(QAccessible::Text text) const
 #else
     Q_UNUSED(text)
 #endif
-    return view()->windowTitle();
+    return view()->title();
 }
 
 

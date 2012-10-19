@@ -176,7 +176,7 @@ private:
 
     void ensureFocus(QWindow *w) {
         w->show();
-        w->requestActivateWindow();
+        w->requestActivate();
         QTest::qWaitForWindowActive(w);
     }
 };

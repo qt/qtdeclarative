@@ -152,7 +152,7 @@ void tst_qquickanimatedimage::mirror_running()
 
     QQuickView window;
     window.setSource(testFileUrl("hearts.qml"));
-    window.requestActivateWindow();
+    window.requestActivate();
     window.show();
     QTest::qWaitForWindowActive(&window);
 

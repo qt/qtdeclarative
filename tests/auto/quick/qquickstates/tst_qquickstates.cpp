@@ -1009,7 +1009,7 @@ void tst_qquickstates::anchorRewindBug()
     view->setSource(testFileUrl("anchorRewindBug.qml"));
 
     view->show();
-    view->requestActivateWindow();
+    view->requestActivate();
 
     QVERIFY(QTest::qWaitForWindowActive(view));
 

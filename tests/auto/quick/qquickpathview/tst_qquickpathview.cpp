@@ -1335,7 +1335,7 @@ void tst_QQuickPathView::package()
     QVERIFY(window);
     window->setSource(testFileUrl("pathview_package.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickPathView *pathView = window->rootObject()->findChild<QQuickPathView*>("photoPathView");
@@ -1452,7 +1452,7 @@ void tst_QQuickPathView::mouseDrag()
     QQuickView *window = createView();
     window->setSource(testFileUrl("dragpath.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QCOMPARE(window, qGuiApp->focusWindow());
 
@@ -1547,7 +1547,7 @@ void tst_QQuickPathView::changePreferredHighlight()
     window->setGeometry(0,0,400,200);
     window->setSource(testFileUrl("dragpath.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QCOMPARE(window, qGuiApp->focusWindow());
 
@@ -1741,7 +1741,7 @@ void tst_QQuickPathView::cancelDrag()
     QQuickView *window = createView();
     window->setSource(testFileUrl("dragpath.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QCOMPARE(window, qGuiApp->focusWindow());
 
@@ -1787,7 +1787,7 @@ void tst_QQuickPathView::maximumFlickVelocity()
     QQuickView *window = createView();
     window->setSource(testFileUrl("dragpath.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QCOMPARE(window, qGuiApp->focusWindow());
 
@@ -1873,7 +1873,7 @@ void tst_QQuickPathView::snapOneItem()
     QQuickView *window = createView();
     window->setSource(testFileUrl("panels.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QCOMPARE(window, qGuiApp->focusWindow());
 
@@ -1927,7 +1927,7 @@ void tst_QQuickPathView::positionViewAtIndex()
     QQuickView *window = createView();
     window->setSource(testFileUrl("pathview3.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QCOMPARE(window, qGuiApp->focusWindow());
 
@@ -1991,7 +1991,7 @@ void tst_QQuickPathView::indexAt_itemAt()
     QQuickView *window = createView();
     window->setSource(testFileUrl("pathview3.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QCOMPARE(window, qGuiApp->focusWindow());
 

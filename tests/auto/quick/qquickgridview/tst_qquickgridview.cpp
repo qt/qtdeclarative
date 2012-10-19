@@ -1965,7 +1965,7 @@ void tst_QQuickGridView::keyNavigation()
     gridview->setVerticalLayoutDirection(verticalLayoutDirection);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
-    window->requestActivateWindow();
+    window->requestActivate();
     QTest::qWaitForWindowActive(window);
     QTRY_VERIFY(qGuiApp->focusWindow() == window);
     QCOMPARE(gridview->currentIndex(), 0);
@@ -4035,7 +4035,7 @@ void tst_QQuickGridView::columnCount()
     QQuickView window;
     window.setSource(testFileUrl("gridview4.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QQuickGridView *view = qobject_cast<QQuickGridView*>(window.rootObject());

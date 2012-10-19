@@ -851,7 +851,7 @@ QQuickView *tst_QQuickMultiPointTouchArea::createAndShowView(const QString &file
     QQuickView *window = new QQuickView(0);
     window->setSource(testFileUrl(file));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QTest::qWaitForWindowActive(window);
 
     return window;

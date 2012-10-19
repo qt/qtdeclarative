@@ -1093,14 +1093,6 @@ QQuickItem *QQuickWindow::mouseGrabberItem() const
 }
 
 
-/*!
-    \qmlproperty color QtQuick.Window2::Window::color
-
-    The background color for the window.
-
-    Setting this property is more efficient than using a separate Rectangle.
-*/
-
 bool QQuickWindowPrivate::clearHover()
 {
     Q_Q(QQuickWindow);
@@ -2759,6 +2751,14 @@ QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, Create
 }
 
 /*!
+    \qmlproperty color QtQuick.Window2::Window::color
+
+    The background color for the window.
+
+    Setting this property is more efficient than using a separate Rectangle.
+*/
+
+/*!
     \property QQuickWindow::color
     \brief The color used to clear the OpenGL context.
 
@@ -2783,7 +2783,26 @@ QColor QQuickWindow::color() const
     return d_func()->clearColor;
 }
 
+/*!
+    \qmlproperty string QtQuick.Window2::Window::title
 
+    The window's title in the windowing system.
+
+    The window title might appear in the title area of the window decorations,
+    depending on the windowing system and the window flags. It might also
+    be used by the windowing system to identify the window in other contexts,
+    such as in the task switcher.
+ */
+
+/*!
+    \qmlproperty string QtQuick.Window2::Window::modality
+
+    The modality of the window.
+
+    A modal window prevents other windows from receiving input events.
+    Possible values are Qt.NonModal (the default), Qt.WindowModal,
+    and Qt.ApplicationModal.
+ */
 
 #include "moc_qquickwindow.cpp"
 

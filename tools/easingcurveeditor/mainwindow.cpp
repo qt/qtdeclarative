@@ -130,7 +130,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
 void MainWindow::initQml()
 {
-    quickView.setWindowFlags(Qt::FramelessWindowHint);
+    quickView.setFlags(Qt::FramelessWindowHint);
     quickView.rootContext()->setContextProperty(QLatin1String("editor"), m_splineEditor);
     quickView.setSource(QUrl("qrc:/preview.qml"));
     quickView.show();

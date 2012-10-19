@@ -193,7 +193,7 @@ void tst_TouchMouse::simpleTouchEvent()
 
     window->setSource(testFileUrl("singleitem.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->rootObject() != 0);
 
@@ -308,7 +308,7 @@ void tst_TouchMouse::eventFilter()
 
 //    window->setSource(testFileUrl("singleitem.qml"));
 //    window->show();
-//    window->requestActivateWindow();
+//    window->requestActivate();
 //    QVERIFY(window->rootObject() != 0);
 
 //    EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
@@ -342,7 +342,7 @@ void tst_TouchMouse::mouse()
 
     window->setSource(testFileUrl("twoitems.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(window->rootObject() != 0);
 
     EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
@@ -374,7 +374,7 @@ void tst_TouchMouse::touchOverMouse()
 
     window->setSource(testFileUrl("twoitems.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(window->rootObject() != 0);
 
     EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
@@ -415,7 +415,7 @@ void tst_TouchMouse::mouseOverTouch()
 
     window->setSource(testFileUrl("twoitems.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(window->rootObject() != 0);
 
     EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
@@ -459,7 +459,7 @@ void tst_TouchMouse::buttonOnFlickable()
 
     window->setSource(testFileUrl("buttononflickable.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(window->rootObject() != 0);
 
     QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>("flickable");
@@ -567,7 +567,7 @@ void tst_TouchMouse::buttonOnTouch()
     QQuickView *window = createView();
     window->setSource(testFileUrl("buttonontouch.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(window->rootObject() != 0);
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
@@ -689,7 +689,7 @@ void tst_TouchMouse::pinchOnFlickable()
     QQuickView *window = createView();
     window->setSource(testFileUrl("pinchonflickable.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(window->rootObject() != 0);
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
@@ -756,7 +756,7 @@ void tst_TouchMouse::flickableOnPinch()
     QQuickView *window = createView();
     window->setSource(testFileUrl("flickableonpinch.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(window->rootObject() != 0);
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
@@ -822,7 +822,7 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     QQuickView *window = createView();
     window->setSource(testFileUrl("mouseonflickableonpinch.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(window->rootObject() != 0);
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");

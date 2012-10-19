@@ -856,7 +856,7 @@ void tst_qquicktext::hAlignImplicitWidth()
 {
     QQuickView view(testFileUrl("hAlignImplicitWidth.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickText *text = view.rootObject()->findChild<QQuickText*>("textItem");
@@ -1309,7 +1309,7 @@ void tst_qquicktext::underline()
 {
     QQuickView view(testFileUrl("underline.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     QQuickText *textObject = view.rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(textObject != 0);
@@ -1322,7 +1322,7 @@ void tst_qquicktext::overline()
 {
     QQuickView view(testFileUrl("overline.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     QQuickText *textObject = view.rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(textObject != 0);
@@ -1335,7 +1335,7 @@ void tst_qquicktext::strikeout()
 {
     QQuickView view(testFileUrl("strikeout.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     QQuickText *textObject = view.rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(textObject != 0);
@@ -1894,7 +1894,7 @@ void tst_qquicktext::embeddedImages()
 
     QQuickView *view = new QQuickView(qmlfile);
     view->show();
-    view->requestActivateWindow();
+    view->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(view));
     QQuickText *textObject = qobject_cast<QQuickText*>(view->rootObject());
 
@@ -2506,7 +2506,7 @@ void tst_qquicktext::lineLaidOutRelayout()
     QQuickView *window = createView(testFile("lineLayoutRelayout.qml"));
 
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
@@ -3611,7 +3611,7 @@ void tst_qquicktext::htmlLists()
     textObject->setText(text);
 
     view->show();
-    view->requestActivateWindow();
+    view->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(view));
 
     QCOMPARE(textPrivate->extra->doc->lineCount(), nbLines);

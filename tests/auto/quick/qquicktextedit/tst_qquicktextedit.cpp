@@ -730,7 +730,7 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignLeft);
     QVERIFY(textEdit->positionToRectangle(0).x() < window.width()/2);
 
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
     QVERIFY(textEdit->hasActiveFocus());
 
@@ -1124,7 +1124,7 @@ void tst_qquicktextedit::persistentSelection()
 {
     QQuickView window(testFileUrl("persistentSelection.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(window.rootObject());
@@ -1193,7 +1193,7 @@ void tst_qquicktextedit::focusOnPress()
     window.resize(100, 50);
     textEditObject->setParentItem(window.contentItem());
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QCOMPARE(textEditObject->hasFocus(), false);
@@ -1393,7 +1393,7 @@ void tst_qquicktextedit::keySelection()
 {
     QQuickView window(testFileUrl("navigation.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(window.rootObject() != 0);
@@ -1850,7 +1850,7 @@ void tst_qquicktextedit::mouseSelection()
     QQuickView window(QUrl::fromLocalFile(qmlfile));
 
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(window.rootObject() != 0);
@@ -1892,7 +1892,7 @@ void tst_qquicktextedit::dragMouseSelection()
     QQuickView window(QUrl::fromLocalFile(qmlfile));
 
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(window.rootObject() != 0);
@@ -1945,7 +1945,7 @@ void tst_qquicktextedit::mouseSelectionMode()
     QQuickView window(QUrl::fromLocalFile(qmlfile));
 
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(window.rootObject() != 0);
@@ -2046,7 +2046,7 @@ void tst_qquicktextedit::inputMethodHints()
 {
     QQuickView window(testFileUrl("inputmethodhints.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
 
     QVERIFY(window.rootObject() != 0);
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
@@ -2086,7 +2086,7 @@ void tst_qquicktextedit::positionAt()
     QQuickView window(testFileUrl("positionAt.qml"));
     QVERIFY(window.rootObject() != 0);
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QQuickTextEdit *texteditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
@@ -2175,7 +2175,7 @@ void tst_qquicktextedit::linkActivated()
     QQuickView window(testFileUrl("linkActivated.qml"));
     QVERIFY(window.rootObject() != 0);
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QQuickTextEdit *texteditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
@@ -2220,7 +2220,7 @@ void tst_qquicktextedit::cursorDelegate()
     QFETCH(QUrl, source);
     QQuickView view(source);
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
     QVERIFY(textEditObject != 0);
     // Delegate creation is deferred until focus in or cursor visibility is forced.
@@ -2335,7 +2335,7 @@ void tst_qquicktextedit::remoteCursorDelegate()
     view.rootContext()->setContextProperty("contextDelegate", &component);
     view.setSource(testFileUrl("cursorTestRemote.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
     QVERIFY(textEditObject != 0);
 
@@ -2363,7 +2363,7 @@ void tst_qquicktextedit::cursorVisible()
 
     QQuickView view(testFileUrl("cursorVisible.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
     QCOMPARE(&view, qGuiApp->focusWindow());
 
@@ -2395,13 +2395,13 @@ void tst_qquicktextedit::cursorVisible()
 
     QWindow alternateView;
     alternateView.show();
-    alternateView.requestActivateWindow();
+    alternateView.requestActivate();
     QTest::qWaitForWindowActive(&alternateView);
 
     QCOMPARE(edit.isCursorVisible(), false);
     QCOMPARE(spy.count(), 6);
 
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
     QCOMPARE(edit.isCursorVisible(), true);
     QCOMPARE(spy.count(), 7);
@@ -2471,7 +2471,7 @@ void tst_qquicktextedit::delegateLoading()
 
     QQuickView view(QUrl(QLatin1String(SERVER_ADDR "/") + qmlfile));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
 
     if (!error.isEmpty()) {
         QTest::ignoreMessage(QtWarningMsg, error.toUtf8());
@@ -2508,7 +2508,7 @@ void tst_qquicktextedit::navigation()
 {
     QQuickView window(testFileUrl("navigation.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
 
     QVERIFY(window.rootObject() != 0);
 
@@ -2660,7 +2660,7 @@ void tst_qquicktextedit::middleClickPaste()
     QQuickView window(testFileUrl("mouseselection_true.qml"));
 
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(window.rootObject() != 0);
@@ -2698,7 +2698,7 @@ void tst_qquicktextedit::readOnly()
 {
     QQuickView window(testFileUrl("readOnly.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
 
     QVERIFY(window.rootObject() != 0);
 
@@ -2734,7 +2734,7 @@ void tst_qquicktextedit::textInput()
 {
     QQuickView view(testFileUrl("inputMethodEvent.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
@@ -2770,7 +2770,7 @@ void tst_qquicktextedit::inputMethodUpdate()
 
     QQuickView view(testFileUrl("inputMethodEvent.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
@@ -2860,7 +2860,7 @@ void tst_qquicktextedit::openInputPanel()
 
     QQuickView view(testFileUrl("openInputPanel.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
@@ -3199,7 +3199,7 @@ void tst_qquicktextedit::preeditCursorRectangle()
 
     QQuickView view(testFileUrl("inputMethodEvent.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
@@ -3282,7 +3282,7 @@ void tst_qquicktextedit::inputMethodComposing()
 
     QQuickView view(testFileUrl("inputContext.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
@@ -3397,7 +3397,7 @@ void tst_qquicktextedit::cursorRectangleSize()
     QVERIFY(textEdit != 0);
     textEdit->setFocus(true);
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QTest::qWaitForWindowActive(window);
 
     QInputMethodQueryEvent event(Qt::ImCursorRectangle);
@@ -4255,7 +4255,7 @@ void tst_qquicktextedit::keySequence()
     QQuickWindow window;
     textEdit->setParentItem(window.contentItem());
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(textEdit->hasActiveFocus());
@@ -4418,7 +4418,7 @@ void tst_qquicktextedit::undo()
     QQuickWindow window;
     textEdit->setParentItem(window.contentItem());
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(textEdit->hasActiveFocus());
@@ -4504,7 +4504,7 @@ void tst_qquicktextedit::redo()
     QQuickWindow window;
     textEdit->setParentItem(window.contentItem());
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
     QVERIFY(textEdit->hasActiveFocus());
 
@@ -4728,7 +4728,7 @@ void tst_qquicktextedit::undo_keypressevents()
     QQuickWindow window;
     textEdit->setParentItem(window.contentItem());
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
     QVERIFY(textEdit->hasActiveFocus());
 
@@ -4817,7 +4817,7 @@ void tst_qquicktextedit::emptytags_QTBUG_22058()
     QVERIFY(window.rootObject() != 0);
 
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
     QQuickTextEdit *input = qobject_cast<QQuickTextEdit *>(qvariant_cast<QObject *>(window.rootObject()->property("inputField")));
     QVERIFY(input->hasActiveFocus());

@@ -313,7 +313,7 @@ void tst_qquickimage::mirror()
         obj->setFillMode(fillMode);
         obj->setProperty("mirror", true);
         window->show();
-        window->requestActivateWindow();
+        window->requestActivate();
         QVERIFY(QTest::qWaitForWindowActive(window));
 
         QImage screenshot = window->grabWindow();
@@ -498,7 +498,7 @@ void tst_qquickimage::tiling_QTBUG_6716()
 
     QQuickView view(testFileUrl(source));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickImage *tiling = findItem<QQuickImage>(view.rootObject(), "tiling");

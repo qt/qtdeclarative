@@ -171,13 +171,13 @@ QWindow *getMasterWindow(QWindow *w)
 
 Qt::WindowFlags QQuickViewInspector::windowFlags() const
 {
-    return getMasterWindow(m_view)->windowFlags();
+    return getMasterWindow(m_view)->flags();
 }
 
 void QQuickViewInspector::setWindowFlags(Qt::WindowFlags flags)
 {
     QWindow *w = getMasterWindow(m_view);
-    w->setWindowFlags(flags);
+    w->setFlags(flags);
     // make flags are applied
     w->setVisible(false);
     w->setVisible(true);

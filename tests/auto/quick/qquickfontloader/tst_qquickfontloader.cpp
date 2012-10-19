@@ -229,7 +229,7 @@ void tst_qquickfontloader::changeFontSourceViaState()
 {
     QQuickView window(testFileUrl("qtbug-20268.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
     QCOMPARE(&window, qGuiApp->focusWindow());
 

@@ -741,7 +741,7 @@ void tst_qquicktextinput::persistentSelection()
 {
     QQuickView window(testFileUrl("persistentSelection.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QQuickTextInput *input = qobject_cast<QQuickTextInput *>(window.rootObject());
@@ -1253,7 +1253,7 @@ void tst_qquicktextinput::dragMouseSelection()
     QQuickView window(QUrl::fromLocalFile(qmlfile));
 
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(window.rootObject() != 0);
@@ -1316,7 +1316,7 @@ void tst_qquicktextinput::mouseSelectionMode()
     QQuickView window(QUrl::fromLocalFile(qmlfile));
 
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(window.rootObject() != 0);
@@ -1497,7 +1497,7 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->boundingRect().left(), qreal(0));
 
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
     QVERIFY(textInput->hasActiveFocus());
 
@@ -1760,7 +1760,7 @@ void tst_qquicktextinput::positionAt()
     QQuickView window(testFileUrl("positionAt.qml"));
     QVERIFY(window.rootObject() != 0);
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QQuickTextInput *textinputObject = qobject_cast<QQuickTextInput *>(window.rootObject());
@@ -1850,7 +1850,7 @@ void tst_qquicktextinput::maxLength()
     QQuickView window(testFileUrl("maxLength.qml"));
     QVERIFY(window.rootObject() != 0);
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QQuickTextInput *textinputObject = qobject_cast<QQuickTextInput *>(window.rootObject());
@@ -1880,7 +1880,7 @@ void tst_qquicktextinput::masks()
     //QString componentStr = "import QtQuick 2.0\nTextInput {  inputMask: 'HHHHhhhh'; }";
     QQuickView window(testFileUrl("masks.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QVERIFY(window.rootObject() != 0);
     QQuickTextInput *textinputObject = qobject_cast<QQuickTextInput *>(window.rootObject());
     QVERIFY(textinputObject != 0);
@@ -1911,7 +1911,7 @@ void tst_qquicktextinput::validators()
 
     QQuickView window(testFileUrl("validators.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(window.rootObject() != 0);
@@ -2238,7 +2238,7 @@ void tst_qquicktextinput::inputMethods()
 {
     QQuickView window(testFileUrl("inputmethods.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     // test input method hints
@@ -2310,7 +2310,7 @@ void tst_qquicktextinput::navigation()
 {
     QQuickView window(testFileUrl("navigation.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
 
     QVERIFY(window.rootObject() != 0);
 
@@ -2359,7 +2359,7 @@ void tst_qquicktextinput::navigation_RTL()
 {
     QQuickView window(testFileUrl("navigation.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
 
     QVERIFY(window.rootObject() != 0);
 
@@ -2505,7 +2505,7 @@ void tst_qquicktextinput::copyAndPasteKeySequence()
     QQuickWindow window;
     textInput->setParentItem(window.contentItem());
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     // copy and paste
@@ -2599,7 +2599,7 @@ void tst_qquicktextinput::middleClickPaste()
     QQuickView window(testFileUrl("mouseselection_true.qml"));
 
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(window.rootObject() != 0);
@@ -2664,7 +2664,7 @@ void tst_qquicktextinput::cursorDelegate()
     QFETCH(QUrl, source);
     QQuickView view(source);
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QQuickTextInput *textInputObject = view.rootObject()->findChild<QQuickTextInput*>("textInputObject");
     QVERIFY(textInputObject != 0);
     // Delegate is created on demand, and so won't be available immediately.  Focus in or
@@ -2783,7 +2783,7 @@ void tst_qquicktextinput::remoteCursorDelegate()
     view.rootContext()->setContextProperty("contextDelegate", &component);
     view.setSource(testFileUrl("cursorTestRemote.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QQuickTextInput *textInputObject = view.rootObject()->findChild<QQuickTextInput*>("textInputObject");
     QVERIFY(textInputObject != 0);
 
@@ -2811,7 +2811,7 @@ void tst_qquicktextinput::cursorVisible()
 
     QQuickView view(testFileUrl("cursorVisible.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 
     QCOMPARE(input.isCursorVisible(), false);
@@ -2842,13 +2842,13 @@ void tst_qquicktextinput::cursorVisible()
 
     QQuickView alternateView;
     alternateView.show();
-    alternateView.requestActivateWindow();
+    alternateView.requestActivate();
     QTest::qWaitForWindowActive(&alternateView);
 
     QCOMPARE(input.isCursorVisible(), false);
     QCOMPARE(spy.count(), 6);
 
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
     QCOMPARE(input.isCursorVisible(), true);
     QCOMPARE(spy.count(), 7);
@@ -3093,7 +3093,7 @@ void tst_qquicktextinput::readOnly()
 {
     QQuickView window(testFileUrl("readOnly.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
 
     QVERIFY(window.rootObject() != 0);
 
@@ -3120,7 +3120,7 @@ void tst_qquicktextinput::echoMode()
 {
     QQuickView window(testFileUrl("echoMode.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(window.rootObject() != 0);
@@ -3194,7 +3194,7 @@ void tst_qquicktextinput::passwordEchoDelay()
         QSKIP("No mask delay in use");
     QQuickView window(testFileUrl("echoMode.qml"));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(window.rootObject() != 0);
@@ -3300,7 +3300,7 @@ void tst_qquicktextinput::focusOnPress()
     window.resize(100, 50);
     textInputObject->setParentItem(window.contentItem());
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QCOMPARE(textInputObject->hasFocus(), false);
@@ -3363,7 +3363,7 @@ void tst_qquicktextinput::openInputPanel()
 
     QQuickView view(testFileUrl("openInputPanel.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 
     QQuickTextInput *input = qobject_cast<QQuickTextInput *>(view.rootObject());
@@ -3452,7 +3452,7 @@ void tst_qquicktextinput::setHAlignClearCache()
     input.setText("Hello world");
     input.setParentItem(view.contentItem());
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 #ifdef Q_OS_MAC
     QEXPECT_FAIL("", "QTBUG-23485", Abort);
@@ -3475,7 +3475,7 @@ void tst_qquicktextinput::focusOutClearSelection()
     input.componentComplete();
     input2.componentComplete();
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
     QVERIFY(input.hasActiveFocus());
     input.select(2,5);
@@ -3545,7 +3545,7 @@ void tst_qquicktextinput::preeditAutoScroll()
 
     QQuickView view(testFileUrl("preeditAutoScroll.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
     QQuickTextInput *input = qobject_cast<QQuickTextInput *>(view.rootObject());
     QVERIFY(input);
@@ -3631,7 +3631,7 @@ void tst_qquicktextinput::preeditCursorRectangle()
 
     QQuickView view(testFileUrl("inputMethodEvent.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
     QQuickTextInput *input = qobject_cast<QQuickTextInput *>(view.rootObject());
     QVERIFY(input);
@@ -3714,7 +3714,7 @@ void tst_qquicktextinput::inputContextMouseHandler()
     input->setText("");
 
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 
     QTextLayout layout(text);
@@ -3750,7 +3750,7 @@ void tst_qquicktextinput::inputMethodComposing()
 
     QQuickView view(testFileUrl("inputContext.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
     QQuickTextInput *input = qobject_cast<QQuickTextInput *>(view.rootObject());
     QVERIFY(input);
@@ -3856,7 +3856,7 @@ void tst_qquicktextinput::inputMethodUpdate()
 
     QQuickView view(testFileUrl("inputContext.qml"));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
     QQuickTextInput *input = qobject_cast<QQuickTextInput *>(view.rootObject());
     QVERIFY(input);
@@ -3946,7 +3946,7 @@ void tst_qquicktextinput::cursorRectangleSize()
     QVERIFY(textInput != 0);
     textInput->setFocus(true);
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QTest::qWaitForWindowActive(window);
     QVERIFY(textInput->hasActiveFocus());
 
@@ -3978,7 +3978,7 @@ void tst_qquicktextinput::tripleClickSelectsAll()
     QString qmlfile = testFile("positionAt.qml");
     QQuickView view(QUrl::fromLocalFile(qmlfile));
     view.show();
-    view.requestActivateWindow();
+    view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 
     QQuickTextInput* input = qobject_cast<QQuickTextInput*>(view.rootObject());
@@ -4970,7 +4970,7 @@ void tst_qquicktextinput::keySequence()
     QQuickWindow window;
     textInput->setParentItem(window.contentItem());
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
     QVERIFY(textInput->hasActiveFocus());
 
@@ -5131,7 +5131,7 @@ void tst_qquicktextinput::undo()
     QQuickWindow window;
     textInput->setParentItem(window.contentItem());
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
     QVERIFY(textInput->hasActiveFocus());
 
@@ -5217,7 +5217,7 @@ void tst_qquicktextinput::redo()
     QQuickWindow window;
     textInput->setParentItem(window.contentItem());
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
     QVERIFY(textInput->hasActiveFocus());
@@ -5549,7 +5549,7 @@ void tst_qquicktextinput::undo_keypressevents()
     QQuickWindow window;
     textInput->setParentItem(window.contentItem());
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
     QVERIFY(textInput->hasActiveFocus());
 
@@ -5579,7 +5579,7 @@ void tst_qquicktextinput::backspaceSurrogatePairs()
     QQuickWindow window;
     textInput->setParentItem(window.contentItem());
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
     QCOMPARE(QGuiApplication::focusWindow(), &window);
 
@@ -5605,7 +5605,7 @@ void tst_qquicktextinput::QTBUG_19956()
 
     QQuickView window(testFileUrl(url));
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
     QVERIFY(window.rootObject() != 0);
     QQuickTextInput *input = qobject_cast<QQuickTextInput*>(window.rootObject());
@@ -5644,7 +5644,7 @@ void tst_qquicktextinput::QTBUG_19956_regexp()
 
     QQuickView window(url);
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
     QVERIFY(window.rootObject() != 0);
     QQuickTextInput *input = qobject_cast<QQuickTextInput*>(window.rootObject());
@@ -5956,7 +5956,7 @@ void tst_qquicktextinput::setInputMask()
         QQuickWindow window;
         textInput->setParentItem(window.contentItem());
         window.show();
-        window.requestActivateWindow();
+        window.requestActivate();
         QTest::qWaitForWindowActive(&window);
         QVERIFY(textInput->hasActiveFocus());
 
@@ -6086,7 +6086,7 @@ void tst_qquicktextinput::keypress_inputMask()
     QQuickWindow window;
     textInput->setParentItem(window.contentItem());
     window.show();
-    window.requestActivateWindow();
+    window.requestActivate();
     QTest::qWaitForWindowActive(&window);
     QVERIFY(textInput->hasActiveFocus());
 

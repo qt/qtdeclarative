@@ -476,7 +476,7 @@ int main(int argc, char ** argv)
                 if (contentItem) {
                     qxView = new QQuickView(&engine, NULL);
                     window = qxView;
-                    window->setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+                    window->setFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
                     if (options.resizeViewToRootItem)
                         qxView->setResizeMode(QQuickView::SizeViewToRootObject);
                     else

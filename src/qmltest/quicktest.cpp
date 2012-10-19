@@ -269,7 +269,7 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
     // Scan through all of the "tst_*.qml" files and run each of them
     // in turn with a QQuickView.
     QQuickView *view = new QQuickView;
-    view->setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint
+    view->setFlags(Qt::Window | Qt::WindowSystemMenuHint
                          | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint
                          | Qt::WindowCloseButtonHint);
     QTestRootObject rootobj;
@@ -288,7 +288,7 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
             continue;
 
         view->setObjectName(fi.baseName());
-        view->setWindowTitle(view->objectName());
+        view->setTitle(view->objectName());
         rootobj.setHasTestCase(false);
         rootobj.setWindowShown(false);
         rootobj.hasQuit = false;

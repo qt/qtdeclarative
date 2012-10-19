@@ -286,7 +286,7 @@ void tst_QQuickItem::keys()
 
     window->setSource(testFileUrl("keystest.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
 
@@ -414,7 +414,7 @@ void tst_QQuickItem::keysProcessingOrder()
 
     window->setSource(testFileUrl("keyspriority.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
 
@@ -472,7 +472,7 @@ void tst_QQuickItem::keysim()
 
     window->setSource(testFileUrl("keysim.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
 
@@ -657,7 +657,7 @@ void tst_QQuickItem::keyNavigation()
 
     window->setSource(testFileUrl("keynavigationtest.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
 
@@ -734,7 +734,7 @@ void tst_QQuickItem::keyNavigation_RightToLeft()
 
     window->setSource(testFileUrl("keynavigationtest.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
 
@@ -789,7 +789,7 @@ void tst_QQuickItem::keyNavigation_skipNotVisible()
 
     window->setSource(testFileUrl("keynavigationtest.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
 
@@ -864,7 +864,7 @@ void tst_QQuickItem::keyNavigation_implicitSetting()
 
     window->setSource(testFileUrl("keynavigationtest_implicit.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
 
@@ -1259,7 +1259,7 @@ void tst_QQuickItem::propertyChanges()
     window->setBaseSize(QSize(300, 300));
     window->setSource(testFileUrl("propertychanges.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
 
@@ -1671,7 +1671,7 @@ void tst_QQuickItem::contains()
     window->setBaseSize(QSize(400, 400));
     window->setSource(testFileUrl("hollowTestItem.qml"));
     window->show();
-    window->requestActivateWindow();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
 
