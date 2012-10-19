@@ -26,110 +26,121 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-qmlscene.html
-\ingroup qtquick-tools
-\title Prototyping with qmlscene
-\ingroup qttools
-\brief a tool for testing and loading QML files
+    \page qtquick-qmlscene.html
+    \ingroup qtquick-tools
+    \title Prototyping with qmlscene
+    \ingroup qttools
+    \brief Utility to test and load QML files
 
-The Qt SDK includes \c qmlscene, a tool for loading QML documents that
-makes it easy to quickly develop and debug QML applications. It provides a simple
-way of loading QML documents and also includes additional features useful for
-the development of QML applications.
+    Qt 5 includes \c qmlscene, a utility to load QML documents.
+    The \c{qmlscene} utility enables viewing your QML document even before the
+    application is complete. This utility also provides the following
+    additional features that are useful while developing QML applications:
+    \list
+     \li View the QML document in a maximized window.
+     \li View the QML document in full-screen mode.
+     \li Make the window transparent.
+     \li Disable multi-sampling (anti-aliasing).
+     \li Do not detect the version of the .qml file.
+     \li Run all animations in slow motion.
+     \li Resize the window to the size of the root item.
+     \li Add the list of import paths.
+     \li Add a named bundle.
+     \li Use a translation file to set the language.
+    \endlist
 
-The \c qmlscene tool should only be used for testing and developing QML applications. It is
-\e not intended for use in a production environment and should not be used for the
-deployment of QML applications. In those cases, a custom C++ application should be
-written instead, or the QML file should be bundled in a module. See
-\l {Deploying QML applications} for more information.
+    The \c qmlscene utility is meant to be used for testing your QML
+    applications, and not as a launcher in a production environment.
+    To launch a QML application in a production environment, develop a custom
+    C++ application or bundle the QML file in a module. See \l {Deploying QML
+    applications} for more information.
 
-The \c qmlscene tool is located at \c QTDIR/bin/qmlscene. To load a \c .qml file,
-run the tool and select the file to be opened, or provide the
-file path on the command line:
+    To load a .qml file, run the tool and select the file to be opened, or
+    provide the file path on the command prompt:
 
-\code
-    qmlscene myqmlfile.qml
-\endcode
+    \code
+        qmlscene myqmlfile.qml
+    \endcode
 
-To see the configuration options, run \c qmlscene with the \c -help argument.
+    To see the configuration options, run \c qmlscene with the \c -help
+    argument.
 
+    \section1 Adding Module Import Paths
 
-\section1 Adding module import paths
+    Additional module import paths can be provided using the \c -I flag.
+    For example, the \l{QML Plugin Example}{QML plugin example}
+    creates a C++ plugin identified with the namespace, \c TimeExample.
+    To load the plugin, you must run \c qmlscene with the \c{-I} flag from the
+    example's base directory:
 
-Additional module import paths can be provided using the \c -I flag.
-For example, the \l{declarative/cppextensions/plugins}{QML plugins example} creates
-a C++ plugin identified as \c com.nokia.TimeExample. Since this has a namespaced
-identifier, \c qmlscene has to be run with the \c -I flag from the example's
-base directory:
+    \code
+    qmlscene -I imports plugins.qml
+    \endcode
 
-\code
-qmlscene -I . plugins.qml
-\endcode
+    This adds the current directory to the import path so that \c qmlscene will
+    find the plugin in the \c imports directory.
 
-This adds the current directory to the import path so that \c qmlscene will
-find the plugin in the \c com/nokia/TimeExample directory.
+    \note By default, the current directory is included in the import search
+    path, but modules in a namespace such as \c TimeExample are not found
+    unless the path is explicitly added.
 
-Note by default, the current directory is included in the import search path,
-but namespaced modules like \c com.nokia.TimeExample are not found unless
-the path is explicitly added.
+    \section1 Loading Test Data
 
+    Often, QML applications are prototyped with test data that is later
+    replaced by real data sources from C++ plugins. The \c qmlscene utility
+    assists in this aspect by loading test data into the application context.
+    It looks for a directory named \c {dummydata} in the same directory as
+    the target QML file, and loads the .qml files in that directory as QML
+    objects and bind them to the root context as properties named after the files.
 
-\section1 Loading placeholder data
+    For example, the following QML document refers to a \c lottoNumbers
+    property which does not exist within the document:
 
-Often, QML applications are prototyped with fake data that is later replaced
-by real data sources from C++ plugins. The \c qmlscene tool assists in this aspect by
-loading fake data into the application context: it looks for a directory named
-"dummydata" in the same directory as the target QML file, and any \c .qml
-files in that directory are loaded as QML objects and bound to the root context
-as properties named after the files.
+    \qml
+    import QtQuick 2.0
 
-For example, this QML document refers to a \c lottoNumbers property which does
-not actually exist within the document:
+    ListView {
+        width: 200; height: 300
+        model: lottoNumbers
+        delegate: Text { text: number }
+    }
+    \endqml
 
-\qml
-import QtQuick 2.0
+    If within the document's directory, there is a \c{dummydata} directory
+    which contains a \c lottoNumbers.qml file like this:
 
-ListView {
-    width: 200; height: 300
-    model: lottoNumbers
-    delegate: Text { text: number }
-}
-\endqml
+    \qml
+    import QtQuick 2.0
 
-If within the document's directory, there is a "dummydata" directory which
-contains a \c lottoNumbers.qml file like this:
+    ListModel {
+        ListElement { number: 23 }
+        ListElement { number: 44 }
+        ListElement { number: 78 }
+    }
+    \endqml
 
-\qml
-import QtQuick 2.0
+    Then this model would be automatically loaded into the ListView in the
+    previous document.
 
-ListModel {
-    ListElement { number: 23 }
-    ListElement { number: 44 }
-    ListElement { number: 78 }
-}
-\endqml
+    Child properties are included when loaded from \c dummydata. The following
+    document refers to a \c clock.time property:
 
-Then this model would be automatically loaded into the ListView in the previous document.
+    \qml
+    import QtQuick 2.0
+    Text { text: clock.time }
+    \endqml
 
-Child properties are included when loaded from dummy data. The following document
-refers to a \c clock.time property:
+    The text value could be filled by a \c dummydata/clock.qml file with a
+    \c time property in the root context:
 
-\qml
-import QtQuick 2.0
-Text { text: clock.time }
-\endqml
+    \qml
+    import QtQuick 2.0
+    QtObject { property int time: 54321 }
+    \endqml
 
-The text value could be filled by a \c dummydata/clock.qml file with a \c time
-property in the root context:
-
-\qml
-import QtQuick 2.0
-QtObject { property int time: 54321 }
-\endqml
-
-To replace this with real data, you can simply bind the real data object to
-the root context in C++ using QQmlContext::setContextProperty(). This
-is detailed in \l{qtqml-cppintegration-topic.html}{Integrating QML and C++}.
+    To replace this with real data, bind the real data object to
+    the root context in C++ using QQmlContext::setContextProperty(). This is
+    detailed in \l{Integrating QML and C++}.
 
 */
 
