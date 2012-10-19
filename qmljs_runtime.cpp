@@ -189,6 +189,11 @@ bool Value::isDateObject() const
     return isObject() ? objectValue()->asDateObject() != 0 : false;
 }
 
+bool Value::isRegExpObject() const
+{
+    return isObject() ? objectValue()->asRegExpObject() != 0 : false;
+}
+
 bool Value::isArrayObject() const
 {
     return isObject() ? objectValue()->asArrayObject() != 0 : false;
@@ -232,6 +237,11 @@ StringObject *Value::asStringObject() const
 DateObject *Value::asDateObject() const
 {
     return isObject() ? objectValue()->asDateObject() : 0;
+}
+
+RegExpObject *Value::asRegExpObject() const
+{
+    return isObject() ? objectValue()->asRegExpObject() : 0;
 }
 
 ArrayObject *Value::asArrayObject() const

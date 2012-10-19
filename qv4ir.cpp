@@ -182,6 +182,21 @@ QString String::escape(const QString &s)
     return r;
 }
 
+void RegExp::dump(QTextStream &out)
+{
+    char f[3];
+    int i = 0;
+    if (flags & RegExp_Global)
+        f[i++] = 'g';
+    if (flags & RegExp_IgnoreCase)
+        f[i++] = 'i';
+    if (flags & RegExp_Multiline)
+        f[i++] = 'm';
+    f[i] = 0;
+
+    out << '/' << *value << '/' << f;
+}
+
 void Name::init(const QString *id, quint32 line, quint32 column)
 {
     this->id = id;
@@ -398,6 +413,13 @@ Expr *BasicBlock::STRING(const QString *value)
 {
     String *e = function->New<String>();
     e->init(value);
+    return e;
+}
+
+Expr *BasicBlock::REGEXP(const QString *value, int flags)
+{
+    RegExp *e = function->New<RegExp>();
+    e->init(value, flags);
     return e;
 }
 

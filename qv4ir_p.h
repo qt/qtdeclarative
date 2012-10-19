@@ -87,6 +87,7 @@ struct Expr;
 // expressions
 struct Const;
 struct String;
+struct RegExp;
 struct Name;
 struct Temp;
 struct Closure;
@@ -158,6 +159,7 @@ struct ExprVisitor {
     virtual ~ExprVisitor() {}
     virtual void visitConst(Const *) = 0;
     virtual void visitString(String *) = 0;
+    virtual void visitRegExp(RegExp *) = 0;
     virtual void visitName(Name *) = 0;
     virtual void visitTemp(Temp *) = 0;
     virtual void visitClosure(Closure *) = 0;
@@ -186,6 +188,7 @@ struct Expr {
     virtual bool isLValue() { return false; }
     virtual Const *asConst() { return 0; }
     virtual String *asString() { return 0; }
+    virtual RegExp *asRegExp() { return 0; }
     virtual Name *asName() { return 0; }
     virtual Temp *asTemp() { return 0; }
     virtual Closure *asClosure() { return 0; }
@@ -238,6 +241,29 @@ struct String: Expr {
 
     virtual void dump(QTextStream &out);
     static QString escape(const QString &s);
+};
+
+struct RegExp: Expr {
+    // needs to be compatible with the flags in the lexer
+    enum Flags {
+        RegExp_Global     = 0x01,
+        RegExp_IgnoreCase = 0x02,
+        RegExp_Multiline  = 0x04
+    };
+
+    const QString *value;
+    int flags;
+
+    void init(const QString *value, int flags)
+    {
+        this->value = value;
+        this->flags = flags;
+    }
+
+    virtual void accept(ExprVisitor *v) { v->visitRegExp(this); }
+    virtual RegExp *asRegExp() { return this; }
+
+    virtual void dump(QTextStream &out);
 };
 
 struct Name: Expr {
@@ -644,6 +670,7 @@ struct BasicBlock {
 
     Expr *CONST(Type type, double value);
     Expr *STRING(const QString *value);
+    Expr *REGEXP(const QString *value, int flags);
 
     Name *NAME(const QString &id, quint32 line, quint32 column);
     Name *NAME(Name::Builtin builtin, quint32 line, quint32 column);

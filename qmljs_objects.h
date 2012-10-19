@@ -46,6 +46,7 @@
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
+#include <QtCore/QRegularExpression>
 #include <cstdio>
 #include <cassert>
 
@@ -393,10 +394,13 @@ struct ScriptFunction: FunctionObject {
 };
 
 struct RegExpObject: Object {
-    Value value;
-    RegExpObject(const Value &value): value(value) {}
+    QRegularExpression value;
+    Value lastIndex;
+    bool global;
+    RegExpObject(const QRegularExpression &value, bool global): value(value), lastIndex(Value::fromInt32(0)), global(global) {}
     virtual QString className() { return QStringLiteral("RegExp"); }
     virtual RegExpObject *asRegExpObject() { return this; }
+    virtual Value getProperty(Context *ctx, String *name, PropertyAttributes *attributes);
 };
 
 struct ErrorObject: Object {
@@ -487,7 +491,7 @@ struct ExecutionEngine
     Object *newDateObject(const Value &value);
     FunctionObject *newDateCtor(Context *ctx);
 
-    Object *newRegExpObject(const Value &value);
+    Object *newRegExpObject(const QString &pattern, int flags);
     FunctionObject *newRegExpCtor(Context *ctx);
 
     Object *newErrorObject(const Value &value);

@@ -229,6 +229,23 @@ void ScriptFunction::call(VM::Context *ctx)
     function->code(ctx, function->codeData);
 }
 
+Value RegExpObject::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
+{
+    QString n = name->toQString();
+    if (n == QLatin1String("source"))
+        return Value::fromString(ctx, value.pattern());
+    else if (n == QLatin1String("global"))
+        return Value::fromBoolean(global);
+    else if (n == QLatin1String("ignoreCase"))
+        return Value::fromBoolean(value.patternOptions() & QRegularExpression::CaseInsensitiveOption);
+    else if (n == QLatin1String("multiline"))
+        return Value::fromBoolean(value.patternOptions() & QRegularExpression::MultilineOption);
+    else if (n == QLatin1String("lastIndex"))
+        return lastIndex;
+    return Object::getProperty(ctx, name, attributes);
+}
+
+
 void ScriptFunction::construct(VM::Context *ctx)
 {
     Object *obj = ctx->engine->newObject();
@@ -487,9 +504,16 @@ FunctionObject *ExecutionEngine::newDateCtor(Context *ctx)
     return new DateCtor(ctx);
 }
 
-Object *ExecutionEngine::newRegExpObject(const Value &value)
+Object *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
 {
-    Object *object = new RegExpObject(value);
+    bool global = (flags & IR::RegExp::RegExp_Global);
+    QRegularExpression::PatternOptions options = 0;
+    if (flags & IR::RegExp::RegExp_IgnoreCase)
+        options |= QRegularExpression::CaseInsensitiveOption;
+    if (flags & IR::RegExp::RegExp_Multiline)
+        options |= QRegularExpression::MultilineOption;
+
+    Object *object = new RegExpObject(QRegularExpression(pattern, options), global);
     object->prototype = regExpPrototype;
     return object;
 }

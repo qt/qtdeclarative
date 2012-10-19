@@ -46,6 +46,7 @@
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>
 #include <QtCore/QStringList>
+#include <QtCore/QRegularExpression>
 #include <QtCore/QDebug>
 #include <cmath>
 #include <qmath.h>
@@ -2435,12 +2436,66 @@ RegExpCtor::RegExpCtor(Context *scope)
 
 void RegExpCtor::construct(Context *ctx)
 {
-    ctx->thisObject = Value::fromObject(ctx->engine->newStringObject(Value::undefinedValue()));
+//    if (ctx->argumentCount > 2) {
+//        ctx->throwTypeError();
+//        return;
+//    }
+
+    Value r = ctx->argumentCount > 0 ? ctx->argument(0) : Value::undefinedValue();
+    Value f = ctx->argumentCount > 1 ? ctx->argument(1) : Value::undefinedValue();
+    if (RegExpObject *re = r.asRegExpObject()) {
+        if (!f.isUndefined()) {
+            ctx->throwTypeError();
+            return;
+        }
+        ctx->result = Value::fromObject(new RegExpObject(re->value, false));
+        return;
+    }
+
+    if (r.isUndefined())
+        r = Value::fromString(ctx, QString());
+    else if (!r.isString())
+        r = __qmljs_to_string(r, ctx);
+
+    bool global = false;
+    QRegularExpression::PatternOptions options = QRegularExpression::NoPatternOption;
+    if (!f.isUndefined()) {
+        f = __qmljs_to_string(f, ctx);
+        QString str = f.stringValue()->toQString();
+        for (int i = 0; i < str.length(); ++i) {
+            if (str.at(i) == QChar('g') && !global) {
+                global = true;
+            } else if (str.at(i) == QChar('i') && !(options & QRegularExpression::CaseInsensitiveOption)) {
+                options |= QRegularExpression::CaseInsensitiveOption;
+            } else if (str.at(i) == QChar('m') && !(options & QRegularExpression::MultilineOption)) {
+                options |= QRegularExpression::MultilineOption;
+            } else {
+                ctx->throwTypeError();
+                return;
+            }
+        }
+    }
+
+    QRegularExpression re(r.stringValue()->toQString(), options);
+    if (!re.isValid()) {
+        ctx->throwTypeError();
+        return;
+    }
+    ctx->thisObject = Value::fromObject(new RegExpObject(re, global));
 }
 
 void RegExpCtor::call(Context *ctx)
 {
-    ctx->result = Value::fromObject(ctx->engine->newRegExpObject(Value::undefinedValue()));
+    if (ctx->argumentCount > 0 && ctx->argument(0).isRegExpObject()) {
+        if (ctx->argumentCount == 1 || ctx->argument(1).isUndefined()) {
+            ctx->result = ctx->argument(0);
+            return;
+        }
+    }
+    Value that = ctx->thisObject;
+    construct(ctx);
+    ctx->result = ctx->thisObject;
+    ctx->thisObject = that;
 }
 
 void RegExpPrototype::init(Context *ctx, const Value &ctor)
@@ -2454,17 +2509,62 @@ void RegExpPrototype::init(Context *ctx, const Value &ctor)
 
 void RegExpPrototype::method_exec(Context *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("RegExp.prototype.exec"));
+    if (RegExpObject *r = ctx->thisObject.asRegExpObject()) {
+        Value arg = ctx->argument(0);
+        arg = __qmljs_to_string(arg, ctx);
+        QString s = arg.stringValue()->toQString();
+
+        int offset = r->global ? r->lastIndex.toInt32(ctx) : 0;
+        if (offset < 0 || offset > s.length()) {
+            ctx->result = Value::nullValue();
+            return;
+        }
+
+        QRegularExpressionMatch match = r->value.match(s, offset);
+        if (!match.hasMatch()) {
+            ctx->result = Value::nullValue();
+            return;
+        }
+
+        // fill in result data
+        ArrayObject *array = ctx->engine->newArrayObject()->asArrayObject();
+        int captured = match.lastCapturedIndex();
+        for (int i = 0; i <= captured; ++i)
+            array->value.push(Value::fromString(ctx, match.captured(i)));
+
+        array->setProperty(ctx, QLatin1String("index"), Value::fromInt32(match.capturedStart(0)));
+        array->setProperty(ctx, QLatin1String("input"), arg);
+
+        if (r->global)
+            r->lastIndex = Value::fromInt32(match.capturedEnd(0));
+
+        ctx->result = Value::fromObject(array);
+    } else {
+        ctx->throwTypeError();
+    }
 }
 
 void RegExpPrototype::method_test(Context *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("RegExp.prototype.test"));
+    method_exec(ctx);
+    ctx->result = Value::fromBoolean(!ctx->result.isNull());
 }
 
 void RegExpPrototype::method_toString(Context *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("RegExp.prototype.toString"));
+    if (RegExpObject *r = ctx->thisObject.asRegExpObject()) {
+        QString result = QChar('/') + r->value.pattern();
+        result += QChar('/');
+        QRegularExpression::PatternOptions o = r->value.patternOptions();
+        // ### 'g' option missing
+        if (o & QRegularExpression::CaseInsensitiveOption)
+            result += QChar('i');
+        if (o & QRegularExpression::MultilineOption)
+            result += QChar('m');
+        ctx->result = Value::fromString(ctx, result);
+    } else {
+        ctx->throwTypeError();
+    }
 }
 
 //

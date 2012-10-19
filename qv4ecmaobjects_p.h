@@ -286,7 +286,7 @@ struct RegExpCtor: FunctionObject
 
 struct RegExpPrototype: RegExpObject
 {
-    RegExpPrototype(): RegExpObject(Value::fromDouble(qSNaN())) {}
+    RegExpPrototype(): RegExpObject(QRegularExpression(), false) {}
     void init(Context *ctx, const Value &ctor);
 
     static void method_exec(Context *ctx);

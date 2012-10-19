@@ -90,6 +90,7 @@ struct ComputeUseDef: IR::StmtVisitor, IR::ExprVisitor
 
     virtual void visitConst(IR::Const *) {}
     virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
     virtual void visitName(IR::Name *) {}
     virtual void visitClosure(IR::Closure *) {}
     virtual void visitUnop(IR::Unop *e) { e->expr->accept(this); }
@@ -1212,9 +1213,9 @@ bool Codegen::visit(PreIncrementExpression *ast)
     return false;
 }
 
-bool Codegen::visit(RegExpLiteral *)
+bool Codegen::visit(RegExpLiteral *ast)
 {
-    assert(!"not implemented");
+    _expr.code = _block->REGEXP(_function->newString(ast->pattern.toString()), ast->flags);
     return false;
 }
 

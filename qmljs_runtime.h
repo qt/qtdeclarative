@@ -83,6 +83,7 @@ struct BooleanObject;
 struct NumberObject;
 struct StringObject;
 struct DateObject;
+struct RegExpObject;
 struct ArrayObject;
 struct ErrorObject;
 struct ActivationObject;
@@ -412,6 +413,7 @@ struct Value
     bool isNumberObject() const;
     bool isStringObject() const;
     bool isDateObject() const;
+    bool isRegExpObject() const;
     bool isArrayObject() const;
     bool isErrorObject() const;
     bool isArgumentsObject() const;
@@ -422,6 +424,7 @@ struct Value
     NumberObject *asNumberObject() const;
     StringObject *asStringObject() const;
     DateObject *asDateObject() const;
+    RegExpObject *asRegExpObject() const;
     ArrayObject *asArrayObject() const;
     ErrorObject *asErrorObject() const;
     ActivationObject *asArgumentsObject() const;

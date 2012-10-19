@@ -376,6 +376,11 @@ void InstructionSelection::visitMove(IR::Move *s)
                 Value v = Value::fromString(_engine->newString(*str->value));
                 storeValue(v, dest);
                 return;
+            } else if (IR::RegExp *re = s->source->asRegExp()) {
+                Address dest = loadTempAddress(Gpr0, t);
+                Value v = Value::fromObject(_engine->newRegExpObject(*re->value, re->flags));
+                storeValue(v, dest);
+                return;
             } else if (IR::Closure *clos = s->source->asClosure()) {
                 generateFunctionCall(t, __qmljs_init_closure, TrustedImmPtr(clos->value), ContextRegister);
                 return;
