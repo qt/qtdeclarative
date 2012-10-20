@@ -70,12 +70,9 @@ protected:
     static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
     static const RegisterID ContextRegister = JSC::X86Registers::esi;
     static const RegisterID ReturnValueRegister = JSC::X86Registers::eax;
-    static const RegisterID Gpr0 = JSC::X86Registers::eax;
-    static const RegisterID Gpr1 = JSC::X86Registers::ecx;
-    static const RegisterID Gpr2 = JSC::X86Registers::edx;
-    static const RegisterID Gpr3 = JSC::X86Registers::esi;
-    static const RegisterID CalleeSavedFirstRegister = Gpr3;
-    static const RegisterID CalleeSavedLastRegister = Gpr3;
+    static const RegisterID ScratchRegister = JSC::X86Registers::ecx;
+    static const RegisterID CalleeSavedFirstRegister = ScratchRegister;
+    static const RegisterID CalleeSavedLastRegister = ScratchRegister;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 
     static const int RegisterSize = 4;
@@ -95,10 +92,7 @@ protected:
     static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
     static const RegisterID ContextRegister = JSC::X86Registers::r14;
     static const RegisterID ReturnValueRegister = JSC::X86Registers::eax;
-    static const RegisterID Gpr0 = JSC::X86Registers::eax;
-    static const RegisterID Gpr1 = JSC::X86Registers::ecx;
-    static const RegisterID Gpr2 = JSC::X86Registers::edx;
-    static const RegisterID Gpr3 = JSC::X86Registers::esi;
+    static const RegisterID ScratchRegister = JSC::MacroAssemblerX86Common::scratchRegister; // r11
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 
     static const int RegisterSize = 8;
@@ -125,10 +119,7 @@ protected:
     static const RegisterID StackPointerRegister = JSC::ARMRegisters::sp;
     static const RegisterID ContextRegister = JSC::ARMRegisters::r5;
     static const RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
-    static const RegisterID Gpr0 = JSC::ARMRegisters::r6;
-    static const RegisterID Gpr1 = JSC::ARMRegisters::r7;
-    static const RegisterID Gpr2 = JSC::ARMRegisters::r8;
-    static const RegisterID Gpr3 = JSC::ARMRegisters::r10;
+    static const RegisterID ScratchRegister = JSC::ARMRegisters::r6;
     static const RegisterID CalleeSavedFirstRegister = JSC::ARMRegisters::r4;
     static const RegisterID CalleeSavedLastRegister = JSC::ARMRegisters::r11;
     static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
@@ -289,8 +280,7 @@ private:
     void storeArgument(RegisterID src, IR::Temp *temp)
     {
         if (temp) {
-            // ### Should use some ScratchRegister here
-            Pointer addr = loadTempAddress(Gpr3, temp);
+            Pointer addr = loadTempAddress(ScratchRegister, temp);
 #ifdef VALUE_FITS_IN_REGISTER
             storePtr(src, addr);
 #else
@@ -322,27 +312,27 @@ private:
 
     void push(const Pointer& ptr)
     {
-        addPtr(TrustedImm32(ptr.offset), ptr.base, Gpr0);
-        push(Gpr0);
+        addPtr(TrustedImm32(ptr.offset), ptr.base, ScratchRegister);
+        push(ScratchRegister);
     }
 
     void push(VM::Value value)
     {
 #ifdef VALUE_FITS_IN_REGISTER
-        move(TrustedImm64(value.val), Gpr0);
-        push(Gpr0);
+        move(TrustedImm64(value.val), ScratchRegister);
+        push(ScratchRegister);
 #else
-        move(TrustedImm32(value.int_32), Gpr0);
-        push(Gpr0);
-        move(TrustedImm32(value.tag), Gpr0);
-        push(Gpr0);
+        move(TrustedImm32(value.int_32), ScratchRegister);
+        push(ScratchRegister);
+        move(TrustedImm32(value.tag), ScratchRegister);
+        push(ScratchRegister);
 #endif
     }
 
     void push(IR::Temp* temp)
     {
         if (temp) {
-            Address addr = loadTempAddress(Gpr0, temp);
+            Address addr = loadTempAddress(ScratchRegister, temp);
             addr.offset += 4;
             push(addr);
             addr.offset -= 4;
@@ -355,8 +345,8 @@ private:
 
     void push(TrustedImmPtr ptr)
     {
-        move(TrustedImmPtr(ptr), Gpr0);
-        push(Gpr0);
+        move(TrustedImmPtr(ptr), ScratchRegister);
+        push(ScratchRegister);
     }
 
     void push(VM::String* name)
@@ -512,14 +502,14 @@ private:
     using JSC::MacroAssembler::loadDouble;
     void loadDouble(IR::Temp* temp, FPRegisterID dest)
     {
-        Pointer ptr = loadTempAddress(Gpr0, temp);
+        Pointer ptr = loadTempAddress(ScratchRegister, temp);
         loadDouble(ptr, dest);
     }
 
     using JSC::MacroAssembler::storeDouble;
     void storeDouble(FPRegisterID source, IR::Temp* temp)
     {
-        Pointer ptr = loadTempAddress(Gpr0, temp);
+        Pointer ptr = loadTempAddress(ScratchRegister, temp);
         storeDouble(source, ptr);
     }
 

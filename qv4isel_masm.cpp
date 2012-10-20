@@ -341,7 +341,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 }
                 return;
             } else if (IR::Const *c = s->source->asConst()) {
-                Address dest = loadTempAddress(Gpr0, t);
+                Address dest = loadTempAddress(ScratchRegister, t);
                 Value v;
                 switch (c->type) {
                 case IR::NullType:
@@ -372,12 +372,12 @@ void InstructionSelection::visitMove(IR::Move *s)
                 copyValue(t, t2);
                 return;
             } else if (IR::String *str = s->source->asString()) {
-                Address dest = loadTempAddress(Gpr0, t);
+                Address dest = loadTempAddress(ScratchRegister, t);
                 Value v = Value::fromString(_engine->newString(*str->value));
                 storeValue(v, dest);
                 return;
             } else if (IR::RegExp *re = s->source->asRegExp()) {
-                Address dest = loadTempAddress(Gpr0, t);
+                Address dest = loadTempAddress(ScratchRegister, t);
                 Value v = Value::fromObject(_engine->newRegExpObject(*re->value, re->flags));
                 storeValue(v, dest);
                 return;
@@ -639,7 +639,7 @@ void InstructionSelection::jumpToBlock(IR::BasicBlock *target)
 void InstructionSelection::visitCJump(IR::CJump *s)
 {
     if (IR::Temp *t = s->cond->asTemp()) {
-        Address temp = loadTempAddress(Gpr0, t);
+        Address temp = loadTempAddress(ScratchRegister, t);
         Address tag = temp;
         tag.offset += offsetof(VM::Value, tag);
         Jump booleanConversion = branch32(NotEqual, tag, TrustedImm32(VM::Value::Boolean_Type));
@@ -744,8 +744,8 @@ template <typename Result, typename Source>
 void InstructionSelection::copyValue(Result result, Source source)
 {
 #if CPU(X86_64)
-    loadArgument(source, Gpr0);
-    storeArgument(Gpr0, result);
+    loadArgument(source, ScratchRegister);
+    storeArgument(ScratchRegister, result);
 #else
     loadDouble(source, FPGpr0);
     storeDouble(FPGpr0, result);
