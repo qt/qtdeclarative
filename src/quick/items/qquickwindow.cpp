@@ -2470,7 +2470,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
 void QQuickWindow::setRenderTarget(QOpenGLFramebufferObject *fbo)
 {
     Q_D(QQuickWindow);
-    if (d->context && d->context && QThread::currentThread() != d->context->thread()) {
+    if (d->context && QThread::currentThread() != d->context->thread()) {
         qWarning("QQuickWindow::setRenderThread: Cannot set render target from outside the rendering thread");
         return;
     }
@@ -2502,7 +2502,7 @@ void QQuickWindow::setRenderTarget(QOpenGLFramebufferObject *fbo)
 void QQuickWindow::setRenderTarget(uint fboId, const QSize &size)
 {
     Q_D(QQuickWindow);
-    if (d->context && d->context && QThread::currentThread() != d->context->thread()) {
+    if (d->context && QThread::currentThread() != d->context->thread()) {
         qWarning("QQuickWindow::setRenderThread: Cannot set render target from outside the rendering thread");
         return;
     }
