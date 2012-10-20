@@ -45,6 +45,7 @@
 #include <RefCounted.h>
 
 #include <sys/mman.h>
+#include <unistd.h>
 
 namespace JSC {
 
