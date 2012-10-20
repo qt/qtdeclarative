@@ -488,7 +488,7 @@ inline Value Value::undefinedValue()
     v.val = quint64(_Undefined_Type) << Tag_Shift;
 #else
     v.tag = _Undefined_Type;
-    v.int_32 = (bool)b;
+    v.int_32 = 0;
 #endif
     return v;
 }
@@ -500,7 +500,7 @@ inline Value Value::nullValue()
     v.val = quint64(_Null_Type) << Tag_Shift;
 #else
     v.tag = _Null_Type;
-    v.int_32 = (bool)b;
+    v.int_32 = 0;
 #endif
     return v;
 }
