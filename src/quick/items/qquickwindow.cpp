@@ -260,7 +260,7 @@ void QQuickWindowPrivate::polishItems()
  * being shown on screen. This feature is very limited in what it supports.
  *
  * For this feature to be useful one needs to hook into beforeRender()
- * and set the render tareget.
+ * and set the render target.
  *
  */
 void QQuickWindowPrivate::setRenderWithoutShowing(bool render)
@@ -2529,7 +2529,7 @@ uint QQuickWindow::renderTargetId() const
 }
 
 /*!
-    Returns the size of the currently set render target; otherwise returns an enpty size.
+    Returns the size of the currently set render target; otherwise returns an empty size.
  */
 QSize QQuickWindow::renderTargetSize() const
 {
@@ -2663,7 +2663,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
 
 /*!
-    Sets weither the scene graph rendering of QML should clear the color buffer
+    Sets whether the scene graph rendering of QML should clear the color buffer
     before it starts rendering to \a enabled.
 
     By disabling clearing of the color buffer, it is possible to do GL painting
@@ -2683,7 +2683,7 @@ void QQuickWindow::setClearBeforeRendering(bool enabled)
 
 
 /*!
-    Returns weither clearing of the color buffer is done before rendering or not.
+    Returns whether clearing of the color buffer is done before rendering or not.
  */
 
 bool QQuickWindow::clearBeforeRendering() const
