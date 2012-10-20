@@ -646,16 +646,16 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
         Address data = temp;
         data.offset += offsetof(VM::Value, int_32);
-        load32(data, Gpr0);
+        load32(data, ReturnValueRegister);
         Jump testBoolean = jump();
 
         booleanConversion.link(this);
         {
-            generateFunctionCall(Gpr0, __qmljs_to_boolean, t, ContextRegister);
+            generateFunctionCall(ReturnValueRegister, __qmljs_to_boolean, t, ContextRegister);
         }
 
         testBoolean.link(this);
-        Jump target = branch32(NotEqual, Gpr0, TrustedImm32(0));
+        Jump target = branch32(NotEqual, ReturnValueRegister, TrustedImm32(0));
         _patches[s->iftrue].append(target);
 
         jumpToBlock(s->iffalse);
@@ -681,9 +681,8 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             } // switch
 
             generateFunctionCallImp(ReturnValueRegister, opName, op, l, r, ContextRegister);
-            move(ReturnValueRegister, Gpr0);
 
-            Jump target = branch32(NotEqual, Gpr0, TrustedImm32(0));
+            Jump target = branch32(NotEqual, ReturnValueRegister, TrustedImm32(0));
             _patches[s->iftrue].append(target);
 
             jumpToBlock(s->iffalse);
