@@ -216,7 +216,6 @@ protected:
     void constructProperty(IR::New *ctor, IR::Temp *result);
     void callValue(IR::Call *call, IR::Temp *result);
     void constructValue(IR::New *call, IR::Temp *result);
-    void checkExceptions();
 
     virtual void visitExp(IR::Exp *);
     virtual void visitEnter(IR::Enter *);
@@ -523,6 +522,10 @@ private:
         FunctionPtr externalFunction;
         const char* functionName;
     };
+    struct CatchBlockToLink {
+        DataLabelPtr ptr;
+        IR::BasicBlock *catchBlock;
+    };
 
     void storeValue(VM::Value value, Address destination)
     {
@@ -544,6 +547,7 @@ private:
     uchar *_codePtr;
     QHash<IR::BasicBlock *, QVector<Jump> > _patches;
     QHash<IR::BasicBlock *, Label> _addrs;
+    QList<CatchBlockToLink> _catchHandlers;
     QList<CallToLink> _callsToLink;
 };
 

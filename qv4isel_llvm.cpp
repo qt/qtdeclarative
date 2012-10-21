@@ -935,13 +935,6 @@ void LLVMInstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
             _llvmValue = llvm::UndefValue::get(_valueTy);
             return;
 
-        case IR::Name::builtin_rethrow:
-            CreateCall2(_llvmModule->getFunction("__qmljs_llvm_rethrow"),
-                        _llvmFunction->arg_begin(), result);
-            _llvmValue = CreateLoad(result);
-            return;
-        }
-
         Q_UNREACHABLE();
     } else {
         llvm::Value *name = getIdentifier(*base->id);

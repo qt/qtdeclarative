@@ -272,7 +272,9 @@ struct Name: Expr {
         builtin_typeof,
         builtin_delete,
         builtin_throw,
-        builtin_rethrow
+        builtin_create_exception_handler,
+        builtin_delete_exception_handler,
+        builtin_get_exception
     };
 
     const QString *id;

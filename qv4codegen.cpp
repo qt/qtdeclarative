@@ -294,7 +294,6 @@ Codegen::Codegen()
     , _block(0)
     , _exitBlock(0)
     , _throwBlock(0)
-    , _handlersBlock(0)
     , _returnAddress(0)
     , _mode(GlobalCode)
     , _env(0)
@@ -1069,8 +1068,9 @@ bool Codegen::visit(FunctionExpression *ast)
 
 bool Codegen::visit(IdentifierExpression *ast)
 {
+    int index = _env->findMember(ast->name.toString());
+
     if (! _function->hasDirectEval && _env->parent) {
-        int index = _env->findMember(ast->name.toString());
         if (index != -1) {
             _expr.code = _block->TEMP(index);
             return false;
@@ -1080,6 +1080,12 @@ bool Codegen::visit(IdentifierExpression *ast)
             _expr.code = _block->TEMP(-(index + 1));
             return false;
         }
+    }
+
+    if (index >= _env->vars.size()) {
+        // named local variable, e.g. in a catch statement
+        _expr.code = _block->TEMP(index);
+        return false;
     }
 
     _expr.code = _block->NAME(ast->name.toString(),
@@ -1484,7 +1490,6 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
     qSwap(_throwBlock, throwBlock);
-    qSwap(_handlersBlock, handlersBlock);
     qSwap(_returnAddress, returnAddress);
 
     for (FormalParameterList *it = formals; it; it = it->next) {
@@ -1512,17 +1517,13 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     _block->JUMP(_exitBlock);
 
-    _throwBlock->JUMP(_function->handlersBlock);
-
-    _handlersBlock->MOVE(_handlersBlock->TEMP(_returnAddress),
-                         _handlersBlock->CALL(_handlersBlock->NAME(IR::Name::builtin_rethrow, 0, 0), 0));
-    _handlersBlock->JUMP(_exitBlock);
+    // ### should not be required
+    _throwBlock->JUMP(_exitBlock);
 
     qSwap(_function, function);
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
     qSwap(_throwBlock, throwBlock);
-    qSwap(_handlersBlock, handlersBlock);
     qSwap(_returnAddress, returnAddress);
 
     leaveEnvironment();
@@ -1858,9 +1859,74 @@ bool Codegen::visit(ThrowStatement *ast)
     return false;
 }
 
-bool Codegen::visit(TryStatement *)
+bool Codegen::visit(TryStatement *ast)
 {
-    assert(!"not implemented");
+    IR::BasicBlock *tryBody = _function->newBasicBlock();
+    IR::BasicBlock *catchBody = ast->catchExpression ?  _function->newBasicBlock() : 0;
+    IR::BasicBlock *finallyBody = ast->finallyExpression ? _function->newBasicBlock() : 0;
+    IR::BasicBlock *after = _function->newBasicBlock();
+    assert(catchBody || finallyBody);
+
+    int inCatch = 0;
+    if (catchBody && finallyBody) {
+        inCatch = _block->newTemp();
+        move(_block->TEMP(inCatch), _block->CONST(IR::BoolType, false));
+    }
+
+    int hasException = _block->newTemp();
+    move(_block->TEMP(hasException), _block->CALL(_block->NAME(IR::Name::builtin_create_exception_handler, 0, 0), 0));
+
+    _block->CJUMP(_block->TEMP(hasException), catchBody ? catchBody : finallyBody, tryBody);
+
+    _block = tryBody;
+    statement(ast->statement);
+    _block->JUMP(finallyBody ? finallyBody : after);
+
+    // regular flow does not go into the catch statement
+    if (catchBody) {
+        _block = catchBody;
+
+        if (finallyBody) {
+            if (inCatch != 0) {
+                // an exception got thrown within catch. Go to finally
+                // and then rethrow
+                IR::BasicBlock *b = _function->newBasicBlock();
+                _block->CJUMP(_block->TEMP(inCatch), finallyBody, b);
+                _block = b;
+            }
+            // if we have finally we need to clear the exception here, so we don't rethrow
+            move(_block->TEMP(inCatch), _block->CONST(IR::BoolType, true));
+            move(_block->TEMP(hasException), _block->CONST(IR::BoolType, false));
+        } else {
+            // otherwise remove the exception handler, so that throw inside catch will
+            // give the correct result
+            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
+        }
+
+        const int exception = _block->newTemp();
+        move(_block->TEMP(exception), _block->CALL(_block->NAME(IR::Name::builtin_get_exception, 0, 0), 0));
+
+        // the variable ued in the catch statement is local and hides any global
+        // variable with the same name.
+        int hiddenIndex = _env->findMember(ast->catchExpression->name.toString());
+        _env->members.insert(ast->catchExpression->name.toString(), exception);
+
+        statement(ast->catchExpression->statement);
+
+        // reset the variable name to the one from the outer scope
+        _env->members.insert(ast->catchExpression->name.toString(), hiddenIndex);
+        _block->JUMP(finallyBody ? finallyBody : after);
+    }
+
+    if (finallyBody) {
+        _block = finallyBody;
+        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
+        statement(ast->finallyExpression->statement);
+        _block->CJUMP(_block->TEMP(hasException), _throwBlock, after);
+    }
+
+    _block = after;
+
     return false;
 }
 

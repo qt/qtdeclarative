@@ -44,6 +44,7 @@
 #endif
 
 #include "qmljs_objects.h"
+#include "qmljs_runtime.h"
 #include "qv4codegen_p.h"
 #include "qv4isel_masm_p.h"
 #include "qv4isel_moth_p.h"
@@ -239,12 +240,20 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
             return;
     }
 
-    ctx->hasUncaughtException = false;
     if (! ctx->activation.isObject())
         ctx->activation = VM::Value::fromObject(new QQmlJS::VM::Object());
 
     foreach (const QString *local, globalCode->locals) {
         ctx->activation.objectValue()->setProperty(ctx, *local, QQmlJS::VM::Value::undefinedValue());
+    }
+
+    void * buf = __qmljs_create_exception_handler(ctx);
+    if (setjmp(*(jmp_buf *)buf)) {
+        if (VM::ErrorObject *e = ctx->result.asErrorObject())
+            std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
+        else
+            std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
+        return;
     }
 
     if (useMoth) {
@@ -254,12 +263,7 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
         globalCode->code(ctx, globalCode->codeData);
     }
 
-    if (ctx->hasUncaughtException) {
-        if (VM::ErrorObject *e = ctx->result.asErrorObject())
-            std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
-        else
-            std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
-    } else if (! ctx->result.isUndefined()) {
+    if (! ctx->result.isUndefined()) {
         if (! qgetenv("SHOW_EXIT_VALUE").isNull())
             std::cout << "exit value: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
     }

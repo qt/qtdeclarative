@@ -284,7 +284,6 @@ void Context::init(ExecutionEngine *eng)
     vars = 0;
     varCount = 0;
     calledAsConstructor = false;
-    hasUncaughtException = false;
 }
 
 Value *Context::lookupPropertyDescriptor(String *name)
@@ -302,7 +301,7 @@ Value *Context::lookupPropertyDescriptor(String *name)
 void Context::throwError(Value value)
 {
     result = value;
-    hasUncaughtException = true;
+    __qmljs_builtin_throw(value, this);
 }
 
 void Context::throwError(const QString &message)
@@ -330,10 +329,11 @@ void Context::throwReferenceError(Value value)
     throwError(Value::fromObject(engine->newErrorObject(Value::fromString(this, msg))));
 }
 
-void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, unsigned argc)
+void Context::initCallContext(Context *parent, const Value *object, FunctionObject *f, Value *args, unsigned argc)
 {
-    engine = e;
-    parent = f->scope;
+    engine = parent->engine;
+    this->parent = f->scope;
+    assert(this->parent == f->scope);
     result = Value::undefinedValue();
 
     if (f->needsActivation)
@@ -360,23 +360,22 @@ void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionO
     vars = f->varList;
     varCount = f->varCount;
     locals = varCount ? new Value[varCount] : 0;
-    hasUncaughtException = false;
     calledAsConstructor = false;
     if (varCount)
         std::fill(locals, locals + varCount, Value::undefinedValue());
 }
 
-void Context::leaveCallContext(FunctionObject *f)
+void Context::leaveCallContext()
 {
-    if (! f->needsActivation) {
+    if (!activation.isNull()) {
         delete[] locals;
         locals = 0;
     }
 }
 
-void Context::initConstructorContext(ExecutionEngine *e, Value *object, FunctionObject *f, Value *args, unsigned argc)
+void Context::initConstructorContext(Context *parent, Value *object, FunctionObject *f, Value *args, unsigned argc)
 {
-    initCallContext(e, object, f, args, argc);
+    initCallContext(parent, object, f, args, argc);
     calledAsConstructor = true;
 }
 
@@ -390,7 +389,7 @@ void Context::leaveConstructorContext(FunctionObject *f)
     if (! thisObject.isObject())
         thisObject.objectValue()->prototype = engine->objectPrototype;
 
-    leaveCallContext(f);
+    leaveCallContext();
 }
 
 extern "C" {
@@ -1205,13 +1204,9 @@ Value __qmljs_call_property(Context *context, Value base, String *name, Value *a
     if (FunctionObject *f = func.asFunctionObject()) {
         Context k;
         Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-        ctx->initCallContext(context->engine, &thisObject, f, args, argc);
+        ctx->initCallContext(context, &thisObject, f, args, argc);
         f->call(ctx);
-        if (ctx->hasUncaughtException) {
-            context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
-            context->result = ctx->result;
-        }
-        ctx->leaveCallContext(f);
+        ctx->leaveCallContext();
         result = ctx->result;
     } else {
         context->throwTypeError();
@@ -1224,13 +1219,9 @@ Value __qmljs_call_function(Context *context, Value thisObject, FunctionObject *
     Context k;
     Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
     const Value *that = thisObject.isUndefined() ? 0 : &thisObject;
-    ctx->initCallContext(context->engine, that, f, args, argc);
+    ctx->initCallContext(context, that, f, args, argc);
     f->call(ctx);
-    if (ctx->hasUncaughtException) {
-        context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
-        context->result = ctx->result;
-    }
-    ctx->leaveCallContext(f);
+    ctx->leaveCallContext();
     return ctx->result;
 }
 
@@ -1259,12 +1250,8 @@ Value __qmljs_construct_value(Context *context, Value func, Value *args, int arg
     if (FunctionObject *f = func.asFunctionObject()) {
         Context k;
         Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-        ctx->initConstructorContext(context->engine, 0, f, args, argc);
+        ctx->initConstructorContext(context, 0, f, args, argc);
         f->construct(ctx);
-        if (ctx->hasUncaughtException) {
-            context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
-            context->result = ctx->result;
-        }
         ctx->leaveConstructorContext(f);
         return ctx->result;
     }
@@ -1282,13 +1269,9 @@ Value __qmljs_construct_property(Context *context, Value base, String *name, Val
     if (FunctionObject *f = func.asFunctionObject()) {
         Context k;
         Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-        ctx->initConstructorContext(context->engine, 0, f, args, argc);
+        ctx->initConstructorContext(context, 0, f, args, argc);
         ctx->calledAsConstructor = true;
         f->construct(ctx);
-        if (ctx->hasUncaughtException) {
-            context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
-            context->result = ctx->result;
-        }
         ctx->leaveConstructorContext(f);
         return ctx->result;
     }
@@ -1298,11 +1281,37 @@ Value __qmljs_construct_property(Context *context, Value base, String *name, Val
 
 void __qmljs_throw(Value value, Context *context)
 {
-    context->hasUncaughtException = true;
-    context->result = value;
+    assert(!context->engine->unwindStack.isEmpty());
+
+    ExecutionEngine::ExceptionHandler handler = context->engine->unwindStack.last();
+
+    // clean up call contexts
+    while (context != handler.context) {
+        context->leaveCallContext();
+        context = context->parent;
+    }
+
+    handler.context->result = value;
+
+    longjmp(handler.stackFrame, 1);
 }
 
-Value __qmljs_rethrow(Context *context)
+void *__qmljs_create_exception_handler(Context *context)
+{
+    context->engine->unwindStack.append(ExecutionEngine::ExceptionHandler());
+    ExecutionEngine::ExceptionHandler *handler = &context->engine->unwindStack.last();
+    handler->context = context;
+    return handler->stackFrame;
+}
+
+void __qmljs_delete_exception_handler(Context *context)
+{
+    assert(!context->engine->unwindStack.isEmpty());
+
+    context->engine->unwindStack.pop_back();
+}
+
+Value __qmljs_get_exception(Context *context)
 {
     return context->result;
 }
@@ -1315,11 +1324,6 @@ Value __qmljs_builtin_typeof(Value val, Context *context)
 void __qmljs_builtin_throw(Value val, Context *context)
 {
     __qmljs_throw(val, context);
-}
-
-Value __qmljs_builtin_rethrow(Context *context)
-{
-    return context->result;
 }
 
 } // extern "C"

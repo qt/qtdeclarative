@@ -49,6 +49,7 @@
 #include <QtCore/QRegularExpression>
 #include <cstdio>
 #include <cassert>
+#include <setjmp.h>
 
 namespace QQmlJS {
 
@@ -458,6 +459,13 @@ struct ExecutionEngine
     String *id_constructor;
     String *id_arguments;
     String *id___proto__;
+
+    struct ExceptionHandler {
+        Context *context;
+        jmp_buf stackFrame;
+    };
+
+    QVector<ExceptionHandler> unwindStack;
 
     ExecutionEngine();
 

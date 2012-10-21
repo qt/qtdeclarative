@@ -457,11 +457,6 @@ void __qmljs_llvm_throw(Context *context, Value *value)
     __qmljs_throw(*value, context);
 }
 
-void __qmljs_llvm_rethrow(Context *context, Value *result)
-{
-    *result = __qmljs_rethrow(context);
-}
-
 void __qmljs_llvm_get_this_object(Context *ctx, Value *result)
 {
     *result = __qmljs_get_thisObject(ctx);

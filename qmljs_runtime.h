@@ -105,7 +105,7 @@ Value __qmljs_construct_value(Context *context, Value func, Value *args, int arg
 
 Value __qmljs_builtin_typeof(Value val, Context *context);
 void __qmljs_builtin_throw(Value val, Context *context);
-Value __qmljs_builtin_rethrow(Context *context);
+
 
 // constructors
 Value __qmljs_init_closure(IR::Function *clos, Context *ctx);
@@ -182,7 +182,10 @@ Value __qmljs_delete_value(Context *ctx, Value value);
 
 Value __qmljs_typeof(Value value, Context *ctx);
 void __qmljs_throw(Value value, Context *context);
-Value __qmljs_rethrow(Context *context);
+// actually returns a jmp_buf *
+void *__qmljs_create_exception_handler(Context *context);
+void __qmljs_delete_exception_handler(Context *context);
+Value __qmljs_get_exception(Context *context);
 
 // binary operators
 Value __qmljs_instanceof(Value left, Value right, Context *ctx);
@@ -570,7 +573,6 @@ struct Context {
     String **vars;
     unsigned int varCount;
     int calledAsConstructor;
-    int hasUncaughtException;
 
     Value *lookupPropertyDescriptor(String *name);
 
@@ -600,10 +602,10 @@ struct Context {
     void throwUnimplemented(const QString &message);
 #endif
 
-    void initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, unsigned argc);
-    void leaveCallContext(FunctionObject *f);
+    void initCallContext(Context *parent, const Value *object, FunctionObject *f, Value *args, unsigned argc);
+    void leaveCallContext();
 
-    void initConstructorContext(ExecutionEngine *e, Value *object, FunctionObject *f, Value *args, unsigned argc);
+    void initConstructorContext(Context *parent, Value *object, FunctionObject *f, Value *args, unsigned argc);
     void leaveConstructorContext(FunctionObject *f);
 };
 

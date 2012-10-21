@@ -312,7 +312,6 @@ private:
     IR::BasicBlock *_block;
     IR::BasicBlock *_exitBlock;
     IR::BasicBlock *_throwBlock;
-    IR::BasicBlock *_handlersBlock;
     unsigned _returnAddress;
     Mode _mode;
     Environment *_env;

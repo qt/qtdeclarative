@@ -213,12 +213,34 @@ void Name::init(Builtin builtin, quint32 line, quint32 column)
     this->column = column;
 }
 
+static const char *builtin_to_string(Name::Builtin b)
+{
+    switch (b) {
+    case Name::builtin_invalid:
+        return "builtin_invalid";
+    case Name::builtin_typeof:
+        return "builtin_typeof";
+    case Name::builtin_delete:
+        return "builtin_delete";
+    case Name::builtin_throw:
+        return "builtin_throw";
+    case Name::builtin_create_exception_handler:
+        return "builtin_create_exception_handler";
+    case Name::builtin_delete_exception_handler:
+        return "builtin_delete_exception_handler";
+    case Name::builtin_get_exception:
+        return "builtin_get_exception";
+    }
+    return "builtin_(###FIXME)";
+};
+
+
 void Name::dump(QTextStream &out)
 {
     if (id)
         out << *id;
     else
-        out << "__qmljs_builtin_%" << (int) builtin;
+        out << builtin_to_string(builtin);
 }
 
 void Temp::dump(QTextStream &out)
