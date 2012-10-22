@@ -93,7 +93,6 @@ protected:
     static const RegisterID ContextRegister = JSC::X86Registers::r14;
     static const RegisterID ReturnValueRegister = JSC::X86Registers::eax;
     static const RegisterID ScratchRegister = JSC::X86Registers::r10;
-    static const RegisterID ScratchRegister2 = JSC::X86Registers::r11;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 
     static const int RegisterSize = 8;
@@ -283,7 +282,7 @@ private:
     void storeArgument(RegisterID src, IR::Temp *temp)
     {
         if (temp) {
-            Pointer addr = loadTempAddress(ScratchRegister2, temp);
+            Pointer addr = loadTempAddress(ScratchRegister, temp);
 #ifdef VALUE_FITS_IN_REGISTER
             store64(src, addr);
 #else

@@ -743,9 +743,11 @@ void InstructionSelection::callRuntimeMethodImp(IR::Temp *result, const char* na
 template <typename Result, typename Source>
 void InstructionSelection::copyValue(Result result, Source source)
 {
-#if CPU(X86_64)
-    loadArgument(source, ScratchRegister);
-    storeArgument(ScratchRegister, result);
+#ifdef VALUE_FITS_IN_REGISTER
+    // Use ReturnValueRegister as "scratch" register because loadArgument
+    // and storeArgument are functions that may need a scratch register themselves.
+    loadArgument(source, ReturnValueRegister);
+    storeArgument(ReturnValueRegister, result);
 #else
     loadDouble(source, FPGpr0);
     storeDouble(FPGpr0, result);
