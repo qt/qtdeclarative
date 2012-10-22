@@ -105,7 +105,7 @@ MainWindow::MainWindow(QWidget *parent) :
 void MainWindow::showQuickView()
 {
     const int margin = 16;
-    quickView.setPos(pos() + QPoint(0, frameGeometry().height() + margin));
+    quickView.setPosition(pos() + QPoint(0, frameGeometry().height() + margin));
 
     quickView.raise();
     quickView.show();

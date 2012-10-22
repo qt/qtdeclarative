@@ -339,7 +339,7 @@ void tst_qquickwindow::touchEvent_basic()
     QScopedPointer<QQuickWindow> cleanup(window);
 
     window->resize(250, 250);
-    window->setPos(100, 100);
+    window->setPosition(100, 100);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
@@ -367,7 +367,7 @@ void tst_qquickwindow::touchEvent_basic()
 
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
-    // At one point this was failing with kwin (KDE window manager) because window->setPos(100, 100)
+    // At one point this was failing with kwin (KDE window manager) because window->setPosition(100, 100)
     // would put the decorated window at that position rather than the window itself.
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, Qt::TouchPointPressed, makeTouchPoint(topItem, pos)));
     topItem->reset();
@@ -468,7 +468,7 @@ void tst_qquickwindow::touchEvent_propagation()
     QScopedPointer<QQuickWindow> cleanup(window);
 
     window->resize(250, 250);
-    window->setPos(100, 100);
+    window->setPosition(100, 100);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
@@ -601,7 +601,7 @@ void tst_qquickwindow::touchEvent_cancel()
     QScopedPointer<QQuickWindow> cleanup(window);
 
     window->resize(250, 250);
-    window->setPos(100, 100);
+    window->setPosition(100, 100);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
@@ -634,7 +634,7 @@ void tst_qquickwindow::touchEvent_reentrant()
     QScopedPointer<QQuickWindow> cleanup(window);
 
     window->resize(250, 250);
-    window->setPos(100, 100);
+    window->setPosition(100, 100);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
@@ -671,7 +671,7 @@ void tst_qquickwindow::touchEvent_velocity()
     QQuickWindow *window = new QQuickWindow;
     QScopedPointer<QQuickWindow> cleanup(window);
     window->resize(250, 250);
-    window->setPos(100, 100);
+    window->setPosition(100, 100);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
     QTest::qWait(10);
@@ -727,7 +727,7 @@ void tst_qquickwindow::mouseFromTouch_basic()
     QQuickWindow *window = new QQuickWindow;
     QScopedPointer<QQuickWindow> cleanup(window);
     window->resize(250, 250);
-    window->setPos(100, 100);
+    window->setPosition(100, 100);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
     QTest::qWait(10);
@@ -806,7 +806,7 @@ void tst_qquickwindow::mouseFiltering()
     QQuickWindow *window = new QQuickWindow;
     QScopedPointer<QQuickWindow> cleanup(window);
     window->resize(250, 250);
-    window->setPos(100, 100);
+    window->setPosition(100, 100);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
@@ -862,7 +862,7 @@ void tst_qquickwindow::clearColor()
     QQuickWindow *window = new QQuickWindow;
     QScopedPointer<QQuickWindow> cleanup(window);
     window->resize(250, 250);
-    window->setPos(100, 100);
+    window->setPosition(100, 100);
     window->setColor(Qt::blue);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
@@ -894,7 +894,7 @@ void tst_qquickwindow::multipleWindows()
         QQuickWindow *c = new QQuickWindow();
         c->setColor(Qt::GlobalColor(Qt::red + i));
         c->resize(300, 200);
-        c->setPos(100 + i * 30, 100 + i * 20);
+        c->setPosition(100 + i * 30, 100 + i * 20);
         c->show();
         windows << c;
         cleanup[i].reset(c);
@@ -904,7 +904,7 @@ void tst_qquickwindow::multipleWindows()
     // move them
     for (int i=0; i<windows.size(); ++i) {
         QQuickWindow *c = windows.at(i);
-        c->setPos(100 + i * 30, 100 + i * 20 + 100);
+        c->setPosition(100 + i * 30, 100 + i * 20 + 100);
     }
 
     // resize them
