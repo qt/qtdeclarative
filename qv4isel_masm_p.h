@@ -255,16 +255,18 @@ private:
         addPtr(TrustedImm32(ptr.offset), ptr.base, dest);
     }
 
+#ifdef VALUE_FITS_IN_REGISTER
     void loadArgument(IR::Temp* temp, RegisterID dest)
     {
         if (!temp) {
             VM::Value undefined = VM::Value::undefinedValue();
-            move(TrustedImmPtr((const void *)undefined.val), dest);
+            move(TrustedImm64(undefined.val), dest);
         } else {
             Pointer addr = loadTempAddress(dest, temp);
-            loadPtr(addr, dest);
+            load64(addr, dest);
         }
     }
+#endif
 
     void loadArgument(VM::String* string, RegisterID dest)
     {
@@ -283,7 +285,7 @@ private:
         if (temp) {
             Pointer addr = loadTempAddress(ScratchRegister2, temp);
 #ifdef VALUE_FITS_IN_REGISTER
-            storePtr(src, addr);
+            store64(src, addr);
 #else
             // If the value doesn't fit into a register, then the
             // register contains the address to where the argument
@@ -296,7 +298,7 @@ private:
 #ifdef VALUE_FITS_IN_REGISTER
     void storeArgument(RegisterID src, const Pointer &dest)
     {
-        storePtr(src, dest);
+        store64(src, dest);
     }
 #endif
 
@@ -526,7 +528,7 @@ private:
     void storeValue(VM::Value value, Address destination)
     {
 #ifdef VALUE_FITS_IN_REGISTER
-        storePtr(TrustedImmPtr((void *)value.val), destination);
+        store64(TrustedImm64(value.val), destination);
 #else
         store32(TrustedImm32(value.int_32), destination);
         destination.offset += 4;
