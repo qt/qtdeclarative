@@ -73,6 +73,7 @@ Rectangle {
         when: windowShown       // Must have this line for events to work.
 
         function test_key_click() {
+            skip("test_key_click() is unstable, QTBUG-27671")
             keyClick(Qt.Key_Left)
             tryCompare(top, "leftKeyPressed", true, 10000)
             tryCompare(top, "leftKeyReleased", true, 10000)
