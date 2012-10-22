@@ -98,6 +98,7 @@ public:
 
     virtual void visitConst(IR::Const *);
     virtual void visitString(IR::String *);
+    virtual void visitRegExp(IR::RegExp *);
     virtual void visitName(IR::Name *);
     virtual void visitTemp(IR::Temp *);
     virtual void visitClosure(IR::Closure *);

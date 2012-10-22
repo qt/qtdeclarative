@@ -623,6 +623,14 @@ void LLVMInstructionSelection::visitString(IR::String *e)
     _llvmValue = CreateLoad(tmp);
 }
 
+void LLVMInstructionSelection::visitRegExp(IR::RegExp *e)
+{
+    e->dump(qerr);
+    qerr << endl;
+    Q_UNIMPLEMENTED();
+    _llvmValue = llvm::Constant::getNullValue(_valueTy);
+}
+
 void LLVMInstructionSelection::visitName(IR::Name *e)
 {
     llvm::Value *result = newLLVMTemp(_valueTy);
