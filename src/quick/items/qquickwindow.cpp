@@ -2776,6 +2776,7 @@ void QQuickWindow::setColor(const QColor &color)
 
     d->clearColor = color;
     emit colorChanged(color);
+    d->dirtyItem(contentItem());
 }
 
 QColor QQuickWindow::color() const

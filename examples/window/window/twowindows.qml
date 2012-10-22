@@ -43,27 +43,47 @@ import QtQuick.Window 2.0
 
 QtObject {
     property var win1: Window {
-        width: 640
-        height: 480
+        width: 320
+        height: 240
         x: 0
         y: 0
         visible: true
         color: "#ccffff"
+        title: "First Window"
         Text {
             anchors.centerIn: parent
             text: "First Window"
+            Text {
+                id: statusText
+                anchors.top: parent.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: win2.visible = !win2.visible
         }
     }
     property var win2: Window {
-        width: 640
-        height: 480
-        x: 640
-        y: 480
+        width: 320
+        height: 240
+        x: 220
+        y: 120
         visible: true
         color: "green"
-        Text {
-            anchors.centerIn: parent
-            text: "Second Window"
+        title: "Second Window: " + color
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 10
+            Text {
+                anchors.centerIn: parent
+                text: "Second Window"
+            }
+            MouseArea {
+                anchors.fill: parent
+                onClicked: win2.color = "#ffffcc"
+            }
         }
+        onVisibleChanged: statusText.text = "second window is " + (visible ? "visible" : "invisible")
     }
 }

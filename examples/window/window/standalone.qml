@@ -44,13 +44,29 @@ import QtQuick.Window 2.0
 Item {
     width: 320
     height: 240
+    // It's not possible to set an Item's windowTitle.  If you want to modify
+    // window properties, you need to explicitly create a Window.
     Text {
+        id: text1
         anchors.centerIn: parent
         text: "First Window"
     }
     Rectangle {
         border.color: "black"
-        color: childWindow.visible ? "green" : "yellow"
+        radius: 4
+        anchors.top: text1.bottom
+        anchors.horizontalCenter: text1.horizontalCenter
+        width: 100
+        height: 30
+        TextInput {
+            id: ti1
+            focus: true // but the modal popup will prevent input while it is open
+            anchors.centerIn: parent
+        }
+    }
+    Rectangle {
+        border.color: "black"
+        color: childWindow.visible ? "goldenrod" : "beige"
         radius: height / 4
         anchors.bottom: parent.bottom
         anchors.right: parent.right
@@ -72,16 +88,39 @@ Item {
         id: childWindow
         width: 320
         height: 240
-        x: 320
-        y: 240
-        color: "green"
+        x: 220
+        y: 120
+        color: "beige"
+        title: "Second Window"
+        modality: Qt.ApplicationModal
+        flags: Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint
         Text {
+            id: text2
             anchors.centerIn: parent
-            text: "Second Window"
+            text: "Modal Frameless Stay-on-Top Window"
         }
-        MouseArea{
-            anchors.fill: parent
-            onClicked: Qt.quit()
+        Text {
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 10
+            text: "X"
+            MouseArea{
+                anchors.fill: parent
+                onClicked: childWindow.visible = false
+            }
+        }
+        Rectangle {
+            border.color: "black"
+            radius: 4
+            anchors.top: text2.bottom
+            anchors.horizontalCenter: text2.horizontalCenter
+            width: 100
+            height: 30
+            TextInput {
+                id: ti2
+                focus: true
+                anchors.centerIn: parent
+            }
         }
     }
 }
