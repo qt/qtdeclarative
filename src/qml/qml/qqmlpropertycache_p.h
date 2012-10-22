@@ -247,6 +247,7 @@ public:
     virtual ~QQmlPropertyCache();
 
     void update(QQmlEngine *, const QMetaObject *);
+    void invalidate(QQmlEngine *, const QMetaObject *);
 
     QQmlPropertyCache *copy();
 
