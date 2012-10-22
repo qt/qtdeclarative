@@ -5319,7 +5319,7 @@ qreal QQuickItem::y() const
 /*!
     \internal
   */
-QPointF QQuickItem::pos() const
+QPointF QQuickItem::position() const
 {
     Q_D(const QQuickItem);
     return QPointF(d->x, d->y);
@@ -5358,7 +5358,7 @@ void QQuickItem::setY(qreal v)
 /*!
     \internal
   */
-void QQuickItem::setPos(const QPointF &pos)
+void QQuickItem::setPosition(const QPointF &pos)
 {
     Q_D(QQuickItem);
     if (QPointF(d->x, d->y) == pos)
@@ -6554,7 +6554,7 @@ QDebug operator<<(QDebug debug, QQuickItem *item)
     debug << item->metaObject()->className() << "(this =" << ((void*)item)
           << ", name=" << item->objectName()
           << ", parent =" << ((void*)item->parentItem())
-          << ", geometry =" << QRectF(item->pos(), QSizeF(item->width(), item->height()))
+          << ", geometry =" << QRectF(item->position(), QSizeF(item->width(), item->height()))
           << ", z =" << item->z() << ')';
     return debug;
 }

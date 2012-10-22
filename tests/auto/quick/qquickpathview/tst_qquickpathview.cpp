@@ -236,7 +236,7 @@ void tst_QQuickPathView::items()
     QPointF offset;
     offset.setX(pathview->highlightItem()->width()/2);
     offset.setY(pathview->highlightItem()->height()/2);
-    QCOMPARE(pathview->highlightItem()->pos() + offset, start);
+    QCOMPARE(pathview->highlightItem()->position() + offset, start);
 
     delete window;
 }
@@ -896,19 +896,19 @@ void tst_QQuickPathView::pathMoved()
     QPointF offset;//Center of item is at point, but pos is from corner
     offset.setX(firstItem->width()/2);
     offset.setY(firstItem->height()/2);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
     pathview->setOffset(1.0);
 
     for (int i=0; i<model.count(); i++) {
         QQuickRectangle *curItem = findItem<QQuickRectangle>(pathview, "wrapper", i);
         QPointF itemPos(path->pointAt(0.25 + i*0.25));
-        QCOMPARE(curItem->pos() + offset, QPointF(itemPos.x(), itemPos.y()));
+        QCOMPARE(curItem->position() + offset, QPointF(itemPos.x(), itemPos.y()));
     }
 
     QCOMPARE(pathview->currentIndex(), 3);
 
     pathview->setOffset(0.0);
-    QCOMPARE(firstItem->pos() + offset, start);
+    QCOMPARE(firstItem->position() + offset, start);
     QCOMPARE(pathview->currentIndex(), 0);
 
     // Change delegate size
@@ -917,13 +917,13 @@ void tst_QQuickPathView::pathMoved()
     window->rootObject()->setProperty("delegateWidth", 30);
     QCOMPARE(firstItem->width(), 30.0);
     offset.setX(firstItem->width()/2);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
 
     // Change delegate scale
     pathview->setOffset(0.1);
     pathview->setOffset(0.0);
     window->rootObject()->setProperty("delegateScale", 1.2);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
 
     delete window;
 }
@@ -985,14 +985,14 @@ void tst_QQuickPathView::setCurrentIndex()
     QPointF offset;//Center of item is at point, but pos is from corner
     offset.setX(firstItem->width()/2);
     offset.setY(firstItem->height()/2);
-    QCOMPARE(firstItem->pos() + offset, start);
+    QCOMPARE(firstItem->position() + offset, start);
     QCOMPARE(window->rootObject()->property("currentA").toInt(), 0);
     QCOMPARE(window->rootObject()->property("currentB").toInt(), 0);
 
     pathview->setCurrentIndex(2);
 
     firstItem = findItem<QQuickRectangle>(pathview, "wrapper", 2);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
     QCOMPARE(window->rootObject()->property("currentA").toInt(), 2);
     QCOMPARE(window->rootObject()->property("currentB").toInt(), 2);
     QCOMPARE(pathview->currentItem(), firstItem);
@@ -1002,7 +1002,7 @@ void tst_QQuickPathView::setCurrentIndex()
     QTRY_COMPARE(pathview->currentIndex(), 1);
     firstItem = findItem<QQuickRectangle>(pathview, "wrapper", 1);
     QVERIFY(firstItem);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
     QCOMPARE(pathview->currentItem(), firstItem);
     QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
@@ -1010,7 +1010,7 @@ void tst_QQuickPathView::setCurrentIndex()
     QTRY_COMPARE(pathview->currentIndex(), 0);
     firstItem = findItem<QQuickRectangle>(pathview, "wrapper", 0);
     QVERIFY(firstItem);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
     QCOMPARE(pathview->currentItem(), firstItem);
     QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
@@ -1018,7 +1018,7 @@ void tst_QQuickPathView::setCurrentIndex()
     QTRY_COMPARE(pathview->currentIndex(), 3);
     firstItem = findItem<QQuickRectangle>(pathview, "wrapper", 3);
     QVERIFY(firstItem);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
     QCOMPARE(pathview->currentItem(), firstItem);
     QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
@@ -1026,7 +1026,7 @@ void tst_QQuickPathView::setCurrentIndex()
     QTRY_COMPARE(pathview->currentIndex(), 0);
     firstItem = findItem<QQuickRectangle>(pathview, "wrapper", 0);
     QVERIFY(firstItem);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
     QCOMPARE(pathview->currentItem(), firstItem);
     QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
@@ -1035,7 +1035,7 @@ void tst_QQuickPathView::setCurrentIndex()
     QTRY_COMPARE(pathview->currentIndex(), 2);
     firstItem = findItem<QQuickRectangle>(pathview, "wrapper", 2);
     QVERIFY(firstItem);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
     QCOMPARE(pathview->currentItem(), firstItem);
     QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
@@ -1044,7 +1044,7 @@ void tst_QQuickPathView::setCurrentIndex()
     QTRY_COMPARE(pathview->currentIndex(), 1);
     firstItem = findItem<QQuickRectangle>(pathview, "wrapper", 1);
     QVERIFY(firstItem);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
     QCOMPARE(pathview->currentItem(), firstItem);
     QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
@@ -1056,7 +1056,7 @@ void tst_QQuickPathView::setCurrentIndex()
     firstItem = findItem<QQuickRectangle>(pathview, "wrapper", 3);
     QVERIFY(firstItem);
     QCOMPARE(pathview->currentItem(), firstItem);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
     model.moveItem(3, 0);
     pathview->setCurrentIndex(0);
     pathview->setHighlightMoveDuration(300);
@@ -1565,12 +1565,12 @@ void tst_QQuickPathView::changePreferredHighlight()
     QPointF offset;//Center of item is at point, but pos is from corner
     offset.setX(firstItem->width()/2);
     offset.setY(firstItem->height()/2);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
 
     pathview->setPreferredHighlightBegin(0.8);
     pathview->setPreferredHighlightEnd(0.8);
     start = path->pointAt(0.8);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
     QCOMPARE(pathview->currentIndex(), 0);
 
     delete window;
@@ -1627,7 +1627,7 @@ void tst_QQuickPathView::currentOffsetOnInsertion()
     QPointF offset;//Center of item is at point, but pos is from corner
     offset.setX(item->width()/2);
     offset.setY(item->height()/2);
-    QCOMPARE(item->pos() + offset, start);
+    QCOMPARE(item->position() + offset, start);
 
     QSignalSpy currentIndexSpy(pathview, SIGNAL(currentIndexChanged()));
 
@@ -1641,7 +1641,7 @@ void tst_QQuickPathView::currentOffsetOnInsertion()
     QVERIFY(item = findItem<QQuickRectangle>(pathview, "wrapper", 1));
 
     // verify that current item (item 1) is still at offset 0.5
-    QCOMPARE(item->pos() + offset, start);
+    QCOMPARE(item->position() + offset, start);
 
     // insert another item at the beginning
     model.insertItem(0, "item2", "2");
@@ -1653,7 +1653,7 @@ void tst_QQuickPathView::currentOffsetOnInsertion()
     QVERIFY(item = findItem<QQuickRectangle>(pathview, "wrapper", 2));
 
     // verify that current item (item 2) is still at offset 0.5
-    QCOMPARE(item->pos() + offset, start);
+    QCOMPARE(item->position() + offset, start);
 
     // verify that remove before current maintains current item
     model.removeItem(0);
@@ -1665,7 +1665,7 @@ void tst_QQuickPathView::currentOffsetOnInsertion()
     QVERIFY(item = findItem<QQuickRectangle>(pathview, "wrapper", 1));
 
     // verify that current item (item 1) is still at offset 0.5
-    QCOMPARE(item->pos() + offset, start);
+    QCOMPARE(item->position() + offset, start);
 
     delete window;
 }
@@ -1714,13 +1714,13 @@ void tst_QQuickPathView::asynchronous()
     QPointF offset;//Center of item is at point, but pos is from corner
     offset.setX(firstItem->width()/2);
     offset.setY(firstItem->height()/2);
-    QTRY_COMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->position() + offset, start);
     pathview->setOffset(1.0);
 
     for (int i=0; i<5; i++) {
         QQuickItem *curItem = findItem<QQuickItem>(pathview, "wrapper", i);
         QPointF itemPos(path->pointAt(0.2 + i*0.2));
-        QCOMPARE(curItem->pos() + offset, itemPos);
+        QCOMPARE(curItem->position() + offset, itemPos);
     }
 
     delete window;

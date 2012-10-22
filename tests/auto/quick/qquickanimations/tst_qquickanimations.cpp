@@ -136,7 +136,7 @@ void tst_qquickanimations::simpleProperty()
     QTest::qWait(animation.duration());
     QTIMED_COMPARE(rect.x(), 200.0);
 
-    rect.setPos(QPointF(0,0));
+    rect.setPosition(QPointF(0,0));
     animation.start();
     QVERIFY(animation.isRunning());
     animation.pause();

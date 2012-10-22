@@ -423,7 +423,7 @@ void QQuickPinchArea::updatePinch()
                         grabMouse();
                     setKeepMouseGrab(true);
                     if (d->pinch && d->pinch->target()) {
-                        d->pinchStartPos = pinch()->target()->pos();
+                        d->pinchStartPos = pinch()->target()->position();
                         d->pinchStartScale = d->pinch->target()->scale();
                         d->pinchStartRotation = d->pinch->target()->rotation();
                         d->pinch->setActive(true);

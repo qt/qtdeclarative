@@ -67,7 +67,7 @@ InspectTool::InspectTool(QQuickViewInspector *inspector, QQuickView *view) :
     m_didPressAndHold(false),
     m_tapEvent(false),
     m_contentItem(view->contentItem()),
-    m_originalPosition(view->contentItem()->pos()),
+    m_originalPosition(view->contentItem()->position()),
     m_smoothScaleFactor(Constants::ZoomSnapDelta),
     m_minScale(0.125f),
     m_maxScale(48.0f),
@@ -100,14 +100,14 @@ void InspectTool::enable(bool enable)
         // restoring the original states.
         if (m_contentItem) {
             m_contentItem->setScale(m_originalScale);
-            m_contentItem->setPos(m_originalPosition);
+            m_contentItem->setPosition(m_originalPosition);
             m_contentItem->setSmooth(m_originalSmooth);
         }
     } else {
         if (m_contentItem) {
             m_originalSmooth = m_contentItem->smooth();
             m_originalScale = m_contentItem->scale();
-            m_originalPosition = m_contentItem->pos();
+            m_originalPosition = m_contentItem->position();
             m_contentItem->setSmooth(true);
         }
     }
@@ -288,9 +288,9 @@ void InspectTool::scaleView(const qreal &factor, const QPointF &newcenter, const
         return;
     }
     //New position = new center + scalefactor * (oldposition - oldcenter)
-    QPointF newPosition = newcenter + (factor * (m_contentItem->pos() - oldcenter));
+    QPointF newPosition = newcenter + (factor * (m_contentItem->position() - oldcenter));
     m_contentItem->setScale(m_contentItem->scale() * factor);
-    m_contentItem->setPos(newPosition);
+    m_contentItem->setPosition(newPosition);
 }
 
 void InspectTool::zoomIn()
@@ -309,7 +309,7 @@ void InspectTool::zoomTo100()
 {
     m_didPressAndHold = true;
 
-    m_contentItem->setPos(QPointF(0, 0));
+    m_contentItem->setPosition(QPointF(0, 0));
     m_contentItem->setScale(1.0);
 }
 
@@ -361,9 +361,9 @@ void InspectTool::initializeDrag(const QPointF &pos)
 
 void InspectTool::dragItemToPosition()
 {
-    QPointF newPosition = m_contentItem->pos() + m_mousePosition - m_dragStartPosition;
+    QPointF newPosition = m_contentItem->position() + m_mousePosition - m_dragStartPosition;
     m_dragStartPosition = m_mousePosition;
-    m_contentItem->setPos(newPosition);
+    m_contentItem->setPosition(newPosition);
 }
 
 void InspectTool::moveItem(bool valid)

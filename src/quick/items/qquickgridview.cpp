@@ -684,7 +684,7 @@ void QQuickGridViewPrivate::repositionPackageItemAt(QQuickItem *item, int index)
             qreal y = (verticalLayoutDirection == QQuickItemView::TopToBottom)
                     ? rowPosAt(index)
                     : -rowPosAt(index) - item->height();
-            item->setPos(QPointF(colPosAt(index), y));
+            item->setPosition(QPointF(colPosAt(index), y));
         }
     } else {
         if (item->x() + item->width() > pos && item->x() < pos + q->width()) {
@@ -692,9 +692,9 @@ void QQuickGridViewPrivate::repositionPackageItemAt(QQuickItem *item, int index)
                     ? colPosAt(index)
                     : -colPosAt(index) - item->height();
             if (flow == QQuickGridView::FlowTopToBottom && q->effectiveLayoutDirection() == Qt::RightToLeft)
-                item->setPos(QPointF(-rowPosAt(index)-item->width(), y));
+                item->setPosition(QPointF(-rowPosAt(index)-item->width(), y));
             else
-                item->setPos(QPointF(rowPosAt(index), y));
+                item->setPosition(QPointF(rowPosAt(index), y));
         }
     }
 }

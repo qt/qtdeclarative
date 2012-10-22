@@ -372,7 +372,7 @@ void tst_QQuickDrag::active()
     QCOMPARE(dropTarget.enterEvents, 1); QCOMPARE(dropTarget.leaveEvents, 0); QCOMPARE(dropTarget.moveEvents, 0);
 
     dropTarget.reset();
-    item->setPos(QPointF(80, 80));
+    item->setPosition(QPointF(80, 80));
     QCOMPARE(evaluate<bool>(item, "Drag.active"), true);
     QCOMPARE(evaluate<bool>(item, "dragActive"), true);
     QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 0); QCOMPARE(dropTarget.moveEvents, 0);
@@ -508,7 +508,7 @@ void tst_QQuickDrag::drop()
     // Queued move event is delivered before a drop event.
     innerTarget.reset(); outerTarget.reset();
     evaluate<void>(item, "Drag.active = true");
-    item->setPos(QPointF(80, 80));
+    item->setPosition(QPointF(80, 80));
     evaluate<void>(item, "Drag.drop()");
     QCOMPARE(evaluate<bool>(item, "Drag.active"), false);
     QCOMPARE(evaluate<bool>(item, "dragActive"), false);
@@ -529,10 +529,10 @@ void tst_QQuickDrag::move()
     TestDropTarget outerTarget(window.contentItem());
     outerTarget.setSize(QSizeF(100, 100));
     TestDropTarget leftTarget(&outerTarget);
-    leftTarget.setPos(QPointF(0, 35));
+    leftTarget.setPosition(QPointF(0, 35));
     leftTarget.setSize(QSizeF(30, 30));
     TestDropTarget rightTarget(&outerTarget);
-    rightTarget.setPos(QPointF(70, 35));
+    rightTarget.setPosition(QPointF(70, 35));
     rightTarget.setSize(QSizeF(30, 30));
     QQmlComponent component(&engine);
     component.setData(
@@ -560,7 +560,7 @@ void tst_QQuickDrag::move()
 
     // Move within the outer target.
     outerTarget.reset(); leftTarget.reset(); rightTarget.reset();
-    item->setPos(QPointF(60, 50));
+    item->setPosition(QPointF(60, 50));
     // Move event is delivered in the event loop.
     QCOMPARE(outerTarget.enterEvents, 0); QCOMPARE(outerTarget.leaveEvents, 0); QCOMPARE(outerTarget.moveEvents, 0);
     QCOMPARE(leftTarget .enterEvents, 0); QCOMPARE(leftTarget .leaveEvents, 0); QCOMPARE(leftTarget .moveEvents, 0);
@@ -592,7 +592,7 @@ void tst_QQuickDrag::move()
 
     // Move into the left target.
     outerTarget.reset(); leftTarget.reset(); rightTarget.reset();
-    item->setPos(QPointF(25, 50));
+    item->setPosition(QPointF(25, 50));
     QCoreApplication::processEvents();
     QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(&leftTarget));
     QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(&leftTarget));
@@ -604,7 +604,7 @@ void tst_QQuickDrag::move()
 
     // Move within the left target.
     outerTarget.reset(); leftTarget.reset(); rightTarget.reset();
-    item->setPos(QPointF(25, 40));
+    item->setPosition(QPointF(25, 40));
     QCoreApplication::processEvents();
     QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(&leftTarget));
     QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(&leftTarget));
@@ -616,7 +616,7 @@ void tst_QQuickDrag::move()
 
     // Move out of all targets.
     outerTarget.reset(); leftTarget.reset(); rightTarget.reset();
-    item->setPos(QPointF(110, 50));
+    item->setPosition(QPointF(110, 50));
     QCoreApplication::processEvents();
     QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
     QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
@@ -628,7 +628,7 @@ void tst_QQuickDrag::move()
     rightTarget.accept = false;
 
     outerTarget.reset(); leftTarget.reset(); rightTarget.reset();
-    item->setPos(QPointF(80, 50));
+    item->setPosition(QPointF(80, 50));
     QCoreApplication::processEvents();
     QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(&outerTarget));
     QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(&outerTarget));
@@ -641,7 +641,7 @@ void tst_QQuickDrag::move()
     outerTarget.accept = false;
 
     outerTarget.reset(); leftTarget.reset(); rightTarget.reset();
-    item->setPos(QPointF(60, 50));
+    item->setPosition(QPointF(60, 50));
     QCoreApplication::processEvents();
     QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(&outerTarget));
     QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(&outerTarget));
@@ -654,7 +654,7 @@ void tst_QQuickDrag::move()
     outerTarget.setFlags(QQuickItem::Flags());
 
     outerTarget.reset(); leftTarget.reset(); rightTarget.reset();
-    item->setPos(QPointF(40, 50));
+    item->setPosition(QPointF(40, 50));
     QCoreApplication::processEvents();
     QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(&outerTarget));
     QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(&outerTarget));
@@ -667,7 +667,7 @@ void tst_QQuickDrag::move()
     leftTarget.setFlags(QQuickItem::Flags());
 
     outerTarget.reset(); leftTarget.reset(); rightTarget.reset();
-    item->setPos(QPointF(25, 50));
+    item->setPosition(QPointF(25, 50));
     QCoreApplication::processEvents();
     QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(&outerTarget));
     QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(&outerTarget));
@@ -802,7 +802,7 @@ void tst_QQuickDrag::hotSpot()
     QCOMPARE(dropTarget.position.x(), qreal(55));
     QCOMPARE(dropTarget.position.y(), qreal(55));
 
-    item->setPos(QPointF(30, 20));
+    item->setPosition(QPointF(30, 20));
     QCoreApplication::processEvents();
     QCOMPARE(dropTarget.position.x(), qreal(35));
     QCOMPARE(dropTarget.position.y(), qreal(25));
@@ -820,7 +820,7 @@ void tst_QQuickDrag::hotSpot()
     QCOMPARE(dropTarget.position.x(), qreal(40));
     QCOMPARE(dropTarget.position.y(), qreal(30));
 
-    item->setPos(QPointF(10, 20));
+    item->setPosition(QPointF(10, 20));
     QCoreApplication::processEvents();
     QCOMPARE(dropTarget.position.x(), qreal(20));
     QCOMPARE(dropTarget.position.y(), qreal(30));
@@ -865,7 +865,7 @@ void tst_QQuickDrag::supportedActions()
     evaluate<void>(item, "Drag.supportedActions = Qt.MoveAction");
     QCOMPARE(evaluate<bool>(item, "Drag.supportedActions == Qt.MoveAction"), true);
     QCOMPARE(evaluate<bool>(item, "supportedActions == Qt.MoveAction"), true);
-    item->setPos(QPointF(60, 60));
+    item->setPosition(QPointF(60, 60));
     QCOMPARE(dropTarget.supportedActions, Qt::CopyAction | Qt::MoveAction);
     QCOMPARE(dropTarget.leaveEvents, 0);
     QCOMPARE(dropTarget.enterEvents, 1);

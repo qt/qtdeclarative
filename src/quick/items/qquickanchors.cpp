@@ -398,7 +398,7 @@ void QQuickAnchorsPrivate::setItemY(qreal v)
 void QQuickAnchorsPrivate::setItemPos(const QPointF &v)
 {
     updatingMe = true;
-    item->setPos(v);
+    item->setPosition(v);
     updatingMe = false;
 }
 

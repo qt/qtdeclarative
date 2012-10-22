@@ -1519,7 +1519,7 @@ void tst_qquickitem::hoverEventInParent()
 
     HoverItem *rightItem = new HoverItem(parentItem);
     rightItem->setSize(QSizeF(100, 200));
-    rightItem->setPos(QPointF(100, 0));
+    rightItem->setPosition(QPointF(100, 0));
     rightItem->setAcceptHoverEvents(true);
 
     const QPoint insideLeft(50, 100);

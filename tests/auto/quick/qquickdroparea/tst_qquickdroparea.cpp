@@ -145,14 +145,14 @@ void tst_QQuickDropArea::containsDrag_internal()
 
     evaluate<void>(dropArea, "{ enterEvents = 0; exitEvents = 0 }");
 
-    dragItem->setPos(QPointF(150, 50));
+    dragItem->setPosition(QPointF(150, 50));
     evaluate<void>(dragItem, "Drag.active = true");
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea, "exitEvents"), 0);
 
-    dragItem->setPos(QPointF(50, 50));
+    dragItem->setPosition(QPointF(50, 50));
     QCoreApplication::processEvents();
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), true);
@@ -160,7 +160,7 @@ void tst_QQuickDropArea::containsDrag_internal()
     QCOMPARE(evaluate<int>(dropArea, "exitEvents"), 0);
 
     evaluate<void>(dropArea, "{ enterEvents = 0; exitEvents = 0 }");
-    dragItem->setPos(QPointF(150, 50));
+    dragItem->setPosition(QPointF(150, 50));
     QCoreApplication::processEvents();
 
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
@@ -544,7 +544,7 @@ void tst_QQuickDropArea::position_internal()
     QCOMPARE(evaluate<qreal>(dropArea, "eventY"), qreal(50));
 
     evaluate<void>(dropArea, "{ enterEvents = 0; moveEvents = 0; eventX = -1; eventY = -1 }");
-    dragItem->setPos(QPointF(40, 50));
+    dragItem->setPosition(QPointF(40, 50));
     QCoreApplication::processEvents();
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea, "moveEvents"), 1);
@@ -556,7 +556,7 @@ void tst_QQuickDropArea::position_internal()
     QCOMPARE(evaluate<qreal>(dropArea, "eventY"), qreal(50));
 
     evaluate<void>(dropArea, "{ enterEvents = 0; moveEvents = 0; eventX = -1; eventY = -1 }");
-    dragItem->setPos(QPointF(75, 25));
+    dragItem->setPosition(QPointF(75, 25));
     QCoreApplication::processEvents();
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea, "moveEvents"), 1);

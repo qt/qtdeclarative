@@ -60,7 +60,7 @@ QQuickItem *QQuickTextUtil::createCursor(
             if ((item = qobject_cast<QQuickItem *>(object))) {
                 QQml_setParent_noEvent(item, parent);
                 item->setParentItem(parent);
-                item->setPos(rectangle.topLeft());
+                item->setPosition(rectangle.topLeft());
                 item->setHeight(rectangle.height());
             } else {
                 qmlInfo(parent) << tr("%1 does not support loading non-visual cursor delegates.")

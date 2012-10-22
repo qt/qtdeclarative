@@ -3226,7 +3226,7 @@ void tst_qquicktextedit::preeditCursorRectangle()
     QCoreApplication::sendEvent(edit, &query);
     currentRect = query.value(Qt::ImCursorRectangle).toRectF();
     QCOMPARE(edit->cursorRectangle(), currentRect);
-    QCOMPARE(cursor->pos(), currentRect.topLeft());
+    QCOMPARE(cursor->position(), currentRect.topLeft());
     QCOMPARE(currentRect, previousRect);
 
     // Verify that the micro focus rect moves to the left as the cursor position
@@ -3240,7 +3240,7 @@ void tst_qquicktextedit::preeditCursorRectangle()
         QCoreApplication::sendEvent(edit, &query);
         currentRect = query.value(Qt::ImCursorRectangle).toRectF();
         QCOMPARE(edit->cursorRectangle(), currentRect);
-        QCOMPARE(cursor->pos(), currentRect.topLeft());
+        QCOMPARE(cursor->position(), currentRect.topLeft());
         QVERIFY(previousRect.left() < currentRect.left());
         QCOMPARE(editSpy.count(), 1); editSpy.clear();
         QCOMPARE(panelSpy.count(), 1); panelSpy.clear();
@@ -3257,7 +3257,7 @@ void tst_qquicktextedit::preeditCursorRectangle()
     QCoreApplication::sendEvent(edit, &query);
     currentRect = query.value(Qt::ImCursorRectangle).toRectF();
     QCOMPARE(edit->cursorRectangle(), currentRect);
-    QCOMPARE(cursor->pos(), currentRect.topLeft());
+    QCOMPARE(cursor->position(), currentRect.topLeft());
     QCOMPARE(editSpy.count(), 1);
     QCOMPARE(panelSpy.count(), 1);
 
@@ -3270,7 +3270,7 @@ void tst_qquicktextedit::preeditCursorRectangle()
     QCoreApplication::sendEvent(edit, &query);
     currentRect = query.value(Qt::ImCursorRectangle).toRectF();
     QCOMPARE(edit->cursorRectangle(), currentRect);
-    QCOMPARE(cursor->pos(), currentRect.topLeft());
+    QCOMPARE(cursor->position(), currentRect.topLeft());
     QCOMPARE(currentRect, previousRect);
     QCOMPARE(editSpy.count(), 1);
     QCOMPARE(panelSpy.count(), 1);

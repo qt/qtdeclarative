@@ -542,7 +542,7 @@ void tst_QQuickGridView::inserted_defaultLayout(QQuickGridView::Flow flow,
         firstPos.rx() = flow == QQuickGridView::FlowLeftToRight ? gridview->width() - gridview->cellWidth() : -gridview->cellWidth();
     if (verticalLayout == QQuickItemView::BottomToTop)
         firstPos.ry() -= gridview->cellHeight();
-    QCOMPARE(item0->pos(), firstPos);
+    QCOMPARE(item0->position(), firstPos);
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
@@ -559,7 +559,7 @@ void tst_QQuickGridView::inserted_defaultLayout(QQuickGridView::Flow flow,
     for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-        QCOMPARE(item->pos(), expectedItemPos(gridview, i, rowOffsetAfterMove));
+        QCOMPARE(item->position(), expectedItemPos(gridview, i, rowOffsetAfterMove));
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QCOMPARE(name->text(), model.name(i));
@@ -983,7 +983,7 @@ void tst_QQuickGridView::removed_defaultLayout(QQuickGridView::Flow flow,
     for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-        QCOMPARE(item->pos(), expectedItemPos(gridview, i, rowOffsetAfterMove));
+        QCOMPARE(item->position(), expectedItemPos(gridview, i, rowOffsetAfterMove));
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QTRY_COMPARE(name->text(), model.name(i));
@@ -1329,7 +1329,7 @@ void tst_QQuickGridView::moved_defaultLayout(QQuickGridView::Flow flow,
             continue;   // index has moved out of view
         }
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-        QCOMPARE(item->pos(), expectedItemPos(gridview, i, rowOffsetAfterMove));
+        QCOMPARE(item->position(), expectedItemPos(gridview, i, rowOffsetAfterMove));
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QTRY_COMPARE(name->text(), model.name(i));
@@ -3013,7 +3013,7 @@ void tst_QQuickGridView::footer()
     QVERIFY(footer);
     QVERIFY(footer == gridview->footerItem());
 
-    QCOMPARE(footer->pos(), initialFooterPos);
+    QCOMPARE(footer->position(), initialFooterPos);
     QCOMPARE(footer->width(), 100.);
     QCOMPARE(footer->height(), 30.);
     QCOMPARE(QPointF(gridview->contentX(), gridview->contentY()), initialContentPos);
@@ -3025,7 +3025,7 @@ void tst_QQuickGridView::footer()
 
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
-    QCOMPARE(item->pos(), firstDelegatePos);
+    QCOMPARE(item->position(), firstDelegatePos);
 
     if (flow == QQuickGridView::FlowLeftToRight) {
         // shrink by one row
@@ -3056,12 +3056,12 @@ void tst_QQuickGridView::footer()
         posWhenNoItems.setX(flow == QQuickGridView::FlowLeftToRight ? gridview->width() - footer->width() : -footer->width());
     if (verticalLayoutDirection == QQuickItemView::BottomToTop)
         posWhenNoItems.setY(-footer->height());
-    QTRY_COMPARE(footer->pos(), posWhenNoItems);
+    QTRY_COMPARE(footer->position(), posWhenNoItems);
 
     // if header is toggled, it shouldn't affect the footer position
     window->rootObject()->setProperty("showHeader", true);
     QVERIFY(findItem<QQuickItem>(contentItem, "header") != 0);
-    QTRY_COMPARE(footer->pos(), posWhenNoItems);
+    QTRY_COMPARE(footer->position(), posWhenNoItems);
     window->rootObject()->setProperty("showHeader", false);
 
     // add 30 items
@@ -3079,7 +3079,7 @@ void tst_QQuickGridView::footer()
     QVERIFY(footer);
     QVERIFY(footer == gridview->footerItem());
 
-    QCOMPARE(footer->pos(), changedFooterPos);
+    QCOMPARE(footer->position(), changedFooterPos);
     QCOMPARE(footer->width(), 50.);
     QCOMPARE(footer->height(), 20.);
 
@@ -3088,7 +3088,7 @@ void tst_QQuickGridView::footer()
 
     item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
-    QCOMPARE(item->pos(), firstDelegatePos);
+    QCOMPARE(item->position(), firstDelegatePos);
 
     gridview->positionViewAtEnd();
     footer->setHeight(10);
@@ -3247,7 +3247,7 @@ void tst_QQuickGridView::header()
     QVERIFY(header);
     QVERIFY(header == gridview->headerItem());
 
-    QCOMPARE(header->pos(), initialHeaderPos);
+    QCOMPARE(header->position(), initialHeaderPos);
     QCOMPARE(header->width(), 100.);
     QCOMPARE(header->height(), 30.);
     QCOMPARE(QPointF(gridview->contentX(), gridview->contentY()), initialContentPos);
@@ -3259,11 +3259,11 @@ void tst_QQuickGridView::header()
 
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
-    QCOMPARE(item->pos(), firstDelegatePos);
+    QCOMPARE(item->position(), firstDelegatePos);
 
     model.clear();
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
-    QCOMPARE(header->pos(), initialHeaderPos); // header should stay where it is
+    QCOMPARE(header->position(), initialHeaderPos); // header should stay where it is
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentHeight(), header->height());
     else
@@ -3284,14 +3284,14 @@ void tst_QQuickGridView::header()
 
     QVERIFY(header == gridview->headerItem());
 
-    QCOMPARE(header->pos(), changedHeaderPos);
+    QCOMPARE(header->position(), changedHeaderPos);
     QCOMPARE(header->width(), 50.);
     QCOMPARE(header->height(), 20.);
     QTRY_COMPARE(QPointF(gridview->contentX(), gridview->contentY()), changedContentPos);
 
     item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
-    QCOMPARE(item->pos(), firstDelegatePos);
+    QCOMPARE(item->position(), firstDelegatePos);
 
     header->setHeight(10);
     header->setWidth(40);
@@ -3319,7 +3319,7 @@ void tst_QQuickGridView::header()
 
     gridview->setWidth(240);
     gridview->setHeight(320);
-    QTRY_COMPARE(gridview->headerItem()->pos(), initialHeaderPos);
+    QTRY_COMPARE(gridview->headerItem()->position(), initialHeaderPos);
     QCOMPARE(QPointF(gridview->contentX(), gridview->contentY()), initialContentPos);
 
     releaseView(window);
@@ -3467,11 +3467,11 @@ void tst_QQuickGridView::extents()
 
     QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
     QVERIFY(header);
-    QCOMPARE(header->pos(), headerPos);
+    QCOMPARE(header->position(), headerPos);
 
     QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
     QVERIFY(footer);
-    QCOMPARE(footer->pos(), footerPos);
+    QCOMPARE(footer->position(), footerPos);
 
     QCOMPARE(static_cast<GVAccessor*>(gridview)->minX(), minPos.x());
     QCOMPARE(static_cast<GVAccessor*>(gridview)->minY(), minPos.y());
@@ -3706,7 +3706,7 @@ void tst_QQuickGridView::resizeGrid()
 
     QQuickItem *item0 = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item0);
-    QCOMPARE(item0->pos(), firstItemPos);
+    QCOMPARE(item0->position(), firstItemPos);
 
     // Confirm items positioned correctly and indexes correct
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
@@ -3714,7 +3714,7 @@ void tst_QQuickGridView::resizeGrid()
     for (int i = 0; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-        QCOMPARE(item->pos(), expectedItemPos(gridview, i, 0));
+        QCOMPARE(item->position(), expectedItemPos(gridview, i, 0));
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QCOMPARE(name->text(), model.name(i));
@@ -3730,7 +3730,7 @@ void tst_QQuickGridView::resizeGrid()
     QCOMPARE(findItem<QQuickItem>(contentItem, "wrapper", 0), item0);
     if (flow == QQuickGridView::FlowLeftToRight && layoutDirection == Qt::RightToLeft)
         firstItemPos.rx() += 80;
-    QCOMPARE(item0->pos(), firstItemPos);
+    QCOMPARE(item0->position(), firstItemPos);
 
     QPointF newContentPos = initialContentPos;
     if (flow == QQuickGridView::FlowTopToBottom && layoutDirection == Qt::RightToLeft)
@@ -3746,7 +3746,7 @@ void tst_QQuickGridView::resizeGrid()
     for (int i = 0; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-        QCOMPARE(item->pos(), expectedItemPos(gridview, i, 0));
+        QCOMPARE(item->position(), expectedItemPos(gridview, i, 0));
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QCOMPARE(name->text(), model.name(i));

@@ -349,12 +349,12 @@ void tst_qquickwindow::touchEvent_basic()
 
     TestTouchItem *middleItem = new TestTouchItem(bottomItem);
     middleItem->setObjectName("Middle Item");
-    middleItem->setPos(QPointF(50, 50));
+    middleItem->setPosition(QPointF(50, 50));
     middleItem->setSize(QSizeF(150, 150));
 
     TestTouchItem *topItem = new TestTouchItem(middleItem);
     topItem->setObjectName("Top Item");
-    topItem->setPos(QPointF(50, 50));
+    topItem->setPosition(QPointF(50, 50));
     topItem->setSize(QSizeF(150, 150));
 
     QPointF pos(10, 10);
@@ -478,12 +478,12 @@ void tst_qquickwindow::touchEvent_propagation()
 
     TestTouchItem *middleItem = new TestTouchItem(bottomItem);
     middleItem->setObjectName("Middle Item");
-    middleItem->setPos(QPointF(50, 50));
+    middleItem->setPosition(QPointF(50, 50));
     middleItem->setSize(QSizeF(150, 150));
 
     TestTouchItem *topItem = new TestTouchItem(middleItem);
     topItem->setObjectName("Top Item");
-    topItem->setPos(QPointF(50, 50));
+    topItem->setPosition(QPointF(50, 50));
     topItem->setSize(QSizeF(150, 150));
 
     QPointF pos(10, 10);
@@ -606,7 +606,7 @@ void tst_qquickwindow::touchEvent_cancel()
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
     TestTouchItem *item = new TestTouchItem(window->contentItem());
-    item->setPos(QPointF(50, 50));
+    item->setPosition(QPointF(50, 50));
     item->setSize(QSizeF(150, 150));
 
     QPointF pos(10, 10);
@@ -642,7 +642,7 @@ void tst_qquickwindow::touchEvent_reentrant()
 
     item->spinLoopWhenPressed = true; // will call processEvents() from the touch handler
 
-    item->setPos(QPointF(50, 50));
+    item->setPosition(QPointF(50, 50));
     item->setSize(QSizeF(150, 150));
     QPointF pos(60, 60);
 
@@ -677,7 +677,7 @@ void tst_qquickwindow::touchEvent_velocity()
     QTest::qWait(10);
 
     TestTouchItem *item = new TestTouchItem(window->contentItem());
-    item->setPos(QPointF(50, 50));
+    item->setPosition(QPointF(50, 50));
     item->setSize(QSizeF(150, 150));
 
     QList<QWindowSystemInterface::TouchPoint> points;
@@ -733,7 +733,7 @@ void tst_qquickwindow::mouseFromTouch_basic()
     QTest::qWait(10);
 
     TestTouchItem *item = new TestTouchItem(window->contentItem());
-    item->setPos(QPointF(50, 50));
+    item->setPosition(QPointF(50, 50));
     item->setSize(QSizeF(150, 150));
     item->acceptTouchEvents = false;
 
@@ -816,12 +816,12 @@ void tst_qquickwindow::mouseFiltering()
 
     TestTouchItem *middleItem = new TestTouchItem(bottomItem);
     middleItem->setObjectName("Middle Item");
-    middleItem->setPos(QPointF(50, 50));
+    middleItem->setPosition(QPointF(50, 50));
     middleItem->setSize(QSizeF(150, 150));
 
     TestTouchItem *topItem = new TestTouchItem(middleItem);
     topItem->setObjectName("Top Item");
-    topItem->setPos(QPointF(50, 50));
+    topItem->setPosition(QPointF(50, 50));
     topItem->setSize(QSizeF(150, 150));
 
     QPoint pos(100, 100);
@@ -1077,23 +1077,23 @@ void tst_qquickwindow::cursor()
     window.resize(320, 240);
 
     QQuickItem parentItem;
-    parentItem.setPos(QPointF(0, 0));
+    parentItem.setPosition(QPointF(0, 0));
     parentItem.setSize(QSizeF(180, 180));
     parentItem.setParentItem(window.contentItem());
 
     QQuickItem childItem;
-    childItem.setPos(QPointF(60, 90));
+    childItem.setPosition(QPointF(60, 90));
     childItem.setSize(QSizeF(120, 120));
     childItem.setParentItem(&parentItem);
 
     QQuickItem clippingItem;
-    clippingItem.setPos(QPointF(120, 120));
+    clippingItem.setPosition(QPointF(120, 120));
     clippingItem.setSize(QSizeF(180, 180));
     clippingItem.setClip(true);
     clippingItem.setParentItem(window.contentItem());
 
     QQuickItem clippedItem;
-    clippedItem.setPos(QPointF(-30, -30));
+    clippedItem.setPosition(QPointF(-30, -30));
     clippedItem.setSize(QSizeF(120, 120));
     clippedItem.setParentItem(&clippingItem);
 

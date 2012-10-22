@@ -703,7 +703,7 @@ void tst_TouchMouse::pinchOnFlickable()
     QVERIFY(flickable->contentX() == 0.0);
     QPoint p = QPoint(100, 100);
     QTest::touchEvent(window, device).press(0, p, window);
-    QCOMPARE(rect->pos(), QPointF(200.0, 200.0));
+    QCOMPARE(rect->position(), QPointF(200.0, 200.0));
     p -= QPoint(10, 0);
     QTest::touchEvent(window, device).move(0, p, window);
     p -= QPoint(10, 0);
@@ -770,7 +770,7 @@ void tst_TouchMouse::flickableOnPinch()
     QVERIFY(flickable->contentX() == 0.0);
     QPoint p = QPoint(100, 100);
     QTest::touchEvent(window, device).press(0, p, window);
-    QCOMPARE(rect->pos(), QPointF(200.0, 200.0));
+    QCOMPARE(rect->position(), QPointF(200.0, 200.0));
     p -= QPoint(10, 0);
     QTest::touchEvent(window, device).move(0, p, window);
     p -= QPoint(10, 0);
@@ -785,7 +785,7 @@ void tst_TouchMouse::flickableOnPinch()
     QTest::qWait(1000);
 
     //QVERIFY(flickable->isMovingHorizontally());
-    qDebug() << "Pos: " << rect->pos();
+    qDebug() << "Pos: " << rect->position();
     // wait until flicking is done
     QTRY_VERIFY(!flickable->isFlicking());
 
@@ -839,7 +839,7 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     QVERIFY(flickable->contentX() == 0.0);
     QPoint p = QPoint(100, 100);
     QTest::touchEvent(window, device).press(0, p, window);
-    QCOMPARE(rect->pos(), QPointF(200.0, 200.0));
+    QCOMPARE(rect->position(), QPointF(200.0, 200.0));
     p -= QPoint(10, 0);
     QTest::touchEvent(window, device).move(0, p, window);
     p -= QPoint(10, 0);
@@ -851,7 +851,7 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     QGuiApplication::processEvents();
 
     //QVERIFY(flickable->isMovingHorizontally());
-    qDebug() << "Pos: " << rect->pos();
+    qDebug() << "Pos: " << rect->position();
 
     // pinch
     QPoint p1 = QPoint(40, 20);
@@ -885,7 +885,7 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     flickable->setContentX(0.0);
     p = QPoint(100, 100);
     pinchSequence.press(0, p, window).commit();
-    QCOMPARE(rect->pos(), QPointF(200.0, 200.0));
+    QCOMPARE(rect->position(), QPointF(200.0, 200.0));
     p -= QPoint(10, 0);
     pinchSequence.move(0, p, window).commit();
     p -= QPoint(10, 0);

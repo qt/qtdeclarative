@@ -2575,7 +2575,7 @@ void QQuickTextInput::updateCursorRectangle()
     emit cursorRectangleChanged();
     if (d->cursorItem) {
         QRectF r = cursorRectangle();
-        d->cursorItem->setPos(r.topLeft());
+        d->cursorItem->setPosition(r.topLeft());
         d->cursorItem->setHeight(r.height());
     }
 #ifndef QT_NO_IM

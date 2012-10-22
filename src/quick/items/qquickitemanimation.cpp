@@ -899,7 +899,7 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
                     QPointF pathPos = QQuickPath::sequentialPointAt(prevData.painterPath, prevData.pathLength, prevData.attributePoints, prevData.prevBez, prevData.currentV);
                     if (!prevData.anchorPoint.isNull())
                         pathPos -= prevData.anchorPoint;
-                    if (pathPos == data->target->pos()) {   //only treat as interruption if we interrupted ourself
+                    if (pathPos == data->target->position()) {   //only treat as interruption if we interrupted ourself
                         data->painterPath = prevData.painterPath;
                         data->toDefined = data->fromDefined = data->fromSourced = true;
                         data->prevBez.isValid = false;
@@ -961,7 +961,7 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
         }
     }
 
-    target->setPos(currentPos);
+    target->setPosition(currentPos);
 
     //adjust angle according to orientation
     if (!fixed) {

@@ -3224,7 +3224,7 @@ void tst_qquicktextinput::passwordEchoDelay()
     QCOMPARE(input->displayText(), QString(4, fillChar));
     QTest::keyPress(&window, '4');
     QCOMPARE(input->displayText(), QString(4, fillChar) + QLatin1Char('4'));
-    QCOMPARE(input->cursorRectangle().topLeft(), cursor->pos());
+    QCOMPARE(input->cursorRectangle().topLeft(), cursor->position());
 
     // Verify the last character entered is replaced by the fill character after a delay.
     // Also check the cursor position is updated to accomdate a size difference between
@@ -3233,7 +3233,7 @@ void tst_qquicktextinput::passwordEchoDelay()
     QTest::qWait(maskDelay);
     QTRY_COMPARE(input->displayText(), QString(5, fillChar));
     QCOMPARE(cursorSpy.count(), 1);
-    QCOMPARE(input->cursorRectangle().topLeft(), cursor->pos());
+    QCOMPARE(input->cursorRectangle().topLeft(), cursor->position());
 
     QTest::keyPress(&window, '5');
     QCOMPARE(input->displayText(), QString(5, fillChar) + QLatin1Char('5'));
@@ -3653,7 +3653,7 @@ void tst_qquicktextinput::preeditCursorRectangle()
     currentRect = query.value(Qt::ImCursorRectangle).toRectF();
     QCOMPARE(currentRect, previousRect);
     QCOMPARE(input->cursorRectangle(), currentRect);
-    QCOMPARE(cursor->pos(), currentRect.topLeft());
+    QCOMPARE(cursor->position(), currentRect.topLeft());
 
     QSignalSpy inputSpy(input, SIGNAL(cursorRectangleChanged()));
     QSignalSpy panelSpy(qGuiApp->inputMethod(), SIGNAL(cursorRectangleChanged()));
@@ -3666,7 +3666,7 @@ void tst_qquicktextinput::preeditCursorRectangle()
         currentRect = query.value(Qt::ImCursorRectangle).toRectF();
         QVERIFY(previousRect.left() < currentRect.left());
         QCOMPARE(input->cursorRectangle(), currentRect);
-        QCOMPARE(cursor->pos(), currentRect.topLeft());
+        QCOMPARE(cursor->position(), currentRect.topLeft());
         QVERIFY(inputSpy.count() > 0); inputSpy.clear();
         QVERIFY(panelSpy.count() > 0); panelSpy.clear();
         previousRect = currentRect;
@@ -3680,7 +3680,7 @@ void tst_qquicktextinput::preeditCursorRectangle()
     QCoreApplication::sendEvent(input, &query);
     currentRect = query.value(Qt::ImCursorRectangle).toRectF();
     QCOMPARE(input->cursorRectangle(), currentRect);
-    QCOMPARE(cursor->pos(), currentRect.topLeft());
+    QCOMPARE(cursor->position(), currentRect.topLeft());
     QCOMPARE(inputSpy.count(), 1);
     QCOMPARE(panelSpy.count(), 1);
 
@@ -3694,7 +3694,7 @@ void tst_qquicktextinput::preeditCursorRectangle()
     currentRect = query.value(Qt::ImCursorRectangle).toRectF();
     QCOMPARE(currentRect, previousRect);
     QCOMPARE(input->cursorRectangle(), currentRect);
-    QCOMPARE(cursor->pos(), currentRect.topLeft());
+    QCOMPARE(cursor->position(), currentRect.topLeft());
     QCOMPARE(inputSpy.count(), 1);
     QCOMPARE(panelSpy.count(), 1);
 }
@@ -3990,7 +3990,7 @@ void tst_qquicktextinput::tripleClickSelectsAll()
 
     // Clicking on the same point inside TextInput three times in a row
     // should trigger a triple click, thus selecting all the text.
-    QPoint pointInside = input->pos().toPoint() + QPoint(2,2);
+    QPoint pointInside = input->position().toPoint() + QPoint(2,2);
     QTest::mouseDClick(&view, Qt::LeftButton, 0, pointInside);
     QTest::mouseClick(&view, Qt::LeftButton, 0, pointInside);
     QGuiApplication::processEvents();

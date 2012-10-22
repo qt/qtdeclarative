@@ -3463,7 +3463,7 @@ void tst_QQuickListView::header()
 
     QCOMPARE(header->width(), 100.);
     QCOMPARE(header->height(), 30.);
-    QCOMPARE(header->pos(), initialHeaderPos);
+    QCOMPARE(header->position(), initialHeaderPos);
     QCOMPARE(QPointF(listview->contentX(), listview->contentY()), initialContentPos);
 
     if (orientation == QQuickListView::Vertical)
@@ -3473,11 +3473,11 @@ void tst_QQuickListView::header()
 
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
-    QCOMPARE(item->pos(), firstDelegatePos);
+    QCOMPARE(item->position(), firstDelegatePos);
 
     model.clear();
     QTRY_COMPARE(listview->count(), model.count());
-    QCOMPARE(header->pos(), initialHeaderPos); // header should stay where it is
+    QCOMPARE(header->position(), initialHeaderPos); // header should stay where it is
     if (orientation == QQuickListView::Vertical)
         QCOMPARE(listview->contentHeight(), header->height());
     else
@@ -3498,14 +3498,14 @@ void tst_QQuickListView::header()
 
     QVERIFY(header == listview->headerItem());
 
-    QCOMPARE(header->pos(), changedHeaderPos);
+    QCOMPARE(header->position(), changedHeaderPos);
     QCOMPARE(header->width(), 50.);
     QCOMPARE(header->height(), 20.);
     QTRY_COMPARE(QPointF(listview->contentX(), listview->contentY()), changedContentPos);
 
     item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
-    QCOMPARE(item->pos(), firstDelegatePos);
+    QCOMPARE(item->position(), firstDelegatePos);
 
     listview->positionViewAtBeginning();
     header->setHeight(10);
@@ -3534,7 +3534,7 @@ void tst_QQuickListView::header()
 
     listview->setWidth(240);
     listview->setHeight(320);
-    QTRY_COMPARE(listview->headerItem()->pos(), initialHeaderPos);
+    QTRY_COMPARE(listview->headerItem()->position(), initialHeaderPos);
     QCOMPARE(QPointF(listview->contentX(), listview->contentY()), initialContentPos);
 
     releaseView(window);
@@ -3671,7 +3671,7 @@ void tst_QQuickListView::footer()
 
     QVERIFY(footer == listview->footerItem());
 
-    QCOMPARE(footer->pos(), initialFooterPos);
+    QCOMPARE(footer->position(), initialFooterPos);
     QCOMPARE(footer->width(), 100.);
     QCOMPARE(footer->height(), 30.);
     QCOMPARE(QPointF(listview->contentX(), listview->contentY()), initialContentPos);
@@ -3683,7 +3683,7 @@ void tst_QQuickListView::footer()
 
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
-    QCOMPARE(item->pos(), firstDelegatePos);
+    QCOMPARE(item->position(), firstDelegatePos);
 
     // remove one item
     model.removeItem(1);
@@ -3708,11 +3708,11 @@ void tst_QQuickListView::footer()
         posWhenNoItems.setX(-100);
     else if (orientation == QQuickListView::Vertical && verticalLayoutDirection == QQuickItemView::BottomToTop)
         posWhenNoItems.setY(-30);
-    QTRY_COMPARE(footer->pos(), posWhenNoItems);
+    QTRY_COMPARE(footer->position(), posWhenNoItems);
 
     // if header is present, it's at a negative pos, so the footer should not move
     window->rootObject()->setProperty("showHeader", true);
-    QTRY_COMPARE(footer->pos(), posWhenNoItems);
+    QTRY_COMPARE(footer->position(), posWhenNoItems);
     window->rootObject()->setProperty("showHeader", false);
 
     // add 30 items
@@ -3731,14 +3731,14 @@ void tst_QQuickListView::footer()
 
     QVERIFY(footer == listview->footerItem());
 
-    QCOMPARE(footer->pos(), changedFooterPos);
+    QCOMPARE(footer->position(), changedFooterPos);
     QCOMPARE(footer->width(), 50.);
     QCOMPARE(footer->height(), 20.);
     QTRY_COMPARE(QPointF(listview->contentX(), listview->contentY()), changedContentPos);
 
     item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
-    QCOMPARE(item->pos(), firstDelegatePos);
+    QCOMPARE(item->position(), firstDelegatePos);
 
     listview->positionViewAtEnd();
     footer->setHeight(10);
@@ -3856,11 +3856,11 @@ void tst_QQuickListView::extents()
 
     QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
     QVERIFY(header);
-    QCOMPARE(header->pos(), headerPos);
+    QCOMPARE(header->position(), headerPos);
 
     QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
     QVERIFY(footer);
-    QCOMPARE(footer->pos(), footerPos);
+    QCOMPARE(footer->position(), footerPos);
 
     QCOMPARE(static_cast<LVAccessor*>(listview)->minX(), minPos.x());
     QCOMPARE(static_cast<LVAccessor*>(listview)->minY(), minPos.y());
@@ -4313,7 +4313,7 @@ void tst_QQuickListView::repositionResizedDelegate()
     QQuickItem *positioner = findItem<QQuickItem>(window->rootObject(), "positioner");
     QVERIFY(positioner);
     QTRY_COMPARE(positioner->boundingRect().size(), origPositionerRect.size());
-    QTRY_COMPARE(positioner->pos(), origPositionerRect.topLeft());
+    QTRY_COMPARE(positioner->position(), origPositionerRect.topLeft());
     QSignalSpy spy(listview, orientation == QQuickListView::Vertical ? SIGNAL(contentYChanged()) : SIGNAL(contentXChanged()));
     int prevSpyCount = 0;
 
@@ -4327,14 +4327,14 @@ void tst_QQuickListView::repositionResizedDelegate()
     prevSpyCount = spy.count();
     QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "incrementRepeater"));
     QTRY_COMPARE(positioner->boundingRect().size(), resizedPositionerRect.size());
-    QTRY_COMPARE(positioner->pos(), resizedPositionerRect.topLeft());
+    QTRY_COMPARE(positioner->position(), resizedPositionerRect.topLeft());
     QCOMPARE(listview->contentX(), contentPos_itemFirstHalfVisible.x());
     QCOMPARE(listview->contentY(), contentPos_itemFirstHalfVisible.y());
     QCOMPARE(spy.count(), prevSpyCount);
 
     QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "decrementRepeater"));
     QTRY_COMPARE(positioner->boundingRect().size(), origPositionerRect.size());
-    QTRY_COMPARE(positioner->pos(), origPositionerRect.topLeft());
+    QTRY_COMPARE(positioner->position(), origPositionerRect.topLeft());
     QCOMPARE(listview->contentX(), contentPos_itemFirstHalfVisible.x());
     QCOMPARE(listview->contentY(), contentPos_itemFirstHalfVisible.y());
 
@@ -4346,7 +4346,7 @@ void tst_QQuickListView::repositionResizedDelegate()
     QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "incrementRepeater"));
     positioner = findItem<QQuickItem>(window->rootObject(), "positioner");
     QTRY_COMPARE(positioner->boundingRect().size(), resizedPositionerRect.size());
-    QTRY_COMPARE(positioner->pos(), resizedPositionerRect.topLeft());
+    QTRY_COMPARE(positioner->position(), resizedPositionerRect.topLeft());
     QCOMPARE(listview->contentX(), contentPos_itemSecondHalfVisible.x());
     QCOMPARE(listview->contentY(), contentPos_itemSecondHalfVisible.y());
     qApp->processEvents();

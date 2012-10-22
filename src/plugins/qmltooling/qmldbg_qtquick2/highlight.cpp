@@ -113,13 +113,13 @@ void Highlight::adjust()
     QQuickWindow *view = m_item->window();
     if (view->contentItem()) {
         scaleFactor = view->contentItem()->scale();
-        originOffset -= view->contentItem()->pos();
+        originOffset -= view->contentItem()->position();
     }
     // The scale transform for the overlay needs to be cancelled
     // as the Item's transform which will be applied to the painter
     // takes care of it.
     parentItem()->setScale(1/scaleFactor);
-    setPos(originOffset);
+    setPosition(originOffset);
     update();
 }
 

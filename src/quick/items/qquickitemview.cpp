@@ -85,7 +85,7 @@ void FxViewItem::moveTo(const QPointF &pos, bool immediate)
     if (transitionableItem)
         transitionableItem->moveTo(pos, immediate);
     else
-        item->setPos(pos);
+        item->setPosition(pos);
 }
 
 void FxViewItem::setVisible(bool visible)

@@ -102,7 +102,7 @@ void QQuickBasePositioner::PositionedItem::moveTo(const QPointF &pos)
     if (transitionableItem)
         transitionableItem->moveTo(pos);
     else
-        item->setPos(pos);
+        item->setPosition(pos);
 }
 
 void QQuickBasePositioner::PositionedItem::transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget)
