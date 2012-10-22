@@ -262,7 +262,7 @@ class StandardItemModel : public QStandardItemModel
     Q_PROPERTY(QQmlListProperty<StandardItem> items READ items CONSTANT)
     Q_CLASSINFO("DefaultProperty", "items")
 public:
-    QQmlListProperty<StandardItem> items() { return QQmlListProperty<StandardItem>(this, 0, append); }
+    QQmlListProperty<StandardItem> items() { return QQmlListProperty<StandardItem>(this, 0, append, 0, 0, 0); }
 
     static void append(QQmlListProperty<StandardItem> *property, StandardItem *item)
     {

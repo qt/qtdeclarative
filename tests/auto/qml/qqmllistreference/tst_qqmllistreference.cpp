@@ -68,6 +68,8 @@ private slots:
     void canAt();
     void canClear();
     void canCount();
+    void isReadable();
+    void isManipulable();
     void append();
     void at();
     void clear();
@@ -128,6 +130,8 @@ void tst_qqmllistreference::qmllistreference_invalid()
     QVERIFY(r.at(10) == 0);
     QVERIFY(r.clear() == false);
     QVERIFY(r.count() == 0);
+    QVERIFY(r.isReadable() == false);
+    QVERIFY(r.isManipulable() == false);
     }
 
     // Non-property
@@ -143,6 +147,8 @@ void tst_qqmllistreference::qmllistreference_invalid()
     QVERIFY(r.at(10) == 0);
     QVERIFY(r.clear() == false);
     QVERIFY(r.count() == 0);
+    QVERIFY(r.isReadable() == false);
+    QVERIFY(r.isManipulable() == false);
     }
 
     // Non-list property
@@ -158,6 +164,8 @@ void tst_qqmllistreference::qmllistreference_invalid()
     QVERIFY(r.at(10) == 0);
     QVERIFY(r.clear() == false);
     QVERIFY(r.count() == 0);
+    QVERIFY(r.isReadable() == false);
+    QVERIFY(r.isManipulable() == false);
     }
 }
 
@@ -340,6 +348,64 @@ void tst_qqmllistreference::canCount()
     tt.property.count = 0;
     QQmlListReference ref(&tt, "data");
     QVERIFY(ref.canCount() == false);
+    }
+}
+
+void tst_qqmllistreference::isReadable()
+{
+    TestType *tt = new TestType;
+
+    {
+    QQmlListReference ref;
+    QVERIFY(ref.isReadable() == false);
+    }
+
+    {
+    QQmlListReference ref(tt, "blah");
+    QVERIFY(ref.isReadable() == false);
+    }
+
+    {
+    QQmlListReference ref(tt, "data");
+    QVERIFY(ref.isReadable() == true);
+    delete tt;
+    QVERIFY(ref.isReadable() == false);
+    }
+
+    {
+    TestType tt;
+    tt.property.count = 0;
+    QQmlListReference ref(&tt, "data");
+    QVERIFY(ref.isReadable() == false);
+    }
+}
+
+void tst_qqmllistreference::isManipulable()
+{
+    TestType *tt = new TestType;
+
+    {
+    QQmlListReference ref;
+    QVERIFY(ref.isManipulable() == false);
+    }
+
+    {
+    QQmlListReference ref(tt, "blah");
+    QVERIFY(ref.isManipulable() == false);
+    }
+
+    {
+    QQmlListReference ref(tt, "data");
+    QVERIFY(ref.isManipulable() == true);
+    delete tt;
+    QVERIFY(ref.isManipulable() == false);
+    }
+
+    {
+    TestType tt;
+    tt.property.count = 0;
+    QQmlListReference ref(&tt, "data");
+    QVERIFY(ref.isManipulable() == false);
     }
 }
 

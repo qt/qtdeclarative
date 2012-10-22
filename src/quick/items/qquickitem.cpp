@@ -2609,12 +2609,6 @@ void QQuickItemPrivate::children_clear(QQmlListProperty<QQuickItem> *prop)
         p->childItems.at(0)->setParentItem(0);
 }
 
-void QQuickItemPrivate::visibleChildren_append(QQmlListProperty<QQuickItem>*, QQuickItem *self)
-{
-    // do nothing
-    qmlInfo(self) << "QQuickItem: visibleChildren property is readonly and cannot be assigned to.";
-}
-
 int QQuickItemPrivate::visibleChildren_count(QQmlListProperty<QQuickItem> *prop)
 {
     QQuickItemPrivate *p = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
@@ -3744,9 +3738,10 @@ QQmlListProperty<QQuickItem> QQuickItemPrivate::children()
 */
 QQmlListProperty<QQuickItem> QQuickItemPrivate::visibleChildren()
 {
-    return QQmlListProperty<QQuickItem>(q_func(), 0, QQuickItemPrivate::visibleChildren_append,
-                                             QQuickItemPrivate::visibleChildren_count,
-                                             QQuickItemPrivate::visibleChildren_at);
+    return QQmlListProperty<QQuickItem>(q_func(),
+                                        0,
+                                        QQuickItemPrivate::visibleChildren_count,
+                                        QQuickItemPrivate::visibleChildren_at);
 
 }
 
