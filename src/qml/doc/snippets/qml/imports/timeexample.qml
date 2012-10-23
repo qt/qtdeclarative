@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 //! [import]
-import com.nokia.TimeExample 1.0
+import TimeExample 1.0
 //! [import]
 
 Item {

@@ -87,12 +87,12 @@
     types into the runtime.
 
     For this example, the TimeExample source directory is in
-    \c{com/nokia/TimeExample}.  The plugin's type namespace will mirror
+    \c{imports/TimeExample}.  The plugin's type namespace will mirror
     this structure, so the types are registered into the namespace
-    "com.nokia.TimeExample".
+    "TimeExample".
 
     Additionally, the project file, in a \c .pro file, defines the project as a plugin library,
-    specifies it should be built into the \c com/nokia/TimeExample directory, and registers
+    specifies it should be built into the \c imports/TimeExample directory, and registers
     the plugin target name and various other details:
 
     \code
@@ -100,21 +100,21 @@
     CONFIG += qt plugin
     QT += qml
 
-    DESTDIR = com/nokia/TimeExample
+    DESTDIR = imports/TimeExample
     TARGET = qmlqtimeexampleplugin
     SOURCES += qexampleqmlplugin.cpp
     \endcode
 
     Finally, a \l{Module Definition qmldir Files}{qmldir file} is required
-    in the \c com/nokia/TimeExample directory to describe the plugin and the types that it
+    in the \c imports/TimeExample directory to describe the plugin and the types that it
     exports. The plugin includes a \c Clock.qml file along with the \c qmlqtimeexampleplugin
     that is built by the project (as shown above in the \c .pro file) so both of these
     need to be specified in the \c qmldir file:
 
-    \quotefile examples/qml/plugins/com/nokia/TimeExample/qmldir
+    \quotefile examples/qml/plugins/imports/TimeExample/qmldir
 
     Once the project is built and installed, the new \c Time component is
-    accessible by any QML component that imports the \c com.nokia.TimeExample
+    accessible by any QML component that imports the \c TimeExample
     module
 
     \snippet examples/qml/plugins/plugins.qml 0
