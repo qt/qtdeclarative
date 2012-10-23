@@ -22,6 +22,7 @@
     F(Jump, jump) \
     F(CJump, jump) \
     F(Binop, binop) \
+    F(ActivateProperty, activateProperty)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define MOTH_THREADED_INTERPRETER
@@ -103,6 +104,10 @@ union Instr
         int rhsTempIndex;
         VM::Value (*alu)(const VM::Value , const VM::Value, VM::Context *);
     };
+    struct instr_activateProperty {
+        MOTH_INSTR_HEADER
+        VM::String *propName;
+    };
 
     instr_common common;
     instr_ret ret;
@@ -117,6 +122,7 @@ union Instr
     instr_call call;
     instr_jump jump;
     instr_binop binop;
+    instr_activateProperty activateProperty;
 
     static int size(Type type);
 };

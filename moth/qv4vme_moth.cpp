@@ -4,10 +4,19 @@
 using namespace QQmlJS;
 using namespace QQmlJS::Moth;
 
+#ifdef DO_TRACE_INSTR
+#  define TRACE_INSTR(I) fprintf(stderr, "%s\n", #I);
+#  define TRACE(n, str, ...) { fprintf(stderr, "-- %s : ", #n); fprintf(stderr, str, __VA_ARGS__); fprintf(stderr, "\n"); }
+#else
+#  define TRACE_INSTR(I)
+#  define TRACE(n, str, ...)
+#endif // DO_TRACE_INSTR
+
 #define MOTH_BEGIN_INSTR_COMMON(I) { \
     const InstrMeta<(int)Instr::I>::DataType &instr = InstrMeta<(int)Instr::I>::data(*genericInstr); \
     code += InstrMeta<(int)Instr::I>::Size; \
-    Q_UNUSED(instr);
+    Q_UNUSED(instr); \
+    TRACE_INSTR(I)
 
 #ifdef MOTH_THREADED_INTERPRETER
 
@@ -40,6 +49,8 @@ using namespace QQmlJS::Moth;
 
 static inline VM::Value *tempValue(QQmlJS::VM::Context *context, QVector<VM::Value> &stack, int index)
 {
+    TRACE(tempValue, "index = %d / arg = %d / local = %d, stack size = %d", index, (-index-1), index - stack.count(), stack.size());
+
     if (index < 0) {
         const int arg = -index - 1;
         return context->arguments + arg;
@@ -153,6 +164,11 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
         context->result = TEMP(instr.tempIndex);
         return;
     MOTH_END_INSTR(Ret)
+
+    MOTH_BEGIN_INSTR(ActivateProperty)
+        TRACE(inline, "property name = %s", instr.propName->toQString().toUtf8().constData());
+        __qmljs_set_activation_property(context, instr.propName, tempRegister);
+    MOTH_END_INSTR(ActivateProperty)
 
 #ifdef MOTH_THREADED_INTERPRETER
     // nothing to do

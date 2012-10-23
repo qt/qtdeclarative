@@ -132,7 +132,7 @@ void InstructionSelection::visitMove(IR::Move *s)
 }
 
 typedef VM::Value (*ALUFunction)(const VM::Value, const VM::Value, VM::Context*);
-ALUFunction aluOpFunction(IR::AluOp op)
+static inline ALUFunction aluOpFunction(IR::AluOp op)
 {
     switch (op) {
     case IR::OpInvalid:
@@ -204,7 +204,18 @@ void InstructionSelection::simpleMove(IR::Move *s)
 {
     if (IR::Name *n = s->target->asName()) {
         Q_UNUSED(n);
-        qWarning("NAME");
+        // set activation property
+        if (IR::Temp *t = s->source->asTemp()) {
+            Instruction::LoadTemp load;
+            load.tempIndex = t->index;
+            addInstruction(load);
+
+            Instruction::ActivateProperty activate;
+            activate.propName = _engine->newString(*n->id);
+            addInstruction(activate);
+        } else {
+            Q_UNREACHABLE();
+        }
     } else if (IR::Temp *t = s->target->asTemp()) {
 
         if (IR::Name *n = s->source->asName()) {
