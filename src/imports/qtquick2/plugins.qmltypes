@@ -3871,9 +3871,7 @@ Module {
                 "MacWindowToolBarButtonHint": 268435456,
                 "BypassGraphicsProxyWidget": 536870912,
                 "WindowOkButtonHint": 524288,
-                "WindowCancelButtonHint": 1048576,
-                "WindowSoftkeysVisibleHint": 1073741824,
-                "WindowSoftkeysRespondHint": -2147483648
+                "WindowCancelButtonHint": 1048576
             }
         }
         Enum {
@@ -3912,9 +3910,7 @@ Module {
                 "MacWindowToolBarButtonHint": 268435456,
                 "BypassGraphicsProxyWidget": 536870912,
                 "WindowOkButtonHint": 524288,
-                "WindowCancelButtonHint": 1048576,
-                "WindowSoftkeysVisibleHint": 1073741824,
-                "WindowSoftkeysRespondHint": -2147483648
+                "WindowCancelButtonHint": 1048576
             }
         }
         Enum {
@@ -4068,8 +4064,6 @@ Module {
                 "WA_AcceptTouchEvents": 121,
                 "WA_WState_AcceptedTouchBeginEvent": 122,
                 "WA_TouchPadAcceptSingleTouchEvents": 123,
-                "WA_MergeSoftkeys": 124,
-                "WA_MergeSoftkeysRecursively": 125,
                 "WA_X11DoNotAcceptFocus": 126,
                 "WA_MacNoShadow": 127,
                 "WA_AttributeCount": 128
