@@ -86,7 +86,7 @@ void tst_QQmlInspector::init()
 {
     const QString argument = "-qmljsdebugger=port:" STR_PORT ",block";
 
-    m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
+    m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
     m_process->start(QStringList() << argument << testFile("qtquick2.qml"));
     QVERIFY2(m_process->waitForSessionStart(),
              "Could not launch application, or did not get 'Waiting for connection'.");

@@ -83,8 +83,9 @@ void QQmlDebugTestClient::messageReceived(const QByteArray &ba)
     emit serverMessage(ba);
 }
 
-QQmlDebugProcess::QQmlDebugProcess(const QString &executable)
-    : m_executable(executable)
+QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
+    : QObject(parent)
+    , m_executable(executable)
     , m_started(false)
 {
     m_process.setProcessChannelMode(QProcess::MergedChannels);
