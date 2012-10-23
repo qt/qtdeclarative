@@ -52,6 +52,8 @@ bool QQmlDebugTest::waitForSignal(QObject *receiver, const char *member, int tim
     QObject::connect(receiver, member, &loop, SLOT(quit()));
     timer.start(timeout);
     loop.exec();
+    if (!timer.isActive())
+        qWarning("waitForSignal %s timed out after %d ms", member, timeout);
     return timer.isActive();
 }
 
