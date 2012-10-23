@@ -164,19 +164,38 @@ protected:
 #endif
         push(StackFrameRegister);
         move(StackPointerRegister, StackFrameRegister);
-        subPtr(TrustedImm32(locals*sizeof(QQmlJS::VM::Value)), StackPointerRegister);
+
+        // space for the locals and the ContextRegister
+        int32_t frameSize = locals * sizeof(QQmlJS::VM::Value) + sizeof(void*);
+
+#if CPU(X86) || CPU(X86_64)
+        frameSize = (frameSize + 15) & ~15; // align on 16 byte boundaries for MMX
+#endif
+        subPtr(TrustedImm32(frameSize), StackPointerRegister);
+
 #if CPU(X86) || CPU(ARM)
         for (int saveReg = CalleeSavedFirstRegister; saveReg <= CalleeSavedLastRegister; ++saveReg)
             push(static_cast<RegisterID>(saveReg));
 #endif
+        // save the ContextRegister
+        storePtr(ContextRegister, StackPointerRegister);
     }
     void leaveStandardStackFrame(int locals)
     {
+        // restore the ContextRegister
+        loadPtr(StackPointerRegister, ContextRegister);
+
 #if CPU(X86) || CPU(ARM)
         for (int saveReg = CalleeSavedLastRegister; saveReg >= CalleeSavedFirstRegister; --saveReg)
             pop(static_cast<RegisterID>(saveReg));
 #endif
-        addPtr(TrustedImm32(locals*sizeof(QQmlJS::VM::Value)), StackPointerRegister);
+        // space for the locals and the ContextRegister
+        int32_t frameSize = locals * sizeof(QQmlJS::VM::Value) + sizeof(void*);
+#if CPU(X86) || CPU(X86_64)
+        frameSize = (frameSize + 15) & ~15; // align on 16 byte boundaries for MMX
+#endif
+        addPtr(TrustedImm32(frameSize), StackPointerRegister);
+
         pop(StackFrameRegister);
 #if CPU(ARM)
         pop(JSC::ARMRegisters::lr);
@@ -458,6 +477,11 @@ private:
             stackSizeToCorrect -= sizeof(void*); // Callee removed the hidden argument (address of return value)
             stackSizeToCorrect += sizeOfReturnValueOnStack;
         }
+
+#if CPU(X86) || CPU(X86_64)
+        while (stackSizeToCorrect % 16)
+            ++stackSizeToCorrect;
+#endif
 
         storeArgument(ReturnValueRegister, r);
 

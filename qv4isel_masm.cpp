@@ -99,7 +99,6 @@ void InstructionSelection::operator()(IR::Function *function)
     locals = (locals + 1) & ~1;
     enterStandardStackFrame(locals);
 
-    push(ContextRegister);
 #if CPU(X86)
     loadPtr(addressForArgument(0), ContextRegister);
 #elif CPU(X86_64) || CPU(ARM)
@@ -115,8 +114,6 @@ void InstructionSelection::operator()(IR::Function *function)
             s->accept(this);
         }
     }
-
-    pop(ContextRegister);
 
     leaveStandardStackFrame(locals);
     ret();
