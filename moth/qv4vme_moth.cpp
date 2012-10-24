@@ -5,7 +5,7 @@ using namespace QQmlJS;
 using namespace QQmlJS::Moth;
 
 #ifdef DO_TRACE_INSTR
-#  define TRACE_INSTR(I) fprintf(stderr, "%s\n", #I);
+#  define TRACE_INSTR(I) fprintf(stderr, "executing a %s\n", #I);
 #  define TRACE(n, str, ...) { fprintf(stderr, "-- %s : ", #n); fprintf(stderr, str, __VA_ARGS__); fprintf(stderr, "\n"); }
 #else
 #  define TRACE_INSTR(I)
@@ -135,8 +135,14 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
     MOTH_END_INSTR(LoadClosure)
 
     MOTH_BEGIN_INSTR(LoadName)
-        tempRegister = __qmljs_get_activation_property(context, instr.value);
+        TRACE(inline, "property name = %s", instr.name->toQString().toUtf8().constData());
+        tempRegister = __qmljs_get_activation_property(context, instr.name);
     MOTH_END_INSTR(LoadName)
+
+    MOTH_BEGIN_INSTR(StoreName)
+        TRACE(inline, "property name = %s", instr.name->toQString().toUtf8().constData());
+        __qmljs_set_activation_property(context, instr.name, tempRegister);
+    MOTH_END_INSTR(StoreName)
 
     MOTH_BEGIN_INSTR(Push)
         stack.resize(instr.value);
@@ -165,10 +171,9 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
         return;
     MOTH_END_INSTR(Ret)
 
-    MOTH_BEGIN_INSTR(ActivateProperty)
-        TRACE(inline, "property name = %s", instr.propName->toQString().toUtf8().constData());
-        __qmljs_set_activation_property(context, instr.propName, tempRegister);
-    MOTH_END_INSTR(ActivateProperty)
+    MOTH_BEGIN_INSTR(LoadThis)
+        tempRegister = __qmljs_get_thisObject(context);
+    MOTH_END_INSTR(LoadThis)
 
 #ifdef MOTH_THREADED_INTERPRETER
     // nothing to do

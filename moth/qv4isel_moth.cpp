@@ -58,7 +58,7 @@ void InstructionSelection::visitExp(IR::Exp *s)
         if (IR::Name *n = c->base->asName()) {
             if (n->builtin == IR::Name::builtin_invalid) {
                 Instruction::LoadName load;
-                load.value = _engine->newString(*n->id);
+                load.name = _engine->newString(*n->id);
                 addInstruction(load);
             } else {
                 Q_UNIMPLEMENTED();
@@ -206,21 +206,29 @@ void InstructionSelection::simpleMove(IR::Move *s)
         Q_UNUSED(n);
         // set activation property
         if (IR::Temp *t = s->source->asTemp()) {
+            // TODO: fold the next 2 instructions.
             Instruction::LoadTemp load;
             load.tempIndex = t->index;
             addInstruction(load);
 
-            Instruction::ActivateProperty activate;
-            activate.propName = _engine->newString(*n->id);
-            addInstruction(activate);
+            Instruction::StoreName store;
+            store.name = _engine->newString(*n->id);
+            addInstruction(store);
         } else {
             Q_UNREACHABLE();
         }
     } else if (IR::Temp *t = s->target->asTemp()) {
-
+        // Check what kind of load it is, and generate the instruction for that.
+        // The store to the temp (the target) is done afterwards.
         if (IR::Name *n = s->source->asName()) {
             Q_UNUSED(n);
-            qWarning("  NAME");
+            if (*n->id == QStringLiteral("this")) { // ### `this' should be a builtin.
+                addInstruction(Instruction::LoadThis());
+            } else {
+                Instruction::LoadName load;
+                load.name = _engine->newString(*n->id);
+                addInstruction(load);
+            }
         } else if (IR::Const *c = s->source->asConst()) {
             switch (c->type) {
             case IR::UndefinedType:

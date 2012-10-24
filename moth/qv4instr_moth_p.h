@@ -17,12 +17,13 @@
     F(LoadTemp, loadTemp) \
     F(MoveTemp, moveTemp) \
     F(LoadName, loadName) \
+    F(StoreName, storeName) \
     F(Push, push) \
     F(Call, call) \
     F(Jump, jump) \
     F(CJump, jump) \
     F(Binop, binop) \
-    F(ActivateProperty, activateProperty)
+    F(LoadThis, loadThis)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define MOTH_THREADED_INTERPRETER
@@ -83,7 +84,11 @@ union Instr
     };
     struct instr_loadName {
         MOTH_INSTR_HEADER
-        VM::String *value;
+        VM::String *name;
+    };
+    struct instr_storeName {
+        MOTH_INSTR_HEADER
+        VM::String *name;
     };
     struct instr_push {
         MOTH_INSTR_HEADER
@@ -104,9 +109,8 @@ union Instr
         int rhsTempIndex;
         VM::Value (*alu)(const VM::Value , const VM::Value, VM::Context *);
     };
-    struct instr_activateProperty {
+    struct instr_loadThis {
         MOTH_INSTR_HEADER
-        VM::String *propName;
     };
 
     instr_common common;
@@ -118,11 +122,12 @@ union Instr
     instr_loadString loadString;
     instr_loadClosure loadClosure;
     instr_loadName loadName;
+    instr_storeName storeName;
     instr_push push;
     instr_call call;
     instr_jump jump;
     instr_binop binop;
-    instr_activateProperty activateProperty;
+    instr_loadThis loadThis;
 
     static int size(Type type);
 };
