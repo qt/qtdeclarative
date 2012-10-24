@@ -169,15 +169,18 @@ int evaluateCompiledCode(const QStringList &files)
         globalObject->setProperty(ctx, vm.identifier(QStringLiteral("print")),
                                   QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
 
-        code(ctx);
-
-        if (ctx->hasUncaughtException) {
+        void * buf = __qmljs_create_exception_handler(ctx);
+        if (setjmp(*(jmp_buf *)buf)) {
             if (VM::ErrorObject *e = ctx->result.asErrorObject())
                 std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
             else
                 std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
+            return -2;
         }
+
+        code(ctx);
     }
+
     return 0;
 }
 

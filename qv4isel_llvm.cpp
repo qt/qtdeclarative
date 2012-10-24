@@ -935,7 +935,9 @@ void LLVMInstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
             _llvmValue = llvm::UndefValue::get(_valueTy);
             return;
 
-        Q_UNREACHABLE();
+        default:
+            Q_UNREACHABLE();
+        }
     } else {
         llvm::Value *name = getIdentifier(*base->id);
 
