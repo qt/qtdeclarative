@@ -19,7 +19,8 @@
     F(LoadName, loadName) \
     F(StoreName, storeName) \
     F(Push, push) \
-    F(Call, call) \
+    F(CallValue, callValue) \
+    F(CallProperty, callProperty) \
     F(Jump, jump) \
     F(CJump, jump) \
     F(Binop, binop) \
@@ -94,8 +95,14 @@ union Instr
         MOTH_INSTR_HEADER
         quint32 value;
     };
-    struct instr_call {
+    struct instr_callValue {
         MOTH_INSTR_HEADER
+        quint32 argc;
+        quint32 args;
+    };
+    struct instr_callProperty {
+        MOTH_INSTR_HEADER
+        VM::String *name;
         quint32 argc;
         quint32 args;
     };
@@ -124,7 +131,8 @@ union Instr
     instr_loadName loadName;
     instr_storeName storeName;
     instr_push push;
-    instr_call call;
+    instr_callValue callValue;
+    instr_callProperty callProperty;
     instr_jump jump;
     instr_binop binop;
     instr_loadThis loadThis;

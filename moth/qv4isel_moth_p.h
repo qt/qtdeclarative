@@ -35,7 +35,10 @@ private:
     };
 
     void simpleMove(IR::Move *);
-    void call(IR::ExprList *);
+    void callActivationProperty(IR::Call *c);
+    void callValue(IR::Call *c);
+    void callProperty(IR::Call *c);
+    void prepareCallArgs(IR::ExprList *, quint32 &, quint32 &);
 
     template <int Instr>
     inline ptrdiff_t addInstruction(const InstrData<Instr> &data);

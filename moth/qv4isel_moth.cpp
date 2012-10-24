@@ -52,63 +52,97 @@ void InstructionSelection::operator()(IR::Function *function)
     qSwap(_function, function);
 }
 
-void InstructionSelection::visitExp(IR::Exp *s)
+void InstructionSelection::callActivationProperty(IR::Call *c)
 {
-    if (IR::Call *c = s->expr->asCall()) {
-        if (IR::Name *n = c->base->asName()) {
-            if (n->builtin == IR::Name::builtin_invalid) {
-                Instruction::LoadName load;
-                load.name = _engine->newString(*n->id);
-                addInstruction(load);
-            } else {
-                Q_UNIMPLEMENTED();
-            }
-        } else if (IR::Member *m = c->base->asMember()) {
-            Q_UNUSED(m);
-            Q_UNIMPLEMENTED();
-        } else if (IR::Temp *t = c->base->asTemp()) {
-            Instruction::LoadTemp load;
-            load.tempIndex = t->index;
-            addInstruction(load);
-        } else {
-            Q_UNREACHABLE();
-        }
+    IR::Name *n = c->base->asName();
+    Q_ASSERT(n);
 
-        call(c->args);
+    if (n->builtin == IR::Name::builtin_invalid) {
+        Instruction::LoadName load;
+        load.name = _engine->newString(*n->id);
+        addInstruction(load);
+
+        Instruction::CallValue call;
+        prepareCallArgs(c->args, call.argc, call.args);
+        addInstruction(call);
     } else {
-        Q_UNREACHABLE();
+        Q_UNIMPLEMENTED();
     }
 }
 
-void InstructionSelection::call(IR::ExprList *e)
+void InstructionSelection::callValue(IR::Call *c)
 {
-    Instruction::Call call;
-    call.argc = 0;
-    call.args = 0;
+    IR::Temp *t = c->base->asTemp();
+    Q_ASSERT(t);
 
+    Instruction::LoadTemp load;
+    load.tempIndex = t->index;
+    addInstruction(load);
+
+    Instruction::CallValue call;
+    prepareCallArgs(c->args, call.argc, call.args);
+    addInstruction(call);
+}
+
+void InstructionSelection::callProperty(IR::Call *c)
+{
+    IR::Member *m = c->base->asMember();
+    Q_ASSERT(m);
+
+    // load the base
+    Instruction::LoadTemp load;
+    load.tempIndex = m->base->asTemp()->index;
+    addInstruction(load);
+
+    // call the property on the loaded base
+    Instruction::CallProperty call;
+    call.name = _engine->newString(*m->name);
+    prepareCallArgs(c->args, call.argc, call.args);
+    addInstruction(call);
+}
+
+void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint32 &args)
+{
     int locals = _function->tempCount - _function->locals.size() + _function->maxNumberOfArguments;
 
     if (e && e->next == 0 && e->expr->asTemp()->index >= 0 && e->expr->asTemp()->index < locals) {
         // We pass single arguments as references to the stack
-        call.argc = 1;
-        call.args = e->expr->asTemp()->index;
+        argc = 1;
+        args = e->expr->asTemp()->index;
     } else if (e) {
         // We need to move all the temps into the function arg array
         int argLocation = _function->tempCount - _function->locals.size();
         assert(argLocation >= 0);
-        call.args = argLocation;
+        args = argLocation;
         while (e) {
             Instruction::MoveTemp move;
             move.fromTempIndex = e->expr->asTemp()->index;
             move.toTempIndex = argLocation;
             addInstruction(move);
             ++argLocation;
-            ++call.argc;
+            ++argc;
             e = e->next;
         }
     }
+}
 
-    addInstruction(call);
+void InstructionSelection::visitExp(IR::Exp *s)
+{
+    if (IR::Call *c = s->expr->asCall()) {
+        if (c->base->asName()) {
+            callActivationProperty(c);
+        } else if (c->base->asTemp()) {
+            callValue(c);
+        } else if (c->base->asMember()) {
+            callProperty(c);
+        } else {
+            Q_UNREACHABLE();
+        }
+
+        // TODO: check if we should store the return value ?
+    } else {
+        Q_UNREACHABLE();
+    }
 }
 
 void InstructionSelection::visitEnter(IR::Enter *)
@@ -281,14 +315,20 @@ void InstructionSelection::simpleMove(IR::Move *s)
             binop.rhsTempIndex = b->right->index;
             addInstruction(binop);
         } else if (IR::Call *c = s->source->asCall()) {
-            Q_UNUSED(c);
-            qWarning("  CALL");
+            if (c->base->asName()) {
+                callActivationProperty(c);
+            } else if (c->base->asMember()) {
+                callProperty(c);
+            } else if (c->base->asTemp()) {
+                callValue(c);
+            } else {
+                Q_UNREACHABLE();
+            }
         }
 
         Instruction::StoreTemp st;
         st.tempIndex = t->index;
         addInstruction(st);
-
     } else if (IR::Member *m = s->target->asMember()) {
         Q_UNUSED(m);
         qWarning("MEMBER");

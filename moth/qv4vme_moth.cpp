@@ -148,10 +148,15 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
         stack.resize(instr.value);
     MOTH_END_INSTR(Push)
 
-    MOTH_BEGIN_INSTR(Call)
+    MOTH_BEGIN_INSTR(CallValue)
         VM::Value *args = stack.data() + instr.args;
         tempRegister = __qmljs_call_value(context, VM::Value::undefinedValue(), tempRegister, args, instr.argc);
-    MOTH_END_INSTR(Call)
+    MOTH_END_INSTR(CallValue)
+
+    MOTH_BEGIN_INSTR(CallProperty)
+        VM::Value *args = stack.data() + instr.args;
+        tempRegister = __qmljs_call_property(context, tempRegister, instr.name, args, instr.argc);
+    MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(Jump)
         code = ((uchar *)&instr.offset) + instr.offset;

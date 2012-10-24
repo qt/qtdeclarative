@@ -1186,6 +1186,7 @@ uint __qmljs_equal(Value x, Value y, Context *ctx)
     return false;
 }
 
+// TODO: remove this function. Backends should just generate a __qmljs_get_activation_property followed by a __qmljs_call_value
 Value __qmljs_call_activation_property(Context *context, String *name, Value *args, int argc)
 {
     Value func = __qmljs_get_activation_property(context, name);
