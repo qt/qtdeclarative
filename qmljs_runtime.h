@@ -97,7 +97,6 @@ extern "C" {
 Value __qmljs_call_activation_property(Context *, String *name, Value *args, int argc);
 Value __qmljs_call_property(Context *context, Value base, String *name, Value *args, int argc);
 Value __qmljs_call_value(Context *context, Value thisObject, Value func, Value *args, int argc);
-Value __qmljs_call_function(Context *context, Value thisObject, FunctionObject *f, Value *args, int argc);
 
 Value __qmljs_construct_activation_property(Context *, String *name, Value *args, int argc);
 Value __qmljs_construct_property(Context *context, Value base, String *name, Value *args, int argc);
