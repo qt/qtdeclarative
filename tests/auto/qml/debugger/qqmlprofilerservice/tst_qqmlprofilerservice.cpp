@@ -77,6 +77,7 @@ public:
         RangeLocation,
         RangeEnd,
         Complete, // end of transmission
+        PixmapCacheEvent,
 
         MaximumMessage
     };
@@ -100,6 +101,17 @@ public:
         HandlingSignal,     //running a signal handler
 
         MaximumRangeType
+    };
+
+    enum PixmapEventType {
+        PixmapSizeKnown,
+        PixmapReferenceCountChanged,
+        PixmapCacheCountChanged,
+        PixmapLoadingStarted,
+        PixmapLoadingFinished,
+        PixmapLoadingError,
+
+        MaximumPixmapEventType
     };
 
     QQmlProfilerClient(QQmlDebugConnection *connection)
@@ -148,6 +160,7 @@ private slots:
     void blockingConnectWithTraceEnabled();
     void blockingConnectWithTraceDisabled();
     void nonBlockingConnect();
+    void pixmapCacheData();
     void profileOnExit();
 };
 
@@ -217,6 +230,16 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
         stream >> data.detailType >> data.detailData >> data.line >> data.column;
         QVERIFY(data.detailType >= 0 && data.detailType < QQmlProfilerClient::MaximumRangeType);
         QVERIFY(data.line >= -2);
+        break;
+    }
+    case QQmlProfilerClient::PixmapCacheEvent: {
+        stream >> data.detailType >> data.detailData;
+        if (data.detailType == QQmlProfilerClient::PixmapSizeKnown)
+            stream >> data.line >> data.column;
+        if (data.detailType == QQmlProfilerClient::PixmapReferenceCountChanged)
+            stream >> data.animationcount;
+        if (data.detailType == QQmlProfilerClient::PixmapCacheCountChanged)
+            stream >> data.animationcount;
         break;
     }
     default:
@@ -318,6 +341,51 @@ void tst_QQmlProfilerService::nonBlockingConnect()
     // must end with "EndTrace"
     QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerClient::Event);
     QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
+}
+
+void tst_QQmlProfilerService::pixmapCacheData()
+{
+    connect(true, "pixmapCacheTest.qml");
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    m_client->setTraceState(true);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
+
+    QVERIFY(m_process->output().indexOf(QLatin1String("image loaded")) != -1 ||
+            m_process->output().indexOf(QLatin1String("image error")) != -1 );
+
+
+    m_client->setTraceState(false);
+
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
+    QVERIFY(m_client->traceMessages.count());
+
+    // must start with "StartTrace"
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
+
+    // image starting to load
+    QCOMPARE(m_client->traceMessages[8].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
+    QCOMPARE(m_client->traceMessages[8].detailType, (int)QQmlProfilerClient::PixmapLoadingStarted);
+
+    // image loaded
+    QCOMPARE(m_client->traceMessages[9].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
+    QCOMPARE(m_client->traceMessages[9].detailType, (int)QQmlProfilerClient::PixmapLoadingFinished);
+
+    // image size
+    QCOMPARE(m_client->traceMessages[10].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
+    QCOMPARE(m_client->traceMessages[10].detailType, (int)QQmlProfilerClient::PixmapSizeKnown);
+    QCOMPARE(m_client->traceMessages[10].line, 2); // width
+    QCOMPARE(m_client->traceMessages[10].column, 2); // height
+
+    // cache size
+    QCOMPARE(m_client->traceMessages[11].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
+    QCOMPARE(m_client->traceMessages[11].detailType, (int)QQmlProfilerClient::PixmapCacheCountChanged);
+
+    // must end with "EndTrace"
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
+
 }
 
 void tst_QQmlProfilerService::profileOnExit()

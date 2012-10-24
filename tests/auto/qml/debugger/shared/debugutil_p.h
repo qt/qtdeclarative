@@ -98,6 +98,9 @@ public:
     QString output() const;
     void stop();
 
+signals:
+    void readyReadStandardOutput();
+
 private slots:
     void timeout();
     void processAppOutput();

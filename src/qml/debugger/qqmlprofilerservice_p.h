@@ -74,10 +74,10 @@ struct Q_AUTOTEST_EXPORT QQmlProfilerData
 
     //###
     QString detailData; //used by RangeData and RangeLocation
-    int line;           //used by RangeLocation
-    int column;         //used by RangeLocation
+    int line;           //used by RangeLocation, also as "width" for pixmaps
+    int column;         //used by RangeLocation, also as "height" for pixmaps
     int framerate;      //used by animation events
-    int animationcount; //used by animation events
+    int animationcount; //used by animation events, also as "cache/reference count" for pixmaps
     int bindingType;
 
     QByteArray toByteArray() const;
@@ -99,6 +99,7 @@ public:
         RangeLocation,
         RangeEnd,
         Complete, // end of transmission
+        PixmapCacheEvent,
 
         MaximumMessage
     };
@@ -132,6 +133,17 @@ public:
         MaximumBindingType
     };
 
+    enum PixmapEventType {
+        PixmapSizeKnown,
+        PixmapReferenceCountChanged,
+        PixmapCacheCountChanged,
+        PixmapLoadingStarted,
+        PixmapLoadingFinished,
+        PixmapLoadingError,
+
+        MaximumPixmapEventType
+    };
+
     static void initialize();
 
     static bool startProfiling();
@@ -163,6 +175,10 @@ private:
     void rangeLocation(RangeType, const QUrl &, int, int);
     void endRange(RangeType);
 
+    // overloading depending on parameters
+    void pixmapEventImpl(PixmapEventType eventType, const QUrl &url);
+    void pixmapEventImpl(PixmapEventType eventType, const QUrl &url, int width, int height);
+    void pixmapEventImpl(PixmapEventType eventType, const QUrl &url, int count);
 
     bool profilingEnabled();
     void setProfilingEnabled(bool enable);
@@ -183,6 +199,7 @@ private:
     friend struct QQmlHandlingSignalProfiler;
     friend struct QQmlObjectCreatingProfiler;
     friend struct QQmlCompilingProfiler;
+    friend struct QQmlPixmapProfiler;
 };
 
 //
@@ -283,6 +300,49 @@ struct QQmlCompilingProfiler {
     {
         if (enabled)
             QQmlProfilerService::instance->endRange(QQmlProfilerService::Compiling);
+    }
+
+    bool enabled;
+};
+
+struct QQmlPixmapProfiler {
+    QQmlPixmapProfiler() {
+        QQmlProfilerService *instance = QQmlProfilerService::instance;
+        enabled = instance ?
+                    instance->profilingEnabled() : false;
+    }
+
+    ~QQmlPixmapProfiler() {}
+
+    void startLoading(const QUrl &pixmapUrl) {
+        if (enabled) {
+            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapLoadingStarted, pixmapUrl);
+        }
+    }
+    void finishLoading(const QUrl &pixmapUrl) {
+        if (enabled) {
+            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapLoadingFinished, pixmapUrl);
+        }
+    }
+    void errorLoading(const QUrl &pixmapUrl) {
+        if (enabled) {
+            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapLoadingError, pixmapUrl);
+        }
+    }
+    void cacheCountChanged(const QUrl &pixmapUrl, int cacheCount) {
+        if (enabled) {
+            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapCacheCountChanged, pixmapUrl, cacheCount);
+        }
+    }
+    void referenceCountChanged(const QUrl &pixmapUrl, int referenceCount) {
+        if (enabled) {
+            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapReferenceCountChanged, pixmapUrl, referenceCount);
+        }
+    }
+    void setSize(const QUrl &pixmapUrl, int width, int height) {
+        if (enabled) {
+            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapSizeKnown, pixmapUrl, width, height);
+        }
     }
 
     bool enabled;

@@ -76,6 +76,15 @@ QByteArray QQmlProfilerData::toByteArray() const
     if (messageType == (int)QQmlProfilerService::Event &&
             detailType == (int)QQmlProfilerService::AnimationFrame)
         ds << framerate << animationcount;
+    if (messageType == (int)QQmlProfilerService::PixmapCacheEvent) {
+        ds << detailData;
+        switch (detailType) {
+        case QQmlProfilerService::PixmapSizeKnown: ds << line << column; break;
+        case QQmlProfilerService::PixmapReferenceCountChanged: ds << animationcount; break;
+        case QQmlProfilerService::PixmapCacheCountChanged: ds << animationcount; break;
+        default: break;
+        }
+    }
     return data;
 }
 
@@ -235,6 +244,30 @@ void QQmlProfilerService::endRange(RangeType range)
 
     QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeEnd, (int)range,
                            QString(), -1, -1, 0, 0, 0};
+    processMessage(rd);
+}
+
+void QQmlProfilerService::pixmapEventImpl(PixmapEventType eventType, const QUrl &url)
+{
+    // assuming enabled checked by caller
+    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)PixmapCacheEvent, (int)eventType,
+                           url.toString(), -1, -1, -1, -1, -1};
+    processMessage(rd);
+}
+
+void QQmlProfilerService::pixmapEventImpl(PixmapEventType eventType, const QUrl &url, int width, int height)
+{
+    // assuming enabled checked by caller
+    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)PixmapCacheEvent, (int)eventType,
+                           url.toString(), width, height, -1, -1, -1};
+    processMessage(rd);
+}
+
+void QQmlProfilerService::pixmapEventImpl(PixmapEventType eventType, const QUrl &url, int count)
+{
+    // assuming enabled checked by caller
+    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)PixmapCacheEvent, (int)eventType,
+                           url.toString(), -1, -1, -1, count, -1};
     processMessage(rd);
 }
 
