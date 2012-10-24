@@ -195,39 +195,35 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
     IR::Name *baseName = call->base->asName();
     assert(baseName != 0);
 
-    if (baseName->id)
+    switch (baseName->builtin) {
+    case IR::Name::builtin_invalid:
         callRuntimeMethod(result, __qmljs_call_activation_property, call->base, call->args);
-    else {
-        switch (baseName->builtin) {
-        case IR::Name::builtin_invalid:
-            Q_UNREACHABLE();
-            break;
-        case IR::Name::builtin_typeof: {
-            IR::Temp *arg = call->args->expr->asTemp();
-            assert(arg != 0);
-            generateFunctionCall(result, __qmljs_builtin_typeof, arg, ContextRegister);
-        }
-            break;
-        case IR::Name::builtin_delete:
-            Q_UNREACHABLE();
-            break;
-        case IR::Name::builtin_throw: {
-            IR::Temp *arg = call->args->expr->asTemp();
-            assert(arg != 0);
-            generateFunctionCall(Void, __qmljs_builtin_throw, arg, ContextRegister);
-        }
-            break;
-        case IR::Name::builtin_create_exception_handler:
-            generateFunctionCall(ReturnValueRegister, __qmljs_create_exception_handler, ContextRegister);
-            generateFunctionCall(result, setjmp, ReturnValueRegister);
-            break;
-        case IR::Name::builtin_delete_exception_handler:
-            generateFunctionCall(Void, __qmljs_delete_exception_handler, ContextRegister);
-            break;
-        case IR::Name::builtin_get_exception:
-            generateFunctionCall(result, __qmljs_get_exception, ContextRegister);
-            break;
-        }
+        break;
+    case IR::Name::builtin_typeof: {
+        IR::Temp *arg = call->args->expr->asTemp();
+        assert(arg != 0);
+        generateFunctionCall(result, __qmljs_builtin_typeof, arg, ContextRegister);
+    }
+        break;
+    case IR::Name::builtin_delete:
+        Q_UNREACHABLE();
+        break;
+    case IR::Name::builtin_throw: {
+        IR::Temp *arg = call->args->expr->asTemp();
+        assert(arg != 0);
+        generateFunctionCall(Void, __qmljs_builtin_throw, arg, ContextRegister);
+    }
+        break;
+    case IR::Name::builtin_create_exception_handler:
+        generateFunctionCall(ReturnValueRegister, __qmljs_create_exception_handler, ContextRegister);
+        generateFunctionCall(result, setjmp, ReturnValueRegister);
+        break;
+    case IR::Name::builtin_delete_exception_handler:
+        generateFunctionCall(Void, __qmljs_delete_exception_handler, ContextRegister);
+        break;
+    case IR::Name::builtin_get_exception:
+        generateFunctionCall(result, __qmljs_get_exception, ContextRegister);
+        break;
     }
 }
 
