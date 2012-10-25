@@ -180,51 +180,6 @@ double Value::toInteger(double number)
     return std::signbit(number) ? -v : v;
 }
 
-bool Value::isFunctionObject() const
-{
-    return isObject() ? objectValue()->asFunctionObject() != 0 : false;
-}
-
-bool Value::isBooleanObject() const
-{
-    return isObject() ? objectValue()->asBooleanObject() != 0 : false;
-}
-
-bool Value::isNumberObject() const
-{
-    return isObject() ? objectValue()->asNumberObject() != 0 : false;
-}
-
-bool Value::isStringObject() const
-{
-    return isObject() ? objectValue()->asStringObject() != 0 : false;
-}
-
-bool Value::isDateObject() const
-{
-    return isObject() ? objectValue()->asDateObject() != 0 : false;
-}
-
-bool Value::isRegExpObject() const
-{
-    return isObject() ? objectValue()->asRegExpObject() != 0 : false;
-}
-
-bool Value::isArrayObject() const
-{
-    return isObject() ? objectValue()->asArrayObject() != 0 : false;
-}
-
-bool Value::isErrorObject() const
-{
-    return isObject() ? objectValue()->asErrorObject() != 0 : false;
-}
-
-bool Value::isArgumentsObject() const
-{
-    return isObject() ? objectValue()->asActivationObject() != 0 : false;
-}
-
 Object *Value::asObject() const
 {
     return isObject() ? objectValue() : 0;
@@ -937,7 +892,7 @@ Bool __qmljs_is_function(Value value)
 Value __qmljs_object_default_value(Context *ctx, Value object, int typeHint)
 {
     if (typeHint == PREFERREDTYPE_HINT) {
-        if (object.isDateObject())
+        if (object.asDateObject())
             typeHint = STRING_HINT;
         else
             typeHint = NUMBER_HINT;

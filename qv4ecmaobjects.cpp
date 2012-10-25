@@ -2449,7 +2449,7 @@ void RegExpCtor::construct(Context *ctx)
 
 void RegExpCtor::call(Context *ctx)
 {
-    if (ctx->argumentCount > 0 && ctx->argument(0).isRegExpObject()) {
+    if (ctx->argumentCount > 0 && ctx->argument(0).asRegExpObject()) {
         if (ctx->argumentCount == 1 || ctx->argument(1).isUndefined()) {
             ctx->result = ctx->argument(0);
             return;

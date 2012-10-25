@@ -408,18 +408,6 @@ struct Value
         return b;
     }
 
-
-
-    bool isFunctionObject() const;
-    bool isBooleanObject() const;
-    bool isNumberObject() const;
-    bool isStringObject() const;
-    bool isDateObject() const;
-    bool isRegExpObject() const;
-    bool isArrayObject() const;
-    bool isErrorObject() const;
-    bool isArgumentsObject() const;
-
     Object *asObject() const;
     FunctionObject *asFunctionObject() const;
     BooleanObject *asBooleanObject() const;
