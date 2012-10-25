@@ -394,8 +394,8 @@ void InstructionSelection::visitMove(IR::Move *s)
         } else if (IR::Binop *b = s->source->asBinop()) {
             Instruction::Binop binop;
             binop.alu = aluOpFunction(b->op);
-            binop.lhsTempIndex = b->left->index;
-            binop.rhsTempIndex = b->right->index;
+//            binop.lhsTempIndex = b->left->index;
+//            binop.rhsTempIndex = b->right->index;
             addInstruction(binop);
         } else if (IR::Call *c = s->source->asCall()) {
             if (c->base->asName()) {
@@ -554,8 +554,8 @@ void InstructionSelection::visitCJump(IR::CJump *s)
     } else if (IR::Binop *b = s->cond->asBinop()) {
         Instruction::Binop binop;
         binop.alu = aluOpFunction(b->op);
-        binop.lhsTempIndex = b->left->index;
-        binop.rhsTempIndex = b->right->index;
+//        binop.lhsTempIndex = b->left->index;
+//        binop.rhsTempIndex = b->right->index;
         addInstruction(binop);
     } else {
         Q_UNREACHABLE();

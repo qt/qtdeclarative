@@ -489,20 +489,22 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
         }
     }
 
-    if (!left->asTemp()) {
+    if (!left->asTemp() && !left->asConst()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), left);
         left = _block->TEMP(t);
     }
 
-    if (!right->asTemp()) {
+    if (!right->asTemp() && !right->asConst()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), right);
         right = _block->TEMP(t);
     }
 
-    assert(left->asTemp() && right->asTemp());
-    return _block->BINOP(op, left->asTemp(), right->asTemp());
+    assert(left->asTemp() || left->asConst());
+    assert(right->asTemp() || right->asConst());
+
+    return _block->BINOP(op, left, right);
 }
 
 IR::Expr *Codegen::call(IR::Expr *base, IR::ExprList *args)

@@ -440,9 +440,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                     return;
                 }
             } else if (IR::Binop *b = s->source->asBinop()) {
-                IR::Temp *l = b->left->asTemp();
-                IR::Temp *r = b->right->asTemp();
-                if (l && r) {
+                if ((b->left->asTemp() || b->left->asConst()) &&
+                    (b->right->asTemp() || b->right->asConst())) {
                     Value (*op)(const Value, const Value, Context *) = 0;
                     const char* opName = 0;
 
@@ -485,7 +484,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     }
 
                     if (op) {
-                        generateFunctionCallImp(t, opName, op, l, r, ContextRegister);
+                        generateFunctionCallImp(t, opName, op, b->left, b->right, ContextRegister);
                     }
                     return;
                 }
@@ -670,9 +669,8 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         jumpToBlock(s->iffalse);
         return;
     } else if (IR::Binop *b = s->cond->asBinop()) {
-        IR::Temp *l = b->left->asTemp();
-        IR::Temp *r = b->right->asTemp();
-        if (l && r) {
+        if ((b->left->asTemp() || b->left->asConst()) &&
+            (b->right->asTemp() || b->right->asConst())) {
             Bool (*op)(const Value, const Value, Context *ctx) = 0;
             const char *opName = 0;
             switch (b->op) {
@@ -689,7 +687,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             case IR::OpIn: setOp(op, opName, __qmljs_cmp_in); break;
             } // switch
 
-            generateFunctionCallImp(ReturnValueRegister, opName, op, l, r, ContextRegister);
+            generateFunctionCallImp(ReturnValueRegister, opName, op, b->left, b->right, ContextRegister);
 
             Jump target = branch32(NotEqual, ReturnValueRegister, TrustedImm32(0));
             _patches[s->iftrue].append(target);

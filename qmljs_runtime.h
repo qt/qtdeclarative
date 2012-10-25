@@ -228,6 +228,9 @@ struct Value
     static inline bool integerCompatible(Value a, Value b) {
         return ((a.tag & b.tag) & ConvertibleToInt) == ConvertibleToInt;
     }
+    static inline bool bothDouble(Value a, Value b) {
+        return ((a.tag | b.tag) & NotDouble_Mask) != NotDouble_Mask;
+    }
     inline bool tryIntegerConversion() {
         bool b = isConvertibleToInt();
         if (b)
@@ -908,7 +911,7 @@ inline Value __qmljs_add(Value left, Value right, Context *ctx)
     if (Value::integerCompatible(left, right))
         return add_int32(left.integerValue(), right.integerValue());
 
-    if (left.isDouble() & right.isDouble())
+    if (Value::bothDouble(left, right))
         return Value::fromDouble(left.doubleValue() + right.doubleValue());
 
     return __qmljs_add_helper(left, right, ctx);
@@ -1064,7 +1067,7 @@ inline Bool __qmljs_cmp_gt(Value left, Value right, Context *ctx)
 
     if (Value::integerCompatible(left, right))
         return left.integerValue() > right.integerValue();
-    if (left.isDouble() && right.isDouble()) {
+    if (Value::bothDouble(left, right)) {
         return left.doubleValue() > right.doubleValue();
     } else if (left.isString() && right.isString()) {
         return __qmljs_string_compare(ctx, right.stringValue(), left.stringValue());
@@ -1084,7 +1087,7 @@ inline Bool __qmljs_cmp_lt(Value left, Value right, Context *ctx)
 
     if (Value::integerCompatible(left, right))
         return left.integerValue() < right.integerValue();
-    if (left.isDouble() && right.isDouble()) {
+    if (Value::bothDouble(left, right)) {
         return left.doubleValue() < right.doubleValue();
     } else if (left.isString() && right.isString()) {
         return __qmljs_string_compare(ctx, left.stringValue(), right.stringValue());
@@ -1104,7 +1107,7 @@ inline Bool __qmljs_cmp_ge(Value left, Value right, Context *ctx)
 
     if (Value::integerCompatible(left, right))
         return left.integerValue() >= right.integerValue();
-    if (left.isDouble() && right.isDouble()) {
+    if (Value::bothDouble(left, right)) {
         return left.doubleValue() >= right.doubleValue();
     } else if (left.isString() && right.isString()) {
         return !__qmljs_string_compare(ctx, left.stringValue(), right.stringValue());
@@ -1124,7 +1127,7 @@ inline Bool __qmljs_cmp_le(Value left, Value right, Context *ctx)
 
     if (Value::integerCompatible(left, right))
         return left.integerValue() <= right.integerValue();
-    if (left.isDouble() && right.isDouble()) {
+    if (Value::bothDouble(left, right)) {
         return left.doubleValue() <= right.doubleValue();
     } else if (left.isString() && right.isString()) {
         return !__qmljs_string_compare(ctx, right.stringValue(), left.stringValue());
@@ -1140,7 +1143,7 @@ inline Bool __qmljs_cmp_eq(Value left, Value right, Context *ctx)
     TRACE2(left, right);
 
     // need to test for doubles first as NaN != NaN
-    if (left.isDouble() && right.isDouble())
+    if (Value::bothDouble(left, right))
         return left.doubleValue() == right.doubleValue();
     if (left.val == right.val)
         return true;

@@ -341,10 +341,10 @@ struct Unop: Expr {
 
 struct Binop: Expr {
     AluOp op;
-    Temp *left;
-    Temp *right;
+    Expr *left; // Temp or Const
+    Expr *right; // Temp or Const
 
-    void init(AluOp op, Temp *left, Temp *right)
+    void init(AluOp op, Expr *left, Expr *right)
     {
         this->op = op;
         this->left = left;
@@ -682,7 +682,7 @@ struct BasicBlock {
     Closure *CLOSURE(Function *function);
 
     Expr *UNOP(AluOp op, Temp *expr);
-    Expr *BINOP(AluOp op, Temp *left, Temp *right);
+    Expr *BINOP(AluOp op, Expr *left, Expr *right);
     Expr *CALL(Expr *base, ExprList *args = 0);
     Expr *NEW(Expr *base, ExprList *args = 0);
     Expr *SUBSCRIPT(Temp *base, Temp *index);

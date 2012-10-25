@@ -283,6 +283,45 @@ private:
             load64(addr, dest);
         }
     }
+
+    void loadArgument(IR::Const* c, RegisterID dest)
+    {
+        VM::Value v;
+        switch (c->type) {
+        case IR::NullType:
+            v = VM::Value::nullValue();
+            break;
+        case IR::UndefinedType:
+            v = VM::Value::undefinedValue();
+            break;
+        case IR::BoolType:
+            v = VM::Value::fromBoolean(c->value != 0);
+            break;
+        case IR::NumberType: {
+            int ival = (int)c->value;
+            if (ival == c->value) {
+                v = VM::Value::fromInt32(ival);
+            } else {
+                v = VM::Value::fromDouble(c->value);
+            }
+        }
+        }
+        move(TrustedImm64(v.val), dest);
+    }
+
+    void loadArgument(IR::Expr* expr, RegisterID dest)
+    {
+        if (!expr) {
+            VM::Value undefined = VM::Value::undefinedValue();
+            move(TrustedImm64(undefined.val), dest);
+        } else if (expr->asTemp()){
+            loadArgument(expr->asTemp(), dest);
+        } else if (expr->asConst()) {
+            loadArgument(expr->asConst(), dest);
+        } else {
+            assert(!"unimplemented expression type in loadArgument");
+        }
+    }
 #endif
 
     void loadArgument(VM::String* string, RegisterID dest)
@@ -363,6 +402,45 @@ private:
         }
     }
 
+    void push(IR::Const* c)
+    {
+        VM::Value v;
+        switch (c->type) {
+        case IR::NullType:
+            v = VM::Value::nullValue();
+            break;
+        case IR::UndefinedType:
+            v = VM::Value::undefinedValue();
+            break;
+        case IR::BoolType:
+            v = VM::Value::fromBoolean(c->value != 0);
+            break;
+        case IR::NumberType: {
+            int ival = (int)c->value;
+            if (ival == c->value) {
+                v = VM::Value::fromInt32(ival);
+            } else {
+                v = VM::Value::fromDouble(c->value);
+            }
+        }
+        }
+        push(v);
+    }
+
+    void push(IR::Expr* e)
+    {
+        if (!e) {
+            VM::Value undefined = VM::Value::undefinedValue();
+            push(undefined);
+        } else if (IR::Const *c = e->asConst())
+            push(c);
+        else if (IR::Temp *t = e->asTemp()) {
+            push(t);
+        } else {
+            assert(!"Trying to push an expression that is not a Temp or Const");
+        }
+    }
+
     void push(TrustedImmPtr ptr)
     {
         move(TrustedImmPtr(ptr), ScratchRegister);
@@ -399,6 +477,8 @@ private:
     static inline int sizeOfArgument(RegisterID)
     { return RegisterSize; }
     static inline int sizeOfArgument(IR::Temp*)
+    { return 8; } // Size of value
+    static inline int sizeOfArgument(IR::Expr*)
     { return 8; } // Size of value
     static inline int sizeOfArgument(const Pointer&)
     { return sizeof(void*); }

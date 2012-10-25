@@ -477,7 +477,7 @@ Expr *BasicBlock::UNOP(AluOp op, Temp *expr)
     return e;
 }
 
-Expr *BasicBlock::BINOP(AluOp op, Temp *left, Temp *right)
+Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
 {
     Binop *e = function->New<Binop>();
     e->init(op, left, right);
