@@ -409,8 +409,8 @@ int main(int argc, char ** argv)
     QGuiApplication app(argc, argv);
 #endif
     app.setApplicationName("QtQmlViewer");
-    app.setOrganizationName("Nokia");
-    app.setOrganizationDomain("nokia.com");
+    app.setOrganizationName("Qt Project");
+    app.setOrganizationDomain("qt-project.org");
 
     QTranslator translator;
     QTranslator qtTranslator;
