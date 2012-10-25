@@ -47,6 +47,7 @@
 #include <QtCore/QBitArray>
 #include <QtCore/QStack>
 #include <private/qqmljsast_p.h>
+#include <qmljs_runtime.h>
 #include <cmath>
 #include <iostream>
 #include <cassert>
@@ -389,6 +390,22 @@ IR::Expr *Codegen::argument(IR::Expr *expr)
 
 IR::Expr *Codegen::unop(IR::AluOp op, IR::Expr *expr)
 {
+    if (IR::Const *c = expr->asConst()) {
+        if (c->type == IR::NumberType) {
+            switch (op) {
+            case IR::OpNot:
+                return _block->CONST(IR::BoolType, !c->value);
+            case IR::OpUMinus:
+                    return _block->CONST(IR::NumberType, -c->value);
+            case IR::OpUPlus:
+                return expr;
+            case IR::OpCompl:
+                return _block->CONST(IR::NumberType, ~VM::Value::toInt32(c->value));
+            default:
+                break;
+            }
+        }
+    }
     if (! expr->asTemp()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), expr);
