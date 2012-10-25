@@ -158,6 +158,29 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
         tempRegister = __qmljs_call_property(context, tempRegister, instr.name, args, instr.argc);
     MOTH_END_INSTR(CallProperty)
 
+    MOTH_BEGIN_INSTR(CallBuiltin)
+        VM::Value *args = stack.data() + instr.args;
+        void *buf;
+        switch (instr.builtin) {
+        case Instr::instr_callBuiltin::builtin_typeof:
+            tempRegister = __qmljs_builtin_typeof(args[0], context);
+            break;
+        case Instr::instr_callBuiltin::builtin_throw:
+            __qmljs_builtin_typeof(args[0], context);
+            break;
+        case Instr::instr_callBuiltin::builtin_create_exception_handler:
+            buf = __qmljs_create_exception_handler(context);
+            tempRegister = VM::Value::fromInt32(setjmp(* static_cast<jmp_buf *>(buf)));
+            break;
+        case Instr::instr_callBuiltin::builtin_delete_exception_handler:
+            __qmljs_delete_exception_handler(context);
+            break;
+        case Instr::instr_callBuiltin::builtin_get_exception:
+            tempRegister = __qmljs_get_exception(context);
+            break;
+        }
+    MOTH_END_INSTR(CallBuiltin)
+
     MOTH_BEGIN_INSTR(Jump)
         code = ((uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(Jump)

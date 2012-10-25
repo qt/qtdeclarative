@@ -21,6 +21,7 @@
     F(Push, push) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
+    F(CallBuiltin, callBuiltin) \
     F(Jump, jump) \
     F(CJump, jump) \
     F(Binop, binop) \
@@ -106,6 +107,18 @@ union Instr
         quint32 argc;
         quint32 args;
     };
+    struct instr_callBuiltin {
+        MOTH_INSTR_HEADER
+        enum {
+            builtin_typeof,
+            builtin_throw,
+            builtin_create_exception_handler,
+            builtin_delete_exception_handler,
+            builtin_get_exception
+        } builtin;
+        quint32 argc;
+        quint32 args;
+    };
     struct instr_jump {
         MOTH_INSTR_HEADER
         ptrdiff_t offset; 
@@ -133,6 +146,7 @@ union Instr
     instr_push push;
     instr_callValue callValue;
     instr_callProperty callProperty;
+    instr_callBuiltin callBuiltin;
     instr_jump jump;
     instr_binop binop;
     instr_loadThis loadThis;

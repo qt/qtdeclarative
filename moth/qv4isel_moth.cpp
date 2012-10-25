@@ -54,18 +54,63 @@ void InstructionSelection::operator()(IR::Function *function)
 
 void InstructionSelection::callActivationProperty(IR::Call *c)
 {
-    IR::Name *n = c->base->asName();
-    Q_ASSERT(n);
+    IR::Name *baseNamen = c->base->asName();
+    Q_ASSERT(baseNamen);
 
-    if (n->builtin == IR::Name::builtin_invalid) {
+    switch (baseNamen->builtin) {
+    case IR::Name::builtin_invalid: {
         Instruction::LoadName load;
-        load.name = _engine->newString(*n->id);
+        load.name = _engine->newString(*baseNamen->id);
         addInstruction(load);
 
         Instruction::CallValue call;
         prepareCallArgs(c->args, call.argc, call.args);
         addInstruction(call);
-    } else {
+    } break;
+
+    case IR::Name::builtin_typeof: {
+        IR::Temp *arg = c->args->expr->asTemp();
+        assert(arg != 0);
+
+        Instruction::CallBuiltin call;
+        call.builtin = Instruction::CallBuiltin::builtin_typeof;
+        prepareCallArgs(c->args, call.argc, call.args);
+        addInstruction(call);
+    } break;
+
+    case IR::Name::builtin_throw: {
+        IR::Temp *arg = c->args->expr->asTemp();
+        assert(arg != 0);
+
+        Instruction::CallBuiltin call;
+        call.builtin = Instruction::CallBuiltin::builtin_throw;
+        prepareCallArgs(c->args, call.argc, call.args);
+        addInstruction(call);
+    } break;
+
+    case IR::Name::builtin_create_exception_handler: {
+        Instruction::CallBuiltin call;
+        call.builtin = Instruction::CallBuiltin::builtin_create_exception_handler;
+        addInstruction(call);
+    } break;
+
+    case IR::Name::builtin_delete_exception_handler: {
+        Instruction::CallBuiltin call;
+        call.builtin = Instruction::CallBuiltin::builtin_delete_exception_handler;
+        addInstruction(call);
+    } break;
+
+    case IR::Name::builtin_get_exception: {
+        Instruction::CallBuiltin call;
+        call.builtin = Instruction::CallBuiltin::builtin_get_exception;
+        addInstruction(call);
+    } break;
+
+    case IR::Name::builtin_delete:
+        Q_UNIMPLEMENTED();
+        break;
+
+    default:
         Q_UNIMPLEMENTED();
     }
 }
