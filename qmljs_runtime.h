@@ -74,7 +74,6 @@ enum PropertyAttributes {
     ConfigurableAttribute = 8
 };
 
-struct Value;
 struct Object;
 struct String;
 struct Context;
@@ -90,6 +89,167 @@ struct ActivationObject;
 struct ExecutionEngine;
 
 typedef uint Bool;
+
+struct Value
+{
+    union {
+        quint64 val;
+        double dbl;
+        struct {
+#if Q_BYTE_ORDER != Q_LITTLE_ENDIAN
+            uint tag;
+#endif
+            union {
+                uint uint_32;
+                int int_32;
+#if CPU(X86_64)
+#else
+                Object *o;
+                String *s;
+#endif
+            };
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+            uint tag;
+#endif
+        };
+    };
+
+    enum Masks {
+        NotDouble_Mask = 0xfff80000,
+        Type_Mask = 0xffff0000,
+        Immediate_Mask = NotDouble_Mask | 0x00040000,
+        Tag_Shift = 32
+    };
+    enum ValueType {
+        Undefined_Type = Immediate_Mask | 0x00000,
+        Null_Type = Immediate_Mask | 0x10000,
+        Boolean_Type = Immediate_Mask | 0x20000,
+        Integer_Type = Immediate_Mask | 0x30000,
+        Object_Type = NotDouble_Mask | 0x00000,
+        String_Type = NotDouble_Mask | 0x10000
+    };
+
+    enum ImmediateFlags {
+        ConvertibleToInt = NotDouble_Mask | 0x1
+    };
+
+    enum ValueTypeInternal {
+        _Undefined_Type = Undefined_Type,
+        _Null_Type = Null_Type | ConvertibleToInt,
+        _Boolean_Type = Boolean_Type | ConvertibleToInt,
+        _Integer_Type = Integer_Type | ConvertibleToInt,
+        _Object_Type = Object_Type,
+        _String_Type = String_Type
+
+    };
+
+    inline ValueType type() const {
+        return (ValueType)(tag & Type_Mask);
+    }
+
+    inline bool isUndefined() const { return tag == _Undefined_Type; }
+    inline bool isNull() const { return tag == _Null_Type; }
+    inline bool isBoolean() const { return tag == _Boolean_Type; }
+    inline bool isInteger() const { return tag == _Integer_Type; }
+    inline bool isDouble() const { return (tag & NotDouble_Mask) != NotDouble_Mask; }
+    inline bool isNumber() const { return tag == _Integer_Type || (tag & NotDouble_Mask) != NotDouble_Mask; }
+#if CPU(X86_64)
+    inline bool isString() const { return (tag & Type_Mask) == String_Type; }
+    inline bool isObject() const { return (tag & Type_Mask) == Object_Type; }
+#else
+    inline bool isString() const { return tag == String_Type; }
+    inline bool isObject() const { return tag == Object_Type; }
+#endif
+    inline bool isConvertibleToInt() const { return (tag & ConvertibleToInt) == ConvertibleToInt; }
+
+    Bool booleanValue() const {
+        return int_32;
+    }
+    double doubleValue() const {
+        return dbl;
+    }
+    void setDouble(double d) {
+        dbl = d;
+    }
+    double asDouble() const {
+        if (tag == _Integer_Type)
+            return int_32;
+        return dbl;
+    }
+    int integerValue() const {
+        return int_32;
+    }
+
+#if CPU(X86_64)
+    String *stringValue() const {
+        return (String *)(val & ~(quint64(Type_Mask) << Tag_Shift));
+    }
+    Object *objectValue() const {
+        return (Object *)(val & ~(quint64(Type_Mask) << Tag_Shift));
+    }
+#else
+    String *stringValue() const {
+        return s;
+    }
+    Object *objectValue() const {
+        return o;
+    }
+#endif
+
+    quint64 rawValue() const {
+        return val;
+    }
+
+    static Value undefinedValue();
+    static Value nullValue();
+    static Value fromBoolean(Bool b);
+    static Value fromDouble(double d);
+    static Value fromInt32(int i);
+    static Value fromString(String *s);
+    static Value fromObject(Object *o);
+
+#ifndef QMLJS_LLVM_RUNTIME
+    static Value fromString(Context *ctx, const QString &fromString);
+#endif
+
+    static double toInteger(double fromNumber);
+    static int toInt32(double value);
+    static unsigned int toUInt32(double value);
+
+    inline int toUInt16(Context *ctx);
+    inline int toInt32(Context *ctx);
+    inline unsigned int toUInt32(Context *ctx);
+    inline Bool toBoolean(Context *ctx) const;
+    inline double toInteger(Context *ctx) const;
+    double toNumber(Context *ctx) const;
+    inline String *toString(Context *ctx) const;
+    inline Value toObject(Context *ctx) const;
+
+    inline bool isPrimitive() const { return !isObject(); }
+    static inline bool integerCompatible(Value a, Value b) {
+        return ((a.tag & b.tag) & ConvertibleToInt) == ConvertibleToInt;
+    }
+    inline bool tryIntegerConversion() {
+        bool b = isConvertibleToInt();
+        if (b)
+            tag = _Integer_Type;
+        return b;
+    }
+
+    Object *asObject() const;
+    FunctionObject *asFunctionObject() const;
+    BooleanObject *asBooleanObject() const;
+    NumberObject *asNumberObject() const;
+    StringObject *asStringObject() const;
+    DateObject *asDateObject() const;
+    RegExpObject *asRegExpObject() const;
+    ArrayObject *asArrayObject() const;
+    ErrorObject *asErrorObject() const;
+    ActivationObject *asArgumentsObject() const;
+
+    Value property(Context *ctx, String *name) const;
+    Value *getPropertyDescriptor(Context *ctx, String *name) const;
+};
 
 extern "C" {
 
@@ -258,170 +418,7 @@ Bool __qmljs_cmp_sne(Value left, Value right, Context *ctx);
 Bool __qmljs_cmp_instanceof(Value left, Value right, Context *ctx);
 Bool __qmljs_cmp_in(Value left, Value right, Context *ctx);
 
-
 } // extern "C"
-
-
-struct Value
-{
-    union {
-        quint64 val;
-        double dbl;
-        struct {
-#if Q_BYTE_ORDER != Q_LITTLE_ENDIAN
-            uint tag;
-#endif
-            union {
-                uint uint_32;
-                int int_32;
-#if CPU(X86_64)
-#else
-                Object *o;
-                String *s;
-#endif
-            };
-#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-            uint tag;
-#endif
-        };
-    };
-
-    enum Masks {
-        NotDouble_Mask = 0xfff80000,
-        Type_Mask = 0xffff0000,
-        Immediate_Mask = NotDouble_Mask | 0x00040000,
-        Tag_Shift = 32
-    };
-    enum ValueType {
-        Undefined_Type = Immediate_Mask | 0x00000,
-        Null_Type = Immediate_Mask | 0x10000,
-        Boolean_Type = Immediate_Mask | 0x20000,
-        Integer_Type = Immediate_Mask | 0x30000,
-        Object_Type = NotDouble_Mask | 0x00000,
-        String_Type = NotDouble_Mask | 0x10000
-    };
-
-    enum ImmediateFlags {
-        ConvertibleToInt = NotDouble_Mask | 0x1
-    };
-
-    enum ValueTypeInternal {
-        _Undefined_Type = Undefined_Type,
-        _Null_Type = Null_Type | ConvertibleToInt,
-        _Boolean_Type = Boolean_Type | ConvertibleToInt,
-        _Integer_Type = Integer_Type | ConvertibleToInt,
-        _Object_Type = Object_Type,
-        _String_Type = String_Type
-
-    };
-
-    inline ValueType type() const {
-        return (ValueType)(tag & Type_Mask);
-    }
-
-    inline bool isUndefined() const { return tag == _Undefined_Type; }
-    inline bool isNull() const { return tag == _Null_Type; }
-    inline bool isBoolean() const { return tag == _Boolean_Type; }
-    inline bool isInteger() const { return tag == _Integer_Type; }
-    inline bool isDouble() const { return (tag & NotDouble_Mask) != NotDouble_Mask; }
-    inline bool isNumber() const { return tag == _Integer_Type || (tag & NotDouble_Mask) != NotDouble_Mask; }
-#if CPU(X86_64)
-    inline bool isString() const { return (tag & Type_Mask) == String_Type; }
-    inline bool isObject() const { return (tag & Type_Mask) == Object_Type; }
-#else
-    inline bool isString() const { return tag == String_Type; }
-    inline bool isObject() const { return tag == Object_Type; }
-#endif
-    inline bool isConvertibleToInt() const { return (tag & ConvertibleToInt) == ConvertibleToInt; }
-
-    Bool booleanValue() const {
-        return int_32;
-    }
-    double doubleValue() const {
-        return dbl;
-    }
-    void setDouble(double d) {
-        dbl = d;
-    }
-    double asDouble() const {
-        if (tag == _Integer_Type)
-            return int_32;
-        return dbl;
-    }
-    int integerValue() const {
-        return int_32;
-    }
-
-#if CPU(X86_64)
-    String *stringValue() const {
-        return (String *)(val & ~(quint64(Type_Mask) << Tag_Shift));
-    }
-    Object *objectValue() const {
-        return (Object *)(val & ~(quint64(Type_Mask) << Tag_Shift));
-    }
-#else
-    String *stringValue() const {
-        return s;
-    }
-    Object *objectValue() const {
-        return o;
-    }
-#endif
-
-    quint64 rawValue() const {
-        return val;
-    }
-
-    static Value undefinedValue();
-    static Value nullValue();
-    static Value fromBoolean(Bool b);
-    static Value fromDouble(double d);
-    static Value fromInt32(int i);
-    static Value fromString(String *s);
-    static Value fromObject(Object *o);
-
-#ifndef QMLJS_LLVM_RUNTIME
-    static Value fromString(Context *ctx, const QString &fromString);
-#endif
-
-    static double toInteger(double fromNumber);
-    static int toInt32(double value);
-    static unsigned int toUInt32(double value);
-
-    inline int toUInt16(Context *ctx);
-    inline int toInt32(Context *ctx);
-    inline unsigned int toUInt32(Context *ctx);
-    inline Bool toBoolean(Context *ctx) const;
-    inline double toInteger(Context *ctx) const;
-    double toNumber(Context *ctx) const;
-    inline String *toString(Context *ctx) const;
-    inline Value toObject(Context *ctx) const;
-
-    inline bool isPrimitive() const { return !isObject(); }
-    static inline bool integerCompatible(Value a, Value b) {
-        return ((a.tag & b.tag) & ConvertibleToInt) == ConvertibleToInt;
-    }
-    inline bool tryIntegerConversion() {
-        bool b = isConvertibleToInt();
-        if (b)
-            tag = _Integer_Type;
-        return b;
-    }
-
-    Object *asObject() const;
-    FunctionObject *asFunctionObject() const;
-    BooleanObject *asBooleanObject() const;
-    NumberObject *asNumberObject() const;
-    StringObject *asStringObject() const;
-    DateObject *asDateObject() const;
-    RegExpObject *asRegExpObject() const;
-    ArrayObject *asArrayObject() const;
-    ErrorObject *asErrorObject() const;
-    ActivationObject *asArgumentsObject() const;
-
-    Value property(Context *ctx, String *name) const;
-    Value *getPropertyDescriptor(Context *ctx, String *name) const;
-};
 
 inline int Value::toUInt16(Context *ctx)
 {
