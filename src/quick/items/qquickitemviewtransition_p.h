@@ -48,8 +48,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Quick)
-
 class QQuickItem;
 class QQuickItemViewTransitionableItem;
 class QQuickItemViewTransitionJob;

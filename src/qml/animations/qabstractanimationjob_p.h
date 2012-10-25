@@ -51,8 +51,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Qml)
-
 class QAnimationGroupJob;
 class QAnimationJobChangeListener;
 class Q_QML_PRIVATE_EXPORT QAbstractAnimationJob
