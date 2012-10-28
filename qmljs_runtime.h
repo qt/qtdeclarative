@@ -66,16 +66,9 @@ enum TypeHint {
     STRING_HINT
 };
 
-enum PropertyAttributes {
-    NoAttributes          = 0,
-    ValueAttribute        = 1,
-    WritableAttribute     = 2,
-    EnumerableAttribute   = 4,
-    ConfigurableAttribute = 8
-};
-
 struct Object;
 struct String;
+struct PropertyDescriptor;
 struct Context;
 struct FunctionObject;
 struct BooleanObject;
@@ -248,7 +241,6 @@ struct Value
     ActivationObject *asArgumentsObject() const;
 
     Value property(Context *ctx, String *name) const;
-    Value *getPropertyDescriptor(Context *ctx, String *name) const;
 };
 
 extern "C" {

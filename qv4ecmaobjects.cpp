@@ -530,11 +530,11 @@ void ObjectCtor::call(Context *ctx)
     ctx->result = Value::fromObject(ctx->engine->newObject());
 }
 
-Value ObjectCtor::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
+Value ObjectCtor::getProperty(Context *ctx, String *name)
 {
     if (name == ctx->engine->id_length)
         return Value::fromDouble(1);
-    return Object::getProperty(ctx, name, attributes);
+    return Object::getProperty(ctx, name);
 }
 
 void ObjectPrototype::init(Context *ctx, const Value &ctor)
@@ -586,9 +586,9 @@ void ObjectPrototype::method_getOwnPropertyNames(Context *ctx)
     else {
         ArrayObject *array = ctx->engine->newArrayObject()->asArrayObject();
         Array &a = array->value;
-        if (Table *members = O.objectValue()->members) {
-            for (Property **it = members->begin(), **end = members->end(); it != end; ++it) {
-                if (Property *prop = *it) {
+        if (PropertyTable *members = O.objectValue()->members) {
+            for (PropertyTableEntry **it = members->begin(), **end = members->end(); it != end; ++it) {
+                if (PropertyTableEntry *prop = *it) {
                     a.push(Value::fromString(prop->name));
                 }
             }

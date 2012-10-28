@@ -69,55 +69,86 @@ void Object::setProperty(Context *ctx, const QString &name, void (*code)(Context
     setProperty(ctx, name, Value::fromObject(ctx->engine->newNativeFunction(ctx, code)));
 }
 
-Value Object::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
+Value Object::getProperty(Context *ctx, String *name)
 {
     if (name->isEqualTo(ctx->engine->id___proto__))
         return Value::fromObject(prototype);
-    else if (Value *v = getPropertyDescriptor(ctx, name, attributes))
-        return *v;
+
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *p = getPropertyDescriptor(ctx, name, &tmp)) {
+        if (p->isData())
+            return p->value;
+        if (!p->get)
+            return Value::undefinedValue();
+        FunctionObject *f = p->get->asFunctionObject();
+        if (f) {
+            f->call(ctx);
+            return ctx->result;
+        }
+    }
     return Value::undefinedValue();
 }
 
-Value *Object::getOwnProperty(Context *, String *name, PropertyAttributes *attributes)
+// Section 8.12.1
+PropertyDescriptor *Object::getOwnProperty(Context *, String *name)
 {
-    if (members) {
-        if (Property *prop = members->find(name)) {
-            if (attributes)
-                *attributes = prop->attributes;
-            return &prop->value;
-        }
+    if (members)
+        return members->find(name);
+    return 0;
+}
+
+PropertyDescriptor *Object::getPropertyDescriptor(Context *ctx, String *name, PropertyDescriptor *to_fill)
+{
+    if (PropertyDescriptor *p = getOwnProperty(ctx, name))
+        return p;
+
+    if (prototype)
+        return prototype->getPropertyDescriptor(ctx, name, to_fill);
+    return 0;
+}
+
+// Section 8.12.5
+void Object::setProperty(Context *ctx, String *name, const Value &value, bool throwException)
+{
+    if (!canSetProperty(ctx, name)) {
+        if (throwException)
+            __qmljs_throw_type_error(ctx);
+        return;
     }
-    return 0;
-}
-
-Value *Object::getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes)
-{
-    if (Value *prop = getOwnProperty(ctx, name, attributes))
-        return prop;
-    else if (prototype)
-        return prototype->getPropertyDescriptor(ctx, name, attributes);
-    return 0;
-}
-
-void Object::setProperty(Context *, String *name, const Value &value, bool flag)
-{
-    Q_UNUSED(flag);
 
     if (! members)
-        members = new Table();
+        members = new PropertyTable();
 
-    members->insert(name, value);
+    PropertyDescriptor *pd = getOwnProperty(ctx, name);
+    if (pd) {
+        if (pd->isData()) {
+            pd->value = value;
+            return;
+        }
+    }
+    PropertyDescriptor *p = members->insert(name);
+    *p = PropertyDescriptor::fromValue(value);
 }
 
+// Section 8.12.4
 bool Object::canSetProperty(Context *ctx, String *name)
 {
-    PropertyAttributes attrs = PropertyAttributes();
-    if (getOwnProperty(ctx, name, &attrs)) {
-        return attrs & WritableAttribute;
-    } else if (! prototype) {
+    if (PropertyDescriptor *p = getOwnProperty(ctx, name)) {
+        if (p->isAccessor())
+            return p->get != 0;
+        return p->isWritable();
+    }
+
+    if (! prototype)
         return extensible;
-    } else if (prototype->getPropertyDescriptor(ctx, name, &attrs)) {
-        return attrs & WritableAttribute;
+
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *p = prototype->getPropertyDescriptor(ctx, name, &tmp)) {
+        if (p->isAccessor())
+            return p->get != 0;
+        if (!extensible)
+            return false;
+        return p->isWritable();
     } else {
         return extensible;
     }
@@ -142,17 +173,26 @@ bool Object::deleteProperty(Context *, String *name, bool flag)
     return false;
 }
 
-void Object::defineOwnProperty(Context *ctx, const Value &getter, const Value &setter, bool flag)
+bool Object::defineOwnProperty(Context *ctx, String *name, const Value &getter, const Value &setter, bool flag)
 {
-    Q_UNUSED(getter);
-    Q_UNUSED(setter);
-    Q_UNUSED(flag);
-    ctx->throwUnimplemented(QStringLiteral("defineOwnProperty"));
+    if (!members)
+        members = new PropertyTable();
+
+    PropertyDescriptor *p = getOwnProperty(ctx, name);
+    if (!p) {
+        if (!extensible)
+            goto reject;
+    }
+
+  reject:
+    if (flag)
+        __qmljs_throw_type_error(ctx);
+    return false;
 }
 
 String *ForEachIteratorObject::nextPropertyName()
 {
-    Property *p = 0;
+    PropertyTableEntry *p = 0;
     while (1) {
         if (!current)
             return 0;
@@ -171,11 +211,11 @@ String *ForEachIteratorObject::nextPropertyName()
     }
 }
 
-Value ArrayObject::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
+Value ArrayObject::getProperty(Context *ctx, String *name)
 {
     if (name->isEqualTo(ctx->engine->id_length))
         return Value::fromDouble(value.size());
-    return Object::getProperty(ctx, name, attributes);
+    return Object::getProperty(ctx, name);
 }
 
 bool FunctionObject::hasInstance(Context *ctx, const Value &value)
@@ -250,7 +290,7 @@ void ScriptFunction::call(VM::Context *ctx)
     function->code(ctx, function->codeData);
 }
 
-Value RegExpObject::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
+Value RegExpObject::getProperty(Context *ctx, String *name)
 {
     QString n = name->toQString();
     if (n == QLatin1String("source"))
@@ -263,7 +303,7 @@ Value RegExpObject::getProperty(Context *ctx, String *name, PropertyAttributes *
         return Value::fromBoolean(value.patternOptions() & QRegularExpression::MultilineOption);
     else if (n == QLatin1String("lastIndex"))
         return lastIndex;
-    return Object::getProperty(ctx, name, attributes);
+    return Object::getProperty(ctx, name);
 }
 
 
@@ -277,23 +317,23 @@ void ScriptFunction::construct(VM::Context *ctx)
     function->code(ctx, function->codeData);
 }
 
-Value *ActivationObject::getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes)
+PropertyDescriptor *ActivationObject::getPropertyDescriptor(Context *ctx, String *name, PropertyDescriptor *to_fill)
 {
     if (context) {
         for (unsigned int i = 0; i < context->varCount; ++i) {
             String *var = context->vars[i];
             if (__qmljs_string_equal(context, var, name)) {
-                if (attributes)
-                    *attributes = PropertyAttributes(*attributes | WritableAttribute);
-                return &context->locals[i];
+                *to_fill = PropertyDescriptor::fromValue(context->locals[i]);
+                to_fill->writable = PropertyDescriptor::Set;
+                return to_fill;
             }
         }
         for (unsigned int i = 0; i < context->formalCount; ++i) {
             String *formal = context->formals[i];
             if (__qmljs_string_equal(context, formal, name)) {
-                if (attributes)
-                    *attributes = PropertyAttributes(*attributes | WritableAttribute);
-                return &context->arguments[i];
+                *to_fill = PropertyDescriptor::fromValue(context->arguments[i]);
+                to_fill->writable = PropertyDescriptor::Set;
+                return to_fill;
             }
         }
         if (name->isEqualTo(ctx->engine->id_arguments)) {
@@ -302,29 +342,32 @@ Value *ActivationObject::getPropertyDescriptor(Context *ctx, String *name, Prope
                 arguments.objectValue()->prototype = ctx->engine->objectPrototype;
             }
 
-            return &arguments;
+            *to_fill = PropertyDescriptor::fromValue(arguments);
+            return to_fill;
         }
     }
-    if (Value *prop = Object::getPropertyDescriptor(ctx, name, attributes))
-        return prop;
-    return 0;
+
+    return Object::getPropertyDescriptor(ctx, name, to_fill);
 }
 
-Value ArgumentsObject::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
+Value ArgumentsObject::getProperty(Context *ctx, String *name)
 {
     if (name->isEqualTo(ctx->engine->id_length))
         return Value::fromDouble(context->argumentCount);
-    return Object::getProperty(ctx, name, attributes);
+    return Object::getProperty(ctx, name);
 }
 
-Value *ArgumentsObject::getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes)
+PropertyDescriptor *ArgumentsObject::getPropertyDescriptor(Context *ctx, String *name, PropertyDescriptor *to_fill)
 {
     if (context) {
         const quint32 i = Value::fromString(name).toUInt32(ctx);
-        if (i < context->argumentCount)
-            return &context->arguments[i];
+        if (i < context->argumentCount) {
+            *to_fill = PropertyDescriptor::fromValue(context->arguments[i]);
+            return to_fill;
+        }
     }
-    return Object::getPropertyDescriptor(ctx, name, attributes);
+
+    return Object::getPropertyDescriptor(ctx, name, to_fill);
 }
 
 ExecutionEngine::ExecutionEngine()

@@ -235,11 +235,6 @@ Value Value::property(Context *ctx, String *name) const
     return isObject() ? objectValue()->getProperty(ctx, name) : undefinedValue();
 }
 
-Value *Value::getPropertyDescriptor(Context *ctx, String *name) const
-{
-    return isObject() ? objectValue()->getPropertyDescriptor(ctx, name) : 0;
-}
-
 void Context::init(ExecutionEngine *eng)
 {
     engine = eng;
@@ -261,8 +256,9 @@ Value *Context::lookupPropertyDescriptor(String *name)
 {
     for (Context *ctx = this; ctx; ctx = ctx->parent) {
         if (ctx->activation.isObject()) {
-            if (Value *prop = ctx->activation.objectValue()->getPropertyDescriptor(this, name)) {
-                return prop;
+            PropertyDescriptor tmp;
+            if (PropertyDescriptor *pd = ctx->activation.objectValue()->getPropertyDescriptor(this, name, &tmp)) {
+                return &pd->value;
             }
         }
     }
