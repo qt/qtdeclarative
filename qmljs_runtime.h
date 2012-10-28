@@ -308,6 +308,10 @@ Value __qmljs_get_activation_property(Context *ctx, String *name);
 Value __qmljs_get_element(Context *ctx, Value object, Value index);
 void __qmljs_set_element(Context *ctx, Value object, Value index, Value value);
 
+// For each
+Value __qmljs_foreach_iterator_object(Value in, Context *ctx);
+Value __qmljs_foreach_next_property_name(Value foreach_iterator);
+
 // context
 Value __qmljs_get_thisObject(Context *ctx);
 

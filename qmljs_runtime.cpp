@@ -1024,6 +1024,27 @@ void __qmljs_set_element(Context *ctx, Value object, Value index, Value value)
     object.objectValue()->setProperty(ctx, name, value, /*flags*/ 0);
 }
 
+Value __qmljs_foreach_iterator_object(Value in, Context *ctx)
+{
+    in = __qmljs_to_object(in, ctx);
+    Object *it = ctx->engine->newForEachIteratorObject(in.objectValue());
+    return Value::fromObject(it);
+}
+
+Value __qmljs_foreach_next_property_name(Value foreach_iterator)
+{
+    assert(foreach_iterator.isObject());
+
+    ForEachIteratorObject *it = static_cast<ForEachIteratorObject *>(foreach_iterator.objectValue());
+    assert(it->className() == QLatin1String("__ForEachIteratorObject"));
+
+    String *s = it->nextPropertyName();
+    if (!s)
+        return Value::nullValue();
+    return Value::fromString(s);
+}
+
+
 void __qmljs_set_activation_property(Context *ctx, String *name, Value value)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))

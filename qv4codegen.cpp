@@ -1081,32 +1081,32 @@ bool Codegen::visit(FunctionExpression *ast)
     return false;
 }
 
-bool Codegen::visit(IdentifierExpression *ast)
+IR::Expr *Codegen::identifier(const QString &name, int line, int col)
 {
-    int index = _env->findMember(ast->name.toString());
+    int index = _env->findMember(name);
 
     if (! _function->hasDirectEval && _env->parent) {
         if (index != -1) {
-            _expr.code = _block->TEMP(index);
-            return false;
+            return _block->TEMP(index);
         }
-        index = indexOfArgument(ast->name);
+        index = indexOfArgument(&name);
         if (index != -1) {
-            _expr.code = _block->TEMP(-(index + 1));
-            return false;
+            return _block->TEMP(-(index + 1));
         }
     }
 
     if (index >= _env->vars.size()) {
         // named local variable, e.g. in a catch statement
-        _expr.code = _block->TEMP(index);
-        return false;
+        return _block->TEMP(index);
     }
 
-    _expr.code = _block->NAME(ast->name.toString(),
-                              ast->identifierToken.startLine,
-                              ast->identifierToken.startColumn);
+    return _block->NAME(name, line, col);
 
+}
+
+bool Codegen::visit(IdentifierExpression *ast)
+{
+    _expr.code = identifier(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn);
     return false;
 }
 
@@ -1532,9 +1532,6 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     _block->JUMP(_exitBlock);
 
-    // ### should not be required
-    _throwBlock->JUMP(_exitBlock);
-
     qSwap(_function, function);
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
@@ -1746,9 +1743,41 @@ bool Codegen::visit(LabelledStatement *ast)
     return false;
 }
 
-bool Codegen::visit(LocalForEachStatement *)
+bool Codegen::visit(LocalForEachStatement *ast)
 {
-    assert(!"not implemented");
+    IR::BasicBlock *foreachin = _function->newBasicBlock();
+    IR::BasicBlock *foreachbody = _function->newBasicBlock();
+    IR::BasicBlock *foreachend = _function->newBasicBlock();
+
+    enterLoop(ast, foreachend, foreachin);
+
+    variableDeclaration(ast->declaration);
+
+    int iterator = _block->newTemp();
+    move(_block->TEMP(iterator), *expression(ast->expression));
+    IR::ExprList *args = _function->New<IR::ExprList>();
+    args->init(_block->TEMP(iterator));
+    move(_block->TEMP(iterator), _block->CALL(_block->NAME(IR::Name::builtin_foreach_iterator_object, 0, 0), args));
+
+    _block->JUMP(foreachin);
+
+    _block = foreachbody;
+    int temp = _block->newTemp();
+    move(identifier(ast->declaration->name.toString()), _block->TEMP(temp));
+    statement(ast->statement);
+    _block->JUMP(foreachin);
+
+    _block = foreachin;
+
+    args = _function->New<IR::ExprList>();
+    args->init(_block->TEMP(iterator));
+    move(_block->TEMP(temp), _block->CALL(_block->NAME(IR::Name::builtin_foreach_next_property_name, 0, 0), args));
+    int null = _block->newTemp();
+    move(_block->TEMP(null), _block->CONST(IR::NullType, 0));
+    cjump(_block->BINOP(IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend);
+    _block = foreachend;
+
+    leaveLoop();
     return false;
 }
 

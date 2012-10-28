@@ -203,6 +203,8 @@ protected:
     void variableDeclaration(AST::VariableDeclaration *ast);
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
+    IR::Expr *identifier(const QString &name, int line = 0, int col = 0);
+
     // nodes
     virtual bool visit(AST::ArgumentList *ast);
     virtual bool visit(AST::CaseBlock *ast);

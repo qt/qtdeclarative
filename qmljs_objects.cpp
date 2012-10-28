@@ -150,6 +150,27 @@ void Object::defineOwnProperty(Context *ctx, const Value &getter, const Value &s
     ctx->throwUnimplemented(QStringLiteral("defineOwnProperty"));
 }
 
+String *ForEachIteratorObject::nextPropertyName()
+{
+    Property *p = 0;
+    while (1) {
+        if (!current)
+            return 0;
+
+        // ### index array data as well
+        ++tableIndex;
+        if (!current->members || tableIndex > current->members->_propertyCount) {
+            current = current->prototype;
+            tableIndex = -1;
+            continue;
+        }
+        p = current->members->_properties[tableIndex];
+        // ### check that it's not a repeated attribute
+        if (p /*&& !(p->attributes & DontEnumAttribute)*/)
+            return p->name;
+    }
+}
+
 Value ArrayObject::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
 {
     if (name->isEqualTo(ctx->engine->id_length))
@@ -540,4 +561,9 @@ Object *ExecutionEngine::newMathObject(Context *ctx)
 Object *ExecutionEngine::newActivationObject(Context *ctx)
 {
     return new ActivationObject(ctx);
+}
+
+Object *ExecutionEngine::newForEachIteratorObject(Object *o)
+{
+    return new ForEachIteratorObject(o);
 }

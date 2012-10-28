@@ -264,6 +264,7 @@ private:
     }
 
 private:
+    friend struct ForEachIteratorObject;
     Property **_properties;
     Property **_buckets;
     Property *_freeList;
@@ -312,6 +313,16 @@ struct Object {
     //
     void setProperty(Context *ctx, const QString &name, const Value &value);
     void setProperty(Context *ctx, const QString &name, void (*code)(Context *), int count = 0);
+};
+
+struct ForEachIteratorObject: Object {
+    Object *object;
+    Object *current; // inside the prototype chain
+    int tableIndex;
+    ForEachIteratorObject(Object *o) : object(o), current(o), tableIndex(-1) {}
+    virtual QString className() { return QStringLiteral("__ForEachIteratorObject"); }
+
+    String *nextPropertyName();
 };
 
 struct BooleanObject: Object {
@@ -505,6 +516,8 @@ struct ExecutionEngine
     Object *newErrorObject(const Value &value);
     Object *newMathObject(Context *ctx);
     Object *newActivationObject(Context *ctx);
+
+    Object *newForEachIteratorObject(Object *o);
 };
 
 } // namespace VM

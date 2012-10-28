@@ -230,6 +230,10 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_delete_exception_handler";
     case Name::builtin_get_exception:
         return "builtin_get_exception";
+    case IR::Name::builtin_foreach_iterator_object:
+        return "builtin_foreach_iterator_object";
+    case IR::Name::builtin_foreach_next_property_name:
+        return "builtin_foreach_next_property_name";
     }
     return "builtin_(###FIXME)";
 };
