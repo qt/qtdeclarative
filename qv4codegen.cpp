@@ -1663,9 +1663,39 @@ bool Codegen::visit(ExpressionStatement *ast)
     return false;
 }
 
-bool Codegen::visit(ForEachStatement *)
+bool Codegen::visit(ForEachStatement *ast)
 {
-    assert(!"not implemented");
+    IR::BasicBlock *foreachin = _function->newBasicBlock();
+    IR::BasicBlock *foreachbody = _function->newBasicBlock();
+    IR::BasicBlock *foreachend = _function->newBasicBlock();
+
+    enterLoop(ast, foreachend, foreachin);
+
+    int iterator = _block->newTemp();
+    move(_block->TEMP(iterator), *expression(ast->expression));
+    IR::ExprList *args = _function->New<IR::ExprList>();
+    args->init(_block->TEMP(iterator));
+    move(_block->TEMP(iterator), _block->CALL(_block->NAME(IR::Name::builtin_foreach_iterator_object, 0, 0), args));
+
+    _block->JUMP(foreachin);
+
+    _block = foreachbody;
+    int temp = _block->newTemp();
+    move(*expression(ast->initialiser), _block->TEMP(temp));
+    statement(ast->statement);
+    _block->JUMP(foreachin);
+
+    _block = foreachin;
+
+    args = _function->New<IR::ExprList>();
+    args->init(_block->TEMP(iterator));
+    move(_block->TEMP(temp), _block->CALL(_block->NAME(IR::Name::builtin_foreach_next_property_name, 0, 0), args));
+    int null = _block->newTemp();
+    move(_block->TEMP(null), _block->CONST(IR::NullType, 0));
+    cjump(_block->BINOP(IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend);
+    _block = foreachend;
+
+    leaveLoop();
     return false;
 }
 
