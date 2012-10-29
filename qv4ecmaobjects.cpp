@@ -530,37 +530,37 @@ void ObjectCtor::call(Context *ctx)
     ctx->result = Value::fromObject(ctx->engine->newObject());
 }
 
-Value ObjectCtor::getProperty(Context *ctx, String *name)
+Value ObjectCtor::__get__(Context *ctx, String *name)
 {
     if (name == ctx->engine->id_length)
         return Value::fromDouble(1);
-    return Object::getProperty(ctx, name);
+    return Object::__get__(ctx, name);
 }
 
 void ObjectPrototype::init(Context *ctx, const Value &ctor)
 {
-    ctor.objectValue()->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 0);
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 0);
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("getOwnPropertyNames"), method_getOwnPropertyNames, 0);
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("create"), method_create, 0);
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("defineProperty"), method_defineProperty, 0);
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("defineProperties"), method_defineProperties, 0);
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("seal"), method_seal, 0);
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("freeze"), method_freeze, 0);
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("preventExtensions"), method_preventExtensions, 0);
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("isSealed"), method_isSealed, 0);
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("isFrozen"), method_isFrozen, 0);
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("isExtensible"), method_isExtensible, 0);
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("keys"), method_keys, 0);
+    ctor.objectValue()->__put__(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->__put__(ctx, QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 0);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 0);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("getOwnPropertyNames"), method_getOwnPropertyNames, 0);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("create"), method_create, 0);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("defineProperty"), method_defineProperty, 0);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("defineProperties"), method_defineProperties, 0);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("seal"), method_seal, 0);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("freeze"), method_freeze, 0);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("preventExtensions"), method_preventExtensions, 0);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("isSealed"), method_isSealed, 0);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("isFrozen"), method_isFrozen, 0);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("isExtensible"), method_isExtensible, 0);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("keys"), method_keys, 0);
 
-    setProperty(ctx, QStringLiteral("constructor"), ctor);
-    setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
-    setProperty(ctx, QStringLiteral("toLocaleString"), method_toLocaleString, 0);
-    setProperty(ctx, QStringLiteral("valueOf"), method_valueOf, 0);
-    setProperty(ctx, QStringLiteral("hasOwnProperty"), method_hasOwnProperty, 0);
-    setProperty(ctx, QStringLiteral("isPrototypeOf"), method_isPrototypeOf, 0);
-    setProperty(ctx, QStringLiteral("propertyIsEnumerable"), method_propertyIsEnumerable, 0);
+    __put__(ctx, QStringLiteral("constructor"), ctor);
+    __put__(ctx, QStringLiteral("toString"), method_toString, 0);
+    __put__(ctx, QStringLiteral("toLocaleString"), method_toLocaleString, 0);
+    __put__(ctx, QStringLiteral("valueOf"), method_valueOf, 0);
+    __put__(ctx, QStringLiteral("hasOwnProperty"), method_hasOwnProperty, 0);
+    __put__(ctx, QStringLiteral("isPrototypeOf"), method_isPrototypeOf, 0);
+    __put__(ctx, QStringLiteral("propertyIsEnumerable"), method_propertyIsEnumerable, 0);
 }
 
 void ObjectPrototype::method_getPrototypeOf(Context *ctx)
@@ -670,7 +670,7 @@ void ObjectPrototype::method_hasOwnProperty(Context *ctx)
 {
     String *P = ctx->argument(0).toString(ctx);
     Value O = ctx->thisObject.toObject(ctx);
-    bool r = O.objectValue()->getOwnProperty(ctx, P) != 0;
+    bool r = O.objectValue()->__getOwnProperty__(ctx, P) != 0;
     ctx->result = Value::fromBoolean(r);
 }
 
@@ -720,29 +720,29 @@ void StringCtor::call(Context *ctx)
 
 void StringPrototype::init(Context *ctx, const Value &ctor)
 {
-    ctor.objectValue()->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("fromCharCode"), method_fromCharCode);
+    ctor.objectValue()->__put__(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->__put__(ctx, QStringLiteral("fromCharCode"), method_fromCharCode);
 
-    setProperty(ctx, QStringLiteral("constructor"), ctor);
-    setProperty(ctx, QStringLiteral("toString"), method_toString);
-    setProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
-    setProperty(ctx, QStringLiteral("charAt"), method_charAt);
-    setProperty(ctx, QStringLiteral("charCodeAt"), method_charCodeAt);
-    setProperty(ctx, QStringLiteral("concat"), method_concat);
-    setProperty(ctx, QStringLiteral("indexOf"), method_indexOf);
-    setProperty(ctx, QStringLiteral("lastIndexOf"), method_lastIndexOf);
-    setProperty(ctx, QStringLiteral("localeCompare"), method_localeCompare);
-    setProperty(ctx, QStringLiteral("match"), method_match);
-    setProperty(ctx, QStringLiteral("replace"), method_replace);
-    setProperty(ctx, QStringLiteral("search"), method_search);
-    setProperty(ctx, QStringLiteral("slice"), method_slice);
-    setProperty(ctx, QStringLiteral("split"), method_split);
-    setProperty(ctx, QStringLiteral("substr"), method_substr);
-    setProperty(ctx, QStringLiteral("substring"), method_substring);
-    setProperty(ctx, QStringLiteral("toLowerCase"), method_toLowerCase);
-    setProperty(ctx, QStringLiteral("toLocaleLowerCase"), method_toLocaleLowerCase);
-    setProperty(ctx, QStringLiteral("toUpperCase"), method_toUpperCase);
-    setProperty(ctx, QStringLiteral("toLocaleUpperCase"), method_toLocaleUpperCase);
+    __put__(ctx, QStringLiteral("constructor"), ctor);
+    __put__(ctx, QStringLiteral("toString"), method_toString);
+    __put__(ctx, QStringLiteral("valueOf"), method_valueOf);
+    __put__(ctx, QStringLiteral("charAt"), method_charAt);
+    __put__(ctx, QStringLiteral("charCodeAt"), method_charCodeAt);
+    __put__(ctx, QStringLiteral("concat"), method_concat);
+    __put__(ctx, QStringLiteral("indexOf"), method_indexOf);
+    __put__(ctx, QStringLiteral("lastIndexOf"), method_lastIndexOf);
+    __put__(ctx, QStringLiteral("localeCompare"), method_localeCompare);
+    __put__(ctx, QStringLiteral("match"), method_match);
+    __put__(ctx, QStringLiteral("replace"), method_replace);
+    __put__(ctx, QStringLiteral("search"), method_search);
+    __put__(ctx, QStringLiteral("slice"), method_slice);
+    __put__(ctx, QStringLiteral("split"), method_split);
+    __put__(ctx, QStringLiteral("substr"), method_substr);
+    __put__(ctx, QStringLiteral("substring"), method_substring);
+    __put__(ctx, QStringLiteral("toLowerCase"), method_toLowerCase);
+    __put__(ctx, QStringLiteral("toLocaleLowerCase"), method_toLocaleLowerCase);
+    __put__(ctx, QStringLiteral("toUpperCase"), method_toUpperCase);
+    __put__(ctx, QStringLiteral("toLocaleUpperCase"), method_toLocaleUpperCase);
 }
 
 QString StringPrototype::getThisString(Context *ctx)
@@ -1027,27 +1027,27 @@ void NumberCtor::call(Context *ctx)
 
 void NumberPrototype::init(Context *ctx, const Value &ctor)
 {
-    ctor.objectValue()->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("NaN"), Value::fromDouble(qSNaN()));
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("NEGATIVE_INFINITY"), Value::fromDouble(-qInf()));
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("POSITIVE_INFINITY"), Value::fromDouble(qInf()));
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("MAX_VALUE"), Value::fromDouble(1.7976931348623158e+308));
+    ctor.objectValue()->__put__(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->__put__(ctx, QStringLiteral("NaN"), Value::fromDouble(qSNaN()));
+    ctor.objectValue()->__put__(ctx, QStringLiteral("NEGATIVE_INFINITY"), Value::fromDouble(-qInf()));
+    ctor.objectValue()->__put__(ctx, QStringLiteral("POSITIVE_INFINITY"), Value::fromDouble(qInf()));
+    ctor.objectValue()->__put__(ctx, QStringLiteral("MAX_VALUE"), Value::fromDouble(1.7976931348623158e+308));
 #ifdef __INTEL_COMPILER
 # pragma warning( push )
 # pragma warning(disable: 239)
 #endif
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("MIN_VALUE"), Value::fromDouble(5e-324));
+    ctor.objectValue()->__put__(ctx, QStringLiteral("MIN_VALUE"), Value::fromDouble(5e-324));
 #ifdef __INTEL_COMPILER
 # pragma warning( pop )
 #endif
 
-    setProperty(ctx, QStringLiteral("constructor"), ctor);
-    setProperty(ctx, QStringLiteral("toString"), method_toString);
-    setProperty(ctx, QStringLiteral("toLocalString"), method_toLocaleString);
-    setProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
-    setProperty(ctx, QStringLiteral("toFixed"), method_toFixed);
-    setProperty(ctx, QStringLiteral("toExponential"), method_toExponential);
-    setProperty(ctx, QStringLiteral("toPrecision"), method_toPrecision);
+    __put__(ctx, QStringLiteral("constructor"), ctor);
+    __put__(ctx, QStringLiteral("toString"), method_toString);
+    __put__(ctx, QStringLiteral("toLocalString"), method_toLocaleString);
+    __put__(ctx, QStringLiteral("valueOf"), method_valueOf);
+    __put__(ctx, QStringLiteral("toFixed"), method_toFixed);
+    __put__(ctx, QStringLiteral("toExponential"), method_toExponential);
+    __put__(ctx, QStringLiteral("toPrecision"), method_toPrecision);
 }
 
 void NumberPrototype::method_toString(Context *ctx)
@@ -1206,10 +1206,10 @@ void BooleanCtor::call(Context *ctx)
 
 void BooleanPrototype::init(Context *ctx, const Value &ctor)
 {
-    ctor.objectValue()->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
-    setProperty(ctx, QStringLiteral("constructor"), ctor);
-    setProperty(ctx, QStringLiteral("toString"), method_toString);
-    setProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
+    ctor.objectValue()->__put__(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    __put__(ctx, QStringLiteral("constructor"), ctor);
+    __put__(ctx, QStringLiteral("toString"), method_toString);
+    __put__(ctx, QStringLiteral("valueOf"), method_valueOf);
 }
 
 void BooleanPrototype::method_toString(Context *ctx)
@@ -1268,29 +1268,29 @@ void ArrayCtor::call(Context *ctx)
 
 void ArrayPrototype::init(Context *ctx, const Value &ctor)
 {
-    ctor.objectValue()->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
-    setProperty(ctx, QStringLiteral("constructor"), ctor);
-    setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
-    setProperty(ctx, QStringLiteral("toLocalString"), method_toLocaleString, 0);
-    setProperty(ctx, QStringLiteral("concat"), method_concat, 1);
-    setProperty(ctx, QStringLiteral("join"), method_join, 1);
-    setProperty(ctx, QStringLiteral("pop"), method_pop, 0);
-    setProperty(ctx, QStringLiteral("push"), method_push, 1);
-    setProperty(ctx, QStringLiteral("reverse"), method_reverse, 0);
-    setProperty(ctx, QStringLiteral("shift"), method_shift, 0);
-    setProperty(ctx, QStringLiteral("slice"), method_slice, 2);
-    setProperty(ctx, QStringLiteral("sort"), method_sort, 1);
-    setProperty(ctx, QStringLiteral("splice"), method_splice, 2);
-    setProperty(ctx, QStringLiteral("unshift"), method_unshift, 1);
-    setProperty(ctx, QStringLiteral("indexOf"), method_indexOf, 0);
-    setProperty(ctx, QStringLiteral("lastIndexOf"), method_lastIndexOf, 0);
-    setProperty(ctx, QStringLiteral("every"), method_every, 0);
-    setProperty(ctx, QStringLiteral("some"), method_some, 0);
-    setProperty(ctx, QStringLiteral("forEach"), method_forEach, 0);
-    setProperty(ctx, QStringLiteral("map"), method_map, 0);
-    setProperty(ctx, QStringLiteral("filter"), method_filter, 0);
-    setProperty(ctx, QStringLiteral("reduce"), method_reduce, 0);
-    setProperty(ctx, QStringLiteral("reduceRight"), method_reduceRight, 0);
+    ctor.objectValue()->__put__(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    __put__(ctx, QStringLiteral("constructor"), ctor);
+    __put__(ctx, QStringLiteral("toString"), method_toString, 0);
+    __put__(ctx, QStringLiteral("toLocalString"), method_toLocaleString, 0);
+    __put__(ctx, QStringLiteral("concat"), method_concat, 1);
+    __put__(ctx, QStringLiteral("join"), method_join, 1);
+    __put__(ctx, QStringLiteral("pop"), method_pop, 0);
+    __put__(ctx, QStringLiteral("push"), method_push, 1);
+    __put__(ctx, QStringLiteral("reverse"), method_reverse, 0);
+    __put__(ctx, QStringLiteral("shift"), method_shift, 0);
+    __put__(ctx, QStringLiteral("slice"), method_slice, 2);
+    __put__(ctx, QStringLiteral("sort"), method_sort, 1);
+    __put__(ctx, QStringLiteral("splice"), method_splice, 2);
+    __put__(ctx, QStringLiteral("unshift"), method_unshift, 1);
+    __put__(ctx, QStringLiteral("indexOf"), method_indexOf, 0);
+    __put__(ctx, QStringLiteral("lastIndexOf"), method_lastIndexOf, 0);
+    __put__(ctx, QStringLiteral("every"), method_every, 0);
+    __put__(ctx, QStringLiteral("some"), method_some, 0);
+    __put__(ctx, QStringLiteral("forEach"), method_forEach, 0);
+    __put__(ctx, QStringLiteral("map"), method_map, 0);
+    __put__(ctx, QStringLiteral("filter"), method_filter, 0);
+    __put__(ctx, QStringLiteral("reduce"), method_reduce, 0);
+    __put__(ctx, QStringLiteral("reduceRight"), method_reduceRight, 0);
 }
 
 void ArrayPrototype::method_toString(Context *ctx)
@@ -1396,12 +1396,12 @@ void ArrayPrototype::method_pop(Context *ctx)
         Value r1 = self.property(ctx, ctx->engine->id_length);
         quint32 r2 = !r1.isUndefined() ? r1.toUInt32(ctx) : 0;
         if (! r2) {
-            self.objectValue()->setProperty(ctx, ctx->engine->id_length, Value::fromDouble(0));
+            self.objectValue()->__put__(ctx, ctx->engine->id_length, Value::fromDouble(0));
         } else {
             String *r6 = Value::fromDouble(r2 - 1).toString(ctx);
             Value r7 = self.property(ctx, r6);
-            self.objectValue()->deleteProperty(ctx, r6, 0);
-            self.objectValue()->setProperty(ctx, ctx->engine->id_length, Value::fromDouble(2 - 1));
+            self.objectValue()->__delete__(ctx, r6, 0);
+            self.objectValue()->__put__(ctx, ctx->engine->id_length, Value::fromDouble(2 - 1));
             ctx->result = r7;
         }
     }
@@ -1423,10 +1423,10 @@ void ArrayPrototype::method_push(Context *ctx)
         for (unsigned int index = 0; index < ctx->argumentCount; ++index, ++n) {
             Value r3 = ctx->argument(index);
             String *name = Value::fromDouble(n).toString(ctx);
-            self.objectValue()->setProperty(ctx, name, r3);
+            self.objectValue()->__put__(ctx, name, r3);
         }
         Value r = Value::fromDouble(n);
-        self.objectValue()->setProperty(ctx, ctx->engine->id_length, r);
+        self.objectValue()->__put__(ctx, ctx->engine->id_length, r);
         ctx->result = r;
     }
 }
@@ -1738,12 +1738,12 @@ void FunctionCtor::call(Context *ctx)
 
 void FunctionPrototype::init(Context *ctx, const Value &ctor)
 {
-    ctor.objectValue()->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
-    setProperty(ctx, QStringLiteral("constructor"), ctor);
-    setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
-    setProperty(ctx, QStringLiteral("apply"), method_apply, 0);
-    setProperty(ctx, QStringLiteral("call"), method_call, 0);
-    setProperty(ctx, QStringLiteral("bind"), method_bind, 0);
+    ctor.objectValue()->__put__(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    __put__(ctx, QStringLiteral("constructor"), ctor);
+    __put__(ctx, QStringLiteral("toString"), method_toString, 0);
+    __put__(ctx, QStringLiteral("apply"), method_apply, 0);
+    __put__(ctx, QStringLiteral("call"), method_call, 0);
+    __put__(ctx, QStringLiteral("bind"), method_bind, 0);
 }
 
 void FunctionPrototype::method_toString(Context *ctx)
@@ -1853,57 +1853,57 @@ void DateCtor::call(Context *ctx)
 
 void DatePrototype::init(Context *ctx, const Value &ctor)
 {
-    ctor.objectValue()->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->__put__(ctx, ctx->engine->id_prototype, Value::fromObject(this));
     LocalTZA = getLocalTZA();
 
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("parse"), method_parse, 1);
-    ctor.objectValue()->setProperty(ctx, QStringLiteral("UTC"), method_UTC, 7);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("parse"), method_parse, 1);
+    ctor.objectValue()->__put__(ctx, QStringLiteral("UTC"), method_UTC, 7);
 
-    setProperty(ctx, QStringLiteral("constructor"), ctor);
-    setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
-    setProperty(ctx, QStringLiteral("toDateString"), method_toDateString, 0);
-    setProperty(ctx, QStringLiteral("toTimeString"), method_toTimeString, 0);
-    setProperty(ctx, QStringLiteral("toLocaleString"), method_toLocaleString, 0);
-    setProperty(ctx, QStringLiteral("toLocaleDateString"), method_toLocaleDateString, 0);
-    setProperty(ctx, QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString, 0);
-    setProperty(ctx, QStringLiteral("valueOf"), method_valueOf, 0);
-    setProperty(ctx, QStringLiteral("getTime"), method_getTime, 0);
-    setProperty(ctx, QStringLiteral("getYear"), method_getYear, 0);
-    setProperty(ctx, QStringLiteral("getFullYear"), method_getFullYear, 0);
-    setProperty(ctx, QStringLiteral("getUTCFullYear"), method_getUTCFullYear, 0);
-    setProperty(ctx, QStringLiteral("getMonth"), method_getMonth, 0);
-    setProperty(ctx, QStringLiteral("getUTCMonth"), method_getUTCMonth, 0);
-    setProperty(ctx, QStringLiteral("getDate"), method_getDate, 0);
-    setProperty(ctx, QStringLiteral("getUTCDate"), method_getUTCDate, 0);
-    setProperty(ctx, QStringLiteral("getDay"), method_getDay, 0);
-    setProperty(ctx, QStringLiteral("getUTCDay"), method_getUTCDay, 0);
-    setProperty(ctx, QStringLiteral("getHours"), method_getHours, 0);
-    setProperty(ctx, QStringLiteral("getUTCHours"), method_getUTCHours, 0);
-    setProperty(ctx, QStringLiteral("getMinutes"), method_getMinutes, 0);
-    setProperty(ctx, QStringLiteral("getUTCMinutes"), method_getUTCMinutes, 0);
-    setProperty(ctx, QStringLiteral("getSeconds"), method_getSeconds, 0);
-    setProperty(ctx, QStringLiteral("getUTCSeconds"), method_getUTCSeconds, 0);
-    setProperty(ctx, QStringLiteral("getMilliseconds"), method_getMilliseconds, 0);
-    setProperty(ctx, QStringLiteral("getUTCMilliseconds"), method_getUTCMilliseconds, 0);
-    setProperty(ctx, QStringLiteral("getTimezoneOffset"), method_getTimezoneOffset, 0);
-    setProperty(ctx, QStringLiteral("setTime"), method_setTime, 1);
-    setProperty(ctx, QStringLiteral("setMilliseconds"), method_setMilliseconds, 1);
-    setProperty(ctx, QStringLiteral("setUTCMilliseconds"), method_setUTCMilliseconds, 1);
-    setProperty(ctx, QStringLiteral("setSeconds"), method_setSeconds, 2);
-    setProperty(ctx, QStringLiteral("setUTCSeconds"), method_setUTCSeconds, 2);
-    setProperty(ctx, QStringLiteral("setMinutes"), method_setMinutes, 3);
-    setProperty(ctx, QStringLiteral("setUTCMinutes"), method_setUTCMinutes, 3);
-    setProperty(ctx, QStringLiteral("setHours"), method_setHours, 4);
-    setProperty(ctx, QStringLiteral("setUTCHours"), method_setUTCHours, 4);
-    setProperty(ctx, QStringLiteral("setDate"), method_setDate, 1);
-    setProperty(ctx, QStringLiteral("setUTCDate"), method_setUTCDate, 1);
-    setProperty(ctx, QStringLiteral("setMonth"), method_setMonth, 2);
-    setProperty(ctx, QStringLiteral("setUTCMonth"), method_setUTCMonth, 2);
-    setProperty(ctx, QStringLiteral("setYear"), method_setYear, 1);
-    setProperty(ctx, QStringLiteral("setFullYear"), method_setFullYear, 3);
-    setProperty(ctx, QStringLiteral("setUTCFullYear"), method_setUTCFullYear, 3);
-    setProperty(ctx, QStringLiteral("toUTCString"), method_toUTCString, 0);
-    setProperty(ctx, QStringLiteral("toGMTString"), method_toUTCString, 0);
+    __put__(ctx, QStringLiteral("constructor"), ctor);
+    __put__(ctx, QStringLiteral("toString"), method_toString, 0);
+    __put__(ctx, QStringLiteral("toDateString"), method_toDateString, 0);
+    __put__(ctx, QStringLiteral("toTimeString"), method_toTimeString, 0);
+    __put__(ctx, QStringLiteral("toLocaleString"), method_toLocaleString, 0);
+    __put__(ctx, QStringLiteral("toLocaleDateString"), method_toLocaleDateString, 0);
+    __put__(ctx, QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString, 0);
+    __put__(ctx, QStringLiteral("valueOf"), method_valueOf, 0);
+    __put__(ctx, QStringLiteral("getTime"), method_getTime, 0);
+    __put__(ctx, QStringLiteral("getYear"), method_getYear, 0);
+    __put__(ctx, QStringLiteral("getFullYear"), method_getFullYear, 0);
+    __put__(ctx, QStringLiteral("getUTCFullYear"), method_getUTCFullYear, 0);
+    __put__(ctx, QStringLiteral("getMonth"), method_getMonth, 0);
+    __put__(ctx, QStringLiteral("getUTCMonth"), method_getUTCMonth, 0);
+    __put__(ctx, QStringLiteral("getDate"), method_getDate, 0);
+    __put__(ctx, QStringLiteral("getUTCDate"), method_getUTCDate, 0);
+    __put__(ctx, QStringLiteral("getDay"), method_getDay, 0);
+    __put__(ctx, QStringLiteral("getUTCDay"), method_getUTCDay, 0);
+    __put__(ctx, QStringLiteral("getHours"), method_getHours, 0);
+    __put__(ctx, QStringLiteral("getUTCHours"), method_getUTCHours, 0);
+    __put__(ctx, QStringLiteral("getMinutes"), method_getMinutes, 0);
+    __put__(ctx, QStringLiteral("getUTCMinutes"), method_getUTCMinutes, 0);
+    __put__(ctx, QStringLiteral("getSeconds"), method_getSeconds, 0);
+    __put__(ctx, QStringLiteral("getUTCSeconds"), method_getUTCSeconds, 0);
+    __put__(ctx, QStringLiteral("getMilliseconds"), method_getMilliseconds, 0);
+    __put__(ctx, QStringLiteral("getUTCMilliseconds"), method_getUTCMilliseconds, 0);
+    __put__(ctx, QStringLiteral("getTimezoneOffset"), method_getTimezoneOffset, 0);
+    __put__(ctx, QStringLiteral("setTime"), method_setTime, 1);
+    __put__(ctx, QStringLiteral("setMilliseconds"), method_setMilliseconds, 1);
+    __put__(ctx, QStringLiteral("setUTCMilliseconds"), method_setUTCMilliseconds, 1);
+    __put__(ctx, QStringLiteral("setSeconds"), method_setSeconds, 2);
+    __put__(ctx, QStringLiteral("setUTCSeconds"), method_setUTCSeconds, 2);
+    __put__(ctx, QStringLiteral("setMinutes"), method_setMinutes, 3);
+    __put__(ctx, QStringLiteral("setUTCMinutes"), method_setUTCMinutes, 3);
+    __put__(ctx, QStringLiteral("setHours"), method_setHours, 4);
+    __put__(ctx, QStringLiteral("setUTCHours"), method_setUTCHours, 4);
+    __put__(ctx, QStringLiteral("setDate"), method_setDate, 1);
+    __put__(ctx, QStringLiteral("setUTCDate"), method_setUTCDate, 1);
+    __put__(ctx, QStringLiteral("setMonth"), method_setMonth, 2);
+    __put__(ctx, QStringLiteral("setUTCMonth"), method_setUTCMonth, 2);
+    __put__(ctx, QStringLiteral("setYear"), method_setYear, 1);
+    __put__(ctx, QStringLiteral("setFullYear"), method_setFullYear, 3);
+    __put__(ctx, QStringLiteral("setUTCFullYear"), method_setUTCFullYear, 3);
+    __put__(ctx, QStringLiteral("toUTCString"), method_toUTCString, 0);
+    __put__(ctx, QStringLiteral("toGMTString"), method_toUTCString, 0);
 }
 
 double DatePrototype::getThisDate(Context *ctx)
@@ -2463,11 +2463,11 @@ void RegExpCtor::call(Context *ctx)
 
 void RegExpPrototype::init(Context *ctx, const Value &ctor)
 {
-    ctor.objectValue()->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
-    setProperty(ctx, QStringLiteral("constructor"), ctor);
-    setProperty(ctx, QStringLiteral("exec"), method_exec, 0);
-    setProperty(ctx, QStringLiteral("test"), method_test, 0);
-    setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
+    ctor.objectValue()->__put__(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    __put__(ctx, QStringLiteral("constructor"), ctor);
+    __put__(ctx, QStringLiteral("exec"), method_exec, 0);
+    __put__(ctx, QStringLiteral("test"), method_test, 0);
+    __put__(ctx, QStringLiteral("toString"), method_toString, 0);
 }
 
 void RegExpPrototype::method_exec(Context *ctx)
@@ -2495,8 +2495,8 @@ void RegExpPrototype::method_exec(Context *ctx)
         for (int i = 0; i <= captured; ++i)
             array->value.push(Value::fromString(ctx, match.captured(i)));
 
-        array->setProperty(ctx, QLatin1String("index"), Value::fromInt32(match.capturedStart(0)));
-        array->setProperty(ctx, QLatin1String("input"), arg);
+        array->__put__(ctx, QLatin1String("index"), Value::fromInt32(match.capturedStart(0)));
+        array->__put__(ctx, QLatin1String("input"), arg);
 
         if (r->global)
             r->lastIndex = Value::fromInt32(match.capturedEnd(0));
@@ -2535,33 +2535,33 @@ void RegExpPrototype::method_toString(Context *ctx)
 //
 MathObject::MathObject(Context *ctx)
 {
-    setProperty(ctx, QStringLiteral("E"), Value::fromDouble(::exp(1.0)));
-    setProperty(ctx, QStringLiteral("LN2"), Value::fromDouble(::log(2.0)));
-    setProperty(ctx, QStringLiteral("LN10"), Value::fromDouble(::log(10.0)));
-    setProperty(ctx, QStringLiteral("LOG2E"), Value::fromDouble(1.0/::log(2.0)));
-    setProperty(ctx, QStringLiteral("LOG10E"), Value::fromDouble(1.0/::log(10.0)));
-    setProperty(ctx, QStringLiteral("PI"), Value::fromDouble(qt_PI));
-    setProperty(ctx, QStringLiteral("SQRT1_2"), Value::fromDouble(::sqrt(0.5)));
-    setProperty(ctx, QStringLiteral("SQRT2"), Value::fromDouble(::sqrt(2.0)));
+    __put__(ctx, QStringLiteral("E"), Value::fromDouble(::exp(1.0)));
+    __put__(ctx, QStringLiteral("LN2"), Value::fromDouble(::log(2.0)));
+    __put__(ctx, QStringLiteral("LN10"), Value::fromDouble(::log(10.0)));
+    __put__(ctx, QStringLiteral("LOG2E"), Value::fromDouble(1.0/::log(2.0)));
+    __put__(ctx, QStringLiteral("LOG10E"), Value::fromDouble(1.0/::log(10.0)));
+    __put__(ctx, QStringLiteral("PI"), Value::fromDouble(qt_PI));
+    __put__(ctx, QStringLiteral("SQRT1_2"), Value::fromDouble(::sqrt(0.5)));
+    __put__(ctx, QStringLiteral("SQRT2"), Value::fromDouble(::sqrt(2.0)));
 
-    setProperty(ctx, QStringLiteral("abs"), method_abs, 1);
-    setProperty(ctx, QStringLiteral("acos"), method_acos, 1);
-    setProperty(ctx, QStringLiteral("asin"), method_asin, 0);
-    setProperty(ctx, QStringLiteral("atan"), method_atan, 1);
-    setProperty(ctx, QStringLiteral("atan2"), method_atan2, 2);
-    setProperty(ctx, QStringLiteral("ceil"), method_ceil, 1);
-    setProperty(ctx, QStringLiteral("cos"), method_cos, 1);
-    setProperty(ctx, QStringLiteral("exp"), method_exp, 1);
-    setProperty(ctx, QStringLiteral("floor"), method_floor, 1);
-    setProperty(ctx, QStringLiteral("log"), method_log, 1);
-    setProperty(ctx, QStringLiteral("max"), method_max, 2);
-    setProperty(ctx, QStringLiteral("min"), method_min, 2);
-    setProperty(ctx, QStringLiteral("pow"), method_pow, 2);
-    setProperty(ctx, QStringLiteral("random"), method_random, 0);
-    setProperty(ctx, QStringLiteral("round"), method_round, 1);
-    setProperty(ctx, QStringLiteral("sin"), method_sin, 1);
-    setProperty(ctx, QStringLiteral("sqrt"), method_sqrt, 1);
-    setProperty(ctx, QStringLiteral("tan"), method_tan, 1);
+    __put__(ctx, QStringLiteral("abs"), method_abs, 1);
+    __put__(ctx, QStringLiteral("acos"), method_acos, 1);
+    __put__(ctx, QStringLiteral("asin"), method_asin, 0);
+    __put__(ctx, QStringLiteral("atan"), method_atan, 1);
+    __put__(ctx, QStringLiteral("atan2"), method_atan2, 2);
+    __put__(ctx, QStringLiteral("ceil"), method_ceil, 1);
+    __put__(ctx, QStringLiteral("cos"), method_cos, 1);
+    __put__(ctx, QStringLiteral("exp"), method_exp, 1);
+    __put__(ctx, QStringLiteral("floor"), method_floor, 1);
+    __put__(ctx, QStringLiteral("log"), method_log, 1);
+    __put__(ctx, QStringLiteral("max"), method_max, 2);
+    __put__(ctx, QStringLiteral("min"), method_min, 2);
+    __put__(ctx, QStringLiteral("pow"), method_pow, 2);
+    __put__(ctx, QStringLiteral("random"), method_random, 0);
+    __put__(ctx, QStringLiteral("round"), method_round, 1);
+    __put__(ctx, QStringLiteral("sin"), method_sin, 1);
+    __put__(ctx, QStringLiteral("sqrt"), method_sqrt, 1);
+    __put__(ctx, QStringLiteral("tan"), method_tan, 1);
 }
 
 /* copies the sign from y to x and returns the result */

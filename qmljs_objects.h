@@ -154,6 +154,24 @@ struct PropertyDescriptor {
         return pd;
     }
 
+    // Section 8.10
+    inline void fullyPopulated() {
+        if (type == Generic) {
+            type = Data;
+            value = Value::undefinedValue();
+        }
+        if (type == Data) {
+            if (writable == Undefined)
+                writable = Unset;
+        } else {
+            writable = Undefined;
+        }
+        if (enumberable == Undefined)
+            enumberable = Unset;
+        if (configurable == Undefined)
+            configurable = Unset;
+    }
+
     inline bool isData() const { return type == Data; }
     inline bool isAccessor() const { return type == Accessor; }
     inline bool isGeneric() const { return type == Generic; }
@@ -161,6 +179,40 @@ struct PropertyDescriptor {
     inline bool isWritable() const { return writable == Set; }
     inline bool isEnumerable() const { return enumberable == Set; }
     inline bool isConfigurable() const { return configurable == Set; }
+
+    inline bool isEmpty() {
+        return type == Generic && writable == Undefined && enumberable == Undefined && configurable == Undefined;
+    }
+    inline bool isSubset(PropertyDescriptor *other) {
+        if (type != other->type)
+            return false;
+        if (enumberable != Undefined && enumberable != other->enumberable)
+            return false;
+        if (configurable != Undefined && configurable != other->configurable)
+            return false;
+        if (writable != Undefined && writable != other->writable)
+            return false;
+        if (type == Data && !value.sameValue(other->value))
+            return false;
+        if (type == Accessor && (get != other->get || set != other->set))
+            return false;
+        return true;
+    }
+    inline void operator+=(const PropertyDescriptor &other) {
+        type = other.type;
+        if (other.enumberable != Undefined)
+            enumberable = other.enumberable;
+        if (other.configurable != Undefined)
+            configurable = other.configurable;
+        if (other.writable != Undefined)
+            writable = other.writable;
+        if (type == Accessor) {
+            get = other.get;
+            set = other.set;
+        } else {
+            value = other.value;
+        }
+    }
 };
 
 struct PropertyTableEntry {
@@ -205,29 +257,23 @@ public:
     inline iterator begin() const { return _properties; }
     inline iterator end() const { return _properties + (_propertyCount + 1); }
 
-    bool remove(String *name)
+    void remove(PropertyTableEntry *prop)
     {
-        if (PropertyTableEntry *prop = findEntry(name)) {
-            // ### TODO check if the property can be removed
-
-            PropertyTableEntry *bucket = _buckets[prop->hashValue() % _bucketCount];
-            if (bucket == prop) {
-                bucket = bucket->next;
-            } else {
-                for (PropertyTableEntry *it = bucket; it; it = it->next) {
-                    if (it->next == prop) {
-                        it->next = it->next->next;
-                        break;
-                    }
+        PropertyTableEntry *bucket = _buckets[prop->hashValue() % _bucketCount];
+        if (bucket == prop) {
+            bucket = bucket->next;
+        } else {
+            for (PropertyTableEntry *it = bucket; it; it = it->next) {
+                if (it->next == prop) {
+                    it->next = it->next->next;
+                    break;
                 }
             }
-
-            _properties[prop->index] = 0;
-            prop->next = _freeList;
-            _freeList = prop;
         }
 
-        return true;
+        _properties[prop->index] = 0;
+        prop->next = _freeList;
+        _freeList = prop;
     }
 
     PropertyTableEntry *findEntry(String *name) const
@@ -349,20 +395,20 @@ struct Object {
     virtual ActivationObject *asActivationObject() { return 0; }
     virtual ArgumentsObject *asArgumentsObject() { return 0; }
 
-    virtual Value getProperty(Context *ctx, String *name);
-    virtual PropertyDescriptor *getOwnProperty(Context *ctx, String *name);
-    virtual PropertyDescriptor *getPropertyDescriptor(Context *ctx, String *name, PropertyDescriptor *to_fill);
-    virtual void setProperty(Context *ctx, String *name, const Value &value, bool throwException = false);
-    virtual bool canSetProperty(Context *ctx, String *name);
-    virtual bool hasProperty(Context *ctx, String *name) const;
-    virtual bool deleteProperty(Context *ctx, String *name, bool flag);
-    virtual bool defineOwnProperty(Context *ctx, String *name, const Value &getter, const Value &setter, bool flag = false);
+    virtual Value __get__(Context *ctx, String *name);
+    virtual PropertyDescriptor *__getOwnProperty__(Context *ctx, String *name);
+    virtual PropertyDescriptor *__getPropertyDescriptor__(Context *ctx, String *name, PropertyDescriptor *to_fill);
+    virtual void __put__(Context *ctx, String *name, const Value &value, bool throwException = false);
+    virtual bool __canPut__(Context *ctx, String *name);
+    virtual bool __hasProperty__(Context *ctx, String *name) const;
+    virtual bool __delete__(Context *ctx, String *name, bool throwException);
+    virtual bool __defineOwnProperty__(Context *ctx, String *name, PropertyDescriptor *desc, bool throwException = false);
 
     //
     // helpers
     //
-    void setProperty(Context *ctx, const QString &name, const Value &value);
-    void setProperty(Context *ctx, const QString &name, void (*code)(Context *), int count = 0);
+    void __put__(Context *ctx, const QString &name, const Value &value);
+    void __put__(Context *ctx, const QString &name, void (*code)(Context *), int count = 0);
 };
 
 struct ForEachIteratorObject: Object {
@@ -409,7 +455,7 @@ struct ArrayObject: Object {
     ArrayObject(const Array &value): value(value) {}
     virtual QString className() { return QStringLiteral("Array"); }
     virtual ArrayObject *asArrayObject() { return this; }
-    virtual Value getProperty(Context *ctx, String *name);
+    virtual Value __get__(Context *ctx, String *name);
 };
 
 struct FunctionObject: Object {
@@ -462,7 +508,7 @@ struct RegExpObject: Object {
     RegExpObject(const QRegularExpression &value, bool global): value(value), lastIndex(Value::fromInt32(0)), global(global) {}
     virtual QString className() { return QStringLiteral("RegExp"); }
     virtual RegExpObject *asRegExpObject() { return this; }
-    virtual Value getProperty(Context *ctx, String *name);
+    virtual Value __get__(Context *ctx, String *name);
 };
 
 struct ErrorObject: Object {
@@ -478,7 +524,7 @@ struct ActivationObject: Object {
     ActivationObject(Context *context): context(context), arguments(Value::undefinedValue()) {}
     virtual QString className() { return QStringLiteral("Activation"); }
     virtual ActivationObject *asActivationObject() { return this; }
-    virtual PropertyDescriptor *getPropertyDescriptor(Context *ctx, String *name, PropertyDescriptor *to_fill);
+    virtual PropertyDescriptor *__getPropertyDescriptor__(Context *ctx, String *name, PropertyDescriptor *to_fill);
 };
 
 struct ArgumentsObject: Object {
@@ -486,8 +532,8 @@ struct ArgumentsObject: Object {
     ArgumentsObject(Context *context): context(context) {}
     virtual QString className() { return QStringLiteral("Arguments"); }
     virtual ArgumentsObject *asArgumentsObject() { return this; }
-    virtual Value getProperty(Context *ctx, String *name);
-    virtual PropertyDescriptor *getPropertyDescriptor(Context *ctx, String *name, PropertyDescriptor *to_fill);
+    virtual Value __get__(Context *ctx, String *name);
+    virtual PropertyDescriptor *__getPropertyDescriptor__(Context *ctx, String *name, PropertyDescriptor *to_fill);
 };
 
 struct ExecutionEngine

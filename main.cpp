@@ -247,7 +247,7 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
         ctx->activation = VM::Value::fromObject(new QQmlJS::VM::Object());
 
     foreach (const QString *local, globalCode->locals) {
-        ctx->activation.objectValue()->setProperty(ctx, *local, QQmlJS::VM::Value::undefinedValue());
+        ctx->activation.objectValue()->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
     }
 
     void * buf = __qmljs_create_exception_handler(ctx);
@@ -297,10 +297,10 @@ int main(int argc, char *argv[])
     QQmlJS::VM::Context *ctx = vm.rootContext;
 
     QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
-    globalObject->setProperty(ctx, vm.identifier(QStringLiteral("print")),
+    globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
                               QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
 
-    globalObject->setProperty(ctx, vm.identifier(QStringLiteral("eval")),
+    globalObject->__put__(ctx, vm.identifier(QStringLiteral("eval")),
                               QQmlJS::VM::Value::fromObject(new builtins::Eval(ctx)));
 
     foreach (const QString &fn, args) {

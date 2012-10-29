@@ -232,7 +232,7 @@ ActivationObject *Value::asArgumentsObject() const
 
 Value Value::property(Context *ctx, String *name) const
 {
-    return isObject() ? objectValue()->getProperty(ctx, name) : undefinedValue();
+    return isObject() ? objectValue()->__get__(ctx, name) : undefinedValue();
 }
 
 void Context::init(ExecutionEngine *eng)
@@ -257,7 +257,7 @@ Value *Context::lookupPropertyDescriptor(String *name)
     for (Context *ctx = this; ctx; ctx = ctx->parent) {
         if (ctx->activation.isObject()) {
             PropertyDescriptor tmp;
-            if (PropertyDescriptor *pd = ctx->activation.objectValue()->getPropertyDescriptor(this, name, &tmp)) {
+            if (PropertyDescriptor *pd = ctx->activation.objectValue()->__getPropertyDescriptor__(this, name, &tmp)) {
                 return &pd->value;
             }
         }
@@ -351,7 +351,7 @@ void Context::leaveConstructorContext(FunctionObject *f)
     assert(thisObject.isObject());
     result = thisObject;
 
-    Value proto = f->getProperty(this, engine->id_prototype);
+    Value proto = f->__get__(this, engine->id_prototype);
     thisObject.objectValue()->prototype = proto.objectValue();
     if (! thisObject.isObject())
         thisObject.objectValue()->prototype = engine->objectPrototype;
@@ -439,7 +439,7 @@ Value __qmljs_delete_subscript(Context *ctx, Value base, Value index)
 Value __qmljs_delete_member(Context *ctx, Value base, String *name)
 {
     Value obj = base.toObject(ctx);
-    return Value::fromBoolean(obj.objectValue()->deleteProperty(ctx, name, true));
+    return Value::fromBoolean(obj.objectValue()->__delete__(ctx, name, true));
 }
 
 Value __qmljs_delete_property(Context *ctx, String *name)
@@ -447,7 +447,7 @@ Value __qmljs_delete_property(Context *ctx, String *name)
     Value obj = ctx->activation;
     if (! obj.isObject())
         obj = ctx->engine->globalObject;
-    return Value::fromBoolean(obj.objectValue()->deleteProperty(ctx, name, true));
+    return Value::fromBoolean(obj.objectValue()->__delete__(ctx, name, true));
 }
 
 Value __qmljs_delete_value(Context *ctx, Value value)
@@ -487,7 +487,7 @@ Value __qmljs_in(Value left, Value right, Context *ctx)
 {
     if (right.isObject()) {
         Value s = __qmljs_to_string(left, ctx);
-        bool r = right.objectValue()->hasProperty(ctx, s.stringValue());
+        bool r = right.objectValue()->__hasProperty__(ctx, s.stringValue());
         return Value::fromBoolean(r);
     } else {
         return __qmljs_throw_type_error(ctx);
@@ -750,89 +750,89 @@ void __qmljs_inplace_ushr_element(Value base, Value index, Value value, Context 
 void __qmljs_inplace_bit_and_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.objectValue();
-    Value prop = o->getProperty(ctx, name);
+    Value prop = o->__get__(ctx, name);
     prop = __qmljs_bit_and(prop, value, ctx);
-    o->setProperty(ctx, name, prop);
+    o->__put__(ctx, name, prop);
 }
 
 void __qmljs_inplace_bit_or_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.objectValue();
-    Value prop = o->getProperty(ctx, name);
+    Value prop = o->__get__(ctx, name);
     prop = __qmljs_bit_or(prop, value, ctx);
-    o->setProperty(ctx, name, prop);
+    o->__put__(ctx, name, prop);
 }
 
 void __qmljs_inplace_bit_xor_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.objectValue();
-    Value prop = o->getProperty(ctx, name);
+    Value prop = o->__get__(ctx, name);
     prop = __qmljs_bit_xor(prop, value, ctx);
-    o->setProperty(ctx, name, prop);
+    o->__put__(ctx, name, prop);
 }
 
 void __qmljs_inplace_add_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.objectValue();
-    Value prop = o->getProperty(ctx, name);
+    Value prop = o->__get__(ctx, name);
     prop = __qmljs_add(prop, value, ctx);
-    o->setProperty(ctx, name, prop);
+    o->__put__(ctx, name, prop);
 }
 
 void __qmljs_inplace_sub_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.objectValue();
-    Value prop = o->getProperty(ctx, name);
+    Value prop = o->__get__(ctx, name);
     prop = __qmljs_sub(prop, value, ctx);
-    o->setProperty(ctx, name, prop);
+    o->__put__(ctx, name, prop);
 }
 
 void __qmljs_inplace_mul_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.objectValue();
-    Value prop = o->getProperty(ctx, name);
+    Value prop = o->__get__(ctx, name);
     prop = __qmljs_mul(prop, value, ctx);
-    o->setProperty(ctx, name, prop);
+    o->__put__(ctx, name, prop);
 }
 
 void __qmljs_inplace_div_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.objectValue();
-    Value prop = o->getProperty(ctx, name);
+    Value prop = o->__get__(ctx, name);
     prop = __qmljs_div(prop, value, ctx);
-    o->setProperty(ctx, name, prop);
+    o->__put__(ctx, name, prop);
 }
 
 void __qmljs_inplace_mod_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.objectValue();
-    Value prop = o->getProperty(ctx, name);
+    Value prop = o->__get__(ctx, name);
     prop = __qmljs_mod(prop, value, ctx);
-    o->setProperty(ctx, name, prop);
+    o->__put__(ctx, name, prop);
 }
 
 void __qmljs_inplace_shl_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.objectValue();
-    Value prop = o->getProperty(ctx, name);
+    Value prop = o->__get__(ctx, name);
     prop = __qmljs_shl(prop, value, ctx);
-    o->setProperty(ctx, name, prop);
+    o->__put__(ctx, name, prop);
 }
 
 void __qmljs_inplace_shr_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.objectValue();
-    Value prop = o->getProperty(ctx, name);
+    Value prop = o->__get__(ctx, name);
     prop = __qmljs_shr(prop, value, ctx);
-    o->setProperty(ctx, name, prop);
+    o->__put__(ctx, name, prop);
 }
 
 void __qmljs_inplace_ushr_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.objectValue();
-    Value prop = o->getProperty(ctx, name);
+    Value prop = o->__get__(ctx, name);
     prop = __qmljs_ushr(prop, value, ctx);
-    o->setProperty(ctx, name, prop);
+    o->__put__(ctx, name, prop);
 }
 
 String *__qmljs_string_from_utf8(Context *ctx, const char *s)
@@ -903,14 +903,14 @@ Value __qmljs_object_default_value(Context *ctx, Value object, int typeHint)
     assert(object.isObject());
     Object *oo = object.objectValue();
 
-    Value conv = oo->getProperty(ctx, meth1);
+    Value conv = oo->__get__(ctx, meth1);
     if (FunctionObject *f = conv.asFunctionObject()) {
         Value r = callFunction(ctx, object, f, 0, 0);
         if (r.isPrimitive())
             return r;
     }
 
-    conv = oo->getProperty(ctx, meth2);
+    conv = oo->__get__(ctx, meth2);
     if (FunctionObject *f = conv.asFunctionObject()) {
         Value r = callFunction(ctx, object, f, 0, 0);
         if (r.isPrimitive())
@@ -951,33 +951,33 @@ Value __qmljs_new_string_object(Context *ctx, String *string)
 
 void __qmljs_set_property(Context *ctx, Value object, String *name, Value value)
 {
-    object.objectValue()->setProperty(ctx, name, value, /*flags*/ 0);
+    object.objectValue()->__put__(ctx, name, value, /*flags*/ 0);
 }
 
 void __qmljs_set_property_boolean(Context *ctx, Value *object, String *name, bool b)
 {
     Value value = Value::fromBoolean(b);
-    object->objectValue()->setProperty(ctx, name, value, /*flag*/ 0);
+    object->objectValue()->__put__(ctx, name, value, /*flag*/ 0);
 }
 
 void __qmljs_set_property_number(Context *ctx, Value *object, String *name, double number)
 {
     Q_UNUSED(ctx);
     Value value = Value::fromDouble(number);
-    object->objectValue()->setProperty(ctx, name, value, /*flag*/ 0);
+    object->objectValue()->__put__(ctx, name, value, /*flag*/ 0);
 }
 
 void __qmljs_set_property_string(Context *ctx, Value *object, String *name, String *s)
 {
     Q_UNUSED(ctx);
     Value value = Value::fromString(s);
-    object->objectValue()->setProperty(ctx, name, value, /*flag*/ 0);
+    object->objectValue()->__put__(ctx, name, value, /*flag*/ 0);
 }
 
 void __qmljs_set_property_closure(Context *ctx, Value *object, String *name, IR::Function *function)
 {
     Value value = __qmljs_init_closure(function, ctx);
-    object->objectValue()->setProperty(ctx, name, value, /*flag*/ 0);
+    object->objectValue()->__put__(ctx, name, value, /*flag*/ 0);
 }
 
 Value __qmljs_get_element(Context *ctx, Value object, Value index)
@@ -1000,7 +1000,7 @@ Value __qmljs_get_element(Context *ctx, Value object, Value index)
     if (! object.isObject())
         object = __qmljs_to_object(object, ctx);
 
-    return object.objectValue()->getProperty(ctx, name);
+    return object.objectValue()->__get__(ctx, name);
 }
 
 void __qmljs_set_element(Context *ctx, Value object, Value index, Value value)
@@ -1017,7 +1017,7 @@ void __qmljs_set_element(Context *ctx, Value object, Value index, Value value)
     if (! object.isObject())
         object = __qmljs_to_object(object, ctx);
 
-    object.objectValue()->setProperty(ctx, name, value, /*flags*/ 0);
+    object.objectValue()->__put__(ctx, name, value, /*flags*/ 0);
 }
 
 Value __qmljs_foreach_iterator_object(Value in, Context *ctx)
@@ -1046,7 +1046,7 @@ void __qmljs_set_activation_property(Context *ctx, String *name, Value value)
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
         *prop = value;
     else
-        ctx->engine->globalObject.objectValue()->setProperty(ctx, name, value);
+        ctx->engine->globalObject.objectValue()->__put__(ctx, name, value);
 }
 
 void __qmljs_set_activation_property_boolean(Context *ctx, String *name, bool b)
@@ -1076,14 +1076,14 @@ void __qmljs_set_activation_property_closure(Context *ctx, String *name, IR::Fun
 Value __qmljs_get_property(Context *ctx, Value object, String *name)
 {
     if (object.isObject()) {
-        return object.objectValue()->getProperty(ctx, name);
+        return object.objectValue()->__get__(ctx, name);
     } else if (object.isString() && name->isEqualTo(ctx->engine->id_length)) {
         return Value::fromInt32(object.stringValue()->toQString().length());
     } else {
         object = __qmljs_to_object(object, ctx);
 
         if (object.isObject()) {
-            return object.objectValue()->getProperty(ctx, name);
+            return object.objectValue()->__get__(ctx, name);
         } else {
             ctx->throwTypeError();
             return Value::undefinedValue();
@@ -1225,7 +1225,7 @@ Value __qmljs_construct_property(Context *context, Value base, String *name, Val
     if (!thisObject.isObject())
         thisObject = __qmljs_to_object(base, context);
 
-    Value func = thisObject.objectValue()->getProperty(context, name);
+    Value func = thisObject.objectValue()->__get__(context, name);
     if (FunctionObject *f = func.asFunctionObject()) {
         Context k;
         Context *ctx = f->needsActivation ? context->engine->newContext() : &k;

@@ -58,24 +58,44 @@ Object::~Object()
     delete members;
 }
 
-void Object::setProperty(Context *ctx, const QString &name, const Value &value)
+void Object::__put__(Context *ctx, const QString &name, const Value &value)
 {
-    setProperty(ctx, ctx->engine->identifier(name), value);
+    __put__(ctx, ctx->engine->identifier(name), value);
 }
 
-void Object::setProperty(Context *ctx, const QString &name, void (*code)(Context *), int count)
+void Object::__put__(Context *ctx, const QString &name, void (*code)(Context *), int count)
 {
     Q_UNUSED(count);
-    setProperty(ctx, name, Value::fromObject(ctx->engine->newNativeFunction(ctx, code)));
+    __put__(ctx, name, Value::fromObject(ctx->engine->newNativeFunction(ctx, code)));
 }
 
-Value Object::getProperty(Context *ctx, String *name)
+// Section 8.12.1
+PropertyDescriptor *Object::__getOwnProperty__(Context *, String *name)
+{
+    if (members)
+        return members->find(name);
+    return 0;
+}
+
+// Section 8.12.2
+PropertyDescriptor *Object::__getPropertyDescriptor__(Context *ctx, String *name, PropertyDescriptor *to_fill)
+{
+    if (PropertyDescriptor *p = __getOwnProperty__(ctx, name))
+        return p;
+
+    if (prototype)
+        return prototype->__getPropertyDescriptor__(ctx, name, to_fill);
+    return 0;
+}
+
+// Section 8.12.3
+Value Object::__get__(Context *ctx, String *name)
 {
     if (name->isEqualTo(ctx->engine->id___proto__))
         return Value::fromObject(prototype);
 
     PropertyDescriptor tmp;
-    if (PropertyDescriptor *p = getPropertyDescriptor(ctx, name, &tmp)) {
+    if (PropertyDescriptor *p = __getPropertyDescriptor__(ctx, name, &tmp)) {
         if (p->isData())
             return p->value;
         if (!p->get)
@@ -89,51 +109,10 @@ Value Object::getProperty(Context *ctx, String *name)
     return Value::undefinedValue();
 }
 
-// Section 8.12.1
-PropertyDescriptor *Object::getOwnProperty(Context *, String *name)
-{
-    if (members)
-        return members->find(name);
-    return 0;
-}
-
-PropertyDescriptor *Object::getPropertyDescriptor(Context *ctx, String *name, PropertyDescriptor *to_fill)
-{
-    if (PropertyDescriptor *p = getOwnProperty(ctx, name))
-        return p;
-
-    if (prototype)
-        return prototype->getPropertyDescriptor(ctx, name, to_fill);
-    return 0;
-}
-
-// Section 8.12.5
-void Object::setProperty(Context *ctx, String *name, const Value &value, bool throwException)
-{
-    if (!canSetProperty(ctx, name)) {
-        if (throwException)
-            __qmljs_throw_type_error(ctx);
-        return;
-    }
-
-    if (!members)
-        members = new PropertyTable();
-
-    PropertyDescriptor *pd = getOwnProperty(ctx, name);
-    if (pd) {
-        if (pd->isData()) {
-            pd->value = value;
-            return;
-        }
-    }
-    PropertyDescriptor *p = members->insert(name);
-    *p = PropertyDescriptor::fromValue(value);
-}
-
 // Section 8.12.4
-bool Object::canSetProperty(Context *ctx, String *name)
+bool Object::__canPut__(Context *ctx, String *name)
 {
-    if (PropertyDescriptor *p = getOwnProperty(ctx, name)) {
+    if (PropertyDescriptor *p = __getOwnProperty__(ctx, name)) {
         if (p->isAccessor())
             return p->get != 0;
         return p->isWritable();
@@ -143,7 +122,7 @@ bool Object::canSetProperty(Context *ctx, String *name)
         return extensible;
 
     PropertyDescriptor tmp;
-    if (PropertyDescriptor *p = prototype->getPropertyDescriptor(ctx, name, &tmp)) {
+    if (PropertyDescriptor *p = prototype->__getPropertyDescriptor__(ctx, name, &tmp)) {
         if (p->isAccessor())
             return p->get != 0;
         if (!extensible)
@@ -155,37 +134,164 @@ bool Object::canSetProperty(Context *ctx, String *name)
     return true;
 }
 
-bool Object::hasProperty(Context *ctx, String *name) const
+// Section 8.12.5
+void Object::__put__(Context *ctx, String *name, const Value &value, bool throwException)
+{
+    // clause 1
+    if (!__canPut__(ctx, name))
+        goto reject;
+
+    if (!members)
+        members = new PropertyTable();
+
+    {
+        // Clause 2
+        PropertyDescriptor *pd = __getOwnProperty__(ctx, name);
+        // Clause 3
+        if (pd && pd->isData()) {
+            // spec says to call [[DefineOwnProperty]] with { [[Value]]: value }
+
+            // ### to simplify and speed up we should expand the relevant parts here (clauses 6,7,9,10,12,13)
+            PropertyDescriptor desc = PropertyDescriptor::fromValue(value);
+            desc.configurable = PropertyDescriptor::Undefined;
+            desc.enumberable = PropertyDescriptor::Undefined;
+            desc.writable = PropertyDescriptor::Undefined;
+            __defineOwnProperty__(ctx, name, &desc, throwException);
+            return;
+        }
+
+        // clause 4
+        PropertyDescriptor tmp;
+        if (prototype)
+            pd = prototype->__getPropertyDescriptor__(ctx, name, &tmp);
+
+        // Clause 5
+        if (pd && pd->isAccessor()) {
+            assert(pd->set != 0);
+            FunctionObject *func = pd->set->asFunctionObject();
+            assert(func);
+
+            // ### unify with callFunction method
+            Context k;
+            Context *c = func->needsActivation ? ctx->engine->newContext() : &k;
+            Value that = Value::fromObject(this);
+            Value args[1];
+            args[0] = value;
+            c->initCallContext(ctx, &that, func, args, 1);
+            func->call(c);
+            c->leaveCallContext();
+            return;
+        }
+
+        PropertyDescriptor *p = members->insert(name);
+        *p = PropertyDescriptor::fromValue(value);
+    }
+
+  reject:
+    if (throwException)
+        __qmljs_throw_type_error(ctx);
+}
+
+// Section 8.12.6
+bool Object::__hasProperty__(Context *ctx, String *name) const
 {
     if (members)
         return members->find(name) != 0;
 
-    return prototype ? prototype->hasProperty(ctx, name) : false;
+    return prototype ? prototype->__hasProperty__(ctx, name) : false;
 }
 
-bool Object::deleteProperty(Context *, String *name, bool flag)
+// Section 8.12.7
+bool Object::__delete__(Context *ctx, String *name, bool throwException)
 {
-    Q_UNUSED(flag);
-
-    if (members)
-        return members->remove(name);
-
-    return false;
+    if (members) {
+        if (PropertyTableEntry *entry = members->findEntry(name)) {
+            if (entry->descriptor.isConfigurable()) {
+                members->remove(entry);
+                return true;
+            }
+            if (throwException)
+                __qmljs_throw_type_error(ctx);
+            return false;
+        }
+    }
+    return true;
 }
 
-bool Object::defineOwnProperty(Context *ctx, String *name, const Value &getter, const Value &setter, bool flag)
+// Section 8.12.9
+bool Object::__defineOwnProperty__(Context *ctx, String *name, PropertyDescriptor *desc, bool throwException)
 {
     if (!members)
         members = new PropertyTable();
 
-    PropertyDescriptor *p = getOwnProperty(ctx, name);
-    if (!p) {
+    // Clause 1
+    PropertyDescriptor *current = __getOwnProperty__(ctx, name);
+    if (!current) {
+        // clause 3
         if (!extensible)
+            goto reject;
+        // clause 4
+        *current = *desc;
+        current->fullyPopulated();
+        return true;
+    }
+
+    // clause 5
+    if (desc->isEmpty())
+        return true;
+
+    // clause 6
+    if (desc->isSubset(current))
+        return true;
+
+    // clause 7
+    if (!current->isConfigurable()) {
+        if (desc->isConfigurable())
+            goto reject;
+        if (desc->enumberable != PropertyDescriptor::Unset && desc->enumberable != current->enumberable)
             goto reject;
     }
 
+    // clause 8
+    if (desc->isGeneric())
+        goto accept;
+
+    // clause 9
+    if (current->isData() != desc->isData()) {
+        // 9a
+        if (!current->isConfigurable())
+            goto reject;
+        if (current->isData()) {
+            // 9b
+            current->type = PropertyDescriptor::Accessor;
+            current->writable = PropertyDescriptor::Undefined;
+            current->get = 0;
+            current->set = 0;
+        } else {
+            // 9c
+            current->type = PropertyDescriptor::Data;
+            current->writable = PropertyDescriptor::Unset;
+            current->value = Value::undefinedValue();
+        }
+    } else if (current->isData() && desc->isData()) { // clause 10
+        if (!current->isConfigurable() && !current->isWritable()) {
+            if (desc->isWritable() || !current->value.sameValue(desc->value))
+                goto reject;
+        }
+    } else { // clause 10
+        assert(current->isAccessor() && desc->isAccessor());
+        if (!current->isConfigurable()) {
+            if (current->get != desc->get || current->set != desc->set)
+                goto reject;
+        }
+    }
+
+  accept:
+
+    *current += *desc;
+    return true;
   reject:
-    if (flag)
+    if (throwException)
         __qmljs_throw_type_error(ctx);
     return false;
 }
@@ -211,11 +317,11 @@ String *ForEachIteratorObject::nextPropertyName()
     }
 }
 
-Value ArrayObject::getProperty(Context *ctx, String *name)
+Value ArrayObject::__get__(Context *ctx, String *name)
 {
     if (name->isEqualTo(ctx->engine->id_length))
         return Value::fromDouble(value.size());
-    return Object::getProperty(ctx, name);
+    return Object::__get__(ctx, name);
 }
 
 bool FunctionObject::hasInstance(Context *ctx, const Value &value)
@@ -225,7 +331,7 @@ bool FunctionObject::hasInstance(Context *ctx, const Value &value)
         return false;
     }
 
-    Value o = getProperty(ctx, ctx->engine->id_prototype);
+    Value o = __get__(ctx, ctx->engine->id_prototype);
     if (! o.isObject()) {
         ctx->throwTypeError();
         return false;
@@ -290,7 +396,7 @@ void ScriptFunction::call(VM::Context *ctx)
     function->code(ctx, function->codeData);
 }
 
-Value RegExpObject::getProperty(Context *ctx, String *name)
+Value RegExpObject::__get__(Context *ctx, String *name)
 {
     QString n = name->toQString();
     if (n == QLatin1String("source"))
@@ -303,21 +409,21 @@ Value RegExpObject::getProperty(Context *ctx, String *name)
         return Value::fromBoolean(value.patternOptions() & QRegularExpression::MultilineOption);
     else if (n == QLatin1String("lastIndex"))
         return lastIndex;
-    return Object::getProperty(ctx, name);
+    return Object::__get__(ctx, name);
 }
 
 
 void ScriptFunction::construct(VM::Context *ctx)
 {
     Object *obj = ctx->engine->newObject();
-    Value proto = getProperty(ctx, ctx->engine->id_prototype);
+    Value proto = __get__(ctx, ctx->engine->id_prototype);
     if (proto.isObject())
         obj->prototype = proto.objectValue();
     ctx->thisObject = Value::fromObject(obj);
     function->code(ctx, function->codeData);
 }
 
-PropertyDescriptor *ActivationObject::getPropertyDescriptor(Context *ctx, String *name, PropertyDescriptor *to_fill)
+PropertyDescriptor *ActivationObject::__getPropertyDescriptor__(Context *ctx, String *name, PropertyDescriptor *to_fill)
 {
     if (context) {
         for (unsigned int i = 0; i < context->varCount; ++i) {
@@ -347,17 +453,17 @@ PropertyDescriptor *ActivationObject::getPropertyDescriptor(Context *ctx, String
         }
     }
 
-    return Object::getPropertyDescriptor(ctx, name, to_fill);
+    return Object::__getPropertyDescriptor__(ctx, name, to_fill);
 }
 
-Value ArgumentsObject::getProperty(Context *ctx, String *name)
+Value ArgumentsObject::__get__(Context *ctx, String *name)
 {
     if (name->isEqualTo(ctx->engine->id_length))
         return Value::fromDouble(context->argumentCount);
-    return Object::getProperty(ctx, name);
+    return Object::__get__(ctx, name);
 }
 
-PropertyDescriptor *ArgumentsObject::getPropertyDescriptor(Context *ctx, String *name, PropertyDescriptor *to_fill)
+PropertyDescriptor *ArgumentsObject::__getPropertyDescriptor__(Context *ctx, String *name, PropertyDescriptor *to_fill)
 {
     if (context) {
         const quint32 i = Value::fromString(name).toUInt32(ctx);
@@ -367,7 +473,7 @@ PropertyDescriptor *ArgumentsObject::getPropertyDescriptor(Context *ctx, String 
         }
     }
 
-    return Object::getPropertyDescriptor(ctx, name, to_fill);
+    return Object::__getPropertyDescriptor__(ctx, name, to_fill);
 }
 
 ExecutionEngine::ExecutionEngine()
@@ -431,15 +537,15 @@ ExecutionEngine::ExecutionEngine()
     globalObject = Value::fromObject(glo);
     rootContext->activation = Value::fromObject(glo);
 
-    glo->setProperty(rootContext, identifier(QStringLiteral("Object")), objectCtor);
-    glo->setProperty(rootContext, identifier(QStringLiteral("String")), stringCtor);
-    glo->setProperty(rootContext, identifier(QStringLiteral("Number")), numberCtor);
-    glo->setProperty(rootContext, identifier(QStringLiteral("Boolean")), booleanCtor);
-    glo->setProperty(rootContext, identifier(QStringLiteral("Array")), arrayCtor);
-    glo->setProperty(rootContext, identifier(QStringLiteral("Function")), functionCtor);
-    glo->setProperty(rootContext, identifier(QStringLiteral("Date")), dateCtor);
-    glo->setProperty(rootContext, identifier(QStringLiteral("RegExp")), regExpCtor);
-    glo->setProperty(rootContext, identifier(QStringLiteral("Math")), Value::fromObject(newMathObject(rootContext)));
+    glo->__put__(rootContext, identifier(QStringLiteral("Object")), objectCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("String")), stringCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("Number")), numberCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("Boolean")), booleanCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("Array")), arrayCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("Function")), functionCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("Date")), dateCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("RegExp")), regExpCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("Math")), Value::fromObject(newMathObject(rootContext)));
 }
 
 Context *ExecutionEngine::newContext()
@@ -466,8 +572,8 @@ FunctionObject *ExecutionEngine::newScriptFunction(Context *scope, IR::Function 
 {
     ScriptFunction *f = new ScriptFunction(scope, function);
     Object *proto = scope->engine->newObject();
-    proto->setProperty(scope, scope->engine->id_constructor, Value::fromObject(f));
-    f->setProperty(scope, scope->engine->id_prototype, Value::fromObject(proto));
+    proto->__put__(scope, scope->engine->id_constructor, Value::fromObject(f));
+    f->__put__(scope, scope->engine->id_prototype, Value::fromObject(proto));
     f->prototype = scope->engine->functionPrototype;
     return f;
 }
