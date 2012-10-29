@@ -42,7 +42,7 @@ Rectangle {
                             anchors.fill: parent
                             anchors.margins: 10
                             radius: index * 20
-                            border.aligned: local._index == 1
+                            border.pixelAligned: local._index == 1
                             border.width: local._index == 0 ? 0 : 0.5
                             opacity: 0.5
                             color: "steelBlue"
@@ -58,7 +58,7 @@ Rectangle {
                             anchors.fill: parent
                             anchors.margins: 10
                             radius: index * 20
-                            border.aligned: local._index == 1
+                            border.pixelAligned: local._index == 1
                             border.width: local._index == 0 ? 0 : 0.5
                             opacity: 0.5
                             gradient: Gradient {

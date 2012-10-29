@@ -69,7 +69,7 @@ Rectangle {
                     anchors.margins: 10
                     width: 200
                     height: 100
-                    culling: model.bar
+                    cullMode: model.bar
                     property variant frontSource: front
                     property variant backSource: back
                     fragmentShader: "
