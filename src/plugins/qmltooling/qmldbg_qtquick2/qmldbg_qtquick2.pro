@@ -1,6 +1,7 @@
 TARGET = qmldbg_qtquick2
 QT       += qml-private quick-private core-private gui-private v8-private
 
+PLUGIN_TYPE = qmltooling
 load(qt_plugin)
 
 DESTDIR  = $$QT.qml.plugins/qmltooling

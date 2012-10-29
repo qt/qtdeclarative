@@ -1,6 +1,7 @@
 TARGET = qmldbg_ost
 QT       += qml network
 
+PLUGIN_TYPE = qmltooling
 load(qt_plugin)
 
 DESTDIR  = $$QT.qml.plugins/qmltooling
