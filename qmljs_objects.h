@@ -138,9 +138,9 @@ struct PropertyDescriptor {
         PropertyDescriptor pd;
         pd.value = v;
         pd.type = Data;
-        pd.writable = Set;
-        pd.enumberable = Set;
-        pd.configurable = Set;
+        pd.writable = Undefined;
+        pd.enumberable = Undefined;
+        pd.configurable = Undefined;
         return pd;
     }
     static inline PropertyDescriptor fromAccessor(Object *getter, Object *setter) {
@@ -149,8 +149,8 @@ struct PropertyDescriptor {
         pd.set = setter;
         pd.type = Accessor;
         pd.writable = Undefined;
-        pd.enumberable = Set;
-        pd.configurable = Set;
+        pd.enumberable = Undefined;
+        pd.configurable = Undefined;
         return pd;
     }
 

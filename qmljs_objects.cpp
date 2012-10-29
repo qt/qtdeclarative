@@ -153,9 +153,6 @@ void Object::__put__(Context *ctx, String *name, const Value &value, bool throwE
 
             // ### to simplify and speed up we should expand the relevant parts here (clauses 6,7,9,10,12,13)
             PropertyDescriptor desc = PropertyDescriptor::fromValue(value);
-            desc.configurable = PropertyDescriptor::Undefined;
-            desc.enumberable = PropertyDescriptor::Undefined;
-            desc.writable = PropertyDescriptor::Undefined;
             __defineOwnProperty__(ctx, name, &desc, throwException);
             return;
         }
@@ -185,6 +182,9 @@ void Object::__put__(Context *ctx, String *name, const Value &value, bool throwE
 
         PropertyDescriptor *p = members->insert(name);
         *p = PropertyDescriptor::fromValue(value);
+        p->configurable = PropertyDescriptor::Set;
+        p->enumberable = PropertyDescriptor::Set;
+        p->writable = PropertyDescriptor::Set;
     }
 
   reject:
@@ -312,7 +312,7 @@ String *ForEachIteratorObject::nextPropertyName()
         }
         p = current->members->_properties[tableIndex];
         // ### check that it's not a repeated attribute
-        if (p /*&& !(p->attributes & DontEnumAttribute)*/)
+        if (p && p->descriptor.isEnumerable())
             return p->name;
     }
 }
@@ -431,6 +431,7 @@ PropertyDescriptor *ActivationObject::__getPropertyDescriptor__(Context *ctx, St
             if (__qmljs_string_equal(var, name)) {
                 *to_fill = PropertyDescriptor::fromValue(context->locals[i]);
                 to_fill->writable = PropertyDescriptor::Set;
+                to_fill->enumberable = PropertyDescriptor::Set;
                 return to_fill;
             }
         }
@@ -439,6 +440,7 @@ PropertyDescriptor *ActivationObject::__getPropertyDescriptor__(Context *ctx, St
             if (__qmljs_string_equal(formal, name)) {
                 *to_fill = PropertyDescriptor::fromValue(context->arguments[i]);
                 to_fill->writable = PropertyDescriptor::Set;
+                to_fill->enumberable = PropertyDescriptor::Set;
                 return to_fill;
             }
         }
@@ -449,6 +451,8 @@ PropertyDescriptor *ActivationObject::__getPropertyDescriptor__(Context *ctx, St
             }
 
             *to_fill = PropertyDescriptor::fromValue(arguments);
+            to_fill->writable = PropertyDescriptor::Unset;
+            to_fill->enumberable = PropertyDescriptor::Unset;
             return to_fill;
         }
     }
@@ -469,6 +473,8 @@ PropertyDescriptor *ArgumentsObject::__getPropertyDescriptor__(Context *ctx, Str
         const quint32 i = Value::fromString(name).toUInt32(ctx);
         if (i < context->argumentCount) {
             *to_fill = PropertyDescriptor::fromValue(context->arguments[i]);
+            to_fill->writable = PropertyDescriptor::Unset;
+            to_fill->enumberable = PropertyDescriptor::Unset;
             return to_fill;
         }
     }
