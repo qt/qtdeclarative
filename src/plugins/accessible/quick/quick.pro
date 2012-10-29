@@ -1,5 +1,4 @@
 TARGET  = qtaccessiblequick
-DESTDIR = $$QT.gui.plugins/accessible
 
 PLUGIN_TYPE = accessible
 load(qt_plugin)
