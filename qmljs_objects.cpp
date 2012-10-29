@@ -116,7 +116,7 @@ void Object::setProperty(Context *ctx, String *name, const Value &value, bool th
         return;
     }
 
-    if (! members)
+    if (!members)
         members = new PropertyTable();
 
     PropertyDescriptor *pd = getOwnProperty(ctx, name);
@@ -322,7 +322,7 @@ PropertyDescriptor *ActivationObject::getPropertyDescriptor(Context *ctx, String
     if (context) {
         for (unsigned int i = 0; i < context->varCount; ++i) {
             String *var = context->vars[i];
-            if (__qmljs_string_equal(context, var, name)) {
+            if (__qmljs_string_equal(var, name)) {
                 *to_fill = PropertyDescriptor::fromValue(context->locals[i]);
                 to_fill->writable = PropertyDescriptor::Set;
                 return to_fill;
@@ -330,7 +330,7 @@ PropertyDescriptor *ActivationObject::getPropertyDescriptor(Context *ctx, String
         }
         for (unsigned int i = 0; i < context->formalCount; ++i) {
             String *formal = context->formals[i];
-            if (__qmljs_string_equal(context, formal, name)) {
+            if (__qmljs_string_equal(formal, name)) {
                 *to_fill = PropertyDescriptor::fromValue(context->arguments[i]);
                 to_fill->writable = PropertyDescriptor::Set;
                 return to_fill;

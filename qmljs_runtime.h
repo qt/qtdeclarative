@@ -241,6 +241,9 @@ struct Value
     ActivationObject *asArgumentsObject() const;
 
     Value property(Context *ctx, String *name) const;
+
+    // Section 9.12
+    bool sameValue(Value other);
 };
 
 extern "C" {
@@ -281,7 +284,7 @@ int __qmljs_string_length(Context *ctx, String *string);
 double __qmljs_string_to_number(Context *ctx, String *string);
 Value __qmljs_string_from_number(Context *ctx, double number);
 Bool __qmljs_string_compare(Context *ctx, String *left, String *right);
-Bool __qmljs_string_equal(Context *ctx, String *left, String *right);
+Bool __qmljs_string_equal(String *left, String *right);
 String *__qmljs_string_concat(Context *ctx, String *first, String *second);
 String *__qmljs_identifier_from_utf8(Context *ctx, const char *s);
 
@@ -321,7 +324,7 @@ Bool __qmljs_is_callable(Value value, Context *ctx);
 Value __qmljs_default_value(Value value, Context *ctx, int typeHint);
 
 Bool __qmljs_equal(Value x, Value y, Context *ctx);
-Bool __qmljs_strict_equal(Value x, Value y, Context *ctx);
+Bool __qmljs_strict_equal(Value x, Value y);
 
 // unary operators
 Value __qmljs_uplus(Value value, Context *ctx);
@@ -535,6 +538,14 @@ inline Value Value::fromObject(Object *o)
     v.o = o;
 #endif
     return v;
+}
+
+inline bool Value::sameValue(Value other) {
+    if (val == other.val)
+        return true;
+    if (isString() && other.isString())
+        return __qmljs_string_equal(stringValue(), other.stringValue());
+    return false;
 }
 
 #include <qmljs_math.h>
@@ -979,15 +990,15 @@ inline Value __qmljs_ne(Value left, Value right, Context *ctx)
     return Value::fromBoolean(!__qmljs_cmp_eq(left, right, ctx));
 }
 
-inline Value __qmljs_se(Value left, Value right, Context *ctx)
+inline Value __qmljs_se(Value left, Value right, Context *)
 {
-    bool r = __qmljs_strict_equal(left, right, ctx);
+    bool r = __qmljs_strict_equal(left, right);
     return Value::fromBoolean(r);
 }
 
-inline Value __qmljs_sne(Value left, Value right, Context *ctx)
+inline Value __qmljs_sne(Value left, Value right, Context *)
 {
-    bool r = ! __qmljs_strict_equal(left, right, ctx);
+    bool r = ! __qmljs_strict_equal(left, right);
     return Value::fromBoolean(r);
 }
 
@@ -1071,7 +1082,7 @@ inline Bool __qmljs_cmp_eq(Value left, Value right, Context *ctx)
     if (left.val == right.val)
         return true;
     if (left.isString() && right.isString())
-        return __qmljs_string_equal(ctx, left.stringValue(), right.stringValue());
+        return __qmljs_string_equal(left.stringValue(), right.stringValue());
 
     return __qmljs_equal(left, right, ctx);
 }
@@ -1081,14 +1092,14 @@ inline Bool __qmljs_cmp_ne(Value left, Value right, Context *ctx)
     return !__qmljs_cmp_eq(left, right, ctx);
 }
 
-inline Bool __qmljs_cmp_se(Value left, Value right, Context *ctx)
+inline Bool __qmljs_cmp_se(Value left, Value right, Context *)
 {
-    return __qmljs_strict_equal(left, right, ctx);
+    return __qmljs_strict_equal(left, right);
 }
 
-inline Bool __qmljs_cmp_sne(Value left, Value right, Context *ctx)
+inline Bool __qmljs_cmp_sne(Value left, Value right, Context *)
 {
-    return ! __qmljs_strict_equal(left, right, ctx);
+    return ! __qmljs_strict_equal(left, right);
 }
 
 inline Bool __qmljs_cmp_instanceof(Value left, Value right, Context *ctx)
@@ -1103,12 +1114,12 @@ inline uint __qmljs_cmp_in(Value left, Value right, Context *ctx)
     return v.booleanValue();
 }
 
-inline Bool __qmljs_strict_equal(Value x, Value y, Context *ctx)
+inline Bool __qmljs_strict_equal(Value x, Value y)
 {
     if (x.rawValue() == y.rawValue())
         return true;
     if (x.isString() && y.isString())
-        return __qmljs_string_equal(ctx, x.stringValue(), y.stringValue());
+        return __qmljs_string_equal(x.stringValue(), y.stringValue());
     return false;
 }
 
