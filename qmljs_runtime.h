@@ -260,7 +260,6 @@ Value __qmljs_construct_value(Context *context, Value func, Value *args, int arg
 Value __qmljs_builtin_typeof(Value val, Context *context);
 void __qmljs_builtin_throw(Value val, Context *context);
 
-
 // constructors
 Value __qmljs_init_closure(IR::Function *clos, Context *ctx);
 Value __qmljs_init_native_function(void (*code)(Context *), Context *ctx);

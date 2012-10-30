@@ -1051,9 +1051,12 @@ bool Codegen::visit(ConditionalExpression *ast)
     return false;
 }
 
-bool Codegen::visit(DeleteExpression *)
+bool Codegen::visit(DeleteExpression *ast)
 {
-    assert(!"not implemented");
+    Result expr = expression(ast->expression);
+    IR::ExprList *args = _function->New<IR::ExprList>();
+    args->init(*expr);
+    _expr.code = call(_block->NAME(IR::Name::builtin_delete, ast->deleteToken.startLine, ast->deleteToken.startColumn), args);
     return false;
 }
 

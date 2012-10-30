@@ -141,24 +141,29 @@ void InstructionSelection::operator()(IR::Function *function)
         linkBuffer.patch(cbl.ptr, linkBuffer.locationOf(target));
     }
 
+    static bool showCode = !qgetenv("SHOW_CODE").isNull();
+    if (showCode) {
 #if OS(LINUX)
-    char* disasmOutput = 0;
-    size_t disasmLength = 0;
-    FILE* disasmStream = open_memstream(&disasmOutput, &disasmLength);
-    WTF::setDataFile(disasmStream);
+        char* disasmOutput = 0;
+        size_t disasmLength = 0;
+        FILE* disasmStream = open_memstream(&disasmOutput, &disasmLength);
+        WTF::setDataFile(disasmStream);
 #endif
 
-    QByteArray name = _function->name->toUtf8();
-    _function->codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
+        QByteArray name = _function->name->toUtf8();
+        _function->codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
 
-    WTF::setDataFile(stderr);
+        WTF::setDataFile(stderr);
 #if OS(LINUX)
-    fclose(disasmStream);
+        fclose(disasmStream);
 #if CPU(X86) || CPU(X86_64)
-    printDisassembledOutputWithCalls(disasmOutput, functions);
+        printDisassembledOutputWithCalls(disasmOutput, functions);
 #endif
-    free(disasmOutput);
+        free(disasmOutput);
 #endif
+    } else {
+        _function->codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
+    }
 
     _function->code = (void (*)(VM::Context *, const uchar *)) _function->codeRef.code().executableAddress();
 
@@ -205,13 +210,23 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
         generateFunctionCall(result, __qmljs_builtin_typeof, arg, ContextRegister);
     }
         break;
-    case IR::Name::builtin_delete:
-        Q_UNREACHABLE();
+    case IR::Name::builtin_delete: {
+        if (IR::Member *m = call->args->expr->asMember()) {
+            generateFunctionCall(result, __qmljs_delete_member, ContextRegister, m->base->asTemp(), identifier(*m->name));
+            return;
+        } else if (IR::Subscript *ss = call->args->expr->asSubscript()) {
+            generateFunctionCall(result, __qmljs_delete_subscript, ContextRegister, ss->base->asTemp(), ss->index->asTemp());
+            return;
+        } else {
+            assert(!"builtin_delete: unimplemented");
+            Q_UNIMPLEMENTED();
+        }
         break;
+    }
     case IR::Name::builtin_throw: {
         IR::Temp *arg = call->args->expr->asTemp();
         assert(arg != 0);
-        generateFunctionCall(Void, __qmljs_builtin_throw, arg, ContextRegister);
+        generateFunctionCall(result, __qmljs_builtin_throw, arg, ContextRegister);
     }
         break;
     case IR::Name::builtin_create_exception_handler:
