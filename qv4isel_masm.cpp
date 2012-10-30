@@ -238,6 +238,7 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
         break;
     case IR::Name::builtin_get_exception:
         generateFunctionCall(result, __qmljs_get_exception, ContextRegister);
+        break;
     case IR::Name::builtin_foreach_iterator_object: {
         IR::Temp *arg = call->args->expr->asTemp();
         assert(arg != 0);
