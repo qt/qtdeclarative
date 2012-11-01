@@ -53,6 +53,14 @@
 #include <qnumeric.h>
 #include <cassert>
 
+#include <private/qqmljsengine_p.h>
+#include <private/qqmljslexer_p.h>
+#include <private/qqmljsparser_p.h>
+#include <private/qqmljsast_p.h>
+#include <qv4ir_p.h>
+#include <qv4codegen_p.h>
+#include <qv4isel_masm_p.h>
+
 #ifndef Q_WS_WIN
 #  include <time.h>
 #  ifndef Q_OS_VXWORKS
@@ -1726,14 +1734,58 @@ FunctionCtor::FunctionCtor(Context *scope)
 {
 }
 
+// 15.3.2
 void FunctionCtor::construct(Context *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Function.prototype.constructor"));
+    QString args;
+    QString body;
+    if (ctx->argumentCount > 0)
+        body = ctx->arguments[ctx->argumentCount - 1].toString(ctx)->toQString();
+
+    for (uint i = 0; i < ctx->argumentCount - 1; ++i) {
+        if (i)
+            args += QLatin1String(", ");
+        args += ctx->arguments[i].toString(ctx)->toQString();
+    }
+
+    QString function = QLatin1String("function(") + args + QLatin1String("){") + body + QLatin1String("}");
+
+    QQmlJS::Engine ee, *engine = &ee;
+    Lexer lexer(engine);
+    lexer.setCode(function, 1, false);
+    Parser parser(engine);
+
+    const bool parsed = parser.parseExpression();
+
+    if (!parsed)
+        // ### Syntax error
+        __qmljs_throw_type_error(ctx);
+
+    using namespace AST;
+    FunctionExpression *fe = AST::cast<FunctionExpression *>(parser.rootNode());
+    if (!fe)
+        // ### Syntax error
+        __qmljs_throw_type_error(ctx);
+
+    IR::Module module;
+
+    Codegen cg;
+    IR::Function *irf = cg(fe, &module);
+
+    uchar *code = 0;
+    MASM::InstructionSelection isel(ctx->engine, &module, code);
+    isel(irf);
+
+    ctx->thisObject = Value::fromObject(new ScriptFunction(ctx->engine->rootContext, irf));
 }
 
+// 15.3.1: This is equivalent to new Function(...)
 void FunctionCtor::call(Context *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Function"));
+    Value v = ctx->thisObject;
+    construct(ctx);
+    ctx->result = ctx->thisObject;
+    ctx->thisObject = v;
 }
 
 void FunctionPrototype::init(Context *ctx, const Value &ctor)

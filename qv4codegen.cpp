@@ -259,8 +259,10 @@ protected:
 
     virtual bool visit(FunctionExpression *ast)
     {
-        _env->hasNestedFunctions = true;
-        _env->enter(ast->name.toString());
+        if (_env) {
+            _env->hasNestedFunctions = true;
+            _env->enter(ast->name.toString());
+        }
         enterEnvironment(ast);
         return true;
     }
@@ -322,6 +324,27 @@ IR::Function *Codegen::operator()(Program *node, IR::Module *module, Mode mode)
 
     return globalCode;
 }
+
+IR::Function *Codegen::operator()(AST::FunctionExpression *ast, IR::Module *module)
+{
+    _module = module;
+    _env = 0;
+
+    ScanFunctions scan(this);
+    scan(ast);
+
+    IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
+
+    foreach (IR::Function *function, _module->functions) {
+        linearize(function);
+    }
+
+    qDeleteAll(_envMap);
+    _envMap.clear();
+
+    return function;
+}
+
 
 void Codegen::enterEnvironment(Node *node)
 {

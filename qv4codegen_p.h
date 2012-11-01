@@ -62,6 +62,7 @@ public:
     };
 
     IR::Function *operator()(AST::Program *ast, IR::Module *module, Mode mode = GlobalCode);
+    IR::Function *operator()(AST::FunctionExpression *ast, IR::Module *module);
 
 protected:
     enum Format { ex, cx, nx };
