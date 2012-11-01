@@ -1,2 +1,2 @@
-QT = qml quick qmltest qmldevtools
+QT = qml quick qmltest
 load(qt_headersclean)
