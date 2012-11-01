@@ -1115,6 +1115,8 @@ inline uint __qmljs_cmp_in(Value left, Value right, Context *ctx)
 
 inline Bool __qmljs_strict_equal(Value x, Value y)
 {
+    if (x.isDouble() || y.isDouble())
+        return x.asDouble() == y.asDouble();
     if (x.rawValue() == y.rawValue())
         return true;
     if (x.isString() && y.isString())
