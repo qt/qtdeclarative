@@ -294,6 +294,23 @@ struct RegExpPrototype: RegExpObject
     static void method_toString(Context *ctx);
 };
 
+struct ErrorCtor: FunctionObject
+{
+    ErrorCtor(Context *scope);
+
+    virtual void construct(Context *ctx);
+    virtual void call(Context *ctx);
+};
+
+struct ErrorPrototype: ErrorObject
+{
+    // ### shouldn't be undefined
+    ErrorPrototype(): ErrorObject(Value::undefinedValue()) {}
+    void init(Context *ctx, const Value &ctor);
+
+    static void method_toString(Context *ctx);
+};
+
 struct MathObject: Object
 {
     MathObject(Context *ctx);

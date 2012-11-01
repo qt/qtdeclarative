@@ -82,6 +82,7 @@ struct ArrayPrototype;
 struct FunctionPrototype;
 struct DatePrototype;
 struct RegExpPrototype;
+struct ErrorPrototype;
 
 struct String {
     String(const QString &text)
@@ -549,6 +550,7 @@ struct ExecutionEngine
     Value functionCtor;
     Value dateCtor;
     Value regExpCtor;
+    Value errorCtor;
 
     ObjectPrototype *objectPrototype;
     StringPrototype *stringPrototype;
@@ -558,6 +560,7 @@ struct ExecutionEngine
     FunctionPrototype *functionPrototype;
     DatePrototype *datePrototype;
     RegExpPrototype *regExpPrototype;
+    ErrorPrototype *errorPrototype;
 
     QHash<QString, String *> identifiers;
 

@@ -2583,6 +2583,67 @@ void RegExpPrototype::method_toString(Context *ctx)
 }
 
 //
+// ErrorCtr
+//
+ErrorCtor::ErrorCtor(Context *scope)
+    : FunctionObject(scope)
+{
+}
+
+void ErrorCtor::construct(Context *ctx)
+{
+    ctx->thisObject = Value::fromObject(new ErrorObject(ctx->argument(0)));
+}
+
+void ErrorCtor::call(Context *ctx)
+{
+    Value that = ctx->thisObject;
+    construct(ctx);
+    ctx->result = ctx->thisObject;
+    ctx->thisObject = that;
+}
+
+void ErrorPrototype::init(Context *ctx, const Value &ctor)
+{
+    ctor.objectValue()->__put__(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    __put__(ctx, QStringLiteral("constructor"), ctor);
+    __put__(ctx, QStringLiteral("toString"), method_toString, 0);
+}
+
+void ErrorPrototype::method_toString(Context *ctx)
+{
+    Object *o = ctx->thisObject.asObject();
+    if (!o)
+        __qmljs_throw_type_error(ctx);
+
+    String n(QString::fromLatin1("name"));
+    Value name = o->__get__(ctx, &n);
+    QString qname;
+    if (name.isUndefined())
+        qname = QString::fromLatin1("Error");
+    else
+        qname = __qmljs_to_string(name, ctx).stringValue()->toQString();
+
+    String m(QString::fromLatin1("message"));
+    Value message = o->__get__(ctx, &m);
+    QString qmessage;
+    if (!message.isUndefined())
+        qmessage = __qmljs_to_string(message, ctx).stringValue()->toQString();
+
+    QString str;
+    if (qname.isEmpty()) {
+        str = qmessage;
+    } else if (qmessage.isEmpty()) {
+        str = qname;
+    } else {
+        str = qname + QLatin1String(": ") + qmessage;
+    }
+
+    ctx->result = Value::fromString(ctx, str);
+}
+
+
+//
 // Math object
 //
 MathObject::MathObject(Context *ctx)
@@ -2833,3 +2894,4 @@ void MathObject::method_tan(Context *ctx)
     else
         ctx->result = Value::fromDouble(::tan(v));
 }
+

@@ -501,6 +501,7 @@ ExecutionEngine::ExecutionEngine()
     datePrototype = new DatePrototype();
     functionPrototype = new FunctionPrototype(rootContext);
     regExpPrototype = new RegExpPrototype();
+    errorPrototype = new ErrorPrototype();
 
     stringPrototype->prototype = objectPrototype;
     numberPrototype->prototype = objectPrototype;
@@ -509,6 +510,7 @@ ExecutionEngine::ExecutionEngine()
     datePrototype->prototype = objectPrototype;
     functionPrototype->prototype = objectPrototype;
     regExpPrototype->prototype = objectPrototype;
+    errorPrototype->prototype = objectPrototype;
 
     objectCtor = Value::fromObject(new ObjectCtor(rootContext));
     stringCtor = Value::fromObject(new StringCtor(rootContext));
@@ -518,6 +520,7 @@ ExecutionEngine::ExecutionEngine()
     functionCtor = Value::fromObject(new FunctionCtor(rootContext));
     dateCtor = Value::fromObject(new DateCtor(rootContext));
     regExpCtor = Value::fromObject(new RegExpCtor(rootContext));
+    errorCtor = Value::fromObject(new ErrorCtor(rootContext));
 
     stringCtor.objectValue()->prototype = functionPrototype;
     numberCtor.objectValue()->prototype = functionPrototype;
@@ -526,6 +529,7 @@ ExecutionEngine::ExecutionEngine()
     functionCtor.objectValue()->prototype = functionPrototype;
     dateCtor.objectValue()->prototype = functionPrototype;
     regExpCtor.objectValue()->prototype = functionPrototype;
+    errorCtor.objectValue()->prototype = functionPrototype;
 
     objectPrototype->init(rootContext, objectCtor);
     stringPrototype->init(rootContext, stringCtor);
@@ -535,6 +539,7 @@ ExecutionEngine::ExecutionEngine()
     datePrototype->init(rootContext, dateCtor);
     functionPrototype->init(rootContext, functionCtor);
     regExpPrototype->init(rootContext, regExpCtor);
+    errorPrototype->init(rootContext, errorCtor);
 
     //
     // set up the global object
@@ -551,6 +556,7 @@ ExecutionEngine::ExecutionEngine()
     glo->__put__(rootContext, identifier(QStringLiteral("Function")), functionCtor);
     glo->__put__(rootContext, identifier(QStringLiteral("Date")), dateCtor);
     glo->__put__(rootContext, identifier(QStringLiteral("RegExp")), regExpCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("Error")), errorCtor);
     glo->__put__(rootContext, identifier(QStringLiteral("Math")), Value::fromObject(newMathObject(rootContext)));
     glo->__put__(rootContext, identifier(QStringLiteral("undefined")), Value::undefinedValue());
     glo->__put__(rootContext, identifier(QStringLiteral("NaN")), Value::fromDouble(nan("")));
