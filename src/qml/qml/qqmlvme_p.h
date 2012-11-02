@@ -62,6 +62,7 @@
 #include <QtCore/QString>
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qtypeinfo.h>
 
 #include <private/qv8_p.h>
 #include <private/qqmlengine_p.h>
@@ -87,8 +88,20 @@ namespace QQmlVMETypes {
         int type;
         QQmlListProperty<void> qListProperty;
     };
+    struct State {
+        enum Flag { Deferred = 0x00000001 };
+
+        State() : flags(0), context(0), compiledData(0), instructionStream(0) {}
+        quint32 flags;
+        QQmlContextData *context;
+        QQmlCompiledData *compiledData;
+        const char *instructionStream;
+        QBitField bindingSkipList;
+    };
 }
 Q_DECLARE_TYPEINFO(QQmlVMETypes::List, Q_PRIMITIVE_TYPE  | Q_MOVABLE_TYPE);
+template<>
+class QTypeInfo<QQmlVMETypes::State> : public QTypeInfoMerger<QQmlVMETypes::State, QBitField> {}; //Q_DECLARE_TYPEINFO
 
 class Q_QML_PRIVATE_EXPORT QQmlVME
 {
@@ -161,17 +174,7 @@ private:
     QQmlGuardedContextData rootContext;
     QQmlGuardedContextData creationContext;
 
-    struct State {
-        enum Flag { Deferred = 0x00000001 };
-
-        State() : flags(0), context(0), compiledData(0), instructionStream(0) {}
-        quint32 flags;
-        QQmlContextData *context;
-        QQmlCompiledData *compiledData;
-        const char *instructionStream;
-        QBitField bindingSkipList;
-    };
-
+    typedef QQmlVMETypes::State State;
     QStack<State> states;
 
     static void blank(QFiniteStack<QQmlParserStatus *> &);

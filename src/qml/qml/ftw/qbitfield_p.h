@@ -54,6 +54,7 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <QtCore/qtypeinfo.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -159,6 +160,8 @@ bool QBitField::testBit(int b) const
         return false;
     }
 }
+
+Q_DECLARE_TYPEINFO(QBitField, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
 
