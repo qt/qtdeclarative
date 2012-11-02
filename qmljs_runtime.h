@@ -572,7 +572,7 @@ struct Context {
     unsigned int varCount;
     int calledAsConstructor;
 
-    Value *lookupPropertyDescriptor(String *name);
+    PropertyDescriptor *lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp);
 
     inline Value argument(unsigned int index = 0)
     {

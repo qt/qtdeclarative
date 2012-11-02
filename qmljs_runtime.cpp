@@ -252,14 +252,12 @@ void Context::init(ExecutionEngine *eng)
     calledAsConstructor = false;
 }
 
-Value *Context::lookupPropertyDescriptor(String *name)
+PropertyDescriptor *Context::lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp)
 {
     for (Context *ctx = this; ctx; ctx = ctx->parent) {
-        if (ctx->activation.isObject()) {
-            PropertyDescriptor tmp;
-            if (PropertyDescriptor *pd = ctx->activation.objectValue()->__getPropertyDescriptor__(this, name, &tmp)) {
-                return &pd->value;
-            }
+        if (Object *act = ctx->activation.asObject()) {
+            if (PropertyDescriptor *pd = act->__getPropertyDescriptor__(this, name, tmp))
+                return pd;
         }
     }
     return 0;
@@ -496,88 +494,99 @@ Value __qmljs_in(Value left, Value right, Context *ctx)
 
 void __qmljs_inplace_bit_and_name(Value value, String *name, Context *ctx)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        *prop = __qmljs_bit_and(*prop, value, ctx);
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+        prop->value = __qmljs_bit_and(prop->value, value, ctx);
     else
         ctx->throwReferenceError(Value::fromString(name));
 }
 
 void __qmljs_inplace_bit_or_name(Value value, String *name, Context *ctx)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        *prop = __qmljs_bit_or(*prop, value, ctx);
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+        prop->value = __qmljs_bit_or(prop->value, value, ctx);
     else
         ctx->throwReferenceError(Value::fromString(name));
 }
 
 void __qmljs_inplace_bit_xor_name(Value value, String *name, Context *ctx)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        *prop = __qmljs_bit_xor(*prop, value, ctx);
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+        prop->value = __qmljs_bit_xor(prop->value, value, ctx);
     else
         ctx->throwReferenceError(Value::fromString(name));
 }
 
 void __qmljs_inplace_add_name(Value value, String *name, Context *ctx)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        *prop = __qmljs_add(*prop, value, ctx);
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+        prop->value = __qmljs_add(prop->value, value, ctx);
     else
         ctx->throwReferenceError(Value::fromString(name));
 }
 
 void __qmljs_inplace_sub_name(Value value, String *name, Context *ctx)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        *prop = __qmljs_sub(*prop, value, ctx);
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+        prop->value = __qmljs_sub(prop->value, value, ctx);
     else
         ctx->throwReferenceError(Value::fromString(name));
 }
 
 void __qmljs_inplace_mul_name(Value value, String *name, Context *ctx)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        *prop = __qmljs_mul(*prop, value, ctx);
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+        prop->value = __qmljs_mul(prop->value, value, ctx);
     else
         ctx->throwReferenceError(Value::fromString(name));
 }
 
 void __qmljs_inplace_div_name(Value value, String *name, Context *ctx)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        *prop = __qmljs_div(*prop, value, ctx);
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+        prop->value = __qmljs_div(prop->value, value, ctx);
     else
         ctx->throwReferenceError(Value::fromString(name));
 }
 
 void __qmljs_inplace_mod_name(Value value, String *name, Context *ctx)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        *prop = __qmljs_mod(*prop, value, ctx);
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+        prop->value = __qmljs_mod(prop->value, value, ctx);
     else
         ctx->throwReferenceError(Value::fromString(name));
 }
 
 void __qmljs_inplace_shl_name(Value value, String *name, Context *ctx)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        *prop = __qmljs_shl(*prop, value, ctx);
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+        prop->value = __qmljs_shl(prop->value, value, ctx);
     else
         ctx->throwReferenceError(Value::fromString(name));
 }
 
 void __qmljs_inplace_shr_name(Value value, String *name, Context *ctx)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        *prop = __qmljs_shr(*prop, value, ctx);
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+        prop->value = __qmljs_shr(prop->value, value, ctx);
     else
         ctx->throwReferenceError(Value::fromString(name));
 }
 
 void __qmljs_inplace_ushr_name(Value value, String *name, Context *ctx)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        *prop = __qmljs_ushr(*prop, value, ctx);
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+        prop->value = __qmljs_ushr(prop->value, value, ctx);
     else
         ctx->throwReferenceError(Value::fromString(name));
 }
@@ -1043,8 +1052,9 @@ Value __qmljs_foreach_next_property_name(Value foreach_iterator)
 
 void __qmljs_set_activation_property(Context *ctx, String *name, Value value)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        *prop = value;
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+        prop->value = value;
     else
         ctx->engine->globalObject.objectValue()->__put__(ctx, name, value);
 }
@@ -1093,8 +1103,9 @@ Value __qmljs_get_property(Context *ctx, Value object, String *name)
 
 Value __qmljs_get_activation_property(Context *ctx, String *name)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        return *prop;
+    PropertyDescriptor tmp;
+    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+        return prop->value;
     ctx->throwReferenceError(Value::fromString(name));
     return Value::undefinedValue();
 }
@@ -1197,12 +1208,13 @@ Value __qmljs_call_value(Context *context, Value thisObject, Value func, Value *
 
 Value __qmljs_construct_activation_property(Context *context, String *name, Value *args, int argc)
 {
-    Value *func = context->lookupPropertyDescriptor(name);
+    PropertyDescriptor tmp;
+    PropertyDescriptor *func = context->lookupPropertyDescriptor(name, &tmp);
     if (! func) {
         context->throwReferenceError(Value::fromString(name));
         return Value::undefinedValue();
     }
-    return __qmljs_construct_value(context, *func, args, argc);
+    return __qmljs_construct_value(context, func->value, args, argc);
 }
 
 Value __qmljs_construct_value(Context *context, Value func, Value *args, int argc)
