@@ -104,7 +104,7 @@ public:
             , viewSize(-1), startMargin(0), endMargin(0)
             , origin(0)
             , transitionTo(0)
-            , continuousFlickVelocity(0), vTime(0)
+            , continuousFlickVelocity(0), velocityTime(), vTime(0)
             , smoothVelocity(fp), atEnd(false), atBeginning(true)
             , transitionToSet(false)
             , fixingUp(false), inOvershoot(false), moving(false), flicking(false)
