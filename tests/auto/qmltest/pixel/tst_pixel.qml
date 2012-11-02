@@ -52,6 +52,7 @@ Rectangle {
         when: windowShown
 
         function test_pixel() {
+           skip("test_pixel() is unstable, QTBUG-27671")
            var img = grabImage(rect);
            compare(img.pixel(20, 20), Qt.rgba(255, 0, 0, 255));
            compare(img.red(1,1), 255);

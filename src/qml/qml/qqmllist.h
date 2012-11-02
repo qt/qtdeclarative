@@ -69,10 +69,11 @@ public:
     QQmlListProperty(QObject *o, QList<T *> &list)
         : object(o), data(&list), append(qlist_append), count(qlist_count), at(qlist_at),
           clear(qlist_clear), dummy1(0), dummy2(0) {}
-    QQmlListProperty(QObject *o, void *d, AppendFunction a, CountFunction c = 0, AtFunction t = 0,
-                    ClearFunction r = 0)
+    QQmlListProperty(QObject *o, void *d, AppendFunction a, CountFunction c, AtFunction t,
+                    ClearFunction r )
         : object(o), data(d), append(a), count(c), at(t), clear(r), dummy1(0), dummy2(0) {}
-
+    QQmlListProperty(QObject *o, void *d, CountFunction c, AtFunction t)
+        : object(o), data(d), append(0), count(c), at(t), clear(0), dummy1(0), dummy2(0) {}
     bool operator==(const QQmlListProperty &o) const {
         return object == o.object &&
                data == o.data &&
@@ -131,6 +132,9 @@ public:
     bool canAt() const;
     bool canClear() const;
     bool canCount() const;
+
+    bool isManipulable() const;
+    bool isReadable() const;
 
     bool append(QObject *) const;
     QObject *at(int) const;

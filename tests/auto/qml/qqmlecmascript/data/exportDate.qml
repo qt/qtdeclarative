@@ -12,7 +12,7 @@ MyTypeObject {
 
         // The test date is 2009-5-12 00:00:01 (local time)
         var compare = new Date(2009, 5-1, 12, 0, 0, 1)
-        var compareOffset = new Date().getTimezoneOffset()
+        var compareOffset = compare.getTimezoneOffset()
 
         // The date is already in local time, so we can use the partial values directly
         var dtAdjusted = dt

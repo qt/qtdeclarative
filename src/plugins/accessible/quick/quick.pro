@@ -1,7 +1,8 @@
 TARGET  = qtaccessiblequick
-DESTDIR = $$QT.gui.plugins/accessible
 
+PLUGIN_TYPE = accessible
 load(qt_plugin)
+
 include ($$PWD/../shared/qaccessiblebase.pri)
 
 QT += core-private gui-private v8-private qml-private quick-private

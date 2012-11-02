@@ -61,8 +61,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Qml)
-
 class QDebugMessageServicePrivate;
 
 class QDebugMessageService : public QQmlDebugService

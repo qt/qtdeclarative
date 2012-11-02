@@ -222,14 +222,14 @@ void QQuickWindow::hideEvent(QHideEvent *)
 void QQuickWindow::focusOutEvent(QFocusEvent *)
 {
     Q_D(QQuickWindow);
-    d->rootItem->setFocus(false);
+    d->contentItem->setFocus(false);
 }
 
 /*! \reimp */
 void QQuickWindow::focusInEvent(QFocusEvent *)
 {
     Q_D(QQuickWindow);
-    d->rootItem->setFocus(true);
+    d->contentItem->setFocus(true);
     d->updateFocusItemTransform();
 }
 
@@ -309,10 +309,10 @@ void QQuickWindowPrivate::syncSceneGraph()
 
     emit q->beforeSynchronizing();
     if (!renderer) {
-        forceUpdate(rootItem);
+        forceUpdate(contentItem);
 
         QSGRootNode *rootNode = new QSGRootNode;
-        rootNode->appendChildNode(QQuickItemPrivate::get(rootItem)->itemNode());
+        rootNode->appendChildNode(QQuickItemPrivate::get(contentItem)->itemNode());
         renderer = context->createRenderer();
         renderer->setRootNode(rootNode);
     }
@@ -348,7 +348,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
 }
 
 QQuickWindowPrivate::QQuickWindowPrivate()
-    : rootItem(0)
+    : contentItem(0)
     , activeFocusItem(0)
     , mouseGrabberItem(0)
 #ifndef QT_NO_CURSOR
@@ -382,18 +382,18 @@ void QQuickWindowPrivate::init(QQuickWindow *c)
 
     Q_Q(QQuickWindow);
 
-    rootItem = new QQuickRootItem;
-    QQmlEngine::setObjectOwnership(rootItem, QQmlEngine::CppOwnership);
-    QQuickItemPrivate *rootItemPrivate = QQuickItemPrivate::get(rootItem);
-    rootItemPrivate->window = q;
-    rootItemPrivate->windowRefCount = 1;
-    rootItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
+    contentItem = new QQuickRootItem;
+    QQmlEngine::setObjectOwnership(contentItem, QQmlEngine::CppOwnership);
+    QQuickItemPrivate *contentItemPrivate = QQuickItemPrivate::get(contentItem);
+    contentItemPrivate->window = q;
+    contentItemPrivate->windowRefCount = 1;
+    contentItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
 
     // In the absence of a focus in event on some platforms assume the window will
-    // be activated immediately and set focus on the rootItem
+    // be activated immediately and set focus on the contentItem
     // ### Remove when QTBUG-22415 is resolved.
-    //It is important that this call happens after the rootItem has a window..
-    rootItem->setFocus(true);
+    //It is important that this call happens after the contentItem has a window..
+    contentItem->setFocus(true);
 
     windowManager = QQuickWindowManager::instance();
     context = windowManager->sceneGraphContext();
@@ -412,19 +412,19 @@ void QQuickWindowPrivate::init(QQuickWindow *c)
 
 QQmlListProperty<QObject> QQuickWindowPrivate::data()
 {
-    initRootItem();
-    return QQuickItemPrivate::get(rootItem)->data();
+    initContentItem();
+    return QQuickItemPrivate::get(contentItem)->data();
 }
 
-void QQuickWindowPrivate::initRootItem()
+void QQuickWindowPrivate::initContentItem()
 {
     Q_Q(QQuickWindow);
     q->connect(q, SIGNAL(widthChanged(int)),
-            rootItem, SLOT(setWidth(int)));
+            contentItem, SLOT(setWidth(int)));
     q->connect(q, SIGNAL(heightChanged(int)),
-            rootItem, SLOT(setHeight(int)));
-    rootItem->setWidth(q->width());
-    rootItem->setHeight(q->height());
+            contentItem, SLOT(setHeight(int)));
+    contentItem->setWidth(q->width());
+    contentItem->setHeight(q->height());
 }
 
 static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QTouchEvent::TouchPoint &p, QTouchEvent *event, QQuickItem *item, bool transformNeeded = true)
@@ -527,7 +527,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                     lastMousePosition = me->windowPos();
 
                     bool accepted = me->isAccepted();
-                    bool delivered = deliverHoverEvent(rootItem, me->windowPos(), last, me->modifiers(), accepted);
+                    bool delivered = deliverHoverEvent(contentItem, me->windowPos(), last, me->modifiers(), accepted);
                     if (!delivered) {
                         //take care of any exits
                         accepted = clearHover();
@@ -594,7 +594,7 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
     Q_Q(QQuickWindow);
 
     Q_ASSERT(item);
-    Q_ASSERT(scope || item == rootItem);
+    Q_ASSERT(scope || item == contentItem);
 
 #ifdef FOCUS_DEBUG
     qWarning() << "QQuickWindowPrivate::setFocusInScope():";
@@ -614,7 +614,7 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
     QVarLengthArray<QQuickItem *, 20> changed;
 
     // Does this change the active focus?
-    if (item == rootItem || (scopePrivate->activeFocus && item->isEnabled())) {
+    if (item == contentItem || (scopePrivate->activeFocus && item->isEnabled())) {
         oldActiveFocusItem = activeFocusItem;
         newActiveFocusItem = item;
         while (newActiveFocusItem->isFocusScope()
@@ -643,7 +643,7 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
         }
     }
 
-    if (item != rootItem && !(options & DontChangeSubFocusItem)) {
+    if (item != contentItem && !(options & DontChangeSubFocusItem)) {
         QQuickItem *oldSubFocusItem = scopePrivate->subFocusItem;
         if (oldSubFocusItem) {
             QQuickItemPrivate::get(oldSubFocusItem)->focus = false;
@@ -654,13 +654,13 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
     }
 
     if (!(options & DontChangeFocusProperty)) {
-//        if (item != rootItem || QGuiApplication::focusWindow() == q) {    // QTBUG-22415
+//        if (item != contentItem || QGuiApplication::focusWindow() == q) {    // QTBUG-22415
             itemPrivate->focus = true;
             changed << item;
 //        }
     }
 
-    if (newActiveFocusItem && rootItem->hasFocus()) {
+    if (newActiveFocusItem && contentItem->hasFocus()) {
         activeFocusItem = newActiveFocusItem;
 
         QQuickItemPrivate::get(newActiveFocusItem)->activeFocus = true;
@@ -690,7 +690,7 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
     Q_Q(QQuickWindow);
 
     Q_ASSERT(item);
-    Q_ASSERT(scope || item == rootItem);
+    Q_ASSERT(scope || item == contentItem);
 
 #ifdef FOCUS_DEBUG
     qWarning() << "QQuickWindowPrivate::clearFocusInScope():";
@@ -711,10 +711,10 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
 
     QVarLengthArray<QQuickItem *, 20> changed;
 
-    Q_ASSERT(item == rootItem || item == scopePrivate->subFocusItem);
+    Q_ASSERT(item == contentItem || item == scopePrivate->subFocusItem);
 
     // Does this change the active focus?
-    if (item == rootItem || scopePrivate->activeFocus) {
+    if (item == contentItem || scopePrivate->activeFocus) {
         oldActiveFocusItem = activeFocusItem;
         newActiveFocusItem = scope;
 
@@ -738,7 +738,7 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         }
     }
 
-    if (item != rootItem && !(options & DontChangeSubFocusItem)) {
+    if (item != contentItem && !(options & DontChangeSubFocusItem)) {
         QQuickItem *oldSubFocusItem = scopePrivate->subFocusItem;
         if (oldSubFocusItem && !(options & DontChangeFocusProperty)) {
             QQuickItemPrivate::get(oldSubFocusItem)->focus = false;
@@ -953,7 +953,7 @@ QQuickWindow::~QQuickWindow()
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     delete d->incubationController; d->incubationController = 0;
 
-    delete d->rootItem; d->rootItem = 0;
+    delete d->contentItem; d->contentItem = 0;
 }
 
 
@@ -1055,7 +1055,7 @@ QQuickItem *QQuickWindow::contentItem() const
 {
     Q_D(const QQuickWindow);
 
-    return d->rootItem;
+    return d->contentItem;
 }
 
 /*!
@@ -1149,7 +1149,7 @@ bool QQuickWindow::event(QEvent *e)
         break;
 #endif
     case QEvent::WindowDeactivate:
-        rootItem()->windowDeactivateEvent();
+        contentItem()->windowDeactivateEvent();
         break;
     case QEvent::FocusAboutToChange:
         if (d->activeFocusItem)
@@ -1241,7 +1241,7 @@ bool QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
     if (!mouseGrabberItem &&
          event->type() == QEvent::MouseButtonPress &&
          (event->buttons() & event->button()) == event->buttons()) {
-        if (deliverInitialMousePressEvent(rootItem, event))
+        if (deliverInitialMousePressEvent(contentItem, event))
             event->accept();
         else
             event->ignore();
@@ -1299,7 +1299,7 @@ void QQuickWindow::mouseDoubleClickEvent(QMouseEvent *event)
 #endif
 
     if (!d->mouseGrabberItem && (event->buttons() & event->button()) == event->buttons()) {
-        if (d->deliverInitialMousePressEvent(d->rootItem, event))
+        if (d->deliverInitialMousePressEvent(d->contentItem, event))
             event->accept();
         else
             event->ignore();
@@ -1344,7 +1344,7 @@ void QQuickWindow::mouseMoveEvent(QMouseEvent *event)
         d->lastMousePosition = event->windowPos();
 
         bool accepted = event->isAccepted();
-        bool delivered = d->deliverHoverEvent(d->rootItem, event->windowPos(), last, event->modifiers(), accepted);
+        bool delivered = d->deliverHoverEvent(d->contentItem, event->windowPos(), last, event->modifiers(), accepted);
         if (!delivered) {
             //take care of any exits
             accepted = d->clearHover();
@@ -1472,7 +1472,7 @@ void QQuickWindow::wheelEvent(QWheelEvent *event)
         return;
 
     event->ignore();
-    d->deliverWheelEvent(d->rootItem, event);
+    d->deliverWheelEvent(d->contentItem, event);
     d->lastWheelEventAccepted = event->isAccepted();
 }
 #endif // QT_NO_WHEELEVENT
@@ -1543,7 +1543,7 @@ bool QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
     // or some item accepted a point and should receive an update
     if (newPoints.count() > 0 || updatedPoints.count() > 0) {
         QSet<int> acceptedNewPoints;
-        event->setAccepted(deliverTouchPoints(rootItem, event, newPoints, &acceptedNewPoints, &updatedPoints));
+        event->setAccepted(deliverTouchPoints(contentItem, event, newPoints, &acceptedNewPoints, &updatedPoints));
     } else
         event->ignore();
 
@@ -1814,7 +1814,7 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
                 e->mouseButtons(),
                 e->keyboardModifiers());
         QQuickDropEventEx::copyActions(&enterEvent, *e);
-        event->setAccepted(deliverDragEvent(grabber, rootItem, &enterEvent));
+        event->setAccepted(deliverDragEvent(grabber, contentItem, &enterEvent));
     }
 }
 
@@ -1874,7 +1874,7 @@ void QQuickWindowPrivate::updateCursor(const QPointF &scenePos)
     Q_Q(QQuickWindow);
 
     QQuickItem *oldCursorItem = cursorItem;
-    cursorItem = findCursorItem(rootItem, scenePos);
+    cursorItem = findCursorItem(contentItem, scenePos);
 
     if (cursorItem != oldCursorItem) {
         if (cursorItem)
@@ -2118,7 +2118,7 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown()
 {
     Q_Q(QQuickWindow);
     cleanupNodes();
-    cleanupNodesOnShutdown(rootItem);
+    cleanupNodesOnShutdown(contentItem);
     QSet<QQuickItem *>::const_iterator it = parentlessItems.begin();
     for (; it != parentlessItems.end(); ++it)
         cleanupNodesOnShutdown(*it);

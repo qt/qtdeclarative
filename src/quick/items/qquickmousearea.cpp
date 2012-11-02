@@ -264,7 +264,7 @@ void QQuickMouseAreaPrivate::propagate(QQuickMouseEvent* event, PropagateType t)
     if (!propagateComposedEvents)
         return;
     QPointF scenePos = q->mapToScene(QPointF(event->x(), event->y()));
-    propagateHelper(event, window->rootItem(), scenePos, t);
+    propagateHelper(event, window->contentItem(), scenePos, t);
 }
 
 bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *item,const QPointF &sp, PropagateType sig)

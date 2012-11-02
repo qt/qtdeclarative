@@ -240,7 +240,7 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
 
     arguments << QQmlDataTest::instance()->testFile(testFile);
 
-    m_process = new QQmlDebugProcess(executable);
+    m_process = new QQmlDebugProcess(executable, this);
     m_process->start(QStringList() << arguments);
     QVERIFY2(m_process->waitForSessionStart(), "Could not launch application, or did not get 'Waiting for connection'.");
 

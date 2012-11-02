@@ -110,7 +110,7 @@ void tst_QQuickPaintedItem::initTestCase()
 void tst_QQuickPaintedItem::update()
 {
     TestPaintedItem item;
-    item.setParentItem(window.rootItem());
+    item.setParentItem(window.contentItem());
 
     QCOMPARE(hasDirtyContentFlag(&item), false);
     item.update();
@@ -149,7 +149,7 @@ void tst_QQuickPaintedItem::opaquePainting()
 {
     TestPaintedItem item;
     item.setSize(QSizeF(320, 240));
-    item.setParentItem(window.rootItem());
+    item.setParentItem(window.contentItem());
 
     QCOMPARE(item.opaquePainting(), false);
 
@@ -187,7 +187,7 @@ void tst_QQuickPaintedItem::antialiasing()
 {
     TestPaintedItem item;
     item.setSize(QSizeF(320, 240));
-    item.setParentItem(window.rootItem());
+    item.setParentItem(window.contentItem());
 
     QCOMPARE(item.antialiasing(), false);
 
@@ -225,7 +225,7 @@ void tst_QQuickPaintedItem::mipmap()
 {
     TestPaintedItem item;
     item.setSize(QSizeF(320, 240));
-    item.setParentItem(window.rootItem());
+    item.setParentItem(window.contentItem());
 
     QCOMPARE(item.mipmap(), false);
 
@@ -263,7 +263,7 @@ void tst_QQuickPaintedItem::performanceHints()
 {
     TestPaintedItem item;
     item.setSize(QSizeF(320, 240));
-    item.setParentItem(window.rootItem());
+    item.setParentItem(window.contentItem());
 
     QCOMPARE(item.performanceHints(), QQuickPaintedItem::PerformanceHints());
 
@@ -332,7 +332,7 @@ void tst_QQuickPaintedItem::contentScale()
 {
     TestPaintedItem item;
     item.setSize(QSizeF(320, 240));
-    item.setParentItem(window.rootItem());
+    item.setParentItem(window.contentItem());
 
     QSignalSpy spy(&item, SIGNAL(contentsScaleChanged()));
 
@@ -376,7 +376,7 @@ void tst_QQuickPaintedItem::contentsBoundingRect()
 {
     TestPaintedItem item;
     item.setSize(QSizeF(320, 240));
-    item.setParentItem(window.rootItem());
+    item.setParentItem(window.contentItem());
 
     QCOMPARE(item.contentsBoundingRect(), QRectF(0, 0, 320, 240));
 
@@ -414,7 +414,7 @@ void tst_QQuickPaintedItem::fillColor()
 {
     TestPaintedItem item;
     item.setSize(QSizeF(320, 240));
-    item.setParentItem(window.rootItem());
+    item.setParentItem(window.contentItem());
 
     QSignalSpy spy(&item, SIGNAL(fillColorChanged()));
 

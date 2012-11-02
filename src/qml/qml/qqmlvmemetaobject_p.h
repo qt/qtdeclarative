@@ -157,7 +157,7 @@ class QV8QObjectWrapper;
 class QQmlVMEVariant;
 class QQmlRefCount;
 class QQmlVMEMetaObjectEndpoint;
-class Q_AUTOTEST_EXPORT QQmlVMEMetaObject : public QAbstractDynamicMetaObject,
+class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QAbstractDynamicMetaObject,
                                                     public QV8GCCallback::Node
 {
 public:

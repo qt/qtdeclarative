@@ -27,7 +27,8 @@
 
 /*!
 \page qtquick-qmltypereference.html
-\title QML Types Provided by Qt Quick
+\title Qt Quick QML Types
+\ingroup qmlmodules
 \brief Description of the QML types provided by the Qt Quick module
 
 The \c QtQuick QML module provides a variety of QML types for creating user

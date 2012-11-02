@@ -122,7 +122,7 @@ void tst_QQuickDropArea::containsDrag_internal()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(window.rootItem());
+    dropArea->setParentItem(window.contentItem());
 
     QQuickItem *dragItem = dropArea->findChild<QQuickItem *>("dragItem");
     QVERIFY(dragItem);
@@ -188,7 +188,7 @@ void tst_QQuickDropArea::containsDrag_external()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(window.rootItem());
+    dropArea->setParentItem(window.contentItem());
 
     QMimeData data;
     QQuickWindow alternateWindow;
@@ -256,7 +256,7 @@ void tst_QQuickDropArea::keys_internal()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(window.rootItem());
+    dropArea->setParentItem(window.contentItem());
 
     QQuickItem *dragItem = dropArea->findChild<QQuickItem *>("dragItem");
     QVERIFY(dragItem);
@@ -356,7 +356,7 @@ void tst_QQuickDropArea::keys_external()
             "}", QUrl());
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
-    dropArea->setParentItem(window.rootItem());
+    dropArea->setParentItem(window.contentItem());
 
     QMimeData data;
     QQuickWindow alternateWindow;
@@ -463,7 +463,7 @@ void tst_QQuickDropArea::source_internal()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(window.rootItem());
+    dropArea->setParentItem(window.contentItem());
 
     QQuickItem *dragItem = dropArea->findChild<QQuickItem *>("dragItem");
     QVERIFY(dragItem);
@@ -528,7 +528,7 @@ void tst_QQuickDropArea::position_internal()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(window.rootItem());
+    dropArea->setParentItem(window.contentItem());
 
     QQuickItem *dragItem = dropArea->findChild<QQuickItem *>("dragItem");
     QVERIFY(dragItem);
@@ -590,7 +590,7 @@ void tst_QQuickDropArea::position_external()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(window.rootItem());
+    dropArea->setParentItem(window.contentItem());
 
     QMimeData data;
 
@@ -667,7 +667,7 @@ void tst_QQuickDropArea::drop_internal()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(window.rootItem());
+    dropArea->setParentItem(window.contentItem());
 
     QQuickItem *dragItem = dropArea->findChild<QQuickItem *>("dragItem");
     QVERIFY(dragItem);
@@ -806,7 +806,7 @@ void tst_QQuickDropArea::simultaneousDrags()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea1 = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea1);
-    dropArea1->setParentItem(window.rootItem());
+    dropArea1->setParentItem(window.contentItem());
 
     QQuickItem *dropArea2 = dropArea1->findChild<QQuickItem *>("dropArea2");
     QVERIFY(dropArea2);

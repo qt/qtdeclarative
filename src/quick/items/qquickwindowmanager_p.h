@@ -76,6 +76,10 @@ public:
 
     // ### make this less of a singleton
     static QQuickWindowManager *instance();
+    static void setInstance(QQuickWindowManager *instance);
+
+private:
+    static QQuickWindowManager *s_instance;
 };
 
 QT_END_NAMESPACE

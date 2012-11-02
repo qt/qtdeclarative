@@ -156,9 +156,6 @@ public:
     qreal radius() const;
     void setRadius(qreal radius);
 
-    virtual QRectF boundingRect() const;
-    virtual QRectF clipRect() const;
-
 Q_SIGNALS:
     void colorChanged();
     void radiusChanged();

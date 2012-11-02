@@ -2509,25 +2509,41 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
     automatically assigned to this property.
  */
 
-int QQuickItemPrivate::data_count(QQmlListProperty<QObject> *prop)
+int QQuickItemPrivate::data_count(QQmlListProperty<QObject> *property)
 {
-    Q_UNUSED(prop);
-    // XXX todo
+    QQuickItem *item = static_cast<QQuickItem*>(property->object);
+    QQuickItemPrivate *privateItem = QQuickItemPrivate::get(item);
+    QQmlListProperty<QObject> resourcesProperty = privateItem->resources();
+    QQmlListProperty<QQuickItem> childrenProperty = privateItem->children();
+
+    return resources_count(&resourcesProperty) + children_count(&childrenProperty);
+}
+
+QObject *QQuickItemPrivate::data_at(QQmlListProperty<QObject> *property, int i)
+{
+    QQuickItem *item = static_cast<QQuickItem*>(property->object);
+    QQuickItemPrivate *privateItem = QQuickItemPrivate::get(item);
+    QQmlListProperty<QObject> resourcesProperty = privateItem->resources();
+    QQmlListProperty<QQuickItem> childrenProperty = privateItem->children();
+
+    int resourcesCount = resources_count(&resourcesProperty);
+    if (i < resourcesCount)
+        return resources_at(&resourcesProperty, i);
+    const int j = i - resourcesCount;
+    if (j < children_count(&childrenProperty))
+        return children_at(&childrenProperty, j);
     return 0;
 }
 
-QObject *QQuickItemPrivate::data_at(QQmlListProperty<QObject> *prop, int i)
+void QQuickItemPrivate::data_clear(QQmlListProperty<QObject> *property)
 {
-    Q_UNUSED(prop);
-    Q_UNUSED(i);
-    // XXX todo
-    return 0;
-}
+    QQuickItem *item = static_cast<QQuickItem*>(property->object);
+    QQuickItemPrivate *privateItem = QQuickItemPrivate::get(item);
+    QQmlListProperty<QObject> resourcesProperty = privateItem->resources();
+    QQmlListProperty<QQuickItem> childrenProperty = privateItem->children();
 
-void QQuickItemPrivate::data_clear(QQmlListProperty<QObject> *prop)
-{
-    Q_UNUSED(prop);
-    // XXX todo
+    resources_clear(&resourcesProperty);
+    children_clear(&childrenProperty);
 }
 
 QObject *QQuickItemPrivate::resources_at(QQmlListProperty<QObject> *prop, int index)
@@ -2591,12 +2607,6 @@ void QQuickItemPrivate::children_clear(QQmlListProperty<QQuickItem> *prop)
     QQuickItemPrivate *p = QQuickItemPrivate::get(that);
     while (!p->childItems.isEmpty())
         p->childItems.at(0)->setParentItem(0);
-}
-
-void QQuickItemPrivate::visibleChildren_append(QQmlListProperty<QQuickItem>*, QQuickItem *self)
-{
-    // do nothing
-    qmlInfo(self) << "QQuickItem: visibleChildren property is readonly and cannot be assigned to.";
 }
 
 int QQuickItemPrivate::visibleChildren_count(QQmlListProperty<QQuickItem> *prop)
@@ -3728,9 +3738,10 @@ QQmlListProperty<QQuickItem> QQuickItemPrivate::children()
 */
 QQmlListProperty<QQuickItem> QQuickItemPrivate::visibleChildren()
 {
-    return QQmlListProperty<QQuickItem>(q_func(), 0, QQuickItemPrivate::visibleChildren_append,
-                                             QQuickItemPrivate::visibleChildren_count,
-                                             QQuickItemPrivate::visibleChildren_at);
+    return QQmlListProperty<QQuickItem>(q_func(),
+                                        0,
+                                        QQuickItemPrivate::visibleChildren_count,
+                                        QQuickItemPrivate::visibleChildren_at);
 
 }
 
@@ -6507,6 +6518,9 @@ bool QQuickItem::event(QEvent *ev)
         return true;
     } else if (ev->type() == QEvent::InputMethod) {
         inputMethodEvent(static_cast<QInputMethodEvent *>(ev));
+        return true;
+    } else if (ev->type() == QEvent::StyleAnimationUpdate) {
+        update();
         return true;
     }
     return QObject::event(ev);

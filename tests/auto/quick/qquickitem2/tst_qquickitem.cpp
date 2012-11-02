@@ -1551,10 +1551,9 @@ void tst_QQuickItem::visibleChildren()
     QCOMPARE(root->property("test4_3").toBool(), true);
     QCOMPARE(root->property("test4_4").toBool(), true);
 
-    QString warning1 = testFileUrl("visiblechildren.qml").toString() + ":96:32: QML Item: QQuickItem: visibleChildren property is readonly and cannot be assigned to.";
+    QString warning1 = testFileUrl("visiblechildren.qml").toString() + ":87: TypeError: Cannot read property 'visibleChildren' of null";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QMetaObject::invokeMethod(root, "tryWriteToReadonlyVisibleChildren");
-    QCOMPARE(root->property("test5_1").toBool(), true);
 
     QMetaObject::invokeMethod(root, "reparentVisibleItem3");
     QCOMPARE(root->property("test6_1").toBool(), true);

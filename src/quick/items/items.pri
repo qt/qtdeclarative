@@ -10,7 +10,6 @@ HEADERS += \
     $$PWD/qquickrectangle_p_p.h \
     $$PWD/qquickwindow.h \
     $$PWD/qquickwindow_p.h \
-    $$PWD/qquickcanvas.h \
     $$PWD/qquickfocusscope_p.h \
     $$PWD/qquickitemsmodule_p.h \
     $$PWD/qquickpainteditem.h \

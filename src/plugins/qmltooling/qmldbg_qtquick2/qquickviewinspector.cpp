@@ -128,7 +128,7 @@ QQuickViewInspector::QQuickViewInspector(QQuickView *view, QObject *parent) :
     // Try to make sure the overlay is always on top
     m_overlay->setZ(FLT_MAX);
 
-    if (QQuickItem *root = view->rootItem())
+    if (QQuickItem *root = view->contentItem())
         m_overlay->setParentItem(root);
 
     view->installEventFilter(this);
@@ -190,13 +190,13 @@ QQmlEngine *QQuickViewInspector::declarativeEngine() const
 
 QQuickItem *QQuickViewInspector::topVisibleItemAt(const QPointF &pos) const
 {
-    QQuickItem *root = m_view->rootItem();
+    QQuickItem *root = m_view->contentItem();
     return itemAt(root, root->mapFromScene(pos), m_overlay);
 }
 
 QList<QQuickItem *> QQuickViewInspector::itemsAt(const QPointF &pos) const
 {
-    QQuickItem *root = m_view->rootItem();
+    QQuickItem *root = m_view->contentItem();
     QList<QQuickItem *> resultList;
     collectItemsAt(root, root->mapFromScene(pos), m_overlay,
                    resultList);

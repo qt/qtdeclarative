@@ -254,6 +254,32 @@ bool QQmlListReference::canCount() const
 }
 
 /*!
+    Return true if at(), count(), append() and clear() are implemented, so you can manipulate
+    the list.
+
+\sa isReadable(), at(), count(), append(), clear()
+*/
+bool QQmlListReference::isManipulable() const
+{
+    return (isValid()
+            && d->property.append
+            && d->property.count
+            && d->property.at
+            && d->property.clear);
+}
+
+
+/*!
+    Return true if at() and count() are implemented, so you can access the elements.
+
+\sa isManipulable(), at(), count()
+*/
+bool QQmlListReference::isReadable() const
+{
+    return (isValid() && d->property.count && d->property.at);
+}
+
+/*!
 Appends \a object to the list.  Returns true if the operation succeeded, otherwise false.
 
 \sa canAppend()
@@ -366,16 +392,25 @@ can very useful while prototyping.
 */
 
 /*!
+\fn QQmlListProperty::QQmlListProperty(QObject *object, void *data,
+                                    CountFunction count, AtFunction at)
+
+Construct a readonly QQmlListProperty from a set of operation functions.  An opaque \a data handle
+may be passed which can be accessed from within the operation functions.  The list property
+remains valid while \a object exists.
+*/
+
+/*!
 \fn QQmlListProperty::QQmlListProperty(QObject *object, void *data, AppendFunction append, 
-                                     CountFunction count = 0, AtFunction at = 0, 
-                                     ClearFunction clear = 0)
+                                     CountFunction count, AtFunction at,
+                                     ClearFunction clear)
 
 Construct a QQmlListProperty from a set of operation functions.  An opaque \a data handle
 may be passed which can be accessed from within the operation functions.  The list property 
 remains valid while \a object exists.
 
-The \a append operation is compulsory and must be provided, while the \a count, \a at and
-\a clear methods are optional.
+You can pass a null pointer, but than the list will be not designable or changeable by the debugger.
+So provide all function, except it is not possible.
 */
 
 /*!

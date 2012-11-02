@@ -37,27 +37,5 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-#include <QGuiApplication>
-#include <QStringList>
-#include <QQuickView>
-#include <QQmlEngine>
-
-void usage()
-{
-    exit(0);
-}
-
-int main(int argc, char* argv[])
-{
-    QGuiApplication app(argc,argv);
-    QQuickView view;
-    QUrl launchFile = QUrl::fromLocalFile(QLatin1String("tweetsearch.qml"));
-    if (app.arguments().contains(QLatin1String("-help")))
-        usage();
-    view.connect(view.engine(), SIGNAL(quit()), &app, SLOT(quit()));
-    view.setSource(launchFile);
-    view.show();
-    return app.exec();
-}
-
+#include "../../shared/shared.h"
+DECLARATIVE_EXAMPLE_MAIN(tweetsearch)

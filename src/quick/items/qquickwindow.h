@@ -82,8 +82,6 @@ public:
     virtual ~QQuickWindow();
 
     QQuickItem *contentItem() const;
-    //XXX rootItem renamed contentItem - this function must be removed before 5.0
-    QQuickItem *rootItem() const { return contentItem(); }
 
     QQuickItem *activeFocusItem() const;
     QObject *focusObject() const;

@@ -1,5 +1,3 @@
-DESTDIR = $$QT.qml.bins
-
 QT += qml qml-private quick-private core-private
 
 SOURCES += \

@@ -84,7 +84,7 @@ class QQmlDebugProcess : public QObject
 {
     Q_OBJECT
 public:
-    QQmlDebugProcess(const QString &executable);
+    QQmlDebugProcess(const QString &executable, QObject *parent = 0);
     ~QQmlDebugProcess();
 
     QString state();

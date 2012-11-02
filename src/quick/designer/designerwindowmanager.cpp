@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Klarälvdalens Datakonsult AB, a KDAB Group company, info@kdab.com, author Stephen Kelly <stephen.kelly@kdab.com>
+** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the test suite of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,14 +39,80 @@
 **
 ****************************************************************************/
 
-#include <QQmlEngine>
-#include <QQuickItem>
+#include "designerwindowmanager_p.h"
 
-int main(int argc, char **argv)
+#include <QtGui/QOpenGLContext>
+
+#include <QtQuick/QQuickWindow>
+
+
+QT_BEGIN_NAMESPACE
+
+DesignerWindowManager::DesignerWindowManager()
+    : m_sgContext(QSGContext::createDefaultContext())
 {
-    QQmlEngine qmlEngine;
-
-    QQuickItem quickItem;
-
-    return 0;
 }
+
+void DesignerWindowManager::show(QQuickWindow *window)
+{
+    makeOpenGLContext(window);
+}
+
+void DesignerWindowManager::hide(QQuickWindow *)
+{
+}
+
+void DesignerWindowManager::windowDestroyed(QQuickWindow *)
+{
+}
+
+void DesignerWindowManager::makeOpenGLContext(QQuickWindow *window)
+{
+    if (!m_openGlContext) {
+        m_openGlContext.reset(new QOpenGLContext());
+        m_openGlContext->setFormat(window->requestedFormat());
+        m_openGlContext->create();
+        if (!m_openGlContext->makeCurrent(window))
+            qWarning("QQuickWindow: makeCurrent() failed...");
+        m_sgContext->initialize(m_openGlContext.data());
+    } else {
+        m_openGlContext->makeCurrent(window);
+    }
+}
+
+void DesignerWindowManager::exposureChanged(QQuickWindow *)
+{
+}
+
+QImage DesignerWindowManager::grab(QQuickWindow *)
+{
+    return QImage();
+}
+
+void DesignerWindowManager::resize(QQuickWindow *, const QSize &)
+{
+}
+
+void DesignerWindowManager::maybeUpdate(QQuickWindow *)
+{
+}
+
+QSGContext *DesignerWindowManager::sceneGraphContext() const
+{
+    return m_sgContext.data();
+}
+
+void DesignerWindowManager::createOpenGLContext(QQuickWindow *window)
+{
+    window->create();
+    window->update();
+}
+
+void DesignerWindowManager::update(QQuickWindow *window)
+{
+    makeOpenGLContext(window);
+}
+
+QT_END_NAMESPACE
+
+

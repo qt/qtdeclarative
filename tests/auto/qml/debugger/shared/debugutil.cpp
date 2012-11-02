@@ -83,8 +83,9 @@ void QQmlDebugTestClient::messageReceived(const QByteArray &ba)
     emit serverMessage(ba);
 }
 
-QQmlDebugProcess::QQmlDebugProcess(const QString &executable)
-    : m_executable(executable)
+QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
+    : QObject(parent)
+    , m_executable(executable)
     , m_started(false)
 {
     m_process.setProcessChannelMode(QProcess::MergedChannels);
@@ -183,7 +184,7 @@ void QQmlDebugProcess::processAppOutput()
         const QString line = m_outputBuffer.left(nlIndex);
         m_outputBuffer = m_outputBuffer.right(m_outputBuffer.size() - nlIndex - 1);
 
-        if (line.startsWith("QML Debugger:")) {
+        if (line.contains("QML Debugger:")) {
             if (line.contains("Waiting for connection ")) {
                 m_timer.stop();
                 m_started = true;

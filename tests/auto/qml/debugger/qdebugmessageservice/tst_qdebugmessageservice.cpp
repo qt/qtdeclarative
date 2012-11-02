@@ -179,7 +179,7 @@ void tst_QDebugMessageService::cleanupTestCase()
 void tst_QDebugMessageService::init()
 {
     m_connection = new QQmlDebugConnection();
-    m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
+    m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
     m_client = new QQmlDebugMsgClient(m_connection);
 
     m_process->start(QStringList() << QLatin1String(NORMALMODE) << QQmlDataTest::instance()->testFile(QMLFILE));

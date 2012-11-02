@@ -9,4 +9,9 @@ find_package(Qt5Core REQUIRED)
 
 include("${_Qt5CTestMacros}")
 
-expect_pass(test_modules)
+set(Qt5_MODULE_TEST_DEPENDS Network Gui)
+
+test_module_includes(
+  Qml QQmlEngine
+  Quick QQuickWindow
+)

@@ -39,20 +39,69 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKCANVAS_H
-#define QQUICKCANVAS_H
+#ifndef DESIGNERWINDOWMANAGER_P_H
+#define DESIGNERWINDOWMANAGER_P_H
 
-#include "qquickwindow.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/QScopedPointer>
+
+#include <private/qquickwindowmanager_p.h>
+#include <private/qtquickglobal_p.h>
+#include <QtQuick/private/qsgcontext_p.h>
+
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-typedef QQuickWindow QQuickCanvas;
+class QQuickWindow;
+class QSGContext;
+class QAnimationDriver;
+class QOpenGLContext;
+
+class DesignerWindowManager : public QObject, public QQuickWindowManager
+{
+    Q_OBJECT
+public:
+    DesignerWindowManager();
+
+    void show(QQuickWindow *window);
+    void hide(QQuickWindow *window);
+
+    void windowDestroyed(QQuickWindow *window);
+
+    void makeOpenGLContext(QQuickWindow *window);
+    void exposureChanged(QQuickWindow *window);
+    QImage grab(QQuickWindow *window);
+    void resize(QQuickWindow *window, const QSize &size);
+
+    void maybeUpdate(QQuickWindow *window);
+    void update(QQuickWindow *window); // identical for this implementation.
+
+    void releaseResources() { }
+
+    QAnimationDriver *animationDriver() const { return 0; }
+
+    QSGContext *sceneGraphContext() const;
+
+    static void createOpenGLContext(QQuickWindow *window);
+
+private:
+    QScopedPointer<QOpenGLContext> m_openGlContext;
+    QScopedPointer<QSGContext> m_sgContext;
+};
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
-
-#endif // QQUICKCANVAS_H
-
+#endif // DESIGNERWINDOWMANAGER_P_H

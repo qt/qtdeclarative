@@ -109,9 +109,9 @@ QQmlListProperty<QObject> QQuickParticleGroup::particleChildren()
 {
     QQuickParticleSystem* system = qobject_cast<QQuickParticleSystem*>(parent());
     if (system)
-        return QQmlListProperty<QObject>(this, 0, &QQuickParticleSystem::statePropertyRedirect);
+        return QQmlListProperty<QObject>(this, 0, &QQuickParticleSystem::statePropertyRedirect, 0, 0, 0);
     else
-        return QQmlListProperty<QObject>(this, 0, &delayedRedirect);
+        return QQmlListProperty<QObject>(this, 0, &delayedRedirect, 0, 0, 0);
 }
 
 void QQuickParticleGroup::setSystem(QQuickParticleSystem* arg)

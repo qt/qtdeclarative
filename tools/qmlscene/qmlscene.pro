@@ -1,5 +1,3 @@
-DESTDIR= $$QT.qml.bins
-
 QT += qml quick core-private
 !contains(QT_CONFIG, no-widgets):QT += widgets
 

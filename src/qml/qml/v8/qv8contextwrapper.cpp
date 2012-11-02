@@ -309,7 +309,6 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
                     const QVariant &value = cp->propertyValues.at(propertyIdx);
                     if (value.userType() == qMetaTypeId<QList<QObject*> >()) {
                         QQmlListProperty<QObject> prop(context->asQQmlContext(), (void*) qintptr(propertyIdx),
-                                                               0,
                                                                QQmlContextPrivate::context_count,
                                                                QQmlContextPrivate::context_at);
                         return engine->listWrapper()->newList(prop, qMetaTypeId<QQmlListProperty<QObject> >());

@@ -1,2 +1,4 @@
-HEADERS +=  designer/designersupport.h
-SOURCES +=  designer/designersupport.cpp
+HEADERS +=  designer/designersupport.h \
+    designer/designerwindowmanager_p.h
+SOURCES +=  designer/designersupport.cpp \
+    designer/designerwindowmanager.cpp

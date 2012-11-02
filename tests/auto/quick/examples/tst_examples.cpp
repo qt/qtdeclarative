@@ -275,7 +275,7 @@ void tst_examples::sgexamples()
         window->show();
         QVERIFY(QTest::qWaitForWindowExposed(window));
     }
-    root->setParentItem(window->rootItem());
+    root->setParentItem(window->contentItem());
     component.completeCreate();
 
     qApp->processEvents();
@@ -319,7 +319,7 @@ void tst_examples::sgsnippets()
         window->show();
         QVERIFY(QTest::qWaitForWindowExposed(window));
     }
-    root->setParentItem(window->rootItem());
+    root->setParentItem(window->contentItem());
     component.completeCreate();
 
     qApp->processEvents();

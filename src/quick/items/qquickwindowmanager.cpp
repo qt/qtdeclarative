@@ -74,6 +74,8 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP);
 DEFINE_BOOL_CONFIG_OPTION(qmlForceThreadedRenderer, QML_FORCE_THREADED_RENDERER); // Might trigger graphics driver threading bugs, use at own risk
 
+QQuickWindowManager *QQuickWindowManager::s_instance = 0;
+
 QQuickWindowManager::~QQuickWindowManager()
 {
 }
@@ -124,11 +126,9 @@ public:
 
 QQuickWindowManager *QQuickWindowManager::instance()
 {
-    static QQuickWindowManager *theInstance;
+    if (!s_instance) {
 
-    if (!theInstance) {
-
-        theInstance = QSGContext::createWindowManager();
+        s_instance = QSGContext::createWindowManager();
 
         bool bufferQueuing = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::BufferQueueingOpenGL);
         bool fancy = bufferQueuing
@@ -148,13 +148,19 @@ QQuickWindowManager *QQuickWindowManager::instance()
         if (fixedAnimationSteps)
             QUnifiedTimer::instance(true)->setConsistentTiming(true);
 
-        if (!theInstance) {
-            theInstance = fancy
+        if (!s_instance) {
+            s_instance = fancy
                     ? (QQuickWindowManager*) new QQuickRenderThreadSingleContextWindowManager
                     : (QQuickWindowManager*) new QQuickTrivialWindowManager;
         }
     }
-    return theInstance;
+    return s_instance;
+}
+
+void QQuickWindowManager::setInstance(QQuickWindowManager *instance)
+{
+    Q_ASSERT(!s_instance);
+    s_instance = instance;
 }
 
 QQuickTrivialWindowManager::QQuickTrivialWindowManager()
@@ -219,7 +225,13 @@ void QQuickTrivialWindowManager::renderWindow(QQuickWindow *window)
     if (!masterWindow)
         return;
 
-    Q_ASSERT(QQuickWindowPrivate::get(masterWindow)->isRenderable());
+    if (!QQuickWindowPrivate::get(masterWindow)->isRenderable()) {
+        qWarning().nospace()
+            << "Unable to find a renderable master window "
+            << masterWindow << "when trying to render"
+            << window << " (" << window->geometry() << ").";
+        return;
+    }
 
     if (!gl) {
         gl = new QOpenGLContext();

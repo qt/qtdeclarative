@@ -1,9 +1,8 @@
 TARGET = qmldbg_qtquick2
 QT       += qml-private quick-private core-private gui-private v8-private
 
+PLUGIN_TYPE = qmltooling
 load(qt_plugin)
-
-DESTDIR  = $$QT.qml.plugins/qmltooling
 
 INCLUDEPATH *= $$PWD $$PWD/../shared
 
@@ -25,6 +24,3 @@ HEADERS += \
     inspecttool.h
 
 OTHER_FILES += qtquick2plugin.json
-
-target.path += $$[QT_INSTALL_PLUGINS]/qmltooling
-INSTALLS += target

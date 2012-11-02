@@ -849,6 +849,39 @@ void QQmlPropertyCache::update(QQmlEngine *engine, const QMetaObject *metaObject
 }
 
 /*! \internal
+    invalidates and updates the PropertyCache if the QMetaObject has changed.
+    This function is used in the tooling to update dynamic properties.
+*/
+void QQmlPropertyCache::invalidate(QQmlEngine *engine, const QMetaObject *metaObject)
+{
+    stringCache.clear();
+    propertyIndexCache.clear();
+    methodIndexCache.clear();
+    signalHandlerIndexCache.clear();
+
+    _hasPropertyOverrides = false;
+    argumentsCache = 0;
+
+    int pc = metaObject->propertyCount();
+    int mc = metaObject->methodCount();
+    int sc = metaObjectSignalCount(metaObject);
+    int reserve = pc + mc + sc;
+
+    if (parent()) {
+        propertyIndexCacheStart = parent()->propertyIndexCache.count() + parent()->propertyIndexCacheStart;
+        methodIndexCacheStart = parent()->methodIndexCache.count() + parent()->methodIndexCacheStart;
+        signalHandlerIndexCacheStart = parent()->signalHandlerIndexCache.count() + parent()->signalHandlerIndexCacheStart;
+        stringCache.linkAndReserve(parent()->stringCache, reserve);
+        append(engine, metaObject, -1);
+    } else {
+        propertyIndexCacheStart = 0;
+        methodIndexCacheStart = 0;
+        signalHandlerIndexCacheStart = 0;
+        update(engine, metaObject);
+    }
+}
+
+/*! \internal
     \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
     This is different from QMetaMethod::methodIndex().
 */

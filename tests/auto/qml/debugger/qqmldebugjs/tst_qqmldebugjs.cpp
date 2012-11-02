@@ -1002,7 +1002,7 @@ void tst_QQmlDebugJS::cleanupTestCase()
 bool tst_QQmlDebugJS::init(const QString &qmlFile, bool blockMode)
 {
     connection = new QQmlDebugConnection();
-    process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
+    process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
     client = new QJSDebugClient(connection);
 
     if (blockMode)

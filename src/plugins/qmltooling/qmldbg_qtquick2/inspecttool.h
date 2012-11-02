@@ -108,7 +108,7 @@ private:
     bool m_pinchStarted;
     bool m_didPressAndHold;
     bool m_tapEvent;
-    QPointer<QQuickItem> m_rootItem;
+    QPointer<QQuickItem> m_contentItem;
     QPointF m_dragStartPosition;
     QPointF m_mousePosition;
     QPointF m_originalPosition;

@@ -24,28 +24,19 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 /*!
-  \module QtQuick
-  \title Qt Quick Module C++ Classes
-  \ingroup modules
+    \title QML Plugin Example
+    \example plugins
 
-  \brief The Qt Quick module provides classes for embedding Qt Quick
-  in Qt/C++ applications.
+    \brief This example creates a C++ plugin extension by subclassing QQmlExtensionPlugin.
 
-  To include the definitions of the module's classes, use the
-  following directive:
+    \image qml-plugins-example.png
 
-  \code
-  #include <QtQuick>
-  \endcode
-
-  To link against the module, add this line to your \l qmake \c
-  .pro file:
-
-  \code
-  QT += quick
-  \endcode
-
-  For more information on the Qt Quick module, see the
-  \l{Qt Quick} module documentation.
+    To run this example, use the following commands on the prompt:
+    \code
+     > qmake
+     > make
+     > qmlscene -I imports plugins.qml
+    \endcode
 */

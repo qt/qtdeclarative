@@ -1,5 +1,3 @@
-DESTDIR= $$QT.qml.bins
-
 SOURCES += main.cpp
 
 QT += qml qmltest

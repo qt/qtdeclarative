@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
 
     To make this class available as a QML type, create a plugin that registers
     this type with a specific \l {QML Modules}{module} using qmlRegisterType(). For this example the plugin
-    module will be named \c com.nokia.TimeExample (as defined in the project
+    module will be named \c TimeExample (as defined in the project
     file further below).
 
     \snippet examples/qml/plugins/plugin.cpp plugin
@@ -93,27 +93,27 @@ QT_BEGIN_NAMESPACE
     ensures the module is imported correctly by any QML components that use this plugin.
 
     The project file defines the project as a plugin library and specifies 
-    it should be built into the \c com/nokia/TimeExample directory:
+    it should be built into the \c imports/TimeExample directory:
 
     \code
     TEMPLATE = lib
     CONFIG += qt plugin
     QT += qml
 
-    DESTDIR = com/nokia/TimeExample
+    DESTDIR = imports/TimeExample
     TARGET = qmlqtimeexampleplugin
     ...
     \endcode    
 
-    Finally, a \l{Module Definition qmldir Files}{qmldir file} is required in the \c com/nokia/TimeExample directory
+    Finally, a \l{Module Definition qmldir Files}{qmldir file} is required in the \c imports/TimeExample directory
     that describes the plugin. This directory includes a \c Clock.qml file that
     should be bundled with the plugin, so it needs to be specified in the \c qmldir
     file:
 
-    \quotefile examples/qml/plugins/com/nokia/TimeExample/qmldir
+    \quotefile examples/qml/plugins/imports/TimeExample/qmldir
 
     Once the project is built and installed, the new \c Time element can be 
-    used by any QML component that imports the \c com.nokia.TimeExample module:
+    used by any QML component that imports the \c TimeExample module:
 
     \snippet examples/qml/plugins/plugins.qml 0
 

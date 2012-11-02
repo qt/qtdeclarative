@@ -102,7 +102,8 @@ QT_BEGIN_NAMESPACE
 
 QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
     : QObject(attachee)
-    , m_screen(0)
+    , m_screen(NULL)
+    , m_window(NULL)
 {
     m_attachee = qobject_cast<QQuickItem*>(attachee);
 
@@ -149,17 +150,27 @@ int QQuickScreenAttached::angleBetween(int a, int b)
     return m_screen->angleBetween((Qt::ScreenOrientation)a,(Qt::ScreenOrientation)b);
 }
 
-void QQuickScreenAttached::windowChanged(QQuickWindow* c)//Called by QQuickItemPrivate::initWindow
+void QQuickScreenAttached::windowChanged(QQuickWindow* c)
 {
-    QScreen* screen = c ? c->screen() : 0;
+    if (m_window)
+        disconnect(m_window, SIGNAL(screenChanged(QScreen*)), this, SLOT(screenChanged(QScreen*)));
+    m_window = c;
+    screenChanged(c ? c->screen() : NULL);
+    if (c)
+        connect(c, SIGNAL(screenChanged(QScreen*)), this, SLOT(screenChanged(QScreen*)));
+}
+
+void QQuickScreenAttached::screenChanged(QScreen *screen)
+{
+    //qDebug() << "QQuickScreenAttached::screenChanged" << (screen ? screen->name() : QString::fromLatin1("null"));
     if (screen != m_screen) {
         QScreen* oldScreen = m_screen;
         m_screen = screen;
 
         if (oldScreen) {
-            disconnect(oldScreen, SIGNAL(sizeChanged(QSize)),
+            disconnect(oldScreen, SIGNAL(geometryChanged(QRect)),
                     this, SIGNAL(widthChanged()));
-            disconnect(oldScreen, SIGNAL(sizeChanged(QSize)),
+            disconnect(oldScreen, SIGNAL(geometryChanged(QRect)),
                     this, SIGNAL(heightChanged()));
             disconnect(oldScreen, SIGNAL(orientationChanged(Qt::ScreenOrientation)),
                     this, SIGNAL(orientationChanged()));
@@ -181,9 +192,9 @@ void QQuickScreenAttached::windowChanged(QQuickWindow* c)//Called by QQuickItemP
             emit primaryOrientationChanged();
 
 
-        connect(screen, SIGNAL(sizeChanged(QSize)),
+        connect(screen, SIGNAL(geometryChanged(QRect)),
                 this, SIGNAL(widthChanged()));
-        connect(screen, SIGNAL(sizeChanged(QSize)),
+        connect(screen, SIGNAL(geometryChanged(QRect)),
                 this, SIGNAL(heightChanged()));
         connect(screen, SIGNAL(orientationChanged(Qt::ScreenOrientation)),
                 this, SIGNAL(orientationChanged()));

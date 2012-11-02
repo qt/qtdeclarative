@@ -597,7 +597,8 @@ QQmlListProperty<QQuickVisualDataGroup> QQuickVisualDataModel::groups()
             d,
             QQuickVisualDataModelPrivate::group_append,
             QQuickVisualDataModelPrivate::group_count,
-            QQuickVisualDataModelPrivate::group_at);
+            QQuickVisualDataModelPrivate::group_at,
+            0);
 }
 
 /*!

@@ -941,7 +941,10 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QObject *assign = objects.pop();
 
             const List &list = lists.top();
-            list.qListProperty.append((QQmlListProperty<void>*)&list.qListProperty, assign);
+            if (list.qListProperty.append)
+                list.qListProperty.append((QQmlListProperty<void>*)&list.qListProperty, assign);
+            else
+                VME_EXCEPTION(tr("Cannot assign object to read only list"), -1);
         QML_END_INSTR(StoreObjectQList)
 
         QML_BEGIN_INSTR(AssignObjectList)
@@ -959,8 +962,10 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             if (!ptr) 
                 VME_EXCEPTION(tr("Cannot assign object to list"), instr.line);
 
-
-            list.qListProperty.append((QQmlListProperty<void>*)&list.qListProperty, ptr);
+            if (list.qListProperty.append)
+                list.qListProperty.append((QQmlListProperty<void>*)&list.qListProperty, ptr);
+            else
+                VME_EXCEPTION(tr("Cannot assign object to read only list"), -1);
         QML_END_INSTR(AssignObjectList)
 
         QML_BEGIN_INSTR(StoreInterface)

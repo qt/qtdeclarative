@@ -196,8 +196,6 @@ public:
     QQuickItem(QQuickItem *parent = 0);
     virtual ~QQuickItem();
 
-    //canvas() is being removed in favor of window() really soon now
-    QQuickWindow *canvas() const { return window(); }
     QQuickWindow *window() const;
     QQuickItem *parentItem() const;
     void setParentItem(QQuickItem *parent);

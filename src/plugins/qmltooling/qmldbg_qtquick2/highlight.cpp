@@ -82,14 +82,14 @@ void Highlight::setItem(QQuickItem *item)
                 SLOT(adjust()));
     }
     QQuickWindow *view = item->window();
-    QQuickItem * rootItem = view->rootItem();
-    if (rootItem) {
-        connect(rootItem, SIGNAL(xChanged()), SLOT(adjust()));
-        connect(rootItem, SIGNAL(yChanged()), SLOT(adjust()));
-        connect(rootItem, SIGNAL(widthChanged()), SLOT(adjust()));
-        connect(rootItem, SIGNAL(heightChanged()), SLOT(adjust()));
-        connect(rootItem, SIGNAL(rotationChanged()), SLOT(adjust()));
-        connect(rootItem, SIGNAL(transformOriginChanged(TransformOrigin)),
+    QQuickItem * contentItem = view->contentItem();
+    if (contentItem) {
+        connect(contentItem, SIGNAL(xChanged()), SLOT(adjust()));
+        connect(contentItem, SIGNAL(yChanged()), SLOT(adjust()));
+        connect(contentItem, SIGNAL(widthChanged()), SLOT(adjust()));
+        connect(contentItem, SIGNAL(heightChanged()), SLOT(adjust()));
+        connect(contentItem, SIGNAL(rotationChanged()), SLOT(adjust()));
+        connect(contentItem, SIGNAL(transformOriginChanged(TransformOrigin)),
                 SLOT(adjust()));
     }
     m_item = item;
@@ -111,9 +111,9 @@ void Highlight::adjust()
     qreal scaleFactor = 1;
     QPointF originOffset = QPointF(0,0);
     QQuickWindow *view = m_item->window();
-    if (view->rootItem()) {
-        scaleFactor = view->rootItem()->scale();
-        originOffset -= view->rootItem()->pos();
+    if (view->contentItem()) {
+        scaleFactor = view->contentItem()->scale();
+        originOffset -= view->contentItem()->pos();
     }
     // The scale transform for the overlay needs to be cancelled
     // as the Item's transform which will be applied to the painter

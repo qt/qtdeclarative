@@ -461,7 +461,7 @@ void QQuickViewPrivate::setRootObject(QObject *obj)
         return;
     if (QQuickItem *sgItem = qobject_cast<QQuickItem *>(obj)) {
         root = sgItem;
-        sgItem->setParentItem(q->QQuickWindow::rootItem());
+        sgItem->setParentItem(q->QQuickWindow::contentItem());
     } else {
         qWarning() << "QQuickView only supports loading of root objects that derive from QQuickItem." << endl
                    << endl

@@ -84,8 +84,12 @@ Q_SIGNALS:
     void primaryOrientationChanged();
     void orientationChanged();
 
+protected slots:
+    void screenChanged(QScreen*);
+
 private:
     QScreen* m_screen;
+    QQuickWindow* m_window;
     QQuickItem* m_attachee;
 };
 

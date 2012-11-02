@@ -180,7 +180,7 @@ void tst_QQuickDrag::cleanupTestCase()
 void tst_QQuickDrag::active()
 {
     QQuickWindow window;
-    TestDropTarget dropTarget(window.rootItem());
+    TestDropTarget dropTarget(window.contentItem());
     dropTarget.setSize(QSizeF(100, 100));
     QQmlComponent component(&engine);
     component.setData(
@@ -390,7 +390,7 @@ void tst_QQuickDrag::active()
 void tst_QQuickDrag::drop()
 {
     QQuickWindow window;
-    TestDropTarget outerTarget(window.rootItem());
+    TestDropTarget outerTarget(window.contentItem());
     outerTarget.setSize(QSizeF(100, 100));
     outerTarget.acceptAction = Qt::CopyAction;
     TestDropTarget innerTarget(&outerTarget);
@@ -526,7 +526,7 @@ void tst_QQuickDrag::drop()
 void tst_QQuickDrag::move()
 {
     QQuickWindow window;
-    TestDropTarget outerTarget(window.rootItem());
+    TestDropTarget outerTarget(window.contentItem());
     outerTarget.setSize(QSizeF(100, 100));
     TestDropTarget leftTarget(&outerTarget);
     leftTarget.setPos(QPointF(0, 35));
@@ -680,11 +680,11 @@ void tst_QQuickDrag::move()
 void tst_QQuickDrag::parentChange()
 {
     QQuickWindow window1;
-    TestDropTarget dropTarget1(window1.rootItem());
+    TestDropTarget dropTarget1(window1.contentItem());
     dropTarget1.setSize(QSizeF(100, 100));
 
     QQuickWindow window2;
-    TestDropTarget dropTarget2(window2.rootItem());
+    TestDropTarget dropTarget2(window2.contentItem());
     dropTarget2.setSize(QSizeF(100, 100));
 
     QQmlComponent component(&engine);
@@ -704,7 +704,7 @@ void tst_QQuickDrag::parentChange()
     QCOMPARE(evaluate<bool>(item, "Drag.active"), true);
 
     // Verify setting a parent item for an item with an active drag sends an enter event.
-    item->setParentItem(window1.rootItem());
+    item->setParentItem(window1.contentItem());
     QCOMPARE(dropTarget1.enterEvents, 0);
     QCoreApplication::processEvents();
     QCOMPARE(dropTarget1.enterEvents, 1);
@@ -719,7 +719,7 @@ void tst_QQuickDrag::parentChange()
 
     // Changing the parent to an item in another window sends a leave event in the old window
     // and an enter on the new window.
-    item->setParentItem(window2.rootItem());
+    item->setParentItem(window2.contentItem());
     QCOMPARE(dropTarget1.enterEvents, 1);
     QCOMPARE(dropTarget1.moveEvents, 1);
     QCOMPARE(dropTarget1.leaveEvents, 0);
@@ -746,13 +746,13 @@ void tst_QQuickDrag::parentChange()
 
     // Go around again and verify no events if active is false.
     evaluate<void>(item, "Drag.active = false");
-    item->setParentItem(window1.rootItem());
+    item->setParentItem(window1.contentItem());
     QCoreApplication::processEvents();
 
     item->setParentItem(&dropTarget1);
     QCoreApplication::processEvents();
 
-    item->setParentItem(window2.rootItem());
+    item->setParentItem(window2.contentItem());
     QCoreApplication::processEvents();
 
     item->setParentItem(0);
@@ -767,7 +767,7 @@ void tst_QQuickDrag::parentChange()
 void tst_QQuickDrag::hotSpot()
 {
     QQuickWindow window;
-    TestDropTarget dropTarget(window.rootItem());
+    TestDropTarget dropTarget(window.contentItem());
     dropTarget.setSize(QSizeF(100, 100));
     QQmlComponent component(&engine);
     component.setData(
@@ -831,7 +831,7 @@ void tst_QQuickDrag::hotSpot()
 void tst_QQuickDrag::supportedActions()
 {
     QQuickWindow window;
-    TestDropTarget dropTarget(window.rootItem());
+    TestDropTarget dropTarget(window.contentItem());
     dropTarget.setSize(QSizeF(100, 100));
     QQmlComponent component(&engine);
     component.setData(
@@ -889,7 +889,7 @@ void tst_QQuickDrag::supportedActions()
 void tst_QQuickDrag::proposedAction()
 {
     QQuickWindow window;
-    TestDropTarget dropTarget(window.rootItem());
+    TestDropTarget dropTarget(window.contentItem());
     dropTarget.setSize(QSizeF(100, 100));
     QQmlComponent component(&engine);
     component.setData(
@@ -958,8 +958,8 @@ void tst_QQuickDrag::keys()
 
     // Test changing the keys restarts a drag.
     QQuickWindow window;
-    item->setParentItem(window.rootItem());
-    TestDropTarget dropTarget(window.rootItem());
+    item->setParentItem(window.contentItem());
+    TestDropTarget dropTarget(window.contentItem());
     dropTarget.setSize(QSizeF(100, 100));
 
     evaluate<void>(item, "Drag.start()");
@@ -1006,8 +1006,8 @@ void tst_QQuickDrag::source()
 
     // Test changing the source restarts a drag.
     QQuickWindow window;
-    item->setParentItem(window.rootItem());
-    TestDropTarget dropTarget(window.rootItem());
+    item->setParentItem(window.contentItem());
+    TestDropTarget dropTarget(window.contentItem());
     dropTarget.setSize(QSizeF(100, 100));
 
     evaluate<void>(item, "Drag.start()");
@@ -1183,7 +1183,7 @@ void tst_QQuickDrag::recursion()
         QTest::ignoreMessage(QtWarningMsg, warning.constData());
 
     QQuickWindow window;
-    RecursingDropTarget dropTarget(script, type, window.rootItem());
+    RecursingDropTarget dropTarget(script, type, window.contentItem());
     dropTarget.setSize(QSizeF(100, 100));
     QQmlComponent component(&engine);
     component.setData(
@@ -1195,7 +1195,7 @@ void tst_QQuickDrag::recursion()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *item = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(item);
-    item->setParentItem(window.rootItem());
+    item->setParentItem(window.contentItem());
 
     dropTarget.setItem(item);
 

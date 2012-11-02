@@ -317,23 +317,6 @@ QQuickRectangle::QQuickRectangle(QQuickItem *parent)
 
 void QQuickRectangle::doUpdate()
 {
-    Q_D(QQuickRectangle);
-    qreal penMargin = 0;
-    qreal penOffset = 0;
-    if (d->pen && d->pen->isValid()) {
-        if (d->pen->pixelAligned()) {
-            const int pw = qRound(d->pen->width());
-            penMargin = qreal(0.5) * pw;
-            penOffset = (pw & 1) * qreal(0.5);
-        } else {
-            penMargin = qreal(0.5) * d->pen->width();
-        }
-    }
-    if (penMargin != d->penMargin || penOffset != d->penOffset) {
-        d->penMargin = penMargin;
-        d->penOffset = penOffset;
-        d->dirty(QQuickItemPrivate::Size); // update clip
-    }
     update();
 }
 
@@ -348,21 +331,7 @@ void QQuickRectangle::doUpdate()
     \note The width of the rectangle's border does not affect the geometry of the
     rectangle itself or its position relative to other items if anchors are used.
 
-    If \c border.width is an odd number, the rectangle is painted at a half-pixel offset to retain
-    border smoothness. Also, the border is rendered evenly on either side of the
-    rectangle's boundaries, and the spare pixel is rendered to the right and below the
-    rectangle (as documented for QRect rendering). This can cause unintended effects if
-    \c border.width is 1 and the rectangle is \l{Item::clip}{clipped} by a parent item:
-
-    \div {class="float-right"}
-    \inlineimage rect-border-width.png
-    \enddiv
-
-    \snippet qml/rectangle/rect-border-width.qml 0
-
-    \clearfloat
-    Here, the innermost rectangle's border is clipped on the bottom and right edges by its
-    parent. To avoid this, the border width can be set to two instead of one.
+    The border is rendered within the rectangle's boundaries.
 */
 QQuickPen *QQuickRectangle::border()
 {
@@ -523,18 +492,6 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     rectangle->update();
 
     return rectangle;
-}
-
-QRectF QQuickRectangle::boundingRect() const
-{
-    Q_D(const QQuickRectangle);
-    return QRectF(d->penOffset - d->penMargin, d->penOffset - d->penMargin,
-                  d->width + 2 * d->penMargin, d->height + 2 * d->penMargin);
-}
-
-QRectF QQuickRectangle::clipRect() const
-{
-    return QQuickRectangle::boundingRect();
 }
 
 QT_END_NAMESPACE
