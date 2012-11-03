@@ -783,7 +783,7 @@ QObject *QQmlComponent::create(QQmlContext *context)
 }
 
 /*!
-    This method provides more advanced control over component instance creation.
+    This method provides advanced control over component instance creation.
     In general, programmers should use QQmlComponent::create() to create a 
     component.
 
@@ -932,11 +932,12 @@ void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionS
 }
 
 /*!
-    This method provides more advanced control over component instance creation.
+    This method provides advanced control over component instance creation.
     In general, programmers should use QQmlComponent::create() to create a 
     component.
 
-    Complete a component creation begin with QQmlComponent::beginCreate().
+    This function completes the component creation begun with QQmlComponent::beginCreate()
+    and must be called afterwards.
 
     \sa beginCreate()
 */
