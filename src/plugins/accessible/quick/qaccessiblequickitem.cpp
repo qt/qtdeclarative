@@ -268,6 +268,11 @@ QVariant QAccessibleQuickItemValueInterface::minimumValue() const
     return item()->property("minimumValue");
 }
 
+QVariant QAccessibleQuickItemValueInterface::minimumStepSize() const
+{
+    return item()->property("stepSize");
+}
+
 /*!
   \internal
   Shared between QAccessibleQuickItem and QAccessibleQuickView

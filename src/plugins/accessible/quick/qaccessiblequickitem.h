@@ -91,6 +91,7 @@ public:
     void setCurrentValue(const QVariant &value);
     QVariant maximumValue() const;
     QVariant minimumValue() const;
+    QVariant minimumStepSize() const;
 };
 
 #endif // QT_NO_ACCESSIBILITY
