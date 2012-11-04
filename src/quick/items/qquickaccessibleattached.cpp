@@ -152,6 +152,10 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     item->d_func()->setAccessibleFlagAndListener();
     QAccessibleEvent ev(item, QAccessible::ObjectCreated);
     QAccessible::updateAccessibility(&ev);
+
+    if (!parent->property("value").isNull()) {
+        connect(parent, SIGNAL(valueChanged()), this, SLOT(valueChanged()));
+    }
 }
 
 QQuickAccessibleAttached::~QQuickAccessibleAttached()

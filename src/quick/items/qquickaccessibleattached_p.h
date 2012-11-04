@@ -139,11 +139,17 @@ public:
         return object;
     }
 
+public Q_SLOTS:
+    void valueChanged() {
+        QAccessibleValueChangeEvent ev(parent(), parent()->property("value"));
+        QAccessible::updateAccessibility(&ev);
+    }
 
 Q_SIGNALS:
     void roleChanged();
     void nameChanged();
     void descriptionChanged();
+
 private:
     QAccessible::Role m_role;
     QString m_name;
