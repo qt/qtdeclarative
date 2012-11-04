@@ -3129,8 +3129,12 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
 {
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessibleEvent ev(this, QAccessible::Focus);
-    QAccessible::updateAccessibility(&ev);
+    if (QAccessible::isActive()) {
+        if (QObject *acc = QQuickAccessibleAttached::findAccessible(this)) {
+            QAccessibleEvent ev(acc, QAccessible::Focus);
+            QAccessible::updateAccessibility(&ev);
+        }
+    }
 #endif
 }
 
@@ -5274,7 +5278,7 @@ void QQuickItem::setFlags(Flags flags)
         }
     }
 
-    if ((flags & ItemClipsChildrenToShape ) != (d->flags & ItemClipsChildrenToShape))
+    if ((flags & ItemClipsChildrenToShape) != (d->flags & ItemClipsChildrenToShape))
         d->dirty(QQuickItemPrivate::Clip);
 
     d->flags = flags;

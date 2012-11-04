@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_ACCESSIBILITY
 
-class QAccessibleQuickItem : public QQmlAccessible
+class QAccessibleQuickItem : public QQmlAccessible, public QAccessibleValueInterface, public QAccessibleTextInterface
 {
 public:
     QAccessibleQuickItem(QQuickItem *item);
@@ -72,27 +72,50 @@ public:
 
     bool isAccessible() const;
 
-protected:
-    QQuickItem *item() const { return static_cast<QQuickItem*>(object()); }
-};
-
-QRect itemScreenRect(QQuickItem *item);
-
-
-class QAccessibleQuickItemValueInterface: public QAccessibleQuickItem, public QAccessibleValueInterface
-{
-public:
-    QAccessibleQuickItemValueInterface(QQuickItem *item) : QAccessibleQuickItem(item)
-    {}
-
-    void *interface_cast(QAccessible::InterfaceType t);
-
+    // Value Interface
     QVariant currentValue() const;
     void setCurrentValue(const QVariant &value);
     QVariant maximumValue() const;
     QVariant minimumValue() const;
     QVariant minimumStepSize() const;
+
+
+    // Text Interface
+    // selection (ignored for now)
+    void selection(int selectionIndex, int *startOffset, int *endOffset) const { *startOffset = 0; *endOffset = 0; }
+    int selectionCount() const { return 0; }
+    void addSelection(int startOffset, int endOffset) {}
+    void removeSelection(int selectionIndex) {}
+    void setSelection(int selectionIndex, int startOffset, int endOffset) {}
+
+    // cursor
+    int cursorPosition() const { return 0; }
+    void setCursorPosition(int position) {}
+
+    // text
+    QString text(int startOffset, int endOffset) const { return text(QAccessible::Name).mid(startOffset, endOffset - startOffset); }
+//    QString textBeforeOffset(int offset, QAccessible2::BoundaryType boundaryType,
+//                                     int *startOffset, int *endOffset) const;
+//    QString textAfterOffset(int offset, QAccessible2::BoundaryType boundaryType,
+//                                    int *startOffset, int *endOffset) const;
+//    QString textAtOffset(int offset, QAccessible2::BoundaryType boundaryType,
+//                                 int *startOffset, int *endOffset) const;
+    int characterCount() const { return text(QAccessible::Name).count(); }
+
+    // character <-> geometry
+    QRect characterRect(int offset) const { return QRect(); }
+    int offsetAtPoint(const QPoint &point) const { return -1; }
+
+    void scrollToSubstring(int startIndex, int endIndex) {}
+    QString attributes(int offset, int *startOffset, int *endOffset) const { return QString(); }
+
+protected:
+    QQuickItem *item() const { return static_cast<QQuickItem*>(object()); }
+    void *interface_cast(QAccessible::InterfaceType t);
 };
+
+QRect itemScreenRect(QQuickItem *item);
+
 
 #endif // QT_NO_ACCESSIBILITY
 
