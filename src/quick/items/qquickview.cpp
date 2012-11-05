@@ -236,6 +236,31 @@ void QQuickView::setSource(const QUrl& url)
 }
 
 /*!
+    \internal
+
+    Set the source \a url, \a component and content \a item (root of the QML object hierarchy) directly.
+ */
+void QQuickView::setContent(const QUrl& url, QQmlComponent *component, QObject* item)
+{
+    Q_D(QQuickView);
+    d->source = url;
+    d->component = component;
+
+    if (d->component && d->component->isError()) {
+        QList<QQmlError> errorList = d->component->errors();
+        foreach (const QQmlError &error, errorList) {
+            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), 0).warning()
+                    << error;
+        }
+        emit statusChanged(status());
+        return;
+    }
+
+    d->setRootObject(item);
+    emit statusChanged(status());
+}
+
+/*!
   Returns the source URL, if set.
 
   \sa setSource()

@@ -442,59 +442,85 @@ int main(int argc, char ** argv)
         displayFileDialog(&options);
 #endif
 
-    QQmlEngine *engine = 0;
-
     int exitCode = 0;
 
     if (!options.file.isEmpty()) {
         if (!options.versionDetection || checkVersion(options.file)) {
             QTranslator translator;
-            QQuickView qxView;
-            engine = qxView.engine();
+
+            // TODO: as soon as the engine construction completes, the debug service is
+            // listening for connections.  But actually we aren't ready to debug anything.
+            QQmlEngine engine;
+            QQmlComponent *component = new QQmlComponent(&engine);
             for (int i = 0; i < imports.size(); ++i)
-                engine->addImportPath(imports.at(i));
+                engine.addImportPath(imports.at(i));
             for (int i = 0; i < bundles.size(); ++i)
-                engine->addNamedBundle(bundles.at(i).first, bundles.at(i).second);
+                engine.addNamedBundle(bundles.at(i).first, bundles.at(i).second);
             if (options.file.isLocalFile()) {
                 QFileInfo fi(options.file.toLocalFile());
                 loadTranslationFile(translator, fi.path());
-                loadDummyDataFiles(*engine, fi.path());
+                loadDummyDataFiles(engine, fi.path());
             }
-            qxView.setSource(options.file);
-
-            QObject::connect(engine, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
-
-            if (options.resizeViewToRootItem)
-                qxView.setResizeMode(QQuickView::SizeViewToRootObject);
-            else
-                qxView.setResizeMode(QQuickView::SizeRootObjectToView);
-
-            if (options.transparent) {
-                QSurfaceFormat surfaceFormat;
-                surfaceFormat.setAlphaBufferSize(8);
-                qxView.setFormat(surfaceFormat);
-                qxView.setClearBeforeRendering(true);
-                qxView.setColor(QColor(Qt::transparent));
-                qxView.setWindowFlags(Qt::FramelessWindowHint);
+            QObject::connect(&engine, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
+            component->loadUrl(options.file);
+            if ( !component->isReady() ) {
+                qFatal(qPrintable(component->errorString()));
+                return -1;
             }
 
-            qxView.setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+            QObject *topLevel = component->create();
+            QQuickWindow *window = qobject_cast<QQuickWindow *>(topLevel);
+            QQuickView* qxView = 0;
+            if (!window) {
+                QQuickItem *contentItem = qobject_cast<QQuickItem *>(topLevel);
+                if (contentItem) {
+                    qxView = new QQuickView(&engine, NULL);
+                    window = qxView;
+                    window->setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+                    if (options.resizeViewToRootItem)
+                        qxView->setResizeMode(QQuickView::SizeViewToRootObject);
+                    else
+                        qxView->setResizeMode(QQuickView::SizeRootObjectToView);
+                    qxView->setContent(options.file, component, contentItem);
+                }
+            }
 
-            if (options.fullscreen)
-                qxView.showFullScreen();
-            else if (options.maximized)
-                qxView.showMaximized();
-            else
-                qxView.show();
+            if (window) {
+                if (options.transparent) {
+                    QSurfaceFormat surfaceFormat;
+                    surfaceFormat.setAlphaBufferSize(8);
+                    window->setFormat(surfaceFormat);
+                    window->setClearBeforeRendering(true);
+                    window->setColor(QColor(Qt::transparent));
+                    window->setWindowFlags(Qt::FramelessWindowHint);
+                }
+
+                if (options.fullscreen)
+                    window->showFullScreen();
+                else if (options.maximized)
+                    window->showMaximized();
+                else
+                    window->show();
+            }
 
             if (options.quitImmediately)
                 QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
+
+            // Now would be a good time to inform the debug service to start listening.
 
             exitCode = app.exec();
 
 #ifdef QML_RUNTIME_TESTING
             RenderStatistics::printTotalStats();
 #endif
+            // Ready to exit.  If we created qxView, it owns the component;
+            // otherwise, the ownership is still right here.  Nobody deletes the engine
+            // (which is odd since the container constructor takes the engine pointer),
+            // but it's stack-allocated anyway.
+            if (qxView)
+                delete qxView;
+            else
+                delete component;
         }
     }
 

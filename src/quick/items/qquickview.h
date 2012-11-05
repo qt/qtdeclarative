@@ -54,6 +54,7 @@ class QQmlEngine;
 class QQmlContext;
 class QQmlError;
 class QQuickItem;
+class QQmlComponent;
 
 class QQuickViewPrivate;
 class Q_QUICK_EXPORT QQuickView : public QQuickWindow
@@ -90,6 +91,7 @@ public:
 
 public Q_SLOTS:
     void setSource(const QUrl&);
+    void setContent(const QUrl& url, QQmlComponent *component, QObject *item);
 
 Q_SIGNALS:
     void statusChanged(QQuickView::Status);

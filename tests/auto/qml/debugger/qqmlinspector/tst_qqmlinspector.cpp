@@ -67,6 +67,8 @@ public:
     {
     }
 
+private:
+    void startQmlsceneProcess(const char *qmlFile);
 
 private:
     QQmlDebugProcess *m_process;
@@ -80,9 +82,10 @@ private slots:
     void connect();
     void showAppOnTop();
     void reloadQml();
+    void reloadQmlWindow();
 };
 
-void tst_QQmlInspector::init()
+void tst_QQmlInspector::startQmlsceneProcess(const char *qmlFile)
 {
     const QString argument = "-qmljsdebugger=port:" STR_PORT ",block";
 
@@ -95,6 +98,10 @@ void tst_QQmlInspector::init()
     m_client = new QQmlInspectorClient(m_connection);
 
     m_connection->connectToHost(QLatin1String("127.0.0.1"), PORT);
+}
+
+void tst_QQmlInspector::init()
+{
 }
 
 void tst_QQmlInspector::cleanup()
@@ -110,11 +117,13 @@ void tst_QQmlInspector::cleanup()
 
 void tst_QQmlInspector::connect()
 {
+    startQmlsceneProcess("qtquick2.qml");
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 }
 
 void tst_QQmlInspector::showAppOnTop()
 {
+    startQmlsceneProcess("qtquick2.qml");
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setShowAppOnTop(true);
@@ -128,6 +137,7 @@ void tst_QQmlInspector::showAppOnTop()
 
 void tst_QQmlInspector::reloadQml()
 {
+    startQmlsceneProcess("qtquick2.qml");
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     QByteArray fileContents;
@@ -145,6 +155,32 @@ void tst_QQmlInspector::reloadQml()
 
     QTRY_COMPARE(m_process->output().contains(
                  QString("version 2.0")), true);
+
+    QCOMPARE(m_client->m_requestResult, true);
+    QCOMPARE(m_client->m_reloadRequestId, m_client->m_responseId);
+}
+
+void tst_QQmlInspector::reloadQmlWindow()
+{
+    startQmlsceneProcess("window.qml");
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    QByteArray fileContents;
+
+    QFile file(testFile("changes.txt"));
+    if (file.open(QFile::ReadOnly))
+        fileContents = file.readAll();
+    file.close();
+
+    QHash<QString, QByteArray> changesHash;
+    changesHash.insert("window.qml", fileContents);
+
+    m_client->reloadQml(changesHash);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(responseReceived())));
+
+    QEXPECT_FAIL("", "cannot debug with a QML file containing a top-level Window", Abort);
+    QTRY_COMPARE(m_process->output().contains(
+                     QString("version 2.0")), true);
 
     QCOMPARE(m_client->m_requestResult, true);
     QCOMPARE(m_client->m_reloadRequestId, m_client->m_responseId);
