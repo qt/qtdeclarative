@@ -38,50 +38,13 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtQuick.Window 2.0
+import QtQml 2.0
 
-Item {
-    width: 320
-    height: 240
-    Text {
-        anchors.centerIn: parent
-        text: "First Window"
-    }
-    Rectangle {
-        border.color: "black"
-        color: childWindow.visible ? "green" : "yellow"
-        radius: height / 4
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
-        anchors.margins: 10
-        width: text.implicitWidth + 20
-        height: text.implicitHeight + 20
-        Text {
-            id: text
-            text: "Pop up window"
-            anchors.centerIn: parent
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: childWindow.visible = !childWindow.visible
-        }
-    }
-
-    Window {
-        id: childWindow
-        width: 320
-        height: 240
-        x: 320
-        y: 240
-        color: "green"
-        Text {
-            anchors.centerIn: parent
-            text: "Second Window"
-        }
-        MouseArea{
-            anchors.fill: parent
-            onClicked: Qt.quit()
-        }
-    }
+/*
+    This object's only functionality is to exist as a root object and
+    display nothing, proving that qmlscene can run without windows.
+    (A QtObject can't even have Component.onCompleted)
+*/
+QtObject {
+    property string philosophy: "hello bleak windowless world"
 }

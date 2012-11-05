@@ -39,9 +39,9 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtQuick.Window 2.0 as Window
+import QtQuick.Window 2.0
 
-Window.Window {
+Window {
     width: 640
     height: 480
     visible: true //It's false by default

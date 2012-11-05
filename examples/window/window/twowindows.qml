@@ -41,47 +41,29 @@
 import QtQuick 2.0
 import QtQuick.Window 2.0
 
-Item {
-    width: 320
-    height: 240
-    Text {
-        anchors.centerIn: parent
-        text: "First Window"
-    }
-    Rectangle {
-        border.color: "black"
-        color: childWindow.visible ? "green" : "yellow"
-        radius: height / 4
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
-        anchors.margins: 10
-        width: text.implicitWidth + 20
-        height: text.implicitHeight + 20
+QtObject {
+    property var win1: Window {
+        width: 640
+        height: 480
+        x: 0
+        y: 0
+        visible: true
+        color: "#ccffff"
         Text {
-            id: text
-            text: "Pop up window"
             anchors.centerIn: parent
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: childWindow.visible = !childWindow.visible
+            text: "First Window"
         }
     }
-
-    Window {
-        id: childWindow
-        width: 320
-        height: 240
-        x: 320
-        y: 240
+    property var win2: Window {
+        width: 640
+        height: 480
+        x: 640
+        y: 480
+        visible: true
         color: "green"
         Text {
             anchors.centerIn: parent
             text: "Second Window"
-        }
-        MouseArea{
-            anchors.fill: parent
-            onClicked: Qt.quit()
         }
     }
 }
