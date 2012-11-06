@@ -166,8 +166,8 @@ int evaluateCompiledCode(const QStringList &files)
         VM::Context *ctx = vm.rootContext;
 
         QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
-        globalObject->setProperty(ctx, vm.identifier(QStringLiteral("print")),
-                                  QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
+        globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
+                              QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
 
         void * buf = __qmljs_create_exception_handler(ctx);
         if (setjmp(*(jmp_buf *)buf)) {
