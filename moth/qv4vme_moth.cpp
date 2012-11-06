@@ -1,16 +1,16 @@
 #include "qv4vme_moth_p.h"
 #include "qv4instr_moth_p.h"
 
-using namespace QQmlJS;
-using namespace QQmlJS::Moth;
-
 #ifdef DO_TRACE_INSTR
 #  define TRACE_INSTR(I) fprintf(stderr, "executing a %s\n", #I);
-#  define TRACE(n, str, ...) { fprintf(stderr, "-- %s : ", #n); fprintf(stderr, str, __VA_ARGS__); fprintf(stderr, "\n"); }
+#  define TRACE(n, str, ...) { fprintf(stderr, "    %s : ", #n); fprintf(stderr, str, __VA_ARGS__); fprintf(stderr, "\n"); }
 #else
 #  define TRACE_INSTR(I)
 #  define TRACE(n, str, ...)
 #endif // DO_TRACE_INSTR
+
+using namespace QQmlJS;
+using namespace QQmlJS::Moth;
 
 #define MOTH_BEGIN_INSTR_COMMON(I) { \
     const InstrMeta<(int)Instr::I>::DataType &instr = InstrMeta<(int)Instr::I>::data(*genericInstr); \
@@ -123,6 +123,7 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
     MOTH_END_INSTR(LoadFalse)
 
     MOTH_BEGIN_INSTR(LoadNumber)
+        TRACE(inline, "number = %f", instr.value);
         tempRegister = VM::Value::fromDouble(instr.value);
     MOTH_END_INSTR(LoadNumber)
 
@@ -145,6 +146,7 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
     MOTH_END_INSTR(StoreName)
 
     MOTH_BEGIN_INSTR(Push)
+        TRACE(inline, "stack size: %u", instr.value);
         stack.resize(instr.value);
     MOTH_END_INSTR(Push)
 

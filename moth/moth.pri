@@ -10,3 +10,4 @@ SOURCES += \
     $$PWD/qv4instr_moth.cpp \
     $$PWD/qv4vme_moth.cpp \
 
+#DEFINES += DO_TRACE_INSTR

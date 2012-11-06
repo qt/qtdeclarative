@@ -52,6 +52,14 @@
 #include <cmath>
 #include <cassert>
 
+#ifdef DO_TRACE_INSTR
+#  define TRACE1(x) fprintf(stderr, "    %s\n", __FUNCTION__);
+#  define TRACE2(x, y) fprintf(stderr, "    %s\n", __FUNCTION__);
+#else
+#  define TRACE1(x)
+#  define TRACE2(x, y)
+#endif // TRACE1
+
 namespace QQmlJS {
 
 namespace IR {
@@ -816,6 +824,8 @@ inline Value __qmljs_typeof(Value value, Context *ctx)
 
 inline Value __qmljs_uplus(Value value, Context *ctx)
 {
+    TRACE1(value);
+
     if (value.tryIntegerConversion())
         return value;
 
@@ -825,6 +835,8 @@ inline Value __qmljs_uplus(Value value, Context *ctx)
 
 inline Value __qmljs_uminus(Value value, Context *ctx)
 {
+    TRACE1(value);
+
     if (value.isInteger())
         return Value::fromInt32(-value.integerValue());
     double n = __qmljs_to_number(value, ctx);
@@ -833,6 +845,8 @@ inline Value __qmljs_uminus(Value value, Context *ctx)
 
 inline Value __qmljs_compl(Value value, Context *ctx)
 {
+    TRACE1(value);
+
     int n;
     if (value.isConvertibleToInt())
         n = ~value.int_32;
@@ -844,6 +858,8 @@ inline Value __qmljs_compl(Value value, Context *ctx)
 
 inline Value __qmljs_not(Value value, Context *ctx)
 {
+    TRACE1(value);
+
     bool b = __qmljs_to_boolean(value, ctx);
     return Value::fromBoolean(!b);
 }
@@ -851,6 +867,8 @@ inline Value __qmljs_not(Value value, Context *ctx)
 // binary operators
 inline Value __qmljs_bit_or(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     if (Value::integerCompatible(left, right))
         return Value::fromInt32(left.integerValue() | right.integerValue());
 
@@ -861,6 +879,8 @@ inline Value __qmljs_bit_or(Value left, Value right, Context *ctx)
 
 inline Value __qmljs_bit_xor(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     if (Value::integerCompatible(left, right))
         return Value::fromInt32(left.integerValue() ^ right.integerValue());
 
@@ -871,6 +891,8 @@ inline Value __qmljs_bit_xor(Value left, Value right, Context *ctx)
 
 inline Value __qmljs_bit_and(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     if (Value::integerCompatible(left, right))
         return Value::fromInt32(left.integerValue() & right.integerValue());
 
@@ -881,6 +903,8 @@ inline Value __qmljs_bit_and(Value left, Value right, Context *ctx)
 
 inline Value __qmljs_add(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     if (Value::integerCompatible(left, right))
         return add_int32(left.integerValue(), right.integerValue());
 
@@ -892,6 +916,8 @@ inline Value __qmljs_add(Value left, Value right, Context *ctx)
 
 inline Value __qmljs_sub(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     if (Value::integerCompatible(left, right))
         return sub_int32(left.integerValue(), right.integerValue());
 
@@ -902,6 +928,8 @@ inline Value __qmljs_sub(Value left, Value right, Context *ctx)
 
 inline Value __qmljs_mul(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     if (Value::integerCompatible(left, right))
         return mul_int32(left.integerValue(), right.integerValue());
 
@@ -912,6 +940,8 @@ inline Value __qmljs_mul(Value left, Value right, Context *ctx)
 
 inline Value __qmljs_div(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     double lval = __qmljs_to_number(left, ctx);
     double rval = __qmljs_to_number(right, ctx);
     return Value::fromDouble(lval / rval);
@@ -919,6 +949,8 @@ inline Value __qmljs_div(Value left, Value right, Context *ctx)
 
 inline Value __qmljs_mod(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     if (Value::integerCompatible(left, right))
         return Value::fromInt32(left.integerValue() % right.integerValue());
 
@@ -931,6 +963,8 @@ inline Value __qmljs_mod(Value left, Value right, Context *ctx)
 
 inline Value __qmljs_shl(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     if (Value::integerCompatible(left, right))
         return Value::fromInt32(left.integerValue() << ((uint(right.integerValue()) & 0x1f)));
 
@@ -941,6 +975,8 @@ inline Value __qmljs_shl(Value left, Value right, Context *ctx)
 
 inline Value __qmljs_shr(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     if (Value::integerCompatible(left, right))
         return Value::fromInt32(left.integerValue() >> ((uint(right.integerValue()) & 0x1f)));
 
@@ -951,6 +987,8 @@ inline Value __qmljs_shr(Value left, Value right, Context *ctx)
 
 inline Value __qmljs_ushr(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     if (Value::integerCompatible(left, right))
         return Value::fromInt32(uint(left.integerValue()) >> ((uint(right.integerValue()) & 0x1f)));
 
@@ -961,48 +999,66 @@ inline Value __qmljs_ushr(Value left, Value right, Context *ctx)
 
 inline Value __qmljs_gt(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     return Value::fromBoolean(__qmljs_cmp_gt(left, right, ctx));
 }
 
 inline Value __qmljs_lt(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     return Value::fromBoolean(__qmljs_cmp_lt(left, right, ctx));
 }
 
 inline Value __qmljs_ge(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     return Value::fromBoolean(__qmljs_cmp_ge(left, right, ctx));
 }
 
 inline Value __qmljs_le(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     return Value::fromBoolean(__qmljs_cmp_le(left, right, ctx));
 }
 
 inline Value __qmljs_eq(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     return Value::fromBoolean(__qmljs_cmp_eq(left, right, ctx));
 }
 
 inline Value __qmljs_ne(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     return Value::fromBoolean(!__qmljs_cmp_eq(left, right, ctx));
 }
 
 inline Value __qmljs_se(Value left, Value right, Context *)
 {
+    TRACE2(left, right);
+
     bool r = __qmljs_strict_equal(left, right);
     return Value::fromBoolean(r);
 }
 
 inline Value __qmljs_sne(Value left, Value right, Context *)
 {
+    TRACE2(left, right);
+
     bool r = ! __qmljs_strict_equal(left, right);
     return Value::fromBoolean(r);
 }
 
 inline Bool __qmljs_cmp_gt(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     left = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
     right = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
 
@@ -1021,6 +1077,8 @@ inline Bool __qmljs_cmp_gt(Value left, Value right, Context *ctx)
 
 inline Bool __qmljs_cmp_lt(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     left = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
     right = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
 
@@ -1039,6 +1097,8 @@ inline Bool __qmljs_cmp_lt(Value left, Value right, Context *ctx)
 
 inline Bool __qmljs_cmp_ge(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     left = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
     right = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
 
@@ -1057,6 +1117,8 @@ inline Bool __qmljs_cmp_ge(Value left, Value right, Context *ctx)
 
 inline Bool __qmljs_cmp_le(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     left = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
     right = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
 
@@ -1075,6 +1137,8 @@ inline Bool __qmljs_cmp_le(Value left, Value right, Context *ctx)
 
 inline Bool __qmljs_cmp_eq(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     // need to test for doubles first as NaN != NaN
     if (left.isDouble() && right.isDouble())
         return left.doubleValue() == right.doubleValue();
@@ -1088,33 +1152,45 @@ inline Bool __qmljs_cmp_eq(Value left, Value right, Context *ctx)
 
 inline Bool __qmljs_cmp_ne(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     return !__qmljs_cmp_eq(left, right, ctx);
 }
 
 inline Bool __qmljs_cmp_se(Value left, Value right, Context *)
 {
+    TRACE2(left, right);
+
     return __qmljs_strict_equal(left, right);
 }
 
 inline Bool __qmljs_cmp_sne(Value left, Value right, Context *)
 {
+    TRACE2(left, right);
+
     return ! __qmljs_strict_equal(left, right);
 }
 
 inline Bool __qmljs_cmp_instanceof(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     Value v = __qmljs_instanceof(left, right, ctx);
     return v.booleanValue();
 }
 
 inline uint __qmljs_cmp_in(Value left, Value right, Context *ctx)
 {
+    TRACE2(left, right);
+
     Value v = __qmljs_in(left, right, ctx);
     return v.booleanValue();
 }
 
 inline Bool __qmljs_strict_equal(Value x, Value y)
 {
+    TRACE2(x, y);
+
     if (x.isDouble() || y.isDouble())
         return x.asDouble() == y.asDouble();
     if (x.rawValue() == y.rawValue())
