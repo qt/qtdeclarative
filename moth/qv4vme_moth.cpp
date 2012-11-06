@@ -146,6 +146,26 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
         __qmljs_set_activation_property(context, instr.name, tempRegister);
     MOTH_END_INSTR(StoreName)
 
+    MOTH_BEGIN_INSTR(LoadElement)
+        tempRegister = __qmljs_get_element(context, TEMP(instr.base), TEMP(instr.index));
+    MOTH_END_INSTR(LoadElement)
+
+    MOTH_BEGIN_INSTR(StoreElement)
+        __qmljs_set_element(context, TEMP(instr.base), TEMP(instr.index), tempRegister);
+    MOTH_END_INSTR(StoreElement)
+
+    MOTH_BEGIN_INSTR(LoadProperty)
+        TRACE(inline, "base temp = %d, property name = %s", instr.baseTemp, instr.name->toQString().toUtf8().constData());
+        VM::Value base = TEMP(instr.baseTemp);
+        tempRegister = __qmljs_get_property(context, base, instr.name);
+    MOTH_END_INSTR(LoadProperty)
+
+    MOTH_BEGIN_INSTR(StoreProperty)
+        TRACE(inline, "base temp = %d, property name = %s", instr.baseTemp, instr.name->toQString().toUtf8().constData());
+        VM::Value base = TEMP(instr.baseTemp);
+        __qmljs_set_property(context, base, instr.name, tempRegister);
+    MOTH_END_INSTR(StoreProperty)
+
     MOTH_BEGIN_INSTR(Push)
         TRACE(inline, "stack size: %u", instr.value);
         stack.resize(instr.value);
@@ -184,6 +204,22 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
         }
     MOTH_END_INSTR(CallBuiltin)
 
+    MOTH_BEGIN_INSTR(CreateValue)
+        VM::Value *args = stack.data() + instr.args;
+        tempRegister = __qmljs_construct_value(context, TEMP(instr.func), args, instr.argc);
+    MOTH_END_INSTR(CreateValue)
+
+    MOTH_BEGIN_INSTR(CreateProperty)
+        VM::Value *args = stack.data() + instr.args;
+        tempRegister = __qmljs_construct_property(context, TEMP(instr.base), instr.name, args, instr.argc);
+    MOTH_END_INSTR(CreateProperty)
+
+    MOTH_BEGIN_INSTR(CreateActivationProperty)
+        TRACE(inline, "property name = %s, argc = %d", instr.name->toQString().toUtf8().constData(), instr.argc);
+        VM::Value *args = stack.data() + instr.args;
+        tempRegister = __qmljs_construct_activation_property(context, instr.name, args, instr.argc);
+    MOTH_END_INSTR(CreateActivationProperty)
+
     MOTH_BEGIN_INSTR(Jump)
         code = ((uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(Jump)
@@ -192,6 +228,10 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
         if (__qmljs_to_boolean(tempRegister, context))
             code = ((uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(CJump)
+
+    MOTH_BEGIN_INSTR(Unop)
+        tempRegister = instr.alu(TEMP(instr.e), context);
+    MOTH_END_INSTR(Unop)
 
     MOTH_BEGIN_INSTR(Binop)
         tempRegister = instr.alu(TEMP(instr.lhsTempIndex), TEMP(instr.rhsTempIndex), context);
@@ -205,6 +245,20 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
     MOTH_BEGIN_INSTR(LoadThis)
         tempRegister = __qmljs_get_thisObject(context);
     MOTH_END_INSTR(LoadThis)
+
+    MOTH_BEGIN_INSTR(InplaceElementOp)
+        instr.alu(TEMP(instr.targetBase),
+                  TEMP(instr.targetIndex),
+                  TEMP(instr.source),
+                  context);
+    MOTH_END_INSTR(InplaceElementOp)
+
+    MOTH_BEGIN_INSTR(InplaceMemberOp)
+        instr.alu(TEMP(instr.source),
+                  TEMP(instr.targetBase),
+                  instr.targetMember,
+                  context);
+    MOTH_END_INSTR(InplaceMemberOp)
 
 #ifdef MOTH_THREADED_INTERPRETER
     // nothing to do

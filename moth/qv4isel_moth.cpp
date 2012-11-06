@@ -4,6 +4,10 @@
 using namespace QQmlJS;
 using namespace QQmlJS::Moth;
 
+namespace {
+QTextStream qout(stderr, QIODevice::WriteOnly);
+}
+
 InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module * /*module*/,
                                            uchar *code)
 : _engine(engine), _code(code), _ccode(code)
@@ -146,6 +150,32 @@ void InstructionSelection::callProperty(IR::Call *c)
     addInstruction(call);
 }
 
+void InstructionSelection::construct(IR::New *ctor)
+{
+    if (IR::Name *baseName = ctor->base->asName()) {
+        Instruction::CreateActivationProperty create;
+        create.name = _engine->newString(*baseName->id);
+        prepareCallArgs(ctor->args, create.argc, create.args);
+        addInstruction(create);
+    } else if (IR::Member *member = ctor->base->asMember()) {
+        IR::Temp *base = member->base->asTemp();
+        assert(base != 0);
+
+        Instruction::CreateProperty create;
+        create.base = base->index;
+        create.name = _engine->newString(*member->name);
+        prepareCallArgs(ctor->args, create.argc, create.args);
+        addInstruction(create);
+    } else if (IR::Temp *baseTemp = ctor->base->asTemp()) {
+        Instruction::CreateValue create;
+        create.func = baseTemp->index;
+        prepareCallArgs(ctor->args, create.argc, create.args);
+        addInstruction(create);
+    } else {
+        qWarning("  NEW");
+    }
+}
+
 void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint32 &args)
 {
     int locals = _function->tempCount - _function->locals.size() + _function->maxNumberOfArguments;
@@ -168,6 +198,9 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
             ++argc;
             e = e->next;
         }
+    } else {
+        argc = 0;
+        args = 0;
     }
 }
 
@@ -200,14 +233,6 @@ void InstructionSelection::visitLeave(IR::Leave *)
 {
     qWarning("%s", __PRETTY_FUNCTION__);
     Q_UNREACHABLE();
-}
-
-void InstructionSelection::visitMove(IR::Move *s)
-{
-    if (s->op == IR::OpInvalid) 
-        simpleMove(s);
-    else 
-        qWarning("UNKNOWN MOVE");
 }
 
 typedef VM::Value (*ALUFunction)(const VM::Value, const VM::Value, VM::Context*);
@@ -278,8 +303,7 @@ static inline ALUFunction aluOpFunction(IR::AluOp op)
     }
 };
 
-// A move that doesn't involve an inplace operation
-void InstructionSelection::simpleMove(IR::Move *s)
+void InstructionSelection::visitMove(IR::Move *s)
 {
     if (IR::Name *n = s->target->asName()) {
         Q_UNUSED(n);
@@ -293,6 +317,7 @@ void InstructionSelection::simpleMove(IR::Move *s)
             Instruction::StoreName store;
             store.name = _engine->newString(*n->id);
             addInstruction(store);
+            return;
         } else {
             Q_UNREACHABLE();
         }
@@ -342,17 +367,44 @@ void InstructionSelection::simpleMove(IR::Move *s)
             load.value = clos->value;
             addInstruction(load);
         } else if (IR::New *ctor = s->source->asNew()) {
-            Q_UNUSED(ctor);
-            qWarning("  NEW");
+            construct(ctor);
         } else if (IR::Member *m = s->source->asMember()) {
-            Q_UNUSED(m);
-            qWarning("  MEMBER");
+            if (IR::Temp *base = m->base->asTemp()) {
+                Instruction::LoadProperty load;
+                load.baseTemp = base->index;
+                load.name = _engine->newString(*m->name);
+                addInstruction(load);
+            } else {
+                qWarning("  MEMBER");
+            }
         } else if (IR::Subscript *ss = s->source->asSubscript()) {
-            Q_UNUSED(ss);
-            qWarning("  SUBSCRIPT");
+            Instruction::LoadElement load;
+            load.base = ss->base->asTemp()->index;
+            load.index = ss->index->asTemp()->index;
+            addInstruction(load);
         } else if (IR::Unop *u = s->source->asUnop()) {
-            Q_UNUSED(u);
-            qWarning("  UNOP");
+            if (IR::Temp *e = u->expr->asTemp()) {
+                VM::Value (*op)(const VM::Value value, VM::Context *ctx) = 0;
+                switch (u->op) {
+                case IR::OpIfTrue: assert(!"unreachable"); break;
+                case IR::OpNot: op = VM::__qmljs_not; break;
+                case IR::OpUMinus: op = VM::__qmljs_uminus; break;
+                case IR::OpUPlus: op = VM::__qmljs_uplus; break;
+                case IR::OpCompl: op = VM::__qmljs_compl; break;
+                default: assert(!"unreachable"); break;
+                } // switch
+
+                if (op) {
+                    Instruction::Unop unop;
+                    unop.alu = op;
+                    unop.e = e->index;
+                    addInstruction(unop);
+                }
+            } else {
+                qWarning("  UNOP");
+                s->dump(qout, IR::Stmt::MIR);
+                qout << endl;
+            }
         } else if (IR::Binop *b = s->source->asBinop()) {
             Instruction::Binop binop;
             binop.alu = aluOpFunction(b->op);
@@ -374,15 +426,93 @@ void InstructionSelection::simpleMove(IR::Move *s)
         Instruction::StoreTemp st;
         st.tempIndex = t->index;
         addInstruction(st);
-    } else if (IR::Member *m = s->target->asMember()) {
-        Q_UNUSED(m);
-        qWarning("MEMBER");
+        return;
     } else if (IR::Subscript *ss = s->target->asSubscript()) {
-        Q_UNUSED(ss);
+        if (IR::Temp *t = s->source->asTemp()) {
+            void (*op)(VM::Value base, VM::Value index, VM::Value value, VM::Context *ctx) = 0;
+            switch (s->op) {
+            case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_element; break;
+            case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_element; break;
+            case IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_element; break;
+            case IR::OpAdd: op = VM::__qmljs_inplace_add_element; break;
+            case IR::OpSub: op = VM::__qmljs_inplace_sub_element; break;
+            case IR::OpMul: op = VM::__qmljs_inplace_mul_element; break;
+            case IR::OpDiv: op = VM::__qmljs_inplace_div_element; break;
+            case IR::OpMod: op = VM::__qmljs_inplace_mod_element; break;
+            case IR::OpLShift: op = VM::__qmljs_inplace_shl_element; break;
+            case IR::OpRShift: op = VM::__qmljs_inplace_shr_element; break;
+            case IR::OpURShift: op = VM::__qmljs_inplace_ushr_element; break;
+            default: break;
+            }
+
+            if (op) {
+                Instruction::InplaceElementOp ieo;
+                ieo.alu = op;
+                ieo.targetBase = ss->base->asTemp()->index;
+                ieo.targetIndex = ss->index->asTemp()->index;
+                ieo.source = t->index;
+                addInstruction(ieo);
+                return;
+            } else if (s->op == IR::OpInvalid) {
+                if (IR::Temp *t2 = s->source->asTemp()) {
+                    Instruction::LoadTemp load;
+                    load.tempIndex = t2->index;
+                    addInstruction(load);
+
+                    Instruction::StoreElement store;
+                    store.base = ss->base->asTemp()->index;
+                    store.index = ss->index->asTemp()->index;
+                    addInstruction(store);
+                    return;
+                }
+            }
+        }
         qWarning("SUBSCRIPT");
-    } else {
-        Q_UNREACHABLE();
+    } else if (IR::Member *m = s->target->asMember()) {
+        if (IR::Temp *t = s->source->asTemp()) {
+            void (*op)(VM::Value value, VM::Value base, VM::String *name, VM::Context *ctx) = 0;
+            switch (s->op) {
+            case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_member; break;
+            case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_member; break;
+            case IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_member; break;
+            case IR::OpAdd: op = VM::__qmljs_inplace_add_member; break;
+            case IR::OpSub: op = VM::__qmljs_inplace_sub_member; break;
+            case IR::OpMul: op = VM::__qmljs_inplace_mul_member; break;
+            case IR::OpDiv: op = VM::__qmljs_inplace_div_member; break;
+            case IR::OpMod: op = VM::__qmljs_inplace_mod_member; break;
+            case IR::OpLShift: op = VM::__qmljs_inplace_shl_member; break;
+            case IR::OpRShift: op = VM::__qmljs_inplace_shr_member; break;
+            case IR::OpURShift: op = VM::__qmljs_inplace_ushr_member; break;
+            default: break;
+            }
+
+            if (op) {
+                Instruction::InplaceMemberOp imo;
+                imo.alu = op;
+                imo.targetBase = m->base->asTemp()->index;
+                imo.targetMember = _engine->newString(*m->name);
+                imo.source = t->index;
+                addInstruction(imo);
+                return;
+            } else if (s->op == IR::OpInvalid) {
+                Instruction::LoadTemp load;
+                load.tempIndex = t->index;
+                addInstruction(load);
+
+                Instruction::StoreProperty store;
+                store.baseTemp = m->base->asTemp()->index;
+                store.name = _engine->newString(*m->name);
+                addInstruction(store);
+                return;
+            }
+        }
+        qWarning("MEMBER");
     }
+
+    Q_UNIMPLEMENTED();
+    s->dump(qout, IR::Stmt::MIR);
+    qout << endl;
+    Q_UNREACHABLE();
 }
 
 void InstructionSelection::visitJump(IR::Jump *s)

@@ -38,6 +38,7 @@ private:
     void callActivationProperty(IR::Call *c);
     void callValue(IR::Call *c);
     void callProperty(IR::Call *c);
+    void construct(IR::New *ctor);
     void prepareCallArgs(IR::ExprList *, quint32 &, quint32 &);
 
     template <int Instr>

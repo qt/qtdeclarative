@@ -18,14 +18,24 @@
     F(MoveTemp, moveTemp) \
     F(LoadName, loadName) \
     F(StoreName, storeName) \
+    F(LoadElement, loadElement) \
+    F(StoreElement, storeElement) \
+    F(LoadProperty, loadProperty) \
+    F(StoreProperty, storeProperty) \
     F(Push, push) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
     F(CallBuiltin, callBuiltin) \
+    F(CreateValue, createValue) \
+    F(CreateProperty, createProperty) \
+    F(CreateActivationProperty, createActivationProperty) \
     F(Jump, jump) \
     F(CJump, jump) \
+    F(Unop, unop) \
     F(Binop, binop) \
-    F(LoadThis, loadThis)
+    F(LoadThis, loadThis) \
+    F(InplaceElementOp, inplaceElementOp) \
+    F(InplaceMemberOp, inplaceMemberOp)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define MOTH_THREADED_INTERPRETER
@@ -92,6 +102,26 @@ union Instr
         MOTH_INSTR_HEADER
         VM::String *name;
     };
+    struct instr_loadProperty {
+        MOTH_INSTR_HEADER
+        int baseTemp;
+        VM::String *name;
+    };
+    struct instr_storeProperty {
+        MOTH_INSTR_HEADER
+        int baseTemp;
+        VM::String *name;
+    };
+    struct instr_loadElement {
+        MOTH_INSTR_HEADER
+        int base;
+        int index;
+    };
+    struct instr_storeElement {
+        MOTH_INSTR_HEADER
+        int base;
+        int index;
+    };
     struct instr_push {
         MOTH_INSTR_HEADER
         quint32 value;
@@ -119,9 +149,33 @@ union Instr
         quint32 argc;
         quint32 args;
     };
+    struct instr_createValue {
+        MOTH_INSTR_HEADER
+        int func;
+        quint32 argc;
+        quint32 args;
+    };
+    struct instr_createProperty {
+        MOTH_INSTR_HEADER
+        int base;
+        VM::String *name;
+        quint32 argc;
+        quint32 args;
+    };
+    struct instr_createActivationProperty {
+        MOTH_INSTR_HEADER
+        VM::String *name;
+        quint32 argc;
+        quint32 args;
+    };
     struct instr_jump {
         MOTH_INSTR_HEADER
         ptrdiff_t offset; 
+    };
+    struct instr_unop {
+        MOTH_INSTR_HEADER
+        int e;
+        VM::Value (*alu)(const VM::Value value, VM::Context *ctx);
     };
     struct instr_binop {
         MOTH_INSTR_HEADER
@@ -131,6 +185,20 @@ union Instr
     };
     struct instr_loadThis {
         MOTH_INSTR_HEADER
+    };
+    struct instr_inplaceElementOp {
+        MOTH_INSTR_HEADER
+        void (*alu)(VM::Value, VM::Value, VM::Value, VM::Context *);
+        int targetBase;
+        int targetIndex;
+        int source;
+    };
+    struct instr_inplaceMemberOp {
+        MOTH_INSTR_HEADER
+        void (*alu)(VM::Value, VM::Value, VM::String *, VM::Context *);
+        int targetBase;
+        VM::String *targetMember;
+        int source;
     };
 
     instr_common common;
@@ -143,13 +211,23 @@ union Instr
     instr_loadClosure loadClosure;
     instr_loadName loadName;
     instr_storeName storeName;
+    instr_loadElement loadElement;
+    instr_storeElement storeElement;
+    instr_loadProperty loadProperty;
+    instr_storeProperty storeProperty;
     instr_push push;
     instr_callValue callValue;
     instr_callProperty callProperty;
     instr_callBuiltin callBuiltin;
+    instr_createValue createValue;
+    instr_createProperty createProperty;
+    instr_createActivationProperty createActivationProperty;
     instr_jump jump;
+    instr_unop unop;
     instr_binop binop;
     instr_loadThis loadThis;
+    instr_inplaceElementOp inplaceElementOp;
+    instr_inplaceMemberOp inplaceMemberOp;
 
     static int size(Type type);
 };
