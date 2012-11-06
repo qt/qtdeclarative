@@ -54,10 +54,11 @@ static inline VM::Value *tempValue(QQmlJS::VM::Context *context, QVector<VM::Val
     if (index < 0) {
         const int arg = -index - 1;
         return context->arguments + arg;
-    } else if (index < stack.count()) {
-        return stack.data() + index;
+    } else if (index < (int) context->varCount) {
+        return context->locals + index;
     } else {
-        return context->locals + index - stack.count();
+        int off = index - context->varCount;
+        return stack.data() + off;
     }
 }
 
