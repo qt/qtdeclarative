@@ -1,0 +1,75 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/legal
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and Digia.  For licensing terms and
+** conditions see http://qt.digia.com/licensing.  For further information
+** use the contact form at http://qt.digia.com/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.  Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: http://www.gnu.org/copyleft/fdl.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+
+\page qtquick-demos.html
+\title QML Demos
+\brief QML demo applications showcasing the power of QML.
+\ingroup all-examples
+\ingroup qtquick
+\inqmlmodule QtQuick 2
+
+The following demo applications showcase the latest version of Qt Quick.
+\div {class="threecolumn_area"}
+    \div {class="heading"}
+    Qt Quick Applications
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/calqlatr}{Calculator}
+        \image qml-calqlatr-example-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/photoviewer}{Photo Viewer}
+        \image qml-photoviewer-demo-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/rssnews}{RSS News Reader}
+        \image qml-rssnews-demo-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/samegame}{Same Game}
+        \image qml-samegame-demo-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/tweetsearch}{Twitter}
+        \image qml-twitter-demo-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/stocqt}{Stock Quote}
+        \image qml-stocqt-demo-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/maroon}{Maroon Game}
+        \image qml-maroon-demo-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/clocks}{Clocks}
+        \image qml-clocks-demo-small.png
+    \enddiv
+\enddiv
+*/
