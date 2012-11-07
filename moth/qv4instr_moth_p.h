@@ -35,7 +35,8 @@
     F(Binop, binop) \
     F(LoadThis, loadThis) \
     F(InplaceElementOp, inplaceElementOp) \
-    F(InplaceMemberOp, inplaceMemberOp)
+    F(InplaceMemberOp, inplaceMemberOp) \
+    F(InplaceNameOp, inplaceNameOp)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define MOTH_THREADED_INTERPRETER
@@ -200,6 +201,12 @@ union Instr
         VM::String *targetMember;
         int source;
     };
+    struct instr_inplaceNameOp {
+        MOTH_INSTR_HEADER
+        void (*alu)(VM::Value, VM::String *, VM::Context *);
+        VM::String *targetName;
+        int source;
+    };
 
     instr_common common;
     instr_ret ret;
@@ -228,6 +235,7 @@ union Instr
     instr_loadThis loadThis;
     instr_inplaceElementOp inplaceElementOp;
     instr_inplaceMemberOp inplaceMemberOp;
+    instr_inplaceNameOp inplaceNameOp;
 
     static int size(Type type);
 };

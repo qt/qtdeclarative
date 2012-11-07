@@ -260,6 +260,12 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
                   context);
     MOTH_END_INSTR(InplaceMemberOp)
 
+    MOTH_BEGIN_INSTR(InplaceNameOp)
+        instr.alu(TEMP(instr.source),
+                  instr.targetName,
+                  context);
+    MOTH_END_INSTR(InplaceNameOp)
+
 #ifdef MOTH_THREADED_INTERPRETER
     // nothing to do
 #else

@@ -305,23 +305,7 @@ static inline ALUFunction aluOpFunction(IR::AluOp op)
 
 void InstructionSelection::visitMove(IR::Move *s)
 {
-    if (IR::Name *n = s->target->asName()) {
-        Q_UNUSED(n);
-        // set activation property
-        if (IR::Temp *t = s->source->asTemp()) {
-            // TODO: fold the next 2 instructions.
-            Instruction::LoadTemp load;
-            load.tempIndex = t->index;
-            addInstruction(load);
-
-            Instruction::StoreName store;
-            store.name = _engine->newString(*n->id);
-            addInstruction(store);
-            return;
-        } else {
-            Q_UNREACHABLE();
-        }
-    } else if (IR::Temp *t = s->target->asTemp()) {
+    if (IR::Temp *t = s->target->asTemp()) {
         // Check what kind of load it is, and generate the instruction for that.
         // The store to the temp (the target) is done afterwards.
         if (IR::Name *n = s->source->asName()) {
@@ -399,9 +383,11 @@ void InstructionSelection::visitMove(IR::Move *s)
                     unop.alu = op;
                     unop.e = e->index;
                     addInstruction(unop);
+                } else {
+                    qWarning("  UNOP1");
                 }
             } else {
-                qWarning("  UNOP");
+                qWarning("  UNOP2");
                 s->dump(qout, IR::Stmt::MIR);
                 qout << endl;
             }
@@ -427,6 +413,43 @@ void InstructionSelection::visitMove(IR::Move *s)
         st.tempIndex = t->index;
         addInstruction(st);
         return;
+    } else if (IR::Name *n = s->target->asName()) {
+        if (IR::Temp *t = s->source->asTemp()) {
+            void (*op)(VM::Value value, VM::String *name, VM::Context *ctx) = 0;
+            switch (s->op) {
+            case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_name; break;
+            case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_name; break;
+            case IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_name; break;
+            case IR::OpAdd: op = VM::__qmljs_inplace_add_name; break;
+            case IR::OpSub: op = VM::__qmljs_inplace_sub_name; break;
+            case IR::OpMul: op = VM::__qmljs_inplace_mul_name; break;
+            case IR::OpDiv: op = VM::__qmljs_inplace_div_name; break;
+            case IR::OpMod: op = VM::__qmljs_inplace_mod_name; break;
+            case IR::OpLShift: op = VM::__qmljs_inplace_shl_name; break;
+            case IR::OpRShift: op = VM::__qmljs_inplace_shr_name; break;
+            case IR::OpURShift: op = VM::__qmljs_inplace_ushr_name; break;
+            default: break;
+            }
+
+            if (op) {
+                Instruction::InplaceNameOp ieo;
+                ieo.alu = op;
+                ieo.targetName = _engine->newString(*n->id);
+                ieo.source = t->index;
+                addInstruction(ieo);
+                return;
+            } else if (s->op == IR::OpInvalid) {
+                Instruction::LoadTemp load;
+                load.tempIndex = t->index;
+                addInstruction(load);
+
+                Instruction::StoreName store;
+                store.name = _engine->newString(*n->id);
+                addInstruction(store);
+                return;
+            }
+        }
+        qWarning("NAME");
     } else if (IR::Subscript *ss = s->target->asSubscript()) {
         if (IR::Temp *t = s->source->asTemp()) {
             void (*op)(VM::Value base, VM::Value index, VM::Value value, VM::Context *ctx) = 0;
@@ -454,17 +477,15 @@ void InstructionSelection::visitMove(IR::Move *s)
                 addInstruction(ieo);
                 return;
             } else if (s->op == IR::OpInvalid) {
-                if (IR::Temp *t2 = s->source->asTemp()) {
-                    Instruction::LoadTemp load;
-                    load.tempIndex = t2->index;
-                    addInstruction(load);
+                Instruction::LoadTemp load;
+                load.tempIndex = t->index;
+                addInstruction(load);
 
-                    Instruction::StoreElement store;
-                    store.base = ss->base->asTemp()->index;
-                    store.index = ss->index->asTemp()->index;
-                    addInstruction(store);
-                    return;
-                }
+                Instruction::StoreElement store;
+                store.base = ss->base->asTemp()->index;
+                store.index = ss->index->asTemp()->index;
+                addInstruction(store);
+                return;
             }
         }
         qWarning("SUBSCRIPT");
