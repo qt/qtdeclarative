@@ -1326,7 +1326,8 @@ bool Codegen::visit(UnaryPlusExpression *ast)
 
 bool Codegen::visit(VoidExpression *ast)
 {
-    statement(ast->expression); // ### CHECK
+    statement(ast->expression);
+    _expr.code = _block->CONST(IR::UndefinedType, 0);
     return false;
 }
 
