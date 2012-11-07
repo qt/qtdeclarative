@@ -58,13 +58,13 @@ void InstructionSelection::operator()(IR::Function *function)
 
 void InstructionSelection::callActivationProperty(IR::Call *c)
 {
-    IR::Name *baseNamen = c->base->asName();
-    Q_ASSERT(baseNamen);
+    IR::Name *baseName = c->base->asName();
+    Q_ASSERT(baseName);
 
-    switch (baseNamen->builtin) {
+    switch (baseName->builtin) {
     case IR::Name::builtin_invalid: {
         Instruction::LoadName load;
-        load.name = _engine->newString(*baseNamen->id);
+        load.name = _engine->newString(*baseName->id);
         addInstruction(load);
 
         Instruction::CallValue call;
@@ -178,6 +178,9 @@ void InstructionSelection::construct(IR::New *ctor)
 
 void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint32 &args)
 {
+    argc = 0;
+    args = 0;
+
     int locals = _function->tempCount - _function->locals.size() + _function->maxNumberOfArguments;
 
     if (e && e->next == 0 && e->expr->asTemp()->index >= 0 && e->expr->asTemp()->index < locals) {
@@ -198,9 +201,6 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
             ++argc;
             e = e->next;
         }
-    } else {
-        argc = 0;
-        args = 0;
     }
 }
 
