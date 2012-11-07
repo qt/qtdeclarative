@@ -27,6 +27,7 @@ INCLUDEPATH += $$PWD
 DEFINES += WTF_USE_UDIS86=1
 INCLUDEPATH += $$PWD/disassembler
 INCLUDEPATH += $$PWD/disassembler/udis86
+INCLUDEPATH += $$_OUT_PWD
 SOURCES += $$PWD/disassembler/UDis86Disassembler.cpp
 SOURCES += $$PWD/disassembler/udis86/udis86.c
 SOURCES += $$PWD/disassembler/udis86/udis86_decode.c
