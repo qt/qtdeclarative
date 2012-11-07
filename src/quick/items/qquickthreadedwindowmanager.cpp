@@ -184,6 +184,7 @@ void QQuickRenderThreadSingleContextWindowManager::handleAddedWindow(QQuickWindo
     data->sizeWasChanged = false;
     data->windowSize = window->size();
     data->isVisible = window->isVisible();
+    data->isRenderable = QQuickWindowPrivate::get(window)->isRenderable();
     m_rendered_windows[window] = data;
 
     isExternalUpdatePending = true;
@@ -397,7 +398,9 @@ void QQuickRenderThreadSingleContextWindowManager::run()
             WindowData *windowData = it.value();
             QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(window);
 
-            if (windowPrivate->isRenderable()) {
+            windowData->isRenderable = windowPrivate->isRenderable();
+
+            if (windowData->isRenderable) {
                 gl->makeCurrent(window);
 
                 if (windowData->viewportSize != windowData->windowSize) {
@@ -410,10 +413,6 @@ void QQuickRenderThreadSingleContextWindowManager::run()
                 }
 
                 windowPrivate->syncSceneGraph();
-            } else {
-                qWarning().nospace()
-                    << "Non-renderable window " << window
-                    << " (" << window->geometry() << ").";
             }
         }
         inSync = false;
@@ -434,6 +433,9 @@ void QQuickRenderThreadSingleContextWindowManager::run()
             QQuickWindow *window = it.key();
             WindowData *windowData = it.value();
             QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(window);
+
+            if (!windowData->isRenderable)
+                continue;
 
 #ifdef THREAD_DEBUG
             printf("                RenderThread: Rendering window %p\n", window);

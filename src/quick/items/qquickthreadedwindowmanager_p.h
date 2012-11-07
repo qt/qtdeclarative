@@ -159,6 +159,7 @@ private:
 
         uint sizeWasChanged : 1;
         uint isVisible : 1;
+        uint isRenderable : 1;
     };
 
     QHash<QQuickWindow *, WindowData *> m_rendered_windows;
