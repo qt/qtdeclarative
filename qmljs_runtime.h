@@ -129,7 +129,7 @@ struct Value
     };
 
     enum ImmediateFlags {
-        ConvertibleToInt = NotDouble_Mask | 0x1
+        ConvertibleToInt = Immediate_Mask | (0x1 << 15)
     };
 
     enum ValueTypeInternal {
