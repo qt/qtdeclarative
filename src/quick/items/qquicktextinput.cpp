@@ -2698,6 +2698,9 @@ void QQuickTextInputPrivate::updateLayout()
     option.setTextDirection(layoutDirection());
     option.setWrapMode(QTextOption::WrapMode(wrapMode));
     option.setAlignment(Qt::Alignment(q->effectiveHAlign()));
+    if (!qmlDisableDistanceField())
+        option.setUseDesignMetrics(renderType != QQuickTextInput::NativeRendering);
+
     m_textLayout.setTextOption(option);
     m_textLayout.setFont(font);
 
