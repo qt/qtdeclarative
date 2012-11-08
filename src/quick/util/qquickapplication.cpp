@@ -42,6 +42,8 @@
 #include "qquickapplication_p.h"
 
 #include <private/qobject_p.h>
+#include <private/qguiapplication_p.h>
+#include <qpa/qplatformintegration.h>
 #include <QtGui/QGuiApplication>
 #include <QtCore/QDebug>
 
@@ -89,6 +91,11 @@ Qt::LayoutDirection QQuickApplication::layoutDirection() const
 {
     Q_D(const QQuickApplication);
     return d->direction;
+}
+
+bool QQuickApplication::supportsMultipleWindows() const
+{
+    return QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::MultipleWindows);
 }
 
 bool QQuickApplication::eventFilter(QObject *, QEvent *event)

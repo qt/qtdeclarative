@@ -57,12 +57,14 @@ class Q_AUTOTEST_EXPORT QQuickApplication : public QObject
     Q_OBJECT
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection NOTIFY layoutDirectionChanged)
+    Q_PROPERTY(bool supportsMultipleWindows READ supportsMultipleWindows CONSTANT)
 
 public:
     explicit QQuickApplication(QObject *parent = 0);
     virtual ~QQuickApplication();
     bool active() const;
     Qt::LayoutDirection layoutDirection() const;
+    bool supportsMultipleWindows() const;
 
 Q_SIGNALS:
     void activeChanged();
