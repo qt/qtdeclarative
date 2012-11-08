@@ -86,7 +86,7 @@
 namespace v8 {
 
 // Needed for V8ObjectSet
-inline uint qHash(const v8::Handle<v8::Object> &object, uint seed)
+inline uint qHash(const v8::Handle<v8::Object> &object, uint seed = 0)
 {
     return (object->GetIdentityHash() ^ seed);
 }
