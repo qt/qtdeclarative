@@ -70,7 +70,8 @@ static inline bool protect(const void *addr, size_t size)
     return mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode) == 0;
 }
 
-static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QString &source,
+static int evaluate(QQmlJS::VM::Context *ctx, const QString &fileName,
+                     const QString &source, bool useInterpreter,
                      QQmlJS::Codegen::Mode mode = QQmlJS::Codegen::GlobalCode);
 
 namespace builtins {
@@ -95,13 +96,36 @@ struct Print: FunctionObject
 
 struct Eval: FunctionObject
 {
-    Eval(Context *scope): FunctionObject(scope) {}
+    Eval(Context *scope, bool useInterpreter): FunctionObject(scope), useInterpreter(useInterpreter) {}
 
     virtual void call(Context *ctx)
     {
         const QString code = ctx->argument(0).toString(ctx)->toQString();
-        evaluate(ctx, QStringLiteral("eval code"), code, QQmlJS::Codegen::EvalCode);
+        evaluate(ctx, QStringLiteral("eval code"), code, useInterpreter, QQmlJS::Codegen::EvalCode);
     }
+
+private:
+    bool useInterpreter;
+};
+
+struct TestHarnessError: FunctionObject
+{
+    TestHarnessError(Context *scope, bool &errorInTestHarness): FunctionObject(scope), errorOccurred(errorInTestHarness) {}
+
+    virtual void call(Context *ctx)
+    {
+        errorOccurred = true;
+
+        for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
+            String *s = ctx->argument(i).toString(ctx);
+            if (i)
+                std::cerr << ' ';
+            std::cerr << qPrintable(s->toQString());
+        }
+        std::cerr << std::endl;
+    }
+
+    bool &errorOccurred;
 };
 
 } // builtins
@@ -145,7 +169,7 @@ int compileFiles(const QStringList &files)
             compile(fileName, source);
         }
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int evaluateCompiledCode(const QStringList &files)
@@ -159,7 +183,7 @@ int evaluateCompiledCode(const QStringList &files)
         QFunctionPointer ptr = lib.resolve("%entry");
 //        qDebug("_%%entry resolved to address %p", ptr);
         if (!ptr)
-            return -1;
+            return EXIT_FAILURE;
         void (*code)(VM::Context *) = (void (*)(VM::Context *)) ptr;
 
         VM::ExecutionEngine vm;
@@ -175,19 +199,20 @@ int evaluateCompiledCode(const QStringList &files)
                 std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
             else
                 std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
-            return -2;
+            return EXIT_FAILURE;
         }
 
         code(ctx);
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 #endif
 
-static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QString &source,
-                     QQmlJS::Codegen::Mode mode)
+static int evaluate(QQmlJS::VM::Context *ctx, const QString &fileName,
+                    const QString &source, bool useInterpreter,
+                    QQmlJS::Codegen::Mode mode)
 {
     using namespace QQmlJS;
 
@@ -201,8 +226,6 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
         assert(!"memalign failed");
     assert(code);
     assert(! (size_t(code) & 15));
-
-    static bool useMoth = !qgetenv("USE_MOTH").isNull();
 
     {
         QQmlJS::Engine ee, *engine = &ee;
@@ -224,7 +247,7 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
             Codegen cg;
             globalCode = cg(program, &module, mode);
 
-            if (useMoth) {
+            if (useInterpreter) {
                 Moth::InstructionSelection isel(vm, &module, code);
                 foreach (IR::Function *function, module.functions)
                     isel(function);
@@ -240,7 +263,7 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
         }
 
         if (! globalCode)
-            return;
+            return EXIT_FAILURE;
     }
 
     if (! ctx->activation.isObject())
@@ -256,10 +279,10 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
             std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
         else
             std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
-        return;
+        return EXIT_FAILURE;
     }
 
-    if (useMoth) {
+    if (useInterpreter) {
         Moth::VME vme;
         vme(ctx, code);
     } else {
@@ -267,9 +290,11 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
     }
 
     if (! ctx->result.isUndefined()) {
-        if (! qgetenv("SHOW_EXIT_VALUE").isNull())
+        if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
             std::cout << "exit value: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
     }
+
+    return EXIT_SUCCESS;
 }
 
 int main(int argc, char *argv[])
@@ -278,38 +303,84 @@ int main(int argc, char *argv[])
     QStringList args = app.arguments();
     args.removeFirst();
 
-#ifndef QMLJS_NO_LLVM
-    if (args.isEmpty()) {
-        std::cerr << "Usage: v4 [--compile|--aot] file..." << std::endl;
-        return 0;
-    }
+    enum {
+        use_masm,
+        use_moth,
+        use_llvm_compiler,
+        use_llvm_runtime
+    } mode = use_masm;
 
-    if (args.first() == QLatin1String("--compile")) {
-        args.removeFirst();
-        return compileFiles(args);
-    } else if (args.first() == QLatin1String("--aot")) {
-        args.removeFirst();
-        return evaluateCompiledCode(args);
-    }
-#endif
-
-    QQmlJS::VM::ExecutionEngine vm;
-    QQmlJS::VM::Context *ctx = vm.rootContext;
-
-    QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
-    globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
-                              QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
-
-    globalObject->__put__(ctx, vm.identifier(QStringLiteral("eval")),
-                              QQmlJS::VM::Value::fromObject(new builtins::Eval(ctx)));
-
-    foreach (const QString &fn, args) {
-        QFile file(fn);
-        if (file.open(QFile::ReadOnly)) {
-            const QString code = QString::fromUtf8(file.readAll());
-            file.close();
-
-            evaluate(vm.rootContext, fn, code);
+    if (!args.isEmpty()) {
+        if (args.first() == QLatin1String("--jit")) {
+            mode = use_masm;
+            args.removeFirst();
         }
+
+        if (args.first() == QLatin1String("--interpret")) {
+            mode = use_moth;
+            args.removeFirst();
+        }
+
+#ifndef QMLJS_NO_LLVM
+        if (args.first() == QLatin1String("--compile")) {
+            mode = use_llvm_compiler;
+            args.removeFirst();
+        }
+
+        if (args.first() == QLatin1String("--aot")) {
+            mode = use_llvm_runtime;
+            args.removeFirst();
+        }
+#endif // QMLJS_NO_LLVM
+        if (args.first() == QLatin1String("--help")) {
+            std::cerr << "Usage: v4 [|--jit|--interpret|--compile|--aot] file..." << std::endl;
+            return EXIT_SUCCESS;
+        }
+    }
+
+    switch (mode) {
+#ifdef QMLJS_NO_LLVM
+    case use_llvm_compiler:
+    case use_llvm_runtime:
+        std::cerr << "LLVM backend was not built, compiler is unavailable." << std::endl;
+        return EXIT_FAILURE;
+#else // QMLJS_NO_LLVM
+    case use_llvm_compiler:
+        return compileFiles(args);
+    case use_llvm_runtime:
+        return evaluateCompiledCode(args);
+#endif // QMLJS_NO_LLVM
+    case use_masm:
+    case use_moth: {
+        bool useInterpreter = mode == use_moth;
+        QQmlJS::VM::ExecutionEngine vm;
+        QQmlJS::VM::Context *ctx = vm.rootContext;
+
+        QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
+        globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
+                                  QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
+
+        globalObject->__put__(ctx, vm.identifier(QStringLiteral("eval")),
+                                  QQmlJS::VM::Value::fromObject(new builtins::Eval(ctx, useInterpreter)));
+
+        bool errorInTestHarness = false;
+        if (!qgetenv("IN_TEST_HARNESS").isEmpty())
+            globalObject->__put__(ctx, vm.identifier(QStringLiteral("$ERROR")),
+                                  QQmlJS::VM::Value::fromObject(new builtins::TestHarnessError(ctx, errorInTestHarness)));
+
+        foreach (const QString &fn, args) {
+            QFile file(fn);
+            if (file.open(QFile::ReadOnly)) {
+                const QString code = QString::fromUtf8(file.readAll());
+                file.close();
+
+                int exitCode = evaluate(vm.rootContext, fn, code, useInterpreter);
+                if (exitCode != EXIT_SUCCESS)
+                    return exitCode;
+                if (errorInTestHarness)
+                    return EXIT_FAILURE;
+            }
+        }
+    } return EXIT_SUCCESS;
     }
 }
