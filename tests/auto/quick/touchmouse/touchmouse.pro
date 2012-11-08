@@ -16,3 +16,5 @@ TESTDATA = data/*
 CONFIG += parallel_test
 
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
+
+mac:CONFIG+=insignificant_test # QTBUG-27890
