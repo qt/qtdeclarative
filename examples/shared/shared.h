@@ -54,7 +54,7 @@
                     qPrintable(QDir::toNativeSeparators(directory.absolutePath())));\
                 return -1;\
             }\
-    } else if (QGuiApplication::platformName() == QLatin1String("Cocoa")) {\
+    } else if (QGuiApplication::platformName() == QLatin1String("cocoa")) {\
         if (directory.absolutePath().endsWith(#NAME".app/Contents/MacOS"))\
             for (int i = 0; i < 3; ++i) {\
                 if (!directory.cdUp()) {\
