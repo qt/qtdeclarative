@@ -44,10 +44,7 @@ HEADERS += \
 INCLUDEPATH += \
     $$system($$LLVM_CONFIG --includedir)
 
-DEFINES += \
-    __STDC_CONSTANT_MACROS \
-    __STDC_FORMAT_MACROS \
-    __STDC_LIMIT_MACROS
+QMAKE_CXXFLAGS += $$system($$LLVM_CONFIG --cppflags)
 
 LIBS += \
     $$system($$LLVM_CONFIG --ldflags) \
@@ -55,8 +52,10 @@ LIBS += \
 
 QMAKE_EXTRA_TARGETS += gen_llvm_runtime
 
+GEN_LLVM_RUNTIME_FLAGS = $$system($$LLVM_CONFIG --cppflags)
+
 gen_llvm_runtime.target = llvm_runtime
-gen_llvm_runtime.commands = clang -O2 -emit-llvm -c -I. -Imasm -DQMLJS_LLVM_RUNTIME llvm_runtime.cpp  -o llvm_runtime.bc
+gen_llvm_runtime.commands = clang -O2 -emit-llvm -c $(INCPATH) $$GEN_LLVM_RUNTIME_FLAGS -DQMLJS_LLVM_RUNTIME llvm_runtime.cpp -o llvm_runtime.bc
 
 
 } else {

@@ -41,11 +41,9 @@
 #ifndef QMLJS_RUNTIME_H
 #define QMLJS_RUNTIME_H
 
-#ifndef QMLJS_LLVM_RUNTIME
-#  include <QtCore/QString>
-#  include <QtCore/qnumeric.h>
-#  include <QtCore/QDebug>
-#endif
+#include <QtCore/QString>
+#include <QtCore/qnumeric.h>
+#include <QtCore/QDebug>
 
 #include <wtf/Platform.h>
 
