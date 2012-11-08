@@ -823,7 +823,10 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     window->setSource(testFileUrl("mouseonflickableonpinch.qml"));
     window->show();
     window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(window->rootObject() != 0);
+    QRect windowRect = QRect(window->position(), window->size());
+    QCursor::setPos(windowRect.center());
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
     QVERIFY(pinchArea);
@@ -841,14 +844,11 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     QTest::touchEvent(window, device).move(0, p, window);
     p -= QPoint(10, 0);
     QTest::touchEvent(window, device).move(0, p, window);
-
-    QTest::qWait(1000);
-
+    QGuiApplication::processEvents();
     p -= QPoint(10, 0);
     QTest::touchEvent(window, device).move(0, p, window);
     QTest::touchEvent(window, device).release(0, p, window);
-
-    QTest::qWait(1000);
+    QGuiApplication::processEvents();
 
     //QVERIFY(flickable->isMovingHorizontally());
     qDebug() << "Pos: " << rect->pos();
@@ -890,13 +890,13 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     pinchSequence.move(0, p, window).commit();
     p -= QPoint(10, 0);
     pinchSequence.move(0, p, window).commit();
-    QTest::qWait(1000);
+    QGuiApplication::processEvents();
     p -= QPoint(10, 0);
     pinchSequence.move(0, p, window).commit();
 
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
-    QCOMPARE(windowPriv->mouseGrabberItem, flickable);
     qDebug() << "Mouse Grabber: " << windowPriv->mouseGrabberItem << " itemForTouchPointId: " << windowPriv->itemForTouchPointId;
+    QCOMPARE(windowPriv->mouseGrabberItem, flickable);
 
     // Add a second finger, this should lead to stealing
     p1 = QPoint(40, 100);
