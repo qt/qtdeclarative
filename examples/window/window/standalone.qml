@@ -49,7 +49,8 @@ Item {
     Text {
         id: text1
         anchors.centerIn: parent
-        text: "First Window"
+        text: "First Window\n" + (Qt.application.supportsMultipleWindows ?
+            "click the button to open a second window" : "only one window is allowed")
     }
     Rectangle {
         border.color: "black"
@@ -73,6 +74,7 @@ Item {
         anchors.margins: 10
         width: text.implicitWidth + 20
         height: text.implicitHeight + 20
+        visible: Qt.application.supportsMultipleWindows
         Text {
             id: text
             text: "Pop up window"
