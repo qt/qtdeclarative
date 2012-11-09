@@ -1996,7 +1996,11 @@ bool QQuickWindowPrivate::isRenderable() const
 {
     if (geometry.width() <= 0 || geometry.height() <= 0)
         return false;
-    return visible || (renderWithoutShowing && platformWindow);
+    // Change to be applied after the visibility property is integrated in qtbase:
+//    return visibility != QWindow::Hidden || (renderWithoutShowing && platformWindow);
+    // Temporary version which is implementation-agnostic but slightly less efficient:
+    const QQuickWindow *q = q_func();
+    return q->isVisible() || (renderWithoutShowing && platformWindow);
 }
 
 /*!
