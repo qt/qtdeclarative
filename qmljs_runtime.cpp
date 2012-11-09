@@ -603,7 +603,9 @@ void __qmljs_inplace_bit_and_element(Value base, Value index, Value value, Conte
             return;
         }
     }
-    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+    String *s = index.toString(ctx);
+    assert(s);
+    __qmljs_inplace_bit_and_member(value, base, s, ctx);
 }
 
 void __qmljs_inplace_bit_or_element(Value base, Value index, Value value, Context *ctx)
@@ -618,7 +620,9 @@ void __qmljs_inplace_bit_or_element(Value base, Value index, Value value, Contex
             return;
         }
     }
-    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+    String *s = index.toString(ctx);
+    assert(s);
+    __qmljs_inplace_bit_or_member(value, base, s, ctx);
 }
 
 void __qmljs_inplace_bit_xor_element(Value base, Value index, Value value, Context *ctx)
@@ -633,7 +637,9 @@ void __qmljs_inplace_bit_xor_element(Value base, Value index, Value value, Conte
             return;
         }
     }
-    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+    String *s = index.toString(ctx);
+    assert(s);
+    __qmljs_inplace_bit_xor_member(value, base, s, ctx);
 }
 
 void __qmljs_inplace_add_element(Value base, Value index, Value value, Context *ctx)
@@ -648,7 +654,9 @@ void __qmljs_inplace_add_element(Value base, Value index, Value value, Context *
             return;
         }
     }
-    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+    String *s = index.toString(ctx);
+    assert(s);
+    __qmljs_inplace_add_member(value, base, s, ctx);
 }
 
 void __qmljs_inplace_sub_element(Value base, Value index, Value value, Context *ctx)
@@ -663,7 +671,9 @@ void __qmljs_inplace_sub_element(Value base, Value index, Value value, Context *
             return;
         }
     }
-    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+    String *s = index.toString(ctx);
+    assert(s);
+    __qmljs_inplace_sub_member(value, base, s, ctx);
 }
 
 void __qmljs_inplace_mul_element(Value base, Value index, Value value, Context *ctx)
@@ -678,7 +688,9 @@ void __qmljs_inplace_mul_element(Value base, Value index, Value value, Context *
             return;
         }
     }
-    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+    String *s = index.toString(ctx);
+    assert(s);
+    __qmljs_inplace_mul_member(value, base, s, ctx);
 }
 
 void __qmljs_inplace_div_element(Value base, Value index, Value value, Context *ctx)
@@ -693,7 +705,9 @@ void __qmljs_inplace_div_element(Value base, Value index, Value value, Context *
             return;
         }
     }
-    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+    String *s = index.toString(ctx);
+    assert(s);
+    __qmljs_inplace_div_member(value, base, s, ctx);
 }
 
 void __qmljs_inplace_mod_element(Value base, Value index, Value value, Context *ctx)
@@ -708,7 +722,9 @@ void __qmljs_inplace_mod_element(Value base, Value index, Value value, Context *
             return;
         }
     }
-    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+    String *s = index.toString(ctx);
+    assert(s);
+    __qmljs_inplace_mod_member(value, base, s, ctx);
 }
 
 void __qmljs_inplace_shl_element(Value base, Value index, Value value, Context *ctx)
@@ -723,7 +739,9 @@ void __qmljs_inplace_shl_element(Value base, Value index, Value value, Context *
             return;
         }
     }
-    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+    String *s = index.toString(ctx);
+    assert(s);
+    __qmljs_inplace_shl_member(value, base, s, ctx);
 }
 
 void __qmljs_inplace_shr_element(Value base, Value index, Value value, Context *ctx)
@@ -738,7 +756,9 @@ void __qmljs_inplace_shr_element(Value base, Value index, Value value, Context *
             return;
         }
     }
-    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+    String *s = index.toString(ctx);
+    assert(s);
+    __qmljs_inplace_shr_member(value, base, s, ctx);
 }
 
 void __qmljs_inplace_ushr_element(Value base, Value index, Value value, Context *ctx)
@@ -753,7 +773,9 @@ void __qmljs_inplace_ushr_element(Value base, Value index, Value value, Context 
             return;
         }
     }
-    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+    String *s = index.toString(ctx);
+    assert(s);
+    __qmljs_inplace_ushr_member(value, base, s, ctx);
 }
 
 void __qmljs_inplace_bit_and_member(Value value, Value base, String *name, Context *ctx)
