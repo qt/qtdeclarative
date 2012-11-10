@@ -102,7 +102,7 @@ Value Object::__get__(Context *ctx, String *name)
             return Value::undefinedValue();
         FunctionObject *f = p->get->asFunctionObject();
         if (f) {
-            f->call(ctx);
+            f->call(ctx, Value::fromObject(this), 0, 0);
             return ctx->result;
         }
     }
@@ -165,18 +165,10 @@ void Object::__put__(Context *ctx, String *name, const Value &value, bool throwE
         // Clause 5
         if (pd && pd->isAccessor()) {
             assert(pd->set != 0);
-            FunctionObject *func = pd->set->asFunctionObject();
-            assert(func);
 
-            // ### unify with callFunction method
-            Context k;
-            Context *c = func->needsActivation ? ctx->engine->newContext() : &k;
-            Value that = Value::fromObject(this);
             Value args[1];
             args[0] = value;
-            c->initCallContext(ctx, &that, func, args, 1);
-            func->call(c);
-            c->leaveCallContext();
+            pd->set->call(ctx, Value::fromObject(this), args, 1);
             return;
         }
 
@@ -348,6 +340,27 @@ bool FunctionObject::hasInstance(Context *ctx, const Value &value)
     }
 
     return false;
+}
+
+Value FunctionObject::construct(Context *context, Value *args, int argc)
+{
+    Context k;
+    Context *ctx = needsActivation ? context->engine->newContext() : &k;
+    ctx->initConstructorContext(context, 0, this, args, argc);
+    construct(ctx);
+    ctx->leaveConstructorContext(this);
+    return ctx->result;
+}
+
+Value FunctionObject::call(Context *context, Value thisObject, Value *args, int argc)
+{
+    Context k;
+    Context *ctx = needsActivation ? context->engine->newContext() : &k;
+    const Value *that = thisObject.isUndefined() ? 0 : &thisObject;
+    ctx->initCallContext(context, that, this, args, argc);
+    call(ctx);
+    ctx->leaveCallContext();
+    return ctx->result;
 }
 
 void FunctionObject::call(Context *ctx)

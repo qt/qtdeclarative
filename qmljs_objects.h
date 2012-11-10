@@ -126,8 +126,8 @@ struct PropertyDescriptor {
     union {
         Value value;
         struct {
-            Object *get;
-            Object *set;
+            FunctionObject *get;
+            FunctionObject *set;
         };
     };
     uint type : 8;
@@ -144,7 +144,7 @@ struct PropertyDescriptor {
         pd.configurable = Undefined;
         return pd;
     }
-    static inline PropertyDescriptor fromAccessor(Object *getter, Object *setter) {
+    static inline PropertyDescriptor fromAccessor(FunctionObject *getter, FunctionObject *setter) {
         PropertyDescriptor pd;
         pd.get = getter;
         pd.set = setter;
@@ -480,6 +480,11 @@ struct FunctionObject: Object {
     virtual QString className() { return QStringLiteral("Function"); }
     virtual FunctionObject *asFunctionObject() { return this; }
     virtual bool hasInstance(Context *ctx, const Value &value);
+
+    Value construct(Context *context, Value *args, int argc);
+    Value call(Context *context, Value thisObject, Value *args, int argc);
+
+protected:
     virtual void call(Context *ctx);
     virtual void construct(Context *ctx);
 };

@@ -58,13 +58,7 @@ namespace VM {
 static inline Value callFunction(Context *context, Value thisObject, FunctionObject *func, Value *args, int argc)
 {
     if (func) {
-        Context k;
-        Context *ctx = func->needsActivation ? context->engine->newContext() : &k;
-        const Value *that = thisObject.isUndefined() ? 0 : &thisObject;
-        ctx->initCallContext(context, that, func, args, argc);
-        func->call(ctx);
-        ctx->leaveCallContext();
-        return ctx->result;
+        return func->call(context, thisObject, args, argc);
     } else {
         context->throwTypeError();
         return Value::undefinedValue();
@@ -1241,14 +1235,9 @@ Value __qmljs_construct_activation_property(Context *context, String *name, Valu
 
 Value __qmljs_construct_value(Context *context, Value func, Value *args, int argc)
 {
-    if (FunctionObject *f = func.asFunctionObject()) {
-        Context k;
-        Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-        ctx->initConstructorContext(context, 0, f, args, argc);
-        f->construct(ctx);
-        ctx->leaveConstructorContext(f);
-        return ctx->result;
-    }
+    if (FunctionObject *f = func.asFunctionObject())
+        return f->construct(context, args, argc);
+
     context->throwTypeError();
     return Value::undefinedValue();
 }
@@ -1260,15 +1249,9 @@ Value __qmljs_construct_property(Context *context, Value base, String *name, Val
         thisObject = __qmljs_to_object(base, context);
 
     Value func = thisObject.objectValue()->__get__(context, name);
-    if (FunctionObject *f = func.asFunctionObject()) {
-        Context k;
-        Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-        ctx->initConstructorContext(context, 0, f, args, argc);
-        ctx->calledAsConstructor = true;
-        f->construct(ctx);
-        ctx->leaveConstructorContext(f);
-        return ctx->result;
-    }
+    if (FunctionObject *f = func.asFunctionObject())
+        return f->construct(context, args, argc);
+
     context->throwTypeError();
     return Value::undefinedValue();
 }
