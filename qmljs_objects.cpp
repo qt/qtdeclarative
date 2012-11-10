@@ -69,6 +69,28 @@ void Object::__put__(Context *ctx, const QString &name, void (*code)(Context *),
     __put__(ctx, name, Value::fromObject(ctx->engine->newNativeFunction(ctx, code)));
 }
 
+Value Object::getValue(Context *ctx, PropertyDescriptor *p) const
+{
+    if (p->isData())
+        return p->value;
+    if (!p->get)
+        return Value::undefinedValue();
+
+    p->get->call(ctx, Value::fromObject(const_cast<Object *>(this)), 0, 0);
+    return ctx->result;
+}
+
+bool Object::inplaceBinOp(Value rhs, Context *ctx, String *name, BinOp op)
+{
+    PropertyDescriptor to_fill;
+    PropertyDescriptor *pd = __getPropertyDescriptor__(ctx, name, &to_fill);
+    if (!pd)
+        return false;
+    Value result = op(getValue(ctx, pd), rhs, ctx);
+    __put__(ctx, name, result);
+    return true;
+}
+
 // Section 8.12.1
 PropertyDescriptor *Object::__getOwnProperty__(Context *, String *name)
 {
@@ -95,17 +117,9 @@ Value Object::__get__(Context *ctx, String *name)
         return Value::fromObject(prototype);
 
     PropertyDescriptor tmp;
-    if (PropertyDescriptor *p = __getPropertyDescriptor__(ctx, name, &tmp)) {
-        if (p->isData())
-            return p->value;
-        if (!p->get)
-            return Value::undefinedValue();
-        FunctionObject *f = p->get->asFunctionObject();
-        if (f) {
-            f->call(ctx, Value::fromObject(this), 0, 0);
-            return ctx->result;
-        }
-    }
+    if (PropertyDescriptor *p = __getPropertyDescriptor__(ctx, name, &tmp))
+        return getValue(ctx, p);
+
     return Value::undefinedValue();
 }
 

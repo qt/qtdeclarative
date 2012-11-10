@@ -410,6 +410,9 @@ struct Object {
     //
     void __put__(Context *ctx, const QString &name, const Value &value);
     void __put__(Context *ctx, const QString &name, void (*code)(Context *), int count = 0);
+
+    Value getValue(Context *ctx, PropertyDescriptor *p) const;
+    bool inplaceBinOp(Value rhs, Context *ctx, String *name, BinOp op);
 };
 
 struct ForEachIteratorObject: Object {

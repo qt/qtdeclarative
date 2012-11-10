@@ -351,6 +351,8 @@ void __qmljs_delete_exception_handler(Context *context);
 Value __qmljs_get_exception(Context *context);
 
 // binary operators
+typedef Value (*BinOp)(Value left, Value right, Context *ctx);
+
 Value __qmljs_instanceof(Value left, Value right, Context *ctx);
 Value __qmljs_in(Value left, Value right, Context *ctx);
 Value __qmljs_bit_or(Value left, Value right, Context *ctx);
