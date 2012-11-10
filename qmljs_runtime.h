@@ -573,6 +573,7 @@ struct Context {
     int calledAsConstructor;
 
     PropertyDescriptor *lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp);
+    void inplaceBitOp(Value value, String *name, BinOp op);
 
     inline Value argument(unsigned int index = 0)
     {

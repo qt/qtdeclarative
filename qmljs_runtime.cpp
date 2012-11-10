@@ -257,6 +257,17 @@ PropertyDescriptor *Context::lookupPropertyDescriptor(String *name, PropertyDesc
     return 0;
 }
 
+void Context::inplaceBitOp(Value value, String *name, BinOp op)
+{
+    for (Context *ctx = this; ctx; ctx = ctx->parent) {
+        if (Object *act = ctx->activation.asObject()) {
+            if (act->inplaceBinOp(value, this, name, op))
+                return;
+        }
+    }
+    throwReferenceError(Value::fromString(name));
+}
+
 void Context::throwError(Value value)
 {
     result = value;
@@ -488,101 +499,57 @@ Value __qmljs_in(Value left, Value right, Context *ctx)
 
 void __qmljs_inplace_bit_and_name(Value value, String *name, Context *ctx)
 {
-    PropertyDescriptor tmp;
-    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
-        prop->value = __qmljs_bit_and(prop->value, value, ctx);
-    else
-        ctx->throwReferenceError(Value::fromString(name));
+    ctx->inplaceBitOp(value, name, __qmljs_bit_and);
 }
 
 void __qmljs_inplace_bit_or_name(Value value, String *name, Context *ctx)
 {
-    PropertyDescriptor tmp;
-    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
-        prop->value = __qmljs_bit_or(prop->value, value, ctx);
-    else
-        ctx->throwReferenceError(Value::fromString(name));
+    ctx->inplaceBitOp(value, name, __qmljs_bit_or);
 }
 
 void __qmljs_inplace_bit_xor_name(Value value, String *name, Context *ctx)
 {
-    PropertyDescriptor tmp;
-    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
-        prop->value = __qmljs_bit_xor(prop->value, value, ctx);
-    else
-        ctx->throwReferenceError(Value::fromString(name));
+    ctx->inplaceBitOp(value, name, __qmljs_bit_xor);
 }
 
 void __qmljs_inplace_add_name(Value value, String *name, Context *ctx)
 {
-    PropertyDescriptor tmp;
-    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
-        prop->value = __qmljs_add(prop->value, value, ctx);
-    else
-        ctx->throwReferenceError(Value::fromString(name));
+    ctx->inplaceBitOp(value, name, __qmljs_add);
 }
 
 void __qmljs_inplace_sub_name(Value value, String *name, Context *ctx)
 {
-    PropertyDescriptor tmp;
-    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
-        prop->value = __qmljs_sub(prop->value, value, ctx);
-    else
-        ctx->throwReferenceError(Value::fromString(name));
+    ctx->inplaceBitOp(value, name, __qmljs_sub);
 }
 
 void __qmljs_inplace_mul_name(Value value, String *name, Context *ctx)
 {
-    PropertyDescriptor tmp;
-    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
-        prop->value = __qmljs_mul(prop->value, value, ctx);
-    else
-        ctx->throwReferenceError(Value::fromString(name));
+    ctx->inplaceBitOp(value, name, __qmljs_mul);
 }
 
 void __qmljs_inplace_div_name(Value value, String *name, Context *ctx)
 {
-    PropertyDescriptor tmp;
-    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
-        prop->value = __qmljs_div(prop->value, value, ctx);
-    else
-        ctx->throwReferenceError(Value::fromString(name));
+    ctx->inplaceBitOp(value, name, __qmljs_div);
 }
 
 void __qmljs_inplace_mod_name(Value value, String *name, Context *ctx)
 {
-    PropertyDescriptor tmp;
-    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
-        prop->value = __qmljs_mod(prop->value, value, ctx);
-    else
-        ctx->throwReferenceError(Value::fromString(name));
+    ctx->inplaceBitOp(value, name, __qmljs_mod);
 }
 
 void __qmljs_inplace_shl_name(Value value, String *name, Context *ctx)
 {
-    PropertyDescriptor tmp;
-    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
-        prop->value = __qmljs_shl(prop->value, value, ctx);
-    else
-        ctx->throwReferenceError(Value::fromString(name));
+    ctx->inplaceBitOp(value, name, __qmljs_shl);
 }
 
 void __qmljs_inplace_shr_name(Value value, String *name, Context *ctx)
 {
-    PropertyDescriptor tmp;
-    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
-        prop->value = __qmljs_shr(prop->value, value, ctx);
-    else
-        ctx->throwReferenceError(Value::fromString(name));
+    ctx->inplaceBitOp(value, name, __qmljs_shr);
 }
 
 void __qmljs_inplace_ushr_name(Value value, String *name, Context *ctx)
 {
-    PropertyDescriptor tmp;
-    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
-        prop->value = __qmljs_ushr(prop->value, value, ctx);
-    else
-        ctx->throwReferenceError(Value::fromString(name));
+    ctx->inplaceBitOp(value, name, __qmljs_ushr);
 }
 
 void __qmljs_inplace_bit_and_element(Value base, Value index, Value value, Context *ctx)
