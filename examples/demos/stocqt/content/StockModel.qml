@@ -96,10 +96,10 @@ ListModel {
         request += "s=" + stockId;
         request += "&a=" + startDate.getDate();
         request += "&b=" + startDate.getMonth();
-        request += "&c=" + startDate.getYear();
+        request += "&c=" + startDate.getFullYear();
         request += "&d=" + endDate.getDate();
         request += "&e=" + endDate.getMonth();
-        request += "&f=" + endDate.getYear();
+        request += "&f=" + endDate.getFullYear();
         request += "&g=" + stockDataCycle;
         request += "&ignore=.csv";
         return request;
