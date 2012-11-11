@@ -261,7 +261,7 @@ void Context::inplaceBitOp(Value value, String *name, BinOp op)
 {
     for (Context *ctx = this; ctx; ctx = ctx->parent) {
         if (Object *act = ctx->activation.asObject()) {
-            if (act->inplaceBinOp(value, this, name, op))
+            if (act->inplaceBinOp(value, name, op, this))
                 return;
         }
     }
@@ -621,67 +621,67 @@ void __qmljs_inplace_ushr_element(Value base, Value index, Value value, Context 
 void __qmljs_inplace_bit_and_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, ctx, name, __qmljs_bit_and);
+    o->inplaceBinOp(value, name, __qmljs_bit_and, ctx);
 }
 
 void __qmljs_inplace_bit_or_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, ctx, name, __qmljs_bit_or);
+    o->inplaceBinOp(value, name, __qmljs_bit_or, ctx);
 }
 
 void __qmljs_inplace_bit_xor_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, ctx, name, __qmljs_bit_xor);
+    o->inplaceBinOp(value, name, __qmljs_bit_xor, ctx);
 }
 
 void __qmljs_inplace_add_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, ctx, name, __qmljs_add);
+    o->inplaceBinOp(value, name, __qmljs_add, ctx);
 }
 
 void __qmljs_inplace_sub_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, ctx, name, __qmljs_sub);
+    o->inplaceBinOp(value, name, __qmljs_sub, ctx);
 }
 
 void __qmljs_inplace_mul_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, ctx, name, __qmljs_mul);
+    o->inplaceBinOp(value, name, __qmljs_mul, ctx);
 }
 
 void __qmljs_inplace_div_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, ctx, name, __qmljs_div);
+    o->inplaceBinOp(value, name, __qmljs_div, ctx);
 }
 
 void __qmljs_inplace_mod_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, ctx, name, __qmljs_mod);
+    o->inplaceBinOp(value, name, __qmljs_mod, ctx);
 }
 
 void __qmljs_inplace_shl_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, ctx, name, __qmljs_shl);
+    o->inplaceBinOp(value, name, __qmljs_shl, ctx);
 }
 
 void __qmljs_inplace_shr_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, ctx, name, __qmljs_shr);
+    o->inplaceBinOp(value, name, __qmljs_shr, ctx);
 }
 
 void __qmljs_inplace_ushr_member(Value value, Value base, String *name, Context *ctx)
 {
     Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, ctx, name, __qmljs_ushr);
+    o->inplaceBinOp(value, name, __qmljs_ushr, ctx);
 }
 
 String *__qmljs_string_from_utf8(Context *ctx, const char *s)

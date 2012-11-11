@@ -80,7 +80,7 @@ Value Object::getValue(Context *ctx, PropertyDescriptor *p) const
     return ctx->result;
 }
 
-bool Object::inplaceBinOp(Value rhs, Context *ctx, String *name, BinOp op)
+bool Object::inplaceBinOp(Value rhs, String *name, BinOp op, Context *ctx)
 {
     PropertyDescriptor to_fill;
     PropertyDescriptor *pd = __getPropertyDescriptor__(ctx, name, &to_fill);
@@ -95,7 +95,7 @@ bool Object::inplaceBinOp(Value rhs, Value index, BinOp op, Context *ctx)
 {
     String *name = index.toString(ctx);
     assert(name);
-    return inplaceBinOp(rhs, ctx, name, op);
+    return inplaceBinOp(rhs, name, op, ctx);
 }
 
 // Section 8.12.1
