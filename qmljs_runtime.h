@@ -337,7 +337,6 @@ Value __qmljs_uminus(Value value, Context *ctx);
 Value __qmljs_compl(Value value, Context *ctx);
 Value __qmljs_not(Value value, Context *ctx);
 
-/* ### these 4 methods are apparently unused right now */
 Value __qmljs_delete_subscript(Context *ctx, Value base, Value index);
 Value __qmljs_delete_member(Context *ctx, Value base, String *name);
 Value __qmljs_delete_property(Context *ctx, String *name);
