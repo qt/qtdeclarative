@@ -91,6 +91,13 @@ bool Object::inplaceBinOp(Value rhs, Context *ctx, String *name, BinOp op)
     return true;
 }
 
+bool Object::inplaceBinOp(Value rhs, Value index, BinOp op, Context *ctx)
+{
+    String *name = index.toString(ctx);
+    assert(name);
+    return inplaceBinOp(rhs, ctx, name, op);
+}
+
 // Section 8.12.1
 PropertyDescriptor *Object::__getOwnProperty__(Context *, String *name)
 {
@@ -328,6 +335,18 @@ Value ArrayObject::__get__(Context *ctx, String *name)
     if (name->isEqualTo(ctx->engine->id_length))
         return Value::fromDouble(value.size());
     return Object::__get__(ctx, name);
+}
+
+bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, Context *ctx)
+{
+    if (index.isNumber()) {
+        const quint32 idx = index.toUInt32(ctx);
+        Value v = value.at(idx);
+        v = op(v, rhs, ctx);
+        value.assign(idx, v);
+        return true;
+    }
+    return Object::inplaceBinOp(rhs, index, op, ctx);
 }
 
 bool FunctionObject::hasInstance(Context *ctx, const Value &value)

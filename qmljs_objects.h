@@ -413,6 +413,7 @@ struct Object {
 
     Value getValue(Context *ctx, PropertyDescriptor *p) const;
     bool inplaceBinOp(Value rhs, Context *ctx, String *name, BinOp op);
+    virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, Context *ctx);
 };
 
 struct ForEachIteratorObject: Object {
@@ -460,6 +461,8 @@ struct ArrayObject: Object {
     virtual QString className() { return QStringLiteral("Array"); }
     virtual ArrayObject *asArrayObject() { return this; }
     virtual Value __get__(Context *ctx, String *name);
+
+    virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, Context *ctx);
 };
 
 struct FunctionObject: Object {
