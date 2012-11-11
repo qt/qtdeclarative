@@ -225,12 +225,23 @@ struct Value
     inline Value toObject(Context *ctx) const;
 
     inline bool isPrimitive() const { return !isObject(); }
+#if CPU(X86_64)
+    static inline bool integerCompatible(Value a, Value b) {
+        const quint64 mask = quint64(ConvertibleToInt) << 32;
+        return ((a.val & b.val) & mask) == mask;
+    }
+    static inline bool bothDouble(Value a, Value b) {
+        const quint64 mask = quint64(NotDouble_Mask) << 32;
+        return ((a.val | b.val) & mask) != mask;
+    }
+#else
     static inline bool integerCompatible(Value a, Value b) {
         return ((a.tag & b.tag) & ConvertibleToInt) == ConvertibleToInt;
     }
     static inline bool bothDouble(Value a, Value b) {
         return ((a.tag | b.tag) & NotDouble_Mask) != NotDouble_Mask;
     }
+#endif
     inline bool tryIntegerConversion() {
         bool b = isConvertibleToInt();
         if (b)
