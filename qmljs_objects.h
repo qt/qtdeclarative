@@ -260,11 +260,11 @@ public:
 
     void remove(PropertyTableEntry *prop)
     {
-        PropertyTableEntry *bucket = _buckets[prop->hashValue() % _bucketCount];
-        if (bucket == prop) {
-            bucket = bucket->next;
+        PropertyTableEntry **bucket = _buckets + (prop->hashValue() % _bucketCount);
+        if (*bucket == prop) {
+            *bucket = prop->next;
         } else {
-            for (PropertyTableEntry *it = bucket; it; it = it->next) {
+            for (PropertyTableEntry *it = *bucket; it; it = it->next) {
                 if (it->next == prop) {
                     it->next = it->next->next;
                     break;
@@ -344,7 +344,7 @@ private:
     void rehash()
     {
         if (_bucketCount)
-            _bucketCount *= 2; // ### next prime
+            _bucketCount = _bucketCount * 2 + 1; // ### next prime
         else
             _bucketCount = 11;
 
