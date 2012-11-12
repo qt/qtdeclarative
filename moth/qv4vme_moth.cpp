@@ -201,8 +201,30 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
         case Instr::instr_callBuiltin::builtin_get_exception:
             tempRegister = __qmljs_get_exception(context);
             break;
+        case Instr::instr_callBuiltin::builtin_foreach_iterator_object:
+            tempRegister = __qmljs_foreach_iterator_object(args[0], context);
+            break;
+        case Instr::instr_callBuiltin::builtin_foreach_next_property_name:
+            tempRegister = __qmljs_foreach_next_property_name(args[0]);
+            break;
         }
     MOTH_END_INSTR(CallBuiltin)
+
+    MOTH_BEGIN_INSTR(CallBuiltinDeleteMember)
+        tempRegister = __qmljs_delete_member(context, TEMP(instr.base), instr.member);
+    MOTH_END_INSTR(CallBuiltinDeleteMember)
+
+    MOTH_BEGIN_INSTR(CallBuiltinDeleteSubscript)
+        tempRegister = __qmljs_delete_subscript(context, TEMP(instr.base), TEMP(instr.index));
+    MOTH_END_INSTR(CallBuiltinDeleteSubscript)
+
+    MOTH_BEGIN_INSTR(CallBuiltinDeleteName)
+        tempRegister = __qmljs_delete_property(context, instr.name);
+    MOTH_END_INSTR(CallBuiltinDeleteName)
+
+    MOTH_BEGIN_INSTR(CallBuiltinDeleteValue)
+        tempRegister = __qmljs_delete_value(context, TEMP(instr.tempIndex));
+    MOTH_END_INSTR(CallBuiltinDeleteValue)
 
     MOTH_BEGIN_INSTR(CreateValue)
         VM::Value *args = stack.data() + instr.args;

@@ -26,6 +26,10 @@
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
     F(CallBuiltin, callBuiltin) \
+    F(CallBuiltinDeleteMember, callBuiltinDeleteMember) \
+    F(CallBuiltinDeleteSubscript, callBuiltinDeleteSubscript) \
+    F(CallBuiltinDeleteName, callBuiltinDeleteName) \
+    F(CallBuiltinDeleteValue, callBuiltinDeleteValue) \
     F(CreateValue, createValue) \
     F(CreateProperty, createProperty) \
     F(CreateActivationProperty, createActivationProperty) \
@@ -150,10 +154,30 @@ union Instr
             builtin_throw,
             builtin_create_exception_handler,
             builtin_delete_exception_handler,
-            builtin_get_exception
+            builtin_get_exception,
+            builtin_foreach_iterator_object,
+            builtin_foreach_next_property_name
         } builtin;
         quint32 argc;
         quint32 args;
+    };
+    struct instr_callBuiltinDeleteMember {
+        MOTH_INSTR_HEADER
+        int base;
+        VM::String *member;
+    };
+    struct instr_callBuiltinDeleteSubscript {
+        MOTH_INSTR_HEADER
+        int base;
+        int index;
+    };
+    struct instr_callBuiltinDeleteName {
+        MOTH_INSTR_HEADER
+        VM::String *name;
+    };
+    struct instr_callBuiltinDeleteValue {
+        MOTH_INSTR_HEADER
+        int tempIndex;
     };
     struct instr_createValue {
         MOTH_INSTR_HEADER
@@ -233,6 +257,10 @@ union Instr
     instr_callValue callValue;
     instr_callProperty callProperty;
     instr_callBuiltin callBuiltin;
+    instr_callBuiltinDeleteMember callBuiltinDeleteMember;
+    instr_callBuiltinDeleteSubscript callBuiltinDeleteSubscript;
+    instr_callBuiltinDeleteName callBuiltinDeleteName;
+    instr_callBuiltinDeleteValue callBuiltinDeleteValue;
     instr_createValue createValue;
     instr_createProperty createProperty;
     instr_createActivationProperty createActivationProperty;

@@ -126,12 +126,45 @@ void InstructionSelection::callActivationProperty(IR::Call *c)
         addInstruction(call);
     } break;
 
-    case IR::Name::builtin_delete:
-        Q_UNIMPLEMENTED();
-        break;
+    case IR::Name::builtin_foreach_iterator_object: {
+        Instruction::CallBuiltin call;
+        call.builtin = Instruction::CallBuiltin::builtin_foreach_iterator_object;
+        prepareCallArgs(c->args, call.argc, call.args);
+        addInstruction(call);
+    } break;
+
+    case IR::Name::builtin_foreach_next_property_name: {
+        Instruction::CallBuiltin call;
+        call.builtin = Instruction::CallBuiltin::builtin_foreach_next_property_name;
+        prepareCallArgs(c->args, call.argc, call.args);
+        addInstruction(call);
+    } break;
+
+    case IR::Name::builtin_delete: {
+        if (IR::Member *m = c->args->expr->asMember()) {
+            Instruction::CallBuiltinDeleteMember call;
+            call.base = m->base->asTemp()->index;
+            call.member = _engine->newString(*m->name);
+            addInstruction(call);
+        } else if (IR::Subscript *ss = c->args->expr->asSubscript()) {
+            Instruction::CallBuiltinDeleteSubscript call;
+            call.base = m->base->asTemp()->index;
+            call.index = ss->index->asTemp()->index;
+            addInstruction(call);
+        } else if (IR::Name *n = c->args->expr->asName()) {
+            Instruction::CallBuiltinDeleteName call;
+            call.name = _engine->newString(*n->id);
+            addInstruction(call);
+        } else {
+            Instruction::CallBuiltinDeleteValue call;
+            call.tempIndex = c->args->expr->asTemp()->index;
+            addInstruction(call);
+        }
+    } break;
 
     default:
         Q_UNIMPLEMENTED();
+        c->dump(qout); qout << endl;
     }
 }
 
