@@ -47,6 +47,7 @@
 #endif // __clang__
 
 #include <llvm/Module.h>
+#include <llvm/PassManager.h>
 #include <llvm/IRBuilder.h>
 
 #ifdef __clang__
@@ -65,7 +66,7 @@ class LLVMInstructionSelection:
 public:
     LLVMInstructionSelection(llvm::LLVMContext &context);
 
-    llvm::Module *getLLVMModule(IR::Module *module, const QString &moduleName);
+    void buildLLVMModule(IR::Module *module, llvm::Module *llvmModule, llvm::FunctionPassManager *fpm);
     llvm::Function *getLLVMFunction(IR::Function *function);
     llvm::Function *compileLLVMFunction(IR::Function *function);
     llvm::BasicBlock *getLLVMBasicBlock(IR::BasicBlock *block);
@@ -110,6 +111,10 @@ public:
     virtual void visitMember(IR::Member *);
 
 private:
+    llvm::Value *createValue(IR::Const *e);
+    llvm::Value *toValuePtr(IR::Expr *e);
+
+private:
     llvm::Module *_llvmModule;
     llvm::Function *_llvmFunction;
     llvm::Value *_llvmValue;
@@ -125,6 +130,7 @@ private:
     QHash<IR::BasicBlock *, llvm::BasicBlock *> _blockMap;
     QVector<llvm::Value *> _tempMap;
     QHash<QString, llvm::Value *> _stringMap;
+    llvm::FunctionPassManager *_fpm;
 };
 
 } // end of namespace QQmlJS

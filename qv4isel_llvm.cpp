@@ -45,9 +45,12 @@
 #endif // __clang__
 
 #include <llvm/Analysis/Passes.h>
+#include <llvm/Analysis/Verifier.h>
 #include <llvm/Assembly/PrintModulePass.h>
 #include <llvm/Bitcode/ReaderWriter.h>
-#include <llvm/PassManager.h>
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/ExecutionEngine/JIT.h>
+#include <llvm/ExecutionEngine/JITMemoryManager.h>
 #include <llvm/Support/FormattedStream.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Support/MemoryBuffer.h>
@@ -74,27 +77,16 @@
 // These includes have to come last, because WTF/Platform.h defines some macros
 // with very unfriendly names that collide with class fields in LLVM.
 #include "qv4isel_llvm_p.h"
+#include "qv4_llvm_p.h"
 #include "qv4ir_p.h"
 
 namespace QQmlJS {
 
-void compileWithLLVM(IR::Module *module, const QString &fileName)
+int compileWithLLVM(IR::Module *module, const QString &fileName, int (*exec)(void *))
 {
     Q_ASSERT(module);
 
-    const QString moduleName = QFileInfo(fileName).fileName();
-
-    LLVMInstructionSelection llvmIsel(llvm::getGlobalContext());
-    llvm::Module *llvmModule = llvmIsel.getLLVMModule(module, moduleName);
-    if (!llvmModule)
-        return;
-
-    // TODO: if output type is .ll, print the module to file
-
-    llvm::PassManager PM;
-
-    const std::string triple = llvm::sys::getDefaultTargetTriple();
-
+    // TODO: should this be done here?
     LLVMInitializeX86TargetInfo();
     LLVMInitializeX86Target();
     LLVMInitializeX86AsmPrinter();
@@ -102,50 +94,105 @@ void compileWithLLVM(IR::Module *module, const QString &fileName)
     LLVMInitializeX86Disassembler();
     LLVMInitializeX86TargetMC();
 
-    std::string err;
-    const llvm::Target *target = llvm::TargetRegistry::lookupTarget(triple, err);
-    if (! err.empty()) {
-        std::cerr << err << ", triple: " << triple << std::endl;
-        assert(!"cannot create target for the host triple");
-    }
+    //----
 
-    std::string cpu;
-    std::string features;
-    llvm::TargetOptions options;
-    llvm::TargetMachine *targetMachine = target->createTargetMachine(triple, cpu, features, options, llvm::Reloc::PIC_);
-    assert(targetMachine);
+    llvm::InitializeNativeTarget();
+    LLVMInstructionSelection llvmIsel(llvm::getGlobalContext());
 
-    llvm::TargetMachine::CodeGenFileType ft;
-    QString ofName;
+    const QString moduleName = QFileInfo(fileName).fileName();
+    llvm::StringRef moduleId(moduleName.toUtf8().constData());
+    llvm::Module *llvmModule = new llvm::Module(moduleId, llvmIsel.getContext());
 
-    ft = llvm::TargetMachine::CGFT_ObjectFile;
-    ofName = fileName + QLatin1String(".o");
+    if (exec) {
+        // The execution engine takes ownership of the model. No need to delete it anymore.
+        std::string errStr;
+        llvm::ExecutionEngine *execEngine = llvm::EngineBuilder(llvmModule)
+                .setUseMCJIT(true)
+//                .setJITMemoryManager(llvm::JITMemoryManager::CreateDefaultMemManager())
+                .setErrorStr(&errStr).create();
+        if (!execEngine) {
+            std::cerr << "Could not create LLVM JIT: " << errStr << std::endl;
+            return EXIT_FAILURE;
+        }
 
-    // TODO:
-//    ft = llvm::TargetMachine::CGFT_AssemblyFile;
-//    ofName = fileName + QLatin1String(".s");
+        llvm::FunctionPassManager fpm(llvmModule);
+        // Set up the optimizer pipeline.  Start with registering info about how the
+        // target lays out data structures.
+        fpm.add(new llvm::DataLayout(*execEngine->getDataLayout()));
+        // Provide basic AliasAnalysis support for GVN.
+        fpm.add(llvm::createBasicAliasAnalysisPass());
+        // Do simple "peephole" optimizations and bit-twiddling optzns.
+        fpm.add(llvm::createInstructionCombiningPass());
+        // Reassociate expressions.
+        fpm.add(llvm::createReassociatePass());
+        // Eliminate Common SubExpressions.
+        fpm.add(llvm::createGVNPass());
+        // Simplify the control flow graph (deleting unreachable blocks, etc).
+        fpm.add(llvm::createCFGSimplificationPass());
 
-    llvm::raw_fd_ostream dest(ofName.toUtf8().constData(), err, llvm::raw_fd_ostream::F_Binary);
-    llvm::formatted_raw_ostream destf(dest);
-    if (!err.empty()) {
-        std::cerr << err << std::endl;
-        delete llvmModule;
-    }
+        fpm.doInitialization();
 
-    PM.add(llvm::createScalarReplAggregatesPass());
-    PM.add(llvm::createInstructionCombiningPass());
-    PM.add(llvm::createGlobalOptimizerPass());
-    PM.add(llvm::createFunctionInliningPass(25));
-    if (targetMachine->addPassesToEmitFile(PM, destf, ft)) {
-        std::cerr << err << " (probably no DataLayout in TargetMachine)" << std::endl;
+        llvmIsel.buildLLVMModule(module, llvmModule, &fpm);
+
+        llvm::Function *entryPoint = llvmModule->getFunction("%entry");
+        Q_ASSERT(entryPoint);
+        void *funcPtr = execEngine->getPointerToFunction(entryPoint);
+        return exec(funcPtr);
     } else {
-        PM.run(*llvmModule);
+        // TODO: add a FunctionPassManager
+        llvmIsel.buildLLVMModule(module, llvmModule, 0);
 
-        destf.flush();
-        dest.flush();
+        // TODO: if output type is .ll, print the module to file
+
+        const std::string triple = llvm::sys::getDefaultTargetTriple();
+
+        std::string err;
+        const llvm::Target *target = llvm::TargetRegistry::lookupTarget(triple, err);
+        if (! err.empty()) {
+            std::cerr << err << ", triple: " << triple << std::endl;
+            assert(!"cannot create target for the host triple");
+        }
+
+        std::string cpu;
+        std::string features;
+        llvm::TargetOptions options;
+        llvm::TargetMachine *targetMachine = target->createTargetMachine(triple, cpu, features, options, llvm::Reloc::PIC_);
+        assert(targetMachine);
+
+        llvm::TargetMachine::CodeGenFileType ft;
+        QString ofName;
+
+        ft = llvm::TargetMachine::CGFT_ObjectFile;
+        ofName = fileName + QLatin1String(".o");
+
+        // TODO:
+        //    ft = llvm::TargetMachine::CGFT_AssemblyFile;
+        //    ofName = fileName + QLatin1String(".s");
+
+        llvm::raw_fd_ostream dest(ofName.toUtf8().constData(), err, llvm::raw_fd_ostream::F_Binary);
+        llvm::formatted_raw_ostream destf(dest);
+        if (!err.empty()) {
+            std::cerr << err << std::endl;
+            delete llvmModule;
+        }
+
+        llvm::PassManager PM;
+        PM.add(llvm::createScalarReplAggregatesPass());
+        PM.add(llvm::createInstructionCombiningPass());
+        PM.add(llvm::createGlobalOptimizerPass());
+        PM.add(llvm::createFunctionInliningPass(25));
+        if (targetMachine->addPassesToEmitFile(PM, destf, ft)) {
+            std::cerr << err << " (probably no DataLayout in TargetMachine)" << std::endl;
+        } else {
+            PM.run(*llvmModule);
+
+            destf.flush();
+            dest.flush();
+        }
+
+        delete llvmModule;
+        return EXIT_SUCCESS;
     }
-
-    delete llvmModule;
 }
 
 } // QQmlJS
@@ -169,14 +216,14 @@ LLVMInstructionSelection::LLVMInstructionSelection(llvm::LLVMContext &context)
     , _allocaInsertPoint(0)
     , _function(0)
     , _block(0)
+    , _fpm(0)
 {
 }
 
-llvm::Module *LLVMInstructionSelection::getLLVMModule(IR::Module *module, const QString &moduleName)
+void LLVMInstructionSelection::buildLLVMModule(IR::Module *module, llvm::Module *llvmModule, llvm::FunctionPassManager *fpm)
 {
-    llvm::StringRef moduleId(moduleName.toUtf8().constData());
-    llvm::Module *llvmModule = new llvm::Module(moduleId, getContext());
     qSwap(_llvmModule, llvmModule);
+    qSwap(_fpm, fpm);
 
     _numberTy = getDoubleTy();
 
@@ -215,7 +262,6 @@ llvm::Module *LLVMInstructionSelection::getLLVMModule(IR::Module *module, const 
     foreach (IR::Function *function, module->functions)
         (void) compileLLVMFunction(function);
     qSwap(_llvmModule, llvmModule);
-    return llvmModule;
 }
 
 llvm::Function *LLVMInstructionSelection::getLLVMFunction(IR::Function *function)
@@ -286,6 +332,13 @@ llvm::Function *LLVMInstructionSelection::compileLLVMFunction(IR::Function *func
     qSwap(_tempMap, tempMap);
     qSwap(_function, function);
     qSwap(_llvmFunction, llvmFunction);
+
+    // Validate the generated code, checking for consistency.
+    llvm::verifyFunction(*llvmFunction);
+    // Optimize the function.
+    if (_fpm)
+        _fpm->run(*llvmFunction);
+
     return llvmFunction;
 }
 
@@ -582,33 +635,9 @@ void LLVMInstructionSelection::visitRet(IR::Ret *s)
     CreateRetVoid();
 }
 
-
 void LLVMInstructionSelection::visitConst(IR::Const *e)
 {
-    llvm::Value *tmp = newLLVMTemp(_valueTy);
-
-    switch (e->type) {
-    case IR::UndefinedType:
-        CreateCall(_llvmModule->getFunction("__qmljs_llvm_init_undefined"), tmp);
-        break;
-
-    case IR::NullType:
-        CreateCall(_llvmModule->getFunction("__qmljs_llvm_init_null"), tmp);
-        break;
-
-    case IR::BoolType:
-        CreateCall2(_llvmModule->getFunction("__qmljs_llvm_init_boolean"), tmp,
-                    getInt1(e->value ? 1 : 0));
-        break;
-
-    case IR::NumberType:
-        CreateCall2(_llvmModule->getFunction("__qmljs_llvm_init_number"), tmp,
-                    llvm::ConstantFP::get(_numberTy, e->value));
-        break;
-
-    default:
-        Q_UNREACHABLE();
-    }
+    llvm::Value *tmp = createValue(e);
 
     _llvmValue = CreateLoad(tmp);
 }
@@ -700,13 +729,11 @@ void LLVMInstructionSelection::genUnop(llvm::Value *result, IR::Unop *e)
 
 void LLVMInstructionSelection::genBinop(llvm::Value *result, IR::Binop *e)
 {
-    IR::Temp *t1 = e->left->asTemp();
-    IR::Temp *t2 = e->right->asTemp();
-    assert(t1 != 0);
-    assert(t2 != 0);
+    assert(e->left->asTemp() || e->left->asConst());
+    assert(e->right->asTemp() || e->right->asConst());
 
-    llvm::Value *left = getLLVMTemp(t1);
-    llvm::Value *right = getLLVMTemp(t2);
+    llvm::Value *left = toValuePtr(e->left);
+    llvm::Value *right = toValuePtr(e->right);
     llvm::Value *op = 0;
     switch (e->op) {
     case IR::OpInvalid:
@@ -1040,4 +1067,45 @@ void LLVMInstructionSelection::visitMember(IR::Member *e)
     CreateCall4(_llvmModule->getFunction("__qmljs_llvm_get_property"),
                 _llvmFunction->arg_begin(), result, base, name);
     _llvmValue = CreateLoad(result);
+}
+
+llvm::Value *LLVMInstructionSelection::createValue(IR::Const *e)
+{
+    llvm::Value *tmp = newLLVMTemp(_valueTy);
+
+    switch (e->type) {
+    case IR::UndefinedType:
+        CreateCall(_llvmModule->getFunction("__qmljs_llvm_init_undefined"), tmp);
+        break;
+
+    case IR::NullType:
+        CreateCall(_llvmModule->getFunction("__qmljs_llvm_init_null"), tmp);
+        break;
+
+    case IR::BoolType:
+        CreateCall2(_llvmModule->getFunction("__qmljs_llvm_init_boolean"), tmp,
+                    getInt1(e->value ? 1 : 0));
+        break;
+
+    case IR::NumberType:
+        CreateCall2(_llvmModule->getFunction("__qmljs_llvm_init_number"), tmp,
+                    llvm::ConstantFP::get(_numberTy, e->value));
+        break;
+
+    default:
+        Q_UNREACHABLE();
+    }
+
+    return tmp;
+}
+
+llvm::Value *LLVMInstructionSelection::toValuePtr(IR::Expr *e)
+{
+    if (IR::Temp *t = e->asTemp()) {
+        return getLLVMTemp(t);
+    } else if (IR::Const *c = e->asConst()) {
+        return createValue(c);
+    } else {
+        Q_UNREACHABLE();
+    }
 }

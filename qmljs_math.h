@@ -46,7 +46,7 @@
 #endif // QMLJS_LLVM_RUNTIME
 #include <cmath>
 
-#if 1 //CPU(X86_64)
+#if !defined(QMLJS_LLVM_RUNTIME) && 1 //CPU(X86_64)
 
 static inline Value add_int32(int a, int b)
 {

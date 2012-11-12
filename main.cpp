@@ -131,7 +131,35 @@ struct TestHarnessError: FunctionObject
 } // builtins
 
 #ifndef QMLJS_NO_LLVM
-void compile(const QString &fileName, const QString &source)
+int executeLLVMCode(void *codePtr)
+{
+    using namespace QQmlJS;
+
+    if (!codePtr)
+        return EXIT_FAILURE;
+    void (*code)(VM::Context *) = (void (*)(VM::Context *)) codePtr;
+
+    VM::ExecutionEngine vm;
+    VM::Context *ctx = vm.rootContext;
+
+    QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
+    globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
+                          QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
+
+    void * buf = __qmljs_create_exception_handler(ctx);
+    if (setjmp(*(jmp_buf *)buf)) {
+        if (VM::ErrorObject *e = ctx->result.asErrorObject())
+            std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
+        else
+            std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    code(ctx);
+    return EXIT_SUCCESS;
+}
+
+int compile(const QString &fileName, const QString &source, bool runInJit)
 {
     using namespace QQmlJS;
 
@@ -149,7 +177,7 @@ void compile(const QString &fileName, const QString &source)
     }
 
     if (!parsed)
-        return;
+        return EXIT_FAILURE;
 
     using namespace AST;
     Program *program = AST::cast<Program *>(parser.rootNode());
@@ -157,16 +185,19 @@ void compile(const QString &fileName, const QString &source)
     Codegen cg;
     /*IR::Function *globalCode =*/ cg(program, &module);
 
-    compileWithLLVM(&module, fileName);
+    int (*exec)(void *) = runInJit ? executeLLVMCode : 0;
+    return compileWithLLVM(&module, fileName, exec);
 }
 
-int compileFiles(const QStringList &files)
+int compileFiles(const QStringList &files, bool runInJit)
 {
     foreach (const QString &fileName, files) {
         QFile file(fileName);
         if (file.open(QFile::ReadOnly)) {
             QString source = QString::fromUtf8(file.readAll());
-            compile(fileName, source);
+            int result = compile(fileName, source, runInJit);
+            if (result != EXIT_SUCCESS)
+                return result;
         }
     }
     return EXIT_SUCCESS;
@@ -182,27 +213,9 @@ int evaluateCompiledCode(const QStringList &files)
         lib.load();
         QFunctionPointer ptr = lib.resolve("%entry");
 //        qDebug("_%%entry resolved to address %p", ptr);
-        if (!ptr)
-            return EXIT_FAILURE;
-        void (*code)(VM::Context *) = (void (*)(VM::Context *)) ptr;
-
-        VM::ExecutionEngine vm;
-        VM::Context *ctx = vm.rootContext;
-
-        QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
-        globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
-                              QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
-
-        void * buf = __qmljs_create_exception_handler(ctx);
-        if (setjmp(*(jmp_buf *)buf)) {
-            if (VM::ErrorObject *e = ctx->result.asErrorObject())
-                std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
-            else
-                std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
-            return EXIT_FAILURE;
-        }
-
-        code(ctx);
+        int result = executeLLVMCode((void *) ptr);
+        if (result != EXIT_SUCCESS)
+            return result;
     }
 
     return EXIT_SUCCESS;
@@ -307,7 +320,8 @@ int main(int argc, char *argv[])
         use_masm,
         use_moth,
         use_llvm_compiler,
-        use_llvm_runtime
+        use_llvm_runtime,
+        use_llvm_jit
     } mode = use_masm;
 
     if (!args.isEmpty()) {
@@ -331,9 +345,14 @@ int main(int argc, char *argv[])
             mode = use_llvm_runtime;
             args.removeFirst();
         }
+
+        if (args.first() == QLatin1String("--llvm-jit")) {
+            mode = use_llvm_jit;
+            args.removeFirst();
+        }
 #endif // QMLJS_NO_LLVM
         if (args.first() == QLatin1String("--help")) {
-            std::cerr << "Usage: v4 [|--jit|--interpret|--compile|--aot] file..." << std::endl;
+            std::cerr << "Usage: v4 [|--jit|--interpret|--compile|--aot|--llvm-jit] file..." << std::endl;
             return EXIT_SUCCESS;
         }
     }
@@ -342,11 +361,14 @@ int main(int argc, char *argv[])
 #ifdef QMLJS_NO_LLVM
     case use_llvm_compiler:
     case use_llvm_runtime:
+    case use_llvm_jit:
         std::cerr << "LLVM backend was not built, compiler is unavailable." << std::endl;
         return EXIT_FAILURE;
 #else // QMLJS_NO_LLVM
+    case use_llvm_jit:
+        return compileFiles(args, true);
     case use_llvm_compiler:
-        return compileFiles(args);
+        return compileFiles(args, false);
     case use_llvm_runtime:
         return evaluateCompiledCode(args);
 #endif // QMLJS_NO_LLVM

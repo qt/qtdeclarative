@@ -36,7 +36,7 @@
 
 namespace QQmlJS {
 
-void compileWithLLVM(IR::Module *module, const QString &fileName);
+int compileWithLLVM(IR::Module *module, const QString &fileName, int (*exec)(void *));
 
 } // QQmlJS
 

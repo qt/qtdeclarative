@@ -49,7 +49,7 @@ QMAKE_CXXFLAGS += $$system($$LLVM_CONFIG --cppflags)
 
 LIBS += \
     $$system($$LLVM_CONFIG --ldflags) \
-    $$system($$LLVM_CONFIG --libs core jit bitreader linker ipo target x86 arm)
+    $$system($$LLVM_CONFIG --libs core jit bitreader linker ipo target x86 arm native)
 
 QMAKE_EXTRA_TARGETS += gen_llvm_runtime
 
