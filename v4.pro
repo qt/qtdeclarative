@@ -30,7 +30,8 @@ HEADERS += \
     qv4syntaxchecker_p.h \
     qv4ecmaobjects_p.h \
     qv4array_p.h \
-    qv4isel_masm_p.h
+    qv4isel_masm_p.h \
+    qv4isel_util_p.h
 
 llvm {
 

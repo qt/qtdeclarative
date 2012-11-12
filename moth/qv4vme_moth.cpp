@@ -234,7 +234,9 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
     MOTH_END_INSTR(Unop)
 
     MOTH_BEGIN_INSTR(Binop)
-        tempRegister = instr.alu(TEMP(instr.lhsTempIndex), TEMP(instr.rhsTempIndex), context);
+        VM::Value lhs = instr.lhsIsTemp ? TEMP(instr.lhs.tempIndex) : instr.lhs.value;
+        VM::Value rhs = instr.rhsIsTemp ? TEMP(instr.rhs.tempIndex) : instr.rhs.value;
+        tempRegister = instr.alu(lhs, rhs, context);
     MOTH_END_INSTR(Binop)
 
     MOTH_BEGIN_INSTR(Ret)

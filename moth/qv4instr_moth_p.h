@@ -59,6 +59,11 @@ namespace Moth {
 
 union Instr
 {
+    union ValueOrTemp {
+        VM::Value value;
+        int tempIndex;
+    };
+
     enum Type {
         FOR_EACH_MOTH_INSTR(MOTH_INSTR_ENUM)
     };
@@ -180,8 +185,10 @@ union Instr
     };
     struct instr_binop {
         MOTH_INSTR_HEADER
-        int lhsTempIndex;
-        int rhsTempIndex;
+        ValueOrTemp lhs;
+        ValueOrTemp rhs;
+        unsigned lhsIsTemp:1;
+        unsigned rhsIsTemp:1;
         VM::Value (*alu)(const VM::Value , const VM::Value, VM::Context *);
     };
     struct instr_loadThis {

@@ -1,3 +1,4 @@
+#include "qv4isel_util_p.h"
 #include "qv4isel_moth_p.h"
 #include "qv4vme_moth_p.h"
 
@@ -5,8 +6,23 @@ using namespace QQmlJS;
 using namespace QQmlJS::Moth;
 
 namespace {
+
 QTextStream qout(stderr, QIODevice::WriteOnly);
+
+static unsigned toValueOrTemp(IR::Expr *e, Instr::ValueOrTemp &vot)
+{
+    if (IR::Const *c = e->asConst()) {
+        vot.value = convertToValue(c);
+        return 0;
+    } else if (IR::Temp *t = e->asTemp()) {
+        vot.tempIndex = t->index;
+        return 1;
+    } else {
+        Q_UNREACHABLE();
+    }
 }
+
+} // anonymous namespace
 
 InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module * /*module*/,
                                            uchar *code)
@@ -394,8 +410,8 @@ void InstructionSelection::visitMove(IR::Move *s)
         } else if (IR::Binop *b = s->source->asBinop()) {
             Instruction::Binop binop;
             binop.alu = aluOpFunction(b->op);
-//            binop.lhsTempIndex = b->left->index;
-//            binop.rhsTempIndex = b->right->index;
+            binop.lhsIsTemp = toValueOrTemp(b->left, binop.lhs);
+            binop.rhsIsTemp = toValueOrTemp(b->right, binop.rhs);
             addInstruction(binop);
         } else if (IR::Call *c = s->source->asCall()) {
             if (c->base->asName()) {
@@ -554,8 +570,8 @@ void InstructionSelection::visitCJump(IR::CJump *s)
     } else if (IR::Binop *b = s->cond->asBinop()) {
         Instruction::Binop binop;
         binop.alu = aluOpFunction(b->op);
-//        binop.lhsTempIndex = b->left->index;
-//        binop.rhsTempIndex = b->right->index;
+        binop.lhsIsTemp = toValueOrTemp(b->left, binop.lhs);
+        binop.rhsIsTemp = toValueOrTemp(b->right, binop.rhs);
         addInstruction(binop);
     } else {
         Q_UNREACHABLE();

@@ -42,6 +42,7 @@
 #define QV4ISEL_MASM_P_H
 
 #include "qv4ir_p.h"
+#include "qv4isel_util_p.h"
 #include "qmljs_objects.h"
 #include "qmljs_runtime.h"
 
@@ -286,26 +287,7 @@ private:
 
     void loadArgument(IR::Const* c, RegisterID dest)
     {
-        VM::Value v;
-        switch (c->type) {
-        case IR::NullType:
-            v = VM::Value::nullValue();
-            break;
-        case IR::UndefinedType:
-            v = VM::Value::undefinedValue();
-            break;
-        case IR::BoolType:
-            v = VM::Value::fromBoolean(c->value != 0);
-            break;
-        case IR::NumberType: {
-            int ival = (int)c->value;
-            if (ival == c->value) {
-                v = VM::Value::fromInt32(ival);
-            } else {
-                v = VM::Value::fromDouble(c->value);
-            }
-        }
-        }
+        VM::Value v = convertToValue(c);
         move(TrustedImm64(v.val), dest);
     }
 
