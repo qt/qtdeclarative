@@ -198,6 +198,9 @@ int compileFiles(const QStringList &files, QQmlJS::LLVMOutputType outputType)
             int result = compile(fileName, source, outputType);
             if (result != EXIT_SUCCESS)
                 return result;
+        } else {
+            std::cerr << "Error: cannot open file " << fileName.toUtf8().constData() << std::endl;
+            return EXIT_FAILURE;
         }
     }
     return EXIT_SUCCESS;
@@ -417,6 +420,9 @@ int main(int argc, char *argv[])
                     return exitCode;
                 if (errorInTestHarness)
                     return EXIT_FAILURE;
+            } else {
+                std::cerr << "Error: cannot open file " << fn.toUtf8().constData() << std::endl;
+                return EXIT_FAILURE;
             }
         }
     } return EXIT_SUCCESS;
