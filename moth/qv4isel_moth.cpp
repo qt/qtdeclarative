@@ -41,7 +41,7 @@ void InstructionSelection::operator()(IR::Function *function)
     _function->code = VME::exec;
     _function->codeData = _ccode;
 
-    int locals = _function->tempCount - _function->locals.size() + _function->maxNumberOfArguments;
+    int locals = _function->tempCount - _function->locals.size() + _function->maxNumberOfArguments + 1;
     assert(locals >= 0);
 
     Instruction::Push push;
@@ -72,19 +72,24 @@ void InstructionSelection::operator()(IR::Function *function)
     qSwap(_function, function);
 }
 
-void InstructionSelection::callActivationProperty(IR::Call *c)
+void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempIndex)
 {
     IR::Name *baseName = c->base->asName();
     Q_ASSERT(baseName);
 
     switch (baseName->builtin) {
     case IR::Name::builtin_invalid: {
+        const int scratchIndex = scratchTempIndex();
+
         Instruction::LoadName load;
         load.name = _engine->newString(*baseName->id);
+        load.targetTempIndex = scratchIndex;
         addInstruction(load);
 
         Instruction::CallValue call;
         prepareCallArgs(c->args, call.argc, call.args);
+        call.destIndex = scratchIndex;
+        call.targetTempIndex = targetTempIndex;
         addInstruction(call);
     } break;
 
@@ -95,6 +100,7 @@ void InstructionSelection::callActivationProperty(IR::Call *c)
         Instruction::CallBuiltin call;
         call.builtin = Instruction::CallBuiltin::builtin_typeof;
         prepareCallArgs(c->args, call.argc, call.args);
+        call.targetTempIndex = targetTempIndex;
         addInstruction(call);
     } break;
 
@@ -105,24 +111,28 @@ void InstructionSelection::callActivationProperty(IR::Call *c)
         Instruction::CallBuiltin call;
         call.builtin = Instruction::CallBuiltin::builtin_throw;
         prepareCallArgs(c->args, call.argc, call.args);
+        call.targetTempIndex = targetTempIndex;
         addInstruction(call);
     } break;
 
     case IR::Name::builtin_create_exception_handler: {
         Instruction::CallBuiltin call;
         call.builtin = Instruction::CallBuiltin::builtin_create_exception_handler;
+        call.targetTempIndex = targetTempIndex;
         addInstruction(call);
     } break;
 
     case IR::Name::builtin_delete_exception_handler: {
         Instruction::CallBuiltin call;
         call.builtin = Instruction::CallBuiltin::builtin_delete_exception_handler;
+        call.targetTempIndex = targetTempIndex;
         addInstruction(call);
     } break;
 
     case IR::Name::builtin_get_exception: {
         Instruction::CallBuiltin call;
         call.builtin = Instruction::CallBuiltin::builtin_get_exception;
+        call.targetTempIndex = targetTempIndex;
         addInstruction(call);
     } break;
 
@@ -130,6 +140,7 @@ void InstructionSelection::callActivationProperty(IR::Call *c)
         Instruction::CallBuiltin call;
         call.builtin = Instruction::CallBuiltin::builtin_foreach_iterator_object;
         prepareCallArgs(c->args, call.argc, call.args);
+        call.targetTempIndex = targetTempIndex;
         addInstruction(call);
     } break;
 
@@ -137,6 +148,7 @@ void InstructionSelection::callActivationProperty(IR::Call *c)
         Instruction::CallBuiltin call;
         call.builtin = Instruction::CallBuiltin::builtin_foreach_next_property_name;
         prepareCallArgs(c->args, call.argc, call.args);
+        call.targetTempIndex = targetTempIndex;
         addInstruction(call);
     } break;
 
@@ -145,19 +157,23 @@ void InstructionSelection::callActivationProperty(IR::Call *c)
             Instruction::CallBuiltinDeleteMember call;
             call.base = m->base->asTemp()->index;
             call.member = _engine->newString(*m->name);
+            call.targetTempIndex = targetTempIndex;
             addInstruction(call);
         } else if (IR::Subscript *ss = c->args->expr->asSubscript()) {
             Instruction::CallBuiltinDeleteSubscript call;
             call.base = m->base->asTemp()->index;
             call.index = ss->index->asTemp()->index;
+            call.targetTempIndex = targetTempIndex;
             addInstruction(call);
         } else if (IR::Name *n = c->args->expr->asName()) {
             Instruction::CallBuiltinDeleteName call;
             call.name = _engine->newString(*n->id);
+            call.targetTempIndex = targetTempIndex;
             addInstruction(call);
         } else {
             Instruction::CallBuiltinDeleteValue call;
             call.tempIndex = c->args->expr->asTemp()->index;
+            call.targetTempIndex = targetTempIndex;
             addInstruction(call);
         }
     } break;
@@ -168,43 +184,39 @@ void InstructionSelection::callActivationProperty(IR::Call *c)
     }
 }
 
-void InstructionSelection::callValue(IR::Call *c)
+void InstructionSelection::callValue(IR::Call *c, int targetTempIndex)
 {
     IR::Temp *t = c->base->asTemp();
     Q_ASSERT(t);
 
-    Instruction::LoadTemp load;
-    load.tempIndex = t->index;
-    addInstruction(load);
-
     Instruction::CallValue call;
     prepareCallArgs(c->args, call.argc, call.args);
+    call.destIndex = t->index;
+    call.targetTempIndex = targetTempIndex;
     addInstruction(call);
 }
 
-void InstructionSelection::callProperty(IR::Call *c)
+void InstructionSelection::callProperty(IR::Call *c, int targetTempIndex)
 {
     IR::Member *m = c->base->asMember();
     Q_ASSERT(m);
 
-    // load the base
-    Instruction::LoadTemp load;
-    load.tempIndex = m->base->asTemp()->index;
-    addInstruction(load);
-
     // call the property on the loaded base
     Instruction::CallProperty call;
+    call.baseTemp = m->base->asTemp()->index;
     call.name = _engine->newString(*m->name);
     prepareCallArgs(c->args, call.argc, call.args);
+    call.targetTempIndex = targetTempIndex;
     addInstruction(call);
 }
 
-void InstructionSelection::construct(IR::New *ctor)
+void InstructionSelection::construct(IR::New *ctor, int targetTempIndex)
 {
     if (IR::Name *baseName = ctor->base->asName()) {
         Instruction::CreateActivationProperty create;
         create.name = _engine->newString(*baseName->id);
         prepareCallArgs(ctor->args, create.argc, create.args);
+        create.targetTempIndex = targetTempIndex;
         addInstruction(create);
     } else if (IR::Member *member = ctor->base->asMember()) {
         IR::Temp *base = member->base->asTemp();
@@ -214,11 +226,13 @@ void InstructionSelection::construct(IR::New *ctor)
         create.base = base->index;
         create.name = _engine->newString(*member->name);
         prepareCallArgs(ctor->args, create.argc, create.args);
+        create.targetTempIndex = targetTempIndex;
         addInstruction(create);
     } else if (IR::Temp *baseTemp = ctor->base->asTemp()) {
         Instruction::CreateValue create;
         create.func = baseTemp->index;
         prepareCallArgs(ctor->args, create.argc, create.args);
+        create.targetTempIndex = targetTempIndex;
         addInstruction(create);
     } else {
         qWarning("  NEW");
@@ -230,13 +244,15 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
     argc = 0;
     args = 0;
 
+    /*
     int locals = _function->tempCount - _function->locals.size() + _function->maxNumberOfArguments;
 
+    The condition for this case is wrong: the locals check is incorrect:
     if (e && e->next == 0 && e->expr->asTemp()->index >= 0 && e->expr->asTemp()->index < locals) {
         // We pass single arguments as references to the stack
         argc = 1;
         args = e->expr->asTemp()->index;
-    } else if (e) {
+    } else */if (e) {
         // We need to move all the temps into the function arg array
         int argLocation = _function->tempCount - _function->locals.size();
         assert(argLocation >= 0);
@@ -256,17 +272,17 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
 void InstructionSelection::visitExp(IR::Exp *s)
 {
     if (IR::Call *c = s->expr->asCall()) {
+        // These are calls where the result is ignored.
+        const int targetTempIndex = scratchTempIndex();
         if (c->base->asName()) {
-            callActivationProperty(c);
+            callActivationProperty(c, targetTempIndex);
         } else if (c->base->asTemp()) {
-            callValue(c);
+            callValue(c, targetTempIndex);
         } else if (c->base->asMember()) {
-            callProperty(c);
+            callProperty(c, targetTempIndex);
         } else {
             Q_UNREACHABLE();
         }
-
-        // TODO: check if we should store the return value ?
     } else {
         Q_UNREACHABLE();
     }
@@ -355,57 +371,77 @@ static inline ALUFunction aluOpFunction(IR::AluOp op)
 void InstructionSelection::visitMove(IR::Move *s)
 {
     if (IR::Temp *t = s->target->asTemp()) {
+        const int targetTempIndex = t->index;
         // Check what kind of load it is, and generate the instruction for that.
         // The store to the temp (the target) is done afterwards.
         if (IR::Name *n = s->source->asName()) {
             Q_UNUSED(n);
             if (*n->id == QStringLiteral("this")) { // ### `this' should be a builtin.
-                addInstruction(Instruction::LoadThis());
+                Instruction::LoadThis load;
+                load.targetTempIndex = targetTempIndex;
+                addInstruction(load);
             } else {
                 Instruction::LoadName load;
                 load.name = _engine->newString(*n->id);
+                load.targetTempIndex = targetTempIndex;
                 addInstruction(load);
             }
         } else if (IR::Const *c = s->source->asConst()) {
             switch (c->type) {
-            case IR::UndefinedType:
-                addInstruction(Instruction::LoadUndefined());
-                break;
-            case IR::NullType:
-                addInstruction(Instruction::LoadNull());
-                break;
+            case IR::UndefinedType: {
+                Instruction::LoadUndefined load;
+                load.targetTempIndex = targetTempIndex;
+                addInstruction(load);
+            } break;
+            case IR::NullType: {
+                Instruction::LoadNull load;
+                load.targetTempIndex = targetTempIndex;
+                addInstruction(load);
+            } break;
             case IR::BoolType:
-                if (c->value) addInstruction(Instruction::LoadTrue());
-                else addInstruction(Instruction::LoadFalse());
+                if (c->value) {
+                    Instruction::LoadTrue load;
+                    load.targetTempIndex = targetTempIndex;
+                    addInstruction(load);
+                } else {
+                    Instruction::LoadFalse load;
+                    load.targetTempIndex = targetTempIndex;
+                    addInstruction(load);
+                }
                 break;
             case IR::NumberType: {
                 Instruction::LoadNumber load;
                 load.value = c->value;
+                load.targetTempIndex = targetTempIndex;
                 addInstruction(load);
-                } break;
+            } break;
             default:
                 Q_UNREACHABLE();
                 break;
             }
         } else if (IR::Temp *t2 = s->source->asTemp()) {
-            Instruction::LoadTemp load;
-            load.tempIndex = t2->index;
-            addInstruction(load);
+            Instruction::MoveTemp move;
+            move.fromTempIndex = t2->index;
+            move.toTempIndex = targetTempIndex;
+            addInstruction(move);
         } else if (IR::String *str = s->source->asString()) {
             Instruction::LoadString load;
             load.value = _engine->newString(*str->value);
+            load.targetTempIndex = targetTempIndex;
             addInstruction(load);
         } else if (IR::Closure *clos = s->source->asClosure()) {
             Instruction::LoadClosure load;
             load.value = clos->value;
+            load.targetTempIndex = targetTempIndex;
             addInstruction(load);
         } else if (IR::New *ctor = s->source->asNew()) {
-            construct(ctor);
+            construct(ctor, targetTempIndex);
         } else if (IR::Member *m = s->source->asMember()) {
             if (IR::Temp *base = m->base->asTemp()) {
                 Instruction::LoadProperty load;
                 load.baseTemp = base->index;
                 load.name = _engine->newString(*m->name);
+                load.targetTempIndex = targetTempIndex;
                 addInstruction(load);
             } else {
                 qWarning("  MEMBER");
@@ -414,6 +450,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             Instruction::LoadElement load;
             load.base = ss->base->asTemp()->index;
             load.index = ss->index->asTemp()->index;
+            load.targetTempIndex = targetTempIndex;
             addInstruction(load);
         } else if (IR::Unop *u = s->source->asUnop()) {
             if (IR::Temp *e = u->expr->asTemp()) {
@@ -431,6 +468,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     Instruction::Unop unop;
                     unop.alu = op;
                     unop.e = e->index;
+                    unop.targetTempIndex = targetTempIndex;
                     addInstruction(unop);
                 } else {
                     qWarning("  UNOP1");
@@ -445,22 +483,19 @@ void InstructionSelection::visitMove(IR::Move *s)
             binop.alu = aluOpFunction(b->op);
             binop.lhsIsTemp = toValueOrTemp(b->left, binop.lhs);
             binop.rhsIsTemp = toValueOrTemp(b->right, binop.rhs);
+            binop.targetTempIndex = targetTempIndex;
             addInstruction(binop);
         } else if (IR::Call *c = s->source->asCall()) {
             if (c->base->asName()) {
-                callActivationProperty(c);
+                callActivationProperty(c, targetTempIndex);
             } else if (c->base->asMember()) {
-                callProperty(c);
+                callProperty(c, targetTempIndex);
             } else if (c->base->asTemp()) {
-                callValue(c);
+                callValue(c, targetTempIndex);
             } else {
                 Q_UNREACHABLE();
             }
         }
-
-        Instruction::StoreTemp st;
-        st.tempIndex = t->index;
-        addInstruction(st);
         return;
     } else if (IR::Name *n = s->target->asName()) {
         if (IR::Temp *t = s->source->asTemp()) {
@@ -488,11 +523,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                 addInstruction(ieo);
                 return;
             } else if (s->op == IR::OpInvalid) {
-                Instruction::LoadTemp load;
-                load.tempIndex = t->index;
-                addInstruction(load);
-
                 Instruction::StoreName store;
+                store.sourceTemp = t->index;
                 store.name = _engine->newString(*n->id);
                 addInstruction(store);
                 return;
@@ -526,11 +558,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                 addInstruction(ieo);
                 return;
             } else if (s->op == IR::OpInvalid) {
-                Instruction::LoadTemp load;
-                load.tempIndex = t->index;
-                addInstruction(load);
-
                 Instruction::StoreElement store;
+                store.sourceTemp = t->index;
                 store.base = ss->base->asTemp()->index;
                 store.index = ss->index->asTemp()->index;
                 addInstruction(store);
@@ -565,11 +594,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                 addInstruction(imo);
                 return;
             } else if (s->op == IR::OpInvalid) {
-                Instruction::LoadTemp load;
-                load.tempIndex = t->index;
-                addInstruction(load);
-
                 Instruction::StoreProperty store;
+                store.sourceTemp = t->index;
                 store.baseTemp = m->base->asTemp()->index;
                 store.name = _engine->newString(*m->name);
                 addInstruction(store);
@@ -596,15 +622,16 @@ void InstructionSelection::visitJump(IR::Jump *s)
 
 void InstructionSelection::visitCJump(IR::CJump *s)
 {
+    int tempIndex;
     if (IR::Temp *t = s->cond->asTemp()) {
-        Instruction::LoadTemp load;
-        load.tempIndex = t->index;
-        addInstruction(load);
+        tempIndex = t->index;
     } else if (IR::Binop *b = s->cond->asBinop()) {
+        tempIndex = scratchTempIndex();
         Instruction::Binop binop;
         binop.alu = aluOpFunction(b->op);
         binop.lhsIsTemp = toValueOrTemp(b->left, binop.lhs);
         binop.rhsIsTemp = toValueOrTemp(b->right, binop.rhs);
+        binop.targetTempIndex = tempIndex;
         addInstruction(binop);
     } else {
         Q_UNREACHABLE();
@@ -612,6 +639,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
     Instruction::CJump jump;
     jump.offset = 0;
+    jump.tempIndex = tempIndex;
     ptrdiff_t tl = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
     _patches[s->iftrue].append(tl);
 
