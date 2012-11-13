@@ -82,9 +82,10 @@
 
 namespace QQmlJS {
 
-int compileWithLLVM(IR::Module *module, const QString &fileName, int (*exec)(void *))
+int compileWithLLVM(IR::Module *module, const QString &fileName, LLVMOutputType outputType, int (*exec)(void *))
 {
     Q_ASSERT(module);
+    Q_ASSERT(exec || outputType != LLVMOutputJit);
 
     // TODO: should this be done here?
     LLVMInitializeX86TargetInfo();
@@ -103,44 +104,61 @@ int compileWithLLVM(IR::Module *module, const QString &fileName, int (*exec)(voi
     llvm::StringRef moduleId(moduleName.toUtf8().constData());
     llvm::Module *llvmModule = new llvm::Module(moduleId, llvmIsel.getContext());
 
-    if (exec) {
+    if (outputType == LLVMOutputJit) {
         // The execution engine takes ownership of the model. No need to delete it anymore.
         std::string errStr;
         llvm::ExecutionEngine *execEngine = llvm::EngineBuilder(llvmModule)
-                .setUseMCJIT(true)
-//                .setJITMemoryManager(llvm::JITMemoryManager::CreateDefaultMemManager())
+//                .setUseMCJIT(true)
                 .setErrorStr(&errStr).create();
         if (!execEngine) {
             std::cerr << "Could not create LLVM JIT: " << errStr << std::endl;
             return EXIT_FAILURE;
         }
 
-        llvm::FunctionPassManager fpm(llvmModule);
+        llvm::FunctionPassManager functionPassManager(llvmModule);
         // Set up the optimizer pipeline.  Start with registering info about how the
         // target lays out data structures.
-        fpm.add(new llvm::DataLayout(*execEngine->getDataLayout()));
+        functionPassManager.add(new llvm::DataLayout(*execEngine->getDataLayout()));
+        // Promote allocas to registers.
+        functionPassManager.add(llvm::createPromoteMemoryToRegisterPass());
         // Provide basic AliasAnalysis support for GVN.
-        fpm.add(llvm::createBasicAliasAnalysisPass());
+        functionPassManager.add(llvm::createBasicAliasAnalysisPass());
         // Do simple "peephole" optimizations and bit-twiddling optzns.
-        fpm.add(llvm::createInstructionCombiningPass());
+        functionPassManager.add(llvm::createInstructionCombiningPass());
         // Reassociate expressions.
-        fpm.add(llvm::createReassociatePass());
+        functionPassManager.add(llvm::createReassociatePass());
         // Eliminate Common SubExpressions.
-        fpm.add(llvm::createGVNPass());
+        functionPassManager.add(llvm::createGVNPass());
         // Simplify the control flow graph (deleting unreachable blocks, etc).
-        fpm.add(llvm::createCFGSimplificationPass());
+        functionPassManager.add(llvm::createCFGSimplificationPass());
 
-        fpm.doInitialization();
+        functionPassManager.doInitialization();
 
-        llvmIsel.buildLLVMModule(module, llvmModule, &fpm);
+        llvmIsel.buildLLVMModule(module, llvmModule, &functionPassManager);
 
         llvm::Function *entryPoint = llvmModule->getFunction("%entry");
         Q_ASSERT(entryPoint);
         void *funcPtr = execEngine->getPointerToFunction(entryPoint);
         return exec(funcPtr);
     } else {
-        // TODO: add a FunctionPassManager
-        llvmIsel.buildLLVMModule(module, llvmModule, 0);
+        llvm::FunctionPassManager functionPassManager(llvmModule);
+        // Set up the optimizer pipeline.
+        // Promote allocas to registers.
+        functionPassManager.add(llvm::createPromoteMemoryToRegisterPass());
+        // Provide basic AliasAnalysis support for GVN.
+        functionPassManager.add(llvm::createBasicAliasAnalysisPass());
+        // Do simple "peephole" optimizations and bit-twiddling optzns.
+        functionPassManager.add(llvm::createInstructionCombiningPass());
+        // Reassociate expressions.
+        functionPassManager.add(llvm::createReassociatePass());
+        // Eliminate Common SubExpressions.
+        functionPassManager.add(llvm::createGVNPass());
+        // Simplify the control flow graph (deleting unreachable blocks, etc).
+        functionPassManager.add(llvm::createCFGSimplificationPass());
+
+        functionPassManager.doInitialization();
+
+        llvmIsel.buildLLVMModule(module, llvmModule, &functionPassManager);
 
         // TODO: if output type is .ll, print the module to file
 
@@ -162,12 +180,16 @@ int compileWithLLVM(IR::Module *module, const QString &fileName, int (*exec)(voi
         llvm::TargetMachine::CodeGenFileType ft;
         QString ofName;
 
-        ft = llvm::TargetMachine::CGFT_ObjectFile;
-        ofName = fileName + QLatin1String(".o");
-
-        // TODO:
-        //    ft = llvm::TargetMachine::CGFT_AssemblyFile;
-        //    ofName = fileName + QLatin1String(".s");
+        if (outputType == LLVMOutputObject) {
+            ft = llvm::TargetMachine::CGFT_ObjectFile;
+            ofName = fileName + QLatin1String(".o");
+        } else if (outputType == LLVMOutputAssembler) {
+            ft = llvm::TargetMachine::CGFT_AssemblyFile;
+            ofName = fileName + QLatin1String(".s");
+        } else {
+            // ft is not used.
+            ofName = fileName + QLatin1String(".ll");
+        }
 
         llvm::raw_fd_ostream dest(ofName.toUtf8().constData(), err, llvm::raw_fd_ostream::F_Binary);
         llvm::formatted_raw_ostream destf(dest);
@@ -176,15 +198,25 @@ int compileWithLLVM(IR::Module *module, const QString &fileName, int (*exec)(voi
             delete llvmModule;
         }
 
-        llvm::PassManager PM;
-        PM.add(llvm::createScalarReplAggregatesPass());
-        PM.add(llvm::createInstructionCombiningPass());
-        PM.add(llvm::createGlobalOptimizerPass());
-        PM.add(llvm::createFunctionInliningPass(25));
-        if (targetMachine->addPassesToEmitFile(PM, destf, ft)) {
-            std::cerr << err << " (probably no DataLayout in TargetMachine)" << std::endl;
-        } else {
-            PM.run(*llvmModule);
+        llvm::PassManager globalPassManager;
+        globalPassManager.add(llvm::createScalarReplAggregatesPass());
+        globalPassManager.add(llvm::createInstructionCombiningPass());
+        globalPassManager.add(llvm::createGlobalOptimizerPass());
+        globalPassManager.add(llvm::createFunctionInliningPass(25));
+//        globalPassManager.add(llvm::createFunctionInliningPass(125));
+
+        if (outputType == LLVMOutputObject || outputType == LLVMOutputAssembler) {
+            if (targetMachine->addPassesToEmitFile(globalPassManager, destf, ft)) {
+                std::cerr << err << " (probably no DataLayout in TargetMachine)" << std::endl;
+            } else {
+                globalPassManager.run(*llvmModule);
+
+                destf.flush();
+                dest.flush();
+            }
+        } else { // .ll
+            globalPassManager.run(*llvmModule);
+            llvmModule->print(destf, 0);
 
             destf.flush();
             dest.flush();
@@ -261,6 +293,7 @@ void LLVMInstructionSelection::buildLLVMModule(IR::Module *module, llvm::Module 
 
     foreach (IR::Function *function, module->functions)
         (void) compileLLVMFunction(function);
+    qSwap(_fpm, fpm);
     qSwap(_llvmModule, llvmModule);
 }
 

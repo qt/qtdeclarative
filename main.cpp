@@ -159,7 +159,7 @@ int executeLLVMCode(void *codePtr)
     return EXIT_SUCCESS;
 }
 
-int compile(const QString &fileName, const QString &source, bool runInJit)
+int compile(const QString &fileName, const QString &source, QQmlJS::LLVMOutputType outputType)
 {
     using namespace QQmlJS;
 
@@ -185,17 +185,17 @@ int compile(const QString &fileName, const QString &source, bool runInJit)
     Codegen cg;
     /*IR::Function *globalCode =*/ cg(program, &module);
 
-    int (*exec)(void *) = runInJit ? executeLLVMCode : 0;
-    return compileWithLLVM(&module, fileName, exec);
+    int (*exec)(void *) = outputType == LLVMOutputJit ? executeLLVMCode : 0;
+    return compileWithLLVM(&module, fileName, outputType, exec);
 }
 
-int compileFiles(const QStringList &files, bool runInJit)
+int compileFiles(const QStringList &files, QQmlJS::LLVMOutputType outputType)
 {
     foreach (const QString &fileName, files) {
         QFile file(fileName);
         if (file.open(QFile::ReadOnly)) {
             QString source = QString::fromUtf8(file.readAll());
-            int result = compile(fileName, source, runInJit);
+            int result = compile(fileName, source, outputType);
             if (result != EXIT_SUCCESS)
                 return result;
         }
@@ -324,6 +324,10 @@ int main(int argc, char *argv[])
         use_llvm_jit
     } mode = use_masm;
 
+#ifndef QMLJS_NO_LLVM
+    QQmlJS::LLVMOutputType fileType = QQmlJS::LLVMOutputObject;
+#endif // QMLJS_NO_LLVM
+
     if (!args.isEmpty()) {
         if (args.first() == QLatin1String("--jit")) {
             mode = use_masm;
@@ -339,6 +343,18 @@ int main(int argc, char *argv[])
         if (args.first() == QLatin1String("--compile")) {
             mode = use_llvm_compiler;
             args.removeFirst();
+
+            if (!args.isEmpty() && args.first() == QLatin1String("-t")) {
+                args.removeFirst();
+                // Note: keep this list in sync with the enum!
+                static QStringList fileTypes = QStringList() << QLatin1String("ll") << QLatin1String("bc") << QLatin1String("asm") << QLatin1String("obj");
+                if (args.isEmpty() || !fileTypes.contains(args.first())) {
+                    std::cerr << "file types: ll, bc, asm, obj" << std::endl;
+                    return EXIT_FAILURE;
+                }
+                fileType = (QQmlJS::LLVMOutputType) fileTypes.indexOf(args.first());
+                args.removeFirst();
+            }
         }
 
         if (args.first() == QLatin1String("--aot")) {
@@ -366,9 +382,9 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
 #else // QMLJS_NO_LLVM
     case use_llvm_jit:
-        return compileFiles(args, true);
+        return compileFiles(args, QQmlJS::LLVMOutputJit);
     case use_llvm_compiler:
-        return compileFiles(args, false);
+        return compileFiles(args, fileType);
     case use_llvm_runtime:
         return evaluateCompiledCode(args);
 #endif // QMLJS_NO_LLVM

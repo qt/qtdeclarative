@@ -36,7 +36,16 @@
 
 namespace QQmlJS {
 
-int compileWithLLVM(IR::Module *module, const QString &fileName, int (*exec)(void *));
+// Note: keep this enum in sync with the command-line option!
+enum LLVMOutputType {
+    LLVMOutputJit = -1,
+    LLVMOutputIR = 0, // .ll
+    LLVMOutputBitcode = 1, // .bc
+    LLVMOutputAssembler = 2, // .s
+    LLVMOutputObject = 3 // .o
+};
+
+int compileWithLLVM(IR::Module *module, const QString &fileName,  LLVMOutputType outputType, int (*exec)(void *));
 
 } // QQmlJS
 
