@@ -41,6 +41,7 @@
 
 #include "qmljs_runtime.h"
 #include <stdio.h>
+#include <setjmp.h>
 
 using namespace QQmlJS::VM;
 
@@ -455,6 +456,32 @@ void __qmljs_llvm_typeof(Context *ctx, Value *result, const Value *value)
 void __qmljs_llvm_throw(Context *context, Value *value)
 {
     __qmljs_throw(*value, context);
+}
+
+void __qmljs_llvm_create_exception_handler(Context *context, Value *result)
+{
+    void *buf = __qmljs_create_exception_handler(context);
+    *result = Value::fromInt32(setjmp(* static_cast<jmp_buf *>(buf)));
+}
+
+void __qmljs_llvm_delete_exception_handler(Context *context)
+{
+    __qmljs_delete_exception_handler(context);
+}
+
+void __qmljs_llvm_get_exception(Context *context, Value *result)
+{
+    *result = __qmljs_get_exception(context);
+}
+
+void __qmljs_llvm_foreach_iterator_object(Context *context, Value *result, Value *in)
+{
+    *result = __qmljs_foreach_iterator_object(*in, context);
+}
+
+void __qmljs_llvm_foreach_next_property_name(Value *result, Value *it)
+{
+    *result = __qmljs_foreach_next_property_name(*it);
 }
 
 void __qmljs_llvm_get_this_object(Context *ctx, Value *result)

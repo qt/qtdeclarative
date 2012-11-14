@@ -393,6 +393,7 @@ llvm::Value *LLVMInstructionSelection::getLLVMValue(IR::Expr *expr)
         qSwap(_llvmValue, llvmValue);
     }
     if (! llvmValue) {
+        expr->dump(qerr);qerr<<endl;
         Q_UNIMPLEMENTED();
         llvmValue = llvm::Constant::getNullValue(_valueTy);
     }
@@ -949,9 +950,43 @@ void LLVMInstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
             break;
 
         case IR::Name::builtin_typeof:
-            // inline void __qmljs_typeof(Context *ctx, Value *result, const Value *value)
             CreateCall3(_llvmModule->getFunction("__qmljs_llvm_typeof"),
                         _llvmFunction->arg_begin(), result, getLLVMTempReference(e->args->expr));
+            _llvmValue = CreateLoad(result);
+            return;
+
+        case IR::Name::builtin_throw:
+            CreateCall2(_llvmModule->getFunction("__qmljs_llvm_throw"),
+                        _llvmFunction->arg_begin(), getLLVMTempReference(e->args->expr));
+            _llvmValue = llvm::UndefValue::get(_valueTy);
+            return;
+
+        case IR::Name::builtin_create_exception_handler:
+            CreateCall2(_llvmModule->getFunction("__qmljs_llvm_create_exception_handler"),
+                        _llvmFunction->arg_begin(), result);
+            _llvmValue = CreateLoad(result);
+            return;
+
+        case IR::Name::builtin_delete_exception_handler:
+            CreateCall(_llvmModule->getFunction("__qmljs_llvm_delete_exception_handler"),
+                       _llvmFunction->arg_begin());
+            return;
+
+        case IR::Name::builtin_get_exception:
+            CreateCall2(_llvmModule->getFunction("__qmljs_llvm_get_exception"),
+                        _llvmFunction->arg_begin(), result);
+            _llvmValue = CreateLoad(result);
+            return;
+
+        case IR::Name::builtin_foreach_iterator_object:
+            CreateCall3(_llvmModule->getFunction("__qmljs_llvm_foreach_iterator_object"),
+                        _llvmFunction->arg_begin(), result, getLLVMTempReference(e->args->expr));
+            _llvmValue = CreateLoad(result);
+            return;
+
+        case IR::Name::builtin_foreach_next_property_name:
+            CreateCall2(_llvmModule->getFunction("__qmljs_llvm_foreach_next_property_name"),
+                        result, getLLVMTempReference(e->args->expr));
             _llvmValue = CreateLoad(result);
             return;
 
@@ -987,13 +1022,7 @@ void LLVMInstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
                 _llvmValue = CreateLoad(result);
                 return;
             }
-        }   break;
-
-        case IR::Name::builtin_throw:
-            CreateCall2(_llvmModule->getFunction("__qmljs_llvm_throw"),
-                        _llvmFunction->arg_begin(), getLLVMTempReference(e->args->expr));
-            _llvmValue = llvm::UndefValue::get(_valueTy);
-            return;
+        } break;
 
         default:
             Q_UNREACHABLE();
