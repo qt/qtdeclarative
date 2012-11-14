@@ -505,7 +505,7 @@ void InstructionSelection::visitMove(IR::Move *s)
         }
         return;
     } else if (IR::Name *n = s->target->asName()) {
-        if (IR::Temp *t = s->source->asTemp()) {
+        if (s->source->asTemp() || s->source->asConst()) {
             void (*op)(VM::Value value, VM::String *name, VM::Context *ctx) = 0;
             switch (s->op) {
             case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_name; break;
@@ -526,12 +526,12 @@ void InstructionSelection::visitMove(IR::Move *s)
                 Instruction::InplaceNameOp ieo;
                 ieo.alu = op;
                 ieo.targetName = _engine->newString(*n->id);
-                ieo.source = t->index;
+                ieo.sourceIsTemp = toValueOrTemp(s->source, ieo.source);
                 addInstruction(ieo);
                 return;
             } else if (s->op == IR::OpInvalid) {
                 Instruction::StoreName store;
-                store.sourceTemp = t->index;
+                store.sourceIsTemp = toValueOrTemp(s->source, store.source);
                 store.name = _engine->newString(*n->id);
                 addInstruction(store);
                 return;
@@ -539,7 +539,7 @@ void InstructionSelection::visitMove(IR::Move *s)
         }
         qWarning("NAME");
     } else if (IR::Subscript *ss = s->target->asSubscript()) {
-        if (IR::Temp *t = s->source->asTemp()) {
+        if (s->source->asTemp() || s->source->asConst()) {
             void (*op)(VM::Value base, VM::Value index, VM::Value value, VM::Context *ctx) = 0;
             switch (s->op) {
             case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_element; break;
@@ -561,21 +561,21 @@ void InstructionSelection::visitMove(IR::Move *s)
                 ieo.alu = op;
                 ieo.targetBase = ss->base->asTemp()->index;
                 ieo.targetIndex = ss->index->asTemp()->index;
-                ieo.source = t->index;
+                ieo.sourceIsTemp = toValueOrTemp(s->source, ieo.source);
                 addInstruction(ieo);
                 return;
             } else if (s->op == IR::OpInvalid) {
                 Instruction::StoreElement store;
-                store.sourceTemp = t->index;
                 store.base = ss->base->asTemp()->index;
                 store.index = ss->index->asTemp()->index;
+                store.sourceIsTemp = toValueOrTemp(s->source, store.source);
                 addInstruction(store);
                 return;
             }
         }
         qWarning("SUBSCRIPT");
     } else if (IR::Member *m = s->target->asMember()) {
-        if (IR::Temp *t = s->source->asTemp()) {
+        if (s->source->asTemp() || s->source->asConst()) {
             void (*op)(VM::Value value, VM::Value base, VM::String *name, VM::Context *ctx) = 0;
             switch (s->op) {
             case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_member; break;
@@ -597,14 +597,14 @@ void InstructionSelection::visitMove(IR::Move *s)
                 imo.alu = op;
                 imo.targetBase = m->base->asTemp()->index;
                 imo.targetMember = _engine->newString(*m->name);
-                imo.source = t->index;
+                imo.sourceIsTemp = toValueOrTemp(s->source, imo.source);
                 addInstruction(imo);
                 return;
             } else if (s->op == IR::OpInvalid) {
                 Instruction::StoreProperty store;
-                store.sourceTemp = t->index;
                 store.baseTemp = m->base->asTemp()->index;
                 store.name = _engine->newString(*m->name);
+                store.sourceIsTemp = toValueOrTemp(s->source, store.source);
                 addInstruction(store);
                 return;
             }

@@ -482,7 +482,7 @@ void LLVMInstructionSelection::genMoveSubscript(IR::Move *s)
     IR::Subscript *subscript = s->target->asSubscript();
     llvm::Value *base = getLLVMTempReference(subscript->base);
     llvm::Value *index = getLLVMTempReference(subscript->index);
-    llvm::Value *source = getLLVMTempReference(s->source);
+    llvm::Value *source = toValuePtr(s->source);
     CreateCall4(_llvmModule->getFunction("__qmljs_llvm_set_element"),
                 _llvmFunction->arg_begin(), base, index, source);
 }
@@ -492,7 +492,7 @@ void LLVMInstructionSelection::genMoveMember(IR::Move *s)
     IR::Member *m = s->target->asMember();
     llvm::Value *base = getLLVMTempReference(m->base);
     llvm::Value *name = getIdentifier(*m->name);
-    llvm::Value *source = getLLVMTempReference(s->source);
+    llvm::Value *source = toValuePtr(s->source);
     CreateCall4(_llvmModule->getFunction("__qmljs_llvm_set_property"),
                 _llvmFunction->arg_begin(), base, name, source);
 }
@@ -508,7 +508,7 @@ void LLVMInstructionSelection::visitMove(IR::Move *s)
             return;
         } else if (IR::Name *n = s->target->asName()) {
             llvm::Value *name = getIdentifier(*n->id);
-            llvm::Value *source = getLLVMTempReference(s->source);
+            llvm::Value *source = toValuePtr(s->source);
             CreateCall3(_llvmModule->getFunction("__qmljs_llvm_set_activation_property"),
                         _llvmFunction->arg_begin(), name, source);
             return;
@@ -520,7 +520,7 @@ void LLVMInstructionSelection::visitMove(IR::Move *s)
         }
     } else {
         if (IR::Temp *t = s->target->asTemp()) {
-            if (IR::Temp *t2 = s->source->asTemp()) {
+            if (s->source->asTemp() || s->source->asConst()) {
                 const char *opName = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: opName = "__qmljs_llvm_bit_and"; break;
@@ -541,8 +541,8 @@ void LLVMInstructionSelection::visitMove(IR::Move *s)
 
                 if (opName) {
                     llvm::Value *target = getLLVMTemp(t);
-                    llvm::Value *s1 = getLLVMTemp(t);
-                    llvm::Value *s2 = getLLVMTemp(t2);
+                    llvm::Value *s1 = toValuePtr(s->target);
+                    llvm::Value *s2 = toValuePtr(s->source);
                     CreateCall4(_llvmModule->getFunction(opName),
                                 _llvmFunction->arg_begin(), target, s1, s2);
                     return;
@@ -550,7 +550,7 @@ void LLVMInstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Name *n = s->target->asName()) {
             // inplace assignment, e.g. x += 1, ++x, ...
-            if (IR::Temp *t = s->source->asTemp()) {
+            if (s->source->asTemp() || s->source->asConst()) {
                 const char *opName = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_name"; break;
@@ -571,14 +571,14 @@ void LLVMInstructionSelection::visitMove(IR::Move *s)
 
                 if (opName) {
                     llvm::Value *dst = getIdentifier(*n->id);
-                    llvm::Value *src = getLLVMTemp(t);
+                    llvm::Value *src = toValuePtr(s->source);
                     CreateCall3(_llvmModule->getFunction(opName),
                                 _llvmFunction->arg_begin(), dst, src);
                     return;
                 }
             }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
-            if (IR::Temp *t = s->source->asTemp()) {
+            if (s->source->asTemp() || s->source->asConst()) {
                 const char *opName = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_element"; break;
@@ -600,7 +600,7 @@ void LLVMInstructionSelection::visitMove(IR::Move *s)
                 if (opName) {
                     llvm::Value *base = getLLVMTemp(ss->base->asTemp());
                     llvm::Value *index = getLLVMTemp(ss->index->asTemp());
-                    llvm::Value *value = getLLVMTemp(t);
+                    llvm::Value *value = toValuePtr(s->source);
                     CreateCall4(_llvmModule->getFunction(opName),
                                 _llvmFunction->arg_begin(), base, index, value);
                     // TODO: checkExceptions();
@@ -608,7 +608,7 @@ void LLVMInstructionSelection::visitMove(IR::Move *s)
                 return;
             }
         } else if (IR::Member *m = s->target->asMember()) {
-            if (IR::Temp *t = s->source->asTemp()) {
+            if (s->source->asTemp() || s->source->asConst()) {
                 const char *opName = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_member"; break;
@@ -630,7 +630,7 @@ void LLVMInstructionSelection::visitMove(IR::Move *s)
                 if (opName) {
                     llvm::Value *base = getLLVMTemp(m->base->asTemp());
                     llvm::Value *member = getIdentifier(*m->name);
-                    llvm::Value *value = getLLVMTemp(t);
+                    llvm::Value *value = toValuePtr(s->source);
                     CreateCall4(_llvmModule->getFunction(opName),
                                 _llvmFunction->arg_begin(), value, base, member);
                     // TODO: checkExceptions();

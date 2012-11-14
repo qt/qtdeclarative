@@ -150,7 +150,8 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
 
     MOTH_BEGIN_INSTR(StoreName)
         TRACE(inline, "property name = %s", instr.name->toQString().toUtf8().constData());
-        __qmljs_set_activation_property(context, instr.name, TEMP(instr.sourceTemp));
+        VM::Value source = instr.sourceIsTemp ? TEMP(instr.source.tempIndex) : instr.source.value;
+        __qmljs_set_activation_property(context, instr.name, source);
     MOTH_END_INSTR(StoreName)
 
     MOTH_BEGIN_INSTR(LoadElement)
@@ -158,7 +159,8 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
     MOTH_END_INSTR(LoadElement)
 
     MOTH_BEGIN_INSTR(StoreElement)
-        __qmljs_set_element(context, TEMP(instr.base), TEMP(instr.index), TEMP(instr.sourceTemp));
+        VM::Value source = instr.sourceIsTemp ? TEMP(instr.source.tempIndex) : instr.source.value;
+        __qmljs_set_element(context, TEMP(instr.base), TEMP(instr.index), source);
     MOTH_END_INSTR(StoreElement)
 
     MOTH_BEGIN_INSTR(LoadProperty)
@@ -170,7 +172,8 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
     MOTH_BEGIN_INSTR(StoreProperty)
         TRACE(inline, "base temp = %d, property name = %s", instr.baseTemp, instr.name->toQString().toUtf8().constData());
         VM::Value base = TEMP(instr.baseTemp);
-        __qmljs_set_property(context, base, instr.name, TEMP(instr.sourceTemp));
+        VM::Value source = instr.sourceIsTemp ? TEMP(instr.source.tempIndex) : instr.source.value;
+        __qmljs_set_property(context, base, instr.name, source);
     MOTH_END_INSTR(StoreProperty)
 
     MOTH_BEGIN_INSTR(Push)
@@ -296,21 +299,24 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
     MOTH_END_INSTR(LoadThis)
 
     MOTH_BEGIN_INSTR(InplaceElementOp)
+        VM::Value source = instr.sourceIsTemp ? TEMP(instr.source.tempIndex) : instr.source.value;
         instr.alu(TEMP(instr.targetBase),
                   TEMP(instr.targetIndex),
-                  TEMP(instr.source),
+                  source,
                   context);
     MOTH_END_INSTR(InplaceElementOp)
 
     MOTH_BEGIN_INSTR(InplaceMemberOp)
-        instr.alu(TEMP(instr.source),
+        VM::Value source = instr.sourceIsTemp ? TEMP(instr.source.tempIndex) : instr.source.value;
+        instr.alu(source,
                   TEMP(instr.targetBase),
                   instr.targetMember,
                   context);
     MOTH_END_INSTR(InplaceMemberOp)
 
     MOTH_BEGIN_INSTR(InplaceNameOp)
-        instr.alu(TEMP(instr.source),
+        VM::Value source = instr.sourceIsTemp ? TEMP(instr.source.tempIndex) : instr.source.value;
+        instr.alu(source,
                   instr.targetName,
                   context);
     MOTH_END_INSTR(InplaceNameOp)

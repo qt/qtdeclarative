@@ -122,7 +122,8 @@ union Instr
     struct instr_storeName {
         MOTH_INSTR_HEADER
         VM::String *name;
-        int sourceTemp;
+        ValueOrTemp source;
+        unsigned sourceIsTemp:1;
     };
     struct instr_loadProperty {
         MOTH_INSTR_HEADER
@@ -132,9 +133,10 @@ union Instr
     };
     struct instr_storeProperty {
         MOTH_INSTR_HEADER
-        int sourceTemp;
         int baseTemp;
         VM::String *name;
+        ValueOrTemp source;
+        unsigned sourceIsTemp:1;
     };
     struct instr_loadElement {
         MOTH_INSTR_HEADER
@@ -144,9 +146,10 @@ union Instr
     };
     struct instr_storeElement {
         MOTH_INSTR_HEADER
-        int sourceTemp;
         int base;
         int index;
+        ValueOrTemp source;
+        unsigned sourceIsTemp:1;
     };
     struct instr_push {
         MOTH_INSTR_HEADER
@@ -259,20 +262,23 @@ union Instr
         void (*alu)(VM::Value, VM::Value, VM::Value, VM::Context *);
         int targetBase;
         int targetIndex;
-        int source;
+        ValueOrTemp source;
+        unsigned sourceIsTemp:1;
     };
     struct instr_inplaceMemberOp {
         MOTH_INSTR_HEADER
         void (*alu)(VM::Value, VM::Value, VM::String *, VM::Context *);
         int targetBase;
         VM::String *targetMember;
-        int source;
+        ValueOrTemp source;
+        unsigned sourceIsTemp:1;
     };
     struct instr_inplaceNameOp {
         MOTH_INSTR_HEADER
         void (*alu)(VM::Value, VM::String *, VM::Context *);
         VM::String *targetName;
-        int source;
+        ValueOrTemp source;
+        unsigned sourceIsTemp:1;
     };
 
     instr_common common;
