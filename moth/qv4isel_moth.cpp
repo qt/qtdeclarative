@@ -244,15 +244,22 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
     argc = 0;
     args = 0;
 
-    /*
-    int locals = _function->tempCount - _function->locals.size() + _function->maxNumberOfArguments;
+    bool singleArgIsTemp = false;
+    if (e && e->next == 0) {
+        // ok, only 1 argument in the cal...
+        const int idx = e->expr->asTemp()->index;
+        if (idx >= 0) {
+            // not an argument to this function...
+            // so if it's not a local, we're in:
+            singleArgIsTemp = idx >= _function->locals.size();
+        }
+    }
 
-    The condition for this case is wrong: the locals check is incorrect:
-    if (e && e->next == 0 && e->expr->asTemp()->index >= 0 && e->expr->asTemp()->index < locals) {
-        // We pass single arguments as references to the stack
+    if (singleArgIsTemp) {
+        // We pass single arguments as references to the stack, but only if it's not a local or an argument.
         argc = 1;
         args = e->expr->asTemp()->index;
-    } else */if (e) {
+    } else if (e) {
         // We need to move all the temps into the function arg array
         int argLocation = _function->tempCount - _function->locals.size();
         assert(argLocation >= 0);
