@@ -472,6 +472,11 @@ Value ErrorObject::__get__(Context *ctx, String *name)
     return Object::__get__(ctx, name);
 }
 
+void ErrorObject::setNameProperty(Context *ctx)
+{
+    __put__(ctx, QLatin1String("name"), Value::fromString(ctx, className()));
+}
+
 void ScriptFunction::construct(VM::Context *ctx)
 {
     Object *obj = ctx->engine->newObject();
@@ -561,6 +566,12 @@ ExecutionEngine::ExecutionEngine()
     functionPrototype = new FunctionPrototype(rootContext);
     regExpPrototype = new RegExpPrototype();
     errorPrototype = new ErrorPrototype();
+    evalErrorPrototype = new EvalErrorPrototype(rootContext);
+    rangeErrorPrototype = new RangeErrorPrototype(rootContext);
+    referenceErrorPrototype = new ReferenceErrorPrototype(rootContext);
+    syntaxErrorPrototype = new SyntaxErrorPrototype(rootContext);
+    typeErrorPrototype = new TypeErrorPrototype(rootContext);
+    uRIErrorPrototype = new URIErrorPrototype(rootContext);
 
     stringPrototype->prototype = objectPrototype;
     numberPrototype->prototype = objectPrototype;
@@ -570,6 +581,12 @@ ExecutionEngine::ExecutionEngine()
     functionPrototype->prototype = objectPrototype;
     regExpPrototype->prototype = objectPrototype;
     errorPrototype->prototype = objectPrototype;
+    evalErrorPrototype->prototype = errorPrototype;
+    rangeErrorPrototype->prototype = errorPrototype;
+    referenceErrorPrototype->prototype = errorPrototype;
+    syntaxErrorPrototype->prototype = errorPrototype;
+    typeErrorPrototype->prototype = errorPrototype;
+    uRIErrorPrototype->prototype = errorPrototype;
 
     objectCtor = Value::fromObject(new ObjectCtor(rootContext));
     stringCtor = Value::fromObject(new StringCtor(rootContext));
@@ -580,6 +597,12 @@ ExecutionEngine::ExecutionEngine()
     dateCtor = Value::fromObject(new DateCtor(rootContext));
     regExpCtor = Value::fromObject(new RegExpCtor(rootContext));
     errorCtor = Value::fromObject(new ErrorCtor(rootContext));
+    evalErrorCtor = Value::fromObject(new EvalErrorCtor(rootContext));
+    rangeErrorCtor = Value::fromObject(new RangeErrorCtor(rootContext));
+    referenceErrorCtor = Value::fromObject(new ReferenceErrorCtor(rootContext));
+    syntaxErrorCtor = Value::fromObject(new SyntaxErrorCtor(rootContext));
+    typeErrorCtor = Value::fromObject(new TypeErrorCtor(rootContext));
+    uRIErrorCtor = Value::fromObject(new URIErrorCtor(rootContext));
 
     stringCtor.objectValue()->prototype = functionPrototype;
     numberCtor.objectValue()->prototype = functionPrototype;
@@ -589,6 +612,12 @@ ExecutionEngine::ExecutionEngine()
     dateCtor.objectValue()->prototype = functionPrototype;
     regExpCtor.objectValue()->prototype = functionPrototype;
     errorCtor.objectValue()->prototype = functionPrototype;
+    evalErrorCtor.objectValue()->prototype = errorPrototype;
+    rangeErrorCtor.objectValue()->prototype = errorPrototype;
+    referenceErrorCtor.objectValue()->prototype = errorPrototype;
+    syntaxErrorCtor.objectValue()->prototype = errorPrototype;
+    typeErrorCtor.objectValue()->prototype = errorPrototype;
+    uRIErrorCtor.objectValue()->prototype = errorPrototype;
 
     objectPrototype->init(rootContext, objectCtor);
     stringPrototype->init(rootContext, stringCtor);
@@ -599,6 +628,12 @@ ExecutionEngine::ExecutionEngine()
     functionPrototype->init(rootContext, functionCtor);
     regExpPrototype->init(rootContext, regExpCtor);
     errorPrototype->init(rootContext, errorCtor);
+    evalErrorPrototype->init(rootContext, evalErrorCtor);
+    rangeErrorPrototype->init(rootContext, rangeErrorCtor);
+    referenceErrorPrototype->init(rootContext, referenceErrorCtor);
+    syntaxErrorPrototype->init(rootContext, syntaxErrorCtor);
+    typeErrorPrototype->init(rootContext, typeErrorCtor);
+    uRIErrorPrototype->init(rootContext, uRIErrorCtor);
 
     //
     // set up the global object
@@ -616,6 +651,12 @@ ExecutionEngine::ExecutionEngine()
     glo->__put__(rootContext, identifier(QStringLiteral("Date")), dateCtor);
     glo->__put__(rootContext, identifier(QStringLiteral("RegExp")), regExpCtor);
     glo->__put__(rootContext, identifier(QStringLiteral("Error")), errorCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("EvalError")), evalErrorCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("RangeError")), rangeErrorCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("ReferenceError")), referenceErrorCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("SyntaxError")), syntaxErrorCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("TypeError")), typeErrorCtor);
+    glo->__put__(rootContext, identifier(QStringLiteral("URIError")), uRIErrorCtor);
     glo->__put__(rootContext, identifier(QStringLiteral("Math")), Value::fromObject(newMathObject(rootContext)));
     glo->__put__(rootContext, identifier(QStringLiteral("undefined")), Value::undefinedValue());
     glo->__put__(rootContext, identifier(QStringLiteral("NaN")), Value::fromDouble(nan("")));
@@ -770,7 +811,7 @@ FunctionObject *ExecutionEngine::newRegExpCtor(Context *ctx)
 Object *ExecutionEngine::newErrorObject(const Value &value)
 {
     ErrorObject *object = new ErrorObject(value);
-    object->prototype = objectPrototype;
+    object->prototype = errorPrototype;
     return object;
 }
 

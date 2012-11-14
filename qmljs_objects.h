@@ -83,6 +83,12 @@ struct FunctionPrototype;
 struct DatePrototype;
 struct RegExpPrototype;
 struct ErrorPrototype;
+struct EvalErrorPrototype;
+struct RangeErrorPrototype;
+struct ReferenceErrorPrototype;
+struct SyntaxErrorPrototype;
+struct TypeErrorPrototype;
+struct URIErrorPrototype;
 
 struct String {
     String(const QString &text)
@@ -529,6 +535,39 @@ struct ErrorObject: Object {
     virtual QString className() { return QStringLiteral("Error"); }
     virtual ErrorObject *asErrorObject() { return this; }
     virtual Value __get__(Context *ctx, String *name);
+
+protected:
+    void setNameProperty(Context *ctx);
+};
+
+struct EvalErrorObject: ErrorObject {
+    EvalErrorObject(Context *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    virtual QString className() { return QStringLiteral("EvalError"); }
+};
+
+struct RangeErrorObject: ErrorObject {
+    RangeErrorObject(Context *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    virtual QString className() { return QStringLiteral("RangeError"); }
+};
+
+struct ReferenceErrorObject: ErrorObject {
+    ReferenceErrorObject(Context *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    virtual QString className() { return QStringLiteral("ReferenceError"); }
+};
+
+struct SyntaxErrorObject: ErrorObject {
+    SyntaxErrorObject(Context *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    virtual QString className() { return QStringLiteral("SyntaxError"); }
+};
+
+struct TypeErrorObject: ErrorObject {
+    TypeErrorObject(Context *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    virtual QString className() { return QStringLiteral("TypeError"); }
+};
+
+struct URIErrorObject: ErrorObject {
+    URIErrorObject(Context *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    virtual QString className() { return QStringLiteral("URIError"); }
 };
 
 struct ActivationObject: Object {
@@ -563,6 +602,12 @@ struct ExecutionEngine
     Value dateCtor;
     Value regExpCtor;
     Value errorCtor;
+    Value evalErrorCtor;
+    Value rangeErrorCtor;
+    Value referenceErrorCtor;
+    Value syntaxErrorCtor;
+    Value typeErrorCtor;
+    Value uRIErrorCtor;
 
     ObjectPrototype *objectPrototype;
     StringPrototype *stringPrototype;
@@ -573,6 +618,12 @@ struct ExecutionEngine
     DatePrototype *datePrototype;
     RegExpPrototype *regExpPrototype;
     ErrorPrototype *errorPrototype;
+    EvalErrorPrototype *evalErrorPrototype;
+    RangeErrorPrototype *rangeErrorPrototype;
+    ReferenceErrorPrototype *referenceErrorPrototype;
+    SyntaxErrorPrototype *syntaxErrorPrototype;
+    TypeErrorPrototype *typeErrorPrototype;
+    URIErrorPrototype *uRIErrorPrototype;
 
     QHash<QString, String *> identifiers;
 

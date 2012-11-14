@@ -2603,11 +2603,41 @@ void ErrorCtor::call(Context *ctx)
     ctx->thisObject = that;
 }
 
-void ErrorPrototype::init(Context *ctx, const Value &ctor)
+void EvalErrorCtor::construct(Context *ctx)
 {
-    ctor.objectValue()->__put__(ctx, ctx->engine->id_prototype, Value::fromObject(this));
-    __put__(ctx, QStringLiteral("constructor"), ctor);
-    __put__(ctx, QStringLiteral("toString"), method_toString, 0);
+    ctx->thisObject = Value::fromObject(new EvalErrorObject(ctx));
+}
+
+void RangeErrorCtor::construct(Context *ctx)
+{
+    ctx->thisObject = Value::fromObject(new RangeErrorObject(ctx));
+}
+
+void ReferenceErrorCtor::construct(Context *ctx)
+{
+    ctx->thisObject = Value::fromObject(new ReferenceErrorObject(ctx));
+}
+
+void SyntaxErrorCtor::construct(Context *ctx)
+{
+    ctx->thisObject = Value::fromObject(new SyntaxErrorObject(ctx));
+}
+
+void TypeErrorCtor::construct(Context *ctx)
+{
+    ctx->thisObject = Value::fromObject(new TypeErrorObject(ctx));
+}
+
+void URIErrorCtor::construct(Context *ctx)
+{
+    ctx->thisObject = Value::fromObject(new URIErrorObject(ctx));
+}
+
+void ErrorPrototype::init(Context *ctx, const Value &ctor, Object *obj)
+{
+    ctor.objectValue()->__put__(ctx, ctx->engine->id_prototype, Value::fromObject(obj));
+    obj->__put__(ctx, QStringLiteral("constructor"), ctor);
+    obj->__put__(ctx, QStringLiteral("toString"), method_toString, 0);
 }
 
 void ErrorPrototype::method_toString(Context *ctx)

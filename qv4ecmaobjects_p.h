@@ -302,14 +302,95 @@ struct ErrorCtor: FunctionObject
     virtual void call(Context *ctx);
 };
 
+struct EvalErrorCtor: ErrorCtor
+{
+    EvalErrorCtor(Context *scope): ErrorCtor(scope) {}
+
+    virtual void construct(Context *ctx);
+};
+
+struct RangeErrorCtor: ErrorCtor
+{
+    RangeErrorCtor(Context *scope): ErrorCtor(scope) {}
+
+    virtual void construct(Context *ctx);
+};
+
+struct ReferenceErrorCtor: ErrorCtor
+{
+    ReferenceErrorCtor(Context *scope): ErrorCtor(scope) {}
+
+    virtual void construct(Context *ctx);
+};
+
+struct SyntaxErrorCtor: ErrorCtor
+{
+    SyntaxErrorCtor(Context *scope): ErrorCtor(scope) {}
+
+    virtual void construct(Context *ctx);
+};
+
+struct TypeErrorCtor: ErrorCtor
+{
+    TypeErrorCtor(Context *scope): ErrorCtor(scope) {}
+
+    virtual void construct(Context *ctx);
+};
+
+struct URIErrorCtor: ErrorCtor
+{
+    URIErrorCtor(Context *scope): ErrorCtor(scope) {}
+
+    virtual void construct(Context *ctx);
+};
+
+
 struct ErrorPrototype: ErrorObject
 {
     // ### shouldn't be undefined
     ErrorPrototype(): ErrorObject(Value::undefinedValue()) {}
-    void init(Context *ctx, const Value &ctor);
+    void init(Context *ctx, const Value &ctor) { init(ctx, ctor, this); }
 
+    static void init(Context *ctx, const Value &ctor, Object *obj);
     static void method_toString(Context *ctx);
 };
+
+struct EvalErrorPrototype: EvalErrorObject
+{
+    EvalErrorPrototype(Context *ctx): EvalErrorObject(ctx) {}
+    void init(Context *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
+};
+
+struct RangeErrorPrototype: RangeErrorObject
+{
+    RangeErrorPrototype(Context *ctx): RangeErrorObject(ctx) {}
+    void init(Context *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
+};
+
+struct ReferenceErrorPrototype: ReferenceErrorObject
+{
+    ReferenceErrorPrototype(Context *ctx): ReferenceErrorObject(ctx) {}
+    void init(Context *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
+};
+
+struct SyntaxErrorPrototype: SyntaxErrorObject
+{
+    SyntaxErrorPrototype(Context *ctx): SyntaxErrorObject(ctx) {}
+    void init(Context *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
+};
+
+struct TypeErrorPrototype: TypeErrorObject
+{
+    TypeErrorPrototype(Context *ctx): TypeErrorObject(ctx) {}
+    void init(Context *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
+};
+
+struct URIErrorPrototype: URIErrorObject
+{
+    URIErrorPrototype(Context *ctx): URIErrorObject(ctx) {}
+    void init(Context *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
+};
+
 
 struct MathObject: Object
 {
