@@ -341,8 +341,8 @@ void InstructionSelection::visitMove(IR::Move *s)
         if (IR::Name *n = s->target->asName()) {
             String *propertyName = identifier(*n->id);
 
-            if (IR::Temp *t = s->source->asTemp()) {
-                generateFunctionCall(Void, __qmljs_set_activation_property, ContextRegister, propertyName, t);
+            if (s->source->asTemp() || s->source->asConst()) {
+                generateFunctionCall(Void, __qmljs_set_activation_property, ContextRegister, propertyName, s->source);
                 return;
             } else {
                 Q_UNREACHABLE();
@@ -502,16 +502,16 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Member *m = s->target->asMember()) {
             if (IR::Temp *base = m->base->asTemp()) {
-                if (IR::Temp *t = s->source->asTemp()) {
-                    generateFunctionCall(Void, __qmljs_set_property, ContextRegister, base, identifier(*m->name), t);
+                if (s->source->asTemp() || s->source->asConst()) {
+                    generateFunctionCall(Void, __qmljs_set_property, ContextRegister, base, identifier(*m->name), s->source);
                     return;
                 } else {
                     Q_UNREACHABLE();
                 }
             }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
-            if (IR::Temp *t2 = s->source->asTemp()) {
-                generateFunctionCall(Void, __qmljs_set_element, ContextRegister, ss->base->asTemp(), ss->index->asTemp(), t2);
+            if (s->source->asTemp() || s->source->asConst()) {
+                generateFunctionCall(Void, __qmljs_set_element, ContextRegister, ss->base->asTemp(), ss->index->asTemp(), s->source);
                 return;
             } else {
                 Q_UNIMPLEMENTED();
@@ -520,7 +520,7 @@ void InstructionSelection::visitMove(IR::Move *s)
     } else {
         // inplace assignment, e.g. x += 1, ++x, ...
         if (IR::Temp *t = s->target->asTemp()) {
-            if (IR::Temp *t2 = s->source->asTemp()) {
+            if (s->source->asTemp() || s->source->asConst()) {
                 Value (*op)(const Value left, const Value right, Context *ctx) = 0;
                 const char *opName = 0;
                 switch (s->op) {
@@ -540,11 +540,11 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
                 }
                 if (op)
-                    generateFunctionCallImp(t, opName, op, t, t2, ContextRegister);
+                    generateFunctionCallImp(t, opName, op, t, s->source, ContextRegister);
                 return;
             }
         } else if (IR::Name *n = s->target->asName()) {
-            if (IR::Temp *t = s->source->asTemp()) {
+            if (s->source->asTemp() || s->source->asConst()) {
                 void (*op)(const Value value, String *name, Context *ctx) = 0;
                 const char *opName = 0;
                 switch (s->op) {
@@ -564,12 +564,12 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
                 }
                 if (op) {
-                    generateFunctionCallImp(Void, opName, op, t, identifier(*n->id), ContextRegister);
+                    generateFunctionCallImp(Void, opName, op, s->source, identifier(*n->id), ContextRegister);
                 }
                 return;
             }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
-            if (IR::Temp *t = s->source->asTemp()) {
+            if (s->source->asTemp() || s->source->asConst()) {
                 void (*op)(Value base, Value index, Value value, Context *ctx) = 0;
                 const char *opName = 0;
                 switch (s->op) {
@@ -592,12 +592,12 @@ void InstructionSelection::visitMove(IR::Move *s)
                 if (op) {
                     IR::Temp* base = ss->base->asTemp();
                     IR::Temp* index = ss->index->asTemp();
-                    generateFunctionCallImp(Void, opName, op, base, index, t, ContextRegister);
+                    generateFunctionCallImp(Void, opName, op, base, index, s->source, ContextRegister);
                 }
                 return;
             }
         } else if (IR::Member *m = s->target->asMember()) {
-            if (IR::Temp *t = s->source->asTemp()) {
+            if (s->source->asTemp() || s->source->asConst()) {
                 void (*op)(Value value, Value base, String *name, Context *ctx) = 0;
                 const char *opName = 0;
                 switch (s->op) {
@@ -620,7 +620,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 if (op) {
                     IR::Temp* base = m->base->asTemp();
                     String* member = identifier(*m->name);
-                    generateFunctionCallImp(Void, opName, op, t, base, member, ContextRegister);
+                    generateFunctionCallImp(Void, opName, op, s->source, base, member, ContextRegister);
                 }
                 return;
             }

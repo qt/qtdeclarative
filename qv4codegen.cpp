@@ -520,7 +520,7 @@ void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
 {
     assert(target->isLValue());
 
-    if (! source->asTemp() && (op != IR::OpInvalid || ! target->asTemp())) {
+    if (!source->asTemp() && !source->asConst() && (op != IR::OpInvalid || ! target->asTemp())) {
         unsigned t = _block->newTemp();
         _block->MOVE(_block->TEMP(t), source);
         source = _block->TEMP(t);
