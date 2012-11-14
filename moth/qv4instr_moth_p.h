@@ -32,7 +32,7 @@
     F(CreateProperty, createProperty) \
     F(CreateActivationProperty, createActivationProperty) \
     F(Jump, jump) \
-    F(CJump, jump) \
+    F(CJump, cjump) \
     F(Unop, unop) \
     F(Binop, binop) \
     F(LoadThis, loadThis) \
@@ -229,6 +229,10 @@ union Instr
     struct instr_jump {
         MOTH_INSTR_HEADER
         ptrdiff_t offset; 
+    };
+    struct instr_cjump {
+        MOTH_INSTR_HEADER
+        ptrdiff_t offset;
         int tempIndex;
     };
     struct instr_unop {
@@ -299,6 +303,7 @@ union Instr
     instr_createProperty createProperty;
     instr_createActivationProperty createActivationProperty;
     instr_jump jump;
+    instr_cjump cjump;
     instr_unop unop;
     instr_binop binop;
     instr_loadThis loadThis;
