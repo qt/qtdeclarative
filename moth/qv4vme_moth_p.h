@@ -21,6 +21,10 @@ public:
 #ifdef MOTH_THREADED_INTERPRETER
     static void **instructionJumpTable();
 #endif
+
+private:
+    static void restoreState(VM::Context *context, QVector<VM::Value> &stack, int &targetTempIndex, const uchar *&code);
+    static void saveState(VM::Context *context, const QVector<VM::Value> &stack, int targetTempIndex, const uchar *code);
 };
 
 } // namespace Moth
