@@ -1970,6 +1970,23 @@ bool Codegen::visit(TryStatement *ast)
     IR::BasicBlock *after = _function->newBasicBlock();
     assert(catchBody || finallyBody);
 
+    Loop *loop = 0;
+    if (_loop) {
+        // So there is a loop around the try statement, and now we have to setup
+        // a new loop-break-block and a new loop-continue-block so that if either
+        // a break or a continue is executed, they will go to these blocks
+        // which need to pop the exception handler. If there is a finally block,
+        // its code also gets generated into all the new break/continue blocks.
+        // And of course, as there can be a labeled break/continue, we have to
+        // do it for all parent loops as well.
+        for (Loop *it = _loop, **it2 = &loop; it; it = it->parent) {
+            *it2 = new Loop(it->node, _function->newBasicBlock(), _function->newBasicBlock(), 0);
+            (*it2)->labelledStatement = it->labelledStatement;
+            it2 = &(*it2)->parent;
+        }
+        std::swap(_loop, loop);
+    }
+
     int inCatch = 0;
     if (catchBody && finallyBody) {
         inCatch = _block->newTemp();
@@ -2004,12 +2021,16 @@ bool Codegen::visit(TryStatement *ast)
             // otherwise remove the exception handler, so that throw inside catch will
             // give the correct result
             _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
+
+            // the exception handler is deleted, so we can restore the
+            // original break/continue blocks.
+            std::swap(_loop, loop);
         }
 
         const int exception = _block->newTemp();
         move(_block->TEMP(exception), _block->CALL(_block->NAME(IR::Name::builtin_get_exception, 0, 0), 0));
 
-        // the variable ued in the catch statement is local and hides any global
+        // the variable used in the catch statement is local and hides any global
         // variable with the same name.
         int hiddenIndex = _env->findMember(ast->catchExpression->name.toString());
         _env->members.insert(ast->catchExpression->name.toString(), exception);
@@ -2024,8 +2045,37 @@ bool Codegen::visit(TryStatement *ast)
     if (finallyBody) {
         _block = finallyBody;
         _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
+
+        // the exception handler is deleted, so we can restore the
+        // original break/continue blocks.
+        std::swap(_loop, loop);
+
         statement(ast->finallyExpression->statement);
         _block->CJUMP(_block->TEMP(hasException), _throwBlock, after);
+    }
+
+    if (loop) {
+        // now do the codegen for each break/continue block
+        for (Loop *it = loop, *it2 = _loop; it && it2; it = it->parent, it2 = it2->parent) {
+            _block = it->breakBlock;
+            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
+            if (finallyBody)
+                statement(ast->finallyExpression->statement);
+            _block->JUMP(it2->breakBlock);
+
+            _block = it->continueBlock;
+            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
+            if (finallyBody)
+                statement(ast->finallyExpression->statement);
+            _block->JUMP(it2->continueBlock);
+        }
+
+        // we don't need the Loop struct itself anymore.
+        while (loop) {
+            Loop *next = loop->parent;
+            delete loop;
+            loop = next;
+        }
     }
 
     _block = after;
