@@ -528,6 +528,7 @@ struct ErrorObject: Object {
     ErrorObject(const Value &message): value(message) {}
     virtual QString className() { return QStringLiteral("Error"); }
     virtual ErrorObject *asErrorObject() { return this; }
+    virtual Value __get__(Context *ctx, String *name);
 };
 
 struct ActivationObject: Object {

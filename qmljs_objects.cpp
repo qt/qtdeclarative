@@ -458,6 +458,13 @@ Value RegExpObject::__get__(Context *ctx, String *name)
     return Object::__get__(ctx, name);
 }
 
+Value ErrorObject::__get__(Context *ctx, String *name)
+{
+    QString n = name->toQString();
+    if (n == QLatin1String("message"))
+        return value;
+    return Object::__get__(ctx, name);
+}
 
 void ScriptFunction::construct(VM::Context *ctx)
 {
