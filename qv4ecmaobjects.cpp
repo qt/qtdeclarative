@@ -2599,7 +2599,8 @@ void ErrorCtor::call(Context *ctx)
 {
     Value that = ctx->thisObject;
     construct(ctx);
-    ctx->result = ctx->thisObject;
+    ctx->wireUpPrototype(this);
+
     ctx->thisObject = that;
 }
 

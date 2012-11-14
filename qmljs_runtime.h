@@ -601,6 +601,7 @@ struct Context {
 
     void initConstructorContext(Context *parent, Value that, FunctionObject *f, Value *args, unsigned argc);
     void leaveConstructorContext(FunctionObject *f);
+    void wireUpPrototype(FunctionObject *f);
 
     void throwError(Value value);
     void throwError(const QString &message);

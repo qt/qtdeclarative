@@ -345,6 +345,12 @@ void Context::initConstructorContext(Context *parent, Value that, FunctionObject
 
 void Context::leaveConstructorContext(FunctionObject *f)
 {
+    wireUpPrototype(f);
+    leaveCallContext();
+}
+
+void Context::wireUpPrototype(FunctionObject *f)
+{
     assert(thisObject.isObject());
     result = thisObject;
 
@@ -353,7 +359,6 @@ void Context::leaveConstructorContext(FunctionObject *f)
     if (! thisObject.isObject())
         thisObject.objectValue()->prototype = engine->objectPrototype;
 
-    leaveCallContext();
 }
 
 extern "C" {
