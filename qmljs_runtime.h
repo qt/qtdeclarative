@@ -589,35 +589,24 @@ struct Context {
 
     inline Value argument(unsigned int index = 0)
     {
-        Value arg;
-        getArgument(&arg, index);
-        return arg;
-    }
-
-    inline void getArgument(Value *result, unsigned int index)
-    {
         if (index < argumentCount)
-            *result = arguments[index];
-        else
-            *result = Value::undefinedValue();
+            return arguments[index];
+        return Value::undefinedValue();
     }
 
     void init(ExecutionEngine *eng);
-
-    void throwError(Value value);
-    void throwTypeError();
-    void throwReferenceError(Value value);
-
-#ifndef QMLJS_LLVM_RUNTIME
-    void throwError(const QString &message);
-    void throwUnimplemented(const QString &message);
-#endif
 
     void initCallContext(Context *parent, const Value *object, FunctionObject *f, Value *args, unsigned argc);
     void leaveCallContext();
 
     void initConstructorContext(Context *parent, Value *object, FunctionObject *f, Value *args, unsigned argc);
     void leaveConstructorContext(FunctionObject *f);
+
+    void throwError(Value value);
+    void throwError(const QString &message);
+    void throwTypeError();
+    void throwReferenceError(Value value);
+    void throwUnimplemented(const QString &message);
 };
 
 
