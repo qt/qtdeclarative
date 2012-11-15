@@ -188,6 +188,8 @@ protected:
                                  AST::SourceElements *body, Mode mode = FunctionCode);
     int indexOfArgument(const QStringRef &string) const;
 
+    void generateFinallyBlock(IR::BasicBlock *finallyBlock, bool exceptionNeedsSaving, AST::Block *ast, int hasException, IR::BasicBlock *after);
+
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);
     void condition(AST::ExpressionNode *ast, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse);

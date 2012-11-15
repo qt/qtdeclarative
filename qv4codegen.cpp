@@ -2043,31 +2043,18 @@ bool Codegen::visit(TryStatement *ast)
     }
 
     if (finallyBody) {
-        _block = finallyBody;
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
-
         // the exception handler is deleted, so we can restore the
         // original break/continue blocks.
         std::swap(_loop, loop);
 
-        statement(ast->finallyExpression->statement);
-        _block->CJUMP(_block->TEMP(hasException), _throwBlock, after);
+        generateFinallyBlock(finallyBody, !catchBody, ast->finallyExpression->statement, hasException, after);
     }
 
     if (loop) {
         // now do the codegen for each break/continue block
         for (Loop *it = loop, *it2 = _loop; it && it2; it = it->parent, it2 = it2->parent) {
-            _block = it->breakBlock;
-            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
-            if (finallyBody)
-                statement(ast->finallyExpression->statement);
-            _block->JUMP(it2->breakBlock);
-
-            _block = it->continueBlock;
-            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
-            if (finallyBody)
-                statement(ast->finallyExpression->statement);
-            _block->JUMP(it2->continueBlock);
+            generateFinallyBlock(it->breakBlock, !catchBody, ast->finallyExpression->statement, hasException, it2->breakBlock);
+            generateFinallyBlock(it->continueBlock, !catchBody, ast->finallyExpression->statement, hasException, it2->continueBlock);
         }
 
         // we don't need the Loop struct itself anymore.
@@ -2081,6 +2068,39 @@ bool Codegen::visit(TryStatement *ast)
     _block = after;
 
     return false;
+}
+
+void Codegen::generateFinallyBlock(IR::BasicBlock *finallyBlock, bool exceptionNeedsSaving, Block *ast, int hasException, IR::BasicBlock *after)
+{
+    _block = finallyBlock;
+
+    int exception;
+    if (exceptionNeedsSaving) {
+        // save the exception so we can rethrow it later.
+        IR::BasicBlock *saveExceptionBlock = _function->newBasicBlock();
+        IR::BasicBlock *realFinallyBlock = _function->newBasicBlock();
+        _block->CJUMP(_block->TEMP(hasException), saveExceptionBlock, realFinallyBlock);
+
+        _block = saveExceptionBlock;
+        exception = saveExceptionBlock->newTemp();
+        move(_block->TEMP(exception), _block->CALL(_block->NAME(IR::Name::builtin_get_exception, 0, 0), 0));
+        _block->JUMP(realFinallyBlock);
+
+        _block = realFinallyBlock;
+    }
+
+    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
+    if (ast)
+        statement(ast);
+
+    if (exceptionNeedsSaving) {
+        IR::BasicBlock *restoreExceptionBlock = _function->newBasicBlock();
+        _block->CJUMP(_block->TEMP(hasException), restoreExceptionBlock, after);
+        restoreExceptionBlock->MOVE(restoreExceptionBlock->TEMP(_returnAddress), restoreExceptionBlock->TEMP(exception));
+        restoreExceptionBlock->JUMP(_throwBlock);
+    } else {
+        _block->CJUMP(_block->TEMP(hasException), _throwBlock, after);
+    }
 }
 
 bool Codegen::visit(VariableStatement *ast)
