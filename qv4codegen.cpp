@@ -2008,7 +2008,7 @@ bool Codegen::visit(TryStatement *ast)
 
         if (finallyBody) {
             if (inCatch != 0) {
-                // an exception got thrown within catch. Go to finally
+                // check if an exception got thrown within catch. Go to finally
                 // and then rethrow
                 IR::BasicBlock *b = _function->newBasicBlock();
                 _block->CJUMP(_block->TEMP(inCatch), finallyBody, b);
@@ -2047,7 +2047,7 @@ bool Codegen::visit(TryStatement *ast)
         // original break/continue blocks.
         std::swap(_loop, loop);
 
-        generateFinallyBlock(finallyBody, !catchBody, ast->finallyExpression->statement, hasException, after);
+        generateFinallyBlock(finallyBody, !catchBody, ast->finallyExpression, hasException, after);
     }
 
     if (loop) {
@@ -2055,8 +2055,8 @@ bool Codegen::visit(TryStatement *ast)
         for (Loop *it = loop, *it2 = _loop; it && it2; it = it->parent, it2 = it2->parent) {
             // if the break/continue trampoline blocks get reached, there cannot
             // be a pending exception, so don't bother with saving it.
-            generateFinallyBlock(it->breakBlock, false, ast->finallyExpression->statement, hasException, it2->breakBlock);
-            generateFinallyBlock(it->continueBlock, false, ast->finallyExpression->statement, hasException, it2->continueBlock);
+            generateFinallyBlock(it->breakBlock, false, ast->finallyExpression, hasException, it2->breakBlock);
+            generateFinallyBlock(it->continueBlock, false, ast->finallyExpression, hasException, it2->continueBlock);
         }
 
         // we don't need the Loop struct itself anymore.
@@ -2072,7 +2072,7 @@ bool Codegen::visit(TryStatement *ast)
     return false;
 }
 
-void Codegen::generateFinallyBlock(IR::BasicBlock *finallyBlock, bool exceptionNeedsSaving, Block *ast, int hasException, IR::BasicBlock *after)
+void Codegen::generateFinallyBlock(IR::BasicBlock *finallyBlock, bool exceptionNeedsSaving, Finally *ast, int hasException, IR::BasicBlock *after)
 {
     _block = finallyBlock;
 
@@ -2095,14 +2095,15 @@ void Codegen::generateFinallyBlock(IR::BasicBlock *finallyBlock, bool exceptionN
     // the finally block contains a break/continue. Should another set of
     // break/continue trampoline blocks get inserted?
     _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
-    if (ast)
-        statement(ast);
+    if (ast && ast->statement)
+        statement(ast->statement);
 
     if (exceptionNeedsSaving) {
         IR::BasicBlock *restoreExceptionBlock = _function->newBasicBlock();
         _block->CJUMP(_block->TEMP(hasException), restoreExceptionBlock, after);
-        restoreExceptionBlock->MOVE(restoreExceptionBlock->TEMP(_returnAddress), restoreExceptionBlock->TEMP(exception));
-        restoreExceptionBlock->JUMP(_throwBlock);
+        _block = restoreExceptionBlock;
+        _block->MOVE(_block->TEMP(_returnAddress), _block->TEMP(exception));
+        _block->JUMP(_throwBlock);
     } else {
         _block->CJUMP(_block->TEMP(hasException), _throwBlock, after);
     }
