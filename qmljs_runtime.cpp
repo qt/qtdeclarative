@@ -243,7 +243,6 @@ void Context::init(ExecutionEngine *eng)
     formalCount = 0;
     vars = 0;
     varCount = 0;
-    calledAsConstructor = false;
 }
 
 PropertyDescriptor *Context::lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp)
@@ -330,7 +329,6 @@ void Context::initCallContext(Context *parent, const Value *object, FunctionObje
     vars = f->varList;
     varCount = f->varCount;
     locals = varCount ? new Value[varCount] : 0;
-    calledAsConstructor = false;
     if (varCount)
         std::fill(locals, locals + varCount, Value::undefinedValue());
 }
@@ -346,7 +344,6 @@ void Context::leaveCallContext()
 void Context::initConstructorContext(Context *parent, Value *object, FunctionObject *f, Value *args, unsigned argc)
 {
     initCallContext(parent, object, f, args, argc);
-    calledAsConstructor = true;
 }
 
 void Context::leaveConstructorContext(FunctionObject *f)

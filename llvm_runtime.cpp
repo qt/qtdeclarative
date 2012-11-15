@@ -509,10 +509,4 @@ void __qmljs_llvm_delete_value(Context *ctx, Value *result, Value *value)
     *result = __qmljs_delete_value(ctx, *value);
 }
 
-void __qmljs_llvm_init_this_object(Context *ctx)
-{
-    if (ctx->calledAsConstructor)
-        ctx->thisObject = __qmljs_new_object(ctx);
-}
-
 } // extern "C"

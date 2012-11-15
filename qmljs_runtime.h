@@ -583,7 +583,6 @@ struct Context {
     unsigned int formalCount;
     String **vars;
     unsigned int varCount;
-    int calledAsConstructor;
 
     PropertyDescriptor *lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp);
     void inplaceBitOp(Value value, String *name, BinOp op);
