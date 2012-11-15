@@ -282,11 +282,11 @@ static int evaluate(QQmlJS::VM::Context *ctx, const QString &fileName,
             return EXIT_FAILURE;
     }
 
-    if (! ctx->activation.isObject())
-        ctx->activation = VM::Value::fromObject(new QQmlJS::VM::Object());
+    if (!ctx->activation)
+        ctx->activation = new QQmlJS::VM::Object();
 
     foreach (const QString *local, globalCode->locals) {
-        ctx->activation.objectValue()->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
+        ctx->activation->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
     }
 
     void * buf = __qmljs_create_exception_handler(ctx);

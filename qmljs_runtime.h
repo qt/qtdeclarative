@@ -573,7 +573,7 @@ inline bool Value::sameValue(Value other) {
 struct Context {
     ExecutionEngine *engine;
     Context *parent;
-    Value activation;
+    Object *activation;
     Value thisObject;
     Value *arguments;
     unsigned int argumentCount;

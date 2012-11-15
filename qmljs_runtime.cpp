@@ -236,7 +236,7 @@ void Context::init(ExecutionEngine *eng)
     arguments = 0;
     argumentCount = 0;
     locals = 0;
-    activation = Value::nullValue();
+    activation = 0;
     thisObject = Value::nullValue();
     result = Value::undefinedValue();
     formals = 0;
@@ -248,8 +248,8 @@ void Context::init(ExecutionEngine *eng)
 PropertyDescriptor *Context::lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp)
 {
     for (Context *ctx = this; ctx; ctx = ctx->parent) {
-        if (Object *act = ctx->activation.asObject()) {
-            if (PropertyDescriptor *pd = act->__getPropertyDescriptor__(this, name, tmp))
+        if (ctx->activation) {
+            if (PropertyDescriptor *pd = ctx->activation->__getPropertyDescriptor__(this, name, tmp))
                 return pd;
         }
     }
@@ -259,8 +259,8 @@ PropertyDescriptor *Context::lookupPropertyDescriptor(String *name, PropertyDesc
 void Context::inplaceBitOp(Value value, String *name, BinOp op)
 {
     for (Context *ctx = this; ctx; ctx = ctx->parent) {
-        if (Object *act = ctx->activation.asObject()) {
-            if (act->inplaceBinOp(value, name, op, this))
+        if (ctx->activation) {
+            if (ctx->activation->inplaceBinOp(value, name, op, this))
                 return;
         }
     }
@@ -306,9 +306,9 @@ void Context::initCallContext(Context *parent, const Value *object, FunctionObje
     result = Value::undefinedValue();
 
     if (f->needsActivation)
-        activation = Value::fromObject(engine->newActivationObject(this));
+        activation = engine->newActivationObject(this);
     else
-        activation = Value::nullValue();
+        activation = 0;
 
     if (object)
         thisObject = *object;
@@ -335,7 +335,7 @@ void Context::initCallContext(Context *parent, const Value *object, FunctionObje
 
 void Context::leaveCallContext()
 {
-    if (!activation.isNull()) {
+    if (activation) {
         delete[] locals;
         locals = 0;
     }
@@ -444,10 +444,10 @@ Value __qmljs_delete_member(Context *ctx, Value base, String *name)
 
 Value __qmljs_delete_property(Context *ctx, String *name)
 {
-    Value obj = ctx->activation;
-    if (! obj.isObject())
-        obj = ctx->engine->globalObject;
-    return Value::fromBoolean(obj.objectValue()->__delete__(ctx, name, true));
+    Object *obj = ctx->activation;
+    if (!obj)
+        obj = ctx->engine->globalObject.objectValue();
+    return Value::fromBoolean(obj->__delete__(ctx, name, true));
 }
 
 Value __qmljs_delete_value(Context *ctx, Value value)
@@ -1020,21 +1020,21 @@ Value __qmljs_call_activation_property(Context *context, String *name, Value *ar
 
 Value __qmljs_call_property(Context *context, Value base, String *name, Value *args, int argc)
 {
-    Value baseObject;
+    Object *baseObject;
     Value thisObject;
 
     if (base.isUndefined()) {
         baseObject = context->activation;
         thisObject = Value::nullValue();
     } else {
-        baseObject = base;
-        if (!baseObject.isObject())
-            baseObject = __qmljs_to_object(baseObject, context);
-        assert(baseObject.isObject());
-        thisObject = baseObject;
+        if (!base.isObject())
+            base = __qmljs_to_object(base, context);
+        assert(base.isObject());
+        baseObject = base.objectValue();
+        thisObject = base;
     }
 
-    Value func = baseObject.property(context, name);
+    Value func = baseObject ? baseObject->__get__(context, name) : Value::undefinedValue();
     return callFunction(context, thisObject, func.asFunctionObject(), args, argc);
 }
 

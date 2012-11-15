@@ -599,7 +599,7 @@ ExecutionEngine::ExecutionEngine()
     //
     VM::Object *glo = newObject(/*rootContext*/);
     globalObject = Value::fromObject(glo);
-    rootContext->activation = Value::fromObject(glo);
+    rootContext->activation = glo;
 
     glo->__put__(rootContext, identifier(QStringLiteral("Object")), objectCtor);
     glo->__put__(rootContext, identifier(QStringLiteral("String")), stringCtor);
