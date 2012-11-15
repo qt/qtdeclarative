@@ -47,12 +47,15 @@ Item {
     property alias group: emitter.group
     signal clicked
     property bool rotatedButton: false
-    //Defaults, feel free to override
+
     width: image.width
-    height: image.height
+    height: image.sourceSize.height
     Image {
         id: image
-        anchors.centerIn: parent
+        height: parent.height
+        width: height/sourceSize.height * sourceSize.width
+
+        anchors.horizontalCenter: parent.horizontalCenter
         rotation: rotatedButton ? ((Math.random() * 3 + 2) * (Math.random() <= 0.5 ? -1 : 1)) : 0
         MenuEmitter {
             id: emitter

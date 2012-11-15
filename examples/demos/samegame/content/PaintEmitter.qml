@@ -40,6 +40,7 @@
 
 import QtQuick 2.0
 import QtQuick.Particles 2.0
+import "../settings.js" as Settings
 
 Emitter {
     property Item block: parent
@@ -56,8 +57,8 @@ Emitter {
             "yellowspots";
         }
     }
-    size: 64
-    endSize: 16
+    size: Settings.blockSize * 2
+    endSize: Settings.blockSize/2
     lifeSpan: 30000
     enabled: false
     emitRate: 60

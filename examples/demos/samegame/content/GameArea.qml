@@ -48,7 +48,6 @@ Item {
     property int score: 0
     property int highScore: 0
     property int moves: 0
-    property int blockSize: 32
     property string mode: ""
     property ParticleSystem ps: particleSystem
     //For easy theming
@@ -85,12 +84,11 @@ Item {
     Image {
         id: bg
         z: -1
+        anchors.fill: parent
         source: background;
         fillMode: Image.PreserveAspectCrop
     }
 
-    width: 320
-    height: 480
     MouseArea {
         anchors.fill: parent; onClicked: {
             if (puzzleTextBubble.opacity == 1) {

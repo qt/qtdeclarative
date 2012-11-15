@@ -70,7 +70,13 @@
             return -1;\
     }\
     view.connect(view.engine(), SIGNAL(quit()), &app, SLOT(quit()));\
-    view.setSource(QUrl::fromLocalFile(fileName));\
-    view.show();\
+    view.setSource(QUrl::fromLocalFile(fileName)); \
+    if (QGuiApplication::platformName() == QLatin1String("qnx") || \
+          QGuiApplication::platformName() == QLatin1String("eglfs")) {\
+        view.setResizeMode(QQuickView::SizeRootObjectToView);\
+        view.showFullScreen();\
+    } else {\
+        view.show();\
+    }\
     return app.exec();\
 }

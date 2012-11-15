@@ -41,13 +41,14 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 import "content/samegame.js" as Logic
+import "settings.js" as Settings
 import "content"
 
 Rectangle {
     id: root
     width: 320; height: 480
     property int acc: 0
-    property int menuDelay: 500
+
 
     function loadPuzzle() {
         if (gameCanvas.mode != "")
@@ -77,10 +78,11 @@ Rectangle {
     GameArea {
         id: gameCanvas
         z: 1
-        width: parent.width
+        y: Settings.headerHeight
 
-        y: 20
-        height: parent.height - 64
+        width: parent.width
+        height: parent.height - Settings.headerHeight - Settings.footerHeight
+
         backgroundVisible: root.state == "in-game"
         onModeChanged: if (gameCanvas.mode != "puzzle") puzzleWon = false; //UI has stricter constraints on this variable than the game does
         Age {
@@ -102,7 +104,7 @@ Rectangle {
 
         LogoAnimation {
             x: 64
-            y: 20
+            y: Settings.headerHeight
             particleSystem: gameCanvas.ps
             running: root.state == ""
         }
@@ -116,10 +118,9 @@ Rectangle {
 
         Column {
             y: 100 + 40
-            spacing: 0
+            spacing: Settings.menuButtonSpacing
 
             Button {
-                height: 64
                 width: root.width
                 rotatedButton: true
                 imgSrc: "content/gfx/but-game-1.png"
@@ -136,7 +137,7 @@ Rectangle {
                 group: "green"
                 Timer {
                     id: arcadeTimer
-                    interval: menuDelay
+                    interval: Settings.menuDelay
                     running : false
                     repeat  : false
                     onTriggered: Logic.startNewGame(gameCanvas)
@@ -144,7 +145,6 @@ Rectangle {
             }
 
             Button {
-                height: 64
                 width: root.width
                 rotatedButton: true
                 imgSrc: "content/gfx/but-game-2.png"
@@ -160,7 +160,7 @@ Rectangle {
                 group: "green"
                 Timer {
                     id: twopTimer
-                    interval: menuDelay
+                    interval: Settings.menuDelay
                     running : false
                     repeat  : false
                     onTriggered: Logic.startNewGame(gameCanvas, "multiplayer")
@@ -168,7 +168,6 @@ Rectangle {
             }
 
             Button {
-                height: 64
                 width: root.width
                 rotatedButton: true
                 imgSrc: "content/gfx/but-game-3.png"
@@ -184,7 +183,7 @@ Rectangle {
                 group: "blue"
                 Timer {
                     id: endlessTimer
-                    interval: menuDelay
+                    interval: Settings.menuDelay
                     running : false
                     repeat  : false
                     onTriggered: Logic.startNewGame(gameCanvas, "endless")
@@ -192,7 +191,6 @@ Rectangle {
             }
 
             Button {
-                height: 64
                 width: root.width
                 rotatedButton: true
                 imgSrc: "content/gfx/but-game-4.png"
@@ -207,7 +205,7 @@ Rectangle {
                 }
                 Timer {
                     id: puzzleTimer
-                    interval: menuDelay
+                    interval: Settings.menuDelay
                     running : false
                     repeat  : false
                     onTriggered: loadPuzzle();
@@ -222,61 +220,45 @@ Rectangle {
         source: "content/gfx/bar.png"
         width: parent.width
         z: 6
-        y: -24
-        height: 24
+        y: -Settings.headerHeight
+        height: Settings.headerHeight
         Behavior on opacity { NumberAnimation {} }
-        Text {
+        SamegameText {
             id: arcadeScore
             anchors { right: parent.right; topMargin: 3; rightMargin: 11; top: parent.top}
             text: '<font color="#f7d303">P1:</font> ' + gameCanvas.score
-            font.pixelSize: 14
+            font.pixelSize: Settings.fontPixelSize
             textFormat: Text.StyledText
             color: "white"
             opacity: gameCanvas.mode == "arcade" ? 1 : 0
             Behavior on opacity { NumberAnimation {} }
         }
-        Text {
+        SamegameText {
             id: arcadeHighScore
             anchors { left: parent.left; topMargin: 3; leftMargin: 11; top: parent.top}
             text: '<font color="#f7d303">Highscore:</font> ' + gameCanvas.highScore
-            font.pixelSize: 14
-            color: "white"
-            textFormat: Text.StyledText
             opacity: gameCanvas.mode == "arcade" ? 1 : 0
-            Behavior on opacity { NumberAnimation {} }
         }
-        Text {
+        SamegameText {
             id: p1Score
             anchors { right: parent.right; topMargin: 3; rightMargin: 11; top: parent.top}
             text: '<font color="#f7d303">P1:</font> ' + gameCanvas.score
-            textFormat: Text.StyledText
-            font.pixelSize: 14
-            color: "white"
             opacity: gameCanvas.mode == "multiplayer" ? 1 : 0
-            Behavior on opacity { NumberAnimation {} }
         }
-        Text {
+        SamegameText {
             id: p2Score
             anchors { left: parent.left; topMargin: 3; leftMargin: 11; top: parent.top}
             text: '<font color="#f7d303">P2:</font> ' + gameCanvas.score2
-            textFormat: Text.StyledText
-            font.pixelSize: 14
-            color: "white"
             opacity: gameCanvas.mode == "multiplayer" ? 1 : 0
-            Behavior on opacity { NumberAnimation {} }
             rotation: 180
         }
-        Text {
+        SamegameText {
             id: puzzleMoves
             anchors { left: parent.left; topMargin: 3; leftMargin: 11; top: parent.top}
             text: '<font color="#f7d303">Moves:</font> ' + gameCanvas.moves
-            textFormat: Text.StyledText
-            font.pixelSize: 14
-            color: "white"
             opacity: gameCanvas.mode == "puzzle" ? 1 : 0
-            Behavior on opacity { NumberAnimation {} }
         }
-        Text {
+        SamegameText {
             Image {
                 source: "content/gfx/icon-time.png"
                 x: -20
@@ -284,10 +266,7 @@ Rectangle {
             id: puzzleTime
             anchors { topMargin: 3; top: parent.top; horizontalCenter: parent.horizontalCenter; horizontalCenterOffset: 20}
             text: "00:00"
-            font.pixelSize: 14
-            color: "white"
             opacity: gameCanvas.mode == "puzzle" ? 1 : 0
-            Behavior on opacity { NumberAnimation {} }
             Timer {
                 interval: 1000
                 repeat: true
@@ -300,56 +279,51 @@ Rectangle {
                 }
             }
         }
-        Text {
+        SamegameText {
             id: puzzleScore
             anchors { right: parent.right; topMargin: 3; rightMargin: 11; top: parent.top}
             text: '<font color="#f7d303">Score:</font> ' + gameCanvas.score
-            textFormat: Text.StyledText
-            font.pixelSize: 14
-            color: "white"
             opacity: gameCanvas.mode == "puzzle" ? 1 : 0
-            Behavior on opacity { NumberAnimation {} }
         }
     }
 
     Image {
         id: bottomBar
         width: parent.width
-        height: 44
+        height: Settings.footerHeight
         source: "content/gfx/bar.png"
-        y: parent.height - 44
+        y: parent.height - Settings.footerHeight;
         z: 2
-        function selectButtons() {
-            menuButton.visible = (root.state == "in-game");
-            nextButton.visible = (root.state == "in-game");
-            againButton.visible = (root.state == "in-game");
-        }
         Button {
             id: quitButton
+            height: Settings.toolButtonHeight
             imgSrc: "content/gfx/but-quit.png"
             onClicked: {Qt.quit(); }
             anchors { left: parent.left; verticalCenter: parent.verticalCenter; leftMargin: 11 }
         }
         Button {
             id: menuButton
+            height: Settings.toolButtonHeight
             imgSrc: "content/gfx/but-menu.png"
-            visible: false
+            visible: (root.state == "in-game");
             onClicked: {root.state = ""; Logic.cleanUp(); gameCanvas.mode = ""}
             anchors { left: quitButton.right; verticalCenter: parent.verticalCenter; leftMargin: 0 }
         }
         Button {
             id: againButton
+            height: Settings.toolButtonHeight
             imgSrc: "content/gfx/but-game-new.png"
-            visible: false
-            opacity: gameCanvas.gameOver && (gameCanvas.mode == "arcade" || gameCanvas.mode == "multiplayer") ? 1 : 0
+            visible: (root.state == "in-game");
+            opacity: gameCanvas.gameOver && (gameCanvas.mode == "arcade" || gameCanvas.mode == "multiplayer")
             Behavior on opacity{ NumberAnimation {} }
-            onClicked: {if (gameCanvas.gameOver) Logic.startNewGame(gameCanvas, gameCanvas.mode);}
+            onClicked: {if (gameCanvas.gameOver) { Logic.startNewGame(gameCanvas, gameCanvas.mode);}}
             anchors { right: parent.right; verticalCenter: parent.verticalCenter; rightMargin: 11 }
         }
         Button {
             id: nextButton
+            height: Settings.toolButtonHeight
             imgSrc: "content/gfx/but-puzzle-next.png"
-            visible: false
+            visible: (root.state == "in-game") && gameCanvas.mode == "puzzle" && gameCanvas.puzzleWon
             opacity: gameCanvas.puzzleWon ? 1 : 0
             Behavior on opacity{ NumberAnimation {} }
             onClicked: {if (gameCanvas.puzzleWon) nextPuzzle();}
@@ -364,13 +338,12 @@ Rectangle {
     SequentialAnimation {
         id: stateChangeAnim
         ParallelAnimation {
-            NumberAnimation { target: bottomBar; property: "y"; to: root.height; duration: menuDelay/2; easing.type: Easing.OutQuad }
-            NumberAnimation { target: scoreBar; property: "y"; to: -24; duration: menuDelay/2; easing.type: Easing.OutQuad }
+            NumberAnimation { target: bottomBar; property: "y"; to: root.height; duration: Settings.menuDelay/2; easing.type: Easing.OutQuad }
+            NumberAnimation { target: scoreBar; property: "y"; to: -Settings.headerHeight; duration: Settings.menuDelay/2; easing.type: Easing.OutQuad }
         }
-        ScriptAction { script: bottomBar.selectButtons(); }
         ParallelAnimation {
-            NumberAnimation { target: bottomBar; property: "y"; to: root.height - 44; duration: menuDelay/2; easing.type: Easing.OutBounce}
-            NumberAnimation { target: scoreBar; property: "y"; to: root.state == "" ? -24 : 0; duration: menuDelay/2; easing.type: Easing.OutBounce}
+            NumberAnimation { target: bottomBar; property: "y"; to: root.height - Settings.footerHeight; duration: Settings.menuDelay/2; easing.type: Easing.OutBounce}
+            NumberAnimation { target: scoreBar; property: "y"; to: root.state == "" ? -Settings.headerHeight : 0; duration: Settings.menuDelay/2; easing.type: Easing.OutBounce}
         }
     }
 

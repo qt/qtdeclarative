@@ -1,6 +1,6 @@
-/****************************************************************************
+/***************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2012 Research In Motion
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -39,19 +39,11 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtQuick.Particles 2.0
-
 import "../settings.js" as Settings
 
-Emitter {
-    property Item block: parent
-    velocity: TargetDirection{targetX: block.width/2; targetY: block.height/2; magnitude: -40; magnitudeVariation: 40}
-    acceleration: TargetDirection{targetX: block.width/2; targetY: block.height/2; magnitude: -100;}
-    shape: EllipseShape{fill:true}
-    enabled: false;
-    lifeSpan: 700; lifeSpanVariation: 100
-    emitRate: 1000
-    maximumEmitted: 100 //only fires 0.1s bursts (still 2x old number)
-    size: Settings.blockSize * 0.85
-    endSize: Settings.blockSize * 0.85 /2
+Text {
+    font.pixelSize: Settings.fontPixelSize;
+    color: "white";
+    textFormat: Text.StyledText;
+    Behavior on opacity { NumberAnimation {} }
 }
