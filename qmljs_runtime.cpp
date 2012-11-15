@@ -298,7 +298,7 @@ void Context::throwReferenceError(Value value)
     throwError(Value::fromObject(engine->newErrorObject(Value::fromString(this, msg))));
 }
 
-void Context::initCallContext(Context *parent, const Value *object, FunctionObject *f, Value *args, unsigned argc)
+void Context::initCallContext(Context *parent, const Value that, FunctionObject *f, Value *args, unsigned argc)
 {
     engine = parent->engine;
     this->parent = f->scope;
@@ -310,10 +310,7 @@ void Context::initCallContext(Context *parent, const Value *object, FunctionObje
     else
         activation = 0;
 
-    if (object)
-        thisObject = *object;
-    else
-        thisObject = Value::nullValue();
+    thisObject = that;
 
     formals = f->formalParameterList;
     formalCount = f->formalParameterCount;
@@ -341,9 +338,9 @@ void Context::leaveCallContext()
     }
 }
 
-void Context::initConstructorContext(Context *parent, Value *object, FunctionObject *f, Value *args, unsigned argc)
+void Context::initConstructorContext(Context *parent, Value that, FunctionObject *f, Value *args, unsigned argc)
 {
-    initCallContext(parent, object, f, args, argc);
+    initCallContext(parent, that, f, args, argc);
 }
 
 void Context::leaveConstructorContext(FunctionObject *f)

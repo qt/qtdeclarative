@@ -379,18 +379,24 @@ Value FunctionObject::construct(Context *context, Value *args, int argc)
 {
     Context k;
     Context *ctx = needsActivation ? context->engine->newContext() : &k;
-    ctx->initConstructorContext(context, 0, this, args, argc);
+    ctx->initConstructorContext(context, Value::nullValue(), this, args, argc);
     construct(ctx);
     ctx->leaveConstructorContext(this);
     return ctx->result;
 }
 
-Value FunctionObject::call(Context *context, Value thisObject, Value *args, int argc)
+Value FunctionObject::call(Context *context, Value thisObject, Value *args, int argc, bool strictMode)
 {
     Context k;
     Context *ctx = needsActivation ? context->engine->newContext() : &k;
-    const Value *that = thisObject.isUndefined() ? 0 : &thisObject;
-    ctx->initCallContext(context, that, this, args, argc);
+
+    if (!strictMode && !thisObject.isObject()) {
+        if (thisObject.isUndefined() || thisObject.isNull())
+            thisObject = context->engine->globalObject;
+        else
+            thisObject = __qmljs_to_object(thisObject, context);
+    }
+    ctx->initCallContext(context, thisObject, this, args, argc);
     call(ctx);
     ctx->leaveCallContext();
     return ctx->result;

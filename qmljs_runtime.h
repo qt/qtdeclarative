@@ -596,10 +596,10 @@ struct Context {
 
     void init(ExecutionEngine *eng);
 
-    void initCallContext(Context *parent, const Value *object, FunctionObject *f, Value *args, unsigned argc);
+    void initCallContext(Context *parent, const Value that, FunctionObject *f, Value *args, unsigned argc);
     void leaveCallContext();
 
-    void initConstructorContext(Context *parent, Value *object, FunctionObject *f, Value *args, unsigned argc);
+    void initConstructorContext(Context *parent, Value that, FunctionObject *f, Value *args, unsigned argc);
     void leaveConstructorContext(FunctionObject *f);
 
     void throwError(Value value);

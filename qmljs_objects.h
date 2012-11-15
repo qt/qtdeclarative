@@ -488,7 +488,7 @@ struct FunctionObject: Object {
     virtual bool hasInstance(Context *ctx, const Value &value);
 
     Value construct(Context *context, Value *args, int argc);
-    Value call(Context *context, Value thisObject, Value *args, int argc);
+    Value call(Context *context, Value thisObject, Value *args, int argc, bool strictMode = false);
 
 protected:
     virtual void call(Context *ctx);
