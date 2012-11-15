@@ -1083,32 +1083,31 @@ void __qmljs_throw(Value value, Context *context)
 {
     assert(!context->engine->unwindStack.isEmpty());
 
-    ExecutionEngine::ExceptionHandler *handler = context->engine->unwindStack.last();
+    ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
 
     // clean up call contexts
-    while (context != handler->context) {
+    while (context != handler.context) {
         context->leaveCallContext();
         context = context->parent;
     }
 
-    handler->context->result = value;
+    handler.context->result = value;
 
-    longjmp(handler->stackFrame, 1);
+    longjmp(handler.stackFrame, 1);
 }
 
 void *__qmljs_create_exception_handler(Context *context)
 {
-    ExecutionEngine::ExceptionHandler *handler = new ExecutionEngine::ExceptionHandler;
-    context->engine->unwindStack.append(handler);
-    handler->context = context;
-    return handler->stackFrame;
+    context->engine->unwindStack.append(ExecutionEngine::ExceptionHandler());
+    ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
+    handler.context = context;
+    return handler.stackFrame;
 }
 
 void __qmljs_delete_exception_handler(Context *context)
 {
     assert(!context->engine->unwindStack.isEmpty());
 
-    delete context->engine->unwindStack.last();
     context->engine->unwindStack.pop_back();
 }
 

@@ -634,24 +634,15 @@ struct ExecutionEngine
     String *id___proto__;
 
     struct ExceptionHandler {
-        struct InterpreterState {
-            QVector<VM::Value> stack;
-            int targetTempIndex;
-            const uchar *code;
-        };
-
         Context *context;
+        const uchar *code; // Interpreter state
+        int targetTempIndex; // Interpreter state
         jmp_buf stackFrame;
-        InterpreterState *interpreterState;
-
-        ExceptionHandler(): interpreterState(0) {}
-        ~ExceptionHandler() { delete interpreterState; }
     };
 
-    QVector<ExceptionHandler *> unwindStack;
+    QVector<ExceptionHandler> unwindStack;
 
     ExecutionEngine();
-    ~ExecutionEngine() { qDeleteAll(unwindStack); }
 
     Context *newContext();
 

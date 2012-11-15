@@ -215,11 +215,11 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
                 // At this point, the interpreter state can be anything but
                 // valid, so first restore the state. This includes all relevant
                 // locals.
-                restoreState(context, stack, targetTempIndex, code);
+                restoreState(context, targetTempIndex, code);
             else
                 // Save the state and any variables we need when catching an
                 // exception, so we can restore the state at that point.
-                saveState(context, stack, targetTempIndex, code);
+                saveState(context, targetTempIndex, code);
             TEMP(targetTempIndex) = VM::Value::fromInt32(didThrow);
         } break;
         case Instr::instr_callBuiltin::builtin_delete_exception_handler:
@@ -351,24 +351,16 @@ void VME::exec(VM::Context *ctxt, const uchar *code)
     vme(ctxt, code);
 }
 
-void VME::restoreState(VM::Context *context, QVector<VM::Value> &stack, int &targetTempIndex, const uchar *&code)
+void VME::restoreState(VM::Context *context, int &targetTempIndex, const uchar *&code)
 {
-    typedef VM::ExecutionEngine::ExceptionHandler EH;
-    EH::InterpreterState *state = context->engine->unwindStack.last()->interpreterState;
-    assert(state);
-    stack.resize(state->stack.size());
-    ::memcpy(stack.data(), state->stack.data(), sizeof(VM::Value) * state->stack.size());
-    targetTempIndex = state->targetTempIndex;
-    code = state->code;
+    VM::ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
+    targetTempIndex = handler.targetTempIndex;
+    code = handler.code;
 }
 
-void VME::saveState(VM::Context *context, const QVector<VM::Value> &stack, int targetTempIndex, const uchar *code)
+void VME::saveState(VM::Context *context, int targetTempIndex, const uchar *code)
 {
-    typedef VM::ExecutionEngine::ExceptionHandler EH;
-    EH::InterpreterState *state = new EH::InterpreterState;
-    context->engine->unwindStack.last()->interpreterState = state;
-    state->stack.resize(stack.size());
-    ::memcpy(state->stack.data(), stack.data(), sizeof(VM::Value) * stack.size());
-    state->targetTempIndex = targetTempIndex;
-    state->code = code;
+    VM::ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
+    handler.targetTempIndex = targetTempIndex;
+    handler.code = code;
 }
