@@ -72,7 +72,7 @@ struct RegExpObject;
 struct ErrorObject;
 struct ActivationObject;
 struct ArgumentsObject;
-struct Context;
+struct ExecutionContext;
 struct ExecutionEngine;
 
 struct ObjectPrototype;
@@ -403,24 +403,24 @@ struct Object {
     virtual ActivationObject *asActivationObject() { return 0; }
     virtual ArgumentsObject *asArgumentsObject() { return 0; }
 
-    virtual Value __get__(Context *ctx, String *name);
-    virtual PropertyDescriptor *__getOwnProperty__(Context *ctx, String *name);
-    virtual PropertyDescriptor *__getPropertyDescriptor__(Context *ctx, String *name, PropertyDescriptor *to_fill);
-    virtual void __put__(Context *ctx, String *name, const Value &value, bool throwException = false);
-    virtual bool __canPut__(Context *ctx, String *name);
-    virtual bool __hasProperty__(Context *ctx, String *name) const;
-    virtual bool __delete__(Context *ctx, String *name, bool throwException);
-    virtual bool __defineOwnProperty__(Context *ctx, String *name, PropertyDescriptor *desc, bool throwException = false);
+    virtual Value __get__(ExecutionContext *ctx, String *name);
+    virtual PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
+    virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill);
+    virtual void __put__(ExecutionContext *ctx, String *name, const Value &value, bool throwException = false);
+    virtual bool __canPut__(ExecutionContext *ctx, String *name);
+    virtual bool __hasProperty__(ExecutionContext *ctx, String *name) const;
+    virtual bool __delete__(ExecutionContext *ctx, String *name, bool throwException);
+    virtual bool __defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc, bool throwException = false);
 
     //
     // helpers
     //
-    void __put__(Context *ctx, const QString &name, const Value &value);
-    void __put__(Context *ctx, const QString &name, void (*code)(Context *), int count = 0);
+    void __put__(ExecutionContext *ctx, const QString &name, const Value &value);
+    void __put__(ExecutionContext *ctx, const QString &name, void (*code)(ExecutionContext *), int count = 0);
 
-    Value getValue(Context *ctx, PropertyDescriptor *p) const;
-    bool inplaceBinOp(Value rhs, String *name, BinOp op, Context *ctx);
-    virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, Context *ctx);
+    Value getValue(ExecutionContext *ctx, PropertyDescriptor *p) const;
+    bool inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx);
+    virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
 };
 
 struct ForEachIteratorObject: Object {
@@ -467,13 +467,13 @@ struct ArrayObject: Object {
     ArrayObject(const Array &value): value(value) {}
     virtual QString className() { return QStringLiteral("Array"); }
     virtual ArrayObject *asArrayObject() { return this; }
-    virtual Value __get__(Context *ctx, String *name);
+    virtual Value __get__(ExecutionContext *ctx, String *name);
 
-    virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, Context *ctx);
+    virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
 };
 
 struct FunctionObject: Object {
-    Context *scope;
+    ExecutionContext *scope;
     String *name;
     String **formalParameterList;
     unsigned int formalParameterCount;
@@ -481,7 +481,7 @@ struct FunctionObject: Object {
     unsigned int varCount;
     bool needsActivation;
 
-    FunctionObject(Context *scope)
+    FunctionObject(ExecutionContext *scope)
         : scope(scope)
         , name(0)
         , formalParameterList(0)
@@ -492,43 +492,43 @@ struct FunctionObject: Object {
 
     virtual QString className() { return QStringLiteral("Function"); }
     virtual FunctionObject *asFunctionObject() { return this; }
-    virtual bool hasInstance(Context *ctx, const Value &value);
+    virtual bool hasInstance(ExecutionContext *ctx, const Value &value);
 
-    Value construct(Context *context, Value *args, int argc);
-    virtual Value call(Context *context, Value thisObject, Value *args, int argc, bool strictMode = false);
+    Value construct(ExecutionContext *context, Value *args, int argc);
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode = false);
 
 protected:
-    virtual void call(Context *ctx);
-    virtual void construct(Context *ctx);
+    virtual void call(ExecutionContext *ctx);
+    virtual void construct(ExecutionContext *ctx);
 };
 
 struct NativeFunction: FunctionObject {
-    void (*code)(Context *);
+    void (*code)(ExecutionContext *);
 
-    NativeFunction(Context *scope, void (*code)(Context *)): FunctionObject(scope), code(code) {}
-    virtual void call(Context *ctx) { code(ctx); }
-    virtual void construct(Context *ctx) { code(ctx); }
+    NativeFunction(ExecutionContext *scope, void (*code)(ExecutionContext *)): FunctionObject(scope), code(code) {}
+    virtual void call(ExecutionContext *ctx) { code(ctx); }
+    virtual void construct(ExecutionContext *ctx) { code(ctx); }
 };
 
 struct ScriptFunction: FunctionObject {
     IR::Function *function;
 
-    ScriptFunction(Context *scope, IR::Function *function);
+    ScriptFunction(ExecutionContext *scope, IR::Function *function);
     virtual ~ScriptFunction();
 
-    virtual void call(Context *ctx);
-    virtual void construct(Context *ctx);
+    virtual void call(ExecutionContext *ctx);
+    virtual void construct(ExecutionContext *ctx);
 };
 
 struct EvalFunction : FunctionObject
 {
-    EvalFunction(Context *scope): FunctionObject(scope) {}
+    EvalFunction(ExecutionContext *scope): FunctionObject(scope) {}
 
-    static int evaluate(QQmlJS::VM::Context *ctx, const QString &fileName,
+    static int evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fileName,
                         const QString &source, bool useInterpreter,
                         QQmlJS::Codegen::Mode mode);
 
-    virtual Value call(Context *context, Value thisObject, Value *args, int argc, bool strictMode = false);
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode = false);
 };
 
 struct RegExpObject: Object {
@@ -538,7 +538,7 @@ struct RegExpObject: Object {
     RegExpObject(const QRegularExpression &value, bool global): value(value), lastIndex(Value::fromInt32(0)), global(global) {}
     virtual QString className() { return QStringLiteral("RegExp"); }
     virtual RegExpObject *asRegExpObject() { return this; }
-    virtual Value __get__(Context *ctx, String *name);
+    virtual Value __get__(ExecutionContext *ctx, String *name);
 };
 
 struct ErrorObject: Object {
@@ -546,63 +546,63 @@ struct ErrorObject: Object {
     ErrorObject(const Value &message): value(message) {}
     virtual QString className() { return QStringLiteral("Error"); }
     virtual ErrorObject *asErrorObject() { return this; }
-    virtual Value __get__(Context *ctx, String *name);
+    virtual Value __get__(ExecutionContext *ctx, String *name);
 
 protected:
-    void setNameProperty(Context *ctx);
+    void setNameProperty(ExecutionContext *ctx);
 };
 
 struct EvalErrorObject: ErrorObject {
-    EvalErrorObject(Context *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    EvalErrorObject(ExecutionContext *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("EvalError"); }
 };
 
 struct RangeErrorObject: ErrorObject {
-    RangeErrorObject(Context *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    RangeErrorObject(ExecutionContext *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("RangeError"); }
 };
 
 struct ReferenceErrorObject: ErrorObject {
-    ReferenceErrorObject(Context *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    ReferenceErrorObject(ExecutionContext *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("ReferenceError"); }
 };
 
 struct SyntaxErrorObject: ErrorObject {
-    SyntaxErrorObject(Context *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    SyntaxErrorObject(ExecutionContext *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("SyntaxError"); }
 };
 
 struct TypeErrorObject: ErrorObject {
-    TypeErrorObject(Context *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    TypeErrorObject(ExecutionContext *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("TypeError"); }
 };
 
 struct URIErrorObject: ErrorObject {
-    URIErrorObject(Context *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    URIErrorObject(ExecutionContext *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("URIError"); }
 };
 
 struct ActivationObject: Object {
-    Context *context;
+    ExecutionContext *context;
     Value arguments;
-    ActivationObject(Context *context): context(context), arguments(Value::undefinedValue()) {}
+    ActivationObject(ExecutionContext *context): context(context), arguments(Value::undefinedValue()) {}
     virtual QString className() { return QStringLiteral("Activation"); }
     virtual ActivationObject *asActivationObject() { return this; }
-    virtual PropertyDescriptor *__getPropertyDescriptor__(Context *ctx, String *name, PropertyDescriptor *to_fill);
+    virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill);
 };
 
 struct ArgumentsObject: Object {
-    Context *context;
-    ArgumentsObject(Context *context): context(context) {}
+    ExecutionContext *context;
+    ArgumentsObject(ExecutionContext *context): context(context) {}
     virtual QString className() { return QStringLiteral("Arguments"); }
     virtual ArgumentsObject *asArgumentsObject() { return this; }
-    virtual Value __get__(Context *ctx, String *name);
-    virtual PropertyDescriptor *__getPropertyDescriptor__(Context *ctx, String *name, PropertyDescriptor *to_fill);
+    virtual Value __get__(ExecutionContext *ctx, String *name);
+    virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill);
 };
 
 struct ExecutionEngine
 {
-    Context *rootContext;
+    ExecutionContext *rootContext;
     Value globalObject;
 
     Value objectCtor;
@@ -646,7 +646,7 @@ struct ExecutionEngine
     String *id___proto__;
 
     struct ExceptionHandler {
-        Context *context;
+        ExecutionContext *context;
         const uchar *code; // Interpreter state
         int targetTempIndex; // Interpreter state
         jmp_buf stackFrame;
@@ -656,42 +656,42 @@ struct ExecutionEngine
 
     ExecutionEngine();
 
-    Context *newContext();
+    ExecutionContext *newContext();
 
     String *identifier(const QString &s);
 
-    FunctionObject *newNativeFunction(Context *scope, void (*code)(Context *));
-    FunctionObject *newScriptFunction(Context *scope, IR::Function *function);
+    FunctionObject *newNativeFunction(ExecutionContext *scope, void (*code)(ExecutionContext *));
+    FunctionObject *newScriptFunction(ExecutionContext *scope, IR::Function *function);
 
     Object *newObject();
-    FunctionObject *newObjectCtor(Context *ctx);
+    FunctionObject *newObjectCtor(ExecutionContext *ctx);
 
     String *newString(const QString &s);
     Object *newStringObject(const Value &value);
-    FunctionObject *newStringCtor(Context *ctx);
+    FunctionObject *newStringCtor(ExecutionContext *ctx);
 
     Object *newNumberObject(const Value &value);
-    FunctionObject *newNumberCtor(Context *ctx);
+    FunctionObject *newNumberCtor(ExecutionContext *ctx);
 
     Object *newBooleanObject(const Value &value);
-    FunctionObject *newBooleanCtor(Context *ctx);
+    FunctionObject *newBooleanCtor(ExecutionContext *ctx);
 
-    Object *newFunctionObject(Context *ctx);
-    FunctionObject *newFunctionCtor(Context *ctx);
+    Object *newFunctionObject(ExecutionContext *ctx);
+    FunctionObject *newFunctionCtor(ExecutionContext *ctx);
 
     Object *newArrayObject();
     Object *newArrayObject(const Array &value);
-    FunctionObject *newArrayCtor(Context *ctx);
+    FunctionObject *newArrayCtor(ExecutionContext *ctx);
 
     Object *newDateObject(const Value &value);
-    FunctionObject *newDateCtor(Context *ctx);
+    FunctionObject *newDateCtor(ExecutionContext *ctx);
 
     Object *newRegExpObject(const QString &pattern, int flags);
-    FunctionObject *newRegExpCtor(Context *ctx);
+    FunctionObject *newRegExpCtor(ExecutionContext *ctx);
 
     Object *newErrorObject(const Value &value);
-    Object *newMathObject(Context *ctx);
-    Object *newActivationObject(Context *ctx);
+    Object *newMathObject(ExecutionContext *ctx);
+    Object *newActivationObject(ExecutionContext *ctx);
 
     Object *newForEachIteratorObject(Object *o);
 };

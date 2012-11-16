@@ -68,7 +68,7 @@ public:
     inline void concat(const Array &other);
     inline Value pop();
     inline Value takeFirst();
-    inline void sort(Context *context, const Value &comparefn);
+    inline void sort(ExecutionContext *context, const Value &comparefn);
     inline void splice(double start, double deleteCount,
                        const QVector<Value> &items,
                        Array &other);
@@ -81,13 +81,13 @@ private:
 class ArrayElementLessThan
 {
 public:
-    inline ArrayElementLessThan(Context *context, const Value &comparefn)
+    inline ArrayElementLessThan(ExecutionContext *context, const Value &comparefn)
         : m_context(context), m_comparefn(comparefn) {}
 
     bool operator()(const Value &v1, const Value &v2) const;
 
 private:
-    Context *m_context;
+    ExecutionContext *m_context;
     Value m_comparefn;
 };
 
@@ -183,7 +183,7 @@ inline Value Array::takeFirst()
     return v;
 }
 
-inline void Array::sort(Context *context, const Value &comparefn)
+inline void Array::sort(ExecutionContext *context, const Value &comparefn)
 {
     ArrayElementLessThan lessThan(context, comparefn);
     std::sort(to_vector->begin(), to_vector->end(), lessThan);

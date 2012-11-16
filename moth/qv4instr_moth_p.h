@@ -240,13 +240,13 @@ union Instr
     };
     struct instr_unop {
         MOTH_INSTR_HEADER
-        VM::Value (*alu)(const VM::Value value, VM::Context *ctx);
+        VM::Value (*alu)(const VM::Value value, VM::ExecutionContext *ctx);
         int e;
         int targetTempIndex;
     };
     struct instr_binop {
         MOTH_INSTR_HEADER
-        VM::Value (*alu)(const VM::Value , const VM::Value, VM::Context *);
+        VM::Value (*alu)(const VM::Value , const VM::Value, VM::ExecutionContext *);
         int targetTempIndex;
         ValueOrTemp lhs;
         ValueOrTemp rhs;
@@ -259,7 +259,7 @@ union Instr
     };
     struct instr_inplaceElementOp {
         MOTH_INSTR_HEADER
-        void (*alu)(VM::Value, VM::Value, VM::Value, VM::Context *);
+        void (*alu)(VM::Value, VM::Value, VM::Value, VM::ExecutionContext *);
         int targetBase;
         int targetIndex;
         ValueOrTemp source;
@@ -267,7 +267,7 @@ union Instr
     };
     struct instr_inplaceMemberOp {
         MOTH_INSTR_HEADER
-        void (*alu)(VM::Value, VM::Value, VM::String *, VM::Context *);
+        void (*alu)(VM::Value, VM::Value, VM::String *, VM::ExecutionContext *);
         int targetBase;
         VM::String *targetMember;
         ValueOrTemp source;
@@ -275,7 +275,7 @@ union Instr
     };
     struct instr_inplaceNameOp {
         MOTH_INSTR_HEADER
-        void (*alu)(VM::Value, VM::String *, VM::Context *);
+        void (*alu)(VM::Value, VM::String *, VM::ExecutionContext *);
         VM::String *targetName;
         ValueOrTemp source;
         unsigned sourceIsTemp:1;

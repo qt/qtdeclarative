@@ -71,7 +71,7 @@ class QQmlType;
 namespace QQmlJS {
 
 namespace VM {
-struct Context;
+struct ExecutionContext;
 struct Value;
 }
 
@@ -596,7 +596,7 @@ struct Function {
     QList<const QString *> locals;
     IR::BasicBlock *handlersBlock;
 
-    void (*code)(VM::Context *, const uchar *);
+    void (*code)(VM::ExecutionContext *, const uchar *);
     const uchar *codeData;
     JSC::MacroAssemblerCodeRef codeRef;
 

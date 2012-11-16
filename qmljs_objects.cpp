@@ -68,18 +68,18 @@ Object::~Object()
     delete members;
 }
 
-void Object::__put__(Context *ctx, const QString &name, const Value &value)
+void Object::__put__(ExecutionContext *ctx, const QString &name, const Value &value)
 {
     __put__(ctx, ctx->engine->identifier(name), value);
 }
 
-void Object::__put__(Context *ctx, const QString &name, void (*code)(Context *), int count)
+void Object::__put__(ExecutionContext *ctx, const QString &name, void (*code)(ExecutionContext *), int count)
 {
     Q_UNUSED(count);
     __put__(ctx, name, Value::fromObject(ctx->engine->newNativeFunction(ctx, code)));
 }
 
-Value Object::getValue(Context *ctx, PropertyDescriptor *p) const
+Value Object::getValue(ExecutionContext *ctx, PropertyDescriptor *p) const
 {
     if (p->isData())
         return p->value;
@@ -90,7 +90,7 @@ Value Object::getValue(Context *ctx, PropertyDescriptor *p) const
     return ctx->result;
 }
 
-bool Object::inplaceBinOp(Value rhs, String *name, BinOp op, Context *ctx)
+bool Object::inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx)
 {
     PropertyDescriptor to_fill;
     PropertyDescriptor *pd = __getPropertyDescriptor__(ctx, name, &to_fill);
@@ -101,7 +101,7 @@ bool Object::inplaceBinOp(Value rhs, String *name, BinOp op, Context *ctx)
     return true;
 }
 
-bool Object::inplaceBinOp(Value rhs, Value index, BinOp op, Context *ctx)
+bool Object::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx)
 {
     String *name = index.toString(ctx);
     assert(name);
@@ -109,7 +109,7 @@ bool Object::inplaceBinOp(Value rhs, Value index, BinOp op, Context *ctx)
 }
 
 // Section 8.12.1
-PropertyDescriptor *Object::__getOwnProperty__(Context *, String *name)
+PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *, String *name)
 {
     if (members)
         return members->find(name);
@@ -117,7 +117,7 @@ PropertyDescriptor *Object::__getOwnProperty__(Context *, String *name)
 }
 
 // Section 8.12.2
-PropertyDescriptor *Object::__getPropertyDescriptor__(Context *ctx, String *name, PropertyDescriptor *to_fill)
+PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill)
 {
     if (PropertyDescriptor *p = __getOwnProperty__(ctx, name))
         return p;
@@ -128,7 +128,7 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(Context *ctx, String *name
 }
 
 // Section 8.12.3
-Value Object::__get__(Context *ctx, String *name)
+Value Object::__get__(ExecutionContext *ctx, String *name)
 {
     if (name->isEqualTo(ctx->engine->id___proto__))
         return Value::fromObject(prototype);
@@ -141,7 +141,7 @@ Value Object::__get__(Context *ctx, String *name)
 }
 
 // Section 8.12.4
-bool Object::__canPut__(Context *ctx, String *name)
+bool Object::__canPut__(ExecutionContext *ctx, String *name)
 {
     if (PropertyDescriptor *p = __getOwnProperty__(ctx, name)) {
         if (p->isAccessor())
@@ -166,7 +166,7 @@ bool Object::__canPut__(Context *ctx, String *name)
 }
 
 // Section 8.12.5
-void Object::__put__(Context *ctx, String *name, const Value &value, bool throwException)
+void Object::__put__(ExecutionContext *ctx, String *name, const Value &value, bool throwException)
 {
     // clause 1
     if (!__canPut__(ctx, name))
@@ -216,7 +216,7 @@ void Object::__put__(Context *ctx, String *name, const Value &value, bool throwE
 }
 
 // Section 8.12.6
-bool Object::__hasProperty__(Context *ctx, String *name) const
+bool Object::__hasProperty__(ExecutionContext *ctx, String *name) const
 {
     if (members)
         return members->find(name) != 0;
@@ -225,7 +225,7 @@ bool Object::__hasProperty__(Context *ctx, String *name) const
 }
 
 // Section 8.12.7
-bool Object::__delete__(Context *ctx, String *name, bool throwException)
+bool Object::__delete__(ExecutionContext *ctx, String *name, bool throwException)
 {
     if (members) {
         if (PropertyTableEntry *entry = members->findEntry(name)) {
@@ -242,7 +242,7 @@ bool Object::__delete__(Context *ctx, String *name, bool throwException)
 }
 
 // Section 8.12.9
-bool Object::__defineOwnProperty__(Context *ctx, String *name, PropertyDescriptor *desc, bool throwException)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc, bool throwException)
 {
     if (!members)
         members = new PropertyTable();
@@ -340,14 +340,14 @@ String *ForEachIteratorObject::nextPropertyName()
     }
 }
 
-Value ArrayObject::__get__(Context *ctx, String *name)
+Value ArrayObject::__get__(ExecutionContext *ctx, String *name)
 {
     if (name->isEqualTo(ctx->engine->id_length))
         return Value::fromDouble(value.size());
     return Object::__get__(ctx, name);
 }
 
-bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, Context *ctx)
+bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx)
 {
     if (index.isNumber()) {
         const quint32 idx = index.toUInt32(ctx);
@@ -359,7 +359,7 @@ bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, Context *ctx)
     return Object::inplaceBinOp(rhs, index, op, ctx);
 }
 
-bool FunctionObject::hasInstance(Context *ctx, const Value &value)
+bool FunctionObject::hasInstance(ExecutionContext *ctx, const Value &value)
 {
     if (! value.isObject()) {
         ctx->throwTypeError();
@@ -385,20 +385,20 @@ bool FunctionObject::hasInstance(Context *ctx, const Value &value)
     return false;
 }
 
-Value FunctionObject::construct(Context *context, Value *args, int argc)
+Value FunctionObject::construct(ExecutionContext *context, Value *args, int argc)
 {
-    Context k;
-    Context *ctx = needsActivation ? context->engine->newContext() : &k;
+    ExecutionContext k;
+    ExecutionContext *ctx = needsActivation ? context->engine->newContext() : &k;
     ctx->initConstructorContext(context, Value::nullValue(), this, args, argc);
     construct(ctx);
     ctx->leaveConstructorContext(this);
     return ctx->result;
 }
 
-Value FunctionObject::call(Context *context, Value thisObject, Value *args, int argc, bool strictMode)
+Value FunctionObject::call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode)
 {
-    Context k;
-    Context *ctx = needsActivation ? context->engine->newContext() : &k;
+    ExecutionContext k;
+    ExecutionContext *ctx = needsActivation ? context->engine->newContext() : &k;
 
     if (!strictMode && !thisObject.isObject()) {
         if (thisObject.isUndefined() || thisObject.isNull())
@@ -412,18 +412,18 @@ Value FunctionObject::call(Context *context, Value thisObject, Value *args, int 
     return ctx->result;
 }
 
-void FunctionObject::call(Context *ctx)
+void FunctionObject::call(ExecutionContext *ctx)
 {
     Q_UNUSED(ctx);
 }
 
-void FunctionObject::construct(Context *ctx)
+void FunctionObject::construct(ExecutionContext *ctx)
 {
     ctx->thisObject = Value::fromObject(ctx->engine->newObject());
     call(ctx);
 }
 
-ScriptFunction::ScriptFunction(Context *scope, IR::Function *function)
+ScriptFunction::ScriptFunction(ExecutionContext *scope, IR::Function *function)
     : FunctionObject(scope)
     , function(function)
 {
@@ -453,13 +453,13 @@ ScriptFunction::~ScriptFunction()
     delete[] varList;
 }
 
-void ScriptFunction::call(VM::Context *ctx)
+void ScriptFunction::call(VM::ExecutionContext *ctx)
 {
     function->code(ctx, function->codeData);
 }
 
 
-Value EvalFunction::call(Context *context, Value thisObject, Value *args, int argc, bool strictMode)
+Value EvalFunction::call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode)
 {
     Value s = context->argument(0);
     if (!s.isString()) {
@@ -471,7 +471,7 @@ Value EvalFunction::call(Context *context, Value thisObject, Value *args, int ar
     // ### how to determine this correctly
     bool directCall = true;
 
-    Context k, *ctx;
+    ExecutionContext k, *ctx;
     if (!directCall) {
         // ###
     } else if (strictMode) {
@@ -497,7 +497,7 @@ static inline bool protect(const void *addr, size_t size)
 }
 
 
-int EvalFunction::evaluate(QQmlJS::VM::Context *ctx, const QString &fileName,
+int EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fileName,
                            const QString &source, bool useInterpreter,
                            QQmlJS::Codegen::Mode mode)
 {
@@ -589,7 +589,7 @@ int EvalFunction::evaluate(QQmlJS::VM::Context *ctx, const QString &fileName,
 }
 
 
-Value RegExpObject::__get__(Context *ctx, String *name)
+Value RegExpObject::__get__(ExecutionContext *ctx, String *name)
 {
     QString n = name->toQString();
     if (n == QLatin1String("source"))
@@ -605,7 +605,7 @@ Value RegExpObject::__get__(Context *ctx, String *name)
     return Object::__get__(ctx, name);
 }
 
-Value ErrorObject::__get__(Context *ctx, String *name)
+Value ErrorObject::__get__(ExecutionContext *ctx, String *name)
 {
     QString n = name->toQString();
     if (n == QLatin1String("message"))
@@ -613,12 +613,12 @@ Value ErrorObject::__get__(Context *ctx, String *name)
     return Object::__get__(ctx, name);
 }
 
-void ErrorObject::setNameProperty(Context *ctx)
+void ErrorObject::setNameProperty(ExecutionContext *ctx)
 {
     __put__(ctx, QLatin1String("name"), Value::fromString(ctx, className()));
 }
 
-void ScriptFunction::construct(VM::Context *ctx)
+void ScriptFunction::construct(VM::ExecutionContext *ctx)
 {
     Object *obj = ctx->engine->newObject();
     Value proto = __get__(ctx, ctx->engine->id_prototype);
@@ -628,7 +628,7 @@ void ScriptFunction::construct(VM::Context *ctx)
     function->code(ctx, function->codeData);
 }
 
-PropertyDescriptor *ActivationObject::__getPropertyDescriptor__(Context *ctx, String *name, PropertyDescriptor *to_fill)
+PropertyDescriptor *ActivationObject::__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill)
 {
     if (context) {
         for (unsigned int i = 0; i < context->varCount; ++i) {
@@ -665,14 +665,14 @@ PropertyDescriptor *ActivationObject::__getPropertyDescriptor__(Context *ctx, St
     return Object::__getPropertyDescriptor__(ctx, name, to_fill);
 }
 
-Value ArgumentsObject::__get__(Context *ctx, String *name)
+Value ArgumentsObject::__get__(ExecutionContext *ctx, String *name)
 {
     if (name->isEqualTo(ctx->engine->id_length))
         return Value::fromDouble(context->argumentCount);
     return Object::__get__(ctx, name);
 }
 
-PropertyDescriptor *ArgumentsObject::__getPropertyDescriptor__(Context *ctx, String *name, PropertyDescriptor *to_fill)
+PropertyDescriptor *ArgumentsObject::__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill)
 {
     if (context) {
         const quint32 i = Value::fromString(name).toUInt32(ctx);
@@ -807,9 +807,9 @@ ExecutionEngine::ExecutionEngine()
 
 }
 
-Context *ExecutionEngine::newContext()
+ExecutionContext *ExecutionEngine::newContext()
 {
-    return new Context();
+    return new ExecutionContext();
 }
 
 String *ExecutionEngine::identifier(const QString &s)
@@ -820,14 +820,14 @@ String *ExecutionEngine::identifier(const QString &s)
     return id;
 }
 
-FunctionObject *ExecutionEngine::newNativeFunction(Context *scope, void (*code)(Context *))
+FunctionObject *ExecutionEngine::newNativeFunction(ExecutionContext *scope, void (*code)(ExecutionContext *))
 {
     NativeFunction *f = new NativeFunction(scope, code);
     f->prototype = scope->engine->functionPrototype;
     return f;
 }
 
-FunctionObject *ExecutionEngine::newScriptFunction(Context *scope, IR::Function *function)
+FunctionObject *ExecutionEngine::newScriptFunction(ExecutionContext *scope, IR::Function *function)
 {
     ScriptFunction *f = new ScriptFunction(scope, function);
     Object *proto = scope->engine->newObject();
@@ -844,7 +844,7 @@ Object *ExecutionEngine::newObject()
     return object;
 }
 
-FunctionObject *ExecutionEngine::newObjectCtor(Context *ctx)
+FunctionObject *ExecutionEngine::newObjectCtor(ExecutionContext *ctx)
 {
     return new ObjectCtor(ctx);
 }
@@ -861,7 +861,7 @@ Object *ExecutionEngine::newStringObject(const Value &value)
     return object;
 }
 
-FunctionObject *ExecutionEngine::newStringCtor(Context *ctx)
+FunctionObject *ExecutionEngine::newStringCtor(ExecutionContext *ctx)
 {
     return new StringCtor(ctx);
 }
@@ -873,7 +873,7 @@ Object *ExecutionEngine::newNumberObject(const Value &value)
     return object;
 }
 
-FunctionObject *ExecutionEngine::newNumberCtor(Context *ctx)
+FunctionObject *ExecutionEngine::newNumberCtor(ExecutionContext *ctx)
 {
     return new NumberCtor(ctx);
 }
@@ -885,19 +885,19 @@ Object *ExecutionEngine::newBooleanObject(const Value &value)
     return object;
 }
 
-FunctionObject *ExecutionEngine::newBooleanCtor(Context *ctx)
+FunctionObject *ExecutionEngine::newBooleanCtor(ExecutionContext *ctx)
 {
     return new BooleanCtor(ctx);
 }
 
-Object *ExecutionEngine::newFunctionObject(Context *ctx)
+Object *ExecutionEngine::newFunctionObject(ExecutionContext *ctx)
 {
     Object *object = new FunctionObject(ctx);
     object->prototype = functionPrototype;
     return object;
 }
 
-FunctionObject *ExecutionEngine::newFunctionCtor(Context *ctx)
+FunctionObject *ExecutionEngine::newFunctionCtor(ExecutionContext *ctx)
 {
     return new FunctionCtor(ctx);
 }
@@ -916,7 +916,7 @@ Object *ExecutionEngine::newArrayObject(const Array &value)
     return object;
 }
 
-FunctionObject *ExecutionEngine::newArrayCtor(Context *ctx)
+FunctionObject *ExecutionEngine::newArrayCtor(ExecutionContext *ctx)
 {
     return new ArrayCtor(ctx);
 }
@@ -928,7 +928,7 @@ Object *ExecutionEngine::newDateObject(const Value &value)
     return object;
 }
 
-FunctionObject *ExecutionEngine::newDateCtor(Context *ctx)
+FunctionObject *ExecutionEngine::newDateCtor(ExecutionContext *ctx)
 {
     return new DateCtor(ctx);
 }
@@ -947,7 +947,7 @@ Object *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
     return object;
 }
 
-FunctionObject *ExecutionEngine::newRegExpCtor(Context *ctx)
+FunctionObject *ExecutionEngine::newRegExpCtor(ExecutionContext *ctx)
 {
     return new RegExpCtor(ctx);
 }
@@ -959,14 +959,14 @@ Object *ExecutionEngine::newErrorObject(const Value &value)
     return object;
 }
 
-Object *ExecutionEngine::newMathObject(Context *ctx)
+Object *ExecutionEngine::newMathObject(ExecutionContext *ctx)
 {
     MathObject *object = new MathObject(ctx);
     object->prototype = objectPrototype;
     return object;
 }
 
-Object *ExecutionEngine::newActivationObject(Context *ctx)
+Object *ExecutionEngine::newActivationObject(ExecutionContext *ctx)
 {
     return new ActivationObject(ctx);
 }

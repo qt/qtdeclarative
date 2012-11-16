@@ -10,9 +10,9 @@ namespace Moth {
 class VME
 {
 public:
-    static void exec(VM::Context *, const uchar *);
+    static void exec(VM::ExecutionContext *, const uchar *);
 
-    void operator()(QQmlJS::VM::Context *, const uchar *code
+    void operator()(QQmlJS::VM::ExecutionContext *, const uchar *code
 #ifdef MOTH_THREADED_INTERPRETER
             , void ***storeJumpTable = 0
 #endif
@@ -23,8 +23,8 @@ public:
 #endif
 
 private:
-    static void restoreState(VM::Context *context, int &targetTempIndex, const uchar *&code);
-    static void saveState(VM::Context *context, int targetTempIndex, const uchar *code);
+    static void restoreState(VM::ExecutionContext *context, int &targetTempIndex, const uchar *&code);
+    static void saveState(VM::ExecutionContext *context, int targetTempIndex, const uchar *code);
 };
 
 } // namespace Moth

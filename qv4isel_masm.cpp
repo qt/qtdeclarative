@@ -165,7 +165,7 @@ void InstructionSelection::operator()(IR::Function *function)
         _function->codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
     }
 
-    _function->code = (void (*)(VM::Context *, const uchar *)) _function->codeRef.code().executableAddress();
+    _function->code = (void (*)(VM::ExecutionContext *, const uchar *)) _function->codeRef.code().executableAddress();
 
     qSwap(_function, function);
 }
@@ -180,10 +180,10 @@ InstructionSelection::Pointer InstructionSelection::loadTempAddress(RegisterID r
     int32_t offset = 0;
     if (t->index < 0) {
         const int arg = -t->index - 1;
-        loadPtr(Address(ContextRegister, offsetof(Context, arguments)), reg);
+        loadPtr(Address(ContextRegister, offsetof(ExecutionContext, arguments)), reg);
         offset = arg * sizeof(Value);
     } else if (t->index < _function->locals.size()) {
-        loadPtr(Address(ContextRegister, offsetof(Context, locals)), reg);
+        loadPtr(Address(ContextRegister, offsetof(ExecutionContext, locals)), reg);
         offset = t->index * sizeof(Value);
     } else {
         const int arg = _function->maxNumberOfArguments + t->index - _function->locals.size();
@@ -424,7 +424,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 return;
             } else if (IR::Unop *u = s->source->asUnop()) {
                 if (IR::Temp *e = u->expr->asTemp()) {
-                    Value (*op)(const Value value, Context *ctx) = 0;
+                    Value (*op)(const Value value, ExecutionContext *ctx) = 0;
                     const char *opName = 0;
                     switch (u->op) {
                     case IR::OpIfTrue: assert(!"unreachable"); break;
@@ -442,7 +442,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             } else if (IR::Binop *b = s->source->asBinop()) {
                 if ((b->left->asTemp() || b->left->asConst()) &&
                     (b->right->asTemp() || b->right->asConst())) {
-                    Value (*op)(const Value, const Value, Context *) = 0;
+                    Value (*op)(const Value, const Value, ExecutionContext *) = 0;
                     const char* opName = 0;
 
                     switch ((IR::AluOp) b->op) {
@@ -521,7 +521,7 @@ void InstructionSelection::visitMove(IR::Move *s)
         // inplace assignment, e.g. x += 1, ++x, ...
         if (IR::Temp *t = s->target->asTemp()) {
             if (s->source->asTemp() || s->source->asConst()) {
-                Value (*op)(const Value left, const Value right, Context *ctx) = 0;
+                Value (*op)(const Value left, const Value right, ExecutionContext *ctx) = 0;
                 const char *opName = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: setOp(op, opName, __qmljs_bit_and); break;
@@ -545,7 +545,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Name *n = s->target->asName()) {
             if (s->source->asTemp() || s->source->asConst()) {
-                void (*op)(const Value value, String *name, Context *ctx) = 0;
+                void (*op)(const Value value, String *name, ExecutionContext *ctx) = 0;
                 const char *opName = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_name); break;
@@ -570,7 +570,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
             if (s->source->asTemp() || s->source->asConst()) {
-                void (*op)(Value base, Value index, Value value, Context *ctx) = 0;
+                void (*op)(Value base, Value index, Value value, ExecutionContext *ctx) = 0;
                 const char *opName = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_element); break;
@@ -598,7 +598,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Member *m = s->target->asMember()) {
             if (s->source->asTemp() || s->source->asConst()) {
-                void (*op)(Value value, Value base, String *name, Context *ctx) = 0;
+                void (*op)(Value value, Value base, String *name, ExecutionContext *ctx) = 0;
                 const char *opName = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_member); break;
@@ -671,7 +671,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
     } else if (IR::Binop *b = s->cond->asBinop()) {
         if ((b->left->asTemp() || b->left->asConst()) &&
             (b->right->asTemp() || b->right->asConst())) {
-            Bool (*op)(const Value, const Value, Context *ctx) = 0;
+            Bool (*op)(const Value, const Value, ExecutionContext *ctx) = 0;
             const char *opName = 0;
             switch (b->op) {
             default: Q_UNREACHABLE(); assert(!"todo"); break;
@@ -706,7 +706,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 void InstructionSelection::visitRet(IR::Ret *s)
 {
     if (IR::Temp *t = s->expr->asTemp()) {
-        copyValue(Pointer(ContextRegister, offsetof(Context, result)), t);
+        copyValue(Pointer(ContextRegister, offsetof(ExecutionContext, result)), t);
         return;
     }
     Q_UNIMPLEMENTED();

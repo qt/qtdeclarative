@@ -67,9 +67,9 @@ using namespace QQmlJS::VM;
 
 struct Print: FunctionObject
 {
-    Print(Context *scope): FunctionObject(scope) {}
+    Print(ExecutionContext *scope): FunctionObject(scope) {}
 
-    virtual void call(Context *ctx)
+    virtual void call(ExecutionContext *ctx)
     {
         for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
             String *s = ctx->argument(i).toString(ctx);
@@ -83,9 +83,9 @@ struct Print: FunctionObject
 
 struct TestHarnessError: FunctionObject
 {
-    TestHarnessError(Context *scope, bool &errorInTestHarness): FunctionObject(scope), errorOccurred(errorInTestHarness) {}
+    TestHarnessError(ExecutionContext *scope, bool &errorInTestHarness): FunctionObject(scope), errorOccurred(errorInTestHarness) {}
 
-    virtual void call(Context *ctx)
+    virtual void call(ExecutionContext *ctx)
     {
         errorOccurred = true;
 
@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
     case use_moth: {
         bool useInterpreter = mode == use_moth;
         QQmlJS::VM::ExecutionEngine vm;
-        QQmlJS::VM::Context *ctx = vm.rootContext;
+        QQmlJS::VM::ExecutionContext *ctx = vm.rootContext;
 
         QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
         globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),

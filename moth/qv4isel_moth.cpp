@@ -307,7 +307,7 @@ void InstructionSelection::visitLeave(IR::Leave *)
     Q_UNREACHABLE();
 }
 
-typedef VM::Value (*ALUFunction)(const VM::Value, const VM::Value, VM::Context*);
+typedef VM::Value (*ALUFunction)(const VM::Value, const VM::Value, VM::ExecutionContext*);
 static inline ALUFunction aluOpFunction(IR::AluOp op)
 {
     switch (op) {
@@ -461,7 +461,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             addInstruction(load);
         } else if (IR::Unop *u = s->source->asUnop()) {
             if (IR::Temp *e = u->expr->asTemp()) {
-                VM::Value (*op)(const VM::Value value, VM::Context *ctx) = 0;
+                VM::Value (*op)(const VM::Value value, VM::ExecutionContext *ctx) = 0;
                 switch (u->op) {
                 case IR::OpIfTrue: assert(!"unreachable"); break;
                 case IR::OpNot: op = VM::__qmljs_not; break;
@@ -506,7 +506,7 @@ void InstructionSelection::visitMove(IR::Move *s)
         return;
     } else if (IR::Name *n = s->target->asName()) {
         if (s->source->asTemp() || s->source->asConst()) {
-            void (*op)(VM::Value value, VM::String *name, VM::Context *ctx) = 0;
+            void (*op)(VM::Value value, VM::String *name, VM::ExecutionContext *ctx) = 0;
             switch (s->op) {
             case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_name; break;
             case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_name; break;
@@ -540,7 +540,7 @@ void InstructionSelection::visitMove(IR::Move *s)
         qWarning("NAME");
     } else if (IR::Subscript *ss = s->target->asSubscript()) {
         if (s->source->asTemp() || s->source->asConst()) {
-            void (*op)(VM::Value base, VM::Value index, VM::Value value, VM::Context *ctx) = 0;
+            void (*op)(VM::Value base, VM::Value index, VM::Value value, VM::ExecutionContext *ctx) = 0;
             switch (s->op) {
             case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_element; break;
             case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_element; break;
@@ -576,7 +576,7 @@ void InstructionSelection::visitMove(IR::Move *s)
         qWarning("SUBSCRIPT");
     } else if (IR::Member *m = s->target->asMember()) {
         if (s->source->asTemp() || s->source->asConst()) {
-            void (*op)(VM::Value value, VM::Value base, VM::String *name, VM::Context *ctx) = 0;
+            void (*op)(VM::Value value, VM::Value base, VM::String *name, VM::ExecutionContext *ctx) = 0;
             switch (s->op) {
             case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_member; break;
             case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_member; break;

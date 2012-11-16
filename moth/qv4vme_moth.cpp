@@ -47,7 +47,7 @@ using namespace QQmlJS::Moth;
 
 #endif
 
-static inline VM::Value *tempValue(QQmlJS::VM::Context *context, QVector<VM::Value> &stack, int index)
+static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, QVector<VM::Value> &stack, int index)
 {
 #ifdef DO_TRACE_INSTR
     const char *kind;
@@ -79,7 +79,7 @@ static inline VM::Value *tempValue(QQmlJS::VM::Context *context, QVector<VM::Val
 
 #define TEMP(index) *tempValue(context, stack, index)
 
-void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
+void VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *code
 #ifdef MOTH_THREADED_INTERPRETER
         , void ***storeJumpTable
 #endif
@@ -345,20 +345,20 @@ void **VME::instructionJumpTable()
 }
 #endif
 
-void VME::exec(VM::Context *ctxt, const uchar *code)
+void VME::exec(VM::ExecutionContext *ctxt, const uchar *code)
 {
     VME vme;
     vme(ctxt, code);
 }
 
-void VME::restoreState(VM::Context *context, int &targetTempIndex, const uchar *&code)
+void VME::restoreState(VM::ExecutionContext *context, int &targetTempIndex, const uchar *&code)
 {
     VM::ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
     targetTempIndex = handler.targetTempIndex;
     code = handler.code;
 }
 
-void VME::saveState(VM::Context *context, int targetTempIndex, const uchar *code)
+void VME::saveState(VM::ExecutionContext *context, int targetTempIndex, const uchar *code)
 {
     VM::ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
     handler.targetTempIndex = targetTempIndex;

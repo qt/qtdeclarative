@@ -579,8 +579,8 @@ private:
 
     int prepareVariableArguments(IR::ExprList* args);
 
-    typedef VM::Value (*ActivationMethod)(VM::Context *, VM::String *name, VM::Value *args, int argc);
-    typedef VM::Value (*BuiltinMethod)(VM::Context *, VM::Value *args, int argc);
+    typedef VM::Value (*ActivationMethod)(VM::ExecutionContext *, VM::String *name, VM::Value *args, int argc);
+    typedef VM::Value (*BuiltinMethod)(VM::ExecutionContext *, VM::Value *args, int argc);
     void callRuntimeMethodImp(IR::Temp *result, const char* name, ActivationMethod method, IR::Expr *base, IR::ExprList *args);
     void callRuntimeMethodImp(IR::Temp *result, const char* name, BuiltinMethod method, IR::ExprList *args);
 #define callRuntimeMethod(result, function, ...) \
