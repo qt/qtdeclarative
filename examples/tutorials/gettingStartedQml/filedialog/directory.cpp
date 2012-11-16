@@ -48,11 +48,11 @@ Initialize the saves directory and creates the file list
 */
 Directory::Directory(QObject *parent) : QObject(parent)
 {
-    m_dir.cd( QDir::currentPath() );
+    m_dir.cd(QDir::currentPath());
 
-    //go to the saved directory. if not found, create save directory
+    // go to the saved directory. if not found, create save directory
     m_saveDir = "saves";
-    if ( m_dir.cd(m_saveDir) == 0 ) {
+    if (m_dir.cd(m_saveDir) == 0) {
         m_dir.mkdir(m_saveDir);
         m_dir.cd(m_saveDir);
     }
@@ -72,7 +72,7 @@ int Directory::filesCount() const
 /*
 Function called to append data onto list property
 */
-void appendFiles(QQmlListProperty<File> * property, File * file)
+void appendFiles(QQmlListProperty<File> *property, File *file)
 {
     Q_UNUSED(property);
     Q_UNUSED(file);
@@ -82,7 +82,7 @@ void appendFiles(QQmlListProperty<File> * property, File * file)
 /*
 Function called to retrieve file in the list using an index
 */
-File* fileAt(QQmlListProperty<File> * property, int index)
+File *fileAt(QQmlListProperty<File> *property, int index)
 {
     return static_cast< QList<File *> *>(property->data)->at(index);
 }
@@ -90,7 +90,7 @@ File* fileAt(QQmlListProperty<File> * property, int index)
 /*
 Returns the number of files in the list
 */
-int filesSize(QQmlListProperty<File> * property) 
+int filesSize(QQmlListProperty<File> *property)
 {
     return static_cast< QList<File *> *>(property->data)->size();
 }
@@ -109,7 +109,7 @@ Returns the list of files as a QQmlListProperty.
 QQmlListProperty<File> Directory::files()
 {
     refresh();
-    return QQmlListProperty<File>( this, &m_fileList, &appendFiles, &filesSize, &fileAt,  &clearFilesPtr );
+    return QQmlListProperty<File>(this, &m_fileList, &appendFiles, &filesSize, &fileAt, &clearFilesPtr);
 }
 
 /*
@@ -133,7 +133,7 @@ Set the file name of the current file
 */
 void Directory::setFilename(const QString &str)
 {
-    if( str != currentFile.name() ) {
+    if (str != currentFile.name()) {
         currentFile.setName(str);
         emit filenameChanged();
     }
@@ -144,7 +144,7 @@ Set the content of the file as a string
 */
 void Directory::setFileContent(const QString &str)
 {
-    if(str != m_fileContent){
+    if (str != m_fileContent) {
         m_fileContent = str;
         emit fileContentChanged();
     }
@@ -156,16 +156,16 @@ Saving makes sure that the file has a .txt extension.
 */
 void Directory::saveFile()
 {
-    if(currentFile.name().size() == 0){
+    if (currentFile.name().isEmpty()) {
         qWarning()<< "Empty filename. no save";
         return;
     }
     QString extendedName = currentFile.name();
-    if(!currentFile.name().endsWith(".txt")){
+    if (!currentFile.name().endsWith(".txt")) {
         extendedName.append(".txt");
     }
-    QFile file( m_dir.filePath(extendedName) );
-    if ( file.open(QFile::WriteOnly | QFile::Truncate) ) {
+    QFile file(m_dir.filePath(extendedName));
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         QTextStream outStream(&file);
         outStream << m_fileContent;
     }
@@ -182,19 +182,14 @@ void Directory::loadFile()
 {
     m_fileContent.clear();
     QString extendedName = currentFile.name();
-    if( !currentFile.name().endsWith(".txt") ) {
+    if (!currentFile.name().endsWith(".txt")) {
         extendedName.append(".txt");
     }
 
-    QFile file( m_dir.filePath(extendedName) );
-    if ( file.open(QFile::ReadOnly ) ) {
+    QFile file(m_dir.filePath(extendedName));
+    if (file.open(QFile::ReadOnly)) {
         QTextStream inStream(&file);
-
-        QString line;
-        do {
-            line = inStream.read(75);
-            m_fileContent.append(line);
-        } while ( !line.isNull() ) ;
+        m_fileContent = inStream.readAll();
     }
     file.close();
 }
@@ -208,15 +203,14 @@ void Directory::refresh()
     m_dirFiles = m_dir.entryList(m_filterList,QDir::Files,QDir::Name);
     m_fileList.clear();
 
-    File * file;
-    for(int i = 0; i < m_dirFiles.size() ; i ++) {
+    File *file;
+    for (int i = 0; i < m_dirFiles.size(); ++i) {
         file = new File();
 
-        if( m_dirFiles.at(i).endsWith(".txt") ) {
+        if (m_dirFiles.at(i).endsWith(".txt")) {
             QString name = m_dirFiles.at(i);
-            file->setName( name.remove(".txt",Qt::CaseSensitive) );
-        }
-        else {
+            file->setName(name.remove(".txt",Qt::CaseSensitive));
+        } else {
             file->setName(m_dirFiles.at(i));
         }
         m_fileList.append(file);

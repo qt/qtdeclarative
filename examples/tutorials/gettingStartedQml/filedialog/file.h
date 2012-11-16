@@ -41,27 +41,26 @@
 #ifndef FILE_H
 #define FILE_H
 
-
-#include <QString>
 #include <QObject>
+#include <QString>
 
-class File : public QObject{
-
+class File : public QObject
+{
     Q_OBJECT
 
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
 
-    public:
-        File(QObject *parent = 0);
+public:
+    File(QObject *parent = 0);
 
-        QString name() const;
-        void setName(const QString &str);
+    QString name() const;
+    void setName(const QString &str);
 
-    signals:
-        void nameChanged();
+signals:
+    void nameChanged();
 
-    private:
-        QString m_name;
+private:
+    QString m_name;
 };
 
 #endif
