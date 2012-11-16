@@ -43,10 +43,20 @@
 #include "qmljs_objects.h"
 #include "qv4ir_p.h"
 #include "qv4ecmaobjects_p.h"
+
+#include <private/qqmljsengine_p.h>
+#include <private/qqmljslexer_p.h>
+#include <private/qqmljsparser_p.h>
+#include <private/qqmljsast_p.h>
+#include <qv4ir_p.h>
+#include <qv4codegen_p.h>
+#include <qv4isel_masm_p.h>
+
 #include <QtCore/qmath.h>
 #include <QtCore/QDebug>
 #include <cassert>
 #include <typeinfo>
+#include <iostream>
 
 using namespace QQmlJS::VM;
 
@@ -448,6 +458,137 @@ void ScriptFunction::call(VM::Context *ctx)
     function->code(ctx, function->codeData);
 }
 
+
+Value EvalFunction::call(Context *context, Value thisObject, Value *args, int argc, bool strictMode)
+{
+    Value s = context->argument(0);
+    if (!s.isString()) {
+        context->result = s;
+        return s;
+    }
+    const QString code = context->argument(0).stringValue()->toQString();
+
+    // ### how to determine this correctly
+    bool directCall = true;
+
+    Context k, *ctx;
+    if (!directCall) {
+        // ###
+    } else if (strictMode) {
+        ctx = &k;
+        ctx->initCallContext(context, context->thisObject, this, args, argc);
+    } else {
+        ctx = context;
+    }
+    // ##### inline and do this in the correct scope
+    evaluate(ctx, QStringLiteral("eval code"), code, /*useInterpreter*/ false, QQmlJS::Codegen::EvalCode);
+
+    if (strictMode)
+        ctx->leaveCallContext();
+}
+
+static inline bool protect(const void *addr, size_t size)
+{
+    size_t pageSize = sysconf(_SC_PAGESIZE);
+    size_t iaddr = reinterpret_cast<size_t>(addr);
+    size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
+    int mode = PROT_READ | PROT_WRITE | PROT_EXEC;
+    return mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode) == 0;
+}
+
+
+int EvalFunction::evaluate(QQmlJS::VM::Context *ctx, const QString &fileName,
+                           const QString &source, bool useInterpreter,
+                           QQmlJS::Codegen::Mode mode)
+{
+    using namespace QQmlJS;
+
+    VM::ExecutionEngine *vm = ctx->engine;
+    IR::Module module;
+    IR::Function *globalCode = 0;
+
+    const size_t codeSize = 400 * getpagesize();
+    uchar *code = 0;
+    if (posix_memalign((void**)&code, 16, codeSize))
+        assert(!"memalign failed");
+    assert(code);
+    assert(! (size_t(code) & 15));
+
+    {
+        QQmlJS::Engine ee, *engine = &ee;
+        Lexer lexer(engine);
+        lexer.setCode(source, 1, false);
+        Parser parser(engine);
+
+        const bool parsed = parser.parseProgram();
+
+        foreach (const DiagnosticMessage &m, parser.diagnosticMessages()) {
+            std::cerr << qPrintable(fileName) << ':' << m.loc.startLine << ':' << m.loc.startColumn
+                      << ": error: " << qPrintable(m.message) << std::endl;
+        }
+
+        if (parsed) {
+            using namespace AST;
+            Program *program = AST::cast<Program *>(parser.rootNode());
+
+            Codegen cg;
+            globalCode = cg(program, &module, mode);
+
+//            if (useInterpreter) {
+//                Moth::InstructionSelection isel(vm, &module, code);
+//                foreach (IR::Function *function, module.functions)
+//                    isel(function);
+//            } else
+            {
+                foreach (IR::Function *function, module.functions) {
+                    MASM::InstructionSelection isel(vm, &module, code);
+                    isel(function);
+                }
+
+                if (! protect(code, codeSize))
+                    Q_UNREACHABLE();
+            }
+        }
+
+        if (! globalCode)
+            return EXIT_FAILURE;
+    }
+
+    if (!ctx->activation)
+        ctx->activation = new QQmlJS::VM::Object();
+
+    foreach (const QString *local, globalCode->locals) {
+        ctx->activation->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
+    }
+
+    if (mode == Codegen::GlobalCode) {
+        void * buf = __qmljs_create_exception_handler(ctx);
+        if (setjmp(*(jmp_buf *)buf)) {
+            if (VM::ErrorObject *e = ctx->result.asErrorObject())
+                std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
+            else
+                std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
+            return EXIT_FAILURE;
+        }
+    }
+
+//    if (useInterpreter) {
+//        Moth::VME vme;
+//        vme(ctx, code);
+//    } else
+    {
+        globalCode->code(ctx, globalCode->codeData);
+    }
+
+    if (! ctx->result.isUndefined()) {
+        if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
+            std::cout << "exit value: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
+    }
+
+    return EXIT_SUCCESS;
+}
+
+
 Value RegExpObject::__get__(Context *ctx, String *name)
 {
     QString n = name->toQString();
@@ -661,6 +802,9 @@ ExecutionEngine::ExecutionEngine()
     glo->__put__(rootContext, identifier(QStringLiteral("undefined")), Value::undefinedValue());
     glo->__put__(rootContext, identifier(QStringLiteral("NaN")), Value::fromDouble(nan("")));
     glo->__put__(rootContext, identifier(QStringLiteral("Infinity")), Value::fromDouble(INFINITY));
+    glo->__put__(rootContext, identifier(QStringLiteral("eval")), Value::fromObject(new EvalFunction(rootContext)));
+
+
 }
 
 Context *ExecutionEngine::newContext()

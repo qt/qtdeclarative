@@ -43,6 +43,7 @@
 
 #include "qmljs_runtime.h"
 #include "qv4array_p.h"
+#include "qv4codegen_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
@@ -494,7 +495,7 @@ struct FunctionObject: Object {
     virtual bool hasInstance(Context *ctx, const Value &value);
 
     Value construct(Context *context, Value *args, int argc);
-    Value call(Context *context, Value thisObject, Value *args, int argc, bool strictMode = false);
+    virtual Value call(Context *context, Value thisObject, Value *args, int argc, bool strictMode = false);
 
 protected:
     virtual void call(Context *ctx);
@@ -517,6 +518,17 @@ struct ScriptFunction: FunctionObject {
 
     virtual void call(Context *ctx);
     virtual void construct(Context *ctx);
+};
+
+struct EvalFunction : FunctionObject
+{
+    EvalFunction(Context *scope): FunctionObject(scope) {}
+
+    static int evaluate(QQmlJS::VM::Context *ctx, const QString &fileName,
+                        const QString &source, bool useInterpreter,
+                        QQmlJS::Codegen::Mode mode);
+
+    virtual Value call(Context *context, Value thisObject, Value *args, int argc, bool strictMode = false);
 };
 
 struct RegExpObject: Object {

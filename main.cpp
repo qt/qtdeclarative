@@ -61,19 +61,6 @@
 #include <sys/mman.h>
 #include <iostream>
 
-static inline bool protect(const void *addr, size_t size)
-{
-    size_t pageSize = sysconf(_SC_PAGESIZE);
-    size_t iaddr = reinterpret_cast<size_t>(addr);
-    size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
-    int mode = PROT_READ | PROT_WRITE | PROT_EXEC;
-    return mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode) == 0;
-}
-
-static int evaluate(QQmlJS::VM::Context *ctx, const QString &fileName,
-                     const QString &source, bool useInterpreter,
-                     QQmlJS::Codegen::Mode mode = QQmlJS::Codegen::GlobalCode);
-
 namespace builtins {
 
 using namespace QQmlJS::VM;
@@ -92,20 +79,6 @@ struct Print: FunctionObject
         }
         std::cout << std::endl;
     }
-};
-
-struct Eval: FunctionObject
-{
-    Eval(Context *scope, bool useInterpreter): FunctionObject(scope), useInterpreter(useInterpreter) {}
-
-    virtual void call(Context *ctx)
-    {
-        const QString code = ctx->argument(0).toString(ctx)->toQString();
-        evaluate(ctx, QStringLiteral("eval code"), code, useInterpreter, QQmlJS::Codegen::EvalCode);
-    }
-
-private:
-    bool useInterpreter;
 };
 
 struct TestHarnessError: FunctionObject
@@ -226,92 +199,6 @@ int evaluateCompiledCode(const QStringList &files)
 
 #endif
 
-static int evaluate(QQmlJS::VM::Context *ctx, const QString &fileName,
-                    const QString &source, bool useInterpreter,
-                    QQmlJS::Codegen::Mode mode)
-{
-    using namespace QQmlJS;
-
-    VM::ExecutionEngine *vm = ctx->engine;
-    IR::Module module;
-    IR::Function *globalCode = 0;
-
-    const size_t codeSize = 400 * getpagesize();
-    uchar *code = 0;
-    if (posix_memalign((void**)&code, 16, codeSize))
-        assert(!"memalign failed");
-    assert(code);
-    assert(! (size_t(code) & 15));
-
-    {
-        QQmlJS::Engine ee, *engine = &ee;
-        Lexer lexer(engine);
-        lexer.setCode(source, 1, false);
-        Parser parser(engine);
-
-        const bool parsed = parser.parseProgram();
-
-        foreach (const DiagnosticMessage &m, parser.diagnosticMessages()) {
-            std::cerr << qPrintable(fileName) << ':' << m.loc.startLine << ':' << m.loc.startColumn
-                      << ": error: " << qPrintable(m.message) << std::endl;
-        }
-
-        if (parsed) {
-            using namespace AST;
-            Program *program = AST::cast<Program *>(parser.rootNode());
-
-            Codegen cg;
-            globalCode = cg(program, &module, mode);
-
-            if (useInterpreter) {
-                Moth::InstructionSelection isel(vm, &module, code);
-                foreach (IR::Function *function, module.functions)
-                    isel(function);
-            } else {
-                foreach (IR::Function *function, module.functions) {
-                    MASM::InstructionSelection isel(vm, &module, code);
-                    isel(function);
-                }
-
-                if (! protect(code, codeSize))
-                    Q_UNREACHABLE();
-            }
-        }
-
-        if (! globalCode)
-            return EXIT_FAILURE;
-    }
-
-    if (!ctx->activation)
-        ctx->activation = new QQmlJS::VM::Object();
-
-    foreach (const QString *local, globalCode->locals) {
-        ctx->activation->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
-    }
-
-    void * buf = __qmljs_create_exception_handler(ctx);
-    if (setjmp(*(jmp_buf *)buf)) {
-        if (VM::ErrorObject *e = ctx->result.asErrorObject())
-            std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
-        else
-            std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    if (useInterpreter) {
-        Moth::VME vme;
-        vme(ctx, code);
-    } else {
-        globalCode->code(ctx, globalCode->codeData);
-    }
-
-    if (! ctx->result.isUndefined()) {
-        if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
-            std::cout << "exit value: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
-    }
-
-    return EXIT_SUCCESS;
-}
 
 int main(int argc, char *argv[])
 {
@@ -401,9 +288,6 @@ int main(int argc, char *argv[])
         globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
                                   QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
 
-        globalObject->__put__(ctx, vm.identifier(QStringLiteral("eval")),
-                                  QQmlJS::VM::Value::fromObject(new builtins::Eval(ctx, useInterpreter)));
-
         bool errorInTestHarness = false;
         if (!qgetenv("IN_TEST_HARNESS").isEmpty())
             globalObject->__put__(ctx, vm.identifier(QStringLiteral("$ERROR")),
@@ -415,7 +299,7 @@ int main(int argc, char *argv[])
                 const QString code = QString::fromUtf8(file.readAll());
                 file.close();
 
-                int exitCode = evaluate(vm.rootContext, fn, code, useInterpreter);
+                int exitCode = QQmlJS::VM::EvalFunction::evaluate(vm.rootContext, fn, code, useInterpreter, QQmlJS::Codegen::GlobalCode);
                 if (exitCode != EXIT_SUCCESS)
                     return exitCode;
                 if (errorInTestHarness)
