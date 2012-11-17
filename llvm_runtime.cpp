@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qmljs_runtime.h"
+#include "qmljs_environment.h"
 #include <stdio.h>
 #include <setjmp.h>
 

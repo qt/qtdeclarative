@@ -42,6 +42,8 @@
 #define QMLJS_OBJECTS_H
 
 #include "qmljs_runtime.h"
+#include "qmljs_engine.h"
+#include "qmljs_environment.h"
 #include "qv4array_p.h"
 #include "qv4codegen_p.h"
 
@@ -50,7 +52,6 @@
 #include <QtCore/QRegularExpression>
 #include <cstdio>
 #include <cassert>
-#include <setjmp.h>
 
 namespace QQmlJS {
 
@@ -598,102 +599,6 @@ struct ArgumentsObject: Object {
     virtual ArgumentsObject *asArgumentsObject() { return this; }
     virtual Value __get__(ExecutionContext *ctx, String *name);
     virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill);
-};
-
-struct ExecutionEngine
-{
-    ExecutionContext *rootContext;
-    Value globalObject;
-
-    Value objectCtor;
-    Value stringCtor;
-    Value numberCtor;
-    Value booleanCtor;
-    Value arrayCtor;
-    Value functionCtor;
-    Value dateCtor;
-    Value regExpCtor;
-    Value errorCtor;
-    Value evalErrorCtor;
-    Value rangeErrorCtor;
-    Value referenceErrorCtor;
-    Value syntaxErrorCtor;
-    Value typeErrorCtor;
-    Value uRIErrorCtor;
-
-    ObjectPrototype *objectPrototype;
-    StringPrototype *stringPrototype;
-    NumberPrototype *numberPrototype;
-    BooleanPrototype *booleanPrototype;
-    ArrayPrototype *arrayPrototype;
-    FunctionPrototype *functionPrototype;
-    DatePrototype *datePrototype;
-    RegExpPrototype *regExpPrototype;
-    ErrorPrototype *errorPrototype;
-    EvalErrorPrototype *evalErrorPrototype;
-    RangeErrorPrototype *rangeErrorPrototype;
-    ReferenceErrorPrototype *referenceErrorPrototype;
-    SyntaxErrorPrototype *syntaxErrorPrototype;
-    TypeErrorPrototype *typeErrorPrototype;
-    URIErrorPrototype *uRIErrorPrototype;
-
-    QHash<QString, String *> identifiers;
-
-    String *id_length;
-    String *id_prototype;
-    String *id_constructor;
-    String *id_arguments;
-    String *id___proto__;
-
-    struct ExceptionHandler {
-        ExecutionContext *context;
-        const uchar *code; // Interpreter state
-        int targetTempIndex; // Interpreter state
-        jmp_buf stackFrame;
-    };
-
-    QVector<ExceptionHandler> unwindStack;
-
-    ExecutionEngine();
-
-    ExecutionContext *newContext();
-
-    String *identifier(const QString &s);
-
-    FunctionObject *newNativeFunction(ExecutionContext *scope, void (*code)(ExecutionContext *));
-    FunctionObject *newScriptFunction(ExecutionContext *scope, IR::Function *function);
-
-    Object *newObject();
-    FunctionObject *newObjectCtor(ExecutionContext *ctx);
-
-    String *newString(const QString &s);
-    Object *newStringObject(const Value &value);
-    FunctionObject *newStringCtor(ExecutionContext *ctx);
-
-    Object *newNumberObject(const Value &value);
-    FunctionObject *newNumberCtor(ExecutionContext *ctx);
-
-    Object *newBooleanObject(const Value &value);
-    FunctionObject *newBooleanCtor(ExecutionContext *ctx);
-
-    Object *newFunctionObject(ExecutionContext *ctx);
-    FunctionObject *newFunctionCtor(ExecutionContext *ctx);
-
-    Object *newArrayObject();
-    Object *newArrayObject(const Array &value);
-    FunctionObject *newArrayCtor(ExecutionContext *ctx);
-
-    Object *newDateObject(const Value &value);
-    FunctionObject *newDateCtor(ExecutionContext *ctx);
-
-    Object *newRegExpObject(const QString &pattern, int flags);
-    FunctionObject *newRegExpCtor(ExecutionContext *ctx);
-
-    Object *newErrorObject(const Value &value);
-    Object *newMathObject(ExecutionContext *ctx);
-    Object *newActivationObject(ExecutionContext *ctx);
-
-    Object *newForEachIteratorObject(Object *o);
 };
 
 } // namespace VM

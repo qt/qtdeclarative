@@ -13,6 +13,8 @@ LIBS += -rdynamic
 SOURCES += main.cpp \
     qv4codegen.cpp \
     qv4ir.cpp \
+    qmljs_engine.cpp \
+    qmljs_environment.cpp \
     qmljs_runtime.cpp \
     qmljs_objects.cpp \
     qv4syntaxchecker.cpp \
@@ -24,6 +26,8 @@ SOURCES += main.cpp \
 HEADERS += \
     qv4codegen_p.h \
     qv4ir_p.h \
+    qmljs_engine.h \
+    qmljs_environment.h \
     qmljs_runtime.h \
     qmljs_objects.h \
     qmljs_math.h \

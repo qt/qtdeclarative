@@ -570,47 +570,6 @@ inline bool Value::sameValue(Value other) {
 
 #include <qmljs_math.h>
 
-struct ExecutionContext {
-    ExecutionEngine *engine;
-    ExecutionContext *parent;
-    Object *activation;
-    Value thisObject;
-    Value *arguments;
-    unsigned int argumentCount;
-    Value *locals;
-    Value result;
-    String **formals;
-    unsigned int formalCount;
-    String **vars;
-    unsigned int varCount;
-
-    PropertyDescriptor *lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp);
-    void inplaceBitOp(Value value, String *name, BinOp op);
-
-    inline Value argument(unsigned int index = 0)
-    {
-        if (index < argumentCount)
-            return arguments[index];
-        return Value::undefinedValue();
-    }
-
-    void init(ExecutionEngine *eng);
-
-    void initCallContext(ExecutionContext *parent, const Value that, FunctionObject *f, Value *args, unsigned argc);
-    void leaveCallContext();
-
-    void initConstructorContext(ExecutionContext *parent, Value that, FunctionObject *f, Value *args, unsigned argc);
-    void leaveConstructorContext(FunctionObject *f);
-    void wireUpPrototype(FunctionObject *f);
-
-    void throwError(Value value);
-    void throwError(const QString &message);
-    void throwTypeError();
-    void throwReferenceError(Value value);
-    void throwUnimplemented(const QString &message);
-};
-
-
 
 extern "C" {
 
