@@ -230,7 +230,7 @@ void QQuickImageBase::load()
 
             d->pix.connectFinished(this, thisRequestFinished);
             d->pix.connectDownloadProgress(this, thisRequestProgress);
-
+            update(); //pixmap may have invalidated texture, updatePaintNode needs to be called before the next repaint
         } else {
             requestFinished();
         }
