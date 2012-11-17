@@ -48,6 +48,9 @@
 
 #if !defined(QMLJS_LLVM_RUNTIME) && 1 //CPU(X86_64)
 
+namespace QQmlJS {
+namespace VM {
+
 static inline Value add_int32(int a, int b)
 {
     quint8 overflow = 0;
@@ -96,5 +99,8 @@ static inline Value mul_int32(int a, int b)
     return Value::fromDouble((double)a * (double)b);
 }
 #endif
+
+} // namespace VM
+} // namespace QQmlJS
 
 #endif

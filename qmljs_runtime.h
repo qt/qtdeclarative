@@ -42,6 +42,7 @@
 #define QMLJS_RUNTIME_H
 
 #include <qmljs_value.h>
+#include <qmljs_math.h>
 
 #include <QtCore/QString>
 #include <QtCore/qnumeric.h>
@@ -257,14 +258,6 @@ Bool __qmljs_cmp_se(Value left, Value right, ExecutionContext *ctx);
 Bool __qmljs_cmp_sne(Value left, Value right, ExecutionContext *ctx);
 Bool __qmljs_cmp_instanceof(Value left, Value right, ExecutionContext *ctx);
 Bool __qmljs_cmp_in(Value left, Value right, ExecutionContext *ctx);
-
-} // extern "C"
-
-
-#include <qmljs_math.h>
-
-
-extern "C" {
 
 // type conversion and testing
 inline Value __qmljs_to_primitive(Value value, ExecutionContext *ctx, int typeHint)
