@@ -17,6 +17,7 @@ SOURCES += main.cpp \
     qmljs_environment.cpp \
     qmljs_runtime.cpp \
     qmljs_objects.cpp \
+    qmljs_value.cpp \
     qv4syntaxchecker.cpp \
     qv4ecmaobjects.cpp \
     qv4array.cpp \
@@ -31,6 +32,7 @@ HEADERS += \
     qmljs_runtime.h \
     qmljs_objects.h \
     qmljs_math.h \
+    qmljs_value.h \
     qv4syntaxchecker_p.h \
     qv4ecmaobjects_p.h \
     qv4array_p.h \
