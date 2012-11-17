@@ -565,7 +565,6 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     if (!node) {
         d->pixmapChanged = true;
         node = d->sceneGraphContext()->createImageNode();
-        node->setTexture(texture);
     }
 
     if (d->pixmapChanged) {
