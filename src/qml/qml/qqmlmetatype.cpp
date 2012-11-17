@@ -139,6 +139,10 @@ QQmlMetaTypeData::~QQmlMetaTypeData()
 {
     for (int i = 0; i < types.count(); ++i)
         delete types.at(i);
+
+    TypeModules::const_iterator i = uriToModule.constBegin();
+    for (; i != uriToModule.constEnd(); ++i)
+        delete *i;
 }
 
 class QQmlTypePrivate
