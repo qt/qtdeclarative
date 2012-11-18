@@ -5,14 +5,18 @@
 #include "qv4instr_moth_p.h"
 
 namespace QQmlJS {
+namespace VM {
+    struct Value;
+}
+
 namespace Moth {
 
 class VME
 {
 public:
-    static void exec(VM::ExecutionContext *, const uchar *);
+    static VM::Value exec(VM::ExecutionContext *, const uchar *);
 
-    void operator()(QQmlJS::VM::ExecutionContext *, const uchar *code
+    VM::Value operator()(QQmlJS::VM::ExecutionContext *, const uchar *code
 #ifdef MOTH_THREADED_INTERPRETER
             , void ***storeJumpTable = 0
 #endif

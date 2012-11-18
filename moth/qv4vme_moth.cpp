@@ -1,5 +1,6 @@
 #include "qv4vme_moth_p.h"
 #include "qv4instr_moth_p.h"
+#include "qmljs_value.h"
 
 #ifdef DO_TRACE_INSTR
 #  define TRACE_INSTR(I) fprintf(stderr, "executing a %s\n", #I);
@@ -79,7 +80,7 @@ static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, QVecto
 
 #define TEMP(index) *tempValue(context, stack, index)
 
-void VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *code
+VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *code
 #ifdef MOTH_THREADED_INTERPRETER
         , void ***storeJumpTable
 #endif
@@ -94,7 +95,7 @@ void VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *code
         };
 #undef MOTH_INSTR_ADDR
         *storeJumpTable = jumpTable;
-        return;
+        return VM::Value::undefinedValue();
     }
 #endif
 
@@ -290,8 +291,7 @@ void VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *code
     MOTH_END_INSTR(Binop)
 
     MOTH_BEGIN_INSTR(Ret)
-        context->result = TEMP(instr.tempIndex);
-        return;
+        return TEMP(instr.tempIndex);
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(LoadThis)
@@ -345,10 +345,11 @@ void **VME::instructionJumpTable()
 }
 #endif
 
-void VME::exec(VM::ExecutionContext *ctxt, const uchar *code)
+VM::Value VME::exec(VM::ExecutionContext *ctxt, const uchar *code)
 {
     VME vme;
     vme(ctxt, code);
+    return VM::Value::undefinedValue();
 }
 
 void VME::restoreState(VM::ExecutionContext *context, int &targetTempIndex, const uchar *&code)

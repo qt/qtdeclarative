@@ -119,7 +119,7 @@ Value __qmljs_init_closure(IR::Function *clos, ExecutionContext *ctx)
     return Value::fromObject(ctx->engine->newScriptFunction(ctx, clos));
 }
 
-Value __qmljs_init_native_function(void (*code)(ExecutionContext *), ExecutionContext *ctx)
+Value __qmljs_init_native_function(Value (*code)(ExecutionContext *), ExecutionContext *ctx)
 {
     return Value::fromObject(ctx->engine->newNativeFunction(ctx, code));
 }
@@ -524,7 +524,7 @@ Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int type
 Value __qmljs_throw_type_error(ExecutionContext *ctx)
 {
     ctx->throwTypeError();
-    return ctx->result;
+    return Value::undefinedValue();
 }
 
 Value __qmljs_new_object(ExecutionContext *ctx)
@@ -844,7 +844,7 @@ void __qmljs_throw(Value value, ExecutionContext *context)
         context = context->parent;
     }
 
-    handler.context->result = value;
+    handler.context->res = value;
 
     longjmp(handler.stackFrame, 1);
 }
@@ -866,7 +866,7 @@ void __qmljs_delete_exception_handler(ExecutionContext *context)
 
 Value __qmljs_get_exception(ExecutionContext *context)
 {
-    return context->result;
+    return context->res;
 }
 
 Value __qmljs_builtin_typeof(Value val, ExecutionContext *context)

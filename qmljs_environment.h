@@ -90,7 +90,7 @@ struct ExecutionContext
     DeclarativeEnvironment *lexicalEnvironment;
     DeclarativeEnvironment *variableEnvironment;
     Value thisObject;
-    Value result;
+    Value res;
 
     void init(ExecutionEngine *eng);
 

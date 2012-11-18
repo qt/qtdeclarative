@@ -104,7 +104,7 @@ void __qmljs_builtin_throw(Value val, ExecutionContext *context);
 
 // constructors
 Value __qmljs_init_closure(IR::Function *clos, ExecutionContext *ctx);
-Value __qmljs_init_native_function(void (*code)(ExecutionContext *), ExecutionContext *ctx);
+Value __qmljs_init_native_function(Value (*code)(ExecutionContext *), ExecutionContext *ctx);
 
 Bool __qmljs_is_function(Value value);
 

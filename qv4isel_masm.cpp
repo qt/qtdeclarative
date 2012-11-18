@@ -165,7 +165,7 @@ void InstructionSelection::operator()(IR::Function *function)
         _function->codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
     }
 
-    _function->code = (void (*)(VM::ExecutionContext *, const uchar *)) _function->codeRef.code().executableAddress();
+    _function->code = (Value (*)(VM::ExecutionContext *, const uchar *)) _function->codeRef.code().executableAddress();
 
     qSwap(_function, function);
 }
@@ -722,7 +722,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 void InstructionSelection::visitRet(IR::Ret *s)
 {
     if (IR::Temp *t = s->expr->asTemp()) {
-        copyValue(Pointer(ContextRegister, offsetof(ExecutionContext, result)), t);
+        copyValue(ReturnValueRegister, t);
         return;
     }
     Q_UNIMPLEMENTED();

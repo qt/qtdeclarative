@@ -48,9 +48,9 @@ using namespace QQmlJS::VM;
 
 extern "C" {
 
-void __qmljs_llvm_return(ExecutionContext *ctx, Value *result)
+Value __qmljs_llvm_return(ExecutionContext */*ctx*/, Value *result)
 {
-    ctx->result = *result;
+    return *result;
 }
 
 Value *__qmljs_llvm_get_argument(ExecutionContext *ctx, int index)
@@ -83,7 +83,7 @@ void __qmljs_llvm_init_string(ExecutionContext *ctx, Value *result, const char *
     *result = Value::fromString(__qmljs_string_from_utf8(ctx, str));
 }
 
-void __qmljs_llvm_init_native_function(ExecutionContext *ctx, Value *result, void (*code)(ExecutionContext *))
+void __qmljs_llvm_init_native_function(ExecutionContext *ctx, Value *result, Value (*code)(ExecutionContext *))
 {
     *result = __qmljs_init_native_function(code, ctx);
 }

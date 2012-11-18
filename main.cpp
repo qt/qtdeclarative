@@ -70,7 +70,7 @@ struct Print: FunctionObject
 {
     Print(ExecutionContext *scope): FunctionObject(scope) {}
 
-    virtual void call(ExecutionContext *ctx)
+    virtual Value call(ExecutionContext *ctx)
     {
         for (unsigned int i = 0; i < ctx->argumentCount(); ++i) {
             String *s = ctx->argument(i).toString(ctx);
@@ -79,6 +79,7 @@ struct Print: FunctionObject
             std::cout << qPrintable(s->toQString());
         }
         std::cout << std::endl;
+        return Value::undefinedValue();
     }
 };
 
@@ -86,7 +87,7 @@ struct TestHarnessError: FunctionObject
 {
     TestHarnessError(ExecutionContext *scope, bool &errorInTestHarness): FunctionObject(scope), errorOccurred(errorInTestHarness) {}
 
-    virtual void call(ExecutionContext *ctx)
+    virtual Value call(ExecutionContext *ctx)
     {
         errorOccurred = true;
 
@@ -97,6 +98,7 @@ struct TestHarnessError: FunctionObject
             std::cerr << qPrintable(s->toQString());
         }
         std::cerr << std::endl;
+        return Value::undefinedValue();
     }
 
     bool &errorOccurred;
@@ -305,9 +307,21 @@ int main(int argc, char *argv[])
                 const QString code = QString::fromUtf8(file.readAll());
                 file.close();
 
-                int exitCode = QQmlJS::VM::EvalFunction::evaluate(vm.rootContext, fn, code, iSelFactory.data(), QQmlJS::Codegen::GlobalCode);
-                if (exitCode != EXIT_SUCCESS)
-                    return exitCode;
+                void * buf = __qmljs_create_exception_handler(ctx);
+                if (setjmp(*(jmp_buf *)buf)) {
+                    if (QQmlJS::VM::ErrorObject *e = ctx->res.asErrorObject())
+                        std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
+                    else
+                        std::cerr << "Uncaught exception: " << qPrintable(ctx->res.toString(ctx)->toQString()) << std::endl;
+                    return EXIT_FAILURE;
+                }
+
+                QQmlJS::VM::Value result = QQmlJS::VM::EvalFunction::evaluate(vm.rootContext, fn, code, iSelFactory.data(), QQmlJS::Codegen::GlobalCode);
+                if (!result.isUndefined()) {
+                    if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
+                        std::cout << "exit value: " << qPrintable(result.toString(ctx)->toQString()) << std::endl;
+                }
+
                 if (errorInTestHarness)
                     return EXIT_FAILURE;
             } else {

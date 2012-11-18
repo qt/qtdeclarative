@@ -109,8 +109,10 @@ void DeclarativeEnvironment::createMutableBinding(String *name, bool deletable)
     deletableLocals.insert(name->toQString(), Value::undefinedValue());
 }
 
-void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool /*strict*/)
+void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool strict)
 {
+    Q_UNUSED(strict);
+
     // ### throw if strict is true, and it would change an immutable binding
     for (unsigned int i = 0; i < varCount; ++i) {
         if (__qmljs_string_equal(vars[i], name)) {
@@ -132,8 +134,10 @@ void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool /
     assert(false);
 }
 
-Value DeclarativeEnvironment::getBindingValue(String *name, bool /*strict*/) const
+Value DeclarativeEnvironment::getBindingValue(String *name, bool strict) const
 {
+    Q_UNUSED(strict);
+
     for (unsigned int i = 0; i < varCount; ++i) {
         if (__qmljs_string_equal(vars[i], name))
             return locals[i];
@@ -167,7 +171,7 @@ void ExecutionContext::init(ExecutionEngine *eng)
     variableEnvironment = new DeclarativeEnvironment(eng);
     lexicalEnvironment = variableEnvironment;
     thisObject = Value::nullValue();
-    result = Value::undefinedValue();
+    res = Value::undefinedValue();
 }
 
 PropertyDescriptor *ExecutionContext::lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp)
@@ -194,7 +198,6 @@ void ExecutionContext::inplaceBitOp(Value value, String *name, BinOp op)
 
 void ExecutionContext::throwError(Value value)
 {
-    result = value;
     __qmljs_builtin_throw(value, this);
 }
 
@@ -232,7 +235,7 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
     lexicalEnvironment = variableEnvironment;
 
     thisObject = that;
-    result = Value::undefinedValue();
+    res = Value::undefinedValue();
 }
 
 void ExecutionContext::leaveCallContext()
@@ -258,7 +261,6 @@ void ExecutionContext::leaveConstructorContext(FunctionObject *f)
 void ExecutionContext::wireUpPrototype(FunctionObject *f)
 {
     assert(thisObject.isObject());
-    result = thisObject;
 
     Value proto = f->__get__(this, engine->id_prototype);
     if (proto.isObject())

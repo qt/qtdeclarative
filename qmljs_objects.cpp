@@ -73,7 +73,7 @@ void Object::__put__(ExecutionContext *ctx, const QString &name, const Value &va
     __put__(ctx, ctx->engine->identifier(name), value);
 }
 
-void Object::__put__(ExecutionContext *ctx, const QString &name, void (*code)(ExecutionContext *), int count)
+void Object::__put__(ExecutionContext *ctx, const QString &name, Value (*code)(ExecutionContext *), int count)
 {
     Q_UNUSED(count);
     __put__(ctx, name, Value::fromObject(ctx->engine->newNativeFunction(ctx, code)));
@@ -86,8 +86,7 @@ Value Object::getValue(ExecutionContext *ctx, PropertyDescriptor *p) const
     if (!p->get)
         return Value::undefinedValue();
 
-    p->get->call(ctx, Value::fromObject(const_cast<Object *>(this)), 0, 0);
-    return ctx->result;
+    return p->get->call(ctx, Value::fromObject(const_cast<Object *>(this)), 0, 0);
 }
 
 bool Object::inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx)
@@ -390,9 +389,9 @@ Value FunctionObject::construct(ExecutionContext *context, Value *args, int argc
     ExecutionContext k;
     ExecutionContext *ctx = needsActivation ? context->engine->newContext() : &k;
     ctx->initConstructorContext(context, Value::nullValue(), this, args, argc);
-    construct(ctx);
+    Value result = construct(ctx);
     ctx->leaveConstructorContext(this);
-    return ctx->result;
+    return result;
 }
 
 Value FunctionObject::call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode)
@@ -407,20 +406,22 @@ Value FunctionObject::call(ExecutionContext *context, Value thisObject, Value *a
             thisObject = __qmljs_to_object(thisObject, context);
     }
     ctx->initCallContext(context, thisObject, this, args, argc);
-    call(ctx);
+    Value result = call(ctx);
     ctx->leaveCallContext();
-    return ctx->result;
+    return result;
 }
 
-void FunctionObject::call(ExecutionContext *ctx)
+Value FunctionObject::call(ExecutionContext *ctx)
 {
     Q_UNUSED(ctx);
+    return Value::undefinedValue();
 }
 
-void FunctionObject::construct(ExecutionContext *ctx)
+Value FunctionObject::construct(ExecutionContext *ctx)
 {
     ctx->thisObject = Value::fromObject(ctx->engine->newObject());
     call(ctx);
+    return ctx->thisObject;
 }
 
 ScriptFunction::ScriptFunction(ExecutionContext *scope, IR::Function *function)
@@ -453,19 +454,18 @@ ScriptFunction::~ScriptFunction()
     delete[] varList;
 }
 
-void ScriptFunction::call(VM::ExecutionContext *ctx)
+Value ScriptFunction::call(VM::ExecutionContext *ctx)
 {
-    function->code(ctx, function->codeData);
+    return function->code(ctx, function->codeData);
 }
 
 
 Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc, bool strictMode)
 {
     Value s = context->argument(0);
-    if (!s.isString()) {
-        context->result = s;
+    if (!s.isString())
         return s;
-    }
+
     const QString code = context->argument(0).stringValue()->toQString();
 
     // ### how to determine this correctly
@@ -481,15 +481,12 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
         ctx = context;
     }
     // ##### inline and do this in the correct scope
-    int result = evaluate(ctx, QStringLiteral("eval code"), code, _factory, QQmlJS::Codegen::EvalCode);
+    Value result = evaluate(ctx, QStringLiteral("eval code"), code, _factory, QQmlJS::Codegen::EvalCode);
 
     if (strictMode)
         ctx->leaveCallContext();
 
-    if (result == EXIT_SUCCESS)
-        return ctx->result;
-    else
-        return Value::undefinedValue();
+    return result;
 }
 
 /// isNaN [15.1.2.4]
@@ -508,7 +505,7 @@ Value IsFiniteFunction::call(ExecutionContext * /*context*/, Value /*thisObject*
     return Value::fromBoolean(v.isDouble() ? std::isfinite(v.doubleValue()) : true);
 }
 
-int EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fileName,
+Value EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fileName,
                            const QString &source, EValISelFactory *factory,
                            QQmlJS::Codegen::Mode mode)
 {
@@ -557,7 +554,8 @@ int EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fil
         }
 
         if (! globalCode)
-            return EXIT_FAILURE;
+            // ### should be a syntax error
+            __qmljs_throw_type_error(ctx);
     }
 
     if (!ctx->variableEnvironment->activation)
@@ -567,31 +565,7 @@ int EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fil
         ctx->variableEnvironment->activation->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
     }
 
-    if (mode == Codegen::GlobalCode) {
-        void * buf = __qmljs_create_exception_handler(ctx);
-        if (setjmp(*(jmp_buf *)buf)) {
-            if (VM::ErrorObject *e = ctx->result.asErrorObject())
-                std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
-            else
-                std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
-            return EXIT_FAILURE;
-        }
-    }
-
-//    if (useInterpreter) {
-//        Moth::VME vme;
-//        vme(ctx, code);
-//    } else
-    {
-        globalCode->code(ctx, globalCode->codeData);
-    }
-
-    if (! ctx->result.isUndefined()) {
-        if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
-            std::cout << "exit value: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
-    }
-
-    return EXIT_SUCCESS;
+    return globalCode->code(ctx, globalCode->codeData);
 }
 
 
@@ -624,7 +598,7 @@ void ErrorObject::setNameProperty(ExecutionContext *ctx)
     __put__(ctx, QLatin1String("name"), Value::fromString(ctx, className()));
 }
 
-void ScriptFunction::construct(VM::ExecutionContext *ctx)
+Value ScriptFunction::construct(VM::ExecutionContext *ctx)
 {
     Object *obj = ctx->engine->newObject();
     Value proto = __get__(ctx, ctx->engine->id_prototype);
@@ -632,6 +606,7 @@ void ScriptFunction::construct(VM::ExecutionContext *ctx)
         obj->prototype = proto.objectValue();
     ctx->thisObject = Value::fromObject(obj);
     function->code(ctx, function->codeData);
+    return ctx->thisObject;
 }
 
 PropertyDescriptor *ActivationObject::__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill)

@@ -418,7 +418,7 @@ struct Object {
     // helpers
     //
     void __put__(ExecutionContext *ctx, const QString &name, const Value &value);
-    void __put__(ExecutionContext *ctx, const QString &name, void (*code)(ExecutionContext *), int count = 0);
+    void __put__(ExecutionContext *ctx, const QString &name, Value (*code)(ExecutionContext *), int count = 0);
 
     Value getValue(ExecutionContext *ctx, PropertyDescriptor *p) const;
     bool inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx);
@@ -500,16 +500,16 @@ struct FunctionObject: Object {
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode = false);
 
 protected:
-    virtual void call(ExecutionContext *ctx);
-    virtual void construct(ExecutionContext *ctx);
+    virtual Value call(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx);
 };
 
 struct NativeFunction: FunctionObject {
-    void (*code)(ExecutionContext *);
+    Value (*code)(ExecutionContext *);
 
-    NativeFunction(ExecutionContext *scope, void (*code)(ExecutionContext *)): FunctionObject(scope), code(code) {}
-    virtual void call(ExecutionContext *ctx) { code(ctx); }
-    virtual void construct(ExecutionContext *ctx) { code(ctx); }
+    NativeFunction(ExecutionContext *scope, Value (*code)(ExecutionContext *)): FunctionObject(scope), code(code) {}
+    virtual Value call(ExecutionContext *ctx) { return code(ctx); }
+    virtual Value construct(ExecutionContext *ctx) { ctx->thisObject = code(ctx); return ctx->thisObject; }
 };
 
 struct ScriptFunction: FunctionObject {
@@ -518,15 +518,15 @@ struct ScriptFunction: FunctionObject {
     ScriptFunction(ExecutionContext *scope, IR::Function *function);
     virtual ~ScriptFunction();
 
-    virtual void call(ExecutionContext *ctx);
-    virtual void construct(ExecutionContext *ctx);
+    virtual Value call(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx);
 };
 
 struct EvalFunction : FunctionObject
 {
     EvalFunction(ExecutionContext *scope, EValISelFactory *factory): FunctionObject(scope), _factory(factory) {}
 
-    static int evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fileName,
+    static Value evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fileName,
                         const QString &source, EValISelFactory *factory,
                         QQmlJS::Codegen::Mode mode);
 

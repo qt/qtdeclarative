@@ -596,7 +596,7 @@ struct Function {
     QList<const QString *> locals;
     IR::BasicBlock *handlersBlock;
 
-    void (*code)(VM::ExecutionContext *, const uchar *);
+    VM::Value (*code)(VM::ExecutionContext *, const uchar *);
     const uchar *codeData;
     JSC::MacroAssemblerCodeRef codeRef;
 

@@ -528,14 +528,15 @@ ObjectCtor::ObjectCtor(ExecutionContext *scope)
 {
 }
 
-void ObjectCtor::construct(ExecutionContext *ctx)
+Value ObjectCtor::construct(ExecutionContext *ctx)
 {
     ctx->thisObject = Value::fromObject(ctx->engine->newObject());
+    return ctx->thisObject;
 }
 
-void ObjectCtor::call(ExecutionContext *ctx)
+Value ObjectCtor::call(ExecutionContext *ctx)
 {
-    ctx->result = Value::fromObject(ctx->engine->newObject());
+    return Value::fromObject(ctx->engine->newObject());
 }
 
 Value ObjectCtor::__get__(ExecutionContext *ctx, String *name)
@@ -571,132 +572,139 @@ void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
     __put__(ctx, QStringLiteral("propertyIsEnumerable"), method_propertyIsEnumerable, 0);
 }
 
-void ObjectPrototype::method_getPrototypeOf(ExecutionContext *ctx)
+Value ObjectPrototype::method_getPrototypeOf(ExecutionContext *ctx)
 {
     Value o = ctx->argument(0);
-    if (! o.isObject()) {
+    if (! o.isObject())
         ctx->throwTypeError();
-    } else {
-        ctx->result = Value::fromObject(o.objectValue()->prototype);
-    }
+
+    return Value::fromObject(o.objectValue()->prototype);
 }
 
-void ObjectPrototype::method_getOwnPropertyDescriptor(ExecutionContext *ctx)
+Value ObjectPrototype::method_getOwnPropertyDescriptor(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Object.getOwnPropertyDescriptors"));
+    return Value::undefinedValue();
 }
 
-void ObjectPrototype::method_getOwnPropertyNames(ExecutionContext *ctx)
+Value ObjectPrototype::method_getOwnPropertyNames(ExecutionContext *ctx)
 {
     Value O = ctx->argument(0);
     if (! O.isObject())
         ctx->throwTypeError();
-    else {
-        ArrayObject *array = ctx->engine->newArrayObject()->asArrayObject();
-        Array &a = array->value;
-        if (PropertyTable *members = O.objectValue()->members) {
-            for (PropertyTableEntry **it = members->begin(), **end = members->end(); it != end; ++it) {
-                if (PropertyTableEntry *prop = *it) {
-                    a.push(Value::fromString(prop->name));
-                }
+
+    ArrayObject *array = ctx->engine->newArrayObject()->asArrayObject();
+    Array &a = array->value;
+    if (PropertyTable *members = O.objectValue()->members) {
+        for (PropertyTableEntry **it = members->begin(), **end = members->end(); it != end; ++it) {
+            if (PropertyTableEntry *prop = *it) {
+                a.push(Value::fromString(prop->name));
             }
         }
-        ctx->result = Value::fromObject(array);
     }
+    return Value::fromObject(array);
 }
 
-void ObjectPrototype::method_create(ExecutionContext *ctx)
+Value ObjectPrototype::method_create(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Object.create"));
+    return Value::undefinedValue();
 }
 
-void ObjectPrototype::method_defineProperty(ExecutionContext *ctx)
+Value ObjectPrototype::method_defineProperty(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Object.defineProperty"));
+    return Value::undefinedValue();
 }
 
-void ObjectPrototype::method_defineProperties(ExecutionContext *ctx)
+Value ObjectPrototype::method_defineProperties(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Object.defineProperties"));
+    return Value::undefinedValue();
 }
 
-void ObjectPrototype::method_seal(ExecutionContext *ctx)
+Value ObjectPrototype::method_seal(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Object.seal"));
+    return Value::undefinedValue();
 }
 
-void ObjectPrototype::method_freeze(ExecutionContext *ctx)
+Value ObjectPrototype::method_freeze(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Object.freeze"));
+    return Value::undefinedValue();
 }
 
-void ObjectPrototype::method_preventExtensions(ExecutionContext *ctx)
+Value ObjectPrototype::method_preventExtensions(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Object.preventExtensions"));
+    return Value::undefinedValue();
 }
 
-void ObjectPrototype::method_isSealed(ExecutionContext *ctx)
+Value ObjectPrototype::method_isSealed(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Object.isSealed"));
+    return Value::undefinedValue();
 }
 
-void ObjectPrototype::method_isFrozen(ExecutionContext *ctx)
+Value ObjectPrototype::method_isFrozen(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Object.isFrozen"));
+    return Value::undefinedValue();
 }
 
-void ObjectPrototype::method_isExtensible(ExecutionContext *ctx)
+Value ObjectPrototype::method_isExtensible(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Object.isExtensible"));
+    return Value::undefinedValue();
 }
 
-void ObjectPrototype::method_keys(ExecutionContext *ctx)
+Value ObjectPrototype::method_keys(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Object.keys"));
+    return Value::undefinedValue();
 }
 
-void ObjectPrototype::method_toString(ExecutionContext *ctx)
+Value ObjectPrototype::method_toString(ExecutionContext *ctx)
 {
     if (! ctx->thisObject.isObject())
         ctx->throwTypeError();
-    else
-        ctx->result = Value::fromString(ctx, QString::fromUtf8("[object %1]").arg(ctx->thisObject.objectValue()->className()));
+    return Value::fromString(ctx, QString::fromUtf8("[object %1]").arg(ctx->thisObject.objectValue()->className()));
 }
 
-void ObjectPrototype::method_toLocaleString(ExecutionContext *ctx)
+Value ObjectPrototype::method_toLocaleString(ExecutionContext *ctx)
 {
-    method_toString(ctx);
+    return method_toString(ctx);
 }
 
-void ObjectPrototype::method_valueOf(ExecutionContext *ctx)
+Value ObjectPrototype::method_valueOf(ExecutionContext *ctx)
 {
-    Value o = ctx->thisObject.toObject(ctx);
-    ctx->result = o;
+    return ctx->thisObject.toObject(ctx);
 }
 
-void ObjectPrototype::method_hasOwnProperty(ExecutionContext *ctx)
+Value ObjectPrototype::method_hasOwnProperty(ExecutionContext *ctx)
 {
     String *P = ctx->argument(0).toString(ctx);
     Value O = ctx->thisObject.toObject(ctx);
     bool r = O.objectValue()->__getOwnProperty__(ctx, P) != 0;
-    ctx->result = Value::fromBoolean(r);
+    return Value::fromBoolean(r);
 }
 
-void ObjectPrototype::method_isPrototypeOf(ExecutionContext *ctx)
+Value ObjectPrototype::method_isPrototypeOf(ExecutionContext *ctx)
 {
     Value V = ctx->argument(0);
     if (! V.isObject())
-        ctx->result = Value::fromBoolean(false);
-    else {
-        Value O = ctx->thisObject.toObject(ctx);
-        Object *proto = V.objectValue()->prototype;
-        ctx->result = Value::fromBoolean(proto && O.objectValue() == proto);
-    }
+        return Value::fromBoolean(false);
+
+    Value O = ctx->thisObject.toObject(ctx);
+    Object *proto = V.objectValue()->prototype;
+    return Value::fromBoolean(proto && O.objectValue() == proto);
 }
 
-void ObjectPrototype::method_propertyIsEnumerable(ExecutionContext *ctx)
+Value ObjectPrototype::method_propertyIsEnumerable(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Object.prototype.propertyIsEnumerable"));
+    return Value::undefinedValue();
 }
 
 //
@@ -707,7 +715,7 @@ StringCtor::StringCtor(ExecutionContext *scope)
 {
 }
 
-void StringCtor::construct(ExecutionContext *ctx)
+Value StringCtor::construct(ExecutionContext *ctx)
 {
     Value value;
     if (ctx->argumentCount())
@@ -715,15 +723,16 @@ void StringCtor::construct(ExecutionContext *ctx)
     else
         value = Value::fromString(ctx, QString());
     ctx->thisObject = Value::fromObject(ctx->engine->newStringObject(value));
+    return ctx->thisObject;
 }
 
-void StringCtor::call(ExecutionContext *ctx)
+Value StringCtor::call(ExecutionContext *ctx)
 {
     const Value arg = ctx->argument(0);
     if (arg.isUndefined())
-        ctx->result = Value::fromString(ctx->engine->newString(QString()));
+        return Value::fromString(ctx->engine->newString(QString()));
     else
-        ctx->result = __qmljs_to_string(arg, ctx);
+        return __qmljs_to_string(arg, ctx);
 }
 
 void StringPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -763,25 +772,23 @@ QString StringPrototype::getThisString(ExecutionContext *ctx)
     }
 }
 
-void StringPrototype::method_toString(ExecutionContext *ctx)
+Value StringPrototype::method_toString(ExecutionContext *ctx)
 {
-    if (StringObject *o = ctx->thisObject.asStringObject()) {
-        ctx->result = o->value;
-    } else {
+    StringObject *o = ctx->thisObject.asStringObject();
+    if (!o)
         ctx->throwTypeError();
-    }
+    return o->value;
 }
 
-void StringPrototype::method_valueOf(ExecutionContext *ctx)
+Value StringPrototype::method_valueOf(ExecutionContext *ctx)
 {
-    if (StringObject *o = ctx->thisObject.asStringObject()) {
-        ctx->result = o->value;
-    } else {
+    StringObject *o = ctx->thisObject.asStringObject();
+    if (!o)
         ctx->throwTypeError();
-    }
+    return o->value;
 }
 
-void StringPrototype::method_charAt(ExecutionContext *ctx)
+Value StringPrototype::method_charAt(ExecutionContext *ctx)
 {
     const QString str = getThisString(ctx);
 
@@ -793,10 +800,10 @@ void StringPrototype::method_charAt(ExecutionContext *ctx)
     if (pos >= 0 && pos < str.length())
         result += str.at(pos);
 
-    ctx->result = Value::fromString(ctx, result);
+    return Value::fromString(ctx, result);
 }
 
-void StringPrototype::method_charCodeAt(ExecutionContext *ctx)
+Value StringPrototype::method_charCodeAt(ExecutionContext *ctx)
 {
     const QString str = getThisString(ctx);
 
@@ -809,10 +816,10 @@ void StringPrototype::method_charCodeAt(ExecutionContext *ctx)
     if (pos >= 0 && pos < str.length())
         result = str.at(pos).unicode();
 
-    ctx->result = Value::fromDouble(result);
+    return Value::fromDouble(result);
 }
 
-void StringPrototype::method_concat(ExecutionContext *ctx)
+Value StringPrototype::method_concat(ExecutionContext *ctx)
 {
     QString value = getThisString(ctx);
 
@@ -822,10 +829,10 @@ void StringPrototype::method_concat(ExecutionContext *ctx)
         value += v.stringValue()->toQString();
     }
 
-    ctx->result = Value::fromString(ctx, value);
+    return Value::fromString(ctx, value);
 }
 
-void StringPrototype::method_indexOf(ExecutionContext *ctx)
+Value StringPrototype::method_indexOf(ExecutionContext *ctx)
 {
     QString value = getThisString(ctx);
 
@@ -841,10 +848,10 @@ void StringPrototype::method_indexOf(ExecutionContext *ctx)
     if (! value.isEmpty())
         index = value.indexOf(searchString, qMin(qMax(pos, 0), value.length()));
 
-    ctx->result = Value::fromDouble(index);
+    return Value::fromDouble(index);
 }
 
-void StringPrototype::method_lastIndexOf(ExecutionContext *ctx)
+Value StringPrototype::method_lastIndexOf(ExecutionContext *ctx)
 {
     const QString value = getThisString(ctx);
 
@@ -865,35 +872,38 @@ void StringPrototype::method_lastIndexOf(ExecutionContext *ctx)
     if (!searchString.isEmpty() && pos == value.length())
         --pos;
     int index = value.lastIndexOf(searchString, pos);
-    ctx->result = Value::fromDouble(index);
+    return Value::fromDouble(index);
 }
 
-void StringPrototype::method_localeCompare(ExecutionContext *ctx)
+Value StringPrototype::method_localeCompare(ExecutionContext *ctx)
 {
     const QString value = getThisString(ctx);
     const QString that = ctx->argument(0).toString(ctx)->toQString();
-    ctx->result = Value::fromDouble(QString::localeAwareCompare(value, that));
+    return Value::fromDouble(QString::localeAwareCompare(value, that));
 }
 
-void StringPrototype::method_match(ExecutionContext *ctx)
+Value StringPrototype::method_match(ExecutionContext *ctx)
 {
     // requires Regexp
     ctx->throwUnimplemented(QStringLiteral("String.prototype.match"));
+    return Value::undefinedValue();
 }
 
-void StringPrototype::method_replace(ExecutionContext *ctx)
+Value StringPrototype::method_replace(ExecutionContext *ctx)
 {
     // requires Regexp
     ctx->throwUnimplemented(QStringLiteral("String.prototype.replace"));
+    return Value::undefinedValue();
 }
 
-void StringPrototype::method_search(ExecutionContext *ctx)
+Value StringPrototype::method_search(ExecutionContext *ctx)
 {
     // requires Regexp
     ctx->throwUnimplemented(QStringLiteral("String.prototype.search"));
+    return Value::undefinedValue();
 }
 
-void StringPrototype::method_slice(ExecutionContext *ctx)
+Value StringPrototype::method_slice(ExecutionContext *ctx)
 {
     const QString text = getThisString(ctx);
     const int length = text.length();
@@ -913,15 +923,16 @@ void StringPrototype::method_slice(ExecutionContext *ctx)
         end = qMin(end, length);
 
     int count = qMax(0, end - start);
-    ctx->result = Value::fromString(ctx, text.mid(start, count));
+    return Value::fromString(ctx, text.mid(start, count));
 }
 
-void StringPrototype::method_split(ExecutionContext *ctx)
+Value StringPrototype::method_split(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("String.prototype.splt"));
+    return Value::undefinedValue();
 }
 
-void StringPrototype::method_substr(ExecutionContext *ctx)
+Value StringPrototype::method_substr(ExecutionContext *ctx)
 {
     const QString value = getThisString(ctx);
 
@@ -941,10 +952,10 @@ void StringPrototype::method_substr(ExecutionContext *ctx)
 
     qint32 x = Value::toInt32(start);
     qint32 y = Value::toInt32(length);
-    ctx->result = Value::fromString(ctx, value.mid(x, y));
+    return Value::fromString(ctx, value.mid(x, y));
 }
 
-void StringPrototype::method_substring(ExecutionContext *ctx)
+Value StringPrototype::method_substring(ExecutionContext *ctx)
 {
     QString value = getThisString(ctx);
     int length = value.length();
@@ -978,39 +989,39 @@ void StringPrototype::method_substring(ExecutionContext *ctx)
 
     qint32 x = Value::toInt32(start);
     qint32 y = Value::toInt32(end - start);
-    ctx->result = Value::fromString(ctx, value.mid(x, y));
+    return Value::fromString(ctx, value.mid(x, y));
 }
 
-void StringPrototype::method_toLowerCase(ExecutionContext *ctx)
+Value StringPrototype::method_toLowerCase(ExecutionContext *ctx)
 {
     QString value = getThisString(ctx);
-    ctx->result = Value::fromString(ctx, value.toLower());
+    return Value::fromString(ctx, value.toLower());
 }
 
-void StringPrototype::method_toLocaleLowerCase(ExecutionContext *ctx)
+Value StringPrototype::method_toLocaleLowerCase(ExecutionContext *ctx)
 {
-    method_toLowerCase(ctx);
+    return method_toLowerCase(ctx);
 }
 
-void StringPrototype::method_toUpperCase(ExecutionContext *ctx)
+Value StringPrototype::method_toUpperCase(ExecutionContext *ctx)
 {
     QString value = getThisString(ctx);
-    ctx->result = Value::fromString(ctx, value.toUpper());
+    return Value::fromString(ctx, value.toUpper());
 }
 
-void StringPrototype::method_toLocaleUpperCase(ExecutionContext *ctx)
+Value StringPrototype::method_toLocaleUpperCase(ExecutionContext *ctx)
 {
-    method_toUpperCase(ctx);
+    return method_toUpperCase(ctx);
 }
 
-void StringPrototype::method_fromCharCode(ExecutionContext *ctx)
+Value StringPrototype::method_fromCharCode(ExecutionContext *ctx)
 {
     QString str;
     for (unsigned i = 0; i < ctx->argumentCount(); ++i) {
         QChar c(ctx->argument(i).toUInt16(ctx));
         str += c;
     }
-    ctx->result = Value::fromString(ctx, str);
+    return Value::fromString(ctx, str);
 }
 
 //
@@ -1021,16 +1032,17 @@ NumberCtor::NumberCtor(ExecutionContext *scope)
 {
 }
 
-void NumberCtor::construct(ExecutionContext *ctx)
+Value NumberCtor::construct(ExecutionContext *ctx)
 {
     const double n = ctx->argument(0).toNumber(ctx);
     ctx->thisObject = Value::fromObject(ctx->engine->newNumberObject(Value::fromDouble(n)));
+    return ctx->thisObject;
 }
 
-void NumberCtor::call(ExecutionContext *ctx)
+Value NumberCtor::call(ExecutionContext *ctx)
 {
     double value = ctx->argumentCount() ? ctx->argument(0).toNumber(ctx) : 0;
-    ctx->result = Value::fromDouble(value);
+    return Value::fromDouble(value);
 }
 
 void NumberPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -1058,138 +1070,135 @@ void NumberPrototype::init(ExecutionContext *ctx, const Value &ctor)
     __put__(ctx, QStringLiteral("toPrecision"), method_toPrecision);
 }
 
-void NumberPrototype::method_toString(ExecutionContext *ctx)
+Value NumberPrototype::method_toString(ExecutionContext *ctx)
 {
-    if (NumberObject *thisObject = ctx->thisObject.asNumberObject()) {
-        Value arg = ctx->argument(0);
-        if (!arg.isUndefined()) {
-            int radix = arg.toInt32(ctx);
-            if (radix < 2 || radix > 36) {
-                ctx->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
-                                .arg(radix));
-                return;
-            }
+    NumberObject *thisObject = ctx->thisObject.asNumberObject();
+    if (!thisObject)
+        ctx->throwTypeError();
 
-            double num = thisObject->value.asDouble();
-            if (qIsNaN(num)) {
-                ctx->result = Value::fromString(ctx, QStringLiteral("NaN"));
-                return;
-            } else if (qIsInf(num)) {
-                ctx->result = Value::fromString(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity"));
-                return;
-            }
-
-            if (radix != 10) {
-                QString str;
-                bool negative = false;
-                if (num < 0) {
-                    negative = true;
-                    num = -num;
-                }
-                double frac = num - ::floor(num);
-                num = Value::toInteger(num);
-                do {
-                    char c = (char)::fmod(num, radix);
-                    c = (c < 10) ? (c + '0') : (c - 10 + 'a');
-                    str.prepend(QLatin1Char(c));
-                    num = ::floor(num / radix);
-                } while (num != 0);
-                if (frac != 0) {
-                    str.append(QLatin1Char('.'));
-                    do {
-                        frac = frac * radix;
-                        char c = (char)::floor(frac);
-                        c = (c < 10) ? (c + '0') : (c - 10 + 'a');
-                        str.append(QLatin1Char(c));
-                        frac = frac - ::floor(frac);
-                    } while (frac != 0);
-                }
-                if (negative)
-                    str.prepend(QLatin1Char('-'));
-                ctx->result = Value::fromString(ctx, str);
-                return;
-            }
+    Value arg = ctx->argument(0);
+    if (!arg.isUndefined()) {
+        int radix = arg.toInt32(ctx);
+        if (radix < 2 || radix > 36) {
+            ctx->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
+                            .arg(radix));
+            return Value::undefinedValue();
         }
 
-        Value internalValue = thisObject->value;
-        String *str = internalValue.toString(ctx);
-        ctx->result = Value::fromString(str);
-    } else {
-        ctx->throwTypeError();
+        double num = thisObject->value.asDouble();
+        if (qIsNaN(num)) {
+            return Value::fromString(ctx, QStringLiteral("NaN"));
+        } else if (qIsInf(num)) {
+            return Value::fromString(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity"));
+        }
+
+        if (radix != 10) {
+            QString str;
+            bool negative = false;
+            if (num < 0) {
+                negative = true;
+                num = -num;
+            }
+            double frac = num - ::floor(num);
+            num = Value::toInteger(num);
+            do {
+                char c = (char)::fmod(num, radix);
+                c = (c < 10) ? (c + '0') : (c - 10 + 'a');
+                str.prepend(QLatin1Char(c));
+                num = ::floor(num / radix);
+            } while (num != 0);
+            if (frac != 0) {
+                str.append(QLatin1Char('.'));
+                do {
+                    frac = frac * radix;
+                    char c = (char)::floor(frac);
+                    c = (c < 10) ? (c + '0') : (c - 10 + 'a');
+                    str.append(QLatin1Char(c));
+                    frac = frac - ::floor(frac);
+                } while (frac != 0);
+            }
+            if (negative)
+                str.prepend(QLatin1Char('-'));
+            return Value::fromString(ctx, str);
+        }
     }
+
+    Value internalValue = thisObject->value;
+    String *str = internalValue.toString(ctx);
+    return Value::fromString(str);
 }
 
-void NumberPrototype::method_toLocaleString(ExecutionContext *ctx)
+Value NumberPrototype::method_toLocaleString(ExecutionContext *ctx)
 {
-    if (NumberObject *thisObject = ctx->thisObject.asNumberObject()) {
-        String *str = thisObject->value.toString(ctx);
-        ctx->result = Value::fromString(str);
-    } else {
+    NumberObject *thisObject = ctx->thisObject.asNumberObject();
+    if (!thisObject)
         ctx->throwTypeError();
-    }
+
+    String *str = thisObject->value.toString(ctx);
+    return Value::fromString(str);
 }
 
-void NumberPrototype::method_valueOf(ExecutionContext *ctx)
+Value NumberPrototype::method_valueOf(ExecutionContext *ctx)
 {
-    if (NumberObject *thisObject = ctx->thisObject.asNumberObject()) {
-        ctx->result = thisObject->value;
-    } else {
+    NumberObject *thisObject = ctx->thisObject.asNumberObject();
+    if (!thisObject)
         ctx->throwTypeError();
-    }
+
+    return thisObject->value;
 }
 
-void NumberPrototype::method_toFixed(ExecutionContext *ctx)
+Value NumberPrototype::method_toFixed(ExecutionContext *ctx)
 {
-    if (NumberObject *thisObject = ctx->thisObject.asNumberObject()) {
-        double fdigits = 0;
-
-        if (ctx->argumentCount() > 0)
-            fdigits = ctx->argument(0).toInteger(ctx);
-
-        if (qIsNaN(fdigits))
-            fdigits = 0;
-
-        double v = thisObject->value.asDouble();
-        QString str;
-        if (qIsNaN(v))
-            str = QString::fromLatin1("NaN");
-        else if (qIsInf(v))
-            str = QString::fromLatin1(v < 0 ? "-Infinity" : "Infinity");
-        else
-            str = QString::number(v, 'f', int (fdigits));
-        ctx->result = Value::fromString(ctx, str);
-    } else {
+    NumberObject *thisObject = ctx->thisObject.asNumberObject();
+    if (!thisObject)
         ctx->throwTypeError();
-    }
+
+    double fdigits = 0;
+
+    if (ctx->argumentCount() > 0)
+        fdigits = ctx->argument(0).toInteger(ctx);
+
+    if (qIsNaN(fdigits))
+        fdigits = 0;
+
+    double v = thisObject->value.asDouble();
+    QString str;
+    if (qIsNaN(v))
+        str = QString::fromLatin1("NaN");
+    else if (qIsInf(v))
+        str = QString::fromLatin1(v < 0 ? "-Infinity" : "Infinity");
+    else
+        str = QString::number(v, 'f', int (fdigits));
+    return Value::fromString(ctx, str);
 }
 
-void NumberPrototype::method_toExponential(ExecutionContext *ctx)
+Value NumberPrototype::method_toExponential(ExecutionContext *ctx)
 {
-    if (NumberObject *thisObject = ctx->thisObject.asNumberObject()) {
-        double fdigits = 0;
-
-        if (ctx->argumentCount() > 0)
-            fdigits = ctx->argument(0).toInteger(ctx);
-
-        QString z = QString::number(thisObject->value.asDouble(), 'e', int (fdigits));
-        ctx->result = Value::fromString(ctx, z);
-    } else {
+    NumberObject *thisObject = ctx->thisObject.asNumberObject();
+    if (!thisObject)
         ctx->throwTypeError();
-    }
+
+    double fdigits = 0;
+
+    if (ctx->argumentCount() > 0)
+        fdigits = ctx->argument(0).toInteger(ctx);
+
+    QString z = QString::number(thisObject->value.asDouble(), 'e', int (fdigits));
+    return Value::fromString(ctx, z);
 }
 
-void NumberPrototype::method_toPrecision(ExecutionContext *ctx)
+Value NumberPrototype::method_toPrecision(ExecutionContext *ctx)
 {
-    if (NumberObject *thisObject = ctx->thisObject.asNumberObject()) {
-        double fdigits = 0;
-
-        if (ctx->argumentCount() > 0)
-            fdigits = ctx->argument(0).toInteger(ctx);
-
-        ctx->result = Value::fromString(ctx, QString::number(thisObject->value.asDouble(), 'g', int (fdigits)));
-    } else {
+    NumberObject *thisObject = ctx->thisObject.asNumberObject();
+    if (!thisObject)
         ctx->throwTypeError();
-    }
+
+    double fdigits = 0;
+
+    if (ctx->argumentCount() > 0)
+        fdigits = ctx->argument(0).toInteger(ctx);
+
+    return Value::fromString(ctx, QString::number(thisObject->value.asDouble(), 'g', int (fdigits)));
 }
 
 //
@@ -1200,16 +1209,17 @@ BooleanCtor::BooleanCtor(ExecutionContext *scope)
 {
 }
 
-void BooleanCtor::construct(ExecutionContext *ctx)
+Value BooleanCtor::construct(ExecutionContext *ctx)
 {
     const double n = ctx->argument(0).toBoolean(ctx);
     ctx->thisObject = Value::fromObject(ctx->engine->newBooleanObject(Value::fromBoolean(n)));
+    return ctx->thisObject;
 }
 
-void BooleanCtor::call(ExecutionContext *ctx)
+Value BooleanCtor::call(ExecutionContext *ctx)
 {
     bool value = ctx->argumentCount() ? ctx->argument(0).toBoolean(ctx) : 0;
-    ctx->result = Value::fromBoolean(value);
+    return Value::fromBoolean(value);
 }
 
 void BooleanPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -1220,22 +1230,22 @@ void BooleanPrototype::init(ExecutionContext *ctx, const Value &ctor)
     __put__(ctx, QStringLiteral("valueOf"), method_valueOf);
 }
 
-void BooleanPrototype::method_toString(ExecutionContext *ctx)
+Value BooleanPrototype::method_toString(ExecutionContext *ctx)
 {
-    if (BooleanObject *thisObject = ctx->thisObject.asBooleanObject()) {
-        ctx->result = Value::fromString(ctx, QLatin1String(thisObject->value.booleanValue() ? "true" : "false"));
-    } else {
+    BooleanObject *thisObject = ctx->thisObject.asBooleanObject();
+    if (!thisObject)
         ctx->throwTypeError();
-    }
+
+    return Value::fromString(ctx, QLatin1String(thisObject->value.booleanValue() ? "true" : "false"));
 }
 
-void BooleanPrototype::method_valueOf(ExecutionContext *ctx)
+Value BooleanPrototype::method_valueOf(ExecutionContext *ctx)
 {
-    if (BooleanObject *thisObject = ctx->thisObject.asBooleanObject()) {
-        ctx->result = thisObject->value;
-    } else {
+    BooleanObject *thisObject = ctx->thisObject.asBooleanObject();
+    if (!thisObject)
         ctx->throwTypeError();
-    }
+
+    return thisObject->value;
 }
 
 //
@@ -1246,13 +1256,14 @@ ArrayCtor::ArrayCtor(ExecutionContext *scope)
 {
 }
 
-void ArrayCtor::construct(ExecutionContext *ctx)
+Value ArrayCtor::construct(ExecutionContext *ctx)
 {
-    call(ctx);
-    ctx->thisObject = ctx->result;
+    Value result = call(ctx);
+    ctx->thisObject = result;
+    return result;
 }
 
-void ArrayCtor::call(ExecutionContext *ctx)
+Value ArrayCtor::call(ExecutionContext *ctx)
 {
     Array value;
     if (ctx->argumentCount() == 1 && ctx->argument(0).isNumber()) {
@@ -1261,7 +1272,7 @@ void ArrayCtor::call(ExecutionContext *ctx)
 
         if (size != double(isize)) {
             ctx->throwError(QStringLiteral("Invalid array length"));
-            return;
+            return Value::undefinedValue();
         }
 
         value.resize(isize);
@@ -1271,7 +1282,7 @@ void ArrayCtor::call(ExecutionContext *ctx)
         }
     }
 
-    ctx->result = Value::fromObject(ctx->engine->newArrayObject(value));
+    return Value::fromObject(ctx->engine->newArrayObject(value));
 }
 
 void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -1301,17 +1312,17 @@ void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
     __put__(ctx, QStringLiteral("reduceRight"), method_reduceRight, 0);
 }
 
-void ArrayPrototype::method_toString(ExecutionContext *ctx)
+Value ArrayPrototype::method_toString(ExecutionContext *ctx)
 {
-    method_join(ctx);
+    return method_join(ctx);
 }
 
-void ArrayPrototype::method_toLocaleString(ExecutionContext *ctx)
+Value ArrayPrototype::method_toLocaleString(ExecutionContext *ctx)
 {
-    method_toString(ctx);
+    return method_toString(ctx);
 }
 
-void ArrayPrototype::method_concat(ExecutionContext *ctx)
+Value ArrayPrototype::method_concat(ExecutionContext *ctx)
 {
     Array result;
 
@@ -1333,10 +1344,10 @@ void ArrayPrototype::method_concat(ExecutionContext *ctx)
             result.assign(k, arg);
     }
 
-    ctx->result = Value::fromObject(ctx->engine->newArrayObject(result));
+    return Value::fromObject(ctx->engine->newArrayObject(result));
 }
 
-void ArrayPrototype::method_join(ExecutionContext *ctx)
+Value ArrayPrototype::method_join(ExecutionContext *ctx)
 {
     Value arg = ctx->argument(0);
 
@@ -1352,10 +1363,8 @@ void ArrayPrototype::method_join(ExecutionContext *ctx)
 
     static QSet<Object *> visitedArrayElements;
 
-    if (! r2 || visitedArrayElements.contains(self.objectValue())) {
-        ctx->result = Value::fromString(ctx, QString());
-        return;
-    }
+    if (! r2 || visitedArrayElements.contains(self.objectValue()))
+        return Value::fromString(ctx, QString());
 
     // avoid infinite recursion
     visitedArrayElements.insert(self.objectValue());
@@ -1391,31 +1400,30 @@ void ArrayPrototype::method_join(ExecutionContext *ctx)
     }
 
     visitedArrayElements.remove(self.objectValue());
-    ctx->result = Value::fromString(ctx, R);
+    return Value::fromString(ctx, R);
 }
 
-void ArrayPrototype::method_pop(ExecutionContext *ctx)
+Value ArrayPrototype::method_pop(ExecutionContext *ctx)
 {
     Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        Value elt = instance->value.pop();
-        ctx->result = elt;
-    } else {
-        Value r1 = self.property(ctx, ctx->engine->id_length);
-        quint32 r2 = !r1.isUndefined() ? r1.toUInt32(ctx) : 0;
-        if (! r2) {
-            self.objectValue()->__put__(ctx, ctx->engine->id_length, Value::fromDouble(0));
-        } else {
-            String *r6 = Value::fromDouble(r2 - 1).toString(ctx);
-            Value r7 = self.property(ctx, r6);
-            self.objectValue()->__delete__(ctx, r6, 0);
-            self.objectValue()->__put__(ctx, ctx->engine->id_length, Value::fromDouble(2 - 1));
-            ctx->result = r7;
-        }
+    if (ArrayObject *instance = self.asArrayObject())
+        return instance->value.pop();
+
+    Value r1 = self.property(ctx, ctx->engine->id_length);
+    quint32 r2 = !r1.isUndefined() ? r1.toUInt32(ctx) : 0;
+    if (r2) {
+        String *r6 = Value::fromDouble(r2 - 1).toString(ctx);
+        Value r7 = self.property(ctx, r6);
+        self.objectValue()->__delete__(ctx, r6, 0);
+        self.objectValue()->__put__(ctx, ctx->engine->id_length, Value::fromDouble(2 - 1));
+        return r7;
     }
+
+    self.objectValue()->__put__(ctx, ctx->engine->id_length, Value::fromDouble(0));
+    return Value::undefinedValue();
 }
 
-void ArrayPrototype::method_push(ExecutionContext *ctx)
+Value ArrayPrototype::method_push(ExecutionContext *ctx)
 {
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
@@ -1424,48 +1432,47 @@ void ArrayPrototype::method_push(ExecutionContext *ctx)
             Value val = ctx->argument(i);
             instance->value.assign(pos++, val);
         }
-        ctx->result = Value::fromDouble(pos);
-    } else {
-        Value r1 = self.property(ctx, ctx->engine->id_length);
-        quint32 n = !r1.isUndefined() ? r1.toUInt32(ctx) : 0;
-        for (unsigned int index = 0; index < ctx->argumentCount(); ++index, ++n) {
-            Value r3 = ctx->argument(index);
-            String *name = Value::fromDouble(n).toString(ctx);
-            self.objectValue()->__put__(ctx, name, r3);
-        }
-        Value r = Value::fromDouble(n);
-        self.objectValue()->__put__(ctx, ctx->engine->id_length, r);
-        ctx->result = r;
+        return Value::fromDouble(pos);
     }
+
+    Value r1 = self.property(ctx, ctx->engine->id_length);
+    quint32 n = !r1.isUndefined() ? r1.toUInt32(ctx) : 0;
+    for (unsigned int index = 0; index < ctx->argumentCount(); ++index, ++n) {
+        Value r3 = ctx->argument(index);
+        String *name = Value::fromDouble(n).toString(ctx);
+        self.objectValue()->__put__(ctx, name, r3);
+    }
+    Value r = Value::fromDouble(n);
+    self.objectValue()->__put__(ctx, ctx->engine->id_length, r);
+    return r;
 }
 
-void ArrayPrototype::method_reverse(ExecutionContext *ctx)
+Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        int lo = 0, hi = instance->value.count() - 1;
-
-        for (; lo < hi; ++lo, --hi) {
-            Value tmp = instance->value.at(lo);
-            instance->value.assign(lo, instance->value.at(hi));
-            instance->value.assign(hi, tmp);
-        }
-    } else {
+    ArrayObject *instance = ctx->thisObject.asArrayObject();
+    if (!instance)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.reverse"));
+
+    int lo = 0, hi = instance->value.count() - 1;
+
+    for (; lo < hi; ++lo, --hi) {
+        Value tmp = instance->value.at(lo);
+        instance->value.assign(lo, instance->value.at(hi));
+        instance->value.assign(hi, tmp);
     }
+    return Value::undefinedValue();
 }
 
-void ArrayPrototype::method_shift(ExecutionContext *ctx)
+Value ArrayPrototype::method_shift(ExecutionContext *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        ctx->result = instance->value.takeFirst();
-    } else {
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.reverse"));
-    }
+    ArrayObject *instance = ctx->thisObject.asArrayObject();
+    if (!instance)
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.shift"));
+
+    return instance->value.takeFirst();
 }
 
-void ArrayPrototype::method_slice(ExecutionContext *ctx)
+Value ArrayPrototype::method_slice(ExecutionContext *ctx)
 {
     // ### TODO implement the fast non-generic version of slice.
 
@@ -1488,242 +1495,238 @@ void ArrayPrototype::method_slice(ExecutionContext *ctx)
         if (! v.isUndefined())
             result.assign(n++, v);
     }
-    ctx->result = Value::fromObject(ctx->engine->newArrayObject(result));
+    return Value::fromObject(ctx->engine->newArrayObject(result));
 }
 
-void ArrayPrototype::method_sort(ExecutionContext *ctx)
+Value ArrayPrototype::method_sort(ExecutionContext *ctx)
 {
-    Value self = ctx->thisObject;
-    Value comparefn = ctx->argument(0);
-    if (ArrayObject *instance = self.asArrayObject()) {
-        instance->value.sort(ctx, comparefn);
-        ctx->result = ctx->thisObject;
-    } else {
+    ArrayObject *instance = ctx->thisObject.asArrayObject();
+    if (!instance)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.sort"));
-    }
+
+    Value comparefn = ctx->argument(0);
+    instance->value.sort(ctx, comparefn);
+    return ctx->thisObject;
 }
 
-void ArrayPrototype::method_splice(ExecutionContext *ctx)
+Value ArrayPrototype::method_splice(ExecutionContext *ctx)
 {
     if (ctx->argumentCount() < 2)
-        return;
+        // ### check
+        return Value::undefinedValue();
+
+    ArrayObject *instance = ctx->thisObject.asArrayObject();
+    if (!instance)
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.splice"));
 
     double start = ctx->argument(0).toInteger(ctx);
     double deleteCount = ctx->argument(1).toInteger(ctx);
     Value a = Value::fromObject(ctx->engine->newArrayObject());
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        QVector<Value> items;
-        for (unsigned int i = 2; i < ctx->argumentCount(); ++i)
-            items << ctx->argument(i);
-        ArrayObject *otherInstance = a.asArrayObject();
-        assert(otherInstance);
-        instance->value.splice(start, deleteCount, items, otherInstance->value);
-        ctx->result = a;
-    } else {
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.splice"));
-    }
+    QVector<Value> items;
+    for (unsigned int i = 2; i < ctx->argumentCount(); ++i)
+        items << ctx->argument(i);
+    ArrayObject *otherInstance = a.asArrayObject();
+    assert(otherInstance);
+    instance->value.splice(start, deleteCount, items, otherInstance->value);
+    return a;
 }
 
-void ArrayPrototype::method_unshift(ExecutionContext *ctx)
+Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Array.prototype.indexOf"));
+    return Value::undefinedValue();
 }
 
-void ArrayPrototype::method_indexOf(ExecutionContext *ctx)
+Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Array.prototype.indexOf"));
+    return Value::undefinedValue();
 }
 
-void ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
+Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Array.prototype.indexOf"));
+    return Value::undefinedValue();
 }
 
-void ArrayPrototype::method_every(ExecutionContext *ctx)
+Value ArrayPrototype::method_every(ExecutionContext *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        Value callback = ctx->argument(0);
-        Value thisArg = ctx->argument(1);
-        bool ok = true;
-        for (uint k = 0; ok && k < instance->value.size(); ++k) {
-            Value v = instance->value.at(k);
-            if (v.isUndefined())
-                continue;
-
-            Value args[3];
-            args[0] = v;
-            args[1] = Value::fromDouble(k);
-            args[2] = ctx->thisObject;
-            Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
-            ok = __qmljs_to_boolean(r, ctx);
-        }
-        ctx->result = Value::fromBoolean(ok);
-    } else {
+    ArrayObject *instance = ctx->thisObject.asArrayObject();
+    if (!instance)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.every"));
+
+    Value callback = ctx->argument(0);
+    Value thisArg = ctx->argument(1);
+    bool ok = true;
+    for (uint k = 0; ok && k < instance->value.size(); ++k) {
+        Value v = instance->value.at(k);
+        if (v.isUndefined())
+            continue;
+
+        Value args[3];
+        args[0] = v;
+        args[1] = Value::fromDouble(k);
+        args[2] = ctx->thisObject;
+        Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
+        ok = __qmljs_to_boolean(r, ctx);
     }
+    return Value::fromBoolean(ok);
 }
 
-void ArrayPrototype::method_some(ExecutionContext *ctx)
+Value ArrayPrototype::method_some(ExecutionContext *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        Value callback = ctx->argument(0);
-        Value thisArg = ctx->argument(1);
-        bool ok = false;
-        for (uint k = 0; !ok && k < instance->value.size(); ++k) {
-            Value v = instance->value.at(k);
-            if (v.isUndefined())
-                continue;
-
-            Value args[3];
-            args[0] = v;
-            args[1] = Value::fromDouble(k);
-            args[2] = ctx->thisObject;
-            Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
-            ok = __qmljs_to_boolean(r, ctx);
-        }
-        ctx->result = Value::fromBoolean(ok);
-    } else {
+    ArrayObject *instance = ctx->thisObject.asArrayObject();
+    if (!instance)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.some"));
+
+    Value callback = ctx->argument(0);
+    Value thisArg = ctx->argument(1);
+    bool ok = false;
+    for (uint k = 0; !ok && k < instance->value.size(); ++k) {
+        Value v = instance->value.at(k);
+        if (v.isUndefined())
+            continue;
+
+        Value args[3];
+        args[0] = v;
+        args[1] = Value::fromDouble(k);
+        args[2] = ctx->thisObject;
+        Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
+        ok = __qmljs_to_boolean(r, ctx);
     }
+    return Value::fromBoolean(ok);
 }
 
-void ArrayPrototype::method_forEach(ExecutionContext *ctx)
+Value ArrayPrototype::method_forEach(ExecutionContext *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        Value callback = ctx->argument(0);
-        Value thisArg = ctx->argument(1);
-        for (quint32 k = 0; k < instance->value.size(); ++k) {
-            Value v = instance->value.at(k);
-            if (v.isUndefined())
-                continue;
-            Value args[3];
-            args[0] = v;
-            args[1] = Value::fromDouble(k);
-            args[2] = ctx->thisObject;
-            /*Value r =*/ __qmljs_call_value(ctx, thisArg, callback, args, 3);
-        }
-    } else {
+    ArrayObject *instance = ctx->thisObject.asArrayObject();
+    if (!instance)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.forEach"));
+
+    Value callback = ctx->argument(0);
+    Value thisArg = ctx->argument(1);
+    for (quint32 k = 0; k < instance->value.size(); ++k) {
+        Value v = instance->value.at(k);
+        if (v.isUndefined())
+            continue;
+        Value args[3];
+        args[0] = v;
+        args[1] = Value::fromDouble(k);
+        args[2] = ctx->thisObject;
+        /*Value r =*/ __qmljs_call_value(ctx, thisArg, callback, args, 3);
     }
+    return Value::undefinedValue();
 }
 
-void ArrayPrototype::method_map(ExecutionContext *ctx)
+Value ArrayPrototype::method_map(ExecutionContext *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        Value callback = ctx->argument(0);
-        Value thisArg = ctx->argument(1);
-        ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
-        a->value.resize(instance->value.size());
-        for (quint32 k = 0; k < instance->value.size(); ++k) {
-            Value v = instance->value.at(k);
-            if (v.isUndefined())
-                continue;
-            Value args[3];
-            args[0] = v;
-            args[1] = Value::fromDouble(k);
-            args[2] = ctx->thisObject;
-            Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
-            a->value.assign(k, r);
-        }
-        ctx->result = Value::fromObject(a);
-    } else {
+    ArrayObject *instance = ctx->thisObject.asArrayObject();
+    if (!instance)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.map"));
+
+    Value callback = ctx->argument(0);
+    Value thisArg = ctx->argument(1);
+    ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
+    a->value.resize(instance->value.size());
+    for (quint32 k = 0; k < instance->value.size(); ++k) {
+        Value v = instance->value.at(k);
+        if (v.isUndefined())
+            continue;
+        Value args[3];
+        args[0] = v;
+        args[1] = Value::fromDouble(k);
+        args[2] = ctx->thisObject;
+        Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
+        a->value.assign(k, r);
     }
+    return Value::fromObject(a);
 }
 
-void ArrayPrototype::method_filter(ExecutionContext *ctx)
+Value ArrayPrototype::method_filter(ExecutionContext *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        Value callback = ctx->argument(0);
-        Value thisArg = ctx->argument(1);
-        ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
-        for (quint32 k = 0; k < instance->value.size(); ++k) {
-            Value v = instance->value.at(k);
-            if (v.isUndefined())
-                continue;
-            Value args[3];
-            args[0] = v;
-            args[1] = Value::fromDouble(k);
-            args[2] = ctx->thisObject;
-            Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
-            if (__qmljs_to_boolean(r, ctx)) {
-                const uint index = a->value.size();
-                a->value.resize(index + 1);
-                a->value.assign(index, v);
-            }
-        }
-        ctx->result = Value::fromObject(a);
-    } else {
+    ArrayObject *instance = ctx->thisObject.asArrayObject();
+    if (!instance)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.filter"));
+
+    Value callback = ctx->argument(0);
+    Value thisArg = ctx->argument(1);
+    ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
+    for (quint32 k = 0; k < instance->value.size(); ++k) {
+        Value v = instance->value.at(k);
+        if (v.isUndefined())
+            continue;
+        Value args[3];
+        args[0] = v;
+        args[1] = Value::fromDouble(k);
+        args[2] = ctx->thisObject;
+        Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
+        if (__qmljs_to_boolean(r, ctx)) {
+            const uint index = a->value.size();
+            a->value.resize(index + 1);
+            a->value.assign(index, v);
+        }
     }
+    return Value::fromObject(a);
 }
 
-void ArrayPrototype::method_reduce(ExecutionContext *ctx)
+Value ArrayPrototype::method_reduce(ExecutionContext *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        Value callback = ctx->argument(0);
-        Value initialValue = ctx->argument(1);
-        Value acc = initialValue;
-        for (quint32 k = 0; k < instance->value.size(); ++k) {
-            Value v = instance->value.at(k);
-            if (v.isUndefined())
-                continue;
-
-            if (acc.isUndefined()) {
-                acc = v;
-                continue;
-            }
-
-            Value args[4];
-            args[0] = acc;
-            args[1] = v;
-            args[2] = Value::fromDouble(k);
-            args[3] = ctx->thisObject;
-            Value r = __qmljs_call_value(ctx, Value::undefinedValue(), callback, args, 4);
-            acc = r;
-        }
-        ctx->result = acc;
-    } else {
+    ArrayObject *instance = ctx->thisObject.asArrayObject();
+    if (!instance)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.reduce"));
+
+    Value callback = ctx->argument(0);
+    Value initialValue = ctx->argument(1);
+    Value acc = initialValue;
+    for (quint32 k = 0; k < instance->value.size(); ++k) {
+        Value v = instance->value.at(k);
+        if (v.isUndefined())
+            continue;
+
+        if (acc.isUndefined()) {
+            acc = v;
+            continue;
+        }
+
+        Value args[4];
+        args[0] = acc;
+        args[1] = v;
+        args[2] = Value::fromDouble(k);
+        args[3] = ctx->thisObject;
+        Value r = __qmljs_call_value(ctx, Value::undefinedValue(), callback, args, 4);
+        acc = r;
     }
+    return acc;
 }
 
-void ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
+Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        Value callback = ctx->argument(0);
-        Value initialValue = ctx->argument(1);
-        Value acc = initialValue;
-        for (int k = instance->value.size() - 1; k != -1; --k) {
-            Value v = instance->value.at(k);
-            if (v.isUndefined())
-                continue;
-
-            if (acc.isUndefined()) {
-                acc = v;
-                continue;
-            }
-
-            Value args[4];
-            args[0] = acc;
-            args[1] = v;
-            args[2] = Value::fromDouble(k);
-            args[3] = ctx->thisObject;
-            Value r = __qmljs_call_value(ctx, Value::undefinedValue(), callback, args, 4);
-            acc = r;
-        }
-        ctx->result = acc;
-    } else {
+    ArrayObject *instance = ctx->thisObject.asArrayObject();
+    if (!instance)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.reduceRight"));
+
+    Value callback = ctx->argument(0);
+    Value initialValue = ctx->argument(1);
+    Value acc = initialValue;
+    for (int k = instance->value.size() - 1; k != -1; --k) {
+        Value v = instance->value.at(k);
+        if (v.isUndefined())
+            continue;
+
+        if (acc.isUndefined()) {
+            acc = v;
+            continue;
+        }
+
+        Value args[4];
+        args[0] = acc;
+        args[1] = v;
+        args[2] = Value::fromDouble(k);
+        args[3] = ctx->thisObject;
+        Value r = __qmljs_call_value(ctx, Value::undefinedValue(), callback, args, 4);
+        acc = r;
     }
+    return acc;
 }
 
 //
@@ -1735,7 +1738,7 @@ FunctionCtor::FunctionCtor(ExecutionContext *scope)
 }
 
 // 15.3.2
-void FunctionCtor::construct(ExecutionContext *ctx)
+Value FunctionCtor::construct(ExecutionContext *ctx)
 {
     QString args;
     QString body;
@@ -1777,15 +1780,16 @@ void FunctionCtor::construct(ExecutionContext *ctx)
     isel(irf);
 
     ctx->thisObject = Value::fromObject(new ScriptFunction(ctx->engine->rootContext, irf));
+    return ctx->thisObject;
 }
 
 // 15.3.1: This is equivalent to new Function(...)
-void FunctionCtor::call(ExecutionContext *ctx)
+Value FunctionCtor::call(ExecutionContext *ctx)
 {
     Value v = ctx->thisObject;
-    construct(ctx);
-    ctx->result = ctx->thisObject;
+    Value result = construct(ctx);
     ctx->thisObject = v;
+    return result;
 }
 
 void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -1798,17 +1802,16 @@ void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
     __put__(ctx, QStringLiteral("bind"), method_bind, 0);
 }
 
-void FunctionPrototype::method_toString(ExecutionContext *ctx)
+Value FunctionPrototype::method_toString(ExecutionContext *ctx)
 {
-    if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
-        Q_UNUSED(fun);
-        ctx->result = Value::fromString(ctx, QStringLiteral("function() { [code] }"));
-    } else {
+    FunctionObject *fun = ctx->thisObject.asFunctionObject();
+    if (!fun)
         ctx->throwTypeError();
-    }
+
+    return Value::fromString(ctx, QStringLiteral("function() { [code] }"));
 }
 
-void FunctionPrototype::method_apply(ExecutionContext *ctx)
+Value FunctionPrototype::method_apply(ExecutionContext *ctx)
 {
     Value thisObject = ctx->argument(0).toObject(ctx);
     if (thisObject.isNull() || thisObject.isUndefined())
@@ -1826,30 +1829,30 @@ void FunctionPrototype::method_apply(ExecutionContext *ctx)
         }
     } else if (!(arg.isUndefined() || arg.isNull())) {
         ctx->throwError(QLatin1String("Function.prototype.apply: second argument is not an array"));
-        return;
+        return Value::undefinedValue();
     }
 
-    ctx->result = __qmljs_call_value(ctx, thisObject, ctx->thisObject, args.data(), args.size());
+    return __qmljs_call_value(ctx, thisObject, ctx->thisObject, args.data(), args.size());
 }
 
-void FunctionPrototype::method_call(ExecutionContext *ctx)
+Value FunctionPrototype::method_call(ExecutionContext *ctx)
 {
     Value thisArg = ctx->argument(0);
     QVector<Value> args(ctx->argumentCount() ? ctx->argumentCount() - 1 : 0);
     if (ctx->argumentCount())
         qCopy(ctx->variableEnvironment->arguments + 1,
               ctx->variableEnvironment->arguments + ctx->argumentCount(), args.begin());
-    ctx->result = __qmljs_call_value(ctx, thisArg, ctx->thisObject, args.data(), args.size());
+    return __qmljs_call_value(ctx, thisArg, ctx->thisObject, args.data(), args.size());
 }
 
-void FunctionPrototype::method_bind(ExecutionContext *ctx)
+Value FunctionPrototype::method_bind(ExecutionContext *ctx)
 {
-    if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
-        Q_UNUSED(fun);
-        ctx->throwUnimplemented(QStringLiteral("Function.prototype.bind"));
-    } else {
+    FunctionObject *fun = ctx->thisObject.asFunctionObject();
+    if (!fun)
         ctx->throwTypeError();
-    }
+
+    ctx->throwUnimplemented(QStringLiteral("Function.prototype.bind"));
+    return Value::undefinedValue();
 }
 
 //
@@ -1860,7 +1863,7 @@ DateCtor::DateCtor(ExecutionContext *scope)
 {
 }
 
-void DateCtor::construct(ExecutionContext *ctx)
+Value DateCtor::construct(ExecutionContext *ctx)
 {
     double t = 0;
 
@@ -1896,12 +1899,13 @@ void DateCtor::construct(ExecutionContext *ctx)
 
     Object *d = ctx->engine->newDateObject(Value::fromDouble(t));
     ctx->thisObject = Value::fromObject(d);
+    return ctx->thisObject;
 }
 
-void DateCtor::call(ExecutionContext *ctx)
+Value DateCtor::call(ExecutionContext *ctx)
 {
     double t = currentTime();
-    ctx->result = Value::fromString(ctx, ToString(t));
+    return Value::fromString(ctx, ToString(t));
 }
 
 void DatePrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -1969,27 +1973,30 @@ double DatePrototype::getThisDate(ExecutionContext *ctx)
     }
 }
 
-void DatePrototype::method_MakeTime(ExecutionContext *ctx)
+Value DatePrototype::method_MakeTime(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Data.MakeTime"));
+    return Value::undefinedValue();
 }
 
-void DatePrototype::method_MakeDate(ExecutionContext *ctx)
+Value DatePrototype::method_MakeDate(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Data.MakeDate"));
+    return Value::undefinedValue();
 }
 
-void DatePrototype::method_TimeClip(ExecutionContext *ctx)
+Value DatePrototype::method_TimeClip(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Data.TimeClip"));
+    return Value::undefinedValue();
 }
 
-void DatePrototype::method_parse(ExecutionContext *ctx)
+Value DatePrototype::method_parse(ExecutionContext *ctx)
 {
-    ctx->result = Value::fromDouble(ParseString(ctx->argument(0).toString(ctx)->toQString()));
+    return Value::fromDouble(ParseString(ctx->argument(0).toString(ctx)->toQString()));
 }
 
-void DatePrototype::method_UTC(ExecutionContext *ctx)
+Value DatePrototype::method_UTC(ExecutionContext *ctx)
 {
     const int numArgs = ctx->argumentCount();
     if (numArgs >= 2) {
@@ -2004,442 +2011,445 @@ void DatePrototype::method_UTC(ExecutionContext *ctx)
             year += 1900;
         double t = MakeDate(MakeDay(year, month, day),
                             MakeTime(hours, mins, secs, ms));
-        ctx->result = Value::fromDouble(TimeClip(t));
+        return Value::fromDouble(TimeClip(t));
     }
+    return Value::undefinedValue();
 }
 
-void DatePrototype::method_toString(ExecutionContext *ctx)
+Value DatePrototype::method_toString(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    ctx->result = Value::fromString(ctx, ToString(t));
+    return Value::fromString(ctx, ToString(t));
 }
 
-void DatePrototype::method_toDateString(ExecutionContext *ctx)
+Value DatePrototype::method_toDateString(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    ctx->result = Value::fromString(ctx, ToDateString(t));
+    return Value::fromString(ctx, ToDateString(t));
 }
 
-void DatePrototype::method_toTimeString(ExecutionContext *ctx)
+Value DatePrototype::method_toTimeString(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    ctx->result = Value::fromString(ctx, ToTimeString(t));
+    return Value::fromString(ctx, ToTimeString(t));
 }
 
-void DatePrototype::method_toLocaleString(ExecutionContext *ctx)
+Value DatePrototype::method_toLocaleString(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    ctx->result = Value::fromString(ctx, ToLocaleString(t));
+    return Value::fromString(ctx, ToLocaleString(t));
 }
 
-void DatePrototype::method_toLocaleDateString(ExecutionContext *ctx)
+Value DatePrototype::method_toLocaleDateString(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    ctx->result = Value::fromString(ctx, ToLocaleDateString(t));
+    return Value::fromString(ctx, ToLocaleDateString(t));
 }
 
-void DatePrototype::method_toLocaleTimeString(ExecutionContext *ctx)
+Value DatePrototype::method_toLocaleTimeString(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    ctx->result = Value::fromString(ctx, ToLocaleTimeString(t));
+    return Value::fromString(ctx, ToLocaleTimeString(t));
 }
 
-void DatePrototype::method_valueOf(ExecutionContext *ctx)
+Value DatePrototype::method_valueOf(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getTime(ExecutionContext *ctx)
+Value DatePrototype::method_getTime(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getYear(ExecutionContext *ctx)
+Value DatePrototype::method_getYear(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = YearFromTime(LocalTime(t)) - 1900;
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getFullYear(ExecutionContext *ctx)
+Value DatePrototype::method_getFullYear(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = YearFromTime(LocalTime(t));
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getUTCFullYear(ExecutionContext *ctx)
+Value DatePrototype::method_getUTCFullYear(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = YearFromTime(t);
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getMonth(ExecutionContext *ctx)
+Value DatePrototype::method_getMonth(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = MonthFromTime(LocalTime(t));
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getUTCMonth(ExecutionContext *ctx)
+Value DatePrototype::method_getUTCMonth(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = MonthFromTime(t);
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getDate(ExecutionContext *ctx)
+Value DatePrototype::method_getDate(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = DateFromTime(LocalTime(t));
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getUTCDate(ExecutionContext *ctx)
+Value DatePrototype::method_getUTCDate(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = DateFromTime(t);
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getDay(ExecutionContext *ctx)
+Value DatePrototype::method_getDay(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = WeekDay(LocalTime(t));
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getUTCDay(ExecutionContext *ctx)
+Value DatePrototype::method_getUTCDay(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = WeekDay(t);
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getHours(ExecutionContext *ctx)
+Value DatePrototype::method_getHours(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = HourFromTime(LocalTime(t));
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getUTCHours(ExecutionContext *ctx)
+Value DatePrototype::method_getUTCHours(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = HourFromTime(t);
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getMinutes(ExecutionContext *ctx)
+Value DatePrototype::method_getMinutes(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = MinFromTime(LocalTime(t));
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getUTCMinutes(ExecutionContext *ctx)
+Value DatePrototype::method_getUTCMinutes(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = MinFromTime(t);
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getSeconds(ExecutionContext *ctx)
+Value DatePrototype::method_getSeconds(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = SecFromTime(LocalTime(t));
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getUTCSeconds(ExecutionContext *ctx)
+Value DatePrototype::method_getUTCSeconds(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = SecFromTime(t);
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getMilliseconds(ExecutionContext *ctx)
+Value DatePrototype::method_getMilliseconds(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = msFromTime(LocalTime(t));
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getUTCMilliseconds(ExecutionContext *ctx)
+Value DatePrototype::method_getUTCMilliseconds(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = msFromTime(t);
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_getTimezoneOffset(ExecutionContext *ctx)
+Value DatePrototype::method_getTimezoneOffset(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! qIsNaN(t))
         t = (t - LocalTime(t)) / msPerMinute;
-    ctx->result = Value::fromDouble(t);
+    return Value::fromDouble(t);
 }
 
-void DatePrototype::method_setTime(ExecutionContext *ctx)
+Value DatePrototype::method_setTime(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        self->value.setDouble(TimeClip(ctx->argument(0).toNumber(ctx)));
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    self->value.setDouble(TimeClip(ctx->argument(0).toNumber(ctx)));
+    return self->value;
 }
 
-void DatePrototype::method_setMilliseconds(ExecutionContext *ctx)
+Value DatePrototype::method_setMilliseconds(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = LocalTime(self->value.asDouble());
-        double ms = ctx->argument(0).toNumber(ctx);
-        self->value.setDouble(TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)))));
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    double t = LocalTime(self->value.asDouble());
+    double ms = ctx->argument(0).toNumber(ctx);
+    self->value.setDouble(TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)))));
+    return self->value;
 }
 
-void DatePrototype::method_setUTCMilliseconds(ExecutionContext *ctx)
+Value DatePrototype::method_setUTCMilliseconds(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = self->value.asDouble();
-        double ms = ctx->argument(0).toNumber(ctx);
-        self->value.setDouble(TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)))));
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    double t = self->value.asDouble();
+    double ms = ctx->argument(0).toNumber(ctx);
+    self->value.setDouble(TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)))));
+    return self->value;
 }
 
-void DatePrototype::method_setSeconds(ExecutionContext *ctx)
+Value DatePrototype::method_setSeconds(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = LocalTime(self->value.asDouble());
-        double sec = ctx->argument(0).toNumber(ctx);
-        double ms = (ctx->argumentCount() < 2) ? msFromTime(t) : ctx->argument(1).toNumber(ctx);
-        t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
-        self->value.setDouble(t);
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    double t = LocalTime(self->value.asDouble());
+    double sec = ctx->argument(0).toNumber(ctx);
+    double ms = (ctx->argumentCount() < 2) ? msFromTime(t) : ctx->argument(1).toNumber(ctx);
+    t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
+    self->value.setDouble(t);
+    return self->value;
 }
 
-void DatePrototype::method_setUTCSeconds(ExecutionContext *ctx)
+Value DatePrototype::method_setUTCSeconds(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = self->value.asDouble();
-        double sec = ctx->argument(0).toNumber(ctx);
-        double ms = (ctx->argumentCount() < 2) ? msFromTime(t) : ctx->argument(1).toNumber(ctx);
-        t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
-        self->value.setDouble(t);
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    double t = self->value.asDouble();
+    double sec = ctx->argument(0).toNumber(ctx);
+    double ms = (ctx->argumentCount() < 2) ? msFromTime(t) : ctx->argument(1).toNumber(ctx);
+    t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
+    self->value.setDouble(t);
+    return self->value;
 }
 
-void DatePrototype::method_setMinutes(ExecutionContext *ctx)
+Value DatePrototype::method_setMinutes(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = LocalTime(self->value.asDouble());
-        double min = ctx->argument(0).toNumber(ctx);
-        double sec = (ctx->argumentCount() < 2) ? SecFromTime(t) : ctx->argument(1).toNumber(ctx);
-        double ms = (ctx->argumentCount() < 3) ? msFromTime(t) : ctx->argument(2).toNumber(ctx);
-        t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
-        self->value.setDouble(t);
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    double t = LocalTime(self->value.asDouble());
+    double min = ctx->argument(0).toNumber(ctx);
+    double sec = (ctx->argumentCount() < 2) ? SecFromTime(t) : ctx->argument(1).toNumber(ctx);
+    double ms = (ctx->argumentCount() < 3) ? msFromTime(t) : ctx->argument(2).toNumber(ctx);
+    t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
+    self->value.setDouble(t);
+    return self->value;
 }
 
-void DatePrototype::method_setUTCMinutes(ExecutionContext *ctx)
+Value DatePrototype::method_setUTCMinutes(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = self->value.asDouble();
-        double min = ctx->argument(0).toNumber(ctx);
-        double sec = (ctx->argumentCount() < 2) ? SecFromTime(t) : ctx->argument(1).toNumber(ctx);
-        double ms = (ctx->argumentCount() < 3) ? msFromTime(t) : ctx->argument(2).toNumber(ctx);
-        t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
-        self->value.setDouble(t);
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    double t = self->value.asDouble();
+    double min = ctx->argument(0).toNumber(ctx);
+    double sec = (ctx->argumentCount() < 2) ? SecFromTime(t) : ctx->argument(1).toNumber(ctx);
+    double ms = (ctx->argumentCount() < 3) ? msFromTime(t) : ctx->argument(2).toNumber(ctx);
+    t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
+    self->value.setDouble(t);
+    return self->value;
 }
 
-void DatePrototype::method_setHours(ExecutionContext *ctx)
+Value DatePrototype::method_setHours(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = LocalTime(self->value.asDouble());
-        double hour = ctx->argument(0).toNumber(ctx);
-        double min = (ctx->argumentCount() < 2) ? MinFromTime(t) : ctx->argument(1).toNumber(ctx);
-        double sec = (ctx->argumentCount() < 3) ? SecFromTime(t) : ctx->argument(2).toNumber(ctx);
-        double ms = (ctx->argumentCount() < 4) ? msFromTime(t) : ctx->argument(3).toNumber(ctx);
-        t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms))));
-        self->value.setDouble(t);
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    double t = LocalTime(self->value.asDouble());
+    double hour = ctx->argument(0).toNumber(ctx);
+    double min = (ctx->argumentCount() < 2) ? MinFromTime(t) : ctx->argument(1).toNumber(ctx);
+    double sec = (ctx->argumentCount() < 3) ? SecFromTime(t) : ctx->argument(2).toNumber(ctx);
+    double ms = (ctx->argumentCount() < 4) ? msFromTime(t) : ctx->argument(3).toNumber(ctx);
+    t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms))));
+    self->value.setDouble(t);
+    return self->value;
 }
 
-void DatePrototype::method_setUTCHours(ExecutionContext *ctx)
+Value DatePrototype::method_setUTCHours(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = self->value.asDouble();
-        double hour = ctx->argument(0).toNumber(ctx);
-        double min = (ctx->argumentCount() < 2) ? MinFromTime(t) : ctx->argument(1).toNumber(ctx);
-        double sec = (ctx->argumentCount() < 3) ? SecFromTime(t) : ctx->argument(2).toNumber(ctx);
-        double ms = (ctx->argumentCount() < 4) ? msFromTime(t) : ctx->argument(3).toNumber(ctx);
-        t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms))));
-        self->value.setDouble(t);
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    double t = self->value.asDouble();
+    double hour = ctx->argument(0).toNumber(ctx);
+    double min = (ctx->argumentCount() < 2) ? MinFromTime(t) : ctx->argument(1).toNumber(ctx);
+    double sec = (ctx->argumentCount() < 3) ? SecFromTime(t) : ctx->argument(2).toNumber(ctx);
+    double ms = (ctx->argumentCount() < 4) ? msFromTime(t) : ctx->argument(3).toNumber(ctx);
+    t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms))));
+    self->value.setDouble(t);
+    return self->value;
 }
 
-void DatePrototype::method_setDate(ExecutionContext *ctx)
+Value DatePrototype::method_setDate(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = LocalTime(self->value.asDouble());
-        double date = ctx->argument(0).toNumber(ctx);
-        t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t))));
-        self->value.setDouble(t);
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    double t = LocalTime(self->value.asDouble());
+    double date = ctx->argument(0).toNumber(ctx);
+    t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t))));
+    self->value.setDouble(t);
+    return self->value;
 }
 
-void DatePrototype::method_setUTCDate(ExecutionContext *ctx)
+Value DatePrototype::method_setUTCDate(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = self->value.asDouble();
-        double date = ctx->argument(0).toNumber(ctx);
-        t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t))));
-        self->value.setDouble(t);
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    double t = self->value.asDouble();
+    double date = ctx->argument(0).toNumber(ctx);
+    t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t))));
+    self->value.setDouble(t);
+    return self->value;
 }
 
-void DatePrototype::method_setMonth(ExecutionContext *ctx)
+Value DatePrototype::method_setMonth(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = LocalTime(self->value.asDouble());
-        double month = ctx->argument(0).toNumber(ctx);
-        double date = (ctx->argumentCount() < 2) ? DateFromTime(t) : ctx->argument(1).toNumber(ctx);
-        t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
-        self->value.setDouble(t);
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    double t = LocalTime(self->value.asDouble());
+    double month = ctx->argument(0).toNumber(ctx);
+    double date = (ctx->argumentCount() < 2) ? DateFromTime(t) : ctx->argument(1).toNumber(ctx);
+    t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
+    self->value.setDouble(t);
+    return self->value;
 }
 
-void DatePrototype::method_setUTCMonth(ExecutionContext *ctx)
+Value DatePrototype::method_setUTCMonth(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = self->value.asDouble();
-        double month = ctx->argument(0).toNumber(ctx);
-        double date = (ctx->argumentCount() < 2) ? DateFromTime(t) : ctx->argument(1).toNumber(ctx);
-        t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
-        self->value.setDouble(t);
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    double t = self->value.asDouble();
+    double month = ctx->argument(0).toNumber(ctx);
+    double date = (ctx->argumentCount() < 2) ? DateFromTime(t) : ctx->argument(1).toNumber(ctx);
+    t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
+    self->value.setDouble(t);
+    return self->value;
 }
 
-void DatePrototype::method_setYear(ExecutionContext *ctx)
+Value DatePrototype::method_setYear(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = self->value.asDouble();
-        if (qIsNaN(t))
-            t = 0;
-        else
-            t = LocalTime(t);
-        double year = ctx->argument(0).toNumber(ctx);
-        double r;
-        if (qIsNaN(year)) {
-            r = qSNaN();
-        } else {
-            if ((Value::toInteger(year) >= 0) && (Value::toInteger(year) <= 99))
-                year += 1900;
-            r = MakeDay(year, MonthFromTime(t), DateFromTime(t));
-            r = UTC(MakeDate(r, TimeWithinDay(t)));
-            r = TimeClip(r);
-        }
-        self->value.setDouble(r);
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
-}
 
-void DatePrototype::method_setUTCFullYear(ExecutionContext *ctx)
-{
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = self->value.asDouble();
-        double year = ctx->argument(0).toNumber(ctx);
-        double month = (ctx->argumentCount() < 2) ? MonthFromTime(t) : ctx->argument(1).toNumber(ctx);
-        double date = (ctx->argumentCount() < 3) ? DateFromTime(t) : ctx->argument(2).toNumber(ctx);
-        t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));
-        self->value.setDouble(t);
-        ctx->result = self->value;
+    double t = self->value.asDouble();
+    if (qIsNaN(t))
+        t = 0;
+    else
+        t = LocalTime(t);
+    double year = ctx->argument(0).toNumber(ctx);
+    double r;
+    if (qIsNaN(year)) {
+        r = qSNaN();
     } else {
-        ctx->throwTypeError();
+        if ((Value::toInteger(year) >= 0) && (Value::toInteger(year) <= 99))
+            year += 1900;
+        r = MakeDay(year, MonthFromTime(t), DateFromTime(t));
+        r = UTC(MakeDate(r, TimeWithinDay(t)));
+        r = TimeClip(r);
     }
+    self->value.setDouble(r);
+    return self->value;
 }
 
-void DatePrototype::method_setFullYear(ExecutionContext *ctx)
+Value DatePrototype::method_setUTCFullYear(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = LocalTime(self->value.asDouble());
-        double year = ctx->argument(0).toNumber(ctx);
-        double month = (ctx->argumentCount() < 2) ? MonthFromTime(t) : ctx->argument(1).toNumber(ctx);
-        double date = (ctx->argumentCount() < 3) ? DateFromTime(t) : ctx->argument(2).toNumber(ctx);
-        t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));
-        self->value.setDouble(t);
-        ctx->result = self->value;
-    } else {
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
         ctx->throwTypeError();
-    }
+
+    double t = self->value.asDouble();
+    double year = ctx->argument(0).toNumber(ctx);
+    double month = (ctx->argumentCount() < 2) ? MonthFromTime(t) : ctx->argument(1).toNumber(ctx);
+    double date = (ctx->argumentCount() < 3) ? DateFromTime(t) : ctx->argument(2).toNumber(ctx);
+    t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));
+    self->value.setDouble(t);
+    return self->value;
 }
 
-void DatePrototype::method_toUTCString(ExecutionContext *ctx)
+Value DatePrototype::method_setFullYear(ExecutionContext *ctx)
 {
-    if (DateObject *self = ctx->thisObject.asDateObject()) {
-        double t = self->value.asDouble();
-        ctx->result = Value::fromString(ctx, ToUTCString(t));
-    }
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
+        ctx->throwTypeError();
+
+    double t = LocalTime(self->value.asDouble());
+    double year = ctx->argument(0).toNumber(ctx);
+    double month = (ctx->argumentCount() < 2) ? MonthFromTime(t) : ctx->argument(1).toNumber(ctx);
+    double date = (ctx->argumentCount() < 3) ? DateFromTime(t) : ctx->argument(2).toNumber(ctx);
+    t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));
+    self->value.setDouble(t);
+    return self->value;
+}
+
+Value DatePrototype::method_toUTCString(ExecutionContext *ctx)
+{
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
+        ctx->throwTypeError();
+
+    double t = self->value.asDouble();
+    return Value::fromString(ctx, ToUTCString(t));
 }
 
 //
@@ -2450,7 +2460,7 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
 {
 }
 
-void RegExpCtor::construct(ExecutionContext *ctx)
+Value RegExpCtor::construct(ExecutionContext *ctx)
 {
 //    if (ctx->argumentCount() > 2) {
 //        ctx->throwTypeError();
@@ -2460,12 +2470,10 @@ void RegExpCtor::construct(ExecutionContext *ctx)
     Value r = ctx->argumentCount() > 0 ? ctx->argument(0) : Value::undefinedValue();
     Value f = ctx->argumentCount() > 1 ? ctx->argument(1) : Value::undefinedValue();
     if (RegExpObject *re = r.asRegExpObject()) {
-        if (!f.isUndefined()) {
+        if (!f.isUndefined())
             ctx->throwTypeError();
-            return;
-        }
-        ctx->result = Value::fromObject(new RegExpObject(re->value, false));
-        return;
+
+        return Value::fromObject(new RegExpObject(re->value, false));
     }
 
     if (r.isUndefined())
@@ -2487,31 +2495,29 @@ void RegExpCtor::construct(ExecutionContext *ctx)
                 options |= QRegularExpression::MultilineOption;
             } else {
                 ctx->throwTypeError();
-                return;
             }
         }
     }
 
     QRegularExpression re(r.stringValue()->toQString(), options);
-    if (!re.isValid()) {
+    if (!re.isValid())
         ctx->throwTypeError();
-        return;
-    }
+
     ctx->thisObject = Value::fromObject(new RegExpObject(re, global));
+    return ctx->thisObject;
 }
 
-void RegExpCtor::call(ExecutionContext *ctx)
+Value RegExpCtor::call(ExecutionContext *ctx)
 {
     if (ctx->argumentCount() > 0 && ctx->argument(0).asRegExpObject()) {
-        if (ctx->argumentCount() == 1 || ctx->argument(1).isUndefined()) {
-            ctx->result = ctx->argument(0);
-            return;
-        }
+        if (ctx->argumentCount() == 1 || ctx->argument(1).isUndefined())
+            return ctx->argument(0);
     }
+
     Value that = ctx->thisObject;
-    construct(ctx);
-    ctx->result = ctx->thisObject;
+    Value result = construct(ctx);
     ctx->thisObject = that;
+    return result;
 }
 
 void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -2523,64 +2529,60 @@ void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
     __put__(ctx, QStringLiteral("toString"), method_toString, 0);
 }
 
-void RegExpPrototype::method_exec(ExecutionContext *ctx)
+Value RegExpPrototype::method_exec(ExecutionContext *ctx)
 {
-    if (RegExpObject *r = ctx->thisObject.asRegExpObject()) {
-        Value arg = ctx->argument(0);
-        arg = __qmljs_to_string(arg, ctx);
-        QString s = arg.stringValue()->toQString();
-
-        int offset = r->global ? r->lastIndex.toInt32(ctx) : 0;
-        if (offset < 0 || offset > s.length()) {
-            ctx->result = Value::nullValue();
-            return;
-        }
-
-        QRegularExpressionMatch match = r->value.match(s, offset);
-        if (!match.hasMatch()) {
-            ctx->result = Value::nullValue();
-            return;
-        }
-
-        // fill in result data
-        ArrayObject *array = ctx->engine->newArrayObject()->asArrayObject();
-        int captured = match.lastCapturedIndex();
-        for (int i = 0; i <= captured; ++i)
-            array->value.push(Value::fromString(ctx, match.captured(i)));
-
-        array->__put__(ctx, QLatin1String("index"), Value::fromInt32(match.capturedStart(0)));
-        array->__put__(ctx, QLatin1String("input"), arg);
-
-        if (r->global)
-            r->lastIndex = Value::fromInt32(match.capturedEnd(0));
-
-        ctx->result = Value::fromObject(array);
-    } else {
+    RegExpObject *r = ctx->thisObject.asRegExpObject();
+    if (!r)
         ctx->throwTypeError();
-    }
+
+    Value arg = ctx->argument(0);
+    arg = __qmljs_to_string(arg, ctx);
+    QString s = arg.stringValue()->toQString();
+
+    int offset = r->global ? r->lastIndex.toInt32(ctx) : 0;
+    if (offset < 0 || offset > s.length())
+        return Value::nullValue();
+
+    QRegularExpressionMatch match = r->value.match(s, offset);
+    if (!match.hasMatch())
+        return Value::nullValue();
+
+    // fill in result data
+    ArrayObject *array = ctx->engine->newArrayObject()->asArrayObject();
+    int captured = match.lastCapturedIndex();
+    for (int i = 0; i <= captured; ++i)
+        array->value.push(Value::fromString(ctx, match.captured(i)));
+
+    array->__put__(ctx, QLatin1String("index"), Value::fromInt32(match.capturedStart(0)));
+    array->__put__(ctx, QLatin1String("input"), arg);
+
+    if (r->global)
+        r->lastIndex = Value::fromInt32(match.capturedEnd(0));
+
+    return Value::fromObject(array);
 }
 
-void RegExpPrototype::method_test(ExecutionContext *ctx)
+Value RegExpPrototype::method_test(ExecutionContext *ctx)
 {
-    method_exec(ctx);
-    ctx->result = Value::fromBoolean(!ctx->result.isNull());
+    Value r = method_exec(ctx);
+    return Value::fromBoolean(!r.isNull());
 }
 
-void RegExpPrototype::method_toString(ExecutionContext *ctx)
+Value RegExpPrototype::method_toString(ExecutionContext *ctx)
 {
-    if (RegExpObject *r = ctx->thisObject.asRegExpObject()) {
-        QString result = QChar('/') + r->value.pattern();
-        result += QChar('/');
-        QRegularExpression::PatternOptions o = r->value.patternOptions();
-        // ### 'g' option missing
-        if (o & QRegularExpression::CaseInsensitiveOption)
-            result += QChar('i');
-        if (o & QRegularExpression::MultilineOption)
-            result += QChar('m');
-        ctx->result = Value::fromString(ctx, result);
-    } else {
+    RegExpObject *r = ctx->thisObject.asRegExpObject();
+    if (!r)
         ctx->throwTypeError();
-    }
+
+    QString result = QChar('/') + r->value.pattern();
+    result += QChar('/');
+    QRegularExpression::PatternOptions o = r->value.patternOptions();
+    // ### 'g' option missing
+    if (o & QRegularExpression::CaseInsensitiveOption)
+        result += QChar('i');
+    if (o & QRegularExpression::MultilineOption)
+        result += QChar('m');
+    return Value::fromString(ctx, result);
 }
 
 //
@@ -2591,48 +2593,57 @@ ErrorCtor::ErrorCtor(ExecutionContext *scope)
 {
 }
 
-void ErrorCtor::construct(ExecutionContext *ctx)
+Value ErrorCtor::construct(ExecutionContext *ctx)
 {
     ctx->thisObject = Value::fromObject(new ErrorObject(ctx->argument(0)));
+    return ctx->thisObject;
 }
 
-void ErrorCtor::call(ExecutionContext *ctx)
+Value ErrorCtor::call(ExecutionContext *ctx)
 {
     Value that = ctx->thisObject;
     construct(ctx);
     ctx->wireUpPrototype(this);
+    Value res = ctx->thisObject;
 
     ctx->thisObject = that;
+    return res;
 }
 
-void EvalErrorCtor::construct(ExecutionContext *ctx)
+Value EvalErrorCtor::construct(ExecutionContext *ctx)
 {
     ctx->thisObject = Value::fromObject(new EvalErrorObject(ctx));
+    return ctx->thisObject;
 }
 
-void RangeErrorCtor::construct(ExecutionContext *ctx)
+Value RangeErrorCtor::construct(ExecutionContext *ctx)
 {
     ctx->thisObject = Value::fromObject(new RangeErrorObject(ctx));
+    return ctx->thisObject;
 }
 
-void ReferenceErrorCtor::construct(ExecutionContext *ctx)
+Value ReferenceErrorCtor::construct(ExecutionContext *ctx)
 {
     ctx->thisObject = Value::fromObject(new ReferenceErrorObject(ctx));
+    return ctx->thisObject;
 }
 
-void SyntaxErrorCtor::construct(ExecutionContext *ctx)
+Value SyntaxErrorCtor::construct(ExecutionContext *ctx)
 {
     ctx->thisObject = Value::fromObject(new SyntaxErrorObject(ctx));
+    return ctx->thisObject;
 }
 
-void TypeErrorCtor::construct(ExecutionContext *ctx)
+Value TypeErrorCtor::construct(ExecutionContext *ctx)
 {
     ctx->thisObject = Value::fromObject(new TypeErrorObject(ctx));
+    return ctx->thisObject;
 }
 
-void URIErrorCtor::construct(ExecutionContext *ctx)
+Value URIErrorCtor::construct(ExecutionContext *ctx)
 {
     ctx->thisObject = Value::fromObject(new URIErrorObject(ctx));
+    return ctx->thisObject;
 }
 
 void ErrorPrototype::init(ExecutionContext *ctx, const Value &ctor, Object *obj)
@@ -2642,7 +2653,7 @@ void ErrorPrototype::init(ExecutionContext *ctx, const Value &ctor, Object *obj)
     obj->__put__(ctx, QStringLiteral("toString"), method_toString, 0);
 }
 
-void ErrorPrototype::method_toString(ExecutionContext *ctx)
+Value ErrorPrototype::method_toString(ExecutionContext *ctx)
 {
     Object *o = ctx->thisObject.asObject();
     if (!o)
@@ -2671,7 +2682,7 @@ void ErrorPrototype::method_toString(ExecutionContext *ctx)
         str = qname + QLatin1String(": ") + qmessage;
     }
 
-    ctx->result = Value::fromString(ctx, str);
+    return Value::fromString(ctx, str);
 }
 
 
@@ -2721,106 +2732,103 @@ static double copySign(double x, double y)
     return x;
 }
 
-void MathObject::method_abs(ExecutionContext *ctx)
+Value MathObject::method_abs(ExecutionContext *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v == 0) // 0 | -0
-        ctx->result = Value::fromDouble(0);
-    else
-        ctx->result = Value::fromDouble(v < 0 ? -v : v);
+        return Value::fromDouble(0);
+
+    return Value::fromDouble(v < 0 ? -v : v);
 }
 
-void MathObject::method_acos(ExecutionContext *ctx)
+Value MathObject::method_acos(ExecutionContext *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v > 1)
-        ctx->result = Value::fromDouble(qSNaN());
-    else
-        ctx->result = Value::fromDouble(::acos(v));
+        return Value::fromDouble(qSNaN());
+
+    return Value::fromDouble(::acos(v));
 }
 
-void MathObject::method_asin(ExecutionContext *ctx)
+Value MathObject::method_asin(ExecutionContext *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v > 1)
-        ctx->result = Value::fromDouble(qSNaN());
+        return Value::fromDouble(qSNaN());
     else
-        ctx->result = Value::fromDouble(::asin(v));
+        return Value::fromDouble(::asin(v));
 }
 
-void MathObject::method_atan(ExecutionContext *ctx)
+Value MathObject::method_atan(ExecutionContext *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v == 0.0)
-        ctx->result = Value::fromDouble(v);
+        return Value::fromDouble(v);
     else
-        ctx->result = Value::fromDouble(::atan(v));
+        return Value::fromDouble(::atan(v));
 }
 
-void MathObject::method_atan2(ExecutionContext *ctx)
+Value MathObject::method_atan2(ExecutionContext *ctx)
 {
     double v1 = ctx->argument(0).toNumber(ctx);
     double v2 = ctx->argument(1).toNumber(ctx);
     if ((v1 < 0) && qIsFinite(v1) && qIsInf(v2) && (copySign(1.0, v2) == 1.0)) {
-        ctx->result = Value::fromDouble(copySign(0, -1.0));
-        return;
+        return Value::fromDouble(copySign(0, -1.0));
     }
     if ((v1 == 0.0) && (v2 == 0.0)) {
         if ((copySign(1.0, v1) == 1.0) && (copySign(1.0, v2) == -1.0)) {
-            ctx->result = Value::fromDouble(qt_PI);
-            return;
+            return Value::fromDouble(qt_PI);
         } else if ((copySign(1.0, v1) == -1.0) && (copySign(1.0, v2) == -1.0)) {
-            ctx->result = Value::fromDouble(-qt_PI);
-            return;
+            return Value::fromDouble(-qt_PI);
         }
     }
-    ctx->result = Value::fromDouble(::atan2(v1, v2));
+    return Value::fromDouble(::atan2(v1, v2));
 }
 
-void MathObject::method_ceil(ExecutionContext *ctx)
+Value MathObject::method_ceil(ExecutionContext *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v < 0.0 && v > -1.0)
-        ctx->result = Value::fromDouble(copySign(0, -1.0));
+        return Value::fromDouble(copySign(0, -1.0));
     else
-        ctx->result = Value::fromDouble(::ceil(v));
+        return Value::fromDouble(::ceil(v));
 }
 
-void MathObject::method_cos(ExecutionContext *ctx)
+Value MathObject::method_cos(ExecutionContext *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
-    ctx->result = Value::fromDouble(::cos(v));
+    return Value::fromDouble(::cos(v));
 }
 
-void MathObject::method_exp(ExecutionContext *ctx)
+Value MathObject::method_exp(ExecutionContext *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (qIsInf(v)) {
         if (copySign(1.0, v) == -1.0)
-            ctx->result = Value::fromDouble(0);
+            return Value::fromDouble(0);
         else
-            ctx->result = Value::fromDouble(qInf());
+            return Value::fromDouble(qInf());
     } else {
-        ctx->result = Value::fromDouble(::exp(v));
+        return Value::fromDouble(::exp(v));
     }
 }
 
-void MathObject::method_floor(ExecutionContext *ctx)
+Value MathObject::method_floor(ExecutionContext *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
-    ctx->result = Value::fromDouble(::floor(v));
+    return Value::fromDouble(::floor(v));
 }
 
-void MathObject::method_log(ExecutionContext *ctx)
+Value MathObject::method_log(ExecutionContext *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v < 0)
-        ctx->result = Value::fromDouble(qSNaN());
+        return Value::fromDouble(qSNaN());
     else
-        ctx->result = Value::fromDouble(::log(v));
+        return Value::fromDouble(::log(v));
 }
 
-void MathObject::method_max(ExecutionContext *ctx)
+Value MathObject::method_max(ExecutionContext *ctx)
 {
     double mx = -qInf();
     for (unsigned i = 0; i < ctx->argumentCount(); ++i) {
@@ -2828,10 +2836,10 @@ void MathObject::method_max(ExecutionContext *ctx)
         if (x > mx || qIsNaN(x))
             mx = x;
     }
-    ctx->result = Value::fromDouble(mx);
+    return Value::fromDouble(mx);
 }
 
-void MathObject::method_min(ExecutionContext *ctx)
+Value MathObject::method_min(ExecutionContext *ctx)
 {
     double mx = qInf();
     for (unsigned i = 0; i < ctx->argumentCount(); ++i) {
@@ -2841,36 +2849,34 @@ void MathObject::method_min(ExecutionContext *ctx)
             mx = x;
         }
     }
-    ctx->result = Value::fromDouble(mx);
+    return Value::fromDouble(mx);
 }
 
-void MathObject::method_pow(ExecutionContext *ctx)
+Value MathObject::method_pow(ExecutionContext *ctx)
 {
     double x = ctx->argument(0).toNumber(ctx);
     double y = ctx->argument(1).toNumber(ctx);
 
-    if (qIsNaN(y)) {
-        ctx->result = Value::fromDouble(qSNaN());
-        return;
-    }
+    if (qIsNaN(y))
+        return Value::fromDouble(qSNaN());
 
     if (y == 0) {
-        ctx->result = Value::fromDouble(1);
+        return Value::fromDouble(1);
     } else if (((x == 1) || (x == -1)) && qIsInf(y)) {
-        ctx->result = Value::fromDouble(qSNaN());
+        return Value::fromDouble(qSNaN());
     } else if (((x == 0) && copySign(1.0, x) == 1.0) && (y < 0)) {
-        ctx->result = Value::fromDouble(qInf());
+        return Value::fromDouble(qInf());
     } else if ((x == 0) && copySign(1.0, x) == -1.0) {
         if (y < 0) {
             if (::fmod(-y, 2.0) == 1.0)
-                ctx->result = Value::fromDouble(-qInf());
+                return Value::fromDouble(-qInf());
             else
-                ctx->result = Value::fromDouble(qInf());
+                return Value::fromDouble(qInf());
         } else if (y > 0) {
             if (::fmod(y, 2.0) == 1.0)
-                ctx->result = Value::fromDouble(copySign(0, -1.0));
+                return Value::fromDouble(copySign(0, -1.0));
             else
-                ctx->result = Value::fromDouble(0);
+                return Value::fromDouble(0);
         }
     }
 
@@ -2878,52 +2884,54 @@ void MathObject::method_pow(ExecutionContext *ctx)
     else if (qIsInf(x) && copySign(1.0, x) == -1.0) {
         if (y > 0) {
             if (::fmod(y, 2.0) == 1.0)
-                ctx->result = Value::number(ctx, -qInf());
+                return Value::number(ctx, -qInf());
             else
-                ctx->result = Value::number(ctx, qInf());
+                return Value::number(ctx, qInf());
         } else if (y < 0) {
             if (::fmod(-y, 2.0) == 1.0)
-                ctx->result = Value::number(ctx, copySign(0, -1.0));
+                return Value::number(ctx, copySign(0, -1.0));
             else
-                ctx->result = Value::number(ctx, 0);
+                return Value::number(ctx, 0);
         }
     }
 #endif
     else {
-        ctx->result = Value::fromDouble(::pow(x, y));
+        return Value::fromDouble(::pow(x, y));
     }
+    // ###
+    return Value::fromDouble(qSNaN());
 }
 
-void MathObject::method_random(ExecutionContext *ctx)
+Value MathObject::method_random(ExecutionContext */*ctx*/)
 {
-    ctx->result = Value::fromDouble(qrand() / (double) RAND_MAX);
+    return Value::fromDouble(qrand() / (double) RAND_MAX);
 }
 
-void MathObject::method_round(ExecutionContext *ctx)
+Value MathObject::method_round(ExecutionContext *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     v = copySign(::floor(v + 0.5), v);
-    ctx->result = Value::fromDouble(v);
+    return Value::fromDouble(v);
 }
 
-void MathObject::method_sin(ExecutionContext *ctx)
+Value MathObject::method_sin(ExecutionContext *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
-    ctx->result = Value::fromDouble(::sin(v));
+    return Value::fromDouble(::sin(v));
 }
 
-void MathObject::method_sqrt(ExecutionContext *ctx)
+Value MathObject::method_sqrt(ExecutionContext *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
-    ctx->result = Value::fromDouble(::sqrt(v));
+    return Value::fromDouble(::sqrt(v));
 }
 
-void MathObject::method_tan(ExecutionContext *ctx)
+Value MathObject::method_tan(ExecutionContext *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v == 0.0)
-        ctx->result = Value::fromDouble(v);
+        return Value::fromDouble(v);
     else
-        ctx->result = Value::fromDouble(::tan(v));
+        return Value::fromDouble(::tan(v));
 }
 
