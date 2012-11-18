@@ -45,25 +45,134 @@
 namespace QQmlJS {
 namespace VM {
 
-void ExecutionContext::init(ExecutionEngine *eng)
+DeclarativeEnvironment::DeclarativeEnvironment(ExecutionEngine *e)
 {
-    engine = eng;
-    parent = 0;
+    engine = e;
+    outer = 0;
     arguments = 0;
     argumentCount = 0;
     locals = 0;
     activation = 0;
-    thisObject = Value::nullValue();
-    result = Value::undefinedValue();
     formals = 0;
     formalCount = 0;
     vars = 0;
     varCount = 0;
 }
 
+DeclarativeEnvironment::DeclarativeEnvironment(FunctionObject *f, Value *args, uint argc)
+{
+    outer = f->scope;
+    engine = outer->engine;
+
+    if (f->needsActivation)
+        activation = engine->newActivationObject(this);
+    else
+        activation = 0;
+
+    formals = f->formalParameterList;
+    formalCount = f->formalParameterCount;
+    arguments = args;
+    argumentCount = argc;
+    if (f->needsActivation || argc < formalCount){
+        arguments = new Value[qMax(argc, formalCount)];
+        if (argc)
+            std::copy(args, args + argc, arguments);
+        if (argc < formalCount)
+            std::fill(arguments + argc, arguments + formalCount, Value::undefinedValue());
+    }
+    vars = f->varList;
+    varCount = f->varCount;
+    locals = varCount ? new Value[varCount] : 0;
+    if (varCount)
+        std::fill(locals, locals + varCount, Value::undefinedValue());
+}
+
+bool DeclarativeEnvironment::hasBinding(String *name) const
+{
+    for (unsigned int i = 0; i < varCount; ++i) {
+        if (__qmljs_string_equal(vars[i], name))
+            return true;
+    }
+    for (unsigned int i = 0; i < formalCount; ++i) {
+        if (__qmljs_string_equal(formals[i], name))
+            return true;
+    }
+    return deletableLocals.contains(name->toQString());
+}
+
+void DeclarativeEnvironment::createMutableBinding(String *name, bool deletable)
+{
+    // all non deletable vars should get created at compile time
+    assert(deletable);
+    assert(!hasBinding(name));
+
+    deletableLocals.insert(name->toQString(), Value::undefinedValue());
+}
+
+void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool strict)
+{
+    // ### throw if strict is true, and it would change an immutable binding
+    for (unsigned int i = 0; i < varCount; ++i) {
+        if (__qmljs_string_equal(vars[i], name)) {
+            locals[i] = value;
+            return;
+        }
+    }
+    for (unsigned int i = 0; i < formalCount; ++i) {
+        if (__qmljs_string_equal(formals[i], name)) {
+            arguments[i] = value;
+            return;
+        }
+    }
+    QHash<QString, Value>::iterator it = deletableLocals.find(name->toQString());
+    if (it != deletableLocals.end()) {
+        *it = value;
+        return;
+    }
+    assert(false);
+}
+
+Value DeclarativeEnvironment::getBindingValue(String *name, bool strict) const
+{
+    for (unsigned int i = 0; i < varCount; ++i) {
+        if (__qmljs_string_equal(vars[i], name))
+            return locals[i];
+    }
+    for (unsigned int i = 0; i < formalCount; ++i) {
+        if (__qmljs_string_equal(formals[i], name))
+            return arguments[i];
+    }
+    QHash<QString, Value>::const_iterator it = deletableLocals.find(name->toQString());
+    if (it != deletableLocals.end())
+        return *it;
+
+    assert(false);
+}
+
+bool DeclarativeEnvironment::deleteBinding(String *name)
+{
+    QHash<QString, Value>::iterator it = deletableLocals.find(name->toQString());
+    if (it != deletableLocals.end()) {
+        deletableLocals.erase(it);
+        return true;
+    }
+    return !hasBinding(name);
+}
+
+
+void ExecutionContext::init(ExecutionEngine *eng)
+{
+    engine = eng;
+    parent = 0;
+    variableEnvironment = new DeclarativeEnvironment(eng);
+    lexicalEnvironment = variableEnvironment;
+    thisObject = Value::nullValue();
+    result = Value::undefinedValue();
+}
+
 PropertyDescriptor *ExecutionContext::lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp)
 {
-    for (ExecutionContext *ctx = this; ctx; ctx = ctx->parent) {
+    for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer) {
         if (ctx->activation) {
             if (PropertyDescriptor *pd = ctx->activation->__getPropertyDescriptor__(this, name, tmp))
                 return pd;
@@ -74,7 +183,7 @@ PropertyDescriptor *ExecutionContext::lookupPropertyDescriptor(String *name, Pro
 
 void ExecutionContext::inplaceBitOp(Value value, String *name, BinOp op)
 {
-    for (ExecutionContext *ctx = this; ctx; ctx = ctx->parent) {
+    for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer) {
         if (ctx->activation) {
             if (ctx->activation->inplaceBinOp(value, name, op, this))
                 return;
@@ -117,40 +226,21 @@ void ExecutionContext::throwReferenceError(Value value)
 void ExecutionContext::initCallContext(ExecutionContext *parent, const Value that, FunctionObject *f, Value *args, unsigned argc)
 {
     engine = parent->engine;
-    this->parent = f->scope;
-    assert(this->parent == f->scope);
-    result = Value::undefinedValue();
+    this->parent = parent;
 
-    if (f->needsActivation)
-        activation = engine->newActivationObject(this);
-    else
-        activation = 0;
+    variableEnvironment = new DeclarativeEnvironment(f, args, argc);
+    lexicalEnvironment = variableEnvironment;
 
     thisObject = that;
-
-    formals = f->formalParameterList;
-    formalCount = f->formalParameterCount;
-    arguments = args;
-    argumentCount = argc;
-    if (f->needsActivation || argc < formalCount){
-        arguments = new Value[qMax(argc, formalCount)];
-        if (argc)
-            std::copy(args, args + argc, arguments);
-        if (argc < formalCount)
-            std::fill(arguments + argc, arguments + formalCount, Value::undefinedValue());
-    }
-    vars = f->varList;
-    varCount = f->varCount;
-    locals = varCount ? new Value[varCount] : 0;
-    if (varCount)
-        std::fill(locals, locals + varCount, Value::undefinedValue());
+    result = Value::undefinedValue();
 }
 
 void ExecutionContext::leaveCallContext()
 {
-    if (activation) {
-        delete[] locals;
-        locals = 0;
+    // ## Should rather be handled by a the activation object having a ref to the environment
+    if (variableEnvironment->activation) {
+        delete[] variableEnvironment->locals;
+        variableEnvironment->locals = 0;
     }
 }
 
@@ -171,11 +261,12 @@ void ExecutionContext::wireUpPrototype(FunctionObject *f)
     result = thisObject;
 
     Value proto = f->__get__(this, engine->id_prototype);
-    thisObject.objectValue()->prototype = proto.objectValue();
-    if (! thisObject.isObject())
+    if (proto.isObject())
+        thisObject.objectValue()->prototype = proto.objectValue();
+    else
         thisObject.objectValue()->prototype = engine->objectPrototype;
-
 }
+
 
 } // namespace VM
 } // namespace QQmlJS

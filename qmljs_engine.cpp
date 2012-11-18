@@ -139,7 +139,7 @@ ExecutionEngine::ExecutionEngine()
     //
     VM::Object *glo = newObject(/*rootContext*/);
     globalObject = Value::fromObject(glo);
-    rootContext->activation = glo;
+    rootContext->variableEnvironment->activation = glo;
 
     glo->__put__(rootContext, identifier(QStringLiteral("Object")), objectCtor);
     glo->__put__(rootContext, identifier(QStringLiteral("String")), stringCtor);
@@ -324,7 +324,7 @@ Object *ExecutionEngine::newMathObject(ExecutionContext *ctx)
     return object;
 }
 
-Object *ExecutionEngine::newActivationObject(ExecutionContext *ctx)
+Object *ExecutionEngine::newActivationObject(DeclarativeEnvironment *ctx)
 {
     return new ActivationObject(ctx);
 }

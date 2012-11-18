@@ -710,7 +710,7 @@ StringCtor::StringCtor(ExecutionContext *scope)
 void StringCtor::construct(ExecutionContext *ctx)
 {
     Value value;
-    if (ctx->argumentCount)
+    if (ctx->argumentCount())
         value = Value::fromString(ctx->argument(0).toString(ctx));
     else
         value = Value::fromString(ctx, QString());
@@ -786,7 +786,7 @@ void StringPrototype::method_charAt(ExecutionContext *ctx)
     const QString str = getThisString(ctx);
 
     int pos = 0;
-    if (ctx->argumentCount > 0)
+    if (ctx->argumentCount() > 0)
         pos = (int) ctx->argument(0).toInteger(ctx);
 
     QString result;
@@ -801,7 +801,7 @@ void StringPrototype::method_charCodeAt(ExecutionContext *ctx)
     const QString str = getThisString(ctx);
 
     int pos = 0;
-    if (ctx->argumentCount > 0)
+    if (ctx->argumentCount() > 0)
         pos = (int) ctx->argument(0).toInteger(ctx);
 
     double result = qSNaN();
@@ -816,8 +816,8 @@ void StringPrototype::method_concat(ExecutionContext *ctx)
 {
     QString value = getThisString(ctx);
 
-    for (unsigned i = 0; i < ctx->argumentCount; ++i) {
-        Value v = __qmljs_to_string(ctx->arguments[i], ctx);
+    for (unsigned i = 0; i < ctx->argumentCount(); ++i) {
+        Value v = __qmljs_to_string(ctx->argument(i), ctx);
         assert(v.isString());
         value += v.stringValue()->toQString();
     }
@@ -830,11 +830,11 @@ void StringPrototype::method_indexOf(ExecutionContext *ctx)
     QString value = getThisString(ctx);
 
     QString searchString;
-    if (ctx->argumentCount)
+    if (ctx->argumentCount())
         searchString = ctx->argument(0).toString(ctx)->toQString();
 
     int pos = 0;
-    if (ctx->argumentCount > 1)
+    if (ctx->argumentCount() > 1)
         pos = (int) ctx->argument(1).toInteger(ctx);
 
     int index = -1;
@@ -849,8 +849,8 @@ void StringPrototype::method_lastIndexOf(ExecutionContext *ctx)
     const QString value = getThisString(ctx);
 
     QString searchString;
-    if (ctx->argumentCount) {
-        Value v = __qmljs_to_string(ctx->arguments[0], ctx);
+    if (ctx->argumentCount()) {
+        Value v = __qmljs_to_string(ctx->argument(0), ctx);
         searchString = v.stringValue()->toQString();
     }
 
@@ -926,11 +926,11 @@ void StringPrototype::method_substr(ExecutionContext *ctx)
     const QString value = getThisString(ctx);
 
     double start = 0;
-    if (ctx->argumentCount > 0)
+    if (ctx->argumentCount() > 0)
         start = ctx->argument(0).toInteger(ctx);
 
     double length = +qInf();
-    if (ctx->argumentCount > 1)
+    if (ctx->argumentCount() > 1)
         length = ctx->argument(1).toInteger(ctx);
 
     double count = value.length();
@@ -952,10 +952,10 @@ void StringPrototype::method_substring(ExecutionContext *ctx)
     double start = 0;
     double end = length;
 
-    if (ctx->argumentCount > 0)
+    if (ctx->argumentCount() > 0)
         start = ctx->argument(0).toInteger(ctx);
 
-    if (ctx->argumentCount > 1)
+    if (ctx->argumentCount() > 1)
         end = ctx->argument(1).toInteger(ctx);
 
     if (qIsNaN(start) || start < 0)
@@ -1006,7 +1006,7 @@ void StringPrototype::method_toLocaleUpperCase(ExecutionContext *ctx)
 void StringPrototype::method_fromCharCode(ExecutionContext *ctx)
 {
     QString str;
-    for (unsigned i = 0; i < ctx->argumentCount; ++i) {
+    for (unsigned i = 0; i < ctx->argumentCount(); ++i) {
         QChar c(ctx->argument(i).toUInt16(ctx));
         str += c;
     }
@@ -1029,7 +1029,7 @@ void NumberCtor::construct(ExecutionContext *ctx)
 
 void NumberCtor::call(ExecutionContext *ctx)
 {
-    double value = ctx->argumentCount ? ctx->argument(0).toNumber(ctx) : 0;
+    double value = ctx->argumentCount() ? ctx->argument(0).toNumber(ctx) : 0;
     ctx->result = Value::fromDouble(value);
 }
 
@@ -1143,7 +1143,7 @@ void NumberPrototype::method_toFixed(ExecutionContext *ctx)
     if (NumberObject *thisObject = ctx->thisObject.asNumberObject()) {
         double fdigits = 0;
 
-        if (ctx->argumentCount > 0)
+        if (ctx->argumentCount() > 0)
             fdigits = ctx->argument(0).toInteger(ctx);
 
         if (qIsNaN(fdigits))
@@ -1168,7 +1168,7 @@ void NumberPrototype::method_toExponential(ExecutionContext *ctx)
     if (NumberObject *thisObject = ctx->thisObject.asNumberObject()) {
         double fdigits = 0;
 
-        if (ctx->argumentCount > 0)
+        if (ctx->argumentCount() > 0)
             fdigits = ctx->argument(0).toInteger(ctx);
 
         QString z = QString::number(thisObject->value.asDouble(), 'e', int (fdigits));
@@ -1183,7 +1183,7 @@ void NumberPrototype::method_toPrecision(ExecutionContext *ctx)
     if (NumberObject *thisObject = ctx->thisObject.asNumberObject()) {
         double fdigits = 0;
 
-        if (ctx->argumentCount > 0)
+        if (ctx->argumentCount() > 0)
             fdigits = ctx->argument(0).toInteger(ctx);
 
         ctx->result = Value::fromString(ctx, QString::number(thisObject->value.asDouble(), 'g', int (fdigits)));
@@ -1208,7 +1208,7 @@ void BooleanCtor::construct(ExecutionContext *ctx)
 
 void BooleanCtor::call(ExecutionContext *ctx)
 {
-    bool value = ctx->argumentCount ? ctx->argument(0).toBoolean(ctx) : 0;
+    bool value = ctx->argumentCount() ? ctx->argument(0).toBoolean(ctx) : 0;
     ctx->result = Value::fromBoolean(value);
 }
 
@@ -1255,7 +1255,7 @@ void ArrayCtor::construct(ExecutionContext *ctx)
 void ArrayCtor::call(ExecutionContext *ctx)
 {
     Array value;
-    if (ctx->argumentCount == 1 && ctx->argument(0).isNumber()) {
+    if (ctx->argumentCount() == 1 && ctx->argument(0).isNumber()) {
         double size = ctx->argument(0).asDouble();
         quint32 isize = Value::toUInt32(size);
 
@@ -1266,7 +1266,7 @@ void ArrayCtor::call(ExecutionContext *ctx)
 
         value.resize(isize);
     } else {
-        for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
+        for (unsigned int i = 0; i < ctx->argumentCount(); ++i) {
             value.assign(i, ctx->argument(i));
         }
     }
@@ -1322,7 +1322,7 @@ void ArrayPrototype::method_concat(ExecutionContext *ctx)
         result.assign(0, Value::fromString(ctx, v));
     }
 
-    for (uint i = 0; i < ctx->argumentCount; ++i) {
+    for (uint i = 0; i < ctx->argumentCount(); ++i) {
         quint32 k = result.size();
         Value arg = ctx->argument(i);
 
@@ -1420,7 +1420,7 @@ void ArrayPrototype::method_push(ExecutionContext *ctx)
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
         uint pos = instance->value.size();
-        for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
+        for (unsigned int i = 0; i < ctx->argumentCount(); ++i) {
             Value val = ctx->argument(i);
             instance->value.assign(pos++, val);
         }
@@ -1428,7 +1428,7 @@ void ArrayPrototype::method_push(ExecutionContext *ctx)
     } else {
         Value r1 = self.property(ctx, ctx->engine->id_length);
         quint32 n = !r1.isUndefined() ? r1.toUInt32(ctx) : 0;
-        for (unsigned int index = 0; index < ctx->argumentCount; ++index, ++n) {
+        for (unsigned int index = 0; index < ctx->argumentCount(); ++index, ++n) {
             Value r3 = ctx->argument(index);
             String *name = Value::fromDouble(n).toString(ctx);
             self.objectValue()->__put__(ctx, name, r3);
@@ -1505,7 +1505,7 @@ void ArrayPrototype::method_sort(ExecutionContext *ctx)
 
 void ArrayPrototype::method_splice(ExecutionContext *ctx)
 {
-    if (ctx->argumentCount < 2)
+    if (ctx->argumentCount() < 2)
         return;
 
     double start = ctx->argument(0).toInteger(ctx);
@@ -1514,7 +1514,7 @@ void ArrayPrototype::method_splice(ExecutionContext *ctx)
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
         QVector<Value> items;
-        for (unsigned int i = 2; i < ctx->argumentCount; ++i)
+        for (unsigned int i = 2; i < ctx->argumentCount(); ++i)
             items << ctx->argument(i);
         ArrayObject *otherInstance = a.asArrayObject();
         assert(otherInstance);
@@ -1739,13 +1739,13 @@ void FunctionCtor::construct(ExecutionContext *ctx)
 {
     QString args;
     QString body;
-    if (ctx->argumentCount > 0)
-        body = ctx->arguments[ctx->argumentCount - 1].toString(ctx)->toQString();
+    if (ctx->argumentCount() > 0)
+        body = ctx->argument(ctx->argumentCount() - 1).toString(ctx)->toQString();
 
-    for (uint i = 0; i < ctx->argumentCount - 1; ++i) {
+    for (uint i = 0; i < ctx->argumentCount() - 1; ++i) {
         if (i)
             args += QLatin1String(", ");
-        args += ctx->arguments[i].toString(ctx)->toQString();
+        args += ctx->argument(i).toString(ctx)->toQString();
     }
 
     QString function = QLatin1String("function(") + args + QLatin1String("){") + body + QLatin1String("}");
@@ -1835,9 +1835,10 @@ void FunctionPrototype::method_apply(ExecutionContext *ctx)
 void FunctionPrototype::method_call(ExecutionContext *ctx)
 {
     Value thisArg = ctx->argument(0);
-    QVector<Value> args(ctx->argumentCount ? ctx->argumentCount - 1 : 0);
-    if (ctx->argumentCount)
-        qCopy(ctx->arguments + 1, ctx->arguments + ctx->argumentCount, args.begin());
+    QVector<Value> args(ctx->argumentCount() ? ctx->argumentCount() - 1 : 0);
+    if (ctx->argumentCount())
+        qCopy(ctx->variableEnvironment->arguments + 1,
+              ctx->variableEnvironment->arguments + ctx->argumentCount(), args.begin());
     ctx->result = __qmljs_call_value(ctx, thisArg, ctx->thisObject, args.data(), args.size());
 }
 
@@ -1863,10 +1864,10 @@ void DateCtor::construct(ExecutionContext *ctx)
 {
     double t = 0;
 
-    if (ctx->argumentCount == 0)
+    if (ctx->argumentCount() == 0)
         t = currentTime();
 
-    else if (ctx->argumentCount == 1) {
+    else if (ctx->argumentCount() == 1) {
         Value arg = ctx->argument(0);
         if (DateObject *d = arg.asDateObject())
             arg = d->value;
@@ -1879,14 +1880,14 @@ void DateCtor::construct(ExecutionContext *ctx)
             t = TimeClip(arg.toNumber(ctx));
     }
 
-    else { // ctx->argumentCount() > 1
+    else { // ctx->argumentCount()() > 1
         double year  = ctx->argument(0).toNumber(ctx);
         double month = ctx->argument(1).toNumber(ctx);
-        double day  = ctx->argumentCount >= 3 ? ctx->argument(2).toNumber(ctx) : 1;
-        double hours = ctx->argumentCount >= 4 ? ctx->argument(3).toNumber(ctx) : 0;
-        double mins = ctx->argumentCount >= 5 ? ctx->argument(4).toNumber(ctx) : 0;
-        double secs = ctx->argumentCount >= 6 ? ctx->argument(5).toNumber(ctx) : 0;
-        double ms    = ctx->argumentCount >= 7 ? ctx->argument(6).toNumber(ctx) : 0;
+        double day  = ctx->argumentCount() >= 3 ? ctx->argument(2).toNumber(ctx) : 1;
+        double hours = ctx->argumentCount() >= 4 ? ctx->argument(3).toNumber(ctx) : 0;
+        double mins = ctx->argumentCount() >= 5 ? ctx->argument(4).toNumber(ctx) : 0;
+        double secs = ctx->argumentCount() >= 6 ? ctx->argument(5).toNumber(ctx) : 0;
+        double ms    = ctx->argumentCount() >= 7 ? ctx->argument(6).toNumber(ctx) : 0;
         if (year >= 0 && year <= 99)
             year += 1900;
         t = MakeDate(MakeDay(year, month, day), MakeTime(hours, mins, secs, ms));
@@ -1990,7 +1991,7 @@ void DatePrototype::method_parse(ExecutionContext *ctx)
 
 void DatePrototype::method_UTC(ExecutionContext *ctx)
 {
-    const int numArgs = ctx->argumentCount;
+    const int numArgs = ctx->argumentCount();
     if (numArgs >= 2) {
         double year  = ctx->argument(0).toNumber(ctx);
         double month = ctx->argument(1).toNumber(ctx);
@@ -2238,7 +2239,7 @@ void DatePrototype::method_setSeconds(ExecutionContext *ctx)
     if (DateObject *self = ctx->thisObject.asDateObject()) {
         double t = LocalTime(self->value.asDouble());
         double sec = ctx->argument(0).toNumber(ctx);
-        double ms = (ctx->argumentCount < 2) ? msFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double ms = (ctx->argumentCount() < 2) ? msFromTime(t) : ctx->argument(1).toNumber(ctx);
         t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
         self->value.setDouble(t);
         ctx->result = self->value;
@@ -2252,7 +2253,7 @@ void DatePrototype::method_setUTCSeconds(ExecutionContext *ctx)
     if (DateObject *self = ctx->thisObject.asDateObject()) {
         double t = self->value.asDouble();
         double sec = ctx->argument(0).toNumber(ctx);
-        double ms = (ctx->argumentCount < 2) ? msFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double ms = (ctx->argumentCount() < 2) ? msFromTime(t) : ctx->argument(1).toNumber(ctx);
         t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
         self->value.setDouble(t);
         ctx->result = self->value;
@@ -2266,8 +2267,8 @@ void DatePrototype::method_setMinutes(ExecutionContext *ctx)
     if (DateObject *self = ctx->thisObject.asDateObject()) {
         double t = LocalTime(self->value.asDouble());
         double min = ctx->argument(0).toNumber(ctx);
-        double sec = (ctx->argumentCount < 2) ? SecFromTime(t) : ctx->argument(1).toNumber(ctx);
-        double ms = (ctx->argumentCount < 3) ? msFromTime(t) : ctx->argument(2).toNumber(ctx);
+        double sec = (ctx->argumentCount() < 2) ? SecFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double ms = (ctx->argumentCount() < 3) ? msFromTime(t) : ctx->argument(2).toNumber(ctx);
         t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
         self->value.setDouble(t);
         ctx->result = self->value;
@@ -2281,8 +2282,8 @@ void DatePrototype::method_setUTCMinutes(ExecutionContext *ctx)
     if (DateObject *self = ctx->thisObject.asDateObject()) {
         double t = self->value.asDouble();
         double min = ctx->argument(0).toNumber(ctx);
-        double sec = (ctx->argumentCount < 2) ? SecFromTime(t) : ctx->argument(1).toNumber(ctx);
-        double ms = (ctx->argumentCount < 3) ? msFromTime(t) : ctx->argument(2).toNumber(ctx);
+        double sec = (ctx->argumentCount() < 2) ? SecFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double ms = (ctx->argumentCount() < 3) ? msFromTime(t) : ctx->argument(2).toNumber(ctx);
         t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
         self->value.setDouble(t);
         ctx->result = self->value;
@@ -2296,9 +2297,9 @@ void DatePrototype::method_setHours(ExecutionContext *ctx)
     if (DateObject *self = ctx->thisObject.asDateObject()) {
         double t = LocalTime(self->value.asDouble());
         double hour = ctx->argument(0).toNumber(ctx);
-        double min = (ctx->argumentCount < 2) ? MinFromTime(t) : ctx->argument(1).toNumber(ctx);
-        double sec = (ctx->argumentCount < 3) ? SecFromTime(t) : ctx->argument(2).toNumber(ctx);
-        double ms = (ctx->argumentCount < 4) ? msFromTime(t) : ctx->argument(3).toNumber(ctx);
+        double min = (ctx->argumentCount() < 2) ? MinFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double sec = (ctx->argumentCount() < 3) ? SecFromTime(t) : ctx->argument(2).toNumber(ctx);
+        double ms = (ctx->argumentCount() < 4) ? msFromTime(t) : ctx->argument(3).toNumber(ctx);
         t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms))));
         self->value.setDouble(t);
         ctx->result = self->value;
@@ -2312,9 +2313,9 @@ void DatePrototype::method_setUTCHours(ExecutionContext *ctx)
     if (DateObject *self = ctx->thisObject.asDateObject()) {
         double t = self->value.asDouble();
         double hour = ctx->argument(0).toNumber(ctx);
-        double min = (ctx->argumentCount < 2) ? MinFromTime(t) : ctx->argument(1).toNumber(ctx);
-        double sec = (ctx->argumentCount < 3) ? SecFromTime(t) : ctx->argument(2).toNumber(ctx);
-        double ms = (ctx->argumentCount < 4) ? msFromTime(t) : ctx->argument(3).toNumber(ctx);
+        double min = (ctx->argumentCount() < 2) ? MinFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double sec = (ctx->argumentCount() < 3) ? SecFromTime(t) : ctx->argument(2).toNumber(ctx);
+        double ms = (ctx->argumentCount() < 4) ? msFromTime(t) : ctx->argument(3).toNumber(ctx);
         t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms))));
         self->value.setDouble(t);
         ctx->result = self->value;
@@ -2354,7 +2355,7 @@ void DatePrototype::method_setMonth(ExecutionContext *ctx)
     if (DateObject *self = ctx->thisObject.asDateObject()) {
         double t = LocalTime(self->value.asDouble());
         double month = ctx->argument(0).toNumber(ctx);
-        double date = (ctx->argumentCount < 2) ? DateFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double date = (ctx->argumentCount() < 2) ? DateFromTime(t) : ctx->argument(1).toNumber(ctx);
         t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
         self->value.setDouble(t);
         ctx->result = self->value;
@@ -2368,7 +2369,7 @@ void DatePrototype::method_setUTCMonth(ExecutionContext *ctx)
     if (DateObject *self = ctx->thisObject.asDateObject()) {
         double t = self->value.asDouble();
         double month = ctx->argument(0).toNumber(ctx);
-        double date = (ctx->argumentCount < 2) ? DateFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double date = (ctx->argumentCount() < 2) ? DateFromTime(t) : ctx->argument(1).toNumber(ctx);
         t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
         self->value.setDouble(t);
         ctx->result = self->value;
@@ -2408,8 +2409,8 @@ void DatePrototype::method_setUTCFullYear(ExecutionContext *ctx)
     if (DateObject *self = ctx->thisObject.asDateObject()) {
         double t = self->value.asDouble();
         double year = ctx->argument(0).toNumber(ctx);
-        double month = (ctx->argumentCount < 2) ? MonthFromTime(t) : ctx->argument(1).toNumber(ctx);
-        double date = (ctx->argumentCount < 3) ? DateFromTime(t) : ctx->argument(2).toNumber(ctx);
+        double month = (ctx->argumentCount() < 2) ? MonthFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double date = (ctx->argumentCount() < 3) ? DateFromTime(t) : ctx->argument(2).toNumber(ctx);
         t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));
         self->value.setDouble(t);
         ctx->result = self->value;
@@ -2423,8 +2424,8 @@ void DatePrototype::method_setFullYear(ExecutionContext *ctx)
     if (DateObject *self = ctx->thisObject.asDateObject()) {
         double t = LocalTime(self->value.asDouble());
         double year = ctx->argument(0).toNumber(ctx);
-        double month = (ctx->argumentCount < 2) ? MonthFromTime(t) : ctx->argument(1).toNumber(ctx);
-        double date = (ctx->argumentCount < 3) ? DateFromTime(t) : ctx->argument(2).toNumber(ctx);
+        double month = (ctx->argumentCount() < 2) ? MonthFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double date = (ctx->argumentCount() < 3) ? DateFromTime(t) : ctx->argument(2).toNumber(ctx);
         t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));
         self->value.setDouble(t);
         ctx->result = self->value;
@@ -2451,13 +2452,13 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
 
 void RegExpCtor::construct(ExecutionContext *ctx)
 {
-//    if (ctx->argumentCount > 2) {
+//    if (ctx->argumentCount() > 2) {
 //        ctx->throwTypeError();
 //        return;
 //    }
 
-    Value r = ctx->argumentCount > 0 ? ctx->argument(0) : Value::undefinedValue();
-    Value f = ctx->argumentCount > 1 ? ctx->argument(1) : Value::undefinedValue();
+    Value r = ctx->argumentCount() > 0 ? ctx->argument(0) : Value::undefinedValue();
+    Value f = ctx->argumentCount() > 1 ? ctx->argument(1) : Value::undefinedValue();
     if (RegExpObject *re = r.asRegExpObject()) {
         if (!f.isUndefined()) {
             ctx->throwTypeError();
@@ -2501,8 +2502,8 @@ void RegExpCtor::construct(ExecutionContext *ctx)
 
 void RegExpCtor::call(ExecutionContext *ctx)
 {
-    if (ctx->argumentCount > 0 && ctx->argument(0).asRegExpObject()) {
-        if (ctx->argumentCount == 1 || ctx->argument(1).isUndefined()) {
+    if (ctx->argumentCount() > 0 && ctx->argument(0).asRegExpObject()) {
+        if (ctx->argumentCount() == 1 || ctx->argument(1).isUndefined()) {
             ctx->result = ctx->argument(0);
             return;
         }
@@ -2822,7 +2823,7 @@ void MathObject::method_log(ExecutionContext *ctx)
 void MathObject::method_max(ExecutionContext *ctx)
 {
     double mx = -qInf();
-    for (unsigned i = 0; i < ctx->argumentCount; ++i) {
+    for (unsigned i = 0; i < ctx->argumentCount(); ++i) {
         double x = ctx->argument(i).toNumber(ctx);
         if (x > mx || qIsNaN(x))
             mx = x;
@@ -2833,7 +2834,7 @@ void MathObject::method_max(ExecutionContext *ctx)
 void MathObject::method_min(ExecutionContext *ctx)
 {
     double mx = qInf();
-    for (unsigned i = 0; i < ctx->argumentCount; ++i) {
+    for (unsigned i = 0; i < ctx->argumentCount(); ++i) {
         double x = ctx->argument(i).toNumber(ctx);
         if ((x == 0 && mx == x && copySign(1.0, x) == -1.0)
                 || (x < mx) || qIsNaN(x)) {

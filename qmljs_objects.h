@@ -474,7 +474,7 @@ struct ArrayObject: Object {
 };
 
 struct FunctionObject: Object {
-    ExecutionContext *scope;
+    DeclarativeEnvironment *scope;
     String *name;
     String **formalParameterList;
     unsigned int formalParameterCount;
@@ -483,7 +483,7 @@ struct FunctionObject: Object {
     bool needsActivation;
 
     FunctionObject(ExecutionContext *scope)
-        : scope(scope)
+        : scope(scope->variableEnvironment)
         , name(0)
         , formalParameterList(0)
         , formalParameterCount(0)
@@ -554,39 +554,46 @@ protected:
 };
 
 struct EvalErrorObject: ErrorObject {
-    EvalErrorObject(ExecutionContext *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    EvalErrorObject(ExecutionContext *ctx)
+        : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("EvalError"); }
 };
 
 struct RangeErrorObject: ErrorObject {
-    RangeErrorObject(ExecutionContext *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    RangeErrorObject(ExecutionContext *ctx)
+        : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("RangeError"); }
 };
 
 struct ReferenceErrorObject: ErrorObject {
-    ReferenceErrorObject(ExecutionContext *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    ReferenceErrorObject(ExecutionContext *ctx)
+        : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("ReferenceError"); }
 };
 
 struct SyntaxErrorObject: ErrorObject {
-    SyntaxErrorObject(ExecutionContext *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    SyntaxErrorObject(ExecutionContext *ctx)
+        : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("SyntaxError"); }
 };
 
 struct TypeErrorObject: ErrorObject {
-    TypeErrorObject(ExecutionContext *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    TypeErrorObject(ExecutionContext *ctx)
+        : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("TypeError"); }
 };
 
 struct URIErrorObject: ErrorObject {
-    URIErrorObject(ExecutionContext *ctx): ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    URIErrorObject(ExecutionContext *ctx)
+        : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("URIError"); }
 };
 
 struct ActivationObject: Object {
-    ExecutionContext *context;
+    DeclarativeEnvironment *context;
     Value arguments;
-    ActivationObject(ExecutionContext *context): context(context), arguments(Value::undefinedValue()) {}
+    ActivationObject(DeclarativeEnvironment *context)
+        : context(context), arguments(Value::undefinedValue()) {}
     virtual QString className() { return QStringLiteral("Activation"); }
     virtual ActivationObject *asActivationObject() { return this; }
     virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill);

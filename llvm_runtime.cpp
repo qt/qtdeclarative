@@ -55,7 +55,7 @@ void __qmljs_llvm_return(ExecutionContext *ctx, Value *result)
 
 Value *__qmljs_llvm_get_argument(ExecutionContext *ctx, int index)
 {
-    return &ctx->arguments[index];
+    return &ctx->variableEnvironment->arguments[index];
 }
 
 void __qmljs_llvm_init_undefined(Value *result)

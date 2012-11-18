@@ -68,11 +68,11 @@ static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, QVecto
 
     if (index < 0) {
         const int arg = -index - 1;
-        return context->arguments + arg;
-    } else if (index < (int) context->varCount) {
-        return context->locals + index;
+        return context->variableEnvironment->arguments + arg;
+    } else if (index < (int) context->variableEnvironment->varCount) {
+        return context->variableEnvironment->locals + index;
     } else {
-        int off = index - context->varCount;
+        int off = index - context->variableEnvironment->varCount;
         return stack.data() + off;
     }
 }

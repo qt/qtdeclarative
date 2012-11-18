@@ -71,7 +71,7 @@ struct Print: FunctionObject
 
     virtual void call(ExecutionContext *ctx)
     {
-        for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
+        for (unsigned int i = 0; i < ctx->argumentCount(); ++i) {
             String *s = ctx->argument(i).toString(ctx);
             if (i)
                 std::cout << ' ';
@@ -89,7 +89,7 @@ struct TestHarnessError: FunctionObject
     {
         errorOccurred = true;
 
-        for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
+        for (unsigned int i = 0; i < ctx->argumentCount(); ++i) {
             String *s = ctx->argument(i).toString(ctx);
             if (i)
                 std::cerr << ' ';

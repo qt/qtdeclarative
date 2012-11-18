@@ -197,7 +197,7 @@ Value __qmljs_delete_member(ExecutionContext *ctx, Value base, String *name)
 
 Value __qmljs_delete_property(ExecutionContext *ctx, String *name)
 {
-    Object *obj = ctx->activation;
+    Object *obj = ctx->lexicalEnvironment->activation;
     if (!obj)
         obj = ctx->engine->globalObject.objectValue();
     return Value::fromBoolean(obj->__delete__(ctx, name, true));
@@ -779,7 +779,7 @@ Value __qmljs_call_property(ExecutionContext *context, Value base, String *name,
     Value thisObject;
 
     if (base.isUndefined()) {
-        baseObject = context->activation;
+        baseObject = context->lexicalEnvironment->activation;
         thisObject = Value::nullValue();
     } else {
         if (!base.isObject())

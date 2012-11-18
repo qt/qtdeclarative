@@ -50,30 +50,47 @@ struct Value;
 struct Object;
 struct ExecutionEngine;
 struct ExecutionContext;
+struct DeclarativeEnvironment;
 
-struct ExecutionContext {
+// This merges LexicalEnvironment and EnvironmentRecord from
+// Sec. 10.2 into one class
+struct DeclarativeEnvironment
+{
     ExecutionEngine *engine;
-    ExecutionContext *parent;
+    DeclarativeEnvironment *outer;
+
     Object *activation;
-    Value thisObject;
     Value *arguments;
     unsigned int argumentCount;
     Value *locals;
-    Value result;
     String **formals;
     unsigned int formalCount;
     String **vars;
     unsigned int varCount;
 
-    PropertyDescriptor *lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp);
-    void inplaceBitOp(Value value, String *name, BinOp op);
+    // these get used for createMutableBinding(..., true).
+    // the only place this is being used is eval(...)
+    QHash<QString, Value> deletableLocals;
 
-    inline Value argument(unsigned int index = 0)
-    {
-        if (index < argumentCount)
-            return arguments[index];
-        return Value::undefinedValue();
-    }
+    DeclarativeEnvironment(ExecutionEngine *e);
+    DeclarativeEnvironment(FunctionObject *f, Value *args, uint argc);
+
+    bool hasBinding(String *name) const;
+    void createMutableBinding(String *name, bool deletable);
+    void setMutableBinding(String *name, Value value, bool strict);
+    Value getBindingValue(String *name, bool strict) const;
+    bool deleteBinding(String *name);
+};
+
+struct ExecutionContext
+{
+    ExecutionEngine *engine;
+    ExecutionContext *parent;
+    // ### Should be a general environment
+    DeclarativeEnvironment *lexicalEnvironment;
+    DeclarativeEnvironment *variableEnvironment;
+    Value thisObject;
+    Value result;
 
     void init(ExecutionEngine *eng);
 
@@ -89,7 +106,19 @@ struct ExecutionContext {
     void throwTypeError();
     void throwReferenceError(Value value);
     void throwUnimplemented(const QString &message);
+
+    PropertyDescriptor *lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp);
+    void inplaceBitOp(Value value, String *name, BinOp op);
+
+    inline uint argumentCount() const { return variableEnvironment->argumentCount; }
+    inline Value argument(unsigned int index = 0)
+    {
+        if (index < variableEnvironment->argumentCount)
+            return variableEnvironment->arguments[index];
+        return Value::undefinedValue();
+    }
 };
+
 
 
 } // namespace VM

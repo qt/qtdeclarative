@@ -554,11 +554,11 @@ int EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fil
             return EXIT_FAILURE;
     }
 
-    if (!ctx->activation)
-        ctx->activation = new QQmlJS::VM::Object();
+    if (!ctx->variableEnvironment->activation)
+        ctx->variableEnvironment->activation = new QQmlJS::VM::Object();
 
     foreach (const QString *local, globalCode->locals) {
-        ctx->activation->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
+        ctx->variableEnvironment->activation->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
     }
 
     if (mode == Codegen::GlobalCode) {
@@ -668,7 +668,7 @@ PropertyDescriptor *ActivationObject::__getPropertyDescriptor__(ExecutionContext
 Value ArgumentsObject::__get__(ExecutionContext *ctx, String *name)
 {
     if (name->isEqualTo(ctx->engine->id_length))
-        return Value::fromDouble(context->argumentCount);
+        return Value::fromInt32(context->argumentCount());
     return Object::__get__(ctx, name);
 }
 
@@ -676,8 +676,8 @@ PropertyDescriptor *ArgumentsObject::__getPropertyDescriptor__(ExecutionContext 
 {
     if (context) {
         const quint32 i = Value::fromString(name).toUInt32(ctx);
-        if (i < context->argumentCount) {
-            *to_fill = PropertyDescriptor::fromValue(context->arguments[i]);
+        if (i < context->argumentCount()) {
+            *to_fill = PropertyDescriptor::fromValue(context->argument(i));
             to_fill->writable = PropertyDescriptor::Unset;
             to_fill->enumberable = PropertyDescriptor::Unset;
             return to_fill;

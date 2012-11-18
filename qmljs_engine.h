@@ -42,6 +42,7 @@
 #define QMLJS_ENGINE_H
 
 #include <qmljs_objects.h>
+#include <qmljs_environment.h>
 #include <setjmp.h>
 
 namespace QQmlJS {
@@ -81,7 +82,9 @@ struct URIErrorPrototype;
 
 struct ExecutionEngine
 {
+    ExecutionContext *current;
     ExecutionContext *rootContext;
+
     Value globalObject;
 
     Value objectCtor;
@@ -170,7 +173,7 @@ struct ExecutionEngine
 
     Object *newErrorObject(const Value &value);
     Object *newMathObject(ExecutionContext *ctx);
-    Object *newActivationObject(ExecutionContext *ctx);
+    Object *newActivationObject(DeclarativeEnvironment *ctx);
 
     Object *newForEachIteratorObject(Object *o);
 };
