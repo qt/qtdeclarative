@@ -542,15 +542,14 @@ Value EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &f
             Codegen cg;
             globalCode = cg(program, &module, mode);
 
-            EvalInstructionSelection *isel = factory->create(vm, &module, code);
 
-            foreach (IR::Function *function, module.functions)
+            foreach (IR::Function *function, module.functions) {
+                EvalInstructionSelection *isel = factory->create(vm, &module, code);
                 isel->run(function);
-
-            if (! isel->finishModule(codeSize))
-                Q_UNREACHABLE();
-
-            delete isel;
+                if (! isel->finishModule(codeSize))
+                    Q_UNREACHABLE();
+                delete isel;
+            }
         }
 
         if (! globalCode)
