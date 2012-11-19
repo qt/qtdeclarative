@@ -487,6 +487,22 @@ Value EvalFunction::call(ExecutionContext *context, Value thisObject, Value *arg
         ctx->leaveCallContext();
 }
 
+/// isNaN [15.1.2.4]
+Value IsNaNFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/, bool /*strictMode*/)
+{
+    // TODO: see if we can generate code for this directly
+    const Value &v = args[0];
+    return Value::fromBoolean(v.isDouble() ? std::isnan(v.doubleValue()) : false);
+}
+
+/// isFinite [15.1.2.5]
+Value IsFiniteFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/, bool /*strictMode*/)
+{
+    // TODO: see if we can generate code for this directly
+    const Value &v = args[0];
+    return Value::fromBoolean(v.isDouble() ? std::isfinite(v.doubleValue()) : true);
+}
+
 static inline bool protect(const void *addr, size_t size)
 {
     size_t pageSize = sysconf(_SC_PAGESIZE);

@@ -162,7 +162,10 @@ ExecutionEngine::ExecutionEngine()
     glo->__put__(rootContext, identifier(QStringLiteral("Infinity")), Value::fromDouble(INFINITY));
     glo->__put__(rootContext, identifier(QStringLiteral("eval")), Value::fromObject(new EvalFunction(rootContext)));
 
-
+    // TODO: parseInt [15.1.2.2]
+    // TODO: parseFloat [15.1.2.3]
+    glo->__put__(rootContext, identifier(QStringLiteral("isNaN")), Value::fromObject(new IsNaNFunction(rootContext))); // isNaN [15.1.2.4]
+    glo->__put__(rootContext, identifier(QStringLiteral("isFinite")), Value::fromObject(new IsFiniteFunction(rootContext))); // isFinite [15.1.2.5]
 }
 
 ExecutionContext *ExecutionEngine::newContext()

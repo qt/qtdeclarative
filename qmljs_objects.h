@@ -532,6 +532,20 @@ struct EvalFunction : FunctionObject
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode = false);
 };
 
+struct IsNaNFunction: FunctionObject
+{
+    IsNaNFunction(ExecutionContext *scope): FunctionObject(scope) {}
+
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode = false);
+};
+
+struct IsFiniteFunction: FunctionObject
+{
+    IsFiniteFunction(ExecutionContext *scope): FunctionObject(scope) {}
+
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode = false);
+};
+
 struct RegExpObject: Object {
     QRegularExpression value;
     Value lastIndex;
