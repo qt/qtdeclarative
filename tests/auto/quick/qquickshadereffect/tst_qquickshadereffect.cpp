@@ -56,8 +56,10 @@ class TestShaderEffect : public QQuickShaderEffect
     Q_PROPERTY(QVariant _0aA9zZ READ dummyRead NOTIFY dummyChanged)
     Q_PROPERTY(QVariant x86 READ dummyRead NOTIFY dummyChanged)
     Q_PROPERTY(QVariant X READ dummyRead NOTIFY dummyChanged)
+    Q_PROPERTY(QMatrix4x4 mat4x4 READ mat4x4Read NOTIFY dummyChanged)
 
 public:
+    QMatrix4x4 mat4x4Read() const { return QMatrix4x4(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1); }
     QVariant dummyRead() const { return QVariant(); }
     bool isConnected(const QMetaMethod &signal) const { return m_signals.contains(signal); }
 
@@ -246,6 +248,11 @@ void tst_qquickshadereffect::lookThroughShaderCode_data()
 
     QTest::newRow("property name #3")
             << QByteArray("uniform lowp float X;")
+            << QByteArray(" ")
+            << int(PropertyPresent);
+
+    QTest::newRow("property name #4")
+            << QByteArray("uniform highp mat4 mat4x4;")
             << QByteArray(" ")
             << int(PropertyPresent);
 }

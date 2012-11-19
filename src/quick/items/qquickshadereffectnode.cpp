@@ -193,6 +193,9 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                 case QMetaType::QVector4D:
                     program()->setUniformValue(loc, qvariant_cast<QVector4D>(d.value));
                     break;
+                case QMetaType::QMatrix4x4:
+                    program()->setUniformValue(loc, qvariant_cast<QMatrix4x4>(d.value));
+                    break;
                 default:
                     break;
                 }
