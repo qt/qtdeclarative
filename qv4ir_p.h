@@ -594,7 +594,6 @@ struct Function {
     QSet<QString> strings;
     QList<const QString *> formals;
     QList<const QString *> locals;
-    IR::BasicBlock *handlersBlock;
 
     VM::Value (*code)(VM::ExecutionContext *, const uchar *);
     const uchar *codeData;
@@ -610,7 +609,6 @@ struct Function {
         , pool(&module->pool)
         , tempCount(0)
         , maxNumberOfArguments(0)
-        , handlersBlock(0)
         , code(0)
         , codeData(0)
         , hasDirectEval(false)

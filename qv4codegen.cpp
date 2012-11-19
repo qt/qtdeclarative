@@ -1346,7 +1346,6 @@ void Codegen::linearize(IR::Function *function)
     assert(exitBlock->terminator()->asRet());
 
     QSet<IR::BasicBlock *> V;
-    V.insert(function->handlersBlock);
     V.insert(exitBlock);
 
     QVector<IR::BasicBlock *> trace;
@@ -1387,9 +1386,6 @@ void Codegen::linearize(IR::Function *function)
     };
 
     I::trace(function->basicBlocks.first(), &V, &trace);
-
-    function->handlersBlock->index = trace.size();
-    trace.append(function->handlersBlock);
 
     exitBlock->index = trace.size();
     trace.append(exitBlock);
@@ -1511,11 +1507,9 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     IR::BasicBlock *entryBlock = function->newBasicBlock();
     IR::BasicBlock *exitBlock = function->newBasicBlock(IR::Function::DontInsertBlock);
     IR::BasicBlock *throwBlock = function->newBasicBlock();
-    IR::BasicBlock *handlersBlock = function->newBasicBlock();
     function->hasDirectEval = _env->hasDirectEval;
     function->hasNestedFunctions = _env->hasNestedFunctions;
     function->maxNumberOfArguments = _env->maxNumberOfArguments;
-    function->handlersBlock = handlersBlock;
 
     for (int i = 0; i < _env->vars.size(); ++i) {
         unsigned t = entryBlock->newTemp();
