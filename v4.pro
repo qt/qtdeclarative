@@ -22,7 +22,8 @@ SOURCES += main.cpp \
     qv4ecmaobjects.cpp \
     qv4array.cpp \
     qv4isel_masm.cpp \
-    llvm_runtime.cpp
+    llvm_runtime.cpp \
+    qv4isel_p.cpp
 
 HEADERS += \
     qv4codegen_p.h \
@@ -37,6 +38,7 @@ HEADERS += \
     qv4ecmaobjects_p.h \
     qv4array_p.h \
     qv4isel_masm_p.h \
+    qv4isel_p.h \
     qv4isel_util_p.h
 
 llvm {

@@ -54,6 +54,7 @@
 #  pragma clang diagnostic pop
 #endif // __clang__
 
+#include "qv4isel_p.h"
 #include "qv4ir_p.h"
 
 namespace QQmlJS {

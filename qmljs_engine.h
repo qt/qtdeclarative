@@ -41,6 +41,7 @@
 #ifndef QMLJS_ENGINE_H
 #define QMLJS_ENGINE_H
 
+#include <qv4isel_p.h>
 #include <qmljs_objects.h>
 #include <qmljs_environment.h>
 #include <setjmp.h>
@@ -49,7 +50,7 @@ namespace QQmlJS {
 namespace VM {
 
 struct Value;
-struct Array;
+class Array;
 struct Object;
 struct BooleanObject;
 struct NumberObject;
@@ -136,7 +137,7 @@ struct ExecutionEngine
 
     QVector<ExceptionHandler> unwindStack;
 
-    ExecutionEngine();
+    ExecutionEngine(EValISelFactory *factory);
 
     ExecutionContext *newContext();
 

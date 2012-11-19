@@ -42,6 +42,7 @@
 
 #include "qmljs_objects.h"
 #include "qv4ir_p.h"
+#include "qv4isel_p.h"
 #include "qv4ecmaobjects_p.h"
 
 #include <private/qqmljsengine_p.h>
@@ -50,7 +51,6 @@
 #include <private/qqmljsast_p.h>
 #include <qv4ir_p.h>
 #include <qv4codegen_p.h>
-#include <qv4isel_masm_p.h>
 
 #include <QtCore/qmath.h>
 #include <QtCore/QDebug>
@@ -459,7 +459,7 @@ void ScriptFunction::call(VM::ExecutionContext *ctx)
 }
 
 
-Value EvalFunction::call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode)
+Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc, bool strictMode)
 {
     Value s = context->argument(0);
     if (!s.isString()) {
@@ -481,10 +481,15 @@ Value EvalFunction::call(ExecutionContext *context, Value thisObject, Value *arg
         ctx = context;
     }
     // ##### inline and do this in the correct scope
-    evaluate(ctx, QStringLiteral("eval code"), code, /*useInterpreter*/ false, QQmlJS::Codegen::EvalCode);
+    int result = evaluate(ctx, QStringLiteral("eval code"), code, _factory, QQmlJS::Codegen::EvalCode);
 
     if (strictMode)
         ctx->leaveCallContext();
+
+    if (result == EXIT_SUCCESS)
+        return ctx->result;
+    else
+        return Value::undefinedValue();
 }
 
 /// isNaN [15.1.2.4]
@@ -503,18 +508,8 @@ Value IsFiniteFunction::call(ExecutionContext * /*context*/, Value /*thisObject*
     return Value::fromBoolean(v.isDouble() ? std::isfinite(v.doubleValue()) : true);
 }
 
-static inline bool protect(const void *addr, size_t size)
-{
-    size_t pageSize = sysconf(_SC_PAGESIZE);
-    size_t iaddr = reinterpret_cast<size_t>(addr);
-    size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
-    int mode = PROT_READ | PROT_WRITE | PROT_EXEC;
-    return mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode) == 0;
-}
-
-
 int EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fileName,
-                           const QString &source, bool useInterpreter,
+                           const QString &source, EValISelFactory *factory,
                            QQmlJS::Codegen::Mode mode)
 {
     using namespace QQmlJS;
@@ -550,20 +545,15 @@ int EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fil
             Codegen cg;
             globalCode = cg(program, &module, mode);
 
-//            if (useInterpreter) {
-//                Moth::InstructionSelection isel(vm, &module, code);
-//                foreach (IR::Function *function, module.functions)
-//                    isel(function);
-//            } else
-            {
-                foreach (IR::Function *function, module.functions) {
-                    MASM::InstructionSelection isel(vm, &module, code);
-                    isel(function);
-                }
+            EvalInstructionSelection *isel = factory->create(vm, &module, code);
 
-                if (! protect(code, codeSize))
-                    Q_UNREACHABLE();
-            }
+            foreach (IR::Function *function, module.functions)
+                isel->run(function);
+
+            if (! isel->finishModule(codeSize))
+                Q_UNREACHABLE();
+
+            delete isel;
         }
 
         if (! globalCode)

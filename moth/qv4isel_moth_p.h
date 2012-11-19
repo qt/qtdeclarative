@@ -1,6 +1,7 @@
 #ifndef QV4ISEL_MOTH_P_H
 #define QV4ISEL_MOTH_P_H
 
+#include "qv4isel_p.h"
 #include "qv4ir_p.h"
 #include "qmljs_objects.h"
 #include "qv4instr_moth_p.h"
@@ -8,13 +9,18 @@
 namespace QQmlJS {
 namespace Moth {
 
-class InstructionSelection : public IR::StmtVisitor
+class InstructionSelection : public IR::StmtVisitor, public EvalInstructionSelection
 {
 public:
     InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module, uchar *code);
     ~InstructionSelection();
 
-    void operator()(IR::Function *function);
+    virtual void run(IR::Function *function)
+    { this->operator()(function); }
+    virtual void operator()(IR::Function *function);
+
+    virtual bool finishModule(size_t)
+    { return true; }
 
 protected:
     virtual void visitExp(IR::Exp *);
@@ -55,6 +61,14 @@ private:
 
     uchar *_code;
     uchar *_ccode;
+};
+
+class ISelFactory: public EValISelFactory
+{
+public:
+    virtual ~ISelFactory() {}
+    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine, IR::Module *module, uchar *code)
+    { return new InstructionSelection(engine, module, code); }
 };
 
 template<int InstrT>

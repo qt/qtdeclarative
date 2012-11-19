@@ -46,6 +46,7 @@
 #include "qmljs_environment.h"
 #include "qv4array_p.h"
 #include "qv4codegen_p.h"
+#include "qv4isel_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
@@ -523,13 +524,16 @@ struct ScriptFunction: FunctionObject {
 
 struct EvalFunction : FunctionObject
 {
-    EvalFunction(ExecutionContext *scope): FunctionObject(scope) {}
+    EvalFunction(ExecutionContext *scope, EValISelFactory *factory): FunctionObject(scope), _factory(factory) {}
 
     static int evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fileName,
-                        const QString &source, bool useInterpreter,
+                        const QString &source, EValISelFactory *factory,
                         QQmlJS::Codegen::Mode mode);
 
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode = false);
+
+private:
+    EValISelFactory *_factory;
 };
 
 struct IsNaNFunction: FunctionObject

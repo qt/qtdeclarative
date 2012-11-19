@@ -98,9 +98,9 @@ static inline Value mul_int32(int a, int b)
         return Value::fromInt32(aa);
     return Value::fromDouble((double)a * (double)b);
 }
-#endif
 
 } // namespace VM
 } // namespace QQmlJS
 
-#endif
+#endif // !defined(QMLJS_LLVM_RUNTIME) && 1 //CPU(X86_64)
+#endif // QMLJS_MATH_H

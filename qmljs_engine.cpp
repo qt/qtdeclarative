@@ -45,7 +45,7 @@
 namespace QQmlJS {
 namespace VM {
 
-ExecutionEngine::ExecutionEngine()
+ExecutionEngine::ExecutionEngine(EValISelFactory *factory)
 {
     rootContext = newContext();
     rootContext->init(this);
@@ -160,7 +160,7 @@ ExecutionEngine::ExecutionEngine()
     glo->__put__(rootContext, identifier(QStringLiteral("undefined")), Value::undefinedValue());
     glo->__put__(rootContext, identifier(QStringLiteral("NaN")), Value::fromDouble(nan("")));
     glo->__put__(rootContext, identifier(QStringLiteral("Infinity")), Value::fromDouble(INFINITY));
-    glo->__put__(rootContext, identifier(QStringLiteral("eval")), Value::fromObject(new EvalFunction(rootContext)));
+    glo->__put__(rootContext, identifier(QStringLiteral("eval")), Value::fromObject(new EvalFunction(rootContext, factory)));
 
     // TODO: parseInt [15.1.2.2]
     // TODO: parseFloat [15.1.2.3]

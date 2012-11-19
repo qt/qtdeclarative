@@ -50,7 +50,7 @@
 namespace QQmlJS {
 namespace VM {
 
-struct Array;
+class Array;
 struct String;
 struct Object;
 struct BooleanObject;

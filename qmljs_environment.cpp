@@ -109,7 +109,7 @@ void DeclarativeEnvironment::createMutableBinding(String *name, bool deletable)
     deletableLocals.insert(name->toQString(), Value::undefinedValue());
 }
 
-void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool strict)
+void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool /*strict*/)
 {
     // ### throw if strict is true, and it would change an immutable binding
     for (unsigned int i = 0; i < varCount; ++i) {
@@ -132,7 +132,7 @@ void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool s
     assert(false);
 }
 
-Value DeclarativeEnvironment::getBindingValue(String *name, bool strict) const
+Value DeclarativeEnvironment::getBindingValue(String *name, bool /*strict*/) const
 {
     for (unsigned int i = 0; i < varCount; ++i) {
         if (__qmljs_string_equal(vars[i], name))

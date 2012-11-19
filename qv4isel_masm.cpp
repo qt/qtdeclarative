@@ -170,6 +170,20 @@ void InstructionSelection::operator()(IR::Function *function)
     qSwap(_function, function);
 }
 
+static inline bool protect(const void *addr, size_t size)
+{
+    size_t pageSize = sysconf(_SC_PAGESIZE);
+    size_t iaddr = reinterpret_cast<size_t>(addr);
+    size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
+    int mode = PROT_READ | PROT_WRITE | PROT_EXEC;
+    return mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode) == 0;
+}
+
+bool InstructionSelection::finishModule(size_t size)
+{
+    return protect(_code, size);
+}
+
 String *InstructionSelection::identifier(const QString &s)
 {
     return _engine->identifier(s);

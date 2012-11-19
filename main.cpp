@@ -51,6 +51,7 @@
 #include "qv4vme_moth_p.h"
 #include "qv4syntaxchecker_p.h"
 #include "qv4ecmaobjects_p.h"
+#include "qv4isel_p.h"
 
 #include <QtCore>
 #include <private/qqmljsengine_p.h>
@@ -110,10 +111,11 @@ int executeLLVMCode(void *codePtr)
 
     if (!codePtr)
         return EXIT_FAILURE;
-    void (*code)(VM::Context *) = (void (*)(VM::Context *)) codePtr;
+    void (*code)(VM::ExecutionContext *) = (void (*)(VM::ExecutionContext *)) codePtr;
 
-    VM::ExecutionEngine vm;
-    VM::Context *ctx = vm.rootContext;
+    QScopedPointer<QQmlJS::EValISelFactory> iSelFactory(new QQmlJS::Moth::ISelFactory);
+    VM::ExecutionEngine vm(iSelFactory.data());
+    VM::ExecutionContext *ctx = vm.rootContext;
 
     QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
     globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
@@ -280,8 +282,12 @@ int main(int argc, char *argv[])
 #endif // QMLJS_NO_LLVM
     case use_masm:
     case use_moth: {
-        bool useInterpreter = mode == use_moth;
-        QQmlJS::VM::ExecutionEngine vm;
+        QScopedPointer<QQmlJS::EValISelFactory> iSelFactory;
+        if (mode == use_moth)
+            iSelFactory.reset(new QQmlJS::Moth::ISelFactory);
+        else
+            iSelFactory.reset(new QQmlJS::MASM::ISelFactory);
+        QQmlJS::VM::ExecutionEngine vm(iSelFactory.data());
         QQmlJS::VM::ExecutionContext *ctx = vm.rootContext;
 
         QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
@@ -299,7 +305,7 @@ int main(int argc, char *argv[])
                 const QString code = QString::fromUtf8(file.readAll());
                 file.close();
 
-                int exitCode = QQmlJS::VM::EvalFunction::evaluate(vm.rootContext, fn, code, useInterpreter, QQmlJS::Codegen::GlobalCode);
+                int exitCode = QQmlJS::VM::EvalFunction::evaluate(vm.rootContext, fn, code, iSelFactory.data(), QQmlJS::Codegen::GlobalCode);
                 if (exitCode != EXIT_SUCCESS)
                     return exitCode;
                 if (errorInTestHarness)
