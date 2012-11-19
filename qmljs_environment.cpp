@@ -171,7 +171,7 @@ void ExecutionContext::init(ExecutionEngine *eng)
     variableEnvironment = new DeclarativeEnvironment(eng);
     lexicalEnvironment = variableEnvironment;
     thisObject = Value::nullValue();
-    res = Value::undefinedValue();
+    eng->exception = Value::undefinedValue();
 }
 
 PropertyDescriptor *ExecutionContext::lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp)
@@ -235,7 +235,6 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
     lexicalEnvironment = variableEnvironment;
 
     thisObject = that;
-    res = Value::undefinedValue();
 }
 
 void ExecutionContext::leaveCallContext()

@@ -844,13 +844,14 @@ void __qmljs_throw(Value value, ExecutionContext *context)
         context = context->parent;
     }
 
-    handler.context->res = value;
+    context->engine->exception = value;
 
     longjmp(handler.stackFrame, 1);
 }
 
 void *__qmljs_create_exception_handler(ExecutionContext *context)
 {
+    context->engine->exception = Value::undefinedValue();
     context->engine->unwindStack.append(ExecutionEngine::ExceptionHandler());
     ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
     handler.context = context;
@@ -866,7 +867,7 @@ void __qmljs_delete_exception_handler(ExecutionContext *context)
 
 Value __qmljs_get_exception(ExecutionContext *context)
 {
-    return context->res;
+    return context->engine->exception;
 }
 
 Value __qmljs_builtin_typeof(Value val, ExecutionContext *context)

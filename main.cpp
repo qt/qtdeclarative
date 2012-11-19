@@ -309,10 +309,10 @@ int main(int argc, char *argv[])
 
                 void * buf = __qmljs_create_exception_handler(ctx);
                 if (setjmp(*(jmp_buf *)buf)) {
-                    if (QQmlJS::VM::ErrorObject *e = ctx->res.asErrorObject())
+                    if (QQmlJS::VM::ErrorObject *e = ctx->engine->exception.asErrorObject())
                         std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
                     else
-                        std::cerr << "Uncaught exception: " << qPrintable(ctx->res.toString(ctx)->toQString()) << std::endl;
+                        std::cerr << "Uncaught exception: " << qPrintable(ctx->engine->exception.toString(ctx)->toQString()) << std::endl;
                     return EXIT_FAILURE;
                 }
 

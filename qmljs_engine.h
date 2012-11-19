@@ -136,6 +136,7 @@ struct ExecutionEngine
     };
 
     QVector<ExceptionHandler> unwindStack;
+    Value exception;
 
     ExecutionEngine(EValISelFactory *factory);
 
