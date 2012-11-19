@@ -974,10 +974,10 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
 
     hData.reset();
     vData.reset();
-    hData.dragMinBound = q->minXExtent();
-    vData.dragMinBound = q->minYExtent();
-    hData.dragMaxBound = q->maxXExtent();
-    vData.dragMaxBound = q->maxYExtent();
+    hData.dragMinBound = q->minXExtent() - hData.startMargin;
+    vData.dragMinBound = q->minYExtent() - vData.startMargin;
+    hData.dragMaxBound = q->maxXExtent() + hData.endMargin;
+    vData.dragMaxBound = q->maxYExtent() + vData.endMargin;
     fixupMode = Normal;
     lastPos = QPointF();
     pressPos = event->localPos();
@@ -1021,8 +1021,11 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
             if (!vMoved)
                 vData.dragStartOffset = dy;
             qreal newY = dy + vData.pressPos - vData.dragStartOffset;
-            const qreal minY = vData.dragMinBound;
-            const qreal maxY = vData.dragMaxBound;
+            // Recalculate bounds in case margins have changed, but use the content
+            // size estimate taken at the start of the drag in case the drag causes
+            // the estimate to be altered
+            const qreal minY = vData.dragMinBound + vData.startMargin;
+            const qreal maxY = vData.dragMaxBound - vData.endMargin;
             if (newY > minY)
                 newY = minY + (newY - minY) / 2;
             if (newY < maxY && maxY - minY <= 0)
@@ -1055,8 +1058,8 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
             if (!hMoved)
                 hData.dragStartOffset = dx;
             qreal newX = dx + hData.pressPos - hData.dragStartOffset;
-            const qreal minX = hData.dragMinBound;
-            const qreal maxX = hData.dragMaxBound;
+            const qreal minX = hData.dragMinBound + hData.startMargin;
+            const qreal maxX = hData.dragMaxBound - hData.endMargin;
             if (newX > minX)
                 newX = minX + (newX - minX) / 2;
             if (newX < maxX && maxX - minX <= 0)
