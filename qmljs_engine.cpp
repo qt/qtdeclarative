@@ -92,7 +92,7 @@ ExecutionEngine::ExecutionEngine(EValISelFactory *factory)
     numberCtor = Value::fromObject(new NumberCtor(rootContext));
     booleanCtor = Value::fromObject(new BooleanCtor(rootContext));
     arrayCtor = Value::fromObject(new ArrayCtor(rootContext));
-    functionCtor = Value::fromObject(new FunctionCtor(rootContext));
+    functionCtor = Value::fromObject(new FunctionCtor(rootContext, factory));
     dateCtor = Value::fromObject(new DateCtor(rootContext));
     regExpCtor = Value::fromObject(new RegExpCtor(rootContext));
     errorCtor = Value::fromObject(new ErrorCtor(rootContext));
@@ -256,11 +256,6 @@ Object *ExecutionEngine::newFunctionObject(ExecutionContext *ctx)
     Object *object = new FunctionObject(ctx);
     object->prototype = functionPrototype;
     return object;
-}
-
-FunctionObject *ExecutionEngine::newFunctionCtor(ExecutionContext *ctx)
-{
-    return new FunctionCtor(ctx);
 }
 
 Object *ExecutionEngine::newArrayObject()

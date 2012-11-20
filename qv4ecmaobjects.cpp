@@ -1732,8 +1732,9 @@ Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
 //
 // Function object
 //
-FunctionCtor::FunctionCtor(ExecutionContext *scope)
+FunctionCtor::FunctionCtor(ExecutionContext *scope, EValISelFactory *factory)
     : FunctionObject(scope)
+    , _factory(factory)
 {
 }
 
@@ -1775,9 +1776,9 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
     Codegen cg;
     IR::Function *irf = cg(fe, &module);
 
-    // FIXME: this mixes MASM and MOTH
-    MASM::InstructionSelection isel(ctx->engine);
-    isel(irf);
+    EvalInstructionSelection *isel = _factory->create(ctx->engine);
+    isel->run(irf);
+    delete isel;
 
     ctx->thisObject = Value::fromObject(new ScriptFunction(ctx->engine->rootContext, irf));
     return ctx->thisObject;

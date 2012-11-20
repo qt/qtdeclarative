@@ -161,7 +161,6 @@ struct ExecutionEngine
     FunctionObject *newBooleanCtor(ExecutionContext *ctx);
 
     Object *newFunctionObject(ExecutionContext *ctx);
-    FunctionObject *newFunctionCtor(ExecutionContext *ctx);
 
     Object *newArrayObject();
     Object *newArrayObject(const Array &value);
