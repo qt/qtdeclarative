@@ -106,6 +106,14 @@ struct TestHarnessError: FunctionObject
 
 } // builtins
 
+static void showException(QQmlJS::VM::ExecutionContext *ctx)
+{
+    if (QQmlJS::VM::ErrorObject *e = ctx->engine->exception.asErrorObject())
+        std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
+    else
+        std::cerr << "Uncaught exception: " << qPrintable(ctx->engine->exception.toString(ctx)->toQString()) << std::endl;
+}
+
 #ifndef QMLJS_NO_LLVM
 int executeLLVMCode(void *codePtr)
 {
@@ -125,10 +133,7 @@ int executeLLVMCode(void *codePtr)
 
     void * buf = __qmljs_create_exception_handler(ctx);
     if (setjmp(*(jmp_buf *)buf)) {
-        if (VM::ErrorObject *e = ctx->result.asErrorObject())
-            std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
-        else
-            std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
+        showException(ctx);
         return EXIT_FAILURE;
     }
 
@@ -309,10 +314,7 @@ int main(int argc, char *argv[])
 
                 void * buf = __qmljs_create_exception_handler(ctx);
                 if (setjmp(*(jmp_buf *)buf)) {
-                    if (QQmlJS::VM::ErrorObject *e = ctx->engine->exception.asErrorObject())
-                        std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
-                    else
-                        std::cerr << "Uncaught exception: " << qPrintable(ctx->engine->exception.toString(ctx)->toQString()) << std::endl;
+                    showException(ctx);
                     return EXIT_FAILURE;
                 }
 
