@@ -43,7 +43,7 @@
 #define SOLIDRECTNODE_H
 
 #include <QtQuick/qsgnode.h>
-#include "qsgflatcolormaterial.h"
+#include <QtQuick/qsgflatcolormaterial.h>
 
 QT_BEGIN_HEADER
 

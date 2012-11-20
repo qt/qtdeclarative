@@ -42,7 +42,7 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "qsggeometry.h"
+#include <QtQuick/qsggeometry.h>
 #include <QtGui/QMatrix4x4>
 
 #include <float.h>

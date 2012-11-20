@@ -42,8 +42,8 @@
 #ifndef QSGTEXTUREPROVIDER_H
 #define QSGTEXTUREPROVIDER_H
 
-#include "qsgtexture.h"
-#include "qobject.h"
+#include <QtQuick/qsgtexture.h>
+#include <QtCore/qobject.h>
 
 QT_BEGIN_HEADER
 
