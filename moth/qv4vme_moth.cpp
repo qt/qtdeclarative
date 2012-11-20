@@ -56,12 +56,12 @@ static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, QVecto
     if (index < 0) {
         kind = "arg";
         pos = -index - 1;
-    } else if (index < (int) context->varCount) {
+    } else if (index < (int) context->variableEnvironment->varCount) {
         kind = "local";
         pos = index;
     } else {
         kind = "temp";
-        pos = index - context->varCount;
+        pos = index - context->variableEnvironment->varCount;
     }
     fprintf(stderr, "    tempValue: index = %d : %s = %d, stack size = %d\n",
           index, kind, pos, stack.size());
@@ -69,11 +69,23 @@ static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, QVecto
 
     if (index < 0) {
         const int arg = -index - 1;
+
+        Q_ASSERT(arg >= 0);
+        Q_ASSERT((unsigned) arg < context->variableEnvironment->argumentCount);
+        Q_ASSERT(context->variableEnvironment->arguments);
+
         return context->variableEnvironment->arguments + arg;
     } else if (index < (int) context->variableEnvironment->varCount) {
+        Q_ASSERT(index >= 0);
+        Q_ASSERT(context->variableEnvironment->locals);
+
         return context->variableEnvironment->locals + index;
     } else {
         int off = index - context->variableEnvironment->varCount;
+
+        Q_ASSERT(off >= 0);
+        Q_ASSERT(off < stack.size());
+
         return stack.data() + off;
     }
 }
