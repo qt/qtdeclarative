@@ -1,0 +1,168 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/legal
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and Digia.  For licensing terms and
+** conditions see http://qt.digia.com/licensing.  For further information
+** use the contact form at http://qt.digia.com/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.  Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: http://www.gnu.org/copyleft/fdl.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+
+\page qtquick-codesamples.html
+\title Qt Quick Code Samples
+\brief Building UIs with QML
+\ingroup all-examples
+\ingroup qtquick
+\target qtquick-samples
+\inqmlmodule QtQuick 2
+
+These are code samples that show how to use various aspects of Qt Quick. Larger
+compound interfaces are grouped as applications as they demonstrate more Qt
+Quick features.
+
+To run the sample applications, open them in Qt Creator or use the included
+\l {Prototyping with qmlscene}{qmlscene} tool.
+
+Some of these code samples have a corresponding \l{qtquick-tutorials}{tutorial}.
+The Qt Quick features are covered in the \l {qtquick-overviews}{main page}.
+This set of code samples are part of the collection of \l{Qt Examples}.
+
+\div {class="threecolumn_area"}
+    \div {class="heading"}
+    QML Examples
+    \enddiv
+    Code samples demonstrate a general use for QML features. Some showcase
+    how elements or properties can be used in an application.
+    \li \l{quick/keyinteraction}{Keyboard Focus}
+    \li \l{quick/mousearea}{MouseArea}
+    \li \l{quick/animation}{Animations}
+    \li \l{quick/positioners}{Positioners}
+    \li \l{quick/righttoleft}{Right to Left}
+    \li \l{quick/modelviews}{Model Views}
+    \li \l{quick/imageelements}{Image Elements}
+    \li \l{localstorage}{SQL Local Storage}
+    \li \l{qml/xmlhttprequest}{XmlHttpRequest}
+    \li \l{qml/i18n}{Translation}
+    \li \l{quick/threading}{Threading}
+    \li \l{quick/shadereffects}{Shader Effects}
+    \endlist
+\enddiv
+\div {class="threecolumn_area"}
+    \div {class="heading"}
+        QDeclarative Examples
+    \enddiv
+    These examples show how a QML based UI could interact with the
+    QDeclarative module.
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        From Qt C++ to QML
+        \enddiv
+        \list
+        \li \l {qml/cppextensions/referenceexamples/adding}{Exporting C++ Classes}
+        \li \l {qml/cppextensions/referenceexamples/properties}{Exporting Qt C++ Properties}
+        \li \l {qml/cppextensions/referenceexamples/coercion}{C++ Inheritance and Coercion}
+        \li \l {qml/cppextensions/referenceexamples/default}{Default Property}
+        \li \l {qml/cppextensions/referenceexamples/grouped}{Grouped Properties}
+        \li \l {qml/cppextensions/referenceexamples/attached}{Attached Properties}
+        \li \l {qml/cppextensions/referenceexamples/signal}{Signal Support}
+        \li \l {qml/cppextensions/referenceexamples/methods}{Methods Support}
+        \li \l {qml/cppextensions/referenceexamples/valuesource}{Property Value Source}
+        \li \l {qml/cppextensions/referenceexamples/binding}{Binding}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        Plugins and Resources
+        \enddiv
+        \list
+        \li \l{qml/cppextensions/plugins}{Plugins}
+        \li \l{qml/cppextensions/imageprovider}{Image Provider}
+        \li \l{qml/cppextensions/networkaccessmanagerfactory}{Network Access Manager}
+        \li \l{src/imports/folderlistmodel}{Folder List Model} - a C++ model plugin
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        Qt UI and QML Integration
+        \enddiv
+        \list
+        \li \l{qml-cppextensions-qgraphicslayouts.html}{QGraphicsLayouts}
+        \li \l{qml/cppextensions/qwidgets}{QWidgets}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        UI Components
+        \enddiv
+        \list
+        \li \l{tutorials/ui-components/dialcontrol}{Dial Control}
+        \li \l{tutorials/ui-components/flipable}{Flipable}
+        \li \l{tutorials/ui-components/progressbar}{Progress Bar}
+        \li \l{tutorials/ui-components/scrollbar}{Scroll Bar}
+        \li \l{tutorials/ui-components/searchbox}{Search Box}
+        \li \l{tutorials/ui-components/slideswitch}{Slide Switch}
+        \li \l{tutorials/ui-components/spinner}{Spinner}
+        \li \l{tutorials/ui-components/tabwidget}{Tab Widget}
+        \endlist
+    \enddiv
+\enddiv
+
+\div {class="threecolumn_area"}
+    \div {class="heading"}
+        Learning and Resources
+    \enddiv
+    The Qt Developer Network contains additional content such as learning
+    videos, a wiki, and a forum for posting questions.
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            Elements and Components
+        \enddiv
+        \list
+        \li \l{QML Types provided by the QtQuick Module}
+        \li \l{external: Qt Mobility QML Plugins}{QML Plugins}
+        \li \l{external: Qt Quick Components for Symbian}{Symbian Components}
+        \li MeeGo Components
+        \li \l{QtWebKit QML Module}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            Qt Developer Network
+        \enddiv
+        \list
+        \li \l{Qt eLearning}{Training Materials}
+        \li \l{Forums on Qt Developer Network}{Forums}
+        \li \l{Wiki on Qt Developer Network}{Wiki}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            Reference
+        \enddiv
+        \list
+        \li \l{All Classes}{Qt API}
+        \li \l{external: Qt Creator Manual}{Qt Creator Manual}
+        \li \l{Develop with Qt}
+        \endlist
+    \enddiv
+\enddiv
+*/

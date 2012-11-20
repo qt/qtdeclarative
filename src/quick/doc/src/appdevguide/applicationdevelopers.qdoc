@@ -87,6 +87,16 @@ their QML documentation. Qt Essentials modules exposing QML types include:
     \endlist
 \endlist
 
+\section1 Code Samples and Demos
+
+To learn more about uses of QML code, there are several code samples which show
+how QML types are used. In addition, there are several demos which show how
+QML code is used in applications.
+
+\list
+\li \l{Qt Quick Code Samples}
+\li \l{QML Demos}
+\endlist
 \section1 Features And Use-Case Solutions
 
 \list
@@ -150,4 +160,3 @@ provided by Qt Quick, please see the \l{Qt Quick} module documentation.
 \endlist
 
 */
-

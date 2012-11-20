@@ -1,4 +1,3 @@
-include($QT_INSTALL_DOCS/global/qt-html-templates-offline.qdocconf)
 include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 
 project                 = QtQuick
@@ -60,4 +59,3 @@ sourcedirs += ../../imports
 #add plugins directory because of dependencies
 headerdirs += ../../plugins
 sourcedirs += ../../plugins
-
