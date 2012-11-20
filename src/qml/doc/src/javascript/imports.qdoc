@@ -117,6 +117,7 @@ For example:
 In particular, this may be useful in order to access functionality provided
 via a singleton type; see qmlRegisterSingletonType() for more information.
 
+\note The .import syntax doesn't work for scripts used in the \l {WorkerScript}
 
 \section1 Including a JavaScript Resource from Another JavaScript Resource
 

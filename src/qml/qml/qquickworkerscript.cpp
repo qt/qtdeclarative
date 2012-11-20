@@ -600,6 +600,8 @@ void QQuickWorkerScriptEngine::run()
     Additionally, there are restrictions on the types of values that can be passed to and
     from the worker script. See the sendMessage() documentation for details.
 
+    Worker script can not use \l {qtqml-javascript-imports.html}{.import} syntax.
+
     \sa {declarative/threading/workerscript}{WorkerScript example},
         {declarative/threading/threadedlistmodel}{Threaded ListModel example}
 */
