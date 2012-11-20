@@ -543,11 +543,6 @@ private:
             stackSizeToCorrect += sizeOfReturnValueOnStack;
         }
 
-#if CPU(X86) || CPU(X86_64)
-        while (stackSizeToCorrect % 16)
-            ++stackSizeToCorrect;
-#endif
-
         storeArgument(ReturnValueRegister, r);
 
         if (stackSizeToCorrect)
