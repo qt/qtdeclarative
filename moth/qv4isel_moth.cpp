@@ -22,6 +22,111 @@ static unsigned toValueOrTemp(IR::Expr *e, Instr::ValueOrTemp &vot)
     }
 }
 
+class CompressTemps: public IR::StmtVisitor, IR::ExprVisitor
+{
+public:
+    void run(IR::Function *function)
+    {
+        _active.reserve(function->tempCount);
+        _localCount = function->locals.size();
+        int maxUsed = _localCount;
+
+        foreach (IR::BasicBlock *block, function->basicBlocks) {
+            foreach (IR::Stmt *s, block->statements) {
+                _currentStatement = s;
+                if (s->d)
+                    s->accept(this);
+            }
+            maxUsed = std::max(maxUsed, _nextFree + _localCount);
+        }
+
+        function->tempCount = maxUsed;
+    }
+
+private:
+    virtual void visitConst(IR::Const *) {}
+    virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
+    virtual void visitName(IR::Name *) {}
+    virtual void visitClosure(IR::Closure *) {}
+    virtual void visitUnop(IR::Unop *e) { e->expr->accept(this); }
+    virtual void visitBinop(IR::Binop *e) { e->left->accept(this); e->right->accept(this); }
+    virtual void visitSubscript(IR::Subscript *e) { e->base->accept(this); e->index->accept(this); }
+    virtual void visitMember(IR::Member *e) { e->base->accept(this); }
+    virtual void visitExp(IR::Exp *s) { s->expr->accept(this); }
+    virtual void visitEnter(IR::Enter *) {}
+    virtual void visitLeave(IR::Leave *) {}
+    virtual void visitJump(IR::Jump *) {}
+    virtual void visitCJump(IR::CJump *s) { s->cond->accept(this); }
+    virtual void visitRet(IR::Ret *s) { s->expr->accept(this); }
+
+    virtual void visitTemp(IR::Temp *e) {
+        if (e->index < 0)
+            return;
+        if (e->index < _localCount) // don't optimise locals yet.
+            return;
+
+        e->index = remap(e->index - _localCount) + _localCount;
+    }
+
+    virtual void visitCall(IR::Call *e) {
+        e->base->accept(this);
+        for (IR::ExprList *it = e->args; it; it = it->next)
+            it->expr->accept(this);
+    }
+
+    virtual void visitNew(IR::New *e) {
+        e->base->accept(this);
+        for (IR::ExprList *it = e->args; it; it = it->next)
+            it->expr->accept(this);
+    }
+
+    virtual void visitMove(IR::Move *s) {
+        s->target->accept(this);
+        s->source->accept(this);
+    }
+
+    int remap(int tempIndex) {
+        for (ActiveTemps::const_iterator i = _active.begin(), ei = _active.end(); i < ei; ++i) {
+            if (i->first == tempIndex) {
+                return i->second;
+            }
+        }
+
+        int firstFree = expireOld();
+        if (_nextFree <= firstFree)
+            _nextFree = firstFree + 1;
+        _active.prepend(qMakePair(tempIndex, firstFree));
+        return firstFree;
+    }
+
+    int expireOld() {
+        const QBitArray &liveIn = _currentStatement->d->liveIn;
+        QBitArray inUse(_nextFree);
+        int i = 0;
+        while (i < _active.size()) {
+            const QPair<int, int> &p = _active[i];
+            if (liveIn[p.first + _localCount]) {
+                inUse[p.second] = true;
+                ++i;
+            } else {
+                _active.remove(i);
+            }
+        }
+        for (int i = 0, ei = inUse.size(); i < ei; ++i)
+            if (!inUse[i])
+                return i;
+        return _nextFree;
+    }
+
+private:
+    typedef QVector<QPair<int, int> > ActiveTemps;
+    ActiveTemps _active;
+    IR::Stmt *_currentStatement;
+    int _localCount;
+    int _nextFree;
+};
+
 } // anonymous namespace
 
 InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module * /*module*/,
@@ -37,6 +142,8 @@ InstructionSelection::~InstructionSelection()
 void InstructionSelection::operator()(IR::Function *function)
 {
     qSwap(_function, function);
+
+    CompressTemps().run(_function);
 
     _function->code = VME::exec;
     _function->codeData = _ccode;

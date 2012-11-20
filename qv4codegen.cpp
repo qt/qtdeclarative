@@ -1432,7 +1432,17 @@ void Codegen::linearize(IR::Function *function)
 
             if (IR::BasicBlock *bb = leader.value(s)) {
                 qout << endl;
-                qout << 'L' << bb->index << ':' << endl;
+                QByteArray str;
+                str.append('L');
+                str.append(QByteArray::number(bb->index));
+                str.append(':');
+                for (int i = 66 - str.length(); i; --i)
+                    str.append(' ');
+                qout << str;
+                qout << "// predecessor blocks:";
+                foreach (IR::BasicBlock *in, bb->in)
+                    qout << " L" << in->index;
+                qout << endl;
             }
             IR::Stmt *n = (i + 1) < code.size() ? code.at(i + 1) : 0;
             if (n && s->asJump() && s->asJump()->target == leader.value(n)) {
@@ -1467,7 +1477,7 @@ void Codegen::linearize(IR::Function *function)
             //        }
 
             if (! s->d->liveOut.isEmpty()) {
-                qout << " // lives:";
+                qout << " // lives out:";
                 for (int i = 0; i < s->d->liveOut.size(); ++i) {
                     if (s->d->liveOut.testBit(i))
                         qout << " %" << i;
@@ -1487,13 +1497,6 @@ void Codegen::linearize(IR::Function *function)
         qout << "}" << endl
              << endl;
     }
-
-#ifndef QV4_NO_LIVENESS
-    foreach (IR::BasicBlock *block, function->basicBlocks) {
-        foreach (IR::Stmt *s, block->statements)
-            s->destroyData();
-    }
-#endif
 }
 
 IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,

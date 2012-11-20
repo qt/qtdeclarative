@@ -387,6 +387,12 @@ Function *Module::newFunction(const QString &name)
 
 Function::~Function()
 {
+    // destroy the Stmt::Data blocks manually, because memory pool cleanup won't
+    // call the Stmt destructors.
+    foreach (IR::BasicBlock *b, basicBlocks)
+        foreach (IR::Stmt *s, b->statements)
+            s->destroyData();
+
     qDeleteAll(basicBlocks);
 }
 
