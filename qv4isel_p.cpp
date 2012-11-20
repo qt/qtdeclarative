@@ -5,5 +5,5 @@ using namespace QQmlJS;
 EvalInstructionSelection::~EvalInstructionSelection()
 {}
 
-EValISelFactory::~EValISelFactory()
+EvalISelFactory::~EvalISelFactory()
 {}

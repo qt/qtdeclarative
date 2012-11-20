@@ -194,13 +194,10 @@ struct ArrayPrototype: ArrayObject
 
 struct FunctionCtor: FunctionObject
 {
-    FunctionCtor(ExecutionContext *scope, EValISelFactory *factory);
+    FunctionCtor(ExecutionContext *scope);
 
     virtual Value construct(ExecutionContext *ctx);
     virtual Value call(ExecutionContext *ctx);
-
-private:
-    EValISelFactory *_factory;
 };
 
 struct FunctionPrototype: FunctionObject

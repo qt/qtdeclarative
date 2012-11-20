@@ -51,10 +51,10 @@ public:
     virtual void run(IR::Function *function) = 0;
 };
 
-class EValISelFactory
+class EvalISelFactory
 {
 public:
-    virtual ~EValISelFactory() = 0;
+    virtual ~EvalISelFactory() = 0;
     virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine) = 0;
 };
 

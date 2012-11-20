@@ -45,7 +45,8 @@
 namespace QQmlJS {
 namespace VM {
 
-ExecutionEngine::ExecutionEngine(EValISelFactory *factory)
+ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
+    : iselFactory(factory)
 {
     rootContext = newContext();
     rootContext->init(this);
@@ -92,7 +93,7 @@ ExecutionEngine::ExecutionEngine(EValISelFactory *factory)
     numberCtor = Value::fromObject(new NumberCtor(rootContext));
     booleanCtor = Value::fromObject(new BooleanCtor(rootContext));
     arrayCtor = Value::fromObject(new ArrayCtor(rootContext));
-    functionCtor = Value::fromObject(new FunctionCtor(rootContext, factory));
+    functionCtor = Value::fromObject(new FunctionCtor(rootContext));
     dateCtor = Value::fromObject(new DateCtor(rootContext));
     regExpCtor = Value::fromObject(new RegExpCtor(rootContext));
     errorCtor = Value::fromObject(new ErrorCtor(rootContext));
@@ -160,7 +161,7 @@ ExecutionEngine::ExecutionEngine(EValISelFactory *factory)
     glo->__put__(rootContext, identifier(QStringLiteral("undefined")), Value::undefinedValue());
     glo->__put__(rootContext, identifier(QStringLiteral("NaN")), Value::fromDouble(nan("")));
     glo->__put__(rootContext, identifier(QStringLiteral("Infinity")), Value::fromDouble(INFINITY));
-    glo->__put__(rootContext, identifier(QStringLiteral("eval")), Value::fromObject(new EvalFunction(rootContext, factory)));
+    glo->__put__(rootContext, identifier(QStringLiteral("eval")), Value::fromObject(new EvalFunction(rootContext)));
 
     // TODO: parseInt [15.1.2.2]
     // TODO: parseFloat [15.1.2.3]

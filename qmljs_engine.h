@@ -83,6 +83,7 @@ struct URIErrorPrototype;
 
 struct ExecutionEngine
 {
+    EvalISelFactory *iselFactory;
     ExecutionContext *current;
     ExecutionContext *rootContext;
 
@@ -138,7 +139,7 @@ struct ExecutionEngine
     QVector<ExceptionHandler> unwindStack;
     Value exception;
 
-    ExecutionEngine(EValISelFactory *factory);
+    ExecutionEngine(EvalISelFactory *iselFactory);
 
     ExecutionContext *newContext();
 

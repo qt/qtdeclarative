@@ -481,7 +481,7 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
         ctx = context;
     }
     // ##### inline and do this in the correct scope
-    Value result = evaluate(ctx, QStringLiteral("eval code"), code, _factory, QQmlJS::Codegen::EvalCode);
+    Value result = evaluate(ctx, QStringLiteral("eval code"), code, QQmlJS::Codegen::EvalCode);
 
     if (strictMode)
         ctx->leaveCallContext();
@@ -506,8 +506,7 @@ Value IsFiniteFunction::call(ExecutionContext * /*context*/, Value /*thisObject*
 }
 
 Value EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fileName,
-                           const QString &source, EValISelFactory *factory,
-                           QQmlJS::Codegen::Mode mode)
+                             const QString &source, QQmlJS::Codegen::Mode mode)
 {
     using namespace QQmlJS;
 
@@ -536,7 +535,7 @@ Value EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &f
             globalCode = cg(program, &module, mode);
 
             foreach (IR::Function *function, module.functions) {
-                EvalInstructionSelection *isel = factory->create(vm);
+                EvalInstructionSelection *isel = ctx->engine->iselFactory->create(vm);
                 isel->run(function);
                 delete isel;
             }

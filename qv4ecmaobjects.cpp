@@ -1732,9 +1732,8 @@ Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
 //
 // Function object
 //
-FunctionCtor::FunctionCtor(ExecutionContext *scope, EValISelFactory *factory)
+FunctionCtor::FunctionCtor(ExecutionContext *scope)
     : FunctionObject(scope)
-    , _factory(factory)
 {
 }
 
@@ -1776,7 +1775,7 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
     Codegen cg;
     IR::Function *irf = cg(fe, &module);
 
-    EvalInstructionSelection *isel = _factory->create(ctx->engine);
+    EvalInstructionSelection *isel = ctx->engine->iselFactory->create(ctx->engine);
     isel->run(irf);
     delete isel;
 

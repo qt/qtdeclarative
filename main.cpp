@@ -123,7 +123,7 @@ int executeLLVMCode(void *codePtr)
         return EXIT_FAILURE;
     void (*code)(VM::ExecutionContext *) = (void (*)(VM::ExecutionContext *)) codePtr;
 
-    QScopedPointer<QQmlJS::EValISelFactory> iSelFactory(new QQmlJS::Moth::ISelFactory);
+    QScopedPointer<QQmlJS::EvalISelFactory> iSelFactory(new QQmlJS::Moth::ISelFactory);
     VM::ExecutionEngine vm(iSelFactory.data());
     VM::ExecutionContext *ctx = vm.rootContext;
 
@@ -289,7 +289,7 @@ int main(int argc, char *argv[])
 #endif // QMLJS_NO_LLVM
     case use_masm:
     case use_moth: {
-        QScopedPointer<QQmlJS::EValISelFactory> iSelFactory;
+        QScopedPointer<QQmlJS::EvalISelFactory> iSelFactory;
         if (mode == use_moth)
             iSelFactory.reset(new QQmlJS::Moth::ISelFactory);
         else
@@ -318,7 +318,7 @@ int main(int argc, char *argv[])
                     return EXIT_FAILURE;
                 }
 
-                QQmlJS::VM::Value result = QQmlJS::VM::EvalFunction::evaluate(vm.rootContext, fn, code, iSelFactory.data(), QQmlJS::Codegen::GlobalCode);
+                QQmlJS::VM::Value result = QQmlJS::VM::EvalFunction::evaluate(vm.rootContext, fn, code, QQmlJS::Codegen::GlobalCode);
                 if (!result.isUndefined()) {
                     if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
                         std::cout << "exit value: " << qPrintable(result.toString(ctx)->toQString()) << std::endl;

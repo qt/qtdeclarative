@@ -631,7 +631,7 @@ private:
     QList<CallToLink> _callsToLink;
 };
 
-class ISelFactory: public EValISelFactory
+class ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}

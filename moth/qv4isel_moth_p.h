@@ -60,7 +60,7 @@ private:
     uchar *_ccode;
 };
 
-class ISelFactory: public EValISelFactory
+class ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}

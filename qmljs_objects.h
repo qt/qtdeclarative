@@ -524,16 +524,13 @@ struct ScriptFunction: FunctionObject {
 
 struct EvalFunction : FunctionObject
 {
-    EvalFunction(ExecutionContext *scope, EValISelFactory *factory): FunctionObject(scope), _factory(factory) {}
+    EvalFunction(ExecutionContext *scope): FunctionObject(scope) {}
 
-    static Value evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fileName,
-                        const QString &source, EValISelFactory *factory,
-                        QQmlJS::Codegen::Mode mode);
+    static Value evaluate(QQmlJS::VM::ExecutionContext *ctx,
+                          const QString &fileName, const QString &source,
+                          QQmlJS::Codegen::Mode mode);
 
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode = false);
-
-private:
-    EValISelFactory *_factory;
 };
 
 struct IsNaNFunction: FunctionObject
