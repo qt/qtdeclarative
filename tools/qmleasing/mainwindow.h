@@ -39,17 +39,43 @@
 **
 ****************************************************************************/
 
-#include "mainwindow.h"
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
-#include <QApplication>
+#include <QMainWindow>
+#include <QtQuick/QQuickView>
+#include "ui_properties.h"
+#include "ui_import.h"
 
-int main(int argc, char ** argv)
+class SplineEditor;
+
+class MainWindow : public QMainWindow
 {
-    QApplication app(argc, argv);
+    Q_OBJECT
+public:
+    explicit MainWindow(QWidget *parent = 0);
 
-    MainWindow mainWindow;
-    mainWindow.show();
-    mainWindow.showQuickView();
+    void showQuickView();
 
-    return app.exec();
-}
+signals:
+
+public slots:
+    void textEditTextChanged();
+    void importData(int result);
+
+protected:
+    virtual void moveEvent(QMoveEvent *event);
+    virtual void resizeEvent(QResizeEvent *event);
+    virtual void closeEvent(QCloseEvent *event);
+    void initQml();
+
+private:
+    QQuickView quickView;
+    QWidget *m_placeholder;
+    Ui_Properties ui_properties;
+    Ui_ImportDialog ui_import;
+    SplineEditor *m_splineEditor;
+
+};
+
+#endif // MAINWINDOW_H

@@ -39,78 +39,17 @@
 **
 ****************************************************************************/
 
-#include <QPainter>
-#include <QtQuick/QQuickView>
-#include <QGuiApplication>
-#include <QEasingCurve>
-#include <QtQuick/QQuickPaintedItem>
+#include "mainwindow.h"
 
-class EasingPlot : public QQuickPaintedItem
-{
-    Q_OBJECT
-    Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged);
-
-public:
-    EasingPlot();
-
-    QEasingCurve easing() const;
-    void setEasing(const QEasingCurve &);
-
-signals:
-    void easingChanged();
-
-protected:
-    virtual void paint(QPainter *painter);
-
-private:
-    QEasingCurve m_easing;
-};
-
-EasingPlot::EasingPlot()
-{
-}
-
-QEasingCurve EasingPlot::easing() const
-{
-    return m_easing;
-}
-
-void EasingPlot::setEasing(const QEasingCurve &e)
-{
-    if (m_easing == e)
-        return;
-
-    m_easing = e;
-    emit easingChanged();
-
-    update();
-}
-
-void EasingPlot::paint(QPainter *painter)
-{
-    QPointF lastPoint(0, 0);
-
-    for (int ii = 1; ii <= 100; ++ii) {
-        qreal value = m_easing.valueForProgress(qreal(ii) / 100.);
-
-        QPointF currentPoint(width() * qreal(ii) / 100., value * (height() - 1));
-        painter->drawLine(lastPoint, currentPoint);
-
-        lastPoint = currentPoint;
-    }
-}
+#include <QApplication>
 
 int main(int argc, char ** argv)
 {
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
 
-    qmlRegisterType<EasingPlot>("EasingPlot", 1, 0, "EasingPlot");
-
-    QQuickView view;
-    view.setSource(QUrl("qrc:/easing.qml"));
-    view.show();
+    MainWindow mainWindow;
+    mainWindow.show();
+    mainWindow.showQuickView();
 
     return app.exec();
 }
-
-#include "main.moc"
