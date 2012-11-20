@@ -360,8 +360,7 @@ void **VME::instructionJumpTable()
 VM::Value VME::exec(VM::ExecutionContext *ctxt, const uchar *code)
 {
     VME vme;
-    vme(ctxt, code);
-    return VM::Value::undefinedValue();
+    return vme(ctxt, code);
 }
 
 void VME::restoreState(VM::ExecutionContext *context, int &targetTempIndex, const uchar *&code)
