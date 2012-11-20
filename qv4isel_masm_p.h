@@ -58,14 +58,12 @@ namespace MASM {
 class InstructionSelection: protected IR::StmtVisitor, public JSC::MacroAssembler, public EvalInstructionSelection
 {
 public:
-    InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module, uchar *code);
+    InstructionSelection(VM::ExecutionEngine *engine);
     ~InstructionSelection();
 
     virtual void run(IR::Function *function)
     { this->operator()(function); }
     void operator()(IR::Function *function);
-
-    virtual bool finishModule(size_t size);
 
 protected:
 #if CPU(X86)
@@ -630,12 +628,8 @@ private:
     }
 
     VM::ExecutionEngine *_engine;
-    IR::Module *_module;
     IR::Function *_function;
     IR::BasicBlock *_block;
-    uchar *_buffer;
-    uchar *_code;
-    uchar *_codePtr;
     QHash<IR::BasicBlock *, QVector<Jump> > _patches;
     QHash<IR::BasicBlock *, Label> _addrs;
     QList<CatchBlockToLink> _catchHandlers;
@@ -646,8 +640,8 @@ class ISelFactory: public EValISelFactory
 {
 public:
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine, IR::Module *module, uchar *code)
-    { return new InstructionSelection(engine, module, code); }
+    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine)
+    { return new InstructionSelection(engine); }
 };
 
 } // end of namespace MASM

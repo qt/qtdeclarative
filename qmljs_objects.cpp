@@ -515,13 +515,6 @@ Value EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &f
     IR::Module module;
     IR::Function *globalCode = 0;
 
-    const size_t codeSize = 400 * getpagesize();
-    uchar *code = 0;
-    if (posix_memalign((void**)&code, 16, codeSize))
-        assert(!"memalign failed");
-    assert(code);
-    assert(! (size_t(code) & 15));
-
     {
         QQmlJS::Engine ee, *engine = &ee;
         Lexer lexer(engine);
@@ -542,12 +535,9 @@ Value EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &f
             Codegen cg;
             globalCode = cg(program, &module, mode);
 
-
             foreach (IR::Function *function, module.functions) {
-                EvalInstructionSelection *isel = factory->create(vm, &module, code);
+                EvalInstructionSelection *isel = factory->create(vm);
                 isel->run(function);
-                if (! isel->finishModule(codeSize))
-                    Q_UNREACHABLE();
                 delete isel;
             }
         }

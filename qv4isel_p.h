@@ -49,14 +49,13 @@ public:
     virtual ~EvalInstructionSelection() = 0;
 
     virtual void run(IR::Function *function) = 0;
-    virtual bool finishModule(size_t codeSize) = 0;
 };
 
 class EValISelFactory
 {
 public:
     virtual ~EValISelFactory() = 0;
-    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine, IR::Module *module, uchar *code) = 0;
+    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine) = 0;
 };
 
 } // namespace QQmlJS

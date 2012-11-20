@@ -1775,8 +1775,8 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
     Codegen cg;
     IR::Function *irf = cg(fe, &module);
 
-    uchar *code = 0;
-    MASM::InstructionSelection isel(ctx->engine, &module, code);
+    // FIXME: this mixes MASM and MOTH
+    MASM::InstructionSelection isel(ctx->engine);
     isel(irf);
 
     ctx->thisObject = Value::fromObject(new ScriptFunction(ctx->engine->rootContext, irf));

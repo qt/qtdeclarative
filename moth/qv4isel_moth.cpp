@@ -129,10 +129,12 @@ private:
 
 } // anonymous namespace
 
-InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module * /*module*/,
-                                           uchar *code)
-: _engine(engine), _code(code), _ccode(code)
+InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine)
+    : _engine(engine)
 {
+    // FIXME: make the size dynamic. This requires changing the patching.
+    _code = new uchar[getpagesize() * 4000];
+    _ccode = _code;
 }
 
 InstructionSelection::~InstructionSelection()
@@ -146,7 +148,7 @@ void InstructionSelection::operator()(IR::Function *function)
     CompressTemps().run(_function);
 
     _function->code = VME::exec;
-    _function->codeData = _ccode;
+    _function->codeData = _code;
 
     int locals = _function->tempCount - _function->locals.size() + _function->maxNumberOfArguments + 1;
     assert(locals >= 0);

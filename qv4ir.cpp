@@ -394,6 +394,7 @@ Function::~Function()
             s->destroyData();
 
     qDeleteAll(basicBlocks);
+    delete[] codeData;
 }
 
 const QString *Function::newString(const QString &text)
