@@ -53,6 +53,7 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
 {
+    setWindowTitle("QML Easing Curve Editor");
     SplineEditor *splineEditor = new SplineEditor(this);
 
     QWidget *mainWidget = new QWidget(this);
