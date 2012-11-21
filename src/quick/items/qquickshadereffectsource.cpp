@@ -955,6 +955,11 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
                       ? QSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())))
                       : m_textureSize;
     Q_ASSERT(!textureSize.isEmpty());
+
+    // Crate large textures on high-dpi displays.
+    if (sourceItem() && sourceItem()->window())
+        textureSize *= sourceItem()->window()->devicePixelRatio();
+
     QQuickItemPrivate *d = static_cast<QQuickItemPrivate *>(QObjectPrivate::get(this));
     const QSize minTextureSize = d->sceneGraphContext()->minimumFBOSize();
     // Keep power-of-two by doubling the size.

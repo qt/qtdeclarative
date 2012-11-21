@@ -336,14 +336,15 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
     Q_Q(QQuickWindow);
     emit q->beforeRendering();
     int fboId = 0;
-    renderer->setDeviceRect(QRect(QPoint(0, 0), size));
+    const qreal devicePixelRatio = q->devicePixelRatio();
+    renderer->setDeviceRect(QRect(QPoint(0, 0), size * devicePixelRatio));
     if (renderTargetId) {
         fboId = renderTargetId;
         renderer->setViewportRect(QRect(QPoint(0, 0), renderTargetSize));
     } else {
-        renderer->setViewportRect(QRect(QPoint(0, 0), size));
+        renderer->setViewportRect(QRect(QPoint(0, 0), size * devicePixelRatio));
     }
-    renderer->setProjectionMatrixToDeviceRect();
+    renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size));
 
     context->renderNextFrame(renderer, fboId);
     emit q->afterRendering();
