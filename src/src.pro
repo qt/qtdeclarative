@@ -1,10 +1,16 @@
 TEMPLATE = subdirs
 CONFIG += ordered
 SUBDIRS += \
-    qml \
-    quick \
-    qmltest \
-    particles \
+    qml
+
+!isEmpty(QT.gui.name) {
+    SUBDIRS += \
+        quick \
+        qmltest \
+        particles
+}
+
+SUBDIRS += \
     plugins \
     imports \
     qmldevtools

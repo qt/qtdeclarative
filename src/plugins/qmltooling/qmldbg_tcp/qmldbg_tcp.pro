@@ -1,5 +1,5 @@
 TARGET = qmldbg_tcp
-QT       += qml-private network v8-private core-private
+QT = qml-private network v8-private core-private
 
 PLUGIN_TYPE = qmltooling
 load(qt_plugin)

@@ -1,2 +1,2 @@
 TEMPLATE = subdirs
-SUBDIRS +=  quick
+!isEmpty(QT.quick.name): SUBDIRS += quick
