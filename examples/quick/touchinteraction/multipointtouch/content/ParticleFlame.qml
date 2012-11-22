@@ -42,6 +42,11 @@ import QtQuick 2.0
 import QtQuick.Particles 2.0
 
 ParticleSystem {
+    anchors.fill: parent
+
+    property alias emitterX: emitter.x
+    property alias emitterY: emitter.y
+
     property alias color: img.color
     property alias emitting: emitter.enabled
     ImageParticle {
@@ -53,7 +58,7 @@ ParticleSystem {
     }
     Emitter {
         id: emitter
-        velocityFromMovement: 20
+        velocityFromMovement: 10
         emitRate: 80
         lifeSpan: 1500
         velocity: PointDirection{ y: -90; yVariation: 50; }

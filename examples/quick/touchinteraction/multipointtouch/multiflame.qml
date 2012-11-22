@@ -63,33 +63,33 @@ Rectangle {
 //! [1]
     ParticleFlame {
         color: "red"
-        x: touch1.x
-        y: touch1.y
+        emitterX: touch1.x
+        emitterY: touch1.y
         emitting: touch1.pressed
     }
 //! [1]
     ParticleFlame {
         color: "green"
-        x: touch2.x
-        y: touch2.y
+        emitterX: touch2.x
+        emitterY: touch2.y
         emitting: touch2.pressed
     }
     ParticleFlame {
         color: "yellow"
-        x: touch11.x
-        y: touch11.y
+        emitterX: touch11.x
+        emitterY: touch11.y
         emitting: touch11.pressed
     }
     ParticleFlame {
         color: "blue"
-        x: touch21.x
-        y: touch21.y
+        emitterX: touch21.x
+        emitterY: touch21.y
         emitting: touch21.pressed
     }
     ParticleFlame {
         color: "violet"
-        x: touch31.x
-        y: touch31.y
+        emitterX: touch31.x
+        emitterY: touch31.y
         emitting: touch31.pressed
     }
 }
