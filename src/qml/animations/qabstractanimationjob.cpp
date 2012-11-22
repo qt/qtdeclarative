@@ -44,6 +44,7 @@
 #include "private/qabstractanimationjob_p.h"
 #include "private/qanimationgroupjob_p.h"
 #include "private/qanimationjobutil_p.h"
+#include "private/qqmlengine_p.h"
 
 #define DEFAULT_TIMER_INTERVAL 16
 
@@ -473,7 +474,17 @@ void QAbstractAnimationJob::start()
 {
     if (m_state == Running)
         return;
-    setState(Running);
+
+    if (QQmlEnginePrivate::designerMode()) {
+        if (state() != Stopped) {
+            m_currentTime = duration();
+            m_totalCurrentTime = totalDuration();
+            setState(Running);
+            setState(Stopped);
+        }
+    } else {
+        setState(Running);
+    }
 }
 
 void QAbstractAnimationJob::stop()

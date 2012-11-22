@@ -175,7 +175,7 @@ void QQuickBehavior::setEnabled(bool enabled)
 void QQuickBehavior::write(const QVariant &value)
 {
     Q_D(QQuickBehavior);
-    bool bypass = !d->enabled || !d->finalized;
+    bool bypass = !d->enabled || !d->finalized || QQmlEnginePrivate::designerMode();
     if (!bypass)
         qmlExecuteDeferred(this);
     if (!d->animation || bypass) {

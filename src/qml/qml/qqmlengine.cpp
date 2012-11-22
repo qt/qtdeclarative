@@ -165,6 +165,7 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
 */
 
 bool QQmlEnginePrivate::qml_debugging_enabled = false;
+bool QQmlEnginePrivate::s_designerMode = false;
 
 // these types are part of the QML language
 void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int versionMinor)
@@ -190,6 +191,16 @@ void QQmlEnginePrivate::defineQtQuick2Module()
     // register the QtQuick2 types which are implemented in the QtQml module.
     registerQtQuick2Types("QtQuick",2,0);
     qmlRegisterUncreatableType<QQmlLocale>("QtQuick", 2, 0, "Locale", QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
+}
+
+bool QQmlEnginePrivate::designerMode()
+{
+    return s_designerMode;
+}
+
+void QQmlEnginePrivate::activateDesignerMode()
+{
+    s_designerMode = true;
 }
 
 

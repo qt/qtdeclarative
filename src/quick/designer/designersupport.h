@@ -145,6 +145,7 @@ public:
     static void updateDirtyNode(QQuickItem *item);
 
     static void activateDesignerWindowManager();
+    static void activateDesignerMode();
 
     static void createOpenGLContext(QQuickWindow *window);
 

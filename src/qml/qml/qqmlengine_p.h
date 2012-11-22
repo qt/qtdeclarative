@@ -265,6 +265,9 @@ public:
     static void registerQtQuick2Types(const char *uri, int versionMajor, int versionMinor);
     static void defineQtQuick2Module();
 
+    static bool designerMode();
+    static void activateDesignerMode();
+
     static bool qml_debugging_enabled;
 
     mutable QMutex mutex;
@@ -305,6 +308,7 @@ private:
     QHash<int, int> m_qmlLists;
     QHash<int, QQmlCompiledData *> m_compositeTypes;
     QHash<QUrl, QByteArray> debugChangesHash;
+    static bool s_designerMode;
 
     // These members is protected by the full QQmlEnginePrivate::mutex mutex
     struct Deletable { Deletable():next(0) {} virtual ~Deletable() {} Deletable *next; };

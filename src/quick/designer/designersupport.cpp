@@ -44,11 +44,13 @@
 
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
+#include <QtQml/private/qabstractanimationjob_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qquickview_p.h>
 #include <private/qquickwindowmanager_p.h>
 #include <QtQuick/private/qquickstategroup_p.h>
 #include <QtGui/QImage>
+#include <private/qqmlvme_p.h>
 
 #include "designerwindowmanager_p.h"
 
@@ -427,6 +429,11 @@ void DesignerSupport::updateDirtyNode(QQuickItem *item)
 void DesignerSupport::activateDesignerWindowManager()
 {
     QQuickWindowManager::setInstance(new DesignerWindowManager);
+}
+
+void DesignerSupport::activateDesignerMode()
+{
+    QQmlEnginePrivate::activateDesignerMode();
 }
 
 void DesignerSupport::createOpenGLContext(QQuickWindow *window)
