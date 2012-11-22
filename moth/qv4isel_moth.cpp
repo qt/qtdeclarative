@@ -31,13 +31,25 @@ public:
         _nextFree = 0;
         _active.reserve(function->tempCount);
         _localCount = function->locals.size();
-        int maxUsed = 0;
+        pinReturnTemp(function);
+        int maxUsed = _nextFree;
 
         foreach (IR::BasicBlock *block, function->basicBlocks) {
-            foreach (IR::Stmt *s, block->statements) {
-                _currentStatement = s;
-                if (s->d)
-                    s->accept(this);
+#ifdef DEBUG_TEMP_COMPRESSION
+            qDebug("L%d:", block->index);
+#endif // DEBUG_TEMP_COMPRESSION
+
+            for (int i = 0, ei = block->statements.size(); i < ei; ++i ) {
+                _currentStatement = block->statements[i];
+                if (i == 0)
+                    expireOld();
+
+#ifdef DEBUG_TEMP_COMPRESSION
+                _currentStatement->dump(qout);qout<<endl<<flush;
+#endif // DEBUG_TEMP_COMPRESSION
+
+                if (_currentStatement->d)
+                    _currentStatement->accept(this);
             }
             maxUsed = std::max(maxUsed, _nextFree);
         }
@@ -48,6 +60,18 @@ public:
     }
 
 private:
+    void pinReturnTemp(IR::Function *function) {
+        const IR::BasicBlock *returnBlock = function->basicBlocks.last();
+        assert(returnBlock);
+        IR::Ret *ret = returnBlock->terminator()->asRet();
+        assert(ret);
+        IR::Temp *t = ret->expr->asTemp();
+        assert(t);
+        assert(t->index >= 0);
+        _pinnedReturnValue = _nextFree;
+        add(t->index, _pinnedReturnValue);
+    }
+
     virtual void visitConst(IR::Const *) {}
     virtual void visitString(IR::String *) {}
     virtual void visitRegExp(IR::RegExp *) {}
@@ -94,34 +118,47 @@ private:
         for (ActiveTemps::const_iterator i = _active.begin(), ei = _active.end(); i < ei; ++i) {
             if (i->first == tempIndex) {
 #ifdef DEBUG_TEMP_COMPRESSION
-                qDebug() << "lookup" << (tempIndex + _localCount) << "->" << (i->second + _localCount);
+                qDebug() << "    lookup" << (tempIndex + _localCount) << "->" << (i->second + _localCount);
 #endif // DEBUG_TEMP_COMPRESSION
                 return i->second;
             }
         }
 
         int firstFree = expireOld();
+        add(tempIndex, firstFree);
+        return firstFree;
+    }
+
+    void add(int tempIndex, int firstFree) {
         if (_nextFree <= firstFree)
             _nextFree = firstFree + 1;
         _active.prepend(qMakePair(tempIndex, firstFree));
 #ifdef DEBUG_TEMP_COMPRESSION
-        qDebug() << "   add" << (tempIndex + _localCount) << "->" << (firstFree+ _localCount);
+        qDebug() << "    add" << (tempIndex + _localCount) << "->" << (firstFree+ _localCount);
 #endif // DEBUG_TEMP_COMPRESSION
-        return firstFree;
     }
 
     int expireOld() {
+        Q_ASSERT(_currentStatement->d);
+
         const QBitArray &liveIn = _currentStatement->d->liveIn;
         QBitArray inUse(_nextFree);
         int i = 0;
         while (i < _active.size()) {
             const QPair<int, int> &p = _active[i];
+
+            if (p.second == _pinnedReturnValue) {
+                inUse.setBit(p.second);
+                ++i;
+                continue;
+            }
+
             if (liveIn[p.first + _localCount]) {
                 inUse[p.second] = true;
                 ++i;
             } else {
 #ifdef DEBUG_TEMP_COMPRESSION
-                qDebug() << "remove" << (p.first + _localCount);
+                qDebug() << "    remove" << (p.first + _localCount) << "->" << (p.second + _localCount);
 #endif // DEBUG_TEMP_COMPRESSION
                 _active.remove(i);
             }
@@ -138,6 +175,7 @@ private:
     IR::Stmt *_currentStatement;
     int _localCount;
     int _nextFree;
+    int _pinnedReturnValue;
 };
 
 } // anonymous namespace

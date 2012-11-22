@@ -305,7 +305,9 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(Binop)
 
     MOTH_BEGIN_INSTR(Ret)
-        return TEMP(instr.tempIndex);
+        VM::Value result = TEMP(instr.tempIndex);
+        TRACE(Ret, "returning value %s", result.toString(context)->toQString().toUtf8().constData());
+        return result;
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(LoadThis)
