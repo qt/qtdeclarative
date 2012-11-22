@@ -1908,7 +1908,7 @@ void QQuickText::resetMaximumLineCount()
     there is no guarantee.
 
     Text.StyledText is an optimized format supporting some basic text
-    styling markup, in the style of html 3.2:
+    styling markup, in the style of HTML 3.2:
 
     \code
     <b></b> - bold
@@ -1951,6 +1951,10 @@ Column {
     \endqml
     \li \image declarative-textformat.png
     \endtable
+
+    Text.RichText supports a larger subset of HTML 4, as described on the
+    \l {Supported HTML Subset} page. You should prefer using Text.PlainText
+    or Text.StyledText instead, as they offer better performance.
 */
 QQuickText::TextFormat QQuickText::textFormat() const
 {
