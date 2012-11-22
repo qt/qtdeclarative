@@ -5,3 +5,8 @@ SUBDIRS +=imageprovider \
           networkaccessmanagerfactory \
           referenceexamples \
           shell
+
+#Install
+sources.files = qml.pro
+sources.path = $$[QT_INSTALL_EXAMPLES]/qtquick/qml
+INSTALLS += sources

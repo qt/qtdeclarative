@@ -6,5 +6,6 @@ SOURCES += main.cpp
 target.path = $$[QT_INSTALL_EXAMPLES]/qtquick/quick/accessibility
 qml.files = accessibility.qml content
 qml.path = $$[QT_INSTALL_EXAMPLES]/qtquick/quick/accessibility
-INSTALLS += target qml
-
+sources.files = $$SOURCES accessibility.pro
+sources.path = $$qml.path
+INSTALLS += sources target qml

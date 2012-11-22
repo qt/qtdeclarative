@@ -15,3 +15,8 @@ HEADERS +=     directory.h \
 SOURCES +=    directory.cpp \
         file.cpp \
         dialogPlugin.cpp
+
+target.path = $$[QT_INSTALL_EXAMPLES]/qtquick/tutorials/gettingStartedQml/filedialog
+sources.files = $$SOURCES $$HEADERS filedialog.pro
+sources.path = $$target.path
+INSTALLS = sources target

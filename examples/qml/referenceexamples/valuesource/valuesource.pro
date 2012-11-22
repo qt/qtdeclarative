@@ -9,7 +9,7 @@ HEADERS += person.h \
            happybirthdaysong.h
 RESOURCES += valuesource.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/qtquick/qml/extending/valuesource
-sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS valuesource.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/qtquick/qml/extending/valuesource
+target.path = $$[QT_INSTALL_EXAMPLES]/qtquick/qml/referenceexamples/valuesource
+sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS valuesource.pro example.qml
+sources.path = $$target.path
 INSTALLS += target sources

@@ -8,4 +8,6 @@ SUBDIRS += affectors \
 #Install shared images too
 qml.files = images
 qml.path = $$[QT_INSTALL_EXAMPLES]/qtquick/particles
-INSTALLS = qml
+sources.files = particles.pro
+sources.path = $$qml.path
+INSTALLS = sources qml

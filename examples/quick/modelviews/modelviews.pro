@@ -14,5 +14,6 @@ qml.files = \
         visualdatamodel \
         visualitemmodel
 qml.path = $$[QT_INSTALL_EXAMPLES]/qtquick/quick/modelviews
-INSTALLS += target qml
-
+sources.files = $$SOURCES modelviews.pro
+sources.path = $$qml.path
+INSTALLS += sources target qml

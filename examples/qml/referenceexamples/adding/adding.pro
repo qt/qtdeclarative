@@ -5,7 +5,7 @@ SOURCES += main.cpp \
 HEADERS += person.h
 RESOURCES += adding.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/qtquick/qml/extending/adding
-sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS adding.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/qtquick/qml/extending/adding
+target.path = $$[QT_INSTALL_EXAMPLES]/qtquick/qml/referenceexamples/adding
+sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS adding.pro example.qml
+sources.path = $$target.path
 INSTALLS += target sources
