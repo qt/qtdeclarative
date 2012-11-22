@@ -394,7 +394,8 @@ bool Minify::parse(int startToken)
     const int yyerrorstate = _stateStack[yytos];
 
     // automatic insertion of `;'
-    if (yytoken != -1 && t_action(yyerrorstate, T_AUTOMATIC_SEMICOLON) && canInsertAutomaticSemicolon(yytoken)) {
+    if (yytoken != -1 && ((t_action(yyerrorstate, T_AUTOMATIC_SEMICOLON) && canInsertAutomaticSemicolon(yytoken))
+                          || t_action(yyerrorstate, T_COMPATIBILITY_SEMICOLON))) {
         _tokens.prepend(yytoken);
         _tokenStrings.prepend(yytokentext);
         yyaction = yyerrorstate;
@@ -509,7 +510,8 @@ bool Tokenize::parse(int startToken)
     const int yyerrorstate = _stateStack[yytos];
 
     // automatic insertion of `;'
-    if (yytoken != -1 && t_action(yyerrorstate, T_AUTOMATIC_SEMICOLON) && canInsertAutomaticSemicolon(yytoken)) {
+    if (yytoken != -1 && ((t_action(yyerrorstate, T_AUTOMATIC_SEMICOLON) && canInsertAutomaticSemicolon(yytoken))
+                          || t_action(yyerrorstate, T_COMPATIBILITY_SEMICOLON))) {
         _tokens.prepend(yytoken);
         _tokenStrings.prepend(yytokentext);
         yyaction = yyerrorstate;

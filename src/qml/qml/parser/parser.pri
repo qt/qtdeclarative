@@ -17,3 +17,6 @@ SOURCES += \
     $$PWD/qqmljsgrammar.cpp \
     $$PWD/qqmljslexer.cpp \
     $$PWD/qqmljsparser.cpp \
+
+OTHER_FILES += \
+    $$PWD/qqmljs.g

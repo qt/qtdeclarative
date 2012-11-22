@@ -265,6 +265,7 @@ private slots:
     void registeredFlagMethod();
     void deleteLaterObjectMethodCall();
     void automaticSemicolon();
+    void compatibilitySemicolon();
     void unaryExpression();
     void switchStatement();
     void withStatement();
@@ -6596,6 +6597,13 @@ void tst_qqmlecmascript::deleteLaterObjectMethodCall()
 void tst_qqmlecmascript::automaticSemicolon()
 {
     QQmlComponent component(&engine, testFileUrl("automaticSemicolon.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+}
+
+void tst_qqmlecmascript::compatibilitySemicolon()
+{
+    QQmlComponent component(&engine, testFileUrl("compatibilitySemicolon.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 }
