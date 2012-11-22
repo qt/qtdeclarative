@@ -369,9 +369,11 @@ unless the client explicitly preserves it.
 \section2 Example One: Automatic Release
 
 In the following example, the scarce resource will be automatically released
-after the binding evaluation is complete.
+after the binding evaluation is complete. Assume we have the following qml file:
 
 \snippet qml/integrating-javascript/scarceresources/exampleOne.qml 0
+
+And then use it from C++:
 
 \snippet qml/integrating-javascript/scarceresources/avatarExample.cpp 1
 
@@ -384,6 +386,8 @@ scarce resource.
 
 \snippet qml/integrating-javascript/scarceresources/exampleTwo.qml 0
 
+And from C++:
+
 \snippet qml/integrating-javascript/scarceresources/avatarExample.cpp 2
 
 \section2 Example Three: Explicit Preservation
@@ -392,10 +396,13 @@ In this example, the resource must be explicitly preserved in order
 to prevent the declarative engine from automatically releasing the
 resource after evaluation of the imported script.
 
+We create a JavaScript file:
 \snippet qml/integrating-javascript/scarceresources/exampleThree.js 0
 
+Import it in QML:
 \snippet qml/integrating-javascript/scarceresources/exampleThree.qml 0
 
+Run it in C++:
 \snippet qml/integrating-javascript/scarceresources/avatarExample.cpp 3
 
 \section2 Example Four: Explicit Destruction
@@ -405,10 +412,13 @@ scarce resource variant.  This example shows how a client may free system
 resources by releasing the scarce resource held in a JavaScript object, if
 required, during evaluation of a JavaScript expression.
 
+We create a JavaScript file:
 \snippet qml/integrating-javascript/scarceresources/exampleFour.js 0
 
+Import it in QML:
 \snippet qml/integrating-javascript/scarceresources/exampleFour.qml 0
 
+Run it in C++:
 \snippet qml/integrating-javascript/scarceresources/avatarExample.cpp 4
 
 \section2 Example Five: Explicit Destruction and JavaScript References
@@ -419,8 +429,10 @@ to one scarce resource is held, and the client calls destroy() on one
 of those references (to explicitly release the scarce resource), all of
 the references will be affected.
 
+
 \snippet qml/integrating-javascript/scarceresources/exampleFive.qml 0
 
+Run it in C++:
 \snippet qml/integrating-javascript/scarceresources/avatarExample.cpp 5
 
 */
