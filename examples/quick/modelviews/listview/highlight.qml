@@ -91,6 +91,7 @@ Rectangle {
     ListView {
         id: listView
         width: 200; height: parent.height
+        x: 30
 
         model: PetsModel {}
         delegate: petDelegate

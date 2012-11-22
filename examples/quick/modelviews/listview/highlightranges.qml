@@ -45,25 +45,36 @@ import "content"
 Rectangle {
     id: root
     property int current: 0
+    property bool increasing: true
     // Example index automation for convenience, disabled on click or tap
-    SequentialAnimation on current {
+    SequentialAnimation {
         id: anim
         loops: -1
-        NumberAnimation {
-            duration: 5000
-            to: aModel.count - 1
+        running: true
+        ScriptAction {
+            script: if (increasing) {
+                        current++;
+                        if (current >= aModel.count -1) {
+                            current = aModel.count - 1;
+                            increasing = !increasing;
+                        }
+                    } else {
+                        current--;
+                        if (current <= 0) {
+                            current = 0;
+                            increasing = !increasing;
+                        }
+                    }
         }
-        NumberAnimation {
-            duration: 5000
-            to: 0
-        }
+
+        PauseAnimation { duration: 500 }
     }
 //! [0]
     MouseArea{
         id: ma
         z: 1
         anchors.fill: parent
-        onClicked: {ma.enabled = false; anim.running = false;}
+        onClicked: { z = 1 - z; if (anim.running) anim.stop(); else anim.restart();}
     }
 
     width: 320; height: 480
@@ -94,7 +105,7 @@ Rectangle {
 //! [1]
     ListView {
         id: list1
-        height: 160; width: parent.width
+        height: 50; width: parent.width
         model: PetsModel {id: aModel}
         delegate: petDelegate
         orientation: ListView.Horizontal
@@ -107,8 +118,8 @@ Rectangle {
 
     ListView {
         id: list2
-        y: list1.height
-        height: 160; width: parent.width
+        y: 160
+        height: 50; width: parent.width
         model: PetsModel {}
         delegate: petDelegate
         orientation: ListView.Horizontal
@@ -121,8 +132,8 @@ Rectangle {
 
     ListView {
         id: list3
-        y: list1.height + list2.height
-        height: 160; width: parent.width
+        y: 320
+        height: 50; width: parent.width
         model: PetsModel {}
         delegate: petDelegate
         orientation: ListView.Horizontal
@@ -149,7 +160,7 @@ Rectangle {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: wrapper.ListView.view.currentIndex = index
+                onClicked: root.current = index
             }
         }
     }
