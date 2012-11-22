@@ -110,5 +110,4 @@ Rectangle {
             text: "Box"
         }
     }
-
 }
