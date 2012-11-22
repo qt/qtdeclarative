@@ -1094,10 +1094,13 @@ QQuickParticleData* QQuickParticleSystem::newDatum(int groupId, bool respectLimi
 void QQuickParticleSystem::emitParticle(QQuickParticleData* pd)
 {// called from prepareNextFrame()->emitWindow - enforce?
     //Account for relative emitter position
-    QPointF offset = this->mapFromItem(pd->e, QPointF(0, 0));
-    if (!offset.isNull()) {
-        pd->x += offset.x();
-        pd->y += offset.y();
+    bool okay = false;
+    QTransform t = pd->e->itemTransform(this, &okay);
+    if (okay) {
+        qreal tx,ty;
+        t.map(pd->x, pd->y, &tx, &ty);
+        pd->x = tx;
+        pd->y = ty;
     }
 
     finishNewDatum(pd);
