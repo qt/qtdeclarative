@@ -1537,8 +1537,11 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
         _function->RECEIVE(it->name.toString());
     }
 
-    foreach (const QString &local, _env->vars) {
-        _function->LOCAL(local);
+    // variables in global code are properties of the global context object, not locals as with other functions.
+    if (mode != GlobalCode) {
+        foreach (const QString &local, _env->vars) {
+            _function->LOCAL(local);
+        }
     }
 
     foreach (AST::FunctionDeclaration *f, _env->functions) {

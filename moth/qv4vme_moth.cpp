@@ -50,18 +50,20 @@ using namespace QQmlJS::Moth;
 
 static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, QVector<VM::Value> &stack, int index)
 {
+    VM::DeclarativeEnvironment *varEnv = context->variableEnvironment;
+
 #ifdef DO_TRACE_INSTR
     const char *kind;
     int pos;
     if (index < 0) {
         kind = "arg";
         pos = -index - 1;
-    } else if (index < (int) context->variableEnvironment->varCount) {
+    } else if (index < (int) varEnv->varCount) {
         kind = "local";
         pos = index;
     } else {
         kind = "temp";
-        pos = index - context->variableEnvironment->varCount;
+        pos = index - varEnv->varCount;
     }
     fprintf(stderr, "    tempValue: index = %d : %s = %d, stack size = %d\n",
           index, kind, pos, stack.size());
@@ -71,17 +73,17 @@ static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, QVecto
         const int arg = -index - 1;
 
         Q_ASSERT(arg >= 0);
-        Q_ASSERT((unsigned) arg < context->variableEnvironment->argumentCount);
-        Q_ASSERT(context->variableEnvironment->arguments);
+        Q_ASSERT((unsigned) arg < varEnv->argumentCount);
+        Q_ASSERT(varEnv->arguments);
 
-        return context->variableEnvironment->arguments + arg;
-    } else if (index < (int) context->variableEnvironment->varCount) {
+        return varEnv->arguments + arg;
+    } else if (index < (int) varEnv->varCount) {
         Q_ASSERT(index >= 0);
-        Q_ASSERT(context->variableEnvironment->locals);
+        Q_ASSERT(varEnv->locals);
 
-        return context->variableEnvironment->locals + index;
+        return varEnv->locals + index;
     } else {
-        int off = index - context->variableEnvironment->varCount;
+        int off = index - varEnv->varCount;
 
         Q_ASSERT(off >= 0);
         Q_ASSERT(off < stack.size());

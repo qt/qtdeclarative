@@ -22,14 +22,16 @@ static unsigned toValueOrTemp(IR::Expr *e, Instr::ValueOrTemp &vot)
     }
 }
 
+#undef DEBUG_TEMP_COMPRESSION
 class CompressTemps: public IR::StmtVisitor, IR::ExprVisitor
 {
 public:
     void run(IR::Function *function)
     {
+        _nextFree = 0;
         _active.reserve(function->tempCount);
         _localCount = function->locals.size();
-        int maxUsed = _localCount;
+        int maxUsed = 0;
 
         foreach (IR::BasicBlock *block, function->basicBlocks) {
             foreach (IR::Stmt *s, block->statements) {
@@ -37,10 +39,12 @@ public:
                 if (s->d)
                     s->accept(this);
             }
-            maxUsed = std::max(maxUsed, _nextFree + _localCount);
+            maxUsed = std::max(maxUsed, _nextFree);
         }
-
-        function->tempCount = maxUsed;
+#ifdef DEBUG_TEMP_COMPRESSION
+        qDebug() << "function" << (*function->name) << "uses" << maxUsed << "temps.";
+#endif // DEBUG_TEMP_COMPRESSION
+        function->tempCount = maxUsed + _localCount;
     }
 
 private:
@@ -89,6 +93,9 @@ private:
     int remap(int tempIndex) {
         for (ActiveTemps::const_iterator i = _active.begin(), ei = _active.end(); i < ei; ++i) {
             if (i->first == tempIndex) {
+#ifdef DEBUG_TEMP_COMPRESSION
+                qDebug() << "lookup" << (tempIndex + _localCount) << "->" << (i->second + _localCount);
+#endif // DEBUG_TEMP_COMPRESSION
                 return i->second;
             }
         }
@@ -97,6 +104,9 @@ private:
         if (_nextFree <= firstFree)
             _nextFree = firstFree + 1;
         _active.prepend(qMakePair(tempIndex, firstFree));
+#ifdef DEBUG_TEMP_COMPRESSION
+        qDebug() << "   add" << (tempIndex + _localCount) << "->" << (firstFree+ _localCount);
+#endif // DEBUG_TEMP_COMPRESSION
         return firstFree;
     }
 
@@ -110,6 +120,9 @@ private:
                 inUse[p.second] = true;
                 ++i;
             } else {
+#ifdef DEBUG_TEMP_COMPRESSION
+                qDebug() << "remove" << (p.first + _localCount);
+#endif // DEBUG_TEMP_COMPRESSION
                 _active.remove(i);
             }
         }
