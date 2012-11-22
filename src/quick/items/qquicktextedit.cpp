@@ -410,7 +410,9 @@ void QQuickTextEdit::setFont(const QFont &font)
         }
         updateSize();
         updateDocument();
+#ifndef QT_NO_IM
         updateInputMethod(Qt::ImCursorRectangle | Qt::ImFont);
+#endif
     }
     emit fontChanged(d->sourceFont);
 }
@@ -606,12 +608,14 @@ bool QQuickTextEditPrivate::determineHorizontalAlignment()
     Q_Q(QQuickTextEdit);
     if (hAlignImplicit && q->isComponentComplete()) {
         Qt::LayoutDirection direction = contentDirection;
+#ifndef QT_NO_IM
         if (direction == Qt::LayoutDirectionAuto) {
             const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
             direction = textDirection(preeditText);
         }
         if (direction == Qt::LayoutDirectionAuto)
             direction = qGuiApp->inputMethod()->inputDirection();
+#endif
 
         return setHAlign(direction == Qt::RightToLeft ? QQuickTextEdit::AlignRight : QQuickTextEdit::AlignLeft);
     }
@@ -802,6 +806,7 @@ int QQuickTextEdit::positionAt(qreal x, qreal y) const
     y -= d->yoff;
 
     int r = d->document->documentLayout()->hitTest(QPointF(x, y), Qt::FuzzyHit);
+#ifndef QT_NO_IM
     QTextCursor cursor = d->control->textCursor();
     if (r > cursor.position()) {
         // The cursor position includes positions within the preedit text, but only positions in the
@@ -818,6 +823,7 @@ int QQuickTextEdit::positionAt(qreal x, qreal y) const
                     : cursor.position();
         }
     }
+#endif
     return r;
 }
 
@@ -1165,6 +1171,7 @@ void QQuickTextEdit::setTextMargin(qreal margin)
     \endlist
 */
 
+#ifndef QT_NO_IM
 Qt::InputMethodHints QQuickTextEdit::inputMethodHints() const
 {
     Q_D(const QQuickTextEdit);
@@ -1182,6 +1189,7 @@ void QQuickTextEdit::setInputMethodHints(Qt::InputMethodHints hints)
     updateInputMethod(Qt::ImHints);
     emit inputMethodHintsChanged();
 }
+#endif // QT_NO_IM
 
 void QQuickTextEdit::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
@@ -1294,7 +1302,9 @@ void QQuickTextEdit::setReadOnly(bool r)
     if (r == isReadOnly())
         return;
 
+#ifndef QT_NO_IM
     setFlag(QQuickItem::ItemAcceptsInputMethod, !r);
+#endif
     Qt::TextInteractionFlags flags = Qt::LinksAccessibleByMouse;
     if (d->selectByMouse)
         flags = flags | Qt::TextSelectableByMouse;
@@ -1304,7 +1314,9 @@ void QQuickTextEdit::setReadOnly(bool r)
     if (!r)
         d->control->moveCursor(QTextCursor::End);
 
+#ifndef QT_NO_IM
     updateInputMethod(Qt::ImEnabled);
+#endif
     q_canPasteChanged();
     emit readOnlyChanged(r);
 }
@@ -1521,8 +1533,10 @@ void QQuickTextEdit::mousePressEvent(QMouseEvent *event)
         bool hadActiveFocus = hasActiveFocus();
         forceActiveFocus();
         // re-open input panel on press if already focused
+#ifndef QT_NO_IM
         if (hasActiveFocus() && hadActiveFocus && !isReadOnly())
             qGuiApp->inputMethod()->show();
+#endif
     }
     if (!event->isAccepted())
         QQuickImplicitSizeItem::mousePressEvent(event);
@@ -1565,6 +1579,7 @@ void QQuickTextEdit::mouseMoveEvent(QMouseEvent *event)
         QQuickImplicitSizeItem::mouseMoveEvent(event);
 }
 
+#ifndef QT_NO_IM
 /*!
 \overload
 Handles the given input method \a event.
@@ -1578,6 +1593,7 @@ void QQuickTextEdit::inputMethodEvent(QInputMethodEvent *event)
     if (wasComposing != isInputMethodComposing())
         emit inputMethodComposingChanged();
 }
+#endif // QT_NO_IM
 
 void QQuickTextEdit::itemChange(ItemChange change, const ItemChangeData &value)
 {
@@ -1588,16 +1604,19 @@ void QQuickTextEdit::itemChange(ItemChange change, const ItemChangeData &value)
         d->control->processEvent(&focusEvent, QPointF(-d->xoff, -d->yoff));
         if (value.boolValue) {
             q_updateAlignment();
+#ifndef QT_NO_IM
             connect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                     this, SLOT(q_updateAlignment()));
         } else {
             disconnect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                        this, SLOT(q_updateAlignment()));
+#endif
         }
     }
     QQuickItem::itemChange(change, value);
 }
 
+#ifndef QT_NO_IM
 /*!
 \overload
 Returns the value of the given \a property.
@@ -1621,6 +1640,7 @@ QVariant QQuickTextEdit::inputMethodQuery(Qt::InputMethodQuery property) const
     return v;
 
 }
+#endif // QT_NO_IM
 
 void QQuickTextEdit::triggerPreprocess()
 {
@@ -1726,6 +1746,7 @@ bool QQuickTextEdit::canRedo() const
     return d->document->isRedoAvailable();
 }
 
+#ifndef QT_NO_IM
 /*!
     \qmlproperty bool QtQuick2::TextEdit::inputMethodComposing
 
@@ -1743,6 +1764,7 @@ bool QQuickTextEdit::isInputMethodComposing() const
     Q_D(const QQuickTextEdit);
     return d->control->hasImState();
 }
+#endif // QT_NO_IM
 
 void QQuickTextEditPrivate::init()
 {
@@ -1755,7 +1777,9 @@ void QQuickTextEditPrivate::init()
 #endif
         q->setAcceptedMouseButtons(Qt::LeftButton);
 
+#ifndef QT_NO_IM
     q->setFlag(QQuickItem::ItemAcceptsInputMethod);
+#endif
     q->setFlag(QQuickItem::ItemHasContents);
 
     document = new QQuickTextDocumentWithImageResources(q);
@@ -1807,7 +1831,9 @@ void QQuickTextEdit::q_textChanged()
 void QQuickTextEdit::moveCursorDelegate()
 {
     Q_D(QQuickTextEdit);
+#ifndef QT_NO_IM
     updateInputMethod();
+#endif
     emit cursorRectangleChanged();
     if (!d->cursorItem)
         return;
@@ -2012,9 +2038,12 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
     else
         opt.setAlignment(Qt::Alignment(vAlign));
 
+#ifndef QT_NO_IM
     if (contentDirection == Qt::LayoutDirectionAuto) {
         opt.setTextDirection(qGuiApp->inputMethod()->inputDirection());
-    } else {
+    } else
+#endif
+    {
         opt.setTextDirection(contentDirection);
     }
 
@@ -2034,8 +2063,10 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
 void QQuickTextEdit::focusInEvent(QFocusEvent *event)
 {
     Q_D(const QQuickTextEdit);
+#ifndef QT_NO_IM
     if (d->focusOnPress && !isReadOnly())
         qGuiApp->inputMethod()->show();
+#endif
     QQuickImplicitSizeItem::focusInEvent(event);
 }
 

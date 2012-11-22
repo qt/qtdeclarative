@@ -75,9 +75,11 @@ QT_BEGIN_NAMESPACE
 void QQuickWindowPrivate::updateFocusItemTransform()
 {
     Q_Q(QQuickWindow);
+#ifndef QT_NO_IM
     QQuickItem *focus = q->activeFocusItem();
     if (focus && qApp->focusObject() == focus)
         qApp->inputMethod()->setInputItemTransform(QQuickItemPrivate::get(focus)->itemToWindowTransform());
+#endif
 }
 
 
@@ -1146,8 +1148,10 @@ bool QQuickWindow::event(QEvent *e)
         contentItem()->windowDeactivateEvent();
         break;
     case QEvent::FocusAboutToChange:
+#ifndef QT_NO_IM
         if (d->activeFocusItem)
             qGuiApp->inputMethod()->commit();
+#endif
         break;
     default:
         break;

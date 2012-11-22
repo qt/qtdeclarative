@@ -1750,7 +1750,11 @@ bool QQuickTextPrivate::setHAlign(QQuickText::HAlignment alignment, bool forceAl
 bool QQuickTextPrivate::determineHorizontalAlignment()
 {
     if (hAlignImplicit) {
+#ifndef QT_NO_IM
         bool alignToRight = text.isEmpty() ? qApp->inputMethod()->inputDirection() == Qt::RightToLeft : rightToLeftText;
+#else
+        bool alignToRight = rightToLeftText;
+#endif
         return setHAlign(alignToRight ? QQuickText::AlignRight : QQuickText::AlignLeft);
     }
     return false;

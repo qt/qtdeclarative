@@ -99,7 +99,9 @@ static QTextLine currentTextLine(const QTextCursor &cursor)
 
 QQuickTextControlPrivate::QQuickTextControlPrivate()
     : doc(0),
+#ifndef QT_NO_IM
       preeditCursor(0),
+#endif
       interactionFlags(Qt::TextEditorInteraction),
       cursorOn(false),
       cursorIsFocusIndicator(false),
@@ -285,7 +287,9 @@ void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &
 {
     Q_Q(QQuickTextControl);
 
+#ifndef QT_NO_IM
     cancelPreedit();
+#endif
 
     // for use when called from setPlainText. we may want to re-use the currently
     // set char format then.
@@ -397,8 +401,10 @@ void QQuickTextControlPrivate::selectionChanged(bool forceEmitSelectionChanged /
 {
     Q_Q(QQuickTextControl);
     if (forceEmitSelectionChanged) {
+#ifndef QT_NO_IM
         if (hasFocus)
             qGuiApp->inputMethod()->update(Qt::ImCurrentSelection);
+#endif
         emit q->selectionChanged();
     }
 
@@ -409,8 +415,10 @@ void QQuickTextControlPrivate::selectionChanged(bool forceEmitSelectionChanged /
     lastSelectionState = current;
     emit q->copyAvailable(current);
     if (!forceEmitSelectionChanged) {
+#ifndef QT_NO_IM
         if (hasFocus)
             qGuiApp->inputMethod()->update(Qt::ImCurrentSelection);
+#endif
         emit q->selectionChanged();
     }
     q->updateCursorRectangle(true);
@@ -611,7 +619,9 @@ void QQuickTextControl::updateCursorRectangle(bool force)
 void QQuickTextControl::setTextCursor(const QTextCursor &cursor)
 {
     Q_D(QQuickTextControl);
+#ifndef QT_NO_IM
     d->commitPreedit();
+#endif
     d->cursorIsFocusIndicator = false;
     const bool posChanged = cursor.position() != d->cursor.position();
     const QTextCursor oldSelection = d->cursor;
@@ -703,9 +713,11 @@ void QQuickTextControl::processEvent(QEvent *e, const QMatrix &matrix)
             QMouseEvent *ev = static_cast<QMouseEvent *>(e);
             d->mouseDoubleClickEvent(ev, matrix.map(ev->localPos()));
             break; }
+#ifndef QT_NO_IM
         case QEvent::InputMethod:
             d->inputMethodEvent(static_cast<QInputMethodEvent *>(e));
             break;
+#endif
         case QEvent::FocusIn:
         case QEvent::FocusOut:
             d->focusEvent(static_cast<QFocusEvent *>(e));
@@ -938,6 +950,7 @@ QRectF QQuickTextControlPrivate::rectForPosition(int position) const
     const QTextLayout *layout = block.layout();
     const QPointF layoutPos = q->blockBoundingRect(block).topLeft();
     int relativePos = position - block.position();
+#ifndef QT_NO_IM
     if (preeditCursor != 0) {
         int preeditPos = layout->preeditAreaPosition();
         if (relativePos == preeditPos)
@@ -945,6 +958,7 @@ QRectF QQuickTextControlPrivate::rectForPosition(int position) const
         else if (relativePos > preeditPos)
             relativePos += layout->preeditAreaText().length();
     }
+#endif
     QTextLine line = layout->lineForTextPosition(relativePos);
 
     int cursorWidth;
@@ -1004,7 +1018,9 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
     const QTextCursor oldSelection = cursor;
     const int oldCursorPos = cursor.position();
 
+#ifndef QT_NO_IM
     commitPreedit();
+#endif
 
     if (trippleClickTimer.isActive()
         && ((pos - trippleClickPoint).toPoint().manhattanLength() < qApp->styleHints()->startDragDistance())) {
@@ -1076,6 +1092,7 @@ void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mou
 
         int newCursorPos = q->hitTest(mousePos, Qt::FuzzyHit);
 
+#ifndef QT_NO_IM
         if (isPreediting()) {
             // note: oldCursorPos not including preedit
             int selectionStartPos = q->hitTest(mousePressPos, Qt::FuzzyHit);
@@ -1087,6 +1104,7 @@ void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mou
                 setCursorPosition(selectionStartPos);
             }
         }
+#endif
 
         if (newCursorPos == -1)
             return;
@@ -1100,15 +1118,19 @@ void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mou
             extendBlockwiseSelection(newCursorPos);
         else if (selectedWordOnDoubleClick.hasSelection())
             extendWordwiseSelection(newCursorPos, mouseX);
+#ifndef QT_NO_IM
         else if (!isPreediting())
             setCursorPosition(newCursorPos, QTextCursor::KeepAnchor);
+#endif
 
         if (interactionFlags & Qt::TextEditable) {
             if (cursor.position() != oldCursorPos)
                 emit q->cursorPositionChanged();
             _q_updateCurrentCharFormatAndSelection();
+#ifndef QT_NO_IM
             if (qGuiApp)
                 qGuiApp->inputMethod()->update(Qt::ImQueryInput);
+#endif
         } else if (cursor.position() != oldCursorPos) {
             emit q->cursorPositionChanged();
         }
@@ -1180,7 +1202,9 @@ void QQuickTextControlPrivate::mouseDoubleClickEvent(QMouseEvent *e, const QPoin
     Q_Q(QQuickTextControl);
 
     if (e->button() == Qt::LeftButton && (interactionFlags & Qt::TextSelectableByMouse)) {
+#ifndef QT_NO_IM
         commitPreedit();
+#endif
 
         const QTextCursor oldSelection = cursor;
         setCursorPosition(pos);
@@ -1235,6 +1259,7 @@ bool QQuickTextControlPrivate::sendMouseEventToInputContext(QMouseEvent *e, cons
     return false;
 }
 
+#ifndef QT_NO_IM
 void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
 {
     Q_Q(QQuickTextControl);
@@ -1333,6 +1358,7 @@ QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property) cons
         return QVariant();
     }
 }
+#endif // QT_NO_IM
 
 void QQuickTextControlPrivate::focusEvent(QFocusEvent *e)
 {
@@ -1568,6 +1594,7 @@ void QQuickTextControlPrivate::activateLinkUnderCursor(QString href)
     emit q_func()->linkActivated(href);
 }
 
+#ifndef QT_NO_IM
 bool QQuickTextControlPrivate::isPreediting() const
 {
     QTextLayout *layout = cursor.block().layout();
@@ -1605,6 +1632,7 @@ void QQuickTextControlPrivate::cancelPreedit()
     QInputMethodEvent event;
     QCoreApplication::sendEvent(q->parent(), &event);
 }
+#endif // QT_NO_IM
 
 void QQuickTextControl::setTextInteractionFlags(Qt::TextInteractionFlags flags)
 {

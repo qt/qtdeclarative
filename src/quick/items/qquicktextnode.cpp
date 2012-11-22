@@ -1149,8 +1149,10 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
                 Q_ASSERT(!engine.currentLine().isValid());
 
                 QTextBlock block = it.currentBlock();
+#ifndef QT_NO_IM
                 int preeditLength = block.isValid() ? block.layout()->preeditAreaText().length() : 0;
                 int preeditPosition = block.isValid() ? block.layout()->preeditAreaPosition() : -1;
+#endif
 
                 QVarLengthArray<QTextLayout::FormatRange> colorChanges;
                 mergeFormats(block.layout(), &colorChanges);
@@ -1254,11 +1256,13 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
                             engine.setTextColor(textColor);
 
                         int fragmentEnd = textPos + fragment.length();
+#ifndef QT_NO_IM
                         if (preeditPosition >= 0
                          && preeditPosition >= textPos
                          && preeditPosition <= fragmentEnd) {
                             fragmentEnd += preeditLength;
                         }
+#endif
 
                         textPos = engine.addText(block, charFormat, textColor, colorChanges, textPos, fragmentEnd,
                                        selectionStart, selectionEnd);
@@ -1267,6 +1271,7 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
                     ++blockIterator;
                 }
 
+#ifndef QT_NO_IM
                 if (preeditLength >= 0 && textPos <= block.position() + preeditPosition) {
                     engine.setPosition(blockPosition);
                     textPos = block.position() + preeditPosition;
@@ -1279,6 +1284,7 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
                                              textPos, textPos + preeditLength,
                                              selectionStart, selectionEnd);
                 }
+#endif
 
                 engine.setCurrentLine(QTextLine()); // Reset current line because the text layout changed
                 ++it;
@@ -1303,8 +1309,10 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
     engine.setAnchorColor(anchorColor);
     engine.setPosition(position);
 
+#ifndef QT_NO_IM
     int preeditLength = textLayout->preeditAreaText().length();
     int preeditPosition = textLayout->preeditAreaPosition();
+#endif
 
     QVarLengthArray<QTextLayout::FormatRange> colorChanges;
     mergeFormats(textLayout, &colorChanges);
@@ -1320,11 +1328,13 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
         int length = line.textLength();
         int end = start + length;
 
+#ifndef QT_NO_IM
         if (preeditPosition >= 0
          && preeditPosition >= start
          && preeditPosition < end) {
             end += preeditLength;
         }
+#endif
 
         engine.setCurrentLine(line);
         engine.addGlyphsForRanges(colorChanges, start, end, selectionStart, selectionEnd);

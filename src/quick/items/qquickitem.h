@@ -156,7 +156,9 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
 public:
     enum Flag {
         ItemClipsChildrenToShape  = 0x01,
+#ifndef QT_NO_IM
         ItemAcceptsInputMethod    = 0x02,
+#endif
         ItemIsFocusScope          = 0x04,
         ItemHasContents           = 0x08,
         ItemAcceptsDrops          = 0x10
@@ -321,7 +323,9 @@ public:
     Q_INVOKABLE void forceActiveFocus();
     Q_INVOKABLE QQuickItem *childAt(qreal x, qreal y) const;
 
+#ifndef QT_NO_IM
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery query) const;
+#endif
 
     struct UpdatePaintNodeData {
        QSGTransformNode *transformNode;
@@ -371,7 +375,9 @@ protected:
     bool isComponentComplete() const;
     virtual void itemChange(ItemChange, const ItemChangeData &);
 
+#ifndef QT_NO_IM
     void updateInputMethod(Qt::InputMethodQueries queries = Qt::ImQueryInput);
+#endif
 
     bool widthValid() const; // ### better name?
     bool heightValid() const; // ### better name?
@@ -382,7 +388,9 @@ protected:
 
     virtual void keyPressEvent(QKeyEvent *event);
     virtual void keyReleaseEvent(QKeyEvent *event);
+#ifndef QT_NO_IM
     virtual void inputMethodEvent(QInputMethodEvent *);
+#endif
     virtual void focusInEvent(QFocusEvent *);
     virtual void focusOutEvent(QFocusEvent *);
     virtual void mousePressEvent(QMouseEvent *event);

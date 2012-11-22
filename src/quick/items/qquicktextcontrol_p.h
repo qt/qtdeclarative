@@ -157,7 +157,9 @@ public:
     virtual void processEvent(QEvent *e, const QMatrix &matrix);
     void processEvent(QEvent *e, const QPointF &coordinateOffset = QPointF());
 
+#ifndef QT_NO_IM
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
+#endif
 
     virtual QMimeData *createMimeDataFromSelection() const;
     virtual bool canInsertFromMimeData(const QMimeData *source) const;

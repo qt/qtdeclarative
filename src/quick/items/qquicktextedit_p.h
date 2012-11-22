@@ -88,13 +88,17 @@ class Q_AUTOTEST_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(bool activeFocusOnPress READ focusOnPress WRITE setFocusOnPress NOTIFY activeFocusOnPressChanged)
     Q_PROPERTY(bool persistentSelection READ persistentSelection WRITE setPersistentSelection NOTIFY persistentSelectionChanged)
     Q_PROPERTY(qreal textMargin READ textMargin WRITE setTextMargin NOTIFY textMarginChanged)
+#ifndef QT_NO_IM
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged)
+#endif
     Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged)
     Q_PROPERTY(SelectionMode mouseSelectionMode READ mouseSelectionMode WRITE setMouseSelectionMode NOTIFY mouseSelectionModeChanged)
     Q_PROPERTY(bool canPaste READ canPaste NOTIFY canPasteChanged)
     Q_PROPERTY(bool canUndo READ canUndo NOTIFY canUndoChanged)
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY canRedoChanged)
+#ifndef QT_NO_IM
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged)
+#endif
     Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
 
@@ -192,8 +196,10 @@ public:
     qreal textMargin() const;
     void setTextMargin(qreal margin);
 
+#ifndef QT_NO_IM
     Qt::InputMethodHints inputMethodHints() const;
     void setInputMethodHints(Qt::InputMethodHints hints);
+#endif
 
     bool selectByMouse() const;
     void setSelectByMouse(bool);
@@ -214,7 +220,9 @@ public:
 
     QRectF cursorRectangle() const;
 
+#ifndef QT_NO_IM
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
+#endif
 
     qreal contentWidth() const;
     qreal contentHeight() const;
@@ -231,7 +239,9 @@ public:
     QRectF boundingRect() const;
     QRectF clipRect() const;
 
+#ifndef QT_NO_IM
     bool isInputMethodComposing() const;
+#endif
 
     RenderType renderType() const;
     void setRenderType(RenderType renderType);
@@ -268,10 +278,14 @@ Q_SIGNALS:
     void canPasteChanged();
     void canUndoChanged();
     void canRedoChanged();
+#ifndef QT_NO_IM
     void inputMethodComposingChanged();
+#endif
     void effectiveHorizontalAlignmentChanged();
     void baseUrlChanged();
+#ifndef QT_NO_IM
     void inputMethodHintsChanged();
+#endif
     void renderTypeChanged();
 
 public Q_SLOTS:
@@ -319,7 +333,9 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseDoubleClickEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
+#ifndef QT_NO_IM
     void inputMethodEvent(QInputMethodEvent *e);
+#endif
     virtual void itemChange(ItemChange, const ItemChangeData &);
 
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData);

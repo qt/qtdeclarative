@@ -78,7 +78,10 @@ public:
         , format(QQuickTextEdit::PlainText), wrapMode(QQuickTextEdit::NoWrap)
         , renderType(QQuickTextEdit::QtRendering)
         , contentDirection(Qt::LayoutDirectionAuto)
-        , mouseSelectionMode(QQuickTextEdit::SelectCharacters), inputMethodHints(Qt::ImhNone)
+        , mouseSelectionMode(QQuickTextEdit::SelectCharacters)
+#ifndef QT_NO_IM
+        , inputMethodHints(Qt::ImhNone)
+#endif
         , updateType(UpdatePaintNode)
         , documentDirty(true), dirty(false), richText(false), cursorVisible(false), cursorPending(false)
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
@@ -139,7 +142,9 @@ public:
     QQuickTextEdit::RenderType renderType;
     Qt::LayoutDirection contentDirection;
     QQuickTextEdit::SelectionMode mouseSelectionMode;
+#ifndef QT_NO_IM
     Qt::InputMethodHints inputMethodHints;
+#endif
     UpdateType updateType;
 
     bool documentDirty : 1;

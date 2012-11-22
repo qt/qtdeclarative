@@ -964,10 +964,12 @@ public:
         return new QQuickApplication(parent);
     }
 
+#ifndef QT_NO_IM
     QInputMethod *inputMethod()
     {
         return qGuiApp->inputMethod();
     }
+#endif
 
     QStringList fontFamilies()
     {

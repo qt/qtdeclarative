@@ -428,7 +428,9 @@ public:
     void addRelationshipForGC(QObject *object, QObject *other);
 
     static v8::Handle<v8::Value> getApplication(v8::Local<v8::String> property, const v8::AccessorInfo &info);
+#ifndef QT_NO_IM
     static v8::Handle<v8::Value> getInputMethod(v8::Local<v8::String> property, const v8::AccessorInfo &info);
+#endif
 
     struct ThreadData {
         ThreadData();

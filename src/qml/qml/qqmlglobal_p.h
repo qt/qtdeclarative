@@ -297,7 +297,9 @@ class Q_QML_PRIVATE_EXPORT QQmlGuiProvider
 public:
     virtual ~QQmlGuiProvider();
     virtual QObject *application(QObject *parent);
+#ifndef QT_NO_IM
     virtual QObject *inputMethod();
+#endif
     virtual QStringList fontFamilies();
     virtual bool openUrlExternally(QUrl &);
 };

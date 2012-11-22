@@ -631,7 +631,9 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 
     if (m_engine) {
         qt->SetAccessor(v8::String::New("application"), getApplication, 0, v8::External::New(this));
+#ifndef QT_NO_IM
         qt->SetAccessor(v8::String::New("inputMethod"), getInputMethod, 0, v8::External::New(this));
+#endif
         qt->Set(v8::String::New("lighter"), V8FUNCTION(lighter, this));
         qt->Set(v8::String::New("darker"), V8FUNCTION(darker, this));
         qt->Set(v8::String::New("tint"), V8FUNCTION(tint, this));
@@ -1449,11 +1451,13 @@ v8::Handle<v8::Value> QV8Engine::getApplication(v8::Local<v8::String>, const v8:
     return engine->newQObject(engine->m_application);
 }
 
+#ifndef QT_NO_IM
 v8::Handle<v8::Value> QV8Engine::getInputMethod(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Unwrap(info.Data()));
     return engine->newQObject(QQml_guiProvider()->inputMethod(), CppOwnership);
 }
+#endif
 
 void QV8GCCallback::registerGcPrologueCallback()
 {

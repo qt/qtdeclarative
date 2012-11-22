@@ -523,7 +523,9 @@ public:
     virtual void transformChanged();
 
     void deliverKeyEvent(QKeyEvent *);
+#ifndef QT_NO_IM
     void deliverInputMethodEvent(QInputMethodEvent *);
+#endif
     void deliverFocusEvent(QFocusEvent *);
     void deliverMouseEvent(QMouseEvent *);
     void deliverWheelEvent(QWheelEvent *);
@@ -593,8 +595,10 @@ public:
 
     virtual void keyPressed(QKeyEvent *event, bool post);
     virtual void keyReleased(QKeyEvent *event, bool post);
+#ifndef QT_NO_IM
     virtual void inputMethodEvent(QInputMethodEvent *event, bool post);
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery query) const;
+#endif
     virtual void componentComplete();
 
     bool m_processPost;
@@ -809,9 +813,10 @@ Q_SIGNALS:
 private:
     virtual void keyPressed(QKeyEvent *event, bool post);
     virtual void keyReleased(QKeyEvent *event, bool post);
+#ifndef QT_NO_IM
     virtual void inputMethodEvent(QInputMethodEvent *, bool post);
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery query) const;
-
+#endif
     const QByteArray keyToSignal(int key) {
         QByteArray keySignal;
         if (key >= Qt::Key_0 && key <= Qt::Key_9) {

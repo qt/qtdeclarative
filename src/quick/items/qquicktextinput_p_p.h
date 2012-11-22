@@ -89,7 +89,9 @@ public:
         , selectionColor(QRgb(0xFF000080))
         , selectedTextColor(QRgb(0xFFFFFFFF))
         , m_cursor(0)
+#ifndef QT_NO_IM
         , m_preeditCursor(0)
+#endif
         , m_blinkPeriod(0)
         , m_blinkTimer(0)
         , m_maxLength(32767)
@@ -97,7 +99,9 @@ public:
         , m_undoState(0)
         , m_selstart(0)
         , m_selend(0)
+#ifndef QT_NO_IM
         , inputMethodHints(Qt::ImhNone)
+#endif
         , hAlign(QQuickTextInput::AlignLeft)
         , vAlign(QQuickTextInput::AlignTop)
         , wrapMode(QQuickTextInput::NoWrap)
@@ -124,7 +128,9 @@ public:
         , m_separator(0)
         , m_readOnly(0)
         , m_textDirty(0)
+#ifndef QT_NO_IM
         , m_preeditDirty(0)
+#endif
         , m_selDirty(0)
         , m_validInput(1)
         , m_acceptableInput(1)
@@ -147,7 +153,9 @@ public:
     bool setHAlign(QQuickTextInput::HAlignment, bool forceAlign = false);
     void mirrorChange();
     bool sendMouseEventToInputContext(QMouseEvent *event);
+#ifndef QT_NO_IM
     Qt::InputMethodHints effectiveInputMethodHints() const;
+#endif
     void hideCursor();
     void showCursor();
 
@@ -211,7 +219,9 @@ public:
     int lastSelectionStart;
     int lastSelectionEnd;
     int m_cursor;
+#ifndef QT_NO_IM
     int m_preeditCursor;
+#endif
     int m_blinkPeriod; // 0 for non-blinking cursor
     int m_blinkTimer;
     int m_maxLength;
@@ -226,7 +236,9 @@ public:
         UpdatePaintNode
     };
 
+#ifndef QT_NO_IM
     Qt::InputMethodHints inputMethodHints;
+#endif
     QQuickTextInput::HAlignment hAlign;
     QQuickTextInput::VAlignment vAlign;
     QQuickTextInput::WrapMode wrapMode;
@@ -256,7 +268,9 @@ public:
     bool m_separator : 1;
     bool m_readOnly : 1;
     bool m_textDirty : 1;
+#ifndef QT_NO_IM
     bool m_preeditDirty : 1;
+#endif
     bool m_selDirty : 1;
     bool m_validInput : 1;
     bool m_acceptableInput : 1;
@@ -327,8 +341,10 @@ public:
     void paste(QClipboard::Mode mode = QClipboard::Clipboard);
 #endif
 
+#ifndef QT_NO_IM
     void commitPreedit();
     void cancelPreedit();
+#endif
 
     Qt::CursorMoveStyle cursorMoveStyle() const { return m_textLayout.cursorMoveStyle(); }
     void setCursorMoveStyle(Qt::CursorMoveStyle style) { m_textLayout.setCursorMoveStyle(style); }
@@ -379,9 +395,9 @@ public:
     // input methods
 #ifndef QT_NO_IM
     bool composeMode() const { return !m_textLayout.preeditAreaText().isEmpty(); }
-#endif
 
     QString preeditAreaText() const { return m_textLayout.preeditAreaText(); }
+#endif
 
     void updatePasswordEchoEditing(bool editing);
 
@@ -399,7 +415,9 @@ public:
         }
     }
 
+#ifndef QT_NO_IM
     void processInputMethodEvent(QInputMethodEvent *event);
+#endif
     void processKeyEvent(QKeyEvent* ev);
 
     void setCursorBlinkPeriod(int msec);

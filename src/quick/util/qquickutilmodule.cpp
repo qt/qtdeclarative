@@ -65,8 +65,10 @@
 
 void QQuickUtilModule::defineModule()
 {
+#ifndef QT_NO_IM
     qmlRegisterUncreatableType<QInputMethod>("QtQuick",2,0,"InputMethod",
                                              QInputMethod::tr("InputMethod is an abstract class"));
+#endif
     qmlRegisterUncreatableType<QQuickAbstractAnimation>("QtQuick",2,0,"Animation",QQuickAbstractAnimation::tr("Animation is an abstract class"));
 
     qmlRegisterType<QQuickBehavior>("QtQuick",2,0,"Behavior");

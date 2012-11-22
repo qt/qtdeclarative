@@ -114,13 +114,17 @@ public:
     void mouseDoubleClickEvent(QMouseEvent *event, const QPointF &pos);
     bool sendMouseEventToInputContext(QMouseEvent *event, const QPointF &pos);
     void focusEvent(QFocusEvent *e);
+#ifndef QT_NO_IM
     void inputMethodEvent(QInputMethodEvent *);
+#endif
 
     void activateLinkUnderCursor(QString href = QString());
 
+#ifndef QT_NO_IM
     bool isPreediting() const;
     void commitPreedit();
     void cancelPreedit();
+#endif
 
     QPointF trippleClickPoint;
     QPointF mousePressPos;
@@ -137,7 +141,9 @@ public:
     QBasicTimer cursorBlinkTimer;
     QBasicTimer trippleClickTimer;
 
+#ifndef QT_NO_IM
     int preeditCursor;
+#endif
 
     Qt::TextInteractionFlags interactionFlags;
 

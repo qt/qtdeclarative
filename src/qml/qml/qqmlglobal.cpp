@@ -332,6 +332,7 @@ QObject *QQmlGuiProvider::application(QObject *) { return 0; }
 QStringList QQmlGuiProvider::fontFamilies() { return QStringList(); }
 bool QQmlGuiProvider::openUrlExternally(QUrl &) { return false; }
 
+#ifndef QT_NO_IM
 QObject *QQmlGuiProvider::inputMethod()
 {
     // We don't have any input method code by default
@@ -339,6 +340,7 @@ QObject *QQmlGuiProvider::inputMethod()
     o->setObjectName(QString::fromLatin1("No inputMethod available"));
     return o;
 }
+#endif
 
 static QQmlGuiProvider *guiProvider = 0;
 
