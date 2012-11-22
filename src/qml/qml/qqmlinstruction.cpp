@@ -117,12 +117,14 @@ void QQmlCompiledData::dump(QQmlInstruction *instr, int idx)
     case QQmlInstruction::StoreStringQList:
         qWarning().nospace() << idx << "\t\t" << "STORE_STRING_QLIST\t\t" << instr->storeString.propertyIndex << "\t" << instr->storeString.value << "\t\t" << primitives.at(instr->storeString.value);
         break;
+#ifndef QT_NO_TRANSLATION
     case QQmlInstruction::StoreTrString:
         qWarning().nospace() << idx << "\t\t" << "STORE_TR_STRING\t" << instr->storeTrString.propertyIndex << "\t" << instr->storeTrString.context << "\t" << instr->storeTrString.text << "\t" << instr->storeTrString.comment << "\t" << instr->storeTrString.n;
         break;
     case QQmlInstruction::StoreTrIdString:
         qWarning().nospace() << idx << "\t\t" << "STORE_TRID_STRING\t" << instr->storeTrIdString.propertyIndex << "\t" << instr->storeTrIdString.text << "\t" << instr->storeTrIdString.n;
         break;
+#endif
     case QQmlInstruction::StoreByteArray:
         qWarning().nospace() << idx << "\t\t" << "STORE_BYTEARRAY" << instr->storeByteArray.propertyIndex << "\t" << instr->storeByteArray.value << "\t\t" << datas.at(instr->storeByteArray.value);
         break;

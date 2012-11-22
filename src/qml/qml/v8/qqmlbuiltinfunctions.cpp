@@ -1328,6 +1328,7 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
     return v8engine->newQObject(c);
 }
 
+#ifndef QT_NO_TRANSLATION
 /*!
     \qmlmethod string qsTranslate(string context, string sourceText, string disambiguation, int n)
 
@@ -1556,7 +1557,7 @@ v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args)
         return v8::Undefined();
     return args[0];
 }
-
+#endif // QT_NO_TRANSLATION
 
 /*!
     \qmlmethod Qt::locale(name)

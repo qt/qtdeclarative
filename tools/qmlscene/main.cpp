@@ -305,11 +305,13 @@ static void displayFileDialog(Options *options)
 #endif
 }
 
+#ifndef QT_NO_TRANSLATION
 static void loadTranslationFile(QTranslator &translator, const QString& directory)
 {
     translator.load(QLatin1String("qml_" )+QLocale::system().name(), directory + QLatin1String("/i18n"));
     QCoreApplication::installTranslator(&translator);
 }
+#endif
 
 static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
 {
@@ -412,6 +414,7 @@ int main(int argc, char ** argv)
     app.setOrganizationName("Qt Project");
     app.setOrganizationDomain("qt-project.org");
 
+#ifndef QT_NO_TRANSLATION
     QTranslator translator;
     QTranslator qtTranslator;
     QString sysLocale = QLocale::system().name();
@@ -432,6 +435,7 @@ int main(int argc, char ** argv)
             qWarning() << "Could not load the translation file" << options.translationFile;
         }
     }
+#endif
 
     QUnifiedTimer::instance()->setSlowModeEnabled(options.slowAnimations);
 
@@ -446,7 +450,9 @@ int main(int argc, char ** argv)
 
     if (!options.file.isEmpty()) {
         if (!options.versionDetection || checkVersion(options.file)) {
+#ifndef QT_NO_TRANSLATION
             QTranslator translator;
+#endif
 
             // TODO: as soon as the engine construction completes, the debug service is
             // listening for connections.  But actually we aren't ready to debug anything.
@@ -458,7 +464,9 @@ int main(int argc, char ** argv)
                 engine.addNamedBundle(bundles.at(i).first, bundles.at(i).second);
             if (options.file.isLocalFile()) {
                 QFileInfo fi(options.file.toLocalFile());
+#ifndef QT_NO_TRANSLATION
                 loadTranslationFile(translator, fi.path());
+#endif
                 loadDummyDataFiles(engine, fi.path());
             }
             QObject::connect(&engine, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));

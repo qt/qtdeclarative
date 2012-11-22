@@ -396,12 +396,14 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_STORE_POINTER(StoreString, &PRIMITIVES.at(instr.value));
         QML_STORE_POINTER(StoreByteArray, &DATAS.at(instr.value));
         QML_STORE_POINTER(StoreUrl, &URLS.at(instr.value));
+#ifndef QT_NO_TRANSLATION
         QML_STORE_VALUE(StoreTrString, QString,
                         QCoreApplication::translate(DATAS.at(instr.context).constData(),
                                                     DATAS.at(instr.text).constData(),
                                                     DATAS.at(instr.comment).constData(),
                                                     instr.n));
         QML_STORE_VALUE(StoreTrIdString, QString, qtTrId(DATAS.at(instr.text).constData(), instr.n));
+#endif
 
         // Store a literal value in a QList
         QML_STORE_LIST(StoreStringList, QStringList, PRIMITIVES.at(instr.value));

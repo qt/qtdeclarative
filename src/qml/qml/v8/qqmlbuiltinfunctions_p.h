@@ -100,12 +100,14 @@ v8::Handle<v8::Value> quit(const v8::Arguments &args);
 v8::Handle<v8::Value> resolvedUrl(const v8::Arguments &args);
 v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args);
 v8::Handle<v8::Value> createComponent(const v8::Arguments &args);
+#ifndef QT_NO_TRANSLATION
 v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args);
 v8::Handle<v8::Value> qsTranslateNoOp(const v8::Arguments &args);
 v8::Handle<v8::Value> qsTr(const v8::Arguments &args);
 v8::Handle<v8::Value> qsTrNoOp(const v8::Arguments &args);
 v8::Handle<v8::Value> qsTrId(const v8::Arguments &args);
 v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args);
+#endif
 v8::Handle<v8::Value> stringArg(const v8::Arguments &args);
 v8::Handle<v8::Value> locale(const v8::Arguments &args);
 v8::Handle<v8::Value> binding(const v8::Arguments &args);

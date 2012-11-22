@@ -85,8 +85,8 @@ QT_BEGIN_NAMESPACE
     F(StoreJSValueBool, storeBool) \
     F(StoreStringList, storeString) \
     F(StoreStringQList, storeString) \
-    F(StoreTrString, storeTrString) \
-    F(StoreTrIdString, storeTrIdString) \
+    F_TRANSLATION(F, StoreTrString, storeTrString) \
+    F_TRANSLATION(F, StoreTrIdString, storeTrIdString) \
     F(StoreByteArray, storeByteArray) \
     F(StoreUrl, storeUrl) \
     F(StoreUrlQList, storeUrl) \
@@ -135,6 +135,12 @@ QT_BEGIN_NAMESPACE
     F(PopFetchedObject, common) \
     F(FetchValueType, fetchValue) \
     F(PopValueType, fetchValue) 
+
+#ifndef QT_NO_TRANSLATION
+#define F_TRANSLATION(F, I, FMT) F(I, FMT)
+#else
+#define F_TRANSLATION(F, I, FMT)
+#endif
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define QML_THREADED_VME_INTERPRETER

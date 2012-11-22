@@ -640,12 +640,14 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
         qt->Set(v8::String::New("createComponent"), V8FUNCTION(createComponent, this));
     }
 
+#ifndef QT_NO_TRANSLATION
     global->Set(v8::String::New("qsTranslate"), V8FUNCTION(qsTranslate, this));
     global->Set(v8::String::New("QT_TRANSLATE_NOOP"), V8FUNCTION(qsTranslateNoOp, this));
     global->Set(v8::String::New("qsTr"), V8FUNCTION(qsTr, this));
     global->Set(v8::String::New("QT_TR_NOOP"), V8FUNCTION(qsTrNoOp, this));
     global->Set(v8::String::New("qsTrId"), V8FUNCTION(qsTrId, this));
     global->Set(v8::String::New("QT_TRID_NOOP"), V8FUNCTION(qsTrIdNoOp, this));
+#endif
 
     global->Set(v8::String::New("print"), consoleLogFn);
     global->Set(v8::String::New("console"), console);
