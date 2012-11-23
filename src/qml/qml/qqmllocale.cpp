@@ -76,7 +76,7 @@ static bool isLocaleObject(v8::Handle<v8::Value> val)
 //--------------
 // Date extension
 
-static const char *dateToLocaleStringFunction =
+static const char dateToLocaleStringFunction[] =
         "(function(toLocaleStringFunc) { "
         "  var orig_toLocaleString;"
         "  orig_toLocaleString = Date.prototype.toLocaleString;"
@@ -87,7 +87,7 @@ static const char *dateToLocaleStringFunction =
         "  })"
         "})";
 
-static const char *dateToLocaleTimeStringFunction =
+static const char dateToLocaleTimeStringFunction[] =
         "(function(toLocaleTimeStringFunc) { "
         "  var orig_toLocaleTimeString;"
         "  orig_toLocaleTimeString = Date.prototype.toLocaleTimeString;"
@@ -98,7 +98,7 @@ static const char *dateToLocaleTimeStringFunction =
         "  })"
         "})";
 
-static const char *dateToLocaleDateStringFunction =
+static const char dateToLocaleDateStringFunction[] =
         "(function(toLocaleDateStringFunc) { "
         "  var orig_toLocaleDateString;"
         "  orig_toLocaleDateString = Date.prototype.toLocaleDateString;"
@@ -110,28 +110,28 @@ static const char *dateToLocaleDateStringFunction =
         "})";
 
 
-static const char *dateFromLocaleStringFunction =
+static const char dateFromLocaleStringFunction[] =
         "(function(fromLocaleStringFunc) { "
         "  Date.fromLocaleString = (function() {"
         "    return fromLocaleStringFunc.apply(null, arguments);"
         "  })"
         "})";
 
-static const char *dateFromLocaleTimeStringFunction =
+static const char dateFromLocaleTimeStringFunction[] =
         "(function(fromLocaleTimeStringFunc) { "
         "  Date.fromLocaleTimeString = (function() {"
         "    return fromLocaleTimeStringFunc.apply(null, arguments);"
         "  })"
         "})";
 
-static const char *dateFromLocaleDateStringFunction =
+static const char dateFromLocaleDateStringFunction[] =
         "(function(fromLocaleDateStringFunc) { "
         "  Date.fromLocaleDateString = (function() {"
         "    return fromLocaleDateStringFunc.apply(null, arguments);"
         "  })"
         "})";
 
-static const char *dateTimeZoneUpdatedFunction =
+static const char dateTimeZoneUpdatedFunction[] =
         "(function(timeZoneUpdatedFunc) { "
         "  Date.timeZoneUpdated = (function() {"
         "    return timeZoneUpdatedFunc.apply(null, arguments);"
@@ -408,7 +408,7 @@ v8::Handle<v8::Value> QQmlDateExtension::timeZoneUpdated(const v8::Arguments& ar
 //-----------------
 // Number extension
 
-static const char *numberToLocaleStringFunction =
+static const char numberToLocaleStringFunction[] =
         "(function(toLocaleStringFunc) { "
         "  var orig_toLocaleString;"
         "  orig_toLocaleString = Number.prototype.toLocaleString;"
@@ -419,14 +419,14 @@ static const char *numberToLocaleStringFunction =
         "  })"
         "})";
 
-static const char *numberToLocaleCurrencyStringFunction =
+static const char numberToLocaleCurrencyStringFunction[] =
         "(function(toLocaleCurrencyStringFunc) { "
         "  Number.prototype.toLocaleCurrencyString = (function() {"
         "    return toLocaleCurrencyStringFunc.apply(this, arguments);"
         "  })"
         "})";
 
-static const char *numberFromLocaleStringFunction =
+static const char numberFromLocaleStringFunction[] =
         "(function(fromLocaleStringFunc) { "
         "  Number.fromLocaleString = (function() {"
         "    return fromLocaleStringFunc.apply(null, arguments);"
@@ -879,7 +879,7 @@ v8::Handle<v8::Value> QQmlLocale::locale(QV8Engine *v8engine, const QString &loc
     return v8Value;
 }
 
-static const char *localeCompareFunction =
+static const char localeCompareFunction[] =
     "(function(localeCompareFunc) { "
     "  var orig_localeCompare;"
     "  orig_localeCompare = String.prototype.localeCompare;"

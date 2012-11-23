@@ -273,11 +273,11 @@ void QQuickCustomMaterialShader::compile()
         m_log += program()->log();
     }
 
-    static const char *fallbackVertexShader =
+    static const char fallbackVertexShader[] =
             "uniform highp mat4 qt_Matrix;"
             "attribute highp vec4 v;"
             "void main() { gl_Position = qt_Matrix * v; }";
-    static const char *fallbackFragmentShader =
+    static const char fallbackFragmentShader[] =
             "void main() { gl_FragColor = vec4(1., 0., 1., 1.); }";
 
     if (!m_compiled) {

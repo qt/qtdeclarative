@@ -463,7 +463,7 @@ void QSGSharedDistanceFieldGlyphCache::saveTexture(GLuint textureId, int width, 
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, textureCoordinateArray);
 
     {
-        static const char *vertexShaderSource =
+        static const char vertexShaderSource[] =
                 "attribute highp   vec4      vertexCoordsArray; \n"
                 "attribute highp   vec2      textureCoordArray; \n"
                 "varying   highp   vec2      textureCoords;     \n"
@@ -473,7 +473,7 @@ void QSGSharedDistanceFieldGlyphCache::saveTexture(GLuint textureId, int width, 
                 "    textureCoords = textureCoordArray; \n"
                 "} \n";
 
-        static const char *fragmentShaderSource =
+        static const char fragmentShaderSource[] =
                 "varying   highp   vec2      textureCoords; \n"
                 "uniform   sampler2D         texture;       \n"
                 "void main() \n"
