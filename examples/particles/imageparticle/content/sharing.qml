@@ -66,6 +66,7 @@ Rectangle {
                 Text {color: "white"; text: 'Type: ' + type; font.pixelSize: 14 }
                 Text {color: "white"; text: 'Age: ' + age; font.pixelSize: 14 }
             }
+            MouseArea { anchors.fill: parent; onClicked: listView.currentIndex = index; }
             // indent the item if it is the current item
             states: State {
                 name: "Current"
@@ -120,13 +121,14 @@ Rectangle {
         Emitter {
             system: particles
             anchors.fill: parent
-            emitRate: 1
+            emitRate: 0
             lifeSpan: 10000
             size: 24
             sizeVariation: 8
             velocity: AngleDirection { angleVariation: 360; magnitude: 3 }
             maximumEmitted: 10
             startTime: 5000
+            Timer { running: true; interval: 10; onTriggered: parent.emitRate = 1; }
         }
 
         //! [0]

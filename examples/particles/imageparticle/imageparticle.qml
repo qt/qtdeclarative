@@ -54,7 +54,7 @@ Item {
             addExample("Deformation", "Deformed particles",  Qt.resolvedUrl("content/deformation.qml"));
             addExample("Rotation", "Rotated particles",  Qt.resolvedUrl("content/rotation.qml"));
             addExample("Sharing", "Multiple ImageParticles on the same particles",  Qt.resolvedUrl("content/sharing.qml"));
-            addExample("Sprites", "Partiles rendered with sprites",  Qt.resolvedUrl("content/sprites.qml"));
+            addExample("Sprites", "Particles rendered with sprites",  Qt.resolvedUrl("content/sprites.qml"));
         }
     }
 }
