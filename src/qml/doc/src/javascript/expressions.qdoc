@@ -330,6 +330,17 @@ an undefined order.
 Likewise, the \l {Component::onDestruction} handler definitions are triggered
 on component destruction.
 
+*/
+
+/*
+ \internal
+    NOTE: TODO Qt 5.1: We are not sufficiently confident about the implementation of scarce
+    resources in Qt 5.0.0, so mark this section as internal for now.
+    It should eventually become public API
+
+    There is another section about scarce resources in basictypes.qdoc. It should
+    be enabled at the same time.
+
 
 
 \section1 Scarce Resources in JavaScript

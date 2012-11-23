@@ -480,7 +480,11 @@ property is only invoked when the property is reassigned to a different object v
     }
     \endqml
 
-    \section1 Using Scarce Resources with the var Type
+    \sa {QML Basic Types}
+*/
+/*
+ TODO Qt 5.1: see explanation in expressions.qdoc
+     \section1 Using Scarce Resources with the var Type
 
     A \c var type property can also hold an image or pixmap.
     A \c var which contains a QPixmap or QImage is known as a
@@ -496,10 +500,7 @@ property is only invoked when the property is reassigned to a different object v
     see \l{Scarce Resources in JavaScript}.
 
     This basic type is provided by the QML language.
-
-    \sa {QML Basic Types}
 */
-
 
 /*!
     \obsolete
