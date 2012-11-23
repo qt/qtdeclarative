@@ -39,60 +39,43 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtQuick.Particles 2.0
-import "../../../shared" as UI //Has a shared UI element
 
-Rectangle {
-    width: 360
-    height: 540
-    ParticleSystem { id: particles }
-    ImageParticle {
-        system: particles
-        sprites: Sprite {
-            name: "snow"
-            source: "../../images/snowflake.png"
-            frameCount: 51
-            frameDuration: 40
-            frameDurationVariation: 8
-        }
+Item {
+    id: container
+
+    property string text: "Button"
+    property string subText: ""
+    signal clicked
+
+    width: buttonLabel.width + 20; height: col.height + 12
+
+    MouseArea {
+        id: mouseArea;
+        anchors.fill: parent;
+        onClicked: container.clicked();
+        onPressed: background.color = Qt.darker("lightgrey");
+        onReleased: background.color="lightgrey";
     }
 
-    //! [0]
-    Wander { 
-        id: wanderer
-        system: particles
+    Rectangle {
+        id: background
         anchors.fill: parent
-        xVariance: 360/(wanderer.affectedParameter+1);
-        pace: 100*(wanderer.affectedParameter+1);
+        color: "lightgrey"
+        radius: 4
+        border.width: 1
+        border.color: Qt.darker(color)
     }
-    //! [0]
 
-    Emitter {
-        system: particles
-        emitRate: 20
-        lifeSpan: 7000
-        velocity: PointDirection { y:80; yVariation: 40; }
-        acceleration: PointDirection { y: 4 }
-        size: 20
-        sizeVariation: 10
-        width: parent.width
-        height: 100
-    }
-    Row {
-        anchors.bottom: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 4
-        GreyButton {
-            text:"dx/dt"
-            onClicked: wanderer.affectedParameter = Wander.Position;
+    Column {
+        spacing: 2
+        id: col
+        x: 10
+        y: 6
+        Text {
+            id: buttonLabel; text: container.text; color: "black"; font.pixelSize: 24
         }
-        GreyButton {
-            text:"dv/dt"
-            onClicked: wanderer.affectedParameter = Wander.Velocity;
-        }
-        GreyButton {
-            text:"da/dt"
-            onClicked: wanderer.affectedParameter = Wander.Acceleration;
+        Text {
+            id: buttonLabel2; text: container.subText; color: "black"; font.pixelSize: 12
         }
     }
 }
