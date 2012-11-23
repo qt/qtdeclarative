@@ -1996,12 +1996,13 @@ bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent 
 
 bool QQuickWindowPrivate::isRenderable() const
 {
-    if (geometry.width() <= 0 || geometry.height() <= 0)
+    const QQuickWindow *q = q_func();
+    QRect geom = q->geometry();
+    if (geom.width() <= 0 || geom.height() <= 0)
         return false;
     // Change to be applied after the visibility property is integrated in qtbase:
 //    return visibility != QWindow::Hidden || (renderWithoutShowing && platformWindow);
     // Temporary version which is implementation-agnostic but slightly less efficient:
-    const QQuickWindow *q = q_func();
     return q->isVisible() || (renderWithoutShowing && platformWindow);
 }
 
