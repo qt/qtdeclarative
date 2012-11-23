@@ -1514,9 +1514,16 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     function->hasNestedFunctions = _env->hasNestedFunctions;
     function->maxNumberOfArguments = _env->maxNumberOfArguments;
 
+    // variables in global code are properties of the global context object, not locals as with other functions.
     for (int i = 0; i < _env->vars.size(); ++i) {
-        unsigned t = entryBlock->newTemp();
-        assert(t == unsigned(i));
+        const QString &local = _env->vars.at(i);
+        if (!_env->parent) {
+            entryBlock->MOVE(entryBlock->NAME(local, 0, 0), entryBlock->CONST(IR::UndefinedType, 0));
+        } else {
+            function->LOCAL(local);
+            unsigned t = entryBlock->newTemp();
+            assert(t == unsigned(i));
+        }
     }
 
     unsigned returnAddress = entryBlock->newTemp();
@@ -1535,13 +1542,6 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     for (FormalParameterList *it = formals; it; it = it->next) {
         _function->RECEIVE(it->name.toString());
-    }
-
-    // variables in global code are properties of the global context object, not locals as with other functions.
-    if (mode != GlobalCode) {
-        foreach (const QString &local, _env->vars) {
-            _function->LOCAL(local);
-        }
     }
 
     foreach (AST::FunctionDeclaration *f, _env->functions) {
