@@ -136,7 +136,7 @@ QImage QQuickTextureFactory::image() const
 
     \list
     \li Loaded using QPixmaps rather than actual image files
-    \li Loaded asynchronously in a separate thread, if imageType() is \l{QQuickImageProvider::ImageType}{ImageType::Image}
+    \li Loaded asynchronously in a separate thread
     \endlist
 
     To specify that an image should be loaded by an image provider, use the
@@ -211,7 +211,7 @@ QImage QQuickTextureFactory::image() const
 
     \section2 Asynchronous image loading
 
-    Image providers that support QImage loading automatically include support
+    Image providers that support QImage or Texture loading automatically include support
     for asychronous loading of images. To enable asynchronous loading for an
     image source, set the \c asynchronous property to \c true for the relevant
     \l Image, \l BorderImage or \l AnimatedImage object. When this is enabled, 
@@ -225,11 +225,11 @@ QImage QQuickTextureFactory::image() const
     provider constructor. This ensures that all image requests for the
     provider are handled in a separate thread.
 
-    Asynchronous loading is not supported for image providers that provide
-    QPixmap rather than QImage values, as pixmaps can only be created in the
-    main thread. In this case, if \l {Image::}{asynchronous} is set to 
-    \c true, the value is ignored and the image is loaded
-    synchronously.
+    Asynchronous loading for image providers that provide QPixmap is only supported
+    in platforms that have the ThreadedPixmaps feature, in platforms where
+    pixmaps can only be created in the main thread (i.e. ThreadedPixmaps is not supported)
+    if \l {Image::}{asynchronous} is set to \c true, the value is ignored
+    and the image is loaded synchronously.
 
 
     \section2 Image caching
@@ -328,6 +328,9 @@ QImage QQuickImageProvider::requestImage(const QString &id, QSize *size, const Q
     In all cases, \a size must be set to the original size of the image. This
     is used to set the \l {Item::}{width} and \l {Item::}{height} of the
     relevant \l Image if these values have not been set explicitly.
+
+    \note this method may be called by multiple threads, so ensure the
+    implementation of this method is reentrant.
 */
 QPixmap QQuickImageProvider::requestPixmap(const QString &id, QSize *size, const QSize& requestedSize)
 {

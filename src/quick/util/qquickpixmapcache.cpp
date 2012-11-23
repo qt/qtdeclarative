@@ -47,6 +47,9 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlengine_p.h>
 
+#include <QtGui/private/qguiapplication_p.h>
+#include <qpa/qplatformintegration.h>
+
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 
@@ -538,6 +541,18 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             mutex.lock();
             if (!cancelled.contains(runningJob))
                 runningJob->postReply(errorCode, errorStr, readSize, textureFactoryForImage(image));
+            mutex.unlock();
+        } else if (imageType == QQuickImageProvider::Pixmap) {
+            const QPixmap pixmap = provider->requestPixmap(imageId(url), &readSize, requestSize);
+            QQuickPixmapReply::ReadError errorCode = QQuickPixmapReply::NoError;
+            QString errorStr;
+            if (pixmap.isNull()) {
+                errorCode = QQuickPixmapReply::Loading;
+                errorStr = QQuickPixmap::tr("Failed to get image from provider: %1").arg(url.toString());
+            }
+            mutex.lock();
+            if (!cancelled.contains(runningJob))
+                runningJob->postReply(errorCode, errorStr, readSize, textureFactoryForImage(pixmap.toImage()));
             mutex.unlock();
         } else {
             QQuickTextureFactory *t = provider->requestTexture(imageId(url), &readSize, requestSize);
@@ -1176,7 +1191,8 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QSize &reques
     if (iter == store->m_cache.end()) {
         if (url.scheme() == QLatin1String("image")) {
             if (QQuickImageProvider *provider = static_cast<QQuickImageProvider *>(engine->imageProvider(imageProviderId(url)))) {
-                if (provider->imageType() == QQuickImageProvider::Pixmap) {
+                const bool threadedPixmaps = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedPixmaps);
+                if (!threadedPixmaps && provider->imageType() == QQuickImageProvider::Pixmap) {
                     // pixmaps can only be loaded synchronously
                     options &= ~QQuickPixmap::Asynchronous;
                 } else if (provider->flags() & QQuickImageProvider::ForceAsynchronousImageLoading) {
