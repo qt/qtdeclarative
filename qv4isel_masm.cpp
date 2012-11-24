@@ -230,9 +230,15 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
         } else if (IR::Subscript *ss = call->args->expr->asSubscript()) {
             generateFunctionCall(result, __qmljs_delete_subscript, ContextRegister, ss->base->asTemp(), ss->index->asTemp());
             return;
-        } else {
-            assert(!"builtin_delete: unimplemented");
-            Q_UNIMPLEMENTED();
+        } else if (IR::Name *n = call->args->expr->asName()) {
+            generateFunctionCall(result, __qmljs_delete_name, ContextRegister, n);
+            return;
+        } else if (call->args->expr->asTemp()){
+            // ### should throw in strict mode
+            Address dest = loadTempAddress(ScratchRegister, result);
+            Value v = Value::fromBoolean(false);
+            storeValue(v, dest);
+            return;
         }
         break;
     }

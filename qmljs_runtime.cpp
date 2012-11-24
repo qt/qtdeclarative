@@ -195,18 +195,9 @@ Value __qmljs_delete_member(ExecutionContext *ctx, Value base, String *name)
     return Value::fromBoolean(obj.objectValue()->__delete__(ctx, name, true));
 }
 
-Value __qmljs_delete_property(ExecutionContext *ctx, String *name)
+Value __qmljs_delete_name(ExecutionContext *ctx, String *name)
 {
-    Object *obj = ctx->lexicalEnvironment->activation;
-    if (!obj)
-        obj = ctx->engine->globalObject.objectValue();
-    return Value::fromBoolean(obj->__delete__(ctx, name, true));
-}
-
-Value __qmljs_delete_value(ExecutionContext *ctx, Value value)
-{
-    Q_UNUSED(value);
-    return __qmljs_throw_type_error(ctx); // ### throw syntax error
+    return Value::fromBoolean(ctx->deleteProperty(name));
 }
 
 Value __qmljs_add_helper(Value left, Value right, ExecutionContext *ctx)

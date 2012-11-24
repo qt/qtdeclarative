@@ -221,6 +221,26 @@ PropertyDescriptor *ExecutionContext::lookupPropertyDescriptor(String *name, Pro
     return 0;
 }
 
+bool ExecutionContext::deleteProperty(String *name)
+{
+    for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer) {
+        if (ctx->withObject) {
+            DeclarativeEnvironment::With *w = ctx->withObject;
+            while (w) {
+                if (w->object->__hasProperty__(this, name))
+                    w->object->__delete__(this, name);
+                w = w->next;
+            }
+        }
+        if (ctx->activation) {
+            if (ctx->activation->__hasProperty__(this, name))
+                ctx->activation->__delete__(this, name);
+        }
+    }
+    // ### throw syntax error in strict mode
+    return true;
+}
+
 void ExecutionContext::inplaceBitOp(Value value, String *name, BinOp op)
 {
     for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer) {

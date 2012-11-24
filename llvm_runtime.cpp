@@ -500,14 +500,9 @@ void __qmljs_llvm_delete_member(ExecutionContext *ctx, Value *result, Value *bas
     *result = __qmljs_delete_member(ctx, *base, name);
 }
 
-void __qmljs_llvm_delete_property(ExecutionContext *ctx, Value *result, String *name)
+void __qmljs_llvm_delete_name(ExecutionContext *ctx, Value *result, String *name)
 {
-    *result = __qmljs_delete_property(ctx, name);
-}
-
-void __qmljs_llvm_delete_value(ExecutionContext *ctx, Value *result, Value *value)
-{
-    *result = __qmljs_delete_value(ctx, *value);
+    *result = __qmljs_delete_name(ctx, name);
 }
 
 } // extern "C"

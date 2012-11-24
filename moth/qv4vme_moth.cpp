@@ -262,11 +262,11 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinDeleteSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteName)
-        TEMP(instr.targetTempIndex) = __qmljs_delete_property(context, instr.name);
+        TEMP(instr.targetTempIndex) = __qmljs_delete_name(context, instr.name);
     MOTH_END_INSTR(CallBuiltinDeleteName)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteValue)
-        TEMP(instr.targetTempIndex) = __qmljs_delete_value(context, TEMP(instr.tempIndex));
+        TEMP(instr.targetTempIndex) = VM::Value::fromBoolean(false);
     MOTH_END_INSTR(CallBuiltinDeleteValue)
 
     MOTH_BEGIN_INSTR(CreateValue)

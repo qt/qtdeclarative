@@ -411,7 +411,7 @@ struct Object {
     virtual void __put__(ExecutionContext *ctx, String *name, const Value &value, bool throwException = false);
     virtual bool __canPut__(ExecutionContext *ctx, String *name);
     virtual bool __hasProperty__(ExecutionContext *ctx, String *name) const;
-    virtual bool __delete__(ExecutionContext *ctx, String *name, bool throwException);
+    virtual bool __delete__(ExecutionContext *ctx, String *name, bool throwException = false);
     virtual bool __defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc, bool throwException = false);
 
     //

@@ -118,6 +118,7 @@ struct ExecutionContext
 
     PropertyDescriptor *lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp);
     void inplaceBitOp(Value value, String *name, BinOp op);
+    bool deleteProperty(String *name);
 
     inline uint argumentCount() const { return variableEnvironment->argumentCount; }
     inline Value argument(unsigned int index = 0)

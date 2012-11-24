@@ -177,8 +177,7 @@ Value __qmljs_not(Value value, ExecutionContext *ctx);
 
 Value __qmljs_delete_subscript(ExecutionContext *ctx, Value base, Value index);
 Value __qmljs_delete_member(ExecutionContext *ctx, Value base, String *name);
-Value __qmljs_delete_property(ExecutionContext *ctx, String *name);
-Value __qmljs_delete_value(ExecutionContext *ctx, Value value);
+Value __qmljs_delete_name(ExecutionContext *ctx, String *name);
 
 Value __qmljs_typeof(Value value, ExecutionContext *ctx);
 void __qmljs_throw(Value value, ExecutionContext *context);
