@@ -276,7 +276,9 @@ struct Name: Expr {
         builtin_delete_exception_handler,
         builtin_get_exception,
         builtin_foreach_iterator_object,
-        builtin_foreach_next_property_name
+        builtin_foreach_next_property_name,
+        builtin_push_with,
+        builtin_pop_with
     };
 
     const QString *id;
@@ -601,6 +603,7 @@ struct Function {
 
     bool hasDirectEval: 1;
     bool hasNestedFunctions: 1;
+    int insideWith;
 
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
 
@@ -613,6 +616,7 @@ struct Function {
         , codeData(0)
         , hasDirectEval(false)
         , hasNestedFunctions(false)
+        , insideWith(0)
     { this->name = newString(name); }
 
     ~Function();

@@ -101,6 +101,8 @@ Value __qmljs_construct_value(ExecutionContext *context, Value func, Value *args
 
 Value __qmljs_builtin_typeof(Value val, ExecutionContext *context);
 void __qmljs_builtin_throw(Value val, ExecutionContext *context);
+void __qmljs_builtin_push_with(Value o, ExecutionContext *ctx);
+void __qmljs_builtin_pop_with(ExecutionContext *ctx);
 
 // constructors
 Value __qmljs_init_closure(IR::Function *clos, ExecutionContext *ctx);

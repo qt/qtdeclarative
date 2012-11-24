@@ -264,6 +264,15 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
         generateFunctionCall(result, __qmljs_foreach_next_property_name, arg);
     }
         break;
+    case IR::Name::builtin_push_with: {
+        IR::Temp *arg = call->args->expr->asTemp();
+        assert(arg != 0);
+        generateFunctionCall(Void, __qmljs_builtin_push_with, arg, ContextRegister);
+    }
+        break;
+    case IR::Name::builtin_pop_with:
+        generateFunctionCall(Void, __qmljs_builtin_pop_with, ContextRegister);
+        break;
     }
 }
 

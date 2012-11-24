@@ -819,6 +819,12 @@ void __qmljs_throw(Value value, ExecutionContext *context)
         context->leaveCallContext();
         context = context->parent;
     }
+    DeclarativeEnvironment *env = context->lexicalEnvironment;
+    while (env->withObject != handler.with) {
+        DeclarativeEnvironment::With *w = env->withObject;
+        env->withObject = w->next;
+        delete w;
+    }
 
     context->engine->exception = value;
 
@@ -831,6 +837,7 @@ void *__qmljs_create_exception_handler(ExecutionContext *context)
     context->engine->unwindStack.append(ExecutionEngine::ExceptionHandler());
     ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
     handler.context = context;
+    handler.with = context->lexicalEnvironment->withObject;
     return handler.stackFrame;
 }
 
@@ -854,6 +861,17 @@ Value __qmljs_builtin_typeof(Value val, ExecutionContext *context)
 void __qmljs_builtin_throw(Value val, ExecutionContext *context)
 {
     __qmljs_throw(val, context);
+}
+
+void __qmljs_builtin_push_with(Value o, ExecutionContext *ctx)
+{
+    Object *obj = __qmljs_to_object(o, ctx).asObject();
+    ctx->lexicalEnvironment->pushWithObject(obj);
+}
+
+void __qmljs_builtin_pop_with(ExecutionContext *ctx)
+{
+    ctx->lexicalEnvironment->popWithObject();
 }
 
 

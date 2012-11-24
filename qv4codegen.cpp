@@ -665,7 +665,7 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
     if (! initializer)
         initializer = _block->CONST(IR::UndefinedType, 0);
 
-    if (! _env->parent) {
+    if (! _env->parent || _function->insideWith) {
         // it's global code.
         move(_block->NAME(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), initializer);
     } else {
@@ -1113,7 +1113,7 @@ IR::Expr *Codegen::identifier(const QString &name, int line, int col)
 {
     int index = _env->findMember(name);
 
-    if (! _function->hasDirectEval && _env->parent) {
+    if (! _function->hasDirectEval && !_function->insideWith && _env->parent) {
         if (index != -1) {
             return _block->TEMP(index);
         }
@@ -2137,9 +2137,26 @@ bool Codegen::visit(WhileStatement *ast)
     return false;
 }
 
-bool Codegen::visit(WithStatement *)
+bool Codegen::visit(WithStatement *ast)
 {
-    assert(!"with not implemented");
+    IR::BasicBlock *withBlock = _function->newBasicBlock();
+
+    _block->JUMP(withBlock);
+    _block = withBlock;
+    int withObject = _block->newTemp();
+    _block->MOVE(_block->TEMP(withObject), *expression(ast->expression));
+    IR::ExprList *args = _function->New<IR::ExprList>();
+    args->init(_block->TEMP(withObject));
+    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_with, 0, 0), args));
+    ++_function->insideWith;
+    statement(ast->statement);
+    --_function->insideWith;
+    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_with, 0, 0), 0));
+
+    IR::BasicBlock *next = _function->newBasicBlock();
+    _block->JUMP(next);
+    _block = next;
+
     return false;
 }
 

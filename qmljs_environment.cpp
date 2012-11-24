@@ -52,22 +52,18 @@ DeclarativeEnvironment::DeclarativeEnvironment(ExecutionEngine *e)
     arguments = 0;
     argumentCount = 0;
     locals = 0;
-    activation = 0;
     formals = 0;
     formalCount = 0;
     vars = 0;
     varCount = 0;
+    activation = 0;
+    withObject = 0;
 }
 
 DeclarativeEnvironment::DeclarativeEnvironment(FunctionObject *f, Value *args, uint argc)
 {
     outer = f->scope;
     engine = outer->engine;
-
-    if (f->needsActivation)
-        activation = engine->newActivationObject(this);
-    else
-        activation = 0;
 
     formals = f->formalParameterList;
     formalCount = f->formalParameterCount;
@@ -85,6 +81,13 @@ DeclarativeEnvironment::DeclarativeEnvironment(FunctionObject *f, Value *args, u
     locals = varCount ? new Value[varCount] : 0;
     if (varCount)
         std::fill(locals, locals + varCount, Value::undefinedValue());
+
+    if (f->needsActivation)
+        activation = engine->newActivationObject(this);
+    else
+        activation = 0;
+
+    withObject = 0;
 }
 
 bool DeclarativeEnvironment::hasBinding(String *name) const
@@ -97,7 +100,9 @@ bool DeclarativeEnvironment::hasBinding(String *name) const
         if (__qmljs_string_equal(formals[i], name))
             return true;
     }
-    return deletableLocals.contains(name->toQString());
+    if (!deletableLocals)
+        return false;
+    return deletableLocals->contains(name->toQString());
 }
 
 void DeclarativeEnvironment::createMutableBinding(String *name, bool deletable)
@@ -106,7 +111,9 @@ void DeclarativeEnvironment::createMutableBinding(String *name, bool deletable)
     assert(deletable);
     assert(!hasBinding(name));
 
-    deletableLocals.insert(name->toQString(), Value::undefinedValue());
+    if (!deletableLocals)
+        deletableLocals = new QHash<QString, Value>();
+    deletableLocals->insert(name->toQString(), Value::undefinedValue());
 }
 
 void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool strict)
@@ -126,8 +133,9 @@ void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool s
             return;
         }
     }
-    QHash<QString, Value>::iterator it = deletableLocals.find(name->toQString());
-    if (it != deletableLocals.end()) {
+    assert(deletableLocals);
+    QHash<QString, Value>::iterator it = deletableLocals->find(name->toQString());
+    if (it != deletableLocals->end()) {
         *it = value;
         return;
     }
@@ -146,8 +154,9 @@ Value DeclarativeEnvironment::getBindingValue(String *name, bool strict) const
         if (__qmljs_string_equal(formals[i], name))
             return arguments[i];
     }
-    QHash<QString, Value>::const_iterator it = deletableLocals.find(name->toQString());
-    if (it != deletableLocals.end())
+    assert(deletableLocals);
+    QHash<QString, Value>::const_iterator it = deletableLocals->find(name->toQString());
+    if (it != deletableLocals->end())
         return *it;
 
     assert(false);
@@ -155,12 +164,31 @@ Value DeclarativeEnvironment::getBindingValue(String *name, bool strict) const
 
 bool DeclarativeEnvironment::deleteBinding(String *name)
 {
-    QHash<QString, Value>::iterator it = deletableLocals.find(name->toQString());
-    if (it != deletableLocals.end()) {
-        deletableLocals.erase(it);
-        return true;
+    if (deletableLocals) {
+        QHash<QString, Value>::iterator it = deletableLocals->find(name->toQString());
+        if (it != deletableLocals->end()) {
+            deletableLocals->erase(it);
+            return true;
+        }
     }
     return !hasBinding(name);
+}
+
+void DeclarativeEnvironment::pushWithObject(Object *with)
+{
+    With *w = new With;
+    w->next = withObject;
+    w->object = with;
+    withObject = w;
+}
+
+void DeclarativeEnvironment::popWithObject()
+{
+    assert(withObject);
+
+    With *w = withObject;
+    withObject = w->next;
+    delete w;
 }
 
 
@@ -177,6 +205,14 @@ void ExecutionContext::init(ExecutionEngine *eng)
 PropertyDescriptor *ExecutionContext::lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp)
 {
     for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer) {
+        if (ctx->withObject) {
+            DeclarativeEnvironment::With *w = ctx->withObject;
+            while (w) {
+                if (PropertyDescriptor *pd = w->object->__getPropertyDescriptor__(this, name, tmp))
+                    return pd;
+                w = w->next;
+            }
+        }
         if (ctx->activation) {
             if (PropertyDescriptor *pd = ctx->activation->__getPropertyDescriptor__(this, name, tmp))
                 return pd;

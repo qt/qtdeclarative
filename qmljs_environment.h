@@ -59,7 +59,6 @@ struct DeclarativeEnvironment
     ExecutionEngine *engine;
     DeclarativeEnvironment *outer;
 
-    Object *activation;
     Value *arguments;
     unsigned int argumentCount;
     Value *locals;
@@ -68,18 +67,29 @@ struct DeclarativeEnvironment
     String **vars;
     unsigned int varCount;
 
+    Object *activation;
+    struct With {
+        Object *object;
+        With *next;
+    } *withObject;
+
     // these get used for createMutableBinding(..., true).
     // the only place this is being used is eval(...)
-    QHash<QString, Value> deletableLocals;
+    QHash<QString, Value> *deletableLocals;
 
     DeclarativeEnvironment(ExecutionEngine *e);
     DeclarativeEnvironment(FunctionObject *f, Value *args, uint argc);
+    ~DeclarativeEnvironment() { delete deletableLocals; }
 
     bool hasBinding(String *name) const;
     void createMutableBinding(String *name, bool deletable);
     void setMutableBinding(String *name, Value value, bool strict);
     Value getBindingValue(String *name, bool strict) const;
     bool deleteBinding(String *name);
+
+    // ### needs a bit of work in exception handlers
+    void pushWithObject(Object *with);
+    void popWithObject();
 };
 
 struct ExecutionContext

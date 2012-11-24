@@ -234,6 +234,10 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_foreach_iterator_object";
     case IR::Name::builtin_foreach_next_property_name:
         return "builtin_foreach_next_property_name";
+    case IR::Name::builtin_push_with:
+        return "builtin_push_with";
+    case IR::Name::builtin_pop_with:
+        return "builtin_pop_with";
     }
     return "builtin_(###FIXME)";
 };
