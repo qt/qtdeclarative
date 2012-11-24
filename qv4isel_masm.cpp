@@ -95,10 +95,17 @@ void InstructionSelection::operator()(IR::Function *function)
     locals = (locals + 1) & ~1;
     enterStandardStackFrame(locals);
 
+    int contextPointer = 0;
+#ifndef VALUE_FITS_IN_REGISTER
+    // When the return VM value doesn't fit into a register, then
+    // the caller provides a pointer for storage as first argument.
+    // That shifts the index the context pointer argument by one.
+    contextPointer++;
+#endif
 #if CPU(X86)
-    loadPtr(addressForArgument(0), ContextRegister);
+    loadPtr(addressForArgument(contextPointer), ContextRegister);
 #elif CPU(X86_64) || CPU(ARM)
-    move(registerForArgument(0), ContextRegister);
+    move(registerForArgument(contextPointer), ContextRegister);
 #else
     assert(!"TODO");
 #endif
@@ -112,6 +119,14 @@ void InstructionSelection::operator()(IR::Function *function)
     }
 
     leaveStandardStackFrame(locals);
+#ifndef VALUE_FITS_IN_REGISTER
+    // Emulate ret(n) instruction
+    // Pop off return address into scratch register ...
+    pop(ScratchRegister);
+    // ... and overwrite the invisible argument with
+    // the return address.
+    poke(ScratchRegister);
+#endif
     ret();
 
     QHashIterator<IR::BasicBlock *, QVector<Jump> > it(_patches);
@@ -704,7 +719,12 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 void InstructionSelection::visitRet(IR::Ret *s)
 {
     if (IR::Temp *t = s->expr->asTemp()) {
+#ifdef VALUE_FITS_IN_REGISTER
         copyValue(ReturnValueRegister, t);
+#else
+        loadPtr(addressForArgument(0), ReturnValueRegister);
+        copyValue(Address(ReturnValueRegister, 0), t);
+#endif
         return;
     }
     Q_UNIMPLEMENTED();
