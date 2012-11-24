@@ -307,6 +307,11 @@ private:
             assert(!"unimplemented expression type in loadArgument");
         }
     }
+#else
+    void loadArgument(IR::Expr*, RegisterID)
+    {
+        assert(!"unimplemented: expression in loadArgument");
+    }
 #endif
 
     void loadArgument(VM::String* string, RegisterID dest)
