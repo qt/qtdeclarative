@@ -651,30 +651,6 @@ void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, Value 
         ctx->engine->globalObject.objectValue()->__put__(ctx, name, value);
 }
 
-void __qmljs_set_activation_property_boolean(ExecutionContext *ctx, String *name, bool b)
-{
-    Value value = Value::fromBoolean(b);
-    __qmljs_set_activation_property(ctx, name, value);
-}
-
-void __qmljs_set_activation_property_number(ExecutionContext *ctx, String *name, double number)
-{
-    Value value = Value::fromDouble(number);
-    __qmljs_set_activation_property(ctx, name, value);
-}
-
-void __qmljs_set_activation_property_string(ExecutionContext *ctx, String *name, String *string)
-{
-    Value value = Value::fromString(string);
-    __qmljs_set_activation_property(ctx, name, value);
-}
-
-void __qmljs_set_activation_property_closure(ExecutionContext *ctx, String *name, IR::Function *clos)
-{
-    Value value = __qmljs_init_closure(clos, ctx);
-    __qmljs_set_activation_property(ctx, name, value);
-}
-
 Value __qmljs_get_property(ExecutionContext *ctx, Value object, String *name)
 {
     if (object.isObject()) {
