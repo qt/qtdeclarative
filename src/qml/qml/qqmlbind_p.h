@@ -39,61 +39,57 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKCONNECTIONS_H
-#define QQUICKCONNECTIONS_H
+#ifndef QQMLBIND_H
+#define QQMLBIND_H
 
 #include <qqml.h>
-#include <private/qqmlcustomparser_p.h>
 
 #include <QtCore/qobject.h>
-#include <QtCore/qstring.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QQmlBoundSignal;
-class QQmlContext;
-class QQuickConnectionsPrivate;
-class Q_AUTOTEST_EXPORT QQuickConnections : public QObject, public QQmlParserStatus
+class QQmlBindPrivate;
+class Q_AUTOTEST_EXPORT QQmlBind : public QObject, public QQmlPropertyValueSource, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QQuickConnections)
-
+    Q_DECLARE_PRIVATE(QQmlBind)
     Q_INTERFACES(QQmlParserStatus)
-    Q_PROPERTY(QObject *target READ target WRITE setTarget NOTIFY targetChanged)
-    Q_PROPERTY(bool ignoreUnknownSignals READ ignoreUnknownSignals WRITE setIgnoreUnknownSignals)
+    Q_INTERFACES(QQmlPropertyValueSource)
+    Q_PROPERTY(QObject *target READ object WRITE setObject)
+    Q_PROPERTY(QString property READ property WRITE setProperty)
+    Q_PROPERTY(QVariant value READ value WRITE setValue)
+    Q_PROPERTY(bool when READ when WRITE setWhen)
 
 public:
-    QQuickConnections(QObject *parent=0);
-    ~QQuickConnections();
+    QQmlBind(QObject *parent=0);
+    ~QQmlBind();
 
-    QObject *target() const;
-    void setTarget(QObject *);
+    bool when() const;
+    void setWhen(bool);
 
-    bool ignoreUnknownSignals() const;
-    void setIgnoreUnknownSignals(bool ignore);
+    QObject *object();
+    void setObject(QObject *);
 
-Q_SIGNALS:
-    void targetChanged();
+    QString property() const;
+    void setProperty(const QString &);
+
+    QVariant value() const;
+    void setValue(const QVariant &);
+
+protected:
+    virtual void setTarget(const QQmlProperty &);
+    virtual void classBegin();
+    virtual void componentComplete();
 
 private:
-    void connectSignals();
-    void classBegin();
-    void componentComplete();
+    void eval();
 };
-
-class QQmlConnectionsParser : public QQmlCustomParser
-{
-public:
-    virtual QByteArray compile(const QList<QQmlCustomParserProperty> &);
-    virtual void setCustomData(QObject *, const QByteArray &);
-};
-
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickConnections)
+QML_DECLARE_TYPE(QQmlBind)
 
 QT_END_HEADER
 

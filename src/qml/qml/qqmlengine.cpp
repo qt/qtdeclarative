@@ -89,6 +89,10 @@
 
 #include <private/qqmllocale_p.h>
 
+#include "qqmlbind_p.h"
+#include "qqmlconnections_p.h"
+#include "qqmltimer_p.h"
+
 #ifdef Q_OS_WIN // for %APPDATA%
 #include <qt_windows.h>
 #include <qlibrary.h>
@@ -172,6 +176,10 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
 {
     qmlRegisterType<QQmlComponent>(uri,versionMajor,versionMinor,"Component");
     qmlRegisterType<QObject>(uri,versionMajor,versionMinor,"QtObject");
+    qmlRegisterType<QQmlBind>(uri, versionMajor, versionMinor,"Binding");
+    qmlRegisterType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections");
+    qmlRegisterType<QQmlTimer>(uri, versionMajor, versionMinor,"Timer");
+    qmlRegisterCustomType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections", new QQmlConnectionsParser);
 }
 
 

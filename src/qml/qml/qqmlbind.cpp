@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qquickbind_p.h"
+#include "qqmlbind_p.h"
 
 #include <private/qqmlnullablevalue_p_p.h>
 #include <private/qqmlproperty_p.h>
@@ -58,11 +58,11 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickBindPrivate : public QObjectPrivate
+class QQmlBindPrivate : public QObjectPrivate
 {
 public:
-    QQuickBindPrivate() : componentComplete(true), obj(0), prevBind(0) {}
-    ~QQuickBindPrivate() { if (prevBind) prevBind->destroy(); }
+    QQmlBindPrivate() : componentComplete(true), obj(0), prevBind(0) {}
+    ~QQmlBindPrivate() { if (prevBind) prevBind->destroy(); }
 
     QQmlNullableValue<bool> when;
     bool componentComplete;
@@ -76,7 +76,7 @@ public:
 
 /*!
     \qmltype Binding
-    \instantiates QQuickBind
+    \instantiates QQmlBind
     \inqmlmodule QtQuick 2
     \ingroup qtquick-interceptors
     \brief Enables the arbitrary creation of property bindings
@@ -141,12 +141,12 @@ public:
 
     \sa QtQml
 */
-QQuickBind::QQuickBind(QObject *parent)
-    : QObject(*(new QQuickBindPrivate), parent)
+QQmlBind::QQmlBind(QObject *parent)
+    : QObject(*(new QQmlBindPrivate), parent)
 {
 }
 
-QQuickBind::~QQuickBind()
+QQmlBind::~QQmlBind()
 {
 }
 
@@ -166,15 +166,15 @@ QQuickBind::~QQuickBind()
     When the binding becomes inactive again, any direct bindings that were previously
     set on the property will be restored.
 */
-bool QQuickBind::when() const
+bool QQmlBind::when() const
 {
-    Q_D(const QQuickBind);
+    Q_D(const QQmlBind);
     return d->when;
 }
 
-void QQuickBind::setWhen(bool v)
+void QQmlBind::setWhen(bool v)
 {
-    Q_D(QQuickBind);
+    Q_D(QQmlBind);
     if (!d->when.isNull && d->when == v)
         return;
 
@@ -187,15 +187,15 @@ void QQuickBind::setWhen(bool v)
 
     The object to be updated.
 */
-QObject *QQuickBind::object()
+QObject *QQmlBind::object()
 {
-    Q_D(const QQuickBind);
+    Q_D(const QQmlBind);
     return d->obj;
 }
 
-void QQuickBind::setObject(QObject *obj)
+void QQmlBind::setObject(QObject *obj)
 {
-    Q_D(QQuickBind);
+    Q_D(QQmlBind);
     if (d->obj && d->when.isValid() && d->when) {
         /* if we switch the object at runtime, we need to restore the
            previous binding on the old object before continuing */
@@ -214,15 +214,15 @@ void QQuickBind::setObject(QObject *obj)
 
     The property to be updated.
 */
-QString QQuickBind::property() const
+QString QQmlBind::property() const
 {
-    Q_D(const QQuickBind);
+    Q_D(const QQmlBind);
     return d->propName;
 }
 
-void QQuickBind::setProperty(const QString &p)
+void QQmlBind::setProperty(const QString &p)
 {
-    Q_D(QQuickBind);
+    Q_D(QQmlBind);
     if (!d->propName.isEmpty() && d->when.isValid() && d->when) {
         /* if we switch the property name at runtime, we need to restore the
            previous binding on the old object before continuing */
@@ -242,43 +242,43 @@ void QQuickBind::setProperty(const QString &p)
     The value to be set on the target object and property.  This can be a
     constant (which isn't very useful), or a bound expression.
 */
-QVariant QQuickBind::value() const
+QVariant QQmlBind::value() const
 {
-    Q_D(const QQuickBind);
+    Q_D(const QQmlBind);
     return d->value.value;
 }
 
-void QQuickBind::setValue(const QVariant &v)
+void QQmlBind::setValue(const QVariant &v)
 {
-    Q_D(QQuickBind);
+    Q_D(QQmlBind);
     d->value = v;
     eval();
 }
 
-void QQuickBind::setTarget(const QQmlProperty &p)
+void QQmlBind::setTarget(const QQmlProperty &p)
 {
-    Q_D(QQuickBind);
+    Q_D(QQmlBind);
     d->prop = p;
 }
 
-void QQuickBind::classBegin()
+void QQmlBind::classBegin()
 {
-    Q_D(QQuickBind);
+    Q_D(QQmlBind);
     d->componentComplete = false;
 }
 
-void QQuickBind::componentComplete()
+void QQmlBind::componentComplete()
 {
-    Q_D(QQuickBind);
+    Q_D(QQmlBind);
     d->componentComplete = true;
     if (!d->prop.isValid())
         d->prop = QQmlProperty(d->obj, d->propName);
     eval();
 }
 
-void QQuickBind::eval()
+void QQmlBind::eval()
 {
-    Q_D(QQuickBind);
+    Q_D(QQmlBind);
     if (!d->prop.isValid() || d->value.isNull || !d->componentComplete)
         return;
 

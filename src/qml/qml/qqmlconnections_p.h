@@ -39,72 +39,61 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKTIMER_H
-#define QQUICKTIMER_H
+#ifndef QQMLCONNECTIONS_H
+#define QQMLCONNECTIONS_H
 
 #include <qqml.h>
+#include <private/qqmlcustomparser_p.h>
 
 #include <QtCore/qobject.h>
-
-#include <private/qtquickglobal_p.h>
+#include <QtCore/qstring.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QQuickTimerPrivate;
-class Q_AUTOTEST_EXPORT QQuickTimer : public QObject, public QQmlParserStatus
+class QQmlBoundSignal;
+class QQmlContext;
+class QQmlConnectionsPrivate;
+class Q_AUTOTEST_EXPORT QQmlConnections : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QQuickTimer)
+    Q_DECLARE_PRIVATE(QQmlConnections)
+
     Q_INTERFACES(QQmlParserStatus)
-    Q_PROPERTY(int interval READ interval WRITE setInterval NOTIFY intervalChanged)
-    Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
-    Q_PROPERTY(bool repeat READ isRepeating WRITE setRepeating NOTIFY repeatChanged)
-    Q_PROPERTY(bool triggeredOnStart READ triggeredOnStart WRITE setTriggeredOnStart NOTIFY triggeredOnStartChanged)
-    Q_PROPERTY(QObject *parent READ parent CONSTANT)
+    Q_PROPERTY(QObject *target READ target WRITE setTarget NOTIFY targetChanged)
+    Q_PROPERTY(bool ignoreUnknownSignals READ ignoreUnknownSignals WRITE setIgnoreUnknownSignals)
 
 public:
-    QQuickTimer(QObject *parent=0);
+    QQmlConnections(QObject *parent=0);
+    ~QQmlConnections();
 
-    void setInterval(int interval);
-    int interval() const;
+    QObject *target() const;
+    void setTarget(QObject *);
 
-    bool isRunning() const;
-    void setRunning(bool running);
-
-    bool isRepeating() const;
-    void setRepeating(bool repeating);
-
-    bool triggeredOnStart() const;
-    void setTriggeredOnStart(bool triggeredOnStart);
-
-protected:
-    void classBegin();
-    void componentComplete();
-
-public Q_SLOTS:
-    void start();
-    void stop();
-    void restart();
+    bool ignoreUnknownSignals() const;
+    void setIgnoreUnknownSignals(bool ignore);
 
 Q_SIGNALS:
-    void triggered();
-    void runningChanged();
-    void intervalChanged();
-    void repeatChanged();
-    void triggeredOnStartChanged();
+    void targetChanged();
 
 private:
-    void update();
-
-private Q_SLOTS:
-    void ticked();
+    void connectSignals();
+    void classBegin();
+    void componentComplete();
 };
+
+class QQmlConnectionsParser : public QQmlCustomParser
+{
+public:
+    virtual QByteArray compile(const QList<QQmlCustomParserProperty> &);
+    virtual void setCustomData(QObject *, const QByteArray &);
+};
+
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickTimer)
+QML_DECLARE_TYPE(QQmlConnections)
 
 QT_END_HEADER
 

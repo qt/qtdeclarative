@@ -43,8 +43,6 @@
 #include "qquickanimation_p.h"
 #include "qquickanimation_p_p.h"
 #include "qquickbehavior_p.h"
-#include "qquickbind_p.h"
-#include "qquickconnections_p.h"
 #include "qquicksmoothedanimation_p.h"
 #include "qquickfontloader_p.h"
 #include "qquickpackage_p.h"
@@ -55,7 +53,6 @@
 #include "qquickstate_p.h"
 #include "qquickstate_p_p.h"
 #include "qquicksystempalette_p.h"
-#include "qquicktimer_p.h"
 #include "qquicktransition_p.h"
 #include <qqmlinfo.h>
 #include <private/qqmltypenotavailable_p.h>
@@ -72,9 +69,7 @@ void QQuickUtilModule::defineModule()
     qmlRegisterUncreatableType<QQuickAbstractAnimation>("QtQuick",2,0,"Animation",QQuickAbstractAnimation::tr("Animation is an abstract class"));
 
     qmlRegisterType<QQuickBehavior>("QtQuick",2,0,"Behavior");
-    qmlRegisterType<QQuickBind>("QtQuick",2,0,"Binding");
     qmlRegisterType<QQuickColorAnimation>("QtQuick",2,0,"ColorAnimation");
-    qmlRegisterType<QQuickConnections>("QtQuick",2,0,"Connections");
     qmlRegisterType<QQuickSmoothedAnimation>("QtQuick",2,0,"SmoothedAnimation");
     qmlRegisterType<QQuickFontLoader>("QtQuick",2,0,"FontLoader");
     qmlRegisterType<QQuickNumberAnimation>("QtQuick",2,0,"NumberAnimation");
@@ -92,12 +87,10 @@ void QQuickUtilModule::defineModule()
     qmlRegisterType<QQuickStateGroup>("QtQuick",2,0,"StateGroup");
     qmlRegisterType<QQuickState>("QtQuick",2,0,"State");
     qmlRegisterType<QQuickSystemPalette>("QtQuick",2,0,"SystemPalette");
-    qmlRegisterType<QQuickTimer>("QtQuick",2,0,"Timer");
     qmlRegisterType<QQuickTransition>("QtQuick",2,0,"Transition");
     qmlRegisterType<QQuickVector3dAnimation>("QtQuick",2,0,"Vector3dAnimation");
 
     qmlRegisterType<QQuickStateOperation>();
 
     qmlRegisterCustomType<QQuickPropertyChanges>("QtQuick",2,0,"PropertyChanges", new QQuickPropertyChangesParser);
-    qmlRegisterCustomType<QQuickConnections>("QtQuick",2,0,"Connections", new QQmlConnectionsParser);
 }

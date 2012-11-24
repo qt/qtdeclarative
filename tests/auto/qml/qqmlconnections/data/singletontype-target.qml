@@ -1,7 +1,7 @@
-import QtQuick 2.0
+import QtQml 2.0
 import MyTestSingletonType 1.0 as MyTestSingletonType
 
-Item {
+QtObject {
     id: rootObject
     objectName: "rootObject"
     property int newIntPropValue: 12
@@ -14,7 +14,7 @@ Item {
         newIntPropValue = newIntPropValue + 1;
     }
 
-    Connections {
+    property Connections c: Connections {
         target: MyTestSingletonType.Api
         onIntPropChanged: moduleIntPropChangedCount = moduleIntPropChangedCount + 1;
         onOtherSignal: moduleOtherSignalCount = moduleOtherSignalCount + 1;

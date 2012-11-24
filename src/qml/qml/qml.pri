@@ -52,7 +52,10 @@ SOURCES += \
     $$PWD/qqmlglobal.cpp \
     $$PWD/qqmlfile.cpp \
     $$PWD/qqmlbundle.cpp \
-    $$PWD/qqmlmemoryprofiler.cpp
+    $$PWD/qqmlmemoryprofiler.cpp \
+    $$PWD/qqmlconnections.cpp \
+    $$PWD/qqmltimer.cpp \
+    $$PWD/qqmlbind.cpp
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
@@ -125,7 +128,11 @@ HEADERS += \
     $$PWD/qqmlvaluetypeproxybinding_p.h \
     $$PWD/qqmlfile.h \
     $$PWD/qqmlbundle_p.h \
-    $$PWD/qqmlmemoryprofiler_p.h
+    $$PWD/qqmlmemoryprofiler_p.h \
+    $$PWD/qqmlconnections_p.h \
+    $$PWD/qqmltimer_p.h \
+    $$PWD/qqmlbind_p.h
+
 
 include(parser/parser.pri)
 include(rewriter/rewriter.pri)

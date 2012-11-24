@@ -25,7 +25,6 @@ PRIVATETESTS += \
     qquickstyledtext \
     qquickstates \
     qquicksystempalette \
-    qquicktimer \
     qquickxmllistmodel
 
 # This test requires the xmlpatterns module

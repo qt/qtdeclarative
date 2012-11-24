@@ -593,7 +593,7 @@ void tst_qqmlengine::qtqmlModule_data()
             << QString(testFileUrl("qtqmlModule.4.qml").toString() + QLatin1String(":1 module \"QtQml\" version 2.5 is not installed\n"))
             << QStringList();
 
-    QTest::newRow("QtQml 2.0 module provides Component and QtObject")
+    QTest::newRow("QtQml 2.0 module provides Component, QtObject, Connections, Binding and Timer")
             << testFileUrl("qtqmlModule.5.qml")
             << QString()
             << QStringList();

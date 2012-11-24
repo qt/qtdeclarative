@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qquicktimer_p.h"
+#include "qqmltimer_p.h"
 
 #include <QtCore/qcoreapplication.h>
 #include "private/qpauseanimationjob_p.h"
@@ -51,16 +51,16 @@ QT_BEGIN_NAMESPACE
 
 
 
-class QQuickTimerPrivate : public QObjectPrivate, public QAnimationJobChangeListener
+class QQmlTimerPrivate : public QObjectPrivate, public QAnimationJobChangeListener
 {
-    Q_DECLARE_PUBLIC(QQuickTimer)
+    Q_DECLARE_PUBLIC(QQmlTimer)
 public:
-    QQuickTimerPrivate()
+    QQmlTimerPrivate()
         : interval(1000), running(false), repeating(false), triggeredOnStart(false)
         , classBegun(false), componentComplete(false), firstTick(true) {}
 
     virtual void animationFinished(QAbstractAnimationJob *);
-    virtual void animationCurrentLoopChanged(QAbstractAnimationJob *)  { Q_Q(QQuickTimer); q->ticked(); }
+    virtual void animationCurrentLoopChanged(QAbstractAnimationJob *)  { Q_Q(QQmlTimer); q->ticked(); }
 
     int interval;
     QPauseAnimationJob pause;
@@ -74,7 +74,7 @@ public:
 
 /*!
     \qmltype Timer
-    \instantiates QQuickTimer
+    \instantiates QQmlTimer
     \inqmlmodule QtQuick 2
     \ingroup qtquick-interceptors
     \brief Triggers a handler at a specified interval
@@ -112,10 +112,10 @@ public:
     \sa {declarative/toys/clocks}{Clocks example}
 */
 
-QQuickTimer::QQuickTimer(QObject *parent)
-    : QObject(*(new QQuickTimerPrivate), parent)
+QQmlTimer::QQmlTimer(QObject *parent)
+    : QObject(*(new QQmlTimerPrivate), parent)
 {
-    Q_D(QQuickTimer);
+    Q_D(QQmlTimer);
     d->pause.addAnimationChangeListener(d, QAbstractAnimationJob::Completion | QAbstractAnimationJob::CurrentLoop);
     d->pause.setLoopCount(1);
     d->pause.setDuration(d->interval);
@@ -128,9 +128,9 @@ QQuickTimer::QQuickTimer(QObject *parent)
 
     The default interval is 1000 milliseconds.
 */
-void QQuickTimer::setInterval(int interval)
+void QQmlTimer::setInterval(int interval)
 {
-    Q_D(QQuickTimer);
+    Q_D(QQmlTimer);
     if (interval != d->interval) {
         d->interval = interval;
         update();
@@ -138,9 +138,9 @@ void QQuickTimer::setInterval(int interval)
     }
 }
 
-int QQuickTimer::interval() const
+int QQmlTimer::interval() const
 {
-    Q_D(const QQuickTimer);
+    Q_D(const QQmlTimer);
     return d->interval;
 }
 
@@ -155,15 +155,15 @@ int QQuickTimer::interval() const
 
     \sa repeat
 */
-bool QQuickTimer::isRunning() const
+bool QQmlTimer::isRunning() const
 {
-    Q_D(const QQuickTimer);
+    Q_D(const QQmlTimer);
     return d->running;
 }
 
-void QQuickTimer::setRunning(bool running)
+void QQmlTimer::setRunning(bool running)
 {
-    Q_D(QQuickTimer);
+    Q_D(QQmlTimer);
     if (d->running != running) {
         d->running = running;
         d->firstTick = true;
@@ -183,15 +183,15 @@ void QQuickTimer::setRunning(bool running)
 
     \sa running
 */
-bool QQuickTimer::isRepeating() const
+bool QQmlTimer::isRepeating() const
 {
-    Q_D(const QQuickTimer);
+    Q_D(const QQmlTimer);
     return d->repeating;
 }
 
-void QQuickTimer::setRepeating(bool repeating)
+void QQmlTimer::setRepeating(bool repeating)
 {
-    Q_D(QQuickTimer);
+    Q_D(QQmlTimer);
     if (repeating != d->repeating) {
         d->repeating = repeating;
         update();
@@ -216,15 +216,15 @@ void QQuickTimer::setRepeating(bool repeating)
 
     \sa running
 */
-bool QQuickTimer::triggeredOnStart() const
+bool QQmlTimer::triggeredOnStart() const
 {
-    Q_D(const QQuickTimer);
+    Q_D(const QQmlTimer);
     return d->triggeredOnStart;
 }
 
-void QQuickTimer::setTriggeredOnStart(bool triggeredOnStart)
+void QQmlTimer::setTriggeredOnStart(bool triggeredOnStart)
 {
-    Q_D(QQuickTimer);
+    Q_D(QQmlTimer);
     if (d->triggeredOnStart != triggeredOnStart) {
         d->triggeredOnStart = triggeredOnStart;
         update();
@@ -239,7 +239,7 @@ void QQuickTimer::setTriggeredOnStart(bool triggeredOnStart)
     If the timer is already running, calling this method has no effect.  The
     \c running property will be true following a call to \c start().
 */
-void QQuickTimer::start()
+void QQmlTimer::start()
 {
     setRunning(true);
 }
@@ -251,7 +251,7 @@ void QQuickTimer::start()
     If the timer is not running, calling this method has no effect.  The
     \c running property will be false following a call to \c stop().
 */
-void QQuickTimer::stop()
+void QQmlTimer::stop()
 {
     setRunning(false);
 }
@@ -264,15 +264,15 @@ void QQuickTimer::stop()
     stopped, reset to initial state and started.  The \c running property
     will be true following a call to \c restart().
 */
-void QQuickTimer::restart()
+void QQmlTimer::restart()
 {
     setRunning(false);
     setRunning(true);
 }
 
-void QQuickTimer::update()
+void QQmlTimer::update()
 {
-    Q_D(QQuickTimer);
+    Q_D(QQmlTimer);
     if (d->classBegun && !d->componentComplete)
         return;
     d->pause.stop();
@@ -288,15 +288,15 @@ void QQuickTimer::update()
     }
 }
 
-void QQuickTimer::classBegin()
+void QQmlTimer::classBegin()
 {
-    Q_D(QQuickTimer);
+    Q_D(QQmlTimer);
     d->classBegun = true;
 }
 
-void QQuickTimer::componentComplete()
+void QQmlTimer::componentComplete()
 {
-    Q_D(QQuickTimer);
+    Q_D(QQmlTimer);
     d->componentComplete = true;
     update();
 }
@@ -306,17 +306,17 @@ void QQuickTimer::componentComplete()
 
     This handler is called when the Timer is triggered.
 */
-void QQuickTimer::ticked()
+void QQmlTimer::ticked()
 {
-    Q_D(QQuickTimer);
+    Q_D(QQmlTimer);
     if (d->running && (d->pause.currentTime() > 0 || (d->triggeredOnStart && d->firstTick)))
         emit triggered();
     d->firstTick = false;
 }
 
-void QQuickTimerPrivate::animationFinished(QAbstractAnimationJob *)
+void QQmlTimerPrivate::animationFinished(QAbstractAnimationJob *)
 {
-    Q_Q(QQuickTimer);
+    Q_Q(QQmlTimer);
     if (repeating || !running)
         return;
     running = false;

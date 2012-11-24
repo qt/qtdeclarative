@@ -41,16 +41,16 @@
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
-#include <private/qquickconnections_p.h>
+#include <private/qqmlconnections_p.h>
 #include <private/qquickitem_p.h>
 #include "../../shared/util.h"
 #include <QtQml/qqmlscriptstring.h>
 
-class tst_qquickconnection : public QQmlDataTest
+class tst_qqmlconnections : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickconnection();
+    tst_qqmlconnections();
 
 private slots:
     void defaultValues();
@@ -69,15 +69,15 @@ private:
     QQmlEngine engine;
 };
 
-tst_qquickconnection::tst_qquickconnection()
+tst_qqmlconnections::tst_qqmlconnections()
 {
 }
 
-void tst_qquickconnection::defaultValues()
+void tst_qqmlconnections::defaultValues()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("test-connection3.qml"));
-    QQuickConnections *item = qobject_cast<QQuickConnections*>(c.create());
+    QQmlConnections *item = qobject_cast<QQmlConnections*>(c.create());
 
     QVERIFY(item != 0);
     QVERIFY(item->target() == 0);
@@ -85,11 +85,11 @@ void tst_qquickconnection::defaultValues()
     delete item;
 }
 
-void tst_qquickconnection::properties()
+void tst_qqmlconnections::properties()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("test-connection2.qml"));
-    QQuickConnections *item = qobject_cast<QQuickConnections*>(c.create());
+    QQmlConnections *item = qobject_cast<QQmlConnections*>(c.create());
 
     QVERIFY(item != 0);
 
@@ -99,7 +99,7 @@ void tst_qquickconnection::properties()
     delete item;
 }
 
-void tst_qquickconnection::connection()
+void tst_qqmlconnections::connection()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("test-connection.qml"));
@@ -116,35 +116,35 @@ void tst_qquickconnection::connection()
     delete item;
 }
 
-void tst_qquickconnection::trimming()
+void tst_qqmlconnections::trimming()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("trimming.qml"));
-    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+    QObject *object = c.create();
 
-    QVERIFY(item != 0);
+    QVERIFY(object != 0);
 
-    QCOMPARE(item->property("tested").toString(), QString(""));
-    int index = item->metaObject()->indexOfSignal("testMe(int,QString)");
-    QMetaMethod method = item->metaObject()->method(index);
-    method.invoke(item,
+    QCOMPARE(object->property("tested").toString(), QString(""));
+    int index = object->metaObject()->indexOfSignal("testMe(int,QString)");
+    QMetaMethod method = object->metaObject()->method(index);
+    method.invoke(object,
                   Qt::DirectConnection,
                   Q_ARG(int, 5),
                   Q_ARG(QString, "worked"));
-    QCOMPARE(item->property("tested").toString(), QString("worked5"));
+    QCOMPARE(object->property("tested").toString(), QString("worked5"));
 
-    delete item;
+    delete object;
 }
 
 // Confirm that target can be changed by one of our signal handlers
-void tst_qquickconnection::targetChanged()
+void tst_qqmlconnections::targetChanged()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("connection-targetchange.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
     QVERIFY(item != 0);
 
-    QQuickConnections *connections = item->findChild<QQuickConnections*>("connections");
+    QQmlConnections *connections = item->findChild<QQmlConnections*>("connections");
     QVERIFY(connections);
 
     QQuickItem *item1 = item->findChild<QQuickItem*>("item1");
@@ -161,18 +161,18 @@ void tst_qquickconnection::targetChanged()
     delete item;
 }
 
-void tst_qquickconnection::unknownSignals_data()
+void tst_qqmlconnections::unknownSignals_data()
 {
     QTest::addColumn<QString>("file");
     QTest::addColumn<QString>("error");
 
-    QTest::newRow("basic") << "connection-unknownsignals.qml" << ":6:5: QML Connections: Cannot assign to non-existent property \"onFooBar\"";
-    QTest::newRow("parent") << "connection-unknownsignals-parent.qml" << ":6:5: QML Connections: Cannot assign to non-existent property \"onFooBar\"";
+    QTest::newRow("basic") << "connection-unknownsignals.qml" << ":6:30: QML Connections: Cannot assign to non-existent property \"onFooBar\"";
+    QTest::newRow("parent") << "connection-unknownsignals-parent.qml" << ":4:30: QML Connections: Cannot assign to non-existent property \"onFooBar\"";
     QTest::newRow("ignored") << "connection-unknownsignals-ignored.qml" << ""; // should be NO error
     QTest::newRow("notarget") << "connection-unknownsignals-notarget.qml" << ""; // should be NO error
 }
 
-void tst_qquickconnection::unknownSignals()
+void tst_qqmlconnections::unknownSignals()
 {
     QFETCH(QString, file);
     QFETCH(QString, error);
@@ -186,20 +186,20 @@ void tst_qquickconnection::unknownSignals()
 
     QQmlEngine engine;
     QQmlComponent c(&engine, url);
-    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
-    QVERIFY(item != 0);
+    QObject *object = c.create();
+    QVERIFY(object != 0);
 
     // check that connection is created (they are all runtime errors)
-    QQuickConnections *connections = item->findChild<QQuickConnections*>("connections");
+    QQmlConnections *connections = object->findChild<QQmlConnections*>("connections");
     QVERIFY(connections);
 
     if (file == "connection-unknownsignals-ignored.qml")
         QVERIFY(connections->ignoreUnknownSignals());
 
-    delete item;
+    delete object;
 }
 
-void tst_qquickconnection::errors_data()
+void tst_qqmlconnections::errors_data()
 {
     QTest::addColumn<QString>("file");
     QTest::addColumn<QString>("error");
@@ -210,7 +210,7 @@ void tst_qquickconnection::errors_data()
     QTest::newRow("grouped object") << "error-syntax.qml" << "Connections: syntax error";
 }
 
-void tst_qquickconnection::errors()
+void tst_qqmlconnections::errors()
 {
     QFETCH(QString, file);
     QFETCH(QString, error);
@@ -245,7 +245,7 @@ private:
     bool m_ran;
 };
 
-void tst_qquickconnection::rewriteErrors()
+void tst_qqmlconnections::rewriteErrors()
 {
     qmlRegisterType<TestObject>("Test", 1, 0, "TestObject");
     {
@@ -312,7 +312,7 @@ static QObject *module_api_factory(QQmlEngine *engine, QJSEngine *scriptEngine)
 }
 
 // QTBUG-20937
-void tst_qquickconnection::singletonTypeTarget()
+void tst_qqmlconnections::singletonTypeTarget()
 {
     qmlRegisterSingletonType<MyTestSingletonType>("MyTestSingletonType", 1, 0, "Api", module_api_factory);
     QQmlComponent component(&engine, testFileUrl("singletontype-target.qml"));
@@ -338,6 +338,6 @@ void tst_qquickconnection::singletonTypeTarget()
     delete object;
 }
 
-QTEST_MAIN(tst_qquickconnection)
+QTEST_MAIN(tst_qqmlconnections)
 
-#include "tst_qquickconnection.moc"
+#include "tst_qqmlconnections.moc"

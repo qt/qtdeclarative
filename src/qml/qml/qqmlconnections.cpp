@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qquickconnections_p.h"
+#include "qqmlconnections_p.h"
 
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlproperty_p.h>
@@ -55,10 +55,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickConnectionsPrivate : public QObjectPrivate
+class QQmlConnectionsPrivate : public QObjectPrivate
 {
 public:
-    QQuickConnectionsPrivate() : target(0), targetSet(false), ignoreUnknownSignals(false), componentcomplete(true) {}
+    QQmlConnectionsPrivate() : target(0), targetSet(false), ignoreUnknownSignals(false), componentcomplete(true) {}
 
     QList<QQmlBoundSignal*> boundsignals;
     QObject *target;
@@ -72,7 +72,7 @@ public:
 
 /*!
     \qmltype Connections
-    \instantiates QQuickConnections
+    \instantiates QQmlConnections
     \inqmlmodule QtQuick 2
     \ingroup qtquick-interceptors
     \brief Describes generalized connections to signals
@@ -128,12 +128,12 @@ public:
 
     \sa QtQml
 */
-QQuickConnections::QQuickConnections(QObject *parent) :
-    QObject(*(new QQuickConnectionsPrivate), parent)
+QQmlConnections::QQmlConnections(QObject *parent) :
+    QObject(*(new QQmlConnectionsPrivate), parent)
 {
 }
 
-QQuickConnections::~QQuickConnections()
+QQmlConnections::~QQmlConnections()
 {
 }
 
@@ -146,9 +146,9 @@ QQuickConnections::~QQuickConnections()
     If set to null, no connection is made and any signal handlers are ignored
     until the target is not null.
 */
-QObject *QQuickConnections::target() const
+QObject *QQmlConnections::target() const
 {
-    Q_D(const QQuickConnections);
+    Q_D(const QQmlConnections);
     return d->targetSet ? d->target : parent();
 }
 
@@ -162,9 +162,9 @@ private:
     QQmlBoundSignal *m_signal;
 };
 
-void QQuickConnections::setTarget(QObject *obj)
+void QQmlConnections::setTarget(QObject *obj)
 {
-    Q_D(QQuickConnections);
+    Q_D(QQmlConnections);
     d->targetSet = true; // even if setting to 0, it is *set*
     if (d->target == obj)
         return;
@@ -191,15 +191,15 @@ void QQuickConnections::setTarget(QObject *obj)
     This is useful if you intend to connect to different types of objects, handling
     a different set of signals for each object.
 */
-bool QQuickConnections::ignoreUnknownSignals() const
+bool QQmlConnections::ignoreUnknownSignals() const
 {
-    Q_D(const QQuickConnections);
+    Q_D(const QQmlConnections);
     return d->ignoreUnknownSignals;
 }
 
-void QQuickConnections::setIgnoreUnknownSignals(bool ignore)
+void QQmlConnections::setIgnoreUnknownSignals(bool ignore)
 {
-    Q_D(QQuickConnections);
+    Q_D(QQmlConnections);
     d->ignoreUnknownSignals = ignore;
 }
 
@@ -218,7 +218,7 @@ QQmlConnectionsParser::compile(const QList<QQmlCustomParserProperty> &props)
         int propColumn = props.at(ii).location().column;
 
         if (!propName.startsWith(QLatin1String("on")) || !propName.at(2).isUpper()) {
-            error(props.at(ii), QQuickConnections::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
+            error(props.at(ii), QQmlConnections::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
             return QByteArray();
         }
 
@@ -228,10 +228,10 @@ QQmlConnectionsParser::compile(const QList<QQmlCustomParserProperty> &props)
             const QVariant &value = values.at(i);
 
             if (value.userType() == qMetaTypeId<QQmlCustomParserNode>()) {
-                error(props.at(ii), QQuickConnections::tr("Connections: nested objects not allowed"));
+                error(props.at(ii), QQmlConnections::tr("Connections: nested objects not allowed"));
                 return QByteArray();
             } else if (value.userType() == qMetaTypeId<QQmlCustomParserProperty>()) {
-                error(props.at(ii), QQuickConnections::tr("Connections: syntax error"));
+                error(props.at(ii), QQmlConnections::tr("Connections: syntax error"));
                 return QByteArray();
             } else {
                 QQmlScript::Variant v = qvariant_cast<QQmlScript::Variant>(value);
@@ -241,7 +241,7 @@ QQmlConnectionsParser::compile(const QList<QQmlCustomParserProperty> &props)
                     ds << propLine;
                     ds << propColumn;
                 } else {
-                    error(props.at(ii), QQuickConnections::tr("Connections: script expected"));
+                    error(props.at(ii), QQmlConnections::tr("Connections: script expected"));
                     return QByteArray();
                 }
             }
@@ -254,15 +254,15 @@ QQmlConnectionsParser::compile(const QList<QQmlCustomParserProperty> &props)
 void QQmlConnectionsParser::setCustomData(QObject *object,
                                             const QByteArray &data)
 {
-    QQuickConnectionsPrivate *p =
-        static_cast<QQuickConnectionsPrivate *>(QObjectPrivate::get(object));
+    QQmlConnectionsPrivate *p =
+        static_cast<QQmlConnectionsPrivate *>(QObjectPrivate::get(object));
     p->data = data;
 }
 
 
-void QQuickConnections::connectSignals()
+void QQmlConnections::connectSignals()
 {
-    Q_D(QQuickConnections);
+    Q_D(QQmlConnections);
     if (!d->componentcomplete || (d->targetSet && !target()))
         return;
 
@@ -305,15 +305,15 @@ void QQuickConnections::connectSignals()
     }
 }
 
-void QQuickConnections::classBegin()
+void QQmlConnections::classBegin()
 {
-    Q_D(QQuickConnections);
+    Q_D(QQmlConnections);
     d->componentcomplete=false;
 }
 
-void QQuickConnections::componentComplete()
+void QQmlConnections::componentComplete()
 {
-    Q_D(QQuickConnections);
+    Q_D(QQmlConnections);
     d->componentcomplete=true;
     connectSignals();
 }

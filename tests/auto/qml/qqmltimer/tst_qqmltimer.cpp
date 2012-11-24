@@ -42,15 +42,15 @@
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
-#include <QtQuick/private/qquicktimer_p.h>
+#include <QtQml/private/qqmltimer_p.h>
 #include <QtQuick/qquickitem.h>
 #include <QDebug>
 
-class tst_qquicktimer : public QObject
+class tst_qqmltimer : public QObject
 {
     Q_OBJECT
 public:
-    tst_qquicktimer();
+    tst_qqmltimer();
 
 private slots:
     void notRepeating();
@@ -84,16 +84,16 @@ public slots:
 
 #define TIMEOUT_TIMEOUT 200
 
-tst_qquicktimer::tst_qquicktimer()
+tst_qqmltimer::tst_qqmltimer()
 {
 }
 
-void tst_qquicktimer::notRepeating()
+void tst_qqmltimer::notRepeating()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQuick 2.0\nTimer { interval: 100; running: true }"), QUrl::fromLocalFile(""));
-    QQuickTimer *timer = qobject_cast<QQuickTimer*>(component.create());
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
     QVERIFY(timer != 0);
     QVERIFY(timer->isRunning());
     QVERIFY(!timer->isRepeating());
@@ -109,12 +109,12 @@ void tst_qquicktimer::notRepeating()
     QVERIFY(timer->isRunning() == false);
 }
 
-void tst_qquicktimer::notRepeatingStart()
+void tst_qqmltimer::notRepeatingStart()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QByteArray("import QtQuick 2.0\nTimer { interval: 100 }"), QUrl::fromLocalFile(""));
-    QQuickTimer *timer = qobject_cast<QQuickTimer*>(component.create());
+    component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 100 }"), QUrl::fromLocalFile(""));
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
     QVERIFY(timer != 0);
     QVERIFY(!timer->isRunning());
 
@@ -134,12 +134,12 @@ void tst_qquicktimer::notRepeatingStart()
     delete timer;
 }
 
-void tst_qquicktimer::repeat()
+void tst_qqmltimer::repeat()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QByteArray("import QtQuick 2.0\nTimer { interval: 100; repeat: true; running: true }"), QUrl::fromLocalFile(""));
-    QQuickTimer *timer = qobject_cast<QQuickTimer*>(component.create());
+    component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 100; repeat: true; running: true }"), QUrl::fromLocalFile(""));
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
     QVERIFY(timer != 0);
 
     TimerHelper helper;
@@ -176,12 +176,12 @@ void tst_qquicktimer::repeat()
     delete timer;
 }
 
-void tst_qquicktimer::triggeredOnStart()
+void tst_qqmltimer::triggeredOnStart()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QByteArray("import QtQuick 2.0\nTimer { interval: 100; running: true; triggeredOnStart: true }"), QUrl::fromLocalFile(""));
-    QQuickTimer *timer = qobject_cast<QQuickTimer*>(component.create());
+    component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 100; running: true; triggeredOnStart: true }"), QUrl::fromLocalFile(""));
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
     QVERIFY(timer != 0);
     QVERIFY(timer->triggeredOnStart());
 
@@ -211,12 +211,12 @@ void tst_qquicktimer::triggeredOnStart()
     delete timer;
 }
 
-void tst_qquicktimer::triggeredOnStartRepeat()
+void tst_qqmltimer::triggeredOnStartRepeat()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QByteArray("import QtQuick 2.0\nTimer { interval: 100; running: true; triggeredOnStart: true; repeat: true }"), QUrl::fromLocalFile(""));
-    QQuickTimer *timer = qobject_cast<QQuickTimer*>(component.create());
+    component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 100; running: true; triggeredOnStart: true; repeat: true }"), QUrl::fromLocalFile(""));
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
     QVERIFY(timer != 0);
 
     TimerHelper helper;
@@ -234,15 +234,15 @@ void tst_qquicktimer::triggeredOnStartRepeat()
     delete timer;
 }
 
-void tst_qquicktimer::noTriggerIfNotRunning()
+void tst_qqmltimer::noTriggerIfNotRunning()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray(
-        "import QtQuick 2.0\n"
-        "Item { property bool ok: true\n"
-            "Timer { id: t1; interval: 100; repeat: true; running: true; onTriggered: if (!running) ok=false }"
-            "Timer { interval: 10; running: true; onTriggered: t1.running=false }"
+        "import QtQml 2.0\n"
+        "QtObject { property bool ok: true\n"
+            "property Timer timer1: Timer { id: t1; interval: 100; repeat: true; running: true; onTriggered: if (!running) ok=false }"
+            "property Timer timer2: Timer { interval: 10; running: true; onTriggered: t1.running=false }"
         "}"
     ), QUrl::fromLocalFile(""));
     QObject *item = component.create();
@@ -253,12 +253,12 @@ void tst_qquicktimer::noTriggerIfNotRunning()
     delete item;
 }
 
-void tst_qquicktimer::changeDuration()
+void tst_qqmltimer::changeDuration()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QByteArray("import QtQuick 2.0\nTimer { interval: 200; repeat: true; running: true }"), QUrl::fromLocalFile(""));
-    QQuickTimer *timer = qobject_cast<QQuickTimer*>(component.create());
+    component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 200; repeat: true; running: true }"), QUrl::fromLocalFile(""));
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
     QVERIFY(timer != 0);
 
     TimerHelper helper;
@@ -289,12 +289,12 @@ void tst_qquicktimer::changeDuration()
     delete timer;
 }
 
-void tst_qquicktimer::restart()
+void tst_qqmltimer::restart()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QByteArray("import QtQuick 2.0\nTimer { interval: 500; repeat: true; running: true }"), QUrl::fromLocalFile(""));
-    QQuickTimer *timer = qobject_cast<QQuickTimer*>(component.create());
+    component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 500; repeat: true; running: true }"), QUrl::fromLocalFile(""));
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
     QVERIFY(timer != 0);
 
     TimerHelper helper;
@@ -316,18 +316,18 @@ void tst_qquicktimer::restart()
     delete timer;
 }
 
-void tst_qquicktimer::restartFromTriggered()
+void tst_qqmltimer::restartFromTriggered()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QByteArray("import QtQuick 2.0\nTimer { "
+    component.setData(QByteArray("import QtQml 2.0\nTimer { "
                                     "interval: 500; "
                                     "repeat: false; "
                                     "running: true; "
                                     "onTriggered: restart()"
                                  " }"), QUrl::fromLocalFile(""));
     QScopedPointer<QObject> object(component.create());
-    QQuickTimer *timer = qobject_cast<QQuickTimer*>(object.data());
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(object.data());
     QVERIFY(timer != 0);
 
     TimerHelper helper;
@@ -343,11 +343,11 @@ void tst_qquicktimer::restartFromTriggered()
     QVERIFY(timer->isRunning());
 }
 
-void tst_qquicktimer::runningFromTriggered()
+void tst_qqmltimer::runningFromTriggered()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QByteArray("import QtQuick 2.0\nTimer { "
+    component.setData(QByteArray("import QtQml 2.0\nTimer { "
                                     "property bool ok: false; "
                                     "interval: 500; "
                                     "repeat: false; "
@@ -355,7 +355,7 @@ void tst_qquicktimer::runningFromTriggered()
                                     "onTriggered: { ok = !running; running = true }"
                                  " }"), QUrl::fromLocalFile(""));
     QScopedPointer<QObject> object(component.create());
-    QQuickTimer *timer = qobject_cast<QQuickTimer*>(object.data());
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(object.data());
     QVERIFY(timer != 0);
 
     TimerHelper helper;
@@ -373,14 +373,14 @@ void tst_qquicktimer::runningFromTriggered()
     QVERIFY(timer->isRunning());
 }
 
-void tst_qquicktimer::parentProperty()
+void tst_qqmltimer::parentProperty()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQuick 2.0\nItem { Timer { objectName: \"timer\"; running: parent.visible } }"), QUrl::fromLocalFile(""));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item != 0);
-    QQuickTimer *timer = item->findChild<QQuickTimer*>("timer");
+    QQmlTimer *timer = item->findChild<QQmlTimer*>("timer");
     QVERIFY(timer != 0);
 
     QVERIFY(timer->isRunning());
@@ -388,6 +388,6 @@ void tst_qquicktimer::parentProperty()
     delete timer;
 }
 
-QTEST_MAIN(tst_qquicktimer)
+QTEST_MAIN(tst_qqmltimer)
 
-#include "tst_qquicktimer.moc"
+#include "tst_qqmltimer.moc"

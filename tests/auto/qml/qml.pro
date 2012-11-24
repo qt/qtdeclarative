@@ -41,16 +41,17 @@ PRIVATETESTS += \
     qqmlsqldatabase \
     qqmlvaluetypes \
     qqmlvaluetypeproviders \
-    qquickbinding \
+    qqmlbinding \
     qquickchangeset \
-    qquickconnection \
+    qqmlconnections \
     qquicklistcompositor \
     qquicklistmodel \
     qquicklistmodelworkerscript \
     qquickworkerscript \
     qqmlbundle \
     qrcqml \
-    v4
+    v4 \
+    qqmltimer
 
 !contains(QT_CONFIG, no-widgets) {
     PUBLICTESTS += \

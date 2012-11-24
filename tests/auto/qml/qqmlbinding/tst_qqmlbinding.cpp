@@ -41,15 +41,15 @@
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
-#include <private/qquickbind_p.h>
+#include <private/qqmlbind_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include "../../shared/util.h"
 
-class tst_qquickbinding : public QQmlDataTest
+class tst_qqmlbinding : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickbinding();
+    tst_qqmlbinding();
 
 private slots:
     void binding();
@@ -63,18 +63,18 @@ private:
     QQmlEngine engine;
 };
 
-tst_qquickbinding::tst_qquickbinding()
+tst_qqmlbinding::tst_qqmlbinding()
 {
 }
 
-void tst_qquickbinding::binding()
+void tst_qqmlbinding::binding()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("test-binding.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
-    QQuickBind *binding3 = qobject_cast<QQuickBind*>(rect->findChild<QQuickBind*>("binding3"));
+    QQmlBind *binding3 = qobject_cast<QQmlBind*>(rect->findChild<QQmlBind*>("binding3"));
     QVERIFY(binding3 != 0);
 
     QCOMPARE(rect->color(), QColor("yellow"));
@@ -86,7 +86,7 @@ void tst_qquickbinding::binding()
 
     QCOMPARE(binding3->when(), true);
 
-    QQuickBind *binding = qobject_cast<QQuickBind*>(rect->findChild<QQuickBind*>("binding1"));
+    QQmlBind *binding = qobject_cast<QQmlBind*>(rect->findChild<QQmlBind*>("binding1"));
     QVERIFY(binding != 0);
     QCOMPARE(binding->object(), qobject_cast<QObject*>(rect));
     QCOMPARE(binding->property(), QLatin1String("text"));
@@ -95,7 +95,7 @@ void tst_qquickbinding::binding()
     delete rect;
 }
 
-void tst_qquickbinding::whenAfterValue()
+void tst_qqmlbinding::whenAfterValue()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("test-binding2.qml"));
@@ -111,7 +111,7 @@ void tst_qquickbinding::whenAfterValue()
     delete rect;
 }
 
-void tst_qquickbinding::restoreBinding()
+void tst_qqmlbinding::restoreBinding()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("restoreBinding.qml"));
@@ -141,7 +141,7 @@ void tst_qquickbinding::restoreBinding()
     delete rect;
 }
 
-void tst_qquickbinding::restoreBindingWithLoop()
+void tst_qqmlbinding::restoreBindingWithLoop()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("restoreBindingWithLoop.qml"));
@@ -177,7 +177,7 @@ void tst_qquickbinding::restoreBindingWithLoop()
     delete rect;
 }
 
-void tst_qquickbinding::restoreBindingWithoutCrash()
+void tst_qqmlbinding::restoreBindingWithoutCrash()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("restoreBindingWithoutCrash.qml"));
@@ -217,7 +217,7 @@ void tst_qquickbinding::restoreBindingWithoutCrash()
 }
 
 //QTBUG-20692
-void tst_qquickbinding::deletedObject()
+void tst_qqmlbinding::deletedObject()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("deletedObject.qml"));
@@ -232,6 +232,6 @@ void tst_qquickbinding::deletedObject()
     delete rect;
 }
 
-QTEST_MAIN(tst_qquickbinding)
+QTEST_MAIN(tst_qqmlbinding)
 
-#include "tst_qquickbinding.moc"
+#include "tst_qqmlbinding.moc"

@@ -1,7 +1,6 @@
 SOURCES += \
     $$PWD/qquickapplication.cpp\
     $$PWD/qquickutilmodule.cpp\
-    $$PWD/qquickconnections.cpp \
     $$PWD/qquickpackage.cpp \
     $$PWD/qquickanimation.cpp \
     $$PWD/qquicksystempalette.cpp \
@@ -16,8 +15,6 @@ SOURCES += \
     $$PWD/qquicktransition.cpp \
     $$PWD/qquicklistaccessor.cpp \
     $$PWD/qquicktimeline.cpp \
-    $$PWD/qquicktimer.cpp \
-    $$PWD/qquickbind.cpp \
     $$PWD/qquickpixmapcache.cpp \
     $$PWD/qquickbehavior.cpp \
     $$PWD/qquickfontloader.cpp \
@@ -34,7 +31,6 @@ SOURCES += \
 HEADERS += \
     $$PWD/qquickapplication_p.h\
     $$PWD/qquickutilmodule_p.h\
-    $$PWD/qquickconnections_p.h \
     $$PWD/qquickpackage_p.h \
     $$PWD/qquickanimation_p.h \
     $$PWD/qquickanimation_p_p.h \
@@ -52,8 +48,6 @@ HEADERS += \
     $$PWD/qquicktransition_p.h \
     $$PWD/qquicklistaccessor_p.h \
     $$PWD/qquicktimeline_p_p.h \
-    $$PWD/qquicktimer_p.h \
-    $$PWD/qquickbind_p.h \
     $$PWD/qquickpixmapcache_p.h \
     $$PWD/qquickbehavior_p.h \
     $$PWD/qquickfontloader_p.h \

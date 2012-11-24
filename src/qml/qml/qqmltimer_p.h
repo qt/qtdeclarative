@@ -39,57 +39,72 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKBIND_H
-#define QQUICKBIND_H
+#ifndef QQMLTIMER_H
+#define QQMLTIMER_H
 
 #include <qqml.h>
 
 #include <QtCore/qobject.h>
 
+#include <private/qtqmlglobal_p.h>
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QQuickBindPrivate;
-class Q_AUTOTEST_EXPORT QQuickBind : public QObject, public QQmlPropertyValueSource, public QQmlParserStatus
+class QQmlTimerPrivate;
+class Q_AUTOTEST_EXPORT QQmlTimer : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QQuickBind)
+    Q_DECLARE_PRIVATE(QQmlTimer)
     Q_INTERFACES(QQmlParserStatus)
-    Q_INTERFACES(QQmlPropertyValueSource)
-    Q_PROPERTY(QObject *target READ object WRITE setObject)
-    Q_PROPERTY(QString property READ property WRITE setProperty)
-    Q_PROPERTY(QVariant value READ value WRITE setValue)
-    Q_PROPERTY(bool when READ when WRITE setWhen)
+    Q_PROPERTY(int interval READ interval WRITE setInterval NOTIFY intervalChanged)
+    Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
+    Q_PROPERTY(bool repeat READ isRepeating WRITE setRepeating NOTIFY repeatChanged)
+    Q_PROPERTY(bool triggeredOnStart READ triggeredOnStart WRITE setTriggeredOnStart NOTIFY triggeredOnStartChanged)
+    Q_PROPERTY(QObject *parent READ parent CONSTANT)
 
 public:
-    QQuickBind(QObject *parent=0);
-    ~QQuickBind();
+    QQmlTimer(QObject *parent=0);
 
-    bool when() const;
-    void setWhen(bool);
+    void setInterval(int interval);
+    int interval() const;
 
-    QObject *object();
-    void setObject(QObject *);
+    bool isRunning() const;
+    void setRunning(bool running);
 
-    QString property() const;
-    void setProperty(const QString &);
+    bool isRepeating() const;
+    void setRepeating(bool repeating);
 
-    QVariant value() const;
-    void setValue(const QVariant &);
+    bool triggeredOnStart() const;
+    void setTriggeredOnStart(bool triggeredOnStart);
 
 protected:
-    virtual void setTarget(const QQmlProperty &);
-    virtual void classBegin();
-    virtual void componentComplete();
+    void classBegin();
+    void componentComplete();
+
+public Q_SLOTS:
+    void start();
+    void stop();
+    void restart();
+
+Q_SIGNALS:
+    void triggered();
+    void runningChanged();
+    void intervalChanged();
+    void repeatChanged();
+    void triggeredOnStartChanged();
 
 private:
-    void eval();
+    void update();
+
+private Q_SLOTS:
+    void ticked();
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickBind)
+QML_DECLARE_TYPE(QQmlTimer)
 
 QT_END_HEADER
 
