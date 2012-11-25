@@ -462,47 +462,39 @@ Value ScriptFunction::call(VM::ExecutionContext *ctx)
 
 Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc, bool strictMode)
 {
-    Value s = context->argument(0);
-    if (!s.isString())
-        return s;
+    if (argc < 1)
+        return Value::undefinedValue();
 
-    const QString code = context->argument(0).stringValue()->toQString();
+    if (!args[0].isString())
+        return args[0];
 
-    // ### how to determine this correctly
+    // ### how to determine this correctly?
     bool directCall = true;
 
     ExecutionContext k, *ctx;
     if (!directCall) {
+        qDebug() << "!direct";
         // ###
     } else if (strictMode) {
         ctx = &k;
         ctx->initCallContext(context, context->thisObject, this, args, argc);
     } else {
-        ctx = context;
+        ctx = &k;
+        // a clone of the surrounding context
+        ctx->engine = context->engine;
+        ctx->parent = context;
+        ctx->thisObject = context->thisObject;
+        ctx->lexicalEnvironment = context->lexicalEnvironment;
+        ctx->variableEnvironment = context->variableEnvironment;
     }
-    // ##### inline and do this in the correct scope
+    const QString code = args[0].stringValue()->toQString();
+
     Value result = evaluate(ctx, QStringLiteral("eval code"), code, QQmlJS::Codegen::EvalCode);
 
     if (strictMode)
         ctx->leaveCallContext();
 
     return result;
-}
-
-/// isNaN [15.1.2.4]
-Value IsNaNFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/, bool /*strictMode*/)
-{
-    // TODO: see if we can generate code for this directly
-    const Value &v = args[0];
-    return Value::fromBoolean(v.isDouble() ? std::isnan(v.doubleValue()) : false);
-}
-
-/// isFinite [15.1.2.5]
-Value IsFiniteFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/, bool /*strictMode*/)
-{
-    // TODO: see if we can generate code for this directly
-    const Value &v = args[0];
-    return Value::fromBoolean(v.isDouble() ? std::isfinite(v.doubleValue()) : true);
 }
 
 Value EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fileName,
@@ -554,6 +546,23 @@ Value EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &f
     }
 
     return globalCode->code(ctx, globalCode->codeData);
+}
+
+
+/// isNaN [15.1.2.4]
+Value IsNaNFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/, bool /*strictMode*/)
+{
+    // TODO: see if we can generate code for this directly
+    const Value &v = args[0];
+    return Value::fromBoolean(v.isDouble() ? std::isnan(v.doubleValue()) : false);
+}
+
+/// isFinite [15.1.2.5]
+Value IsFiniteFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/, bool /*strictMode*/)
+{
+    // TODO: see if we can generate code for this directly
+    const Value &v = args[0];
+    return Value::fromBoolean(v.isDouble() ? std::isfinite(v.doubleValue()) : true);
 }
 
 
