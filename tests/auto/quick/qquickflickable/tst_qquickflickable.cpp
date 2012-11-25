@@ -388,6 +388,35 @@ void tst_qquickflickable::nestedPressDelay()
 
     QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(150, 150));
 
+    // Dragging inner Flickable should work
+    QTest::mousePress(window, Qt::LeftButton, 0, QPoint(80, 150));
+    // the MouseArea is not pressed immediately
+    QVERIFY(outer->property("pressed").toBool() == false);
+
+    QTest::mouseMove(window, QPoint(60, 150));
+    QTest::mouseMove(window, QPoint(40, 150));
+    QTest::mouseMove(window, QPoint(20, 150));
+
+    QVERIFY(outer->property("moving").toBool() == false);
+    QVERIFY(inner->property("moving").toBool() == true);
+
+    QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(20, 150));
+
+    // Dragging the MouseArea in the inner Flickable should move the inner Flickable
+    QTest::mousePress(window, Qt::LeftButton, 0, QPoint(150, 150));
+    // the MouseArea is not pressed immediately
+    QVERIFY(outer->property("pressed").toBool() == false);
+
+    QTest::mouseMove(window, QPoint(130, 150));
+    QTest::mouseMove(window, QPoint(110, 150));
+    QTest::mouseMove(window, QPoint(90, 150));
+
+
+    QVERIFY(outer->property("moving").toBool() == false);
+    QVERIFY(inner->property("moving").toBool() == true);
+
+    QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(90, 150));
+
     delete window;
 }
 

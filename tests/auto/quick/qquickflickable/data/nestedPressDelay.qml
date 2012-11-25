@@ -8,24 +8,30 @@ Flickable {
     contentHeight: 320
     flickableDirection: Flickable.HorizontalFlick
     pressDelay: 50
-    Flickable {
-        objectName: "innerFlickable"
-        flickableDirection: Flickable.VerticalFlick
-        width: 480
-        height: 320
-        contentWidth: 480
-        contentHeight: 400
-        pressDelay: 10000
-        Rectangle {
-            y: 100
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: 240
-            height: 100
-            color: ma.pressed ? 'blue' : 'green'
-            MouseArea {
-                id: ma
-                objectName: "mouseArea"
-                anchors.fill: parent
+    Rectangle {
+        x: 20
+        y: 20
+        width: 400
+        height: 300
+        color: "yellow"
+        Flickable {
+            objectName: "innerFlickable"
+            anchors.fill: parent
+            flickableDirection: Flickable.HorizontalFlick
+            contentWidth: 1480
+            contentHeight: 400
+            pressDelay: 10000
+            Rectangle {
+                y: 100
+                x: 80
+                width: 240
+                height: 100
+                color: ma.pressed ? 'blue' : 'green'
+                MouseArea {
+                    id: ma
+                    objectName: "mouseArea"
+                    anchors.fill: parent
+                }
             }
         }
     }

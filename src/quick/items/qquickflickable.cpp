@@ -2007,6 +2007,22 @@ bool QQuickFlickable::sendMouseEvent(QMouseEvent *event)
 
         switch (mouseEvent->type()) {
         case QEvent::MouseMove:
+            if (d->delayedPressEvent) {
+                // A move beyond the threshold replays the press to give nested Flickables
+                // the opportunity to grab the gesture.
+                QPointF delta = event->localPos() - d->delayedPressEvent->localPos();
+                if (QQuickWindowPrivate::dragOverThreshold(qAbs(delta.x()), Qt::XAxis, event)
+                    || QQuickWindowPrivate::dragOverThreshold(qAbs(delta.y()), Qt::YAxis, event)) {
+                    // We replay the mouse press but the grabber we had might not be interested in the event (e.g. overlay)
+                    // so we reset the grabber
+                    if (c->mouseGrabberItem() == d->delayedPressTarget)
+                        d->delayedPressTarget->ungrabMouse();
+                    // Use the event handler that will take care of finding the proper item to propagate the event
+                    QQuickWindowPrivate::get(window())->deliverMouseEvent(d->delayedPressEvent);
+                    d->clearDelayedPress();
+                    // continue on to handle mouse move event
+                }
+            }
             d->handleMouseMoveEvent(mouseEvent.data());
             break;
         case QEvent::MouseButtonPress:
