@@ -371,9 +371,9 @@ private:
         move(TrustedImm64(value.val), ScratchRegister);
         push(ScratchRegister);
 #else
-        move(TrustedImm32(value.int_32), ScratchRegister);
-        push(ScratchRegister);
         move(TrustedImm32(value.tag), ScratchRegister);
+        push(ScratchRegister);
+        move(TrustedImm32(value.int_32), ScratchRegister);
         push(ScratchRegister);
 #endif
     }
