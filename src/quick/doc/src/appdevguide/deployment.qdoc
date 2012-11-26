@@ -59,7 +59,7 @@ QQmlEngine by either:
 
 \section2 Deploying with QQuickView
 
-QQuickView is a QWidget-based class that is able to load QML files.
+QQuickView is a QWindow-based class that is able to load QML files.
 For example, if there is a QML file, \c application.qml, like this:
 
 \qml
@@ -71,12 +71,12 @@ For example, if there is a QML file, \c application.qml, like this:
 It can be loaded in a Qt application's \c main.cpp file like this:
 
 \code
-    #include <QApplication>
+    #include <QGuiApplication>
     #include <QQuickView>
 
     int main(int argc, char *argv[])
     {
-        QApplication app(argc, argv);
+        QGuiApplication app(argc, argv);
 
         QQuickView view;
         view.setSource(QUrl::fromLocalFile("application.qml"));
@@ -86,7 +86,7 @@ It can be loaded in a Qt application's \c main.cpp file like this:
     }
 \endcode
 
-This creates a QWidget-based view that displays the contents of
+This creates a QWindow-based view that displays the contents of
 \c application.qml.
 
 The application's \c .pro \l{qmake Project Files}{project file} must specify
@@ -94,7 +94,7 @@ the \c declarative module for the \c QT variable. For example:
 
 \code
     TEMPLATE += app
-    QT += gui declarative
+    QT += quick
     SOURCES += main.cpp
 \endcode
 
@@ -107,14 +107,14 @@ can be constructed directly instead. In this case, \c application.qml is
 loaded as a QQmlComponent instance rather than placed into a view:
 
 \code
-    #include <QApplication>
+    #include <QGuiApplication>
     #include <QQmlEngine>
     #include <QQmlContext>
     #include <QQmlComponent>
 
     int main(int argc, char *argv[])
     {
-        QApplication app(argc, argv);
+        QGuiApplication app(argc, argv);
 
         QQmlEngine engine;
         QQmlContext *objectContext = new QQmlContext(engine.rootContext());
@@ -128,8 +128,12 @@ loaded as a QQmlComponent instance rather than placed into a view:
     }
 \endcode
 
-See \l{qtqml-cppintegration-data.html}{qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Types to QML} for more information about using
-QQmlEngine, QQmlContext and QQmlComponent, as well
+QGuiApplication can be replaced by a QCoreApplication in the code above in case you are not
+using any graphical items from Qt Quick. This allows using QML as a language without any
+dependencies to the Qt Gui module.
+
+See \l{qtqml-cppintegration-data.html}{qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Types to QML}
+for more information about using QQmlEngine, QQmlContext and QQmlComponent, as well
 as details on including QML files through \l{The Qt Resource System}{Qt's Resource system}.
 
 
