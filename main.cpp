@@ -165,6 +165,7 @@ int compile(const QString &fileName, const QString &source, QQmlJS::LLVMOutputTy
     Program *program = AST::cast<Program *>(parser.rootNode());
 
     Codegen cg;
+    // FIXME: if the program is empty, we should we generate an empty %entry, or give an error?
     /*IR::Function *globalCode =*/ cg(program, &module);
 
     int (*exec)(void *) = outputType == LLVMOutputJit ? executeLLVMCode : 0;

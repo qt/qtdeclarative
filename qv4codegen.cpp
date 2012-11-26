@@ -307,6 +307,8 @@ Codegen::Codegen()
 
 IR::Function *Codegen::operator()(Program *node, IR::Module *module, Mode mode)
 {
+    assert(node);
+
     _module = module;
     _env = 0;
 

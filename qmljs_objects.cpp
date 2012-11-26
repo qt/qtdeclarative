@@ -522,14 +522,21 @@ Value EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &f
         if (parsed) {
             using namespace AST;
             Program *program = AST::cast<Program *>(parser.rootNode());
+            if (!program) {
+                // if parsing was successful, and we have no program, then
+                // we're done...:
+                return QQmlJS::VM::Value::undefinedValue();
+            }
 
             Codegen cg;
             globalCode = cg(program, &module, mode);
-
-            foreach (IR::Function *function, module.functions) {
-                EvalInstructionSelection *isel = ctx->engine->iselFactory->create(vm);
-                isel->run(function);
-                delete isel;
+            if (globalCode) {
+                // only generate other functions if global code generation succeeded.
+                foreach (IR::Function *function, module.functions) {
+                    EvalInstructionSelection *isel = ctx->engine->iselFactory->create(vm);
+                    isel->run(function);
+                    delete isel;
+                }
             }
         }
 
