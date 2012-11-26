@@ -194,6 +194,7 @@ private:
     int scanNumber(QChar ch);
 
     bool isLineTerminator() const;
+    unsigned isLineTerminatorSequence() const;
     static bool isIdentLetter(QChar c);
     static bool isDecimalDigit(ushort c);
     static bool isHexDigit(QChar c);
