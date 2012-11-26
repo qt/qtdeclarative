@@ -63,26 +63,38 @@ Module {
     Component {
         name: "QWindow"
         prototype: "QObject"
-        Property { name: "windowTitle"; type: "string" }
-        Property { name: "windowIcon"; type: "QIcon" }
-        Property { name: "windowModality"; type: "Qt::WindowModality" }
+        Property { name: "title"; type: "string" }
+        Property { name: "modality"; type: "Qt::WindowModality" }
+        Property { name: "flags"; type: "Qt::WindowFlags" }
         Property { name: "x"; type: "int" }
         Property { name: "y"; type: "int" }
         Property { name: "width"; type: "int" }
         Property { name: "height"; type: "int" }
-        Property { name: "pos"; type: "QPoint" }
-        Property { name: "size"; type: "QSize" }
-        Property { name: "geometry"; type: "QRect" }
+        Property { name: "minimumWidth"; type: "int" }
+        Property { name: "minimumHeight"; type: "int" }
+        Property { name: "maximumWidth"; type: "int" }
+        Property { name: "maximumHeight"; type: "int" }
         Property { name: "visible"; type: "bool" }
         Property { name: "contentOrientation"; type: "Qt::ScreenOrientation" }
-        Property { name: "cursor"; type: "QCursor" }
+        Property { name: "windowTitle"; type: "string" }
+        Property { name: "windowFilePath"; type: "string" }
+        Property { name: "windowIcon"; type: "QIcon" }
+        Property { name: "windowModality"; type: "Qt::WindowModality" }
+        Signal {
+            name: "windowModalityChanged"
+            Parameter { name: "windowModality"; type: "Qt::WindowModality" }
+        }
         Signal {
             name: "screenChanged"
             Parameter { name: "screen"; type: "QScreen"; isPointer: true }
         }
         Signal {
-            name: "windowModalityChanged"
-            Parameter { name: "windowModality"; type: "Qt::WindowModality" }
+            name: "modalityChanged"
+            Parameter { name: "modality"; type: "Qt::WindowModality" }
+        }
+        Signal {
+            name: "windowStateChanged"
+            Parameter { name: "windowState"; type: "Qt::WindowState" }
         }
         Signal {
             name: "xChanged"
@@ -98,6 +110,22 @@ Module {
         }
         Signal {
             name: "heightChanged"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Signal {
+            name: "minimumWidthChanged"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Signal {
+            name: "minimumHeightChanged"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Signal {
+            name: "maximumWidthChanged"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Signal {
+            name: "maximumHeightChanged"
             Parameter { name: "arg"; type: "int" }
         }
         Signal {
@@ -126,7 +154,7 @@ Module {
         Method { name: "raise" }
         Method { name: "lower" }
         Method {
-            name: "setWindowTitle"
+            name: "setTitle"
             Parameter { type: "string" }
         }
         Method {
@@ -144,6 +172,22 @@ Module {
         Method {
             name: "setHeight"
             Parameter { name: "arg"; type: "int" }
+        }
+        Method {
+            name: "setMinimumWidth"
+            Parameter { name: "w"; type: "int" }
+        }
+        Method {
+            name: "setMinimumHeight"
+            Parameter { name: "h"; type: "int" }
+        }
+        Method {
+            name: "setMaximumWidth"
+            Parameter { name: "w"; type: "int" }
+        }
+        Method {
+            name: "setMaximumHeight"
+            Parameter { name: "h"; type: "int" }
         }
     }
 }

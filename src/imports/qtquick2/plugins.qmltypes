@@ -29,8 +29,18 @@ Module {
         Signal {
             name: "layoutChanged"
             Parameter { name: "parents"; type: "QList<QPersistentModelIndex>" }
+            Parameter { name: "hint"; type: "QAbstractItemModel::LayoutChangeHint" }
+        }
+        Signal {
+            name: "layoutChanged"
+            Parameter { name: "parents"; type: "QList<QPersistentModelIndex>" }
         }
         Signal { name: "layoutChanged" }
+        Signal {
+            name: "layoutAboutToBeChanged"
+            Parameter { name: "parents"; type: "QList<QPersistentModelIndex>" }
+            Parameter { name: "hint"; type: "QAbstractItemModel::LayoutChangeHint" }
+        }
         Signal {
             name: "layoutAboutToBeChanged"
             Parameter { name: "parents"; type: "QList<QPersistentModelIndex>" }
@@ -164,7 +174,6 @@ Module {
                 "ContextMenu": 1
             }
         }
-        Property { name: "inputItem"; type: "QObject"; isPointer: true }
         Property { name: "cursorRectangle"; type: "QRectF"; isReadonly: true }
         Property { name: "keyboardRectangle"; type: "QRectF"; isReadonly: true }
         Property { name: "visible"; type: "bool"; isReadonly: true }
@@ -419,6 +428,14 @@ Module {
         Method { name: "complete" }
     }
     Component {
+        name: "QQuickAccessibleAttached"
+        prototype: "QObject"
+        exports: ["QtQuick/Accessible 2.0"]
+        Property { name: "role"; type: "QAccessible::Role" }
+        Property { name: "name"; type: "string" }
+        Property { name: "description"; type: "string" }
+    }
+    Component {
         name: "QQuickAnchorAnimation"
         prototype: "QQuickAbstractAnimation"
         exports: ["QtQuick/AnchorAnimation 2.0"]
@@ -669,6 +686,7 @@ Module {
         exports: ["QtQuick/Application 2.0"]
         Property { name: "active"; type: "bool"; isReadonly: true }
         Property { name: "layoutDirection"; type: "Qt::LayoutDirection"; isReadonly: true }
+        Property { name: "supportsMultipleWindows"; type: "bool"; isReadonly: true }
     }
     Component {
         name: "QQuickBasePositioner"
@@ -3871,7 +3889,9 @@ Module {
                 "MacWindowToolBarButtonHint": 268435456,
                 "BypassGraphicsProxyWidget": 536870912,
                 "WindowOkButtonHint": 524288,
-                "WindowCancelButtonHint": 1048576
+                "WindowCancelButtonHint": 1048576,
+                "NoDropShadowWindowHint": 1073741824,
+                "WindowFullscreenButtonHint": -2147483648
             }
         }
         Enum {
@@ -3910,7 +3930,9 @@ Module {
                 "MacWindowToolBarButtonHint": 268435456,
                 "BypassGraphicsProxyWidget": 536870912,
                 "WindowOkButtonHint": 524288,
-                "WindowCancelButtonHint": 1048576
+                "WindowCancelButtonHint": 1048576,
+                "NoDropShadowWindowHint": 1073741824,
+                "WindowFullscreenButtonHint": -2147483648
             }
         }
         Enum {
