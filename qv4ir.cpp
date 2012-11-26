@@ -238,6 +238,8 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_push_with";
     case IR::Name::builtin_pop_with:
         return "builtin_pop_with";
+    case IR::Name::builtin_declare_vars:
+        return "builtin_declare_vars";
     }
     return "builtin_(###FIXME)";
 };

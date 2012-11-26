@@ -865,6 +865,10 @@ void __qmljs_builtin_pop_with(ExecutionContext *ctx)
     ctx->lexicalEnvironment->popWithObject();
 }
 
+void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name)
+{
+    ctx->lexicalEnvironment->createMutableBinding(ctx, name, deletable);
+}
 
 } // extern "C"
 

@@ -100,20 +100,22 @@ bool DeclarativeEnvironment::hasBinding(String *name) const
         if (__qmljs_string_equal(formals[i], name))
             return true;
     }
-    if (!deletableLocals)
-        return false;
-    return deletableLocals->contains(name->toQString());
+    return false;
 }
 
-void DeclarativeEnvironment::createMutableBinding(String *name, bool deletable)
+void DeclarativeEnvironment::createMutableBinding(ExecutionContext *ctx, String *name, bool deletable)
 {
-    // all non deletable vars should get created at compile time
-    assert(deletable);
-    assert(!hasBinding(name));
-
-    if (!deletableLocals)
-        deletableLocals = new QHash<QString, Value>();
-    deletableLocals->insert(name->toQString(), Value::undefinedValue());
+    if (activation) {
+        if (activation->__hasProperty__(ctx, name))
+            return;
+        PropertyDescriptor desc;
+        desc.value = Value::undefinedValue();
+        desc.type = PropertyDescriptor::Data;
+        desc.configurable = deletable ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
+        desc.writable = PropertyDescriptor::Set;
+        desc.enumberable = PropertyDescriptor::Set;
+        activation->__defineOwnProperty__(ctx, name, &desc, true);
+    }
 }
 
 void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool strict)
@@ -133,12 +135,6 @@ void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool s
             return;
         }
     }
-    assert(deletableLocals);
-    QHash<QString, Value>::iterator it = deletableLocals->find(name->toQString());
-    if (it != deletableLocals->end()) {
-        *it = value;
-        return;
-    }
     assert(false);
 }
 
@@ -154,24 +150,16 @@ Value DeclarativeEnvironment::getBindingValue(String *name, bool strict) const
         if (__qmljs_string_equal(formals[i], name))
             return arguments[i];
     }
-    assert(deletableLocals);
-    QHash<QString, Value>::const_iterator it = deletableLocals->find(name->toQString());
-    if (it != deletableLocals->end())
-        return *it;
-
     assert(false);
 }
 
-bool DeclarativeEnvironment::deleteBinding(String *name)
+bool DeclarativeEnvironment::deleteBinding(ExecutionContext *ctx, String *name)
 {
-    if (deletableLocals) {
-        QHash<QString, Value>::iterator it = deletableLocals->find(name->toQString());
-        if (it != deletableLocals->end()) {
-            deletableLocals->erase(it);
-            return true;
-        }
-    }
-    return !hasBinding(name);
+    if (activation)
+        activation->__delete__(ctx, name, false);
+
+    // ### throw in strict mode?
+    return false;
 }
 
 void DeclarativeEnvironment::pushWithObject(Object *with)

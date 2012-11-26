@@ -103,6 +103,7 @@ Value __qmljs_builtin_typeof(Value val, ExecutionContext *context);
 void __qmljs_builtin_throw(Value val, ExecutionContext *context);
 void __qmljs_builtin_push_with(Value o, ExecutionContext *ctx);
 void __qmljs_builtin_pop_with(ExecutionContext *ctx);
+void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name);
 
 // constructors
 Value __qmljs_init_closure(IR::Function *clos, ExecutionContext *ctx);

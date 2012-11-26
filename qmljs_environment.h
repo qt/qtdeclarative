@@ -73,19 +73,15 @@ struct DeclarativeEnvironment
         With *next;
     } *withObject;
 
-    // these get used for createMutableBinding(..., true).
-    // the only place this is being used is eval(...)
-    QHash<QString, Value> *deletableLocals;
 
     DeclarativeEnvironment(ExecutionEngine *e);
     DeclarativeEnvironment(FunctionObject *f, Value *args, uint argc);
-    ~DeclarativeEnvironment() { delete deletableLocals; }
 
     bool hasBinding(String *name) const;
-    void createMutableBinding(String *name, bool deletable);
+    void createMutableBinding(ExecutionContext *ctx, String *name, bool deletable);
     void setMutableBinding(String *name, Value value, bool strict);
     Value getBindingValue(String *name, bool strict) const;
-    bool deleteBinding(String *name);
+    bool deleteBinding(ExecutionContext *ctx, String *name);
 
     // ### needs a bit of work in exception handlers
     void pushWithObject(Object *with);

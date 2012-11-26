@@ -279,6 +279,18 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
     case IR::Name::builtin_pop_with:
         generateFunctionCall(Void, __qmljs_builtin_pop_with, ContextRegister);
         break;
+    case IR::Name::builtin_declare_vars: {
+        if (!call->args)
+            return;
+        IR::Const *deletable = call->args->expr->asConst();
+        assert(deletable->type == IR::BoolType);
+        for (IR::ExprList *it = call->args->next; it; it = it->next) {
+            IR::Name *arg = it->expr->asName();
+            assert(arg != 0);
+            generateFunctionCall(Void, __qmljs_builtin_declare_var, ContextRegister,
+                                 TrustedImm32(deletable->value != 0), identifier(*arg->id));
+        }
+    }
     }
 }
 

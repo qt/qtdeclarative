@@ -253,8 +253,9 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
         if (!extensible)
             goto reject;
         // clause 4
-        *current = *desc;
-        current->fullyPopulated();
+        PropertyDescriptor *pd = members->insert(name);
+        *pd = *desc;
+        pd->fullyPopulated();
         return true;
     }
 
@@ -270,7 +271,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
     if (!current->isConfigurable()) {
         if (desc->isConfigurable())
             goto reject;
-        if (desc->enumberable != PropertyDescriptor::Unset && desc->enumberable != current->enumberable)
+        if (desc->enumberable != PropertyDescriptor::Undefined && desc->enumberable != current->enumberable)
             goto reject;
     }
 
@@ -313,6 +314,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
     *current += *desc;
     return true;
   reject:
+    qDebug() << "___put__ rejected" << name->toQString();
     if (throwException)
         __qmljs_throw_type_error(ctx);
     return false;

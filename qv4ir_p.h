@@ -278,7 +278,8 @@ struct Name: Expr {
         builtin_foreach_iterator_object,
         builtin_foreach_next_property_name,
         builtin_push_with,
-        builtin_pop_with
+        builtin_pop_with,
+        builtin_declare_vars
     };
 
     const QString *id;

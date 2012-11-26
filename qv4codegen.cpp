@@ -1517,14 +1517,29 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     function->maxNumberOfArguments = _env->maxNumberOfArguments;
 
     // variables in global code are properties of the global context object, not locals as with other functions.
-    for (int i = 0; i < _env->vars.size(); ++i) {
-        const QString &local = _env->vars.at(i);
-        if (!_env->parent) {
-            entryBlock->MOVE(entryBlock->NAME(local, 0, 0), entryBlock->CONST(IR::UndefinedType, 0));
-        } else {
+    if (_mode == FunctionCode) {
+        for (int i = 0; i < _env->vars.size(); ++i) {
+            const QString &local = _env->vars.at(i);
             function->LOCAL(local);
             unsigned t = entryBlock->newTemp();
             assert(t == unsigned(i));
+        }
+    } else {
+        IR::ExprList *args = 0;
+        for (int i = 0; i < _env->vars.size(); ++i) {
+            const QString &local = _env->vars.at(i);
+            IR::ExprList *next = function->New<IR::ExprList>();
+            next->expr = entryBlock->NAME(local, 0, 0);
+            next->next = args;
+            args = next;
+        }
+        if (args) {
+            IR::ExprList *next = function->New<IR::ExprList>();
+            next->expr = entryBlock->CONST(IR::BoolType, mode == EvalCode);
+            next->next = args;
+            args = next;
+
+            entryBlock->EXP(entryBlock->CALL(entryBlock->NAME(IR::Name::builtin_declare_vars, 0, 0), args));
         }
     }
 
