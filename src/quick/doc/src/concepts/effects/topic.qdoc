@@ -52,14 +52,13 @@ page titled \l{qtquick-effects-transformations.html}
 \section1 Shader Effects
 
 Shader effects allow the full, raw power of a graphics processing unit to be
-utilized directly via vertex and pixel shaders.  Using too many shader effects
+utilized directly via vertex and fragment shaders. Using too many shader effects
 can result in increased power usage and sometimes slow performance, but if
 used sparingly and carefully, a shader can allow complex and visually appealing
 effects to be applied to a visual object (for example, ripples in water).
 
-For information about shader programs and shader effects, see the page
-titled \l{qtquick-effects-shaders.html}
-{Qt Quick Shader Effects}.
+For information about shader effects, see the \l {ShaderEffect}
+reference documentation.
 
 \section1 Particles
 
@@ -83,6 +82,14 @@ which use sprites extensively (such as games).
 For information about sprite animations, see the page titled
 \l{qtquick-effects-sprites.html}{Sprite Animations}.
 
+\section1 Opacity
+
+Visual objects can be opaque or translucent. For example, an application
+can make one visual object opaque and other visual objects translucent
+to focus the users attention on the opaque one. This is controlled using the
+\c{opacity} property of the Item.
+
+For more information about opacity, see the \l {Item} documentation.
 
 */
 

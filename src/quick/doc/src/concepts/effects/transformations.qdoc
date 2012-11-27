@@ -31,6 +31,30 @@
 \title Qt Quick Transformation Types
 \brief Types for applying transformations to visual types
 
-\section1 Related Types
 \generatelist{related}
+
+Transformations are applied to child hierarchies and also will also transform
+mouse and touch input so coordinates in event handlers behave as expected.
+
+\section1 Item Properties
+
+The \l {Item} contains a number of convenience properties,
+covering the most common types of transformations.
+
+\list
+  \li \c {x} and \c{y}; Translates the item.
+  \li \c {scale}; Applies a uniform scale factor to the item.
+  \li \c {rotation}; Applies a counterclockwise rotation of the item.
+  \li \c {transformOrigin}; Used in conjunction with scale and rotation to
+         change the origin of the transformation.
+\endlist
+
+\section1 Transform List
+
+In addition to the convenience types, it is possible to define more
+comprehensive transformations using a list of
+\l {Scale}, \l {Rotation},
+and \l {Translate} objects to the \c {transform}
+property of the \l {Item}.
+
 */

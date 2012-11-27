@@ -32,8 +32,6 @@
 \title Sprite Animations
 \brief Sprite-based animations with flexible transitioning
 
-\section1 Related Types
-
 \generatelist{related}
 
 \section1 Sprite Engine
