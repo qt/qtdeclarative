@@ -264,6 +264,32 @@ void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempInd
         addInstruction(call);
     } break;
 
+    case IR::Name::builtin_delete: {
+        if (IR::Member *m = c->args->expr->asMember()) {
+            Instruction::CallBuiltinDeleteMember call;
+            call.base = m->base->asTemp()->index;
+            call.member = _engine->newString(*m->name);
+            call.targetTempIndex = targetTempIndex;
+            addInstruction(call);
+        } else if (IR::Subscript *ss = c->args->expr->asSubscript()) {
+            Instruction::CallBuiltinDeleteSubscript call;
+            call.base = m->base->asTemp()->index;
+            call.index = ss->index->asTemp()->index;
+            call.targetTempIndex = targetTempIndex;
+            addInstruction(call);
+        } else if (IR::Name *n = c->args->expr->asName()) {
+            Instruction::CallBuiltinDeleteName call;
+            call.name = _engine->newString(*n->id);
+            call.targetTempIndex = targetTempIndex;
+            addInstruction(call);
+        } else {
+            Instruction::CallBuiltinDeleteValue call;
+            call.tempIndex = c->args->expr->asTemp()->index;
+            call.targetTempIndex = targetTempIndex;
+            addInstruction(call);
+        }
+    } break;
+
     case IR::Name::builtin_throw: {
         IR::Temp *arg = c->args->expr->asTemp();
         assert(arg != 0);
@@ -312,29 +338,28 @@ void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempInd
         addInstruction(call);
     } break;
 
-    case IR::Name::builtin_delete: {
-        if (IR::Member *m = c->args->expr->asMember()) {
-            Instruction::CallBuiltinDeleteMember call;
-            call.base = m->base->asTemp()->index;
-            call.member = _engine->newString(*m->name);
-            call.targetTempIndex = targetTempIndex;
-            addInstruction(call);
-        } else if (IR::Subscript *ss = c->args->expr->asSubscript()) {
-            Instruction::CallBuiltinDeleteSubscript call;
-            call.base = m->base->asTemp()->index;
-            call.index = ss->index->asTemp()->index;
-            call.targetTempIndex = targetTempIndex;
-            addInstruction(call);
-        } else if (IR::Name *n = c->args->expr->asName()) {
-            Instruction::CallBuiltinDeleteName call;
-            call.name = _engine->newString(*n->id);
-            call.targetTempIndex = targetTempIndex;
-            addInstruction(call);
-        } else {
-            Instruction::CallBuiltinDeleteValue call;
-            call.tempIndex = c->args->expr->asTemp()->index;
-            call.targetTempIndex = targetTempIndex;
-            addInstruction(call);
+    case IR::Name::builtin_push_with: {
+        Instruction::CallBuiltin call;
+        call.builtin = Instruction::CallBuiltin::builtin_push_with;
+        prepareCallArgs(c->args, call.argc, call.args);
+        assert(call.argc == 1);
+        addInstruction(call);
+    } break;
+
+    case IR::Name::builtin_pop_with: {
+        Instruction::CallBuiltin call;
+        call.builtin = Instruction::CallBuiltin::builtin_pop_with;
+        addInstruction(call);
+    } break;
+
+    case IR::Name::builtin_declare_vars: if (c->args) {
+        IR::Const *deletable = c->args->expr->asConst();
+        assert(deletable->type == IR::BoolType);
+        const bool isDeletable = deletable->value != 0;
+        for (IR::ExprList *it = c->args->next; it; it = it->next) {
+            Instruction::CallBuiltinDeclareVar call;
+            call.isDeletable = isDeletable;
+            call.varName = _engine->newString(*it->expr->asName()->id);
         }
     } break;
 

@@ -212,10 +212,12 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         void *buf;
         switch (instr.builtin) {
         case Instr::instr_callBuiltin::builtin_typeof:
+            Q_ASSERT(instr.argc == 1);
             TEMP(instr.targetTempIndex) = __qmljs_builtin_typeof(args[0], context);
             break;
         case Instr::instr_callBuiltin::builtin_throw:
             TRACE(builtin_throw, "Throwing now...%s", "");
+            Q_ASSERT(instr.argc == 1);
             __qmljs_builtin_throw(args[0], context);
             break;
         case Instr::instr_callBuiltin::builtin_create_exception_handler: {
@@ -245,11 +247,22 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
             TEMP(instr.targetTempIndex) = __qmljs_get_exception(context);
             break;
         case Instr::instr_callBuiltin::builtin_foreach_iterator_object:
+            Q_ASSERT(instr.argc == 1);
             TEMP(instr.targetTempIndex) = __qmljs_foreach_iterator_object(args[0], context);
             break;
         case Instr::instr_callBuiltin::builtin_foreach_next_property_name:
+            Q_ASSERT(instr.argc == 1);
             TEMP(instr.targetTempIndex) = __qmljs_foreach_next_property_name(args[0]);
             break;
+        case Instr::instr_callBuiltin::builtin_push_with:
+            Q_ASSERT(instr.argc == 1);
+            __qmljs_builtin_push_with(args[0], context);
+            break;
+        case Instr::instr_callBuiltin::builtin_pop_with:
+            __qmljs_builtin_pop_with(context);
+            break;
+        default:
+            Q_UNREACHABLE();
         }
     MOTH_END_INSTR(CallBuiltin)
 
@@ -267,6 +280,10 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteValue)
         TEMP(instr.targetTempIndex) = VM::Value::fromBoolean(false);
+    MOTH_END_INSTR(CallBuiltinDeleteValue)
+
+    MOTH_BEGIN_INSTR(CallBuiltinDeclareVar)
+        __qmljs_builtin_declare_var(context, instr.isDeletable, instr.varName);
     MOTH_END_INSTR(CallBuiltinDeleteValue)
 
     MOTH_BEGIN_INSTR(CreateValue)

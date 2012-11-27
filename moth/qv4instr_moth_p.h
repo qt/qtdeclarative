@@ -28,6 +28,7 @@
     F(CallBuiltinDeleteSubscript, callBuiltinDeleteSubscript) \
     F(CallBuiltinDeleteName, callBuiltinDeleteName) \
     F(CallBuiltinDeleteValue, callBuiltinDeleteValue) \
+    F(CallBuiltinDeclareVar, callBuiltinDeclareVar) \
     F(CreateValue, createValue) \
     F(CreateProperty, createProperty) \
     F(CreateActivationProperty, createActivationProperty) \
@@ -179,7 +180,9 @@ union Instr
             builtin_delete_exception_handler,
             builtin_get_exception,
             builtin_foreach_iterator_object,
-            builtin_foreach_next_property_name
+            builtin_foreach_next_property_name,
+            builtin_push_with,
+            builtin_pop_with
         } builtin;
         quint32 argc;
         quint32 args;
@@ -206,6 +209,11 @@ union Instr
         MOTH_INSTR_HEADER
         int tempIndex;
         int targetTempIndex;
+    };
+    struct instr_callBuiltinDeclareVar {
+        MOTH_INSTR_HEADER
+        bool isDeletable;
+        VM::String *varName;
     };
     struct instr_createValue {
         MOTH_INSTR_HEADER
@@ -305,6 +313,7 @@ union Instr
     instr_callBuiltinDeleteSubscript callBuiltinDeleteSubscript;
     instr_callBuiltinDeleteName callBuiltinDeleteName;
     instr_callBuiltinDeleteValue callBuiltinDeleteValue;
+    instr_callBuiltinDeclareVar callBuiltinDeclareVar;
     instr_createValue createValue;
     instr_createProperty createProperty;
     instr_createActivationProperty createActivationProperty;
