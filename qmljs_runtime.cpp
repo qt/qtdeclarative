@@ -546,32 +546,6 @@ void __qmljs_set_property(ExecutionContext *ctx, Value object, String *name, Val
     object.objectValue()->__put__(ctx, name, value, /*flags*/ 0);
 }
 
-void __qmljs_set_property_boolean(ExecutionContext *ctx, Value *object, String *name, bool b)
-{
-    Value value = Value::fromBoolean(b);
-    object->objectValue()->__put__(ctx, name, value, /*flag*/ 0);
-}
-
-void __qmljs_set_property_number(ExecutionContext *ctx, Value *object, String *name, double number)
-{
-    Q_UNUSED(ctx);
-    Value value = Value::fromDouble(number);
-    object->objectValue()->__put__(ctx, name, value, /*flag*/ 0);
-}
-
-void __qmljs_set_property_string(ExecutionContext *ctx, Value *object, String *name, String *s)
-{
-    Q_UNUSED(ctx);
-    Value value = Value::fromString(s);
-    object->objectValue()->__put__(ctx, name, value, /*flag*/ 0);
-}
-
-void __qmljs_set_property_closure(ExecutionContext *ctx, Value *object, String *name, IR::Function *function)
-{
-    Value value = __qmljs_init_closure(function, ctx);
-    object->objectValue()->__put__(ctx, name, value, /*flag*/ 0);
-}
-
 Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index)
 {
     if (index.isNumber()) {
