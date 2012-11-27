@@ -165,7 +165,7 @@ bool Object::__canPut__(ExecutionContext *ctx, String *name)
 }
 
 // Section 8.12.5
-void Object::__put__(ExecutionContext *ctx, String *name, const Value &value, bool throwException)
+void Object::__put__(ExecutionContext *ctx, String *name, const Value &value)
 {
     // clause 1
     if (!__canPut__(ctx, name))
@@ -183,7 +183,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, const Value &value, bo
 
             // ### to simplify and speed up we should expand the relevant parts here (clauses 6,7,9,10,12,13)
             PropertyDescriptor desc = PropertyDescriptor::fromValue(value);
-            __defineOwnProperty__(ctx, name, &desc, throwException);
+            __defineOwnProperty__(ctx, name, &desc);
             return;
         }
 
@@ -210,7 +210,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, const Value &value, bo
     }
 
   reject:
-    if (throwException)
+    if (ctx->lexicalEnvironment->strictMode)
         __qmljs_throw_type_error(ctx);
 }
 
@@ -224,7 +224,7 @@ bool Object::__hasProperty__(ExecutionContext *ctx, String *name) const
 }
 
 // Section 8.12.7
-bool Object::__delete__(ExecutionContext *ctx, String *name, bool throwException)
+bool Object::__delete__(ExecutionContext *ctx, String *name)
 {
     if (members) {
         if (PropertyTableEntry *entry = members->findEntry(name)) {
@@ -232,7 +232,7 @@ bool Object::__delete__(ExecutionContext *ctx, String *name, bool throwException
                 members->remove(entry);
                 return true;
             }
-            if (throwException)
+            if (ctx->lexicalEnvironment->strictMode)
                 __qmljs_throw_type_error(ctx);
             return false;
         }
@@ -241,7 +241,7 @@ bool Object::__delete__(ExecutionContext *ctx, String *name, bool throwException
 }
 
 // Section 8.12.9
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc, bool throwException)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc)
 {
     if (!members)
         members = new PropertyTable();
@@ -315,7 +315,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
     return true;
   reject:
     qDebug() << "___put__ rejected" << name->toQString();
-    if (throwException)
+    if (ctx->lexicalEnvironment->strictMode)
         __qmljs_throw_type_error(ctx);
     return false;
 }

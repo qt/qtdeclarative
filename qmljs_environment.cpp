@@ -118,7 +118,7 @@ void DeclarativeEnvironment::createMutableBinding(ExecutionContext *ctx, String 
     desc.configurable = deletable ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
     desc.writable = PropertyDescriptor::Set;
     desc.enumberable = PropertyDescriptor::Set;
-    activation->__defineOwnProperty__(ctx, name, &desc, true);
+    activation->__defineOwnProperty__(ctx, name, &desc);
 }
 
 void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool strict)
@@ -159,9 +159,10 @@ Value DeclarativeEnvironment::getBindingValue(String *name, bool strict) const
 bool DeclarativeEnvironment::deleteBinding(ExecutionContext *ctx, String *name)
 {
     if (activation)
-        activation->__delete__(ctx, name, false);
+        activation->__delete__(ctx, name);
 
-    // ### throw in strict mode?
+    if (ctx->lexicalEnvironment->strictMode)
+        __qmljs_throw_type_error(ctx);
     return false;
 }
 

@@ -408,11 +408,11 @@ struct Object {
     virtual Value __get__(ExecutionContext *ctx, String *name);
     virtual PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
     virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill);
-    virtual void __put__(ExecutionContext *ctx, String *name, const Value &value, bool throwException = false);
+    virtual void __put__(ExecutionContext *ctx, String *name, const Value &value);
     virtual bool __canPut__(ExecutionContext *ctx, String *name);
     virtual bool __hasProperty__(ExecutionContext *ctx, String *name) const;
-    virtual bool __delete__(ExecutionContext *ctx, String *name, bool throwException = false);
-    virtual bool __defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc, bool throwException = false);
+    virtual bool __delete__(ExecutionContext *ctx, String *name);
+    virtual bool __defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc);
 
     //
     // helpers

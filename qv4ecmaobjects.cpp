@@ -1414,7 +1414,7 @@ Value ArrayPrototype::method_pop(ExecutionContext *ctx)
     if (r2) {
         String *r6 = Value::fromDouble(r2 - 1).toString(ctx);
         Value r7 = self.property(ctx, r6);
-        self.objectValue()->__delete__(ctx, r6, 0);
+        self.objectValue()->__delete__(ctx, r6);
         self.objectValue()->__put__(ctx, ctx->engine->id_length, Value::fromDouble(2 - 1));
         return r7;
     }

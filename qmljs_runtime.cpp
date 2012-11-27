@@ -192,7 +192,7 @@ Value __qmljs_delete_subscript(ExecutionContext *ctx, Value base, Value index)
 Value __qmljs_delete_member(ExecutionContext *ctx, Value base, String *name)
 {
     Value obj = base.toObject(ctx);
-    return Value::fromBoolean(obj.objectValue()->__delete__(ctx, name, true));
+    return Value::fromBoolean(obj.objectValue()->__delete__(ctx, name));
 }
 
 Value __qmljs_delete_name(ExecutionContext *ctx, String *name)
@@ -543,7 +543,7 @@ Value __qmljs_new_string_object(ExecutionContext *ctx, String *string)
 
 void __qmljs_set_property(ExecutionContext *ctx, Value object, String *name, Value value)
 {
-    object.objectValue()->__put__(ctx, name, value, /*flags*/ 0);
+    object.objectValue()->__put__(ctx, name, value);
 }
 
 Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index)
@@ -583,7 +583,7 @@ void __qmljs_set_element(ExecutionContext *ctx, Value object, Value index, Value
     if (! object.isObject())
         object = __qmljs_to_object(object, ctx);
 
-    object.objectValue()->__put__(ctx, name, value, /*flags*/ 0);
+    object.objectValue()->__put__(ctx, name, value);
 }
 
 Value __qmljs_foreach_iterator_object(Value in, ExecutionContext *ctx)
