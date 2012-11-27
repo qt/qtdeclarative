@@ -74,8 +74,6 @@ height: {
 height: someMethodThatReturnsHeight()
 \endcode
 
-###TODO have .gif here that demonstrates the changes?
-
 Whenever the value of \c parent.height changes, the QML engine will re-evaluate the above expression and assign the blue rectangle's \c width property with the appropriate updated value.
 
 Bindings can access object properties, call methods and use built-in JavaScript objects such as \c Date and \c Math. Here is an example with various valid bindings:
@@ -104,8 +102,6 @@ Column {
     }
 }
 \endqml
-
-###TODO have .gif here that demonstrates the changes?
 
 While syntactically bindings can be of arbitrary complexity, if a binding starts to become overly complex - such as involving multiple lines, or imperative loops - it may be better to refactor the component entirely, or at least factor the binding out into a separate function.
 
