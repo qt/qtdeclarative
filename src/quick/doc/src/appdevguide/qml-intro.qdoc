@@ -1284,9 +1284,4 @@ which forms the basis for user-interfaces developed in QML.
 
 The \l{qtquick-codesamples.html}{Qt Quick Code Samples} page has a gallery of QML applications.
 
-\section1 License Information
-\list
-\li \l{qtquicklicense.html}{Qt Quick Licensing Information}
-\endlist
-
 */
