@@ -319,7 +319,11 @@ int main(int argc, char *argv[])
                     return EXIT_FAILURE;
                 }
 
-                QQmlJS::VM::Value result = QQmlJS::VM::EvalFunction::evaluate(vm.rootContext, fn, code, QQmlJS::Codegen::GlobalCode);
+                QQmlJS::IR::Function *f = QQmlJS::VM::EvalFunction::parseSource(vm.rootContext, fn, code, QQmlJS::Codegen::GlobalCode);
+                if (!f)
+                    continue;
+                ctx->lexicalEnvironment->strictMode = f->isStrict;
+                QQmlJS::VM::Value result = f->code(ctx, f->codeData);
                 if (!result.isUndefined()) {
                     if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
                         std::cout << "exit value: " << qPrintable(result.toString(ctx)->toQString()) << std::endl;

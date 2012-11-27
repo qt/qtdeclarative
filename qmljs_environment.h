@@ -66,6 +66,7 @@ struct DeclarativeEnvironment
     unsigned int formalCount;
     String **vars;
     unsigned int varCount;
+    bool strictMode;
 
     Object *activation;
     struct With {

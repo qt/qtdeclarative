@@ -482,6 +482,7 @@ struct FunctionObject: Object {
     String **varList;
     unsigned int varCount;
     bool needsActivation;
+    bool strictMode;
 
     FunctionObject(ExecutionContext *scope)
         : scope(scope->variableEnvironment)
@@ -490,14 +491,15 @@ struct FunctionObject: Object {
         , formalParameterCount(0)
         , varList(0)
         , varCount(0)
-        , needsActivation(false) {}
+        , needsActivation(false)
+        , strictMode(false) {}
 
     virtual QString className() { return QStringLiteral("Function"); }
     virtual FunctionObject *asFunctionObject() { return this; }
     virtual bool hasInstance(ExecutionContext *ctx, const Value &value);
 
     Value construct(ExecutionContext *context, Value *args, int argc);
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode = false);
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 
 protected:
     virtual Value call(ExecutionContext *ctx);
@@ -526,25 +528,25 @@ struct EvalFunction : FunctionObject
 {
     EvalFunction(ExecutionContext *scope): FunctionObject(scope) {}
 
-    static Value evaluate(QQmlJS::VM::ExecutionContext *ctx,
-                          const QString &fileName, const QString &source,
-                          QQmlJS::Codegen::Mode mode);
+    static QQmlJS::IR::Function *parseSource(QQmlJS::VM::ExecutionContext *ctx,
+                                     const QString &fileName, const QString &source,
+                                     QQmlJS::Codegen::Mode mode);
 
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode = false);
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 };
 
 struct IsNaNFunction: FunctionObject
 {
     IsNaNFunction(ExecutionContext *scope): FunctionObject(scope) {}
 
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode = false);
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 };
 
 struct IsFiniteFunction: FunctionObject
 {
     IsFiniteFunction(ExecutionContext *scope): FunctionObject(scope) {}
 
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode = false);
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 };
 
 struct RegExpObject: Object {

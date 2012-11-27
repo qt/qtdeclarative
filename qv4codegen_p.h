@@ -116,7 +116,10 @@ protected:
             , hasDirectEval(false)
             , hasNestedFunctions(false)
             , isStrict(false)
-        {}
+        {
+            if (parent && parent->isStrict)
+                isStrict = true;
+        }
 
         int findMember(const QString &name) const
         {

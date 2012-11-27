@@ -396,7 +396,7 @@ Value FunctionObject::construct(ExecutionContext *context, Value *args, int argc
     return result;
 }
 
-Value FunctionObject::call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool strictMode)
+Value FunctionObject::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
 {
     ExecutionContext k;
     ExecutionContext *ctx = needsActivation ? context->engine->newContext() : &k;
@@ -433,6 +433,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, IR::Function *function)
     if (function->name)
         name = scope->engine->identifier(*function->name);
     needsActivation = function->needsActivation();
+    strictMode = function->isStrict;
     formalParameterCount = function->formals.size();
     if (formalParameterCount) {
         formalParameterList = new String*[formalParameterCount];
@@ -462,7 +463,7 @@ Value ScriptFunction::call(VM::ExecutionContext *ctx)
 }
 
 
-Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc, bool strictMode)
+Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
 {
     if (argc < 1)
         return Value::undefinedValue();
@@ -473,11 +474,18 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
     // ### how to determine this correctly?
     bool directCall = true;
 
+    const QString code = args[0].stringValue()->toQString();
+    QQmlJS::IR::Function *f = parseSource(context, QStringLiteral("eval code"), code, QQmlJS::Codegen::EvalCode);
+    if (!f)
+        return Value::undefinedValue();
+
+    bool strict = f->isStrict || context->lexicalEnvironment->strictMode;
+
     ExecutionContext k, *ctx;
     if (!directCall) {
         qDebug() << "!direct";
         // ###
-    } else if (strictMode) {
+    } else if (strict) {
         ctx = &k;
         ctx->initCallContext(context, context->thisObject, this, args, argc);
     } else {
@@ -489,18 +497,18 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
         ctx->lexicalEnvironment = context->lexicalEnvironment;
         ctx->variableEnvironment = context->variableEnvironment;
     }
-    const QString code = args[0].stringValue()->toQString();
 
-    Value result = evaluate(ctx, QStringLiteral("eval code"), code, QQmlJS::Codegen::EvalCode);
+    Value result = f->code(ctx, f->codeData);
 
-    if (strictMode)
+    if (strict)
         ctx->leaveCallContext();
 
     return result;
 }
 
-Value EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &fileName,
-                             const QString &source, QQmlJS::Codegen::Mode mode)
+QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ctx,
+                                                const QString &fileName, const QString &source,
+                                                QQmlJS::Codegen::Mode mode)
 {
     using namespace QQmlJS;
 
@@ -527,7 +535,7 @@ Value EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &f
             if (!program) {
                 // if parsing was successful, and we have no program, then
                 // we're done...:
-                return QQmlJS::VM::Value::undefinedValue();
+                return 0;
             }
 
             Codegen cg;
@@ -553,13 +561,12 @@ Value EvalFunction::evaluate(QQmlJS::VM::ExecutionContext *ctx, const QString &f
     foreach (const QString *local, globalCode->locals) {
         ctx->variableEnvironment->activation->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
     }
-
-    return globalCode->code(ctx, globalCode->codeData);
+    return globalCode;
 }
 
 
 /// isNaN [15.1.2.4]
-Value IsNaNFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/, bool /*strictMode*/)
+Value IsNaNFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/)
 {
     // TODO: see if we can generate code for this directly
     const Value &v = args[0];
@@ -567,7 +574,7 @@ Value IsNaNFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, 
 }
 
 /// isFinite [15.1.2.5]
-Value IsFiniteFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/, bool /*strictMode*/)
+Value IsFiniteFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/)
 {
     // TODO: see if we can generate code for this directly
     const Value &v = args[0];

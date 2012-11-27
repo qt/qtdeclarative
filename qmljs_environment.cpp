@@ -58,12 +58,14 @@ DeclarativeEnvironment::DeclarativeEnvironment(ExecutionEngine *e)
     varCount = 0;
     activation = 0;
     withObject = 0;
+    strictMode = false;
 }
 
 DeclarativeEnvironment::DeclarativeEnvironment(FunctionObject *f, Value *args, uint argc)
 {
     outer = f->scope;
     engine = outer->engine;
+    strictMode = f->strictMode;
 
     formals = f->formalParameterList;
     formalCount = f->formalParameterCount;
@@ -105,17 +107,18 @@ bool DeclarativeEnvironment::hasBinding(String *name) const
 
 void DeclarativeEnvironment::createMutableBinding(ExecutionContext *ctx, String *name, bool deletable)
 {
-    if (activation) {
-        if (activation->__hasProperty__(ctx, name))
-            return;
-        PropertyDescriptor desc;
-        desc.value = Value::undefinedValue();
-        desc.type = PropertyDescriptor::Data;
-        desc.configurable = deletable ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
-        desc.writable = PropertyDescriptor::Set;
-        desc.enumberable = PropertyDescriptor::Set;
-        activation->__defineOwnProperty__(ctx, name, &desc, true);
-    }
+    if (!activation)
+        activation = engine->newActivationObject(this);
+
+    if (activation->__hasProperty__(ctx, name))
+        return;
+    PropertyDescriptor desc;
+    desc.value = Value::undefinedValue();
+    desc.type = PropertyDescriptor::Data;
+    desc.configurable = deletable ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
+    desc.writable = PropertyDescriptor::Set;
+    desc.enumberable = PropertyDescriptor::Set;
+    activation->__defineOwnProperty__(ctx, name, &desc, true);
 }
 
 void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool strict)
