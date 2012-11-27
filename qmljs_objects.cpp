@@ -165,7 +165,7 @@ bool Object::__canPut__(ExecutionContext *ctx, String *name)
 }
 
 // Section 8.12.5
-void Object::__put__(ExecutionContext *ctx, String *name, const Value &value)
+void Object::__put__(ExecutionContext *ctx, String *name, Value value)
 {
     // clause 1
     if (!__canPut__(ctx, name))
@@ -207,6 +207,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, const Value &value)
         p->configurable = PropertyDescriptor::Set;
         p->enumberable = PropertyDescriptor::Set;
         p->writable = PropertyDescriptor::Set;
+        return;
     }
 
   reject:

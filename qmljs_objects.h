@@ -408,7 +408,7 @@ struct Object {
     virtual Value __get__(ExecutionContext *ctx, String *name);
     virtual PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
     virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill);
-    virtual void __put__(ExecutionContext *ctx, String *name, const Value &value);
+    virtual void __put__(ExecutionContext *ctx, String *name, Value value);
     virtual bool __canPut__(ExecutionContext *ctx, String *name);
     virtual bool __hasProperty__(ExecutionContext *ctx, String *name) const;
     virtual bool __delete__(ExecutionContext *ctx, String *name);
