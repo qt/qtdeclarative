@@ -108,12 +108,15 @@ protected:
         int maxNumberOfArguments;
         bool hasDirectEval;
         bool hasNestedFunctions;
+        bool isStrict;
 
         Environment(Environment *parent)
             : parent(parent)
             , maxNumberOfArguments(0)
             , hasDirectEval(false)
-            , hasNestedFunctions(false) {}
+            , hasNestedFunctions(false)
+            , isStrict(false)
+        {}
 
         int findMember(const QString &name) const
         {

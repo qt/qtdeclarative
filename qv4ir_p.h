@@ -602,9 +602,11 @@ struct Function {
     const uchar *codeData;
     JSC::MacroAssemblerCodeRef codeRef;
 
+    int insideWith;
+
     bool hasDirectEval: 1;
     bool hasNestedFunctions: 1;
-    int insideWith;
+    bool isStrict: 1;
 
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
 
@@ -615,9 +617,10 @@ struct Function {
         , maxNumberOfArguments(0)
         , code(0)
         , codeData(0)
+        , insideWith(0)
         , hasDirectEval(false)
         , hasNestedFunctions(false)
-        , insideWith(0)
+        , isStrict(false)
     { this->name = newString(name); }
 
     ~Function();

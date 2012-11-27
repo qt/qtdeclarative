@@ -215,9 +215,48 @@ protected:
         _env = _envStack.isEmpty() ? 0 : _envStack.top();
     }
 
+    void checkDirectivePrologue(SourceElements *ast)
+    {
+        for (SourceElements *it = ast; it; it = it->next) {
+            if (StatementSourceElement *stmt = cast<StatementSourceElement *>(it->element)) {
+                if (ExpressionStatement *expr = cast<ExpressionStatement *>(stmt->statement)) {
+                    if (StringLiteral *strLit = cast<StringLiteral *>(expr->expression)) {
+                        if (strLit->value == QLatin1String("use strict")) {
+                            _env->isStrict = true;
+                        } else {
+                            // TODO: give a warning.
+                        }
+                        continue;
+                    }
+                }
+            }
+
+            break;
+        }
+    }
+
+    void checkName(const QStringRef &name, const SourceLocation &loc)
+    {
+        if (_env->isStrict) {
+            if (name == QLatin1String("implements")
+                    || name == QLatin1String("interface")
+                    || name == QLatin1String("let")
+                    || name == QLatin1String("package")
+                    || name == QLatin1String("private")
+                    || name == QLatin1String("protected")
+                    || name == QLatin1String("public")
+                    || name == QLatin1String("static")
+                    || name == QLatin1String("yield")) {
+                // TODO: error!
+                qDebug("TODO: give a proper error message @%u:%u", loc.startLine, loc.startColumn);
+            }
+        }
+    }
+
     virtual bool visit(Program *ast)
     {
         enterEnvironment(ast);
+        checkDirectivePrologue(ast->elements);
         return true;
     }
 
@@ -253,7 +292,14 @@ protected:
 
     virtual bool visit(VariableDeclaration *ast)
     {
+        checkName(ast->name, ast->identifierToken);
         _env->enter(ast->name.toString());
+        return true;
+    }
+
+    virtual bool visit(IdentifierExpression *ast)
+    {
+        checkName(ast->name, ast->identifierToken);
         return true;
     }
 
@@ -264,6 +310,8 @@ protected:
             _env->enter(ast->name.toString());
         }
         enterEnvironment(ast);
+        if (ast->body)
+            checkDirectivePrologue(ast->body->elements);
         return true;
     }
 
@@ -278,12 +326,25 @@ protected:
         _env->hasNestedFunctions = true;
         _env->enter(ast->name.toString());
         enterEnvironment(ast);
+        if (ast->body)
+            checkDirectivePrologue(ast->body->elements);
         return true;
     }
 
     virtual void endVisit(FunctionDeclaration *)
     {
         leaveEnvironment();
+    }
+
+    virtual bool visit(WithStatement *ast)
+    {
+        if (_env->isStrict) {
+            // TODO: give a proper error message
+            qDebug("TODO: give proper error message @%u:%u", ast->withToken.startLine, ast->withToken.startColumn);
+            return false;
+        }
+
+        return true;
     }
 
     Codegen *_cg;
@@ -1515,6 +1576,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     function->hasDirectEval = _env->hasDirectEval;
     function->hasNestedFunctions = _env->hasNestedFunctions;
     function->maxNumberOfArguments = _env->maxNumberOfArguments;
+    function->isStrict = _env->isStrict;
 
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (_mode == FunctionCode) {
