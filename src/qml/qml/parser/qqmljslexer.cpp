@@ -1150,7 +1150,7 @@ bool Lexer::scanDirectives(Directives *directives)
             //
             // recognize the mandatory `as' followed by the module name
             //
-            if (! (lex() == T_RESERVED_WORD && tokenText() == QLatin1String("as")))
+            if (! (lex() == T_IDENTIFIER && tokenText() == QLatin1String("as")))
                 return false; // expected `as'
 
             if (lex() != T_IDENTIFIER)
