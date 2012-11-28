@@ -147,7 +147,7 @@ Returns an STL-style iterator pointing to the imaginary item after the last item
 */
 
 /*!
-\fn iterator &QInplacelist::iterator::erase()
+\fn iterator &QIntrusiveList::iterator::erase()
 
 Remove the current object from the list, and return an iterator to the next element.
 */
