@@ -723,8 +723,23 @@ Value ObjectPrototype::method_isExtensible(ExecutionContext *ctx)
 
 Value ObjectPrototype::method_keys(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.keys"));
-    return Value::undefinedValue();
+    if (!ctx->argument(0).isObject())
+        __qmljs_throw_type_error(ctx);
+
+    Object *o = ctx->argument(0).objectValue();
+
+    ArrayObject *a = ctx->engine->newArrayObject();
+
+    if (o->members) {
+        PropertyTable::iterator it = o->members->begin();
+        while (it != o->members->end()) {
+            if ((*it)->descriptor.isEnumerable())
+                a->value.push(Value::fromString((*it)->name));
+            ++it;
+        }
+    }
+
+    return Value::fromObject(a);
 }
 
 Value ObjectPrototype::method_toString(ExecutionContext *ctx)
@@ -765,8 +780,11 @@ Value ObjectPrototype::method_isPrototypeOf(ExecutionContext *ctx)
 
 Value ObjectPrototype::method_propertyIsEnumerable(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.prototype.propertyIsEnumerable"));
-    return Value::undefinedValue();
+    String *p = ctx->argument(0).toString(ctx);
+
+    Object *o = ctx->thisObject.toObject(ctx).objectValue();
+    PropertyDescriptor *pd = o->__getOwnProperty__(ctx, p);
+    return Value::fromBoolean(pd && pd->enumberable);
 }
 
 Value ObjectPrototype::method_defineGetter(ExecutionContext *ctx)

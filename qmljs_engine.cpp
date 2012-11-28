@@ -276,14 +276,14 @@ Object *ExecutionEngine::newFunctionObject(ExecutionContext *ctx)
     return object;
 }
 
-Object *ExecutionEngine::newArrayObject()
+ArrayObject *ExecutionEngine::newArrayObject()
 {
     ArrayObject *object = new ArrayObject();
     object->prototype = arrayPrototype;
     return object;
 }
 
-Object *ExecutionEngine::newArrayObject(const Array &value)
+ArrayObject *ExecutionEngine::newArrayObject(const Array &value)
 {
     ArrayObject *object = new ArrayObject(value);
     object->prototype = arrayPrototype;
