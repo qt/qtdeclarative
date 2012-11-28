@@ -144,7 +144,7 @@ bool Object::__canPut__(ExecutionContext *ctx, String *name)
 {
     if (PropertyDescriptor *p = __getOwnProperty__(ctx, name)) {
         if (p->isAccessor())
-            return p->get != 0;
+            return p->set != 0;
         return p->isWritable();
     }
 
@@ -154,7 +154,7 @@ bool Object::__canPut__(ExecutionContext *ctx, String *name)
     PropertyDescriptor tmp;
     if (PropertyDescriptor *p = prototype->__getPropertyDescriptor__(ctx, name, &tmp)) {
         if (p->isAccessor())
-            return p->get != 0;
+            return p->set != 0;
         if (!extensible)
             return false;
         return p->isWritable();
@@ -189,7 +189,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
 
         // clause 4
         PropertyDescriptor tmp;
-        if (prototype)
+        if (!pd && prototype)
             pd = prototype->__getPropertyDescriptor__(ctx, name, &tmp);
 
         // Clause 5
@@ -305,7 +305,8 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
     } else { // clause 10
         assert(current->isAccessor() && desc->isAccessor());
         if (!current->isConfigurable()) {
-            if (current->get != desc->get || current->set != desc->set)
+            if ((desc->get && current->get != desc->get) ||
+                (desc->set && current->set != desc->set))
                 goto reject;
         }
     }

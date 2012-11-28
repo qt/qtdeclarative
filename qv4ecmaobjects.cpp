@@ -570,6 +570,8 @@ void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
     __put__(ctx, QStringLiteral("hasOwnProperty"), method_hasOwnProperty, 0);
     __put__(ctx, QStringLiteral("isPrototypeOf"), method_isPrototypeOf, 0);
     __put__(ctx, QStringLiteral("propertyIsEnumerable"), method_propertyIsEnumerable, 0);
+    __put__(ctx, QStringLiteral("__defineGetter__"), method_defineGetter, 0);
+    __put__(ctx, QStringLiteral("__defineSetter__"), method_defineSetter, 0);
 }
 
 Value ObjectPrototype::method_getPrototypeOf(ExecutionContext *ctx)
@@ -704,6 +706,46 @@ Value ObjectPrototype::method_isPrototypeOf(ExecutionContext *ctx)
 Value ObjectPrototype::method_propertyIsEnumerable(ExecutionContext *ctx)
 {
     ctx->throwUnimplemented(QStringLiteral("Object.prototype.propertyIsEnumerable"));
+    return Value::undefinedValue();
+}
+
+Value ObjectPrototype::method_defineGetter(ExecutionContext *ctx)
+{
+    if (ctx->argumentCount() < 2)
+        __qmljs_throw_type_error(ctx);
+    String *prop = ctx->argument(0).toString(ctx);
+
+    FunctionObject *f = ctx->argument(1).asFunctionObject();
+    if (!f)
+        __qmljs_throw_type_error(ctx);
+
+    Object *o = ctx->thisObject.toObject(ctx).objectValue();
+
+    PropertyDescriptor pd = PropertyDescriptor::fromAccessor(f, 0);
+    pd.writable = PropertyDescriptor::Set;
+    pd.configurable = PropertyDescriptor::Set;
+    pd.enumberable = PropertyDescriptor::Set;
+    o->__defineOwnProperty__(ctx, prop, &pd);
+    return Value::undefinedValue();
+}
+
+Value ObjectPrototype::method_defineSetter(ExecutionContext *ctx)
+{
+    if (ctx->argumentCount() < 2)
+        __qmljs_throw_type_error(ctx);
+    String *prop = ctx->argument(0).toString(ctx);
+
+    FunctionObject *f = ctx->argument(1).asFunctionObject();
+    if (!f)
+        __qmljs_throw_type_error(ctx);
+
+    Object *o = ctx->thisObject.toObject(ctx).objectValue();
+
+    PropertyDescriptor pd = PropertyDescriptor::fromAccessor(0, f);
+    pd.writable = PropertyDescriptor::Set;
+    pd.configurable = PropertyDescriptor::Set;
+    pd.enumberable = PropertyDescriptor::Set;
+    o->__defineOwnProperty__(ctx, prop, &pd);
     return Value::undefinedValue();
 }
 

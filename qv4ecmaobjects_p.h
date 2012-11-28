@@ -80,6 +80,9 @@ struct ObjectPrototype: Object
     static Value method_hasOwnProperty(ExecutionContext *ctx);
     static Value method_isPrototypeOf(ExecutionContext *ctx);
     static Value method_propertyIsEnumerable(ExecutionContext *ctx);
+
+    static Value method_defineGetter(ExecutionContext *ctx);
+    static Value method_defineSetter(ExecutionContext *ctx);
 };
 
 struct StringCtor: FunctionObject

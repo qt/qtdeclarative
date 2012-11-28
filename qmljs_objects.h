@@ -217,8 +217,10 @@ struct PropertyDescriptor {
         if (other.writable != Undefined)
             writable = other.writable;
         if (type == Accessor) {
-            get = other.get;
-            set = other.set;
+            if (other.get)
+                get = other.get;
+            if (other.set)
+                set = other.set;
         } else {
             value = other.value;
         }
