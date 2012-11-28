@@ -604,7 +604,6 @@ again:
 
                 // hex escape sequence
                 case 'x':
-                case 'X':
                     if (isHexDigit(_codePtr[0]) && isHexDigit(_codePtr[1])) {
                         scanChar();
 
