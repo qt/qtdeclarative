@@ -108,10 +108,32 @@ struct TestHarnessError: FunctionObject
 
 static void showException(QQmlJS::VM::ExecutionContext *ctx)
 {
-    if (QQmlJS::VM::ErrorObject *e = ctx->engine->exception.asErrorObject())
-        std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
-    else
+    QQmlJS::VM::ErrorObject *e = ctx->engine->exception.asErrorObject();
+    if (!e) {
         std::cerr << "Uncaught exception: " << qPrintable(ctx->engine->exception.toString(ctx)->toQString()) << std::endl;
+        return;
+    }
+
+    if (QQmlJS::VM::SyntaxErrorObject *err = e->asSyntaxError()) {
+        QQmlJS::VM::DiagnosticMessage *msg = err->message();
+        if (!msg) {
+            std::cerr << "Uncaught exception: Syntax error" << std::endl;
+            return;
+        }
+
+        for (; msg; msg = msg->next) {
+            if (msg->fileName)
+                std::cerr << qPrintable(msg->fileName->toQString());
+            std::cerr << ':' << msg->startLine << ':' << msg->startColumn << ": ";
+            if (msg->type == QQmlJS::VM::DiagnosticMessage::Error)
+                std::cerr << "error";
+            else
+                std::cerr << "warning";
+            std::cerr << ": " << qPrintable(msg->message->toQString()) << std::endl;
+        }
+    } else {
+        std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
+    }
 }
 
 #ifndef QMLJS_NO_LLVM

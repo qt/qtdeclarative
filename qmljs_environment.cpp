@@ -45,6 +45,17 @@
 namespace QQmlJS {
 namespace VM {
 
+DiagnosticMessage::DiagnosticMessage()
+    : fileName(0)
+    , offset(0)
+    , length(0)
+    , startLine(0)
+    , startColumn(0)
+    , type(0)
+    , message(0)
+    , next(0)
+{}
+
 DeclarativeEnvironment::DeclarativeEnvironment(ExecutionEngine *e)
 {
     engine = e;
@@ -253,6 +264,11 @@ void ExecutionContext::throwError(const QString &message)
 {
     Value v = Value::fromString(this, message);
     throwError(Value::fromObject(engine->newErrorObject(v)));
+}
+
+void ExecutionContext::throwSyntaxError(DiagnosticMessage *message)
+{
+    throwError(Value::fromObject(engine->newSyntaxErrorObject(this, message)));
 }
 
 void ExecutionContext::throwTypeError()

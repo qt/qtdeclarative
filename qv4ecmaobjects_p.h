@@ -375,7 +375,7 @@ struct ReferenceErrorPrototype: ReferenceErrorObject
 
 struct SyntaxErrorPrototype: SyntaxErrorObject
 {
-    SyntaxErrorPrototype(ExecutionContext *ctx): SyntaxErrorObject(ctx) {}
+    SyntaxErrorPrototype(ExecutionContext *ctx): SyntaxErrorObject(ctx, 0) {}
     void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
 };
 

@@ -566,6 +566,8 @@ struct ErrorObject: Object {
     virtual ErrorObject *asErrorObject() { return this; }
     virtual Value __get__(ExecutionContext *ctx, String *name);
 
+    virtual struct SyntaxErrorObject *asSyntaxError() { return 0; }
+
 protected:
     void setNameProperty(ExecutionContext *ctx);
 };
@@ -589,9 +591,14 @@ struct ReferenceErrorObject: ErrorObject {
 };
 
 struct SyntaxErrorObject: ErrorObject {
-    SyntaxErrorObject(ExecutionContext *ctx)
-        : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *msg);
     virtual QString className() { return QStringLiteral("SyntaxError"); }
+
+    virtual SyntaxErrorObject *asSyntaxError() { return this; }
+    DiagnosticMessage *message() { return msg; }
+
+private:
+    DiagnosticMessage *msg;
 };
 
 struct TypeErrorObject: ErrorObject {

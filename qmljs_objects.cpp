@@ -525,10 +525,25 @@ QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
 
         const bool parsed = parser.parseProgram();
 
-        foreach (const DiagnosticMessage &m, parser.diagnosticMessages()) {
-            std::cerr << qPrintable(fileName) << ':' << m.loc.startLine << ':' << m.loc.startColumn
-                      << ": error: " << qPrintable(m.message) << std::endl;
+        VM::DiagnosticMessage *error = 0, **errIt = &error;
+        foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
+            if (m.isError()) {
+                *errIt = new VM::DiagnosticMessage; // FIXME: should we ask the engine to create this object?
+                (*errIt)->fileName = ctx->engine->newString(fileName);
+                (*errIt)->offset = m.loc.offset;
+                (*errIt)->length = m.loc.length;
+                (*errIt)->startLine = m.loc.startLine;
+                (*errIt)->startColumn = m.loc.startColumn;
+                (*errIt)->type = VM::DiagnosticMessage::Error;
+                (*errIt)->message = ctx->engine->newString(m.message);
+                errIt = &(*errIt)->next;
+            } else {
+                std::cerr << qPrintable(fileName) << ':' << m.loc.startLine << ':' << m.loc.startColumn
+                          << ": warning: " << qPrintable(m.message) << std::endl;
+            }
         }
+        if (error)
+            ctx->throwSyntaxError(error);
 
         if (parsed) {
             using namespace AST;
@@ -611,6 +626,16 @@ void ErrorObject::setNameProperty(ExecutionContext *ctx)
 {
     __put__(ctx, QLatin1String("name"), Value::fromString(ctx, className()));
 }
+
+SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message)
+    : ErrorObject(ctx->argument(0))
+    , msg(message)
+{
+    if (message)
+        value = Value::fromString(message->message);
+    setNameProperty(ctx);
+}
+
 
 Value ScriptFunction::construct(VM::ExecutionContext *ctx)
 {

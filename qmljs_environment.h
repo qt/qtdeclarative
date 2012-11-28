@@ -52,6 +52,22 @@ struct ExecutionEngine;
 struct ExecutionContext;
 struct DeclarativeEnvironment;
 
+struct DiagnosticMessage
+{
+    enum { Error, Warning };
+
+    String *fileName;
+    quint32 offset;
+    quint32 length;
+    quint32 startLine;
+    unsigned startColumn: 31;
+    unsigned type: 1;
+    String *message;
+    DiagnosticMessage *next;
+
+    DiagnosticMessage();
+};
+
 // This merges LexicalEnvironment and EnvironmentRecord from
 // Sec. 10.2 into one class
 struct DeclarativeEnvironment
@@ -109,6 +125,7 @@ struct ExecutionContext
 
     void throwError(Value value);
     void throwError(const QString &message);
+    void throwSyntaxError(DiagnosticMessage *message);
     void throwTypeError();
     void throwReferenceError(Value value);
     void throwUnimplemented(const QString &message);

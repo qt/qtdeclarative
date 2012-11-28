@@ -175,6 +175,7 @@ struct ExecutionEngine
     FunctionObject *newRegExpCtor(ExecutionContext *ctx);
 
     Object *newErrorObject(const Value &value);
+    Object *newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message);
     Object *newMathObject(ExecutionContext *ctx);
     Object *newActivationObject(DeclarativeEnvironment *ctx);
 

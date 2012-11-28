@@ -2630,7 +2630,7 @@ Value ReferenceErrorCtor::construct(ExecutionContext *ctx)
 
 Value SyntaxErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new SyntaxErrorObject(ctx));
+    ctx->thisObject = Value::fromObject(new SyntaxErrorObject(ctx, 0));
     return ctx->thisObject;
 }
 

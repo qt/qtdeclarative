@@ -316,6 +316,13 @@ Object *ExecutionEngine::newErrorObject(const Value &value)
     return object;
 }
 
+Object *ExecutionEngine::newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message)
+{
+    SyntaxErrorObject *object = new SyntaxErrorObject(ctx, message);
+    object->prototype = syntaxErrorPrototype;
+    return object;
+}
+
 Object *ExecutionEngine::newMathObject(ExecutionContext *ctx)
 {
     MathObject *object = new MathObject(ctx);
