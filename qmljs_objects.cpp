@@ -634,7 +634,7 @@ SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *m
     , msg(message)
 {
     if (message)
-        value = Value::fromString(message->message);
+        value = Value::fromString(message->buildFullMessage(ctx));
     setNameProperty(ctx);
 }
 

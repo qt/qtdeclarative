@@ -122,14 +122,7 @@ static void showException(QQmlJS::VM::ExecutionContext *ctx)
         }
 
         for (; msg; msg = msg->next) {
-            if (msg->fileName)
-                std::cerr << qPrintable(msg->fileName->toQString());
-            std::cerr << ':' << msg->startLine << ':' << msg->startColumn << ": ";
-            if (msg->type == QQmlJS::VM::DiagnosticMessage::Error)
-                std::cerr << "error";
-            else
-                std::cerr << "warning";
-            std::cerr << ": " << qPrintable(msg->message->toQString()) << std::endl;
+            std::cerr << qPrintable(msg->buildFullMessage(ctx)->toQString()) << std::endl;
         }
     } else {
         std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;

@@ -66,6 +66,7 @@ struct DiagnosticMessage
     DiagnosticMessage *next;
 
     DiagnosticMessage();
+    String *buildFullMessage(ExecutionContext *ctx) const;
 };
 
 // This merges LexicalEnvironment and EnvironmentRecord from

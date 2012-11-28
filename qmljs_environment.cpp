@@ -56,6 +56,21 @@ DiagnosticMessage::DiagnosticMessage()
     , next(0)
 {}
 
+String *DiagnosticMessage::buildFullMessage(ExecutionContext *ctx) const
+{
+    QString msg;
+    if (fileName)
+        msg = fileName->toQString() + QLatin1Char(':');
+    msg += QString::number(startLine) + QLatin1Char(':') + QString::number(startColumn) + QLatin1String(": ");
+    if (type == QQmlJS::VM::DiagnosticMessage::Error)
+        msg += QLatin1String("error");
+    else
+        msg += QLatin1String("warning");
+    msg += ": " + message->toQString();
+
+    return ctx->engine->newString(msg);
+}
+
 void DeclarativeEnvironment::init(ExecutionEngine *e)
 {
     engine = e;
