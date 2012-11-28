@@ -108,8 +108,8 @@ Rectangle {
 
     signal buttonClicked(real xPos, real yPos)
 
-    function showMousePosition() {
-        root.color = Qt.rgba(Qt.random(), Qt.random(), Qt.random(), 1)
+    function randomizeColor() {
+        root.color = Qt.rgba(Math.random(), Math.random(), Math.random(), 1)
     }
 
     width: 100; height: 100
