@@ -394,6 +394,8 @@ Value FunctionObject::construct(ExecutionContext *context, Value *args, int argc
     ctx->initConstructorContext(context, Value::nullValue(), this, args, argc);
     Value result = construct(ctx);
     ctx->leaveConstructorContext(this);
+    if (ctx != &k)
+        delete ctx;
     return result;
 }
 

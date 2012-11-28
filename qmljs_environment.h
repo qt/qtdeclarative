@@ -91,8 +91,8 @@ struct DeclarativeEnvironment
     } *withObject;
 
 
-    DeclarativeEnvironment(ExecutionEngine *e);
-    DeclarativeEnvironment(FunctionObject *f, Value *args, uint argc);
+    void init(ExecutionEngine *e);
+    void init(FunctionObject *f, Value *args, uint argc);
 
     bool hasBinding(String *name) const;
     void createMutableBinding(ExecutionContext *ctx, String *name, bool deletable);

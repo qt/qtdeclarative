@@ -56,7 +56,7 @@ DiagnosticMessage::DiagnosticMessage()
     , next(0)
 {}
 
-DeclarativeEnvironment::DeclarativeEnvironment(ExecutionEngine *e)
+void DeclarativeEnvironment::init(ExecutionEngine *e)
 {
     engine = e;
     outer = 0;
@@ -72,7 +72,7 @@ DeclarativeEnvironment::DeclarativeEnvironment(ExecutionEngine *e)
     strictMode = false;
 }
 
-DeclarativeEnvironment::DeclarativeEnvironment(FunctionObject *f, Value *args, uint argc)
+void DeclarativeEnvironment::init(FunctionObject *f, Value *args, uint argc)
 {
     outer = f->scope;
     engine = outer->engine;
@@ -194,12 +194,12 @@ void DeclarativeEnvironment::popWithObject()
     delete w;
 }
 
-
 void ExecutionContext::init(ExecutionEngine *eng)
 {
     engine = eng;
     parent = 0;
-    variableEnvironment = new DeclarativeEnvironment(eng);
+    variableEnvironment = new DeclarativeEnvironment;
+    variableEnvironment->init(eng);
     lexicalEnvironment = variableEnvironment;
     thisObject = Value::nullValue();
     eng->exception = Value::undefinedValue();
@@ -295,7 +295,8 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
     engine = parent->engine;
     this->parent = parent;
 
-    variableEnvironment = new DeclarativeEnvironment(f, args, argc);
+    variableEnvironment = new DeclarativeEnvironment;
+    variableEnvironment->init(f, args, argc);
     lexicalEnvironment = variableEnvironment;
 
     thisObject = that;
@@ -308,6 +309,9 @@ void ExecutionContext::leaveCallContext()
         delete[] variableEnvironment->locals;
         variableEnvironment->locals = 0;
     }
+
+    delete variableEnvironment;
+    variableEnvironment = 0;
 }
 
 void ExecutionContext::initConstructorContext(ExecutionContext *parent, Value that, FunctionObject *f, Value *args, unsigned argc)
