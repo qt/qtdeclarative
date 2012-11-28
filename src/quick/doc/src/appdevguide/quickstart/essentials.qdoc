@@ -178,13 +178,7 @@ That type may now be re-used multiple times in the application, as follows:
 In this way, modular user interface elements can be built up and re-used within
 an application.
 
-The Qt Quick Desktop Components project provides the most commonly used
-user interface elements (such as buttons, lists, scrollers, tabbed screens, and
-so forth) for both commercial and open-source use.  Please see the
-Qt Quick Desktop Components home page on the Qt Project website for more
-information on how to use these components in applications.
-
-See \l{qtquick-appdevguide-components.html}{Defining Resuable Components}
+See \l {QML Object Attributes}
 for more details on how to develop your own reusable components.
 
 */
