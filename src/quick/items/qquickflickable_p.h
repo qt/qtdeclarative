@@ -257,7 +257,7 @@ protected:
     virtual void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry);
     void mouseUngrabEvent();
-    bool sendMouseEvent(QMouseEvent *event);
+    bool sendMouseEvent(QQuickItem *item, QMouseEvent *event);
 
     bool xflick() const;
     bool yflick() const;

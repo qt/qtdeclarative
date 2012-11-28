@@ -7,7 +7,7 @@ Flickable {
     contentWidth: 480
     contentHeight: 320
     flickableDirection: Flickable.HorizontalFlick
-    pressDelay: 50
+    pressDelay: 10000
     Rectangle {
         x: 20
         y: 20
@@ -20,7 +20,7 @@ Flickable {
             flickableDirection: Flickable.HorizontalFlick
             contentWidth: 1480
             contentHeight: 400
-            pressDelay: 10000
+            pressDelay: 50
             Rectangle {
                 y: 100
                 x: 80

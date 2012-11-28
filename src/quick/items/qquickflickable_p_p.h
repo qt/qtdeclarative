@@ -183,9 +183,10 @@ public:
 
     void updateBeginningEnd();
 
-    bool isOutermostPressDelay() const;
-    void captureDelayedPress(QMouseEvent *event);
+    bool isInnermostPressDelay(QQuickItem *item) const;
+    void captureDelayedPress(QQuickItem *item, QMouseEvent *event);
     void clearDelayedPress();
+    void replayDelayedPress();
 
     void setViewportX(qreal x);
     void setViewportY(qreal y);
@@ -213,6 +214,7 @@ public:
     bool interactive : 1;
     bool calcVelocity : 1;
     bool pixelAligned : 1;
+    bool replayingPressEvent : 1;
     QElapsedTimer timer;
     qint64 lastPosTime;
     qint64 lastPressTime;
@@ -222,7 +224,6 @@ public:
     qreal maxVelocity;
     qreal reportedVelocitySmoothing;
     QMouseEvent *delayedPressEvent;
-    QQuickItem *delayedPressTarget;
     QBasicTimer delayedPressTimer;
     int pressDelay;
     int fixupDuration;
