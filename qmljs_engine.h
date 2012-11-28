@@ -140,6 +140,8 @@ struct ExecutionEngine
     QVector<ExceptionHandler> unwindStack;
     Value exception;
 
+    struct StringPool *stringPool;
+
     ExecutionEngine(EvalISelFactory *iselFactory);
 
     ExecutionContext *newContext();

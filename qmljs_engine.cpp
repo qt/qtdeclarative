@@ -45,9 +45,26 @@
 namespace QQmlJS {
 namespace VM {
 
+struct StringPool
+{
+    QHash<QString, String*> strings;
+
+    String *newString(const QString &s)
+    {
+        QHash<QString, String*>::const_iterator it = strings.find(s);
+        if (it != strings.end())
+            return it.value();
+        String *str = new String(s);
+        strings.insert(s, str);
+        return str;
+    }
+};
+
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : iselFactory(factory)
 {
+    stringPool = new StringPool;
+
     rootContext = newContext();
     rootContext->init(this);
 
@@ -213,7 +230,7 @@ FunctionObject *ExecutionEngine::newObjectCtor(ExecutionContext *ctx)
 
 String *ExecutionEngine::newString(const QString &s)
 {
-    return new String(s);
+    return stringPool->newString(s);
 }
 
 Object *ExecutionEngine::newStringObject(const Value &value)
