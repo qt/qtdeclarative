@@ -273,7 +273,7 @@ void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempInd
             addInstruction(call);
         } else if (IR::Subscript *ss = c->args->expr->asSubscript()) {
             Instruction::CallBuiltinDeleteSubscript call;
-            call.base = m->base->asTemp()->index;
+            call.base = ss->base->asTemp()->index;
             call.index = ss->index->asTemp()->index;
             call.targetTempIndex = targetTempIndex;
             addInstruction(call);
