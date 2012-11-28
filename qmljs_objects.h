@@ -252,7 +252,9 @@ public:
         , _freeList(0)
         , _propertyCount(-1)
         , _bucketCount(0)
-        , _allocated(0) {}
+        , _primeIdx(-1)
+        , _allocated(0)
+    {}
 
     ~PropertyTable()
     {
@@ -352,10 +354,7 @@ public:
 private:
     void rehash()
     {
-        if (_bucketCount)
-            _bucketCount = _bucketCount * 2 + 1; // ### next prime
-        else
-            _bucketCount = 11;
+        _bucketCount = nextPrime();
 
         delete[] _buckets;
         _buckets = new PropertyTableEntry *[_bucketCount];
@@ -369,6 +368,19 @@ private:
         }
     }
 
+    inline int nextPrime()
+    {
+        // IMPORTANT: do not add more primes without checking if _primeIdx needs more bits!
+        static int primes[] = {
+            11, 23, 47, 97, 197, 397, 797, 1597, 3203, 6421, 12853, 25717, 51437, 102877
+        };
+
+        if (_primeIdx < (int) (sizeof(primes)/sizeof(int)))
+            return primes[++_primeIdx];
+        else
+            return _bucketCount * 2 + 1; // Yes, we're degrading here. But who needs more than about 68000 properties?
+    }
+
 private:
     friend struct ForEachIteratorObject;
     PropertyTableEntry **_properties;
@@ -376,7 +388,8 @@ private:
     PropertyTableEntry *_freeList;
     int _propertyCount;
     int _bucketCount;
-    int _allocated;
+    int _primeIdx: 4;
+    int _allocated: 28;
 };
 
 struct Object {
