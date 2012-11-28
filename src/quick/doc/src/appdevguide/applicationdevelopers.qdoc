@@ -25,18 +25,6 @@
 **
 ****************************************************************************/
 
-/*
-XXX
-
-The "QML Intro" section has been temporarily removed, as it includes mostly
-outdated information.  However, it has some pertinent information, so we
-should review it and extract the useful documentation at some point, for
-inclusion somewhere in the documentation.  In particular, the documentation
-related to using QtCreator for QML development seems useful.
-
-\li \l{qml-intro.html}{Introduction to QML Application Development}
-*/
-
 /*!
 \page qtquick-applicationdevelopers.html
 \title QML Application Developer Resources
@@ -61,13 +49,8 @@ through other modules. If you require the functionality of those modules, you sh
 their QML documentation. Qt Essentials modules exposing QML types include:
 
 \list
-\li \c Qt3D for 3D graphics rendering.
-\li \c QtSensors for using device sensors such as accelerometers.
-\li \c QtMultimedia for playing and managing multimedia content and cameras.
-\li \c QtLocation for using GPS and mapping data.
-\li \c QtSystems for reading system info and interacting with services.
-\li \c QtWebkit for rendering web content.
-\li \c QtPim for interacting with contact and calendar information.
+\li \l QtMultimedia for playing and managing multimedia content and cameras.
+\li \l QtWebkit for rendering web content.
 \endlist
 
 \section1 Quick Start
