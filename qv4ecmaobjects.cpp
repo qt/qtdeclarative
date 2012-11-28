@@ -627,38 +627,98 @@ Value ObjectPrototype::method_defineProperties(ExecutionContext *ctx)
 
 Value ObjectPrototype::method_seal(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.seal"));
+    if (!ctx->argument(0).isObject())
+        __qmljs_throw_type_error(ctx);
+
+    Object *o = ctx->argument(0).objectValue();
+    o->extensible = false;
+    if (o->members) {
+        PropertyTable::iterator it = o->members->begin();
+        while (it != o->members->end()) {
+            (*it)->descriptor.configurable = PropertyDescriptor::Unset;
+            ++it;
+        }
+    }
     return Value::undefinedValue();
 }
 
 Value ObjectPrototype::method_freeze(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.freeze"));
+    if (!ctx->argument(0).isObject())
+        __qmljs_throw_type_error(ctx);
+
+    Object *o = ctx->argument(0).objectValue();
+    o->extensible = false;
+    if (o->members) {
+        PropertyTable::iterator it = o->members->begin();
+        while (it != o->members->end()) {
+            if ((*it)->descriptor.isData())
+                (*it)->descriptor.writable = PropertyDescriptor::Unset;
+            (*it)->descriptor.configurable = PropertyDescriptor::Unset;
+            ++it;
+        }
+    }
     return Value::undefinedValue();
 }
 
 Value ObjectPrototype::method_preventExtensions(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.preventExtensions"));
+    if (!ctx->argument(0).isObject())
+        __qmljs_throw_type_error(ctx);
+
+    Object *o = ctx->argument(0).objectValue();
+    o->extensible = false;
     return Value::undefinedValue();
 }
 
 Value ObjectPrototype::method_isSealed(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.isSealed"));
-    return Value::undefinedValue();
+    if (!ctx->argument(0).isObject())
+        __qmljs_throw_type_error(ctx);
+
+    Object *o = ctx->argument(0).objectValue();
+    if (o->extensible)
+        return Value::fromBoolean(false);
+    if (o->members) {
+        PropertyTable::iterator it = o->members->begin();
+        while (it != o->members->end()) {
+            if ((*it)->descriptor.configurable != PropertyDescriptor::Unset)
+                return Value::fromBoolean(false);
+            ++it;
+        }
+    }
+    return Value::fromBoolean(true);
 }
 
 Value ObjectPrototype::method_isFrozen(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.isFrozen"));
-    return Value::undefinedValue();
+    if (!ctx->argument(0).isObject())
+        __qmljs_throw_type_error(ctx);
+
+    Object *o = ctx->argument(0).objectValue();
+    if (o->extensible)
+        return Value::fromBoolean(false);
+    if (o->members) {
+        PropertyTable::iterator it = o->members->begin();
+        while (it != o->members->end()) {
+            if ((*it)->descriptor.isData() &&
+                ((*it)->descriptor.writable != PropertyDescriptor::Unset))
+                return Value::fromBoolean(false);
+            if ((*it)->descriptor.configurable != PropertyDescriptor::Unset)
+                return Value::fromBoolean(false);
+            ++it;
+        }
+    }
+    return Value::fromBoolean(true);
 }
 
 Value ObjectPrototype::method_isExtensible(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.isExtensible"));
-    return Value::undefinedValue();
+    if (!ctx->argument(0).isObject())
+        __qmljs_throw_type_error(ctx);
+
+    Object *o = ctx->argument(0).objectValue();
+    return Value::fromBoolean(o->extensible);
 }
 
 Value ObjectPrototype::method_keys(ExecutionContext *ctx)
