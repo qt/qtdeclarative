@@ -29,16 +29,6 @@
 \title Qt Quick Scene Graph
 \page qtquick-visualcanvas-scenegraph.html
 
-\section1 What is a Scene Graph?
-
-When drawing visual objects of a user-interface, it can be beneficial to group
-drawing operations which are similar.  For example, if a user-interface
-includes many similar text boxes, each with a light-blue background, then all
-of those text boxes could be painted at the same time, prior to painting any
-of the text in each box, as this might be more performant than painting one of
-the text boxes, and then painting its text, and then painting the next text
-box, and then its text, and so on.
-
 \section1 The Scene Graph in Qt Quick
 
 Qt Quick 2 makes use of a dedicated scene graph based on OpenGL ES 2.0
@@ -47,7 +37,17 @@ rather than the traditional imperative painting systems (QPainter and
 similar), means the scene to be rendered can be retained between
 frames and the complete set of primitives to render is known before
 rendering starts. This opens up for a number of optimizations, such as
-batch rendering to minimize state changes and discarding obscured primitives.
+batch rendering to minimize state changes and discarding obscured
+primitives.
+
+For example, say a user-interface contains a list of ten items
+where each item has a background color, an icon and a text. Using the
+traditional drawing techniques, this would result in 30 draw calls and
+a similar amount of state changes. A scene graph, on the other hand,
+could reorganize the primitives to render such that all backgrounds
+are drawn in one call, then all icons, then all the text, reducing the
+total amount of draw calls to only 3. Batching and state change
+reduction like this can greatly improve performance on some hardware.
 
 The scene graph is closely tied to QML and can not be used as
 stand-alone. The scene graph is managed and rendered by the
