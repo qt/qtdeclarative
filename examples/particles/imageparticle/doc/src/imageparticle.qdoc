@@ -44,8 +44,8 @@
     \snippet examples/particles/imageparticle/content/colortable.qml 0
 
     Deformation spins and squishes a starfish particle.
-    \snippet examples/particles/imageparticle/content/colortable.qml spin
-    \snippet examples/particles/imageparticle/content/colortable.qml deform
+    \snippet examples/particles/imageparticle/content/deformation.qml spin
+    \snippet examples/particles/imageparticle/content/deformation.qml deform
 
     Rotation demonstrates the autoRotate property, so that particles rotate in the direction that they travel.
 

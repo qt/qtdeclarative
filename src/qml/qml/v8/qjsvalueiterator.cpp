@@ -55,6 +55,7 @@ QT_BEGIN_NAMESPACE
     \brief The QJSValueIterator class provides a Java-style iterator for QJSValue.
 
     \ingroup qtjavascript
+    \inmodule QtQml
 
 
     The QJSValueIterator constructor takes a QJSValue as

@@ -55,6 +55,6 @@
     This sends the particles towards the center of the ellipse with proportional speed, keeping the ellipse outline as they move to the center.
 
     TrailEmitter uses that element to add smoke particles to trail the fire particles in the scene.
-    \snippet examples/particles/emitters/content/trailemitter.qml 0
+    \snippet examples/particles/emitters/content/customemitter.qml 0
 
 */

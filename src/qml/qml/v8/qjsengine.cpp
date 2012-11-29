@@ -79,6 +79,7 @@ Q_DECLARE_METATYPE(QList<int>)
   \brief The QJSEngine class provides an environment for evaluating JavaScript code.
 
   \ingroup qtjavascript
+  \inmodule QtQml
   \mainclass
 
   \section1 Evaluating Scripts
@@ -184,6 +185,9 @@ QJSEngine::QJSEngine(QObject *parent)
 {
 }
 
+/*!
+    \internal
+*/
 QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
     : QObject(dd, parent)
     , d(new QV8Engine(this))
@@ -288,8 +292,7 @@ QJSValue QJSEngine::newArray(uint length)
 
 /*!
   Creates a JavaScript object that wraps the given QObject \a
-  object, using JavaScriptOwnership. The given \a options control
-  various aspects of the interaction with the resulting script object.
+  object, using JavaScriptOwnership.
 
   Signals and slots, properties and children of \a object are
   available as properties of the created QJSValue.

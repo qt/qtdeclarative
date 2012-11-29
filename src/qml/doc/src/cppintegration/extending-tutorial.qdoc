@@ -422,7 +422,7 @@ Finally, we add a \l{qtqml-modules-qmldir.html}{qmldir} file that is
 parsed by the QML engine.  In this file, we specify that a plugin named
 "chapter6-plugin" (the name of the example project) can be found in the "lib" subdirectory:
 
-\quotefile examples/tutorials/extending/chapter6-plugins/ChartsPlugin/qmldir
+\quotefile examples/tutorials/extending/chapter6-plugins/Charts/qmldir
 
 Now we have a plugin, and instead of having a main.cpp and an executable, we can build
 the project and then load the QML file using the \l{Prototyping with qmlscene}{qmlscene tool},

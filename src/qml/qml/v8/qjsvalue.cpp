@@ -55,6 +55,7 @@
   \brief The QJSValue class acts as a container for Qt/JavaScript data types.
 
   \ingroup qtjavascript
+  \inmodule QtQml
   \mainclass
 
   QJSValue supports the types defined in the \l{ECMA-262}
