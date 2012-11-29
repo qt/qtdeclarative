@@ -490,6 +490,9 @@ void QQuickPaintedItem::setRenderTarget(RenderTarget target)
     As a consequence, paint() is not called from the main GUI thread but from the GL enabled
     renderer thread. At the moment paint() is called, the GUI thread is blocked and this is
     therefore thread-safe.
+
+    \warning Extreme caution must be used when creating QObjects, emitting signals, starting
+    timers and similar inside this function as these will have affinity to the rendering thread.
 */
 
 /*!
