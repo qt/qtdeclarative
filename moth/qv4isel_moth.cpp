@@ -578,44 +578,57 @@ void InstructionSelection::visitMove(IR::Move *s)
                 load.targetTempIndex = targetTempIndex;
                 addInstruction(load);
             }
-        } else if (IR::Const *c = s->source->asConst()) {
-            switch (c->type) {
-            case IR::UndefinedType: {
-                Instruction::LoadUndefined load;
-                load.targetTempIndex = targetTempIndex;
-                addInstruction(load);
-            } break;
-            case IR::NullType: {
-                Instruction::LoadNull load;
-                load.targetTempIndex = targetTempIndex;
-                addInstruction(load);
-            } break;
-            case IR::BoolType:
-                if (c->value) {
-                    Instruction::LoadTrue load;
-                    load.targetTempIndex = targetTempIndex;
-                    addInstruction(load);
+        } else if (s->source->asTemp() || s->source->asConst()) {
+            if (s->op == IR::OpInvalid) {
+                if (IR::Temp *t2 = s->source->asTemp()) {
+                    Instruction::MoveTemp move;
+                    move.fromTempIndex = t2->index;
+                    move.toTempIndex = targetTempIndex;
+                    addInstruction(move);
                 } else {
-                    Instruction::LoadFalse load;
-                    load.targetTempIndex = targetTempIndex;
-                    addInstruction(load);
+                    IR::Const *c = s->source->asConst();
+                    assert(c);
+                    switch (c->type) {
+                    case IR::UndefinedType: {
+                        Instruction::LoadUndefined load;
+                        load.targetTempIndex = targetTempIndex;
+                        addInstruction(load);
+                    } break;
+                    case IR::NullType: {
+                        Instruction::LoadNull load;
+                        load.targetTempIndex = targetTempIndex;
+                        addInstruction(load);
+                    } break;
+                    case IR::BoolType:
+                        if (c->value) {
+                            Instruction::LoadTrue load;
+                            load.targetTempIndex = targetTempIndex;
+                            addInstruction(load);
+                        } else {
+                            Instruction::LoadFalse load;
+                            load.targetTempIndex = targetTempIndex;
+                            addInstruction(load);
+                        }
+                        break;
+                    case IR::NumberType: {
+                        Instruction::LoadNumber load;
+                        load.value = c->value;
+                        load.targetTempIndex = targetTempIndex;
+                        addInstruction(load);
+                    } break;
+                    default:
+                        Q_UNREACHABLE();
+                        break;
+                    }
                 }
-                break;
-            case IR::NumberType: {
-                Instruction::LoadNumber load;
-                load.value = c->value;
-                load.targetTempIndex = targetTempIndex;
-                addInstruction(load);
-            } break;
-            default:
-                Q_UNREACHABLE();
-                break;
+            } else {
+                Instruction::Binop binop;
+                binop.alu = aluOpFunction(s->op);
+                binop.lhsIsTemp = toValueOrTemp(t, binop.lhs);
+                binop.rhsIsTemp = toValueOrTemp(s->source, binop.rhs);
+                binop.targetTempIndex = targetTempIndex;
+                addInstruction(binop);
             }
-        } else if (IR::Temp *t2 = s->source->asTemp()) {
-            Instruction::MoveTemp move;
-            move.fromTempIndex = t2->index;
-            move.toTempIndex = targetTempIndex;
-            addInstruction(move);
         } else if (IR::String *str = s->source->asString()) {
             Instruction::LoadString load;
             load.value = _engine->newString(*str->value);
