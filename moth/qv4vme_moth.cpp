@@ -155,7 +155,11 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(LoadString)
 
     MOTH_BEGIN_INSTR(LoadClosure)
-        TEMP(instr.targetTempIndex) = __qmljs_init_closure(instr.value, context);
+        VM::Value c = __qmljs_init_closure(instr.value, context);
+        TEMP(instr.targetTempIndex) = c;
+#ifdef DO_TRACE_INSTR
+        qDebug() << "loaded:" << c.toString(context)->toQString();
+#endif
     MOTH_END_INSTR(LoadClosure)
 
     MOTH_BEGIN_INSTR(LoadName)
@@ -197,18 +201,32 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(Push)
 
     MOTH_BEGIN_INSTR(CallValue)
-        TRACE(Call, "argStart = %d, argc = %d, result temp index = %d", instr.args, instr.argc, instr.targetTempIndex);
-        VM::Value *args = stack.data() + instr.args;
+#ifdef DO_TRACE_INSTR
+        if (Debugging::Debugger *debugger = context->engine->debugger) {
+            if (VM::FunctionObject *o = (TEMP(instr.destIndex)).asFunctionObject()) {
+                if (Debugging::FunctionDebugInfo *info = debugger->debugInfo(o)) {
+                    QString n = debugger->name(o);
+                    std::cerr << "*** Call to \"" << (n.isNull() ? "<no name>" : qPrintable(n)) << "\" defined @" << info->startLine << ":" << info->startColumn << std::endl;
+                }
+            }
+        }
+#endif // DO_TRACE_INSTR
+        quint32 argStart = instr.args - context->variableEnvironment->varCount;
+        TRACE(Call, "value index = %d, argStart = %d, argc = %d, result temp index = %d", instr.destIndex, argStart, instr.argc, instr.targetTempIndex);
+        VM::Value *args = stack.data() + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_call_value(context, VM::Value::undefinedValue(), TEMP(instr.destIndex), args, instr.argc);
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
-        VM::Value *args = stack.data() + instr.args;
-        TEMP(instr.targetTempIndex) = __qmljs_call_property(context, TEMP(instr.baseTemp), instr.name, args, instr.argc);
+        quint32 argStart = instr.args - context->variableEnvironment->varCount;
+        VM::Value *args = stack.data() + argStart;
+        VM::Value base = TEMP(instr.baseTemp);
+        TEMP(instr.targetTempIndex) = __qmljs_call_property(context, base, instr.name, args, instr.argc);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltin)
-        VM::Value *args = stack.data() + instr.args;
+        quint32 argStart = instr.args - context->variableEnvironment->varCount;
+        VM::Value *args = stack.data() + argStart;
         void *buf;
         switch (instr.builtin) {
         case Instr::instr_callBuiltin::builtin_typeof:
@@ -287,18 +305,21 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinDeleteValue)
 
     MOTH_BEGIN_INSTR(CreateValue)
-        VM::Value *args = stack.data() + instr.args;
+        quint32 argStart = instr.args - context->variableEnvironment->varCount;
+        VM::Value *args = stack.data() + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_value(context, TEMP(instr.func), args, instr.argc);
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
-        VM::Value *args = stack.data() + instr.args;
+        quint32 argStart = instr.args - context->variableEnvironment->varCount;
+        VM::Value *args = stack.data() + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_property(context, TEMP(instr.base), instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
         TRACE(inline, "property name = %s, argc = %d", instr.name->toQString().toUtf8().constData(), instr.argc);
-        VM::Value *args = stack.data() + instr.args;
+        quint32 argStart = instr.args - context->variableEnvironment->varCount;
+        VM::Value *args = stack.data() + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_activation_property(context, instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateActivationProperty)
 

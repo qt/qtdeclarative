@@ -43,7 +43,10 @@ private:
     void callProperty(IR::Call *c, int targetTempIndex);
     void construct(IR::New *ctor, int targetTempIndex);
     void prepareCallArgs(IR::ExprList *, quint32 &, quint32 &);
-    int scratchTempIndex() { return _function->tempCount - _function->locals.size() + _function->maxNumberOfArguments; }
+
+    int outgoingArgumentTempStart() const { return _function->tempCount; }
+    int scratchTempIndex() const { return outgoingArgumentTempStart() + _function->maxNumberOfArguments; }
+    int frameSize() const { return scratchTempIndex() + 1 - _function->locals.size(); }
 
     template <int Instr>
     inline ptrdiff_t addInstruction(const InstrData<Instr> &data);

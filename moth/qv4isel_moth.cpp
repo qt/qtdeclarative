@@ -201,7 +201,7 @@ void InstructionSelection::operator()(IR::Function *function)
     _function->code = VME::exec;
     _function->codeData = _code;
 
-    int locals = _function->tempCount - _function->locals.size() + _function->maxNumberOfArguments + 1;
+    int locals = frameSize();
     assert(locals >= 0);
 
     Instruction::Push push;
@@ -446,7 +446,7 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
         args = e->expr->asTemp()->index;
     } else if (e) {
         // We need to move all the temps into the function arg array
-        int argLocation = _function->tempCount - _function->locals.size();
+        int argLocation = outgoingArgumentTempStart();
         assert(argLocation >= 0);
         args = argLocation;
         while (e) {
