@@ -524,7 +524,7 @@ protected:
 struct NativeFunction: FunctionObject {
     Value (*code)(ExecutionContext *);
 
-    NativeFunction(ExecutionContext *scope, Value (*code)(ExecutionContext *)): FunctionObject(scope), code(code) {}
+    NativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
     virtual Value call(ExecutionContext *ctx) { return code(ctx); }
     virtual Value construct(ExecutionContext *ctx) { ctx->thisObject = code(ctx); return ctx->thisObject; }
 };
@@ -541,7 +541,7 @@ struct ScriptFunction: FunctionObject {
 
 struct EvalFunction : FunctionObject
 {
-    EvalFunction(ExecutionContext *scope): FunctionObject(scope) {}
+    EvalFunction(ExecutionContext *scope);
 
     static QQmlJS::IR::Function *parseSource(QQmlJS::VM::ExecutionContext *ctx,
                                      const QString &fileName, const QString &source,
@@ -552,14 +552,14 @@ struct EvalFunction : FunctionObject
 
 struct IsNaNFunction: FunctionObject
 {
-    IsNaNFunction(ExecutionContext *scope): FunctionObject(scope) {}
+    IsNaNFunction(ExecutionContext *scope);
 
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 };
 
 struct IsFiniteFunction: FunctionObject
 {
-    IsFiniteFunction(ExecutionContext *scope): FunctionObject(scope) {}
+    IsFiniteFunction(ExecutionContext *scope);
 
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 };

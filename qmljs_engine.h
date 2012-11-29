@@ -148,7 +148,7 @@ struct ExecutionEngine
 
     String *identifier(const QString &s);
 
-    FunctionObject *newNativeFunction(ExecutionContext *scope, Value (*code)(ExecutionContext *));
+    FunctionObject *newNativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
     FunctionObject *newScriptFunction(ExecutionContext *scope, IR::Function *function);
 
     Object *newObject();

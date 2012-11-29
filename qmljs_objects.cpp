@@ -76,7 +76,8 @@ void Object::__put__(ExecutionContext *ctx, const QString &name, const Value &va
 void Object::__put__(ExecutionContext *ctx, const QString &name, Value (*code)(ExecutionContext *), int count)
 {
     Q_UNUSED(count);
-    __put__(ctx, name, Value::fromObject(ctx->engine->newNativeFunction(ctx, code)));
+    String *nameStr = ctx->engine->newString(name);
+    __put__(ctx, name, Value::fromObject(ctx->engine->newNativeFunction(ctx, nameStr, code)));
 }
 
 Value Object::getValue(ExecutionContext *ctx, PropertyDescriptor *p) const
@@ -510,6 +511,12 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
     return result;
 }
 
+EvalFunction::EvalFunction(ExecutionContext *scope)
+    : FunctionObject(scope)
+{
+    name = scope->engine->newString(QLatin1String("eval"));
+}
+
 QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ctx,
                                                 const QString &fileName, const QString &source,
                                                 QQmlJS::Codegen::Mode mode)
@@ -585,6 +592,12 @@ QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
 
 
 /// isNaN [15.1.2.4]
+IsNaNFunction::IsNaNFunction(ExecutionContext *scope)
+    : FunctionObject(scope)
+{
+    name = scope->engine->newString(QLatin1String("isNaN"));
+}
+
 Value IsNaNFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/)
 {
     // TODO: see if we can generate code for this directly
@@ -593,6 +606,12 @@ Value IsNaNFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, 
 }
 
 /// isFinite [15.1.2.5]
+IsFiniteFunction::IsFiniteFunction(ExecutionContext *scope)
+    : FunctionObject(scope)
+{
+    name = scope->engine->newString(QLatin1String("isFinite"));
+}
+
 Value IsFiniteFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/)
 {
     // TODO: see if we can generate code for this directly
@@ -708,4 +727,12 @@ PropertyDescriptor *ArgumentsObject::__getPropertyDescriptor__(ExecutionContext 
     }
 
     return Object::__getPropertyDescriptor__(ctx, name, to_fill);
+}
+
+
+NativeFunction::NativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
+    : FunctionObject(scope)
+    , code(code)
+{
+    this->name = name;
 }

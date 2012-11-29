@@ -68,7 +68,9 @@ using namespace QQmlJS::VM;
 
 struct Print: FunctionObject
 {
-    Print(ExecutionContext *scope): FunctionObject(scope) {}
+    Print(ExecutionContext *scope): FunctionObject(scope) {
+        name = scope->engine->newString("print");
+    }
 
     virtual Value call(ExecutionContext *ctx)
     {
@@ -85,7 +87,9 @@ struct Print: FunctionObject
 
 struct TestHarnessError: FunctionObject
 {
-    TestHarnessError(ExecutionContext *scope, bool &errorInTestHarness): FunctionObject(scope), errorOccurred(errorInTestHarness) {}
+    TestHarnessError(ExecutionContext *scope, bool &errorInTestHarness): FunctionObject(scope), errorOccurred(errorInTestHarness) {
+        name = scope->engine->newString("$ERROR");
+    }
 
     virtual Value call(ExecutionContext *ctx)
     {

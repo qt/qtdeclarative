@@ -199,9 +199,9 @@ String *ExecutionEngine::identifier(const QString &s)
     return id;
 }
 
-FunctionObject *ExecutionEngine::newNativeFunction(ExecutionContext *scope, Value (*code)(ExecutionContext *))
+FunctionObject *ExecutionEngine::newNativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
 {
-    NativeFunction *f = new NativeFunction(scope, code);
+    NativeFunction *f = new NativeFunction(scope, name, code);
     f->prototype = scope->engine->functionPrototype;
     return f;
 }
