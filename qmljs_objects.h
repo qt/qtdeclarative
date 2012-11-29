@@ -373,7 +373,7 @@ private:
     inline int nextPrime()
     {
         // IMPORTANT: do not add more primes without checking if _primeIdx needs more bits!
-        static int primes[] = {
+        static const int primes[] = {
             11, 23, 47, 97, 197, 397, 797, 1597, 3203, 6421, 12853, 25717, 51437, 102877
         };
 
@@ -390,8 +390,8 @@ private:
     PropertyTableEntry *_freeList;
     int _propertyCount;
     int _bucketCount;
-    int _primeIdx: 4;
-    int _allocated: 28;
+    int _primeIdx: 5;
+    int _allocated: 27;
 };
 
 struct Object {
