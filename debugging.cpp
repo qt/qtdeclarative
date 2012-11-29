@@ -50,16 +50,16 @@ FunctionState::~FunctionState()
 
 VM::Value *FunctionState::argument(unsigned idx)
 {
-    if (idx < _context->variableEnvironment->argumentCount)
-        return _context->variableEnvironment->arguments + idx;
+    if (idx < _context->lexicalEnvironment->argumentCount)
+        return _context->lexicalEnvironment->arguments + idx;
     else
         return 0;
 }
 
 VM::Value *FunctionState::local(unsigned idx)
 {
-    if (idx < _context->variableEnvironment->varCount)
-        return _context->variableEnvironment->locals + idx;
+    if (idx < _context->lexicalEnvironment->varCount)
+        return _context->lexicalEnvironment->locals + idx;
     else
         return 0;
 }

@@ -112,7 +112,6 @@ struct ExecutionContext
     ExecutionContext *parent;
     // ### Should be a general environment
     DeclarativeEnvironment *lexicalEnvironment;
-    DeclarativeEnvironment *variableEnvironment;
     Value thisObject;
 
     void init(ExecutionEngine *eng);
@@ -135,11 +134,11 @@ struct ExecutionContext
     void inplaceBitOp(Value value, String *name, BinOp op);
     bool deleteProperty(String *name);
 
-    inline uint argumentCount() const { return variableEnvironment->argumentCount; }
+    inline uint argumentCount() const { return lexicalEnvironment->argumentCount; }
     inline Value argument(unsigned int index = 0)
     {
-        if (index < variableEnvironment->argumentCount)
-            return variableEnvironment->arguments[index];
+        if (index < lexicalEnvironment->argumentCount)
+            return lexicalEnvironment->arguments[index];
         return Value::undefinedValue();
     }
 };

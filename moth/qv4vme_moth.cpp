@@ -53,7 +53,7 @@ using namespace QQmlJS::Moth;
 
 static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, QVector<VM::Value> &stack, int index)
 {
-    VM::DeclarativeEnvironment *varEnv = context->variableEnvironment;
+    VM::DeclarativeEnvironment *varEnv = context->lexicalEnvironment;
 
 #ifdef DO_TRACE_INSTR
     const char *kind;
@@ -231,21 +231,21 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
             }
         }
 #endif // DO_TRACE_INSTR
-        quint32 argStart = instr.args - context->variableEnvironment->varCount;
+        quint32 argStart = instr.args - context->lexicalEnvironment->varCount;
         TRACE(Call, "value index = %d, argStart = %d, argc = %d, result temp index = %d", instr.destIndex, argStart, instr.argc, instr.targetTempIndex);
         VM::Value *args = stack.data() + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_call_value(context, VM::Value::undefinedValue(), TEMP(instr.destIndex), args, instr.argc);
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
-        quint32 argStart = instr.args - context->variableEnvironment->varCount;
+        quint32 argStart = instr.args - context->lexicalEnvironment->varCount;
         VM::Value *args = stack.data() + argStart;
         VM::Value base = TEMP(instr.baseTemp);
         TEMP(instr.targetTempIndex) = __qmljs_call_property(context, base, instr.name, args, instr.argc);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltin)
-        quint32 argStart = instr.args - context->variableEnvironment->varCount;
+        quint32 argStart = instr.args - context->lexicalEnvironment->varCount;
         VM::Value *args = stack.data() + argStart;
         void *buf;
         switch (instr.builtin) {
@@ -325,20 +325,20 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinDeleteValue)
 
     MOTH_BEGIN_INSTR(CreateValue)
-        quint32 argStart = instr.args - context->variableEnvironment->varCount;
+        quint32 argStart = instr.args - context->lexicalEnvironment->varCount;
         VM::Value *args = stack.data() + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_value(context, TEMP(instr.func), args, instr.argc);
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
-        quint32 argStart = instr.args - context->variableEnvironment->varCount;
+        quint32 argStart = instr.args - context->lexicalEnvironment->varCount;
         VM::Value *args = stack.data() + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_property(context, TEMP(instr.base), instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
         TRACE(inline, "property name = %s, argc = %d", instr.name->toQString().toUtf8().constData(), instr.argc);
-        quint32 argStart = instr.args - context->variableEnvironment->varCount;
+        quint32 argStart = instr.args - context->lexicalEnvironment->varCount;
         VM::Value *args = stack.data() + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_activation_property(context, instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateActivationProperty)

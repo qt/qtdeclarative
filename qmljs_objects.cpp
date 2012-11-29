@@ -499,7 +499,6 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
         ctx->parent = context;
         ctx->thisObject = context->thisObject;
         ctx->lexicalEnvironment = context->lexicalEnvironment;
-        ctx->variableEnvironment = context->variableEnvironment;
     }
 
     Value result = f->code(ctx, f->codeData);
@@ -580,11 +579,11 @@ QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
             __qmljs_throw_type_error(ctx);
     }
 
-    if (!ctx->variableEnvironment->activation)
-        ctx->variableEnvironment->activation = new QQmlJS::VM::Object();
+    if (!ctx->lexicalEnvironment->activation)
+        ctx->lexicalEnvironment->activation = new QQmlJS::VM::Object();
 
     foreach (const QString *local, globalCode->locals) {
-        ctx->variableEnvironment->activation->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
+        ctx->lexicalEnvironment->activation->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
     }
     return globalCode;
 }

@@ -1960,8 +1960,8 @@ Value FunctionPrototype::method_call(ExecutionContext *ctx)
     Value thisArg = ctx->argument(0);
     QVector<Value> args(ctx->argumentCount() ? ctx->argumentCount() - 1 : 0);
     if (ctx->argumentCount())
-        qCopy(ctx->variableEnvironment->arguments + 1,
-              ctx->variableEnvironment->arguments + ctx->argumentCount(), args.begin());
+        qCopy(ctx->lexicalEnvironment->arguments + 1,
+              ctx->lexicalEnvironment->arguments + ctx->argumentCount(), args.begin());
     return __qmljs_call_value(ctx, thisArg, ctx->thisObject, args.data(), args.size());
 }
 

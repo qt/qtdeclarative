@@ -215,9 +215,8 @@ void ExecutionContext::init(ExecutionEngine *eng)
 {
     engine = eng;
     parent = 0;
-    variableEnvironment = new DeclarativeEnvironment;
-    variableEnvironment->init(eng);
-    lexicalEnvironment = variableEnvironment;
+    lexicalEnvironment = new DeclarativeEnvironment;
+    lexicalEnvironment->init(eng);
     thisObject = Value::nullValue();
     eng->exception = Value::undefinedValue();
 }
@@ -312,9 +311,8 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
     engine = parent->engine;
     this->parent = parent;
 
-    variableEnvironment = new DeclarativeEnvironment;
-    variableEnvironment->init(f, args, argc);
-    lexicalEnvironment = variableEnvironment;
+    lexicalEnvironment = new DeclarativeEnvironment;
+    lexicalEnvironment->init(f, args, argc);
 
     thisObject = that;
 
@@ -325,13 +323,13 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
 void ExecutionContext::leaveCallContext()
 {
     // ## Should rather be handled by a the activation object having a ref to the environment
-    if (variableEnvironment->activation) {
-        delete[] variableEnvironment->locals;
-        variableEnvironment->locals = 0;
+    if (lexicalEnvironment->activation) {
+        delete[] lexicalEnvironment->locals;
+        lexicalEnvironment->locals = 0;
     }
 
-    delete variableEnvironment;
-    variableEnvironment = 0;
+    delete lexicalEnvironment;
+    lexicalEnvironment = 0;
 
     if (engine->debugger)
         engine->debugger->justLeft(this);

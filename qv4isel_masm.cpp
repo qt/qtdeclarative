@@ -191,11 +191,11 @@ InstructionSelection::Pointer InstructionSelection::loadTempAddress(RegisterID r
     int32_t offset = 0;
     if (t->index < 0) {
         const int arg = -t->index - 1;
-        loadPtr(Address(ContextRegister, offsetof(ExecutionContext, variableEnvironment)), reg);
+        loadPtr(Address(ContextRegister, offsetof(ExecutionContext, lexicalEnvironment)), reg);
         loadPtr(Address(reg, offsetof(DeclarativeEnvironment, arguments)), reg);
         offset = arg * sizeof(Value);
     } else if (t->index < _function->locals.size()) {
-        loadPtr(Address(ContextRegister, offsetof(ExecutionContext, variableEnvironment)), reg);
+        loadPtr(Address(ContextRegister, offsetof(ExecutionContext, lexicalEnvironment)), reg);
         loadPtr(Address(reg, offsetof(DeclarativeEnvironment, locals)), reg);
         offset = t->index * sizeof(Value);
     } else {
