@@ -59,7 +59,7 @@ Tutorial chapters:
 \li \l {tutorials/samegame/samegame4}{Finishing Touches}
 \endlist
 
-All the code in this tutorial can be found in Qt's \c examples/tutorials/samegame
+All the code in this tutorial can be found in Qt's \c examples/quick/tutorials/samegame
 directory.
 */
 

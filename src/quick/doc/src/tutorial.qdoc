@@ -41,7 +41,7 @@ with properties and signals, and we will create a simple animation with the help
 
 Chapter one starts with a minimal "Hello world" program and the following chapters introduce new concepts.
 
-The tutorial's source code is located in the \c{examples/tutorials/helloworld} directory.
+The tutorial's source code is located in the \c{examples/quick/tutorials/helloworld} directory.
 
 Tutorial chapters:
 

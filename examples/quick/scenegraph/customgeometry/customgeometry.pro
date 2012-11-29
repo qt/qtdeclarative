@@ -8,9 +8,8 @@ SOURCES += \
 HEADERS += \
     beziercurve.h
 
-OTHER_FILES += main.qml
+target.path = $$[QT_INSTALL_EXAMPLES]/quick/scenegraph/customgeometry
+qml.files = main.qml
+qml.path = $$[QT_INSTALL_EXAMPLES]/quick/scenegraph/customgeometry
 
-sources.files = $$SOURCES $$HEADERS $$OTHER_FILES customgeometry.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/qtquick/quick/scenegraph/customgeometry
-target.path = $$sources.path
-INSTALLS += sources target
+INSTALLS += target qml

@@ -7,15 +7,9 @@ TARGET  = qmlimageproviderplugin
 
 SOURCES += imageprovider.cpp
 
-OTHER_FILES += imageprovider.json
+EXAMPLE_FILES = imageprovider-example.qml
 
-sources.files = $$SOURCES imageprovider.qml imageprovider.pro $$OTHER_FILES
-sources.path = $$[QT_INSTALL_EXAMPLES]/qtquick/qml/imageprovider
-
-target.path = $$[QT_INSTALL_EXAMPLES]/qtquick/qml/imageprovider/ImageProviderCore
-
-ImageProviderCore_sources.files = \
-    ImageProviderCore/qmldir 
-ImageProviderCore_sources.path = $$[QT_INSTALL_EXAMPLES]/qtquick/qml/imageprovider/ImageProviderCore
-
-INSTALLS = sources ImageProviderCore_sources target
+target.path = $$[QT_INSTALL_EXAMPLES]/qml/imageprovider/ImageProviderCore
+qml.files = ImageProviderCore/qmldir
+qml.path = $$[QT_INSTALL_EXAMPLES]/qml/imageprovider/ImageProviderCore
+INSTALLS = target qml

@@ -9,16 +9,12 @@ HEADERS += TextBalloonPlugin/plugin.h \
 
 SOURCES += textballoon.cpp
 
-OTHER_FILES += textballoon.json
-
 DESTDIR = TextBalloonPlugin
 
-INSTALL_PATH = $$[QT_INSTALL_EXAMPLES]/qtquick/quick/customitems/painteditem/
-qdeclarativesources.files += \
-    TextBalloonPlugin/qmldir TextBalloonPlugin/plugin.h
-qdeclarativesources.path += $$INSTALL_PATH/TextBalloonPlugin
-sources.files = textballoons.qml $$SOURCES textballoon.h $$OTHER_FILES painteditem.pro
-sources.path = $$INSTALL_PATH
-target.path = $$INSTALL_PATH/TextBalloonPlugin
+target.path = $$[QT_INSTALL_EXAMPLES]/quick/customitems/painteditem/TextBalloonPlugin
+qmldir.files = TextBalloonPlugin/qmldir
+qmldir.path = $$[QT_INSTALL_EXAMPLES]/quick/customitems/painteditem/TextBalloonPlugin
+qml.files = textballoons.qml
+qml.path = $$[QT_INSTALL_EXAMPLES]/quick/customitems/painteditem/
 
-INSTALLS = qdeclarativesources sources target
+INSTALLS += qml qmldir target
