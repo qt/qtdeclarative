@@ -47,6 +47,11 @@
 #include <setjmp.h>
 
 namespace QQmlJS {
+
+namespace Debugging {
+class Debugger;
+} // namespace Debugging
+
 namespace VM {
 
 struct Value;
@@ -86,6 +91,8 @@ struct ExecutionEngine
     EvalISelFactory *iselFactory;
     ExecutionContext *current;
     ExecutionContext *rootContext;
+
+    Debugging::Debugger *debugger;
 
     Value globalObject;
 
@@ -183,7 +190,6 @@ struct ExecutionEngine
 
     Object *newForEachIteratorObject(Object *o);
 };
-
 
 } // namespace VM
 } // namespace QQmlJS

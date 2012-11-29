@@ -1892,7 +1892,7 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
 
     IR::Module module;
 
-    Codegen cg;
+    Codegen cg(ctx->engine->debugger);
     IR::Function *irf = cg(fe, &module);
 
     EvalInstructionSelection *isel = ctx->engine->iselFactory->create(ctx->engine);

@@ -38,6 +38,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
+#include "debugging.h"
 #include <qmljs_environment.h>
 #include <qmljs_objects.h>
 #include <qv4ecmaobjects_p.h>
@@ -315,6 +317,9 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
     lexicalEnvironment = variableEnvironment;
 
     thisObject = that;
+
+    if (engine->debugger)
+        engine->debugger->aboutToCall(f, this);
 }
 
 void ExecutionContext::leaveCallContext()
@@ -327,6 +332,9 @@ void ExecutionContext::leaveCallContext()
 
     delete variableEnvironment;
     variableEnvironment = 0;
+
+    if (engine->debugger)
+        engine->debugger->justLeft(this);
 }
 
 void ExecutionContext::initConstructorContext(ExecutionContext *parent, Value that, FunctionObject *f, Value *args, unsigned argc)

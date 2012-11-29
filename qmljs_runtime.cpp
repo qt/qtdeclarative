@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 
+#include "debugging.h"
 #include "qmljs_runtime.h"
 #include "qmljs_objects.h"
 #include "qv4ir_p.h"
@@ -776,6 +777,9 @@ Value __qmljs_construct_property(ExecutionContext *context, Value base, String *
 void __qmljs_throw(Value value, ExecutionContext *context)
 {
     assert(!context->engine->unwindStack.isEmpty());
+
+    if (context->engine->debugger)
+        context->engine->debugger->aboutToThrow(&value);
 
     ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
 

@@ -62,6 +62,7 @@ struct StringPool
 
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : iselFactory(factory)
+    , debugger(0)
 {
     stringPool = new StringPool;
 

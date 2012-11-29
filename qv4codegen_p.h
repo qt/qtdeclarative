@@ -50,10 +50,14 @@ namespace AST {
 class UiParameterList;
 }
 
+namespace Debugging {
+class Debugger;
+} // namespace Debugging
+
 class Codegen: protected AST::Visitor
 {
 public:
-    Codegen();
+    Codegen(Debugging::Debugger *debugger);
 
     enum Mode {
         GlobalCode,
@@ -330,6 +334,7 @@ private:
     AST::LabelledStatement *_labelledStatement;
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
+    Debugging::Debugger *_debugger;
 
     class ScanFunctions;
 };

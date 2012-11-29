@@ -43,6 +43,7 @@
 #  include "qv4_llvm_p.h"
 #endif
 
+#include "debugging.h"
 #include "qmljs_objects.h"
 #include "qmljs_runtime.h"
 #include "qv4codegen_p.h"
@@ -183,7 +184,7 @@ int compile(const QString &fileName, const QString &source, QQmlJS::LLVMOutputTy
     using namespace AST;
     Program *program = AST::cast<Program *>(parser.rootNode());
 
-    Codegen cg;
+    Codegen cg(0);
     // FIXME: if the program is empty, we should we generate an empty %entry, or give an error?
     /*IR::Function *globalCode =*/ cg(program, &module);
 
@@ -246,6 +247,14 @@ int main(int argc, char *argv[])
 #ifndef QMLJS_NO_LLVM
     QQmlJS::LLVMOutputType fileType = QQmlJS::LLVMOutputObject;
 #endif // QMLJS_NO_LLVM
+    bool enableDebugging = false;
+
+    if (!args.isEmpty()) {
+        if (args.first() == QLatin1String("-d") || args.first() == QLatin1String("--debug")) {
+            enableDebugging = true;
+            args.removeFirst();
+        }
+    }
 
     if (!args.isEmpty()) {
         if (args.first() == QLatin1String("--jit")) {
@@ -287,7 +296,7 @@ int main(int argc, char *argv[])
         }
 #endif // QMLJS_NO_LLVM
         if (args.first() == QLatin1String("--help")) {
-            std::cerr << "Usage: v4 [|--jit|--interpret|--compile|--aot|--llvm-jit] file..." << std::endl;
+            std::cerr << "Usage: v4 [|--debug|-d] [|--jit|--interpret|--compile|--aot|--llvm-jit] file..." << std::endl;
             return EXIT_SUCCESS;
         }
     }
@@ -314,7 +323,14 @@ int main(int argc, char *argv[])
             iSelFactory.reset(new QQmlJS::Moth::ISelFactory);
         else
             iSelFactory.reset(new QQmlJS::MASM::ISelFactory);
+
         QQmlJS::VM::ExecutionEngine vm(iSelFactory.data());
+
+        QScopedPointer<QQmlJS::Debugging::Debugger> debugger;
+        if (enableDebugging)
+            debugger.reset(new QQmlJS::Debugging::Debugger(&vm));
+        vm.debugger = debugger.data();
+
         QQmlJS::VM::ExecutionContext *ctx = vm.rootContext;
 
         QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
@@ -338,11 +354,15 @@ int main(int argc, char *argv[])
                     return EXIT_FAILURE;
                 }
 
-                QQmlJS::IR::Function *f = QQmlJS::VM::EvalFunction::parseSource(vm.rootContext, fn, code, QQmlJS::Codegen::GlobalCode);
+                QQmlJS::IR::Function *f = QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode);
                 if (!f)
                     continue;
                 ctx->lexicalEnvironment->strictMode = f->isStrict;
+                if (debugger)
+                    debugger->aboutToCall(0, ctx);
                 QQmlJS::VM::Value result = f->code(ctx, f->codeData);
+                if (debugger)
+                    debugger->justLeft(ctx);
                 if (!result.isUndefined()) {
                     if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
                         std::cout << "exit value: " << qPrintable(result.toString(ctx)->toQString()) << std::endl;

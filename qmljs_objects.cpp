@@ -39,7 +39,6 @@
 **
 ****************************************************************************/
 
-
 #include "qmljs_objects.h"
 #include "qv4ir_p.h"
 #include "qv4isel_p.h"
@@ -564,7 +563,7 @@ QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
                 return 0;
             }
 
-            Codegen cg;
+            Codegen cg(ctx->engine->debugger);
             globalCode = cg(program, &module, mode);
             if (globalCode) {
                 // only generate other functions if global code generation succeeded.

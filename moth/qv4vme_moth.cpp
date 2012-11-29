@@ -1,6 +1,9 @@
 #include "qv4vme_moth_p.h"
 #include "qv4instr_moth_p.h"
 #include "qmljs_value.h"
+#include "debugging.h"
+
+#include <iostream>
 
 #ifdef DO_TRACE_INSTR
 #  define TRACE_INSTR(I) fprintf(stderr, "executing a %s\n", #I);
@@ -92,6 +95,22 @@ static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, QVecto
     }
 }
 
+class FunctionState: public Debugging::FunctionState
+{
+public:
+    FunctionState(QQmlJS::VM::ExecutionContext *context, QVector<VM::Value> *stack, const uchar **code)
+        : Debugging::FunctionState(context)
+        , stack(stack)
+        , code(code)
+    {}
+
+    virtual VM::Value *temp(unsigned idx) { return stack->data() + idx; }
+
+private:
+    QVector<VM::Value> *stack;
+    const uchar **code;
+};
+
 #define TEMP(index) *tempValue(context, stack, index)
 
 VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *code
@@ -114,6 +133,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 #endif
 
     QVector<VM::Value> stack;
+    FunctionState state(context, &stack, &code);
 
 #ifdef MOTH_THREADED_INTERPRETER
     const Instr *genericInstr = reinterpret_cast<const Instr *>(code);

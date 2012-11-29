@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qv4codegen_p.h"
+#include "debugging.h"
 
 #include <QtCore/QStringList>
 #include <QtCore/QSet>
@@ -352,7 +353,7 @@ protected:
     QStack<Environment *> _envStack;
 };
 
-Codegen::Codegen()
+Codegen::Codegen(Debugging::Debugger *debugger)
     : _module(0)
     , _function(0)
     , _block(0)
@@ -363,6 +364,7 @@ Codegen::Codegen()
     , _env(0)
     , _loop(0)
     , _labelledStatement(0)
+    , _debugger(debugger)
 {
 }
 
@@ -377,6 +379,12 @@ IR::Function *Codegen::operator()(Program *node, IR::Module *module, Mode mode)
     scan(node);
 
     IR::Function *globalCode = defineFunction(QStringLiteral("%entry"), node, 0, node->elements, mode);
+    if (_debugger) {
+        if (node->elements->element) {
+            SourceLocation loc = node->elements->element->firstSourceLocation();
+            _debugger->setSourceLocation(globalCode, loc.startLine, loc.startColumn);
+        }
+    }
 
     foreach (IR::Function *function, _module->functions) {
         linearize(function);
@@ -397,6 +405,8 @@ IR::Function *Codegen::operator()(AST::FunctionExpression *ast, IR::Module *modu
     scan(ast);
 
     IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
+    if (_debugger)
+        _debugger->setSourceLocation(function, ast->functionToken.startLine, ast->functionToken.startColumn);
 
     foreach (IR::Function *function, _module->functions) {
         linearize(function);
@@ -1168,6 +1178,8 @@ bool Codegen::visit(FieldMemberExpression *ast)
 bool Codegen::visit(FunctionExpression *ast)
 {
     IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
+    if (_debugger)
+        _debugger->setSourceLocation(function, ast->functionToken.startLine, ast->functionToken.startColumn);
     _expr.code = _block->CLOSURE(function);
     return false;
 }
@@ -1570,6 +1582,8 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     enterEnvironment(ast);
     IR::Function *function = _module->newFunction(name);
+    if (_debugger)
+        _debugger->addFunction(function);
     IR::BasicBlock *entryBlock = function->newBasicBlock();
     IR::BasicBlock *exitBlock = function->newBasicBlock(IR::Function::DontInsertBlock);
     IR::BasicBlock *throwBlock = function->newBasicBlock();
@@ -1626,6 +1640,8 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     foreach (AST::FunctionDeclaration *f, _env->functions) {
         IR::Function *function = defineFunction(f->name.toString(), f, f->formals,
                                                 f->body ? f->body->elements : 0);
+        if (_debugger)
+            _debugger->setSourceLocation(function, f->functionToken.startLine, f->functionToken.startColumn);
         if (! _env->parent)
             move(_block->NAME(f->name.toString(), f->identifierToken.startLine, f->identifierToken.startColumn),
                  _block->CLOSURE(function));

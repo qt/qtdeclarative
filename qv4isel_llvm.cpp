@@ -720,6 +720,7 @@ void LLVMInstructionSelection::visitClosure(IR::Closure *e)
 {
     llvm::Value *tmp = newLLVMTemp(_valueTy);
     llvm::Value *clos = getLLVMFunction(e->value);
+    assert("!broken: pass function name!");
     CreateCall3(_llvmModule->getFunction("__qmljs_llvm_init_native_function"),
                 _llvmFunction->arg_begin(), tmp, clos);
     _llvmValue = CreateLoad(tmp);

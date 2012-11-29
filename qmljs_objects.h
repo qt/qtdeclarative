@@ -516,6 +516,8 @@ struct FunctionObject: Object {
     Value construct(ExecutionContext *context, Value *args, int argc);
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 
+    virtual struct ScriptFunction *asScriptFunction() { return 0; }
+
 protected:
     virtual Value call(ExecutionContext *ctx);
     virtual Value construct(ExecutionContext *ctx);
@@ -537,6 +539,8 @@ struct ScriptFunction: FunctionObject {
 
     virtual Value call(ExecutionContext *ctx);
     virtual Value construct(ExecutionContext *ctx);
+
+    virtual ScriptFunction *asScriptFunction() { return this; }
 };
 
 struct EvalFunction : FunctionObject

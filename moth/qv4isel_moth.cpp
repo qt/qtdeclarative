@@ -1,6 +1,7 @@
 #include "qv4isel_util_p.h"
 #include "qv4isel_moth_p.h"
 #include "qv4vme_moth_p.h"
+#include "debugging.h"
 
 using namespace QQmlJS;
 using namespace QQmlJS::Moth;
@@ -209,7 +210,10 @@ void InstructionSelection::operator()(IR::Function *function)
     addInstruction(push);
 
     foreach (_block, _function->basicBlocks) {
+        ptrdiff_t blockOffset = _ccode - _code;
         _addrs.insert(_block, _ccode - _code);
+        if (_engine->debugger)
+            _engine->debugger->addaddBasicBlockOffset(_function, _block, blockOffset);
 
         foreach (IR::Stmt *s, _block->statements)
             s->accept(this);

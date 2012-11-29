@@ -23,7 +23,8 @@ SOURCES += main.cpp \
     qv4array.cpp \
     qv4isel_masm.cpp \
     llvm_runtime.cpp \
-    qv4isel_p.cpp
+    qv4isel_p.cpp \
+    debugging.cpp
 
 HEADERS += \
     qv4codegen_p.h \
@@ -39,7 +40,8 @@ HEADERS += \
     qv4array_p.h \
     qv4isel_masm_p.h \
     qv4isel_p.h \
-    qv4isel_util_p.h
+    qv4isel_util_p.h \
+    debugging.h
 
 llvm {
 
