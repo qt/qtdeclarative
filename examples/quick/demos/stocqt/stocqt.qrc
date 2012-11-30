@@ -2,6 +2,7 @@
     <qresource prefix="/demos/stocqt">
         <file>stocqt.qml</file>
         <file>content/Button.qml</file>
+        <file>content/CheckBox.qml</file>
         <file>content/DatePicker.qml</file>
         <file>content/StockChart.qml</file>
         <file>content/StockListModel.qml</file>

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2012 Research In Motion.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -40,23 +40,33 @@
 
 import QtQuick 2.0
 
-Rectangle {
+Row {
   id:button
-  signal clicked
   property alias text: txt.text
-  property bool buttonEnabled:false
-  radius:5
-  width: Math.max(64,txt.width+16);
-  height: 32
-  color: buttonEnabled ? "steelblue" : "gray"
-  MouseArea {
-    anchors.fill:parent
-    onClicked: button.clicked();
-  }
+  property bool buttonEnabled:true
+  width: txt.width + 30
+  height:25
+  spacing: 5
+  x: 5
   Text {
-    anchors.centerIn: parent
-    font.pixelSize: 18
-    color:"#ecc089"
     id: txt
+    text:"Close "
+    color:"#76644A"
+    font.pixelSize:18
+  }
+  Rectangle {
+    width: 25
+    height: 25
+    radius:5
+    color:buttonEnabled ? "steelblue" : "gray"
+    MouseArea {
+        anchors.fill:parent
+        onClicked: {
+          if (buttonEnabled)
+           buttonEnabled = false;
+          else
+           buttonEnabled = true;
+        }
+    }
   }
 }

@@ -128,65 +128,38 @@ Rectangle {
       spacing:2
        Row{
            spacing:10
-          Text {
-            text:"High   "
-            color:"#76644A"
-            font.pointSize:15
-          }
-
-          Button {
+           CheckBox {
              id:highButton
+             text:"High   "
              buttonEnabled:false
-          }
+           }
 
-          Text {
-            text:"Low     "
-            color:"#76644A"
-            font.pointSize:15
-          }
-
-          Button {
+           CheckBox {
              id:lowButton
+             text:"Low     "
              buttonEnabled:false
-          }
-
-          Text {
-            text:"Open "
-            color:"#76644A"
-            font.pointSize:15
-          }
-          Button {
+           }
+           CheckBox {
+             text:"Open "
              id:openButton
              buttonEnabled:false
-          }
+           }
       }
        Row{
            spacing:10
-          Text {
-            text:"Close "
-            color:"#76644A"
-            font.pointSize:15
-          }
-          Button {
+           CheckBox {
+             text:"Close "
              id:closeButton
              buttonEnabled:true
-          }
-          Text {
-            text:"Volume"
-            color:"#76644A"
-            font.pointSize:15
-          }
-          Button {
+           }
+           CheckBox {
              id:volumeButton
+             text:"Volume"
              buttonEnabled:true
-          }
-          Text {
-            text:"K Line"
-            color:"#76644A"
-            font.pointSize:15
-          }
-          Button {
+           }
+           CheckBox {
              id:klineButton
+             text:"K Line"
              buttonEnabled:false
           }
       }
@@ -195,7 +168,7 @@ Rectangle {
 
   Text {
     id:chartTypeText
-    text:"CHART TYPE:"
+    text:"SHOW PREVIOUS:"
     color:"#76644A"
     font.pointSize:15
     anchors.left:parent.left
@@ -209,109 +182,29 @@ Rectangle {
       anchors.top : chartTypeText.bottom
       anchors.topMargin: 20
       spacing:10
-      Rectangle {
-          id:yearView
-          width:70
-          height:30
-          radius:10
-          color:"steelblue"
-          Text {
-              anchors.horizontalCenter: parent.horizontalCenter
-              anchors.fill: parent
-              font.pointSize: 15
-              text:"YEAR"
-          }
-          MouseArea {
-              anchors.fill: parent
-              onClicked: {
-                  if (root.chartType != "year") {
-                      root.chartType = "year";
-                      yearView.color = "steelblue"
-                      monthView.color = "gray"
-                      weekView.color = "gray"
-                      allView.color = "gray"
-                  }
-              }
-          }
+      Button {
+        id: yearView
+        text: "YEAR"
+        buttonEnabled: root.chartType == "year"
+        onClicked: root.chartType = "year"
       }
-      Rectangle {
-          id:monthView
-          width:70
-          radius:10
-          height:30
-          color:"gray"
-          Text {
-              anchors.fill: parent
-              anchors.horizontalCenter: parent.horizontalCenter
-              font.pointSize: 15
-              color:"#ecc089"
-              text:"MONTH"
-          }
-          MouseArea {
-              anchors.fill: parent
-              onClicked: {
-                  if (root.chartType != "month") {
-                      root.chartType = "month";
-                      yearView.color = "gray"
-                      monthView.color = "steelblue"
-                      weekView.color = "gray"
-                      allView.color = "gray"
-                  }
-              }
-          }
-
+      Button {
+        id: monthView
+        text: "MONTH"
+        buttonEnabled: root.chartType == "month"
+        onClicked: root.chartType = "month"
       }
-      Rectangle {
-          id:weekView
-          height:30
-          width:70
-          radius:10
-          color:"gray"
-          Text {
-              anchors.fill: parent
-              anchors.horizontalCenter: parent.horizontalCenter
-              font.pointSize: 15
-              color:"#ecc089"
-              text:"WEEK"
-          }
-          MouseArea {
-              anchors.fill: parent
-              onClicked: {
-                  if (root.chartType != "week") {
-                      root.chartType = "week";
-                      yearView.color = "gray"
-                      monthView.color = "gray"
-                      weekView.color = "steelblue"
-                      allView.color = "gray"
-                  }
-              }
-          }
+      Button {
+        id: weekView
+        text: "WEEK"
+        buttonEnabled: root.chartType == "week"
+        onClicked: root.chartType = "week"
       }
-      Rectangle {
-          id:allView
-          width:70
-          radius:10
-          height:30
-          color:"gray"
-          Text {
-              anchors.horizontalCenter: parent.horizontalCenter
-              anchors.fill: parent
-              font.pointSize: 15
-              color:"#ecc089"
-              text:"ALL"
-          }
-          MouseArea {
-              anchors.fill: parent
-              onClicked: {
-                  if (root.chartType != "all") {
-                      root.chartType = "all";
-                      yearView.color = "gray"
-                      monthView.color = "gray"
-                      weekView.color = "gray"
-                      allView.color = "steelblue"
-                  }
-              }
-          }
+      Button {
+        id: allView
+        text: "ALL"
+        buttonEnabled: root.chartType == "all"
+        onClicked: root.chartType = "all"
       }
   }
 }
