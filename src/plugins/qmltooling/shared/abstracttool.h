@@ -74,7 +74,9 @@ public:
     virtual void mouseDoubleClickEvent(QMouseEvent *event) = 0;
 
     virtual void hoverMoveEvent(QMouseEvent *event) = 0;
+#ifndef QT_NO_WHEELEVENT
     virtual void wheelEvent(QWheelEvent *event) = 0;
+#endif
 
     virtual void keyPressEvent(QKeyEvent *event) = 0;
     virtual void keyReleaseEvent(QKeyEvent *keyEvent) = 0;

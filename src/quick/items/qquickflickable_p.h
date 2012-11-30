@@ -234,7 +234,9 @@ protected:
     virtual void mousePressEvent(QMouseEvent *event);
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
+#ifndef QT_NO_WHEELEVENT
     virtual void wheelEvent(QWheelEvent *event);
+#endif
     virtual void timerEvent(QTimerEvent *event);
 
     QQuickFlickableVisibleArea *visibleArea();

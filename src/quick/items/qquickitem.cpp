@@ -3206,6 +3206,7 @@ void QQuickItem::touchUngrabEvent()
     // XXX todo
 }
 
+#ifndef QT_NO_WHEELEVENT
 /*!
     This event handler can be reimplemented in a subclass to receive
     wheel events for an item. The event information is provided by the
@@ -3215,6 +3216,7 @@ void QQuickItem::wheelEvent(QWheelEvent *event)
 {
     event->ignore();
 }
+#endif
 
 /*!
     This event handler can be reimplemented in a subclass to receive touch
@@ -4104,11 +4106,13 @@ void QQuickItemPrivate::deliverMouseEvent(QMouseEvent *e)
     }
 }
 
+#ifndef QT_NO_WHEELEVENT
 void QQuickItemPrivate::deliverWheelEvent(QWheelEvent *e)
 {
     Q_Q(QQuickItem);
     q->wheelEvent(e);
 }
+#endif
 
 void QQuickItemPrivate::deliverTouchEvent(QTouchEvent *e)
 {

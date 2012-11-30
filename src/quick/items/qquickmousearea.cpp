@@ -938,6 +938,7 @@ void QQuickMouseArea::hoverLeaveEvent(QHoverEvent *event)
         setHovered(false);
 }
 
+#ifndef QT_NO_WHEELEVENT
 void QQuickMouseArea::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickMouseArea);
@@ -953,6 +954,7 @@ void QQuickMouseArea::wheelEvent(QWheelEvent *event)
     if (!we.isAccepted())
         QQuickItem::wheelEvent(event);
 }
+#endif
 
 void QQuickMouseArea::ungrabMouse()
 {
