@@ -77,13 +77,10 @@ void DeclarativeEnvironment::init(ExecutionEngine *e)
 {
     engine = e;
     outer = 0;
+    function = 0;
     arguments = 0;
     argumentCount = 0;
     locals = 0;
-    formals = 0;
-    formalCount = 0;
-    vars = 0;
-    varCount = 0;
     activation = 0;
     withObject = 0;
     strictMode = false;
@@ -91,28 +88,25 @@ void DeclarativeEnvironment::init(ExecutionEngine *e)
 
 void DeclarativeEnvironment::init(FunctionObject *f, Value *args, uint argc)
 {
-    outer = f->scope;
+    function = f;
+    outer = function->scope;
     engine = outer->engine;
     strictMode = f->strictMode;
 
-    formals = f->formalParameterList;
-    formalCount = f->formalParameterCount;
     arguments = args;
     argumentCount = argc;
-    if (f->needsActivation || argc < formalCount){
-        arguments = new Value[qMax(argc, formalCount)];
+    if (function->needsActivation || argc < function->formalParameterCount){
+        arguments = new Value[qMax(argc, function->formalParameterCount)];
         if (argc)
             std::copy(args, args + argc, arguments);
-        if (argc < formalCount)
-            std::fill(arguments + argc, arguments + formalCount, Value::undefinedValue());
+        if (argc < function->formalParameterCount)
+            std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
     }
-    vars = f->varList;
-    varCount = f->varCount;
-    locals = varCount ? new Value[varCount] : 0;
-    if (varCount)
-        std::fill(locals, locals + varCount, Value::undefinedValue());
+    locals = function->varCount ? new Value[function->varCount] : 0;
+    if (function->varCount)
+        std::fill(locals, locals + function->varCount, Value::undefinedValue());
 
-    if (f->needsActivation)
+    if (function->needsActivation)
         activation = engine->newActivationObject(this);
     else
         activation = 0;
@@ -122,12 +116,15 @@ void DeclarativeEnvironment::init(FunctionObject *f, Value *args, uint argc)
 
 bool DeclarativeEnvironment::hasBinding(String *name) const
 {
-    for (unsigned int i = 0; i < varCount; ++i) {
-        if (__qmljs_string_equal(vars[i], name))
+    if (!function)
+        return false;
+
+    for (unsigned int i = 0; i < function->varCount; ++i) {
+        if (__qmljs_string_equal(function->varList[i], name))
             return true;
     }
-    for (unsigned int i = 0; i < formalCount; ++i) {
-        if (__qmljs_string_equal(formals[i], name))
+    for (unsigned int i = 0; i < function->formalParameterCount; ++i) {
+        if (__qmljs_string_equal(function->formalParameterList[i], name))
             return true;
     }
     return false;
@@ -152,16 +149,17 @@ void DeclarativeEnvironment::createMutableBinding(ExecutionContext *ctx, String 
 void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool strict)
 {
     Q_UNUSED(strict);
+    assert(function);
 
     // ### throw if strict is true, and it would change an immutable binding
-    for (unsigned int i = 0; i < varCount; ++i) {
-        if (__qmljs_string_equal(vars[i], name)) {
+    for (unsigned int i = 0; i < variableCount(); ++i) {
+        if (__qmljs_string_equal(variables()[i], name)) {
             locals[i] = value;
             return;
         }
     }
-    for (unsigned int i = 0; i < formalCount; ++i) {
-        if (__qmljs_string_equal(formals[i], name)) {
+    for (unsigned int i = 0; i < formalCount(); ++i) {
+        if (__qmljs_string_equal(formals()[i], name)) {
             arguments[i] = value;
             return;
         }
@@ -172,13 +170,14 @@ void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool s
 Value DeclarativeEnvironment::getBindingValue(String *name, bool strict) const
 {
     Q_UNUSED(strict);
+    assert(function);
 
-    for (unsigned int i = 0; i < varCount; ++i) {
-        if (__qmljs_string_equal(vars[i], name))
+    for (unsigned int i = 0; i < variableCount(); ++i) {
+        if (__qmljs_string_equal(variables()[i], name))
             return locals[i];
     }
-    for (unsigned int i = 0; i < formalCount; ++i) {
-        if (__qmljs_string_equal(formals[i], name))
+    for (unsigned int i = 0; i < formalCount(); ++i) {
+        if (__qmljs_string_equal(formals()[i], name))
             return arguments[i];
     }
     assert(false);
@@ -210,6 +209,27 @@ void DeclarativeEnvironment::popWithObject()
     withObject = w->next;
     delete w;
 }
+
+String **DeclarativeEnvironment::formals() const
+{
+    return function ? function->formalParameterList : 0;
+}
+
+unsigned int DeclarativeEnvironment::formalCount() const
+{
+    return function ? function->formalParameterCount : 0;
+}
+
+String **DeclarativeEnvironment::variables() const
+{
+    return function ? function->varList : 0;
+}
+
+unsigned int DeclarativeEnvironment::variableCount() const
+{
+    return function ? function->varCount : 0;
+}
+
 
 void ExecutionContext::init(ExecutionEngine *eng)
 {
@@ -356,7 +376,6 @@ void ExecutionContext::wireUpPrototype(FunctionObject *f)
     else
         thisObject.objectValue()->prototype = engine->objectPrototype;
 }
-
 
 } // namespace VM
 } // namespace QQmlJS

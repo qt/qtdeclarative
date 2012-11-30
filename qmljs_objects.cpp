@@ -434,6 +434,10 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, IR::Function *function)
     : FunctionObject(scope)
     , function(function)
 {
+    // global function
+    if (!scope)
+        return;
+
     if (function->name)
         name = scope->engine->identifier(*function->name);
     needsActivation = function->needsActivation();
@@ -671,8 +675,8 @@ Value ScriptFunction::construct(VM::ExecutionContext *ctx)
 PropertyDescriptor *ActivationObject::__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill)
 {
     if (context) {
-        for (unsigned int i = 0; i < context->varCount; ++i) {
-            String *var = context->vars[i];
+        for (unsigned int i = 0; i < context->variableCount(); ++i) {
+            String *var = context->variables()[i];
             if (__qmljs_string_equal(var, name)) {
                 *to_fill = PropertyDescriptor::fromValue(context->locals[i]);
                 to_fill->writable = PropertyDescriptor::Set;
@@ -680,8 +684,8 @@ PropertyDescriptor *ActivationObject::__getPropertyDescriptor__(ExecutionContext
                 return to_fill;
             }
         }
-        for (unsigned int i = 0; i < context->formalCount; ++i) {
-            String *formal = context->formals[i];
+        for (unsigned int i = 0; i < context->formalCount(); ++i) {
+            String *formal = context->formals()[i];
             if (__qmljs_string_equal(formal, name)) {
                 *to_fill = PropertyDescriptor::fromValue(context->arguments[i]);
                 to_fill->writable = PropertyDescriptor::Set;

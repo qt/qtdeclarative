@@ -58,10 +58,9 @@ VM::Value *FunctionState::argument(unsigned idx)
 
 VM::Value *FunctionState::local(unsigned idx)
 {
-    if (idx < _context->lexicalEnvironment->varCount)
+    if (idx < _context->lexicalEnvironment->variableCount())
         return _context->lexicalEnvironment->locals + idx;
-    else
-        return 0;
+    return 0;
 }
 
 Debugger::Debugger(VM::ExecutionEngine *engine)

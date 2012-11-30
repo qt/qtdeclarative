@@ -76,13 +76,15 @@ struct DeclarativeEnvironment
     ExecutionEngine *engine;
     DeclarativeEnvironment *outer;
 
+    FunctionObject *function;
+
     Value *arguments;
     unsigned int argumentCount;
     Value *locals;
-    String **formals;
-    unsigned int formalCount;
-    String **vars;
-    unsigned int varCount;
+    String **formals() const;
+    unsigned int formalCount() const;
+    String **variables() const;
+    unsigned int variableCount() const;
     bool strictMode;
 
     Object *activation;

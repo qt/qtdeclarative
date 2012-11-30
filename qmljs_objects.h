@@ -500,7 +500,7 @@ struct FunctionObject: Object {
     bool strictMode;
 
     FunctionObject(ExecutionContext *scope)
-        : scope(scope->lexicalEnvironment)
+        : scope(scope ? scope->lexicalEnvironment : 0)
         , name(0)
         , formalParameterList(0)
         , formalParameterCount(0)
