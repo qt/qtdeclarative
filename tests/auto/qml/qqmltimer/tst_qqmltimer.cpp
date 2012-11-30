@@ -45,6 +45,18 @@
 #include <QtQml/private/qqmltimer_p.h>
 #include <QtQuick/qquickitem.h>
 #include <QDebug>
+#include <QtCore/QPauseAnimation>
+#include <private/qabstractanimation_p.h>
+
+void consistentWait(int ms)
+{
+    //Use animations for timing, because we enabled consistentTiming
+    //This function will qWait for >= ms worth of consistent timing to elapse
+    QPauseAnimation waitTimer(ms);
+    waitTimer.start();
+    while (waitTimer.state() == QAbstractAnimation::Running)
+        QTest::qWait(20);
+}
 
 class tst_qqmltimer : public QObject
 {
@@ -53,6 +65,7 @@ public:
     tst_qqmltimer();
 
 private slots:
+    void initTestCase();
     void notRepeating();
     void notRepeatingStart();
     void repeat();
@@ -82,17 +95,20 @@ public slots:
     }
 };
 
-#define TIMEOUT_TIMEOUT 200
-
 tst_qqmltimer::tst_qqmltimer()
 {
+}
+
+void tst_qqmltimer::initTestCase()
+{
+    QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
 void tst_qqmltimer::notRepeating()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QByteArray("import QtQuick 2.0\nTimer { interval: 100; running: true }"), QUrl::fromLocalFile(""));
+    component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 100; running: true }"), QUrl::fromLocalFile(""));
     QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
     QVERIFY(timer != 0);
     QVERIFY(timer->isRunning());
@@ -102,9 +118,10 @@ void tst_qqmltimer::notRepeating()
     TimerHelper helper;
     connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
 
-    QTest::qWait(TIMEOUT_TIMEOUT);
+
+    consistentWait(200);
     QCOMPARE(helper.count, 1);
-    QTest::qWait(TIMEOUT_TIMEOUT);
+    consistentWait(200);
     QCOMPARE(helper.count, 1);
     QVERIFY(timer->isRunning() == false);
 }
@@ -121,13 +138,13 @@ void tst_qqmltimer::notRepeatingStart()
     TimerHelper helper;
     connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
 
-    QTest::qWait(TIMEOUT_TIMEOUT);
+    consistentWait(200);
     QCOMPARE(helper.count, 0);
 
     timer->start();
-    QTest::qWait(TIMEOUT_TIMEOUT);
+    consistentWait(200);
     QCOMPARE(helper.count, 1);
-    QTest::qWait(TIMEOUT_TIMEOUT);
+    consistentWait(200);
     QCOMPARE(helper.count, 1);
     QVERIFY(timer->isRunning() == false);
 
@@ -146,18 +163,18 @@ void tst_qqmltimer::repeat()
     connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
     QCOMPARE(helper.count, 0);
 
-    QTest::qWait(TIMEOUT_TIMEOUT);
+    consistentWait(200);
     QVERIFY(helper.count > 0);
     int oldCount = helper.count;
 
-    QTest::qWait(TIMEOUT_TIMEOUT);
+    consistentWait(200);
     QVERIFY(helper.count > oldCount);
     QVERIFY(timer->isRunning());
 
     oldCount = helper.count;
     timer->stop();
 
-    QTest::qWait(TIMEOUT_TIMEOUT);
+    consistentWait(200);
     QVERIFY(helper.count == oldCount);
     QVERIFY(timer->isRunning() == false);
 
@@ -187,12 +204,11 @@ void tst_qqmltimer::triggeredOnStart()
 
     TimerHelper helper;
     connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
-    QTest::qWait(1);
+    consistentWait(1);
     QCOMPARE(helper.count, 1);
-
-    QTest::qWait(TIMEOUT_TIMEOUT);
+    consistentWait(200);
     QCOMPARE(helper.count, 2);
-    QTest::qWait(TIMEOUT_TIMEOUT);
+    consistentWait(200);
     QCOMPARE(helper.count, 2);
     QVERIFY(timer->isRunning() == false);
 
@@ -221,13 +237,13 @@ void tst_qqmltimer::triggeredOnStartRepeat()
 
     TimerHelper helper;
     connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
-    QTest::qWait(1);
+    consistentWait(1);
     QCOMPARE(helper.count, 1);
 
-    QTest::qWait(TIMEOUT_TIMEOUT);
+    consistentWait(200);
     QVERIFY(helper.count > 1);
     int oldCount = helper.count;
-    QTest::qWait(TIMEOUT_TIMEOUT);
+    consistentWait(200);
     QVERIFY(helper.count > oldCount);
     QVERIFY(timer->isRunning());
 
@@ -247,7 +263,7 @@ void tst_qqmltimer::noTriggerIfNotRunning()
     ), QUrl::fromLocalFile(""));
     QObject *item = component.create();
     QVERIFY(item != 0);
-    QTest::qWait(TIMEOUT_TIMEOUT);
+    consistentWait(200);
     QCOMPARE(item->property("ok").toBool(), true);
 
     delete item;
@@ -265,12 +281,12 @@ void tst_qqmltimer::changeDuration()
     connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
     QCOMPARE(helper.count, 0);
 
-    QTest::qWait(500);
+    consistentWait(500);
     QCOMPARE(helper.count, 2);
 
     timer->setInterval(500);
 
-    QTest::qWait(600);
+    consistentWait(600);
     QCOMPARE(helper.count, 3);
     QVERIFY(timer->isRunning());
 
@@ -301,14 +317,14 @@ void tst_qqmltimer::restart()
     connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
     QCOMPARE(helper.count, 0);
 
-    QTest::qWait(600);
+    consistentWait(600);
     QCOMPARE(helper.count, 1);
 
-    QTest::qWait(300);
+    consistentWait(300);
 
     timer->restart();
 
-    QTest::qWait(700);
+    consistentWait(700);
 
     QCOMPARE(helper.count, 2);
     QVERIFY(timer->isRunning());
@@ -334,11 +350,11 @@ void tst_qqmltimer::restartFromTriggered()
     connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
     QCOMPARE(helper.count, 0);
 
-    QTest::qWait(600);
+    consistentWait(600);
     QCOMPARE(helper.count, 1);
     QVERIFY(timer->isRunning());
 
-    QTest::qWait(600);
+    consistentWait(600);
     QCOMPARE(helper.count, 2);
     QVERIFY(timer->isRunning());
 }
@@ -362,12 +378,12 @@ void tst_qqmltimer::runningFromTriggered()
     connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
     QCOMPARE(helper.count, 0);
 
-    QTest::qWait(600);
+    consistentWait(600);
     QCOMPARE(helper.count, 1);
     QVERIFY(timer->property("ok").toBool());
     QVERIFY(timer->isRunning());
 
-    QTest::qWait(600);
+    consistentWait(600);
     QCOMPARE(helper.count, 2);
     QVERIFY(timer->property("ok").toBool());
     QVERIFY(timer->isRunning());
