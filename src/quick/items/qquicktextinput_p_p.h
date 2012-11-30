@@ -464,9 +464,9 @@ private:
         IntermediateInput   = QValidator::Intermediate,
         AcceptableInput     = QValidator::Acceptable
 #else
-        Invalid,
-        Intermediate,
-        Acceptable
+        InvalidInput,
+        IntermediateInput,
+        AcceptableInput
 #endif
     };
 
