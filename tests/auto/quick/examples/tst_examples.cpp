@@ -116,9 +116,6 @@ tst_examples::tst_examples() : window(0)
     excludedDirs << "snippets/qml/xmlrole.qml";
 #endif
 
-    // QTBUG-24034 - don't run customparticle examples
-    excludedDirs << "demos/flickr";
-    excludedDirs << "examples/particles/customparticle";
 }
 
 tst_examples::~tst_examples()
