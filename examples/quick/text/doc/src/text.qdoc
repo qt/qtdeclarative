@@ -27,8 +27,9 @@
 /*!
     \title QML Examples - Text
     \example quick/text
-    \brief This is a collection of QML examples
+    \brief This is a collection of QML examples relating to text
     \image qml-text-example.png
+    \ingroup qtquickexamples
 
     This is a collection of  small QML examples relating to text. Each example is
     a small QML file, usually containing or emphasizing a particular element or
@@ -37,24 +38,24 @@
     'Hello' shows how to change and animate the letter spacing of a Text element.
     It uses a sequential animation to first animate the font.letterSpacing property
     from 0 to 50 over 3 seconds and then move the text to a random position on screen:
-    \snippet examples/quick/text/fonts/hello.qml letterspacing
+    \snippet quick/text/fonts/hello.qml letterspacing
 
     'Fonts' shows different ways of using fonts with the Text element.
     Simply by name, using the font.family property directly:
-    \snippet examples/quick/text/fonts/fonts.qml name
+    \snippet quick/text/fonts/fonts.qml name
     or using a FontLoader element:
-    \snippet examples/quick/text/fonts/fonts.qml fontloader
+    \snippet quick/text/fonts/fonts.qml fontloader
     or using a FontLoader and specifying a local font file:
-    \snippet examples/quick/text/fonts/fonts.qml fontloaderlocal
+    \snippet quick/text/fonts/fonts.qml fontloaderlocal
     or finally using a FontLoader and specifying a remote font file:
-    \snippet examples/quick/text/fonts/fonts.qml fontloaderremote
+    \snippet quick/text/fonts/fonts.qml fontloaderremote
 
     'Available Fonts' shows how to use the QML global Qt object and a list view
     to display all the fonts available on the system.
     The ListView element uses the list of fonts available as its model:
-    \snippet examples/quick/text/fonts/availableFonts.qml model
+    \snippet quick/text/fonts/availableFonts.qml model
     Inside the delegate, the font family is set with the modelData:
-    \snippet examples/quick/text/fonts/availableFonts.qml delegate
+    \snippet quick/text/fonts/availableFonts.qml delegate
 
     'Banner' is a simple example showing how to create a banner using a row of text
     elements and a NumberAnimation.
@@ -65,5 +66,5 @@
     'Text Layout' shows how to create a more complex layout for a text element.
     This example lays out the text in two columns using the onLineLaidOut handler
     that allows you to position and resize each line:
-    \snippet examples/quick/text/styledtext-layout.qml layout
+    \snippet quick/text/styledtext-layout.qml layout
 */

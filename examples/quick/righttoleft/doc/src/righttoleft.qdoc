@@ -29,6 +29,7 @@
     \example quick/righttoleft
     \brief This is a collection of QML Right to Left examples.
     \image qml-righttoleft-example.png
+    \ingroup qtquickexamples
 
     This is a collection of small QML examples relating to right to left(RTL) localization support.
 

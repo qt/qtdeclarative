@@ -29,6 +29,7 @@
     \example quick/keyinteraction
     \brief This is a collection of QML keyboard interaction examples.
     \image qml-keyinteraction-example.png
+    \ingroup qtquickexamples
 
     This example demonstrates combining various methods of interacting with keyboard focus.
 */

@@ -29,6 +29,7 @@
     \example quick/threading
     \brief This is a collection of QML Multithreading examples.
     \image qml-threading-example.png
+    \ingroup qtquickexamples
 
     Threaded ListModel contains a ListView and a ListModel. The ListModel is updated asynchronusly in another thread, and the results propagate back to the main thread.
     A timer requests updates from the worker thread periodically:

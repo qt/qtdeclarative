@@ -46,26 +46,16 @@ Some of these code samples have a corresponding \l{qtquick-tutorials}{tutorial}.
 The Qt Quick features are covered in the \l {qtquick-overviews}{main page}.
 This set of code samples are part of the collection of \l{Qt Examples}.
 
-\div {class="threecolumn_area"}
-    \div {class="heading"}
-    QML Examples
-    \enddiv
-    Code samples demonstrate a general use for QML features. Some showcase
-    how elements or properties can be used in an application.
-    \li \l{quick/keyinteraction}{Keyboard Focus}
-    \li \l{quick/mousearea}{MouseArea}
-    \li \l{quick/animation}{Animations}
-    \li \l{quick/positioners}{Positioners}
-    \li \l{quick/righttoleft}{Right to Left}
-    \li \l{quick/modelviews}{Model Views}
-    \li \l{quick/imageelements}{Image Elements}
-    \li \l{localstorage}{SQL Local Storage}
-    \li \l{qml/xmlhttprequest}{XmlHttpRequest}
-    \li \l{qml/i18n}{Translation}
-    \li \l{quick/threading}{Threading}
-    \li \l{quick/shadereffects}{Shader Effects}
-    \endlist
-\enddiv
+\annotatedlist{qtquickexamples}
+
+The following examples show how a QML-based user interface can be combined with C++
+code using the \l{Qt Qml} Module.
+
+\annotatedlist{qmlextendingexamples}
+
+*/
+
+/*
 \div {class="threecolumn_area"}
     \div {class="heading"}
         QDeclarative Examples
