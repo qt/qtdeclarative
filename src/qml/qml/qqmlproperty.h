@@ -100,9 +100,9 @@ public:
     QString name() const;
 
     QVariant read() const;
-    static QVariant read(QObject *, const QString &);
-    static QVariant read(QObject *, const QString &, QQmlContext *);
-    static QVariant read(QObject *, const QString &, QQmlEngine *);
+    static QVariant read(const QObject *, const QString &);
+    static QVariant read(const QObject *, const QString &, QQmlContext *);
+    static QVariant read(const QObject *, const QString &, QQmlEngine *);
 
     bool write(const QVariant &) const;
     static bool write(QObject *, const QString &, const QVariant &);

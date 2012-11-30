@@ -1074,9 +1074,9 @@ Return the \a name property value of \a object.  This method is equivalent to:
     p.read();
 \endcode
 */
-QVariant QQmlProperty::read(QObject *object, const QString &name)
+QVariant QQmlProperty::read(const QObject *object, const QString &name)
 {
-    QQmlProperty p(object, name);
+    QQmlProperty p(const_cast<QObject *>(object), name);
     return p.read();
 }
 
@@ -1090,9 +1090,9 @@ QVariant QQmlProperty::read(QObject *object, const QString &name)
     p.read();
   \endcode
 */
-QVariant QQmlProperty::read(QObject *object, const QString &name, QQmlContext *ctxt)
+QVariant QQmlProperty::read(const QObject *object, const QString &name, QQmlContext *ctxt)
 {
-    QQmlProperty p(object, name, ctxt);
+    QQmlProperty p(const_cast<QObject *>(object), name, ctxt);
     return p.read();
 }
 
@@ -1107,9 +1107,9 @@ QVariant QQmlProperty::read(QObject *object, const QString &name, QQmlContext *c
     p.read();
   \endcode
 */
-QVariant QQmlProperty::read(QObject *object, const QString &name, QQmlEngine *engine)
+QVariant QQmlProperty::read(const QObject *object, const QString &name, QQmlEngine *engine)
 {
-    QQmlProperty p(object, name, engine);
+    QQmlProperty p(const_cast<QObject *>(object), name, engine);
     return p.read();
 }
 
