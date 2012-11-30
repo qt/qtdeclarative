@@ -228,6 +228,15 @@ Module {
         }
     }
     Component {
+        name: "QQmlBind"
+        prototype: "QObject"
+        exports: ["QtQml/Binding 2.0", "QtQuick/Binding 2.0"]
+        Property { name: "target"; type: "QObject"; isPointer: true }
+        Property { name: "property"; type: "string" }
+        Property { name: "value"; type: "QVariant" }
+        Property { name: "when"; type: "bool" }
+    }
+    Component {
         name: "QQmlComponent"
         prototype: "QObject"
         exports: [
@@ -284,6 +293,13 @@ Module {
         prototype: "QObject"
         Signal { name: "completed" }
         Signal { name: "destruction" }
+    }
+    Component {
+        name: "QQmlConnections"
+        prototype: "QObject"
+        exports: ["QtQml/Connections 2.0", "QtQuick/Connections 2.0"]
+        Property { name: "target"; type: "QObject"; isPointer: true }
+        Property { name: "ignoreUnknownSignals"; type: "bool" }
     }
     Component {
         name: "QQmlEasingValueType"
@@ -386,6 +402,20 @@ Module {
                 "Saturday": 6
             }
         }
+    }
+    Component {
+        name: "QQmlTimer"
+        prototype: "QObject"
+        exports: ["QtQml/Timer 2.0", "QtQuick/Timer 2.0"]
+        Property { name: "interval"; type: "int" }
+        Property { name: "running"; type: "bool" }
+        Property { name: "repeat"; type: "bool" }
+        Property { name: "triggeredOnStart"; type: "bool" }
+        Property { name: "parent"; type: "QObject"; isReadonly: true; isPointer: true }
+        Signal { name: "triggered" }
+        Method { name: "start" }
+        Method { name: "stop" }
+        Method { name: "restart" }
     }
     Component { name: "QQmlValueType"; prototype: "QObject" }
     Component {
@@ -708,15 +738,6 @@ Module {
         Property { name: "enabled"; type: "bool" }
     }
     Component {
-        name: "QQuickBind"
-        prototype: "QObject"
-        exports: ["QtQuick/Binding 2.0"]
-        Property { name: "target"; type: "QObject"; isPointer: true }
-        Property { name: "property"; type: "string" }
-        Property { name: "value"; type: "QVariant" }
-        Property { name: "when"; type: "bool" }
-    }
-    Component {
         name: "QQuickBorderImage"
         defaultProperty: "data"
         prototype: "QQuickImageBase"
@@ -833,13 +854,6 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickBasePositioner"
         exports: ["QtQuick/Column 2.0"]
-    }
-    Component {
-        name: "QQuickConnections"
-        prototype: "QObject"
-        exports: ["QtQuick/Connections 2.0"]
-        Property { name: "target"; type: "QObject"; isPointer: true }
-        Property { name: "ignoreUnknownSignals"; type: "bool" }
     }
     Component {
         name: "QQuickCurve"
@@ -1322,7 +1336,6 @@ Module {
         Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "resources"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "children"; type: "QQuickItem"; isList: true; isReadonly: true }
-        Property { name: "pos"; type: "QPointF"; isReadonly: true }
         Property { name: "x"; type: "double" }
         Property { name: "y"; type: "double" }
         Property { name: "z"; type: "double" }
@@ -3464,20 +3477,6 @@ Module {
             Parameter { name: "start"; type: "int" }
             Parameter { name: "end"; type: "int" }
         }
-    }
-    Component {
-        name: "QQuickTimer"
-        prototype: "QObject"
-        exports: ["QtQuick/Timer 2.0"]
-        Property { name: "interval"; type: "int" }
-        Property { name: "running"; type: "bool" }
-        Property { name: "repeat"; type: "bool" }
-        Property { name: "triggeredOnStart"; type: "bool" }
-        Property { name: "parent"; type: "QObject"; isReadonly: true; isPointer: true }
-        Signal { name: "triggered" }
-        Method { name: "start" }
-        Method { name: "stop" }
-        Method { name: "restart" }
     }
     Component {
         name: "QQuickTouchPoint"
