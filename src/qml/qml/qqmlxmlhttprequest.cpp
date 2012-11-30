@@ -1338,9 +1338,11 @@ void QQmlXMLHttpRequest::finished()
         QVariant redirect = m_network->attribute(QNetworkRequest::RedirectionTargetAttribute);
         if (redirect.isValid()) {
             QUrl url = m_network->url().resolved(redirect.toUrl());
-            destroyNetwork();
-            requestFromUrl(url);
-            return;
+            if (url.scheme() != QLatin1String("file")) {
+                destroyNetwork();
+                requestFromUrl(url);
+                return;
+            }
         }
     }
 
