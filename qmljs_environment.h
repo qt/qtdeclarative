@@ -74,8 +74,6 @@ struct DiagnosticMessage
 struct DeclarativeEnvironment
 {
     ExecutionEngine *engine;
-    DeclarativeEnvironment *outer;
-
     FunctionObject *function;
 
     Value *arguments;
@@ -86,6 +84,8 @@ struct DeclarativeEnvironment
     String **variables() const;
     unsigned int variableCount() const;
     bool strictMode;
+
+    DeclarativeEnvironment *outer() const;
 
     Object *activation;
     struct With {

@@ -76,7 +76,6 @@ String *DiagnosticMessage::buildFullMessage(ExecutionContext *ctx) const
 void DeclarativeEnvironment::init(ExecutionEngine *e)
 {
     engine = e;
-    outer = 0;
     function = 0;
     arguments = 0;
     argumentCount = 0;
@@ -89,8 +88,7 @@ void DeclarativeEnvironment::init(ExecutionEngine *e)
 void DeclarativeEnvironment::init(FunctionObject *f, Value *args, uint argc)
 {
     function = f;
-    outer = function->scope;
-    engine = outer->engine;
+    engine = f->scope->engine;
     strictMode = f->strictMode;
 
     arguments = args;
@@ -210,6 +208,11 @@ void DeclarativeEnvironment::popWithObject()
     delete w;
 }
 
+DeclarativeEnvironment *DeclarativeEnvironment::outer() const
+{
+    return function ? function->scope : 0;
+}
+
 String **DeclarativeEnvironment::formals() const
 {
     return function ? function->formalParameterList : 0;
@@ -243,7 +246,7 @@ void ExecutionContext::init(ExecutionEngine *eng)
 
 PropertyDescriptor *ExecutionContext::lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp)
 {
-    for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer) {
+    for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer()) {
         if (ctx->withObject) {
             DeclarativeEnvironment::With *w = ctx->withObject;
             while (w) {
@@ -262,7 +265,7 @@ PropertyDescriptor *ExecutionContext::lookupPropertyDescriptor(String *name, Pro
 
 bool ExecutionContext::deleteProperty(String *name)
 {
-    for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer) {
+    for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer()) {
         if (ctx->withObject) {
             DeclarativeEnvironment::With *w = ctx->withObject;
             while (w) {
@@ -282,7 +285,7 @@ bool ExecutionContext::deleteProperty(String *name)
 
 void ExecutionContext::inplaceBitOp(Value value, String *name, BinOp op)
 {
-    for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer) {
+    for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer()) {
         if (ctx->activation) {
             if (ctx->activation->inplaceBinOp(value, name, op, this))
                 return;
