@@ -2186,9 +2186,11 @@ void QQuickItemPrivate::addChild(QQuickItem *child)
 
     childItems.append(child);
 
+#ifndef QT_NO_CURSOR
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
     if (childPrivate->extra.isAllocated())
         incrementCursorCount(childPrivate->extra.value().numItemsWithCursor);
+#endif
 
     markSortedChildrenDirty(child);
     dirty(QQuickItemPrivate::ChildrenChanged);
@@ -2207,9 +2209,11 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     childItems.removeOne(child);
     Q_ASSERT(!childItems.contains(child));
 
+#ifndef QT_NO_CURSOR
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
     if (childPrivate->extra.isAllocated())
         incrementCursorCount(-childPrivate->extra.value().numItemsWithCursor);
+#endif
 
     markSortedChildrenDirty(child);
     dirty(QQuickItemPrivate::ChildrenChanged);
