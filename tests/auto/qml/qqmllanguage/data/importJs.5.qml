@@ -1,4 +1,4 @@
-import com.nokia.VersionedOnlyJsModule 1.0
+import org.qtproject.VersionedOnlyJsModule 1.0
 import QtQuick 2.0
 
 Item {

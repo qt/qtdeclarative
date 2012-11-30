@@ -1,5 +1,5 @@
-import com.nokia.VersionedOnlyJsModule 9.0
-import com.nokia.VersionedOnlyJsModule 9.0
+import org.qtproject.VersionedOnlyJsModule 9.0
+import org.qtproject.VersionedOnlyJsModule 9.0
 import QtQuick 2.0
 
 Item {
