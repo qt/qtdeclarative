@@ -503,7 +503,7 @@ int main(int argc, char ** argv)
                     window->setFormat(surfaceFormat);
                     window->setClearBeforeRendering(true);
                     window->setColor(QColor(Qt::transparent));
-                    window->setWindowFlags(Qt::FramelessWindowHint);
+                    window->setFlags(Qt::FramelessWindowHint);
                 }
 
                 if (options.fullscreen)
