@@ -1244,6 +1244,7 @@ v8::Persistent<v8::Object> QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptD
         script->initialize(parentCtxt->engine);
 
     v8::Local<v8::Object> qmlglobal = v8engine->qmlScope(ctxt, 0);
+    v8engine->contextWrapper()->takeContextOwnership(qmlglobal);
 
     if (!script->m_program.IsEmpty()) {
         script->m_program->Run(qmlglobal);

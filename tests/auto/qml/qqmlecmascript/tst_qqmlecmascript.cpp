@@ -288,6 +288,7 @@ private slots:
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
+    static void verifyContextLifetime(QQmlContextData *ctxt);
     QQmlEngine engine;
 };
 
@@ -3783,6 +3784,41 @@ void tst_qqmlecmascript::singletonTypeResolution()
     delete object;
 }
 
+void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
+    QQmlContextData *childCtxt = ctxt->childContexts;
+
+    if (!ctxt->importedScripts.isEmpty()) {
+        QV8Engine *engine = QV8Engine::get(ctxt->engine);
+        foreach (v8::Persistent<v8::Object> qmlglobal, ctxt->importedScripts) {
+            QQmlContextData *scriptContext, *newContext;
+
+            if (qmlglobal.IsEmpty())
+                continue;
+
+            scriptContext = engine->contextWrapper()->context(qmlglobal);
+
+            {
+                v8::HandleScope handle_scope;
+                v8::Persistent<v8::Context> context = v8::Context::New();
+                v8::Context::Scope context_scope(context);
+                v8::Local<v8::Object> temporaryScope = engine->qmlScope(scriptContext, NULL);
+
+                context.Dispose();
+            }
+
+            QV8Engine::gc();
+            newContext = engine->contextWrapper()->context(qmlglobal);
+            QVERIFY(scriptContext == newContext);
+        }
+    }
+
+    while (childCtxt) {
+        verifyContextLifetime(childCtxt);
+
+        childCtxt = childCtxt->nextChild;
+    }
+}
+
 void tst_qqmlecmascript::importScripts_data()
 {
     QTest::addColumn<QUrl>("testfile");
@@ -4014,6 +4050,10 @@ void tst_qqmlecmascript::importScripts()
         QVERIFY(object == 0);
     } else {
         QVERIFY(object != 0);
+
+        QQmlContextData *ctxt = QQmlContextData::get(engine.rootContext());
+        tst_qqmlecmascript::verifyContextLifetime(ctxt);
+
         for (int i = 0; i < propertyNames.size(); ++i)
             QCOMPARE(object->property(propertyNames.at(i).toLatin1().constData()), propertyValues.at(i));
         delete object;
