@@ -394,26 +394,7 @@ private:
 
     void push(IR::Const* c)
     {
-        VM::Value v;
-        switch (c->type) {
-        case IR::NullType:
-            v = VM::Value::nullValue();
-            break;
-        case IR::UndefinedType:
-            v = VM::Value::undefinedValue();
-            break;
-        case IR::BoolType:
-            v = VM::Value::fromBoolean(c->value != 0);
-            break;
-        case IR::NumberType: {
-            int ival = (int)c->value;
-            if (ival == c->value) {
-                v = VM::Value::fromInt32(ival);
-            } else {
-                v = VM::Value::fromDouble(c->value);
-            }
-        }
-        }
+        VM::Value v = convertToValue(c);
         push(v);
     }
 
