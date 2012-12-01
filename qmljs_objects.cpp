@@ -211,7 +211,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
     }
 
   reject:
-    if (ctx->lexicalEnvironment->strictMode)
+    if (ctx->strictMode)
         __qmljs_throw_type_error(ctx);
 }
 
@@ -233,7 +233,7 @@ bool Object::__delete__(ExecutionContext *ctx, String *name)
                 members->remove(entry);
                 return true;
             }
-            if (ctx->lexicalEnvironment->strictMode)
+            if (ctx->strictMode)
                 __qmljs_throw_type_error(ctx);
             return false;
         }
@@ -317,7 +317,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
     return true;
   reject:
     qDebug() << "___put__ rejected" << name->toQString();
-    if (ctx->lexicalEnvironment->strictMode)
+    if (ctx->strictMode)
         __qmljs_throw_type_error(ctx);
     return false;
 }
@@ -487,7 +487,7 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
     if (!f)
         return Value::undefinedValue();
 
-    bool strict = f->isStrict || context->lexicalEnvironment->strictMode;
+    bool strict = f->isStrict || context->strictMode;
 
     ExecutionContext k, *ctx;
     if (!directCall) {
@@ -497,12 +497,8 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
         ctx = &k;
         ctx->initCallContext(context, context->thisObject, this, args, argc);
     } else {
-        ctx = &k;
-        // a clone of the surrounding context
-        ctx->engine = context->engine;
-        ctx->parent = context;
-        ctx->thisObject = context->thisObject;
-        ctx->lexicalEnvironment = context->lexicalEnvironment;
+        // use the surrounding context
+        ctx = context;
     }
 
     Value result = f->code(ctx, f->codeData);
@@ -583,11 +579,11 @@ QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
             __qmljs_throw_type_error(ctx);
     }
 
-    if (!ctx->lexicalEnvironment->activation)
-        ctx->lexicalEnvironment->activation = new QQmlJS::VM::Object();
+    if (!ctx->activation)
+        ctx->activation = new QQmlJS::VM::Object();
 
     foreach (const QString *local, globalCode->locals) {
-        ctx->lexicalEnvironment->activation->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
+        ctx->activation->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
     }
     return globalCode;
 }
@@ -712,7 +708,7 @@ PropertyDescriptor *ActivationObject::__getPropertyDescriptor__(ExecutionContext
 Value ArgumentsObject::__get__(ExecutionContext *ctx, String *name)
 {
     if (name->isEqualTo(ctx->engine->id_length))
-        return Value::fromInt32(context->argumentCount());
+        return Value::fromInt32(context->argumentCount);
     return Object::__get__(ctx, name);
 }
 
@@ -720,7 +716,7 @@ PropertyDescriptor *ArgumentsObject::__getPropertyDescriptor__(ExecutionContext 
 {
     if (context) {
         const quint32 i = Value::fromString(name).toUInt32(ctx);
-        if (i < context->argumentCount()) {
+        if (i < context->argumentCount) {
             *to_fill = PropertyDescriptor::fromValue(context->argument(i));
             to_fill->writable = PropertyDescriptor::Unset;
             to_fill->enumberable = PropertyDescriptor::Unset;

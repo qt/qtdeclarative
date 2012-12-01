@@ -73,19 +73,7 @@ String *DiagnosticMessage::buildFullMessage(ExecutionContext *ctx) const
     return ctx->engine->newString(msg);
 }
 
-void DeclarativeEnvironment::init(ExecutionEngine *e)
-{
-    engine = e;
-    function = 0;
-    arguments = 0;
-    argumentCount = 0;
-    locals = 0;
-    activation = 0;
-    withObject = 0;
-    strictMode = false;
-}
-
-void DeclarativeEnvironment::init(FunctionObject *f, Value *args, uint argc)
+void ExecutionContext::init(FunctionObject *f, Value *args, uint argc)
 {
     function = f;
     engine = f->scope->engine;
@@ -112,7 +100,7 @@ void DeclarativeEnvironment::init(FunctionObject *f, Value *args, uint argc)
     withObject = 0;
 }
 
-bool DeclarativeEnvironment::hasBinding(String *name) const
+bool ExecutionContext::hasBinding(String *name) const
 {
     if (!function)
         return false;
@@ -128,7 +116,7 @@ bool DeclarativeEnvironment::hasBinding(String *name) const
     return false;
 }
 
-void DeclarativeEnvironment::createMutableBinding(ExecutionContext *ctx, String *name, bool deletable)
+void ExecutionContext::createMutableBinding(ExecutionContext *ctx, String *name, bool deletable)
 {
     if (!activation)
         activation = engine->newActivationObject(this);
@@ -144,7 +132,7 @@ void DeclarativeEnvironment::createMutableBinding(ExecutionContext *ctx, String 
     activation->__defineOwnProperty__(ctx, name, &desc);
 }
 
-void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool strict)
+void ExecutionContext::setMutableBinding(String *name, Value value, bool strict)
 {
     Q_UNUSED(strict);
     assert(function);
@@ -165,7 +153,7 @@ void DeclarativeEnvironment::setMutableBinding(String *name, Value value, bool s
     assert(false);
 }
 
-Value DeclarativeEnvironment::getBindingValue(String *name, bool strict) const
+Value ExecutionContext::getBindingValue(String *name, bool strict) const
 {
     Q_UNUSED(strict);
     assert(function);
@@ -181,17 +169,17 @@ Value DeclarativeEnvironment::getBindingValue(String *name, bool strict) const
     assert(false);
 }
 
-bool DeclarativeEnvironment::deleteBinding(ExecutionContext *ctx, String *name)
+bool ExecutionContext::deleteBinding(ExecutionContext *ctx, String *name)
 {
     if (activation)
         activation->__delete__(ctx, name);
 
-    if (ctx->lexicalEnvironment->strictMode)
+    if (ctx->strictMode)
         __qmljs_throw_type_error(ctx);
     return false;
 }
 
-void DeclarativeEnvironment::pushWithObject(Object *with)
+void ExecutionContext::pushWithObject(Object *with)
 {
     With *w = new With;
     w->next = withObject;
@@ -199,7 +187,7 @@ void DeclarativeEnvironment::pushWithObject(Object *with)
     withObject = w;
 }
 
-void DeclarativeEnvironment::popWithObject()
+void ExecutionContext::popWithObject()
 {
     assert(withObject);
 
@@ -208,27 +196,27 @@ void DeclarativeEnvironment::popWithObject()
     delete w;
 }
 
-DeclarativeEnvironment *DeclarativeEnvironment::outer() const
+ExecutionContext *ExecutionContext::outer() const
 {
     return function ? function->scope : 0;
 }
 
-String **DeclarativeEnvironment::formals() const
+String **ExecutionContext::formals() const
 {
     return function ? function->formalParameterList : 0;
 }
 
-unsigned int DeclarativeEnvironment::formalCount() const
+unsigned int ExecutionContext::formalCount() const
 {
     return function ? function->formalParameterCount : 0;
 }
 
-String **DeclarativeEnvironment::variables() const
+String **ExecutionContext::variables() const
 {
     return function ? function->varList : 0;
 }
 
-unsigned int DeclarativeEnvironment::variableCount() const
+unsigned int ExecutionContext::variableCount() const
 {
     return function ? function->varCount : 0;
 }
@@ -238,17 +226,24 @@ void ExecutionContext::init(ExecutionEngine *eng)
 {
     engine = eng;
     parent = 0;
-    lexicalEnvironment = new DeclarativeEnvironment;
-    lexicalEnvironment->init(eng);
     thisObject = Value::nullValue();
+
+    function = 0;
+    arguments = 0;
+    argumentCount = 0;
+    locals = 0;
+    strictMode = false;
+    activation = 0;
+    withObject = 0;
+
     eng->exception = Value::undefinedValue();
 }
 
 PropertyDescriptor *ExecutionContext::lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp)
 {
-    for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer()) {
+    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
         if (ctx->withObject) {
-            DeclarativeEnvironment::With *w = ctx->withObject;
+            With *w = ctx->withObject;
             while (w) {
                 if (PropertyDescriptor *pd = w->object->__getPropertyDescriptor__(this, name, tmp))
                     return pd;
@@ -265,9 +260,9 @@ PropertyDescriptor *ExecutionContext::lookupPropertyDescriptor(String *name, Pro
 
 bool ExecutionContext::deleteProperty(String *name)
 {
-    for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer()) {
+    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
         if (ctx->withObject) {
-            DeclarativeEnvironment::With *w = ctx->withObject;
+            ExecutionContext::With *w = ctx->withObject;
             while (w) {
                 if (w->object->__hasProperty__(this, name))
                     w->object->__delete__(this, name);
@@ -285,7 +280,7 @@ bool ExecutionContext::deleteProperty(String *name)
 
 void ExecutionContext::inplaceBitOp(Value value, String *name, BinOp op)
 {
-    for (DeclarativeEnvironment *ctx = lexicalEnvironment; ctx; ctx = ctx->outer()) {
+    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
         if (ctx->activation) {
             if (ctx->activation->inplaceBinOp(value, name, op, this))
                 return;
@@ -334,8 +329,7 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
     engine = parent->engine;
     this->parent = parent;
 
-    lexicalEnvironment = new DeclarativeEnvironment;
-    lexicalEnvironment->init(f, args, argc);
+    init(f, args, argc);
 
     thisObject = that;
 
@@ -346,13 +340,10 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
 void ExecutionContext::leaveCallContext()
 {
     // ## Should rather be handled by a the activation object having a ref to the environment
-    if (lexicalEnvironment->activation) {
-        delete[] lexicalEnvironment->locals;
-        lexicalEnvironment->locals = 0;
+    if (activation) {
+        delete[] locals;
+        locals = 0;
     }
-
-    delete lexicalEnvironment;
-    lexicalEnvironment = 0;
 
     if (engine->debugger)
         engine->debugger->justLeft(this);

@@ -75,7 +75,7 @@ struct Print: FunctionObject
 
     virtual Value call(ExecutionContext *ctx)
     {
-        for (unsigned int i = 0; i < ctx->argumentCount(); ++i) {
+        for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
             String *s = ctx->argument(i).toString(ctx);
             if (i)
                 std::cout << ' ';
@@ -96,7 +96,7 @@ struct TestHarnessError: FunctionObject
     {
         errorOccurred = true;
 
-        for (unsigned int i = 0; i < ctx->argumentCount(); ++i) {
+        for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
             String *s = ctx->argument(i).toString(ctx);
             if (i)
                 std::cerr << ' ';
@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
                 QQmlJS::IR::Function *f = QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode);
                 if (!f)
                     continue;
-                ctx->lexicalEnvironment->strictMode = f->isStrict;
+                ctx->strictMode = f->isStrict;
                 if (debugger)
                     debugger->aboutToCall(0, ctx);
                 QQmlJS::VM::Value result = f->code(ctx, f->codeData);

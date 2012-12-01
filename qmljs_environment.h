@@ -69,23 +69,25 @@ struct DiagnosticMessage
     String *buildFullMessage(ExecutionContext *ctx) const;
 };
 
-// This merges LexicalEnvironment and EnvironmentRecord from
-// Sec. 10.2 into one class
-struct DeclarativeEnvironment
+struct ExecutionContext
 {
     ExecutionEngine *engine;
+    ExecutionContext *parent;
+    Value thisObject;
+
     FunctionObject *function;
 
     Value *arguments;
     unsigned int argumentCount;
     Value *locals;
+
     String **formals() const;
     unsigned int formalCount() const;
     String **variables() const;
     unsigned int variableCount() const;
-    bool strictMode;
+    ExecutionContext *outer() const;
 
-    DeclarativeEnvironment *outer() const;
+    bool strictMode;
 
     Object *activation;
     struct With {
@@ -103,20 +105,8 @@ struct DeclarativeEnvironment
     Value getBindingValue(String *name, bool strict) const;
     bool deleteBinding(ExecutionContext *ctx, String *name);
 
-    // ### needs a bit of work in exception handlers
     void pushWithObject(Object *with);
     void popWithObject();
-};
-
-struct ExecutionContext
-{
-    ExecutionEngine *engine;
-    ExecutionContext *parent;
-    // ### Should be a general environment
-    DeclarativeEnvironment *lexicalEnvironment;
-    Value thisObject;
-
-    void init(ExecutionEngine *eng);
 
     void initCallContext(ExecutionContext *parent, const Value that, FunctionObject *f, Value *args, unsigned argc);
     void leaveCallContext();
@@ -136,11 +126,10 @@ struct ExecutionContext
     void inplaceBitOp(Value value, String *name, BinOp op);
     bool deleteProperty(String *name);
 
-    inline uint argumentCount() const { return lexicalEnvironment->argumentCount; }
     inline Value argument(unsigned int index = 0)
     {
-        if (index < lexicalEnvironment->argumentCount)
-            return lexicalEnvironment->arguments[index];
+        if (index < argumentCount)
+            return arguments[index];
         return Value::undefinedValue();
     }
 };

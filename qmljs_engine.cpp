@@ -158,7 +158,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     //
     VM::Object *glo = newObject(/*rootContext*/);
     globalObject = Value::fromObject(glo);
-    rootContext->lexicalEnvironment->activation = glo;
+    rootContext->activation = glo;
 
     glo->__put__(rootContext, identifier(QStringLiteral("Object")), objectCtor);
     glo->__put__(rootContext, identifier(QStringLiteral("String")), stringCtor);
@@ -348,7 +348,7 @@ Object *ExecutionEngine::newMathObject(ExecutionContext *ctx)
     return object;
 }
 
-Object *ExecutionEngine::newActivationObject(DeclarativeEnvironment *ctx)
+Object *ExecutionEngine::newActivationObject(ExecutionContext *ctx)
 {
     return new ActivationObject(ctx);
 }

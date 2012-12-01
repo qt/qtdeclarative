@@ -53,8 +53,6 @@ using namespace QQmlJS::Moth;
 
 static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, QVector<VM::Value> &stack, int index)
 {
-    VM::DeclarativeEnvironment *varEnv = context->lexicalEnvironment;
-
 #ifdef DO_TRACE_INSTR
     const char *kind;
     int pos;
@@ -76,17 +74,17 @@ static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, QVecto
         const int arg = -index - 1;
 
         Q_ASSERT(arg >= 0);
-        Q_ASSERT((unsigned) arg < varEnv->argumentCount);
-        Q_ASSERT(varEnv->arguments);
+        Q_ASSERT((unsigned) arg < context->argumentCount);
+        Q_ASSERT(context->arguments);
 
-        return varEnv->arguments + arg;
-    } else if (index < (int) varEnv->variableCount()) {
+        return context->arguments + arg;
+    } else if (index < (int) context->variableCount()) {
         Q_ASSERT(index >= 0);
-        Q_ASSERT(varEnv->locals);
+        Q_ASSERT(context->locals);
 
-        return varEnv->locals + index;
+        return context->locals + index;
     } else {
-        int off = index - varEnv->variableCount();
+        int off = index - context->variableCount();
 
         Q_ASSERT(off >= 0);
         Q_ASSERT(off < stack.size());
@@ -231,21 +229,21 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
             }
         }
 #endif // DO_TRACE_INSTR
-        quint32 argStart = instr.args - context->lexicalEnvironment->variableCount();
+        quint32 argStart = instr.args - context->variableCount();
         TRACE(Call, "value index = %d, argStart = %d, argc = %d, result temp index = %d", instr.destIndex, argStart, instr.argc, instr.targetTempIndex);
         VM::Value *args = stack.data() + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_call_value(context, VM::Value::undefinedValue(), TEMP(instr.destIndex), args, instr.argc);
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
-        quint32 argStart = instr.args - context->lexicalEnvironment->variableCount();
+        quint32 argStart = instr.args - context->variableCount();
         VM::Value *args = stack.data() + argStart;
         VM::Value base = TEMP(instr.baseTemp);
         TEMP(instr.targetTempIndex) = __qmljs_call_property(context, base, instr.name, args, instr.argc);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltin)
-        quint32 argStart = instr.args - context->lexicalEnvironment->variableCount();
+        quint32 argStart = instr.args - context->variableCount();
         VM::Value *args = stack.data() + argStart;
         void *buf;
         switch (instr.builtin) {
@@ -325,20 +323,20 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinDeleteValue)
 
     MOTH_BEGIN_INSTR(CreateValue)
-        quint32 argStart = instr.args - context->lexicalEnvironment->variableCount();
+        quint32 argStart = instr.args - context->variableCount();
         VM::Value *args = stack.data() + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_value(context, TEMP(instr.func), args, instr.argc);
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
-        quint32 argStart = instr.args - context->lexicalEnvironment->variableCount();
+        quint32 argStart = instr.args - context->variableCount();
         VM::Value *args = stack.data() + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_property(context, TEMP(instr.base), instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
         TRACE(inline, "property name = %s, argc = %d", instr.name->toQString().toUtf8().constData(), instr.argc);
-        quint32 argStart = instr.args - context->lexicalEnvironment->variableCount();
+        quint32 argStart = instr.args - context->variableCount();
         VM::Value *args = stack.data() + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_activation_property(context, instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateActivationProperty)

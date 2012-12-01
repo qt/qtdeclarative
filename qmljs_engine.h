@@ -138,7 +138,7 @@ struct ExecutionEngine
 
     struct ExceptionHandler {
         ExecutionContext *context;
-        DeclarativeEnvironment::With *with;
+        ExecutionContext::With *with;
         const uchar *code; // Interpreter state
         int targetTempIndex; // Interpreter state
         jmp_buf stackFrame;
@@ -186,7 +186,7 @@ struct ExecutionEngine
     Object *newErrorObject(const Value &value);
     Object *newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message);
     Object *newMathObject(ExecutionContext *ctx);
-    Object *newActivationObject(DeclarativeEnvironment *ctx);
+    Object *newActivationObject(ExecutionContext *ctx);
 
     Object *newForEachIteratorObject(Object *o);
 };

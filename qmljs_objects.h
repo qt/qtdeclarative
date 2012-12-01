@@ -490,7 +490,7 @@ struct ArrayObject: Object {
 };
 
 struct FunctionObject: Object {
-    DeclarativeEnvironment *scope;
+    ExecutionContext *scope;
     String *name;
     String **formalParameterList;
     unsigned int formalParameterCount;
@@ -500,7 +500,7 @@ struct FunctionObject: Object {
     bool strictMode;
 
     FunctionObject(ExecutionContext *scope)
-        : scope(scope ? scope->lexicalEnvironment : 0)
+        : scope(scope)
         , name(0)
         , formalParameterList(0)
         , formalParameterCount(0)
@@ -633,9 +633,9 @@ struct URIErrorObject: ErrorObject {
 };
 
 struct ActivationObject: Object {
-    DeclarativeEnvironment *context;
+    ExecutionContext *context;
     Value arguments;
-    ActivationObject(DeclarativeEnvironment *context)
+    ActivationObject(ExecutionContext *context)
         : context(context), arguments(Value::undefinedValue()) {}
     virtual QString className() { return QStringLiteral("Activation"); }
     virtual ActivationObject *asActivationObject() { return this; }
