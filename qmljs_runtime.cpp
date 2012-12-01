@@ -611,10 +611,14 @@ Value __qmljs_foreach_next_property_name(Value foreach_iterator)
 void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, Value value)
 {
     PropertyDescriptor tmp;
-    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
+    PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp);
+    if (prop) {
         prop->value = value;
-    else
-        ctx->engine->globalObject.objectValue()->__put__(ctx, name, value);
+        return;
+    }
+    if (ctx->strictMode)
+        ctx->throwReferenceError(Value::fromString(name));
+    ctx->engine->globalObject.objectValue()->__put__(ctx, name, value);
 }
 
 Value __qmljs_get_property(ExecutionContext *ctx, Value object, String *name)
@@ -638,10 +642,10 @@ Value __qmljs_get_property(ExecutionContext *ctx, Value object, String *name)
 Value __qmljs_get_activation_property(ExecutionContext *ctx, String *name)
 {
     PropertyDescriptor tmp;
-    if (PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp))
-        return prop->value;
-    ctx->throwReferenceError(Value::fromString(name));
-    return Value::undefinedValue();
+    PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp);
+    if (!prop)
+        ctx->throwReferenceError(Value::fromString(name));
+    return prop->value;
 }
 
 Value __qmljs_get_thisObject(ExecutionContext *ctx)
@@ -744,10 +748,8 @@ Value __qmljs_construct_activation_property(ExecutionContext *context, String *n
 {
     PropertyDescriptor tmp;
     PropertyDescriptor *func = context->lookupPropertyDescriptor(name, &tmp);
-    if (! func) {
+    if (! func)
         context->throwReferenceError(Value::fromString(name));
-        return Value::undefinedValue();
-    }
     return __qmljs_construct_value(context, func->value, args, argc);
 }
 
@@ -785,8 +787,9 @@ void __qmljs_throw(Value value, ExecutionContext *context)
 
     // clean up call contexts
     while (context != handler.context) {
+        ExecutionContext *parent = context->parent;
         context->leaveCallContext();
-        context = context->parent;
+        context = parent;
     }
 
     while (context->withObject != handler.with) {
