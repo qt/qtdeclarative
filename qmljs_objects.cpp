@@ -392,9 +392,10 @@ Value FunctionObject::construct(ExecutionContext *context, Value *args, int argc
 {
     ExecutionContext k;
     ExecutionContext *ctx = needsActivation ? context->engine->newContext() : &k;
-    ctx->initConstructorContext(context, Value::nullValue(), this, args, argc);
+    ctx->initCallContext(context, Value::nullValue(), this, args, argc);
     Value result = construct(ctx);
-    ctx->leaveConstructorContext(this);
+    ctx->wireUpPrototype();
+    ctx->leaveCallContext();
     if (ctx != &k)
         delete ctx;
     return result;

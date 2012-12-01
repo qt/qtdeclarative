@@ -97,7 +97,6 @@ struct ExecutionContext
 
 
     void init(ExecutionEngine *e);
-    void init(FunctionObject *f, Value *args, uint argc);
 
     bool hasBinding(String *name) const;
     void createMutableBinding(ExecutionContext *ctx, String *name, bool deletable);
@@ -111,9 +110,7 @@ struct ExecutionContext
     void initCallContext(ExecutionContext *parent, const Value that, FunctionObject *f, Value *args, unsigned argc);
     void leaveCallContext();
 
-    void initConstructorContext(ExecutionContext *parent, Value that, FunctionObject *f, Value *args, unsigned argc);
-    void leaveConstructorContext(FunctionObject *f);
-    void wireUpPrototype(FunctionObject *f);
+    void wireUpPrototype();
 
     void throwError(Value value);
     void throwError(const QString &message);

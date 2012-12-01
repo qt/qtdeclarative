@@ -2723,7 +2723,7 @@ Value ErrorCtor::call(ExecutionContext *ctx)
 {
     Value that = ctx->thisObject;
     construct(ctx);
-    ctx->wireUpPrototype(this);
+    ctx->wireUpPrototype();
     Value res = ctx->thisObject;
 
     ctx->thisObject = that;

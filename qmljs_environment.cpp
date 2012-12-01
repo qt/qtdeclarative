@@ -73,33 +73,6 @@ String *DiagnosticMessage::buildFullMessage(ExecutionContext *ctx) const
     return ctx->engine->newString(msg);
 }
 
-void ExecutionContext::init(FunctionObject *f, Value *args, uint argc)
-{
-    function = f;
-    engine = f->scope->engine;
-    strictMode = f->strictMode;
-
-    arguments = args;
-    argumentCount = argc;
-    if (function->needsActivation || argc < function->formalParameterCount){
-        arguments = new Value[qMax(argc, function->formalParameterCount)];
-        if (argc)
-            std::copy(args, args + argc, arguments);
-        if (argc < function->formalParameterCount)
-            std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
-    }
-    locals = function->varCount ? new Value[function->varCount] : 0;
-    if (function->varCount)
-        std::fill(locals, locals + function->varCount, Value::undefinedValue());
-
-    if (function->needsActivation)
-        activation = engine->newActivationObject(this);
-    else
-        activation = 0;
-
-    withObject = 0;
-}
-
 bool ExecutionContext::hasBinding(String *name) const
 {
     if (!function)
@@ -328,10 +301,31 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
 {
     engine = parent->engine;
     this->parent = parent;
-
-    init(f, args, argc);
-
     thisObject = that;
+
+    function = f;
+    strictMode = f->strictMode;
+
+    arguments = args;
+    argumentCount = argc;
+    if (function->needsActivation || argc < function->formalParameterCount){
+        arguments = new Value[qMax(argc, function->formalParameterCount)];
+        if (argc)
+            std::copy(args, args + argc, arguments);
+        if (argc < function->formalParameterCount)
+            std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
+    }
+    locals = function->varCount ? new Value[function->varCount] : 0;
+    if (function->varCount)
+        std::fill(locals, locals + function->varCount, Value::undefinedValue());
+
+    if (function->needsActivation)
+        activation = engine->newActivationObject(this);
+    else
+        activation = 0;
+
+    withObject = 0;
+
 
     if (engine->debugger)
         engine->debugger->aboutToCall(f, this);
@@ -344,27 +338,17 @@ void ExecutionContext::leaveCallContext()
         delete[] locals;
         locals = 0;
     }
+    parent = 0;
 
     if (engine->debugger)
         engine->debugger->justLeft(this);
 }
 
-void ExecutionContext::initConstructorContext(ExecutionContext *parent, Value that, FunctionObject *f, Value *args, unsigned argc)
-{
-    initCallContext(parent, that, f, args, argc);
-}
-
-void ExecutionContext::leaveConstructorContext(FunctionObject *f)
-{
-    wireUpPrototype(f);
-    leaveCallContext();
-}
-
-void ExecutionContext::wireUpPrototype(FunctionObject *f)
+void ExecutionContext::wireUpPrototype()
 {
     assert(thisObject.isObject());
 
-    Value proto = f->__get__(this, engine->id_prototype);
+    Value proto = function->__get__(this, engine->id_prototype);
     if (proto.isObject())
         thisObject.objectValue()->prototype = proto.objectValue();
     else
