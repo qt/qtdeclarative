@@ -719,23 +719,15 @@ Value __qmljs_call_activation_property(ExecutionContext *context, String *name, 
     }
 }
 
-Value __qmljs_call_property(ExecutionContext *context, Value base, String *name, Value *args, int argc)
+Value __qmljs_call_property(ExecutionContext *context, Value thisObject, String *name, Value *args, int argc)
 {
-    Object *baseObject;
-    Value thisObject;
+    if (!thisObject.isObject())
+        thisObject = __qmljs_to_object(thisObject, context);
 
-    if (base.isUndefined()) {
-        baseObject = context->activation;
-        thisObject = Value::nullValue();
-    } else {
-        if (!base.isObject())
-            base = __qmljs_to_object(base, context);
-        assert(base.isObject());
-        baseObject = base.objectValue();
-        thisObject = base;
-    }
+    assert(thisObject.isObject());
+    Object *baseObject = base.objectValue();
 
-    Value func = baseObject ? baseObject->__get__(context, name) : Value::undefinedValue();
+    Value func = baseObject->__get__(context, name);
     return callFunction(context, thisObject, func.asFunctionObject(), args, argc);
 }
 
