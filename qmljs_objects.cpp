@@ -322,6 +322,12 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
     return false;
 }
 
+Value Object::call(ExecutionContext *context, Value , Value *, int)
+{
+    context->throwTypeError();
+    return Value::undefinedValue();
+}
+
 String *ForEachIteratorObject::nextPropertyName()
 {
     PropertyTableEntry *p = 0;

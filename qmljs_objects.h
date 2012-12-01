@@ -429,6 +429,8 @@ struct Object {
     virtual bool __delete__(ExecutionContext *ctx, String *name);
     virtual bool __defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc);
 
+    virtual Value call(ExecutionContext *context, Value, Value *, int);
+
     //
     // helpers
     //

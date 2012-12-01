@@ -57,16 +57,6 @@
 namespace QQmlJS {
 namespace VM {
 
-static inline Value callFunction(ExecutionContext *context, Value thisObject, FunctionObject *func, Value *args, int argc)
-{
-    if (func) {
-        return func->call(context, thisObject, args, argc);
-    } else {
-        context->throwTypeError();
-        return Value::undefinedValue();
-    }
-}
-
 QString numberToString(double num, int radix = 10)
 {
     if (std::isnan(num)) {
@@ -497,15 +487,15 @@ Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int type
     Object *oo = object.objectValue();
 
     Value conv = oo->__get__(ctx, meth1);
-    if (FunctionObject *f = conv.asFunctionObject()) {
-        Value r = callFunction(ctx, object, f, 0, 0);
+    if (Object *o = conv.asObject()) {
+        Value r = o->call(ctx, object, 0, 0);
         if (r.isPrimitive())
             return r;
     }
 
     conv = oo->__get__(ctx, meth2);
-    if (FunctionObject *f = conv.asFunctionObject()) {
-        Value r = callFunction(ctx, object, f, 0, 0);
+    if (Object *o = conv.asObject()) {
+        Value r = o->call(ctx, object, 0, 0);
         if (r.isPrimitive())
             return r;
     }
@@ -711,12 +701,11 @@ uint __qmljs_equal(Value x, Value y, ExecutionContext *ctx)
 Value __qmljs_call_activation_property(ExecutionContext *context, String *name, Value *args, int argc)
 {
     Value func = __qmljs_get_activation_property(context, name);
-    if (FunctionObject *f = func.asFunctionObject()) {
-        return callFunction(context, Value::undefinedValue(), f, args, argc);
-    } else {
+    Object *o = func.asObject();
+    if (!o)
         context->throwReferenceError(Value::fromString(name));
-        return Value::undefinedValue();
-    }
+
+    return o->call(context, Value::undefinedValue(), args, argc);
 }
 
 Value __qmljs_call_property(ExecutionContext *context, Value thisObject, String *name, Value *args, int argc)
@@ -725,15 +714,22 @@ Value __qmljs_call_property(ExecutionContext *context, Value thisObject, String 
         thisObject = __qmljs_to_object(thisObject, context);
 
     assert(thisObject.isObject());
-    Object *baseObject = base.objectValue();
+    Object *baseObject = thisObject.objectValue();
 
     Value func = baseObject->__get__(context, name);
-    return callFunction(context, thisObject, func.asFunctionObject(), args, argc);
+    Object *o = func.asObject();
+    if (!o)
+        context->throwTypeError();
+
+    return o->call(context, thisObject, args, argc);
 }
 
 Value __qmljs_call_value(ExecutionContext *context, Value thisObject, Value func, Value *args, int argc)
 {
-    return callFunction(context, thisObject, func.asFunctionObject(), args, argc);
+    Object *o = func.asObject();
+    if (!o)
+        context->throwTypeError();
+    return o->call(context, thisObject, args, argc);
 }
 
 Value __qmljs_construct_activation_property(ExecutionContext *context, String *name, Value *args, int argc)
