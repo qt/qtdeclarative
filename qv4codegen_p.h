@@ -167,12 +167,21 @@ protected:
     struct UiMember {
     };
 
+    struct TryCleanup {
+        TryCleanup *parent;
+        AST::Finally *finally;
+
+        TryCleanup(TryCleanup *parent, AST::Finally *finally)
+            : parent(parent), finally(finally) {}
+    };
+
     struct Loop {
         AST::LabelledStatement *labelledStatement;
         AST::Statement *node;
         IR::BasicBlock *breakBlock;
         IR::BasicBlock *continueBlock;
         Loop *parent;
+        TryCleanup *tryCleanup;
 
         Loop(AST::Statement *node, IR::BasicBlock *breakBlock, IR::BasicBlock *continueBlock, Loop *parent)
             : labelledStatement(0), node(node), breakBlock(breakBlock), continueBlock(continueBlock), parent(parent) {}
@@ -183,6 +192,7 @@ protected:
 
     void enterLoop(AST::Statement *node, IR::BasicBlock *breakBlock, IR::BasicBlock *continueBlock);
     void leaveLoop();
+
 
     IR::Expr *member(IR::Expr *base, const QString *name);
     IR::Expr *subscript(IR::Expr *base, IR::Expr *index);
@@ -199,6 +209,7 @@ protected:
     int indexOfArgument(const QStringRef &string) const;
 
     void generateFinallyBlock(IR::BasicBlock *finallyBlock, bool exceptionNeedsSaving, AST::Finally *ast, int hasException, IR::BasicBlock *after);
+    void unwindException(TryCleanup *outest);
 
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);
@@ -332,6 +343,7 @@ private:
     Environment *_env;
     Loop *_loop;
     AST::LabelledStatement *_labelledStatement;
+    TryCleanup *_tryCleanup;
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
     Debugging::Debugger *_debugger;

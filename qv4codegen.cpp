@@ -364,6 +364,7 @@ Codegen::Codegen(Debugging::Debugger *debugger)
     , _env(0)
     , _loop(0)
     , _labelledStatement(0)
+    , _tryCleanup(0)
     , _debugger(debugger)
 {
 }
@@ -435,6 +436,7 @@ void Codegen::enterLoop(Statement *node, IR::BasicBlock *breakBlock, IR::BasicBl
 {
     _loop = new Loop(node, breakBlock, continueBlock, _loop);
     _loop->labelledStatement = _labelledStatement; // consume the enclosing labelled statement
+    _loop->tryCleanup = _tryCleanup;
     _labelledStatement = 0;
 }
 
@@ -1718,6 +1720,7 @@ bool Codegen::visit(Block *ast)
 
 bool Codegen::visit(BreakStatement *ast)
 {
+    unwindException(_loop->tryCleanup);
     if (ast->label.isEmpty())
         _block->JUMP(_loop->breakBlock);
     else {
@@ -1735,9 +1738,11 @@ bool Codegen::visit(BreakStatement *ast)
 
 bool Codegen::visit(ContinueStatement *ast)
 {
-    if (ast->label.isEmpty())
+    unwindException(_loop->tryCleanup);
+
+    if (ast->label.isEmpty()) {
         _block->JUMP(_loop->continueBlock);
-    else {
+    } else {
         for (Loop *loop = _loop; loop; loop = loop->parent) {
             if (loop->labelledStatement && loop->labelledStatement->label == ast->label) {
                 if (! loop->continueBlock)
@@ -1966,6 +1971,7 @@ bool Codegen::visit(LocalForStatement *ast)
 
 bool Codegen::visit(ReturnStatement *ast)
 {
+    unwindException(0);
     if (ast->expression) {
         Result expr = expression(ast->expression);
         move(_block->TEMP(_returnAddress), *expr);
@@ -2061,29 +2067,17 @@ bool Codegen::visit(TryStatement *ast)
 {
     IR::BasicBlock *tryBody = _function->newBasicBlock();
     IR::BasicBlock *catchBody = ast->catchExpression ?  _function->newBasicBlock() : 0;
-    IR::BasicBlock *finallyBody = ast->finallyExpression ? _function->newBasicBlock() : 0;
+    // We always need a finally body to clean up the exception handler
+    IR::BasicBlock *finallyBody = _function->newBasicBlock();
+
+    TryCleanup tcf(_tryCleanup, ast->finallyExpression);
+    _tryCleanup = &tcf;
+
     IR::BasicBlock *after = _function->newBasicBlock();
     assert(catchBody || finallyBody);
 
-    Loop *loop = 0;
-    if (_loop) {
-        // So there is a loop around the try statement, and now we have to setup
-        // a new loop-break-block and a new loop-continue-block so that if either
-        // a break or a continue is executed, they will go to these blocks
-        // which need to pop the exception handler. If there is a finally block,
-        // its code also gets generated into all the new break/continue blocks.
-        // And of course, as there can be a labeled break/continue, we have to
-        // do it for all parent loops as well.
-        for (Loop *it = _loop, **it2 = &loop; it; it = it->parent) {
-            *it2 = new Loop(it->node, _function->newBasicBlock(), _function->newBasicBlock(), 0);
-            (*it2)->labelledStatement = it->labelledStatement;
-            it2 = &(*it2)->parent;
-        }
-        std::swap(_loop, loop);
-    }
-
     int inCatch = 0;
-    if (catchBody && finallyBody) {
+    if (catchBody) {
         inCatch = _block->newTemp();
         move(_block->TEMP(inCatch), _block->CONST(IR::BoolType, false));
     }
@@ -2101,26 +2095,16 @@ bool Codegen::visit(TryStatement *ast)
     if (catchBody) {
         _block = catchBody;
 
-        if (finallyBody) {
-            if (inCatch != 0) {
-                // check if an exception got thrown within catch. Go to finally
-                // and then rethrow
-                IR::BasicBlock *b = _function->newBasicBlock();
-                _block->CJUMP(_block->TEMP(inCatch), finallyBody, b);
-                _block = b;
-            }
-            // if we have finally we need to clear the exception here, so we don't rethrow
-            move(_block->TEMP(inCatch), _block->CONST(IR::BoolType, true));
-            move(_block->TEMP(hasException), _block->CONST(IR::BoolType, false));
-        } else {
-            // otherwise remove the exception handler, so that throw inside catch will
-            // give the correct result
-            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
-
-            // the exception handler is deleted, so we can restore the
-            // original break/continue blocks.
-            std::swap(_loop, loop);
+        if (inCatch != 0) {
+            // check if an exception got thrown within catch. Go to finally
+            // and then rethrow
+            IR::BasicBlock *b = _function->newBasicBlock();
+            _block->CJUMP(_block->TEMP(inCatch), finallyBody, b);
+            _block = b;
         }
+        // if we have finally we need to clear the exception here, so we don't rethrow
+        move(_block->TEMP(inCatch), _block->CONST(IR::BoolType, true));
+        move(_block->TEMP(hasException), _block->CONST(IR::BoolType, false));
 
         const int exception = _block->newTemp();
         move(_block->TEMP(exception), _block->CALL(_block->NAME(IR::Name::builtin_get_exception, 0, 0), 0));
@@ -2137,30 +2121,10 @@ bool Codegen::visit(TryStatement *ast)
         _block->JUMP(finallyBody ? finallyBody : after);
     }
 
-    if (finallyBody) {
-        // the exception handler is deleted, so we can restore the
-        // original break/continue blocks.
-        std::swap(_loop, loop);
+    _tryCleanup = tcf.parent;
 
+    if (finallyBody)
         generateFinallyBlock(finallyBody, !catchBody, ast->finallyExpression, hasException, after);
-    }
-
-    if (loop) {
-        // now do the codegen for each break/continue block
-        for (Loop *it = loop, *it2 = _loop; it && it2; it = it->parent, it2 = it2->parent) {
-            // if the break/continue trampoline blocks get reached, there cannot
-            // be a pending exception, so don't bother with saving it.
-            generateFinallyBlock(it->breakBlock, false, ast->finallyExpression, hasException, it2->breakBlock);
-            generateFinallyBlock(it->continueBlock, false, ast->finallyExpression, hasException, it2->continueBlock);
-        }
-
-        // we don't need the Loop struct itself anymore.
-        while (loop) {
-            Loop *next = loop->parent;
-            delete loop;
-            loop = next;
-        }
-    }
 
     _block = after;
 
@@ -2186,9 +2150,6 @@ void Codegen::generateFinallyBlock(IR::BasicBlock *finallyBlock, bool exceptionN
         _block = realFinallyBlock;
     }
 
-    // TODO: this will not re-throw when there is a pending exception, and
-    // the finally block contains a break/continue. Should another set of
-    // break/continue trampoline blocks get inserted?
     _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
     if (ast && ast->statement)
         statement(ast->statement);
@@ -2201,6 +2162,19 @@ void Codegen::generateFinallyBlock(IR::BasicBlock *finallyBlock, bool exceptionN
         _block->JUMP(_throwBlock);
     } else {
         _block->CJUMP(_block->TEMP(hasException), _throwBlock, after);
+    }
+}
+
+void Codegen::unwindException(Codegen::TryCleanup *outest)
+{
+    TryCleanup *tryCleanup = _tryCleanup;
+    qSwap(_tryCleanup, tryCleanup);
+    while (_tryCleanup != outest) {
+        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
+        TryCleanup *tc = _tryCleanup;
+        _tryCleanup = tc->parent;
+        if (tc->finally && tc->finally->statement)
+            statement(tc->finally->statement);
     }
 }
 
