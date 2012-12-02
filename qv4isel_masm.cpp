@@ -803,8 +803,8 @@ void InstructionSelection::generateBinOp(IR::AluOp operation, IR::Temp* target, 
         return;
     }
 
-    VM::Value leftConst;
-    VM::Value rightConst;
+    Value leftConst = Value::undefinedValue();
+    Value rightConst = Value::undefinedValue();
 
     bool canDoInline = info.inlineMemOp && info.inlineImmOp;
 
@@ -853,8 +853,7 @@ void InstructionSelection::generateBinOp(IR::AluOp operation, IR::Temp* target, 
 
             overflowCheck = (this->*info.inlineMemOp)(Overflow, rightValue, IntegerOpRegister);
         } else { // right->asConst()
-            VM::Value value = convertToValue(right->asConst());
-            overflowCheck = (this->*info.inlineImmOp)(Overflow, TrustedImm32(value.integerValue()), IntegerOpRegister);
+            overflowCheck = (this->*info.inlineImmOp)(Overflow, TrustedImm32(rightConst.integerValue()), IntegerOpRegister);
         }
 
         Address resultAddr = loadTempAddress(ScratchRegister, target);
