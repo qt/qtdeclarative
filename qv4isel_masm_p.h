@@ -611,12 +611,7 @@ private:
 #endif
     }
 
-    typedef VM::Value (*FallbackOp)(const VM::Value, const VM::Value, VM::ExecutionContext*);
-
-    typedef Jump (JSC::MacroAssembler::*MemBinOpWithOverFlow)(ResultCondition, Address, RegisterID);
-    typedef Jump (JSC::MacroAssembler::*ImmBinOpWithOverFlow)(ResultCondition, TrustedImm32, RegisterID);
-    bool generateArithmeticIntegerInlineBinOp(IR::Temp* target, IR::Expr* left, IR::Expr* right,
-            MemBinOpWithOverFlow memOp, ImmBinOpWithOverFlow immOp, FallbackOp fallback, const char* fallbackOpName);
+    void generateBinOp(IR::AluOp operation, IR::Temp* target, IR::Expr* left, IR::Expr* right);
 
     VM::ExecutionEngine *_engine;
     IR::Function *_function;

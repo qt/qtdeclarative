@@ -62,6 +62,61 @@ namespace {
 QTextStream qout(stderr, QIODevice::WriteOnly);
 }
 
+typedef JSC::MacroAssembler::Jump (JSC::MacroAssembler::*MemBinOpWithOverFlow)(JSC::MacroAssembler::ResultCondition, JSC::MacroAssembler::Address, JSC::MacroAssembler::RegisterID);
+typedef JSC::MacroAssembler::Jump (JSC::MacroAssembler::*ImmBinOpWithOverFlow)(JSC::MacroAssembler::ResultCondition, JSC::MacroAssembler::TrustedImm32, JSC::MacroAssembler::RegisterID);
+
+#define OP(op) \
+    { isel_stringIfy(op), op, 0, 0 }
+
+#define INLINE_OP(op, memOp, immOp) \
+    { isel_stringIfy(op), op, memOp, immOp }
+
+#define NULL_OP \
+    { 0, 0, 0, 0 }
+
+static const struct BinaryOperationInfo {
+    const char *name;
+    Value (*fallbackImplementation)(const Value, const Value, ExecutionContext *);
+    MemBinOpWithOverFlow inlineMemOp;
+    ImmBinOpWithOverFlow inlineImmOp;
+} binaryOperations[QQmlJS::IR::LastAluOp + 1] = {
+    NULL_OP, // OpInvalid
+    NULL_OP, // OpIfTrue
+    NULL_OP, // OpNot
+    NULL_OP, // OpUMinus
+    NULL_OP, // OpUPlus
+    NULL_OP, // OpCompl
+
+    OP(__qmljs_bit_and), // OpBitAnd
+    OP(__qmljs_bit_or), // OpBitOr
+    OP(__qmljs_bit_xor), // OpBitXor
+
+    INLINE_OP(__qmljs_add, &JSC::MacroAssembler::branchAdd32, &JSC::MacroAssembler::branchAdd32), // OpAdd
+    INLINE_OP(__qmljs_sub, &JSC::MacroAssembler::branchSub32, &JSC::MacroAssembler::branchSub32), // OpSub
+    OP(__qmljs_mul), // OpMul
+    OP(__qmljs_div), // OpDiv
+    OP(__qmljs_mod), // OpMod
+
+    OP(__qmljs_shl), // OpLShift
+    OP(__qmljs_shr), // OpRShift
+    OP(__qmljs_ushr), // OpURShift
+
+    OP(__qmljs_gt), // OpGt
+    OP(__qmljs_lt), // OpLt
+    OP(__qmljs_ge), // OpGe
+    OP(__qmljs_le), // OpLe
+    OP(__qmljs_eq), // OpEqual
+    OP(__qmljs_ne), // OpNotEqual
+    OP(__qmljs_se), // OpStrictEqual
+    OP(__qmljs_sne), // OpStrictNotEqual
+
+    OP(__qmljs_instanceof), // OpInstanceof
+    OP(__qmljs_in), // OpIn
+
+    NULL_OP, // OpAnd
+    NULL_OP // OpOr
+};
+
 #if OS(LINUX)
 static void printDisassembledOutputWithCalls(const char* output, const QHash<void*, const char*>& functions)
 {
@@ -480,66 +535,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             } else if (IR::Binop *b = s->source->asBinop()) {
                 if ((b->left->asTemp() || b->left->asConst()) &&
                     (b->right->asTemp() || b->right->asConst())) {
-                    Value (*op)(const Value, const Value, ExecutionContext *) = 0;
-                    const char* opName = 0;
-                    MemBinOpWithOverFlow inlineMemBinOp = 0;
-                    ImmBinOpWithOverFlow inlineImmBinOp = 0;
-
-                    switch ((IR::AluOp) b->op) {
-                    case IR::OpInvalid:
-                    case IR::OpIfTrue:
-                    case IR::OpNot:
-                    case IR::OpUMinus:
-                    case IR::OpUPlus:
-                    case IR::OpCompl:
-                        assert(!"unreachable");
-                        break;
-
-                    case IR::OpBitAnd: setOp(op, opName, __qmljs_bit_and); break;
-                    case IR::OpBitOr: setOp(op, opName, __qmljs_bit_or); break;
-                    case IR::OpBitXor: setOp(op, opName, __qmljs_bit_xor); break;
-                    case IR::OpAdd: {
-                        setOp(op, opName, __qmljs_add);
-                        inlineMemBinOp = &JSC::MacroAssembler::branchAdd32;
-                        inlineImmBinOp = &JSC::MacroAssembler::branchAdd32;
-                        break;
-                    }
-                    case IR::OpSub: {
-                        setOp(op, opName, __qmljs_sub);
-                        inlineMemBinOp = &JSC::MacroAssembler::branchSub32;
-                        inlineImmBinOp = &JSC::MacroAssembler::branchSub32;
-                        break;
-                    }
-                    case IR::OpMul: setOp(op, opName, __qmljs_mul); break;
-                    case IR::OpDiv: setOp(op, opName, __qmljs_div); break;
-                    case IR::OpMod: setOp(op, opName, __qmljs_mod); break;
-                    case IR::OpLShift: setOp(op, opName, __qmljs_shl); break;
-                    case IR::OpRShift: setOp(op, opName, __qmljs_shr); break;
-                    case IR::OpURShift: setOp(op, opName, __qmljs_ushr); break;
-                    case IR::OpGt: setOp(op, opName, __qmljs_gt); break;
-                    case IR::OpLt: setOp(op, opName, __qmljs_lt); break;
-                    case IR::OpGe: setOp(op, opName, __qmljs_ge); break;
-                    case IR::OpLe: setOp(op, opName, __qmljs_le); break;
-                    case IR::OpEqual: setOp(op, opName, __qmljs_eq); break;
-                    case IR::OpNotEqual: setOp(op, opName, __qmljs_ne); break;
-                    case IR::OpStrictEqual: setOp(op, opName, __qmljs_se); break;
-                    case IR::OpStrictNotEqual: setOp(op, opName, __qmljs_sne); break;
-                    case IR::OpInstanceof: setOp(op, opName, __qmljs_instanceof); break;
-                    case IR::OpIn: setOp(op, opName, __qmljs_in); break;
-
-                    case IR::OpAnd:
-                    case IR::OpOr:
-                        assert(!"unreachable");
-                        break;
-                    }
-
-                    if (op) {
-                        if (inlineMemBinOp && inlineImmBinOp
-                            && generateArithmeticIntegerInlineBinOp(t, b->left, b->right, inlineMemBinOp, inlineImmBinOp, op, opName))
-                            return;
-                        else
-                            generateFunctionCallImp(t, opName, op, b->left, b->right, ContextRegister);
-                    }
+                    generateBinOp((IR::AluOp)b->op, t, b->left, b->right);
                     return;
                 }
             } else if (IR::Call *c = s->source->asCall()) {
@@ -575,26 +571,7 @@ void InstructionSelection::visitMove(IR::Move *s)
         // inplace assignment, e.g. x += 1, ++x, ...
         if (IR::Temp *t = s->target->asTemp()) {
             if (s->source->asTemp() || s->source->asConst()) {
-                Value (*op)(const Value left, const Value right, ExecutionContext *ctx) = 0;
-                const char *opName = 0;
-                switch (s->op) {
-                case IR::OpBitAnd: setOp(op, opName, __qmljs_bit_and); break;
-                case IR::OpBitOr: setOp(op, opName, __qmljs_bit_or); break;
-                case IR::OpBitXor: setOp(op, opName, __qmljs_bit_xor); break;
-                case IR::OpAdd: setOp(op, opName, __qmljs_add); break;
-                case IR::OpSub: setOp(op, opName, __qmljs_sub); break;
-                case IR::OpMul: setOp(op, opName, __qmljs_mul); break;
-                case IR::OpDiv: setOp(op, opName, __qmljs_div); break;
-                case IR::OpMod: setOp(op, opName, __qmljs_mod); break;
-                case IR::OpLShift: setOp(op, opName, __qmljs_shl); break;
-                case IR::OpRShift: setOp(op, opName, __qmljs_shr); break;
-                case IR::OpURShift: setOp(op, opName, __qmljs_ushr); break;
-                default:
-                    Q_UNREACHABLE();
-                    break;
-                }
-                if (op)
-                    generateFunctionCallImp(t, opName, op, t, s->source, ContextRegister);
+                generateBinOp((IR::AluOp)s->op, t, t, s->source);
                 return;
             }
         } else if (IR::Name *n = s->target->asName()) {
@@ -818,74 +795,89 @@ void InstructionSelection::copyValue(Result result, Source source)
 #endif
 }
 
-bool InstructionSelection::generateArithmeticIntegerInlineBinOp(IR::Temp* target, IR::Expr* left, IR::Expr* right,
-            MemBinOpWithOverFlow memOp, ImmBinOpWithOverFlow immOp, FallbackOp fallbackOp, const char* fallbackOpName)
+void InstructionSelection::generateBinOp(IR::AluOp operation, IR::Temp* target, IR::Expr* left, IR::Expr* right)
 {
+    const BinaryOperationInfo& info = binaryOperations[operation];
+    if (!info.fallbackImplementation) {
+        assert(!"unreachable");
+        return;
+    }
+
     VM::Value leftConst;
-    if (left->asConst()) {
-        leftConst = convertToValue(left->asConst());
-        if (!leftConst.tryIntegerConversion())
-            return false;
-    }
     VM::Value rightConst;
-    if (right->asConst()) {
-        rightConst = convertToValue(right->asConst());
-        if (!rightConst.tryIntegerConversion())
-            return false;
+
+    bool canDoInline = info.inlineMemOp && info.inlineImmOp;
+
+    if (canDoInline) {
+        if (left->asConst()) {
+            leftConst = convertToValue(left->asConst());
+            canDoInline = canDoInline && leftConst.tryIntegerConversion();
+        }
+        if (right->asConst()) {
+            rightConst = convertToValue(right->asConst());
+            canDoInline = canDoInline && rightConst.tryIntegerConversion();
+        }
     }
 
-    Jump leftTypeCheck;
-    if (left->asTemp()) {
-        Address typeAddress = loadTempAddress(ScratchRegister, left->asTemp());
-        typeAddress.offset += offsetof(VM::Value, tag);
-        leftTypeCheck = branch32(NotEqual, typeAddress, TrustedImm32(VM::Value::_Integer_Type));
+    Jump binOpFinished;
+
+    if (canDoInline) {
+
+        Jump leftTypeCheck;
+        if (left->asTemp()) {
+            Address typeAddress = loadTempAddress(ScratchRegister, left->asTemp());
+            typeAddress.offset += offsetof(VM::Value, tag);
+            leftTypeCheck = branch32(NotEqual, typeAddress, TrustedImm32(VM::Value::_Integer_Type));
+        }
+
+        Jump rightTypeCheck;
+        if (right->asTemp()) {
+            Address typeAddress = loadTempAddress(ScratchRegister, right->asTemp());
+            typeAddress.offset += offsetof(VM::Value, tag);
+            rightTypeCheck = branch32(NotEqual, typeAddress, TrustedImm32(VM::Value::_Integer_Type));
+        }
+
+        if (left->asTemp()) {
+            Address leftValue = loadTempAddress(ScratchRegister, left->asTemp());
+            leftValue.offset += offsetof(VM::Value, int_32);
+            load32(leftValue, IntegerOpRegister);
+        } else { // left->asConst()
+            move(TrustedImm32(leftConst.integerValue()), IntegerOpRegister);
+        }
+
+        Jump overflowCheck;
+
+        if (right->asTemp()) {
+            Address rightValue = loadTempAddress(ScratchRegister, right->asTemp());
+            rightValue.offset += offsetof(VM::Value, int_32);
+
+            overflowCheck = (this->*info.inlineMemOp)(Overflow, rightValue, IntegerOpRegister);
+        } else { // right->asConst()
+            VM::Value value = convertToValue(right->asConst());
+            overflowCheck = (this->*info.inlineImmOp)(Overflow, TrustedImm32(value.integerValue()), IntegerOpRegister);
+        }
+
+        Address resultAddr = loadTempAddress(ScratchRegister, target);
+        Address resultValueAddr = resultAddr;
+        resultValueAddr.offset += offsetof(VM::Value, int_32);
+        store32(IntegerOpRegister, resultValueAddr);
+
+        Address resultTypeAddr = resultAddr;
+        resultTypeAddr.offset += offsetof(VM::Value, tag);
+        store32(TrustedImm32(VM::Value::_Integer_Type), resultTypeAddr);
+
+        binOpFinished = jump();
+
+        if (leftTypeCheck.isSet())
+            leftTypeCheck.link(this);
+        if (rightTypeCheck.isSet())
+            rightTypeCheck.link(this);
+        overflowCheck.link(this);
     }
 
-    Jump rightTypeCheck;
-    if (right->asTemp()) {
-        Address typeAddress = loadTempAddress(ScratchRegister, right->asTemp());
-        typeAddress.offset += offsetof(VM::Value, tag);
-        rightTypeCheck = branch32(NotEqual, typeAddress, TrustedImm32(VM::Value::_Integer_Type));
-    }
+    // Fallback
+    generateFunctionCallImp(target, info.name, info.fallbackImplementation, left, right, ContextRegister);
 
-    if (left->asTemp()) {
-        Address leftValue = loadTempAddress(ScratchRegister, left->asTemp());
-        leftValue.offset += offsetof(VM::Value, int_32);
-        load32(leftValue, IntegerOpRegister);
-    } else { // left->asConst()
-        move(TrustedImm32(leftConst.integerValue()), IntegerOpRegister);
-    }
-
-    Jump overflowCheck;
-
-    if (right->asTemp()) {
-        Address rightValue = loadTempAddress(ScratchRegister, right->asTemp());
-        rightValue.offset += offsetof(VM::Value, int_32);
-
-        overflowCheck = (this->*memOp)(Overflow, rightValue, IntegerOpRegister);
-    } else { // right->asConst()
-        VM::Value value = convertToValue(right->asConst());
-        overflowCheck = (this->*immOp)(Overflow, TrustedImm32(value.integerValue()), IntegerOpRegister);
-    }
-
-    Address resultAddr = loadTempAddress(ScratchRegister, target);
-    Address resultValueAddr = resultAddr;
-    resultValueAddr.offset += offsetof(VM::Value, int_32);
-    store32(IntegerOpRegister, resultValueAddr);
-
-    Address resultTypeAddr = resultAddr;
-    resultTypeAddr.offset += offsetof(VM::Value, tag);
-    store32(TrustedImm32(VM::Value::_Integer_Type), resultTypeAddr);
-
-    Jump finishBinOp = jump();
-
-    if (leftTypeCheck.isSet())
-        leftTypeCheck.link(this);
-    if (rightTypeCheck.isSet())
-        rightTypeCheck.link(this);
-    overflowCheck.link(this);
-    generateFunctionCallImp(target, fallbackOpName, fallbackOp, left, right, ContextRegister);
-
-    finishBinOp.link(this);
-    return true;
+    if (binOpFinished.isSet())
+        binOpFinished.link(this);
 }

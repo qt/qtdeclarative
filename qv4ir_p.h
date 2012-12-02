@@ -143,7 +143,9 @@ enum AluOp {
     OpIn,
 
     OpAnd,
-    OpOr
+    OpOr,
+
+    LastAluOp = OpOr
 };
 AluOp binaryOperator(int op);
 const char *opname(IR::AluOp op);
