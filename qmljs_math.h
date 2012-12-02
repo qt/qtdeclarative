@@ -60,7 +60,7 @@ static inline Value add_int32(int a, int b)
          "seto %0"
     : "=q" (overflow), "=r" (aa)
          : "r" (b), "1" (aa)
-         :
+         : "cc"
     );
     if (!overflow)
         return Value::fromInt32(aa);
@@ -76,7 +76,7 @@ static inline Value sub_int32(int a, int b)
          "seto %0"
     : "=q" (overflow), "=r" (aa)
          : "r" (b), "1" (aa)
-         :
+         : "cc"
     );
     if (!overflow)
         return Value::fromInt32(aa);
@@ -92,7 +92,7 @@ static inline Value mul_int32(int a, int b)
          "setc %0"
          : "=q" (overflow), "=a" (aa)
          : "r" (b), "1" (aa)
-         : "edx"
+         : "edx", "cc"
     );
     if (!overflow)
         return Value::fromInt32(aa);
