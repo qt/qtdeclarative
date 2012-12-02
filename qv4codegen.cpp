@@ -49,6 +49,7 @@
 #include <QtCore/QStack>
 #include <private/qqmljsast_p.h>
 #include <qmljs_runtime.h>
+#include <qmljs_environment.h>
 #include <cmath>
 #include <iostream>
 #include <cassert>
@@ -206,6 +207,7 @@ protected:
     inline void enterEnvironment(Node *node)
     {
         Environment *e = _cg->newEnvironment(node, _env);
+        e->isStrict = _cg->_context->strictMode;
         _envStack.append(e);
         _env = e;
     }
@@ -248,8 +250,7 @@ protected:
                     || name == QLatin1String("public")
                     || name == QLatin1String("static")
                     || name == QLatin1String("yield")) {
-                // TODO: error!
-                qDebug("TODO: give a proper error message @%u:%u", loc.startLine, loc.startColumn);
+                _cg->throwSyntaxError(loc, "Unexpected strict mode reserved word");
             }
         }
     }
@@ -353,7 +354,7 @@ protected:
     QStack<Environment *> _envStack;
 };
 
-Codegen::Codegen(Debugging::Debugger *debugger)
+Codegen::Codegen(VM::ExecutionContext *context)
     : _module(0)
     , _function(0)
     , _block(0)
@@ -365,7 +366,8 @@ Codegen::Codegen(Debugging::Debugger *debugger)
     , _loop(0)
     , _labelledStatement(0)
     , _tryCleanup(0)
-    , _debugger(debugger)
+    , _context(context)
+    , _debugger(context->engine->debugger)
 {
 }
 
@@ -1021,7 +1023,7 @@ bool Codegen::visit(BinaryExpression *ast)
 
     case QSOperator::Assign:
         if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember())) {
-            assert(!"syntax error");
+            throwSyntaxError(ast->lastSourceLocation(), "syntax error");
         }
 
         if (_expr.accept(nx)) {
@@ -1046,7 +1048,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceURightShift:
     case QSOperator::InplaceXor: {
         if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember())) {
-            assert(!"syntax error");
+            throwSyntaxError(ast->lastSourceLocation(), "syntax error");
         }
 
         if (_expr.accept(nx)) {
@@ -1730,7 +1732,7 @@ bool Codegen::visit(BreakStatement *ast)
                 return false;
             }
         }
-        assert(!"throw syntax error");
+        throwSyntaxError(ast->lastSourceLocation(), QString("Undefined label '") + ast->label.toString() + QString("'"));
     }
 
     return false;
@@ -1752,7 +1754,7 @@ bool Codegen::visit(ContinueStatement *ast)
                 return false;
             }
         }
-        assert(!"throw syntax error");
+        throwSyntaxError(ast->lastSourceLocation(), QString("Undefined label '") + ast->label.toString() + QString("'"));
     }
     return false;
 }
@@ -2263,4 +2265,14 @@ bool Codegen::visit(UiSourceElement *)
 {
     assert(!"not implemented");
     return false;
+}
+
+void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
+{
+    VM::DiagnosticMessage *msg = new VM::DiagnosticMessage;
+    msg->offset = loc.begin();
+    msg->startLine = loc.startLine;
+    msg->startColumn = loc.startColumn;
+    msg->message = new VM::String(detail);
+    _context->throwSyntaxError(msg);
 }

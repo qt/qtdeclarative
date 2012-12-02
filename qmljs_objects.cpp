@@ -569,7 +569,7 @@ QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
                 return 0;
             }
 
-            Codegen cg(ctx->engine->debugger);
+            Codegen cg(ctx);
             globalCode = cg(program, &module, mode);
             if (globalCode) {
                 // only generate other functions if global code generation succeeded.

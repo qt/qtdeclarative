@@ -50,6 +50,10 @@ namespace AST {
 class UiParameterList;
 }
 
+namespace VM {
+struct ExecutionContext;
+}
+
 namespace Debugging {
 class Debugger;
 } // namespace Debugging
@@ -57,7 +61,7 @@ class Debugger;
 class Codegen: protected AST::Visitor
 {
 public:
-    Codegen(Debugging::Debugger *debugger);
+    Codegen(VM::ExecutionContext *ctx);
 
     enum Mode {
         GlobalCode,
@@ -329,6 +333,8 @@ protected:
     virtual bool visit(AST::UiScriptBinding *ast);
     virtual bool visit(AST::UiSourceElement *ast);
 
+    void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
+
 private:
     Result _expr;
     QString _property;
@@ -346,6 +352,7 @@ private:
     TryCleanup *_tryCleanup;
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
+    VM::ExecutionContext *_context;
     Debugging::Debugger *_debugger;
 
     class ScanFunctions;
