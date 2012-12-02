@@ -484,6 +484,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                     (b->right->asTemp() || b->right->asConst())) {
                     Value (*op)(const Value, const Value, ExecutionContext *) = 0;
                     const char* opName = 0;
+                    MemBinOpWithOverFlow inlineMemBinOp = 0;
+                    ImmBinOpWithOverFlow inlineImmBinOp = 0;
 
                     switch ((IR::AluOp) b->op) {
                     case IR::OpInvalid:
@@ -498,8 +500,18 @@ void InstructionSelection::visitMove(IR::Move *s)
                     case IR::OpBitAnd: setOp(op, opName, __qmljs_bit_and); break;
                     case IR::OpBitOr: setOp(op, opName, __qmljs_bit_or); break;
                     case IR::OpBitXor: setOp(op, opName, __qmljs_bit_xor); break;
-                    case IR::OpAdd: setOp(op, opName, __qmljs_add); break;
-                    case IR::OpSub: setOp(op, opName, __qmljs_sub); break;
+                    case IR::OpAdd: {
+                        setOp(op, opName, __qmljs_add);
+                        inlineMemBinOp = &JSC::MacroAssembler::branchAdd32;
+                        inlineImmBinOp = &JSC::MacroAssembler::branchAdd32;
+                        break;
+                    }
+                    case IR::OpSub: {
+                        setOp(op, opName, __qmljs_sub);
+                        inlineMemBinOp = &JSC::MacroAssembler::branchSub32;
+                        inlineImmBinOp = &JSC::MacroAssembler::branchSub32;
+                        break;
+                    }
                     case IR::OpMul: setOp(op, opName, __qmljs_mul); break;
                     case IR::OpDiv: setOp(op, opName, __qmljs_div); break;
                     case IR::OpMod: setOp(op, opName, __qmljs_mod); break;
@@ -524,7 +536,11 @@ void InstructionSelection::visitMove(IR::Move *s)
                     }
 
                     if (op) {
-                        generateFunctionCallImp(t, opName, op, b->left, b->right, ContextRegister);
+                        if (inlineMemBinOp && inlineImmBinOp
+                            && generateArithmeticIntegerInlineBinOp(t, b->left, b->right, inlineMemBinOp, inlineImmBinOp, op, opName))
+                            return;
+                        else
+                            generateFunctionCallImp(t, opName, op, b->left, b->right, ContextRegister);
                     }
                     return;
                 }
@@ -802,4 +818,76 @@ void InstructionSelection::copyValue(Result result, Source source)
     loadDouble(source, FPGpr0);
     storeDouble(FPGpr0, result);
 #endif
+}
+
+bool InstructionSelection::generateArithmeticIntegerInlineBinOp(IR::Temp* target, IR::Expr* left, IR::Expr* right,
+            MemBinOpWithOverFlow memOp, ImmBinOpWithOverFlow immOp, FallbackOp fallbackOp, const char* fallbackOpName)
+{
+    VM::Value leftConst;
+    if (left->asConst()) {
+        leftConst = convertToValue(left->asConst());
+        if (!leftConst.tryIntegerConversion())
+            return false;
+    }
+    VM::Value rightConst;
+    if (right->asConst()) {
+        rightConst = convertToValue(right->asConst());
+        if (!rightConst.tryIntegerConversion())
+            return false;
+    }
+
+    Jump leftTypeCheck;
+    if (left->asTemp()) {
+        Address typeAddress = loadTempAddress(ScratchRegister, left->asTemp());
+        typeAddress.offset += offsetof(VM::Value, tag);
+        leftTypeCheck = branch32(NotEqual, typeAddress, TrustedImm32(VM::Value::_Integer_Type));
+    }
+
+    Jump rightTypeCheck;
+    if (right->asTemp()) {
+        Address typeAddress = loadTempAddress(ScratchRegister, right->asTemp());
+        typeAddress.offset += offsetof(VM::Value, tag);
+        rightTypeCheck = branch32(NotEqual, typeAddress, TrustedImm32(VM::Value::_Integer_Type));
+    }
+
+    if (left->asTemp()) {
+        Address leftValue = loadTempAddress(ScratchRegister, left->asTemp());
+        leftValue.offset += offsetof(VM::Value, int_32);
+        load32(leftValue, IntegerOpRegister);
+    } else { // left->asConst()
+        move(TrustedImm32(leftConst.integerValue()), IntegerOpRegister);
+    }
+
+    Jump overflowCheck;
+
+    if (right->asTemp()) {
+        Address rightValue = loadTempAddress(ScratchRegister, right->asTemp());
+        rightValue.offset += offsetof(VM::Value, int_32);
+
+        overflowCheck = (this->*memOp)(Overflow, rightValue, IntegerOpRegister);
+    } else { // right->asConst()
+        VM::Value value = convertToValue(right->asConst());
+        overflowCheck = (this->*immOp)(Overflow, TrustedImm32(value.integerValue()), IntegerOpRegister);
+    }
+
+    Address resultAddr = loadTempAddress(ScratchRegister, target);
+    Address resultValueAddr = resultAddr;
+    resultValueAddr.offset += offsetof(VM::Value, int_32);
+    store32(IntegerOpRegister, resultValueAddr);
+
+    Address resultTypeAddr = resultAddr;
+    resultTypeAddr.offset += offsetof(VM::Value, tag);
+    store32(TrustedImm32(VM::Value::_Integer_Type), resultTypeAddr);
+
+    Jump finishBinOp = jump();
+
+    if (leftTypeCheck.isSet())
+        leftTypeCheck.link(this);
+    if (rightTypeCheck.isSet())
+        rightTypeCheck.link(this);
+    overflowCheck.link(this);
+    generateFunctionCallImp(target, fallbackOpName, fallbackOp, left, right, ContextRegister);
+
+    finishBinOp.link(this);
+    return true;
 }

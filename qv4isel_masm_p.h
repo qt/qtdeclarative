@@ -77,6 +77,7 @@ protected:
     static const RegisterID ScratchRegister = JSC::X86Registers::ecx;
     static const RegisterID CalleeSavedFirstRegister = ScratchRegister;
     static const RegisterID CalleeSavedLastRegister = ScratchRegister;
+    static const RegisterID IntegerOpRegister = JSC::X86Registers::eax;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 
     static const int RegisterSize = 4;
@@ -97,6 +98,7 @@ protected:
     static const RegisterID ContextRegister = JSC::X86Registers::r14;
     static const RegisterID ReturnValueRegister = JSC::X86Registers::eax;
     static const RegisterID ScratchRegister = JSC::X86Registers::r10;
+    static const RegisterID IntegerOpRegister = JSC::X86Registers::eax;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 
     static const int RegisterSize = 8;
@@ -126,6 +128,7 @@ protected:
     static const RegisterID ScratchRegister = JSC::ARMRegisters::r6;
     static const RegisterID CalleeSavedFirstRegister = JSC::ARMRegisters::r4;
     static const RegisterID CalleeSavedLastRegister = JSC::ARMRegisters::r11;
+    static const RegisterID IntegerOpRegister = JSC::X86Registers::r0;
     static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
 
     static const int RegisterSize = 4;
@@ -607,6 +610,13 @@ private:
         store32(TrustedImm32(value.tag), destination);
 #endif
     }
+
+    typedef VM::Value (*FallbackOp)(const VM::Value, const VM::Value, VM::ExecutionContext*);
+
+    typedef Jump (JSC::MacroAssembler::*MemBinOpWithOverFlow)(ResultCondition, Address, RegisterID);
+    typedef Jump (JSC::MacroAssembler::*ImmBinOpWithOverFlow)(ResultCondition, TrustedImm32, RegisterID);
+    bool generateArithmeticIntegerInlineBinOp(IR::Temp* target, IR::Expr* left, IR::Expr* right,
+            MemBinOpWithOverFlow memOp, ImmBinOpWithOverFlow immOp, FallbackOp fallback, const char* fallbackOpName);
 
     VM::ExecutionEngine *_engine;
     IR::Function *_function;
