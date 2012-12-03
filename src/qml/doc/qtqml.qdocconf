@@ -10,23 +10,21 @@ qhp.projects            = QtQml
 qhp.QtQml.file                = qtqml.qhp
 qhp.QtQml.namespace           = org.qt-project.qtqml.500
 qhp.QtQml.virtualFolder       = qdoc
-qhp.QtQml.indexTitle          = Qt QML Reference Documentation
+qhp.QtQml.indexTitle          = Qt QML
 qhp.QtQml.indexRoot           =
 
 qhp.QtQml.filterAttributes    = qtqml 5.0.0 qtrefdoc
 qhp.QtQml.customFilters.Qt.name = QtQml 5.0.0
 qhp.QtQml.customFilters.Qt.filterAttributes = qtqml 5.0.0
-qhp.QtQml.subprojects         = classes overviews examples
-qhp.QtQml.subprojects.classes.title = Classes
-qhp.QtQml.subprojects.classes.indexTitle = Qt QML's Classes
+qhp.QtQml.subprojects         = classes examples
+qhp.QtQml.subprojects.classes.title = C++ Classes
+qhp.QtQml.subprojects.classes.indexTitle = Qt QML Module C++ Classes
 qhp.QtQml.subprojects.classes.selectors = class fake:headerfile
 qhp.QtQml.subprojects.classes.sortPages = true
-qhp.QtQml.subprojects.overviews.title = Overviews
-qhp.QtQml.subprojects.overviews.indexTitle = All Overviews and HOWTOs
-qhp.QtQml.subprojects.overviews.selectors = fake:page,group,module
-qhp.QtQml.subprojects.examples.title = Qt QML Examples
-qhp.QtQml.subprojects.examples.indexTitle = Qt QML Examples
+qhp.QtQml.subprojects.examples.title = Examples
+qhp.QtQml.subprojects.examples.indexTitle = Qt Quick Code Samples
 qhp.QtQml.subprojects.examples.selectors = fake:example
+
 
 tagfile                 = ../../../doc/qtqml/qtqml.tags
 
