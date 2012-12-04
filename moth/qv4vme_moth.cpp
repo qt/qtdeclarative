@@ -7,7 +7,7 @@
 
 #ifdef DO_TRACE_INSTR
 #  define TRACE_INSTR(I) fprintf(stderr, "executing a %s\n", #I);
-#  define TRACE(n, str, ...) { fprintf(stderr, "    %s : ", #n); fprintf(stderr, str, __VA_ARGS__); fprintf(stderr, "\n"); }
+#  define TRACE(n, str, ...) { char buf[4096]; snprintf(buf, 4096, str, __VA_ARGS__); fprintf(stderr, "    %s : %s\n", #n, buf); }
 #else
 #  define TRACE_INSTR(I)
 #  define TRACE(n, str, ...)
@@ -154,9 +154,6 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_BEGIN_INSTR(LoadClosure)
         VM::Value c = __qmljs_init_closure(instr.value, context);
         TEMP(instr.targetTempIndex) = c;
-#ifdef DO_TRACE_INSTR
-        qDebug() << "loaded:" << c.toString(context)->toQString();
-#endif
     MOTH_END_INSTR(LoadClosure)
 
     MOTH_BEGIN_INSTR(LoadName)
@@ -341,7 +338,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 
     MOTH_BEGIN_INSTR(Ret)
         VM::Value result = TEMP(instr.tempIndex);
-        TRACE(Ret, "returning value %s", result.toString(context)->toQString().toUtf8().constData());
+//        TRACE(Ret, "returning value %s", result.toString(context)->toQString().toUtf8().constData());
         return result;
     MOTH_END_INSTR(Ret)
 

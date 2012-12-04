@@ -121,6 +121,7 @@ public: // debugging hooks
     const char *currentArg(unsigned idx) const;
     const char *currentLocal(unsigned idx) const;
     const char *currentTemp(unsigned idx) const;
+    void printStackTrace() const;
 
 private:
     int callIndex(VM::ExecutionContext *context);

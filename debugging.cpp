@@ -32,6 +32,8 @@
 
 #include <iostream>
 
+#define LOW_LEVEL_DEBUGGING_HELPERS
+
 using namespace QQmlJS;
 using namespace QQmlJS::Debugging;
 
@@ -63,13 +65,32 @@ VM::Value *FunctionState::local(unsigned idx)
     return 0;
 }
 
+#ifdef LOW_LEVEL_DEBUGGING_HELPERS
+Debugger *globalInstance = 0;
+
+void printStackTrace()
+{
+    if (globalInstance)
+        globalInstance->printStackTrace();
+    else
+        std::cerr << "No debugger." << std::endl;
+}
+#endif // DO_TRACE_INSTR
+
 Debugger::Debugger(VM::ExecutionEngine *engine)
     : _engine(engine)
 {
+#ifdef LOW_LEVEL_DEBUGGING_HELPERS
+    globalInstance = this;
+#endif // DO_TRACE_INSTR
 }
 
 Debugger::~Debugger()
 {
+#ifdef LOW_LEVEL_DEBUGGING_HELPERS
+    globalInstance = 0;
+#endif // DO_TRACE_INSTR
+
     qDeleteAll(_functionInfo.values());
 }
 
@@ -129,9 +150,9 @@ void Debugger::enterFunction(FunctionState *state)
 
 #ifdef DO_TRACE_INSTR
     QString n = name(_callStack[callIndex(state->context())].function);
-    std::cerr << "*** Entering \"" << qPrintable(n) << "\" with" << state->context()->variableEnvironment->argumentCount << "args" << std::endl;
-    for (unsigned i = 0; i < state->context()->variableEnvironment->argumentCount; ++i)
-        std::cerr << "        " << i << ": " << currentArg(i) << std::endl;
+    std::cerr << "*** Entering \"" << qPrintable(n) << "\" with " << state->context()->variableEnvironment->argumentCount << " args" << std::endl;
+//    for (unsigned i = 0; i < state->context()->variableEnvironment->argumentCount; ++i)
+//        std::cerr << "        " << i << ": " << currentArg(i) << std::endl;
 #endif // DO_TRACE_INSTR
 }
 
@@ -169,6 +190,14 @@ const char *Debugger::currentTemp(unsigned idx) const
 {
     FunctionState *state = currentState();
     return qPrintable(state->temp(idx)->toString(state->context())->toQString());
+}
+
+void Debugger::printStackTrace() const
+{
+    for (int i = _callStack.size() - 1; i >=0; --i) {
+        QString n = name(_callStack[i].function);
+        std::cerr << "\tframe #" << i << ": " << qPrintable(n) << std::endl;
+    }
 }
 
 int Debugger::callIndex(VM::ExecutionContext *context)
