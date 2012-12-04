@@ -125,6 +125,43 @@ static JSC::MacroAssembler::Jump masm_shr32(JSC::MacroAssembler* assembler, JSC:
     return JSC::MacroAssembler::Jump();
 }
 
+static JSC::MacroAssembler::Jump masm_and32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
+{
+    assembler->and32(addr, reg);
+    return JSC::MacroAssembler::Jump();
+}
+
+static JSC::MacroAssembler::Jump masm_and32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
+{
+    assembler->and32(imm, reg);
+    return JSC::MacroAssembler::Jump();
+}
+
+static JSC::MacroAssembler::Jump masm_or32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
+{
+    assembler->or32(addr, reg);
+    return JSC::MacroAssembler::Jump();
+}
+
+static JSC::MacroAssembler::Jump masm_or32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
+{
+    assembler->or32(imm, reg);
+    return JSC::MacroAssembler::Jump();
+}
+
+static JSC::MacroAssembler::Jump masm_xor32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
+{
+    assembler->xor32(addr, reg);
+    return JSC::MacroAssembler::Jump();
+}
+
+static JSC::MacroAssembler::Jump masm_xor32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
+{
+    assembler->xor32(imm, reg);
+    return JSC::MacroAssembler::Jump();
+}
+
+
 #define OP(op) \
     { isel_stringIfy(op), op, 0, 0 }
 
@@ -147,9 +184,9 @@ static const struct BinaryOperationInfo {
     NULL_OP, // OpUPlus
     NULL_OP, // OpCompl
 
-    OP(__qmljs_bit_and), // OpBitAnd
-    OP(__qmljs_bit_or), // OpBitOr
-    OP(__qmljs_bit_xor), // OpBitXor
+    INLINE_OP(__qmljs_bit_and, &masm_and32, &masm_and32), // OpBitAnd
+    INLINE_OP(__qmljs_bit_or, &masm_or32, &masm_or32), // OpBitOr
+    INLINE_OP(__qmljs_bit_xor, &masm_xor32, &masm_xor32), // OpBitXor
 
     INLINE_OP(__qmljs_add, &masm_add32, &masm_add32), // OpAdd
     INLINE_OP(__qmljs_sub, &masm_sub32, &masm_sub32), // OpSub
