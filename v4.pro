@@ -57,7 +57,7 @@ HEADERS += \
 INCLUDEPATH += \
     $$system($$LLVM_CONFIG --includedir)
 
-QMAKE_CXXFLAGS += $$system($$LLVM_CONFIG --cppflags)
+QMAKE_CXXFLAGS += $$system($$LLVM_CONFIG --cppflags) -fvisibility-inlines-hidden
 
 LIBS += \
     $$system($$LLVM_CONFIG --ldflags) \
