@@ -357,6 +357,7 @@ int main(int argc, char *argv[])
                 QQmlJS::IR::Function *f = QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode);
                 if (!f)
                     continue;
+
                 ctx->strictMode = f->isStrict;
                 if (debugger)
                     debugger->aboutToCall(0, ctx);

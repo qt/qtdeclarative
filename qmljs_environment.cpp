@@ -90,15 +90,17 @@ bool ExecutionContext::hasBinding(String *name) const
         if (__qmljs_string_equal(function->formalParameterList[i], name))
             return true;
     }
+    if (activation)
+        return activation->__hasProperty__(this, name);
     return false;
 }
 
-void ExecutionContext::createMutableBinding(ExecutionContext *ctx, String *name, bool deletable)
+void ExecutionContext::createMutableBinding(String *name, bool deletable)
 {
     if (!activation)
-        activation = engine->newActivationObject(this);
+        activation = engine->newActivationObject();
 
-    if (activation->__hasProperty__(ctx, name))
+    if (activation->__hasProperty__(this, name))
         return;
     PropertyDescriptor desc;
     desc.value = Value::undefinedValue();
@@ -106,31 +108,33 @@ void ExecutionContext::createMutableBinding(ExecutionContext *ctx, String *name,
     desc.configurable = deletable ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
     desc.writable = PropertyDescriptor::Set;
     desc.enumberable = PropertyDescriptor::Set;
-    activation->__defineOwnProperty__(ctx, name, &desc);
+    activation->__defineOwnProperty__(this, name, &desc);
 }
 
-void ExecutionContext::setMutableBinding(String *name, Value value, bool strict)
+bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, Value value)
 {
-    Q_UNUSED(strict);
-    assert(function);
-
-    // ### throw if strict is true, and it would change an immutable binding
+    // ### throw if scope->strict is true, and it would change an immutable binding
     for (unsigned int i = 0; i < variableCount(); ++i) {
         if (__qmljs_string_equal(variables()[i], name)) {
             locals[i] = value;
-            return;
+            return true;
         }
     }
     for (unsigned int i = 0; i < formalCount(); ++i) {
         if (__qmljs_string_equal(formals()[i], name)) {
             arguments[i] = value;
-            return;
+            return true;
         }
     }
-    assert(false);
+    if (activation && activation->__hasProperty__(scope, name)) {
+        activation->__put__(scope, name, value);
+        return true;
+    }
+
+    return false;
 }
 
-Value ExecutionContext::getBindingValue(String *name, bool strict) const
+Value ExecutionContext::getBindingValue(ExecutionContext *scope, String *name, bool strict) const
 {
     Q_UNUSED(strict);
     assert(function);
@@ -143,16 +147,18 @@ Value ExecutionContext::getBindingValue(String *name, bool strict) const
         if (__qmljs_string_equal(formals()[i], name))
             return arguments[i];
     }
+    if (activation && activation->__hasProperty__(this, name))
+        return activation->__get__(scope, name);
     assert(false);
 }
 
-bool ExecutionContext::deleteBinding(ExecutionContext *ctx, String *name)
+bool ExecutionContext::deleteBinding(ExecutionContext *scope, String *name)
 {
     if (activation)
-        activation->__delete__(ctx, name);
+        activation->__delete__(scope, name);
 
-    if (ctx->strictMode)
-        __qmljs_throw_type_error(ctx);
+    if (scope->strictMode)
+        __qmljs_throw_type_error(scope);
     return false;
 }
 
@@ -251,9 +257,65 @@ bool ExecutionContext::deleteProperty(String *name)
                 ctx->activation->__delete__(this, name);
         }
     }
-    // ### throw syntax error in strict mode
+    if (strictMode)
+        throwSyntaxError(0);
     return true;
 }
+
+void ExecutionContext::setProperty(String *name, Value value)
+{
+    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
+        if (ctx->withObject) {
+            With *w = ctx->withObject;
+            while (w) {
+                if (w->object->__hasProperty__(ctx, name)) {
+                    w->object->__put__(ctx, name, value);
+                    return;
+                }
+                w = w->next;
+            }
+        }
+        if (ctx->setMutableBinding(this, name, value))
+            return;
+    }
+    if (strictMode)
+        throwReferenceError(Value::fromString(name));
+    engine->globalObject.objectValue()->__put__(this, name, value);
+}
+
+Value ExecutionContext::getProperty(String *name)
+{
+    PropertyDescriptor tmp;
+    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
+        if (ctx->withObject) {
+            With *w = ctx->withObject;
+            while (w) {
+                if (PropertyDescriptor *pd = w->object->__getPropertyDescriptor__(this, name, &tmp))
+                    return pd->value;
+                w = w->next;
+            }
+        }
+
+        for (unsigned int i = 0; i < ctx->variableCount(); ++i)
+            if (__qmljs_string_equal(ctx->variables()[i], name))
+                return ctx->locals[i];
+        for (unsigned int i = 0; i < ctx->formalCount(); ++i)
+            if (__qmljs_string_equal(ctx->formals()[i], name))
+                return ctx->arguments[i];
+        if (ctx->activation && ctx->activation->__hasProperty__(ctx, name))
+            return ctx->activation->__get__(ctx, name);
+        if (name->isEqualTo(ctx->engine->id_arguments)) {
+            Value arguments = Value::fromObject(new ArgumentsObject(this));
+            createMutableBinding(ctx->engine->id_arguments, false);
+            setMutableBinding(this, ctx->engine->id_arguments, arguments);
+            return arguments;
+        }
+    }
+    throwReferenceError(Value::fromString(name));
+    return Value::undefinedValue();
+}
+
+
 
 void ExecutionContext::inplaceBitOp(Value value, String *name, BinOp op)
 {
@@ -323,7 +385,7 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
         std::fill(locals, locals + function->varCount, Value::undefinedValue());
 
     if (function->needsActivation)
-        activation = engine->newActivationObject(this);
+        activation = engine->newActivationObject();
     else
         activation = 0;
 

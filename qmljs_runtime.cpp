@@ -600,15 +600,7 @@ Value __qmljs_foreach_next_property_name(Value foreach_iterator)
 
 void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, Value value)
 {
-    PropertyDescriptor tmp;
-    PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp);
-    if (prop) {
-        prop->value = value;
-        return;
-    }
-    if (ctx->strictMode)
-        ctx->throwReferenceError(Value::fromString(name));
-    ctx->engine->globalObject.objectValue()->__put__(ctx, name, value);
+    ctx->setProperty(name, value);
 }
 
 Value __qmljs_get_property(ExecutionContext *ctx, Value object, String *name)
@@ -631,11 +623,7 @@ Value __qmljs_get_property(ExecutionContext *ctx, Value object, String *name)
 
 Value __qmljs_get_activation_property(ExecutionContext *ctx, String *name)
 {
-    PropertyDescriptor tmp;
-    PropertyDescriptor *prop = ctx->lookupPropertyDescriptor(name, &tmp);
-    if (!prop)
-        ctx->throwReferenceError(Value::fromString(name));
-    return prop->value;
+    return ctx->getProperty(name);
 }
 
 Value __qmljs_get_thisObject(ExecutionContext *ctx)
@@ -700,7 +688,7 @@ uint __qmljs_equal(Value x, Value y, ExecutionContext *ctx)
 // TODO: remove this function. Backends should just generate a __qmljs_get_activation_property followed by a __qmljs_call_value
 Value __qmljs_call_activation_property(ExecutionContext *context, String *name, Value *args, int argc)
 {
-    Value func = __qmljs_get_activation_property(context, name);
+    Value func = context->getProperty(name);
     Object *o = func.asObject();
     if (!o)
         context->throwReferenceError(Value::fromString(name));
@@ -734,11 +722,8 @@ Value __qmljs_call_value(ExecutionContext *context, Value thisObject, Value func
 
 Value __qmljs_construct_activation_property(ExecutionContext *context, String *name, Value *args, int argc)
 {
-    PropertyDescriptor tmp;
-    PropertyDescriptor *func = context->lookupPropertyDescriptor(name, &tmp);
-    if (! func)
-        context->throwReferenceError(Value::fromString(name));
-    return __qmljs_construct_value(context, func->value, args, argc);
+    Value func = context->getProperty(name);
+    return __qmljs_construct_value(context, func, args, argc);
 }
 
 Value __qmljs_construct_value(ExecutionContext *context, Value func, Value *args, int argc)
@@ -836,7 +821,7 @@ void __qmljs_builtin_pop_with(ExecutionContext *ctx)
 
 void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name)
 {
-    ctx->createMutableBinding(ctx, name, deletable);
+    ctx->createMutableBinding(name, deletable);
 }
 
 } // extern "C"

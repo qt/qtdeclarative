@@ -65,7 +65,6 @@ struct DateObject;
 struct FunctionObject;
 struct RegExpObject;
 struct ErrorObject;
-struct ActivationObject;
 struct ArgumentsObject;
 struct ExecutionContext;
 struct ExecutionEngine;
@@ -190,7 +189,7 @@ struct ExecutionEngine
     Object *newTypeErrorObject(ExecutionContext *ctx, const QString &message);
 
     Object *newMathObject(ExecutionContext *ctx);
-    Object *newActivationObject(ExecutionContext *ctx);
+    Object *newActivationObject();
 
     Object *newForEachIteratorObject(Object *o);
 };

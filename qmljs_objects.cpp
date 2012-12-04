@@ -216,7 +216,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
 }
 
 // Section 8.12.6
-bool Object::__hasProperty__(ExecutionContext *ctx, String *name) const
+bool Object::__hasProperty__(const ExecutionContext *ctx, String *name) const
 {
     if (members)
         return members->find(name) != 0;
@@ -592,12 +592,6 @@ QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
             __qmljs_throw_type_error(ctx);
     }
 
-    if (!ctx->activation)
-        ctx->activation = new QQmlJS::VM::Object();
-
-    foreach (const QString *local, globalCode->locals) {
-        ctx->activation->__put__(ctx, *local, QQmlJS::VM::Value::undefinedValue());
-    }
     return globalCode;
 }
 
@@ -681,42 +675,6 @@ Value ScriptFunction::construct(VM::ExecutionContext *ctx)
     return ctx->thisObject;
 }
 
-PropertyDescriptor *ActivationObject::__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill)
-{
-    if (context) {
-        for (unsigned int i = 0; i < context->variableCount(); ++i) {
-            String *var = context->variables()[i];
-            if (__qmljs_string_equal(var, name)) {
-                *to_fill = PropertyDescriptor::fromValue(context->locals[i]);
-                to_fill->writable = PropertyDescriptor::Set;
-                to_fill->enumberable = PropertyDescriptor::Set;
-                return to_fill;
-            }
-        }
-        for (unsigned int i = 0; i < context->formalCount(); ++i) {
-            String *formal = context->formals()[i];
-            if (__qmljs_string_equal(formal, name)) {
-                *to_fill = PropertyDescriptor::fromValue(context->arguments[i]);
-                to_fill->writable = PropertyDescriptor::Set;
-                to_fill->enumberable = PropertyDescriptor::Set;
-                return to_fill;
-            }
-        }
-        if (name->isEqualTo(ctx->engine->id_arguments)) {
-            if (arguments.isUndefined()) {
-                arguments = Value::fromObject(new ArgumentsObject(ctx));
-                arguments.objectValue()->prototype = ctx->engine->objectPrototype;
-            }
-
-            *to_fill = PropertyDescriptor::fromValue(arguments);
-            to_fill->writable = PropertyDescriptor::Unset;
-            to_fill->enumberable = PropertyDescriptor::Unset;
-            return to_fill;
-        }
-    }
-
-    return Object::__getPropertyDescriptor__(ctx, name, to_fill);
-}
 
 Value ArgumentsObject::__get__(ExecutionContext *ctx, String *name)
 {

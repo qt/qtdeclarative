@@ -72,7 +72,6 @@ struct DateObject;
 struct FunctionObject;
 struct RegExpObject;
 struct ErrorObject;
-struct ActivationObject;
 struct ArgumentsObject;
 struct ExecutionContext;
 struct ExecutionEngine;
@@ -419,7 +418,6 @@ struct Object {
     virtual FunctionObject *asFunctionObject() { return 0; }
     virtual RegExpObject *asRegExpObject() { return 0; }
     virtual ErrorObject *asErrorObject() { return 0; }
-    virtual ActivationObject *asActivationObject() { return 0; }
     virtual ArgumentsObject *asArgumentsObject() { return 0; }
 
     virtual Value __get__(ExecutionContext *ctx, String *name);
@@ -427,7 +425,7 @@ struct Object {
     virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill);
     virtual void __put__(ExecutionContext *ctx, String *name, Value value);
     virtual bool __canPut__(ExecutionContext *ctx, String *name);
-    virtual bool __hasProperty__(ExecutionContext *ctx, String *name) const;
+    virtual bool __hasProperty__(const ExecutionContext *ctx, String *name) const;
     virtual bool __delete__(ExecutionContext *ctx, String *name);
     virtual bool __defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc);
 
@@ -639,16 +637,6 @@ struct URIErrorObject: ErrorObject {
     URIErrorObject(ExecutionContext *ctx)
         : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("URIError"); }
-};
-
-struct ActivationObject: Object {
-    ExecutionContext *context;
-    Value arguments;
-    ActivationObject(ExecutionContext *context)
-        : context(context), arguments(Value::undefinedValue()) {}
-    virtual QString className() { return QStringLiteral("Activation"); }
-    virtual ActivationObject *asActivationObject() { return this; }
-    virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill);
 };
 
 struct ArgumentsObject: Object {

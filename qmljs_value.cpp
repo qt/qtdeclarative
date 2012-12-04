@@ -210,11 +210,6 @@ ErrorObject *Value::asErrorObject() const
     return isObject() ? objectValue()->asErrorObject() : 0;
 }
 
-ActivationObject *Value::asArgumentsObject() const
-{
-    return isObject() ? objectValue()->asActivationObject() : 0;
-}
-
 Value Value::property(ExecutionContext *ctx, String *name) const
 {
     return isObject() ? objectValue()->__get__(ctx, name) : undefinedValue();

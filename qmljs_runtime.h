@@ -85,7 +85,6 @@ struct DateObject;
 struct RegExpObject;
 struct ArrayObject;
 struct ErrorObject;
-struct ActivationObject;
 struct ExecutionEngine;
 
 extern "C" {

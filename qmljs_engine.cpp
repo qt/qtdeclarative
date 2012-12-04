@@ -176,9 +176,20 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     glo->__put__(rootContext, identifier(QStringLiteral("TypeError")), typeErrorCtor);
     glo->__put__(rootContext, identifier(QStringLiteral("URIError")), uRIErrorCtor);
     glo->__put__(rootContext, identifier(QStringLiteral("Math")), Value::fromObject(newMathObject(rootContext)));
-    glo->__put__(rootContext, identifier(QStringLiteral("undefined")), Value::undefinedValue());
-    glo->__put__(rootContext, identifier(QStringLiteral("NaN")), Value::fromDouble(nan("")));
-    glo->__put__(rootContext, identifier(QStringLiteral("Infinity")), Value::fromDouble(INFINITY));
+
+    PropertyDescriptor pd;
+    pd.type = PropertyDescriptor::Data;
+    pd.writable = PropertyDescriptor::Unset;
+    pd.enumberable = PropertyDescriptor::Unset;
+    pd.configurable = PropertyDescriptor::Unset;
+
+    pd.value = Value::undefinedValue();
+    glo->__defineOwnProperty__(rootContext, identifier(QStringLiteral("undefined")), &pd);
+    pd.value = Value::fromDouble(nan(""));
+    glo->__defineOwnProperty__(rootContext, identifier(QStringLiteral("NaN")), &pd);
+    pd.value = Value::fromDouble(INFINITY);
+    glo->__defineOwnProperty__(rootContext, identifier(QStringLiteral("Infinity")), &pd);
+
     glo->__put__(rootContext, identifier(QStringLiteral("eval")), Value::fromObject(new EvalFunction(rootContext)));
 
     // TODO: parseInt [15.1.2.2]
@@ -369,9 +380,9 @@ Object *ExecutionEngine::newMathObject(ExecutionContext *ctx)
     return object;
 }
 
-Object *ExecutionEngine::newActivationObject(ExecutionContext *ctx)
+Object *ExecutionEngine::newActivationObject()
 {
-    return new ActivationObject(ctx);
+    return new Object();
 }
 
 Object *ExecutionEngine::newForEachIteratorObject(Object *o)

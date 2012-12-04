@@ -100,9 +100,9 @@ struct ExecutionContext
     void init(ExecutionEngine *e);
 
     bool hasBinding(String *name) const;
-    void createMutableBinding(ExecutionContext *ctx, String *name, bool deletable);
-    void setMutableBinding(String *name, Value value, bool strict);
-    Value getBindingValue(String *name, bool strict) const;
+    void createMutableBinding(String *name, bool deletable);
+    bool setMutableBinding(ExecutionContext *scope, String *name, Value value);
+    Value getBindingValue(ExecutionContext *scope, String *name, bool strict) const;
     bool deleteBinding(ExecutionContext *ctx, String *name);
 
     void pushWithObject(Object *with);
@@ -121,6 +121,8 @@ struct ExecutionContext
     void throwUnimplemented(const QString &message);
 
     PropertyDescriptor *lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp);
+    void setProperty(String *name, Value value);
+    Value getProperty(String *name);
     void inplaceBitOp(Value value, String *name, BinOp op);
     bool deleteProperty(String *name);
 

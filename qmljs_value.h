@@ -61,7 +61,6 @@ struct DateObject;
 struct FunctionObject;
 struct RegExpObject;
 struct ErrorObject;
-struct ActivationObject;
 struct ArgumentsObject;
 struct ExecutionContext;
 struct ExecutionEngine;
@@ -238,7 +237,6 @@ struct Value
     RegExpObject *asRegExpObject() const;
     ArrayObject *asArrayObject() const;
     ErrorObject *asErrorObject() const;
-    ActivationObject *asArgumentsObject() const;
 
     Value property(ExecutionContext *ctx, String *name) const;
 
