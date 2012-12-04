@@ -62,25 +62,53 @@ namespace {
 QTextStream qout(stderr, QIODevice::WriteOnly);
 }
 
-typedef JSC::MacroAssembler::Jump (JSC::MacroAssembler::*MemRegBinOp)(JSC::MacroAssembler::ResultCondition, JSC::MacroAssembler::Address, JSC::MacroAssembler::RegisterID);
-typedef JSC::MacroAssembler::Jump (JSC::MacroAssembler::*ImmRegBinOp)(JSC::MacroAssembler::ResultCondition, JSC::MacroAssembler::TrustedImm32, JSC::MacroAssembler::RegisterID);
-typedef JSC::MacroAssembler::Jump (JSC::MacroAssembler::*ImmRegRegBinOp)(JSC::MacroAssembler::ResultCondition, JSC::MacroAssembler::TrustedImm32, JSC::MacroAssembler::RegisterID, JSC::MacroAssembler::RegisterID);
+typedef JSC::MacroAssembler::Jump (*MemRegBinOp)(JSC::MacroAssembler*, JSC::MacroAssembler::Address, JSC::MacroAssembler::RegisterID);
+typedef JSC::MacroAssembler::Jump (*ImmRegBinOp)(JSC::MacroAssembler*, JSC::MacroAssembler::TrustedImm32, JSC::MacroAssembler::RegisterID);
+
+static JSC::MacroAssembler::Jump masm_add32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
+{
+    return assembler->branchAdd32(JSC::MacroAssembler::Overflow, addr, reg);
+}
+
+static JSC::MacroAssembler::Jump masm_add32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
+{
+    return assembler->branchAdd32(JSC::MacroAssembler::Overflow, imm, reg);
+}
+
+static JSC::MacroAssembler::Jump masm_sub32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
+{
+    return assembler->branchSub32(JSC::MacroAssembler::Overflow, addr, reg);
+}
+
+static JSC::MacroAssembler::Jump masm_sub32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
+{
+    return assembler->branchSub32(JSC::MacroAssembler::Overflow, imm, reg);
+}
+
+static JSC::MacroAssembler::Jump masm_mul32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
+{
+    return assembler->branchMul32(JSC::MacroAssembler::Overflow, addr, reg);
+}
+
+static JSC::MacroAssembler::Jump masm_mul32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
+{
+    return assembler->branchMul32(JSC::MacroAssembler::Overflow, imm, reg, reg);
+}
 
 #define OP(op) \
-    { isel_stringIfy(op), op, 0, 0, 0 }
+    { isel_stringIfy(op), op, 0, 0 }
 
 #define INLINE_OP(op, memOp, immOp) \
-    { isel_stringIfy(op), op, memOp, immOp, 0 }
+    { isel_stringIfy(op), op, memOp, immOp }
 
 #define NULL_OP \
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 
 static const struct BinaryOperationInfo {
     const char *name;
     Value (*fallbackImplementation)(const Value, const Value, ExecutionContext *);
     MemRegBinOp inlineMemRegOp;
     ImmRegBinOp inlineImmRegOp;
-    ImmRegRegBinOp inlineImmRegRegOp;
 } binaryOperations[QQmlJS::IR::LastAluOp + 1] = {
     NULL_OP, // OpInvalid
     NULL_OP, // OpIfTrue
@@ -93,11 +121,9 @@ static const struct BinaryOperationInfo {
     OP(__qmljs_bit_or), // OpBitOr
     OP(__qmljs_bit_xor), // OpBitXor
 
-    INLINE_OP(__qmljs_add, &JSC::MacroAssembler::branchAdd32, &JSC::MacroAssembler::branchAdd32), // OpAdd
-    INLINE_OP(__qmljs_sub, &JSC::MacroAssembler::branchSub32, &JSC::MacroAssembler::branchSub32), // OpSub
-    // There's no branchMul32(Immediate, Reg) variant, only branchMul32(Immediate, Reg, Reg), so we need
-    // to use the last entry in the struct.
-    { "__qmljs_mul", __qmljs_mul, &JSC::MacroAssembler::branchMul32, 0, &JSC::MacroAssembler::branchMul32 },
+    INLINE_OP(__qmljs_add, &masm_add32, &masm_add32), // OpAdd
+    INLINE_OP(__qmljs_sub, &masm_sub32, &masm_sub32), // OpSub
+    INLINE_OP(__qmljs_mul, &masm_mul32, &masm_mul32), // OpMul
 
     OP(__qmljs_div), // OpDiv
     OP(__qmljs_mod), // OpMod
@@ -811,7 +837,7 @@ void InstructionSelection::generateBinOp(IR::AluOp operation, IR::Temp* target, 
     Value leftConst = Value::undefinedValue();
     Value rightConst = Value::undefinedValue();
 
-    bool canDoInline = info.inlineMemRegOp && (info.inlineImmRegOp || info.inlineImmRegRegOp);
+    bool canDoInline = info.inlineMemRegOp && info.inlineImmRegOp;
 
     if (canDoInline) {
         if (left->asConst()) {
@@ -856,12 +882,9 @@ void InstructionSelection::generateBinOp(IR::AluOp operation, IR::Temp* target, 
             Address rightValue = loadTempAddress(ScratchRegister, right->asTemp());
             rightValue.offset += offsetof(VM::Value, int_32);
 
-            overflowCheck = (this->*info.inlineMemRegOp)(Overflow, rightValue, IntegerOpRegister);
+            overflowCheck = info.inlineMemRegOp(this, rightValue, IntegerOpRegister);
         } else { // right->asConst()
-            if (info.inlineImmRegOp)
-                overflowCheck = (this->*info.inlineImmRegOp)(Overflow, TrustedImm32(rightConst.integerValue()), IntegerOpRegister);
-            else
-                overflowCheck = (this->*info.inlineImmRegRegOp)(Overflow, TrustedImm32(rightConst.integerValue()), IntegerOpRegister, IntegerOpRegister);
+            overflowCheck = info.inlineImmRegOp(this, TrustedImm32(rightConst.integerValue()), IntegerOpRegister);
         }
 
         Address resultAddr = loadTempAddress(ScratchRegister, target);
@@ -879,7 +902,8 @@ void InstructionSelection::generateBinOp(IR::AluOp operation, IR::Temp* target, 
             leftTypeCheck.link(this);
         if (rightTypeCheck.isSet())
             rightTypeCheck.link(this);
-        overflowCheck.link(this);
+        if (overflowCheck.isSet())
+            overflowCheck.link(this);
     }
 
     // Fallback
