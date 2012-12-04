@@ -62,8 +62,6 @@
 #include <QtCore/qtimer.h>
 #include <QtCore/qatomic.h>
 
-Q_DECLARE_METATYPE(QJSValue);
-
 QT_BEGIN_NAMESPACE
 
 #if defined(__GNUC__) && !defined(__INTEL_COMPILER)

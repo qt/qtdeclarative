@@ -696,7 +696,6 @@ public:
     }
 };
 
-Q_DECLARE_METATYPE(QJSValue);
 class MyInvokableBaseObject : public QObject
 {
     Q_OBJECT

@@ -66,8 +66,6 @@ public:
     int id;
 };
 
-Q_DECLARE_METATYPE(QJSValue)
-
 QT_BEGIN_NAMESPACE
 #define MyInterface_iid "org.qt-project.Qt.Test.MyInterface"
 Q_DECLARE_INTERFACE(MyInterface, MyInterface_iid);

@@ -61,8 +61,6 @@
 #  pragma warning( disable : 4200 )
 #endif
 
-Q_DECLARE_METATYPE(QJSValue)
-
 QT_BEGIN_NAMESPACE
 
 #define Q_INT16_MAX 32767

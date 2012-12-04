@@ -49,7 +49,6 @@
 #include <QtTest/QtTest>
 
 Q_DECLARE_METATYPE(QVariant)
-Q_DECLARE_METATYPE(QJSValue)
 
 class tst_QJSValue : public QObject
 {
