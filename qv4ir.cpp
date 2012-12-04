@@ -391,7 +391,19 @@ Function *Module::newFunction(const QString &name)
     return f;
 }
 
+Module::~Module()
+{
+    foreach (Function *f, functions)
+        f->releaseModuleManagedData();
+}
+
 Function::~Function()
+{
+    delete[] codeData;
+}
+
+
+void Function::releaseModuleManagedData()
 {
     // destroy the Stmt::Data blocks manually, because memory pool cleanup won't
     // call the Stmt destructors.
@@ -400,8 +412,10 @@ Function::~Function()
             s->destroyData();
 
     qDeleteAll(basicBlocks);
-    delete[] codeData;
+    pool = 0;
+    module = 0;
 }
+
 
 const QString *Function::newString(const QString &text)
 {

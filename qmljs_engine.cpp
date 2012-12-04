@@ -41,6 +41,7 @@
 #include <qmljs_engine.h>
 #include <qmljs_objects.h>
 #include <qv4ecmaobjects_p.h>
+#include "qv4mm.h"
 
 namespace QQmlJS {
 namespace VM {
@@ -48,6 +49,9 @@ namespace VM {
 struct StringPool
 {
     QHash<QString, String*> strings;
+
+    ~StringPool()
+    { qDeleteAll(strings.values()); }
 
     String *newString(const QString &s)
     {
@@ -60,11 +64,18 @@ struct StringPool
     }
 };
 
-ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
-    : iselFactory(factory)
+ExecutionEngine::ExecutionEngine(MemoryManager *memoryManager, EvalISelFactory *factory)
+    : memoryManager(memoryManager)
+    , iselFactory(factory)
     , debugger(0)
+    , globalObject(Value::nullValue())
+    , exception(Value::nullValue())
 {
+    MemoryManager::GCBlocker gcBlocker(memoryManager);
+
     stringPool = new StringPool;
+    memoryManager->setStringPool(stringPool);
+    memoryManager->setExecutionEngine(this);
 
     rootContext = newContext();
     rootContext->init(this);
@@ -75,21 +86,21 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     id_arguments = identifier(QStringLiteral("arguments"));
     id___proto__ = identifier(QStringLiteral("__proto__"));
 
-    objectPrototype = new ObjectPrototype();
-    stringPrototype = new StringPrototype(rootContext);
-    numberPrototype = new NumberPrototype();
-    booleanPrototype = new BooleanPrototype();
-    arrayPrototype = new ArrayPrototype();
-    datePrototype = new DatePrototype();
-    functionPrototype = new FunctionPrototype(rootContext);
-    regExpPrototype = new RegExpPrototype();
-    errorPrototype = new ErrorPrototype();
-    evalErrorPrototype = new EvalErrorPrototype(rootContext);
-    rangeErrorPrototype = new RangeErrorPrototype(rootContext);
-    referenceErrorPrototype = new ReferenceErrorPrototype(rootContext);
-    syntaxErrorPrototype = new SyntaxErrorPrototype(rootContext);
-    typeErrorPrototype = new TypeErrorPrototype(rootContext);
-    uRIErrorPrototype = new URIErrorPrototype(rootContext);
+    objectPrototype = new (memoryManager) ObjectPrototype();
+    stringPrototype = new (memoryManager) StringPrototype(rootContext);
+    numberPrototype = new (memoryManager) NumberPrototype();
+    booleanPrototype = new (memoryManager) BooleanPrototype();
+    arrayPrototype = new (memoryManager) ArrayPrototype();
+    datePrototype = new (memoryManager) DatePrototype();
+    functionPrototype = new (memoryManager) FunctionPrototype(rootContext);
+    regExpPrototype = new (memoryManager) RegExpPrototype();
+    errorPrototype = new (memoryManager) ErrorPrototype();
+    evalErrorPrototype = new (memoryManager) EvalErrorPrototype(rootContext);
+    rangeErrorPrototype = new (memoryManager) RangeErrorPrototype(rootContext);
+    referenceErrorPrototype = new (memoryManager) ReferenceErrorPrototype(rootContext);
+    syntaxErrorPrototype = new (memoryManager) SyntaxErrorPrototype(rootContext);
+    typeErrorPrototype = new (memoryManager) TypeErrorPrototype(rootContext);
+    uRIErrorPrototype = new (memoryManager) URIErrorPrototype(rootContext);
 
     stringPrototype->prototype = objectPrototype;
     numberPrototype->prototype = objectPrototype;
@@ -106,21 +117,21 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     typeErrorPrototype->prototype = errorPrototype;
     uRIErrorPrototype->prototype = errorPrototype;
 
-    objectCtor = Value::fromObject(new ObjectCtor(rootContext));
-    stringCtor = Value::fromObject(new StringCtor(rootContext));
-    numberCtor = Value::fromObject(new NumberCtor(rootContext));
-    booleanCtor = Value::fromObject(new BooleanCtor(rootContext));
-    arrayCtor = Value::fromObject(new ArrayCtor(rootContext));
-    functionCtor = Value::fromObject(new FunctionCtor(rootContext));
-    dateCtor = Value::fromObject(new DateCtor(rootContext));
-    regExpCtor = Value::fromObject(new RegExpCtor(rootContext));
-    errorCtor = Value::fromObject(new ErrorCtor(rootContext));
-    evalErrorCtor = Value::fromObject(new EvalErrorCtor(rootContext));
-    rangeErrorCtor = Value::fromObject(new RangeErrorCtor(rootContext));
-    referenceErrorCtor = Value::fromObject(new ReferenceErrorCtor(rootContext));
-    syntaxErrorCtor = Value::fromObject(new SyntaxErrorCtor(rootContext));
-    typeErrorCtor = Value::fromObject(new TypeErrorCtor(rootContext));
-    uRIErrorCtor = Value::fromObject(new URIErrorCtor(rootContext));
+    objectCtor = Value::fromObject(new (memoryManager) ObjectCtor(rootContext));
+    stringCtor = Value::fromObject(new (memoryManager) StringCtor(rootContext));
+    numberCtor = Value::fromObject(new (memoryManager) NumberCtor(rootContext));
+    booleanCtor = Value::fromObject(new (memoryManager) BooleanCtor(rootContext));
+    arrayCtor = Value::fromObject(new (memoryManager) ArrayCtor(rootContext));
+    functionCtor = Value::fromObject(new (memoryManager) FunctionCtor(rootContext));
+    dateCtor = Value::fromObject(new (memoryManager) DateCtor(rootContext));
+    regExpCtor = Value::fromObject(new (memoryManager) RegExpCtor(rootContext));
+    errorCtor = Value::fromObject(new (memoryManager) ErrorCtor(rootContext));
+    evalErrorCtor = Value::fromObject(new (memoryManager) EvalErrorCtor(rootContext));
+    rangeErrorCtor = Value::fromObject(new (memoryManager) RangeErrorCtor(rootContext));
+    referenceErrorCtor = Value::fromObject(new (memoryManager) ReferenceErrorCtor(rootContext));
+    syntaxErrorCtor = Value::fromObject(new (memoryManager) SyntaxErrorCtor(rootContext));
+    typeErrorCtor = Value::fromObject(new (memoryManager) TypeErrorCtor(rootContext));
+    uRIErrorCtor = Value::fromObject(new (memoryManager) URIErrorCtor(rootContext));
 
     stringCtor.objectValue()->prototype = functionPrototype;
     numberCtor.objectValue()->prototype = functionPrototype;
@@ -190,19 +201,19 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     pd.value = Value::fromDouble(INFINITY);
     glo->__defineOwnProperty__(rootContext, identifier(QStringLiteral("Infinity")), &pd);
 
-    glo->__put__(rootContext, identifier(QStringLiteral("eval")), Value::fromObject(new EvalFunction(rootContext)));
+    glo->__put__(rootContext, identifier(QStringLiteral("eval")), Value::fromObject(new (memoryManager) EvalFunction(rootContext)));
 
     // TODO: parseInt [15.1.2.2]
     // TODO: parseFloat [15.1.2.3]
-    glo->__put__(rootContext, identifier(QStringLiteral("isNaN")), Value::fromObject(new IsNaNFunction(rootContext))); // isNaN [15.1.2.4]
-    glo->__put__(rootContext, identifier(QStringLiteral("isFinite")), Value::fromObject(new IsFiniteFunction(rootContext))); // isFinite [15.1.2.5]
+    glo->__put__(rootContext, identifier(QStringLiteral("isNaN")), Value::fromObject(new (memoryManager) IsNaNFunction(rootContext))); // isNaN [15.1.2.4]
+    glo->__put__(rootContext, identifier(QStringLiteral("isFinite")), Value::fromObject(new (memoryManager) IsFiniteFunction(rootContext))); // isFinite [15.1.2.5]
 }
 
 ExecutionEngine::~ExecutionEngine()
 {
     delete globalObject.asObject();
     delete rootContext;
-    delete stringPool; // the String pointers should get GC-ed.
+    delete stringPool;
 }
 
 ExecutionContext *ExecutionEngine::newContext()
@@ -220,14 +231,16 @@ String *ExecutionEngine::identifier(const QString &s)
 
 FunctionObject *ExecutionEngine::newNativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
 {
-    NativeFunction *f = new NativeFunction(scope, name, code);
+    NativeFunction *f = new (memoryManager) NativeFunction(scope, name, code);
     f->prototype = scope->engine->functionPrototype;
     return f;
 }
 
 FunctionObject *ExecutionEngine::newScriptFunction(ExecutionContext *scope, IR::Function *function)
 {
-    ScriptFunction *f = new ScriptFunction(scope, function);
+    MemoryManager::GCBlocker gcBlocker(memoryManager);
+
+    ScriptFunction *f = new (memoryManager) ScriptFunction(scope, function);
     Object *proto = scope->engine->newObject();
     proto->__put__(scope, scope->engine->id_constructor, Value::fromObject(f));
     f->__put__(scope, scope->engine->id_prototype, Value::fromObject(proto));
@@ -237,14 +250,14 @@ FunctionObject *ExecutionEngine::newScriptFunction(ExecutionContext *scope, IR::
 
 Object *ExecutionEngine::newObject()
 {
-    Object *object = new Object();
+    Object *object = new (memoryManager) Object();
     object->prototype = objectPrototype;
     return object;
 }
 
 FunctionObject *ExecutionEngine::newObjectCtor(ExecutionContext *ctx)
 {
-    return new ObjectCtor(ctx);
+    return new (memoryManager) ObjectCtor(ctx);
 }
 
 String *ExecutionEngine::newString(const QString &s)
@@ -254,76 +267,76 @@ String *ExecutionEngine::newString(const QString &s)
 
 Object *ExecutionEngine::newStringObject(const Value &value)
 {
-    StringObject *object = new StringObject(value);
+    StringObject *object = new (memoryManager) StringObject(value);
     object->prototype = stringPrototype;
     return object;
 }
 
 FunctionObject *ExecutionEngine::newStringCtor(ExecutionContext *ctx)
 {
-    return new StringCtor(ctx);
+    return new (memoryManager) StringCtor(ctx);
 }
 
 Object *ExecutionEngine::newNumberObject(const Value &value)
 {
-    NumberObject *object = new NumberObject(value);
+    NumberObject *object = new (memoryManager) NumberObject(value);
     object->prototype = numberPrototype;
     return object;
 }
 
 FunctionObject *ExecutionEngine::newNumberCtor(ExecutionContext *ctx)
 {
-    return new NumberCtor(ctx);
+    return new (memoryManager) NumberCtor(ctx);
 }
 
 Object *ExecutionEngine::newBooleanObject(const Value &value)
 {
-    Object *object = new BooleanObject(value);
+    Object *object = new (memoryManager) BooleanObject(value);
     object->prototype = booleanPrototype;
     return object;
 }
 
 FunctionObject *ExecutionEngine::newBooleanCtor(ExecutionContext *ctx)
 {
-    return new BooleanCtor(ctx);
+    return new (memoryManager) BooleanCtor(ctx);
 }
 
 Object *ExecutionEngine::newFunctionObject(ExecutionContext *ctx)
 {
-    Object *object = new FunctionObject(ctx);
+    Object *object = new (memoryManager) FunctionObject(ctx);
     object->prototype = functionPrototype;
     return object;
 }
 
 ArrayObject *ExecutionEngine::newArrayObject()
 {
-    ArrayObject *object = new ArrayObject();
+    ArrayObject *object = new (memoryManager) ArrayObject();
     object->prototype = arrayPrototype;
     return object;
 }
 
 ArrayObject *ExecutionEngine::newArrayObject(const Array &value)
 {
-    ArrayObject *object = new ArrayObject(value);
+    ArrayObject *object = new (memoryManager) ArrayObject(value);
     object->prototype = arrayPrototype;
     return object;
 }
 
 FunctionObject *ExecutionEngine::newArrayCtor(ExecutionContext *ctx)
 {
-    return new ArrayCtor(ctx);
+    return new (memoryManager) ArrayCtor(ctx);
 }
 
 Object *ExecutionEngine::newDateObject(const Value &value)
 {
-    Object *object = new DateObject(value);
+    Object *object = new (memoryManager) DateObject(value);
     object->prototype = datePrototype;
     return object;
 }
 
 FunctionObject *ExecutionEngine::newDateCtor(ExecutionContext *ctx)
 {
-    return new DateCtor(ctx);
+    return new (memoryManager) DateCtor(ctx);
 }
 
 Object *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
@@ -335,61 +348,60 @@ Object *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
     if (flags & IR::RegExp::RegExp_Multiline)
         options |= QRegularExpression::MultilineOption;
 
-    Object *object = new RegExpObject(QRegularExpression(pattern, options), global);
+    Object *object = new (memoryManager) RegExpObject(QRegularExpression(pattern, options), global);
     object->prototype = regExpPrototype;
     return object;
 }
 
 FunctionObject *ExecutionEngine::newRegExpCtor(ExecutionContext *ctx)
 {
-    return new RegExpCtor(ctx);
+    return new (memoryManager) RegExpCtor(ctx);
 }
 
 Object *ExecutionEngine::newErrorObject(const Value &value)
 {
-    ErrorObject *object = new ErrorObject(value);
+    ErrorObject *object = new (memoryManager) ErrorObject(value);
     object->prototype = errorPrototype;
     return object;
 }
 
 Object *ExecutionEngine::newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message)
 {
-    SyntaxErrorObject *object = new SyntaxErrorObject(ctx, message);
+    SyntaxErrorObject *object = new (memoryManager) SyntaxErrorObject(ctx, message);
     object->prototype = syntaxErrorPrototype;
     return object;
 }
 
 Object *ExecutionEngine::newReferenceErrorObject(ExecutionContext *ctx, const QString &message)
 {
-    ReferenceErrorObject *object = new ReferenceErrorObject(ctx, message);
+    ReferenceErrorObject *object = new (memoryManager) ReferenceErrorObject(ctx, message);
     object->prototype = referenceErrorPrototype;
     return object;
 }
 
 Object *ExecutionEngine::newTypeErrorObject(ExecutionContext *ctx, const QString &message)
 {
-    TypeErrorObject *object = new TypeErrorObject(ctx, message);
+    TypeErrorObject *object = new (memoryManager) TypeErrorObject(ctx, message);
     object->prototype = typeErrorPrototype;
     return object;
 }
 
 Object *ExecutionEngine::newMathObject(ExecutionContext *ctx)
 {
-    MathObject *object = new MathObject(ctx);
+    MathObject *object = new (memoryManager) MathObject(ctx);
     object->prototype = objectPrototype;
     return object;
 }
 
 Object *ExecutionEngine::newActivationObject()
 {
-    return new Object();
+    return new (memoryManager) Object();
 }
 
 Object *ExecutionEngine::newForEachIteratorObject(Object *o)
 {
-    return new ForEachIteratorObject(o);
+    return new (memoryManager) ForEachIteratorObject(o);
 }
-
 
 } // namespace VM
 } // namespace QQmlJS

@@ -53,6 +53,7 @@
 #include "qv4syntaxchecker_p.h"
 #include "qv4ecmaobjects_p.h"
 #include "qv4isel_p.h"
+#include "qv4mm_moth.h"
 
 #include <QtCore>
 #include <private/qqmljsengine_p.h>
@@ -144,12 +145,12 @@ int executeLLVMCode(void *codePtr)
     void (*code)(VM::ExecutionContext *) = (void (*)(VM::ExecutionContext *)) codePtr;
 
     QScopedPointer<QQmlJS::EvalISelFactory> iSelFactory(new QQmlJS::Moth::ISelFactory);
-    VM::ExecutionEngine vm(iSelFactory.data());
+    VM::ExecutionEngine vm(0, iSelFactory.data());
     VM::ExecutionContext *ctx = vm.rootContext;
 
     QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
     globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
-                          QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
+                          QQmlJS::VM::Value::fromObject(new (ctx->engine->memoryManager) builtins::Print(ctx)));
 
     void * buf = __qmljs_create_exception_handler(ctx);
     if (setjmp(*(jmp_buf *)buf)) {
@@ -318,13 +319,17 @@ int main(int argc, char *argv[])
 #endif // QMLJS_NO_LLVM
     case use_masm:
     case use_moth: {
+        QScopedPointer<QQmlJS::VM::MemoryManager> mm;
         QScopedPointer<QQmlJS::EvalISelFactory> iSelFactory;
-        if (mode == use_moth)
+        if (mode == use_moth) {
+            mm.reset(new QQmlJS::Moth::MemoryManager);
             iSelFactory.reset(new QQmlJS::Moth::ISelFactory);
-        else
+        } else {
+            mm.reset(new QQmlJS::VM::MemoryManagerWithoutGC);
             iSelFactory.reset(new QQmlJS::MASM::ISelFactory);
+        }
 
-        QQmlJS::VM::ExecutionEngine vm(iSelFactory.data());
+        QQmlJS::VM::ExecutionEngine vm(mm.data(), iSelFactory.data());
 
         QScopedPointer<QQmlJS::Debugging::Debugger> debugger;
         if (enableDebugging)
@@ -335,12 +340,12 @@ int main(int argc, char *argv[])
 
         QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
         globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
-                                  QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
+                                  QQmlJS::VM::Value::fromObject(new (ctx->engine->memoryManager) builtins::Print(ctx)));
 
         bool errorInTestHarness = false;
         if (!qgetenv("IN_TEST_HARNESS").isEmpty())
             globalObject->__put__(ctx, vm.identifier(QStringLiteral("$ERROR")),
-                                  QQmlJS::VM::Value::fromObject(new builtins::TestHarnessError(ctx, errorInTestHarness)));
+                                  QQmlJS::VM::Value::fromObject(new (ctx->engine->memoryManager) builtins::TestHarnessError(ctx, errorInTestHarness)));
 
         foreach (const QString &fn, args) {
             QFile file(fn);
@@ -354,7 +359,7 @@ int main(int argc, char *argv[])
                     return EXIT_FAILURE;
                 }
 
-                QQmlJS::IR::Function *f = QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode);
+                QScopedPointer<QQmlJS::IR::Function> f(QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode));
                 if (!f)
                     continue;
 
@@ -376,6 +381,8 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
         }
+
+        mm->dumpStats();
     } return EXIT_SUCCESS;
     }
 }

@@ -587,6 +587,8 @@ struct Module {
     QVector<Function *> functions;
 
     Function *newFunction(const QString &name);
+
+    ~Module();
 };
 
 struct Function {
@@ -626,6 +628,7 @@ struct Function {
     { this->name = newString(name); }
 
     ~Function();
+    void releaseModuleManagedData();
 
     enum BasicBlockInsertMode {
         InsertBlock,

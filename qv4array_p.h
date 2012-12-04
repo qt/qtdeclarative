@@ -74,8 +74,11 @@ public:
                        Array &other);
     inline void push(const Value &value);
 
+    void getCollectables(QVector<Object *> &objects);
+
 private:
-    std::deque<Value> *to_vector;
+    typedef std::deque<Value> ToVectorType;
+    ToVectorType *to_vector;
 };
 
 class ArrayElementLessThan
@@ -192,6 +195,14 @@ inline void Array::sort(ExecutionContext *context, const Value &comparefn)
 inline void Array::push(const Value &value)
 {
     to_vector->push_back(value);
+}
+
+inline void Array::getCollectables(QVector<Object *> &objects)
+{
+    for (ToVectorType::const_iterator it = to_vector->begin(), eit = to_vector->end(); it != eit; ++it) {
+        if (Object *o = it->asObject())
+            objects.append(o);
+    }
 }
 
 inline void Array::splice(double start, double deleteCount,

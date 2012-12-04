@@ -43,6 +43,7 @@
 #include "qv4ir_p.h"
 #include "qv4isel_p.h"
 #include "qv4ecmaobjects_p.h"
+#include "qv4mm.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -58,6 +59,28 @@
 #include <iostream>
 
 using namespace QQmlJS::VM;
+
+
+Managed::~Managed()
+{
+}
+
+void *Managed::operator new(size_t size, MemoryManager *mm)
+{
+    assert(mm);
+
+    return mm->allocManaged(size);
+}
+
+void Managed::operator delete(void *ptr)
+{
+    if (!ptr)
+        return;
+
+    Managed *m = reinterpret_cast<Managed *>(ptr);
+    assert(m->mm);
+    m->mm->deallocManaged(m);
+}
 
 //
 // Object
@@ -105,6 +128,20 @@ bool Object::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ct
     String *name = index.toString(ctx);
     assert(name);
     return inplaceBinOp(rhs, name, op, ctx);
+}
+
+void Object::getCollectables(QVector<Object *> &objects)
+{
+    if (prototype)
+        objects.append(prototype);
+
+    if (members) {
+        for (PropertyTable::iterator it = members->begin(), eit = members->end(); it < eit; ++it) {
+            if ((*it)->descriptor.isData())
+                if (Object *o = (*it)->descriptor.value.asObject())
+                    objects.append(o);
+        }
+    }
 }
 
 // Section 8.12.1
@@ -349,6 +386,15 @@ String *ForEachIteratorObject::nextPropertyName()
     }
 }
 
+void ForEachIteratorObject::getCollectables(QVector<Object *> &objects)
+{
+    Object::getCollectables(objects);
+    if (object)
+        objects.append(object);
+    if (current)
+        objects.append(current);
+}
+
 Value ArrayObject::__get__(ExecutionContext *ctx, String *name)
 {
     if (name->isEqualTo(ctx->engine->id_length))
@@ -366,6 +412,12 @@ bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContex
         return true;
     }
     return Object::inplaceBinOp(rhs, index, op, ctx);
+}
+
+void ArrayObject::getCollectables(QVector<Object *> &objects)
+{
+    Object::getCollectables(objects);
+    value.getCollectables(objects);
 }
 
 bool FunctionObject::hasInstance(ExecutionContext *ctx, const Value &value)
@@ -490,7 +542,7 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
     bool directCall = true;
 
     const QString code = args[0].stringValue()->toQString();
-    QQmlJS::IR::Function *f = parseSource(context, QStringLiteral("eval code"), code, QQmlJS::Codegen::EvalCode);
+    QScopedPointer<QQmlJS::IR::Function> f(parseSource(context, QStringLiteral("eval code"), code, QQmlJS::Codegen::EvalCode));
     if (!f)
         return Value::undefinedValue();
 
@@ -533,6 +585,8 @@ QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
                                                 QQmlJS::Codegen::Mode mode)
 {
     using namespace QQmlJS;
+
+    MemoryManager::GCBlocker gcBlocker(ctx->engine->memoryManager);
 
     VM::ExecutionEngine *vm = ctx->engine;
     IR::Module module;
@@ -654,6 +708,13 @@ void ErrorObject::setNameProperty(ExecutionContext *ctx)
     __put__(ctx, QLatin1String("name"), Value::fromString(ctx, className()));
 }
 
+void ErrorObject::getCollectables(QVector<Object *> &objects)
+{
+    Object::getCollectables(objects);
+    if (Object *o = value.asObject())
+        objects.append(o);
+}
+
 SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message)
     : ErrorObject(ctx->argument(0))
     , msg(message)
@@ -674,7 +735,6 @@ Value ScriptFunction::construct(VM::ExecutionContext *ctx)
     function->code(ctx, function->codeData);
     return ctx->thisObject;
 }
-
 
 Value ArgumentsObject::__get__(ExecutionContext *ctx, String *name)
 {
@@ -697,7 +757,6 @@ PropertyDescriptor *ArgumentsObject::__getPropertyDescriptor__(ExecutionContext 
 
     return Object::__getPropertyDescriptor__(ctx, name, to_fill);
 }
-
 
 NativeFunction::NativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
     : FunctionObject(scope)

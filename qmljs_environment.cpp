@@ -44,6 +44,7 @@
 #include <qmljs_environment.h>
 #include <qmljs_objects.h>
 #include <qv4ecmaobjects_p.h>
+#include "qv4mm.h"
 
 namespace QQmlJS {
 namespace VM {
@@ -266,7 +267,6 @@ void ExecutionContext::setProperty(String *name, Value value)
 
 Value ExecutionContext::getProperty(String *name)
 {
-    PropertyDescriptor tmp;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
         if (ctx->withObject) {
             With *w = ctx->withObject;
@@ -286,7 +286,7 @@ Value ExecutionContext::getProperty(String *name)
         if (ctx->activation && ctx->activation->__hasProperty__(ctx, name))
             return ctx->activation->__get__(ctx, name);
         if (name->isEqualTo(ctx->engine->id_arguments)) {
-            Value arguments = Value::fromObject(new ArgumentsObject(this));
+            Value arguments = Value::fromObject(new (engine->memoryManager) ArgumentsObject(this));
             createMutableBinding(ctx->engine->id_arguments, false);
             setMutableBinding(this, ctx->engine->id_arguments, arguments);
             return arguments;
@@ -345,6 +345,8 @@ void ExecutionContext::throwReferenceError(Value value)
 
 void ExecutionContext::initCallContext(ExecutionContext *parent, const Value that, FunctionObject *f, Value *args, unsigned argc)
 {
+    MemoryManager::GCBlocker blockGC(parent->engine->memoryManager);
+
     engine = parent->engine;
     this->parent = parent;
     thisObject = that;

@@ -151,7 +151,7 @@ void liveness(IR::Function *function)
             computeUseDef(s);
     }
 
-    dfs(function->basicBlocks.first(), &V, &blocks);
+    dfs(function->basicBlocks.at(0), &V, &blocks);
 
     bool changed;
     do {
@@ -1471,6 +1471,9 @@ void Codegen::linearize(IR::Function *function)
     exitBlock->index = trace.size();
     trace.append(exitBlock);
 
+    foreach (IR::BasicBlock *b, function->basicBlocks)
+        if (!trace.contains(b))
+            delete b;
     function->basicBlocks = trace;
 
 #ifndef QV4_NO_LIVENESS

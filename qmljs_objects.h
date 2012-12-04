@@ -75,6 +75,7 @@ struct ErrorObject;
 struct ArgumentsObject;
 struct ExecutionContext;
 struct ExecutionEngine;
+class MemoryManager;
 
 struct ObjectPrototype;
 struct StringPrototype;
@@ -91,6 +92,29 @@ struct ReferenceErrorPrototype;
 struct SyntaxErrorPrototype;
 struct TypeErrorPrototype;
 struct URIErrorPrototype;
+
+struct Managed
+{
+private:
+    Managed(const Managed &other);
+    void operator = (const Managed &other);
+
+protected:
+    Managed() {}
+
+public:
+    virtual ~Managed();
+
+    void *operator new(size_t size, MemoryManager *mm);
+    void operator delete(void *ptr);
+
+protected:
+    virtual void getCollectables(QVector<Object *> &objects) = 0;
+
+private:
+    friend class MemoryManager;
+    MemoryManager *mm;
+};
 
 struct String {
     inline bool isEqualTo(const String *other) const {
@@ -395,7 +419,7 @@ private:
     int _allocated: 27;
 };
 
-struct Object {
+struct Object: Managed {
     Object *prototype;
     String *klass;
     PropertyTable *members;
@@ -440,6 +464,9 @@ struct Object {
     Value getValue(ExecutionContext *ctx, PropertyDescriptor *p) const;
     bool inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx);
     virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
+
+protected:
+    virtual void getCollectables(QVector<Object *> &objects);
 };
 
 struct ForEachIteratorObject: Object {
@@ -450,6 +477,9 @@ struct ForEachIteratorObject: Object {
     virtual QString className() { return QStringLiteral("__ForEachIteratorObject"); }
 
     String *nextPropertyName();
+
+protected:
+    virtual void getCollectables(QVector<Object *> &objects);
 };
 
 struct BooleanObject: Object {
@@ -489,6 +519,9 @@ struct ArrayObject: Object {
     virtual Value __get__(ExecutionContext *ctx, String *name);
 
     virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
+
+protected:
+    virtual void getCollectables(QVector<Object *> &objects);
 };
 
 struct FunctionObject: Object {
@@ -591,6 +624,7 @@ struct ErrorObject: Object {
 
 protected:
     void setNameProperty(ExecutionContext *ctx);
+    virtual void getCollectables(QVector<Object *> &objects);
 };
 
 struct EvalErrorObject: ErrorObject {

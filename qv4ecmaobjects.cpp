@@ -42,6 +42,7 @@
 
 #include "qv4ecmaobjects_p.h"
 #include "qv4array_p.h"
+#include "qv4mm.h"
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>
@@ -1860,6 +1861,8 @@ FunctionCtor::FunctionCtor(ExecutionContext *scope)
 // 15.3.2
 Value FunctionCtor::construct(ExecutionContext *ctx)
 {
+    MemoryManager::GCBlocker gcBlocker(ctx->engine->memoryManager);
+
     QString args;
     QString body;
     if (ctx->argumentCount > 0)
@@ -1899,7 +1902,7 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
     isel->run(irf);
     delete isel;
 
-    ctx->thisObject = Value::fromObject(new ScriptFunction(ctx->engine->rootContext, irf));
+    ctx->thisObject = Value::fromObject(ctx->engine->newScriptFunction(ctx->engine->rootContext, irf));
     return ctx->thisObject;
 }
 
@@ -2593,7 +2596,7 @@ Value RegExpCtor::construct(ExecutionContext *ctx)
         if (!f.isUndefined())
             ctx->throwTypeError();
 
-        return Value::fromObject(new RegExpObject(re->value, false));
+        return Value::fromObject(new (ctx->engine->memoryManager) RegExpObject(re->value, false));
     }
 
     if (r.isUndefined())
@@ -2623,7 +2626,7 @@ Value RegExpCtor::construct(ExecutionContext *ctx)
     if (!re.isValid())
         ctx->throwTypeError();
 
-    ctx->thisObject = Value::fromObject(new RegExpObject(re, global));
+    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) RegExpObject(re, global));
     return ctx->thisObject;
 }
 
@@ -2715,7 +2718,7 @@ ErrorCtor::ErrorCtor(ExecutionContext *scope)
 
 Value ErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new ErrorObject(ctx->argument(0)));
+    ctx->thisObject = Value::fromObject(ctx->engine->newErrorObject(ctx->argument(0)));
     return ctx->thisObject;
 }
 
@@ -2732,37 +2735,37 @@ Value ErrorCtor::call(ExecutionContext *ctx)
 
 Value EvalErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new EvalErrorObject(ctx));
+    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) EvalErrorObject(ctx));
     return ctx->thisObject;
 }
 
 Value RangeErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new RangeErrorObject(ctx));
+    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) RangeErrorObject(ctx));
     return ctx->thisObject;
 }
 
 Value ReferenceErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new ReferenceErrorObject(ctx));
+    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) ReferenceErrorObject(ctx));
     return ctx->thisObject;
 }
 
 Value SyntaxErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new SyntaxErrorObject(ctx, 0));
+    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) SyntaxErrorObject(ctx, 0));
     return ctx->thisObject;
 }
 
 Value TypeErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new TypeErrorObject(ctx));
+    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) TypeErrorObject(ctx));
     return ctx->thisObject;
 }
 
 Value URIErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new URIErrorObject(ctx));
+    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) URIErrorObject(ctx));
     return ctx->thisObject;
 }
 

@@ -68,6 +68,7 @@ struct ErrorObject;
 struct ArgumentsObject;
 struct ExecutionContext;
 struct ExecutionEngine;
+class MemoryManager;
 
 struct ObjectPrototype;
 struct StringPrototype;
@@ -87,6 +88,7 @@ struct URIErrorPrototype;
 
 struct ExecutionEngine
 {
+    MemoryManager *memoryManager;
     EvalISelFactory *iselFactory;
     ExecutionContext *current;
     ExecutionContext *rootContext;
@@ -148,7 +150,7 @@ struct ExecutionEngine
 
     struct StringPool *stringPool;
 
-    ExecutionEngine(EvalISelFactory *iselFactory);
+    ExecutionEngine(MemoryManager *memoryManager, EvalISelFactory *iselFactory);
     ~ExecutionEngine();
 
     ExecutionContext *newContext();

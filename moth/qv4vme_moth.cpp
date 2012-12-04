@@ -2,6 +2,7 @@
 #include "qv4instr_moth_p.h"
 #include "qmljs_value.h"
 #include "debugging.h"
+#include "qv4mm_moth.h"
 
 #include <iostream>
 
@@ -51,7 +52,7 @@ using namespace QQmlJS::Moth;
 
 #endif
 
-static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, QVector<VM::Value> &stack, int index)
+static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, VM::Value* stack, int index)
 {
 #ifdef DO_TRACE_INSTR
     const char *kind;
@@ -87,25 +88,32 @@ static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, QVecto
         int off = index - context->variableCount();
 
         Q_ASSERT(off >= 0);
-        Q_ASSERT(off < stack.size());
 
-        return stack.data() + off;
+        return stack + off;
     }
 }
 
 class FunctionState: public Debugging::FunctionState
 {
 public:
-    FunctionState(QQmlJS::VM::ExecutionContext *context, QVector<VM::Value> *stack, const uchar **code)
+    FunctionState(QQmlJS::VM::ExecutionContext *context, const uchar **code)
         : Debugging::FunctionState(context)
-        , stack(stack)
+        , stack(0)
+        , stackSize(0)
         , code(code)
     {}
 
-    virtual VM::Value *temp(unsigned idx) { return stack->data() + idx; }
+    ~FunctionState()
+    { if (stack) static_cast<MemoryManager *>(context()->engine->memoryManager)->deallocStackFrame(stack); }
+
+    virtual VM::Value *temp(unsigned idx) { return stack + idx; }
+
+    void setStack(VM::Value *stack, unsigned stackSize)
+    { this->stack = stack; this->stackSize = stackSize; }
 
 private:
-    QVector<VM::Value> *stack;
+    VM::Value *stack;
+    unsigned stackSize;
     const uchar **code;
 };
 
@@ -130,8 +138,9 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     }
 #endif
 
-    QVector<VM::Value> stack;
-    FunctionState state(context, &stack, &code);
+    VM::Value *stack = 0;
+    unsigned stackSize = 0;
+    FunctionState state(context, &code);
 
 #ifdef MOTH_THREADED_INTERPRETER
     const Instr *genericInstr = reinterpret_cast<const Instr *>(code);
@@ -191,7 +200,9 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 
     MOTH_BEGIN_INSTR(Push)
         TRACE(inline, "stack size: %u", instr.value);
-        stack.resize(instr.value);
+        stackSize = instr.value;
+        stack = static_cast<MemoryManager *>(context->engine->memoryManager)->allocStackFrame(stackSize);
+        state.setStack(stack, stackSize);
     MOTH_END_INSTR(Push)
 
     MOTH_BEGIN_INSTR(CallValue)
@@ -207,20 +218,20 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 #endif // DO_TRACE_INSTR
         quint32 argStart = instr.args - context->variableCount();
         TRACE(Call, "value index = %d, argStart = %d, argc = %d, result temp index = %d", instr.destIndex, argStart, instr.argc, instr.targetTempIndex);
-        VM::Value *args = stack.data() + argStart;
+        VM::Value *args = stack + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_call_value(context, VM::Value::undefinedValue(), TEMP(instr.destIndex), args, instr.argc);
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
         quint32 argStart = instr.args - context->variableCount();
-        VM::Value *args = stack.data() + argStart;
+        VM::Value *args = stack + argStart;
         VM::Value base = TEMP(instr.baseTemp);
         TEMP(instr.targetTempIndex) = __qmljs_call_property(context, base, instr.name, args, instr.argc);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltin)
         quint32 argStart = instr.args - context->variableCount();
-        VM::Value *args = stack.data() + argStart;
+        VM::Value *args = stack + argStart;
         void *buf;
         switch (instr.builtin) {
         case Instr::instr_callBuiltin::builtin_typeof:
@@ -300,20 +311,20 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 
     MOTH_BEGIN_INSTR(CreateValue)
         quint32 argStart = instr.args - context->variableCount();
-        VM::Value *args = stack.data() + argStart;
+        VM::Value *args = stack + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_value(context, TEMP(instr.func), args, instr.argc);
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
         quint32 argStart = instr.args - context->variableCount();
-        VM::Value *args = stack.data() + argStart;
+        VM::Value *args = stack + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_property(context, TEMP(instr.base), instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
         TRACE(inline, "property name = %s, argc = %d", instr.name->toQString().toUtf8().constData(), instr.argc);
         quint32 argStart = instr.args - context->variableCount();
-        VM::Value *args = stack.data() + argStart;
+        VM::Value *args = stack + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_activation_property(context, instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateActivationProperty)
 
