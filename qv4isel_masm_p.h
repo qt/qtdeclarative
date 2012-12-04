@@ -65,6 +65,7 @@ public:
     { this->operator()(function); }
     void operator()(IR::Function *function);
 
+protected:
 #if CPU(X86)
 
 #undef VALUE_FITS_IN_REGISTER
@@ -147,7 +148,6 @@ public:
 #error Argh.
 #endif
 
-protected:
     struct VoidType {};
     static const VoidType Void;
 
@@ -611,7 +611,115 @@ private:
 #endif
     }
 
+    typedef Jump (InstructionSelection::*MemRegBinOp)(Address, RegisterID);
+    typedef Jump (InstructionSelection::*ImmRegBinOp)(TrustedImm32, RegisterID);
+
+    struct BinaryOperationInfo {
+        const char *name;
+        VM::Value (*fallbackImplementation)(const VM::Value, const VM::Value, VM::ExecutionContext *);
+        MemRegBinOp inlineMemRegOp;
+        ImmRegBinOp inlineImmRegOp;
+    };
+
+    static const BinaryOperationInfo binaryOperations[QQmlJS::IR::LastAluOp + 1];
+
     void generateBinOp(IR::AluOp operation, IR::Temp* target, IR::Expr* left, IR::Expr* right);
+
+    Jump inline_add32(Address addr, RegisterID reg)
+    {
+        return branchAdd32(Overflow, addr, reg);
+    }
+
+    Jump inline_add32(TrustedImm32 imm, RegisterID reg)
+    {
+        return branchAdd32(Overflow, imm, reg);
+    }
+
+    Jump inline_sub32(Address addr, RegisterID reg)
+    {
+        return branchSub32(Overflow, addr, reg);
+    }
+
+    Jump inline_sub32(TrustedImm32 imm, RegisterID reg)
+    {
+        return branchSub32(Overflow, imm, reg);
+    }
+
+    Jump inline_mul32(Address addr, RegisterID reg)
+    {
+        return branchMul32(Overflow, addr, reg);
+    }
+
+    Jump inline_mul32(TrustedImm32 imm, RegisterID reg)
+    {
+        return branchMul32(Overflow, imm, reg, reg);
+    }
+
+    Jump inline_shl32(Address addr, RegisterID reg)
+    {
+        load32(addr, ScratchRegister);
+        and32(TrustedImm32(0x1f), ScratchRegister);
+        lshift32(ScratchRegister, reg);
+        return Jump();
+    }
+
+    Jump inline_shl32(TrustedImm32 imm, RegisterID reg)
+    {
+        imm.m_value &= 0x1f;
+        lshift32(imm, reg);
+        return Jump();
+    }
+
+    Jump inline_shr32(Address addr, RegisterID reg)
+    {
+        load32(addr, ScratchRegister);
+        and32(TrustedImm32(0x1f), ScratchRegister);
+        rshift32(ScratchRegister, reg);
+        return Jump();
+    }
+
+    Jump inline_shr32(TrustedImm32 imm, RegisterID reg)
+    {
+        imm.m_value &= 0x1f;
+        rshift32(imm, reg);
+        return Jump();
+    }
+
+    Jump inline_and32(Address addr, RegisterID reg)
+    {
+        and32(addr, reg);
+        return Jump();
+    }
+
+    Jump inline_and32(TrustedImm32 imm, RegisterID reg)
+    {
+        and32(imm, reg);
+        return Jump();
+    }
+
+    Jump inline_or32(Address addr, RegisterID reg)
+    {
+        or32(addr, reg);
+        return Jump();
+    }
+
+    Jump inline_or32(TrustedImm32 imm, RegisterID reg)
+    {
+        or32(imm, reg);
+        return Jump();
+    }
+
+    Jump inline_xor32(Address addr, RegisterID reg)
+    {
+        xor32(addr, reg);
+        return Jump();
+    }
+
+    Jump inline_xor32(TrustedImm32 imm, RegisterID reg)
+    {
+        xor32(imm, reg);
+        return Jump();
+    }
 
     VM::ExecutionEngine *_engine;
     IR::Function *_function;

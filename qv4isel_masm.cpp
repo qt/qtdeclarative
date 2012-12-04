@@ -62,106 +62,6 @@ namespace {
 QTextStream qout(stderr, QIODevice::WriteOnly);
 }
 
-typedef JSC::MacroAssembler::Jump (*MemRegBinOp)(JSC::MacroAssembler*, JSC::MacroAssembler::Address, JSC::MacroAssembler::RegisterID);
-typedef JSC::MacroAssembler::Jump (*ImmRegBinOp)(JSC::MacroAssembler*, JSC::MacroAssembler::TrustedImm32, JSC::MacroAssembler::RegisterID);
-
-static JSC::MacroAssembler::Jump masm_add32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
-{
-    return assembler->branchAdd32(JSC::MacroAssembler::Overflow, addr, reg);
-}
-
-static JSC::MacroAssembler::Jump masm_add32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
-{
-    return assembler->branchAdd32(JSC::MacroAssembler::Overflow, imm, reg);
-}
-
-static JSC::MacroAssembler::Jump masm_sub32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
-{
-    return assembler->branchSub32(JSC::MacroAssembler::Overflow, addr, reg);
-}
-
-static JSC::MacroAssembler::Jump masm_sub32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
-{
-    return assembler->branchSub32(JSC::MacroAssembler::Overflow, imm, reg);
-}
-
-static JSC::MacroAssembler::Jump masm_mul32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
-{
-    return assembler->branchMul32(JSC::MacroAssembler::Overflow, addr, reg);
-}
-
-static JSC::MacroAssembler::Jump masm_mul32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
-{
-    return assembler->branchMul32(JSC::MacroAssembler::Overflow, imm, reg, reg);
-}
-
-static JSC::MacroAssembler::Jump masm_shl32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
-{
-    assembler->load32(addr, InstructionSelection::ScratchRegister);
-    assembler->and32(JSC::MacroAssembler::TrustedImm32(0x1f), InstructionSelection::ScratchRegister);
-    assembler->lshift32(InstructionSelection::ScratchRegister, reg);
-    return JSC::MacroAssembler::Jump();
-}
-
-static JSC::MacroAssembler::Jump masm_shl32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
-{
-    imm.m_value &= 0x1f;
-    assembler->lshift32(imm, reg);
-    return JSC::MacroAssembler::Jump();
-}
-
-static JSC::MacroAssembler::Jump masm_shr32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
-{
-    assembler->load32(addr, InstructionSelection::ScratchRegister);
-    assembler->and32(JSC::MacroAssembler::TrustedImm32(0x1f), InstructionSelection::ScratchRegister);
-    assembler->rshift32(InstructionSelection::ScratchRegister, reg);
-    return JSC::MacroAssembler::Jump();
-}
-
-static JSC::MacroAssembler::Jump masm_shr32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
-{
-    imm.m_value &= 0x1f;
-    assembler->rshift32(imm, reg);
-    return JSC::MacroAssembler::Jump();
-}
-
-static JSC::MacroAssembler::Jump masm_and32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
-{
-    assembler->and32(addr, reg);
-    return JSC::MacroAssembler::Jump();
-}
-
-static JSC::MacroAssembler::Jump masm_and32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
-{
-    assembler->and32(imm, reg);
-    return JSC::MacroAssembler::Jump();
-}
-
-static JSC::MacroAssembler::Jump masm_or32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
-{
-    assembler->or32(addr, reg);
-    return JSC::MacroAssembler::Jump();
-}
-
-static JSC::MacroAssembler::Jump masm_or32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
-{
-    assembler->or32(imm, reg);
-    return JSC::MacroAssembler::Jump();
-}
-
-static JSC::MacroAssembler::Jump masm_xor32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
-{
-    assembler->xor32(addr, reg);
-    return JSC::MacroAssembler::Jump();
-}
-
-static JSC::MacroAssembler::Jump masm_xor32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
-{
-    assembler->xor32(imm, reg);
-    return JSC::MacroAssembler::Jump();
-}
-
-
 #define OP(op) \
     { isel_stringIfy(op), op, 0, 0 }
 
@@ -171,12 +71,7 @@ static JSC::MacroAssembler::Jump masm_xor32(JSC::MacroAssembler* assembler, JSC:
 #define NULL_OP \
     { 0, 0, 0, 0 }
 
-static const struct BinaryOperationInfo {
-    const char *name;
-    Value (*fallbackImplementation)(const Value, const Value, ExecutionContext *);
-    MemRegBinOp inlineMemRegOp;
-    ImmRegBinOp inlineImmRegOp;
-} binaryOperations[QQmlJS::IR::LastAluOp + 1] = {
+const InstructionSelection::BinaryOperationInfo InstructionSelection::binaryOperations[QQmlJS::IR::LastAluOp + 1] = {
     NULL_OP, // OpInvalid
     NULL_OP, // OpIfTrue
     NULL_OP, // OpNot
@@ -184,19 +79,19 @@ static const struct BinaryOperationInfo {
     NULL_OP, // OpUPlus
     NULL_OP, // OpCompl
 
-    INLINE_OP(__qmljs_bit_and, &masm_and32, &masm_and32), // OpBitAnd
-    INLINE_OP(__qmljs_bit_or, &masm_or32, &masm_or32), // OpBitOr
-    INLINE_OP(__qmljs_bit_xor, &masm_xor32, &masm_xor32), // OpBitXor
+    INLINE_OP(__qmljs_bit_and, &InstructionSelection::inline_and32, &InstructionSelection::inline_and32), // OpBitAnd
+    INLINE_OP(__qmljs_bit_or, &InstructionSelection::inline_or32, &InstructionSelection::inline_or32), // OpBitOr
+    INLINE_OP(__qmljs_bit_xor, &InstructionSelection::inline_xor32, &InstructionSelection::inline_xor32), // OpBitXor
 
-    INLINE_OP(__qmljs_add, &masm_add32, &masm_add32), // OpAdd
-    INLINE_OP(__qmljs_sub, &masm_sub32, &masm_sub32), // OpSub
-    INLINE_OP(__qmljs_mul, &masm_mul32, &masm_mul32), // OpMul
+    INLINE_OP(__qmljs_add, &InstructionSelection::inline_add32, &InstructionSelection::inline_add32), // OpAdd
+    INLINE_OP(__qmljs_sub, &InstructionSelection::inline_sub32, &InstructionSelection::inline_sub32), // OpSub
+    INLINE_OP(__qmljs_mul, &InstructionSelection::inline_mul32, &InstructionSelection::inline_mul32), // OpMul
 
     OP(__qmljs_div), // OpDiv
     OP(__qmljs_mod), // OpMod
 
-    INLINE_OP(__qmljs_shl, &masm_shl32, &masm_shl32), // OpLShift
-    INLINE_OP(__qmljs_shr, &masm_shr32, &masm_shr32), // OpRShift
+    INLINE_OP(__qmljs_shl, &InstructionSelection::inline_shl32, &InstructionSelection::inline_shl32), // OpLShift
+    INLINE_OP(__qmljs_shr, &InstructionSelection::inline_shr32, &InstructionSelection::inline_shr32), // OpRShift
     OP(__qmljs_ushr), // OpURShift
 
     OP(__qmljs_gt), // OpGt
@@ -949,9 +844,9 @@ void InstructionSelection::generateBinOp(IR::AluOp operation, IR::Temp* target, 
             Address rightValue = loadTempAddress(ScratchRegister, right->asTemp());
             rightValue.offset += offsetof(VM::Value, int_32);
 
-            overflowCheck = info.inlineMemRegOp(this, rightValue, IntegerOpRegister);
+            overflowCheck = (this->*info.inlineMemRegOp)(rightValue, IntegerOpRegister);
         } else { // right->asConst()
-            overflowCheck = info.inlineImmRegOp(this, TrustedImm32(rightConst.integerValue()), IntegerOpRegister);
+            overflowCheck = (this->*info.inlineImmRegOp)(TrustedImm32(rightConst.integerValue()), IntegerOpRegister);
         }
 
         Address resultAddr = loadTempAddress(ScratchRegister, target);
