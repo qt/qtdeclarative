@@ -65,7 +65,6 @@ public:
     { this->operator()(function); }
     void operator()(IR::Function *function);
 
-protected:
 #if CPU(X86)
 
 #undef VALUE_FITS_IN_REGISTER
@@ -148,6 +147,7 @@ protected:
 #error Argh.
 #endif
 
+protected:
     struct VoidType {};
     static const VoidType Void;
 

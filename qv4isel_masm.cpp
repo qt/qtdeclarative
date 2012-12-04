@@ -95,6 +95,36 @@ static JSC::MacroAssembler::Jump masm_mul32(JSC::MacroAssembler* assembler, JSC:
     return assembler->branchMul32(JSC::MacroAssembler::Overflow, imm, reg, reg);
 }
 
+static JSC::MacroAssembler::Jump masm_shl32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
+{
+    assembler->load32(addr, InstructionSelection::ScratchRegister);
+    assembler->and32(JSC::MacroAssembler::TrustedImm32(0x1f), InstructionSelection::ScratchRegister);
+    assembler->lshift32(InstructionSelection::ScratchRegister, reg);
+    return JSC::MacroAssembler::Jump();
+}
+
+static JSC::MacroAssembler::Jump masm_shl32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
+{
+    imm.m_value &= 0x1f;
+    assembler->lshift32(imm, reg);
+    return JSC::MacroAssembler::Jump();
+}
+
+static JSC::MacroAssembler::Jump masm_shr32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::Address addr, JSC::MacroAssembler::RegisterID reg)
+{
+    assembler->load32(addr, InstructionSelection::ScratchRegister);
+    assembler->and32(JSC::MacroAssembler::TrustedImm32(0x1f), InstructionSelection::ScratchRegister);
+    assembler->rshift32(InstructionSelection::ScratchRegister, reg);
+    return JSC::MacroAssembler::Jump();
+}
+
+static JSC::MacroAssembler::Jump masm_shr32(JSC::MacroAssembler* assembler, JSC::MacroAssembler::TrustedImm32 imm, JSC::MacroAssembler::RegisterID reg)
+{
+    imm.m_value &= 0x1f;
+    assembler->rshift32(imm, reg);
+    return JSC::MacroAssembler::Jump();
+}
+
 #define OP(op) \
     { isel_stringIfy(op), op, 0, 0 }
 
@@ -128,8 +158,8 @@ static const struct BinaryOperationInfo {
     OP(__qmljs_div), // OpDiv
     OP(__qmljs_mod), // OpMod
 
-    OP(__qmljs_shl), // OpLShift
-    OP(__qmljs_shr), // OpRShift
+    INLINE_OP(__qmljs_shl, &masm_shl32, &masm_shl32), // OpLShift
+    INLINE_OP(__qmljs_shr, &masm_shr32, &masm_shr32), // OpRShift
     OP(__qmljs_ushr), // OpURShift
 
     OP(__qmljs_gt), // OpGt
