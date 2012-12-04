@@ -271,8 +271,8 @@ Value ExecutionContext::getProperty(String *name)
         if (ctx->withObject) {
             With *w = ctx->withObject;
             while (w) {
-                if (PropertyDescriptor *pd = w->object->__getPropertyDescriptor__(this, name, &tmp))
-                    return pd->value;
+                if (w->object->__hasProperty__(ctx, name))
+                    return w->object->__get__(ctx, name);
                 w = w->next;
             }
         }
