@@ -54,7 +54,7 @@
     \snippet quick/modelviews/listview/expandingdelegates.qml 3
 
     \section2 Highlight demonstrates adding a custom highlight to a ListView.
-    \snippet examples/quick/modelviews/listview/highlight.qml 0
+    \snippet quick/modelviews/listview/highlight.qml 0
 
     \section2 Highlight Ranges shows the three different highlight range modes of ListView.
     \snippet quick/modelviews/listview/highlightranges.qml 0
