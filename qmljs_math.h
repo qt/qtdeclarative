@@ -88,11 +88,11 @@ static inline Value mul_int32(int a, int b)
     quint8 overflow = 0;
     int aa = a;
 
-    asm ("imul %2\n"
+    asm ("imul %2, %1\n"
          "setc %0"
-         : "=q" (overflow), "=a" (aa)
+         : "=q" (overflow), "=r" (aa)
          : "r" (b), "1" (aa)
-         : "edx", "cc"
+         : "cc"
     );
     if (!overflow)
         return Value::fromInt32(aa);
