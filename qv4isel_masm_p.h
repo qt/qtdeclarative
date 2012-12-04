@@ -681,6 +681,21 @@ private:
         return Jump();
     }
 
+    Jump inline_ushr32(Address addr, RegisterID reg)
+    {
+        load32(addr, ScratchRegister);
+        and32(TrustedImm32(0x1f), ScratchRegister);
+        urshift32(ScratchRegister, reg);
+        return Jump();
+    }
+
+    Jump inline_ushr32(TrustedImm32 imm, RegisterID reg)
+    {
+        imm.m_value &= 0x1f;
+        urshift32(imm, reg);
+        return Jump();
+    }
+
     Jump inline_and32(Address addr, RegisterID reg)
     {
         and32(addr, reg);

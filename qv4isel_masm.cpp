@@ -92,7 +92,7 @@ const InstructionSelection::BinaryOperationInfo InstructionSelection::binaryOper
 
     INLINE_OP(__qmljs_shl, &InstructionSelection::inline_shl32, &InstructionSelection::inline_shl32), // OpLShift
     INLINE_OP(__qmljs_shr, &InstructionSelection::inline_shr32, &InstructionSelection::inline_shr32), // OpRShift
-    OP(__qmljs_ushr), // OpURShift
+    INLINE_OP(__qmljs_ushr, &InstructionSelection::inline_ushr32, &InstructionSelection::inline_ushr32), // OpURShift
 
     OP(__qmljs_gt), // OpGt
     OP(__qmljs_lt), // OpLt
