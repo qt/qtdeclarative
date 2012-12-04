@@ -675,13 +675,13 @@ void QQmlEnginePrivate::init()
         firstTime = false;
     }
 
-    qRegisterMetaType<QVariant>("QVariant");
-    qRegisterMetaType<QQmlScriptString>("QQmlScriptString");
-    qRegisterMetaType<QJSValue>("QJSValue");
-    qRegisterMetaType<QQmlComponent::Status>("QQmlComponent::Status");
-    qRegisterMetaType<QList<QObject*> >("QList<QObject*>");
-    qRegisterMetaType<QList<int> >("QList<int>");
-    qRegisterMetaType<QQmlV8Handle>("QQmlV8Handle");
+    qRegisterMetaType<QVariant>();
+    qRegisterMetaType<QQmlScriptString>();
+    qRegisterMetaType<QJSValue>();
+    qRegisterMetaType<QQmlComponent::Status>();
+    qRegisterMetaType<QList<QObject*> >();
+    qRegisterMetaType<QList<int> >();
+    qRegisterMetaType<QQmlV8Handle>();
 
     v8engine()->setEngine(q);
 
