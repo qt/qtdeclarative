@@ -120,7 +120,6 @@ struct ExecutionContext
     void throwReferenceError(Value value);
     void throwUnimplemented(const QString &message);
 
-    PropertyDescriptor *lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp);
     void setProperty(String *name, Value value);
     Value getProperty(String *name);
     void inplaceBitOp(Value value, String *name, BinOp op);

@@ -222,25 +222,6 @@ void ExecutionContext::init(ExecutionEngine *eng)
     eng->exception = Value::undefinedValue();
 }
 
-PropertyDescriptor *ExecutionContext::lookupPropertyDescriptor(String *name, PropertyDescriptor *tmp)
-{
-    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
-        if (ctx->withObject) {
-            With *w = ctx->withObject;
-            while (w) {
-                if (PropertyDescriptor *pd = w->object->__getPropertyDescriptor__(this, name, tmp))
-                    return pd;
-                w = w->next;
-            }
-        }
-        if (ctx->activation) {
-            if (PropertyDescriptor *pd = ctx->activation->__getPropertyDescriptor__(this, name, tmp))
-                return pd;
-        }
-    }
-    return 0;
-}
-
 bool ExecutionContext::deleteProperty(String *name)
 {
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
