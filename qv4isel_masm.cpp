@@ -195,11 +195,6 @@ void InstructionSelection::operator()(IR::Function *function)
         functions[ctl.externalFunction.value()] = ctl.functionName;
     }
 
-    foreach (CatchBlockToLink cbl, _catchHandlers) {
-        Label target = _addrs.value(cbl.catchBlock);
-        linkBuffer.patch(cbl.ptr, linkBuffer.locationOf(target));
-    }
-
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
 #if OS(LINUX)

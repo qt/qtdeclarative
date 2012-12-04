@@ -595,10 +595,6 @@ private:
         FunctionPtr externalFunction;
         const char* functionName;
     };
-    struct CatchBlockToLink {
-        DataLabelPtr ptr;
-        IR::BasicBlock *catchBlock;
-    };
 
     void storeValue(VM::Value value, Address destination)
     {
@@ -726,7 +722,6 @@ private:
     IR::BasicBlock *_block;
     QHash<IR::BasicBlock *, QVector<Jump> > _patches;
     QHash<IR::BasicBlock *, Label> _addrs;
-    QList<CatchBlockToLink> _catchHandlers;
     QList<CallToLink> _callsToLink;
 };
 
