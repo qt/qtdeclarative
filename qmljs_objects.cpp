@@ -508,7 +508,13 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
         ctx = context;
     }
 
+    // set the correct strict mode flag on the context
+    bool cstrict = ctx->strictMode;
+    ctx->strictMode = strict;
+
     Value result = f->code(ctx, f->codeData);
+
+    ctx->strictMode = cstrict;
 
     if (strict)
         ctx->leaveCallContext();
