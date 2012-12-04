@@ -543,14 +543,14 @@ QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
         VM::DiagnosticMessage *error = 0, **errIt = &error;
         foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
             if (m.isError()) {
-                *errIt = new VM::DiagnosticMessage; // FIXME: should we ask the engine to create this object?
-                (*errIt)->fileName = ctx->engine->newString(fileName);
+                *errIt = new VM::DiagnosticMessage;
+                (*errIt)->fileName = fileName;
                 (*errIt)->offset = m.loc.offset;
                 (*errIt)->length = m.loc.length;
                 (*errIt)->startLine = m.loc.startLine;
                 (*errIt)->startColumn = m.loc.startColumn;
                 (*errIt)->type = VM::DiagnosticMessage::Error;
-                (*errIt)->message = ctx->engine->newString(m.message);
+                (*errIt)->message = m.message;
                 errIt = &(*errIt)->next;
             } else {
                 std::cerr << qPrintable(fileName) << ':' << m.loc.startLine << ':' << m.loc.startColumn
@@ -570,7 +570,7 @@ QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
             }
 
             Codegen cg(ctx);
-            globalCode = cg(program, &module, mode);
+            globalCode = cg(fileName, program, &module, mode);
             if (globalCode) {
                 // only generate other functions if global code generation succeeded.
                 foreach (IR::Function *function, module.functions) {

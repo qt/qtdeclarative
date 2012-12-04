@@ -69,8 +69,8 @@ public:
         FunctionCode
     };
 
-    IR::Function *operator()(AST::Program *ast, IR::Module *module, Mode mode = GlobalCode);
-    IR::Function *operator()(AST::FunctionExpression *ast, IR::Module *module);
+    IR::Function *operator()(const QString &fileName, AST::Program *ast, IR::Module *module, Mode mode = GlobalCode);
+    IR::Function *operator()(const QString &fileName, AST::FunctionExpression *ast, IR::Module *module);
 
 protected:
     enum Format { ex, cx, nx };
@@ -336,6 +336,7 @@ protected:
     void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
 
 private:
+    QString _fileName;
     Result _expr;
     QString _property;
     UiMember _uiMember;

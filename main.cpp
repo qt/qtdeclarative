@@ -186,7 +186,7 @@ int compile(const QString &fileName, const QString &source, QQmlJS::LLVMOutputTy
 
     Codegen cg(0);
     // FIXME: if the program is empty, we should we generate an empty %entry, or give an error?
-    /*IR::Function *globalCode =*/ cg(program, &module);
+    /*IR::Function *globalCode =*/ cg(fileName, program, &module);
 
     int (*exec)(void *) = outputType == LLVMOutputJit ? executeLLVMCode : 0;
     return compileWithLLVM(&module, fileName, outputType, exec);

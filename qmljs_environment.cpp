@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 
+#include <QString>
 #include "debugging.h"
 #include <qmljs_environment.h>
 #include <qmljs_objects.h>
@@ -48,27 +49,30 @@ namespace QQmlJS {
 namespace VM {
 
 DiagnosticMessage::DiagnosticMessage()
-    : fileName(0)
-    , offset(0)
+    : offset(0)
     , length(0)
     , startLine(0)
     , startColumn(0)
     , type(0)
-    , message(0)
     , next(0)
 {}
+
+DiagnosticMessage::~DiagnosticMessage()
+{
+    delete next;
+}
 
 String *DiagnosticMessage::buildFullMessage(ExecutionContext *ctx) const
 {
     QString msg;
-    if (fileName)
-        msg = fileName->toQString() + QLatin1Char(':');
+    if (!fileName.isEmpty())
+        msg = fileName + QLatin1Char(':');
     msg += QString::number(startLine) + QLatin1Char(':') + QString::number(startColumn) + QLatin1String(": ");
     if (type == QQmlJS::VM::DiagnosticMessage::Error)
         msg += QLatin1String("error");
     else
         msg += QLatin1String("warning");
-    msg += ": " + message->toQString();
+    msg += ": " + message;
 
     return ctx->engine->newString(msg);
 }

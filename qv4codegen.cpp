@@ -371,10 +371,11 @@ Codegen::Codegen(VM::ExecutionContext *context)
 {
 }
 
-IR::Function *Codegen::operator()(Program *node, IR::Module *module, Mode mode)
+IR::Function *Codegen::operator()(const QString &fileName, Program *node, IR::Module *module, Mode mode)
 {
     assert(node);
 
+    _fileName = fileName;
     _module = module;
     _env = 0;
 
@@ -399,8 +400,9 @@ IR::Function *Codegen::operator()(Program *node, IR::Module *module, Mode mode)
     return globalCode;
 }
 
-IR::Function *Codegen::operator()(AST::FunctionExpression *ast, IR::Module *module)
+IR::Function *Codegen::operator()(const QString &fileName, AST::FunctionExpression *ast, IR::Module *module)
 {
+    _fileName = fileName;
     _module = module;
     _env = 0;
 
@@ -2270,9 +2272,10 @@ bool Codegen::visit(UiSourceElement *)
 void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 {
     VM::DiagnosticMessage *msg = new VM::DiagnosticMessage;
+    msg->fileName = _fileName;
     msg->offset = loc.begin();
     msg->startLine = loc.startLine;
     msg->startColumn = loc.startColumn;
-    msg->message = new VM::String(detail);
+    msg->message = detail;
     _context->throwSyntaxError(msg);
 }

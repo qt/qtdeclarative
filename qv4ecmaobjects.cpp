@@ -1893,7 +1893,7 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
     IR::Module module;
 
     Codegen cg(ctx);
-    IR::Function *irf = cg(fe, &module);
+    IR::Function *irf = cg(QString(), fe, &module);
 
     EvalInstructionSelection *isel = ctx->engine->iselFactory->create(ctx->engine);
     isel->run(irf);
@@ -2779,16 +2779,14 @@ Value ErrorPrototype::method_toString(ExecutionContext *ctx)
     if (!o)
         __qmljs_throw_type_error(ctx);
 
-    String n(QString::fromLatin1("name"));
-    Value name = o->__get__(ctx, &n);
+    Value name = o->__get__(ctx, ctx->engine->newString(QString::fromLatin1("name")));
     QString qname;
     if (name.isUndefined())
         qname = QString::fromLatin1("Error");
     else
         qname = __qmljs_to_string(name, ctx).stringValue()->toQString();
 
-    String m(QString::fromLatin1("message"));
-    Value message = o->__get__(ctx, &m);
+    Value message = o->__get__(ctx, ctx->engine->newString(QString::fromLatin1("message")));
     QString qmessage;
     if (!message.isUndefined())
         qmessage = __qmljs_to_string(message, ctx).stringValue()->toQString();

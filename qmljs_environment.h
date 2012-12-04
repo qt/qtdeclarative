@@ -56,16 +56,17 @@ struct DiagnosticMessage
 {
     enum { Error, Warning };
 
-    String *fileName;
+    QString fileName;
     quint32 offset;
     quint32 length;
     quint32 startLine;
     unsigned startColumn: 31;
     unsigned type: 1;
-    String *message;
+    QString message;
     DiagnosticMessage *next;
 
     DiagnosticMessage();
+    ~DiagnosticMessage();
     String *buildFullMessage(ExecutionContext *ctx) const;
 };
 

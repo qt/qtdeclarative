@@ -94,9 +94,6 @@ struct TypeErrorPrototype;
 struct URIErrorPrototype;
 
 struct String {
-    String(const QString &text)
-        : _text(text), _hashValue(0) {}
-
     inline bool isEqualTo(const String *other) const {
         if (this == other)
             return true;
@@ -115,6 +112,11 @@ struct String {
 
         return _hashValue;
     }
+
+private:
+    friend struct StringPool;
+    String(const QString &text)
+        : _text(text), _hashValue(0) {}
 
 private:
     QString _text;
@@ -613,6 +615,7 @@ struct ReferenceErrorObject: ErrorObject {
 
 struct SyntaxErrorObject: ErrorObject {
     SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *msg);
+    ~SyntaxErrorObject() { delete msg; }
     virtual QString className() { return QStringLiteral("SyntaxError"); }
 
     virtual SyntaxErrorObject *asSyntaxError() { return this; }
