@@ -63,7 +63,6 @@
 #include <QtCore/qatomic.h>
 
 Q_DECLARE_METATYPE(QJSValue);
-Q_DECLARE_METATYPE(QQmlV8Handle);
 
 QT_BEGIN_NAMESPACE
 
