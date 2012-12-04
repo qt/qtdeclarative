@@ -1705,4 +1705,8 @@ function decrypt() {
 var d1 = +new Date
 encrypt()
 decrypt()
+
+if (typeof(print) === "undefined")
+    print = console.log;
+
 print("done in", new Date - d1)
