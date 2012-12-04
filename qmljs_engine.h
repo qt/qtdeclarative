@@ -150,6 +150,7 @@ struct ExecutionEngine
     struct StringPool *stringPool;
 
     ExecutionEngine(EvalISelFactory *iselFactory);
+    ~ExecutionEngine();
 
     ExecutionContext *newContext();
 

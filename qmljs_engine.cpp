@@ -187,6 +187,13 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     glo->__put__(rootContext, identifier(QStringLiteral("isFinite")), Value::fromObject(new IsFiniteFunction(rootContext))); // isFinite [15.1.2.5]
 }
 
+ExecutionEngine::~ExecutionEngine()
+{
+    delete globalObject.asObject();
+    delete rootContext;
+    delete stringPool; // the String pointers should get GC-ed.
+}
+
 ExecutionContext *ExecutionEngine::newContext()
 {
     return new ExecutionContext();
