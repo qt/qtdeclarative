@@ -284,8 +284,7 @@ void ExecutionContext::throwSyntaxError(DiagnosticMessage *message)
 
 void ExecutionContext::throwTypeError()
 {
-    Value v = Value::fromString(this, QStringLiteral("Type error"));
-    throwError(Value::fromObject(engine->newErrorObject(v)));
+    throwError(Value::fromObject(engine->newTypeErrorObject(this, QStringLiteral("Type error"))));
 }
 
 void ExecutionContext::throwUnimplemented(const QString &message)
@@ -298,7 +297,7 @@ void ExecutionContext::throwReferenceError(Value value)
 {
     String *s = value.toString(this);
     QString msg = s->toQString() + QStringLiteral(" is not defined");
-    throwError(Value::fromObject(engine->newErrorObject(Value::fromString(this, msg))));
+    throwError(Value::fromObject(engine->newReferenceErrorObject(this, msg)));
 }
 
 void ExecutionContext::initCallContext(ExecutionContext *parent, const Value that, FunctionObject *f, Value *args, unsigned argc)

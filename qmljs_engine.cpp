@@ -348,6 +348,20 @@ Object *ExecutionEngine::newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticM
     return object;
 }
 
+Object *ExecutionEngine::newReferenceErrorObject(ExecutionContext *ctx, const QString &message)
+{
+    ReferenceErrorObject *object = new ReferenceErrorObject(ctx, message);
+    object->prototype = referenceErrorPrototype;
+    return object;
+}
+
+Object *ExecutionEngine::newTypeErrorObject(ExecutionContext *ctx, const QString &message)
+{
+    TypeErrorObject *object = new TypeErrorObject(ctx, message);
+    object->prototype = typeErrorPrototype;
+    return object;
+}
+
 Object *ExecutionEngine::newMathObject(ExecutionContext *ctx)
 {
     MathObject *object = new MathObject(ctx);

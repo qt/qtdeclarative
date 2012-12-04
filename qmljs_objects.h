@@ -610,6 +610,8 @@ struct RangeErrorObject: ErrorObject {
 struct ReferenceErrorObject: ErrorObject {
     ReferenceErrorObject(ExecutionContext *ctx)
         : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    ReferenceErrorObject(ExecutionContext *ctx, const QString &msg)
+        : ErrorObject(Value::fromString(ctx,msg)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("ReferenceError"); }
 };
 
@@ -628,6 +630,8 @@ private:
 struct TypeErrorObject: ErrorObject {
     TypeErrorObject(ExecutionContext *ctx)
         : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    TypeErrorObject(ExecutionContext *ctx, const QString &msg)
+        : ErrorObject(Value::fromString(ctx,msg)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("TypeError"); }
 };
 
