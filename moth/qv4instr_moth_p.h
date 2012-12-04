@@ -6,12 +6,7 @@
 
 #define FOR_EACH_MOTH_INSTR(F) \
     F(Ret, ret) \
-    F(LoadUndefined, loadUndefined) \
-    F(LoadNull, loadNull) \
-    F(LoadFalse, loadFalse) \
-    F(LoadTrue, loadTrue) \
-    F(LoadNumber, loadNumber) \
-    F(LoadString, loadString) \
+    F(LoadValue, loadValue) \
     F(LoadClosure, loadClosure) \
     F(MoveTemp, moveTemp) \
     F(LoadName, loadName) \
@@ -79,36 +74,15 @@ union Instr
         MOTH_INSTR_HEADER
         int tempIndex;
     }; 
-    struct instr_loadUndefined {
+    struct instr_loadValue {
         MOTH_INSTR_HEADER
         int targetTempIndex;
-    };
-    struct instr_loadNull {
-        MOTH_INSTR_HEADER
-        int targetTempIndex;
-    };
-    struct instr_loadFalse {
-        MOTH_INSTR_HEADER
-        int targetTempIndex;
-    };
-    struct instr_loadTrue {
-        MOTH_INSTR_HEADER
-        int targetTempIndex;
+        VM::Value value;
     };
     struct instr_moveTemp {
         MOTH_INSTR_HEADER
         int fromTempIndex;
         int toTempIndex;
-    };
-    struct instr_loadNumber {
-        MOTH_INSTR_HEADER
-        double value;
-        int targetTempIndex;
-    };
-    struct instr_loadString {
-        MOTH_INSTR_HEADER
-        VM::String *value;
-        int targetTempIndex;
     };
     struct instr_loadClosure {
         MOTH_INSTR_HEADER
@@ -291,13 +265,8 @@ union Instr
 
     instr_common common;
     instr_ret ret;
-    instr_loadUndefined loadUndefined;
-    instr_loadNull loadNull;
-    instr_loadFalse loadFalse;
-    instr_loadTrue loadTrue;
+    instr_loadValue loadValue;
     instr_moveTemp moveTemp;
-    instr_loadNumber loadNumber;
-    instr_loadString loadString;
     instr_loadClosure loadClosure;
     instr_loadName loadName;
     instr_storeName storeName;

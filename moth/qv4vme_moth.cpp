@@ -147,30 +147,9 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         TEMP(instr.toTempIndex) = tmp;
     MOTH_END_INSTR(MoveTemp)
 
-    MOTH_BEGIN_INSTR(LoadUndefined)
-        TEMP(instr.targetTempIndex) = VM::Value::undefinedValue();
+    MOTH_BEGIN_INSTR(LoadValue)
+        TEMP(instr.targetTempIndex) = instr.value;
     MOTH_END_INSTR(LoadUndefined)
-
-    MOTH_BEGIN_INSTR(LoadNull)
-        TEMP(instr.targetTempIndex) = VM::Value::nullValue();
-    MOTH_END_INSTR(LoadNull)
-
-    MOTH_BEGIN_INSTR(LoadTrue)
-        TEMP(instr.targetTempIndex) = VM::Value::fromBoolean(true);
-    MOTH_END_INSTR(LoadTrue)
-
-    MOTH_BEGIN_INSTR(LoadFalse)
-        TEMP(instr.targetTempIndex) = VM::Value::fromBoolean(false);
-    MOTH_END_INSTR(LoadFalse)
-
-    MOTH_BEGIN_INSTR(LoadNumber)
-        TRACE(inline, "number = %f", instr.value);
-        TEMP(instr.targetTempIndex) = VM::Value::fromDouble(instr.value);
-    MOTH_END_INSTR(LoadNumber)
-
-    MOTH_BEGIN_INSTR(LoadString)
-        TEMP(instr.targetTempIndex) = VM::Value::fromString(instr.value);
-    MOTH_END_INSTR(LoadString)
 
     MOTH_BEGIN_INSTR(LoadClosure)
         VM::Value c = __qmljs_init_closure(instr.value, context);

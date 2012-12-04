@@ -592,38 +592,10 @@ void InstructionSelection::visitMove(IR::Move *s)
                 } else {
                     IR::Const *c = s->source->asConst();
                     assert(c);
-                    switch (c->type) {
-                    case IR::UndefinedType: {
-                        Instruction::LoadUndefined load;
-                        load.targetTempIndex = targetTempIndex;
-                        addInstruction(load);
-                    } break;
-                    case IR::NullType: {
-                        Instruction::LoadNull load;
-                        load.targetTempIndex = targetTempIndex;
-                        addInstruction(load);
-                    } break;
-                    case IR::BoolType:
-                        if (c->value) {
-                            Instruction::LoadTrue load;
-                            load.targetTempIndex = targetTempIndex;
-                            addInstruction(load);
-                        } else {
-                            Instruction::LoadFalse load;
-                            load.targetTempIndex = targetTempIndex;
-                            addInstruction(load);
-                        }
-                        break;
-                    case IR::NumberType: {
-                        Instruction::LoadNumber load;
-                        load.value = c->value;
-                        load.targetTempIndex = targetTempIndex;
-                        addInstruction(load);
-                    } break;
-                    default:
-                        Q_UNREACHABLE();
-                        break;
-                    }
+                    Instruction::LoadValue load;
+                    load.targetTempIndex = targetTempIndex;
+                    load.value = convertToValue(c);
+                    addInstruction(load);
                 }
             } else {
                 Instruction::Binop binop;
@@ -634,8 +606,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                 addInstruction(binop);
             }
         } else if (IR::String *str = s->source->asString()) {
-            Instruction::LoadString load;
-            load.value = _engine->newString(*str->value);
+            Instruction::LoadValue load;
+            load.value = VM::Value::fromString(_engine->newString(*str->value));
             load.targetTempIndex = targetTempIndex;
             addInstruction(load);
         } else if (IR::Closure *clos = s->source->asClosure()) {
