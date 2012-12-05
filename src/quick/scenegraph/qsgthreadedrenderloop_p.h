@@ -39,51 +39,87 @@
 **
 ****************************************************************************/
 
-#ifndef QSGCONTEXTPLUGIN_H
-#define QSGCONTEXTPLUGIN_H
+#ifndef QSGTHREADEDRENDERLOOP_P_H
+#define QSGTHREADEDRENDERLOOP_P_H
 
-#include <private/qtquickglobal_p.h>
-#include <QtQuick/qquickimageprovider.h>
-#include <QtCore/qplugin.h>
-#include <QtCore/qfactoryinterface.h>
+#include <QtCore/QThread>
+#include <QtGui/QOpenGLContext>
+#include <private/qsgcontext_p.h>
+
+#include "qsgrenderloop_p.h"
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QSGContext;
+class QSGRenderThread;
 
-class QSGRenderLoop;
-
-struct Q_QUICK_PRIVATE_EXPORT QSGContextFactoryInterface : public QFactoryInterface
-{
-    virtual QSGContext *create(const QString &key) const = 0;
-
-    virtual QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image) = 0;
-    virtual QSGRenderLoop *createWindowManager() = 0;
-};
-
-#define QSGContextFactoryInterface_iid \
-        "org.qt-project.Qt.QSGContextFactoryInterface"
-Q_DECLARE_INTERFACE(QSGContextFactoryInterface, QSGContextFactoryInterface_iid)
-
-class Q_QUICK_PRIVATE_EXPORT QSGContextPlugin : public QObject, public QSGContextFactoryInterface
+class QSGThreadedRenderLoop : public QObject, public QSGRenderLoop
 {
     Q_OBJECT
-    Q_INTERFACES(QSGContextFactoryInterface:QFactoryInterface)
 public:
-    explicit QSGContextPlugin(QObject *parent = 0);
-    virtual ~QSGContextPlugin();
+    QSGThreadedRenderLoop();
 
-    virtual QStringList keys() const = 0;
-    virtual QSGContext *create(const QString &key) const = 0;
+    void show(QQuickWindow *window);
+    void hide(QQuickWindow *window);
 
-    virtual QQuickTextureFactory *createTextureFactoryFromImage(const QImage &) { return 0; }
-    virtual QSGRenderLoop *createWindowManager() { return 0; }
+    void windowDestroyed(QQuickWindow *window);
+    void exposureChanged(QQuickWindow *window);
+
+    void handleExposure(QQuickWindow *window);
+    void handleObscurity(QQuickWindow *window);
+
+    QImage grab(QQuickWindow *);
+
+    void resize(QQuickWindow *, const QSize &);
+
+    void update(QQuickWindow *window);
+    void maybeUpdate(QQuickWindow *window);
+    QSGContext *sceneGraphContext() const;
+
+    QAnimationDriver *animationDriver() const;
+
+    void releaseResources(QQuickWindow *window) { releaseResources(window, false); }
+
+    bool event(QEvent *);
+
+    void wakeup();
+
+public slots:
+    void animationStarted();
+    void animationStopped();
+
+private:
+    friend class QSGRenderThread;
+
+    void releaseResources(QQuickWindow *window, bool inDestructor);
+    bool checkAndResetForceUpdate(QQuickWindow *window);
+
+    bool anyoneShowing();
+    void initialize();
+
+    void waitForReleaseComplete();
+
+    void polishAndSync();
+
+    struct Window {
+        QQuickWindow *window;
+        uint pendingUpdate : 1;
+    };
+
+    QSGRenderThread *m_thread;
+    QAnimationDriver *m_animation_driver;
+    QList<Window> m_windows;
+
+    int m_animation_timer;
+    int m_update_timer;
+    int m_exhaust_delay;
 };
+
+
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QSGCONTEXTPLUGIN_H
+#endif // QSGTHREADEDRENDERLOOP_P_H

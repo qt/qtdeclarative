@@ -55,7 +55,7 @@
 
 #include <QtCore/QScopedPointer>
 
-#include <private/qquickwindowmanager_p.h>
+#include <private/qsgrenderloop_p.h>
 #include <private/qtquickglobal_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 
@@ -69,7 +69,7 @@ class QSGContext;
 class QAnimationDriver;
 class QOpenGLContext;
 
-class DesignerWindowManager : public QObject, public QQuickWindowManager
+class DesignerWindowManager : public QObject, public QSGRenderLoop
 {
     Q_OBJECT
 public:
@@ -88,7 +88,7 @@ public:
     void maybeUpdate(QQuickWindow *window);
     void update(QQuickWindow *window); // identical for this implementation.
 
-    void releaseResources() { }
+    void releaseResources(QQuickWindow *) { }
 
     QAnimationDriver *animationDriver() const { return 0; }
 

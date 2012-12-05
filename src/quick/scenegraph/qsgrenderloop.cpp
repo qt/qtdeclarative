@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#include "qquickwindowmanager_p.h"
-#include "qquickthreadedwindowmanager_p.h"
+#include "qsgrenderloop_p.h"
+#include "qsgthreadedrenderloop_p.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QTime>
@@ -74,17 +74,17 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP);
 DEFINE_BOOL_CONFIG_OPTION(qmlForceThreadedRenderer, QML_FORCE_THREADED_RENDERER); // Might trigger graphics driver threading bugs, use at own risk
 
-QQuickWindowManager *QQuickWindowManager::s_instance = 0;
+QSGRenderLoop *QSGRenderLoop::s_instance = 0;
 
-QQuickWindowManager::~QQuickWindowManager()
+QSGRenderLoop::~QSGRenderLoop()
 {
 }
 
-class QQuickTrivialWindowManager : public QObject, public QQuickWindowManager
+class QSGGuiThreadRenderLoop : public QObject, public QSGRenderLoop
 {
     Q_OBJECT
 public:
-    QQuickTrivialWindowManager();
+    QSGGuiThreadRenderLoop();
 
     void show(QQuickWindow *window);
     void hide(QQuickWindow *window);
@@ -100,7 +100,7 @@ public:
     void maybeUpdate(QQuickWindow *window);
     void update(QQuickWindow *window) { maybeUpdate(window); } // identical for this implementation.
 
-    void releaseResources() { }
+    void releaseResources(QQuickWindow *) { }
 
     QAnimationDriver *animationDriver() const { return 0; }
 
@@ -124,7 +124,7 @@ public:
 };
 
 
-QQuickWindowManager *QQuickWindowManager::instance()
+QSGRenderLoop *QSGRenderLoop::instance()
 {
     if (!s_instance) {
 
@@ -153,20 +153,20 @@ QQuickWindowManager *QQuickWindowManager::instance()
 
         if (!s_instance) {
             s_instance = fancy
-                    ? (QQuickWindowManager*) new QQuickRenderThreadSingleContextWindowManager
-                    : (QQuickWindowManager*) new QQuickTrivialWindowManager;
+                    ? (QSGRenderLoop*) new QSGThreadedRenderLoop
+                    : (QSGRenderLoop*) new QSGGuiThreadRenderLoop;
         }
     }
     return s_instance;
 }
 
-void QQuickWindowManager::setInstance(QQuickWindowManager *instance)
+void QSGRenderLoop::setInstance(QSGRenderLoop *instance)
 {
     Q_ASSERT(!s_instance);
     s_instance = instance;
 }
 
-QQuickTrivialWindowManager::QQuickTrivialWindowManager()
+QSGGuiThreadRenderLoop::QSGGuiThreadRenderLoop()
     : gl(0)
     , eventPending(false)
 {
@@ -174,7 +174,7 @@ QQuickTrivialWindowManager::QQuickTrivialWindowManager()
 }
 
 
-void QQuickTrivialWindowManager::show(QQuickWindow *window)
+void QSGGuiThreadRenderLoop::show(QQuickWindow *window)
 {
     WindowData data;
     data.updatePending = false;
@@ -184,7 +184,7 @@ void QQuickTrivialWindowManager::show(QQuickWindow *window)
     maybeUpdate(window);
 }
 
-void QQuickTrivialWindowManager::hide(QQuickWindow *window)
+void QSGGuiThreadRenderLoop::hide(QQuickWindow *window)
 {
     if (!m_windows.contains(window))
         return;
@@ -200,12 +200,12 @@ void QQuickTrivialWindowManager::hide(QQuickWindow *window)
     }
 }
 
-void QQuickTrivialWindowManager::windowDestroyed(QQuickWindow *window)
+void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
 {
     hide(window);
 }
 
-void QQuickTrivialWindowManager::renderWindow(QQuickWindow *window)
+void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 {
     bool renderWithoutShowing = QQuickWindowPrivate::get(window)->renderWithoutShowing;
     if ((!window->isExposed() && !renderWithoutShowing) || !m_windows.contains(window))
@@ -294,13 +294,13 @@ void QQuickTrivialWindowManager::renderWindow(QQuickWindow *window)
         maybeUpdate(window);
 }
 
-void QQuickTrivialWindowManager::exposureChanged(QQuickWindow *window)
+void QSGGuiThreadRenderLoop::exposureChanged(QQuickWindow *window)
 {
     if (window->isExposed())
         maybeUpdate(window);
 }
 
-QImage QQuickTrivialWindowManager::grab(QQuickWindow *window)
+QImage QSGGuiThreadRenderLoop::grab(QQuickWindow *window)
 {
     if (!m_windows.contains(window))
         return QImage();
@@ -316,13 +316,13 @@ QImage QQuickTrivialWindowManager::grab(QQuickWindow *window)
 
 
 
-void QQuickTrivialWindowManager::resize(QQuickWindow *, const QSize &)
+void QSGGuiThreadRenderLoop::resize(QQuickWindow *, const QSize &)
 {
 }
 
 
 
-void QQuickTrivialWindowManager::maybeUpdate(QQuickWindow *window)
+void QSGGuiThreadRenderLoop::maybeUpdate(QQuickWindow *window)
 {
     if (!m_windows.contains(window))
         return;
@@ -337,13 +337,13 @@ void QQuickTrivialWindowManager::maybeUpdate(QQuickWindow *window)
 
 
 
-QSGContext *QQuickTrivialWindowManager::sceneGraphContext() const
+QSGContext *QSGGuiThreadRenderLoop::sceneGraphContext() const
 {
     return sg;
 }
 
 
-bool QQuickTrivialWindowManager::event(QEvent *e)
+bool QSGGuiThreadRenderLoop::event(QEvent *e)
 {
     if (e->type() == QEvent::User) {
         eventPending = false;
@@ -358,6 +358,6 @@ bool QQuickTrivialWindowManager::event(QEvent *e)
     return QObject::event(e);
 }
 
-#include "qquickwindowmanager.moc"
+#include "qsgrenderloop.moc"
 
 QT_END_NAMESPACE

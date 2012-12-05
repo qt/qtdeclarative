@@ -47,7 +47,7 @@
 #include <QtQml/private/qabstractanimationjob_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qquickview_p.h>
-#include <private/qquickwindowmanager_p.h>
+#include <private/qsgrenderloop_p.h>
 #include <QtQuick/private/qquickstategroup_p.h>
 #include <QtGui/QImage>
 #include <private/qqmlvme_p.h>
@@ -428,7 +428,7 @@ void DesignerSupport::updateDirtyNode(QQuickItem *item)
 
 void DesignerSupport::activateDesignerWindowManager()
 {
-    QQuickWindowManager::setInstance(new DesignerWindowManager);
+    QSGRenderLoop::setInstance(new DesignerWindowManager);
 }
 
 void DesignerSupport::activateDesignerMode()

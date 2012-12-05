@@ -39,11 +39,13 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKWINDOWMANAGER_P_H
-#define QQUICKWINDOWMANAGER_P_H
+#ifndef QSGRenderLoop_P_H
+#define QSGRenderLoop_P_H
 
 #include <QtGui/QImage>
 #include <private/qtquickglobal_p.h>
+
+QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
@@ -51,10 +53,10 @@ class QQuickWindow;
 class QSGContext;
 class QAnimationDriver;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowManager
+class Q_QUICK_PRIVATE_EXPORT QSGRenderLoop
 {
 public:
-    virtual ~QQuickWindowManager();
+    virtual ~QSGRenderLoop();
 
     virtual void show(QQuickWindow *window) = 0;
     virtual void hide(QQuickWindow *window) = 0;
@@ -72,16 +74,18 @@ public:
 
     virtual QSGContext *sceneGraphContext() const = 0;
 
-    virtual void releaseResources() = 0;
+    virtual void releaseResources(QQuickWindow *window) = 0;
 
     // ### make this less of a singleton
-    static QQuickWindowManager *instance();
-    static void setInstance(QQuickWindowManager *instance);
+    static QSGRenderLoop *instance();
+    static void setInstance(QSGRenderLoop *instance);
 
 private:
-    static QQuickWindowManager *s_instance;
+    static QSGRenderLoop *s_instance;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKWINDOWMANAGER_P_H
+QT_END_HEADER
+
+#endif // QSGRenderLoop_P_H

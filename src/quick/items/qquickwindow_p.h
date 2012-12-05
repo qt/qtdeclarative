@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
 
 //Make it easy to identify and customize the root item if needed
 
-class QQuickWindowManager;
+class QSGRenderLoop;
 
 class QQuickRootItem : public QQuickItem
 {
@@ -200,7 +200,7 @@ public:
     QSGContext *context;
     QSGRenderer *renderer;
 
-    QQuickWindowManager *windowManager;
+    QSGRenderLoop *windowManager;
 
     QColor clearColor;
 

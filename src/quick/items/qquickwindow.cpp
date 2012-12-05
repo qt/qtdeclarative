@@ -50,7 +50,7 @@
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgflashnode_p.h>
 
-#include <private/qquickwindowmanager_p.h>
+#include <private/qsgrenderloop_p.h>
 
 #include <private/qguiapplication_p.h>
 #include <QtGui/QInputMethod>
@@ -366,8 +366,8 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , windowManager(0)
     , clearColor(Qt::white)
     , clearBeforeRendering(true)
-    , persistentGLContext(false)
-    , persistentSceneGraph(false)
+    , persistentGLContext(true)
+    , persistentSceneGraph(true)
     , lastWheelEventAccepted(false)
     , renderTarget(0)
     , renderTargetId(0)
@@ -392,7 +392,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c)
     contentItemPrivate->windowRefCount = 1;
     contentItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
 
-    windowManager = QQuickWindowManager::instance();
+    windowManager = QSGRenderLoop::instance();
     context = windowManager->sceneGraphContext();
     q->setSurfaceType(QWindow::OpenGLSurface);
     q->setFormat(context->defaultSurfaceFormat());
@@ -923,6 +923,8 @@ QQuickWindow::QQuickWindow(QWindow *parent)
     d->init(this);
 }
 
+
+
 /*!
     \internal
 */
@@ -966,20 +968,32 @@ QQuickWindow::~QQuickWindow()
 void QQuickWindow::releaseResources()
 {
     Q_D(QQuickWindow);
-    d->windowManager->releaseResources();
+    d->windowManager->releaseResources(this);
     QQuickPixmap::purgeCache();
 }
 
 
 
 /*!
-    Sets whether the OpenGL context can be released as a part of a call to
-    releaseResources() to \a persistent.
+    Sets whether the OpenGL context can be released to \a
+    persistent. The default value is true.
 
-    The OpenGL context might still be released when the user makes an explicit
-    call to hide().
+    The OpenGL context can be released to free up graphics resources
+    when the window is obscured, hidden or not rendering. When this
+    happens is implementation specific.
 
-    \sa setPersistentSceneGraph()
+    The QOpenGLContext::aboutToBeDestroyed() signal is emitted from
+    the QQuickWindow::openglContext() when the OpenGL context is about
+    to be released.  The QQuickWindow::sceneGraphInitialized() signal
+    is emitted when a new OpenGL context is created for this
+    window. Make a Qt::DirectConnection to these signals to be
+    notified.
+
+    The OpenGL context is still released when the last QQuickWindow is
+    deleted.
+
+    \sa setPersistentSceneGraph(),
+    QOpenGLContext::aboutToBeDestroyed(), sceneGraphInitialized()
  */
 
 void QQuickWindow::setPersistentOpenGLContext(bool persistent)
@@ -989,9 +1003,13 @@ void QQuickWindow::setPersistentOpenGLContext(bool persistent)
 }
 
 
+
 /*!
-    Returns whether the OpenGL context can be released as a part of a call to
-    releaseResources().
+    Returns whether the OpenGL context can be released during the
+    lifetime of the QQuickWindow.
+
+    \note This is a hint. When and how this happens is implementation
+    specific.
  */
 
 bool QQuickWindow::isPersistentOpenGLContext() const
@@ -1003,13 +1021,24 @@ bool QQuickWindow::isPersistentOpenGLContext() const
 
 
 /*!
-    Sets whether the scene graph nodes and resources can be released as a
-    part of a call to releaseResources() to \a persistent.
+    Sets whether the scene graph nodes and resources can be released
+    to \a persistent.  The default value is true.
 
-    The scene graph nodes and resources might still be released when the user
-    makes an explicit call to hide().
+    The scene graph nodes and resources can be released to free up
+    graphics resources when the window is obscured, hidden or not
+    rendering. When this happens is implementation specific.
 
-    \sa setPersistentOpenGLContext()
+    The QQuickWindow::sceneGraphInvalidated() signal is emitted when
+    cleanup occurs. The QQuickWindow::sceneGraphInitialized() signal
+    is emitted when a new scene graph is recreated for this
+    window. Make a Qt::DirectConnection to these signals to be
+    notified.
+
+    The scene graph nodes and resources are still released when the
+    last QQuickWindow is deleted.
+
+    \sa setPersistentOpenGLContext(),
+    sceneGraphInvalidated(), sceneGraphInitialized()
  */
 
 void QQuickWindow::setPersistentSceneGraph(bool persistent)
@@ -1021,8 +1050,11 @@ void QQuickWindow::setPersistentSceneGraph(bool persistent)
 
 
 /*!
-    Returns whether the scene graph nodes and resources can be released as a part
-    of a call to releaseResources().
+    Returns whether the scene graph nodes and resources can be
+    released during the lifetime of this QQuickWindow.
+
+    \note This is a hint. When and how this happens is implementation
+    specific.
  */
 
 bool QQuickWindow::isPersistentSceneGraph() const

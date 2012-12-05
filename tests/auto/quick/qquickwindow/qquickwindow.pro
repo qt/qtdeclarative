@@ -13,6 +13,7 @@ TESTDATA = data/*
 
 OTHER_FILES += \
     data/AnimationsWhileHidden.qml \
-    data/Headless.qml
+    data/Headless.qml \
+    data/showHideAnimate.qml
 
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

@@ -69,7 +69,7 @@ class QQuickWindow;
 class QSGTexture;
 class QSGMaterial;
 class QSGMaterialShader;
-class QQuickWindowManager;
+class QSGRenderLoop;
 
 class QOpenGLContext;
 class QOpenGLFramebufferObject;
@@ -127,7 +127,7 @@ public:
     virtual QAnimationDriver *createAnimationDriver(QObject *parent);
 
     static QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image);
-    static QQuickWindowManager *createWindowManager();
+    static QSGRenderLoop *createWindowManager();
 
 
 public slots:

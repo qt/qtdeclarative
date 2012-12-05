@@ -62,7 +62,6 @@
 #include <private/qv8domerrors_p.h>
 #include <QtCore/qnumeric.h>
 #include <private/qquickwindow_p.h>
-#include <private/qquickwindowmanager_p.h>
 
 #if defined(Q_OS_QNX) || defined(Q_OS_LINUX_ANDROID)
 #include <ctype.h>
@@ -3348,7 +3347,6 @@ QQuickContext2D::QQuickContext2D(QObject *parent)
     : QQuickCanvasContext(parent)
     , m_buffer(new QQuickContext2DCommandBuffer)
     , m_v8engine(0)
-    , m_windowManager(0)
     , m_surface(0)
     , m_glContext(0)
     , m_thread(0)
@@ -3380,7 +3378,6 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     m_renderTarget = canvasItem->renderTarget();
 
     QQuickWindow *window = canvasItem->window();
-    m_windowManager =  QQuickWindowPrivate::get(window)->windowManager;
     m_renderStrategy = canvasItem->renderStrategy();
 
     switch (m_renderTarget) {

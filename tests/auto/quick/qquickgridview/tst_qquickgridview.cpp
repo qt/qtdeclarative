@@ -2871,7 +2871,8 @@ void tst_QQuickGridView::enforceRange_rightToLeft()
     ctxt->setContextProperty("testTopToBottom", QVariant(true));
 
     window->setSource(testFileUrl("gridview-enforcerange.qml"));
-    qApp->processEvents();
+    window->show();
+    QTRY_VERIFY(window->isExposed());
     QVERIFY(window->rootObject() != 0);
 
     QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
