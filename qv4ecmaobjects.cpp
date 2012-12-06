@@ -506,13 +506,13 @@ static inline QString ToLocaleTimeString(double t)
 static double getLocalTZA()
 {
 #ifndef Q_WS_WIN
-    struct tm* t;
+    struct tm t;
     time_t curr;
     time(&curr);
-    t = localtime(&curr);
-    time_t locl = mktime(t);
-    t = gmtime(&curr);
-    time_t globl = mktime(t);
+    localtime_r(&curr, &t);
+    time_t locl = mktime(&t);
+    gmtime_r(&curr, &t);
+    time_t globl = mktime(&t);
     return double(locl - globl) * 1000.0;
 #else
     TIME_ZONE_INFORMATION tzInfo;
