@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
 SUBDIRS = \
-#    abstractitemmodel \ #Doesn't build right now
+    abstractitemmodel \
     objectlistmodel \
     stringlistmodel

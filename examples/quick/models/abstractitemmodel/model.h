@@ -74,6 +74,8 @@ public:
 
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
 
+protected:
+    QHash<int, QByteArray> roleNames() const;
 private:
     QList<Animal> m_animals;
 //![2]

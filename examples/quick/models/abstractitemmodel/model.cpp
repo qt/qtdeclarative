@@ -54,16 +54,10 @@ QString Animal::size() const
     return m_size;
 }
 
-//![0]
 AnimalModel::AnimalModel(QObject *parent)
     : QAbstractListModel(parent)
 {
-    QHash<int, QByteArray> roles;
-    roles[TypeRole] = "type";
-    roles[SizeRole] = "size";
-    setRoleNames(roles);
 }
-//![0]
 
 void AnimalModel::addAnimal(const Animal &animal)
 {
@@ -87,4 +81,13 @@ QVariant AnimalModel::data(const QModelIndex & index, int role) const {
         return animal.size();
     return QVariant();
 }
+
+//![0]
+QHash<int, QByteArray> AnimalModel::roleNames() const {
+    QHash<int, QByteArray> roles;
+    roles[TypeRole] = "type";
+    roles[SizeRole] = "size";
+    return roles;
+}
+//![0]
 
