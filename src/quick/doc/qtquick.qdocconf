@@ -45,10 +45,6 @@ exampledirs +=  ../../../examples/ \
 
 imagedirs   += images
 
-#add qml sources because of dependencies
-headerdirs += ../../qml
-exampledirs += ../../qml
-imagedirs += ../../qml
 
 #add particles sources
 headerdirs += ../../particles
