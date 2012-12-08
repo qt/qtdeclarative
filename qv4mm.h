@@ -106,8 +106,8 @@ public:
     void dumpStats() const;
 
 protected:
-#if 1 // 64bit and x86:
     struct MMObject;
+#if CPU(X86_64) // 64bit and x86:
     struct MMInfo {
         std::size_t inUse   :  1;
         std::size_t markBit :  1;
@@ -119,20 +119,17 @@ protected:
         MMInfo info;
         std::size_t data;
     };
-#endif
-#if 0 // for 32bits:
-        // untested!
+#elif CPU(X86) // for 32bits:
     struct MMInfo {
         std::size_t inUse   :  1;
         std::size_t markBit :  1;
-        std::size_t size    : 30;
+        std::size_t needsManagedDestructorCall : 1;
+        std::size_t size    : 29;
+        struct MMObject *next;
     };
     struct MMObject {
         MMInfo info;
-        union {
-            struct MMObject *next;
-            char data[1];
-        }
+        std::size_t data;
     };
 #endif
 
