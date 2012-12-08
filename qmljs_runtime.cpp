@@ -696,8 +696,9 @@ Value __qmljs_call_activation_property(ExecutionContext *context, String *name, 
     return o->call(context, Value::undefinedValue(), args, argc);
 }
 
-Value __qmljs_call_property(ExecutionContext *context, Value thisObject, String *name, Value *args, int argc)
+Value __qmljs_call_property(ExecutionContext *context, Value that, String *name, Value *args, int argc)
 {
+    Value thisObject = that;
     if (!thisObject.isObject())
         thisObject = __qmljs_to_object(thisObject, context);
 
@@ -709,7 +710,7 @@ Value __qmljs_call_property(ExecutionContext *context, Value thisObject, String 
     if (!o)
         context->throwTypeError();
 
-    return o->call(context, thisObject, args, argc);
+    return o->call(context, that, args, argc);
 }
 
 Value __qmljs_call_value(ExecutionContext *context, Value thisObject, Value func, Value *args, int argc)

@@ -83,6 +83,8 @@ struct ObjectPrototype: Object
 
     static Value method_defineGetter(ExecutionContext *ctx);
     static Value method_defineSetter(ExecutionContext *ctx);
+
+    static void toPropertyDescriptor(ExecutionContext *ctx, Value v, PropertyDescriptor *desc);
 };
 
 struct StringCtor: FunctionObject

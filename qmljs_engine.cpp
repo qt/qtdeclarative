@@ -85,6 +85,12 @@ ExecutionEngine::ExecutionEngine(MemoryManager *memoryManager, EvalISelFactory *
     id_constructor = identifier(QStringLiteral("constructor"));
     id_arguments = identifier(QStringLiteral("arguments"));
     id___proto__ = identifier(QStringLiteral("__proto__"));
+    id_enumerable = identifier(QStringLiteral("enumerable"));
+    id_configurable = identifier(QStringLiteral("configurable"));
+    id_writable = identifier(QStringLiteral("writable"));
+    id_value = identifier(QStringLiteral("value"));
+    id_get = identifier(QStringLiteral("get"));
+    id_set = identifier(QStringLiteral("set"));
 
     objectPrototype = new (memoryManager) ObjectPrototype();
     stringPrototype = new (memoryManager) StringPrototype(rootContext);

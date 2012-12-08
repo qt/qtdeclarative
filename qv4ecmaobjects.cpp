@@ -610,18 +610,46 @@ Value ObjectPrototype::method_getOwnPropertyNames(ExecutionContext *ctx)
 
 Value ObjectPrototype::method_create(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.create"));
-    return Value::undefinedValue();
+    Value O = ctx->argument(0);
+    if (!O.isObject())
+        ctx->throwTypeError();
+
+    Object *newObject = ctx->engine->newObject();
+    newObject->prototype = O.objectValue();
+
+    Value objValue = Value::fromObject(newObject);
+    ctx->arguments[0] = objValue;
+    method_defineProperties(ctx);
+
+    return objValue;
 }
 
 Value ObjectPrototype::method_defineProperty(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.defineProperty"));
-    return Value::undefinedValue();
+    Value O = ctx->argument(0);
+    if (!O.isObject())
+        ctx->throwTypeError();
+
+    String *name = ctx->argument(1).toString(ctx);
+
+    Value attributes = ctx->argument(2);
+    PropertyDescriptor pd;
+    toPropertyDescriptor(ctx, attributes, &pd);
+
+    bool strict = ctx->strictMode;
+    ctx->strictMode = true;
+    O.objectValue()->__defineOwnProperty__(ctx, name, &pd);
+    ctx->strictMode = strict;
+
+    return O;
 }
 
 Value ObjectPrototype::method_defineProperties(ExecutionContext *ctx)
 {
+    Value O = ctx->argument(0);
+    if (!O.isObject())
+        ctx->throwTypeError();
+
     ctx->throwUnimplemented(QStringLiteral("Object.defineProperties"));
     return Value::undefinedValue();
 }
@@ -826,6 +854,63 @@ Value ObjectPrototype::method_defineSetter(ExecutionContext *ctx)
     pd.enumberable = PropertyDescriptor::Set;
     o->__defineOwnProperty__(ctx, prop, &pd);
     return Value::undefinedValue();
+}
+
+void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, PropertyDescriptor *desc)
+{
+    if (!v.isObject())
+        __qmljs_throw_type_error(ctx);
+
+    Object *o = v.objectValue();
+
+    desc->type = PropertyDescriptor::Generic;
+
+    desc->enumberable = PropertyDescriptor::Undefined;
+    if (o->__hasProperty__(ctx, ctx->engine->id_enumerable))
+        desc->enumberable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_enumerable), ctx) ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
+
+    desc->configurable = PropertyDescriptor::Undefined;
+    if (o->__hasProperty__(ctx, ctx->engine->id_configurable))
+        desc->enumberable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_configurable), ctx) ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
+
+    desc->writable = PropertyDescriptor::Undefined;
+    if (o->__hasProperty__(ctx, ctx->engine->id_writable))
+        desc->enumberable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_writable), ctx) ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
+
+    if (o->__hasProperty__(ctx, ctx->engine->id_value)) {
+        desc->value = o->__get__(ctx, ctx->engine->id_value);
+        desc->type = PropertyDescriptor::Data;
+    }
+
+    if (o->__hasProperty__(ctx, ctx->engine->id_get)) {
+        Value get = o->__get__(ctx, ctx->engine->id_get);
+        FunctionObject *f = get.asFunctionObject();
+        if (f) {
+            if (desc->isWritable() || desc->isData())
+                __qmljs_throw_type_error(ctx);
+            desc->get = f;
+        } else if (!get.isUndefined()) {
+            __qmljs_throw_type_error(ctx);
+        } else {
+            desc->get = 0;
+        }
+        desc->type = PropertyDescriptor::Accessor;
+    }
+
+    if (o->__hasProperty__(ctx, ctx->engine->id_set)) {
+        Value get = o->__get__(ctx, ctx->engine->id_set);
+        FunctionObject *f = get.asFunctionObject();
+        if (f) {
+            if (desc->isWritable() || desc->isData())
+                __qmljs_throw_type_error(ctx);
+            desc->set = f;
+        } else if (!get.isUndefined()) {
+            __qmljs_throw_type_error(ctx);
+        } else {
+            desc->set = 0;
+        }
+        desc->type = PropertyDescriptor::Accessor;
+    }
 }
 
 //

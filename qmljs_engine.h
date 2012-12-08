@@ -136,6 +136,12 @@ struct ExecutionEngine
     String *id_constructor;
     String *id_arguments;
     String *id___proto__;
+    String *id_enumerable;
+    String *id_configurable;
+    String *id_writable;
+    String *id_value;
+    String *id_get;
+    String *id_set;
 
     struct ExceptionHandler {
         ExecutionContext *context;
