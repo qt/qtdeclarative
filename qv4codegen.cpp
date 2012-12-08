@@ -490,6 +490,17 @@ IR::Expr *Codegen::argument(IR::Expr *expr)
     return expr;
 }
 
+// keeps references alive, converts other expressions to temps
+IR::Expr *Codegen::reference(IR::Expr *expr)
+{
+    if (expr && !expr->asTemp() && !expr->asName() && !expr->asMember() && !expr->asSubscript()) {
+        const unsigned t = _block->newTemp();
+        move(_block->TEMP(t), expr);
+        expr = _block->TEMP(t);
+    }
+    return expr;
+}
+
 IR::Expr *Codegen::unop(IR::AluOp op, IR::Expr *expr)
 {
     if (IR::Const *c = expr->asConst()) {
@@ -1159,7 +1170,7 @@ bool Codegen::visit(DeleteExpression *ast)
 {
     Result expr = expression(ast->expression);
     IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(*expr);
+    args->init(reference(*expr));
     _expr.code = call(_block->NAME(IR::Name::builtin_delete, ast->deleteToken.startLine, ast->deleteToken.startColumn), args);
     return false;
 }
@@ -1384,7 +1395,7 @@ bool Codegen::visit(TypeOfExpression *ast)
 {
     Result expr = expression(ast->expression);
     IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(*expr);
+    args->init(reference(*expr));
     _expr.code = call(_block->NAME(IR::Name::builtin_typeof, ast->typeofToken.startLine, ast->typeofToken.startColumn), args);
     return false;
 }
