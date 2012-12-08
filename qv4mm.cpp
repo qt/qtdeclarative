@@ -77,7 +77,7 @@ struct MemoryManager::Data
     ~Data()
     {
         for (QLinkedList<QPair<char *, std::size_t> >::iterator i = heapChunks.begin(), ei = heapChunks.end(); i != ei; ++i)
-            delete[] i->first;
+            free(i->first);
     }
 };
 
