@@ -305,8 +305,8 @@ void QSGDefaultImageNode::setTexture(QSGTexture *texture)
     m_materialO.setTexture(texture);
     m_smoothMaterial.setTexture(texture);
     // Texture cleanup
-//    if (!texture.isNull())
-//        m_material.setBlending(texture->hasAlphaChannel());
+    if (texture)
+        m_material.setFlag(QSGMaterial::Blending, texture->hasAlphaChannel());
     markDirty(DirtyMaterial);
 
     // Because the texture can be a different part of the atlas, we need to update it...
@@ -355,12 +355,11 @@ void QSGDefaultImageNode::preprocess()
         doDirty = t->updateTexture();
         updateGeometry();
     }
-// ### texture cleanup
-//    bool alpha = m_material.blending();
-//    if (!m_material->texture().isNull() && alpha != m_material.texture()->hasAlphaChannel()) {
-//        m_material.setBlending(!alpha);
-//        doDirty = true;
-//    }
+    bool alpha = m_material.flags() & QSGMaterial::Blending;
+    if (m_material.texture() && alpha != m_material.texture()->hasAlphaChannel()) {
+        m_material.setFlag(QSGMaterial::Blending, !alpha);
+        doDirty = true;
+    }
 
     if (doDirty)
         markDirty(DirtyMaterial);
