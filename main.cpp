@@ -110,6 +110,20 @@ struct TestHarnessError: FunctionObject
     bool &errorOccurred;
 };
 
+struct GC: public FunctionObject
+{
+    GC(ExecutionContext* scope)
+        : FunctionObject(scope)
+    {
+        name = scope->engine->newString("gc");
+    }
+    virtual Value call(ExecutionContext *ctx)
+    {
+        ctx->engine->memoryManager->runGC();
+        return Value::undefinedValue();
+    }
+};
+
 } // builtins
 
 static void showException(QQmlJS::VM::ExecutionContext *ctx)
@@ -341,6 +355,8 @@ int main(int argc, char *argv[])
         QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
         globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
                                   QQmlJS::VM::Value::fromObject(new (ctx->engine->memoryManager) builtins::Print(ctx)));
+        globalObject->__put__(ctx, vm.identifier(QStringLiteral("gc")),
+                                  QQmlJS::VM::Value::fromObject(new (ctx->engine->memoryManager) builtins::GC(ctx)));
 
         bool errorInTestHarness = false;
         if (!qgetenv("IN_TEST_HARNESS").isEmpty())
