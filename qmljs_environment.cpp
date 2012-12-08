@@ -385,6 +385,7 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
 
     engine = parent->engine;
     this->parent = parent;
+    engine->current = this;
 
     function = f;
     strictMode = f->strictMode;
@@ -429,7 +430,9 @@ void ExecutionContext::leaveCallContext()
         delete[] locals;
         locals = 0;
     }
+    engine->current = parent;
     parent = 0;
+    function = 0;
 
     if (engine->debugger)
         engine->debugger->justLeft(this);
