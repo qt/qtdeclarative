@@ -27,7 +27,7 @@
 
 /*!
 \page qtquick-porting-qt5.html
-\title QML Applications in Qt 5
+\title Porting QML Applications to Qt 5
 \brief Lists the Qt 5.0 changes that affect the existing QML applications
 
 When porting QML-related code from Qt 4.8 to Qt 5, application developers should be aware that
@@ -37,6 +37,15 @@ these changes and the impact they have on your existing code.
 This article describes the changes that affect your existing code. If you are
 interested in the summary of all new features in Qt 5 for QML application development, see
 \l{qtqml-releasenotes.html}{QtQml Release Notes} and \l{qtquick-releasenotes.html}{QtQuick Release Notes}.
+
+\section1 QML Language changes
+
+There are very few changes in the QML language which affect the porting of existing Qt 4.8 QML code to Qt 5. These are:
+
+\list
+\li Individual file imports no longer work (e.g. import "MyType.qml"). Import the containing directory instead.
+\li Relative file paths in JavaScript files are now resolved relative to the location of the JavaScript file instead of the QML file that imported it.
+\endlist
 
 \section1 QtQuick Module
 
