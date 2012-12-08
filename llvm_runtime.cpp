@@ -451,7 +451,7 @@ void __qmljs_llvm_set_property(ExecutionContext *ctx, Value *object, String *nam
 
 void __qmljs_llvm_typeof(ExecutionContext *ctx, Value *result, const Value *value)
 {
-    *result = __qmljs_typeof(*value, ctx);
+    *result = __qmljs_builtin_typeof(*value, ctx);
 }
 
 void __qmljs_llvm_throw(ExecutionContext *context, Value *value)

@@ -296,6 +296,36 @@ Value ExecutionContext::getProperty(String *name)
     return Value::undefinedValue();
 }
 
+Value ExecutionContext::getPropertyNoThrow(String *name)
+{
+    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
+        if (ctx->withObject) {
+            With *w = ctx->withObject;
+            while (w) {
+                if (w->object->__hasProperty__(ctx, name))
+                    return w->object->__get__(ctx, name);
+                w = w->next;
+            }
+        }
+
+        for (unsigned int i = 0; i < ctx->variableCount(); ++i)
+            if (__qmljs_string_equal(ctx->variables()[i], name))
+                return ctx->locals[i];
+        for (unsigned int i = 0; i < ctx->formalCount(); ++i)
+            if (__qmljs_string_equal(ctx->formals()[i], name))
+                return ctx->arguments[i];
+        if (ctx->activation && ctx->activation->__hasProperty__(ctx, name))
+            return ctx->activation->__get__(ctx, name);
+        if (name->isEqualTo(ctx->engine->id_arguments)) {
+            Value arguments = Value::fromObject(new (engine->memoryManager) ArgumentsObject(this));
+            createMutableBinding(ctx->engine->id_arguments, false);
+            setMutableBinding(this, ctx->engine->id_arguments, arguments);
+            return arguments;
+        }
+    }
+    return Value::undefinedValue();
+}
+
 
 
 void ExecutionContext::inplaceBitOp(Value value, String *name, BinOp op)

@@ -1384,7 +1384,7 @@ bool Codegen::visit(TypeOfExpression *ast)
 {
     Result expr = expression(ast->expression);
     IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(argument(*expr));
+    args->init(*expr);
     _expr.code = call(_block->NAME(IR::Name::builtin_typeof, ast->typeofToken.startLine, ast->typeofToken.startColumn), args);
     return false;
 }

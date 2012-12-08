@@ -98,7 +98,11 @@ Value __qmljs_construct_activation_property(ExecutionContext *, String *name, Va
 Value __qmljs_construct_property(ExecutionContext *context, Value base, String *name, Value *args, int argc);
 Value __qmljs_construct_value(ExecutionContext *context, Value func, Value *args, int argc);
 
-Value __qmljs_builtin_typeof(Value val, ExecutionContext *context);
+Value __qmljs_builtin_typeof(Value val, ExecutionContext *ctx);
+Value __qmljs_builtin_typeof_name(String *name, ExecutionContext *context);
+Value __qmljs_builtin_typeof_member(Value base, String *name, ExecutionContext *context);
+Value __qmljs_builtin_typeof_element(Value base, Value index, ExecutionContext *context);
+
 void __qmljs_builtin_throw(Value val, ExecutionContext *context);
 void __qmljs_builtin_push_with(Value o, ExecutionContext *ctx);
 void __qmljs_builtin_pop_with(ExecutionContext *ctx);
@@ -179,7 +183,6 @@ Value __qmljs_delete_subscript(ExecutionContext *ctx, Value base, Value index);
 Value __qmljs_delete_member(ExecutionContext *ctx, Value base, String *name);
 Value __qmljs_delete_name(ExecutionContext *ctx, String *name);
 
-Value __qmljs_typeof(Value value, ExecutionContext *ctx);
 void __qmljs_throw(Value value, ExecutionContext *context);
 // actually returns a jmp_buf *
 void *__qmljs_create_exception_handler(ExecutionContext *context);
@@ -442,34 +445,6 @@ inline Value __qmljs_default_value(Value value, ExecutionContext *ctx, int typeH
     return Value::undefinedValue();
 }
 
-
-// unary operators
-inline Value __qmljs_typeof(Value value, ExecutionContext *ctx)
-{
-    switch (value.type()) {
-    case Value::Undefined_Type:
-        return __qmljs_string_literal_undefined(ctx);
-        break;
-    case Value::Null_Type:
-        return __qmljs_string_literal_object(ctx);
-        break;
-    case Value::Boolean_Type:
-        return __qmljs_string_literal_boolean(ctx);
-        break;
-    case Value::String_Type:
-        return __qmljs_string_literal_string(ctx);
-        break;
-    case Value::Object_Type:
-        if (__qmljs_is_callable(value, ctx))
-            return __qmljs_string_literal_function(ctx);
-        else
-            return __qmljs_string_literal_object(ctx); // ### implementation-defined
-        break;
-    default:
-        return __qmljs_string_literal_number(ctx);
-        break;
-    }
-}
 
 inline Value __qmljs_uplus(Value value, ExecutionContext *ctx)
 {

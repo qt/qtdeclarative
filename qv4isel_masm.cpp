@@ -259,9 +259,21 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
         callRuntimeMethod(result, __qmljs_call_activation_property, call->base, call->args);
         break;
     case IR::Name::builtin_typeof: {
-        IR::Temp *arg = call->args->expr->asTemp();
-        assert(arg != 0);
-        generateFunctionCall(result, __qmljs_builtin_typeof, arg, ContextRegister);
+        if (IR::Member *m = call->args->expr->asMember()) {
+            generateFunctionCall(result, __qmljs_builtin_typeof_member, m->base->asTemp(), identifier(*m->name), ContextRegister);
+            return;
+        } else if (IR::Subscript *ss = call->args->expr->asSubscript()) {
+            generateFunctionCall(result, __qmljs_builtin_typeof_element, ss->base->asTemp(), ss->index->asTemp(), ContextRegister);
+            return;
+        } else if (IR::Name *n = call->args->expr->asName()) {
+            generateFunctionCall(result, __qmljs_builtin_typeof_name, identifier(*n->id), ContextRegister);
+            return;
+        } else if (IR::Temp *arg = call->args->expr->asTemp()){
+            assert(arg != 0);
+            generateFunctionCall(result, __qmljs_builtin_typeof, arg, ContextRegister);
+        } else {
+            assert(false);
+        }
     }
         break;
     case IR::Name::builtin_delete: {
@@ -272,7 +284,7 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
             generateFunctionCall(result, __qmljs_delete_subscript, ContextRegister, ss->base->asTemp(), ss->index->asTemp());
             return;
         } else if (IR::Name *n = call->args->expr->asName()) {
-            generateFunctionCall(result, __qmljs_delete_name, ContextRegister, n);
+            generateFunctionCall(result, __qmljs_delete_name, ContextRegister, identifier(*n->id));
             return;
         } else if (call->args->expr->asTemp()){
             // ### should throw in strict mode
