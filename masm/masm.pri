@@ -45,7 +45,7 @@ udis86.CONFIG += no_link
 udis86.commands = python $$PWD/disassembler/udis86/itab.py ${QMAKE_FILE_IN}
 QMAKE_EXTRA_COMPILERS += udis86
 
-udis86_tab_cfile.target = udis86_itab.c
+udis86_tab_cfile.target = $$OUT_PWD/udis86_itab.c
 udis86_tab_cfile.depends = udis86_itab.h
 QMAKE_EXTRA_TARGETS += udis86_tab_cfile
 
