@@ -1902,7 +1902,7 @@ QQmlTypeData::TypeDataCallback::~TypeDataCallback()
 QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader::Options options, 
                                            QQmlTypeLoader *manager)
 : QQmlTypeLoader::Blob(url, QmlFile, manager), m_options(options),
-   m_typesResolved(false), m_compiledData(0), m_implicitImport(0)
+   m_typesResolved(false), m_compiledData(0), m_implicitImport(0), m_implicitImportLoaded(false)
 {
 }
 
@@ -2008,6 +2008,27 @@ void QQmlTypeData::completed()
     }
 }
 
+bool QQmlTypeData::loadImplicitImport()
+{
+    m_implicitImportLoaded = true; // Even if we hit an error, count as loaded (we'd just keep hitting the error)
+
+    m_imports.setBaseUrl(finalUrl(), finalUrlString());
+
+    QQmlImportDatabase *importDatabase = typeLoader()->importDatabase();
+    // For local urls, add an implicit import "." as most overridden lookup.
+    // This will also trigger the loading of the qmldir and the import of any native
+    // types from available plugins.
+    QList<QQmlError> implicitImportErrors;
+    m_imports.addImplicitImport(importDatabase, &implicitImportErrors);
+
+    if (!implicitImportErrors.isEmpty()) {
+        setError(implicitImportErrors);
+        return false;
+    }
+
+    return true;
+}
+
 void QQmlTypeData::dataReceived(const Data &data)
 {
     QString code = QString::fromUtf8(data.data(), data.size());
@@ -2022,30 +2043,21 @@ void QQmlTypeData::dataReceived(const Data &data)
 
     m_imports.setBaseUrl(finalUrl(), finalUrlString());
 
-    QQmlImportDatabase *importDatabase = typeLoader()->importDatabase();
-
-    // For local urls, add an implicit import "." as first (most overridden) lookup.
-    // This will also trigger the loading of the qmldir and the import of any native
-    // types from available plugins.
-    QList<QQmlError> implicitImportErrors;
-    m_imports.addImplicitImport(importDatabase, &implicitImportErrors);
-
-    if (!implicitImportErrors.isEmpty()) {
-        setError(implicitImportErrors);
-        return;
-    }
-
-    QList<QQmlError> errors;
-
+    // For remote URLs, we don't delay the loading of the implicit import
+    // because the loading probably requires an asynchronous fetch of the
+    // qmldir (so we can't load it just in time).
     if (!finalUrl().scheme().isEmpty()) {
         QUrl qmldirUrl = finalUrl().resolved(QUrl(QLatin1String("qmldir")));
         if (!QQmlImports::isLocal(qmldirUrl)) {
+            if (!loadImplicitImport())
+                return;
             // This qmldir is for the implicit import
             m_implicitImport = new QQmlScript::Import;
             m_implicitImport->uri = QLatin1String(".");
             m_implicitImport->qualifier = QString();
             m_implicitImport->majorVersion = -1;
             m_implicitImport->minorVersion = -1;
+            QList<QQmlError> errors;
 
             if (!fetchQmldir(qmldirUrl, m_implicitImport, 1, &errors)) {
                 setError(errors);
@@ -2053,6 +2065,8 @@ void QQmlTypeData::dataReceived(const Data &data)
             }
         }
     }
+
+    QList<QQmlError> errors;
 
     foreach (const QQmlScript::Import &import, scriptParser.imports()) {
         if (!addImport(import, &errors)) {
@@ -2155,8 +2169,21 @@ void QQmlTypeData::resolveTypes()
         QQmlImportNamespace *typeNamespace = 0;
         QList<QQmlError> errors;
 
-        if (!m_imports.resolveType(parserRef->name, &ref.type, &majorVersion, &minorVersion,
-                                   &typeNamespace, &errors) || typeNamespace) {
+        bool typeFound = m_imports.resolveType(parserRef->name, &ref.type,
+                &majorVersion, &minorVersion, &typeNamespace, &errors);
+        if (!typeNamespace && !typeFound && !m_implicitImportLoaded) {
+            // Lazy loading of implicit import
+            if (loadImplicitImport()) {
+                // Try again to find the type
+                errors.clear();
+                typeFound = m_imports.resolveType(parserRef->name, &ref.type,
+                    &majorVersion, &minorVersion, &typeNamespace, &errors);
+            } else {
+                return; //loadImplicitImport() hit an error, and called setError already
+            }
+        }
+
+        if (!typeFound || typeNamespace) {
             // Known to not be a type:
             //  - known to be a namespace (Namespace {})
             //  - type with unknown namespace (UnknownNamespace.SomeType {})

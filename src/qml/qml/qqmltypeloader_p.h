@@ -465,6 +465,8 @@ private:
     QList<TypeDataCallback *> m_callbacks;
 
     QQmlScript::Import *m_implicitImport;
+    bool m_implicitImportLoaded;
+    bool loadImplicitImport();
 };
 
 // QQmlScriptData instances are created, uninitialized, by the loader in the 

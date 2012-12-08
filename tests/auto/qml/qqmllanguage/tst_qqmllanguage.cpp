@@ -140,6 +140,7 @@ private slots:
     void readonly();
     void receivers();
     void registeredCompositeType();
+    void implicitImportsLast();
 
     void basicRemote_data();
     void basicRemote();
@@ -2470,6 +2471,12 @@ void tst_qqmllanguage::importsOrder_data()
            << (!qmlCheckTypes()?"QQuickRectangle":"")// i.e. from org.qtproject.installedtest, not data/LocalLast.qml
            << (!qmlCheckTypes()?"":"LocalLast is ambiguous. Found in lib/org/qtproject/installedtest/ and in ")
            << false;
+    QTest::newRow("local last 3") << //Forces it to load the local qmldir to resolve types, but they shouldn't override anything
+           "import org.qtproject.installedtest 1.0\n"
+           "LocalLast {LocalLast2{}}"
+           << (!qmlCheckTypes()?"QQuickRectangle":"")// i.e. from org.qtproject.installedtest, not data/LocalLast.qml
+           << (!qmlCheckTypes()?"":"LocalLast is ambiguous. Found in lib/org/qtproject/installedtest/ and in ")
+           << false;
 }
 
 void tst_qqmllanguage::importsOrder()
@@ -3141,6 +3148,30 @@ void tst_qqmllanguage::scopedProperties()
     QVERIFY(o != 0);
     QVERIFY(o->property("success").toBool());
 }
+
+// Tests that the implicit import has lowest precedence, in the case where
+// there are conflicting types and types only found in the local import.
+// Tests that just check one (or the root) type are in ::importsOrder
+void tst_qqmllanguage::implicitImportsLast()
+{
+    if (qmlCheckTypes())
+        QSKIP("This test is about maintaining the same choice when type is ambiguous.");
+
+    if (engine.importPathList() == defaultImportPathList)
+        engine.addImportPath(testFile("lib"));
+
+    QQmlComponent component(&engine, testFile("localOrderTest.qml"));
+    VERIFY_ERRORS(0);
+    QObject *object = qobject_cast<QObject *>(component.create());
+    QVERIFY(object != 0);
+    QVERIFY(QString(object->metaObject()->className()).startsWith(QLatin1String("QQuickMouseArea")));
+    QObject* object2 = object->property("item").value<QObject*>();
+    QVERIFY(object2 != 0);
+    QCOMPARE(QString(object2->metaObject()->className()), QLatin1String("QQuickRectangle"));
+
+    engine.setImportPathList(defaultImportPathList);
+}
+
 
 QTEST_MAIN(tst_qqmllanguage)
 
