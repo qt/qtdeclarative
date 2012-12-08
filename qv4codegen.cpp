@@ -1239,7 +1239,13 @@ bool Codegen::visit(NestedExpression *ast)
 bool Codegen::visit(NewExpression *ast)
 {
     Result base = expression(ast->expression);
-    _expr.code = _block->NEW(*base, 0);
+    IR::Expr *expr = *base;
+    if (expr && !expr->asTemp() && !expr->asName() && !expr->asMember()) {
+        const unsigned t = _block->newTemp();
+        move(_block->TEMP(t), expr);
+        expr = _block->TEMP(t);
+    }
+    _expr.code = _block->NEW(expr, 0);
     return false;
 }
 
