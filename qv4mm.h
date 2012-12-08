@@ -175,6 +175,19 @@ protected:
     virtual void collectRootsOnStack(QVector<VM::Object *> &roots) const;
 };
 
+class MemoryManagerWithNativeStack: public MemoryManager
+{
+public:
+    MemoryManagerWithNativeStack()
+    { setEnableGC(true); }
+
+    virtual ~MemoryManagerWithNativeStack();
+
+protected:
+    virtual void collectRootsOnStack(QVector<VM::Object *> &roots) const;
+};
+
+
 } // namespace VM
 } // namespace QQmlJS
 

@@ -6,6 +6,9 @@ SOURCES += $$PWD/assembler/MacroAssemblerARM.cpp
 SOURCES += $$PWD/assembler/MacroAssemblerSH4.cpp
 SOURCES += $$PWD/assembler/LinkBuffer.cpp
 
+SOURCES += $$PWD/wtf/StackBounds.cpp
+HEADERS += $$PWD/wtf/StackBounds.h
+
 SOURCES += $$PWD/stubs/WTFStubs.cpp
 HEADERS += $$PWD/stubs/WTFStubs.h
 

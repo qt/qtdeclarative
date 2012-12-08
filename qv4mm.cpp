@@ -31,6 +31,7 @@
 #include "qmljs_objects.h"
 #include "qv4ecmaobjects_p.h"
 #include "qv4mm.h"
+#include "StackBounds.h"
 
 #include <QTime>
 #include <QVector>
@@ -374,4 +375,21 @@ MemoryManagerWithoutGC::~MemoryManagerWithoutGC()
 void MemoryManagerWithoutGC::collectRootsOnStack(QVector<VM::Object *> &roots) const
 {
     Q_UNUSED(roots);
+}
+
+MemoryManagerWithNativeStack::~MemoryManagerWithNativeStack()
+{
+}
+
+void MemoryManagerWithNativeStack::collectRootsOnStack(QVector<VM::Object *> &roots) const
+{
+    StackBounds bounds = StackBounds::currentThreadStackBounds();
+    Value* top = reinterpret_cast<Value*>(bounds.origin());
+    Value* current = reinterpret_cast<Value*>(bounds.current());
+    qDebug("Collecting on stack. top %p current %p\n", top, current);
+    for (; current < top; ++current) {
+        if (current->asObject())
+            qDebug("found object %p on stack", (void*)current);
+        add(roots, *current);
+    }
 }
