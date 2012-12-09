@@ -135,6 +135,7 @@ struct ExecutionEngine
     String *id_prototype;
     String *id_constructor;
     String *id_arguments;
+    String *id_this;
     String *id___proto__;
     String *id_enumerable;
     String *id_configurable;

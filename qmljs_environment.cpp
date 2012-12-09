@@ -267,6 +267,9 @@ void ExecutionContext::setProperty(String *name, Value value)
 
 Value ExecutionContext::getProperty(String *name)
 {
+    if (name == engine->id_this)
+        return thisObject;
+
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
         if (ctx->withObject) {
             With *w = ctx->withObject;
@@ -298,6 +301,9 @@ Value ExecutionContext::getProperty(String *name)
 
 Value ExecutionContext::getPropertyNoThrow(String *name)
 {
+    if (name == engine->id_this)
+        return thisObject;
+
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
         if (ctx->withObject) {
             With *w = ctx->withObject;

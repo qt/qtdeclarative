@@ -84,6 +84,7 @@ ExecutionEngine::ExecutionEngine(MemoryManager *memoryManager, EvalISelFactory *
     id_prototype = identifier(QStringLiteral("prototype"));
     id_constructor = identifier(QStringLiteral("constructor"));
     id_arguments = identifier(QStringLiteral("arguments"));
+    id_this = identifier(QStringLiteral("this"));
     id___proto__ = identifier(QStringLiteral("__proto__"));
     id_enumerable = identifier(QStringLiteral("enumerable"));
     id_configurable = identifier(QStringLiteral("configurable"));
