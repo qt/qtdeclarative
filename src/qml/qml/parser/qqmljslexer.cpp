@@ -275,6 +275,59 @@ QChar Lexer::decodeUnicodeEscapeCharacter(bool *ok)
     return QChar();
 }
 
+static inline bool isIdentifierStart(QChar ch)
+{
+    // fast path for ascii
+    if ((ch.unicode() >= 'a' && ch.unicode() <= 'z') ||
+        (ch.unicode() >= 'A' && ch.unicode() <= 'Z') ||
+        ch == '$' || ch == '_')
+        return true;
+
+    switch (ch.category()) {
+    case QChar::Number_Letter:
+    case QChar::Letter_Uppercase:
+    case QChar::Letter_Lowercase:
+    case QChar::Letter_Titlecase:
+    case QChar::Letter_Modifier:
+    case QChar::Letter_Other:
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
+static bool isIdentifierPart(QChar ch)
+{
+    // fast path for ascii
+    if ((ch.unicode() >= 'a' && ch.unicode() <= 'z') ||
+        (ch.unicode() >= 'A' && ch.unicode() <= 'Z') ||
+        (ch.unicode() >= '0' && ch.unicode() <= '9') ||
+        ch == '$' || ch == '_' ||
+        ch.unicode() == 0x200c /* ZWNJ */ || ch.unicode() == 0x200d /* ZWJ */)
+        return true;
+
+    switch (ch.category()) {
+    case QChar::Mark_NonSpacing:
+    case QChar::Mark_SpacingCombining:
+
+    case QChar::Number_DecimalDigit:
+    case QChar::Number_Letter:
+
+    case QChar::Letter_Uppercase:
+    case QChar::Letter_Lowercase:
+    case QChar::Letter_Titlecase:
+    case QChar::Letter_Modifier:
+    case QChar::Letter_Other:
+
+    case QChar::Punctuation_Connector:
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
 int Lexer::scanToken()
 {
     if (_stackToken != -1) {
@@ -697,28 +750,28 @@ again:
     case '9':
         return scanNumber(ch);
 
-    default:
-        if (ch.isLetter() || ch == QLatin1Char('$') || ch == QLatin1Char('_') || (ch == QLatin1Char('\\') && _char == QLatin1Char('u'))) {
-            bool identifierWithEscapeChars = false;
-            if (ch == QLatin1Char('\\')) {
-                identifierWithEscapeChars = true;
+    default: {
+        QChar c = ch;
+        bool identifierWithEscapeChars = false;
+        if (c == QLatin1Char('\\') && _char == QLatin1Char('u')) {
+            identifierWithEscapeChars = true;
+            bool ok = false;
+            c = decodeUnicodeEscapeCharacter(&ok);
+            if (! ok) {
+                _errorCode = IllegalUnicodeEscapeSequence;
+                _errorMessage = QCoreApplication::translate("QQmlParser", "Illegal unicode escape sequence");
+                return T_ERROR;
+            }
+        }
+        if (isIdentifierStart(c)) {
+            if (identifierWithEscapeChars) {
                 _tokenText.resize(0);
-                bool ok = false;
-                _tokenText += decodeUnicodeEscapeCharacter(&ok);
+                _tokenText += c;
                 _validTokenText = true;
-                if (! ok) {
-                    _errorCode = IllegalUnicodeEscapeSequence;
-                    _errorMessage = QCoreApplication::translate("QQmlParser", "Illegal unicode escape sequence");
-                    return T_ERROR;
-                }
             }
             while (true) {
-                if (_char.isLetterOrNumber() || _char == QLatin1Char('$') || _char == QLatin1Char('_')) {
-                    if (identifierWithEscapeChars)
-                        _tokenText += _char;
-
-                    scanChar();
-                } else if (_char == QLatin1Char('\\') && _codePtr[0] == QLatin1Char('u')) {
+                c = _char;
+                if (_char == QLatin1Char('\\') && _codePtr[0] == QLatin1Char('u')) {
                     if (! identifierWithEscapeChars) {
                         identifierWithEscapeChars = true;
                         _tokenText.resize(0);
@@ -728,30 +781,40 @@ again:
 
                     scanChar(); // skip '\\'
                     bool ok = false;
-                    _tokenText += decodeUnicodeEscapeCharacter(&ok);
+                    c = decodeUnicodeEscapeCharacter(&ok);
                     if (! ok) {
                         _errorCode = IllegalUnicodeEscapeSequence;
                         _errorMessage = QCoreApplication::translate("QQmlParser", "Illegal unicode escape sequence");
                         return T_ERROR;
                     }
-                } else {
-                    _tokenLength = _codePtr - _tokenStartPtr - 1;
+                    if (isIdentifierPart(c))
+                        _tokenText += c;
+                    continue;
+                } else if (isIdentifierPart(c)) {
+                    if (identifierWithEscapeChars)
+                        _tokenText += c;
 
-                    int kind = T_IDENTIFIER;
-
-                    if (! identifierWithEscapeChars)
-                        kind = classify(_tokenStartPtr, _tokenLength, _qmlMode);
-
-                    if (_engine) {
-                        if (kind == T_IDENTIFIER && identifierWithEscapeChars)
-                            _tokenSpell = _engine->newStringRef(_tokenText);
-                        else
-                            _tokenSpell = _engine->midRef(_tokenStartPtr - _code.unicode(), _tokenLength);
-                    }
-
-                    return kind;
+                    scanChar();
+                    continue;
                 }
+
+                _tokenLength = _codePtr - _tokenStartPtr - 1;
+
+                int kind = T_IDENTIFIER;
+
+                if (! identifierWithEscapeChars)
+                    kind = classify(_tokenStartPtr, _tokenLength, _qmlMode);
+
+                if (_engine) {
+                    if (kind == T_IDENTIFIER && identifierWithEscapeChars)
+                        _tokenSpell = _engine->newStringRef(_tokenText);
+                    else
+                        _tokenSpell = _engine->midRef(_tokenStartPtr - _code.unicode(), _tokenLength);
+                }
+
+                return kind;
             }
+        }
         }
 
         break;
