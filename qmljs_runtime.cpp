@@ -44,6 +44,7 @@
 #include "qmljs_objects.h"
 #include "qv4ir_p.h"
 #include "qv4ecmaobjects_p.h"
+#include "private/qlocale_tools_p.h"
 
 #include <QtCore/qmath.h>
 #include <QtCore/qnumeric.h>
@@ -52,7 +53,6 @@
 #include <cassert>
 #include <typeinfo>
 #include <stdlib.h>
-#include <xlocale.h>
 
 namespace QQmlJS {
 namespace VM {
@@ -436,9 +436,17 @@ double __qmljs_string_to_number(ExecutionContext *, String *string)
     const QString s = string->toQString();
     if (s.startsWith(QLatin1String("0x")) || s.startsWith(QLatin1String("0X")))
         return s.toLong(0, 16);
-    locale_t c_locale = newlocale(LC_ALL_MASK, NULL, NULL);
-    double d = ::strtod_l(s.toUtf8().constData(), 0, c_locale);
-    freelocale(c_locale);
+    bool ok;
+    QByteArray ba = s.toLatin1();
+    const char *begin = ba.constData();
+    const char *end = 0;
+    double d = qstrtod(begin, &end, &ok);
+    if (end - begin != ba.size() - 1) {
+        if (ba == "Infinity")
+            d = INFINITY;
+        else
+            d = nan("");
+    }
     return d;
 }
 

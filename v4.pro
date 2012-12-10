@@ -1,4 +1,4 @@
-QT = core qmldevtools-private
+QT = core-private qmldevtools-private
 CONFIG -= app_bundle
 CONFIG += console
 
