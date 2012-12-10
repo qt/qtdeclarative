@@ -177,6 +177,7 @@ ExecutionEngine::ExecutionEngine(MemoryManager *memoryManager, EvalISelFactory *
     VM::Object *glo = newObject(/*rootContext*/);
     globalObject = Value::fromObject(glo);
     rootContext->activation = glo;
+    rootContext->thisObject = Value::fromObject(glo);
 
     glo->__put__(rootContext, identifier(QStringLiteral("Object")), objectCtor);
     glo->__put__(rootContext, identifier(QStringLiteral("String")), stringCtor);

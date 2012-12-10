@@ -450,7 +450,7 @@ Value FunctionObject::construct(ExecutionContext *context, Value *args, int argc
 {
     ExecutionContext k;
     ExecutionContext *ctx = needsActivation ? context->engine->newContext() : &k;
-    ctx->initCallContext(context, Value::nullValue(), this, args, argc);
+    ctx->initCallContext(context, Value::undefinedValue(), this, args, argc);
     Value result = construct(ctx);
     ctx->wireUpPrototype();
     ctx->leaveCallContext();
@@ -464,12 +464,6 @@ Value FunctionObject::call(ExecutionContext *context, Value thisObject, Value *a
     ExecutionContext k;
     ExecutionContext *ctx = needsActivation ? context->engine->newContext() : &k;
 
-    if (!strictMode && !thisObject.isObject()) {
-        if (thisObject.isUndefined() || thisObject.isNull())
-            thisObject = context->engine->globalObject;
-        else
-            thisObject = __qmljs_to_object(thisObject, context);
-    }
     ctx->initCallContext(context, thisObject, this, args, argc);
     Value result = call(ctx);
     ctx->leaveCallContext();

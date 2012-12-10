@@ -628,9 +628,7 @@ Value __qmljs_get_activation_property(ExecutionContext *ctx, String *name)
 
 Value __qmljs_get_thisObject(ExecutionContext *ctx)
 {
-    if (ctx->thisObject.isObject())
-        return ctx->thisObject;
-    return ctx->engine->globalObject;
+    return ctx->thisObject;
 }
 
 uint __qmljs_equal(Value x, Value y, ExecutionContext *ctx)

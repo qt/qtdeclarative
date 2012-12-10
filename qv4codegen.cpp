@@ -207,7 +207,8 @@ protected:
     inline void enterEnvironment(Node *node)
     {
         Environment *e = _cg->newEnvironment(node, _env);
-        e->isStrict = _cg->_context->strictMode;
+        if (!e->isStrict)
+            e->isStrict = _cg->_context->strictMode;
         _envStack.append(e);
         _env = e;
     }

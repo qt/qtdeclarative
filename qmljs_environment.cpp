@@ -210,7 +210,7 @@ void ExecutionContext::init(ExecutionEngine *eng)
 {
     engine = eng;
     parent = 0;
-    thisObject = Value::nullValue();
+    thisObject = eng->globalObject;
 
     function = 0;
     arguments = 0;
@@ -385,10 +385,17 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
 
     engine = parent->engine;
     this->parent = parent;
-    thisObject = that;
 
     function = f;
     strictMode = f->strictMode;
+
+    thisObject = that;
+    if (!strictMode && !thisObject.isObject()) {
+        if (thisObject.isUndefined() || thisObject.isNull())
+            thisObject = engine->globalObject;
+        else
+            thisObject = thisObject.toObject(this);
+    }
 
     arguments = args;
     argumentCount = argc;
