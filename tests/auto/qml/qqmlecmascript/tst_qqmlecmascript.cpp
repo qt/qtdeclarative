@@ -285,6 +285,8 @@ private slots:
     void propertyOverride();
     void concatenatedStringPropertyAccess();
     void jsOwnedObjectsDeletedOnEngineDestroy();
+    void numberParsing();
+    void stringParsing();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7333,6 +7335,28 @@ void tst_qqmlecmascript::jsOwnedObjectsDeletedOnEngineDestroy()
     QCOMPARE(spy2.count(), 1);
 
     delete object;
+}
+
+void tst_qqmlecmascript::numberParsing()
+{
+    for (int i = 1; i < 8; ++i) {
+        QString file("numberParsing.%1.qml");
+        file = file.arg(i);
+        QQmlComponent component(&engine, testFileUrl(file));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+    }
+}
+
+void tst_qqmlecmascript::stringParsing()
+{
+    for (int i = 1; i < 5; ++i) {
+        QString file("stringParsing_error.%1.qml");
+        file = file.arg(i);
+        QQmlComponent component(&engine, testFileUrl(file));
+        QObject *object = component.create();
+        QVERIFY(object == 0);
+    }
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

@@ -631,14 +631,24 @@ again:
                 case 'v':  u = QLatin1Char('\v'); scanChar(); break;
 
                 case '0':
-                    if (! _codePtr[1].isDigit()) {
+                    if (! _codePtr->isDigit()) {
                         scanChar();
                         u = QLatin1Char('\0');
-                    } else {
-                        // ### parse deprecated octal escape sequence ?
-                        u = _char;
+                        break;
                     }
-                    break;
+                    // fall through
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    _errorCode = IllegalEscapeSequence;
+                    _errorMessage = QCoreApplication::translate("QQmlParser", "Octal escape sequences are not allowed");
+                    return T_ERROR;
 
                 case '\r':
                     if (isLineTerminatorSequence() == 2) {
@@ -770,6 +780,10 @@ int Lexer::scanNumber(QChar ch)
             _tokenValue = integer;
             return T_NUMERIC_LITERAL;
         }
+    } else if (_char.isDigit() && !qmlMode()) {
+        _errorCode = IllegalCharacter;
+        _errorMessage = QCoreApplication::translate("QQmlParser", "Decimal numbers can't start with '0'");
+        return T_ERROR;
     }
 
     QVarLengthArray<char,32> chars;
