@@ -37,7 +37,7 @@
 #include <QLinkedList>
 
 #include <iostream>
-#include <malloc.h>
+#include <cstdlib>
 
 using namespace QQmlJS::VM;
 
@@ -127,7 +127,8 @@ MemoryManager::MMObject *MemoryManager::alloc(std::size_t size)
             return alloc(size - sizeof(MMInfo));
 
     std::size_t allocSize = std::max(size, CHUNK_SIZE);
-    char *ptr = (char*)memalign(16, allocSize);
+    char *ptr = 0;
+    posix_memalign(reinterpret_cast<void**>(&ptr), 16, allocSize);
     m_d->heapChunks.append(qMakePair(ptr, allocSize));
 //    qDebug("Allocated new chunk of %lu bytes @ %p", allocSize, ptr);
 
