@@ -7,6 +7,8 @@ SOURCES += tst_qquickview.cpp
 
 include (../../shared/util.pri)
 
+mac:CONFIG += insignificant_test # QTBUG-28505
+
 TESTDATA = data/*
 
 QT += core-private gui-private qml-private quick-private testlib
