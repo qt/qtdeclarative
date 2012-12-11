@@ -364,7 +364,7 @@ again:
     _tokenStartPtr = _codePtr - 1;
     _tokenLine = _currentLineNumber;
 
-    if (_char.isNull())
+    if (_codePtr > _endPtr)
         return EOF_SYMBOL;
 
     const QChar ch = _char;
@@ -609,7 +609,7 @@ again:
         const QChar *startCode = _codePtr;
 
         if (_engine) {
-            while (!_char.isNull()) {
+            while (_codePtr <= _endPtr) {
                 if (isLineTerminator()) {
                     if (qmlMode())
                         break;
@@ -634,7 +634,7 @@ again:
         while (startCode != _codePtr - 1) 
             _tokenText += *startCode++;
 
-        while (! _char.isNull()) {
+        while (_codePtr <= _endPtr) {
             if (unsigned sequenceLength = isLineTerminatorSequence()) {
                 multilineStringLiteral = true;
                 _tokenText += _char;
@@ -984,7 +984,7 @@ bool Lexer::scanRegExp(RegExpBodyPrefix prefix)
             _tokenText += _char;
             scanChar();
 
-            if (_char.isNull() || isLineTerminator()) {
+            if (_codePtr > _endPtr || isLineTerminator()) {
                 _errorMessage = QCoreApplication::translate("QQmlParser", "Unterminated regular expression backslash sequence");
                 return false;
             }
@@ -998,7 +998,7 @@ bool Lexer::scanRegExp(RegExpBodyPrefix prefix)
             _tokenText += _char;
             scanChar();
 
-            while (! _char.isNull() && ! isLineTerminator()) {
+            while (_codePtr <= _endPtr && ! isLineTerminator()) {
                 if (_char == QLatin1Char(']'))
                     break;
                 else if (_char == QLatin1Char('\\')) {
@@ -1006,7 +1006,7 @@ bool Lexer::scanRegExp(RegExpBodyPrefix prefix)
                     _tokenText += _char;
                     scanChar();
 
-                    if (_char.isNull() || isLineTerminator()) {
+                    if (_codePtr > _endPtr || isLineTerminator()) {
                         _errorMessage = QCoreApplication::translate("QQmlParser", "Unterminated regular expression backslash sequence");
                         return false;
                     }
@@ -1029,7 +1029,7 @@ bool Lexer::scanRegExp(RegExpBodyPrefix prefix)
             break;
 
         default:
-            if (_char.isNull() || isLineTerminator()) {
+            if (_codePtr > _endPtr || isLineTerminator()) {
                 _errorMessage = QCoreApplication::translate("QQmlParser", "Unterminated regular expression literal");
                 return false;
             } else {
