@@ -55,17 +55,10 @@
 namespace QQmlJS {
 namespace MASM {
 
-class InstructionSelection: protected IR::StmtVisitor, public JSC::MacroAssembler, public EvalInstructionSelection
+class Assembler : public JSC::MacroAssembler
 {
 public:
-    InstructionSelection(VM::ExecutionEngine *engine);
-    ~InstructionSelection();
-
-    virtual void run(IR::Function *function)
-    { this->operator()(function); }
-    void operator()(IR::Function *function);
-
-protected:
+    Assembler(IR::Function* function);
 #if CPU(X86)
 
 #undef VALUE_FITS_IN_REGISTER
@@ -148,9 +141,6 @@ protected:
 #error Argh.
 #endif
 
-    struct VoidType {};
-    static const VoidType Void;
-
     // Explicit type to allow distinguishing between
     // pushing an address itself or the value it points
     // to onto the stack when calling functions.
@@ -164,97 +154,17 @@ protected:
         {}
     };
 
-    void enterStandardStackFrame(int locals)
-    {
-#if CPU(ARM)
-        push(JSC::ARMRegisters::lr);
-#endif
-        push(StackFrameRegister);
-        move(StackPointerRegister, StackFrameRegister);
+    struct VoidType {};
+    static const VoidType Void;
 
-        // space for the locals and the ContextRegister
-        int32_t frameSize = locals * sizeof(QQmlJS::VM::Value) + sizeof(void*);
-
-#if CPU(X86) || CPU(X86_64)
-        frameSize = (frameSize + 15) & ~15; // align on 16 byte boundaries for MMX
-#endif
-        subPtr(TrustedImm32(frameSize), StackPointerRegister);
-
-#if CPU(X86) || CPU(ARM)
-        for (int saveReg = CalleeSavedFirstRegister; saveReg <= CalleeSavedLastRegister; ++saveReg)
-            push(static_cast<RegisterID>(saveReg));
-#endif
-        // save the ContextRegister
-        storePtr(ContextRegister, StackPointerRegister);
-    }
-    void leaveStandardStackFrame(int locals)
-    {
-        // restore the ContextRegister
-        loadPtr(StackPointerRegister, ContextRegister);
-
-#if CPU(X86) || CPU(ARM)
-        for (int saveReg = CalleeSavedLastRegister; saveReg >= CalleeSavedFirstRegister; --saveReg)
-            pop(static_cast<RegisterID>(saveReg));
-#endif
-        // space for the locals and the ContextRegister
-        int32_t frameSize = locals * sizeof(QQmlJS::VM::Value) + sizeof(void*);
-#if CPU(X86) || CPU(X86_64)
-        frameSize = (frameSize + 15) & ~15; // align on 16 byte boundaries for MMX
-#endif
-        addPtr(TrustedImm32(frameSize), StackPointerRegister);
-
-        pop(StackFrameRegister);
-#if CPU(ARM)
-        pop(JSC::ARMRegisters::lr);
-#endif
-    }
-
-    Address addressForArgument(int index) const
-    {
-        if (index < RegisterArgumentCount)
-            return Address(registerForArgument(index), 0);
-
-        // StackFrameRegister points to its old value on the stack, and above
-        // it we have the return address, hence the need to step over two
-        // values before reaching the first argument.
-        return Address(StackFrameRegister, (index - RegisterArgumentCount + 2) * sizeof(void*));
-    }
-
-    // Some run-time functions take (Value* args, int argc). This function is for populating
-    // the args.
-    Pointer argumentAddressForCall(int argument)
-    {
-        const int index = _function->maxNumberOfArguments - argument;
-        return Pointer(StackFrameRegister, sizeof(VM::Value) * (-index)
-                                          - sizeof(void*) // size of ebp
-                       );
-    }
-    Pointer baseAddressForCallArguments()
-    {
-        return argumentAddressForCall(0);
-    }
-
-    VM::String *identifier(const QString &s);
-    Pointer loadTempAddress(RegisterID reg, IR::Temp *t);
-    void callActivationProperty(IR::Call *call, IR::Temp *result);
-    void callProperty(IR::Call *call, IR::Temp *result);
-    void constructActivationProperty(IR::New *call, IR::Temp *result);
-    void constructProperty(IR::New *ctor, IR::Temp *result);
-    void callValue(IR::Call *call, IR::Temp *result);
-    void constructValue(IR::New *call, IR::Temp *result);
-
-    virtual void visitExp(IR::Exp *);
-    virtual void visitEnter(IR::Enter *);
-    virtual void visitLeave(IR::Leave *);
-    virtual void visitMove(IR::Move *s);
-    virtual void visitJump(IR::Jump *);
-    virtual void visitCJump(IR::CJump *);
-    virtual void visitRet(IR::Ret *);
-
-private:
-    void jumpToBlock(IR::BasicBlock *target);
 
     typedef JSC::FunctionPtr FunctionPtr;
+
+    struct CallToLink {
+        Call call;
+        FunctionPtr externalFunction;
+        const char* functionName;
+    };
 
     void callAbsolute(const char* functionName, FunctionPtr function) {
         CallToLink ctl;
@@ -263,6 +173,12 @@ private:
         ctl.functionName = functionName;
         _callsToLink.append(ctl);
     }
+
+    void registerBlock(IR::BasicBlock*);
+    void jumpToBlock(IR::BasicBlock* current, IR::BasicBlock *target);
+    void addPatch(IR::BasicBlock* targetBlock, Jump targetJump);
+
+    Pointer loadTempAddress(RegisterID reg, IR::Temp *t);
 
     void loadArgument(RegisterID source, RegisterID dest)
     {
@@ -426,6 +342,37 @@ private:
         push(TrustedImmPtr(name));
     }
 
+    using JSC::MacroAssembler::loadDouble;
+    void loadDouble(IR::Temp* temp, FPRegisterID dest)
+    {
+        Pointer ptr = loadTempAddress(ScratchRegister, temp);
+        loadDouble(ptr, dest);
+    }
+
+    using JSC::MacroAssembler::storeDouble;
+    void storeDouble(FPRegisterID source, IR::Temp* temp)
+    {
+        Pointer ptr = loadTempAddress(ScratchRegister, temp);
+        storeDouble(source, ptr);
+    }
+
+    template <typename Result, typename Source>
+    void copyValue(Result result, Source source);
+
+    void storeValue(VM::Value value, Address destination)
+    {
+#ifdef VALUE_FITS_IN_REGISTER
+        store64(TrustedImm64(value.val), destination);
+#else
+        store32(TrustedImm32(value.int_32), destination);
+        destination.offset += 4;
+        store32(TrustedImm32(value.tag), destination);
+#endif
+    }
+
+    void enterStandardStackFrame(int locals);
+    void leaveStandardStackFrame(int locals);
+
     void callFunctionPrologue()
     {
 #if CPU(X86)
@@ -439,12 +386,6 @@ private:
         pop(ContextRegister);
 #endif
     }
-
-    #define isel_stringIfyx(s) #s
-    #define isel_stringIfy(s) isel_stringIfyx(s)
-
-    #define generateFunctionCall(t, function, ...) \
-        generateFunctionCallImp(t, isel_stringIfy(function), function, __VA_ARGS__)
 
     static inline int sizeOfArgument(VoidType)
     { return 0; }
@@ -465,8 +406,8 @@ private:
 
     struct ArgumentLoader
     {
-        ArgumentLoader(InstructionSelection* instructionSelection, int totalNumberOfArguments)
-            : isel(instructionSelection)
+        ArgumentLoader(Assembler* _assembler, int totalNumberOfArguments)
+            : assembler(_assembler)
             , stackSpaceForArguments(0)
             , currentRegisterIndex(qMin(totalNumberOfArguments - 1, RegisterArgumentCount - 1))
         {
@@ -476,10 +417,10 @@ private:
         void load(T argument)
         {
             if (currentRegisterIndex >= 0) {
-                isel->loadArgument(argument, registerForArgument(currentRegisterIndex));
+                assembler->loadArgument(argument, registerForArgument(currentRegisterIndex));
                 --currentRegisterIndex;
             } else {
-                isel->push(argument);
+                assembler->push(argument);
                 stackSpaceForArguments += sizeOfArgument(argument);
             }
         }
@@ -490,7 +431,7 @@ private:
                 --currentRegisterIndex;
         }
 
-        InstructionSelection *isel;
+        Assembler *assembler;
         int stackSpaceForArguments;
         int currentRegisterIndex;
     };
@@ -564,51 +505,8 @@ private:
         generateFunctionCallImp(r, functionName, function, arg1, VoidType(), VoidType(), VoidType(), VoidType());
     }
 
-    int prepareVariableArguments(IR::ExprList* args);
-
-    typedef VM::Value (*ActivationMethod)(VM::ExecutionContext *, VM::String *name, VM::Value *args, int argc);
-    typedef VM::Value (*BuiltinMethod)(VM::ExecutionContext *, VM::Value *args, int argc);
-    void callRuntimeMethodImp(IR::Temp *result, const char* name, ActivationMethod method, IR::Expr *base, IR::ExprList *args);
-    void callRuntimeMethodImp(IR::Temp *result, const char* name, BuiltinMethod method, IR::ExprList *args);
-#define callRuntimeMethod(result, function, ...) \
-    callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
-
-    using JSC::MacroAssembler::loadDouble;
-    void loadDouble(IR::Temp* temp, FPRegisterID dest)
-    {
-        Pointer ptr = loadTempAddress(ScratchRegister, temp);
-        loadDouble(ptr, dest);
-    }
-
-    using JSC::MacroAssembler::storeDouble;
-    void storeDouble(FPRegisterID source, IR::Temp* temp)
-    {
-        Pointer ptr = loadTempAddress(ScratchRegister, temp);
-        storeDouble(source, ptr);
-    }
-
-    template <typename Result, typename Source>
-    void copyValue(Result result, Source source);
-
-    struct CallToLink {
-        Call call;
-        FunctionPtr externalFunction;
-        const char* functionName;
-    };
-
-    void storeValue(VM::Value value, Address destination)
-    {
-#ifdef VALUE_FITS_IN_REGISTER
-        store64(TrustedImm64(value.val), destination);
-#else
-        store32(TrustedImm32(value.int_32), destination);
-        destination.offset += 4;
-        store32(TrustedImm32(value.tag), destination);
-#endif
-    }
-
-    typedef Jump (InstructionSelection::*MemRegBinOp)(Address, RegisterID);
-    typedef Jump (InstructionSelection::*ImmRegBinOp)(TrustedImm32, RegisterID);
+    typedef Jump (Assembler::*MemRegBinOp)(Address, RegisterID);
+    typedef Jump (Assembler::*ImmRegBinOp)(TrustedImm32, RegisterID);
 
     struct BinaryOperationInfo {
         const char *name;
@@ -732,12 +630,91 @@ private:
         return Jump();
     }
 
-    VM::ExecutionEngine *_engine;
-    IR::Function *_function;
-    IR::BasicBlock *_block;
-    QHash<IR::BasicBlock *, QVector<Jump> > _patches;
+    void link();
+
+private:
+    IR::Function* _function;
     QHash<IR::BasicBlock *, Label> _addrs;
+    QHash<IR::BasicBlock *, QVector<Jump> > _patches;
     QList<CallToLink> _callsToLink;
+};
+
+class InstructionSelection: protected IR::StmtVisitor, public EvalInstructionSelection
+{
+public:
+    InstructionSelection(VM::ExecutionEngine *engine);
+    ~InstructionSelection();
+
+    virtual void run(IR::Function *function)
+    { this->operator()(function); }
+    void operator()(IR::Function *function);
+
+protected:
+    typedef Assembler::Address Address;
+    typedef Assembler::Pointer Pointer;
+
+    Address addressForArgument(int index) const
+    {
+        if (index < Assembler::RegisterArgumentCount)
+            return Address(_asm->registerForArgument(index), 0);
+
+        // StackFrameRegister points to its old value on the stack, and above
+        // it we have the return address, hence the need to step over two
+        // values before reaching the first argument.
+        return Address(Assembler::StackFrameRegister, (index - Assembler::RegisterArgumentCount + 2) * sizeof(void*));
+    }
+
+    // Some run-time functions take (Value* args, int argc). This function is for populating
+    // the args.
+    Pointer argumentAddressForCall(int argument)
+    {
+        const int index = _function->maxNumberOfArguments - argument;
+        return Pointer(Assembler::StackFrameRegister, sizeof(VM::Value) * (-index)
+                                                      - sizeof(void*) // size of ebp
+                       );
+    }
+    Pointer baseAddressForCallArguments()
+    {
+        return argumentAddressForCall(0);
+    }
+
+    VM::String *identifier(const QString &s);
+    void callActivationProperty(IR::Call *call, IR::Temp *result);
+    void callProperty(IR::Call *call, IR::Temp *result);
+    void constructActivationProperty(IR::New *call, IR::Temp *result);
+    void constructProperty(IR::New *ctor, IR::Temp *result);
+    void callValue(IR::Call *call, IR::Temp *result);
+    void constructValue(IR::New *call, IR::Temp *result);
+
+    virtual void visitExp(IR::Exp *);
+    virtual void visitEnter(IR::Enter *);
+    virtual void visitLeave(IR::Leave *);
+    virtual void visitMove(IR::Move *s);
+    virtual void visitJump(IR::Jump *);
+    virtual void visitCJump(IR::CJump *);
+    virtual void visitRet(IR::Ret *);
+
+private:
+    #define isel_stringIfyx(s) #s
+    #define isel_stringIfy(s) isel_stringIfyx(s)
+
+    #define generateFunctionCall(t, function, ...) \
+        _asm->generateFunctionCallImp(t, isel_stringIfy(function), function, __VA_ARGS__)
+
+    int prepareVariableArguments(IR::ExprList* args);
+
+    typedef VM::Value (*ActivationMethod)(VM::ExecutionContext *, VM::String *name, VM::Value *args, int argc);
+    typedef VM::Value (*BuiltinMethod)(VM::ExecutionContext *, VM::Value *args, int argc);
+    void callRuntimeMethodImp(IR::Temp *result, const char* name, ActivationMethod method, IR::Expr *base, IR::ExprList *args);
+    void callRuntimeMethodImp(IR::Temp *result, const char* name, BuiltinMethod method, IR::ExprList *args);
+#define callRuntimeMethod(result, function, ...) \
+    callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
+
+
+    VM::ExecutionEngine *_engine;
+    IR::BasicBlock *_block;
+    IR::Function* _function;
+    Assembler* _asm;
 };
 
 class ISelFactory: public EvalISelFactory
