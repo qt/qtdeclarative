@@ -37,7 +37,7 @@
 
 var gTestfile = 'regress-441477-01.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 441477-01;
+var BUGNUMBER = 441477.01;
 var summary = '';
 var actual = 'No Exception';
 var expect = 'No Exception';

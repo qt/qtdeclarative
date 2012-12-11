@@ -194,11 +194,6 @@ new TestCase( SECTION,
 	      Math.abs( -0xfff ) );
 
 new TestCase( SECTION,
-	      "Math.abs( -0777 )", 
-	      511,   
-	      Math.abs(-0777 ) );
-
-new TestCase( SECTION,
 	      "Math.abs('-1e-1')",  
 	      0.1,  
 	      Math.abs('-1e-1') );

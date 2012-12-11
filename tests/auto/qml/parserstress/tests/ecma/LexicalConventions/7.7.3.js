@@ -215,24 +215,6 @@ new TestCase( SECTION, "0XE",  14,  0XE );
 new TestCase( SECTION, "0XF",  15,  0XF );
 
 
-new TestCase( SECTION, "00",  0,   00 );
-new TestCase( SECTION, "01",  1,   01 );
-new TestCase( SECTION, "02",  2,   02 );
-new TestCase( SECTION, "03",  3,   03 );
-new TestCase( SECTION, "04",  4,   04 );
-new TestCase( SECTION, "05",  5,   05 );
-new TestCase( SECTION, "06",  6,   06 );
-new TestCase( SECTION, "07",  7,   07 );
-
-new TestCase( SECTION, "000",  0,   000 );
-new TestCase( SECTION, "011",  9,   011 );
-new TestCase( SECTION, "022",  18,  022 );
-new TestCase( SECTION, "033",  27,  033 );
-new TestCase( SECTION, "044",  36,  044 );
-new TestCase( SECTION, "055",  45,  055 );
-new TestCase( SECTION, "066",  54,  066 );
-new TestCase( SECTION, "077",  63,   077 );
-
 new TestCase( SECTION, "0.00000000001",  0.00000000001,  0.00000000001 );
 new TestCase( SECTION, "0.00000000001e-2",  0.0000000000001,  0.00000000001e-2 );
 

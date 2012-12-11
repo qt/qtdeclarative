@@ -74,20 +74,4 @@ new TestCase( SECTION,
 	      9,
 	      9 );
 
-new TestCase( SECTION,
-	      "09",
-	      9,
-	      09 );
-
-new TestCase( SECTION,
-	      "099",
-	      99,
-	      099 );
-
-
-new TestCase( SECTION,
-	      "077",
-	      63,
-	      077 );
-
 test();

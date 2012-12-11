@@ -2,7 +2,7 @@ import QtQuick 2.0
 
 QtObject {
     property variant n1:  0xFe32   // hex
-    property variant n2:  015      // octal
+    property variant n2:  015
     property variant n3:  -4.2E11  // floating-point literals
     property variant n4:  .1e9
     property variant n5:  3e-12
@@ -18,7 +18,6 @@ QtObject {
     property variant c7:  "\'"
     property variant c8:  "\""
     property variant c9:  "\\"
-    property variant c10:  "\251"
-    property variant c11:  "\xA9"
-    property variant c12:  "\u00A9" // unicode
+    property variant c10:  "\xA9"
+    property variant c11:  "\u00A9" // unicode
 }

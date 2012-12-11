@@ -106,9 +106,6 @@ new TestCase( SECTION, "isNaN( '0xaa' )",    false,              isNaN( "0xaa" )
 new TestCase( SECTION, "isNaN( '0x0A' )",    false,              isNaN( "0x0A" ) );
 new TestCase( SECTION, "isNaN( '0xAA' )",    false,              isNaN( "0xAA" ) );
 
-new TestCase( SECTION, "isNaN( 077 )",      false,              isNaN( 077 ) );
-new TestCase( SECTION, "isNaN( '077' )",    false,              isNaN( "077" ) );
-
 
 new TestCase( SECTION, "isNaN( Number.NaN )",   true,              isNaN(Number.NaN) );
 new TestCase( SECTION, "isNaN( Number.POSITIVE_INFINITY )", false,  isNaN(Number.POSITIVE_INFINITY) );
