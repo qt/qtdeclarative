@@ -2854,7 +2854,6 @@ void tst_qqmlecmascript::listToVariant()
 }
 
 // QTBUG-16316
-Q_DECLARE_METATYPE(QQmlListProperty<MyQmlObject>)
 void tst_qqmlecmascript::listAssignment()
 {
     QQmlComponent component(&engine, testFileUrl("listAssignment.qml"));
