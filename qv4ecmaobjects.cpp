@@ -2954,14 +2954,28 @@ Value ErrorPrototype::method_toString(ExecutionContext *ctx)
 //
 MathObject::MathObject(ExecutionContext *ctx)
 {
-    __put__(ctx, QStringLiteral("E"), Value::fromDouble(::exp(1.0)));
-    __put__(ctx, QStringLiteral("LN2"), Value::fromDouble(::log(2.0)));
-    __put__(ctx, QStringLiteral("LN10"), Value::fromDouble(::log(10.0)));
-    __put__(ctx, QStringLiteral("LOG2E"), Value::fromDouble(1.0/::log(2.0)));
-    __put__(ctx, QStringLiteral("LOG10E"), Value::fromDouble(1.0/::log(10.0)));
-    __put__(ctx, QStringLiteral("PI"), Value::fromDouble(qt_PI));
-    __put__(ctx, QStringLiteral("SQRT1_2"), Value::fromDouble(::sqrt(0.5)));
-    __put__(ctx, QStringLiteral("SQRT2"), Value::fromDouble(::sqrt(2.0)));
+    PropertyDescriptor desc;
+    desc.type = PropertyDescriptor::Data;
+    desc.writable = PropertyDescriptor::Unset;
+    desc.enumberable = PropertyDescriptor::Unset;
+    desc.configurable = PropertyDescriptor::Unset;
+
+    desc.value = Value::fromDouble(::exp(1.0));
+    __defineOwnProperty__(ctx, QStringLiteral("E"), &desc);
+    desc.value = Value::fromDouble(::log(2.0));
+    __defineOwnProperty__(ctx, QStringLiteral("LN2"), &desc);
+    desc.value = Value::fromDouble(::log(10.0));
+    __defineOwnProperty__(ctx, QStringLiteral("LN10"), &desc);
+    desc.value = Value::fromDouble(1.0/::log(2.0));
+    __defineOwnProperty__(ctx, QStringLiteral("LOG2E"), &desc);
+    desc.value = Value::fromDouble(1.0/::log(10.0));
+    __defineOwnProperty__(ctx, QStringLiteral("LOG10E"), &desc);
+    desc.value = Value::fromDouble(qt_PI);
+    __defineOwnProperty__(ctx, QStringLiteral("PI"), &desc);
+    desc.value = Value::fromDouble(::sqrt(0.5));
+    __defineOwnProperty__(ctx, QStringLiteral("SQRT1_2"), &desc);
+    desc.value = Value::fromDouble(::sqrt(2.0));
+    __defineOwnProperty__(ctx, QStringLiteral("SQRT2"), &desc);
 
     __put__(ctx, QStringLiteral("abs"), method_abs, 1);
     __put__(ctx, QStringLiteral("acos"), method_acos, 1);

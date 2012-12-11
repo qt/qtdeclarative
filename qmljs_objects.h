@@ -452,6 +452,7 @@ struct Object: Managed {
     virtual bool __hasProperty__(const ExecutionContext *ctx, String *name) const;
     virtual bool __delete__(ExecutionContext *ctx, String *name);
     virtual bool __defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc);
+    bool __defineOwnProperty__(ExecutionContext *ctx, const QString &name, PropertyDescriptor *desc);
 
     virtual Value call(ExecutionContext *context, Value, Value *, int);
 

@@ -359,6 +359,12 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
     return false;
 }
 
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, PropertyDescriptor *desc)
+{
+    return __defineOwnProperty__(ctx, ctx->engine->identifier(name), desc);
+}
+
+
 Value Object::call(ExecutionContext *context, Value , Value *, int)
 {
     context->throwTypeError();
