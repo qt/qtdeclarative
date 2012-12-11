@@ -370,6 +370,8 @@ public:
 #endif
     }
 
+    void storeValue(VM::Value value, IR::Temp* temp);
+
     void enterStandardStackFrame(int locals);
     void leaveStandardStackFrame(int locals);
 

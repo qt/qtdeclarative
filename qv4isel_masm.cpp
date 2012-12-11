@@ -117,6 +117,12 @@ void Assembler::copyValue(Result result, Source source)
 #endif
 }
 
+void Assembler::storeValue(VM::Value value, IR::Temp* destination)
+{
+    Address addr = loadTempAddress(ScratchRegister, destination);
+    storeValue(value, addr);
+}
+
 void Assembler::enterStandardStackFrame(int locals)
 {
 #if CPU(ARM)
@@ -471,9 +477,7 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
             return;
         } else if (call->args->expr->asTemp()){
             // ### should throw in strict mode
-            Address dest = _asm->loadTempAddress(Assembler::ScratchRegister, result);
-            Value v = Value::fromBoolean(false);
-            _asm->storeValue(v, dest);
+            _asm->storeValue(Value::fromBoolean(false), result);
             return;
         }
         break;
@@ -633,22 +637,19 @@ void InstructionSelection::visitMove(IR::Move *s)
                 }
                 return;
             } else if (IR::Const *c = s->source->asConst()) {
-                Address dest = _asm->loadTempAddress(Assembler::ScratchRegister, t);
                 Value v = convertToValue(c);
-                _asm->storeValue(v, dest);
+                _asm->storeValue(t, dest);
                 return;
             } else if (IR::Temp *t2 = s->source->asTemp()) {
                 _asm->copyValue(t, t2);
                 return;
             } else if (IR::String *str = s->source->asString()) {
-                Address dest = _asm->loadTempAddress(Assembler::ScratchRegister, t);
                 Value v = Value::fromString(engine()->newString(*str->value));
-                _asm->storeValue(v, dest);
+                _asm->storeValue(v, t);
                 return;
             } else if (IR::RegExp *re = s->source->asRegExp()) {
-                Address dest = _asm->loadTempAddress(Assembler::ScratchRegister, t);
                 Value v = Value::fromObject(engine()->newRegExpObject(*re->value, re->flags));
-                _asm->storeValue(v, dest);
+                _asm->storeValue(v, t);
                 return;
             } else if (IR::Closure *clos = s->source->asClosure()) {
                 VM::Function *vmFunc = vmFunction(clos->value);
