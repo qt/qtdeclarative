@@ -618,8 +618,10 @@ Value ObjectPrototype::method_create(ExecutionContext *ctx)
     newObject->prototype = O.objectValue();
 
     Value objValue = Value::fromObject(newObject);
-    ctx->arguments[0] = objValue;
-    method_defineProperties(ctx);
+    if (ctx->argumentCount > 1) {
+        ctx->arguments[0] = objValue;
+        method_defineProperties(ctx);
+    }
 
     return objValue;
 }
@@ -650,8 +652,22 @@ Value ObjectPrototype::method_defineProperties(ExecutionContext *ctx)
     if (!O.isObject())
         ctx->throwTypeError();
 
-    ctx->throwUnimplemented(QStringLiteral("Object.defineProperties"));
-    return Value::undefinedValue();
+    Object *o = ctx->argument(1).toObject(ctx).objectValue();
+
+    if (o->members) {
+        PropertyTable::iterator it = o->members->begin();
+        while (it != o->members->end()) {
+            if ((*it)->descriptor.isEnumerable()) {
+                String *name = (*it)->name;
+                PropertyDescriptor pd;
+                toPropertyDescriptor(ctx, o->__get__(ctx, name), &pd);
+                O.objectValue()->__defineOwnProperty__(ctx, name, &pd);
+            }
+            ++it;
+        }
+    }
+
+    return O;
 }
 
 Value ObjectPrototype::method_seal(ExecutionContext *ctx)
