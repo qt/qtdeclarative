@@ -309,7 +309,7 @@ static inline int classify5(const QChar *s, bool qmlMode) {
       if (s[2].unicode() == 'p') {
         if (s[3].unicode() == 'e') {
           if (s[4].unicode() == 'r') {
-            return qmlMode ? Lexer::T_SUPER : Lexer::T_IDENTIFIER;
+            return qmlMode ? Lexer::T_SUPER : Lexer::T_RESERVED_WORD;
           }
         }
       }
