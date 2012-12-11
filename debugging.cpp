@@ -99,14 +99,14 @@ void Debugger::addFunction(IR::Function *function)
     _functionInfo.insert(function, new FunctionDebugInfo(function));
 }
 
-void Debugger::addaddBasicBlockOffset(IR::Function *function, IR::BasicBlock *block, ptrdiff_t blockOffset)
-{
-    _functionInfo[function]->addBasicBlockOffset(block, blockOffset);
-}
-
 void Debugger::setSourceLocation(IR::Function *function, unsigned line, unsigned column)
 {
     _functionInfo[function]->setSourceLocation(line, column);
+}
+
+void Debugger::mapFunction(VM::Function *vmf, IR::Function *irf)
+{
+    _vmToIr.insert(vmf, irf);
 }
 
 FunctionDebugInfo *Debugger::debugInfo(VM::FunctionObject *function) const
@@ -115,7 +115,7 @@ FunctionDebugInfo *Debugger::debugInfo(VM::FunctionObject *function) const
         return 0;
 
     if (VM::ScriptFunction *sf = function->asScriptFunction())
-        return _functionInfo[sf->function];
+        return _functionInfo[irFunction(sf->function)];
     else
         return 0;
 }
@@ -208,4 +208,9 @@ int Debugger::callIndex(VM::ExecutionContext *context)
     }
 
     return -1;
+}
+
+IR::Function *Debugger::irFunction(VM::Function *vmf) const
+{
+    return _vmToIr[vmf];
 }

@@ -86,7 +86,7 @@ union Instr
     };
     struct instr_loadClosure {
         MOTH_INSTR_HEADER
-        IR::Function *value;
+        VM::Function *value;
         int targetTempIndex;
     };
     struct instr_loadName {

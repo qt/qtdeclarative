@@ -105,8 +105,9 @@ QString numberToString(double num, int radix = 10)
 
 extern "C" {
 
-Value __qmljs_init_closure(IR::Function *clos, ExecutionContext *ctx)
+Value __qmljs_init_closure(VM::Function *clos, ExecutionContext *ctx)
 {
+    assert(clos);
     return Value::fromObject(ctx->engine->newScriptFunction(ctx, clos));
 }
 

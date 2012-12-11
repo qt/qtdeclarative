@@ -375,7 +375,7 @@ int main(int argc, char *argv[])
                     return EXIT_FAILURE;
                 }
 
-                QScopedPointer<QQmlJS::IR::Function> f(QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode));
+                QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode);
                 if (!f)
                     continue;
 

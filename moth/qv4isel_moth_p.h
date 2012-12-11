@@ -12,12 +12,10 @@ namespace Moth {
 class InstructionSelection : public IR::StmtVisitor, public EvalInstructionSelection
 {
 public:
-    InstructionSelection(VM::ExecutionEngine *engine);
+    InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module);
     ~InstructionSelection();
 
-    virtual void run(IR::Function *function)
-    { this->operator()(function); }
-    virtual void operator()(IR::Function *function);
+    virtual VM::Function *run(IR::Function *function);
 
 protected:
     virtual void visitExp(IR::Exp *);
@@ -52,7 +50,6 @@ private:
     inline ptrdiff_t addInstruction(const InstrData<Instr> &data);
     ptrdiff_t addInstructionHelper(Instr::Type type, Instr &instr);
 
-    VM::ExecutionEngine *_engine;
     IR::Function *_function;
     IR::BasicBlock *_block;
 
@@ -67,8 +64,8 @@ class ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine)
-    { return new InstructionSelection(engine); }
+    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine, IR::Module *module)
+    { return new InstructionSelection(engine, module); }
 };
 
 template<int InstrT>

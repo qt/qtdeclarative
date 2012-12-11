@@ -602,10 +602,6 @@ struct Function {
     QList<const QString *> formals;
     QList<const QString *> locals;
 
-    VM::Value (*code)(VM::ExecutionContext *, const uchar *);
-    const uchar *codeData;
-    JSC::MacroAssemblerCodeRef codeRef;
-
     int insideWith;
 
     bool hasDirectEval: 1;
@@ -619,8 +615,6 @@ struct Function {
         , pool(&module->pool)
         , tempCount(0)
         , maxNumberOfArguments(0)
-        , code(0)
-        , codeData(0)
         , insideWith(0)
         , hasDirectEval(false)
         , hasNestedFunctions(false)
@@ -628,7 +622,6 @@ struct Function {
     { this->name = newString(name); }
 
     ~Function();
-    void releaseModuleManagedData();
 
     enum BasicBlockInsertMode {
         InsertBlock,
@@ -644,8 +637,6 @@ struct Function {
     inline BasicBlock *insertBasicBlock(BasicBlock *block) { basicBlocks.append(block); return block; }
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
-
-    inline bool needsActivation() const { return hasNestedFunctions || hasDirectEval; }
 };
 
 struct BasicBlock {

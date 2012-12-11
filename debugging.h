@@ -48,14 +48,8 @@ class Debugger;
 
 struct FunctionDebugInfo { // TODO: use opaque d-pointers here
     IR::Function *function;
-    QHash<ptrdiff_t, IR::BasicBlock *> blockOffsets;
     unsigned startLine, startColumn;
-
-    FunctionDebugInfo(IR::Function *function): function(function), startLine(0), startColumn(0) {}
-
-    void addBasicBlockOffset(IR::BasicBlock *block, ptrdiff_t offset) {
-        blockOffsets.insert(offset, block);
-    }
+ FunctionDebugInfo(IR::Function *function): function(function), startLine(0), startColumn(0) {}
 
     void setSourceLocation(unsigned line, unsigned column)
     { startLine = line; startColumn = column; }
@@ -102,8 +96,8 @@ public:
 
 public: // compile-time interface
     void addFunction(IR::Function *function);
-    void addaddBasicBlockOffset(IR::Function *function, IR::BasicBlock *block, ptrdiff_t blockOffset);
     void setSourceLocation(IR::Function *function, unsigned line, unsigned column);
+    void mapFunction(VM::Function *vmf, IR::Function *irf);
 
 public: // run-time querying interface
     FunctionDebugInfo *debugInfo(VM::FunctionObject *function) const;
@@ -125,10 +119,12 @@ public: // debugging hooks
 
 private:
     int callIndex(VM::ExecutionContext *context);
+    IR::Function *irFunction(VM::Function *vmf) const;
 
 private: // TODO: use opaque d-pointers here
     VM::ExecutionEngine *_engine;
     QHash<IR::Function *, FunctionDebugInfo *> _functionInfo;
+    QHash<VM::Function *, IR::Function *> _vmToIr;
     QVector<CallInfo> _callStack;
 };
 

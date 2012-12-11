@@ -630,7 +630,7 @@ public:
         return Jump();
     }
 
-    void link();
+    void link(VM::Function *vmFunc);
 
 private:
     IR::Function* _function;
@@ -642,12 +642,10 @@ private:
 class InstructionSelection: protected IR::StmtVisitor, public EvalInstructionSelection
 {
 public:
-    InstructionSelection(VM::ExecutionEngine *engine);
+    InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module);
     ~InstructionSelection();
 
-    virtual void run(IR::Function *function)
-    { this->operator()(function); }
-    void operator()(IR::Function *function);
+    virtual VM::Function *run(IR::Function *function);
 
 protected:
     typedef Assembler::Address Address;
@@ -710,8 +708,6 @@ private:
 #define callRuntimeMethod(result, function, ...) \
     callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
 
-
-    VM::ExecutionEngine *_engine;
     IR::BasicBlock *_block;
     IR::Function* _function;
     Assembler* _asm;
@@ -721,8 +717,8 @@ class ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine)
-    { return new InstructionSelection(engine); }
+    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine, IR::Module *module)
+    { return new InstructionSelection(engine, module); }
 };
 
 } // end of namespace MASM

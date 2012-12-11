@@ -181,26 +181,27 @@ private:
 
 } // anonymous namespace
 
-InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine)
-    : _engine(engine)
+InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module)
+    : EvalInstructionSelection(engine, module)
+    , _function(0)
+    , _block(0)
+    , _code(0)
+    , _ccode(0)
 {
-    // FIXME: make the size dynamic. This requires changing the patching.
-    _code = new uchar[getpagesize() * 4000];
-    _ccode = _code;
 }
 
 InstructionSelection::~InstructionSelection()
 {
 }
 
-void InstructionSelection::operator()(IR::Function *function)
+VM::Function *InstructionSelection::run(IR::Function *function)
 {
     qSwap(_function, function);
+    // FIXME: make the size dynamic. This requires changing the patching.
+    _code = new uchar[getpagesize() * 4000];
+    _ccode = _code;
 
     CompressTemps().run(_function);
-
-    _function->code = VME::exec;
-    _function->codeData = _code;
 
     int locals = frameSize();
     assert(locals >= 0);
@@ -210,10 +211,7 @@ void InstructionSelection::operator()(IR::Function *function)
     addInstruction(push);
 
     foreach (_block, _function->basicBlocks) {
-        ptrdiff_t blockOffset = _ccode - _code;
         _addrs.insert(_block, _ccode - _code);
-        if (_engine->debugger)
-            _engine->debugger->addaddBasicBlockOffset(_function, _block, blockOffset);
 
         foreach (IR::Stmt *s, _block->statements)
             s->accept(this);
@@ -234,6 +232,17 @@ void InstructionSelection::operator()(IR::Function *function)
     }
 
     qSwap(_function, function);
+    _patches.clear();
+    _addrs.clear();
+
+    VM::Function *vmFunc = vmFunction(function);
+    vmFunc->code = VME::exec;
+    vmFunc->codeData = _code;
+
+    _block = 0;
+    _code = 0;
+    _ccode = 0;
+    return vmFunc;
 }
 
 void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempIndex)
@@ -246,7 +255,7 @@ void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempInd
         const int scratchIndex = scratchTempIndex();
 
         Instruction::LoadName load;
-        load.name = _engine->newString(*baseName->id);
+        load.name = engine()->newString(*baseName->id);
         load.targetTempIndex = scratchIndex;
         addInstruction(load);
 
@@ -272,7 +281,7 @@ void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempInd
         if (IR::Member *m = c->args->expr->asMember()) {
             Instruction::CallBuiltinDeleteMember call;
             call.base = m->base->asTemp()->index;
-            call.member = _engine->newString(*m->name);
+            call.member = engine()->newString(*m->name);
             call.targetTempIndex = targetTempIndex;
             addInstruction(call);
         } else if (IR::Subscript *ss = c->args->expr->asSubscript()) {
@@ -283,7 +292,7 @@ void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempInd
             addInstruction(call);
         } else if (IR::Name *n = c->args->expr->asName()) {
             Instruction::CallBuiltinDeleteName call;
-            call.name = _engine->newString(*n->id);
+            call.name = engine()->newString(*n->id);
             call.targetTempIndex = targetTempIndex;
             addInstruction(call);
         } else {
@@ -363,7 +372,7 @@ void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempInd
         for (IR::ExprList *it = c->args->next; it; it = it->next) {
             Instruction::CallBuiltinDeclareVar call;
             call.isDeletable = isDeletable;
-            call.varName = _engine->newString(*it->expr->asName()->id);
+            call.varName = engine()->newString(*it->expr->asName()->id);
         }
     } break;
 
@@ -393,7 +402,7 @@ void InstructionSelection::callProperty(IR::Call *c, int targetTempIndex)
     // call the property on the loaded base
     Instruction::CallProperty call;
     call.baseTemp = m->base->asTemp()->index;
-    call.name = _engine->newString(*m->name);
+    call.name = engine()->newString(*m->name);
     prepareCallArgs(c->args, call.argc, call.args);
     call.targetTempIndex = targetTempIndex;
     addInstruction(call);
@@ -403,7 +412,7 @@ void InstructionSelection::construct(IR::New *ctor, int targetTempIndex)
 {
     if (IR::Name *baseName = ctor->base->asName()) {
         Instruction::CreateActivationProperty create;
-        create.name = _engine->newString(*baseName->id);
+        create.name = engine()->newString(*baseName->id);
         prepareCallArgs(ctor->args, create.argc, create.args);
         create.targetTempIndex = targetTempIndex;
         addInstruction(create);
@@ -413,7 +422,7 @@ void InstructionSelection::construct(IR::New *ctor, int targetTempIndex)
 
         Instruction::CreateProperty create;
         create.base = base->index;
-        create.name = _engine->newString(*member->name);
+        create.name = engine()->newString(*member->name);
         prepareCallArgs(ctor->args, create.argc, create.args);
         create.targetTempIndex = targetTempIndex;
         addInstruction(create);
@@ -578,7 +587,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 addInstruction(load);
             } else {
                 Instruction::LoadName load;
-                load.name = _engine->newString(*n->id);
+                load.name = engine()->newString(*n->id);
                 load.targetTempIndex = targetTempIndex;
                 addInstruction(load);
             }
@@ -607,12 +616,14 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::String *str = s->source->asString()) {
             Instruction::LoadValue load;
-            load.value = VM::Value::fromString(_engine->newString(*str->value));
+            load.value = VM::Value::fromString(engine()->newString(*str->value));
             load.targetTempIndex = targetTempIndex;
             addInstruction(load);
         } else if (IR::Closure *clos = s->source->asClosure()) {
+            VM::Function *vmFunc = vmFunction(clos->value);
+            assert(vmFunc);
             Instruction::LoadClosure load;
-            load.value = clos->value;
+            load.value = vmFunc;
             load.targetTempIndex = targetTempIndex;
             addInstruction(load);
         } else if (IR::New *ctor = s->source->asNew()) {
@@ -621,7 +632,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             if (IR::Temp *base = m->base->asTemp()) {
                 Instruction::LoadProperty load;
                 load.baseTemp = base->index;
-                load.name = _engine->newString(*m->name);
+                load.name = engine()->newString(*m->name);
                 load.targetTempIndex = targetTempIndex;
                 addInstruction(load);
             } else {
@@ -699,14 +710,14 @@ void InstructionSelection::visitMove(IR::Move *s)
             if (op) {
                 Instruction::InplaceNameOp ieo;
                 ieo.alu = op;
-                ieo.targetName = _engine->newString(*n->id);
+                ieo.targetName = engine()->newString(*n->id);
                 ieo.sourceIsTemp = toValueOrTemp(s->source, ieo.source);
                 addInstruction(ieo);
                 return;
             } else if (s->op == IR::OpInvalid) {
                 Instruction::StoreName store;
                 store.sourceIsTemp = toValueOrTemp(s->source, store.source);
-                store.name = _engine->newString(*n->id);
+                store.name = engine()->newString(*n->id);
                 addInstruction(store);
                 return;
             }
@@ -770,14 +781,14 @@ void InstructionSelection::visitMove(IR::Move *s)
                 Instruction::InplaceMemberOp imo;
                 imo.alu = op;
                 imo.targetBase = m->base->asTemp()->index;
-                imo.targetMember = _engine->newString(*m->name);
+                imo.targetMember = engine()->newString(*m->name);
                 imo.sourceIsTemp = toValueOrTemp(s->source, imo.source);
                 addInstruction(imo);
                 return;
             } else if (s->op == IR::OpInvalid) {
                 Instruction::StoreProperty store;
                 store.baseTemp = m->base->asTemp()->index;
-                store.name = _engine->newString(*m->name);
+                store.name = engine()->newString(*m->name);
                 store.sourceIsTemp = toValueOrTemp(s->source, store.source);
                 addInstruction(store);
                 return;

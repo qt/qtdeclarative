@@ -426,6 +426,11 @@ void ArrayObject::getCollectables(QVector<Object *> &objects)
     value.getCollectables(objects);
 }
 
+Function::~Function()
+{
+    delete[] codeData;
+}
+
 bool FunctionObject::hasInstance(ExecutionContext *ctx, const Value &value)
 {
     if (! value.isObject()) {
@@ -489,23 +494,26 @@ Value FunctionObject::construct(ExecutionContext *ctx)
     return ctx->thisObject;
 }
 
-ScriptFunction::ScriptFunction(ExecutionContext *scope, IR::Function *function)
+ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
     : FunctionObject(scope)
     , function(function)
 {
+    assert(function);
+    assert(function->code);
+
     // global function
     if (!scope)
         return;
 
-    if (function->name)
-        name = scope->engine->identifier(*function->name);
+    if (!function->name.isEmpty())
+        name = scope->engine->identifier(function->name);
     needsActivation = function->needsActivation();
     strictMode = function->isStrict;
     formalParameterCount = function->formals.size();
     if (formalParameterCount) {
         formalParameterList = new String*[formalParameterCount];
         for (unsigned int i = 0; i < formalParameterCount; ++i) {
-            formalParameterList[i] = scope->engine->identifier(*function->formals.at(i));
+            formalParameterList[i] = scope->engine->identifier(function->formals.at(i));
         }
     }
 
@@ -513,7 +521,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, IR::Function *function)
     if (varCount) {
         varList = new String*[varCount];
         for (unsigned int i = 0; i < varCount; ++i) {
-            varList[i] = scope->engine->identifier(*function->locals.at(i));
+            varList[i] = scope->engine->identifier(function->locals.at(i));
         }
     }
 }
@@ -526,6 +534,7 @@ ScriptFunction::~ScriptFunction()
 
 Value ScriptFunction::call(VM::ExecutionContext *ctx)
 {
+    assert(function->code);
     return function->code(ctx, function->codeData);
 }
 
@@ -542,7 +551,7 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
     bool directCall = true;
 
     const QString code = args[0].stringValue()->toQString();
-    QScopedPointer<QQmlJS::IR::Function> f(parseSource(context, QStringLiteral("eval code"), code, QQmlJS::Codegen::EvalCode));
+    QQmlJS::VM::Function *f = parseSource(context, QStringLiteral("eval code"), code, QQmlJS::Codegen::EvalCode);
     if (!f)
         return Value::undefinedValue();
 
@@ -580,7 +589,7 @@ EvalFunction::EvalFunction(ExecutionContext *scope)
     name = scope->engine->newString(QLatin1String("eval"));
 }
 
-QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ctx,
+QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ctx,
                                                 const QString &fileName, const QString &source,
                                                 QQmlJS::Codegen::Mode mode)
 {
@@ -590,7 +599,7 @@ QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
 
     VM::ExecutionEngine *vm = ctx->engine;
     IR::Module module;
-    IR::Function *globalCode = 0;
+    VM::Function *globalCode = 0;
 
     {
         QQmlJS::Engine ee, *engine = &ee;
@@ -630,13 +639,17 @@ QQmlJS::IR::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
             }
 
             Codegen cg(ctx);
-            globalCode = cg(fileName, program, &module, mode);
+            IR::Function *globalIRCode = cg(fileName, program, &module, mode);
+            QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(vm, &module));
+            if (globalIRCode) {
+                globalCode = isel->run(globalIRCode);
+            }
             if (globalCode) {
                 // only generate other functions if global code generation succeeded.
                 foreach (IR::Function *function, module.functions) {
-                    EvalInstructionSelection *isel = ctx->engine->iselFactory->create(vm);
-                    isel->run(function);
-                    delete isel;
+                    if (function == globalIRCode)
+                        continue;
+                    globalCode->nestedFunctions.append(isel->run(function));
                 }
             }
         }

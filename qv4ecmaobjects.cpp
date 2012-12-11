@@ -2040,11 +2040,10 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
     Codegen cg(ctx);
     IR::Function *irf = cg(QString(), fe, &module);
 
-    EvalInstructionSelection *isel = ctx->engine->iselFactory->create(ctx->engine);
-    isel->run(irf);
-    delete isel;
+    QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(ctx->engine, &module));
+    VM::Function *vmf = isel->run(irf);
 
-    ctx->thisObject = Value::fromObject(ctx->engine->newScriptFunction(ctx->engine->rootContext, irf));
+    ctx->thisObject = Value::fromObject(ctx->engine->newScriptFunction(ctx->engine->rootContext, vmf));
     return ctx->thisObject;
 }
 

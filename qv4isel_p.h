@@ -31,6 +31,7 @@
 #define QV4ISEL_P_H
 
 #include <qglobal.h>
+#include <QHash>
 
 namespace QQmlJS {
 
@@ -41,21 +42,32 @@ struct Module;
 
 namespace VM {
 struct ExecutionEngine;
+struct Function;
 } // namespace VM
 
 class EvalInstructionSelection
 {
 public:
+    EvalInstructionSelection(VM::ExecutionEngine *engine, IR::Module *module);
     virtual ~EvalInstructionSelection() = 0;
 
-    virtual void run(IR::Function *function) = 0;
+    virtual VM::Function *run(IR::Function *function) = 0;
+
+protected:
+    VM::Function *createFunctionMapping(VM::ExecutionEngine *engine, IR::Function *irFunction);
+    VM::Function *vmFunction(IR::Function *f) const { return _irToVM[f]; }
+    VM::ExecutionEngine *engine() const { return _engine; }
+
+private:
+    VM::ExecutionEngine *_engine;
+    QHash<IR::Function *, VM::Function *> _irToVM;
 };
 
 class EvalISelFactory
 {
 public:
     virtual ~EvalISelFactory() = 0;
-    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine) = 0;
+    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine, IR::Module *module) = 0;
 };
 
 } // namespace QQmlJS

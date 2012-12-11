@@ -222,6 +222,7 @@ ExecutionEngine::~ExecutionEngine()
     delete globalObject.asObject();
     delete rootContext;
     delete stringPool;
+    qDeleteAll(functions);
 }
 
 ExecutionContext *ExecutionEngine::newContext()
@@ -237,6 +238,13 @@ String *ExecutionEngine::identifier(const QString &s)
     return id;
 }
 
+Function *ExecutionEngine::newFunction(const QString &name)
+{
+    VM::Function *f = new VM::Function(name);
+    functions.append(f);
+    return f;
+}
+
 FunctionObject *ExecutionEngine::newNativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
 {
     NativeFunction *f = new (memoryManager) NativeFunction(scope, name, code);
@@ -244,8 +252,10 @@ FunctionObject *ExecutionEngine::newNativeFunction(ExecutionContext *scope, Stri
     return f;
 }
 
-FunctionObject *ExecutionEngine::newScriptFunction(ExecutionContext *scope, IR::Function *function)
+FunctionObject *ExecutionEngine::newScriptFunction(ExecutionContext *scope, VM::Function *function)
 {
+    assert(function);
+
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
     ScriptFunction *f = new (memoryManager) ScriptFunction(scope, function);

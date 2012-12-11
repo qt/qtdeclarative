@@ -56,13 +56,10 @@
 
 namespace QQmlJS {
 
-namespace IR {
-struct Function;
-}
-
 namespace VM {
 
 struct Value;
+struct Function;
 struct Object;
 struct BooleanObject;
 struct NumberObject;
@@ -525,6 +522,34 @@ protected:
     virtual void getCollectables(QVector<Object *> &objects);
 };
 
+struct Function {
+    QString name;
+
+    VM::Value (*code)(VM::ExecutionContext *, const uchar *);
+    const uchar *codeData;
+    JSC::MacroAssemblerCodeRef codeRef;
+
+    QList<QString> formals;
+    QList<QString> locals;
+    QVector<Function *> nestedFunctions;
+
+    bool hasDirectEval: 1;
+    bool isStrict: 1;
+
+    Function(const QString &name)
+        : name(name)
+        , code(0)
+        , codeData(0)
+        , hasDirectEval(false)
+        , isStrict(false)
+    {}
+    ~Function();
+
+    inline bool hasNestedFunctions() const { return !nestedFunctions.isEmpty(); }
+
+    inline bool needsActivation() const { return hasNestedFunctions() || hasDirectEval; }
+};
+
 struct FunctionObject: Object {
     ExecutionContext *scope;
     String *name;
@@ -568,9 +593,9 @@ struct NativeFunction: FunctionObject {
 };
 
 struct ScriptFunction: FunctionObject {
-    IR::Function *function;
+    VM::Function *function;
 
-    ScriptFunction(ExecutionContext *scope, IR::Function *function);
+    ScriptFunction(ExecutionContext *scope, VM::Function *function);
     virtual ~ScriptFunction();
 
     virtual Value call(ExecutionContext *ctx);
@@ -583,9 +608,10 @@ struct EvalFunction : FunctionObject
 {
     EvalFunction(ExecutionContext *scope);
 
-    static QQmlJS::IR::Function *parseSource(QQmlJS::VM::ExecutionContext *ctx,
-                                     const QString &fileName, const QString &source,
-                                     QQmlJS::Codegen::Mode mode);
+    static QQmlJS::VM::Function *parseSource(QQmlJS::VM::ExecutionContext *ctx,
+                                             const QString &fileName,
+                                             const QString &source,
+                                             QQmlJS::Codegen::Mode mode);
 
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 };

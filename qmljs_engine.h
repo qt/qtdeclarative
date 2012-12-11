@@ -56,6 +56,7 @@ namespace VM {
 
 struct Value;
 class Array;
+struct Function;
 struct Object;
 struct BooleanObject;
 struct NumberObject;
@@ -156,6 +157,7 @@ struct ExecutionEngine
     Value exception;
 
     struct StringPool *stringPool;
+    QVector<Function *> functions;
 
     ExecutionEngine(MemoryManager *memoryManager, EvalISelFactory *iselFactory);
     ~ExecutionEngine();
@@ -164,8 +166,10 @@ struct ExecutionEngine
 
     String *identifier(const QString &s);
 
+    VM::Function *newFunction(const QString &name);
+
     FunctionObject *newNativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
-    FunctionObject *newScriptFunction(ExecutionContext *scope, IR::Function *function);
+    FunctionObject *newScriptFunction(ExecutionContext *scope, VM::Function *function);
 
     Object *newObject();
     FunctionObject *newObjectCtor(ExecutionContext *ctx);

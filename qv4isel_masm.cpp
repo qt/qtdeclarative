@@ -313,7 +313,7 @@ static void printDisassembledOutputWithCalls(const char* output, const QHash<voi
 }
 #endif
 
-void Assembler::link()
+void Assembler::link(VM::Function *vmFunc)
 {
     QHashIterator<IR::BasicBlock *, QVector<Jump> > it(_patches);
     while (it.hasNext()) {
@@ -343,7 +343,7 @@ void Assembler::link()
 #endif
 
         QByteArray name = _function->name->toUtf8();
-        _function->codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
+        vmFunc->codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
 
         WTF::setDataFile(stderr);
 #if OS(LINUX)
@@ -354,14 +354,14 @@ void Assembler::link()
         free(disasmOutput);
 #endif
     } else {
-        _function->codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
+        vmFunc->codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
     }
 
-    _function->code = (Value (*)(VM::ExecutionContext *, const uchar *)) _function->codeRef.code().executableAddress();
+    vmFunc->code = (Value (*)(VM::ExecutionContext *, const uchar *)) vmFunc->codeRef.code().executableAddress();
 }
 
-InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine)
-    : _engine(engine)
+InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module)
+    : EvalInstructionSelection(engine, module)
     , _block(0)
     , _function(0)
     , _asm(0)
@@ -373,7 +373,7 @@ InstructionSelection::~InstructionSelection()
     delete _asm;
 }
 
-void InstructionSelection::operator()(IR::Function *function)
+VM::Function *InstructionSelection::run(IR::Function *function)
 {
     qSwap(_function, function);
     Assembler* oldAssembler = _asm;
@@ -417,16 +417,19 @@ void InstructionSelection::operator()(IR::Function *function)
 #endif
     _asm->ret();
 
-    _asm->link();
+    VM::Function *vmFunc = vmFunction(_function);
+    _asm->link(vmFunc);
 
     qSwap(_function, function);
     delete _asm;
     _asm = oldAssembler;
+
+    return vmFunc;
 }
 
 String *InstructionSelection::identifier(const QString &s)
 {
-    return _engine->identifier(s);
+    return engine()->identifier(s);
 }
 
 void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *result)
@@ -662,16 +665,18 @@ void InstructionSelection::visitMove(IR::Move *s)
                 return;
             } else if (IR::String *str = s->source->asString()) {
                 Address dest = _asm->loadTempAddress(Assembler::ScratchRegister, t);
-                Value v = Value::fromString(_engine->newString(*str->value));
+                Value v = Value::fromString(engine()->newString(*str->value));
                 _asm->storeValue(v, dest);
                 return;
             } else if (IR::RegExp *re = s->source->asRegExp()) {
                 Address dest = _asm->loadTempAddress(Assembler::ScratchRegister, t);
-                Value v = Value::fromObject(_engine->newRegExpObject(*re->value, re->flags));
+                Value v = Value::fromObject(engine()->newRegExpObject(*re->value, re->flags));
                 _asm->storeValue(v, dest);
                 return;
             } else if (IR::Closure *clos = s->source->asClosure()) {
-                generateFunctionCall(t, __qmljs_init_closure, Assembler::TrustedImmPtr(clos->value), Assembler::ContextRegister);
+                VM::Function *vmFunc = vmFunction(clos->value);
+                assert(vmFunc);
+                generateFunctionCall(t, __qmljs_init_closure, Assembler::TrustedImmPtr(vmFunc), Assembler::ContextRegister);
                 return;
             } else if (IR::New *ctor = s->source->asNew()) {
                 if (ctor->base->asName()) {

@@ -60,11 +60,6 @@
 #endif // TRACE1
 
 namespace QQmlJS {
-
-namespace IR {
-struct Function;
-}
-
 namespace VM {
 
 enum TypeHint {
@@ -73,6 +68,7 @@ enum TypeHint {
     STRING_HINT
 };
 
+struct Function;
 struct Object;
 struct String;
 struct PropertyDescriptor;
@@ -109,7 +105,7 @@ void __qmljs_builtin_pop_with(ExecutionContext *ctx);
 void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name);
 
 // constructors
-Value __qmljs_init_closure(IR::Function *clos, ExecutionContext *ctx);
+Value __qmljs_init_closure(VM::Function *clos, ExecutionContext *ctx);
 Value __qmljs_init_native_function(String *name, Value (*code)(ExecutionContext *), ExecutionContext *ctx);
 
 Bool __qmljs_is_function(Value value);
