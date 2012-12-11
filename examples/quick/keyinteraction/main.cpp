@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(keyinteraction)
+DECLARATIVE_EXAMPLE_MAIN(keyinteraction/keyinteraction)

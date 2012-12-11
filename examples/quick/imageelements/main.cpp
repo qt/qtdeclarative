@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(imageelements)
+DECLARATIVE_EXAMPLE_MAIN(imageelements/imageelements)

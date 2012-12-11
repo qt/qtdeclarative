@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(imageparticle)
+DECLARATIVE_EXAMPLE_MAIN(particles/imageparticle/imageparticle)

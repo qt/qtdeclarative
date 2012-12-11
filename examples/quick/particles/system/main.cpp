@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(system)
+DECLARATIVE_EXAMPLE_MAIN(particles/system/system)

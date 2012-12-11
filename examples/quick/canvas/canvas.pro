@@ -2,8 +2,9 @@ TEMPLATE = app
 
 QT += quick qml
 SOURCES += main.cpp
+RESOURCES += \
+    canvas.qrc \
+    ../shared/shared.qrc
 
 target.path = $$[QT_INSTALL_EXAMPLES]/quick/canvas
-qml.files = canvas.qml bezierCurve clip quadraticCurveTo roundedrect smile squircle tiger contents
-qml.path = $$[QT_INSTALL_EXAMPLES]/quick/canvas
-INSTALLS += target qml
+INSTALLS += target

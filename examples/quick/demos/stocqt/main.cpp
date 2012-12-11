@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(stocqt)
+DECLARATIVE_EXAMPLE_MAIN(demos/stocqt/stocqt)

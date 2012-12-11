@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(righttoleft)
+DECLARATIVE_EXAMPLE_MAIN(righttoleft/righttoleft)

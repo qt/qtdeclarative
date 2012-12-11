@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/quick/shared">
+        <file>LauncherList.qml</file>
+        <file>SimpleLauncherDelegate.qml</file>
+        <file>Button.qml</file>
+        <file>images/back.png</file>
+    </qresource>
+</RCC>

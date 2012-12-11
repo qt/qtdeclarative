@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     QGuiApplication app(argc, argv);
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.loadUrl(QUrl::fromLocalFile("Window.qml"));
+    component.loadUrl(QUrl("qrc:///window/window/Window.qml"));
     if ( component.isReady() )
         component.create();
     else

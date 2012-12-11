@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(shadereffects)
+DECLARATIVE_EXAMPLE_MAIN(shadereffects/shadereffects)

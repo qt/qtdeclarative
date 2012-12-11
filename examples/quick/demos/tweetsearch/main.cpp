@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(tweetsearch)
+DECLARATIVE_EXAMPLE_MAIN(demos/tweetsearch/tweetsearch)

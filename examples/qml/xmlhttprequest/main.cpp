@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../../quick/shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(xmlhttprequest)
+DECLARATIVE_EXAMPLE_MAIN(qml/xmlhttprequest/xmlhttprequest)

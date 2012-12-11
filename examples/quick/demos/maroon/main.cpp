@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(maroon)
+DECLARATIVE_EXAMPLE_MAIN(demos/maroon/maroon)

@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(mousearea)
+DECLARATIVE_EXAMPLE_MAIN(mousearea/mousearea)

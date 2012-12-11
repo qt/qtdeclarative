@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(accessibility)
+DECLARATIVE_EXAMPLE_MAIN(accessibility/accessibility)

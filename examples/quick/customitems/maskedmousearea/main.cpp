@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 
     qmlRegisterType<MaskedMouseArea>("Example", 1, 0, "MaskedMouseArea");
 
-    view.setSource(QUrl::fromLocalFile("maskedmousearea.qml"));
+    view.setSource(QUrl("qrc:///customitems/maskedmousearea/maskedmousearea.qml"));
     view.show();
     return app.exec();
 }
