@@ -1950,13 +1950,14 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
 
     QString args;
     QString body;
-    if (ctx->argumentCount > 0)
+    if (ctx->argumentCount > 0) {
         body = ctx->argument(ctx->argumentCount - 1).toString(ctx)->toQString();
 
-    for (uint i = 0; i < ctx->argumentCount - 1; ++i) {
-        if (i)
-            args += QLatin1String(", ");
-        args += ctx->argument(i).toString(ctx)->toQString();
+        for (uint i = 0; i < ctx->argumentCount - 1; ++i) {
+            if (i)
+                args += QLatin1String(", ");
+            args += ctx->argument(i).toString(ctx)->toQString();
+        }
     }
 
     QString function = QLatin1String("function(") + args + QLatin1String("){") + body + QLatin1String("}");
