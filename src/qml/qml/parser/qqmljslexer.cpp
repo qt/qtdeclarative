@@ -610,7 +610,13 @@ again:
 
         if (_engine) {
             while (!_char.isNull()) {
-                if (isLineTerminator() || _char == QLatin1Char('\\')) {
+                if (isLineTerminator()) {
+                    if (qmlMode())
+                        break;
+                    _errorCode = IllegalCharacter;
+                    _errorMessage = QCoreApplication::translate("QQmlParser", "Stray newline in string literal");
+                    return T_ERROR;
+                } else if (_char == QLatin1Char('\\')) {
                     break;
                 } else if (_char == quote) {
                     _tokenSpell = _engine->midRef(startCode - _code.unicode() - 1, _codePtr - startCode);
