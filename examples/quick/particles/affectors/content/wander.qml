@@ -40,7 +40,6 @@
 
 import QtQuick 2.0
 import QtQuick.Particles 2.0
-import "../../../shared" as UI //Has a shared UI element
 
 Rectangle {
     width: 360
