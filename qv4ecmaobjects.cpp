@@ -586,8 +586,13 @@ Value ObjectPrototype::method_getPrototypeOf(ExecutionContext *ctx)
 
 Value ObjectPrototype::method_getOwnPropertyDescriptor(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.getOwnPropertyDescriptors"));
-    return Value::undefinedValue();
+    Value O = ctx->argument(0);
+    if (!O.isObject())
+        ctx->throwTypeError();
+
+    String *name = ctx->argument(1).toString(ctx);
+    PropertyDescriptor *desc = O.objectValue()->__getOwnProperty__(ctx, name);
+    return fromPropertyDescriptor(ctx, desc);
 }
 
 Value ObjectPrototype::method_getOwnPropertyNames(ExecutionContext *ctx)
@@ -927,6 +932,41 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
         }
         desc->type = PropertyDescriptor::Accessor;
     }
+}
+
+
+Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const PropertyDescriptor *desc)
+{
+    if (!desc)
+        return Value::undefinedValue();
+
+    ExecutionEngine *engine = ctx->engine;
+//    Let obj be the result of creating a new object as if by the expression new Object() where Object is the standard built-in constructor with that name.
+    Object *o = engine->newObject();
+
+    PropertyDescriptor pd;
+    pd.type = PropertyDescriptor::Data;
+    pd.writable = PropertyDescriptor::Set;
+    pd.enumberable = PropertyDescriptor::Set;
+    pd.configurable = PropertyDescriptor::Set;
+
+    if (desc->isData()) {
+        pd.value = desc->value;
+        o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("value")), &pd);
+        pd.value = Value::fromBoolean(desc->writable == PropertyDescriptor::Set ? true : false);
+        o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("writable")), &pd);
+    } else {
+        pd.value = desc->get ? Value::fromObject(desc->get) : Value::undefinedValue();
+        o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("get")), &pd);
+        pd.value = desc->set ? Value::fromObject(desc->set) : Value::undefinedValue();
+        o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("set")), &pd);
+    }
+    pd.value = Value::fromBoolean(desc->enumberable == PropertyDescriptor::Set ? true : false);
+    o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("enumerable")), &pd);
+    pd.value = Value::fromBoolean(desc->configurable == PropertyDescriptor::Set ? true : false);
+    o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("configurable")), &pd);
+
+    return Value::fromObject(o);
 }
 
 //
