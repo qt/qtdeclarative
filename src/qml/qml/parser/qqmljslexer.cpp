@@ -136,6 +136,7 @@ void Lexer::setCode(const QString &code, int lineno, bool qmlMode)
     _tokenSpell = QStringRef();
 
     _codePtr = code.unicode();
+    _endPtr = _codePtr + code.length();
     _lastLinePtr = _codePtr;
     _tokenLinePtr = _codePtr;
     _tokenStartPtr = _codePtr;
@@ -448,7 +449,7 @@ again:
     case '/':
         if (_char == QLatin1Char('*')) {
             scanChar();
-            while (!_char.isNull()) {
+            while (_codePtr <= _endPtr) {
                 if (_char == QLatin1Char('*')) {
                     scanChar();
                     if (_char == QLatin1Char('/')) {
@@ -466,7 +467,7 @@ again:
                 }
             }
         } else if (_char == QLatin1Char('/')) {
-            while (!_char.isNull() && !isLineTerminator()) {
+            while (_codePtr <= _endPtr && !isLineTerminator()) {
                 scanChar();
             }
             if (_engine) {

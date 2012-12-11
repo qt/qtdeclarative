@@ -211,6 +211,7 @@ private:
     QStringRef _tokenSpell;
 
     const QChar *_codePtr;
+    const QChar *_endPtr;
     const QChar *_lastLinePtr;
     const QChar *_tokenLinePtr;
     const QChar *_tokenStartPtr;
