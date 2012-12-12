@@ -510,7 +510,7 @@ IR::Expr *Codegen::unop(IR::AluOp op, IR::Expr *expr)
             case IR::OpNot:
                 return _block->CONST(IR::BoolType, !c->value);
             case IR::OpUMinus:
-                    return _block->CONST(IR::NumberType, -c->value);
+                return _block->CONST(IR::NumberType, -c->value);
             case IR::OpUPlus:
                 return expr;
             case IR::OpCompl:
