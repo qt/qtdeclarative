@@ -46,7 +46,8 @@ inline VM::Value convertToValue(IR::Const *c)
         return VM::Value::fromBoolean(c->value != 0);
     case IR::NumberType: {
         int ival = (int)c->value;
-        if (ival == c->value) {
+        // +0 != -0, so we need to convert to double when negating 0
+        if (ival == c->value && c->value != -0) {
             return VM::Value::fromInt32(ival);
         } else {
             return VM::Value::fromDouble(c->value);

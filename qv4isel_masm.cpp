@@ -634,30 +634,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 return;
             } else if (IR::Const *c = s->source->asConst()) {
                 Address dest = _asm->loadTempAddress(Assembler::ScratchRegister, t);
-                Value v;
-                switch (c->type) {
-                case IR::NullType:
-                    v = Value::nullValue();
-                    break;
-                case IR::UndefinedType:
-                    v = Value::undefinedValue();
-                    break;
-                case IR::BoolType:
-                    v = Value::fromBoolean(c->value != 0);
-                    break;
-                case IR::NumberType: {
-                    int ival = (int)c->value;
-                    if (ival == c->value) {
-                        v = Value::fromInt32(ival);
-                    } else {
-                        v = Value::fromDouble(c->value);
-                    }
-                }
-                    break;
-                default:
-                    Q_UNIMPLEMENTED();
-                    assert(!"TODO");
-                }
+                Value v = convertToValue(c);
                 _asm->storeValue(v, dest);
                 return;
             } else if (IR::Temp *t2 = s->source->asTemp()) {

@@ -457,7 +457,8 @@ inline Value __qmljs_uminus(Value value, ExecutionContext *ctx)
 {
     TRACE1(value);
 
-    if (value.isInteger())
+    // +0 != -0, so we need to convert to double when negating 0
+    if (value.isInteger() && value.integerValue())
         return Value::fromInt32(-value.integerValue());
     double n = __qmljs_to_number(value, ctx);
     return Value::fromDouble(-n);
