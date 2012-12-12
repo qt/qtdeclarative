@@ -1613,6 +1613,8 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 {
     qSwap(_mode, mode); // enter function code.
 
+    TryCleanup *tryCleanup = 0;
+
     enterEnvironment(ast);
     IR::Function *function = _module->newFunction(name);
     if (_debugger)
@@ -1665,6 +1667,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_exitBlock, exitBlock);
     qSwap(_throwBlock, throwBlock);
     qSwap(_returnAddress, returnAddress);
+    qSwap(_tryCleanup, tryCleanup);
 
     for (FormalParameterList *it = formals; it; it = it->next) {
         _function->RECEIVE(it->name.toString());
@@ -1694,6 +1697,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_exitBlock, exitBlock);
     qSwap(_throwBlock, throwBlock);
     qSwap(_returnAddress, returnAddress);
+    qSwap(_tryCleanup, tryCleanup);
 
     leaveEnvironment();
 
