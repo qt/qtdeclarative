@@ -115,6 +115,8 @@ enum AluOp {
     OpUMinus,
     OpUPlus,
     OpCompl,
+    OpIncrement,
+    OpDecrement,
 
     OpBitAnd,
     OpBitOr,

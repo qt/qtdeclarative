@@ -187,6 +187,8 @@ const Assembler::BinaryOperationInfo Assembler::binaryOperations[QQmlJS::IR::Las
     NULL_OP, // OpUMinus
     NULL_OP, // OpUPlus
     NULL_OP, // OpCompl
+    NULL_OP, // OpIncrement
+    NULL_OP, // OpDecrement
 
     INLINE_OP(__qmljs_bit_and, &Assembler::inline_and32, &Assembler::inline_and32), // OpBitAnd
     INLINE_OP(__qmljs_bit_or, &Assembler::inline_or32, &Assembler::inline_or32), // OpBitOr
@@ -688,6 +690,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                     case IR::OpUMinus: setOp(op, opName, __qmljs_uminus); break;
                     case IR::OpUPlus: setOp(op, opName, __qmljs_uplus); break;
                     case IR::OpCompl: setOp(op, opName, __qmljs_compl); break;
+                    case IR::OpIncrement: setOp(op, opName, __qmljs_increment); break;
+                    case IR::OpDecrement: setOp(op, opName, __qmljs_decrement); break;
                     default: assert(!"unreachable"); break;
                     } // switch
 

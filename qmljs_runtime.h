@@ -174,6 +174,8 @@ Value __qmljs_uplus(Value value, ExecutionContext *ctx);
 Value __qmljs_uminus(Value value, ExecutionContext *ctx);
 Value __qmljs_compl(Value value, ExecutionContext *ctx);
 Value __qmljs_not(Value value, ExecutionContext *ctx);
+Value __qmljs_increment(Value value, ExecutionContext *ctx);
+Value __qmljs_decrement(Value value, ExecutionContext *ctx);
 
 Value __qmljs_delete_subscript(ExecutionContext *ctx, Value base, Value index);
 Value __qmljs_delete_member(ExecutionContext *ctx, Value base, String *name);

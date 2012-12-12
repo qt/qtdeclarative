@@ -515,6 +515,10 @@ IR::Expr *Codegen::unop(IR::AluOp op, IR::Expr *expr)
                 return expr;
             case IR::OpCompl:
                 return _block->CONST(IR::NumberType, ~VM::Value::toInt32(c->value));
+            case IR::OpIncrement:
+                return _block->CONST(IR::NumberType, c->value + 1);
+            case IR::OpDecrement:
+                return _block->CONST(IR::NumberType, c->value - 1);
             default:
                 break;
             }
@@ -567,6 +571,8 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
                 case IR::OpUMinus:
                 case IR::OpUPlus:
                 case IR::OpCompl:
+                case IR::OpIncrement:
+                case IR::OpDecrement:
                 case IR::OpInvalid:
                     break;
                 }
@@ -1310,13 +1316,21 @@ bool Codegen::visit(ObjectLiteral *ast)
 
 bool Codegen::visit(PostDecrementExpression *ast)
 {
+    // ###
+    //    Throw a SyntaxError exception if the following conditions are all true:
+    //    Type(lhs) is Reference is true
+    //    IsStrictReference(lhs) is true
+    //    Type(GetBase(lhs)) is Environment Record
+    //    GetReferencedName(lhs) is either "eval" or "arguments"
+
+
     Result expr = expression(ast->base);
     if (_expr.accept(nx)) {
-        move(*expr, _block->CONST(IR::NumberType, 1), IR::OpSub);
+        move(*expr, unop(IR::OpDecrement, *expr));
     } else {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), *expr);
-        move(*expr, _block->CONST(IR::NumberType, 1), IR::OpSub);
+        move(*expr, unop(IR::OpDecrement, _block->TEMP(t)));
         _expr.code = _block->TEMP(t);
     }
     return false;
@@ -1324,13 +1338,20 @@ bool Codegen::visit(PostDecrementExpression *ast)
 
 bool Codegen::visit(PostIncrementExpression *ast)
 {
+    // ###
+    //    Throw a SyntaxError exception if the following conditions are all true:
+    //    Type(lhs) is Reference is true
+    //    IsStrictReference(lhs) is true
+    //    Type(GetBase(lhs)) is Environment Record
+    //    GetReferencedName(lhs) is either "eval" or "arguments"
+
     Result expr = expression(ast->base);
     if (_expr.accept(nx)) {
-        move(*expr, _block->CONST(IR::NumberType, 1), IR::OpAdd);
+        move(*expr, unop(IR::OpIncrement, *expr));
     } else {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), *expr);
-        move(*expr, _block->CONST(IR::NumberType, 1), IR::OpAdd);
+        move(*expr, unop(IR::OpIncrement, _block->TEMP(t)));
         _expr.code = _block->TEMP(t);
     }
     return false;
@@ -1338,8 +1359,15 @@ bool Codegen::visit(PostIncrementExpression *ast)
 
 bool Codegen::visit(PreDecrementExpression *ast)
 {
+    // ###
+    //    Throw a SyntaxError exception if the following conditions are all true:
+    //    Type(lhs) is Reference is true
+    //    IsStrictReference(lhs) is true
+    //    Type(GetBase(lhs)) is Environment Record
+    //    GetReferencedName(lhs) is either "eval" or "arguments"
+
     Result expr = expression(ast->expression);
-    move(*expr, _block->CONST(IR::NumberType, 1), IR::OpSub);
+    move(*expr, unop(IR::OpDecrement, *expr));
     if (_expr.accept(nx)) {
         // nothing to do
     } else {
@@ -1350,9 +1378,15 @@ bool Codegen::visit(PreDecrementExpression *ast)
 
 bool Codegen::visit(PreIncrementExpression *ast)
 {
-    Result expr = expression(ast->expression);
-    move(*expr, _block->CONST(IR::NumberType, 1), IR::OpAdd);
+    // ###
+    //    Throw a SyntaxError exception if the following conditions are all true:
+    //    Type(lhs) is Reference is true
+    //    IsStrictReference(lhs) is true
+    //    Type(GetBase(lhs)) is Environment Record
+    //    GetReferencedName(lhs) is either "eval" or "arguments"
 
+    Result expr = expression(ast->expression);
+    move(*expr, unop(IR::OpIncrement, *expr));
     if (_expr.accept(nx)) {
         // nothing to do
     } else {

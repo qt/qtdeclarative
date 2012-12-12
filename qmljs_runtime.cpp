@@ -873,6 +873,28 @@ void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *
     ctx->createMutableBinding(name, deletable);
 }
 
+Value __qmljs_increment(Value value, ExecutionContext *ctx)
+{
+    TRACE1(value);
+
+    if (value.isInteger())
+        return Value::fromInt32(value.integerValue() + 1);
+
+    double d = __qmljs_to_number(value, ctx);
+    return Value::fromDouble(d + 1);
+}
+
+Value __qmljs_decrement(Value value, ExecutionContext *ctx)
+{
+    TRACE1(value);
+
+    if (value.isInteger())
+        return Value::fromInt32(value.integerValue() - 1);
+
+    double d = __qmljs_to_number(value, ctx);
+    return Value::fromDouble(d - 1);
+}
+
 } // extern "C"
 
 

@@ -73,6 +73,8 @@ const char *opname(AluOp op)
     case OpUMinus: return "-";
     case OpUPlus: return "+";
     case OpCompl: return "~";
+    case OpIncrement: return "++";
+    case OpDecrement: return "--";
 
     case OpBitAnd: return "&";
     case OpBitOr: return "|";

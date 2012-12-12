@@ -653,6 +653,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                 case IR::OpUMinus: op = VM::__qmljs_uminus; break;
                 case IR::OpUPlus: op = VM::__qmljs_uplus; break;
                 case IR::OpCompl: op = VM::__qmljs_compl; break;
+                case IR::OpIncrement: op = VM::__qmljs_increment; break;
+                case IR::OpDecrement: op = VM::__qmljs_decrement; break;
                 default: assert(!"unreachable"); break;
                 } // switch
 
