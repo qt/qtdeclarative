@@ -537,7 +537,9 @@ Value ObjectCtor::construct(ExecutionContext *ctx)
 
 Value ObjectCtor::call(ExecutionContext *ctx)
 {
-    return Value::fromObject(ctx->engine->newObject());
+    if (!ctx->argumentCount || ctx->argument(0).isUndefined() || ctx->argument(0).isNull())
+        return Value::fromObject(ctx->engine->newObject());
+    return __qmljs_to_object(ctx->argument(0), ctx);
 }
 
 Value ObjectCtor::__get__(ExecutionContext *ctx, String *name)
