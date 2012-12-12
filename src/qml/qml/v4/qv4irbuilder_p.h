@@ -139,7 +139,9 @@ protected:
     virtual bool visit(QQmlJS::AST::StatementSourceElement *ast);
 
     // object literals
-    virtual bool visit(QQmlJS::AST::PropertyNameAndValueList *ast);
+    virtual bool visit(QQmlJS::AST::PropertyAssignmentList *ast);
+    virtual bool visit(QQmlJS::AST::PropertyNameAndValue *ast);
+    virtual bool visit(QQmlJS::AST::PropertyGetterSetter *ast);
     virtual bool visit(QQmlJS::AST::IdentifierPropertyName *ast);
     virtual bool visit(QQmlJS::AST::StringLiteralPropertyName *ast);
     virtual bool visit(QQmlJS::AST::NumericLiteralPropertyName *ast);

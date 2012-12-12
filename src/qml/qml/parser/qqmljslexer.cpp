@@ -42,6 +42,7 @@
 #include "qqmljslexer_p.h"
 #include "qqmljsengine_p.h"
 #include "qqmljsmemorypool_p.h"
+#include "qqmljskeywords_p.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QVarLengthArray>
@@ -1256,5 +1257,3 @@ bool Lexer::scanDirectives(Directives *directives)
 
     return true;
 }
-
-#include "qqmljskeywords_p.h"
