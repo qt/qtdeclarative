@@ -44,16 +44,16 @@
 
 #include <QtGui/qaccessible2.h>
 #include <QtGui/qaccessibleobject.h>
-#include <QtQuick/qquickview.h>
+#include <QtQuick/qquickwindow.h>
 
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_ACCESSIBILITY
 
-class QAccessibleQuickView : public QAccessibleObject
+class QAccessibleQuickWindow : public QAccessibleObject
 {
 public:
-    QAccessibleQuickView(QQuickView *object);
+    QAccessibleQuickWindow(QQuickWindow *object);
 
     QAccessibleInterface *parent() const;
     QAccessibleInterface *child(int index) const;
@@ -66,8 +66,10 @@ public:
     int indexOfChild(const QAccessibleInterface *iface) const;
     QString text(QAccessible::Text text) const;
     QAccessibleInterface *childAt(int x, int y) const;
+
 private:
-    QQuickView *view() const { return static_cast<QQuickView*>(object()); }
+    QQuickWindow *window() const { return static_cast<QQuickWindow*>(object()); }
+    QQuickItem *rootItem() const;
 };
 
 #endif // QT_NO_ACCESSIBILITY
