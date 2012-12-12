@@ -1002,11 +1002,12 @@ Value StringCtor::construct(ExecutionContext *ctx)
 
 Value StringCtor::call(ExecutionContext *ctx)
 {
-    const Value arg = ctx->argument(0);
-    if (arg.isUndefined())
-        return Value::fromString(ctx->engine->newString(QString()));
+    Value value;
+    if (ctx->argumentCount)
+        value = Value::fromString(ctx->argument(0).toString(ctx));
     else
-        return __qmljs_to_string(arg, ctx);
+        value = Value::fromString(ctx, QString());
+    return value;
 }
 
 void StringPrototype::init(ExecutionContext *ctx, const Value &ctor)
