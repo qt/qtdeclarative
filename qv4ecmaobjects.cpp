@@ -1309,17 +1309,15 @@ NumberCtor::NumberCtor(ExecutionContext *scope)
 
 Value NumberCtor::construct(ExecutionContext *ctx)
 {
-    double d = 0;
-    if (!ctx->argument(0).isUndefined())
-        d = ctx->argument(0).toNumber(ctx);
+    double d = ctx->argumentCount ? ctx->argument(0).toNumber(ctx) : 0;
     ctx->thisObject = Value::fromObject(ctx->engine->newNumberObject(Value::fromDouble(d)));
     return ctx->thisObject;
 }
 
 Value NumberCtor::call(ExecutionContext *ctx)
 {
-    double value = ctx->argumentCount ? ctx->argument(0).toNumber(ctx) : 0;
-    return Value::fromDouble(value);
+    double d = ctx->argumentCount ? ctx->argument(0).toNumber(ctx) : 0;
+    return Value::fromDouble(d);
 }
 
 void NumberPrototype::init(ExecutionContext *ctx, const Value &ctor)
