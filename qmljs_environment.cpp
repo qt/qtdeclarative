@@ -260,7 +260,7 @@ void ExecutionContext::setProperty(String *name, Value value)
         if (ctx->setMutableBinding(this, name, value))
             return;
     }
-    if (strictMode)
+    if (strictMode || name == engine->id_this)
         throwReferenceError(Value::fromString(name));
     engine->globalObject.objectValue()->__put__(this, name, value);
 }
