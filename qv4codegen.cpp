@@ -1493,8 +1493,8 @@ void Codegen::linearize(IR::Function *function)
         if (!trace.contains(b)) {
             foreach (IR::BasicBlock *out, b->out) {
                 int idx = out->in.indexOf(b);
-                assert(idx >= 0);
-                out->in.remove(idx);
+                if (idx >= 0)
+                    out->in.remove(idx);
             }
             delete b;
         }
