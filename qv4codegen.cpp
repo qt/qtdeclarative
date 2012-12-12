@@ -42,6 +42,7 @@
 #include "qv4codegen_p.h"
 #include "debugging.h"
 
+#include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
 #include <QtCore/QSet>
 #include <QtCore/QBuffer>
@@ -251,7 +252,7 @@ protected:
                     || name == QLatin1String("public")
                     || name == QLatin1String("static")
                     || name == QLatin1String("yield")) {
-                _cg->throwSyntaxError(loc, "Unexpected strict mode reserved word");
+                _cg->throwSyntaxError(loc, QCoreApplication::translate("qv4codegen", "Unexpected strict mode reserved word"));
             }
         }
     }
@@ -322,14 +323,7 @@ protected:
 
     virtual bool visit(FunctionExpression *ast)
     {
-        if (_env) {
-            _env->hasNestedFunctions = true;
-            _env->enter(ast->name.toString(), Environment::FunctionDefinition);
-        }
-        enterEnvironment(ast);
-        checkForArguments(ast->formals);
-        if (ast->body)
-            checkDirectivePrologue(ast->body->elements);
+        enterFunction(ast, ast->name.toString(), ast->formals, ast->body);
         return true;
     }
 
@@ -338,16 +332,20 @@ protected:
         leaveEnvironment();
     }
 
+    virtual bool visit(PropertyGetterSetter *ast)
+    {
+        enterFunction(ast, QString(), ast->formals, ast->functionBody);
+        return true;
+    }
+
+    virtual void endVisit(PropertyGetterSetter *)
+    {
+        leaveEnvironment();
+    }
+
     virtual bool visit(FunctionDeclaration *ast)
     {
-        _env->hasNestedFunctions = true;
-        _env->enter(ast->name.toString(), Environment::FunctionDefinition, ast);
-        if (ast->name == QLatin1String("arguments"))
-            _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
-        enterEnvironment(ast);
-        checkForArguments(ast->formals);
-        if (ast->body)
-            checkDirectivePrologue(ast->body->elements);
+        enterFunction(ast, ast->name.toString(), ast->formals, ast->body, ast);
         return true;
     }
 
@@ -359,13 +357,37 @@ protected:
     virtual bool visit(WithStatement *ast)
     {
         if (_env->isStrict) {
-            // TODO: give a proper error message
-            qDebug("TODO: give proper error message @%u:%u", ast->withToken.startLine, ast->withToken.startColumn);
+            _cg->throwSyntaxError(ast->withToken, QCoreApplication::translate("qv4codegen", "'with' statement is not allowed in strict mode"));
             return false;
         }
 
         return true;
     }
+
+private:
+    void enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionDeclaration *decl = 0)
+    {
+        bool wasStrict = false;
+        if (_env) {
+            _env->hasNestedFunctions = true;
+            _env->enter(name, Environment::FunctionDefinition, decl);
+            if (name == QLatin1String("arguments"))
+                _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
+            wasStrict = _env->isStrict;
+        }
+
+        enterEnvironment(ast);
+        checkForArguments(formals);
+
+        if (body)
+            checkDirectivePrologue(body->elements);
+
+        if (wasStrict || _env->isStrict)
+            for (FormalParameterList *it = formals; it; it = it->next)
+                if (it->name == QLatin1String("eval") || it->name == QLatin1String("arguments"))
+                    _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "'%1' cannot be used as parameter name in strict mode").arg(it->name.toString()));
+    }
+
 
     Codegen *_cg;
     Environment *_env;
@@ -1068,9 +1090,8 @@ bool Codegen::visit(BinaryExpression *ast)
         break;
 
     case QSOperator::Assign:
-        if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember())) {
-            throwSyntaxError(ast->lastSourceLocation(), "syntax error");
-        }
+        if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember()))
+            throwSyntaxError(ast->operatorToken, QCoreApplication::translate("qv4codegen", "left-hand side of assignment operator is not an lvalue"));
 
         if (_expr.accept(nx)) {
             move(*left, *right);
@@ -1093,9 +1114,8 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceRightShift:
     case QSOperator::InplaceURightShift:
     case QSOperator::InplaceXor: {
-        if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember())) {
-            throwSyntaxError(ast->lastSourceLocation(), "syntax error");
-        }
+        if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember()))
+            throwSyntaxError(ast->operatorToken, QCoreApplication::translate("qv4codegen", "left-hand side of inplace operator is not an lvalue"));
 
         if (_expr.accept(nx)) {
             move(*left, *right, baseOp(ast->op));
@@ -1341,10 +1361,16 @@ bool Codegen::visit(ObjectLiteral *ast)
 {
     const unsigned t = _block->newTemp();
     move(_block->TEMP(t), _block->NEW(_block->NAME(QStringLiteral("Object"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
-    for (PropertyNameAndValueList *it = ast->properties; it; it = it->next) {
-        QString name = propertyName(it->name);
-        Result value = expression(it->value);
-        move(member(_block->TEMP(t), _function->newString(name)), *value);
+    for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
+        if (PropertyNameAndValue *nv = AST::cast<AST::PropertyNameAndValue *>(it->assignment)) {
+            QString name = propertyName(nv->name);
+            Result value = expression(nv->value);
+            move(member(_block->TEMP(t), _function->newString(name)), *value);
+        } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
+            assert(!"todo!");
+        } else {
+            Q_UNREACHABLE();
+        }
     }
     _expr.code = _block->TEMP(t);
     return false;
@@ -1842,7 +1868,7 @@ bool Codegen::visit(BreakStatement *ast)
                 return false;
             }
         }
-        throwSyntaxError(ast->lastSourceLocation(), QString("Undefined label '") + ast->label.toString() + QString("'"));
+        throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Undefined label '%1'").arg(ast->label.toString()));
     }
 
     return false;
@@ -1864,7 +1890,7 @@ bool Codegen::visit(ContinueStatement *ast)
                 return false;
             }
         }
-        throwSyntaxError(ast->lastSourceLocation(), QString("Undefined label '") + ast->label.toString() + QString("'"));
+        throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Undefined label '%1'").arg(ast->label.toString()));
     }
     return false;
 }
