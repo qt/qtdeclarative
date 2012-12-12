@@ -457,11 +457,17 @@ struct Object: Managed {
     // helpers
     //
     void __put__(ExecutionContext *ctx, const QString &name, const Value &value);
-    void __put__(ExecutionContext *ctx, const QString &name, Value (*code)(ExecutionContext *), int count = 0);
 
     Value getValue(ExecutionContext *ctx, PropertyDescriptor *p) const;
     bool inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx);
     virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
+
+    /* The spec default: Writable: true, Enumerable: false, Configurable: true */
+    void defineDefaultProperty(String *name, Value value);
+    void defineDefaultProperty(ExecutionContext *context, const QString &name, Value value);
+    void defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(ExecutionContext *), int count = 0);
+    /* Fixed: Writable: false, Enumerable: false, Configurable: false */
+    void defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value);
 
 protected:
     virtual void getCollectables(QVector<Object *> &objects);

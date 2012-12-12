@@ -179,42 +179,33 @@ ExecutionEngine::ExecutionEngine(MemoryManager *memoryManager, EvalISelFactory *
     rootContext->activation = glo;
     rootContext->thisObject = Value::fromObject(glo);
 
-    glo->__put__(rootContext, identifier(QStringLiteral("Object")), objectCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("String")), stringCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("Number")), numberCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("Boolean")), booleanCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("Array")), arrayCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("Function")), functionCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("Date")), dateCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("RegExp")), regExpCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("Error")), errorCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("EvalError")), evalErrorCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("RangeError")), rangeErrorCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("ReferenceError")), referenceErrorCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("SyntaxError")), syntaxErrorCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("TypeError")), typeErrorCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("URIError")), uRIErrorCtor);
-    glo->__put__(rootContext, identifier(QStringLiteral("Math")), Value::fromObject(newMathObject(rootContext)));
+    glo->defineDefaultProperty(rootContext, QStringLiteral("Object"), objectCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("String"), stringCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("Number"), numberCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("Boolean"), booleanCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("Array"), arrayCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("Function"), functionCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("Date"), dateCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("RegExp"), regExpCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("Error"), errorCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("EvalError"), evalErrorCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("RangeError"), rangeErrorCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("ReferenceError"), referenceErrorCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("SyntaxError"), syntaxErrorCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("TypeError"), typeErrorCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("URIError"), uRIErrorCtor);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("Math"), Value::fromObject(newMathObject(rootContext)));
 
-    PropertyDescriptor pd;
-    pd.type = PropertyDescriptor::Data;
-    pd.writable = PropertyDescriptor::Unset;
-    pd.enumberable = PropertyDescriptor::Unset;
-    pd.configurable = PropertyDescriptor::Unset;
+    glo->defineReadonlyProperty(this, QStringLiteral("undefined"), Value::undefinedValue());
+    glo->defineReadonlyProperty(this, QStringLiteral("NaN"), Value::fromDouble(nan("")));
+    glo->defineReadonlyProperty(this, QStringLiteral("Infinity"), Value::fromDouble(INFINITY));
 
-    pd.value = Value::undefinedValue();
-    glo->__defineOwnProperty__(rootContext, identifier(QStringLiteral("undefined")), &pd);
-    pd.value = Value::fromDouble(nan(""));
-    glo->__defineOwnProperty__(rootContext, identifier(QStringLiteral("NaN")), &pd);
-    pd.value = Value::fromDouble(INFINITY);
-    glo->__defineOwnProperty__(rootContext, identifier(QStringLiteral("Infinity")), &pd);
-
-    glo->__put__(rootContext, identifier(QStringLiteral("eval")), Value::fromObject(new (memoryManager) EvalFunction(rootContext)));
+    glo->defineDefaultProperty(rootContext, QStringLiteral("eval"), Value::fromObject(new (memoryManager) EvalFunction(rootContext)));
 
     // TODO: parseInt [15.1.2.2]
     // TODO: parseFloat [15.1.2.3]
-    glo->__put__(rootContext, identifier(QStringLiteral("isNaN")), Value::fromObject(new (memoryManager) IsNaNFunction(rootContext))); // isNaN [15.1.2.4]
-    glo->__put__(rootContext, identifier(QStringLiteral("isFinite")), Value::fromObject(new (memoryManager) IsFiniteFunction(rootContext))); // isFinite [15.1.2.5]
+    glo->defineDefaultProperty(rootContext, QStringLiteral("isNaN"), Value::fromObject(new (memoryManager) IsNaNFunction(rootContext)));
+    glo->defineDefaultProperty(rootContext, QStringLiteral("isFinite"), Value::fromObject(new (memoryManager) IsFiniteFunction(rootContext)));
 }
 
 ExecutionEngine::~ExecutionEngine()

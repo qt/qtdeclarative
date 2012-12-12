@@ -95,13 +95,6 @@ void Object::__put__(ExecutionContext *ctx, const QString &name, const Value &va
     __put__(ctx, ctx->engine->identifier(name), value);
 }
 
-void Object::__put__(ExecutionContext *ctx, const QString &name, Value (*code)(ExecutionContext *), int count)
-{
-    Q_UNUSED(count);
-    String *nameStr = ctx->engine->newString(name);
-    __put__(ctx, name, Value::fromObject(ctx->engine->newNativeFunction(ctx, nameStr, code)));
-}
-
 Value Object::getValue(ExecutionContext *ctx, PropertyDescriptor *p) const
 {
     if (p->isData())
@@ -128,6 +121,43 @@ bool Object::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ct
     String *name = index.toString(ctx);
     assert(name);
     return inplaceBinOp(rhs, name, op, ctx);
+}
+
+void Object::defineDefaultProperty(String *name, Value value)
+{
+    if (!members)
+        members = new PropertyTable();
+    PropertyDescriptor *pd = members->insert(name);
+    pd->type = PropertyDescriptor::Data;
+    pd->writable = PropertyDescriptor::Set;
+    pd->enumberable = PropertyDescriptor::Unset;
+    pd->configurable = PropertyDescriptor::Set;
+    pd->value = value;
+}
+
+void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value value)
+{
+    defineDefaultProperty(context->engine->identifier(name), value);
+}
+
+void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(ExecutionContext *), int count)
+{
+    Q_UNUSED(count);
+    // ### FIX count
+    String *s = context->engine->identifier(name);
+    defineDefaultProperty(s, Value::fromObject(context->engine->newNativeFunction(context, s, code)));
+}
+
+void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value)
+{
+    if (!members)
+        members = new PropertyTable();
+    PropertyDescriptor *pd = members->insert(engine->identifier(name));
+    pd->type = PropertyDescriptor::Data;
+    pd->writable = PropertyDescriptor::Unset;
+    pd->enumberable = PropertyDescriptor::Unset;
+    pd->configurable = PropertyDescriptor::Unset;
+    pd->value = value;
 }
 
 void Object::getCollectables(QVector<Object *> &objects)
@@ -724,7 +754,7 @@ Value ErrorObject::__get__(ExecutionContext *ctx, String *name)
 
 void ErrorObject::setNameProperty(ExecutionContext *ctx)
 {
-    __put__(ctx, QLatin1String("name"), Value::fromString(ctx, className()));
+    defineDefaultProperty(ctx, QLatin1String("name"), Value::fromString(ctx, className()));
 }
 
 void ErrorObject::getCollectables(QVector<Object *> &objects)
