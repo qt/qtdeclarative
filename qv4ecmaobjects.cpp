@@ -892,23 +892,13 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
 
     desc->configurable = PropertyDescriptor::Undefined;
     if (o->__hasProperty__(ctx, ctx->engine->id_configurable))
-        desc->enumberable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_configurable), ctx) ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
+        desc->configurable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_configurable), ctx) ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
 
-    desc->writable = PropertyDescriptor::Undefined;
-    if (o->__hasProperty__(ctx, ctx->engine->id_writable))
-        desc->enumberable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_writable), ctx) ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
-
-    if (o->__hasProperty__(ctx, ctx->engine->id_value)) {
-        desc->value = o->__get__(ctx, ctx->engine->id_value);
-        desc->type = PropertyDescriptor::Data;
-    }
-
+    desc->get = 0;
     if (o->__hasProperty__(ctx, ctx->engine->id_get)) {
         Value get = o->__get__(ctx, ctx->engine->id_get);
         FunctionObject *f = get.asFunctionObject();
         if (f) {
-            if (desc->isWritable() || desc->isData())
-                __qmljs_throw_type_error(ctx);
             desc->get = f;
         } else if (!get.isUndefined()) {
             __qmljs_throw_type_error(ctx);
@@ -918,12 +908,11 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
         desc->type = PropertyDescriptor::Accessor;
     }
 
+    desc->set = 0;
     if (o->__hasProperty__(ctx, ctx->engine->id_set)) {
         Value get = o->__get__(ctx, ctx->engine->id_set);
         FunctionObject *f = get.asFunctionObject();
         if (f) {
-            if (desc->isWritable() || desc->isData())
-                __qmljs_throw_type_error(ctx);
             desc->set = f;
         } else if (!get.isUndefined()) {
             __qmljs_throw_type_error(ctx);
@@ -932,6 +921,24 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
         }
         desc->type = PropertyDescriptor::Accessor;
     }
+
+    desc->writable = PropertyDescriptor::Undefined;
+    if (o->__hasProperty__(ctx, ctx->engine->id_writable)) {
+        if (desc->isAccessor())
+            __qmljs_throw_type_error(ctx);
+        desc->writable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_writable), ctx) ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
+        // writable forces it to be a data descriptor
+        desc->type = PropertyDescriptor::Data;
+        desc->value = Value::undefinedValue();
+    }
+
+    if (o->__hasProperty__(ctx, ctx->engine->id_value)) {
+        if (desc->isAccessor())
+            __qmljs_throw_type_error(ctx);
+        desc->value = o->__get__(ctx, ctx->engine->id_value);
+        desc->type = PropertyDescriptor::Data;
+    }
+
 }
 
 
