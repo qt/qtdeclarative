@@ -670,11 +670,14 @@ IsNaNFunction::IsNaNFunction(ExecutionContext *scope)
     name = scope->engine->newString(QLatin1String("isNaN"));
 }
 
-Value IsNaNFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/)
+Value IsNaNFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int /*argc*/)
 {
-    // TODO: see if we can generate code for this directly
     const Value &v = args[0];
-    return Value::fromBoolean(v.isDouble() ? std::isnan(v.doubleValue()) : false);
+    if (v.integerCompatible())
+        return Value::fromBoolean(false);
+
+    double d = v.toNumber(context);
+    return Value::fromBoolean(std::isnan(d));
 }
 
 /// isFinite [15.1.2.5]
@@ -684,11 +687,14 @@ IsFiniteFunction::IsFiniteFunction(ExecutionContext *scope)
     name = scope->engine->newString(QLatin1String("isFinite"));
 }
 
-Value IsFiniteFunction::call(ExecutionContext * /*context*/, Value /*thisObject*/, Value *args, int /*argc*/)
+Value IsFiniteFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int /*argc*/)
 {
-    // TODO: see if we can generate code for this directly
     const Value &v = args[0];
-    return Value::fromBoolean(v.isDouble() ? std::isfinite(v.doubleValue()) : true);
+    if (v.integerCompatible())
+        return Value::fromBoolean(true);
+
+    double d = v.toNumber(context);
+    return Value::fromBoolean(std::isfinite(d));
 }
 
 

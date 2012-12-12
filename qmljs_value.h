@@ -205,6 +205,10 @@ struct Value
 
     inline bool isPrimitive() const { return !isObject(); }
 #if CPU(X86_64)
+    inline bool integerCompatible() const {
+        const quint64 mask = quint64(ConvertibleToInt) << 32;
+        return (val & mask) == mask;
+    }
     static inline bool integerCompatible(Value a, Value b) {
         const quint64 mask = quint64(ConvertibleToInt) << 32;
         return ((a.val & b.val) & mask) == mask;
@@ -214,6 +218,9 @@ struct Value
         return ((a.val | b.val) & mask) != mask;
     }
 #else
+    inline bool integerCompatible() const {
+        return (tag & ConvertibleToInt) == ConvertibleToInt;
+    }
     static inline bool integerCompatible(Value a, Value b) {
         return ((a.tag & b.tag) & ConvertibleToInt) == ConvertibleToInt;
     }
