@@ -255,8 +255,8 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
 // Section 8.12.6
 bool Object::__hasProperty__(const ExecutionContext *ctx, String *name) const
 {
-    if (members)
-        return members->find(name) != 0;
+    if (members && members->find(name) != 0)
+        return true;
 
     return prototype ? prototype->__hasProperty__(ctx, name) : false;
 }
