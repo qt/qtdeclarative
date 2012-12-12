@@ -553,13 +553,13 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
                 case IR::OpGt: return _block->CONST(IR::BoolType, c1->value > c2->value);
                 case IR::OpLe: return _block->CONST(IR::BoolType, c1->value <= c2->value);
                 case IR::OpLt: return _block->CONST(IR::BoolType, c1->value < c2->value);
-                case IR::OpLShift: return _block->CONST(IR::NumberType, int(c1->value) << int(c2->value));
+                case IR::OpLShift: return _block->CONST(IR::NumberType, VM::Value::toInt32(c1->value) << (VM::Value::toUInt32(c2->value) & 0x1f));
                 case IR::OpMod: return _block->CONST(IR::NumberType, ::fmod(c1->value, c2->value));
                 case IR::OpMul: return _block->CONST(IR::NumberType, c1->value * c2->value);
                 case IR::OpOr: return _block->CONST(IR::NumberType, c1->value ? c1->value : c2->value);
-                case IR::OpRShift: return _block->CONST(IR::NumberType, int(c1->value) >> int(c2->value));
+                case IR::OpRShift: return _block->CONST(IR::NumberType, VM::Value::toInt32(c1->value) << (VM::Value::toUInt32(c2->value) & 0x1f));
                 case IR::OpSub: return _block->CONST(IR::NumberType, c1->value - c2->value);
-                case IR::OpURShift: return _block->CONST(IR::NumberType, unsigned(c1->value) >> int(c2->value));
+                case IR::OpURShift: return _block->CONST(IR::NumberType,VM::Value::toUInt32(c1->value) << (VM::Value::toUInt32(c2->value) & 0x1f));
 
                 case IR::OpInstanceof:
                 case IR::OpIn:

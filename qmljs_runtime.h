@@ -472,9 +472,9 @@ inline Value __qmljs_compl(Value value, ExecutionContext *ctx)
 
     int n;
     if (value.isConvertibleToInt())
-        n = ~value.int_32;
+        n = value.int_32;
     else
-        n = Value::toInteger(__qmljs_to_number(value, ctx));
+        n = Value::toInt32(__qmljs_to_number(value, ctx));
 
     return Value::fromInt32(~n);
 }
@@ -588,8 +588,6 @@ inline Value __qmljs_mod(Value left, Value right, ExecutionContext *ctx)
     return Value::fromDouble(fmod(lval, rval));
 }
 
-// ### unsigned shl missing?
-
 inline Value __qmljs_shl(Value left, Value right, ExecutionContext *ctx)
 {
     TRACE2(left, right);
@@ -618,12 +616,18 @@ inline Value __qmljs_ushr(Value left, Value right, ExecutionContext *ctx)
 {
     TRACE2(left, right);
 
-    if (Value::integerCompatible(left, right))
-        return Value::fromInt32(uint(left.integerValue()) >> ((uint(right.integerValue()) & 0x1f)));
+    uint result;
+    if (Value::integerCompatible(left, right)) {
+        result = uint(left.integerValue()) >> (uint(right.integerValue()) & 0x1f);
+    } else {
+        unsigned lval = Value::toUInt32(__qmljs_to_number(left, ctx));
+        unsigned rval = Value::toUInt32(__qmljs_to_number(right, ctx)) & 0x1f;
+        result = lval >> rval;
+    }
 
-    unsigned lval = Value::toUInt32(__qmljs_to_number(left, ctx));
-    unsigned rval = Value::toUInt32(__qmljs_to_number(right, ctx)) & 0x1f;
-    return Value::fromInt32(lval >> rval);
+    if (result > INT_MAX)
+        return Value::fromDouble(result);
+    return Value::fromInt32(result);
 }
 
 inline Value __qmljs_gt(Value left, Value right, ExecutionContext *ctx)
