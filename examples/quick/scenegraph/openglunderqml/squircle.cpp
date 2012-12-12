@@ -48,6 +48,8 @@
 //! [7]
 Squircle::Squircle()
     : m_program(0)
+    , m_t(0)
+    , m_thread_t(0)
 {
 }
 //! [7]
@@ -70,8 +72,8 @@ void Squircle::itemChange(ItemChange change, const ItemChangeData &)
 {
     // The ItemSceneChange event is sent when we are first attached to a window.
     if (change == ItemSceneChange) {
-        QQuickWindow *c = window();
-        if (!c)
+        QQuickWindow *win = window();
+        if (!win)
             return;
 //! [1]
 
@@ -79,15 +81,17 @@ void Squircle::itemChange(ItemChange change, const ItemChangeData &)
         // Since this call is executed on the rendering thread it must be
         // a Qt::DirectConnection
 //! [2]
-        connect(c, SIGNAL(beforeRendering()), this, SLOT(paint()), Qt::DirectConnection);
+        connect(win, SIGNAL(beforeRendering()), this, SLOT(paint()), Qt::DirectConnection);
+        connect(win, SIGNAL(beforeSynchronizing()), this, SLOT(sync()), Qt::DirectConnection);
 //! [2]
 
         // If we allow QML to do the clearing, they would clear what we paint
         // and nothing would show.
 //! [3]
-        c->setClearBeforeRendering(false);
+        win->setClearBeforeRendering(false);
     }
 }
+
 //! [3] //! [4]
 void Squircle::paint()
 {
@@ -128,7 +132,7 @@ void Squircle::paint()
         1, 1
     };
     m_program->setAttributeArray(0, GL_FLOAT, values, 2);
-    m_program->setUniformValue("t", (float) m_t);
+    m_program->setUniformValue("t", (float) m_thread_t);
 
     glViewport(0, 0, window()->width(), window()->height());
 
@@ -157,4 +161,10 @@ void Squircle::cleanup()
 }
 //! [6]
 
+//! [9]
+void Squircle::sync()
+{
+    m_thread_t = m_t;
+}
+//! [9]
 

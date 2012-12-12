@@ -1,0 +1,168 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/legal
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and Digia.  For licensing terms and
+** conditions see http://qt.digia.com/licensing.  For further information
+** use the contact form at http://qt.digia.com/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.  Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: http://www.gnu.org/copyleft/fdl.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example quick/scenegraph/openglunderqml
+    \title OpenGL Under QML
+    \ingroup qtquickexamples
+    \brief Shows how to render OpenGL under a Qt Quick scene.
+
+    \image openglunderqml-example.jpg
+
+    The OpenGL under QML example shows how an application can make use
+    of the \l QQuickWindow::beforeRendering() signal to draw custom
+    OpenGL content under a Qt Quick scene. This signal is emitted at
+    the start of every frame, before the scene graph starts its
+    rendering, thus any OpenGL draw calls that are made as a response
+    to this signal, will stack under the Qt Quick items.
+
+    As an alternative, applications that wish to render OpenGL content
+    on top of the Qt Quick scene, can do so by connecting to the \l
+    QQuickWindow::afterRendering() signal.
+
+    In this example, we will also see how it is possible to have
+    values that are exposed to QML which affect the OpenGL
+    rendering. We animate the threshold value using a NumberAnimation
+    in the QML file and this value is used by the OpenGL shader
+    program that draws the squircles.
+
+    \snippet quick/scenegraph/openglunderqml/squircle.h 1
+
+    First of all, we need a QObject with a slot to connect the signals
+    to. We subclass QQuickItem in order to use the \l
+    QQuickItem::window() which holds the window instance we want to
+    connect to.
+
+    We use two values of \c t. The variable \c m_t is the property
+    value as it exists in the GUI thread. The \c m_thread_t value is a
+    copy of \c m_t for use in the rendering thread. We need an
+    explicit copy because the scene graph can render in one thread
+    while updating properties on the GUI thread in preparation for the
+    next frame. If we had used only one value, the animation could
+    have updated the value to that of the next frame before we got a
+    chance to render it.
+
+    \note In this example, a wrong value for \c t will have minimal
+    consequences, but we emphasize that rendering and GUI thread
+    objects and values must stay separate to avoid race conditions,
+    undesired behavior and in the worst case, crashes.
+
+    Lets move on to the implementation.
+
+    \snippet quick/scenegraph/openglunderqml/squircle.cpp 7
+
+    The constructor of the \c Squircle class simply initializes the
+    values. The shader program will be initialized during rendering
+    later.
+
+    \snippet quick/scenegraph/openglunderqml/squircle.cpp 8
+
+    The property setter checks that the value has indeed changed
+    before updating its internal variable. It then calls \l
+    QQuickWindow::update() which will trigger another frame to be
+    rendered. Note that the setter might be called during
+    initialization, before the object has been entered into the scene
+    and before it has a window.
+
+    \snippet quick/scenegraph/openglunderqml/squircle.cpp 1
+    \snippet quick/scenegraph/openglunderqml/squircle.cpp 2
+
+    For our paint function to be called, we need to connect to the
+    window's signals. When Squircle object is populated into the
+    scene, the itemChange function is called with the change type \c
+    ItemSceneChange. We connect \l QQuickWindow::beforeRendering() to
+    \c paint() to do the rendering, and \l
+    QQuickWindow::beforeSynchronizing() to \c sync() to copy the state
+    of the \c t property for the upcoming frame.
+
+    \note Since the Squircle object has affinity to the GUI thread and
+    the signals are emitted from the rendering thread, it is crucial
+    that the connections are made with \l
+    Qt::DirectConnection. Failing to do so, will result in that the
+    slots are invoked on the wrong thread with no OpenGL context
+    present.
+
+    \snippet quick/scenegraph/openglunderqml/squircle.cpp 3
+
+    The default behavior of the scene graph is to clear the
+    framebuffer before rendering. Since we render before the scene
+    graph, we need to turn this clearing off. This means that we need
+    to clear ourselves in the \c paint() function.
+
+    \snippet quick/scenegraph/openglunderqml/squircle.cpp 4
+
+    The first thing we do in the \c paint() function is to
+    initialize the shader program. By initializing the shader program
+    here, we make sure that the OpenGL context is bound and that we
+    are on the correct thread.
+
+    We also connect to the QOpenGLContext::aboutToBeDestroyed()
+    signal, so that we can clean up the shader program when the
+    context is destroyed. Again, this is a \l Qt::DirectConnection as
+    all rendering related operations must happen on the rendering
+    thread.
+
+    \snippet quick/scenegraph/openglunderqml/squircle.cpp 5
+
+    We use the shader program to draw the squircle. At the end of the
+    \c paint function we release the program and disable the
+    attributes we used so that the OpenGL context is in a "clean"
+    state for the scene graph to pick it up.
+
+    \snippet quick/scenegraph/openglunderqml/squircle.cpp 6
+
+    In the \c cleanup() function we delete the program.
+
+    \snippet quick/scenegraph/openglunderqml/squircle.cpp 9
+
+    We use the \c sync() function to copy the state of the
+    object in the GUI thread into the rendering thread.
+
+    The signal is emitted on the rendering thread while the GUI
+    thread is blocked, so it is safe to simply copy the value without
+    any additional protection.
+
+    \snippet quick/scenegraph/openglunderqml/main.cpp 1
+
+    The application's \c main() function instantiates a QQuickView and
+    launches the \c main.qml file. The only thing worth noting is that
+    we export the \c Squircle class to QML using the \l
+    qmlRegisterType() macro.
+
+    \snippet quick/scenegraph/openglunderqml/main.qml 1
+
+    We import the Squircle QML type with the name we registered in the
+    \c main() function. We then instantiate it and create a running
+    NumberAnimation on the its \c t property.
+
+    \snippet quick/scenegraph/openglunderqml/main.qml 2
+
+    Then we overlay a short descriptive text, so that it is clearly
+    visible that we are in fact rendering OpenGL under our Qt Quick
+    scene.
+
+  */
