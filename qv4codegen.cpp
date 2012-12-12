@@ -866,7 +866,19 @@ bool Codegen::visit(Program *)
     return false;
 }
 
-bool Codegen::visit(PropertyNameAndValueList *)
+bool Codegen::visit(PropertyAssignmentList *)
+{
+    assert(!"unreachable");
+    return false;
+}
+
+bool Codegen::visit(PropertyNameAndValue *)
+{
+    assert(!"unreachable");
+    return false;
+}
+
+bool Codegen::visit(PropertyGetterSetter *)
 {
     assert(!"unreachable");
     return false;

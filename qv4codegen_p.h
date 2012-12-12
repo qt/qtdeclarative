@@ -279,7 +279,9 @@ protected:
     virtual bool visit(AST::FormalParameterList *ast);
     virtual bool visit(AST::FunctionBody *ast);
     virtual bool visit(AST::Program *ast);
-    virtual bool visit(AST::PropertyNameAndValueList *ast);
+    virtual bool visit(AST::PropertyNameAndValue *ast);
+    virtual bool visit(AST::PropertyAssignmentList *ast);
+    virtual bool visit(AST::PropertyGetterSetter *ast);
     virtual bool visit(AST::SourceElements *ast);
     virtual bool visit(AST::StatementList *ast);
     virtual bool visit(AST::UiArrayMemberList *ast);
