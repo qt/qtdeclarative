@@ -10,7 +10,7 @@ qhp.projects            = QtQuick
 
 qhp.QtQuick.file                = qtquick.qhp
 qhp.QtQuick.namespace           = org.qt-project.qtquick.500
-qhp.QtQuick.virtualFolder       = qdoc
+qhp.QtQuick.virtualFolder       = qtquick
 qhp.QtQuick.indexTitle          = Qt Quick
 qhp.QtQuick.indexRoot           =
 

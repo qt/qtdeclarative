@@ -9,7 +9,7 @@ qhp.projects            = QtQml
 
 qhp.QtQml.file                = qtqml.qhp
 qhp.QtQml.namespace           = org.qt-project.qtqml.500
-qhp.QtQml.virtualFolder       = qdoc
+qhp.QtQml.virtualFolder       = qtqml
 qhp.QtQml.indexTitle          = Qt QML
 qhp.QtQml.indexRoot           =
 
