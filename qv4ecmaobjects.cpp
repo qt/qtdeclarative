@@ -2726,18 +2726,15 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
 
 Value RegExpCtor::construct(ExecutionContext *ctx)
 {
-//    if (ctx->argumentCount > 2) {
-//        ctx->throwTypeError();
-//        return;
-//    }
-
     Value r = ctx->argumentCount > 0 ? ctx->argument(0) : Value::undefinedValue();
     Value f = ctx->argumentCount > 1 ? ctx->argument(1) : Value::undefinedValue();
     if (RegExpObject *re = r.asRegExpObject()) {
         if (!f.isUndefined())
             ctx->throwTypeError();
 
-        return Value::fromObject(new (ctx->engine->memoryManager) RegExpObject(re->value, false));
+        RegExpObject *o = ctx->engine->newRegExpObject(re->value, re->global);
+        ctx->thisObject = Value::fromObject(o);
+        return ctx->thisObject;
     }
 
     if (r.isUndefined())
@@ -2767,7 +2764,8 @@ Value RegExpCtor::construct(ExecutionContext *ctx)
     if (!re.isValid())
         ctx->throwTypeError();
 
-    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) RegExpObject(re, global));
+    RegExpObject *o = ctx->engine->newRegExpObject(re, global);
+    ctx->thisObject = Value::fromObject(o);
     return ctx->thisObject;
 }
 

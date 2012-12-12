@@ -357,7 +357,7 @@ FunctionObject *ExecutionEngine::newDateCtor(ExecutionContext *ctx)
     return new (memoryManager) DateCtor(ctx);
 }
 
-Object *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
+RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
 {
     bool global = (flags & IR::RegExp::RegExp_Global);
     QRegularExpression::PatternOptions options = 0;
@@ -366,7 +366,13 @@ Object *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
     if (flags & IR::RegExp::RegExp_Multiline)
         options |= QRegularExpression::MultilineOption;
 
-    Object *object = new (memoryManager) RegExpObject(QRegularExpression(pattern, options), global);
+    QRegularExpression re(pattern, options);
+    return newRegExpObject(re, global);
+}
+
+RegExpObject *ExecutionEngine::newRegExpObject(const QRegularExpression &re, bool global)
+{
+    RegExpObject *object = new (memoryManager) RegExpObject(re, global);
     object->prototype = regExpPrototype;
     return object;
 }

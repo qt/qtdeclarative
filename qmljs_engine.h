@@ -193,7 +193,8 @@ struct ExecutionEngine
     Object *newDateObject(const Value &value);
     FunctionObject *newDateCtor(ExecutionContext *ctx);
 
-    Object *newRegExpObject(const QString &pattern, int flags);
+    RegExpObject *newRegExpObject(const QString &pattern, int flags);
+    RegExpObject *newRegExpObject(const QRegularExpression &re, bool global);
     FunctionObject *newRegExpCtor(ExecutionContext *ctx);
 
     Object *newErrorObject(const Value &value);
