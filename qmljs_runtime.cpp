@@ -222,8 +222,8 @@ Value __qmljs_instanceof(Value left, Value right, ExecutionContext *ctx)
 Value __qmljs_in(Value left, Value right, ExecutionContext *ctx)
 {
     if (right.isObject()) {
-        Value s = __qmljs_to_string(left, ctx);
-        bool r = right.objectValue()->__hasProperty__(ctx, s.stringValue());
+        String *s = left.toString(ctx);
+        bool r = right.objectValue()->__hasProperty__(ctx, s);
         return Value::fromBoolean(r);
     } else {
         return __qmljs_throw_type_error(ctx);
