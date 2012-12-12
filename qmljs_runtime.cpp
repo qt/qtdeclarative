@@ -509,6 +509,7 @@ Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int type
             return r;
     }
 
+    ctx->throwTypeError();
     return Value::undefinedValue();
 }
 
