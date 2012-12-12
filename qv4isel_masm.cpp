@@ -638,7 +638,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 return;
             } else if (IR::Const *c = s->source->asConst()) {
                 Value v = convertToValue(c);
-                _asm->storeValue(t, dest);
+                _asm->storeValue(v, t);
                 return;
             } else if (IR::Temp *t2 = s->source->asTemp()) {
                 _asm->copyValue(t, t2);
