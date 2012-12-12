@@ -845,6 +845,9 @@ QImage QQuickRenderThreadSingleContextWindowManager::grab(QQuickWindow *window)
     if (QThread::currentThread() != qApp->thread()) {
         qWarning("QQuickWindow::grabFrameBuffer: can only be called from the GUI thread");
         return QImage();
+    } else if (window->size().width() <= 0 || window->size().height() <= 0 ) {
+        qWarning("QQuickWindow::grabFrameBuffer: Can't grab a Window with size %dx%d", window->size().width(), window->size().height());
+        return QImage();
     }
 
 #ifdef THREAD_DEBUG
