@@ -1490,8 +1490,14 @@ void Codegen::linearize(IR::Function *function)
     trace.append(exitBlock);
 
     foreach (IR::BasicBlock *b, function->basicBlocks)
-        if (!trace.contains(b))
+        if (!trace.contains(b)) {
+            foreach (IR::BasicBlock *out, b->out) {
+                int idx = out->in.indexOf(b);
+                assert(idx >= 0);
+                out->in.remove(idx);
+            }
             delete b;
+        }
     function->basicBlocks = trace;
 
 #ifndef QV4_NO_LIVENESS
