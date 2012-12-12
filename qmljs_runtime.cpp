@@ -442,7 +442,7 @@ double __qmljs_string_to_number(ExecutionContext *, String *string)
     const char *begin = ba.constData();
     const char *end = 0;
     double d = qstrtod(begin, &end, &ok);
-    if (end - begin != ba.size() - 1) {
+    if (end - begin != ba.size()) {
         if (ba == "Infinity")
             d = INFINITY;
         else
