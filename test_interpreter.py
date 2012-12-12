@@ -15,6 +15,7 @@ import resource
 import subprocess
 import threading
 import sys
+import multiprocessing
 
 ### Settings & Command Line Processing ########################################
 
@@ -32,6 +33,7 @@ class Settings:
     #       "test262/console/harness/cth*"
     #   ]
     blacklist_patterns = []
+    job_count = 1
 
 class CommandLineProcessor:
     """ Process command line arguments and overwrite values in Settings."""
@@ -61,6 +63,7 @@ Options:
                      default: '%s').
   -p, --printers     Print results by specified printers. printers is a comma
                      separated list (valid: '%s', default: '%s').
+  -j, --jobs         Allow N jobs at once (default: %s).
   -v, --verbose      Print some more information, e.g. files are being
                      processed (default: not enabled).
 
@@ -73,12 +76,13 @@ Options:
             ",".join(Settings.modes),
             ",".join(self.valid_printers),
             ",".join(Settings.printers),
+            Settings.job_count
         ))
 
     def run(self):
         try:
-            options, arguments = getopt.getopt(self.args, "hvm:i:d:p:t:",
-                ["help", "verbose", "modes=", "interpreter=", "input-dir=", "printers=", "timeout="])
+            options, arguments = getopt.getopt(self.args, "hvm:i:d:p:t:j:",
+                ["help", "verbose", "modes=", "interpreter=", "input-dir=", "printers=", "timeout=", "jobs="])
         except getopt.error, msg:
             sys.stdout.write("For help use -h, --help.")
             sys.exit(2)
@@ -118,6 +122,8 @@ Options:
                 Settings.interpreter_timeout = int(argument)
             elif option in ("-v", "--verbose"):
                 Settings.verbose = True
+            elif option in ("-j", "--jobs"):
+                Settings.job_count = int(argument)
             else:
                 sys.stdout.write("Unknown option '%s'." %(option))
                 sys.stdout.write("For help use -h, --help.")
@@ -206,6 +212,30 @@ class InterpreterResult:
         self.output_stdout= output_stdout
         self.output_stderr = output_stderr
 
+def executeCommand(data):
+    interpreterRunner, input_file = data
+    if not os.path.exists(input_file):
+        sys.stderr.write("Warning:  File '%s' does not exist anymore for interpreter '%s'.\n"
+            %(input_file, interpreterRunner.runner_info.info))
+        return
+    if Settings.verbose:
+        sys.stdout.write("  %s\n" %(input_file))
+    command = ['./' + Settings.interpreter] + interpreterRunner.extra_args + [input_file]
+
+    process = Command(command)
+    process.run(timeout=Settings.interpreter_timeout)
+    if not process.finished_within_timeout:
+        sys.stderr.write("Warning: Interpreter '%s' did not finish within %d seconds processing file '%s'.\n"
+            %(interpreterRunner.runner_info.info, Settings.interpreter_timeout, input_file))
+    result = InterpreterResult(
+        input_file,
+        process.finished_within_timeout,
+        process.exit_code,
+        process.stdout,
+        process.stderr
+    )
+    return result
+
 class InterpreterRunner:
     def __init__(self, input_files, label, extra_args, printers):
         self.input_files = input_files
@@ -232,29 +262,12 @@ class InterpreterRunner:
     def run(self):
         sys.stdout.write("Running interpreter '%s %s' for each test file.\n"
                 %(Settings.interpreter, " ".join(self.extra_args)))
-        self.__printers_begin()
-        for input_file in self.input_files:
-            if not os.path.exists(input_file):
-                sys.stderr.write("Warning:  File '%s' does not exist anymore for interpreter '%s'.\n"
-                    %(input_file, self.runner_info.info))
-                break
-            if Settings.verbose:
-                sys.stdout.write("  %s\n" %(input_file))
-            command = ['./' + Settings.interpreter] + self.extra_args + [input_file]
 
-            process = Command(command)
-            process.run(timeout=Settings.interpreter_timeout)
-            if not process.finished_within_timeout:
-                sys.stderr.write("Warning: Interpreter '%s' did not finish within %d seconds processing file '%s'.\n"
-                    %(self.runner_info.info, Settings.interpreter_timeout, input_file))
-            result = InterpreterResult(
-                input_file,
-                process.finished_within_timeout,
-                process.exit_code,
-                process.stdout,
-                process.stderr
-            )
-            self.__printers_do(result)
+        self.__printers_begin()
+        processPool = multiprocessing.Pool(processes = Settings.job_count)
+        results = processPool.map(executeCommand, [(self, input_file) for input_file in self.input_files])
+        for result in results:
+            self.__printers_do(result) # TODO we may put it to the executeCommand, if it is safe
         self.__printers_end()
 
 ### Printers ##################################################################
