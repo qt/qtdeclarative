@@ -1317,15 +1317,28 @@ Value NumberCtor::call(ExecutionContext *ctx)
 void NumberPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
     ctor.objectValue()->__put__(ctx, ctx->engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->__put__(ctx, QStringLiteral("NaN"), Value::fromDouble(qSNaN()));
-    ctor.objectValue()->__put__(ctx, QStringLiteral("NEGATIVE_INFINITY"), Value::fromDouble(-qInf()));
-    ctor.objectValue()->__put__(ctx, QStringLiteral("POSITIVE_INFINITY"), Value::fromDouble(qInf()));
-    ctor.objectValue()->__put__(ctx, QStringLiteral("MAX_VALUE"), Value::fromDouble(1.7976931348623158e+308));
+
+    PropertyDescriptor desc;
+    desc.type = PropertyDescriptor::Data;
+    desc.writable = PropertyDescriptor::Unset;
+    desc.enumberable = PropertyDescriptor::Unset;
+    desc.configurable = PropertyDescriptor::Unset;
+
+    desc.value = Value::fromDouble(qSNaN());
+    ctor.objectValue()->__defineOwnProperty__(ctx, QStringLiteral("NaN"), &desc);
+    desc.value = Value::fromDouble(-qInf());
+    ctor.objectValue()->__defineOwnProperty__(ctx, QStringLiteral("NEGATIVE_INFINITY"), &desc);
+    desc.value = Value::fromDouble(qInf());
+    ctor.objectValue()->__defineOwnProperty__(ctx, QStringLiteral("POSITIVE_INFINITY"), &desc);
+    desc.value = Value::fromDouble(1.7976931348623158e+308);
+    ctor.objectValue()->__defineOwnProperty__(ctx, QStringLiteral("MAX_VALUE"), &desc);
+
 #ifdef __INTEL_COMPILER
 # pragma warning( push )
 # pragma warning(disable: 239)
 #endif
-    ctor.objectValue()->__put__(ctx, QStringLiteral("MIN_VALUE"), Value::fromDouble(5e-324));
+    desc.value = Value::fromDouble(5e-324);
+    ctor.objectValue()->__defineOwnProperty__(ctx, QStringLiteral("MIN_VALUE"), &desc);
 #ifdef __INTEL_COMPILER
 # pragma warning( pop )
 #endif
