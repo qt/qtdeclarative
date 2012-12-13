@@ -234,10 +234,8 @@ bool ExecutionContext::deleteProperty(String *name)
                 w = w->next;
             }
         }
-        if (ctx->activation) {
-            if (ctx->activation->__hasProperty__(this, name))
-                return ctx->activation->__delete__(this, name);
-        }
+        if (ctx->activation && ctx->activation->__hasProperty__(this, name))
+            return ctx->activation->__delete__(this, name);
     }
     if (strictMode)
         throwSyntaxError(0);
@@ -336,13 +334,9 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
 
 void ExecutionContext::inplaceBitOp(Value value, String *name, BinOp op)
 {
-    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
-        if (ctx->activation) {
-            if (ctx->activation->inplaceBinOp(value, name, op, this))
-                return;
-        }
-    }
-    throwReferenceError(Value::fromString(name));
+    Value rhs = getProperty(name);
+    value = op(value, rhs, this);
+    setProperty(name, value);
 }
 
 void ExecutionContext::throwError(Value value)
@@ -411,10 +405,7 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
     if (function->varCount)
         std::fill(locals, locals + function->varCount, Value::undefinedValue());
 
-    if (function->needsActivation)
-        activation = engine->newActivationObject();
-    else
-        activation = 0;
+    activation = 0;
 
     withObject = 0;
 
@@ -425,8 +416,7 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
 
 void ExecutionContext::leaveCallContext()
 {
-    // ## Should rather be handled by a the activation object having a ref to the environment
-    if (activation) {
+    if (!function->needsActivation) {
         delete[] locals;
         locals = 0;
     }
