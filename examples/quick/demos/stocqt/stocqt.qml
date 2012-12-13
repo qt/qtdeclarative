@@ -42,60 +42,60 @@ import QtQuick 2.0
 import "./content"
 
 ListView {
-  id:root
-  width:320
-  height:480
-  snapMode:ListView.SnapOneItem
-  focus:false
-  orientation : ListView.Horizontal
-  boundsBehavior : Flickable.StopAtBounds
-  currentIndex : 1
+    id: root
+    width: 320
+    height: 480
+    snapMode: ListView.SnapOneItem
+    focus: false
+    orientation: ListView.Horizontal
+    boundsBehavior: Flickable.StopAtBounds
+    currentIndex: 1
 
-  StockModel {
-    id:stock
-    stockId:listView.currentStockId
-    stockName: listView.currentStockName
-    startDate: settings.startDate
-    endDate:settings.endDate
-    onStockIdChanged: updateStock()
-    onStartDateChanged: updateStock()
-    onEndDateChanged: updateStock()
-    onDataReady: {
-        root.currentIndex = 1
-        stockView.update()
-    }
-  }
-
-  model: VisualItemModel {
-    StockListView {
-      id:listView
-      width:root.width
-      height:root.height
+    StockModel {
+        id: stock
+        stockId: listView.currentStockId
+        stockName: listView.currentStockName
+        startDate: settings.startDate
+        endDate: settings.endDate
+        onStockIdChanged: updateStock()
+        onStartDateChanged: updateStock()
+        onEndDateChanged: updateStock()
+        onDataReady: {
+            root.currentIndex = 1
+            stockView.update()
+        }
     }
 
-    StockView {
-      id:stockView
-      width:root.width
-      height:root.height
-      stocklist : listView
-      settings : settings
-      stock: stock
+    model: VisualItemModel {
+        StockListView {
+            id: listView
+            width: root.width
+            height: root.height
+        }
 
-      onListViewClicked:root.currentIndex = 0
-      onSettingsClicked:root.currentIndex = 2
-    }
+        StockView {
+            id: stockView
+            width: root.width
+            height: root.height
+            stocklist: listView
+            settings: settings
+            stock: stock
 
-    StockSettings {
-      id:settings
-      width:root.width
-      height:root.height
-      onDrawHighPriceChanged: stockView.update()
-      onDrawLowPriceChanged: stockView.update()
-      onDrawOpenPriceChanged: stockView.update()
-      onDrawClosePriceChanged: stockView.update()
-      onDrawVolumeChanged: stockView.update()
-      onDrawKLineChanged: stockView.update()
-      onChartTypeChanged: stockView.update()
+            onListViewClicked: root.currentIndex = 0
+            onSettingsClicked: root.currentIndex = 2
+        }
+
+        StockSettings {
+            id: settings
+            width: root.width
+            height: root.height
+            onDrawHighPriceChanged: stockView.update()
+            onDrawLowPriceChanged: stockView.update()
+            onDrawOpenPriceChanged: stockView.update()
+            onDrawClosePriceChanged: stockView.update()
+            onDrawVolumeChanged: stockView.update()
+            onDrawKLineChanged: stockView.update()
+            onChartTypeChanged: stockView.update()
+        }
     }
-  }
 }

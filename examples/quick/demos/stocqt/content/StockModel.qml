@@ -41,23 +41,23 @@
 import QtQuick 2.0
 
 ListModel {
-    id:model
-    property string stockId:""
-    property string stockName:""
+    id: model
+    property string stockId: ""
+    property string stockName: ""
     property var startDate
     property var endDate
-    property string stockDataCycle:"d"
-    property bool ready:false
-    property real stockPrice:0.0
-    property real stockPriceChanged:0.0
-    property real highestPrice:0
-    property real highestVolume:0
+    property string stockDataCycle: "d"
+    property bool ready: false
+    property real stockPrice: 0.0
+    property real stockPriceChanged: 0.0
+    property real highestPrice: 0
+    property real highestVolume: 0
 
     signal dataReady
 
     function indexOf(date) {
-        var end = new Date(model.get(0).date)
-        var start = new Date(model.get(model.count - 1).date)
+        var end = new Date(model.get(0).date);
+        var start = new Date(model.get(model.count - 1).date);
         if (end <= date)
             return model.count -1;
 
@@ -65,7 +65,7 @@ ListModel {
             return 0;
 
         for (var i = 0; i < model.count; i++) {
-            var d = new Date(model.get(i).date)
+            var d = new Date(model.get(i).date);
             if ( d === date)
                 return i;
         }
@@ -77,7 +77,7 @@ ListModel {
             return;
 
         if (startDate === undefined)
-            startDate = new Date(1995, 3, 25) //default: 25 April 1995
+            startDate = new Date(1995, 3, 25); //default: 25 April 1995
 
         if (endDate === undefined)
             endDate = new Date(); //today
@@ -125,10 +125,8 @@ ListModel {
        var xhr = new XMLHttpRequest;
 
         var req = requestUrl();
-        console.log("getting " + req + " .....");
 
         xhr.open("GET", req);
-
 
         model.ready = false;
         model.clear();
@@ -136,7 +134,6 @@ ListModel {
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.LOADING || xhr.readyState === XMLHttpRequest.DONE) {
                 var records = xhr.responseText.split('\n');
-                console.log("Updating:" + (records.length - i) + " records for " + model.stockId + " from:" + model.startDate + " to " + model.endDate)
 
                 for (;i < records.length; i++ ) {
                     var r = records[i].split(',');
@@ -146,10 +143,9 @@ ListModel {
 
                 if (xhr.readyState === XMLHttpRequest.DONE) {
                     if (model.count > 0) {
-                        console.log("done, total:" + model.count);
                         model.ready = true;
-                        model.stockPrice = model.get(0).adjusted
-                        model.stockPriceChanged = Math.round((model.stockPrice - model.get(2).adjusted) * 100) / 100
+                        model.stockPrice = model.get(0).adjusted;
+                        model.stockPriceChanged = Math.round((model.stockPrice - model.get(2).adjusted) * 100) / 100;
                         model.dataReady(); //emit signal
                     }
                 }

@@ -41,32 +41,32 @@
 import QtQuick 2.0
 
 Row {
-  id:button
-  property alias text: txt.text
-  property bool buttonEnabled:true
-  width: txt.width + 30
-  height:25
-  spacing: 5
-  x: 5
-  Text {
-    id: txt
-    text:"Close "
-    color:"#76644A"
-    font.pixelSize:18
-  }
-  Rectangle {
-    width: 25
+    id: button
+    property alias text: txt.text
+    property bool buttonEnabled: true
+    width: txt.width + 30
     height: 25
-    radius:5
-    color:buttonEnabled ? "steelblue" : "gray"
-    MouseArea {
-        anchors.fill:parent
-        onClicked: {
-          if (buttonEnabled)
-           buttonEnabled = false;
-          else
-           buttonEnabled = true;
+    spacing: 5
+    x: 5
+    Text {
+        id: txt
+        text: "Close "
+        color: "#76644A"
+        font.pixelSize: 18
+    }
+    Rectangle {
+        width: 25
+        height: 25
+        radius: 5
+        color: buttonEnabled ? "steelblue" : "gray"
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                if (buttonEnabled)
+                    buttonEnabled = false;
+                else
+                    buttonEnabled = true;
+            }
         }
     }
-  }
 }

@@ -39,91 +39,93 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+
 Rectangle {
-  id:root
-  width:320
-  height:480
-  color:"#423A2F"
-  property var stock:null
-  property var stocklist:null
-  property var settings:null
-  signal listViewClicked
-  signal settingsClicked
+    id: root
+    width: 320
+    height: 480
+    color: "#423A2F"
 
-  function update() {
-     chart.endDate = settings.endDate
-     chart.update()
-  }
+    property var stock: null
+    property var stocklist: null
+    property var settings: null
+    signal listViewClicked
+    signal settingsClicked
 
-  Rectangle {
-    color:"#272822"
-    anchors.fill:parent
-    radius:20
-
-    Image {
-      source:"images/icon-items.png"
-      anchors.left:parent.left
-      anchors.leftMargin:10
-      anchors.top:parent.top
-      anchors.topMargin:10
-      MouseArea {
-        anchors.fill:parent
-        onClicked:listViewClicked()
-      }
-    }
-    Image {
-      source:"images/icon-settings.png"
-      anchors.right:parent.right
-      anchors.rightMargin:10
-      anchors.top:parent.top
-      anchors.topMargin:10
-      MouseArea {
-        anchors.fill:parent
-        onClicked:settingsClicked()
-      }
+    function update() {
+        chart.endDate = settings.endDate
+        chart.update()
     }
 
-    Text {
-      id:desc
-      anchors.left:parent.left
-      anchors.leftMargin:20
-      anchors.top:parent.top
-      anchors.topMargin:40
-      color:"#564c3A"
-      font.pointSize:15
-      text:root.stock.stockId + " - " + root.stock.stockName
-    }
+    Rectangle {
+        color: "#272822"
+        anchors.fill: parent
+        radius: 20
 
-    Text {
-      id:price
-      anchors.left:parent.left
-      anchors.leftMargin:20
-      anchors.top:desc.bottom
-      anchors.topMargin:5
-      color:"#ECC089"
-      font.pointSize:30
-      text:root.stock.stockPrice
-    }
+        Image {
+            source: "images/icon-items.png"
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            anchors.top: parent.top
+            anchors.topMargin: 10
+            MouseArea {
+                anchors.fill: parent
+                onClicked: listViewClicked()
+            }
+        }
+        Image {
+            source: "images/icon-settings.png"
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+            anchors.top: parent.top
+            anchors.topMargin: 10
+            MouseArea {
+                anchors.fill: parent
+                onClicked: settingsClicked()
+            }
+        }
 
-    Text {
-      id:priceChange
-      anchors.left:parent.left
-      anchors.leftMargin:20
-      anchors.top:price.bottom
-      anchors.topMargin:5
-      color: root.stock.stockPriceChanged < 0 ? "#A43D3D" : "#679B3A"
-      font.pointSize:25
-      text: root.stock.stockPriceChanged + " (" + Math.abs(Math.round(root.stock.stockPriceChanged/(root.stock.stockPrice - root.stock.stockPriceChanged) * 100))/100  +"%)"
-    }
+        Text {
+            id: desc
+            anchors.left: parent.left
+            anchors.leftMargin: 20
+            anchors.top: parent.top
+            anchors.topMargin: 40
+            color: "#564c3A"
+            font.pointSize: 15
+            text: root.stock.stockId + " - " + root.stock.stockName
+        }
 
-    StockChart {
-        id:chart
-        anchors.bottom: parent.bottom
-        anchors.top : priceChange.bottom
-        anchors.topMargin: 30
-        width:parent.width
-        stockModel:root.stock
-        settings:root.settings
+        Text {
+            id: price
+            anchors.left: parent.left
+            anchors.leftMargin: 20
+            anchors.top: desc.bottom
+            anchors.topMargin: 5
+            color: "#ECC089"
+            font.pointSize: 30
+            text: root.stock.stockPrice
+        }
+
+        Text {
+            id: priceChange
+            anchors.left: parent.left
+            anchors.leftMargin: 20
+            anchors.top: price.bottom
+            anchors.topMargin: 5
+            color: root.stock.stockPriceChanged < 0 ? "#A43D3D" : "#679B3A"
+            font.pointSize: 25
+            text: root.stock.stockPriceChanged + " (" + Math.abs(Math.round(root.stock.stockPriceChanged/(root.stock.stockPrice - root.stock.stockPriceChanged) * 100))/100  +"%)"
+        }
+
+        StockChart {
+            id: chart
+            anchors.bottom: parent.bottom
+            anchors.top : priceChange.bottom
+            anchors.topMargin: 30
+            width: parent.width
+            stockModel: root.stock
+            settings: root.settings
+        }
     }
-  }
 }
