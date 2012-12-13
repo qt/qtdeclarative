@@ -136,7 +136,7 @@ struct String {
     }
 
 private:
-    friend struct StringPool;
+    friend class StringPool;
     String(const QString &text)
         : _text(text), _hashValue(0) {}
 

@@ -154,7 +154,7 @@ struct ExecutionEngine
     QVector<ExceptionHandler> unwindStack;
     Value exception;
 
-    QScopedPointer<struct StringPool> stringPool;
+    QScopedPointer<class StringPool> stringPool;
     QVector<Function *> functions;
 
     ExecutionEngine(MemoryManager *memoryManager, EvalISelFactory *iselFactory);

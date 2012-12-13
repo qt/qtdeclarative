@@ -45,6 +45,7 @@ using namespace QQmlJS::VM;
 
 static const std::size_t CHUNK_SIZE = 65536;
 
+class StringPool;
 struct MemoryManager::Data
 {
     bool enableGC;

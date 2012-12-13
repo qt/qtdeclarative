@@ -46,12 +46,14 @@
 namespace QQmlJS {
 namespace VM {
 
-struct StringPool
+class StringPool
 {
     QHash<QString, String*> strings;
-
+public:
     ~StringPool()
-    { qDeleteAll(strings.values()); }
+    {
+        qDeleteAll(strings);
+    }
 
     String *newString(const QString &s)
     {
