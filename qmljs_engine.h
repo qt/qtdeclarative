@@ -130,8 +130,6 @@ struct ExecutionEngine
     TypeErrorPrototype *typeErrorPrototype;
     URIErrorPrototype *uRIErrorPrototype;
 
-    QHash<QString, String *> identifiers;
-
     String *id_length;
     String *id_prototype;
     String *id_constructor;

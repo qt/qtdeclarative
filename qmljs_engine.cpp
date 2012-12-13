@@ -223,10 +223,7 @@ ExecutionContext *ExecutionEngine::newContext()
 
 String *ExecutionEngine::identifier(const QString &s)
 {
-    String *&id = identifiers[s];
-    if (! id)
-        id = newString(s);
-    return id;
+    return stringPool->newString(s);
 }
 
 Function *ExecutionEngine::newFunction(const QString &name)
