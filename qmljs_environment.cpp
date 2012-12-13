@@ -230,13 +230,13 @@ bool ExecutionContext::deleteProperty(String *name)
             ExecutionContext::With *w = ctx->withObject;
             while (w) {
                 if (w->object->__hasProperty__(this, name))
-                    w->object->__delete__(this, name);
+                    return w->object->__delete__(this, name);
                 w = w->next;
             }
         }
         if (ctx->activation) {
             if (ctx->activation->__hasProperty__(this, name))
-                ctx->activation->__delete__(this, name);
+                return ctx->activation->__delete__(this, name);
         }
     }
     if (strictMode)
