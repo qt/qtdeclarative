@@ -1,5 +1,6 @@
 /* This script file handles the game logic */
 .import QtQuick.LocalStorage 2.0 as Sql
+.import QtQuick 2.0 as Quick
 
 var maxColumn = 10;
 var maxRow = 15;
@@ -45,12 +46,12 @@ function startNewGame() {
 
 function createBlock(column, row) {
     if (component == null)
-        component = Qt.createComponent("content/BoomBlock.qml");
+        component = Qt.createComponent("BoomBlock.qml");
 
     // Note that if Block.qml was not a local file, component.status would be
     // Loading and we should wait for the component's statusChanged() signal to
     // know when the file is downloaded and ready before calling createObject().
-    if (component.status == Component.Ready) {
+    if (component.status == Quick.Component.Ready) {
         var dynamicObject = component.createObject(gameCanvas);
         if (dynamicObject == null) {
             console.log("error creating block");

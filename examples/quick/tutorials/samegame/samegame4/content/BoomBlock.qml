@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 1.0
+import QtQuick.Particles 2.0
 
 Item {
     id: block
@@ -81,23 +81,30 @@ Item {
     //![2]
 
     //![3]
-    Particles {
-        id: particles
-
-        width: 1; height: 1
+    ParticleSystem {
+        id: sys
         anchors.centerIn: parent
+        ImageParticle {
+            // ![0]
+            source: {
+                if (type == 0)
+                    return "../../shared/pics/redStar.png";
+                else if (type == 1)
+                    return "../../shared/pics/blueStar.png";
+                else
+                    return "../../shared/pics/greenStar.png";
+            }
+            rotationVelocityVariation: 360
+            // ![0]
+        }
 
-        emissionRate: 0
-        lifeSpan: 700; lifeSpanDeviation: 600
-        angle: 0; angleDeviation: 360;
-        velocity: 100; velocityDeviation: 30
-        source: {
-            if (type == 0)
-                return "../../shared/pics/redStar.png";
-            else if (type == 1) 
-                return "../../shared/pics/blueStar.png";
-            else
-                return "../../shared/pics/greenStar.png";
+        Emitter {
+            id: particles
+            anchors.centerIn: parent
+            emitRate: 0
+            lifeSpan: 700
+            velocity: AngleDirection {angleVariation: 360; magnitude: 80; magnitudeVariation: 40}
+            size: 16
         }
     }
     //![3]

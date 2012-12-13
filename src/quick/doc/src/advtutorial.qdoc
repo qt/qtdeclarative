@@ -364,12 +364,12 @@ To fade out, we set \c dying to true instead of setting opacity to 0 when a bloc
 
 \section3 Adding particle effects
 
-Finally, we'll add a cool-looking particle effect to the blocks when they are destroyed. To do this, we first add a \l Particles element in
+Finally, we'll add a cool-looking particle effect to the blocks when they are destroyed. To do this, we first add a \l ParticleSystem in
 \c BoomBlock.qml, like so:
 
 \snippet tutorials/samegame/samegame4/content/BoomBlock.qml 3
 
-To fully understand this you should read the \l Particles documentation, but it's important to note that \c emissionRate is set
+To fully understand this you should read the \l Particles documentation, but it's important to note that \c emitRate is set
 to zero so that particles are not emitted normally.
 Also, we extend the \c dying State, which creates a burst of particles by calling the \c burst() method on the particles element. The code for the states now look
 like this:
