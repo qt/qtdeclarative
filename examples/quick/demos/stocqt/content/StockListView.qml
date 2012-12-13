@@ -82,10 +82,9 @@ Rectangle {
             }
         }
 
-        highlight: Image {
-            height:30
-            width:parent.width
-            source:"images/stock-selected.png"
+        highlight: Rectangle {
+            width: parent.width
+            color: "#662"
         }
     }
 }

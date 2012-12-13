@@ -95,6 +95,7 @@ Rectangle {
         anchors.top: toDate.bottom
         anchors.bottom: parent.bottom
         renderTarget: Canvas.FramebufferObject
+        antialiasing: true
         property int frames: first
         property int mouseX: 0
         property int mouseY: 0
@@ -105,6 +106,8 @@ Rectangle {
         property real scaleY: 1.0
         property int first: 0
         property int last: 0
+
+        property int pixelSkip: 1
 
         function drawBackground(ctx) {
             ctx.save();
@@ -142,7 +145,7 @@ Rectangle {
 
             var w = canvas.width/points.length;
             var end = points.length;
-            for (var i = 0; i < end; i++) {
+            for (var i = 0; i < end; i+=pixelSkip) {
                 var x = points[i].x;
                 var y = points[i][price];
                 y = canvas.height * y/highest;
@@ -162,7 +165,7 @@ Rectangle {
             ctx.globalAlpha = 0.4;
             ctx.lineWidth = 2;
             var end = points.length;
-            for (var i = 0; i < end; i++) {
+            for (var i = 0; i < end; i+=pixelSkip) {
                 var x = points[i].x;
                 var open = canvas.height * points[i].open/highest - canvas.movedY;
                 var close = canvas.height * points[i].close/highest - canvas.movedY;
@@ -204,7 +207,7 @@ Rectangle {
             ctx.lineWidth = 1;
 
             var end = points.length;
-            for (var i = 0; i < end; i++) {
+            for (var i = 0; i < end; i+=pixelSkip) {
                 var x = points[i].x;
                 var y = points[i][price];
                 y = canvas.height * (1 - y/highest);
@@ -231,7 +234,7 @@ Rectangle {
             var highestVolume = stockModel.highestVolume;
             console.log("highest price:" + highestPrice + ", highest volume:" + highestVolume)
             var points = [];
-            for (var i = 0; i <= last - first; i++) {
+            for (var i = 0; i <= last - first; i+=pixelSkip) {
                 var price = stockModel.get(i + first);
                 points.push({
                                 x: i*canvas.width/(last-first+1),

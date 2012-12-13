@@ -44,29 +44,45 @@ Row {
     id: button
     property alias text: txt.text
     property bool buttonEnabled: true
-    width: txt.width + 30
+    width: 140
     height: 25
     spacing: 5
     x: 5
-    Text {
-        id: txt
-        text: "Close "
-        color: "#76644A"
-        font.pixelSize: 18
+    MouseArea {
+        id: mouse
+        anchors.fill: parent
+        onClicked: {
+            if (buttonEnabled)
+                buttonEnabled = false;
+            else
+                buttonEnabled = true;
+        }
     }
     Rectangle {
-        width: 25
-        height: 25
-        radius: 5
-        color: buttonEnabled ? "steelblue" : "gray"
-        MouseArea {
+        id: checkbox
+        width: 23
+        height: 23
+        anchors.left: parent.left
+        border.color: "#76644A"
+        border.width: 1
+        antialiasing: true
+        radius: 2
+        color: "transparent"
+        Rectangle {
             anchors.fill: parent
-            onClicked: {
-                if (buttonEnabled)
-                    buttonEnabled = false;
-                else
-                    buttonEnabled = true;
-            }
+            anchors.margins: 4
+            antialiasing: true
+            radius: 1
+            color: mouse.pressed || buttonEnabled ? "#76644A" : "transparent"
+        }
+        Text {
+            id: txt
+            anchors.left: checkbox.right
+            anchors.leftMargin: 4
+            anchors.verticalCenter: parent.verticalCenter
+            text: "Close "
+            color: "#ecc089"
+            font.pixelSize: 18
         }
     }
 }

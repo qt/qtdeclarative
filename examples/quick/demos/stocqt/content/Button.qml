@@ -45,10 +45,11 @@ Rectangle {
     signal clicked
     property alias text: txt.text
     property bool buttonEnabled: false
-    radius: 5
     width: Math.max(64, txt.width + 16)
     height: 32
-    color: buttonEnabled ? "steelblue" : "gray"
+    color: buttonEnabled ? "#76644A" : "transparent"
+    border.color: "#76644A"
+    border.width: 1
     MouseArea {
         anchors.fill: parent
         onClicked: button.clicked()

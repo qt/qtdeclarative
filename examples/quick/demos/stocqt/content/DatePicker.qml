@@ -44,7 +44,7 @@ Rectangle {
     id: root
     color: "transparent"
     width: 300
-    height: 45
+    height: 40
     property var _monthNames: [ "JAN", "FEB", "MAR", "APR", "MAY", "JUN","JUL", "AUG", "SEP", "OCT", "NOV", "DEC" ];
     property var date: new Date()
 
@@ -54,14 +54,17 @@ Rectangle {
         year.text = date.getFullYear();
     }
     Row {
-        spacing: 20
+        spacing: 4
         anchors.fill: parent
 
         Rectangle {
             height: root.height
             width: root.width/3 - 20
             color: "#272822"
-            radius: 5
+            border.color: "#76644A"
+            border.width: 1
+            radius: 2
+            antialiasing: true
 
             TextInput {
                 id: month
@@ -87,7 +90,10 @@ Rectangle {
             height: root.height
             width: root.width/3 - 20
             color: "#272822"
-            radius: 5
+            border.color: "#76644A"
+            border.width: 1
+            radius: 2
+            antialiasing: true
 
             TextInput {
                 id: day
@@ -105,7 +111,10 @@ Rectangle {
             height: root.height
             width: root.width/3 - 20
             color: "#272822"
-            radius: 5
+            border.color: "#76644A"
+            border.width: 1
+            radius: 2
+            antialiasing: true
 
             TextInput {
                 id: year

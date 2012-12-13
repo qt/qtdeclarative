@@ -87,7 +87,7 @@ Rectangle {
         anchors.left: parent.left
         anchors.leftMargin: 30
         anchors.top: startDateText.bottom
-        anchors.topMargin: 15
+        anchors.topMargin: 8
         date: new Date(1995, 3, 25)
     }
 
@@ -107,7 +107,7 @@ Rectangle {
         anchors.left: parent.left
         anchors.leftMargin: 30
         anchors.top: endDateText.bottom
-        anchors.topMargin: 15
+        anchors.topMargin: 8
     }
 
     Text {
@@ -123,7 +123,7 @@ Rectangle {
     Column {
         id: drawOptions
         anchors.top: drawOptionsText.bottom
-        anchors.topMargin: 20
+        anchors.topMargin: 8
         anchors.left: parent.left
         anchors.leftMargin: 30
         spacing: 2
@@ -133,27 +133,31 @@ Rectangle {
 
             CheckBox {
                 id: highButton
-                text: "High   "
+                text: "High"
                 buttonEnabled: false
             }
             CheckBox {
                 id: lowButton
-                text: "Low     "
-                buttonEnabled: false
-            }
-            CheckBox {
-                id: openButton
-                text: "Open "
+                text: "Low"
                 buttonEnabled: false
             }
         }
         Row {
             spacing: 10
             CheckBox {
-                text: "Close "
+                id: openButton
+                text: "Open"
+                buttonEnabled: false
+            }
+            CheckBox {
+                text: "Close"
                 id: closeButton
                 buttonEnabled: true
             }
+
+        }
+        Row {
+            spacing: 10
             CheckBox {
                 id: volumeButton
                 text: "Volume"
@@ -181,8 +185,8 @@ Rectangle {
         anchors.left: parent.left
         anchors.leftMargin: 20
         anchors.top: chartTypeText.bottom
-        anchors.topMargin: 20
-        spacing: 10
+        anchors.topMargin: 8
+        spacing: -1
         Button {
             id: yearView
             text: "YEAR"
