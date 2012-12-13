@@ -51,22 +51,6 @@ int Value::toUInt16(ExecutionContext *ctx)
     return __qmljs_to_uint16(*this, ctx);
 }
 
-int Value::toInt32(ExecutionContext *ctx)
-{
-    if (isConvertibleToInt())
-        return int_32;
-
-    return Value::toInt32(__qmljs_to_number(*this, ctx));
-}
-
-unsigned int Value::toUInt32(ExecutionContext *ctx)
-{
-    if (isConvertibleToInt())
-        return (unsigned) int_32;
-
-    return toUInt32(__qmljs_to_number(*this, ctx));
-}
-
 Bool Value::toBoolean(ExecutionContext *ctx) const
 {
     return __qmljs_to_boolean(*this, ctx);

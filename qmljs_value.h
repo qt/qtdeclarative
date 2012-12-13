@@ -64,6 +64,11 @@ struct ErrorObject;
 struct ArgumentsObject;
 struct ExecutionContext;
 struct ExecutionEngine;
+struct Value;
+
+extern "C" {
+double __qmljs_to_number(Value value, ExecutionContext *ctx);
+}
 
 typedef uint Bool;
 
@@ -197,6 +202,7 @@ struct Value
     int toUInt16(ExecutionContext *ctx);
     int toInt32(ExecutionContext *ctx);
     unsigned int toUInt32(ExecutionContext *ctx);
+
     Bool toBoolean(ExecutionContext *ctx) const;
     double toInteger(ExecutionContext *ctx) const;
     double toNumber(ExecutionContext *ctx) const;
@@ -322,6 +328,40 @@ inline Value Value::fromObject(Object *o)
     v.o = o;
 #endif
     return v;
+}
+
+inline int Value::toInt32(ExecutionContext *ctx)
+{
+    if (isConvertibleToInt())
+        return int_32;
+    double d;
+    if (isDouble())
+        d = dbl;
+    else
+        d = __qmljs_to_number(*this, ctx);
+
+    const double D32 = 4294967296.0;
+    const double D31 = D32 / 2.0;
+
+    if ((d >= -D31 && d < D31))
+        return static_cast<int>(d);
+
+    return Value::toInt32(__qmljs_to_number(*this, ctx));
+}
+
+inline unsigned int Value::toUInt32(ExecutionContext *ctx) {
+    if (isConvertibleToInt())
+        return (unsigned) int_32;
+    double d;
+    if (isDouble())
+        d = dbl;
+    else
+        d = __qmljs_to_number(*this, ctx);
+
+    const double D32 = 4294967296.0;
+    if (dbl >= 0 && dbl < D32)
+        return static_cast<uint>(dbl);
+    return toUInt32(d);
 }
 
 } // namespace VM
