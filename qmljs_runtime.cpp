@@ -434,7 +434,8 @@ int __qmljs_string_length(ExecutionContext *, String *string)
 
 double __qmljs_string_to_number(ExecutionContext *, String *string)
 {
-    const QString s = string->toQString();
+    QString s = string->toQString();
+    s = s.trimmed();
     if (s.startsWith(QLatin1String("0x")) || s.startsWith(QLatin1String("0X")))
         return s.toLong(0, 16);
     bool ok;
@@ -443,8 +444,10 @@ double __qmljs_string_to_number(ExecutionContext *, String *string)
     const char *end = 0;
     double d = qstrtod(begin, &end, &ok);
     if (end - begin != ba.size()) {
-        if (ba == "Infinity")
+        if (ba == "Infinity" || ba == "+Infinity")
             d = INFINITY;
+        else if (ba == "-Infinity")
+            d = -INFINITY;
         else
             d = nan("");
     }
