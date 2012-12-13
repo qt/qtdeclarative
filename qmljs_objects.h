@@ -153,8 +153,8 @@ struct PropertyDescriptor {
     };
     enum State {
         Undefined,
-        Unset,
-        Set
+        Disabled,
+        Enabled
     };
     union {
         Value value;
@@ -196,23 +196,23 @@ struct PropertyDescriptor {
         }
         if (type == Data) {
             if (writable == Undefined)
-                writable = Unset;
+                writable = Disabled;
         } else {
             writable = Undefined;
         }
         if (enumberable == Undefined)
-            enumberable = Unset;
+            enumberable = Disabled;
         if (configurable == Undefined)
-            configurable = Unset;
+            configurable = Disabled;
     }
 
     inline bool isData() const { return type == Data; }
     inline bool isAccessor() const { return type == Accessor; }
     inline bool isGeneric() const { return type == Generic; }
 
-    inline bool isWritable() const { return writable == Set; }
-    inline bool isEnumerable() const { return enumberable == Set; }
-    inline bool isConfigurable() const { return configurable == Set; }
+    inline bool isWritable() const { return writable == Enabled; }
+    inline bool isEnumerable() const { return enumberable == Enabled; }
+    inline bool isConfigurable() const { return configurable == Enabled; }
 
     inline bool isEmpty() {
         return type == Generic && writable == Undefined && enumberable == Undefined && configurable == Undefined;

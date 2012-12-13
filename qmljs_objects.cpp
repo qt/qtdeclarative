@@ -128,9 +128,9 @@ void Object::defineDefaultProperty(String *name, Value value)
         members.reset(new PropertyTable());
     PropertyDescriptor *pd = members->insert(name);
     pd->type = PropertyDescriptor::Data;
-    pd->writable = PropertyDescriptor::Set;
-    pd->enumberable = PropertyDescriptor::Unset;
-    pd->configurable = PropertyDescriptor::Set;
+    pd->writable = PropertyDescriptor::Enabled;
+    pd->enumberable = PropertyDescriptor::Disabled;
+    pd->configurable = PropertyDescriptor::Enabled;
     pd->value = value;
 }
 
@@ -153,9 +153,9 @@ void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name
         members.reset(new PropertyTable());
     PropertyDescriptor *pd = members->insert(engine->identifier(name));
     pd->type = PropertyDescriptor::Data;
-    pd->writable = PropertyDescriptor::Unset;
-    pd->enumberable = PropertyDescriptor::Unset;
-    pd->configurable = PropertyDescriptor::Unset;
+    pd->writable = PropertyDescriptor::Disabled;
+    pd->enumberable = PropertyDescriptor::Disabled;
+    pd->configurable = PropertyDescriptor::Disabled;
     pd->value = value;
 }
 
@@ -270,9 +270,9 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
 
         PropertyDescriptor *p = members->insert(name);
         *p = PropertyDescriptor::fromValue(value);
-        p->configurable = PropertyDescriptor::Set;
-        p->enumberable = PropertyDescriptor::Set;
-        p->writable = PropertyDescriptor::Set;
+        p->configurable = PropertyDescriptor::Enabled;
+        p->enumberable = PropertyDescriptor::Enabled;
+        p->writable = PropertyDescriptor::Enabled;
         return;
     }
 
@@ -360,7 +360,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
         } else {
             // 9c
             current->type = PropertyDescriptor::Data;
-            current->writable = PropertyDescriptor::Unset;
+            current->writable = PropertyDescriptor::Disabled;
             current->value = Value::undefinedValue();
         }
     } else if (current->isData() && desc->isData()) { // clause 10
@@ -788,8 +788,8 @@ PropertyDescriptor *ArgumentsObject::__getPropertyDescriptor__(ExecutionContext 
         const quint32 i = Value::fromString(name).toUInt32(ctx);
         if (i < context->argumentCount) {
             *to_fill = PropertyDescriptor::fromValue(context->argument(i));
-            to_fill->writable = PropertyDescriptor::Unset;
-            to_fill->enumberable = PropertyDescriptor::Unset;
+            to_fill->writable = PropertyDescriptor::Disabled;
+            to_fill->enumberable = PropertyDescriptor::Disabled;
             return to_fill;
         }
     }

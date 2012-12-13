@@ -106,9 +106,9 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     PropertyDescriptor desc;
     desc.value = Value::undefinedValue();
     desc.type = PropertyDescriptor::Data;
-    desc.configurable = deletable ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
-    desc.writable = PropertyDescriptor::Set;
-    desc.enumberable = PropertyDescriptor::Set;
+    desc.configurable = deletable ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
+    desc.writable = PropertyDescriptor::Enabled;
+    desc.enumberable = PropertyDescriptor::Enabled;
     activation->__defineOwnProperty__(this, name, &desc);
 }
 

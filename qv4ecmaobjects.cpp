@@ -687,7 +687,7 @@ Value ObjectPrototype::method_seal(ExecutionContext *ctx)
     if (o->members) {
         PropertyTable::iterator it = o->members->begin();
         while (it != o->members->end()) {
-            (*it)->descriptor.configurable = PropertyDescriptor::Unset;
+            (*it)->descriptor.configurable = PropertyDescriptor::Disabled;
             ++it;
         }
     }
@@ -705,8 +705,8 @@ Value ObjectPrototype::method_freeze(ExecutionContext *ctx)
         PropertyTable::iterator it = o->members->begin();
         while (it != o->members->end()) {
             if ((*it)->descriptor.isData())
-                (*it)->descriptor.writable = PropertyDescriptor::Unset;
-            (*it)->descriptor.configurable = PropertyDescriptor::Unset;
+                (*it)->descriptor.writable = PropertyDescriptor::Disabled;
+            (*it)->descriptor.configurable = PropertyDescriptor::Disabled;
             ++it;
         }
     }
@@ -734,7 +734,7 @@ Value ObjectPrototype::method_isSealed(ExecutionContext *ctx)
     if (o->members) {
         PropertyTable::iterator it = o->members->begin();
         while (it != o->members->end()) {
-            if ((*it)->descriptor.configurable != PropertyDescriptor::Unset)
+            if ((*it)->descriptor.configurable != PropertyDescriptor::Disabled)
                 return Value::fromBoolean(false);
             ++it;
         }
@@ -754,9 +754,9 @@ Value ObjectPrototype::method_isFrozen(ExecutionContext *ctx)
         PropertyTable::iterator it = o->members->begin();
         while (it != o->members->end()) {
             if ((*it)->descriptor.isData() &&
-                ((*it)->descriptor.writable != PropertyDescriptor::Unset))
+                ((*it)->descriptor.writable != PropertyDescriptor::Disabled))
                 return Value::fromBoolean(false);
-            if ((*it)->descriptor.configurable != PropertyDescriptor::Unset)
+            if ((*it)->descriptor.configurable != PropertyDescriptor::Disabled)
                 return Value::fromBoolean(false);
             ++it;
         }
@@ -857,9 +857,9 @@ Value ObjectPrototype::method_defineGetter(ExecutionContext *ctx)
     Object *o = ctx->thisObject.toObject(ctx).objectValue();
 
     PropertyDescriptor pd = PropertyDescriptor::fromAccessor(f, 0);
-    pd.writable = PropertyDescriptor::Set;
-    pd.configurable = PropertyDescriptor::Set;
-    pd.enumberable = PropertyDescriptor::Set;
+    pd.writable = PropertyDescriptor::Enabled;
+    pd.configurable = PropertyDescriptor::Enabled;
+    pd.enumberable = PropertyDescriptor::Enabled;
     o->__defineOwnProperty__(ctx, prop, &pd);
     return Value::undefinedValue();
 }
@@ -877,9 +877,9 @@ Value ObjectPrototype::method_defineSetter(ExecutionContext *ctx)
     Object *o = ctx->thisObject.toObject(ctx).objectValue();
 
     PropertyDescriptor pd = PropertyDescriptor::fromAccessor(0, f);
-    pd.writable = PropertyDescriptor::Set;
-    pd.configurable = PropertyDescriptor::Set;
-    pd.enumberable = PropertyDescriptor::Set;
+    pd.writable = PropertyDescriptor::Enabled;
+    pd.configurable = PropertyDescriptor::Enabled;
+    pd.enumberable = PropertyDescriptor::Enabled;
     o->__defineOwnProperty__(ctx, prop, &pd);
     return Value::undefinedValue();
 }
@@ -895,11 +895,11 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
 
     desc->enumberable = PropertyDescriptor::Undefined;
     if (o->__hasProperty__(ctx, ctx->engine->id_enumerable))
-        desc->enumberable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_enumerable), ctx) ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
+        desc->enumberable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_enumerable), ctx) ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
 
     desc->configurable = PropertyDescriptor::Undefined;
     if (o->__hasProperty__(ctx, ctx->engine->id_configurable))
-        desc->configurable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_configurable), ctx) ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
+        desc->configurable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_configurable), ctx) ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
 
     desc->get = 0;
     if (o->__hasProperty__(ctx, ctx->engine->id_get)) {
@@ -933,7 +933,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     if (o->__hasProperty__(ctx, ctx->engine->id_writable)) {
         if (desc->isAccessor())
             __qmljs_throw_type_error(ctx);
-        desc->writable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_writable), ctx) ? PropertyDescriptor::Set : PropertyDescriptor::Unset;
+        desc->writable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_writable), ctx) ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
         // writable forces it to be a data descriptor
         desc->type = PropertyDescriptor::Data;
         desc->value = Value::undefinedValue();
@@ -960,14 +960,14 @@ Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Prope
 
     PropertyDescriptor pd;
     pd.type = PropertyDescriptor::Data;
-    pd.writable = PropertyDescriptor::Set;
-    pd.enumberable = PropertyDescriptor::Set;
-    pd.configurable = PropertyDescriptor::Set;
+    pd.writable = PropertyDescriptor::Enabled;
+    pd.enumberable = PropertyDescriptor::Enabled;
+    pd.configurable = PropertyDescriptor::Enabled;
 
     if (desc->isData()) {
         pd.value = desc->value;
         o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("value")), &pd);
-        pd.value = Value::fromBoolean(desc->writable == PropertyDescriptor::Set ? true : false);
+        pd.value = Value::fromBoolean(desc->writable == PropertyDescriptor::Enabled ? true : false);
         o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("writable")), &pd);
     } else {
         pd.value = desc->get ? Value::fromObject(desc->get) : Value::undefinedValue();
@@ -975,9 +975,9 @@ Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Prope
         pd.value = desc->set ? Value::fromObject(desc->set) : Value::undefinedValue();
         o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("set")), &pd);
     }
-    pd.value = Value::fromBoolean(desc->enumberable == PropertyDescriptor::Set ? true : false);
+    pd.value = Value::fromBoolean(desc->enumberable == PropertyDescriptor::Enabled ? true : false);
     o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("enumerable")), &pd);
-    pd.value = Value::fromBoolean(desc->configurable == PropertyDescriptor::Set ? true : false);
+    pd.value = Value::fromBoolean(desc->configurable == PropertyDescriptor::Enabled ? true : false);
     o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("configurable")), &pd);
 
     return Value::fromObject(o);
