@@ -73,8 +73,8 @@ ExecutionEngine::ExecutionEngine(MemoryManager *memoryManager, EvalISelFactory *
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
-    stringPool = new StringPool;
-    memoryManager->setStringPool(stringPool);
+    stringPool.reset(new StringPool);
+    memoryManager->setStringPool(stringPool.data());
     memoryManager->setExecutionEngine(this);
 
     rootContext = newContext();
@@ -212,7 +212,6 @@ ExecutionEngine::~ExecutionEngine()
 {
     delete globalObject.asObject();
     delete rootContext;
-    delete stringPool;
     qDeleteAll(functions);
 }
 
