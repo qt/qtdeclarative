@@ -1308,8 +1308,10 @@ NumberCtor::NumberCtor(ExecutionContext *scope)
 
 Value NumberCtor::construct(ExecutionContext *ctx)
 {
-    const double n = ctx->argument(0).toNumber(ctx);
-    ctx->thisObject = Value::fromObject(ctx->engine->newNumberObject(Value::fromDouble(n)));
+    double d = 0;
+    if (!ctx->argument(0).isUndefined())
+        d = ctx->argument(0).toNumber(ctx);
+    ctx->thisObject = Value::fromObject(ctx->engine->newNumberObject(Value::fromDouble(d)));
     return ctx->thisObject;
 }
 
