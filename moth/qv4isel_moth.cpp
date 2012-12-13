@@ -194,12 +194,24 @@ InstructionSelection::~InstructionSelection()
 {
 }
 
-VM::Function *InstructionSelection::run(IR::Function *function)
+void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
 {
     qSwap(_function, function);
+
+    IR::BasicBlock *block;
+
+    QHash<IR::BasicBlock *, QVector<ptrdiff_t> > patches;
+    QHash<IR::BasicBlock *, ptrdiff_t> addrs;
+
     // FIXME: make the size dynamic. This requires changing the patching.
-    _code = new uchar[getpagesize() * 4000];
-    _ccode = _code;
+    uchar *code = new uchar[getpagesize() * 4000];
+    uchar *ccode = code;
+
+    qSwap(block, _block);
+    qSwap(patches, _patches);
+    qSwap(addrs, _addrs);
+    qSwap(code, _code);
+    qSwap(ccode, _ccode);
 
     CompressTemps().run(_function);
 
@@ -235,14 +247,14 @@ VM::Function *InstructionSelection::run(IR::Function *function)
     _patches.clear();
     _addrs.clear();
 
-    VM::Function *vmFunc = vmFunction(function);
-    vmFunc->code = VME::exec;
-    vmFunc->codeData = _code;
+    vmFunction->code = VME::exec;
+    vmFunction->codeData = _code;
 
-    _block = 0;
-    _code = 0;
-    _ccode = 0;
-    return vmFunc;
+    qSwap(block, _block);
+    qSwap(patches, _patches);
+    qSwap(addrs, _addrs);
+    qSwap(code, _code);
+    qSwap(ccode, _ccode);
 }
 
 void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempIndex)

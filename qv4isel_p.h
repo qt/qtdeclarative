@@ -51,12 +51,12 @@ public:
     EvalInstructionSelection(VM::ExecutionEngine *engine, IR::Module *module);
     virtual ~EvalInstructionSelection() = 0;
 
-    virtual VM::Function *run(IR::Function *function) = 0;
+    VM::Function *vmFunction(IR::Function *f);
 
 protected:
     VM::Function *createFunctionMapping(VM::ExecutionEngine *engine, IR::Function *irFunction);
-    VM::Function *vmFunction(IR::Function *f) const { return _irToVM[f]; }
     VM::ExecutionEngine *engine() const { return _engine; }
+    virtual void run(VM::Function *vmFunction, IR::Function *function) = 0;
 
 private:
     VM::ExecutionEngine *_engine;

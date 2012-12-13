@@ -671,17 +671,8 @@ QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
             Codegen cg(ctx);
             IR::Function *globalIRCode = cg(fileName, program, &module, mode);
             QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(vm, &module));
-            if (globalIRCode) {
-                globalCode = isel->run(globalIRCode);
-            }
-            if (globalCode) {
-                // only generate other functions if global code generation succeeded.
-                foreach (IR::Function *function, module.functions) {
-                    if (function == globalIRCode)
-                        continue;
-                    globalCode->nestedFunctions.append(isel->run(function));
-                }
-            }
+            if (globalIRCode)
+                globalCode = isel->vmFunction(globalIRCode);
         }
 
         if (! globalCode)

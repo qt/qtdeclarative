@@ -381,7 +381,7 @@ InstructionSelection::~InstructionSelection()
     delete _asm;
 }
 
-VM::Function *InstructionSelection::run(IR::Function *function)
+void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
 {
     qSwap(_function, function);
     Assembler* oldAssembler = _asm;
@@ -425,14 +425,11 @@ VM::Function *InstructionSelection::run(IR::Function *function)
 #endif
     _asm->ret();
 
-    VM::Function *vmFunc = vmFunction(_function);
-    _asm->link(vmFunc);
+    _asm->link(vmFunction);
 
     qSwap(_function, function);
     delete _asm;
     _asm = oldAssembler;
-
-    return vmFunc;
 }
 
 String *InstructionSelection::identifier(const QString &s)

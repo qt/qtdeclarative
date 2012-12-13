@@ -647,7 +647,7 @@ public:
     InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module);
     ~InstructionSelection();
 
-    virtual VM::Function *run(IR::Function *function);
+    virtual void run(VM::Function *vmFunction, IR::Function *function);
 
 protected:
     typedef Assembler::Address Address;

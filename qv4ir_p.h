@@ -587,9 +587,11 @@ struct Ret: Stmt {
 struct Module {
     MemoryPool pool;
     QVector<Function *> functions;
+    Function *rootFunction;
 
-    Function *newFunction(const QString &name);
+    Function *newFunction(const QString &name, Function *outer);
 
+    Module() : rootFunction(0) {}
     ~Module();
 };
 
@@ -603,11 +605,11 @@ struct Function {
     QSet<QString> strings;
     QList<const QString *> formals;
     QList<const QString *> locals;
+    QVector<Function *> nestedFunctions;
 
     int insideWith;
 
     bool hasDirectEval: 1;
-    bool hasNestedFunctions: 1;
     bool isStrict: 1;
 
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
@@ -619,7 +621,6 @@ struct Function {
         , maxNumberOfArguments(0)
         , insideWith(0)
         , hasDirectEval(false)
-        , hasNestedFunctions(false)
         , isStrict(false)
     { this->name = newString(name); }
 

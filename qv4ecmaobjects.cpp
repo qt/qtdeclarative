@@ -2058,7 +2058,7 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
     IR::Function *irf = cg(QString(), fe, &module);
 
     QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(ctx->engine, &module));
-    VM::Function *vmf = isel->run(irf);
+    VM::Function *vmf = isel->vmFunction(irf);
 
     ctx->thisObject = Value::fromObject(ctx->engine->newScriptFunction(ctx->engine->rootContext, vmf));
     return ctx->thisObject;

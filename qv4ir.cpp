@@ -386,10 +386,16 @@ void Ret::dump(QTextStream &out, Mode)
     out << ';';
 }
 
-Function *Module::newFunction(const QString &name)
+Function *Module::newFunction(const QString &name, Function *outer)
 {
     Function *f = new Function(this, name);
     functions.append(f);
+    if (!outer) {
+        assert(!rootFunction);
+        rootFunction = f;
+    } else {
+        outer->nestedFunctions.append(f);
+    }
     return f;
 }
 

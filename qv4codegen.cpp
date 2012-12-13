@@ -1650,14 +1650,14 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     TryCleanup *tryCleanup = 0;
 
     enterEnvironment(ast);
-    IR::Function *function = _module->newFunction(name);
+    IR::Function *function = _module->newFunction(name, _function);
+
     if (_debugger)
         _debugger->addFunction(function);
     IR::BasicBlock *entryBlock = function->newBasicBlock();
     IR::BasicBlock *exitBlock = function->newBasicBlock(IR::Function::DontInsertBlock);
     IR::BasicBlock *throwBlock = function->newBasicBlock();
     function->hasDirectEval = _env->hasDirectEval;
-    function->hasNestedFunctions = _env->hasNestedFunctions;
     function->maxNumberOfArguments = _env->maxNumberOfArguments;
     function->isStrict = _env->isStrict;
 
