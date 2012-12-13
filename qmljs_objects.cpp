@@ -87,7 +87,6 @@ void Managed::operator delete(void *ptr)
 //
 Object::~Object()
 {
-    delete members;
 }
 
 void Object::__put__(ExecutionContext *ctx, const QString &name, const Value &value)
@@ -126,7 +125,7 @@ bool Object::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ct
 void Object::defineDefaultProperty(String *name, Value value)
 {
     if (!members)
-        members = new PropertyTable();
+        members.reset(new PropertyTable());
     PropertyDescriptor *pd = members->insert(name);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Set;
@@ -151,7 +150,7 @@ void Object::defineDefaultProperty(ExecutionContext *context, const QString &nam
 void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value)
 {
     if (!members)
-        members = new PropertyTable();
+        members.reset(new PropertyTable());
     PropertyDescriptor *pd = members->insert(engine->identifier(name));
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Unset;
@@ -239,7 +238,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
         goto reject;
 
     if (!members)
-        members = new PropertyTable();
+        members.reset(new PropertyTable());
 
     {
         // Clause 2
@@ -312,7 +311,7 @@ bool Object::__delete__(ExecutionContext *ctx, String *name)
 bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc)
 {
     if (!members)
-        members = new PropertyTable();
+        members.reset(new PropertyTable());
 
     // Clause 1
     PropertyDescriptor *current = __getOwnProperty__(ctx, name);

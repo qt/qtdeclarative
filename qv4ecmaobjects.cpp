@@ -605,7 +605,7 @@ Value ObjectPrototype::method_getOwnPropertyNames(ExecutionContext *ctx)
 
     ArrayObject *array = ctx->engine->newArrayObject()->asArrayObject();
     Array &a = array->value;
-    if (PropertyTable *members = O.objectValue()->members) {
+    if (PropertyTable *members = O.objectValue()->members.data()) {
         for (PropertyTableEntry **it = members->begin(), **end = members->end(); it != end; ++it) {
             if (PropertyTableEntry *prop = *it) {
                 a.push(Value::fromString(prop->name));

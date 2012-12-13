@@ -51,6 +51,7 @@
 #include <QtCore/QString>
 #include <QtCore/QHash>
 #include <QtCore/QRegularExpression>
+#include <QtCore/QScopedPointer>
 #include <cstdio>
 #include <cassert>
 
@@ -418,12 +419,11 @@ private:
 
 struct Object: Managed {
     Object *prototype;
-    PropertyTable *members;
+    QScopedPointer<PropertyTable> members;
     bool extensible;
 
     Object()
         : prototype(0)
-        , members(0)
         , extensible(true) {}
 
     virtual ~Object();
