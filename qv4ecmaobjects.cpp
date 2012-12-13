@@ -823,9 +823,14 @@ Value ObjectPrototype::method_isPrototypeOf(ExecutionContext *ctx)
     if (! V.isObject())
         return Value::fromBoolean(false);
 
-    Value O = ctx->thisObject.toObject(ctx);
+    Object *O = ctx->thisObject.toObject(ctx).objectValue();
     Object *proto = V.objectValue()->prototype;
-    return Value::fromBoolean(proto && O.objectValue() == proto);
+    while (proto) {
+        if (O == proto)
+            return Value::fromBoolean(true);
+        proto = proto->prototype;
+    }
+    return Value::fromBoolean(false);
 }
 
 Value ObjectPrototype::method_propertyIsEnumerable(ExecutionContext *ctx)
