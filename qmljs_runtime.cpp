@@ -544,6 +544,8 @@ Value __qmljs_new_string_object(ExecutionContext *ctx, String *string)
 
 void __qmljs_set_property(ExecutionContext *ctx, Value object, String *name, Value value)
 {
+    if (! object.isObject())
+        object = __qmljs_to_object(object, ctx);
     object.objectValue()->__put__(ctx, name, value);
 }
 
