@@ -432,7 +432,6 @@ void ExecutionContext::leaveCallContext()
     }
     engine->current = parent;
     parent = 0;
-    function = 0;
 
     if (engine->debugger)
         engine->debugger->justLeft(this);
