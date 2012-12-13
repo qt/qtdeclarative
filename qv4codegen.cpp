@@ -1520,18 +1520,21 @@ void Codegen::linearize(IR::Function *function)
 
     I::trace(function->basicBlocks.first(), &V, &trace);
 
+    V.insert(exitBlock);
     exitBlock->index = trace.size();
     trace.append(exitBlock);
 
+    QVarLengthArray<IR::BasicBlock*> blocksToDelete;
     foreach (IR::BasicBlock *b, function->basicBlocks)
-        if (!trace.contains(b)) {
-            foreach (IR::BasicBlock *out, b->out) {
-                int idx = out->in.indexOf(b);
-                if (idx >= 0)
-                    out->in.remove(idx);
+        if (!V.contains(b)) {
+                foreach (IR::BasicBlock *out, b->out) {
+                    int idx = out->in.indexOf(b);
+                    if (idx >= 0)
+                        out->in.remove(idx);
+                }
+                blocksToDelete.append(b);
             }
-            delete b;
-        }
+    qDeleteAll(blocksToDelete);
     function->basicBlocks = trace;
 
 #ifndef QV4_NO_LIVENESS
