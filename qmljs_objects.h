@@ -110,6 +110,7 @@ protected:
     virtual void getCollectables(QVector<Object *> &objects) = 0;
 
 private:
+    void *operator new(size_t);
     friend class MemoryManager;
     MemoryManager *mm;
 };
