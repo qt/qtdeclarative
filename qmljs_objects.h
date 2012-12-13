@@ -418,13 +418,11 @@ private:
 
 struct Object: Managed {
     Object *prototype;
-    String *klass;
     PropertyTable *members;
     bool extensible;
 
     Object()
         : prototype(0)
-        , klass(0)
         , members(0)
         , extensible(true) {}
 
