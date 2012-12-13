@@ -689,7 +689,7 @@ Value ObjectPrototype::method_seal(ExecutionContext *ctx)
             ++it;
         }
     }
-    return Value::undefinedValue();
+    return ctx->argument(0);
 }
 
 Value ObjectPrototype::method_freeze(ExecutionContext *ctx)
@@ -708,7 +708,7 @@ Value ObjectPrototype::method_freeze(ExecutionContext *ctx)
             ++it;
         }
     }
-    return Value::undefinedValue();
+    return ctx->argument(0);
 }
 
 Value ObjectPrototype::method_preventExtensions(ExecutionContext *ctx)
@@ -718,7 +718,7 @@ Value ObjectPrototype::method_preventExtensions(ExecutionContext *ctx)
 
     Object *o = ctx->argument(0).objectValue();
     o->extensible = false;
-    return Value::undefinedValue();
+    return ctx->argument(0);
 }
 
 Value ObjectPrototype::method_isSealed(ExecutionContext *ctx)
