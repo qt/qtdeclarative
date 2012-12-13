@@ -36,6 +36,7 @@
 #include <QTime>
 #include <QVector>
 #include <QLinkedList>
+#include <QMap>
 
 #include <iostream>
 #include <cstdlib>
@@ -53,10 +54,9 @@ struct MemoryManager::Data
     ExecutionEngine *engine;
     StringPool *stringPool;
 
-    // FIXME: this freeList will get out of hand if there is one allocation+deallocation of, say, 16M.
-    // TODO: turn the freeList into a fixed length array which can hold the most common sizes (e.g. up to 64K), then use a tree for anything afterwards.
-    // TODO: this requires that the interaction with the freeList is factored out first into separate methods.
-    QVector<MMObject *> freeList;
+    MMObject *fallbackObject;
+    MMObject *smallItems[16]; // 16 - 256 bytes
+    QMap<size_t, MMObject *> largeItems;
     QLinkedList<QPair<char *, std::size_t> > heapChunks;
 
     // statistics:
@@ -69,8 +69,9 @@ struct MemoryManager::Data
         , gcBlocked(false)
         , engine(0)
         , stringPool(0)
-        , freeList(0)
+        , fallbackObject(0)
     {
+        memset(smallItems, 0, sizeof(smallItems));
         scribble = qgetenv("MM_NO_SCRIBBLE").isEmpty();
         aggressiveGC = !qgetenv("MM_AGGRESSIVE_GC").isEmpty();
     }
@@ -96,60 +97,76 @@ MemoryManager::MMObject *MemoryManager::alloc(std::size_t size)
 #endif // DETAILED_MM_STATS
 
     size += align(sizeof(MMInfo));
+
     assert(size >= 16);
     assert(size % 16 == 0);
 
-    for (std::size_t s = size / 16, es = m_d->freeList.size(); s < es; ++s) {
-        if (MMObject *m = m_d->freeList.at(s)) {
-            m_d->freeList[s] = m->info.next;
+    size_t pos = size >> 4;
 
-            if (s != size / 16) {
-                MMObject *tail = reinterpret_cast<MMObject *>(reinterpret_cast<char *>(m) + size);
-                assert(m->info.size == s * 16);
-                tail->info.inUse = 0;
-                tail->info.markBit = 0;
-                tail->info.size = m->info.size - size;
-                MMObject *&f = m_d->freeList[tail->info.size / 16];
-                tail->info.next = f;
-                f = tail;
-                m->info.size = size;
-            }
-
+    // fits into a small bucket
+    if (pos < sizeof(m_d->smallItems)/sizeof(MMObject *)) {
+        MMObject *m = m_d->smallItems[pos];
+        if (m) {
+            m_d->smallItems[pos] = m->info.next;
             m->info.inUse = 1;
             m->info.markBit = 0;
-            scribble(m, 0xaa);
-//            qDebug("alloc(%lu) -> %p", size, m);
             return m;
         }
     }
 
-    if (!m_d->aggressiveGC)
-        if (runGC() >= size)
-            return alloc(size - sizeof(MMInfo));
 
-    std::size_t allocSize = std::max(size, CHUNK_SIZE);
-    char *ptr = 0;
-    posix_memalign(reinterpret_cast<void**>(&ptr), 16, allocSize);
-    m_d->heapChunks.append(qMakePair(ptr, allocSize));
-//    qDebug("Allocated new chunk of %lu bytes @ %p", allocSize, ptr);
-
-    if (allocSize > size) {
-        MMObject *m = reinterpret_cast<MMObject *>(ptr + size);
-        m->info.size = allocSize - size;
-        std::size_t off = m->info.size / 16;
-        if (((std::size_t) m_d->freeList.size()) <= off)
-            m_d->freeList.resize(off + 1);
-        MMObject *&f = m_d->freeList[off];
-        m->info.next = f;
-        f = m;
+    // ### use new heap space if available
+    if (m_d->fallbackObject && m_d->fallbackObject->info.size >= size) {
+        MMObject *m = m_d->fallbackObject;
+        m_d->fallbackObject = splitItem(m, size);
+        m->info.inUse = 1;
+        m->info.markBit = 0;
+        return m;
     }
 
-    MMObject *m = reinterpret_cast<MMObject *>(ptr);
+    // use or split up a large bucket
+    QMap<size_t, MMObject *>::iterator it = m_d->largeItems.lowerBound(pos);
+    if (it == m_d->largeItems.end()) {
+        // try to free up space, otherwise allocate
+        if (!m_d->aggressiveGC || runGC() < size) {
+            std::size_t allocSize = std::max(size, CHUNK_SIZE);
+            char *ptr = 0;
+            posix_memalign(reinterpret_cast<void**>(&ptr), 16, allocSize);
+            m_d->heapChunks.append(qMakePair(ptr, allocSize));
+            m_d->fallbackObject = reinterpret_cast<MMObject *>(ptr);
+            m_d->fallbackObject->info.inUse = 0;
+            m_d->fallbackObject->info.next = 0;
+            m_d->fallbackObject->info.markBit = 0;
+            m_d->fallbackObject->info.size = allocSize;
+        }
+        return alloc(size - sizeof(MMInfo));
+    }
+
+    MMObject *m = it.value();
+    assert(m);
+
+    if (it.key() == pos) {
+        // a match, return it
+        if (!m->info.next)
+            m_d->largeItems.erase(it);
+        else
+            *it = m->info.next;
+        m->info.inUse = 1;
+        m->info.markBit = 0;
+        return m;
+    }
+
+    // split up
+    if (!m->info.next)
+        m_d->largeItems.erase(it);
+    else
+        *it = m->info.next;
+    MMObject *tail = splitItem(m, size);
+    MMObject *&f = m_d->largeItems[tail->info.size];
+    tail->info.next = f;
+    f = tail;
     m->info.inUse = 1;
     m->info.markBit = 0;
-    m->info.size = size;
-    scribble(m, 0xaa);
-//    qDebug("alloc(%lu) -> %p", size, ptr);
     return m;
 }
 
@@ -163,16 +180,33 @@ void MemoryManager::dealloc(MMObject *ptr)
 
 //    qDebug("dealloc %p (%lu)", ptr, ptr->info.size);
 
-    std::size_t off = ptr->info.size / 16;
-    if (((std::size_t) m_d->freeList.size()) <= off)
-        m_d->freeList.resize(off + 1);
-    MMObject *&f = m_d->freeList[off];
-    ptr->info.next = f;
+    std::size_t pos = ptr->info.size >> 4;
+    MMObject **f;
+
+    // fits into a small bucket
+    if (pos < sizeof(m_d->smallItems)/sizeof(MMObject *)) {
+        f = &m_d->smallItems[pos];
+    } else {
+        f = &m_d->largeItems[pos];
+    }
+
+    ptr->info.next = *f;
     ptr->info.inUse = 0;
     ptr->info.markBit = 0;
     ptr->info.needsManagedDestructorCall = 0;
-    f = ptr;
-    scribble(ptr, 0x55);
+    *f = ptr;
+}
+
+MemoryManager::MMObject *MemoryManager::splitItem(MemoryManager::MMObject *m, int newSize)
+{
+    if (newSize - m->info.size <= sizeof(MMObject))
+        return 0;
+    MMObject *tail = reinterpret_cast<MMObject *>(reinterpret_cast<char *>(m) + newSize);
+    tail->info.inUse = 0;
+    tail->info.markBit = 0;
+    tail->info.size = m->info.size - newSize;
+    m->info.size = newSize;
+    return tail;
 }
 
 void MemoryManager::scribble(MemoryManager::MMObject *obj, int c) const
@@ -344,6 +378,7 @@ void MemoryManager::willAllocate(std::size_t size)
         counters.resize(alignedSize + 1);
     counters[alignedSize]++;
 }
+
 #endif // DETAILED_MM_STATS
 
 void MemoryManager::collectRoots(QVector<VM::Object *> &roots) const

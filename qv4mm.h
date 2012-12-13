@@ -153,6 +153,8 @@ protected:
     void willAllocate(std::size_t size);
 #endif // DETAILED_MM_STATS
 
+    MMObject *splitItem(MMObject *m, int newSize);
+
 private:
     void collectRoots(QVector<VM::Object *> &roots) const;
     static std::size_t mark(const QVector<Object *> &objects);
