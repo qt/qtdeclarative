@@ -96,7 +96,8 @@ MemoryManager::MMObject *MemoryManager::alloc(std::size_t size)
     willAllocate(size);
 #endif // DETAILED_MM_STATS
 
-    size += align(sizeof(MMInfo));
+    const std::size_t alignedSizeOfMMInfo = align(sizeof(MMInfo));
+    size += alignedSizeOfMMInfo;
 
     assert(size >= 16);
     assert(size % 16 == 0);
@@ -139,7 +140,7 @@ MemoryManager::MMObject *MemoryManager::alloc(std::size_t size)
             m_d->fallbackObject->info.markBit = 0;
             m_d->fallbackObject->info.size = allocSize;
         }
-        return alloc(size - sizeof(MMInfo));
+        return alloc(size - alignedSizeOfMMInfo);
     }
 
     MMObject *m = it.value();
