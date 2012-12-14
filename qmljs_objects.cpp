@@ -815,7 +815,7 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context)
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(get, set);
         pd.configurable = PropertyDescriptor::Enabled;
         pd.enumberable = PropertyDescriptor::Enabled;
-        for (int i = 0; i < context->argumentCount; ++i)
+        for (uint i = 0; i < context->argumentCount; ++i)
             __defineOwnProperty__(context, QString::number(i), &pd);
         defineDefaultProperty(context, QStringLiteral("callee"), Value::fromObject(context->function));
     }
@@ -823,10 +823,12 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context)
 
 Value ArgumentsObject::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 {
-    bool ok = false;
-    currentIndex = name->toQString().toInt(&ok);
-    if (!ok)
-        currentIndex = -1;
+    if (!ctx->strictMode) {
+        bool ok = false;
+        currentIndex = name->toQString().toInt(&ok);
+        if (!ok)
+            currentIndex = -1;
+    }
     Value result = Object::__get__(ctx, name, hasProperty);
     currentIndex = -1;
     return result;
@@ -834,10 +836,12 @@ Value ArgumentsObject::__get__(ExecutionContext *ctx, String *name, bool *hasPro
 
 void ArgumentsObject::__put__(ExecutionContext *ctx, String *name, Value value)
 {
-    bool ok = false;
-    currentIndex = name->toQString().toInt(&ok);
-    if (!ok)
-        currentIndex = -1;
+    if (!ctx->strictMode) {
+        bool ok = false;
+        currentIndex = name->toQString().toInt(&ok);
+        if (!ok)
+            currentIndex = -1;
+    }
     Object::__put__(ctx, name, value);
     currentIndex = -1;
 }
@@ -852,7 +856,7 @@ Value ArgumentsObject::method_getArg(ExecutionContext *ctx)
         __qmljs_throw_type_error(ctx);
 
     assert(ctx != args->context);
-    assert(args->currentIndex >= 0 && args->currentIndex < args->context->argumentCount);
+    assert(args->currentIndex >= 0 && args->currentIndex < (int)args->context->argumentCount);
     return args->context->argument(args->currentIndex);
 }
 
@@ -866,8 +870,9 @@ Value ArgumentsObject::method_setArg(ExecutionContext *ctx)
         __qmljs_throw_type_error(ctx);
 
     assert(ctx != args->context);
-    assert(args->currentIndex >= 0 && args->currentIndex < args->context->argumentCount);
+    assert(args->currentIndex >= 0 && args->currentIndex < (int)args->context->argumentCount);
     args->context->arguments[args->currentIndex] = ctx->arguments[0];
+    return Value::undefinedValue();
 }
 
 NativeFunction::NativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
