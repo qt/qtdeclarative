@@ -1,5 +1,5 @@
 TEMPLATE = lib
-CONFIG += qt plugin
+CONFIG += plugin
 QT += qml
 
 DESTDIR +=  ../plugins

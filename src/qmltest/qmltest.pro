@@ -1,5 +1,4 @@
 TARGET     = QtQuickTest
-CONFIG += dll warn_on
 
 DEFINES += QT_NO_URL_CAST_FROM_STRING
 QT = core
