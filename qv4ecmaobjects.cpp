@@ -531,7 +531,10 @@ ObjectCtor::ObjectCtor(ExecutionContext *scope)
 
 Value ObjectCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(ctx->engine->newObject());
+    if (!ctx->argumentCount || ctx->argument(0).isUndefined() || ctx->argument(0).isNull())
+        ctx->thisObject = Value::fromObject(ctx->engine->newObject());
+    else
+        ctx->thisObject = __qmljs_to_object(ctx->argument(0), ctx);
     return ctx->thisObject;
 }
 
