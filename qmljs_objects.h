@@ -442,7 +442,7 @@ struct Object: Managed {
 
     virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
     virtual PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
-    virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill);
+    PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name);
     virtual void __put__(ExecutionContext *ctx, String *name, Value value);
     virtual bool __canPut__(ExecutionContext *ctx, String *name);
     virtual bool __hasProperty__(const ExecutionContext *ctx, String *name) const;
@@ -707,11 +707,12 @@ struct URIErrorObject: ErrorObject {
 
 struct ArgumentsObject: Object {
     ExecutionContext *context;
-    ArgumentsObject(ExecutionContext *context): context(context) {}
+    ArgumentsObject(ExecutionContext *context);
     virtual QString className() { return QStringLiteral("Arguments"); }
     virtual ArgumentsObject *asArgumentsObject() { return this; }
     virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty);
-    virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill);
+    virtual void __put__(ExecutionContext *ctx, String *name, Value value);
+    virtual bool __canPut__(ExecutionContext *ctx, String *name);
 };
 
 } // namespace VM

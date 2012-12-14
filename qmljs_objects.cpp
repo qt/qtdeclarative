@@ -107,10 +107,11 @@ Value Object::getValue(ExecutionContext *ctx, PropertyDescriptor *p) const
 bool Object::inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx)
 {
     PropertyDescriptor to_fill;
-    PropertyDescriptor *pd = __getPropertyDescriptor__(ctx, name, &to_fill);
-    if (!pd)
+    bool hasProperty = false;
+    Value v = __get__(ctx, name, &hasProperty);
+    if (!hasProperty)
         return false;
-    Value result = op(getValue(ctx, pd), rhs, ctx);
+    Value result = op(v, rhs, ctx);
     __put__(ctx, name, result);
     return true;
 }
@@ -182,14 +183,14 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *, String *name)
 }
 
 // Section 8.12.2
-PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill)
+PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, String *name)
 {
     if (members)
         if (PropertyDescriptor *p = members->find(name))
             return p;
 
     if (prototype)
-        return prototype->__getPropertyDescriptor__(ctx, name, to_fill);
+        return prototype->__getPropertyDescriptor__(ctx, name);
     return 0;
 }
 
@@ -202,8 +203,7 @@ Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
         return Value::fromObject(prototype);
     }
 
-    PropertyDescriptor tmp;
-    if (PropertyDescriptor *p = __getPropertyDescriptor__(ctx, name, &tmp)) {
+    if (PropertyDescriptor *p = __getPropertyDescriptor__(ctx, name)) {
         if (hasProperty)
             *hasProperty = true;
         return getValue(ctx, p);
@@ -226,8 +226,7 @@ bool Object::__canPut__(ExecutionContext *ctx, String *name)
     if (! prototype)
         return extensible;
 
-    PropertyDescriptor tmp;
-    if (PropertyDescriptor *p = prototype->__getPropertyDescriptor__(ctx, name, &tmp)) {
+    if (PropertyDescriptor *p = prototype->__getPropertyDescriptor__(ctx, name)) {
         if (p->isAccessor())
             return p->set != 0;
         if (!extensible)
@@ -263,9 +262,8 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
         }
 
         // clause 4
-        PropertyDescriptor tmp;
         if (!pd && prototype)
-            pd = prototype->__getPropertyDescriptor__(ctx, name, &tmp);
+            pd = prototype->__getPropertyDescriptor__(ctx, name);
 
         // Clause 5
         if (pd && pd->isAccessor()) {
@@ -804,22 +802,45 @@ Value ArgumentsObject::__get__(ExecutionContext *ctx, String *name, bool *hasPro
             *hasProperty = true;
         return Value::fromInt32(context->argumentCount);
     }
+    if (context) {
+        bool ok = false;
+        int idx = name->toQString().toInt(&ok);
+        if (ok && idx >= 0 && idx < context->argumentCount)
+            return context->argument(idx);
+    }
+
     return Object::__get__(ctx, name, hasProperty);
 }
 
-PropertyDescriptor *ArgumentsObject::__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill)
+
+ArgumentsObject::ArgumentsObject(ExecutionContext *context)
+    : context(context)
+{
+    defineDefaultProperty(context->engine->id_length, Value::fromInt32(context->argumentCount));
+}
+
+void ArgumentsObject::__put__(ExecutionContext *ctx, String *name, Value value)
 {
     if (context) {
-        const quint32 i = Value::fromString(name).toUInt32(ctx);
-        if (i < context->argumentCount) {
-            *to_fill = PropertyDescriptor::fromValue(context->argument(i));
-            to_fill->writable = PropertyDescriptor::Disabled;
-            to_fill->enumberable = PropertyDescriptor::Disabled;
-            return to_fill;
-        }
+        bool ok = false;
+        int idx = name->toQString().toInt(&ok);
+        if (ok && idx >= 0 && idx < context->argumentCount)
+            context->arguments[idx] = value;
     }
 
-    return Object::__getPropertyDescriptor__(ctx, name, to_fill);
+    return Object::__put__(ctx, name, value);
+}
+
+bool ArgumentsObject::__canPut__(ExecutionContext *ctx, String *name)
+{
+    if (context) {
+        bool ok = false;
+        int idx = name->toQString().toInt(&ok);
+        if (ok && idx >= 0 && idx < context->argumentCount)
+            return true;
+    }
+
+    return Object::__canPut__(ctx, name);
 }
 
 NativeFunction::NativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
