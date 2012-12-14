@@ -184,8 +184,9 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *, String *name)
 // Section 8.12.2
 PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill)
 {
-    if (PropertyDescriptor *p = __getOwnProperty__(ctx, name))
-        return p;
+    if (members)
+        if (PropertyDescriptor *p = members->find(name))
+            return p;
 
     if (prototype)
         return prototype->__getPropertyDescriptor__(ctx, name, to_fill);
@@ -193,15 +194,23 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, Str
 }
 
 // Section 8.12.3
-Value Object::__get__(ExecutionContext *ctx, String *name)
+Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 {
-    if (name->isEqualTo(ctx->engine->id___proto__))
+    if (name->isEqualTo(ctx->engine->id___proto__)) {
+        if (hasProperty)
+            *hasProperty = true;
         return Value::fromObject(prototype);
+    }
 
     PropertyDescriptor tmp;
-    if (PropertyDescriptor *p = __getPropertyDescriptor__(ctx, name, &tmp))
+    if (PropertyDescriptor *p = __getPropertyDescriptor__(ctx, name, &tmp)) {
+        if (hasProperty)
+            *hasProperty = true;
         return getValue(ctx, p);
+    }
 
+    if (hasProperty)
+        *hasProperty = false;
     return Value::undefinedValue();
 }
 
@@ -430,11 +439,14 @@ void ForEachIteratorObject::getCollectables(QVector<Object *> &objects)
         objects.append(current);
 }
 
-Value ArrayObject::__get__(ExecutionContext *ctx, String *name)
+Value ArrayObject::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 {
-    if (name->isEqualTo(ctx->engine->id_length))
+    if (name->isEqualTo(ctx->engine->id_length)) {
+        if (hasProperty)
+            *hasProperty = true;
         return Value::fromDouble(value.size());
-    return Object::__get__(ctx, name);
+    }
+    return Object::__get__(ctx, name, hasProperty);
 }
 
 bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx)
@@ -718,28 +730,38 @@ Value IsFiniteFunction::call(ExecutionContext *context, Value /*thisObject*/, Va
 }
 
 
-Value RegExpObject::__get__(ExecutionContext *ctx, String *name)
+Value RegExpObject::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     QString n = name->toQString();
+    Value v = Value::undefinedValue();
     if (n == QLatin1String("source"))
-        return Value::fromString(ctx, value.pattern());
+        v = Value::fromString(ctx, value.pattern());
     else if (n == QLatin1String("global"))
-        return Value::fromBoolean(global);
+        v = Value::fromBoolean(global);
     else if (n == QLatin1String("ignoreCase"))
-        return Value::fromBoolean(value.patternOptions() & QRegularExpression::CaseInsensitiveOption);
+        v = Value::fromBoolean(value.patternOptions() & QRegularExpression::CaseInsensitiveOption);
     else if (n == QLatin1String("multiline"))
-        return Value::fromBoolean(value.patternOptions() & QRegularExpression::MultilineOption);
+        v = Value::fromBoolean(value.patternOptions() & QRegularExpression::MultilineOption);
     else if (n == QLatin1String("lastIndex"))
-        return lastIndex;
-    return Object::__get__(ctx, name);
+        v = lastIndex;
+    if (v.type() != Value::Undefined_Type) {
+        if (hasProperty)
+            *hasProperty = true;
+        return v;
+    }
+
+    return Object::__get__(ctx, name, hasProperty);
 }
 
-Value ErrorObject::__get__(ExecutionContext *ctx, String *name)
+Value ErrorObject::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     QString n = name->toQString();
-    if (n == QLatin1String("message"))
+    if (n == QLatin1String("message")) {
+        if (hasProperty)
+            *hasProperty = true;
         return value;
-    return Object::__get__(ctx, name);
+    }
+    return Object::__get__(ctx, name, hasProperty);
 }
 
 void ErrorObject::setNameProperty(ExecutionContext *ctx)
@@ -775,11 +797,14 @@ Value ScriptFunction::construct(VM::ExecutionContext *ctx)
     return ctx->thisObject;
 }
 
-Value ArgumentsObject::__get__(ExecutionContext *ctx, String *name)
+Value ArgumentsObject::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 {
-    if (name->isEqualTo(ctx->engine->id_length))
+    if (name->isEqualTo(ctx->engine->id_length)) {
+        if (hasProperty)
+            *hasProperty = true;
         return Value::fromInt32(context->argumentCount);
-    return Object::__get__(ctx, name);
+    }
+    return Object::__get__(ctx, name, hasProperty);
 }
 
 PropertyDescriptor *ArgumentsObject::__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill)

@@ -53,7 +53,7 @@ struct ObjectCtor: FunctionObject
 
     virtual Value construct(ExecutionContext *ctx);
     virtual Value call(ExecutionContext *ctx);
-    virtual Value __get__(ExecutionContext *ctx, String *name);
+    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty);
 };
 
 struct ObjectPrototype: Object

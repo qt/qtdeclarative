@@ -440,7 +440,7 @@ struct Object: Managed {
     virtual ErrorObject *asErrorObject() { return 0; }
     virtual ArgumentsObject *asArgumentsObject() { return 0; }
 
-    virtual Value __get__(ExecutionContext *ctx, String *name);
+    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
     virtual PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
     virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill);
     virtual void __put__(ExecutionContext *ctx, String *name, Value value);
@@ -519,7 +519,7 @@ struct ArrayObject: Object {
     ArrayObject(const Array &value): value(value) {}
     virtual QString className() { return QStringLiteral("Array"); }
     virtual ArrayObject *asArrayObject() { return this; }
-    virtual Value __get__(ExecutionContext *ctx, String *name);
+    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty);
 
     virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
 
@@ -642,7 +642,7 @@ struct RegExpObject: Object {
     RegExpObject(const QRegularExpression &value, bool global): value(value), lastIndex(Value::fromInt32(0)), global(global) {}
     virtual QString className() { return QStringLiteral("RegExp"); }
     virtual RegExpObject *asRegExpObject() { return this; }
-    virtual Value __get__(ExecutionContext *ctx, String *name);
+    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty);
 };
 
 struct ErrorObject: Object {
@@ -650,7 +650,7 @@ struct ErrorObject: Object {
     ErrorObject(const Value &message): value(message) {}
     virtual QString className() { return QStringLiteral("Error"); }
     virtual ErrorObject *asErrorObject() { return this; }
-    virtual Value __get__(ExecutionContext *ctx, String *name);
+    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty);
 
     virtual struct SyntaxErrorObject *asSyntaxError() { return 0; }
 
@@ -710,7 +710,7 @@ struct ArgumentsObject: Object {
     ArgumentsObject(ExecutionContext *context): context(context) {}
     virtual QString className() { return QStringLiteral("Arguments"); }
     virtual ArgumentsObject *asArgumentsObject() { return this; }
-    virtual Value __get__(ExecutionContext *ctx, String *name);
+    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty);
     virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name, PropertyDescriptor *to_fill);
 };
 

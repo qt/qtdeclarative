@@ -542,11 +542,14 @@ Value ObjectCtor::call(ExecutionContext *ctx)
     return __qmljs_to_object(ctx->argument(0), ctx);
 }
 
-Value ObjectCtor::__get__(ExecutionContext *ctx, String *name)
+Value ObjectCtor::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 {
-    if (name == ctx->engine->id_length)
+    if (name == ctx->engine->id_length) {
+        if (hasProperty)
+            *hasProperty = true;
         return Value::fromDouble(1);
-    return Object::__get__(ctx, name);
+    }
+    return Object::__get__(ctx, name, hasProperty);
 }
 
 void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)

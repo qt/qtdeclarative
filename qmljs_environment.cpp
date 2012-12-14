@@ -148,8 +148,12 @@ Value ExecutionContext::getBindingValue(ExecutionContext *scope, String *name, b
         if (__qmljs_string_equal(formals()[i], name))
             return arguments[i];
     }
-    if (activation && activation->__hasProperty__(this, name))
-        return activation->__get__(scope, name);
+    if (activation) {
+        bool hasProperty = false;
+        Value v = activation->__get__(scope, name, &hasProperty);
+        if (hasProperty)
+            return v;
+    }
     assert(false);
 }
 
@@ -272,8 +276,10 @@ Value ExecutionContext::getProperty(String *name)
         if (ctx->withObject) {
             With *w = ctx->withObject;
             while (w) {
-                if (w->object->__hasProperty__(ctx, name))
-                    return w->object->__get__(ctx, name);
+                bool hasProperty = false;
+                Value v = w->object->__get__(ctx, name, &hasProperty);
+                if (hasProperty)
+                    return v;
                 w = w->next;
             }
         }
@@ -284,8 +290,12 @@ Value ExecutionContext::getProperty(String *name)
         for (unsigned int i = 0; i < ctx->formalCount(); ++i)
             if (__qmljs_string_equal(ctx->formals()[i], name))
                 return ctx->arguments[i];
-        if (ctx->activation && ctx->activation->__hasProperty__(ctx, name))
-            return ctx->activation->__get__(ctx, name);
+        if (ctx->activation) {
+            bool hasProperty = false;
+            Value v = ctx->activation->__get__(ctx, name, &hasProperty);
+            if (hasProperty)
+                return v;
+        }
         if (name->isEqualTo(ctx->engine->id_arguments)) {
             Value arguments = Value::fromObject(new (engine->memoryManager) ArgumentsObject(this));
             createMutableBinding(ctx->engine->id_arguments, false);
@@ -306,8 +316,10 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
         if (ctx->withObject) {
             With *w = ctx->withObject;
             while (w) {
-                if (w->object->__hasProperty__(ctx, name))
-                    return w->object->__get__(ctx, name);
+                bool hasProperty = false;
+                Value v = w->object->__get__(ctx, name, &hasProperty);
+                if (hasProperty)
+                    return v;
                 w = w->next;
             }
         }
@@ -318,8 +330,12 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
         for (unsigned int i = 0; i < ctx->formalCount(); ++i)
             if (__qmljs_string_equal(ctx->formals()[i], name))
                 return ctx->arguments[i];
-        if (ctx->activation && ctx->activation->__hasProperty__(ctx, name))
-            return ctx->activation->__get__(ctx, name);
+        if (ctx->activation) {
+            bool hasProperty = false;
+            Value v = ctx->activation->__get__(ctx, name, &hasProperty);
+            if (hasProperty)
+                return v;
+        }
         if (name->isEqualTo(ctx->engine->id_arguments)) {
             Value arguments = Value::fromObject(new (engine->memoryManager) ArgumentsObject(this));
             createMutableBinding(ctx->engine->id_arguments, false);
