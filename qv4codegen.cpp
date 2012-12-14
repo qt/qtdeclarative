@@ -1194,6 +1194,16 @@ bool Codegen::visit(ConditionalExpression *ast)
 bool Codegen::visit(DeleteExpression *ast)
 {
     Result expr = expression(ast->expression);
+    if ((*expr)->asTemp() && (*expr)->asTemp()->index < 0) {
+        // expr points to a function argument
+        if (_function->isStrict)
+            throwSyntaxError(ast->deleteToken, "Delete of an unqualified identifier in strict mode.");
+        // can't delete an argument, just evaluate expr for side effects
+        _expr.accept(nx);
+        return false;
+    }
+    if (_function->isStrict && (*expr)->asName())
+        throwSyntaxError(ast->deleteToken, "Delete of an unqualified identifier in strict mode.");
     IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(reference(*expr));
     _expr.code = call(_block->NAME(IR::Name::builtin_delete, ast->deleteToken.startLine, ast->deleteToken.startColumn), args);
