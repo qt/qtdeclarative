@@ -255,6 +255,14 @@ protected:
             }
         }
     }
+    void checkForArguments(AST::FormalParameterList *parameters)
+    {
+        while (parameters) {
+            if (parameters->name == QStringLiteral("arguments"))
+                _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
+            parameters = parameters->next;
+        }
+    }
 
     virtual bool visit(Program *ast)
     {
@@ -273,6 +281,8 @@ protected:
         if (! _env->hasDirectEval) {
             if (IdentifierExpression *id = cast<IdentifierExpression *>(ast->base)) {
                 if (id->name == QStringLiteral("eval")) {
+                    if (_env->usesArgumentsObject == Environment::ArgumentsObjectUnknown)
+                        _env->usesArgumentsObject = Environment::ArgumentsObjectUsed;
                     _env->hasDirectEval = true;
                 }
             }
@@ -296,6 +306,8 @@ protected:
     virtual bool visit(VariableDeclaration *ast)
     {
         checkName(ast->name, ast->identifierToken);
+        if (ast->name == QLatin1String("arguments"))
+            _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
         _env->enter(ast->name.toString());
         return true;
     }
@@ -303,6 +315,8 @@ protected:
     virtual bool visit(IdentifierExpression *ast)
     {
         checkName(ast->name, ast->identifierToken);
+        if (_env->usesArgumentsObject == Environment::ArgumentsObjectUnknown && ast->name == QLatin1String("arguments"))
+            _env->usesArgumentsObject = Environment::ArgumentsObjectUsed;
         return true;
     }
 
@@ -313,6 +327,7 @@ protected:
             _env->enter(ast->name.toString());
         }
         enterEnvironment(ast);
+        checkForArguments(ast->formals);
         if (ast->body)
             checkDirectivePrologue(ast->body->elements);
         return true;
@@ -328,7 +343,10 @@ protected:
         _env->functions.append(ast);
         _env->hasNestedFunctions = true;
         _env->enter(ast->name.toString());
+        if (ast->name == QLatin1String("arguments"))
+            _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
         enterEnvironment(ast);
+        checkForArguments(ast->formals);
         if (ast->body)
             checkDirectivePrologue(ast->body->elements);
         return true;
@@ -1661,6 +1679,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     IR::BasicBlock *exitBlock = function->newBasicBlock(IR::Function::DontInsertBlock);
     IR::BasicBlock *throwBlock = function->newBasicBlock();
     function->hasDirectEval = _env->hasDirectEval;
+    function->usesArgumentsObject = (_env->usesArgumentsObject == Environment::ArgumentsObjectUsed);
     function->maxNumberOfArguments = _env->maxNumberOfArguments;
     function->isStrict = _env->isStrict;
 

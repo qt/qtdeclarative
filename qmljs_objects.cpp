@@ -106,7 +106,6 @@ Value Object::getValue(ExecutionContext *ctx, PropertyDescriptor *p) const
 
 bool Object::inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx)
 {
-    PropertyDescriptor to_fill;
     bool hasProperty = false;
     Value v = __get__(ctx, name, &hasProperty);
     if (!hasProperty)
@@ -547,6 +546,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
     if (!function->name.isEmpty())
         name = scope->engine->identifier(function->name);
     needsActivation = function->needsActivation();
+    usesArgumentsObject = function->usesArgumentsObject;
     strictMode = function->isStrict;
     formalParameterCount = function->formals.size();
     if (formalParameterCount) {
@@ -795,52 +795,21 @@ Value ScriptFunction::construct(VM::ExecutionContext *ctx)
     return ctx->thisObject;
 }
 
-Value ArgumentsObject::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
-{
-    if (name->isEqualTo(ctx->engine->id_length)) {
-        if (hasProperty)
-            *hasProperty = true;
-        return Value::fromInt32(context->argumentCount);
-    }
-    if (context) {
-        bool ok = false;
-        int idx = name->toQString().toInt(&ok);
-        if (ok && idx >= 0 && idx < context->argumentCount)
-            return context->argument(idx);
-    }
-
-    return Object::__get__(ctx, name, hasProperty);
-}
-
-
 ArgumentsObject::ArgumentsObject(ExecutionContext *context)
-    : context(context)
 {
     defineDefaultProperty(context->engine->id_length, Value::fromInt32(context->argumentCount));
-}
-
-void ArgumentsObject::__put__(ExecutionContext *ctx, String *name, Value value)
-{
-    if (context) {
-        bool ok = false;
-        int idx = name->toQString().toInt(&ok);
-        if (ok && idx >= 0 && idx < context->argumentCount)
-            context->arguments[idx] = value;
+    for (uint i = 0; i < context->argumentCount; ++i)
+        __put__(context, QString::number(i), context->arguments[i]);
+    if (context->strictMode) {
+        FunctionObject *thrower = context->engine->newNativeFunction(context, 0, __qmljs_throw_type_error);
+        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
+        pd.configurable = PropertyDescriptor::Disabled;
+        pd.enumberable = PropertyDescriptor::Disabled;
+        __defineOwnProperty__(context, QStringLiteral("callee"), &pd);
+        __defineOwnProperty__(context, QStringLiteral("caller"), &pd);
+    } else {
+        defineDefaultProperty(context, QStringLiteral("callee"), Value::fromObject(context->function));
     }
-
-    return Object::__put__(ctx, name, value);
-}
-
-bool ArgumentsObject::__canPut__(ExecutionContext *ctx, String *name)
-{
-    if (context) {
-        bool ok = false;
-        int idx = name->toQString().toInt(&ok);
-        if (ok && idx >= 0 && idx < context->argumentCount)
-            return true;
-    }
-
-    return Object::__canPut__(ctx, name);
 }
 
 NativeFunction::NativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))

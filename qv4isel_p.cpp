@@ -34,6 +34,7 @@ VM::Function *EvalInstructionSelection::createFunctionMapping(VM::ExecutionEngin
     _irToVM.insert(irFunction, vmFunction);
 
     vmFunction->hasDirectEval = irFunction->hasDirectEval;
+    vmFunction->usesArgumentsObject = irFunction->usesArgumentsObject;
     vmFunction->isStrict = irFunction->isStrict;
 
     foreach (const QString *formal, irFunction->formals)

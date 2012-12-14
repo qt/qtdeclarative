@@ -296,12 +296,6 @@ Value ExecutionContext::getProperty(String *name)
             if (hasProperty)
                 return v;
         }
-        if (name->isEqualTo(ctx->engine->id_arguments)) {
-            Value arguments = Value::fromObject(new (engine->memoryManager) ArgumentsObject(this));
-            createMutableBinding(ctx->engine->id_arguments, false);
-            setMutableBinding(this, ctx->engine->id_arguments, arguments);
-            return arguments;
-        }
     }
     throwReferenceError(Value::fromString(name));
     return Value::undefinedValue();
@@ -335,12 +329,6 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             Value v = ctx->activation->__get__(ctx, name, &hasProperty);
             if (hasProperty)
                 return v;
-        }
-        if (name->isEqualTo(ctx->engine->id_arguments)) {
-            Value arguments = Value::fromObject(new (engine->memoryManager) ArgumentsObject(this));
-            createMutableBinding(ctx->engine->id_arguments, false);
-            setMutableBinding(this, ctx->engine->id_arguments, arguments);
-            return arguments;
         }
     }
     return Value::undefinedValue();
@@ -417,14 +405,21 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
         if (argc < function->formalParameterCount)
             std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
     }
+
     locals = function->varCount ? new Value[function->varCount] : 0;
     if (function->varCount)
         std::fill(locals, locals + function->varCount, Value::undefinedValue());
 
     activation = 0;
-
     withObject = 0;
 
+    if (function->usesArgumentsObject) {
+        ArgumentsObject *args = new (engine->memoryManager) ArgumentsObject(this);
+        args->prototype = engine->objectPrototype;
+        Value arguments = Value::fromObject(args);
+        createMutableBinding(engine->id_arguments, false);
+        setMutableBinding(this, engine->id_arguments, arguments);
+    }
 
     if (engine->debugger)
         engine->debugger->aboutToCall(f, this);

@@ -539,6 +539,7 @@ struct Function {
     QVector<Function *> nestedFunctions;
 
     bool hasDirectEval: 1;
+    bool usesArgumentsObject : 1;
     bool isStrict: 1;
 
     Function(const QString &name)
@@ -546,6 +547,7 @@ struct Function {
         , code(0)
         , codeData(0)
         , hasDirectEval(false)
+        , usesArgumentsObject(false)
         , isStrict(false)
     {}
     ~Function();
@@ -563,6 +565,7 @@ struct FunctionObject: Object {
     String **varList;
     unsigned int varCount;
     bool needsActivation;
+    bool usesArgumentsObject;
     bool strictMode;
 
     FunctionObject(ExecutionContext *scope)
@@ -573,6 +576,7 @@ struct FunctionObject: Object {
         , varList(0)
         , varCount(0)
         , needsActivation(false)
+        , usesArgumentsObject(false)
         , strictMode(false) {}
 
     virtual QString className() { return QStringLiteral("Function"); }
@@ -706,13 +710,9 @@ struct URIErrorObject: ErrorObject {
 };
 
 struct ArgumentsObject: Object {
-    ExecutionContext *context;
     ArgumentsObject(ExecutionContext *context);
     virtual QString className() { return QStringLiteral("Arguments"); }
     virtual ArgumentsObject *asArgumentsObject() { return this; }
-    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty);
-    virtual void __put__(ExecutionContext *ctx, String *name, Value value);
-    virtual bool __canPut__(ExecutionContext *ctx, String *name);
 };
 
 } // namespace VM

@@ -117,6 +117,13 @@ protected:
         bool hasDirectEval;
         bool hasNestedFunctions;
         bool isStrict;
+        enum UsesArgumentsObject {
+            ArgumentsObjectUnknown,
+            ArgumentsObjectNotUsed,
+            ArgumentsObjectUsed
+        };
+
+        UsesArgumentsObject usesArgumentsObject;
 
         Environment(Environment *parent)
             : parent(parent)
@@ -124,6 +131,7 @@ protected:
             , hasDirectEval(false)
             , hasNestedFunctions(false)
             , isStrict(false)
+            , usesArgumentsObject(ArgumentsObjectUnknown)
         {
             if (parent && parent->isStrict)
                 isStrict = true;

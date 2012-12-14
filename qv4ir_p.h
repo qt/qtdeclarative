@@ -610,6 +610,7 @@ struct Function {
     int insideWith;
 
     bool hasDirectEval: 1;
+    bool usesArgumentsObject : 1;
     bool isStrict: 1;
 
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
@@ -621,6 +622,7 @@ struct Function {
         , maxNumberOfArguments(0)
         , insideWith(0)
         , hasDirectEval(false)
+        , usesArgumentsObject(false)
         , isStrict(false)
     { this->name = newString(name); }
 
