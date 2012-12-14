@@ -79,6 +79,7 @@ ExecutionEngine::ExecutionEngine(MemoryManager *memoryManager, EvalISelFactory *
 
     rootContext = newContext();
     rootContext->init(this);
+    current = rootContext;
 
     id_length = identifier(QStringLiteral("length"));
     id_prototype = identifier(QStringLiteral("prototype"));
