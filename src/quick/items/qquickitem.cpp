@@ -739,7 +739,12 @@ void QQuickKeyNavigationAttached::setFocusNavigation(QQuickItem *currentItem, co
     while (currentItem != initialItem && isNextItem);
 }
 
-const QQuickKeysAttached::SigMap QQuickKeysAttached::sigMap[] = {
+struct SigMap {
+    int key;
+    const char *sig;
+};
+
+const SigMap sigMap[] = {
     { Qt::Key_Left, "leftPressed" },
     { Qt::Key_Right, "rightPressed" },
     { Qt::Key_Up, "upPressed" },
@@ -770,6 +775,21 @@ const QQuickKeysAttached::SigMap QQuickKeysAttached::sigMap[] = {
     { Qt::Key_VolumeDown, "volumeDownPressed" },
     { 0, 0 }
 };
+
+const QByteArray QQuickKeysAttached::keyToSignal(int key)
+{
+    QByteArray keySignal;
+    if (key >= Qt::Key_0 && key <= Qt::Key_9) {
+        keySignal = "digit0Pressed";
+        keySignal[5] = '0' + (key - Qt::Key_0);
+    } else {
+        int i = 0;
+        while (sigMap[i].key && sigMap[i].key != key)
+            ++i;
+        keySignal = sigMap[i].sig;
+    }
+    return keySignal;
+}
 
 bool QQuickKeysAttached::isConnected(const char *signalName)
 {

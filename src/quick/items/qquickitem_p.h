@@ -819,28 +819,9 @@ private:
     virtual void inputMethodEvent(QInputMethodEvent *, bool post);
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery query) const;
 #endif
-    const QByteArray keyToSignal(int key) {
-        QByteArray keySignal;
-        if (key >= Qt::Key_0 && key <= Qt::Key_9) {
-            keySignal = "digit0Pressed";
-            keySignal[5] = '0' + (key - Qt::Key_0);
-        } else {
-            int i = 0;
-            while (sigMap[i].key && sigMap[i].key != key)
-                ++i;
-            keySignal = sigMap[i].sig;
-        }
-        return keySignal;
-    }
+    const QByteArray keyToSignal(int key);
 
     bool isConnected(const char *signalName);
-
-    struct SigMap {
-        int key;
-        const char *sig;
-    };
-
-    static const SigMap sigMap[];
 };
 
 Qt::MouseButtons QQuickItemPrivate::acceptedMouseButtons() const
