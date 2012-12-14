@@ -554,7 +554,7 @@ struct Function {
 
     inline bool hasNestedFunctions() const { return !nestedFunctions.isEmpty(); }
 
-    inline bool needsActivation() const { return hasNestedFunctions() || hasDirectEval; }
+    inline bool needsActivation() const { return hasNestedFunctions() || hasDirectEval || usesArgumentsObject; }
 };
 
 struct FunctionObject: Object {
@@ -710,9 +710,17 @@ struct URIErrorObject: ErrorObject {
 };
 
 struct ArgumentsObject: Object {
+    ExecutionContext *context;
+    int currentIndex;
     ArgumentsObject(ExecutionContext *context);
     virtual QString className() { return QStringLiteral("Arguments"); }
     virtual ArgumentsObject *asArgumentsObject() { return this; }
+
+    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
+    virtual void __put__(ExecutionContext *ctx, String *name, Value value);
+
+    static Value method_getArg(ExecutionContext *ctx);
+    static Value method_setArg(ExecutionContext *ctx);
 };
 
 } // namespace VM

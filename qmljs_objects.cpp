@@ -796,11 +796,13 @@ Value ScriptFunction::construct(VM::ExecutionContext *ctx)
 }
 
 ArgumentsObject::ArgumentsObject(ExecutionContext *context)
+    : context(context)
+    , currentIndex(-1)
 {
     defineDefaultProperty(context->engine->id_length, Value::fromInt32(context->argumentCount));
-    for (uint i = 0; i < context->argumentCount; ++i)
-        __put__(context, QString::number(i), context->arguments[i]);
     if (context->strictMode) {
+        for (uint i = 0; i < context->argumentCount; ++i)
+            Object::__put__(context, QString::number(i), context->arguments[i]);
         FunctionObject *thrower = context->engine->newNativeFunction(context, 0, __qmljs_throw_type_error);
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
         pd.configurable = PropertyDescriptor::Disabled;
@@ -808,8 +810,64 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context)
         __defineOwnProperty__(context, QStringLiteral("callee"), &pd);
         __defineOwnProperty__(context, QStringLiteral("caller"), &pd);
     } else {
+        FunctionObject *get = context->engine->newNativeFunction(context, 0, method_getArg);
+        FunctionObject *set = context->engine->newNativeFunction(context, 0, method_setArg);
+        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(get, set);
+        pd.configurable = PropertyDescriptor::Enabled;
+        pd.enumberable = PropertyDescriptor::Enabled;
+        for (int i = 0; i < context->argumentCount; ++i)
+            __defineOwnProperty__(context, QString::number(i), &pd);
         defineDefaultProperty(context, QStringLiteral("callee"), Value::fromObject(context->function));
     }
+}
+
+Value ArgumentsObject::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
+{
+    bool ok = false;
+    currentIndex = name->toQString().toInt(&ok);
+    if (!ok)
+        currentIndex = -1;
+    Value result = Object::__get__(ctx, name, hasProperty);
+    currentIndex = -1;
+    return result;
+}
+
+void ArgumentsObject::__put__(ExecutionContext *ctx, String *name, Value value)
+{
+    bool ok = false;
+    currentIndex = name->toQString().toInt(&ok);
+    if (!ok)
+        currentIndex = -1;
+    Object::__put__(ctx, name, value);
+    currentIndex = -1;
+}
+
+Value ArgumentsObject::method_getArg(ExecutionContext *ctx)
+{
+    Object *that = ctx->thisObject.asObject();
+    if (!that)
+        __qmljs_throw_type_error(ctx);
+    ArgumentsObject *args = that->asArgumentsObject();
+    if (!args)
+        __qmljs_throw_type_error(ctx);
+
+    assert(ctx != args->context);
+    assert(args->currentIndex >= 0 && args->currentIndex < args->context->argumentCount);
+    return args->context->argument(args->currentIndex);
+}
+
+Value ArgumentsObject::method_setArg(ExecutionContext *ctx)
+{
+    Object *that = ctx->thisObject.asObject();
+    if (!that)
+        __qmljs_throw_type_error(ctx);
+    ArgumentsObject *args = that->asArgumentsObject();
+    if (!args)
+        __qmljs_throw_type_error(ctx);
+
+    assert(ctx != args->context);
+    assert(args->currentIndex >= 0 && args->currentIndex < args->context->argumentCount);
+    args->context->arguments[args->currentIndex] = ctx->arguments[0];
 }
 
 NativeFunction::NativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
