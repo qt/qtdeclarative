@@ -527,8 +527,14 @@ Value FunctionObject::call(ExecutionContext *ctx)
 
 Value FunctionObject::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(ctx->engine->newObject());
-    call(ctx);
+    Object *obj = ctx->engine->newObject();
+    Value proto = __get__(ctx, ctx->engine->id_prototype);
+    if (proto.isObject())
+        obj->prototype = proto.objectValue();
+    ctx->thisObject = Value::fromObject(obj);
+    Value result = call(ctx);
+    if (result.isObject())
+        return result;
     return ctx->thisObject;
 }
 
@@ -791,7 +797,9 @@ Value ScriptFunction::construct(VM::ExecutionContext *ctx)
     if (proto.isObject())
         obj->prototype = proto.objectValue();
     ctx->thisObject = Value::fromObject(obj);
-    function->code(ctx, function->codeData);
+    Value result = function->code(ctx, function->codeData);
+    if (result.isObject())
+        return result;
     return ctx->thisObject;
 }
 
