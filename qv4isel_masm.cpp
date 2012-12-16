@@ -94,7 +94,7 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, IR::Temp *t)
         loadPtr(Address(ContextRegister, offsetof(ExecutionContext, locals)), reg);
         offset = t->index * sizeof(Value);
     } else {
-        const int arg = _function->maxNumberOfArguments + t->index - _function->locals.size();
+        const int arg = _function->maxNumberOfArguments + t->index - _function->locals.size() + 1;
         // StackFrameRegister points to its old value on the stack, so even for the first temp we need to
         // subtract at least sizeof(Value).
         offset = - sizeof(Value) * (arg + 1);
@@ -387,7 +387,7 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     Assembler* oldAssembler = _asm;
     _asm = new Assembler(_function);
 
-    int locals = (_function->tempCount - _function->locals.size() + _function->maxNumberOfArguments);
+    int locals = (_function->tempCount - _function->locals.size() + _function->maxNumberOfArguments) + 1;
     locals = (locals + 1) & ~1;
     _asm->enterStandardStackFrame(locals);
 
