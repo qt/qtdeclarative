@@ -497,15 +497,21 @@ bool FunctionObject::hasInstance(ExecutionContext *ctx, const Value &value)
 
 Value FunctionObject::construct(ExecutionContext *context, Value *args, int argc)
 {
+    Object *obj = context->engine->newObject();
+    Value proto = __get__(context, context->engine->id_prototype);
+    if (proto.isObject())
+        obj->prototype = proto.objectValue();
+
     ExecutionContext k;
     ExecutionContext *ctx = needsActivation ? context->engine->newContext() : &k;
-    ctx->initCallContext(context, Value::undefinedValue(), this, args, argc);
+
+    ctx->initCallContext(context, Value::fromObject(obj), this, args, argc);
     Value result = construct(ctx);
-    ctx->wireUpPrototype();
     ctx->leaveCallContext();
-    if (ctx != &k)
-        delete ctx;
-    return result;
+
+    if (result.isObject())
+        return result;
+    return Value::fromObject(obj);
 }
 
 Value FunctionObject::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
@@ -527,15 +533,7 @@ Value FunctionObject::call(ExecutionContext *ctx)
 
 Value FunctionObject::construct(ExecutionContext *ctx)
 {
-    Object *obj = ctx->engine->newObject();
-    Value proto = __get__(ctx, ctx->engine->id_prototype);
-    if (proto.isObject())
-        obj->prototype = proto.objectValue();
-    ctx->thisObject = Value::fromObject(obj);
-    Value result = call(ctx);
-    if (result.isObject())
-        return result;
-    return ctx->thisObject;
+    return call(ctx);
 }
 
 ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
@@ -789,19 +787,6 @@ SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *m
     setNameProperty(ctx);
 }
 
-
-Value ScriptFunction::construct(VM::ExecutionContext *ctx)
-{
-    Object *obj = ctx->engine->newObject();
-    Value proto = __get__(ctx, ctx->engine->id_prototype);
-    if (proto.isObject())
-        obj->prototype = proto.objectValue();
-    ctx->thisObject = Value::fromObject(obj);
-    Value result = function->code(ctx, function->codeData);
-    if (result.isObject())
-        return result;
-    return ctx->thisObject;
-}
 
 ArgumentsObject::ArgumentsObject(ExecutionContext *context)
     : context(context)

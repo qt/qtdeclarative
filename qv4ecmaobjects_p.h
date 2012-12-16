@@ -167,7 +167,6 @@ struct ArrayCtor: FunctionObject
 {
     ArrayCtor(ExecutionContext *scope);
 
-    virtual Value construct(ExecutionContext *ctx);
     virtual Value call(ExecutionContext *ctx);
 };
 

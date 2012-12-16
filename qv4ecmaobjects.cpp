@@ -532,10 +532,8 @@ ObjectCtor::ObjectCtor(ExecutionContext *scope)
 Value ObjectCtor::construct(ExecutionContext *ctx)
 {
     if (!ctx->argumentCount || ctx->argument(0).isUndefined() || ctx->argument(0).isNull())
-        ctx->thisObject = Value::fromObject(ctx->engine->newObject());
-    else
-        ctx->thisObject = __qmljs_to_object(ctx->argument(0), ctx);
-    return ctx->thisObject;
+        return ctx->thisObject;
+    return __qmljs_to_object(ctx->argument(0), ctx);
 }
 
 Value ObjectCtor::call(ExecutionContext *ctx)
@@ -1004,8 +1002,7 @@ Value StringCtor::construct(ExecutionContext *ctx)
         value = Value::fromString(ctx->argument(0).toString(ctx));
     else
         value = Value::fromString(ctx, QString());
-    ctx->thisObject = Value::fromObject(ctx->engine->newStringObject(value));
-    return ctx->thisObject;
+    return Value::fromObject(ctx->engine->newStringObject(value));
 }
 
 Value StringCtor::call(ExecutionContext *ctx)
@@ -1318,8 +1315,7 @@ NumberCtor::NumberCtor(ExecutionContext *scope)
 Value NumberCtor::construct(ExecutionContext *ctx)
 {
     double d = ctx->argumentCount ? ctx->argument(0).toNumber(ctx) : 0;
-    ctx->thisObject = Value::fromObject(ctx->engine->newNumberObject(Value::fromDouble(d)));
-    return ctx->thisObject;
+    return Value::fromObject(ctx->engine->newNumberObject(Value::fromDouble(d)));
 }
 
 Value NumberCtor::call(ExecutionContext *ctx)
@@ -1497,8 +1493,7 @@ BooleanCtor::BooleanCtor(ExecutionContext *scope)
 Value BooleanCtor::construct(ExecutionContext *ctx)
 {
     const double n = ctx->argument(0).toBoolean(ctx);
-    ctx->thisObject = Value::fromObject(ctx->engine->newBooleanObject(Value::fromBoolean(n)));
-    return ctx->thisObject;
+    return Value::fromObject(ctx->engine->newBooleanObject(Value::fromBoolean(n)));
 }
 
 Value BooleanCtor::call(ExecutionContext *ctx)
@@ -1539,13 +1534,6 @@ Value BooleanPrototype::method_valueOf(ExecutionContext *ctx)
 ArrayCtor::ArrayCtor(ExecutionContext *scope)
     : FunctionObject(scope)
 {
-}
-
-Value ArrayCtor::construct(ExecutionContext *ctx)
-{
-    Value result = call(ctx);
-    ctx->thisObject = result;
-    return result;
 }
 
 Value ArrayCtor::call(ExecutionContext *ctx)
@@ -2066,17 +2054,13 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
     QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(ctx->engine, &module));
     VM::Function *vmf = isel->vmFunction(irf);
 
-    ctx->thisObject = Value::fromObject(ctx->engine->newScriptFunction(ctx->engine->rootContext, vmf));
-    return ctx->thisObject;
+    return Value::fromObject(ctx->engine->newScriptFunction(ctx->engine->rootContext, vmf));
 }
 
 // 15.3.1: This is equivalent to new Function(...)
 Value FunctionCtor::call(ExecutionContext *ctx)
 {
-    Value v = ctx->thisObject;
-    Value result = construct(ctx);
-    ctx->thisObject = v;
-    return result;
+    return construct(ctx);
 }
 
 void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -2185,8 +2169,7 @@ Value DateCtor::construct(ExecutionContext *ctx)
     }
 
     Object *d = ctx->engine->newDateObject(Value::fromDouble(t));
-    ctx->thisObject = Value::fromObject(d);
-    return ctx->thisObject;
+    return Value::fromObject(d);
 }
 
 Value DateCtor::call(ExecutionContext *ctx)
@@ -2756,8 +2739,7 @@ Value RegExpCtor::construct(ExecutionContext *ctx)
             ctx->throwTypeError();
 
         RegExpObject *o = ctx->engine->newRegExpObject(re->value, re->global);
-        ctx->thisObject = Value::fromObject(o);
-        return ctx->thisObject;
+        return Value::fromObject(o);
     }
 
     if (r.isUndefined())
@@ -2788,8 +2770,7 @@ Value RegExpCtor::construct(ExecutionContext *ctx)
         ctx->throwTypeError();
 
     RegExpObject *o = ctx->engine->newRegExpObject(re, global);
-    ctx->thisObject = Value::fromObject(o);
-    return ctx->thisObject;
+    return Value::fromObject(o);
 }
 
 Value RegExpCtor::call(ExecutionContext *ctx)
@@ -2799,10 +2780,7 @@ Value RegExpCtor::call(ExecutionContext *ctx)
             return ctx->argument(0);
     }
 
-    Value that = ctx->thisObject;
-    Value result = construct(ctx);
-    ctx->thisObject = that;
-    return result;
+    return construct(ctx);
 }
 
 void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -2880,55 +2858,42 @@ ErrorCtor::ErrorCtor(ExecutionContext *scope)
 
 Value ErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(ctx->engine->newErrorObject(ctx->argument(0)));
-    return ctx->thisObject;
+    return Value::fromObject(ctx->engine->newErrorObject(ctx->argument(0)));
 }
 
 Value ErrorCtor::call(ExecutionContext *ctx)
 {
-    Value that = ctx->thisObject;
-    construct(ctx);
-    ctx->wireUpPrototype();
-    Value res = ctx->thisObject;
-
-    ctx->thisObject = that;
-    return res;
+    return construct(ctx);
 }
 
 Value EvalErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) EvalErrorObject(ctx));
-    return ctx->thisObject;
+    return Value::fromObject(new (ctx->engine->memoryManager) EvalErrorObject(ctx));
 }
 
 Value RangeErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) RangeErrorObject(ctx));
-    return ctx->thisObject;
+    return Value::fromObject(new (ctx->engine->memoryManager) RangeErrorObject(ctx));
 }
 
 Value ReferenceErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) ReferenceErrorObject(ctx));
-    return ctx->thisObject;
+    return Value::fromObject(new (ctx->engine->memoryManager) ReferenceErrorObject(ctx));
 }
 
 Value SyntaxErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) SyntaxErrorObject(ctx, 0));
-    return ctx->thisObject;
+    return Value::fromObject(new (ctx->engine->memoryManager) SyntaxErrorObject(ctx, 0));
 }
 
 Value TypeErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) TypeErrorObject(ctx));
-    return ctx->thisObject;
+    return Value::fromObject(new (ctx->engine->memoryManager) TypeErrorObject(ctx));
 }
 
 Value URIErrorCtor::construct(ExecutionContext *ctx)
 {
-    ctx->thisObject = Value::fromObject(new (ctx->engine->memoryManager) URIErrorObject(ctx));
-    return ctx->thisObject;
+    return Value::fromObject(new (ctx->engine->memoryManager) URIErrorObject(ctx));
 }
 
 void ErrorPrototype::init(ExecutionContext *ctx, const Value &ctor, Object *obj)

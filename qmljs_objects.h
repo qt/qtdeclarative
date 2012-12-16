@@ -598,7 +598,6 @@ struct NativeFunction: FunctionObject {
 
     NativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
     virtual Value call(ExecutionContext *ctx) { return code(ctx); }
-    virtual Value construct(ExecutionContext *ctx) { ctx->thisObject = code(ctx); return ctx->thisObject; }
 };
 
 struct ScriptFunction: FunctionObject {
@@ -608,7 +607,6 @@ struct ScriptFunction: FunctionObject {
     virtual ~ScriptFunction();
 
     virtual Value call(ExecutionContext *ctx);
-    virtual Value construct(ExecutionContext *ctx);
 
     virtual ScriptFunction *asScriptFunction() { return this; }
 };
