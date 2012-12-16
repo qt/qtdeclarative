@@ -217,8 +217,9 @@ private:
 
     enum RegistrationType {
         CppType = 0,
-        SingletonType = 1
-        // In the future, we should register all types via QQmlType, including Composite types.
+        SingletonType = 1,
+        InterfaceType = 2
+        // In the near future, we should register all types via QQmlType, including Composite types.
     };
     friend QString registrationTypeString(RegistrationType);
     friend bool checkRegistration(RegistrationType, QQmlMetaTypeData *, const char *, const QString &);
