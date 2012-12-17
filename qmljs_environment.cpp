@@ -273,8 +273,7 @@ Value ExecutionContext::getProperty(String *name)
         return thisObject;
 
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
-        if (ctx->withObject) {
-            With *w = ctx->withObject;
+        if (With *w = ctx->withObject) {
             while (w) {
                 bool hasProperty = false;
                 Value v = w->object->__get__(ctx, name, &hasProperty);
@@ -284,12 +283,16 @@ Value ExecutionContext::getProperty(String *name)
             }
         }
 
-        for (unsigned int i = 0; i < ctx->variableCount(); ++i)
-            if (ctx->variables()[i]->isEqualTo(name))
-                return ctx->locals[i];
-        for (unsigned int i = 0; i < ctx->formalCount(); ++i)
-            if (ctx->formals()[i]->isEqualTo(name))
-                return ctx->arguments[i];
+        if (FunctionObject *f = ctx->function) {
+            if (f->needsActivation || ctx->withObject) {
+                for (unsigned int i = 0; i < f->varCount; ++i)
+                    if (f->varList[i]->isEqualTo(name))
+                        return ctx->locals[i];
+                for (unsigned int i = 0; i < f->formalParameterCount; ++i)
+                    if (f->formalParameterList[i]->isEqualTo(name))
+                        return ctx->arguments[i];
+            }
+        }
         if (ctx->activation) {
             bool hasProperty = false;
             Value v = ctx->activation->__get__(ctx, name, &hasProperty);
@@ -307,8 +310,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
         return thisObject;
 
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
-        if (ctx->withObject) {
-            With *w = ctx->withObject;
+        if (With *w = ctx->withObject) {
             while (w) {
                 bool hasProperty = false;
                 Value v = w->object->__get__(ctx, name, &hasProperty);
@@ -318,12 +320,16 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             }
         }
 
-        for (unsigned int i = 0; i < ctx->variableCount(); ++i)
-            if (ctx->variables()[i]->isEqualTo(name))
-                return ctx->locals[i];
-        for (unsigned int i = 0; i < ctx->formalCount(); ++i)
-            if (ctx->formals()[i]->isEqualTo(name))
-                return ctx->arguments[i];
+        if (FunctionObject *f = ctx->function) {
+            if (f->needsActivation || ctx->withObject) {
+                for (unsigned int i = 0; i < f->varCount; ++i)
+                    if (f->varList[i]->isEqualTo(name))
+                        return ctx->locals[i];
+                for (unsigned int i = 0; i < f->formalParameterCount; ++i)
+                    if (f->formalParameterList[i]->isEqualTo(name))
+                        return ctx->arguments[i];
+            }
+        }
         if (ctx->activation) {
             bool hasProperty = false;
             Value v = ctx->activation->__get__(ctx, name, &hasProperty);
