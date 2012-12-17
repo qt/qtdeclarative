@@ -339,7 +339,7 @@ int main(int argc, char *argv[])
             mm.reset(new QQmlJS::Moth::MemoryManager);
             iSelFactory.reset(new QQmlJS::Moth::ISelFactory);
         } else {
-            mm.reset(new QQmlJS::VM::MemoryManagerWithoutGC);
+            mm.reset(new QQmlJS::VM::MemoryManagerWithNativeStack);
             iSelFactory.reset(new QQmlJS::MASM::ISelFactory);
         }
 
