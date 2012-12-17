@@ -184,12 +184,14 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *, String *name)
 // Section 8.12.2
 PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, String *name)
 {
-    if (members)
-        if (PropertyDescriptor *p = members->find(name))
-            return p;
-
-    if (prototype)
-        return prototype->__getPropertyDescriptor__(ctx, name);
+    Object *o = this;
+    while (o) {
+        if (o->members) {
+            if (PropertyDescriptor *p = o->members->find(name))
+                return p;
+        }
+        o = o->prototype;
+    }
     return 0;
 }
 
@@ -231,10 +233,9 @@ bool Object::__canPut__(ExecutionContext *ctx, String *name)
         if (!extensible)
             return false;
         return p->isWritable();
-    } else {
-        return extensible;
     }
-    return true;
+
+    return extensible;
 }
 
 // Section 8.12.5
