@@ -558,6 +558,11 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QObject *o = 0;
             void *memory = 0;
             type.type->create(&o, &memory, sizeof(QQmlData));
+
+            if (!o)
+                VME_EXCEPTION(tr("Unable to create object of type %1").arg(type.type->elementName()),
+                              instr.line);
+
             QQmlData *ddata = new (memory) QQmlData;
             ddata->ownMemory = false;
             QObjectPrivate::get(o)->declarativeData = ddata;
@@ -571,10 +576,6 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 ddata->propertyCache = type.typePropertyCache;
                 ddata->propertyCache->addref();
             }
-
-            if (!o) 
-                VME_EXCEPTION(tr("Unable to create object of type %1").arg(type.type->elementName()),
-                              instr.line);
 
             if (states.count() == 1) {
                 // Keep a reference to the compiled data we rely on
