@@ -1774,7 +1774,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
 int Codegen::indexOfArgument(const QStringRef &string) const
 {
-    for (int i = 0; i < _function->formals.size(); ++i) {
+    for (int i = _function->formals.size() - 1; i >= 0; --i) {
         if (*_function->formals.at(i) == string)
             return i;
     }

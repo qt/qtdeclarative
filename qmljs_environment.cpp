@@ -115,18 +115,19 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, Value value)
 {
     // ### throw if scope->strict is true, and it would change an immutable binding
-    for (unsigned int i = 0; i < variableCount(); ++i) {
-        if (variables()[i]->isEqualTo(name)) {
-            locals[i] = value;
-            return true;
-        }
+    if (function) {
+        for (unsigned int i = 0; i < function->varCount; ++i)
+            if (function->varList[i]->isEqualTo(name)) {
+                locals[i] = value;
+                return true;
+            }
+        for (int i = (int)function->formalParameterCount - 1; i >= 0; --i)
+            if (function->formalParameterList[i]->isEqualTo(name)) {
+                arguments[i] = value;
+                return true;
+            }
     }
-    for (unsigned int i = 0; i < formalCount(); ++i) {
-        if (formals()[i]->isEqualTo(name)) {
-            arguments[i] = value;
-            return true;
-        }
-    }
+
     if (activation && activation->__hasProperty__(scope, name)) {
         activation->__put__(scope, name, value);
         return true;
@@ -140,14 +141,15 @@ Value ExecutionContext::getBindingValue(ExecutionContext *scope, String *name, b
     Q_UNUSED(strict);
     assert(function);
 
-    for (unsigned int i = 0; i < variableCount(); ++i) {
-        if (variables()[i]->isEqualTo(name))
-            return locals[i];
+    if (function) {
+        for (unsigned int i = 0; i < function->varCount; ++i)
+            if (function->varList[i]->isEqualTo(name))
+                return locals[i];
+        for (int i = (int)function->formalParameterCount - 1; i >= 0; --i)
+            if (function->formalParameterList[i]->isEqualTo(name))
+                return arguments[i];
     }
-    for (unsigned int i = 0; i < formalCount(); ++i) {
-        if (formals()[i]->isEqualTo(name))
-            return arguments[i];
-    }
+
     if (activation) {
         bool hasProperty = false;
         Value v = activation->__get__(scope, name, &hasProperty);
@@ -288,7 +290,7 @@ Value ExecutionContext::getProperty(String *name)
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
                         return ctx->locals[i];
-                for (unsigned int i = 0; i < f->formalParameterCount; ++i)
+                for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
                     if (f->formalParameterList[i]->isEqualTo(name))
                         return ctx->arguments[i];
             }
@@ -325,7 +327,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
                         return ctx->locals[i];
-                for (unsigned int i = 0; i < f->formalParameterCount; ++i)
+                for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
                     if (f->formalParameterList[i]->isEqualTo(name))
                         return ctx->arguments[i];
             }
