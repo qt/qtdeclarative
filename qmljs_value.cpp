@@ -83,7 +83,7 @@ bool Value::sameValue(Value other) {
     if (val == other.val)
         return true;
     if (isString() && other.isString())
-        return __qmljs_string_equal(stringValue(), other.stringValue());
+        return stringValue()->isEqualTo(other.stringValue());
     return false;
 }
 

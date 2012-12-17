@@ -660,7 +660,7 @@ uint __qmljs_equal(Value x, Value y, ExecutionContext *ctx)
         case Value::Integer_Type:
             return x.integerValue() == y.integerValue();
         case Value::String_Type:
-            return __qmljs_string_equal(x.stringValue(), y.stringValue());
+            return x.stringValue()->isEqualTo(y.stringValue());
         case Value::Object_Type:
             return x.objectValue() == y.objectValue();
         default: // double

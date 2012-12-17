@@ -84,11 +84,11 @@ bool ExecutionContext::hasBinding(String *name) const
         return false;
 
     for (unsigned int i = 0; i < function->varCount; ++i) {
-        if (__qmljs_string_equal(function->varList[i], name))
+        if (function->varList[i]->isEqualTo(name))
             return true;
     }
     for (unsigned int i = 0; i < function->formalParameterCount; ++i) {
-        if (__qmljs_string_equal(function->formalParameterList[i], name))
+        if (function->formalParameterList[i]->isEqualTo(name))
             return true;
     }
     if (activation)
@@ -116,13 +116,13 @@ bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, 
 {
     // ### throw if scope->strict is true, and it would change an immutable binding
     for (unsigned int i = 0; i < variableCount(); ++i) {
-        if (__qmljs_string_equal(variables()[i], name)) {
+        if (variables()[i]->isEqualTo(name)) {
             locals[i] = value;
             return true;
         }
     }
     for (unsigned int i = 0; i < formalCount(); ++i) {
-        if (__qmljs_string_equal(formals()[i], name)) {
+        if (formals()[i]->isEqualTo(name)) {
             arguments[i] = value;
             return true;
         }
@@ -141,11 +141,11 @@ Value ExecutionContext::getBindingValue(ExecutionContext *scope, String *name, b
     assert(function);
 
     for (unsigned int i = 0; i < variableCount(); ++i) {
-        if (__qmljs_string_equal(variables()[i], name))
+        if (variables()[i]->isEqualTo(name))
             return locals[i];
     }
     for (unsigned int i = 0; i < formalCount(); ++i) {
-        if (__qmljs_string_equal(formals()[i], name))
+        if (formals()[i]->isEqualTo(name))
             return arguments[i];
     }
     if (activation) {
@@ -285,10 +285,10 @@ Value ExecutionContext::getProperty(String *name)
         }
 
         for (unsigned int i = 0; i < ctx->variableCount(); ++i)
-            if (__qmljs_string_equal(ctx->variables()[i], name))
+            if (ctx->variables()[i]->isEqualTo(name))
                 return ctx->locals[i];
         for (unsigned int i = 0; i < ctx->formalCount(); ++i)
-            if (__qmljs_string_equal(ctx->formals()[i], name))
+            if (ctx->formals()[i]->isEqualTo(name))
                 return ctx->arguments[i];
         if (ctx->activation) {
             bool hasProperty = false;
@@ -319,10 +319,10 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
         }
 
         for (unsigned int i = 0; i < ctx->variableCount(); ++i)
-            if (__qmljs_string_equal(ctx->variables()[i], name))
+            if (ctx->variables()[i]->isEqualTo(name))
                 return ctx->locals[i];
         for (unsigned int i = 0; i < ctx->formalCount(); ++i)
-            if (__qmljs_string_equal(ctx->formals()[i], name))
+            if (ctx->formals()[i]->isEqualTo(name))
                 return ctx->arguments[i];
         if (ctx->activation) {
             bool hasProperty = false;
