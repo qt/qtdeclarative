@@ -161,7 +161,7 @@ private:
     std::size_t sweep(std::size_t &largestFreedBlock);
     std::size_t sweep(char *chunkStart, std::size_t chunkSize, std::size_t &largestFreedBlock);
 
-private:
+protected:
     QScopedPointer<Data> m_d;
 };
 

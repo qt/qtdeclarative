@@ -40,6 +40,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <alloca.h>
 
 using namespace QQmlJS::VM;
 
@@ -420,13 +421,38 @@ MemoryManagerWithNativeStack::~MemoryManagerWithNativeStack()
 
 void MemoryManagerWithNativeStack::collectRootsOnStack(QVector<VM::Object *> &roots) const
 {
+    if (!m_d->heapChunks.count())
+        return;
+    Value valueOnStack = Value::undefinedValue();
     StackBounds bounds = StackBounds::currentThreadStackBounds();
-    Value* top = reinterpret_cast<Value*>(bounds.origin());
-    Value* current = reinterpret_cast<Value*>(bounds.current());
-    qDebug("Collecting on stack. top %p current %p\n", top, current);
-    for (; current < top; ++current) {
-        if (current->asObject())
-            qDebug("found object %p on stack", (void*)current);
-        add(roots, *current);
+    Value* top = reinterpret_cast<Value*>(bounds.origin()) - 1;
+    Value* current = (&valueOnStack) + 1;
+
+    char** heapChunkBoundaries = (char**)alloca(m_d->heapChunks.count() * 2 * sizeof(char*));
+    char** heapChunkBoundariesEnd = heapChunkBoundaries + 2 * m_d->heapChunks.count();
+    int i = 0;
+    for (QLinkedList<QPair<char *, std::size_t> >::Iterator it = m_d->heapChunks.begin(), end =
+         m_d->heapChunks.end(); it != end; ++it) {
+        heapChunkBoundaries[i++] = it->first;
+        heapChunkBoundaries[i++] = it->first + it->second;
+    }
+    qSort(heapChunkBoundaries, heapChunkBoundariesEnd);
+
+    int blah = 0;
+    for (; current < top; ++current, ++blah) {
+        Object* possibleObject = current->asObject();
+        if (!possibleObject)
+            continue;
+        char* genericPtr = reinterpret_cast<char*>(possibleObject);
+        if (genericPtr < *heapChunkBoundaries || genericPtr >= *(heapChunkBoundariesEnd - 1))
+            continue;
+        int index = qLowerBound(heapChunkBoundaries, heapChunkBoundariesEnd, genericPtr) - heapChunkBoundaries;
+        // An odd index means the pointer is _before_ the end of a heap chunk and therefore valid.
+        if (index & 1) {
+            // It appears to happen that the stack can still contain a pointer to an already
+            // dealloc'ed. Skip those.
+            if (toObject(possibleObject)->info.inUse)
+                roots.append(possibleObject);
+        }
     }
 }
