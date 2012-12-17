@@ -221,7 +221,6 @@ protected:
                                  AST::SourceElements *body, Mode mode = FunctionCode);
     int indexOfArgument(const QStringRef &string) const;
 
-    void generateFinallyBlock(IR::BasicBlock *finallyBlock, bool exceptionNeedsSaving, AST::Finally *ast, int hasException, IR::BasicBlock *after);
     void unwindException(TryCleanup *outest);
 
     void statement(AST::Statement *ast);

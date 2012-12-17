@@ -326,6 +326,13 @@ void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempInd
         addInstruction(call);
     } break;
 
+    case IR::Name::builtin_rethrow: {
+        Instruction::CallBuiltin call;
+        call.builtin = Instruction::CallBuiltin::builtin_rethrow;
+        call.targetTempIndex = targetTempIndex;
+        addInstruction(call);
+    } break;
+
     case IR::Name::builtin_create_exception_handler: {
         Instruction::CallBuiltin call;
         call.builtin = Instruction::CallBuiltin::builtin_create_exception_handler;

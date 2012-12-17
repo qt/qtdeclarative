@@ -2174,9 +2174,6 @@ bool Codegen::visit(TryStatement *ast)
     TryCleanup tcf(_tryCleanup, ast->finallyExpression);
     _tryCleanup = &tcf;
 
-    IR::BasicBlock *after = _function->newBasicBlock();
-    assert(catchBody || finallyBody);
-
     int inCatch = 0;
     if (catchBody) {
         inCatch = _block->newTemp();
@@ -2190,7 +2187,7 @@ bool Codegen::visit(TryStatement *ast)
 
     _block = tryBody;
     statement(ast->statement);
-    _block->JUMP(finallyBody ? finallyBody : after);
+    _block->JUMP(finallyBody);
 
     // regular flow does not go into the catch statement
     if (catchBody) {
@@ -2219,51 +2216,29 @@ bool Codegen::visit(TryStatement *ast)
 
         // reset the variable name to the one from the outer scope
         _env->members.insert(ast->catchExpression->name.toString(), hiddenIndex);
-        _block->JUMP(finallyBody ? finallyBody : after);
+        _block->JUMP(finallyBody);
     }
 
     _tryCleanup = tcf.parent;
 
-    if (finallyBody)
-        generateFinallyBlock(finallyBody, !catchBody, ast->finallyExpression, hasException, after);
-
-    _block = after;
-
-    return false;
-}
-
-void Codegen::generateFinallyBlock(IR::BasicBlock *finallyBlock, bool exceptionNeedsSaving, Finally *ast, int hasException, IR::BasicBlock *after)
-{
-    _block = finallyBlock;
-
-    int exception;
-    if (exceptionNeedsSaving) {
-        // save the exception so we can rethrow it later.
-        IR::BasicBlock *saveExceptionBlock = _function->newBasicBlock();
-        IR::BasicBlock *realFinallyBlock = _function->newBasicBlock();
-        _block->CJUMP(_block->TEMP(hasException), saveExceptionBlock, realFinallyBlock);
-
-        _block = saveExceptionBlock;
-        exception = saveExceptionBlock->newTemp();
-        move(_block->TEMP(exception), _block->CALL(_block->NAME(IR::Name::builtin_get_exception, 0, 0), 0));
-        _block->JUMP(realFinallyBlock);
-
-        _block = realFinallyBlock;
-    }
+    IR::BasicBlock *after = _function->newBasicBlock();
+    _block = finallyBody;
 
     _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
-    if (ast && ast->statement)
-        statement(ast->statement);
+    if (ast->finallyExpression && ast->finallyExpression->statement)
+        statement(ast->finallyExpression->statement);
 
-    if (exceptionNeedsSaving) {
-        IR::BasicBlock *restoreExceptionBlock = _function->newBasicBlock();
-        _block->CJUMP(_block->TEMP(hasException), restoreExceptionBlock, after);
-        _block = restoreExceptionBlock;
-        _block->MOVE(_block->TEMP(_returnAddress), _block->TEMP(exception));
-        _block->JUMP(_throwBlock);
+    if (!catchBody) {
+        IR::BasicBlock *rethrowBlock = _function->newBasicBlock();
+        _block->CJUMP(_block->TEMP(hasException), rethrowBlock, after);
+        _block = rethrowBlock;
+        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_rethrow, 0, 0), 0));
     } else {
         _block->CJUMP(_block->TEMP(hasException), _throwBlock, after);
     }
+    _block = after;
+
+    return false;
 }
 
 void Codegen::unwindException(Codegen::TryCleanup *outest)
@@ -2277,6 +2252,7 @@ void Codegen::unwindException(Codegen::TryCleanup *outest)
         if (tc->finally && tc->finally->statement)
             statement(tc->finally->statement);
     }
+    qSwap(_tryCleanup, tryCleanup);
 }
 
 bool Codegen::visit(VariableStatement *ast)

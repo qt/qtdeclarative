@@ -484,8 +484,11 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
     case IR::Name::builtin_throw: {
         IR::Temp *arg = call->args->expr->asTemp();
         assert(arg != 0);
-        generateFunctionCall(result, __qmljs_builtin_throw, arg, Assembler::ContextRegister);
+        generateFunctionCall(Assembler::Void, __qmljs_builtin_throw, arg, Assembler::ContextRegister);
     }
+        break;
+    case IR::Name::builtin_rethrow:
+        generateFunctionCall(Assembler::Void, __qmljs_builtin_rethrow, Assembler::ContextRegister);
         break;
     case IR::Name::builtin_create_exception_handler:
         generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_create_exception_handler, Assembler::ContextRegister);

@@ -100,6 +100,7 @@ Value __qmljs_builtin_typeof_member(Value base, String *name, ExecutionContext *
 Value __qmljs_builtin_typeof_element(Value base, Value index, ExecutionContext *context);
 
 void __qmljs_builtin_throw(Value val, ExecutionContext *context);
+void __qmljs_builtin_rethrow(ExecutionContext *context);
 void __qmljs_builtin_push_with(Value o, ExecutionContext *ctx);
 void __qmljs_builtin_pop_with(ExecutionContext *ctx);
 void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name);

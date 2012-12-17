@@ -862,6 +862,12 @@ void __qmljs_builtin_throw(Value val, ExecutionContext *context)
     __qmljs_throw(val, context);
 }
 
+void __qmljs_builtin_rethrow(ExecutionContext *context)
+{
+    __qmljs_throw(context->engine->exception, context);
+}
+
+
 void __qmljs_builtin_push_with(Value o, ExecutionContext *ctx)
 {
     Object *obj = __qmljs_to_object(o, ctx).asObject();
