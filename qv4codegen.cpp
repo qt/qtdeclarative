@@ -308,7 +308,7 @@ protected:
         checkName(ast->name, ast->identifierToken);
         if (ast->name == QLatin1String("arguments"))
             _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
-        _env->enter(ast->name.toString());
+        _env->enter(ast->name.toString(), ast->expression ? Environment::VariableDefinition : Environment::VariableDeclaration);
         return true;
     }
 
@@ -324,7 +324,7 @@ protected:
     {
         if (_env) {
             _env->hasNestedFunctions = true;
-            _env->enter(ast->name.toString());
+            _env->enter(ast->name.toString(), Environment::FunctionDefinition);
         }
         enterEnvironment(ast);
         checkForArguments(ast->formals);
@@ -340,9 +340,8 @@ protected:
 
     virtual bool visit(FunctionDeclaration *ast)
     {
-        _env->functions.append(ast);
         _env->hasNestedFunctions = true;
-        _env->enter(ast->name.toString());
+        _env->enter(ast->name.toString(), Environment::FunctionDefinition, ast);
         if (ast->name == QLatin1String("arguments"))
             _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
         enterEnvironment(ast);
@@ -771,14 +770,11 @@ void Codegen::sourceElements(SourceElements *ast)
 void Codegen::variableDeclaration(VariableDeclaration *ast)
 {
     IR::Expr *initializer = 0;
-    if (ast->expression) {
-        Result expr = expression(ast->expression);
-        assert(expr.code);
-        initializer = *expr;
-    }
-
-    if (! initializer)
-        initializer = _block->CONST(IR::UndefinedType, 0);
+    if (!ast->expression)
+        return;
+    Result expr = expression(ast->expression);
+    assert(expr.code);
+    initializer = *expr;
 
     if (! _env->parent || _function->insideWith) {
         // it's global code.
@@ -1250,7 +1246,7 @@ IR::Expr *Codegen::identifier(const QString &name, int line, int col)
         }
     }
 
-    if (index >= _env->vars.size()) {
+    if (index >= _env->members.size()) {
         // named local variable, e.g. in a catch statement
         return _block->TEMP(index);
     }
@@ -1695,16 +1691,16 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (_mode == FunctionCode) {
-        for (int i = 0; i < _env->vars.size(); ++i) {
-            const QString &local = _env->vars.at(i);
+        for (Environment::MemberMap::iterator it = _env->members.begin(); it != _env->members.end(); ++it) {
+            const QString &local = it.key();
             function->LOCAL(local);
             unsigned t = entryBlock->newTemp();
-            assert(t == unsigned(i));
+            (*it).index = t;
         }
     } else {
         IR::ExprList *args = 0;
-        for (int i = 0; i < _env->vars.size(); ++i) {
-            const QString &local = _env->vars.at(i);
+        for (Environment::MemberMap::const_iterator it = _env->members.constBegin(); it != _env->members.constEnd(); ++it) {
+            const QString &local = it.key();
             IR::ExprList *next = function->New<IR::ExprList>();
             next->expr = entryBlock->NAME(local, 0, 0);
             next->next = args;
@@ -1739,17 +1735,20 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
         _function->RECEIVE(it->name.toString());
     }
 
-    foreach (AST::FunctionDeclaration *f, _env->functions) {
-        IR::Function *function = defineFunction(f->name.toString(), f, f->formals,
-                                                f->body ? f->body->elements : 0);
-        if (_debugger)
-            _debugger->setSourceLocation(function, f->functionToken.startLine, f->functionToken.startColumn);
-        if (! _env->parent)
-            move(_block->NAME(f->name.toString(), f->identifierToken.startLine, f->identifierToken.startColumn),
-                 _block->CLOSURE(function));
-        else
-            move(_block->TEMP(_env->findMember(f->name.toString())),
-                 _block->CLOSURE(function));
+    foreach (const Environment::Member &member, _env->members) {
+        if (member.function) {
+            IR::Function *function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
+                                                    member.function->body ? member.function->body->elements : 0);
+            if (_debugger)
+                _debugger->setSourceLocation(function, member.function->functionToken.startLine, member.function->functionToken.startColumn);
+            if (! _env->parent) {
+                move(_block->NAME(member.function->name.toString(), member.function->identifierToken.startLine, member.function->identifierToken.startColumn),
+                     _block->CLOSURE(function));
+            } else {
+                assert(member.index >= 0);
+                move(_block->TEMP(member.index), _block->CLOSURE(function));
+            }
+        }
     }
 
     sourceElements(body);
@@ -2209,13 +2208,18 @@ bool Codegen::visit(TryStatement *ast)
 
         // the variable used in the catch statement is local and hides any global
         // variable with the same name.
-        int hiddenIndex = _env->findMember(ast->catchExpression->name.toString());
-        _env->members.insert(ast->catchExpression->name.toString(), exception);
+        const Environment::Member undefinedMember = { Environment::UndefinedMember, -1 , 0 };
+        const Environment::Member catchMember = { Environment::VariableDefinition, exception, 0 };
+        Environment::Member m = _env->members.value(ast->catchExpression->name.toString(), undefinedMember);
+        _env->members.insert(ast->catchExpression->name.toString(), catchMember);
 
         statement(ast->catchExpression->statement);
 
         // reset the variable name to the one from the outer scope
-        _env->members.insert(ast->catchExpression->name.toString(), hiddenIndex);
+        if (m.type == Environment::UndefinedMember)
+            _env->members.remove(ast->catchExpression->name.toString());
+        else
+            _env->members.insert(ast->catchExpression->name.toString(), m);
         _block->JUMP(finallyBody);
     }
 

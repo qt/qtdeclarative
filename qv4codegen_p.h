@@ -43,6 +43,7 @@
 
 #include "qv4ir_p.h"
 #include <private/qqmljsastvisitor_p.h>
+#include <assert.h>
 
 namespace QQmlJS {
 
@@ -110,9 +111,21 @@ protected:
 
     struct Environment {
         Environment *parent;
-        QHash<QString, int> members;
-        QVector<QString> vars;
-        QVector<AST::FunctionDeclaration *> functions;
+
+        enum MemberType {
+            UndefinedMember,
+            VariableDefinition,
+            VariableDeclaration,
+            FunctionDefinition
+        };
+        struct Member {
+            MemberType type;
+            int index;
+            AST::FunctionDeclaration *function;
+        };
+        typedef QMap<QString, Member> MemberMap;
+
+        MemberMap members;
         int maxNumberOfArguments;
         bool hasDirectEval;
         bool hasNestedFunctions;
@@ -139,7 +152,11 @@ protected:
 
         int findMember(const QString &name) const
         {
-            return members.value(name, -1);
+            MemberMap::const_iterator it = members.find(name);
+            if (it == members.end())
+                return -1;
+            assert((*it).index != -1 || !parent);
+            return (*it).index;
         }
 
         bool lookupMember(const QString &name, Environment **scope, int *index, int *distance)
@@ -157,13 +174,21 @@ protected:
             return false;
         }
 
-        void enter(const QString &name)
+        void enter(const QString &name, MemberType type, AST::FunctionDeclaration *function = 0)
         {
             if (! name.isEmpty()) {
-                int idx = members.value(name, -1);
-                if (idx == -1) {
-                    members.insert(name, vars.count());
-                    vars.append(name);
+                MemberMap::iterator it = members.find(name);
+                if (it == members.end()) {
+                    Member m;
+                    m.index = -1;
+                    m.type = type;
+                    m.function = function;
+                    members.insert(name, m);
+                } else {
+                    if ((*it).type < type) {
+                        (*it).type = type;
+                        (*it).function = function;
+                    }
                 }
             }
         }
