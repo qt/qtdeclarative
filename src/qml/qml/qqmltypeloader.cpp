@@ -2135,12 +2135,12 @@ void QQmlTypeData::resolveTypes()
         TypeReference ref;
 
         QString url;
-        int majorVersion;
-        int minorVersion;
+        int majorVersion = -1;
+        int minorVersion = -1;
         QQmlImportNamespace *typeNamespace = 0;
         QList<QQmlError> errors;
 
-        if (!m_imports.resolveType(parserRef->name, &ref.type, &url, &majorVersion, &minorVersion,
+        if (!m_imports.resolveType(parserRef->name, &ref.type, &majorVersion, &minorVersion,
                                    &typeNamespace, &errors) || typeNamespace) {
             // Known to not be a type:
             //  - known to be a namespace (Namespace {})
@@ -2169,13 +2169,12 @@ void QQmlTypeData::resolveTypes()
             return;
         }
 
-        if (ref.type) {
-            ref.majorVersion = majorVersion;
-            ref.minorVersion = minorVersion;
-        } else {
-            ref.typeData = typeLoader()->getType(QUrl(url));
+        if (ref.type->isComposite()) {
+            ref.typeData = typeLoader()->getType(ref.type->sourceUrl());
             addDependency(ref.typeData);
         }
+        ref.majorVersion = majorVersion;
+        ref.minorVersion = minorVersion;
 
         Q_ASSERT(parserRef->firstUse);
         ref.location = parserRef->firstUse->location.start;

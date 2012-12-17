@@ -57,6 +57,7 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qvariant.h>
+#include <QtCore/qurl.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -251,11 +252,20 @@ namespace QQmlPrivate
         // If this is extended ensure "version" is bumped!!!
     };
 
+    struct RegisterCompositeType {
+        const QUrl &url;
+        const char *uri;
+        int versionMajor;
+        int versionMinor;
+        const char *typeName;
+    };
+
     enum RegistrationType {
-        TypeRegistration       = 0, 
+        TypeRegistration       = 0,
         InterfaceRegistration  = 1,
         AutoParentRegistration = 2,
-        SingletonRegistration  = 3
+        SingletonRegistration  = 3,
+        CompositeRegistration  = 4
     };
 
     int Q_QML_EXPORT qmlregister(RegistrationType, void *);

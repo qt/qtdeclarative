@@ -75,6 +75,8 @@ struct QQmlMetaTypeData
     Ids idToType;
     typedef QHash<QHashedStringRef,QQmlType *> Names;
     Names nameToType;
+    typedef QHash<QUrl, QQmlType *> Files; //For file imported composite types only
+    Files urlToType;
     typedef QHash<const QMetaObject *, QQmlType *> MetaObjects;
     MetaObjects metaObjectToType;
     typedef QHash<int, QQmlMetaType::StringConverter> StringConverters;
@@ -178,9 +180,15 @@ public:
         QQmlType::SingletonInstanceInfo *singletonInstanceInfo;
     };
 
+    struct QQmlCompositeTypeData
+    {
+        QUrl url;
+    };
+
     union extraData {
         QQmlCppTypeData* cd;
         QQmlSingletonTypeData* sd;
+        QQmlCompositeTypeData* fd;
     } extraData;
 
     const char *iid;
@@ -292,6 +300,9 @@ QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
     case QQmlType::InterfaceType:
         extraData.cd = 0;
         break;
+    case QQmlType::CompositeType:
+        extraData.fd = new QQmlCompositeTypeData;
+        break;
     default: qFatal("QQmlTypePrivate Internal Error.");
     }
 }
@@ -306,6 +317,9 @@ QQmlTypePrivate::~QQmlTypePrivate()
     case QQmlType::SingletonType:
         delete extraData.sd->singletonInstanceInfo;
         delete extraData.sd;
+        break;
+    case QQmlType::CompositeType:
+        delete extraData.fd;
         break;
     default: //Also InterfaceType, because it has no extra data
         break;
@@ -387,6 +401,19 @@ QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::Reg
 
     if (type.extensionMetaObject)
         d->extraData.cd->extMetaObject = type.extensionMetaObject;
+}
+
+QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::RegisterCompositeType &type)
+: d(new QQmlTypePrivate(CompositeType))
+{
+    d->index = index;
+    d->elementName = elementName;
+
+    d->module = moduleFromUtf8(type.uri);
+    d->version_maj = type.versionMajor;
+    d->version_min = type.versionMinor;
+
+    d->extraData.fd->url = type.url;
 }
 
 QQmlType::~QQmlType()
@@ -751,6 +778,11 @@ bool QQmlType::isInterface() const
     return d->regType == InterfaceType;
 }
 
+bool QQmlType::isComposite() const
+{
+    return d->regType == CompositeType;
+}
+
 int QQmlType::typeId() const
 {
     return d->typeId;
@@ -846,6 +878,13 @@ const char *QQmlType::interfaceIId() const
 int QQmlType::index() const
 {
     return d->index;
+}
+
+QUrl QQmlType::sourceUrl() const
+{
+    if (d->regType != CompositeType)
+        return QUrl();
+    return d->extraData.fd->url;
 }
 
 int QQmlType::enumValue(const QHashedStringRef &name, bool *ok) const
@@ -1074,6 +1113,8 @@ QString registrationTypeString(QQmlType::RegistrationType typeType)
         typeStr = QStringLiteral("element");
     else if (typeType == QQmlType::SingletonType)
         typeStr = QStringLiteral("singleton type");
+    else
+        typeStr = QStringLiteral("type");
     return typeStr;
 }
 
@@ -1083,7 +1124,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
     if (!typeName.isEmpty()) {
         int typeNameLen = typeName.length();
         for (int ii = 0; ii < typeNameLen; ++ii) {
-            if (!typeName.at(ii).isLetterOrNumber()) {
+            if (!(typeName.at(ii).isLetterOrNumber() || typeName.at(ii) == '_')) {
                 QString failure(QCoreApplication::translate("qmlRegisterType", "Invalid QML %1 name \"%2\""));
                 data->typeRegistrationFailures.append(failure.arg(registrationTypeString(typeType)).arg(typeName));
                 return false;
@@ -1116,6 +1157,43 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
     return true;
 }
 
+// NOTE: caller must hold a QWriteLocker on "data"
+void addTypeToData(QQmlType* type, QQmlMetaTypeData *data)
+{
+    if (!type->elementName().isEmpty())
+        data->nameToType.insertMulti(type->elementName(), type);
+
+    if (type->baseMetaObject())
+        data->metaObjectToType.insertMulti(type->baseMetaObject(), type);
+
+    if (type->typeId()) {
+        data->idToType.insert(type->typeId(), type);
+        if (data->objects.size() <= type->typeId())
+            data->objects.resize(type->typeId() + 16);
+        data->objects.setBit(type->typeId(), true);
+    }
+
+    if (type->qListTypeId()) {
+        if (data->lists.size() <= type->qListTypeId())
+            data->lists.resize(type->qListTypeId() + 16);
+        data->lists.setBit(type->qListTypeId(), true);
+        data->idToType.insert(type->qListTypeId(), type);
+    }
+
+    if (!type->module().isEmpty()) {
+        const QHashedString &mod = type->module();
+
+        QQmlMetaTypeData::VersionedUri versionedUri(mod, type->majorVersion());
+        QQmlTypeModule *module = data->uriToModule.value(versionedUri);
+        if (!module) {
+            module = new QQmlTypeModule;
+            module->d->uri = versionedUri;
+            data->uriToModule.insert(versionedUri, module);
+        }
+        module->d->add(type);
+    }
+}
+
 int registerType(const QQmlPrivate::RegisterType &type)
 {
     QWriteLocker lock(metaTypeDataLock());
@@ -1129,33 +1207,9 @@ int registerType(const QQmlPrivate::RegisterType &type)
     QQmlType *dtype = new QQmlType(index, elementName, type);
 
     data->types.append(dtype);
-    data->idToType.insert(dtype->typeId(), dtype);
-    if (dtype->qListTypeId()) data->idToType.insert(dtype->qListTypeId(), dtype);
-
-    if (!dtype->elementName().isEmpty())
-        data->nameToType.insertMulti(dtype->elementName(), dtype);
-
-    data->metaObjectToType.insertMulti(dtype->baseMetaObject(), dtype);
-
-    if (data->objects.size() <= type.typeId)
-        data->objects.resize(type.typeId + 16);
-    if (data->lists.size() <= type.listId)
-        data->lists.resize(type.listId + 16);
-    data->objects.setBit(type.typeId, true);
-    if (type.listId) data->lists.setBit(type.listId, true);
-
-    if (!dtype->module().isEmpty()) {
-        const QHashedString &mod = dtype->module();
-
-        QQmlMetaTypeData::VersionedUri versionedUri(mod, type.versionMajor);
-        QQmlTypeModule *module = data->uriToModule.value(versionedUri);
-        if (!module) {
-            module = new QQmlTypeModule;
-            module->d->uri = versionedUri;
-            data->uriToModule.insert(versionedUri, module);
-        }
-        module->d->add(dtype);
-    }
+    addTypeToData(dtype, data);
+    if (!type.typeId)
+        data->idToType.insert(dtype->typeId(), dtype);
 
     return index;
 }
@@ -1173,32 +1227,31 @@ int registerSingletonType(const QQmlPrivate::RegisterSingletonType &type)
     QQmlType *dtype = new QQmlType(index, typeName, type);
 
     data->types.append(dtype);
-    data->idToType.insert(dtype->typeId(), dtype);
+    addTypeToData(dtype, data);
 
-    if (!dtype->elementName().isEmpty())
-        data->nameToType.insertMulti(dtype->elementName(), dtype);
+    return index;
+}
 
-    if (dtype->baseMetaObject())
-        data->metaObjectToType.insertMulti(dtype->baseMetaObject(), dtype);
+int registerCompositeType(const QQmlPrivate::RegisterCompositeType &type)
+{
+    // Assumes URL is absolute and valid. Checking of user input should happen before the URL enters type.
+    QWriteLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+    QString typeName = QString::fromUtf8(type.typeName);
+    bool fileImport = false;
+    if (*(type.uri) == '\0')
+        fileImport = true;
+    if (!checkRegistration(QQmlType::CompositeType, data, fileImport?0:type.uri, typeName))
+        return -1;
 
-    if (type.typeId) {
-        if (data->objects.size() <= type.typeId)
-            data->objects.resize(type.typeId + 16);
-        data->objects.setBit(type.typeId, true);
-    }
+    int index = data->types.count();
 
-    if (!dtype->module().isEmpty()) {
-        const QHashedString &mod = dtype->module();
+    QQmlType *dtype = new QQmlType(index, typeName, type);
+    data->types.append(dtype);
+    addTypeToData(dtype, data);
 
-        QQmlMetaTypeData::VersionedUri versionedUri(mod, type.versionMajor);
-        QQmlTypeModule *module = data->uriToModule.value(versionedUri);
-        if (!module) {
-            module = new QQmlTypeModule;
-            module->d->uri = versionedUri;
-            data->uriToModule.insert(versionedUri, module);
-        }
-        module->d->add(dtype);
-    }
+    if (fileImport)
+        data->urlToType.insertMulti(type.url, dtype);
 
     return index;
 }
@@ -1218,6 +1271,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         return registerAutoParentFunction(*reinterpret_cast<RegisterAutoParent *>(data));
     } else if (type == SingletonRegistration) {
         return registerSingletonType(*reinterpret_cast<RegisterSingletonType *>(data));
+    } else if (type == CompositeRegistration) {
+        return registerCompositeType(*reinterpret_cast<RegisterCompositeType *>(data));
     }
     return -1;
 }
@@ -1534,7 +1589,7 @@ QQmlType *QQmlMetaType::qmlType(const QHashedStringRef &name, const QHashedStrin
     QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.constFind(name);
     while (it != data->nameToType.end() && it.key() == name) {
         // XXX version_major<0 just a kludge for QQmlPropertyPrivate::initProperty
-        if (version_major < 0 || (*it)->availableInVersion(module, version_major,version_minor))
+        if (version_major < 0 || module.isEmpty() || (*it)->availableInVersion(module, version_major,version_minor))
             return (*it);
         ++it;
     }
@@ -1568,7 +1623,7 @@ QQmlType *QQmlMetaType::qmlType(const QMetaObject *metaObject, const QHashedStri
     QQmlMetaTypeData::MetaObjects::const_iterator it = data->metaObjectToType.constFind(metaObject);
     while (it != data->metaObjectToType.end() && it.key() == metaObject) {
         QQmlType *t = *it;
-        if (version_major < 0 || t->availableInVersion(module, version_major,version_minor))
+        if (version_major < 0 || module.isEmpty() || t->availableInVersion(module, version_major,version_minor))
             return t;
         ++it;
     }
@@ -1590,6 +1645,39 @@ QQmlType *QQmlMetaType::qmlType(int userType)
         return type;
     else
         return 0;
+}
+
+/*!
+    Returns the type (if any) that corresponds to the given \a url in the set of
+    composite types added through file imports.
+
+    Returns null if no such type is registered.
+*/
+QQmlType *QQmlMetaType::qmlType(const QUrl &url)
+{
+    QReadLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+
+    QQmlType *type = data->urlToType.value(url);
+    if (type && type->sourceUrl() == url)
+        return type;
+    else
+        return 0;
+}
+
+/*!
+    Returns the type (if any) with the given \a index in the global type store.
+    This is for use when you just got the index back from a qmlRegister function.
+    Returns null if the index is out of bounds.
+*/
+QQmlType *QQmlMetaType::qmlTypeFromIndex(int idx)
+{
+    QReadLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+
+    if (idx < 0 || idx >= data->types.count())
+            return 0;
+    return data->types[idx];
 }
 
 /*!

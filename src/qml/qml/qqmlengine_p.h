@@ -235,8 +235,8 @@ public:
     QQmlMetaObject metaObjectForType(int) const;
     QQmlPropertyCache *propertyCacheForType(int);
     QQmlPropertyCache *rawPropertyCacheForType(int);
-    void registerCompositeType(QQmlCompiledData *);
-    void unregisterCompositeType(QQmlCompiledData *);
+    void registerInternalCompositeType(QQmlCompiledData *);
+    void unregisterInternalCompositeType(QQmlCompiledData *);
 
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;

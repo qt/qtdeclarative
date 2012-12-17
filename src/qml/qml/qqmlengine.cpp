@@ -2062,7 +2062,7 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
     }
 }
 
-void QQmlEnginePrivate::registerCompositeType(QQmlCompiledData *data)
+void QQmlEnginePrivate::registerInternalCompositeType(QQmlCompiledData *data)
 {
     QByteArray name = data->rootPropertyCache->className();
 
@@ -2097,7 +2097,7 @@ void QQmlEnginePrivate::registerCompositeType(QQmlCompiledData *data)
     m_compositeTypes.insert(ptr_type, data);
 }
 
-void QQmlEnginePrivate::unregisterCompositeType(QQmlCompiledData *data)
+void QQmlEnginePrivate::unregisterInternalCompositeType(QQmlCompiledData *data)
 {
     int ptr_type = data->metaTypeId;
     int lst_type = data->listMetaTypeId;
