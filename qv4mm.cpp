@@ -32,6 +32,8 @@
 #include "qv4ecmaobjects_p.h"
 #include "qv4mm.h"
 #include "StackBounds.h"
+#include "PageAllocation.h"
+#include "StdLibExtras.h"
 
 #include <QTime>
 #include <QVector>
@@ -43,6 +45,7 @@
 #include <alloca.h>
 
 using namespace QQmlJS::VM;
+using namespace WTF;
 
 static const std::size_t CHUNK_SIZE = 65536;
 
@@ -59,7 +62,7 @@ struct MemoryManager::Data
     MMObject *fallbackObject;
     MMObject *smallItems[16]; // 16 - 256 bytes
     QMap<size_t, MMObject *> largeItems;
-    QLinkedList<QPair<char *, std::size_t> > heapChunks;
+    QLinkedList<PageAllocation> heapChunks;
 
     // statistics:
 #ifdef DETAILED_MM_STATS
@@ -80,8 +83,8 @@ struct MemoryManager::Data
 
     ~Data()
     {
-        for (QLinkedList<QPair<char *, std::size_t> >::iterator i = heapChunks.begin(), ei = heapChunks.end(); i != ei; ++i)
-            free(i->first);
+        for (QLinkedList<PageAllocation>::iterator i = heapChunks.begin(), ei = heapChunks.end(); i != ei; ++i)
+            i->deallocate();
     }
 };
 
@@ -133,14 +136,14 @@ MemoryManager::MMObject *MemoryManager::alloc(std::size_t size)
         // try to free up space, otherwise allocate
         if (!m_d->aggressiveGC || runGC() < size) {
             std::size_t allocSize = std::max(size, CHUNK_SIZE);
-            char *ptr = 0;
-            posix_memalign(reinterpret_cast<void**>(&ptr), 16, allocSize);
-            m_d->heapChunks.append(qMakePair(ptr, allocSize));
-            m_d->fallbackObject = reinterpret_cast<MMObject *>(ptr);
+            allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
+            PageAllocation allocation = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
+            m_d->heapChunks.append(allocation);
+            m_d->fallbackObject = reinterpret_cast<MMObject *>(allocation.base());
             m_d->fallbackObject->info.inUse = 0;
             m_d->fallbackObject->info.next = 0;
             m_d->fallbackObject->info.markBit = 0;
-            m_d->fallbackObject->info.size = allocSize;
+            m_d->fallbackObject->info.size = allocation.size();
         }
         return alloc(size - alignedSizeOfMMInfo);
     }
@@ -247,8 +250,8 @@ std::size_t MemoryManager::sweep(std::size_t &largestFreedBlock)
 {
     std::size_t freedCount = 0;
 
-    for (QLinkedList<QPair<char *, std::size_t> >::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)
-        freedCount += sweep(i->first, i->second, largestFreedBlock);
+    for (QLinkedList<PageAllocation>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)
+        freedCount += sweep(reinterpret_cast<char*>(i->base()), i->size(), largestFreedBlock);
 
     return freedCount;
 }
@@ -431,10 +434,10 @@ void MemoryManagerWithNativeStack::collectRootsOnStack(QVector<VM::Object *> &ro
     char** heapChunkBoundaries = (char**)alloca(m_d->heapChunks.count() * 2 * sizeof(char*));
     char** heapChunkBoundariesEnd = heapChunkBoundaries + 2 * m_d->heapChunks.count();
     int i = 0;
-    for (QLinkedList<QPair<char *, std::size_t> >::Iterator it = m_d->heapChunks.begin(), end =
+    for (QLinkedList<PageAllocation>::Iterator it = m_d->heapChunks.begin(), end =
          m_d->heapChunks.end(); it != end; ++it) {
-        heapChunkBoundaries[i++] = it->first;
-        heapChunkBoundaries[i++] = it->first + it->second;
+        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->base());
+        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->base()) + it->size();
     }
     qSort(heapChunkBoundaries, heapChunkBoundariesEnd);
 
