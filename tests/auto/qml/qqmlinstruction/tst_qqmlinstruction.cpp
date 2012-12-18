@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include <qtest.h>
+#include "../../shared/util.h"
 #include <private/qqmlcompiler_p.h>
 
 #include <QVector3D>
@@ -64,12 +65,6 @@ private slots:
     void vector4d();
     void time();
 };
-
-static QStringList messages;
-static void msgHandler(QtMsgType, const QMessageLogContext &, const QString &msg)
-{
-    messages << msg;
-}
 
 void tst_qqmlinstruction::dump()
 {
@@ -564,15 +559,14 @@ void tst_qqmlinstruction::dump()
         << "57\t\tSTORE_VAR_BOOL\t\t83\ttrue"
         << "-------------------------------------------------------------------------------";
 
-    messages = QStringList();
-    QtMessageHandler old = qInstallMessageHandler(msgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     data->dumpInstructions();
-    qInstallMessageHandler(old);
 
-    QCOMPARE(messages.count(), expect.count());
-    for (int ii = 0; ii < messages.count(); ++ii) {
-        QCOMPARE(messages.at(ii), expect.at(ii));
+    const int messageCount = messageHandler.messages().count();
+    QCOMPARE(messageCount, expect.count());
+    for (int ii = 0; ii < messageCount; ++ii) {
+        QCOMPARE(messageHandler.messages().at(ii), expect.at(ii));
     }
 
     data->release();

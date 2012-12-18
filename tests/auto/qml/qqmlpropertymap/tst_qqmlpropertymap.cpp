@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 #include <qtest.h>
+#include "../../shared/util.h"
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlpropertymap.h>
@@ -294,19 +295,9 @@ public slots:
     void testSlot() {}
 };
 
-namespace
-{
-    QStringList messages;
-    void msgHandler(QtMsgType, const QMessageLogContext &, const QString &msg)
-    {
-        messages << msg;
-    }
-}
-
 void tst_QQmlPropertyMap::metaObjectAccessibility()
 {
-    messages.clear();
-    QtMessageHandler old = qInstallMessageHandler(msgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     QQmlEngine engine;
 
@@ -318,9 +309,7 @@ void tst_QQmlPropertyMap::metaObjectAccessibility()
 
     QCOMPARE(map.metaObject()->className(), "MyEnhancedPropertyMap");
 
-    qInstallMessageHandler(old);
-
-    QCOMPARE(messages.count(), 0);
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 }
 
 QTEST_MAIN(tst_QQmlPropertyMap)
