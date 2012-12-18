@@ -9,6 +9,28 @@ SOURCES += $$PWD/assembler/LinkBuffer.cpp
 SOURCES += $$PWD/wtf/StackBounds.cpp
 HEADERS += $$PWD/wtf/StackBounds.h
 
+SOURCES += $$PWD/wtf/PrintStream.cpp
+HEADERS += $$PWD/wtf/PrintStream.h
+
+SOURCES += $$PWD/wtf/FilePrintStream.cpp
+HEADERS += $$PWD/wtf/FilePrintStream.h
+
+HEADERS += $$PWD/wtf/RawPointer.h
+HEADERS += $$PWD/wtf/PassOwnPtr.h
+
+win32: SOURCES += $$PWD/wtf/OSAllocatorWin.cpp
+else: SOURCES += $$PWD/wtf/OSAllocatorPosix.cpp
+HEADERS += $$PWD/wtf/OSAllocator.h
+
+SOURCES += $$PWD/wtf/PageAllocationAligned.cpp
+HEADERS += $$PWD/wtf/PageAllocationAligned.h
+HEADERS += $$PWD/wtf/PageAllocation.h
+
+SOURCES += $$PWD/wtf/PageBlock.cpp
+HEADERS += $$PWD/wtf/PageBlock.h
+
+HEADERS += $$PWD/wtf/PageReservation.h
+
 SOURCES += $$PWD/stubs/WTFStubs.cpp
 HEADERS += $$PWD/stubs/WTFStubs.h
 
@@ -31,6 +53,7 @@ DEFINES += WTF_USE_UDIS86=1
 INCLUDEPATH += $$PWD/disassembler
 INCLUDEPATH += $$PWD/disassembler/udis86
 INCLUDEPATH += $$_OUT_PWD
+SOURCES += $$PWD/disassembler/Disassembler.cpp
 SOURCES += $$PWD/disassembler/UDis86Disassembler.cpp
 SOURCES += $$PWD/disassembler/udis86/udis86.c
 SOURCES += $$PWD/disassembler/udis86/udis86_decode.c

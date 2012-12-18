@@ -302,6 +302,14 @@
 #define HAVE_ARM_NEON_INTRINSICS 1
 #endif
 
+#if (defined(__VFP_FP__) && !defined(__SOFTFP__))
+#define WTF_CPU_ARM_VFP 1
+#endif
+
+#if defined(__ARM_ARCH_7S__)
+#define WTF_CPU_APPLE_ARMV7S 1
+#endif
+
 #endif /* ARM */
 
 #if CPU(ARM) || CPU(MIPS) || CPU(SH4) || CPU(SPARC)
@@ -424,6 +432,7 @@
 /* PLATFORM(CHROMIUM) */
 /* PLATFORM(QT) */
 /* PLATFORM(WX) */
+/* PLATFORM(EFL) */
 /* PLATFORM(GTK) */
 /* PLATFORM(BLACKBERRY) */
 /* PLATFORM(MAC) */
@@ -434,6 +443,8 @@
 #define WTF_PLATFORM_QT 1
 #elif defined(BUILDING_WX__)
 #define WTF_PLATFORM_WX 1
+#elif defined(BUILDING_EFL__)
+#define WTF_PLATFORM_EFL 1
 #elif defined(BUILDING_GTK__)
 #define WTF_PLATFORM_GTK 1
 #elif defined(BUILDING_BLACKBERRY__)
@@ -545,7 +556,6 @@
 #endif
 #define WTF_USE_CF 1
 #define WTF_USE_PTHREADS 1
-#define HAVE_PTHREAD_RWLOCK 1
 #define HAVE_READLINE 1
 #define HAVE_RUNLOOP_TIMER 1
 #define ENABLE_FULLSCREEN_API 1
@@ -565,10 +575,20 @@
 #if PLATFORM(CHROMIUM) && OS(DARWIN)
 #define WTF_USE_CF 1
 #define WTF_USE_PTHREADS 1
-#define HAVE_PTHREAD_RWLOCK 1
-
 #define WTF_USE_WK_SCROLLBAR_PAINTER 1
 #endif
+
+#if PLATFORM(CHROMIUM)
+#if OS(DARWIN)
+/* We can't override the global operator new and delete on OS(DARWIN) because
+ * some object are allocated by WebKit and deallocated by the embedder. */
+#define ENABLE_GLOBAL_FASTMALLOC_NEW 0
+#else /* !OS(DARWIN) */
+/* On non-OS(DARWIN), the "system malloc" is actually TCMalloc anyway, so there's
+ * no need to use WebKit's copy of TCMalloc. */
+#define USE_SYSTEM_MALLOC 1
+#endif /* OS(DARWIN) */
+#endif /* PLATFORM(CHROMIUM) */
 
 #if PLATFORM(IOS)
 #define DONT_FINALIZE_ON_MAIN_THREAD 1
@@ -592,11 +612,10 @@
 #define ENABLE_ORIENTATION_EVENTS 1
 #define ENABLE_REPAINT_THROTTLING 1
 #define ENABLE_WEB_ARCHIVE 1
-#define HAVE_NETWORK_CFDATA_ARRAY_CALLBACK 1
-#define HAVE_PTHREAD_RWLOCK 1
 #define HAVE_READLINE 1
 #define WTF_USE_CF 1
 #define WTF_USE_CFNETWORK 1
+#define WTF_USE_NETWORK_CFDATA_ARRAY_CALLBACK 1
 #define WTF_USE_PTHREADS 1
 
 #if PLATFORM(IOS_SIMULATOR)
@@ -622,7 +641,6 @@
 
 #if USE(CFNETWORK) || PLATFORM(MAC) || PLATFORM(IOS)
 #define WTF_USE_CFURLCACHE 1
-#define WTF_USE_CFURLSTORAGESESSIONS 1
 #endif
 
 #if PLATFORM(WIN) && !OS(WINCE) && !PLATFORM(CHROMIUM) && !PLATFORM(QT)
@@ -650,11 +668,10 @@
 
 #if OS(UNIX) && (PLATFORM(GTK) || PLATFORM(QT))
 #define WTF_USE_PTHREADS 1
-#define HAVE_PTHREAD_RWLOCK 1
 #endif
 
 #if !defined(HAVE_ACCESSIBILITY)
-#if PLATFORM(IOS) || PLATFORM(MAC) || PLATFORM(WIN) || PLATFORM(GTK) || (PLATFORM(CHROMIUM) && !OS(ANDROID))
+#if PLATFORM(IOS) || PLATFORM(MAC) || PLATFORM(WIN) || PLATFORM(GTK) || (PLATFORM(CHROMIUM) && !OS(ANDROID)) || PLATFORM(EFL)
 #define HAVE_ACCESSIBILITY 1
 #endif
 #endif /* !defined(HAVE_ACCESSIBILITY) */
@@ -818,20 +835,16 @@
 #endif
 #endif
 
-#if !defined(ENABLE_GESTURE_ANIMATION)
-#if PLATFORM(QT) || !ENABLE(SMOOTH_SCROLLING)
-#define ENABLE_GESTURE_ANIMATION 0
-#else
-#define ENABLE_GESTURE_ANIMATION 1
-#endif
-#endif
-
 #if !defined(ENABLE_SATURATED_LAYOUT_ARITHMETIC)
 #define ENABLE_SATURATED_LAYOUT_ARITHMETIC 0
 #endif
 
 #if ENABLE(ENABLE_SATURATED_LAYOUT_ARITHMETIC) && !ENABLE(ENABLE_SUBPIXEL_LAYOUT)
 #error "ENABLE_SATURATED_LAYOUT_ARITHMETIC requires ENABLE_SUBPIXEL_LAYOUT"
+#endif
+
+#if ENABLE(INPUT_TYPE_DATE) || ENABLE(INPUT_TYPE_DATETIME) || ENABLE(INPUT_TYPE_DATETIMELOCAL) || ENABLE(INPUT_TYPE_MONTH) || ENABLE(INPUT_TYPE_TIME) || ENABLE(INPUT_TYPE_WEEK)
+#define ENABLE_DATE_AND_TIME_INPUT_TYPES 1
 #endif
 
 #define ENABLE_DEBUG_WITH_BREAKPOINT 0
@@ -884,14 +897,15 @@
     && (CPU(X86) || CPU(X86_64) || CPU(ARM) || CPU(MIPS)) \
     && (OS(DARWIN) || !COMPILER(GCC) || GCC_VERSION_AT_LEAST(4, 1, 0)) \
     && !OS(WINCE) \
-    && !OS(QNX)
+    && !(OS(QNX) && !PLATFORM(QT)) /* We use JIT in QNX Qt */
 #define ENABLE_JIT 1
 #endif
 
 /* If possible, try to enable a disassembler. This is optional. We proceed in two
    steps: first we try to find some disassembler that we can use, and then we
    decide if the high-level disassembler API can be enabled. */
-#if !defined(WTF_USE_UDIS86) && ENABLE(JIT) && PLATFORM(MAC) && (CPU(X86) || CPU(X86_64))
+#if !defined(WTF_USE_UDIS86) && ENABLE(JIT) && (PLATFORM(MAC) || (PLATFORM(QT) && OS(LINUX))) \
+    && (CPU(X86) || CPU(X86_64))
 #define WTF_USE_UDIS86 1
 #endif
 
@@ -912,7 +926,7 @@
 #if !defined(ENABLE_LLINT) \
     && ENABLE(JIT) \
     && (OS(DARWIN) || OS(LINUX)) \
-    && (PLATFORM(MAC) || PLATFORM(IOS) || PLATFORM(GTK) || (PLATFORM(QT) && OS(LINUX))) \
+    && (PLATFORM(MAC) || PLATFORM(IOS) || PLATFORM(GTK) || PLATFORM(QT)) \
     && (CPU(X86) || CPU(X86_64) || CPU(ARM_THUMB2))
 #define ENABLE_LLINT 1
 #endif
@@ -922,8 +936,8 @@
 #if (CPU(X86) || CPU(X86_64)) && (PLATFORM(MAC) || OS(LINUX))
 #define ENABLE_DFG_JIT 1
 #endif
-/* Enable the DFG JIT on ARMv7.  Only tested on iOS. */
-#if CPU(ARM_THUMB2) && (PLATFORM(IOS) || PLATFORM(BLACKBERRY))
+/* Enable the DFG JIT on ARMv7.  Only tested on iOS and Qt Linux. */
+#if CPU(ARM_THUMB2) && (PLATFORM(IOS) || PLATFORM(BLACKBERRY) || PLATFORM(QT))
 #define ENABLE_DFG_JIT 1
 #endif
 /* Enable the DFG JIT on ARM. */
@@ -993,7 +1007,7 @@
 #define ENABLE_REGEXP_TRACING 0
 
 /* Yet Another Regex Runtime - turned on by default for JIT enabled ports. */
-#if !defined(ENABLE_YARR_JIT) && (ENABLE(JIT) || ENABLE(LLINT_C_LOOP)) && !PLATFORM(CHROMIUM)
+#if !defined(ENABLE_YARR_JIT) && (ENABLE(JIT) || ENABLE(LLINT_C_LOOP)) && !PLATFORM(CHROMIUM) && !(OS(QNX) && PLATFORM(QT))
 #define ENABLE_YARR_JIT 1
 
 /* Setting this flag compares JIT results with interpreter results. */
@@ -1048,17 +1062,17 @@
 #define ENABLE_CSS_IMAGE_SET 1
 #endif
 
+#if ENABLE(WEBGL) && !defined(WTF_USE_3D_GRAPHICS)
+#define WTF_USE_3D_GRAPHICS 1
+#endif
 
 /* Qt always uses Texture Mapper */
 #if PLATFORM(QT)
 #define WTF_USE_TEXTURE_MAPPER 1
-#if USE(3D_GRAPHICS)
-#define WTF_USE_TEXTURE_MAPPER_GL 1
-#endif
 #endif
 
-#if ENABLE(WEBGL) && !defined(WTF_USE_3D_GRAPHICS)
-#define WTF_USE_3D_GRAPHICS 1
+#if USE(TEXTURE_MAPPER) && USE(3D_GRAPHICS) && !defined(WTF_USE_TEXTURE_MAPPER_GL)
+#define WTF_USE_TEXTURE_MAPPER_GL 1
 #endif
 
 /* Compositing on the UI-process in WebKit2 */
@@ -1149,6 +1163,10 @@
 
 #if PLATFORM(MAC) && !PLATFORM(IOS) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 1080
 #define WTF_USE_COREMEDIA 1
+#endif
+
+#if PLATFORM(MAC) && !PLATFORM(IOS) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+#define HAVE_AVFOUNDATION_TEXT_TRACK_SUPPORT 1
 #endif
 
 #if PLATFORM(MAC) || PLATFORM(GTK) || PLATFORM(EFL) || (PLATFORM(WIN) && !OS(WINCE) && !PLATFORM(WIN_CAIRO)) || PLATFORM(BLACKBERRY)

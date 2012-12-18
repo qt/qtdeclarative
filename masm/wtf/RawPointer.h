@@ -23,41 +23,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "Disassembler.h"
+#ifndef RawPointer_h
+#define RawPointer_h
 
-#if USE(UDIS86)
+namespace WTF {
 
-#include "MacroAssemblerCodeRef.h"
-#include "udis86.h"
-
-namespace JSC {
-
-bool tryToDisassemble(const MacroAssemblerCodePtr& codePtr, size_t size, const char* prefix, PrintStream& out)
-{
-    ud_t disassembler;
-    ud_init(&disassembler);
-    ud_set_input_buffer(&disassembler, static_cast<unsigned char*>(codePtr.executableAddress()), size);
-#if CPU(X86_64)
-    ud_set_mode(&disassembler, 64);
-#else
-    ud_set_mode(&disassembler, 32);
-#endif
-    ud_set_pc(&disassembler, bitwise_cast<uintptr_t>(codePtr.executableAddress()));
-    ud_set_syntax(&disassembler, UD_SYN_ATT);
-    
-    uint64_t currentPC = disassembler.pc;
-    while (ud_disassemble(&disassembler)) {
-        char pcString[20];
-        snprintf(pcString, sizeof(pcString), "0x%lx", static_cast<unsigned long>(currentPC));
-        out.printf("%s%16s: %s\n", prefix, pcString, ud_insn_asm(&disassembler));
-        currentPC = disassembler.pc;
+class RawPointer {
+public:
+    RawPointer()
+        : m_value(0)
+    {
     }
     
-    return true;
-}
+    explicit RawPointer(void* value)
+        : m_value(value)
+    {
+    }
+    
+    explicit RawPointer(const void* value)
+        : m_value(value)
+    {
+    }
+    
+    const void* value() const { return m_value; }
+    
+private:
+    const void* m_value;
+};
 
-} // namespace JSC
+} // namespace WTF
 
-#endif // USE(UDIS86)
+using WTF::RawPointer;
 
+#endif // RawPointer_h

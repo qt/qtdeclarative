@@ -51,7 +51,7 @@ class LinkBuffer;
 class RepatchBuffer;
 class Watchpoint;
 namespace DFG {
-class CorrectableJumpPoint;
+struct OSRExit;
 }
 
 template <class AssemblerType>
@@ -320,7 +320,7 @@ public:
     class Label {
         template<class TemplateAssemblerType>
         friend class AbstractMacroAssembler;
-        friend class DFG::CorrectableJumpPoint;
+        friend struct DFG::OSRExit;
         friend class Jump;
         friend class JumpReplacementWatchpoint;
         friend class MacroAssemblerCodeRef;
@@ -501,7 +501,7 @@ public:
         template<class TemplateAssemblerType>
         friend class AbstractMacroAssembler;
         friend class Call;
-        friend class DFG::CorrectableJumpPoint;
+        friend struct DFG::OSRExit;
         friend class LinkBuffer;
     public:
         Jump()
@@ -528,6 +528,13 @@ public:
         {
         }
 #endif
+        
+        Label label() const
+        {
+            Label result;
+            result.m_label = m_label;
+            return result;
+        }
 
         void link(AbstractMacroAssembler<AssemblerType>* masm) const
         {
@@ -586,6 +593,13 @@ public:
 
     public:
         typedef Vector<Jump, 16> JumpVector;
+        
+        JumpList() { }
+        
+        JumpList(Jump jump)
+        {
+            append(jump);
+        }
 
         void link(AbstractMacroAssembler<AssemblerType>* masm)
         {

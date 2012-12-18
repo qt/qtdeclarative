@@ -42,8 +42,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-
 #include <qdebug.h>
+#include <FilePrintStream.h>
 
 namespace WTF {
 
@@ -67,26 +67,29 @@ uint32_t cryptographicallyRandomNumber()
     return 0;
 }
 
-static FILE* s_dataFile = stderr;
+static FilePrintStream* s_dataFile;
 
 void setDataFile(FILE* f)
 {
-    s_dataFile = f;
+    delete s_dataFile;
+    s_dataFile = new FilePrintStream(f, FilePrintStream::Borrow);
 }
 
-FILE* dataFile()
+FilePrintStream& dataFile()
 {
-    return s_dataFile;
+    if (!s_dataFile)
+        s_dataFile = new FilePrintStream(stderr, FilePrintStream::Borrow);
+    return *s_dataFile;
 }
 
-void dataLogV(const char* format, va_list args)
+void dataLogFV(const char* format, va_list args)
 {
     char buffer[1024];
     vsnprintf(buffer, sizeof(buffer), format, args);
     qDebug("%s", buffer);
 }
 
-void dataLog(const char* format, ...)
+void dataLogF(const char* format, ...)
 {
     char buffer[1024];
     va_list args;
@@ -96,7 +99,7 @@ void dataLog(const char* format, ...)
     qDebug("%s", buffer);
 }
 
-void dataLogString(const char* str)
+void dataLogFString(const char* str)
 {
     qDebug("%s", str);
 }
