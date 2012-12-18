@@ -3065,9 +3065,8 @@ void tst_qqmllanguage::literals_data()
     QTest::newRow("special8") << "c8" << QVariant(QString("\""));
     QTest::newRow("special9") << "c9" << QVariant(QString("\\"));
     // We don't handle octal escape sequences
-//    QTest::newRow("special10") << "c10" << QVariant(QString("\251"));
-    QTest::newRow("special11") << "c11" << QVariant(QString::fromLatin1("\xa9"));
-    QTest::newRow("special12") << "c12" << QVariant(QString::fromUtf8("\u00A9"));
+    QTest::newRow("special11") << "c10" << QVariant(QString(1, QChar(0xa9)));
+    QTest::newRow("special12") << "c11" << QVariant(QString(1, QChar(0x00A9)));
 }
 
 void tst_qqmllanguage::literals()

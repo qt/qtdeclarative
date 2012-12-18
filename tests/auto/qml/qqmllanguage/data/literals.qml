@@ -18,7 +18,6 @@ QtObject {
     property variant c7:  "\'"
     property variant c8:  "\""
     property variant c9:  "\\"
-    property variant c10:  "\251"
-    property variant c11:  "\xA9"
-    property variant c12:  "\u00A9" // unicode
+    property variant c10:  "\xA9"
+    property variant c11:  "\u00A9" // unicode
 }
