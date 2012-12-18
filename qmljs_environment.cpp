@@ -412,6 +412,7 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
             std::copy(args, args + argc, arguments);
         if (argc < function->formalParameterCount)
             std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
+        argumentCount = function->formalParameterCount;
     }
 
     locals = function->varCount ? new Value[function->varCount] : 0;
