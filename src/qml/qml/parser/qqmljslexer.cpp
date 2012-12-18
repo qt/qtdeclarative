@@ -659,8 +659,11 @@ again:
                 // unicode escape sequence
                 case 'u':
                     u = decodeUnicodeEscapeCharacter(&ok);
-                    if (! ok)
-                        u = _char;
+                    if (! ok) {
+                        _errorCode = IllegalUnicodeEscapeSequence;
+                        _errorMessage = QCoreApplication::translate("QQmlParser", "Illegal unicode escape sequence");
+                        return T_ERROR;
+                    }
                     break;
 
                 // hex escape sequence

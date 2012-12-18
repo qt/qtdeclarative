@@ -155,10 +155,8 @@ new TestCase( SECTION, "\\o",    "o",        "\o" );
 new TestCase( SECTION, "\\p",    "p",        "\p" );
 new TestCase( SECTION, "\\q",    "q",        "\q" );
 new TestCase( SECTION, "\\s",    "s",        "\s" );
-new TestCase( SECTION, "\\u",    "u",        "\u" );
 
 new TestCase( SECTION, "\\w",    "w",        "\w" );
-new TestCase( SECTION, "\\x",    "x",        "\x" );
 new TestCase( SECTION, "\\y",    "y",        "\y" );
 new TestCase( SECTION, "\\z",    "z",        "\z" );
 

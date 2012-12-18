@@ -7364,7 +7364,7 @@ void tst_qqmlecmascript::numberParsing()
 
 void tst_qqmlecmascript::stringParsing()
 {
-    for (int i = 1; i < 5; ++i) {
+    for (int i = 1; i < 6; ++i) {
         QString file("stringParsing_error.%1.qml");
         file = file.arg(i);
         QQmlComponent component(&engine, testFileUrl(file));
