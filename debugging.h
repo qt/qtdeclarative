@@ -47,9 +47,15 @@ namespace Debugging {
 class Debugger;
 
 struct FunctionDebugInfo { // TODO: use opaque d-pointers here
-    IR::Function *function;
+    QString name;
     unsigned startLine, startColumn;
- FunctionDebugInfo(IR::Function *function): function(function), startLine(0), startColumn(0) {}
+
+    FunctionDebugInfo(IR::Function *function):
+        startLine(0), startColumn(0)
+    {
+        if (function->name)
+            name = *function->name;
+    }
 
     void setSourceLocation(unsigned line, unsigned column)
     { startLine = line; startColumn = column; }

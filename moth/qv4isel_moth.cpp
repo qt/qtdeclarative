@@ -29,6 +29,10 @@ class CompressTemps: public IR::StmtVisitor, IR::ExprVisitor
 public:
     void run(IR::Function *function)
     {
+#ifdef DEBUG_TEMP_COMPRESSION
+        qDebug() << "starting on function" << (*function->name) << "with" << function->tempCount << "temps.";
+#endif // DEBUG_TEMP_COMPRESSION
+
         _seenTemps.clear();
         _nextFree = 0;
         _active.reserve(function->tempCount);

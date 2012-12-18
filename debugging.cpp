@@ -123,9 +123,7 @@ FunctionDebugInfo *Debugger::debugInfo(VM::FunctionObject *function) const
 QString Debugger::name(VM::FunctionObject *function) const
 {
     if (FunctionDebugInfo *i = debugInfo(function))
-        if (i->function)
-            if (const QString *n = i->function->name)
-                return *n;
+        return i->name;
 
     return QString();
 }
