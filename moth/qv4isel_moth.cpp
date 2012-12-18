@@ -29,6 +29,7 @@ class CompressTemps: public IR::StmtVisitor, IR::ExprVisitor
 public:
     void run(IR::Function *function)
     {
+        _seenTemps.clear();
         _nextFree = 0;
         _active.reserve(function->tempCount);
         _localCount = function->locals.size();
@@ -90,6 +91,10 @@ private:
     virtual void visitRet(IR::Ret *s) { s->expr->accept(this); }
 
     virtual void visitTemp(IR::Temp *e) {
+        if (_seenTemps.contains(e))
+            return;
+        _seenTemps.insert(e);
+
         if (e->index < 0)
             return;
         if (e->index < _localCount) // don't optimise locals yet.
@@ -173,6 +178,7 @@ private:
 private:
     typedef QVector<QPair<int, int> > ActiveTemps;
     ActiveTemps _active;
+    QSet<IR::Temp *> _seenTemps;
     IR::Stmt *_currentStatement;
     int _localCount;
     int _nextFree;
@@ -410,6 +416,7 @@ void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempInd
             Instruction::CallBuiltinDeclareVar call;
             call.isDeletable = isDeletable;
             call.varName = engine()->newString(*it->expr->asName()->id);
+            addInstruction(call);
         }
     } break;
 
