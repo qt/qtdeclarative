@@ -438,8 +438,7 @@ void MemoryManagerWithNativeStack::collectRootsOnStack(QVector<VM::Object *> &ro
     }
     qSort(heapChunkBoundaries, heapChunkBoundariesEnd);
 
-    int blah = 0;
-    for (; current < top; ++current, ++blah) {
+    for (; current < top; ++current) {
         Object* possibleObject = current->asObject();
         if (!possibleObject)
             continue;
