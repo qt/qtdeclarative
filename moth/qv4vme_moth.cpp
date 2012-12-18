@@ -234,10 +234,6 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         VM::Value *args = stack + argStart;
         void *buf;
         switch (instr.builtin) {
-        case Instr::instr_callBuiltin::builtin_typeof:
-            Q_ASSERT(instr.argc == 1);
-            TEMP(instr.targetTempIndex) = __qmljs_builtin_typeof(args[0], context);
-            break;
         case Instr::instr_callBuiltin::builtin_throw:
             TRACE(builtin_throw, "Throwing now...%s", "");
             Q_ASSERT(instr.argc == 1);
@@ -304,6 +300,22 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_BEGIN_INSTR(CallBuiltinDeleteValue)
         TEMP(instr.targetTempIndex) = VM::Value::fromBoolean(false);
     MOTH_END_INSTR(CallBuiltinDeleteValue)
+
+    MOTH_BEGIN_INSTR(CallBuiltinTypeofMember)
+        TEMP(instr.targetTempIndex) = __qmljs_builtin_typeof_member(TEMP(instr.base), instr.member, context);
+    MOTH_END_INSTR(CallBuiltinTypeofMember)
+
+    MOTH_BEGIN_INSTR(CallBuiltinTypeofSubscript)
+        TEMP(instr.targetTempIndex) = __qmljs_builtin_typeof_element(TEMP(instr.base), TEMP(instr.index), context);
+    MOTH_END_INSTR(CallBuiltinTypeofSubscript)
+
+    MOTH_BEGIN_INSTR(CallBuiltinTypeofName)
+        TEMP(instr.targetTempIndex) = __qmljs_builtin_typeof_name(instr.name, context);
+    MOTH_END_INSTR(CallBuiltinTypeofName)
+
+    MOTH_BEGIN_INSTR(CallBuiltinTypeofValue)
+        TEMP(instr.targetTempIndex) = __qmljs_builtin_typeof(TEMP(instr.tempIndex), context);
+    MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeclareVar)
         __qmljs_builtin_declare_var(context, instr.isDeletable, instr.varName);

@@ -279,14 +279,32 @@ void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempInd
     } break;
 
     case IR::Name::builtin_typeof: {
-        IR::Temp *arg = c->args->expr->asTemp();
-        assert(arg != 0);
-
-        Instruction::CallBuiltin call;
-        call.builtin = Instruction::CallBuiltin::builtin_typeof;
-        prepareCallArgs(c->args, call.argc, call.args);
-        call.targetTempIndex = targetTempIndex;
-        addInstruction(call);
+        if (IR::Member *m = c->args->expr->asMember()) {
+            Instruction::CallBuiltinTypeofMember call;
+            call.base = m->base->asTemp()->index;
+            call.member = engine()->identifier(*m->name);
+            call.targetTempIndex = targetTempIndex;
+            addInstruction(call);
+        } else if (IR::Subscript *ss = c->args->expr->asSubscript()) {
+            Instruction::CallBuiltinTypeofSubscript call;
+            call.base = ss->base->asTemp()->index;
+            call.index = ss->index->asTemp()->index;
+            call.targetTempIndex = targetTempIndex;
+            addInstruction(call);
+        } else if (IR::Name *n = c->args->expr->asName()) {
+            Instruction::CallBuiltinTypeofName call;
+            call.name = engine()->identifier(*n->id);
+            call.targetTempIndex = targetTempIndex;
+            addInstruction(call);
+        } else if (IR::Temp *arg = c->args->expr->asTemp()){
+            assert(arg != 0);
+            Instruction::CallBuiltinTypeofValue call;
+            call.tempIndex = arg->index;
+            call.targetTempIndex = targetTempIndex;
+            addInstruction(call);
+        } else {
+            assert(false);
+        }
     } break;
 
     case IR::Name::builtin_delete: {

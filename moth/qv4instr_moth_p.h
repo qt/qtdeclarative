@@ -23,6 +23,10 @@
     F(CallBuiltinDeleteSubscript, callBuiltinDeleteSubscript) \
     F(CallBuiltinDeleteName, callBuiltinDeleteName) \
     F(CallBuiltinDeleteValue, callBuiltinDeleteValue) \
+    F(CallBuiltinTypeofMember, callBuiltinTypeofMember) \
+    F(CallBuiltinTypeofSubscript, callBuiltinTypeofSubscript) \
+    F(CallBuiltinTypeofName, callBuiltinTypeofName) \
+    F(CallBuiltinTypeofValue, callBuiltinTypeofValue) \
     F(CallBuiltinDeclareVar, callBuiltinDeclareVar) \
     F(CreateValue, createValue) \
     F(CreateProperty, createProperty) \
@@ -148,7 +152,6 @@ union Instr
     struct instr_callBuiltin {
         MOTH_INSTR_HEADER
         enum {
-            builtin_typeof,
             builtin_throw,
             builtin_rethrow,
             builtin_create_exception_handler,
@@ -181,6 +184,28 @@ union Instr
         int targetTempIndex;
     };
     struct instr_callBuiltinDeleteValue {
+        MOTH_INSTR_HEADER
+        int tempIndex;
+        int targetTempIndex;
+    };
+    struct instr_callBuiltinTypeofMember {
+        MOTH_INSTR_HEADER
+        int base;
+        VM::String *member;
+        int targetTempIndex;
+    };
+    struct instr_callBuiltinTypeofSubscript {
+        MOTH_INSTR_HEADER
+        int base;
+        int index;
+        int targetTempIndex;
+    };
+    struct instr_callBuiltinTypeofName {
+        MOTH_INSTR_HEADER
+        VM::String *name;
+        int targetTempIndex;
+    };
+    struct instr_callBuiltinTypeofValue {
         MOTH_INSTR_HEADER
         int tempIndex;
         int targetTempIndex;
@@ -283,6 +308,10 @@ union Instr
     instr_callBuiltinDeleteSubscript callBuiltinDeleteSubscript;
     instr_callBuiltinDeleteName callBuiltinDeleteName;
     instr_callBuiltinDeleteValue callBuiltinDeleteValue;
+    instr_callBuiltinTypeofMember callBuiltinTypeofMember;
+    instr_callBuiltinTypeofSubscript callBuiltinTypeofSubscript;
+    instr_callBuiltinTypeofName callBuiltinTypeofName;
+    instr_callBuiltinTypeofValue callBuiltinTypeofValue;
     instr_callBuiltinDeclareVar callBuiltinDeclareVar;
     instr_createValue createValue;
     instr_createProperty createProperty;
