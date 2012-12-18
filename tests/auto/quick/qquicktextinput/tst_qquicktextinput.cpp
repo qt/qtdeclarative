@@ -3448,15 +3448,13 @@ public:
 void tst_qquicktextinput::setHAlignClearCache()
 {
     QQuickView view;
+    view.resize(200, 200);
     MyTextInput input;
     input.setText("Hello world");
     input.setParentItem(view.contentItem());
     view.show();
     view.requestActivate();
     QTest::qWaitForWindowActive(&view);
-#ifdef Q_OS_MAC
-    QEXPECT_FAIL("", "QTBUG-23485", Abort);
-#endif
     QTRY_COMPARE(input.nbPaint, 1);
     input.setHAlign(QQuickTextInput::AlignRight);
     //Changing the alignment should trigger a repaint
