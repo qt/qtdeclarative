@@ -150,7 +150,7 @@ void Debugger::enterFunction(FunctionState *state)
 
 #ifdef DO_TRACE_INSTR
     QString n = name(_callStack[callIndex(state->context())].function);
-    std::cerr << "*** Entering \"" << qPrintable(n) << "\" with " << state->context()->variableEnvironment->argumentCount << " args" << std::endl;
+    std::cerr << "*** Entering \"" << qPrintable(n) << "\" with " << state->context()->argumentCount << " args" << std::endl;
 //    for (unsigned i = 0; i < state->context()->variableEnvironment->argumentCount; ++i)
 //        std::cerr << "        " << i << ": " << currentArg(i) << std::endl;
 #endif // DO_TRACE_INSTR

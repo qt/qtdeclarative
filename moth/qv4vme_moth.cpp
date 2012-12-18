@@ -60,15 +60,15 @@ static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, VM::Va
     if (index < 0) {
         kind = "arg";
         pos = -index - 1;
-    } else if (index < (int) varEnv->varCount) {
+    } else if (index < (int) context->variableCount()) {
         kind = "local";
         pos = index;
     } else {
         kind = "temp";
-        pos = index - varEnv->varCount;
+        pos = index - context->variableCount();
     }
-    fprintf(stderr, "    tempValue: index = %d : %s = %d, stack size = %d\n",
-          index, kind, pos, stack.size());
+    fprintf(stderr, "    tempValue: index = %d : %s = %d\n",
+          index, kind, pos);
 #endif // DO_TRACE_INSTR
 
     if (index < 0) {
