@@ -121,6 +121,7 @@ public:
     enum Error {
         NoError,
         IllegalCharacter,
+        IllegalHexNumber,
         UnclosedStringLiteral,
         IllegalEscapeSequence,
         IllegalUnicodeEscapeSequence,

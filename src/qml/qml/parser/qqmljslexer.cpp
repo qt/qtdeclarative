@@ -861,14 +861,21 @@ int Lexer::scanNumber(QChar ch)
     chars.append(ch.unicode());
 
     if (ch == QLatin1Char('0') && (_char == QLatin1Char('x') || _char == QLatin1Char('X'))) {
-        // parse hex integer literal
+        ch = _char; // remember the x or X to use it in the error message below.
 
+        // parse hex integer literal
         chars.append(_char.unicode());
         scanChar(); // consume `x'
 
         while (isHexDigit(_char)) {
             chars.append(_char.unicode());
             scanChar();
+        }
+
+        if (chars.size() < 3) {
+            _errorCode = IllegalHexNumber;
+            _errorMessage = QCoreApplication::translate("QQmlParser", "At least one hexadecimal digit is required after '0%1'").arg(ch);
+            return T_ERROR;
         }
 
         _tokenValue = integerFromString(chars.constData(), chars.size(), 16);

@@ -124,6 +124,8 @@ void tst_qmlmin::initTestCase()
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.2.qml";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.3.qml";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.4.qml";
+    invalidFiles << "tests/auto/qml/qqmlecmascript/data/numberParsing_error.1.qml";
+    invalidFiles << "tests/auto/qml/qqmlecmascript/data/numberParsing_error.2.qml";
 }
 
 QStringList tst_qmlmin::findFiles(const QDir &d)

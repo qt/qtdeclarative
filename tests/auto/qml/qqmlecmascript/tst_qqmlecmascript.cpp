@@ -7346,6 +7346,12 @@ void tst_qqmlecmascript::numberParsing()
         QObject *object = component.create();
         QVERIFY(object != 0);
     }
+    for (int i = 1; i < 3; ++i) {
+        QString file("numberParsing_error.%1.qml");
+        file = file.arg(i);
+        QQmlComponent component(&engine, testFileUrl(file));
+        QVERIFY(!component.errors().isEmpty());
+    }
 }
 
 void tst_qqmlecmascript::stringParsing()
