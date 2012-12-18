@@ -780,6 +780,11 @@ void LLVMInstructionSelection::genBinop(llvm::Value *result, IR::Binop *e)
         Q_UNREACHABLE();
         break;
 
+    case IR::OpIncrement:
+    case IR::OpDecrement:
+        assert(!"TODO!");
+        break;
+
     case IR::OpBitAnd: op = _llvmModule->getFunction("__qmljs_llvm_bit_and"); break;
     case IR::OpBitOr: op = _llvmModule->getFunction("__qmljs_llvm_bit_or"); break;
     case IR::OpBitXor: op = _llvmModule->getFunction("__qmljs_llvm_bit_xor"); break;

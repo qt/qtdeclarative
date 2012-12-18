@@ -184,6 +184,8 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *, String *name)
 // Section 8.12.2
 PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, String *name)
 {
+    Q_UNUSED(ctx);
+
     Object *o = this;
     while (o) {
         if (o->members) {
