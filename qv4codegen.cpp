@@ -2208,9 +2208,6 @@ bool Codegen::visit(TryStatement *ast)
     // We always need a finally body to clean up the exception handler
     IR::BasicBlock *finallyBody = _function->newBasicBlock();
 
-    TryCleanup tcf(_tryCleanup, ast->finallyExpression);
-    _tryCleanup = &tcf;
-
     int inCatch = 0;
     if (catchBody) {
         inCatch = _block->newTemp();
@@ -2219,6 +2216,19 @@ bool Codegen::visit(TryStatement *ast)
 
     int hasException = _block->newTemp();
     move(_block->TEMP(hasException), _block->CALL(_block->NAME(IR::Name::builtin_create_exception_handler, 0, 0), 0));
+
+    // Pass the hidden "inCatch" and "hasException" TEMPs to the
+    // builtin_delete_exception_handler, in order to have those TEMPs alive for
+    // the duration of the exception handling block.
+    IR::ExprList *deleteExceptionArgs = _function->New<IR::ExprList>();
+    deleteExceptionArgs->init(_block->TEMP(hasException));
+    if (inCatch) {
+        deleteExceptionArgs->next = _function->New<IR::ExprList>();
+        deleteExceptionArgs->next->init(_block->TEMP(inCatch));
+    }
+
+    TryCleanup tcf(_tryCleanup, ast->finallyExpression, deleteExceptionArgs);
+    _tryCleanup = &tcf;
 
     _block->CJUMP(_block->TEMP(hasException), catchBody ? catchBody : finallyBody, tryBody);
 
@@ -2266,7 +2276,7 @@ bool Codegen::visit(TryStatement *ast)
     IR::BasicBlock *after = _function->newBasicBlock();
     _block = finallyBody;
 
-    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
+    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), deleteExceptionArgs));
     if (ast->finallyExpression && ast->finallyExpression->statement)
         statement(ast->finallyExpression->statement);
 
@@ -2288,7 +2298,7 @@ void Codegen::unwindException(Codegen::TryCleanup *outest)
     TryCleanup *tryCleanup = _tryCleanup;
     qSwap(_tryCleanup, tryCleanup);
     while (_tryCleanup != outest) {
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), 0));
+        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), _tryCleanup->deleteExceptionArgs));
         TryCleanup *tc = _tryCleanup;
         _tryCleanup = tc->parent;
         if (tc->finally && tc->finally->statement)

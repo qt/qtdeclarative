@@ -207,9 +207,11 @@ protected:
     struct TryCleanup {
         TryCleanup *parent;
         AST::Finally *finally;
+        IR::ExprList *deleteExceptionArgs;
 
-        TryCleanup(TryCleanup *parent, AST::Finally *finally)
-            : parent(parent), finally(finally) {}
+        TryCleanup(TryCleanup *parent, AST::Finally *finally, IR::ExprList *deleteExceptionArgs)
+            : parent(parent), finally(finally), deleteExceptionArgs(deleteExceptionArgs)
+        {}
     };
 
     struct Loop {
