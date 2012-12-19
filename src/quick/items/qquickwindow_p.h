@@ -120,6 +120,7 @@ public:
     QQuickDragGrabber dragGrabber;
 #endif
     int touchMouseId;
+    bool checkIfDoubleClicked(ulong newPressEventTimestamp);
     ulong touchMousePressTimestamp;
 
     // Mouse positions are saved in widget coordinates

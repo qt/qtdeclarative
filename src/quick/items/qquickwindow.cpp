@@ -447,6 +447,29 @@ static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QTouchEvent::Touc
     return me;
 }
 
+bool QQuickWindowPrivate::checkIfDoubleClicked(ulong newPressEventTimestamp)
+{
+    bool doubleClicked;
+
+    if (touchMousePressTimestamp == 0) {
+        // just initialize the variable
+        touchMousePressTimestamp = newPressEventTimestamp;
+        doubleClicked = false;
+    } else {
+        ulong timeBetweenPresses = newPressEventTimestamp - touchMousePressTimestamp;
+        ulong doubleClickInterval = static_cast<ulong>(qApp->styleHints()->
+                mouseDoubleClickInterval());
+        doubleClicked = timeBetweenPresses < doubleClickInterval;
+        if (doubleClicked) {
+            touchMousePressTimestamp = 0;
+        } else {
+            touchMousePressTimestamp = newPressEventTimestamp;
+        }
+    }
+
+    return doubleClicked;
+}
+
 bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *event)
 {
     Q_Q(QQuickWindow);
@@ -463,9 +486,6 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
             if (!item->contains(pos))
                 break;
 
-            bool doubleClick = event->timestamp() - touchMousePressTimestamp
-                            < static_cast<ulong>(qApp->styleHints()->mouseDoubleClickInterval());
-            touchMousePressTimestamp = event->timestamp();
             // Store the id already here and restore it to -1 if the event does not get
             // accepted. Cannot defer setting the new value because otherwise if the event
             // handler spins the event loop all subsequent moves and releases get lost.
@@ -489,8 +509,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                     item->ungrabMouse();
             }
 
-            if (doubleClick && mousePress->isAccepted()) {
-                touchMousePressTimestamp = 0;
+            if (mousePress->isAccepted() && checkIfDoubleClicked(event->timestamp())) {
                 QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event, item));
                 q->sendEvent(item, mouseDoubleClick.data());
                 event->setAccepted(mouseDoubleClick->isAccepted());
