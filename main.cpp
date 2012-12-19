@@ -53,7 +53,7 @@
 #include "qv4syntaxchecker_p.h"
 #include "qv4ecmaobjects_p.h"
 #include "qv4isel_p.h"
-#include "qv4mm_moth.h"
+#include "qv4mm.h"
 
 #include <QtCore>
 #include <private/qqmljsengine_p.h>
@@ -333,13 +333,11 @@ int main(int argc, char *argv[])
 #endif // QMLJS_NO_LLVM
     case use_masm:
     case use_moth: {
-        QScopedPointer<QQmlJS::VM::MemoryManager> mm;
+        QScopedPointer<QQmlJS::VM::MemoryManager> mm(new QQmlJS::VM::MemoryManagerWithNativeStack);
         QScopedPointer<QQmlJS::EvalISelFactory> iSelFactory;
         if (mode == use_moth) {
-            mm.reset(new QQmlJS::Moth::MemoryManager);
             iSelFactory.reset(new QQmlJS::Moth::ISelFactory);
         } else {
-            mm.reset(new QQmlJS::VM::MemoryManagerWithNativeStack);
             iSelFactory.reset(new QQmlJS::MASM::ISelFactory);
         }
 

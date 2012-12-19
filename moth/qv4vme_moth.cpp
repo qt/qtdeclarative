@@ -2,9 +2,10 @@
 #include "qv4instr_moth_p.h"
 #include "qmljs_value.h"
 #include "debugging.h"
-#include "qv4mm_moth.h"
 
 #include <iostream>
+
+#include <alloca.h>
 
 #ifdef DO_TRACE_INSTR
 #  define TRACE_INSTR(I) fprintf(stderr, "executing a %s\n", #I);
@@ -103,9 +104,6 @@ public:
         , code(code)
     {}
 
-    ~FunctionState()
-    { if (stack) static_cast<MemoryManager *>(context()->engine->memoryManager)->deallocStackFrame(stack); }
-
     virtual VM::Value *temp(unsigned idx) { return stack + idx; }
 
     void setStack(VM::Value *stack, unsigned stackSize)
@@ -201,7 +199,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_BEGIN_INSTR(Push)
         TRACE(inline, "stack size: %u", instr.value);
         stackSize = instr.value;
-        stack = static_cast<MemoryManager *>(context->engine->memoryManager)->allocStackFrame(stackSize);
+        stack = static_cast<VM::Value *>(alloca(stackSize * sizeof(VM::Value)));
         state.setStack(stack, stackSize);
     MOTH_END_INSTR(Push)
 
