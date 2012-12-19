@@ -37,7 +37,21 @@ public:
         _nextFree = 0;
         _active.reserve(function->tempCount);
         _localCount = function->locals.size();
-        pinReturnTemp(function);
+
+        QVector<int> pinned;
+        foreach (IR::BasicBlock *block, function->basicBlocks) {
+            if (IR::Stmt *last = block->terminator()) {
+                const QBitArray &liveOut = last->d->liveOut;
+                for (int i = 0, ei = liveOut.size(); i < ei; ++i) {
+                    if (liveOut.at(i) && !pinned.contains(i)) {
+                        pinned.append(i);
+                        add(i - _localCount, _nextFree);
+                    }
+                }
+            }
+        }
+        _pinnedCount = _nextFree;
+
         int maxUsed = _nextFree;
 
         foreach (IR::BasicBlock *block, function->basicBlocks) {
@@ -66,18 +80,6 @@ public:
     }
 
 private:
-    void pinReturnTemp(IR::Function *function) {
-        const IR::BasicBlock *returnBlock = function->basicBlocks.last();
-        assert(returnBlock);
-        IR::Ret *ret = returnBlock->terminator()->asRet();
-        assert(ret);
-        IR::Temp *t = ret->expr->asTemp();
-        assert(t);
-        assert(t->index >= 0);
-        _pinnedReturnValue = _nextFree;
-        add(t->index, _pinnedReturnValue);
-    }
-
     virtual void visitConst(IR::Const *) {}
     virtual void visitString(IR::String *) {}
     virtual void visitRegExp(IR::RegExp *) {}
@@ -157,7 +159,7 @@ private:
         while (i < _active.size()) {
             const QPair<int, int> &p = _active[i];
 
-            if (p.second == _pinnedReturnValue) {
+            if (p.second < _pinnedCount) {
                 inUse.setBit(p.second);
                 ++i;
                 continue;
@@ -186,7 +188,7 @@ private:
     IR::Stmt *_currentStatement;
     int _localCount;
     int _nextFree;
-    int _pinnedReturnValue;
+    int _pinnedCount;
 };
 
 } // anonymous namespace
