@@ -160,6 +160,8 @@ private slots:
     void flickableOnPinch();
     void mouseOnFlickableOnPinch();
 
+    void tapOnDismissiveTopMouseAreaClicksBottomOne();
+
 private:
     QQuickView *createView();
     QTouchDevice *device;
@@ -916,6 +918,53 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     pinchSequence.release(0, p1, window).release(1, p2, window).commit();
     QVERIFY(rect->scale() > 1.0);
     pinchSequence.release(0, p, window).commit();
+}
+
+/*
+   Regression test for the following use case:
+   You have two mouse areas, on on top of the other.
+   1 - You tap the top one.
+   2 - That top mouse area receives a mouse press event but doesn't accept it
+   Expected outcome:
+     3 - the bottom mouse area gets clicked (besides press and release mouse events)
+   Bogus outcome:
+     3 - the bottom mouse area gets double clicked.
+ */
+void tst_TouchMouse::tapOnDismissiveTopMouseAreaClicksBottomOne()
+{
+    QQuickView *window = createView();
+
+    window->setSource(testFileUrl("twoMouseAreas.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(window->rootObject() != 0);
+
+    QQuickMouseArea *bottomMouseArea =
+        window->rootObject()->findChild<QQuickMouseArea*>("rear mouseArea");
+
+    QSignalSpy bottomClickedSpy(bottomMouseArea, SIGNAL(clicked(QQuickMouseEvent*)));
+    QSignalSpy bottomDoubleClickedSpy(bottomMouseArea,
+                                      SIGNAL(doubleClicked(QQuickMouseEvent*)));
+
+    // tap the front mouse area (see qml file)
+    QPoint p1(20, 20);
+    QTest::touchEvent(window, device).press(0, p1, window);
+    QTest::qWait(1);
+    QTest::touchEvent(window, device).release(0, p1, window);
+
+    QCOMPARE(bottomClickedSpy.count(), 1);
+    QCOMPARE(bottomDoubleClickedSpy.count(), 0);
+    QTest::qWait(15);
+
+    QTest::touchEvent(window, device).press(0, p1, window);
+    QTest::qWait(1);
+    QTest::touchEvent(window, device).release(0, p1, window);
+
+    QCOMPARE(bottomClickedSpy.count(), 1);
+    QCOMPARE(bottomDoubleClickedSpy.count(), 1);
+
+    delete window;
 }
 
 QTEST_MAIN(tst_TouchMouse)
