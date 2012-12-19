@@ -128,14 +128,14 @@ void tst_qqmlinstruction::dump()
     {
         QQmlCompiledData::Instruction::StoreFloat i;
         i.propertyIndex = 3;
-        i.value = 11.3;
+        i.value = 11.3f;
         data->addInstruction(i);
     }
 
     {
         QQmlCompiledData::Instruction::StoreDouble i;
         i.propertyIndex = 4;
-        i.value = 14.8;
+        i.value = 14.8f;
         data->addInstruction(i);
     }
 
@@ -676,8 +676,8 @@ void tst_qqmlinstruction::vector3d()
     QCOMPARE(Q_ALIGNOF(QQmlInstruction::instr_storeVector3D::QVector3D), Q_ALIGNOF(QVector3D));
 
     QQmlInstruction i;
-    i.storeVector3D.vector.xp = 8.2;
-    i.storeVector3D.vector.yp = 99.3;
+    i.storeVector3D.vector.xp = 8.2f;
+    i.storeVector3D.vector.yp = 99.3f;
     i.storeVector3D.vector.zp = 12.0;
 
     const QVector3D &vector = (const QVector3D &)(i.storeVector3D.vector);
@@ -692,10 +692,10 @@ void tst_qqmlinstruction::vector4d()
     QCOMPARE(Q_ALIGNOF(QQmlInstruction::instr_storeVector4D::QVector4D), Q_ALIGNOF(QVector4D));
 
     QQmlInstruction i;
-    i.storeVector4D.vector.xp = 8.2;
-    i.storeVector4D.vector.yp = 99.3;
+    i.storeVector4D.vector.xp = 8.2f;
+    i.storeVector4D.vector.yp = 99.3f;
     i.storeVector4D.vector.zp = 12.0;
-    i.storeVector4D.vector.wp = 121.1;
+    i.storeVector4D.vector.wp = 121.1f;
 
     const QVector4D &vector = (const QVector4D &)(i.storeVector4D.vector);
     QCOMPARE(vector.x(), (qreal)(float)8.2);

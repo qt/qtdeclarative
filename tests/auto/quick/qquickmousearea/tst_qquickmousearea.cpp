@@ -1285,7 +1285,6 @@ void tst_QQuickMouseArea::pressedMultipleButtons()
 
     QPoint point(10,10);
 
-    int prevButtons = 0;
     for (int i = 0; i < buttons.count(); ++i) {
         int btns = buttons.at(i);
 
@@ -1294,8 +1293,6 @@ void tst_QQuickMouseArea::pressedMultipleButtons()
 
         QCOMPARE(mouseArea->pressed(), pressed.at(i));
         QCOMPARE(mouseArea->pressedButtons(), pressedButtons.at(i));
-
-        prevButtons = buttons.at(i);
     }
 
     QTest::mousePress(view, Qt::NoButton, 0, point);

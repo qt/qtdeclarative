@@ -3801,6 +3801,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
                 v8::Persistent<v8::Context> context = v8::Context::New();
                 v8::Context::Scope context_scope(context);
                 v8::Local<v8::Object> temporaryScope = engine->qmlScope(scriptContext, NULL);
+                Q_UNUSED(temporaryScope)
 
                 context.Dispose();
             }

@@ -236,7 +236,7 @@ void tst_qquickimageprovider::runTest(bool async, QQuickImageProvider *provider)
 
     // From this point on, treat forced async providers as async behaviour-wise
     if (engine.imageProvider(QUrl(source).host()) == provider)
-        async |= provider->flags() & QQuickImageProvider::ForceAsynchronousImageLoading;
+        async |= (provider->flags() & QQuickImageProvider::ForceAsynchronousImageLoading) != 0;
 
     if (async)
         QTRY_VERIFY(obj->status() == QQuickImage::Loading);
