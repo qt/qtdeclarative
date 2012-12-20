@@ -179,6 +179,55 @@ void Lexer::scanChar()
     }
 }
 
+namespace {
+inline bool isBinop(int tok)
+{
+    switch (tok) {
+    case Lexer::T_AND:
+    case Lexer::T_AND_AND:
+    case Lexer::T_AND_EQ:
+    case Lexer::T_DIVIDE_:
+    case Lexer::T_DIVIDE_EQ:
+    case Lexer::T_EQ:
+    case Lexer::T_EQ_EQ:
+    case Lexer::T_EQ_EQ_EQ:
+    case Lexer::T_GE:
+    case Lexer::T_GT:
+    case Lexer::T_GT_GT:
+    case Lexer::T_GT_GT_EQ:
+    case Lexer::T_GT_GT_GT:
+    case Lexer::T_GT_GT_GT_EQ:
+    case Lexer::T_LE:
+    case Lexer::T_LT:
+    case Lexer::T_LT_LT:
+    case Lexer::T_LT_LT_EQ:
+    case Lexer::T_MINUS:
+    case Lexer::T_MINUS_EQ:
+    case Lexer::T_MINUS_MINUS:
+    case Lexer::T_NOT_EQ:
+    case Lexer::T_NOT_EQ_EQ:
+    case Lexer::T_OR:
+    case Lexer::T_OR_EQ:
+    case Lexer::T_OR_OR:
+    case Lexer::T_PLUS:
+    case Lexer::T_PLUS_EQ:
+    case Lexer::T_PLUS_PLUS:
+    case Lexer::T_REMAINDER:
+    case Lexer::T_REMAINDER_EQ:
+    case Lexer::T_RETURN:
+    case Lexer::T_STAR:
+    case Lexer::T_STAR_EQ:
+    case Lexer::T_TILDE:
+    case Lexer::T_XOR:
+    case Lexer::T_XOR_EQ:
+        return true;
+
+    default:
+        return false;
+    }
+}
+} // anonymous namespace
+
 int Lexer::lex()
 {
     const int previousTokenKind = _tokenKind;
@@ -195,8 +244,13 @@ int Lexer::lex()
     switch (_tokenKind) {
     case T_LBRACE:
     case T_SEMICOLON:
+    case T_QUESTION:
     case T_COLON:
         _delimited = true;
+        break;
+    default:
+        if (isBinop(_tokenKind))
+            _delimited = true;
         break;
 
     case T_IF:

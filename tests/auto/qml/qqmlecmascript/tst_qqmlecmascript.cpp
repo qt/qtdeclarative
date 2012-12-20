@@ -266,6 +266,8 @@ private slots:
     void deleteLaterObjectMethodCall();
     void automaticSemicolon();
     void compatibilitySemicolon();
+    void incrDecrSemicolon1();
+    void incrDecrSemicolon2();
     void unaryExpression();
     void switchStatement();
     void withStatement();
@@ -6623,6 +6625,20 @@ void tst_qqmlecmascript::automaticSemicolon()
 void tst_qqmlecmascript::compatibilitySemicolon()
 {
     QQmlComponent component(&engine, testFileUrl("compatibilitySemicolon.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+}
+
+void tst_qqmlecmascript::incrDecrSemicolon1()
+{
+    QQmlComponent component(&engine, testFileUrl("incrDecrSemicolon1.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+}
+
+void tst_qqmlecmascript::incrDecrSemicolon2()
+{
+    QQmlComponent component(&engine, testFileUrl("incrDecrSemicolon2.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 }
