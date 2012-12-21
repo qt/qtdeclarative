@@ -12,4 +12,4 @@ SUBDIRS += \
     valuesource \
     methods
 
-!contains(QT_CONFIG, no-widgets): SUBDIRS += extended
+qtHaveModule(widgets): SUBDIRS += extended

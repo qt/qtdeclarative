@@ -4,7 +4,7 @@ SUBDIRS += \
     folderlistmodel \
     localstorage
 
-!isEmpty(QT.quick.name) {
+qtHaveModule(quick) {
     SUBDIRS += \
         qtquick2 \
         particles \
@@ -12,4 +12,4 @@ SUBDIRS += \
         testlib
 }
 
-contains(QT_CONFIG, xmlpatterns) : SUBDIRS += xmllistmodel
+qtHaveModule(xmlpatterns) : SUBDIRS += xmllistmodel
