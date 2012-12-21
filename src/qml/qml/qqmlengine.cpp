@@ -814,6 +814,16 @@ QQmlEngine::QQmlEngine(QObject *parent)
 }
 
 /*!
+* \internal
+*/
+QQmlEngine::QQmlEngine(QQmlEnginePrivate &dd, QObject *parent)
+: QJSEngine(dd, parent)
+{
+    Q_D(QQmlEngine);
+    d->init();
+}
+
+/*!
   Destroys the QQmlEngine.
 
   Any QQmlContext's created on this engine will be

@@ -142,6 +142,7 @@ public:
     static void setObjectOwnership(QObject *, ObjectOwnership);
     static ObjectOwnership objectOwnership(QObject *);
 protected:
+    QQmlEngine(QQmlEnginePrivate &dd, QObject *p);
     virtual bool event(QEvent *);
 
 Q_SIGNALS:

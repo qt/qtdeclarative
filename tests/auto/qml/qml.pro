@@ -24,7 +24,8 @@ PUBLICTESTS += \
     qqmltranslation \
     qqmlxmlhttprequest \
     qtqmlmodules \
-    qquickfolderlistmodel
+    qquickfolderlistmodel \
+    qqmlapplicationengine
 
 PRIVATETESTS += \
     animation \

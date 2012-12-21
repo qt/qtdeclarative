@@ -50,7 +50,8 @@ SOURCES += \
     $$PWD/qqmlbundle.cpp \
     $$PWD/qqmlmemoryprofiler.cpp \
     $$PWD/qqmlplatform.cpp \
-    $$PWD/qqmlbinding.cpp
+    $$PWD/qqmlbinding.cpp \
+    $$PWD/qqmlapplicationengine.cpp
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
@@ -121,7 +122,9 @@ HEADERS += \
     $$PWD/qqmlmemoryprofiler_p.h \
     $$PWD/qqmlplatform_p.h \
     $$PWD/qqmlbinding_p.h \
-    $$PWD/qqmlextensionplugin_p.h
+    $$PWD/qqmlextensionplugin_p.h \
+    $$PWD/qqmlapplicationengine_p.h \
+    $$PWD/qqmlapplicationengine.h
 
 
 include(parser/parser.pri)
