@@ -2,6 +2,7 @@ TEMPLATE = subdirs
 qtHaveModule(quick): SUBDIRS += qmlscene qmlplugindump
 qtHaveModule(qmltest): SUBDIRS += qmltestrunner
 SUBDIRS += \
+    qml \
     qmlmin \
     qmlprofiler \
     qmlbundle \

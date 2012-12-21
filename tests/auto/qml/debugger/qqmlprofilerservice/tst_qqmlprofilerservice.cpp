@@ -198,8 +198,6 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
 
     stream >> data.time >> data.messageType;
 
-    QVERIFY(data.time >= -1);
-
     switch (data.messageType) {
     case (QQmlProfilerClient::Event): {
         stream >> data.detailType;
@@ -299,8 +297,10 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
 
 void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
 {
+    // ### Still using qmlscene due to QTBUG-33377
     const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene";
     QStringList arguments;
+    arguments << QLatin1String("-enable-debugger");
 
     if (block)
         arguments << QString("-qmljsdebugger=port:" STR_PORT_FROM "," STR_PORT_TO ",block");

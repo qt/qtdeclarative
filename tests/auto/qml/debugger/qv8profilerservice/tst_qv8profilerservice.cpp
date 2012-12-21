@@ -204,8 +204,9 @@ void QV8ProfilerClient::messageReceived(const QByteArray &message)
 bool tst_QV8ProfilerService::connect(bool block, const QString &testFile,
                                      QString *error)
 {
-    const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene";
+    const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qml";
     QStringList arguments;
+    arguments << QLatin1String("-enable-debugger");
 
     if (block)
         arguments << QString("-qmljsdebugger=port:" STR_PORT_FROM "," STR_PORT_TO ",block");
