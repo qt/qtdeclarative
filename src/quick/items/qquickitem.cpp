@@ -5272,7 +5272,7 @@ void QQuickItem::setFlags(Flags flags)
 {
     Q_D(QQuickItem);
 
-    if ((flags & ItemIsFocusScope) != (d->flags & ItemIsFocusScope)) {
+    if (int(flags & ItemIsFocusScope) != int(d->flags & ItemIsFocusScope)) {
         if (flags & ItemIsFocusScope && !d->childItems.isEmpty() && d->window) {
             qWarning("QQuickItem: Cannot set FocusScope once item has children and is in a window.");
             flags &= ~ItemIsFocusScope;
@@ -5282,7 +5282,7 @@ void QQuickItem::setFlags(Flags flags)
         }
     }
 
-    if ((flags & ItemClipsChildrenToShape) != (d->flags & ItemClipsChildrenToShape))
+    if (int(flags & ItemClipsChildrenToShape) != int(d->flags & ItemClipsChildrenToShape))
         d->dirty(QQuickItemPrivate::Clip);
 
     d->flags = flags;
