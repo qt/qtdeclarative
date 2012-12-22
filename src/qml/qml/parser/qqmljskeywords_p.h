@@ -91,7 +91,7 @@ static inline int classify3(const QChar *s, bool qmlMode) {
   else if (s[0].unicode() == 'i') {
     if (s[1].unicode() == 'n') {
       if (s[2].unicode() == 't') {
-        return qmlMode ? Lexer::T_INT : Lexer::T_IDENTIFIER;
+        return qmlMode ? int(Lexer::T_INT) : int(Lexer::T_IDENTIFIER);
       }
     }
   }
@@ -124,7 +124,7 @@ static inline int classify4(const QChar *s, bool qmlMode) {
     if (s[1].unicode() == 'y') {
       if (s[2].unicode() == 't') {
         if (s[3].unicode() == 'e') {
-          return qmlMode ? Lexer::T_BYTE : Lexer::T_IDENTIFIER;
+          return qmlMode ? int(Lexer::T_BYTE) : int(Lexer::T_IDENTIFIER);
         }
       }
     }
@@ -140,7 +140,7 @@ static inline int classify4(const QChar *s, bool qmlMode) {
     else if (s[1].unicode() == 'h') {
       if (s[2].unicode() == 'a') {
         if (s[3].unicode() == 'r') {
-          return qmlMode ? Lexer::T_CHAR : Lexer::T_IDENTIFIER;
+          return qmlMode ? int(Lexer::T_CHAR) : int(Lexer::T_IDENTIFIER);
         }
       }
     }
@@ -165,7 +165,7 @@ static inline int classify4(const QChar *s, bool qmlMode) {
     if (s[1].unicode() == 'o') {
       if (s[2].unicode() == 't') {
         if (s[3].unicode() == 'o') {
-          return qmlMode ? Lexer::T_GOTO : Lexer::T_IDENTIFIER;
+          return qmlMode ? int(Lexer::T_GOTO) : int(Lexer::T_IDENTIFIER);
         }
       }
     }
@@ -174,7 +174,7 @@ static inline int classify4(const QChar *s, bool qmlMode) {
     if (s[1].unicode() == 'o') {
       if (s[2].unicode() == 'n') {
         if (s[3].unicode() == 'g') {
-          return qmlMode ? Lexer::T_LONG : Lexer::T_IDENTIFIER;
+          return qmlMode ? int(Lexer::T_LONG) : int(Lexer::T_IDENTIFIER);
         }
       }
     }
@@ -260,7 +260,7 @@ static inline int classify5(const QChar *s, bool qmlMode) {
       if (s[2].unicode() == 'n') {
         if (s[3].unicode() == 's') {
           if (s[4].unicode() == 't') {
-            return qmlMode ? Lexer::T_CONST : Lexer::T_RESERVED_WORD;
+            return qmlMode ? int(Lexer::T_CONST) : int(Lexer::T_RESERVED_WORD);
           }
         }
       }
@@ -280,7 +280,7 @@ static inline int classify5(const QChar *s, bool qmlMode) {
       if (s[2].unicode() == 'n') {
         if (s[3].unicode() == 'a') {
           if (s[4].unicode() == 'l') {
-            return qmlMode ? Lexer::T_FINAL : Lexer::T_IDENTIFIER;
+            return qmlMode ? int(Lexer::T_FINAL) : int(Lexer::T_IDENTIFIER);
           }
         }
       }
@@ -289,7 +289,7 @@ static inline int classify5(const QChar *s, bool qmlMode) {
       if (s[2].unicode() == 'o') {
         if (s[3].unicode() == 'a') {
           if (s[4].unicode() == 't') {
-            return qmlMode ? Lexer::T_FLOAT : Lexer::T_IDENTIFIER;
+            return qmlMode ? int(Lexer::T_FLOAT) : int(Lexer::T_IDENTIFIER);
           }
         }
       }
@@ -300,7 +300,7 @@ static inline int classify5(const QChar *s, bool qmlMode) {
       if (s[2].unicode() == 'o') {
         if (s[3].unicode() == 'r') {
           if (s[4].unicode() == 't') {
-            return qmlMode ? Lexer::T_SHORT : Lexer::T_IDENTIFIER;
+            return qmlMode ? int(Lexer::T_SHORT) : int(Lexer::T_IDENTIFIER);
           }
         }
       }
@@ -309,7 +309,7 @@ static inline int classify5(const QChar *s, bool qmlMode) {
       if (s[2].unicode() == 'p') {
         if (s[3].unicode() == 'e') {
           if (s[4].unicode() == 'r') {
-            return qmlMode ? Lexer::T_SUPER : Lexer::T_IDENTIFIER;
+            return qmlMode ? int(Lexer::T_SUPER) : int(Lexer::T_IDENTIFIER);
           }
         }
       }
@@ -358,7 +358,7 @@ static inline int classify6(const QChar *s, bool qmlMode) {
         if (s[3].unicode() == 'b') {
           if (s[4].unicode() == 'l') {
             if (s[5].unicode() == 'e') {
-              return qmlMode ? Lexer::T_DOUBLE : Lexer::T_IDENTIFIER;
+              return qmlMode ? int(Lexer::T_DOUBLE) : int(Lexer::T_IDENTIFIER);
             }
           }
         }
@@ -384,7 +384,7 @@ static inline int classify6(const QChar *s, bool qmlMode) {
         if (s[3].unicode() == 'o') {
           if (s[4].unicode() == 'r') {
             if (s[5].unicode() == 't') {
-              return qmlMode ? Lexer::T_IMPORT : Lexer::T_RESERVED_WORD;
+              return qmlMode ? int(Lexer::T_IMPORT) : int(Lexer::T_RESERVED_WORD);
             }
           }
         }
@@ -397,7 +397,7 @@ static inline int classify6(const QChar *s, bool qmlMode) {
         if (s[3].unicode() == 'i') {
           if (s[4].unicode() == 'v') {
             if (s[5].unicode() == 'e') {
-              return qmlMode ? Lexer::T_NATIVE : Lexer::T_IDENTIFIER;
+              return qmlMode ? int(Lexer::T_NATIVE) : int(Lexer::T_IDENTIFIER);
             }
           }
         }
@@ -447,7 +447,7 @@ static inline int classify6(const QChar *s, bool qmlMode) {
         if (s[3].unicode() == 't') {
           if (s[4].unicode() == 'i') {
             if (s[5].unicode() == 'c') {
-              return qmlMode ? Lexer::T_STATIC : Lexer::T_IDENTIFIER;
+              return qmlMode ? int(Lexer::T_STATIC) : int(Lexer::T_IDENTIFIER);
             }
           }
         }
@@ -471,7 +471,7 @@ static inline int classify6(const QChar *s, bool qmlMode) {
         if (s[3].unicode() == 'o') {
           if (s[4].unicode() == 'w') {
             if (s[5].unicode() == 's') {
-              return qmlMode ? Lexer::T_THROWS : Lexer::T_IDENTIFIER;
+              return qmlMode ? int(Lexer::T_THROWS) : int(Lexer::T_IDENTIFIER);
             }
           }
         }
@@ -500,7 +500,7 @@ static inline int classify7(const QChar *s, bool qmlMode) {
           if (s[4].unicode() == 'e') {
             if (s[5].unicode() == 'a') {
               if (s[6].unicode() == 'n') {
-                return qmlMode ? Lexer::T_BOOLEAN : Lexer::T_IDENTIFIER;
+                return qmlMode ? int(Lexer::T_BOOLEAN) : int(Lexer::T_IDENTIFIER);
               }
             }
           }
@@ -560,7 +560,7 @@ static inline int classify7(const QChar *s, bool qmlMode) {
           if (s[4].unicode() == 'a') {
             if (s[5].unicode() == 'g') {
               if (s[6].unicode() == 'e') {
-                return qmlMode ? Lexer::T_PACKAGE : Lexer::T_IDENTIFIER;
+                return qmlMode ? int(Lexer::T_PACKAGE) : int(Lexer::T_IDENTIFIER);
               }
             }
           }
@@ -573,7 +573,7 @@ static inline int classify7(const QChar *s, bool qmlMode) {
           if (s[4].unicode() == 'a') {
             if (s[5].unicode() == 't') {
               if (s[6].unicode() == 'e') {
-                return qmlMode ? Lexer::T_PRIVATE : Lexer::T_IDENTIFIER;
+                return qmlMode ? int(Lexer::T_PRIVATE) : int(Lexer::T_IDENTIFIER);
               }
             }
           }
@@ -593,7 +593,7 @@ static inline int classify8(const QChar *s, bool qmlMode) {
             if (s[5].unicode() == 'a') {
               if (s[6].unicode() == 'c') {
                 if (s[7].unicode() == 't') {
-                  return qmlMode ? Lexer::T_ABSTRACT : Lexer::T_IDENTIFIER;
+                  return qmlMode ? int(Lexer::T_ABSTRACT) : int(Lexer::T_IDENTIFIER);
                 }
               }
             }
@@ -695,7 +695,7 @@ static inline int classify8(const QChar *s, bool qmlMode) {
             if (s[5].unicode() == 'i') {
               if (s[6].unicode() == 'l') {
                 if (s[7].unicode() == 'e') {
-                  return qmlMode ? Lexer::T_VOLATILE : Lexer::T_IDENTIFIER;
+                  return qmlMode ? int(Lexer::T_VOLATILE) : int(Lexer::T_IDENTIFIER);
                 }
               }
             }
@@ -717,7 +717,7 @@ static inline int classify9(const QChar *s, bool qmlMode) {
               if (s[6].unicode() == 'a') {
                 if (s[7].unicode() == 'c') {
                   if (s[8].unicode() == 'e') {
-                    return qmlMode ? Lexer::T_INTERFACE : Lexer::T_IDENTIFIER;
+                    return qmlMode ? int(Lexer::T_INTERFACE) : int(Lexer::T_IDENTIFIER);
                   }
                 }
               }
@@ -736,7 +736,7 @@ static inline int classify9(const QChar *s, bool qmlMode) {
               if (s[6].unicode() == 't') {
                 if (s[7].unicode() == 'e') {
                   if (s[8].unicode() == 'd') {
-                    return qmlMode ? Lexer::T_PROTECTED : Lexer::T_IDENTIFIER;
+                    return qmlMode ? int(Lexer::T_PROTECTED) : int(Lexer::T_IDENTIFIER);
                   }
                 }
               }
@@ -755,7 +755,7 @@ static inline int classify9(const QChar *s, bool qmlMode) {
               if (s[6].unicode() == 'e') {
                 if (s[7].unicode() == 'n') {
                   if (s[8].unicode() == 't') {
-                    return qmlMode ? Lexer::T_TRANSIENT : Lexer::T_IDENTIFIER;
+                    return qmlMode ? int(Lexer::T_TRANSIENT) : int(Lexer::T_IDENTIFIER);
                   }
                 }
               }
@@ -779,7 +779,7 @@ static inline int classify10(const QChar *s, bool qmlMode) {
                 if (s[7].unicode() == 'n') {
                   if (s[8].unicode() == 't') {
                     if (s[9].unicode() == 's') {
-                      return qmlMode ? Lexer::T_IMPLEMENTS : Lexer::T_IDENTIFIER;
+                      return qmlMode ? int(Lexer::T_IMPLEMENTS) : int(Lexer::T_IDENTIFIER);
                     }
                   }
                 }
@@ -825,7 +825,7 @@ static inline int classify12(const QChar *s, bool qmlMode) {
                     if (s[9].unicode() == 'z') {
                       if (s[10].unicode() == 'e') {
                         if (s[11].unicode() == 'd') {
-                          return qmlMode ? Lexer::T_SYNCHRONIZED : Lexer::T_IDENTIFIER;
+                          return qmlMode ? int(Lexer::T_SYNCHRONIZED) : int(Lexer::T_IDENTIFIER);
                         }
                       }
                     }
