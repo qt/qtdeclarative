@@ -73,7 +73,7 @@ public:
 /*!
     \qmltype Connections
     \instantiates QQmlConnections
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQml 2
     \ingroup qtquick-interceptors
     \brief Describes generalized connections to signals
 
@@ -138,7 +138,7 @@ QQmlConnections::~QQmlConnections()
 }
 
 /*!
-    \qmlproperty Object QtQuick2::Connections::target
+    \qmlproperty Object QtQml2::Connections::target
     This property holds the object that sends the signal.
 
     If this property is not set, the \c target defaults to the parent of the Connection.
@@ -183,7 +183,7 @@ void QQmlConnections::setTarget(QObject *obj)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Connections::ignoreUnknownSignals
+    \qmlproperty bool QtQml2::Connections::ignoreUnknownSignals
 
     Normally, a connection to a non-existent signal produces runtime errors.
 
