@@ -53,7 +53,8 @@ PRIVATETESTS += \
     qqmlbundle \
     qrcqml \
     v4 \
-    qqmltimer
+    qqmltimer \
+    qqmlinstantiator
 
 qtHaveModule(widgets) {
     PUBLICTESTS += \
