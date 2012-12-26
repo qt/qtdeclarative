@@ -70,6 +70,7 @@ public:
     void setRootPath(const QString &path);
     void setSortFlags(QDir::SortFlags flags);
     void setNameFilters(const QStringList & nameFilters);
+    void setShowFiles(bool show);
     void setShowDirs(bool showFolders);
     void setShowDirsFirst(bool show);
     void setShowDotAndDotDot(bool on);
@@ -102,6 +103,7 @@ private:
     bool needUpdate;
     bool folderUpdate;
     bool sortUpdate;
+    bool showFiles;
     bool showDirs;
     bool showDirsFirst;
     bool showDotAndDotDot;

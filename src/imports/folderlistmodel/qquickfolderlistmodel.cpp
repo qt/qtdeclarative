@@ -55,7 +55,8 @@ class QQuickFolderListModelPrivate
 public:
     QQuickFolderListModelPrivate(QQuickFolderListModel *q)
         : q_ptr(q),
-          sortField(QQuickFolderListModel::Name), sortReversed(false), showDirs(true), showDirsFirst(false), showDotAndDotDot(false), showOnlyReadable(false)
+          sortField(QQuickFolderListModel::Name), sortReversed(false), showFiles(true),
+          showDirs(true), showDirsFirst(false), showDotAndDotDot(false), showOnlyReadable(false)
     {
         nameFilters << QLatin1String("*");
     }
@@ -70,6 +71,7 @@ public:
     QQuickFolderListModel::SortField sortField;
     QStringList nameFilters;
     bool sortReversed;
+    bool showFiles;
     bool showDirs;
     bool showDirsFirst;
     bool showDotAndDotDot;
@@ -616,6 +618,30 @@ bool QQuickFolderListModel::isFolder(int index) const
         }
     }
     return false;
+}
+
+/*!
+    \qmlproperty bool FolderListModel::showFiles
+
+    If true, files are included in the model; otherwise only directories
+    are included.
+
+    By default, this property is true.
+
+    \sa showDirs
+*/
+bool QQuickFolderListModel::showFiles() const
+{
+    Q_D(const QQuickFolderListModel);
+    return d->showFiles;
+}
+
+void QQuickFolderListModel::setShowFiles(bool on)
+{
+    Q_D(QQuickFolderListModel);
+
+    d->fileInfoThread.setShowFiles(on);
+    d->showFiles = on;
 }
 
 /*!
