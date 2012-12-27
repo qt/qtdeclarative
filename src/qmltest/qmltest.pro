@@ -4,6 +4,11 @@ DEFINES += QT_NO_URL_CAST_FROM_STRING
 QT = core
 QT_PRIVATE = testlib-private quick qml-private v8-private gui core-private
 
+!contains(QT_CONFIG, no-widgets) {
+    QT += widgets
+    DEFINES += QT_QMLTEST_WITH_WIDGETS
+}
+
 load(qt_module)
 
 # Install qmltestcase.prf into the Qt mkspecs so that "CONFIG += qmltestcase"
