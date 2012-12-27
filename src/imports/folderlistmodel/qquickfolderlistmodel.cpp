@@ -334,10 +334,10 @@ QVariant QQuickFolderListModel::data(const QModelIndex &index, int role) const
             rv = d->data.at(index.row()).size();
             break;
         case FileLastModifiedRole:
-            rv = d->data.at(index.row()).lastModified().date().toString(Qt::ISODate) + " " + d->data.at(index.row()).lastModified().time().toString();
+            rv = d->data.at(index.row()).lastModified();
             break;
         case FileLastReadRole:
-            rv = d->data.at(index.row()).lastRead().date().toString(Qt::ISODate) + " " + d->data.at(index.row()).lastRead().time().toString();
+            rv = d->data.at(index.row()).lastRead();
             break;
         case FileIsDirRole:
             rv = d->data.at(index.row()).isDir();
