@@ -60,7 +60,7 @@ struct MemoryManager::Data
     StringPool *stringPool;
 
     enum { MaxItemSize = 128 };
-    MMObject *smallItems[MaxItemSize/16];
+    Managed *smallItems[MaxItemSize/16];
     struct Chunk {
         PageAllocation memory;
         int chunkSize;
@@ -103,16 +103,13 @@ MemoryManager::MemoryManager()
     setEnableGC(true);
 }
 
-MemoryManager::MMObject *MemoryManager::alloc(std::size_t size)
+Managed *MemoryManager::alloc(std::size_t size)
 {
     if (m_d->aggressiveGC)
         runGC();
 #ifdef DETAILED_MM_STATS
     willAllocate(size);
 #endif // DETAILED_MM_STATS
-
-    const std::size_t alignedSizeOfMMInfo = align(sizeof(MMInfo));
-    size += alignedSizeOfMMInfo;
 
     assert(size >= 16);
     assert(size % 16 == 0);
@@ -122,13 +119,13 @@ MemoryManager::MMObject *MemoryManager::alloc(std::size_t size)
     // fits into a small bucket
     assert(size < MemoryManager::Data::MaxItemSize);
 
-    MMObject *m = m_d->smallItems[pos];
+    Managed *m = m_d->smallItems[pos];
     if (m)
         goto found;
 
     // try to free up space, otherwise allocate
-//    if (!m_d->aggressiveGC)
-//        runGC();
+    if (!m_d->aggressiveGC)
+        runGC();
 
     m = m_d->smallItems[pos];
     if (m)
@@ -145,51 +142,28 @@ MemoryManager::MMObject *MemoryManager::alloc(std::size_t size)
         qSort(m_d->heapChunks);
         char *chunk = (char *)allocation.memory.base();
         char *end = chunk + allocation.memory.size() - size;
-        MMObject **last = &m_d->smallItems[pos];
+        Managed **last = &m_d->smallItems[pos];
         while (chunk <= end) {
-            MMObject *o = reinterpret_cast<MMObject *>(chunk);
-            o->info.inUse = 0;
-            o->info.next = 0;
-            o->info.markBit = 0;
-            o->info.size = size;
+            Managed *o = reinterpret_cast<Managed *>(chunk);
+            o->inUse = 0;
+            o->markBit = 0;
             *last = o;
-            last = &o->info.next;
+            last = &o->nextFree;
             chunk += size;
         }
+        *last = 0;
         m = m_d->smallItems[pos];
     }
 
   found:
-    m_d->smallItems[pos] = m->info.next;
-    m->info.inUse = 1;
-    m->info.markBit = 0;
+    m_d->smallItems[pos] = m->nextFree;
     return m;
 }
 
-void MemoryManager::dealloc(MMObject *ptr)
-{
-    if (!ptr)
-        return;
-
-    assert(ptr->info.size >= 16);
-    assert(ptr->info.size % 16 == 0);
-
-//    qDebug("dealloc %p (%lu)", ptr, ptr->info.size);
-
-    std::size_t pos = ptr->info.size >> 4;
-    MMObject **f = &m_d->smallItems[pos];
-
-    ptr->info.next = *f;
-    ptr->info.inUse = 0;
-    ptr->info.markBit = 0;
-//    scribble(ptr, 0x99);
-    *f = ptr;
-}
-
-void MemoryManager::scribble(MemoryManager::MMObject *obj, int c) const
+void MemoryManager::scribble(Managed *obj, int c, int size) const
 {
     if (m_d->scribble)
-        ::memset(&obj->data, c, obj->info.size - sizeof(MMInfo));
+        ::memset(obj + 1, c, size - sizeof(Managed));
 }
 
 std::size_t MemoryManager::mark(const QVector<Object *> &objects)
@@ -203,10 +177,10 @@ std::size_t MemoryManager::mark(const QVector<Object *> &objects)
         if (!o)
             continue;
 
-        MMObject *obj = toObject(o);
-        assert(obj->info.inUse);
-        if (obj->info.markBit == 0) {
-            obj->info.markBit = 1;
+        Managed *obj = o;
+        assert(obj->inUse);
+        if (obj->markBit == 0) {
+            obj->markBit = 1;
             ++marks;
             static_cast<Managed *>(o)->getCollectables(kids);
             marks += mark(kids);
@@ -232,26 +206,32 @@ std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t
 //    qDebug("chunkStart @ %p, size=%x", chunkStart, size);
     std::size_t freedCount = 0;
 
+    Managed **f = &m_d->smallItems[size >> 4];
+
     for (char *chunk = chunkStart, *chunkEnd = chunk + chunkSize - size; chunk <= chunkEnd; ) {
-        MMObject *m = reinterpret_cast<MMObject *>(chunk);
+        Managed *m = reinterpret_cast<Managed *>(chunk);
 //        qDebug("chunk @ %p, size = %lu, in use: %s, mark bit: %s",
-//               chunk, m->info.size, (m->info.inUse ? "yes" : "no"), (m->info.markBit ? "true" : "false"));
+//               chunk, m->size, (m->inUse ? "yes" : "no"), (m->markBit ? "true" : "false"));
 
         assert((intptr_t) chunk % 16 == 0);
-        assert(m->info.size >= 16);
-        assert(m->info.size == size);
-        assert(m->info.size % 16 == 0);
 
         chunk = chunk + size;
-        if (m->info.inUse) {
-            if (m->info.markBit) {
-                m->info.markBit = 0;
+        if (m->inUse) {
+            if (m->markBit) {
+                m->markBit = 0;
             } else {
 //                qDebug() << "-- collecting it." << m << reinterpret_cast<VM::Managed *>(&m->data);
-                reinterpret_cast<VM::Managed *>(&m->data)->~Managed();
-                dealloc(m);
+                m->~Managed();
+
+                m->nextFree = *f;
+                f = &m->nextFree;
+                //scribble(m, 0x99, size);
                 ++freedCount;
             }
+        } else if (!m->nextFree) {
+            m->nextFree = *f;
+            f = &m->nextFree;
+            ++freedCount;
         }
     }
 
@@ -381,6 +361,7 @@ void MemoryManager::collectRootsOnStack(QVector<VM::Object *> &roots) const
 {
     if (!m_d->heapChunks.count())
         return;
+
     Value valueOnStack = Value::undefinedValue();
     StackBounds bounds = StackBounds::currentThreadStackBounds();
     Value* top = reinterpret_cast<Value*>(bounds.origin()) - 1;
@@ -407,13 +388,13 @@ void MemoryManager::collectRootsOnStack(QVector<VM::Object *> &roots) const
         // An odd index means the pointer is _before_ the end of a heap chunk and therefore valid.
         if (index & 1) {
             int size = m_d->heapChunks.at(index >> 1).chunkSize;
-            MMObject *m = toObject(possibleObject);
+            Managed *m = possibleObject;
 
             if (((quintptr)m - (quintptr)heapChunkBoundaries[index-1]) % size)
                 // wrongly aligned value, skip it
                 continue;
 
-            if (m->info.inUse)
+            if (!m->inUse)
                 // Skip pointers to already freed objects, they are bogus as well
                 continue;
 

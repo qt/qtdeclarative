@@ -43,6 +43,8 @@
 
 #include <QtCore/QString>
 #include <QtCore/QVector>
+#include <QtCore/QDebug>
+#include <wtf/Platform.h>
 
 namespace QQmlJS {
 
@@ -54,15 +56,15 @@ struct Object;
 struct Managed
 {
 private:
+    void *operator new(size_t);
     Managed(const Managed &other);
     void operator = (const Managed &other);
 
 protected:
-    Managed() {}
-
-public:
+    Managed() : markBit(0), inUse(1), unused(0) { }
     virtual ~Managed();
 
+public:
     void *operator new(size_t size, MemoryManager *mm);
     void operator delete(void *ptr);
 
@@ -70,9 +72,22 @@ protected:
     virtual void getCollectables(QVector<Object *> &objects) = 0;
 
 private:
-    void *operator new(size_t);
     friend class MemoryManager;
-    MemoryManager *mm;
+
+    union {
+        Managed *nextFree;
+        struct {
+            quintptr markBit :  1;
+            quintptr inUse   :  1;
+#if CPU(X86_64)
+            quintptr unused  : 62;
+#elif CPU(X86)
+            quintptr unused  : 30;
+#else
+#error "implement me"
+#endif
+        };
+    };
 };
 
 }

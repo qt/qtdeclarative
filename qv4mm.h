@@ -39,6 +39,8 @@
 namespace QQmlJS {
 namespace VM {
 
+class Managed;
+
 class MemoryManager
 {
     MemoryManager(const MemoryManager &);
@@ -79,19 +81,8 @@ public:
     inline Managed *allocManaged(std::size_t size)
     {
         size = align(size);
-        MMObject *o = alloc(size);
-        Managed *ptr = reinterpret_cast<Managed *>(&o->data);
-        ptr->mm = this;
-        return ptr;
-    }
-
-    inline void deallocManaged(Managed *m)
-    {
-        if (!m)
-            return;
-
-        assert(m->mm == this);
-        dealloc(toObject(m));
+        Managed *o = alloc(size);
+        return o;
     }
 
     bool isGCBlocked() const;
@@ -105,42 +96,11 @@ public:
     void dumpStats() const;
 
 protected:
-    struct MMObject;
-#if CPU(X86_64) // 64bit and x86:
-    struct MMInfo {
-        std::size_t inUse   :  1;
-        std::size_t markBit :  1;
-        std::size_t size    : 62;
-        MMObject *next;
-    };
-    struct MMObject {
-        MMInfo info;
-        std::size_t data;
-    };
-#elif CPU(X86) // for 32bits:
-    struct MMInfo {
-        std::size_t inUse   :  1;
-        std::size_t markBit :  1;
-        std::size_t size    : 30;
-        struct MMObject *next;
-    };
-    struct MMObject {
-        MMInfo info;
-        std::size_t data;
-    };
-#endif
-
-protected:
-    static inline MMObject *toObject(void *ptr) { return reinterpret_cast<MMObject *>(reinterpret_cast<char *>(ptr) - sizeof(MMInfo)); }
-
     /// expects size to be aligned
     // TODO: try to inline
-    MMObject *alloc(std::size_t size);
+    Managed *alloc(std::size_t size);
 
-    // TODO: try to inline
-    void dealloc(MMObject *ptr);
-
-    void scribble(MMObject *obj, int c) const;
+    void scribble(Managed *obj, int c, int size) const;
 
     void collectRootsOnStack(QVector<VM::Object *> &roots) const;
 

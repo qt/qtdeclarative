@@ -46,6 +46,8 @@ using namespace QQmlJS::VM;
 
 Managed::~Managed()
 {
+    nextFree = 0;
+    inUse = 0;
 }
 
 void *Managed::operator new(size_t size, MemoryManager *mm)
@@ -60,7 +62,6 @@ void Managed::operator delete(void *ptr)
     if (!ptr)
         return;
 
-    Managed *m = reinterpret_cast<Managed *>(ptr);
-    assert(m->mm);
-    m->mm->deallocManaged(m);
+    Managed *m = static_cast<Managed *>(ptr);
+    m->~Managed();
 }
