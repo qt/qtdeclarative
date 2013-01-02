@@ -37,7 +37,7 @@
 
 #include <QTime>
 #include <QVector>
-#include <QLinkedList>
+#include <QVector>
 #include <QMap>
 
 #include <iostream>
@@ -59,10 +59,14 @@ struct MemoryManager::Data
     ExecutionEngine *engine;
     StringPool *stringPool;
 
-    MMObject *fallbackObject;
-    MMObject *smallItems[16]; // 16 - 256 bytes
-    QMap<size_t, MMObject *> largeItems;
-    QLinkedList<PageAllocation> heapChunks;
+    enum { MaxItemSize = 128 };
+    MMObject *smallItems[MaxItemSize/16];
+    struct Chunk {
+        PageAllocation memory;
+        int chunkSize;
+    };
+
+    QVector<Chunk> heapChunks;
 
     // statistics:
 #ifdef DETAILED_MM_STATS
@@ -74,7 +78,6 @@ struct MemoryManager::Data
         , gcBlocked(false)
         , engine(0)
         , stringPool(0)
-        , fallbackObject(0)
     {
         memset(smallItems, 0, sizeof(smallItems));
         scribble = qgetenv("MM_NO_SCRIBBLE").isEmpty();
@@ -83,10 +86,16 @@ struct MemoryManager::Data
 
     ~Data()
     {
-        for (QLinkedList<PageAllocation>::iterator i = heapChunks.begin(), ei = heapChunks.end(); i != ei; ++i)
-            i->deallocate();
+        for (QVector<Chunk>::iterator i = heapChunks.begin(), ei = heapChunks.end(); i != ei; ++i)
+            i->memory.deallocate();
     }
 };
+
+static bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::Chunk &b)
+{
+    return a.memory.base() < b.memory.base();
+}
+
 
 MemoryManager::MemoryManager()
     : m_d(new Data(true))
@@ -111,67 +120,47 @@ MemoryManager::MMObject *MemoryManager::alloc(std::size_t size)
     size_t pos = size >> 4;
 
     // fits into a small bucket
-    if (pos < sizeof(m_d->smallItems)/sizeof(MMObject *)) {
-        MMObject *m = m_d->smallItems[pos];
-        if (m) {
-            m_d->smallItems[pos] = m->info.next;
-            m->info.inUse = 1;
-            m->info.markBit = 0;
-            return m;
+    assert(size < MemoryManager::Data::MaxItemSize);
+
+    MMObject *m = m_d->smallItems[pos];
+    if (m)
+        goto found;
+
+    // try to free up space, otherwise allocate
+//    if (!m_d->aggressiveGC)
+//        runGC();
+
+    m = m_d->smallItems[pos];
+    if (m)
+        goto found;
+
+    // no free item available, allocate a new chunk
+    {
+        std::size_t allocSize = std::max(size, CHUNK_SIZE);
+        allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
+        Data::Chunk allocation;
+        allocation.memory = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
+        allocation.chunkSize = size;
+        m_d->heapChunks.append(allocation);
+        qSort(m_d->heapChunks);
+        char *chunk = (char *)allocation.memory.base();
+        char *end = chunk + allocation.memory.size() - size;
+        MMObject **last = &m_d->smallItems[pos];
+        while (chunk <= end) {
+            MMObject *o = reinterpret_cast<MMObject *>(chunk);
+            o->info.inUse = 0;
+            o->info.next = 0;
+            o->info.markBit = 0;
+            o->info.size = size;
+            *last = o;
+            last = &o->info.next;
+            chunk += size;
         }
+        m = m_d->smallItems[pos];
     }
 
-
-    // ### use new heap space if available
-    if (m_d->fallbackObject && m_d->fallbackObject->info.size >= size) {
-        MMObject *m = m_d->fallbackObject;
-        m_d->fallbackObject = splitItem(m, size);
-        m->info.inUse = 1;
-        m->info.markBit = 0;
-        return m;
-    }
-
-    // use or split up a large bucket
-    QMap<size_t, MMObject *>::iterator it = m_d->largeItems.lowerBound(pos);
-    if (it == m_d->largeItems.end()) {
-        // try to free up space, otherwise allocate
-        if (!m_d->aggressiveGC || runGC() < size) {
-            std::size_t allocSize = std::max(size, CHUNK_SIZE);
-            allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
-            PageAllocation allocation = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
-            m_d->heapChunks.append(allocation);
-            m_d->fallbackObject = reinterpret_cast<MMObject *>(allocation.base());
-            m_d->fallbackObject->info.inUse = 0;
-            m_d->fallbackObject->info.next = 0;
-            m_d->fallbackObject->info.markBit = 0;
-            m_d->fallbackObject->info.size = allocation.size();
-        }
-        return alloc(size - alignedSizeOfMMInfo);
-    }
-
-    MMObject *m = it.value();
-    assert(m);
-
-    if (it.key() == pos) {
-        // a match, return it
-        if (!m->info.next)
-            m_d->largeItems.erase(it);
-        else
-            *it = m->info.next;
-        m->info.inUse = 1;
-        m->info.markBit = 0;
-        return m;
-    }
-
-    // split up
-    if (!m->info.next)
-        m_d->largeItems.erase(it);
-    else
-        *it = m->info.next;
-    MMObject *tail = splitItem(m, size);
-    MMObject *&f = m_d->largeItems[tail->info.size];
-    tail->info.next = f;
-    f = tail;
+  found:
+    m_d->smallItems[pos] = m->info.next;
     m->info.inUse = 1;
     m->info.markBit = 0;
     return m;
@@ -188,32 +177,13 @@ void MemoryManager::dealloc(MMObject *ptr)
 //    qDebug("dealloc %p (%lu)", ptr, ptr->info.size);
 
     std::size_t pos = ptr->info.size >> 4;
-    MMObject **f;
-
-    // fits into a small bucket
-    if (pos < sizeof(m_d->smallItems)/sizeof(MMObject *)) {
-        f = &m_d->smallItems[pos];
-    } else {
-        f = &m_d->largeItems[pos];
-    }
+    MMObject **f = &m_d->smallItems[pos];
 
     ptr->info.next = *f;
     ptr->info.inUse = 0;
     ptr->info.markBit = 0;
-    ptr->info.needsManagedDestructorCall = 0;
+//    scribble(ptr, 0x99);
     *f = ptr;
-}
-
-MemoryManager::MMObject *MemoryManager::splitItem(MemoryManager::MMObject *m, int newSize)
-{
-    if (newSize - m->info.size <= sizeof(MMObject))
-        return 0;
-    MMObject *tail = reinterpret_cast<MMObject *>(reinterpret_cast<char *>(m) + newSize);
-    tail->info.inUse = 0;
-    tail->info.markBit = 0;
-    tail->info.size = m->info.size - newSize;
-    m->info.size = newSize;
-    return tail;
 }
 
 void MemoryManager::scribble(MemoryManager::MMObject *obj, int c) const
@@ -247,40 +217,39 @@ std::size_t MemoryManager::mark(const QVector<Object *> &objects)
     return marks;
 }
 
-std::size_t MemoryManager::sweep(std::size_t &largestFreedBlock)
+std::size_t MemoryManager::sweep()
 {
     std::size_t freedCount = 0;
 
-    for (QLinkedList<PageAllocation>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)
-        freedCount += sweep(reinterpret_cast<char*>(i->base()), i->size(), largestFreedBlock);
+    for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)
+        freedCount += sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize);
 
     return freedCount;
 }
 
-std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, std::size_t &largestFreedBlock)
+std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
 {
-//    qDebug("chunkStart @ %p", chunkStart);
+//    qDebug("chunkStart @ %p, size=%x", chunkStart, size);
     std::size_t freedCount = 0;
 
-    for (char *chunk = chunkStart, *chunkEnd = chunk + chunkSize; chunk < chunkEnd; ) {
+    for (char *chunk = chunkStart, *chunkEnd = chunk + chunkSize - size; chunk <= chunkEnd; ) {
         MMObject *m = reinterpret_cast<MMObject *>(chunk);
 //        qDebug("chunk @ %p, size = %lu, in use: %s, mark bit: %s",
 //               chunk, m->info.size, (m->info.inUse ? "yes" : "no"), (m->info.markBit ? "true" : "false"));
 
         assert((intptr_t) chunk % 16 == 0);
         assert(m->info.size >= 16);
+        assert(m->info.size == size);
         assert(m->info.size % 16 == 0);
 
-        chunk = chunk + m->info.size;
+        chunk = chunk + size;
         if (m->info.inUse) {
             if (m->info.markBit) {
                 m->info.markBit = 0;
             } else {
-//                qDebug("-- collecting it.");
-                if (m->info.needsManagedDestructorCall)
-                    reinterpret_cast<VM::Managed *>(&m->data)->~Managed();
+//                qDebug() << "-- collecting it." << m << reinterpret_cast<VM::Managed *>(&m->data);
+                reinterpret_cast<VM::Managed *>(&m->data)->~Managed();
                 dealloc(m);
-                largestFreedBlock = std::max(largestFreedBlock, m->info.size);
                 ++freedCount;
             }
         }
@@ -299,15 +268,16 @@ void MemoryManager::setGCBlocked(bool blockGC)
     m_d->gcBlocked = blockGC;
 }
 
-std::size_t MemoryManager::runGC()
+void MemoryManager::runGC()
 {
     if (!m_d->enableGC || m_d->gcBlocked) {
 //        qDebug() << "Not running GC.";
-        return 0;
+        return;
     }
 
 //    QTime t; t.start();
 
+//    qDebug() << ">>>>>>>>runGC";
     QVector<Object *> roots;
     collectRoots(roots);
 //    std::cerr << "GC: found " << roots.size()
@@ -321,13 +291,10 @@ std::size_t MemoryManager::runGC()
 //              << "ms" << std::endl;
 
 //    t.restart();
-    std::size_t freedCount = 0, largestFreedBlock = 0;
-    freedCount = sweep(largestFreedBlock);
+    /*std::size_t freedCount =*/ sweep();
 //    std::cerr << "GC: sweep freed " << freedCount
 //              << " objects in " << t.elapsed()
 //              << "ms" << std::endl;
-
-    return largestFreedBlock;
 }
 
 void MemoryManager::setEnableGC(bool enableGC)
@@ -337,8 +304,7 @@ void MemoryManager::setEnableGC(bool enableGC)
 
 MemoryManager::~MemoryManager()
 {
-    std::size_t dummy = 0;
-    sweep(dummy);
+    sweep();
 }
 
 static inline void add(QVector<Object *> &values, const Value &v)
@@ -423,27 +389,35 @@ void MemoryManager::collectRootsOnStack(QVector<VM::Object *> &roots) const
     char** heapChunkBoundaries = (char**)alloca(m_d->heapChunks.count() * 2 * sizeof(char*));
     char** heapChunkBoundariesEnd = heapChunkBoundaries + 2 * m_d->heapChunks.count();
     int i = 0;
-    for (QLinkedList<PageAllocation>::Iterator it = m_d->heapChunks.begin(), end =
+    for (QVector<Data::Chunk>::Iterator it = m_d->heapChunks.begin(), end =
          m_d->heapChunks.end(); it != end; ++it) {
-        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->base());
-        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->base()) + it->size();
+        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base());
+        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base()) + it->memory.size();
     }
-    qSort(heapChunkBoundaries, heapChunkBoundariesEnd);
 
     for (; current < top; ++current) {
         Object* possibleObject = current->asObject();
         if (!possibleObject)
             continue;
+
         char* genericPtr = reinterpret_cast<char*>(possibleObject);
         if (genericPtr < *heapChunkBoundaries || genericPtr >= *(heapChunkBoundariesEnd - 1))
             continue;
         int index = qLowerBound(heapChunkBoundaries, heapChunkBoundariesEnd, genericPtr) - heapChunkBoundaries;
         // An odd index means the pointer is _before_ the end of a heap chunk and therefore valid.
         if (index & 1) {
-            // It appears to happen that the stack can still contain a pointer to an already
-            // dealloc'ed. Skip those.
-            if (toObject(possibleObject)->info.inUse)
-                roots.append(possibleObject);
+            int size = m_d->heapChunks.at(index >> 1).chunkSize;
+            MMObject *m = toObject(possibleObject);
+
+            if (((quintptr)m - (quintptr)heapChunkBoundaries[index-1]) % size)
+                // wrongly aligned value, skip it
+                continue;
+
+            if (m->info.inUse)
+                // Skip pointers to already freed objects, they are bogus as well
+                continue;
+
+            roots.append(possibleObject);
         }
     }
 }

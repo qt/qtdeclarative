@@ -44,9 +44,9 @@ class MemoryManager
     MemoryManager(const MemoryManager &);
     MemoryManager &operator=(const MemoryManager&);
 
+public:
     struct Data;
 
-public:
     class GCBlocker
     {
     public:
@@ -80,7 +80,6 @@ public:
     {
         size = align(size);
         MMObject *o = alloc(size);
-        o->info.needsManagedDestructorCall = 1;
         Managed *ptr = reinterpret_cast<Managed *>(&o->data);
         ptr->mm = this;
         return ptr;
@@ -97,7 +96,7 @@ public:
 
     bool isGCBlocked() const;
     void setGCBlocked(bool blockGC);
-    std::size_t runGC();
+    void runGC();
 
     void setEnableGC(bool enableGC);
     void setExecutionEngine(ExecutionEngine *engine);
@@ -111,8 +110,7 @@ protected:
     struct MMInfo {
         std::size_t inUse   :  1;
         std::size_t markBit :  1;
-        std::size_t needsManagedDestructorCall : 1;
-        std::size_t size    : 61;
+        std::size_t size    : 62;
         MMObject *next;
     };
     struct MMObject {
@@ -123,8 +121,7 @@ protected:
     struct MMInfo {
         std::size_t inUse   :  1;
         std::size_t markBit :  1;
-        std::size_t needsManagedDestructorCall : 1;
-        std::size_t size    : 29;
+        std::size_t size    : 30;
         struct MMObject *next;
     };
     struct MMObject {
@@ -153,13 +150,11 @@ protected:
     void willAllocate(std::size_t size);
 #endif // DETAILED_MM_STATS
 
-    MMObject *splitItem(MMObject *m, int newSize);
-
 private:
     void collectRoots(QVector<VM::Object *> &roots) const;
     static std::size_t mark(const QVector<Object *> &objects);
-    std::size_t sweep(std::size_t &largestFreedBlock);
-    std::size_t sweep(char *chunkStart, std::size_t chunkSize, std::size_t &largestFreedBlock);
+    std::size_t sweep();
+    std::size_t sweep(char *chunkStart, std::size_t chunkSize, size_t size);
 
 protected:
     QScopedPointer<Data> m_d;
