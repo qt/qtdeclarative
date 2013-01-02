@@ -47,6 +47,7 @@
 #include "qv4array_p.h"
 #include "qv4codegen_p.h"
 #include "qv4isel_p.h"
+#include "qv4managed.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
@@ -90,30 +91,6 @@ struct ReferenceErrorPrototype;
 struct SyntaxErrorPrototype;
 struct TypeErrorPrototype;
 struct URIErrorPrototype;
-
-struct Managed
-{
-private:
-    Managed(const Managed &other);
-    void operator = (const Managed &other);
-
-protected:
-    Managed() {}
-
-public:
-    virtual ~Managed();
-
-    void *operator new(size_t size, MemoryManager *mm);
-    void operator delete(void *ptr);
-
-protected:
-    virtual void getCollectables(QVector<Object *> &objects) = 0;
-
-private:
-    void *operator new(size_t);
-    friend class MemoryManager;
-    MemoryManager *mm;
-};
 
 struct String {
     inline bool isEqualTo(const String *other) const {

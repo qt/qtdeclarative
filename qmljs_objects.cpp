@@ -60,28 +60,6 @@
 
 using namespace QQmlJS::VM;
 
-
-Managed::~Managed()
-{
-}
-
-void *Managed::operator new(size_t size, MemoryManager *mm)
-{
-    assert(mm);
-
-    return mm->allocManaged(size);
-}
-
-void Managed::operator delete(void *ptr)
-{
-    if (!ptr)
-        return;
-
-    Managed *m = reinterpret_cast<Managed *>(ptr);
-    assert(m->mm);
-    m->mm->deallocManaged(m);
-}
-
 //
 // Object
 //
