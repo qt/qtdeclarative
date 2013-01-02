@@ -61,7 +61,7 @@ private:
     void operator = (const Managed &other);
 
 protected:
-    Managed() : markBit(0), inUse(1), unused(0) { }
+    Managed() : markBit(0), inUse(1), extensible(true), unused(0) { }
     virtual ~Managed();
 
 public:
@@ -79,10 +79,14 @@ private:
         struct {
             quintptr markBit :  1;
             quintptr inUse   :  1;
+            quintptr extensible : 1; // used by Object
+            quintptr needsActivation : 1; // used by FunctionObject
+            quintptr usesArgumentsObject : 1; // used by FunctionObject
+            quintptr strictMode : 1; // used by FunctionObject
 #if CPU(X86_64)
-            quintptr unused  : 62;
+            quintptr unused  : 58;
 #elif CPU(X86)
-            quintptr unused  : 30;
+            quintptr unused  : 26;
 #else
 #error "implement me"
 #endif

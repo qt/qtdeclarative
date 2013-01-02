@@ -398,11 +398,9 @@ private:
 struct Object: Managed {
     Object *prototype;
     QScopedPointer<PropertyTable> members;
-    bool extensible;
 
     Object()
-        : prototype(0)
-        , extensible(true) {}
+        : prototype(0) {}
 
     virtual ~Object();
 
@@ -538,23 +536,20 @@ struct FunctionObject: Object {
     ExecutionContext *scope;
     String *name;
     String **formalParameterList;
-    unsigned int formalParameterCount;
     String **varList;
+    unsigned int formalParameterCount;
     unsigned int varCount;
-    bool needsActivation;
-    bool usesArgumentsObject;
-    bool strictMode;
 
     FunctionObject(ExecutionContext *scope)
         : scope(scope)
         , name(0)
         , formalParameterList(0)
-        , formalParameterCount(0)
         , varList(0)
+        , formalParameterCount(0)
         , varCount(0)
-        , needsActivation(false)
-        , usesArgumentsObject(false)
-        , strictMode(false) {}
+        { needsActivation = false;
+          usesArgumentsObject = false;
+          strictMode = false; }
 
     virtual QString className() { return QStringLiteral("Function"); }
     virtual FunctionObject *asFunctionObject() { return this; }
