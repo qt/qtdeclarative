@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
 #endif // QMLJS_NO_LLVM
     case use_masm:
     case use_moth: {
-        QScopedPointer<QQmlJS::VM::MemoryManager> mm(new QQmlJS::VM::MemoryManagerWithNativeStack);
+        QScopedPointer<QQmlJS::VM::MemoryManager> mm(new QQmlJS::VM::MemoryManager);
         QScopedPointer<QQmlJS::EvalISelFactory> iSelFactory;
         if (mode == use_moth) {
             iSelFactory.reset(new QQmlJS::Moth::ISelFactory);

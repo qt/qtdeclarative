@@ -91,6 +91,7 @@ struct MemoryManager::Data
 MemoryManager::MemoryManager()
     : m_d(new Data(true))
 {
+    setEnableGC(true);
 }
 
 MemoryManager::MMObject *MemoryManager::alloc(std::size_t size)
@@ -410,19 +411,7 @@ void MemoryManager::collectRoots(QVector<VM::Object *> &roots) const
     collectRootsOnStack(roots);
 }
 
-MemoryManagerWithoutGC::~MemoryManagerWithoutGC()
-{}
-
-void MemoryManagerWithoutGC::collectRootsOnStack(QVector<VM::Object *> &roots) const
-{
-    Q_UNUSED(roots);
-}
-
-MemoryManagerWithNativeStack::~MemoryManagerWithNativeStack()
-{
-}
-
-void MemoryManagerWithNativeStack::collectRootsOnStack(QVector<VM::Object *> &roots) const
+void MemoryManager::collectRootsOnStack(QVector<VM::Object *> &roots) const
 {
     if (!m_d->heapChunks.count())
         return;

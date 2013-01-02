@@ -69,7 +69,7 @@ public:
 
 public:
     MemoryManager();
-    virtual ~MemoryManager() = 0;
+    ~MemoryManager();
 
     // TODO: this is only for 64bit (and x86 with SSE/AVX), so exend it for other architectures to be slightly more efficient (meaning, align on 8-byte boundaries).
     // Note: all occurances of "16" in alloc/dealloc are also due to the alignment.
@@ -145,7 +145,7 @@ protected:
 
     void scribble(MMObject *obj, int c) const;
 
-    virtual void collectRootsOnStack(QVector<VM::Object *> &roots) const = 0;
+    void collectRootsOnStack(QVector<VM::Object *> &roots) const;
 
     ExecutionEngine *engine() const;
 
@@ -163,30 +163,6 @@ private:
 
 protected:
     QScopedPointer<Data> m_d;
-};
-
-class MemoryManagerWithoutGC: public MemoryManager
-{
-public:
-    MemoryManagerWithoutGC()
-    { setEnableGC(false); }
-
-    virtual ~MemoryManagerWithoutGC();
-
-protected:
-    virtual void collectRootsOnStack(QVector<VM::Object *> &roots) const;
-};
-
-class MemoryManagerWithNativeStack: public MemoryManager
-{
-public:
-    MemoryManagerWithNativeStack()
-    { setEnableGC(true); }
-
-    virtual ~MemoryManagerWithNativeStack();
-
-protected:
-    virtual void collectRootsOnStack(QVector<VM::Object *> &roots) const;
 };
 
 
