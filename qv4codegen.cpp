@@ -1357,8 +1357,15 @@ bool Codegen::visit(NumericLiteral *ast)
     return false;
 }
 
+struct Accessor {
+    IR::Function *getter;
+    IR::Function *setter;
+};
+
 bool Codegen::visit(ObjectLiteral *ast)
 {
+    QMap<QString, Accessor> accessorMap;
+
     const unsigned t = _block->newTemp();
     move(_block->TEMP(t), _block->NEW(_block->NAME(QStringLiteral("Object"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
     for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
@@ -1367,11 +1374,43 @@ bool Codegen::visit(ObjectLiteral *ast)
             Result value = expression(nv->value);
             move(member(_block->TEMP(t), _function->newString(name)), *value);
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
-            assert(!"todo!");
+            QString name = propertyName(gs->name);
+            IR::Function *function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : 0);
+            if (_debugger)
+                _debugger->setSourceLocation(function, gs->getSetToken.startLine, gs->getSetToken.startColumn);
+            if (gs->type == PropertyGetterSetter::Getter)
+                accessorMap[name].getter = function;
+            else
+                accessorMap[name].setter = function;
         } else {
             Q_UNREACHABLE();
         }
     }
+    if (!accessorMap.isEmpty()) {
+        const unsigned getter = _block->newTemp();
+        const unsigned setter = _block->newTemp();
+        for (QMap<QString, Accessor>::const_iterator it = accessorMap.constBegin(); it != accessorMap.constEnd(); ++it) {
+            move(_block->TEMP(getter), it->getter ? _block->CLOSURE(it->getter) : _block->CONST(IR::UndefinedType, 0));
+            move(_block->TEMP(setter), it->setter ? _block->CLOSURE(it->setter) : _block->CONST(IR::UndefinedType, 0));
+
+
+            // __qmljs_builtin_define_getter_setter(Value object, String *name, Value getter, Value setter, ExecutionContext *ctx);
+            IR::ExprList *args = _function->New<IR::ExprList>();
+            IR::ExprList *current = args;
+            current->expr = _block->TEMP(t);
+            current->next = _function->New<IR::ExprList>();
+            current = current->next;
+            current->expr = _block->NAME(it.key(), 0, 0);
+            current->next = _function->New<IR::ExprList>();
+            current = current->next;
+            current->expr = _block->TEMP(getter);
+            current->next = _function->New<IR::ExprList>();
+            current = current->next;
+            current->expr = _block->TEMP(setter);
+            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_define_getter_setter, 0, 0), args));
+        }
+    }
+
     _expr.code = _block->TEMP(t);
     return false;
 }

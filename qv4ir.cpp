@@ -244,6 +244,8 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_pop_with";
     case IR::Name::builtin_declare_vars:
         return "builtin_declare_vars";
+    case IR::Name::builtin_define_getter_setter:
+        return "builtin_define_getter_setter";
     }
     return "builtin_(###FIXME)";
 };

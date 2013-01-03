@@ -532,6 +532,27 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
             generateFunctionCall(Assembler::Void, __qmljs_builtin_declare_var, Assembler::ContextRegister,
                                  Assembler::TrustedImm32(deletable->value != 0), identifier(*arg->id));
         }
+        break;
+    }
+    case IR::Name::builtin_define_getter_setter: {
+        if (!call->args)
+            return;
+        IR::ExprList *args = call->args;
+        IR::Temp *object = args->expr->asTemp();
+        assert(object);
+        args = args->next;
+        assert(args);
+        IR::Name *name = args->expr->asName();
+        args = args->next;
+        assert(args);
+        IR::Temp *getter = args->expr->asTemp();
+        args = args->next;
+        assert(args);
+        IR::Temp *setter = args->expr->asTemp();
+
+        generateFunctionCall(Assembler::Void, __qmljs_builtin_define_getter_setter,
+                             object, identifier(*name->id), getter, setter, Assembler::ContextRegister);
+        break;
     }
     }
 }

@@ -890,6 +890,16 @@ void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *
     ctx->createMutableBinding(name, deletable);
 }
 
+void __qmljs_builtin_define_getter_setter(Value object, String *name, Value getter, Value setter, ExecutionContext *ctx)
+{
+    Object *o = object.asObject();
+    assert(o);
+
+    PropertyDescriptor desc;
+    desc.fromAccessor(getter.asFunctionObject(), setter.asFunctionObject());
+    o->__defineOwnProperty__(ctx, name, &desc);
+}
+
 Value __qmljs_increment(Value value, ExecutionContext *ctx)
 {
     TRACE1(value);
