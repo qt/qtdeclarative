@@ -111,6 +111,8 @@ struct String {
 
         return _hashValue;
     }
+    enum { InvalidArrayIndex = 0xffffffff };
+    uint asArrayIndex() const;
 
 private:
     friend class StringPool;

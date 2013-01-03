@@ -60,6 +60,24 @@
 
 using namespace QQmlJS::VM;
 
+
+uint String::asArrayIndex() const
+{
+    uint u = 0;
+    const QChar *ch = _text.constData();
+    const QChar *end = ch + _text.length();
+    while (ch < end) {
+        if (ch->unicode() < '0' && ch->unicode() > '9')
+            return InvalidArrayIndex;
+        uint n = u*10 + ch->unicode() - '0';
+        if (n < u)
+            // overflow
+            return InvalidArrayIndex;
+        u = n;
+    }
+    return u;
+}
+
 //
 // Object
 //
