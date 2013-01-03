@@ -157,7 +157,7 @@ struct ExecutionEngine
     QScopedPointer<class StringPool> stringPool;
     QVector<Function *> functions;
 
-    ExecutionEngine(MemoryManager *memoryManager, EvalISelFactory *iselFactory);
+    ExecutionEngine(EvalISelFactory *iselFactory);
     ~ExecutionEngine();
 
     ExecutionContext *newContext();

@@ -333,7 +333,6 @@ int main(int argc, char *argv[])
 #endif // QMLJS_NO_LLVM
     case use_masm:
     case use_moth: {
-        QScopedPointer<QQmlJS::VM::MemoryManager> mm(new QQmlJS::VM::MemoryManager);
         QScopedPointer<QQmlJS::EvalISelFactory> iSelFactory;
         if (mode == use_moth) {
             iSelFactory.reset(new QQmlJS::Moth::ISelFactory);
@@ -341,7 +340,7 @@ int main(int argc, char *argv[])
             iSelFactory.reset(new QQmlJS::MASM::ISelFactory);
         }
 
-        QQmlJS::VM::ExecutionEngine vm(mm.data(), iSelFactory.data());
+        QQmlJS::VM::ExecutionEngine vm(iSelFactory.data());
 
         QScopedPointer<QQmlJS::Debugging::Debugger> debugger;
         if (enableDebugging)
@@ -396,7 +395,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        mm->dumpStats();
+        vm.memoryManager->dumpStats();
     } return EXIT_SUCCESS;
     }
 }

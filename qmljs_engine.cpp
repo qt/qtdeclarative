@@ -66,8 +66,8 @@ public:
     }
 };
 
-ExecutionEngine::ExecutionEngine(MemoryManager *memoryManager, EvalISelFactory *factory)
-    : memoryManager(memoryManager)
+ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
+    : memoryManager(new QQmlJS::VM::MemoryManager)
     , iselFactory(factory)
     , debugger(0)
     , globalObject(Value::nullValue())
@@ -216,6 +216,7 @@ ExecutionEngine::~ExecutionEngine()
     delete globalObject.asObject();
     delete rootContext;
     qDeleteAll(functions);
+    delete memoryManager;
 }
 
 ExecutionContext *ExecutionEngine::newContext()
