@@ -679,12 +679,17 @@ class QML_PARSER_EXPORT PropertyGetterSetter: public PropertyAssignment
 public:
     QQMLJS_DECLARE_AST_NODE(PropertyGetterSetter)
 
+    enum Type {
+        Getter,
+        Setter
+    };
+
     PropertyGetterSetter(PropertyName *n, FunctionBody *b)
-        : name(n), formals(0), functionBody (b)
+        : type(Getter), name(n), formals(0), functionBody (b)
     { kind = K; }
 
     PropertyGetterSetter(PropertyName *n, FormalParameterList *f, FunctionBody *b)
-        : name(n), formals(f), functionBody (b)
+        : type(Setter), name(n), formals(f), functionBody (b)
     { kind = K; }
 
     virtual void accept0(Visitor *visitor);
@@ -696,6 +701,7 @@ public:
     { return rbraceToken; }
 
 // attributes
+    Type type;
     SourceLocation getSetToken;
     PropertyName *name;
     SourceLocation lparenToken;
