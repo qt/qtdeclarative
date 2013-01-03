@@ -1360,14 +1360,15 @@ bool Codegen::visit(NumericLiteral *ast)
     return false;
 }
 
-struct Accessor {
+struct ObjectPropertyValue {
+    IR::Expr *value;
     IR::Function *getter;
     IR::Function *setter;
 };
 
 bool Codegen::visit(ObjectLiteral *ast)
 {
-    QMap<QString, Accessor> accessorMap;
+    QMap<QString, ObjectPropertyValue> valueMap;
 
     const unsigned t = _block->newTemp();
     move(_block->TEMP(t), _block->NEW(_block->NAME(QStringLiteral("Object"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
@@ -1375,42 +1376,57 @@ bool Codegen::visit(ObjectLiteral *ast)
         if (PropertyNameAndValue *nv = AST::cast<AST::PropertyNameAndValue *>(it->assignment)) {
             QString name = propertyName(nv->name);
             Result value = expression(nv->value);
-            move(member(_block->TEMP(t), _function->newString(name)), *value);
+            ObjectPropertyValue &v = valueMap[name];
+            if (v.getter || v.setter || (_function->isStrict && v.value))
+                throwSyntaxError(nv->lastSourceLocation(),
+                                 QCoreApplication::translate("qv4codegen", "Illegal duplicate key '%1' in object literal").arg(name));
+
+            valueMap[name].value = *value;
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
             QString name = propertyName(gs->name);
             IR::Function *function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : 0);
             if (_debugger)
                 _debugger->setSourceLocation(function, gs->getSetToken.startLine, gs->getSetToken.startColumn);
+            ObjectPropertyValue &v = valueMap[name];
+            if (v.value ||
+                (gs->type == PropertyGetterSetter::Getter && v.getter) ||
+                (gs->type == PropertyGetterSetter::Setter && v.setter))
+                throwSyntaxError(gs->lastSourceLocation(),
+                                 QCoreApplication::translate("qv4codegen", "Illegal duplicate key '%1' in object literal").arg(name));
             if (gs->type == PropertyGetterSetter::Getter)
-                accessorMap[name].getter = function;
+                v.getter = function;
             else
-                accessorMap[name].setter = function;
+                v.setter = function;
         } else {
             Q_UNREACHABLE();
         }
     }
-    if (!accessorMap.isEmpty()) {
+    if (!valueMap.isEmpty()) {
         const unsigned getter = _block->newTemp();
         const unsigned setter = _block->newTemp();
-        for (QMap<QString, Accessor>::const_iterator it = accessorMap.constBegin(); it != accessorMap.constEnd(); ++it) {
-            move(_block->TEMP(getter), it->getter ? _block->CLOSURE(it->getter) : _block->CONST(IR::UndefinedType, 0));
-            move(_block->TEMP(setter), it->setter ? _block->CLOSURE(it->setter) : _block->CONST(IR::UndefinedType, 0));
+        for (QMap<QString, ObjectPropertyValue>::const_iterator it = valueMap.constBegin(); it != valueMap.constEnd(); ++it) {
+            if (it->value) {
+                move(member(_block->TEMP(t), _function->newString(it.key())), it->value);
+            } else {
+                move(_block->TEMP(getter), it->getter ? _block->CLOSURE(it->getter) : _block->CONST(IR::UndefinedType, 0));
+                move(_block->TEMP(setter), it->setter ? _block->CLOSURE(it->setter) : _block->CONST(IR::UndefinedType, 0));
 
 
-            // __qmljs_builtin_define_getter_setter(Value object, String *name, Value getter, Value setter, ExecutionContext *ctx);
-            IR::ExprList *args = _function->New<IR::ExprList>();
-            IR::ExprList *current = args;
-            current->expr = _block->TEMP(t);
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = _block->NAME(it.key(), 0, 0);
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = _block->TEMP(getter);
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = _block->TEMP(setter);
-            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_define_getter_setter, 0, 0), args));
+                // __qmljs_builtin_define_getter_setter(Value object, String *name, Value getter, Value setter, ExecutionContext *ctx);
+                IR::ExprList *args = _function->New<IR::ExprList>();
+                IR::ExprList *current = args;
+                current->expr = _block->TEMP(t);
+                current->next = _function->New<IR::ExprList>();
+                current = current->next;
+                current->expr = _block->NAME(it.key(), 0, 0);
+                current->next = _function->New<IR::ExprList>();
+                current = current->next;
+                current->expr = _block->TEMP(getter);
+                current->next = _function->New<IR::ExprList>();
+                current = current->next;
+                current->expr = _block->TEMP(setter);
+                _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_define_getter_setter, 0, 0), args));
+            }
         }
     }
 
