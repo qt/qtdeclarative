@@ -54,6 +54,8 @@
 #include <typeinfo>
 #include <stdlib.h>
 
+#include "3rdparty/double-conversion/double-conversion.h"
+
 namespace QQmlJS {
 namespace VM {
 
@@ -65,8 +67,12 @@ QString numberToString(double num, int radix = 10)
         return QLatin1String(num < 0 ? "-Infinity" : "Infinity");
     }
 
-    if (radix == 10)
-        return QString::number(num, 'g', 16);
+    if (radix == 10) {
+        char str[100];
+        double_conversion::StringBuilder builder(str, sizeof(str));
+        double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToShortest(num, &builder);
+        return QString::fromLatin1(builder.Finalize());
+    }
 
     QString str;
     bool negative = false;

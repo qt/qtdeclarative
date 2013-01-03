@@ -81,3 +81,4 @@ DEFINES += QMLJS_NO_LLVM
 
 include(moth/moth.pri)
 include(masm/masm.pri)
+include(3rdparty/double-conversion/double-conversion.pri)
