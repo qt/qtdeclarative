@@ -997,8 +997,11 @@ bool Codegen::visit(ArrayLiteral *ast)
         move(subscript(_block->TEMP(t), _block->CONST(IR::NumberType, index)), *expr);
         ++index;
     }
-    for (Elision *elision = ast->elision; elision; elision = elision->next)
-        ++index; // ### set the size of the array
+    if (ast->elision) {
+        for (Elision *elision = ast->elision->next; elision; elision = elision->next)
+            ++index;
+        move(subscript(_block->TEMP(t), _block->CONST(IR::NumberType, index)), _block->CONST(IR::UndefinedType, 0));
+    }
     _expr.code = _block->TEMP(t);
     return false;
 }
