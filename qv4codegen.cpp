@@ -1402,25 +1402,36 @@ bool Codegen::visit(ObjectLiteral *ast)
         }
     }
     if (!valueMap.isEmpty()) {
-        const unsigned getter = _block->newTemp();
-        const unsigned setter = _block->newTemp();
+        unsigned value = 0;
+        unsigned getter = 0;
+        unsigned setter = 0;
         for (QMap<QString, ObjectPropertyValue>::const_iterator it = valueMap.constBegin(); it != valueMap.constEnd(); ++it) {
+            IR::ExprList *args = _function->New<IR::ExprList>();
+            IR::ExprList *current = args;
+            current->expr = _block->TEMP(t);
+            current->next = _function->New<IR::ExprList>();
+            current = current->next;
+            current->expr = _block->NAME(it.key(), 0, 0);
+            current->next = _function->New<IR::ExprList>();
+            current = current->next;
+
             if (it->value) {
-                move(member(_block->TEMP(t), _function->newString(it.key())), it->value);
+                if (!value)
+                    value = _block->newTemp();
+                move(_block->TEMP(value), it->value);
+                // __qmljs_builtin_define_property(Value object, String *name, Value val, ExecutionContext *ctx)
+                current->expr = _block->TEMP(value);
+                _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_define_property, 0, 0), args));
             } else {
+                if (!getter) {
+                    getter = _block->newTemp();
+                    setter = _block->newTemp();
+                }
                 move(_block->TEMP(getter), it->getter ? _block->CLOSURE(it->getter) : _block->CONST(IR::UndefinedType, 0));
                 move(_block->TEMP(setter), it->setter ? _block->CLOSURE(it->setter) : _block->CONST(IR::UndefinedType, 0));
 
 
                 // __qmljs_builtin_define_getter_setter(Value object, String *name, Value getter, Value setter, ExecutionContext *ctx);
-                IR::ExprList *args = _function->New<IR::ExprList>();
-                IR::ExprList *current = args;
-                current->expr = _block->TEMP(t);
-                current->next = _function->New<IR::ExprList>();
-                current = current->next;
-                current->expr = _block->NAME(it.key(), 0, 0);
-                current->next = _function->New<IR::ExprList>();
-                current = current->next;
                 current->expr = _block->TEMP(getter);
                 current->next = _function->New<IR::ExprList>();
                 current = current->next;

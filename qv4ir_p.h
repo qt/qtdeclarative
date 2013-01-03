@@ -285,6 +285,7 @@ struct Name: Expr {
         builtin_push_with,
         builtin_pop_with,
         builtin_declare_vars,
+        builtin_define_property,
         builtin_define_getter_setter
     };
 

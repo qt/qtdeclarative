@@ -554,6 +554,23 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
                              object, identifier(*name->id), getter, setter, Assembler::ContextRegister);
         break;
     }
+    case IR::Name::builtin_define_property: {
+        if (!call->args)
+            return;
+        IR::ExprList *args = call->args;
+        IR::Temp *object = args->expr->asTemp();
+        assert(object);
+        args = args->next;
+        assert(args);
+        IR::Name *name = args->expr->asName();
+        args = args->next;
+        assert(args);
+        IR::Temp *value = args->expr->asTemp();
+
+        generateFunctionCall(Assembler::Void, __qmljs_builtin_define_property,
+                             object, identifier(*name->id), value, Assembler::ContextRegister);
+        break;
+    }
     }
 }
 
