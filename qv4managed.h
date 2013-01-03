@@ -52,6 +52,9 @@ namespace VM {
 
 class MemoryManager;
 struct Object;
+struct ObjectPrototype;
+struct ExecutionContext;
+struct ScriptFunction;
 
 struct Managed
 {
@@ -73,6 +76,11 @@ protected:
 
 private:
     friend class MemoryManager;
+    friend struct Object;
+    friend struct ObjectPrototype;
+    friend struct FunctionObject;
+    friend struct ExecutionContext;
+    friend struct ScriptFunction;
 
     union {
         Managed *nextFree;

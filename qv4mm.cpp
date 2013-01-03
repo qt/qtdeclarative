@@ -90,11 +90,14 @@ struct MemoryManager::Data
     }
 };
 
-static bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::Chunk &b)
+namespace QQmlJS { namespace VM {
+
+bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::Chunk &b)
 {
     return a.memory.base() < b.memory.base();
 }
 
+} } // namespace QQmlJS::VM
 
 MemoryManager::MemoryManager()
     : m_d(new Data(true))

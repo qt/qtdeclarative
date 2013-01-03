@@ -39,7 +39,7 @@
 namespace QQmlJS {
 namespace VM {
 
-class Managed;
+struct Managed;
 
 class MemoryManager
 {
