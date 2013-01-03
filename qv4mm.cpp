@@ -31,7 +31,6 @@
 #include "qmljs_objects.h"
 #include "qv4ecmaobjects_p.h"
 #include "qv4mm.h"
-#include "StackBounds.h"
 #include "PageAllocation.h"
 #include "StdLibExtras.h"
 
@@ -363,8 +362,20 @@ void MemoryManager::collectRootsOnStack(QVector<VM::Object *> &roots) const
         return;
 
     Value valueOnStack = Value::undefinedValue();
-    StackBounds bounds = StackBounds::currentThreadStackBounds();
-    Value* top = reinterpret_cast<Value*>(bounds.origin()) - 1;
+
+    void* stackTop = 0;
+#if USE(PTHREADS)
+#if OS(DARWIN)
+    stackTop = pthread_get_stackaddr_np(pthread_self());
+#else
+    pthread_attr_t attr;
+    pthread_getattr_np(pthread_self(), &attr);
+    size_t stackSize = 0;
+    pthread_attr_getstack(&attr, &stackTop, &stackSize);
+#endif
+#endif
+
+    Value* top = reinterpret_cast<Value*>(stackTop) - 1;
     Value* current = (&valueOnStack) + 1;
 
     char** heapChunkBoundaries = (char**)alloca(m_d->heapChunks.count() * 2 * sizeof(char*));

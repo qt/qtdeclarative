@@ -6,9 +6,6 @@ SOURCES += $$PWD/assembler/MacroAssemblerARM.cpp
 SOURCES += $$PWD/assembler/MacroAssemblerSH4.cpp
 SOURCES += $$PWD/assembler/LinkBuffer.cpp
 
-SOURCES += $$PWD/wtf/StackBounds.cpp
-HEADERS += $$PWD/wtf/StackBounds.h
-
 SOURCES += $$PWD/wtf/PrintStream.cpp
 HEADERS += $$PWD/wtf/PrintStream.h
 
@@ -42,6 +39,8 @@ DEFINES += ENABLE_JIT=1
 DEFINES += ENABLE_JIT_CONSTANT_BLINDING=0
 DEFINES += ENABLE_ASSEMBLER=1
 DEFINES += USE_SYSTEM_MALLOC=1
+
+DEFINES += BUILDING_QT__
 
 INCLUDEPATH += $$PWD/jit
 INCLUDEPATH += $$PWD/assembler
