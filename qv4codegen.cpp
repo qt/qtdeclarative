@@ -1927,6 +1927,8 @@ bool Codegen::visit(Block *ast)
 
 bool Codegen::visit(BreakStatement *ast)
 {
+    if (!_loop)
+        throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Break outside of loop"));
     unwindException(_loop->tryCleanup);
     if (ast->label.isEmpty())
         _block->JUMP(_loop->breakBlock);
@@ -2104,7 +2106,7 @@ bool Codegen::visit(LabelledStatement *ast)
             AST::cast<AST::LocalForStatement *>(ast->statement) ||
             AST::cast<AST::LocalForEachStatement *>(ast->statement)) {
         statement(ast->statement); // labelledStatement will be associated with the ast->statement's loop.
-    } else {
+    } else if (_loop) {
         IR::BasicBlock *breakBlock = _function->newBasicBlock();
         enterLoop(ast->statement, breakBlock, /*continueBlock*/ 0);
         statement(ast->statement);
