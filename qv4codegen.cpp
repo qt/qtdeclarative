@@ -2112,6 +2112,7 @@ bool Codegen::visit(LabelledStatement *ast)
         statement(ast->statement);
         _block->JUMP(breakBlock);
         _block = breakBlock;
+        leaveLoop();
     }
 
     return false;
