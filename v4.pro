@@ -79,6 +79,11 @@ DEFINES += QMLJS_NO_LLVM
 
 }
 
+checktarget.target = check
+checktarget.commands = python tests/test262.py
+checktarget.depends = all
+QMAKE_EXTRA_TARGETS += checktarget
+
 include(moth/moth.pri)
 include(masm/masm.pri)
 include(3rdparty/double-conversion/double-conversion.pri)
