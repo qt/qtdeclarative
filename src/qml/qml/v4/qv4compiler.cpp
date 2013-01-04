@@ -50,8 +50,6 @@
 #include <private/qqmlaccessors_p.h>
 #include <private/qqmljsengine_p.h>
 
-Q_DECLARE_METATYPE(QJSValue)
-
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(bindingsDump, QML_BINDINGS_DUMP)

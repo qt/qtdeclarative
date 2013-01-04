@@ -153,7 +153,7 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                 if (state.isMatrixDirty())
                     program()->setUniformValue(loc, state.combinedMatrix());
             } else if (d.specialType == UniformData::None) {
-                switch (d.value.type()) {
+                switch (int(d.value.type())) {
                 case QMetaType::QColor:
                     program()->setUniformValue(loc, qt_premultiply_color(qvariant_cast<QColor>(d.value)));
                     break;

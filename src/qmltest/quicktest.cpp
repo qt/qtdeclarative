@@ -64,6 +64,10 @@
 #include <QtCore/QTranslator>
 #include <QtTest/QSignalSpy>
 
+#ifdef QT_QMLTEST_WITH_WIDGETS
+#include <QtWidgets/QApplication>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QTestRootObject : public QObject
@@ -167,11 +171,6 @@ bool qWaitForSignal(QObject *obj, const char* signal, int timeout = 5000)
 
 int quick_test_main(int argc, char **argv, const char *name, const char *sourceDir)
 {
-    QGuiApplication* app = 0;
-    if (!QCoreApplication::instance()) {
-        app = new QGuiApplication(argc, argv);
-    }
-
     // Look for QML-specific command-line options.
     //      -import dir         Specify an import directory.
     //      -input dir          Specify the input directory for test cases.
@@ -179,6 +178,9 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
     QStringList imports;
     QString testPath;
     QString translationFile;
+#ifdef QT_QMLTEST_WITH_WIDGETS
+    bool withWidgets = false;
+#endif
     int outargc = 1;
     int index = 1;
     while (index < argc) {
@@ -190,6 +192,11 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
             index += 2;
         } else if (strcmp(argv[index], "-opengl") == 0) {
             ++index;
+#ifdef QT_QMLTEST_WITH_WIDGETS
+        } else if (strcmp(argv[index], "-widgets") == 0) {
+            withWidgets = true;
+            ++index;
+#endif
         } else if (strcmp(argv[index], "-translation") == 0 && (index + 1) < argc) {
             translationFile = stripQuotes(QString::fromLocal8Bit(argv[index + 1]));
             index += 2;
@@ -202,6 +209,18 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
     }
     argv[outargc] = 0;
     argc = outargc;
+
+    QCoreApplication* app = 0;
+    if (!QCoreApplication::instance()) {
+#ifdef QT_QMLTEST_WITH_WIDGETS
+        if (withWidgets)
+            app = new QApplication(argc, argv);
+        else
+#endif
+        {
+            app = new QGuiApplication(argc, argv);
+        }
+    }
 
     // Parse the command-line arguments.
 

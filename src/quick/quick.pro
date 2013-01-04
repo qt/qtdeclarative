@@ -1,7 +1,5 @@
 TARGET = QtQuick
 
-CONFIG += dll warn_on
-
 QT = core-private gui-private qml-private
 QT_PRIVATE = v8-private network
 

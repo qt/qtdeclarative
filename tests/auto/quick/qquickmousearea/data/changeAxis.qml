@@ -16,7 +16,7 @@ Rectangle {
             objectName: "mouseregion"
             anchors.fill: parent
             drag.target: blackRect
-            drag.axis: blackRect.x <= 75 ? Drag.XandYAxis : Drag.YAxis
+            drag.axis: blackRect.x <= 75 ? Drag.XAndYAxis : Drag.YAxis
          }
      }
  }

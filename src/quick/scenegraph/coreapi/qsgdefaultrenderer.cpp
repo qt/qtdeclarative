@@ -69,7 +69,7 @@ static bool nodeLessThan(QSGNode *nodeA, QSGNode *nodeB)
     if (nodeA->type() != QSGNode::GeometryNodeType)
         return nodeA < nodeB;
     QSGGeometryNode *a = static_cast<QSGGeometryNode *>(nodeA);
-    QSGGeometryNode *b = static_cast<QSGGeometryNode *>(nodeA);
+    QSGGeometryNode *b = static_cast<QSGGeometryNode *>(nodeB);
 
     // Sort by clip...
     if (a->clipList() != b->clipList())
@@ -97,7 +97,7 @@ static bool nodeLessThanWithRenderOrder(QSGNode *nodeA, QSGNode *nodeB)
     if (nodeA->type() != QSGNode::GeometryNodeType)
         return nodeA < nodeB;
     QSGGeometryNode *a = static_cast<QSGGeometryNode *>(nodeA);
-    QSGGeometryNode *b = static_cast<QSGGeometryNode *>(nodeA);
+    QSGGeometryNode *b = static_cast<QSGGeometryNode *>(nodeB);
 
     // Sort by clip...
     if (a->clipList() != b->clipList())

@@ -58,8 +58,6 @@
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qdebug.h>
 
-Q_DECLARE_METATYPE(QQmlV8Handle)
-
 QT_BEGIN_NAMESPACE
 
 static QQmlJavaScriptExpression::VTable QQmlBoundSignalExpression_jsvtable = {

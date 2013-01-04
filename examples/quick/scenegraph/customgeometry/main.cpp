@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     qmlRegisterType<BezierCurve>("CustomGeometry", 1, 0, "BezierCurve");
 
     QQuickView view;
-    view.setSource(QUrl("main.qml"));
+    view.setSource(QUrl("qrc:///scenegraph/customgeometry/main.qml"));
     view.show();
 
     app.exec();

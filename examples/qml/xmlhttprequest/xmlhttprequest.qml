@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "../../shared" as Examples
+import "../../quick/shared" as Examples
 
 Item {
     height: 480

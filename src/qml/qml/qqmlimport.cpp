@@ -986,6 +986,7 @@ QQmlImportNamespace::Import *QQmlImportsPrivate::addImportToNamespace(QQmlImport
 {
     Q_ASSERT(nameSpace);
     Q_ASSERT(errors);
+    Q_UNUSED(errors);
     Q_ASSERT(url.isEmpty() || url.endsWith(Slash));
 
     QQmlImportNamespace::Import *import = new QQmlImportNamespace::Import;

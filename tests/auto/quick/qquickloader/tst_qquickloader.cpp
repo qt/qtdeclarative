@@ -462,6 +462,7 @@ void tst_QQuickLoader::networkComponent()
                 " Component { id: comp; NW.Rect120x60 {} }\n"
                 " Loader { sourceComponent: comp } }")
             , dataDirectory());
+    QTRY_COMPARE(component.status(), QQmlComponent::Ready);
 
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
@@ -488,6 +489,7 @@ void tst_QQuickLoader::failNetworkRequest()
 
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQuick 2.0\nLoader { property int did_load: 123; source: \"" SERVER_ADDR "/IDontExist.qml\"; onLoaded: did_load=456 }"), QUrl(QString(SERVER_ADDR "/dummy.qml")));
+    QTRY_COMPARE(component.status(), QQmlComponent::Ready);
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader != 0);
 

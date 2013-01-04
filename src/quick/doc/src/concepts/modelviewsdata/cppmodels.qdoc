@@ -121,7 +121,7 @@ QAbstractItemModel::setRoleNames(). The default role names set by Qt are:
 \endtable
 
 Here is an application with a QAbstractListModel subclass named \c AnimalModel
-that has \e type and \e size roles. It calls QAbstractItemModel::setRoleNames() to set the
+that has \e type and \e size roles. It reimplements QAbstractItemModel::roleNames() to set the
 role names for accessing the properties via QML:
 
 \snippet examples/quick/modelviews/abstractitemmodel/model.h 0

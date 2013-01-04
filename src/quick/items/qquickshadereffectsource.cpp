@@ -695,6 +695,7 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
 void QQuickShaderEffectSource::sourceItemDestroyed(QObject *item)
 {
     Q_ASSERT(item == m_sourceItem);
+    Q_UNUSED(item);
     m_sourceItem = 0;
     update();
     emit sourceItemChanged();

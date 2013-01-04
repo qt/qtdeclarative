@@ -146,6 +146,7 @@ namespace QtQuickTest
         }
     }
 
+#ifndef QT_NO_WHEELEVENT
     static void mouseWheel(QWindow* window, QObject* item, Qt::MouseButtons buttons,
                                 Qt::KeyboardModifiers stateKey,
                                 QPointF _pos, int xDelta, int yDelta, int delay = -1)
@@ -172,6 +173,7 @@ namespace QtQuickTest
         if (!qApp->notify(window, &we))
             QTest::qWarn("Wheel event not accepted by receiving window");
     }
+#endif
 };
 
 bool QuickTestEvent::mousePress
@@ -188,6 +190,7 @@ bool QuickTestEvent::mousePress
     return true;
 }
 
+#ifndef QT_NO_WHEELEVENT
 bool QuickTestEvent::mouseWheel(
     QObject *item, qreal x, qreal y, int buttons,
     int modifiers, int xDelta, int yDelta, int delay)
@@ -200,6 +203,7 @@ bool QuickTestEvent::mouseWheel(
                             QPointF(x, y), xDelta, yDelta, delay);
     return true;
 }
+#endif
 
 bool QuickTestEvent::mouseRelease
     (QObject *item, qreal x, qreal y, int button,

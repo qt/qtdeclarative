@@ -150,7 +150,7 @@ void tst_QQuickMouseArea::dragProperties()
     QCOMPARE(targetSpy.count(),1);
 
     // axis
-    QCOMPARE(drag->axis(), QQuickDrag::XandYAxis);
+    QCOMPARE(drag->axis(), QQuickDrag::XAndYAxis);
     QSignalSpy axisSpy(drag, SIGNAL(axisChanged()));
     drag->setAxis(QQuickDrag::XAxis);
     QCOMPARE(drag->axis(), QQuickDrag::XAxis);
@@ -1285,7 +1285,6 @@ void tst_QQuickMouseArea::pressedMultipleButtons()
 
     QPoint point(10,10);
 
-    int prevButtons = 0;
     for (int i = 0; i < buttons.count(); ++i) {
         int btns = buttons.at(i);
 
@@ -1294,8 +1293,6 @@ void tst_QQuickMouseArea::pressedMultipleButtons()
 
         QCOMPARE(mouseArea->pressed(), pressed.at(i));
         QCOMPARE(mouseArea->pressedButtons(), pressedButtons.at(i));
-
-        prevButtons = buttons.at(i);
     }
 
     QTest::mousePress(view, Qt::NoButton, 0, point);
@@ -1344,7 +1341,7 @@ void tst_QQuickMouseArea::changeAxis()
     QTRY_VERIFY(drag->active());
     QCOMPARE(blackRect->x(), 72.0);
     QCOMPARE(blackRect->y(), 72.0);
-    QCOMPARE(drag->axis(), QQuickDrag::XandYAxis);
+    QCOMPARE(drag->axis(), QQuickDrag::XAndYAxis);
 
     /* When blackRect.x becomes bigger than 75, the drag axis is changed to
      * Drag.YAxis by the QML code. Verify that this happens, and that the drag

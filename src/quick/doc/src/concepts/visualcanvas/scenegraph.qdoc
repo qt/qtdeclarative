@@ -49,18 +49,18 @@ are drawn in one call, then all icons, then all the text, reducing the
 total amount of draw calls to only 3. Batching and state change
 reduction like this can greatly improve performance on some hardware.
 
-The scene graph is closely tied to QML and can not be used as
+The scene graph is closely tied to Qt Quick 2.0 and can not be used
 stand-alone. The scene graph is managed and rendered by the
-QQuickWindow class and custom QML elements will add their graphical
+QQuickWindow class and custom Item elements can add their graphical
 primitives into the scene graph through a call to
 QQuickItem::updatePaintNode().
 
-The QML scene graph is a graphical representation of the QML scene. It
-can be thought of as a graphical deep copy, an independent structure that
-contains enough information to render the QML Scene. Once it has been set
-up, it can be manipulated and rendered independently of the state of
-the QML scene. On some platforms, the scene graph will even be
-rendered on a dedicated render thread.
+The scene graph is a graphical representation of the Item scene, an
+independent structure that contains enough information to render all
+the items. Once it has been set up, it can be manipulated and rendered
+independently of the state of the items. On many platforms, the scene
+graph will even be rendered on a dedicated render thread while the GUI
+thread is preparing the next frame's state.
 
 
 
@@ -74,7 +74,7 @@ serving a dedicated purpose.
 \li QSGGeometryNode - for all rendered content in the scene
 graph. In most cases, it will be enough for a custom QQuickItem object to
 simply return a single QSGGeometryNode object from the
-QQuickItem::updatePaintNode() call.
+QQuickItem::updatePaintNode() call. 
 
 \li QSGTransformNode - implements transformations in the scene
 graph. Nested transforms are multiplied together.
@@ -91,6 +91,11 @@ the rendering, such as the shared root for a subtree of geometry nodes.
 
 \endlist
 
+Ownership of the nodes is either done explicitly by the creator or by
+the scene graph by setting the flag \l QSGNode::OwnedByParent on
+it. Assigning ownership to the scene graph is often preferable as it
+simplifies cleanup when the scene graph lives outside the GUI thread.
+
 
 
 \section1 Rendering
@@ -102,6 +107,40 @@ Rendering} section.
 How to integrate QPainter based graphics is explained in \l{Custom
 Items using QPainter}.
 
+\section1 Mixing Scene Graph and OpenGL
+
+The scene graph offers two methods for integrating OpenGL
+content. 
+
+By connecting to the \l QQuickWindow::beforeRendering() and \l
+QQuickWindow::afterRendering() signals, applications can make OpenGL
+calls directly into the same context as the scene graph is rendering
+to. As the signal names indicate, the user can then render OpenGL
+content either under a Qt Quick scene or over it. The benefit of
+integrating in this manner is that no extra framebuffer nor memory is
+needed to perform the rendering. The downside is that Qt Quick decides
+when to call the signals and this is the only time the OpenGL
+application is allowed to draw. 
+
+The other alternative is to create a FramebufferObject, render into it
+and use the result as a textured node in the scene graph, for instance
+using a QSGSimpleTextureNode. A simple way of doing the same is to use
+a QQuickPaintedItem with QQuickPaintedItem::FramebufferObject as
+render target and by calling QPainter::beginNativePainting() before
+the OpenGL rendering and QPainter::endNativePainting() after. When
+OpenGL content is integrated with a texture and FramebufferObject, the
+application has more control over when the content is rendered. For
+instance, the application can create a second QOpenGLContext on the
+GUI thread which shares memory with the scene graph's OpenGL context and drive the rendering manually.
+
+\warning When mixing OpenGL content with scene graph rendering, it is
+important the application does not leave the OpenGL context in a state
+with buffers bound, attributes enabled, special values in the z-buffer
+or stencil-buffer or similar. Doing so can result in unpredictable
+behavior.
+
+\warning The OpenGL rendering code must be thread aware, as the
+rendering might be happening outside the GUI thread. 
 
 
 \section1 Scene Graph Backend

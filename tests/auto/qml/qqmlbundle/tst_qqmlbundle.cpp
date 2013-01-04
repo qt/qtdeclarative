@@ -201,7 +201,7 @@ void tst_qqmlbundle::import()
     engine.addImportPath(testFile("imports"));
 
     QQmlComponent component(&engine, testFileUrl("import.qml"));
-    QVERIFY(component.isReady());
+    QVERIFY2(component.isReady(), QQmlDataTest::msgComponentError(component, &engine));
 
     QObject *o = component.create();
     QVERIFY(o != 0);

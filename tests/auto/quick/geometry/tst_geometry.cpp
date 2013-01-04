@@ -139,9 +139,9 @@ void GeometryTest::testCustomGeometry()
     };
 
     static QSGGeometry::Attribute attributes[] = {
-        { 0, 2, GL_FLOAT },
-        { 1, 4, GL_UNSIGNED_BYTE },
-        { 2, 4, GL_FLOAT },
+        { 0, 2, GL_FLOAT, 0, 0},
+        { 1, 4, GL_UNSIGNED_BYTE, 0, 0},
+        { 2, 4, GL_FLOAT, 0, 0},
     };
     static QSGGeometry::AttributeSet set = { 4, 6 * sizeof(float) + 4 * sizeof(unsigned char), attributes };
 

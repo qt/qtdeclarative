@@ -63,7 +63,6 @@
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonvalue.h>
 
-Q_DECLARE_METATYPE(QJSValue)
 Q_DECLARE_METATYPE(QList<int>)
 
 

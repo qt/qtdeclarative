@@ -1,0 +1,22 @@
+<RCC>
+    <qresource prefix="/demos/calqlatr">
+        <file>calqlatr.qml</file>
+        <file>content/Button.qml</file>
+        <file>content/calculator.js</file>
+        <file>content/Display.qml</file>
+        <file>content/NumberPad.qml</file>
+        <file>content/StyleLabel.qml</file>
+        <file>content/audio/touch.wav</file>
+        <file>content/images/icon-back.png</file>
+        <file>content/images/icon-close.png</file>
+        <file>content/images/icon-settings.png</file>
+        <file>content/images/logo.png</file>
+        <file>content/images/paper-edge-left.png</file>
+        <file>content/images/paper-edge-right.png</file>
+        <file>content/images/paper-grip.png</file>
+        <file>content/images/settings-selected-a.png</file>
+        <file>content/images/settings-selected-b.png</file>
+        <file>content/images/touch-green.png</file>
+        <file>content/images/touch-white.png</file>
+    </qresource>
+</RCC>

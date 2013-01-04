@@ -285,6 +285,7 @@ private:
     int m_intProperty;
     Qt::MouseButtons m_buttons;
 };
+Q_DECLARE_METATYPE(QQmlListProperty<MyQmlObject>)
 
 QML_DECLARE_TYPEINFO(MyQmlObject, QML_HAS_ATTACHED_PROPERTIES)
 
@@ -696,7 +697,6 @@ public:
     }
 };
 
-Q_DECLARE_METATYPE(QJSValue);
 class MyInvokableBaseObject : public QObject
 {
     Q_OBJECT

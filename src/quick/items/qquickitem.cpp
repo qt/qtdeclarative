@@ -3129,8 +3129,12 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
 {
 #ifndef QT_NO_ACCESSIBILITY
-    QAccessibleEvent ev(this, QAccessible::Focus);
-    QAccessible::updateAccessibility(&ev);
+    if (QAccessible::isActive()) {
+        if (QObject *acc = QQuickAccessibleAttached::findAccessible(this)) {
+            QAccessibleEvent ev(acc, QAccessible::Focus);
+            QAccessible::updateAccessibility(&ev);
+        }
+    }
 #endif
 }
 
@@ -3202,6 +3206,7 @@ void QQuickItem::touchUngrabEvent()
     // XXX todo
 }
 
+#ifndef QT_NO_WHEELEVENT
 /*!
     This event handler can be reimplemented in a subclass to receive
     wheel events for an item. The event information is provided by the
@@ -3211,6 +3216,7 @@ void QQuickItem::wheelEvent(QWheelEvent *event)
 {
     event->ignore();
 }
+#endif
 
 /*!
     This event handler can be reimplemented in a subclass to receive touch
@@ -4100,11 +4106,13 @@ void QQuickItemPrivate::deliverMouseEvent(QMouseEvent *e)
     }
 }
 
+#ifndef QT_NO_WHEELEVENT
 void QQuickItemPrivate::deliverWheelEvent(QWheelEvent *e)
 {
     Q_Q(QQuickItem);
     q->wheelEvent(e);
 }
+#endif
 
 void QQuickItemPrivate::deliverTouchEvent(QTouchEvent *e)
 {
@@ -5264,7 +5272,7 @@ void QQuickItem::setFlags(Flags flags)
 {
     Q_D(QQuickItem);
 
-    if ((flags & ItemIsFocusScope) != (d->flags & ItemIsFocusScope)) {
+    if (int(flags & ItemIsFocusScope) != int(d->flags & ItemIsFocusScope)) {
         if (flags & ItemIsFocusScope && !d->childItems.isEmpty() && d->window) {
             qWarning("QQuickItem: Cannot set FocusScope once item has children and is in a window.");
             flags &= ~ItemIsFocusScope;
@@ -5274,7 +5282,7 @@ void QQuickItem::setFlags(Flags flags)
         }
     }
 
-    if ((flags & ItemClipsChildrenToShape ) != (d->flags & ItemClipsChildrenToShape))
+    if (int(flags & ItemClipsChildrenToShape) != int(d->flags & ItemClipsChildrenToShape))
         d->dirty(QQuickItemPrivate::Clip);
 
     d->flags = flags;

@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/demos/stocqt">
+        <file>stocqt.qml</file>
+        <file>content/Button.qml</file>
+        <file>content/CheckBox.qml</file>
+        <file>content/DatePicker.qml</file>
+        <file>content/StockChart.qml</file>
+        <file>content/StockListModel.qml</file>
+        <file>content/StockListView.qml</file>
+        <file>content/StockModel.qml</file>
+        <file>content/StockSettings.qml</file>
+        <file>content/StockView.qml</file>
+        <file>content/images/icon-calendar-anim.png</file>
+        <file>content/images/icon-calendar.png</file>
+        <file>content/images/icon-items.png</file>
+        <file>content/images/icon-settings.png</file>
+        <file>content/images/logo.png</file>
+        <file>content/images/wheel-touch.png</file>
+        <file>content/images/wheel.png</file>
+    </qresource>
+</RCC>

@@ -108,7 +108,7 @@ void tst_QQuickPinchArea::pinchProperties()
     QCOMPARE(targetSpy.count(),1);
 
     // axis
-    QCOMPARE(pinch->axis(), QQuickPinch::XandYAxis);
+    QCOMPARE(pinch->axis(), QQuickPinch::XAndYAxis);
     QSignalSpy axisSpy(pinch, SIGNAL(dragAxisChanged()));
     pinch->setAxis(QQuickPinch::XAxis);
     QCOMPARE(pinch->axis(), QQuickPinch::XAxis);

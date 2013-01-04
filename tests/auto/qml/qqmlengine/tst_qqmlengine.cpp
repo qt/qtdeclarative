@@ -417,12 +417,6 @@ void tst_qqmlengine::failedCompilation_data()
     QTest::newRow("Invalid content") << "failedCompilation.1.qml";
 }
 
-static QStringList warnings;
-static void msgHandler(QtMsgType, const QMessageLogContext &, const QString &warning)
-{
-    warnings << warning;
-}
-
 void tst_qqmlengine::outputWarningsToStandardError()
 {
     QQmlEngine engine;
@@ -434,35 +428,26 @@ void tst_qqmlengine::outputWarningsToStandardError()
 
     QVERIFY(c.isReady() == true);
 
-    warnings.clear();
-    QtMessageHandler old = qInstallMessageHandler(msgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     QObject *o = c.create();
-
-    qInstallMessageHandler(old);
 
     QVERIFY(o != 0);
     delete o;
 
-    QCOMPARE(warnings.count(), 1);
-    QCOMPARE(warnings.at(0), QLatin1String("<Unknown File>: Unable to assign [undefined] to int"));
-    warnings.clear();
-
+    QCOMPARE(messageHandler.messages().count(), 1);
+    QCOMPARE(messageHandler.messages().at(0), QLatin1String("<Unknown File>: Unable to assign [undefined] to int"));
+    messageHandler.clear();
 
     engine.setOutputWarningsToStandardError(false);
     QCOMPARE(engine.outputWarningsToStandardError(), false);
 
-
-    old = qInstallMessageHandler(msgHandler);
-
     o = c.create();
-
-    qInstallMessageHandler(old);
 
     QVERIFY(o != 0);
     delete o;
 
-    QCOMPARE(warnings.count(), 0);
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 }
 
 void tst_qqmlengine::objectOwnership()

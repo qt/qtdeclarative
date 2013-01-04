@@ -1,12 +1,13 @@
 TEMPLATE = subdirs
 
-SUBDIRS +=imageprovider \
-          plugins \
+SUBDIRS += \
           networkaccessmanagerfactory \
+          plugins \
           referenceexamples \
-          shell
+          shell \
+          xmlhttprequest
 
-#Install
-sources.files = qml.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/qtquick/qml
-INSTALLS += sources
+EXAMPLE_FILES = \
+    dynamicscene \
+    i18n \
+    locale

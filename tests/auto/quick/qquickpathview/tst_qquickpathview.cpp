@@ -1798,7 +1798,7 @@ void tst_QQuickPathView::maximumFlickVelocity()
     flick(window, QPoint(200,10), QPoint(10,10), 180);
     QVERIFY(pathview->isMoving());
     QVERIFY(pathview->isFlicking());
-    QTRY_VERIFY(!pathview->isMoving());
+    QTRY_VERIFY_WITH_TIMEOUT(!pathview->isMoving(), 50000);
 
     double dist1 = 100 - pathview->offset();
 
@@ -1807,7 +1807,7 @@ void tst_QQuickPathView::maximumFlickVelocity()
     flick(window, QPoint(200,10), QPoint(10,10), 180);
     QVERIFY(pathview->isMoving());
     QVERIFY(pathview->isFlicking());
-    QTRY_VERIFY(!pathview->isMoving());
+    QTRY_VERIFY_WITH_TIMEOUT(!pathview->isMoving(), 50000);
 
     double dist2 = 100 - pathview->offset();
 
@@ -1816,7 +1816,7 @@ void tst_QQuickPathView::maximumFlickVelocity()
     flick(window, QPoint(200,10), QPoint(10,10), 180);
     QVERIFY(pathview->isMoving());
     QVERIFY(pathview->isFlicking());
-    QTRY_VERIFY(!pathview->isMoving());
+    QTRY_VERIFY_WITH_TIMEOUT(!pathview->isMoving(), 50000);
 
     double dist3 = 100 - pathview->offset();
 

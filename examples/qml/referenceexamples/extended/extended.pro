@@ -5,7 +5,5 @@ SOURCES += main.cpp \
 HEADERS += lineedit.h
 RESOURCES += extended.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/qtquick/qml/referenceexamples/extended
-sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS extended.pro example.qml
-sources.path = $$target.path
-INSTALLS += target sources
+target.path = $$[QT_INSTALL_EXAMPLES]/qml/referenceexamples/extended
+INSTALLS += target

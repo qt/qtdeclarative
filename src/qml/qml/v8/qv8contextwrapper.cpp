@@ -55,7 +55,7 @@ class QV8ContextResource : public QV8ObjectResource
     V8_RESOURCE_TYPE(ContextType);
 
 public:
-    QV8ContextResource(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject);
+    QV8ContextResource(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
     ~QV8ContextResource();
 
     inline QQmlContextData *getContext() const;
@@ -64,7 +64,8 @@ public:
     quint32 isSharedContext:1;
     quint32 hasSubContexts:1;
     quint32 readOnly:1;
-    quint32 dummy:29;
+    quint32 ownsContext:1;
+    quint32 dummy:28;
 
     // This is a pretty horrible hack, and an abuse of external strings.  When we create a 
     // sub-context (a context created by a Qt.include() in an external javascript file),
@@ -86,15 +87,15 @@ private:
 
 };
 
-QV8ContextResource::QV8ContextResource(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject)
-: QV8ObjectResource(engine), isSharedContext(false), hasSubContexts(false), readOnly(true), 
-  context(context), scopeObject(scopeObject)
+QV8ContextResource::QV8ContextResource(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
+: QV8ObjectResource(engine), isSharedContext(false), hasSubContexts(false), readOnly(true),
+  ownsContext(ownsContext), context(context), scopeObject(scopeObject)
 {
 }
 
 QV8ContextResource::~QV8ContextResource()
 {
-    if (context && context->isJSContext)
+    if (context && ownsContext)
         context->destroy();
 }
 
@@ -186,7 +187,7 @@ v8::Local<v8::Object> QV8ContextWrapper::urlScope(const QUrl &url)
 
     // XXX NewInstance() should be optimized
     v8::Local<v8::Object> rv = m_urlConstructor->NewInstance(); 
-    QV8ContextResource *r = new QV8ContextResource(m_engine, context, 0);
+    QV8ContextResource *r = new QV8ContextResource(m_engine, context, 0, true);
     rv->SetExternalResource(r);
     return rv;
 }
@@ -224,6 +225,12 @@ QQmlContextData *QV8ContextWrapper::context(v8::Handle<v8::Value> value)
     v8::Handle<v8::Object> qmlglobal = v8::Handle<v8::Object>::Cast(value);
     QV8ContextResource *r = v8_resource_cast<QV8ContextResource>(qmlglobal);
     return r?r->getContext():0;
+}
+
+void QV8ContextWrapper::takeContextOwnership(v8::Handle<v8::Object> qmlglobal)
+{
+    QV8ContextResource *r = v8_resource_cast<QV8ContextResource>(qmlglobal);
+    r->ownsContext = true;
 }
 
 v8::Handle<v8::Value> QV8ContextWrapper::NullGetter(v8::Local<v8::String>,

@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     qmlRegisterType<Squircle>("OpenGLUnderQML", 1, 0, "Squircle");
 
     QQuickView view;
-    view.setSource(QUrl("main.qml"));
+    view.setSource(QUrl("qrc:///scenegraph/openglunderqml/main.qml"));
     view.show();
 
     return app.exec();

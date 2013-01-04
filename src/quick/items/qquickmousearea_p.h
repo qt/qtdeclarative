@@ -78,7 +78,7 @@ public:
     void setTarget(QQuickItem *target);
     void resetTarget();
 
-    enum Axis { XAxis=0x01, YAxis=0x02, XandYAxis=0x03 };
+    enum Axis { XAxis=0x01, YAxis=0x02, XAndYAxis=0x03, XandYAxis=XAndYAxis };
     Axis axis() const;
     void setAxis(Axis);
 
@@ -222,7 +222,9 @@ protected:
     virtual void hoverEnterEvent(QHoverEvent *event);
     virtual void hoverMoveEvent(QHoverEvent *event);
     virtual void hoverLeaveEvent(QHoverEvent *event);
+#ifndef QT_NO_WHEELEVENT
     virtual void wheelEvent(QWheelEvent *event);
+#endif
     virtual bool childMouseEventFilter(QQuickItem *i, QEvent *e);
     virtual void timerEvent(QTimerEvent *event);
     virtual void windowDeactivateEvent();

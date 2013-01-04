@@ -1,7 +1,6 @@
 CONFIG += testcase
 TEMPLATE = app
 TARGET = tst_bench_qjsvalue
-DEPENDPATH += .
 INCLUDEPATH += .
 macx:CONFIG -= app_bundle
 CONFIG += release

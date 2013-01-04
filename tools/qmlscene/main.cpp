@@ -476,7 +476,7 @@ int main(int argc, char ** argv)
             QObject::connect(&engine, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
             component->loadUrl(options.file);
             if ( !component->isReady() ) {
-                qFatal("%s", qPrintable(component->errorString()));
+                qWarning("%s", qPrintable(component->errorString()));
                 return -1;
             }
 

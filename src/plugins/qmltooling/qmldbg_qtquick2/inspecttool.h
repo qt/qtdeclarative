@@ -79,7 +79,9 @@ public:
     void mouseDoubleClickEvent(QMouseEvent *);
 
     void hoverMoveEvent(QMouseEvent *);
+#ifndef QT_NO_WHEELEVENT
     void wheelEvent(QWheelEvent *);
+#endif
 
     void keyPressEvent(QKeyEvent *) {}
     void keyReleaseEvent(QKeyEvent *);

@@ -92,22 +92,7 @@ QAccessibleInterface *AccessibleQuickFactory::create(const QString &classname, Q
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
         if (!itemPrivate->isAccessible)
             return 0;
-
-        QVariant v = QQuickAccessibleAttached::property(item, "role");
-        bool ok;
-        QAccessible::Role role = (QAccessible::Role)v.toInt(&ok);
-        if (!ok)    // Not sure if this check is needed.
-            return new QAccessibleQuickItem(item);
-
-        switch (role) {
-        case QAccessible::Slider:
-        case QAccessible::SpinBox:
-        case QAccessible::Dial:
-        case QAccessible::ScrollBar:
-            return new QAccessibleQuickItemValueInterface(item);
-        default:
-            return new QAccessibleQuickItem(item);
-        }
+        return new QAccessibleQuickItem(item);
     }
 
     return 0;

@@ -880,7 +880,7 @@ Module {
             values: {
                 "XAxis": 1,
                 "YAxis": 2,
-                "XandYAxis": 3
+                "XAndYAxis": 3
             }
         }
         Property { name: "target"; type: "QQuickItem"; isPointer: true }
@@ -2337,7 +2337,7 @@ Module {
                 "NoDrag": 0,
                 "XAxis": 1,
                 "YAxis": 2,
-                "XandYAxis": 3
+                "XAndYAxis": 3
             }
         }
         Property { name: "target"; type: "QQuickItem"; isPointer: true }

@@ -64,7 +64,7 @@ static const int PressAndHoldDelay = 800;
 #ifndef QT_NO_DRAGANDDROP
 
 QQuickDrag::QQuickDrag(QObject *parent)
-: QObject(parent), _target(0), _axis(XandYAxis), _xmin(-FLT_MAX),
+: QObject(parent), _target(0), _axis(XAndYAxis), _xmin(-FLT_MAX),
 _xmax(FLT_MAX), _ymin(-FLT_MAX), _ymax(FLT_MAX), _active(false), _filterChildren(false)
 {
 }
@@ -938,6 +938,7 @@ void QQuickMouseArea::hoverLeaveEvent(QHoverEvent *event)
         setHovered(false);
 }
 
+#ifndef QT_NO_WHEELEVENT
 void QQuickMouseArea::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickMouseArea);
@@ -953,6 +954,7 @@ void QQuickMouseArea::wheelEvent(QWheelEvent *event)
     if (!we.isAccepted())
         QQuickItem::wheelEvent(event);
 }
+#endif
 
 void QQuickMouseArea::ungrabMouse()
 {
@@ -1331,7 +1333,7 @@ void QQuickMouseArea::setCursorShape(Qt::CursorShape shape)
     \list
     \li \c drag.target specifies the id of the item to drag.
     \li \c drag.active specifies if the target item is currently being dragged.
-    \li \c drag.axis specifies whether dragging can be done horizontally (\c Drag.XAxis), vertically (\c Drag.YAxis), or both (\c Drag.XandYAxis)
+    \li \c drag.axis specifies whether dragging can be done horizontally (\c Drag.XAxis), vertically (\c Drag.YAxis), or both (\c Drag.XAndYAxis)
     \li \c drag.minimum and \c drag.maximum limit how far the target can be dragged along the corresponding axes.
     \endlist
 

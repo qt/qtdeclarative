@@ -56,13 +56,13 @@ information about the concepts which are central to \c QtQuick.
     Qt Quick includes several submodules which contain additional types.
 
     \list
-    \li \l{QML Module QtQuick.XmlListModel 2.0}{XML List Model} - contains types
+    \li \l{QtQuick.XmlListModel 2}{XML List Model} - contains types
     for creating models from XML data
-    \li \l{QML Module QtQuick.LocalStorage 2.0}{Local Storage} - a submodule
+    \li \l{QtQuick.LocalStorage 2}{Local Storage} - a submodule
     containing a JavaScript interface for an SQLite database
-    \li \l{QML Module QtQuick.Particles 2.0}{Particles} - provides a particle
+    \li \l{QtQuick.Particles 2}{Particles} - provides a particle
     system for QML applications
-    \li \l{QML Module QtQuick.Window 2.0}{Window} - contains types for creating
+    \li \l{QtQuick.Window 2}{Window} - contains types for creating
     top-level windows and accessing screen information
     \endlist
 

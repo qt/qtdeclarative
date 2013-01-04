@@ -1,5 +1,5 @@
-import com.nokia.PureJsModule 1.5 as PJM_1_5
-import com.nokia.PureJsModule 1.6 as PJM_1_6
+import org.qtproject.PureJsModule 1.5 as PJM_1_5
+import org.qtproject.PureJsModule 1.6 as PJM_1_6
 import QtQuick 2.0
 
 Item {

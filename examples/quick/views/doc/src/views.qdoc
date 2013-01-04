@@ -1,0 +1,83 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/legal
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and Digia.  For licensing terms and
+** conditions see http://qt.digia.com/licensing.  For further information
+** use the contact form at http://qt.digia.com/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.  Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: http://www.gnu.org/copyleft/fdl.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \title QtQuick Examples - Views
+    \example quick/views
+    \brief This is a collection of QML model/view examples
+    \image qml-modelviews-example.png
+    \ingroup qtquickexamples
+
+    This is a collection of small QML examples relating to model and view functionality. They demonstrate how to show data from a model using the QtQuick view types.
+
+    \section2 GridView and PathView demonstrate usage of these elements to display views.
+    \snippet quick/modelviews/gridview/gridview-example.qml 0
+
+    \section2 Dynamic List demonstrates animation of runtime additions and removals to a ListView.
+
+    The ListView.onAdd signal handler runs an animation when new items are added to the
+    view, and the ListView.onRemove another when they are removed.
+    \snippet quick/modelviews/listview/dynamiclist.qml 0
+    \snippet quick/modelviews/listview/dynamiclist.qml 1
+
+    \section2 Expanding Delegates demonstrates delegates that expand when activated.
+
+    It has a complex delegate the size and appearance of which can change, displacing
+    other items in the view.
+    \snippet quick/modelviews/listview/expandingdelegates.qml 0
+    \snippet quick/modelviews/listview/expandingdelegates.qml 1
+    \snippet quick/modelviews/listview/expandingdelegates.qml 2
+    \snippet quick/modelviews/listview/expandingdelegates.qml 3
+
+    \section2 Highlight demonstrates adding a custom highlight to a ListView.
+    \snippet quick/modelviews/listview/highlight.qml 0
+
+    \section2 Highlight Ranges shows the three different highlight range modes of ListView.
+    \snippet quick/modelviews/listview/highlightranges.qml 0
+    \snippet quick/modelviews/listview/highlightranges.qml 1
+    \snippet quick/modelviews/listview/highlightranges.qml 2
+
+    \section2 Sections demonstrates the various section headers and footers available to ListView.
+    \snippet quick/modelviews/listview/sections.qml 0
+
+    \section2 Packages demonstrates using Packages to transition delegates between two views.
+
+    It has a Package which defines delegate items for each view and an item that can
+    be transferred between delegates.
+
+    \snippet quick/modelviews/package/Delegate.qml 0
+
+    A VisualDataModel allows the individual views to access their specific items from
+    the shared package delegate.
+
+    \snippet quick/modelviews/package/view.qml 0
+
+    \section2 VisualItemModel uses a VisualItemModel for the model instead of a ListModel.
+
+    \snippet quick/modelviews/visualitemmodel/visualitemmodel.qml 0
+*/
+

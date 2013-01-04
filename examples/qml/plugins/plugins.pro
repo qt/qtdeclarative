@@ -1,5 +1,5 @@
 TEMPLATE = lib
-CONFIG += qt plugin
+CONFIG += plugin
 QT += qml
 
 DESTDIR = imports/TimeExample
@@ -7,7 +7,7 @@ TARGET  = qmlqtimeexampleplugin
 
 SOURCES += plugin.cpp
 
-qdeclarativesources.files += \
+pluginfiles.files += \
     imports/TimeExample/qmldir \
     imports/TimeExample/center.png \
     imports/TimeExample/clock.png \
@@ -15,11 +15,10 @@ qdeclarativesources.files += \
     imports/TimeExample/hour.png \
     imports/TimeExample/minute.png
 
-qdeclarativesources.path += $$[QT_INSTALL_EXAMPLES]/qtquick/qml/plugins/imports/TimeExample
+qml.files = plugins.qml
+qml.path += $$[QT_INSTALL_EXAMPLES]/qml/plugins
+target.path += $$[QT_INSTALL_EXAMPLES]/qml/plugins/imports/TimeExample
+pluginfiles.path += $$[QT_INSTALL_EXAMPLES]/qml/plugins/imports/TimeExample
 
-sources.files += plugins.pro plugin.cpp plugins.qml
-sources.path += $$[QT_INSTALL_EXAMPLES]/qtquick/qml/plugins
-target.path += $$[QT_INSTALL_EXAMPLES]/qtquick/qml/plugins/imports/TimeExample
-
-INSTALLS += qdeclarativesources sources target
+INSTALLS += target qml pluginfiles
 

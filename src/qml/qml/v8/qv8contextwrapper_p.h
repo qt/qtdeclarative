@@ -54,6 +54,7 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <private/qtqmlglobal_p.h>
 #include <private/qv8_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -62,7 +63,7 @@ class QUrl;
 class QObject;
 class QV8Engine;
 class QQmlContextData;
-class QV8ContextWrapper 
+class Q_QML_PRIVATE_EXPORT QV8ContextWrapper
 {
 public:
     QV8ContextWrapper();
@@ -83,6 +84,8 @@ public:
     QQmlContextData *context(v8::Handle<v8::Value>);
 
     inline v8::Handle<v8::Object> sharedContext() const;
+
+    void takeContextOwnership(v8::Handle<v8::Object> qmlglobal);
 
 private:
     static v8::Handle<v8::Value> NullGetter(v8::Local<v8::String> property, 

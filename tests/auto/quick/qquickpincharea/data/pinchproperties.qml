@@ -22,7 +22,7 @@ Rectangle {
             objectName: "pincharea"
             anchors.fill: parent
             pinch.target: blackRect
-            pinch.dragAxis: Drag.XandYAxis
+            pinch.dragAxis: Drag.XAndYAxis
             pinch.minimumX: 0
             pinch.maximumX: whiteRect.width-blackRect.width
             pinch.minimumY: 0

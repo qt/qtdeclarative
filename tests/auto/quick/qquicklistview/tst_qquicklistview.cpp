@@ -259,17 +259,9 @@ private:
     }
 #endif
 
-    static void errorMsgHandler(QtMsgType, const QMessageLogContext &, const QString &)
-    {
-        ++m_errorCount;
-    }
-
     QQuickView *m_view;
     QString testForView;
-    static int m_errorCount;
 };
-
-int tst_QQuickListView::m_errorCount = 0;
 
 class TestObject : public QObject
 {
@@ -6785,8 +6777,7 @@ void tst_QQuickListView::parentBinding()
 {
     QQuickView *window = createView();
 
-    m_errorCount = 0;
-    QtMessageHandler old = qInstallMessageHandler(errorMsgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     window->setSource(testFileUrl("parentBinding.qml"));
     window->show();
@@ -6805,9 +6796,7 @@ void tst_QQuickListView::parentBinding()
     QCOMPARE(item->height(), listview->height()/12);
 
     // there should be no transient binding error
-    QVERIFY(!m_errorCount);
-
-    qInstallMessageHandler(old);
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 
     delete window;
 }

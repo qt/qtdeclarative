@@ -642,4 +642,6 @@ QV8Engine::Deletable *QV8Engine::extensionData(int index) const
 
 QT_END_NAMESPACE
 
+Q_DECLARE_METATYPE(QQmlV8Handle)
+
 #endif // QQMLV8ENGINE_P_H

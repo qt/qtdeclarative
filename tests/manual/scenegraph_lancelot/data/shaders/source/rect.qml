@@ -44,7 +44,7 @@ Item {
         MouseArea {
             anchors.fill: parent
             drag.target: parent
-            drag.axis: Drag.XandYAxis
+            drag.axis: Drag.XAndYAxis
             drag.minimumX: 0
             drag.maximumX: parent.parent.width - width
             drag.minimumY: 0

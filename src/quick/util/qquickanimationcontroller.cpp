@@ -67,6 +67,7 @@ void QQuickAnimationControllerPrivate::animationFinished(QAbstractAnimationJob *
 {
     Q_Q(QQuickAnimationController);
     Q_ASSERT(animationInstance && animationInstance == job);
+    Q_UNUSED(job);
 
     animationInstance->removeAnimationChangeListener(this, QAbstractAnimationJob::Completion | QAbstractAnimationJob::CurrentTime);
 
@@ -84,6 +85,7 @@ void QQuickAnimationControllerPrivate::animationCurrentTimeChanged(QAbstractAnim
 {
     Q_Q(QQuickAnimationController);
     Q_ASSERT(animationInstance && animationInstance == job);
+    Q_UNUSED(job);
     const qreal newProgress = currentTime * 1.0 / animationInstance->duration();
     if (progress != newProgress) {
         progress = newProgress;
