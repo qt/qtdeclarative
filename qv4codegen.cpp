@@ -1973,14 +1973,20 @@ bool Codegen::visit(DebuggerStatement *)
 bool Codegen::visit(DoWhileStatement *ast)
 {
     IR::BasicBlock *loopbody = _function->newBasicBlock();
+    IR::BasicBlock *loopcond = _function->newBasicBlock();
     IR::BasicBlock *loopend = _function->newBasicBlock();
 
-    enterLoop(ast, loopend, loopbody);
+    enterLoop(ast, loopend, loopcond);
 
     _block->JUMP(loopbody);
+
     _block = loopbody;
     statement(ast->statement);
+    _block->JUMP(loopcond);
+
+    _block = loopcond;
     condition(ast->expression, loopbody, loopend);
+
     _block = loopend;
 
     leaveLoop();
