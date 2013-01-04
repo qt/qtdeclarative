@@ -39,6 +39,16 @@ def ReportError(s):
   raise Test262Error(s)
 
 
+class TestExpectations:
+    def __init__(self):
+        f = open(rootDir + "/TestExpectations")
+        self.testsToSkip = []
+        for line in f.read().splitlines():
+            line = line.strip()
+            if len(line) == 0 or line[0] == "#":
+                continue
+            self.testsToSkip.append(line)
+        f.close()
 
 if not os.path.exists(EXCLUDED_FILENAME):
     print "Cannot generate (JSON) test262 tests without a file," + \
@@ -307,6 +317,7 @@ class TestSuite(object):
     self.non_strict_only = non_strict_only
     self.unmarked_default = unmarked_default
     self.include_cache = { }
+    self.expectations = TestExpectations()
 
   def Validate(self):
     if not path.exists(self.test_root):
@@ -359,7 +370,7 @@ class TestSuite(object):
           if self.ShouldRun(rel_path, tests):
             basename = path.basename(full_path)[:-3]
             name = rel_path.split(path.sep)[:-1] + [basename]
-            if EXCLUDE_LIST.count(basename) >= 1:
+            if EXCLUDE_LIST.count(basename) >= 1 or self.expectations.testsToSkip.count(basename) >= 1:
               print 'Excluded: ' + basename
             else:
               if not self.non_strict_only:
