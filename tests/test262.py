@@ -7,15 +7,17 @@
 # copyrighted. TODO: Refactor so there is less duplication between
 # test262.py and packager.py.
 
+import sys
+from os import path
+rootDir = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.abspath(rootDir + "/test262/tools/packaging"))
 
 import logging
 import optparse
 import os
-from os import path
 import platform
 import re
 import subprocess
-import sys
 import tempfile
 import time
 import xml.dom.minidom
@@ -49,12 +51,12 @@ EXCLUDE_LIST = [x.getAttribute("id") for x in EXCLUDE_LIST]
 
 def BuildOptions():
   result = optparse.OptionParser()
-  result.add_option("--command", default=None, help="The command-line to run")
-  result.add_option("--tests", default=path.abspath('.'), 
+  result.add_option("--command", default=path.abspath(rootDir + "/../v4"), help="The command-line to run")
+  result.add_option("--tests", default=path.abspath(rootDir + '/test262'),
                     help="Path to the tests")
   result.add_option("--cat", default=False, action="store_true",
                     help="Print packaged test code that would be run")
-  result.add_option("--summary", default=False, action="store_true",
+  result.add_option("--summary", default=True, action="store_true",
                     help="Print summary after running tests")
   result.add_option("--full-summary", default=False, action="store_true",
                     help="Print summary and test output after running tests")
