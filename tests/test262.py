@@ -43,11 +43,19 @@ class TestExpectations:
     def __init__(self):
         f = open(rootDir + "/TestExpectations")
         self.testsToSkip = []
+        self.failingTests = []
         for line in f.read().splitlines():
             line = line.strip()
             if len(line) == 0 or line[0] == "#":
                 continue
-            self.testsToSkip.append(line)
+            record = line.split()
+            if len(record) == 1:
+                self.testsToSkip.append(record)
+            else:
+                test = record[0]
+                expectation = record[1]
+                if expectation == "failing":
+                    self.failingTests.append(test)
         f.close()
 
 if not os.path.exists(EXCLUDED_FILENAME):
@@ -208,6 +216,12 @@ class TestCase(object):
 
   def GetPath(self):
     return self.name
+
+  def NegateResult(self):
+      if self.IsNegative():
+          del self.testRecord['negative']
+      else:
+          self.testRecord['negative'] = "Some failure";
 
   def IsNegative(self):
     return 'negative' in self.testRecord
@@ -375,12 +389,16 @@ class TestSuite(object):
             else:
               if not self.non_strict_only:
                 strict_case = TestCase(self, name, full_path, True)
+                if self.expectations.failingTests.count(basename) >= 1:
+                    strict_case.NegateResult()
                 if not strict_case.IsNoStrict():
                   if strict_case.IsOnlyStrict() or \
                         self.unmarked_default in ['both', 'strict']:
                     cases.append(strict_case)
               if not self.strict_only:
                 non_strict_case = TestCase(self, name, full_path, False)
+                if self.expectations.failingTests.count(basename) >= 1:
+                    non_strict_case.NegateResult()
                 if not non_strict_case.IsOnlyStrict():
                   if non_strict_case.IsNoStrict() or \
                         self.unmarked_default in ['both', 'non_strict']:
