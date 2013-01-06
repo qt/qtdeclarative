@@ -25,11 +25,26 @@ import datetime
 import shutil
 import json
 import stat
+import multiprocessing
+import signal
 
 
 from parseTestRecord import parseTestRecord, stripHeader
 
 from packagerConfig import *
+
+# ############# Helpers needed for parallel multi-process test execution ############
+
+def runTest(case, args):
+    return case.Run(args)
+
+def runTestVarArgs(args):
+    return runTest(*args)
+
+def initWorkerProcess():
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+# #############
 
 class Test262Error(Exception):
   def __init__(self, message):
@@ -82,6 +97,8 @@ def BuildOptions():
                     help="Test only strict mode")
   result.add_option("--non_strict_only", default=False, action="store_true", 
                     help="Test only non-strict mode")
+  result.add_option("--parallel", default=False, action="store_true",
+                    help="Run tests in parallel")
   # TODO: Once enough tests are made strict compat, change the default
   # to "both"
   result.add_option("--unmarked_default", default="non_strict", 
@@ -438,16 +455,23 @@ class TestSuite(object):
       print
       result.ReportOutcome(False)
 
-  def Run(self, command_template, tests, print_summary, full_summary):
+  def Run(self, command_template, tests, print_summary, full_summary, parallel):
     if not "{{path}}" in command_template:
       command_template += " {{path}}"
     cases = self.EnumerateTests(tests)
     if len(cases) == 0:
       ReportError("No tests to run")
     progress = ProgressIndicator(len(cases))
-    for case in cases:
-      result = case.Run(command_template)
-      progress.HasRun(result)
+
+    if parallel:
+      pool = multiprocessing.Pool(processes=multiprocessing.cpu_count(), initializer=initWorkerProcess)
+      results = pool.map_async(func=runTestVarArgs, iterable=[(case, command_template) for case in cases], chunksize=len(cases) / multiprocessing.cpu_count()).get(9999999)
+      for result in results:
+        progress.HasRun(result)
+    else:
+      for case in cases:
+        result = case.Run(command_template)
+        progress.HasRun(result)
     if print_summary:
       self.PrintSummary(progress)
       if full_summary:
@@ -477,7 +501,8 @@ def Main():
   else:
     test_suite.Run(options.command, args,
                    options.summary or options.full_summary,
-                   options.full_summary)
+                   options.full_summary,
+                   options.parallel)
 
 
 if __name__ == '__main__':
