@@ -440,7 +440,7 @@ Value ArrayObject::__get__(ExecutionContext *ctx, String *name, bool *hasPropert
     if (name->isEqualTo(ctx->engine->id_length)) {
         if (hasProperty)
             *hasProperty = true;
-        return Value::fromDouble(value.size());
+        return Value::fromDouble(value.length());
     }
     return Object::__get__(ctx, name, hasProperty);
 }
@@ -451,7 +451,7 @@ bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContex
         const quint32 idx = index.toUInt32(ctx);
         Value v = value.at(idx);
         v = op(v, rhs, ctx);
-        value.assign(idx, v);
+        value.insert(idx, v);
         return true;
     }
     return Object::inplaceBinOp(rhs, index, op, ctx);

@@ -41,7 +41,6 @@
 
 
 #include "qv4ecmaobjects_p.h"
-#include "qv4array_p.h"
 #include "qv4mm.h"
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
@@ -612,7 +611,7 @@ Value ObjectPrototype::method_getOwnPropertyNames(ExecutionContext *ctx)
     if (PropertyTable *members = O.objectValue()->members.data()) {
         for (PropertyTableEntry **it = members->begin(), **end = members->end(); it != end; ++it) {
             if (PropertyTableEntry *prop = *it) {
-                a.push(Value::fromString(prop->name));
+                a.push_back(Value::fromString(prop->name));
             }
         }
     }
@@ -790,7 +789,7 @@ Value ObjectPrototype::method_keys(ExecutionContext *ctx)
         PropertyTable::iterator it = o->members->begin();
         while (it != o->members->end()) {
             if ((*it)->descriptor.isEnumerable())
-                a->value.push(Value::fromString((*it)->name));
+                a->value.push_back(Value::fromString((*it)->name));
             ++it;
         }
     }
@@ -1548,10 +1547,10 @@ Value ArrayCtor::call(ExecutionContext *ctx)
             return Value::undefinedValue();
         }
 
-        value.resize(isize);
+        value.setLength(isize);
     } else {
         for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
-            value.assign(i, ctx->argument(i));
+            value.insert(i, ctx->argument(i));
         }
     }
 
@@ -1603,18 +1602,18 @@ Value ArrayPrototype::method_concat(ExecutionContext *ctx)
         result = instance->value;
     else {
         QString v = ctx->thisObject.toString(ctx)->toQString();
-        result.assign(0, Value::fromString(ctx, v));
+        result.insert(0, Value::fromString(ctx, v));
     }
 
     for (uint i = 0; i < ctx->argumentCount; ++i) {
-        quint32 k = result.size();
+        quint32 k = result.length();
         Value arg = ctx->argument(i);
 
         if (ArrayObject *elt = arg.asArrayObject())
             result.concat(elt->value);
 
         else
-            result.assign(k, arg);
+            result.insert(k, arg);
     }
 
     return Value::fromObject(ctx->engine->newArrayObject(result));
@@ -1644,8 +1643,9 @@ Value ArrayPrototype::method_join(ExecutionContext *ctx)
 
     QString R;
 
+    // ### FIXME
     if (ArrayObject *a = self.asArrayObject()) {
-        for (uint i = 0; i < a->value.size(); ++i) {
+        for (uint i = 0; i < a->value.length(); ++i) {
             if (i)
                 R += r4;
 
@@ -1680,7 +1680,7 @@ Value ArrayPrototype::method_pop(ExecutionContext *ctx)
 {
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject())
-        return instance->value.pop();
+        return instance->value.pop_back();
 
     Value r1 = self.property(ctx, ctx->engine->id_length);
     quint32 r2 = !r1.isUndefined() ? r1.toUInt32(ctx) : 0;
@@ -1700,12 +1700,11 @@ Value ArrayPrototype::method_push(ExecutionContext *ctx)
 {
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
-        uint pos = instance->value.size();
         for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
             Value val = ctx->argument(i);
-            instance->value.assign(pos++, val);
+            instance->value.push_back(val);
         }
-        return Value::fromDouble(pos);
+        return Value::fromDouble(instance->value.length());
     }
 
     Value r1 = self.property(ctx, ctx->engine->id_length);
@@ -1726,12 +1725,12 @@ Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
     if (!instance)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.reverse"));
 
-    int lo = 0, hi = instance->value.count() - 1;
+    int lo = 0, hi = instance->value.length() - 1;
 
     for (; lo < hi; ++lo, --hi) {
         Value tmp = instance->value.at(lo);
-        instance->value.assign(lo, instance->value.at(hi));
-        instance->value.assign(hi, tmp);
+        instance->value.insert(lo, instance->value.at(hi));
+        instance->value.insert(hi, tmp);
     }
     return Value::undefinedValue();
 }
@@ -1742,7 +1741,7 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
     if (!instance)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.shift"));
 
-    return instance->value.takeFirst();
+    return instance->value.pop_front();
 }
 
 Value ArrayPrototype::method_slice(ExecutionContext *ctx)
@@ -1766,7 +1765,7 @@ Value ArrayPrototype::method_slice(ExecutionContext *ctx)
         String *r11 = Value::fromDouble(k).toString(ctx);
         Value v = self.property(ctx, r11);
         if (! v.isUndefined())
-            result.assign(n++, v);
+            result.insert(n++, v);
     }
     return Value::fromObject(ctx->engine->newArrayObject(result));
 }
@@ -1806,8 +1805,19 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Array.prototype.indexOf"));
-    return Value::undefinedValue();
+    ArrayObject *instance = ctx->thisObject.asArrayObject();
+    if (!instance)
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.shift"));
+
+    for (int i = ctx->argumentCount - 1; i >= 0; --i) {
+        Value v = ctx->argument(i);
+        instance->value.push_front(v);
+    }
+
+    uint l = instance->value.length();
+    if (l < INT_MAX)
+        return Value::fromInt32(l);
+    return Value::fromDouble((double)l);
 }
 
 Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
@@ -1831,7 +1841,8 @@ Value ArrayPrototype::method_every(ExecutionContext *ctx)
     Value callback = ctx->argument(0);
     Value thisArg = ctx->argument(1);
     bool ok = true;
-    for (uint k = 0; ok && k < instance->value.size(); ++k) {
+    // ###
+    for (uint k = 0; ok && k < instance->value.length(); ++k) {
         Value v = instance->value.at(k);
         if (v.isUndefined())
             continue;
@@ -1855,7 +1866,8 @@ Value ArrayPrototype::method_some(ExecutionContext *ctx)
     Value callback = ctx->argument(0);
     Value thisArg = ctx->argument(1);
     bool ok = false;
-    for (uint k = 0; !ok && k < instance->value.size(); ++k) {
+    // ###
+    for (uint k = 0; !ok && k < instance->value.length(); ++k) {
         Value v = instance->value.at(k);
         if (v.isUndefined())
             continue;
@@ -1878,7 +1890,8 @@ Value ArrayPrototype::method_forEach(ExecutionContext *ctx)
 
     Value callback = ctx->argument(0);
     Value thisArg = ctx->argument(1);
-    for (quint32 k = 0; k < instance->value.size(); ++k) {
+    // ###
+    for (quint32 k = 0; k < instance->value.length(); ++k) {
         Value v = instance->value.at(k);
         if (v.isUndefined())
             continue;
@@ -1900,8 +1913,8 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
     Value callback = ctx->argument(0);
     Value thisArg = ctx->argument(1);
     ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
-    a->value.resize(instance->value.size());
-    for (quint32 k = 0; k < instance->value.size(); ++k) {
+    a->value.setLength(instance->value.length());
+    for (quint32 k = 0; k < instance->value.length(); ++k) {
         Value v = instance->value.at(k);
         if (v.isUndefined())
             continue;
@@ -1910,7 +1923,7 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
         args[1] = Value::fromDouble(k);
         args[2] = ctx->thisObject;
         Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
-        a->value.assign(k, r);
+        a->value.insert(k, r);
     }
     return Value::fromObject(a);
 }
@@ -1924,7 +1937,7 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
     Value callback = ctx->argument(0);
     Value thisArg = ctx->argument(1);
     ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
-    for (quint32 k = 0; k < instance->value.size(); ++k) {
+    for (quint32 k = 0; k < instance->value.length(); ++k) {
         Value v = instance->value.at(k);
         if (v.isUndefined())
             continue;
@@ -1934,9 +1947,9 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
         args[2] = ctx->thisObject;
         Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
         if (__qmljs_to_boolean(r, ctx)) {
-            const uint index = a->value.size();
-            a->value.resize(index + 1);
-            a->value.assign(index, v);
+            const uint index = a->value.length();
+            a->value.setLength(index + 1);
+            a->value.insert(index, v);
         }
     }
     return Value::fromObject(a);
@@ -1951,7 +1964,7 @@ Value ArrayPrototype::method_reduce(ExecutionContext *ctx)
     Value callback = ctx->argument(0);
     Value initialValue = ctx->argument(1);
     Value acc = initialValue;
-    for (quint32 k = 0; k < instance->value.size(); ++k) {
+    for (quint32 k = 0; k < instance->value.length(); ++k) {
         Value v = instance->value.at(k);
         if (v.isUndefined())
             continue;
@@ -1981,7 +1994,7 @@ Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
     Value callback = ctx->argument(0);
     Value initialValue = ctx->argument(1);
     Value acc = initialValue;
-    for (int k = instance->value.size() - 1; k != -1; --k) {
+    for (int k = instance->value.length() - 1; k != -1; --k) {
         Value v = instance->value.at(k);
         if (v.isUndefined())
             continue;
@@ -2094,7 +2107,7 @@ Value FunctionPrototype::method_apply(ExecutionContext *ctx)
     if (ArrayObject *arr = arg.asArrayObject()) {
         const Array &actuals = arr->value;
 
-        for (quint32 i = 0; i < actuals.count(); ++i) {
+        for (quint32 i = 0; i < actuals.length(); ++i) {
             Value a = actuals.at(i);
             args.append(a);
         }
@@ -2814,7 +2827,7 @@ Value RegExpPrototype::method_exec(ExecutionContext *ctx)
     ArrayObject *array = ctx->engine->newArrayObject()->asArrayObject();
     int captured = match.lastCapturedIndex();
     for (int i = 0; i <= captured; ++i)
-        array->value.push(Value::fromString(ctx, match.captured(i)));
+        array->value.push_back(Value::fromString(ctx, match.captured(i)));
 
     array->__put__(ctx, QLatin1String("index"), Value::fromInt32(match.capturedStart(0)));
     array->__put__(ctx, QLatin1String("input"), arg);

@@ -20,13 +20,13 @@ SOURCES += main.cpp \
     qmljs_value.cpp \
     qv4syntaxchecker.cpp \
     qv4ecmaobjects.cpp \
-    qv4array.cpp \
     qv4isel_masm.cpp \
     llvm_runtime.cpp \
     qv4isel_p.cpp \
     debugging.cpp \
     qv4mm.cpp \
-    qv4managed.cpp
+    qv4managed.cpp \
+    qv4array.cpp
 
 HEADERS += \
     qv4codegen_p.h \
@@ -39,13 +39,13 @@ HEADERS += \
     qmljs_value.h \
     qv4syntaxchecker_p.h \
     qv4ecmaobjects_p.h \
-    qv4array_p.h \
     qv4isel_masm_p.h \
     qv4isel_p.h \
     qv4isel_util_p.h \
     debugging.h \
     qv4mm.h \
-    qv4managed.h
+    qv4managed.h \
+    qv4array.h
 
 llvm {
 

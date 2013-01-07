@@ -176,8 +176,9 @@ Value __qmljs_delete_subscript(ExecutionContext *ctx, Value base, Value index)
         else if (index.isDouble())
             n = index.doubleValue();
         if (n >= 0) {
-            if (n < (int) a->value.size()) {
-                a->value.assign(n, Value::undefinedValue());
+            if (n < (int) a->value.length()) {
+                // ### check writable/deletable property
+                a->value.remove(n);
                 return Value::fromBoolean(true);
             }
         }
@@ -585,7 +586,7 @@ void __qmljs_set_element(ExecutionContext *ctx, Value object, Value index, Value
 {
     if (index.isNumber()) {
         if (ArrayObject *a = object.asArrayObject()) {
-            a->value.assign(index.toUInt32(ctx), value);
+            a->value.insert(index.toUInt32(ctx), value);
             return;
         }
     }
