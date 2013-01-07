@@ -13,7 +13,6 @@ SOURCES += $$PWD/wtf/FilePrintStream.cpp
 HEADERS += $$PWD/wtf/FilePrintStream.h
 
 HEADERS += $$PWD/wtf/RawPointer.h
-HEADERS += $$PWD/wtf/PassOwnPtr.h
 
 win32: SOURCES += $$PWD/wtf/OSAllocatorWin.cpp
 else: SOURCES += $$PWD/wtf/OSAllocatorPosix.cpp
