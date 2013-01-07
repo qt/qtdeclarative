@@ -65,7 +65,7 @@ class TestExpectations:
                 continue
             record = line.split()
             if len(record) == 1:
-                self.testsToSkip.append(record)
+                self.testsToSkip.append(record[0])
             else:
                 test = record[0]
                 expectation = record[1]
