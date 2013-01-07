@@ -465,7 +465,7 @@ class TestSuite(object):
 
     if parallel:
       pool = multiprocessing.Pool(processes=multiprocessing.cpu_count(), initializer=initWorkerProcess)
-      results = pool.map_async(func=runTestVarArgs, iterable=[(case, command_template) for case in cases], chunksize=len(cases) / multiprocessing.cpu_count()).get(9999999)
+      results = pool.imap_unordered(func=runTestVarArgs, iterable=[(case, command_template) for case in cases], chunksize=multiprocessing.cpu_count() * 8)
       for result in results:
         progress.HasRun(result)
     else:
