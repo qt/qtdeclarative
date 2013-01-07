@@ -80,7 +80,7 @@ DEFINES += QMLJS_NO_LLVM
 }
 
 checktarget.target = check
-checktarget.commands = python tests/test262.py
+checktarget.commands = python tests/test262.py --parallel
 checktarget.depends = all
 QMAKE_EXTRA_TARGETS += checktarget
 
