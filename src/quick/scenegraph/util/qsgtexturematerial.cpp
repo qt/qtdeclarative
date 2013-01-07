@@ -131,6 +131,8 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
     \class QSGOpaqueTextureMaterial
     \brief The QSGOpaqueTextureMaterial class provides a convenient way of
     rendering textured geometry in the scene graph.
+    \inmodule QtQuick
+    \ingroup qtquick-scenegraph-materials
 
     The opaque textured material will fill every pixel in a geometry with
     the supplied texture. The material does not respect the opacity of the
@@ -323,6 +325,8 @@ int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
     \class QSGTextureMaterial
     \brief The QSGTextureMaterial class provides a convenient way of
     rendering textured geometry in the scene graph.
+    \inmodule QtQuick
+    \ingroup qtquick-scenegraph-materials
 
     The textured material will fill every pixel in a geometry with
     the supplied texture.

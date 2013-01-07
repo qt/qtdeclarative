@@ -124,6 +124,7 @@ const char *FlatColorMaterialShader::fragmentShader() const {
     solid colored geometry in the scene graph.
 
     \inmodule QtQuick
+    \ingroup qtquick-scenegraph-materials
 
     The flat color material will fill every pixel in a geometry using
     a solid color. The color can contain transparency.

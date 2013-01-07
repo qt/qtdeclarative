@@ -114,6 +114,7 @@ const char *QSGVertexColorMaterialShader::fragmentShader() const {
     colored geometry in the scene graph.
 
     \inmodule QtQuick
+    \ingroup qtquick-scenegraph-materials
 
     The vertex color material will give each vertex in a geometry a color. Pixels between
     vertices will be linearly interpolated. The colors can contain transparency.
