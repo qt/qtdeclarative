@@ -37,5 +37,5 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "../../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(shadereffects)
+#include "../shared/shared.h"
+DECLARATIVE_EXAMPLE_MAIN(shadereffects/shadereffects)

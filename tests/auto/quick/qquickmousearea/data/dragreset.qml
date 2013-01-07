@@ -18,7 +18,7 @@ Rectangle {
             objectName: "mouseregion"
             anchors.fill: parent
             drag.target: haveTarget ? blackRect : undefined
-            drag.axis: Drag.XandYAxis
+            drag.axis: Drag.XAndYAxis
             drag.minimumX: 0
             drag.maximumX: whiteRect.width-blackRect.width
             drag.minimumY: 0

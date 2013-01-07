@@ -1,16 +1,5 @@
 TEMPLATE = subdirs
 SUBDIRS += \
-    demos \
-    shared \
-    localstorage \
-    particles \
+    qmltest \
     qml \
-    quick \
-    tutorials \
-    window \
-    qmltest
-
-# install
-sources.files = shared examples.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/qtquick/
-INSTALLS += sources
+    quick

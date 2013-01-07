@@ -253,7 +253,7 @@ void QQuickTrivialWindowManager::renderWindow(QQuickWindow *window)
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     cd->polishItems();
 
-    int renderTime, syncTime;
+    int renderTime = 0, syncTime = 0;
     QTime renderTimer;
     if (qquick_render_timing())
         renderTimer.start();

@@ -43,9 +43,6 @@
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qjsengine.h>
 
-
-Q_DECLARE_METATYPE(QJSValue)
-
 class tst_QJSEngine : public QObject
 {
     Q_OBJECT

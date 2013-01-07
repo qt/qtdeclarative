@@ -59,6 +59,7 @@
 
 #ifndef QT_NO_ACCESSIBILITY
 #include "qaccessible.h"
+#include "qquickaccessibleattached_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -3374,9 +3375,11 @@ void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool e
 #ifdef QT_NO_ACCESSIBILITY
     Q_UNUSED(changed)
 #else
-    if (changed) {
-        QAccessibleTextUpdateEvent ev(q, 0, oldText, m_text);
-        QAccessible::updateAccessibility(&ev);
+    if (changed && QAccessible::isActive()) {
+        if (QObject *acc = QQuickAccessibleAttached::findAccessible(q, QAccessible::EditableText)) {
+            QAccessibleTextUpdateEvent ev(acc, 0, oldText, m_text);
+            QAccessible::updateAccessibility(&ev);
+        }
     }
 #endif
 }
@@ -4025,8 +4028,12 @@ bool QQuickTextInputPrivate::emitCursorPositionChanged()
         }
 
 #ifndef QT_NO_ACCESSIBILITY
-        QAccessibleTextCursorEvent ev(q, m_cursor);
-        QAccessible::updateAccessibility(&ev);
+        if (QAccessible::isActive()) {
+            if (QObject *acc = QQuickAccessibleAttached::findAccessible(q, QAccessible::EditableText)) {
+                QAccessibleTextCursorEvent ev(acc, m_cursor);
+                QAccessible::updateAccessibility(&ev);
+            }
+        }
 #endif
 
         return true;

@@ -290,6 +290,7 @@ private slots:
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
+    static void verifyContextLifetime(QQmlContextData *ctxt);
     QQmlEngine engine;
 };
 
@@ -1924,27 +1925,18 @@ void tst_qqmlecmascript::compileInvalidBinding()
     delete object;
 }
 
-static int transientErrorsMsgCount = 0;
-static void transientErrorsMsgHandler(QtMsgType, const QMessageLogContext &, const QString &)
-{
-    ++transientErrorsMsgCount;
-}
-
 // Check that transient binding errors are not displayed
 void tst_qqmlecmascript::transientErrors()
 {
     {
     QQmlComponent component(&engine, testFileUrl("transientErrors.qml"));
 
-    transientErrorsMsgCount = 0;
-    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    qInstallMessageHandler(old);
-
-    QCOMPARE(transientErrorsMsgCount, 0);
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 
     delete object;
     }
@@ -1953,15 +1945,12 @@ void tst_qqmlecmascript::transientErrors()
     {
     QQmlComponent component(&engine, testFileUrl("transientErrors.2.qml"));
 
-    transientErrorsMsgCount = 0;
-    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    qInstallMessageHandler(old);
-
-    QCOMPARE(transientErrorsMsgCount, 0);
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 
     delete object;
     }
@@ -1974,13 +1963,11 @@ void tst_qqmlecmascript::shutdownErrors()
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    transientErrorsMsgCount = 0;
-    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     delete object;
 
-    qInstallMessageHandler(old);
-    QCOMPARE(transientErrorsMsgCount, 0);
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 }
 
 void tst_qqmlecmascript::compositePropertyType()
@@ -2855,7 +2842,6 @@ void tst_qqmlecmascript::listToVariant()
 }
 
 // QTBUG-16316
-Q_DECLARE_METATYPE(QQmlListProperty<MyQmlObject>)
 void tst_qqmlecmascript::listAssignment()
 {
     QQmlComponent component(&engine, testFileUrl("listAssignment.qml"));
@@ -3785,6 +3771,42 @@ void tst_qqmlecmascript::singletonTypeResolution()
     delete object;
 }
 
+void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
+    QQmlContextData *childCtxt = ctxt->childContexts;
+
+    if (!ctxt->importedScripts.isEmpty()) {
+        QV8Engine *engine = QV8Engine::get(ctxt->engine);
+        foreach (v8::Persistent<v8::Object> qmlglobal, ctxt->importedScripts) {
+            QQmlContextData *scriptContext, *newContext;
+
+            if (qmlglobal.IsEmpty())
+                continue;
+
+            scriptContext = engine->contextWrapper()->context(qmlglobal);
+
+            {
+                v8::HandleScope handle_scope;
+                v8::Persistent<v8::Context> context = v8::Context::New();
+                v8::Context::Scope context_scope(context);
+                v8::Local<v8::Object> temporaryScope = engine->qmlScope(scriptContext, NULL);
+                Q_UNUSED(temporaryScope)
+
+                context.Dispose();
+            }
+
+            QV8Engine::gc();
+            newContext = engine->contextWrapper()->context(qmlglobal);
+            QVERIFY(scriptContext == newContext);
+        }
+    }
+
+    while (childCtxt) {
+        verifyContextLifetime(childCtxt);
+
+        childCtxt = childCtxt->nextChild;
+    }
+}
+
 void tst_qqmlecmascript::importScripts_data()
 {
     QTest::addColumn<QUrl>("testfile");
@@ -4016,6 +4038,10 @@ void tst_qqmlecmascript::importScripts()
         QVERIFY(object == 0);
     } else {
         QVERIFY(object != 0);
+
+        QQmlContextData *ctxt = QQmlContextData::get(engine.rootContext());
+        tst_qqmlecmascript::verifyContextLifetime(ctxt);
+
         for (int i = 0; i < propertyNames.size(); ++i)
             QCOMPARE(object->property(propertyNames.at(i).toLatin1().constData()), propertyValues.at(i));
         delete object;
@@ -5756,14 +5782,11 @@ void tst_qqmlecmascript::qtbug_9792()
 
     delete context;
 
-    transientErrorsMsgCount = 0;
-    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     object->basicSignal();
-    
-    qInstallMessageHandler(old);
 
-    QCOMPARE(transientErrorsMsgCount, 0);
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 
     delete object;
 }
@@ -5797,14 +5820,11 @@ void tst_qqmlecmascript::noSpuriousWarningsAtShutdown()
 
     QObject *o = component.create();
 
-    transientErrorsMsgCount = 0;
-    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     delete o;
 
-    qInstallMessageHandler(old);
-
-    QCOMPARE(transientErrorsMsgCount, 0);
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
     }
 
 
@@ -5813,14 +5833,11 @@ void tst_qqmlecmascript::noSpuriousWarningsAtShutdown()
 
     QObject *o = component.create();
 
-    transientErrorsMsgCount = 0;
-    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     delete o;
 
-    qInstallMessageHandler(old);
-
-    QCOMPARE(transientErrorsMsgCount, 0);
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
     }
 }
 
@@ -6634,22 +6651,15 @@ void tst_qqmlecmascript::doubleEvaluate()
     delete object;
 }
 
-static QStringList messages;
-static void captureMsgHandler(QtMsgType, const QMessageLogContext &, const QString &msg)
-{
-    messages.append(msg);
-}
-
 void tst_qqmlecmascript::nonNotifyable()
 {
     QV4Compiler::enableV4(false);
     QQmlComponent component(&engine, testFileUrl("nonNotifyable.qml"));
     QV4Compiler::enableV4(true);
 
-    QtMessageHandler old = qInstallMessageHandler(captureMsgHandler);
-    messages.clear();
+    QQmlTestMessageHandler messageHandler;
+
     QObject *object = component.create();
-    qInstallMessageHandler(old);
 
     QVERIFY(object != 0);
 
@@ -6660,9 +6670,9 @@ void tst_qqmlecmascript::nonNotifyable()
                         QLatin1String(object->metaObject()->className()) +
                         QLatin1String("::value");
 
-    QCOMPARE(messages.length(), 2);
-    QCOMPARE(messages.at(0), expected1);
-    QCOMPARE(messages.at(1), expected2);
+    QCOMPARE(messageHandler.messages().length(), 2);
+    QCOMPARE(messageHandler.messages().at(0), expected1);
+    QCOMPARE(messageHandler.messages().at(1), expected2);
 
     delete object;
 }
@@ -7087,16 +7097,14 @@ void tst_qqmlecmascript::bindingSuppression()
     EventProcessor processor;
     engine.rootContext()->setContextProperty("pendingEvents", &processor);
 
-    transientErrorsMsgCount = 0;
-    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     QQmlComponent c(&engine, testFileUrl("bindingSuppression.qml"));
     QObject *obj = c.create();
     QVERIFY(obj != 0);
     delete obj;
 
-    qInstallMessageHandler(old);
-    QCOMPARE(transientErrorsMsgCount, 0);
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 }
 
 void tst_qqmlecmascript::signalEmitted()

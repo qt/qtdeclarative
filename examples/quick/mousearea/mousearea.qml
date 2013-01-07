@@ -152,7 +152,7 @@ Rectangle {
             anchors.fill: parent
             //! [drag]
             drag.target: blueSquare
-            drag.axis: Drag.XandYAxis
+            drag.axis: Drag.XAndYAxis
             drag.minimumX: 0
             drag.maximumX: box.width - parent.width
             drag.minimumY: 0

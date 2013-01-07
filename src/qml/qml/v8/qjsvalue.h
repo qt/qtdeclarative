@@ -155,6 +155,8 @@ private:
 
 QT_END_NAMESPACE
 
+Q_DECLARE_METATYPE(QJSValue)
+
 QT_END_HEADER
 
 #endif

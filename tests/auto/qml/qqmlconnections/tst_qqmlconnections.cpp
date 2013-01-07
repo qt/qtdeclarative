@@ -231,7 +231,7 @@ class TestObject : public QObject
     Q_PROPERTY(bool ran READ ran WRITE setRan)
 
 public:
-    TestObject(QObject *parent = 0) : m_ran(false) {}
+    TestObject(QObject *parent = 0) : QObject(parent), m_ran(false) {}
     ~TestObject() {}
 
     bool ran() const { return m_ran; }

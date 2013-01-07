@@ -1270,6 +1270,7 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
     }
 }
 
+#ifndef QT_NO_WHEELEVENT
 void QQuickFlickable::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickFlickable);
@@ -1324,6 +1325,7 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
     if (!event->isAccepted())
         QQuickItem::wheelEvent(event);
 }
+#endif
 
 bool QQuickFlickablePrivate::isInnermostPressDelay(QQuickItem *i) const
 {

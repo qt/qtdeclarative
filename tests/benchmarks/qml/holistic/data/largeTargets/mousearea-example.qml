@@ -90,7 +90,7 @@ Rectangle {
         MouseArea {
             anchors.fill: parent
             drag.target: blueSquare
-            drag.axis: Drag.XandYAxis
+            drag.axis: Drag.XAndYAxis
             drag.minimumX: 0
             drag.maximumX: box.width - parent.width
             drag.minimumY: 0

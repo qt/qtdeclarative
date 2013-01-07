@@ -2,7 +2,7 @@ QT += core-private gui-private qml-private
 TEMPLATE=app
 TARGET=tst_qquickcanvasitem
 
-CONFIG += warn_on qmltestcase
+CONFIG += qmltestcase
 SOURCES += tst_qquickcanvasitem.cpp
 
 TESTDATA = data/*

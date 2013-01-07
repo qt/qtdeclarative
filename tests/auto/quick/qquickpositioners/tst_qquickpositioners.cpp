@@ -1722,111 +1722,109 @@ void tst_qquickpositioners::test_flow_implicit_resize()
     delete window;
 }
 
-QString warningMessage;
-
-void interceptWarnings(QtMsgType type, const QMessageLogContext &, const QString &msg)
-{
-    Q_UNUSED( type );
-    warningMessage = msg;
-}
-
 void tst_qquickpositioners::test_conflictinganchors()
 {
-    QtMessageHandler oldMsgHandler = qInstallMessageHandler(interceptWarnings);
+    QQmlTestMessageHandler messageHandler;
     QQmlEngine engine;
     QQmlComponent component(&engine);
 
     component.setData("import QtQuick 2.0\nColumn { Item { width: 100; height: 100; } }", QUrl::fromLocalFile(""));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QVERIFY(warningMessage.isEmpty());
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
     delete item;
 
     component.setData("import QtQuick 2.0\nRow { Item { width: 100; height: 100; } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QVERIFY(warningMessage.isEmpty());
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
     delete item;
 
     component.setData("import QtQuick 2.0\nGrid { Item { width: 100; height: 100; } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QVERIFY(warningMessage.isEmpty());
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
     delete item;
 
     component.setData("import QtQuick 2.0\nFlow { Item { width: 100; height: 100; } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QVERIFY(warningMessage.isEmpty());
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
     delete item;
 
     component.setData("import QtQuick 2.0\nColumn { Item { width: 100; height: 100; anchors.top: parent.top } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function."));
-    warningMessage.clear();
+    QCOMPARE(messageHandler.messages().size(), 1);
+    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function."));
+    messageHandler.clear();
     delete item;
 
     component.setData("import QtQuick 2.0\nColumn { Item { width: 100; height: 100; anchors.centerIn: parent } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function."));
-    warningMessage.clear();
+    QCOMPARE(messageHandler.messages().size(), 1);
+    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function."));
+    messageHandler.clear();
     delete item;
 
     component.setData("import QtQuick 2.0\nColumn { Item { width: 100; height: 100; anchors.left: parent.left } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QVERIFY(warningMessage.isEmpty());
-    warningMessage.clear();
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
     delete item;
 
     component.setData("import QtQuick 2.0\nRow { Item { width: 100; height: 100; anchors.left: parent.left } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row. Row will not function."));
-    warningMessage.clear();
+    QCOMPARE(messageHandler.messages().size(), 1);
+    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row. Row will not function."));
+    messageHandler.clear();
     delete item;
 
     component.setData("import QtQuick 2.0\nRow { width: 100; height: 100; Item { anchors.fill: parent } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row. Row will not function."));
-    warningMessage.clear();
+    QCOMPARE(messageHandler.messages().size(), 1);
+    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row. Row will not function."));
+    messageHandler.clear();
     delete item;
 
     component.setData("import QtQuick 2.0\nRow { Item { width: 100; height: 100; anchors.top: parent.top } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QVERIFY(warningMessage.isEmpty());
-    warningMessage.clear();
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
     delete item;
 
     component.setData("import QtQuick 2.0\nGrid { Item { width: 100; height: 100; anchors.horizontalCenter: parent.horizontalCenter } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Grid: Cannot specify anchors for items inside Grid. Grid will not function."));
-    warningMessage.clear();
+    QCOMPARE(messageHandler.messages().size(), 1);
+    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Grid: Cannot specify anchors for items inside Grid. Grid will not function."));
+    messageHandler.clear();
     delete item;
 
     component.setData("import QtQuick 2.0\nGrid { Item { width: 100; height: 100; anchors.centerIn: parent } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Grid: Cannot specify anchors for items inside Grid. Grid will not function."));
-    warningMessage.clear();
+    QCOMPARE(messageHandler.messages().size(), 1);
+    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Grid: Cannot specify anchors for items inside Grid. Grid will not function."));
+    messageHandler.clear();
     delete item;
 
     component.setData("import QtQuick 2.0\nFlow { Item { width: 100; height: 100; anchors.verticalCenter: parent.verticalCenter } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Flow: Cannot specify anchors for items inside Flow. Flow will not function."));
+    QCOMPARE(messageHandler.messages().size(), 1);
+    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Flow: Cannot specify anchors for items inside Flow. Flow will not function."));
+    messageHandler.clear();
     delete item;
 
     component.setData("import QtQuick 2.0\nFlow {  width: 100; height: 100; Item { anchors.fill: parent } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Flow: Cannot specify anchors for items inside Flow. Flow will not function."));
-    qInstallMessageHandler(oldMsgHandler);
+    QCOMPARE(messageHandler.messages().size(), 1);
+    QCOMPARE(messageHandler.messages().back(), QString("file::2:1: QML Flow: Cannot specify anchors for items inside Flow. Flow will not function."));
     delete item;
 }
 

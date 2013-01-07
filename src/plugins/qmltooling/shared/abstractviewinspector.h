@@ -107,7 +107,9 @@ protected:
     virtual bool keyPressEvent(QKeyEvent *event);
     virtual bool keyReleaseEvent(QKeyEvent *keyEvent);
     virtual bool mouseDoubleClickEvent(QMouseEvent *event);
+#ifndef QT_NO_WHEELEVENT
     virtual bool wheelEvent(QWheelEvent *event);
+#endif
     virtual bool touchEvent(QTouchEvent *event);
     virtual void setShowAppOnTop(bool) = 0;
 

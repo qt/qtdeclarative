@@ -37,5 +37,5 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "../../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(touchinteraction)
+#include "../shared/shared.h"
+DECLARATIVE_EXAMPLE_MAIN(touchinteraction/touchinteraction)

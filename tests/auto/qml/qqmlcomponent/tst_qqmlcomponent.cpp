@@ -226,20 +226,13 @@ void tst_qqmlcomponent::qmlCreateObjectWithProperties()
     delete testBindingThisObj;
 }
 
-static QStringList warnings;
-static void msgHandler(QtMsgType, const QMessageLogContext &, const QString &warning)
-{
-    warnings << warning;
-}
-
 void tst_qqmlcomponent::qmlCreateParentReference()
 {
     QQmlEngine engine;
 
     QCOMPARE(engine.outputWarningsToStandardError(), true);
 
-    warnings.clear();
-    QtMessageHandler old = qInstallMessageHandler(msgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     QQmlComponent component(&engine, testFileUrl("createParentReference.qml"));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
@@ -249,12 +242,10 @@ void tst_qqmlcomponent::qmlCreateParentReference()
     QVERIFY(QMetaObject::invokeMethod(object, "createChild"));
     delete object;
 
-    qInstallMessageHandler(old);
-
     engine.setOutputWarningsToStandardError(false);
     QCOMPARE(engine.outputWarningsToStandardError(), false);
 
-    QCOMPARE(warnings.count(), 0);
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 }
 
 void tst_qqmlcomponent::async()
@@ -398,13 +389,14 @@ void tst_qqmlcomponent::onDestructionCount()
     // Warning should not be emitted any further
     QCOMPARE(engine.outputWarningsToStandardError(), true);
 
-    warnings.clear();
-    QtMessageHandler old = qInstallMessageHandler(msgHandler);
+    QStringList warnings;
+    {
+        QQmlTestMessageHandler messageHandler;
 
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-    QCoreApplication::processEvents();
-
-    qInstallMessageHandler(old);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
+        warnings = messageHandler.messages();
+    }
 
     engine.setOutputWarningsToStandardError(false);
     QCOMPARE(engine.outputWarningsToStandardError(), false);

@@ -398,7 +398,9 @@ protected:
     virtual void mouseDoubleClickEvent(QMouseEvent *event);
     virtual void mouseUngrabEvent(); // XXX todo - params?
     virtual void touchUngrabEvent();
+#ifndef QT_NO_WHEELEVENT
     virtual void wheelEvent(QWheelEvent *event);
+#endif
     virtual void touchEvent(QTouchEvent *event);
     virtual void hoverEnterEvent(QHoverEvent *event);
     virtual void hoverMoveEvent(QHoverEvent *event);

@@ -24,7 +24,7 @@ Rectangle {
                 property bool pinching: false
 
                 pinch.target: rect
-                pinch.dragAxis: Drag.XandYAxis
+                pinch.dragAxis: Drag.XAndYAxis
                 onPinchStarted: pinching = true
                 onPinchFinished: pinching = false
             }

@@ -53,8 +53,6 @@
 #include <private/qv8variantresource_p.h>
 #include <private/qqmlglobal_p.h>
 
-Q_DECLARE_METATYPE(QJSValue);
-
 QT_BEGIN_NAMESPACE
 
 QQmlVMEVariantQObjectPtr::QQmlVMEVariantQObjectPtr(bool isVar)

@@ -45,7 +45,7 @@ Tutorial chapters:
 \li \l {tutorials/dynamicview/dynamicview4}{Sorting Items}
 \endlist
 
-All the code in this tutorial can be found in Qt's \c examples/tutorials/dynamicview
+All the code in this tutorial can be found in Qt's \c examples/quick/tutorials/dynamicview
 directory.
 */
 
@@ -139,7 +139,7 @@ so that is above other items in the stacking order and isn't obscured as it is d
 \previouspage QML Dynamic View Ordering Tutorial 2 - Dragging View Items
 \nextpage QML Dynamic View Ordering Tutorial 4 - Sorting Items
 
-\example examples/tutorials/dynamicview/dynamicview3
+\example examples/quick/tutorials/dynamicview/dynamicview3
 
 The next step in our application to move items within the list as they're dragged so that we
 can re-order the list.  To achieve this we introduce three new elements to our application;

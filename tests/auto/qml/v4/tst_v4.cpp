@@ -104,16 +104,6 @@ void tst_v4::initTestCase()
     registerTypes();
 }
 
-static int v4ErrorCount;
-static QList<QString> v4ErrorMessages;
-static void v4ErrorsMsgHandler(QtMsgType, const QMessageLogContext &, const QString &message)
-{
-    v4ErrorMessages.append(message);
-
-    if (message.contains("QV4"))
-        ++v4ErrorCount;
-}
-
 void tst_v4::qtscript()
 {
     QFETCH(QString, file);
@@ -121,21 +111,14 @@ void tst_v4::qtscript()
 
     QQmlComponent component(&engine, testFileUrl(file));
 
-    v4ErrorCount = 0;
-    v4ErrorMessages.clear();
-    QtMessageHandler old = qInstallMessageHandler(v4ErrorsMsgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     QObject *o = component.create();
     delete o;
 
-    qInstallMessageHandler(old);
-
-    if (v4ErrorCount) {
-        foreach (const QString &msg, v4ErrorMessages)
-            qDebug() << msg;
-    }
     QEXPECT_FAIL("jsvalueHandling", "QTBUG-26951 - QJSValue has a different representation of NULL to QV8Engine", Continue);
-    QCOMPARE(v4ErrorCount, 0);
+    const int v4ErrorCount = messageHandler.messages().filter(QLatin1String("QV4")).size();
+    QVERIFY2(v4ErrorCount == 0, qPrintable(messageHandler.messageString()));
 
     QV4Compiler::enableBindingsTest(false);
 }
@@ -959,12 +942,6 @@ void tst_v4::subscriptions()
     }
 }
 
-static QStringList messages;
-static void msgHandler(QtMsgType, const QMessageLogContext &, const QString &msg)
-{
-    messages << msg;
-}
-
 static QByteArray getAddress(int address)
 {
     return QByteArray::number(address);
@@ -1108,8 +1085,7 @@ void tst_v4::debuggingDumpInstructions()
     expectedPreAddress << "\t\tInitString\t\tString_DataIndex(0) -> String_Slot(0)";
     QStringList expected;
 
-    messages = QStringList();
-    QtMessageHandler old = qInstallMessageHandler(msgHandler);
+    QQmlTestMessageHandler messageHandler;
 
     QQmlJS::Bytecode bc;
 #define DUMP_INSTR_IN_UNIT_TEST(I, FMT) { QQmlJS::V4InstrData<QQmlJS::V4Instr::I> i; memset(&i, 0, sizeof(i)); bc.append(i); }
@@ -1130,15 +1106,15 @@ void tst_v4::debuggingDumpInstructions()
     bc.dump(start, end);
 
     // ensure that the output was expected.
-    qInstallMessageHandler(old);
-    QCOMPARE(messages.count(), expected.count());
-    for (int ii = 0; ii < messages.count(); ++ii) {
+    const int messageCount = messageHandler.messages().count();
+    QCOMPARE(messageCount, expected.count());
+    for (int ii = 0; ii < messageCount; ++ii) {
         // Calculating the destination address of a null jump/branch instruction is tricky
         // so instead we simply don't compare that part of those instructions.
         QRegExp ignoreAddress("\\bAddress\\((\\w*)\\)");
         ignoreAddress.setMinimal(true);
         QString expectOut = expected.at(ii); expectOut.replace(ignoreAddress, "");
-        QString actualOut = messages.at(ii); actualOut.replace(ignoreAddress, "");
+        QString actualOut = messageHandler.messages().at(ii); actualOut.replace(ignoreAddress, "");
         QCOMPARE(actualOut, expectOut);
     }
 }

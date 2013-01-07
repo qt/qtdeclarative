@@ -96,7 +96,7 @@ Rectangle {
 
             MouseArea {
                 anchors.fill: parent
-                drag.target: letter; drag.axis: Drag.XandYAxis
+                drag.target: letter; drag.axis: Drag.XAndYAxis
                 onPressed: letter.color = "#dddddd"
                 onReleased: letter.color = "#999999"
             }

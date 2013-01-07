@@ -7,7 +7,5 @@ HEADERS += person.h \
            birthdayparty.h
 RESOURCES += signal.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/qtquick/qml/referenceexamples/signal
-sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS signal.pro example.qml
-sources.path = $$target.path
-INSTALLS += target sources
+target.path = $$[QT_INSTALL_EXAMPLES]/qml/referenceexamples/signal
+INSTALLS += target

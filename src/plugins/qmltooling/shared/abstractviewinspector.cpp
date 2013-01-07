@@ -173,10 +173,12 @@ bool AbstractViewInspector::eventFilter(QObject *obj, QEvent *event)
         if (mouseDoubleClickEvent(static_cast<QMouseEvent*>(event)))
             return true;
         break;
+#ifndef QT_NO_WHEELEVENT
     case QEvent::Wheel:
         if (wheelEvent(static_cast<QWheelEvent*>(event)))
             return true;
         break;
+#endif
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
@@ -244,12 +246,14 @@ bool AbstractViewInspector::mouseDoubleClickEvent(QMouseEvent *event)
     return true;
 }
 
+#ifndef QT_NO_WHEELEVENT
 bool AbstractViewInspector::wheelEvent(QWheelEvent *event)
 {
     foreach (AbstractTool *tool, m_tools)
         tool->wheelEvent(event);
     return true;
 }
+#endif
 
 bool AbstractViewInspector::touchEvent(QTouchEvent *event)
 {

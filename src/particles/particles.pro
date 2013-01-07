@@ -1,6 +1,6 @@
 TARGET = QtQuickParticles
 
-CONFIG += dll warn_on internal_module
+CONFIG += internal_module
 
 QT = core-private gui-private qml-private quick-private
 QT_PRIVATE = v8-private

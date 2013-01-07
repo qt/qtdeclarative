@@ -5,7 +5,9 @@ SUBDIRS = accessibility \
             canvas \
             imageelements \
             keyinteraction \
-            modelviews \
+            localstorage \
+            models \
+            views \
             mousearea \
             positioners \
             righttoleft \
@@ -14,9 +16,13 @@ SUBDIRS = accessibility \
             text \
             threading \
             touchinteraction \
-            customitems
+            tutorials \
+            customitems \
+            imageprovider \
+            window \
+            particles \
+            demos
 
-# install
-sources.files = quick.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/qtquick/quick
-INSTALLS += sources
+EXAMPLE_FILES = \
+    ui-components \
+    shared

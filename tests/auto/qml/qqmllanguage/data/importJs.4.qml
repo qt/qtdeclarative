@@ -1,4 +1,4 @@
-import com.nokia.PureJsModule 1.6
+import org.qtproject.PureJsModule 1.6
 import QtQuick 2.0
 
 Item {

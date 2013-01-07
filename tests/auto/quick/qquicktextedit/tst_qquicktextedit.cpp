@@ -2139,6 +2139,8 @@ void tst_qquicktextedit::positionAt()
     case QQuickTextEdit::AlignRight:
         xoff = texteditObject->width() - secondLine.naturalTextWidth();
         break;
+    case QQuickTextEdit::AlignJustify:
+        break;
     }
     int pos = texteditObject->positionAt(texteditObject->width()/2, y0);
 

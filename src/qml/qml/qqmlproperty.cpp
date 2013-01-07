@@ -64,7 +64,6 @@
 
 #include <math.h>
 
-Q_DECLARE_METATYPE(QJSValue)
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<qreal>)
 Q_DECLARE_METATYPE(QList<bool>)

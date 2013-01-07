@@ -185,7 +185,7 @@ int main(int argc, char **argv)
     qmlRegisterType<Item>("SimpleMaterial", 1, 0, "SimpleMaterialItem");
 
     QQuickView view;
-    view.setSource(QUrl("main.qml"));
+    view.setSource(QUrl("qrc:///scenegraph/simplematerial/main.qml"));
     view.show();
 
     return app.exec();

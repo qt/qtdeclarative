@@ -3,11 +3,10 @@ QT += quick
 
 SOURCES += \
     simplematerial.cpp
+RESOURCES += simplematerial.qrc
 
-OTHER_FILES += \
-    main.qml
+target.path = $$[QT_INSTALL_EXAMPLES]/quick/scenegraph/simplematerial
+qml.files = main.qml
+qml.path = $$[QT_INSTALL_EXAMPLES]/quick/scenegraph/simplematerial
 
-sources.files = $$SOURCES $$OTHER_FILES simplematerial.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/qtquick/quick/scenegraph/simplematerial
-target.path = $$sources.path
-INSTALLS += sources target
+INSTALLS += target qml

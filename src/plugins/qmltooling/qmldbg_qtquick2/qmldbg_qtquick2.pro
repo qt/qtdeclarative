@@ -2,6 +2,7 @@ TARGET = qmldbg_qtquick2
 QT       += qml-private quick-private core-private gui-private v8-private
 
 PLUGIN_TYPE = qmltooling
+PLUGIN_CLASS_NAME = QtQuick2Plugin
 load(qt_plugin)
 
 INCLUDEPATH *= $$PWD $$PWD/../shared

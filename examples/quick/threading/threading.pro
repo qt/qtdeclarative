@@ -2,10 +2,9 @@ TEMPLATE = app
 
 QT += quick qml
 SOURCES += main.cpp
+RESOURCES += \
+    threading.qrc \
+    ../shared/shared.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/qtquick/quick/threading
-qml.files = threading.qml threadedlistmodel workerscript
-qml.path = $$[QT_INSTALL_EXAMPLES]/qtquick/quick/threading
-sources.files = $$SOURCES threading.pro
-sources.path = $$qml.path
-INSTALLS += sources target qml
+target.path = $$[QT_INSTALL_EXAMPLES]/quick/threading
+INSTALLS += target
