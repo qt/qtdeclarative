@@ -145,7 +145,7 @@ void Object::getCollectables(QVector<Object *> &objects)
 
     if (members) {
         for (PropertyTable::iterator it = members->begin(), eit = members->end(); it < eit; ++it) {
-            if ((*it)->descriptor.isData())
+            if ((*it) && (*it)->descriptor.isData())
                 if (Object *o = (*it)->descriptor.value.asObject())
                     objects.append(o);
         }

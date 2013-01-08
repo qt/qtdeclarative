@@ -667,7 +667,7 @@ Value ObjectPrototype::method_defineProperties(ExecutionContext *ctx)
     if (o->members) {
         PropertyTable::iterator it = o->members->begin();
         while (it != o->members->end()) {
-            if ((*it)->descriptor.isEnumerable()) {
+            if ((*it) && (*it)->descriptor.isEnumerable()) {
                 String *name = (*it)->name;
                 PropertyDescriptor pd;
                 toPropertyDescriptor(ctx, o->__get__(ctx, name), &pd);
