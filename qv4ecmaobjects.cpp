@@ -1822,13 +1822,33 @@ Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Array.prototype.indexOf"));
-    return Value::undefinedValue();
+    ArrayObject *instance = ctx->thisObject.asArrayObject();
+    if (!instance)
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.indexOf"));
+
+    Value searchValue;
+    int fromIndex = 0;
+
+    if (ctx->argumentCount == 1)
+        searchValue = ctx->argument(0);
+    else if (ctx->argumentCount == 2) {
+        searchValue = ctx->argument(0);
+        fromIndex = ctx->argument(1).toInteger(ctx);
+    } else
+        __qmljs_throw_type_error(ctx);
+
+    for (Array::ConstIterator it = instance->value.find(fromIndex), end = instance->value.constEnd();
+         it != end; ++it) {
+        if (__qmljs_strict_equal(instance->value.valueRefFromIndex(*it), searchValue))
+            return Value::fromInt32(it.key());
+    }
+
+    return Value::fromInt32(-1);
 }
 
 Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Array.prototype.indexOf"));
+    ctx->throwUnimplemented(QStringLiteral("Array.prototype.lastIndexOf"));
     return Value::undefinedValue();
 }
 
