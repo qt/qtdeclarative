@@ -99,9 +99,12 @@ struct URIErrorPrototype;
 struct Object: Managed {
     Object *prototype;
     QScopedPointer<PropertyTable> members;
+    Array array;
 
     Object()
         : prototype(0) {}
+    Object(const Array &a)
+        : prototype(0), array(a) {}
 
     virtual ~Object();
 
@@ -190,9 +193,8 @@ struct DateObject: Object {
 };
 
 struct ArrayObject: Object {
-    Array value;
     ArrayObject() {}
-    ArrayObject(const Array &value): value(value) {}
+    ArrayObject(const Array &value): Object(value) {}
     virtual QString className() { return QStringLiteral("Array"); }
     virtual ArrayObject *asArrayObject() { return this; }
     virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty);

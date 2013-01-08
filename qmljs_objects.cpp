@@ -423,7 +423,7 @@ Value ArrayObject::__get__(ExecutionContext *ctx, String *name, bool *hasPropert
     if (name->isEqualTo(ctx->engine->id_length)) {
         if (hasProperty)
             *hasProperty = true;
-        return Value::fromDouble(value.length());
+        return Value::fromDouble(array.length());
     }
     return Object::__get__(ctx, name, hasProperty);
 }
@@ -432,9 +432,9 @@ bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContex
 {
     if (index.isNumber()) {
         const quint32 idx = index.toUInt32(ctx);
-        Value v = value.at(idx);
+        Value v = array.at(idx);
         v = op(v, rhs, ctx);
-        value.insert(idx, v);
+        array.insert(idx, v);
         return true;
     }
     return Object::inplaceBinOp(rhs, index, op, ctx);
@@ -443,7 +443,7 @@ bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContex
 void ArrayObject::getCollectables(QVector<Object *> &objects)
 {
     Object::getCollectables(objects);
-    value.getCollectables(objects);
+    array.getCollectables(objects);
 }
 
 Function::~Function()
