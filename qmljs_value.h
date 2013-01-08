@@ -125,8 +125,8 @@ struct Value
 
     };
 
-    inline ValueType type() const {
-        return (ValueType)(tag & Type_Mask);
+    inline unsigned type() const {
+        return tag & Type_Mask;
     }
 
     inline bool isUndefined() const { return tag == _Undefined_Type; }

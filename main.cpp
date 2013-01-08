@@ -159,7 +159,7 @@ int executeLLVMCode(void *codePtr)
     void (*code)(VM::ExecutionContext *) = (void (*)(VM::ExecutionContext *)) codePtr;
 
     QScopedPointer<QQmlJS::EvalISelFactory> iSelFactory(new QQmlJS::Moth::ISelFactory);
-    VM::ExecutionEngine vm(0, iSelFactory.data());
+    VM::ExecutionEngine vm(iSelFactory.data());
     VM::ExecutionContext *ctx = vm.rootContext;
 
     QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();

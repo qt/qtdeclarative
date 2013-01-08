@@ -64,6 +64,8 @@ INCLUDEPATH += \
     $$system($$LLVM_CONFIG --includedir)
 
 QMAKE_CXXFLAGS += $$system($$LLVM_CONFIG --cppflags) -fvisibility-inlines-hidden
+QMAKE_CXXFLAGS -= -pedantic
+QMAKE_CXXFLAGS -= -Wcovered-switch-default
 
 LIBS += \
     $$system($$LLVM_CONFIG --ldflags) \
@@ -72,6 +74,7 @@ LIBS += \
 QMAKE_EXTRA_TARGETS += gen_llvm_runtime
 
 GEN_LLVM_RUNTIME_FLAGS = $$system($$LLVM_CONFIG --cppflags)
+GEN_LLVM_RUNTIME_FLAGS -= -pedantic
 
 gen_llvm_runtime.target = llvm_runtime
 gen_llvm_runtime.commands = clang -O2 -emit-llvm -c $(INCPATH) $$GEN_LLVM_RUNTIME_FLAGS -DQMLJS_LLVM_RUNTIME llvm_runtime.cpp -o llvm_runtime.bc

@@ -165,7 +165,7 @@ Managed *MemoryManager::alloc(std::size_t size)
 void MemoryManager::scribble(Managed *obj, int c, int size) const
 {
     if (m_d->scribble)
-        ::memset(obj + 1, c, size - sizeof(Managed));
+        ::memset((void *)(obj + 1), c, size - sizeof(Managed));
 }
 
 std::size_t MemoryManager::mark(const QVector<Object *> &objects)
