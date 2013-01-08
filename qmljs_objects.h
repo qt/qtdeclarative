@@ -45,9 +45,11 @@
 #include "qmljs_engine.h"
 #include "qmljs_environment.h"
 #include "qv4array.h"
+#include "qv4string.h"
 #include "qv4codegen_p.h"
 #include "qv4isel_p.h"
 #include "qv4managed.h"
+#include "qv4propertydescriptor.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
@@ -92,143 +94,6 @@ struct SyntaxErrorPrototype;
 struct TypeErrorPrototype;
 struct URIErrorPrototype;
 
-struct String {
-    inline bool isEqualTo(const String *other) const {
-        if (this == other)
-            return true;
-        else if (other && hashValue() == other->hashValue())
-            return toQString() == other->toQString();
-        return false;
-    }
-
-    inline const QString &toQString() const {
-        return _text;
-    }
-
-    inline unsigned hashValue() const {
-        if (! _hashValue)
-            _hashValue = qHash(_text);
-
-        return _hashValue;
-    }
-    enum { InvalidArrayIndex = 0xffffffff };
-    uint asArrayIndex() const;
-
-private:
-    friend class StringPool;
-    String(const QString &text)
-        : _text(text), _hashValue(0) {}
-
-private:
-    QString _text;
-    mutable unsigned _hashValue;
-};
-
-struct PropertyDescriptor {
-    enum Type {
-        Generic,
-        Data,
-        Accessor
-    };
-    enum State {
-        Undefined,
-        Disabled,
-        Enabled
-    };
-    union {
-        Value value;
-        struct {
-            FunctionObject *get;
-            FunctionObject *set;
-        };
-    };
-    uint type : 8;
-    uint writable : 8;
-    uint enumberable : 8;
-    uint configurable : 8;
-
-    static inline PropertyDescriptor fromValue(Value v) {
-        PropertyDescriptor pd;
-        pd.value = v;
-        pd.type = Data;
-        pd.writable = Undefined;
-        pd.enumberable = Undefined;
-        pd.configurable = Undefined;
-        return pd;
-    }
-    static inline PropertyDescriptor fromAccessor(FunctionObject *getter, FunctionObject *setter) {
-        PropertyDescriptor pd;
-        pd.get = getter;
-        pd.set = setter;
-        pd.type = Accessor;
-        pd.writable = Undefined;
-        pd.enumberable = Undefined;
-        pd.configurable = Undefined;
-        return pd;
-    }
-
-    // Section 8.10
-    inline void fullyPopulated() {
-        if (type == Generic) {
-            type = Data;
-            value = Value::undefinedValue();
-        }
-        if (type == Data) {
-            if (writable == Undefined)
-                writable = Disabled;
-        } else {
-            writable = Undefined;
-        }
-        if (enumberable == Undefined)
-            enumberable = Disabled;
-        if (configurable == Undefined)
-            configurable = Disabled;
-    }
-
-    inline bool isData() const { return type == Data; }
-    inline bool isAccessor() const { return type == Accessor; }
-    inline bool isGeneric() const { return type == Generic; }
-
-    inline bool isWritable() const { return writable == Enabled; }
-    inline bool isEnumerable() const { return enumberable == Enabled; }
-    inline bool isConfigurable() const { return configurable == Enabled; }
-
-    inline bool isEmpty() {
-        return type == Generic && writable == Undefined && enumberable == Undefined && configurable == Undefined;
-    }
-    inline bool isSubset(PropertyDescriptor *other) {
-        if (type != other->type)
-            return false;
-        if (enumberable != Undefined && enumberable != other->enumberable)
-            return false;
-        if (configurable != Undefined && configurable != other->configurable)
-            return false;
-        if (writable != Undefined && writable != other->writable)
-            return false;
-        if (type == Data && !value.sameValue(other->value))
-            return false;
-        if (type == Accessor && (get != other->get || set != other->set))
-            return false;
-        return true;
-    }
-    inline void operator+=(const PropertyDescriptor &other) {
-        type = other.type;
-        if (other.enumberable != Undefined)
-            enumberable = other.enumberable;
-        if (other.configurable != Undefined)
-            configurable = other.configurable;
-        if (other.writable != Undefined)
-            writable = other.writable;
-        if (type == Accessor) {
-            if (other.get)
-                get = other.get;
-            if (other.set)
-                set = other.set;
-        } else {
-            value = other.value;
-        }
-    }
-};
 
 struct PropertyTableEntry {
     PropertyDescriptor descriptor;

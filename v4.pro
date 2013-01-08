@@ -47,7 +47,8 @@ HEADERS += \
     qv4mm.h \
     qv4managed.h \
     qv4array.h \
-    qv4string.h
+    qv4string.h \
+    qv4propertydescriptor.h
 
 llvm {
 
