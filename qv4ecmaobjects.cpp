@@ -1537,12 +1537,14 @@ ArrayCtor::ArrayCtor(ExecutionContext *scope)
 
 Value ArrayCtor::call(ExecutionContext *ctx)
 {
-    Array value;
+    ArrayObject *a = ctx->engine->newArrayObject();
+    Array &value = a->value;
     if (ctx->argumentCount == 1 && ctx->argument(0).isNumber()) {
         double size = ctx->argument(0).asDouble();
         quint32 isize = Value::toUInt32(size);
 
         if (size != double(isize)) {
+            // ### Should be a RangeError
             ctx->throwError(QStringLiteral("Invalid array length"));
             return Value::undefinedValue();
         }
@@ -1554,7 +1556,7 @@ Value ArrayCtor::call(ExecutionContext *ctx)
         }
     }
 
-    return Value::fromObject(ctx->engine->newArrayObject(value));
+    return Value::fromObject(a);
 }
 
 void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
