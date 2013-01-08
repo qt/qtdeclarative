@@ -426,6 +426,39 @@ void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempInd
         }
     } break;
 
+    case IR::Name::builtin_define_getter_setter: {
+        if (!c->args)
+            return;
+        IR::ExprList *args = c->args;
+        Instruction::CallBuiltinDefineGetterSetter call;
+        call.objectTemp = args->expr->asTemp()->index;
+        args = args->next;
+        assert(args);
+        call.name = engine()->newString(*args->expr->asName()->id);
+        args = args->next;
+        assert(args);
+        call.getterTemp = args->expr->asTemp()->index;
+        args = args->next;
+        assert(args);
+        call.setterTemp = args->expr->asTemp()->index;
+        addInstruction(call);
+    } break;
+
+    case IR::Name::builtin_define_property: {
+        if (!c->args)
+            return;
+        IR::ExprList *args = c->args;
+        Instruction::CallBuiltinDefineProperty call;
+        call.objectTemp = args->expr->asTemp()->index;
+        args = args->next;
+        assert(args);
+        call.name = engine()->newString(*args->expr->asName()->id);
+        args = args->next;
+        assert(args);
+        call.valueTemp = args->expr->asTemp()->index;
+        addInstruction(call);
+    } break;
+
     default:
         Q_UNIMPLEMENTED();
         c->dump(qout); qout << endl;

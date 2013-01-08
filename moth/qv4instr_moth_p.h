@@ -28,6 +28,8 @@
     F(CallBuiltinTypeofName, callBuiltinTypeofName) \
     F(CallBuiltinTypeofValue, callBuiltinTypeofValue) \
     F(CallBuiltinDeclareVar, callBuiltinDeclareVar) \
+    F(CallBuiltinDefineGetterSetter, callBuiltinDefineGetterSetter) \
+    F(CallBuiltinDefineProperty, callBuiltinDefineProperty) \
     F(CreateValue, createValue) \
     F(CreateProperty, createProperty) \
     F(CreateActivationProperty, createActivationProperty) \
@@ -215,6 +217,19 @@ union Instr
         bool isDeletable;
         VM::String *varName;
     };
+    struct instr_callBuiltinDefineGetterSetter {
+        MOTH_INSTR_HEADER
+        int objectTemp;
+        VM::String *name;
+        int getterTemp;
+        int setterTemp;
+    };
+    struct instr_callBuiltinDefineProperty {
+        MOTH_INSTR_HEADER
+        int objectTemp;
+        VM::String *name;
+        int valueTemp;
+    };
     struct instr_createValue {
         MOTH_INSTR_HEADER
         int func;
@@ -313,6 +328,8 @@ union Instr
     instr_callBuiltinTypeofName callBuiltinTypeofName;
     instr_callBuiltinTypeofValue callBuiltinTypeofValue;
     instr_callBuiltinDeclareVar callBuiltinDeclareVar;
+    instr_callBuiltinDefineGetterSetter callBuiltinDefineGetterSetter;
+    instr_callBuiltinDefineProperty callBuiltinDefineProperty;
     instr_createValue createValue;
     instr_createProperty createProperty;
     instr_createActivationProperty createActivationProperty;

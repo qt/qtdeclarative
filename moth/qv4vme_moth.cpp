@@ -319,6 +319,14 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         __qmljs_builtin_declare_var(context, instr.isDeletable, instr.varName);
     MOTH_END_INSTR(CallBuiltinDeleteValue)
 
+    MOTH_BEGIN_INSTR(CallBuiltinDefineGetterSetter)
+        __qmljs_builtin_define_getter_setter(TEMP(instr.objectTemp), instr.name, TEMP(instr.getterTemp), TEMP(instr.setterTemp), context);
+    MOTH_END_INSTR(CallBuiltinDefineGetterSetter)
+
+    MOTH_BEGIN_INSTR(CallBuiltinDefineProperty)
+        __qmljs_builtin_define_property(TEMP(instr.objectTemp), instr.name, TEMP(instr.valueTemp), context);
+    MOTH_END_INSTR(CallBuiltinDefineProperty)
+
     MOTH_BEGIN_INSTR(CreateValue)
         quint32 argStart = instr.args - context->variableCount();
         VM::Value *args = stack + argStart;
