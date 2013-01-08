@@ -15,7 +15,6 @@ S15.4.5.2_A3_T4 failing
 15.4.4.15-5-16 failing
 15.4.4.15-5-12 failing
 15.4.4.14-9-9 failing
-S15.4.2.2_A2.1_T1 failing
 S7.9_A5.8_T1 failing
 S8.8_A2_T1 failing
 S8.8_A2_T2 failing
@@ -2035,7 +2034,6 @@ S15.4.4.13_A5.7 failing
 15.4.4.14-5-14 failing
 15.4.4.14-5-15 failing
 15.4.4.14-5-17 failing
-15.4.4.14-5-2 failing
 15.4.4.14-5-26 failing
 15.4.4.14-5-27 failing
 15.4.4.14-5-28 failing
@@ -2044,14 +2042,6 @@ S15.4.4.13_A5.7 failing
 15.4.4.14-5-32 failing
 15.4.4.14-8-1 failing
 15.4.4.14-8-2 failing
-15.4.4.14-9-10 failing
-15.4.4.14-9-2 failing
-15.4.4.14-9-3 failing
-15.4.4.14-9-4 failing
-15.4.4.14-9-5 failing
-15.4.4.14-9-6 failing
-15.4.4.14-9-7 failing
-15.4.4.14-9-8 failing
 15.4.4.14-9-a-1 failing
 15.4.4.14-9-a-10 failing
 15.4.4.14-9-a-11 failing
@@ -3944,7 +3934,6 @@ S15.5.4.7_A11 failing
 S15.5.4.7_A1_T1 failing
 S15.5.4.7_A1_T10 failing
 S15.5.4.7_A1_T11 failing
-S15.5.4.7_A1_T12 failing
 S15.5.4.7_A1_T2 failing
 15.5.4.20-4-10 failing
 15.5.4.20-4-11 failing
