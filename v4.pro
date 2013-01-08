@@ -26,7 +26,8 @@ SOURCES += main.cpp \
     debugging.cpp \
     qv4mm.cpp \
     qv4managed.cpp \
-    qv4array.cpp
+    qv4array.cpp \
+    qv4string.cpp
 
 HEADERS += \
     qv4codegen_p.h \
@@ -45,7 +46,8 @@ HEADERS += \
     debugging.h \
     qv4mm.h \
     qv4managed.h \
-    qv4array.h
+    qv4array.h \
+    qv4string.h
 
 llvm {
 
