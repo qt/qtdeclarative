@@ -178,7 +178,9 @@ Value __qmljs_delete_subscript(ExecutionContext *ctx, Value base, Value index)
         if (n >= 0) {
             if (n < (int) a->array.length()) {
                 // ### check writable/deletable property
-                a->array.remove(n);
+                Array::Iterator it = a->array.find(n);
+                if (it != a->array.end())
+                    a->array.valueRefFromIndex(*it) = Value::undefinedValue();
                 return Value::fromBoolean(true);
             }
         }
