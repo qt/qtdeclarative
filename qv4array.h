@@ -422,24 +422,21 @@ public:
 
 inline Array::Array(const Array &other)
 {
-    d = new SparseArrayData;
-    if (other.d->header.left) {
-        d->header.left = other.d->header.left->copy(d);
-        d->header.left->setParent(&d->header);
-        d->recalcMostLeftNode();
-        d->length = other.d->length;
-    }
+    d = 0;
+    *this = other;
 }
 
 
 inline Array &Array::operator=(const Array &other)
 {
-    d = new SparseArrayData;
-    if (other.d->header.left) {
-        d->header.left = other.d->header.left->copy(d);
-        d->header.left->setParent(&d->header);
-        d->recalcMostLeftNode();
-        d->length = other.d->length;
+    if (this != &other) {
+        d = new SparseArrayData;
+        if (other.d->header.left) {
+            d->header.left = other.d->header.left->copy(d);
+            d->header.left->setParent(&d->header);
+            d->recalcMostLeftNode();
+            d->length = other.d->length;
+        }
     }
     return *this;
 }
