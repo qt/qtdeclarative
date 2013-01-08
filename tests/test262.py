@@ -73,6 +73,25 @@ class TestExpectations:
                     self.failingTests.append(test)
         f.close()
 
+    def update(self, progress):
+        unexpectedPasses = [c for c in progress.failed_tests if c.case.IsNegative()]
+
+        f = open(rootDir + "/TestExpectations")
+        lines = f.read().splitlines()
+        oldLen = len(lines)
+        for result in unexpectedPasses:
+            expectationLine = result.case.name[-1] + " failing"
+            try:
+                lines.remove(expectationLine)
+            except ValueError:
+                pass
+        f.close()
+        if len(lines) != oldLen:
+            f = open(rootDir + "/TestExpectations", "w")
+            f.write("\n".join(lines))
+            f.close()
+
+
 if not os.path.exists(EXCLUDED_FILENAME):
     print "Cannot generate (JSON) test262 tests without a file," + \
         " %s, showing which tests have been disabled!" % EXCLUDED_FILENAME
@@ -99,6 +118,8 @@ def BuildOptions():
                     help="Test only non-strict mode")
   result.add_option("--parallel", default=False, action="store_true",
                     help="Run tests in parallel")
+  result.add_option("--update-expectations", default=False, action="store_true",
+                    help="Update test expectations fail when a test passes that was expected to fail")
   # TODO: Once enough tests are made strict compat, change the default
   # to "both"
   result.add_option("--unmarked_default", default="non_strict", 
@@ -455,7 +476,7 @@ class TestSuite(object):
       print
       result.ReportOutcome(False)
 
-  def Run(self, command_template, tests, print_summary, full_summary, parallel):
+  def Run(self, command_template, tests, print_summary, full_summary, parallel, update_expectations):
     if not "{{path}}" in command_template:
       command_template += " {{path}}"
     cases = self.EnumerateTests(tests)
@@ -480,6 +501,8 @@ class TestSuite(object):
         print
         print "Use --full-summary to see output from failed tests"
     print
+    if update_expectations:
+        self.expectations.update(progress)
 
   def Print(self, tests):
     cases = self.EnumerateTests(tests)
@@ -502,7 +525,8 @@ def Main():
     test_suite.Run(options.command, args,
                    options.summary or options.full_summary,
                    options.full_summary,
-                   options.parallel)
+                   options.parallel,
+                   options.update_expectations)
 
 
 if __name__ == '__main__':
