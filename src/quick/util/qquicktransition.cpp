@@ -435,7 +435,7 @@ bool QQuickTransition::running() const
 
     This property holds a list of the animations to be run for this transition.
 
-    \snippet examples/qml/dynamicscene/dynamicscene.qml top-level transitions
+    \snippet qml/dynamicscene/dynamicscene.qml top-level transitions
 
     The top-level animations are run in parallel. To run them sequentially,
     define them within a SequentialAnimation:

@@ -2183,7 +2183,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     each section.
 
 
-    \snippet examples/quick/modelviews/listview/sections.qml 0
+    \snippet quick/views/listview/sections.qml 0
 
     \image qml-listview-sections-example.png
 
@@ -2194,7 +2194,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     differing sections will result in a section header being created
     even if that section exists elsewhere.
 
-    \sa {quick/modelviews/listview}{ListView examples}
+    \sa {quick/views/listview}{ListView examples}
 */
 QQuickViewSection *QQuickListView::sectionCriteria()
 {

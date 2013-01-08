@@ -34,7 +34,7 @@ headerdirs  += ..
 
 sourcedirs  += ..
 
-exampledirs += ../../../examples/qml \
+exampledirs += ../../../examples/ \
                ../ \
                snippets
 

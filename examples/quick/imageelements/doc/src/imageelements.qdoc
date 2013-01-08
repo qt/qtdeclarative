@@ -40,7 +40,7 @@
 
     'Shadows' shows how to create a drop shadow effect for a rectangular item
     using a BorderImage:
-    \snippet quick/imageelements/content/ShadowRectangle.qml delegate
+    \snippet quick/imageelements/content/ShadowRectangle.qml shadow
 
     'AnimatedSprite' shows how to display a simple animation using an
     AnimatedSprite element:

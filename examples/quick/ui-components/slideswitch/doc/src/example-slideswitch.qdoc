@@ -34,7 +34,7 @@
 
 This example shows how to create a reusable switch component in QML.
 
-The code for this example can be found in the \c examples/quick/tutorials/ui-components/slideswitch directory.
+The code for this example can be found in the \c examples/quick/ui-components/slideswitch directory.
 
 The elements that compose the switch are:
 
@@ -105,7 +105,7 @@ For more information on states see \l{Qt Quick States}.
 
 We add two JavaScript functions to our switch:
 
-\snippet quick/tutorials/ui-components/slideswitch/content/Switch.qml 2
+\snippet quick/ui-components/slideswitch/content/Switch.qml 2
 
 This first function is called when the background image or the knob are clicked. We simply want the switch to toggle between the two
 states (\e on and \e off).
