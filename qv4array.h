@@ -155,7 +155,6 @@ struct Q_CORE_EXPORT SparseArrayData
     int numEntries;
     SparseArrayNode header;
     SparseArrayNode *mostLeftNode;
-    uint length;
 
     void rotateLeft(SparseArrayNode *x);
     void rotateRight(SparseArrayNode *x);
@@ -199,6 +198,8 @@ inline SparseArrayNode *SparseArrayData::findNode(uint akey) const
 class Array
 {
     SparseArrayData *d;
+    uint len;
+
     int allocValue() {
         int idx = freeList;
         if (values.size() <= freeList)
@@ -217,21 +218,16 @@ class Array
     int freeList;
 
 public:
-    inline Array() : d(new SparseArrayData), freeList(0) {}
-    Array(const Array &other);
-
+    inline Array() : d(new SparseArrayData), len(0), freeList(0) {}
     inline ~Array() { delete d; }
 
+    Array(const Array &other);
     Array &operator=(const Array &other);
 
-    bool operator==(const Array &other) const;
-    inline bool operator!=(const Array &other) const { return !(*this == other); }
-
     inline int numEntries() const { return d->numEntries; }
-    inline uint length() const { return d->length; }
+    inline uint length() const { return len; }
     void setLength(uint l);
 
-    inline bool isEmpty() const { return d->numEntries == 0; }
 
     void clear();
 
@@ -407,7 +403,6 @@ public:
     typedef int mapped_type;
     typedef qptrdiff difference_type;
     typedef int size_type;
-    inline bool empty() const { return isEmpty(); }
 
 #ifdef Q_MAP_DEBUG
     void dump() const;
@@ -430,12 +425,14 @@ inline Array::Array(const Array &other)
 inline Array &Array::operator=(const Array &other)
 {
     if (this != &other) {
+        if (d)
+            delete d;
         d = new SparseArrayData;
         if (other.d->header.left) {
             d->header.left = other.d->header.left->copy(d);
             d->header.left->setParent(&d->header);
             d->recalcMostLeftNode();
-            d->length = other.d->length;
+            len = other.len;
         }
     }
     return *this;
@@ -474,7 +471,7 @@ inline Value &Array::operator[](uint akey)
 inline Value Array::pop_front()
 {
     int idx = -1 ;
-    if (!d->length)
+    if (!len)
         return Value::undefinedValue();
 
     SparseArrayNode *n = d->findNode(0);
@@ -488,7 +485,7 @@ inline Value Array::pop_front()
             n = n->left;
         }
     }
-    --d->length;
+    --len;
     Value v = valueFromIndex(idx);
     freeValue(idx);
     return v;
@@ -502,18 +499,18 @@ inline void Array::push_front(Value value)
         n->size_left += 1;
         n = n->left;
     }
-    ++d->length;
+    ++len;
     insert(0, value);
 }
 
 inline Value Array::pop_back()
 {
     int idx = -1;
-    if (!d->length)
+    if (!len)
         return Value::undefinedValue();
 
-    --d->length;
-    SparseArrayNode *n = d->findNode(d->length);
+    --len;
+    SparseArrayNode *n = d->findNode(len);
     if (n) {
         idx = n->value;
         d->deleteNode(n);
@@ -525,7 +522,7 @@ inline Value Array::pop_back()
 
 inline void Array::push_back(Value value)
 {
-    insert(d->length, value);
+    insert(len, value);
 }
 
 
@@ -662,11 +659,11 @@ inline Array::iterator Array::upperBound(uint akey)
 
 inline void Array::concat(const Array &other)
 {
-    int newLen = d->length + other.d->length;
+    int newLen = len + other.len;
     for (const_iterator it = other.constBegin(); it != other.constEnd(); ++it) {
-        insert(d->length + it.key(), other.valueFromIndex(it.value()));
+        insert(len + it.key(), other.valueFromIndex(it.value()));
     }
-    d->length = newLen;
+    len = newLen;
 }
 
 inline void Array::sort(ExecutionContext *context, const Value &comparefn)

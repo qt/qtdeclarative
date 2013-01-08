@@ -412,7 +412,6 @@ void SparseArrayData::freeTree(SparseArrayNode *root, int alignment)
 
 SparseArrayData::SparseArrayData()
     : numEntries(0)
-    , length(0)
 {
     header.p = 0;
     header.left = 0;
@@ -422,8 +421,8 @@ SparseArrayData::SparseArrayData()
 
 Array::iterator Array::insert(uint akey, Value value)
 {
-    if (akey >= d->length)
-        d->length = akey + 1;
+    if (akey >= len)
+        len = akey + 1;
 
     SparseArrayNode *n = d->root();
     SparseArrayNode *y = d->end();
@@ -450,25 +449,6 @@ Array::iterator Array::insert(uint akey, Value value)
     return iterator(z);
 }
 
-bool Array::operator==(const Array &other) const
-{
-    if (numEntries() != other.numEntries())
-        return false;
-    if (d == other.d)
-        return true;
-
-    const_iterator it1 = begin();
-    const_iterator it2 = other.begin();
-
-    while (it1 != end()) {
-        if (it1.value() != it2.value() || it1.key() != it2.key())
-            return false;
-        ++it2;
-        ++it1;
-    }
-    return true;
-}
-
 void Array::setLength(uint l)
 {
     if (l == 0) {
@@ -479,14 +459,13 @@ void Array::setLength(uint l)
     iterator it = lowerBound(l);
     while (it != end())
         it = erase(it);
-    d->length = l;
+    len = l;
 }
 
 void Array::splice(double start, double deleteCount,
                           const QVector<Value> &/*items*/,
                           Array &/*other*/)
 {
-    const double len = length();
     if (start < 0)
         start = qMax(len + start, double(0));
     else if (start > len)
