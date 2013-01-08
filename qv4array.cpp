@@ -103,7 +103,7 @@ const SparseArrayNode *SparseArrayNode::previousNode() const
     return n;
 }
 
-SparseArrayNode *SparseArrayNode::copy(SparseArrayData *d) const
+SparseArrayNode *SparseArrayNode::copy(SparseArray *d) const
 {
     SparseArrayNode *n = d->createNode(size_left, value, 0, false);
     n->setColor(color());
@@ -129,7 +129,7 @@ SparseArrayNode *SparseArrayNode::copy(SparseArrayData *d) const
       / \          \
      a   b          a
 */
-void SparseArrayData::rotateLeft(SparseArrayNode *x)
+void SparseArray::rotateLeft(SparseArrayNode *x)
 {
     SparseArrayNode *&root = header.left;
     SparseArrayNode *y = x->right;
@@ -156,7 +156,7 @@ void SparseArrayData::rotateLeft(SparseArrayNode *x)
       / \            /
      a   b          b
 */
-void SparseArrayData::rotateRight(SparseArrayNode *x)
+void SparseArray::rotateRight(SparseArrayNode *x)
 {
     SparseArrayNode *&root = header.left;
     SparseArrayNode *y = x->left;
@@ -176,7 +176,7 @@ void SparseArrayData::rotateRight(SparseArrayNode *x)
 }
 
 
-void SparseArrayData::rebalance(SparseArrayNode *x)
+void SparseArray::rebalance(SparseArrayNode *x)
 {
     SparseArrayNode *&root = header.left;
     x->setColor(SparseArrayNode::Red);
@@ -218,7 +218,7 @@ void SparseArrayData::rebalance(SparseArrayNode *x)
     root->setColor(SparseArrayNode::Black);
 }
 
-void SparseArrayData::deleteNode(SparseArrayNode *z)
+void SparseArray::deleteNode(SparseArrayNode *z)
 {
     SparseArrayNode *&root = header.left;
     SparseArrayNode *y = z;
@@ -345,7 +345,7 @@ void SparseArrayData::deleteNode(SparseArrayNode *z)
     --numEntries;
 }
 
-void SparseArrayData::recalcMostLeftNode()
+void SparseArray::recalcMostLeftNode()
 {
     mostLeftNode = &header;
     while (mostLeftNode->left)
@@ -375,7 +375,7 @@ static inline void qMapDeallocate(SparseArrayNode *node, int alignment)
         ::free(node);
 }
 
-SparseArrayNode *SparseArrayData::createNode(uint sl, int value, SparseArrayNode *parent, bool left)
+SparseArrayNode *SparseArray::createNode(uint sl, int value, SparseArrayNode *parent, bool left)
 {
     SparseArrayNode *node = static_cast<SparseArrayNode *>(qMapAllocate(sizeof(SparseArrayNode), Q_ALIGNOF(SparseArrayNode)));
     Q_CHECK_PTR(node);
@@ -401,7 +401,7 @@ SparseArrayNode *SparseArrayData::createNode(uint sl, int value, SparseArrayNode
     return node;
 }
 
-void SparseArrayData::freeTree(SparseArrayNode *root, int alignment)
+void SparseArray::freeTree(SparseArrayNode *root, int alignment)
 {
     if (root->left)
         freeTree(root->left, alignment);
@@ -410,8 +410,10 @@ void SparseArrayData::freeTree(SparseArrayNode *root, int alignment)
     qMapDeallocate(root, alignment);
 }
 
-SparseArrayData::SparseArrayData()
+SparseArray::SparseArray()
     : numEntries(0)
+    , len(0)
+    , freeList(0)
 {
     header.p = 0;
     header.left = 0;
@@ -419,20 +421,20 @@ SparseArrayData::SparseArrayData()
     mostLeftNode = &header;
 }
 
-Array::iterator Array::insert(uint akey, Value value)
+SparseArrayNode *SparseArray::insert(uint akey, Value value)
 {
     if (akey >= len)
         len = akey + 1;
 
-    SparseArrayNode *n = d->root();
-    SparseArrayNode *y = d->end();
+    SparseArrayNode *n = root();
+    SparseArrayNode *y = end();
     bool  left = true;
     uint s = akey;
     while (n) {
         y = n;
         if (s == n->size_left) {
             values[n->value] = value;
-            return iterator(n);
+            return n;
         } else if (s < n->size_left) {
             left = true;
             n = n->left;
@@ -444,28 +446,25 @@ Array::iterator Array::insert(uint akey, Value value)
     }
 
     int idx = allocValue();
-    SparseArrayNode *z = d->createNode(s, idx, y, left);
+    SparseArrayNode *z = createNode(s, idx, y, left);
     values[idx] = value;
-    return iterator(z);
+    return z;
 }
 
-void Array::setLength(uint l)
+void SparseArray::setLength(uint l)
 {
-    if (l == 0) {
-        clear();
-        return;
-    }
-
-    iterator it = lowerBound(l);
+    SparseArrayNode *it = lowerBound(l);
     while (it != end())
         it = erase(it);
     len = l;
 }
 
 void Array::splice(double start, double deleteCount,
-                          const QVector<Value> &/*items*/,
-                          Array &/*other*/)
+                   const QVector<Value> &/*items*/,
+                   Array &/*other*/)
 {
+    init();
+    uint len = length();
     if (start < 0)
         start = qMax(len + start, double(0));
     else if (start > len)

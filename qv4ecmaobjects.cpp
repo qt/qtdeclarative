@@ -1552,7 +1552,7 @@ Value ArrayCtor::call(ExecutionContext *ctx)
         value.setLength(isize);
     } else {
         for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
-            value.insert(i, ctx->argument(i));
+            value.set(i, ctx->argument(i));
         }
     }
 
@@ -1604,7 +1604,7 @@ Value ArrayPrototype::method_concat(ExecutionContext *ctx)
         result = instance->array;
     else {
         QString v = ctx->thisObject.toString(ctx)->toQString();
-        result.insert(0, Value::fromString(ctx, v));
+        result.set(0, Value::fromString(ctx, v));
     }
 
     for (uint i = 0; i < ctx->argumentCount; ++i) {
@@ -1615,7 +1615,7 @@ Value ArrayPrototype::method_concat(ExecutionContext *ctx)
             result.concat(elt->array);
 
         else
-            result.insert(k, arg);
+            result.set(k, arg);
     }
 
     return Value::fromObject(ctx->engine->newArrayObject(result));
@@ -1731,8 +1731,8 @@ Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
 
     for (; lo < hi; ++lo, --hi) {
         Value tmp = instance->array.at(lo);
-        instance->array.insert(lo, instance->array.at(hi));
-        instance->array.insert(hi, tmp);
+        instance->array.set(lo, instance->array.at(hi));
+        instance->array.set(hi, tmp);
     }
     return Value::undefinedValue();
 }
@@ -1767,7 +1767,7 @@ Value ArrayPrototype::method_slice(ExecutionContext *ctx)
         String *r11 = Value::fromDouble(k).toString(ctx);
         Value v = self.property(ctx, r11);
         if (! v.isUndefined())
-            result.insert(n++, v);
+            result.set(n++, v);
     }
     return Value::fromObject(ctx->engine->newArrayObject(result));
 }
@@ -1839,9 +1839,8 @@ Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
     } else
         __qmljs_throw_type_error(ctx);
 
-    for (Array::ConstIterator it = instance->array.find(fromIndex), end = instance->array.constEnd();
-         it != end; ++it) {
-        if (__qmljs_strict_equal(instance->array.valueRefFromIndex(*it), searchValue))
+    for (Array::iterator it = instance->array.find(fromIndex), end = instance->array.end(); it != end; ++it) {
+        if (__qmljs_strict_equal(instance->array.at(*it), searchValue))
             return Value::fromInt32(it.key());
     }
 
@@ -1945,7 +1944,7 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
         args[1] = Value::fromDouble(k);
         args[2] = ctx->thisObject;
         Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
-        a->array.insert(k, r);
+        a->array.set(k, r);
     }
     return Value::fromObject(a);
 }
@@ -1971,7 +1970,7 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
         if (__qmljs_to_boolean(r, ctx)) {
             const uint index = a->array.length();
             a->array.setLength(index + 1);
-            a->array.insert(index, v);
+            a->array.set(index, v);
         }
     }
     return Value::fromObject(a);

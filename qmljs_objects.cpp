@@ -157,6 +157,7 @@ void Object::getCollectables(QVector<Object *> &objects)
                     objects.append(o);
         }
     }
+    array.getCollectables(objects);
 }
 
 // Section 8.12.1
@@ -441,17 +442,12 @@ bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContex
         const quint32 idx = index.toUInt32(ctx);
         Value v = array.at(idx);
         v = op(v, rhs, ctx);
-        array.insert(idx, v);
+        array.set(idx, v);
         return true;
     }
     return Object::inplaceBinOp(rhs, index, op, ctx);
 }
 
-void ArrayObject::getCollectables(QVector<Object *> &objects)
-{
-    Object::getCollectables(objects);
-    array.getCollectables(objects);
-}
 
 Function::~Function()
 {

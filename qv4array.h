@@ -54,7 +54,7 @@
 namespace QQmlJS {
 namespace VM {
 
-struct SparseArrayData;
+struct SparseArray;
 
 class ArrayElementLessThan
 {
@@ -102,7 +102,7 @@ struct SparseArrayNode
         return k;
     }
 
-    SparseArrayNode *copy(SparseArrayData *d) const;
+    SparseArrayNode *copy(SparseArray *d) const;
 
     SparseArrayNode *lowerBound(uint key);
     SparseArrayNode *upperBound(uint key);
@@ -144,13 +144,17 @@ inline SparseArrayNode *SparseArrayNode::upperBound(uint akey)
 
 
 
-struct Q_CORE_EXPORT SparseArrayData
+struct Q_CORE_EXPORT SparseArray
 {
-    SparseArrayData();
-    ~SparseArrayData() {
+    SparseArray();
+    ~SparseArray() {
         if (root())
             freeTree(header.left, Q_ALIGNOF(SparseArrayNode));
     }
+
+private:
+    SparseArray(const SparseArray &other);
+    SparseArray &operator=(const SparseArray &other);
 
     int numEntries;
     SparseArrayNode header;
@@ -161,43 +165,11 @@ struct Q_CORE_EXPORT SparseArrayData
     void rebalance(SparseArrayNode *x);
     void recalcMostLeftNode();
 
-    SparseArrayNode *createNode(uint sl, int value, SparseArrayNode *parent, bool left);
-    void freeTree(SparseArrayNode *root, int alignment);
-
     SparseArrayNode *root() const { return header.left; }
-
-    const SparseArrayNode *end() const { return &header; }
-    SparseArrayNode *end() { return &header; }
-    const SparseArrayNode *begin() const { if (root()) return mostLeftNode; return end(); }
-    SparseArrayNode *begin() { if (root()) return mostLeftNode; return end(); }
 
     void deleteNode( SparseArrayNode *z);
     SparseArrayNode *findNode(uint akey) const;
 
-};
-
-inline SparseArrayNode *SparseArrayData::findNode(uint akey) const
-{
-    SparseArrayNode *n = root();
-
-    while (n) {
-        if (akey == n->size_left) {
-            return n;
-        } else if (akey < n->size_left) {
-            n = n->left;
-        } else {
-            akey -= n->size_left;
-            n = n->right;
-        }
-    }
-
-    return 0;
-}
-
-
-class Array
-{
-    SparseArrayData *d;
     uint len;
 
     int allocValue() {
@@ -218,18 +190,11 @@ class Array
     int freeList;
 
 public:
-    inline Array() : d(new SparseArrayData), len(0), freeList(0) {}
-    inline ~Array() { delete d; }
+    SparseArrayNode *createNode(uint sl, int value, SparseArrayNode *parent, bool left);
+    void freeTree(SparseArrayNode *root, int alignment);
 
-    Array(const Array &other);
-    Array &operator=(const Array &other);
-
-    inline int numEntries() const { return d->numEntries; }
     inline uint length() const { return len; }
     void setLength(uint l);
-
-
-    void clear();
 
     bool remove(uint key);
     Value take(uint key);
@@ -255,21 +220,291 @@ public:
         return values[idx];
     }
 
-    class const_iterator;
+    const SparseArrayNode *end() const { return &header; }
+    SparseArrayNode *end() { return &header; }
+    const SparseArrayNode *begin() const { if (root()) return mostLeftNode; return end(); }
+    SparseArrayNode *begin() { if (root()) return mostLeftNode; return end(); }
 
-    class iterator
+    SparseArrayNode *erase(SparseArrayNode *n);
+
+    // more Qt
+    SparseArrayNode *find(uint key);
+    const SparseArrayNode *find(uint key) const;
+    const SparseArrayNode *constFind(uint key) const;
+    SparseArrayNode *lowerBound(uint key);
+    const SparseArrayNode *lowerBound(uint key) const;
+    SparseArrayNode *upperBound(uint key);
+    const SparseArrayNode *upperBound(uint key) const;
+    SparseArrayNode *insert(uint akey, Value at);
+
+    // STL compatibility
+    typedef uint key_type;
+    typedef int mapped_type;
+    typedef qptrdiff difference_type;
+    typedef int size_type;
+
+#ifdef Q_MAP_DEBUG
+    void dump() const;
+#endif
+
+    void getCollectables(QVector<Object *> &objects) const;
+};
+
+inline SparseArrayNode *SparseArray::findNode(uint akey) const
+{
+    SparseArrayNode *n = root();
+
+    while (n) {
+        if (akey == n->size_left) {
+            return n;
+        } else if (akey < n->size_left) {
+            n = n->left;
+        } else {
+            akey -= n->size_left;
+            n = n->right;
+        }
+    }
+
+    return 0;
+}
+
+inline Value SparseArray::at(uint akey) const
+{
+    SparseArrayNode *n = findNode(akey);
+    int idx = n ? n->value : -1;
+    return valueFromIndex(idx);
+}
+
+
+inline Value SparseArray::operator[](uint akey) const
+{
+    return at(akey);
+}
+
+
+inline Value &SparseArray::operator[](uint akey)
+{
+    SparseArrayNode *n = findNode(akey);
+    if (!n)
+        n = insert(akey, Value::undefinedValue());
+    return valueRefFromIndex(n->value);
+}
+
+inline Value SparseArray::pop_front()
+{
+    int idx = -1 ;
+    if (!len)
+        return Value::undefinedValue();
+
+    SparseArrayNode *n = findNode(0);
+    if (n) {
+        idx = n->value;
+        deleteNode(n);
+        // adjust all size_left indices on the path to leftmost item by 1
+        SparseArrayNode *n = root();
+        while (n) {
+            n->size_left -= 1;
+            n = n->left;
+        }
+    }
+    --len;
+    Value v = valueFromIndex(idx);
+    freeValue(idx);
+    return v;
+}
+
+inline void SparseArray::push_front(Value value)
+{
+    // adjust all size_left indices on the path to leftmost item by 1
+    SparseArrayNode *n = root();
+    while (n) {
+        n->size_left += 1;
+        n = n->left;
+    }
+    ++len;
+    insert(0, value);
+}
+
+inline Value SparseArray::pop_back()
+{
+    int idx = -1;
+    if (!len)
+        return Value::undefinedValue();
+
+    --len;
+    SparseArrayNode *n = findNode(len);
+    if (n) {
+        idx = n->value;
+        deleteNode(n);
+    }
+    Value v = valueFromIndex(idx);
+    freeValue(idx);
+    return v;
+}
+
+inline void SparseArray::push_back(Value value)
+{
+    insert(len, value);
+}
+
+
+inline bool SparseArray::contains(uint akey) const
+{
+    return findNode(akey) != 0;
+}
+
+
+inline const SparseArrayNode *SparseArray::constFind(uint akey) const
+{
+    SparseArrayNode *n = findNode(akey);
+    return n ? n : end();
+}
+
+
+inline const SparseArrayNode *SparseArray::find(uint akey) const
+{
+    return constFind(akey);
+}
+
+
+inline SparseArrayNode *SparseArray::find(uint akey)
+{
+    SparseArrayNode *n = findNode(akey);
+    return n ? n : end();
+}
+
+#ifdef Q_MAP_DEBUG
+
+void SparseArray::dump() const
+{
+    const_iterator it = begin();
+    qDebug() << "map dump:";
+    while (it != end()) {
+        const SparseArrayNode *n = it.i;
+        int depth = 0;
+        while (n && n != root()) {
+            ++depth;
+            n = n->parent();
+        }
+        QByteArray space(4*depth, ' ');
+        qDebug() << space << (it.i->color() == SparseArrayNode::Red ? "Red  " : "Black") << it.i << it.i->left << it.i->right
+                 << it.key() << it.value();
+        ++it;
+    }
+    qDebug() << "---------";
+}
+#endif
+
+
+inline bool SparseArray::remove(uint akey)
+{
+    SparseArrayNode *node = findNode(akey);
+    if (node) {
+        deleteNode(node);
+        return true;
+    }
+    return false;
+}
+
+
+inline Value SparseArray::take(uint akey)
+{
+    SparseArrayNode *node = findNode(akey);
+    int t;
+    if (node) {
+        t = node->value;
+        deleteNode(node);
+    } else {
+        t = -1;
+    }
+    return valueFromIndex(t);
+}
+
+
+inline SparseArrayNode *SparseArray::erase(SparseArrayNode *n)
+{
+    if (n == end())
+        return n;
+
+    SparseArrayNode *next = n->nextNode();
+    deleteNode(n);
+    return next;
+}
+
+inline QList<int> SparseArray::keys() const
+{
+    QList<int> res;
+    res.reserve(numEntries);
+    SparseArrayNode *n = mostLeftNode;
+    while (n != end()) {
+        res.append(n->key());
+        n = n->nextNode();
+    }
+    return res;
+}
+
+inline const SparseArrayNode *SparseArray::lowerBound(uint akey) const
+{
+    const SparseArrayNode *lb = root()->lowerBound(akey);
+    if (!lb)
+        lb = end();
+    return lb;
+}
+
+
+inline SparseArrayNode *SparseArray::lowerBound(uint akey)
+{
+    SparseArrayNode *lb = root()->lowerBound(akey);
+    if (!lb)
+        lb = end();
+    return lb;
+}
+
+
+inline const SparseArrayNode *SparseArray::upperBound(uint akey) const
+{
+    const SparseArrayNode *ub = root()->upperBound(akey);
+    if (!ub)
+        ub = end();
+    return ub;
+}
+
+
+inline SparseArrayNode *SparseArray::upperBound(uint akey)
+{
+    SparseArrayNode *ub = root()->upperBound(akey);
+    if (!ub)
+        ub = end();
+    return ub;
+}
+
+inline void SparseArray::getCollectables(QVector<Object *> &objects) const
+{
+    for (const SparseArrayNode *it = begin(), *eit = end(); it != eit; it = it->nextNode()) {
+        if (Object *o = valueFromIndex(it->value).asObject())
+            objects.append(o);
+    }
+}
+
+class Array
+{
+    SparseArray *d;
+
+public:
+    Array() : d(0) {}
+    ~Array() { delete d; }
+    void init() { if (!d) d = new SparseArray; }
+
+    uint length() const { return d ? d->length() : 0; }
+    void setLength(uint l) {
+        init();
+        d->setLength(l);
+    }
+
+    struct iterator
     {
-        friend class const_iterator;
         SparseArrayNode *i;
 
-    public:
-        typedef std::bidirectional_iterator_tag iterator_category;
-        typedef qptrdiff difference_type;
-        typedef int value_type;
-        typedef int *pointer;
-        typedef int &reference;
-
-        inline iterator() : i(0) { }
         inline iterator( SparseArrayNode *node) : i(node) { }
 
         inline uint key() const { return i->key(); }
@@ -303,382 +538,77 @@ public:
         inline iterator &operator+=(int j) { return *this = *this + j; }
         inline iterator &operator-=(int j) { return *this = *this - j; }
 
-#ifndef QT_STRICT_ITERATORS
-    public:
-        inline bool operator==(const const_iterator &o) const
-            { return i == o.i; }
-        inline bool operator!=(const const_iterator &o) const
-            { return i != o.i; }
-#endif
-        friend class Array;
+        friend class SparseArray;
     };
-    friend class iterator;
 
-    class const_iterator
-    {
-        friend class iterator;
-        const SparseArrayNode *i;
+    iterator begin() const {
+        return iterator(d ? d->begin() : 0);
+    }
+    iterator end() const {
+        return iterator(d ? d->end() : 0);
+    }
 
-    public:
-        typedef std::bidirectional_iterator_tag iterator_category;
-        typedef qptrdiff difference_type;
-        typedef int value_type;
-        typedef const int *pointer;
-        typedef int reference;
+    iterator find(uint index) const {
+        return iterator(d ? d->find(index) : 0);
+    }
 
-        inline const_iterator() : i(0) { }
-        inline const_iterator(const SparseArrayNode *node) : i(node) { }
-#ifdef QT_STRICT_ITERATORS
-        explicit inline const_iterator(const iterator &o)
-#else
-        inline const_iterator(const iterator &o)
-#endif
-        { i = o.i; }
+    void set(uint index, Value value) {
+        init();
+        (*d)[index] = value;
+    }
+    Value at(uint index) const {
+        return d ? d->at(index) : Value::undefinedValue();
+    }
+    Value at(iterator it) const {
+        return it.i ? d->valueFromIndex(*it) : Value::undefinedValue();
+    }
 
-        inline uint key() const { return i->key(); }
-        inline int value() const { return i->value; }
-        inline int operator*() const { return i->value; }
-        inline const int *operator->() const { return &i->value; }
-        inline bool operator==(const const_iterator &o) const { return i == o.i; }
-        inline bool operator!=(const const_iterator &o) const { return i != o.i; }
+    void getCollectables(QVector<Object *> &objects) const {
+        if (d)
+            d->getCollectables(objects);
+    }
 
-        inline const_iterator &operator++() {
-            i = i->nextNode();
-            return *this;
-        }
-        inline const_iterator operator++(int) {
-            const_iterator r = *this;
-            i = i->nextNode();
-            return r;
-        }
-        inline const_iterator &operator--() {
-            i = i->previousNode();
-            return *this;
-        }
-        inline const_iterator operator--(int) {
-            const_iterator r = *this;
-            i = i->previousNode();
-            return r;
-        }
-        inline const_iterator operator+(int j) const
-        { const_iterator r = *this; if (j > 0) while (j--) ++r; else while (j++) --r; return r; }
-        inline const_iterator operator-(int j) const { return operator+(-j); }
-        inline const_iterator &operator+=(int j) { return *this = *this + j; }
-        inline const_iterator &operator-=(int j) { return *this = *this - j; }
-
-#ifdef QT_STRICT_ITERATORS
-    private:
-        inline bool operator==(const iterator &o) const { return operator==(const_iterator(o)); }
-        inline bool operator!=(const iterator &o) const { return operator!=(const_iterator(o)); }
-#endif
-        friend class Array;
-    };
-    friend class const_iterator;
-
-    // STL style
-    inline iterator begin() { return iterator(d->begin()); }
-    inline const_iterator begin() const { return const_iterator(d->begin()); }
-    inline const_iterator constBegin() const { return const_iterator(d->begin()); }
-    inline const_iterator cbegin() const { return const_iterator(d->begin()); }
-    inline iterator end() { return iterator(d->end()); }
-    inline const_iterator end() const { return const_iterator(d->end()); }
-    inline const_iterator constEnd() const { return const_iterator(d->end()); }
-    inline const_iterator cend() const { return const_iterator(d->end()); }
-    iterator erase(iterator it);
-
-    // more Qt
-    typedef iterator Iterator;
-    typedef const_iterator ConstIterator;
-    iterator find(uint key);
-    const_iterator find(uint key) const;
-    const_iterator constFind(uint key) const;
-    iterator lowerBound(uint key);
-    const_iterator lowerBound(uint key) const;
-    iterator upperBound(uint key);
-    const_iterator upperBound(uint key) const;
-    iterator insert(uint akey, Value at);
-
-    // STL compatibility
-    typedef uint key_type;
-    typedef int mapped_type;
-    typedef qptrdiff difference_type;
-    typedef int size_type;
-
-#ifdef Q_MAP_DEBUG
-    void dump() const;
-#endif
+    void push_front(Value v) {
+        init();
+        d->push_front(v);
+    }
+    Value pop_front() {
+        init();
+        return d->pop_front();
+    }
+    void push_back(Value v) {
+        init();
+        d->push_back(v);
+    }
+    Value pop_back() {
+        init();
+        return d->pop_back();
+    }
 
     void concat(const Array &other);
     void sort(ExecutionContext *context, const Value &comparefn);
-    void getCollectables(QVector<Object *> &objects) const;
     void splice(double start, double deleteCount, const QVector<Value> &, Array &);
 };
 
-
-inline Array::Array(const Array &other)
-{
-    d = 0;
-    *this = other;
-}
-
-
-inline Array &Array::operator=(const Array &other)
-{
-    if (this != &other) {
-        if (d)
-            delete d;
-        d = new SparseArrayData;
-        if (other.d->header.left) {
-            d->header.left = other.d->header.left->copy(d);
-            d->header.left->setParent(&d->header);
-            d->recalcMostLeftNode();
-            len = other.len;
-        }
-    }
-    return *this;
-}
-
-
-inline void Array::clear()
-{
-    *this = Array();
-}
-
-
-
-inline Value Array::at(uint akey) const
-{
-    SparseArrayNode *n = d->findNode(akey);
-    int idx = n ? n->value : -1;
-    return valueFromIndex(idx);
-}
-
-
-inline Value Array::operator[](uint akey) const
-{
-    return at(akey);
-}
-
-
-inline Value &Array::operator[](uint akey)
-{
-    SparseArrayNode *n = d->findNode(akey);
-    if (!n)
-        n = insert(akey, Value::undefinedValue()).i;
-    return valueRefFromIndex(n->value);
-}
-
-inline Value Array::pop_front()
-{
-    int idx = -1 ;
-    if (!len)
-        return Value::undefinedValue();
-
-    SparseArrayNode *n = d->findNode(0);
-    if (n) {
-        idx = n->value;
-        d->deleteNode(n);
-        // adjust all size_left indices on the path to leftmost item by 1
-        SparseArrayNode *n = d->root();
-        while (n) {
-            n->size_left -= 1;
-            n = n->left;
-        }
-    }
-    --len;
-    Value v = valueFromIndex(idx);
-    freeValue(idx);
-    return v;
-}
-
-inline void Array::push_front(Value value)
-{
-    // adjust all size_left indices on the path to leftmost item by 1
-    SparseArrayNode *n = d->root();
-    while (n) {
-        n->size_left += 1;
-        n = n->left;
-    }
-    ++len;
-    insert(0, value);
-}
-
-inline Value Array::pop_back()
-{
-    int idx = -1;
-    if (!len)
-        return Value::undefinedValue();
-
-    --len;
-    SparseArrayNode *n = d->findNode(len);
-    if (n) {
-        idx = n->value;
-        d->deleteNode(n);
-    }
-    Value v = valueFromIndex(idx);
-    freeValue(idx);
-    return v;
-}
-
-inline void Array::push_back(Value value)
-{
-    insert(len, value);
-}
-
-
-inline bool Array::contains(uint akey) const
-{
-    return d->findNode(akey) != 0;
-}
-
-
-inline Array::const_iterator Array::constFind(uint akey) const
-{
-    SparseArrayNode *n = d->findNode(akey);
-    return const_iterator(n ? n : d->end());
-}
-
-
-inline Array::const_iterator Array::find(uint akey) const
-{
-    return constFind(akey);
-}
-
-
-inline Array::iterator Array::find(uint akey)
-{
-    SparseArrayNode *n = d->findNode(akey);
-    return iterator(n ? n : d->end());
-}
-
-#ifdef Q_MAP_DEBUG
-
-void SparseArray::dump() const
-{
-    const_iterator it = begin();
-    qDebug() << "map dump:";
-    while (it != end()) {
-        const SparseArrayNode *n = it.i;
-        int depth = 0;
-        while (n && n != d->root()) {
-            ++depth;
-            n = n->parent();
-        }
-        QByteArray space(4*depth, ' ');
-        qDebug() << space << (it.i->color() == SparseArrayNode::Red ? "Red  " : "Black") << it.i << it.i->left << it.i->right
-                 << it.key() << it.value();
-        ++it;
-    }
-    qDebug() << "---------";
-}
-#endif
-
-
-inline bool Array::remove(uint akey)
-{
-    SparseArrayNode *node = d->findNode(akey);
-    if (node) {
-        d->deleteNode(node);
-        return true;
-    }
-    return false;
-}
-
-
-inline Value Array::take(uint akey)
-{
-    SparseArrayNode *node = d->findNode(akey);
-    int t;
-    if (node) {
-        t = node->value;
-        d->deleteNode(node);
-    } else {
-        t = -1;
-    }
-    return valueFromIndex(t);
-}
-
-
-inline Array::iterator Array::erase(iterator it)
-{
-    if (it == iterator(d->end()))
-        return it;
-
-    SparseArrayNode *n = it.i;
-    ++it;
-    d->deleteNode(n);
-    return it;
-}
-
-inline QList<int> Array::keys() const
-{
-    QList<int> res;
-    res.reserve(numEntries());
-    const_iterator i = begin();
-    while (i != end()) {
-        res.append(i.key());
-        ++i;
-    }
-    return res;
-}
-
-inline Array::const_iterator Array::lowerBound(uint akey) const
-{
-    SparseArrayNode *lb = d->root()->lowerBound(akey);
-    if (!lb)
-        lb = d->end();
-    return const_iterator(lb);
-}
-
-
-inline Array::iterator Array::lowerBound(uint akey)
-{
-    SparseArrayNode *lb = d->root()->lowerBound(akey);
-    if (!lb)
-        lb = d->end();
-    return iterator(lb);
-}
-
-
-inline Array::const_iterator Array::upperBound(uint akey) const
-{
-    SparseArrayNode *ub = d->root()->upperBound(akey);
-    if (!ub)
-        ub = d->end();
-    return const_iterator(ub);
-}
-
-
-inline Array::iterator Array::upperBound(uint akey)
-{
-    SparseArrayNode *ub = d->root()->upperBound(akey);
-    if (!ub)
-        ub = d->end();
-    return iterator(ub);
-}
-
 inline void Array::concat(const Array &other)
 {
-    int newLen = len + other.len;
-    for (const_iterator it = other.constBegin(); it != other.constEnd(); ++it) {
-        insert(len + it.key(), other.valueFromIndex(it.value()));
+    init();
+    int len = length();
+    int newLen = len + other.length();
+    for (const SparseArrayNode *it = other.d->begin(); it != other.d->end(); it = it->nextNode()) {
+        set(len + it->key(), other.d->valueFromIndex(it->value));
     }
-    len = newLen;
+    setLength(newLen);
 }
 
 inline void Array::sort(ExecutionContext *context, const Value &comparefn)
 {
+    if (!d)
+        return;
+
     ArrayElementLessThan lessThan(context, comparefn);
     // ###
     //std::sort(to_vector.begin(), to_vector.end(), lessThan);
-}
-
-inline void Array::getCollectables(QVector<Object *> &objects) const
-{
-    for (const_iterator it = constBegin(), eit = constEnd(); it != eit; ++it) {
-        if (Object *o = valueFromIndex(*it).asObject())
-            objects.append(o);
-    }
 }
 
 

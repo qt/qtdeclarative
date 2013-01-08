@@ -170,19 +170,17 @@ Value __qmljs_string_literal_function(ExecutionContext *ctx)
 Value __qmljs_delete_subscript(ExecutionContext *ctx, Value base, Value index)
 {
     if (ArrayObject *a = base.asArrayObject()) {
-        int n = -1;
+        uint n = UINT_MAX;
         if (index.isInteger())
             n = index.integerValue();
         else if (index.isDouble())
             n = index.doubleValue();
-        if (n >= 0) {
-            if (n < (int) a->array.length()) {
-                // ### check writable/deletable property
-                Array::Iterator it = a->array.find(n);
-                if (it != a->array.end())
-                    a->array.valueRefFromIndex(*it) = Value::undefinedValue();
-                return Value::fromBoolean(true);
-            }
+        if (n < a->array.length()) {
+            // ### check writable/deletable property
+            Array::iterator it = a->array.find(n);
+            if (it != a->array.end())
+                a->array.set(n, Value::undefinedValue());
+            return Value::fromBoolean(true);
         }
     }
 
@@ -588,7 +586,7 @@ void __qmljs_set_element(ExecutionContext *ctx, Value object, Value index, Value
 {
     if (index.isNumber()) {
         if (ArrayObject *a = object.asArrayObject()) {
-            a->array.insert(index.toUInt32(ctx), value);
+            a->array.set(index.toUInt32(ctx), value);
             return;
         }
     }

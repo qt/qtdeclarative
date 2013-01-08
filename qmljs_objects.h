@@ -201,9 +201,6 @@ struct ArrayObject: Object {
     virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty);
 
     virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
-
-protected:
-    virtual void getCollectables(QVector<Object *> &objects);
 };
 
 struct Function {
