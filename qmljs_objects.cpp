@@ -74,7 +74,7 @@ void Object::__put__(ExecutionContext *ctx, const QString &name, const Value &va
     __put__(ctx, ctx->engine->identifier(name), value);
 }
 
-Value Object::getValue(ExecutionContext *ctx, PropertyDescriptor *p) const
+Value Object::getValue(ExecutionContext *ctx, const PropertyDescriptor *p) const
 {
     if (p->isData())
         return p->value;
@@ -82,6 +82,26 @@ Value Object::getValue(ExecutionContext *ctx, PropertyDescriptor *p) const
         return Value::undefinedValue();
 
     return p->get->call(ctx, Value::fromObject(const_cast<Object *>(this)), 0, 0);
+}
+
+Value Object::getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p) const
+{
+    if (!p || p->type == PropertyDescriptor::Generic)
+        return Value::undefinedValue();
+    return getValue(ctx, p);
+}
+
+Value Object::getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const
+{
+    *exists = p && p->type != PropertyDescriptor::Generic;
+    if (!*exists)
+        return Value::undefinedValue();
+    return getValue(ctx, p);
+}
+
+Value Object::getElement(ExecutionContext *ctx, uint index) const
+{
+    return getValueChecked(ctx, array.at(index));
 }
 
 bool Object::inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx)
@@ -440,7 +460,7 @@ bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContex
 {
     if (index.isNumber()) {
         const quint32 idx = index.toUInt32(ctx);
-        Value v = array.at(idx);
+        Value v = getElement(ctx, idx);
         v = op(v, rhs, ctx);
         array.set(idx, v);
         return true;

@@ -44,6 +44,8 @@
 
 #include <QtCore/qmap.h>
 #include <qmljs_value.h>
+#include <qv4propertydescriptor.h>
+#include <assert.h>
 
 #ifdef Q_MAP_DEBUG
 #include <QtCore/qdebug.h>
@@ -59,13 +61,14 @@ struct SparseArray;
 class ArrayElementLessThan
 {
 public:
-    inline ArrayElementLessThan(ExecutionContext *context, const Value &comparefn)
-        : m_context(context), m_comparefn(comparefn) {}
+    inline ArrayElementLessThan(ExecutionContext *context, Object *thisObject, const Value &comparefn)
+        : m_context(context), thisObject(thisObject), m_comparefn(comparefn) {}
 
-    bool operator()(const Value &v1, const Value &v2) const;
+    bool operator()(const PropertyDescriptor &v1, const PropertyDescriptor &v2) const;
 
 private:
     ExecutionContext *m_context;
+    Object *thisObject;
     Value m_comparefn;
 };
 
@@ -76,7 +79,7 @@ struct SparseArrayNode
     SparseArrayNode *left;
     SparseArrayNode *right;
     uint size_left;
-    int value;
+    uint value;
 
     enum Color { Red = 0, Black = 1 };
     enum { Mask = 3 }; // reserve the second bit as well
@@ -152,8 +155,8 @@ struct Q_CORE_EXPORT SparseArray
             freeTree(header.left, Q_ALIGNOF(SparseArrayNode));
     }
 
-private:
     SparseArray(const SparseArray &other);
+private:
     SparseArray &operator=(const SparseArray &other);
 
     int numEntries;
@@ -167,58 +170,21 @@ private:
 
     SparseArrayNode *root() const { return header.left; }
 
-    void deleteNode( SparseArrayNode *z);
-    SparseArrayNode *findNode(uint akey) const;
+    void deleteNode(SparseArrayNode *z);
 
-    uint len;
-
-    int allocValue() {
-        int idx = freeList;
-        if (values.size() <= freeList)
-            values.resize(++freeList);
-        else
-            freeList = values.at(freeList).integerValue();
-
-        return idx;
-    }
-    void freeValue(int idx) {
-        values[idx] = Value::fromInt32(freeList);
-        freeList = idx;
-    }
-
-    QVector<Value> values;
-    int freeList;
 
 public:
-    SparseArrayNode *createNode(uint sl, int value, SparseArrayNode *parent, bool left);
+    SparseArrayNode *createNode(uint sl, SparseArrayNode *parent, bool left);
     void freeTree(SparseArrayNode *root, int alignment);
 
-    inline uint length() const { return len; }
-    void setLength(uint l);
+    SparseArrayNode *findNode(uint akey) const;
 
-    bool remove(uint key);
-    Value take(uint key);
-
-    bool contains(uint key) const;
-    Value at(uint key) const;
-    Value &operator[](uint key);
-    Value operator[](uint key) const;
-
-    Value pop_front();
-    void push_front(Value at);
-    Value pop_back();
-    void push_back(Value at);
+    uint pop_front();
+    void push_front(uint at);
+    uint pop_back(uint len);
+    void push_back(uint at, uint len);
 
     QList<int> keys() const;
-
-    Value valueFromIndex(int idx) const {
-        if (idx == -1)
-            return Value::undefinedValue();
-        return values.at(idx);
-    }
-    Value &valueRefFromIndex(int idx) {
-        return values[idx];
-    }
 
     const SparseArrayNode *end() const { return &header; }
     SparseArrayNode *end() { return &header; }
@@ -227,15 +193,11 @@ public:
 
     SparseArrayNode *erase(SparseArrayNode *n);
 
-    // more Qt
-    SparseArrayNode *find(uint key);
-    const SparseArrayNode *find(uint key) const;
-    const SparseArrayNode *constFind(uint key) const;
     SparseArrayNode *lowerBound(uint key);
     const SparseArrayNode *lowerBound(uint key) const;
     SparseArrayNode *upperBound(uint key);
     const SparseArrayNode *upperBound(uint key) const;
-    SparseArrayNode *insert(uint akey, Value at);
+    SparseArrayNode *insert(uint akey);
 
     // STL compatibility
     typedef uint key_type;
@@ -246,8 +208,6 @@ public:
 #ifdef Q_MAP_DEBUG
     void dump() const;
 #endif
-
-    void getCollectables(QVector<Object *> &objects) const;
 };
 
 inline SparseArrayNode *SparseArray::findNode(uint akey) const
@@ -268,33 +228,9 @@ inline SparseArrayNode *SparseArray::findNode(uint akey) const
     return 0;
 }
 
-inline Value SparseArray::at(uint akey) const
+inline uint SparseArray::pop_front()
 {
-    SparseArrayNode *n = findNode(akey);
-    int idx = n ? n->value : -1;
-    return valueFromIndex(idx);
-}
-
-
-inline Value SparseArray::operator[](uint akey) const
-{
-    return at(akey);
-}
-
-
-inline Value &SparseArray::operator[](uint akey)
-{
-    SparseArrayNode *n = findNode(akey);
-    if (!n)
-        n = insert(akey, Value::undefinedValue());
-    return valueRefFromIndex(n->value);
-}
-
-inline Value SparseArray::pop_front()
-{
-    int idx = -1 ;
-    if (!len)
-        return Value::undefinedValue();
+    uint idx = UINT_MAX ;
 
     SparseArrayNode *n = findNode(0);
     if (n) {
@@ -307,13 +243,10 @@ inline Value SparseArray::pop_front()
             n = n->left;
         }
     }
-    --len;
-    Value v = valueFromIndex(idx);
-    freeValue(idx);
-    return v;
+    return idx;
 }
 
-inline void SparseArray::push_front(Value value)
+inline void SparseArray::push_front(uint value)
 {
     // adjust all size_left indices on the path to leftmost item by 1
     SparseArrayNode *n = root();
@@ -321,56 +254,28 @@ inline void SparseArray::push_front(Value value)
         n->size_left += 1;
         n = n->left;
     }
-    ++len;
-    insert(0, value);
+    n = insert(0);
+    n->value = value;
 }
 
-inline Value SparseArray::pop_back()
+inline uint SparseArray::pop_back(uint len)
 {
-    int idx = -1;
+    uint idx = UINT_MAX;
     if (!len)
-        return Value::undefinedValue();
+        return idx;
 
-    --len;
-    SparseArrayNode *n = findNode(len);
+    SparseArrayNode *n = findNode(len - 1);
     if (n) {
         idx = n->value;
         deleteNode(n);
     }
-    Value v = valueFromIndex(idx);
-    freeValue(idx);
-    return v;
+    return idx;
 }
 
-inline void SparseArray::push_back(Value value)
+inline void SparseArray::push_back(uint index, uint len)
 {
-    insert(len, value);
-}
-
-
-inline bool SparseArray::contains(uint akey) const
-{
-    return findNode(akey) != 0;
-}
-
-
-inline const SparseArrayNode *SparseArray::constFind(uint akey) const
-{
-    SparseArrayNode *n = findNode(akey);
-    return n ? n : end();
-}
-
-
-inline const SparseArrayNode *SparseArray::find(uint akey) const
-{
-    return constFind(akey);
-}
-
-
-inline SparseArrayNode *SparseArray::find(uint akey)
-{
-    SparseArrayNode *n = findNode(akey);
-    return n ? n : end();
+    SparseArrayNode *n = insert(len);
+    n->value = index;
 }
 
 #ifdef Q_MAP_DEBUG
@@ -394,31 +299,6 @@ void SparseArray::dump() const
     qDebug() << "---------";
 }
 #endif
-
-
-inline bool SparseArray::remove(uint akey)
-{
-    SparseArrayNode *node = findNode(akey);
-    if (node) {
-        deleteNode(node);
-        return true;
-    }
-    return false;
-}
-
-
-inline Value SparseArray::take(uint akey)
-{
-    SparseArrayNode *node = findNode(akey);
-    int t;
-    if (node) {
-        t = node->value;
-        deleteNode(node);
-    } else {
-        t = -1;
-    }
-    return valueFromIndex(t);
-}
 
 
 inline SparseArrayNode *SparseArray::erase(SparseArrayNode *n)
@@ -478,139 +358,324 @@ inline SparseArrayNode *SparseArray::upperBound(uint akey)
     return ub;
 }
 
-inline void SparseArray::getCollectables(QVector<Object *> &objects) const
-{
-    for (const SparseArrayNode *it = begin(), *eit = end(); it != eit; it = it->nextNode()) {
-        if (Object *o = valueFromIndex(it->value).asObject())
-            objects.append(o);
-    }
-}
 
 class Array
 {
-    SparseArray *d;
+    uint len;
+    union {
+        uint freeList;
+        uint offset;
+    };
+    QVector<PropertyDescriptor> values;
+    SparseArray *sparse;
 
-public:
-    Array() : d(0) {}
-    ~Array() { delete d; }
-    void init() { if (!d) d = new SparseArray; }
-
-    uint length() const { return d ? d->length() : 0; }
-    void setLength(uint l) {
-        init();
-        d->setLength(l);
+    void fillDescriptor(PropertyDescriptor *pd, Value v)
+    {
+        pd->type = PropertyDescriptor::Data;
+        pd->writable = PropertyDescriptor::Enabled;
+        pd->enumberable = PropertyDescriptor::Enabled;
+        pd->configurable = PropertyDescriptor::Enabled;
+        pd->value = v;
     }
 
-    struct iterator
-    {
-        SparseArrayNode *i;
+    uint allocValue() {
+        uint idx = freeList;
+        if (values.size() <= (int)freeList)
+            values.resize(++freeList);
+        else
+            freeList = values.at(freeList).value.integerValue();
+        return idx;
+    }
 
-        inline iterator( SparseArrayNode *node) : i(node) { }
+    uint allocValue(Value v) {
+        uint idx = allocValue();
+        PropertyDescriptor *pd = &values[idx];
+        fillDescriptor(pd, v);
+        return idx;
+    }
+    void freeValue(int idx) {
+        PropertyDescriptor &pd = values[idx];
+        pd.type = PropertyDescriptor::Generic;
+        pd.value.tag = Value::_Undefined_Type;
+        pd.value.int_32 = freeList;
+        freeList = idx;
+    }
+
+    PropertyDescriptor *descriptor(uint index) {
+        PropertyDescriptor *pd = values.data() + index;
+        if (!sparse)
+            pd += offset;
+        return pd;
+    }
+    const PropertyDescriptor *descriptor(uint index) const {
+        const PropertyDescriptor *pd = values.data() + index;
+        if (!sparse)
+            pd += offset;
+        return pd;
+    }
+
+    void getHeadRoom() {
+        assert(!sparse && !offset);
+        offset = qMax(values.size() >> 2, 16);
+        QVector<PropertyDescriptor> newValues(values.size() + offset);
+        memcpy(newValues.data() + offset, values.data(), values.size()*sizeof(PropertyDescriptor));
+        values = newValues;
+    }
+
+public:
+    Array() : len(0), offset(0), sparse(0) {}
+    Array(const Array &other);
+    ~Array() { delete sparse; }
+    void initSparse();
+
+    uint length() const { return len; }
+    void setLength(uint l) {
+        len = l;
+        if (len > 0x100000)
+            initSparse();
+        if (sparse) {
+            SparseArrayNode *it = sparse->lowerBound(l);
+            while (it != sparse->end()) {
+                PropertyDescriptor &pd = values[it->value];
+                pd.type = PropertyDescriptor::Generic;
+                pd.value.tag = Value::_Undefined_Type;
+                pd.value.int_32 = freeList;
+                freeList = it->value;
+                it = sparse->erase(it);
+            }
+        } else if (values.size() > (int)len){
+            values.resize(len);
+        }
+    }
+
+#if 0
+    struct sparse_iterator
+    {
+        Array *array;
+        SparseArrayNode *i;
+        PropertyDescriptor *pd;
+
+        inline sparse_iterator(SparseArrayNode *node) : i(node), pd(0) { }
 
         inline uint key() const { return i->key(); }
-        inline int &value() const { return i->value; }
-        inline int &operator*() const { return i->value; }
-        inline int *operator->() const { return &i->value; }
-        inline bool operator==(const iterator &o) const { return i == o.i; }
-        inline bool operator!=(const iterator &o) const { return i != o.i; }
+        inline uint &value() const { return i->value; }
+        inline uint &operator*() const { return i->value; }
+        inline uint *operator->() const { return &i->value; }
+        inline bool operator==(const sparse_iterator &o) const { return i == o.i; }
+        inline bool operator!=(const sparse_iterator &o) const { return i != o.i; }
 
-        inline iterator &operator++() {
+        inline sparse_iterator &operator++() {
             i = i->nextNode();
             return *this;
         }
-        inline iterator operator++(int) {
-            iterator r = *this;
+        inline sparse_iterator operator++(int) {
+            sparse_iterator r = *this;
             i = i->nextNode();
             return r;
         }
-        inline iterator &operator--() {
+        inline sparse_iterator &operator--() {
             i = i->previousNode();
             return *this;
         }
-        inline iterator operator--(int) {
-            iterator r = *this;
+        inline sparse_iterator operator--(int) {
+            sparse_iterator r = *this;
             i = i->previousNode();
             return r;
         }
-        inline iterator operator+(int j) const
-        { iterator r = *this; if (j > 0) while (j--) ++r; else while (j++) --r; return r; }
-        inline iterator operator-(int j) const { return operator+(-j); }
-        inline iterator &operator+=(int j) { return *this = *this + j; }
-        inline iterator &operator-=(int j) { return *this = *this - j; }
+        inline sparse_iterator operator+(int j) const
+        { sparse_iterator r = *this; if (j > 0) while (j--) ++r; else while (j++) --r; return r; }
+        inline sparse_iterator operator-(int j) const { return operator+(-j); }
+        inline sparse_iterator &operator+=(int j) { return *this = *this + j; }
+        inline sparse_iterator &operator-=(int j) { return *this = *this - j; }
 
         friend class SparseArray;
     };
 
-    iterator begin() const {
-        return iterator(d ? d->begin() : 0);
+    sparse_iterator begin() const {
+        return sparse_iterator(sparse ? sparse->begin() : 0);
     }
-    iterator end() const {
-        return iterator(d ? d->end() : 0);
-    }
-
-    iterator find(uint index) const {
-        return iterator(d ? d->find(index) : 0);
+    sparse_iterator end() const {
+        return sparse_iterator(sparse ? sparse->end() : 0);
     }
 
+    sparse_iterator find(uint index) const {
+        return sparse_iterator(sparse ? sparse->find(index) : 0);
+    }
+
+    PropertyDescriptor *at(sparse_iterator it) const {
+        return it.i ? descriptor(*it) : 0;
+    }
+#endif
+
+    void set(uint index, const PropertyDescriptor *pd) {
+        if (!sparse && (index < 0x1000 || index < len + (len >> 2))) {
+            if (index + offset >= (uint)values.size()) {
+                values.resize(offset + index + 1);
+                for (uint i = len + 1; i < index; ++i) {
+                    values[i].type = PropertyDescriptor::Generic;
+                    values[i].value.tag = Value::_Undefined_Type;
+                }
+            }
+            *descriptor(index) = *pd;
+        } else {
+            initSparse();
+            SparseArrayNode *n = sparse->insert(index);
+            uint idx = allocValue();
+            *descriptor(idx) = *pd;
+            n->value = idx;
+        }
+        if (index >= len)
+            len = index + 1;
+    }
     void set(uint index, Value value) {
-        init();
-        (*d)[index] = value;
+        PropertyDescriptor pd;
+        fillDescriptor(&pd, value);
+        set(index, &pd);
     }
-    Value at(uint index) const {
-        return d ? d->at(index) : Value::undefinedValue();
+
+    bool deleteIndex(uint index) {
+        if (index >= len)
+            return true;
+        PropertyDescriptor *pd = 0;
+        if (!sparse) {
+            pd = at(index);
+        } else {
+            SparseArrayNode *n = sparse->findNode(index);
+            if (n)
+                pd = descriptor(n->value);
+        }
+        if (!pd)
+            return true;
+        if (!pd->isConfigurable())
+            return false;
+        pd->type = PropertyDescriptor::Generic;
+        pd->value.tag = Value::_Undefined_Type;
+        if (sparse) {
+            pd->value.int_32 = freeList;
+            freeList = pd - values.constData();
+        }
+        return true;
     }
-    Value at(iterator it) const {
-        return it.i ? d->valueFromIndex(*it) : Value::undefinedValue();
+
+    PropertyDescriptor *at(uint index) {
+        if (!sparse) {
+            if (index >= values.size() - offset)
+                return 0;
+            return values.data() + index - offset;
+        } else {
+            SparseArrayNode *n = sparse->findNode(index);
+            if (!n)
+                return 0;
+            return values.data() + n->value;
+        }
+    }
+
+    const PropertyDescriptor *at(uint index) const {
+        if (!sparse) {
+            if (index >= values.size() - offset)
+                return 0;
+            return values.data() + index + offset;
+        } else {
+            SparseArrayNode *n = sparse->findNode(index);
+            if (!n)
+                return 0;
+            return values.data() + n->value;
+        }
     }
 
     void getCollectables(QVector<Object *> &objects) const {
-        if (d)
-            d->getCollectables(objects);
+        uint i = sparse ? 0 : offset;
+        for (; i < (uint)values.size(); ++i) {
+            const PropertyDescriptor &pd = values.at(i);
+            if (pd.isData())
+                if (Object *o = pd.value.asObject())
+                    objects.append(o);
+        }
     }
 
     void push_front(Value v) {
-        init();
-        d->push_front(v);
+        if (!sparse) {
+            if (!offset)
+                getHeadRoom();
+
+            PropertyDescriptor pd;
+            fillDescriptor(&pd, v);
+            --offset;
+            values[offset] = pd;
+        } else {
+            uint idx = allocValue(v);
+            sparse->push_front(idx);
+        }
+        ++len;
     }
-    Value pop_front() {
-        init();
-        return d->pop_front();
+    PropertyDescriptor *front() {
+        PropertyDescriptor *pd = 0;
+        if (!sparse) {
+            if (len)
+                pd = values.data() + offset;
+        } else {
+            SparseArrayNode *n = sparse->findNode(0);
+            if (n)
+                pd = descriptor(n->value);
+        }
+        if (pd && pd->type == PropertyDescriptor::Generic)
+            return 0;
+        return pd;
+    }
+    void pop_front() {
+        if (!len)
+            return;
+        if (!sparse) {
+            ++offset;
+        } else {
+            uint idx = sparse->pop_front();
+            freeValue(idx);
+        }
+        --len;
     }
     void push_back(Value v) {
-        init();
-        d->push_back(v);
+        if (!sparse) {
+            PropertyDescriptor pd;
+            fillDescriptor(&pd, v);
+            values.append(pd);
+        } else {
+            uint idx = allocValue(v);
+            sparse->push_back(idx, len);
+        }
+        ++len;
     }
-    Value pop_back() {
-        init();
-        return d->pop_back();
+    PropertyDescriptor *back() {
+        PropertyDescriptor *pd = 0;
+        if (!sparse) {
+            if (len)
+                pd = values.data() + offset + len;
+        } else {
+            SparseArrayNode *n = sparse->findNode(len - 1);
+            if (n)
+                pd = descriptor(n->value);
+        }
+        if (pd && pd->type == PropertyDescriptor::Generic)
+            return 0;
+        return pd;
+    }
+    void pop_back() {
+        if (!len)
+            return;
+        if (!sparse) {
+            values.resize(values.size() - 1);
+        } else {
+            uint idx = sparse->pop_back(len);
+            if (idx != UINT_MAX)
+                freeValue(idx);
+        }
+        --len;
     }
 
     void concat(const Array &other);
-    void sort(ExecutionContext *context, const Value &comparefn);
+    void sort(ExecutionContext *context, Object *thisObject, const Value &comparefn);
     void splice(double start, double deleteCount, const QVector<Value> &, Array &);
+    Value indexOf(Value v, uint fromIndex, ExecutionContext *ctx, Object *o);
 };
-
-inline void Array::concat(const Array &other)
-{
-    init();
-    int len = length();
-    int newLen = len + other.length();
-    for (const SparseArrayNode *it = other.d->begin(); it != other.d->end(); it = it->nextNode()) {
-        set(len + it->key(), other.d->valueFromIndex(it->value));
-    }
-    setLength(newLen);
-}
-
-inline void Array::sort(ExecutionContext *context, const Value &comparefn)
-{
-    if (!d)
-        return;
-
-    ArrayElementLessThan lessThan(context, comparefn);
-    // ###
-    //std::sort(to_vector.begin(), to_vector.end(), lessThan);
-}
-
 
 }
 }

@@ -136,7 +136,11 @@ struct Object: Managed {
     //
     void __put__(ExecutionContext *ctx, const QString &name, const Value &value);
 
-    Value getValue(ExecutionContext *ctx, PropertyDescriptor *p) const;
+    Value getValue(ExecutionContext *ctx, const PropertyDescriptor *p) const;
+    Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p) const;
+    Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const;
+    Value getElement(ExecutionContext *ctx, uint index) const;
+
     bool inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx);
     virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
 

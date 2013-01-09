@@ -52,8 +52,15 @@
 namespace QQmlJS {
 namespace VM {
 
-bool ArrayElementLessThan::operator()(const Value &v1, const Value &v2) const
+bool ArrayElementLessThan::operator()(const PropertyDescriptor &p1, const PropertyDescriptor &p2) const
 {
+    if (p1.type == PropertyDescriptor::Generic)
+        return false;
+    if (p2.type == PropertyDescriptor::Generic)
+        return true;
+    Value v1 = thisObject->getValue(m_context, &p1);
+    Value v2 = thisObject->getValue(m_context, &p2);
+
     if (v1.isUndefined())
         return false;
     if (v2.isUndefined())
@@ -105,7 +112,8 @@ const SparseArrayNode *SparseArrayNode::previousNode() const
 
 SparseArrayNode *SparseArrayNode::copy(SparseArray *d) const
 {
-    SparseArrayNode *n = d->createNode(size_left, value, 0, false);
+    SparseArrayNode *n = d->createNode(size_left, 0, false);
+    n->value = value;
     n->setColor(color());
     if (left) {
         n->left = left->copy(d);
@@ -375,7 +383,7 @@ static inline void qMapDeallocate(SparseArrayNode *node, int alignment)
         ::free(node);
 }
 
-SparseArrayNode *SparseArray::createNode(uint sl, int value, SparseArrayNode *parent, bool left)
+SparseArrayNode *SparseArray::createNode(uint sl, SparseArrayNode *parent, bool left)
 {
     SparseArrayNode *node = static_cast<SparseArrayNode *>(qMapAllocate(sizeof(SparseArrayNode), Q_ALIGNOF(SparseArrayNode)));
     Q_CHECK_PTR(node);
@@ -384,7 +392,6 @@ SparseArrayNode *SparseArray::createNode(uint sl, int value, SparseArrayNode *pa
     node->left = 0;
     node->right = 0;
     node->size_left = sl;
-    node->value = value;
     ++numEntries;
 
     if (parent) {
@@ -412,8 +419,6 @@ void SparseArray::freeTree(SparseArrayNode *root, int alignment)
 
 SparseArray::SparseArray()
     : numEntries(0)
-    , len(0)
-    , freeList(0)
 {
     header.p = 0;
     header.left = 0;
@@ -421,11 +426,19 @@ SparseArray::SparseArray()
     mostLeftNode = &header;
 }
 
-SparseArrayNode *SparseArray::insert(uint akey, Value value)
+SparseArray::SparseArray(const SparseArray &other)
 {
-    if (akey >= len)
-        len = akey + 1;
+    header.p = 0;
+    header.right = 0;
+    if (other.header.left) {
+        header.left = other.header.left->copy(this);
+        header.left->setParent(&header);
+        recalcMostLeftNode();
+    }
+}
 
+SparseArrayNode *SparseArray::insert(uint akey)
+{
     SparseArrayNode *n = root();
     SparseArrayNode *y = end();
     bool  left = true;
@@ -433,7 +446,6 @@ SparseArrayNode *SparseArray::insert(uint akey, Value value)
     while (n) {
         y = n;
         if (s == n->size_left) {
-            values[n->value] = value;
             return n;
         } else if (s < n->size_left) {
             left = true;
@@ -445,25 +457,25 @@ SparseArrayNode *SparseArray::insert(uint akey, Value value)
         }
     }
 
-    int idx = allocValue();
-    SparseArrayNode *z = createNode(s, idx, y, left);
-    values[idx] = value;
-    return z;
+    return createNode(s, y, left);
 }
 
-void SparseArray::setLength(uint l)
+Array::Array(const Array & other)
+    : len(other.len)
+    , values(other.values)
+    , sparse(0)
 {
-    SparseArrayNode *it = lowerBound(l);
-    while (it != end())
-        it = erase(it);
-    len = l;
+    freeList = other.freeList;
+    if (other.sparse)
+        sparse = new SparseArray(*other.sparse);
 }
+
 
 void Array::splice(double start, double deleteCount,
                    const QVector<Value> &/*items*/,
                    Array &/*other*/)
 {
-    init();
+    initSparse();
     uint len = length();
     if (start < 0)
         start = qMax(len + start, double(0));
@@ -485,7 +497,95 @@ void Array::splice(double start, double deleteCount,
 //    else if (itemsSize < dc)
 //        to_vector.erase(to_vector.begin() + st, to_vector.begin() + (dc - itemsSize));
 //    for (uint i = 0; i < itemsSize; ++i)
-//        (*to_vector)[st + i] = items.at(i);
+    //        (*to_vector)[st + i] = items.at(i);
+}
+
+Value Array::indexOf(Value v, uint fromIndex, ExecutionContext *ctx, Object *o)
+{
+    if (sparse) {
+        for (SparseArrayNode *n = sparse->findNode(fromIndex); n; n = n->nextNode()) {
+            bool exists;
+            Value value = o->getValueChecked(ctx, descriptor(n->value), &exists);
+            if (exists && __qmljs_strict_equal(value, v))
+                return Value::fromDouble(n->key());
+        }
+    } else {
+        PropertyDescriptor *pd = values.data();
+        PropertyDescriptor *end = pd + values.size();
+        pd += offset + fromIndex;
+        while (pd < end) {
+            bool exists;
+            Value value = o->getValueChecked(ctx, pd, &exists);
+            if (exists && __qmljs_strict_equal(value, v))
+                return Value::fromDouble(pd - offset - values.constData());
+            ++pd;
+        }
+    }
+    return Value::fromInt32(-1);
+}
+
+void Array::concat(const Array &other)
+{
+    initSparse();
+    int len = length();
+    int newLen = len + other.length();
+    if (other.sparse)
+        initSparse();
+    if (sparse) {
+        if (other.sparse) {
+            for (const SparseArrayNode *it = other.sparse->begin(); it != other.sparse->end(); it = it->nextNode())
+                set(len + it->key(), other.descriptor(it->value));
+        } else {
+            int oldSize = values.size();
+            values.resize(oldSize + other.length());
+            memcpy(values.data() + oldSize, other.values.constData() + other.offset, other.length()*sizeof(PropertyDescriptor));
+            for (uint i = 0; i < other.length(); ++i) {
+                SparseArrayNode *n = sparse->insert(len + i);
+                n->value = oldSize + i;
+            }
+        }
+    } else {
+        int oldSize = values.size();
+        values.resize(oldSize + other.length());
+        memcpy(values.data() + oldSize, other.values.constData() + other.offset, other.length()*sizeof(PropertyDescriptor));
+    }
+    setLength(newLen);
+}
+
+void Array::sort(ExecutionContext *context, Object *thisObject, const Value &comparefn)
+{
+    if (!sparse)
+        return;
+
+    ArrayElementLessThan lessThan(context, thisObject, comparefn);
+    std::sort(values.begin(), values.end(), lessThan);
+    if (sparse)
+        delete sparse;
+}
+
+
+void Array::initSparse()
+{
+    if (!sparse) {
+        sparse = new SparseArray;
+        for (int i = offset; i < values.size(); ++i) {
+            SparseArrayNode *n = sparse->insert(i - offset);
+            n->value = i;
+        }
+
+        if (offset) {
+            int o = offset;
+            for (int i = 0; i < o - 1; ++i) {
+                values[i].type = PropertyDescriptor::Generic;
+                values[i].value = Value::fromInt32(i + 1);
+            }
+            values[o - 1].type = PropertyDescriptor::Generic;
+            values[o - 1].value = Value::fromInt32(values.size());
+            freeList = 0;
+        } else {
+            freeList = values.size();
+        }
+    }
 }
 
 

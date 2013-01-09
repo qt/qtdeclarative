@@ -1651,7 +1651,7 @@ Value ArrayPrototype::method_join(ExecutionContext *ctx)
             if (i)
                 R += r4;
 
-            Value e = a->array.at(i);
+            Value e = a->getElement(ctx, i);
             if (! (e.isUndefined() || e.isNull()))
                 R += e.toString(ctx)->toQString();
         }
@@ -1681,8 +1681,11 @@ Value ArrayPrototype::method_join(ExecutionContext *ctx)
 Value ArrayPrototype::method_pop(ExecutionContext *ctx)
 {
     Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject())
-        return instance->array.pop_back();
+    if (ArrayObject *instance = self.asArrayObject()) {
+        Value v = instance->getValueChecked(ctx, instance->array.back());
+        instance->array.pop_back();
+        return v;
+    }
 
     Value r1 = self.property(ctx, ctx->engine->id_length);
     quint32 r2 = !r1.isUndefined() ? r1.toUInt32(ctx) : 0;
@@ -1729,9 +1732,10 @@ Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
 
     int lo = 0, hi = instance->array.length() - 1;
 
+    // ###
     for (; lo < hi; ++lo, --hi) {
-        Value tmp = instance->array.at(lo);
-        instance->array.set(lo, instance->array.at(hi));
+        Value tmp = instance->getElement(ctx, lo);
+        instance->array.set(lo, instance->getElement(ctx, hi));
         instance->array.set(hi, tmp);
     }
     return Value::undefinedValue();
@@ -1743,7 +1747,9 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
     if (!instance)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.shift"));
 
-    return instance->array.pop_front();
+    Value v = instance->getValueChecked(ctx, instance->array.front());
+    instance->array.pop_front();
+    return v;
 }
 
 Value ArrayPrototype::method_slice(ExecutionContext *ctx)
@@ -1779,7 +1785,7 @@ Value ArrayPrototype::method_sort(ExecutionContext *ctx)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.sort"));
 
     Value comparefn = ctx->argument(0);
-    instance->array.sort(ctx, comparefn);
+    instance->array.sort(ctx, instance, comparefn);
     return ctx->thisObject;
 }
 
@@ -1829,22 +1835,17 @@ Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
         ctx->throwUnimplemented(QStringLiteral("Array.prototype.indexOf"));
 
     Value searchValue;
-    int fromIndex = 0;
+    uint fromIndex = 0;
 
     if (ctx->argumentCount == 1)
         searchValue = ctx->argument(0);
     else if (ctx->argumentCount == 2) {
         searchValue = ctx->argument(0);
-        fromIndex = ctx->argument(1).toInteger(ctx);
+        fromIndex = ctx->argument(1).toUInt32(ctx);
     } else
         __qmljs_throw_type_error(ctx);
 
-    for (Array::iterator it = instance->array.find(fromIndex), end = instance->array.end(); it != end; ++it) {
-        if (__qmljs_strict_equal(instance->array.at(*it), searchValue))
-            return Value::fromInt32(it.key());
-    }
-
-    return Value::fromInt32(-1);
+    return instance->array.indexOf(searchValue, fromIndex, ctx, instance);
 }
 
 Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
@@ -1864,7 +1865,7 @@ Value ArrayPrototype::method_every(ExecutionContext *ctx)
     bool ok = true;
     // ###
     for (uint k = 0; ok && k < instance->array.length(); ++k) {
-        Value v = instance->array.at(k);
+        Value v = instance->getElement(ctx, k);
         if (v.isUndefined())
             continue;
 
@@ -1889,7 +1890,7 @@ Value ArrayPrototype::method_some(ExecutionContext *ctx)
     bool ok = false;
     // ###
     for (uint k = 0; !ok && k < instance->array.length(); ++k) {
-        Value v = instance->array.at(k);
+        Value v = instance->getElement(ctx, k);
         if (v.isUndefined())
             continue;
 
@@ -1913,7 +1914,7 @@ Value ArrayPrototype::method_forEach(ExecutionContext *ctx)
     Value thisArg = ctx->argument(1);
     // ###
     for (quint32 k = 0; k < instance->array.length(); ++k) {
-        Value v = instance->array.at(k);
+        Value v = instance->getElement(ctx, k);
         if (v.isUndefined())
             continue;
         Value args[3];
@@ -1936,7 +1937,7 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
     ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
     a->array.setLength(instance->array.length());
     for (quint32 k = 0; k < instance->array.length(); ++k) {
-        Value v = instance->array.at(k);
+        Value v = instance->getElement(ctx, k);
         if (v.isUndefined())
             continue;
         Value args[3];
@@ -1959,7 +1960,7 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
     Value thisArg = ctx->argument(1);
     ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
     for (quint32 k = 0; k < instance->array.length(); ++k) {
-        Value v = instance->array.at(k);
+        Value v = instance->getElement(ctx, k);
         if (v.isUndefined())
             continue;
         Value args[3];
@@ -1986,7 +1987,7 @@ Value ArrayPrototype::method_reduce(ExecutionContext *ctx)
     Value initialValue = ctx->argument(1);
     Value acc = initialValue;
     for (quint32 k = 0; k < instance->array.length(); ++k) {
-        Value v = instance->array.at(k);
+        Value v = instance->getElement(ctx, k);
         if (v.isUndefined())
             continue;
 
@@ -2016,7 +2017,7 @@ Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
     Value initialValue = ctx->argument(1);
     Value acc = initialValue;
     for (int k = instance->array.length() - 1; k != -1; --k) {
-        Value v = instance->array.at(k);
+        Value v = instance->getElement(ctx, k);
         if (v.isUndefined())
             continue;
 
@@ -2126,10 +2127,8 @@ Value FunctionPrototype::method_apply(ExecutionContext *ctx)
     QVector<Value> args;
 
     if (ArrayObject *arr = arg.asArrayObject()) {
-        const Array &actuals = arr->array;
-
-        for (quint32 i = 0; i < actuals.length(); ++i) {
-            Value a = actuals.at(i);
+        for (quint32 i = 0; i < arr->array.length(); ++i) {
+            Value a = arr->getElement(ctx, i);
             args.append(a);
         }
     } else if (!(arg.isUndefined() || arg.isNull())) {
