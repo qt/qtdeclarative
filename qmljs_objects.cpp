@@ -884,7 +884,7 @@ SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *m
 }
 
 
-ArgumentsObject::ArgumentsObject(ExecutionContext *context)
+ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterCount)
     : context(context)
     , currentIndex(-1)
 {
@@ -904,8 +904,10 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context)
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(get, set);
         pd.configurable = PropertyDescriptor::Enabled;
         pd.enumberable = PropertyDescriptor::Enabled;
-        for (uint i = 0; i < context->argumentCount; ++i)
+        for (uint i = 0; i < formalParameterCount; ++i)
             __defineOwnProperty__(context, QString::number(i), &pd);
+        for (uint i = formalParameterCount; i < context->argumentCount; ++i)
+            Object::__put__(context, QString::number(i), context->arguments[i]);
         defineDefaultProperty(context, QStringLiteral("callee"), Value::fromObject(context->function));
     }
 }

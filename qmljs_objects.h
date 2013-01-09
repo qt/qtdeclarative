@@ -399,7 +399,7 @@ struct URIErrorObject: ErrorObject {
 struct ArgumentsObject: Object {
     ExecutionContext *context;
     int currentIndex;
-    ArgumentsObject(ExecutionContext *context);
+    ArgumentsObject(ExecutionContext *context, int formalParameterCount);
     virtual QString className() { return QStringLiteral("Arguments"); }
     virtual ArgumentsObject *asArgumentsObject() { return this; }
 

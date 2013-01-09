@@ -423,7 +423,7 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
     withObject = 0;
 
     if (function->usesArgumentsObject) {
-        ArgumentsObject *args = new (engine->memoryManager) ArgumentsObject(this);
+        ArgumentsObject *args = new (engine->memoryManager) ArgumentsObject(this, function->formalParameterCount);
         args->prototype = engine->objectPrototype;
         Value arguments = Value::fromObject(args);
         createMutableBinding(engine->id_arguments, false);

@@ -952,7 +952,6 @@ S15.1.3.2_A4_T4 failing
 S15.1.3.2_A5.1 failing
 S15.1.3.2_A5.2 failing
 S15.1.3.2_A5.3 failing
-15.2.3.3-3-13 failing
 15.2.3.3-3-14 failing
 15.2.3.3-4-10 failing
 15.2.3.3-4-11 failing
@@ -1478,7 +1477,6 @@ S15.1.3.2_A5.3 failing
 15.2.3.7-6-a-99 failing
 15.2.3.8-0-2 failing
 15.2.3.9-0-2 failing
-15.2.3.9-2-a-11 failing
 15.2.3.9-2-a-12 failing
 15.2.3.9-2-a-14 failing
 15.2.4.2-1-1 failing
@@ -4290,10 +4288,3 @@ S15.4.4.4_A1_T3 failing
 # Regression introduced by qtdeclarative parser changes
 S7.9_A5.7_T1 failing
 
-# Bugs with defineProperty on the arguments object
-15.2.3.6-4-291 failing
-15.2.3.6-4-297 failing
-15.2.3.6-4-298 failing
-15.2.3.6-4-299 failing
-15.2.3.6-4-300 failing
-15.2.3.7-6-a-292 failing
