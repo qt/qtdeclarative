@@ -1779,8 +1779,6 @@ Test file/lineNumbers for inline functions.
 */
 void tst_qqmlecmascript::functionErrors()
 {
-    QSKIP("Temporarily skip this test case until the next V8 update is landed into QtJSBackend.");
-
     QQmlComponent component(&engine, testFileUrl("functionErrors.qml"));
     QString url = component.url().toString();
 
@@ -4055,8 +4053,6 @@ void tst_qqmlecmascript::scarceResources_other()
 {
     /* These tests require knowledge of state, since we test values after
        performing signal or function invocation. */
-
-    QSKIP("Temporarily skip this test case until the next V8 update is landed into QtJSBackend.");
 
     QPixmap origPixmap(100, 100);
     origPixmap.fill(Qt::blue);

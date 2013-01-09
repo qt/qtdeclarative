@@ -2226,8 +2226,6 @@ void tst_QJSEngine::jsContinueInSwitch()
 
 void tst_QJSEngine::jsShadowReadOnlyPrototypeProperty()
 {
-    QSKIP("Temporarily skip this test case until the next V8 update is landed into QtJSBackend.");
-
     QJSEngine eng;
     QVERIFY(eng.evaluate("o = {}; o.__proto__ = parseInt; o.length").isNumber());
     QVERIFY(eng.evaluate("o.length = 123; o.length").toInt() != 123);
