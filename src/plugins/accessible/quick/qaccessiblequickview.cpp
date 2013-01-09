@@ -53,52 +53,59 @@
 
 QT_BEGIN_NAMESPACE
 
-QAccessibleQuickView::QAccessibleQuickView(QQuickView *object)
+QAccessibleQuickWindow::QAccessibleQuickWindow(QQuickWindow *object)
     :QAccessibleObject(object)
 {
 }
 
-int QAccessibleQuickView::childCount() const
+QQuickItem *QAccessibleQuickWindow::rootItem() const
 {
-    return view()->contentItem() ? 1 : 0;
+    if (window()->contentItem())
+        return window()->contentItem()->childItems().first();
+    return 0;
 }
 
-QAccessibleInterface *QAccessibleQuickView::parent() const
+int QAccessibleQuickWindow::childCount() const
+{
+    return rootItem() ? 1 : 0;
+}
+
+QAccessibleInterface *QAccessibleQuickWindow::parent() const
 {
     // FIXME: for now we assume to be a top level window...
     return QAccessible::queryAccessibleInterface(qApp);
 }
 
-QAccessibleInterface *QAccessibleQuickView::child(int index) const
+QAccessibleInterface *QAccessibleQuickWindow::child(int index) const
 {
     if (index == 0) {
-        if (QQuickItem *declarativeRoot = view()->rootObject())
+        if (QQuickItem *declarativeRoot = rootItem())
             return new QAccessibleQuickItem(declarativeRoot);
     }
     return 0;
 }
 
-QAccessible::Role QAccessibleQuickView::role() const
+QAccessible::Role QAccessibleQuickWindow::role() const
 {
     return QAccessible::Window; // FIXME
 }
 
-QAccessible::State QAccessibleQuickView::state() const
+QAccessible::State QAccessibleQuickWindow::state() const
 {
     QAccessible::State st;
-    if (view() == QGuiApplication::focusWindow())
+    if (window() == QGuiApplication::focusWindow())
         st.active = true;
-    if (!view()->isVisible())
+    if (!window()->isVisible())
         st.invisible = true;
     return st;
 }
 
-QRect QAccessibleQuickView::rect() const
+QRect QAccessibleQuickWindow::rect() const
 {
-    return QRect(view()->x(), view()->y(), view()->width(), view()->height());
+    return QRect(window()->x(), window()->y(), window()->width(), window()->height());
 }
 
-QString QAccessibleQuickView::text(QAccessible::Text text) const
+QString QAccessibleQuickWindow::text(QAccessible::Text text) const
 {
 #ifdef Q_ACCESSIBLE_QUICK_ITEM_ENABLE_DEBUG_DESCRIPTION
     if (text == QAccessible::DebugDescription) {
@@ -107,7 +114,7 @@ QString QAccessibleQuickView::text(QAccessible::Text text) const
 #else
     Q_UNUSED(text)
 #endif
-    return view()->title();
+    return window()->title();
 }
 
 
@@ -152,10 +159,10 @@ static QQuickItem *childAt_helper(QQuickItem *item, int x, int y)
     return 0;
 }
 
-QAccessibleInterface *QAccessibleQuickView::childAt(int x, int y) const
+QAccessibleInterface *QAccessibleQuickWindow::childAt(int x, int y) const
 {
-    Q_ASSERT(view());
-    QQuickItem *root = view()->contentItem();
+    Q_ASSERT(window());
+    QQuickItem *root = rootItem();
     if (root) {
         if (QQuickItem *item = childAt_helper(root, x, y))
             return QAccessible::queryAccessibleInterface(item);
@@ -164,15 +171,14 @@ QAccessibleInterface *QAccessibleQuickView::childAt(int x, int y) const
     return 0;
 }
 
-int QAccessibleQuickView::indexOfChild(const QAccessibleInterface *iface) const
+int QAccessibleQuickWindow::indexOfChild(const QAccessibleInterface *iface) const
 {
     if (iface) {
-        QQuickItem *declarativeRoot = view()->rootObject();
+        QQuickItem *declarativeRoot = rootItem();
         if (declarativeRoot == iface->object())
             return 0;
     }
     return -1;
-
 }
 
 QT_END_NAMESPACE

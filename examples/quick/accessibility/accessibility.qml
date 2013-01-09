@@ -55,17 +55,13 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: 10
         width: parent.width
-        Row {
-            spacing: 6
-            width: column.width
-            Button { width: 100; height: column.h + 20; text: "Send"; onClicked : { status.text = "Send" } }
-            Button { width: 100; height: column.h + 20; text: "Discard";  onClicked : { status.text = "Discard" } }
-        }
+
 
         Row {
             spacing: 6
             width: column.width
             height: column.h
+
             Text {
                 id: subjectLabel
                 //! [text]
@@ -73,6 +69,7 @@ Rectangle {
                 Accessible.name: text
                 //! [text]
                 text: "Subject:"
+                y: 3
             }
             Rectangle {
                 id: subjectBorder
@@ -80,13 +77,20 @@ Rectangle {
                 Accessible.name: subjectEdit.text
                 border.width: 1
                 border.color: "black"
-                height: subjectEdit.height
+                height: subjectEdit.height + 6
                 width: 240
                 TextInput {
+                    focus: true
+                    y: 3
+                    x: 3
+                    width: parent.width - 6
                     id: subjectEdit
                     text: "Vacation plans"
+                    KeyNavigation.tab: textEdit
                 }
+
             }
+
         }
         Rectangle {
             id: textBorder
@@ -95,12 +99,18 @@ Rectangle {
             border.width: 1
             border.color: "black"
             width: parent.width - 2
-            height: parent.height - (textBorder.y + column.spacing)
+
+            height: 200
             TextEdit {
                 id: textEdit
-                text: "Hi, we're going to the Dolomites this summer. Weren't you also going to northern Italy? \n\nbest wishes, your friend Luke"
-                width: parent.width
+                y: 3
+                x: 3
+                width: parent.width - 6
+                height: parent.height - 6
+                text: "Hi, we're going to the Dolomites this summer. Weren't you also going to northern Italy? \n\nBest wishes, your friend Luke"
                 wrapMode: TextEdit.WordWrap
+                KeyNavigation.tab: sendButton
+                KeyNavigation.priority: KeyNavigation.BeforeItem
             }
         }
         Text {
@@ -110,9 +120,28 @@ Rectangle {
 
         Row {
             spacing: 6
-            width: column.width
-            Checkbox { checked: false }
-            Slider { value: 10 }
+            Button { id: sendButton; width: 100; height: column.h + 20; text: "Send";
+                onClicked : { status.text = "Send" }
+                KeyNavigation.tab: discardButton
+            }
+            Button { id: discardButton; width: 100; height: column.h + 20; text: "Discard";
+                onClicked : { status.text = "Discard" }
+                KeyNavigation.tab: checkBox
+            }
+        }
+
+        Row {
+            spacing: 6
+            Checkbox {
+                id: checkBox
+                checked: false
+                KeyNavigation.tab: slider
+            }
+            Slider {
+                id: slider
+                value: 10
+                KeyNavigation.tab: subjectEdit
+            }
         }
     }
 }

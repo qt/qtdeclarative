@@ -320,8 +320,8 @@ void tst_qqmlqt::vector2d()
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    QCOMPARE(qvariant_cast<QVector2D>(object->property("test1")), QVector2D(1, 0.9));
-    QCOMPARE(qvariant_cast<QVector2D>(object->property("test2")), QVector2D(102, -982.1));
+    QCOMPARE(qvariant_cast<QVector2D>(object->property("test1")), QVector2D(1, 0.9f));
+    QCOMPARE(qvariant_cast<QVector2D>(object->property("test2")), QVector2D(102, -982.1f));
     QCOMPARE(qvariant_cast<QVector2D>(object->property("test3")), QVector2D());
     QCOMPARE(qvariant_cast<QVector2D>(object->property("test4")), QVector2D());
 
@@ -340,8 +340,8 @@ void tst_qqmlqt::vector3d()
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    QCOMPARE(qvariant_cast<QVector3D>(object->property("test1")), QVector3D(1, 0, 0.9));
-    QCOMPARE(qvariant_cast<QVector3D>(object->property("test2")), QVector3D(102, -10, -982.1));
+    QCOMPARE(qvariant_cast<QVector3D>(object->property("test1")), QVector3D(1, 0, 0.9f));
+    QCOMPARE(qvariant_cast<QVector3D>(object->property("test2")), QVector3D(102, -10, -982.1f));
     QCOMPARE(qvariant_cast<QVector3D>(object->property("test3")), QVector3D());
     QCOMPARE(qvariant_cast<QVector3D>(object->property("test4")), QVector3D());
 
@@ -360,8 +360,8 @@ void tst_qqmlqt::vector4d()
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    QCOMPARE(qvariant_cast<QVector4D>(object->property("test1")), QVector4D(1, 0, 0.9, 0.6));
-    QCOMPARE(qvariant_cast<QVector4D>(object->property("test2")), QVector4D(102, -10, -982.1, 10));
+    QCOMPARE(qvariant_cast<QVector4D>(object->property("test1")), QVector4D(1, 0, 0.9f, 0.6f));
+    QCOMPARE(qvariant_cast<QVector4D>(object->property("test2")), QVector4D(102, -10, -982.1f, 10));
     QCOMPARE(qvariant_cast<QVector4D>(object->property("test3")), QVector4D());
     QCOMPARE(qvariant_cast<QVector4D>(object->property("test4")), QVector4D());
 
@@ -380,8 +380,8 @@ void tst_qqmlqt::quaternion()
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    QCOMPARE(qvariant_cast<QQuaternion>(object->property("test1")), QQuaternion(2, 17, 0.9, 0.6));
-    QCOMPARE(qvariant_cast<QQuaternion>(object->property("test2")), QQuaternion(102, -10, -982.1, 10));
+    QCOMPARE(qvariant_cast<QQuaternion>(object->property("test1")), QQuaternion(2, 17, 0.9f, 0.6f));
+    QCOMPARE(qvariant_cast<QQuaternion>(object->property("test2")), QQuaternion(102, -10, -982.1f, 10));
     QCOMPARE(qvariant_cast<QQuaternion>(object->property("test3")), QQuaternion());
     QCOMPARE(qvariant_cast<QQuaternion>(object->property("test4")), QQuaternion());
 

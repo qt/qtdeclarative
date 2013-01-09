@@ -596,8 +596,8 @@ void tst_qqmllanguage::assignBasicTypes()
     QCOMPARE(object->rectFProperty(), QRectF(1000.1, -10.9, 400, 90.99));
     QCOMPARE(object->boolProperty(), true);
     QCOMPARE(object->variantProperty(), QVariant("Hello World!"));
-    QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2));
-    QCOMPARE(object->vector4Property(), QVector4D(10, 1, 2.2, 2.3));
+    QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2f));
+    QCOMPARE(object->vector4Property(), QVector4D(10, 1, 2.2f, 2.3f));
     QUrl encoded;
     encoded.setEncodedUrl("main.qml?with%3cencoded%3edata", QUrl::TolerantMode);
     QCOMPARE(object->urlProperty(), component.url().resolved(encoded));
@@ -2571,7 +2571,7 @@ void tst_qqmllanguage::importJs()
         QCOMPARE(expected.size(), actual.size());
         for (int i = 0; i < expected.size(); ++i)
         {
-            size_t compareLen = std::min(expected.at(i).length(), actual.at(i).length());
+            const int compareLen = qMin(expected.at(i).length(), actual.at(i).length());
             QCOMPARE(expected.at(i).left(compareLen), actual.at(i).left(compareLen));
         }
     }
@@ -2948,13 +2948,12 @@ void tst_qqmllanguage::signalWithDefaultArg()
     QCOMPARE(object->property("signalCount").toInt(), 2);
     QCOMPARE(object->property("signalArg").toInt(), 15);
 
-    const QMetaObject *metaObject = object->metaObject();
 
-    metaObject->invokeMethod(object, "emitNoArgSignal");
+    QMetaObject::invokeMethod(object, "emitNoArgSignal");
     QCOMPARE(object->property("signalCount").toInt(), 3);
     QCOMPARE(object->property("signalArg").toInt(), 5);
 
-    metaObject->invokeMethod(object, "emitArgSignal");
+    QMetaObject::invokeMethod(object, "emitArgSignal");
     QCOMPARE(object->property("signalCount").toInt(), 4);
     QCOMPARE(object->property("signalArg").toInt(), 22);
 
@@ -3065,9 +3064,8 @@ void tst_qqmllanguage::literals_data()
     QTest::newRow("special8") << "c8" << QVariant(QString("\""));
     QTest::newRow("special9") << "c9" << QVariant(QString("\\"));
     // We don't handle octal escape sequences
-//    QTest::newRow("special10") << "c10" << QVariant(QString("\251"));
-    QTest::newRow("special11") << "c11" << QVariant(QString::fromLatin1("\xa9"));
-    QTest::newRow("special12") << "c12" << QVariant(QString::fromUtf8("\u00A9"));
+    QTest::newRow("special11") << "c10" << QVariant(QString(1, QChar(0xa9)));
+    QTest::newRow("special12") << "c11" << QVariant(QString(1, QChar(0x00A9)));
 }
 
 void tst_qqmllanguage::literals()

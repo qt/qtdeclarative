@@ -195,9 +195,8 @@ void tst_QQuickView::errors()
 {
     QQuickView *view = new QQuickView;
     QVERIFY(view);
-    QtMessageHandler old = qInstallMessageHandler(silentErrorsMsgHandler);
+    QQmlTestMessageHandler messageHandler;
     view->setSource(testFileUrl("error1.qml"));
-    qInstallMessageHandler(old);
     QVERIFY(view->status() == QQuickView::Error);
     QVERIFY(view->errors().count() == 1);
     delete view;

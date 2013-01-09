@@ -45,6 +45,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QUrl>
 #include <QtCore/QCoreApplication>
+#include <QtCore/QStringList>
 #include <QtTest/QTest>
 
 QT_FORWARD_DECLARE_CLASS(QQmlComponent)
@@ -85,6 +86,26 @@ private:
     const QString m_dataDirectory;
     const QUrl m_dataDirectoryUrl;
     QString m_directory;
+};
+
+class QQmlTestMessageHandler
+{
+    Q_DISABLE_COPY(QQmlTestMessageHandler)
+public:
+    QQmlTestMessageHandler();
+    ~QQmlTestMessageHandler();
+
+    const QStringList &messages() const { return m_messages; }
+    const QString messageString() const { return m_messages.join(QLatin1Char('\n')); }
+
+    void clear() { m_messages.clear(); }
+
+private:
+    static void messageHandler(QtMsgType, const QMessageLogContext &, const QString &message);
+
+    static QQmlTestMessageHandler *m_instance;
+    QStringList m_messages;
+    QtMessageHandler m_oldHandler;
 };
 
 #endif // QQMLTESTUTILS_H

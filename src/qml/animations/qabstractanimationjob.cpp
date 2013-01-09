@@ -463,7 +463,7 @@ void QAbstractAnimationJob::setCurrentTime(int msecs)
     // and has reached the end.
     if ((m_direction == Forward && m_totalCurrentTime == totalDura)
         || (m_direction == Backward && m_totalCurrentTime == 0)) {
-        stop();
+        RETURN_IF_DELETED(stop());
     }
 
     if (m_hasCurrentTimeChangeListeners)

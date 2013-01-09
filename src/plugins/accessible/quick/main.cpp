@@ -44,7 +44,7 @@
 #include "qaccessiblequickview.h"
 #include "qaccessiblequickitem.h"
 
-#include <QtQuick/QQuickView>
+#include <QtQuick/QQuickWindow>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
@@ -77,37 +77,22 @@ AccessibleQuickFactory::AccessibleQuickFactory()
 QStringList AccessibleQuickFactory::keys() const
 {
     QStringList list;
-    list << QLatin1String("QQuickView");
+    list << QLatin1String("QQuickWindow");
     list << QLatin1String("QQuickItem");
     return list;
 }
 
 QAccessibleInterface *AccessibleQuickFactory::create(const QString &classname, QObject *object)
 {
-    if (classname == QLatin1String("QQuickView")) {
-        return new QAccessibleQuickView(qobject_cast<QQuickView *>(object)); // FIXME
+    if (classname == QLatin1String("QQuickWindow")) {
+        return new QAccessibleQuickWindow(qobject_cast<QQuickWindow *>(object));
     } else if (classname == QLatin1String("QQuickItem")) {
         QQuickItem *item = qobject_cast<QQuickItem *>(object);
         Q_ASSERT(item);
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
         if (!itemPrivate->isAccessible)
             return 0;
-
-        QVariant v = QQuickAccessibleAttached::property(item, "role");
-        bool ok;
-        QAccessible::Role role = (QAccessible::Role)v.toInt(&ok);
-        if (!ok)    // Not sure if this check is needed.
-            return new QAccessibleQuickItem(item);
-
-        switch (role) {
-        case QAccessible::Slider:
-        case QAccessible::SpinBox:
-        case QAccessible::Dial:
-        case QAccessible::ScrollBar:
-            return new QAccessibleQuickItemValueInterface(item);
-        default:
-            return new QAccessibleQuickItem(item);
-        }
+        return new QAccessibleQuickItem(item);
     }
 
     return 0;

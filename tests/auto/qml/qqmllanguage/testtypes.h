@@ -939,7 +939,7 @@ class MyUncreateableBaseClass : public QObject
     Q_PROPERTY(bool prop2 READ prop2 WRITE setprop2 REVISION 1)
     Q_PROPERTY(bool prop3 READ prop3 WRITE setprop3 REVISION 1)
 public:
-    explicit MyUncreateableBaseClass(bool arg, QObject *parent = 0)
+    explicit MyUncreateableBaseClass(bool /* arg */, QObject *parent = 0)
         : QObject(parent), _prop1(false), _prop2(false), _prop3(false)
     {
     }

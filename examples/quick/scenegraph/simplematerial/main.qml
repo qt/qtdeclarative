@@ -44,30 +44,40 @@ import QtQuick 2.0
 import SimpleMaterial 1.0
 
 Rectangle {
-    width: 640
-    height: 360
-
-    gradient: Gradient {
-        GradientStop { position: 0; color: "#00ffff" }
-        GradientStop { position: 1; color: "#00ff00" }
-    }
+    width: 320
+    height: 480
+    color: "black"
 
 //! [1] //! [2]
-    SimpleMaterialItem {
 
+    Column {
         anchors.fill: parent
-        SequentialAnimation on scale {
-            NumberAnimation { to: 100; duration: 60000; easing.type: Easing.InCubic }
-            NumberAnimation { to: 1; duration: 60000; easing.type: Easing.OutCubic }
-            loops: Animation.Infinite
+
+        SimpleMaterialItem {
+            width: parent.width;
+            height: parent.height / 3;
+            color: "steelblue"
         }
 
-        rotation: scale * 10 - 10
+        SimpleMaterialItem {
+            width: parent.width;
+            height: parent.height / 3;
+            color: "darkorchid"
+        }
+
+         SimpleMaterialItem {
+            width: parent.width;
+            height: parent.height / 3;
+            color: "springgreen"
+        }
     }
+
+
 //! [2] //! [3]
     Rectangle {
         color: Qt.rgba(0, 0, 0, 0.8)
         radius: 10
+        antialiasing: true
         border.width: 1
         border.color: "black"
         anchors.fill: label
@@ -78,7 +88,7 @@ Rectangle {
         id: label
         color: "white"
         wrapMode: Text.WordWrap
-        text: "The background here is implemented as one QSGGeometryNode node which uses QSGSimpleMaterial to implement a mandlebrot fractal fill"
+        text: "These three gradient boxes are colorized using a custom material."
         anchors.right: parent.right
         anchors.left: parent.left
         anchors.bottom: parent.bottom

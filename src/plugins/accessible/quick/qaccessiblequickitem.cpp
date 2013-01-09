@@ -228,7 +228,7 @@ QString QAccessibleQuickItem::text(QAccessible::Text textType) const
         break;
     }
 
-    // the following blocks handles item-specific behavior
+    // the following block handles item-specific behavior
     if (role() == QAccessible::EditableText) {
         if (textType == QAccessible::Value) {
             QVariant text = object()->property("text");
@@ -241,34 +241,44 @@ QString QAccessibleQuickItem::text(QAccessible::Text textType) const
     return QString();
 }
 
-void *QAccessibleQuickItemValueInterface::interface_cast(QAccessible::InterfaceType t)
+void *QAccessibleQuickItem::interface_cast(QAccessible::InterfaceType t)
 {
-    if (t == QAccessible::ValueInterface)
+    QAccessible::Role r = role();
+    if (t == QAccessible::ValueInterface &&
+           (r == QAccessible::Slider ||
+            r == QAccessible::SpinBox ||
+            r == QAccessible::Dial ||
+            r == QAccessible::ScrollBar))
        return static_cast<QAccessibleValueInterface*>(this);
-    return QAccessibleQuickItem::interface_cast(t);
+
+    if (t == QAccessible::TextInterface &&
+            (r == QAccessible::EditableText))
+        return static_cast<QAccessibleTextInterface*>(this);
+
+    return QQmlAccessible::interface_cast(t);
 }
 
-QVariant QAccessibleQuickItemValueInterface::currentValue() const
+QVariant QAccessibleQuickItem::currentValue() const
 {
     return item()->property("value");
 }
 
-void QAccessibleQuickItemValueInterface::setCurrentValue(const QVariant &value)
+void QAccessibleQuickItem::setCurrentValue(const QVariant &value)
 {
     item()->setProperty("value", value);
 }
 
-QVariant QAccessibleQuickItemValueInterface::maximumValue() const
+QVariant QAccessibleQuickItem::maximumValue() const
 {
     return item()->property("maximumValue");
 }
 
-QVariant QAccessibleQuickItemValueInterface::minimumValue() const
+QVariant QAccessibleQuickItem::minimumValue() const
 {
     return item()->property("minimumValue");
 }
 
-QVariant QAccessibleQuickItemValueInterface::minimumStepSize() const
+QVariant QAccessibleQuickItem::minimumStepSize() const
 {
     return item()->property("stepSize");
 }

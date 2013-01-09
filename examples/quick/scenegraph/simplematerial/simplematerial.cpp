@@ -52,11 +52,11 @@
 #include <qsgsimplematerial.h>
 
 //! [1]
-struct Color
+struct State
 {
     QColor color;
 
-    int compare(const Color *other) const {
+    int compare(const State *other) const {
         uint rgb = color.rgba();
         uint otherRgb = other->color.rgba();
 
@@ -72,9 +72,9 @@ struct Color
 //! [1]
 
 //! [2]
-class Shader : public QSGSimpleMaterialShader<Color>
+class Shader : public QSGSimpleMaterialShader<State>
 {
-    QSG_DECLARE_SIMPLE_COMPARABLE_SHADER(Shader, Color);
+    QSG_DECLARE_SIMPLE_COMPARABLE_SHADER(Shader, State);
 //! [2] //! [3]
 public:
 
@@ -97,18 +97,8 @@ public:
                 "varying highp vec2 texCoord;                               \n"
                 "void main ()                                               \n"
                 "{                                                          \n"
-                "    highp vec2 z = texCoord;                               \n"
-                "    gl_FragColor = vec4(0);                                \n"
-                "    const highp float maxIterations = 100.;                \n"
-                "    for (float i = 0.; i < maxIterations; i += 1.0) {      \n"
-                "        z = vec2(z.x*z.x - z.y*z.y, 2.0*z.x*z.y) + texCoord; \n"
-                "        if (dot(z, z) > 4.0) {                             \n"
-                "            float col = pow(1. - i / maxIterations, sqrt(maxIterations / 10.)); \n"
-                "            gl_FragColor = color * col * qt_Opacity;       \n"
-                "            break;                                         \n"
-                "        }                                                  \n"
-                "    }                                                      \n"
-                "}                                                          \n";
+                "    gl_FragColor = texCoord.y * texCoord.x * color * qt_Opacity;  \n"
+                "}";
     }
 //! [3] //! [4]
     QList<QByteArray> attributes() const
@@ -116,9 +106,9 @@ public:
         return QList<QByteArray>() << "aVertex" << "aTexCoord";
     }
 //! [4] //! [5]
-    void updateState(const Color *color, const Color *)
+    void updateState(const State *state, const State *)
     {
-        program()->setUniformValue(id_color, color->color);
+        program()->setUniformValue(id_color, state->color);
     }
 //! [5] //! [6]
     void resolveUniforms()
@@ -128,38 +118,37 @@ public:
 
 private:
     int id_color;
-};
 //! [6]
+};
 
 
 //! [7]
-class TestNode : public QSGGeometryNode
+class ColorNode : public QSGGeometryNode
 {
 public:
-    TestNode(const QRectF &bounds)
+    ColorNode()
         : m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
     {
-        QSGGeometry::updateTexturedRectGeometry(&m_geometry, bounds, QRectF(-0.60, -0.66, 0.08, 0.04));
         setGeometry(&m_geometry);
 
-//! [7] //! [8]
-        QSGSimpleMaterial<Color> *material = Shader::createMaterial();
-        material->state()->color = Qt::blue;
+        QSGSimpleMaterial<State> *material = Shader::createMaterial();
         material->setFlag(QSGMaterial::Blending);
-
         setMaterial(material);
         setFlag(OwnsMaterial);
     }
-//! [8] //! [9]
+
     QSGGeometry m_geometry;
 };
-//! [9]
+//! [7]
 
 
-//! [10]
+//! [8]
 class Item : public QQuickItem
 {
     Q_OBJECT
+
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+
 public:
 
     Item()
@@ -167,17 +156,40 @@ public:
         setFlag(ItemHasContents, true);
     }
 
+    void setColor(const QColor &color) {
+        if (m_color != color) {
+            m_color = color;
+            emit colorChanged();
+            update();
+        }
+    }
+    QColor color() const {
+        return m_color;
+    }
+
+signals:
+    void colorChanged();
+
+private:
+  QColor m_color;
+
+//! [8] //! [9]
+public:
     QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
     {
-        delete node;
-        return new TestNode(boundingRect());
+        ColorNode *n = static_cast<ColorNode *>(node);
+        if (!node)
+            n = new ColorNode();
+
+        QSGGeometry::updateTexturedRectGeometry(n->geometry(), boundingRect(), QRectF(0, 0, 1, 1));
+        static_cast<QSGSimpleMaterial<State>*>(n->material())->state()->color = m_color;
+
+        n->markDirty(QSGNode::DirtyGeometry | QSGNode::DirtyMaterial);
+
+        return n;
     }
 };
-//! [10]
-
-
-
-//! [11]
+//! [9] //! [11]
 int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
@@ -185,11 +197,12 @@ int main(int argc, char **argv)
     qmlRegisterType<Item>("SimpleMaterial", 1, 0, "SimpleMaterialItem");
 
     QQuickView view;
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setSource(QUrl("qrc:///scenegraph/simplematerial/main.qml"));
     view.show();
 
     return app.exec();
 }
-//! [11]
 
 #include "simplematerial.moc"
+//! [11]

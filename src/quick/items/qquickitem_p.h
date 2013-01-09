@@ -528,7 +528,9 @@ public:
 #endif
     void deliverFocusEvent(QFocusEvent *);
     void deliverMouseEvent(QMouseEvent *);
+#ifndef QT_NO_WHEELEVENT
     void deliverWheelEvent(QWheelEvent *);
+#endif
     void deliverTouchEvent(QTouchEvent *);
     void deliverHoverEvent(QHoverEvent *);
 #ifndef QT_NO_DRAGANDDROP

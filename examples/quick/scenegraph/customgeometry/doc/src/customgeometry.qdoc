@@ -28,7 +28,8 @@
 /*!
     \example quick/scenegraph/customgeometry
     \title Custom Geometry Example
-    \ingroup examples
+    \ingroup qtquickexamples
+    \brief Shows how to implement a custom geometry in the Qt Quick Scene Graph.
 
     \brief The custom geometry example shows how to create a QQuickItem which
     uses the scene graph API to build a custom geometry for the scene
@@ -58,11 +59,11 @@
     QQuickItem::updatePaintNode() which all items with custom scene
     graph logic must implement.
 
-    \e { The scene graph will on many hardware configurations be
+    \note The scene graph will on many hardware configurations be
     rendering on a separate thread. It is therefore crucial that
-    interaction with the scene graph happens in a controlled
-    manner, first and foremost through the \l
-    QQuickItem::updatePaintNode() function. }
+    interaction with the scene graph happens in a controlled manner,
+    first and foremost through the \l QQuickItem::updatePaintNode()
+    function.
 
     \section1 BezierCurve Implementation
 
@@ -122,17 +123,17 @@
     set which has two floats, one for x coordinates and one for y
     coordinates. The second argument is the vertex count.
 
-    \e {Custom attribute sets can also created, but that is not
-    covered in this example}.
+    Custom attribute sets can also created, but that is not
+    covered in this example.
 
     Since we do not have any special needs for memory managing the
     geometry, we specify that the QSGGeometryNode should own the
     geometry.
 
-    \e {To minimize allocations, reduce memory fragmentation and
+    To minimize allocations, reduce memory fragmentation and
     improve performance, it would also be possible to make the
     geometry a member of a QSGGeometryNode subclass, in which case, we
-    would not have set the QSGGeometryNode::OwnsGeometry flag}.
+    would not have set the QSGGeometryNode::OwnsGeometry flag.
 
     \snippet quick/scenegraph/customgeometry/beziercurve.cpp 6
 
@@ -174,26 +175,32 @@
     BezierCurve and make it part of the \c {CustomGeometry 1.0}
     module.
 
+    As the bezier curve is drawn using GL_LINE_STRIP, we specify that
+    the view should be multisampled to get antialiasing. This is not
+    required, but it will make the item look a bit nicer on hardware
+    that supports it. Multisampling is not enabled by default because
+    it often results in higher memory usage.
+
     \section1 Using the Item
 
-    \snippet quick/scenegraph/customgeometry/LineTester.qml 1
+    \snippet quick/scenegraph/customgeometry/main.qml 1
 
     Our .qml file imports the \c {QtQuick 2.0} module to get the
     standard elements and also our own \c {CustomGeometry 1.0} module
     which contains our newly created BezierCurve element.
 
-    \snippet quick/scenegraph/customgeometry/LineTester.qml 2
+    \snippet quick/scenegraph/customgeometry/main.qml 2
 
     Then we create the our root item and an instance of the
     BezierCurve which we anchor to fill the root.
 
-    \snippet quick/scenegraph/customgeometry/LineTester.qml 3
+    \snippet quick/scenegraph/customgeometry/main.qml 3
 
     To make the example a bit more interesting we add an animation to
     change the two control points in the curve. The end points stay
     unchanged.
 
-    \snippet quick/scenegraph/customgeometry/LineTester.qml 4
+    \snippet quick/scenegraph/customgeometry/main.qml 4
 
     Finally we overlay a short text outlining what the example shows.
 

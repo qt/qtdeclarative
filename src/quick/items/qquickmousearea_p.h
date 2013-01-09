@@ -222,7 +222,9 @@ protected:
     virtual void hoverEnterEvent(QHoverEvent *event);
     virtual void hoverMoveEvent(QHoverEvent *event);
     virtual void hoverLeaveEvent(QHoverEvent *event);
+#ifndef QT_NO_WHEELEVENT
     virtual void wheelEvent(QWheelEvent *event);
+#endif
     virtual bool childMouseEventFilter(QQuickItem *i, QEvent *e);
     virtual void timerEvent(QTimerEvent *event);
     virtual void windowDeactivateEvent();

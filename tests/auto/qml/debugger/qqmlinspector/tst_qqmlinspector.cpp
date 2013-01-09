@@ -85,7 +85,7 @@ private slots:
     void reloadQmlWindow();
 };
 
-void tst_QQmlInspector::startQmlsceneProcess(const char *qmlFile)
+void tst_QQmlInspector::startQmlsceneProcess(const char * /* qmlFile */)
 {
     const QString argument = "-qmljsdebugger=port:" STR_PORT ",block";
 

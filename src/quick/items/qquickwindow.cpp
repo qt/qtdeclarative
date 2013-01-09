@@ -1421,6 +1421,7 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
     return false;
 }
 
+#ifndef QT_NO_WHEELEVENT
 bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event)
 {
     Q_Q(QQuickWindow);
@@ -1457,7 +1458,6 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
     return false;
 }
 
-#ifndef QT_NO_WHEELEVENT
 /*! \reimp */
 void QQuickWindow::wheelEvent(QWheelEvent *event)
 {
@@ -2058,9 +2058,11 @@ bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
             item->mouseUngrabEvent();
         }
         break;
+#ifndef QT_NO_WHEELEVENT
     case QEvent::Wheel:
         QQuickItemPrivate::get(item)->deliverWheelEvent(static_cast<QWheelEvent *>(e));
         break;
+#endif
     case QEvent::HoverEnter:
     case QEvent::HoverLeave:
     case QEvent::HoverMove:

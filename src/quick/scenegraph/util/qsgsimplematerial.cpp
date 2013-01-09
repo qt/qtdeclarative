@@ -145,6 +145,29 @@
  */
 
 /*!
+    \macro QSG_DECLARE_SIMPLE_SHADER(Shader, State)
+    \relates QSGSimpleMaterialShader
+
+    This macro is used to declare a QSGMaterialType and a \c
+    createMaterial() function for \a Shader with the given \a State.
+    */
+
+/*!
+    \macro QSG_DECLARE_SIMPLE_COMPARABLE_SHADER(Shader, State)
+    \relates QSGSimpleMaterialShader
+
+    This macro is used to declare a QSGMaterialType and a \c
+    createMaterial() function for \a Shader with the given \a State,
+    where the \a State class must define a compare function on the
+    form:
+
+    \code
+    int compare(const State *other) const;
+    \endcode
+*/
+
+
+/*!
     \fn char const *const *QSGSimpleMaterialShader::attributeNames() const
     \internal
  */

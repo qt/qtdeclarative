@@ -131,7 +131,9 @@ public:
     bool deliverInitialMousePressEvent(QQuickItem *, QMouseEvent *);
     bool deliverMouseEvent(QMouseEvent *);
     bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QEvent *);
+#ifndef QT_NO_WHEELEVENT
     bool deliverWheelEvent(QQuickItem *, QWheelEvent *);
+#endif
     bool deliverTouchPoints(QQuickItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
             QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *);
     bool deliverTouchEvent(QTouchEvent *);
