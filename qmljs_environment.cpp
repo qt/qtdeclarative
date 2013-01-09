@@ -407,12 +407,12 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
     arguments = args;
     argumentCount = argc;
     if (function->needsActivation || argc < function->formalParameterCount){
-        arguments = new Value[qMax(argc, function->formalParameterCount)];
+        argumentCount = qMax(argc, function->formalParameterCount);
+        arguments = new Value[argumentCount];
         if (argc)
             std::copy(args, args + argc, arguments);
         if (argc < function->formalParameterCount)
             std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
-        argumentCount = function->formalParameterCount;
     }
 
     locals = function->varCount ? new Value[function->varCount] : 0;
