@@ -4393,8 +4393,6 @@ S15.9.5.9_A3_T2 failing
 6.4_b failing
 
 # Tests that are passing but are supposed to fail (@negative)
-S7.8.3_A6.1_T1 failing
-S7.8.3_A6.1_T2 failing
 Sbp_12.5_A9_T3 failing
 Sbp_12.6.2_A13_T3 failing
 Sbp_7.8.4_A6.1_T4 failing
@@ -4406,14 +4404,7 @@ Sbp_A2_T2 failing
 Sbp_A3_T1 failing
 Sbp_A4_T1 failing
 Sbp_A4_T2 failing
-S7.8.4_A7.1_T4 failing
 S12.4_A1 failing
-S7.8.4_A7.2_T1 failing
-S7.8.4_A7.2_T2 failing
-S7.8.4_A7.2_T3 failing
-S7.8.4_A7.2_T4 failing
-S7.8.4_A7.2_T5 failing
-S7.8.4_A7.2_T6 failing
 S12.9_A1_T1 failing
 S12.9_A1_T10 failing
 S12.9_A1_T2 failing
