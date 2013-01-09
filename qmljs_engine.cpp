@@ -205,8 +205,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     glo->defineDefaultProperty(rootContext, QStringLiteral("eval"), Value::fromObject(new (memoryManager) EvalFunction(rootContext)));
 
-    // TODO: parseInt [15.1.2.2]
-    // TODO: parseFloat [15.1.2.3]
+    glo->defineDefaultProperty(rootContext, QStringLiteral("parseInt"), Value::fromObject(new (memoryManager) ParseIntFunction(rootContext)));
+    glo->defineDefaultProperty(rootContext, QStringLiteral("parseFloat"), Value::fromObject(new (memoryManager) ParseFloatFunction(rootContext)));
     glo->defineDefaultProperty(rootContext, QStringLiteral("isNaN"), Value::fromObject(new (memoryManager) IsNaNFunction(rootContext)));
     glo->defineDefaultProperty(rootContext, QStringLiteral("isFinite"), Value::fromObject(new (memoryManager) IsFiniteFunction(rootContext)));
 }

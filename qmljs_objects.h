@@ -298,6 +298,20 @@ struct EvalFunction : FunctionObject
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 };
 
+struct ParseIntFunction: FunctionObject
+{
+    ParseIntFunction(ExecutionContext *scope);
+
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+};
+
+struct ParseFloatFunction: FunctionObject
+{
+    ParseFloatFunction(ExecutionContext *scope);
+
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+};
+
 struct IsNaNFunction: FunctionObject
 {
     IsNaNFunction(ExecutionContext *scope);

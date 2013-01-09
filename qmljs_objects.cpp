@@ -51,6 +51,7 @@
 #include <private/qqmljsast_p.h>
 #include <qv4ir_p.h>
 #include <qv4codegen_p.h>
+#include "private/qlocale_tools_p.h"
 
 #include <QtCore/qmath.h>
 #include <QtCore/QDebug>
@@ -678,6 +679,119 @@ QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
     return globalCode;
 }
 
+// parseInt [15.1.2.2]
+ParseIntFunction::ParseIntFunction(ExecutionContext *scope)
+    : FunctionObject(scope)
+{
+    name = scope->engine->newString(QLatin1String("parseInt"));
+}
+
+static inline int toInt(const QChar &qc, int R)
+{
+    ushort c = qc.unicode();
+    int v = -1;
+    if (c >= '0' && c <= '9')
+        v = c - '0';
+    else if (c >= 'A' && c <= 'Z')
+        v = c - 'A' + 10;
+    else if (c >= 'a' && c <= 'z')
+        v = c - 'a' + 10;
+    if (v >= 0 && v < R)
+        return v;
+    else
+        return -1;
+}
+
+Value ParseIntFunction::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
+{
+    Q_UNUSED(thisObject);
+
+    Value string = (argc > 0) ? args[0] : Value::undefinedValue();
+    Value radix = (argc > 1) ? args[1] : Value::undefinedValue();
+    int R = radix.isUndefined() ? 0 : radix.toInt32(context);
+
+    // [15.1.2.2] step by step:
+    String *inputString = string.toString(context); // 1
+    QString trimmed = inputString->toQString().trimmed(); // 2
+    const QChar *pos = trimmed.constData();
+    const QChar *end = pos + trimmed.length();
+
+    int sign = 1; // 3
+    if (pos != end) {
+        if (*pos == QLatin1Char('-'))
+            sign = -1; // 4
+        if (*pos == QLatin1Char('-') || *pos == QLatin1Char('+'))
+            ++pos; // 5
+    }
+    bool stripPrefix = true; // 7
+    if (R) { // 8
+        if (R < 2 || R > 36)
+            return Value::fromDouble(nan("")); // 8a
+        if (R != 16)
+            stripPrefix = false; // 8b
+    } else { // 9
+        R = 10; // 9a
+    }
+    if (stripPrefix) { // 10
+        if ((end - pos >= 2)
+                && (pos[0] == QLatin1Char('0'))
+                && (pos[1] == QLatin1Char('x') || pos[1] == QLatin1Char('X'))) { // 10a
+            pos += 2;
+            R = 16;
+        }
+    }
+    // 11: Z is progressively built below
+    // 13: this is handled by the toInt function
+    if (pos == end) // 12
+        return Value::fromDouble(nan(""));
+    int d = toInt(*pos++, R);
+    if (d == -1)
+        return Value::fromDouble(nan(""));
+    qint64 v = d;
+    while (pos != end) {
+        d = toInt(*pos++, R);
+        if (d == -1)
+            break;
+        v = v * R + d;
+    }
+
+    return Value::fromDouble(v * sign); // 15
+}
+
+// parseFloat [15.1.2.3]
+ParseFloatFunction::ParseFloatFunction(ExecutionContext *scope)
+    : FunctionObject(scope)
+{
+    name = scope->engine->newString(QLatin1String("parseFloat"));
+}
+
+Value ParseFloatFunction::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
+{
+    Q_UNUSED(context);
+    Q_UNUSED(thisObject);
+
+    Value string = (argc > 0) ? args[0] : Value::undefinedValue();
+
+    // [15.1.2.3] step by step:
+    String *inputString = string.toString(context); // 1
+    QString trimmed = inputString->toQString().trimmed(); // 2
+
+    // 4:
+    if (trimmed.startsWith(QLatin1String("Infinity"))
+            || trimmed.startsWith(QLatin1String("+Infinity")))
+        return Value::fromDouble(INFINITY);
+    if (trimmed.startsWith("-Infinity"))
+        return Value::fromDouble(-INFINITY);
+    QByteArray ba = trimmed.toLatin1();
+    bool ok;
+    const char *begin = ba.constData();
+    const char *end = 0;
+    double d = qstrtod(begin, &end, &ok);
+    if (end - begin == 0)
+        return Value::fromDouble(nan("")); // 3
+    else
+        return Value::fromDouble(d);
+}
 
 /// isNaN [15.1.2.4]
 IsNaNFunction::IsNaNFunction(ExecutionContext *scope)
@@ -686,9 +800,9 @@ IsNaNFunction::IsNaNFunction(ExecutionContext *scope)
     name = scope->engine->newString(QLatin1String("isNaN"));
 }
 
-Value IsNaNFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int /*argc*/)
+Value IsNaNFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
 {
-    const Value &v = args[0];
+    const Value &v = (argc > 0) ? args[0] : Value::undefinedValue();
     if (v.integerCompatible())
         return Value::fromBoolean(false);
 
@@ -703,9 +817,9 @@ IsFiniteFunction::IsFiniteFunction(ExecutionContext *scope)
     name = scope->engine->newString(QLatin1String("isFinite"));
 }
 
-Value IsFiniteFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int /*argc*/)
+Value IsFiniteFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
 {
-    const Value &v = args[0];
+    const Value &v = (argc > 0) ? args[0] : Value::undefinedValue();
     if (v.integerCompatible())
         return Value::fromBoolean(true);
 
