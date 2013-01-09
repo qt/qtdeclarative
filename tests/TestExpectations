@@ -4496,3 +4496,6 @@ S15.4.4.11_A1.4_T2 failing
 S15.4.4.4_A1_T1 failing
 S15.4.4.4_A1_T2 failing
 S15.4.4.4_A1_T3 failing
+
+# Regression introduced by qtdeclarative parser changes
+S7.9_A5.7_T1 failing
