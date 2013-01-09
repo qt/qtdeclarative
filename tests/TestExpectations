@@ -4387,3 +4387,8 @@ S15.4.4.4_A1_T3 failing
 
 # Regression introduced by qtdeclarative parser changes
 S7.9_A5.7_T1 failing
+
+# Regression introduced by https://codereview.qt-project.org/#change,44302
+S15.1.2.2_A9.5 failing
+S15.1.2.3_A7.5 failing
+
