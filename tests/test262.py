@@ -74,22 +74,30 @@ class TestExpectations:
         f.close()
 
     def update(self, progress):
-        unexpectedPasses = [c for c in progress.failed_tests if c.case.IsNegative()]
+        unexpectedPasses = [c.case.name[-1] for c in progress.failed_tests if c.case.IsNegative()]
+
+        # If a test fails that we expected to fail, then it actually passed unexpectedly.
+        failures = [c.case.name[-1] for c in progress.failed_tests if not c.case.IsNegative()]
+        for failure in failures:
+            if failure in self.failingTests:
+                unexpectedPasses.append(failure)
 
         f = open(rootDir + "/TestExpectations")
         lines = f.read().splitlines()
         oldLen = len(lines)
         for result in unexpectedPasses:
-            expectationLine = result.case.name[-1] + " failing"
+            expectationLine = result + " failing"
             try:
                 lines.remove(expectationLine)
             except ValueError:
                 pass
+
         f.close()
         if len(lines) != oldLen:
             f = open(rootDir + "/TestExpectations", "w")
             f.write("\n".join(lines))
             f.close()
+            print "Changes to TestExpectations written!"
 
 
 if not os.path.exists(EXCLUDED_FILENAME):
