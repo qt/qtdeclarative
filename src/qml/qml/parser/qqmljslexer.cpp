@@ -891,7 +891,7 @@ again:
 int Lexer::scanNumber(QChar ch)
 {
     if (ch != QLatin1Char('0')) {
-        double integer = ch.unicode() - '0';
+        quint64 integer = ch.unicode() - '0';
 
         QChar n = _char;
         const QChar *code = _codePtr;
