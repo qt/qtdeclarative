@@ -844,7 +844,7 @@ Value ObjectPrototype::method_propertyIsEnumerable(ExecutionContext *ctx)
 
     Object *o = ctx->thisObject.toObject(ctx).objectValue();
     PropertyDescriptor *pd = o->__getOwnProperty__(ctx, p);
-    return Value::fromBoolean(pd && pd->enumberable);
+    return Value::fromBoolean(pd && pd->isEnumerable());
 }
 
 Value ObjectPrototype::method_defineGetter(ExecutionContext *ctx)
