@@ -281,7 +281,7 @@ void QQuickPinchArea::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickPinchArea);
     if (!d->enabled || !isVisible()) {
-        QQuickItem::event(event);
+        QQuickItem::touchEvent(event);
         return;
     }
 
