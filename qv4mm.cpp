@@ -48,7 +48,6 @@ using namespace WTF;
 
 static const std::size_t CHUNK_SIZE = 65536;
 
-class StringPool;
 struct MemoryManager::Data
 {
     bool enableGC;
@@ -56,7 +55,6 @@ struct MemoryManager::Data
     bool scribble;
     bool aggressiveGC;
     ExecutionEngine *engine;
-    StringPool *stringPool;
 
     enum { MaxItemSize = 128 };
     Managed *smallItems[MaxItemSize/16];
@@ -76,7 +74,6 @@ struct MemoryManager::Data
         : enableGC(enableGC)
         , gcBlocked(false)
         , engine(0)
-        , stringPool(0)
     {
         memset(smallItems, 0, sizeof(smallItems));
         scribble = qgetenv("MM_NO_SCRIBBLE").isEmpty();
@@ -298,11 +295,6 @@ static inline void add(QVector<Object *> &values, const Value &v)
 void MemoryManager::setExecutionEngine(ExecutionEngine *engine)
 {
     m_d->engine = engine;
-}
-
-void MemoryManager::setStringPool(StringPool *stringPool)
-{
-    m_d->stringPool = stringPool;
 }
 
 void MemoryManager::dumpStats() const

@@ -76,7 +76,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
     stringPool.reset(new StringPool);
-    memoryManager->setStringPool(stringPool.data());
     memoryManager->setExecutionEngine(this);
 
     rootContext = newContext();
