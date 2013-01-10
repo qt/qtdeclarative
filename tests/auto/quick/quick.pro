@@ -7,7 +7,7 @@ PUBLICTESTS += \
 
 !contains(QT_CONFIG, no-widgets): PUBLICTESTS += nodes
 
-!cross_compile: PUBLICTESTS += examples
+!cross_compile: PRIVATETESTS += examples
 
 # This test requires the qtconcurrent module
 !contains(QT_CONFIG, concurrent):PUBLICTESTS -= qquickpixmapcache
