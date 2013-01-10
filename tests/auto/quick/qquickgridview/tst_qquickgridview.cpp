@@ -52,7 +52,7 @@
 #include <QtQuick/private/qquickgridview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickvisualitemmodel_p.h>
-#include <QtQml/private/qquicklistmodel_p.h>
+#include <QtQml/private/qqmllistmodel_p.h>
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"
@@ -2435,7 +2435,7 @@ void tst_QQuickGridView::modelChanges()
     QQuickGridView *gridView = window->rootObject()->findChild<QQuickGridView*>("gridView");
     QTRY_VERIFY(gridView);
 
-    QQuickListModel *alternateModel = window->rootObject()->findChild<QQuickListModel*>("alternateModel");
+    QQmlListModel *alternateModel = window->rootObject()->findChild<QQmlListModel*>("alternateModel");
     QTRY_VERIFY(alternateModel);
     QVariant modelVariant = QVariant::fromValue<QObject *>(alternateModel);
     QSignalSpy modelSpy(gridView, SIGNAL(modelChanged()));

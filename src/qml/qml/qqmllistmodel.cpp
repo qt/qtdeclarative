@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#include "qquicklistmodel_p_p.h"
-#include "qquicklistmodelworkeragent_p.h"
+#include "qqmllistmodel_p_p.h"
+#include "qqmllistmodelworkeragent_p.h"
 #include "qqmlopenmetaobject_p.h"
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsengine_p.h>
@@ -246,7 +246,7 @@ const ListLayout::Role *ListLayout::getExistingRole(v8::Handle<v8::String> key)
     return r;
 }
 
-ModelObject *ListModel::getOrCreateModelObject(QQuickListModel *model, int elementIndex)
+ModelObject *ListModel::getOrCreateModelObject(QQmlListModel *model, int elementIndex)
 {
     ListElement *e = elements[elementIndex];
     if (e->m_objectCache == 0) {
@@ -326,7 +326,7 @@ void ListModel::sync(ListModel *src, ListModel *target, QHash<int, ListModel *> 
     }
 }
 
-ListModel::ListModel(ListLayout *layout, QQuickListModel *modelCache, int uid) : m_layout(layout), m_modelCache(modelCache)
+ListModel::ListModel(ListLayout *layout, QQmlListModel *modelCache, int uid) : m_layout(layout), m_modelCache(modelCache)
 {
     if (uid == -1)
         uid = uidCounter.fetchAndAddOrdered(1);
@@ -394,7 +394,7 @@ void ListModel::updateCacheIndices()
     }
 }
 
-QVariant ListModel::getProperty(int elementIndex, int roleIndex, const QQuickListModel *owner, QV8Engine *eng)
+QVariant ListModel::getProperty(int elementIndex, int roleIndex, const QQmlListModel *owner, QV8Engine *eng)
 {
     ListElement *e = elements[elementIndex];
     const ListLayout::Role &r = m_layout->getExistingRole(roleIndex);
@@ -698,7 +698,7 @@ ListModel *ListElement::getListProperty(const ListLayout::Role &role)
     return *value;
 }
 
-QVariant ListElement::getProperty(const ListLayout::Role &role, const QQuickListModel *owner, QV8Engine *eng)
+QVariant ListElement::getProperty(const ListLayout::Role &role, const QQmlListModel *owner, QV8Engine *eng)
 {
     char *mem = getPropertyMemory(role);
 
@@ -731,7 +731,7 @@ QVariant ListElement::getProperty(const ListLayout::Role &role, const QQuickList
 
                 if (model) {
                     if (model->m_modelCache == 0) {
-                        model->m_modelCache = new QQuickListModel(owner, model, eng);
+                        model->m_modelCache = new QQmlListModel(owner, model, eng);
                         QQmlEngine::setContextForObject(model->m_modelCache, QQmlEngine::contextForObject(owner));
                     }
 
@@ -1207,7 +1207,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, v8::Handle<v8::Valu
     return roleIndex;
 }
 
-ModelObject::ModelObject(QQuickListModel *model, int elementIndex)
+ModelObject::ModelObject(QQmlListModel *model, int elementIndex)
 : m_model(model), m_elementIndex(elementIndex), m_meta(new ModelNodeMetaObject(this))
 {
     updateValues();
@@ -1269,12 +1269,12 @@ void ModelNodeMetaObject::propertyWritten(int index)
     }
 }
 
-DynamicRoleModelNode::DynamicRoleModelNode(QQuickListModel *owner, int uid) : m_owner(owner), m_uid(uid), m_meta(new DynamicRoleModelNodeMetaObject(this))
+DynamicRoleModelNode::DynamicRoleModelNode(QQmlListModel *owner, int uid) : m_owner(owner), m_uid(uid), m_meta(new DynamicRoleModelNodeMetaObject(this))
 {
     setNodeUpdatesEnabled(true);
 }
 
-DynamicRoleModelNode *DynamicRoleModelNode::create(const QVariantMap &obj, QQuickListModel *owner)
+DynamicRoleModelNode *DynamicRoleModelNode::create(const QVariantMap &obj, QQmlListModel *owner)
 {
     DynamicRoleModelNode *object = new DynamicRoleModelNode(owner, uidCounter.fetchAndAddOrdered(1));
     QVector<int> roles;
@@ -1282,20 +1282,20 @@ DynamicRoleModelNode *DynamicRoleModelNode::create(const QVariantMap &obj, QQuic
     return object;
 }
 
-void DynamicRoleModelNode::sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target, QHash<int, QQuickListModel *> *targetModelHash)
+void DynamicRoleModelNode::sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target, QHash<int, QQmlListModel *> *targetModelHash)
 {
     for (int i=0 ; i < src->m_meta->count() ; ++i) {
         const QByteArray &name = src->m_meta->name(i);
         QVariant value = src->m_meta->value(i);
 
-        QQuickListModel *srcModel = qobject_cast<QQuickListModel *>(value.value<QObject *>());
-        QQuickListModel *targetModel = qobject_cast<QQuickListModel *>(target->m_meta->value(i).value<QObject *>());
+        QQmlListModel *srcModel = qobject_cast<QQmlListModel *>(value.value<QObject *>());
+        QQmlListModel *targetModel = qobject_cast<QQmlListModel *>(target->m_meta->value(i).value<QObject *>());
 
         if (srcModel) {
             if (targetModel == 0)
-                targetModel = QQuickListModel::createWithOwner(target->m_owner);
+                targetModel = QQmlListModel::createWithOwner(target->m_owner);
 
-            QQuickListModel::sync(srcModel, targetModel, targetModelHash);
+            QQmlListModel::sync(srcModel, targetModel, targetModelHash);
 
             QObject *targetModelObject = targetModel;
             value = QVariant::fromValue(targetModelObject);
@@ -1326,7 +1326,7 @@ void DynamicRoleModelNode::updateValues(const QVariantMap &object, QVector<int> 
         QVariant value = object[key];
 
         if (value.type() == QVariant::List) {
-            QQuickListModel *subModel = QQuickListModel::createWithOwner(m_owner);
+            QQmlListModel *subModel = QQmlListModel::createWithOwner(m_owner);
 
             QVariantList subArray = value.toList();
             QVariantList::const_iterator subIt = subArray.begin();
@@ -1343,7 +1343,7 @@ void DynamicRoleModelNode::updateValues(const QVariantMap &object, QVector<int> 
 
         const QByteArray &keyUtf8 = key.toUtf8();
 
-        QQuickListModel *existingModel = qobject_cast<QQuickListModel *>(m_meta->value(keyUtf8).value<QObject *>());
+        QQmlListModel *existingModel = qobject_cast<QQmlListModel *>(m_meta->value(keyUtf8).value<QObject *>());
         if (existingModel)
             delete existingModel;
 
@@ -1362,7 +1362,7 @@ DynamicRoleModelNodeMetaObject::DynamicRoleModelNodeMetaObject(DynamicRoleModelN
 DynamicRoleModelNodeMetaObject::~DynamicRoleModelNodeMetaObject()
 {
     for (int i=0 ; i < count() ; ++i) {
-        QQuickListModel *subModel = qobject_cast<QQuickListModel *>(value(i).value<QObject *>());
+        QQmlListModel *subModel = qobject_cast<QQmlListModel *>(value(i).value<QObject *>());
         if (subModel)
             delete subModel;
     }
@@ -1374,7 +1374,7 @@ void DynamicRoleModelNodeMetaObject::propertyWrite(int index)
         return;
 
     QVariant v = value(index);
-    QQuickListModel *model = qobject_cast<QQuickListModel *>(v.value<QObject *>());
+    QQmlListModel *model = qobject_cast<QQmlListModel *>(v.value<QObject *>());
     if (model)
         delete model;
 }
@@ -1384,11 +1384,11 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     if (!m_enabled)
         return;
 
-    QQuickListModel *parentModel = m_owner->m_owner;
+    QQmlListModel *parentModel = m_owner->m_owner;
 
     QVariant v = value(index);
     if (v.type() == QVariant::List) {
-        QQuickListModel *subModel = QQuickListModel::createWithOwner(parentModel);
+        QQmlListModel *subModel = QQmlListModel::createWithOwner(parentModel);
 
         QVariantList subArray = v.toList();
         QVariantList::const_iterator subIt = subArray.begin();
@@ -1417,14 +1417,14 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     }
 }
 
-QQuickListModelParser::ListInstruction *QQuickListModelParser::ListModelData::instructions() const
+QQmlListModelParser::ListInstruction *QQmlListModelParser::ListModelData::instructions() const
 {
-    return (QQuickListModelParser::ListInstruction *)((char *)this + sizeof(ListModelData));
+    return (QQmlListModelParser::ListInstruction *)((char *)this + sizeof(ListModelData));
 }
 
 /*!
     \qmltype ListModel
-    \instantiates QQuickListModel
+    \instantiates QQmlListModel
     \inqmlmodule QtQuick 2
     \brief Defines a free-form list data source
     \ingroup qtquick-models
@@ -1515,7 +1515,7 @@ QQuickListModelParser::ListInstruction *QQuickListModelParser::ListModelData::in
     \sa {qml-data-models}{Data Models}, {declarative/threading/threadedlistmodel}{Threaded ListModel example}, QtQml
 */
 
-QQuickListModel::QQuickListModel(QObject *parent)
+QQmlListModel::QQmlListModel(QObject *parent)
 : QAbstractListModel(parent)
 {
     m_mainThread = true;
@@ -1530,7 +1530,7 @@ QQuickListModel::QQuickListModel(QObject *parent)
     m_engine = 0;
 }
 
-QQuickListModel::QQuickListModel(const QQuickListModel *owner, ListModel *data, QV8Engine *eng, QObject *parent)
+QQmlListModel::QQmlListModel(const QQmlListModel *owner, ListModel *data, QV8Engine *eng, QObject *parent)
 : QAbstractListModel(parent)
 {
     m_mainThread = owner->m_mainThread;
@@ -1545,7 +1545,7 @@ QQuickListModel::QQuickListModel(const QQuickListModel *owner, ListModel *data, 
     m_engine = eng;
 }
 
-QQuickListModel::QQuickListModel(QQuickListModel *orig, QQuickListModelWorkerAgent *agent)
+QQmlListModel::QQmlListModel(QQmlListModel *orig, QQmlListModelWorkerAgent *agent)
 : QAbstractListModel(agent)
 {
     m_mainThread = false;
@@ -1564,7 +1564,7 @@ QQuickListModel::QQuickListModel(QQuickListModel *orig, QQuickListModelWorkerAge
     m_engine = 0;
 }
 
-QQuickListModel::~QQuickListModel()
+QQmlListModel::~QQmlListModel()
 {
     for (int i=0 ; i < m_modelObjects.count() ; ++i)
         delete m_modelObjects[i];
@@ -1585,9 +1585,9 @@ QQuickListModel::~QQuickListModel()
     m_layout = 0;
 }
 
-QQuickListModel *QQuickListModel::createWithOwner(QQuickListModel *newOwner)
+QQmlListModel *QQmlListModel::createWithOwner(QQmlListModel *newOwner)
 {
-    QQuickListModel *model = new QQuickListModel;
+    QQmlListModel *model = new QQmlListModel;
 
     model->m_mainThread = newOwner->m_mainThread;
     model->m_engine = newOwner->m_engine;
@@ -1602,7 +1602,7 @@ QQuickListModel *QQuickListModel::createWithOwner(QQuickListModel *newOwner)
     return model;
 }
 
-QV8Engine *QQuickListModel::engine() const
+QV8Engine *QQmlListModel::engine() const
 {
     if (m_engine == 0) {
         m_engine  = QQmlEnginePrivate::getV8Engine(qmlEngine(this));
@@ -1611,7 +1611,7 @@ QV8Engine *QQuickListModel::engine() const
     return m_engine;
 }
 
-void QQuickListModel::sync(QQuickListModel *src, QQuickListModel *target, QHash<int, QQuickListModel *> *targetModelHash)
+void QQmlListModel::sync(QQmlListModel *src, QQmlListModel *target, QHash<int, QQmlListModel *> *targetModelHash)
 {
     Q_ASSERT(src->m_dynamicRoles && target->m_dynamicRoles);
 
@@ -1672,7 +1672,7 @@ void QQuickListModel::sync(QQuickListModel *src, QQuickListModel *target, QHash<
     }
 }
 
-void QQuickListModel::emitItemsChanged(int index, int count, const QVector<int> &roles)
+void QQmlListModel::emitItemsChanged(int index, int count, const QVector<int> &roles)
 {
     if (count <= 0)
         return;
@@ -1685,7 +1685,7 @@ void QQuickListModel::emitItemsChanged(int index, int count, const QVector<int> 
     }
 }
 
-void QQuickListModel::emitItemsRemoved(int index, int count)
+void QQmlListModel::emitItemsRemoved(int index, int count)
 {
     if (count <= 0)
         return;
@@ -1702,7 +1702,7 @@ void QQuickListModel::emitItemsRemoved(int index, int count)
     }
 }
 
-void QQuickListModel::emitItemsInserted(int index, int count)
+void QQmlListModel::emitItemsInserted(int index, int count)
 {
     if (count <= 0)
         return;
@@ -1717,7 +1717,7 @@ void QQuickListModel::emitItemsInserted(int index, int count)
     }
 }
 
-void QQuickListModel::emitItemsMoved(int from, int to, int n)
+void QQmlListModel::emitItemsMoved(int from, int to, int n)
 {
     if (n <= 0)
         return;
@@ -1731,33 +1731,33 @@ void QQuickListModel::emitItemsMoved(int from, int to, int n)
     }
 }
 
-QQuickListModelWorkerAgent *QQuickListModel::agent()
+QQmlListModelWorkerAgent *QQmlListModel::agent()
 {
     if (m_agent)
         return m_agent;
 
-    m_agent = new QQuickListModelWorkerAgent(this);
+    m_agent = new QQmlListModelWorkerAgent(this);
     return m_agent;
 }
 
-QModelIndex QQuickListModel::index(int row, int column, const QModelIndex &parent) const
+QModelIndex QQmlListModel::index(int row, int column, const QModelIndex &parent) const
 {
     return row >= 0 && row < count() && column == 0 && !parent.isValid()
             ? createIndex(row, column)
             : QModelIndex();
 }
 
-int QQuickListModel::rowCount(const QModelIndex &parent) const
+int QQmlListModel::rowCount(const QModelIndex &parent) const
 {
     return !parent.isValid() ? count() : 0;
 }
 
-QVariant QQuickListModel::data(const QModelIndex &index, int role) const
+QVariant QQmlListModel::data(const QModelIndex &index, int role) const
 {
     return data(index.row(), role);
 }
 
-QVariant QQuickListModel::data(int index, int role) const
+QVariant QQmlListModel::data(int index, int role) const
 {
     QVariant v;
 
@@ -1772,7 +1772,7 @@ QVariant QQuickListModel::data(int index, int role) const
     return v;
 }
 
-QHash<int, QByteArray> QQuickListModel::roleNames() const
+QHash<int, QByteArray> QQmlListModel::roleNames() const
 {
     QHash<int, QByteArray> roleNames;
 
@@ -1790,7 +1790,7 @@ QHash<int, QByteArray> QQuickListModel::roleNames() const
 }
 
 /*!
-    \qmlproperty bool QtQuick2::ListModel::dynamicRoles
+    \qmlproperty bool QtQml2::ListModel::dynamicRoles
 
     By default, the type of a role is fixed the first time
     the role is used. For example, if you create a role called
@@ -1815,7 +1815,7 @@ QHash<int, QByteArray> QQuickListModel::roleNames() const
     Due to the performance cost of using dynamic roles,
     they are disabled by default.
 */
-void QQuickListModel::setDynamicRoles(bool enableDynamicRoles)
+void QQmlListModel::setDynamicRoles(bool enableDynamicRoles)
 {
     if (m_mainThread && m_agent == 0) {
         if (enableDynamicRoles) {
@@ -1836,10 +1836,10 @@ void QQuickListModel::setDynamicRoles(bool enableDynamicRoles)
 }
 
 /*!
-    \qmlproperty int QtQuick2::ListModel::count
+    \qmlproperty int QtQml2::ListModel::count
     The number of data entries in the model.
 */
-int QQuickListModel::count() const
+int QQmlListModel::count() const
 {
     int count;
 
@@ -1853,13 +1853,13 @@ int QQuickListModel::count() const
 }
 
 /*!
-    \qmlmethod QtQuick2::ListModel::clear()
+    \qmlmethod QtQml2::ListModel::clear()
 
     Deletes all content from the model.
 
     \sa append(), remove()
 */
-void QQuickListModel::clear()
+void QQmlListModel::clear()
 {
     int cleared = count();
 
@@ -1875,13 +1875,13 @@ void QQuickListModel::clear()
 }
 
 /*!
-    \qmlmethod QtQuick2::ListModel::remove(int index, int count = 1)
+    \qmlmethod QtQml2::ListModel::remove(int index, int count = 1)
 
     Deletes the content at \a index from the model.
 
     \sa clear()
 */
-void QQuickListModel::remove(QQmlV8Function *args)
+void QQmlListModel::remove(QQmlV8Function *args)
 {
     int argLength = args->Length();
 
@@ -1909,7 +1909,7 @@ void QQuickListModel::remove(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod QtQuick2::ListModel::insert(int index, jsobject dict)
+    \qmlmethod QtQml2::ListModel::insert(int index, jsobject dict)
 
     Adds a new item to the list model at position \a index, with the
     values in \a dict.
@@ -1924,7 +1924,7 @@ void QQuickListModel::remove(QQmlV8Function *args)
     \sa set(), append()
 */
 
-void QQuickListModel::insert(QQmlV8Function *args)
+void QQmlListModel::insert(QQmlV8Function *args)
 {
     if (args->Length() == 2) {
 
@@ -1970,7 +1970,7 @@ void QQuickListModel::insert(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod QtQuick2::ListModel::move(int from, int to, int n)
+    \qmlmethod QtQml2::ListModel::move(int from, int to, int n)
 
     Moves \a n items \a from one position \a to another.
 
@@ -1983,7 +1983,7 @@ void QQuickListModel::insert(QQmlV8Function *args)
 
     \sa append()
 */
-void QQuickListModel::move(int from, int to, int n)
+void QQmlListModel::move(int from, int to, int n)
 {
     if (n==0 || from==to)
         return;
@@ -2023,7 +2023,7 @@ void QQuickListModel::move(int from, int to, int n)
 }
 
 /*!
-    \qmlmethod QtQuick2::ListModel::append(jsobject dict)
+    \qmlmethod QtQml2::ListModel::append(jsobject dict)
 
     Adds a new item to the end of the list model, with the
     values in \a dict.
@@ -2034,7 +2034,7 @@ void QQuickListModel::move(int from, int to, int n)
 
     \sa set(), remove()
 */
-void QQuickListModel::append(QQmlV8Function *args)
+void QQmlListModel::append(QQmlV8Function *args)
 {
     if (args->Length() == 1) {
         v8::Handle<v8::Value> arg = (*args)[0];
@@ -2077,7 +2077,7 @@ void QQuickListModel::append(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod object QtQuick2::ListModel::get(int index)
+    \qmlmethod object QtQml2::ListModel::get(int index)
 
     Returns the item at \a index in the list model. This allows the item
     data to be accessed or modified from JavaScript:
@@ -2107,7 +2107,7 @@ void QQuickListModel::append(QQmlV8Function *args)
 
     \sa append()
 */
-QQmlV8Handle QQuickListModel::get(int index) const
+QQmlV8Handle QQmlListModel::get(int index) const
 {
     v8::Handle<v8::Value> result = v8::Undefined();
 
@@ -2118,7 +2118,7 @@ QQmlV8Handle QQuickListModel::get(int index) const
             DynamicRoleModelNode *object = m_modelObjects[index];
             result = v8engine->newQObject(object);
         } else {
-            ModelObject *object = m_listModel->getOrCreateModelObject(const_cast<QQuickListModel *>(this), index);
+            ModelObject *object = m_listModel->getOrCreateModelObject(const_cast<QQmlListModel *>(this), index);
             result = v8engine->newQObject(object);
         }
     }
@@ -2127,7 +2127,7 @@ QQmlV8Handle QQuickListModel::get(int index) const
 }
 
 /*!
-    \qmlmethod QtQuick2::ListModel::set(int index, jsobject dict)
+    \qmlmethod QtQml2::ListModel::set(int index, jsobject dict)
 
     Changes the item at \a index in the list model with the
     values in \a dict. Properties not appearing in \a dict
@@ -2142,7 +2142,7 @@ QQmlV8Handle QQuickListModel::get(int index) const
 
     \sa append()
 */
-void QQuickListModel::set(int index, const QQmlV8Handle &handle)
+void QQmlListModel::set(int index, const QQmlV8Handle &handle)
 {
     v8::Handle<v8::Value> valuemap = handle.toHandle();
 
@@ -2182,7 +2182,7 @@ void QQuickListModel::set(int index, const QQmlV8Handle &handle)
 }
 
 /*!
-    \qmlmethod QtQuick2::ListModel::setProperty(int index, string property, variant value)
+    \qmlmethod QtQml2::ListModel::setProperty(int index, string property, variant value)
 
     Changes the \a property of the item at \a index in the list model to \a value.
 
@@ -2194,7 +2194,7 @@ void QQuickListModel::set(int index, const QQmlV8Handle &handle)
 
     \sa append()
 */
-void QQuickListModel::setProperty(int index, const QString& property, const QVariant& value)
+void QQmlListModel::setProperty(int index, const QString& property, const QVariant& value)
 {
     if (count() == 0 || index >= count() || index < 0) {
         qmlInfo(this) << tr("set: index %1 out of range").arg(index);
@@ -2225,20 +2225,20 @@ void QQuickListModel::setProperty(int index, const QString& property, const QVar
 }
 
 /*!
-    \qmlmethod QtQuick2::ListModel::sync()
+    \qmlmethod QtQml2::ListModel::sync()
 
     Writes any unsaved changes to the list model after it has been modified
     from a worker script.
 */
-void QQuickListModel::sync()
+void QQmlListModel::sync()
 {
     // This is just a dummy method to make it look like sync() exists in
-    // ListModel (and not just QQuickListModelWorkerAgent) and to let
+    // ListModel (and not just QQmlListModelWorkerAgent) and to let
     // us document sync().
     qmlInfo(this) << "List sync() can only be called from a WorkerScript";
 }
 
-bool QQuickListModelParser::compileProperty(const QQmlCustomParserProperty &prop, QList<ListInstruction> &instr, QByteArray &data)
+bool QQmlListModelParser::compileProperty(const QQmlCustomParserProperty &prop, QList<ListInstruction> &instr, QByteArray &data)
 {
     QList<QVariant> values = prop.assignedValues();
     for(int ii = 0; ii < values.count(); ++ii) {
@@ -2250,8 +2250,8 @@ bool QQuickListModelParser::compileProperty(const QQmlCustomParserProperty &prop
 
             if (node.name() != listElementTypeName) {
                 const QMetaObject *mo = resolveType(node.name());
-                if (mo != &QQuickListElement::staticMetaObject) {
-                    error(node, QQuickListModel::tr("ListElement: cannot contain nested elements"));
+                if (mo != &QQmlListElement::staticMetaObject) {
+                    error(node, QQmlListModel::tr("ListElement: cannot contain nested elements"));
                     return false;
                 }
                 listElementTypeName = node.name(); // cache right name for next time
@@ -2268,11 +2268,11 @@ bool QQuickListModelParser::compileProperty(const QQmlCustomParserProperty &prop
             for(int jj = 0; jj < props.count(); ++jj) {
                 const QQmlCustomParserProperty &nodeProp = props.at(jj);
                 if (nodeProp.name().isEmpty()) {
-                    error(nodeProp, QQuickListModel::tr("ListElement: cannot contain nested elements"));
+                    error(nodeProp, QQmlListModel::tr("ListElement: cannot contain nested elements"));
                     return false;
                 }
                 if (nodeProp.name() == QStringLiteral("id")) {
-                    error(nodeProp, QQuickListModel::tr("ListElement: cannot use reserved \"id\" property"));
+                    error(nodeProp, QQmlListModel::tr("ListElement: cannot use reserved \"id\" property"));
                     return false;
                 }
 
@@ -2331,14 +2331,14 @@ bool QQuickListModelParser::compileProperty(const QQmlCustomParserProperty &prop
                                     if (callExpr->arguments && !callExpr->arguments->next)
                                         literal = AST::cast<AST::StringLiteral *>(callExpr->arguments->expression);
                                     if (!literal) {
-                                        error(prop, QQuickListModel::tr("ListElement: improperly specified %1").arg(idExpr->name.toString()));
+                                        error(prop, QQmlListModel::tr("ListElement: improperly specified %1").arg(idExpr->name.toString()));
                                         return false;
                                     }
                                 } else if (idExpr->name == QLatin1String("QT_TRANSLATE_NOOP")) {
                                     if (callExpr->arguments && callExpr->arguments->next && !callExpr->arguments->next->next)
                                         literal = AST::cast<AST::StringLiteral *>(callExpr->arguments->next->expression);
                                     if (!literal) {
-                                        error(prop, QQuickListModel::tr("ListElement: improperly specified QT_TRANSLATE_NOOP"));
+                                        error(prop, QQmlListModel::tr("ListElement: improperly specified QT_TRANSLATE_NOOP"));
                                         return false;
                                     }
                                 }
@@ -2349,7 +2349,7 @@ bool QQuickListModelParser::compileProperty(const QQmlCustomParserProperty &prop
                             d[0] = char(QQmlScript::Variant::String);
                             d += literal->value.toUtf8();
                         } else {
-                            error(prop, QQuickListModel::tr("ListElement: cannot use script for property value"));
+                            error(prop, QQmlListModel::tr("ListElement: cannot use script for property value"));
                             return false;
                         }
                     } else {
@@ -2371,7 +2371,7 @@ bool QQuickListModelParser::compileProperty(const QQmlCustomParserProperty &prop
     return true;
 }
 
-QByteArray QQuickListModelParser::compile(const QList<QQmlCustomParserProperty> &customProps)
+QByteArray QQmlListModelParser::compile(const QList<QQmlCustomParserProperty> &customProps)
 {
     QList<ListInstruction> instr;
     QByteArray data;
@@ -2380,7 +2380,7 @@ QByteArray QQuickListModelParser::compile(const QList<QQmlCustomParserProperty> 
     for(int ii = 0; ii < customProps.count(); ++ii) {
         const QQmlCustomParserProperty &prop = customProps.at(ii);
         if(!prop.name().isEmpty()) { // isn't default property
-            error(prop, QQuickListModel::tr("ListModel: undefined property '%1'").arg(prop.name()));
+            error(prop, QQmlListModel::tr("ListModel: undefined property '%1'").arg(prop.name()));
             return QByteArray();
         }
 
@@ -2407,9 +2407,9 @@ QByteArray QQuickListModelParser::compile(const QList<QQmlCustomParserProperty> 
     return rv;
 }
 
-void QQuickListModelParser::setCustomData(QObject *obj, const QByteArray &d)
+void QQmlListModelParser::setCustomData(QObject *obj, const QByteArray &d)
 {
-    QQuickListModel *rv = static_cast<QQuickListModel *>(obj);
+    QQmlListModel *rv = static_cast<QQmlListModel *>(obj);
 
     QV8Engine *engine = QQmlEnginePrivate::getV8Engine(qmlEngine(rv));
     rv->m_engine = engine;
@@ -2508,7 +2508,7 @@ void QQuickListModelParser::setCustomData(QObject *obj, const QByteArray &d)
         qmlInfo(obj) << "All ListElement declarations are empty, no roles can be created unless dynamicRoles is set.";
 }
 
-bool QQuickListModelParser::definesEmptyList(const QString &s)
+bool QQmlListModelParser::definesEmptyList(const QString &s)
 {
     if (s.startsWith(QLatin1Char('[')) && s.endsWith(QLatin1Char(']'))) {
         for (int i=1; i<s.length()-1; i++) {
@@ -2523,7 +2523,7 @@ bool QQuickListModelParser::definesEmptyList(const QString &s)
 
 /*!
     \qmltype ListElement
-    \instantiates QQuickListElement
+    \instantiates QQmlListElement
     \inqmlmodule QtQuick 2
     \brief Defines a data item in a ListModel
     \ingroup qtquick-models

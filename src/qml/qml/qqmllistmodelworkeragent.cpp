@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#include "qquicklistmodelworkeragent_p.h"
-#include "qquicklistmodel_p_p.h"
+#include "qqmllistmodelworkeragent_p.h"
+#include "qqmllistmodel_p_p.h"
 #include <private/qqmldata_p.h>
 #include <private/qqmlengine_p.h>
 #include <qqmlinfo.h>
@@ -53,7 +53,7 @@
 QT_BEGIN_NAMESPACE
 
 
-void QQuickListModelWorkerAgent::Data::clearChange(int uid)
+void QQmlListModelWorkerAgent::Data::clearChange(int uid)
 {
     for (int i=0 ; i < changes.count() ; ++i) {
         if (changes[i].modelUid == uid) {
@@ -63,53 +63,53 @@ void QQuickListModelWorkerAgent::Data::clearChange(int uid)
     }
 }
 
-void QQuickListModelWorkerAgent::Data::insertChange(int uid, int index, int count)
+void QQmlListModelWorkerAgent::Data::insertChange(int uid, int index, int count)
 {
     Change c = { uid, Change::Inserted, index, count, 0, QVector<int>() };
     changes << c;
 }
 
-void QQuickListModelWorkerAgent::Data::removeChange(int uid, int index, int count)
+void QQmlListModelWorkerAgent::Data::removeChange(int uid, int index, int count)
 {
     Change c = { uid, Change::Removed, index, count, 0, QVector<int>() };
     changes << c;
 }
 
-void QQuickListModelWorkerAgent::Data::moveChange(int uid, int index, int count, int to)
+void QQmlListModelWorkerAgent::Data::moveChange(int uid, int index, int count, int to)
 {
     Change c = { uid, Change::Moved, index, count, to, QVector<int>() };
     changes << c;
 }
 
-void QQuickListModelWorkerAgent::Data::changedChange(int uid, int index, int count, const QVector<int> &roles)
+void QQmlListModelWorkerAgent::Data::changedChange(int uid, int index, int count, const QVector<int> &roles)
 {
     Change c = { uid, Change::Changed, index, count, 0, roles };
     changes << c;
 }
 
-QQuickListModelWorkerAgent::QQuickListModelWorkerAgent(QQuickListModel *model)
-: m_ref(1), m_orig(model), m_copy(new QQuickListModel(model, this))
+QQmlListModelWorkerAgent::QQmlListModelWorkerAgent(QQmlListModel *model)
+: m_ref(1), m_orig(model), m_copy(new QQmlListModel(model, this))
 {
 }
 
-QQuickListModelWorkerAgent::~QQuickListModelWorkerAgent()
+QQmlListModelWorkerAgent::~QQmlListModelWorkerAgent()
 {
     mutex.lock();
     syncDone.wakeAll();
     mutex.unlock();
 }
 
-void QQuickListModelWorkerAgent::setV8Engine(QV8Engine *eng)
+void QQmlListModelWorkerAgent::setV8Engine(QV8Engine *eng)
 {
     m_copy->m_engine = eng;
 }
 
-void QQuickListModelWorkerAgent::addref()
+void QQmlListModelWorkerAgent::addref()
 {
     m_ref.ref();
 }
 
-void QQuickListModelWorkerAgent::release()
+void QQmlListModelWorkerAgent::release()
 {
     bool del = !m_ref.deref();
 
@@ -117,57 +117,57 @@ void QQuickListModelWorkerAgent::release()
         deleteLater();
 }
 
-void QQuickListModelWorkerAgent::modelDestroyed()
+void QQmlListModelWorkerAgent::modelDestroyed()
 {
     m_orig = 0;
 }
 
-int QQuickListModelWorkerAgent::count() const
+int QQmlListModelWorkerAgent::count() const
 {
     return m_copy->count();
 }
 
-void QQuickListModelWorkerAgent::clear()
+void QQmlListModelWorkerAgent::clear()
 {
     m_copy->clear();
 }
 
-void QQuickListModelWorkerAgent::remove(QQmlV8Function *args)
+void QQmlListModelWorkerAgent::remove(QQmlV8Function *args)
 {
     m_copy->remove(args);
 }
 
-void QQuickListModelWorkerAgent::append(QQmlV8Function *args)
+void QQmlListModelWorkerAgent::append(QQmlV8Function *args)
 {
     m_copy->append(args);
 }
 
-void QQuickListModelWorkerAgent::insert(QQmlV8Function *args)
+void QQmlListModelWorkerAgent::insert(QQmlV8Function *args)
 {
     m_copy->insert(args);
 }
 
-QQmlV8Handle QQuickListModelWorkerAgent::get(int index) const
+QQmlV8Handle QQmlListModelWorkerAgent::get(int index) const
 {
     return m_copy->get(index);
 }
 
-void QQuickListModelWorkerAgent::set(int index, const QQmlV8Handle &value)
+void QQmlListModelWorkerAgent::set(int index, const QQmlV8Handle &value)
 {
     m_copy->set(index, value);
 }
 
-void QQuickListModelWorkerAgent::setProperty(int index, const QString& property, const QVariant& value)
+void QQmlListModelWorkerAgent::setProperty(int index, const QString& property, const QVariant& value)
 {
     m_copy->setProperty(index, property, value);
 }
 
-void QQuickListModelWorkerAgent::move(int from, int to, int count)
+void QQmlListModelWorkerAgent::move(int from, int to, int count)
 {
     m_copy->move(from, to, count);
 }
 
-void QQuickListModelWorkerAgent::sync()
+void QQmlListModelWorkerAgent::sync()
 {
     Sync *s = new Sync;
     s->data = data;
@@ -180,7 +180,7 @@ void QQuickListModelWorkerAgent::sync()
     mutex.unlock();
 }
 
-bool QQuickListModelWorkerAgent::event(QEvent *e)
+bool QQmlListModelWorkerAgent::event(QEvent *e)
 {
     if (e->type() == QEvent::User) {
         bool cc = false;
@@ -191,19 +191,19 @@ bool QQuickListModelWorkerAgent::event(QEvent *e)
 
             cc = m_orig->count() != s->list->count();
 
-            QHash<int, QQuickListModel *> targetModelDynamicHash;
+            QHash<int, QQmlListModel *> targetModelDynamicHash;
             QHash<int, ListModel *> targetModelStaticHash;
 
             Q_ASSERT(m_orig->m_dynamicRoles == s->list->m_dynamicRoles);
             if (m_orig->m_dynamicRoles)
-                QQuickListModel::sync(s->list, m_orig, &targetModelDynamicHash);
+                QQmlListModel::sync(s->list, m_orig, &targetModelDynamicHash);
             else
                 ListModel::sync(s->list->m_listModel, m_orig->m_listModel, &targetModelStaticHash);
 
             for (int ii = 0; ii < changes.count(); ++ii) {
                 const Change &change = changes.at(ii);
 
-                QQuickListModel *model = 0;
+                QQmlListModel *model = 0;
                 if (m_orig->m_dynamicRoles) {
                     model = targetModelDynamicHash.value(change.modelUid);
                 } else {

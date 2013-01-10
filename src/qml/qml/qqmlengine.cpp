@@ -55,7 +55,7 @@
 #include "qqmlxmlhttprequest_p.h"
 #include "qqmlscriptstring.h"
 #include "qqmlglobal_p.h"
-#include "qquicklistmodel_p.h"
+#include "qqmllistmodel_p.h"
 #include "qquickworkerscript_p.h"
 #include "qqmlcomponent_p.h"
 #include "qqmlnetworkaccessmanagerfactory.h"
@@ -180,14 +180,14 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
     qmlRegisterType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections");
     qmlRegisterType<QQmlTimer>(uri, versionMajor, versionMinor,"Timer");
     qmlRegisterCustomType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections", new QQmlConnectionsParser);
+    qmlRegisterType<QQmlListElement>(uri, versionMajor, versionMinor, "ListElement");
+    qmlRegisterCustomType<QQmlListModel>(uri, versionMajor, versionMinor, "ListModel", new QQmlListModelParser);
 }
 
 
 // These QtQuick types' implementation resides in the QtQml module
 void QQmlEnginePrivate::registerQtQuick2Types(const char *uri, int versionMajor, int versionMinor)
 {
-    qmlRegisterType<QQuickListElement>(uri, versionMajor, versionMinor, "ListElement");
-    qmlRegisterCustomType<QQuickListModel>(uri, versionMajor, versionMinor, "ListModel", new QQuickListModelParser);
     qmlRegisterType<QQuickWorkerScript>(uri, versionMajor, versionMinor, "WorkerScript");
 }
 

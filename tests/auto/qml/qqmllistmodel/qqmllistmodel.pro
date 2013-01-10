@@ -1,8 +1,8 @@
 CONFIG += testcase
-TARGET = tst_qquicklistmodel
+TARGET = tst_qqmllistmodel
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qquicklistmodel.cpp
+SOURCES += tst_qqmllistmodel.cpp
 
 include (../../shared/util.pri)
 

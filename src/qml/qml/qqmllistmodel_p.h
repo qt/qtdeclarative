@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKLISTMODEL_H
-#define QQUICKLISTMODEL_H
+#ifndef QQMLLISTMODEL_H
+#define QQMLLISTMODEL_H
 
 #include <qqml.h>
 #include <private/qqmlcustomparser_p.h>
@@ -60,19 +60,19 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 
-class QQuickListModelWorkerAgent;
+class QQmlListModelWorkerAgent;
 class ListModel;
 class ListLayout;
 
-class Q_QML_PRIVATE_EXPORT QQuickListModel : public QAbstractListModel
+class Q_QML_PRIVATE_EXPORT QQmlListModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(bool dynamicRoles READ dynamicRoles WRITE setDynamicRoles)
 
 public:
-    QQuickListModel(QObject *parent=0);
-    ~QQuickListModel();
+    QQmlListModel(QObject *parent=0);
+    ~QQmlListModel();
 
     QModelIndex index(int row, int column, const QModelIndex &parent) const;
     int rowCount(const QModelIndex &parent) const;
@@ -92,7 +92,7 @@ public:
     Q_INVOKABLE void move(int from, int to, int count);
     Q_INVOKABLE void sync();
 
-    QQuickListModelWorkerAgent *agent();
+    QQmlListModelWorkerAgent *agent();
 
     bool dynamicRoles() const { return m_dynamicRoles; }
     void setDynamicRoles(bool enableDynamicRoles);
@@ -101,8 +101,8 @@ Q_SIGNALS:
     void countChanged();
 
 private:
-    friend class QQuickListModelParser;
-    friend class QQuickListModelWorkerAgent;
+    friend class QQmlListModelParser;
+    friend class QQmlListModelWorkerAgent;
     friend class ModelObject;
     friend class ModelNodeMetaObject;
     friend class ListModel;
@@ -111,14 +111,14 @@ private:
     friend class DynamicRoleModelNodeMetaObject;
 
     // Constructs a flat list model for a worker agent
-    QQuickListModel(QQuickListModel *orig, QQuickListModelWorkerAgent *agent);
-    QQuickListModel(const QQuickListModel *owner, ListModel *data, QV8Engine *eng, QObject *parent=0);
+    QQmlListModel(QQmlListModel *orig, QQmlListModelWorkerAgent *agent);
+    QQmlListModel(const QQmlListModel *owner, ListModel *data, QV8Engine *eng, QObject *parent=0);
 
     QV8Engine *engine() const;
 
     inline bool canMove(int from, int to, int n) const { return !(from+n > count() || to+n > count() || from < 0 || to < 0 || n < 0); }
 
-    QQuickListModelWorkerAgent *m_agent;
+    QQmlListModelWorkerAgent *m_agent;
     mutable QV8Engine *m_engine;
     bool m_mainThread;
     bool m_primary;
@@ -142,8 +142,8 @@ private:
 
     int getUid() const { return m_uid; }
 
-    static void sync(QQuickListModel *src, QQuickListModel *target, QHash<int, QQuickListModel *> *targetModelHash);
-    static QQuickListModel *createWithOwner(QQuickListModel *newOwner);
+    static void sync(QQmlListModel *src, QQmlListModel *target, QHash<int, QQmlListModel *> *targetModelHash);
+    static QQmlListModel *createWithOwner(QQmlListModel *newOwner);
 
     void emitItemsChanged(int index, int count, const QVector<int> &roles);
     void emitItemsRemoved(int index, int count);
@@ -152,15 +152,15 @@ private:
 };
 
 // ### FIXME
-class QQuickListElement : public QObject
+class QQmlListElement : public QObject
 {
 Q_OBJECT
 };
 
-class QQuickListModelParser : public QQmlCustomParser
+class QQmlListModelParser : public QQmlCustomParser
 {
 public:
-    QQuickListModelParser() : QQmlCustomParser(QQmlCustomParser::AcceptsSignalHandlers) {}
+    QQmlListModelParser() : QQmlCustomParser(QQmlCustomParser::AcceptsSignalHandlers) {}
     QByteArray compile(const QList<QQmlCustomParserProperty> &);
     void setCustomData(QObject *, const QByteArray &);
 
@@ -194,9 +194,9 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickListModel)
-QML_DECLARE_TYPE(QQuickListElement)
+QML_DECLARE_TYPE(QQmlListModel)
+QML_DECLARE_TYPE(QQmlListElement)
 
 QT_END_HEADER
 
-#endif // QQUICKLISTMODEL_H
+#endif // QQMLLISTMODEL_H

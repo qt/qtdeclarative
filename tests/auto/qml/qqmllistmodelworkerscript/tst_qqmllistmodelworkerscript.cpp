@@ -42,7 +42,7 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQml/private/qqmlengine_p.h>
-#include <QtQml/private/qquicklistmodel_p.h>
+#include <QtQml/private/qqmllistmodel_p.h>
 #include <QtQml/private/qqmlexpression_p.h>
 #include <QQmlComponent>
 
@@ -81,18 +81,18 @@ static bool isValidErrorMessage(const QString &msg, bool dynamicRoleTest)
     return valid;
 }
 
-class tst_qquicklistmodelworkerscript : public QQmlDataTest
+class tst_qqmllistmodelworkerscript : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquicklistmodelworkerscript()
+    tst_qqmllistmodelworkerscript()
     {
         qRegisterMetaType<QVector<int> >();
     }
 
 private:
-    int roleFromName(const QQuickListModel *model, const QString &roleName);
-    QQuickItem *createWorkerTest(QQmlEngine *eng, QQmlComponent *component, QQuickListModel *model);
+    int roleFromName(const QQmlListModel *model, const QString &roleName);
+    QQuickItem *createWorkerTest(QQmlEngine *eng, QQmlComponent *component, QQmlListModel *model);
     void waitForWorker(QQuickItem *item);
 
     static bool compareVariantList(const QVariantList &testList, QVariant object);
@@ -119,11 +119,11 @@ private slots:
     void dynamic_role();
 };
 
-bool tst_qquicklistmodelworkerscript::compareVariantList(const QVariantList &testList, QVariant object)
+bool tst_qqmllistmodelworkerscript::compareVariantList(const QVariantList &testList, QVariant object)
 {
     bool allOk = true;
 
-    QQuickListModel *model = qobject_cast<QQuickListModel *>(object.value<QObject *>());
+    QQmlListModel *model = qobject_cast<QQmlListModel *>(object.value<QObject *>());
     if (model == 0)
         return false;
 
@@ -165,12 +165,12 @@ bool tst_qquicklistmodelworkerscript::compareVariantList(const QVariantList &tes
     return allOk;
 }
 
-int tst_qquicklistmodelworkerscript::roleFromName(const QQuickListModel *model, const QString &roleName)
+int tst_qqmllistmodelworkerscript::roleFromName(const QQmlListModel *model, const QString &roleName)
 {
     return model->roleNames().key(roleName.toUtf8(), -1);
 }
 
-QQuickItem *tst_qquicklistmodelworkerscript::createWorkerTest(QQmlEngine *eng, QQmlComponent *component, QQuickListModel *model)
+QQuickItem *tst_qqmllistmodelworkerscript::createWorkerTest(QQmlEngine *eng, QQmlComponent *component, QQmlListModel *model)
 {
     QQuickItem *item = qobject_cast<QQuickItem*>(component->create());
     QQmlEngine::setContextForObject(model, eng->rootContext());
@@ -179,7 +179,7 @@ QQuickItem *tst_qquicklistmodelworkerscript::createWorkerTest(QQmlEngine *eng, Q
     return item;
 }
 
-void tst_qquicklistmodelworkerscript::waitForWorker(QQuickItem *item)
+void tst_qqmllistmodelworkerscript::waitForWorker(QQuickItem *item)
 {
     QQmlProperty prop(item, "done");
     QVERIFY(prop.isValid());
@@ -198,7 +198,7 @@ void tst_qquicklistmodelworkerscript::waitForWorker(QQuickItem *item)
     QVERIFY(prop.read().toBool());
 }
 
-void tst_qquicklistmodelworkerscript::dynamic_data()
+void tst_qqmllistmodelworkerscript::dynamic_data()
 {
     QTest::addColumn<QString>("script");
     QTest::addColumn<int>("result");
@@ -339,12 +339,12 @@ void tst_qquicklistmodelworkerscript::dynamic_data()
     }
 }
 
-void tst_qquicklistmodelworkerscript::dynamic_worker_data()
+void tst_qqmllistmodelworkerscript::dynamic_worker_data()
 {
     dynamic_data();
 }
 
-void tst_qquicklistmodelworkerscript::dynamic_worker()
+void tst_qqmllistmodelworkerscript::dynamic_worker()
 {
     QFETCH(QString, script);
     QFETCH(int, result);
@@ -357,7 +357,7 @@ void tst_qquicklistmodelworkerscript::dynamic_worker()
     // This is same as dynamic() except it applies the test to a ListModel called
     // from a WorkerScript.
 
-    QQuickListModel model;
+    QQmlListModel model;
     model.setDynamicRoles(dynamicRoles);
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("model.qml"));
@@ -389,12 +389,12 @@ void tst_qquicklistmodelworkerscript::dynamic_worker()
     qApp->processEvents();
 }
 
-void tst_qquicklistmodelworkerscript::dynamic_worker_sync_data()
+void tst_qqmllistmodelworkerscript::dynamic_worker_sync_data()
 {
     dynamic_data();
 }
 
-void tst_qquicklistmodelworkerscript::dynamic_worker_sync()
+void tst_qqmllistmodelworkerscript::dynamic_worker_sync()
 {
     QFETCH(QString, script);
     QFETCH(int, result);
@@ -408,7 +408,7 @@ void tst_qquicklistmodelworkerscript::dynamic_worker_sync()
     // from the worker script, calls sync(), and tests the changes are reflected in the
     // list in the main thread
 
-    QQuickListModel model;
+    QQmlListModel model;
     model.setDynamicRoles(dynamicRoles);
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("model.qml"));
@@ -439,7 +439,7 @@ void tst_qquicklistmodelworkerscript::dynamic_worker_sync()
     qApp->processEvents();
 }
 
-void tst_qquicklistmodelworkerscript::get_data()
+void tst_qqmllistmodelworkerscript::get_data()
 {
     QTest::addColumn<QString>("expression");
     QTest::addColumn<int>("index");
@@ -463,7 +463,7 @@ void tst_qquicklistmodelworkerscript::get_data()
     }
 }
 
-void tst_qquicklistmodelworkerscript::get_worker()
+void tst_qqmllistmodelworkerscript::get_worker()
 {
     QFETCH(QString, expression);
     QFETCH(int, index);
@@ -471,7 +471,7 @@ void tst_qquicklistmodelworkerscript::get_worker()
     QFETCH(QVariant, roleValue);
     QFETCH(bool, dynamicRoles);
 
-    QQuickListModel model;
+    QQmlListModel model;
     model.setDynamicRoles(dynamicRoles);
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("model.qml"));
@@ -513,12 +513,12 @@ void tst_qquicklistmodelworkerscript::get_worker()
     delete item;
 }
 
-void tst_qquicklistmodelworkerscript::get_worker_data()
+void tst_qqmllistmodelworkerscript::get_worker_data()
 {
     get_data();
 }
 
-void tst_qquicklistmodelworkerscript::property_changes_data()
+void tst_qqmllistmodelworkerscript::property_changes_data()
 {
     QTest::addColumn<QString>("script_setup");
     QTest::addColumn<QString>("script_change");
@@ -591,7 +591,7 @@ void tst_qquicklistmodelworkerscript::property_changes_data()
     }
 }
 
-void tst_qquicklistmodelworkerscript::property_changes_worker()
+void tst_qqmllistmodelworkerscript::property_changes_worker()
 {
     QFETCH(QString, script_setup);
     QFETCH(QString, script_change);
@@ -600,7 +600,7 @@ void tst_qquicklistmodelworkerscript::property_changes_worker()
     QFETCH(bool, itemsChanged);
     QFETCH(bool, dynamicRoles);
 
-    QQuickListModel model;
+    QQmlListModel model;
     model.setDynamicRoles(dynamicRoles);
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("model.qml"));
@@ -631,12 +631,12 @@ void tst_qquicklistmodelworkerscript::property_changes_worker()
     qApp->processEvents();
 }
 
-void tst_qquicklistmodelworkerscript::property_changes_worker_data()
+void tst_qqmllistmodelworkerscript::property_changes_worker_data()
 {
     property_changes_data();
 }
 
-void tst_qquicklistmodelworkerscript::worker_sync_data()
+void tst_qqmllistmodelworkerscript::worker_sync_data()
 {
     QTest::addColumn<bool>("dynamicRoles");
 
@@ -644,11 +644,11 @@ void tst_qquicklistmodelworkerscript::worker_sync_data()
     QTest::newRow("dynamicRoles") << true;
 }
 
-void tst_qquicklistmodelworkerscript::worker_sync()
+void tst_qqmllistmodelworkerscript::worker_sync()
 {
     QFETCH(bool, dynamicRoles);
 
-    QQuickListModel model;
+    QQmlListModel model;
     model.setDynamicRoles(dynamicRoles);
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("workersync.qml"));
@@ -661,7 +661,7 @@ void tst_qquicklistmodelworkerscript::worker_sync()
 
     QVERIFY(model.count() == 2);
     QVariant childData = model.data(0, 0);
-    QQuickListModel *childModel = qobject_cast<QQuickListModel *>(childData.value<QObject *>());
+    QQmlListModel *childModel = qobject_cast<QQmlListModel *>(childData.value<QObject *>());
     QVERIFY(childModel);
     QVERIFY(childModel->count() == 1);
 
@@ -704,16 +704,16 @@ void tst_qquicklistmodelworkerscript::worker_sync()
     qApp->processEvents();
 }
 
-void tst_qquicklistmodelworkerscript::worker_remove_element_data()
+void tst_qqmllistmodelworkerscript::worker_remove_element_data()
 {
     worker_sync_data();
 }
 
-void tst_qquicklistmodelworkerscript::worker_remove_element()
+void tst_qqmllistmodelworkerscript::worker_remove_element()
 {
     QFETCH(bool, dynamicRoles);
 
-    QQuickListModel model;
+    QQmlListModel model;
     model.setDynamicRoles(dynamicRoles);
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("workerremoveelement.qml"));
@@ -746,7 +746,7 @@ void tst_qquicklistmodelworkerscript::worker_remove_element()
 
     {
         //don't crash if model was deleted earlier
-        QQuickListModel* model = new QQuickListModel;
+        QQmlListModel* model = new QQmlListModel;
         model->setDynamicRoles(dynamicRoles);
         QQmlEngine eng;
         QQmlComponent component(&eng, testFileUrl("workerremoveelement.qml"));
@@ -767,16 +767,16 @@ void tst_qquicklistmodelworkerscript::worker_remove_element()
     }
 }
 
-void tst_qquicklistmodelworkerscript::worker_remove_list_data()
+void tst_qqmllistmodelworkerscript::worker_remove_list_data()
 {
     worker_sync_data();
 }
 
-void tst_qquicklistmodelworkerscript::worker_remove_list()
+void tst_qqmllistmodelworkerscript::worker_remove_list()
 {
     QFETCH(bool, dynamicRoles);
 
-    QQuickListModel model;
+    QQmlListModel model;
     model.setDynamicRoles(dynamicRoles);
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("workerremovelist.qml"));
@@ -808,7 +808,7 @@ void tst_qquicklistmodelworkerscript::worker_remove_list()
     qApp->processEvents();
 }
 
-void tst_qquicklistmodelworkerscript::dynamic_role_data()
+void tst_qqmllistmodelworkerscript::dynamic_role_data()
 {
     QTest::addColumn<QString>("preamble");
     QTest::addColumn<QString>("script");
@@ -817,13 +817,13 @@ void tst_qquicklistmodelworkerscript::dynamic_role_data()
     QTest::newRow("sync1") << "{append({'a':[{'b':1},{'b':2}]})}" << "{get(0).a = 'string';count}" << 1;
 }
 
-void tst_qquicklistmodelworkerscript::dynamic_role()
+void tst_qqmllistmodelworkerscript::dynamic_role()
 {
     QFETCH(QString, preamble);
     QFETCH(QString, script);
     QFETCH(int, result);
 
-    QQuickListModel model;
+    QQmlListModel model;
     model.setDynamicRoles(true);
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("model.qml"));
@@ -854,6 +854,6 @@ void tst_qquicklistmodelworkerscript::dynamic_role()
     qApp->processEvents();
 }
 
-QTEST_MAIN(tst_qquicklistmodelworkerscript)
+QTEST_MAIN(tst_qqmllistmodelworkerscript)
 
-#include "tst_qquicklistmodelworkerscript.moc"
+#include "tst_qqmllistmodelworkerscript.moc"

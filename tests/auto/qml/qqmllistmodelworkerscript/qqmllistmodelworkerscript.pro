@@ -1,8 +1,8 @@
 CONFIG += testcase
-TARGET = tst_qquicklistmodelworkerscript
+TARGET = tst_qqmllistmodelworkerscript
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qquicklistmodelworkerscript.cpp
+SOURCES += tst_qqmllistmodelworkerscript.cpp
 
 include (../../shared/util.pri)
 

@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 #include "qquickworkerscript_p.h"
-#include "qquicklistmodel_p.h"
-#include "qquicklistmodelworkeragent_p.h"
+#include "qqmllistmodel_p.h"
+#include "qqmllistmodelworkeragent_p.h"
 #include "qqmlengine_p.h"
 #include "qqmlexpression_p.h"
 
@@ -484,7 +484,7 @@ QQuickWorkerScriptEngine::~QQuickWorkerScriptEngine()
 
     //We have to force to cleanup the main thread's event queue here
     //to make sure the main GUI release all pending locks/wait conditions which
-    //some worker script/agent are waiting for (QQuickListModelWorkerAgent::sync() for example).
+    //some worker script/agent are waiting for (QQmlListModelWorkerAgent::sync() for example).
     while (!isFinished()) {
         // We can't simply wait here, because the worker thread will not terminate
         // until the main thread processes the last data event it generates

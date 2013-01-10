@@ -50,7 +50,7 @@
 #include <QtQuick/private/qquickpath_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
-#include <QtQml/private/qquicklistmodel_p.h>
+#include <QtQml/private/qqmllistmodel_p.h>
 #include <QtQml/private/qqmlvaluetype_p.h>
 #include <QtGui/qstandarditemmodel.h>
 #include <QStringListModel>
@@ -1269,7 +1269,7 @@ void tst_QQuickPathView::modelChanges()
     pathView->setCurrentIndex(3);
     QTRY_COMPARE(pathView->offset(), 6.0);
 
-    QQuickListModel *alternateModel = window->rootObject()->findChild<QQuickListModel*>("alternateModel");
+    QQmlListModel *alternateModel = window->rootObject()->findChild<QQmlListModel*>("alternateModel");
     QVERIFY(alternateModel);
     QVariant modelVariant = QVariant::fromValue<QObject *>(alternateModel);
     QSignalSpy modelSpy(pathView, SIGNAL(modelChanged()));

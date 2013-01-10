@@ -1,7 +1,7 @@
 SOURCES += \
     $$PWD/qqmlinstruction.cpp \
-    $$PWD/qquicklistmodel.cpp \
-    $$PWD/qquicklistmodelworkeragent.cpp \
+    $$PWD/qqmllistmodel.cpp \
+    $$PWD/qqmllistmodelworkeragent.cpp \
     $$PWD/qqmlopenmetaobject.cpp \
     $$PWD/qqmlvmemetaobject.cpp \
     $$PWD/qqmlengine.cpp \
@@ -60,9 +60,9 @@ SOURCES += \
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
     $$PWD/qqmlinstruction_p.h \
-    $$PWD/qquicklistmodel_p.h\
-    $$PWD/qquicklistmodel_p_p.h\
-    $$PWD/qquicklistmodelworkeragent_p.h \
+    $$PWD/qqmllistmodel_p.h\
+    $$PWD/qqmllistmodel_p_p.h\
+    $$PWD/qqmllistmodelworkeragent_p.h \
     $$PWD/qqmlopenmetaobject_p.h \
     $$PWD/qqmlvmemetaobject_p.h \
     $$PWD/qqml.h \

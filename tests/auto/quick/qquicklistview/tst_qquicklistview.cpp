@@ -49,7 +49,7 @@
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickvisualitemmodel_p.h>
-#include <QtQml/private/qquicklistmodel_p.h>
+#include <QtQml/private/qqmllistmodel_p.h>
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"
@@ -3257,7 +3257,7 @@ void tst_QQuickListView::modelChanges()
     QQuickListView *listView = window->rootObject()->findChild<QQuickListView*>("listView");
     QTRY_VERIFY(listView);
 
-    QQuickListModel *alternateModel = window->rootObject()->findChild<QQuickListModel*>("alternateModel");
+    QQmlListModel *alternateModel = window->rootObject()->findChild<QQmlListModel*>("alternateModel");
     QTRY_VERIFY(alternateModel);
     QVariant modelVariant = QVariant::fromValue<QObject *>(alternateModel);
     QSignalSpy modelSpy(listView, SIGNAL(modelChanged()));

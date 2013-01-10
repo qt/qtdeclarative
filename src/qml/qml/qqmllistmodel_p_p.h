@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKLISTMODEL_P_P_H
-#define QQUICKLISTMODEL_P_P_H
+#ifndef QQMLLISTMODEL_P_P_H
+#define QQMLLISTMODEL_P_P_H
 
 //
 //  W A R N I N G
@@ -53,7 +53,7 @@
 // We mean it.
 //
 
-#include "qquicklistmodel_p.h"
+#include "qqmllistmodel_p.h"
 #include <private/qqmlengine_p.h>
 #include "qqmlopenmetaobject_p.h"
 #include <qqml.h>
@@ -85,9 +85,9 @@ class DynamicRoleModelNode : public QObject
 {
     Q_OBJECT
 public:
-    DynamicRoleModelNode(QQuickListModel *owner, int uid);
+    DynamicRoleModelNode(QQmlListModel *owner, int uid);
 
-    static DynamicRoleModelNode *create(const QVariantMap &obj, QQuickListModel *owner);
+    static DynamicRoleModelNode *create(const QVariantMap &obj, QQmlListModel *owner);
 
     void updateValues(const QVariantMap &object, QVector<int> &roles);
 
@@ -111,10 +111,10 @@ public:
         return m_uid;
     }
 
-    static void sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target, QHash<int, QQuickListModel *> *targetModelHash);
+    static void sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target, QHash<int, QQmlListModel *> *targetModelHash);
 
 private:
-    QQuickListModel *m_owner;
+    QQmlListModel *m_owner;
     int m_uid;
     DynamicRoleModelNodeMetaObject *m_meta;
 
@@ -143,7 +143,7 @@ class ModelObject : public QObject
 {
     Q_OBJECT
 public:
-    ModelObject(QQuickListModel *model, int elementIndex);
+    ModelObject(QQmlListModel *model, int elementIndex);
 
     void setValue(const QByteArray &name, const QVariant &val, bool force)
     {
@@ -164,7 +164,7 @@ public:
     void updateValues();
     void updateValues(const QVector<int> &roles);
 
-    QQuickListModel *m_model;
+    QQmlListModel *m_model;
     int m_elementIndex;
 
 private:
@@ -273,7 +273,7 @@ private:
 
     void clearProperty(const ListLayout::Role &role);
 
-    QVariant getProperty(const ListLayout::Role &role, const QQuickListModel *owner, QV8Engine *eng);
+    QVariant getProperty(const ListLayout::Role &role, const QQmlListModel *owner, QV8Engine *eng);
     ListModel *getListProperty(const ListLayout::Role &role);
     QString *getStringProperty(const ListLayout::Role &role);
     QObject *getQObjectProperty(const ListLayout::Role &role);
@@ -298,7 +298,7 @@ class ListModel
 {
 public:
 
-    ListModel(ListLayout *layout, QQuickListModel *modelCache, int uid);
+    ListModel(ListLayout *layout, QQmlListModel *modelCache, int uid);
     ~ListModel() {}
 
     void destroy();
@@ -306,7 +306,7 @@ public:
     int setOrCreateProperty(int elementIndex, const QString &key, const QVariant &data);
     int setExistingProperty(int uid, const QString &key, v8::Handle<v8::Value> data, QV8Engine *eng);
 
-    QVariant getProperty(int elementIndex, int roleIndex, const QQuickListModel *owner, QV8Engine *eng);
+    QVariant getProperty(int elementIndex, int roleIndex, const QQmlListModel *owner, QV8Engine *eng);
     ListModel *getListProperty(int elementIndex, const ListLayout::Role &role);
 
     int roleCount() const
@@ -347,14 +347,14 @@ public:
 
     static void sync(ListModel *src, ListModel *target, QHash<int, ListModel *> *srcModelHash);
 
-    ModelObject *getOrCreateModelObject(QQuickListModel *model, int elementIndex);
+    ModelObject *getOrCreateModelObject(QQmlListModel *model, int elementIndex);
 
 private:
     QPODVector<ListElement *, 4> elements;
     ListLayout *m_layout;
     int m_uid;
 
-    QQuickListModel *m_modelCache;
+    QQmlListModel *m_modelCache;
 
     struct ElementSync
     {
@@ -369,7 +369,7 @@ private:
     void updateCacheIndices();
 
     friend class ListElement;
-    friend class QQuickListModelWorkerAgent;
+    friend class QQmlListModelWorkerAgent;
 };
 
 QT_END_NAMESPACE

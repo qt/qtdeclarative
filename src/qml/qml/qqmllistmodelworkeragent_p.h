@@ -65,16 +65,16 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 
-class QQuickListModel;
+class QQmlListModel;
 
-class QQuickListModelWorkerAgent : public QObject
+class QQmlListModelWorkerAgent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count)
 
 public:
-    QQuickListModelWorkerAgent(QQuickListModel *);
-    ~QQuickListModelWorkerAgent();
+    QQmlListModelWorkerAgent(QQmlListModel *);
+    ~QQmlListModelWorkerAgent();
     void setV8Engine(QV8Engine *eng);
 
     void addref();
@@ -96,7 +96,7 @@ public:
     {
         VariantRef() : a(0) {}
         VariantRef(const VariantRef &r) : a(r.a) { if (a) a->addref(); }
-        VariantRef(QQuickListModelWorkerAgent *_a) : a(_a) { if (a) a->addref(); }
+        VariantRef(QQmlListModelWorkerAgent *_a) : a(_a) { if (a) a->addref(); }
         ~VariantRef() { if (a) a->release(); }
 
         VariantRef &operator=(const VariantRef &o) { 
@@ -105,7 +105,7 @@ public:
             return *this; 
         }
 
-        QQuickListModelWorkerAgent *a;
+        QQmlListModelWorkerAgent *a;
     };
     void modelDestroyed();
 protected:
@@ -113,7 +113,7 @@ protected:
 
 private:
     friend class QQuickWorkerScriptEnginePrivate;
-    friend class QQuickListModel;
+    friend class QQmlListModel;
 
     struct Change
     {
@@ -140,19 +140,19 @@ private:
     struct Sync : public QEvent {
         Sync() : QEvent(QEvent::User) {}
         Data data;
-        QQuickListModel *list;
+        QQmlListModel *list;
     };
 
     QAtomicInt m_ref;
-    QQuickListModel *m_orig;
-    QQuickListModel *m_copy;
+    QQmlListModel *m_orig;
+    QQmlListModel *m_copy;
     QMutex mutex;
     QWaitCondition syncDone;
 };
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QQuickListModelWorkerAgent::VariantRef)
+Q_DECLARE_METATYPE(QQmlListModelWorkerAgent::VariantRef)
 
 QT_END_HEADER
 

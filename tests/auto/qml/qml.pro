@@ -45,8 +45,8 @@ PRIVATETESTS += \
     qquickchangeset \
     qqmlconnections \
     qquicklistcompositor \
-    qquicklistmodel \
-    qquicklistmodelworkerscript \
+    qqmllistmodel \
+    qqmllistmodelworkerscript \
     qquickworkerscript \
     qqmlbundle \
     qrcqml \

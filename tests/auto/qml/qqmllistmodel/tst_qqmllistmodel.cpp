@@ -43,7 +43,7 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQml/private/qqmlengine_p.h>
-#include <QtQml/private/qquicklistmodel_p.h>
+#include <QtQml/private/qqmllistmodel_p.h>
 #include <QtQml/private/qqmlexpression_p.h>
 #include <QQmlComponent>
 
@@ -82,17 +82,17 @@ static bool isValidErrorMessage(const QString &msg, bool dynamicRoleTest)
     return valid;
 }
 
-class tst_qquicklistmodel : public QQmlDataTest
+class tst_qqmllistmodel : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquicklistmodel()
+    tst_qqmllistmodel()
     {
         qRegisterMetaType<QVector<int> >();
     }
 
 private:
-    int roleFromName(const QQuickListModel *model, const QString &roleName);
+    int roleFromName(const QQmlListModel *model, const QString &roleName);
 
     static bool compareVariantList(const QVariantList &testList, QVariant object);
 
@@ -132,11 +132,11 @@ private slots:
     void datetime_data();
 };
 
-bool tst_qquicklistmodel::compareVariantList(const QVariantList &testList, QVariant object)
+bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
 {
     bool allOk = true;
 
-    QQuickListModel *model = qobject_cast<QQuickListModel *>(object.value<QObject *>());
+    QQmlListModel *model = qobject_cast<QQmlListModel *>(object.value<QObject *>());
     if (model == 0)
         return false;
 
@@ -178,12 +178,12 @@ bool tst_qquicklistmodel::compareVariantList(const QVariantList &testList, QVari
     return allOk;
 }
 
-int tst_qquicklistmodel::roleFromName(const QQuickListModel *model, const QString &roleName)
+int tst_qqmllistmodel::roleFromName(const QQmlListModel *model, const QString &roleName)
 {
     return model->roleNames().key(roleName.toUtf8(), -1);
 }
 
-void tst_qquicklistmodel::static_types_data()
+void tst_qqmllistmodel::static_types_data()
 {
     QTest::addColumn<QString>("qml");
     QTest::addColumn<QVariant>("value");
@@ -240,7 +240,7 @@ void tst_qquicklistmodel::static_types_data()
         << QString("<Unknown File>: Can't assign to existing role 'foo' of different type [List -> Number]");
 }
 
-void tst_qquicklistmodel::static_types()
+void tst_qqmllistmodel::static_types()
 {
     QFETCH(QString, qml);
     QFETCH(QVariant, value);
@@ -272,7 +272,7 @@ void tst_qquicklistmodel::static_types()
     delete obj;
 }
 
-void tst_qquicklistmodel::static_i18n_data()
+void tst_qqmllistmodel::static_i18n_data()
 {
     QTest::addColumn<QString>("qml");
     QTest::addColumn<QVariant>("value");
@@ -309,7 +309,7 @@ void tst_qquicklistmodel::static_i18n_data()
         << QString("ListElement: improperly specified QT_TRID_NOOP");
 }
 
-void tst_qquicklistmodel::static_i18n()
+void tst_qqmllistmodel::static_i18n()
 {
     QFETCH(QString, qml);
     QFETCH(QVariant, value);
@@ -341,7 +341,7 @@ void tst_qquicklistmodel::static_i18n()
     delete obj;
 }
 
-void tst_qquicklistmodel::static_nestedElements()
+void tst_qqmllistmodel::static_nestedElements()
 {
     QFETCH(int, elementCount);
 
@@ -379,7 +379,7 @@ void tst_qquicklistmodel::static_nestedElements()
     delete obj;
 }
 
-void tst_qquicklistmodel::static_nestedElements_data()
+void tst_qqmllistmodel::static_nestedElements_data()
 {
     QTest::addColumn<int>("elementCount");
 
@@ -389,7 +389,7 @@ void tst_qquicklistmodel::static_nestedElements_data()
     QTest::newRow("many items") << 5;
 }
 
-void tst_qquicklistmodel::dynamic_data()
+void tst_qqmllistmodel::dynamic_data()
 {
     QTest::addColumn<QString>("script");
     QTest::addColumn<int>("result");
@@ -530,7 +530,7 @@ void tst_qquicklistmodel::dynamic_data()
     }
 }
 
-void tst_qquicklistmodel::dynamic()
+void tst_qqmllistmodel::dynamic()
 {
     QFETCH(QString, script);
     QFETCH(int, result);
@@ -539,7 +539,7 @@ void tst_qquicklistmodel::dynamic()
 
     QQuickItem dummyItem0, dummyItem1;
     QQmlEngine engine;
-    QQuickListModel model;
+    QQmlListModel model;
     model.setDynamicRoles(dynamicRoles);
     QQmlEngine::setContextForObject(&model,engine.rootContext());
     engine.rootContext()->setContextObject(&model);
@@ -561,7 +561,7 @@ void tst_qquicklistmodel::dynamic()
         QVERIFY(spyCount.count() > 0);
 }
 
-void tst_qquicklistmodel::enumerate()
+void tst_qqmllistmodel::enumerate()
 {
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("enumerate.qml"));
@@ -602,7 +602,7 @@ void tst_qquicklistmodel::enumerate()
     delete item;
 }
 
-void tst_qquicklistmodel::error_data()
+void tst_qqmllistmodel::error_data()
 {
     QTest::addColumn<QString>("qml");
     QTest::addColumn<QString>("error");
@@ -652,7 +652,7 @@ void tst_qquicklistmodel::error_data()
         << "Foo.ListElement - Foo is not a namespace";
 }
 
-void tst_qquicklistmodel::error()
+void tst_qqmllistmodel::error()
 {
     QFETCH(QString, qml);
     QFETCH(QString, error);
@@ -671,7 +671,7 @@ void tst_qquicklistmodel::error()
     }
 }
 
-void tst_qquicklistmodel::syncError()
+void tst_qqmllistmodel::syncError()
 {
     QString qml = "import QtQuick 2.0\nListModel { id: lm; Component.onCompleted: lm.sync() }";
     QString error = "file:dummy.qml:2:1: QML ListModel: List sync() can only be called from a WorkerScript";
@@ -689,7 +689,7 @@ void tst_qquicklistmodel::syncError()
 /*
     Test model changes from set() are available to the view
 */
-void tst_qquicklistmodel::set_data()
+void tst_qqmllistmodel::set_data()
 {
     QTest::addColumn<bool>("dynamicRoles");
 
@@ -697,12 +697,12 @@ void tst_qquicklistmodel::set_data()
     QTest::newRow("dynamicRoles") << true;
 }
 
-void tst_qquicklistmodel::set()
+void tst_qqmllistmodel::set()
 {
     QFETCH(bool, dynamicRoles);
 
     QQmlEngine engine;
-    QQuickListModel model;
+    QQmlListModel model;
     model.setDynamicRoles(dynamicRoles);
     QQmlEngine::setContextForObject(&model,engine.rootContext());
     engine.rootContext()->setContextProperty("model", &model);
@@ -727,7 +727,7 @@ void tst_qquicklistmodel::set()
 /*
     Test model changes on values returned by get() are available to the view
 */
-void tst_qquicklistmodel::get()
+void tst_qqmllistmodel::get()
 {
     QFETCH(QString, expression);
     QFETCH(int, index);
@@ -740,7 +740,7 @@ void tst_qquicklistmodel::get()
     component.setData(
         "import QtQuick 2.0\n"
         "ListModel {}\n", QUrl());
-    QQuickListModel *model = qobject_cast<QQuickListModel*>(component.create());
+    QQmlListModel *model = qobject_cast<QQmlListModel*>(component.create());
     model->setDynamicRoles(dynamicRoles);
     engine.rootContext()->setContextProperty("model", model);
 
@@ -775,7 +775,7 @@ void tst_qquicklistmodel::get()
     delete model;
 }
 
-void tst_qquicklistmodel::get_data()
+void tst_qqmllistmodel::get_data()
 {
     QTest::addColumn<QString>("expression");
     QTest::addColumn<int>("index");
@@ -802,7 +802,7 @@ void tst_qquicklistmodel::get_data()
 /*
     Test that the tests run in get() also work for nested list data
 */
-void tst_qquicklistmodel::get_nested()
+void tst_qqmllistmodel::get_nested()
 {
     QFETCH(QString, expression);
     QFETCH(int, index);
@@ -818,10 +818,10 @@ void tst_qquicklistmodel::get_nested()
     component.setData(
         "import QtQuick 2.0\n"
         "ListModel {}", QUrl());
-    QQuickListModel *model = qobject_cast<QQuickListModel*>(component.create());
+    QQmlListModel *model = qobject_cast<QQmlListModel*>(component.create());
     model->setDynamicRoles(dynamicRoles);
     QVERIFY(component.errorString().isEmpty());
-    QQuickListModel *childModel;
+    QQmlListModel *childModel;
     engine.rootContext()->setContextProperty("model", model);
 
     RUNEXPR("model.append({ listRoleA: [\n"
@@ -872,7 +872,7 @@ void tst_qquicklistmodel::get_nested()
         int outerListRole = roleFromName(model, outerListRoleName);
         QVERIFY(outerListRole >= 0);
 
-        childModel = qobject_cast<QQuickListModel*>(model->data(outerListIndex, outerListRole).value<QObject*>());
+        childModel = qobject_cast<QQmlListModel*>(model->data(outerListIndex, outerListRole).value<QObject*>());
         QVERIFY(childModel);
 
         QString extendedExpression = QString("get(%1).%2.%3").arg(outerListIndex).arg(outerListRoleName).arg(expression);
@@ -900,20 +900,20 @@ void tst_qquicklistmodel::get_nested()
     delete model;
 }
 
-void tst_qquicklistmodel::get_nested_data()
+void tst_qqmllistmodel::get_nested_data()
 {
     get_data();
 }
 
 //QTBUG-13754
-void tst_qquicklistmodel::crash_model_with_multiple_roles()
+void tst_qqmllistmodel::crash_model_with_multiple_roles()
 {
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("multipleroles.qml"));
     QObject *rootItem = component.create();
     QVERIFY(component.errorString().isEmpty());
     QVERIFY(rootItem != 0);
-    QQuickListModel *model = rootItem->findChild<QQuickListModel*>("listModel");
+    QQmlListModel *model = rootItem->findChild<QQmlListModel*>("listModel");
     QVERIFY(model != 0);
 
     // used to cause a crash
@@ -923,7 +923,7 @@ void tst_qquicklistmodel::crash_model_with_multiple_roles()
 }
 
 //QTBUG-15190
-void tst_qquicklistmodel::set_model_cache()
+void tst_qqmllistmodel::set_model_cache()
 {
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("setmodelcachelist.qml"));
@@ -935,7 +935,7 @@ void tst_qquicklistmodel::set_model_cache()
     delete model;
 }
 
-void tst_qquicklistmodel::property_changes()
+void tst_qqmllistmodel::property_changes()
 {
     QFETCH(QString, script_setup);
     QFETCH(QString, script_change);
@@ -946,7 +946,7 @@ void tst_qquicklistmodel::property_changes()
     QFETCH(bool, dynamicRoles);
 
     QQmlEngine engine;
-    QQuickListModel model;
+    QQmlListModel model;
     model.setDynamicRoles(dynamicRoles);
     QQmlEngine::setContextForObject(&model, engine.rootContext());
     engine.rootContext()->setContextObject(&model);
@@ -993,7 +993,7 @@ void tst_qquicklistmodel::property_changes()
     delete connectionsObject;
 }
 
-void tst_qquicklistmodel::property_changes_data()
+void tst_qqmllistmodel::property_changes_data()
 {
     QTest::addColumn<QString>("script_setup");
     QTest::addColumn<QString>("script_change");
@@ -1066,7 +1066,7 @@ void tst_qquicklistmodel::property_changes_data()
     }
 }
 
-void tst_qquicklistmodel::clear_data()
+void tst_qqmllistmodel::clear_data()
 {
     QTest::addColumn<bool>("dynamicRoles");
 
@@ -1074,12 +1074,12 @@ void tst_qquicklistmodel::clear_data()
     QTest::newRow("dynamicRoles") << true;
 }
 
-void tst_qquicklistmodel::clear()
+void tst_qqmllistmodel::clear()
 {
     QFETCH(bool, dynamicRoles);
 
     QQmlEngine engine;
-    QQuickListModel model;
+    QQmlListModel model;
     model.setDynamicRoles(dynamicRoles);
     QQmlEngine::setContextForObject(&model, engine.rootContext());
     engine.rootContext()->setContextProperty("model", &model);
@@ -1111,7 +1111,7 @@ void tst_qquicklistmodel::clear()
     QCOMPARE(roleNames[2], QByteArray("propertyC"));
 }
 
-void tst_qquicklistmodel::signal_handlers_data()
+void tst_qqmllistmodel::signal_handlers_data()
 {
     QTest::addColumn<bool>("dynamicRoles");
 
@@ -1119,14 +1119,14 @@ void tst_qquicklistmodel::signal_handlers_data()
     QTest::newRow("dynamicRoles") << true;
 }
 
-void tst_qquicklistmodel::signal_handlers()
+void tst_qqmllistmodel::signal_handlers()
 {
     QFETCH(bool, dynamicRoles);
 
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("signalhandlers.qml"));
     QObject *model = component.create();
-    QQuickListModel *lm = qobject_cast<QQuickListModel *>(model);
+    QQmlListModel *lm = qobject_cast<QQmlListModel *>(model);
     QVERIFY(lm != 0);
     lm->setDynamicRoles(dynamicRoles);
     QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
@@ -1136,7 +1136,7 @@ void tst_qquicklistmodel::signal_handlers()
     delete model;
 }
 
-void tst_qquicklistmodel::role_mode_data()
+void tst_qqmllistmodel::role_mode_data()
 {
     QTest::addColumn<QString>("script");
     QTest::addColumn<int>("result");
@@ -1150,14 +1150,14 @@ void tst_qquicklistmodel::role_mode_data()
     QTest::newRow("enableDynamic2") << "{dynamicRoles=true;append({'a':1});dynamicRoles=false;dynamicRoles}" << 1 << "<Unknown File>: QML ListModel: unable to enable static roles as this model is not empty!";
 }
 
-void tst_qquicklistmodel::role_mode()
+void tst_qqmllistmodel::role_mode()
 {
     QFETCH(QString, script);
     QFETCH(int, result);
     QFETCH(QString, warning);
 
     QQmlEngine engine;
-    QQuickListModel model;
+    QQmlListModel model;
     QQmlEngine::setContextForObject(&model,engine.rootContext());
     engine.rootContext()->setContextObject(&model);
     QQmlExpression e(engine.rootContext(), &model, script);
@@ -1171,10 +1171,10 @@ void tst_qquicklistmodel::role_mode()
     QCOMPARE(actual,result);
 }
 
-void tst_qquicklistmodel::string_to_list_crash()
+void tst_qqmllistmodel::string_to_list_crash()
 {
     QQmlEngine engine;
-    QQuickListModel model;
+    QQmlListModel model;
     QQmlEngine::setContextForObject(&model,engine.rootContext());
     engine.rootContext()->setContextObject(&model);
     QString script = QLatin1String("{append({'a':'data'});get(0).a = [{'x':123}]}");
@@ -1184,7 +1184,7 @@ void tst_qquicklistmodel::string_to_list_crash()
     e.evaluate();
 }
 
-void tst_qquicklistmodel::empty_element_warning_data()
+void tst_qqmllistmodel::empty_element_warning_data()
 {
     QTest::addColumn<QString>("qml");
     QTest::addColumn<bool>("warning");
@@ -1198,7 +1198,7 @@ void tst_qquicklistmodel::empty_element_warning_data()
     QTest::newRow("role3") << "import QtQuick 2.0\nListModel { ListElement {} ListElement {a:1} ListElement {b:2} }" << false;
 }
 
-void tst_qquicklistmodel::empty_element_warning()
+void tst_qqmllistmodel::empty_element_warning()
 {
     QFETCH(QString, qml);
     QFETCH(bool, warning);
@@ -1219,7 +1219,7 @@ void tst_qquicklistmodel::empty_element_warning()
     delete obj;
 }
 
-void tst_qquicklistmodel::datetime_data()
+void tst_qqmllistmodel::datetime_data()
 {
     QTest::addColumn<QString>("qml");
     QTest::addColumn<QDateTime>("expected");
@@ -1234,13 +1234,13 @@ void tst_qquicklistmodel::datetime_data()
     QTest::newRow("dt3") << "{append({'date':dt0});get(0).date=undefined;get(0).date}" << dt;
 }
 
-void tst_qquicklistmodel::datetime()
+void tst_qqmllistmodel::datetime()
 {
     QFETCH(QString, qml);
     QFETCH(QDateTime, expected);
 
     QQmlEngine engine;
-    QQuickListModel model;
+    QQmlListModel model;
     QQmlEngine::setContextForObject(&model,engine.rootContext());
     QDateTime dt0(QDate(1900,  1,  2), QTime( 8, 14));
     QDateTime dt1(QDate(2000, 11, 22), QTime(10, 45));
@@ -1253,6 +1253,6 @@ void tst_qquicklistmodel::datetime()
     QVERIFY(expected == dtResult);
 }
 
-QTEST_MAIN(tst_qquicklistmodel)
+QTEST_MAIN(tst_qqmllistmodel)
 
-#include "tst_qquicklistmodel.moc"
+#include "tst_qqmllistmodel.moc"
