@@ -461,7 +461,7 @@ bool Object::__delete__(ExecutionContext *ctx, uint index)
 {
     if (array.deleteIndex(index))
         return true;
-        if (ctx->strictMode)
+    if (ctx->strictMode)
         __qmljs_throw_type_error(ctx);
     return false;
 }
@@ -473,11 +473,19 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
     if (idx != String::InvalidArrayIndex)
         return __defineOwnProperty__(ctx, idx, desc);
 
+    PropertyDescriptor *current;
+
+    if (isArray && name->isEqualTo(ctx->engine->id_length)) {
+        if (desc->type != PropertyDescriptor::Data)
+            goto reject;
+        array.setLength(desc->value.toUInt32(ctx));
+    }
+
     if (!members)
         members.reset(new PropertyTable());
 
     // Clause 1
-    PropertyDescriptor *current = __getOwnProperty__(ctx, name);
+    current = __getOwnProperty__(ctx, name);
     if (!current) {
         // clause 3
         if (!extensible)
