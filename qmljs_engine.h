@@ -203,7 +203,7 @@ struct ExecutionEngine
     Object *newMathObject(ExecutionContext *ctx);
     Object *newActivationObject();
 
-    Object *newForEachIteratorObject(Object *o);
+    Object *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
 };
 
 } // namespace VM

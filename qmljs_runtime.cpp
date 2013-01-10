@@ -581,17 +581,17 @@ Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index)
 
 void __qmljs_set_element(ExecutionContext *ctx, Value object, Value index, Value value)
 {
+    if (! object.isObject())
+        object = __qmljs_to_object(object, ctx);
+
     if (index.isNumber()) {
-        if (ArrayObject *a = object.asArrayObject()) {
-            a->array.set(index.toUInt32(ctx), value);
+        if (Object *o = object.asObject()) {
+            o->__put__(ctx, index.toUInt32(ctx), value);
             return;
         }
     }
 
     String *name = index.toString(ctx);
-
-    if (! object.isObject())
-        object = __qmljs_to_object(object, ctx);
 
     object.objectValue()->__put__(ctx, name, value);
 }
@@ -599,7 +599,7 @@ void __qmljs_set_element(ExecutionContext *ctx, Value object, Value index, Value
 Value __qmljs_foreach_iterator_object(Value in, ExecutionContext *ctx)
 {
     in = __qmljs_to_object(in, ctx);
-    Object *it = ctx->engine->newForEachIteratorObject(in.objectValue());
+    Object *it = ctx->engine->newForEachIteratorObject(ctx, in.objectValue());
     return Value::fromObject(it);
 }
 

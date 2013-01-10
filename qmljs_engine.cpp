@@ -413,9 +413,9 @@ Object *ExecutionEngine::newActivationObject()
     return new (memoryManager) Object();
 }
 
-Object *ExecutionEngine::newForEachIteratorObject(Object *o)
+Object *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object *o)
 {
-    return new (memoryManager) ForEachIteratorObject(o);
+    return new (memoryManager) ForEachIteratorObject(ctx, o);
 }
 
 } // namespace VM

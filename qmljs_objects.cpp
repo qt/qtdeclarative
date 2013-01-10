@@ -176,8 +176,12 @@ void Object::getCollectables(QVector<Object *> &objects)
 }
 
 // Section 8.12.1
-PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *, String *name)
+PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, String *name)
 {
+    uint idx = name->asArrayIndex();
+    if (idx != String::InvalidArrayIndex)
+        return __getOwnProperty__(ctx, idx);
+
     if (members)
         return members->find(name);
     return 0;
@@ -194,7 +198,10 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *, uint index)
 // Section 8.12.2
 PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, String *name)
 {
-    Q_UNUSED(ctx);
+    uint idx = name->asArrayIndex();
+    if (idx != String::InvalidArrayIndex)
+        return __getPropertyDescriptor__(ctx, idx);
+
 
     Object *o = this;
     while (o) {
@@ -652,7 +659,7 @@ Value ForEachIteratorObject::nextPropertyName()
                 PropertyDescriptor *p = current->array.at(index);
                 arrayNode = arrayNode->nextNode();
                 if (p && p->isEnumerable())
-                    return Value::fromDouble(index);
+                    return __qmljs_to_string(Value::fromDouble(index), context);
             }
             arrayNode = 0;
             arrayIndex = UINT_MAX;
@@ -662,7 +669,7 @@ Value ForEachIteratorObject::nextPropertyName()
             PropertyDescriptor *p = current->array.at(arrayIndex);
             ++arrayIndex;
             if (p && p->isEnumerable())
-                return Value::fromDouble(arrayIndex - 1);
+                return __qmljs_to_string(Value::fromDouble(arrayIndex - 1), context);
         }
 
         if (!current->members || tableIndex > (uint)current->members->_propertyCount) {

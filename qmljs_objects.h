@@ -167,12 +167,14 @@ protected:
 };
 
 struct ForEachIteratorObject: Object {
+    ExecutionContext *context;
     Object *object;
     Object *current; // inside the prototype chain
     SparseArrayNode *arrayNode;
     uint arrayIndex;
     uint tableIndex;
-    ForEachIteratorObject(Object *o) : object(o), current(o), arrayNode(0), arrayIndex(0), tableIndex(0) {}
+    ForEachIteratorObject(ExecutionContext *ctx, Object *o)
+        : context(ctx), object(o), current(o), arrayNode(0), arrayIndex(0), tableIndex(0) {}
     virtual QString className() { return QStringLiteral("__ForEachIteratorObject"); }
 
     Value nextPropertyName();
