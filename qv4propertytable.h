@@ -47,6 +47,8 @@
 namespace QQmlJS {
 namespace VM {
 
+struct ObjectIterator;
+
 struct PropertyTableEntry {
     PropertyDescriptor descriptor;
     String *name;
@@ -72,7 +74,7 @@ public:
         : _properties(0)
         , _buckets(0)
         , _freeList(0)
-        , _propertyCount(-1)
+        , _propertyCount(0)
         , _bucketCount(0)
         , _primeIdx(-1)
         , _allocated(0)
@@ -80,16 +82,16 @@ public:
 
     ~PropertyTable()
     {
-        qDeleteAll(_properties, _properties + _propertyCount + 1);
+        qDeleteAll(_properties, _properties + _propertyCount);
         delete[] _properties;
         delete[] _buckets;
     }
 
-    inline bool isEmpty() const { return _propertyCount == -1; }
+    inline bool isEmpty() const { return _propertyCount == 0; }
 
     typedef PropertyTableEntry **iterator;
     inline iterator begin() const { return _properties; }
-    inline iterator end() const { return _properties + (_propertyCount + 1); }
+    inline iterator end() const { return _properties + _propertyCount; }
 
     void remove(PropertyTableEntry *prop)
     {
@@ -139,7 +141,7 @@ public:
         if (PropertyTableEntry *prop = findEntry(name))
             return &prop->descriptor;
 
-        if (++_propertyCount == _allocated) {
+        if (_propertyCount == _allocated) {
             if (! _allocated)
                 _allocated = 4;
             else
@@ -161,6 +163,7 @@ public:
 
         prop->index = _propertyCount;
         _properties[_propertyCount] = prop;
+        ++_propertyCount;
 
         if (! _buckets || 3 * _propertyCount >= 2 * _bucketCount) {
             rehash();
@@ -182,7 +185,7 @@ private:
         _buckets = new PropertyTableEntry *[_bucketCount];
         std::fill(_buckets, _buckets + _bucketCount, (PropertyTableEntry *) 0);
 
-        for (int i = 0; i <= _propertyCount; ++i) {
+        for (int i = 0; i < _propertyCount; ++i) {
             PropertyTableEntry *prop = _properties[i];
             PropertyTableEntry *&bucket = _buckets[prop->hashValue() % _bucketCount];
             prop->next = bucket;
@@ -204,7 +207,7 @@ private:
     }
 
 private:
-    friend struct ForEachIteratorObject;
+    friend struct ObjectIterator;
     PropertyTableEntry **_properties;
     PropertyTableEntry **_buckets;
     PropertyTableEntry *_freeList;

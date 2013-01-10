@@ -640,56 +640,11 @@ Value Object::call(ExecutionContext *context, Value , Value *, int)
     return Value::undefinedValue();
 }
 
-Value ForEachIteratorObject::nextPropertyName()
-{
-    while (1) {
-        if (!current)
-            return Value::nullValue();
-
-        if (!arrayIndex)
-            arrayNode = current->array.sparseBegin();
-
-        // sparse arrays
-        if (arrayNode) {
-            while (arrayNode != current->array.sparseEnd()) {
-                uint index = arrayNode->key();
-                PropertyDescriptor *p = current->array.at(index);
-                arrayNode = arrayNode->nextNode();
-                if (p && p->isEnumerable())
-                    return __qmljs_to_string(Value::fromDouble(index), context);
-            }
-            arrayNode = 0;
-            arrayIndex = UINT_MAX;
-        }
-        // dense arrays
-        while (arrayIndex < current->array.length()) {
-            PropertyDescriptor *p = current->array.at(arrayIndex);
-            ++arrayIndex;
-            if (p && p->isEnumerable())
-                return __qmljs_to_string(Value::fromDouble(arrayIndex - 1), context);
-        }
-
-        if (!current->members || tableIndex > (uint)current->members->_propertyCount) {
-            current = current->prototype;
-            arrayIndex = 0;
-            tableIndex = 0;
-            continue;
-        }
-        PropertyTableEntry *p = current->members->_properties[tableIndex];
-        ++tableIndex;
-        // ### check that it's not a repeated attribute
-        if (p && p->descriptor.isEnumerable())
-            return Value::fromString(p->name);
-    }
-}
-
 void ForEachIteratorObject::getCollectables(QVector<Object *> &objects)
 {
     Object::getCollectables(objects);
-    if (object)
-        objects.append(object);
-    if (current)
-        objects.append(current);
+    if (it.object)
+        objects.append(it.object);
 }
 
 bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx)
@@ -1162,10 +1117,10 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterC
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(get, set);
         pd.configurable = PropertyDescriptor::Enabled;
         pd.enumberable = PropertyDescriptor::Enabled;
-        for (uint i = 0; i < formalParameterCount; ++i)
-            __defineOwnProperty__(context, QString::number(i), &pd);
+        for (uint i = 0; i < (uint)formalParameterCount; ++i)
+            __defineOwnProperty__(context, i, &pd);
         for (uint i = formalParameterCount; i < context->argumentCount; ++i)
-            Object::__put__(context, QString::number(i), context->arguments[i]);
+            Object::__put__(context, i, context->arguments[i]);
         defineDefaultProperty(context, QStringLiteral("callee"), Value::fromObject(context->function));
     }
 }

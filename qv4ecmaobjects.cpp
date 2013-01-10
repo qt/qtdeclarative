@@ -602,18 +602,18 @@ Value ObjectPrototype::method_getOwnPropertyDescriptor(ExecutionContext *ctx)
 
 Value ObjectPrototype::method_getOwnPropertyNames(ExecutionContext *ctx)
 {
-    Value O = ctx->argument(0);
-    if (! O.isObject())
+    Object *O = ctx->argument(0).asObject();
+    if (!O)
         ctx->throwTypeError();
 
     ArrayObject *array = ctx->engine->newArrayObject()->asArrayObject();
     Array &a = array->array;
-    if (PropertyTable *members = O.objectValue()->members.data()) {
-        for (PropertyTableEntry **it = members->begin(), **end = members->end(); it != end; ++it) {
-            if (PropertyTableEntry *prop = *it) {
-                a.push_back(Value::fromString(prop->name));
-            }
-        }
+    ObjectIterator it(O, ObjectIterator::NoFlags);
+    while (1) {
+        Value v = it.nextPropertyNameAsString(ctx);
+        if (v.isNull())
+            break;
+        a.push_back(v);
     }
     return Value::fromObject(array);
 }
@@ -621,7 +621,7 @@ Value ObjectPrototype::method_getOwnPropertyNames(ExecutionContext *ctx)
 Value ObjectPrototype::method_create(ExecutionContext *ctx)
 {
     Value O = ctx->argument(0);
-    if (!O.isObject())
+    if (!O.isObject() && !O.isNull())
         ctx->throwTypeError();
 
     Object *newObject = ctx->engine->newObject();
@@ -664,17 +664,19 @@ Value ObjectPrototype::method_defineProperties(ExecutionContext *ctx)
 
     Object *o = ctx->argument(1).toObject(ctx).objectValue();
 
-    if (o->members) {
-        PropertyTable::iterator it = o->members->begin();
-        while (it != o->members->end()) {
-            if ((*it) && (*it)->descriptor.isEnumerable()) {
-                String *name = (*it)->name;
-                PropertyDescriptor pd;
-                toPropertyDescriptor(ctx, o->__get__(ctx, name), &pd);
-                O.objectValue()->__defineOwnProperty__(ctx, name, &pd);
-            }
-            ++it;
-        }
+    ObjectIterator it(o, ObjectIterator::EnumberableOnly);
+    while (1) {
+        uint index;
+        String *name;
+        PropertyDescriptor *pd = it.next(&name, &index);
+        if (!pd)
+            break;
+        PropertyDescriptor n;
+        toPropertyDescriptor(ctx, o->getValue(ctx, pd), &n);
+        if (name)
+            O.objectValue()->__defineOwnProperty__(ctx, name, &n);
+        else
+            O.objectValue()->__defineOwnProperty__(ctx, index, &n);
     }
 
     return O;
@@ -687,12 +689,15 @@ Value ObjectPrototype::method_seal(ExecutionContext *ctx)
 
     Object *o = ctx->argument(0).objectValue();
     o->extensible = false;
-    if (o->members) {
-        PropertyTable::iterator it = o->members->begin();
-        while (it != o->members->end()) {
-            (*it)->descriptor.configurable = PropertyDescriptor::Disabled;
-            ++it;
-        }
+
+    ObjectIterator it(o, ObjectIterator::NoFlags);
+    while (1) {
+        uint index;
+        String *name;
+        PropertyDescriptor *pd = it.next(&name, &index);
+        if (!pd)
+            break;
+        pd->configurable = PropertyDescriptor::Disabled;
     }
     return ctx->argument(0);
 }
@@ -704,14 +709,16 @@ Value ObjectPrototype::method_freeze(ExecutionContext *ctx)
 
     Object *o = ctx->argument(0).objectValue();
     o->extensible = false;
-    if (o->members) {
-        PropertyTable::iterator it = o->members->begin();
-        while (it != o->members->end()) {
-            if ((*it)->descriptor.isData())
-                (*it)->descriptor.writable = PropertyDescriptor::Disabled;
-            (*it)->descriptor.configurable = PropertyDescriptor::Disabled;
-            ++it;
-        }
+
+    ObjectIterator it(o, ObjectIterator::NoFlags);
+    while (1) {
+        uint index;
+        String *name;
+        PropertyDescriptor *pd = it.next(&name, &index);
+        if (!pd)
+            break;
+        pd->writable = PropertyDescriptor::Disabled;
+        pd->configurable = PropertyDescriptor::Disabled;
     }
     return ctx->argument(0);
 }
@@ -734,13 +741,16 @@ Value ObjectPrototype::method_isSealed(ExecutionContext *ctx)
     Object *o = ctx->argument(0).objectValue();
     if (o->extensible)
         return Value::fromBoolean(false);
-    if (o->members) {
-        PropertyTable::iterator it = o->members->begin();
-        while (it != o->members->end()) {
-            if ((*it)->descriptor.configurable != PropertyDescriptor::Disabled)
-                return Value::fromBoolean(false);
-            ++it;
-        }
+
+    ObjectIterator it(o, ObjectIterator::NoFlags);
+    while (1) {
+        uint index;
+        String *name;
+        PropertyDescriptor *pd = it.next(&name, &index);
+        if (!pd)
+            break;
+        if (pd->configurable != PropertyDescriptor::Disabled)
+            return Value::fromBoolean(false);
     }
     return Value::fromBoolean(true);
 }
@@ -753,16 +763,16 @@ Value ObjectPrototype::method_isFrozen(ExecutionContext *ctx)
     Object *o = ctx->argument(0).objectValue();
     if (o->extensible)
         return Value::fromBoolean(false);
-    if (o->members) {
-        PropertyTable::iterator it = o->members->begin();
-        while (it != o->members->end()) {
-            if ((*it)->descriptor.isData() &&
-                ((*it)->descriptor.writable != PropertyDescriptor::Disabled))
-                return Value::fromBoolean(false);
-            if ((*it)->descriptor.configurable != PropertyDescriptor::Disabled)
-                return Value::fromBoolean(false);
-            ++it;
-        }
+
+    ObjectIterator it(o, ObjectIterator::NoFlags);
+    while (1) {
+        uint index;
+        String *name;
+        PropertyDescriptor *pd = it.next(&name, &index);
+        if (!pd)
+            break;
+            if (pd->isWritable() || pd->isConfigurable())
+            return Value::fromBoolean(false);
     }
     return Value::fromBoolean(true);
 }
@@ -785,13 +795,21 @@ Value ObjectPrototype::method_keys(ExecutionContext *ctx)
 
     ArrayObject *a = ctx->engine->newArrayObject();
 
-    if (o->members) {
-        PropertyTable::iterator it = o->members->begin();
-        while (it != o->members->end()) {
-            if ((*it)->descriptor.isEnumerable())
-                a->array.push_back(Value::fromString((*it)->name));
-            ++it;
+    ObjectIterator it(o, ObjectIterator::EnumberableOnly);
+    while (1) {
+        uint index;
+        String *name;
+        PropertyDescriptor *pd = it.next(&name, &index);
+        if (!pd)
+            break;
+        Value key;
+        if (name) {
+            key = Value::fromString(name);
+        } else {
+            key = Value::fromDouble(index);
+            key = __qmljs_to_string(key, ctx);
         }
+        a->array.push_back(key);
     }
 
     return Value::fromObject(a);

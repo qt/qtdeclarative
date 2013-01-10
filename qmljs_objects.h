@@ -51,6 +51,7 @@
 #include "qv4managed.h"
 #include "qv4propertydescriptor.h"
 #include "qv4propertytable.h"
+#include "qv4objectiterator.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
@@ -66,6 +67,7 @@ namespace VM {
 struct Value;
 struct Function;
 struct Object;
+struct ObjectIterator;
 struct BooleanObject;
 struct NumberObject;
 struct StringObject;
@@ -164,20 +166,18 @@ struct Object: Managed {
 
 protected:
     virtual void getCollectables(QVector<Object *> &objects);
+
+    friend struct ObjectIterator;
 };
 
 struct ForEachIteratorObject: Object {
     ExecutionContext *context;
-    Object *object;
-    Object *current; // inside the prototype chain
-    SparseArrayNode *arrayNode;
-    uint arrayIndex;
-    uint tableIndex;
+    ObjectIterator it;
     ForEachIteratorObject(ExecutionContext *ctx, Object *o)
-        : context(ctx), object(o), current(o), arrayNode(0), arrayIndex(0), tableIndex(0) {}
+        : context(ctx), it(o, ObjectIterator::EnumberableOnly|ObjectIterator::WithProtoChain) {}
     virtual QString className() { return QStringLiteral("__ForEachIteratorObject"); }
 
-    Value nextPropertyName();
+    Value nextPropertyName() { return it.nextPropertyNameAsString(context); }
 
 protected:
     virtual void getCollectables(QVector<Object *> &objects);

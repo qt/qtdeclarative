@@ -27,7 +27,8 @@ SOURCES += main.cpp \
     qv4mm.cpp \
     qv4managed.cpp \
     qv4array.cpp \
-    qv4string.cpp
+    qv4string.cpp \
+    qv4objectiterator.cpp
 
 HEADERS += \
     qv4codegen_p.h \
@@ -49,7 +50,8 @@ HEADERS += \
     qv4array.h \
     qv4string.h \
     qv4propertydescriptor.h \
-    qv4propertytable.h
+    qv4propertytable.h \
+    qv4objectiterator.h
 
 llvm {
 
