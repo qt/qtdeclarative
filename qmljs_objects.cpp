@@ -378,9 +378,6 @@ void Object::__put__(ExecutionContext *ctx, uint index, Value value)
     if (!__canPut__(ctx, index))
         goto reject;
 
-    if (!members)
-        members.reset(new PropertyTable());
-
     {
         // Clause 2
         PropertyDescriptor *pd = __getOwnProperty__(ctx, index);
