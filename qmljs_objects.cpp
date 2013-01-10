@@ -647,22 +647,22 @@ Value ForEachIteratorObject::nextPropertyName()
 
         // sparse arrays
         if (arrayNode) {
-            uint index = arrayNode->key();
-            PropertyDescriptor *p = current->array.at(index);
-            arrayNode = arrayNode->nextNode();
-            if (arrayNode == current->array.sparseEnd()) {
-                arrayNode = 0;
-                arrayIndex = UINT_MAX;
+            while (arrayNode != current->array.sparseEnd()) {
+                uint index = arrayNode->key();
+                PropertyDescriptor *p = current->array.at(index);
+                arrayNode = arrayNode->nextNode();
+                if (p && p->isEnumerable())
+                    return Value::fromDouble(index);
             }
-            if (p && p->isEnumerable())
-                return Value::fromDouble(index);
+            arrayNode = 0;
+            arrayIndex = UINT_MAX;
         }
         // dense arrays
-        if (arrayIndex < current->array.length()) {
+        while (arrayIndex < current->array.length()) {
             PropertyDescriptor *p = current->array.at(arrayIndex);
             ++arrayIndex;
             if (p && p->isEnumerable())
-                return Value::fromDouble(arrayIndex);
+                return Value::fromDouble(arrayIndex - 1);
         }
 
         if (!current->members || tableIndex > (uint)current->members->_propertyCount) {
