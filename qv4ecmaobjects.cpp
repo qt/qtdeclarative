@@ -555,27 +555,27 @@ Value ObjectCtor::__get__(ExecutionContext *ctx, String *name, bool *hasProperty
 void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
     ctor.objectValue()->defineDefaultProperty(ctx->engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 0);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 0);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("getOwnPropertyNames"), method_getOwnPropertyNames, 0);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("create"), method_create, 0);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("defineProperty"), method_defineProperty, 0);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("defineProperties"), method_defineProperties, 0);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("seal"), method_seal, 0);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("freeze"), method_freeze, 0);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("preventExtensions"), method_preventExtensions, 0);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("isSealed"), method_isSealed, 0);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("isFrozen"), method_isFrozen, 0);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("isExtensible"), method_isExtensible, 0);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("keys"), method_keys, 0);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 1);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 2);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("getOwnPropertyNames"), method_getOwnPropertyNames, 1);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("create"), method_create, 2);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("defineProperty"), method_defineProperty, 3);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("defineProperties"), method_defineProperties, 2);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("seal"), method_seal, 1);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("freeze"), method_freeze, 1);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("preventExtensions"), method_preventExtensions, 1);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("isSealed"), method_isSealed, 1);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("isFrozen"), method_isFrozen, 1);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("isExtensible"), method_isExtensible, 1);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("keys"), method_keys, 1);
 
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
     defineDefaultProperty(ctx, QStringLiteral("toLocaleString"), method_toLocaleString, 0);
     defineDefaultProperty(ctx, QStringLiteral("valueOf"), method_valueOf, 0);
-    defineDefaultProperty(ctx, QStringLiteral("hasOwnProperty"), method_hasOwnProperty, 0);
-    defineDefaultProperty(ctx, QStringLiteral("isPrototypeOf"), method_isPrototypeOf, 0);
-    defineDefaultProperty(ctx, QStringLiteral("propertyIsEnumerable"), method_propertyIsEnumerable, 0);
+    defineDefaultProperty(ctx, QStringLiteral("hasOwnProperty"), method_hasOwnProperty, 1);
+    defineDefaultProperty(ctx, QStringLiteral("isPrototypeOf"), method_isPrototypeOf, 1);
+    defineDefaultProperty(ctx, QStringLiteral("propertyIsEnumerable"), method_propertyIsEnumerable, 1);
     defineDefaultProperty(ctx, QStringLiteral("__defineGetter__"), method_defineGetter, 0);
     defineDefaultProperty(ctx, QStringLiteral("__defineSetter__"), method_defineSetter, 0);
 }
@@ -1017,24 +1017,24 @@ Value StringCtor::call(ExecutionContext *ctx)
 void StringPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
     ctor.objectValue()->defineDefaultProperty(ctx->engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("fromCharCode"), method_fromCharCode);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("fromCharCode"), method_fromCharCode, 1);
 
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString);
     defineDefaultProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
-    defineDefaultProperty(ctx, QStringLiteral("charAt"), method_charAt);
-    defineDefaultProperty(ctx, QStringLiteral("charCodeAt"), method_charCodeAt);
-    defineDefaultProperty(ctx, QStringLiteral("concat"), method_concat);
-    defineDefaultProperty(ctx, QStringLiteral("indexOf"), method_indexOf);
-    defineDefaultProperty(ctx, QStringLiteral("lastIndexOf"), method_lastIndexOf);
-    defineDefaultProperty(ctx, QStringLiteral("localeCompare"), method_localeCompare);
-    defineDefaultProperty(ctx, QStringLiteral("match"), method_match);
-    defineDefaultProperty(ctx, QStringLiteral("replace"), method_replace);
-    defineDefaultProperty(ctx, QStringLiteral("search"), method_search);
-    defineDefaultProperty(ctx, QStringLiteral("slice"), method_slice);
-    defineDefaultProperty(ctx, QStringLiteral("split"), method_split);
-    defineDefaultProperty(ctx, QStringLiteral("substr"), method_substr);
-    defineDefaultProperty(ctx, QStringLiteral("substring"), method_substring);
+    defineDefaultProperty(ctx, QStringLiteral("charAt"), method_charAt, 1);
+    defineDefaultProperty(ctx, QStringLiteral("charCodeAt"), method_charCodeAt, 1);
+    defineDefaultProperty(ctx, QStringLiteral("concat"), method_concat, 1);
+    defineDefaultProperty(ctx, QStringLiteral("indexOf"), method_indexOf, 1);
+    defineDefaultProperty(ctx, QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
+    defineDefaultProperty(ctx, QStringLiteral("localeCompare"), method_localeCompare, 1);
+    defineDefaultProperty(ctx, QStringLiteral("match"), method_match, 1);
+    defineDefaultProperty(ctx, QStringLiteral("replace"), method_replace, 2);
+    defineDefaultProperty(ctx, QStringLiteral("search"), method_search, 1);
+    defineDefaultProperty(ctx, QStringLiteral("slice"), method_slice, 2);
+    defineDefaultProperty(ctx, QStringLiteral("split"), method_split, 2);
+    defineDefaultProperty(ctx, QStringLiteral("substr"), method_substr, 2);
+    defineDefaultProperty(ctx, QStringLiteral("substring"), method_substring, 2);
     defineDefaultProperty(ctx, QStringLiteral("toLowerCase"), method_toLowerCase);
     defineDefaultProperty(ctx, QStringLiteral("toLocaleLowerCase"), method_toLocaleLowerCase);
     defineDefaultProperty(ctx, QStringLiteral("toUpperCase"), method_toUpperCase);
@@ -1345,7 +1345,7 @@ void NumberPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString);
     defineDefaultProperty(ctx, QStringLiteral("toLocalString"), method_toLocaleString);
     defineDefaultProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
-    defineDefaultProperty(ctx, QStringLiteral("toFixed"), method_toFixed);
+    defineDefaultProperty(ctx, QStringLiteral("toFixed"), method_toFixed, 1);
     defineDefaultProperty(ctx, QStringLiteral("toExponential"), method_toExponential);
     defineDefaultProperty(ctx, QStringLiteral("toPrecision"), method_toPrecision);
 }
@@ -1575,15 +1575,15 @@ void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("sort"), method_sort, 1);
     defineDefaultProperty(ctx, QStringLiteral("splice"), method_splice, 2);
     defineDefaultProperty(ctx, QStringLiteral("unshift"), method_unshift, 1);
-    defineDefaultProperty(ctx, QStringLiteral("indexOf"), method_indexOf, 0);
-    defineDefaultProperty(ctx, QStringLiteral("lastIndexOf"), method_lastIndexOf, 0);
-    defineDefaultProperty(ctx, QStringLiteral("every"), method_every, 0);
-    defineDefaultProperty(ctx, QStringLiteral("some"), method_some, 0);
-    defineDefaultProperty(ctx, QStringLiteral("forEach"), method_forEach, 0);
-    defineDefaultProperty(ctx, QStringLiteral("map"), method_map, 0);
-    defineDefaultProperty(ctx, QStringLiteral("filter"), method_filter, 0);
-    defineDefaultProperty(ctx, QStringLiteral("reduce"), method_reduce, 0);
-    defineDefaultProperty(ctx, QStringLiteral("reduceRight"), method_reduceRight, 0);
+    defineDefaultProperty(ctx, QStringLiteral("indexOf"), method_indexOf, 1);
+    defineDefaultProperty(ctx, QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
+    defineDefaultProperty(ctx, QStringLiteral("every"), method_every, 1);
+    defineDefaultProperty(ctx, QStringLiteral("some"), method_some, 1);
+    defineDefaultProperty(ctx, QStringLiteral("forEach"), method_forEach, 1);
+    defineDefaultProperty(ctx, QStringLiteral("map"), method_map, 1);
+    defineDefaultProperty(ctx, QStringLiteral("filter"), method_filter, 1);
+    defineDefaultProperty(ctx, QStringLiteral("reduce"), method_reduce, 1);
+    defineDefaultProperty(ctx, QStringLiteral("reduceRight"), method_reduceRight, 1);
 }
 
 Value ArrayPrototype::method_toString(ExecutionContext *ctx)
@@ -2104,8 +2104,8 @@ void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
     defineDefaultProperty(ctx, QStringLiteral("apply"), method_apply, 0);
-    defineDefaultProperty(ctx, QStringLiteral("call"), method_call, 0);
-    defineDefaultProperty(ctx, QStringLiteral("bind"), method_bind, 0);
+    defineDefaultProperty(ctx, QStringLiteral("call"), method_call, 1);
+    defineDefaultProperty(ctx, QStringLiteral("bind"), method_bind, 1);
 }
 
 Value FunctionPrototype::method_toString(ExecutionContext *ctx)
@@ -2822,8 +2822,8 @@ void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
     ctor.objectValue()->defineDefaultProperty(ctx->engine->id_prototype, Value::fromObject(this));
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(ctx, QStringLiteral("exec"), method_exec, 0);
-    defineDefaultProperty(ctx, QStringLiteral("test"), method_test, 0);
+    defineDefaultProperty(ctx, QStringLiteral("exec"), method_exec, 1);
+    defineDefaultProperty(ctx, QStringLiteral("test"), method_test, 1);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
 }
 

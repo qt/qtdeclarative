@@ -119,19 +119,25 @@ void Object::defineDefaultProperty(ExecutionContext *context, const QString &nam
     defineDefaultProperty(context->engine->identifier(name), value);
 }
 
-void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(ExecutionContext *), int count)
+void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(ExecutionContext *), int argumentCount)
 {
-    Q_UNUSED(count);
-    // ### FIX count
+    Q_UNUSED(argumentCount);
     String *s = context->engine->identifier(name);
-    defineDefaultProperty(s, Value::fromObject(context->engine->newNativeFunction(context, s, code)));
+    FunctionObject* function = context->engine->newNativeFunction(context, s, code);
+    function->defineReadonlyProperty(context->engine, context->engine->id_length, Value::fromInt32(argumentCount));
+    defineDefaultProperty(s, Value::fromObject(function));
 }
 
 void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value)
 {
+    defineReadonlyProperty(engine, engine->identifier(name), value);
+}
+
+void Object::defineReadonlyProperty(ExecutionEngine *engine, String *name, Value value)
+{
     if (!members)
         members.reset(new PropertyTable());
-    PropertyDescriptor *pd = members->insert(engine->identifier(name));
+    PropertyDescriptor *pd = members->insert(name);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Disabled;
     pd->enumberable = PropertyDescriptor::Disabled;
