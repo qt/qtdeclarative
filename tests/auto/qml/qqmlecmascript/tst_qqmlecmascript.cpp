@@ -268,6 +268,7 @@ private slots:
     void compatibilitySemicolon();
     void incrDecrSemicolon1();
     void incrDecrSemicolon2();
+    void incrDecrSemicolon_error1();
     void unaryExpression();
     void switchStatement();
     void withStatement();
@@ -6636,6 +6637,13 @@ void tst_qqmlecmascript::incrDecrSemicolon2()
     QQmlComponent component(&engine, testFileUrl("incrDecrSemicolon2.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
+}
+
+void tst_qqmlecmascript::incrDecrSemicolon_error1()
+{
+    QQmlComponent component(&engine, testFileUrl("incrDecrSemicolon_error1.qml"));
+    QObject *object = component.create();
+    QVERIFY(object == 0);
 }
 
 void tst_qqmlecmascript::unaryExpression()

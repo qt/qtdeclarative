@@ -203,7 +203,6 @@ inline bool isBinop(int tok)
     case Lexer::T_LT_LT_EQ:
     case Lexer::T_MINUS:
     case Lexer::T_MINUS_EQ:
-    case Lexer::T_MINUS_MINUS:
     case Lexer::T_NOT_EQ:
     case Lexer::T_NOT_EQ_EQ:
     case Lexer::T_OR:
@@ -211,13 +210,11 @@ inline bool isBinop(int tok)
     case Lexer::T_OR_OR:
     case Lexer::T_PLUS:
     case Lexer::T_PLUS_EQ:
-    case Lexer::T_PLUS_PLUS:
     case Lexer::T_REMAINDER:
     case Lexer::T_REMAINDER_EQ:
     case Lexer::T_RETURN:
     case Lexer::T_STAR:
     case Lexer::T_STAR_EQ:
-    case Lexer::T_TILDE:
     case Lexer::T_XOR:
     case Lexer::T_XOR_EQ:
         return true;
@@ -246,6 +243,7 @@ int Lexer::lex()
     case T_SEMICOLON:
     case T_QUESTION:
     case T_COLON:
+    case T_TILDE:
         _delimited = true;
         break;
     default:
