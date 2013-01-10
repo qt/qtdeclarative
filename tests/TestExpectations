@@ -68,7 +68,6 @@ S10.2.3_A1.3_T2 failing
 10.4.3-1-99gs failing
 10.5-1-s failing
 10.5-7-b-1-s failing
-10.6-6-4 failing
 11.1.4_4-5-1 failing
 11.1.4_5-6-1 failing
 S11.10.1_A2.4_T1 failing
@@ -396,7 +395,6 @@ S13_A17_T1 failing
 S13_A17_T2 failing
 S13_A3_T1 failing
 S13_A6_T2 failing
-S13_A8_T1 failing
 13.1-10-s failing
 13.1-11-s failing
 13.1-12-s failing
@@ -4287,4 +4285,3 @@ S15.4.4.4_A1_T3 failing
 
 # Regression introduced by qtdeclarative parser changes
 S7.9_A5.7_T1 failing
-

@@ -884,11 +884,11 @@ SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *m
 }
 
 
-ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterCount)
+ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount)
     : context(context)
     , currentIndex(-1)
 {
-    defineDefaultProperty(context->engine->id_length, Value::fromInt32(context->argumentCount));
+    defineDefaultProperty(context->engine->id_length, Value::fromInt32(actualParameterCount));
     if (context->strictMode) {
         for (uint i = 0; i < context->argumentCount; ++i)
             Object::__put__(context, QString::number(i), context->arguments[i]);
