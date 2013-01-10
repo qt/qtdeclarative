@@ -87,7 +87,7 @@ DEFINES += QMLJS_NO_LLVM
 }
 
 checktarget.target = check
-checktarget.commands = python tests/test262.py --parallel --update-expectations
+checktarget.commands = python tests/test262.py --parallel --with-test-expectations --update-expectations
 checktarget.depends = all
 QMAKE_EXTRA_TARGETS += checktarget
 

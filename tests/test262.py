@@ -55,10 +55,12 @@ def ReportError(s):
 
 
 class TestExpectations:
-    def __init__(self):
-        f = open(rootDir + "/TestExpectations")
+    def __init__(self, enabled):
         self.testsToSkip = []
         self.failingTests = []
+        f = open(rootDir + "/TestExpectations")
+        if not enabled:
+            return
         for line in f.read().splitlines():
             line = line.strip()
             if len(line) == 0 or line[0] == "#":
@@ -126,6 +128,8 @@ def BuildOptions():
                     help="Test only non-strict mode")
   result.add_option("--parallel", default=False, action="store_true",
                     help="Run tests in parallel")
+  result.add_option("--with-test-expectations", default=False, action="store_true",
+                    help="Parse TestExpectations to deal with tests known to fail")
   result.add_option("--update-expectations", default=False, action="store_true",
                     help="Update test expectations fail when a test passes that was expected to fail")
   # TODO: Once enough tests are made strict compat, change the default
@@ -369,7 +373,7 @@ def MakePlural(n):
 
 class TestSuite(object):
 
-  def __init__(self, root, strict_only, non_strict_only, unmarked_default):
+  def __init__(self, root, strict_only, non_strict_only, unmarked_default, load_expectations):
     # TODO: derive from packagerConfig.py
     self.test_root = path.join(root, 'test', 'suite')
     self.lib_root = path.join(root, 'test', 'harness')
@@ -377,7 +381,7 @@ class TestSuite(object):
     self.non_strict_only = non_strict_only
     self.unmarked_default = unmarked_default
     self.include_cache = { }
-    self.expectations = TestExpectations()
+    self.expectations = TestExpectations(load_expectations)
 
   def Validate(self):
     if not path.exists(self.test_root):
@@ -525,7 +529,8 @@ def Main():
   test_suite = TestSuite(options.tests, 
                          options.strict_only, 
                          options.non_strict_only,
-                         options.unmarked_default)
+                         options.unmarked_default,
+                         options.with_test_expectations)
   test_suite.Validate()
   if options.cat:
     test_suite.Print(args)
