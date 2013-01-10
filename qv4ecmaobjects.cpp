@@ -1651,7 +1651,7 @@ Value ArrayPrototype::method_join(ExecutionContext *ctx)
             if (i)
                 R += r4;
 
-            Value e = a->getElement(ctx, i);
+            Value e = a->__get__(ctx, i);
             if (! (e.isUndefined() || e.isNull()))
                 R += e.toString(ctx)->toQString();
         }
@@ -1734,8 +1734,8 @@ Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
 
     // ###
     for (; lo < hi; ++lo, --hi) {
-        Value tmp = instance->getElement(ctx, lo);
-        instance->array.set(lo, instance->getElement(ctx, hi));
+        Value tmp = instance->__get__(ctx, lo);
+        instance->array.set(lo, instance->__get__(ctx, hi));
         instance->array.set(hi, tmp);
     }
     return Value::undefinedValue();
@@ -1865,7 +1865,7 @@ Value ArrayPrototype::method_every(ExecutionContext *ctx)
     bool ok = true;
     // ###
     for (uint k = 0; ok && k < instance->array.length(); ++k) {
-        Value v = instance->getElement(ctx, k);
+        Value v = instance->__get__(ctx, k);
         if (v.isUndefined())
             continue;
 
@@ -1890,7 +1890,7 @@ Value ArrayPrototype::method_some(ExecutionContext *ctx)
     bool ok = false;
     // ###
     for (uint k = 0; !ok && k < instance->array.length(); ++k) {
-        Value v = instance->getElement(ctx, k);
+        Value v = instance->__get__(ctx, k);
         if (v.isUndefined())
             continue;
 
@@ -1914,7 +1914,7 @@ Value ArrayPrototype::method_forEach(ExecutionContext *ctx)
     Value thisArg = ctx->argument(1);
     // ###
     for (quint32 k = 0; k < instance->array.length(); ++k) {
-        Value v = instance->getElement(ctx, k);
+        Value v = instance->__get__(ctx, k);
         if (v.isUndefined())
             continue;
         Value args[3];
@@ -1937,7 +1937,7 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
     ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
     a->array.setLength(instance->array.length());
     for (quint32 k = 0; k < instance->array.length(); ++k) {
-        Value v = instance->getElement(ctx, k);
+        Value v = instance->__get__(ctx, k);
         if (v.isUndefined())
             continue;
         Value args[3];
@@ -1960,7 +1960,7 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
     Value thisArg = ctx->argument(1);
     ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
     for (quint32 k = 0; k < instance->array.length(); ++k) {
-        Value v = instance->getElement(ctx, k);
+        Value v = instance->__get__(ctx, k);
         if (v.isUndefined())
             continue;
         Value args[3];
@@ -1987,7 +1987,7 @@ Value ArrayPrototype::method_reduce(ExecutionContext *ctx)
     Value initialValue = ctx->argument(1);
     Value acc = initialValue;
     for (quint32 k = 0; k < instance->array.length(); ++k) {
-        Value v = instance->getElement(ctx, k);
+        Value v = instance->__get__(ctx, k);
         if (v.isUndefined())
             continue;
 
@@ -2017,7 +2017,7 @@ Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
     Value initialValue = ctx->argument(1);
     Value acc = initialValue;
     for (int k = instance->array.length() - 1; k != -1; --k) {
-        Value v = instance->getElement(ctx, k);
+        Value v = instance->__get__(ctx, k);
         if (v.isUndefined())
             continue;
 
@@ -2128,7 +2128,7 @@ Value FunctionPrototype::method_apply(ExecutionContext *ctx)
 
     if (ArrayObject *arr = arg.asArrayObject()) {
         for (quint32 i = 0; i < arr->array.length(); ++i) {
-            Value a = arr->getElement(ctx, i);
+            Value a = arr->__get__(ctx, i);
             args.append(a);
         }
     } else if (!(arg.isUndefined() || arg.isNull())) {

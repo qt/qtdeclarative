@@ -99,11 +99,6 @@ Value Object::getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p
     return getValue(ctx, p);
 }
 
-Value Object::getElement(ExecutionContext *ctx, uint index) const
-{
-    return getValueChecked(ctx, array.at(index));
-}
-
 bool Object::inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx)
 {
     bool hasProperty = false;
@@ -188,6 +183,14 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *, String *name)
     return 0;
 }
 
+PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *, uint index)
+{
+    PropertyDescriptor *p = array.at(index);
+    if(p && p->type != PropertyDescriptor::Generic)
+        return p;
+    return 0;
+}
+
 // Section 8.12.2
 PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, String *name)
 {
@@ -204,13 +207,34 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, Str
     return 0;
 }
 
+PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *, uint index)
+{
+    Object *o = this;
+    while (o) {
+        PropertyDescriptor *p = array.at(index);
+        if(p && p->type != PropertyDescriptor::Generic)
+            return p;
+        o = o->prototype;
+    }
+    return 0;
+}
+
 // Section 8.12.3
 Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 {
+    uint idx = name->asArrayIndex();
+    if (idx != String::InvalidArrayIndex)
+        return __get__(ctx, idx, hasProperty);
+
     if (name->isEqualTo(ctx->engine->id___proto__)) {
         if (hasProperty)
             *hasProperty = true;
         return Value::fromObject(prototype);
+    }
+    if (isArray && name->isEqualTo(ctx->engine->id_length)) {
+        if (hasProperty)
+            *hasProperty = true;
+        return Value::fromDouble(array.length());
     }
 
     if (PropertyDescriptor *p = __getPropertyDescriptor__(ctx, name)) {
@@ -224,9 +248,27 @@ Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
     return Value::undefinedValue();
 }
 
+Value Object::__get__(ExecutionContext *ctx, uint index, bool *hasProperty)
+{
+    if (PropertyDescriptor *p = __getPropertyDescriptor__(ctx, index)) {
+        if (hasProperty)
+            *hasProperty = true;
+        return getValue(ctx, p);
+    }
+
+    if (hasProperty)
+        *hasProperty = false;
+    return Value::undefinedValue();
+}
+
+
 // Section 8.12.4
 bool Object::__canPut__(ExecutionContext *ctx, String *name)
 {
+    uint idx = name->asArrayIndex();
+    if (idx != String::InvalidArrayIndex)
+        return __canPut__(ctx, idx);
+
     if (PropertyDescriptor *p = __getOwnProperty__(ctx, name)) {
         if (p->isAccessor())
             return p->set != 0;
@@ -247,9 +289,35 @@ bool Object::__canPut__(ExecutionContext *ctx, String *name)
     return extensible;
 }
 
+bool Object::__canPut__(ExecutionContext *ctx, uint index)
+{
+    if (PropertyDescriptor *p = __getOwnProperty__(ctx, index)) {
+        if (p->isAccessor())
+            return p->set != 0;
+        return p->isWritable();
+    }
+
+    if (! prototype)
+        return extensible;
+
+    if (PropertyDescriptor *p = prototype->__getPropertyDescriptor__(ctx, index)) {
+        if (p->isAccessor())
+            return p->set != 0;
+        if (!extensible)
+            return false;
+        return p->isWritable();
+    }
+
+    return extensible;
+}
+
 // Section 8.12.5
 void Object::__put__(ExecutionContext *ctx, String *name, Value value)
 {
+    uint idx = name->asArrayIndex();
+    if (idx != String::InvalidArrayIndex)
+        return __put__(ctx, idx, value);
+
     // clause 1
     if (!__canPut__(ctx, name))
         goto reject;
@@ -297,18 +365,80 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
         __qmljs_throw_type_error(ctx);
 }
 
+void Object::__put__(ExecutionContext *ctx, uint index, Value value)
+{
+    // clause 1
+    if (!__canPut__(ctx, index))
+        goto reject;
+
+    if (!members)
+        members.reset(new PropertyTable());
+
+    {
+        // Clause 2
+        PropertyDescriptor *pd = __getOwnProperty__(ctx, index);
+        // Clause 3
+        if (pd && pd->isData()) {
+            // spec says to call [[DefineOwnProperty]] with { [[Value]]: value }
+
+            // ### to simplify and speed up we should expand the relevant parts here (clauses 6,7,9,10,12,13)
+            PropertyDescriptor desc = PropertyDescriptor::fromValue(value);
+            __defineOwnProperty__(ctx, index, &desc);
+            return;
+        }
+
+        // clause 4
+        if (!pd && prototype)
+            pd = prototype->__getPropertyDescriptor__(ctx, index);
+
+        // Clause 5
+        if (pd && pd->isAccessor()) {
+            assert(pd->set != 0);
+
+            Value args[1];
+            args[0] = value;
+            pd->set->call(ctx, Value::fromObject(this), args, 1);
+            return;
+        }
+
+        array.set(index, value);
+        return;
+    }
+
+  reject:
+    if (ctx->strictMode)
+        __qmljs_throw_type_error(ctx);
+}
+
 // Section 8.12.6
 bool Object::__hasProperty__(const ExecutionContext *ctx, String *name) const
 {
+    uint idx = name->asArrayIndex();
+    if (idx != String::InvalidArrayIndex)
+        return __hasProperty__(ctx, idx);
+
     if (members && members->find(name) != 0)
         return true;
 
     return prototype ? prototype->__hasProperty__(ctx, name) : false;
 }
 
+bool Object::__hasProperty__(const ExecutionContext *ctx, uint index) const
+{
+    const PropertyDescriptor *p = array.at(index);
+    if (p && p->type != PropertyDescriptor::Generic)
+        return true;
+
+    return prototype ? prototype->__hasProperty__(ctx, index) : false;
+}
+
 // Section 8.12.7
 bool Object::__delete__(ExecutionContext *ctx, String *name)
 {
+    uint idx = name->asArrayIndex();
+    if (idx != String::InvalidArrayIndex)
+        return __delete__(ctx, idx);
+
     if (members) {
         if (PropertyTableEntry *entry = members->findEntry(name)) {
             if (entry->descriptor.isConfigurable()) {
@@ -323,9 +453,22 @@ bool Object::__delete__(ExecutionContext *ctx, String *name)
     return true;
 }
 
+bool Object::__delete__(ExecutionContext *ctx, uint index)
+{
+    if (array.deleteIndex(index))
+        return true;
+        if (ctx->strictMode)
+        __qmljs_throw_type_error(ctx);
+    return false;
+}
+
 // Section 8.12.9
 bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc)
 {
+    uint idx = name->asArrayIndex();
+    if (idx != String::InvalidArrayIndex)
+        return __defineOwnProperty__(ctx, idx, desc);
+
     if (!members)
         members.reset(new PropertyTable());
 
@@ -404,6 +547,83 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
     return false;
 }
 
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, PropertyDescriptor *desc)
+{
+    // Clause 1
+    PropertyDescriptor *current = __getOwnProperty__(ctx, index);
+    if (!current) {
+        // clause 3
+        if (!extensible)
+            goto reject;
+        // clause 4
+        PropertyDescriptor *pd = array.insert(index);
+        *pd = *desc;
+        pd->fullyPopulated();
+        return true;
+    }
+
+    // clause 5
+    if (desc->isEmpty())
+        return true;
+
+    // clause 6
+    if (desc->isSubset(current))
+        return true;
+
+    // clause 7
+    if (!current->isConfigurable()) {
+        if (desc->isConfigurable())
+            goto reject;
+        if (desc->enumberable != PropertyDescriptor::Undefined && desc->enumberable != current->enumberable)
+            goto reject;
+    }
+
+    // clause 8
+    if (desc->isGeneric())
+        goto accept;
+
+    // clause 9
+    if (current->isData() != desc->isData()) {
+        // 9a
+        if (!current->isConfigurable())
+            goto reject;
+        if (current->isData()) {
+            // 9b
+            current->type = PropertyDescriptor::Accessor;
+            current->writable = PropertyDescriptor::Undefined;
+            current->get = 0;
+            current->set = 0;
+        } else {
+            // 9c
+            current->type = PropertyDescriptor::Data;
+            current->writable = PropertyDescriptor::Disabled;
+            current->value = Value::undefinedValue();
+        }
+    } else if (current->isData() && desc->isData()) { // clause 10
+        if (!current->isConfigurable() && !current->isWritable()) {
+            if (desc->isWritable() || !current->value.sameValue(desc->value))
+                goto reject;
+        }
+    } else { // clause 10
+        assert(current->isAccessor() && desc->isAccessor());
+        if (!current->isConfigurable()) {
+            if ((desc->get && current->get != desc->get) ||
+                (desc->set && current->set != desc->set))
+                goto reject;
+        }
+    }
+
+  accept:
+
+    *current += *desc;
+    return true;
+  reject:
+    qDebug() << "___put__ rejected index=" << index;
+    if (ctx->strictMode)
+        __qmljs_throw_type_error(ctx);
+    return false;
+}
+
 bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, PropertyDescriptor *desc)
 {
     return __defineOwnProperty__(ctx, ctx->engine->identifier(name), desc);
@@ -416,24 +636,46 @@ Value Object::call(ExecutionContext *context, Value , Value *, int)
     return Value::undefinedValue();
 }
 
-String *ForEachIteratorObject::nextPropertyName()
+Value ForEachIteratorObject::nextPropertyName()
 {
-    PropertyTableEntry *p = 0;
     while (1) {
         if (!current)
-            return 0;
+            return Value::nullValue();
 
-        // ### index array data as well
-        ++tableIndex;
-        if (!current->members || tableIndex > current->members->_propertyCount) {
+        if (!arrayIndex)
+            arrayNode = current->array.sparseBegin();
+
+        // sparse arrays
+        if (arrayNode) {
+            uint index = arrayNode->key();
+            PropertyDescriptor *p = current->array.at(index);
+            arrayNode = arrayNode->nextNode();
+            if (arrayNode == current->array.sparseEnd()) {
+                arrayNode = 0;
+                arrayIndex = UINT_MAX;
+            }
+            if (p && p->isEnumerable())
+                return Value::fromDouble(index);
+        }
+        // dense arrays
+        if (arrayIndex < current->array.length()) {
+            PropertyDescriptor *p = current->array.at(arrayIndex);
+            ++arrayIndex;
+            if (p && p->isEnumerable())
+                return Value::fromDouble(arrayIndex);
+        }
+
+        if (!current->members || tableIndex > (uint)current->members->_propertyCount) {
             current = current->prototype;
-            tableIndex = -1;
+            arrayIndex = 0;
+            tableIndex = 0;
             continue;
         }
-        p = current->members->_properties[tableIndex];
+        PropertyTableEntry *p = current->members->_properties[tableIndex];
+        ++tableIndex;
         // ### check that it's not a repeated attribute
         if (p && p->descriptor.isEnumerable())
-            return p->name;
+            return Value::fromString(p->name);
     }
 }
 
@@ -446,21 +688,11 @@ void ForEachIteratorObject::getCollectables(QVector<Object *> &objects)
         objects.append(current);
 }
 
-Value ArrayObject::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
-{
-    if (name->isEqualTo(ctx->engine->id_length)) {
-        if (hasProperty)
-            *hasProperty = true;
-        return Value::fromDouble(array.length());
-    }
-    return Object::__get__(ctx, name, hasProperty);
-}
-
 bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx)
 {
     if (index.isNumber()) {
         const quint32 idx = index.toUInt32(ctx);
-        Value v = getElement(ctx, idx);
+        Value v = __get__(ctx, idx);
         v = op(v, rhs, ctx);
         array.set(idx, v);
         return true;
@@ -934,28 +1166,20 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterC
     }
 }
 
-Value ArgumentsObject::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
+Value ArgumentsObject::__get__(ExecutionContext *ctx, uint index, bool *hasProperty)
 {
-    if (!ctx->strictMode) {
-        bool ok = false;
-        currentIndex = name->toQString().toInt(&ok);
-        if (!ok)
-            currentIndex = -1;
-    }
-    Value result = Object::__get__(ctx, name, hasProperty);
+    if (!ctx->strictMode)
+        currentIndex = index;
+    Value result = Object::__get__(ctx, index, hasProperty);
     currentIndex = -1;
     return result;
 }
 
-void ArgumentsObject::__put__(ExecutionContext *ctx, String *name, Value value)
+void ArgumentsObject::__put__(ExecutionContext *ctx, uint index, Value value)
 {
-    if (!ctx->strictMode) {
-        bool ok = false;
-        currentIndex = name->toQString().toInt(&ok);
-        if (!ok)
-            currentIndex = -1;
-    }
-    Object::__put__(ctx, name, value);
+    if (!ctx->strictMode)
+        currentIndex = index;
+    Object::__put__(ctx, index, value);
     currentIndex = -1;
 }
 

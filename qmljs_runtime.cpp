@@ -169,13 +169,14 @@ Value __qmljs_string_literal_function(ExecutionContext *ctx)
 
 Value __qmljs_delete_subscript(ExecutionContext *ctx, Value base, Value index)
 {
-    if (ArrayObject *a = base.asArrayObject()) {
+    if (Object *o = base.asObject()) {
         uint n = UINT_MAX;
         if (index.isInteger())
             n = index.integerValue();
         else if (index.isDouble())
             n = index.doubleValue();
-        a->array.deleteIndex(n);
+        if (n < UINT_MAX)
+            o->__delete__(ctx, n);
     }
 
     String *name = index.toString(ctx);
@@ -556,16 +557,18 @@ void __qmljs_set_property(ExecutionContext *ctx, Value object, String *name, Val
 Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index)
 {
     if (index.isNumber()) {
+        uint idx = index.toUInt32(ctx);
+
+        if (Object *o = object.asObject())
+            return o->__get__(ctx, idx);
+
         if (object.isString()) {
-            const QString s = object.stringValue()->toQString().mid(index.toUInt32(ctx), 1);
+            const QString s = object.stringValue()->toQString().mid(idx, 1);
             if (s.isNull())
                 return Value::undefinedValue();
             else
                 return Value::fromString(ctx, s);
         }
-
-        if (ArrayObject *a = object.asArrayObject())
-            return a->getElement(ctx, index.toUInt32(ctx));
     }
 
     String *name = index.toString(ctx);
@@ -607,10 +610,7 @@ Value __qmljs_foreach_next_property_name(Value foreach_iterator)
     ForEachIteratorObject *it = static_cast<ForEachIteratorObject *>(foreach_iterator.objectValue());
     assert(it->className() == QLatin1String("__ForEachIteratorObject"));
 
-    String *s = it->nextPropertyName();
-    if (!s)
-        return Value::nullValue();
-    return Value::fromString(s);
+    return it->nextPropertyName();
 }
 
 

@@ -44,21 +44,59 @@
 namespace QQmlJS {
 namespace VM {
 
-uint String::asArrayIndex() const
+static uint toArrayIndex(const QChar *ch, const QChar *end)
 {
-    uint u = 0;
+    uint i = ch->unicode() - '0';
+    if (i > 9)
+        return String::InvalidArrayIndex;
+    ++ch;
+    if (i == 0 && ch == end)
+        return i;
+    while (ch < end) {
+        uint x = ch->unicode() - '0';
+        if (x > 9)
+            return String::InvalidArrayIndex;
+        uint n = i*10 + x;
+        if (n < i)
+            // overflow
+            return String::InvalidArrayIndex;
+        i = n;
+        ++ch;
+    }
+    return i;
+}
+
+uint String::asArrayIndexSlow() const
+{
+    if (_hashValue < LargestHashedArrayIndex)
+        return _hashValue;
+
     const QChar *ch = _text.constData();
     const QChar *end = ch + _text.length();
-    while (ch < end) {
-        if (ch->unicode() < '0' && ch->unicode() > '9')
-            return InvalidArrayIndex;
-        uint n = u*10 + ch->unicode() - '0';
-        if (n < u)
-            // overflow
-            return InvalidArrayIndex;
-        u = n;
+    return toArrayIndex(ch, end);
+}
+
+void String::createHashValue() const
+{
+    const QChar *ch = _text.constData();
+    const QChar *end = ch + _text.length();
+
+    // array indices get their number as hash value, for large numbers we set to INT_MAX
+    _hashValue = toArrayIndex(ch, end);
+    if (_hashValue < UINT_MAX) {
+        if (_hashValue > INT_MAX)
+            _hashValue = INT_MAX;
+        return;
     }
-    return u;
+
+    uint h = 0xffffffff;
+    while (ch < end) {
+        h = 31 * h + ch->unicode();
+        ++ch;
+    }
+
+    // set highest bit to mark it as a non number
+    _hashValue = h | 0xf0000000;
 }
 
 }

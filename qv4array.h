@@ -507,7 +507,8 @@ public:
     }
 #endif
 
-    void set(uint index, const PropertyDescriptor *pd) {
+    PropertyDescriptor *insert(uint index) {
+        PropertyDescriptor *pd;
         if (!sparse && (index < 0x1000 || index < len + (len >> 2))) {
             if (index + offset >= (uint)values.size()) {
                 values.resize(offset + index + 1);
@@ -516,21 +517,26 @@ public:
                     values[i].value.tag = Value::_Undefined_Type;
                 }
             }
-            *descriptor(index) = *pd;
+            pd = descriptor(index);
         } else {
             initSparse();
             SparseArrayNode *n = sparse->insert(index);
-            uint idx = allocValue();
-            *descriptor(idx) = *pd;
-            n->value = idx;
+            if (n->value == UINT_MAX)
+                n->value = allocValue();
+            pd = descriptor(n->value);
         }
         if (index >= len)
             len = index + 1;
+        return pd;
     }
+
+    void set(uint index, const PropertyDescriptor *pd) {
+        *insert(index) = *pd;
+    }
+
     void set(uint index, Value value) {
-        PropertyDescriptor pd;
-        fillDescriptor(&pd, value);
-        set(index, &pd);
+        PropertyDescriptor *pd = insert(index);
+        fillDescriptor(pd, value);
     }
 
     bool deleteIndex(uint index) {
@@ -544,7 +550,7 @@ public:
             if (n)
                 pd = descriptor(n->value);
         }
-        if (!pd)
+        if (!pd || pd->type == PropertyDescriptor::Generic)
             return true;
         if (!pd->isConfigurable())
             return false;
@@ -670,6 +676,9 @@ public:
         }
         --len;
     }
+
+    SparseArrayNode *sparseBegin() { return sparse ? sparse->begin() : 0; }
+    SparseArrayNode *sparseEnd() { return sparse ? sparse->end() : 0; }
 
     void concat(const Array &other);
     void sort(ExecutionContext *context, Object *thisObject, const Value &comparefn);

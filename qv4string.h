@@ -61,20 +61,34 @@ struct String {
     }
 
     inline unsigned hashValue() const {
-        if (! _hashValue)
-            _hashValue = qHash(_text);
+        if (_hashValue == InvalidHashValue)
+            createHashValue();
 
         return _hashValue;
     }
-    enum { InvalidArrayIndex = 0xffffffff };
-    uint asArrayIndex() const;
+    enum {
+        InvalidArrayIndex = 0xffffffff,
+        LargestHashedArrayIndex = 0x7fffffff,
+        InvalidHashValue  = 0xffffffff
+    };
+    uint asArrayIndex() const {
+        if (_hashValue == InvalidHashValue)
+            createHashValue();
+        if (_hashValue > LargestHashedArrayIndex)
+            return InvalidArrayIndex;
+        if (_hashValue < LargestHashedArrayIndex)
+            return _hashValue;
+        return asArrayIndexSlow();
+    }
+    uint asArrayIndexSlow() const;
 
 private:
     friend class StringPool;
     String(const QString &text)
-        : _text(text), _hashValue(0) {}
+        : _text(text), _hashValue(InvalidHashValue) {}
 
 private:
+    void createHashValue() const;
     QString _text;
     mutable unsigned _hashValue;
 };

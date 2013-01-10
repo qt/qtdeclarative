@@ -119,14 +119,25 @@ struct Object: Managed {
     virtual ErrorObject *asErrorObject() { return 0; }
     virtual ArgumentsObject *asArgumentsObject() { return 0; }
 
-    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
     virtual PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
+    virtual PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, uint index);
     PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name);
+    PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, uint index);
+
+    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
+    virtual Value __get__(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
+
     virtual void __put__(ExecutionContext *ctx, String *name, Value value);
+    virtual void __put__(ExecutionContext *ctx, uint index, Value value);
+
     virtual bool __canPut__(ExecutionContext *ctx, String *name);
+    virtual bool __canPut__(ExecutionContext *ctx, uint index);
     virtual bool __hasProperty__(const ExecutionContext *ctx, String *name) const;
+    virtual bool __hasProperty__(const ExecutionContext *ctx, uint index) const;
     virtual bool __delete__(ExecutionContext *ctx, String *name);
+    virtual bool __delete__(ExecutionContext *ctx, uint index);
     virtual bool __defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc);
+    bool __defineOwnProperty__(ExecutionContext *ctx, uint index, PropertyDescriptor *desc);
     bool __defineOwnProperty__(ExecutionContext *ctx, const QString &name, PropertyDescriptor *desc);
 
     virtual Value call(ExecutionContext *context, Value, Value *, int);
@@ -139,7 +150,6 @@ struct Object: Managed {
     Value getValue(ExecutionContext *ctx, const PropertyDescriptor *p) const;
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p) const;
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const;
-    Value getElement(ExecutionContext *ctx, uint index) const;
 
     bool inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx);
     virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
@@ -159,11 +169,13 @@ protected:
 struct ForEachIteratorObject: Object {
     Object *object;
     Object *current; // inside the prototype chain
-    int tableIndex;
-    ForEachIteratorObject(Object *o) : object(o), current(o), tableIndex(-1) {}
+    SparseArrayNode *arrayNode;
+    uint arrayIndex;
+    uint tableIndex;
+    ForEachIteratorObject(Object *o) : object(o), current(o), arrayNode(0), arrayIndex(0), tableIndex(0) {}
     virtual QString className() { return QStringLiteral("__ForEachIteratorObject"); }
 
-    String *nextPropertyName();
+    Value nextPropertyName();
 
 protected:
     virtual void getCollectables(QVector<Object *> &objects);
@@ -198,11 +210,10 @@ struct DateObject: Object {
 };
 
 struct ArrayObject: Object {
-    ArrayObject() {}
-    ArrayObject(const Array &value): Object(value) {}
+    ArrayObject() { isArray = true; }
+    ArrayObject(const Array &value): Object(value) { isArray = true; }
     virtual QString className() { return QStringLiteral("Array"); }
     virtual ArrayObject *asArrayObject() { return this; }
-    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty);
 
     virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
 };
@@ -405,8 +416,8 @@ struct ArgumentsObject: Object {
     virtual QString className() { return QStringLiteral("Arguments"); }
     virtual ArgumentsObject *asArgumentsObject() { return this; }
 
-    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
-    virtual void __put__(ExecutionContext *ctx, String *name, Value value);
+    virtual Value __get__(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
+    virtual void __put__(ExecutionContext *ctx, uint index, Value value);
 
     static Value method_getArg(ExecutionContext *ctx);
     static Value method_setArg(ExecutionContext *ctx);

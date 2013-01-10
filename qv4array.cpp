@@ -392,6 +392,7 @@ SparseArrayNode *SparseArray::createNode(uint sl, SparseArrayNode *parent, bool 
     node->left = 0;
     node->right = 0;
     node->size_left = sl;
+    node->value = UINT_MAX;
     ++numEntries;
 
     if (parent) {
