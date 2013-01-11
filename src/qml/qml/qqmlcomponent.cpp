@@ -794,7 +794,7 @@ QObject *QQmlComponent::create(QQmlContext *context)
     When QQmlComponent constructs an instance, it occurs in three steps:
     \list 1
     \li The object hierarchy is created, and constant values are assigned.
-    \li Property bindings are evaluated for the the first time.
+    \li Property bindings are evaluated for the first time.
     \li If applicable, QQmlParserStatus::componentComplete() is called on objects.
     \endlist 
     QQmlComponent::beginCreate() differs from QQmlComponent::create() in that it

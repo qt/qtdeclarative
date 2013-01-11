@@ -336,7 +336,7 @@ inline QQuickListCompositor::Range *QQuickListCompositor::erase(
 }
 
 /*!
-    Sets the the number (\a count) of possible groups that items may belong to in a compositor.
+    Sets the number (\a count) of possible groups that items may belong to in a compositor.
 */
 
 void QQuickListCompositor::setGroupCount(int count)
