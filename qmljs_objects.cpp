@@ -1207,3 +1207,9 @@ NativeFunction::NativeFunction(ExecutionContext *scope, String *name, Value (*co
 {
     this->name = name;
 }
+
+Value NativeFunction::construct(ExecutionContext *ctx)
+{
+    ctx->throwTypeError();
+    return Value::undefinedValue();
+}

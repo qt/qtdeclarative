@@ -287,6 +287,7 @@ struct NativeFunction: FunctionObject {
 
     NativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
     virtual Value call(ExecutionContext *ctx) { return code(ctx); }
+    virtual Value construct(ExecutionContext *ctx);
 };
 
 struct ScriptFunction: FunctionObject {
