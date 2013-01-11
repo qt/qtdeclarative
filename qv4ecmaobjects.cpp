@@ -2143,9 +2143,7 @@ Value FunctionPrototype::method_toString(ExecutionContext *ctx)
 
 Value FunctionPrototype::method_apply(ExecutionContext *ctx)
 {
-    Value thisObject = ctx->argument(0).toObject(ctx);
-    if (thisObject.isNull() || thisObject.isUndefined())
-        thisObject = ctx->engine->globalObject;
+    Value thisArg = ctx->argument(0);
 
     Value arg = ctx->argument(1);
     QVector<Value> args;
@@ -2160,17 +2158,27 @@ Value FunctionPrototype::method_apply(ExecutionContext *ctx)
         return Value::undefinedValue();
     }
 
-    return __qmljs_call_value(ctx, thisObject, ctx->thisObject, args.data(), args.size());
+    FunctionObject *o = ctx->thisObject.asFunctionObject();
+    if (!o)
+        ctx->throwTypeError();
+
+    return o->callDirect(ctx, thisArg, args.data(), args.size());
 }
 
 Value FunctionPrototype::method_call(ExecutionContext *ctx)
 {
     Value thisArg = ctx->argument(0);
+
     QVector<Value> args(ctx->argumentCount ? ctx->argumentCount - 1 : 0);
     if (ctx->argumentCount)
         qCopy(ctx->arguments + 1,
               ctx->arguments + ctx->argumentCount, args.begin());
-    return __qmljs_call_value(ctx, thisArg, ctx->thisObject, args.data(), args.size());
+
+    FunctionObject *o = ctx->thisObject.asFunctionObject();
+    if (!o)
+        ctx->throwTypeError();
+
+    return o->callDirect(ctx, thisArg, args.data(), args.size());
 }
 
 Value FunctionPrototype::method_bind(ExecutionContext *ctx)

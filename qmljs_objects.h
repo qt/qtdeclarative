@@ -274,6 +274,9 @@ struct FunctionObject: Object {
 
     Value construct(ExecutionContext *context, Value *args, int argc);
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+    // Nothing to do in the default implementation, only _native_ functions might change context->thisObject.
+    virtual void maybeAdjustThisObjectForDirectCall(ExecutionContext* /*context*/, Value /*thisArg*/) { }
+    Value callDirect(ExecutionContext *context, Value thisObject, Value *args, int argc);
 
     virtual struct ScriptFunction *asScriptFunction() { return 0; }
 
@@ -288,6 +291,7 @@ struct NativeFunction: FunctionObject {
     NativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
     virtual Value call(ExecutionContext *ctx) { return code(ctx); }
     virtual Value construct(ExecutionContext *ctx);
+    virtual void maybeAdjustThisObjectForDirectCall(ExecutionContext *context, Value thisArg);
 };
 
 struct ScriptFunction: FunctionObject {

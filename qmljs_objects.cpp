@@ -751,6 +751,18 @@ Value FunctionObject::call(ExecutionContext *context, Value thisObject, Value *a
     return result;
 }
 
+Value FunctionObject::callDirect(ExecutionContext *context, Value thisObject, Value *args, int argc)
+{
+    ExecutionContext k;
+    ExecutionContext *ctx = needsActivation ? context->engine->newContext() : &k;
+
+    ctx->initCallContext(context, thisObject, this, args, argc);
+    maybeAdjustThisObjectForDirectCall(ctx, thisObject);
+    Value result = call(ctx);
+    ctx->leaveCallContext();
+    return result;
+}
+
 Value FunctionObject::call(ExecutionContext *ctx)
 {
     Q_UNUSED(ctx);
@@ -1212,4 +1224,13 @@ Value NativeFunction::construct(ExecutionContext *ctx)
 {
     ctx->throwTypeError();
     return Value::undefinedValue();
+}
+
+void NativeFunction::maybeAdjustThisObjectForDirectCall(ExecutionContext *context, Value thisArg)
+{
+    // Built-in functions allow for the this object to be null or undefined. This overrides
+    // the behaviour of changing thisObject to the global object if null/undefined and allows
+    // the built-in functions for example to throw a type error if null is passed.
+    if (thisArg.isNull() || thisArg.isUndefined())
+        context->thisObject = thisArg;
 }
