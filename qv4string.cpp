@@ -44,14 +44,18 @@
 namespace QQmlJS {
 namespace VM {
 
-static uint toArrayIndex(const QChar *ch, const QChar *end)
+static uint toArrayIndex(const QChar *ch, const QChar *end, bool *ok = 0)
 {
+    if (ok)
+        *ok = false;
     uint i = ch->unicode() - '0';
     if (i > 9)
         return String::InvalidArrayIndex;
     ++ch;
-    if (i == 0 && ch == end)
-        return i;
+    // reject "01", "001", ...
+    if (i == 0 && ch != end)
+        return String::InvalidArrayIndex;
+
     while (ch < end) {
         uint x = ch->unicode() - '0';
         if (x > 9)
@@ -63,6 +67,8 @@ static uint toArrayIndex(const QChar *ch, const QChar *end)
         i = n;
         ++ch;
     }
+    if (ok)
+        *ok = true;
     return i;
 }
 
@@ -74,6 +80,24 @@ uint String::asArrayIndexSlow() const
     const QChar *ch = _text.constData();
     const QChar *end = ch + _text.length();
     return toArrayIndex(ch, end);
+}
+
+uint String::toUInt(bool *ok) const
+{
+    *ok = true;
+
+    if (_hashValue == InvalidHashValue)
+        createHashValue();
+    if (_hashValue > LargestHashedArrayIndex) {
+        *ok = false;
+        return InvalidArrayIndex;
+    }
+    if (_hashValue < LargestHashedArrayIndex)
+        return _hashValue;
+
+    const QChar *ch = _text.constData();
+    const QChar *end = ch + _text.length();
+    return toArrayIndex(ch, end, ok);
 }
 
 void String::createHashValue() const

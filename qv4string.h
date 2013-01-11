@@ -81,6 +81,7 @@ struct String {
         return asArrayIndexSlow();
     }
     uint asArrayIndexSlow() const;
+    uint toUInt(bool *ok) const;
 
 private:
     friend class StringPool;
