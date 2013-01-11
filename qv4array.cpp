@@ -461,7 +461,7 @@ SparseArrayNode *SparseArray::insert(uint akey)
     return createNode(s, y, left);
 }
 
-Array::Array(const Array & other)
+Array::Array(const Array &other)
     : len(other.len)
     , values(other.values)
     , sparse(0)
@@ -560,8 +560,7 @@ void Array::sort(ExecutionContext *context, Object *thisObject, const Value &com
 
     ArrayElementLessThan lessThan(context, thisObject, comparefn);
     std::sort(values.begin(), values.end(), lessThan);
-    if (sparse)
-        delete sparse;
+    delete sparse;
 }
 
 
