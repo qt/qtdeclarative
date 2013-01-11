@@ -154,7 +154,7 @@ struct Object: Managed {
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const;
 
     bool inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx);
-    virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
+    bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(String *name, Value value);
@@ -216,8 +216,6 @@ struct ArrayObject: Object {
     ArrayObject(const Array &value): Object(value) { isArray = true; }
     virtual QString className() { return QStringLiteral("Array"); }
     virtual ArrayObject *asArrayObject() { return this; }
-
-    virtual bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
 };
 
 struct Function {

@@ -112,6 +112,16 @@ bool Object::inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *c
 
 bool Object::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx)
 {
+    uint idx = index.asArrayIndex();
+    if (idx < UINT_MAX) {
+        bool hasProperty = false;
+        Value v = __get__(ctx, idx, &hasProperty);
+        if (!hasProperty)
+            return false;
+        v = op(v, rhs, ctx);
+        __put__(ctx, idx, v);
+        return true;
+    }
     String *name = index.toString(ctx);
     assert(name);
     return inplaceBinOp(rhs, name, op, ctx);
@@ -659,18 +669,6 @@ void ForEachIteratorObject::getCollectables(QVector<Object *> &objects)
     Object::getCollectables(objects);
     if (it.object)
         objects.append(it.object);
-}
-
-bool ArrayObject::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx)
-{
-    if (index.isNumber()) {
-        const quint32 idx = index.toUInt32(ctx);
-        Value v = __get__(ctx, idx);
-        v = op(v, rhs, ctx);
-        array.set(idx, v);
-        return true;
-    }
-    return Object::inplaceBinOp(rhs, index, op, ctx);
 }
 
 
