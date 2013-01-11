@@ -362,6 +362,7 @@ inline SparseArrayNode *SparseArray::upperBound(uint akey)
 class Array
 {
     uint len;
+    PropertyDescriptor *lengthProperty;
     union {
         uint freeList;
         uint offset;
@@ -429,9 +430,11 @@ public:
     void initSparse();
 
     uint length() const { return len; }
-    void setLength(uint l) {
-        len = l;
-        if (len > 0x100000)
+    bool setLength(uint l) {
+        if (lengthProperty && !lengthProperty->isWritable())
+            return false;
+        setLengthUnchecked(l);
+        if (len >= 0x100000)
             initSparse();
         if (sparse) {
             SparseArrayNode *it = sparse->lowerBound(l);
@@ -446,66 +449,17 @@ public:
         } else if (values.size() > (int)len){
             values.resize(len);
         }
+        return true;
     }
 
-#if 0
-    struct sparse_iterator
-    {
-        Array *array;
-        SparseArrayNode *i;
-        PropertyDescriptor *pd;
+    void setLengthProperty(PropertyDescriptor *pd) { lengthProperty = pd; }
+    PropertyDescriptor *getLengthProperty() { return lengthProperty; }
 
-        inline sparse_iterator(SparseArrayNode *node) : i(node), pd(0) { }
-
-        inline uint key() const { return i->key(); }
-        inline uint &value() const { return i->value; }
-        inline uint &operator*() const { return i->value; }
-        inline uint *operator->() const { return &i->value; }
-        inline bool operator==(const sparse_iterator &o) const { return i == o.i; }
-        inline bool operator!=(const sparse_iterator &o) const { return i != o.i; }
-
-        inline sparse_iterator &operator++() {
-            i = i->nextNode();
-            return *this;
-        }
-        inline sparse_iterator operator++(int) {
-            sparse_iterator r = *this;
-            i = i->nextNode();
-            return r;
-        }
-        inline sparse_iterator &operator--() {
-            i = i->previousNode();
-            return *this;
-        }
-        inline sparse_iterator operator--(int) {
-            sparse_iterator r = *this;
-            i = i->previousNode();
-            return r;
-        }
-        inline sparse_iterator operator+(int j) const
-        { sparse_iterator r = *this; if (j > 0) while (j--) ++r; else while (j++) --r; return r; }
-        inline sparse_iterator operator-(int j) const { return operator+(-j); }
-        inline sparse_iterator &operator+=(int j) { return *this = *this + j; }
-        inline sparse_iterator &operator-=(int j) { return *this = *this - j; }
-
-        friend class SparseArray;
-    };
-
-    sparse_iterator begin() const {
-        return sparse_iterator(sparse ? sparse->begin() : 0);
+    void setLengthUnchecked(uint l) {
+        len = l;
+        if (lengthProperty)
+            lengthProperty->value = Value::fromUInt32(l);
     }
-    sparse_iterator end() const {
-        return sparse_iterator(sparse ? sparse->end() : 0);
-    }
-
-    sparse_iterator find(uint index) const {
-        return sparse_iterator(sparse ? sparse->find(index) : 0);
-    }
-
-    PropertyDescriptor *at(sparse_iterator it) const {
-        return it.i ? descriptor(*it) : 0;
-    }
-#endif
 
     PropertyDescriptor *insert(uint index) {
         PropertyDescriptor *pd;
@@ -526,7 +480,7 @@ public:
             pd = descriptor(n->value);
         }
         if (index >= len)
-            len = index + 1;
+            setLengthUnchecked(index + 1);
         return pd;
     }
 
@@ -612,7 +566,7 @@ public:
             uint idx = allocValue(v);
             sparse->push_front(idx);
         }
-        ++len;
+        setLengthUnchecked(len + 1);
     }
     PropertyDescriptor *front() {
         PropertyDescriptor *pd = 0;
@@ -637,7 +591,7 @@ public:
             uint idx = sparse->pop_front();
             freeValue(idx);
         }
-        --len;
+        setLengthUnchecked(len - 1);
     }
     void push_back(Value v) {
         if (!sparse) {
@@ -648,7 +602,7 @@ public:
             uint idx = allocValue(v);
             sparse->push_back(idx, len);
         }
-        ++len;
+        setLengthUnchecked(len + 1);
     }
     PropertyDescriptor *back() {
         PropertyDescriptor *pd = 0;
@@ -674,7 +628,7 @@ public:
             if (idx != UINT_MAX)
                 freeValue(idx);
         }
-        --len;
+        setLengthUnchecked(len - 1);
     }
 
     SparseArrayNode *sparseBegin() { return sparse ? sparse->begin() : 0; }

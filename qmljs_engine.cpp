@@ -99,7 +99,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     stringPrototype = new (memoryManager) StringPrototype(rootContext);
     numberPrototype = new (memoryManager) NumberPrototype();
     booleanPrototype = new (memoryManager) BooleanPrototype();
-    arrayPrototype = new (memoryManager) ArrayPrototype();
+    arrayPrototype = new (memoryManager) ArrayPrototype(rootContext);
     datePrototype = new (memoryManager) DatePrototype();
     functionPrototype = new (memoryManager) FunctionPrototype(rootContext);
     regExpPrototype = new (memoryManager) RegExpPrototype();
@@ -316,16 +316,16 @@ Object *ExecutionEngine::newFunctionObject(ExecutionContext *ctx)
     return object;
 }
 
-ArrayObject *ExecutionEngine::newArrayObject()
+ArrayObject *ExecutionEngine::newArrayObject(ExecutionContext *ctx)
 {
-    ArrayObject *object = new (memoryManager) ArrayObject();
+    ArrayObject *object = new (memoryManager) ArrayObject(ctx);
     object->prototype = arrayPrototype;
     return object;
 }
 
-ArrayObject *ExecutionEngine::newArrayObject(const Array &value)
+ArrayObject *ExecutionEngine::newArrayObject(ExecutionContext *ctx, const Array &value)
 {
-    ArrayObject *object = new (memoryManager) ArrayObject(value);
+    ArrayObject *object = new (memoryManager) ArrayObject(ctx, value);
     object->prototype = arrayPrototype;
     return object;
 }

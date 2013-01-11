@@ -606,7 +606,7 @@ Value ObjectPrototype::method_getOwnPropertyNames(ExecutionContext *ctx)
     if (!O)
         ctx->throwTypeError();
 
-    ArrayObject *array = ctx->engine->newArrayObject()->asArrayObject();
+    ArrayObject *array = ctx->engine->newArrayObject(ctx)->asArrayObject();
     Array &a = array->array;
     ObjectIterator it(O, ObjectIterator::NoFlags);
     while (1) {
@@ -793,7 +793,7 @@ Value ObjectPrototype::method_keys(ExecutionContext *ctx)
 
     Object *o = ctx->argument(0).objectValue();
 
-    ArrayObject *a = ctx->engine->newArrayObject();
+    ArrayObject *a = ctx->engine->newArrayObject(ctx);
 
     ObjectIterator it(o, ObjectIterator::EnumberableOnly);
     while (1) {
@@ -1555,19 +1555,18 @@ ArrayCtor::ArrayCtor(ExecutionContext *scope)
 
 Value ArrayCtor::call(ExecutionContext *ctx)
 {
-    ArrayObject *a = ctx->engine->newArrayObject();
+    ArrayObject *a = ctx->engine->newArrayObject(ctx);
     Array &value = a->array;
     if (ctx->argumentCount == 1 && ctx->argument(0).isNumber()) {
         bool ok;
         uint len = ctx->argument(0).asArrayLength(&ok);
-        qDebug() << len << ok << (uint)ctx->argument(0).doubleValue();
 
         if (!ok) {
             ctx->throwRangeError(ctx->argument(0));
             return Value::undefinedValue();
         }
 
-        value.setLength(len);
+        value.setLengthUnchecked(len);
     } else {
         for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
             value.set(i, ctx->argument(i));
@@ -1636,7 +1635,7 @@ Value ArrayPrototype::method_concat(ExecutionContext *ctx)
             result.set(k, arg);
     }
 
-    return Value::fromObject(ctx->engine->newArrayObject(result));
+    return Value::fromObject(ctx->engine->newArrayObject(ctx, result));
 }
 
 Value ArrayPrototype::method_join(ExecutionContext *ctx)
@@ -1793,7 +1792,7 @@ Value ArrayPrototype::method_slice(ExecutionContext *ctx)
         if (! v.isUndefined())
             result.set(n++, v);
     }
-    return Value::fromObject(ctx->engine->newArrayObject(result));
+    return Value::fromObject(ctx->engine->newArrayObject(ctx, result));
 }
 
 Value ArrayPrototype::method_sort(ExecutionContext *ctx)
@@ -1819,7 +1818,7 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
 
     double start = ctx->argument(0).toInteger(ctx);
     double deleteCount = ctx->argument(1).toInteger(ctx);
-    Value a = Value::fromObject(ctx->engine->newArrayObject());
+    Value a = Value::fromObject(ctx->engine->newArrayObject(ctx));
     QVector<Value> items;
     for (unsigned int i = 2; i < ctx->argumentCount; ++i)
         items << ctx->argument(i);
@@ -1952,8 +1951,8 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
 
     Value callback = ctx->argument(0);
     Value thisArg = ctx->argument(1);
-    ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
-    a->array.setLength(instance->array.length());
+    ArrayObject *a = ctx->engine->newArrayObject(ctx)->asArrayObject();
+    a->array.setLengthUnchecked(instance->array.length());
     for (quint32 k = 0; k < instance->array.length(); ++k) {
         Value v = instance->__get__(ctx, k);
         if (v.isUndefined())
@@ -1976,7 +1975,7 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
 
     Value callback = ctx->argument(0);
     Value thisArg = ctx->argument(1);
-    ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
+    ArrayObject *a = ctx->engine->newArrayObject(ctx)->asArrayObject();
     for (quint32 k = 0; k < instance->array.length(); ++k) {
         Value v = instance->__get__(ctx, k);
         if (v.isUndefined())
@@ -1988,7 +1987,6 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
         Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
         if (__qmljs_to_boolean(r, ctx)) {
             const uint index = a->array.length();
-            a->array.setLength(index + 1);
             a->array.set(index, v);
         }
     }
@@ -2862,7 +2860,7 @@ Value RegExpPrototype::method_exec(ExecutionContext *ctx)
         return Value::nullValue();
 
     // fill in result data
-    ArrayObject *array = ctx->engine->newArrayObject()->asArrayObject();
+    ArrayObject *array = ctx->engine->newArrayObject(ctx)->asArrayObject();
     int captured = match.lastCapturedIndex();
     for (int i = 0; i <= captured; ++i)
         array->array.push_back(Value::fromString(ctx, match.captured(i)));

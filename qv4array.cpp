@@ -463,6 +463,7 @@ SparseArrayNode *SparseArray::insert(uint akey)
 
 Array::Array(const Array &other)
     : len(other.len)
+    , lengthProperty(0)
     , values(other.values)
     , sparse(0)
 {
@@ -528,7 +529,6 @@ Value Array::indexOf(Value v, uint fromIndex, ExecutionContext *ctx, Object *o)
 void Array::concat(const Array &other)
 {
     initSparse();
-    int len = length();
     int newLen = len + other.length();
     if (other.sparse)
         initSparse();
@@ -550,7 +550,7 @@ void Array::concat(const Array &other)
         values.resize(oldSize + other.length());
         memcpy(values.data() + oldSize, other.values.constData() + other.offset, other.length()*sizeof(PropertyDescriptor));
     }
-    setLength(newLen);
+    setLengthUnchecked(newLen);
 }
 
 void Array::sort(ExecutionContext *context, Object *thisObject, const Value &comparefn)

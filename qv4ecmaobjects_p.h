@@ -172,6 +172,8 @@ struct ArrayCtor: FunctionObject
 
 struct ArrayPrototype: ArrayObject
 {
+    ArrayPrototype(ExecutionContext *context) : ArrayObject(context) {}
+
     void init(ExecutionContext *ctx, const Value &ctor);
 
     static Value method_toString(ExecutionContext *ctx);

@@ -250,11 +250,6 @@ Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
             *hasProperty = true;
         return Value::fromObject(prototype);
     }
-    if (isArray && name->isEqualTo(ctx->engine->id_length)) {
-        if (hasProperty)
-            *hasProperty = true;
-        return Value::fromDouble(array.length());
-    }
 
     if (PropertyDescriptor *p = __getPropertyDescriptor__(ctx, name)) {
         if (hasProperty)
@@ -488,13 +483,20 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
     PropertyDescriptor *current;
 
     if (isArray && name->isEqualTo(ctx->engine->id_length)) {
-        if (desc->type != PropertyDescriptor::Data)
+        PropertyDescriptor *lp = array.getLengthProperty();
+        if (!lp->isWritable() || desc->type != PropertyDescriptor::Data || desc->isConfigurable() || desc->isEnumerable())
             goto reject;
-        bool ok;
-        uint l = desc->value.asArrayLength(&ok);
-        if (!ok)
-            ctx->throwRangeError(desc->value);
-        array.setLength(l);
+        if (!desc->value.isUndefined()) {
+            bool ok;
+            uint l = desc->value.asArrayLength(&ok);
+            if (!ok)
+                ctx->throwRangeError(desc->value);
+            if (!array.setLength(l))
+                goto reject;
+        }
+        if (!desc->isWritable())
+            lp->writable = PropertyDescriptor::Disabled;
+        return true;
     }
 
     if (!members)
@@ -663,6 +665,22 @@ Value Object::call(ExecutionContext *context, Value , Value *, int)
     context->throwTypeError();
     return Value::undefinedValue();
 }
+
+void ArrayObject::init(ExecutionContext *context)
+{
+    isArray = true;
+    if (!members)
+        members.reset(new PropertyTable());
+    PropertyDescriptor *pd = members->insert(context->engine->id_length);
+    pd->type = PropertyDescriptor::Data;
+    pd->writable = PropertyDescriptor::Enabled;
+    pd->enumberable = PropertyDescriptor::Disabled;
+    pd->configurable = PropertyDescriptor::Disabled;
+    pd->value = Value::fromInt32(0);
+    array.setLengthProperty(pd);
+}
+
+
 
 void ForEachIteratorObject::getCollectables(QVector<Object *> &objects)
 {

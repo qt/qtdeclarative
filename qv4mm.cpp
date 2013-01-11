@@ -56,7 +56,7 @@ struct MemoryManager::Data
     bool aggressiveGC;
     ExecutionEngine *engine;
 
-    enum { MaxItemSize = 128 };
+    enum { MaxItemSize = 256 };
     Managed *smallItems[MaxItemSize/16];
     struct Chunk {
         PageAllocation memory;

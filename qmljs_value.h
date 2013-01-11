@@ -45,6 +45,7 @@
 
 #include <QtCore/QString>
 #include <QtCore/qnumeric.h>
+#include <qv4string.h>
 #include <QtCore/QDebug>
 
 namespace QQmlJS {
@@ -187,6 +188,7 @@ struct Value
     static Value fromBoolean(Bool b);
     static Value fromDouble(double d);
     static Value fromInt32(int i);
+    static Value fromUInt32(uint i);
     static Value fromString(String *s);
     static Value fromObject(Object *o);
 
@@ -305,6 +307,18 @@ inline Value Value::fromInt32(int i)
     return v;
 }
 
+inline Value Value::fromUInt32(uint i)
+{
+    Value v;
+    if (i < INT_MAX) {
+        v.tag = _Integer_Type;
+        v.int_32 = (int)i;
+    } else {
+        v.dbl = i;
+    }
+    return v;
+}
+
 inline Value Value::fromString(String *s)
 {
     Value v;
@@ -382,6 +396,9 @@ inline uint Value::asArrayLength(bool *ok) const
     *ok = true;
     if (isInteger() && int_32 >= 0)
         return (uint)int_32;
+    if (isString())
+        return stringValue()->toUInt(ok);
+
     if (!isDouble()) {
         *ok = false;
         return UINT_MAX;

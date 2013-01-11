@@ -212,8 +212,9 @@ struct DateObject: Object {
 };
 
 struct ArrayObject: Object {
-    ArrayObject() { isArray = true; }
-    ArrayObject(const Array &value): Object(value) { isArray = true; }
+    ArrayObject(ExecutionContext *ctx) { init(ctx); }
+    ArrayObject(ExecutionContext *ctx, const Array &value): Object(value) { init(ctx); }
+    void init(ExecutionContext *context);
     virtual QString className() { return QStringLiteral("Array"); }
     virtual ArrayObject *asArrayObject() { return this; }
 };

@@ -184,8 +184,8 @@ struct ExecutionEngine
 
     Object *newFunctionObject(ExecutionContext *ctx);
 
-    ArrayObject *newArrayObject();
-    ArrayObject *newArrayObject(const Array &value);
+    ArrayObject *newArrayObject(ExecutionContext *ctx);
+    ArrayObject *newArrayObject(ExecutionContext *ctx, const Array &value);
     FunctionObject *newArrayCtor(ExecutionContext *ctx);
 
     Object *newDateObject(const Value &value);
