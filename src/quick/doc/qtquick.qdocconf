@@ -3,20 +3,20 @@ include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 project                 = QtQuick
 description             = Qt Quick Reference Documentation
 url                     = http://qt-project.org/doc/qt-5.0/qtquick-index.html
-version                 = 5.0.1
+version                 = 5.1.0
 
 
 qhp.projects            = QtQuick
 
 qhp.QtQuick.file                = qtquick.qhp
-qhp.QtQuick.namespace           = org.qt-project.qtquick.500
+qhp.QtQuick.namespace           = org.qt-project.qtquick.510
 qhp.QtQuick.virtualFolder       = qtquick
 qhp.QtQuick.indexTitle          = Qt Quick
 qhp.QtQuick.indexRoot           =
 
-qhp.QtQuick.filterAttributes    = qtquick 5.0.1 qtrefdoc
-qhp.QtQuick.customFilters.Qt.name = QtQuick 5.0.1
-qhp.QtQuick.customFilters.Qt.filterAttributes = qtquick 5.0.1
+qhp.QtQuick.filterAttributes    = qtquick 5.1.0 qtrefdoc
+qhp.QtQuick.customFilters.Qt.name = QtQuick 5.1.0
+qhp.QtQuick.customFilters.Qt.filterAttributes = qtquick 5.1.0
 qhp.QtQuick.subprojects         = qmltypes classes examples
 qhp.QtQuick.subprojects.qmltypes.title = QML Types
 qhp.QtQuick.subprojects.qmltypes.indexTitle = Qt Quick QML Types

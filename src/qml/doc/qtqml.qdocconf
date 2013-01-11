@@ -3,19 +3,19 @@ include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 project                 = QtQml
 description             = Qt QML Reference Documentation
 url                     = http://qt-project.org/doc/qt-5.0/qtqml
-version                 = 5.0.1
+version                 = 5.1.0
 
 qhp.projects            = QtQml
 
 qhp.QtQml.file                = qtqml.qhp
-qhp.QtQml.namespace           = org.qt-project.qtqml.500
+qhp.QtQml.namespace           = org.qt-project.qtqml.510
 qhp.QtQml.virtualFolder       = qtqml
 qhp.QtQml.indexTitle          = Qt QML
 qhp.QtQml.indexRoot           =
 
-qhp.QtQml.filterAttributes    = qtqml 5.0.1 qtrefdoc
-qhp.QtQml.customFilters.Qt.name = QtQml 5.0.1
-qhp.QtQml.customFilters.Qt.filterAttributes = qtqml 5.0.1
+qhp.QtQml.filterAttributes    = qtqml 5.1.0 qtrefdoc
+qhp.QtQml.customFilters.Qt.name = QtQml 5.1.0
+qhp.QtQml.customFilters.Qt.filterAttributes = qtqml 5.1.0
 qhp.QtQml.subprojects         = classes examples
 qhp.QtQml.subprojects.classes.title = C++ Classes
 qhp.QtQml.subprojects.classes.indexTitle = Qt QML Module C++ Classes
