@@ -618,7 +618,7 @@ void tst_qquickflickable::movingAndFlicking()
     window->setSource(testFileUrl("flickable03.qml"));
     window->show();
     window->requestActivate();
-    QTest::qWaitForWindowActive(window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(window->rootObject() != 0);
 
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
@@ -639,7 +639,7 @@ void tst_qquickflickable::movingAndFlicking()
     // do a flick that keeps the view within the bounds
     flick(window, flickFrom, flickToWithoutSnapBack, 200);
 
-    QVERIFY(flickable->isMoving());
+    QTRY_VERIFY(flickable->isMoving());
     QCOMPARE(flickable->isMovingHorizontally(), horizontalEnabled);
     QCOMPARE(flickable->isMovingVertically(), verticalEnabled);
     QVERIFY(flickable->isFlicking());
@@ -695,7 +695,7 @@ void tst_qquickflickable::movingAndFlicking()
     QTRY_VERIFY(!flickable->isMoving());
     flick(window, flickFrom, flickToWithSnapBack, 200);
 
-    QVERIFY(flickable->isMoving());
+    QTRY_VERIFY(flickable->isMoving());
     QCOMPARE(flickable->isMovingHorizontally(), horizontalEnabled);
     QCOMPARE(flickable->isMovingVertically(), verticalEnabled);
     QVERIFY(flickable->isFlicking());
@@ -999,7 +999,7 @@ void tst_qquickflickable::pressWhileFlicking()
     // flicking == false, moving == true;
     flick(window, QPoint(20,190), QPoint(20, 50), 200);
     QVERIFY(flickable->verticalVelocity() > 0.0);
-    QVERIFY(flickable->isFlicking());
+    QTRY_VERIFY(flickable->isFlicking());
     QVERIFY(flickable->isFlickingVertically());
     QVERIFY(!flickable->isFlickingHorizontally());
     QVERIFY(flickable->isMoving());
@@ -1257,7 +1257,7 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     window->setSource(testFileUrl("longList.qml"));
     window->show();
     window->requestActivate();
-    QTest::qWaitForWindowActive(window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(window->rootObject() != 0);
 
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());

@@ -248,7 +248,7 @@ void tst_QQuickMouseArea::dragging()
     window->setSource(testFileUrl("dragging.qml"));
     window->show();
     window->requestActivate();
-    QTest::qWait(20);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->rootObject() != 0);
 
     QQuickMouseArea *mouseRegion = window->rootObject()->findChild<QQuickMouseArea*>("mouseregion");
@@ -274,19 +274,17 @@ void tst_QQuickMouseArea::dragging()
     // First move event triggers drag, second is acted upon.
     // This is due to possibility of higher stacked area taking precedence.
 
-    QTest::mouseMove(window, QPoint(111,111));
-    QTest::qWait(50);
-    QTest::mouseMove(window, QPoint(122,122));
-    QTest::qWait(50);
+    QTest::mouseMove(window, QPoint(111,111), 50);
+    QTest::mouseMove(window, QPoint(116,116), 50);
+    QTest::mouseMove(window, QPoint(122,122), 50);
 
-    QVERIFY(drag->active());
-    QCOMPARE(blackRect->x(), 72.0);
+    QTRY_VERIFY(drag->active());
+    QTRY_COMPARE(blackRect->x(), 72.0);
     QCOMPARE(blackRect->y(), 72.0);
 
     QTest::mouseRelease(window, button, 0, QPoint(122,122));
-    QTest::qWait(50);
 
-    QVERIFY(!drag->active());
+    QTRY_VERIFY(!drag->active());
     QCOMPARE(blackRect->x(), 72.0);
     QCOMPARE(blackRect->y(), 72.0);
 
@@ -477,20 +475,28 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
         window->show();
         window->requestActivate();
         QVERIFY(window->rootObject() != 0);
+        QQuickMouseArea *mouseArea = qobject_cast<QQuickMouseArea*>(window->rootObject()->children().first());
+        QVERIFY(mouseArea);
 
         QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
         QGuiApplication::sendEvent(window, &pressEvent);
 
+        QVERIFY(mouseArea->pressedButtons() == Qt::LeftButton);
         QVERIFY(!window->rootObject()->property("clicked").toBool());
         QVERIFY(!window->rootObject()->property("held").toBool());
 
+        // timeout is 800 (in qquickmousearea.cpp)
         QTest::qWait(1000);
+        QCoreApplication::processEvents();
+
+        QVERIFY(!window->rootObject()->property("clicked").toBool());
+        QVERIFY(window->rootObject()->property("held").toBool());
 
         QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
         QGuiApplication::sendEvent(window, &releaseEvent);
 
+        QTRY_VERIFY(window->rootObject()->property("held").toBool());
         QVERIFY(!window->rootObject()->property("clicked").toBool());
-        QVERIFY(window->rootObject()->property("held").toBool());
 
         delete window;
     }
