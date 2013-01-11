@@ -1059,12 +1059,15 @@ void StringPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
 QString StringPrototype::getThisString(ExecutionContext *ctx)
 {
-    if (StringObject *thisObject = ctx->thisObject.asStringObject()) {
-        return thisObject->value.stringValue()->toQString();
-    } else {
+    String* str = 0;
+    Value thisObject = ctx->thisObject;
+    if (StringObject *thisString = thisObject.asStringObject())
+        str = thisString->value.stringValue();
+    else if (thisObject.isUndefined() || thisObject.isNull())
         ctx->throwTypeError();
-        return QString();
-    }
+    else
+        str = ctx->thisObject.toString(ctx);
+    return str->toQString();
 }
 
 Value StringPrototype::method_toString(ExecutionContext *ctx)
