@@ -127,7 +127,7 @@ Value __qmljs_string_literal_function(ExecutionContext *ctx);
 // strings
 String *__qmljs_string_from_utf8(ExecutionContext *ctx, const char *s);
 int __qmljs_string_length(ExecutionContext *ctx, String *string);
-double __qmljs_string_to_number(ExecutionContext *ctx, String *string);
+double __qmljs_string_to_number(const String *string);
 Value __qmljs_string_from_number(ExecutionContext *ctx, double number);
 Bool __qmljs_string_compare(ExecutionContext *ctx, String *left, String *right);
 Bool __qmljs_string_equal(String *left, String *right);
@@ -304,7 +304,7 @@ inline double __qmljs_to_number(Value value, ExecutionContext *ctx)
     case Value::Integer_Type:
         return value.int_32;
     case Value::String_Type:
-        return __qmljs_string_to_number(ctx, value.stringValue());
+        return __qmljs_string_to_number(value.stringValue());
     case Value::Object_Type: {
         Value prim = __qmljs_to_primitive(value, ctx, NUMBER_HINT);
         return __qmljs_to_number(prim, ctx);

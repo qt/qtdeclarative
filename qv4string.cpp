@@ -40,14 +40,13 @@
 ****************************************************************************/
 
 #include "qv4string.h"
+#include "qmljs_runtime.h"
 
 namespace QQmlJS {
 namespace VM {
 
-static uint toArrayIndex(const QChar *ch, const QChar *end, bool *ok = 0)
+static uint toArrayIndex(const QChar *ch, const QChar *end)
 {
-    if (ok)
-        *ok = false;
     uint i = ch->unicode() - '0';
     if (i > 9)
         return String::InvalidArrayIndex;
@@ -67,8 +66,6 @@ static uint toArrayIndex(const QChar *ch, const QChar *end, bool *ok = 0)
         i = n;
         ++ch;
     }
-    if (ok)
-        *ok = true;
     return i;
 }
 
@@ -88,16 +85,16 @@ uint String::toUInt(bool *ok) const
 
     if (_hashValue == InvalidHashValue)
         createHashValue();
-    if (_hashValue > LargestHashedArrayIndex) {
-        *ok = false;
-        return InvalidArrayIndex;
-    }
     if (_hashValue < LargestHashedArrayIndex)
         return _hashValue;
 
-    const QChar *ch = _text.constData();
-    const QChar *end = ch + _text.length();
-    return toArrayIndex(ch, end, ok);
+    double d = __qmljs_string_to_number(this);
+    qDebug() << "toUInt" << d;
+    uint l = (uint)d;
+    if (d == l)
+        return l;
+    *ok = false;
+    return UINT_MAX;
 }
 
 void String::createHashValue() const

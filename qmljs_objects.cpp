@@ -484,17 +484,17 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
 
     if (isArray && name->isEqualTo(ctx->engine->id_length)) {
         PropertyDescriptor *lp = array.getLengthProperty();
-        if (!lp->isWritable() || desc->type != PropertyDescriptor::Data || desc->isConfigurable() || desc->isEnumerable())
+        if (!lp->isWritable() || desc->type == PropertyDescriptor::Accessor || desc->isConfigurable() || desc->isEnumerable())
             goto reject;
-        if (!desc->value.isUndefined()) {
+        if (desc->type == PropertyDescriptor::Data) {
             bool ok;
-            uint l = desc->value.asArrayLength(&ok);
+            uint l = desc->value.asArrayLength(ctx, &ok);
             if (!ok)
                 ctx->throwRangeError(desc->value);
             if (!array.setLength(l))
                 goto reject;
         }
-        if (!desc->isWritable())
+        if (desc->writable == PropertyDescriptor::Disabled)
             lp->writable = PropertyDescriptor::Disabled;
         return true;
     }
@@ -560,8 +560,8 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
     } else { // clause 10
         assert(current->isAccessor() && desc->isAccessor());
         if (!current->isConfigurable()) {
-            if ((desc->get && current->get != desc->get) ||
-                (desc->set && current->set != desc->set))
+            if (((quintptr)desc->get > 0x1 && current->get != desc->get) ||
+                ((quintptr)desc->set > 0x1 && current->set != desc->set))
                 goto reject;
         }
     }
@@ -637,8 +637,8 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, PropertyDe
     } else { // clause 10
         assert(current->isAccessor() && desc->isAccessor());
         if (!current->isConfigurable()) {
-            if ((desc->get && current->get != desc->get) ||
-                (desc->set && current->set != desc->set))
+            if (((quintptr)desc->get > 0x1 && current->get != desc->get) ||
+                ((quintptr)desc->set > 0x1 && current->set != desc->set))
                 goto reject;
         }
     }

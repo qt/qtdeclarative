@@ -202,7 +202,7 @@ struct Value
 
     int toUInt16(ExecutionContext *ctx);
     int toInt32(ExecutionContext *ctx);
-    unsigned int toUInt32(ExecutionContext *ctx);
+    unsigned int toUInt32(ExecutionContext *ctx) const;
 
     Bool toBoolean(ExecutionContext *ctx) const;
     double toInteger(ExecutionContext *ctx) const;
@@ -252,7 +252,7 @@ struct Value
     ArrayObject *asArrayObject() const;
     ErrorObject *asErrorObject() const;
     uint asArrayIndex() const;
-    uint asArrayLength(bool *ok) const;
+    uint asArrayLength(ExecutionContext *ctx, bool *ok) const;
 
     Value property(ExecutionContext *ctx, String *name) const;
 
@@ -364,7 +364,7 @@ inline int Value::toInt32(ExecutionContext *ctx)
     return Value::toInt32(__qmljs_to_number(*this, ctx));
 }
 
-inline unsigned int Value::toUInt32(ExecutionContext *ctx) {
+inline unsigned int Value::toUInt32(ExecutionContext *ctx) const {
     if (isConvertibleToInt())
         return (unsigned) int_32;
     double d;
@@ -391,20 +391,25 @@ inline uint Value::asArrayIndex() const
     return idx;
 }
 
-inline uint Value::asArrayLength(bool *ok) const
+inline uint Value::asArrayLength(ExecutionContext *ctx, bool *ok) const
 {
     *ok = true;
-    if (isInteger() && int_32 >= 0)
+    if (isConvertibleToInt() && int_32 >= 0)
         return (uint)int_32;
+    if (isDouble()) {
+        uint idx = (uint)dbl;
+        if ((double)idx != dbl) {
+            *ok = false;
+            return UINT_MAX;
+        }
+        return idx;
+    }
     if (isString())
         return stringValue()->toUInt(ok);
 
-    if (!isDouble()) {
-        *ok = false;
-        return UINT_MAX;
-    }
-    uint idx = (uint)dbl;
-    if ((double)idx != dbl) {
+    uint idx = toUInt32(ctx);
+    double d = toNumber(ctx);
+    if (d != idx) {
         *ok = false;
         return UINT_MAX;
     }

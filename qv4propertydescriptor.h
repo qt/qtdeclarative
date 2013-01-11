@@ -102,6 +102,10 @@ struct PropertyDescriptor {
                 writable = Disabled;
         } else {
             writable = Undefined;
+            if ((quintptr)get == 0x1)
+                get = 0;
+            if ((quintptr)set == 0x1)
+                set = 0;
         }
         if (enumberable == Undefined)
             enumberable = Disabled;
@@ -109,9 +113,9 @@ struct PropertyDescriptor {
             configurable = Disabled;
     }
 
-    inline bool isData() const { return type == Data; }
+    inline bool isData() const { return type == Data || writable != Undefined; }
     inline bool isAccessor() const { return type == Accessor; }
-    inline bool isGeneric() const { return type == Generic; }
+    inline bool isGeneric() const { return type == Generic && writable == Undefined; }
 
     inline bool isWritable() const { return writable == Enabled; }
     inline bool isEnumerable() const { return enumberable == Enabled; }
@@ -121,7 +125,7 @@ struct PropertyDescriptor {
         return type == Generic && writable == Undefined && enumberable == Undefined && configurable == Undefined;
     }
     inline bool isSubset(PropertyDescriptor *other) {
-        if (type != other->type)
+        if (type != Generic && type != other->type)
             return false;
         if (enumberable != Undefined && enumberable != other->enumberable)
             return false;
@@ -131,24 +135,30 @@ struct PropertyDescriptor {
             return false;
         if (type == Data && !value.sameValue(other->value))
             return false;
-        if (type == Accessor && (get != other->get || set != other->set))
-            return false;
+        if (type == Accessor) {
+            if ((quintptr)get != 0x1 && get != other->get)
+                return false;
+            qDebug() << "isSubset" << set << other->set;
+            if ((quintptr)set != 0x1 && set != other->set)
+                return false;
+        }
         return true;
     }
     inline void operator+=(const PropertyDescriptor &other) {
-        type = other.type;
         if (other.enumberable != Undefined)
             enumberable = other.enumberable;
         if (other.configurable != Undefined)
             configurable = other.configurable;
         if (other.writable != Undefined)
             writable = other.writable;
-        if (type == Accessor) {
+        if (other.type == Accessor) {
+            type = Accessor;
             if (other.get)
-                get = other.get;
+                get = ((quintptr)other.get == 0x1) ? 0 : other.get;
             if (other.set)
-                set = other.set;
-        } else {
+                set = ((quintptr)other.set == 0x1) ? 0 : other.set;
+        } else if (other.type == Data){
+            type = Data;
             value = other.value;
         }
     }

@@ -717,7 +717,8 @@ Value ObjectPrototype::method_freeze(ExecutionContext *ctx)
         PropertyDescriptor *pd = it.next(&name, &index);
         if (!pd)
             break;
-        pd->writable = PropertyDescriptor::Disabled;
+        if (pd->type == PropertyDescriptor::Data)
+            pd->writable = PropertyDescriptor::Disabled;
         pd->configurable = PropertyDescriptor::Disabled;
     }
     return ctx->argument(0);
@@ -878,7 +879,6 @@ Value ObjectPrototype::method_defineGetter(ExecutionContext *ctx)
     Object *o = ctx->thisObject.toObject(ctx).objectValue();
 
     PropertyDescriptor pd = PropertyDescriptor::fromAccessor(f, 0);
-    pd.writable = PropertyDescriptor::Enabled;
     pd.configurable = PropertyDescriptor::Enabled;
     pd.enumberable = PropertyDescriptor::Enabled;
     o->__defineOwnProperty__(ctx, prop, &pd);
@@ -898,7 +898,6 @@ Value ObjectPrototype::method_defineSetter(ExecutionContext *ctx)
     Object *o = ctx->thisObject.toObject(ctx).objectValue();
 
     PropertyDescriptor pd = PropertyDescriptor::fromAccessor(0, f);
-    pd.writable = PropertyDescriptor::Enabled;
     pd.configurable = PropertyDescriptor::Enabled;
     pd.enumberable = PropertyDescriptor::Enabled;
     o->__defineOwnProperty__(ctx, prop, &pd);
@@ -928,24 +927,24 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
         FunctionObject *f = get.asFunctionObject();
         if (f) {
             desc->get = f;
-        } else if (!get.isUndefined()) {
-            __qmljs_throw_type_error(ctx);
+        } else if (get.isUndefined()) {
+            desc->get = (FunctionObject *)0x1;
         } else {
-            desc->get = 0;
+            __qmljs_throw_type_error(ctx);
         }
         desc->type = PropertyDescriptor::Accessor;
     }
 
     desc->set = 0;
     if (o->__hasProperty__(ctx, ctx->engine->id_set)) {
-        Value get = o->__get__(ctx, ctx->engine->id_set);
-        FunctionObject *f = get.asFunctionObject();
+        Value set = o->__get__(ctx, ctx->engine->id_set);
+        FunctionObject *f = set.asFunctionObject();
         if (f) {
             desc->set = f;
-        } else if (!get.isUndefined()) {
-            __qmljs_throw_type_error(ctx);
+        } else if (set.isUndefined()) {
+            desc->set = (FunctionObject *)0x1;
         } else {
-            desc->set = 0;
+            __qmljs_throw_type_error(ctx);
         }
         desc->type = PropertyDescriptor::Accessor;
     }
@@ -956,7 +955,6 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
             __qmljs_throw_type_error(ctx);
         desc->writable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_writable), ctx) ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
         // writable forces it to be a data descriptor
-        desc->type = PropertyDescriptor::Data;
         desc->value = Value::undefinedValue();
     }
 
@@ -1559,7 +1557,7 @@ Value ArrayCtor::call(ExecutionContext *ctx)
     Array &value = a->array;
     if (ctx->argumentCount == 1 && ctx->argument(0).isNumber()) {
         bool ok;
-        uint len = ctx->argument(0).asArrayLength(&ok);
+        uint len = ctx->argument(0).asArrayLength(ctx, &ok);
 
         if (!ok) {
             ctx->throwRangeError(ctx->argument(0));

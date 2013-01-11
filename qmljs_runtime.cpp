@@ -434,7 +434,7 @@ int __qmljs_string_length(ExecutionContext *, String *string)
     return string->toQString().length();
 }
 
-double __qmljs_string_to_number(ExecutionContext *, String *string)
+double __qmljs_string_to_number(const String *string)
 {
     QString s = string->toQString();
     s = s.trimmed();
