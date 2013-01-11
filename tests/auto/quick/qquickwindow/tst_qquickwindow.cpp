@@ -997,6 +997,11 @@ void tst_qquickwindow::focusObject()
     QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
 
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
     QQuickItem *item1 = window->findChild<QQuickItem*>("item1");
     QVERIFY(item1);
     item1->setFocus(true);

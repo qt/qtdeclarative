@@ -525,7 +525,6 @@ void tst_qquickfocusscope::canvasFocus()
     QSignalSpy scope2ActiveFocusSpy(scope2, SIGNAL(activeFocusChanged(bool)));
     QSignalSpy item2ActiveFocusSpy(item2, SIGNAL(activeFocusChanged(bool)));
 
-    QEXPECT_FAIL("", "QTBUG-22415", Abort);
     QCOMPARE(rootItem->hasFocus(), false);
     QCOMPARE(rootItem->hasActiveFocus(), false);
     QCOMPARE(scope1->hasFocus(), true);

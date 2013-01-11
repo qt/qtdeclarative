@@ -392,12 +392,6 @@ void QQuickWindowPrivate::init(QQuickWindow *c)
     contentItemPrivate->windowRefCount = 1;
     contentItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
 
-    // In the absence of a focus in event on some platforms assume the window will
-    // be activated immediately and set focus on the contentItem
-    // ### Remove when QTBUG-22415 is resolved.
-    //It is important that this call happens after the contentItem has a window..
-    contentItem->setFocus(true);
-
     windowManager = QQuickWindowManager::instance();
     context = windowManager->sceneGraphContext();
     q->setSurfaceType(QWindow::OpenGLSurface);
@@ -657,10 +651,10 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
     }
 
     if (!(options & DontChangeFocusProperty)) {
-//        if (item != contentItem || QGuiApplication::focusWindow() == q) {    // QTBUG-22415
+        if (item != contentItem || QGuiApplication::focusWindow() == q) {
             itemPrivate->focus = true;
             changed << item;
-//        }
+        }
     }
 
     if (newActiveFocusItem && contentItem->hasFocus()) {

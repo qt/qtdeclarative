@@ -732,7 +732,7 @@ void tst_qquickitem::focusSubItemInNonFocusScope()
     QQuickView *view = new QQuickView;
     view->setSource(testFileUrl("focusSubItemInNonFocusScope.qml"));
     view->show();
-    qApp->processEvents();
+    QTest::qWaitForWindowActive(view);
 
     QQuickItem *dummyItem = view->rootObject()->findChild<QQuickItem *>("dummyItem");
     QVERIFY(dummyItem);

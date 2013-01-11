@@ -2223,6 +2223,7 @@ void tst_qquicktextedit::cursorDelegate()
     QQuickView view(source);
     view.show();
     view.requestActivate();
+    QTest::qWaitForWindowActive(&view);
     QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
     QVERIFY(textEditObject != 0);
     // Delegate creation is deferred until focus in or cursor visibility is forced.
@@ -2338,6 +2339,7 @@ void tst_qquicktextedit::remoteCursorDelegate()
     view.setSource(testFileUrl("cursorTestRemote.qml"));
     view.show();
     view.requestActivate();
+    QTest::qWaitForWindowActive(&view);
     QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
     QVERIFY(textEditObject != 0);
 

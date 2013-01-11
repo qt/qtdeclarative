@@ -2665,6 +2665,7 @@ void tst_qquicktextinput::cursorDelegate()
     QQuickView view(source);
     view.show();
     view.requestActivate();
+    QTest::qWaitForWindowActive(&view);
     QQuickTextInput *textInputObject = view.rootObject()->findChild<QQuickTextInput*>("textInputObject");
     QVERIFY(textInputObject != 0);
     // Delegate is created on demand, and so won't be available immediately.  Focus in or
@@ -2784,6 +2785,7 @@ void tst_qquicktextinput::remoteCursorDelegate()
     view.setSource(testFileUrl("cursorTestRemote.qml"));
     view.show();
     view.requestActivate();
+    QTest::qWaitForWindowActive(&view);
     QQuickTextInput *textInputObject = view.rootObject()->findChild<QQuickTextInput*>("textInputObject");
     QVERIFY(textInputObject != 0);
 
