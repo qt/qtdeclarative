@@ -400,6 +400,13 @@ Object *ExecutionEngine::newTypeErrorObject(ExecutionContext *ctx, const QString
     return object;
 }
 
+Object *ExecutionEngine::newRangeErrorObject(ExecutionContext *ctx, const QString &message)
+{
+    RangeErrorObject *object = new (memoryManager) RangeErrorObject(ctx, message);
+    object->prototype = rangeErrorPrototype;
+    return object;
+}
+
 Object *ExecutionEngine::newMathObject(ExecutionContext *ctx)
 {
     MathObject *object = new (memoryManager) MathObject(ctx);

@@ -374,6 +374,8 @@ struct EvalErrorObject: ErrorObject {
 struct RangeErrorObject: ErrorObject {
     RangeErrorObject(ExecutionContext *ctx)
         : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    RangeErrorObject(ExecutionContext *ctx, const QString &msg)
+        : ErrorObject(Value::fromString(ctx,msg)) { setNameProperty(ctx); }
     virtual QString className() { return QStringLiteral("RangeError"); }
 };
 

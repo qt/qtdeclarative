@@ -1562,8 +1562,7 @@ Value ArrayCtor::call(ExecutionContext *ctx)
         quint32 isize = Value::toUInt32(size);
 
         if (size != double(isize)) {
-            // ### Should be a RangeError
-            ctx->throwError(QStringLiteral("Invalid array length"));
+            ctx->throwRangeError(ctx->argument(0));
             return Value::undefinedValue();
         }
 

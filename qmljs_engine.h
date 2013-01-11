@@ -199,6 +199,7 @@ struct ExecutionEngine
     Object *newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message);
     Object *newReferenceErrorObject(ExecutionContext *ctx, const QString &message);
     Object *newTypeErrorObject(ExecutionContext *ctx, const QString &message);
+    Object *newRangeErrorObject(ExecutionContext *ctx, const QString &message);
 
     Object *newMathObject(ExecutionContext *ctx);
     Object *newActivationObject();

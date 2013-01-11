@@ -385,6 +385,13 @@ void ExecutionContext::throwReferenceError(Value value)
     throwError(Value::fromObject(engine->newReferenceErrorObject(this, msg)));
 }
 
+void ExecutionContext::throwRangeError(Value value)
+{
+    String *s = value.toString(this);
+    QString msg = s->toQString() + QStringLiteral(" out of range");
+    throwError(Value::fromObject(engine->newRangeErrorObject(this, msg)));
+}
+
 void ExecutionContext::initCallContext(ExecutionContext *parent, const Value that, FunctionObject *f, Value *args, unsigned argc)
 {
     MemoryManager::GCBlocker blockGC(parent->engine->memoryManager);

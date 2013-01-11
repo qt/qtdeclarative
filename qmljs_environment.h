@@ -118,6 +118,7 @@ struct ExecutionContext
     void throwSyntaxError(DiagnosticMessage *message);
     void throwTypeError();
     void throwReferenceError(Value value);
+    void throwRangeError(Value value);
     void throwUnimplemented(const QString &message);
 
     void setProperty(String *name, Value value);
