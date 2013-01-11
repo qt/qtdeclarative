@@ -2156,7 +2156,7 @@ Value FunctionPrototype::method_apply(ExecutionContext *ctx)
             args.append(a);
         }
     } else if (!(arg.isUndefined() || arg.isNull())) {
-        ctx->throwError(QLatin1String("Function.prototype.apply: second argument is not an array"));
+        ctx->throwTypeError();
         return Value::undefinedValue();
     }
 

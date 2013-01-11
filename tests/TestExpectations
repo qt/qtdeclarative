@@ -1260,7 +1260,6 @@ S15.3.4.3_A3_T7 failing
 S15.3.4.3_A3_T8 failing
 S15.3.4.3_A3_T9 failing
 S15.3.4.3_A5_T4 failing
-S15.3.4.3_A6_T3 failing
 S15.3.4.3_A7_T1 failing
 S15.3.4.3_A7_T10 failing
 S15.3.4.3_A7_T2 failing
@@ -3624,12 +3623,3 @@ S15.4.4.13_A1_T2 failing
 15.4.4.22-9-c-i-33 failing
 15.4.4.22-8-b-iii-1-6 failing
 S15.4.4.7_A5_T1 failing
-
-# decreasing length of array ignores non configurable properties
-15.4.4.16-7-b-16 failing
-15.4.4.17-7-b-16 failing
-15.4.4.18-7-b-16 failing
-15.4.4.19-8-b-16 failing
-15.4.4.20-9-b-16 failing
-15.4.4.21-9-b-29 failing
-15.4.4.22-9-b-16 failing
