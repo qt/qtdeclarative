@@ -176,7 +176,7 @@ Value __qmljs_delete_subscript(ExecutionContext *ctx, Value base, Value index)
         else if (index.isDouble())
             n = index.doubleValue();
         if (n < UINT_MAX)
-            o->__delete__(ctx, n);
+            return Value::fromBoolean(o->__delete__(ctx, n));
     }
 
     String *name = index.toString(ctx);
