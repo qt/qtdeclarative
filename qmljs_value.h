@@ -249,6 +249,8 @@ struct Value
     RegExpObject *asRegExpObject() const;
     ArrayObject *asArrayObject() const;
     ErrorObject *asErrorObject() const;
+    uint asArrayIndex() const;
+    uint asArrayLength(bool *ok) const;
 
     Value property(ExecutionContext *ctx, String *name) const;
 
@@ -362,6 +364,36 @@ inline unsigned int Value::toUInt32(ExecutionContext *ctx) {
         return static_cast<uint>(dbl);
     return toUInt32(d);
 }
+
+inline uint Value::asArrayIndex() const
+{
+    if (isInteger() && int_32 >= 0)
+        return (uint)int_32;
+    if (!isDouble())
+        return UINT_MAX;
+    uint idx = (uint)dbl;
+    if (idx != dbl)
+        return UINT_MAX;
+    return idx;
+}
+
+inline uint Value::asArrayLength(bool *ok) const
+{
+    *ok = true;
+    if (isInteger() && int_32 >= 0)
+        return (uint)int_32;
+    if (!isDouble()) {
+        *ok = false;
+        return UINT_MAX;
+    }
+    uint idx = (uint)dbl;
+    if ((double)idx != dbl) {
+        *ok = false;
+        return UINT_MAX;
+    }
+    return idx;
+}
+
 
 } // namespace VM
 } // namespace QQmlJS

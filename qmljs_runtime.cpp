@@ -556,44 +556,42 @@ void __qmljs_set_property(ExecutionContext *ctx, Value object, String *name, Val
 
 Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index)
 {
-    if (index.isNumber()) {
-        uint idx = index.toUInt32(ctx);
-
-        if (Object *o = object.asObject())
-            return o->__get__(ctx, idx);
-
-        if (object.isString()) {
-            const QString s = object.stringValue()->toQString().mid(idx, 1);
-            if (s.isNull())
-                return Value::undefinedValue();
-            else
-                return Value::fromString(ctx, s);
-        }
+    uint idx = index.asArrayIndex();
+    if (object.isString() && idx < UINT_MAX) {
+        const QString s = object.stringValue()->toQString().mid(idx, 1);
+        if (s.isNull())
+            return Value::undefinedValue();
+        else
+            return Value::fromString(ctx, s);
     }
-
-    String *name = index.toString(ctx);
 
     if (! object.isObject())
         object = __qmljs_to_object(object, ctx);
 
-    return object.objectValue()->__get__(ctx, name);
+    Object *o = object.objectValue();
+
+    if (idx < UINT_MAX)
+        return o->__get__(ctx, idx);
+
+    String *name = index.toString(ctx);
+    return o->__get__(ctx, name);
 }
 
 void __qmljs_set_element(ExecutionContext *ctx, Value object, Value index, Value value)
 {
-    if (! object.isObject())
+    if (!object.isObject())
         object = __qmljs_to_object(object, ctx);
 
-    if (index.isNumber()) {
-        if (Object *o = object.asObject()) {
-            o->__put__(ctx, index.toUInt32(ctx), value);
-            return;
-        }
+    Object *o = object.objectValue();
+
+    uint idx = index.asArrayIndex();
+    if (idx < UINT_MAX) {
+        o->__put__(ctx, idx, value);
+        return;
     }
 
     String *name = index.toString(ctx);
-
-    object.objectValue()->__put__(ctx, name, value);
+    o->__put__(ctx, name, value);
 }
 
 Value __qmljs_foreach_iterator_object(Value in, ExecutionContext *ctx)

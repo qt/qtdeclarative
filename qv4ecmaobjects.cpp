@@ -1558,15 +1558,16 @@ Value ArrayCtor::call(ExecutionContext *ctx)
     ArrayObject *a = ctx->engine->newArrayObject();
     Array &value = a->array;
     if (ctx->argumentCount == 1 && ctx->argument(0).isNumber()) {
-        double size = ctx->argument(0).asDouble();
-        quint32 isize = Value::toUInt32(size);
+        bool ok;
+        uint len = ctx->argument(0).asArrayLength(&ok);
+        qDebug() << len << ok << (uint)ctx->argument(0).doubleValue();
 
-        if (size != double(isize)) {
+        if (!ok) {
             ctx->throwRangeError(ctx->argument(0));
             return Value::undefinedValue();
         }
 
-        value.setLength(isize);
+        value.setLength(len);
     } else {
         for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
             value.set(i, ctx->argument(i));

@@ -480,7 +480,11 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
     if (isArray && name->isEqualTo(ctx->engine->id_length)) {
         if (desc->type != PropertyDescriptor::Data)
             goto reject;
-        array.setLength(desc->value.toUInt32(ctx));
+        bool ok;
+        uint l = desc->value.asArrayLength(&ok);
+        if (!ok)
+            ctx->throwRangeError(desc->value);
+        array.setLength(l);
     }
 
     if (!members)
