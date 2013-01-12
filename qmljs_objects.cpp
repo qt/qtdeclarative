@@ -150,6 +150,8 @@ void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name
 
 void Object::defineReadonlyProperty(ExecutionEngine *engine, String *name, Value value)
 {
+    Q_UNUSED(engine);
+
     if (!members)
         members.reset(new PropertyTable());
     PropertyDescriptor *pd = members->insert(name);

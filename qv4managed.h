@@ -74,16 +74,6 @@ public:
 protected:
     virtual void getCollectables(QVector<Object *> &objects) = 0;
 
-private:
-    friend class MemoryManager;
-    friend struct Object;
-    friend struct ObjectPrototype;
-    friend struct Array;
-    friend struct ArrayPrototype;
-    friend struct FunctionObject;
-    friend struct ExecutionContext;
-    friend struct ScriptFunction;
-
     union {
         Managed *nextFree;
         struct {
@@ -103,6 +93,16 @@ private:
 #endif
         };
     };
+
+private:
+    friend class MemoryManager;
+    friend struct Object;
+    friend struct ObjectPrototype;
+    friend class Array;
+    friend struct ArrayPrototype;
+    friend struct FunctionObject;
+    friend struct ExecutionContext;
+    friend struct ScriptFunction;
 };
 
 }
