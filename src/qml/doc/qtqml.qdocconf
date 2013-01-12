@@ -8,7 +8,7 @@ version                 = 5.0.1
 qhp.projects            = QtQml
 
 qhp.QtQml.file                = qtqml.qhp
-qhp.QtQml.namespace           = org.qt-project.qtqml.500
+qhp.QtQml.namespace           = org.qt-project.qtqml.501
 qhp.QtQml.virtualFolder       = qtqml
 qhp.QtQml.indexTitle          = Qt QML
 qhp.QtQml.indexRoot           =
