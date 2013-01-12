@@ -1769,26 +1769,36 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_slice(ExecutionContext *ctx)
 {
-    // ### TODO implement the fast non-generic version of slice.
+    Object *o = ctx->thisObject.toObject(ctx).objectValue();
 
     Array result;
-    Value start = ctx->argument(0);
-    Value end = ctx->argument(1);
-    Value self = ctx->thisObject;
-    Value l = self.property(ctx, ctx->engine->id_length);
-    double r2 = !l.isUndefined() ? l.toNumber(ctx) : 0;
-    quint32 r3 = Value::toUInt32(r2);
-    qint32 r4 = qint32(start.toInteger(ctx));
-    quint32 r5 = r4 < 0 ? qMax(quint32(r3 + r4), quint32(0)) : qMin(quint32(r4), r3);
-    quint32 k = r5;
-    qint32 r7 = end.isUndefined() ? r3 : qint32 (end.toInteger(ctx));
-    quint32 r8 = r7 < 0 ? qMax(quint32(r3 + r7), quint32(0)) : qMin(quint32(r7), r3);
-    quint32 n = 0;
-    for (; k < r8; ++k) {
-        String *r11 = Value::fromDouble(k).toString(ctx);
-        Value v = self.property(ctx, r11);
-        if (! v.isUndefined())
-            result.set(n++, v);
+    uint len = o->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
+    double s = ctx->argument(0).toInteger(ctx);
+    uint start;
+    if (s < 0)
+        start = (uint)qMax(len + s, 0.);
+    else if (s > len)
+        start = len;
+    else
+        start = (uint) s;
+    uint end = len;
+    if (!ctx->argument(1).isUndefined()) {
+        double e = ctx->argument(1).toInteger(ctx);
+        if (e < 0)
+            end = (uint)qMax(len + e, 0.);
+        else if (e > len)
+            end = len;
+        else
+            end = (uint) e;
+    }
+
+    uint n = 0;
+    for (uint i = start; i < end; ++i) {
+        bool exists;
+        Value v = o->__get__(ctx, i, &exists);
+        if (exists)
+            result.set(n, v);
+        ++n;
     }
     return Value::fromObject(ctx->engine->newArrayObject(ctx, result));
 }
