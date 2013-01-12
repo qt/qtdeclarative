@@ -2070,6 +2070,7 @@ Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
 FunctionCtor::FunctionCtor(ExecutionContext *scope)
     : FunctionObject(scope)
 {
+    defineDefaultProperty(scope->engine->id_length, Value::fromInt32(1));
 }
 
 // 15.3.2
@@ -2080,13 +2081,12 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
     QString args;
     QString body;
     if (ctx->argumentCount > 0) {
-        body = ctx->argument(ctx->argumentCount - 1).toString(ctx)->toQString();
-
         for (uint i = 0; i < ctx->argumentCount - 1; ++i) {
             if (i)
                 args += QLatin1String(", ");
             args += ctx->argument(i).toString(ctx)->toQString();
         }
+        body = ctx->argument(ctx->argumentCount - 1).toString(ctx)->toQString();
     }
 
     QString function = QLatin1String("function(") + args + QLatin1String("){") + body + QLatin1String("}");
@@ -2099,14 +2099,12 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
     const bool parsed = parser.parseExpression();
 
     if (!parsed)
-        // ### Syntax error
-        __qmljs_throw_type_error(ctx);
+        ctx->throwSyntaxError(0);
 
     using namespace AST;
     FunctionExpression *fe = AST::cast<FunctionExpression *>(parser.rootNode());
     if (!fe)
-        // ### Syntax error
-        __qmljs_throw_type_error(ctx);
+        ctx->throwSyntaxError(0);
 
     IR::Module module;
 
@@ -2130,7 +2128,7 @@ void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
     ctor.objectValue()->defineDefaultProperty(ctx->engine->id_prototype, Value::fromObject(this));
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("apply"), method_apply, 0);
+    defineDefaultProperty(ctx, QStringLiteral("apply"), method_apply, 2);
     defineDefaultProperty(ctx, QStringLiteral("call"), method_call, 1);
     defineDefaultProperty(ctx, QStringLiteral("bind"), method_bind, 1);
 }

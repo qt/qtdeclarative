@@ -196,14 +196,9 @@ public:
 
     void operator()(Node *node)
     {
-        _env = 0;
         if (node)
             node->accept(this);
     }
-
-protected:
-    using Visitor::visit;
-    using Visitor::endVisit;
 
     inline void enterEnvironment(Node *node)
     {
@@ -219,6 +214,10 @@ protected:
         _envStack.pop();
         _env = _envStack.isEmpty() ? 0 : _envStack.top();
     }
+
+protected:
+    using Visitor::visit;
+    using Visitor::endVisit;
 
     void checkDirectivePrologue(SourceElements *ast)
     {
@@ -382,10 +381,17 @@ private:
         if (body)
             checkDirectivePrologue(body->elements);
 
-        if (wasStrict || _env->isStrict)
-            for (FormalParameterList *it = formals; it; it = it->next)
-                if (it->name == QLatin1String("eval") || it->name == QLatin1String("arguments"))
-                    _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "'%1' cannot be used as parameter name in strict mode").arg(it->name.toString()));
+        if (wasStrict || _env->isStrict) {
+            QStringList args;
+            for (FormalParameterList *it = formals; it; it = it->next) {
+                QString arg = it->name.toString();
+                if (args.contains(arg))
+                    _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "Duplicate parameter name '%1' in strict mode").arg(arg));
+                if (arg == QLatin1String("eval") || arg == QLatin1String("arguments"))
+                    _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "'%1' cannot be used as parameter name in strict mode").arg(arg));
+                args += arg;
+            }
+        }
     }
 
 
@@ -447,7 +453,10 @@ IR::Function *Codegen::operator()(const QString &fileName, AST::FunctionExpressi
     _env = 0;
 
     ScanFunctions scan(this);
+    // fake a global environment
+    scan.enterEnvironment(0);
     scan(ast);
+    scan.leaveEnvironment();
 
     IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
     if (_debugger)
