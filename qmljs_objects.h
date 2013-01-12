@@ -213,7 +213,7 @@ struct DateObject: Object {
 
 struct ArrayObject: Object {
     ArrayObject(ExecutionContext *ctx) { init(ctx); }
-    ArrayObject(ExecutionContext *ctx, const Array &value): Object(value) { init(ctx); }
+    ArrayObject(ExecutionContext *ctx, const Array &value): Object(value) { init(ctx); array.setLengthUnchecked(array.length()); }
     void init(ExecutionContext *context);
     virtual QString className() { return QStringLiteral("Array"); }
     virtual ArrayObject *asArrayObject() { return this; }
