@@ -424,7 +424,7 @@ class Array
     }
 
 public:
-    Array() : len(0), offset(0), sparse(0) {}
+    Array() : len(0), lengthProperty(0), offset(0), sparse(0) {}
     Array(const Array &other);
     ~Array() { delete sparse; }
     void initSparse();
