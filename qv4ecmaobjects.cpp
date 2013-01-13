@@ -554,7 +554,7 @@ Value ObjectCtor::__get__(ExecutionContext *ctx, String *name, bool *hasProperty
 
 void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
-    ctor.objectValue()->defineDefaultProperty(ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
     ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 1);
     ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 2);
     ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("getOwnPropertyNames"), method_getOwnPropertyNames, 1);
@@ -1032,7 +1032,7 @@ Value StringCtor::call(ExecutionContext *ctx)
 
 void StringPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
-    ctor.objectValue()->defineDefaultProperty(ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
     ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("fromCharCode"), method_fromCharCode, 1);
 
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
@@ -1344,7 +1344,7 @@ Value NumberCtor::call(ExecutionContext *ctx)
 
 void NumberPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
-    ctor.objectValue()->defineDefaultProperty(ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
 
     ctor.objectValue()->defineReadonlyProperty(ctx->engine, QStringLiteral("NaN"), Value::fromDouble(qSNaN()));
     ctor.objectValue()->defineReadonlyProperty(ctx->engine, QStringLiteral("NEGATIVE_INFINITY"), Value::fromDouble(-qInf()));
@@ -1522,7 +1522,7 @@ Value BooleanCtor::call(ExecutionContext *ctx)
 
 void BooleanPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
-    ctor.objectValue()->defineDefaultProperty(ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString);
     defineDefaultProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
@@ -1579,7 +1579,7 @@ Value ArrayCtor::call(ExecutionContext *ctx)
 
 void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
-    ctor.objectValue()->defineDefaultProperty(ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
     defineDefaultProperty(ctx, QStringLiteral("toLocalString"), method_toLocaleString, 0);
@@ -2125,7 +2125,7 @@ Value FunctionCtor::call(ExecutionContext *ctx)
 
 void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
-    ctor.objectValue()->defineDefaultProperty(ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
     defineDefaultProperty(ctx, QStringLiteral("apply"), method_apply, 2);
@@ -2246,7 +2246,7 @@ Value DateCtor::call(ExecutionContext *ctx)
 
 void DatePrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
-    ctor.objectValue()->defineDefaultProperty(ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
     LocalTZA = getLocalTZA();
 
     ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("parse"), method_parse, 1);
@@ -2851,7 +2851,7 @@ Value RegExpCtor::call(ExecutionContext *ctx)
 
 void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
-    ctor.objectValue()->defineDefaultProperty(ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("exec"), method_exec, 1);
     defineDefaultProperty(ctx, QStringLiteral("test"), method_test, 1);
@@ -2964,7 +2964,7 @@ Value URIErrorCtor::construct(ExecutionContext *ctx)
 
 void ErrorPrototype::init(ExecutionContext *ctx, const Value &ctor, Object *obj)
 {
-    ctor.objectValue()->defineDefaultProperty(ctx->engine->id_prototype, Value::fromObject(obj));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(obj));
     obj->defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     obj->defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
 }

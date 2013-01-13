@@ -162,7 +162,7 @@ struct Object: Managed {
     void defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(ExecutionContext *), int count = 0);
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value);
-    void defineReadonlyProperty(ExecutionEngine *engine, String *name, Value value);
+    void defineReadonlyProperty(String *name, Value value);
 
 protected:
     virtual void getCollectables(QVector<Object *> &objects);
