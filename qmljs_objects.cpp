@@ -695,10 +695,8 @@ Function::~Function()
 
 bool FunctionObject::hasInstance(ExecutionContext *ctx, const Value &value)
 {
-    if (! value.isObject()) {
-        ctx->throwTypeError();
+    if (! value.isObject())
         return false;
-    }
 
     Value o = __get__(ctx, ctx->engine->id_prototype);
     if (! o.isObject()) {
