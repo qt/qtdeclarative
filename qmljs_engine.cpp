@@ -173,6 +173,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     typeErrorPrototype->init(rootContext, typeErrorCtor);
     uRIErrorPrototype->init(rootContext, uRIErrorCtor);
 
+    thrower = newNativeFunction(rootContext, 0, __qmljs_throw_type_error);
+
     //
     // set up the global object
     //
@@ -246,13 +248,7 @@ FunctionObject *ExecutionEngine::newScriptFunction(ExecutionContext *scope, VM::
 {
     assert(function);
 
-    MemoryManager::GCBlocker gcBlocker(memoryManager);
-
     ScriptFunction *f = new (memoryManager) ScriptFunction(scope, function);
-    Object *proto = scope->engine->newObject();
-    proto->__put__(scope, scope->engine->id_constructor, Value::fromObject(f));
-    f->__put__(scope, scope->engine->id_prototype, Value::fromObject(proto));
-    f->prototype = scope->engine->functionPrototype;
     return f;
 }
 

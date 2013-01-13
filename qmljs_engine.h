@@ -130,6 +130,8 @@ struct ExecutionEngine
     TypeErrorPrototype *typeErrorPrototype;
     URIErrorPrototype *uRIErrorPrototype;
 
+    FunctionObject *thrower; // function that throws a type error
+
     String *id_length;
     String *id_prototype;
     String *id_constructor;

@@ -781,6 +781,8 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
     if (!scope)
         return;
 
+    MemoryManager::GCBlocker gcBlocker(scope->engine->memoryManager);
+
     if (!function->name.isEmpty())
         name = scope->engine->identifier(function->name);
     needsActivation = function->needsActivation();
@@ -793,6 +795,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
             formalParameterList[i] = scope->engine->identifier(function->formals.at(i));
         }
     }
+    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(formalParameterCount));
 
     varCount = function->locals.size();
     if (varCount) {
@@ -800,6 +803,25 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
         for (unsigned int i = 0; i < varCount; ++i) {
             varList[i] = scope->engine->identifier(function->locals.at(i));
         }
+    }
+
+    Object *proto = scope->engine->newObject();
+    proto->defineDefaultProperty(scope->engine->id_constructor, Value::fromObject(this));
+    PropertyDescriptor *pd = members->insert(scope->engine->id_prototype);
+    pd->type = PropertyDescriptor::Data;
+    pd->writable = PropertyDescriptor::Enabled;
+    pd->enumberable = PropertyDescriptor::Disabled;
+    pd->configurable = PropertyDescriptor::Disabled;
+    pd->value = Value::fromObject(proto);
+
+    prototype = scope->engine->functionPrototype;
+
+    if (scope->strictMode) {
+        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(scope->engine->thrower, scope->engine->thrower);
+        pd.configurable = PropertyDescriptor::Disabled;
+        pd.enumberable = PropertyDescriptor::Disabled;
+        __defineOwnProperty__(scope, QStringLiteral("caller"), &pd);
+        __defineOwnProperty__(scope, QStringLiteral("arguments"), &pd);
     }
 }
 
@@ -1143,8 +1165,7 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterC
     if (context->strictMode) {
         for (uint i = 0; i < context->argumentCount; ++i)
             Object::__put__(context, QString::number(i), context->arguments[i]);
-        FunctionObject *thrower = context->engine->newNativeFunction(context, 0, __qmljs_throw_type_error);
-        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
+        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(context->engine->thrower, context->engine->thrower);
         pd.configurable = PropertyDescriptor::Disabled;
         pd.enumberable = PropertyDescriptor::Disabled;
         __defineOwnProperty__(context, QStringLiteral("callee"), &pd);
