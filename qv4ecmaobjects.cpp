@@ -2070,7 +2070,6 @@ Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
 FunctionCtor::FunctionCtor(ExecutionContext *scope)
     : FunctionObject(scope)
 {
-    defineDefaultProperty(scope->engine->id_length, Value::fromInt32(1));
 }
 
 // 15.3.2
@@ -2126,6 +2125,7 @@ Value FunctionCtor::call(ExecutionContext *ctx)
 void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
     ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
     defineDefaultProperty(ctx, QStringLiteral("apply"), method_apply, 2);
