@@ -272,7 +272,7 @@ struct FunctionObject: Object {
     virtual FunctionObject *asFunctionObject() { return this; }
     virtual bool hasInstance(ExecutionContext *ctx, const Value &value);
 
-    Value construct(ExecutionContext *context, Value *args, int argc);
+    virtual Value construct(ExecutionContext *context, Value *args, int argc);
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
     // Nothing to do in the default implementation, only _native_ functions might change context->thisObject.
     virtual void maybeAdjustThisObjectForDirectCall(ExecutionContext* /*context*/, Value /*thisArg*/) { }
@@ -315,6 +315,20 @@ struct EvalFunction : FunctionObject
                                              QQmlJS::Codegen::Mode mode);
 
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+};
+
+struct BoundFunction: FunctionObject {
+    FunctionObject *target;
+    Value boundThis;
+    QVector<Value> boundArgs;
+
+    BoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
+    virtual ~BoundFunction() {}
+
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+    virtual Value construct(ExecutionContext *context, Value *args, int argc);
+    virtual bool hasInstance(ExecutionContext *ctx, const Value &value);
+    virtual void getCollectables(QVector<Object *> &objects);
 };
 
 struct ParseIntFunction: FunctionObject

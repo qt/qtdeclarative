@@ -64,6 +64,7 @@ struct StringObject;
 struct ArrayObject;
 struct DateObject;
 struct FunctionObject;
+struct BoundFunction;
 struct RegExpObject;
 struct ErrorObject;
 struct ArgumentsObject;
@@ -130,12 +131,11 @@ struct ExecutionEngine
     TypeErrorPrototype *typeErrorPrototype;
     URIErrorPrototype *uRIErrorPrototype;
 
-    FunctionObject *thrower; // function that throws a type error
-
     String *id_length;
     String *id_prototype;
     String *id_constructor;
     String *id_arguments;
+    String *id_caller;
     String *id_this;
     String *id___proto__;
     String *id_enumerable;
@@ -170,6 +170,7 @@ struct ExecutionEngine
 
     FunctionObject *newNativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
     FunctionObject *newScriptFunction(ExecutionContext *scope, VM::Function *function);
+    BoundFunction *newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
 
     Object *newObject();
     FunctionObject *newObjectCtor(ExecutionContext *ctx);

@@ -2185,12 +2185,18 @@ Value FunctionPrototype::method_call(ExecutionContext *ctx)
 
 Value FunctionPrototype::method_bind(ExecutionContext *ctx)
 {
-    FunctionObject *fun = ctx->thisObject.asFunctionObject();
-    if (!fun)
+    FunctionObject *target = ctx->thisObject.asFunctionObject();
+    if (!target)
         ctx->throwTypeError();
 
-    ctx->throwUnimplemented(QStringLiteral("Function.prototype.bind"));
-    return Value::undefinedValue();
+    Value boundThis = ctx->argument(0);
+    QVector<Value> boundArgs;
+    for (uint i = 1; i < ctx->argumentCount; ++i)
+        boundArgs += ctx->argument(i);
+
+
+    BoundFunction *f = ctx->engine->newBoundFunction(ctx, target, boundThis, boundArgs);
+    return Value::fromObject(f);
 }
 
 //

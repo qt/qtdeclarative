@@ -41,6 +41,7 @@
 #include <qmljs_engine.h>
 #include <qmljs_objects.h>
 #include <qv4ecmaobjects_p.h>
+#include <qmljs_runtime.h>
 #include "qv4mm.h"
 
 namespace QQmlJS {
@@ -86,6 +87,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     id_prototype = identifier(QStringLiteral("prototype"));
     id_constructor = identifier(QStringLiteral("constructor"));
     id_arguments = identifier(QStringLiteral("arguments"));
+    id_caller = identifier(QStringLiteral("caller"));
     id_this = identifier(QStringLiteral("this"));
     id___proto__ = identifier(QStringLiteral("__proto__"));
     id_enumerable = identifier(QStringLiteral("enumerable"));
@@ -142,6 +144,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     typeErrorCtor = Value::fromObject(new (memoryManager) TypeErrorCtor(rootContext));
     uRIErrorCtor = Value::fromObject(new (memoryManager) URIErrorCtor(rootContext));
 
+    objectCtor.objectValue()->prototype = functionPrototype;
     stringCtor.objectValue()->prototype = functionPrototype;
     numberCtor.objectValue()->prototype = functionPrototype;
     booleanCtor.objectValue()->prototype = functionPrototype;
@@ -172,8 +175,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     syntaxErrorPrototype->init(rootContext, syntaxErrorCtor);
     typeErrorPrototype->init(rootContext, typeErrorCtor);
     uRIErrorPrototype->init(rootContext, uRIErrorCtor);
-
-    thrower = newNativeFunction(rootContext, 0, __qmljs_throw_type_error);
 
     //
     // set up the global object
@@ -251,6 +252,15 @@ FunctionObject *ExecutionEngine::newScriptFunction(ExecutionContext *scope, VM::
     ScriptFunction *f = new (memoryManager) ScriptFunction(scope, function);
     return f;
 }
+
+BoundFunction *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)
+{
+    assert(target);
+
+    BoundFunction *f = new (memoryManager) BoundFunction(scope, target, boundThis, boundArgs);
+    return f;
+}
+
 
 Object *ExecutionEngine::newObject()
 {

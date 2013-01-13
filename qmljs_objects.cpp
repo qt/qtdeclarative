@@ -58,6 +58,7 @@
 #include <cassert>
 #include <typeinfo>
 #include <iostream>
+#include <alloca.h>
 
 using namespace QQmlJS::VM;
 
@@ -817,7 +818,8 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
     prototype = scope->engine->functionPrototype;
 
     if (scope->strictMode) {
-        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(scope->engine->thrower, scope->engine->thrower);
+        FunctionObject *thrower = scope->engine->newNativeFunction(scope, 0, __qmljs_throw_type_error);
+        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
         pd.configurable = PropertyDescriptor::Disabled;
         pd.enumberable = PropertyDescriptor::Disabled;
         __defineOwnProperty__(scope, QStringLiteral("caller"), &pd);
@@ -1165,7 +1167,8 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterC
     if (context->strictMode) {
         for (uint i = 0; i < context->argumentCount; ++i)
             Object::__put__(context, QString::number(i), context->arguments[i]);
-        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(context->engine->thrower, context->engine->thrower);
+        FunctionObject *thrower = context->engine->newNativeFunction(context, 0, __qmljs_throw_type_error);
+        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
         pd.configurable = PropertyDescriptor::Disabled;
         pd.enumberable = PropertyDescriptor::Disabled;
         __defineOwnProperty__(context, QStringLiteral("callee"), &pd);
@@ -1250,4 +1253,61 @@ void NativeFunction::maybeAdjustThisObjectForDirectCall(ExecutionContext *contex
     // the built-in functions for example to throw a type error if null is passed.
     if (thisArg.isNull() || thisArg.isUndefined())
         context->thisObject = thisArg;
+}
+
+
+BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)
+    : FunctionObject(scope)
+    , target(target)
+    , boundThis(boundThis)
+    , boundArgs(boundArgs)
+{
+    prototype = scope->engine->functionPrototype;
+
+    int len = target->__get__(scope, scope->engine->id_length).toUInt32(scope);
+    len -= boundArgs.size();
+    if (len < 0)
+        len = 0;
+    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(len));
+
+    FunctionObject *thrower = scope->engine->newNativeFunction(scope, 0, __qmljs_throw_type_error);
+    PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
+    pd.configurable = PropertyDescriptor::Disabled;
+    pd.enumberable = PropertyDescriptor::Disabled;
+    *members->insert(scope->engine->id_arguments) = pd;
+    *members->insert(scope->engine->id_caller) = pd;
+}
+
+Value BoundFunction::call(ExecutionContext *context, Value, Value *args, int argc)
+{
+    Value *newArgs = static_cast<Value *>(alloca(sizeof(Value)*(boundArgs.size() + argc)));
+    memcpy(newArgs, boundArgs.constData(), boundArgs.size()*sizeof(Value));
+    memcpy(newArgs + boundArgs.size(), args, argc*sizeof(Value));
+
+    return target->call(context, boundThis, newArgs, boundArgs.size() + argc);
+}
+
+Value BoundFunction::construct(ExecutionContext *context, Value *args, int argc)
+{
+    Value *newArgs = static_cast<Value *>(alloca(sizeof(Value)*(boundArgs.size() + argc)));
+    memcpy(newArgs, boundArgs.constData(), boundArgs.size()*sizeof(Value));
+    memcpy(newArgs + boundArgs.size(), args, argc*sizeof(Value));
+
+    return target->construct(context, newArgs, boundArgs.size() + argc);
+}
+
+bool BoundFunction::hasInstance(ExecutionContext *ctx, const Value &value)
+{
+    return target->hasInstance(ctx, value);
+}
+
+void BoundFunction::getCollectables(QVector<Object *> &objects)
+{
+    FunctionObject::getCollectables(objects);
+    objects.append(target);
+    if (Object *o = boundThis.asObject())
+        objects.append(o);
+    for (int i = 0; i < boundArgs.size(); ++i)
+        if (Object *o = boundArgs.at(i).asObject())
+            objects.append(o);
 }
