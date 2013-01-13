@@ -98,7 +98,7 @@ int compileWithLLVM(IR::Module *module, const QString &fileName, LLVMOutputType 
     //----
 
     llvm::InitializeNativeTarget();
-    LLVMInstructionSelection llvmIsel(llvm::getGlobalContext());
+    LLVM::InstructionSelection llvmIsel(llvm::getGlobalContext());
 
     const QString moduleName = QFileInfo(fileName).fileName();
     llvm::StringRef moduleId(moduleName.toUtf8().constData());
@@ -230,12 +230,13 @@ int compileWithLLVM(IR::Module *module, const QString &fileName, LLVMOutputType 
 } // QQmlJS
 
 using namespace QQmlJS;
+using namespace QQmlJS::LLVM;
 
 namespace {
 QTextStream qerr(stderr, QIODevice::WriteOnly);
 }
 
-LLVMInstructionSelection::LLVMInstructionSelection(llvm::LLVMContext &context)
+InstructionSelection::InstructionSelection(llvm::LLVMContext &context)
     : llvm::IRBuilder<>(context)
     , _llvmModule(0)
     , _llvmFunction(0)
@@ -252,7 +253,7 @@ LLVMInstructionSelection::LLVMInstructionSelection(llvm::LLVMContext &context)
 {
 }
 
-void LLVMInstructionSelection::buildLLVMModule(IR::Module *module, llvm::Module *llvmModule, llvm::FunctionPassManager *fpm)
+void InstructionSelection::buildLLVMModule(IR::Module *module, llvm::Module *llvmModule, llvm::FunctionPassManager *fpm)
 {
     qSwap(_llvmModule, llvmModule);
     qSwap(_fpm, fpm);
@@ -297,7 +298,145 @@ void LLVMInstructionSelection::buildLLVMModule(IR::Module *module, llvm::Module 
     qSwap(_llvmModule, llvmModule);
 }
 
-llvm::Function *LLVMInstructionSelection::getLLVMFunction(IR::Function *function)
+void InstructionSelection::callActivationProperty(IR::Call *c, IR::Temp *temp)
+{
+    // TODO: implement instead of visitExp
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callValue(IR::Call *c, IR::Temp *temp)
+{
+    // TODO: implement instead of visitExp
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callProperty(IR::Call *c, IR::Temp *temp)
+{
+    // TODO: implement instead of visitExp
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *result)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::loadThisObject(IR::Temp *temp)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::loadConst(IR::Const *con, IR::Temp *temp)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *temp)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::setActivationProperty(IR::Expr *source, const QString &targetName)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::getProperty(IR::Temp *base, const QString &name, IR::Temp *target)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, const QString &targetName)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
+{
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+llvm::Function *InstructionSelection::getLLVMFunction(IR::Function *function)
 {
     llvm::Function *&f = _functionMap[function];
     if (! f) {
@@ -314,7 +453,7 @@ llvm::Function *LLVMInstructionSelection::getLLVMFunction(IR::Function *function
     return f;
 }
 
-llvm::Function *LLVMInstructionSelection::compileLLVMFunction(IR::Function *function)
+llvm::Function *InstructionSelection::compileLLVMFunction(IR::Function *function)
 {
     llvm::Function *llvmFunction = getLLVMFunction(function);
 
@@ -375,7 +514,7 @@ llvm::Function *LLVMInstructionSelection::compileLLVMFunction(IR::Function *func
     return llvmFunction;
 }
 
-llvm::BasicBlock *LLVMInstructionSelection::getLLVMBasicBlock(IR::BasicBlock *block)
+llvm::BasicBlock *InstructionSelection::getLLVMBasicBlock(IR::BasicBlock *block)
 {
     llvm::BasicBlock *&llvmBlock = _blockMap[block];
     if (! llvmBlock)
@@ -384,7 +523,7 @@ llvm::BasicBlock *LLVMInstructionSelection::getLLVMBasicBlock(IR::BasicBlock *bl
     return llvmBlock;
 }
 
-llvm::Value *LLVMInstructionSelection::getLLVMValue(IR::Expr *expr)
+llvm::Value *InstructionSelection::getLLVMValue(IR::Expr *expr)
 {
     llvm::Value *llvmValue = 0;
     if (expr) {
@@ -400,7 +539,7 @@ llvm::Value *LLVMInstructionSelection::getLLVMValue(IR::Expr *expr)
     return llvmValue;
 }
 
-llvm::Value *LLVMInstructionSelection::getLLVMTempReference(IR::Expr *expr)
+llvm::Value *InstructionSelection::getLLVMTempReference(IR::Expr *expr)
 {
     if (IR::Temp *t = expr->asTemp())
         return getLLVMTemp(t);
@@ -410,7 +549,7 @@ llvm::Value *LLVMInstructionSelection::getLLVMTempReference(IR::Expr *expr)
     return addr;
 }
 
-llvm::Value *LLVMInstructionSelection::getLLVMCondition(IR::Expr *expr)
+llvm::Value *InstructionSelection::getLLVMCondition(IR::Expr *expr)
 {
     llvm::Value *value = 0;
     if (IR::Temp *t = expr->asTemp()) {
@@ -432,7 +571,7 @@ llvm::Value *LLVMInstructionSelection::getLLVMCondition(IR::Expr *expr)
                        value);
 }
 
-llvm::Value *LLVMInstructionSelection::getLLVMTemp(IR::Temp *temp)
+llvm::Value *InstructionSelection::getLLVMTemp(IR::Temp *temp)
 {
     if (temp->index < 0) {
         const int index = -temp->index -1;
@@ -443,7 +582,7 @@ llvm::Value *LLVMInstructionSelection::getLLVMTemp(IR::Temp *temp)
     return _tempMap[temp->index];
 }
 
-llvm::Value *LLVMInstructionSelection::getStringPtr(const QString &s)
+llvm::Value *InstructionSelection::getStringPtr(const QString &s)
 {
     llvm::Value *&value = _stringMap[s];
     if (! value) {
@@ -454,7 +593,7 @@ llvm::Value *LLVMInstructionSelection::getStringPtr(const QString &s)
     return value;
 }
 
-llvm::Value *LLVMInstructionSelection::getIdentifier(const QString &s)
+llvm::Value *InstructionSelection::getIdentifier(const QString &s)
 {
     llvm::Value *str = getStringPtr(s);
     llvm::Value *id = CreateCall2(_llvmModule->getFunction("__qmljs_identifier_from_utf8"),
@@ -462,22 +601,12 @@ llvm::Value *LLVMInstructionSelection::getIdentifier(const QString &s)
     return id;
 }
 
-void LLVMInstructionSelection::visitExp(IR::Exp *s)
+void InstructionSelection::visitExp(IR::Exp *s)
 {
     getLLVMValue(s->expr);
 }
 
-void LLVMInstructionSelection::visitEnter(IR::Enter *)
-{
-    Q_UNREACHABLE();
-}
-
-void LLVMInstructionSelection::visitLeave(IR::Leave *)
-{
-    Q_UNREACHABLE();
-}
-
-void LLVMInstructionSelection::genMoveSubscript(IR::Move *s)
+void InstructionSelection::genMoveSubscript(IR::Move *s)
 {
     IR::Subscript *subscript = s->target->asSubscript();
     llvm::Value *base = getLLVMTempReference(subscript->base);
@@ -487,7 +616,7 @@ void LLVMInstructionSelection::genMoveSubscript(IR::Move *s)
                 _llvmFunction->arg_begin(), base, index, source);
 }
 
-void LLVMInstructionSelection::genMoveMember(IR::Move *s)
+void InstructionSelection::genMoveMember(IR::Move *s)
 {
     IR::Member *m = s->target->asMember();
     llvm::Value *base = getLLVMTempReference(m->base);
@@ -497,7 +626,7 @@ void LLVMInstructionSelection::genMoveMember(IR::Move *s)
                 _llvmFunction->arg_begin(), base, name, source);
 }
 
-void LLVMInstructionSelection::visitMove(IR::Move *s)
+void InstructionSelection::visitMove(IR::Move *s)
 {
     if (s->op == IR::OpInvalid) {
         if (s->target->asSubscript()) {
@@ -647,19 +776,19 @@ void LLVMInstructionSelection::visitMove(IR::Move *s)
     return;
 }
 
-void LLVMInstructionSelection::visitJump(IR::Jump *s)
+void InstructionSelection::visitJump(IR::Jump *s)
 {
     CreateBr(getLLVMBasicBlock(s->target));
 }
 
-void LLVMInstructionSelection::visitCJump(IR::CJump *s)
+void InstructionSelection::visitCJump(IR::CJump *s)
 {
     CreateCondBr(getLLVMCondition(s->cond),
                  getLLVMBasicBlock(s->iftrue),
                  getLLVMBasicBlock(s->iffalse));
 }
 
-void LLVMInstructionSelection::visitRet(IR::Ret *s)
+void InstructionSelection::visitRet(IR::Ret *s)
 {
     IR::Temp *t = s->expr->asTemp();
     assert(t != 0);
@@ -669,14 +798,14 @@ void LLVMInstructionSelection::visitRet(IR::Ret *s)
     CreateRetVoid();
 }
 
-void LLVMInstructionSelection::visitConst(IR::Const *e)
+void InstructionSelection::visitConst(IR::Const *e)
 {
     llvm::Value *tmp = createValue(e);
 
     _llvmValue = CreateLoad(tmp);
 }
 
-void LLVMInstructionSelection::visitString(IR::String *e)
+void InstructionSelection::visitString(IR::String *e)
 {
     llvm::Value *tmp = newLLVMTemp(_valueTy);
     CreateCall3(_llvmModule->getFunction("__qmljs_llvm_init_string"),
@@ -685,7 +814,7 @@ void LLVMInstructionSelection::visitString(IR::String *e)
     _llvmValue = CreateLoad(tmp);
 }
 
-void LLVMInstructionSelection::visitRegExp(IR::RegExp *e)
+void InstructionSelection::visitRegExp(IR::RegExp *e)
 {
     e->dump(qerr);
     qerr << endl;
@@ -693,7 +822,7 @@ void LLVMInstructionSelection::visitRegExp(IR::RegExp *e)
     _llvmValue = llvm::Constant::getNullValue(_valueTy);
 }
 
-void LLVMInstructionSelection::visitName(IR::Name *e)
+void InstructionSelection::visitName(IR::Name *e)
 {
     llvm::Value *result = newLLVMTemp(_valueTy);
 
@@ -709,14 +838,14 @@ void LLVMInstructionSelection::visitName(IR::Name *e)
 
 }
 
-void LLVMInstructionSelection::visitTemp(IR::Temp *e)
+void InstructionSelection::visitTemp(IR::Temp *e)
 {
     if (llvm::Value *t = getLLVMTemp(e)) {
         _llvmValue = CreateLoad(t);
     }
 }
 
-void LLVMInstructionSelection::visitClosure(IR::Closure *e)
+void InstructionSelection::visitClosure(IR::Closure *e)
 {
     llvm::Value *tmp = newLLVMTemp(_valueTy);
     llvm::Value *clos = getLLVMFunction(e->value);
@@ -726,21 +855,21 @@ void LLVMInstructionSelection::visitClosure(IR::Closure *e)
     _llvmValue = CreateLoad(tmp);
 }
 
-void LLVMInstructionSelection::visitUnop(IR::Unop *e)
+void InstructionSelection::visitUnop(IR::Unop *e)
 {
     llvm::Value *result = newLLVMTemp(_valueTy);
     genUnop(result, e);
     _llvmValue = CreateLoad(result);
 }
 
-void LLVMInstructionSelection::visitBinop(IR::Binop *e)
+void InstructionSelection::visitBinop(IR::Binop *e)
 {
     llvm::Value *result = newLLVMTemp(_valueTy);
     genBinop(result, e);
     _llvmValue = CreateLoad(result);
 }
 
-void LLVMInstructionSelection::genUnop(llvm::Value *result, IR::Unop *e)
+void InstructionSelection::genUnop(llvm::Value *result, IR::Unop *e)
 {
     IR::Temp *t = e->expr->asTemp();
     assert(t != 0);
@@ -762,7 +891,7 @@ void LLVMInstructionSelection::genUnop(llvm::Value *result, IR::Unop *e)
     CreateCall3(op, _llvmFunction->arg_begin(), result, expr);
 }
 
-void LLVMInstructionSelection::genBinop(llvm::Value *result, IR::Binop *e)
+void InstructionSelection::genBinop(llvm::Value *result, IR::Binop *e)
 {
     assert(e->left->asTemp() || e->left->asConst());
     assert(e->right->asTemp() || e->right->asConst());
@@ -816,13 +945,13 @@ void LLVMInstructionSelection::genBinop(llvm::Value *result, IR::Binop *e)
     CreateCall4(op, _llvmFunction->arg_begin(), result, left, right);
 }
 
-llvm::AllocaInst *LLVMInstructionSelection::newLLVMTemp(llvm::Type *type, llvm::Value *size)
+llvm::AllocaInst *InstructionSelection::newLLVMTemp(llvm::Type *type, llvm::Value *size)
 {
     llvm::AllocaInst *addr = new llvm::AllocaInst(type, size, llvm::Twine(), _allocaInsertPoint);
     return addr;
 }
 
-llvm::Value * LLVMInstructionSelection::genArguments(IR::ExprList *exprs, int &argc)
+llvm::Value * InstructionSelection::genArguments(IR::ExprList *exprs, int &argc)
 {
     llvm::Value *args = 0;
 
@@ -844,7 +973,7 @@ llvm::Value * LLVMInstructionSelection::genArguments(IR::ExprList *exprs, int &a
     return args;
 }
 
-void LLVMInstructionSelection::genCallMember(IR::Call *e, llvm::Value *result)
+void InstructionSelection::genCallMember(IR::Call *e, llvm::Value *result)
 {
     if (! result)
         result = newLLVMTemp(_valueTy);
@@ -869,7 +998,7 @@ void LLVMInstructionSelection::genCallMember(IR::Call *e, llvm::Value *result)
     _llvmValue = CreateLoad(result);
 }
 
-void LLVMInstructionSelection::genConstructMember(IR::New *e, llvm::Value *result)
+void InstructionSelection::genConstructMember(IR::New *e, llvm::Value *result)
 {
     if (! result)
         result = newLLVMTemp(_valueTy);
@@ -894,7 +1023,7 @@ void LLVMInstructionSelection::genConstructMember(IR::New *e, llvm::Value *resul
     _llvmValue = CreateLoad(result);
 }
 
-void LLVMInstructionSelection::genCallTemp(IR::Call *e, llvm::Value *result)
+void InstructionSelection::genCallTemp(IR::Call *e, llvm::Value *result)
 {
     if (! result)
         result = newLLVMTemp(_valueTy);
@@ -920,7 +1049,7 @@ void LLVMInstructionSelection::genCallTemp(IR::Call *e, llvm::Value *result)
     _llvmValue = CreateLoad(result);
 }
 
-void LLVMInstructionSelection::genConstructTemp(IR::New *e, llvm::Value *result)
+void InstructionSelection::genConstructTemp(IR::New *e, llvm::Value *result)
 {
     if (! result)
         result = newLLVMTemp(_valueTy);
@@ -943,7 +1072,7 @@ void LLVMInstructionSelection::genConstructTemp(IR::New *e, llvm::Value *result)
     _llvmValue = CreateLoad(result);
 }
 
-void LLVMInstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
+void InstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
 {
     IR::Name *base = e->base->asName();
 
@@ -1046,7 +1175,7 @@ void LLVMInstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
     }
 }
 
-void LLVMInstructionSelection::genConstructName(IR::New *e, llvm::Value *result)
+void InstructionSelection::genConstructName(IR::New *e, llvm::Value *result)
 {
     IR::Name *base = e->base->asName();
 
@@ -1068,7 +1197,7 @@ void LLVMInstructionSelection::genConstructName(IR::New *e, llvm::Value *result)
     }
 }
 
-void LLVMInstructionSelection::visitCall(IR::Call *e)
+void InstructionSelection::visitCall(IR::Call *e)
 {
     if (e->base->asMember()) {
         genCallMember(e);
@@ -1092,7 +1221,7 @@ void LLVMInstructionSelection::visitCall(IR::Call *e)
     }
 }
 
-void LLVMInstructionSelection::visitNew(IR::New *e)
+void InstructionSelection::visitNew(IR::New *e)
 {
     if (e->base->asMember()) {
         genConstructMember(e);
@@ -1116,7 +1245,7 @@ void LLVMInstructionSelection::visitNew(IR::New *e)
     }
 }
 
-void LLVMInstructionSelection::visitSubscript(IR::Subscript *e)
+void InstructionSelection::visitSubscript(IR::Subscript *e)
 {
     llvm::Value *result = newLLVMTemp(_valueTy);
     llvm::Value *base = getLLVMTempReference(e->base);
@@ -1126,7 +1255,7 @@ void LLVMInstructionSelection::visitSubscript(IR::Subscript *e)
     _llvmValue = CreateLoad(result);
 }
 
-void LLVMInstructionSelection::visitMember(IR::Member *e)
+void InstructionSelection::visitMember(IR::Member *e)
 {
     llvm::Value *result = newLLVMTemp(_valueTy);
     llvm::Value *base = getLLVMTempReference(e->base);
@@ -1137,7 +1266,7 @@ void LLVMInstructionSelection::visitMember(IR::Member *e)
     _llvmValue = CreateLoad(result);
 }
 
-llvm::Value *LLVMInstructionSelection::createValue(IR::Const *e)
+llvm::Value *InstructionSelection::createValue(IR::Const *e)
 {
     llvm::Value *tmp = newLLVMTemp(_valueTy);
 
@@ -1167,7 +1296,7 @@ llvm::Value *LLVMInstructionSelection::createValue(IR::Const *e)
     return tmp;
 }
 
-llvm::Value *LLVMInstructionSelection::toValuePtr(IR::Expr *e)
+llvm::Value *InstructionSelection::toValuePtr(IR::Expr *e)
 {
     if (IR::Temp *t = e->asTemp()) {
         return getLLVMTemp(t);

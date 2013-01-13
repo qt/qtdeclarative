@@ -191,6 +191,74 @@ private:
     int _pinnedCount;
 };
 
+typedef VM::Value (*ALUFunction)(const VM::Value, const VM::Value, VM::ExecutionContext*);
+inline ALUFunction aluOpFunction(IR::AluOp op)
+{
+    switch (op) {
+    case IR::OpInvalid:
+        return 0;
+    case IR::OpIfTrue:
+        return 0;
+    case IR::OpNot:
+        return 0;
+    case IR::OpUMinus:
+        return 0;
+    case IR::OpUPlus:
+        return 0;
+    case IR::OpCompl:
+        return 0;
+    case IR::OpBitAnd:
+        return VM::__qmljs_bit_and;
+    case IR::OpBitOr:
+        return VM::__qmljs_bit_or;
+    case IR::OpBitXor:
+        return VM::__qmljs_bit_xor;
+    case IR::OpAdd:
+        return VM::__qmljs_add;
+    case IR::OpSub:
+        return VM::__qmljs_sub;
+    case IR::OpMul:
+        return VM::__qmljs_mul;
+    case IR::OpDiv:
+        return VM::__qmljs_div;
+    case IR::OpMod:
+        return VM::__qmljs_mod;
+    case IR::OpLShift:
+        return VM::__qmljs_shl;
+    case IR::OpRShift:
+        return VM::__qmljs_shr;
+    case IR::OpURShift:
+        return VM::__qmljs_ushr;
+    case IR::OpGt:
+        return VM::__qmljs_gt;
+    case IR::OpLt:
+        return VM::__qmljs_lt;
+    case IR::OpGe:
+        return VM::__qmljs_ge;
+    case IR::OpLe:
+        return VM::__qmljs_le;
+    case IR::OpEqual:
+        return VM::__qmljs_eq;
+    case IR::OpNotEqual:
+        return VM::__qmljs_ne;
+    case IR::OpStrictEqual:
+        return VM::__qmljs_se;
+    case IR::OpStrictNotEqual:
+        return VM::__qmljs_sne;
+    case IR::OpInstanceof:
+        return VM::__qmljs_instanceof;
+    case IR::OpIn:
+        return VM::__qmljs_in;
+    case IR::OpAnd:
+        return 0;
+    case IR::OpOr:
+        return 0;
+    default:
+        assert(!"Unknown AluOp");
+        return 0;
+    }
+};
+
 } // anonymous namespace
 
 InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module)
@@ -269,8 +337,10 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     qSwap(ccode, _ccode);
 }
 
-void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempIndex)
+void InstructionSelection::callActivationProperty(IR::Call *c, IR::Temp *temp)
 {
+    const int targetTempIndex = temp ? temp->index : scratchTempIndex();
+;
     IR::Name *baseName = c->base->asName();
     Q_ASSERT(baseName);
 
@@ -465,8 +535,9 @@ void InstructionSelection::callActivationProperty(IR::Call *c, int targetTempInd
     }
 }
 
-void InstructionSelection::callValue(IR::Call *c, int targetTempIndex)
+void InstructionSelection::callValue(IR::Call *c, IR::Temp *temp)
 {
+    const int targetTempIndex = temp ? temp->index : scratchTempIndex();
     IR::Temp *t = c->base->asTemp();
     Q_ASSERT(t);
 
@@ -477,8 +548,9 @@ void InstructionSelection::callValue(IR::Call *c, int targetTempIndex)
     addInstruction(call);
 }
 
-void InstructionSelection::callProperty(IR::Call *c, int targetTempIndex)
+void InstructionSelection::callProperty(IR::Call *c, IR::Temp *temp)
 {
+    const int targetTempIndex = temp ? temp->index : scratchTempIndex();
     IR::Member *m = c->base->asMember();
     Q_ASSERT(m);
 
@@ -491,33 +563,255 @@ void InstructionSelection::callProperty(IR::Call *c, int targetTempIndex)
     addInstruction(call);
 }
 
-void InstructionSelection::construct(IR::New *ctor, int targetTempIndex)
+void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *result)
 {
-    if (IR::Name *baseName = ctor->base->asName()) {
-        Instruction::CreateActivationProperty create;
-        create.name = engine()->newString(*baseName->id);
-        prepareCallArgs(ctor->args, create.argc, create.args);
-        create.targetTempIndex = targetTempIndex;
-        addInstruction(create);
-    } else if (IR::Member *member = ctor->base->asMember()) {
-        IR::Temp *base = member->base->asTemp();
-        assert(base != 0);
+    Instruction::CreateActivationProperty create;
+    create.name = engine()->newString(*call->base->asName()->id);
+    prepareCallArgs(call->args, create.argc, create.args);
+    create.targetTempIndex = result->index;
+    addInstruction(create);
+}
 
-        Instruction::CreateProperty create;
-        create.base = base->index;
-        create.name = engine()->newString(*member->name);
-        prepareCallArgs(ctor->args, create.argc, create.args);
-        create.targetTempIndex = targetTempIndex;
-        addInstruction(create);
-    } else if (IR::Temp *baseTemp = ctor->base->asTemp()) {
-        Instruction::CreateValue create;
-        create.func = baseTemp->index;
-        prepareCallArgs(ctor->args, create.argc, create.args);
-        create.targetTempIndex = targetTempIndex;
-        addInstruction(create);
+void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
+{
+    IR::Member *member = call->base->asMember();
+    assert(member != 0);
+    assert(member->base->asTemp() != 0);
+
+    Instruction::CreateProperty create;
+    create.base = member->base->asTemp()->index;
+    create.name = engine()->newString(*member->name);
+    prepareCallArgs(call->args, create.argc, create.args);
+    create.targetTempIndex = result->index;
+    addInstruction(create);
+}
+
+void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
+{
+    Instruction::CreateValue create;
+    create.func = call->base->asTemp()->index;
+    prepareCallArgs(call->args, create.argc, create.args);
+    create.targetTempIndex = result->index;
+    addInstruction(create);
+}
+
+void InstructionSelection::loadThisObject(IR::Temp *temp)
+{
+    Instruction::LoadThis load;
+    load.targetTempIndex = temp->index;
+    addInstruction(load);
+}
+
+void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Temp *targetTemp)
+{
+    assert(sourceConst);
+
+    Instruction::LoadValue load;
+    load.targetTempIndex = targetTemp->index;
+    load.value = convertToValue(sourceConst);
+    addInstruction(load);
+}
+
+void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
+{
+    Instruction::LoadValue load;
+    load.value = VM::Value::fromString(engine()->newString(str));
+    load.targetTempIndex = targetTemp->index;
+    addInstruction(load);
+}
+
+void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp)
+{
+    Instruction::LoadValue load;
+    load.value = VM::Value::fromObject(engine()->newRegExpObject(
+                                           *sourceRegexp->value,
+                                           sourceRegexp->flags));
+    load.targetTempIndex = targetTemp->index;
+    addInstruction(load);
+}
+
+void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *temp)
+{
+    Instruction::LoadName load;
+    load.name = engine()->newString(name);
+    load.targetTempIndex = temp->index;
+    addInstruction(load);
+}
+
+void InstructionSelection::setActivationProperty(IR::Expr *source, const QString &targetName)
+{
+    Instruction::StoreName store;
+    store.sourceIsTemp = toValueOrTemp(source, store.source);
+    store.name = engine()->newString(targetName);
+    addInstruction(store);
+}
+
+void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
+{
+    VM::Function *vmFunc = vmFunction(closure->value);
+    assert(vmFunc);
+    Instruction::LoadClosure load;
+    load.value = vmFunc;
+    load.targetTempIndex = target->index;
+    addInstruction(load);
+}
+
+void InstructionSelection::getProperty(IR::Temp *base, const QString &name, IR::Temp *target)
+{
+    Instruction::LoadProperty load;
+    load.baseTemp = base->index;
+    load.name = engine()->newString(name);
+    load.targetTempIndex = target->index;
+    addInstruction(load);
+}
+
+void InstructionSelection::setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
+{
+    Instruction::StoreProperty store;
+    store.baseTemp = targetBase->index;
+    store.name = engine()->newString(targetName);
+    store.sourceIsTemp = toValueOrTemp(source, store.source);
+    addInstruction(store);
+}
+
+void InstructionSelection::getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target)
+{
+    Instruction::LoadElement load;
+    load.base = base->index;
+    load.index = index->index;
+    load.targetTempIndex = target->index;
+    addInstruction(load);
+}
+
+void InstructionSelection::setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex)
+{
+    Instruction::StoreElement store;
+    store.base = targetBase->index;
+    store.index = targetIndex->index;
+    store.sourceIsTemp = toValueOrTemp(source, store.source);
+    addInstruction(store);
+}
+
+void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
+{
+    Instruction::MoveTemp move;
+    move.fromTempIndex = sourceTemp->index;
+    move.toTempIndex = targetTemp->index;
+    addInstruction(move);
+}
+
+void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp)
+{
+    VM::Value (*op)(const VM::Value value, VM::ExecutionContext *ctx) = 0;
+    switch (oper) {
+    case IR::OpIfTrue: assert(!"unreachable"); break;
+    case IR::OpNot: op = VM::__qmljs_not; break;
+    case IR::OpUMinus: op = VM::__qmljs_uminus; break;
+    case IR::OpUPlus: op = VM::__qmljs_uplus; break;
+    case IR::OpCompl: op = VM::__qmljs_compl; break;
+    case IR::OpIncrement: op = VM::__qmljs_increment; break;
+    case IR::OpDecrement: op = VM::__qmljs_decrement; break;
+    default: assert(!"unreachable"); break;
+    } // switch
+
+    if (op) {
+        Instruction::Unop unop;
+        unop.alu = op;
+        unop.e = sourceTemp->index;
+        unop.targetTempIndex = targetTemp->index;
+        addInstruction(unop);
     } else {
-        qWarning("  NEW");
+        qWarning("  UNOP1");
     }
+}
+
+void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
+{
+    Instruction::Binop binop;
+    binop.alu = aluOpFunction(oper);
+    binop.lhsIsTemp = toValueOrTemp(leftSource, binop.lhs);
+    binop.rhsIsTemp = toValueOrTemp(rightSource, binop.rhs);
+    binop.targetTempIndex = target->index;
+    addInstruction(binop);
+}
+
+void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, const QString &targetName)
+{
+    void (*op)(VM::Value value, VM::String *name, VM::ExecutionContext *ctx) = 0;
+    switch (oper) {
+    case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_name; break;
+    case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_name; break;
+    case IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_name; break;
+    case IR::OpAdd: op = VM::__qmljs_inplace_add_name; break;
+    case IR::OpSub: op = VM::__qmljs_inplace_sub_name; break;
+    case IR::OpMul: op = VM::__qmljs_inplace_mul_name; break;
+    case IR::OpDiv: op = VM::__qmljs_inplace_div_name; break;
+    case IR::OpMod: op = VM::__qmljs_inplace_mod_name; break;
+    case IR::OpLShift: op = VM::__qmljs_inplace_shl_name; break;
+    case IR::OpRShift: op = VM::__qmljs_inplace_shr_name; break;
+    case IR::OpURShift: op = VM::__qmljs_inplace_ushr_name; break;
+    default: break;
+    }
+
+    if (op) {
+        Instruction::InplaceNameOp ieo;
+        ieo.alu = op;
+        ieo.targetName = engine()->newString(targetName);
+        ieo.sourceIsTemp = toValueOrTemp(sourceExpr, ieo.source);
+        addInstruction(ieo);
+    }
+}
+
+void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp)
+{
+    void (*op)(VM::Value base, VM::Value index, VM::Value value, VM::ExecutionContext *ctx) = 0;
+    switch (oper) {
+    case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_element; break;
+    case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_element; break;
+    case IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_element; break;
+    case IR::OpAdd: op = VM::__qmljs_inplace_add_element; break;
+    case IR::OpSub: op = VM::__qmljs_inplace_sub_element; break;
+    case IR::OpMul: op = VM::__qmljs_inplace_mul_element; break;
+    case IR::OpDiv: op = VM::__qmljs_inplace_div_element; break;
+    case IR::OpMod: op = VM::__qmljs_inplace_mod_element; break;
+    case IR::OpLShift: op = VM::__qmljs_inplace_shl_element; break;
+    case IR::OpRShift: op = VM::__qmljs_inplace_shr_element; break;
+    case IR::OpURShift: op = VM::__qmljs_inplace_ushr_element; break;
+    default: break;
+    }
+
+    Instruction::InplaceElementOp ieo;
+    ieo.alu = op;
+    ieo.targetBase = targetBaseTemp->index;
+    ieo.targetIndex = targetIndexTemp->index;
+    ieo.sourceIsTemp = toValueOrTemp(sourceExpr, ieo.source);
+    addInstruction(ieo);
+}
+
+void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
+{
+    void (*op)(VM::Value value, VM::Value base, VM::String *name, VM::ExecutionContext *ctx) = 0;
+    switch (oper) {
+    case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_member; break;
+    case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_member; break;
+    case IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_member; break;
+    case IR::OpAdd: op = VM::__qmljs_inplace_add_member; break;
+    case IR::OpSub: op = VM::__qmljs_inplace_sub_member; break;
+    case IR::OpMul: op = VM::__qmljs_inplace_mul_member; break;
+    case IR::OpDiv: op = VM::__qmljs_inplace_div_member; break;
+    case IR::OpMod: op = VM::__qmljs_inplace_mod_member; break;
+    case IR::OpLShift: op = VM::__qmljs_inplace_shl_member; break;
+    case IR::OpRShift: op = VM::__qmljs_inplace_shr_member; break;
+    case IR::OpURShift: op = VM::__qmljs_inplace_ushr_member; break;
+    default: break;
+    }
+
+    Instruction::InplaceMemberOp imo;
+    imo.alu = op;
+    imo.targetBase = targetBase->index;
+    imo.targetMember = engine()->newString(targetName);
+    imo.sourceIsTemp = toValueOrTemp(source, imo.source);
+    addInstruction(imo);
 }
 
 void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint32 &args)
@@ -555,337 +849,6 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
             e = e->next;
         }
     }
-}
-
-void InstructionSelection::visitExp(IR::Exp *s)
-{
-    if (IR::Call *c = s->expr->asCall()) {
-        // These are calls where the result is ignored.
-        const int targetTempIndex = scratchTempIndex();
-        if (c->base->asName()) {
-            callActivationProperty(c, targetTempIndex);
-        } else if (c->base->asTemp()) {
-            callValue(c, targetTempIndex);
-        } else if (c->base->asMember()) {
-            callProperty(c, targetTempIndex);
-        } else {
-            Q_UNREACHABLE();
-        }
-    } else {
-        Q_UNREACHABLE();
-    }
-}
-
-void InstructionSelection::visitEnter(IR::Enter *)
-{
-    qWarning("%s", __PRETTY_FUNCTION__);
-    Q_UNREACHABLE();
-}
-
-void InstructionSelection::visitLeave(IR::Leave *)
-{
-    qWarning("%s", __PRETTY_FUNCTION__);
-    Q_UNREACHABLE();
-}
-
-typedef VM::Value (*ALUFunction)(const VM::Value, const VM::Value, VM::ExecutionContext*);
-static inline ALUFunction aluOpFunction(IR::AluOp op)
-{
-    switch (op) {
-    case IR::OpInvalid:
-        return 0;
-    case IR::OpIfTrue:
-        return 0;
-    case IR::OpNot:
-        return 0;
-    case IR::OpUMinus:
-        return 0;
-    case IR::OpUPlus:
-        return 0;
-    case IR::OpCompl:
-        return 0;
-    case IR::OpBitAnd:
-        return VM::__qmljs_bit_and;
-    case IR::OpBitOr:
-        return VM::__qmljs_bit_or;
-    case IR::OpBitXor:
-        return VM::__qmljs_bit_xor;
-    case IR::OpAdd:
-        return VM::__qmljs_add;
-    case IR::OpSub:
-        return VM::__qmljs_sub;
-    case IR::OpMul:
-        return VM::__qmljs_mul;
-    case IR::OpDiv:
-        return VM::__qmljs_div;
-    case IR::OpMod:
-        return VM::__qmljs_mod;
-    case IR::OpLShift:
-        return VM::__qmljs_shl;
-    case IR::OpRShift:
-        return VM::__qmljs_shr;
-    case IR::OpURShift:
-        return VM::__qmljs_ushr;
-    case IR::OpGt:
-        return VM::__qmljs_gt;
-    case IR::OpLt:
-        return VM::__qmljs_lt;
-    case IR::OpGe:
-        return VM::__qmljs_ge;
-    case IR::OpLe:
-        return VM::__qmljs_le;
-    case IR::OpEqual:
-        return VM::__qmljs_eq;
-    case IR::OpNotEqual:
-        return VM::__qmljs_ne;
-    case IR::OpStrictEqual:
-        return VM::__qmljs_se;
-    case IR::OpStrictNotEqual:
-        return VM::__qmljs_sne;
-    case IR::OpInstanceof:
-        return VM::__qmljs_instanceof;
-    case IR::OpIn:
-        return VM::__qmljs_in;
-    case IR::OpAnd:
-        return 0;
-    case IR::OpOr:
-        return 0;
-    default:
-        assert(!"Unknown AluOp");
-        return 0;
-    }
-};
-
-void InstructionSelection::visitMove(IR::Move *s)
-{
-    if (IR::Temp *t = s->target->asTemp()) {
-        const int targetTempIndex = t->index;
-        // Check what kind of load it is, and generate the instruction for that.
-        // The store to the temp (the target) is done afterwards.
-        if (IR::Name *n = s->source->asName()) {
-            Q_UNUSED(n);
-            if (*n->id == QStringLiteral("this")) { // ### `this' should be a builtin.
-                Instruction::LoadThis load;
-                load.targetTempIndex = targetTempIndex;
-                addInstruction(load);
-            } else {
-                Instruction::LoadName load;
-                load.name = engine()->newString(*n->id);
-                load.targetTempIndex = targetTempIndex;
-                addInstruction(load);
-            }
-        } else if (s->source->asTemp() || s->source->asConst()) {
-            if (s->op == IR::OpInvalid) {
-                if (IR::Temp *t2 = s->source->asTemp()) {
-                    Instruction::MoveTemp move;
-                    move.fromTempIndex = t2->index;
-                    move.toTempIndex = targetTempIndex;
-                    addInstruction(move);
-                } else {
-                    IR::Const *c = s->source->asConst();
-                    assert(c);
-                    Instruction::LoadValue load;
-                    load.targetTempIndex = targetTempIndex;
-                    load.value = convertToValue(c);
-                    addInstruction(load);
-                }
-            } else {
-                Instruction::Binop binop;
-                binop.alu = aluOpFunction(s->op);
-                binop.lhsIsTemp = toValueOrTemp(t, binop.lhs);
-                binop.rhsIsTemp = toValueOrTemp(s->source, binop.rhs);
-                binop.targetTempIndex = targetTempIndex;
-                addInstruction(binop);
-            }
-        } else if (IR::String *str = s->source->asString()) {
-            Instruction::LoadValue load;
-            load.value = VM::Value::fromString(engine()->newString(*str->value));
-            load.targetTempIndex = targetTempIndex;
-            addInstruction(load);
-        } else if (IR::Closure *clos = s->source->asClosure()) {
-            VM::Function *vmFunc = vmFunction(clos->value);
-            assert(vmFunc);
-            Instruction::LoadClosure load;
-            load.value = vmFunc;
-            load.targetTempIndex = targetTempIndex;
-            addInstruction(load);
-        } else if (IR::New *ctor = s->source->asNew()) {
-            construct(ctor, targetTempIndex);
-        } else if (IR::Member *m = s->source->asMember()) {
-            if (IR::Temp *base = m->base->asTemp()) {
-                Instruction::LoadProperty load;
-                load.baseTemp = base->index;
-                load.name = engine()->newString(*m->name);
-                load.targetTempIndex = targetTempIndex;
-                addInstruction(load);
-            } else {
-                qWarning("  MEMBER");
-            }
-        } else if (IR::Subscript *ss = s->source->asSubscript()) {
-            Instruction::LoadElement load;
-            load.base = ss->base->asTemp()->index;
-            load.index = ss->index->asTemp()->index;
-            load.targetTempIndex = targetTempIndex;
-            addInstruction(load);
-        } else if (IR::Unop *u = s->source->asUnop()) {
-            if (IR::Temp *e = u->expr->asTemp()) {
-                VM::Value (*op)(const VM::Value value, VM::ExecutionContext *ctx) = 0;
-                switch (u->op) {
-                case IR::OpIfTrue: assert(!"unreachable"); break;
-                case IR::OpNot: op = VM::__qmljs_not; break;
-                case IR::OpUMinus: op = VM::__qmljs_uminus; break;
-                case IR::OpUPlus: op = VM::__qmljs_uplus; break;
-                case IR::OpCompl: op = VM::__qmljs_compl; break;
-                case IR::OpIncrement: op = VM::__qmljs_increment; break;
-                case IR::OpDecrement: op = VM::__qmljs_decrement; break;
-                default: assert(!"unreachable"); break;
-                } // switch
-
-                if (op) {
-                    Instruction::Unop unop;
-                    unop.alu = op;
-                    unop.e = e->index;
-                    unop.targetTempIndex = targetTempIndex;
-                    addInstruction(unop);
-                } else {
-                    qWarning("  UNOP1");
-                }
-            } else {
-                qWarning("  UNOP2");
-                s->dump(qout, IR::Stmt::MIR);
-                qout << endl;
-            }
-        } else if (IR::Binop *b = s->source->asBinop()) {
-            Instruction::Binop binop;
-            binop.alu = aluOpFunction(b->op);
-            binop.lhsIsTemp = toValueOrTemp(b->left, binop.lhs);
-            binop.rhsIsTemp = toValueOrTemp(b->right, binop.rhs);
-            binop.targetTempIndex = targetTempIndex;
-            addInstruction(binop);
-        } else if (IR::Call *c = s->source->asCall()) {
-            if (c->base->asName()) {
-                callActivationProperty(c, targetTempIndex);
-            } else if (c->base->asMember()) {
-                callProperty(c, targetTempIndex);
-            } else if (c->base->asTemp()) {
-                callValue(c, targetTempIndex);
-            } else {
-                Q_UNREACHABLE();
-            }
-        }
-        return;
-    } else if (IR::Name *n = s->target->asName()) {
-        if (s->source->asTemp() || s->source->asConst()) {
-            void (*op)(VM::Value value, VM::String *name, VM::ExecutionContext *ctx) = 0;
-            switch (s->op) {
-            case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_name; break;
-            case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_name; break;
-            case IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_name; break;
-            case IR::OpAdd: op = VM::__qmljs_inplace_add_name; break;
-            case IR::OpSub: op = VM::__qmljs_inplace_sub_name; break;
-            case IR::OpMul: op = VM::__qmljs_inplace_mul_name; break;
-            case IR::OpDiv: op = VM::__qmljs_inplace_div_name; break;
-            case IR::OpMod: op = VM::__qmljs_inplace_mod_name; break;
-            case IR::OpLShift: op = VM::__qmljs_inplace_shl_name; break;
-            case IR::OpRShift: op = VM::__qmljs_inplace_shr_name; break;
-            case IR::OpURShift: op = VM::__qmljs_inplace_ushr_name; break;
-            default: break;
-            }
-
-            if (op) {
-                Instruction::InplaceNameOp ieo;
-                ieo.alu = op;
-                ieo.targetName = engine()->newString(*n->id);
-                ieo.sourceIsTemp = toValueOrTemp(s->source, ieo.source);
-                addInstruction(ieo);
-                return;
-            } else if (s->op == IR::OpInvalid) {
-                Instruction::StoreName store;
-                store.sourceIsTemp = toValueOrTemp(s->source, store.source);
-                store.name = engine()->newString(*n->id);
-                addInstruction(store);
-                return;
-            }
-        }
-        qWarning("NAME");
-    } else if (IR::Subscript *ss = s->target->asSubscript()) {
-        if (s->source->asTemp() || s->source->asConst()) {
-            void (*op)(VM::Value base, VM::Value index, VM::Value value, VM::ExecutionContext *ctx) = 0;
-            switch (s->op) {
-            case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_element; break;
-            case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_element; break;
-            case IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_element; break;
-            case IR::OpAdd: op = VM::__qmljs_inplace_add_element; break;
-            case IR::OpSub: op = VM::__qmljs_inplace_sub_element; break;
-            case IR::OpMul: op = VM::__qmljs_inplace_mul_element; break;
-            case IR::OpDiv: op = VM::__qmljs_inplace_div_element; break;
-            case IR::OpMod: op = VM::__qmljs_inplace_mod_element; break;
-            case IR::OpLShift: op = VM::__qmljs_inplace_shl_element; break;
-            case IR::OpRShift: op = VM::__qmljs_inplace_shr_element; break;
-            case IR::OpURShift: op = VM::__qmljs_inplace_ushr_element; break;
-            default: break;
-            }
-
-            if (op) {
-                Instruction::InplaceElementOp ieo;
-                ieo.alu = op;
-                ieo.targetBase = ss->base->asTemp()->index;
-                ieo.targetIndex = ss->index->asTemp()->index;
-                ieo.sourceIsTemp = toValueOrTemp(s->source, ieo.source);
-                addInstruction(ieo);
-                return;
-            } else if (s->op == IR::OpInvalid) {
-                Instruction::StoreElement store;
-                store.base = ss->base->asTemp()->index;
-                store.index = ss->index->asTemp()->index;
-                store.sourceIsTemp = toValueOrTemp(s->source, store.source);
-                addInstruction(store);
-                return;
-            }
-        }
-        qWarning("SUBSCRIPT");
-    } else if (IR::Member *m = s->target->asMember()) {
-        if (s->source->asTemp() || s->source->asConst()) {
-            void (*op)(VM::Value value, VM::Value base, VM::String *name, VM::ExecutionContext *ctx) = 0;
-            switch (s->op) {
-            case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_member; break;
-            case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_member; break;
-            case IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_member; break;
-            case IR::OpAdd: op = VM::__qmljs_inplace_add_member; break;
-            case IR::OpSub: op = VM::__qmljs_inplace_sub_member; break;
-            case IR::OpMul: op = VM::__qmljs_inplace_mul_member; break;
-            case IR::OpDiv: op = VM::__qmljs_inplace_div_member; break;
-            case IR::OpMod: op = VM::__qmljs_inplace_mod_member; break;
-            case IR::OpLShift: op = VM::__qmljs_inplace_shl_member; break;
-            case IR::OpRShift: op = VM::__qmljs_inplace_shr_member; break;
-            case IR::OpURShift: op = VM::__qmljs_inplace_ushr_member; break;
-            default: break;
-            }
-
-            if (op) {
-                Instruction::InplaceMemberOp imo;
-                imo.alu = op;
-                imo.targetBase = m->base->asTemp()->index;
-                imo.targetMember = engine()->newString(*m->name);
-                imo.sourceIsTemp = toValueOrTemp(s->source, imo.source);
-                addInstruction(imo);
-                return;
-            } else if (s->op == IR::OpInvalid) {
-                Instruction::StoreProperty store;
-                store.baseTemp = m->base->asTemp()->index;
-                store.name = engine()->newString(*m->name);
-                store.sourceIsTemp = toValueOrTemp(s->source, store.source);
-                addInstruction(store);
-                return;
-            }
-        }
-        qWarning("MEMBER");
-    }
-
-    Q_UNIMPLEMENTED();
-    s->dump(qout, IR::Stmt::MIR);
-    qout << endl;
-    Q_UNREACHABLE();
 }
 
 void InstructionSelection::visitJump(IR::Jump *s)

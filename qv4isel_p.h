@@ -30,15 +30,12 @@
 #ifndef QV4ISEL_P_H
 #define QV4ISEL_P_H
 
+#include "qv4ir_p.h"
+
 #include <qglobal.h>
 #include <QHash>
 
 namespace QQmlJS {
-
-namespace IR {
-struct Function;
-struct Module;
-} // namespace IR;
 
 namespace VM {
 struct ExecutionEngine;
@@ -69,6 +66,45 @@ public:
     virtual ~EvalISelFactory() = 0;
     virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine, IR::Module *module) = 0;
 };
+
+namespace IR {
+class InstructionSelection: protected IR::StmtVisitor
+{
+public:
+    virtual ~InstructionSelection() = 0;
+
+public: // visitor methods for StmtVisitor:
+    virtual void visitMove(IR::Move *s);
+    virtual void visitEnter(IR::Enter *);
+    virtual void visitLeave(IR::Leave *);
+    virtual void visitExp(IR::Exp *s);
+
+public: // to implement by subclasses:
+    virtual void callActivationProperty(IR::Call *c, IR::Temp *temp) = 0;
+    virtual void callValue(IR::Call *c, IR::Temp *temp) = 0;
+    virtual void callProperty(IR::Call *c, IR::Temp *temp) = 0;
+    virtual void constructActivationProperty(IR::New *call, IR::Temp *result) = 0;
+    virtual void constructProperty(IR::New *ctor, IR::Temp *result) = 0;
+    virtual void constructValue(IR::New *call, IR::Temp *result) = 0;
+    virtual void loadThisObject(IR::Temp *temp) = 0;
+    virtual void loadConst(IR::Const *sourceConst, IR::Temp *targetTemp) = 0;
+    virtual void loadString(const QString &str, IR::Temp *targetTemp) = 0;
+    virtual void loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp) = 0;
+    virtual void getActivationProperty(const QString &name, IR::Temp *temp) = 0;
+    virtual void setActivationProperty(IR::Expr *source, const QString &targetName) = 0;
+    virtual void initClosure(IR::Closure *closure, IR::Temp *target) = 0;
+    virtual void getProperty(IR::Temp *base, const QString &name, IR::Temp *target) = 0;
+    virtual void setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName) = 0;
+    virtual void getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target) = 0;
+    virtual void setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex) = 0;
+    virtual void copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp) = 0;
+    virtual void unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp) = 0;
+    virtual void binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target) = 0;
+    virtual void inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, const QString &targetName) = 0;
+    virtual void inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp) = 0;
+    virtual void inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR::Temp *targetBase, const QString &targetName) = 0;
+};
+} // namespace IR
 
 } // namespace QQmlJS
 

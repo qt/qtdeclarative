@@ -58,16 +58,65 @@
 #include "qv4ir_p.h"
 
 namespace QQmlJS {
+namespace LLVM {
 
-class LLVMInstructionSelection:
+class InstructionSelection:
         public llvm::IRBuilder<>,
-        protected IR::StmtVisitor,
+        public IR::InstructionSelection,
         protected IR::ExprVisitor
 {
 public:
-    LLVMInstructionSelection(llvm::LLVMContext &context);
+    InstructionSelection(llvm::LLVMContext &context);
 
     void buildLLVMModule(IR::Module *module, llvm::Module *llvmModule, llvm::FunctionPassManager *fpm);
+
+public: // methods from InstructionSelection:
+    virtual void callActivationProperty(IR::Call *c, IR::Temp *temp);
+    virtual void callValue(IR::Call *c, IR::Temp *temp);
+    virtual void callProperty(IR::Call *c, IR::Temp *temp);
+    virtual void constructActivationProperty(IR::New *call, IR::Temp *result);
+    virtual void constructProperty(IR::New *call, IR::Temp *result);
+    virtual void constructValue(IR::New *call, IR::Temp *result);
+    virtual void loadThisObject(IR::Temp *temp);
+    virtual void loadConst(IR::Const *con, IR::Temp *temp);
+    virtual void loadString(const QString &str, IR::Temp *targetTemp);
+    virtual void loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp);
+    virtual void getActivationProperty(const QString &name, IR::Temp *temp);
+    virtual void setActivationProperty(IR::Expr *source, const QString &targetName);
+    virtual void initClosure(IR::Closure *closure, IR::Temp *target);
+    virtual void getProperty(IR::Temp *base, const QString &name, IR::Temp *target);
+    virtual void setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName);
+    virtual void getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target);
+    virtual void setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex);
+    virtual void copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp);
+    virtual void unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp);
+    virtual void binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target);
+    virtual void inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, const QString &targetName);
+    virtual void inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp);
+    virtual void inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR::Temp *targetBase, const QString &targetName);
+
+public: // visitor methods for StmtVisitor:
+    virtual void visitExp(IR::Exp *); // TODO: remove
+    virtual void visitMove(IR::Move *);
+    virtual void visitJump(IR::Jump *);
+    virtual void visitCJump(IR::CJump *);
+    virtual void visitRet(IR::Ret *);
+
+public: // visitor methods for ExprVisitor:
+    virtual void visitConst(IR::Const *);
+    virtual void visitString(IR::String *);
+    virtual void visitRegExp(IR::RegExp *);
+    virtual void visitName(IR::Name *);
+    virtual void visitTemp(IR::Temp *);
+    virtual void visitClosure(IR::Closure *);
+    virtual void visitUnop(IR::Unop *);
+    virtual void visitBinop(IR::Binop *);
+    virtual void visitCall(IR::Call *);
+    virtual void visitNew(IR::New *);
+    virtual void visitSubscript(IR::Subscript *);
+    virtual void visitMember(IR::Member *);
+
+private:
     llvm::Function *getLLVMFunction(IR::Function *function);
     llvm::Function *compileLLVMFunction(IR::Function *function);
     llvm::BasicBlock *getLLVMBasicBlock(IR::BasicBlock *block);
@@ -89,29 +138,6 @@ public:
     void genConstructMember(IR::New *e, llvm::Value *result = 0);
     void genMoveSubscript(IR::Move *s);
     void genMoveMember(IR::Move *s);
-
-    virtual void visitExp(IR::Exp *);
-    virtual void visitEnter(IR::Enter *);
-    virtual void visitLeave(IR::Leave *);
-    virtual void visitMove(IR::Move *);
-    virtual void visitJump(IR::Jump *);
-    virtual void visitCJump(IR::CJump *);
-    virtual void visitRet(IR::Ret *);
-
-    virtual void visitConst(IR::Const *);
-    virtual void visitString(IR::String *);
-    virtual void visitRegExp(IR::RegExp *);
-    virtual void visitName(IR::Name *);
-    virtual void visitTemp(IR::Temp *);
-    virtual void visitClosure(IR::Closure *);
-    virtual void visitUnop(IR::Unop *);
-    virtual void visitBinop(IR::Binop *);
-    virtual void visitCall(IR::Call *);
-    virtual void visitNew(IR::New *);
-    virtual void visitSubscript(IR::Subscript *);
-    virtual void visitMember(IR::Member *);
-
-private:
     llvm::Value *createValue(IR::Const *e);
     llvm::Value *toValuePtr(IR::Expr *e);
 
@@ -134,6 +160,7 @@ private:
     llvm::FunctionPassManager *_fpm;
 };
 
-} // end of namespace QQmlJS
+} // LLVM namespace
+} // QQmlJS namespace
 
 #endif // QV4ISEL_LLVM_P_H

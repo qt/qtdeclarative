@@ -9,7 +9,9 @@
 namespace QQmlJS {
 namespace Moth {
 
-class InstructionSelection : public IR::StmtVisitor, public EvalInstructionSelection
+class InstructionSelection:
+        public IR::InstructionSelection,
+        public EvalInstructionSelection
 {
 public:
     InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module);
@@ -18,13 +20,33 @@ public:
     virtual void run(VM::Function *vmFunction, IR::Function *function);
 
 protected:
-    virtual void visitExp(IR::Exp *);
-    virtual void visitEnter(IR::Enter *);
-    virtual void visitLeave(IR::Leave *);
-    virtual void visitMove(IR::Move *);
     virtual void visitJump(IR::Jump *);
     virtual void visitCJump(IR::CJump *);
     virtual void visitRet(IR::Ret *);
+
+    virtual void callActivationProperty(IR::Call *c, IR::Temp *temp);
+    virtual void callValue(IR::Call *c, IR::Temp *temp);
+    virtual void callProperty(IR::Call *c, IR::Temp *temp);
+    virtual void constructActivationProperty(IR::New *call, IR::Temp *result);
+    virtual void constructProperty(IR::New *call, IR::Temp *result);
+    virtual void constructValue(IR::New *call, IR::Temp *result);
+    virtual void loadThisObject(IR::Temp *temp);
+    virtual void loadConst(IR::Const *sourceConst, IR::Temp *targetTemp);
+    virtual void loadString(const QString &str, IR::Temp *targetTemp);
+    virtual void loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp);
+    virtual void getActivationProperty(const QString &name, IR::Temp *temp);
+    virtual void setActivationProperty(IR::Expr *source, const QString &targetName);
+    virtual void initClosure(IR::Closure *closure, IR::Temp *target);
+    virtual void getProperty(IR::Temp *base, const QString &name, IR::Temp *target);
+    virtual void setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName);
+    virtual void getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target);
+    virtual void setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex);
+    virtual void copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp);
+    virtual void unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp);
+    virtual void binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target);
+    virtual void inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, const QString &targetName);
+    virtual void inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp);
+    virtual void inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR::Temp *targetBase, const QString &targetName);
 
 private:
     struct Instruction {
@@ -36,10 +58,6 @@ private:
     };
 
     void simpleMove(IR::Move *);
-    void callActivationProperty(IR::Call *c, int targetTempIndex);
-    void callValue(IR::Call *c, int targetTempIndex);
-    void callProperty(IR::Call *c, int targetTempIndex);
-    void construct(IR::New *ctor, int targetTempIndex);
     void prepareCallArgs(IR::ExprList *, quint32 &, quint32 &);
 
     int outgoingArgumentTempStart() const { return _function->tempCount; }

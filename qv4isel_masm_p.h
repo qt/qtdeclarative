@@ -641,7 +641,9 @@ private:
     QList<CallToLink> _callsToLink;
 };
 
-class InstructionSelection: protected IR::StmtVisitor, public EvalInstructionSelection
+class InstructionSelection:
+        protected IR::InstructionSelection,
+        public EvalInstructionSelection
 {
 public:
     InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module);
@@ -650,6 +652,27 @@ public:
     virtual void run(VM::Function *vmFunction, IR::Function *function);
 
 protected:
+    virtual void callActivationProperty(IR::Call *call, IR::Temp *result);
+    virtual void callProperty(IR::Call *call, IR::Temp *result);
+    virtual void callValue(IR::Call *call, IR::Temp *result);
+    virtual void loadThisObject(IR::Temp *temp);
+    virtual void loadConst(IR::Const *sourceConst, IR::Temp *targetTemp);
+    virtual void loadString(const QString &str, IR::Temp *targetTemp);
+    virtual void loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp);
+    virtual void getActivationProperty(const QString &name, IR::Temp *temp);
+    virtual void setActivationProperty(IR::Expr *source, const QString &targetName);
+    virtual void initClosure(IR::Closure *closure, IR::Temp *target);
+    virtual void getProperty(IR::Temp *base, const QString &name, IR::Temp *target);
+    virtual void setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName);
+    virtual void getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target);
+    virtual void setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex);
+    virtual void copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp);
+    virtual void unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp);
+    virtual void binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target);
+    virtual void inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, const QString &targetName);
+    virtual void inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp);
+    virtual void inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR::Temp *targetBase, const QString &targetName);
+
     typedef Assembler::Address Address;
     typedef Assembler::Pointer Pointer;
 
@@ -679,17 +702,10 @@ protected:
     }
 
     VM::String *identifier(const QString &s);
-    void callActivationProperty(IR::Call *call, IR::Temp *result);
-    void callProperty(IR::Call *call, IR::Temp *result);
-    void constructActivationProperty(IR::New *call, IR::Temp *result);
-    void constructProperty(IR::New *ctor, IR::Temp *result);
-    void callValue(IR::Call *call, IR::Temp *result);
-    void constructValue(IR::New *call, IR::Temp *result);
+    virtual void constructActivationProperty(IR::New *call, IR::Temp *result);
+    virtual void constructProperty(IR::New *ctor, IR::Temp *result);
+    virtual void constructValue(IR::New *call, IR::Temp *result);
 
-    virtual void visitExp(IR::Exp *);
-    virtual void visitEnter(IR::Enter *);
-    virtual void visitLeave(IR::Leave *);
-    virtual void visitMove(IR::Move *s);
     virtual void visitJump(IR::Jump *);
     virtual void visitCJump(IR::CJump *);
     virtual void visitRet(IR::Ret *);

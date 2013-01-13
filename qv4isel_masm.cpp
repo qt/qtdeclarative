@@ -58,10 +58,6 @@ using namespace QQmlJS;
 using namespace QQmlJS::MASM;
 using namespace QQmlJS::VM;
 
-namespace {
-QTextStream qout(stderr, QIODevice::WriteOnly);
-}
-
 Assembler::Assembler(IR::Function* function)
     : _function(function)
 {
@@ -585,6 +581,179 @@ void InstructionSelection::callValue(IR::Call *call, IR::Temp *result)
     generateFunctionCall(result, __qmljs_call_value, Assembler::ContextRegister, thisObject, baseTemp, baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
 }
 
+void InstructionSelection::loadThisObject(IR::Temp *temp)
+{
+    generateFunctionCall(temp, __qmljs_get_thisObject, Assembler::ContextRegister);
+}
+
+void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Temp *targetTemp)
+{
+    _asm->storeValue(convertToValue(sourceConst), targetTemp);
+}
+
+void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
+{
+    Value v = Value::fromString(engine()->newString(str));
+    _asm->storeValue(v, targetTemp);
+}
+
+void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp)
+{
+    Value v = Value::fromObject(engine()->newRegExpObject(*sourceRegexp->value,
+                                                          sourceRegexp->flags));
+    _asm->storeValue(v, targetTemp);
+}
+
+void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *temp)
+{
+    String *propertyName = identifier(name);
+    generateFunctionCall(temp, __qmljs_get_activation_property, Assembler::ContextRegister, propertyName);
+}
+
+void InstructionSelection::setActivationProperty(IR::Expr *source, const QString &targetName)
+{
+    String *propertyName = identifier(targetName);
+    generateFunctionCall(Assembler::Void, __qmljs_set_activation_property, Assembler::ContextRegister, propertyName, source);
+}
+
+void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
+{
+    VM::Function *vmFunc = vmFunction(closure->value);
+    assert(vmFunc);
+    generateFunctionCall(target, __qmljs_init_closure, Assembler::TrustedImmPtr(vmFunc), Assembler::ContextRegister);
+}
+
+void InstructionSelection::getProperty(IR::Temp *base, const QString &name, IR::Temp *target)
+{
+    generateFunctionCall(target, __qmljs_get_property, Assembler::ContextRegister, base, identifier(name));
+}
+
+void InstructionSelection::setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
+{
+    generateFunctionCall(Assembler::Void, __qmljs_set_property, Assembler::ContextRegister, targetBase, identifier(targetName), source);
+}
+
+void InstructionSelection::getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target)
+{
+    generateFunctionCall(target, __qmljs_get_element, Assembler::ContextRegister, base, index);
+}
+
+void InstructionSelection::setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex)
+{
+    generateFunctionCall(Assembler::Void, __qmljs_set_element, Assembler::ContextRegister, targetBase, targetIndex, source);
+}
+
+void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
+{
+    _asm->copyValue(targetTemp, sourceTemp);
+}
+
+#define setOp(op, opName, operation) \
+    do { op = operation; opName = isel_stringIfy(operation); } while (0)
+
+void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp)
+{
+    Value (*op)(const Value value, ExecutionContext *ctx) = 0;
+    const char *opName = 0;
+    switch (oper) {
+    case IR::OpIfTrue: assert(!"unreachable"); break;
+    case IR::OpNot: setOp(op, opName, __qmljs_not); break;
+    case IR::OpUMinus: setOp(op, opName, __qmljs_uminus); break;
+    case IR::OpUPlus: setOp(op, opName, __qmljs_uplus); break;
+    case IR::OpCompl: setOp(op, opName, __qmljs_compl); break;
+    case IR::OpIncrement: setOp(op, opName, __qmljs_increment); break;
+    case IR::OpDecrement: setOp(op, opName, __qmljs_decrement); break;
+    default: assert(!"unreachable"); break;
+    } // switch
+
+    if (op)
+        _asm->generateFunctionCallImp(targetTemp, opName, op, sourceTemp,
+                                      Assembler::ContextRegister);
+}
+
+void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
+{
+    _asm->generateBinOp(oper, target, leftSource, rightSource);
+}
+
+void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, const QString &targetName)
+{
+    void (*op)(const Value value, String *name, ExecutionContext *ctx) = 0;
+    const char *opName = 0;
+    switch (oper) {
+    case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_name); break;
+    case IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_name); break;
+    case IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_name); break;
+    case IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_name); break;
+    case IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_name); break;
+    case IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_name); break;
+    case IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_name); break;
+    case IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_name); break;
+    case IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_name); break;
+    case IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_name); break;
+    case IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_name); break;
+    default:
+        Q_UNREACHABLE();
+        break;
+    }
+    if (op) {
+        _asm->generateFunctionCallImp(Assembler::Void, opName, op, sourceExpr, identifier(targetName), Assembler::ContextRegister);
+    }
+}
+
+void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp)
+{
+    void (*op)(Value base, Value index, Value value, ExecutionContext *ctx) = 0;
+    const char *opName = 0;
+    switch (oper) {
+    case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_element); break;
+    case IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_element); break;
+    case IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_element); break;
+    case IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_element); break;
+    case IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_element); break;
+    case IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_element); break;
+    case IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_element); break;
+    case IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_element); break;
+    case IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_element); break;
+    case IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_element); break;
+    case IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_element); break;
+    default:
+        Q_UNREACHABLE();
+        break;
+    }
+
+    if (op) {
+        _asm->generateFunctionCallImp(Assembler::Void, opName, op, targetBaseTemp, targetIndexTemp, sourceExpr, Assembler::ContextRegister);
+    }
+}
+
+void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
+{
+    void (*op)(Value value, Value base, String *name, ExecutionContext *ctx) = 0;
+    const char *opName = 0;
+    switch (oper) {
+    case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_member); break;
+    case IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_member); break;
+    case IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_member); break;
+    case IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_member); break;
+    case IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_member); break;
+    case IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_member); break;
+    case IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_member); break;
+    case IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_member); break;
+    case IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_member); break;
+    case IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_member); break;
+    case IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_member); break;
+    default:
+        Q_UNREACHABLE();
+        break;
+    }
+
+    if (op) {
+        String* member = identifier(targetName);
+        _asm->generateFunctionCallImp(Assembler::Void, opName, op, source, targetBase, member, Assembler::ContextRegister);
+    }
+}
+
 void InstructionSelection::callProperty(IR::Call *call, IR::Temp *result)
 {
     IR::Member *member = call->base->asMember();
@@ -620,253 +789,6 @@ void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
 
     int argc = prepareVariableArguments(call->args);
     generateFunctionCall(result, __qmljs_construct_value, Assembler::ContextRegister, baseTemp, baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
-}
-
-void InstructionSelection::visitExp(IR::Exp *s)
-{
-    if (IR::Call *c = s->expr->asCall()) {
-        if (c->base->asName()) {
-            callActivationProperty(c, 0);
-            return;
-        } else if (c->base->asTemp()) {
-            callValue(c, 0);
-            return;
-        } else if (c->base->asMember()) {
-            callProperty(c, 0);
-            return;
-        }
-    }
-    assert(!"TODO");
-}
-
-void InstructionSelection::visitEnter(IR::Enter *)
-{
-    Q_UNIMPLEMENTED();
-    assert(!"TODO");
-}
-
-void InstructionSelection::visitLeave(IR::Leave *)
-{
-    Q_UNIMPLEMENTED();
-    assert(!"TODO");
-}
-
-#define setOp(op, opName, operation) \
-    do { op = operation; opName = isel_stringIfy(operation); } while (0)
-
-void InstructionSelection::visitMove(IR::Move *s)
-{
-
-    if (s->op == IR::OpInvalid) {
-        if (IR::Name *n = s->target->asName()) {
-            String *propertyName = identifier(*n->id);
-
-            if (s->source->asTemp() || s->source->asConst()) {
-                generateFunctionCall(Assembler::Void, __qmljs_set_activation_property, Assembler::ContextRegister, propertyName, s->source);
-                return;
-            } else {
-                Q_UNREACHABLE();
-            }
-        } else if (IR::Temp *t = s->target->asTemp()) {
-            if (IR::Name *n = s->source->asName()) {
-                if (*n->id == QStringLiteral("this")) { // ### `this' should be a builtin.
-                    generateFunctionCall(t, __qmljs_get_thisObject, Assembler::ContextRegister);
-                } else {
-                    String *propertyName = identifier(*n->id);
-                    generateFunctionCall(t, __qmljs_get_activation_property, Assembler::ContextRegister, propertyName);
-                }
-                return;
-            } else if (IR::Const *c = s->source->asConst()) {
-                Value v = convertToValue(c);
-                _asm->storeValue(v, t);
-                return;
-            } else if (IR::Temp *t2 = s->source->asTemp()) {
-                _asm->copyValue(t, t2);
-                return;
-            } else if (IR::String *str = s->source->asString()) {
-                Value v = Value::fromString(engine()->newString(*str->value));
-                _asm->storeValue(v, t);
-                return;
-            } else if (IR::RegExp *re = s->source->asRegExp()) {
-                Value v = Value::fromObject(engine()->newRegExpObject(*re->value, re->flags));
-                _asm->storeValue(v, t);
-                return;
-            } else if (IR::Closure *clos = s->source->asClosure()) {
-                VM::Function *vmFunc = vmFunction(clos->value);
-                assert(vmFunc);
-                generateFunctionCall(t, __qmljs_init_closure, Assembler::TrustedImmPtr(vmFunc), Assembler::ContextRegister);
-                return;
-            } else if (IR::New *ctor = s->source->asNew()) {
-                if (ctor->base->asName()) {
-                    constructActivationProperty(ctor, t);
-                    return;
-                } else if (ctor->base->asMember()) {
-                    constructProperty(ctor, t);
-                    return;
-                } else if (ctor->base->asTemp()) {
-                    constructValue(ctor, t);
-                    return;
-                }
-            } else if (IR::Member *m = s->source->asMember()) {
-                //__qmljs_get_property(ctx, result, object, name);
-                if (IR::Temp *base = m->base->asTemp()) {
-                    generateFunctionCall(t, __qmljs_get_property, Assembler::ContextRegister, base, identifier(*m->name));
-                    return;
-                }
-                assert(!"wip");
-                return;
-            } else if (IR::Subscript *ss = s->source->asSubscript()) {
-                generateFunctionCall(t, __qmljs_get_element, Assembler::ContextRegister, ss->base->asTemp(), ss->index->asTemp());
-                return;
-            } else if (IR::Unop *u = s->source->asUnop()) {
-                if (IR::Temp *e = u->expr->asTemp()) {
-                    Value (*op)(const Value value, ExecutionContext *ctx) = 0;
-                    const char *opName = 0;
-                    switch (u->op) {
-                    case IR::OpIfTrue: assert(!"unreachable"); break;
-                    case IR::OpNot: setOp(op, opName, __qmljs_not); break;
-                    case IR::OpUMinus: setOp(op, opName, __qmljs_uminus); break;
-                    case IR::OpUPlus: setOp(op, opName, __qmljs_uplus); break;
-                    case IR::OpCompl: setOp(op, opName, __qmljs_compl); break;
-                    case IR::OpIncrement: setOp(op, opName, __qmljs_increment); break;
-                    case IR::OpDecrement: setOp(op, opName, __qmljs_decrement); break;
-                    default: assert(!"unreachable"); break;
-                    } // switch
-
-                    if (op)
-                        _asm->generateFunctionCallImp(t, opName, op, e, Assembler::ContextRegister);
-                    return;
-                }
-            } else if (IR::Binop *b = s->source->asBinop()) {
-                if ((b->left->asTemp() || b->left->asConst()) &&
-                    (b->right->asTemp() || b->right->asConst())) {
-                    _asm->generateBinOp((IR::AluOp)b->op, t, b->left, b->right);
-                    return;
-                }
-            } else if (IR::Call *c = s->source->asCall()) {
-                if (c->base->asName()) {
-                    callActivationProperty(c, t);
-                    return;
-                } else if (c->base->asMember()) {
-                    callProperty(c, t);
-                    return;
-                } else if (c->base->asTemp()) {
-                    callValue(c, t);
-                    return;
-                }
-            }
-        } else if (IR::Member *m = s->target->asMember()) {
-            if (IR::Temp *base = m->base->asTemp()) {
-                if (s->source->asTemp() || s->source->asConst()) {
-                    generateFunctionCall(Assembler::Void, __qmljs_set_property, Assembler::ContextRegister, base, identifier(*m->name), s->source);
-                    return;
-                } else {
-                    Q_UNREACHABLE();
-                }
-            }
-        } else if (IR::Subscript *ss = s->target->asSubscript()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                generateFunctionCall(Assembler::Void, __qmljs_set_element, Assembler::ContextRegister, ss->base->asTemp(), ss->index->asTemp(), s->source);
-                return;
-            } else {
-                Q_UNIMPLEMENTED();
-            }
-        }
-    } else {
-        // inplace assignment, e.g. x += 1, ++x, ...
-        if (IR::Temp *t = s->target->asTemp()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                _asm->generateBinOp((IR::AluOp)s->op, t, t, s->source);
-                return;
-            }
-        } else if (IR::Name *n = s->target->asName()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                void (*op)(const Value value, String *name, ExecutionContext *ctx) = 0;
-                const char *opName = 0;
-                switch (s->op) {
-                case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_name); break;
-                case IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_name); break;
-                case IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_name); break;
-                case IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_name); break;
-                case IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_name); break;
-                case IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_name); break;
-                case IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_name); break;
-                case IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_name); break;
-                case IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_name); break;
-                case IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_name); break;
-                case IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_name); break;
-                default:
-                    Q_UNREACHABLE();
-                    break;
-                }
-                if (op) {
-                    _asm->generateFunctionCallImp(Assembler::Void, opName, op, s->source, identifier(*n->id), Assembler::ContextRegister);
-                }
-                return;
-            }
-        } else if (IR::Subscript *ss = s->target->asSubscript()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                void (*op)(Value base, Value index, Value value, ExecutionContext *ctx) = 0;
-                const char *opName = 0;
-                switch (s->op) {
-                case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_element); break;
-                case IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_element); break;
-                case IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_element); break;
-                case IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_element); break;
-                case IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_element); break;
-                case IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_element); break;
-                case IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_element); break;
-                case IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_element); break;
-                case IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_element); break;
-                case IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_element); break;
-                case IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_element); break;
-                default:
-                    Q_UNREACHABLE();
-                    break;
-                }
-
-                if (op) {
-                    IR::Temp* base = ss->base->asTemp();
-                    IR::Temp* index = ss->index->asTemp();
-                    _asm->generateFunctionCallImp(Assembler::Void, opName, op, base, index, s->source, Assembler::ContextRegister);
-                }
-                return;
-            }
-        } else if (IR::Member *m = s->target->asMember()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                void (*op)(Value value, Value base, String *name, ExecutionContext *ctx) = 0;
-                const char *opName = 0;
-                switch (s->op) {
-                case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_member); break;
-                case IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_member); break;
-                case IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_member); break;
-                case IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_member); break;
-                case IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_member); break;
-                case IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_member); break;
-                case IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_member); break;
-                case IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_member); break;
-                case IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_member); break;
-                case IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_member); break;
-                case IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_member); break;
-                default:
-                    Q_UNREACHABLE();
-                    break;
-                }
-
-                if (op) {
-                    IR::Temp* base = m->base->asTemp();
-                    String* member = identifier(*m->name);
-                    _asm->generateFunctionCallImp(Assembler::Void, opName, op, s->source, base, member, Assembler::ContextRegister);
-                }
-                return;
-            }
-        }
-    }
-    Q_UNIMPLEMENTED();
-    s->dump(qout, IR::Stmt::MIR);
-    qout << endl;
-    assert(!"TODO");
-
 }
 
 void InstructionSelection::visitJump(IR::Jump *s)
