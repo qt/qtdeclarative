@@ -2149,8 +2149,9 @@ Value FunctionPrototype::method_apply(ExecutionContext *ctx)
     Value arg = ctx->argument(1);
     QVector<Value> args;
 
-    if (ArrayObject *arr = arg.asArrayObject()) {
-        for (quint32 i = 0; i < arr->array.length(); ++i) {
+    if (Object *arr = arg.asObject()) {
+        quint32 len = arr->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
+        for (quint32 i = 0; i < len; ++i) {
             Value a = arr->__get__(ctx, i);
             args.append(a);
         }
