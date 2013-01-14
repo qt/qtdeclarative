@@ -596,7 +596,8 @@ void __qmljs_set_element(ExecutionContext *ctx, Value object, Value index, Value
 
 Value __qmljs_foreach_iterator_object(Value in, ExecutionContext *ctx)
 {
-    in = __qmljs_to_object(in, ctx);
+    if (!in.isNull() && !in.isUndefined())
+        in = __qmljs_to_object(in, ctx);
     Object *it = ctx->engine->newForEachIteratorObject(ctx, in.objectValue());
     return Value::fromObject(it);
 }

@@ -351,12 +351,6 @@ S13_A6_T2 failing
 13.1-40-s failing
 13.1-41-s failing
 13.1-42-s failing
-13.2-12-s failing
-13.2-16-s failing
-13.2-20-s failing
-13.2-24-s failing
-13.2-28-s failing
-13.2-8-s failing
 S13.2.2_A16_T2 failing
 S13.2.2_A16_T3 failing
 S13.2.2_A19_T1 failing
@@ -379,7 +373,6 @@ S15.1.2.1_A4.2 failing
 S15.1.2.1_A4.3 failing
 S15.1.2.1_A4.4 failing
 S15.1.2.1_A4.7 failing
-S12.6.4_A1 failing
 S12.6.4_A2 failing
 S12.7_A7 failing
 S12.8_A4_T1 failing
@@ -1079,14 +1072,12 @@ S15.4.3_A2.4 failing
 15.4.3.2-2-1 failing
 15.4.3.2-2-2 failing
 15.4.3.2-2-3 failing
-S15.4.4.10_A5.1 failing
 S15.4.4.11_A3_T1 failing
 S15.4.4.11_A3_T2 failing
 S15.4.4.11_A4_T1 failing
 S15.4.4.11_A4_T2 failing
 S15.4.4.11_A4_T3 failing
 S15.4.4.11_A6_T2 failing
-S15.4.4.11_A7.1 failing
 15.4.4.12-9-c-ii-1 failing
 S15.4.4.12_A1.1_T4 failing
 S15.4.4.12_A1.1_T6 failing
@@ -1104,7 +1095,6 @@ S15.4.4.12_A3_T3 failing
 S15.4.4.12_A4_T1 failing
 S15.4.4.12_A4_T2 failing
 S15.4.4.12_A4_T3 failing
-S15.4.4.12_A5.1 failing
 S15.4.4.13_A2_T1 failing
 S15.4.4.13_A2_T2 failing
 S15.4.4.13_A2_T3 failing
@@ -1113,7 +1103,6 @@ S15.4.4.13_A3_T2 failing
 S15.4.4.13_A3_T3 failing
 S15.4.4.13_A4_T1 failing
 S15.4.4.13_A4_T2 failing
-S15.4.4.13_A5.1 failing
 15.4.4.14-1-1 failing
 15.4.4.14-1-10 failing
 15.4.4.14-1-11 failing
@@ -2441,18 +2430,14 @@ S15.4.4.3_A3_T1 failing
 S15.4.4.4_A2_T1 failing
 S15.4.4.4_A2_T2 failing
 S15.4.4.4_A3_T1 failing
-S15.4.4.4_A4.1 failing
-S15.4.4.5_A6.1 failing
 S15.4.4.6_A1.2_T1 failing
 S15.4.4.6_A3_T2 failing
 S15.4.4.6_A3_T3 failing
 S15.4.4.6_A4_T1 failing
 S15.4.4.6_A4_T2 failing
-S15.4.4.6_A5.1 failing
 S15.4.4.7_A3 failing
 S15.4.4.7_A4_T2 failing
 S15.4.4.7_A4_T3 failing
-S15.4.4.7_A6.1 failing
 S15.5.3_A1 failing
 S15.5.4.10_A1_T1 failing
 S15.5.4.10_A1_T10 failing
@@ -2556,7 +2541,6 @@ S15.4.4.8_A3_T2 failing
 S15.4.4.8_A3_T3 failing
 S15.4.4.8_A4_T1 failing
 S15.4.4.8_A4_T2 failing
-S15.4.4.8_A5.1 failing
 S15.4.4.9_A1.2_T1 failing
 S15.4.4.9_A2_T1 failing
 S15.4.4.9_A2_T2 failing
@@ -2568,7 +2552,6 @@ S15.4.4.9_A3_T2 failing
 S15.4.4.9_A3_T3 failing
 S15.4.4.9_A4_T1 failing
 S15.4.4.9_A4_T2 failing
-S15.4.4.9_A5.1 failing
 S15.5.4.13_A2_T2 failing
 S15.5.4.13_A2_T7 failing
 S15.5.4.13_A3_T3 failing
