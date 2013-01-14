@@ -45,6 +45,8 @@
 #include <wtf/Platform.h>
 #ifdef __cplusplus
 #include <wtf/Vector.h>
+#include <wtf/FastAllocBase.h>
+#include <wtf/RefPtr.h>
 #include <cmath>
 #else
 #include <math.h>

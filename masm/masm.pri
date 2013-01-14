@@ -30,7 +30,7 @@ HEADERS += $$PWD/wtf/PageReservation.h
 SOURCES += $$PWD/stubs/WTFStubs.cpp
 HEADERS += $$PWD/stubs/WTFStubs.h
 
-DEFINES += WTF_EXPORT_PRIVATE=""
+DEFINES += WTF_EXPORT_PRIVATE="" JS_EXPORT_PRIVATE=""
 
 DEFINES += ENABLE_LLINT=0
 DEFINES += ENABLE_DFG_JIT=0
@@ -42,6 +42,7 @@ DEFINES += BUILDING_QT__
 
 INCLUDEPATH += $$PWD/jit
 INCLUDEPATH += $$PWD/assembler
+INCLUDEPATH += $$PWD/runtime
 INCLUDEPATH += $$PWD/wtf
 INCLUDEPATH += $$PWD/stubs
 INCLUDEPATH += $$PWD/stubs/wtf
@@ -61,6 +62,21 @@ SOURCES += $$PWD/disassembler/udis86/udis86_syn-att.c
 SOURCES += $$PWD/disassembler/udis86/udis86_syn.c
 SOURCES += $$PWD/disassembler/udis86/udis86_syn-intel.c
 
+DEFINES += ENABLE_YARR_JIT=0
+SOURCES += \
+    $$PWD/yarr/YarrCanonicalizeUCS2.cpp \
+    $$PWD/yarr/YarrInterpreter.cpp \
+    $$PWD/yarr/YarrPattern.cpp \
+    $$PWD/yarr/YarrSyntaxChecker.cpp
+
+HEADERS += $$PWD/yarr/*.h
+
+retgen.output = RegExpJitTables.h
+retgen.script = $$PWD/create_regex_tables
+retgen.input = retgen.script
+retgen.CONFIG += no_link
+retgen.commands = python $$retgen.script > ${QMAKE_FILE_OUT}
+QMAKE_EXTRA_COMPILERS += retgen
 
 ITAB = $$PWD/disassembler/udis86/optable.xml
 udis86.output = udis86_itab.h

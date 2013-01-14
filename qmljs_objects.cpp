@@ -1114,13 +1114,13 @@ Value RegExpObject::__get__(ExecutionContext *ctx, String *name, bool *hasProper
     QString n = name->toQString();
     Value v = Value::undefinedValue();
     if (n == QLatin1String("source"))
-        v = Value::fromString(ctx, value.pattern());
+        v = Value::fromString(ctx, value->pattern());
     else if (n == QLatin1String("global"))
         v = Value::fromBoolean(global);
     else if (n == QLatin1String("ignoreCase"))
-        v = Value::fromBoolean(value.patternOptions() & QRegularExpression::CaseInsensitiveOption);
+        v = Value::fromBoolean(value->ignoreCase());
     else if (n == QLatin1String("multiline"))
-        v = Value::fromBoolean(value.patternOptions() & QRegularExpression::MultilineOption);
+        v = Value::fromBoolean(value->multiLine());
     else if (n == QLatin1String("lastIndex"))
         v = lastIndex;
     if (v.type() != Value::Undefined_Type) {
@@ -1128,7 +1128,6 @@ Value RegExpObject::__get__(ExecutionContext *ctx, String *name, bool *hasProper
             *hasProperty = true;
         return v;
     }
-
     return Object::__get__(ctx, name, hasProperty);
 }
 

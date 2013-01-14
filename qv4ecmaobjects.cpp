@@ -46,7 +46,6 @@
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>
 #include <QtCore/QStringList>
-#include <QtCore/QRegularExpression>
 #include <QtCore/QDebug>
 #include <cmath>
 #include <qmath.h>
@@ -2846,25 +2845,26 @@ Value RegExpCtor::construct(ExecutionContext *ctx)
         r = __qmljs_to_string(r, ctx);
 
     bool global = false;
-    QRegularExpression::PatternOptions options = QRegularExpression::NoPatternOption;
+    bool ignoreCase = false;
+    bool multiLine = false;
     if (!f.isUndefined()) {
         f = __qmljs_to_string(f, ctx);
         QString str = f.stringValue()->toQString();
         for (int i = 0; i < str.length(); ++i) {
             if (str.at(i) == QChar('g') && !global) {
                 global = true;
-            } else if (str.at(i) == QChar('i') && !(options & QRegularExpression::CaseInsensitiveOption)) {
-                options |= QRegularExpression::CaseInsensitiveOption;
-            } else if (str.at(i) == QChar('m') && !(options & QRegularExpression::MultilineOption)) {
-                options |= QRegularExpression::MultilineOption;
+            } else if (str.at(i) == QChar('i') && !ignoreCase) {
+                ignoreCase = true;
+            } else if (str.at(i) == QChar('m') && !multiLine) {
+                multiLine = true;
             } else {
                 ctx->throwTypeError();
             }
         }
     }
 
-    QRegularExpression re(r.stringValue()->toQString(), options);
-    if (!re.isValid())
+    RefPtr<RegExp> re = RegExp::create(ctx->engine, r.stringValue()->toQString(), ignoreCase, multiLine);
+    if (!re->isValid())
         ctx->throwTypeError();
 
     RegExpObject *o = ctx->engine->newRegExpObject(re, global);
@@ -2905,21 +2905,25 @@ Value RegExpPrototype::method_exec(ExecutionContext *ctx)
     if (offset < 0 || offset > s.length())
         return Value::nullValue();
 
-    QRegularExpressionMatch match = r->value.match(s, offset);
-    if (!match.hasMatch())
+    uint* matchOffsets = (uint*)alloca(r->value->captureCount() * 2 * sizeof(uint));
+    int result = r->value->match(s, offset, matchOffsets);
+    if (result == -1)
         return Value::nullValue();
 
     // fill in result data
     ArrayObject *array = ctx->engine->newArrayObject(ctx)->asArrayObject();
-    int captured = match.lastCapturedIndex();
-    for (int i = 0; i <= captured; ++i)
-        array->array.push_back(Value::fromString(ctx, match.captured(i)));
+    for (int i = 0; i < r->value->captureCount(); ++i) {
+        int start = matchOffsets[i * 2];
+        int end = matchOffsets[i * 2 + 1];
+        if (start != -1 && end != -1)
+            array->array.push_back(Value::fromString(ctx, s.mid(start, end - start)));
+    }
 
-    array->__put__(ctx, QLatin1String("index"), Value::fromInt32(match.capturedStart(0)));
+    array->__put__(ctx, QLatin1String("index"), Value::fromInt32(result));
     array->__put__(ctx, QLatin1String("input"), arg);
 
     if (r->global)
-        r->lastIndex = Value::fromInt32(match.capturedEnd(0));
+        r->lastIndex = Value::fromInt32(matchOffsets[1]);
 
     return Value::fromObject(array);
 }
@@ -2936,13 +2940,12 @@ Value RegExpPrototype::method_toString(ExecutionContext *ctx)
     if (!r)
         ctx->throwTypeError();
 
-    QString result = QChar('/') + r->value.pattern();
+    QString result = QChar('/') + r->value->pattern();
     result += QChar('/');
-    QRegularExpression::PatternOptions o = r->value.patternOptions();
     // ### 'g' option missing
-    if (o & QRegularExpression::CaseInsensitiveOption)
+    if (r->value->ignoreCase())
         result += QChar('i');
-    if (o & QRegularExpression::MultilineOption)
+    if (r->value->multiLine())
         result += QChar('m');
     return Value::fromString(ctx, result);
 }

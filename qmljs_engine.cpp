@@ -357,17 +357,17 @@ FunctionObject *ExecutionEngine::newDateCtor(ExecutionContext *ctx)
 RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
 {
     bool global = (flags & IR::RegExp::RegExp_Global);
-    QRegularExpression::PatternOptions options = 0;
+    bool ignoreCase = false;
+    bool multiline = false;
     if (flags & IR::RegExp::RegExp_IgnoreCase)
-        options |= QRegularExpression::CaseInsensitiveOption;
+        ignoreCase = true;
     if (flags & IR::RegExp::RegExp_Multiline)
-        options |= QRegularExpression::MultilineOption;
+        multiline = true;
 
-    QRegularExpression re(pattern, options);
-    return newRegExpObject(re, global);
+    return newRegExpObject(RegExp::create(this, pattern, ignoreCase, multiline), global);
 }
 
-RegExpObject *ExecutionEngine::newRegExpObject(const QRegularExpression &re, bool global)
+RegExpObject *ExecutionEngine::newRegExpObject(PassRefPtr<RegExp> re, bool global)
 {
     RegExpObject *object = new (memoryManager) RegExpObject(re, global);
     object->prototype = regExpPrototype;

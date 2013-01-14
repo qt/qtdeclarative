@@ -38,58 +38,55 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef VECTOR_H
-#define VECTOR_H
+#ifndef QV4REGEXP_H
+#define QV4REGEXP_H
 
-#include <vector>
-#include <wtf/Assertions.h>
-#include <wtf/NotFound.h>
-#include <qalgorithms.h>
+#include <QString>
+#include <QVector>
 
-namespace WTF {
+#include <wtf/RefCounted.h>
+#include <wtf/RefPtr.h>
+#include <wtf/FastAllocBase.h>
+#include <wtf/BumpPointerAllocator.h>
 
-template <typename T, int capacity = 1>
-class Vector : public std::vector<T> {
+#include <limits.h>
+
+#include <yarr/Yarr.h>
+#include <yarr/YarrInterpreter.h>
+
+namespace QQmlJS {
+namespace VM {
+
+struct ExecutionEngine;
+
+class RegExp : public RefCounted<RegExp>
+{
 public:
-    Vector() {}
-    Vector(int initialSize) : std::vector<T>(initialSize) {}
+    static PassRefPtr<RegExp> create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false)
+    { return adoptRef(new RegExp(engine, pattern, ignoreCase, multiline)); }
 
-    inline void append(const T& value)
-    { this->push_back(value); }
+    QString pattern() const { return m_pattern; }
 
-    inline void append(const Vector<T>& vector)
-    {
-        this->insert(this->end(), vector.begin(), vector.end());
-    }
+    bool isValid() const { return m_byteCode.get(); }
 
-    using std::vector<T>::insert;
+    int match(const QString& string, int start, uint *matchOffsets);
 
-    inline void insert(size_t position, T value)
-    { this->insert(this->begin() + position, value); }
+    bool ignoreCase() const { return m_ignoreCase; }
+    bool multiLine() const { return m_multiLine; }
+    int captureCount() const { return m_subPatternCount + 1; }
 
-    inline void grow(size_t size)
-    { this->resize(size); }
+private:
+    Q_DISABLE_COPY(RegExp);
+    RegExp(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline);
 
-    inline void shrink(size_t size)
-    { this->erase(this->begin() + size, this->end()); }
-
-    inline void remove(size_t position)
-    { this->erase(this->begin() + position); }
-
-    inline bool isEmpty() const { return this->empty(); }
-
-    inline T &last() { return *(this->begin() + this->size() - 1); }
+    QString m_pattern;
+    OwnPtr<JSC::Yarr::BytecodePattern> m_byteCode;
+    int m_subPatternCount;
+    bool m_ignoreCase;
+    bool m_multiLine;
 };
 
-template <typename T, int capacity>
-void deleteAllValues(const Vector<T, capacity> &vector)
-{
-    qDeleteAll(vector);
-}
+} // end of namespace VM
+} // end of namespace QQmlJS
 
-}
-
-using WTF::Vector;
-using WTF::deleteAllValues;
-
-#endif // VECTOR_H
+#endif // QV4REGEXP_H

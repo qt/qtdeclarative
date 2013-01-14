@@ -52,10 +52,10 @@
 #include "qv4propertydescriptor.h"
 #include "qv4propertytable.h"
 #include "qv4objectiterator.h"
+#include "qv4regexp.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
-#include <QtCore/QRegularExpression>
 #include <QtCore/QScopedPointer>
 #include <cstdio>
 #include <cassert>
@@ -362,10 +362,10 @@ struct IsFiniteFunction: FunctionObject
 };
 
 struct RegExpObject: Object {
-    QRegularExpression value;
+    RefPtr<RegExp> value;
     Value lastIndex;
     bool global;
-    RegExpObject(const QRegularExpression &value, bool global): value(value), lastIndex(Value::fromInt32(0)), global(global) {}
+    RegExpObject(PassRefPtr<RegExp> value, bool global): value(value), lastIndex(Value::fromInt32(0)), global(global) {}
     virtual QString className() { return QStringLiteral("RegExp"); }
     virtual RegExpObject *asRegExpObject() { return this; }
     virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty);

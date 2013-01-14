@@ -6,3 +6,4 @@ udis86_itab.*
 *.pro.user
 *.bc
 *.ll
+RegExpJitTables.h

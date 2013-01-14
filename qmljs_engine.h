@@ -46,6 +46,9 @@
 #include <qmljs_environment.h>
 #include <setjmp.h>
 
+#include <wtf/PassRefPtr.h>
+#include <wtf/BumpPointerAllocator.h>
+
 namespace QQmlJS {
 
 namespace Debugging {
@@ -88,12 +91,15 @@ struct SyntaxErrorPrototype;
 struct TypeErrorPrototype;
 struct URIErrorPrototype;
 
+class RegExp;
+
 struct ExecutionEngine
 {
     MemoryManager *memoryManager;
     EvalISelFactory *iselFactory;
     ExecutionContext *current;
     ExecutionContext *rootContext;
+    WTF::BumpPointerAllocator bumperPointerAllocator; // Used by Yarr Regex engine.
 
     Debugging::Debugger *debugger;
 
@@ -195,7 +201,7 @@ struct ExecutionEngine
     FunctionObject *newDateCtor(ExecutionContext *ctx);
 
     RegExpObject *newRegExpObject(const QString &pattern, int flags);
-    RegExpObject *newRegExpObject(const QRegularExpression &re, bool global);
+    RegExpObject *newRegExpObject(PassRefPtr<RegExp> re, bool global);
     FunctionObject *newRegExpCtor(ExecutionContext *ctx);
 
     Object *newErrorObject(const Value &value);

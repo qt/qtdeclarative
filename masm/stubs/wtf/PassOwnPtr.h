@@ -43,7 +43,30 @@
 
 #include <qscopedpointer.h>
 
-#define OwnPtr QScopedPointer
+template <typename T> class PassOwnPtr;
+template <typename PtrType> PassOwnPtr<PtrType> adoptPtr(PtrType*);
+
+template <typename T>
+struct OwnPtr : public QScopedPointer<T>
+{
+    OwnPtr() {}
+    OwnPtr(const PassOwnPtr<T> &ptr)
+        : QScopedPointer<T>(ptr.leakRef())
+    {}
+
+    OwnPtr& operator=(const OwnPtr<T>& other)
+    {
+        this->reset(const_cast<OwnPtr<T> &>(other).take());
+        return *this;
+    }
+
+    T* get() const { return this->data(); }
+
+    PassOwnPtr<T> release()
+    {
+        return adoptPtr(this->take());
+    }
+};
 
 template <typename T>
 class PassOwnPtr {

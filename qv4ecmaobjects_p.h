@@ -295,7 +295,7 @@ struct RegExpCtor: FunctionObject
 
 struct RegExpPrototype: RegExpObject
 {
-    RegExpPrototype(): RegExpObject(QRegularExpression(), false) {}
+    RegExpPrototype(): RegExpObject(RegExp::create(0, QString()), false) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
     static Value method_exec(ExecutionContext *ctx);
