@@ -175,6 +175,7 @@ struct ArrayPrototype: ArrayObject
 
     void init(ExecutionContext *ctx, const Value &ctor);
 
+    static Value method_isArray(ExecutionContext *ctx);
     static Value method_toString(ExecutionContext *ctx);
     static Value method_toLocaleString(ExecutionContext *ctx);
     static Value method_concat(ExecutionContext *ctx);

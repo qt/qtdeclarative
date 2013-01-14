@@ -1575,6 +1575,7 @@ void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
     ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
     ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("isArray"), method_isArray, 1);
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
     defineDefaultProperty(ctx, QStringLiteral("toLocalString"), method_toLocaleString, 0);
@@ -1597,6 +1598,13 @@ void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("filter"), method_filter, 1);
     defineDefaultProperty(ctx, QStringLiteral("reduce"), method_reduce, 1);
     defineDefaultProperty(ctx, QStringLiteral("reduceRight"), method_reduceRight, 1);
+}
+
+Value ArrayPrototype::method_isArray(ExecutionContext *ctx)
+{
+    Value arg = ctx->argument(0);
+    bool isArray = arg.asArrayObject();
+    return Value::fromBoolean(isArray);
 }
 
 Value ArrayPrototype::method_toString(ExecutionContext *ctx)
