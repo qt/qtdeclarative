@@ -136,9 +136,9 @@ struct PropertyDescriptor {
         if (type == Data && !value.sameValue(other->value))
             return false;
         if (type == Accessor) {
-            if ((quintptr)get != 0x1 && get != other->get)
+            if (get != other->get)
                 return false;
-            if ((quintptr)set != 0x1 && set != other->set)
+            if (set != other->set)
                 return false;
         }
         return true;
