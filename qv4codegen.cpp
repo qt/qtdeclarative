@@ -1010,7 +1010,7 @@ bool Codegen::visit(ArrayLiteral *ast)
         for (Elision *elision = ast->elision->next; elision; elision = elision->next)
             ++index;
         // ### the new string leaks
-        move(member(_block->TEMP(t), new QString("length")), _block->CONST(IR::NumberType, index + 1));
+        move(member(_block->TEMP(t), _function->newString(QStringLiteral("length"))), _block->CONST(IR::NumberType, index + 1));
     }
     _expr.code = _block->TEMP(t);
     return false;
