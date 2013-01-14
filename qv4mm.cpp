@@ -123,12 +123,12 @@ Managed *MemoryManager::alloc(std::size_t size)
         goto found;
 
     // try to free up space, otherwise allocate
-    if (!m_d->aggressiveGC)
+    if (!m_d->aggressiveGC) {
         runGC();
-
-    m = m_d->smallItems[pos];
-    if (m)
-        goto found;
+        m = m_d->smallItems[pos];
+        if (m)
+            goto found;
+    }
 
     // no free item available, allocate a new chunk
     {
