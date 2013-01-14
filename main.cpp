@@ -350,10 +350,14 @@ int main(int argc, char *argv[])
         QQmlJS::VM::ExecutionContext *ctx = vm.rootContext;
 
         QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
+        QQmlJS::VM::Object *print = new (ctx->engine->memoryManager) builtins::Print(ctx);
+        print->prototype = ctx->engine->objectPrototype;
         globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
-                                  QQmlJS::VM::Value::fromObject(new (ctx->engine->memoryManager) builtins::Print(ctx)));
+                                  QQmlJS::VM::Value::fromObject(print));
+        QQmlJS::VM::Object *gc = new (ctx->engine->memoryManager) builtins::GC(ctx);
+        gc->prototype = ctx->engine->objectPrototype;
         globalObject->__put__(ctx, vm.identifier(QStringLiteral("gc")),
-                                  QQmlJS::VM::Value::fromObject(new (ctx->engine->memoryManager) builtins::GC(ctx)));
+                                  QQmlJS::VM::Value::fromObject(gc));
 
         bool errorInTestHarness = false;
         if (!qgetenv("IN_TEST_HARNESS").isEmpty())
