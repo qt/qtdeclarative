@@ -78,6 +78,8 @@ private slots:
     void test_grid_animated();
     void test_grid_animated_rightToLeft();
     void test_grid_zero_columns();
+    void test_grid_H_alignment();
+    void test_grid_V_alignment();
     void test_propertychanges();
     void test_repeater();
     void test_flow();
@@ -1414,6 +1416,130 @@ void tst_qquickpositioners::test_grid_zero_columns()
     QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
     QCOMPARE(grid->width(), 170.0);
     QCOMPARE(grid->height(), 60.0);
+
+    delete window;
+}
+
+void tst_qquickpositioners::test_grid_H_alignment()
+{
+    QQuickView *window = createView(testFile("gridtest.qml"));
+
+    window->rootObject()->setProperty("testHAlignment", QQuickGrid::AlignHCenter);
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
+    QVERIFY(four != 0);
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
+    QVERIFY(five != 0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 70.0);
+    QCOMPARE(three->y(), 0.0);
+    QCOMPARE(four->x(), 0.0);
+    QCOMPARE(four->y(), 50.0);
+    QCOMPARE(five->x(), 55.0);
+    QCOMPARE(five->y(), 50.0);
+
+    QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
+    QCOMPARE(grid->width(), 100.0);
+    QCOMPARE(grid->height(), 100.0);
+
+    window->rootObject()->setProperty("testHAlignment", QQuickGrid::AlignRight);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 70.0);
+    QCOMPARE(three->y(), 0.0);
+    QCOMPARE(four->x(), 0.0);
+    QCOMPARE(four->y(), 50.0);
+    QCOMPARE(five->x(), 60.0);
+    QCOMPARE(five->y(), 50.0);
+    QCOMPARE(grid->width(), 100.0);
+    QCOMPARE(grid->height(), 100.0);
+
+    window->rootObject()->setProperty("testRightToLeft", true);
+
+    QCOMPARE(one->x(), 50.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 30.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 0.0);
+    QCOMPARE(three->y(), 0.0);
+    QCOMPARE(four->x(), 50.0);
+    QCOMPARE(four->y(), 50.0);
+    QCOMPARE(five->x(), 30.0);
+    QCOMPARE(five->y(), 50.0);
+    QCOMPARE(grid->width(), 100.0);
+    QCOMPARE(grid->height(), 100.0);
+
+    window->rootObject()->setProperty("testHAlignment", QQuickGrid::AlignHCenter);
+
+    QCOMPARE(one->x(), 50.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 30.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 0.0);
+    QCOMPARE(three->y(), 0.0);
+    QCOMPARE(four->x(), 50.0);
+    QCOMPARE(four->y(), 50.0);
+    QCOMPARE(five->x(), 35.0);
+    QCOMPARE(five->y(), 50.0);
+    QCOMPARE(grid->width(), 100.0);
+    QCOMPARE(grid->height(), 100.0);
+
+    delete window;
+}
+
+void tst_qquickpositioners::test_grid_V_alignment()
+{
+    QQuickView *window = createView(testFile("gridtest.qml"));
+
+    window->rootObject()->setProperty("testVAlignment", QQuickGrid::AlignVCenter);
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
+    QVERIFY(four != 0);
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
+    QVERIFY(five != 0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 70.0);
+    QCOMPARE(three->y(), 15.0);
+    QCOMPARE(four->x(), 0.0);
+    QCOMPARE(four->y(), 50.0);
+    QCOMPARE(five->x(), 50.0);
+    QCOMPARE(five->y(), 70.0);
+
+    window->rootObject()->setProperty("testVAlignment", QQuickGrid::AlignBottom);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 70.0);
+    QCOMPARE(three->y(), 30.0);
+    QCOMPARE(four->x(), 0.0);
+    QCOMPARE(four->y(), 50.0);
+    QCOMPARE(five->x(), 50.0);
+    QCOMPARE(five->y(), 90.0);
 
     delete window;
 }

@@ -222,6 +222,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #ifndef QT_NO_ACCESSIBILITY
     qmlRegisterUncreatableType<QQuickAccessibleAttached>("QtQuick", 2, 0, "Accessible",QQuickAccessibleAttached::tr("Accessible is only available via attached properties"));
 #endif
+
+    qmlRegisterType<QQuickGrid, 1>(uri, 2, 1, "Grid");
 }
 
 void QQuickItemsModule::defineModule()
