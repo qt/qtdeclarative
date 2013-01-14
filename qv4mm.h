@@ -91,7 +91,6 @@ public:
 
     void setEnableGC(bool enableGC);
     void setExecutionEngine(ExecutionEngine *engine);
-    void setStringPool(StringPool *stringPool);
 
     void dumpStats() const;
 
