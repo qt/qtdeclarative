@@ -84,6 +84,10 @@ bool Value::sameValue(Value other) {
         return true;
     if (isString() && other.isString())
         return stringValue()->isEqualTo(other.stringValue());
+    if (isInteger() && int_32 == 0 && other.dbl == 0)
+        return true;
+    if (dbl == 0 && other.isInteger() && other.int_32 == 0)
+        return true;
     return false;
 }
 
