@@ -55,9 +55,11 @@ struct ObjectIterator
     enum Flags {
         NoFlags = 0,
         EnumberableOnly = 0x1,
-        WithProtoChain = 0x2
+        WithProtoChain = 0x2,
+        CurrentIsString = 0x4
     };
 
+    ExecutionContext *context;
     Object *object;
     Object *current;
     SparseArrayNode *arrayNode;
@@ -65,10 +67,10 @@ struct ObjectIterator
     uint tableIndex;
     uint flags;
 
-    ObjectIterator(Object *o, uint flags);
+    ObjectIterator(ExecutionContext *context, Object *o, uint flags);
     PropertyDescriptor *next(String **name, uint *index);
     Value nextPropertyName();
-    Value nextPropertyNameAsString(ExecutionContext *context);
+    Value nextPropertyNameAsString();
 };
 
 }

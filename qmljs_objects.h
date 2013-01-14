@@ -171,13 +171,12 @@ protected:
 };
 
 struct ForEachIteratorObject: Object {
-    ExecutionContext *context;
     ObjectIterator it;
     ForEachIteratorObject(ExecutionContext *ctx, Object *o)
-        : context(ctx), it(o, ObjectIterator::EnumberableOnly|ObjectIterator::WithProtoChain) {}
+        : it(ctx, o, ObjectIterator::EnumberableOnly|ObjectIterator::WithProtoChain) {}
     virtual QString className() { return QStringLiteral("__ForEachIteratorObject"); }
 
-    Value nextPropertyName() { return it.nextPropertyNameAsString(context); }
+    Value nextPropertyName() { return it.nextPropertyNameAsString(); }
 
 protected:
     virtual void getCollectables(QVector<Object *> &objects);

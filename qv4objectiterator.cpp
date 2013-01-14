@@ -44,14 +44,17 @@
 namespace QQmlJS {
 namespace VM {
 
-ObjectIterator::ObjectIterator(Object *o, uint flags)
-    : object(o)
+ObjectIterator::ObjectIterator(ExecutionContext *context, Object *o, uint flags)
+    : context(context)
+    , object(o)
     , current(o)
     , arrayNode(0)
     , arrayIndex(0)
     , tableIndex(0)
     , flags(flags)
 {
+    if (current && current->asStringObject())
+        this->flags |= CurrentIsString;
 }
 
 PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
@@ -62,6 +65,21 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
     while (1) {
         if (!current)
             break;
+
+        if (flags & CurrentIsString) {
+            StringObject *s = static_cast<StringObject *>(current);
+            uint slen = s->value.stringValue()->toQString().length();
+            while (arrayIndex < slen) {
+                *index = arrayIndex;
+                ++arrayIndex;
+                return s->__getOwnProperty__(context, *index);
+            }
+            flags &= ~CurrentIsString;
+            arrayNode = current->array.sparseBegin();
+            // iterate until we're past the end of the string
+            while (arrayNode && arrayNode->key() < slen)
+                arrayNode = arrayNode->nextNode();
+        }
 
         if (!arrayIndex)
             arrayNode = current->array.sparseBegin();
@@ -85,7 +103,7 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
         while (arrayIndex < current->array.length()) {
             p = current->array.at(arrayIndex);
             ++arrayIndex;
-            if (p && (!(flags & EnumberableOnly) || p->isEnumerable())) {
+            if (p && p->type != PropertyDescriptor::Generic && (!(flags & EnumberableOnly) || p->isEnumerable())) {
                 *index = arrayIndex - 1;
                 return p;
             }
@@ -96,6 +114,12 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
                 current = current->prototype;
             else
                 current = 0;
+            if (current && current->asStringObject())
+                flags |= CurrentIsString;
+            else
+                flags &= ~CurrentIsString;
+
+
             arrayIndex = 0;
             tableIndex = 0;
             continue;
@@ -124,7 +148,7 @@ Value ObjectIterator::nextPropertyName()
     return Value::nullValue();
 }
 
-Value ObjectIterator::nextPropertyNameAsString(ExecutionContext *context)
+Value ObjectIterator::nextPropertyNameAsString()
 {
     uint index;
     String *name;

@@ -600,9 +600,9 @@ Value ObjectPrototype::method_getOwnPropertyNames(ExecutionContext *ctx)
 
     ArrayObject *array = ctx->engine->newArrayObject(ctx)->asArrayObject();
     Array &a = array->array;
-    ObjectIterator it(O, ObjectIterator::NoFlags);
+    ObjectIterator it(ctx, O, ObjectIterator::NoFlags);
     while (1) {
-        Value v = it.nextPropertyNameAsString(ctx);
+        Value v = it.nextPropertyNameAsString();
         if (v.isNull())
             break;
         a.push_back(v);
@@ -656,7 +656,7 @@ Value ObjectPrototype::method_defineProperties(ExecutionContext *ctx)
 
     Object *o = ctx->argument(1).toObject(ctx).objectValue();
 
-    ObjectIterator it(o, ObjectIterator::EnumberableOnly);
+    ObjectIterator it(ctx, o, ObjectIterator::EnumberableOnly);
     while (1) {
         uint index;
         String *name;
@@ -682,7 +682,7 @@ Value ObjectPrototype::method_seal(ExecutionContext *ctx)
     Object *o = ctx->argument(0).objectValue();
     o->extensible = false;
 
-    ObjectIterator it(o, ObjectIterator::NoFlags);
+    ObjectIterator it(ctx, o, ObjectIterator::NoFlags);
     while (1) {
         uint index;
         String *name;
@@ -702,7 +702,7 @@ Value ObjectPrototype::method_freeze(ExecutionContext *ctx)
     Object *o = ctx->argument(0).objectValue();
     o->extensible = false;
 
-    ObjectIterator it(o, ObjectIterator::NoFlags);
+    ObjectIterator it(ctx, o, ObjectIterator::NoFlags);
     while (1) {
         uint index;
         String *name;
@@ -735,7 +735,7 @@ Value ObjectPrototype::method_isSealed(ExecutionContext *ctx)
     if (o->extensible)
         return Value::fromBoolean(false);
 
-    ObjectIterator it(o, ObjectIterator::NoFlags);
+    ObjectIterator it(ctx, o, ObjectIterator::NoFlags);
     while (1) {
         uint index;
         String *name;
@@ -757,7 +757,7 @@ Value ObjectPrototype::method_isFrozen(ExecutionContext *ctx)
     if (o->extensible)
         return Value::fromBoolean(false);
 
-    ObjectIterator it(o, ObjectIterator::NoFlags);
+    ObjectIterator it(ctx, o, ObjectIterator::NoFlags);
     while (1) {
         uint index;
         String *name;
@@ -788,7 +788,7 @@ Value ObjectPrototype::method_keys(ExecutionContext *ctx)
 
     ArrayObject *a = ctx->engine->newArrayObject(ctx);
 
-    ObjectIterator it(o, ObjectIterator::EnumberableOnly);
+    ObjectIterator it(ctx, o, ObjectIterator::EnumberableOnly);
     while (1) {
         uint index;
         String *name;
