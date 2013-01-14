@@ -518,72 +518,23 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
         return true;
     }
 
-    // clause 5
-    if (desc->isEmpty())
-        return true;
-
-    // clause 6
-    if (desc->isSubset(current))
-        return true;
-
-    // clause 7
-    if (!current->isConfigurable()) {
-        if (desc->isConfigurable())
-            goto reject;
-        if (desc->enumberable != PropertyDescriptor::Undefined && desc->enumberable != current->enumberable)
-            goto reject;
-    }
-
-    // clause 8
-    if (desc->isGeneric())
-        goto accept;
-
-    // clause 9
-    if (current->isData() != desc->isData()) {
-        // 9a
-        if (!current->isConfigurable())
-            goto reject;
-        if (current->isData()) {
-            // 9b
-            current->type = PropertyDescriptor::Accessor;
-            current->writable = PropertyDescriptor::Undefined;
-            current->get = 0;
-            current->set = 0;
-        } else {
-            // 9c
-            current->type = PropertyDescriptor::Data;
-            current->writable = PropertyDescriptor::Disabled;
-            current->value = Value::undefinedValue();
-        }
-    } else if (current->isData() && desc->isData()) { // clause 10
-        if (!current->isConfigurable() && !current->isWritable()) {
-            if (desc->isWritable() || !current->value.sameValue(desc->value))
-                goto reject;
-        }
-    } else { // clause 10
-        assert(current->isAccessor() && desc->isAccessor());
-        if (!current->isConfigurable()) {
-            if (((quintptr)desc->get > 0x1 && current->get != desc->get) ||
-                ((quintptr)desc->set > 0x1 && current->set != desc->set))
-                goto reject;
-        }
-    }
-
-  accept:
-
-    *current += *desc;
-    return true;
-  reject:
-    qDebug() << "___put__ rejected" << name->toQString();
-    if (ctx->strictMode)
-        __qmljs_throw_type_error(ctx);
-    return false;
+    return __defineOwnProperty__(ctx, current, desc);
+reject:
+  if (ctx->strictMode)
+      __qmljs_throw_type_error(ctx);
+  return false;
 }
 
 bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, PropertyDescriptor *desc)
 {
+    PropertyDescriptor *current;
+
+    // 15.4.5.1, 4b
+    if (isArray && index >= array.length() && !array.getLengthProperty()->isWritable())
+        goto reject;
+
     // Clause 1
-    PropertyDescriptor *current = __getOwnProperty__(ctx, index);
+    current = __getOwnProperty__(ctx, index);
     if (!current) {
         // clause 3
         if (!extensible)
@@ -595,6 +546,15 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, PropertyDe
         return true;
     }
 
+    return __defineOwnProperty__(ctx, current, desc);
+reject:
+  if (ctx->strictMode)
+      __qmljs_throw_type_error(ctx);
+  return false;
+}
+
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *current, PropertyDescriptor *desc)
+{
     // clause 5
     if (desc->isEmpty())
         return true;
@@ -640,8 +600,10 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, PropertyDe
     } else { // clause 10
         assert(current->isAccessor() && desc->isAccessor());
         if (!current->isConfigurable()) {
-            if (((quintptr)desc->get > 0x1 && current->get != desc->get) ||
-                ((quintptr)desc->set > 0x1 && current->set != desc->set))
+            if ((!current->get && (quintptr)desc->get > 0x1) ||
+                (current->get && current->get != desc->get) ||
+                (!current->set && (quintptr)desc->set > 0x1) ||
+                (current->set && current->set != desc->set))
                 goto reject;
         }
     }
@@ -651,11 +613,11 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, PropertyDe
     *current += *desc;
     return true;
   reject:
-    qDebug() << "___put__ rejected index=" << index;
     if (ctx->strictMode)
         __qmljs_throw_type_error(ctx);
     return false;
 }
+
 
 bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, PropertyDescriptor *desc)
 {
