@@ -92,6 +92,7 @@
 #include "qqmlbind_p.h"
 #include "qqmlconnections_p.h"
 #include "qqmltimer_p.h"
+#include "qqmlplatform_p.h"
 #include <private/qquickpackage_p.h>
 #include <private/qqmldelegatemodel_p.h>
 #include <private/qqmlobjectmodel_p.h>
@@ -364,6 +365,36 @@ The following functions are also on the Qt object.
     \li \l{Qt::openUrlExternally()}{Qt.openUrlExternally(string)}
     \li \l{Qt::fontFamilies()}{list<string> Qt.fontFamilies()}
 \endlist
+*/
+
+/*!
+    \qmlproperty object Qt::platform
+    \since QtQml 2.1
+
+    The \c platform object provides info about the underlying platform.
+
+    Its properties are:
+
+    \table
+    \row
+    \li \c platform.os
+    \li
+
+    This read-only property contains the name of the operating system.
+
+    Possible values are:
+
+    \list
+        \li \c "android" - Android
+        \li \c "blackberry" - BlackBerry OS
+        \li \c "ios" - Apple iOS
+        \li \c "linux" - Linux
+        \li \c "mac" - Mac OS X
+        \li \c "unix" - Other Unix-based OS
+        \li \c "windows" - Windows
+        \li \c "wince" - Windows CE
+    \endlist
+    \endtable
 */
 
 /*!

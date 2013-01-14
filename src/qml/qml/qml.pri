@@ -55,7 +55,8 @@ SOURCES += \
     $$PWD/qqmlmemoryprofiler.cpp \
     $$PWD/qqmlconnections.cpp \
     $$PWD/qqmltimer.cpp \
-    $$PWD/qqmlbind.cpp
+    $$PWD/qqmlbind.cpp \
+    $$PWD/qqmlplatform.cpp
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
@@ -131,7 +132,8 @@ HEADERS += \
     $$PWD/qqmlmemoryprofiler_p.h \
     $$PWD/qqmlconnections_p.h \
     $$PWD/qqmltimer_p.h \
-    $$PWD/qqmlbind_p.h
+    $$PWD/qqmlbind_p.h \
+    $$PWD/qqmlplatform_p.h
 
 
 include(parser/parser.pri)
