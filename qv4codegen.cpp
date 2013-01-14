@@ -2196,11 +2196,11 @@ bool Codegen::visit(LocalForStatement *ast)
 
 bool Codegen::visit(ReturnStatement *ast)
 {
-    unwindException(0);
     if (ast->expression) {
         Result expr = expression(ast->expression);
         move(_block->TEMP(_returnAddress), *expr);
     }
+    unwindException(0);
 
     _block->JUMP(_exitBlock);
     return false;
