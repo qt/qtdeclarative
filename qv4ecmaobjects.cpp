@@ -1873,7 +1873,8 @@ Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
     } else
         __qmljs_throw_type_error(ctx);
 
-    return instance->array.indexOf(searchValue, fromIndex, ctx, instance);
+    uint len = instance->isArray ? instance->array.length() : instance->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
+    return instance->array.indexOf(searchValue, fromIndex, len, ctx, instance);
 }
 
 Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)

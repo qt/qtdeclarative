@@ -229,7 +229,7 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *, uint i
 {
     Object *o = this;
     while (o) {
-        PropertyDescriptor *p = array.at(index);
+        PropertyDescriptor *p = o->array.at(index);
         if(p && p->type != PropertyDescriptor::Generic)
             return p;
         o = o->prototype;

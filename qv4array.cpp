@@ -502,19 +502,35 @@ void Array::splice(double start, double deleteCount,
     //        (*to_vector)[st + i] = items.at(i);
 }
 
-Value Array::indexOf(Value v, uint fromIndex, ExecutionContext *ctx, Object *o)
+Value Array::indexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
 {
-    if (sparse) {
-        for (SparseArrayNode *n = sparse->findNode(fromIndex); n; n = n->nextNode()) {
+    bool protoHasArray = false;
+    Object *p = o;
+    while ((p = p->prototype))
+        if (p->array.length())
+            protoHasArray = true;
+
+    if (protoHasArray) {
+        // lets be safe and slow
+        for (uint i = fromIndex; i < endIndex; ++i) {
+            bool exists;
+            Value value = o->__get__(ctx, i, &exists);
+            if (exists && __qmljs_strict_equal(value, v))
+                return Value::fromDouble(i);
+        }
+    } else if (sparse) {
+        for (SparseArrayNode *n = sparse->findNode(fromIndex); n && n->key() < endIndex; n = n->nextNode()) {
             bool exists;
             Value value = o->getValueChecked(ctx, descriptor(n->value), &exists);
             if (exists && __qmljs_strict_equal(value, v))
                 return Value::fromDouble(n->key());
         }
     } else {
-        PropertyDescriptor *pd = values.data();
-        PropertyDescriptor *end = pd + values.size();
-        pd += offset + fromIndex;
+        if (endIndex > len)
+            endIndex = len;
+        PropertyDescriptor *pd = values.data() + offset;
+        PropertyDescriptor *end = pd + endIndex;
+        pd += fromIndex;
         while (pd < end) {
             bool exists;
             Value value = o->getValueChecked(ctx, pd, &exists);
