@@ -620,7 +620,7 @@ Value ObjectPrototype::method_create(ExecutionContext *ctx)
     newObject->prototype = O.objectValue();
 
     Value objValue = Value::fromObject(newObject);
-    if (ctx->argumentCount > 1) {
+    if (ctx->argumentCount > 1 && !ctx->argument(1).isUndefined()) {
         ctx->arguments[0] = objValue;
         method_defineProperties(ctx);
     }
