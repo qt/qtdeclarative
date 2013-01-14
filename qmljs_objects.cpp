@@ -483,9 +483,11 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
 
     if (isArray && name->isEqualTo(ctx->engine->id_length)) {
         PropertyDescriptor *lp = array.getLengthProperty();
+        if (desc->isEmpty() || desc->isSubset(lp))
+            return true;
         if (!lp->isWritable() || desc->type == PropertyDescriptor::Accessor || desc->isConfigurable() || desc->isEnumerable())
             goto reject;
-        bool succeeded = false;
+        bool succeeded = true;
         if (desc->type == PropertyDescriptor::Data) {
             bool ok;
             uint l = desc->value.asArrayLength(ctx, &ok);
