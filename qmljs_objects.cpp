@@ -1179,10 +1179,15 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterC
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(get, set);
         pd.configurable = PropertyDescriptor::Enabled;
         pd.enumberable = PropertyDescriptor::Enabled;
-        for (uint i = 0; i < (uint)formalParameterCount; ++i)
+        uint enumerableParams = qMin(formalParameterCount, actualParameterCount);
+        for (uint i = 0; i < (uint)enumerableParams; ++i)
             __defineOwnProperty__(context, i, &pd);
-        for (uint i = formalParameterCount; i < context->argumentCount; ++i)
-            Object::__put__(context, i, context->arguments[i]);
+        pd.type = PropertyDescriptor::Data;
+        pd.writable = PropertyDescriptor::Enabled;
+        for (uint i = enumerableParams; i < qMin((uint)actualParameterCount, context->argumentCount); ++i) {
+            pd.value = context->argument(i);
+            __defineOwnProperty__(context, i, &pd);
+        }
         defineDefaultProperty(context, QStringLiteral("callee"), Value::fromObject(context->function));
     }
 }
