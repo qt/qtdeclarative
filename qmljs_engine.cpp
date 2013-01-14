@@ -279,9 +279,9 @@ String *ExecutionEngine::newString(const QString &s)
     return stringPool->newString(s);
 }
 
-Object *ExecutionEngine::newStringObject(const Value &value)
+Object *ExecutionEngine::newStringObject(ExecutionContext *ctx, const Value &value)
 {
-    StringObject *object = new (memoryManager) StringObject(value);
+    StringObject *object = new (memoryManager) StringObject(ctx, value);
     object->prototype = stringPrototype;
     return object;
 }

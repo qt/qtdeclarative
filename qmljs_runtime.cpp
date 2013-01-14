@@ -544,7 +544,7 @@ Value __qmljs_new_number_object(ExecutionContext *ctx, double number)
 Value __qmljs_new_string_object(ExecutionContext *ctx, String *string)
 {
     Value value = Value::fromString(string);
-    return Value::fromObject(ctx->engine->newStringObject(value));
+    return Value::fromObject(ctx->engine->newStringObject(ctx, value));
 }
 
 void __qmljs_set_property(ExecutionContext *ctx, Value object, String *name, Value value)
@@ -558,11 +558,10 @@ Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index)
 {
     uint idx = index.asArrayIndex();
     if (object.isString() && idx < UINT_MAX) {
-        const QString s = object.stringValue()->toQString().mid(idx, 1);
-        if (s.isNull())
+        if (idx >= object.stringValue()->toQString().length())
             return Value::undefinedValue();
-        else
-            return Value::fromString(ctx, s);
+        const QString s = object.stringValue()->toQString().mid(idx, 1);
+        return Value::fromString(ctx, s);
     }
 
     if (! object.isObject())

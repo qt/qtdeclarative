@@ -176,7 +176,7 @@ struct ExecutionEngine
     FunctionObject *newObjectCtor(ExecutionContext *ctx);
 
     String *newString(const QString &s);
-    Object *newStringObject(const Value &value);
+    Object *newStringObject(ExecutionContext *ctx, const Value &value);
     FunctionObject *newStringCtor(ExecutionContext *ctx);
 
     Object *newNumberObject(const Value &value);

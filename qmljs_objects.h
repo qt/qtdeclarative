@@ -199,9 +199,12 @@ struct NumberObject: Object {
 
 struct StringObject: Object {
     Value value;
-    StringObject(const Value &value): value(value) {}
+    PropertyDescriptor tmpProperty;
+    StringObject(ExecutionContext *ctx, const Value &value);
     virtual QString className() { return QStringLiteral("String"); }
     virtual StringObject *asStringObject() { return this; }
+
+    virtual PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, uint index);
 };
 
 struct DateObject: Object {

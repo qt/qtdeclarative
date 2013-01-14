@@ -1316,3 +1316,31 @@ void BoundFunction::getCollectables(QVector<Object *> &objects)
         if (Object *o = boundArgs.at(i).asObject())
             objects.append(o);
 }
+
+
+StringObject::StringObject(ExecutionContext *ctx, const Value &value)
+    : value(value)
+{
+    tmpProperty.type = PropertyDescriptor::Data;
+    tmpProperty.enumberable = PropertyDescriptor::Enabled;
+    tmpProperty.writable = PropertyDescriptor::Disabled;
+    tmpProperty.configurable = PropertyDescriptor::Disabled;
+    tmpProperty.value = Value::undefinedValue();
+
+    assert(value.isString());
+    defineReadonlyProperty(ctx->engine->id_length, Value::fromUInt32(value.stringValue()->toQString().length()));
+}
+
+PropertyDescriptor *StringObject::__getOwnProperty__(ExecutionContext *ctx, uint index)
+{
+    PropertyDescriptor *pd = Object::__getOwnProperty__(ctx, index);
+    if (pd)
+        return pd;
+    assert(value.isString());
+    QString str = value.stringValue()->toQString();
+    if (index >= (uint)str.length())
+        return 0;
+    String *result = ctx->engine->newString(str.mid(index, 1));
+    tmpProperty.value = Value::fromString(result);
+    return &tmpProperty;
+}

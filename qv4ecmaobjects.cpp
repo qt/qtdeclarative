@@ -1009,7 +1009,7 @@ Value StringCtor::construct(ExecutionContext *ctx)
         value = Value::fromString(ctx->argument(0).toString(ctx));
     else
         value = Value::fromString(ctx, QString());
-    return Value::fromObject(ctx->engine->newStringObject(value));
+    return Value::fromObject(ctx->engine->newStringObject(ctx, value));
 }
 
 Value StringCtor::call(ExecutionContext *ctx)

@@ -97,7 +97,7 @@ struct StringCtor: FunctionObject
 
 struct StringPrototype: StringObject
 {
-    StringPrototype(ExecutionContext *ctx): StringObject(Value::fromString(ctx, QString())) {}
+    StringPrototype(ExecutionContext *ctx): StringObject(ctx, Value::fromString(ctx, QString())) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
     static QString getThisString(ExecutionContext *ctx);
