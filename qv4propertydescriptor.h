@@ -138,7 +138,6 @@ struct PropertyDescriptor {
         if (type == Accessor) {
             if ((quintptr)get != 0x1 && get != other->get)
                 return false;
-            qDebug() << "isSubset" << set << other->set;
             if ((quintptr)set != 0x1 && set != other->set)
                 return false;
         }
