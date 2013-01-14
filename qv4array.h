@@ -430,27 +430,7 @@ public:
     void initSparse();
 
     uint length() const { return len; }
-    bool setLength(uint l) {
-        if (lengthProperty && !lengthProperty->isWritable())
-            return false;
-        setLengthUnchecked(l);
-        if (len >= 0x100000)
-            initSparse();
-        if (sparse) {
-            SparseArrayNode *it = sparse->lowerBound(l);
-            while (it != sparse->end()) {
-                PropertyDescriptor &pd = values[it->value];
-                pd.type = PropertyDescriptor::Generic;
-                pd.value.tag = Value::_Undefined_Type;
-                pd.value.int_32 = freeList;
-                freeList = it->value;
-                it = sparse->erase(it);
-            }
-        } else if (values.size() > (int)len){
-            values.resize(len);
-        }
-        return true;
-    }
+    bool setLength(uint newLen);
 
     void setLengthProperty(PropertyDescriptor *pd) { lengthProperty = pd; }
     PropertyDescriptor *getLengthProperty() { return lengthProperty; }
@@ -631,6 +611,7 @@ public:
         setLengthUnchecked(len - 1);
     }
 
+    SparseArrayNode *sparseLowerBound(uint idx) { return sparse ? sparse->lowerBound(idx) : 0; }
     SparseArrayNode *sparseBegin() { return sparse ? sparse->begin() : 0; }
     SparseArrayNode *sparseEnd() { return sparse ? sparse->end() : 0; }
 

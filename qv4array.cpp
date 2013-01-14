@@ -604,6 +604,52 @@ void Array::initSparse()
     }
 }
 
+bool Array::setLength(uint newLen) {
+    if (lengthProperty && !lengthProperty->isWritable())
+        return false;
+    uint oldLen = length();
+    bool ok = true;
+    if (newLen < oldLen) {
+        if (sparse) {
+            SparseArrayNode *begin = sparse->lowerBound(newLen);
+            SparseArrayNode *it = sparse->end()->previousNode();
+            while (1) {
+                PropertyDescriptor &pd = values[it->value];
+                if (pd.type != PropertyDescriptor::Generic && !pd.isConfigurable()) {
+                    ok = false;
+                    newLen = it->key() + 1;
+                    break;
+                }
+                pd.type = PropertyDescriptor::Generic;
+                pd.value.tag = Value::_Undefined_Type;
+                pd.value.int_32 = freeList;
+                freeList = it->value;
+                bool brk = (it == begin);
+                SparseArrayNode *prev = it->previousNode();
+                sparse->erase(it);
+                if (brk)
+                    break;
+                it = prev;
+            }
+        } else {
+            PropertyDescriptor *it = values.data() + offset + values.size();
+            const PropertyDescriptor *begin = values.constData() + offset + newLen;
+            while (--it >= begin) {
+                if (it->type != PropertyDescriptor::Generic && !it->isConfigurable()) {
+                    ok = false;
+                    newLen = it - values.data() + offset + 1;
+                    break;
+                }
+            }
+            values.resize(newLen);
+        }
+    } else {
+        if (newLen >= 0x100000)
+            initSparse();
+    }
+    setLengthUnchecked(newLen);
+    return ok;
+}
 
 }
 }

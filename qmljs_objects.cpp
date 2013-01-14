@@ -485,16 +485,18 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, Property
         PropertyDescriptor *lp = array.getLengthProperty();
         if (!lp->isWritable() || desc->type == PropertyDescriptor::Accessor || desc->isConfigurable() || desc->isEnumerable())
             goto reject;
+        bool succeeded = false;
         if (desc->type == PropertyDescriptor::Data) {
             bool ok;
             uint l = desc->value.asArrayLength(ctx, &ok);
             if (!ok)
                 ctx->throwRangeError(desc->value);
-            if (!array.setLength(l))
-                goto reject;
+            succeeded = array.setLength(l);
         }
         if (desc->writable == PropertyDescriptor::Disabled)
             lp->writable = PropertyDescriptor::Disabled;
+        if (!succeeded)
+            goto reject;
         return true;
     }
 
