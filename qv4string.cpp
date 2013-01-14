@@ -89,7 +89,6 @@ uint String::toUInt(bool *ok) const
         return _hashValue;
 
     double d = __qmljs_string_to_number(this);
-    qDebug() << "toUInt" << d;
     uint l = (uint)d;
     if (d == l)
         return l;
