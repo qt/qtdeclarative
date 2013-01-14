@@ -88,10 +88,19 @@ DEFINES += QMLJS_NO_LLVM
 
 }
 
+TESTSCRIPT=$$PWD/tests/test262.py
+V4CMD = $$OUT_PWD/v4
+
 checktarget.target = check
-checktarget.commands = python tests/test262.py --parallel --with-test-expectations --update-expectations
+checktarget.commands = python $$TESTSCRIPT --command=$$V4CMD --parallel --with-test-expectations --update-expectations
 checktarget.depends = all
 QMAKE_EXTRA_TARGETS += checktarget
+
+checkmothtarget.target = check-interpreter
+checkmothtarget.commands = python $$TESTSCRIPT --command=\"$$V4CMD --interpret\" --parallel --with-test-expectations --update-expectations
+checkmothtarget.depends = all
+QMAKE_EXTRA_TARGETS += checkmothtarget
+
 
 include(moth/moth.pri)
 include(masm/masm.pri)
