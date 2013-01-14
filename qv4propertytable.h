@@ -187,9 +187,11 @@ private:
 
         for (int i = 0; i < _propertyCount; ++i) {
             PropertyTableEntry *prop = _properties[i];
-            PropertyTableEntry *&bucket = _buckets[prop->hashValue() % _bucketCount];
-            prop->next = bucket;
-            bucket = prop;
+            if (prop) {
+                PropertyTableEntry *&bucket = _buckets[prop->hashValue() % _bucketCount];
+                prop->next = bucket;
+                bucket = prop;
+            }
         }
     }
 
