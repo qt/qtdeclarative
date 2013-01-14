@@ -558,7 +558,7 @@ Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index)
 {
     uint idx = index.asArrayIndex();
     if (object.isString() && idx < UINT_MAX) {
-        if (idx >= object.stringValue()->toQString().length())
+        if (idx > INT_MAX || (int) idx >= object.stringValue()->toQString().length())
             return Value::undefinedValue();
         const QString s = object.stringValue()->toQString().mid(idx, 1);
         return Value::fromString(ctx, s);

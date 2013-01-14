@@ -526,7 +526,7 @@ Value Array::indexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *c
                 return Value::fromDouble(n->key());
         }
     } else {
-        if (endIndex > values.size())
+        if ((int) endIndex > values.size())
             endIndex = values.size();
         PropertyDescriptor *pd = values.data() + offset;
         PropertyDescriptor *end = pd + endIndex;
