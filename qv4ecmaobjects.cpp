@@ -577,7 +577,8 @@ Value ObjectPrototype::method_getPrototypeOf(ExecutionContext *ctx)
     if (! o.isObject())
         ctx->throwTypeError();
 
-    return Value::fromObject(o.objectValue()->prototype);
+    Object *p = o.objectValue()->prototype;
+    return p ? Value::fromObject(p) : Value::nullValue();
 }
 
 Value ObjectPrototype::method_getOwnPropertyDescriptor(ExecutionContext *ctx)
