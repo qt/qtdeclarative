@@ -121,12 +121,12 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     functionPrototype->prototype = objectPrototype;
     regExpPrototype->prototype = objectPrototype;
     errorPrototype->prototype = objectPrototype;
-    evalErrorPrototype->prototype = errorPrototype;
-    rangeErrorPrototype->prototype = errorPrototype;
-    referenceErrorPrototype->prototype = errorPrototype;
-    syntaxErrorPrototype->prototype = errorPrototype;
-    typeErrorPrototype->prototype = errorPrototype;
-    uRIErrorPrototype->prototype = errorPrototype;
+    evalErrorPrototype->prototype = objectPrototype;
+    rangeErrorPrototype->prototype = objectPrototype;
+    referenceErrorPrototype->prototype = objectPrototype;
+    syntaxErrorPrototype->prototype = objectPrototype;
+    typeErrorPrototype->prototype = objectPrototype;
+    uRIErrorPrototype->prototype = objectPrototype;
 
     objectCtor = Value::fromObject(new (memoryManager) ObjectCtor(rootContext));
     stringCtor = Value::fromObject(new (memoryManager) StringCtor(rootContext));
@@ -387,30 +387,22 @@ Object *ExecutionEngine::newErrorObject(const Value &value)
 
 Object *ExecutionEngine::newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message)
 {
-    SyntaxErrorObject *object = new (memoryManager) SyntaxErrorObject(ctx, message);
-    object->prototype = syntaxErrorPrototype;
-    return object;
+    return new (memoryManager) SyntaxErrorObject(ctx, message);
 }
 
 Object *ExecutionEngine::newReferenceErrorObject(ExecutionContext *ctx, const QString &message)
 {
-    ReferenceErrorObject *object = new (memoryManager) ReferenceErrorObject(ctx, message);
-    object->prototype = referenceErrorPrototype;
-    return object;
+    return new (memoryManager) ReferenceErrorObject(ctx, message);
 }
 
 Object *ExecutionEngine::newTypeErrorObject(ExecutionContext *ctx, const QString &message)
 {
-    TypeErrorObject *object = new (memoryManager) TypeErrorObject(ctx, message);
-    object->prototype = typeErrorPrototype;
-    return object;
+    return new (memoryManager) TypeErrorObject(ctx, message);
 }
 
 Object *ExecutionEngine::newRangeErrorObject(ExecutionContext *ctx, const QString &message)
 {
-    RangeErrorObject *object = new (memoryManager) RangeErrorObject(ctx, message);
-    object->prototype = rangeErrorPrototype;
-    return object;
+    return new (memoryManager) RangeErrorObject(ctx, message);
 }
 
 Object *ExecutionEngine::newMathObject(ExecutionContext *ctx)

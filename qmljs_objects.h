@@ -386,24 +386,19 @@ protected:
 };
 
 struct EvalErrorObject: ErrorObject {
-    EvalErrorObject(ExecutionContext *ctx)
-        : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    EvalErrorObject(ExecutionContext *ctx);
     virtual QString className() { return QStringLiteral("EvalError"); }
 };
 
 struct RangeErrorObject: ErrorObject {
-    RangeErrorObject(ExecutionContext *ctx)
-        : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
-    RangeErrorObject(ExecutionContext *ctx, const QString &msg)
-        : ErrorObject(Value::fromString(ctx,msg)) { setNameProperty(ctx); }
+    RangeErrorObject(ExecutionContext *ctx);
+    RangeErrorObject(ExecutionContext *ctx, const QString &msg);
     virtual QString className() { return QStringLiteral("RangeError"); }
 };
 
 struct ReferenceErrorObject: ErrorObject {
-    ReferenceErrorObject(ExecutionContext *ctx)
-        : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
-    ReferenceErrorObject(ExecutionContext *ctx, const QString &msg)
-        : ErrorObject(Value::fromString(ctx,msg)) { setNameProperty(ctx); }
+    ReferenceErrorObject(ExecutionContext *ctx);
+    ReferenceErrorObject(ExecutionContext *ctx, const QString &msg);
     virtual QString className() { return QStringLiteral("ReferenceError"); }
 };
 
@@ -420,16 +415,13 @@ private:
 };
 
 struct TypeErrorObject: ErrorObject {
-    TypeErrorObject(ExecutionContext *ctx)
-        : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
-    TypeErrorObject(ExecutionContext *ctx, const QString &msg)
-        : ErrorObject(Value::fromString(ctx,msg)) { setNameProperty(ctx); }
+    TypeErrorObject(ExecutionContext *ctx);
+    TypeErrorObject(ExecutionContext *ctx, const QString &msg);
     virtual QString className() { return QStringLiteral("TypeError"); }
 };
 
 struct URIErrorObject: ErrorObject {
-    URIErrorObject(ExecutionContext *ctx)
-        : ErrorObject(ctx->argument(0)) { setNameProperty(ctx); }
+    URIErrorObject(ExecutionContext *ctx);
     virtual QString className() { return QStringLiteral("URIError"); }
 };
 

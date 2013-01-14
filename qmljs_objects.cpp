@@ -1153,6 +1153,7 @@ SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *m
     : ErrorObject(ctx->argument(0))
     , msg(message)
 {
+    prototype = ctx->engine->syntaxErrorPrototype;
     if (message)
         value = Value::fromString(message->buildFullMessage(ctx));
     setNameProperty(ctx);
@@ -1343,4 +1344,61 @@ PropertyDescriptor *StringObject::__getOwnProperty__(ExecutionContext *ctx, uint
     String *result = ctx->engine->newString(str.mid(index, 1));
     tmpProperty.value = Value::fromString(result);
     return &tmpProperty;
+}
+
+
+EvalErrorObject::EvalErrorObject(ExecutionContext *ctx)
+    : ErrorObject(ctx->argument(0))
+{
+    setNameProperty(ctx);
+    prototype = ctx->engine->evalErrorPrototype;
+}
+
+RangeErrorObject::RangeErrorObject(ExecutionContext *ctx)
+    : ErrorObject(ctx->argument(0))
+{
+    setNameProperty(ctx);
+    prototype = ctx->engine->rangeErrorPrototype;
+}
+
+RangeErrorObject::RangeErrorObject(ExecutionContext *ctx, const QString &msg)
+    : ErrorObject(Value::fromString(ctx,msg))
+{
+    setNameProperty(ctx);
+    prototype = ctx->engine->rangeErrorPrototype;
+}
+
+ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx)
+    : ErrorObject(ctx->argument(0))
+{
+    setNameProperty(ctx);
+    prototype = ctx->engine->referenceErrorPrototype;
+}
+
+ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx, const QString &msg)
+    : ErrorObject(Value::fromString(ctx,msg))
+{
+    setNameProperty(ctx);
+    prototype = ctx->engine->referenceErrorPrototype;
+}
+
+TypeErrorObject::TypeErrorObject(ExecutionContext *ctx)
+    : ErrorObject(ctx->argument(0))
+{
+    setNameProperty(ctx);
+    prototype = ctx->engine->typeErrorPrototype;
+}
+
+TypeErrorObject::TypeErrorObject(ExecutionContext *ctx, const QString &msg)
+    : ErrorObject(Value::fromString(ctx,msg))
+{
+    setNameProperty(ctx);
+    prototype = ctx->engine->typeErrorPrototype;
+}
+
+URIErrorObject::URIErrorObject(ExecutionContext *ctx)
+    : ErrorObject(ctx->argument(0))
+{
+    setNameProperty(ctx);
+    prototype = ctx->engine->uRIErrorPrototype;
 }
