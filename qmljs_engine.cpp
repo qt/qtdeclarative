@@ -153,12 +153,12 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     dateCtor.objectValue()->prototype = functionPrototype;
     regExpCtor.objectValue()->prototype = functionPrototype;
     errorCtor.objectValue()->prototype = functionPrototype;
-    evalErrorCtor.objectValue()->prototype = errorPrototype;
-    rangeErrorCtor.objectValue()->prototype = errorPrototype;
-    referenceErrorCtor.objectValue()->prototype = errorPrototype;
-    syntaxErrorCtor.objectValue()->prototype = errorPrototype;
-    typeErrorCtor.objectValue()->prototype = errorPrototype;
-    uRIErrorCtor.objectValue()->prototype = errorPrototype;
+    evalErrorCtor.objectValue()->prototype = functionPrototype;
+    rangeErrorCtor.objectValue()->prototype = functionPrototype;
+    referenceErrorCtor.objectValue()->prototype = functionPrototype;
+    syntaxErrorCtor.objectValue()->prototype = functionPrototype;
+    typeErrorCtor.objectValue()->prototype = functionPrototype;
+    uRIErrorCtor.objectValue()->prototype = functionPrototype;
 
     objectPrototype->init(rootContext, objectCtor);
     stringPrototype->init(rootContext, stringCtor);
