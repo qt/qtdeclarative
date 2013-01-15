@@ -67,6 +67,8 @@ private:
     template <int Instr>
     inline ptrdiff_t addInstruction(const InstrData<Instr> &data);
     ptrdiff_t addInstructionHelper(Instr::Type type, Instr &instr);
+    void patchJumpAddresses();
+    uchar *squeezeCode() const;
 
     IR::Function *_function;
     IR::BasicBlock *_block;
@@ -74,8 +76,9 @@ private:
     QHash<IR::BasicBlock *, QVector<ptrdiff_t> > _patches;
     QHash<IR::BasicBlock *, ptrdiff_t> _addrs;
 
-    uchar *_code;
-    uchar *_ccode;
+    uchar *_codeStart;
+    uchar *_codeNext;
+    uchar *_codeEnd;
 };
 
 class ISelFactory: public EvalISelFactory

@@ -265,8 +265,9 @@ InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Modu
     : EvalInstructionSelection(engine, module)
     , _function(0)
     , _block(0)
-    , _code(0)
-    , _ccode(0)
+    , _codeStart(0)
+    , _codeNext(0)
+    , _codeEnd(0)
 {
 }
 
@@ -276,22 +277,23 @@ InstructionSelection::~InstructionSelection()
 
 void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
 {
-    qSwap(_function, function);
-
     IR::BasicBlock *block;
 
     QHash<IR::BasicBlock *, QVector<ptrdiff_t> > patches;
     QHash<IR::BasicBlock *, ptrdiff_t> addrs;
 
-    // FIXME: make the size dynamic. This requires changing the patching.
-    uchar *code = new uchar[getpagesize() * 4000];
-    uchar *ccode = code;
+    int codeSize = 4096;
+    uchar *codeStart = new uchar[codeSize];
+    uchar *codeNext = codeStart;
+    uchar *codeEnd = codeStart + codeSize;
 
+    qSwap(_function, function);
     qSwap(block, _block);
     qSwap(patches, _patches);
     qSwap(addrs, _addrs);
-    qSwap(code, _code);
-    qSwap(ccode, _ccode);
+    qSwap(codeStart, _codeStart);
+    qSwap(codeNext, _codeNext);
+    qSwap(codeEnd, _codeEnd);
 
     CompressTemps().run(_function);
 
@@ -303,38 +305,26 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     addInstruction(push);
 
     foreach (_block, _function->basicBlocks) {
-        _addrs.insert(_block, _ccode - _code);
+        _addrs.insert(_block, _codeNext - _codeStart);
 
         foreach (IR::Stmt *s, _block->statements)
             s->accept(this);
     }
 
-    for (QHash<IR::BasicBlock *, QVector<ptrdiff_t> >::ConstIterator iter = _patches.begin();
-         iter != _patches.end(); ++iter) {
-
-        Q_ASSERT(_addrs.contains(iter.key()));
-        ptrdiff_t target = _addrs.value(iter.key());
-
-        const QVector<ptrdiff_t> &patchList = iter.value();
-        for (int ii = 0; ii < patchList.count(); ++ii) {
-            ptrdiff_t patch = patchList.at(ii);
-
-            *((ptrdiff_t *)(_code + patch)) = target - patch;
-        }
-    }
-
-    qSwap(_function, function);
-    _patches.clear();
-    _addrs.clear();
+    patchJumpAddresses();
 
     vmFunction->code = VME::exec;
-    vmFunction->codeData = _code;
+    vmFunction->codeData = squeezeCode();
 
+    qSwap(_function, function);
     qSwap(block, _block);
     qSwap(patches, _patches);
     qSwap(addrs, _addrs);
-    qSwap(code, _code);
-    qSwap(ccode, _ccode);
+    qSwap(codeStart, _codeStart);
+    qSwap(codeNext, _codeNext);
+    qSwap(codeEnd, _codeEnd);
+
+    delete[] codeStart;
 }
 
 void InstructionSelection::callActivationProperty(IR::Call *c, IR::Temp *temp)
@@ -880,14 +870,14 @@ void InstructionSelection::visitCJump(IR::CJump *s)
     Instruction::CJump jump;
     jump.offset = 0;
     jump.tempIndex = tempIndex;
-    ptrdiff_t tl = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
-    _patches[s->iftrue].append(tl);
+    ptrdiff_t trueLoc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
+    _patches[s->iftrue].append(trueLoc);
 
     if (_block->index + 1 != s->iffalse->index) {
         Instruction::Jump jump;
         jump.offset = 0;
-        ptrdiff_t fl = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
-        _patches[s->iffalse].append(fl);
+        ptrdiff_t falseLoc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
+        _patches[s->iffalse].append(falseLoc);
     }
 }
 
@@ -906,12 +896,48 @@ ptrdiff_t InstructionSelection::addInstructionHelper(Instr::Type type, Instr &in
     instr.common.instructionType = type;
 #endif
 
-    ptrdiff_t ptrOffset = _ccode - _code;
-    int size = Instr::size(type);
+    int instructionSize = Instr::size(type);
+    if (_codeEnd - _codeNext < instructionSize) {
+        int currSize = _codeEnd - _codeStart;
+        uchar *newCode = new uchar[currSize * 2];
+        ::memset(newCode + currSize, 0, currSize);
+        ::memcpy(newCode, _codeStart, currSize);
+        _codeNext = _codeNext - _codeStart + newCode;
+        delete[] _codeStart;
+        _codeStart = newCode;
+        _codeEnd = _codeStart + currSize * 2;
+    }
 
-    ::memcpy(_ccode, reinterpret_cast<const char *>(&instr), size);
-    _ccode += size;
+    ::memcpy(_codeNext, reinterpret_cast<const char *>(&instr), instructionSize);
+    ptrdiff_t ptrOffset = _codeNext - _codeStart;
+    _codeNext += instructionSize;
 
     return ptrOffset;
 }
 
+void InstructionSelection::patchJumpAddresses()
+{
+    typedef QHash<IR::BasicBlock *, QVector<ptrdiff_t> >::ConstIterator PatchIt;
+    for (PatchIt i = _patches.begin(), ei = _patches.end(); i != ei; ++i) {
+        Q_ASSERT(_addrs.contains(i.key()));
+        ptrdiff_t target = _addrs.value(i.key());
+
+        const QVector<ptrdiff_t> &patchList = i.value();
+        for (int ii = 0, eii = patchList.count(); ii < eii; ++ii) {
+            ptrdiff_t patch = patchList.at(ii);
+
+            *((ptrdiff_t *)(_codeStart + patch)) = target - patch;
+        }
+    }
+
+    _patches.clear();
+    _addrs.clear();
+}
+
+uchar *InstructionSelection::squeezeCode() const
+{
+    int codeSize = _codeNext - _codeStart;
+    uchar *squeezed = new uchar[codeSize];
+    ::memcpy(squeezed, _codeStart, codeSize);
+    return squeezed;
+}
