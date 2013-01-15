@@ -50,7 +50,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QQuickChangeSet;
+class QQmlChangeSet;
 
 class QQuickPathViewPrivate;
 class QQuickPathViewAttached;
@@ -216,10 +216,10 @@ private Q_SLOTS:
     void refill();
     void ticked();
     void movementEnding();
-    void modelUpdated(const QQuickChangeSet &changeSet, bool reset);
-    void createdItem(int index, QQuickItem *item);
-    void initItem(int index, QQuickItem *item);
-    void destroyingItem(QQuickItem *item);
+    void modelUpdated(const QQmlChangeSet &changeSet, bool reset);
+    void createdItem(int index, QObject *item);
+    void initItem(int index, QObject *item);
+    void destroyingItem(QObject *item);
     void pathUpdated();
 
 private:

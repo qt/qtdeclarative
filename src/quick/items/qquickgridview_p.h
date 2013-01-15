@@ -50,7 +50,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QQuickVisualModel;
 class QQuickGridViewAttached;
 class QQuickGridViewPrivate;
 class Q_AUTOTEST_EXPORT QQuickGridView : public QQuickItemView
@@ -112,7 +111,7 @@ protected:
     virtual void viewportMoved(Qt::Orientations);
     virtual void keyPressEvent(QKeyEvent *);
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
-    virtual void initItem(int index, QQuickItem *item);
+    virtual void initItem(int index, QObject *item);
 };
 
 class QQuickGridViewAttached : public QQuickItemViewAttached

@@ -96,7 +96,7 @@ private:
 };
 
 
-class QQuickVisualModel;
+class QQmlInstanceModel;
 class QQuickListViewAttached;
 class Q_AUTOTEST_EXPORT QQuickListView : public QQuickItemView
 {
@@ -169,7 +169,7 @@ protected:
     virtual void viewportMoved(Qt::Orientations orient);
     virtual void keyPressEvent(QKeyEvent *);
     virtual void geometryChanged(const QRectF &newGeometry,const QRectF &oldGeometry);
-    virtual void initItem(int index, QQuickItem *item);
+    virtual void initItem(int index, QObject *item);
 };
 
 class QQuickListViewAttached : public QQuickItemViewAttached

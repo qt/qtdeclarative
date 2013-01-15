@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qquicklistcompositor_p.h"
+#include "qqmllistcompositor_p.h"
 
 #include <QtCore/qvarlengtharray.h>
 
@@ -49,12 +49,12 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class QQuickListCompositor
-    \brief The QQuickListCompositor class provides a lookup table for filtered, or re-ordered list
+    \class QQmlListCompositor
+    \brief The QQmlListCompositor class provides a lookup table for filtered, or re-ordered list
     indexes.
     \internal
 
-    QQuickListCompositor is intended as an aid for developing proxy models.  It doesn't however
+    QQmlListCompositor is intended as an aid for developing proxy models.  It doesn't however
     directly proxy a list or model, instead a range of indexes from one or many lists can be
     inserted into the compositor and then categorized and shuffled around and it will manage the
     task of translating from an index in the combined space into an index in a particular list.
@@ -118,15 +118,15 @@ QT_BEGIN_NAMESPACE
 */
 
 static bool qt_verifyMinimal(
-        const QQuickListCompositor::iterator &begin,
-        const QQuickListCompositor::iterator &end)
+        const QQmlListCompositor::iterator &begin,
+        const QQmlListCompositor::iterator &end)
 {
     bool minimal = true;
     int index = 0;
 
-    for (const QQuickListCompositor::Range *range = begin->next; range != *end; range = range->next, ++index) {
+    for (const QQmlListCompositor::Range *range = begin->next; range != *end; range = range->next, ++index) {
         if (range->previous->list == range->list
-                && range->previous->flags == (range->flags & ~QQuickListCompositor::AppendFlag)
+                && range->previous->flags == (range->flags & ~QQmlListCompositor::AppendFlag)
                 && range->previous->end() == range->index) {
             qWarning() << index << "Consecutive ranges";
             qWarning() << *range->previous;
@@ -141,7 +141,7 @@ static bool qt_verifyMinimal(
 #endif
 
 #ifdef QT_QML_VERIFY_INTEGRITY
-static bool qt_printInfo(const QQuickListCompositor &compositor)
+static bool qt_printInfo(const QQmlListCompositor &compositor)
 {
     qWarning() << compositor;
     return true;
@@ -158,14 +158,14 @@ static bool qt_printInfo(const QQuickListCompositor &compositor)
 */
 
 static bool qt_verifyIntegrity(
-        const QQuickListCompositor::iterator &begin,
-        const QQuickListCompositor::iterator &end,
-        const QQuickListCompositor::iterator &cachedIt)
+        const QQmlListCompositor::iterator &begin,
+        const QQmlListCompositor::iterator &end,
+        const QQmlListCompositor::iterator &cachedIt)
 {
     bool valid = true;
 
     int index = 0;
-    QQuickListCompositor::iterator it;
+    QQmlListCompositor::iterator it;
     for (it = begin; *it != *end; *it = it->next) {
         if (it->count == 0 && !it->append()) {
             qWarning() << index << "Empty non-append range";
@@ -175,7 +175,7 @@ static bool qt_verifyIntegrity(
             qWarning() << index << "Negative count";
             valid = false;
         }
-        if (it->list && it->flags != QQuickListCompositor::CacheFlag && it->index < 0) {
+        if (it->list && it->flags != QQmlListCompositor::CacheFlag && it->index < 0) {
             qWarning() << index <<"Negative index";
             valid = false;
         }
@@ -195,7 +195,7 @@ static bool qt_verifyIntegrity(
                 if (groupIndex != cachedIt.index[i]) {
                     qWarning() << index
                             << "invalid cached index"
-                            << QQuickListCompositor::Group(i)
+                            << QQmlListCompositor::Group(i)
                             << "Expected:"
                             << groupIndex
                             << "Actual"
@@ -233,7 +233,7 @@ static bool qt_verifyIntegrity(
 //#define QT_QML_TRACE_LISTCOMPOSITOR(args) qDebug() << m_end.index[1] << m_end.index[0] << Q_FUNC_INFO args;
 #define QT_QML_TRACE_LISTCOMPOSITOR(args)
 
-QQuickListCompositor::iterator &QQuickListCompositor::iterator::operator +=(int difference)
+QQmlListCompositor::iterator &QQmlListCompositor::iterator::operator +=(int difference)
 {
     // Update all indexes to the start of the range.
     decrementIndexes(offset);
@@ -267,7 +267,7 @@ QQuickListCompositor::iterator &QQuickListCompositor::iterator::operator +=(int 
     return *this;
 }
 
-QQuickListCompositor::insert_iterator &QQuickListCompositor::insert_iterator::operator +=(int difference)
+QQmlListCompositor::insert_iterator &QQmlListCompositor::insert_iterator::operator +=(int difference)
 {
     iterator::operator +=(difference);
 
@@ -286,7 +286,7 @@ QQuickListCompositor::insert_iterator &QQuickListCompositor::insert_iterator::op
     Constructs an empty list compositor.
 */
 
-QQuickListCompositor::QQuickListCompositor()
+QQmlListCompositor::QQmlListCompositor()
     : m_end(m_ranges.next, 0, Default, 2)
     , m_cacheIt(m_end)
     , m_groupCount(2)
@@ -300,7 +300,7 @@ QQuickListCompositor::QQuickListCompositor()
     Destroys a list compositor.
 */
 
-QQuickListCompositor::~QQuickListCompositor()
+QQmlListCompositor::~QQmlListCompositor()
 {
     for (Range *next, *range = m_ranges.next; range != &m_ranges; range = next) {
         next = range->next;
@@ -313,7 +313,7 @@ QQuickListCompositor::~QQuickListCompositor()
     of the existing range \a before.
 */
 
-inline QQuickListCompositor::Range *QQuickListCompositor::insert(
+inline QQmlListCompositor::Range *QQmlListCompositor::insert(
         Range *before, void *list, int index, int count, uint flags)
 {
     return new Range(before, list, index, count, flags);
@@ -325,7 +325,7 @@ inline QQuickListCompositor::Range *QQuickListCompositor::insert(
     Returns a pointer to the next range in the compositor.
 */
 
-inline QQuickListCompositor::Range *QQuickListCompositor::erase(
+inline QQmlListCompositor::Range *QQmlListCompositor::erase(
         Range *range)
 {
     Range *next = range->next;
@@ -339,7 +339,7 @@ inline QQuickListCompositor::Range *QQuickListCompositor::erase(
     Sets the number (\a count) of possible groups that items may belong to in a compositor.
 */
 
-void QQuickListCompositor::setGroupCount(int count)
+void QQmlListCompositor::setGroupCount(int count)
 {
     m_groupCount = count;
     m_end = iterator(&m_ranges, 0, Default, m_groupCount);
@@ -350,7 +350,7 @@ void QQuickListCompositor::setGroupCount(int count)
     Returns the number of items that belong to a \a group.
 */
 
-int QQuickListCompositor::count(Group group) const
+int QQmlListCompositor::count(Group group) const
 {
     return m_end.index[group];
 }
@@ -361,7 +361,7 @@ int QQuickListCompositor::count(Group group) const
     The index must be between 0 and count(group) - 1.
 */
 
-QQuickListCompositor::iterator QQuickListCompositor::find(Group group, int index)
+QQmlListCompositor::iterator QQmlListCompositor::find(Group group, int index)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< group << index)
     Q_ASSERT(index >=0 && index < count(group));
@@ -385,9 +385,9 @@ QQuickListCompositor::iterator QQuickListCompositor::find(Group group, int index
     The index must be between 0 and count(group) - 1.
 */
 
-QQuickListCompositor::iterator QQuickListCompositor::find(Group group, int index) const
+QQmlListCompositor::iterator QQmlListCompositor::find(Group group, int index) const
 {
-    return const_cast<QQuickListCompositor *>(this)->find(group, index);
+    return const_cast<QQmlListCompositor *>(this)->find(group, index);
 }
 
 /*!
@@ -402,7 +402,7 @@ QQuickListCompositor::iterator QQuickListCompositor::find(Group group, int index
     The index must be between 0 and count(group) - 1.
 */
 
-QQuickListCompositor::insert_iterator QQuickListCompositor::findInsertPosition(Group group, int index)
+QQmlListCompositor::insert_iterator QQmlListCompositor::findInsertPosition(Group group, int index)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< group << index)
     Q_ASSERT(index >=0 && index <= count(group));
@@ -428,7 +428,7 @@ QQuickListCompositor::insert_iterator QQuickListCompositor::findInsertPosition(G
     in each group.
 */
 
-void QQuickListCompositor::append(
+void QQmlListCompositor::append(
         void *list, int index, int count, uint flags, QVector<Insert> *inserts)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << index << count << flags)
@@ -443,7 +443,7 @@ void QQuickListCompositor::append(
     each group.
 */
 
-void QQuickListCompositor::insert(
+void QQmlListCompositor::insert(
         Group group, int before, void *list, int index, int count, uint flags, QVector<Insert> *inserts)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< group << before << list << index << count << flags)
@@ -458,7 +458,7 @@ void QQuickListCompositor::insert(
     each group.
 */
 
-QQuickListCompositor::iterator QQuickListCompositor::insert(
+QQmlListCompositor::iterator QQmlListCompositor::insert(
         iterator before, void *list, int index, int count, uint flags, QVector<Insert> *inserts)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< before << list << index << count << flags)
@@ -512,7 +512,7 @@ QQuickListCompositor::iterator QQuickListCompositor::insert(
     If supplied the \a inserts list will be populated with insert notifications for affected groups.
 */
 
-void QQuickListCompositor::setFlags(
+void QQmlListCompositor::setFlags(
         Group fromGroup, int from, int count, Group group, int flags, QVector<Insert> *inserts)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< fromGroup << from << count << group << flags)
@@ -526,7 +526,7 @@ void QQuickListCompositor::setFlags(
     If supplied the \a inserts list will be populated with insert notifications for affected groups.
 */
 
-void QQuickListCompositor::setFlags(
+void QQmlListCompositor::setFlags(
         iterator from, int count, Group group, uint flags, QVector<Insert> *inserts)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< from << count << flags)
@@ -622,7 +622,7 @@ void QQuickListCompositor::setFlags(
     If supplied the \a removes list will be populated with remove notifications for affected groups.
 */
 
-void QQuickListCompositor::clearFlags(
+void QQmlListCompositor::clearFlags(
         Group fromGroup, int from, int count, Group group, uint flags, QVector<Remove> *removes)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< fromGroup << from << count << group << flags)
@@ -636,7 +636,7 @@ void QQuickListCompositor::clearFlags(
     If supplied the \a removes list will be populated with remove notifications for affected groups.
 */
 
-void QQuickListCompositor::clearFlags(
+void QQmlListCompositor::clearFlags(
         iterator from, int count, Group group, uint flags, QVector<Remove> *removes)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< from << count << flags)
@@ -730,7 +730,7 @@ void QQuickListCompositor::clearFlags(
     QT_QML_VERIFY_LISTCOMPOSITOR
 }
 
-bool QQuickListCompositor::verifyMoveTo(
+bool QQmlListCompositor::verifyMoveTo(
         Group fromGroup, int from, Group toGroup, int to, int count, Group group) const
 {
     if (group != toGroup) {
@@ -765,7 +765,7 @@ bool QQuickListCompositor::verifyMoveTo(
     of the items moved.
  */
 
-void QQuickListCompositor::move(
+void QQmlListCompositor::move(
         Group fromGroup,
         int from,
         Group toGroup,
@@ -940,7 +940,7 @@ void QQuickListCompositor::move(
     Clears the contents of a compositor.
 */
 
-void QQuickListCompositor::clear()
+void QQmlListCompositor::clear()
 {
     QT_QML_TRACE_LISTCOMPOSITOR( )
     for (Range *range = m_ranges.next; range != &m_ranges; range = erase(range)) {}
@@ -948,10 +948,10 @@ void QQuickListCompositor::clear()
     m_cacheIt = m_end;
 }
 
-void QQuickListCompositor::listItemsInserted(
+void QQmlListCompositor::listItemsInserted(
         QVector<Insert> *translatedInsertions,
         void *list,
-        const QVector<QQuickChangeSet::Insert> &insertions,
+        const QVector<QQmlChangeSet::Insert> &insertions,
         const QVector<MovedFlags> *movedFlags)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << insertions)
@@ -966,7 +966,7 @@ void QQuickListCompositor::listItemsInserted(
             it.incrementIndexes(it->count);
             continue;
         }
-        foreach (const QQuickChangeSet::Insert &insertion, insertions) {
+        foreach (const QQmlChangeSet::Insert &insertion, insertions) {
             int offset = insertion.index - it->index;
             if ((offset > 0 && offset < it->count)
                     || (offset == 0 && it->prepend())
@@ -1058,23 +1058,23 @@ void QQuickListCompositor::listItemsInserted(
     groups.
 */
 
-void QQuickListCompositor::listItemsInserted(
+void QQmlListCompositor::listItemsInserted(
         void *list, int index, int count, QVector<Insert> *translatedInsertions)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << index << count)
     Q_ASSERT(count > 0);
 
-    QVector<QQuickChangeSet::Insert> insertions;
-    insertions.append(QQuickChangeSet::Insert(index, count));
+    QVector<QQmlChangeSet::Insert> insertions;
+    insertions.append(QQmlChangeSet::Insert(index, count));
 
     listItemsInserted(translatedInsertions, list, insertions);
 }
 
-void QQuickListCompositor::listItemsRemoved(
+void QQmlListCompositor::listItemsRemoved(
         QVector<Remove> *translatedRemovals,
         void *list,
-        QVector<QQuickChangeSet::Remove> *removals,
-        QVector<QQuickChangeSet::Insert> *insertions,
+        QVector<QQmlChangeSet::Remove> *removals,
+        QVector<QQmlChangeSet::Insert> *insertions,
         QVector<MovedFlags> *movedFlags)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << *removals)
@@ -1086,7 +1086,7 @@ void QQuickListCompositor::listItemsRemoved(
             continue;
         }
         bool removed = false;
-        for (QVector<QQuickChangeSet::Remove>::iterator removal = removals->begin();
+        for (QVector<QQmlChangeSet::Remove>::iterator removal = removals->begin();
                 !removed && removal != removals->end();
                 ++removal) {
             int relativeIndex = removal->index - it->index;
@@ -1104,7 +1104,7 @@ void QQuickListCompositor::listItemsRemoved(
                 }
                 if (removal->isMove()) {
                     // If the removal was part of a move find the corresponding insert.
-                    QVector<QQuickChangeSet::Insert>::iterator insertion = insertions->begin();
+                    QVector<QQmlChangeSet::Insert>::iterator insertion = insertions->begin();
                     for (; insertion != insertions->end() && insertion->moveId != removal->moveId;
                             ++insertion) {}
                     Q_ASSERT(insertion != insertions->end());
@@ -1114,11 +1114,11 @@ void QQuickListCompositor::listItemsRemoved(
                         // If the remove started before the current range, split it and the
                         // corresponding insert so we're only working with intersecting part.
                         int splitMoveId = ++m_moveId;
-                        removal = removals->insert(removal, QQuickChangeSet::Remove(
+                        removal = removals->insert(removal, QQmlChangeSet::Remove(
                                 removal->index, -relativeIndex, splitMoveId));
                         ++removal;
                         removal->count -= -relativeIndex;
-                        insertion = insertions->insert(insertion, QQuickChangeSet::Insert(
+                        insertion = insertions->insert(insertion, QQmlChangeSet::Insert(
                                 insertion->index, -relativeIndex, splitMoveId));
                         ++insertion;
                         insertion->index += -relativeIndex;
@@ -1135,10 +1135,10 @@ void QQuickListCompositor::listItemsRemoved(
                         if (removeCount < removal->count) {
                             // If the remove doesn't encompass all of the current range,
                             // split it and the corresponding insert.
-                            removal = removals->insert(removal, QQuickChangeSet::Remove(
+                            removal = removals->insert(removal, QQmlChangeSet::Remove(
                                     removal->index, removeCount, translatedRemoval.moveId));
                             ++removal;
-                            insertion = insertions->insert(insertion, QQuickChangeSet::Insert(
+                            insertion = insertions->insert(insertion, QQmlChangeSet::Insert(
                                     insertion->index, removeCount, translatedRemoval.moveId));
                             ++insertion;
 
@@ -1247,14 +1247,14 @@ void QQuickListCompositor::listItemsRemoved(
 */
 
 
-void QQuickListCompositor::listItemsRemoved(
+void QQmlListCompositor::listItemsRemoved(
         void *list, int index, int count, QVector<Remove> *translatedRemovals)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << index << count)
     Q_ASSERT(count >= 0);
 
-    QVector<QQuickChangeSet::Remove> removals;
-    removals.append(QQuickChangeSet::Remove(index, count));
+    QVector<QQmlChangeSet::Remove> removals;
+    removals.append(QQmlChangeSet::Remove(index, count));
     listItemsRemoved(translatedRemovals, list, &removals, 0, 0);
 }
 
@@ -1269,7 +1269,7 @@ void QQuickListCompositor::listItemsRemoved(
     notifications for the affected groups.
 */
 
-void QQuickListCompositor::listItemsMoved(
+void QQmlListCompositor::listItemsMoved(
         void *list,
         int from,
         int to,
@@ -1280,20 +1280,20 @@ void QQuickListCompositor::listItemsMoved(
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << from << to << count)
     Q_ASSERT(count >= 0);
 
-    QVector<QQuickChangeSet::Remove> removals;
-    QVector<QQuickChangeSet::Insert> insertions;
+    QVector<QQmlChangeSet::Remove> removals;
+    QVector<QQmlChangeSet::Insert> insertions;
     QVector<MovedFlags> movedFlags;
-    removals.append(QQuickChangeSet::Remove(from, count, 0));
-    insertions.append(QQuickChangeSet::Insert(to, count, 0));
+    removals.append(QQmlChangeSet::Remove(from, count, 0));
+    insertions.append(QQmlChangeSet::Insert(to, count, 0));
 
     listItemsRemoved(translatedRemovals, list, &removals, &insertions, &movedFlags);
     listItemsInserted(translatedInsertions, list, insertions, &movedFlags);
 }
 
-void QQuickListCompositor::listItemsChanged(
+void QQmlListCompositor::listItemsChanged(
         QVector<Change> *translatedChanges,
         void *list,
-        const QVector<QQuickChangeSet::Change> &changes)
+        const QVector<QQmlChangeSet::Change> &changes)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << changes)
     for (iterator it(m_ranges.next, 0, Default, m_groupCount); *it != &m_ranges; *it = it->next) {
@@ -1303,7 +1303,7 @@ void QQuickListCompositor::listItemsChanged(
         } else if (!it->inGroup()) {
             continue;
         }
-        foreach (const QQuickChangeSet::Change &change, changes) {
+        foreach (const QQmlChangeSet::Change &change, changes) {
             const int offset = change.index - it->index;
             if (offset + change.count > 0 && offset < it->count) {
                 const int changeOffset = qMax(0, offset);
@@ -1329,29 +1329,29 @@ void QQuickListCompositor::listItemsChanged(
     affected groups.
 */
 
-void QQuickListCompositor::listItemsChanged(
+void QQmlListCompositor::listItemsChanged(
         void *list, int index, int count, QVector<Change> *translatedChanges)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << index << count)
     Q_ASSERT(count >= 0);
-    QVector<QQuickChangeSet::Change> changes;
-    changes.append(QQuickChangeSet::Change(index, count));
+    QVector<QQmlChangeSet::Change> changes;
+    changes.append(QQmlChangeSet::Change(index, count));
     listItemsChanged(translatedChanges, list, changes);
 }
 
-void QQuickListCompositor::transition(
+void QQmlListCompositor::transition(
         Group from,
         Group to,
-        QVector<QQuickChangeSet::Remove> *removes,
-        QVector<QQuickChangeSet::Insert> *inserts)
+        QVector<QQmlChangeSet::Remove> *removes,
+        QVector<QQmlChangeSet::Insert> *inserts)
 {
     int removeCount = 0;
     for (iterator it(m_ranges.next, 0, Default, m_groupCount); *it != &m_ranges; *it = it->next) {
         if (it == from && it != to) {
-            removes->append(QQuickChangeSet::Remove(it.index[from]- removeCount, it->count));
+            removes->append(QQmlChangeSet::Remove(it.index[from]- removeCount, it->count));
             removeCount += it->count;
         } else if (it != from && it == to) {
-            inserts->append(QQuickChangeSet::Insert(it.index[to], it->count));
+            inserts->append(QQmlChangeSet::Insert(it.index[to], it->count));
         }
         it.incrementIndexes(it->count);
     }
@@ -1362,11 +1362,11 @@ void QQuickListCompositor::transition(
     Writes the name of \a group to \a debug.
 */
 
-QDebug operator <<(QDebug debug, const QQuickListCompositor::Group &group)
+QDebug operator <<(QDebug debug, const QQmlListCompositor::Group &group)
 {
     switch (group) {
-    case QQuickListCompositor::Cache:   return debug << "Cache";
-    case QQuickListCompositor::Default: return debug << "Default";
+    case QQmlListCompositor::Cache:   return debug << "Cache";
+    case QQmlListCompositor::Default: return debug << "Default";
     default: return (debug.nospace() << "Group" << int(group)).space();
     }
 
@@ -1377,7 +1377,7 @@ QDebug operator <<(QDebug debug, const QQuickListCompositor::Group &group)
     Writes the contents of \a range to \a debug.
 */
 
-QDebug operator <<(QDebug debug, const QQuickListCompositor::Range &range)
+QDebug operator <<(QDebug debug, const QQmlListCompositor::Range &range)
 {
     (debug.nospace()
             << "Range("
@@ -1387,11 +1387,11 @@ QDebug operator <<(QDebug debug, const QQuickListCompositor::Range &range)
             << (range.isUnresolved() ? 'U' : '0')
             << (range.append() ? 'A' : '0')
             << (range.prepend() ? 'P' : '0');
-    for (int i = QQuickListCompositor::MaximumGroupCount - 1; i >= 2; --i)
+    for (int i = QQmlListCompositor::MaximumGroupCount - 1; i >= 2; --i)
         debug << (range.inGroup(i) ? '1' : '0');
     return (debug
-            << (range.inGroup(QQuickListCompositor::Default) ? 'D' : '0')
-            << (range.inGroup(QQuickListCompositor::Cache) ? 'C' : '0'));
+            << (range.inGroup(QQmlListCompositor::Default) ? 'D' : '0')
+            << (range.inGroup(QQmlListCompositor::Cache) ? 'C' : '0'));
 }
 
 static void qt_print_indexes(QDebug &debug, int count, const int *indexes)
@@ -1405,21 +1405,21 @@ static void qt_print_indexes(QDebug &debug, int count, const int *indexes)
     Writes the contents of \a it to \a debug.
 */
 
-QDebug operator <<(QDebug debug, const QQuickListCompositor::iterator &it)
+QDebug operator <<(QDebug debug, const QQmlListCompositor::iterator &it)
 {
     (debug.nospace() << "iterator(" << it.group).space() << "offset:" << it.offset;
     qt_print_indexes(debug, it.groupCount, it.index);
     return ((debug << **it).nospace() << ')').space();
 }
 
-static QDebug qt_print_change(QDebug debug, const char *name, const QQuickListCompositor::Change &change)
+static QDebug qt_print_change(QDebug debug, const char *name, const QQmlListCompositor::Change &change)
 {
     debug.nospace() << name << '(' << change.moveId << ' ' << change.count << ' ';
-    for (int i = QQuickListCompositor::MaximumGroupCount - 1; i >= 2; --i)
+    for (int i = QQmlListCompositor::MaximumGroupCount - 1; i >= 2; --i)
         debug << (change.inGroup(i) ? '1' : '0');
-    debug << (change.inGroup(QQuickListCompositor::Default) ? 'D' : '0')
-            << (change.inGroup(QQuickListCompositor::Cache) ? 'C' : '0');
-    int i = QQuickListCompositor::MaximumGroupCount - 1;
+    debug << (change.inGroup(QQmlListCompositor::Default) ? 'D' : '0')
+            << (change.inGroup(QQmlListCompositor::Cache) ? 'C' : '0');
+    int i = QQmlListCompositor::MaximumGroupCount - 1;
     for (; i >= 0 && !change.inGroup(i); --i) {}
     for (; i >= 0; --i)
         debug << ' ' << change.index[i];
@@ -1431,7 +1431,7 @@ static QDebug qt_print_change(QDebug debug, const char *name, const QQuickListCo
     Writes the contents of \a change to \a debug.
 */
 
-QDebug operator <<(QDebug debug, const QQuickListCompositor::Change &change)
+QDebug operator <<(QDebug debug, const QQmlListCompositor::Change &change)
 {
     return qt_print_change(debug, "Change", change);
 }
@@ -1441,7 +1441,7 @@ QDebug operator <<(QDebug debug, const QQuickListCompositor::Change &change)
     Writes the contents of \a remove to \a debug.
 */
 
-QDebug operator <<(QDebug debug, const QQuickListCompositor::Remove &remove)
+QDebug operator <<(QDebug debug, const QQmlListCompositor::Remove &remove)
 {
     return qt_print_change(debug, "Remove", remove);
 }
@@ -1451,7 +1451,7 @@ QDebug operator <<(QDebug debug, const QQuickListCompositor::Remove &remove)
     Writes the contents of \a insert to \a debug.
 */
 
-QDebug operator <<(QDebug debug, const QQuickListCompositor::Insert &insert)
+QDebug operator <<(QDebug debug, const QQmlListCompositor::Insert &insert)
 {
     return qt_print_change(debug, "Insert", insert);
 }
@@ -1461,14 +1461,14 @@ QDebug operator <<(QDebug debug, const QQuickListCompositor::Insert &insert)
     Writes the contents of \a list to \a debug.
 */
 
-QDebug operator <<(QDebug debug, const QQuickListCompositor &list)
+QDebug operator <<(QDebug debug, const QQmlListCompositor &list)
 {
-    int indexes[QQuickListCompositor::MaximumGroupCount];
-    for (int i = 0; i < QQuickListCompositor::MaximumGroupCount; ++i)
+    int indexes[QQmlListCompositor::MaximumGroupCount];
+    for (int i = 0; i < QQmlListCompositor::MaximumGroupCount; ++i)
         indexes[i] = 0;
-    debug.nospace() << "QQuickListCompositor(";
+    debug.nospace() << "QQmlListCompositor(";
     qt_print_indexes(debug, list.m_groupCount, list.m_end.index);
-    for (QQuickListCompositor::Range *range = list.m_ranges.next; range != &list.m_ranges; range = range->next) {
+    for (QQmlListCompositor::Range *range = list.m_ranges.next; range != &list.m_ranges; range = range->next) {
         (debug << '\n').space();
         qt_print_indexes(debug, list.m_groupCount, indexes);
         debug << ' ' << *range;

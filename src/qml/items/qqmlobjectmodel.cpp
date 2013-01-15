@@ -39,14 +39,13 @@
 **
 ****************************************************************************/
 
-#include "qquickvisualitemmodel_p.h"
-#include "qquickitem.h"
+#include "qqmlobjectmodel_p.h"
 
 #include <QtCore/qcoreapplication.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlengine.h>
 
-#include <private/qquickchangeset_p.h>
+#include <private/qqmlchangeset_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qobject_p.h>
 
@@ -55,69 +54,69 @@
 
 QT_BEGIN_NAMESPACE
 
-QHash<QObject*, QQuickVisualItemModelAttached*> QQuickVisualItemModelAttached::attachedProperties;
+QHash<QObject*, QQmlObjectModelAttached*> QQmlObjectModelAttached::attachedProperties;
 
 
-class QQuickVisualItemModelPrivate : public QObjectPrivate
+class QQmlObjectModelPrivate : public QObjectPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickVisualItemModel)
+    Q_DECLARE_PUBLIC(QQmlObjectModel)
 public:
     class Item {
     public:
-        Item(QQuickItem *i) : item(i), ref(0) {}
+        Item(QObject *i) : item(i), ref(0) {}
 
         void addRef() { ++ref; }
         bool deref() { return --ref == 0; }
 
-        QQuickItem *item;
+        QObject *item;
         int ref;
     };
 
-    QQuickVisualItemModelPrivate() : QObjectPrivate() {}
+    QQmlObjectModelPrivate() : QObjectPrivate() {}
 
-    static void children_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *item) {
-        static_cast<QQuickVisualItemModelPrivate *>(prop->data)->children.append(Item(item));
-        static_cast<QQuickVisualItemModelPrivate *>(prop->data)->itemAppended();
-        static_cast<QQuickVisualItemModelPrivate *>(prop->data)->emitChildrenChanged();
+    static void children_append(QQmlListProperty<QObject> *prop, QObject *item) {
+        static_cast<QQmlObjectModelPrivate *>(prop->data)->children.append(Item(item));
+        static_cast<QQmlObjectModelPrivate *>(prop->data)->itemAppended();
+        static_cast<QQmlObjectModelPrivate *>(prop->data)->emitChildrenChanged();
     }
 
-    static int children_count(QQmlListProperty<QQuickItem> *prop) {
-        return static_cast<QQuickVisualItemModelPrivate *>(prop->data)->children.count();
+    static int children_count(QQmlListProperty<QObject> *prop) {
+        return static_cast<QQmlObjectModelPrivate *>(prop->data)->children.count();
     }
 
-    static QQuickItem *children_at(QQmlListProperty<QQuickItem> *prop, int index) {
-        return static_cast<QQuickVisualItemModelPrivate *>(prop->data)->children.at(index).item;
+    static QObject *children_at(QQmlListProperty<QObject> *prop, int index) {
+        return static_cast<QQmlObjectModelPrivate *>(prop->data)->children.at(index).item;
     }
 
-    static void children_clear(QQmlListProperty<QQuickItem> *prop) {
-        static_cast<QQuickVisualItemModelPrivate *>(prop->data)->itemCleared(static_cast<QQuickVisualItemModelPrivate *>(prop->data)->children);
-        static_cast<QQuickVisualItemModelPrivate *>(prop->data)->children.clear();
-        static_cast<QQuickVisualItemModelPrivate *>(prop->data)->emitChildrenChanged();
+    static void children_clear(QQmlListProperty<QObject> *prop) {
+        static_cast<QQmlObjectModelPrivate *>(prop->data)->itemCleared(static_cast<QQmlObjectModelPrivate *>(prop->data)->children);
+        static_cast<QQmlObjectModelPrivate *>(prop->data)->children.clear();
+        static_cast<QQmlObjectModelPrivate *>(prop->data)->emitChildrenChanged();
     }
 
     void itemAppended() {
-        Q_Q(QQuickVisualItemModel);
-        QQuickVisualItemModelAttached *attached = QQuickVisualItemModelAttached::properties(children.last().item);
+        Q_Q(QQmlObjectModel);
+        QQmlObjectModelAttached *attached = QQmlObjectModelAttached::properties(children.last().item);
         attached->setIndex(children.count()-1);
-        QQuickChangeSet changeSet;
+        QQmlChangeSet changeSet;
         changeSet.insert(children.count() - 1, 1);
         emit q->modelUpdated(changeSet, false);
         emit q->countChanged();
     }
 
     void itemCleared(const QList<Item> &children) {
-        Q_Q(QQuickVisualItemModel);
+        Q_Q(QQmlObjectModel);
         foreach (const Item &child, children)
             emit q->destroyingItem(child.item);
         emit q->countChanged();
     }
 
     void emitChildrenChanged() {
-        Q_Q(QQuickVisualItemModel);
+        Q_Q(QQmlObjectModel);
         emit q->childrenChanged();
     }
 
-    int indexOf(QQuickItem *item) const {
+    int indexOf(QObject *item) const {
         for (int i = 0; i < children.count(); ++i)
             if (children.at(i).item == item)
                 return i;
@@ -131,7 +130,7 @@ public:
 
 /*!
     \qmltype VisualItemModel
-    \instantiates QQuickVisualItemModel
+    \instantiates QQmlObjectModel
     \inqmlmodule QtQuick 2
     \ingroup qtquick-models
     \brief Defines items to be used added to a view
@@ -167,8 +166,8 @@ public:
 
     \sa {quick/modelviews/visualitemmodel}{VisualItemModel example}
 */
-QQuickVisualItemModel::QQuickVisualItemModel(QObject *parent)
-    : QQuickVisualModel(*(new QQuickVisualItemModelPrivate), parent)
+QQmlObjectModel::QQmlObjectModel(QObject *parent)
+    : QQmlInstanceModel(*(new QQmlObjectModelPrivate), parent)
 {
 }
 
@@ -179,10 +178,10 @@ QQuickVisualItemModel::QQuickVisualItemModel(QObject *parent)
     It is attached to each instance of the delegate.
 */
 
-QQmlListProperty<QQuickItem> QQuickVisualItemModel::children()
+QQmlListProperty<QObject> QQmlObjectModel::children()
 {
-    Q_D(QQuickVisualItemModel);
-    return QQmlListProperty<QQuickItem>(this,
+    Q_D(QQmlObjectModel);
+    return QQmlListProperty<QObject>(this,
                                         d,
                                         d->children_append,
                                         d->children_count,
@@ -195,21 +194,21 @@ QQmlListProperty<QQuickItem> QQuickVisualItemModel::children()
 
     The number of items in the model.  This property is readonly.
 */
-int QQuickVisualItemModel::count() const
+int QQmlObjectModel::count() const
 {
-    Q_D(const QQuickVisualItemModel);
+    Q_D(const QQmlObjectModel);
     return d->children.count();
 }
 
-bool QQuickVisualItemModel::isValid() const
+bool QQmlObjectModel::isValid() const
 {
     return true;
 }
 
-QQuickItem *QQuickVisualItemModel::item(int index, bool)
+QObject *QQmlObjectModel::object(int index, bool)
 {
-    Q_D(QQuickVisualItemModel);
-    QQuickVisualItemModelPrivate::Item &item = d->children[index];
+    Q_D(QQmlObjectModel);
+    QQmlObjectModelPrivate::Item &item = d->children[index];
     item.addRef();
     if (item.ref == 1) {
         emit initItem(index, item.item);
@@ -218,38 +217,34 @@ QQuickItem *QQuickVisualItemModel::item(int index, bool)
     return item.item;
 }
 
-QQuickVisualModel::ReleaseFlags QQuickVisualItemModel::release(QQuickItem *item)
+QQmlInstanceModel::ReleaseFlags QQmlObjectModel::release(QObject *item)
 {
-    Q_D(QQuickVisualItemModel);
+    Q_D(QQmlObjectModel);
     int idx = d->indexOf(item);
     if (idx >= 0) {
-        if (d->children[idx].deref()) {
-            // XXX todo - the original did item->scene()->removeItem().  Why?
-            item->setParentItem(0);
-        } else {
-            return QQuickVisualModel::Referenced;
-        }
+        if (!d->children[idx].deref())
+            return QQmlInstanceModel::Referenced;
     }
     return 0;
 }
 
-QString QQuickVisualItemModel::stringValue(int index, const QString &name)
+QString QQmlObjectModel::stringValue(int index, const QString &name)
 {
-    Q_D(QQuickVisualItemModel);
+    Q_D(QQmlObjectModel);
     if (index < 0 || index >= d->children.count())
         return QString();
     return QQmlEngine::contextForObject(d->children.at(index).item)->contextProperty(name).toString();
 }
 
-int QQuickVisualItemModel::indexOf(QQuickItem *item, QObject *) const
+int QQmlObjectModel::indexOf(QObject *item, QObject *) const
 {
-    Q_D(const QQuickVisualItemModel);
+    Q_D(const QQmlObjectModel);
     return d->indexOf(item);
 }
 
-QQuickVisualItemModelAttached *QQuickVisualItemModel::qmlAttachedProperties(QObject *obj)
+QQmlObjectModelAttached *QQmlObjectModel::qmlAttachedProperties(QObject *obj)
 {
-    return QQuickVisualItemModelAttached::properties(obj);
+    return QQmlObjectModelAttached::properties(obj);
 }
 
 QT_END_NAMESPACE

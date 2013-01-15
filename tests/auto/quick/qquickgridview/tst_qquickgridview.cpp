@@ -51,7 +51,6 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickgridview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
-#include <QtQuick/private/qquickvisualitemmodel_p.h>
 #include <QtQml/private/qqmllistmodel_p.h>
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"

@@ -39,10 +39,10 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKVISUALITEMMODEL_P_H
-#define QQUICKVISUALITEMMODEL_P_H
+#ifndef QQMLINSTANCEMODEL_P_H
+#define QQMLINSTANCEMODEL_P_H
 
-#include <private/qtquickglobal_p.h>
+#include <private/qtqmlglobal_p.h>
 #include <QtQml/qqml.h>
 #include <QtCore/qobject.h>
 
@@ -50,88 +50,88 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QQuickItem;
-class QQuickChangeSet;
+class QObject;
+class QQmlChangeSet;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickVisualModel : public QObject
+class Q_QML_PRIVATE_EXPORT QQmlInstanceModel : public QObject
 {
     Q_OBJECT
 
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
-    virtual ~QQuickVisualModel() {}
+    virtual ~QQmlInstanceModel() {}
 
     enum ReleaseFlag { Referenced = 0x01, Destroyed = 0x02 };
     Q_DECLARE_FLAGS(ReleaseFlags, ReleaseFlag)
 
     virtual int count() const = 0;
     virtual bool isValid() const = 0;
-    virtual QQuickItem *item(int index, bool asynchronous=false) = 0;
-    virtual ReleaseFlags release(QQuickItem *item) = 0;
+    virtual QObject *object(int index, bool asynchronous=false) = 0;
+    virtual ReleaseFlags release(QObject *object) = 0;
     virtual void cancel(int) {}
     virtual QString stringValue(int, const QString &) = 0;
     virtual void setWatchedRoles(QList<QByteArray> roles) = 0;
 
-    virtual int indexOf(QQuickItem *item, QObject *objectContext) const = 0;
+    virtual int indexOf(QObject *object, QObject *objectContext) const = 0;
 
 Q_SIGNALS:
     void countChanged();
-    void modelUpdated(const QQuickChangeSet &changeSet, bool reset);
-    void createdItem(int index, QQuickItem *item);
-    void initItem(int index, QQuickItem *item);
-    void destroyingItem(QQuickItem *item);
+    void modelUpdated(const QQmlChangeSet &changeSet, bool reset);
+    void createdItem(int index, QObject *object);
+    void initItem(int index, QObject *object);
+    void destroyingItem(QObject *object);
 
 protected:
-    QQuickVisualModel(QObjectPrivate &dd, QObject *parent = 0)
+    QQmlInstanceModel(QObjectPrivate &dd, QObject *parent = 0)
         : QObject(dd, parent) {}
 
 private:
-    Q_DISABLE_COPY(QQuickVisualModel)
+    Q_DISABLE_COPY(QQmlInstanceModel)
 };
 
-class QQuickVisualItemModelAttached;
-class QQuickVisualItemModelPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickVisualItemModel : public QQuickVisualModel
+class QQmlObjectModelAttached;
+class QQmlObjectModelPrivate;
+class Q_QML_PRIVATE_EXPORT QQmlObjectModel : public QQmlInstanceModel
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QQuickVisualItemModel)
+    Q_DECLARE_PRIVATE(QQmlObjectModel)
 
-    Q_PROPERTY(QQmlListProperty<QQuickItem> children READ children NOTIFY childrenChanged DESIGNABLE false)
+    Q_PROPERTY(QQmlListProperty<QObject> children READ children NOTIFY childrenChanged DESIGNABLE false)
     Q_CLASSINFO("DefaultProperty", "children")
 
 public:
-    QQuickVisualItemModel(QObject *parent=0);
-    virtual ~QQuickVisualItemModel() {}
+    QQmlObjectModel(QObject *parent=0);
+    virtual ~QQmlObjectModel() {}
 
     virtual int count() const;
     virtual bool isValid() const;
-    virtual QQuickItem *item(int index, bool asynchronous=false);
-    virtual ReleaseFlags release(QQuickItem *item);
+    virtual QObject *object(int index, bool asynchronous=false);
+    virtual ReleaseFlags release(QObject *object);
     virtual QString stringValue(int index, const QString &role);
     virtual void setWatchedRoles(QList<QByteArray>) {}
 
-    virtual int indexOf(QQuickItem *item, QObject *objectContext) const;
+    virtual int indexOf(QObject *object, QObject *objectContext) const;
 
-    QQmlListProperty<QQuickItem> children();
+    QQmlListProperty<QObject> children();
 
-    static QQuickVisualItemModelAttached *qmlAttachedProperties(QObject *obj);
+    static QQmlObjectModelAttached *qmlAttachedProperties(QObject *obj);
 
 Q_SIGNALS:
     void childrenChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickVisualItemModel)
+    Q_DISABLE_COPY(QQmlObjectModel)
 };
 
-class QQuickVisualItemModelAttached : public QObject
+class QQmlObjectModelAttached : public QObject
 {
     Q_OBJECT
 
 public:
-    QQuickVisualItemModelAttached(QObject *parent)
+    QQmlObjectModelAttached(QObject *parent)
         : QObject(parent), m_index(0) {}
-    ~QQuickVisualItemModelAttached() {
+    ~QQmlObjectModelAttached() {
         attachedProperties.remove(parent());
     }
 
@@ -144,10 +144,10 @@ public:
         }
     }
 
-    static QQuickVisualItemModelAttached *properties(QObject *obj) {
-        QQuickVisualItemModelAttached *rv = attachedProperties.value(obj);
+    static QQmlObjectModelAttached *properties(QObject *obj) {
+        QQmlObjectModelAttached *rv = attachedProperties.value(obj);
         if (!rv) {
-            rv = new QQuickVisualItemModelAttached(obj);
+            rv = new QQmlObjectModelAttached(obj);
             attachedProperties.insert(obj, rv);
         }
         return rv;
@@ -159,16 +159,16 @@ Q_SIGNALS:
 public:
     int m_index;
 
-    static QHash<QObject*, QQuickVisualItemModelAttached*> attachedProperties;
+    static QHash<QObject*, QQmlObjectModelAttached*> attachedProperties;
 };
 
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickVisualModel)
-QML_DECLARE_TYPE(QQuickVisualItemModel)
-QML_DECLARE_TYPEINFO(QQuickVisualItemModel, QML_HAS_ATTACHED_PROPERTIES)
+QML_DECLARE_TYPE(QQmlInstanceModel)
+QML_DECLARE_TYPE(QQmlObjectModel)
+QML_DECLARE_TYPEINFO(QQmlObjectModel, QML_HAS_ATTACHED_PROPERTIES)
 
 QT_END_HEADER
 
-#endif // QQUICKVISUALITEMMODEL_P_H
+#endif // QQMLINSTANCEMODEL_P_H

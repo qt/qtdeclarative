@@ -48,7 +48,7 @@
 #include <QtQml/qqmlincubator.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
-#include <QtQuick/private/qquickvisualitemmodel_p.h>
+#include <QtQml/private/qqmlobjectmodel_p.h>
 #include <QtQml/private/qqmllistmodel_p.h>
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
@@ -2767,7 +2767,7 @@ void tst_QQuickListView::itemList()
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
-    QQuickVisualItemModel *model = window->rootObject()->findChild<QQuickVisualItemModel*>("itemModel");
+    QQmlObjectModel *model = window->rootObject()->findChild<QQmlObjectModel*>("itemModel");
     QTRY_VERIFY(model != 0);
 
     QTRY_VERIFY(model->count() == 3);
@@ -2808,7 +2808,7 @@ void tst_QQuickListView::itemListFlicker()
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
-    QQuickVisualItemModel *model = window->rootObject()->findChild<QQuickVisualItemModel*>("itemModel");
+    QQmlObjectModel *model = window->rootObject()->findChild<QQmlObjectModel*>("itemModel");
     QTRY_VERIFY(model != 0);
 
     QTRY_VERIFY(model->count() == 3);
@@ -4605,7 +4605,7 @@ void tst_QQuickListView::rightToLeft()
 
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
-    QQuickVisualItemModel *model = window->rootObject()->findChild<QQuickVisualItemModel*>("itemModel");
+    QQmlObjectModel *model = window->rootObject()->findChild<QQmlObjectModel*>("itemModel");
     QTRY_VERIFY(model != 0);
 
     QTRY_VERIFY(model->count() == 3);

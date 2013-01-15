@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 #include <qtest.h>
-#include <private/qquickchangeset_p.h>
+#include <private/qqmlchangeset_p.h>
 
-class tst_qquickchangeset : public QObject
+class tst_qqmlchangeset : public QObject
 {
     Q_OBJECT
 private slots:
@@ -140,7 +140,7 @@ public:
 
     bool applyChanges(QVector<int> &list, const QVector<Signal> &changes)
     {
-        QHash<QQuickChangeSet::MoveKey, int> removedValues;
+        QHash<QQmlChangeSet::MoveKey, int> removedValues;
         foreach (const Signal &signal, changes) {
             if (signal.isInsert()) {
                 if (signal.index < 0 || signal.index > list.count()) {
@@ -148,7 +148,7 @@ public:
                     return false;
                 }
                 if (signal.moveId != -1) {
-                    QQuickChangeSet::Insert insert(signal.index, signal.count, signal.moveId, signal.offset);
+                    QQmlChangeSet::Insert insert(signal.index, signal.count, signal.moveId, signal.offset);
                     for (int i = insert.start(); i < insert.end(); ++i)
                         list.insert(i, removedValues.take(insert.moveKey(i)));
                 } else {
@@ -160,7 +160,7 @@ public:
                     return false;
                 }
                 if (signal.moveId != -1) {
-                    QQuickChangeSet::Remove remove(signal.index, signal.count, signal.moveId, signal.offset);
+                    QQmlChangeSet::Remove remove(signal.index, signal.count, signal.moveId, signal.offset);
                     for (int i = remove.start(); i < remove.end(); ++i)
                         removedValues.insert(remove.moveKey(i), list.at(i));
                 }
@@ -184,7 +184,7 @@ public:
 
 };
 
-bool operator ==(const tst_qquickchangeset::Signal &left, const tst_qquickchangeset::Signal &right)
+bool operator ==(const tst_qqmlchangeset::Signal &left, const tst_qqmlchangeset::Signal &right)
 {
     return left.index == right.index
             && left.count == right.count
@@ -194,13 +194,13 @@ bool operator ==(const tst_qquickchangeset::Signal &left, const tst_qquickchange
 }
 
 QT_BEGIN_NAMESPACE
-bool operator ==(const QQuickChangeSet::Change &left, const QQuickChangeSet::Change &right)
+bool operator ==(const QQmlChangeSet::Change &left, const QQmlChangeSet::Change &right)
 {
     return left.index == right.index && left.count == right.count && left.moveId == right.moveId;
 }
 QT_END_NAMESPACE
 
-QDebug operator <<(QDebug debug, const tst_qquickchangeset::Signal &signal)
+QDebug operator <<(QDebug debug, const tst_qqmlchangeset::Signal &signal)
 {
     if (signal.isInsert() && signal.moveId == -1)
         debug.nospace() << "Insert(" << signal.index << "," << signal.count << ")";
@@ -217,8 +217,8 @@ QDebug operator <<(QDebug debug, const tst_qquickchangeset::Signal &signal)
     return debug;
 }
 
-Q_DECLARE_METATYPE(tst_qquickchangeset::SignalList)
-Q_DECLARE_METATYPE(tst_qquickchangeset::SignalListList)
+Q_DECLARE_METATYPE(tst_qqmlchangeset::SignalList)
+Q_DECLARE_METATYPE(tst_qqmlchangeset::SignalListList)
 
 #if 0
 # define VERIFY_EXPECTED_OUTPUT \
@@ -256,7 +256,7 @@ Q_DECLARE_METATYPE(tst_qquickchangeset::SignalListList)
     }
 #endif
 
-void tst_qquickchangeset::sequence_data()
+void tst_qqmlchangeset::sequence_data()
 {
     QTest::addColumn<SignalList>("input");
     QTest::addColumn<SignalList>("output");
@@ -1163,12 +1163,12 @@ void tst_qquickchangeset::sequence_data()
                 << Insert(24,1,5,9) << Insert(25,2) << Insert(27,2));
 }
 
-void tst_qquickchangeset::sequence()
+void tst_qqmlchangeset::sequence()
 {
     QFETCH(SignalList, input);
     QFETCH(SignalList, output);
 
-    QQuickChangeSet set;
+    QQmlChangeSet set;
 
     foreach (const Signal &signal, input) {
         if (signal.isRemove())
@@ -1182,18 +1182,18 @@ void tst_qquickchangeset::sequence()
     }
 
     SignalList changes;
-    foreach (const QQuickChangeSet::Remove &remove, set.removes())
+    foreach (const QQmlChangeSet::Remove &remove, set.removes())
         changes << Remove(remove.index, remove.count, remove.moveId, remove.offset);
-    foreach (const QQuickChangeSet::Insert &insert, set.inserts())
+    foreach (const QQmlChangeSet::Insert &insert, set.inserts())
         changes << Insert(insert.index, insert.count, insert.moveId, insert.offset);
-    foreach (const QQuickChangeSet::Change &change, set.changes())
+    foreach (const QQmlChangeSet::Change &change, set.changes())
         changes << Change(change.index, change.count);
 
     VERIFY_EXPECTED_OUTPUT
     QCOMPARE(changes, output);
 }
 
-void tst_qquickchangeset::apply_data()
+void tst_qqmlchangeset::apply_data()
 {
     QTest::addColumn<SignalListList>("input");
 
@@ -1297,15 +1297,15 @@ void tst_qquickchangeset::apply_data()
                 << (SignalList() << Move(38,23,1,3) << Move(38,31,0,4) << Remove(26,11) << Move(5,7,18,5) << Move(19,0,8,6)));
 }
 
-void tst_qquickchangeset::apply()
+void tst_qqmlchangeset::apply()
 {
     QFETCH(SignalListList, input);
 
-    QQuickChangeSet set;
-    QQuickChangeSet linearSet;
+    QQmlChangeSet set;
+    QQmlChangeSet linearSet;
 
     foreach (const SignalList &list, input) {
-        QQuickChangeSet intermediateSet;
+        QQmlChangeSet intermediateSet;
         foreach (const Signal &signal, list) {
             if (signal.isRemove()) {
                 intermediateSet.remove(signal.index, signal.count);
@@ -1322,15 +1322,15 @@ void tst_qquickchangeset::apply()
     }
 
     SignalList changes;
-    foreach (const QQuickChangeSet::Remove &remove, set.removes())
+    foreach (const QQmlChangeSet::Remove &remove, set.removes())
         changes << Remove(remove.index, remove.count, remove.moveId, remove.offset);
-    foreach (const QQuickChangeSet::Insert &insert, set.inserts())
+    foreach (const QQmlChangeSet::Insert &insert, set.inserts())
         changes << Insert(insert.index, insert.count, insert.moveId, insert.offset);
 
     SignalList linearChanges;
-    foreach (const QQuickChangeSet::Remove &remove, linearSet.removes())
+    foreach (const QQmlChangeSet::Remove &remove, linearSet.removes())
         linearChanges << Remove(remove.index, remove.count, remove.moveId, remove.offset);
-    foreach (const QQuickChangeSet::Insert &insert, linearSet.inserts())
+    foreach (const QQmlChangeSet::Insert &insert, linearSet.inserts())
         linearChanges << Insert(insert.index, insert.count, insert.moveId, insert.offset);
 
     // The output in the failing tests isn't incorrect, merely sub-optimal.
@@ -1343,7 +1343,7 @@ void tst_qquickchangeset::apply()
     QCOMPARE(changes, linearChanges);
 }
 
-void tst_qquickchangeset::removeConsecutive_data()
+void tst_qqmlchangeset::removeConsecutive_data()
 {
     QTest::addColumn<SignalList>("input");
     QTest::addColumn<SignalList>("output");
@@ -1359,22 +1359,22 @@ void tst_qquickchangeset::removeConsecutive_data()
             << (SignalList() << Remove(0,2) << Remove(0,1,0,0) << Remove(0,5));
 }
 
-void tst_qquickchangeset::removeConsecutive()
+void tst_qqmlchangeset::removeConsecutive()
 {
     QFETCH(SignalList, input);
     QFETCH(SignalList, output);
 
-    QVector<QQuickChangeSet::Remove> removes;
+    QVector<QQmlChangeSet::Remove> removes;
     foreach (const Signal &signal, input) {
         QVERIFY(signal.isRemove());
-        removes.append(QQuickChangeSet::Remove(signal.index, signal.count, signal.moveId, signal.offset));
+        removes.append(QQmlChangeSet::Remove(signal.index, signal.count, signal.moveId, signal.offset));
     }
 
-    QQuickChangeSet set;
+    QQmlChangeSet set;
     set.remove(removes);
 
     SignalList changes;
-    foreach (const QQuickChangeSet::Remove &remove, set.removes())
+    foreach (const QQmlChangeSet::Remove &remove, set.removes())
         changes << Remove(remove.index, remove.count, remove.moveId, remove.offset);
     QVERIFY(set.inserts().isEmpty());
     QVERIFY(set.changes().isEmpty());
@@ -1383,7 +1383,7 @@ void tst_qquickchangeset::removeConsecutive()
     QCOMPARE(changes, output);
 }
 
-void tst_qquickchangeset::insertConsecutive_data()
+void tst_qqmlchangeset::insertConsecutive_data()
 {
     QTest::addColumn<SignalList>("input");
     QTest::addColumn<SignalList>("output");
@@ -1399,22 +1399,22 @@ void tst_qquickchangeset::insertConsecutive_data()
             << (SignalList() << Insert(0,2) << Insert(2,1,0,0) << Insert(3,5));
 }
 
-void tst_qquickchangeset::insertConsecutive()
+void tst_qqmlchangeset::insertConsecutive()
 {
     QFETCH(SignalList, input);
     QFETCH(SignalList, output);
 
-    QVector<QQuickChangeSet::Insert> inserts;
+    QVector<QQmlChangeSet::Insert> inserts;
     foreach (const Signal &signal, input) {
         QVERIFY(signal.isInsert());
-        inserts.append(QQuickChangeSet::Insert(signal.index, signal.count, signal.moveId, signal.offset));
+        inserts.append(QQmlChangeSet::Insert(signal.index, signal.count, signal.moveId, signal.offset));
     }
 
-    QQuickChangeSet set;
+    QQmlChangeSet set;
     set.insert(inserts);
 
     SignalList changes;
-    foreach (const QQuickChangeSet::Insert &insert, set.inserts())
+    foreach (const QQmlChangeSet::Insert &insert, set.inserts())
         changes << Insert(insert.index, insert.count, insert.moveId, insert.offset);
     QVERIFY(set.removes().isEmpty());
     QVERIFY(set.changes().isEmpty());
@@ -1423,9 +1423,9 @@ void tst_qquickchangeset::insertConsecutive()
     QCOMPARE(changes, output);
 }
 
-void tst_qquickchangeset::copy()
+void tst_qqmlchangeset::copy()
 {
-    QQuickChangeSet changeSet;
+    QQmlChangeSet changeSet;
     changeSet.remove(0, 12);
     changeSet.remove(5, 4);
     changeSet.insert(3, 9);
@@ -1433,9 +1433,9 @@ void tst_qquickchangeset::copy()
     changeSet.change(24, 8);
     changeSet.move(3, 5, 9, 0);
 
-    QQuickChangeSet copy(changeSet);
+    QQmlChangeSet copy(changeSet);
 
-    QQuickChangeSet assign;
+    QQmlChangeSet assign;
     assign = changeSet;
 
     copy.move(4, 2, 5, 1);
@@ -1453,27 +1453,27 @@ void tst_qquickchangeset::copy()
     QCOMPARE(assign.difference(), changeSet.difference());
 }
 
-void tst_qquickchangeset::debug()
+void tst_qqmlchangeset::debug()
 {
-    QQuickChangeSet changeSet;
+    QQmlChangeSet changeSet;
     changeSet.remove(0, 12);
     changeSet.remove(5, 4);
     changeSet.insert(3, 9);
     changeSet.insert(15, 2);
     changeSet.change(24, 8);
 
-    QTest::ignoreMessage(QtDebugMsg, "QQuickChangeSet(Remove(0,12) Remove(5,4) Insert(3,9) Insert(15,2) Change(24,8) )");
+    QTest::ignoreMessage(QtDebugMsg, "QQmlChangeSet(Remove(0,12) Remove(5,4) Insert(3,9) Insert(15,2) Change(24,8) )");
     qDebug() << changeSet;
 
     changeSet.clear();
 
-    QTest::ignoreMessage(QtDebugMsg, "QQuickChangeSet(Remove(12,4,0,0) Insert(5,4,0,0) )");
+    QTest::ignoreMessage(QtDebugMsg, "QQmlChangeSet(Remove(12,4,0,0) Insert(5,4,0,0) )");
 
     changeSet.move(12, 5, 4, 0);
     qDebug() << changeSet;
 }
 
-void tst_qquickchangeset::random_data()
+void tst_qqmlchangeset::random_data()
 {
     QTest::addColumn<int>("seed");
     QTest::addColumn<int>("combinations");
@@ -1484,7 +1484,7 @@ void tst_qquickchangeset::random_data()
     QTest::newRow("3*5") << 32 << 3 << 5;
 }
 
-void tst_qquickchangeset::random()
+void tst_qqmlchangeset::random()
 {
     QFETCH(int, seed);
     QFETCH(int, combinations);
@@ -1494,14 +1494,14 @@ void tst_qquickchangeset::random()
 
     int failures = 0;
     for (int i = 0; i < 20000; ++i) {
-        QQuickChangeSet accumulatedSet;
+        QQmlChangeSet accumulatedSet;
         SignalList input;
 
         int modelCount = 40;
         int moveCount = 0;
 
         for (int j = 0; j < combinations; ++j) {
-            QQuickChangeSet set;
+            QQmlChangeSet set;
             for (int k = 0; k < depth; ++k) {
                 switch (-(qrand() % 3)) {
                 case InsertOp: {
@@ -1537,9 +1537,9 @@ void tst_qquickchangeset::random()
         }
 
         SignalList output;
-        foreach (const QQuickChangeSet::Remove &remove, accumulatedSet.removes())
+        foreach (const QQmlChangeSet::Remove &remove, accumulatedSet.removes())
             output << Remove(remove.index, remove.count, remove.moveId, remove.offset);
-        foreach (const QQuickChangeSet::Insert &insert, accumulatedSet.inserts())
+        foreach (const QQmlChangeSet::Insert &insert, accumulatedSet.inserts())
             output << Insert(insert.index, insert.count, insert.moveId, insert.offset);
 
         QVector<int> inputList;
@@ -1569,6 +1569,6 @@ void tst_qquickchangeset::random()
     QCOMPARE(failures, 0);
 }
 
-QTEST_MAIN(tst_qquickchangeset)
+QTEST_MAIN(tst_qqmlchangeset)
 
-#include "tst_qquickchangeset.moc"
+#include "tst_qqmlchangeset.moc"

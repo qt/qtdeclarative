@@ -57,8 +57,6 @@
 #include "qquickflickable_p.h"
 #include "qquickflickable_p_p.h"
 #include "qquicklistview_p.h"
-#include "qquickvisualitemmodel_p.h"
-#include "qquickvisualdatamodel_p.h"
 #include "qquickgridview_p.h"
 #include "qquickpathview_p.h"
 #include "qquickitemviewtransition_p.h"
@@ -161,9 +159,6 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTextEdit>(uri,major,minor,"TextEdit");
     qmlRegisterType<QQuickTextInput>(uri,major,minor,"TextInput");
     qmlRegisterType<QQuickViewSection>(uri,major,minor,"ViewSection");
-    qmlRegisterType<QQuickVisualDataModel>(uri,major,minor,"VisualDataModel");
-    qmlRegisterType<QQuickVisualDataGroup>(uri,major,minor,"VisualDataGroup");
-    qmlRegisterType<QQuickVisualItemModel>(uri,major,minor,"VisualItemModel");
 
     qmlRegisterType<QQuickItemLayer>();
     qmlRegisterType<QQuickAnchors>();
@@ -178,7 +173,6 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #ifndef QT_NO_VALIDATOR
     qmlRegisterType<QValidator>();
 #endif
-    qmlRegisterType<QQuickVisualModel>();
     qmlRegisterType<QQuickPen>();
     qmlRegisterType<QQuickFlickableVisibleArea>();
     qRegisterMetaType<QQuickAnchorLine>("QQuickAnchorLine");

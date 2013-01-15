@@ -40,7 +40,6 @@
 ****************************************************************************/
 
 #include "qquickitemparticle_p.h"
-#include <private/qquickvisualitemmodel_p.h>
 #include <QtQuick/qsgnode.h>
 #include <QTimer>
 #include <QQmlComponent>

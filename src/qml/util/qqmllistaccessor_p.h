@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKLISTACCESSOR_H
-#define QQUICKLISTACCESSOR_H
+#ifndef QQMLLISTACCESSOR_H
+#define QQMLLISTACCESSOR_H
 
 #include <QtCore/QVariant>
 
@@ -49,11 +49,11 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
-class Q_AUTOTEST_EXPORT QQuickListAccessor
+class Q_AUTOTEST_EXPORT QQmlListAccessor
 {
 public:
-    QQuickListAccessor();
-    ~QQuickListAccessor();
+    QQmlListAccessor();
+    ~QQmlListAccessor();
 
     QVariant list() const;
     void setList(const QVariant &, QQmlEngine * = 0);
@@ -75,4 +75,4 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QQUICKLISTACCESSOR_H
+#endif // QQMLLISTACCESSOR_H

@@ -39,16 +39,16 @@
 **
 ****************************************************************************/
 
-#include "qquickvisualadaptormodel_p.h"
-#include "qquickvisualdatamodel_p_p.h"
+#include "qqmladaptormodel_p.h"
 
+#include <private/qqmldelegatemodel_p_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qv8engine_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickVisualAdaptorModelEngineData : public QV8Engine::Deletable
+class QQmlAdaptorModelEngineData : public QV8Engine::Deletable
 {
 public:
     enum
@@ -59,8 +59,8 @@ public:
         StringCount
     };
 
-    QQuickVisualAdaptorModelEngineData(QV8Engine *engine);
-    ~QQuickVisualAdaptorModelEngineData();
+    QQmlAdaptorModelEngineData(QV8Engine *engine);
+    ~QQmlAdaptorModelEngineData();
 
     v8::Local<v8::String> index() { return strings->Get(Index)->ToString(); }
     v8::Local<v8::String> modelData() { return strings->Get(ModelData)->ToString(); }
@@ -70,11 +70,11 @@ public:
     v8::Persistent<v8::Array> strings;
 };
 
-V8_DEFINE_EXTENSION(QQuickVisualAdaptorModelEngineData, engineData)
+V8_DEFINE_EXTENSION(QQmlAdaptorModelEngineData, engineData)
 
 static v8::Handle<v8::Value> get_index(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
+    QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
     V8ASSERT_TYPE(data, "Not a valid VisualData object");
 
     return v8::Int32::New(data->index);
@@ -99,11 +99,11 @@ static void addProperty(QMetaObjectBuilder *builder, int propertyId, const QByte
 
 class VDMModelDelegateDataType;
 
-class QQuickVDMCachedModelData : public QQuickVisualDataModelItem
+class QQmlDMCachedModelData : public QQmlDelegateModelItem
 {
 public:
-    QQuickVDMCachedModelData(
-            QQuickVisualDataModelItemMetaType *metaType,
+    QQmlDMCachedModelData(
+            QQmlDelegateModelItemMetaType *metaType,
             VDMModelDelegateDataType *dataType,
             int index);
 
@@ -113,7 +113,7 @@ public:
     virtual void setValue(int role, const QVariant &value) = 0;
 
     void setValue(const QString &role, const QVariant &value);
-    bool resolveIndex(const QQuickVisualAdaptorModel &model, int idx);
+    bool resolveIndex(const QQmlAdaptorModel &model, int idx);
 
     static v8::Handle<v8::Value> get_property(v8::Local<v8::String>, const v8::AccessorInfo &info);
     static void set_property(
@@ -125,11 +125,11 @@ public:
 
 class VDMModelDelegateDataType
         : public QQmlRefCount
-        , public QQuickVisualAdaptorModel::Accessors
+        , public QQmlAdaptorModel::Accessors
         , public QAbstractDynamicMetaObject
 {
 public:
-    VDMModelDelegateDataType(QQuickVisualAdaptorModel *model)
+    VDMModelDelegateDataType(QQmlAdaptorModel *model)
         : model(model)
         , metaObject(0)
         , propertyCache(0)
@@ -149,8 +149,8 @@ public:
     }
 
     bool notify(
-            const QQuickVisualAdaptorModel &,
-            const QList<QQuickVisualDataModelItem *> &items,
+            const QQmlAdaptorModel &,
+            const QList<QQmlDelegateModelItem *> &items,
             int index,
             int count,
             const QVector<int> &roles) const
@@ -182,7 +182,7 @@ public:
         }
 
         for (int i = 0, c = items.count();  i < c; ++i) {
-            QQuickVisualDataModelItem *item = items.at(i);
+            QQmlDelegateModelItem *item = items.at(i);
             const int idx = item->modelIndex();
             if (idx >= index && idx < index + count) {
                 for (int i = 0; i < signalIndexes.count(); ++i)
@@ -193,7 +193,7 @@ public:
     }
 
     void replaceWatchedRoles(
-            QQuickVisualAdaptorModel &,
+            QQmlAdaptorModel &,
             const QList<QByteArray> &oldRoles,
             const QList<QByteArray> &newRoles) const
     {
@@ -205,7 +205,7 @@ public:
         dataType->watchedRoles += newRoles;
     }
 
-    void initializeConstructor(QQuickVisualAdaptorModelEngineData *const data)
+    void initializeConstructor(QQmlAdaptorModelEngineData *const data)
     {
         constructor = qPersistentNew(v8::ObjectTemplate::New());
         constructor->SetHasExternalResource(true);
@@ -218,8 +218,8 @@ public:
 
             constructor->SetAccessor(
                     v8::String::New(propertyName.constData(), propertyName.length()),
-                    QQuickVDMCachedModelData::get_property,
-                    QQuickVDMCachedModelData::set_property,
+                    QQmlDMCachedModelData::get_property,
+                    QQmlDMCachedModelData::set_property,
                     v8::Int32::New(propertyId));
         }
     }
@@ -233,7 +233,7 @@ public:
 
     int metaCall(QObject *object, QMetaObject::Call call, int id, void **arguments)
     {
-        return static_cast<QQuickVDMCachedModelData *>(object)->metaCall(call, id, arguments);
+        return static_cast<QQmlDMCachedModelData *>(object)->metaCall(call, id, arguments);
     }
 
     v8::Persistent<v8::ObjectTemplate> constructor;
@@ -241,7 +241,7 @@ public:
     QList<int> watchedRoleIds;
     QList<QByteArray> watchedRoles;
     QHash<QByteArray, int> roleNames;
-    QQuickVisualAdaptorModel *model;
+    QQmlAdaptorModel *model;
     QMetaObject *metaObject;
     QQmlPropertyCache *propertyCache;
     int propertyOffset;
@@ -249,9 +249,9 @@ public:
     bool hasModelData;
 };
 
-QQuickVDMCachedModelData::QQuickVDMCachedModelData(
-        QQuickVisualDataModelItemMetaType *metaType, VDMModelDelegateDataType *dataType, int index)
-    : QQuickVisualDataModelItem(metaType, index)
+QQmlDMCachedModelData::QQmlDMCachedModelData(
+        QQmlDelegateModelItemMetaType *metaType, VDMModelDelegateDataType *dataType, int index)
+    : QQmlDelegateModelItem(metaType, index)
     , type(dataType)
 {
     if (index == -1)
@@ -266,7 +266,7 @@ QQuickVDMCachedModelData::QQuickVDMCachedModelData(
     qmldata->propertyCache->addref();
 }
 
-int QQuickVDMCachedModelData::metaCall(QMetaObject::Call call, int id, void **arguments)
+int QQmlDMCachedModelData::metaCall(QMetaObject::Call call, int id, void **arguments)
 {
     if (call == QMetaObject::ReadProperty && id >= type->propertyOffset) {
         const int propertyIndex = id - type->propertyOffset;
@@ -300,7 +300,7 @@ int QQuickVDMCachedModelData::metaCall(QMetaObject::Call call, int id, void **ar
     }
 }
 
-void QQuickVDMCachedModelData::setValue(const QString &role, const QVariant &value)
+void QQmlDMCachedModelData::setValue(const QString &role, const QVariant &value)
 {
     QHash<QByteArray, int>::iterator it = type->roleNames.find(role.toUtf8());
     if (it != type->roleNames.end()) {
@@ -313,7 +313,7 @@ void QQuickVDMCachedModelData::setValue(const QString &role, const QVariant &val
     }
 }
 
-bool QQuickVDMCachedModelData::resolveIndex(const QQuickVisualAdaptorModel &, int idx)
+bool QQmlDMCachedModelData::resolveIndex(const QQmlAdaptorModel &, int idx)
 {
     if (index == -1) {
         Q_ASSERT(idx >= 0);
@@ -330,13 +330,13 @@ bool QQuickVDMCachedModelData::resolveIndex(const QQuickVisualAdaptorModel &, in
     }
 }
 
-v8::Handle<v8::Value> QQuickVDMCachedModelData::get_property(
+v8::Handle<v8::Value> QQmlDMCachedModelData::get_property(
         v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
+    QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
     V8ASSERT_TYPE(data, "Not a valid VisualData object");
 
-    QQuickVDMCachedModelData *modelData = static_cast<QQuickVDMCachedModelData *>(data);
+    QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(data);
     const int propertyId = info.Data()->Int32Value();
     if (data->index == -1) {
         if (!modelData->cachedData.isEmpty()) {
@@ -350,15 +350,15 @@ v8::Handle<v8::Value> QQuickVDMCachedModelData::get_property(
     return v8::Undefined();
 }
 
-void QQuickVDMCachedModelData::set_property(
+void QQmlDMCachedModelData::set_property(
         v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
+    QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
     V8ASSERT_TYPE_SETTER(data, "Not a valid VisualData object");
 
     const int propertyId = info.Data()->Int32Value();
     if (data->index == -1) {
-        QQuickVDMCachedModelData *modelData = static_cast<QQuickVDMCachedModelData *>(data);
+        QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(data);
         if (!modelData->cachedData.isEmpty()) {
             if (modelData->cachedData.count() > 1) {
                 modelData->cachedData[propertyId] = data->engine->toVariant(value, QVariant::Invalid);
@@ -376,16 +376,16 @@ void QQuickVDMCachedModelData::set_property(
 // QAbstractItemModel
 //-----------------------------------------------------------------
 
-class QQuickVDMAbstractItemModelData : public QQuickVDMCachedModelData
+class QQmlDMAbstractItemModelData : public QQmlDMCachedModelData
 {
     Q_OBJECT
     Q_PROPERTY(bool hasModelChildren READ hasModelChildren CONSTANT)
 public:
-    QQuickVDMAbstractItemModelData(
-            QQuickVisualDataModelItemMetaType *metaType,
+    QQmlDMAbstractItemModelData(
+            QQmlDelegateModelItemMetaType *metaType,
             VDMModelDelegateDataType *dataType,
             int index)
-        : QQuickVDMCachedModelData(metaType, dataType, index)
+        : QQmlDMCachedModelData(metaType, dataType, index)
     {
     }
 
@@ -413,7 +413,7 @@ public:
     v8::Handle<v8::Value> get()
     {
         if (type->constructor.IsEmpty()) {
-            QQuickVisualAdaptorModelEngineData * const data = engineData(engine);
+            QQmlAdaptorModelEngineData * const data = engineData(engine);
             v8::HandleScope handleScope;
             v8::Context::Scope contextScope(engine->context());
             type->initializeConstructor(data);
@@ -427,10 +427,10 @@ public:
 
     static v8::Handle<v8::Value> get_hasModelChildren(v8::Local<v8::String>, const v8::AccessorInfo &info)
     {
-        QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
+        QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
         V8ASSERT_TYPE(data, "Not a valid VisualData object");
 
-        const QQuickVisualAdaptorModel *const model = static_cast<QQuickVDMCachedModelData *>(data)->type->model;
+        const QQmlAdaptorModel *const model = static_cast<QQmlDMCachedModelData *>(data)->type->model;
         if (data->index >= 0 && *model) {
             const QAbstractItemModel * const aim = model->aim();
             return v8::Boolean::New(aim->hasChildren(aim->index(data->index, 0, model->rootIndex)));
@@ -443,17 +443,17 @@ public:
 class VDMAbstractItemModelDataType : public VDMModelDelegateDataType
 {
 public:
-    VDMAbstractItemModelDataType(QQuickVisualAdaptorModel *model)
+    VDMAbstractItemModelDataType(QQmlAdaptorModel *model)
         : VDMModelDelegateDataType(model)
     {
     }
 
-    int count(const QQuickVisualAdaptorModel &model) const
+    int count(const QQmlAdaptorModel &model) const
     {
         return model.aim()->rowCount(model.rootIndex);
     }
 
-    void cleanup(QQuickVisualAdaptorModel &model, QQuickVisualDataModel *vdm) const
+    void cleanup(QQmlAdaptorModel &model, QQmlDelegateModel *vdm) const
     {
         QAbstractItemModel * const aim = model.aim();
         if (aim && vdm) {
@@ -476,7 +476,7 @@ public:
         const_cast<VDMAbstractItemModelDataType *>(this)->release();
     }
 
-    QVariant value(const QQuickVisualAdaptorModel &model, int index, const QString &role) const
+    QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const
     {
         QHash<QByteArray, int>::const_iterator it = roleNames.find(role.toUtf8());
         if (it != roleNames.end()) {
@@ -488,47 +488,47 @@ public:
         }
     }
 
-    QVariant parentModelIndex(const QQuickVisualAdaptorModel &model) const
+    QVariant parentModelIndex(const QQmlAdaptorModel &model) const
     {
         return model
                 ? QVariant::fromValue(model.aim()->parent(model.rootIndex))
                 : QVariant();
     }
 
-    QVariant modelIndex(const QQuickVisualAdaptorModel &model, int index) const
+    QVariant modelIndex(const QQmlAdaptorModel &model, int index) const
     {
         return model
                 ? QVariant::fromValue(model.aim()->index(index, 0, model.rootIndex))
                 : QVariant();
     }
 
-    bool canFetchMore(const QQuickVisualAdaptorModel &model) const
+    bool canFetchMore(const QQmlAdaptorModel &model) const
     {
         return model && model.aim()->canFetchMore(model.rootIndex);
     }
 
-    void fetchMore(QQuickVisualAdaptorModel &model) const
+    void fetchMore(QQmlAdaptorModel &model) const
     {
         if (model)
             model.aim()->fetchMore(model.rootIndex);
     }
 
-    QQuickVisualDataModelItem *createItem(
-            QQuickVisualAdaptorModel &model,
-            QQuickVisualDataModelItemMetaType *metaType,
+    QQmlDelegateModelItem *createItem(
+            QQmlAdaptorModel &model,
+            QQmlDelegateModelItemMetaType *metaType,
             QQmlEngine *engine,
             int index) const
     {
         VDMAbstractItemModelDataType *dataType = const_cast<VDMAbstractItemModelDataType *>(this);
         if (!metaObject)
             dataType->initializeMetaType(model, engine);
-        return new QQuickVDMAbstractItemModelData(metaType, dataType, index);
+        return new QQmlDMAbstractItemModelData(metaType, dataType, index);
     }
 
-    void initializeMetaType(QQuickVisualAdaptorModel &model, QQmlEngine *engine)
+    void initializeMetaType(QQmlAdaptorModel &model, QQmlEngine *engine)
     {
         QMetaObjectBuilder builder;
-        setModelDataType<QQuickVDMAbstractItemModelData>(&builder, this);
+        setModelDataType<QQmlDMAbstractItemModelData>(&builder, this);
 
         const QByteArray propertyType = QByteArrayLiteral("QVariant");
         const QHash<int, QByteArray> names = model.aim()->roleNames();
@@ -555,16 +555,16 @@ public:
 };
 
 //-----------------------------------------------------------------
-// QQuickListAccessor
+// QQmlListAccessor
 //-----------------------------------------------------------------
 
-class QQuickVDMListAccessorData : public QQuickVisualDataModelItem
+class QQmlDMListAccessorData : public QQmlDelegateModelItem
 {
     Q_OBJECT
     Q_PROPERTY(QVariant modelData READ modelData WRITE setModelData NOTIFY modelDataChanged)
 public:
-    QQuickVDMListAccessorData(QQuickVisualDataModelItemMetaType *metaType, int index, const QVariant &value)
-        : QQuickVisualDataModelItem(metaType, index)
+    QQmlDMListAccessorData(QQmlDelegateModelItemMetaType *metaType, int index, const QVariant &value)
+        : QQmlDelegateModelItem(metaType, index)
         , cachedData(value)
     {
     }
@@ -584,18 +584,18 @@ public:
 
     static v8::Handle<v8::Value> get_modelData(v8::Local<v8::String>, const v8::AccessorInfo &info)
     {
-        QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
+        QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
         V8ASSERT_TYPE(data, "Not a valid VisualData object");
 
-        return data->engine->fromVariant(static_cast<QQuickVDMListAccessorData *>(data)->cachedData);
+        return data->engine->fromVariant(static_cast<QQmlDMListAccessorData *>(data)->cachedData);
     }
 
     static void set_modelData(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
     {
-        QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
+        QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
         V8ASSERT_TYPE_SETTER(data, "Not a valid VisualData object");
 
-        static_cast<QQuickVDMListAccessorData *>(data)->setModelData(
+        static_cast<QQmlDMListAccessorData *>(data)->setModelData(
                 data->engine->toVariant(value, QVariant::Invalid));
     }
 
@@ -613,7 +613,7 @@ public:
             cachedData = value;
     }
 
-    bool resolveIndex(const QQuickVisualAdaptorModel &model, int idx)
+    bool resolveIndex(const QQmlAdaptorModel &model, int idx)
     {
         if (index == -1) {
             index = idx;
@@ -635,30 +635,30 @@ private:
 };
 
 
-class VDMListDelegateDataType : public QQuickVisualAdaptorModel::Accessors
+class VDMListDelegateDataType : public QQmlAdaptorModel::Accessors
 {
 public:
     inline VDMListDelegateDataType() {}
 
-    int count(const QQuickVisualAdaptorModel &model) const
+    int count(const QQmlAdaptorModel &model) const
     {
         return model.list.count();
     }
 
-    QVariant value(const QQuickVisualAdaptorModel &model, int index, const QString &role) const
+    QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const
     {
         return role == QLatin1String("modelData")
                 ? model.list.at(index)
                 : QVariant();
     }
 
-    QQuickVisualDataModelItem *createItem(
-            QQuickVisualAdaptorModel &model,
-            QQuickVisualDataModelItemMetaType *metaType,
+    QQmlDelegateModelItem *createItem(
+            QQmlAdaptorModel &model,
+            QQmlDelegateModelItemMetaType *metaType,
             QQmlEngine *,
             int index) const
     {
-        return new QQuickVDMListAccessorData(
+        return new QQmlDMListAccessorData(
                 metaType,
                 index,
                 index >= 0 && index < model.list.count() ? model.list.at(index) : QVariant());
@@ -670,14 +670,14 @@ public:
 //-----------------------------------------------------------------
 
 class VDMObjectDelegateDataType;
-class QQuickVDMObjectData : public QQuickVisualDataModelItem, public QQuickVisualAdaptorModelProxyInterface
+class QQmlDMObjectData : public QQmlDelegateModelItem, public QQmlAdaptorModelProxyInterface
 {
     Q_OBJECT
     Q_PROPERTY(QObject *modelData READ modelData CONSTANT)
-    Q_INTERFACES(QQuickVisualAdaptorModelProxyInterface)
+    Q_INTERFACES(QQmlAdaptorModelProxyInterface)
 public:
-    QQuickVDMObjectData(
-            QQuickVisualDataModelItemMetaType *metaType,
+    QQmlDMObjectData(
+            QQmlDelegateModelItemMetaType *metaType,
             VDMObjectDelegateDataType *dataType,
             int index,
             QObject *object);
@@ -688,7 +688,7 @@ public:
     QQmlGuard<QObject> object;
 };
 
-class VDMObjectDelegateDataType : public QQmlRefCount, public QQuickVisualAdaptorModel::Accessors
+class VDMObjectDelegateDataType : public QQmlRefCount, public QQmlAdaptorModel::Accessors
 {
 public:
     QMetaObject *metaObject;
@@ -707,7 +707,7 @@ public:
 
     VDMObjectDelegateDataType(const VDMObjectDelegateDataType &type)
         : QQmlRefCount()
-        , QQuickVisualAdaptorModel::Accessors()
+        , QQmlAdaptorModel::Accessors()
         , metaObject(0)
         , propertyOffset(type.propertyOffset)
         , signalOffset(type.signalOffset)
@@ -725,21 +725,21 @@ public:
         free(metaObject);
     }
 
-    int count(const QQuickVisualAdaptorModel &model) const
+    int count(const QQmlAdaptorModel &model) const
     {
         return model.list.count();
     }
 
-    QVariant value(const QQuickVisualAdaptorModel &model, int index, const QString &role) const
+    QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const
     {
         if (QObject *object = model.list.at(index).value<QObject *>())
             return object->property(role.toUtf8());
         return QVariant();
     }
 
-    QQuickVisualDataModelItem *createItem(
-            QQuickVisualAdaptorModel &model,
-            QQuickVisualDataModelItemMetaType *metaType,
+    QQmlDelegateModelItem *createItem(
+            QQmlAdaptorModel &model,
+            QQmlDelegateModelItemMetaType *metaType,
             QQmlEngine *,
             int index) const
     {
@@ -747,27 +747,27 @@ public:
         if (!metaObject)
             dataType->initializeMetaType(model);
         return index >= 0 && index < model.list.count()
-                ? new QQuickVDMObjectData(metaType, dataType, index, qvariant_cast<QObject *>(model.list.at(index)))
+                ? new QQmlDMObjectData(metaType, dataType, index, qvariant_cast<QObject *>(model.list.at(index)))
                 : 0;
     }
 
-    void initializeMetaType(QQuickVisualAdaptorModel &)
+    void initializeMetaType(QQmlAdaptorModel &)
     {
-        setModelDataType<QQuickVDMObjectData>(&builder, this);
+        setModelDataType<QQmlDMObjectData>(&builder, this);
 
         metaObject = builder.toMetaObject();
     }
 
-    void cleanup(QQuickVisualAdaptorModel &, QQuickVisualDataModel *) const
+    void cleanup(QQmlAdaptorModel &, QQmlDelegateModel *) const
     {
         const_cast<VDMObjectDelegateDataType *>(this)->release();
     }
 };
 
-class QQuickVDMObjectDataMetaObject : public QAbstractDynamicMetaObject
+class QQmlDMObjectDataMetaObject : public QAbstractDynamicMetaObject
 {
 public:
-    QQuickVDMObjectDataMetaObject(QQuickVDMObjectData *data, VDMObjectDelegateDataType *type)
+    QQmlDMObjectDataMetaObject(QQmlDMObjectData *data, VDMObjectDelegateDataType *type)
         : m_data(data)
         , m_type(type)
     {
@@ -777,7 +777,7 @@ public:
         m_type->addref();
     }
 
-    ~QQuickVDMObjectDataMetaObject()
+    ~QQmlDMObjectDataMetaObject()
     {
         m_type->release();
     }
@@ -854,43 +854,43 @@ public:
         return propertyIndex + m_type->propertyOffset - objectPropertyOffset;
     }
 
-    QQuickVDMObjectData *m_data;
+    QQmlDMObjectData *m_data;
     VDMObjectDelegateDataType *m_type;
 };
 
-QQuickVDMObjectData::QQuickVDMObjectData(
-        QQuickVisualDataModelItemMetaType *metaType,
+QQmlDMObjectData::QQmlDMObjectData(
+        QQmlDelegateModelItemMetaType *metaType,
         VDMObjectDelegateDataType *dataType,
         int index,
         QObject *object)
-    : QQuickVisualDataModelItem(metaType, index)
+    : QQmlDelegateModelItem(metaType, index)
     , object(object)
 {
-    new QQuickVDMObjectDataMetaObject(this, dataType);
+    new QQmlDMObjectDataMetaObject(this, dataType);
 }
 
 //-----------------------------------------------------------------
-// QQuickVisualAdaptorModel
+// QQmlAdaptorModel
 //-----------------------------------------------------------------
 
-static const QQuickVisualAdaptorModel::Accessors qt_vdm_null_accessors;
+static const QQmlAdaptorModel::Accessors qt_vdm_null_accessors;
 static const VDMListDelegateDataType qt_vdm_list_accessors;
 
-QQuickVisualAdaptorModel::Accessors::~Accessors()
+QQmlAdaptorModel::Accessors::~Accessors()
 {
 }
 
-QQuickVisualAdaptorModel::QQuickVisualAdaptorModel()
+QQmlAdaptorModel::QQmlAdaptorModel()
     : accessors(&qt_vdm_null_accessors)
 {
 }
 
-QQuickVisualAdaptorModel::~QQuickVisualAdaptorModel()
+QQmlAdaptorModel::~QQmlAdaptorModel()
 {
     accessors->cleanup(*this);
 }
 
-void QQuickVisualAdaptorModel::setModel(const QVariant &variant, QQuickVisualDataModel *vdm, QQmlEngine *engine)
+void QQmlAdaptorModel::setModel(const QVariant &variant, QQmlDelegateModel *vdm, QQmlEngine *engine)
 {
     accessors->cleanup(*this, vdm);
 
@@ -902,27 +902,27 @@ void QQuickVisualAdaptorModel::setModel(const QVariant &variant, QQuickVisualDat
             accessors = new VDMAbstractItemModelDataType(this);
 
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsInserted(QModelIndex,int,int)),
-                              vdm, QQuickVisualDataModel, SLOT(_q_rowsInserted(QModelIndex,int,int)));
+                              vdm, QQmlDelegateModel, SLOT(_q_rowsInserted(QModelIndex,int,int)));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsRemoved(QModelIndex,int,int)),
-                              vdm,  QQuickVisualDataModel, SLOT(_q_rowsRemoved(QModelIndex,int,int)));
+                              vdm,  QQmlDelegateModel, SLOT(_q_rowsRemoved(QModelIndex,int,int)));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
-                              vdm,  QQuickVisualDataModel, SLOT(_q_rowsAboutToBeRemoved(QModelIndex,int,int)));
+                              vdm,  QQmlDelegateModel, SLOT(_q_rowsAboutToBeRemoved(QModelIndex,int,int)));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),
-                              vdm, QQuickVisualDataModel, SLOT(_q_dataChanged(QModelIndex,QModelIndex,QVector<int>)));
+                              vdm, QQmlDelegateModel, SLOT(_q_dataChanged(QModelIndex,QModelIndex,QVector<int>)));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
-                              vdm, QQuickVisualDataModel, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
+                              vdm, QQmlDelegateModel, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(modelReset()),
-                              vdm, QQuickVisualDataModel, SLOT(_q_modelReset()));
+                              vdm, QQmlDelegateModel, SLOT(_q_modelReset()));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(layoutChanged()),
-                              vdm, QQuickVisualDataModel, SLOT(_q_layoutChanged()));
+                              vdm, QQmlDelegateModel, SLOT(_q_layoutChanged()));
         } else {
             accessors = new VDMObjectDelegateDataType;
         }
-    } else if (list.type() == QQuickListAccessor::ListProperty) {
+    } else if (list.type() == QQmlListAccessor::ListProperty) {
         setObject(static_cast<const QQmlListReference *>(variant.constData())->object());
         accessors = new VDMObjectDelegateDataType;
-    } else if (list.type() != QQuickListAccessor::Invalid) {
-        Q_ASSERT(list.type() != QQuickListAccessor::Instance);  // Should have cast to QObject.
+    } else if (list.type() != QQmlListAccessor::Invalid) {
+        Q_ASSERT(list.type() != QQmlListAccessor::Instance);  // Should have cast to QObject.
         setObject(0);
         accessors = &qt_vdm_list_accessors;
     } else {
@@ -931,7 +931,7 @@ void QQuickVisualAdaptorModel::setModel(const QVariant &variant, QQuickVisualDat
     }
 }
 
-void QQuickVisualAdaptorModel::invalidateModel(QQuickVisualDataModel *vdm)
+void QQmlAdaptorModel::invalidateModel(QQmlDelegateModel *vdm)
 {
     accessors->cleanup(*this, vdm);
     accessors = &qt_vdm_null_accessors;
@@ -939,17 +939,17 @@ void QQuickVisualAdaptorModel::invalidateModel(QQuickVisualDataModel *vdm)
     // object is destroyed.
 }
 
-bool QQuickVisualAdaptorModel::isValid() const
+bool QQmlAdaptorModel::isValid() const
 {
     return accessors != &qt_vdm_null_accessors;
 }
 
-void QQuickVisualAdaptorModel::objectDestroyed(QObject *)
+void QQmlAdaptorModel::objectDestroyed(QObject *)
 {
     setModel(QVariant(), 0, 0);
 }
 
-QQuickVisualAdaptorModelEngineData::QQuickVisualAdaptorModelEngineData(QV8Engine *)
+QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV8Engine *)
 {
     strings = qPersistentNew(v8::Array::New(StringCount));
     strings->Set(Index, v8::String::New("index"));
@@ -961,12 +961,12 @@ QQuickVisualAdaptorModelEngineData::QQuickVisualAdaptorModelEngineData(QV8Engine
     listItem->InstanceTemplate()->SetAccessor(index(), get_index);
     listItem->InstanceTemplate()->SetAccessor(
             modelData(),
-            QQuickVDMListAccessorData::get_modelData,
-            QQuickVDMListAccessorData::set_modelData);
+            QQmlDMListAccessorData::get_modelData,
+            QQmlDMListAccessorData::set_modelData);
     constructorListItem = qPersistentNew(listItem->GetFunction());
 }
 
-QQuickVisualAdaptorModelEngineData::~QQuickVisualAdaptorModelEngineData()
+QQmlAdaptorModelEngineData::~QQmlAdaptorModelEngineData()
 {
     qPersistentDispose(constructorListItem);
     qPersistentDispose(strings);
@@ -974,4 +974,4 @@ QQuickVisualAdaptorModelEngineData::~QQuickVisualAdaptorModelEngineData()
 
 QT_END_NAMESPACE
 
-#include <qquickvisualadaptormodel.moc>
+#include <qqmladaptormodel.moc>

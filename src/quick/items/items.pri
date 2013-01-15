@@ -38,10 +38,6 @@ HEADERS += \
     $$PWD/qquickflickable_p.h \
     $$PWD/qquickflickable_p_p.h \
     $$PWD/qquicklistview_p.h \
-    $$PWD/qquickvisualadaptormodel_p.h \
-    $$PWD/qquickvisualdatamodel_p.h \
-    $$PWD/qquickvisualdatamodel_p_p.h \
-    $$PWD/qquickvisualitemmodel_p.h \
     $$PWD/qquickrepeater_p.h \
     $$PWD/qquickrepeater_p_p.h \
     $$PWD/qquickgridview_p.h \
@@ -99,9 +95,6 @@ SOURCES += \
     $$PWD/qquickpincharea.cpp \
     $$PWD/qquickflickable.cpp \
     $$PWD/qquicklistview.cpp \
-    $$PWD/qquickvisualadaptormodel.cpp \
-    $$PWD/qquickvisualdatamodel.cpp \
-    $$PWD/qquickvisualitemmodel.cpp \
     $$PWD/qquickrepeater.cpp \
     $$PWD/qquickgridview.cpp \
     $$PWD/qquickpathview.cpp \

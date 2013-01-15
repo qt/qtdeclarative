@@ -42,9 +42,9 @@ PRIVATETESTS += \
     qqmlvaluetypes \
     qqmlvaluetypeproviders \
     qqmlbinding \
-    qquickchangeset \
+    qqmlchangeset \
     qqmlconnections \
-    qquicklistcompositor \
+    qqmllistcompositor \
     qqmllistmodel \
     qqmllistmodelworkerscript \
     qquickworkerscript \

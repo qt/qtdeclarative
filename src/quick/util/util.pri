@@ -1,7 +1,6 @@
 SOURCES += \
     $$PWD/qquickapplication.cpp\
     $$PWD/qquickutilmodule.cpp\
-    $$PWD/qquickpackage.cpp \
     $$PWD/qquickanimation.cpp \
     $$PWD/qquicksystempalette.cpp \
     $$PWD/qquickspringanimation.cpp \
@@ -13,15 +12,12 @@ SOURCES += \
     $$PWD/qquickpropertychanges.cpp \
     $$PWD/qquickstategroup.cpp \
     $$PWD/qquicktransition.cpp \
-    $$PWD/qquicklistaccessor.cpp \
     $$PWD/qquicktimeline.cpp \
     $$PWD/qquickpixmapcache.cpp \
     $$PWD/qquickbehavior.cpp \
     $$PWD/qquickfontloader.cpp \
     $$PWD/qquickstyledtext.cpp \
     $$PWD/qquickpath.cpp \
-    $$PWD/qquickchangeset.cpp \
-    $$PWD/qquicklistcompositor.cpp \
     $$PWD/qquickpathinterpolator.cpp \
     $$PWD/qquickimageprovider.cpp \
     $$PWD/qquicksvgparser.cpp \
@@ -31,7 +27,6 @@ SOURCES += \
 HEADERS += \
     $$PWD/qquickapplication_p.h\
     $$PWD/qquickutilmodule_p.h\
-    $$PWD/qquickpackage_p.h \
     $$PWD/qquickanimation_p.h \
     $$PWD/qquickanimation_p_p.h \
     $$PWD/qquicksystempalette_p.h \
@@ -46,7 +41,6 @@ HEADERS += \
     $$PWD/qquicktransitionmanager_p_p.h \
     $$PWD/qquickstategroup_p.h \
     $$PWD/qquicktransition_p.h \
-    $$PWD/qquicklistaccessor_p.h \
     $$PWD/qquicktimeline_p_p.h \
     $$PWD/qquickpixmapcache_p.h \
     $$PWD/qquickbehavior_p.h \
@@ -54,8 +48,6 @@ HEADERS += \
     $$PWD/qquickstyledtext_p.h \
     $$PWD/qquickpath_p.h \
     $$PWD/qquickpath_p_p.h \
-    $$PWD/qquickchangeset_p.h \
-    $$PWD/qquicklistcompositor_p.h \
     $$PWD/qquickpathinterpolator_p.h \
     $$PWD/qquickimageprovider.h \
     $$PWD/qquicksvgparser_p.h \

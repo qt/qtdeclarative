@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKCHANGESET_P_H
-#define QQUICKCHANGESET_P_H
+#ifndef QQMLCHANGESET_P_H
+#define QQMLCHANGESET_P_H
 
 //
 //  W A R N I N G
@@ -55,10 +55,11 @@
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qvector.h>
+#include <QtQml/private/qtqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QQuickChangeSet
+class Q_QML_PRIVATE_EXPORT QQmlChangeSet
 {
 public:
     struct MoveKey
@@ -104,11 +105,11 @@ public:
             : Change(index, count, moveId, offset) {}
     };
 
-    QQuickChangeSet();
-    QQuickChangeSet(const QQuickChangeSet &changeSet);
-    ~QQuickChangeSet();
+    QQmlChangeSet();
+    QQmlChangeSet(const QQmlChangeSet &changeSet);
+    ~QQmlChangeSet();
 
-    QQuickChangeSet &operator =(const QQuickChangeSet &changeSet);
+    QQmlChangeSet &operator =(const QQmlChangeSet &changeSet);
 
     const QVector<Remove> &removes() const { return m_removes; }
     const QVector<Insert> &inserts() const { return m_inserts; }
@@ -123,7 +124,7 @@ public:
     void remove(const QVector<Remove> &removes, QVector<Insert> *inserts = 0);
     void move(const QVector<Remove> &removes, const QVector<Insert> &inserts);
     void change(const QVector<Change> &changes);
-    void apply(const QQuickChangeSet &changeSet);
+    void apply(const QQmlChangeSet &changeSet);
 
     bool isEmpty() const { return m_removes.empty() && m_inserts.empty() && m_changes.isEmpty(); }
 
@@ -147,19 +148,19 @@ private:
     int m_difference;
 };
 
-Q_DECLARE_TYPEINFO(QQuickChangeSet::Change, Q_PRIMITIVE_TYPE);
-Q_DECLARE_TYPEINFO(QQuickChangeSet::Remove, Q_PRIMITIVE_TYPE);
-Q_DECLARE_TYPEINFO(QQuickChangeSet::Insert, Q_PRIMITIVE_TYPE);
-Q_DECLARE_TYPEINFO(QQuickChangeSet::MoveKey, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlChangeSet::Change, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlChangeSet::Remove, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlChangeSet::Insert, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlChangeSet::MoveKey, Q_PRIMITIVE_TYPE);
 
-inline uint qHash(const QQuickChangeSet::MoveKey &key) { return qHash(qMakePair(key.moveId, key.offset)); }
-inline bool operator ==(const QQuickChangeSet::MoveKey &l, const QQuickChangeSet::MoveKey &r) {
+inline uint qHash(const QQmlChangeSet::MoveKey &key) { return qHash(qMakePair(key.moveId, key.offset)); }
+inline bool operator ==(const QQmlChangeSet::MoveKey &l, const QQmlChangeSet::MoveKey &r) {
     return l.moveId == r.moveId && l.offset == r.offset; }
 
-Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickChangeSet::Remove &remove);
-Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickChangeSet::Insert &insert);
-Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickChangeSet::Change &change);
-Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickChangeSet &change);
+Q_QML_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet::Remove &remove);
+Q_QML_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet::Insert &insert);
+Q_QML_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet::Change &change);
+Q_QML_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet &change);
 
 QT_END_NAMESPACE
 

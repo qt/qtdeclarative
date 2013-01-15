@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKLISTCOMPOSITOR_P_H
-#define QQUICKLISTCOMPOSITOR_P_H
+#ifndef QQMLLISTCOMPOSITOR_P_H
+#define QQMLLISTCOMPOSITOR_P_H
 
 //
 //  W A R N I N G
@@ -56,13 +56,13 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qvector.h>
 
-#include <private/qquickchangeset_p.h>
+#include <private/qqmlchangeset_p.h>
 
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QQuickListCompositor
+class Q_AUTOTEST_EXPORT QQmlListCompositor
 {
 public:
     enum { MinimumGroupCount = 3, MaximumGroupCount = 11 };
@@ -207,8 +207,8 @@ public:
             : Change(it, count, flags, moveId) {}
     };
 
-    QQuickListCompositor();
-    ~QQuickListCompositor();
+    QQmlListCompositor();
+    ~QQmlListCompositor();
 
     int defaultGroups() const { return m_defaultFlags & ~PrependFlag; }
     void setDefaultGroups(int groups) { m_defaultFlags = groups | PrependFlag; }
@@ -263,8 +263,8 @@ public:
     void transition(
             Group from,
             Group to,
-            QVector<QQuickChangeSet::Remove> *removes,
-            QVector<QQuickChangeSet::Insert> *inserts);
+            QVector<QQmlChangeSet::Remove> *removes,
+            QVector<QQmlChangeSet::Insert> *inserts);
 
 private:
     Range m_ranges;
@@ -290,29 +290,29 @@ private:
     void listItemsRemoved(
             QVector<Remove> *translatedRemovals,
             void *list,
-            QVector<QQuickChangeSet::Remove> *removals,
-            QVector<QQuickChangeSet::Insert> *insertions = 0,
+            QVector<QQmlChangeSet::Remove> *removals,
+            QVector<QQmlChangeSet::Insert> *insertions = 0,
             QVector<MovedFlags> *movedFlags = 0);
     void listItemsInserted(
             QVector<Insert> *translatedInsertions,
             void *list,
-            const QVector<QQuickChangeSet::Insert> &insertions,
+            const QVector<QQmlChangeSet::Insert> &insertions,
             const QVector<MovedFlags> *movedFlags = 0);
     void listItemsChanged(
             QVector<Change> *translatedChanges,
             void *list,
-            const QVector<QQuickChangeSet::Change> &changes);
+            const QVector<QQmlChangeSet::Change> &changes);
 
-    friend Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickListCompositor &list);
+    friend Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQmlListCompositor &list);
 };
 
-Q_DECLARE_TYPEINFO(QQuickListCompositor::Change, Q_PRIMITIVE_TYPE);
-Q_DECLARE_TYPEINFO(QQuickListCompositor::Remove, Q_PRIMITIVE_TYPE);
-Q_DECLARE_TYPEINFO(QQuickListCompositor::Insert, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlListCompositor::Change, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlListCompositor::Remove, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlListCompositor::Insert, Q_PRIMITIVE_TYPE);
 
-inline QQuickListCompositor::iterator::iterator()
+inline QQmlListCompositor::iterator::iterator()
     : range(0), offset(0), group(Default), groupCount(0) {}
-inline QQuickListCompositor::iterator::iterator(const iterator &it)
+inline QQmlListCompositor::iterator::iterator(const iterator &it)
     : range(it.range)
     , offset(it.offset)
     , group(it.group)
@@ -323,7 +323,7 @@ inline QQuickListCompositor::iterator::iterator(const iterator &it)
         index[i] = it.index[i];
 }
 
-inline QQuickListCompositor::iterator::iterator(
+inline QQmlListCompositor::iterator::iterator(
         Range *range, int offset, Group group, int groupCount)
     : range(range)
     , offset(offset)
@@ -335,7 +335,7 @@ inline QQuickListCompositor::iterator::iterator(
         index[i] = 0;
 }
 
-inline void QQuickListCompositor::iterator::incrementIndexes(int difference, uint flags)
+inline void QQmlListCompositor::iterator::incrementIndexes(int difference, uint flags)
 {
     for (int i = 0; i < groupCount; ++i) {
         if (flags & (1 << i))
@@ -343,7 +343,7 @@ inline void QQuickListCompositor::iterator::incrementIndexes(int difference, uin
     }
 }
 
-inline void QQuickListCompositor::iterator::decrementIndexes(int difference, uint flags)
+inline void QQmlListCompositor::iterator::decrementIndexes(int difference, uint flags)
 {
     for (int i = 0; i < groupCount; ++i) {
         if (flags & (1 << i))
@@ -351,24 +351,24 @@ inline void QQuickListCompositor::iterator::decrementIndexes(int difference, uin
     }
 }
 
-inline QQuickListCompositor::insert_iterator::insert_iterator(
+inline QQmlListCompositor::insert_iterator::insert_iterator(
         Range *range, int offset, Group group, int groupCount)
     : iterator(range, offset, group, groupCount) {}
 
-inline QQuickListCompositor::Change::Change(iterator it, int count, uint flags, int moveId)
+inline QQmlListCompositor::Change::Change(iterator it, int count, uint flags, int moveId)
     : count(count), flags(flags), moveId(moveId)
 {
     for (int i = 0; i < MaximumGroupCount; ++i)
         index[i] = it.index[i];
 }
 
-Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickListCompositor::Group &group);
-Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickListCompositor::Range &range);
-Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickListCompositor::iterator &it);
-Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickListCompositor::Change &change);
-Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickListCompositor::Remove &remove);
-Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickListCompositor::Insert &insert);
-Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickListCompositor &list);
+Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQmlListCompositor::Group &group);
+Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQmlListCompositor::Range &range);
+Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQmlListCompositor::iterator &it);
+Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQmlListCompositor::Change &change);
+Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQmlListCompositor::Remove &remove);
+Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQmlListCompositor::Insert &insert);
+Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQmlListCompositor &list);
 
 QT_END_NAMESPACE
 

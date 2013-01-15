@@ -1,8 +1,8 @@
 CONFIG += testcase
-TARGET = tst_qquicklistcompositor
+TARGET = tst_qqmllistcompositor
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qquicklistcompositor.cpp
+SOURCES += tst_qqmllistcompositor.cpp
 
 CONFIG += parallel_test
 

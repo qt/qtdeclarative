@@ -39,18 +39,18 @@
 **
 ****************************************************************************/
 
-#include "qquickchangeset_p.h"
+#include "qqmlchangeset_p.h"
 
 QT_BEGIN_NAMESPACE
 
 
 /*!
-    \class QQuickChangeSet
-    \brief The QQuickChangeSet class stores an ordered list of notifications about
+    \class QQmlChangeSet
+    \brief The QQmlChangeSet class stores an ordered list of notifications about
     changes to a linear data set.
     \internal
 
-    QQuickChangeSet can be used to record a series of notications about items in an indexed list
+    QQmlChangeSet can be used to record a series of notifications about items in an indexed list
     being inserted, removed, moved, and changed.  Notifications in the set are re-ordered so that
     all notifications of a single type are grouped together and sorted in order of ascending index,
     with remove notifications preceding all others, followed by insert notification, and then
@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
     Constructs an empty change set.
 */
 
-QQuickChangeSet::QQuickChangeSet()
+QQmlChangeSet::QQmlChangeSet()
     : m_difference(0)
 {
 }
@@ -76,7 +76,7 @@ QQuickChangeSet::QQuickChangeSet()
     Constructs a copy of a \a changeSet.
 */
 
-QQuickChangeSet::QQuickChangeSet(const QQuickChangeSet &changeSet)
+QQmlChangeSet::QQmlChangeSet(const QQmlChangeSet &changeSet)
     : m_removes(changeSet.m_removes)
     , m_inserts(changeSet.m_inserts)
     , m_changes(changeSet.m_changes)
@@ -88,7 +88,7 @@ QQuickChangeSet::QQuickChangeSet(const QQuickChangeSet &changeSet)
     Destroys a change set.
 */
 
-QQuickChangeSet::~QQuickChangeSet()
+QQmlChangeSet::~QQmlChangeSet()
 {
 }
 
@@ -96,7 +96,7 @@ QQuickChangeSet::~QQuickChangeSet()
     Assigns the value of a \a changeSet to another.
 */
 
-QQuickChangeSet &QQuickChangeSet::operator =(const QQuickChangeSet &changeSet)
+QQmlChangeSet &QQmlChangeSet::operator =(const QQmlChangeSet &changeSet)
 {
     m_removes = changeSet.m_removes;
     m_inserts = changeSet.m_inserts;
@@ -109,7 +109,7 @@ QQuickChangeSet &QQuickChangeSet::operator =(const QQuickChangeSet &changeSet)
     Appends a notification that \a count items were inserted at \a index.
 */
 
-void QQuickChangeSet::insert(int index, int count)
+void QQmlChangeSet::insert(int index, int count)
 {
     insert(QVector<Insert>() << Insert(index, count));
 }
@@ -118,7 +118,7 @@ void QQuickChangeSet::insert(int index, int count)
     Appends a notification that \a count items were removed at \a index.
 */
 
-void QQuickChangeSet::remove(int index, int count)
+void QQmlChangeSet::remove(int index, int count)
 {
     QVector<Remove> removes;
     removes.append(Remove(index, count));
@@ -132,7 +132,7 @@ void QQuickChangeSet::remove(int index, int count)
     change sets.
 */
 
-void QQuickChangeSet::move(int from, int to, int count, int moveId)
+void QQmlChangeSet::move(int from, int to, int count, int moveId)
 {
     QVector<Remove> removes;
     removes.append(Remove(from, count, moveId));
@@ -146,7 +146,7 @@ void QQuickChangeSet::move(int from, int to, int count, int moveId)
     Appends a notification that \a count items were changed at \a index.
 */
 
-void QQuickChangeSet::change(int index, int count)
+void QQmlChangeSet::change(int index, int count)
 {
     QVector<Change> changes;
     changes.append(Change(index, count));
@@ -157,7 +157,7 @@ void QQuickChangeSet::change(int index, int count)
     Applies the changes in a \a changeSet to another.
 */
 
-void QQuickChangeSet::apply(const QQuickChangeSet &changeSet)
+void QQmlChangeSet::apply(const QQmlChangeSet &changeSet)
 {
     QVector<Remove> r = changeSet.m_removes;
     QVector<Insert> i = changeSet.m_inserts;
@@ -174,13 +174,13 @@ void QQuickChangeSet::apply(const QQuickChangeSet &changeSet)
     corresponding intersection in the optional \a inserts list.
 */
 
-void QQuickChangeSet::remove(const QVector<Remove> &removes, QVector<Insert> *inserts)
+void QQmlChangeSet::remove(const QVector<Remove> &removes, QVector<Insert> *inserts)
 {
     QVector<Remove> r = removes;
     remove(&r, inserts);
 }
 
-void QQuickChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
+void QQmlChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
 {
     int removeCount = 0;
     int insertCount = 0;
@@ -395,7 +395,7 @@ void QQuickChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
     Applies a list of \a inserts to a change set.
 */
 
-void QQuickChangeSet::insert(const QVector<Insert> &inserts)
+void QQmlChangeSet::insert(const QVector<Insert> &inserts)
 {
     int insertCount = 0;
     QVector<Insert>::iterator insert = m_inserts.begin();
@@ -487,7 +487,7 @@ void QQuickChangeSet::insert(const QVector<Insert> &inserts)
     calling \l remove() followed by \l insert() with the same lists.
 */
 
-void QQuickChangeSet::move(const QVector<Remove> &removes, const QVector<Insert> &inserts)
+void QQmlChangeSet::move(const QVector<Remove> &removes, const QVector<Insert> &inserts)
 {
     QVector<Remove> r = removes;
     QVector<Insert> i = inserts;
@@ -499,13 +499,13 @@ void QQuickChangeSet::move(const QVector<Remove> &removes, const QVector<Insert>
     Applies a list of \a changes to a change set.
 */
 
-void QQuickChangeSet::change(const QVector<Change> &changes)
+void QQmlChangeSet::change(const QVector<Change> &changes)
 {
     QVector<Change> c = changes;
     change(&c);
 }
 
-void QQuickChangeSet::change(QVector<Change> *changes)
+void QQmlChangeSet::change(QVector<Change> *changes)
 {
     QVector<Insert>::iterator insert = m_inserts.begin();
     QVector<Change>::iterator change = m_changes.begin();
@@ -557,12 +557,12 @@ void QQuickChangeSet::change(QVector<Change> *changes)
     Prints the contents of a change \a set to the \a debug stream.
 */
 
-QDebug operator <<(QDebug debug, const QQuickChangeSet &set)
+QDebug operator <<(QDebug debug, const QQmlChangeSet &set)
 {
-    debug.nospace() << "QQuickChangeSet(";
-    foreach (const QQuickChangeSet::Remove &remove, set.removes()) debug << remove;
-    foreach (const QQuickChangeSet::Insert &insert, set.inserts()) debug << insert;
-    foreach (const QQuickChangeSet::Change &change, set.changes()) debug << change;
+    debug.nospace() << "QQmlChangeSet(";
+    foreach (const QQmlChangeSet::Remove &remove, set.removes()) debug << remove;
+    foreach (const QQmlChangeSet::Insert &insert, set.inserts()) debug << insert;
+    foreach (const QQmlChangeSet::Change &change, set.changes()) debug << change;
     return debug.nospace() << ')';
 }
 
@@ -570,7 +570,7 @@ QDebug operator <<(QDebug debug, const QQuickChangeSet &set)
     Prints a \a remove to the \a debug stream.
 */
 
-QDebug operator <<(QDebug debug, const QQuickChangeSet::Remove &remove)
+QDebug operator <<(QDebug debug, const QQmlChangeSet::Remove &remove)
 {
     if (remove.moveId == -1) {
         return (debug.nospace()
@@ -591,7 +591,7 @@ QDebug operator <<(QDebug debug, const QQuickChangeSet::Remove &remove)
     Prints an \a insert to the \a debug stream.
 */
 
-QDebug operator <<(QDebug debug, const QQuickChangeSet::Insert &insert)
+QDebug operator <<(QDebug debug, const QQmlChangeSet::Insert &insert)
 {
     if (insert.moveId == -1) {
         return (debug.nospace()
@@ -612,7 +612,7 @@ QDebug operator <<(QDebug debug, const QQuickChangeSet::Insert &insert)
     Prints a \a change to the \a debug stream.
 */
 
-QDebug operator <<(QDebug debug, const QQuickChangeSet::Change &change)
+QDebug operator <<(QDebug debug, const QQmlChangeSet::Change &change)
 {
     return (debug.nospace() << "Change(" << change.index << ',' << change.count << ')').space();
 }

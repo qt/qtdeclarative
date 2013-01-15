@@ -61,7 +61,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlContext;
-class QQuickVisualModel;
+class QQmlInstanceModel;
 class QQuickRepeaterPrivate : public QQuickItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickRepeater)
@@ -73,12 +73,13 @@ public:
 private:
     void createItems();
 
-    QQuickVisualModel *model;
+    QQmlInstanceModel *model;
     QVariant dataSource;
     QQmlGuard<QObject> dataSourceAsObject;
     bool ownModel : 1;
     bool inRequest : 1;
     bool dataSourceIsObject : 1;
+    bool delegateValidated : 1;
     int itemCount;
     int createFrom;
 

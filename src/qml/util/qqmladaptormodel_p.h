@@ -39,12 +39,12 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKVISUALADAPTORMODEL_P_H
-#define QQUICKVISUALADAPTORMODEL_P_H
+#ifndef QQMLADAPTORMODEL_P_H
+#define QQMLADAPTORMODEL_P_H
 
 #include <QtCore/qabstractitemmodel.h>
 
-#include "private/qquicklistaccessor_p.h"
+#include "private/qqmllistaccessor_p.h"
 
 #include <private/qqmlguard_p.h>
 
@@ -54,11 +54,11 @@ QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
 
-class QQuickVisualDataModel;
-class QQuickVisualDataModelItem;
-class QQuickVisualDataModelItemMetaType;
+class QQmlDelegateModel;
+class QQmlDelegateModelItem;
+class QQmlDelegateModelItemMetaType;
 
-class QQuickVisualAdaptorModel : public QQmlGuard<QObject>
+class QQmlAdaptorModel : public QQmlGuard<QObject>
 {
 public:
     class Accessors
@@ -66,46 +66,46 @@ public:
     public:
         inline Accessors() {}
         virtual ~Accessors();
-        virtual int count(const QQuickVisualAdaptorModel &) const { return 0; }
-        virtual void cleanup(QQuickVisualAdaptorModel &, QQuickVisualDataModel * = 0) const {}
+        virtual int count(const QQmlAdaptorModel &) const { return 0; }
+        virtual void cleanup(QQmlAdaptorModel &, QQmlDelegateModel * = 0) const {}
 
-        virtual QVariant value(const QQuickVisualAdaptorModel &, int, const QString &) const {
+        virtual QVariant value(const QQmlAdaptorModel &, int, const QString &) const {
             return QVariant(); }
 
-        virtual QQuickVisualDataModelItem *createItem(
-                QQuickVisualAdaptorModel &,
-                QQuickVisualDataModelItemMetaType *,
+        virtual QQmlDelegateModelItem *createItem(
+                QQmlAdaptorModel &,
+                QQmlDelegateModelItemMetaType *,
                 QQmlEngine *,
                 int) const { return 0; }
 
         virtual bool notify(
-                const QQuickVisualAdaptorModel &,
-                const QList<QQuickVisualDataModelItem *> &,
+                const QQmlAdaptorModel &,
+                const QList<QQmlDelegateModelItem *> &,
                 int,
                 int,
                 const QVector<int> &) const { return false; }
         virtual void replaceWatchedRoles(
-                QQuickVisualAdaptorModel &,
+                QQmlAdaptorModel &,
                 const QList<QByteArray> &,
                 const QList<QByteArray> &) const {}
-        virtual QVariant parentModelIndex(const QQuickVisualAdaptorModel &) const {
+        virtual QVariant parentModelIndex(const QQmlAdaptorModel &) const {
             return QVariant(); }
-        virtual QVariant modelIndex(const QQuickVisualAdaptorModel &, int) const {
+        virtual QVariant modelIndex(const QQmlAdaptorModel &, int) const {
             return QVariant(); }
-        virtual bool canFetchMore(const QQuickVisualAdaptorModel &) const { return false; }
-        virtual void fetchMore(QQuickVisualAdaptorModel &) const {}
+        virtual bool canFetchMore(const QQmlAdaptorModel &) const { return false; }
+        virtual void fetchMore(QQmlAdaptorModel &) const {}
     };
 
     const Accessors *accessors;
     QPersistentModelIndex rootIndex;
-    QQuickListAccessor list;
+    QQmlListAccessor list;
 
-    QQuickVisualAdaptorModel();
-    ~QQuickVisualAdaptorModel();
+    QQmlAdaptorModel();
+    ~QQmlAdaptorModel();
 
     inline QVariant model() const { return list.list(); }
-    void setModel(const QVariant &variant, QQuickVisualDataModel *vdm, QQmlEngine *engine);
-    void invalidateModel(QQuickVisualDataModel *vdm);
+    void setModel(const QVariant &variant, QQmlDelegateModel *vdm, QQmlEngine *engine);
+    void invalidateModel(QQmlDelegateModel *vdm);
 
     bool isValid() const;
 
@@ -115,13 +115,13 @@ public:
     inline int count() const { return qMax(0, accessors->count(*this)); }
     inline QVariant value(int index, const QString &role) const {
         return accessors->value(*this, index, role); }
-    inline QQuickVisualDataModelItem *createItem(QQuickVisualDataModelItemMetaType *metaType, QQmlEngine *engine, int index) {
+    inline QQmlDelegateModelItem *createItem(QQmlDelegateModelItemMetaType *metaType, QQmlEngine *engine, int index) {
         return accessors->createItem(*this, metaType, engine, index); }
     inline bool hasProxyObject() const {
-        return list.type() == QQuickListAccessor::Instance || list.type() == QQuickListAccessor::ListProperty; }
+        return list.type() == QQmlListAccessor::Instance || list.type() == QQmlListAccessor::ListProperty; }
 
     inline bool notify(
-            const QList<QQuickVisualDataModelItem *> &items,
+            const QList<QQmlDelegateModelItem *> &items,
             int index,
             int count,
             const QVector<int> &roles) const {
@@ -139,17 +139,17 @@ protected:
     void objectDestroyed(QObject *);
 };
 
-class QQuickVisualAdaptorModelProxyInterface
+class QQmlAdaptorModelProxyInterface
 {
 public:
-    virtual ~QQuickVisualAdaptorModelProxyInterface() {}
+    virtual ~QQmlAdaptorModelProxyInterface() {}
 
     virtual QObject *proxiedObject() = 0;
 };
 
-#define QQuickVisualAdaptorModelProxyInterface_iid "org.qt-project.Qt.QQuickVisualAdaptorModelProxyInterface"
+#define QQmlAdaptorModelProxyInterface_iid "org.qt-project.Qt.QQmlAdaptorModelProxyInterface"
 
-Q_DECLARE_INTERFACE(QQuickVisualAdaptorModelProxyInterface, QQuickVisualAdaptorModelProxyInterface_iid)
+Q_DECLARE_INTERFACE(QQmlAdaptorModelProxyInterface, QQmlAdaptorModelProxyInterface_iid)
 
 QT_END_NAMESPACE
 

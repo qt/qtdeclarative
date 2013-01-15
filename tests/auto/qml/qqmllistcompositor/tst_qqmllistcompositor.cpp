@@ -39,11 +39,11 @@
 **
 ****************************************************************************/
 #include <qtest.h>
-#include <private/qquicklistcompositor_p.h>
+#include <private/qqmllistcompositor_p.h>
 
 template<typename T, int N> int lengthOf(const T (&)[N]) { return N; }
 
-typedef QQuickListCompositor C;
+typedef QQmlListCompositor C;
 
 struct Range
 {
@@ -70,9 +70,9 @@ template <typename T>  struct Array
 typedef Array<int> IndexArray;
 typedef Array<const void *> ListArray;
 
-typedef QVector<QQuickListCompositor::Remove> RemoveList;
-typedef QVector<QQuickListCompositor::Insert> InsertList;
-typedef QVector<QQuickListCompositor::Change> ChangeList;
+typedef QVector<QQmlListCompositor::Remove> RemoveList;
+typedef QVector<QQmlListCompositor::Insert> InsertList;
+typedef QVector<QQmlListCompositor::Change> ChangeList;
 
 typedef QVector<Range> RangeList;
 
@@ -102,7 +102,7 @@ QT_END_NAMESPACE
 static const C::Group Visible = C::Group(2);
 static const C::Group Selection = C::Group(3);
 
-class tst_qquicklistcompositor : public QObject
+class tst_qqmllistcompositor : public QObject
 {
     Q_OBJECT
 
@@ -174,7 +174,7 @@ private slots:
     void groupDebug();
 };
 
-void tst_qquicklistcompositor::find_data()
+void tst_qqmllistcompositor::find_data()
 {
     QTest::addColumn<RangeList>("ranges");
     QTest::addColumn<C::Group>("startGroup");
@@ -201,7 +201,7 @@ void tst_qquicklistcompositor::find_data()
             << uint(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag) << 0;
 }
 
-void tst_qquicklistcompositor::find()
+void tst_qqmllistcompositor::find()
 {
     QFETCH(RangeList, ranges);
     QFETCH(C::Group, startGroup);
@@ -215,7 +215,7 @@ void tst_qquicklistcompositor::find()
     QFETCH(uint, rangeFlags);
     QFETCH(int, rangeIndex);
 
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
@@ -224,7 +224,7 @@ void tst_qquicklistcompositor::find()
 
     compositor.find(startGroup, startIndex);
 
-    QQuickListCompositor::iterator it = compositor.find(group, index);
+    QQmlListCompositor::iterator it = compositor.find(group, index);
     QCOMPARE(it.index[C::Cache], cacheIndex);
     QCOMPARE(it.index[C::Default], defaultIndex);
     QCOMPARE(it.index[Visible], visibleIndex);
@@ -233,7 +233,7 @@ void tst_qquicklistcompositor::find()
     QCOMPARE(it->index, rangeIndex);
 }
 
-void tst_qquicklistcompositor::findInsertPosition_data()
+void tst_qqmllistcompositor::findInsertPosition_data()
 {
     QTest::addColumn<RangeList>("ranges");
     QTest::addColumn<C::Group>("group");
@@ -265,7 +265,7 @@ void tst_qquicklistcompositor::findInsertPosition_data()
             << uint(0) << 0;
 }
 
-void tst_qquicklistcompositor::findInsertPosition()
+void tst_qqmllistcompositor::findInsertPosition()
 {
     QFETCH(RangeList, ranges);
     QFETCH(C::Group, group);
@@ -277,14 +277,14 @@ void tst_qquicklistcompositor::findInsertPosition()
     QFETCH(uint, rangeFlags);
     QFETCH(int, rangeIndex);
 
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
     foreach (const Range &range, ranges)
         compositor.append(range.list, range.index, range.count, range.flags);
 
-    QQuickListCompositor::insert_iterator it = compositor.findInsertPosition(group, index);
+    QQmlListCompositor::insert_iterator it = compositor.findInsertPosition(group, index);
 
     QCOMPARE(it.index[C::Cache], cacheIndex);
     QCOMPARE(it.index[C::Default], defaultIndex);
@@ -294,9 +294,9 @@ void tst_qquicklistcompositor::findInsertPosition()
     QCOMPARE(it->index, rangeIndex);
 }
 
-void tst_qquicklistcompositor::insert()
+void tst_qqmllistcompositor::insert()
 {
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
@@ -383,7 +383,7 @@ void tst_qquicklistcompositor::insert()
     }
 }
 
-void tst_qquicklistcompositor::clearFlags_data()
+void tst_qqmllistcompositor::clearFlags_data()
 {
     QTest::addColumn<RangeList>("ranges");
     QTest::addColumn<C::Group>("group");
@@ -518,7 +518,7 @@ void tst_qquicklistcompositor::clearFlags_data()
     }
 }
 
-void tst_qquicklistcompositor::clearFlags()
+void tst_qqmllistcompositor::clearFlags()
 {
     QFETCH(RangeList, ranges);
     QFETCH(C::Group, group);
@@ -535,7 +535,7 @@ void tst_qquicklistcompositor::clearFlags()
     QFETCH(IndexArray, selectionIndexes);
     QFETCH(ListArray, selectionLists);
 
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
@@ -577,7 +577,7 @@ void tst_qquicklistcompositor::clearFlags()
     }
 }
 
-void tst_qquicklistcompositor::setFlags_data()
+void tst_qqmllistcompositor::setFlags_data()
 {
     QTest::addColumn<RangeList>("ranges");
     QTest::addColumn<C::Group>("group");
@@ -700,7 +700,7 @@ void tst_qquicklistcompositor::setFlags_data()
     }
 }
 
-void tst_qquicklistcompositor::setFlags()
+void tst_qqmllistcompositor::setFlags()
 {
     QFETCH(RangeList, ranges);
     QFETCH(C::Group, group);
@@ -717,7 +717,7 @@ void tst_qquicklistcompositor::setFlags()
     QFETCH(IndexArray, selectionIndexes);
     QFETCH(ListArray, selectionLists);
 
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
@@ -759,7 +759,7 @@ void tst_qquicklistcompositor::setFlags()
     }
 }
 
-void tst_qquicklistcompositor::move_data()
+void tst_qqmllistcompositor::move_data()
 {
     QTest::addColumn<RangeList>("ranges");
     QTest::addColumn<C::Group>("fromGroup");
@@ -985,7 +985,7 @@ void tst_qquicklistcompositor::move_data()
     }
 }
 
-void tst_qquicklistcompositor::move()
+void tst_qqmllistcompositor::move()
 {
     QFETCH(RangeList, ranges);
     QFETCH(C::Group, fromGroup);
@@ -1004,7 +1004,7 @@ void tst_qquicklistcompositor::move()
     QFETCH(IndexArray, selectionIndexes);
     QFETCH(ListArray, selectionLists);
 
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
@@ -1048,11 +1048,11 @@ void tst_qquicklistcompositor::move()
     }
 }
 
-void tst_qquicklistcompositor::moveFromEnd()
+void tst_qqmllistcompositor::moveFromEnd()
 {
     int listA; void *a = &listA;
 
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.append(a, 0, 1, C::AppendFlag | C::PrependFlag | C::DefaultFlag);
 
     // Moving an item anchors it to that position.
@@ -1074,9 +1074,9 @@ void tst_qquicklistcompositor::moveFromEnd()
     QCOMPARE(it.modelIndex(), 0);
 }
 
-void tst_qquicklistcompositor::clear()
+void tst_qqmllistcompositor::clear()
 {
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
@@ -1097,7 +1097,7 @@ void tst_qquicklistcompositor::clear()
     QCOMPARE(compositor.count(C::Cache), 0);
 }
 
-void tst_qquicklistcompositor::listItemsInserted_data()
+void tst_qqmllistcompositor::listItemsInserted_data()
 {
     QTest::addColumn<RangeList>("ranges");
     QTest::addColumn<void *>("list");
@@ -1226,7 +1226,7 @@ void tst_qquicklistcompositor::listItemsInserted_data()
     }
 }
 
-void tst_qquicklistcompositor::listItemsInserted()
+void tst_qqmllistcompositor::listItemsInserted()
 {
     QFETCH(RangeList, ranges);
     QFETCH(void *, list);
@@ -1238,7 +1238,7 @@ void tst_qquicklistcompositor::listItemsInserted()
     QFETCH(IndexArray, visibleIndexes);
     QFETCH(IndexArray, selectionIndexes);
 
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
@@ -1276,7 +1276,7 @@ void tst_qquicklistcompositor::listItemsInserted()
     }
 }
 
-void tst_qquicklistcompositor::listItemsRemoved_data()
+void tst_qqmllistcompositor::listItemsRemoved_data()
 {
     QTest::addColumn<RangeList>("ranges");
     QTest::addColumn<void *>("list");
@@ -1362,7 +1362,7 @@ void tst_qquicklistcompositor::listItemsRemoved_data()
     }
 }
 
-void tst_qquicklistcompositor::listItemsRemoved()
+void tst_qqmllistcompositor::listItemsRemoved()
 {
     QFETCH(RangeList, ranges);
     QFETCH(void *, list);
@@ -1374,7 +1374,7 @@ void tst_qquicklistcompositor::listItemsRemoved()
     QFETCH(IndexArray, visibleIndexes);
     QFETCH(IndexArray, selectionIndexes);
 
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
@@ -1412,7 +1412,7 @@ void tst_qquicklistcompositor::listItemsRemoved()
     }
 }
 
-void tst_qquicklistcompositor::listItemsMoved_data()
+void tst_qqmllistcompositor::listItemsMoved_data()
 {
     QTest::addColumn<RangeList>("ranges");
     QTest::addColumn<void *>("list");
@@ -1554,7 +1554,7 @@ void tst_qquicklistcompositor::listItemsMoved_data()
     }
 }
 
-void tst_qquicklistcompositor::listItemsMoved()
+void tst_qqmllistcompositor::listItemsMoved()
 {
     QFETCH(RangeList, ranges);
     QFETCH(void *, list);
@@ -1568,7 +1568,7 @@ void tst_qquicklistcompositor::listItemsMoved()
     QFETCH(IndexArray, visibleIndexes);
     QFETCH(IndexArray, selectionIndexes);
 
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
@@ -1608,7 +1608,7 @@ void tst_qquicklistcompositor::listItemsMoved()
     }
 }
 
-void tst_qquicklistcompositor::listItemsChanged_data()
+void tst_qqmllistcompositor::listItemsChanged_data()
 {
     QTest::addColumn<RangeList>("ranges");
     QTest::addColumn<void *>("list");
@@ -1640,7 +1640,7 @@ void tst_qquicklistcompositor::listItemsChanged_data()
                 << Change(0, 0, 3, 6, 2, C::DefaultFlag | C::CacheFlag));
 }
 
-void tst_qquicklistcompositor::listItemsChanged()
+void tst_qqmllistcompositor::listItemsChanged()
 {
     QFETCH(RangeList, ranges);
     QFETCH(void *, list);
@@ -1648,7 +1648,7 @@ void tst_qquicklistcompositor::listItemsChanged()
     QFETCH(int, count);
     QFETCH(ChangeList, expectedChanges);
 
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
 
@@ -1661,12 +1661,12 @@ void tst_qquicklistcompositor::listItemsChanged()
     QCOMPARE(changes, expectedChanges);
 }
 
-void tst_qquicklistcompositor::compositorDebug()
+void tst_qqmllistcompositor::compositorDebug()
 {
     void *a = (void *)0xa0;
     void *b = (void *)0xb0;
 
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
     compositor.append(a, 0, 2, C::PrependFlag | C::DefaultFlag);
@@ -1676,7 +1676,7 @@ void tst_qquicklistcompositor::compositorDebug()
     compositor.append(a, 2, 3, C::DefaultFlag);
 
     QTest::ignoreMessage(QtDebugMsg,
-            "QQuickListCompositor(00110\n"
+            "QQmlListCompositor(00110\n"
             " 0 0 0 0   Range(0xa0 0 2 00P000000000D0\n"
             " 0 0 2 0   Range(0xa0 2 3 00P00000000000\n"
             " 0 0 2 0   Range(0xa0 5 2 0AP000000000D0\n"
@@ -1687,7 +1687,7 @@ void tst_qquicklistcompositor::compositorDebug()
     compositor.setFlags(C::Default, 5, 2, SelectionFlag);
 
     QTest::ignoreMessage(QtDebugMsg,
-            "QQuickListCompositor(20110\n"
+            "QQmlListCompositor(20110\n"
             " 0 0 0 0   Range(0xa0 0 2 00P000000000D0\n"
             " 0 0 2 0   Range(0xa0 2 3 00P00000000000\n"
             " 0 0 2 0   Range(0xa0 5 2 0AP000000000D0\n"
@@ -1698,12 +1698,12 @@ void tst_qquicklistcompositor::compositorDebug()
     qDebug() << compositor;
 }
 
-void tst_qquicklistcompositor::changeDebug()
+void tst_qqmllistcompositor::changeDebug()
 {
     void *a = (void *)0xa0;
     void *b = (void *)0xb0;
 
-    QQuickListCompositor compositor;
+    QQmlListCompositor compositor;
     compositor.setGroupCount(4);
     compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
     compositor.append(a, 0, 2, C::PrependFlag | C::DefaultFlag);
@@ -1716,14 +1716,14 @@ void tst_qquicklistcompositor::changeDebug()
 
 
     QTest::ignoreMessage(QtDebugMsg, "Change(-1 2 000000010D0 2 0 7 0)");
-    qDebug() << QQuickListCompositor::Change(compositor.find(C::Default, 7), 2, SelectionFlag | C::DefaultFlag);
+    qDebug() << QQmlListCompositor::Change(compositor.find(C::Default, 7), 2, SelectionFlag | C::DefaultFlag);
     QTest::ignoreMessage(QtDebugMsg, "Remove(9 4 000000000D0 10 0)");
-    qDebug() << QQuickListCompositor::Remove(compositor.find(C::Default, 10), 4, C::DefaultFlag, 9);
+    qDebug() << QQmlListCompositor::Remove(compositor.find(C::Default, 10), 4, C::DefaultFlag, 9);
     QTest::ignoreMessage(QtDebugMsg, "Insert(9 4 000000000D0 3 0)");
-    qDebug() << QQuickListCompositor::Insert(compositor.find(C::Default, 3), 4, C::DefaultFlag, 9);
+    qDebug() << QQmlListCompositor::Insert(compositor.find(C::Default, 3), 4, C::DefaultFlag, 9);
 }
 
-void tst_qquicklistcompositor::groupDebug()
+void tst_qqmllistcompositor::groupDebug()
 {
     QTest::ignoreMessage(QtDebugMsg, "Default ");
     qDebug() << C::Default;
@@ -1733,8 +1733,8 @@ void tst_qquicklistcompositor::groupDebug()
     qDebug() << Selection;
 }
 
-QTEST_MAIN(tst_qquicklistcompositor)
+QTEST_MAIN(tst_qqmllistcompositor)
 
-#include "tst_qquicklistcompositor.moc"
+#include "tst_qqmllistcompositor.moc"
 
 

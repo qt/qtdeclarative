@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qquicklistaccessor_p.h"
+#include "qqmllistaccessor_p.h"
 
 #include <private/qqmlmetatype_p.h>
 
@@ -51,21 +51,21 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickListAccessor::QQuickListAccessor()
+QQmlListAccessor::QQmlListAccessor()
 : m_type(Invalid)
 {
 }
 
-QQuickListAccessor::~QQuickListAccessor()
+QQmlListAccessor::~QQmlListAccessor()
 {
 }
 
-QVariant QQuickListAccessor::list() const
+QVariant QQmlListAccessor::list() const
 {
     return d;
 }
 
-void QQuickListAccessor::setList(const QVariant &v, QQmlEngine *engine)
+void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
 {
     d = v;
 
@@ -91,7 +91,7 @@ void QQuickListAccessor::setList(const QVariant &v, QQmlEngine *engine)
     }
 }
 
-int QQuickListAccessor::count() const
+int QQmlListAccessor::count() const
 {
     switch(m_type) {
     case StringList:
@@ -110,7 +110,7 @@ int QQuickListAccessor::count() const
     }
 }
 
-QVariant QQuickListAccessor::at(int idx) const
+QVariant QQmlListAccessor::at(int idx) const
 {
     Q_ASSERT(idx >= 0 && idx < count());
     switch(m_type) {
@@ -130,7 +130,7 @@ QVariant QQuickListAccessor::at(int idx) const
     }
 }
 
-bool QQuickListAccessor::isValid() const
+bool QQmlListAccessor::isValid() const
 {
     return m_type != Invalid;
 }

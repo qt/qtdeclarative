@@ -92,6 +92,9 @@
 #include "qqmlbind_p.h"
 #include "qqmlconnections_p.h"
 #include "qqmltimer_p.h"
+#include <private/qquickpackage_p.h>
+#include <private/qqmldelegatemodel_p.h>
+#include <private/qqmlobjectmodel_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #include <qt_windows.h>
@@ -189,6 +192,11 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
 void QQmlEnginePrivate::registerQtQuick2Types(const char *uri, int versionMajor, int versionMinor)
 {
     qmlRegisterType<QQuickWorkerScript>(uri, versionMajor, versionMinor, "WorkerScript");
+    qmlRegisterType<QQuickPackage>(uri, versionMajor, versionMinor, "Package");
+    qmlRegisterType<QQmlDelegateModel>(uri, versionMajor, versionMinor, "VisualDataModel");
+    qmlRegisterType<QQmlDataGroup>(uri, versionMajor, versionMinor, "VisualDataGroup");
+    qmlRegisterType<QQmlObjectModel>(uri, versionMajor, versionMinor, "VisualItemModel");
+    qmlRegisterType<QQmlInstanceModel>();
 }
 
 void QQmlEnginePrivate::defineQtQuick2Module()

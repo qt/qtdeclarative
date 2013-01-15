@@ -48,7 +48,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QQuickChangeSet;
+class QQmlChangeSet;
 
 class QQuickRepeaterPrivate;
 class Q_AUTOTEST_EXPORT QQuickRepeater : public QQuickItem
@@ -91,9 +91,9 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value);
 
 private Q_SLOTS:
-    void createdItem(int index, QQuickItem *item);
-    void initItem(int, QQuickItem *item);
-    void modelUpdated(const QQuickChangeSet &changeSet, bool reset);
+    void createdItem(int index, QObject *item);
+    void initItem(int, QObject *item);
+    void modelUpdated(const QQmlChangeSet &changeSet, bool reset);
 
 private:
     Q_DISABLE_COPY(QQuickRepeater)
