@@ -985,6 +985,9 @@ Value ParseIntFunction::call(ExecutionContext *context, Value thisObject, Value 
     // 13: this is handled by the toInt function
     if (pos == end) // 12
         return Value::fromDouble(nan(""));
+    bool overflow = false;
+    qint64 v_overflow;
+    unsigned overflow_digit_count = 0;
     int d = toInt(*pos++, R);
     if (d == -1)
         return Value::fromDouble(nan(""));
@@ -993,10 +996,31 @@ Value ParseIntFunction::call(ExecutionContext *context, Value thisObject, Value 
         d = toInt(*pos++, R);
         if (d == -1)
             break;
-        v = v * R + d;
+        if (overflow) {
+            if (overflow_digit_count == 0) {
+                v_overflow = v;
+                v = 0;
+            }
+            ++overflow_digit_count;
+            v = v * R + d;
+        } else {
+            qint64 vNew = v * R + d;
+            if (vNew < v) {
+                overflow = true;
+                --pos;
+            } else {
+                v = vNew;
+            }
+        }
     }
 
-    return Value::fromDouble(v * sign); // 15
+    if (overflow) {
+        double result = (double) v_overflow * pow(R, overflow_digit_count);
+        result += v;
+        return Value::fromDouble(sign * result);
+    } else {
+        return Value::fromDouble(sign * (double) v); // 15
+    }
 }
 
 // parseFloat [15.1.2.3]
