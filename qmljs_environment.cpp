@@ -229,6 +229,12 @@ void ExecutionContext::init(ExecutionEngine *eng)
     eng->exception = Value::undefinedValue();
 }
 
+void ExecutionContext::destroy()
+{
+    delete[] arguments;
+    delete[] locals;
+}
+
 bool ExecutionContext::deleteProperty(String *name)
 {
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {

@@ -298,10 +298,10 @@ static inline double DaylightSavingTA(double t)
 {
 #ifndef Q_WS_WIN
     long int tt = (long int)(t / msPerSecond);
-    struct tm *tmtm = localtime((const time_t*)&tt);
-    if (! tmtm)
+    struct tm tmtm;
+    if (!localtime_r((const time_t*)&tt, &tmtm))
         return 0;
-    return (tmtm->tm_isdst > 0) ? msPerHour : 0;
+    return (tmtm.tm_isdst > 0) ? msPerHour : 0;
 #else
     Q_UNUSED(t);
     /// ### implement me

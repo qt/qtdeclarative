@@ -216,6 +216,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 ExecutionEngine::~ExecutionEngine()
 {
     delete globalObject.asObject();
+    rootContext->destroy();
     delete rootContext;
     qDeleteAll(functions);
     delete memoryManager;

@@ -96,8 +96,8 @@ struct ExecutionContext
         With *next;
     } *withObject;
 
-
     void init(ExecutionEngine *e);
+    void destroy();
 
     bool hasBinding(String *name) const;
     void createMutableBinding(String *name, bool deletable);
