@@ -889,12 +889,14 @@ again:
 int Lexer::scanNumber(QChar ch)
 {
     if (ch != QLatin1Char('0')) {
-        quint64 integer = ch.unicode() - '0';
+        QByteArray buf;
+        buf.reserve(64);
+        buf += ch.toLatin1();
 
         QChar n = _char;
         const QChar *code = _codePtr;
         while (n.isDigit()) {
-            integer = integer * 10 + (n.unicode() - '0');
+            buf += n.toLatin1();
             n = *code++;
         }
 
@@ -903,7 +905,8 @@ int Lexer::scanNumber(QChar ch)
                 _codePtr = code - 1;
                 scanChar();
             }
-            _tokenValue = integer;
+            buf.append('\0');
+            _tokenValue = strtod(buf.constData(), 0);
             return T_NUMERIC_LITERAL;
         }
     } else if (_char.isDigit() && !qmlMode()) {

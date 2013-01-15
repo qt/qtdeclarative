@@ -3053,7 +3053,8 @@ void tst_qqmllanguage::literals_data()
     QTest::newRow("fp3") << "n5" << QVariant(3e-12);
     QTest::newRow("fp4") << "n6" << QVariant(3e+12);
     QTest::newRow("fp5") << "n7" << QVariant(0.1e9);
-    QTest::newRow("large-int") << "n8" << QVariant((double) 1152921504606846976);
+    QTest::newRow("large-int1") << "n8" << QVariant((double) 1152921504606846976);
+    QTest::newRow("large-int2") << "n9" << QVariant(100000000000000000000.);
 
     QTest::newRow("special1") << "c1" << QVariant(QString("\b"));
     QTest::newRow("special2") << "c2" << QVariant(QString("\f"));

@@ -9,6 +9,7 @@ QtObject {
     property variant n6:  3e+12
     property variant n7:  0.1e9
     property variant n8:  1152921504606846976
+    property variant n9:  100000000000000000000
 
     property variant c1:  "\b"     // special characters
     property variant c2:  "\f"
