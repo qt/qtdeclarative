@@ -4,3 +4,5 @@ v4
 udis86_itab.*
 *.pyc
 *.pro.user
+*.bc
+*.ll
