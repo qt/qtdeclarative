@@ -126,7 +126,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 }
             } else if (IR::Call *c = s->source->asCall()) {
                 if (c->base->asName()) {
-                    callActivationProperty(c, t);
+                    callBuiltin(c, t);
                     return;
                 } else if (c->base->asMember()) {
                     callProperty(c, t);
@@ -201,7 +201,7 @@ void InstructionSelection::visitExp(IR::Exp *s)
     if (IR::Call *c = s->expr->asCall()) {
         // These are calls where the result is ignored.
         if (c->base->asName()) {
-            callActivationProperty(c, 0);
+            callBuiltin(c, 0);
         } else if (c->base->asTemp()) {
             callValue(c, 0);
         } else if (c->base->asMember()) {
@@ -212,4 +212,148 @@ void InstructionSelection::visitExp(IR::Exp *s)
     } else {
         Q_UNREACHABLE();
     }
+}
+
+void InstructionSelection::callBuiltin(IR::Call *call, IR::Temp *result)
+{
+    IR::Name *baseName = call->base->asName();
+    assert(baseName != 0);
+
+    switch (baseName->builtin) {
+    case IR::Name::builtin_invalid:
+        callBuiltinInvalid(call->base, call->args, result);
+        return;
+
+    case IR::Name::builtin_typeof: {
+        if (IR::Member *m = call->args->expr->asMember()) {
+            callBuiltinTypeofMember(m->base->asTemp(), *m->name, result);
+            return;
+        } else if (IR::Subscript *ss = call->args->expr->asSubscript()) {
+            callBuiltinTypeofSubscript(ss->base->asTemp(), ss->index->asTemp(), result);
+            return;
+        } else if (IR::Name *n = call->args->expr->asName()) {
+            callBuiltinTypeofName(*n->id, result);
+            return;
+        } else if (IR::Temp *arg = call->args->expr->asTemp()){
+            assert(arg != 0);
+            callBuiltinTypeofValue(arg, result);
+            return;
+        }
+    } break;
+
+    case IR::Name::builtin_delete: {
+        if (IR::Member *m = call->args->expr->asMember()) {
+            callBuiltinDeleteMember(m->base->asTemp(), *m->name, result);
+            return;
+        } else if (IR::Subscript *ss = call->args->expr->asSubscript()) {
+            callBuiltinDeleteSubscript(ss->base->asTemp(), ss->index->asTemp(), result);
+            return;
+        } else if (IR::Name *n = call->args->expr->asName()) {
+            callBuiltinDeleteName(*n->id, result);
+            return;
+        } else if (call->args->expr->asTemp()){
+            // TODO: should throw in strict mode
+            callBuiltinDeleteValue(result);
+            return;
+        }
+    } break;
+
+    case IR::Name::builtin_throw: {
+        IR::Temp *arg = call->args->expr->asTemp();
+        assert(arg != 0);
+        callBuiltinThrow(arg);
+    } return;
+
+    case IR::Name::builtin_rethrow:
+        callBuiltinRethrow();
+        return;
+
+    case IR::Name::builtin_create_exception_handler:
+        callBuiltinCreateExceptionHandler(result);
+        return;
+
+    case IR::Name::builtin_delete_exception_handler:
+        callBuiltinDeleteExceptionHandler();
+        return;
+
+    case IR::Name::builtin_get_exception:
+        callBuiltinGetException(result);
+        return;
+
+    case IR::Name::builtin_foreach_iterator_object: {
+        IR::Temp *arg = call->args->expr->asTemp();
+        assert(arg != 0);
+        callBuiltinForeachIteratorObject(arg, result);
+    } return;
+
+    case IR::Name::builtin_foreach_next_property_name: {
+        IR::Temp *arg = call->args->expr->asTemp();
+        assert(arg != 0);
+        callBuiltinForeachNextPropertyname(arg, result);
+    } return;
+    case IR::Name::builtin_push_with: {
+        IR::Temp *arg = call->args->expr->asTemp();
+        assert(arg != 0);
+        callBuiltinPushWith(arg);
+    } return;
+
+    case IR::Name::builtin_pop_with:
+        callBuiltinPopWith();
+        return;
+
+    case IR::Name::builtin_declare_vars: {
+        if (!call->args)
+            return;
+        IR::Const *deletable = call->args->expr->asConst();
+        assert(deletable->type == IR::BoolType);
+        for (IR::ExprList *it = call->args->next; it; it = it->next) {
+            IR::Name *arg = it->expr->asName();
+            assert(arg != 0);
+            callBuiltinDeclareVar(deletable->value != 0, *arg->id);
+        }
+    } return;
+
+    case IR::Name::builtin_define_getter_setter: {
+        if (!call->args)
+            return;
+        IR::ExprList *args = call->args;
+        IR::Temp *object = args->expr->asTemp();
+        assert(object);
+        args = args->next;
+        assert(args);
+        IR::Name *name = args->expr->asName();
+        args = args->next;
+        assert(args);
+        IR::Temp *getter = args->expr->asTemp();
+        args = args->next;
+        assert(args);
+        IR::Temp *setter = args->expr->asTemp();
+
+        callBuiltinDefineGetterSetter(object, *name->id, getter, setter);
+    } return;
+
+    case IR::Name::builtin_define_property: {
+        if (!call->args)
+            return;
+        IR::ExprList *args = call->args;
+        IR::Temp *object = args->expr->asTemp();
+        assert(object);
+        args = args->next;
+        assert(args);
+        IR::Name *name = args->expr->asName();
+        args = args->next;
+        assert(args);
+        IR::Temp *value = args->expr->asTemp();
+
+        callBuiltinDefineProperty(object, *name->id, value);
+    } return;
+
+    default:
+        break;
+    }
+
+    Q_UNIMPLEMENTED();
+    call->dump(qout); qout << endl;
+    assert(!"TODO!");
+    Q_UNREACHABLE();
 }

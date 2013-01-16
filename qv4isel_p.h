@@ -80,7 +80,27 @@ public: // visitor methods for StmtVisitor:
     virtual void visitExp(IR::Exp *s);
 
 public: // to implement by subclasses:
-    virtual void callActivationProperty(IR::Call *c, IR::Temp *temp) = 0;
+    virtual void callBuiltinInvalid(IR::Expr *func, IR::ExprList *args, IR::Temp *result) = 0;
+    virtual void callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result) = 0;
+    virtual void callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result) = 0;
+    virtual void callBuiltinTypeofName(const QString &name, IR::Temp *result) = 0;
+    virtual void callBuiltinTypeofValue(IR::Temp *value, IR::Temp *result) = 0;
+    virtual void callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result) = 0;
+    virtual void callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result) = 0;
+    virtual void callBuiltinDeleteName(const QString &name, IR::Temp *result) = 0;
+    virtual void callBuiltinDeleteValue(IR::Temp *result) = 0;
+    virtual void callBuiltinThrow(IR::Temp *arg) = 0;
+    virtual void callBuiltinRethrow() = 0;
+    virtual void callBuiltinCreateExceptionHandler(IR::Temp *result) = 0;
+    virtual void callBuiltinDeleteExceptionHandler() = 0;
+    virtual void callBuiltinGetException(IR::Temp *result) = 0;
+    virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result) = 0;
+    virtual void callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result) = 0;
+    virtual void callBuiltinPushWith(IR::Temp *arg) = 0;
+    virtual void callBuiltinPopWith() = 0;
+    virtual void callBuiltinDeclareVar(bool deletable, const QString &name) = 0;
+    virtual void callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter) = 0;
+    virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value) = 0;
     virtual void callValue(IR::Call *c, IR::Temp *temp) = 0;
     virtual void callProperty(IR::Call *c, IR::Temp *temp) = 0;
     virtual void constructActivationProperty(IR::New *call, IR::Temp *result) = 0;
@@ -103,6 +123,9 @@ public: // to implement by subclasses:
     virtual void inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, const QString &targetName) = 0;
     virtual void inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp) = 0;
     virtual void inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR::Temp *targetBase, const QString &targetName) = 0;
+
+private:
+    void callBuiltin(IR::Call *c, IR::Temp *temp);
 };
 } // namespace IR
 

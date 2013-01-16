@@ -81,10 +81,6 @@
 #include "qv4ir_p.h"
 #include "qv4string.h"
 
-namespace {
-QTextStream qout(stderr, QIODevice::WriteOnly);
-} // anonymous namespace
-
 namespace QQmlJS {
 
 int compileWithLLVM(IR::Module *module, const QString &fileName, LLVMOutputType outputType, int (*exec)(void *))
@@ -304,70 +300,192 @@ void InstructionSelection::buildLLVMModule(IR::Module *module, llvm::Module *llv
     qSwap(_llvmModule, llvmModule);
 }
 
-void InstructionSelection::callActivationProperty(IR::Call *c, IR::Temp *temp)
+void InstructionSelection::callBuiltinInvalid(IR::Expr *func, IR::ExprList *args, IR::Temp *result)
 {
-    IR::Name *baseName = c->base->asName();
-    Q_ASSERT(baseName);
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
 
-    switch (baseName->builtin) {
-    case IR::Name::builtin_declare_vars: {
-        if (!c->args)
-            return;
-        IR::Const *deletable = c->args->expr->asConst();
-        assert(deletable->type == IR::BoolType);
-        llvm::ConstantInt *isDeletable = getInt1(deletable->value != 0);
-        for (IR::ExprList *it = c->args->next; it; it = it->next) {
-            IR::Name *arg = it->expr->asName();
-            assert(arg != 0);
+void InstructionSelection::callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
 
-            llvm::Value *name = getIdentifier(*arg->id);
-            CreateCall3(getRuntimeFunction("__qmljs_builtin_declare_var"),
-                        _llvmFunction->arg_begin(), isDeletable, name);
-        }
-    } return;
-    default:
-        break;
-    } // switch
+void InstructionSelection::callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
 
-    Q_UNIMPLEMENTED();
-    c->dump(qout);
-    qout << endl;
+void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinTypeofValue(IR::Temp *value, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinRethrow()
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinDeleteExceptionHandler()
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinGetException(IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinPushWith(IR::Temp *arg)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinPopWith()
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &name)
+{
+    llvm::ConstantInt *isDeletable = getInt1(deletable != 0);
+    llvm::Value *varName = getIdentifier(name);
+    CreateCall3(getRuntimeFunction("__qmljs_builtin_declare_var"),
+                _llvmFunction->arg_begin(), isDeletable, varName);
+}
+
+void InstructionSelection::callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value)
+{
+    // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
 void InstructionSelection::callValue(IR::Call *c, IR::Temp *temp)
 {
-    // TODO: implement instead of visitExp
+    // TODO
+    assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
 void InstructionSelection::callProperty(IR::Call *c, IR::Temp *temp)
 {
-    // TODO: implement instead of visitExp
+    // TODO
+    assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
 void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *result)
 {
+    // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
 void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
 {
+    // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
 void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
 {
+    // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
 void InstructionSelection::loadThisObject(IR::Temp *temp)
 {
+    // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
@@ -381,18 +499,21 @@ void InstructionSelection::loadConst(IR::Const *con, IR::Temp *temp)
 
 void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
 {
+    // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
 void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp)
 {
+    // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
 void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *temp)
 {
+    // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
@@ -449,6 +570,7 @@ void InstructionSelection::setProperty(IR::Expr *source, IR::Temp *targetBase, c
 
 void InstructionSelection::getElement(IR::Temp *sourceBase, IR::Temp *sourceIndex, IR::Temp *target)
 {
+    // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 

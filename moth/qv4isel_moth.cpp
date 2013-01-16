@@ -327,220 +327,20 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     delete[] codeStart;
 }
 
-void InstructionSelection::callActivationProperty(IR::Call *c, IR::Temp *temp)
+void InstructionSelection::callValue(IR::Call *c, IR::Temp *result)
 {
-    const int targetTempIndex = temp ? temp->index : scratchTempIndex();
-;
-    IR::Name *baseName = c->base->asName();
-    Q_ASSERT(baseName);
-
-    switch (baseName->builtin) {
-    case IR::Name::builtin_invalid: {
-        const int scratchIndex = scratchTempIndex();
-
-        Instruction::LoadName load;
-        load.name = engine()->newString(*baseName->id);
-        load.targetTempIndex = scratchIndex;
-        addInstruction(load);
-
-        Instruction::CallValue call;
-        prepareCallArgs(c->args, call.argc, call.args);
-        call.destIndex = scratchIndex;
-        call.targetTempIndex = targetTempIndex;
-        addInstruction(call);
-    } break;
-
-    case IR::Name::builtin_typeof: {
-        if (IR::Member *m = c->args->expr->asMember()) {
-            Instruction::CallBuiltinTypeofMember call;
-            call.base = m->base->asTemp()->index;
-            call.member = engine()->identifier(*m->name);
-            call.targetTempIndex = targetTempIndex;
-            addInstruction(call);
-        } else if (IR::Subscript *ss = c->args->expr->asSubscript()) {
-            Instruction::CallBuiltinTypeofSubscript call;
-            call.base = ss->base->asTemp()->index;
-            call.index = ss->index->asTemp()->index;
-            call.targetTempIndex = targetTempIndex;
-            addInstruction(call);
-        } else if (IR::Name *n = c->args->expr->asName()) {
-            Instruction::CallBuiltinTypeofName call;
-            call.name = engine()->identifier(*n->id);
-            call.targetTempIndex = targetTempIndex;
-            addInstruction(call);
-        } else if (IR::Temp *arg = c->args->expr->asTemp()){
-            assert(arg != 0);
-            Instruction::CallBuiltinTypeofValue call;
-            call.tempIndex = arg->index;
-            call.targetTempIndex = targetTempIndex;
-            addInstruction(call);
-        } else {
-            assert(false);
-        }
-    } break;
-
-    case IR::Name::builtin_delete: {
-        if (IR::Member *m = c->args->expr->asMember()) {
-            Instruction::CallBuiltinDeleteMember call;
-            call.base = m->base->asTemp()->index;
-            call.member = engine()->newString(*m->name);
-            call.targetTempIndex = targetTempIndex;
-            addInstruction(call);
-        } else if (IR::Subscript *ss = c->args->expr->asSubscript()) {
-            Instruction::CallBuiltinDeleteSubscript call;
-            call.base = ss->base->asTemp()->index;
-            call.index = ss->index->asTemp()->index;
-            call.targetTempIndex = targetTempIndex;
-            addInstruction(call);
-        } else if (IR::Name *n = c->args->expr->asName()) {
-            Instruction::CallBuiltinDeleteName call;
-            call.name = engine()->newString(*n->id);
-            call.targetTempIndex = targetTempIndex;
-            addInstruction(call);
-        } else {
-            Instruction::CallBuiltinDeleteValue call;
-            call.tempIndex = c->args->expr->asTemp()->index;
-            call.targetTempIndex = targetTempIndex;
-            addInstruction(call);
-        }
-    } break;
-
-    case IR::Name::builtin_throw: {
-        IR::Temp *arg = c->args->expr->asTemp();
-        assert(arg != 0);
-
-        Instruction::CallBuiltin call;
-        call.builtin = Instruction::CallBuiltin::builtin_throw;
-        prepareCallArgs(c->args, call.argc, call.args);
-        call.targetTempIndex = targetTempIndex;
-        addInstruction(call);
-    } break;
-
-    case IR::Name::builtin_rethrow: {
-        Instruction::CallBuiltin call;
-        call.builtin = Instruction::CallBuiltin::builtin_rethrow;
-        call.targetTempIndex = targetTempIndex;
-        addInstruction(call);
-    } break;
-
-    case IR::Name::builtin_create_exception_handler: {
-        Instruction::CallBuiltin call;
-        call.builtin = Instruction::CallBuiltin::builtin_create_exception_handler;
-        call.targetTempIndex = targetTempIndex;
-        addInstruction(call);
-    } break;
-
-    case IR::Name::builtin_delete_exception_handler: {
-        Instruction::CallBuiltin call;
-        call.builtin = Instruction::CallBuiltin::builtin_delete_exception_handler;
-        call.targetTempIndex = targetTempIndex;
-        addInstruction(call);
-    } break;
-
-    case IR::Name::builtin_get_exception: {
-        Instruction::CallBuiltin call;
-        call.builtin = Instruction::CallBuiltin::builtin_get_exception;
-        call.targetTempIndex = targetTempIndex;
-        addInstruction(call);
-    } break;
-
-    case IR::Name::builtin_foreach_iterator_object: {
-        Instruction::CallBuiltin call;
-        call.builtin = Instruction::CallBuiltin::builtin_foreach_iterator_object;
-        prepareCallArgs(c->args, call.argc, call.args);
-        call.targetTempIndex = targetTempIndex;
-        addInstruction(call);
-    } break;
-
-    case IR::Name::builtin_foreach_next_property_name: {
-        Instruction::CallBuiltin call;
-        call.builtin = Instruction::CallBuiltin::builtin_foreach_next_property_name;
-        prepareCallArgs(c->args, call.argc, call.args);
-        call.targetTempIndex = targetTempIndex;
-        addInstruction(call);
-    } break;
-
-    case IR::Name::builtin_push_with: {
-        Instruction::CallBuiltin call;
-        call.builtin = Instruction::CallBuiltin::builtin_push_with;
-        prepareCallArgs(c->args, call.argc, call.args);
-        assert(call.argc == 1);
-        addInstruction(call);
-    } break;
-
-    case IR::Name::builtin_pop_with: {
-        Instruction::CallBuiltin call;
-        call.builtin = Instruction::CallBuiltin::builtin_pop_with;
-        addInstruction(call);
-    } break;
-
-    case IR::Name::builtin_declare_vars: if (c->args) {
-        IR::Const *deletable = c->args->expr->asConst();
-        assert(deletable->type == IR::BoolType);
-        const bool isDeletable = deletable->value != 0;
-        for (IR::ExprList *it = c->args->next; it; it = it->next) {
-            Instruction::CallBuiltinDeclareVar call;
-            call.isDeletable = isDeletable;
-            call.varName = engine()->newString(*it->expr->asName()->id);
-            addInstruction(call);
-        }
-    } break;
-
-    case IR::Name::builtin_define_getter_setter: {
-        if (!c->args)
-            return;
-        IR::ExprList *args = c->args;
-        Instruction::CallBuiltinDefineGetterSetter call;
-        call.objectTemp = args->expr->asTemp()->index;
-        args = args->next;
-        assert(args);
-        call.name = engine()->newString(*args->expr->asName()->id);
-        args = args->next;
-        assert(args);
-        call.getterTemp = args->expr->asTemp()->index;
-        args = args->next;
-        assert(args);
-        call.setterTemp = args->expr->asTemp()->index;
-        addInstruction(call);
-    } break;
-
-    case IR::Name::builtin_define_property: {
-        if (!c->args)
-            return;
-        IR::ExprList *args = c->args;
-        Instruction::CallBuiltinDefineProperty call;
-        call.objectTemp = args->expr->asTemp()->index;
-        args = args->next;
-        assert(args);
-        call.name = engine()->newString(*args->expr->asName()->id);
-        args = args->next;
-        assert(args);
-        call.valueTemp = args->expr->asTemp()->index;
-        addInstruction(call);
-    } break;
-
-    default:
-        Q_UNIMPLEMENTED();
-        c->dump(qout); qout << endl;
-    }
-}
-
-void InstructionSelection::callValue(IR::Call *c, IR::Temp *temp)
-{
-    const int targetTempIndex = temp ? temp->index : scratchTempIndex();
     IR::Temp *t = c->base->asTemp();
     Q_ASSERT(t);
 
     Instruction::CallValue call;
     prepareCallArgs(c->args, call.argc, call.args);
     call.destIndex = t->index;
-    call.targetTempIndex = targetTempIndex;
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
     addInstruction(call);
 }
 
-void InstructionSelection::callProperty(IR::Call *c, IR::Temp *temp)
+void InstructionSelection::callProperty(IR::Call *c, IR::Temp *result)
 {
-    const int targetTempIndex = temp ? temp->index : scratchTempIndex();
     IR::Member *m = c->base->asMember();
     Q_ASSERT(m);
 
@@ -549,7 +349,7 @@ void InstructionSelection::callProperty(IR::Call *c, IR::Temp *temp)
     call.baseTemp = m->base->asTemp()->index;
     call.name = engine()->newString(*m->name);
     prepareCallArgs(c->args, call.argc, call.args);
-    call.targetTempIndex = targetTempIndex;
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
     addInstruction(call);
 }
 
@@ -804,11 +604,15 @@ void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR:
     addInstruction(imo);
 }
 
+void InstructionSelection::prepareCallArg(IR::Expr *e, quint32 &argc, quint32 &args)
+{
+    // We pass single arguments as references to the stack, but only if it's not a local or an argument.
+    argc = 1;
+    args = e->asTemp()->index;
+}
+
 void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint32 &args)
 {
-    argc = 0;
-    args = 0;
-
     bool singleArgIsTemp = false;
     if (e && e->next == 0) {
         // ok, only 1 argument in the cal...
@@ -822,12 +626,12 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
 
     if (singleArgIsTemp) {
         // We pass single arguments as references to the stack, but only if it's not a local or an argument.
-        argc = 1;
-        args = e->expr->asTemp()->index;
+        prepareCallArg(e->expr, argc, args);
     } else if (e) {
         // We need to move all the temps into the function arg array
         int argLocation = outgoingArgumentTempStart();
         assert(argLocation >= 0);
+        argc = 0;
         args = argLocation;
         while (e) {
             Instruction::MoveTemp move;
@@ -886,6 +690,191 @@ void InstructionSelection::visitRet(IR::Ret *s)
     Instruction::Ret ret;
     ret.tempIndex = s->expr->index;
     addInstruction(ret);
+}
+
+void InstructionSelection::callBuiltinInvalid(IR::Expr *func, IR::ExprList *args, IR::Temp *result)
+{
+    const int scratchIndex = scratchTempIndex();
+
+    Instruction::LoadName load;
+    load.name = engine()->newString(*func->asCall()->base->asName()->id);
+    load.targetTempIndex = scratchIndex;
+    addInstruction(load);
+
+    const int targetTempIndex = result ? result->index : scratchTempIndex();
+
+    Instruction::CallValue call;
+    prepareCallArgs(args, call.argc, call.args);
+    call.destIndex = scratchIndex;
+    call.targetTempIndex = targetTempIndex;
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result)
+{
+    Instruction::CallBuiltinTypeofMember call;
+    call.base = base->index;
+    call.member = engine()->identifier(name);
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+{
+    Instruction::CallBuiltinTypeofSubscript call;
+    call.base = base->index;
+    call.index = index->index;
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *result)
+{
+    Instruction::CallBuiltinTypeofName call;
+    call.name = engine()->identifier(name);
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinTypeofValue(IR::Temp *value, IR::Temp *result)
+{
+    Instruction::CallBuiltinTypeofValue call;
+    call.tempIndex = value->index;
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result)
+{
+    Instruction::CallBuiltinDeleteMember call;
+    call.base = base->index;
+    call.member = engine()->newString(name);
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+{
+    Instruction::CallBuiltinDeleteSubscript call;
+    call.base = base->index;
+    call.index = index->index;
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *result)
+{
+    Instruction::CallBuiltinDeleteName call;
+    call.name = engine()->newString(name);
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
+{
+    Instruction::LoadValue load;
+    load.value = VM::Value::fromBoolean(false);
+    load.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(load);
+}
+
+void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
+{
+    Instruction::CallBuiltin call;
+    call.builtin = Instruction::CallBuiltin::builtin_throw;
+    prepareCallArg(arg, call.argc, call.args);
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinRethrow()
+{
+    Instruction::CallBuiltin call;
+    call.builtin = Instruction::CallBuiltin::builtin_rethrow;
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
+{
+    Instruction::CallBuiltin call;
+    call.builtin = Instruction::CallBuiltin::builtin_create_exception_handler;
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinDeleteExceptionHandler()
+{
+    Instruction::CallBuiltin call;
+    call.builtin = Instruction::CallBuiltin::builtin_delete_exception_handler;
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinGetException(IR::Temp *result)
+{
+    Instruction::CallBuiltin call;
+    call.builtin = Instruction::CallBuiltin::builtin_get_exception;
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result)
+{
+    Instruction::CallBuiltin call;
+    call.builtin = Instruction::CallBuiltin::builtin_foreach_iterator_object;
+    prepareCallArg(arg, call.argc, call.args);
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result)
+{
+    Instruction::CallBuiltin call;
+    call.builtin = Instruction::CallBuiltin::builtin_foreach_next_property_name;
+    prepareCallArg(arg, call.argc, call.args);
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinPushWith(IR::Temp *arg)
+{
+    Instruction::CallBuiltin call;
+    call.builtin = Instruction::CallBuiltin::builtin_push_with;
+    prepareCallArg(arg, call.argc, call.args);
+    assert(call.argc == 1);
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinPopWith()
+{
+    Instruction::CallBuiltin call;
+    call.builtin = Instruction::CallBuiltin::builtin_pop_with;
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &name)
+{
+    Instruction::CallBuiltinDeclareVar call;
+    call.isDeletable = deletable;
+    call.varName = engine()->newString(name);
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter)
+{
+    Instruction::CallBuiltinDefineGetterSetter call;
+    call.objectTemp = object->index;
+    call.name = engine()->newString(name);
+    call.getterTemp = getter->index;
+    call.setterTemp = setter->index;
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value)
+{
+    Instruction::CallBuiltinDefineProperty call;
+    call.objectTemp = object->index;
+    call.name = engine()->newString(name);
+    call.valueTemp = value->index;
+    addInstruction(call);
 }
 
 ptrdiff_t InstructionSelection::addInstructionHelper(Instr::Type type, Instr &instr)

@@ -156,7 +156,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 
     MOTH_BEGIN_INSTR(LoadValue)
         TEMP(instr.targetTempIndex) = instr.value;
-    MOTH_END_INSTR(LoadUndefined)
+    MOTH_END_INSTR(LoadValue)
 
     MOTH_BEGIN_INSTR(LoadClosure)
         VM::Value c = __qmljs_init_closure(instr.value, context);
@@ -237,6 +237,9 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
             Q_ASSERT(instr.argc == 1);
             __qmljs_builtin_throw(args[0], context);
             break;
+        case Instr::instr_callBuiltin::builtin_rethrow:
+            __qmljs_builtin_rethrow(context);
+            break;
         case Instr::instr_callBuiltin::builtin_create_exception_handler: {
             TRACE(builtin_create_exception_handler, "%s", "");
             buf = __qmljs_create_exception_handler(context);
@@ -279,6 +282,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
             __qmljs_builtin_pop_with(context);
             break;
         default:
+            assert(!"TODO!");
             Q_UNREACHABLE();
         }
     MOTH_END_INSTR(CallBuiltin)
@@ -294,10 +298,6 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_BEGIN_INSTR(CallBuiltinDeleteName)
         TEMP(instr.targetTempIndex) = __qmljs_delete_name(context, instr.name);
     MOTH_END_INSTR(CallBuiltinDeleteName)
-
-    MOTH_BEGIN_INSTR(CallBuiltinDeleteValue)
-        TEMP(instr.targetTempIndex) = VM::Value::fromBoolean(false);
-    MOTH_END_INSTR(CallBuiltinDeleteValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofMember)
         TEMP(instr.targetTempIndex) = __qmljs_builtin_typeof_member(TEMP(instr.base), instr.member, context);
@@ -317,7 +317,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 
     MOTH_BEGIN_INSTR(CallBuiltinDeclareVar)
         __qmljs_builtin_declare_var(context, instr.isDeletable, instr.varName);
-    MOTH_END_INSTR(CallBuiltinDeleteValue)
+    MOTH_END_INSTR(CallBuiltinDeclareVar)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineGetterSetter)
         __qmljs_builtin_define_getter_setter(TEMP(instr.objectTemp), instr.name, TEMP(instr.getterTemp), TEMP(instr.setterTemp), context);

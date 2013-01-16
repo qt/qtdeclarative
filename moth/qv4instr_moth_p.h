@@ -22,7 +22,6 @@
     F(CallBuiltinDeleteMember, callBuiltinDeleteMember) \
     F(CallBuiltinDeleteSubscript, callBuiltinDeleteSubscript) \
     F(CallBuiltinDeleteName, callBuiltinDeleteName) \
-    F(CallBuiltinDeleteValue, callBuiltinDeleteValue) \
     F(CallBuiltinTypeofMember, callBuiltinTypeofMember) \
     F(CallBuiltinTypeofSubscript, callBuiltinTypeofSubscript) \
     F(CallBuiltinTypeofName, callBuiltinTypeofName) \
@@ -185,11 +184,6 @@ union Instr
         VM::String *name;
         int targetTempIndex;
     };
-    struct instr_callBuiltinDeleteValue {
-        MOTH_INSTR_HEADER
-        int tempIndex;
-        int targetTempIndex;
-    };
     struct instr_callBuiltinTypeofMember {
         MOTH_INSTR_HEADER
         int base;
@@ -322,7 +316,6 @@ union Instr
     instr_callBuiltinDeleteMember callBuiltinDeleteMember;
     instr_callBuiltinDeleteSubscript callBuiltinDeleteSubscript;
     instr_callBuiltinDeleteName callBuiltinDeleteName;
-    instr_callBuiltinDeleteValue callBuiltinDeleteValue;
     instr_callBuiltinTypeofMember callBuiltinTypeofMember;
     instr_callBuiltinTypeofSubscript callBuiltinTypeofSubscript;
     instr_callBuiltinTypeofName callBuiltinTypeofName;

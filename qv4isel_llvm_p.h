@@ -70,7 +70,27 @@ public:
     void buildLLVMModule(IR::Module *module, llvm::Module *llvmModule, llvm::FunctionPassManager *fpm);
 
 public: // methods from InstructionSelection:
-    virtual void callActivationProperty(IR::Call *c, IR::Temp *temp);
+    virtual void callBuiltinInvalid(IR::Expr *func, IR::ExprList *args, IR::Temp *result);
+    virtual void callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result);
+    virtual void callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result);
+    virtual void callBuiltinTypeofName(const QString &name, IR::Temp *result);
+    virtual void callBuiltinTypeofValue(IR::Temp *value, IR::Temp *result);
+    virtual void callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result);
+    virtual void callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result);
+    virtual void callBuiltinDeleteName(const QString &name, IR::Temp *result);
+    virtual void callBuiltinDeleteValue(IR::Temp *result);
+    virtual void callBuiltinThrow(IR::Temp *arg);
+    virtual void callBuiltinRethrow();
+    virtual void callBuiltinCreateExceptionHandler(IR::Temp *result);
+    virtual void callBuiltinDeleteExceptionHandler();
+    virtual void callBuiltinGetException(IR::Temp *result);
+    virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result);
+    virtual void callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result);
+    virtual void callBuiltinPushWith(IR::Temp *arg);
+    virtual void callBuiltinPopWith();
+    virtual void callBuiltinDeclareVar(bool deletable, const QString &name);
+    virtual void callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter);
+    virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value);
     virtual void callValue(IR::Call *c, IR::Temp *temp);
     virtual void callProperty(IR::Call *c, IR::Temp *temp);
     virtual void constructActivationProperty(IR::New *call, IR::Temp *result);

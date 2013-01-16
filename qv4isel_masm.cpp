@@ -428,148 +428,114 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     _asm = oldAssembler;
 }
 
-String *InstructionSelection::identifier(const QString &s)
+void InstructionSelection::callBuiltinInvalid(IR::Expr *func, IR::ExprList *args, IR::Temp *result)
 {
-    return engine()->identifier(s);
+    callRuntimeMethod(result, __qmljs_call_activation_property, func, args);
 }
 
-void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *result)
+void InstructionSelection::callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result)
 {
-    IR::Name *baseName = call->base->asName();
-    assert(baseName != 0);
-
-    switch (baseName->builtin) {
-    case IR::Name::builtin_invalid:
-        callRuntimeMethod(result, __qmljs_call_activation_property, call->base, call->args);
-        break;
-    case IR::Name::builtin_typeof: {
-        if (IR::Member *m = call->args->expr->asMember()) {
-            generateFunctionCall(result, __qmljs_builtin_typeof_member, m->base->asTemp(), identifier(*m->name), Assembler::ContextRegister);
-            return;
-        } else if (IR::Subscript *ss = call->args->expr->asSubscript()) {
-            generateFunctionCall(result, __qmljs_builtin_typeof_element, ss->base->asTemp(), ss->index->asTemp(), Assembler::ContextRegister);
-            return;
-        } else if (IR::Name *n = call->args->expr->asName()) {
-            generateFunctionCall(result, __qmljs_builtin_typeof_name, identifier(*n->id), Assembler::ContextRegister);
-            return;
-        } else if (IR::Temp *arg = call->args->expr->asTemp()){
-            assert(arg != 0);
-            generateFunctionCall(result, __qmljs_builtin_typeof, arg, Assembler::ContextRegister);
-        } else {
-            assert(false);
-        }
-    }
-        break;
-    case IR::Name::builtin_delete: {
-        if (IR::Member *m = call->args->expr->asMember()) {
-            generateFunctionCall(result, __qmljs_delete_member, Assembler::ContextRegister, m->base->asTemp(), identifier(*m->name));
-            return;
-        } else if (IR::Subscript *ss = call->args->expr->asSubscript()) {
-            generateFunctionCall(result, __qmljs_delete_subscript, Assembler::ContextRegister, ss->base->asTemp(), ss->index->asTemp());
-            return;
-        } else if (IR::Name *n = call->args->expr->asName()) {
-            generateFunctionCall(result, __qmljs_delete_name, Assembler::ContextRegister, identifier(*n->id));
-            return;
-        } else if (call->args->expr->asTemp()){
-            // ### should throw in strict mode
-            _asm->storeValue(Value::fromBoolean(false), result);
-            return;
-        }
-        break;
-    }
-    case IR::Name::builtin_throw: {
-        IR::Temp *arg = call->args->expr->asTemp();
-        assert(arg != 0);
-        generateFunctionCall(Assembler::Void, __qmljs_builtin_throw, arg, Assembler::ContextRegister);
-    }
-        break;
-    case IR::Name::builtin_rethrow:
-        generateFunctionCall(Assembler::Void, __qmljs_builtin_rethrow, Assembler::ContextRegister);
-        break;
-    case IR::Name::builtin_create_exception_handler:
-        generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_create_exception_handler, Assembler::ContextRegister);
-        generateFunctionCall(result, setjmp, Assembler::ReturnValueRegister);
-        break;
-    case IR::Name::builtin_delete_exception_handler:
-        generateFunctionCall(Assembler::Void, __qmljs_delete_exception_handler, Assembler::ContextRegister);
-        break;
-    case IR::Name::builtin_get_exception:
-        generateFunctionCall(result, __qmljs_get_exception, Assembler::ContextRegister);
-        break;
-    case IR::Name::builtin_foreach_iterator_object: {
-        IR::Temp *arg = call->args->expr->asTemp();
-        assert(arg != 0);
-        generateFunctionCall(result, __qmljs_foreach_iterator_object, arg, Assembler::ContextRegister);
-    }
-        break;
-    case IR::Name::builtin_foreach_next_property_name: {
-        IR::Temp *arg = call->args->expr->asTemp();
-        assert(arg != 0);
-        generateFunctionCall(result, __qmljs_foreach_next_property_name, arg);
-    }
-        break;
-    case IR::Name::builtin_push_with: {
-        IR::Temp *arg = call->args->expr->asTemp();
-        assert(arg != 0);
-        generateFunctionCall(Assembler::Void, __qmljs_builtin_push_with, arg, Assembler::ContextRegister);
-    }
-        break;
-    case IR::Name::builtin_pop_with:
-        generateFunctionCall(Assembler::Void, __qmljs_builtin_pop_with, Assembler::ContextRegister);
-        break;
-    case IR::Name::builtin_declare_vars: {
-        if (!call->args)
-            return;
-        IR::Const *deletable = call->args->expr->asConst();
-        assert(deletable->type == IR::BoolType);
-        for (IR::ExprList *it = call->args->next; it; it = it->next) {
-            IR::Name *arg = it->expr->asName();
-            assert(arg != 0);
-            generateFunctionCall(Assembler::Void, __qmljs_builtin_declare_var, Assembler::ContextRegister,
-                                 Assembler::TrustedImm32(deletable->value != 0), identifier(*arg->id));
-        }
-        break;
-    }
-    case IR::Name::builtin_define_getter_setter: {
-        if (!call->args)
-            return;
-        IR::ExprList *args = call->args;
-        IR::Temp *object = args->expr->asTemp();
-        assert(object);
-        args = args->next;
-        assert(args);
-        IR::Name *name = args->expr->asName();
-        args = args->next;
-        assert(args);
-        IR::Temp *getter = args->expr->asTemp();
-        args = args->next;
-        assert(args);
-        IR::Temp *setter = args->expr->asTemp();
-
-        generateFunctionCall(Assembler::Void, __qmljs_builtin_define_getter_setter,
-                             object, identifier(*name->id), getter, setter, Assembler::ContextRegister);
-        break;
-    }
-    case IR::Name::builtin_define_property: {
-        if (!call->args)
-            return;
-        IR::ExprList *args = call->args;
-        IR::Temp *object = args->expr->asTemp();
-        assert(object);
-        args = args->next;
-        assert(args);
-        IR::Name *name = args->expr->asName();
-        args = args->next;
-        assert(args);
-        IR::Temp *value = args->expr->asTemp();
-
-        generateFunctionCall(Assembler::Void, __qmljs_builtin_define_property,
-                             object, identifier(*name->id), value, Assembler::ContextRegister);
-        break;
-    }
-    }
+    generateFunctionCall(result, __qmljs_builtin_typeof_member, base, identifier(name), Assembler::ContextRegister);
 }
 
+void InstructionSelection::callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_builtin_typeof_element, base, index, Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_builtin_typeof_name, identifier(name), Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinTypeofValue(IR::Temp *value, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_builtin_typeof, value, Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_delete_member, Assembler::ContextRegister, base, identifier(name));
+}
+
+void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_delete_subscript, Assembler::ContextRegister, base, index);
+}
+
+void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_delete_name, Assembler::ContextRegister, identifier(name));
+}
+
+void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
+{
+    _asm->storeValue(Value::fromBoolean(false), result);
+}
+
+void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
+{
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_throw, arg, Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinRethrow()
+{
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_rethrow, Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
+{
+    generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_create_exception_handler, Assembler::ContextRegister);
+    generateFunctionCall(result, setjmp, Assembler::ReturnValueRegister);
+}
+
+void InstructionSelection::callBuiltinDeleteExceptionHandler()
+{
+    generateFunctionCall(Assembler::Void, __qmljs_delete_exception_handler, Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinGetException(IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_get_exception, Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_foreach_iterator_object, arg, Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_foreach_next_property_name, arg);
+}
+
+void InstructionSelection::callBuiltinPushWith(IR::Temp *arg)
+{
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_push_with, arg, Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinPopWith()
+{
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_pop_with, Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &name)
+{
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_declare_var, Assembler::ContextRegister,
+                         Assembler::TrustedImm32(deletable), identifier(name));
+}
+
+void InstructionSelection::callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter)
+{
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_getter_setter,
+                         object, identifier(name), getter, setter, Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value)
+{
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_property,
+                         object, identifier(name), value, Assembler::ContextRegister);
+}
 
 void InstructionSelection::callValue(IR::Call *call, IR::Temp *result)
 {
@@ -762,6 +728,11 @@ void InstructionSelection::callProperty(IR::Call *call, IR::Temp *result)
 
     int argc = prepareVariableArguments(call->args);
     generateFunctionCall(result, __qmljs_call_property, Assembler::ContextRegister, member->base->asTemp(), identifier(*member->name), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+}
+
+String *InstructionSelection::identifier(const QString &s)
+{
+    return engine()->identifier(s);
 }
 
 void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *result)
