@@ -263,7 +263,8 @@ void InstructionSelection::buildLLVMModule(IR::Module *module, llvm::Module *llv
     std::string err;
 
     llvm::OwningPtr<llvm::MemoryBuffer> buffer;
-    llvm::error_code ec = llvm::MemoryBuffer::getFile(llvm::StringRef("llvm_runtime.bc"), buffer);
+    qDebug()<<"llvm runtime:"<<LLVM_RUNTIME;
+    llvm::error_code ec = llvm::MemoryBuffer::getFile(llvm::StringRef(LLVM_RUNTIME), buffer);
     if (ec) {
         qWarning() << ec.message().c_str();
         assert(!"cannot load QML/JS LLVM runtime, you can generate the runtime with the command `make llvm_runtime'");
