@@ -52,6 +52,7 @@ class UiParameterList;
 }
 
 namespace VM {
+struct DiagnosticMessage;
 struct ExecutionContext;
 }
 
@@ -59,10 +60,17 @@ namespace Debugging {
 class Debugger;
 } // namespace Debugging
 
+class ErrorHandler
+{
+public:
+    virtual void syntaxError(VM::DiagnosticMessage *message) = 0;
+};
+
 class Codegen: protected AST::Visitor
 {
 public:
     Codegen(VM::ExecutionContext *ctx);
+    Codegen(ErrorHandler *errorHandler, bool strictMode);
 
     enum Mode {
         GlobalCode,
@@ -391,7 +399,9 @@ private:
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
     VM::ExecutionContext *_context;
+    bool _strictMode;
     Debugging::Debugger *_debugger;
+    ErrorHandler *_errorHandler;
 
     class ScanFunctions;
 };

@@ -204,7 +204,7 @@ public:
     {
         Environment *e = _cg->newEnvironment(node, _env);
         if (!e->isStrict)
-            e->isStrict = _cg->_context->strictMode;
+            e->isStrict = _cg->_strictMode;
         _envStack.append(e);
         _env = e;
     }
@@ -413,7 +413,28 @@ Codegen::Codegen(VM::ExecutionContext *context)
     , _labelledStatement(0)
     , _tryCleanup(0)
     , _context(context)
+    , _strictMode(context->strictMode)
     , _debugger(context->engine->debugger)
+    , _errorHandler(0)
+{
+}
+
+Codegen::Codegen(ErrorHandler *errorHandler, bool strictMode)
+    : _module(0)
+    , _function(0)
+    , _block(0)
+    , _exitBlock(0)
+    , _throwBlock(0)
+    , _returnAddress(0)
+    , _mode(GlobalCode)
+    , _env(0)
+    , _loop(0)
+    , _labelledStatement(0)
+    , _tryCleanup(0)
+    , _context(0)
+    , _strictMode(strictMode)
+    , _debugger(0)
+    , _errorHandler(errorHandler)
 {
 }
 
@@ -2490,5 +2511,10 @@ void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
     msg->startLine = loc.startLine;
     msg->startColumn = loc.startColumn;
     msg->message = detail;
-    _context->throwSyntaxError(msg);
+    if (_context)
+        _context->throwSyntaxError(msg);
+    else if (_errorHandler)
+        _errorHandler->syntaxError(msg);
+    else
+        Q_ASSERT(!"No error handler available.");
 }

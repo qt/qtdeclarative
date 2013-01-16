@@ -54,6 +54,7 @@
 #include "qv4ecmaobjects_p.h"
 #include "qv4isel_p.h"
 #include "qv4mm.h"
+#include "qmljs_environment.h"
 
 #include <QtCore>
 #include <private/qqmljsengine_p.h>
@@ -189,8 +190,10 @@ int compile(const QString &fileName, const QString &source, QQmlJS::LLVMOutputTy
     const bool parsed = parser.parseProgram();
 
     foreach (const DiagnosticMessage &m, parser.diagnosticMessages()) {
-        std::cerr << qPrintable(fileName) << ':' << m.loc.startLine << ':' << m.loc.startColumn
-                  << ": error: " << qPrintable(m.message) << std::endl;
+        std::cerr << qPrintable(fileName) << ':'
+                  << m.loc.startLine << ':'
+                  << m.loc.startColumn << ": error: "
+                  << qPrintable(m.message) << std::endl;
     }
 
     if (!parsed)
@@ -199,7 +202,20 @@ int compile(const QString &fileName, const QString &source, QQmlJS::LLVMOutputTy
     using namespace AST;
     Program *program = AST::cast<Program *>(parser.rootNode());
 
-    Codegen cg(0);
+    class MyErrorHandler: public ErrorHandler {
+    public:
+        virtual void syntaxError(QQmlJS::VM::DiagnosticMessage *message) {
+            for (; message; message = message->next) {
+                std::cerr << qPrintable(message->fileName) << ':'
+                          << message->startLine << ':'
+                          << message->startColumn << ": "
+                          << (message->type == QQmlJS::VM::DiagnosticMessage::Error ? "error" : "warning") << ": "
+                          << qPrintable(message->message) << std::endl;
+            }
+        }
+    } errorHandler;
+
+    Codegen cg(&errorHandler, false);
     // FIXME: if the program is empty, we should we generate an empty %entry, or give an error?
     /*IR::Function *globalCode =*/ cg(fileName, program, &module);
 
