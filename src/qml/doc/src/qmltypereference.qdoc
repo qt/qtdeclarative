@@ -25,9 +25,10 @@
 **
 ****************************************************************************/
 /*!
-\page qtqml-typereference-topic.html
-\title QML Types Provided By The QtQml Module
-\brief List of QML types provided by the QtQml module
+\qmlmodule QtQml 2
+\title Qt Qml QML Types
+\ingroup qmlmodules
+\brief List of QML types provided by the Qt QML module
 
 The \c QtQml module provides the definition and implementation of various
 convenience types which can be used with the QML language, including some
@@ -153,7 +154,6 @@ run-time:
         }
     }
 \endcode
-
 */
 
 /*!
