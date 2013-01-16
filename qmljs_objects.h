@@ -231,25 +231,24 @@ struct Function {
 
     QList<QString> formals;
     QList<QString> locals;
-    QVector<Function *> nestedFunctions;
 
-    bool hasDirectEval: 1;
+    bool hasNestedFunctions  : 1;
+    bool hasDirectEval       : 1;
     bool usesArgumentsObject : 1;
-    bool isStrict: 1;
+    bool isStrict            : 1;
 
     Function(const QString &name)
         : name(name)
         , code(0)
         , codeData(0)
+        , hasNestedFunctions(0)
         , hasDirectEval(false)
         , usesArgumentsObject(false)
         , isStrict(false)
     {}
     ~Function();
 
-    inline bool hasNestedFunctions() const { return !nestedFunctions.isEmpty(); }
-
-    inline bool needsActivation() const { return hasNestedFunctions() || hasDirectEval || usesArgumentsObject; }
+    inline bool needsActivation() const { return hasNestedFunctions || hasDirectEval || usesArgumentsObject; }
 };
 
 struct FunctionObject: Object {
