@@ -49,7 +49,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QQuickStateGroupPrivate;
-class Q_AUTOTEST_EXPORT QQuickStateGroup : public QObject, public QQmlParserStatus
+class Q_QUICK_PRIVATE_EXPORT QQuickStateGroup : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)

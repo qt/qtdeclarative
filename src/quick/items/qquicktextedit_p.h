@@ -51,7 +51,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QQuickTextEditPrivate;
-class Q_AUTOTEST_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
+class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
 {
     Q_OBJECT
     Q_ENUMS(VAlignment)

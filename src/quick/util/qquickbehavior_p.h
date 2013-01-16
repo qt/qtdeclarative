@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimation;
 class QQuickBehaviorPrivate;
-class Q_AUTOTEST_EXPORT QQuickBehavior : public QObject, public QQmlPropertyValueInterceptor
+class Q_QUICK_PRIVATE_EXPORT QQuickBehavior : public QObject, public QQmlPropertyValueInterceptor
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickBehavior)

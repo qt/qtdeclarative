@@ -74,7 +74,7 @@ private:
     friend class QQuickTransition;
 };
 
-class Q_AUTOTEST_EXPORT QQuickTransition : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickTransition : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickTransition)

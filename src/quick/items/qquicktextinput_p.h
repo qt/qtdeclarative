@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTextInputPrivate;
 class QValidator;
-class Q_AUTOTEST_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
+class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
 {
     Q_OBJECT
     Q_ENUMS(HAlignment)
