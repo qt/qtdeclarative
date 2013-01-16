@@ -523,15 +523,7 @@ public:
         }
     }
 
-    void getCollectables(QVector<Object *> &objects) const {
-        uint i = sparse ? 0 : offset;
-        for (; i < (uint)values.size(); ++i) {
-            const PropertyDescriptor &pd = values.at(i);
-            if (pd.isData())
-                if (Object *o = pd.value.asObject())
-                    objects.append(o);
-        }
-    }
+    void getCollectables(QVector<Object *> &objects) const;
 
     void push_front(Value v) {
         if (!sparse) {

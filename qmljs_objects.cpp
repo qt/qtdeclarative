@@ -178,9 +178,18 @@ void Object::getCollectables(QVector<Object *> &objects)
 
     if (members) {
         for (PropertyTable::iterator it = members->begin(), eit = members->end(); it < eit; ++it) {
-            if ((*it) && (*it)->descriptor.isData())
-                if (Object *o = (*it)->descriptor.value.asObject())
+            if (!(*it))
+                continue;
+            PropertyDescriptor &pd = (*it)->descriptor;
+            if (pd.isData()) {
+                if (Object *o = pd.value.asObject())
                     objects.append(o);
+            } else if (pd.isAccessor()) {
+                if (pd.get)
+                    objects.append(pd.get);
+                if (pd.set)
+                    objects.append(pd.set);
+            }
         }
     }
     array.getCollectables(objects);
