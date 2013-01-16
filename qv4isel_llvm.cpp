@@ -79,6 +79,11 @@
 #include "qv4isel_llvm_p.h"
 #include "qv4_llvm_p.h"
 #include "qv4ir_p.h"
+#include "qv4string.h"
+
+namespace {
+QTextStream qout(stderr, QIODevice::WriteOnly);
+} // anonymous namespace
 
 namespace QQmlJS {
 
@@ -284,7 +289,7 @@ void InstructionSelection::buildLLVMModule(IR::Module *module, llvm::Module *llv
     }
 
     _valueTy = _llvmModule->getTypeByName("struct.QQmlJS::VM::Value");
-    _contextPtrTy = _llvmModule->getTypeByName("struct.QQmlJS::VM::Context")->getPointerTo();
+    _contextPtrTy = _llvmModule->getTypeByName("struct.QQmlJS::VM::ExecutionContext")->getPointerTo();
     _stringPtrTy = _llvmModule->getTypeByName("struct.QQmlJS::VM::String")->getPointerTo();
 
     {
@@ -301,7 +306,33 @@ void InstructionSelection::buildLLVMModule(IR::Module *module, llvm::Module *llv
 
 void InstructionSelection::callActivationProperty(IR::Call *c, IR::Temp *temp)
 {
-    // TODO: implement instead of visitExp
+    IR::Name *baseName = c->base->asName();
+    Q_ASSERT(baseName);
+
+    switch (baseName->builtin) {
+    case IR::Name::builtin_declare_vars: {
+        if (!c->args)
+            return;
+        IR::Const *deletable = c->args->expr->asConst();
+        assert(deletable->type == IR::BoolType);
+        llvm::ConstantInt *isDeletable = getInt1(deletable->value != 0);
+        for (IR::ExprList *it = c->args->next; it; it = it->next) {
+            IR::Name *arg = it->expr->asName();
+            assert(arg != 0);
+
+            llvm::Value *name = getIdentifier(*arg->id);
+            CreateCall3(getRuntimeFunction("__qmljs_builtin_declare_var"),
+                        _llvmFunction->arg_begin(), isDeletable, name);
+        }
+    } return;
+    default:
+        break;
+    } // switch
+
+    Q_UNIMPLEMENTED();
+    c->dump(qout);
+    qout << endl;
+    assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
@@ -343,8 +374,9 @@ void InstructionSelection::loadThisObject(IR::Temp *temp)
 
 void InstructionSelection::loadConst(IR::Const *con, IR::Temp *temp)
 {
-    assert(!"TODO!");
-    Q_UNREACHABLE();
+    llvm::Value *target = getLLVMTemp(temp);
+    llvm::Value *source = CreateLoad(createValue(con));
+    CreateStore(source, target);
 }
 
 void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
@@ -367,74 +399,218 @@ void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *
 
 void InstructionSelection::setActivationProperty(IR::Expr *source, const QString &targetName)
 {
-    assert(!"TODO!");
-    Q_UNREACHABLE();
+    llvm::Value *name = getIdentifier(targetName);
+    llvm::Value *src = toValuePtr(source);
+    CreateCall3(getRuntimeFunction("__qmljs_llvm_set_activation_property"),
+                _llvmFunction->arg_begin(), name, src);
 }
 
 void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
 {
-    assert(!"TODO!");
-    Q_UNREACHABLE();
+    IR::Function *f = closure->value;
+    QString name;
+    if (f->name)
+        name = *f->name;
+
+    llvm::Value *args[] = {
+        _llvmFunction->arg_begin(),
+        getLLVMTemp(target),
+        getIdentifier(name),
+        getInt1(f->hasDirectEval),
+        getInt1(f->usesArgumentsObject),
+        getInt1(f->isStrict),
+        getInt1(!f->nestedFunctions.isEmpty()),
+        genStringList(f->formals, "formals", "formal"),
+        getInt32(f->formals.size()),
+        genStringList(f->locals, "locals", "local"),
+        getInt32(f->locals.size())
+    };
+    llvm::Function *callee = _llvmModule->getFunction("__qmljs_llvm_init_closure");
+    CreateCall(callee, args);
 }
 
-void InstructionSelection::getProperty(IR::Temp *base, const QString &name, IR::Temp *target)
+void InstructionSelection::getProperty(IR::Temp *sourceBase, const QString &sourceName, IR::Temp *target)
 {
-    assert(!"TODO!");
-    Q_UNREACHABLE();
+    llvm::Value *base = getLLVMTempReference(sourceBase);
+    llvm::Value *name = getIdentifier(sourceName);
+    llvm::Value *t = getLLVMTemp(target);
+    CreateCall4(getRuntimeFunction("__qmljs_llvm_get_property"),
+                _llvmFunction->arg_begin(), t, base, name);
 }
 
 void InstructionSelection::setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
 {
-    assert(!"TODO!");
-    Q_UNREACHABLE();
+    llvm::Value *base = getLLVMTempReference(targetBase);
+    llvm::Value *name = getIdentifier(targetName);
+    llvm::Value *src = toValuePtr(source);
+    CreateCall4(getRuntimeFunction("__qmljs_llvm_set_property"),
+                _llvmFunction->arg_begin(), base, name, src);
 }
 
-void InstructionSelection::getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target)
+void InstructionSelection::getElement(IR::Temp *sourceBase, IR::Temp *sourceIndex, IR::Temp *target)
 {
     assert(!"TODO!");
     Q_UNREACHABLE();
+
+    llvm::Value *base = getLLVMTempReference(sourceBase);
+    llvm::Value *index = getLLVMTempReference(sourceIndex);
+    llvm::Value *t = getLLVMTemp(target);
+    CreateCall4(getRuntimeFunction("__qmljs_llvm_get_element"),
+                _llvmFunction->arg_begin(), t, base, index);
 }
 
 void InstructionSelection::setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex)
 {
-    assert(!"TODO!");
-    Q_UNREACHABLE();
+    llvm::Value *base = getLLVMTempReference(targetBase);
+    llvm::Value *index = getLLVMTempReference(targetIndex);
+    llvm::Value *src = toValuePtr(source);
+    CreateCall4(getRuntimeFunction("__qmljs_llvm_set_element"),
+                _llvmFunction->arg_begin(), base, index, src);
 }
 
 void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
 {
-    assert(!"TODO!");
-    Q_UNREACHABLE();
+    llvm::Value *t = getLLVMTemp(targetTemp);
+    llvm::Value *s = getLLVMTemp(sourceTemp);
+    CreateStore(s, t);
 }
 
 void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp)
 {
-    assert(!"TODO!");
-    Q_UNREACHABLE();
+    const char *opName = 0;
+    switch (oper) {
+    case IR::OpNot: opName = "__qmljs_not"; break;
+    case IR::OpUMinus: opName = "__qmljs_uminus"; break;
+    case IR::OpUPlus: opName = "__qmljs_uplus"; break;
+    case IR::OpCompl: opName = "__qmljs_compl"; break;
+    case IR::OpIncrement: opName = "__qmljs_increment"; break;
+    case IR::OpDecrement: opName = "__qmljs_decrement"; break;
+    default: assert(!"unreachable"); break;
+    }
+
+    if (opName) {
+        llvm::Value *t = getLLVMTemp(targetTemp);
+        llvm::Value *s = getLLVMTemp(sourceTemp);
+        CreateCall3(getRuntimeFunction(opName),
+                    _llvmFunction->arg_begin(), t, s);
+    }
 }
 
 void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
 {
-    assert(!"TODO!");
-    Q_UNREACHABLE();
+    const char *opName = 0;
+    switch (oper) {
+    case IR::OpBitAnd: opName = "__qmljs_llvm_bit_and"; break;
+    case IR::OpBitOr: opName = "__qmljs_llvm_bit_or"; break;
+    case IR::OpBitXor: opName = "__qmljs_llvm_bit_xor"; break;
+    case IR::OpAdd: opName = "__qmljs_llvm_add"; break;
+    case IR::OpSub: opName = "__qmljs_llvm_sub"; break;
+    case IR::OpMul: opName = "__qmljs_llvm_mul"; break;
+    case IR::OpDiv: opName = "__qmljs_llvm_div"; break;
+    case IR::OpMod: opName = "__qmljs_llvm_mod"; break;
+    case IR::OpLShift: opName = "__qmljs_llvm_shl"; break;
+    case IR::OpRShift: opName = "__qmljs_llvm_shr"; break;
+    case IR::OpURShift: opName = "__qmljs_llvm_ushr"; break;
+    default:
+        Q_UNREACHABLE();
+        break;
+    }
+
+    if (opName) {
+        llvm::Value *t = getLLVMTemp(target);
+        llvm::Value *s1 = toValuePtr(leftSource);
+        llvm::Value *s2 = toValuePtr(rightSource);
+        CreateCall4(getRuntimeFunction(opName),
+                    _llvmFunction->arg_begin(), t, s1, s2);
+        return;
+    }
 }
 
 void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, const QString &targetName)
 {
-    assert(!"TODO!");
-    Q_UNREACHABLE();
+    const char *opName = 0;
+    switch (oper) {
+    case IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_name"; break;
+    case IR::OpBitOr: opName = "__qmljs_llvm_inplace_bit_or_name"; break;
+    case IR::OpBitXor: opName = "__qmljs_llvm_inplace_bit_xor_name"; break;
+    case IR::OpAdd: opName = "__qmljs_llvm_inplace_add_name"; break;
+    case IR::OpSub: opName = "__qmljs_llvm_inplace_sub_name"; break;
+    case IR::OpMul: opName = "__qmljs_llvm_inplace_mul_name"; break;
+    case IR::OpDiv: opName = "__qmljs_llvm_inplace_div_name"; break;
+    case IR::OpMod: opName = "__qmljs_llvm_inplace_mod_name"; break;
+    case IR::OpLShift: opName = "__qmljs_llvm_inplace_shl_name"; break;
+    case IR::OpRShift: opName = "__qmljs_llvm_inplace_shr_name"; break;
+    case IR::OpURShift: opName = "__qmljs_llvm_inplace_ushr_name"; break;
+    default:
+        Q_UNREACHABLE();
+        break;
+    }
+
+    if (opName) {
+        llvm::Value *dst = getIdentifier(targetName);
+        llvm::Value *src = toValuePtr(sourceExpr);
+        CreateCall3(getRuntimeFunction(opName),
+                    _llvmFunction->arg_begin(), dst, src);
+        return;
+    }
 }
 
 void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp)
 {
-    assert(!"TODO!");
-    Q_UNREACHABLE();
+    const char *opName = 0;
+    switch (oper) {
+    case IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_element"; break;
+    case IR::OpBitOr: opName = "__qmljs_llvm_inplace_bit_or_element"; break;
+    case IR::OpBitXor: opName = "__qmljs_llvm_inplace_bit_xor_element"; break;
+    case IR::OpAdd: opName = "__qmljs_llvm_inplace_add_element"; break;
+    case IR::OpSub: opName = "__qmljs_llvm_inplace_sub_element"; break;
+    case IR::OpMul: opName = "__qmljs_llvm_inplace_mul_element"; break;
+    case IR::OpDiv: opName = "__qmljs_llvm_inplace_div_element"; break;
+    case IR::OpMod: opName = "__qmljs_llvm_inplace_mod_element"; break;
+    case IR::OpLShift: opName = "__qmljs_llvm_inplace_shl_element"; break;
+    case IR::OpRShift: opName = "__qmljs_llvm_inplace_shr_element"; break;
+    case IR::OpURShift: opName = "__qmljs_llvm_inplace_ushr_element"; break;
+    default:
+        Q_UNREACHABLE();
+        break;
+    }
+
+    if (opName) {
+        llvm::Value *base = getLLVMTemp(targetBaseTemp);
+        llvm::Value *index = getLLVMTemp(targetIndexTemp);
+        llvm::Value *value = toValuePtr(sourceExpr);
+        CreateCall4(getRuntimeFunction(opName),
+                    _llvmFunction->arg_begin(), base, index, value);
+    }
 }
 
 void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
 {
-    assert(!"TODO!");
-    Q_UNREACHABLE();
+    const char *opName = 0;
+    switch (oper) {
+    case IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_member"; break;
+    case IR::OpBitOr: opName = "__qmljs_llvm_inplace_bit_or_member"; break;
+    case IR::OpBitXor: opName = "__qmljs_llvm_inplace_bit_xor_member"; break;
+    case IR::OpAdd: opName = "__qmljs_llvm_inplace_add_member"; break;
+    case IR::OpSub: opName = "__qmljs_llvm_inplace_sub_member"; break;
+    case IR::OpMul: opName = "__qmljs_llvm_inplace_mul_member"; break;
+    case IR::OpDiv: opName = "__qmljs_llvm_inplace_div_member"; break;
+    case IR::OpMod: opName = "__qmljs_llvm_inplace_mod_member"; break;
+    case IR::OpLShift: opName = "__qmljs_llvm_inplace_shl_member"; break;
+    case IR::OpRShift: opName = "__qmljs_llvm_inplace_shr_member"; break;
+    case IR::OpURShift: opName = "__qmljs_llvm_inplace_ushr_member"; break;
+    default:
+        Q_UNREACHABLE();
+        break;
+    }
+
+    if (opName) {
+        llvm::Value *base = getLLVMTemp(targetBase);
+        llvm::Value *member = getIdentifier(targetName);
+        llvm::Value *value = toValuePtr(source);
+        CreateCall4(getRuntimeFunction(opName),
+                    _llvmFunction->arg_begin(), value, base, member);
+    }
 }
 
 llvm::Function *InstructionSelection::getLLVMFunction(IR::Function *function)
@@ -486,8 +662,8 @@ llvm::Function *InstructionSelection::compileLLVMFunction(IR::Function *function
         CreateStore(llvm::Constant::getNullValue(_valueTy), t);
     }
 
-    CreateCall(_llvmModule->getFunction("__qmljs_llvm_init_this_object"),
-               _llvmFunction->arg_begin());
+//    CreateCall(getRuntimeFunction("__qmljs_llvm_init_this_object"),
+//               _llvmFunction->arg_begin());
 
     foreach (IR::BasicBlock *block, _function->basicBlocks) {
         qSwap(_block, block);
@@ -524,29 +700,14 @@ llvm::BasicBlock *InstructionSelection::getLLVMBasicBlock(IR::BasicBlock *block)
     return llvmBlock;
 }
 
-llvm::Value *InstructionSelection::getLLVMValue(IR::Expr *expr)
-{
-    llvm::Value *llvmValue = 0;
-    if (expr) {
-        qSwap(_llvmValue, llvmValue);
-        expr->accept(this);
-        qSwap(_llvmValue, llvmValue);
-    }
-    if (! llvmValue) {
-        expr->dump(qerr);qerr<<endl;
-        Q_UNIMPLEMENTED();
-        llvmValue = llvm::Constant::getNullValue(_valueTy);
-    }
-    return llvmValue;
-}
-
 llvm::Value *InstructionSelection::getLLVMTempReference(IR::Expr *expr)
 {
     if (IR::Temp *t = expr->asTemp())
         return getLLVMTemp(t);
 
+    assert(!"TODO!");
     llvm::Value *addr = newLLVMTemp(_valueTy);
-    CreateStore(getLLVMValue(expr), addr);
+//    CreateStore(getLLVMValue(expr), addr);
     return addr;
 }
 
@@ -556,6 +717,10 @@ llvm::Value *InstructionSelection::getLLVMCondition(IR::Expr *expr)
     if (IR::Temp *t = expr->asTemp()) {
         value = getLLVMTemp(t);
     } else {
+        assert(!"TODO!");
+        Q_UNREACHABLE();
+
+#if 0
         value = getLLVMValue(expr);
         if (! value) {
             Q_UNIMPLEMENTED();
@@ -565,9 +730,10 @@ llvm::Value *InstructionSelection::getLLVMCondition(IR::Expr *expr)
         llvm::Value *tmp = newLLVMTemp(_valueTy);
         CreateStore(value, tmp);
         value = tmp;
+#endif
     }
 
-    return CreateCall2(_llvmModule->getFunction("__qmljs_llvm_to_boolean"),
+    return CreateCall2(getRuntimeFunction("__qmljs_llvm_to_boolean"),
                        _llvmFunction->arg_begin(),
                        value);
 }
@@ -576,7 +742,7 @@ llvm::Value *InstructionSelection::getLLVMTemp(IR::Temp *temp)
 {
     if (temp->index < 0) {
         const int index = -temp->index -1;
-        return CreateCall2(_llvmModule->getFunction("__qmljs_llvm_get_argument"),
+        return CreateCall2(getRuntimeFunction("__qmljs_llvm_get_argument"),
                            _llvmFunction->arg_begin(), getInt32(index));
     }
 
@@ -597,184 +763,9 @@ llvm::Value *InstructionSelection::getStringPtr(const QString &s)
 llvm::Value *InstructionSelection::getIdentifier(const QString &s)
 {
     llvm::Value *str = getStringPtr(s);
-    llvm::Value *id = CreateCall2(_llvmModule->getFunction("__qmljs_identifier_from_utf8"),
+    llvm::Value *id = CreateCall2(getRuntimeFunction("__qmljs_identifier_from_utf8"),
                                   _llvmFunction->arg_begin(), str);
     return id;
-}
-
-void InstructionSelection::visitExp(IR::Exp *s)
-{
-    getLLVMValue(s->expr);
-}
-
-void InstructionSelection::genMoveSubscript(IR::Move *s)
-{
-    IR::Subscript *subscript = s->target->asSubscript();
-    llvm::Value *base = getLLVMTempReference(subscript->base);
-    llvm::Value *index = getLLVMTempReference(subscript->index);
-    llvm::Value *source = toValuePtr(s->source);
-    CreateCall4(_llvmModule->getFunction("__qmljs_llvm_set_element"),
-                _llvmFunction->arg_begin(), base, index, source);
-}
-
-void InstructionSelection::genMoveMember(IR::Move *s)
-{
-    IR::Member *m = s->target->asMember();
-    llvm::Value *base = getLLVMTempReference(m->base);
-    llvm::Value *name = getIdentifier(*m->name);
-    llvm::Value *source = toValuePtr(s->source);
-    CreateCall4(_llvmModule->getFunction("__qmljs_llvm_set_property"),
-                _llvmFunction->arg_begin(), base, name, source);
-}
-
-void InstructionSelection::visitMove(IR::Move *s)
-{
-    if (s->op == IR::OpInvalid) {
-        if (s->target->asSubscript()) {
-            genMoveSubscript(s);
-            return;
-        } else if (s->target->asMember()) {
-            genMoveMember(s);
-            return;
-        } else if (IR::Name *n = s->target->asName()) {
-            llvm::Value *name = getIdentifier(*n->id);
-            llvm::Value *source = toValuePtr(s->source);
-            CreateCall3(_llvmModule->getFunction("__qmljs_llvm_set_activation_property"),
-                        _llvmFunction->arg_begin(), name, source);
-            return;
-        } else if (IR::Temp *t = s->target->asTemp()) {
-            llvm::Value *target = getLLVMTemp(t);
-            llvm::Value *source = getLLVMValue(s->source);
-            CreateStore(source, target);
-            return;
-        }
-    } else {
-        if (IR::Temp *t = s->target->asTemp()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                const char *opName = 0;
-                switch (s->op) {
-                case IR::OpBitAnd: opName = "__qmljs_llvm_bit_and"; break;
-                case IR::OpBitOr: opName = "__qmljs_llvm_bit_or"; break;
-                case IR::OpBitXor: opName = "__qmljs_llvm_bit_xor"; break;
-                case IR::OpAdd: opName = "__qmljs_llvm_add"; break;
-                case IR::OpSub: opName = "__qmljs_llvm_sub"; break;
-                case IR::OpMul: opName = "__qmljs_llvm_mul"; break;
-                case IR::OpDiv: opName = "__qmljs_llvm_div"; break;
-                case IR::OpMod: opName = "__qmljs_llvm_mod"; break;
-                case IR::OpLShift: opName = "__qmljs_llvm_shl"; break;
-                case IR::OpRShift: opName = "__qmljs_llvm_shr"; break;
-                case IR::OpURShift: opName = "__qmljs_llvm_ushr"; break;
-                default:
-                    Q_UNREACHABLE();
-                    break;
-                }
-
-                if (opName) {
-                    llvm::Value *target = getLLVMTemp(t);
-                    llvm::Value *s1 = toValuePtr(s->target);
-                    llvm::Value *s2 = toValuePtr(s->source);
-                    CreateCall4(_llvmModule->getFunction(opName),
-                                _llvmFunction->arg_begin(), target, s1, s2);
-                    return;
-                }
-            }
-        } else if (IR::Name *n = s->target->asName()) {
-            // inplace assignment, e.g. x += 1, ++x, ...
-            if (s->source->asTemp() || s->source->asConst()) {
-                const char *opName = 0;
-                switch (s->op) {
-                case IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_name"; break;
-                case IR::OpBitOr: opName = "__qmljs_llvm_inplace_bit_or_name"; break;
-                case IR::OpBitXor: opName = "__qmljs_llvm_inplace_bit_xor_name"; break;
-                case IR::OpAdd: opName = "__qmljs_llvm_inplace_add_name"; break;
-                case IR::OpSub: opName = "__qmljs_llvm_inplace_sub_name"; break;
-                case IR::OpMul: opName = "__qmljs_llvm_inplace_mul_name"; break;
-                case IR::OpDiv: opName = "__qmljs_llvm_inplace_div_name"; break;
-                case IR::OpMod: opName = "__qmljs_llvm_inplace_mod_name"; break;
-                case IR::OpLShift: opName = "__qmljs_llvm_inplace_shl_name"; break;
-                case IR::OpRShift: opName = "__qmljs_llvm_inplace_shr_name"; break;
-                case IR::OpURShift: opName = "__qmljs_llvm_inplace_ushr_name"; break;
-                default:
-                    Q_UNREACHABLE();
-                    break;
-                }
-
-                if (opName) {
-                    llvm::Value *dst = getIdentifier(*n->id);
-                    llvm::Value *src = toValuePtr(s->source);
-                    CreateCall3(_llvmModule->getFunction(opName),
-                                _llvmFunction->arg_begin(), dst, src);
-                    return;
-                }
-            }
-        } else if (IR::Subscript *ss = s->target->asSubscript()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                const char *opName = 0;
-                switch (s->op) {
-                case IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_element"; break;
-                case IR::OpBitOr: opName = "__qmljs_llvm_inplace_bit_or_element"; break;
-                case IR::OpBitXor: opName = "__qmljs_llvm_inplace_bit_xor_element"; break;
-                case IR::OpAdd: opName = "__qmljs_llvm_inplace_add_element"; break;
-                case IR::OpSub: opName = "__qmljs_llvm_inplace_sub_element"; break;
-                case IR::OpMul: opName = "__qmljs_llvm_inplace_mul_element"; break;
-                case IR::OpDiv: opName = "__qmljs_llvm_inplace_div_element"; break;
-                case IR::OpMod: opName = "__qmljs_llvm_inplace_mod_element"; break;
-                case IR::OpLShift: opName = "__qmljs_llvm_inplace_shl_element"; break;
-                case IR::OpRShift: opName = "__qmljs_llvm_inplace_shr_element"; break;
-                case IR::OpURShift: opName = "__qmljs_llvm_inplace_ushr_element"; break;
-                default:
-                    Q_UNREACHABLE();
-                    break;
-                }
-
-                if (opName) {
-                    llvm::Value *base = getLLVMTemp(ss->base->asTemp());
-                    llvm::Value *index = getLLVMTemp(ss->index->asTemp());
-                    llvm::Value *value = toValuePtr(s->source);
-                    CreateCall4(_llvmModule->getFunction(opName),
-                                _llvmFunction->arg_begin(), base, index, value);
-                    // TODO: checkExceptions();
-                }
-                return;
-            }
-        } else if (IR::Member *m = s->target->asMember()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                const char *opName = 0;
-                switch (s->op) {
-                case IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_member"; break;
-                case IR::OpBitOr: opName = "__qmljs_llvm_inplace_bit_or_member"; break;
-                case IR::OpBitXor: opName = "__qmljs_llvm_inplace_bit_xor_member"; break;
-                case IR::OpAdd: opName = "__qmljs_llvm_inplace_add_member"; break;
-                case IR::OpSub: opName = "__qmljs_llvm_inplace_sub_member"; break;
-                case IR::OpMul: opName = "__qmljs_llvm_inplace_mul_member"; break;
-                case IR::OpDiv: opName = "__qmljs_llvm_inplace_div_member"; break;
-                case IR::OpMod: opName = "__qmljs_llvm_inplace_mod_member"; break;
-                case IR::OpLShift: opName = "__qmljs_llvm_inplace_shl_member"; break;
-                case IR::OpRShift: opName = "__qmljs_llvm_inplace_shr_member"; break;
-                case IR::OpURShift: opName = "__qmljs_llvm_inplace_ushr_member"; break;
-                default:
-                    Q_UNREACHABLE();
-                    break;
-                }
-
-                if (opName) {
-                    llvm::Value *base = getLLVMTemp(m->base->asTemp());
-                    llvm::Value *member = getIdentifier(*m->name);
-                    llvm::Value *value = toValuePtr(s->source);
-                    CreateCall4(_llvmModule->getFunction(opName),
-                                _llvmFunction->arg_begin(), value, base, member);
-                    // TODO: checkExceptions();
-                }
-                return;
-            }
-        }
-    }
-
-    // For anything else:
-    s->dump(qerr, IR::Stmt::HIR);
-    qerr << endl;
-    Q_UNIMPLEMENTED();
-    return;
 }
 
 void InstructionSelection::visitJump(IR::Jump *s)
@@ -795,156 +786,20 @@ void InstructionSelection::visitRet(IR::Ret *s)
     assert(t != 0);
     llvm::Value *result = getLLVMTemp(t);
     llvm::Value *ctx = _llvmFunction->arg_begin();
-    CreateCall2(_llvmModule->getFunction("__qmljs_llvm_return"), ctx, result);
+    CreateCall2(getRuntimeFunction("__qmljs_llvm_return"), ctx, result);
     CreateRetVoid();
 }
 
-void InstructionSelection::visitConst(IR::Const *e)
-{
-    llvm::Value *tmp = createValue(e);
-
-    _llvmValue = CreateLoad(tmp);
-}
-
+#if 0
 void InstructionSelection::visitString(IR::String *e)
 {
     llvm::Value *tmp = newLLVMTemp(_valueTy);
-    CreateCall3(_llvmModule->getFunction("__qmljs_llvm_init_string"),
+    CreateCall3(getRuntimeFunction("__qmljs_llvm_init_string"),
                 _llvmFunction->arg_begin(), tmp,
                 getStringPtr(*e->value));
     _llvmValue = CreateLoad(tmp);
 }
-
-void InstructionSelection::visitRegExp(IR::RegExp *e)
-{
-    e->dump(qerr);
-    qerr << endl;
-    Q_UNIMPLEMENTED();
-    _llvmValue = llvm::Constant::getNullValue(_valueTy);
-}
-
-void InstructionSelection::visitName(IR::Name *e)
-{
-    llvm::Value *result = newLLVMTemp(_valueTy);
-
-    if (e->id == QStringLiteral("this")) {
-        CreateCall2(_llvmModule->getFunction("__qmljs_llvm_get_this_object"),
-                    _llvmFunction->arg_begin(), result);
-    } else {
-        llvm::Value *name = getIdentifier(*e->id);
-        CreateCall3(_llvmModule->getFunction("__qmljs_llvm_get_activation_property"),
-                    _llvmFunction->arg_begin(), result, name);
-    }
-    _llvmValue = CreateLoad(result);
-
-}
-
-void InstructionSelection::visitTemp(IR::Temp *e)
-{
-    if (llvm::Value *t = getLLVMTemp(e)) {
-        _llvmValue = CreateLoad(t);
-    }
-}
-
-void InstructionSelection::visitClosure(IR::Closure *e)
-{
-    llvm::Value *tmp = newLLVMTemp(_valueTy);
-    llvm::Value *clos = getLLVMFunction(e->value);
-    assert("!broken: pass function name!");
-    CreateCall3(_llvmModule->getFunction("__qmljs_llvm_init_native_function"),
-                _llvmFunction->arg_begin(), tmp, clos);
-    _llvmValue = CreateLoad(tmp);
-}
-
-void InstructionSelection::visitUnop(IR::Unop *e)
-{
-    llvm::Value *result = newLLVMTemp(_valueTy);
-    genUnop(result, e);
-    _llvmValue = CreateLoad(result);
-}
-
-void InstructionSelection::visitBinop(IR::Binop *e)
-{
-    llvm::Value *result = newLLVMTemp(_valueTy);
-    genBinop(result, e);
-    _llvmValue = CreateLoad(result);
-}
-
-void InstructionSelection::genUnop(llvm::Value *result, IR::Unop *e)
-{
-    IR::Temp *t = e->expr->asTemp();
-    assert(t != 0);
-
-    llvm::Value *expr = getLLVMTemp(t);
-    llvm::Value *op = 0;
-
-    switch (e->op) {
-    default:
-        Q_UNREACHABLE();
-        break;
-
-    case IR::OpNot: op = _llvmModule->getFunction("__qmljs_llvm_not"); break;
-    case IR::OpUMinus: op = _llvmModule->getFunction("__qmljs_llvm_uminus"); break;
-    case IR::OpUPlus: op = _llvmModule->getFunction("__qmljs_llvm_uplus"); break;
-    case IR::OpCompl: op = _llvmModule->getFunction("__qmljs_llvm_compl"); break;
-    }
-
-    CreateCall3(op, _llvmFunction->arg_begin(), result, expr);
-}
-
-void InstructionSelection::genBinop(llvm::Value *result, IR::Binop *e)
-{
-    assert(e->left->asTemp() || e->left->asConst());
-    assert(e->right->asTemp() || e->right->asConst());
-
-    llvm::Value *left = toValuePtr(e->left);
-    llvm::Value *right = toValuePtr(e->right);
-    llvm::Value *op = 0;
-    switch (e->op) {
-    case IR::OpInvalid:
-    case IR::OpIfTrue:
-    case IR::OpNot:
-    case IR::OpUMinus:
-    case IR::OpUPlus:
-    case IR::OpCompl:
-        Q_UNREACHABLE();
-        break;
-
-    case IR::OpIncrement:
-    case IR::OpDecrement:
-        assert(!"TODO!");
-        break;
-
-    case IR::OpBitAnd: op = _llvmModule->getFunction("__qmljs_llvm_bit_and"); break;
-    case IR::OpBitOr: op = _llvmModule->getFunction("__qmljs_llvm_bit_or"); break;
-    case IR::OpBitXor: op = _llvmModule->getFunction("__qmljs_llvm_bit_xor"); break;
-    case IR::OpAdd: op = _llvmModule->getFunction("__qmljs_llvm_add"); break;
-    case IR::OpSub: op = _llvmModule->getFunction("__qmljs_llvm_sub"); break;
-    case IR::OpMul: op = _llvmModule->getFunction("__qmljs_llvm_mul"); break;
-    case IR::OpDiv: op = _llvmModule->getFunction("__qmljs_llvm_div"); break;
-    case IR::OpMod: op = _llvmModule->getFunction("__qmljs_llvm_mod"); break;
-    case IR::OpLShift: op = _llvmModule->getFunction("__qmljs_llvm_shl"); break;
-    case IR::OpRShift: op = _llvmModule->getFunction("__qmljs_llvm_shr"); break;
-    case IR::OpURShift: op = _llvmModule->getFunction("__qmljs_llvm_ushr"); break;
-    case IR::OpGt: op = _llvmModule->getFunction("__qmljs_llvm_gt"); break;
-    case IR::OpLt: op = _llvmModule->getFunction("__qmljs_llvm_lt"); break;
-    case IR::OpGe: op = _llvmModule->getFunction("__qmljs_llvm_ge"); break;
-    case IR::OpLe: op = _llvmModule->getFunction("__qmljs_llvm_le"); break;
-    case IR::OpEqual: op = _llvmModule->getFunction("__qmljs_llvm_eq"); break;
-    case IR::OpNotEqual: op = _llvmModule->getFunction("__qmljs_llvm_ne"); break;
-    case IR::OpStrictEqual: op = _llvmModule->getFunction("__qmljs_llvm_se"); break;
-    case IR::OpStrictNotEqual: op = _llvmModule->getFunction("__qmljs_llvm_sne"); break;
-    case IR::OpInstanceof: op = _llvmModule->getFunction("__qmljs_llvm_instanceof"); break;
-    case IR::OpIn: op = _llvmModule->getFunction("__qmljs_llvm_in"); break;
-
-    case IR::OpAnd:
-    case IR::OpOr:
-        Q_UNREACHABLE();
-        break;
-    }
-
-    CreateCall4(op, _llvmFunction->arg_begin(), result, left, right);
-}
+#endif
 
 llvm::AllocaInst *InstructionSelection::newLLVMTemp(llvm::Type *type, llvm::Value *size)
 {
@@ -967,8 +822,8 @@ llvm::Value * InstructionSelection::genArguments(IR::ExprList *exprs, int &argc)
 
     int i = 0;
     for (IR::ExprList *it = exprs; it; it = it->next) {
-        llvm::Value *arg = getLLVMValue(it->expr);
-        CreateStore(arg, CreateConstGEP1_32(args, i++));
+//        llvm::Value *arg = getLLVMValue(it->expr);
+//        CreateStore(arg, CreateConstGEP1_32(args, i++));
     }
 
     return args;
@@ -995,7 +850,7 @@ void InstructionSelection::genCallMember(IR::Call *e, llvm::Value *result)
         getInt32(argc)
     };
 
-    CreateCall(_llvmModule->getFunction("__qmljs_llvm_call_property"), llvm::ArrayRef<llvm::Value *>(actuals));
+    CreateCall(getRuntimeFunction("__qmljs_llvm_call_property"), llvm::ArrayRef<llvm::Value *>(actuals));
     _llvmValue = CreateLoad(result);
 }
 
@@ -1020,7 +875,7 @@ void InstructionSelection::genConstructMember(IR::New *e, llvm::Value *result)
         getInt32(argc)
     };
 
-    CreateCall(_llvmModule->getFunction("__qmljs_llvm_construct_property"), llvm::ArrayRef<llvm::Value *>(actuals));
+    CreateCall(getRuntimeFunction("__qmljs_llvm_construct_property"), llvm::ArrayRef<llvm::Value *>(actuals));
     _llvmValue = CreateLoad(result);
 }
 
@@ -1045,7 +900,7 @@ void InstructionSelection::genCallTemp(IR::Call *e, llvm::Value *result)
         getInt32(argc)
     };
 
-    CreateCall(_llvmModule->getFunction("__qmljs_llvm_call_value"), actuals);
+    CreateCall(getRuntimeFunction("__qmljs_llvm_call_value"), actuals);
 
     _llvmValue = CreateLoad(result);
 }
@@ -1068,7 +923,7 @@ void InstructionSelection::genConstructTemp(IR::New *e, llvm::Value *result)
         getInt32(argc)
     };
 
-    CreateCall(_llvmModule->getFunction("__qmljs_llvm_construct_value"), actuals);
+    CreateCall(getRuntimeFunction("__qmljs_llvm_construct_value"), actuals);
 
     _llvmValue = CreateLoad(result);
 }
@@ -1086,49 +941,49 @@ void InstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
             break;
 
         case IR::Name::builtin_typeof:
-            CreateCall3(_llvmModule->getFunction("__qmljs_llvm_typeof"),
+            CreateCall3(getRuntimeFunction("__qmljs_llvm_typeof"),
                         _llvmFunction->arg_begin(), result, getLLVMTempReference(e->args->expr));
             _llvmValue = CreateLoad(result);
             return;
 
         case IR::Name::builtin_throw:
-            CreateCall2(_llvmModule->getFunction("__qmljs_llvm_throw"),
+            CreateCall2(getRuntimeFunction("__qmljs_llvm_throw"),
                         _llvmFunction->arg_begin(), getLLVMTempReference(e->args->expr));
             _llvmValue = llvm::UndefValue::get(_valueTy);
             return;
 
         case IR::Name::builtin_create_exception_handler:
-            CreateCall2(_llvmModule->getFunction("__qmljs_llvm_create_exception_handler"),
+            CreateCall2(getRuntimeFunction("__qmljs_llvm_create_exception_handler"),
                         _llvmFunction->arg_begin(), result);
             _llvmValue = CreateLoad(result);
             return;
 
         case IR::Name::builtin_delete_exception_handler:
-            CreateCall(_llvmModule->getFunction("__qmljs_llvm_delete_exception_handler"),
+            CreateCall(getRuntimeFunction("__qmljs_llvm_delete_exception_handler"),
                        _llvmFunction->arg_begin());
             return;
 
         case IR::Name::builtin_get_exception:
-            CreateCall2(_llvmModule->getFunction("__qmljs_llvm_get_exception"),
+            CreateCall2(getRuntimeFunction("__qmljs_llvm_get_exception"),
                         _llvmFunction->arg_begin(), result);
             _llvmValue = CreateLoad(result);
             return;
 
         case IR::Name::builtin_foreach_iterator_object:
-            CreateCall3(_llvmModule->getFunction("__qmljs_llvm_foreach_iterator_object"),
+            CreateCall3(getRuntimeFunction("__qmljs_llvm_foreach_iterator_object"),
                         _llvmFunction->arg_begin(), result, getLLVMTempReference(e->args->expr));
             _llvmValue = CreateLoad(result);
             return;
 
         case IR::Name::builtin_foreach_next_property_name:
-            CreateCall2(_llvmModule->getFunction("__qmljs_llvm_foreach_next_property_name"),
+            CreateCall2(getRuntimeFunction("__qmljs_llvm_foreach_next_property_name"),
                         result, getLLVMTempReference(e->args->expr));
             _llvmValue = CreateLoad(result);
             return;
 
         case IR::Name::builtin_delete: {
             if (IR::Subscript *subscript = e->args->expr->asSubscript()) {
-                CreateCall4(_llvmModule->getFunction("__qmljs_llvm_delete_subscript"),
+                CreateCall4(getRuntimeFunction("__qmljs_llvm_delete_subscript"),
                            _llvmFunction->arg_begin(),
                            result,
                            getLLVMTempReference(subscript->base),
@@ -1136,7 +991,7 @@ void InstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
                 _llvmValue = CreateLoad(result);
                 return;
             } else if (IR::Member *member = e->args->expr->asMember()) {
-                CreateCall4(_llvmModule->getFunction("__qmljs_llvm_delete_member"),
+                CreateCall4(getRuntimeFunction("__qmljs_llvm_delete_member"),
                            _llvmFunction->arg_begin(),
                            result,
                            getLLVMTempReference(member->base),
@@ -1144,14 +999,14 @@ void InstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
                 _llvmValue = CreateLoad(result);
                 return;
             } else if (IR::Name *name = e->args->expr->asName()) {
-                CreateCall3(_llvmModule->getFunction("__qmljs_llvm_delete_property"),
+                CreateCall3(getRuntimeFunction("__qmljs_llvm_delete_property"),
                            _llvmFunction->arg_begin(),
                            result,
                            getIdentifier(*name->id));
                 _llvmValue = CreateLoad(result);
                 return;
             } else {
-                CreateCall3(_llvmModule->getFunction("__qmljs_llvm_delete_value"),
+                CreateCall3(getRuntimeFunction("__qmljs_llvm_delete_value"),
                            _llvmFunction->arg_begin(),
                            result,
                            getLLVMTempReference(e->args->expr));
@@ -1169,7 +1024,7 @@ void InstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
         int argc = 0;
         llvm::Value *args = genArguments(e->args, argc);
 
-        CreateCall5(_llvmModule->getFunction("__qmljs_llvm_call_activation_property"),
+        CreateCall5(getRuntimeFunction("__qmljs_llvm_call_activation_property"),
                     _llvmFunction->arg_begin(), result, name, args, getInt32(argc));
 
         _llvmValue = CreateLoad(result);
@@ -1191,13 +1046,14 @@ void InstructionSelection::genConstructName(IR::New *e, llvm::Value *result)
         int argc = 0;
         llvm::Value *args = genArguments(e->args, argc);
 
-        CreateCall5(_llvmModule->getFunction("__qmljs_llvm_construct_activation_property"),
+        CreateCall5(getRuntimeFunction("__qmljs_llvm_construct_activation_property"),
                     _llvmFunction->arg_begin(), result, name, args, getInt32(argc));
 
         _llvmValue = CreateLoad(result);
     }
 }
 
+#if 0
 void InstructionSelection::visitCall(IR::Call *e)
 {
     if (e->base->asMember()) {
@@ -1214,14 +1070,16 @@ void InstructionSelection::visitCall(IR::Call *e)
 
         llvm::Value *result = newLLVMTemp(_valueTy);
         CreateStore(llvm::Constant::getNullValue(_valueTy), result);
-        CreateCall5(_llvmModule->getFunction("__qmljs_llvm_call_value"),
+        CreateCall5(getRuntimeFunction("__qmljs_llvm_call_value"),
                     _llvmFunction->arg_begin(), result, base, args, getInt32(argc));
         _llvmValue = CreateLoad(result);
     } else {
         Q_UNIMPLEMENTED();
     }
 }
+#endif
 
+#if 0
 void InstructionSelection::visitNew(IR::New *e)
 {
     if (e->base->asMember()) {
@@ -1238,33 +1096,49 @@ void InstructionSelection::visitNew(IR::New *e)
 
         llvm::Value *result = newLLVMTemp(_valueTy);
         CreateStore(llvm::Constant::getNullValue(_valueTy), result);
-        CreateCall5(_llvmModule->getFunction("__qmljs_llvm_construct_value"),
+        CreateCall5(getRuntimeFunction("__qmljs_llvm_construct_value"),
                     _llvmFunction->arg_begin(), result, base, args, getInt32(argc));
         _llvmValue = CreateLoad(result);
     } else {
         Q_UNIMPLEMENTED();
     }
 }
+#endif
 
+#if 0
 void InstructionSelection::visitSubscript(IR::Subscript *e)
 {
     llvm::Value *result = newLLVMTemp(_valueTy);
     llvm::Value *base = getLLVMTempReference(e->base);
     llvm::Value *index = getLLVMTempReference(e->index);
-    CreateCall4(_llvmModule->getFunction("__qmljs_llvm_get_element"),
+    CreateCall4(getRuntimeFunction("__qmljs_llvm_get_element"),
                 _llvmFunction->arg_begin(), result, base, index);
     _llvmValue = CreateLoad(result);
 }
+#endif
 
+#if 0
 void InstructionSelection::visitMember(IR::Member *e)
 {
     llvm::Value *result = newLLVMTemp(_valueTy);
     llvm::Value *base = getLLVMTempReference(e->base);
     llvm::Value *name = getIdentifier(*e->name);
 
-    CreateCall4(_llvmModule->getFunction("__qmljs_llvm_get_property"),
+    CreateCall4(getRuntimeFunction("__qmljs_llvm_get_property"),
                 _llvmFunction->arg_begin(), result, base, name);
     _llvmValue = CreateLoad(result);
+}
+#endif
+
+llvm::Function *InstructionSelection::getRuntimeFunction(llvm::StringRef str)
+{
+    llvm::Function *func = _llvmModule->getFunction(str);
+    if (!func) {
+        std::cerr << "Cannot find runtime function \""
+                  << str.str() << "\"!" << std::endl;
+        assert(func);
+    }
+    return func;
 }
 
 llvm::Value *InstructionSelection::createValue(IR::Const *e)
@@ -1273,20 +1147,20 @@ llvm::Value *InstructionSelection::createValue(IR::Const *e)
 
     switch (e->type) {
     case IR::UndefinedType:
-        CreateCall(_llvmModule->getFunction("__qmljs_llvm_init_undefined"), tmp);
+        CreateCall(getRuntimeFunction("__qmljs_llvm_init_undefined"), tmp);
         break;
 
     case IR::NullType:
-        CreateCall(_llvmModule->getFunction("__qmljs_llvm_init_null"), tmp);
+        CreateCall(getRuntimeFunction("__qmljs_llvm_init_null"), tmp);
         break;
 
     case IR::BoolType:
-        CreateCall2(_llvmModule->getFunction("__qmljs_llvm_init_boolean"), tmp,
+        CreateCall2(getRuntimeFunction("__qmljs_llvm_init_boolean"), tmp,
                     getInt1(e->value ? 1 : 0));
         break;
 
     case IR::NumberType:
-        CreateCall2(_llvmModule->getFunction("__qmljs_llvm_init_number"), tmp,
+        CreateCall2(getRuntimeFunction("__qmljs_llvm_init_number"), tmp,
                     llvm::ConstantFP::get(_numberTy, e->value));
         break;
 
@@ -1306,4 +1180,21 @@ llvm::Value *InstructionSelection::toValuePtr(IR::Expr *e)
     } else {
         Q_UNREACHABLE();
     }
+}
+
+llvm::Value *InstructionSelection::genStringList(const QList<const QString *> &strings, const char *arrayName, const char *elementName)
+{
+    llvm::Value *array = CreateAlloca(_stringPtrTy, getInt32(strings.size()),
+                                      arrayName);
+    for (int i = 0, ei = strings.size(); i < ei; ++i) {
+        llvm::Value *el;
+        if (const QString *string = strings.at(i))
+            el = getIdentifier(*string);
+        else
+            el = llvm::Constant::getNullValue(_stringPtrTy);
+        llvm::Value *ptr = CreateGEP(array, getInt32(i), elementName);
+        CreateStore(el, ptr);
+    }
+
+    return array;
 }

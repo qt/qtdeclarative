@@ -83,6 +83,21 @@ void __qmljs_llvm_init_string(ExecutionContext *ctx, Value *result, const char *
     *result = Value::fromString(__qmljs_string_from_utf8(ctx, str));
 }
 
+void __qmljs_llvm_init_closure(ExecutionContext *ctx, Value *result,
+                               String *name, bool hasDirectEval,
+                               bool usesArgumentsObject, bool isStrict,
+                               bool hasNestedFunctions,
+                               String **formals, unsigned formalCount,
+                               String **locals, unsigned localCount)
+{
+    Function *clos = __qmljs_register_function(ctx, name, hasDirectEval,
+                                               usesArgumentsObject, isStrict,
+                                               hasNestedFunctions,
+                                               formals, formalCount,
+                                               locals, localCount);
+    *result = __qmljs_init_closure(clos, ctx);
+}
+
 bool __qmljs_llvm_to_boolean(ExecutionContext *ctx, const Value *value)
 {
     return __qmljs_to_boolean(*value, ctx);
@@ -442,6 +457,11 @@ void __qmljs_llvm_set_element(ExecutionContext *ctx, Value *object, Value *index
 void __qmljs_llvm_set_property(ExecutionContext *ctx, Value *object, String *name, Value *value)
 {
     __qmljs_set_property(ctx, *object, name, *value);
+}
+
+void __qmljs_llvm_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name)
+{
+    __qmljs_builtin_declare_var(ctx, deletable, name);
 }
 
 void __qmljs_llvm_typeof(ExecutionContext *ctx, Value *result, const Value *value)

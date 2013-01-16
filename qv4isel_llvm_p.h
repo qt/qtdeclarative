@@ -62,8 +62,7 @@ namespace LLVM {
 
 class InstructionSelection:
         public llvm::IRBuilder<>,
-        public IR::InstructionSelection,
-        protected IR::ExprVisitor
+        public IR::InstructionSelection
 {
 public:
     InstructionSelection(llvm::LLVMContext &context);
@@ -84,9 +83,9 @@ public: // methods from InstructionSelection:
     virtual void getActivationProperty(const QString &name, IR::Temp *temp);
     virtual void setActivationProperty(IR::Expr *source, const QString &targetName);
     virtual void initClosure(IR::Closure *closure, IR::Temp *target);
-    virtual void getProperty(IR::Temp *base, const QString &name, IR::Temp *target);
+    virtual void getProperty(IR::Temp *sourceBase, const QString &sourceName, IR::Temp *target);
     virtual void setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName);
-    virtual void getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target);
+    virtual void getElement(IR::Temp *sourceBase, IR::Temp *sourceIndex, IR::Temp *target);
     virtual void setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex);
     virtual void copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp);
     virtual void unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp);
@@ -96,38 +95,20 @@ public: // methods from InstructionSelection:
     virtual void inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR::Temp *targetBase, const QString &targetName);
 
 public: // visitor methods for StmtVisitor:
-    virtual void visitExp(IR::Exp *); // TODO: remove
-    virtual void visitMove(IR::Move *);
     virtual void visitJump(IR::Jump *);
     virtual void visitCJump(IR::CJump *);
     virtual void visitRet(IR::Ret *);
 
-public: // visitor methods for ExprVisitor:
-    virtual void visitConst(IR::Const *);
-    virtual void visitString(IR::String *);
-    virtual void visitRegExp(IR::RegExp *);
-    virtual void visitName(IR::Name *);
-    virtual void visitTemp(IR::Temp *);
-    virtual void visitClosure(IR::Closure *);
-    virtual void visitUnop(IR::Unop *);
-    virtual void visitBinop(IR::Binop *);
-    virtual void visitCall(IR::Call *);
-    virtual void visitNew(IR::New *);
-    virtual void visitSubscript(IR::Subscript *);
-    virtual void visitMember(IR::Member *);
-
 private:
+    llvm::Function *getRuntimeFunction(llvm::StringRef str);
     llvm::Function *getLLVMFunction(IR::Function *function);
     llvm::Function *compileLLVMFunction(IR::Function *function);
     llvm::BasicBlock *getLLVMBasicBlock(IR::BasicBlock *block);
-    llvm::Value *getLLVMValue(IR::Expr *expr);
     llvm::Value *getLLVMTempReference(IR::Expr *expr);
     llvm::Value *getLLVMCondition(IR::Expr *expr);
     llvm::Value *getLLVMTemp(IR::Temp *temp);
     llvm::Value *getStringPtr(const QString &s);
     llvm::Value *getIdentifier(const QString &s);
-    void genUnop(llvm::Value *result, IR::Unop *e);
-    void genBinop(llvm::Value *result, IR::Binop *e);
     llvm::AllocaInst *newLLVMTemp(llvm::Type *type, llvm::Value *size = 0);
     llvm::Value * genArguments(IR::ExprList *args, int &argc);
     void genCallTemp(IR::Call *e, llvm::Value *result = 0);
@@ -136,10 +117,11 @@ private:
     void genConstructTemp(IR::New *e, llvm::Value *result = 0);
     void genConstructName(IR::New *e, llvm::Value *result = 0);
     void genConstructMember(IR::New *e, llvm::Value *result = 0);
-    void genMoveSubscript(IR::Move *s);
-    void genMoveMember(IR::Move *s);
     llvm::Value *createValue(IR::Const *e);
     llvm::Value *toValuePtr(IR::Expr *e);
+    llvm::Value *genStringList(const QList<const QString *> &strings,
+                               const char *arrayName, const char *elementName);
+
 
 private:
     llvm::Module *_llvmModule;

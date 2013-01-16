@@ -117,6 +117,30 @@ Value __qmljs_init_closure(VM::Function *clos, ExecutionContext *ctx)
     return Value::fromObject(ctx->engine->newScriptFunction(ctx, clos));
 }
 
+Function *__qmljs_register_function(ExecutionContext *ctx, String *name,
+                                    bool hasDirectEval,
+                                    bool usesArgumentsObject, bool isStrict,
+                                    bool hasNestedFunctions,
+                                    String **formals, unsigned formalCount,
+                                    String **locals, unsigned localCount)
+{
+    Function *f = ctx->engine->newFunction(name ? name->toQString() : QString());
+
+    f->hasDirectEval = hasDirectEval;
+    f->usesArgumentsObject = usesArgumentsObject;
+    f->isStrict = isStrict;
+    f->hasNestedFunctions = hasNestedFunctions;
+
+    for (unsigned i = 0; i < formalCount; ++i)
+        if (formals[i])
+            f->formals.append(formals[i]->toQString());
+    for (unsigned i = 0; i < localCount; ++i)
+        if (locals[i])
+            f->locals.append(locals[i]->toQString());
+
+    return f;
+}
+
 Value __qmljs_string_literal_undefined(ExecutionContext *ctx)
 {
     return Value::fromString(ctx->engine->identifier(QStringLiteral("undefined")));
