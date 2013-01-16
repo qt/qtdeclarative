@@ -1841,24 +1841,65 @@ Value ArrayPrototype::method_sort(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_splice(ExecutionContext *ctx)
 {
-    if (ctx->argumentCount < 2)
-        // ### check
-        return Value::undefinedValue();
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    uint len = getLength(ctx, instance);
 
-    ArrayObject *instance = ctx->thisObject.asArrayObject();
-    if (!instance)
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.splice"));
+    ArrayObject *newArray = ctx->engine->newArrayObject(ctx);
 
-    double start = ctx->argument(0).toInteger(ctx);
-    double deleteCount = ctx->argument(1).toInteger(ctx);
-    Value a = Value::fromObject(ctx->engine->newArrayObject(ctx));
-    QVector<Value> items;
-    for (unsigned int i = 2; i < ctx->argumentCount; ++i)
-        items << ctx->argument(i);
-    ArrayObject *otherInstance = a.asArrayObject();
-    assert(otherInstance);
-    instance->array.splice(start, deleteCount, items, otherInstance->array);
-    return a;
+    double rs = ctx->argument(0).toInteger(ctx);
+    uint start;
+    if (rs < 0)
+        start = (uint) qMax(0., len + rs);
+    else
+        start = (uint) qMin(rs, (double)len);
+
+    uint deleteCount = (uint)qMin(qMax(ctx->argument(1).toInteger(ctx), 0.), (double)(len - start));
+
+    newArray->array.values.resize(deleteCount);
+    PropertyDescriptor *pd = newArray->array.values.data();
+    for (uint i = 0; i < deleteCount; ++i) {
+        pd->type = PropertyDescriptor::Data;
+        pd->writable = PropertyDescriptor::Enabled;
+        pd->enumberable = PropertyDescriptor::Enabled;
+        pd->configurable = PropertyDescriptor::Enabled;
+        pd->value = instance->__get__(ctx, start + i);
+        ++pd;
+    }
+    newArray->array.setLengthUnchecked(deleteCount);
+
+    uint itemCount = ctx->argumentCount < 2 ? 0 : ctx->argumentCount - 2;
+
+    if (itemCount < deleteCount) {
+        for (uint k = start; k < len - deleteCount; ++k) {
+            bool exists;
+            Value v = instance->__get__(ctx, k + deleteCount, &exists);
+            if (exists)
+                instance->array.set(k + itemCount, v);
+            else
+                instance->__delete__(ctx, k + itemCount);
+        }
+        for (uint k = len; k > len - deleteCount + itemCount; --k)
+            instance->__delete__(ctx, k - 1);
+    } else if (itemCount > deleteCount) {
+        uint k = len - deleteCount;
+        while (k > start) {
+            bool exists;
+            Value v = instance->__get__(ctx, k + deleteCount - 1, &exists);
+            if (exists)
+                instance->array.set(k + itemCount - 1, v);
+            else
+                instance->__delete__(ctx, k + itemCount - 1);
+            --k;
+        }
+    }
+
+    for (uint i = 0; i < itemCount; ++i)
+        instance->array.set(start + i, ctx->argument(i + 2));
+
+    ctx->strictMode = true;
+    instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(len - deleteCount + itemCount));
+
+    return Value::fromObject(newArray);
 }
 
 Value ArrayPrototype::method_unshift(ExecutionContext *ctx)

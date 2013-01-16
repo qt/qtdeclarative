@@ -473,35 +473,6 @@ Array::Array(const Array &other)
 }
 
 
-void Array::splice(double start, double deleteCount,
-                   const QVector<Value> &/*items*/,
-                   Array &/*other*/)
-{
-    initSparse();
-    uint len = length();
-    if (start < 0)
-        start = qMax(len + start, double(0));
-    else if (start > len)
-        start = len;
-    deleteCount = qMax(qMin(deleteCount, len - start), double(0));
-
-    // ###
-//    const uint st = uint(start);
-//    const uint dc = uint(deleteCount);
-//    other.resize(dc);
-
-//    const uint itemsSize = uint(items.size());
-
-//    for (uint i = 0; i < dc; ++i)
-//        other.assign(i, to_vector.at(st + i));
-//    if (itemsSize > dc)
-//        to_vector.insert(to_vector.begin() + st, itemsSize - dc, Value::undefinedValue());
-//    else if (itemsSize < dc)
-//        to_vector.erase(to_vector.begin() + st, to_vector.begin() + (dc - itemsSize));
-//    for (uint i = 0; i < itemsSize; ++i)
-    //        (*to_vector)[st + i] = items.at(i);
-}
-
 Value Array::indexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
 {
     bool protoHasArray = false;

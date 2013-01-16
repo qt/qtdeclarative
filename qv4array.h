@@ -361,6 +361,8 @@ inline SparseArrayNode *SparseArray::upperBound(uint akey)
 
 class Array
 {
+    friend class ArrayPrototype;
+
     uint len;
     PropertyDescriptor *lengthProperty;
     union {
@@ -609,7 +611,6 @@ public:
 
     void concat(const Array &other);
     void sort(ExecutionContext *context, Object *thisObject, const Value &comparefn, uint len);
-    void splice(double start, double deleteCount, const QVector<Value> &, Array &);
     Value indexOf(Value v, uint fromIndex, uint len, ExecutionContext *ctx, Object *o);
 };
 
