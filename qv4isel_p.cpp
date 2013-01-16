@@ -224,7 +224,7 @@ void InstructionSelection::callBuiltin(IR::Call *call, IR::Temp *result)
 
     switch (baseName->builtin) {
     case IR::Name::builtin_invalid:
-        callBuiltinInvalid(call->base, call->args, result);
+        callBuiltinInvalid(baseName, call->args, result);
         return;
 
     case IR::Name::builtin_typeof: {

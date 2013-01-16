@@ -70,7 +70,7 @@ public:
     void buildLLVMModule(IR::Module *module, llvm::Module *llvmModule, llvm::FunctionPassManager *fpm);
 
 public: // methods from InstructionSelection:
-    virtual void callBuiltinInvalid(IR::Expr *func, IR::ExprList *args, IR::Temp *result);
+    virtual void callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result);
     virtual void callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result);
     virtual void callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result);
     virtual void callBuiltinTypeofName(const QString &name, IR::Temp *result);

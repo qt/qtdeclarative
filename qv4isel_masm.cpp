@@ -428,7 +428,7 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     _asm = oldAssembler;
 }
 
-void InstructionSelection::callBuiltinInvalid(IR::Expr *func, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result)
 {
     callRuntimeMethod(result, __qmljs_call_activation_property, func, args);
 }

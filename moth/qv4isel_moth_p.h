@@ -24,7 +24,7 @@ protected:
     virtual void visitCJump(IR::CJump *);
     virtual void visitRet(IR::Ret *);
 
-    virtual void callBuiltinInvalid(IR::Expr *func, IR::ExprList *args, IR::Temp *result);
+    virtual void callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result);
     virtual void callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result);
     virtual void callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result);
     virtual void callBuiltinTypeofName(const QString &name, IR::Temp *result);

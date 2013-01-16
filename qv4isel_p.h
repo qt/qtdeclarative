@@ -80,7 +80,7 @@ public: // visitor methods for StmtVisitor:
     virtual void visitExp(IR::Exp *s);
 
 public: // to implement by subclasses:
-    virtual void callBuiltinInvalid(IR::Expr *func, IR::ExprList *args, IR::Temp *result) = 0;
+    virtual void callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result) = 0;
     virtual void callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result) = 0;
     virtual void callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result) = 0;
     virtual void callBuiltinTypeofName(const QString &name, IR::Temp *result) = 0;

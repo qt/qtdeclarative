@@ -300,7 +300,7 @@ void InstructionSelection::buildLLVMModule(IR::Module *module, llvm::Module *llv
     qSwap(_llvmModule, llvmModule);
 }
 
-void InstructionSelection::callBuiltinInvalid(IR::Expr *func, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");

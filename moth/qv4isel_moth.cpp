@@ -692,12 +692,12 @@ void InstructionSelection::visitRet(IR::Ret *s)
     addInstruction(ret);
 }
 
-void InstructionSelection::callBuiltinInvalid(IR::Expr *func, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result)
 {
     const int scratchIndex = scratchTempIndex();
 
     Instruction::LoadName load;
-    load.name = engine()->newString(*func->asCall()->base->asName()->id);
+    load.name = engine()->newString(*func->id);
     load.targetTempIndex = scratchIndex;
     addInstruction(load);
 
