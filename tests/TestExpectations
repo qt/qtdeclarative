@@ -2794,8 +2794,6 @@ S15.4.4.11_A1.4_T1 failing
 S15.4.4.11_A1.4_T2 failing
 S15.4.4.4_A1_T2 failing
 
-# Regression introduced by qtdeclarative parser changes
-
 # Regressions due to Object/property refactoring
 15.12.2-2-1 failing
 15.12.2-2-10 failing
@@ -2825,3 +2823,9 @@ S15.4.4.13_A1_T2 failing
 15.4.4.20-9-c-i-6 failing
 15.4.4.21-8-b-iii-1-6 failing
 15.4.4.22-8-b-iii-1-6 failing
+
+# Bugs in Array.prototype
+15.4.4.14-9-b-i-5 failing
+15.4.4.16-7-c-i-6 failing
+15.4.4.17-7-c-i-6 failing
+
