@@ -606,9 +606,9 @@ void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR:
 
 void InstructionSelection::prepareCallArg(IR::Expr *e, quint32 &argc, quint32 &args)
 {
-    // We pass single arguments as references to the stack, but only if it's not a local or an argument.
-    argc = 1;
-    args = e->asTemp()->index;
+    IR::ExprList exprs;
+    exprs.init(e);
+    prepareCallArgs(&exprs, argc, args);
 }
 
 void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint32 &args)
@@ -626,7 +626,8 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
 
     if (singleArgIsTemp) {
         // We pass single arguments as references to the stack, but only if it's not a local or an argument.
-        prepareCallArg(e->expr, argc, args);
+        argc = 1;
+        args = e->expr->asTemp()->index;
     } else if (e) {
         // We need to move all the temps into the function arg array
         int argLocation = outgoingArgumentTempStart();
@@ -642,6 +643,9 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
             ++argc;
             e = e->next;
         }
+    } else {
+        argc = 0;
+        args = 0;
     }
 }
 
