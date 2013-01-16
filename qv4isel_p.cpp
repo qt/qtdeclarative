@@ -49,6 +49,9 @@ VM::Function *EvalInstructionSelection::createFunctionMapping(VM::ExecutionEngin
         if (local)
             vmFunction->locals.append(*local);
 
+    foreach (IR::Function *function, irFunction->nestedFunctions)
+        createFunctionMapping(engine, function);
+
     vmFunction->hasNestedFunctions = !irFunction->nestedFunctions.isEmpty();
 
     if (engine->debugger)
