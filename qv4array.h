@@ -512,16 +512,25 @@ public:
         }
     }
 
+    const PropertyDescriptor *nonSparseAt(uint index) const {
+        if (sparse)
+            return 0;
+        index += offset;
+        if (index >= (uint)values.size())
+            return 0;
+        return values.constData() + index;
+    }
+
     const PropertyDescriptor *at(uint index) const {
         if (!sparse) {
             if (index >= values.size() - offset)
                 return 0;
-            return values.data() + index + offset;
+            return values.constData() + index + offset;
         } else {
             SparseArrayNode *n = sparse->findNode(index);
             if (!n)
                 return 0;
-            return values.data() + n->value;
+            return values.constData() + n->value;
         }
     }
 

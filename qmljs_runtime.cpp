@@ -576,14 +576,16 @@ void __qmljs_set_property(ExecutionContext *ctx, Value object, String *name, Val
 Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index)
 {
     uint idx = index.asArrayIndex();
+
     if (object.isString() && idx < UINT_MAX) {
-        if (idx > INT_MAX || (int) idx >= object.stringValue()->toQString().length())
+        String *str = object.stringValue();
+        if (idx >= (uint)str->toQString().length())
             return Value::undefinedValue();
-        const QString s = object.stringValue()->toQString().mid(idx, 1);
+        const QString s = str->toQString().mid(idx, 1);
         return Value::fromString(ctx, s);
     }
 
-    if (! object.isObject())
+    if (!object.isObject())
         object = __qmljs_to_object(object, ctx);
 
     Object *o = object.objectValue();

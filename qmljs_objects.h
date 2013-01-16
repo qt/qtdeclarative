@@ -124,7 +124,7 @@ struct Object: Managed {
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, uint index);
     PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name);
-    virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, uint index);
+    PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, uint index);
 
     virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
     virtual Value __get__(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
@@ -132,8 +132,6 @@ struct Object: Managed {
     virtual void __put__(ExecutionContext *ctx, String *name, Value value);
     virtual void __put__(ExecutionContext *ctx, uint index, Value value);
 
-    virtual bool __canPut__(ExecutionContext *ctx, String *name);
-    virtual bool __canPut__(ExecutionContext *ctx, uint index);
     virtual bool __hasProperty__(const ExecutionContext *ctx, String *name) const;
     virtual bool __hasProperty__(const ExecutionContext *ctx, uint index) const;
     virtual bool __delete__(ExecutionContext *ctx, String *name);

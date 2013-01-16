@@ -280,7 +280,7 @@ Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 
 Value Object::__get__(ExecutionContext *ctx, uint index, bool *hasProperty)
 {
-    if (PropertyDescriptor *p = __getPropertyDescriptor__(ctx, index)) {
+    if (const PropertyDescriptor *p = __getPropertyDescriptor__(ctx, index)) {
         if (hasProperty)
             *hasProperty = true;
         return getValue(ctx, p);
@@ -292,55 +292,6 @@ Value Object::__get__(ExecutionContext *ctx, uint index, bool *hasProperty)
 }
 
 
-// Section 8.12.4
-bool Object::__canPut__(ExecutionContext *ctx, String *name)
-{
-    uint idx = name->asArrayIndex();
-    if (idx != String::InvalidArrayIndex)
-        return __canPut__(ctx, idx);
-
-    if (PropertyDescriptor *p = __getOwnProperty__(ctx, name)) {
-        if (p->isAccessor())
-            return p->set != 0;
-        return p->isWritable();
-    }
-
-    if (! prototype)
-        return extensible;
-
-    if (PropertyDescriptor *p = prototype->__getPropertyDescriptor__(ctx, name)) {
-        if (p->isAccessor())
-            return p->set != 0;
-        if (!extensible)
-            return false;
-        return p->isWritable();
-    }
-
-    return extensible;
-}
-
-bool Object::__canPut__(ExecutionContext *ctx, uint index)
-{
-    if (PropertyDescriptor *p = __getOwnProperty__(ctx, index)) {
-        if (p->isAccessor())
-            return p->set != 0;
-        return p->isWritable();
-    }
-
-    if (! prototype)
-        return extensible;
-
-    if (PropertyDescriptor *p = prototype->__getPropertyDescriptor__(ctx, index)) {
-        if (p->isAccessor())
-            return p->set != 0;
-        if (!extensible)
-            return false;
-        return p->isWritable();
-    }
-
-    return extensible;
-}
-
 // Section 8.12.5
 void Object::__put__(ExecutionContext *ctx, String *name, Value value)
 {
@@ -348,42 +299,71 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
     if (idx != String::InvalidArrayIndex)
         return __put__(ctx, idx, value);
 
+    PropertyDescriptor *pd  = __getOwnProperty__(ctx, name);
     // clause 1
-    if (!__canPut__(ctx, name))
-        goto reject;
+    if (pd) {
+        if (pd->isAccessor()) {
+                if (pd->set)
+                    goto cont;
+                goto reject;
+        } else if (!pd->isWritable())
+            goto reject;
+        else if (isArray && name->isEqualTo(ctx->engine->id_length)) {
+            bool ok;
+            uint l = value.asArrayLength(ctx, &ok);
+            if (!ok)
+                ctx->throwRangeError(value);
+            ok = array.setLength(l);
+            if (!ok)
+                goto reject;
+        } else {
+            pd->value = value;
+        }
+        return;
+    } else if (!prototype) {
+        if (!extensible)
+            goto reject;
+    } else {
+        if (PropertyDescriptor *p = prototype->__getPropertyDescriptor__(ctx, name)) {
+            if (p->isAccessor()) {
+                if (p->set)
+                    goto cont;
+                goto reject;
+            }
+            if (!extensible)
+                goto reject;
+            if (!p->isWritable())
+                goto reject;
+        } else {
+            if (!extensible)
+                goto reject;
+        }
+    }
+
+    cont:
 
     if (!members)
         members.reset(new PropertyTable());
 
+
+    // clause 4
+    if (!pd && prototype)
+        pd = prototype->__getPropertyDescriptor__(ctx, name);
+
+    // Clause 5
+    if (pd && pd->isAccessor()) {
+        assert(pd->set != 0);
+
+        Value args[1];
+        args[0] = value;
+        pd->set->call(ctx, Value::fromObject(this), args, 1);
+        return;
+    }
+
     {
-        // Clause 2
-        PropertyDescriptor *pd = __getOwnProperty__(ctx, name);
-        // Clause 3
-        if (pd && pd->isData()) {
-            // spec says to call [[DefineOwnProperty]] with { [[Value]]: value }
-
-            // ### to simplify and speed up we should expand the relevant parts here (clauses 6,7,9,10,12,13)
-            PropertyDescriptor desc = PropertyDescriptor::fromValue(value);
-            __defineOwnProperty__(ctx, name, &desc);
-            return;
-        }
-
-        // clause 4
-        if (!pd && prototype)
-            pd = prototype->__getPropertyDescriptor__(ctx, name);
-
-        // Clause 5
-        if (pd && pd->isAccessor()) {
-            assert(pd->set != 0);
-
-            Value args[1];
-            args[0] = value;
-            pd->set->call(ctx, Value::fromObject(this), args, 1);
-            return;
-        }
-
         PropertyDescriptor *p = members->insert(name);
-        *p = PropertyDescriptor::fromValue(value);
+        p->type = PropertyDescriptor::Data;
+        p->value = value;
         p->configurable = PropertyDescriptor::Enabled;
         p->enumberable = PropertyDescriptor::Enabled;
         p->writable = PropertyDescriptor::Enabled;
@@ -397,40 +377,56 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
 
 void Object::__put__(ExecutionContext *ctx, uint index, Value value)
 {
+    PropertyDescriptor *pd  = __getOwnProperty__(ctx, index);
     // clause 1
-    if (!__canPut__(ctx, index))
-        goto reject;
-
-    {
-        // Clause 2
-        PropertyDescriptor *pd = __getOwnProperty__(ctx, index);
-        // Clause 3
-        if (pd && pd->isData()) {
-            // spec says to call [[DefineOwnProperty]] with { [[Value]]: value }
-
-            // ### to simplify and speed up we should expand the relevant parts here (clauses 6,7,9,10,12,13)
-            PropertyDescriptor desc = PropertyDescriptor::fromValue(value);
-            __defineOwnProperty__(ctx, index, &desc);
-            return;
+    if (pd) {
+        if (pd->isAccessor()) {
+                if (pd->set)
+                    goto cont;
+                goto reject;
+        } else if (!pd->isWritable())
+            goto reject;
+        else
+            pd->value = value;
+        return;
+    } else if (!prototype) {
+        if (!extensible)
+            goto reject;
+    } else {
+        if (PropertyDescriptor *p = prototype->__getPropertyDescriptor__(ctx, index)) {
+            if (p->isAccessor()) {
+                if (p->set)
+                    goto cont;
+                goto reject;
+            }
+            if (!extensible)
+                goto reject;
+            if (!p->isWritable())
+                goto reject;
+        } else {
+            if (!extensible)
+                goto reject;
         }
+    }
 
-        // clause 4
-        if (!pd && prototype)
-            pd = prototype->__getPropertyDescriptor__(ctx, index);
+    cont:
 
-        // Clause 5
-        if (pd && pd->isAccessor()) {
-            assert(pd->set != 0);
+    // clause 4
+    if (!pd && prototype)
+        pd = prototype->__getPropertyDescriptor__(ctx, index);
 
-            Value args[1];
-            args[0] = value;
-            pd->set->call(ctx, Value::fromObject(this), args, 1);
-            return;
-        }
+    // Clause 5
+    if (pd && pd->isAccessor()) {
+        assert(pd->set != 0);
 
-        array.set(index, value);
+        Value args[1];
+        args[0] = value;
+        pd->set->call(ctx, Value::fromObject(this), args, 1);
         return;
     }
+
+    array.set(index, value);
+    return;
 
   reject:
     if (ctx->strictMode)
