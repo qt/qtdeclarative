@@ -462,7 +462,9 @@ void InstructionSelection::callProperty(IR::Call *c, IR::Temp *temp)
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *result)
+void InstructionSelection::constructActivationProperty(IR::Name *func,
+                                                       IR::ExprList *args,
+                                                       IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");

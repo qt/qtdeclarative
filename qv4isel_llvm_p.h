@@ -93,7 +93,7 @@ public: // methods from InstructionSelection:
     virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value);
     virtual void callValue(IR::Call *c, IR::Temp *temp);
     virtual void callProperty(IR::Call *c, IR::Temp *temp);
-    virtual void constructActivationProperty(IR::New *call, IR::Temp *result);
+    virtual void constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result);
     virtual void constructProperty(IR::New *call, IR::Temp *result);
     virtual void constructValue(IR::New *call, IR::Temp *result);
     virtual void loadThisObject(IR::Temp *temp);

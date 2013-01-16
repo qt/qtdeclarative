@@ -722,7 +722,7 @@ protected:
     }
 
     VM::String *identifier(const QString &s);
-    virtual void constructActivationProperty(IR::New *call, IR::Temp *result);
+    virtual void constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result);
     virtual void constructProperty(IR::New *ctor, IR::Temp *result);
     virtual void constructValue(IR::New *call, IR::Temp *result);
 

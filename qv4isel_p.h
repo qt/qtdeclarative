@@ -103,7 +103,7 @@ public: // to implement by subclasses:
     virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value) = 0;
     virtual void callValue(IR::Call *c, IR::Temp *temp) = 0;
     virtual void callProperty(IR::Call *c, IR::Temp *temp) = 0;
-    virtual void constructActivationProperty(IR::New *call, IR::Temp *result) = 0;
+    virtual void constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result) = 0;
     virtual void constructProperty(IR::New *ctor, IR::Temp *result) = 0;
     virtual void constructValue(IR::New *call, IR::Temp *result) = 0;
     virtual void loadThisObject(IR::Temp *temp) = 0;

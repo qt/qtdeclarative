@@ -735,12 +735,11 @@ String *InstructionSelection::identifier(const QString &s)
     return engine()->identifier(s);
 }
 
-void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *result)
+void InstructionSelection::constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result)
 {
-    IR::Name *baseName = call->base->asName();
-    assert(baseName != 0);
+    assert(func != 0);
 
-    callRuntimeMethod(result, __qmljs_construct_activation_property, call->base, call->args);
+    callRuntimeMethod(result, __qmljs_construct_activation_property, func, args);
 }
 
 void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)

@@ -353,11 +353,13 @@ void InstructionSelection::callProperty(IR::Call *c, IR::Temp *result)
     addInstruction(call);
 }
 
-void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *result)
+void InstructionSelection::constructActivationProperty(IR::Name *func,
+                                                       IR::ExprList *args,
+                                                       IR::Temp *result)
 {
     Instruction::CreateActivationProperty create;
-    create.name = engine()->newString(*call->base->asName()->id);
-    prepareCallArgs(call->args, create.argc, create.args);
+    create.name = engine()->newString(*func->id);
+    prepareCallArgs(args, create.argc, create.args);
     create.targetTempIndex = result->index;
     addInstruction(create);
 }

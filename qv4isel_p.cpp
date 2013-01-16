@@ -98,8 +98,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                 initClosure(clos, t);
                 return;
             } else if (IR::New *ctor = s->source->asNew()) {
-                if (ctor->base->asName()) {
-                    constructActivationProperty(ctor, t);
+                if (Name *func = ctor->base->asName()) {
+                    constructActivationProperty(func, ctor->args, t);
                     return;
                 } else if (ctor->base->asMember()) {
                     constructProperty(ctor, t);
