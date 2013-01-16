@@ -824,7 +824,12 @@ Value ObjectPrototype::method_toString(ExecutionContext *ctx)
 
 Value ObjectPrototype::method_toLocaleString(ExecutionContext *ctx)
 {
-    return method_toString(ctx);
+    Object *o = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Value ts = o->__get__(ctx, ctx->engine->identifier(QStringLiteral("toString")));
+    FunctionObject *f = ts.asFunctionObject();
+    if (!f)
+        __qmljs_throw_type_error(ctx);
+    return f->call(ctx, Value::fromObject(o), 0, 0);
 }
 
 Value ObjectPrototype::method_valueOf(ExecutionContext *ctx)
