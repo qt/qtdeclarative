@@ -121,10 +121,10 @@ struct Object: Managed {
     virtual ErrorObject *asErrorObject() { return 0; }
     virtual ArgumentsObject *asArgumentsObject() { return 0; }
 
-    virtual PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
-    virtual PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, uint index);
+    PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
+    PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, uint index);
     PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name);
-    PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, uint index);
+    virtual PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, uint index);
 
     virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
     virtual Value __get__(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
@@ -204,7 +204,7 @@ struct StringObject: Object {
     virtual QString className() { return QStringLiteral("String"); }
     virtual StringObject *asStringObject() { return this; }
 
-    virtual PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, uint index);
+    PropertyDescriptor *getIndex(ExecutionContext *ctx, uint index);
 };
 
 struct DateObject: Object {

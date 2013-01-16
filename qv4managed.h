@@ -64,7 +64,7 @@ private:
     void operator = (const Managed &other);
 
 protected:
-    Managed() : markBit(0), inUse(1), extensible(true), isArray(false), unused(0) { }
+    Managed() : markBit(0), inUse(1), extensible(true), isArray(false), isString(false), unused(0) { }
     virtual ~Managed();
 
 public:
@@ -81,13 +81,14 @@ protected:
             quintptr inUse   :  1;
             quintptr extensible : 1; // used by Object
             quintptr isArray : 1; // used by Object & Array
+            quintptr isString : 1; // used by Object & StringObject
             quintptr needsActivation : 1; // used by FunctionObject
             quintptr usesArgumentsObject : 1; // used by FunctionObject
             quintptr strictMode : 1; // used by FunctionObject
 #if CPU(X86_64)
-            quintptr unused  : 57;
+            quintptr unused  : 56;
 #elif CPU(X86)
-            quintptr unused  : 25;
+            quintptr unused  : 24;
 #else
 #error "implement me"
 #endif

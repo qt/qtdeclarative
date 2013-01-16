@@ -207,11 +207,14 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, String *na
     return 0;
 }
 
-PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *, uint index)
+PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, uint index)
 {
     PropertyDescriptor *p = array.at(index);
     if(p && p->type != PropertyDescriptor::Generic)
         return p;
+    if (isString)
+        return static_cast<StringObject *>(this)->getIndex(ctx, index);
+
     return 0;
 }
 
@@ -234,13 +237,18 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, Str
     return 0;
 }
 
-PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *, uint index)
+PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, uint index)
 {
     Object *o = this;
     while (o) {
         PropertyDescriptor *p = o->array.at(index);
         if(p && p->type != PropertyDescriptor::Generic)
             return p;
+        if (o->isString) {
+            p = static_cast<StringObject *>(o)->getIndex(ctx, index);
+            if (p)
+                return p;
+        }
         o = o->prototype;
     }
     return 0;
@@ -1320,6 +1328,8 @@ void BoundFunction::getCollectables(QVector<Object *> &objects)
 StringObject::StringObject(ExecutionContext *ctx, const Value &value)
     : value(value)
 {
+    isString = true;
+
     tmpProperty.type = PropertyDescriptor::Data;
     tmpProperty.enumberable = PropertyDescriptor::Enabled;
     tmpProperty.writable = PropertyDescriptor::Disabled;
@@ -1330,12 +1340,8 @@ StringObject::StringObject(ExecutionContext *ctx, const Value &value)
     defineReadonlyProperty(ctx->engine->id_length, Value::fromUInt32(value.stringValue()->toQString().length()));
 }
 
-PropertyDescriptor *StringObject::__getOwnProperty__(ExecutionContext *ctx, uint index)
+PropertyDescriptor *StringObject::getIndex(ExecutionContext *ctx, uint index)
 {
-    PropertyDescriptor *pd = Object::__getOwnProperty__(ctx, index);
-    if (pd)
-        return pd;
-    assert(value.isString());
     QString str = value.stringValue()->toQString();
     if (index >= (uint)str.length())
         return 0;
@@ -1343,7 +1349,6 @@ PropertyDescriptor *StringObject::__getOwnProperty__(ExecutionContext *ctx, uint
     tmpProperty.value = Value::fromString(result);
     return &tmpProperty;
 }
-
 
 EvalErrorObject::EvalErrorObject(ExecutionContext *ctx)
     : ErrorObject(ctx->argument(0))
