@@ -640,10 +640,8 @@ Value ObjectPrototype::method_defineProperty(ExecutionContext *ctx)
     PropertyDescriptor pd;
     toPropertyDescriptor(ctx, attributes, &pd);
 
-    bool strict = ctx->strictMode;
-    ctx->strictMode = true;
-    O.objectValue()->__defineOwnProperty__(ctx, name, &pd);
-    ctx->strictMode = strict;
+    if (!O.objectValue()->__defineOwnProperty__(ctx, name, &pd))
+        __qmljs_throw_type_error(ctx);
 
     return O;
 }
@@ -665,10 +663,13 @@ Value ObjectPrototype::method_defineProperties(ExecutionContext *ctx)
             break;
         PropertyDescriptor n;
         toPropertyDescriptor(ctx, o->getValue(ctx, pd), &n);
+        bool ok;
         if (name)
-            O.objectValue()->__defineOwnProperty__(ctx, name, &n);
+            ok = O.objectValue()->__defineOwnProperty__(ctx, name, &n);
         else
-            O.objectValue()->__defineOwnProperty__(ctx, index, &n);
+            ok = O.objectValue()->__defineOwnProperty__(ctx, index, &n);
+        if (!ok)
+            __qmljs_throw_type_error(ctx);
     }
 
     return O;

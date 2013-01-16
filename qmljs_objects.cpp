@@ -600,10 +600,9 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *cu
     } else { // clause 10
         assert(current->isAccessor() && desc->isAccessor());
         if (!current->isConfigurable()) {
-            if ((!current->get && (quintptr)desc->get > 0x1) ||
-                (current->get && current->get != desc->get) ||
-                (!current->set && (quintptr)desc->set > 0x1) ||
-                (current->set && current->set != desc->set))
+            if (desc->get && !(current->get == desc->get || (!current->get && (quintptr)desc->get == 0x1)))
+                goto reject;
+            if (desc->set && !(current->set == desc->set || (!current->set && (quintptr)desc->set == 0x1)))
                 goto reject;
         }
     }
