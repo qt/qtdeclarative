@@ -811,9 +811,15 @@ Value ObjectPrototype::method_keys(ExecutionContext *ctx)
 
 Value ObjectPrototype::method_toString(ExecutionContext *ctx)
 {
-    if (! ctx->thisObject.isObject())
-        ctx->throwTypeError();
-    return Value::fromString(ctx, QString::fromUtf8("[object %1]").arg(ctx->thisObject.objectValue()->className()));
+    if (ctx->thisObject.isUndefined()) {
+        return Value::fromString(ctx, QStringLiteral("[object Undefined]"));
+    } else if (ctx->thisObject.isNull()) {
+        return Value::fromString(ctx, QStringLiteral("[object Null]"));
+    } else {
+        Value obj = __qmljs_to_object(ctx->thisObject, ctx);
+        QString className = obj.objectValue()->className();
+        return Value::fromString(ctx, QString::fromUtf8("[object %1]").arg(className));
+    }
 }
 
 Value ObjectPrototype::method_toLocaleString(ExecutionContext *ctx)
