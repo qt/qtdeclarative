@@ -83,11 +83,6 @@ void __qmljs_llvm_init_string(ExecutionContext *ctx, Value *result, const char *
     *result = Value::fromString(__qmljs_string_from_utf8(ctx, str));
 }
 
-void __qmljs_llvm_init_native_function(ExecutionContext *ctx, Value *result, String *name, Value (*code)(ExecutionContext *))
-{
-    *result = __qmljs_init_native_function(name, code, ctx);
-}
-
 bool __qmljs_llvm_to_boolean(ExecutionContext *ctx, const Value *value)
 {
     return __qmljs_to_boolean(*value, ctx);

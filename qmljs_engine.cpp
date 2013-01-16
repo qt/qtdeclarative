@@ -239,9 +239,9 @@ Function *ExecutionEngine::newFunction(const QString &name)
     return f;
 }
 
-FunctionObject *ExecutionEngine::newNativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
+FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
 {
-    NativeFunction *f = new (memoryManager) NativeFunction(scope, name, code);
+    BuiltinFunction *f = new (memoryManager) BuiltinFunction(scope, name, code);
     f->prototype = scope->engine->functionPrototype;
     return f;
 }

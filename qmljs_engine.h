@@ -168,7 +168,7 @@ struct ExecutionEngine
 
     VM::Function *newFunction(const QString &name);
 
-    FunctionObject *newNativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
+    FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
     FunctionObject *newScriptFunction(ExecutionContext *scope, VM::Function *function);
     BoundFunction *newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
 

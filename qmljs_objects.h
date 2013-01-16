@@ -288,10 +288,10 @@ protected:
     virtual Value construct(ExecutionContext *ctx);
 };
 
-struct NativeFunction: FunctionObject {
+struct BuiltinFunction: FunctionObject {
     Value (*code)(ExecutionContext *);
 
-    NativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
+    BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
     virtual Value call(ExecutionContext *ctx) { return code(ctx); }
     virtual Value construct(ExecutionContext *ctx);
     virtual void maybeAdjustThisObjectForDirectCall(ExecutionContext *context, Value thisArg);

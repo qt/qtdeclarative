@@ -117,11 +117,6 @@ Value __qmljs_init_closure(VM::Function *clos, ExecutionContext *ctx)
     return Value::fromObject(ctx->engine->newScriptFunction(ctx, clos));
 }
 
-Value __qmljs_init_native_function(String *name, Value (*code)(ExecutionContext *), ExecutionContext *ctx)
-{
-    return Value::fromObject(ctx->engine->newNativeFunction(ctx, name, code));
-}
-
 Value __qmljs_string_literal_undefined(ExecutionContext *ctx)
 {
     return Value::fromString(ctx->engine->identifier(QStringLiteral("undefined")));

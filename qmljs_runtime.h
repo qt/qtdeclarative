@@ -109,7 +109,6 @@ void __qmljs_builtin_define_getter_setter(Value object, String *name, Value gett
 
 // constructors
 Value __qmljs_init_closure(VM::Function *clos, ExecutionContext *ctx);
-Value __qmljs_init_native_function(String *name, Value (*code)(ExecutionContext *), ExecutionContext *ctx);
 
 Bool __qmljs_is_function(Value value);
 

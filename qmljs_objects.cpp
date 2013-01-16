@@ -149,7 +149,7 @@ void Object::defineDefaultProperty(ExecutionContext *context, const QString &nam
 {
     Q_UNUSED(argumentCount);
     String *s = context->engine->identifier(name);
-    FunctionObject* function = context->engine->newNativeFunction(context, s, code);
+    FunctionObject* function = context->engine->newBuiltinFunction(context, s, code);
     function->defineReadonlyProperty(context->engine->id_length, Value::fromInt32(argumentCount));
     defineDefaultProperty(s, Value::fromObject(function));
 }
@@ -800,7 +800,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
     prototype = scope->engine->functionPrototype;
 
     if (scope->strictMode) {
-        FunctionObject *thrower = scope->engine->newNativeFunction(scope, 0, __qmljs_throw_type_error);
+        FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, __qmljs_throw_type_error);
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
         pd.configurable = PropertyDescriptor::Disabled;
         pd.enumberable = PropertyDescriptor::Disabled;
@@ -1174,15 +1174,15 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterC
     if (context->strictMode) {
         for (uint i = 0; i < context->argumentCount; ++i)
             Object::__put__(context, QString::number(i), context->arguments[i]);
-        FunctionObject *thrower = context->engine->newNativeFunction(context, 0, __qmljs_throw_type_error);
+        FunctionObject *thrower = context->engine->newBuiltinFunction(context, 0, __qmljs_throw_type_error);
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
         pd.configurable = PropertyDescriptor::Disabled;
         pd.enumberable = PropertyDescriptor::Disabled;
         __defineOwnProperty__(context, QStringLiteral("callee"), &pd);
         __defineOwnProperty__(context, QStringLiteral("caller"), &pd);
     } else {
-        FunctionObject *get = context->engine->newNativeFunction(context, 0, method_getArg);
-        FunctionObject *set = context->engine->newNativeFunction(context, 0, method_setArg);
+        FunctionObject *get = context->engine->newBuiltinFunction(context, 0, method_getArg);
+        FunctionObject *set = context->engine->newBuiltinFunction(context, 0, method_setArg);
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(get, set);
         pd.configurable = PropertyDescriptor::Enabled;
         pd.enumberable = PropertyDescriptor::Enabled;
@@ -1245,20 +1245,20 @@ Value ArgumentsObject::method_setArg(ExecutionContext *ctx)
     return Value::undefinedValue();
 }
 
-NativeFunction::NativeFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
+BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
     : FunctionObject(scope)
     , code(code)
 {
     this->name = name;
 }
 
-Value NativeFunction::construct(ExecutionContext *ctx)
+Value BuiltinFunction::construct(ExecutionContext *ctx)
 {
     ctx->throwTypeError();
     return Value::undefinedValue();
 }
 
-void NativeFunction::maybeAdjustThisObjectForDirectCall(ExecutionContext *context, Value thisArg)
+void BuiltinFunction::maybeAdjustThisObjectForDirectCall(ExecutionContext *context, Value thisArg)
 {
     // Built-in functions allow for the this object to be null or undefined. This overrides
     // the behaviour of changing thisObject to the global object if null/undefined and allows
@@ -1282,7 +1282,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
         len = 0;
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(len));
 
-    FunctionObject *thrower = scope->engine->newNativeFunction(scope, 0, __qmljs_throw_type_error);
+    FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, __qmljs_throw_type_error);
     PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
     pd.configurable = PropertyDescriptor::Disabled;
     pd.enumberable = PropertyDescriptor::Disabled;
