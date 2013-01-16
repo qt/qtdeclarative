@@ -793,7 +793,6 @@ S15.1.3.2_A5.3 failing
 15.2.3.3-4-82 failing
 15.2.3.3-4-9 failing
 15.2.3.3-4-90 failing
-15.2.3.4-4-44 failing
 15.2.3.5-4-120 failing
 15.2.3.5-4-13 failing
 15.2.3.5-4-145 failing
@@ -860,12 +859,6 @@ S15.1.3.2_A5.3 failing
 15.2.3.7-6-a-289 failing
 15.3.4.5-2-7 failing
 15.4.3.2-1-11 failing
-S15.4.4.11_A3_T1 failing
-S15.4.4.11_A3_T2 failing
-S15.4.4.11_A4_T1 failing
-S15.4.4.11_A4_T2 failing
-S15.4.4.11_A4_T3 failing
-S15.4.4.11_A6_T2 failing
 15.4.4.12-9-c-ii-1 failing
 S15.4.4.12_A1.1_T4 failing
 S15.4.4.12_A1.1_T6 failing
@@ -2759,15 +2752,6 @@ S15.2.4.4_A14 failing
 S15.2.4.4_A15 failing
 
 # Array regressions
-S13.2.1_A5_T1 failing
-S15.4.4.11_A1.5_T1 failing
-S15.4.4.11_A2.1_T1 failing
-S15.4.4.11_A2.1_T2 failing
-S15.4.4.11_A2.1_T3 failing
-S15.4.4.11_A2.2_T1 failing
-S15.4.4.11_A2.2_T2 failing
-S15.4.4.11_A2.2_T3 failing
-S15.4.4.11_A5_T1 failing
 15.4.4.12-9-a-1 failing
 S15.4.4.12_A1.1_T1 failing
 S15.4.4.12_A1.1_T2 failing
@@ -2788,10 +2772,6 @@ S15.4.4.12_A2.1_T4 failing
 S15.4.4.12_A2.1_T5 failing
 S15.4.4.12_A2.2_T3 failing
 S15.4.4.12_A2.2_T5 failing
-S15.4.4.11_A1.2_T1 failing
-S15.4.4.11_A1.2_T2 failing
-S15.4.4.11_A1.4_T1 failing
-S15.4.4.11_A1.4_T2 failing
 S15.4.4.4_A1_T2 failing
 
 # Regressions due to Object/property refactoring

@@ -569,14 +569,19 @@ void Array::concat(const Array &other)
     setLengthUnchecked(newLen);
 }
 
-void Array::sort(ExecutionContext *context, Object *thisObject, const Value &comparefn)
+void Array::sort(ExecutionContext *context, Object *thisObject, const Value &comparefn, uint len)
 {
-    if (!sparse)
+    if (sparse) {
+        context->throwUnimplemented("Array::sort unimplemented for sparse arrays");
         return;
+        delete sparse;
+    }
 
     ArrayElementLessThan lessThan(context, thisObject, comparefn);
-    std::sort(values.begin(), values.end(), lessThan);
-    delete sparse;
+    if (len > values.size() - offset)
+        len = values.size() - offset;
+    PropertyDescriptor *begin = values.begin() + offset;
+    std::sort(begin, begin + len, lessThan);
 }
 
 

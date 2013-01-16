@@ -1613,6 +1613,13 @@ void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("reduceRight"), method_reduceRight, 1);
 }
 
+uint ArrayPrototype::getLength(ExecutionContext *ctx, Object *o)
+{
+    if (o->isArray)
+        return o->array.length();
+    return o->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
+}
+
 Value ArrayPrototype::method_isArray(ExecutionContext *ctx)
 {
     Value arg = ctx->argument(0);
@@ -1824,12 +1831,12 @@ Value ArrayPrototype::method_slice(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_sort(ExecutionContext *ctx)
 {
-    ArrayObject *instance = ctx->thisObject.asArrayObject();
-    if (!instance)
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.sort"));
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+
+    uint len = getLength(ctx, instance);
 
     Value comparefn = ctx->argument(0);
-    instance->array.sort(ctx, instance, comparefn);
+    instance->array.sort(ctx, instance, comparefn, len);
     return ctx->thisObject;
 }
 

@@ -608,7 +608,7 @@ public:
     SparseArrayNode *sparseEnd() { return sparse ? sparse->end() : 0; }
 
     void concat(const Array &other);
-    void sort(ExecutionContext *context, Object *thisObject, const Value &comparefn);
+    void sort(ExecutionContext *context, Object *thisObject, const Value &comparefn, uint len);
     void splice(double start, double deleteCount, const QVector<Value> &, Array &);
     Value indexOf(Value v, uint fromIndex, uint len, ExecutionContext *ctx, Object *o);
 };
