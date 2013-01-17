@@ -210,10 +210,10 @@ void InstructionSelection::visitExp(IR::Exp *s)
         } else if (c->base->asMember()) {
             callProperty(c, 0);
         } else {
-            Q_UNREACHABLE();
+            Q_UNIMPLEMENTED();
         }
     } else {
-        Q_UNREACHABLE();
+        Q_UNIMPLEMENTED();
     }
 }
 
