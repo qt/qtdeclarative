@@ -1991,24 +1991,28 @@ Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_every(ExecutionContext *ctx)
 {
-    ArrayObject *instance = ctx->thisObject.asArrayObject();
-    if (!instance)
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.every"));
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
 
-    Value callback = ctx->argument(0);
+    uint len = getLength(ctx, instance);
+
+    FunctionObject *callback = ctx->argument(0).asFunctionObject();
+    if (!callback)
+        __qmljs_throw_type_error(ctx);
+
     Value thisArg = ctx->argument(1);
+
     bool ok = true;
-    // ###
-    for (uint k = 0; ok && k < instance->array.length(); ++k) {
-        Value v = instance->__get__(ctx, k);
-        if (v.isUndefined())
+    for (uint k = 0; ok && k < len; ++k) {
+        bool exists;
+        Value v = instance->__get__(ctx, k, &exists);
+        if (!exists)
             continue;
 
         Value args[3];
         args[0] = v;
         args[1] = Value::fromDouble(k);
         args[2] = ctx->thisObject;
-        Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
+        Value r = callback->call(ctx, thisArg, args, 3);
         ok = __qmljs_to_boolean(r, ctx);
     }
     return Value::fromBoolean(ok);
@@ -2016,47 +2020,56 @@ Value ArrayPrototype::method_every(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_some(ExecutionContext *ctx)
 {
-    ArrayObject *instance = ctx->thisObject.asArrayObject();
-    if (!instance)
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.some"));
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
 
-    Value callback = ctx->argument(0);
+    uint len = getLength(ctx, instance);
+
+    FunctionObject *callback = ctx->argument(0).asFunctionObject();
+    if (!callback)
+        __qmljs_throw_type_error(ctx);
+
     Value thisArg = ctx->argument(1);
-    bool ok = false;
-    // ###
-    for (uint k = 0; !ok && k < instance->array.length(); ++k) {
-        Value v = instance->__get__(ctx, k);
-        if (v.isUndefined())
+
+    for (uint k = 0; k < len; ++k) {
+        bool exists;
+        Value v = instance->__get__(ctx, k, &exists);
+        if (!exists)
             continue;
 
         Value args[3];
         args[0] = v;
         args[1] = Value::fromDouble(k);
         args[2] = ctx->thisObject;
-        Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
-        ok = __qmljs_to_boolean(r, ctx);
+        Value r = callback->call(ctx, thisArg, args, 3);
+        if (__qmljs_to_boolean(r, ctx))
+            return Value::fromBoolean(true);
     }
-    return Value::fromBoolean(ok);
+    return Value::fromBoolean(false);
 }
 
 Value ArrayPrototype::method_forEach(ExecutionContext *ctx)
 {
-    ArrayObject *instance = ctx->thisObject.asArrayObject();
-    if (!instance)
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.forEach"));
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
 
-    Value callback = ctx->argument(0);
+    uint len = getLength(ctx, instance);
+
+    FunctionObject *callback = ctx->argument(0).asFunctionObject();
+    if (!callback)
+        __qmljs_throw_type_error(ctx);
+
     Value thisArg = ctx->argument(1);
-    // ###
-    for (quint32 k = 0; k < instance->array.length(); ++k) {
-        Value v = instance->__get__(ctx, k);
-        if (v.isUndefined())
+
+    for (uint k = 0; k < len; ++k) {
+        bool exists;
+        Value v = instance->__get__(ctx, k, &exists);
+        if (!exists)
             continue;
+
         Value args[3];
         args[0] = v;
         args[1] = Value::fromDouble(k);
         args[2] = ctx->thisObject;
-        /*Value r =*/ __qmljs_call_value(ctx, thisArg, callback, args, 3);
+        callback->call(ctx, thisArg, args, 3);
     }
     return Value::undefinedValue();
 }
