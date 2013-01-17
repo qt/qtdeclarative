@@ -1922,7 +1922,7 @@ Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
 Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
 {
     Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
-    uint len = instance->isArray ? instance->array.length() : instance->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
+    uint len = getLength(ctx, instance);
     if (!len)
         return Value::fromInt32(-1);
 
@@ -1958,8 +1958,35 @@ Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Array.prototype.lastIndexOf"));
-    return Value::undefinedValue();
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    uint len = getLength(ctx, instance);
+    if (!len)
+        return Value::fromInt32(-1);
+
+    Value searchValue;
+    uint fromIndex = len - 1;
+
+    if (ctx->argumentCount >= 1)
+        searchValue = ctx->argument(0);
+    else
+        searchValue = Value::undefinedValue();
+
+    if (ctx->argumentCount >= 2) {
+        double f = ctx->argument(1).toInteger(ctx);
+        if (f >= len)
+            return Value::fromInt32(-1);
+        if (f < 0)
+            f = qMax(len + f, 0.);
+        fromIndex = (uint) f;
+    }
+
+    for (uint k = fromIndex; k > 0; --k) {
+        bool exists;
+        Value v = instance->__get__(ctx, k, &exists);
+        if (exists && __qmljs_strict_equal(v, searchValue))
+            return Value::fromDouble(k);
+    }
+    return Value::fromInt32(-1);
 }
 
 Value ArrayPrototype::method_every(ExecutionContext *ctx)
