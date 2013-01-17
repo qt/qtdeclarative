@@ -361,9 +361,9 @@ struct IsFiniteFunction: FunctionObject
 
 struct RegExpObject: Object {
     RefPtr<RegExp> value;
-    Value lastIndex;
+    PropertyDescriptor *lastIndexProperty;
     bool global;
-    RegExpObject(PassRefPtr<RegExp> value, bool global): value(value), lastIndex(Value::fromInt32(0)), global(global) {}
+    RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bool global);
     virtual QString className() { return QStringLiteral("RegExp"); }
     virtual RegExpObject *asRegExpObject() { return this; }
     virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty);

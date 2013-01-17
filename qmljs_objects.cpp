@@ -1105,6 +1105,20 @@ Value IsFiniteFunction::call(ExecutionContext *context, Value /*thisObject*/, Va
 }
 
 
+RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bool global)
+    : value(value)
+    , global(global)
+{
+    if (!members)
+        members.reset(new PropertyTable());
+    lastIndexProperty = members->insert(engine->identifier("lastIndex"));
+    lastIndexProperty->type = PropertyDescriptor::Data;
+    lastIndexProperty->writable = PropertyDescriptor::Enabled;
+    lastIndexProperty->enumberable = PropertyDescriptor::Disabled;
+    lastIndexProperty->configurable = PropertyDescriptor::Disabled;
+    lastIndexProperty->value = Value::fromInt32(0);
+}
+
 Value RegExpObject::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     QString n = name->toQString();
@@ -1117,8 +1131,6 @@ Value RegExpObject::__get__(ExecutionContext *ctx, String *name, bool *hasProper
         v = Value::fromBoolean(value->ignoreCase());
     else if (n == QLatin1String("multiline"))
         v = Value::fromBoolean(value->multiLine());
-    else if (n == QLatin1String("lastIndex"))
-        v = lastIndex;
     if (v.type() != Value::Undefined_Type) {
         if (hasProperty)
             *hasProperty = true;

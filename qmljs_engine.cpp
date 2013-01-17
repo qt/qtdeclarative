@@ -104,7 +104,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     arrayPrototype = new (memoryManager) ArrayPrototype(rootContext);
     datePrototype = new (memoryManager) DatePrototype();
     functionPrototype = new (memoryManager) FunctionPrototype(rootContext);
-    regExpPrototype = new (memoryManager) RegExpPrototype();
+    regExpPrototype = new (memoryManager) RegExpPrototype(this);
     errorPrototype = new (memoryManager) ErrorPrototype();
     evalErrorPrototype = new (memoryManager) EvalErrorPrototype(rootContext);
     rangeErrorPrototype = new (memoryManager) RangeErrorPrototype(rootContext);
@@ -369,7 +369,7 @@ RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags
 
 RegExpObject *ExecutionEngine::newRegExpObject(PassRefPtr<RegExp> re, bool global)
 {
-    RegExpObject *object = new (memoryManager) RegExpObject(re, global);
+    RegExpObject *object = new (memoryManager) RegExpObject(this, re, global);
     object->prototype = regExpPrototype;
     return object;
 }
