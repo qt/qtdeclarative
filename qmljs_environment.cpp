@@ -352,8 +352,8 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
 
 void ExecutionContext::inplaceBitOp(Value value, String *name, BinOp op)
 {
-    Value rhs = getProperty(name);
-    value = op(value, rhs, this);
+    Value lhs = getProperty(name);
+    value = op(lhs, value, this);
     setProperty(name, value);
 }
 
