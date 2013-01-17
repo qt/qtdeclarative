@@ -7,7 +7,7 @@ PUBLICTESTS += \
 
 qtHaveModule(widgets): PUBLICTESTS += nodes
 
-!cross_compile: PUBLICTESTS += examples
+!cross_compile: PRIVATETESTS += examples
 
 # This test requires the qtconcurrent module
 !qtHaveModule(concurrent): PUBLICTESTS -= qquickpixmapcache
