@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -74,7 +74,7 @@ private:
     friend class QQuickTransition;
 };
 
-class Q_AUTOTEST_EXPORT QQuickTransition : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickTransition : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickTransition)

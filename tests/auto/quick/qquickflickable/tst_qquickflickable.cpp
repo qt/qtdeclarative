@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -53,6 +53,8 @@
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"
 
+#include <qpa/qwindowsysteminterface.h>
+
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
 
@@ -88,8 +90,10 @@ private slots:
     void margins();
     void cancelOnMouseGrab();
     void clickAndDragWhenTransformed();
+    void flickTwiceUsingTouches();
 
 private:
+    void flickWithTouch(QWindow *window, QTouchDevice *touchDevice);
     QQmlEngine engine;
 };
 
@@ -1239,6 +1243,72 @@ void tst_qquickflickable::clickAndDragWhenTransformed()
     QTest::mouseRelease(view, Qt::LeftButton, 0, QPoint(220, 140));
 
     delete view;
+}
+
+void tst_qquickflickable::flickTwiceUsingTouches()
+{
+    QTouchDevice *touchDevice = new QTouchDevice;
+    touchDevice->setName("Fake Touchscreen");
+    touchDevice->setType(QTouchDevice::TouchScreen);
+    touchDevice->setCapabilities(QTouchDevice::Position);
+    QWindowSystemInterface::registerTouchDevice(touchDevice);
+
+    QQuickView *window = new QQuickView;
+    window->setSource(testFileUrl("longList.qml"));
+    window->show();
+    window->requestActivate();
+    QTest::qWaitForWindowActive(window);
+    QVERIFY(window->rootObject() != 0);
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(flickable != 0);
+
+    QCOMPARE(flickable->contentY(), 0.0f);
+    flickWithTouch(window, touchDevice);
+
+    qreal contentYAfterFirstFlick = flickable->contentY();
+    qDebug() << "contentYAfterFirstFlick " << contentYAfterFirstFlick;
+    QVERIFY(contentYAfterFirstFlick > 50.0f);
+
+    flickWithTouch(window, touchDevice);
+
+    // In the original bug, that second flick would cause Flickable to halt immediately
+    qreal contentYAfterSecondFlick = flickable->contentY();
+    qDebug() << "contentYAfterSecondFlick " << contentYAfterSecondFlick;
+    QVERIFY(contentYAfterSecondFlick > (contentYAfterFirstFlick + 80.0f));
+
+    delete window;
+}
+
+void tst_qquickflickable::flickWithTouch(QWindow *window, QTouchDevice *touchDevice)
+{
+    QTest::touchEvent(window, touchDevice)
+        .press(0, QPoint(100, 400), window);
+    QTest::qWait(1);
+    QTest::touchEvent(window, touchDevice)
+        .move(0, QPoint(100, 380), window);
+    QTest::qWait(1);
+    QTest::touchEvent(window, touchDevice)
+        .move(0, QPoint(100, 360), window);
+    QTest::qWait(1);
+    QTest::touchEvent(window, touchDevice)
+        .move(0, QPoint(100, 340), window);
+    QTest::qWait(1);
+    QTest::touchEvent(window, touchDevice)
+        .move(0, QPoint(100, 320), window);
+    QTest::qWait(1);
+    QTest::touchEvent(window, touchDevice)
+        .move(0, QPoint(100, 300), window);
+    QTest::qWait(1);
+    QTest::touchEvent(window, touchDevice)
+        .move(0, QPoint(100, 280), window);
+    QTest::qWait(1);
+    QTest::touchEvent(window, touchDevice)
+        .move(0, QPoint(100, 260), window);
+    QTest::qWait(1);
+    QTest::touchEvent(window, touchDevice)
+        .release(0, QPoint(100, 240), window);
+    QTest::qWait(1);
 }
 
 QTEST_MAIN(tst_qquickflickable)

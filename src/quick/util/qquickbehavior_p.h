@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimation;
 class QQuickBehaviorPrivate;
-class Q_AUTOTEST_EXPORT QQuickBehavior : public QObject, public QQmlPropertyValueInterceptor
+class Q_QUICK_PRIVATE_EXPORT QQuickBehavior : public QObject, public QQmlPropertyValueInterceptor
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickBehavior)

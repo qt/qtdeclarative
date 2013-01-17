@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -50,10 +50,10 @@ The \e validator types enforce the type and format of
 
 \annotatedlist qtquick-text-validator
 
-\snippet doc/snippets/qml/texthandling.qml int validator
+\snippet qml/texthandling.qml int validator
 The validator types bind to \c {TextInput}'s \c validator property.
 
-\snippet doc/snippets/qml/texthandling.qml regexp validator
+\snippet qml/texthandling.qml regexp validator
 The regular expression in the snippet will only allow the inputted text to be
 \c {fruit basket}.
 

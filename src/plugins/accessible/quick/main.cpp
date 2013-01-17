@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -44,7 +44,7 @@
 #include "qaccessiblequickview.h"
 #include "qaccessiblequickitem.h"
 
-#include <QtQuick/QQuickView>
+#include <QtQuick/QQuickWindow>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
@@ -77,15 +77,15 @@ AccessibleQuickFactory::AccessibleQuickFactory()
 QStringList AccessibleQuickFactory::keys() const
 {
     QStringList list;
-    list << QLatin1String("QQuickView");
+    list << QLatin1String("QQuickWindow");
     list << QLatin1String("QQuickItem");
     return list;
 }
 
 QAccessibleInterface *AccessibleQuickFactory::create(const QString &classname, QObject *object)
 {
-    if (classname == QLatin1String("QQuickView")) {
-        return new QAccessibleQuickView(qobject_cast<QQuickView *>(object)); // FIXME
+    if (classname == QLatin1String("QQuickWindow")) {
+        return new QAccessibleQuickWindow(qobject_cast<QQuickWindow *>(object));
     } else if (classname == QLatin1String("QQuickItem")) {
         QQuickItem *item = qobject_cast<QQuickItem *>(object);
         Q_ASSERT(item);

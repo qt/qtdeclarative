@@ -3,7 +3,7 @@ CONFIG += ordered
 SUBDIRS += \
     qml
 
-!isEmpty(QT.gui.name) {
+qtHaveModule(gui) {
     SUBDIRS += \
         quick \
         qmltest \

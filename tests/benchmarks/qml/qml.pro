@@ -14,6 +14,6 @@ SUBDIRS += \
            js \
            qquickwindow
 
-contains(QT_CONFIG, opengl): SUBDIRS += painting
+qtHaveModule(opengl): SUBDIRS += painting
 
 include(../trusted-benchmarks.pri)

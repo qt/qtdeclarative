@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -61,11 +61,12 @@ Rectangle {
     height: 30
     gradient: Gradient {
         GradientStop { position: 0.0; color: "lightsteelblue" }
-        GradientStop { position: 1.0; color: "blue" }
+        GradientStop { position: 1.0;
+            color: button.focus ? "red" : "blue" }
     }
-    border.width: 2
-    border.color: "black";
-    radius: 10
+   // border.width: 1
+    //border.color: "black";
+    radius: 5
     antialiasing: true
 
     Text {
@@ -73,14 +74,15 @@ Rectangle {
         text: parent.description
         anchors.centerIn: parent
         font.pixelSize: parent.height * .5
-        style: Text.Sunken; color: "white"; styleColor: "black"
+        style: Text.Sunken
+        color: "white"
+        styleColor: "black"
     }
 
     MouseArea {
         id: mouseArea
         anchors.fill: parent
-        onClicked: {
-            parent.clicked()
-        }
+        onClicked: parent.clicked()
     }
+    Keys.onSpacePressed: clicked()
 }

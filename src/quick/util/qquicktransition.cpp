@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -435,7 +435,7 @@ bool QQuickTransition::running() const
 
     This property holds a list of the animations to be run for this transition.
 
-    \snippet examples/qml/dynamicscene/dynamicscene.qml top-level transitions
+    \snippet qml/dynamicscene/dynamicscene.qml top-level transitions
 
     The top-level animations are run in parallel. To run them sequentially,
     define them within a SequentialAnimation:

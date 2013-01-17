@@ -6,6 +6,6 @@ SUBDIRS += \
     qmlprofiler \
     qmlbundle \
     qmltestrunner
-!contains(QT_CONFIG, no-widgets):SUBDIRS += qmleasing
+qtHaveModule(widgets): SUBDIRS += qmleasing
 
 

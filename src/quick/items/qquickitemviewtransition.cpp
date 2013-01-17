@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -868,7 +868,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 /*!
     \qmlattachedproperty list QtQuick2::ViewTransition::item
 
-    This attached property holds the the item that is being transitioned.
+    This attached property holds the item that is being transitioned.
 
     \warning This item should not be kept and referred to outside of the transition
     as it may become invalid as the view changes.

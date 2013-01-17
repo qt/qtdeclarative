@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -167,16 +167,8 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
         QScreen* oldScreen = m_screen;
         m_screen = screen;
 
-        if (oldScreen) {
-            disconnect(oldScreen, SIGNAL(geometryChanged(QRect)),
-                    this, SIGNAL(widthChanged()));
-            disconnect(oldScreen, SIGNAL(geometryChanged(QRect)),
-                    this, SIGNAL(heightChanged()));
-            disconnect(oldScreen, SIGNAL(orientationChanged(Qt::ScreenOrientation)),
-                    this, SIGNAL(orientationChanged()));
-            disconnect(oldScreen, SIGNAL(primaryOrientationChanged(Qt::ScreenOrientation)),
-                    this, SIGNAL(primaryOrientationChanged()));
-        }
+        if (oldScreen)
+            oldScreen->disconnect(this);
 
         if (!screen)
             return; //Don't bother emitting signals, because the new values are garbage anyways

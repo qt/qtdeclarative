@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -98,7 +98,7 @@ public:
         : gl(0)
         , depthStencilBufferManager(0)
         , distanceFieldCacheManager(0)
-    #ifndef QT_OPENGL_ES
+    #if !defined(QT_OPENGL_ES) || defined(QT_OPENGL_ES_2_ANGLE)
         , distanceFieldAntialiasing(QSGGlyphNode::HighQualitySubPixelAntialiasing)
     #else
         , distanceFieldAntialiasing(QSGGlyphNode::GrayAntialiasing)

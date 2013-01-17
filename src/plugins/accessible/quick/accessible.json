@@ -1,3 +1,3 @@
 {
-    "Keys": [ "QQuickView", "QQuickItem" ]
+    "Keys": [ "QQuickWindow", "QQuickItem" ]
 }

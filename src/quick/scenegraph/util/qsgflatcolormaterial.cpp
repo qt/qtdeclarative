@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -124,6 +124,7 @@ const char *FlatColorMaterialShader::fragmentShader() const {
     solid colored geometry in the scene graph.
 
     \inmodule QtQuick
+    \ingroup qtquick-scenegraph-materials
 
     The flat color material will fill every pixel in a geometry using
     a solid color. The color can contain transparency.

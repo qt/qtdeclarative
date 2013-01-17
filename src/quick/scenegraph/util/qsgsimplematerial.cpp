@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -46,6 +46,7 @@
     building custom materials for the scene graph.
 
     \inmodule QtQuick
+    \ingroup qtquick-scenegraph-materials
 
     Where the QSGMaterial and QSGMaterialShader API requires a bit of
     boilerplate code to create a functioning material, the
@@ -145,6 +146,29 @@
  */
 
 /*!
+    \macro QSG_DECLARE_SIMPLE_SHADER(Shader, State)
+    \relates QSGSimpleMaterialShader
+
+    This macro is used to declare a QSGMaterialType and a \c
+    createMaterial() function for \a Shader with the given \a State.
+    */
+
+/*!
+    \macro QSG_DECLARE_SIMPLE_COMPARABLE_SHADER(Shader, State)
+    \relates QSGSimpleMaterialShader
+
+    This macro is used to declare a QSGMaterialType and a \c
+    createMaterial() function for \a Shader with the given \a State,
+    where the \a State class must define a compare function on the
+    form:
+
+    \code
+    int compare(const State *other) const;
+    \endcode
+*/
+
+
+/*!
     \fn char const *const *QSGSimpleMaterialShader::attributeNames() const
     \internal
  */
@@ -198,6 +222,7 @@
     \class QSGSimpleMaterial
 
     \inmodule QtQuick
+    \ingroup qtquick-scenegraph-materials
 
     \brief The QSGSimpleMaterial class is a template generated class
     used to store the state used with a QSGSimpleMateralShader.

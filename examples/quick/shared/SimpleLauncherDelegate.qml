@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -39,15 +39,51 @@
 ****************************************************************************/
 import QtQuick 2.0
 
-Item {
+Rectangle {
     id: container
     property Item exampleItem
     width: ListView.view.width
-    height: 64
+    height: button.implicitHeight + 22
+
+    gradient: Gradient {
+        GradientStop {
+            position: 0
+            Behavior on color {ColorAnimation { duration: 100 }}
+            color: button.pressed ? "#e0e0e0" : "#fff"
+        }
+        GradientStop {
+            position: 1
+            Behavior on color {ColorAnimation { duration: 100 }}
+            color: button.pressed ? "#e0e0e0" : button.containsMouse ? "#f5f5f5" : "#eee"
+        }
+    }
+
+    Image {
+        id: image
+        opacity: 0.7
+        Behavior on opacity {NumberAnimation {duration: 100}}
+        source: "images/next.png"
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.right: parent.right
+        anchors.rightMargin: 16
+    }
+
     Button {
-        anchors.fill: parent
+        id: button
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.right:image.left
         text: name
         subText: description
         onClicked: exampleItem.exampleUrl = url;
+    }
+
+    Rectangle {
+        height: 1
+        color: "#ccc"
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
     }
 }

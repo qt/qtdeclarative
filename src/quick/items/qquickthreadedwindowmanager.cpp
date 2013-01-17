@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -844,6 +844,9 @@ QImage QQuickRenderThreadSingleContextWindowManager::grab(QQuickWindow *window)
 
     if (QThread::currentThread() != qApp->thread()) {
         qWarning("QQuickWindow::grabFrameBuffer: can only be called from the GUI thread");
+        return QImage();
+    } else if (window->size().width() <= 0 || window->size().height() <= 0 ) {
+        qWarning("QQuickWindow::grabFrameBuffer: Can't grab a Window with size %dx%d", window->size().width(), window->size().height());
         return QImage();
     }
 

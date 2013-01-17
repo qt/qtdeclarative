@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -40,7 +40,7 @@
 
     'Shadows' shows how to create a drop shadow effect for a rectangular item
     using a BorderImage:
-    \snippet quick/imageelements/content/ShadowRectangle.qml delegate
+    \snippet quick/imageelements/content/ShadowRectangle.qml shadow
 
     'AnimatedSprite' shows how to display a simple animation using an
     AnimatedSprite element:

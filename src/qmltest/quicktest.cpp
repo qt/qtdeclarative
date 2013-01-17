@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -339,7 +339,8 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
                 view->resize(200, 200);
             }
             view->show();
-            if (qWaitForSignal(view, SIGNAL(frameSwapped())))
+            QTest::qWaitForWindowExposed(view);
+            if (view->isExposed())
                 rootobj.setWindowShown(true);
             if (!rootobj.hasQuit && rootobj.hasTestCase())
                 eventLoop.exec();

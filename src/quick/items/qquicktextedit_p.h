@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -51,7 +51,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QQuickTextEditPrivate;
-class Q_AUTOTEST_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
+class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
 {
     Q_OBJECT
     Q_ENUMS(VAlignment)

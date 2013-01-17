@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -65,15 +65,15 @@ QT_BEGIN_NAMESPACE
     delegate it should appear in.  This allows an item to move
     between views.
 
-    \snippet examples/quick/modelviews/package/Delegate.qml 0
+    \snippet quick/views/package/Delegate.qml 0
 
     These named items are used as the delegates by the two views who
     reference the special \l{VisualDataModel::parts} property to select
     a model which provides the chosen delegate.
 
-    \snippet examples/quick/modelviews/package/view.qml 0
+    \snippet quick/views/package/view.qml 0
 
-    \sa {quick/modelviews/package}{Package example}, {declarative/photoviewer}{Photo Viewer example}, QtQml
+    \sa {quick/views/package}{Package example}, {quick/demos/photoviewer}{Photo Viewer example}, QtQml
 */
 
 /*!

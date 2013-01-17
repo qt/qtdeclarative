@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the demonstration applications of the Qt Toolkit.
@@ -67,11 +67,13 @@ protected:
 public slots:
     void paint();
     void cleanup();
+    void sync();
 
 private:
     QOpenGLShaderProgram *m_program;
 
     qreal m_t;
+    qreal m_thread_t;
 };
 //! [1]
 

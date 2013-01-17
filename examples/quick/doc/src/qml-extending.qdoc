@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -38,9 +38,9 @@ The \c Person type can be used from QML like this:
 
 \section1 Declare the Person class
 
-All QML elements map to C++ types.  Here we declare a basic C++ Person class 
+All QML elements map to C++ types.  Here we declare a basic C++ Person class
 with the two properties we want accessible on the QML type - name and shoeSize.
-Although in this example we use the same name for the C++ class as the QML 
+Although in this example we use the same name for the C++ class as the QML
 element, the C++ class can be named differently, or appear in a namespace.
 
 \snippet qml/referenceexamples/adding/person.h 0
@@ -58,8 +58,8 @@ and defines the mapping between the C++ and QML class names.
 
 \section1 Running the example
 
-The main.cpp file in the example includes a simple shell application that 
-loads and runs the QML snippet shown at the beginning of this page.  
+The main.cpp file in the example includes a simple shell application that
+loads and runs the QML snippet shown at the beginning of this page.
 */
 
 /*!
@@ -89,12 +89,12 @@ The BirthdayParty class is declared like this:
 \snippet qml/referenceexamples/properties/birthdayparty.h 2
 \snippet qml/referenceexamples/properties/birthdayparty.h 3
 
-The class contains a member to store the celebrant object, and also a 
-QList<Person *> member.  
+The class contains a member to store the celebrant object, and also a
+QList<Person *> member.
 
-In QML, the type of a list properties - and the guests property is a list of 
+In QML, the type of a list properties - and the guests property is a list of
 people - are all of type QDeclarativeListProperty<T>.  QDeclarativeListProperty is simple value
-type that contains a set of function pointers.  QML calls these function 
+type that contains a set of function pointers.  QML calls these function
 pointers whenever it needs to read from, write to or otherwise interact with
 the list.  In addition to concrete lists like the people list used in this
 example, the use of QDeclarativeListProperty allows for "virtual lists" and other advanced
@@ -108,8 +108,8 @@ The implementation of BirthdayParty property accessors is straight forward.
 
 \section1 Running the example
 
-The main.cpp file in the example includes a simple shell application that 
-loads and runs the QML snippet shown at the beginning of this page.  
+The main.cpp file in the example includes a simple shell application that
+loads and runs the QML snippet shown at the beginning of this page.
 */
 
 /*!
@@ -134,15 +134,15 @@ developed in the previous examples into two elements - a \c Boy and a \c Girl.
 
 \snippet qml/referenceexamples/coercion/person.h 0
 
-The Person class remains unaltered in this example and the Boy and Girl C++ 
+The Person class remains unaltered in this example and the Boy and Girl C++
 classes are trivial extensions of it.  As an example, the inheritance used here
 is a little contrived, but in real applications it is likely that the two
-extensions would add additional properties or modify the Person classes 
+extensions would add additional properties or modify the Person classes
 behavior.
 
 \section2 Define People as a base class
 
-The implementation of the People class itself has not changed since the the 
+The implementation of the People class itself has not changed since the
 previous example.  However, as we have repurposed the People class as a common
 base for Boy and Girl, we want to prevent it from being instantiated from QML
 directly - an explicit Boy or Girl should be instantiated instead.
@@ -164,8 +164,8 @@ and their QML name with the QML engine.
 
 \section1 Running the example
 
-The BirthdayParty element has not changed since the previous example.  The 
-celebrant and guests property still use the People type.  
+The BirthdayParty element has not changed since the previous example.  The
+celebrant and guests property still use the People type.
 
 \snippet qml/referenceexamples/coercion/birthdayparty.h 0
 
@@ -173,8 +173,8 @@ However, as all three types, Person, Boy and Girl, have been registered with the
 QML system, on assignment QML automatically (and type-safely) converts the Boy
 and Girl objects into a Person.
 
-The main.cpp file in the example includes a simple shell application that 
-loads and runs the QML snippet shown at the beginning of this page.  
+The main.cpp file in the example includes a simple shell application that
+loads and runs the QML snippet shown at the beginning of this page.
 */
 
 /*!
@@ -190,8 +190,8 @@ This example builds on:
 \li \l {Extending QML - Adding Types Example}
 \endlist
 
-The Default Property Example is a minor modification of the 
-\l {Extending QML - Inheritance and Coercion Example} that simplifies the 
+The Default Property Example is a minor modification of the
+\l {Extending QML - Inheritance and Coercion Example} that simplifies the
 specification of a BirthdayParty through the use of a default property.
 
 \snippet qml/referenceexamples/default/example.qml 0
@@ -199,20 +199,20 @@ specification of a BirthdayParty through the use of a default property.
 \section1 Declaring the BirthdayParty class
 
 The only difference between this example and the last, is the addition of the
-\c DefaultProperty class info annotation.  
+\c DefaultProperty class info annotation.
 
 \snippet qml/referenceexamples/default/birthdayparty.h 0
 
-The default property specifies the property to assign to whenever an explicit 
+The default property specifies the property to assign to whenever an explicit
 property is not specified, in the case of the BirthdayParty element the guest
-property.  It is purely a syntactic simplification, the behavior is identical 
+property.  It is purely a syntactic simplification, the behavior is identical
 to specifying the property by name, but it can add a more natural feel in many
 situations.  The default property must be either an object or list property.
 
 \section1 Running the example
 
-The main.cpp file in the example includes a simple shell application that 
-loads and runs the QML snippet shown at the beginning of this page.  
+The main.cpp file in the example includes a simple shell application that
+loads and runs the QML snippet shown at the beginning of this page.
 */
 
 /*!

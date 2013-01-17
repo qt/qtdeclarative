@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -46,19 +46,46 @@ Item {
     property string text: "Button"
     property string subText: ""
     signal clicked
+    property alias containsMouse: mouseArea.containsMouse
+    property alias pressed: mouseArea.pressed
+    implicitHeight: col.height
+    height: implicitHeight
+    width: buttonLabel.width + 20
 
-    width: buttonLabel.width + 20; height: col.height + 12
-
-    MouseArea { id: mouseArea; anchors.fill: parent; onClicked: container.clicked() }
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        onClicked: container.clicked()
+        hoverEnabled: true
+    }
 
     Column {
         spacing: 2
         id: col
+        anchors.verticalCenter: parent.verticalCenter
+        width: parent.width
         Text {
-            id: buttonLabel; text: container.text; color: "black"; font.pixelSize: 24
+            id: buttonLabel
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+            text: container.text
+            color: "black"
+            font.pixelSize: 22
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            styleColor: "white"
+            style: Text.Raised
+
         }
         Text {
-            id: buttonLabel2; text: container.subText; color: "black"; font.pixelSize: 12
+            id: buttonLabel2
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            text: container.subText
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            color: "#666"
+            font.pixelSize: 12
         }
     }
 }

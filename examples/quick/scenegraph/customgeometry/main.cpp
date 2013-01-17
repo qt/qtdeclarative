@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the demonstration applications of the Qt Toolkit.
@@ -52,6 +52,9 @@ int main(int argc, char **argv)
     qmlRegisterType<BezierCurve>("CustomGeometry", 1, 0, "BezierCurve");
 
     QQuickView view;
+    QSurfaceFormat format;
+    format.setSamples(16);
+    view.setFormat(format);
     view.setSource(QUrl("qrc:///scenegraph/customgeometry/main.qml"));
     view.show();
 

@@ -1,4 +1,4 @@
 TEMPLATE = subdirs
 
 SUBDIRS =  qmldbg_tcp
-!isEmpty(QT.quick.name): SUBDIRS += qmldbg_qtquick2
+qtHaveModule(quick): SUBDIRS += qmldbg_qtquick2
