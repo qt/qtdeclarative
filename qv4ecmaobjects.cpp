@@ -2884,7 +2884,7 @@ Value RegExpCtor::call(ExecutionContext *ctx)
 void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
     ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(2));
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("exec"), method_exec, 1);
     defineDefaultProperty(ctx, QStringLiteral("test"), method_test, 1);
