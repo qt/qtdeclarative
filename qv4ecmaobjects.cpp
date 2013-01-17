@@ -2858,14 +2858,14 @@ Value RegExpCtor::construct(ExecutionContext *ctx)
             } else if (str.at(i) == QChar('m') && !multiLine) {
                 multiLine = true;
             } else {
-                ctx->throwTypeError();
+                ctx->throwSyntaxError(0);
             }
         }
     }
 
     RefPtr<RegExp> re = RegExp::create(ctx->engine, r.stringValue()->toQString(), ignoreCase, multiLine);
     if (!re->isValid())
-        ctx->throwTypeError();
+        ctx->throwSyntaxError(0);
 
     RegExpObject *o = ctx->engine->newRegExpObject(re, global);
     return Value::fromObject(o);
