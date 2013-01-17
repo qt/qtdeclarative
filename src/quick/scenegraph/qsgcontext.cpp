@@ -98,7 +98,7 @@ public:
         : gl(0)
         , depthStencilBufferManager(0)
         , distanceFieldCacheManager(0)
-    #ifndef QT_OPENGL_ES
+    #if !defined(QT_OPENGL_ES) || defined(QT_OPENGL_ES_2_ANGLE)
         , distanceFieldAntialiasing(QSGGlyphNode::HighQualitySubPixelAntialiasing)
     #else
         , distanceFieldAntialiasing(QSGGlyphNode::GrayAntialiasing)
