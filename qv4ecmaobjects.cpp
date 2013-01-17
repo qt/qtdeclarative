@@ -1186,9 +1186,55 @@ Value StringPrototype::method_localeCompare(ExecutionContext *ctx)
 
 Value StringPrototype::method_match(ExecutionContext *ctx)
 {
-    // requires Regexp
-    ctx->throwUnimplemented(QStringLiteral("String.prototype.match"));
-    return Value::undefinedValue();
+    if (ctx->thisObject.isUndefined() || ctx->thisObject.isNull())
+        __qmljs_throw_type_error(ctx);
+
+    String *s = ctx->thisObject.toString(ctx);
+
+    Value regexp = ctx->argument(0);
+    RegExpObject *rx = regexp.asRegExpObject();
+    if (!rx)
+        rx = ctx->engine->regExpCtor.asFunctionObject()->construct(ctx, &regexp, 1).asRegExpObject();
+
+    if (!rx)
+        // ### CHECK
+        __qmljs_throw_type_error(ctx);
+
+    bool global = rx->global;
+
+    FunctionObject *exec = ctx->engine->regExpPrototype->__get__(ctx, ctx->engine->identifier(QStringLiteral("exec")), 0).asFunctionObject();
+
+    Value arg = Value::fromString(s);
+    if (!global)
+        return exec->call(ctx, Value::fromObject(rx), &arg, 1);
+
+    String *lastIndex = ctx->engine->identifier(QStringLiteral("lastIndex"));
+    rx->__put__(ctx, lastIndex, Value::fromDouble(0.));
+    ArrayObject *a = ctx->engine->newArrayObject(ctx);
+
+    double previousLastIndex = 0;
+    uint n = 0;
+    while (1) {
+        Value result = exec->call(ctx, Value::fromObject(rx), &arg, 1);
+        if (result.isNull())
+            break;
+        assert(result.isObject());
+        double thisIndex = rx->__get__(ctx, lastIndex, 0).toInteger(ctx);
+        if (previousLastIndex == thisIndex) {
+            previousLastIndex = thisIndex + 1;
+            rx->__put__(ctx, lastIndex, Value::fromDouble(previousLastIndex));
+        } else {
+            previousLastIndex = thisIndex;
+        }
+        Value matchStr = result.objectValue()->__get__(ctx, (uint)0, (bool *)0);
+        a->array.set(n, matchStr);
+        ++n;
+    }
+    if (!n)
+        return Value::nullValue();
+
+    return Value::fromObject(a);
+
 }
 
 Value StringPrototype::method_replace(ExecutionContext *ctx)
