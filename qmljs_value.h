@@ -98,9 +98,9 @@ struct Value
     };
 
     enum Masks {
-        NotDouble_Mask = 0xfff80000,
-        Type_Mask = 0xffff0000,
-        Immediate_Mask = NotDouble_Mask | 0x00040000,
+        NotDouble_Mask = 0xfffc0000,
+        Type_Mask = 0xffff8000,
+        Immediate_Mask = NotDouble_Mask | 0x00008000,
         Tag_Shift = 32
     };
     enum ValueType {
@@ -113,7 +113,7 @@ struct Value
     };
 
     enum ImmediateFlags {
-        ConvertibleToInt = Immediate_Mask | (0x1 << 15)
+        ConvertibleToInt = Immediate_Mask | 0x1
     };
 
     enum ValueTypeInternal {
