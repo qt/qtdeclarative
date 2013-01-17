@@ -2141,60 +2141,90 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_reduce(ExecutionContext *ctx)
 {
-    ArrayObject *instance = ctx->thisObject.asArrayObject();
-    if (!instance)
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.reduce"));
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
 
-    Value callback = ctx->argument(0);
-    Value initialValue = ctx->argument(1);
-    Value acc = initialValue;
-    for (quint32 k = 0; k < instance->array.length(); ++k) {
-        Value v = instance->__get__(ctx, k);
-        if (v.isUndefined())
-            continue;
+    uint len = getLength(ctx, instance);
 
-        if (acc.isUndefined()) {
-            acc = v;
-            continue;
+    FunctionObject *callback = ctx->argument(0).asFunctionObject();
+    if (!callback)
+        __qmljs_throw_type_error(ctx);
+
+    uint k = 0;
+    Value acc;
+    if (ctx->argumentCount > 1) {
+        acc = ctx->argument(1);
+    } else {
+        bool kPresent = false;
+        while (k < len && !kPresent) {
+            Value v = instance->__get__(ctx, k, &kPresent);
+            if (kPresent)
+                acc = v;
+            ++k;
         }
+        if (!kPresent)
+            __qmljs_throw_type_error(ctx);
+    }
 
-        Value args[4];
-        args[0] = acc;
-        args[1] = v;
-        args[2] = Value::fromDouble(k);
-        args[3] = ctx->thisObject;
-        Value r = __qmljs_call_value(ctx, Value::undefinedValue(), callback, args, 4);
-        acc = r;
+    while (k < len) {
+        bool kPresent;
+        Value v = instance->__get__(ctx, k, &kPresent);
+        if (kPresent) {
+            Value args[4];
+            args[0] = acc;
+            args[1] = v;
+            args[2] = Value::fromDouble(k);
+            args[3] = ctx->thisObject;
+            acc = callback->call(ctx, Value::undefinedValue(), args, 4);
+        }
+        ++k;
     }
     return acc;
 }
 
 Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
 {
-    ArrayObject *instance = ctx->thisObject.asArrayObject();
-    if (!instance)
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.reduceRight"));
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
 
-    Value callback = ctx->argument(0);
-    Value initialValue = ctx->argument(1);
-    Value acc = initialValue;
-    for (int k = instance->array.length() - 1; k != -1; --k) {
-        Value v = instance->__get__(ctx, k);
-        if (v.isUndefined())
-            continue;
+    uint len = getLength(ctx, instance);
 
-        if (acc.isUndefined()) {
-            acc = v;
-            continue;
+    FunctionObject *callback = ctx->argument(0).asFunctionObject();
+    if (!callback)
+        __qmljs_throw_type_error(ctx);
+
+    if (len == 0) {
+        if (ctx->argumentCount == 1)
+            __qmljs_throw_type_error(ctx);
+        return ctx->argument(1);
+    }
+
+    uint k = len;
+    Value acc;
+    if (ctx->argumentCount > 1) {
+        acc = ctx->argument(1);
+    } else {
+        bool kPresent = false;
+        while (k > 0 && !kPresent) {
+            Value v = instance->__get__(ctx, k - 1, &kPresent);
+            if (kPresent)
+                acc = v;
+            --k;
         }
+        if (!kPresent)
+            __qmljs_throw_type_error(ctx);
+    }
 
-        Value args[4];
-        args[0] = acc;
-        args[1] = v;
-        args[2] = Value::fromDouble(k);
-        args[3] = ctx->thisObject;
-        Value r = __qmljs_call_value(ctx, Value::undefinedValue(), callback, args, 4);
-        acc = r;
+    while (k > 0) {
+        bool kPresent;
+        Value v = instance->__get__(ctx, k - 1, &kPresent);
+        if (kPresent) {
+            Value args[4];
+            args[0] = acc;
+            args[1] = v;
+            args[2] = Value::fromDouble(k - 1);
+            args[3] = ctx->thisObject;
+            acc = callback->call(ctx, Value::undefinedValue(), args, 4);
+        }
+        --k;
     }
     return acc;
 }
