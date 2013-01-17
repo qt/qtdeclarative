@@ -2076,49 +2076,64 @@ Value ArrayPrototype::method_forEach(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_map(ExecutionContext *ctx)
 {
-    ArrayObject *instance = ctx->thisObject.asArrayObject();
-    if (!instance)
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.map"));
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
 
-    Value callback = ctx->argument(0);
+    uint len = getLength(ctx, instance);
+
+    FunctionObject *callback = ctx->argument(0).asFunctionObject();
+    if (!callback)
+        __qmljs_throw_type_error(ctx);
+
     Value thisArg = ctx->argument(1);
-    ArrayObject *a = ctx->engine->newArrayObject(ctx)->asArrayObject();
-    a->array.setLengthUnchecked(instance->array.length());
-    for (quint32 k = 0; k < instance->array.length(); ++k) {
-        Value v = instance->__get__(ctx, k);
-        if (v.isUndefined())
+
+    ArrayObject *a = ctx->engine->newArrayObject(ctx);
+    a->array.setLength(len);
+
+    for (uint k = 0; k < len; ++k) {
+        bool exists;
+        Value v = instance->__get__(ctx, k, &exists);
+        if (!exists)
             continue;
+
         Value args[3];
         args[0] = v;
         args[1] = Value::fromDouble(k);
         args[2] = ctx->thisObject;
-        Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
-        a->array.set(k, r);
+        Value mapped = callback->call(ctx, thisArg, args, 3);
+        a->array.set(k, mapped);
     }
     return Value::fromObject(a);
 }
 
 Value ArrayPrototype::method_filter(ExecutionContext *ctx)
 {
-    ArrayObject *instance = ctx->thisObject.asArrayObject();
-    if (!instance)
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.filter"));
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
 
-    Value callback = ctx->argument(0);
+    uint len = getLength(ctx, instance);
+
+    FunctionObject *callback = ctx->argument(0).asFunctionObject();
+    if (!callback)
+        __qmljs_throw_type_error(ctx);
+
     Value thisArg = ctx->argument(1);
-    ArrayObject *a = ctx->engine->newArrayObject(ctx)->asArrayObject();
-    for (quint32 k = 0; k < instance->array.length(); ++k) {
-        Value v = instance->__get__(ctx, k);
-        if (v.isUndefined())
+
+    ArrayObject *a = ctx->engine->newArrayObject(ctx);
+
+    uint to = 0;
+    for (uint k = 0; k < len; ++k) {
+        bool exists;
+        Value v = instance->__get__(ctx, k, &exists);
+        if (!exists)
             continue;
+
         Value args[3];
         args[0] = v;
         args[1] = Value::fromDouble(k);
         args[2] = ctx->thisObject;
-        Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
-        if (__qmljs_to_boolean(r, ctx)) {
-            const uint index = a->array.length();
-            a->array.set(index, v);
+        Value selected = callback->call(ctx, thisArg, args, 3);
+        if (__qmljs_to_boolean(selected, ctx)) {
+            a->array.set(to, v);
+            ++to;
         }
     }
     return Value::fromObject(a);
