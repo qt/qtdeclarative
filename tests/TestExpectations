@@ -83,7 +83,6 @@ S11.11.1_A3_T4 failing
 11.13.2-6-9-s failing
 S11.13.2_A4.3_T1.4 failing
 S11.13.2_A4.3_T2.3 failing
-S11.13.2_A4.3_T2.7 failing
 S11.13.2_A4.3_T2.9 failing
 S11.2.1_A3_T1 failing
 S11.2.1_A3_T2 failing
@@ -687,7 +686,6 @@ S15.4.4.13_A4_T1 failing
 S15.4.4.13_A4_T2 failing
 15.4.4.14-1-13 failing
 15.4.4.14-2-17 failing
-15.4.4.14-3-22 failing
 15.4.4.14-4-4 failing
 15.4.4.14-9-a-10 failing
 15.4.4.14-9-a-17 failing
@@ -696,7 +694,6 @@ S15.4.4.13_A4_T2 failing
 15.4.4.14-9-b-i-25 failing
 15.4.4.14-9-b-i-26 failing
 15.4.4.14-9-b-i-27 failing
-15.4.4.14-9-b-ii-2 failing
 15.4.4.15-1-1 failing
 15.4.4.15-1-10 failing
 15.4.4.15-1-11 failing

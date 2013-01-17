@@ -1922,6 +1922,9 @@ Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
 Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
 {
     Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    uint len = instance->isArray ? instance->array.length() : instance->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
+    if (!len)
+        return Value::fromInt32(-1);
 
     Value searchValue;
     uint fromIndex = 0;
@@ -1929,9 +1932,7 @@ Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
     if (ctx->argumentCount >= 1)
         searchValue = ctx->argument(0);
     else
-        return Value::fromInt32(-1);
-
-    uint len = instance->isArray ? instance->array.length() : instance->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
+        searchValue = Value::undefinedValue();
 
     if (ctx->argumentCount >= 2) {
         double f = ctx->argument(1).toInteger(ctx);
