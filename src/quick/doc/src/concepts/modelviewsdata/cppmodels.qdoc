@@ -178,6 +178,8 @@ created directly as elements within QML:
 \code
 class MyModelPlugin : public QQmlExtensionPlugin
 {
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.QmlExtension.MyModel" FILE "mymodel.json")
 public:
     void registerTypes(const char *uri)
     {
@@ -185,8 +187,6 @@ public:
                 "MyModel");
     }
 }
-
-Q_EXPORT_PLUGIN2(mymodelplugin, MyModelPlugin);
 \endcode
 
 \li

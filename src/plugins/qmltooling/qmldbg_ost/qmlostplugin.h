@@ -53,6 +53,7 @@ class QmlOstPluginPrivate;
 class QmlOstPlugin : public QObject, public QQmlDebugServerConnection
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qml.QmlOstPlugin")
     Q_DECLARE_PRIVATE(QmlOstPlugin)
     Q_DISABLE_COPY(QmlOstPlugin)
     Q_INTERFACES(QQmlDebugServerConnection)
