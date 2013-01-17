@@ -2327,3 +2327,13 @@ S15.4.4.13_A1_T2 failing
 15.4.4.14-9-b-i-5 failing
 15.4.4.16-7-c-i-6 failing
 15.4.4.17-7-c-i-6 failing
+
+# Regressions introduced with https://codereview.qt-project.org/#change,45044
+15.4.4.16-7-b-1 failing
+15.4.4.17-7-b-1 failing
+15.4.4.18-7-b-1 failing
+15.4.4.19-8-b-1 failing
+15.4.4.20-9-b-1 failing
+15.4.4.21-8-b-iii-1-6 failing
+15.4.4.22-9-9 failing
+
