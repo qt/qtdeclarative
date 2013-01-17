@@ -361,7 +361,7 @@ inline SparseArrayNode *SparseArray::upperBound(uint akey)
 
 class Array
 {
-    friend class ArrayPrototype;
+    friend struct ArrayPrototype;
 
     uint len;
     PropertyDescriptor *lengthProperty;
