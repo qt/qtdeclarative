@@ -1921,22 +1921,37 @@ Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
 {
-    ArrayObject *instance = ctx->thisObject.asArrayObject();
-    if (!instance)
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.indexOf"));
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
 
     Value searchValue;
     uint fromIndex = 0;
 
-    if (ctx->argumentCount == 1)
+    if (ctx->argumentCount >= 1)
         searchValue = ctx->argument(0);
-    else if (ctx->argumentCount == 2) {
-        searchValue = ctx->argument(0);
-        fromIndex = ctx->argument(1).toUInt32(ctx);
-    } else
-        __qmljs_throw_type_error(ctx);
+    else
+        return Value::fromInt32(-1);
 
     uint len = instance->isArray ? instance->array.length() : instance->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
+
+    if (ctx->argumentCount >= 2) {
+        double f = ctx->argument(1).toInteger(ctx);
+        if (f >= len)
+            return Value::fromInt32(-1);
+        if (f < 0)
+            f = qMax(len + f, 0.);
+        fromIndex = (uint) f;
+    }
+
+    if (instance->isString) {
+        for (uint k = fromIndex; k < len; ++k) {
+            bool exists;
+            Value v = instance->__get__(ctx, k, &exists);
+            if (exists && __qmljs_strict_equal(v, searchValue))
+                return Value::fromDouble(k);
+        }
+        return Value::fromInt32(-1);
+    }
+
     return instance->array.indexOf(searchValue, fromIndex, len, ctx, instance);
 }
 
