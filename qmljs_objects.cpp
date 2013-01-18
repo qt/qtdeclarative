@@ -280,7 +280,8 @@ Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 
 Value Object::__get__(ExecutionContext *ctx, uint index, bool *hasProperty)
 {
-    if (const PropertyDescriptor *p = __getPropertyDescriptor__(ctx, index)) {
+    const PropertyDescriptor *p = __getPropertyDescriptor__(ctx, index);
+    if (p && p->type != PropertyDescriptor::Generic) {
         if (hasProperty)
             *hasProperty = true;
         return getValue(ctx, p);

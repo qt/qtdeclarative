@@ -521,6 +521,15 @@ public:
         return values.constData() + index;
     }
 
+    PropertyDescriptor *nonSparseAtRef(uint index) {
+        if (sparse)
+            return 0;
+        index += offset;
+        if (index >= (uint)values.size())
+            return 0;
+        return values.data() + index;
+    }
+
     const PropertyDescriptor *at(uint index) const {
         if (!sparse) {
             if (index >= values.size() - offset)

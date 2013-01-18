@@ -575,23 +575,30 @@ void __qmljs_set_property(ExecutionContext *ctx, Value object, String *name, Val
 
 Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index)
 {
+    uint type = object.type();
     uint idx = index.asArrayIndex();
 
-    if (object.isString() && idx < UINT_MAX) {
-        String *str = object.stringValue();
-        if (idx >= (uint)str->toQString().length())
-            return Value::undefinedValue();
-        const QString s = str->toQString().mid(idx, 1);
-        return Value::fromString(ctx, s);
-    }
+    if (type != Value::Object_Type) {
+        if (type == Value::String_Type) {
+            String *str = object.stringValue();
+            if (idx >= (uint)str->toQString().length())
+                return Value::undefinedValue();
+            const QString s = str->toQString().mid(idx, 1);
+            return Value::fromString(ctx, s);
+        }
 
-    if (!object.isObject())
         object = __qmljs_to_object(object, ctx);
+    }
 
     Object *o = object.objectValue();
 
-    if (idx < UINT_MAX)
+    if (idx < UINT_MAX) {
+        const PropertyDescriptor *p = o->array.nonSparseAt(idx);
+        if (p && p->type == PropertyDescriptor::Data)
+            return p->value;
+
         return o->__get__(ctx, idx);
+    }
 
     String *name = index.toString(ctx);
     return o->__get__(ctx, name);
@@ -606,6 +613,11 @@ void __qmljs_set_element(ExecutionContext *ctx, Value object, Value index, Value
 
     uint idx = index.asArrayIndex();
     if (idx < UINT_MAX) {
+        PropertyDescriptor *p = o->array.nonSparseAtRef(idx);
+        if (p && p->type == PropertyDescriptor::Data && p->isWritable()) {
+            p->value = value;
+            return;
+        }
         o->__put__(ctx, idx, value);
         return;
     }
