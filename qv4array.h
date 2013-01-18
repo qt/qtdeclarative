@@ -421,7 +421,7 @@ class Array
         assert(!sparse && !offset);
         offset = qMax(values.size() >> 2, 16);
         QVector<PropertyDescriptor> newValues(values.size() + offset);
-        memcpy(newValues.data() + offset, values.data(), values.size()*sizeof(PropertyDescriptor));
+        memcpy(newValues.data() + offset, values.constData(), values.size()*sizeof(PropertyDescriptor));
         values = newValues;
     }
 
@@ -503,7 +503,7 @@ public:
         if (!sparse) {
             if (index >= values.size() - offset)
                 return 0;
-            return values.data() + index - offset;
+            return values.data() + index + offset;
         } else {
             SparseArrayNode *n = sparse->findNode(index);
             if (!n)
