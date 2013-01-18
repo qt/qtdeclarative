@@ -79,11 +79,11 @@ private:
     Q_DISABLE_COPY(RegExp);
     RegExp(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline);
 
-    QString m_pattern;
+    const QString m_pattern;
     OwnPtr<JSC::Yarr::BytecodePattern> m_byteCode;
     int m_subPatternCount;
-    bool m_ignoreCase;
-    bool m_multiLine;
+    const bool m_ignoreCase;
+    const bool m_multiLine;
 };
 
 } // end of namespace VM

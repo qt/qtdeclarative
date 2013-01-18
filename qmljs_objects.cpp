@@ -1111,32 +1111,18 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
 {
     if (!members)
         members.reset(new PropertyTable());
-    lastIndexProperty = members->insert(engine->identifier("lastIndex"));
+    lastIndexProperty = members->insert(engine->identifier(QStringLiteral("lastIndex")));
     lastIndexProperty->type = PropertyDescriptor::Data;
     lastIndexProperty->writable = PropertyDescriptor::Enabled;
     lastIndexProperty->enumberable = PropertyDescriptor::Disabled;
     lastIndexProperty->configurable = PropertyDescriptor::Disabled;
     lastIndexProperty->value = Value::fromInt32(0);
-}
-
-Value RegExpObject::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
-{
-    QString n = name->toQString();
-    Value v = Value::undefinedValue();
-    if (n == QLatin1String("source"))
-        v = Value::fromString(ctx, value->pattern());
-    else if (n == QLatin1String("global"))
-        v = Value::fromBoolean(global);
-    else if (n == QLatin1String("ignoreCase"))
-        v = Value::fromBoolean(value->ignoreCase());
-    else if (n == QLatin1String("multiline"))
-        v = Value::fromBoolean(value->multiLine());
-    if (v.type() != Value::Undefined_Type) {
-        if (hasProperty)
-            *hasProperty = true;
-        return v;
-    }
-    return Object::__get__(ctx, name, hasProperty);
+    if (!this->value.get())
+        return;
+    defineDefaultProperty(engine->identifier(QStringLiteral("source")), Value::fromString(engine->newString(this->value->pattern())));
+    defineDefaultProperty(engine->identifier(QStringLiteral("global")), Value::fromBoolean(global));
+    defineDefaultProperty(engine->identifier(QStringLiteral("ignoreCase")), Value::fromBoolean(this->value->ignoreCase()));
+    defineDefaultProperty(engine->identifier(QStringLiteral("multiline")), Value::fromBoolean(this->value->multiLine()));
 }
 
 ErrorObject::ErrorObject(ExecutionEngine* engine, const Value &message)
