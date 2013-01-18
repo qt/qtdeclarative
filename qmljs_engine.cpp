@@ -43,6 +43,7 @@
 #include <qv4ecmaobjects_p.h>
 #include <qmljs_runtime.h>
 #include "qv4mm.h"
+#include <qv4argumentsobject.h>
 
 namespace QQmlJS {
 namespace VM {
@@ -421,6 +422,25 @@ Object *ExecutionEngine::newActivationObject()
 Object *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object *o)
 {
     return new (memoryManager) ForEachIteratorObject(ctx, o);
+}
+
+void ExecutionEngine::requireArgumentsAccessors(int n)
+{
+    if (n <= argumentsAccessors.size())
+        return;
+
+    uint oldSize = argumentsAccessors.size();
+    argumentsAccessors.resize(n);
+    for (int i = oldSize; i < n; ++i) {
+        FunctionObject *get = new (memoryManager) ArgumentsGetterFunction(rootContext, i);
+        get->prototype = functionPrototype;
+        FunctionObject *set = new (memoryManager) ArgumentsSetterFunction(rootContext, i);
+        set->prototype = functionPrototype;
+        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(get, set);
+        pd.configurable = PropertyDescriptor::Enabled;
+        pd.enumberable = PropertyDescriptor::Enabled;
+        argumentsAccessors[i] = pd;
+    }
 }
 
 } // namespace VM

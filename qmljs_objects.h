@@ -127,19 +127,19 @@ struct Object: Managed {
     PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, uint index);
 
     virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
-    virtual Value __get__(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
+    Value __get__(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
 
-    virtual void __put__(ExecutionContext *ctx, String *name, Value value);
-    virtual void __put__(ExecutionContext *ctx, uint index, Value value);
+    void __put__(ExecutionContext *ctx, String *name, Value value);
+    void __put__(ExecutionContext *ctx, uint index, Value value);
 
     virtual bool __hasProperty__(const ExecutionContext *ctx, String *name) const;
     virtual bool __hasProperty__(const ExecutionContext *ctx, uint index) const;
     virtual bool __delete__(ExecutionContext *ctx, String *name);
     virtual bool __delete__(ExecutionContext *ctx, uint index);
-    bool __defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *current, PropertyDescriptor *desc);
-    virtual bool __defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc);
-    bool __defineOwnProperty__(ExecutionContext *ctx, uint index, PropertyDescriptor *desc);
-    bool __defineOwnProperty__(ExecutionContext *ctx, const QString &name, PropertyDescriptor *desc);
+    bool __defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *current, const PropertyDescriptor *desc);
+    virtual bool __defineOwnProperty__(ExecutionContext *ctx, String *name, const PropertyDescriptor *desc);
+    bool __defineOwnProperty__(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc);
+    bool __defineOwnProperty__(ExecutionContext *ctx, const QString &name, const PropertyDescriptor *desc);
 
     virtual Value call(ExecutionContext *context, Value, Value *, int);
 
@@ -421,20 +421,6 @@ struct TypeErrorObject: ErrorObject {
 struct URIErrorObject: ErrorObject {
     URIErrorObject(ExecutionContext *ctx);
     virtual QString className() { return QStringLiteral("URIError"); }
-};
-
-struct ArgumentsObject: Object {
-    ExecutionContext *context;
-    int currentIndex;
-    ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount);
-    virtual QString className() { return QStringLiteral("Arguments"); }
-    virtual ArgumentsObject *asArgumentsObject() { return this; }
-
-    virtual Value __get__(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
-    virtual void __put__(ExecutionContext *ctx, uint index, Value value);
-
-    static Value method_getArg(ExecutionContext *ctx);
-    static Value method_setArg(ExecutionContext *ctx);
 };
 
 } // namespace VM

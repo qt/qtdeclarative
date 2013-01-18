@@ -257,7 +257,7 @@ struct Value
     Value property(ExecutionContext *ctx, String *name) const;
 
     // Section 9.12
-    bool sameValue(Value other);
+    bool sameValue(Value other) const;
 };
 
 inline Value Value::undefinedValue()

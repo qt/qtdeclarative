@@ -45,6 +45,7 @@
 #include <qmljs_objects.h>
 #include <qv4ecmaobjects_p.h>
 #include "qv4mm.h"
+#include <qv4argumentsobject.h>
 
 namespace QQmlJS {
 namespace VM {

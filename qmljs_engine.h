@@ -137,6 +137,8 @@ struct ExecutionEngine
     TypeErrorPrototype *typeErrorPrototype;
     URIErrorPrototype *uRIErrorPrototype;
 
+    QVector<PropertyDescriptor> argumentsAccessors;
+
     String *id_length;
     String *id_prototype;
     String *id_constructor;
@@ -214,6 +216,8 @@ struct ExecutionEngine
     Object *newActivationObject();
 
     Object *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
+
+    void requireArgumentsAccessors(int n);
 };
 
 } // namespace VM

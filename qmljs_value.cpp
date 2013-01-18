@@ -79,7 +79,7 @@ Value Value::toObject(ExecutionContext *ctx) const
 }
 
 
-bool Value::sameValue(Value other) {
+bool Value::sameValue(Value other) const {
     if (val == other.val)
         return true;
     if (isString() && other.isString())

@@ -333,6 +333,12 @@ void MemoryManager::collectRoots(QVector<VM::Object *> &roots) const
     add(roots, m_d->engine->globalObject);
     add(roots, m_d->engine->exception);
 
+    for (int i = 0; i < m_d->engine->argumentsAccessors.size(); ++i) {
+        const PropertyDescriptor &pd = m_d->engine->argumentsAccessors.at(i);
+        add(roots, Value::fromObject(pd.get));
+        add(roots, Value::fromObject(pd.set));
+    }
+
     for (ExecutionContext *ctxt = engine()->current; ctxt; ctxt = ctxt->parent) {
         add(roots, ctxt->thisObject);
         if (ctxt->function)

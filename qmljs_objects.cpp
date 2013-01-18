@@ -486,7 +486,7 @@ bool Object::__delete__(ExecutionContext *ctx, uint index)
 }
 
 // Section 8.12.9
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, PropertyDescriptor *desc)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const PropertyDescriptor *desc)
 {
     uint idx = name->asArrayIndex();
     if (idx != String::InvalidArrayIndex)
@@ -538,7 +538,7 @@ reject:
   return false;
 }
 
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, PropertyDescriptor *desc)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc)
 {
     PropertyDescriptor *current;
 
@@ -566,7 +566,7 @@ reject:
   return false;
 }
 
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *current, PropertyDescriptor *desc)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *current, const PropertyDescriptor *desc)
 {
     // clause 5
     if (desc->isEmpty())
@@ -631,7 +631,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *cu
 }
 
 
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, PropertyDescriptor *desc)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, const PropertyDescriptor *desc)
 {
     return __defineOwnProperty__(ctx, ctx->engine->identifier(name), desc);
 }
@@ -1173,84 +1173,6 @@ SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *m
 }
 
 
-ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount)
-    : context(context)
-    , currentIndex(-1)
-{
-    defineDefaultProperty(context->engine->id_length, Value::fromInt32(actualParameterCount));
-    if (context->strictMode) {
-        for (uint i = 0; i < context->argumentCount; ++i)
-            Object::__put__(context, QString::number(i), context->arguments[i]);
-        FunctionObject *thrower = context->engine->newBuiltinFunction(context, 0, __qmljs_throw_type_error);
-        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
-        pd.configurable = PropertyDescriptor::Disabled;
-        pd.enumberable = PropertyDescriptor::Disabled;
-        __defineOwnProperty__(context, QStringLiteral("callee"), &pd);
-        __defineOwnProperty__(context, QStringLiteral("caller"), &pd);
-    } else {
-        FunctionObject *get = context->engine->newBuiltinFunction(context, 0, method_getArg);
-        FunctionObject *set = context->engine->newBuiltinFunction(context, 0, method_setArg);
-        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(get, set);
-        pd.configurable = PropertyDescriptor::Enabled;
-        pd.enumberable = PropertyDescriptor::Enabled;
-        uint enumerableParams = qMin(formalParameterCount, actualParameterCount);
-        for (uint i = 0; i < (uint)enumerableParams; ++i)
-            __defineOwnProperty__(context, i, &pd);
-        pd.type = PropertyDescriptor::Data;
-        pd.writable = PropertyDescriptor::Enabled;
-        for (uint i = enumerableParams; i < qMin((uint)actualParameterCount, context->argumentCount); ++i) {
-            pd.value = context->argument(i);
-            __defineOwnProperty__(context, i, &pd);
-        }
-        defineDefaultProperty(context, QStringLiteral("callee"), Value::fromObject(context->function));
-    }
-}
-
-Value ArgumentsObject::__get__(ExecutionContext *ctx, uint index, bool *hasProperty)
-{
-    if (!ctx->strictMode)
-        currentIndex = index;
-    Value result = Object::__get__(ctx, index, hasProperty);
-    currentIndex = -1;
-    return result;
-}
-
-void ArgumentsObject::__put__(ExecutionContext *ctx, uint index, Value value)
-{
-    if (!ctx->strictMode)
-        currentIndex = index;
-    Object::__put__(ctx, index, value);
-    currentIndex = -1;
-}
-
-Value ArgumentsObject::method_getArg(ExecutionContext *ctx)
-{
-    Object *that = ctx->thisObject.asObject();
-    if (!that)
-        __qmljs_throw_type_error(ctx);
-    ArgumentsObject *args = that->asArgumentsObject();
-    if (!args)
-        __qmljs_throw_type_error(ctx);
-
-    assert(ctx != args->context);
-    assert(args->currentIndex >= 0 && args->currentIndex < (int)args->context->argumentCount);
-    return args->context->argument(args->currentIndex);
-}
-
-Value ArgumentsObject::method_setArg(ExecutionContext *ctx)
-{
-    Object *that = ctx->thisObject.asObject();
-    if (!that)
-        __qmljs_throw_type_error(ctx);
-    ArgumentsObject *args = that->asArgumentsObject();
-    if (!args)
-        __qmljs_throw_type_error(ctx);
-
-    assert(ctx != args->context);
-    assert(args->currentIndex >= 0 && args->currentIndex < (int)args->context->argumentCount);
-    args->context->arguments[args->currentIndex] = ctx->arguments[0];
-    return Value::undefinedValue();
-}
 
 BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
     : FunctionObject(scope)

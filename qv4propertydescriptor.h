@@ -121,10 +121,10 @@ struct PropertyDescriptor {
     inline bool isEnumerable() const { return enumberable == Enabled; }
     inline bool isConfigurable() const { return configurable == Enabled; }
 
-    inline bool isEmpty() {
+    inline bool isEmpty() const {
         return type == Generic && writable == Undefined && enumberable == Undefined && configurable == Undefined;
     }
-    inline bool isSubset(PropertyDescriptor *other) {
+    inline bool isSubset(PropertyDescriptor *other) const {
         if (type != Generic && type != other->type)
             return false;
         if (enumberable != Undefined && enumberable != other->enumberable)
