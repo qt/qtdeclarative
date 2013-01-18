@@ -28,6 +28,7 @@ SOURCES += main.cpp \
     qv4managed.cpp \
     qv4array.cpp \
     qv4argumentsobject.cpp \
+    qv4jsonobject.cpp \
     qv4string.cpp \
     qv4objectiterator.cpp \
     qv4regexp.cpp
@@ -51,6 +52,7 @@ HEADERS += \
     qv4managed.h \
     qv4array.h \
     qv4argumentsobject.h \
+    qv4jsonobject.h \
     qv4string.h \
     qv4propertydescriptor.h \
     qv4propertytable.h \

@@ -44,6 +44,7 @@
 #include <qmljs_runtime.h>
 #include "qv4mm.h"
 #include <qv4argumentsobject.h>
+#include <qv4jsonobject.h>
 
 namespace QQmlJS {
 namespace VM {
@@ -201,6 +202,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     glo->defineDefaultProperty(rootContext, QStringLiteral("TypeError"), typeErrorCtor);
     glo->defineDefaultProperty(rootContext, QStringLiteral("URIError"), uRIErrorCtor);
     glo->defineDefaultProperty(rootContext, QStringLiteral("Math"), Value::fromObject(newMathObject(rootContext)));
+    glo->defineDefaultProperty(rootContext, QStringLiteral("JSON"), Value::fromObject(new (memoryManager) JsonObject(rootContext)));
 
     glo->defineReadonlyProperty(this, QStringLiteral("undefined"), Value::undefinedValue());
     glo->defineReadonlyProperty(this, QStringLiteral("NaN"), Value::fromDouble(nan("")));
