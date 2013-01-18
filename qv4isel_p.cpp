@@ -40,6 +40,7 @@ VM::Function *EvalInstructionSelection::createFunctionMapping(VM::ExecutionEngin
 
     vmFunction->hasDirectEval = irFunction->hasDirectEval;
     vmFunction->usesArgumentsObject = irFunction->usesArgumentsObject;
+    vmFunction->hasNestedFunctions = !irFunction->nestedFunctions.isEmpty();
     vmFunction->isStrict = irFunction->isStrict;
 
     foreach (const QString *formal, irFunction->formals)
@@ -52,7 +53,6 @@ VM::Function *EvalInstructionSelection::createFunctionMapping(VM::ExecutionEngin
     foreach (IR::Function *function, irFunction->nestedFunctions)
         createFunctionMapping(engine, function);
 
-    vmFunction->hasNestedFunctions = !irFunction->nestedFunctions.isEmpty();
 
     if (engine->debugger)
         engine->debugger->mapFunction(vmFunction, irFunction);
