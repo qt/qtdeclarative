@@ -370,17 +370,14 @@ struct RegExpObject: Object {
 };
 
 struct ErrorObject: Object {
-    Value value;
-    ErrorObject(const Value &message): value(message) {}
+    ErrorObject(ExecutionEngine* engine, const Value &message);
     virtual QString className() { return QStringLiteral("Error"); }
     virtual ErrorObject *asErrorObject() { return this; }
-    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty);
 
     virtual struct SyntaxErrorObject *asSyntaxError() { return 0; }
 
 protected:
     void setNameProperty(ExecutionContext *ctx);
-    virtual void getCollectables(QVector<Object *> &objects);
 };
 
 struct EvalErrorObject: ErrorObject {

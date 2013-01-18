@@ -3198,6 +3198,7 @@ void ErrorPrototype::init(ExecutionContext *ctx, const Value &ctor, Object *obj)
     ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(1));
     obj->defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     obj->defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
+    obj->defineDefaultProperty(ctx, QStringLiteral("message"), Value::fromString(ctx, QString()));
 }
 
 Value ErrorPrototype::method_toString(ExecutionContext *ctx)

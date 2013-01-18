@@ -1139,15 +1139,10 @@ Value RegExpObject::__get__(ExecutionContext *ctx, String *name, bool *hasProper
     return Object::__get__(ctx, name, hasProperty);
 }
 
-Value ErrorObject::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
+ErrorObject::ErrorObject(ExecutionEngine* engine, const Value &message)
 {
-    QString n = name->toQString();
-    if (n == QLatin1String("message")) {
-        if (hasProperty)
-            *hasProperty = true;
-        return value;
-    }
-    return Object::__get__(ctx, name, hasProperty);
+    if (message.type() != Value::Undefined_Type)
+        defineDefaultProperty(engine->identifier(QStringLiteral("message")), message);
 }
 
 void ErrorObject::setNameProperty(ExecutionContext *ctx)
@@ -1155,20 +1150,11 @@ void ErrorObject::setNameProperty(ExecutionContext *ctx)
     defineDefaultProperty(ctx, QLatin1String("name"), Value::fromString(ctx, className()));
 }
 
-void ErrorObject::getCollectables(QVector<Object *> &objects)
-{
-    Object::getCollectables(objects);
-    if (Object *o = value.asObject())
-        objects.append(o);
-}
-
 SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message)
-    : ErrorObject(ctx->argument(0))
+    : ErrorObject(ctx->engine, message ? Value::fromString(message->buildFullMessage(ctx)) : ctx->argument(0))
     , msg(message)
 {
     prototype = ctx->engine->syntaxErrorPrototype;
-    if (message)
-        value = Value::fromString(message->buildFullMessage(ctx));
     setNameProperty(ctx);
 }
 
@@ -1280,56 +1266,56 @@ PropertyDescriptor *StringObject::getIndex(ExecutionContext *ctx, uint index)
 }
 
 EvalErrorObject::EvalErrorObject(ExecutionContext *ctx)
-    : ErrorObject(ctx->argument(0))
+    : ErrorObject(ctx->engine, ctx->argument(0))
 {
     setNameProperty(ctx);
     prototype = ctx->engine->evalErrorPrototype;
 }
 
 RangeErrorObject::RangeErrorObject(ExecutionContext *ctx)
-    : ErrorObject(ctx->argument(0))
+    : ErrorObject(ctx->engine, ctx->argument(0))
 {
     setNameProperty(ctx);
     prototype = ctx->engine->rangeErrorPrototype;
 }
 
 RangeErrorObject::RangeErrorObject(ExecutionContext *ctx, const QString &msg)
-    : ErrorObject(Value::fromString(ctx,msg))
+    : ErrorObject(ctx->engine, Value::fromString(ctx,msg))
 {
     setNameProperty(ctx);
     prototype = ctx->engine->rangeErrorPrototype;
 }
 
 ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx)
-    : ErrorObject(ctx->argument(0))
+    : ErrorObject(ctx->engine, ctx->argument(0))
 {
     setNameProperty(ctx);
     prototype = ctx->engine->referenceErrorPrototype;
 }
 
 ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx, const QString &msg)
-    : ErrorObject(Value::fromString(ctx,msg))
+    : ErrorObject(ctx->engine, Value::fromString(ctx,msg))
 {
     setNameProperty(ctx);
     prototype = ctx->engine->referenceErrorPrototype;
 }
 
 TypeErrorObject::TypeErrorObject(ExecutionContext *ctx)
-    : ErrorObject(ctx->argument(0))
+    : ErrorObject(ctx->engine, ctx->argument(0))
 {
     setNameProperty(ctx);
     prototype = ctx->engine->typeErrorPrototype;
 }
 
 TypeErrorObject::TypeErrorObject(ExecutionContext *ctx, const QString &msg)
-    : ErrorObject(Value::fromString(ctx,msg))
+    : ErrorObject(ctx->engine, Value::fromString(ctx,msg))
 {
     setNameProperty(ctx);
     prototype = ctx->engine->typeErrorPrototype;
 }
 
 URIErrorObject::URIErrorObject(ExecutionContext *ctx)
-    : ErrorObject(ctx->argument(0))
+    : ErrorObject(ctx->engine, ctx->argument(0))
 {
     setNameProperty(ctx);
     prototype = ctx->engine->uRIErrorPrototype;

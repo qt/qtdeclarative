@@ -106,7 +106,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     datePrototype = new (memoryManager) DatePrototype();
     functionPrototype = new (memoryManager) FunctionPrototype(rootContext);
     regExpPrototype = new (memoryManager) RegExpPrototype(this);
-    errorPrototype = new (memoryManager) ErrorPrototype();
+    errorPrototype = new (memoryManager) ErrorPrototype(this);
     evalErrorPrototype = new (memoryManager) EvalErrorPrototype(rootContext);
     rangeErrorPrototype = new (memoryManager) RangeErrorPrototype(rootContext);
     referenceErrorPrototype = new (memoryManager) ReferenceErrorPrototype(rootContext);
@@ -382,7 +382,7 @@ FunctionObject *ExecutionEngine::newRegExpCtor(ExecutionContext *ctx)
 
 Object *ExecutionEngine::newErrorObject(const Value &value)
 {
-    ErrorObject *object = new (memoryManager) ErrorObject(value);
+    ErrorObject *object = new (memoryManager) ErrorObject(this, value);
     object->prototype = errorPrototype;
     return object;
 }

@@ -357,7 +357,7 @@ struct URIErrorCtor: ErrorCtor
 struct ErrorPrototype: ErrorObject
 {
     // ### shouldn't be undefined
-    ErrorPrototype(): ErrorObject(Value::undefinedValue()) {}
+    ErrorPrototype(ExecutionEngine* engine): ErrorObject(engine, Value::undefinedValue()) {}
     void init(ExecutionContext *ctx, const Value &ctor) { init(ctx, ctor, this); }
 
     static void init(ExecutionContext *ctx, const Value &ctor, Object *obj);
