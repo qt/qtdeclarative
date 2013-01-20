@@ -1120,10 +1120,10 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
     lastIndexProperty->value = Value::fromInt32(0);
     if (!this->value.get())
         return;
-    defineDefaultProperty(engine->identifier(QStringLiteral("source")), Value::fromString(engine->newString(this->value->pattern())));
-    defineDefaultProperty(engine->identifier(QStringLiteral("global")), Value::fromBoolean(global));
-    defineDefaultProperty(engine->identifier(QStringLiteral("ignoreCase")), Value::fromBoolean(this->value->ignoreCase()));
-    defineDefaultProperty(engine->identifier(QStringLiteral("multiline")), Value::fromBoolean(this->value->multiLine()));
+    defineReadonlyProperty(engine->identifier(QStringLiteral("source")), Value::fromString(engine->newString(this->value->pattern())));
+    defineReadonlyProperty(engine->identifier(QStringLiteral("global")), Value::fromBoolean(global));
+    defineReadonlyProperty(engine->identifier(QStringLiteral("ignoreCase")), Value::fromBoolean(this->value->ignoreCase()));
+    defineReadonlyProperty(engine->identifier(QStringLiteral("multiline")), Value::fromBoolean(this->value->multiLine()));
 }
 
 ErrorObject::ErrorObject(ExecutionEngine* engine, const Value &message)
