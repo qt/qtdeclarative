@@ -486,7 +486,11 @@ void InstructionSelection::callBuiltinRethrow()
 void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
 {
     generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_create_exception_handler, Assembler::ContextRegister);
-    generateFunctionCall(result, setjmp, Assembler::ReturnValueRegister);
+    generateFunctionCall(Assembler::ReturnValueRegister, setjmp, Assembler::ReturnValueRegister);
+    Address addr = _asm->loadTempAddress(Assembler::ScratchRegister, result);
+    _asm->store32(Assembler::ReturnValueRegister, addr);
+    addr.offset += 4;
+    _asm->store32(Assembler::TrustedImm32(Value::Boolean_Type), addr);
 }
 
 void InstructionSelection::callBuiltinDeleteExceptionHandler()
