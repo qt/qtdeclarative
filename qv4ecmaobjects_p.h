@@ -42,6 +42,7 @@
 #define QV4ECMAOBJECTS_P_H
 
 #include "qmljs_objects.h"
+#include "qv4functionobject.h"
 #include <QtCore/qnumeric.h>
 
 namespace QQmlJS {
@@ -162,25 +163,6 @@ struct ArrayPrototype: ArrayObject
     static Value method_filter(ExecutionContext *ctx);
     static Value method_reduce(ExecutionContext *ctx);
     static Value method_reduceRight(ExecutionContext *ctx);
-};
-
-struct FunctionCtor: FunctionObject
-{
-    FunctionCtor(ExecutionContext *scope);
-
-    virtual Value construct(ExecutionContext *ctx);
-    virtual Value call(ExecutionContext *ctx);
-};
-
-struct FunctionPrototype: FunctionObject
-{
-    FunctionPrototype(ExecutionContext *ctx): FunctionObject(ctx) {}
-    void init(ExecutionContext *ctx, const Value &ctor);
-
-    static Value method_toString(ExecutionContext *ctx);
-    static Value method_apply(ExecutionContext *ctx);
-    static Value method_call(ExecutionContext *ctx);
-    static Value method_bind(ExecutionContext *ctx);
 };
 
 struct RegExpCtor: FunctionObject

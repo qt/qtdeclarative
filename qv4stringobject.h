@@ -42,6 +42,7 @@
 #define QV4STRINGOBJECT_P_H
 
 #include "qmljs_objects.h"
+#include "qv4functionobject.h"
 #include <QtCore/qnumeric.h>
 
 namespace QQmlJS {

@@ -46,6 +46,8 @@
 #include "debugging.h"
 #include "qmljs_objects.h"
 #include "qmljs_runtime.h"
+#include "qv4functionobject.h"
+#include "qv4globalobject.h"
 #include "qv4codegen_p.h"
 #include "qv4isel_masm_p.h"
 #include "qv4isel_moth_p.h"

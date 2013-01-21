@@ -29,7 +29,7 @@
 
 #include "debugging.h"
 #include "qmljs_objects.h"
-
+#include "qv4functionobject.h"
 #include <iostream>
 
 #define LOW_LEVEL_DEBUGGING_HELPERS

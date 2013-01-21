@@ -41,6 +41,8 @@
 #include <qmljs_engine.h>
 #include <qmljs_objects.h>
 #include <qv4ecmaobjects_p.h>
+#include <qv4globalobject.h>
+#include <qv4functionobject.h>
 #include <qmljs_runtime.h>
 #include "qv4mm.h"
 #include <qv4argumentsobject.h>
