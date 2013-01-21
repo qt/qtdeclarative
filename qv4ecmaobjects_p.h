@@ -126,45 +126,6 @@ struct BooleanPrototype: BooleanObject
     static Value method_valueOf(ExecutionContext *ctx);
 };
 
-struct ArrayCtor: FunctionObject
-{
-    ArrayCtor(ExecutionContext *scope);
-
-    virtual Value call(ExecutionContext *ctx);
-};
-
-struct ArrayPrototype: ArrayObject
-{
-    ArrayPrototype(ExecutionContext *context) : ArrayObject(context) {}
-
-    void init(ExecutionContext *ctx, const Value &ctor);
-
-    static uint getLength(ExecutionContext *ctx, Object *o);
-
-    static Value method_isArray(ExecutionContext *ctx);
-    static Value method_toString(ExecutionContext *ctx);
-    static Value method_toLocaleString(ExecutionContext *ctx);
-    static Value method_concat(ExecutionContext *ctx);
-    static Value method_join(ExecutionContext *ctx);
-    static Value method_pop(ExecutionContext *ctx);
-    static Value method_push(ExecutionContext *ctx);
-    static Value method_reverse(ExecutionContext *ctx);
-    static Value method_shift(ExecutionContext *ctx);
-    static Value method_slice(ExecutionContext *ctx);
-    static Value method_sort(ExecutionContext *ctx);
-    static Value method_splice(ExecutionContext *ctx);
-    static Value method_unshift(ExecutionContext *ctx);
-    static Value method_indexOf(ExecutionContext *ctx);
-    static Value method_lastIndexOf(ExecutionContext *ctx);
-    static Value method_every(ExecutionContext *ctx);
-    static Value method_some(ExecutionContext *ctx);
-    static Value method_forEach(ExecutionContext *ctx);
-    static Value method_map(ExecutionContext *ctx);
-    static Value method_filter(ExecutionContext *ctx);
-    static Value method_reduce(ExecutionContext *ctx);
-    static Value method_reduceRight(ExecutionContext *ctx);
-};
-
 
 } // end of namespace VM
 } // end of namespace QQmlJS

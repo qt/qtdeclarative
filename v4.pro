@@ -26,6 +26,7 @@ SOURCES += main.cpp \
     qv4mm.cpp \
     qv4managed.cpp \
     qv4array.cpp \
+    qv4arrayobject.cpp \
     qv4argumentsobject.cpp \
     qv4dateobject.cpp \
     qv4errorobject.cpp \
@@ -57,6 +58,7 @@ HEADERS += \
     qv4mm.h \
     qv4managed.h \
     qv4array.h \
+    qv4arrayobject.h \
     qv4argumentsobject.h \
     qv4dateobject.h \
     qv4errorobject.h \
