@@ -568,8 +568,8 @@ Value StringPrototype::method_substring(ExecutionContext *ctx)
         end = was;
     }
 
-    qint32 x = Value::toInt32(start);
-    qint32 y = Value::toInt32(end - start);
+    qint32 x = (int)start;
+    qint32 y = (int)(end - start);
     return Value::fromString(ctx, value.mid(x, y));
 }
 
