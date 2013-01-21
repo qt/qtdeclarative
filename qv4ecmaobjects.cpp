@@ -1670,6 +1670,7 @@ void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("exec"), method_exec, 1);
     defineDefaultProperty(ctx, QStringLiteral("test"), method_test, 1);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
+    defineDefaultProperty(ctx, QStringLiteral("compile"), method_compile, 2);
 }
 
 Value RegExpPrototype::method_exec(ExecutionContext *ctx)
@@ -1735,6 +1736,19 @@ Value RegExpPrototype::method_toString(ExecutionContext *ctx)
     if (r->value->multiLine())
         result += QChar('m');
     return Value::fromString(ctx, result);
+}
+
+Value RegExpPrototype::method_compile(ExecutionContext *ctx)
+{
+    RegExpObject *r = ctx->thisObject.asRegExpObject();
+    if (!r)
+        ctx->throwTypeError();
+
+    RegExpObject *re = ctx->engine->regExpCtor.asFunctionObject()->construct(ctx, ctx->arguments, ctx->argumentCount).asRegExpObject();
+
+    r->value = re->value;
+    r->global = re->global;
+    return Value::undefinedValue();
 }
 
 //

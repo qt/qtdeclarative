@@ -199,6 +199,7 @@ struct RegExpPrototype: RegExpObject
     static Value method_exec(ExecutionContext *ctx);
     static Value method_test(ExecutionContext *ctx);
     static Value method_toString(ExecutionContext *ctx);
+    static Value method_compile(ExecutionContext *ctx);
 };
 
 struct ErrorCtor: FunctionObject
