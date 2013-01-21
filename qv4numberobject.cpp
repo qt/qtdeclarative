@@ -87,7 +87,7 @@ void NumberPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString);
-    defineDefaultProperty(ctx, QStringLiteral("toLocalString"), method_toLocaleString);
+    defineDefaultProperty(ctx, QStringLiteral("toLocaleString"), method_toLocaleString);
     defineDefaultProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
     defineDefaultProperty(ctx, QStringLiteral("toFixed"), method_toFixed, 1);
     defineDefaultProperty(ctx, QStringLiteral("toExponential"), method_toExponential);
@@ -184,6 +184,9 @@ Value NumberPrototype::method_toFixed(ExecutionContext *ctx)
 
     if (std::isnan(fdigits))
         fdigits = 0;
+
+    if (fdigits < 0 || fdigits > 20)
+        ctx->throwRangeError(ctx->thisObject);
 
     double v = thisObject->value.asDouble();
     QString str;

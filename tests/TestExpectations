@@ -516,7 +516,6 @@ S15.1.3.2_A5.3 failing
 15.2.3.3-4-13 failing
 15.2.3.3-4-51 failing
 15.2.3.3-4-9 failing
-15.2.3.3-4-90 failing
 15.2.3.6-2-17-1 failing
 15.2.3.5-4-315 failing
 15.2.3.6-4-291-1 failing
@@ -745,9 +744,6 @@ S15.5.4.15_A1_T9 failing
 S15.5.4.7_A1_T11 failing
 S15.5.4.8_A1_T12 failing
 S15.5.4.8_A1_T4 failing
-S15.7.4_A3.3 failing
-S15.7.4.5_A1.3_T01 failing
-S15.7.4.5_A1.3_T02 failing
 S15.7.4.5_A1.4_T01 failing
 6.4_c failing
 8.0_L15 failing
@@ -862,7 +858,6 @@ S15.7.4.5_A1.4_T01 failing
 12.4_a failing
 13.1.1_6 failing
 13.1.1_7 failing
-13.2.1_1 failing
 13.2.1_4 failing
 13.2.1_5 failing
 13.3.0_2 failing
