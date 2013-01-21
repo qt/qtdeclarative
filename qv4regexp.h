@@ -69,7 +69,7 @@ public:
 
     bool isValid() const { return m_byteCode.get(); }
 
-    int match(const QString& string, int start, uint *matchOffsets);
+    uint match(const QString& string, int start, uint *matchOffsets);
 
     bool ignoreCase() const { return m_ignoreCase; }
     bool multiLine() const { return m_multiLine; }

@@ -793,11 +793,137 @@ Value StringPrototype::method_match(ExecutionContext *ctx)
 
 }
 
+static QString makeReplacementString(const QString &input, const QString& replaceValue, uint* matchOffsets, int captureCount)
+{
+    QString result;
+    result.reserve(replaceValue.length());
+    for (int i = 0; i < replaceValue.length(); ++i) {
+        if (replaceValue.at(i) == QLatin1Char('$') && i < replaceValue.length() - 1) {
+            char ch = replaceValue.at(++i).toLatin1();
+            uint substStart = JSC::Yarr::offsetNoMatch;
+            uint substEnd = JSC::Yarr::offsetNoMatch;
+            if (ch == '$') {
+                result += ch;
+                continue;
+            } else if (ch == '&') {
+                substStart = matchOffsets[0];
+                substEnd = matchOffsets[1];
+            } else if (ch == '`') {
+                substStart = 0;
+                substEnd = matchOffsets[0];
+            } else if (ch == '\'') {
+                substStart = matchOffsets[1];
+                substEnd = input.length();
+            } else if (ch >= '1' && ch <= '9') {
+                char capture = ch - '0';
+                if (capture > 0 && capture < captureCount) {
+                    substStart = matchOffsets[capture * 2];
+                    substEnd = matchOffsets[capture * 2 + 1];
+                }
+            } else if (ch == '0' && i < replaceValue.length() - 1) {
+                int capture = (ch - '0') * 10;
+                ch = replaceValue.at(++i).toLatin1();
+                capture += ch - '0';
+                if (capture > 0 && capture < captureCount) {
+                    substStart = matchOffsets[capture * 2];
+                    substEnd = matchOffsets[capture * 2 + 1];
+                }
+            }
+            if (substStart != JSC::Yarr::offsetNoMatch && substEnd != JSC::Yarr::offsetNoMatch)
+                result += input.midRef(substStart, substEnd - substStart);
+        } else {
+            result += replaceValue.at(i);
+        }
+    }
+    return result;
+}
+
 Value StringPrototype::method_replace(ExecutionContext *ctx)
 {
-    // requires Regexp
-    ctx->throwUnimplemented(QStringLiteral("String.prototype.replace"));
-    return Value::undefinedValue();
+    QString string;
+    if (StringObject *thisString = ctx->thisObject.asStringObject())
+        string = thisString->value.stringValue()->toQString();
+    else
+        string = ctx->thisObject.toString(ctx)->toQString();
+
+    int numCaptures = 0;
+    QVarLengthArray<uint, 16> matchOffsets;
+    int numStringMatches = 0;
+
+    Value searchValue = ctx->argument(0);
+    RegExpObject *regExp = searchValue.asRegExpObject();
+    if (regExp) {
+        uint offset = 0;
+        while (true) {
+            int oldSize = matchOffsets.size();
+            matchOffsets.resize(matchOffsets.size() + regExp->value->captureCount() * 2);
+            if (regExp->value->match(string, offset, matchOffsets.data() + oldSize) == JSC::Yarr::offsetNoMatch) {
+                matchOffsets.resize(oldSize);
+                break;
+            }
+            if (!regExp->global)
+                break;
+            offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
+        }
+        if (regExp->global)
+            regExp->lastIndexProperty->value = Value::fromUInt32(0);
+        numStringMatches = matchOffsets.size() / (regExp->value->captureCount() * 2);
+        numCaptures = regExp->value->captureCount();
+    } else {
+        numCaptures = 1;
+        QString searchString = searchValue.toString(ctx)->toQString();
+        int idx = string.indexOf(searchString);
+        if (idx != -1) {
+            numStringMatches = 1;
+            matchOffsets.resize(2);
+            matchOffsets[0] = idx;
+            matchOffsets[1] = idx + searchString.length();
+        }
+    }
+
+    QString result = string;
+    Value replaceValue = ctx->argument(1);
+    if (FunctionObject* searchCallback = replaceValue.asFunctionObject()) {
+        int replacementDelta = 0;
+        int argc = numCaptures + 2;
+        Value *args = (Value*)alloca((numCaptures + 2) * sizeof(Value));
+        for (int i = 0; i < numStringMatches; ++i) {
+            for (int k = 0; k < numCaptures; ++k) {
+                int idx = (i * numCaptures + k) * 2;
+                uint start = matchOffsets[idx];
+                uint end = matchOffsets[idx + 1];
+                Value entry = Value::undefinedValue();
+                if (start != JSC::Yarr::offsetNoMatch && end != JSC::Yarr::offsetNoMatch)
+                    entry = Value::fromString(ctx, string.mid(start, end - start));
+                args[k] = entry;
+            }
+            uint matchStart = matchOffsets[i * numCaptures * 2];
+            uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
+            args[numCaptures] = Value::fromUInt32(matchStart);
+            args[numCaptures + 1] = Value::fromString(ctx, string);
+            Value replacement = searchCallback->call(ctx, Value::undefinedValue(), args, argc);
+            QString replacementString = replacement.toString(ctx)->toQString();
+            result.replace(replacementDelta + matchStart, matchEnd - matchStart, replacementString);
+            replacementDelta += replacementString.length() - matchEnd + matchStart;
+        }
+    } else {
+        QString newString = replaceValue.toString(ctx)->toQString();
+        int replacementDelta = 0;
+
+        for (int i = 0; i < numStringMatches; ++i) {
+            int baseIndex = i * numCaptures * 2;
+            uint matchStart = matchOffsets[baseIndex];
+            uint matchEnd = matchOffsets[baseIndex + 1];
+            if (matchStart == JSC::Yarr::offsetNoMatch)
+                continue;
+
+            QString replacement = makeReplacementString(string, newString, matchOffsets.data() + baseIndex, numCaptures);
+            result.replace(replacementDelta + matchStart, matchEnd - matchStart, replacement);
+            replacementDelta += replacement.length() - matchEnd + matchStart;
+        }
+    }
+
+    return Value::fromString(ctx, result);
 }
 
 Value StringPrototype::method_search(ExecutionContext *ctx)

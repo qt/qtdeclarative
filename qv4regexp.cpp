@@ -46,7 +46,7 @@
 namespace QQmlJS {
 namespace VM {
 
-int RegExp::match(const QString &string, int start, uint *matchOffsets)
+uint RegExp::match(const QString &string, int start, uint *matchOffsets)
 {
     if (!isValid())
         return JSC::Yarr::offsetNoMatch;
