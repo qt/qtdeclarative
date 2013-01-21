@@ -615,6 +615,7 @@ void StringPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("toLocaleLowerCase"), method_toLocaleLowerCase);
     defineDefaultProperty(ctx, QStringLiteral("toUpperCase"), method_toUpperCase);
     defineDefaultProperty(ctx, QStringLiteral("toLocaleUpperCase"), method_toLocaleUpperCase);
+    defineDefaultProperty(ctx, QStringLiteral("trim"), method_trim);
 }
 
 QString StringPrototype::getThisString(ExecutionContext *ctx)
@@ -1052,6 +1053,26 @@ Value StringPrototype::method_fromCharCode(ExecutionContext *ctx)
         str += c;
     }
     return Value::fromString(ctx, str);
+}
+
+Value StringPrototype::method_trim(ExecutionContext *ctx)
+{
+    if (ctx->thisObject.isNull() || ctx->thisObject.isUndefined())
+        __qmljs_throw_type_error(ctx);
+
+    QString s = __qmljs_to_string(ctx->thisObject, ctx).stringValue()->toQString();
+    const QChar *chars = s.constData();
+    int start, end;
+    for (start = 0; start < s.length(); ++start) {
+        if (!chars[start].isSpace() && chars[start].unicode() != 0xfeff)
+            break;
+    }
+    for (end = s.length() - 1; end >= start; --end) {
+        if (!chars[end].isSpace() && chars[end].unicode() != 0xfeff)
+            break;
+    }
+
+    return Value::fromString(ctx, QString(chars + start, end - start + 1));
 }
 
 //

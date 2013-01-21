@@ -122,6 +122,7 @@ struct StringPrototype: StringObject
     static Value method_toUpperCase(ExecutionContext *ctx);
     static Value method_toLocaleUpperCase(ExecutionContext *ctx);
     static Value method_fromCharCode(ExecutionContext *ctx);
+    static Value method_trim(ExecutionContext *ctx);
 };
 
 struct NumberCtor: FunctionObject
