@@ -205,13 +205,6 @@ struct StringObject: Object {
     PropertyDescriptor *getIndex(ExecutionContext *ctx, uint index);
 };
 
-struct DateObject: Object {
-    Value value;
-    DateObject(const Value &value): value(value) {}
-    virtual QString className() { return QStringLiteral("Date"); }
-    virtual DateObject *asDateObject() { return this; }
-};
-
 struct ArrayObject: Object {
     ArrayObject(ExecutionContext *ctx) { init(ctx); }
     ArrayObject(ExecutionContext *ctx, const Array &value): Object(value) { init(ctx); array.setLengthUnchecked(array.length()); }

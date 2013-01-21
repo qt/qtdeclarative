@@ -44,6 +44,7 @@
 #include <qmljs_runtime.h>
 #include "qv4mm.h"
 #include <qv4argumentsobject.h>
+#include <qv4dateobject.h>
 #include <qv4jsonobject.h>
 
 namespace QQmlJS {
