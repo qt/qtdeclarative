@@ -124,6 +124,7 @@ struct ExecutionContext
     void setProperty(String *name, Value value);
     Value getProperty(String *name);
     Value getPropertyNoThrow(String *name);
+    Value getPropertyAndBase(String *name, Object **base);
     void inplaceBitOp(Value value, String *name, BinOp op);
     bool deleteProperty(String *name);
 

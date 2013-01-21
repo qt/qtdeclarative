@@ -730,15 +730,17 @@ uint __qmljs_equal(Value x, Value y, ExecutionContext *ctx)
     return false;
 }
 
-// TODO: remove this function. Backends should just generate a __qmljs_get_activation_property followed by a __qmljs_call_value
 Value __qmljs_call_activation_property(ExecutionContext *context, String *name, Value *args, int argc)
 {
-    Value func = context->getProperty(name);
+    Object *base;
+    Value func = context->getPropertyAndBase(name, &base);
     Object *o = func.asObject();
     if (!o)
         context->throwTypeError();
 
-    return o->call(context, Value::undefinedValue(), args, argc);
+    Value thisObject = base ? Value::fromObject(base) : Value::undefinedValue();
+
+    return o->call(context, thisObject, args, argc);
 }
 
 Value __qmljs_call_property(ExecutionContext *context, Value that, String *name, Value *args, int argc)

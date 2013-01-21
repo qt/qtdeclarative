@@ -349,6 +349,47 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
     return Value::undefinedValue();
 }
 
+Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
+{
+    *base = 0;
+
+    if (name == engine->id_this)
+        return thisObject;
+
+    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
+        if (With *w = ctx->withObject) {
+            while (w) {
+                bool hasProperty = false;
+                Value v = w->object->__get__(ctx, name, &hasProperty);
+                if (hasProperty) {
+                    *base = w->object;
+                    return v;
+                }
+                w = w->next;
+            }
+        }
+
+        if (FunctionObject *f = ctx->function) {
+            if (f->needsActivation || ctx->withObject) {
+                for (unsigned int i = 0; i < f->varCount; ++i)
+                    if (f->varList[i]->isEqualTo(name))
+                        return ctx->locals[i];
+                for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
+                    if (f->formalParameterList[i]->isEqualTo(name))
+                        return ctx->arguments[i];
+            }
+        }
+        if (ctx->activation) {
+            bool hasProperty = false;
+            Value v = ctx->activation->__get__(ctx, name, &hasProperty);
+            if (hasProperty)
+                return v;
+        }
+    }
+    throwReferenceError(Value::fromString(name));
+    return Value::undefinedValue();
+}
+
 
 
 void ExecutionContext::inplaceBitOp(Value value, String *name, BinOp op)
