@@ -41,7 +41,7 @@
 #ifndef QV4MATHOBJECT_H
 #define QV$MATHOBJECT_H
 
-#include "qmljs_objects.h"
+#include "qv4object.h"
 
 namespace QQmlJS {
 

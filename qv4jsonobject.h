@@ -41,7 +41,7 @@
 #ifndef QV4JSONOBJECTS_H
 #define QV4SJONOBJECTS_H
 
-#include <qmljs_objects.h>
+#include <qv4object.h>
 
 namespace QQmlJS {
 namespace VM {

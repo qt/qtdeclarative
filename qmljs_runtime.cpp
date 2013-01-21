@@ -41,7 +41,7 @@
 
 #include "debugging.h"
 #include "qmljs_runtime.h"
-#include "qmljs_objects.h"
+#include "qv4object.h"
 #include "qv4ir_p.h"
 #include "qv4ecmaobjects_p.h"
 #include "private/qlocale_tools_p.h"

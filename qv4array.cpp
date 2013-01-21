@@ -41,7 +41,7 @@
 
 #include "qv4array.h"
 #include "qmljs_runtime.h"
-#include "qmljs_objects.h"
+#include "qv4object.h"
 #include "qv4functionobject.h"
 #include <stdlib.h>
 

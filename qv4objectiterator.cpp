@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 #include "qv4objectiterator.h"
-#include "qmljs_objects.h"
+#include "qv4object.h"
 #include "qv4stringobject.h"
 
 namespace QQmlJS {

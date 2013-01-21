@@ -42,7 +42,7 @@
 #define QMLJS_ENGINE_H
 
 #include <qv4isel_p.h>
-#include <qmljs_objects.h>
+#include <qv4object.h>
 #include <qmljs_environment.h>
 #include <setjmp.h>
 

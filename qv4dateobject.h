@@ -41,7 +41,7 @@
 #ifndef QV4DATEOBJECT_P_H
 #define QV4DATEOBJECT_P_H
 
-#include "qmljs_objects.h"
+#include "qv4object.h"
 #include "qv4functionobject.h"
 #include <QtCore/qnumeric.h>
 

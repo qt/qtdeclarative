@@ -44,7 +44,7 @@
 #endif
 
 #include "debugging.h"
-#include "qmljs_objects.h"
+#include "qv4object.h"
 #include "qmljs_runtime.h"
 #include "qv4functionobject.h"
 #include "qv4errorobject.h"

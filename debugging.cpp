@@ -28,7 +28,7 @@
 ****************************************************************************/
 
 #include "debugging.h"
-#include "qmljs_objects.h"
+#include "qv4object.h"
 #include "qv4functionobject.h"
 #include <iostream>
 

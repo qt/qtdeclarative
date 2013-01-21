@@ -28,7 +28,7 @@
 ****************************************************************************/
 
 #include "qmljs_engine.h"
-#include "qmljs_objects.h"
+#include "qv4object.h"
 #include "qv4ecmaobjects_p.h"
 #include "qv4mm.h"
 #include "PageAllocation.h"

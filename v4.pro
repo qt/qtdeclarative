@@ -16,7 +16,6 @@ SOURCES += main.cpp \
     qmljs_engine.cpp \
     qmljs_environment.cpp \
     qmljs_runtime.cpp \
-    qmljs_objects.cpp \
     qmljs_value.cpp \
     qv4syntaxchecker.cpp \
     qv4ecmaobjects.cpp \
@@ -34,6 +33,7 @@ SOURCES += main.cpp \
     qv4globalobject.cpp \
     qv4jsonobject.cpp \
     qv4mathobject.cpp \
+    qv4object.cpp \
     qv4regexpobject.cpp \
     qv4stringobject.cpp \
     qv4string.cpp \
@@ -46,7 +46,6 @@ HEADERS += \
     qmljs_engine.h \
     qmljs_environment.h \
     qmljs_runtime.h \
-    qmljs_objects.h \
     qmljs_math.h \
     qmljs_value.h \
     qv4syntaxchecker_p.h \
@@ -65,6 +64,7 @@ HEADERS += \
     qv4globalobject.h \
     qv4jsonobject.h \
     qv4mathobject.h \
+    qv4object.h \
     qv4regexpobject.h \
     qv4stringobject.h \
     qv4string.h \

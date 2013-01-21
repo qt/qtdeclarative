@@ -30,7 +30,7 @@
 #ifndef QV4GC_H
 #define QV4GC_H
 
-#include "qmljs_objects.h"
+#include "qv4object.h"
 
 #include <QScopedPointer>
 

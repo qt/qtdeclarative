@@ -41,7 +41,7 @@
 #ifndef QV4ARGUMENTSOBJECTS_H
 #define QV4ARGUMENTSOBJECTS_H
 
-#include <qmljs_objects.h>
+#include <qv4object.h>
 #include <qv4functionobject.h>
 
 namespace QQmlJS {

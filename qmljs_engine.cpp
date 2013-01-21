@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 #include <qmljs_engine.h>
-#include <qmljs_objects.h>
+#include <qv4object.h>
 #include <qv4ecmaobjects_p.h>
 #include <qv4globalobject.h>
 #include <qv4errorobject.h>

@@ -3,7 +3,7 @@
 
 #include "qv4isel_p.h"
 #include "qv4ir_p.h"
-#include "qmljs_objects.h"
+#include "qv4object.h"
 #include "qv4instr_moth_p.h"
 
 namespace QQmlJS {
