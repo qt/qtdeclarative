@@ -42,7 +42,7 @@
 
 #include "qv4stringobject.h"
 #include "qv4regexpobject.h"
-#include "qv4ecmaobjects_p.h"
+#include "qv4objectproto.h"
 #include "qv4mm.h"
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>

@@ -43,7 +43,7 @@
 #include "qmljs_runtime.h"
 #include "qv4object.h"
 #include "qv4ir_p.h"
-#include "qv4ecmaobjects_p.h"
+#include "qv4objectproto.h"
 #include "private/qlocale_tools_p.h"
 
 #include <QtCore/qmath.h>

@@ -40,7 +40,7 @@
 ****************************************************************************/
 #include <qmljs_engine.h>
 #include <qv4object.h>
-#include <qv4ecmaobjects_p.h>
+#include <qv4objectproto.h>
 
 namespace QQmlJS {
 namespace VM {

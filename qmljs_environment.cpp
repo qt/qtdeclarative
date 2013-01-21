@@ -43,7 +43,7 @@
 #include "debugging.h"
 #include <qmljs_environment.h>
 #include <qv4object.h>
-#include <qv4ecmaobjects_p.h>
+#include <qv4objectproto.h>
 #include "qv4mm.h"
 #include <qv4argumentsobject.h>
 

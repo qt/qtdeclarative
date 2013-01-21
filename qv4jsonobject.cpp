@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 #include <qv4jsonobject.h>
-#include <qv4ecmaobjects_p.h>
+#include <qv4objectproto.h>
 #include <qjsondocument.h>
 #include <qjsonobject.h>
 #include <qjsonarray.h>

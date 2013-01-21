@@ -42,7 +42,7 @@
 #include "qv4globalobject.h"
 #include "qv4ir_p.h"
 #include "qv4isel_p.h"
-#include "qv4ecmaobjects_p.h"
+#include "qv4objectproto.h"
 #include "qv4stringobject.h"
 #include "qv4mm.h"
 

@@ -18,7 +18,6 @@ SOURCES += main.cpp \
     qmljs_runtime.cpp \
     qmljs_value.cpp \
     qv4syntaxchecker.cpp \
-    qv4ecmaobjects.cpp \
     qv4isel_masm.cpp \
     llvm_runtime.cpp \
     qv4isel_p.cpp \
@@ -37,6 +36,7 @@ SOURCES += main.cpp \
     qv4mathobject.cpp \
     qv4numberobject.cpp \
     qv4object.cpp \
+    qv4objectproto.cpp \
     qv4regexpobject.cpp \
     qv4stringobject.cpp \
     qv4string.cpp \
@@ -52,7 +52,6 @@ HEADERS += \
     qmljs_math.h \
     qmljs_value.h \
     qv4syntaxchecker_p.h \
-    qv4ecmaobjects_p.h \
     qv4isel_masm_p.h \
     qv4isel_p.h \
     qv4isel_util_p.h \
@@ -71,6 +70,7 @@ HEADERS += \
     qv4mathobject.h \
     qv4numberobject.h \
     qv4object.h \
+    qv4objectproto.h \
     qv4regexpobject.h \
     qv4stringobject.h \
     qv4string.h \

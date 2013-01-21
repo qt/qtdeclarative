@@ -54,7 +54,7 @@
 #include "qv4isel_moth_p.h"
 #include "qv4vme_moth_p.h"
 #include "qv4syntaxchecker_p.h"
-#include "qv4ecmaobjects_p.h"
+#include "qv4objectproto.h"
 #include "qv4isel_p.h"
 #include "qv4mm.h"
 #include "qmljs_environment.h"
