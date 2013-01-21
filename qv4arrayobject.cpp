@@ -453,7 +453,7 @@ Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
         return Value::fromInt32(-1);
 
     Value searchValue;
-    uint fromIndex = len - 1;
+    uint fromIndex = len;
 
     if (ctx->argumentCount >= 1)
         searchValue = ctx->argument(0);
@@ -462,14 +462,18 @@ Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
 
     if (ctx->argumentCount >= 2) {
         double f = ctx->argument(1).toInteger(ctx);
-        if (f >= len)
-            return Value::fromInt32(-1);
-        if (f < 0)
-            f = qMax(len + f, 0.);
-        fromIndex = (uint) f;
+        if (f > 0)
+            f = qMin(f, (double)(len - 1));
+        else if (f < 0) {
+            f = len + f;
+            if (f < 0)
+                return Value::fromInt32(-1);
+        }
+        fromIndex = (uint) f + 1;
     }
 
-    for (uint k = fromIndex; k > 0; --k) {
+    for (uint k = fromIndex; k > 0;) {
+        --k;
         bool exists;
         Value v = instance->__get__(ctx, k, &exists);
         if (exists && __qmljs_strict_equal(v, searchValue))

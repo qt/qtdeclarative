@@ -13,8 +13,6 @@ S15.9.3.1_A5_T6 failing
 
 
 # Tests failing that are supposed to pass.
-15.4.4.15-5-16 failing
-15.4.4.15-5-12 failing
 15.4.4.14-9-9 failing
 S10.2.3_A1.1_T2 failing
 S10.2.3_A1.2_T2 failing
@@ -547,49 +545,7 @@ S15.4.4.13_A4_T2 failing
 15.4.4.14-9-a-17 failing
 15.4.4.14-9-a-7 failing
 15.4.4.14-9-a-9 failing
-15.4.4.15-3-2 failing
-15.4.4.15-3-29 failing
-15.4.4.15-5-14 failing
-15.4.4.15-5-2 failing
-15.4.4.15-5-33 failing
-15.4.4.15-5-4 failing
-15.4.4.15-5-5 failing
-15.4.4.15-5-7 failing
-15.4.4.15-5-8 failing
-15.4.4.15-5-9 failing
-15.4.4.15-6-1 failing
-15.4.4.15-8-b-i-1 failing
-15.4.4.15-8-b-i-10 failing
-15.4.4.15-8-b-i-11 failing
-15.4.4.15-8-b-i-12 failing
-15.4.4.15-8-b-i-13 failing
-15.4.4.15-8-b-i-14 failing
-15.4.4.15-8-b-i-15 failing
-15.4.4.15-8-b-i-16 failing
-15.4.4.15-8-b-i-17 failing
-15.4.4.15-8-b-i-18 failing
-15.4.4.15-8-b-i-19 failing
-15.4.4.15-8-b-i-2 failing
-15.4.4.15-8-b-i-20 failing
-15.4.4.15-8-b-i-21 failing
-15.4.4.15-8-b-i-22 failing
-15.4.4.15-8-b-i-23 failing
-15.4.4.15-8-b-i-25 failing
-15.4.4.15-8-b-i-26 failing
-15.4.4.15-8-b-i-3 failing
-15.4.4.15-8-b-i-4 failing
 15.4.4.15-8-b-i-5 failing
-15.4.4.15-8-b-i-6 failing
-15.4.4.15-8-b-i-7 failing
-15.4.4.15-8-b-i-8 failing
-15.4.4.15-8-b-i-9 failing
-15.4.4.15-8-b-ii-11 failing
-15.4.4.15-8-b-ii-2 failing
-15.4.4.15-8-b-ii-3 failing
-15.4.4.15-8-b-ii-6 failing
-15.4.4.15-8-b-ii-7 failing
-15.4.4.15-8-b-ii-8 failing
-15.4.4.15-8-b-ii-9 failing
 15.4.4.16-1-10 failing
 15.4.4.17-1-10 failing
 15.4.4.18-1-10 failing
@@ -742,7 +698,6 @@ S15.5.4.15_A1_T8 failing
 S15.5.4.15_A1_T9 failing
 15.5.4.20-4-1 failing
 S15.5.4.7_A1_T11 failing
-S15.5.4.8_A1_T12 failing
 S15.5.4.8_A1_T4 failing
 S15.7.4.5_A1.4_T01 failing
 6.4_c failing
