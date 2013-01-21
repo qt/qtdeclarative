@@ -736,7 +736,7 @@ Value __qmljs_call_activation_property(ExecutionContext *context, String *name, 
     Value func = context->getProperty(name);
     Object *o = func.asObject();
     if (!o)
-        context->throwReferenceError(Value::fromString(name));
+        context->throwTypeError();
 
     return o->call(context, Value::undefinedValue(), args, argc);
 }
