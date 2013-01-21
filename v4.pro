@@ -126,5 +126,5 @@ QMAKE_EXTRA_TARGETS += checkmothtarget
 
 
 include(moth/moth.pri)
-include(masm/masm.pri)
+include(3rdparty/masm/masm.pri)
 include(3rdparty/double-conversion/double-conversion.pri)
