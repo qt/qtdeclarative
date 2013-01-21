@@ -929,9 +929,23 @@ Value StringPrototype::method_replace(ExecutionContext *ctx)
 
 Value StringPrototype::method_search(ExecutionContext *ctx)
 {
-    // requires Regexp
-    ctx->throwUnimplemented(QStringLiteral("String.prototype.search"));
-    return Value::undefinedValue();
+    QString string;
+    if (StringObject *thisString = ctx->thisObject.asStringObject())
+        string = thisString->value.stringValue()->toQString();
+    else
+        string = ctx->thisObject.toString(ctx)->toQString();
+
+    Value regExpValue = ctx->argument(0);
+    RegExpObject *regExp = regExpValue.asRegExpObject();
+    if (!regExp) {
+        regExpValue = ctx->engine->regExpCtor.asFunctionObject()->construct(ctx, &regExpValue, 1);
+        regExp = regExpValue.asRegExpObject();
+    }
+    uint* matchOffsets = (uint*)alloca(regExp->value->captureCount() * 2 * sizeof(uint));
+    uint result = regExp->value->match(string, /*offset*/0, matchOffsets);
+    if (result == JSC::Yarr::offsetNoMatch)
+        return Value::fromInt32(-1);
+    return Value::fromUInt32(result);
 }
 
 Value StringPrototype::method_slice(ExecutionContext *ctx)
