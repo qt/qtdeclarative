@@ -165,29 +165,6 @@ struct ArrayPrototype: ArrayObject
     static Value method_reduceRight(ExecutionContext *ctx);
 };
 
-struct MathObject: Object
-{
-    MathObject(ExecutionContext *ctx);
-
-    static Value method_abs(ExecutionContext *ctx);
-    static Value method_acos(ExecutionContext *ctx);
-    static Value method_asin(ExecutionContext *ctx);
-    static Value method_atan(ExecutionContext *ctx);
-    static Value method_atan2(ExecutionContext *ctx);
-    static Value method_ceil(ExecutionContext *ctx);
-    static Value method_cos(ExecutionContext *ctx);
-    static Value method_exp(ExecutionContext *ctx);
-    static Value method_floor(ExecutionContext *ctx);
-    static Value method_log(ExecutionContext *ctx);
-    static Value method_max(ExecutionContext *ctx);
-    static Value method_min(ExecutionContext *ctx);
-    static Value method_pow(ExecutionContext *ctx);
-    static Value method_random(ExecutionContext *ctx);
-    static Value method_round(ExecutionContext *ctx);
-    static Value method_sin(ExecutionContext *ctx);
-    static Value method_sqrt(ExecutionContext *ctx);
-    static Value method_tan(ExecutionContext *ctx);
-};
 
 } // end of namespace VM
 } // end of namespace QQmlJS
