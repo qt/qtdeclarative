@@ -29,6 +29,7 @@ SOURCES += main.cpp \
     qv4array.cpp \
     qv4argumentsobject.cpp \
     qv4dateobject.cpp \
+    qv4errorobject.cpp \
     qv4functionobject.cpp \
     qv4globalobject.cpp \
     qv4jsonobject.cpp \
@@ -57,6 +58,7 @@ HEADERS += \
     qv4array.h \
     qv4argumentsobject.h \
     qv4dateobject.h \
+    qv4errorobject.h \
     qv4functionobject.h \
     qv4globalobject.h \
     qv4jsonobject.h \

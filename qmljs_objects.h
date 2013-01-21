@@ -212,56 +212,6 @@ struct RegExpObject: Object {
     virtual RegExpObject *asRegExpObject() { return this; }
 };
 
-struct ErrorObject: Object {
-    ErrorObject(ExecutionEngine* engine, const Value &message);
-    virtual QString className() { return QStringLiteral("Error"); }
-    virtual ErrorObject *asErrorObject() { return this; }
-
-    virtual struct SyntaxErrorObject *asSyntaxError() { return 0; }
-
-protected:
-    void setNameProperty(ExecutionContext *ctx);
-};
-
-struct EvalErrorObject: ErrorObject {
-    EvalErrorObject(ExecutionContext *ctx);
-    virtual QString className() { return QStringLiteral("EvalError"); }
-};
-
-struct RangeErrorObject: ErrorObject {
-    RangeErrorObject(ExecutionContext *ctx);
-    RangeErrorObject(ExecutionContext *ctx, const QString &msg);
-    virtual QString className() { return QStringLiteral("RangeError"); }
-};
-
-struct ReferenceErrorObject: ErrorObject {
-    ReferenceErrorObject(ExecutionContext *ctx);
-    ReferenceErrorObject(ExecutionContext *ctx, const QString &msg);
-    virtual QString className() { return QStringLiteral("ReferenceError"); }
-};
-
-struct SyntaxErrorObject: ErrorObject {
-    SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *msg);
-    ~SyntaxErrorObject() { delete msg; }
-    virtual QString className() { return QStringLiteral("SyntaxError"); }
-
-    virtual SyntaxErrorObject *asSyntaxError() { return this; }
-    DiagnosticMessage *message() { return msg; }
-
-private:
-    DiagnosticMessage *msg;
-};
-
-struct TypeErrorObject: ErrorObject {
-    TypeErrorObject(ExecutionContext *ctx);
-    TypeErrorObject(ExecutionContext *ctx, const QString &msg);
-    virtual QString className() { return QStringLiteral("TypeError"); }
-};
-
-struct URIErrorObject: ErrorObject {
-    URIErrorObject(ExecutionContext *ctx);
-    virtual QString className() { return QStringLiteral("URIError"); }
-};
 
 } // namespace VM
 } // namespace QQmlJS
