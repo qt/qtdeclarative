@@ -510,8 +510,82 @@ Value StringPrototype::method_slice(ExecutionContext *ctx)
 
 Value StringPrototype::method_split(ExecutionContext *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("String.prototype.splt"));
-    return Value::undefinedValue();
+    QString text;
+    if (StringObject *thisObject = ctx->thisObject.asStringObject())
+        text = thisObject->value.stringValue()->toQString();
+    else
+        text = ctx->thisObject.toString(ctx)->toQString();
+
+    Value separatorValue = ctx->argumentCount > 0 ? ctx->argument(0) : Value::undefinedValue();
+    Value limitValue = ctx->argumentCount > 1 ? ctx->argument(1) : Value::undefinedValue();
+
+    ArrayObject* array = ctx->engine->newArrayObject(ctx);
+    Value result = Value::fromObject(array);
+
+    if (separatorValue.isUndefined()) {
+        if (limitValue.isUndefined()) {
+            array->array.push_back(Value::fromString(ctx, text));
+            return result;
+        }
+        return Value::fromString(ctx, text.left(limitValue.toInteger(ctx)));
+    }
+
+    uint limit = limitValue.isUndefined() ? UINT_MAX : limitValue.toUInt32(ctx);
+
+    if (limit == 0)
+        return result;
+
+    if (RegExpObject* re = separatorValue.asRegExpObject()) {
+        if (re->value->pattern().isEmpty()) {
+            re = 0;
+            separatorValue = Value::fromString(ctx, QString());
+        }
+    }
+
+    if (RegExpObject* re = separatorValue.asRegExpObject()) {
+        uint offset = 0;
+        uint* matchOffsets = (uint*)alloca(re->value->captureCount() * 2 * sizeof(uint));
+        while (true) {
+            uint result = re->value->match(text, offset, matchOffsets);
+            if (result == JSC::Yarr::offsetNoMatch)
+                break;
+
+            array->array.push_back(Value::fromString(ctx, text.mid(offset, matchOffsets[0] - offset)));
+            offset = qMax(offset + 1, matchOffsets[1]);
+
+            if (array->array.length() >= limit)
+                break;
+
+            for (int i = 1; i < re->value->captureCount(); ++i) {
+                uint start = matchOffsets[i * 2];
+                uint end = matchOffsets[i * 2 + 1];
+                array->array.push_back(Value::fromString(ctx, text.mid(start, end - start)));
+                if (array->array.length() >= limit)
+                    break;
+            }
+        }
+        if (array->array.length() < limit)
+            array->array.push_back(Value::fromString(ctx, text.mid(offset)));
+    } else {
+        QString separator = separatorValue.toString(ctx)->toQString();
+        if (separator.isEmpty()) {
+            for (uint i = 0; i < qMin(limit, uint(text.length())); ++i)
+                array->array.push_back(Value::fromString(ctx, text.mid(i, 1)));
+            return result;
+        }
+
+        int start = 0;
+        int end;
+        while ((end = text.indexOf(separator, start)) != -1) {
+            array->array.push_back(Value::fromString(ctx, text.mid(start, end - start)));
+            start = end + separator.size();
+            if (array->array.length() >= limit)
+                break;
+        }
+        if (array->array.length() < limit && start != -1)
+            array->array.push_back(Value::fromString(ctx, text.mid(start)));
+    }
+    return result;
 }
 
 Value StringPrototype::method_substr(ExecutionContext *ctx)
