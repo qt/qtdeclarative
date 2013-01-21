@@ -277,13 +277,13 @@ static double MakeDay(double year, double month, double day)
     if (month < 0)
         month += 12.0;
 
-    double t = TimeFromYear(year);
-    double leap = InLeapYear(t);
+    double d = DayFromYear(year);
+    bool leap = InLeapYear(d*msPerDay);
 
-    day += ::floor(t / msPerDay);
-    day += DayFromMonth(month, leap);
+    d += DayFromMonth(month, leap);
+    d += day - 1;
 
-    return day - 1;
+    return d;
 }
 
 static inline double MakeDate(double day, double time)
@@ -708,11 +708,12 @@ Value DateCtor::call(ExecutionContext *ctx)
 void DatePrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
     ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(7));
     LocalTZA = getLocalTZA();
 
     ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("parse"), method_parse, 1);
     ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("UTC"), method_UTC, 7);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("now"), method_now, 0);
 
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
@@ -760,6 +761,7 @@ void DatePrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("toUTCString"), method_toUTCString, 0);
     defineDefaultProperty(ctx, QStringLiteral("toGMTString"), method_toUTCString, 0);
     defineDefaultProperty(ctx, QStringLiteral("toISOString"), method_toISOString, 0);
+    defineDefaultProperty(ctx, QStringLiteral("toJSON"), method_toJSON, 1);
 }
 
 double DatePrototype::getThisDate(ExecutionContext *ctx)
@@ -795,6 +797,12 @@ Value DatePrototype::method_UTC(ExecutionContext *ctx)
         return Value::fromDouble(TimeClip(t));
     }
     return Value::undefinedValue();
+}
+
+Value DatePrototype::method_now(ExecutionContext *ctx)
+{
+    double t = currentTime();
+    return Value::fromDouble(t);
 }
 
 Value DatePrototype::method_toString(ExecutionContext *ctx)
@@ -1215,6 +1223,8 @@ Value DatePrototype::method_setFullYear(ExecutionContext *ctx)
         ctx->throwTypeError();
 
     double t = LocalTime(self->value.asDouble());
+    if (isnan(t))
+        t = 0;
     double year = ctx->argument(0).toNumber(ctx);
     double month = (ctx->argumentCount < 2) ? MonthFromTime(t) : ctx->argument(1).toNumber(ctx);
     double date = (ctx->argumentCount < 3) ? DateFromTime(t) : ctx->argument(2).toNumber(ctx);
@@ -1282,4 +1292,20 @@ Value DatePrototype::method_toISOString(ExecutionContext *ctx)
     result += 'Z';
 
     return Value::fromString(ctx, result);
+}
+
+Value DatePrototype::method_toJSON(ExecutionContext *ctx)
+{
+    Value O = __qmljs_to_object(ctx->thisObject, ctx);
+    Value tv = __qmljs_to_primitive(O, ctx, NUMBER_HINT);
+
+    if (tv.isNumber() && !std::isfinite(tv.toNumber(ctx)))
+        return Value::nullValue();
+
+    FunctionObject *toIso = O.objectValue()->__get__(ctx, ctx->engine->identifier(QStringLiteral("toISOString"))).asFunctionObject();
+
+    if (!toIso)
+        __qmljs_throw_type_error(ctx);
+
+    return toIso->call(ctx, ctx->thisObject, 0, 0);
 }

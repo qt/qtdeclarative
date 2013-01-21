@@ -2,6 +2,16 @@
 S15.1.3.1_A2.5_T1
 S15.1.3.2_A2.5_T1
 
+# broken test cases
+# The test data in the 6 tests below is wrong. V8 agrees with our results and the test suite is 0.375 days off
+S15.9.3.1_A5_T1 failing
+S15.9.3.1_A5_T2 failing
+S15.9.3.1_A5_T3 failing
+S15.9.3.1_A5_T4 failing
+S15.9.3.1_A5_T5 failing
+S15.9.3.1_A5_T6 failing
+
+
 # Tests failing that are supposed to pass.
 15.4.4.15-5-16 failing
 15.4.4.15-5-12 failing
@@ -508,7 +518,6 @@ S15.1.3.2_A5.3 failing
 15.2.3.3-4-11 failing
 15.2.3.3-4-12 failing
 15.2.3.3-4-13 failing
-15.2.3.3-4-162 failing
 15.2.3.3-4-164 failing
 15.2.3.3-4-51 failing
 15.2.3.3-4-82 failing
@@ -529,8 +538,6 @@ S15.1.3.2_A5.3 failing
 15.2.3.6-4-360-3 failing
 15.2.3.6-4-360-7 failing
 15.2.3.6-4-621 failing
-15.2.3.6-4-622 failing
-15.2.3.6-4-624 failing
 15.2.3.7-6-a-110 failing
 15.2.3.7-6-a-280 failing
 15.2.3.7-6-a-286 failing
@@ -904,19 +911,6 @@ S15.7.4_A3.3 failing
 S15.7.4.5_A1.3_T01 failing
 S15.7.4.5_A1.3_T02 failing
 S15.7.4.5_A1.4_T01 failing
-15.9.4.4-0-1 failing
-15.9.4.4-0-2 failing
-15.9.4.4-0-3 failing
-15.9.4.4-0-4 failing
-S15.9.3.1_A5_T1 failing
-S15.9.3.1_A5_T2 failing
-S15.9.3.1_A5_T3 failing
-S15.9.3.1_A5_T4 failing
-S15.9.3.1_A5_T5 failing
-S15.9.3.1_A5_T6 failing
-S15.9.4_A5 failing
-S15.9.5.1_A2_T1 failing
-15.9.5.40_1 failing
 6.4_c failing
 8.0_L15 failing
 9.1_a failing
@@ -1036,8 +1030,6 @@ S15.9.5.1_A2_T1 failing
 13.3.0_2 failing
 13.3.0_6 failing
 13.3.0_7 failing
-15.9.5.44-0-1 failing
-15.9.5.44-0-2 failing
 6.2.2_a failing
 6.2.2_b failing
 6.2.2_c failing

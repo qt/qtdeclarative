@@ -72,6 +72,7 @@ struct DatePrototype: DateObject
 
     static Value method_parse(ExecutionContext *ctx);
     static Value method_UTC(ExecutionContext *ctx);
+    static Value method_now(ExecutionContext *ctx);
 
     static Value method_toString(ExecutionContext *ctx);
     static Value method_toDateString(ExecutionContext *ctx);
@@ -117,6 +118,7 @@ struct DatePrototype: DateObject
     static Value method_setUTCFullYear(ExecutionContext *ctx);
     static Value method_toUTCString(ExecutionContext *ctx);
     static Value method_toISOString(ExecutionContext *ctx);
+    static Value method_toJSON(ExecutionContext *ctx);
 };
 
 } // end of namespace VM
