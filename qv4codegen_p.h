@@ -193,7 +193,7 @@ protected:
                     m.function = function;
                     members.insert(name, m);
                 } else {
-                    if ((*it).type < type) {
+                    if ((*it).type <= type) {
                         (*it).type = type;
                         (*it).function = function;
                     }
