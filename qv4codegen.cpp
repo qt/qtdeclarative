@@ -1349,6 +1349,13 @@ bool Codegen::visit(NewExpression *ast)
 bool Codegen::visit(NewMemberExpression *ast)
 {
     Result base = expression(ast->base);
+    IR::Expr *expr = *base;
+    if (expr && !expr->asTemp() && !expr->asName() && !expr->asMember()) {
+        const unsigned t = _block->newTemp();
+        move(_block->TEMP(t), expr);
+        expr = _block->TEMP(t);
+    }
+
     IR::ExprList *args = 0, **args_it = &args;
     for (ArgumentList *it = ast->arguments; it; it = it->next) {
         Result arg = expression(it->expression);
@@ -1358,7 +1365,7 @@ bool Codegen::visit(NewMemberExpression *ast)
         args_it = &(*args_it)->next;
     }
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), _block->NEW(*base, args));
+    move(_block->TEMP(t), _block->NEW(expr, args));
     _expr.code = _block->TEMP(t);
     return false;
 }

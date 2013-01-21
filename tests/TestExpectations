@@ -266,8 +266,6 @@ S13_A3_T1 failing
 13.1-40-s failing
 13.1-41-s failing
 13.1-42-s failing
-S13.2.2_A16_T2 failing
-S13.2.2_A16_T3 failing
 S13.2.2_A19_T1 failing
 S13.2.2_A19_T3 failing
 S13.2.2_A19_T4 failing
@@ -297,7 +295,6 @@ S15.1.2.2_A9.3 failing
 S15.1.2.2_A9.4 failing
 S15.1.2.2_A9.7 failing
 S15.10.6.2_A1_T2 failing
-S15.10.7_A2_T1 failing
 S15.11.4.2_A1 failing
 S15.11.4.2_A2 failing
 15.12.1.1-g6-3 failing
