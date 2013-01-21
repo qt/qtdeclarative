@@ -43,6 +43,7 @@
 #include "qmljs_runtime.h"
 #include "qmljs_objects.h"
 #include "qv4functionobject.h"
+#include "qv4regexpobject.h"
 
 #include <assembler/LinkBuffer.h>
 #include <WTFStubs.h>

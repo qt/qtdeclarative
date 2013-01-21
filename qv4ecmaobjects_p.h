@@ -165,26 +165,6 @@ struct ArrayPrototype: ArrayObject
     static Value method_reduceRight(ExecutionContext *ctx);
 };
 
-struct RegExpCtor: FunctionObject
-{
-    RegExpCtor(ExecutionContext *scope);
-
-    virtual Value construct(ExecutionContext *ctx);
-    virtual Value call(ExecutionContext *ctx);
-};
-
-struct RegExpPrototype: RegExpObject
-{
-    RegExpPrototype(ExecutionEngine* engine): RegExpObject(engine, RegExp::create(0, QString()), false) {}
-    void init(ExecutionContext *ctx, const Value &ctor);
-
-    static Value method_exec(ExecutionContext *ctx);
-    static Value method_test(ExecutionContext *ctx);
-    static Value method_toString(ExecutionContext *ctx);
-    static Value method_compile(ExecutionContext *ctx);
-};
-
-
 struct MathObject: Object
 {
     MathObject(ExecutionContext *ctx);

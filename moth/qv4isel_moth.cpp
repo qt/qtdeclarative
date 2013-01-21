@@ -2,6 +2,7 @@
 #include "qv4isel_moth_p.h"
 #include "qv4vme_moth_p.h"
 #include "qv4functionobject.h"
+#include "qv4regexpobject.h"
 #include "debugging.h"
 
 using namespace QQmlJS;

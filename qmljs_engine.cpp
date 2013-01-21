@@ -44,6 +44,7 @@
 #include <qv4globalobject.h>
 #include <qv4errorobject.h>
 #include <qv4functionobject.h>
+#include <qv4regexpobject.h>
 #include <qmljs_runtime.h>
 #include "qv4mm.h"
 #include <qv4argumentsobject.h>
