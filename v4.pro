@@ -28,6 +28,7 @@ SOURCES += main.cpp \
     qv4array.cpp \
     qv4arrayobject.cpp \
     qv4argumentsobject.cpp \
+    qv4booleanobject.cpp \
     qv4dateobject.cpp \
     qv4errorobject.cpp \
     qv4functionobject.cpp \
@@ -61,6 +62,7 @@ HEADERS += \
     qv4array.h \
     qv4arrayobject.h \
     qv4argumentsobject.h \
+    qv4booleanobject.h \
     qv4dateobject.h \
     qv4errorobject.h \
     qv4functionobject.h \

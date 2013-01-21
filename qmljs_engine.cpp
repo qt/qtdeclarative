@@ -42,6 +42,7 @@
 #include <qv4object.h>
 #include <qv4ecmaobjects_p.h>
 #include <qv4arrayobject.h>
+#include <qv4booleanobject.h>
 #include <qv4globalobject.h>
 #include <qv4errorobject.h>
 #include <qv4functionobject.h>
