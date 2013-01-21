@@ -42,7 +42,6 @@
 #define QV4DATEOBJECT_P_H
 
 #include "qmljs_objects.h"
-#include "qv4ecmaobjects_p.h"
 #include <QtCore/qnumeric.h>
 
 namespace QQmlJS {

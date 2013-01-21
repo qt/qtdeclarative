@@ -46,6 +46,7 @@
 #include <qv4argumentsobject.h>
 #include <qv4dateobject.h>
 #include <qv4jsonobject.h>
+#include <qv4stringobject.h>
 
 namespace QQmlJS {
 namespace VM {

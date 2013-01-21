@@ -195,16 +195,6 @@ struct NumberObject: Object {
     virtual NumberObject *asNumberObject() { return this; }
 };
 
-struct StringObject: Object {
-    Value value;
-    PropertyDescriptor tmpProperty;
-    StringObject(ExecutionContext *ctx, const Value &value);
-    virtual QString className() { return QStringLiteral("String"); }
-    virtual StringObject *asStringObject() { return this; }
-
-    PropertyDescriptor *getIndex(ExecutionContext *ctx, uint index);
-};
-
 struct ArrayObject: Object {
     ArrayObject(ExecutionContext *ctx) { init(ctx); }
     ArrayObject(ExecutionContext *ctx, const Array &value): Object(value) { init(ctx); array.setLengthUnchecked(array.length()); }

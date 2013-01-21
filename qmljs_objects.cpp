@@ -43,6 +43,7 @@
 #include "qv4ir_p.h"
 #include "qv4isel_p.h"
 #include "qv4ecmaobjects_p.h"
+#include "qv4stringobject.h"
 #include "qv4mm.h"
 
 #include <private/qqmljsengine_p.h>
@@ -1226,31 +1227,6 @@ void BoundFunction::getCollectables(QVector<Object *> &objects)
             objects.append(o);
 }
 
-
-StringObject::StringObject(ExecutionContext *ctx, const Value &value)
-    : value(value)
-{
-    isString = true;
-
-    tmpProperty.type = PropertyDescriptor::Data;
-    tmpProperty.enumberable = PropertyDescriptor::Enabled;
-    tmpProperty.writable = PropertyDescriptor::Disabled;
-    tmpProperty.configurable = PropertyDescriptor::Disabled;
-    tmpProperty.value = Value::undefinedValue();
-
-    assert(value.isString());
-    defineReadonlyProperty(ctx->engine->id_length, Value::fromUInt32(value.stringValue()->toQString().length()));
-}
-
-PropertyDescriptor *StringObject::getIndex(ExecutionContext *ctx, uint index)
-{
-    QString str = value.stringValue()->toQString();
-    if (index >= (uint)str.length())
-        return 0;
-    String *result = ctx->engine->newString(str.mid(index, 1));
-    tmpProperty.value = Value::fromString(result);
-    return &tmpProperty;
-}
 
 EvalErrorObject::EvalErrorObject(ExecutionContext *ctx)
     : ErrorObject(ctx->engine, ctx->argument(0))

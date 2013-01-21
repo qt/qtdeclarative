@@ -87,44 +87,6 @@ struct ObjectPrototype: Object
     static Value fromPropertyDescriptor(ExecutionContext *ctx, const PropertyDescriptor *desc);
 };
 
-struct StringCtor: FunctionObject
-{
-    StringCtor(ExecutionContext *scope);
-
-    virtual Value construct(ExecutionContext *ctx);
-    virtual Value call(ExecutionContext *ctx);
-};
-
-struct StringPrototype: StringObject
-{
-    StringPrototype(ExecutionContext *ctx): StringObject(ctx, Value::fromString(ctx, QString())) {}
-    void init(ExecutionContext *ctx, const Value &ctor);
-
-    static QString getThisString(ExecutionContext *ctx);
-
-    static Value method_toString(ExecutionContext *ctx);
-    static Value method_valueOf(ExecutionContext *ctx);
-    static Value method_charAt(ExecutionContext *ctx);
-    static Value method_charCodeAt(ExecutionContext *ctx);
-    static Value method_concat(ExecutionContext *ctx);
-    static Value method_indexOf(ExecutionContext *ctx);
-    static Value method_lastIndexOf(ExecutionContext *ctx);
-    static Value method_localeCompare(ExecutionContext *ctx);
-    static Value method_match(ExecutionContext *ctx);
-    static Value method_replace(ExecutionContext *ctx);
-    static Value method_search(ExecutionContext *ctx);
-    static Value method_slice(ExecutionContext *ctx);
-    static Value method_split(ExecutionContext *ctx);
-    static Value method_substr(ExecutionContext *ctx);
-    static Value method_substring(ExecutionContext *ctx);
-    static Value method_toLowerCase(ExecutionContext *ctx);
-    static Value method_toLocaleLowerCase(ExecutionContext *ctx);
-    static Value method_toUpperCase(ExecutionContext *ctx);
-    static Value method_toLocaleUpperCase(ExecutionContext *ctx);
-    static Value method_fromCharCode(ExecutionContext *ctx);
-    static Value method_trim(ExecutionContext *ctx);
-};
-
 struct NumberCtor: FunctionObject
 {
     NumberCtor(ExecutionContext *scope);
