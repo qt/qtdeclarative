@@ -235,11 +235,9 @@ struct DatePrototype: DateObject
 
     static double getThisDate(ExecutionContext *ctx);
 
-    static Value method_MakeTime(ExecutionContext *ctx);
-    static Value method_MakeDate(ExecutionContext *ctx);
-    static Value method_TimeClip(ExecutionContext *ctx);
     static Value method_parse(ExecutionContext *ctx);
     static Value method_UTC(ExecutionContext *ctx);
+
     static Value method_toString(ExecutionContext *ctx);
     static Value method_toDateString(ExecutionContext *ctx);
     static Value method_toTimeString(ExecutionContext *ctx);
@@ -283,6 +281,7 @@ struct DatePrototype: DateObject
     static Value method_setFullYear(ExecutionContext *ctx);
     static Value method_setUTCFullYear(ExecutionContext *ctx);
     static Value method_toUTCString(ExecutionContext *ctx);
+    static Value method_toISOString(ExecutionContext *ctx);
 };
 
 struct RegExpCtor: FunctionObject

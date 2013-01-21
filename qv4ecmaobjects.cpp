@@ -366,6 +366,144 @@ static inline double FromDateTime(const QDateTime &dt)
 
 static inline double ParseString(const QString &s)
 {
+    // first try the format defined in 15.9.1.15, only if that fails fall back to
+    // QDateTime for parsing
+
+    // the define string format is YYYY-MM-DDTHH:mm:ss.sssZ
+    // It can be date or time only, and the second and later components
+    // of both fields are optional
+    // and extended syntax for negative and large positive years exists: +/-YYYYYY
+
+    enum Format {
+        Year,
+        Month,
+        Day,
+        Hour,
+        Minute,
+        Second,
+        MilliSecond,
+        TimezoneHour,
+        TimezoneMinute,
+        Done
+    };
+
+    const QChar *ch = s.constData();
+    const QChar *end = ch + s.length();
+
+    uint format = Year;
+    int current = 0;
+    int currentSize = 0;
+    bool extendedYear = false;
+
+    int yearSign = 1;
+    int year = 0;
+    int month = 0;
+    int day = 1;
+    int hour = 0;
+    int minute = 0;
+    int second = 0;
+    int msec = 0;
+    int offsetSign = 1;
+    int offset = 0;
+
+    bool error = false;
+    if (*ch == '+' || *ch == '-') {
+        extendedYear = true;
+        if (*ch == '-')
+            yearSign = -1;
+        ++ch;
+    }
+    while (ch <= end) {
+        if (*ch >= '0' && *ch <= '9') {
+            current *= 10;
+            current += ch->unicode() - '0';
+            ++currentSize;
+        } else { // other char, delimits field
+            switch (format) {
+            case Year:
+                year = current;
+                if (extendedYear)
+                    error = (currentSize != 6);
+                else
+                    error = (currentSize != 4);
+                break;
+            case Month:
+                month = current - 1;
+                error = (currentSize != 2) || month > 11;
+                break;
+            case Day:
+                day = current;
+                error = (currentSize != 2) || day > 31;
+                break;
+            case Hour:
+                hour = current;
+                error = (currentSize != 2) || hour > 24;
+                break;
+            case Minute:
+                minute = current;
+                error = (currentSize != 2) || minute > 60;
+                break;
+            case Second:
+                second = current;
+                error = (currentSize != 2) || second > 60;
+                break;
+            case MilliSecond:
+                msec = current;
+                error = (currentSize != 3);
+                break;
+            case TimezoneHour:
+                offset = current*60;
+                error = (currentSize != 2) || offset > 23*60;
+                break;
+            case TimezoneMinute:
+                offset += current;
+                error = (currentSize != 2) || current >= 60;
+                break;
+            }
+            if (*ch == 'T') {
+                if (format >= Hour)
+                    error = true;
+                format = Hour;
+            } else if (*ch == '-') {
+                if (format < Day)
+                    ++format;
+                else if (format < Minute)
+                    error = true;
+                else if (format >= TimezoneHour)
+                    error = true;
+                else {
+                    offsetSign = -1;
+                    format = TimezoneHour;
+                }
+            } else if (*ch == ':') {
+                if (format != Hour && format != Minute && format != TimezoneHour)
+                    error = true;
+                ++format;
+            } else if (*ch == '.') {
+                if (format != Second)
+                    error = true;
+                ++format;
+            } else if (*ch == '+') {
+                if (format < Minute || format >= TimezoneHour)
+                    error = true;
+                format = TimezoneHour;
+            } else if (*ch == 'Z' || *ch == 0) {
+                format = Done;
+            }
+            current = 0;
+            currentSize = 0;
+        }
+        if (error || format == Done)
+            break;
+        ++ch;
+    }
+
+    if (!error) {
+        double t = MakeDate(MakeDay(year * yearSign, month, day), MakeTime(hour, minute, second, msec));
+        t += offset * offsetSign * 60 * 1000;
+        return t;
+    }
+
     QDateTime dt = QDateTime::fromString(s, Qt::TextDate);
     if (!dt.isValid())
         dt = QDateTime::fromString(s, Qt::ISODate);
@@ -2433,7 +2571,7 @@ Value DateCtor::construct(ExecutionContext *ctx)
             arg = __qmljs_to_primitive(arg, ctx, PREFERREDTYPE_HINT);
 
         if (arg.isString())
-            t = ParseString(arg.toString(ctx)->toQString());
+            t = ParseString(arg.stringValue()->toQString());
         else
             t = TimeClip(arg.toNumber(ctx));
     }
@@ -2516,6 +2654,7 @@ void DatePrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("setUTCFullYear"), method_setUTCFullYear, 3);
     defineDefaultProperty(ctx, QStringLiteral("toUTCString"), method_toUTCString, 0);
     defineDefaultProperty(ctx, QStringLiteral("toGMTString"), method_toUTCString, 0);
+    defineDefaultProperty(ctx, QStringLiteral("toISOString"), method_toISOString, 0);
 }
 
 double DatePrototype::getThisDate(ExecutionContext *ctx)
@@ -2526,24 +2665,6 @@ double DatePrototype::getThisDate(ExecutionContext *ctx)
         ctx->throwTypeError();
         return 0;
     }
-}
-
-Value DatePrototype::method_MakeTime(ExecutionContext *ctx)
-{
-    ctx->throwUnimplemented(QStringLiteral("Data.MakeTime"));
-    return Value::undefinedValue();
-}
-
-Value DatePrototype::method_MakeDate(ExecutionContext *ctx)
-{
-    ctx->throwUnimplemented(QStringLiteral("Data.MakeDate"));
-    return Value::undefinedValue();
-}
-
-Value DatePrototype::method_TimeClip(ExecutionContext *ctx)
-{
-    ctx->throwUnimplemented(QStringLiteral("Data.TimeClip"));
-    return Value::undefinedValue();
 }
 
 Value DatePrototype::method_parse(ExecutionContext *ctx)
@@ -3005,6 +3126,57 @@ Value DatePrototype::method_toUTCString(ExecutionContext *ctx)
 
     double t = self->value.asDouble();
     return Value::fromString(ctx, ToUTCString(t));
+}
+
+static void addZeroPrefixedInt(QString &str, int num, int nDigits)
+{
+    str.resize(str.size() + nDigits);
+
+    QChar *c = str.data() + str.size() - 1;
+    while (nDigits) {
+        *c = QChar(num % 10 + '0');
+        num /= 10;
+        --c;
+        --nDigits;
+    }
+}
+
+Value DatePrototype::method_toISOString(ExecutionContext *ctx)
+{
+    DateObject *self = ctx->thisObject.asDateObject();
+    if (!self)
+        ctx->throwTypeError();
+
+    double t = self->value.asDouble();
+    if (!std::isfinite(t))
+        ctx->throwRangeError(ctx->thisObject);
+
+    QString result;
+    int year = (int)YearFromTime(t);
+    if (year < 0 || year > 9999) {
+        if (qAbs(year) >= 1000000)
+            return Value::fromString(ctx, QStringLiteral("Invalid Date"));
+        result += year < 0 ? '-' : '+';
+        year = qAbs(year);
+        addZeroPrefixedInt(result, year, 6);
+    } else {
+        addZeroPrefixedInt(result, year, 4);
+    }
+    result += '-';
+    addZeroPrefixedInt(result, (int)MonthFromTime(t) + 1, 2);
+    result += '-';
+    addZeroPrefixedInt(result, (int)DateFromTime(t), 2);
+    result += 'T';
+    addZeroPrefixedInt(result, HourFromTime(t), 2);
+    result += ':';
+    addZeroPrefixedInt(result, MinFromTime(t), 2);
+    result += ':';
+    addZeroPrefixedInt(result, SecFromTime(t), 2);
+    result += '.';
+    addZeroPrefixedInt(result, msFromTime(t), 3);
+    result += 'Z';
+
+    return Value::fromString(ctx, result);
 }
 
 //
