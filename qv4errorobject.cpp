@@ -150,6 +150,13 @@ URIErrorObject::URIErrorObject(ExecutionContext *ctx)
     prototype = ctx->engine->uRIErrorPrototype;
 }
 
+URIErrorObject::URIErrorObject(ExecutionContext *ctx, Value msg)
+    : ErrorObject(ctx->engine, msg)
+{
+    setNameProperty(ctx);
+    prototype = ctx->engine->uRIErrorPrototype;
+}
+
 
 ErrorCtor::ErrorCtor(ExecutionContext *scope)
     : FunctionObject(scope)

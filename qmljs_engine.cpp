@@ -224,6 +224,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     glo->defineDefaultProperty(rootContext, QStringLiteral("parseFloat"), Value::fromObject(new (memoryManager) ParseFloatFunction(rootContext)));
     glo->defineDefaultProperty(rootContext, QStringLiteral("isNaN"), Value::fromObject(new (memoryManager) IsNaNFunction(rootContext)));
     glo->defineDefaultProperty(rootContext, QStringLiteral("isFinite"), Value::fromObject(new (memoryManager) IsFiniteFunction(rootContext)));
+    glo->defineDefaultProperty(rootContext, QStringLiteral("decodeURI"), Value::fromObject(new (memoryManager) DecodeUriFunction(rootContext)));
+    glo->defineDefaultProperty(rootContext, QStringLiteral("decodeURIComponent"), Value::fromObject(new (memoryManager) DecodeUriComponentFunction(rootContext)));
+    glo->defineDefaultProperty(rootContext, QStringLiteral("encodeURI"), Value::fromObject(new (memoryManager) EncodeUriFunction(rootContext)));
+    glo->defineDefaultProperty(rootContext, QStringLiteral("encodeURIComponent"), Value::fromObject(new (memoryManager) EncodeUriComponentFunction(rootContext)));
 }
 
 ExecutionEngine::~ExecutionEngine()
@@ -417,6 +421,11 @@ Object *ExecutionEngine::newTypeErrorObject(ExecutionContext *ctx, const QString
 Object *ExecutionEngine::newRangeErrorObject(ExecutionContext *ctx, const QString &message)
 {
     return new (memoryManager) RangeErrorObject(ctx, message);
+}
+
+Object *ExecutionEngine::newURIErrorObject(ExecutionContext *ctx, Value message)
+{
+    return new (memoryManager) URIErrorObject(ctx, message);
 }
 
 Object *ExecutionEngine::newMathObject(ExecutionContext *ctx)

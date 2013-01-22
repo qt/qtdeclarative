@@ -211,6 +211,7 @@ struct ExecutionEngine
     Object *newReferenceErrorObject(ExecutionContext *ctx, const QString &message);
     Object *newTypeErrorObject(ExecutionContext *ctx, const QString &message);
     Object *newRangeErrorObject(ExecutionContext *ctx, const QString &message);
+    Object *newURIErrorObject(ExecutionContext *ctx, Value message);
 
     Object *newMathObject(ExecutionContext *ctx);
     Object *newActivationObject();

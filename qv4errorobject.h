@@ -95,6 +95,7 @@ struct TypeErrorObject: ErrorObject {
 
 struct URIErrorObject: ErrorObject {
     URIErrorObject(ExecutionContext *ctx);
+    URIErrorObject(ExecutionContext *ctx, Value);
     virtual QString className() { return QStringLiteral("URIError"); }
 };
 

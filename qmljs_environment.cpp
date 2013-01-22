@@ -440,6 +440,11 @@ void ExecutionContext::throwRangeError(Value value)
     throwError(Value::fromObject(engine->newRangeErrorObject(this, msg)));
 }
 
+void ExecutionContext::throwURIError(Value msg)
+{
+    throwError(Value::fromObject(engine->newURIErrorObject(this, msg)));
+}
+
 void ExecutionContext::initCallContext(ExecutionContext *parent, const Value that, FunctionObject *f, Value *args, unsigned argc)
 {
     MemoryManager::GCBlocker blockGC(parent->engine->memoryManager);

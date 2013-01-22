@@ -40,11 +40,9 @@
 ****************************************************************************/
 
 #include "qv4globalobject.h"
-#include "qv4ir_p.h"
-#include "qv4isel_p.h"
-#include "qv4objectproto.h"
-#include "qv4stringobject.h"
 #include "qv4mm.h"
+#include "qmljs_value.h"
+#include "qmljs_environment.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -54,14 +52,243 @@
 #include <qv4codegen_p.h>
 #include "private/qlocale_tools_p.h"
 
-#include <QtCore/qmath.h>
 #include <QtCore/QDebug>
-#include <cassert>
-#include <typeinfo>
+#include <QtCore/QString>
 #include <iostream>
-#include <alloca.h>
 
 using namespace QQmlJS::VM;
+
+static inline char toHex(char c)
+{
+    static const char hexnumbers[] = "0123456789ABCDEF";
+    return hexnumbers[c & 0xf];
+}
+
+static int fromHex(QChar ch)
+{
+    ushort c = ch.unicode();
+    if ((c >= '0') && (c <= '9'))
+        return c - '0';
+    if ((c >= 'A') && (c <= 'F'))
+        return c - 'A' + 10;
+    if ((c >= 'a') && (c <= 'f'))
+        return c - 'a' + 10;
+    return -1;
+}
+
+static QString escape(const QString &input)
+{
+    QString output;
+    output.reserve(input.size() * 3);
+    const int length = input.length();
+    for (int i = 0; i < length; ++i) {
+        ushort uc = input.at(i).unicode();
+        if (uc < 0x100) {
+            if (   (uc > 0x60 && uc < 0x7B)
+                || (uc > 0x3F && uc < 0x5B)
+                || (uc > 0x2C && uc < 0x3A)
+                || (uc == 0x2A)
+                || (uc == 0x2B)
+                || (uc == 0x5F)) {
+                output.append(QChar(uc));
+            } else {
+                output.append('%');
+                output.append(QChar(toHex(uc >> 4)));
+                output.append(QChar(toHex(uc)));
+            }
+        } else {
+            output.append('%');
+            output.append('u');
+            output.append(QChar(toHex(uc >> 12)));
+            output.append(QChar(toHex(uc >> 8)));
+            output.append(QChar(toHex(uc >> 4)));
+            output.append(QChar(toHex(uc)));
+        }
+    }
+    return output;
+}
+
+static QString unescape(const QString &input)
+{
+    QString result;
+    result.reserve(input.length());
+    int i = 0;
+    const int length = input.length();
+    while (i < length) {
+        QChar c = input.at(i++);
+        if ((c == '%') && (i + 1 < length)) {
+            QChar a = input.at(i);
+            if ((a == 'u') && (i + 4 < length)) {
+                int d3 = fromHex(input.at(i+1));
+                int d2 = fromHex(input.at(i+2));
+                int d1 = fromHex(input.at(i+3));
+                int d0 = fromHex(input.at(i+4));
+                if ((d3 != -1) && (d2 != -1) && (d1 != -1) && (d0 != -1)) {
+                    ushort uc = ushort((d3 << 12) | (d2 << 8) | (d1 << 4) | d0);
+                    result.append(QChar(uc));
+                    i += 5;
+                } else {
+                    result.append(c);
+                }
+            } else {
+                int d1 = fromHex(a);
+                int d0 = fromHex(input.at(i+1));
+                if ((d1 != -1) && (d0 != -1)) {
+                    c = (d1 << 4) | d0;
+                    i += 2;
+                }
+                result.append(c);
+            }
+        } else {
+            result.append(c);
+        }
+    }
+    return result;
+}
+
+static const char uriReserved[] = ";/?:@&=+$,";
+static const char uriUnescaped[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()";
+
+static QString encode(const QString &input, const QString &unescapedSet, bool *ok)
+{
+    *ok = true;
+    QString output;
+    const int length = input.length();
+    int i = 0;
+    while (i < length) {
+        const QChar c = input.at(i);
+        if (!unescapedSet.contains(c)) {
+            ushort uc = c.unicode();
+            if ((uc >= 0xDC00) && (uc <= 0xDFFF)) {
+                *ok = false;
+                break;
+            }
+            if (!((uc < 0xD800) || (uc > 0xDBFF))) {
+                ++i;
+                if (i == length) {
+                    *ok = false;
+                    break;
+                }
+                const ushort uc2 = input.at(i).unicode();
+                if ((uc < 0xDC00) || (uc > 0xDFFF)) {
+                    *ok = false;
+                    break;
+                }
+                uc = ((uc - 0xD800) * 0x400) + (uc2 - 0xDC00) + 0x10000;
+            }
+            QString tmp(1, QChar(uc));
+            QByteArray octets = tmp.toUtf8();
+            for (int j = 0; j < octets.length(); ++j) {
+                output.append(QLatin1Char('%'));
+                output.append(QLatin1Char(toHex(octets.at(j) >> 4)));
+                output.append(QLatin1Char(toHex(octets.at(j))));
+            }
+        } else {
+            output.append(c);
+        }
+        ++i;
+    }
+    if (i != length)
+        *ok = false;
+    return output;
+}
+
+static QString decode(const QString &input, const QString &reservedSet, bool *ok)
+{
+    *ok = true;
+    QString output;
+    const int length = input.length();
+    int i = 0;
+    const QChar percent = QLatin1Char('%');
+    while (i < length) {
+        const QChar ch = input.at(i);
+        if (ch == percent) {
+            int start = i;
+            if (i + 2 >= length)
+                goto error;
+
+            int d1 = fromHex(input.at(i+1));
+            int d0 = fromHex(input.at(i+2));
+            if ((d1 == -1) || (d0 == -1))
+                goto error;
+
+            int b = (d1 << 4) | d0;
+            i += 2;
+            if (b & 0x80) {
+                int uc;
+                int min_uc;
+                int need;
+                if ((b & 0xe0) == 0xc0) {
+                    uc = b & 0x1f;
+                    need = 1;
+                    min_uc = 0x80;
+                } else if ((b & 0xf0) == 0xe0) {
+                    uc = b & 0x0f;
+                    need = 2;
+                    min_uc = 0x800;
+                } else if ((b & 0xf8) == 0xf0) {
+                    uc = b & 0x07;
+                    need = 3;
+                    min_uc = 0x10000;
+                } else {
+                    goto error;
+                }
+
+                if (i + (3 * need) >= length)
+                    goto error;
+
+                for (int j = 0; j < need; ++j) {
+                    ++i;
+                    if (input.at(i) != percent)
+                        goto error;
+
+                    d1 = fromHex(input.at(i+1));
+                    d0 = fromHex(input.at(i+2));
+                    if ((d1 == -1) || (d0 == -1))
+                        goto error;
+
+                    b = (d1 << 4) | d0;
+                    if ((b & 0xC0) != 0x80)
+                        goto error;
+
+                    i += 2;
+                    uc = (uc << 6) + b;
+                }
+                if (uc < min_uc)
+                    goto error;
+
+                if (uc < 0x10000) {
+                    output.append(QChar(uc));
+                } else {
+                    if (uc > 0x10FFFF)
+                        goto error;
+
+                    ushort l = ushort(((uc - 0x10000) & 0x3FF) + 0xDC00);
+                    ushort h = ushort((((uc - 0x10000) >> 10) & 0x3FF) + 0xD800);
+                    output.append(QChar(l));
+                    output.append(QChar(h));
+                }
+            } else {
+                QChar z(b);
+                if (!reservedSet.contains(z)) {
+                    output.append(z);
+                } else {
+                    output.append(input.mid(start, i - start + 1));
+                }
+            }
+        } else {
+            output.append(ch);
+        }
+        ++i;
+    }
+    if (i != length)
+        *ok = false;
+    return output;
+  error:
+    *ok = false;
+    return QString();
+}
+
 
 
 Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
@@ -349,3 +576,90 @@ Value IsFiniteFunction::call(ExecutionContext *context, Value /*thisObject*/, Va
     double d = v.toNumber(context);
     return Value::fromBoolean(std::isfinite(d));
 }
+
+
+/// decodeURI [15.1.3.1]
+DecodeUriFunction::DecodeUriFunction(ExecutionContext *scope)
+    : FunctionObject(scope)
+{
+    name = scope->engine->newString(QLatin1String("decodeURI"));
+}
+
+Value DecodeUriFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
+{
+    if (argc == 0)
+        return Value::undefinedValue();
+
+    QString uriString = args[0].toString(context)->toQString();
+    bool ok;
+    QString out = decode(uriString, QString::fromUtf8(uriReserved) + QString::fromUtf8("#"), &ok);
+    if (!ok)
+        context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
+
+    return Value::fromString(context, out);
+}
+
+/// decodeURIComponent [15.1.3.2]
+DecodeUriComponentFunction::DecodeUriComponentFunction(ExecutionContext *scope)
+    : FunctionObject(scope)
+{
+    name = scope->engine->newString(QLatin1String("decodeURIComponent"));
+}
+
+Value DecodeUriComponentFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
+{
+    if (argc == 0)
+        return Value::undefinedValue();
+
+    QString uriString = args[0].toString(context)->toQString();
+    bool ok;
+    QString out = decode(uriString, QString(), &ok);
+    if (!ok)
+        context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
+
+    return Value::fromString(context, out);
+}
+
+/// encodeURI [15.1.3.3]
+EncodeUriFunction::EncodeUriFunction(ExecutionContext *scope)
+    : FunctionObject(scope)
+{
+    name = scope->engine->newString(QLatin1String("encodeURI"));
+}
+
+Value EncodeUriFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
+{
+    if (argc == 0)
+        return Value::undefinedValue();
+
+    QString uriString = args[0].toString(context)->toQString();
+    bool ok;
+    QString out = encode(uriString, QLatin1String(uriReserved) + QLatin1String(uriUnescaped) + QString::fromUtf8("#"), &ok);
+    if (!ok)
+        context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
+
+    return Value::fromString(context, out);
+}
+
+
+/// encodeURIComponent [15.1.3.4]
+EncodeUriComponentFunction::EncodeUriComponentFunction(ExecutionContext *scope)
+    : FunctionObject(scope)
+{
+    name = scope->engine->newString(QLatin1String("encodeURIComponent"));
+}
+
+Value EncodeUriComponentFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
+{
+    if (argc == 0)
+        return Value::undefinedValue();
+
+    QString uriString = args[0].toString(context)->toQString();
+    bool ok;
+    QString out = encode(uriString, QString(), &ok);
+    if (!ok)
+        context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
+
+    return Value::fromString(context, out);
+}
+

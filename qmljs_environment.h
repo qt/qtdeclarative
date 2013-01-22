@@ -119,6 +119,7 @@ struct ExecutionContext
     void throwTypeError();
     void throwReferenceError(Value value);
     void throwRangeError(Value value);
+    void throwURIError(Value msg);
     void throwUnimplemented(const QString &message);
 
     void setProperty(String *name, Value value);

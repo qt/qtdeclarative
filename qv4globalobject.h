@@ -41,63 +41,11 @@
 #ifndef QV4GLOBALOBJECT_H
 #define QV4GLOBALOBJECT_H
 
-#include "qmljs_runtime.h"
-#include "qmljs_engine.h"
-#include "qmljs_environment.h"
 #include "qv4functionobject.h"
-#include "qv4array.h"
-#include "qv4string.h"
-#include "qv4codegen_p.h"
-#include "qv4isel_p.h"
-#include "qv4managed.h"
-#include "qv4propertydescriptor.h"
-#include "qv4propertytable.h"
-#include "qv4objectiterator.h"
-#include "qv4regexp.h"
-
-#include <QtCore/QString>
-#include <QtCore/QHash>
-#include <QtCore/QScopedPointer>
-#include <cstdio>
-#include <cassert>
 
 namespace QQmlJS {
 
 namespace VM {
-
-struct Value;
-struct Function;
-struct Object;
-struct ObjectIterator;
-struct BooleanObject;
-struct NumberObject;
-struct StringObject;
-struct ArrayObject;
-struct DateObject;
-struct FunctionObject;
-struct RegExpObject;
-struct ErrorObject;
-struct ArgumentsObject;
-struct ExecutionContext;
-struct ExecutionEngine;
-class MemoryManager;
-
-struct ObjectPrototype;
-struct StringPrototype;
-struct NumberPrototype;
-struct BooleanPrototype;
-struct ArrayPrototype;
-struct FunctionPrototype;
-struct DatePrototype;
-struct RegExpPrototype;
-struct ErrorPrototype;
-struct EvalErrorPrototype;
-struct RangeErrorPrototype;
-struct ReferenceErrorPrototype;
-struct SyntaxErrorPrototype;
-struct TypeErrorPrototype;
-struct URIErrorPrototype;
-
 
 struct EvalFunction : FunctionObject
 {
@@ -135,6 +83,34 @@ struct IsNaNFunction: FunctionObject
 struct IsFiniteFunction: FunctionObject
 {
     IsFiniteFunction(ExecutionContext *scope);
+
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+};
+
+struct DecodeUriFunction: FunctionObject
+{
+    DecodeUriFunction(ExecutionContext *scope);
+
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+};
+
+struct DecodeUriComponentFunction: FunctionObject
+{
+    DecodeUriComponentFunction(ExecutionContext *scope);
+
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+};
+
+struct EncodeUriFunction: FunctionObject
+{
+    EncodeUriFunction(ExecutionContext *scope);
+
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+};
+
+struct EncodeUriComponentFunction: FunctionObject
+{
+    EncodeUriComponentFunction(ExecutionContext *scope);
 
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 };
