@@ -405,13 +405,6 @@ QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
     return globalCode;
 }
 
-// parseInt [15.1.2.2]
-ParseIntFunction::ParseIntFunction(ExecutionContext *scope)
-    : FunctionObject(scope)
-{
-    name = scope->engine->newString(QLatin1String("parseInt"));
-}
-
 static inline int toInt(const QChar &qc, int R)
 {
     ushort c = qc.unicode();
@@ -428,12 +421,11 @@ static inline int toInt(const QChar &qc, int R)
         return -1;
 }
 
-Value ParseIntFunction::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
+// parseInt [15.1.2.2]
+Value GlobalFunctions::method_parseInt(ExecutionContext *context)
 {
-    Q_UNUSED(thisObject);
-
-    Value string = (argc > 0) ? args[0] : Value::undefinedValue();
-    Value radix = (argc > 1) ? args[1] : Value::undefinedValue();
+    Value string = context->argument(0);
+    Value radix = context->argument(1);
     int R = radix.isUndefined() ? 0 : radix.toInt32(context);
 
     // [15.1.2.2] step by step:
@@ -509,18 +501,9 @@ Value ParseIntFunction::call(ExecutionContext *context, Value thisObject, Value 
 }
 
 // parseFloat [15.1.2.3]
-ParseFloatFunction::ParseFloatFunction(ExecutionContext *scope)
-    : FunctionObject(scope)
+Value GlobalFunctions::method_parseFloat(ExecutionContext *context)
 {
-    name = scope->engine->newString(QLatin1String("parseFloat"));
-}
-
-Value ParseFloatFunction::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
-{
-    Q_UNUSED(context);
-    Q_UNUSED(thisObject);
-
-    Value string = (argc > 0) ? args[0] : Value::undefinedValue();
+    Value string = context->argument(0);
 
     // [15.1.2.3] step by step:
     String *inputString = string.toString(context); // 1
@@ -544,15 +527,9 @@ Value ParseFloatFunction::call(ExecutionContext *context, Value thisObject, Valu
 }
 
 /// isNaN [15.1.2.4]
-IsNaNFunction::IsNaNFunction(ExecutionContext *scope)
-    : FunctionObject(scope)
+Value GlobalFunctions::method_isNaN(ExecutionContext *context)
 {
-    name = scope->engine->newString(QLatin1String("isNaN"));
-}
-
-Value IsNaNFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
-{
-    const Value &v = (argc > 0) ? args[0] : Value::undefinedValue();
+    const Value &v = context->argument(0);
     if (v.integerCompatible())
         return Value::fromBoolean(false);
 
@@ -561,15 +538,9 @@ Value IsNaNFunction::call(ExecutionContext *context, Value /*thisObject*/, Value
 }
 
 /// isFinite [15.1.2.5]
-IsFiniteFunction::IsFiniteFunction(ExecutionContext *scope)
-    : FunctionObject(scope)
+Value GlobalFunctions::method_isFinite(ExecutionContext *context)
 {
-    name = scope->engine->newString(QLatin1String("isFinite"));
-}
-
-Value IsFiniteFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
-{
-    const Value &v = (argc > 0) ? args[0] : Value::undefinedValue();
+    const Value &v = context->argument(0);
     if (v.integerCompatible())
         return Value::fromBoolean(true);
 
@@ -577,20 +548,13 @@ Value IsFiniteFunction::call(ExecutionContext *context, Value /*thisObject*/, Va
     return Value::fromBoolean(std::isfinite(d));
 }
 
-
 /// decodeURI [15.1.3.1]
-DecodeUriFunction::DecodeUriFunction(ExecutionContext *scope)
-    : FunctionObject(scope)
+Value GlobalFunctions::method_decodeURI(ExecutionContext *context)
 {
-    name = scope->engine->newString(QLatin1String("decodeURI"));
-}
-
-Value DecodeUriFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
-{
-    if (argc == 0)
+    if (context->argumentCount == 0)
         return Value::undefinedValue();
 
-    QString uriString = args[0].toString(context)->toQString();
+    QString uriString = context->argument(0).toString(context)->toQString();
     bool ok;
     QString out = decode(uriString, QString::fromUtf8(uriReserved) + QString::fromUtf8("#"), &ok);
     if (!ok)
@@ -600,18 +564,12 @@ Value DecodeUriFunction::call(ExecutionContext *context, Value /*thisObject*/, V
 }
 
 /// decodeURIComponent [15.1.3.2]
-DecodeUriComponentFunction::DecodeUriComponentFunction(ExecutionContext *scope)
-    : FunctionObject(scope)
+Value GlobalFunctions::method_decodeURIComponent(ExecutionContext *context)
 {
-    name = scope->engine->newString(QLatin1String("decodeURIComponent"));
-}
-
-Value DecodeUriComponentFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
-{
-    if (argc == 0)
+    if (context->argumentCount == 0)
         return Value::undefinedValue();
 
-    QString uriString = args[0].toString(context)->toQString();
+    QString uriString = context->argument(0).toString(context)->toQString();
     bool ok;
     QString out = decode(uriString, QString(), &ok);
     if (!ok)
@@ -621,18 +579,12 @@ Value DecodeUriComponentFunction::call(ExecutionContext *context, Value /*thisOb
 }
 
 /// encodeURI [15.1.3.3]
-EncodeUriFunction::EncodeUriFunction(ExecutionContext *scope)
-    : FunctionObject(scope)
+Value GlobalFunctions::method_encodeURI(ExecutionContext *context)
 {
-    name = scope->engine->newString(QLatin1String("encodeURI"));
-}
-
-Value EncodeUriFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
-{
-    if (argc == 0)
+    if (context->argumentCount == 0)
         return Value::undefinedValue();
 
-    QString uriString = args[0].toString(context)->toQString();
+    QString uriString = context->argument(0).toString(context)->toQString();
     bool ok;
     QString out = encode(uriString, QLatin1String(uriReserved) + QLatin1String(uriUnescaped) + QString::fromUtf8("#"), &ok);
     if (!ok)
@@ -641,20 +593,13 @@ Value EncodeUriFunction::call(ExecutionContext *context, Value /*thisObject*/, V
     return Value::fromString(context, out);
 }
 
-
 /// encodeURIComponent [15.1.3.4]
-EncodeUriComponentFunction::EncodeUriComponentFunction(ExecutionContext *scope)
-    : FunctionObject(scope)
+Value GlobalFunctions::method_encodeURIComponent(ExecutionContext *context)
 {
-    name = scope->engine->newString(QLatin1String("encodeURIComponent"));
-}
-
-Value EncodeUriComponentFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
-{
-    if (argc == 0)
+    if (context->argumentCount == 0)
         return Value::undefinedValue();
 
-    QString uriString = args[0].toString(context)->toQString();
+    QString uriString = context->argument(0).toString(context)->toQString();
     bool ok;
     QString out = encode(uriString, QString(), &ok);
     if (!ok)
@@ -663,34 +608,20 @@ Value EncodeUriComponentFunction::call(ExecutionContext *context, Value /*thisOb
     return Value::fromString(context, out);
 }
 
-
-EscapeFunction::EscapeFunction(ExecutionContext *scope)
-    : FunctionObject(scope)
+Value GlobalFunctions::method_escape(ExecutionContext *context)
 {
-    name = scope->engine->newString(QLatin1String("escape"));
-}
-
-Value EscapeFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
-{
-    if (!argc)
+    if (!context->argumentCount)
         return Value::fromString(context, QStringLiteral("undefined"));
 
-    QString str = args->toString(context)->toQString();
+    QString str = context->argument(0).toString(context)->toQString();
     return Value::fromString(context, escape(str));
 }
 
-
-UnescapeFunction::UnescapeFunction(ExecutionContext *scope)
-    : FunctionObject(scope)
+Value GlobalFunctions::method_unescape(ExecutionContext *context)
 {
-    name = scope->engine->newString(QLatin1String("unescape"));
-}
-
-Value UnescapeFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
-{
-    if (!argc)
+    if (!context->argumentCount)
         return Value::fromString(context, QStringLiteral("undefined"));
 
-    QString str = args->toString(context)->toQString();
+    QString str = context->argument(0).toString(context)->toQString();
     return Value::fromString(context, unescape(str));
 }

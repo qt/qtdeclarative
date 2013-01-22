@@ -59,74 +59,18 @@ struct EvalFunction : FunctionObject
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 };
 
-struct ParseIntFunction: FunctionObject
+struct GlobalFunctions
 {
-    ParseIntFunction(ExecutionContext *scope);
-
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-};
-
-struct ParseFloatFunction: FunctionObject
-{
-    ParseFloatFunction(ExecutionContext *scope);
-
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-};
-
-struct IsNaNFunction: FunctionObject
-{
-    IsNaNFunction(ExecutionContext *scope);
-
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-};
-
-struct IsFiniteFunction: FunctionObject
-{
-    IsFiniteFunction(ExecutionContext *scope);
-
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-};
-
-struct DecodeUriFunction: FunctionObject
-{
-    DecodeUriFunction(ExecutionContext *scope);
-
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-};
-
-struct DecodeUriComponentFunction: FunctionObject
-{
-    DecodeUriComponentFunction(ExecutionContext *scope);
-
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-};
-
-struct EncodeUriFunction: FunctionObject
-{
-    EncodeUriFunction(ExecutionContext *scope);
-
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-};
-
-struct EncodeUriComponentFunction: FunctionObject
-{
-    EncodeUriComponentFunction(ExecutionContext *scope);
-
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-};
-
-struct EscapeFunction: FunctionObject
-{
-    EscapeFunction(ExecutionContext *scope);
-
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-};
-
-struct UnescapeFunction: FunctionObject
-{
-    UnescapeFunction(ExecutionContext *scope);
-
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+    static Value method_parseInt(ExecutionContext *context);
+    static Value method_parseFloat(ExecutionContext *context);
+    static Value method_isNaN(ExecutionContext *context);
+    static Value method_isFinite(ExecutionContext *context);
+    static Value method_decodeURI(ExecutionContext *context);
+    static Value method_decodeURIComponent(ExecutionContext *context);
+    static Value method_encodeURI(ExecutionContext *context);
+    static Value method_encodeURIComponent(ExecutionContext *context);
+    static Value method_escape(ExecutionContext *context);
+    static Value method_unescape(ExecutionContext *context);
 };
 
 } // namespace VM

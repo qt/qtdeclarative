@@ -220,16 +220,16 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     glo->defineDefaultProperty(rootContext, QStringLiteral("eval"), Value::fromObject(new (memoryManager) EvalFunction(rootContext)));
 
-    glo->defineDefaultProperty(rootContext, QStringLiteral("parseInt"), Value::fromObject(new (memoryManager) ParseIntFunction(rootContext)));
-    glo->defineDefaultProperty(rootContext, QStringLiteral("parseFloat"), Value::fromObject(new (memoryManager) ParseFloatFunction(rootContext)));
-    glo->defineDefaultProperty(rootContext, QStringLiteral("isNaN"), Value::fromObject(new (memoryManager) IsNaNFunction(rootContext)));
-    glo->defineDefaultProperty(rootContext, QStringLiteral("isFinite"), Value::fromObject(new (memoryManager) IsFiniteFunction(rootContext)));
-    glo->defineDefaultProperty(rootContext, QStringLiteral("decodeURI"), Value::fromObject(new (memoryManager) DecodeUriFunction(rootContext)));
-    glo->defineDefaultProperty(rootContext, QStringLiteral("decodeURIComponent"), Value::fromObject(new (memoryManager) DecodeUriComponentFunction(rootContext)));
-    glo->defineDefaultProperty(rootContext, QStringLiteral("encodeURI"), Value::fromObject(new (memoryManager) EncodeUriFunction(rootContext)));
-    glo->defineDefaultProperty(rootContext, QStringLiteral("encodeURIComponent"), Value::fromObject(new (memoryManager) EncodeUriComponentFunction(rootContext)));
-    glo->defineDefaultProperty(rootContext, QStringLiteral("escape"), Value::fromObject(new (memoryManager) EscapeFunction(rootContext)));
-    glo->defineDefaultProperty(rootContext, QStringLiteral("unescape"), Value::fromObject(new (memoryManager) UnescapeFunction(rootContext)));
+    glo->defineDefaultProperty(rootContext, QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("parseFloat"), GlobalFunctions::method_parseFloat, 1);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("isNaN"), GlobalFunctions::method_isNaN, 1);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("isFinite"), GlobalFunctions::method_isFinite, 1);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("decodeURI"), GlobalFunctions::method_decodeURI, 1);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("decodeURIComponent"), GlobalFunctions::method_decodeURIComponent, 1);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("encodeURI"), GlobalFunctions::method_encodeURI, 1);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("encodeURIComponent"), GlobalFunctions::method_encodeURIComponent, 1);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("escape"), GlobalFunctions::method_escape, 1);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 }
 
 ExecutionEngine::~ExecutionEngine()
