@@ -488,24 +488,27 @@ Value StringPrototype::method_search(ExecutionContext *ctx)
 Value StringPrototype::method_slice(ExecutionContext *ctx)
 {
     const QString text = getThisString(ctx);
-    const int length = text.length();
+    const double length = text.length();
 
-    int start = int (ctx->argument(0).toInteger(ctx));
-    int end = ctx->argument(1).isUndefined()
-            ? length : int (ctx->argument(1).toInteger(ctx));
+    double start = ctx->argument(0).toInteger(ctx);
+    double end = ctx->argument(1).isUndefined()
+            ? length : ctx->argument(1).toInteger(ctx);
 
     if (start < 0)
-        start = qMax(length + start, 0);
+        start = qMax(length + start, 0.);
     else
         start = qMin(start, length);
 
     if (end < 0)
-        end = qMax(length + end, 0);
+        end = qMax(length + end, 0.);
     else
         end = qMin(end, length);
 
-    int count = qMax(0, end - start);
-    return Value::fromString(ctx, text.mid(start, count));
+    const int intStart = int(start);
+    const int intEnd = int(end);
+
+    int count = qMax(0, intEnd - intStart);
+    return Value::fromString(ctx, text.mid(intStart, count));
 }
 
 Value StringPrototype::method_split(ExecutionContext *ctx)
