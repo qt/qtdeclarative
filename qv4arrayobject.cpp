@@ -275,19 +275,25 @@ Value ArrayPrototype::method_push(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
 {
-    ArrayObject *instance = ctx->thisObject.asArrayObject();
-    if (!instance)
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.reverse"));
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    uint length = getLength(ctx, instance);
 
-    int lo = 0, hi = instance->array.length() - 1;
+    int lo = 0, hi = length - 1;
 
-    // ###
     for (; lo < hi; ++lo, --hi) {
-        Value tmp = instance->__get__(ctx, lo);
-        instance->array.set(lo, instance->__get__(ctx, hi));
-        instance->array.set(hi, tmp);
+        bool loExists, hiExists;
+        Value lval = instance->__get__(ctx, lo, &loExists);
+        Value hval = instance->__get__(ctx, hi, &hiExists);
+        if (hiExists)
+            instance->__put__(ctx, lo, hval);
+        else
+            instance->__delete__(ctx, lo);
+        if (loExists)
+            instance->__put__(ctx, hi, lval);
+        else
+            instance->__delete__(ctx, hi);
     }
-    return Value::undefinedValue();
+    return Value::fromObject(instance);
 }
 
 Value ArrayPrototype::method_shift(ExecutionContext *ctx)
