@@ -149,6 +149,13 @@ static QString unescape(const QString &input)
 static const char uriReserved[] = ";/?:@&=+$,";
 static const char uriUnescaped[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()";
 
+static void addEscapeSequence(QString &output, uchar ch)
+{
+    output.append(QLatin1Char('%'));
+    output.append(QLatin1Char(toHex(ch >> 4)));
+    output.append(QLatin1Char(toHex(ch & 0xf)));
+}
+
 static QString encode(const QString &input, const QString &unescapedSet, bool *ok)
 {
     *ok = true;
@@ -158,7 +165,7 @@ static QString encode(const QString &input, const QString &unescapedSet, bool *o
     while (i < length) {
         const QChar c = input.at(i);
         if (!unescapedSet.contains(c)) {
-            ushort uc = c.unicode();
+            uint uc = c.unicode();
             if ((uc >= 0xDC00) && (uc <= 0xDFFF)) {
                 *ok = false;
                 break;
@@ -169,19 +176,29 @@ static QString encode(const QString &input, const QString &unescapedSet, bool *o
                     *ok = false;
                     break;
                 }
-                const ushort uc2 = input.at(i).unicode();
-                if ((uc < 0xDC00) || (uc > 0xDFFF)) {
+                const uint uc2 = input.at(i).unicode();
+                if ((uc2 < 0xDC00) || (uc2 > 0xDFFF)) {
                     *ok = false;
                     break;
                 }
                 uc = ((uc - 0xD800) * 0x400) + (uc2 - 0xDC00) + 0x10000;
             }
-            QString tmp(1, QChar(uc));
-            QByteArray octets = tmp.toUtf8();
-            for (int j = 0; j < octets.length(); ++j) {
-                output.append(QLatin1Char('%'));
-                output.append(QLatin1Char(toHex(octets.at(j) >> 4)));
-                output.append(QLatin1Char(toHex(octets.at(j))));
+            if (uc < 0x80) {
+                addEscapeSequence(output, (uchar)uc);
+            } else {
+                if (uc < 0x0800) {
+                    addEscapeSequence(output, 0xc0 | ((uchar) (uc >> 6)));
+                } else {
+
+                    if (QChar::requiresSurrogates(uc)) {
+                        addEscapeSequence(output, 0xf0 | ((uchar) (uc >> 18)));
+                        addEscapeSequence(output, 0x80 | (((uchar) (uc >> 12)) & 0x3f));
+                    } else {
+                        addEscapeSequence(output, 0xe0 | (((uchar) (uc >> 12)) & 0x3f));
+                    }
+                    addEscapeSequence(output, 0x80 | (((uchar) (uc >> 6)) & 0x3f));
+                }
+                addEscapeSequence(output, 0x80 | ((uchar) (uc&0x3f)));
             }
         } else {
             output.append(c);
@@ -252,7 +269,7 @@ static QString decode(const QString &input, const QString &reservedSet, bool *ok
                         goto error;
 
                     i += 2;
-                    uc = (uc << 6) + b;
+                    uc = (uc << 6) + (b & 0x3f);
                 }
                 if (uc < min_uc)
                     goto error;
@@ -601,7 +618,7 @@ Value GlobalFunctions::method_encodeURIComponent(ExecutionContext *context)
 
     QString uriString = context->argument(0).toString(context)->toQString();
     bool ok;
-    QString out = encode(uriString, QString(), &ok);
+    QString out = encode(uriString, QString(uriUnescaped), &ok);
     if (!ok)
         context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
 
