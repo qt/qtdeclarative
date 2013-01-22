@@ -87,8 +87,6 @@ public:
         delete[] _buckets;
     }
 
-    inline bool isEmpty() const { return _propertyCount == 0; }
-
     typedef PropertyTableEntry **iterator;
     inline iterator begin() const { return _properties; }
     inline iterator end() const { return _properties + _propertyCount; }
@@ -156,6 +154,7 @@ public:
         PropertyTableEntry *prop;
         if (_freeList) {
             prop = _freeList;
+            prop->name = name;
             _freeList = _freeList->next;
         } else {
             prop = new PropertyTableEntry(name);
