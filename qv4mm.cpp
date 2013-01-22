@@ -202,7 +202,7 @@ std::size_t MemoryManager::sweep()
 
 std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
 {
-//    qDebug("chunkStart @ %p, size=%x", chunkStart, size);
+//    qDebug("chunkStart @ %p, size=%x, pos=%x (%x)", chunkStart, size, size>>4, m_d->smallItems[size >> 4]);
     std::size_t freedCount = 0;
 
     Managed **f = &m_d->smallItems[size >> 4];
@@ -219,7 +219,7 @@ std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t
             if (m->markBit) {
                 m->markBit = 0;
             } else {
-//                qDebug() << "-- collecting it." << m << reinterpret_cast<VM::Managed *>(&m->data);
+//                qDebug() << "-- collecting it." << m << *f << &m->nextFree;
                 m->~Managed();
 
                 m->nextFree = *f;
@@ -227,10 +227,6 @@ std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t
                 //scribble(m, 0x99, size);
                 ++freedCount;
             }
-        } else if (!m->nextFree) {
-            m->nextFree = *f;
-            f = &m->nextFree;
-            ++freedCount;
         }
     }
 
