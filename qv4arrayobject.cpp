@@ -272,13 +272,41 @@ Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_shift(ExecutionContext *ctx)
 {
-    ArrayObject *instance = ctx->thisObject.asArrayObject();
-    if (!instance)
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.shift"));
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    uint len = getLength(ctx, instance);
 
-    Value v = instance->getValueChecked(ctx, instance->array.front());
-    instance->array.pop_front();
-    return v;
+    if (!len) {
+        if (!instance->isArray)
+            instance->__put__(ctx, ctx->engine->id_length, Value::fromInt32(0));
+        return Value::undefinedValue();
+    }
+
+    Value result = instance->getValueChecked(ctx, instance->array.front());
+
+    bool protoHasArray = false;
+    Object *p = instance;
+    while ((p = p->prototype))
+        if (p->array.length())
+            protoHasArray = true;
+
+    if (!protoHasArray && len >= instance->array.length()) {
+        instance->array.pop_front();
+    } else {
+        // do it the slow way
+        for (uint k = 1; k < len; ++k) {
+            bool exists;
+            Value v = instance->__get__(ctx, k, &exists);
+            if (exists)
+                instance->__put__(ctx, k - 1, v);
+            else
+                instance->__delete__(ctx, k - 1);
+        }
+        instance->__delete__(ctx, len - 1);
+    }
+
+    if (!instance->isArray)
+        instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(len - 1));
+    return result;
 }
 
 Value ArrayPrototype::method_slice(ExecutionContext *ctx)
@@ -393,19 +421,39 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
 {
-    ArrayObject *instance = ctx->thisObject.asArrayObject();
-    if (!instance)
-        ctx->throwUnimplemented(QStringLiteral("Array.prototype.shift"));
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    uint len = getLength(ctx, instance);
 
-    for (int i = ctx->argumentCount - 1; i >= 0; --i) {
-        Value v = ctx->argument(i);
-        instance->array.push_front(v);
+    bool protoHasArray = false;
+    Object *p = instance;
+    while ((p = p->prototype))
+        if (p->array.length())
+            protoHasArray = true;
+
+    if (!protoHasArray && len >= instance->array.length()) {
+        for (int i = ctx->argumentCount - 1; i >= 0; --i) {
+            Value v = ctx->argument(i);
+            instance->array.push_front(v);
+        }
+    } else {
+        for (uint k = len; k > 0; --k) {
+            bool exists;
+            Value v = instance->__get__(ctx, k - 1, &exists);
+            if (exists)
+                instance->__put__(ctx, k + ctx->argumentCount - 1, v);
+            else
+                instance->__delete__(ctx, k + ctx->argumentCount - 1);
+        }
+        for (uint i = 0; i < ctx->argumentCount; ++i)
+            instance->__put__(ctx, i, ctx->argument(i));
     }
+    uint newLen = len + ctx->argumentCount;
+    if (!instance->isArray)
+        instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
 
-    uint l = instance->array.length();
-    if (l < INT_MAX)
-        return Value::fromInt32(l);
-    return Value::fromDouble((double)l);
+    if (newLen < INT_MAX)
+        return Value::fromInt32(newLen);
+    return Value::fromDouble((double)newLen);
 }
 
 Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)

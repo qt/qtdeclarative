@@ -609,7 +609,7 @@ bool Array::setLength(uint newLen) {
                 it = prev;
             }
         } else {
-            PropertyDescriptor *it = values.data() + offset + values.size();
+            PropertyDescriptor *it = values.data() + values.size();
             const PropertyDescriptor *begin = values.constData() + offset + newLen;
             while (--it >= begin) {
                 if (it->type != PropertyDescriptor::Generic && !it->isConfigurable()) {
@@ -618,7 +618,7 @@ bool Array::setLength(uint newLen) {
                     break;
                 }
             }
-            values.resize(newLen);
+            values.resize(newLen + offset);
         }
     } else {
         if (newLen >= 0x100000)
