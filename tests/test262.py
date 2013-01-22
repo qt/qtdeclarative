@@ -523,6 +523,8 @@ class TestSuite(object):
 
 
 def Main():
+  # Some date tests rely on being run in pacific time.
+  os.environ["TZ"] = "PST8PDT"
   parser = BuildOptions()
   (options, args) = parser.parse_args()
   ValidateOptions(options)

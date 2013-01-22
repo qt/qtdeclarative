@@ -2,16 +2,6 @@
 S15.1.3.1_A2.5_T1
 S15.1.3.2_A2.5_T1
 
-# broken test cases
-# The test data in the 6 tests below is wrong. V8 agrees with our results and the test suite is 0.375 days off
-S15.9.3.1_A5_T1 failing
-S15.9.3.1_A5_T2 failing
-S15.9.3.1_A5_T3 failing
-S15.9.3.1_A5_T4 failing
-S15.9.3.1_A5_T5 failing
-S15.9.3.1_A5_T6 failing
-
-
 # Tests failing that are supposed to pass.
 S10.2.3_A1.1_T2 failing
 S10.2.3_A1.2_T2 failing
@@ -561,7 +551,6 @@ S15.5.4.15_A1_T7 failing
 S15.5.4.15_A1_T8 failing
 S15.5.4.15_A1_T9 failing
 15.5.4.20-4-1 failing
-S15.5.4.7_A1_T11 failing
 S15.5.4.8_A1_T4 failing
 S15.7.4.5_A1.4_T01 failing
 6.4_c failing
