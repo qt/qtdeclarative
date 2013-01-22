@@ -757,7 +757,7 @@ Value __qmljs_call_property(ExecutionContext *context, Value that, String *name,
     if (!o)
         context->throwTypeError();
 
-    return o->call(context, that, args, argc);
+    return o->call(context, thisObject, args, argc);
 }
 
 Value __qmljs_call_value(ExecutionContext *context, Value thisObject, Value func, Value *args, int argc)
