@@ -79,7 +79,7 @@ void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
     ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("isArray"), method_isArray, 1);
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("toLocalString"), method_toLocaleString, 0);
+    defineDefaultProperty(ctx, QStringLiteral("toLocaleString"), method_toLocaleString, 0);
     defineDefaultProperty(ctx, QStringLiteral("concat"), method_concat, 1);
     defineDefaultProperty(ctx, QStringLiteral("join"), method_join, 1);
     defineDefaultProperty(ctx, QStringLiteral("pop"), method_pop, 0);
