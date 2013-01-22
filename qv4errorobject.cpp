@@ -203,6 +203,7 @@ void ErrorPrototype::init(ExecutionContext *ctx, const Value &ctor, Object *obj)
     obj->defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     obj->defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
     obj->defineDefaultProperty(ctx, QStringLiteral("message"), Value::fromString(ctx, QString()));
+    obj->defineDefaultProperty(ctx, QStringLiteral("name"), Value::fromString(ctx, QStringLiteral("Error")));
 }
 
 Value ErrorPrototype::method_toString(ExecutionContext *ctx)
