@@ -58,22 +58,74 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterC
         __defineOwnProperty__(context, QStringLiteral("callee"), &pd);
         __defineOwnProperty__(context, QStringLiteral("caller"), &pd);
     } else {
-        uint enumerableParams = qMin(formalParameterCount, actualParameterCount);
-        context->engine->requireArgumentsAccessors(enumerableParams);
-        for (uint i = 0; i < (uint)enumerableParams; ++i)
+        uint numAccessors = qMin(formalParameterCount, actualParameterCount);
+        context->engine->requireArgumentsAccessors(numAccessors);
+        for (uint i = 0; i < (uint)numAccessors; ++i) {
+            mappedArguments.append(context->argument(i));
             __defineOwnProperty__(context, i, &context->engine->argumentsAccessors.at(i));
+        }
         PropertyDescriptor pd;
         pd.type = PropertyDescriptor::Data;
         pd.writable = PropertyDescriptor::Enabled;
         pd.configurable = PropertyDescriptor::Enabled;
         pd.enumberable = PropertyDescriptor::Enabled;
-        for (uint i = enumerableParams; i < qMin((uint)actualParameterCount, context->argumentCount); ++i) {
+        for (uint i = numAccessors; i < qMin((uint)actualParameterCount, context->argumentCount); ++i) {
             pd.value = context->argument(i);
             __defineOwnProperty__(context, i, &pd);
         }
         defineDefaultProperty(context, QStringLiteral("callee"), Value::fromObject(context->function));
+        isArgumentsObject = true;
     }
 }
+
+bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc)
+{
+    PropertyDescriptor *pd = array.at(index);
+    PropertyDescriptor map;
+    bool isMapped = false;
+    if (pd && index < (uint)mappedArguments.size())
+        isMapped = pd->isAccessor() && pd->get == context->engine->argumentsAccessors.at(index).get;
+
+    if (isMapped) {
+        map = *pd;
+        pd->type = PropertyDescriptor::Data;
+        pd->writable = PropertyDescriptor::Enabled;
+        pd->configurable = PropertyDescriptor::Enabled;
+        pd->enumberable = PropertyDescriptor::Enabled;
+        pd->value = mappedArguments.at(index);
+    }
+
+    isArgumentsObject = false;
+    bool strict = ctx->strictMode;
+    ctx->strictMode = false;
+    bool result = Object::__defineOwnProperty__(ctx, index, desc);
+    ctx->strictMode = strict;
+    isArgumentsObject = true;
+
+    if (isMapped && desc->isData()) {
+        if (desc->type != PropertyDescriptor::Generic) {
+            Value arg = desc->value;
+            map.set->call(ctx, Value::fromObject(this), &arg, 1);
+        }
+        if (desc->writable != PropertyDescriptor::Disabled)
+            *pd = map;
+    }
+
+    if (ctx->strictMode && !result)
+        __qmljs_throw_type_error(ctx);
+    return result;
+}
+
+void ArgumentsObject::getCollectables(QVector<Object *> &objects)
+{
+    for (int i = 0; i < mappedArguments.size(); ++i) {
+        Object *o = mappedArguments.at(i).asObject();
+        if (o)
+            objects.append(o);
+    }
+    Object::getCollectables(objects);
+}
+
 
 Value ArgumentsGetterFunction::call(ExecutionContext *ctx, Value thisObject, Value *, int)
 {
@@ -101,6 +153,7 @@ Value ArgumentsSetterFunction::call(ExecutionContext *ctx, Value thisObject, Val
     o->context->arguments[index] = argc ? args[0] : Value::undefinedValue();
     return Value::undefinedValue();
 }
+
 
 }
 }

@@ -70,9 +70,14 @@ struct ArgumentsSetterFunction: FunctionObject
 
 struct ArgumentsObject: Object {
     ExecutionContext *context;
+    QVector<Value> mappedArguments;
     ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount);
     virtual QString className() { return QStringLiteral("Arguments"); }
     virtual ArgumentsObject *asArgumentsObject() { return this; }
+
+    bool defineOwnProperty(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc);
+
+    virtual void getCollectables(QVector<Object *> &objects);
 };
 
 }

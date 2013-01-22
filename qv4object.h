@@ -137,7 +137,7 @@ struct Object: Managed {
     virtual bool __delete__(ExecutionContext *ctx, String *name);
     virtual bool __delete__(ExecutionContext *ctx, uint index);
     bool __defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *current, const PropertyDescriptor *desc);
-    virtual bool __defineOwnProperty__(ExecutionContext *ctx, String *name, const PropertyDescriptor *desc);
+    bool __defineOwnProperty__(ExecutionContext *ctx, String *name, const PropertyDescriptor *desc);
     bool __defineOwnProperty__(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc);
     bool __defineOwnProperty__(ExecutionContext *ctx, const QString &name, const PropertyDescriptor *desc);
 

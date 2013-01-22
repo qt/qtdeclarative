@@ -44,6 +44,7 @@
 #include "qv4isel_p.h"
 #include "qv4objectproto.h"
 #include "qv4stringobject.h"
+#include "qv4argumentsobject.h"
 #include "qv4mm.h"
 
 #include <private/qqmljsengine_p.h>
@@ -547,6 +548,9 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
     // 15.4.5.1, 4b
     if (isArray && index >= array.length() && !array.getLengthProperty()->isWritable())
         goto reject;
+
+    if (isArgumentsObject)
+        return static_cast<ArgumentsObject *>(this)->defineOwnProperty(ctx, index, desc);
 
     // Clause 1
     current = __getOwnProperty__(ctx, index);

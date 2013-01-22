@@ -2,6 +2,11 @@
 S15.1.3.1_A2.5_T1
 S15.1.3.2_A2.5_T1
 
+# wrong tests
+# uses octal number
+15.2.3.6-2-17-1 failing
+
+
 # Tests failing that are supposed to pass.
 10.4.2-1-1 failing
 10.4.2-1-2 failing
@@ -314,23 +319,8 @@ S15.12.2_A1 failing
 15.12.3_2-3-a-2 failing
 15.12.3_2-3-a-3 failing
 15.12.3_4-1-2 failing
-15.2.3.6-2-17-1 failing
-15.2.3.6-4-291-1 failing
-15.2.3.6-4-292-1 failing
-15.2.3.6-4-293-2 failing
-15.2.3.6-4-293-3 failing
-15.2.3.6-4-294-1 failing
-15.2.3.6-4-295-1 failing
-15.2.3.6-4-296-1 failing
-15.2.3.6-4-297-1 failing
-15.2.3.6-4-299-1 failing
-15.2.3.6-4-300-1 failing
 15.2.3.6-4-360-3 failing
 15.2.3.6-4-360-7 failing
-15.2.3.7-6-a-280 failing
-15.2.3.7-6-a-286 failing
-15.2.3.7-6-a-288 failing
-15.2.3.7-6-a-289 failing
 15.4.4.14-9-a-10 failing
 15.4.4.14-9-a-17 failing
 15.4.4.14-9-a-7 failing
