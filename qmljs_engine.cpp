@@ -228,6 +228,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     glo->defineDefaultProperty(rootContext, QStringLiteral("decodeURIComponent"), Value::fromObject(new (memoryManager) DecodeUriComponentFunction(rootContext)));
     glo->defineDefaultProperty(rootContext, QStringLiteral("encodeURI"), Value::fromObject(new (memoryManager) EncodeUriFunction(rootContext)));
     glo->defineDefaultProperty(rootContext, QStringLiteral("encodeURIComponent"), Value::fromObject(new (memoryManager) EncodeUriComponentFunction(rootContext)));
+    glo->defineDefaultProperty(rootContext, QStringLiteral("escape"), Value::fromObject(new (memoryManager) EscapeFunction(rootContext)));
+    glo->defineDefaultProperty(rootContext, QStringLiteral("unescape"), Value::fromObject(new (memoryManager) UnescapeFunction(rootContext)));
 }
 
 ExecutionEngine::~ExecutionEngine()

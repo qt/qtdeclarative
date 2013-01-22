@@ -663,3 +663,34 @@ Value EncodeUriComponentFunction::call(ExecutionContext *context, Value /*thisOb
     return Value::fromString(context, out);
 }
 
+
+EscapeFunction::EscapeFunction(ExecutionContext *scope)
+    : FunctionObject(scope)
+{
+    name = scope->engine->newString(QLatin1String("escape"));
+}
+
+Value EscapeFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
+{
+    if (!argc)
+        return Value::fromString(context, QStringLiteral("undefined"));
+
+    QString str = args->toString(context)->toQString();
+    return Value::fromString(context, escape(str));
+}
+
+
+UnescapeFunction::UnescapeFunction(ExecutionContext *scope)
+    : FunctionObject(scope)
+{
+    name = scope->engine->newString(QLatin1String("unescape"));
+}
+
+Value UnescapeFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
+{
+    if (!argc)
+        return Value::fromString(context, QStringLiteral("undefined"));
+
+    QString str = args->toString(context)->toQString();
+    return Value::fromString(context, unescape(str));
+}

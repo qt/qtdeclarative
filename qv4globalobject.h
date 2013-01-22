@@ -115,6 +115,19 @@ struct EncodeUriComponentFunction: FunctionObject
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 };
 
+struct EscapeFunction: FunctionObject
+{
+    EscapeFunction(ExecutionContext *scope);
+
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+};
+
+struct UnescapeFunction: FunctionObject
+{
+    UnescapeFunction(ExecutionContext *scope);
+
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+};
 
 } // namespace VM
 } // namespace QQmlJS
