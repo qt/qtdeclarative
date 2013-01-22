@@ -209,48 +209,68 @@ Value ArrayPrototype::method_join(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_pop(ExecutionContext *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        Value v = instance->getValueChecked(ctx, instance->array.back());
-        instance->array.pop_back();
-        return v;
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    uint len = getLength(ctx, instance);
+
+    if (!len) {
+        if (!instance->isArray)
+            instance->__put__(ctx, ctx->engine->id_length, Value::fromInt32(0));
+        return Value::undefinedValue();
     }
 
-    Value r1 = self.property(ctx, ctx->engine->id_length);
-    quint32 r2 = !r1.isUndefined() ? r1.toUInt32(ctx) : 0;
-    if (r2) {
-        String *r6 = Value::fromDouble(r2 - 1).toString(ctx);
-        Value r7 = self.property(ctx, r6);
-        self.objectValue()->__delete__(ctx, r6);
-        self.objectValue()->__put__(ctx, ctx->engine->id_length, Value::fromDouble(2 - 1));
-        return r7;
-    }
+    Value result = instance->__get__(ctx, len - 1);
 
-    self.objectValue()->__put__(ctx, ctx->engine->id_length, Value::fromDouble(0));
-    return Value::undefinedValue();
+    instance->__delete__(ctx, len - 1);
+    if (instance->isArray)
+        instance->array.setLengthUnchecked(len - 1);
+    else
+        instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(len - 1));
+    return result;
 }
 
 Value ArrayPrototype::method_push(ExecutionContext *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
-            Value val = ctx->argument(i);
-            instance->array.push_back(val);
+    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    uint len = getLength(ctx, instance);
+
+    if (len + ctx->argumentCount < len) {
+        // ughh...
+        double l = len;
+        for (double i = 0; i < ctx->argumentCount; ++i) {
+            Value idx = Value::fromDouble(l + i);
+            instance->__put__(ctx, idx.toString(ctx), ctx->argument(i));
         }
-        return Value::fromDouble(instance->array.length());
+        double newLen = l + ctx->argumentCount;
+        if (!instance->isArray)
+            instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
+        else
+            ctx->throwRangeError(Value::fromString(ctx, QStringLiteral("Array.prototype.push: Overflow")));
+        return Value::fromDouble(newLen);
     }
 
-    Value r1 = self.property(ctx, ctx->engine->id_length);
-    quint32 n = !r1.isUndefined() ? r1.toUInt32(ctx) : 0;
-    for (unsigned int index = 0; index < ctx->argumentCount; ++index, ++n) {
-        Value r3 = ctx->argument(index);
-        String *name = Value::fromDouble(n).toString(ctx);
-        self.objectValue()->__put__(ctx, name, r3);
+    bool protoHasArray = false;
+    Object *p = instance;
+    while ((p = p->prototype))
+        if (p->array.length())
+            protoHasArray = true;
+
+    if (!protoHasArray && len == instance->array.length()) {
+        for (uint i = 0; i < ctx->argumentCount; ++i) {
+            Value v = ctx->argument(i);
+            instance->array.push_back(v);
+        }
+    } else {
+        for (uint i = 0; i < ctx->argumentCount; ++i)
+            instance->__put__(ctx, len + i, ctx->argument(i));
     }
-    Value r = Value::fromDouble(n);
-    self.objectValue()->__put__(ctx, ctx->engine->id_length, r);
-    return r;
+    uint newLen = len + ctx->argumentCount;
+    if (!instance->isArray)
+        instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
+
+    if (newLen < INT_MAX)
+        return Value::fromInt32(newLen);
+    return Value::fromDouble((double)newLen);
+
 }
 
 Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
