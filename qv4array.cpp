@@ -491,7 +491,7 @@ Value Array::indexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *c
                 return Value::fromDouble(i);
         }
     } else if (sparse) {
-        for (SparseArrayNode *n = sparse->findNode(fromIndex); n && n->key() < endIndex; n = n->nextNode()) {
+        for (SparseArrayNode *n = sparse->lowerBound(fromIndex); n && n->key() < endIndex; n = n->nextNode()) {
             bool exists;
             Value value = o->getValueChecked(ctx, descriptor(n->value), &exists);
             if (exists && __qmljs_strict_equal(value, v))
