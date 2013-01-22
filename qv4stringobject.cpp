@@ -622,8 +622,9 @@ Value StringPrototype::method_substring(ExecutionContext *ctx)
     if (ctx->argumentCount > 0)
         start = ctx->argument(0).toInteger(ctx);
 
-    if (ctx->argumentCount > 1)
-        end = ctx->argument(1).toInteger(ctx);
+    Value endValue = ctx->argument(1);
+    if (!endValue.isUndefined())
+        end = endValue.toInteger(ctx);
 
     if (std::isnan(start) || start < 0)
         start = 0;
