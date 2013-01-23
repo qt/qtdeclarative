@@ -1988,7 +1988,12 @@ bool Codegen::visit(ContinueStatement *ast)
     unwindException(_loop->tryCleanup);
 
     if (ast->label.isEmpty()) {
-        _block->JUMP(_loop->continueBlock);
+        for (Loop *loop = _loop; loop; loop = loop->parent) {
+            if (loop->continueBlock) {
+                _block->JUMP(loop->continueBlock);
+                return false;
+            }
+        }
     } else {
         for (Loop *loop = _loop; loop; loop = loop->parent) {
             if (loop->labelledStatement && loop->labelledStatement->label == ast->label) {
@@ -1999,8 +2004,8 @@ bool Codegen::visit(ContinueStatement *ast)
                 return false;
             }
         }
-        throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Undefined label '%1'").arg(ast->label.toString()));
     }
+    throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Undefined label '%1'").arg(ast->label.toString()));
     return false;
 }
 
