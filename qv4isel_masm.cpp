@@ -483,11 +483,6 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
     generateFunctionCall(Assembler::Void, __qmljs_builtin_throw, arg, Assembler::ContextRegister);
 }
 
-void InstructionSelection::callBuiltinRethrow()
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_rethrow, Assembler::ContextRegister);
-}
-
 void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
 {
     generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_create_exception_handler, Assembler::ContextRegister);

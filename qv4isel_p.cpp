@@ -268,10 +268,6 @@ void InstructionSelection::callBuiltin(IR::Call *call, IR::Temp *result)
         callBuiltinThrow(arg);
     } return;
 
-    case IR::Name::builtin_rethrow:
-        callBuiltinRethrow();
-        return;
-
     case IR::Name::builtin_create_exception_handler:
         callBuiltinCreateExceptionHandler(result);
         return;

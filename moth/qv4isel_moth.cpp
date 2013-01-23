@@ -766,13 +766,6 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinRethrow()
-{
-    Instruction::CallBuiltin call;
-    call.builtin = Instruction::CallBuiltin::builtin_rethrow;
-    addInstruction(call);
-}
-
 void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
 {
     Instruction::CallBuiltin call;

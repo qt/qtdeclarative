@@ -90,7 +90,6 @@ public: // to implement by subclasses:
     virtual void callBuiltinDeleteName(const QString &name, IR::Temp *result) = 0;
     virtual void callBuiltinDeleteValue(IR::Temp *result) = 0;
     virtual void callBuiltinThrow(IR::Temp *arg) = 0;
-    virtual void callBuiltinRethrow() = 0;
     virtual void callBuiltinCreateExceptionHandler(IR::Temp *result) = 0;
     virtual void callBuiltinDeleteExceptionHandler() = 0;
     virtual void callBuiltinGetException(IR::Temp *result) = 0;

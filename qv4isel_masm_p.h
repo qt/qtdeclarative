@@ -662,7 +662,6 @@ protected:
     virtual void callBuiltinDeleteName(const QString &name, IR::Temp *result);
     virtual void callBuiltinDeleteValue(IR::Temp *result);
     virtual void callBuiltinThrow(IR::Temp *arg);
-    virtual void callBuiltinRethrow();
     virtual void callBuiltinCreateExceptionHandler(IR::Temp *result);
     virtual void callBuiltinDeleteExceptionHandler();
     virtual void callBuiltinGetException(IR::Temp *result);

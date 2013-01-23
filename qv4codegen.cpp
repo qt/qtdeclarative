@@ -2347,6 +2347,10 @@ bool Codegen::visit(ThrowStatement *ast)
 
 bool Codegen::visit(TryStatement *ast)
 {
+    if (_function->isStrict && ast->catchExpression &&
+        (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments")))
+            throwSyntaxError(ast->catchExpression->identifierToken, QCoreApplication::translate("qv4codegen", "Catch variable name may not be eval or arguments in strict mode"));
+
     IR::BasicBlock *tryBody = _function->newBasicBlock();
     IR::BasicBlock *catchBody = ast->catchExpression ?  _function->newBasicBlock() : 0;
     // We always need a finally body to clean up the exception handler
@@ -2421,17 +2425,18 @@ bool Codegen::visit(TryStatement *ast)
     _block = finallyBody;
 
     _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), deleteExceptionArgs));
+    int exception_to_rethrow  = _block->newTemp();
+    move(_block->TEMP(exception_to_rethrow), _block->CALL(_block->NAME(IR::Name::builtin_get_exception, 0, 0), 0));
+
     if (ast->finallyExpression && ast->finallyExpression->statement)
         statement(ast->finallyExpression->statement);
 
-    if (!catchBody) {
-        IR::BasicBlock *rethrowBlock = _function->newBasicBlock();
-        _block->CJUMP(_block->TEMP(hasException), rethrowBlock, after);
-        _block = rethrowBlock;
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_rethrow, 0, 0), 0));
-    } else {
-        _block->CJUMP(_block->TEMP(hasException), _throwBlock, after);
-    }
+    IR::BasicBlock *rethrowBlock = _function->newBasicBlock();
+    _block->CJUMP(_block->TEMP(hasException), rethrowBlock, after);
+    _block = rethrowBlock;
+    move(_block->TEMP(_returnAddress), _block->TEMP(exception_to_rethrow));
+    _block->JUMP(_throwBlock);
+
     _block = after;
 
     return false;

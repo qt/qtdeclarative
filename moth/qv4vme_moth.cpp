@@ -249,9 +249,6 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
             TRACE(builtin_throw, "Throwing now...%s", "");
             __qmljs_builtin_throw(TEMP(instr.argTemp), context);
             break;
-        case Instr::instr_callBuiltin::builtin_rethrow:
-            __qmljs_builtin_rethrow(context);
-            break;
         case Instr::instr_callBuiltin::builtin_create_exception_handler: {
             TRACE(builtin_create_exception_handler, "%s", "");
             void *buf = __qmljs_create_exception_handler(context);

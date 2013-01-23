@@ -226,8 +226,6 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_delete";
     case Name::builtin_throw:
         return "builtin_throw";
-    case Name::builtin_rethrow:
-        return "builtin_rethrow";
     case Name::builtin_create_exception_handler:
         return "builtin_create_exception_handler";
     case Name::builtin_delete_exception_handler:
