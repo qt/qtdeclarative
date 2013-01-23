@@ -118,6 +118,7 @@ private slots:
     void pathUpdateOnStartChanged();
     void package();
     void emptyModel();
+    void emptyPath();
     void closed();
     void pathUpdate();
     void visualDataModel();
@@ -1352,6 +1353,19 @@ void tst_QQuickPathView::emptyModel()
 
     QCOMPARE(pathview->offset(), qreal(0.0));
 
+}
+
+void tst_QQuickPathView::emptyPath()
+{
+    QQuickView *window = createView();
+
+    window->setSource(testFileUrl("emptypath.qml"));
+    qApp->processEvents();
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview != 0);
+
+    delete window;
 }
 
 void tst_QQuickPathView::closed()

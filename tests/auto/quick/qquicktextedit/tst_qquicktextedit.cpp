@@ -2329,7 +2329,7 @@ void tst_qquicktextedit::cursorDelegate()
 void tst_qquicktextedit::remoteCursorDelegate()
 {
     TestHTTPServer server(SERVER_PORT);
-    server.serveDirectory(dataDirectory());
+    server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     QQuickView view;
 
