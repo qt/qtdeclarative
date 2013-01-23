@@ -319,6 +319,7 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
         return Value::undefinedValue();
 
     ExecutionContext *ctx = context;
+
     if (!directCall) {
         // the context for eval should be the global scope
         while (ctx->parent)
@@ -329,14 +330,20 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
         return args[0];
 
     const QString code = args[0].stringValue()->toQString();
-    bool inheritContext = !context->strictMode;
-    QQmlJS::VM::Function *f = parseSource(context, QStringLiteral("eval code"),
+    bool inheritContext = !ctx->strictMode;
+
+    bool cstrict = ctx->strictMode;
+    if (!directCall)
+        ctx->strictMode = false;
+    QQmlJS::VM::Function *f = parseSource(ctx, QStringLiteral("eval code"),
                                           code, QQmlJS::Codegen::EvalCode,
                                           inheritContext);
+    ctx->strictMode = cstrict;
+
     if (!f)
         return Value::undefinedValue();
 
-    bool strict = f->isStrict || context->strictMode;
+    bool strict = f->isStrict || (directCall && context->strictMode);
 
     ExecutionContext k;
 
@@ -346,7 +353,7 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
     }
 
     // set the correct strict mode flag on the context
-    bool cstrict = ctx->strictMode;
+    cstrict = ctx->strictMode;
     ctx->strictMode = strict;
 
     Value result = f->code(ctx, f->codeData);

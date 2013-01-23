@@ -305,6 +305,8 @@ protected:
 
     virtual bool visit(VariableDeclaration *ast)
     {
+        if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == "arguments"))
+            _cg->throwSyntaxError(ast->identifierToken, QCoreApplication::translate("qv4codegen", "Variable name may not be eval or arguments in strict mode"));
         checkName(ast->name, ast->identifierToken);
         if (ast->name == QLatin1String("arguments"))
             _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
@@ -1119,6 +1121,11 @@ bool Codegen::visit(BinaryExpression *ast)
     }
 
     Result left = expression(ast->left);
+    if (_function->isStrict) {
+        if (IR::Name *n = left->asName())
+            if (*n->id == QLatin1String("eval") || *n->id == QLatin1String("arguments"))
+            throwSyntaxError(ast->left->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Variable name may not be eval or arguments in strict mode"));
+    }
     Result right = expression(ast->right);
 
     switch (ast->op) {
