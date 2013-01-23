@@ -631,7 +631,7 @@ Value __qmljs_foreach_iterator_object(Value in, ExecutionContext *ctx)
 {
     if (!in.isNull() && !in.isUndefined())
         in = __qmljs_to_object(in, ctx);
-    Object *it = ctx->engine->newForEachIteratorObject(ctx, in.objectValue());
+    Object *it = ctx->engine->newForEachIteratorObject(ctx, in.asObject());
     return Value::fromObject(it);
 }
 
