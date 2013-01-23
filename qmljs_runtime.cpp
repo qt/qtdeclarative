@@ -44,6 +44,7 @@
 #include "qv4object.h"
 #include "qv4ir_p.h"
 #include "qv4objectproto.h"
+#include "qv4globalobject.h"
 #include "private/qlocale_tools_p.h"
 
 #include <QtCore/qmath.h>
@@ -739,6 +740,9 @@ Value __qmljs_call_activation_property(ExecutionContext *context, String *name, 
         context->throwTypeError();
 
     Value thisObject = base ? Value::fromObject(base) : Value::undefinedValue();
+
+    if (o == context->engine->evalFunction && name == context->engine->id_eval)
+        return static_cast<EvalFunction *>(o)->call(context, thisObject, args, argc, true);
 
     return o->call(context, thisObject, args, argc);
 }

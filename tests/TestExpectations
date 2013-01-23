@@ -8,11 +8,7 @@ S15.1.3.2_A2.5_T1
 
 
 # Tests failing that are supposed to pass.
-10.4.2-1-1 failing
 10.4.2-1-2 failing
-10.4.2-1-3 failing
-10.4.2-1-4 failing
-10.4.2-1-5 failing
 10.4.3-1-104 failing
 10.4.3-1-106 failing
 10.4.3-1-17-s failing

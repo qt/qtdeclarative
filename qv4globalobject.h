@@ -57,6 +57,7 @@ struct EvalFunction : FunctionObject
                                              QQmlJS::Codegen::Mode mode);
 
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+    Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool directCall);
 };
 
 struct GlobalFunctions

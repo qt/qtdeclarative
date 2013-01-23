@@ -90,6 +90,7 @@ struct ReferenceErrorPrototype;
 struct SyntaxErrorPrototype;
 struct TypeErrorPrototype;
 struct URIErrorPrototype;
+struct EvalFunction;
 
 class RegExp;
 
@@ -137,6 +138,8 @@ struct ExecutionEngine
     TypeErrorPrototype *typeErrorPrototype;
     URIErrorPrototype *uRIErrorPrototype;
 
+    EvalFunction *evalFunction;
+
     QVector<PropertyDescriptor> argumentsAccessors;
 
     String *id_length;
@@ -152,6 +155,7 @@ struct ExecutionEngine
     String *id_value;
     String *id_get;
     String *id_set;
+    String *id_eval;
 
     struct ExceptionHandler {
         ExecutionContext *context;

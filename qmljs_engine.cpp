@@ -108,6 +108,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     id_value = identifier(QStringLiteral("value"));
     id_get = identifier(QStringLiteral("get"));
     id_set = identifier(QStringLiteral("set"));
+    id_eval = identifier(QStringLiteral("eval"));
 
     objectPrototype = new (memoryManager) ObjectPrototype();
     stringPrototype = new (memoryManager) StringPrototype(rootContext);
@@ -218,7 +219,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     glo->defineReadonlyProperty(this, QStringLiteral("NaN"), Value::fromDouble(nan("")));
     glo->defineReadonlyProperty(this, QStringLiteral("Infinity"), Value::fromDouble(INFINITY));
 
-    glo->defineDefaultProperty(rootContext, QStringLiteral("eval"), Value::fromObject(new (memoryManager) EvalFunction(rootContext)));
+    evalFunction = new (memoryManager) EvalFunction(rootContext);
+    glo->defineDefaultProperty(rootContext, QStringLiteral("eval"), Value::fromObject(evalFunction));
 
     glo->defineDefaultProperty(rootContext, QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
     glo->defineDefaultProperty(rootContext, QStringLiteral("parseFloat"), GlobalFunctions::method_parseFloat, 1);

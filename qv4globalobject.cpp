@@ -307,17 +307,19 @@ static QString decode(const QString &input, const QString &reservedSet, bool *ok
 }
 
 
+EvalFunction::EvalFunction(ExecutionContext *scope)
+    : FunctionObject(scope)
+{
+    name = scope->engine->id_eval;
+}
 
-Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc)
+Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc, bool directCall)
 {
     if (argc < 1)
         return Value::undefinedValue();
 
     if (!args[0].isString())
         return args[0];
-
-    // ### how to determine this correctly?
-    bool directCall = true;
 
     const QString code = args[0].stringValue()->toQString();
     QQmlJS::VM::Function *f = parseSource(context, QStringLiteral("eval code"), code, QQmlJS::Codegen::EvalCode);
@@ -326,16 +328,18 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
 
     bool strict = f->isStrict || context->strictMode;
 
-    ExecutionContext k, *ctx;
+    ExecutionContext k;
+
+    ExecutionContext *ctx = context;
     if (!directCall) {
-        qDebug() << "!direct";
-        // ###
-    } else if (strict) {
+        // the context for eval should be the global scope
+        while (ctx->parent)
+            ctx = ctx->parent;
+    }
+
+    if (strict) {
         ctx = &k;
         ctx->initCallContext(context, context->thisObject, this, args, argc);
-    } else {
-        // use the surrounding context
-        ctx = context;
     }
 
     // set the correct strict mode flag on the context
@@ -352,10 +356,11 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
     return result;
 }
 
-EvalFunction::EvalFunction(ExecutionContext *scope)
-    : FunctionObject(scope)
+
+Value EvalFunction::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
 {
-    name = scope->engine->newString(QLatin1String("eval"));
+    // indirect call
+    return call(context, thisObject, args, argc, false);
 }
 
 QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ctx,
