@@ -402,7 +402,7 @@ private:
     QStack<Environment *> _envStack;
 };
 
-Codegen::Codegen(VM::ExecutionContext *context)
+Codegen::Codegen(VM::ExecutionContext *context, bool strict)
     : _module(0)
     , _function(0)
     , _block(0)
@@ -415,7 +415,7 @@ Codegen::Codegen(VM::ExecutionContext *context)
     , _labelledStatement(0)
     , _tryCleanup(0)
     , _context(context)
-    , _strictMode(context->strictMode)
+    , _strictMode(strict)
     , _debugger(context->engine->debugger)
     , _errorHandler(0)
 {

@@ -182,7 +182,7 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
 
     IR::Module module;
 
-    Codegen cg(ctx);
+    Codegen cg(ctx, ctx->strictMode);
     IR::Function *irf = cg(QString(), fe, &module);
 
     QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(ctx->engine, &module));

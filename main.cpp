@@ -395,7 +395,8 @@ int main(int argc, char *argv[])
                     return EXIT_FAILURE;
                 }
 
-                QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode, /*inheritContext =*/ false);
+                QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode,
+                                                                                /*strictMode =*/ false, /*inheritContext =*/ false);
                 if (!f)
                     continue;
 

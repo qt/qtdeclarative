@@ -70,7 +70,7 @@ public:
 class Codegen: protected AST::Visitor
 {
 public:
-    Codegen(VM::ExecutionContext *ctx);
+    Codegen(VM::ExecutionContext *ctx, bool strict);
     Codegen(ErrorHandler *errorHandler, bool strictMode);
 
     enum Mode {

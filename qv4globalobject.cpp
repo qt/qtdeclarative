@@ -332,13 +332,9 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
     const QString code = args[0].stringValue()->toQString();
     bool inheritContext = !ctx->strictMode;
 
-    bool cstrict = ctx->strictMode;
-    if (!directCall)
-        ctx->strictMode = false;
-    QQmlJS::VM::Function *f = parseSource(ctx, QStringLiteral("eval code"),
+    QQmlJS::VM::Function *f = parseSource(context, QStringLiteral("eval code"),
                                           code, QQmlJS::Codegen::EvalCode,
-                                          inheritContext);
-    ctx->strictMode = cstrict;
+                                          (directCall && context->strictMode), inheritContext);
 
     if (!f)
         return Value::undefinedValue();
@@ -353,7 +349,7 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
     }
 
     // set the correct strict mode flag on the context
-    cstrict = ctx->strictMode;
+    bool cstrict = ctx->strictMode;
     ctx->strictMode = strict;
 
     Value result = f->code(ctx, f->codeData);
@@ -376,7 +372,7 @@ Value EvalFunction::call(ExecutionContext *context, Value thisObject, Value *arg
 QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ctx,
                                                 const QString &fileName, const QString &source,
                                                 QQmlJS::Codegen::Mode mode,
-                                                bool inheritContext)
+                                                bool strictMode, bool inheritContext)
 {
     using namespace QQmlJS;
 
@@ -428,7 +424,7 @@ QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
                 for (String **i = ctx->variables(), **ei = i + ctx->variableCount(); i < ei; ++i)
                     inheritedLocals.append(*i ? (*i)->toQString() : QString());
 
-            Codegen cg(ctx);
+            Codegen cg(ctx, strictMode);
             IR::Function *globalIRCode = cg(fileName, program, &module, mode, inheritedLocals);
             QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(vm, &module));
             if (globalIRCode)
