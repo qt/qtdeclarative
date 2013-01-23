@@ -683,19 +683,10 @@ void InstructionSelection::visitRet(IR::Ret *s)
 
 void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result)
 {
-    const int scratchIndex = scratchTempIndex();
-
-    Instruction::LoadName load;
-    load.name = engine()->newString(*func->id);
-    load.targetTempIndex = scratchIndex;
-    addInstruction(load);
-
-    const int targetTempIndex = result ? result->index : scratchTempIndex();
-
-    Instruction::CallValue call;
+    Instruction::CallActivationProperty call;
+    call.name = engine()->newString(*func->id);
     prepareCallArgs(args, call.argc, call.args);
-    call.destIndex = scratchIndex;
-    call.targetTempIndex = targetTempIndex;
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
     addInstruction(call);
 }
 
@@ -817,7 +808,6 @@ void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR:
 {
     Instruction::CallBuiltinForeachNextPropertyName call;
     call.argTemp = arg->index;
-    qDebug("result index: %d", result ? result->index : -1);
     call.targetTempIndex = result ? result->index : scratchTempIndex();
     addInstruction(call);
 }

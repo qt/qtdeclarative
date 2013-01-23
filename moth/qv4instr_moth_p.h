@@ -18,6 +18,7 @@
     F(Push, push) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
+    F(CallActivationProperty, callActivationProperty) \
     F(CallBuiltin, callBuiltin) \
     F(CallBuiltinForeachIteratorObject, callBuiltinForeachIteratorObject) \
     F(CallBuiltinForeachNextPropertyName, callBuiltinForeachNextPropertyName) \
@@ -148,6 +149,13 @@ union Instr
         MOTH_INSTR_HEADER
         VM::String *name;
         int baseTemp;
+        quint32 argc;
+        quint32 args;
+        int targetTempIndex;
+    };
+    struct instr_callActivationProperty {
+        MOTH_INSTR_HEADER
+        VM::String *name;
         quint32 argc;
         quint32 args;
         int targetTempIndex;
@@ -321,6 +329,7 @@ union Instr
     instr_push push;
     instr_callValue callValue;
     instr_callProperty callProperty;
+    instr_callActivationProperty callActivationProperty;
     instr_callBuiltin callBuiltin;
     instr_callBuiltinForeachIteratorObject callBuiltinForeachIteratorObject;
     instr_callBuiltinForeachNextPropertyName callBuiltinForeachNextPropertyName;

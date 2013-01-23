@@ -221,7 +221,8 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         int argStart = instr.args - context->variableCount();
         TRACE(Call, "value index = %d, argStart = %d, argc = %d, result temp index = %d", instr.destIndex, argStart, instr.argc, instr.targetTempIndex);
         VM::Value *args = stack + argStart;
-        TEMP(instr.targetTempIndex) = __qmljs_call_value(context, VM::Value::undefinedValue(), TEMP(instr.destIndex), args, instr.argc);
+        VM::Value result = __qmljs_call_value(context, VM::Value::undefinedValue(), TEMP(instr.destIndex), args, instr.argc);
+        TEMP(instr.targetTempIndex) = result;
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
@@ -232,6 +233,14 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         VM::Value base = TEMP(instr.baseTemp);
         TEMP(instr.targetTempIndex) = __qmljs_call_property(context, base, instr.name, args, instr.argc);
     MOTH_END_INSTR(CallProperty)
+
+    MOTH_BEGIN_INSTR(CallActivationProperty)
+        int argStart = instr.args - context->variableCount();
+    // TODO: change this assert everywhere to include a minimum
+    // TODO: the args calculation is duplicate code, fix that
+        VM::Value *args = stack + argStart;
+        TEMP(instr.targetTempIndex) = __qmljs_call_activation_property(context, instr.name, args, instr.argc);
+    MOTH_END_INSTR(CallActivationProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltin)
         // TODO: split this into separate instructions
