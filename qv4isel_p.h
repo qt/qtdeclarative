@@ -101,11 +101,11 @@ public: // to implement by subclasses:
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name) = 0;
     virtual void callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter) = 0;
     virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value) = 0;
-    virtual void callValue(IR::Call *c, IR::Temp *temp) = 0;
-    virtual void callProperty(IR::Call *c, IR::Temp *temp) = 0;
+    virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result) = 0;
+    virtual void callProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result) = 0;
     virtual void constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result) = 0;
-    virtual void constructProperty(IR::New *ctor, IR::Temp *result) = 0;
-    virtual void constructValue(IR::New *call, IR::Temp *result) = 0;
+    virtual void constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result) = 0;
+    virtual void constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result) = 0;
     virtual void loadThisObject(IR::Temp *temp) = 0;
     virtual void loadConst(IR::Const *sourceConst, IR::Temp *targetTemp) = 0;
     virtual void loadString(const QString &str, IR::Temp *targetTemp) = 0;

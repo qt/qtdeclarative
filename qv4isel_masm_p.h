@@ -673,8 +673,8 @@ protected:
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name);
     virtual void callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter);
     virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value);
-    virtual void callProperty(IR::Call *call, IR::Temp *result);
-    virtual void callValue(IR::Call *call, IR::Temp *result);
+    virtual void callProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result);
+    virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);
     virtual void loadThisObject(IR::Temp *temp);
     virtual void loadConst(IR::Const *sourceConst, IR::Temp *targetTemp);
     virtual void loadString(const QString &str, IR::Temp *targetTemp);
@@ -723,8 +723,8 @@ protected:
 
     VM::String *identifier(const QString &s);
     virtual void constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result);
-    virtual void constructProperty(IR::New *ctor, IR::Temp *result);
-    virtual void constructValue(IR::New *call, IR::Temp *result);
+    virtual void constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result);
+    virtual void constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);
 
     virtual void visitJump(IR::Jump *);
     virtual void visitCJump(IR::CJump *);

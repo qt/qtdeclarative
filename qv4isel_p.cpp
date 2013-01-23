@@ -102,11 +102,11 @@ void InstructionSelection::visitMove(IR::Move *s)
                 if (Name *func = ctor->base->asName()) {
                     constructActivationProperty(func, ctor->args, t);
                     return;
-                } else if (ctor->base->asMember()) {
-                    constructProperty(ctor, t);
+                } else if (IR::Member *member = ctor->base->asMember()) {
+                    constructProperty(member->base->asTemp(), *member->name, ctor->args, t);
                     return;
-                } else if (ctor->base->asTemp()) {
-                    constructValue(ctor, t);
+                } else if (IR::Temp *value = ctor->base->asTemp()) {
+                    constructValue(value, ctor->args, t);
                     return;
                 }
             } else if (IR::Member *m = s->source->asMember()) {
@@ -132,11 +132,11 @@ void InstructionSelection::visitMove(IR::Move *s)
                 if (c->base->asName()) {
                     callBuiltin(c, t);
                     return;
-                } else if (c->base->asMember()) {
-                    callProperty(c, t);
+                } else if (Member *member = c->base->asMember()) {
+                    callProperty(member->base, *member->name, c->args, t);
                     return;
-                } else if (c->base->asTemp()) {
-                    callValue(c, t);
+                } else if (IR::Temp *value = c->base->asTemp()) {
+                    callValue(value, c->args, t);
                     return;
                 }
             }
@@ -206,10 +206,10 @@ void InstructionSelection::visitExp(IR::Exp *s)
         // These are calls where the result is ignored.
         if (c->base->asName()) {
             callBuiltin(c, 0);
-        } else if (c->base->asTemp()) {
-            callValue(c, 0);
-        } else if (c->base->asMember()) {
-            callProperty(c, 0);
+        } else if (Temp *value = c->base->asTemp()) {
+            callValue(value, c->args, 0);
+        } else if (Member *member = c->base->asMember()) {
+            callProperty(member->base, *member->name, c->args, 0);
         } else {
             Q_UNIMPLEMENTED();
         }

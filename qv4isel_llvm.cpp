@@ -448,14 +448,14 @@ void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QSt
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callValue(IR::Call *c, IR::Temp *temp)
+void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callProperty(IR::Call *c, IR::Temp *temp)
+void InstructionSelection::callProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
@@ -471,14 +471,14 @@ void InstructionSelection::constructActivationProperty(IR::Name *func,
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
+void InstructionSelection::constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
+void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");

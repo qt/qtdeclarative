@@ -543,14 +543,11 @@ void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QSt
                          object, identifier(name), value, Assembler::ContextRegister);
 }
 
-void InstructionSelection::callValue(IR::Call *call, IR::Temp *result)
+void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
 {
-    IR::Temp *baseTemp = call->base->asTemp();
-    assert(baseTemp != 0);
-
-    int argc = prepareVariableArguments(call->args);
+    int argc = prepareVariableArguments(args);
     IR::Temp* thisObject = 0;
-    generateFunctionCall(result, __qmljs_call_value, Assembler::ContextRegister, thisObject, baseTemp, baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    generateFunctionCall(result, __qmljs_call_value, Assembler::ContextRegister, thisObject, value, baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
 }
 
 void InstructionSelection::loadThisObject(IR::Temp *temp)
@@ -726,14 +723,16 @@ void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR:
     }
 }
 
-void InstructionSelection::callProperty(IR::Call *call, IR::Temp *result)
+void InstructionSelection::callProperty(IR::Temp *base, const QString &name,
+                                        IR::ExprList *args, IR::Temp *result)
 {
-    IR::Member *member = call->base->asMember();
-    assert(member != 0);
-    assert(member->base->asTemp() != 0);
+    assert(base != 0);
 
-    int argc = prepareVariableArguments(call->args);
-    generateFunctionCall(result, __qmljs_call_property, Assembler::ContextRegister, member->base->asTemp(), identifier(*member->name), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    int argc = prepareVariableArguments(args);
+    generateFunctionCall(result, __qmljs_call_property,
+                         Assembler::ContextRegister, base, identifier(name),
+                         baseAddressForCallArguments(),
+                         Assembler::TrustedImm32(argc));
 }
 
 String *InstructionSelection::identifier(const QString &s)
@@ -748,23 +747,18 @@ void InstructionSelection::constructActivationProperty(IR::Name *func, IR::ExprL
     callRuntimeMethod(result, __qmljs_construct_activation_property, func, args);
 }
 
-void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
+void InstructionSelection::constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
 {
-    IR::Member *member = call->base->asMember();
-    assert(member != 0);
-    assert(member->base->asTemp() != 0);
-
-    int argc = prepareVariableArguments(call->args);
-    generateFunctionCall(result, __qmljs_construct_property, Assembler::ContextRegister, member->base->asTemp(), identifier(*member->name), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    int argc = prepareVariableArguments(args);
+    generateFunctionCall(result, __qmljs_construct_property, Assembler::ContextRegister, base, identifier(name), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
 }
 
-void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
+void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
 {
-    IR::Temp *baseTemp = call->base->asTemp();
-    assert(baseTemp != 0);
+    assert(value != 0);
 
-    int argc = prepareVariableArguments(call->args);
-    generateFunctionCall(result, __qmljs_construct_value, Assembler::ContextRegister, baseTemp, baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    int argc = prepareVariableArguments(args);
+    generateFunctionCall(result, __qmljs_construct_value, Assembler::ContextRegister, value, baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
 }
 
 void InstructionSelection::visitJump(IR::Jump *s)

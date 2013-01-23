@@ -329,28 +329,22 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     delete[] codeStart;
 }
 
-void InstructionSelection::callValue(IR::Call *c, IR::Temp *result)
+void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
 {
-    IR::Temp *t = c->base->asTemp();
-    Q_ASSERT(t);
-
     Instruction::CallValue call;
-    prepareCallArgs(c->args, call.argc, call.args);
-    call.destIndex = t->index;
+    prepareCallArgs(args, call.argc, call.args);
+    call.destIndex = value->index;
     call.targetTempIndex = result ? result->index : scratchTempIndex();
     addInstruction(call);
 }
 
-void InstructionSelection::callProperty(IR::Call *c, IR::Temp *result)
+void InstructionSelection::callProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
 {
-    IR::Member *m = c->base->asMember();
-    Q_ASSERT(m);
-
     // call the property on the loaded base
     Instruction::CallProperty call;
-    call.baseTemp = m->base->asTemp()->index;
-    call.name = engine()->newString(*m->name);
-    prepareCallArgs(c->args, call.argc, call.args);
+    call.baseTemp = base->index;
+    call.name = engine()->newString(name);
+    prepareCallArgs(args, call.argc, call.args);
     call.targetTempIndex = result ? result->index : scratchTempIndex();
     addInstruction(call);
 }
@@ -366,25 +360,21 @@ void InstructionSelection::constructActivationProperty(IR::Name *func,
     addInstruction(create);
 }
 
-void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
+void InstructionSelection::constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
 {
-    IR::Member *member = call->base->asMember();
-    assert(member != 0);
-    assert(member->base->asTemp() != 0);
-
     Instruction::CreateProperty create;
-    create.base = member->base->asTemp()->index;
-    create.name = engine()->newString(*member->name);
-    prepareCallArgs(call->args, create.argc, create.args);
+    create.base = base->index;
+    create.name = engine()->newString(name);
+    prepareCallArgs(args, create.argc, create.args);
     create.targetTempIndex = result->index;
     addInstruction(create);
 }
 
-void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
+void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
 {
     Instruction::CreateValue create;
-    create.func = call->base->asTemp()->index;
-    prepareCallArgs(call->args, create.argc, create.args);
+    create.func = value->index;
+    prepareCallArgs(args, create.argc, create.args);
     create.targetTempIndex = result->index;
     addInstruction(create);
 }
