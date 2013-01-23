@@ -1888,6 +1888,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     IR::ExprList *throwArgs = function->New<IR::ExprList>();
     throwArgs->expr = throwBlock->TEMP(returnAddress);
     throwBlock->EXP(throwBlock->CALL(throwBlock->NAME(IR::Name::builtin_throw, /*line*/0, /*column*/0), throwArgs));
+    Loop *loop = 0;
 
     qSwap(_function, function);
     qSwap(_block, entryBlock);
@@ -1895,6 +1896,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_throwBlock, throwBlock);
     qSwap(_returnAddress, returnAddress);
     qSwap(_tryCleanup, tryCleanup);
+    qSwap(_loop, loop);
 
     for (FormalParameterList *it = formals; it; it = it->next) {
         _function->RECEIVE(it->name.toString());
@@ -1928,6 +1930,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_throwBlock, throwBlock);
     qSwap(_returnAddress, returnAddress);
     qSwap(_tryCleanup, tryCleanup);
+    qSwap(_loop, loop);
 
     leaveEnvironment();
 
@@ -1987,45 +1990,45 @@ bool Codegen::visit(BreakStatement *ast)
 {
     if (!_loop)
         throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Break outside of loop"));
-    unwindException(_loop->tryCleanup);
+    Loop *loop = 0;
     if (ast->label.isEmpty())
-        _block->JUMP(_loop->breakBlock);
+        loop = _loop;
     else {
-        for (Loop *loop = _loop; loop; loop = loop->parent) {
-            if (loop->labelledStatement && loop->labelledStatement->label == ast->label) {
-                _block->JUMP(loop->breakBlock);
-                return false;
-            }
+        for (loop = _loop; loop; loop = loop->parent) {
+            if (loop->labelledStatement && loop->labelledStatement->label == ast->label)
+                break;
         }
-        throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Undefined label '%1'").arg(ast->label.toString()));
+        if (!loop)
+            throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Undefined label '%1'").arg(ast->label.toString()));
     }
-
+    unwindException(loop->tryCleanup);
+    _block->JUMP(loop->breakBlock);
     return false;
 }
 
 bool Codegen::visit(ContinueStatement *ast)
 {
-    unwindException(_loop->tryCleanup);
-
+    Loop *loop = 0;
     if (ast->label.isEmpty()) {
-        for (Loop *loop = _loop; loop; loop = loop->parent) {
-            if (loop->continueBlock) {
-                _block->JUMP(loop->continueBlock);
-                return false;
-            }
+        for (loop = _loop; loop; loop = loop->parent) {
+            if (loop->continueBlock)
+                break;
         }
     } else {
-        for (Loop *loop = _loop; loop; loop = loop->parent) {
+        for (loop = _loop; loop; loop = loop->parent) {
             if (loop->labelledStatement && loop->labelledStatement->label == ast->label) {
-                if (! loop->continueBlock)
-                    break;
-
-                _block->JUMP(loop->continueBlock);
-                return false;
+                if (!loop->continueBlock)
+                    loop = 0;
+                break;
             }
         }
+        if (!loop)
+            throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Undefined label '%1'").arg(ast->label.toString()));
     }
-    throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Undefined label '%1'").arg(ast->label.toString()));
+    if (!loop)
+        throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "continue outside of loop"));
+    unwindException(loop->tryCleanup);
+    _block->JUMP(loop->continueBlock);
     return false;
 }
 
