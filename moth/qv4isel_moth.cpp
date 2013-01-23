@@ -608,24 +608,15 @@ void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR:
     addInstruction(imo);
 }
 
-void InstructionSelection::prepareCallArg(IR::Expr *e, quint32 &argc, quint32 &args)
-{
-    IR::ExprList exprs;
-    exprs.init(e);
-    prepareCallArgs(&exprs, argc, args);
-}
-
 void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint32 &args)
 {
     bool singleArgIsTemp = false;
     if (e && e->next == 0) {
-        // ok, only 1 argument in the cal...
+        // ok, only 1 argument in the call...
         const int idx = e->expr->asTemp()->index;
-        if (idx >= 0) {
-            // not an argument to this function...
-            // so if it's not a local, we're in:
-            singleArgIsTemp = idx >= _function->locals.size();
-        }
+        // We can only pass a reference into the stack, which holds temps that
+        // are not arguments (idx >= 0) nor locals (idx >= localCound).
+        singleArgIsTemp = idx >= _function->locals.size();
     }
 
     if (singleArgIsTemp) {
@@ -790,7 +781,7 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
 {
     Instruction::CallBuiltin call;
     call.builtin = Instruction::CallBuiltin::builtin_throw;
-    prepareCallArg(arg, call.argc, call.args);
+    call.argTemp = arg->index;
     addInstruction(call);
 }
 
@@ -826,18 +817,17 @@ void InstructionSelection::callBuiltinGetException(IR::Temp *result)
 
 void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result)
 {
-    Instruction::CallBuiltin call;
-    call.builtin = Instruction::CallBuiltin::builtin_foreach_iterator_object;
-    prepareCallArg(arg, call.argc, call.args);
+    Instruction::CallBuiltinForeachIteratorObject call;
+    call.argTemp = arg->index;
     call.targetTempIndex = result ? result->index : scratchTempIndex();
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result)
 {
-    Instruction::CallBuiltin call;
-    call.builtin = Instruction::CallBuiltin::builtin_foreach_next_property_name;
-    prepareCallArg(arg, call.argc, call.args);
+    Instruction::CallBuiltinForeachNextPropertyName call;
+    call.argTemp = arg->index;
+    qDebug("result index: %d", result ? result->index : -1);
     call.targetTempIndex = result ? result->index : scratchTempIndex();
     addInstruction(call);
 }
@@ -846,8 +836,7 @@ void InstructionSelection::callBuiltinPushWith(IR::Temp *arg)
 {
     Instruction::CallBuiltin call;
     call.builtin = Instruction::CallBuiltin::builtin_push_with;
-    prepareCallArg(arg, call.argc, call.args);
-    assert(call.argc == 1);
+    call.argTemp = arg->index;
     addInstruction(call);
 }
 

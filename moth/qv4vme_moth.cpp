@@ -123,6 +123,9 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 #endif
         )
 {
+#ifdef DO_TRACE_INSTR
+    qDebug("Starting VME with context=%p and code=%p", context, code);
+#endif // DO_TRACE_INSTR
 
 #ifdef MOTH_THREADED_INTERPRETER
     if (storeJumpTable) {
@@ -165,7 +168,8 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 
     MOTH_BEGIN_INSTR(LoadName)
         TRACE(inline, "property name = %s", instr.name->toQString().toUtf8().constData());
-        TEMP(instr.targetTempIndex) = __qmljs_get_activation_property(context, instr.name);
+        VM::Value val = __qmljs_get_activation_property(context, instr.name);
+        TEMP(instr.targetTempIndex) = val;
     MOTH_END_INSTR(LoadName)
 
     MOTH_BEGIN_INSTR(StoreName)
@@ -214,35 +218,34 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
             }
         }
 #endif // DO_TRACE_INSTR
-        quint32 argStart = instr.args - context->variableCount();
+        int argStart = instr.args - context->variableCount();
         TRACE(Call, "value index = %d, argStart = %d, argc = %d, result temp index = %d", instr.destIndex, argStart, instr.argc, instr.targetTempIndex);
         VM::Value *args = stack + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_call_value(context, VM::Value::undefinedValue(), TEMP(instr.destIndex), args, instr.argc);
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
-        quint32 argStart = instr.args - context->variableCount();
+        int argStart = instr.args - context->variableCount();
+    // TODO: change this assert everywhere to include a minimum
+    // TODO: the args calculation is duplicate code, fix that
         VM::Value *args = stack + argStart;
         VM::Value base = TEMP(instr.baseTemp);
         TEMP(instr.targetTempIndex) = __qmljs_call_property(context, base, instr.name, args, instr.argc);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltin)
-        quint32 argStart = instr.args - context->variableCount();
-        VM::Value *args = stack + argStart;
-        void *buf;
+        // TODO: split this into separate instructions
         switch (instr.builtin) {
         case Instr::instr_callBuiltin::builtin_throw:
             TRACE(builtin_throw, "Throwing now...%s", "");
-            Q_ASSERT(instr.argc == 1);
-            __qmljs_builtin_throw(args[0], context);
+            __qmljs_builtin_throw(TEMP(instr.argTemp), context);
             break;
         case Instr::instr_callBuiltin::builtin_rethrow:
             __qmljs_builtin_rethrow(context);
             break;
         case Instr::instr_callBuiltin::builtin_create_exception_handler: {
             TRACE(builtin_create_exception_handler, "%s", "");
-            buf = __qmljs_create_exception_handler(context);
+            void *buf = __qmljs_create_exception_handler(context);
             // The targetTempIndex is the only value we need from the instr to
             // continue execution when an exception is caught.
             int targetTempIndex = instr.targetTempIndex;
@@ -266,17 +269,8 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         case Instr::instr_callBuiltin::builtin_get_exception:
             TEMP(instr.targetTempIndex) = __qmljs_get_exception(context);
             break;
-        case Instr::instr_callBuiltin::builtin_foreach_iterator_object:
-            Q_ASSERT(instr.argc == 1);
-            TEMP(instr.targetTempIndex) = __qmljs_foreach_iterator_object(args[0], context);
-            break;
-        case Instr::instr_callBuiltin::builtin_foreach_next_property_name:
-            Q_ASSERT(instr.argc == 1);
-            TEMP(instr.targetTempIndex) = __qmljs_foreach_next_property_name(args[0]);
-            break;
         case Instr::instr_callBuiltin::builtin_push_with:
-            Q_ASSERT(instr.argc == 1);
-            __qmljs_builtin_push_with(args[0], context);
+            __qmljs_builtin_push_with(TEMP(instr.argTemp), context);
             break;
         case Instr::instr_callBuiltin::builtin_pop_with:
             __qmljs_builtin_pop_with(context);
@@ -286,6 +280,18 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
             Q_UNREACHABLE();
         }
     MOTH_END_INSTR(CallBuiltin)
+
+    MOTH_BEGIN_INSTR(CallBuiltinForeachIteratorObject)
+        VM::Value &obj = TEMP(instr.argTemp);
+        VM::Value it = __qmljs_foreach_iterator_object(obj, context);
+        TEMP(instr.targetTempIndex) = it;
+    MOTH_END_INSTR(CallBuiltinForeachIteratorObject)
+
+    MOTH_BEGIN_INSTR(CallBuiltinForeachNextPropertyName)
+        VM::Value &iter = TEMP(instr.argTemp);
+        VM::Value val = __qmljs_foreach_next_property_name(iter);
+        TEMP(instr.targetTempIndex) = val;
+    MOTH_END_INSTR(CallBuiltinForeachNextPropertyName)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteMember)
         TEMP(instr.targetTempIndex) = __qmljs_delete_member(context, TEMP(instr.base), instr.member);
@@ -328,20 +334,20 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinDefineProperty)
 
     MOTH_BEGIN_INSTR(CreateValue)
-        quint32 argStart = instr.args - context->variableCount();
+        int argStart = instr.args - context->variableCount();
         VM::Value *args = stack + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_value(context, TEMP(instr.func), args, instr.argc);
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
-        quint32 argStart = instr.args - context->variableCount();
+        int argStart = instr.args - context->variableCount();
         VM::Value *args = stack + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_property(context, TEMP(instr.base), instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
         TRACE(inline, "property name = %s, argc = %d", instr.name->toQString().toUtf8().constData(), instr.argc);
-        quint32 argStart = instr.args - context->variableCount();
+        int argStart = instr.args - context->variableCount();
         VM::Value *args = stack + argStart;
         TEMP(instr.targetTempIndex) = __qmljs_construct_activation_property(context, instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateActivationProperty)
@@ -392,6 +398,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(InplaceMemberOp)
 
     MOTH_BEGIN_INSTR(InplaceNameOp)
+        TRACE(name, "%s", instr.targetName->toQString().toUtf8().constData());
         VM::Value source = instr.sourceIsTemp ? TEMP(instr.source.tempIndex) : instr.source.value;
         instr.alu(source,
                   instr.targetName,

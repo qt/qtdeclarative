@@ -78,7 +78,6 @@ private:
     };
 
     void simpleMove(IR::Move *);
-    void prepareCallArg(IR::Expr *e, quint32 &argc, quint32 &args);
     void prepareCallArgs(IR::ExprList *, quint32 &, quint32 &);
 
     int outgoingArgumentTempStart() const { return _function->tempCount; }

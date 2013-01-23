@@ -19,6 +19,8 @@
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
     F(CallBuiltin, callBuiltin) \
+    F(CallBuiltinForeachIteratorObject, callBuiltinForeachIteratorObject) \
+    F(CallBuiltinForeachNextPropertyName, callBuiltinForeachNextPropertyName) \
     F(CallBuiltinDeleteMember, callBuiltinDeleteMember) \
     F(CallBuiltinDeleteSubscript, callBuiltinDeleteSubscript) \
     F(CallBuiltinDeleteName, callBuiltinDeleteName) \
@@ -158,13 +160,20 @@ union Instr
             builtin_create_exception_handler,
             builtin_delete_exception_handler,
             builtin_get_exception,
-            builtin_foreach_iterator_object,
-            builtin_foreach_next_property_name,
             builtin_push_with,
             builtin_pop_with
         } builtin;
-        quint32 argc;
-        quint32 args;
+        int argTemp;
+        int targetTempIndex;
+    };
+    struct instr_callBuiltinForeachIteratorObject {
+        MOTH_INSTR_HEADER
+        int argTemp;
+        int targetTempIndex;
+    };
+    struct instr_callBuiltinForeachNextPropertyName {
+        MOTH_INSTR_HEADER
+        int argTemp;
         int targetTempIndex;
     };
     struct instr_callBuiltinDeleteMember {
@@ -313,6 +322,8 @@ union Instr
     instr_callValue callValue;
     instr_callProperty callProperty;
     instr_callBuiltin callBuiltin;
+    instr_callBuiltinForeachIteratorObject callBuiltinForeachIteratorObject;
+    instr_callBuiltinForeachNextPropertyName callBuiltinForeachNextPropertyName;
     instr_callBuiltinDeleteMember callBuiltinDeleteMember;
     instr_callBuiltinDeleteSubscript callBuiltinDeleteSubscript;
     instr_callBuiltinDeleteName callBuiltinDeleteName;
