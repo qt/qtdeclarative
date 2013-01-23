@@ -2172,7 +2172,7 @@ bool Codegen::visit(LabelledStatement *ast)
             AST::cast<AST::LocalForStatement *>(ast->statement) ||
             AST::cast<AST::LocalForEachStatement *>(ast->statement)) {
         statement(ast->statement); // labelledStatement will be associated with the ast->statement's loop.
-    } else if (_loop) {
+    } else {
         IR::BasicBlock *breakBlock = _function->newBasicBlock();
         enterLoop(ast->statement, breakBlock, /*continueBlock*/ 0);
         statement(ast->statement);
