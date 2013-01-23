@@ -1425,6 +1425,17 @@ QQmlListModelParser::ListInstruction *QQmlListModelParser::ListModelData::instru
 /*!
     \qmltype ListModel
     \instantiates QQmlListModel
+    \inqmlmodule QtQml.Models 2
+    \brief Defines a free-form list data source
+
+    The ListModel is a simple container of ListElement definitions, each containing data roles.
+    The contents can be defined dynamically, or explicitly in QML.
+
+    This type is also available in the QtQuick 2 import. For full documentation, see \l QtQuick2::ListModel
+*/
+/*!
+    \qmltype ListModel
+    \instantiates QQmlListModel
     \inqmlmodule QtQuick 2
     \brief Defines a free-form list data source
     \ingroup qtquick-models
@@ -2521,6 +2532,16 @@ bool QQmlListModelParser::definesEmptyList(const QString &s)
 }
 
 
+/*!
+    \qmltype ListElement
+    \instantiates QQmlListElement
+    \inqmlmodule QtQml.Models 2
+    \brief Defines a data item in a ListModel
+
+    List elements are defined inside ListModel definitions, and represent items in a list.
+
+    This type is also available in the QtQuick 2 import. For full documentation, see \l QtQuick2::ListElement
+*/
 /*!
     \qmltype ListElement
     \instantiates QQmlListElement

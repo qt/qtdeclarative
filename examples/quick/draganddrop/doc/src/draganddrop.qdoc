@@ -49,7 +49,7 @@
 
     \section2 GridView adds drag and drop to a GridView, allowing you to reorder the list.
 
-    It uses a VisualDataModel to move a delegate item to the position of another item
+    It uses a DelegateModel to move a delegate item to the position of another item
     it is dragged over.
 
     \snippet quick/draganddrop/views/gridview.qml 0

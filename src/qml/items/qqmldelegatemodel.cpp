@@ -126,16 +126,36 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
     \brief Encapsulates a model and delegate
 
     The VisualDataModel type encapsulates a model and the delegate that will
+    be instantiated for items in a model.
+
+    This type is provided by QtQuick 2 for compatibility reasons. The same implementation
+    is now primarily available as DelegateModel in the QtQml.Models module.
+
+    \sa {QtQml.Models2::DelegateModel}
+*/
+/*!
+    \qmltype DelegateModel
+    \instantiates QQmlDelegateModel
+    \inqmlmodule QtQml.Models 2
+    \brief Encapsulates a model and delegate
+
+    The DelegateModel type encapsulates a model and the delegate that will
     be instantiated for items in the model.
 
-    It is usually not necessary to create a VisualDataModel.
+    This element is also available as DelegateModel in the QtQuick module. For full details,
+    see the \l DelegateModel documentation.
+
+    The DelegateModel type encapsulates a model and the delegate that will
+    be instantiated for items in the model.
+
+    It is usually not necessary to create a DelegateModel.
     However, it can be useful for manipulating and accessing the \l modelIndex
     when a QAbstractItemModel subclass is used as the
-    model. Also, VisualDataModel is used together with \l Package to
-    provide delegates to multiple views, and with VisualDataGroup to sort and filter
+    model. Also, DelegateModel is used together with \l Package to
+    provide delegates to multiple views, and with DelegateModelGroup to sort and filter
     delegate items.
 
-    The example below illustrates using a VisualDataModel with a ListView.
+    The example below illustrates using a DelegateModel with a ListView.
 
     \snippet qml/visualdatamodel.qml 0
 */
@@ -173,10 +193,10 @@ void QQmlDelegateModelPrivate::init()
     Q_Q(QQmlDelegateModel);
     m_compositor.setRemoveGroups(Compositor::GroupMask & ~Compositor::PersistedFlag);
 
-    m_items = new QQmlDataGroup(QStringLiteral("items"), q, Compositor::Default, q);
+    m_items = new QQmlDelegateModelGroup(QStringLiteral("items"), q, Compositor::Default, q);
     m_items->setDefaultInclude(true);
-    m_persistedItems = new QQmlDataGroup(QStringLiteral("persistedItems"), q, Compositor::Persisted, q);
-    QQmlDataGroupPrivate::get(m_items)->emitters.insert(this);
+    m_persistedItems = new QQmlDelegateModelGroup(QStringLiteral("persistedItems"), q, Compositor::Persisted, q);
+    QQmlDelegateModelGroupPrivate::get(m_items)->emitters.insert(this);
 }
 
 QQmlDelegateModel::QQmlDelegateModel()
@@ -230,9 +250,9 @@ void QQmlDelegateModel::componentComplete()
     QStringList groupNames;
     groupNames.append(QStringLiteral("items"));
     groupNames.append(QStringLiteral("persistedItems"));
-    if (QQmlDataGroupPrivate::get(d->m_items)->defaultInclude)
+    if (QQmlDelegateModelGroupPrivate::get(d->m_items)->defaultInclude)
         defaultGroups |= Compositor::DefaultFlag;
-    if (QQmlDataGroupPrivate::get(d->m_persistedItems)->defaultInclude)
+    if (QQmlDelegateModelGroupPrivate::get(d->m_persistedItems)->defaultInclude)
         defaultGroups |= Compositor::PersistedFlag;
     for (int i = Compositor::MinimumGroupCount; i < d->m_groupCount; ++i) {
         QString name = d->m_groups[i]->name();
@@ -241,14 +261,14 @@ void QQmlDelegateModel::componentComplete()
             --d->m_groupCount;
             --i;
         } else if (name.at(0).isUpper()) {
-            qmlInfo(d->m_groups[i]) << QQmlDataGroup::tr("Group names must start with a lower case letter");
+            qmlInfo(d->m_groups[i]) << QQmlDelegateModelGroup::tr("Group names must start with a lower case letter");
             d->m_groups[i] = d->m_groups[d->m_groupCount - 1];
             --d->m_groupCount;
             --i;
         } else {
             groupNames.append(name);
 
-            QQmlDataGroupPrivate *group = QQmlDataGroupPrivate::get(d->m_groups[i]);
+            QQmlDelegateModelGroupPrivate *group = QQmlDelegateModelGroupPrivate::get(d->m_groups[i]);
             group->setModel(this, Compositor::Group(i));
             if (group->defaultInclude)
                 defaultGroups |= (1 << i);
@@ -281,8 +301,8 @@ void QQmlDelegateModel::componentComplete()
 }
 
 /*!
-    \qmlproperty model QtQuick2::VisualDataModel::model
-    This property holds the model providing data for the VisualDataModel.
+    \qmlproperty model QtQml.Models2::DelegateModel::model
+    This property holds the model providing data for the DelegateModel.
 
     The model provides a set of data that is used to create the items
     for a view.  For large or dynamic datasets the model is usually
@@ -322,7 +342,7 @@ void QQmlDelegateModel::setModel(const QVariant &model)
 }
 
 /*!
-    \qmlproperty Component QtQuick2::VisualDataModel::delegate
+    \qmlproperty Component QtQml.Models2::DelegateModel::delegate
 
     The delegate provides a template defining each item instantiated by a view.
     The index is exposed as an accessible \c index property.  Properties of the
@@ -338,7 +358,7 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
 {
     Q_D(QQmlDelegateModel);
     if (d->m_transaction) {
-        qmlInfo(this) << tr("The delegate of a VisualDataModel cannot be changed within onUpdated.");
+        qmlInfo(this) << tr("The delegate of a DelegateModel cannot be changed within onUpdated.");
         return;
     }
     bool wasValid = d->m_delegate != 0;
@@ -346,13 +366,13 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
     d->m_delegateValidated = false;
     if (wasValid && d->m_complete) {
         for (int i = 1; i < d->m_groupCount; ++i) {
-            QQmlDataGroupPrivate::get(d->m_groups[i])->changeSet.remove(
+            QQmlDelegateModelGroupPrivate::get(d->m_groups[i])->changeSet.remove(
                     0, d->m_compositor.count(Compositor::Group(i)));
         }
     }
     if (d->m_complete && d->m_delegate) {
         for (int i = 1; i < d->m_groupCount; ++i) {
-            QQmlDataGroupPrivate::get(d->m_groups[i])->changeSet.insert(
+            QQmlDelegateModelGroupPrivate::get(d->m_groups[i])->changeSet.insert(
                     0, d->m_compositor.count(Compositor::Group(i)));
         }
     }
@@ -360,7 +380,7 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
 }
 
 /*!
-    \qmlproperty QModelIndex QtQuick2::VisualDataModel::rootIndex
+    \qmlproperty QModelIndex QtQml.Models2::DelegateModel::rootIndex
 
     QAbstractItemModel provides a hierarchical tree of data, whereas
     QML only operates on list data.  \c rootIndex allows the children of
@@ -420,7 +440,7 @@ void QQmlDelegateModel::setRootIndex(const QVariant &root)
 }
 
 /*!
-    \qmlmethod QModelIndex QtQuick2::VisualDataModel::modelIndex(int index)
+    \qmlmethod QModelIndex QtQml.Models2::DelegateModel::modelIndex(int index)
 
     QAbstractItemModel provides a hierarchical tree of data, whereas
     QML only operates on list data.  This function assists in using
@@ -438,7 +458,7 @@ QVariant QQmlDelegateModel::modelIndex(int idx) const
 }
 
 /*!
-    \qmlmethod QModelIndex QtQuick2::VisualDataModel::parentModelIndex()
+    \qmlmethod QModelIndex QtQml.Models2::DelegateModel::parentModelIndex()
 
     QAbstractItemModel provides a hierarchical tree of data, whereas
     QML only operates on list data.  This function assists in using
@@ -456,7 +476,7 @@ QVariant QQmlDelegateModel::parentModelIndex() const
 }
 
 /*!
-    \qmlproperty int QtQuick2::VisualDataModel::count
+    \qmlproperty int QtQml.Models2::DelegateModel::count
 */
 
 int QQmlDelegateModel::count() const
@@ -506,7 +526,7 @@ void QQmlDelegateModel::cancel(int index)
 {
     Q_D(QQmlDelegateModel);
     if (!d->m_delegate || index < 0 || index >= d->m_compositor.count(d->m_compositorGroup)) {
-        qWarning() << "VisualDataModel::cancel: index out range" << index << d->m_compositor.count(d->m_compositorGroup);
+        qWarning() << "DelegateModel::cancel: index out range" << index << d->m_compositor.count(d->m_compositorGroup);
         return;
     }
 
@@ -538,13 +558,13 @@ void QQmlDelegateModel::cancel(int index)
 }
 
 void QQmlDelegateModelPrivate::group_append(
-        QQmlListProperty<QQmlDataGroup> *property, QQmlDataGroup *group)
+        QQmlListProperty<QQmlDelegateModelGroup> *property, QQmlDelegateModelGroup *group)
 {
     QQmlDelegateModelPrivate *d = static_cast<QQmlDelegateModelPrivate *>(property->data);
     if (d->m_complete)
         return;
     if (d->m_groupCount == Compositor::MaximumGroupCount) {
-        qmlInfo(d->q_func()) << QQmlDelegateModel::tr("The maximum number of supported VisualDataGroups is 8");
+        qmlInfo(d->q_func()) << QQmlDelegateModel::tr("The maximum number of supported DelegateModelGroups is 8");
         return;
     }
     d->m_groups[d->m_groupCount] = group;
@@ -552,14 +572,14 @@ void QQmlDelegateModelPrivate::group_append(
 }
 
 int QQmlDelegateModelPrivate::group_count(
-        QQmlListProperty<QQmlDataGroup> *property)
+        QQmlListProperty<QQmlDelegateModelGroup> *property)
 {
     QQmlDelegateModelPrivate *d = static_cast<QQmlDelegateModelPrivate *>(property->data);
     return d->m_groupCount - 1;
 }
 
-QQmlDataGroup *QQmlDelegateModelPrivate::group_at(
-        QQmlListProperty<QQmlDataGroup> *property, int index)
+QQmlDelegateModelGroup *QQmlDelegateModelPrivate::group_at(
+        QQmlListProperty<QQmlDelegateModelGroup> *property, int index)
 {
     QQmlDelegateModelPrivate *d = static_cast<QQmlDelegateModelPrivate *>(property->data);
     return index >= 0 && index < d->m_groupCount - 1
@@ -568,16 +588,16 @@ QQmlDataGroup *QQmlDelegateModelPrivate::group_at(
 }
 
 /*!
-    \qmlproperty list<VisualDataGroup> QtQuick2::VisualDataModel::groups
+    \qmlproperty list<DelegateModelGroup> QtQml.Models2::DelegateModel::groups
 
     This property holds a visual data model's group definitions.
 
     Groups define a sub-set of the items in a visual data model and can be used to filter
     a model.
 
-    For every group defined in a VisualDataModel two attached properties are added to each
-    delegate item.  The first of the form VisualDataModel.in\e{GroupName} holds whether the
-    item belongs to the group and the second VisualDataModel.\e{groupName}Index holds the
+    For every group defined in a DelegateModel two attached properties are added to each
+    delegate item.  The first of the form DelegateModel.in\e{GroupName} holds whether the
+    item belongs to the group and the second DelegateModel.\e{groupName}Index holds the
     index of the item in that group.
 
     The following example illustrates using groups to select items in a model.
@@ -585,10 +605,10 @@ QQmlDataGroup *QQmlDelegateModelPrivate::group_at(
     \snippet qml/visualdatagroup.qml 0
 */
 
-QQmlListProperty<QQmlDataGroup> QQmlDelegateModel::groups()
+QQmlListProperty<QQmlDelegateModelGroup> QQmlDelegateModel::groups()
 {
     Q_D(QQmlDelegateModel);
-    return QQmlListProperty<QQmlDataGroup>(
+    return QQmlListProperty<QQmlDelegateModelGroup>(
             this,
             d,
             QQmlDelegateModelPrivate::group_append,
@@ -598,19 +618,19 @@ QQmlListProperty<QQmlDataGroup> QQmlDelegateModel::groups()
 }
 
 /*!
-    \qmlproperty VisualDataGroup QtQuick2::VisualDataModel::items
+    \qmlproperty DelegateModelGroup QtQml.Models2::DelegateModel::items
 
     This property holds visual data model's default group to which all new items are added.
 */
 
-QQmlDataGroup *QQmlDelegateModel::items()
+QQmlDelegateModelGroup *QQmlDelegateModel::items()
 {
     Q_D(QQmlDelegateModel);
     return d->m_items;
 }
 
 /*!
-    \qmlproperty VisualDataGroup QtQuick2::VisualDataModel::persistedItems
+    \qmlproperty DelegateModelGroup QtQml.Models2::DelegateModel::persistedItems
 
     This property holds visual data model's persisted items group.
 
@@ -618,22 +638,22 @@ QQmlDataGroup *QQmlDelegateModel::items()
     until removed from the group.
 
     An item can be removed from the persistedItems group by setting the
-    VisualDataModel.inPersistedItems property to false.  If the item is not referenced by a view
+    DelegateModel.inPersistedItems property to false.  If the item is not referenced by a view
     at that time it will be destroyed.  Adding an item to this group will not create a new
     instance.
 
-    Items returned by the \l QtQuick2::VisualDataGroup::create() function are automatically added
+    Items returned by the \l QtQml.Models2::DelegateModelGroup::create() function are automatically added
     to this group.
 */
 
-QQmlDataGroup *QQmlDelegateModel::persistedItems()
+QQmlDelegateModelGroup *QQmlDelegateModel::persistedItems()
 {
     Q_D(QQmlDelegateModel);
     return d->m_persistedItems;
 }
 
 /*!
-    \qmlproperty string QtQuick2::VisualDataModel::filterOnGroup
+    \qmlproperty string QtQml.Models2::DelegateModel::filterOnGroup
 
     This property holds the name of the group used to filter the visual data model.
 
@@ -653,7 +673,7 @@ void QQmlDelegateModel::setFilterGroup(const QString &group)
     Q_D(QQmlDelegateModel);
 
     if (d->m_transaction) {
-        qmlInfo(this) << tr("The group of a VisualDataModel cannot be changed within onChanged");
+        qmlInfo(this) << tr("The group of a DelegateModel cannot be changed within onChanged");
         return;
     }
 
@@ -684,7 +704,7 @@ void QQmlDelegateModelPrivate::updateFilterGroup()
         }
     }
 
-    QQmlDataGroupPrivate::get(m_groups[m_compositorGroup])->emitters.insert(this);
+    QQmlDelegateModelGroupPrivate::get(m_groups[m_compositorGroup])->emitters.insert(this);
     if (m_compositorGroup != previousGroup) {
         QVector<QQmlChangeSet::Remove> removes;
         QVector<QQmlChangeSet::Insert> inserts;
@@ -705,9 +725,9 @@ void QQmlDelegateModelPrivate::updateFilterGroup()
 }
 
 /*!
-    \qmlproperty object QtQuick2::VisualDataModel::parts
+    \qmlproperty object QtQml.Models2::DelegateModel::parts
 
-    The \a parts property selects a VisualDataModel which creates
+    The \a parts property selects a DelegateModel which creates
     delegates from the part named.  This is used in conjunction with
     the \l Package type.
 
@@ -715,7 +735,7 @@ void QQmlDelegateModelPrivate::updateFilterGroup()
     delegates named \e list from a \l Package:
 
     \code
-    VisualDataModel {
+    DelegateModel {
         id: visualModel
         delegate: Package {
             Item { Package.name: "list" }
@@ -743,19 +763,19 @@ QObject *QQmlDelegateModel::parts()
 void QQmlDelegateModelPrivate::emitCreatedPackage(QQDMIncubationTask *incubationTask, QQuickPackage *package)
 {
     for (int i = 1; i < m_groupCount; ++i)
-        QQmlDataGroupPrivate::get(m_groups[i])->createdPackage(incubationTask->index[i], package);
+        QQmlDelegateModelGroupPrivate::get(m_groups[i])->createdPackage(incubationTask->index[i], package);
 }
 
 void QQmlDelegateModelPrivate::emitInitPackage(QQDMIncubationTask *incubationTask, QQuickPackage *package)
 {
     for (int i = 1; i < m_groupCount; ++i)
-        QQmlDataGroupPrivate::get(m_groups[i])->initPackage(incubationTask->index[i], package);
+        QQmlDelegateModelGroupPrivate::get(m_groups[i])->initPackage(incubationTask->index[i], package);
 }
 
 void QQmlDelegateModelPrivate::emitDestroyingPackage(QQuickPackage *package)
 {
     for (int i = 1; i < m_groupCount; ++i)
-        QQmlDataGroupPrivate::get(m_groups[i])->destroyingPackage(package);
+        QQmlDelegateModelGroupPrivate::get(m_groups[i])->destroyingPackage(package);
 }
 
 void QQDMIncubationTask::statusChanged(Status status)
@@ -842,7 +862,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
 {
     Q_Q(QQmlDelegateModel);
     if (!m_delegate || index < 0 || index >= m_compositor.count(group)) {
-        qWarning() << "VisualDataModel::item: index out range" << index << m_compositor.count(group);
+        qWarning() << "DelegateModel::item: index out range" << index << m_compositor.count(group);
         return 0;
     } else if (!m_context->isValid()) {
         return 0;
@@ -936,7 +956,7 @@ QObject *QQmlDelegateModel::object(int index, bool asynchronous)
 {
     Q_D(QQmlDelegateModel);
     if (!d->m_delegate || index < 0 || index >= d->m_compositor.count(d->m_compositorGroup)) {
-        qWarning() << "VisualDataModel::item: index out range" << index << d->m_compositor.count(d->m_compositorGroup);
+        qWarning() << "DelegateModel::item: index out range" << index << d->m_compositor.count(d->m_compositorGroup);
         return 0;
     }
 
@@ -1053,7 +1073,7 @@ void QQmlDelegateModelPrivate::itemsChanged(const QVector<Compositor::Change> &c
     }
 
     for (int i = 1; i < m_groupCount; ++i)
-        QQmlDataGroupPrivate::get(m_groups[i])->changeSet.change(translatedChanges.at(i));
+        QQmlDelegateModelGroupPrivate::get(m_groups[i])->changeSet.change(translatedChanges.at(i));
 }
 
 void QQmlDelegateModel::_q_itemsChanged(int index, int count, const QVector<int> &roles)
@@ -1148,7 +1168,7 @@ void QQmlDelegateModelPrivate::itemsInserted(const QVector<Compositor::Insert> &
         return;
 
     for (int i = 1; i < m_groupCount; ++i)
-        QQmlDataGroupPrivate::get(m_groups[i])->changeSet.insert(translatedInserts.at(i));
+        QQmlDelegateModelGroupPrivate::get(m_groups[i])->changeSet.insert(translatedInserts.at(i));
 }
 
 void QQmlDelegateModel::_q_itemsInserted(int index, int count)
@@ -1265,7 +1285,7 @@ void QQmlDelegateModelPrivate::itemsRemoved(const QVector<Compositor::Remove> &r
         return;
 
     for (int i = 1; i < m_groupCount; ++i)
-       QQmlDataGroupPrivate::get(m_groups[i])->changeSet.remove(translatedRemoves.at(i));
+       QQmlDelegateModelGroupPrivate::get(m_groups[i])->changeSet.remove(translatedRemoves.at(i));
 }
 
 void QQmlDelegateModel::_q_itemsRemoved(int index, int count)
@@ -1307,7 +1327,7 @@ void QQmlDelegateModelPrivate::itemsMoved(
         return;
 
     for (int i = 1; i < m_groupCount; ++i) {
-        QQmlDataGroupPrivate::get(m_groups[i])->changeSet.move(
+        QQmlDelegateModelGroupPrivate::get(m_groups[i])->changeSet.move(
                     translatedRemoves.at(i),
                     translatedInserts.at(i));
     }
@@ -1372,13 +1392,13 @@ void QQmlDelegateModelPrivate::emitChanges()
     m_transaction = true;
     QV8Engine *engine = QQmlEnginePrivate::getV8Engine(m_context->engine());
     for (int i = 1; i < m_groupCount; ++i)
-        QQmlDataGroupPrivate::get(m_groups[i])->emitChanges(engine);
+        QQmlDelegateModelGroupPrivate::get(m_groups[i])->emitChanges(engine);
     m_transaction = false;
 
     const bool reset = m_reset;
     m_reset = false;
     for (int i = 1; i < m_groupCount; ++i)
-        QQmlDataGroupPrivate::get(m_groups[i])->emitModelUpdated(reset);
+        QQmlDelegateModelGroupPrivate::get(m_groups[i])->emitModelUpdated(reset);
 
     foreach (QQmlDelegateModelItem *cacheItem, m_cache) {
         if (cacheItem->attached)
@@ -1931,7 +1951,7 @@ QQmlDelegateModelAttached::QQmlDelegateModelAttached(
 }
 
 /*!
-    \qmlattachedproperty int QtQuick2::VisualDataModel::model
+    \qmlattachedproperty int QtQml.Models2::DelegateModel::model
 
     This attached property holds the visual data model this delegate instance belongs to.
 
@@ -1944,9 +1964,9 @@ QQmlDelegateModel *QQmlDelegateModelAttached::model() const
 }
 
 /*!
-    \qmlattachedproperty stringlist QtQuick2::VisualDataModel::groups
+    \qmlattachedproperty stringlist QtQml.Models2::DelegateModel::groups
 
-    This attached property holds the name of VisualDataGroups the item belongs to.
+    This attached property holds the name of DelegateModelGroups the item belongs to.
 
     It is attached to each instance of the delegate.
 */
@@ -1978,12 +1998,12 @@ void QQmlDelegateModelAttached::setGroups(const QStringList &groups)
 }
 
 /*!
-    \qmlattachedproperty bool QtQuick2::VisualDataModel::isUnresolved
+    \qmlattachedproperty bool QtQml.Models2::DelegateModel::isUnresolved
 
     This attached property holds whether the visual item is bound to a data model index.
     Returns true if the item is not bound to the model, and false if it is.
 
-    An unresolved item can be bound to the data model using the VisualDataGroup::resolve()
+    An unresolved item can be bound to the data model using the DelegateModelGroup::resolve()
     function.
 
     It is attached to each instance of the delegate.
@@ -1998,9 +2018,9 @@ bool QQmlDelegateModelAttached::isUnresolved() const
 }
 
 /*!
-    \qmlattachedproperty int QtQuick2::VisualDataModel::inItems
+    \qmlattachedproperty int QtQml.Models2::DelegateModel::inItems
 
-    This attached property holds whether the item belongs to the default \l items VisualDataGroup.
+    This attached property holds whether the item belongs to the default \l items DelegateModelGroup.
 
     Changing this property will add or remove the item from the items group.
 
@@ -2008,17 +2028,17 @@ bool QQmlDelegateModelAttached::isUnresolved() const
 */
 
 /*!
-    \qmlattachedproperty int QtQuick2::VisualDataModel::itemsIndex
+    \qmlattachedproperty int QtQml.Models2::DelegateModel::itemsIndex
 
-    This attached property holds the index of the item in the default \l items VisualDataGroup.
+    This attached property holds the index of the item in the default \l items DelegateModelGroup.
 
     It is attached to each instance of the delegate.
 */
 
 /*!
-    \qmlattachedproperty int QtQuick2::VisualDataModel::inPersistedItems
+    \qmlattachedproperty int QtQml.Models2::DelegateModel::inPersistedItems
 
-    This attached property holds whether the item belongs to the \l persistedItems VisualDataGroup.
+    This attached property holds whether the item belongs to the \l persistedItems DelegateModelGroup.
 
     Changing this property will add or remove the item from the items group.  Change with caution
     as removing an item from the persistedItems group will destroy the current instance if it is
@@ -2028,9 +2048,9 @@ bool QQmlDelegateModelAttached::isUnresolved() const
 */
 
 /*!
-    \qmlattachedproperty int QtQuick2::VisualDataModel::persistedItemsIndex
+    \qmlattachedproperty int QtQml.Models2::DelegateModel::persistedItemsIndex
 
-    This attached property holds the index of the item in the \l persistedItems VisualDataGroup.
+    This attached property holds the index of the item in the \l persistedItems DelegateModelGroup.
 
     It is attached to each instance of the delegate.
 */
@@ -2065,22 +2085,22 @@ void QQmlDelegateModelAttached::emitChanges()
 
 //============================================================================
 
-void QQmlDataGroupPrivate::setModel(QQmlDelegateModel *m, Compositor::Group g)
+void QQmlDelegateModelGroupPrivate::setModel(QQmlDelegateModel *m, Compositor::Group g)
 {
     Q_ASSERT(!model);
     model = m;
     group = g;
 }
 
-bool QQmlDataGroupPrivate::isChangedConnected()
+bool QQmlDelegateModelGroupPrivate::isChangedConnected()
 {
-    Q_Q(QQmlDataGroup);
-    IS_SIGNAL_CONNECTED(q, QQmlDataGroup, changed, (const QQmlV8Handle &,const QQmlV8Handle &));
+    Q_Q(QQmlDelegateModelGroup);
+    IS_SIGNAL_CONNECTED(q, QQmlDelegateModelGroup, changed, (const QQmlV8Handle &,const QQmlV8Handle &));
 }
 
-void QQmlDataGroupPrivate::emitChanges(QV8Engine *engine)
+void QQmlDelegateModelGroupPrivate::emitChanges(QV8Engine *engine)
 {
-    Q_Q(QQmlDataGroup);
+    Q_Q(QQmlDelegateModelGroup);
     if (isChangedConnected() && !changeSet.isEmpty()) {
         v8::HandleScope handleScope;
         v8::Context::Scope contextScope(engine->context());
@@ -2092,101 +2112,116 @@ void QQmlDataGroupPrivate::emitChanges(QV8Engine *engine)
         emit q->countChanged();
 }
 
-void QQmlDataGroupPrivate::emitModelUpdated(bool reset)
+void QQmlDelegateModelGroupPrivate::emitModelUpdated(bool reset)
 {
-    for (QQmlDataGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
+    for (QQmlDelegateModelGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
         it->emitModelUpdated(changeSet, reset);
     changeSet.clear();
 }
 
-void QQmlDataGroupPrivate::createdPackage(int index, QQuickPackage *package)
+void QQmlDelegateModelGroupPrivate::createdPackage(int index, QQuickPackage *package)
 {
-    for (QQmlDataGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
+    for (QQmlDelegateModelGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
         it->createdPackage(index, package);
 }
 
-void QQmlDataGroupPrivate::initPackage(int index, QQuickPackage *package)
+void QQmlDelegateModelGroupPrivate::initPackage(int index, QQuickPackage *package)
 {
-    for (QQmlDataGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
+    for (QQmlDelegateModelGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
         it->initPackage(index, package);
 }
 
-void QQmlDataGroupPrivate::destroyingPackage(QQuickPackage *package)
+void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
 {
-    for (QQmlDataGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
+    for (QQmlDelegateModelGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
         it->destroyingPackage(package);
 }
 
 /*!
-    \qmltype VisualDataGroup
-    \instantiates QQmlDataGroup
+    \qmltype DelegateModelGroup
+    \instantiates QQmlDelegateModelGroup
     \inqmlmodule QtQuick 2
     \ingroup qtquick-models
     \brief Encapsulates a filtered set of visual data items
 
-    The VisualDataGroup type provides a means to address the model data of a VisualDataModel's
+    The DelegateModelGroup type provides a means to address the model data of a DelegateModel's
     delegate items, as well as sort and filter these delegate items.
 
-    The initial set of instantiable delegate items in a VisualDataModel is represented
-    by its \l {QtQuick2::VisualDataModel::items}{items} group, which normally directly reflects
-    the contents of the model assigned to VisualDataModel::model.  This set can be changed to
-    the contents of any other member of VisualDataModel::groups by assigning the  \l name of that
-    VisualDataGroup to the VisualDataModel::filterOnGroup property.
+    The initial set of instantiable delegate items in a DelegateModel is represented
+    by its \l {QtQml.Models2::DelegateModel::items}{items} group, which normally directly reflects
+    the contents of the model assigned to DelegateModel::model.  This set can be changed to
+    the contents of any other member of DelegateModel::groups by assigning the  \l name of that
+    DelegateModelGroup to the DelegateModel::filterOnGroup property.
 
-    The data of an item in a VisualDataGroup can be accessed using the get() function, which returns
+    The data of an item in a DelegateModelGroup can be accessed using the get() function, which returns
     information about group membership and indexes as well as model data.  In combination
     with the move() function this can be used to implement view sorting, with remove() to filter
     items out of a view, or with setGroups() and \l Package delegates to categorize items into
     different views.
 
-    Data from models can be supplemented by inserting data directly into a VisualDataGroup
+    Data from models can be supplemented by inserting data directly into a DelegateModelGroup
     with the insert() function.  This can be used to introduce mock items into a view, or
     placeholder items that are later \l {resolve()}{resolved} to real model data when it becomes
     available.
 
-    Delegate items can also be be instantiated directly from a VisualDataGroup using the
-    create() function, making it possible to use VisualDataModel without an accompanying view
+    Delegate items can also be be instantiated directly from a DelegateModelGroup using the
+    create() function, making it possible to use DelegateModel without an accompanying view
     type or to cherry-pick specific items that should be instantiated irregardless of whether
     they're currently within a view's visible area.
 
     \sa {QML Dynamic View Ordering Tutorial}
 */
+/*!
+    \qmltype DelegateModelGroup
+    \instantiates QQmlDelegateModelGroup
+    \inqmlmodule QtQml.Models 2
+    \brief Encapsulates a filtered set of visual data items
 
-QQmlDataGroup::QQmlDataGroup(QObject *parent)
-    : QObject(*new QQmlDataGroupPrivate, parent)
+    The DelegateModelGroup type provides a means to address the model data of a DelegateModel's
+    delegate items, as well as sort and filter these delegate items.
+
+    This element is also available as DelegateModelGroup in the QtQuick module. For full details,
+    see the \l DelegateModelGroup documentation.
+
+    \sa {QtQuick::DelegateModelGroup}
+*/
+
+
+QQmlDelegateModelGroup::QQmlDelegateModelGroup(QObject *parent)
+    : QObject(*new QQmlDelegateModelGroupPrivate, parent)
 {
 }
 
-QQmlDataGroup::QQmlDataGroup(
+QQmlDelegateModelGroup::QQmlDelegateModelGroup(
         const QString &name, QQmlDelegateModel *model, int index, QObject *parent)
-    : QObject(*new QQmlDataGroupPrivate, parent)
+    : QObject(*new QQmlDelegateModelGroupPrivate, parent)
 {
-    Q_D(QQmlDataGroup);
+    Q_D(QQmlDelegateModelGroup);
     d->name = name;
     d->setModel(model, Compositor::Group(index));
 }
 
-QQmlDataGroup::~QQmlDataGroup()
+QQmlDelegateModelGroup::~QQmlDelegateModelGroup()
 {
 }
 
 /*!
-    \qmlproperty string QtQuick2::VisualDataGroup::name
+    \qmlproperty string QtQml.Models2::DelegateModelGroup::name
 
     This property holds the name of the group.
 
     Each group in a model must have a unique name starting with a lower case letter.
 */
 
-QString QQmlDataGroup::name() const
+QString QQmlDelegateModelGroup::name() const
 {
-    Q_D(const QQmlDataGroup);
+    Q_D(const QQmlDelegateModelGroup);
     return d->name;
 }
 
-void QQmlDataGroup::setName(const QString &name)
+void QQmlDelegateModelGroup::setName(const QString &name)
 {
-    Q_D(QQmlDataGroup);
+    Q_D(QQmlDelegateModelGroup);
     if (d->model)
         return;
     if (d->name != name) {
@@ -2196,34 +2231,34 @@ void QQmlDataGroup::setName(const QString &name)
 }
 
 /*!
-    \qmlproperty int QtQuick2::VisualDataGroup::count
+    \qmlproperty int QtQml.Models2::DelegateModelGroup::count
 
     This property holds the number of items in the group.
 */
 
-int QQmlDataGroup::count() const
+int QQmlDelegateModelGroup::count() const
 {
-    Q_D(const QQmlDataGroup);
+    Q_D(const QQmlDelegateModelGroup);
     if (!d->model)
         return 0;
     return QQmlDelegateModelPrivate::get(d->model)->m_compositor.count(d->group);
 }
 
 /*!
-    \qmlproperty bool QtQuick2::VisualDataGroup::includeByDefault
+    \qmlproperty bool QtQml.Models2::DelegateModelGroup::includeByDefault
 
     This property holds whether new items are assigned to this group by default.
 */
 
-bool QQmlDataGroup::defaultInclude() const
+bool QQmlDelegateModelGroup::defaultInclude() const
 {
-    Q_D(const QQmlDataGroup);
+    Q_D(const QQmlDelegateModelGroup);
     return d->defaultInclude;
 }
 
-void QQmlDataGroup::setDefaultInclude(bool include)
+void QQmlDelegateModelGroup::setDefaultInclude(bool include)
 {
-    Q_D(QQmlDataGroup);
+    Q_D(QQmlDelegateModelGroup);
     if (d->defaultInclude != include) {
         d->defaultInclude = include;
 
@@ -2238,32 +2273,32 @@ void QQmlDataGroup::setDefaultInclude(bool include)
 }
 
 /*!
-    \qmlmethod object QtQuick2::VisualDataGroup::get(int index)
+    \qmlmethod object QtQml.Models2::DelegateModelGroup::get(int index)
 
     Returns a javascript object describing the item at \a index in the group.
 
     The returned object contains the same information that is available to a delegate from the
-    VisualDataModel attached as well as the model for that item.  It has the properties:
+    DelegateModel attached as well as the model for that item.  It has the properties:
 
     \list
     \li \b model The model data of the item.  This is the same as the model context property in
     a delegate
     \li \b groups A list the of names of groups the item is a member of.  This property can be
     written to change the item's membership.
-    \li \b inItems Whether the item belongs to the \l {QtQuick2::VisualDataModel::items}{items} group.
+    \li \b inItems Whether the item belongs to the \l {QtQml.Models2::DelegateModel::items}{items} group.
     Writing to this property will add or remove the item from the group.
-    \li \b itemsIndex The index of the item within the \l {QtQuick2::VisualDataModel::items}{items} group.
+    \li \b itemsIndex The index of the item within the \l {QtQml.Models2::DelegateModel::items}{items} group.
     \li \b {in<GroupName>} Whether the item belongs to the dynamic group \e groupName.  Writing to
     this property will add or remove the item from the group.
     \li \b {<groupName>Index} The index of the item within the dynamic group \e groupName.
     \li \b isUnresolved Whether the item is bound to an index in the model assigned to
-    VisualDataModel::model.  Returns true if the item is not bound to the model, and false if it is.
+    DelegateModel::model.  Returns true if the item is not bound to the model, and false if it is.
     \endlist
 */
 
-QQmlV8Handle QQmlDataGroup::get(int index)
+QQmlV8Handle QQmlDelegateModelGroup::get(int index)
 {
-    Q_D(QQmlDataGroup);
+    Q_D(QQmlDelegateModelGroup);
     if (!d->model)
         return QQmlV8Handle::fromHandle(v8::Undefined());;
 
@@ -2300,7 +2335,7 @@ QQmlV8Handle QQmlDataGroup::get(int index)
     return QQmlV8Handle::fromHandle(handle);
 }
 
-bool QQmlDataGroupPrivate::parseIndex(
+bool QQmlDelegateModelGroupPrivate::parseIndex(
         const v8::Local<v8::Value> &value, int *index, Compositor::Group *group) const
 {
     if (value->IsInt32()) {
@@ -2321,25 +2356,25 @@ bool QQmlDataGroupPrivate::parseIndex(
 }
 
 /*!
-    \qmlmethod QtQuick2::VisualDataGroup::insert(int index, jsdict data, array groups = undefined)
-    \qmlmethod QtQuick2::VisualDataGroup::insert(jsdict data, var groups = undefined)
+    \qmlmethod QtQml.Models2::DelegateModelGroup::insert(int index, jsdict data, array groups = undefined)
+    \qmlmethod QtQml.Models2::DelegateModelGroup::insert(jsdict data, var groups = undefined)
 
-    Creates a new entry at \a index in a VisualDataModel with the values from \a data that
-    correspond to roles in the model assigned to VisualDataModel::model.
+    Creates a new entry at \a index in a DelegateModel with the values from \a data that
+    correspond to roles in the model assigned to DelegateModel::model.
 
     If no index is supplied the data is appended to the model.
 
     The optional \a groups parameter identifies the groups the new entry should belong to,
     if unspecified this is equal to the group insert was called on.
 
-    Data inserted into a VisualDataModel can later be merged with an existing entry in
-    VisualDataModel::model using the \l resolve() function.  This can be used to create placeholder
+    Data inserted into a DelegateModel can later be merged with an existing entry in
+    DelegateModel::model using the \l resolve() function.  This can be used to create placeholder
     items that are later replaced by actual data.
 */
 
-void QQmlDataGroup::insert(QQmlV8Function *args)
+void QQmlDelegateModelGroup::insert(QQmlV8Function *args)
 {
-    Q_D(QQmlDataGroup);
+    Q_D(QQmlDelegateModelGroup);
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
 
     int index = model->m_compositor.count(d->group);
@@ -2377,9 +2412,9 @@ void QQmlDataGroup::insert(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod QtQuick2::VisualDataGroup::create(int index)
-    \qmlmethod QtQuick2::VisualDataGroup::create(int index, jsdict data, array groups = undefined)
-    \qmlmethod QtQuick2::VisualDataGroup::create(jsdict data, array groups = undefined)
+    \qmlmethod QtQml.Models2::DelegateModelGroup::create(int index)
+    \qmlmethod QtQml.Models2::DelegateModelGroup::create(int index, jsdict data, array groups = undefined)
+    \qmlmethod QtQml.Models2::DelegateModelGroup::create(jsdict data, array groups = undefined)
 
     Returns a reference to the instantiated item at \a index in the group.
 
@@ -2389,13 +2424,13 @@ void QQmlDataGroup::insert(QQmlV8Function *args)
     was called on.
 
     All items returned by create are added to the
-    \l {QtQuick2::VisualDataModel::persistedItems}{persistedItems} group.  Items in this
+    \l {QtQml.Models2::DelegateModel::persistedItems}{persistedItems} group.  Items in this
     group remain instantiated when not referenced by any view.
 */
 
-void QQmlDataGroup::create(QQmlV8Function *args)
+void QQmlDelegateModelGroup::create(QQmlV8Function *args)
 {
-    Q_D(QQmlDataGroup);
+    Q_D(QQmlDelegateModelGroup);
     if (!d->model)
         return;
 
@@ -2450,24 +2485,24 @@ void QQmlDataGroup::create(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod QtQuick2::VisualDataGroup::resolve(int from, int to)
+    \qmlmethod QtQml.Models2::DelegateModelGroup::resolve(int from, int to)
 
-    Binds an unresolved item at \a from to an item in VisualDataModel::model at index \a to.
+    Binds an unresolved item at \a from to an item in DelegateModel::model at index \a to.
 
-    Unresolved items are entries whose data has been \l {insert()}{inserted} into a VisualDataGroup
-    instead of being derived from a VisualDataModel::model index.  Resolving an item will replace
+    Unresolved items are entries whose data has been \l {insert()}{inserted} into a DelegateModelGroup
+    instead of being derived from a DelegateModel::model index.  Resolving an item will replace
     the item at the target index with the unresolved item. A resolved an item will reflect the data
     of the source model at its bound index and will move when that index moves like any other item.
 
-    If a new item is replaced in the VisualDataGroup onChanged() handler its insertion and
+    If a new item is replaced in the DelegateModelGroup onChanged() handler its insertion and
     replacement will be communicated to views as an atomic operation, creating the appearance
     that the model contents have not changed, or if the unresolved and model item are not adjacent
     that the previously unresolved item has simply moved.
 
 */
-void QQmlDataGroup::resolve(QQmlV8Function *args)
+void QQmlDelegateModelGroup::resolve(QQmlV8Function *args)
 {
-    Q_D(QQmlDataGroup);
+    Q_D(QQmlDelegateModelGroup);
     if (!d->model)
         return;
 
@@ -2560,14 +2595,14 @@ void QQmlDataGroup::resolve(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod QtQuick2::VisualDataGroup::remove(int index, int count)
+    \qmlmethod QtQml.Models2::DelegateModelGroup::remove(int index, int count)
 
     Removes \a count items starting at \a index from the group.
 */
 
-void QQmlDataGroup::remove(QQmlV8Function *args)
+void QQmlDelegateModelGroup::remove(QQmlV8Function *args)
 {
-    Q_D(QQmlDataGroup);
+    Q_D(QQmlDelegateModelGroup);
     if (!d->model)
         return;
     Compositor::Group group = d->group;
@@ -2603,7 +2638,7 @@ void QQmlDataGroup::remove(QQmlV8Function *args)
     }
 }
 
-bool QQmlDataGroupPrivate::parseGroupArgs(
+bool QQmlDelegateModelGroupPrivate::parseGroupArgs(
         QQmlV8Function *args, Compositor::Group *group, int *index, int *count, int *groups) const
 {
     if (!model || !QQmlDelegateModelPrivate::get(model)->m_cacheMetaType)
@@ -2632,14 +2667,14 @@ bool QQmlDataGroupPrivate::parseGroupArgs(
 }
 
 /*!
-    \qmlmethod QtQuick2::VisualDataGroup::addGroups(int index, int count, stringlist groups)
+    \qmlmethod QtQml.Models2::DelegateModelGroup::addGroups(int index, int count, stringlist groups)
 
     Adds \a count items starting at \a index to \a groups.
 */
 
-void QQmlDataGroup::addGroups(QQmlV8Function *args)
+void QQmlDelegateModelGroup::addGroups(QQmlV8Function *args)
 {
-    Q_D(QQmlDataGroup);
+    Q_D(QQmlDelegateModelGroup);
     Compositor::Group group = d->group;
     int index = -1;
     int count = 1;
@@ -2662,14 +2697,14 @@ void QQmlDataGroup::addGroups(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod QtQuick2::VisualDataGroup::removeGroups(int index, int count, stringlist groups)
+    \qmlmethod QtQml.Models2::DelegateModelGroup::removeGroups(int index, int count, stringlist groups)
 
     Removes \a count items starting at \a index from \a groups.
 */
 
-void QQmlDataGroup::removeGroups(QQmlV8Function *args)
+void QQmlDelegateModelGroup::removeGroups(QQmlV8Function *args)
 {
-    Q_D(QQmlDataGroup);
+    Q_D(QQmlDelegateModelGroup);
     Compositor::Group group = d->group;
     int index = -1;
     int count = 1;
@@ -2692,14 +2727,14 @@ void QQmlDataGroup::removeGroups(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod QtQuick2::VisualDataGroup::setGroups(int index, int count, stringlist groups)
+    \qmlmethod QtQml.Models2::DelegateModelGroup::setGroups(int index, int count, stringlist groups)
 
     Sets the \a groups \a count items starting at \a index belong to.
 */
 
-void QQmlDataGroup::setGroups(QQmlV8Function *args)
+void QQmlDelegateModelGroup::setGroups(QQmlV8Function *args)
 {
-    Q_D(QQmlDataGroup);
+    Q_D(QQmlDelegateModelGroup);
     Compositor::Group group = d->group;
     int index = -1;
     int count = 1;
@@ -2722,20 +2757,20 @@ void QQmlDataGroup::setGroups(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod QtQuick2::VisualDataGroup::setGroups(int index, int count, stringlist groups)
+    \qmlmethod QtQml.Models2::DelegateModelGroup::setGroups(int index, int count, stringlist groups)
 
     Sets the \a groups \a count items starting at \a index belong to.
 */
 
 /*!
-    \qmlmethod QtQuick2::VisualDataGroup::move(var from, var to, int count)
+    \qmlmethod QtQml.Models2::DelegateModelGroup::move(var from, var to, int count)
 
     Moves \a count at \a from in a group \a to a new position.
 */
 
-void QQmlDataGroup::move(QQmlV8Function *args)
+void QQmlDelegateModelGroup::move(QQmlV8Function *args)
 {
-    Q_D(QQmlDataGroup);
+    Q_D(QQmlDelegateModelGroup);
 
     if (args->Length() < 2)
         return;
@@ -2782,7 +2817,7 @@ void QQmlDataGroup::move(QQmlV8Function *args)
 }
 
 /*!
-    \qmlsignal QtQuick2::VisualDataGroup::onChanged(array removed, array inserted)
+    \qmlsignal QtQml.Models2::DelegateModelGroup::onChanged(array removed, array inserted)
 
     This handler is called when items have been removed from or inserted into the group.
 
@@ -2804,7 +2839,7 @@ QQmlPartsModel::QQmlPartsModel(QQmlDelegateModel *model, const QString &part, QO
 {
     QQmlDelegateModelPrivate *d = QQmlDelegateModelPrivate::get(m_model);
     if (d->m_cacheMetaType) {
-        QQmlDataGroupPrivate::get(d->m_groups[1])->emitters.insert(this);
+        QQmlDelegateModelGroupPrivate::get(d->m_groups[1])->emitters.insert(this);
         m_compositorGroup = Compositor::Default;
     } else {
         d->m_pendingParts.insert(this);
@@ -2825,7 +2860,7 @@ QString QQmlPartsModel::filterGroup() const
 void QQmlPartsModel::setFilterGroup(const QString &group)
 {
     if (QQmlDelegateModelPrivate::get(m_model)->m_transaction) {
-        qmlInfo(this) << tr("The group of a VisualDataModel cannot be changed within onChanged");
+        qmlInfo(this) << tr("The group of a DelegateModel cannot be changed within onChanged");
         return;
     }
 
@@ -2861,7 +2896,7 @@ void QQmlPartsModel::updateFilterGroup()
 
     QQmlListCompositor::Group previousGroup = m_compositorGroup;
     m_compositorGroup = Compositor::Default;
-    QQmlDataGroupPrivate::get(model->m_groups[Compositor::Default])->emitters.insert(this);
+    QQmlDelegateModelGroupPrivate::get(model->m_groups[Compositor::Default])->emitters.insert(this);
     for (int i = 1; i < model->m_groupCount; ++i) {
         if (m_filterGroup == model->m_cacheMetaType->groupNames.at(i - 1)) {
             m_compositorGroup = Compositor::Group(i);
@@ -2869,7 +2904,7 @@ void QQmlPartsModel::updateFilterGroup()
         }
     }
 
-    QQmlDataGroupPrivate::get(model->m_groups[m_compositorGroup])->emitters.insert(this);
+    QQmlDelegateModelGroupPrivate::get(model->m_groups[m_compositorGroup])->emitters.insert(this);
     if (m_compositorGroup != previousGroup) {
         QVector<QQmlChangeSet::Remove> removes;
         QVector<QQmlChangeSet::Insert> inserts;
@@ -2892,7 +2927,7 @@ void QQmlPartsModel::updateFilterGroup(
         return;
 
     m_compositorGroup = group;
-    QQmlDataGroupPrivate::get(QQmlDelegateModelPrivate::get(m_model)->m_groups[m_compositorGroup])->emitters.insert(this);
+    QQmlDelegateModelGroupPrivate::get(QQmlDelegateModelPrivate::get(m_model)->m_groups[m_compositorGroup])->emitters.insert(this);
 
     if (!changeSet.isEmpty())
         emit modelUpdated(changeSet, false);
@@ -2921,7 +2956,7 @@ QObject *QQmlPartsModel::object(int index, bool asynchronous)
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(m_model);
 
     if (!model->m_delegate || index < 0 || index >= model->m_compositor.count(m_compositorGroup)) {
-        qWarning() << "VisualDataModel::item: index out range" << index << model->m_compositor.count(m_compositorGroup);
+        qWarning() << "DelegateModel::item: index out range" << index << model->m_compositor.count(m_compositorGroup);
         return 0;
     }
 
@@ -3026,11 +3061,11 @@ v8::Handle<v8::Value> get_change_moveId(v8::Local<v8::String>, const v8::Accesso
     return info.This()->GetInternalField(2);
 }
 
-class QQmlDataGroupChangeArray : public QV8ObjectResource
+class QQmlDelegateModelGroupChangeArray : public QV8ObjectResource
 {
     V8_RESOURCE_TYPE(ChangeSetArrayType)
 public:
-    QQmlDataGroupChangeArray(QV8Engine *engine)
+    QQmlDelegateModelGroupChangeArray(QV8Engine *engine)
         : QV8ObjectResource(engine)
     {
     }
@@ -3040,7 +3075,7 @@ public:
 
     static v8::Handle<v8::Value> get_change(quint32 index, const v8::AccessorInfo &info)
     {
-        QQmlDataGroupChangeArray *array = v8_resource_cast<QQmlDataGroupChangeArray>(info.This());
+        QQmlDelegateModelGroupChangeArray *array = v8_resource_cast<QQmlDelegateModelGroupChangeArray>(info.This());
         V8ASSERT_TYPE(array, "Not a valid change array");
 
         if (index >= array->count())
@@ -3059,7 +3094,7 @@ public:
 
     static v8::Handle<v8::Value> get_length(v8::Local<v8::String>, const v8::AccessorInfo &info)
     {
-        QQmlDataGroupChangeArray *array = v8_resource_cast<QQmlDataGroupChangeArray>(info.This());
+        QQmlDelegateModelGroupChangeArray *array = v8_resource_cast<QQmlDelegateModelGroupChangeArray>(info.This());
         V8ASSERT_TYPE(array, "Not a valid change array");
 
         return v8::Integer::New(array->count());
@@ -3075,11 +3110,11 @@ public:
     }
 };
 
-class QQmlDataGroupRemoveArray : public QQmlDataGroupChangeArray
+class QQmlDelegateModelGroupRemoveArray : public QQmlDelegateModelGroupChangeArray
 {
 public:
-    QQmlDataGroupRemoveArray(QV8Engine *engine, const QVector<QQmlChangeSet::Remove> &changes)
-        : QQmlDataGroupChangeArray(engine)
+    QQmlDelegateModelGroupRemoveArray(QV8Engine *engine, const QVector<QQmlChangeSet::Remove> &changes)
+        : QQmlDelegateModelGroupChangeArray(engine)
         , changes(changes)
     {
     }
@@ -3091,11 +3126,11 @@ private:
     QVector<QQmlChangeSet::Remove> changes;
 };
 
-class QQmlDataGroupInsertArray : public QQmlDataGroupChangeArray
+class QQmlDelegateModelGroupInsertArray : public QQmlDelegateModelGroupChangeArray
 {
 public:
-    QQmlDataGroupInsertArray(QV8Engine *engine, const QVector<QQmlChangeSet::Insert> &changes)
-        : QQmlDataGroupChangeArray(engine)
+    QQmlDelegateModelGroupInsertArray(QV8Engine *engine, const QVector<QQmlChangeSet::Insert> &changes)
+        : QQmlDelegateModelGroupChangeArray(engine)
         , changes(changes)
     {
     }
@@ -3124,7 +3159,7 @@ QQmlDelegateModelEngineData::QQmlDelegateModelEngineData(QV8Engine *)
     change->InstanceTemplate()->SetAccessor(v8::String::New("moveId"), get_change_moveId);
     change->InstanceTemplate()->SetInternalFieldCount(3);
     constructorChange = qPersistentNew(change->GetFunction());
-    constructorChangeArray = qPersistentNew(QQmlDataGroupChangeArray::constructor());
+    constructorChangeArray = qPersistentNew(QQmlDelegateModelGroupChangeArray::constructor());
 }
 
 QQmlDelegateModelEngineData::~QQmlDelegateModelEngineData()
@@ -3138,7 +3173,7 @@ v8::Local<v8::Object> QQmlDelegateModelEngineData::array(
         QV8Engine *engine, const QVector<QQmlChangeSet::Remove> &changes)
 {
     v8::Local<v8::Object> array = constructorChangeArray->NewInstance();
-    array->SetExternalResource(new QQmlDataGroupRemoveArray(engine, changes));
+    array->SetExternalResource(new QQmlDelegateModelGroupRemoveArray(engine, changes));
     return array;
 }
 
@@ -3146,7 +3181,7 @@ v8::Local<v8::Object> QQmlDelegateModelEngineData::array(
         QV8Engine *engine, const QVector<QQmlChangeSet::Insert> &changes)
 {
     v8::Local<v8::Object> array = constructorChangeArray->NewInstance();
-    array->SetExternalResource(new QQmlDataGroupInsertArray(engine, changes));
+    array->SetExternalResource(new QQmlDelegateModelGroupInsertArray(engine, changes));
     return array;
 }
 

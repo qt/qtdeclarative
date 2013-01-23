@@ -24,6 +24,7 @@ PUBLICTESTS += \
     qqmltranslation \
     qqmlxmlhttprequest \
     qqmlparser \
+    qtqmlmodules \
     qquickfolderlistmodel
 
 PRIVATETESTS += \

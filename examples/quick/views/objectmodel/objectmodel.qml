@@ -39,9 +39,10 @@
 ****************************************************************************/
 
 // This example demonstrates placing items in a view using
-// a VisualItemModel
+// an ObjectModel
 
 import QtQuick 2.0
+import QtQml.Models 2.1
 
 Rectangle {
     id: root
@@ -51,7 +52,7 @@ Rectangle {
     property bool printDestruction: false
 
 //! [0]
-    VisualItemModel {
+    ObjectModel {
         id: itemModel
 
         Rectangle {

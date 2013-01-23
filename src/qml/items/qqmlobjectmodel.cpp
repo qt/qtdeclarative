@@ -129,26 +129,26 @@ public:
 
 
 /*!
-    \qmltype VisualItemModel
+    \qmltype ObjectModel
     \instantiates QQmlObjectModel
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQml.Models 2
     \ingroup qtquick-models
-    \brief Defines items to be used added to a view
+    \brief Defines a set of items to be used as a model
 
-    A VisualItemModel contains the visual items to be used in a view.
-    When a VisualItemModel is used in a view, the view does not require
-    a delegate since the VisualItemModel already contains the visual
+    A ObjectModel contains the visual items to be used in a view.
+    When a ObjectModel is used in a view, the view does not require
+    a delegate since the ObjectModel already contains the visual
     delegate (items).
 
     An item can determine its index within the
-    model via the \l{VisualItemModel::index}{index} attached property.
+    model via the \l{ObjectModel::index}{index} attached property.
 
     The example below places three colored rectangles in a ListView.
     \code
     import QtQuick 2.0
 
     Rectangle {
-        VisualItemModel {
+        ObjectModel {
             id: itemModel
             Rectangle { height: 30; width: 80; color: "red" }
             Rectangle { height: 30; width: 80; color: "green" }
@@ -164,15 +164,33 @@ public:
 
     \image visualitemmodel.png
 
-    \sa {quick/modelviews/visualitemmodel}{VisualItemModel example}
+    \sa {quick/views/objectmodel}{ObjectModel example}
 */
+/*!
+    \qmltype VisualItemModel
+    \instantiates QQmlObjectModel
+    \inqmlmodule QtQuick 2
+    \brief Defines a set of objects to be used as a model
+
+    The VisualItemModel type encapsulates contains the objects to be used
+    as a model.
+
+    This element is now primarily available as ObjectModel in the QtQml.Models module.
+    VisualItemModel continues to be provided, with the same implementation, in QtQuick for
+    compatibility reasons.
+
+    For full details about the type, see the \l ObjectModel documentation.
+
+    \sa {QtQml.Models2::ObjectModel}
+*/
+
 QQmlObjectModel::QQmlObjectModel(QObject *parent)
     : QQmlInstanceModel(*(new QQmlObjectModelPrivate), parent)
 {
 }
 
 /*!
-    \qmlattachedproperty int QtQuick2::VisualItemModel::index
+    \qmlattachedproperty int QtQml.Models2::ObjectModel::index
     This attached property holds the index of this delegate's item within the model.
 
     It is attached to each instance of the delegate.
@@ -190,7 +208,7 @@ QQmlListProperty<QObject> QQmlObjectModel::children()
 }
 
 /*!
-    \qmlproperty int QtQuick2::VisualItemModel::count
+    \qmlproperty int QtQml.Models2::ObjectModel::count
 
     The number of items in the model.  This property is readonly.
 */

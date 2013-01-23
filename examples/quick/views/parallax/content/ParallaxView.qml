@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQml.Models 2.1
 
 Item {
     id: root
@@ -63,7 +64,7 @@ Item {
 
         orientation: Qt.Horizontal
         boundsBehavior: Flickable.DragOverBounds
-        model: VisualItemModel { id: visualModel }
+        model: ObjectModel { id: visualModel }
 
         highlightRangeMode: ListView.StrictlyEnforceRange
         snapMode: ListView.SnapOneItem

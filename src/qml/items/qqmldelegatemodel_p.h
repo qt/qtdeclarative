@@ -60,7 +60,7 @@ class QQmlChangeSet;
 class QQmlComponent;
 class QQuickPackage;
 class QQmlV8Function;
-class QQmlDataGroup;
+class QQmlDelegateModelGroup;
 class QQmlDelegateModelAttached;
 class QQmlDelegateModelPrivate;
 
@@ -73,9 +73,9 @@ class Q_QML_PRIVATE_EXPORT QQmlDelegateModel : public QQmlInstanceModel, public 
     Q_PROPERTY(QVariant model READ model WRITE setModel)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate)
     Q_PROPERTY(QString filterOnGroup READ filterGroup WRITE setFilterGroup NOTIFY filterGroupChanged RESET resetFilterGroup)
-    Q_PROPERTY(QQmlDataGroup *items READ items CONSTANT) //TODO : worth renaming?
-    Q_PROPERTY(QQmlDataGroup *persistedItems READ persistedItems CONSTANT)
-    Q_PROPERTY(QQmlListProperty<QQmlDataGroup> groups READ groups CONSTANT)
+    Q_PROPERTY(QQmlDelegateModelGroup *items READ items CONSTANT) //TODO : worth renaming?
+    Q_PROPERTY(QQmlDelegateModelGroup *persistedItems READ persistedItems CONSTANT)
+    Q_PROPERTY(QQmlListProperty<QQmlDelegateModelGroup> groups READ groups CONSTANT)
     Q_PROPERTY(QObject *parts READ parts CONSTANT)
     Q_PROPERTY(QVariant rootIndex READ rootIndex WRITE setRootIndex NOTIFY rootIndexChanged)
     Q_CLASSINFO("DefaultProperty", "delegate")
@@ -114,9 +114,9 @@ public:
     void setFilterGroup(const QString &group);
     void resetFilterGroup();
 
-    QQmlDataGroup *items();
-    QQmlDataGroup *persistedItems();
-    QQmlListProperty<QQmlDataGroup> groups();
+    QQmlDelegateModelGroup *items();
+    QQmlDelegateModelGroup *persistedItems();
+    QQmlListProperty<QQmlDelegateModelGroup> groups();
     QObject *parts();
 
     bool event(QEvent *);
@@ -145,17 +145,17 @@ private:
     Q_DISABLE_COPY(QQmlDelegateModel)
 };
 
-class QQmlDataGroupPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlDataGroup : public QObject
+class QQmlDelegateModelGroupPrivate;
+class Q_QML_PRIVATE_EXPORT QQmlDelegateModelGroup : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(bool includeByDefault READ defaultInclude WRITE setDefaultInclude NOTIFY defaultIncludeChanged)
 public:
-    QQmlDataGroup(QObject *parent = 0);
-    QQmlDataGroup(const QString &name, QQmlDelegateModel *model, int compositorType, QObject *parent = 0);
-    ~QQmlDataGroup();
+    QQmlDelegateModelGroup(QObject *parent = 0);
+    QQmlDelegateModelGroup(const QString &name, QQmlDelegateModel *model, int compositorType, QObject *parent = 0);
+    ~QQmlDelegateModelGroup();
 
     QString name() const;
     void setName(const QString &name);
@@ -183,7 +183,7 @@ Q_SIGNALS:
     void defaultIncludeChanged();
     void changed(const QQmlV8Handle &removed, const QQmlV8Handle &inserted);
 private:
-    Q_DECLARE_PRIVATE(QQmlDataGroup)
+    Q_DECLARE_PRIVATE(QQmlDelegateModelGroup)
 };
 
 class QQmlDelegateModelItem;
@@ -229,6 +229,6 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQmlDelegateModel)
 QML_DECLARE_TYPEINFO(QQmlDelegateModel, QML_HAS_ATTACHED_PROPERTIES)
-QML_DECLARE_TYPE(QQmlDataGroup)
+QML_DECLARE_TYPE(QQmlDelegateModelGroup)
 
 #endif // QQMLDATAMODEL_P_H

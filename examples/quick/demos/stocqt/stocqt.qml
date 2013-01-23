@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQml.Models 2.1
 import "./content"
 
 ListView {
@@ -66,7 +67,7 @@ ListView {
         }
     }
 
-    model: VisualItemModel {
+    model: ObjectModel {
         StockListView {
             id: listView
             width: root.width

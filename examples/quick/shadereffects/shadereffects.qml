@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQml.Models 2.1
 import "content"
 
 Rectangle {
@@ -85,7 +86,7 @@ Rectangle {
                 height: 140
                 clip: true
                 snapMode: ListView.SnapOneItem
-                model: VisualItemModel {
+                model: ObjectModel {
                     Text {
                         width: 160
                         height: 140

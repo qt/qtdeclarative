@@ -183,10 +183,10 @@ public:
 };
 
 
-class QQmlDataGroupEmitter
+class QQmlDelegateModelGroupEmitter
 {
 public:
-    virtual ~QQmlDataGroupEmitter() {}
+    virtual ~QQmlDelegateModelGroupEmitter() {}
     virtual void emitModelUpdated(const QQmlChangeSet &changeSet, bool reset) = 0;
     virtual void createdPackage(int, QQuickPackage *) {}
     virtual void initPackage(int, QQuickPackage *) {}
@@ -195,17 +195,17 @@ public:
     QIntrusiveListNode emitterNode;
 };
 
-typedef QIntrusiveList<QQmlDataGroupEmitter, &QQmlDataGroupEmitter::emitterNode> QQmlDataGroupEmitterList;
+typedef QIntrusiveList<QQmlDelegateModelGroupEmitter, &QQmlDelegateModelGroupEmitter::emitterNode> QQmlDelegateModelGroupEmitterList;
 
-class QQmlDataGroupPrivate : public QObjectPrivate
+class QQmlDelegateModelGroupPrivate : public QObjectPrivate
 {
 public:
-    Q_DECLARE_PUBLIC(QQmlDataGroup)
+    Q_DECLARE_PUBLIC(QQmlDelegateModelGroup)
 
-    QQmlDataGroupPrivate() : group(Compositor::Cache), defaultInclude(false) {}
+    QQmlDelegateModelGroupPrivate() : group(Compositor::Cache), defaultInclude(false) {}
 
-    static QQmlDataGroupPrivate *get(QQmlDataGroup *group) {
-        return static_cast<QQmlDataGroupPrivate *>(QObjectPrivate::get(group)); }
+    static QQmlDelegateModelGroupPrivate *get(QQmlDelegateModelGroup *group) {
+        return static_cast<QQmlDelegateModelGroupPrivate *>(QObjectPrivate::get(group)); }
 
     void setModel(QQmlDelegateModel *model, Compositor::Group group);
     bool isChangedConnected();
@@ -222,7 +222,7 @@ public:
 
     Compositor::Group group;
     QQmlGuard<QQmlDelegateModel> model;
-    QQmlDataGroupEmitterList emitters;
+    QQmlDelegateModelGroupEmitterList emitters;
     QQmlChangeSet changeSet;
     QString name;
     bool defaultInclude;
@@ -230,7 +230,7 @@ public:
 
 class QQmlDelegateModelParts;
 
-class QQmlDelegateModelPrivate : public QObjectPrivate, public QQmlDataGroupEmitter
+class QQmlDelegateModelPrivate : public QObjectPrivate, public QQmlDelegateModelGroupEmitter
 {
     Q_DECLARE_PUBLIC(QQmlDelegateModel)
 public:
@@ -282,9 +282,9 @@ public:
 
     bool insert(Compositor::insert_iterator &before, const v8::Local<v8::Object> &object, int groups);
 
-    static void group_append(QQmlListProperty<QQmlDataGroup> *property, QQmlDataGroup *group);
-    static int group_count(QQmlListProperty<QQmlDataGroup> *property);
-    static QQmlDataGroup *group_at(QQmlListProperty<QQmlDataGroup> *property, int index);
+    static void group_append(QQmlListProperty<QQmlDelegateModelGroup> *property, QQmlDelegateModelGroup *group);
+    static int group_count(QQmlListProperty<QQmlDelegateModelGroup> *property);
+    static QQmlDelegateModelGroup *group_at(QQmlListProperty<QQmlDelegateModelGroup> *property, int index);
 
     void releaseIncubator(QQDMIncubationTask *incubationTask);
     void incubatorStatusChanged(QQDMIncubationTask *incubationTask, QQmlIncubator::Status status);
@@ -296,7 +296,7 @@ public:
     QQmlDelegateModelItemMetaType *m_cacheMetaType;
     QQmlContext *m_context;
     QQmlDelegateModelParts *m_parts;
-    QQmlDataGroupEmitterList m_pendingParts;
+    QQmlDelegateModelGroupEmitterList m_pendingParts;
 
     QList<QQmlDelegateModelItem *> m_cache;
     QList<QQDMIncubationTask *> m_finishedIncubating;
@@ -316,15 +316,15 @@ public:
 
     union {
         struct {
-            QQmlDataGroup *m_cacheItems;
-            QQmlDataGroup *m_items;
-            QQmlDataGroup *m_persistedItems;
+            QQmlDelegateModelGroup *m_cacheItems;
+            QQmlDelegateModelGroup *m_items;
+            QQmlDelegateModelGroup *m_persistedItems;
         };
-        QQmlDataGroup *m_groups[Compositor::MaximumGroupCount];
+        QQmlDelegateModelGroup *m_groups[Compositor::MaximumGroupCount];
     };
 };
 
-class QQmlPartsModel : public QQmlInstanceModel, public QQmlDataGroupEmitter
+class QQmlPartsModel : public QQmlInstanceModel, public QQmlDelegateModelGroupEmitter
 {
     Q_OBJECT
     Q_PROPERTY(QString filterOnGroup READ filterGroup WRITE setFilterGroup NOTIFY filterGroupChanged RESET resetFilterGroup)

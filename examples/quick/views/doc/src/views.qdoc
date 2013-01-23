@@ -71,12 +71,12 @@
 
     \snippet quick/views/package/Delegate.qml 0
 
-    A VisualDataModel allows the individual views to access their specific items from
+    A DelegateModel allows the individual views to access their specific items from
     the shared package delegate.
 
     \snippet quick/views/package/view.qml 0
 
-    \section2 VisualItemModel uses a VisualItemModel for the model instead of a ListModel.
+    \section2 ObjectModel uses an ObjectModel for the model instead of a ListModel.
 
     \snippet quick/views/visualitemmodel/visualitemmodel.qml 0
 */

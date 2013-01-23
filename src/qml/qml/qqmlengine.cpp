@@ -55,7 +55,6 @@
 #include "qqmlxmlhttprequest_p.h"
 #include "qqmlscriptstring.h"
 #include "qqmlglobal_p.h"
-#include "qqmllistmodel_p.h"
 #include "qquickworkerscript_p.h"
 #include "qqmlcomponent_p.h"
 #include "qqmlnetworkaccessmanagerfactory.h"
@@ -89,10 +88,11 @@
 
 #include <private/qqmllocale_p.h>
 
-#include "qqmlbind_p.h"
-#include "qqmlconnections_p.h"
-#include "qqmltimer_p.h"
-#include "qqmlplatform_p.h"
+#include <private/qqmlbind_p.h>
+#include <private/qqmlconnections_p.h>
+#include <private/qqmltimer_p.h>
+#include <private/qqmllistmodel_p.h>
+#include <private/qqmlplatform_p.h>
 #include <private/qquickpackage_p.h>
 #include <private/qqmldelegatemodel_p.h>
 #include <private/qqmlobjectmodel_p.h>
@@ -184,20 +184,20 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
     qmlRegisterType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections");
     qmlRegisterType<QQmlTimer>(uri, versionMajor, versionMinor,"Timer");
     qmlRegisterCustomType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections", new QQmlConnectionsParser);
-    qmlRegisterType<QQmlListElement>(uri, versionMajor, versionMinor, "ListElement");
-    qmlRegisterCustomType<QQmlListModel>(uri, versionMajor, versionMinor, "ListModel", new QQmlListModelParser);
+    qmlRegisterType<QQmlInstanceModel>();
 }
 
 
 // These QtQuick types' implementation resides in the QtQml module
 void QQmlEnginePrivate::registerQtQuick2Types(const char *uri, int versionMajor, int versionMinor)
 {
+    qmlRegisterType<QQmlListElement>(uri, versionMajor, versionMinor, "ListElement"); // Now in QtQml.Models, here for compatibility
+    qmlRegisterCustomType<QQmlListModel>(uri, versionMajor, versionMinor, "ListModel", new QQmlListModelParser); // Now in QtQml.Models, here for compatibility
     qmlRegisterType<QQuickWorkerScript>(uri, versionMajor, versionMinor, "WorkerScript");
     qmlRegisterType<QQuickPackage>(uri, versionMajor, versionMinor, "Package");
     qmlRegisterType<QQmlDelegateModel>(uri, versionMajor, versionMinor, "VisualDataModel");
-    qmlRegisterType<QQmlDataGroup>(uri, versionMajor, versionMinor, "VisualDataGroup");
+    qmlRegisterType<QQmlDelegateModelGroup>(uri, versionMajor, versionMinor, "VisualDataGroup");
     qmlRegisterType<QQmlObjectModel>(uri, versionMajor, versionMinor, "VisualItemModel");
-    qmlRegisterType<QQmlInstanceModel>();
 }
 
 void QQmlEnginePrivate::defineQtQuick2Module()
