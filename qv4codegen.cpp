@@ -2313,7 +2313,7 @@ bool Codegen::visit(SwitchStatement *ast)
             Result rhs = expression(clause->expression);
             IR::BasicBlock *iftrue = blockMap[clause];
             IR::BasicBlock *iffalse = _function->newBasicBlock();
-            cjump(binop(IR::OpEqual, *lhs, *rhs), iftrue, iffalse);
+            cjump(binop(IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse);
             _block = iffalse;
         }
 
@@ -2322,7 +2322,7 @@ bool Codegen::visit(SwitchStatement *ast)
             Result rhs = expression(clause->expression);
             IR::BasicBlock *iftrue = blockMap[clause];
             IR::BasicBlock *iffalse = _function->newBasicBlock();
-            cjump(binop(IR::OpEqual, *lhs, *rhs), iftrue, iffalse);
+            cjump(binop(IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse);
             _block = iffalse;
         }
 
