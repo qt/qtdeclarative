@@ -54,7 +54,8 @@ struct EvalFunction : FunctionObject
     static QQmlJS::VM::Function *parseSource(QQmlJS::VM::ExecutionContext *ctx,
                                              const QString &fileName,
                                              const QString &source,
-                                             QQmlJS::Codegen::Mode mode);
+                                             QQmlJS::Codegen::Mode mode,
+                                             bool inheritContext);
 
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
     Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool directCall);

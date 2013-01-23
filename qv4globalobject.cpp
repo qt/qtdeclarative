@@ -318,24 +318,27 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
     if (argc < 1)
         return Value::undefinedValue();
 
-    if (!args[0].isString())
-        return args[0];
-
-    const QString code = args[0].stringValue()->toQString();
-    QQmlJS::VM::Function *f = parseSource(context, QStringLiteral("eval code"), code, QQmlJS::Codegen::EvalCode);
-    if (!f)
-        return Value::undefinedValue();
-
-    bool strict = f->isStrict || context->strictMode;
-
-    ExecutionContext k;
-
     ExecutionContext *ctx = context;
     if (!directCall) {
         // the context for eval should be the global scope
         while (ctx->parent)
             ctx = ctx->parent;
     }
+
+    if (!args[0].isString())
+        return args[0];
+
+    const QString code = args[0].stringValue()->toQString();
+    bool inheritContext = !context->strictMode;
+    QQmlJS::VM::Function *f = parseSource(context, QStringLiteral("eval code"),
+                                          code, QQmlJS::Codegen::EvalCode,
+                                          inheritContext);
+    if (!f)
+        return Value::undefinedValue();
+
+    bool strict = f->isStrict || context->strictMode;
+
+    ExecutionContext k;
 
     if (strict) {
         ctx = &k;
@@ -365,7 +368,8 @@ Value EvalFunction::call(ExecutionContext *context, Value thisObject, Value *arg
 
 QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ctx,
                                                 const QString &fileName, const QString &source,
-                                                QQmlJS::Codegen::Mode mode)
+                                                QQmlJS::Codegen::Mode mode,
+                                                bool inheritContext)
 {
     using namespace QQmlJS;
 
@@ -412,8 +416,13 @@ QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
                 return 0;
             }
 
+            QStringList inheritedLocals;
+            if (inheritContext)
+                for (String **i = ctx->variables(), **ei = i + ctx->variableCount(); i < ei; ++i)
+                    inheritedLocals.append(*i ? (*i)->toQString() : QString());
+
             Codegen cg(ctx);
-            IR::Function *globalIRCode = cg(fileName, program, &module, mode);
+            IR::Function *globalIRCode = cg(fileName, program, &module, mode, inheritedLocals);
             QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(vm, &module));
             if (globalIRCode)
                 globalCode = isel->vmFunction(globalIRCode);

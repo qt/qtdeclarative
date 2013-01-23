@@ -43,6 +43,7 @@
 
 #include "qv4ir_p.h"
 #include <private/qqmljsastvisitor_p.h>
+#include <QtCore/QStringList>
 #include <assert.h>
 
 namespace QQmlJS {
@@ -78,7 +79,7 @@ public:
         FunctionCode
     };
 
-    IR::Function *operator()(const QString &fileName, AST::Program *ast, IR::Module *module, Mode mode = GlobalCode);
+    IR::Function *operator()(const QString &fileName, AST::Program *ast, IR::Module *module, Mode mode = GlobalCode, const QStringList &inheritedLocals = QStringList());
     IR::Function *operator()(const QString &fileName, AST::FunctionExpression *ast, IR::Module *module);
 
 protected:
@@ -252,8 +253,11 @@ protected:
     void cjump(IR::Expr *cond, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse);
 
     void linearize(IR::Function *function);
-    IR::Function *defineFunction(const QString &name, AST::Node *ast, AST::FormalParameterList *formals,
-                                 AST::SourceElements *body, Mode mode = FunctionCode);
+    IR::Function *defineFunction(const QString &name, AST::Node *ast,
+                                 AST::FormalParameterList *formals,
+                                 AST::SourceElements *body,
+                                 Mode mode = FunctionCode,
+                                 const QStringList &inheritedLocals = QStringList());
     int indexOfArgument(const QStringRef &string) const;
 
     void unwindException(TryCleanup *outest);

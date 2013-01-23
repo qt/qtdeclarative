@@ -395,7 +395,7 @@ int main(int argc, char *argv[])
                     return EXIT_FAILURE;
                 }
 
-                QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode);
+                QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode, /*inheritContext =*/ false);
                 if (!f)
                     continue;
 
@@ -420,5 +420,5 @@ int main(int argc, char *argv[])
 
         vm.memoryManager->dumpStats();
     } return EXIT_SUCCESS;
-    }
+    } // switch (mode)
 }

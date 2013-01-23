@@ -438,7 +438,9 @@ Codegen::Codegen(ErrorHandler *errorHandler, bool strictMode)
 {
 }
 
-IR::Function *Codegen::operator()(const QString &fileName, Program *node, IR::Module *module, Mode mode)
+IR::Function *Codegen::operator()(const QString &fileName, Program *node,
+                                  IR::Module *module, Mode mode,
+                                  const QStringList &inheritedLocals)
 {
     assert(node);
 
@@ -449,7 +451,8 @@ IR::Function *Codegen::operator()(const QString &fileName, Program *node, IR::Mo
     ScanFunctions scan(this);
     scan(node);
 
-    IR::Function *globalCode = defineFunction(QStringLiteral("%entry"), node, 0, node->elements, mode);
+    IR::Function *globalCode = defineFunction(QStringLiteral("%entry"), node, 0,
+                                              node->elements, mode, inheritedLocals);
     if (_debugger) {
         if (node->elements->element) {
             SourceLocation loc = node->elements->element->firstSourceLocation();
@@ -1815,7 +1818,8 @@ void Codegen::linearize(IR::Function *function)
 
 IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
                                       AST::FormalParameterList *formals,
-                                      AST::SourceElements *body, Mode mode)
+                                      AST::SourceElements *body, Mode mode,
+                                      const QStringList &inheritedLocals)
 {
     qSwap(_mode, mode); // enter function code.
 
@@ -1843,6 +1847,15 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
             (*it).index = t;
         }
     } else {
+        if (!_env->isStrict) {
+            foreach (const QString &inheritedLocal, inheritedLocals) {
+                function->LOCAL(inheritedLocal);
+                unsigned tempIndex = entryBlock->newTemp();
+                Environment::Member member = { Environment::UndefinedMember, tempIndex, 0 };
+                _env->members.insert(inheritedLocal, member);
+            }
+        }
+
         IR::ExprList *args = 0;
         for (Environment::MemberMap::const_iterator it = _env->members.constBegin(); it != _env->members.constEnd(); ++it) {
             const QString &local = it.key();

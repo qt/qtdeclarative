@@ -476,7 +476,7 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
     }
 
     locals = function->varCount ? new Value[function->varCount] : 0;
-    if (function->varCount)
+    if (locals)
         std::fill(locals, locals + function->varCount, Value::undefinedValue());
 
     activation = 0;
