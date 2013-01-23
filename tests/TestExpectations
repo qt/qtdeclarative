@@ -92,10 +92,6 @@ S11.7.1_A2.4_T1 failing
 S11.7.1_A2.4_T3 failing
 S11.7.2_A2.4_T1 failing
 S11.7.2_A2.4_T3 failing
-S11.7.2_A3_T1.2 failing
-S11.7.2_A4_T3 failing
-S11.7.2_A4_T4 failing
-S11.7.2_A5.2_T1 failing
 S11.6.1_A2.4_T1 failing
 S11.6.1_A2.4_T3 failing
 S11.6.2_A2.4_T1 failing
@@ -106,12 +102,6 @@ S11.8.3_A2.4_T1 failing
 S11.8.3_A2.4_T3 failing
 S11.7.3_A2.4_T1 failing
 S11.7.3_A2.4_T3 failing
-S11.7.3_A3_T1.2 failing
-S11.7.3_A4_T1 failing
-S11.7.3_A4_T2 failing
-S11.7.3_A4_T3 failing
-S11.7.3_A4_T4 failing
-S11.7.3_A5.2_T1 failing
 S11.8.1_A2.4_T1 failing
 S11.8.1_A2.4_T3 failing
 S11.8.4_A2.4_T1 failing
@@ -153,7 +143,6 @@ S12.11_A1_T1 failing
 S12.11_A1_T2 failing
 S12.11_A1_T3 failing
 S12.11_A1_T4 failing
-S12.13_A3_T3 failing
 12.14-13 failing
 12.10-0-3 failing
 S12.10_A1.11_T1 failing
