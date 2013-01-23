@@ -107,6 +107,7 @@ struct Function {
 
     QList<QString> formals;
     QList<QString> locals;
+    QVector<Value> generatedValues;
 
     bool hasNestedFunctions  : 1;
     bool hasDirectEval       : 1;

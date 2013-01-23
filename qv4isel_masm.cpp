@@ -370,6 +370,7 @@ InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Modu
     : EvalInstructionSelection(engine, module)
     , _block(0)
     , _function(0)
+    , _vmFunction(0)
     , _asm(0)
 {
 }
@@ -382,6 +383,7 @@ InstructionSelection::~InstructionSelection()
 void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
 {
     qSwap(_function, function);
+    qSwap(_vmFunction, vmFunction);
     Assembler* oldAssembler = _asm;
     _asm = new Assembler(_function);
 
@@ -423,8 +425,9 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
 #endif
     _asm->ret();
 
-    _asm->link(vmFunction);
+    _asm->link(_vmFunction);
 
+    qSwap(_vmFunction, vmFunction);
     qSwap(_function, function);
     delete _asm;
     _asm = oldAssembler;
@@ -570,6 +573,7 @@ void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *target
 {
     Value v = Value::fromObject(engine()->newRegExpObject(*sourceRegexp->value,
                                                           sourceRegexp->flags));
+    _vmFunction->generatedValues.append(v);
     _asm->storeValue(v, targetTemp);
 }
 

@@ -350,6 +350,12 @@ void MemoryManager::collectRoots(QVector<VM::Object *> &roots) const
                 roots.append(it->object);
     }
 
+    for (int i = 0; i < m_d->engine->functions.size(); ++i) {
+        Function* f = m_d->engine->functions.at(i);
+        for (int k = 0; k < f->generatedValues.count(); ++k)
+            add(roots, f->generatedValues.at(k));
+    }
+
     collectRootsOnStack(roots);
 }
 

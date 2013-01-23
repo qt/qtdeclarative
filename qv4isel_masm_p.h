@@ -748,6 +748,7 @@ private:
 
     IR::BasicBlock *_block;
     IR::Function* _function;
+    VM::Function* _vmFunction;
     Assembler* _asm;
 };
 
