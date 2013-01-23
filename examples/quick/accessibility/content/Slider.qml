@@ -39,7 +39,6 @@
 **
 ****************************************************************************/
 
-
 import QtQuick 2.0
 
 // Minimal slider implementation
@@ -49,10 +48,10 @@ Rectangle {
     property alias text: buttonText.text
     Accessible.role: Accessible.Slider
 
-    property int value : 5         // required
-    property int minimumValue : 0  // optional (default INT_MIN)
-    property int maximumValue : 20 // optional (default INT_MAX)
-    property int stepSize : 1      // optional (default 1)
+    property int value: 5         // required
+    property int minimumValue: 0  // optional (default INT_MIN)
+    property int maximumValue: 20 // optional (default INT_MAX)
+    property int stepSize: 1      // optional (default 1)
 
     width: 100
     height: 30
@@ -77,6 +76,7 @@ Rectangle {
         anchors.centerIn: parent
         font.pixelSize: parent.height * .5
     }
+
     MouseArea {
         anchors.fill: parent
         onClicked: {
@@ -84,6 +84,7 @@ Rectangle {
             slider.value = pos
         }
     }
+
     Keys.onLeftPressed: value > minimumValue ? value = value - stepSize : minimumValue
     Keys.onRightPressed: value < maximumValue ? value = value + stepSize : maximumValue
 }
