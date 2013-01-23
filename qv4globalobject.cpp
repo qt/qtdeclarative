@@ -313,7 +313,7 @@ EvalFunction::EvalFunction(ExecutionContext *scope)
     name = scope->engine->id_eval;
 }
 
-Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc, bool directCall)
+Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc, bool directCall)
 {
     if (argc < 1)
         return Value::undefinedValue();
@@ -363,7 +363,7 @@ Value EvalFunction::call(ExecutionContext *context, Value /*thisObject*/, Value 
 Value EvalFunction::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
 {
     // indirect call
-    return call(context, thisObject, args, argc, false);
+    return evalCall(context, thisObject, args, argc, false);
 }
 
 QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ctx,

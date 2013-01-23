@@ -802,6 +802,7 @@ Value DatePrototype::method_UTC(ExecutionContext *ctx)
 
 Value DatePrototype::method_now(ExecutionContext *ctx)
 {
+    Q_UNUSED(ctx);
     double t = currentTime();
     return Value::fromDouble(t);
 }

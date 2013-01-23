@@ -103,6 +103,7 @@ Value JsonObject::method_parse(ExecutionContext *ctx)
 
 Value JsonObject::method_stringify(ExecutionContext *ctx)
 {
+    Q_UNUSED(ctx);
     assert(!"Not implemented");
 }
 

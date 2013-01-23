@@ -58,7 +58,7 @@ struct EvalFunction : FunctionObject
                                              bool inheritContext);
 
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-    Value call(ExecutionContext *context, Value thisObject, Value *args, int argc, bool directCall);
+    Value evalCall(ExecutionContext *context, Value thisObject, Value *args, int argc, bool directCall);
 };
 
 struct GlobalFunctions

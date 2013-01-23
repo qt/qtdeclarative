@@ -742,7 +742,7 @@ Value __qmljs_call_activation_property(ExecutionContext *context, String *name, 
     Value thisObject = base ? Value::fromObject(base) : Value::undefinedValue();
 
     if (o == context->engine->evalFunction && name == context->engine->id_eval)
-        return static_cast<EvalFunction *>(o)->call(context, thisObject, args, argc, true);
+        return static_cast<EvalFunction *>(o)->evalCall(context, thisObject, args, argc, true);
 
     return o->call(context, thisObject, args, argc);
 }
