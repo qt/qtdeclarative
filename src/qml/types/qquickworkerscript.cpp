@@ -42,8 +42,8 @@
 #include "qquickworkerscript_p.h"
 #include "qqmllistmodel_p.h"
 #include "qqmllistmodelworkeragent_p.h"
-#include "qqmlengine_p.h"
-#include "qqmlexpression_p.h"
+#include <private/qqmlengine_p.h>
+#include <private/qqmlexpression_p.h>
 
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qcoreapplication.h>

@@ -55,7 +55,6 @@
 #include "qqmlxmlhttprequest_p.h"
 #include "qqmlscriptstring.h"
 #include "qqmlglobal_p.h"
-#include "qquickworkerscript_p.h"
 #include "qqmlcomponent_p.h"
 #include "qqmlnetworkaccessmanagerfactory.h"
 #include "qqmldirparser_p.h"
@@ -96,6 +95,7 @@
 #include <private/qquickpackage_p.h>
 #include <private/qqmldelegatemodel_p.h>
 #include <private/qqmlobjectmodel_p.h>
+#include <private/qquickworkerscript_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #include <qt_windows.h>

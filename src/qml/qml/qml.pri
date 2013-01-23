@@ -1,12 +1,9 @@
 SOURCES += \
     $$PWD/qqmlinstruction.cpp \
-    $$PWD/qqmllistmodel.cpp \
-    $$PWD/qqmllistmodelworkeragent.cpp \
     $$PWD/qqmlopenmetaobject.cpp \
     $$PWD/qqmlvmemetaobject.cpp \
     $$PWD/qqmlengine.cpp \
     $$PWD/qqmlexpression.cpp \
-    $$PWD/qqmlbinding.cpp \
     $$PWD/qqmlproperty.cpp \
     $$PWD/qqmlcomponent.cpp \
     $$PWD/qqmlincubator.cpp \
@@ -38,7 +35,6 @@ SOURCES += \
     $$PWD/qqmltypenotavailable.cpp \
     $$PWD/qqmltypenamecache.cpp \
     $$PWD/qqmlscriptstring.cpp \
-    $$PWD/qquickworkerscript.cpp \
     $$PWD/qqmlnetworkaccessmanagerfactory.cpp \
     $$PWD/qqmldirparser.cpp \
     $$PWD/qqmlextensionplugin.cpp \
@@ -53,21 +49,15 @@ SOURCES += \
     $$PWD/qqmlfile.cpp \
     $$PWD/qqmlbundle.cpp \
     $$PWD/qqmlmemoryprofiler.cpp \
-    $$PWD/qqmlconnections.cpp \
-    $$PWD/qqmltimer.cpp \
-    $$PWD/qqmlbind.cpp \
-    $$PWD/qqmlplatform.cpp
+    $$PWD/qqmlplatform.cpp \
+    $$PWD/qqmlbinding.cpp
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
     $$PWD/qqmlinstruction_p.h \
-    $$PWD/qqmllistmodel_p.h\
-    $$PWD/qqmllistmodel_p_p.h\
-    $$PWD/qqmllistmodelworkeragent_p.h \
     $$PWD/qqmlopenmetaobject_p.h \
     $$PWD/qqmlvmemetaobject_p.h \
     $$PWD/qqml.h \
-    $$PWD/qqmlbinding_p.h \
     $$PWD/qqmlproperty.h \
     $$PWD/qqmlcomponent.h \
     $$PWD/qqmlcomponent_p.h \
@@ -112,7 +102,6 @@ HEADERS += \
     $$PWD/qqmltypenotavailable_p.h \
     $$PWD/qqmltypenamecache_p.h \
     $$PWD/qqmlscriptstring.h \
-    $$PWD/qquickworkerscript_p.h \
     $$PWD/qqmlguard_p.h \
     $$PWD/qqmlnetworkaccessmanagerfactory.h \
     $$PWD/qqmldirparser_p.h \
@@ -130,10 +119,8 @@ HEADERS += \
     $$PWD/qqmlfile.h \
     $$PWD/qqmlbundle_p.h \
     $$PWD/qqmlmemoryprofiler_p.h \
-    $$PWD/qqmlconnections_p.h \
-    $$PWD/qqmltimer_p.h \
-    $$PWD/qqmlbind_p.h \
     $$PWD/qqmlplatform_p.h \
+    $$PWD/qqmlbinding_p.h \
     $$PWD/qqmlextensionplugin_p.h
 
 

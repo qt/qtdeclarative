@@ -55,7 +55,7 @@
 
 #include "qqmllistmodel_p.h"
 #include <private/qqmlengine_p.h>
-#include "qqmlopenmetaobject_p.h"
+#include <private/qqmlopenmetaobject_p.h>
 #include <qqml.h>
 
 QT_BEGIN_NAMESPACE
