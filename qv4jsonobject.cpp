@@ -40,10 +40,14 @@
 ****************************************************************************/
 #include <qv4jsonobject.h>
 #include <qv4objectproto.h>
+#include <qv4numberobject.h>
+#include <qv4stringobject.h>
+#include <qv4booleanobject.h>
+#include <qv4objectiterator.h>
 #include <qjsondocument.h>
-#include <qjsonobject.h>
-#include <qjsonarray.h>
-#include <qjsonvalue.h>
+#include <qstack.h>
+#include <qstringlist.h>
+
 
 namespace QQmlJS {
 namespace VM {
@@ -633,6 +637,230 @@ bool Parser::parseString(QString *string)
 }
 
 
+struct Stringify
+{
+    ExecutionContext *ctx;
+    FunctionObject *replacerFunction;
+    QVector<String *> propertyList;
+    QString gap;
+    QString indent;
+
+    QStack<Object *> stack;
+
+    Stringify(ExecutionContext *ctx) : ctx(ctx), replacerFunction(0) {}
+
+    QString Str(const QString &key, Value value);
+    QString JA(ArrayObject *a);
+    QString JO(Object *o);
+
+    QString makeMember(const QString &key, Value v);
+};
+
+static QString quote(const QString &str)
+{
+    QString product = "\"";
+    for (int i = 0; i < str.length(); ++i) {
+        QChar c = str.at(i);
+        switch (c.unicode()) {
+        case '"':
+            product += "\\\"";
+            break;
+        case '\\':
+            product += "\\\\";
+            break;
+        case '\b':
+            product += "\\b";
+            break;
+        case '\f':
+            product += "\\f";
+            break;
+        case '\n':
+            product += "\\n";
+            break;
+        case '\r':
+            product += "\\r";
+            break;
+        case '\t':
+            product += "\\t";
+            break;
+        default:
+            if (c.unicode() <= 0x1f) {
+                product += "\\u00";
+                product += c.unicode() > 0xf ? '1' : '0';
+                product += "0123456789abcdef"[c.unicode() & 0xf];
+            } else {
+                product += c;
+            }
+        }
+    }
+    product += '"';
+    return product;
+}
+
+QString Stringify::Str(const QString &key, Value value)
+{
+    QString result;
+
+    if (Object *o = value.asObject()) {
+        FunctionObject *toJSON = o->__get__(ctx, ctx->engine->identifier(QStringLiteral("toJSON"))).asFunctionObject();
+        if (toJSON) {
+            Value arg = Value::fromString(ctx, key);
+            value = toJSON->call(ctx, value, &arg, 1);
+        }
+    }
+
+    if (replacerFunction) {
+        Object *holder = ctx->engine->newObject();
+        Value holderValue = Value::fromObject(holder);
+        holder->__put__(ctx, QString(), value);
+        Value args[2];
+        args[0] = Value::fromString(ctx, key);
+        args[1] = value;
+        value = replacerFunction->call(ctx, holderValue, args, 2);
+    }
+
+    if (Object *o = value.asObject()) {
+        if (NumberObject *n = o->asNumberObject())
+            value = n->value;
+        else if (StringObject *so = o->asStringObject())
+            value = so->value;
+        else if (BooleanObject *b =o->asBooleanObject())
+            value = b->value;
+    }
+
+    if (value.isNull())
+        return QStringLiteral("null");
+    if (value.isBoolean())
+        return value.booleanValue() ? QStringLiteral("true") : QStringLiteral("false");
+    if (value.isString())
+        return quote(value.stringValue()->toQString());
+
+    if (value.isNumber()) {
+        double d = value.toNumber(ctx);
+        return std::isfinite(d) ? value.toString(ctx)->toQString() : QStringLiteral("null");
+    }
+
+    if (Object *o = value.asObject()) {
+        if (!o->asFunctionObject()) {
+            if (o->asArrayObject())
+                return JA(static_cast<ArrayObject *>(o));
+            else
+                return JO(o);
+        }
+    }
+
+    return QString();
+}
+
+QString Stringify::makeMember(const QString &key, Value v)
+{
+    QString strP = Str(key, v);
+    if (!strP.isEmpty()) {
+        QString member = quote(key) + ':';
+        if (!gap.isEmpty())
+            member += ' ';
+        member += strP;
+        return member;
+    }
+    return QString();
+}
+
+QString Stringify::JO(Object *o)
+{
+    if (stack.contains(o))
+        ctx->throwTypeError();
+
+    QString result;
+    stack.push(o);
+    QString stepback = indent;
+    indent += gap;
+
+    QStringList partial;
+    if (propertyList.isEmpty()) {
+        ObjectIterator it(ctx, o, ObjectIterator::EnumberableOnly);
+
+        while (1) {
+            String *name;
+            uint index;
+            PropertyDescriptor *pd = it.next(&name, &index);
+            if (!pd)
+                break;
+            Value v = o->getValueChecked(ctx, pd);
+            QString key;
+            if (name)
+                key = name->toQString();
+            else
+                key = QString::number(index);
+            QString member = makeMember(key, v);
+            if (!member.isEmpty())
+                partial += member;
+        }
+    } else {
+        for (int i = 0; i < propertyList.size(); ++i) {
+            bool exists;
+            Value v = o->__get__(ctx, propertyList.at(i), &exists);
+            if (!exists)
+                continue;
+            QString member = makeMember(propertyList.at(i)->toQString(), v);
+            if (!member.isEmpty())
+                partial += member;
+        }
+    }
+
+    if (partial.isEmpty()) {
+        result = QStringLiteral("{}");
+    } else if (gap.isEmpty()) {
+        result = "{" + partial.join(",") + "}";
+    } else {
+        QString separator = ",\n" + indent;
+        result = "{\n" + indent + partial.join(separator) + "\n" + stepback + "}";
+    }
+
+    indent = stepback;
+    stack.pop();
+    return result;
+}
+
+QString Stringify::JA(ArrayObject *a)
+{
+    if (stack.contains(a))
+        ctx->throwTypeError();
+
+    QString result;
+    stack.push(a);
+    QString stepback = indent;
+    indent += gap;
+
+    QStringList partial;
+    uint len = a->array.length();
+    for (uint i = 0; i < len; ++i) {
+        bool exists;
+        Value v = a->__get__(ctx, i, &exists);
+        if (!exists) {
+            partial += QStringLiteral("null");
+            continue;
+        }
+        QString strP = Str(QString::number(i), v);
+        if (!strP.isEmpty())
+            partial += strP;
+        else
+            partial += QStringLiteral("null");
+    }
+
+    if (partial.isEmpty()) {
+        result = QStringLiteral("[]");
+    } else if (gap.isEmpty()) {
+        result = "[" + partial.join(",") + "]";
+    } else {
+        QString separator = ",\n" + indent;
+        result = "[\n" + indent + partial.join(separator) + "\n" + stepback + "]";
+    }
+
+    indent = stepback;
+    stack.pop();
+    return result;
+}
+
 
 JsonObject::JsonObject(ExecutionContext *context)
     : Object()
@@ -640,7 +868,7 @@ JsonObject::JsonObject(ExecutionContext *context)
     prototype = context->engine->objectPrototype;
 
     defineDefaultProperty(context, QStringLiteral("parse"), method_parse, 2);
-    defineDefaultProperty(context, QStringLiteral("stringify"), method_stringify);
+    defineDefaultProperty(context, QStringLiteral("stringify"), method_stringify, 3);
 }
 
 
@@ -662,8 +890,42 @@ Value JsonObject::method_parse(ExecutionContext *ctx)
 
 Value JsonObject::method_stringify(ExecutionContext *ctx)
 {
-    Q_UNUSED(ctx);
-    assert(!"Not implemented");
+    Stringify stringify(ctx);
+
+    Object *o = ctx->argument(1).asObject();
+    if (o) {
+        stringify.replacerFunction = o->asFunctionObject();
+        if (o->isArray) {
+            for (uint i = 0; i < o->array.length(); ++i) {
+                Value v = o->__get__(ctx, i);
+                if (v.asNumberObject() || v.asStringObject() || v.isNumber())
+                    v = __qmljs_to_string(v, ctx);
+                if (v.isString()) {
+                    String *s = v.stringValue();
+                    if (!stringify.propertyList.contains(s))
+                    stringify.propertyList.append(s);
+                }
+            }
+        }
+    }
+
+    Value s = ctx->argument(2);
+    if (NumberObject *n = s.asNumberObject())
+        s = n->value;
+    else if (StringObject *so = s.asStringObject())
+        s = so->value;
+
+    if (s.isNumber()) {
+        stringify.gap = QString(qMin(10, (int)s.toInteger(ctx)), ' ');
+    } else if (s.isString()) {
+        stringify.gap = s.stringValue()->toQString().left(10);
+    }
+
+
+    QString result = stringify.Str(QString(), ctx->argument(0));
+    if (result.isEmpty())
+        return Value::undefinedValue();
+    return Value::fromString(ctx, result);
 }
 
 
