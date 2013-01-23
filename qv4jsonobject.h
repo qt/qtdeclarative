@@ -53,11 +53,6 @@ struct JsonObject : Object {
     static Value method_parse(ExecutionContext *ctx);
     static Value method_stringify(ExecutionContext *ctx);
 
-private:
-    static Value convertArray(ExecutionContext *context, const QJsonArray &array);
-    static Value convertObject(ExecutionContext *context, const QJsonObject &object);
-    static Value convertValue(ExecutionContext *context, const QJsonValue &value);
-
 };
 
 }
