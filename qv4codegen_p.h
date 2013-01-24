@@ -213,13 +213,15 @@ protected:
     struct UiMember {
     };
 
-    struct TryCleanup {
-        TryCleanup *parent;
+    struct ScopeAndFinally {
+        ScopeAndFinally *parent;
         AST::Finally *finally;
         IR::ExprList *deleteExceptionArgs;
+        bool popScope;
 
-        TryCleanup(TryCleanup *parent, AST::Finally *finally, IR::ExprList *deleteExceptionArgs)
-            : parent(parent), finally(finally), deleteExceptionArgs(deleteExceptionArgs)
+        ScopeAndFinally(ScopeAndFinally *parent) : parent(parent), finally(0), deleteExceptionArgs(0), popScope(true) {}
+        ScopeAndFinally(ScopeAndFinally *parent, AST::Finally *finally, IR::ExprList *deleteExceptionArgs)
+        : parent(parent), finally(finally), deleteExceptionArgs(deleteExceptionArgs), popScope(false)
         {}
     };
 
@@ -229,7 +231,7 @@ protected:
         IR::BasicBlock *breakBlock;
         IR::BasicBlock *continueBlock;
         Loop *parent;
-        TryCleanup *tryCleanup;
+        ScopeAndFinally *scopeAndFinally;
 
         Loop(AST::Statement *node, IR::BasicBlock *breakBlock, IR::BasicBlock *continueBlock, Loop *parent)
             : labelledStatement(0), node(node), breakBlock(breakBlock), continueBlock(continueBlock), parent(parent) {}
@@ -260,7 +262,7 @@ protected:
                                  const QStringList &inheritedLocals = QStringList());
     int indexOfArgument(const QStringRef &string) const;
 
-    void unwindException(TryCleanup *outest);
+    void unwindException(ScopeAndFinally *outest);
 
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);
@@ -399,7 +401,7 @@ private:
     Environment *_env;
     Loop *_loop;
     AST::LabelledStatement *_labelledStatement;
-    TryCleanup *_tryCleanup;
+    ScopeAndFinally *_scopeAndFinally;
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
     VM::ExecutionContext *_context;

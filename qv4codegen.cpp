@@ -413,7 +413,7 @@ Codegen::Codegen(VM::ExecutionContext *context, bool strict)
     , _env(0)
     , _loop(0)
     , _labelledStatement(0)
-    , _tryCleanup(0)
+    , _scopeAndFinally(0)
     , _context(context)
     , _strictMode(strict)
     , _debugger(context->engine->debugger)
@@ -432,7 +432,7 @@ Codegen::Codegen(ErrorHandler *errorHandler, bool strictMode)
     , _env(0)
     , _loop(0)
     , _labelledStatement(0)
-    , _tryCleanup(0)
+    , _scopeAndFinally(0)
     , _context(0)
     , _strictMode(strictMode)
     , _debugger(0)
@@ -515,7 +515,7 @@ void Codegen::enterLoop(Statement *node, IR::BasicBlock *breakBlock, IR::BasicBl
 {
     _loop = new Loop(node, breakBlock, continueBlock, _loop);
     _loop->labelledStatement = _labelledStatement; // consume the enclosing labelled statement
-    _loop->tryCleanup = _tryCleanup;
+    _loop->scopeAndFinally = _scopeAndFinally;
     _labelledStatement = 0;
 }
 
@@ -1849,7 +1849,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 {
     qSwap(_mode, mode); // enter function code.
 
-    TryCleanup *tryCleanup = 0;
+    ScopeAndFinally *scopeAndFinally = 0;
 
     enterEnvironment(ast);
     IR::Function *function = _module->newFunction(name, _function);
@@ -1914,7 +1914,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_exitBlock, exitBlock);
     qSwap(_throwBlock, throwBlock);
     qSwap(_returnAddress, returnAddress);
-    qSwap(_tryCleanup, tryCleanup);
+    qSwap(_scopeAndFinally, scopeAndFinally);
     qSwap(_loop, loop);
 
     for (FormalParameterList *it = formals; it; it = it->next) {
@@ -1948,7 +1948,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_exitBlock, exitBlock);
     qSwap(_throwBlock, throwBlock);
     qSwap(_returnAddress, returnAddress);
-    qSwap(_tryCleanup, tryCleanup);
+    qSwap(_scopeAndFinally, scopeAndFinally);
     qSwap(_loop, loop);
 
     leaveEnvironment();
@@ -2020,7 +2020,7 @@ bool Codegen::visit(BreakStatement *ast)
         if (!loop)
             throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Undefined label '%1'").arg(ast->label.toString()));
     }
-    unwindException(loop->tryCleanup);
+    unwindException(loop->scopeAndFinally);
     _block->JUMP(loop->breakBlock);
     return false;
 }
@@ -2046,7 +2046,7 @@ bool Codegen::visit(ContinueStatement *ast)
     }
     if (!loop)
         throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "continue outside of loop"));
-    unwindException(loop->tryCleanup);
+    unwindException(loop->scopeAndFinally);
     _block->JUMP(loop->continueBlock);
     return false;
 }
@@ -2394,8 +2394,8 @@ bool Codegen::visit(TryStatement *ast)
         deleteExceptionArgs->next->init(_block->TEMP(inCatch));
     }
 
-    TryCleanup tcf(_tryCleanup, ast->finallyExpression, deleteExceptionArgs);
-    _tryCleanup = &tcf;
+    ScopeAndFinally tcf(_scopeAndFinally, ast->finallyExpression, deleteExceptionArgs);
+    _scopeAndFinally = &tcf;
 
     _block->CJUMP(_block->TEMP(hasException), catchBody ? catchBody : finallyBody, tryBody);
 
@@ -2438,7 +2438,7 @@ bool Codegen::visit(TryStatement *ast)
         _block->JUMP(finallyBody);
     }
 
-    _tryCleanup = tcf.parent;
+    _scopeAndFinally = tcf.parent;
 
     IR::BasicBlock *after = _function->newBasicBlock();
     _block = finallyBody;
@@ -2461,18 +2461,23 @@ bool Codegen::visit(TryStatement *ast)
     return false;
 }
 
-void Codegen::unwindException(Codegen::TryCleanup *outest)
+void Codegen::unwindException(Codegen::ScopeAndFinally *outest)
 {
-    TryCleanup *tryCleanup = _tryCleanup;
-    qSwap(_tryCleanup, tryCleanup);
-    while (_tryCleanup != outest) {
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), _tryCleanup->deleteExceptionArgs));
-        TryCleanup *tc = _tryCleanup;
-        _tryCleanup = tc->parent;
-        if (tc->finally && tc->finally->statement)
-            statement(tc->finally->statement);
+    ScopeAndFinally *scopeAndFinally = _scopeAndFinally;
+    qSwap(_scopeAndFinally, scopeAndFinally);
+    while (_scopeAndFinally != outest) {
+        if (_scopeAndFinally->popScope) {
+            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0)));
+            _scopeAndFinally = _scopeAndFinally->parent;
+        } else {
+            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), _scopeAndFinally->deleteExceptionArgs));
+            ScopeAndFinally *tc = _scopeAndFinally;
+            _scopeAndFinally = tc->parent;
+            if (tc->finally && tc->finally->statement)
+                statement(tc->finally->statement);
+        }
     }
-    qSwap(_tryCleanup, tryCleanup);
+    qSwap(_scopeAndFinally, scopeAndFinally);
 }
 
 bool Codegen::visit(VariableStatement *ast)
@@ -2514,8 +2519,14 @@ bool Codegen::visit(WithStatement *ast)
     IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(_block->TEMP(withObject));
     _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_with_scope, 0, 0), args));
+
     ++_function->insideWith;
-    statement(ast->statement);
+    {
+        ScopeAndFinally scope(_scopeAndFinally);
+        _scopeAndFinally = &scope;
+        statement(ast->statement);
+        _scopeAndFinally = scope.parent;
+    }
     --_function->insideWith;
     _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
 
