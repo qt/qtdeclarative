@@ -125,6 +125,9 @@ public:
     ~QQmlEnginePrivate();
 
     void init();
+    // No mutex protecting baseModulesUninitialized, because use outside QQmlEngine
+    // is just qmlClearTypeRegistrations (which can't be called while an engine exists)
+    static bool baseModulesUninitialized;
 
     class PropertyCapture {
     public:

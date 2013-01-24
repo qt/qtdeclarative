@@ -102,6 +102,8 @@ class QQmlPropertyValueInterceptor;
     listName[listLen+nameLen] = '>'; \
     listName[listLen+nameLen+1] = '\0';
 
+void Q_QML_EXPORT qmlClearTypeRegistrations();
+
 template<typename T>
 int qmlRegisterType()
 {

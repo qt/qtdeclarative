@@ -722,17 +722,17 @@ void QQmlData::flushPendingBindingImpl(int coreIndex)
     }
 }
 
+bool QQmlEnginePrivate::baseModulesUninitialized = true;
 void QQmlEnginePrivate::init()
 {
     Q_Q(QQmlEngine);
 
-    static bool firstTime = true;
-    if (firstTime) {
+    if (baseModulesUninitialized) {
         qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component"); // required for the Compiler.
         registerBaseTypes("QtQml", 2, 0); // import which provides language building blocks.
 
         QQmlData::init();
-        firstTime = false;
+        baseModulesUninitialized = false;
     }
 
     qRegisterMetaType<QVariant>();

@@ -46,6 +46,7 @@
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlguard_p.h>
 #include <private/qhashedstring_p.h>
+#include <private/qqmlimport_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qstringlist.h>
@@ -1068,6 +1069,29 @@ QQmlType *QQmlTypeModuleVersion::type(const QHashedV8String &name) const
     else return 0;
 }
 
+void qmlClearTypeRegistrations() // Declared in qqml.h
+{
+    //Only cleans global static, assumed no running engine
+    QWriteLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+
+    for (int i = 0; i < data->types.count(); ++i)
+        delete data->types.at(i);
+
+    QQmlMetaTypeData::TypeModules::const_iterator i = data->uriToModule.constBegin();
+    for (; i != data->uriToModule.constEnd(); ++i)
+        delete *i;
+
+    data->types.clear();
+    data->idToType.clear();
+    data->nameToType.clear();
+    data->urlToType.clear();
+    data->metaObjectToType.clear();
+    data->uriToModule.clear();
+
+    QQmlEnginePrivate::baseModulesUninitialized = true; //So the engine re-registers its types
+    qmlClearEnginePlugins();
+}
 
 int registerAutoParentFunction(QQmlPrivate::RegisterAutoParent &autoparent)
 {
