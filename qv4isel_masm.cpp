@@ -515,12 +515,12 @@ void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR:
 
 void InstructionSelection::callBuiltinPushWith(IR::Temp *arg)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_push_with, arg, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_push_with, arg, Assembler::ContextRegister);
 }
 
 void InstructionSelection::callBuiltinPopWith()
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_pop_with, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_pop_with, Assembler::ContextRegister);
 }
 
 void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &name)

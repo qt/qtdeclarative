@@ -101,8 +101,8 @@ Value __qmljs_builtin_typeof_element(Value base, Value index, ExecutionContext *
 
 void __qmljs_builtin_throw(Value val, ExecutionContext *context);
 void __qmljs_builtin_rethrow(ExecutionContext *context);
-void __qmljs_builtin_push_with(Value o, ExecutionContext *ctx);
-void __qmljs_builtin_pop_with(ExecutionContext *ctx);
+ExecutionContext *__qmljs_builtin_push_with(Value o, ExecutionContext *ctx);
+ExecutionContext *__qmljs_builtin_pop_with(ExecutionContext *ctx);
 void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name);
 void __qmljs_builtin_define_property(Value object, String *name, Value val, ExecutionContext *ctx);
 void __qmljs_builtin_define_getter_setter(Value object, String *name, Value getter, Value setter, ExecutionContext *ctx);

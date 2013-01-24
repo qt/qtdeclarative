@@ -345,9 +345,8 @@ void MemoryManager::collectRoots(QVector<VM::Object *> &roots) const
             add(roots, ctxt->locals[local]);
         if (ctxt->activation)
             roots.append(ctxt->activation);
-        for (ExecutionContext::With *it = ctxt->withObject; it; it = it->next)
-            if (it->object)
-                roots.append(it->object);
+        if (ctxt->withObject)
+            roots.append(ctxt->withObject);
     }
 
     for (int i = 0; i < m_d->engine->functions.size(); ++i) {

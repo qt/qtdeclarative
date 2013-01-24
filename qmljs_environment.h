@@ -74,6 +74,7 @@ struct ExecutionContext
 {
     ExecutionEngine *engine;
     ExecutionContext *parent;
+    ExecutionContext *outer;
     Value thisObject;
 
     FunctionObject *function;
@@ -86,17 +87,14 @@ struct ExecutionContext
     unsigned int formalCount() const;
     String **variables() const;
     unsigned int variableCount() const;
-    ExecutionContext *outer() const;
 
     bool strictMode;
 
     Object *activation;
-    struct With {
-        Object *object;
-        With *next;
-    } *withObject;
+    Object *withObject;
 
     void init(ExecutionEngine *e);
+    void init(ExecutionContext *p, Object *with);
     void destroy();
 
     bool hasBinding(String *name) const;
@@ -105,8 +103,8 @@ struct ExecutionContext
     Value getBindingValue(ExecutionContext *scope, String *name, bool strict) const;
     bool deleteBinding(ExecutionContext *ctx, String *name);
 
-    void pushWithObject(Object *with);
-    void popWithObject();
+    ExecutionContext *pushWithObject(Object *with);
+    ExecutionContext *popWithObject();
 
     void initCallContext(ExecutionContext *parent, const Value that, FunctionObject *f, Value *args, unsigned argc);
     void leaveCallContext();

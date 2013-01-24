@@ -159,7 +159,6 @@ struct ExecutionEngine
 
     struct ExceptionHandler {
         ExecutionContext *context;
-        ExecutionContext::With *with;
         const uchar *code; // Interpreter state
         int targetTempIndex; // Interpreter state
         jmp_buf stackFrame;

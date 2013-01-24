@@ -170,26 +170,22 @@ bool ExecutionContext::deleteBinding(ExecutionContext *scope, String *name)
     return false;
 }
 
-void ExecutionContext::pushWithObject(Object *with)
+ExecutionContext *ExecutionContext::pushWithObject(Object *with)
 {
-    With *w = new With;
-    w->next = withObject;
-    w->object = with;
-    withObject = w;
+    ExecutionContext *withCtx = engine->newContext();
+    withCtx->init(this, with);
+    engine->current = withCtx;
+    return withCtx;
 }
 
-void ExecutionContext::popWithObject()
+ExecutionContext *ExecutionContext::popWithObject()
 {
-    assert(withObject);
+    assert(engine->current == this);
+    assert(withObject != 0);
 
-    With *w = withObject;
-    withObject = w->next;
-    delete w;
-}
-
-ExecutionContext *ExecutionContext::outer() const
-{
-    return function ? function->scope : 0;
+    engine->current = parent;
+    parent = 0;
+    return engine->current;
 }
 
 String **ExecutionContext::formals() const
@@ -217,6 +213,7 @@ void ExecutionContext::init(ExecutionEngine *eng)
 {
     engine = eng;
     parent = 0;
+    outer = 0;
     thisObject = eng->globalObject;
 
     function = 0;
@@ -230,6 +227,22 @@ void ExecutionContext::init(ExecutionEngine *eng)
     eng->exception = Value::undefinedValue();
 }
 
+void ExecutionContext::init(ExecutionContext *p, Object *with)
+{
+    engine = p->engine;
+    parent = p;
+    outer = p;
+    thisObject = p->thisObject;
+
+    function = 0;
+    arguments = 0;
+    argumentCount = 0;
+    locals = 0;
+    strictMode = false;
+    activation = 0;
+    withObject = with;
+}
+
 void ExecutionContext::destroy()
 {
     delete[] arguments;
@@ -238,17 +251,14 @@ void ExecutionContext::destroy()
 
 bool ExecutionContext::deleteProperty(String *name)
 {
-    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
+    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
         if (ctx->withObject) {
-            ExecutionContext::With *w = ctx->withObject;
-            while (w) {
-                if (w->object->__hasProperty__(this, name))
-                    return w->object->__delete__(this, name);
-                w = w->next;
-            }
+            if (ctx->withObject->__hasProperty__(this, name))
+                return ctx->withObject->__delete__(this, name);
+        } else {
+            if (ctx->activation && ctx->activation->__hasProperty__(this, name))
+                return ctx->activation->__delete__(this, name);
         }
-        if (ctx->activation && ctx->activation->__hasProperty__(this, name))
-            return ctx->activation->__delete__(this, name);
     }
     if (strictMode)
         throwSyntaxError(0);
@@ -257,19 +267,20 @@ bool ExecutionContext::deleteProperty(String *name)
 
 void ExecutionContext::setProperty(String *name, Value value)
 {
-    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
-        if (ctx->withObject) {
-            With *w = ctx->withObject;
-            while (w) {
-                if (w->object->__hasProperty__(ctx, name)) {
-                    w->object->__put__(ctx, name, value);
-                    return;
-                }
-                w = w->next;
+//    qDebug() << "=== SetProperty" << value.toString(this)->toQString();
+    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
+        if (Object *w = ctx->withObject) {
+//            qDebug() << ctx << "hasWith";
+            if (w->__hasProperty__(ctx, name)) {
+//                qDebug() << "   withHasProp";
+                w->__put__(ctx, name, value);
+                return;
             }
+        } else {
+//            qDebug() << ctx << "setting mutable binding";
+            if (ctx->setMutableBinding(this, name, value))
+                return;
         }
-        if (ctx->setMutableBinding(this, name, value))
-            return;
     }
     if (strictMode || name == engine->id_this)
         throwReferenceError(Value::fromString(name));
@@ -281,19 +292,23 @@ Value ExecutionContext::getProperty(String *name)
     if (name == engine->id_this)
         return thisObject;
 
-    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
-        if (With *w = ctx->withObject) {
-            while (w) {
-                bool hasProperty = false;
-                Value v = w->object->__get__(ctx, name, &hasProperty);
-                if (hasProperty)
-                    return v;
-                w = w->next;
+    bool hasWith = false;
+//    qDebug() << "=== getProperty" << name->toQString();
+    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
+        if (Object *w = ctx->withObject) {
+            hasWith = true;
+//            qDebug() << ctx << "hasWith";
+            bool hasProperty = false;
+            Value v = w->__get__(ctx, name, &hasProperty);
+            if (hasProperty) {
+//                qDebug() << "   withHasProp";
+                return v;
             }
+            continue;
         }
 
         if (FunctionObject *f = ctx->function) {
-            if (f->needsActivation || ctx->withObject) {
+            if (f->needsActivation || hasWith) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
                         return ctx->locals[i];
@@ -318,19 +333,19 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
     if (name == engine->id_this)
         return thisObject;
 
-    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
-        if (With *w = ctx->withObject) {
-            while (w) {
-                bool hasProperty = false;
-                Value v = w->object->__get__(ctx, name, &hasProperty);
-                if (hasProperty)
-                    return v;
-                w = w->next;
-            }
+    bool hasWith = false;
+    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
+        if (Object *w = ctx->withObject) {
+            hasWith = true;
+            bool hasProperty = false;
+            Value v = w->__get__(ctx, name, &hasProperty);
+            if (hasProperty)
+                return v;
+            continue;
         }
 
         if (FunctionObject *f = ctx->function) {
-            if (f->needsActivation || ctx->withObject) {
+            if (f->needsActivation || hasWith) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
                         return ctx->locals[i];
@@ -356,21 +371,21 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
     if (name == engine->id_this)
         return thisObject;
 
-    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer()) {
-        if (With *w = ctx->withObject) {
-            while (w) {
-                bool hasProperty = false;
-                Value v = w->object->__get__(ctx, name, &hasProperty);
-                if (hasProperty) {
-                    *base = w->object;
-                    return v;
-                }
-                w = w->next;
+    bool hasWith = false;
+    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
+        if (Object *w = ctx->withObject) {
+            hasWith = true;
+            bool hasProperty = false;
+            Value v = w->__get__(ctx, name, &hasProperty);
+            if (hasProperty) {
+                *base = w;
+                return v;
             }
+            continue;
         }
 
         if (FunctionObject *f = ctx->function) {
-            if (f->needsActivation || ctx->withObject) {
+            if (f->needsActivation || hasWith) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
                         return ctx->locals[i];
@@ -451,6 +466,7 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
 
     engine = parent->engine;
     this->parent = parent;
+    outer = f->scope;
     engine->current = this;
 
     function = f;

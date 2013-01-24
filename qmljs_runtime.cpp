@@ -813,14 +813,9 @@ void __qmljs_throw(Value value, ExecutionContext *context)
     // clean up call contexts
     while (context != handler.context) {
         ExecutionContext *parent = context->parent;
-        context->leaveCallContext();
+        if (!context->withObject)
+            context->leaveCallContext();
         context = parent;
-    }
-
-    while (context->withObject != handler.with) {
-        ExecutionContext::With *w = context->withObject;
-        context->withObject = w->next;
-        delete w;
     }
 
     context->engine->exception = value;
@@ -834,7 +829,6 @@ void *__qmljs_create_exception_handler(ExecutionContext *context)
     context->engine->unwindStack.append(ExecutionEngine::ExceptionHandler());
     ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
     handler.context = context;
-    handler.with = context->withObject;
     return handler.stackFrame;
 }
 
@@ -900,15 +894,15 @@ void __qmljs_builtin_throw(Value val, ExecutionContext *context)
     __qmljs_throw(val, context);
 }
 
-void __qmljs_builtin_push_with(Value o, ExecutionContext *ctx)
+ExecutionContext *__qmljs_builtin_push_with(Value o, ExecutionContext *ctx)
 {
     Object *obj = __qmljs_to_object(o, ctx).asObject();
-    ctx->pushWithObject(obj);
+    return ctx->pushWithObject(obj);
 }
 
-void __qmljs_builtin_pop_with(ExecutionContext *ctx)
+ExecutionContext *__qmljs_builtin_pop_with(ExecutionContext *ctx)
 {
-    ctx->popWithObject();
+    return ctx->popWithObject();
 }
 
 void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name)
