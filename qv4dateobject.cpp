@@ -1225,7 +1225,7 @@ Value DatePrototype::method_setFullYear(ExecutionContext *ctx)
         ctx->throwTypeError();
 
     double t = LocalTime(self->value.asDouble());
-    if (isnan(t))
+    if (std::isnan(t))
         t = 0;
     double year = ctx->argument(0).toNumber(ctx);
     double month = (ctx->argumentCount < 2) ? MonthFromTime(t) : ctx->argument(1).toNumber(ctx);
