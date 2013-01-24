@@ -18,9 +18,9 @@ QT += qml qmltest
 
 macx: CONFIG -= app_bundle
 
-target.path = $$[QT_INSTALL_EXAMPLES]/qmltest
+target.path = $$[QT_INSTALL_EXAMPLES]/qmltest/qmltest
 qml.files = tst_basic.qml tst_item.qml
-qml.path = $$[QT_INSTALL_EXAMPLES]/qmltest
+qml.path = $$[QT_INSTALL_EXAMPLES]/qmltest/qmltest
 INSTALLS += target qml
 
 }
