@@ -139,6 +139,7 @@ private slots:
     void registrationOrder();
     void readonly();
     void receivers();
+    void registeredCompositeType();
 
     void basicRemote_data();
     void basicRemote();
@@ -467,6 +468,9 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("invalidTypeName.4") << "invalidTypeName.4.qml" << "invalidTypeName.4.errors.txt" << false;
 
     QTest::newRow("Major version isolation") << "majorVersionIsolation.qml" << "majorVersionIsolation.errors.txt" << false;
+
+    QTest::newRow("badCompositeRegistration.1") << "badCompositeRegistration.1.qml" << "badCompositeRegistration.1.errors.txt" << false;
+    QTest::newRow("badCompositeRegistration.2") << "badCompositeRegistration.2.qml" << "badCompositeRegistration.2.errors.txt" << false;
 }
 
 
@@ -2771,6 +2775,10 @@ void tst_qqmllanguage::initTestCase()
     QQmlMetaType::registerCustomStringConverter(qMetaTypeId<MyCustomVariantType>(), myCustomVariantTypeConverter);
 
     registerTypes();
+    // Registered here because it uses testFileUrl
+    qmlRegisterType(testFileUrl("CompositeType.qml"), "Test", 1, 0, "RegisteredCompositeType");
+    qmlRegisterType(testFileUrl("CompositeType.DoesNotExist.qml"), "Test", 1, 0, "RegisteredCompositeType2");
+    qmlRegisterType(testFileUrl("invalidRoot.1.qml"), "Test", 1, 0, "RegisteredCompositeType3");
 
     // Registering the TestType class in other modules should have no adverse effects
     qmlRegisterType<TestType>("org.qtproject.TestPre", 1, 0, "Test");
@@ -2911,6 +2919,17 @@ void tst_qqmllanguage::receivers()
     QVERIFY(o->isSignalConnected(QMetaMethod::fromSignal(&MyReceiversTestObject::mySignal)));
     QVERIFY(o->isSignalConnected(QMetaMethod::fromSignal(&MyReceiversTestObject::propChanged)));
     QVERIFY(!o->isSignalConnected(QMetaMethod::fromSignal(&MyReceiversTestObject::myUnconnectedSignal)));
+
+    delete o;
+}
+
+void tst_qqmllanguage::registeredCompositeType()
+{
+    QQmlComponent component(&engine, testFileUrl("registeredCompositeType.qml"));
+
+    VERIFY_ERRORS(0);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
 
     delete o;
 }

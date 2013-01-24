@@ -129,11 +129,7 @@ void tst_qqmlmetatype::initTestCase()
     qmlRegisterType<ValueInterceptorTestType>("Test", 1, 0, "ValueInterceptorTestType");
 
     QUrl testTypeUrl(testFileUrl("CompositeType.qml"));
-    //TODO: Replace this with public API version when added
-    QQmlPrivate::RegisterCompositeType regStruct = {
-        testTypeUrl,"Test", 1, 0, "TestTypeComposite"
-    };
-    QQmlPrivate::qmlregister(QQmlPrivate::CompositeRegistration, &regStruct);
+    qmlRegisterType(testTypeUrl, "Test", 1, 0, "TestTypeComposite");
 }
 
 void tst_qqmlmetatype::qmlParserStatusCast()
