@@ -667,8 +667,8 @@ protected:
     virtual void callBuiltinGetException(IR::Temp *result);
     virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result);
     virtual void callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result);
-    virtual void callBuiltinPushWith(IR::Temp *arg);
-    virtual void callBuiltinPopWith();
+    virtual void callBuiltinPushWithScope(IR::Temp *arg);
+    virtual void callBuiltinPopScope();
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name);
     virtual void callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter);
     virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value);

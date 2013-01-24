@@ -167,8 +167,8 @@ union Instr
             builtin_create_exception_handler,
             builtin_delete_exception_handler,
             builtin_get_exception,
-            builtin_push_with,
-            builtin_pop_with
+            builtin_push_with_scope,
+            builtin_pop_scope
         } builtin;
         int argTemp;
         int targetTempIndex;

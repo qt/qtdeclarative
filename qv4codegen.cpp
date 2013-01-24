@@ -2513,11 +2513,11 @@ bool Codegen::visit(WithStatement *ast)
     _block->MOVE(_block->TEMP(withObject), *expression(ast->expression));
     IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(_block->TEMP(withObject));
-    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_with, 0, 0), args));
+    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_with_scope, 0, 0), args));
     ++_function->insideWith;
     statement(ast->statement);
     --_function->insideWith;
-    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_with, 0, 0), 0));
+    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
 
     IR::BasicBlock *next = _function->newBasicBlock();
     _block->JUMP(next);

@@ -291,14 +291,14 @@ void InstructionSelection::callBuiltin(IR::Call *call, IR::Temp *result)
         assert(arg != 0);
         callBuiltinForeachNextPropertyname(arg, result);
     } return;
-    case IR::Name::builtin_push_with: {
+    case IR::Name::builtin_push_with_scope: {
         IR::Temp *arg = call->args->expr->asTemp();
         assert(arg != 0);
-        callBuiltinPushWith(arg);
+        callBuiltinPushWithScope(arg);
     } return;
 
-    case IR::Name::builtin_pop_with:
-        callBuiltinPopWith();
+    case IR::Name::builtin_pop_scope:
+        callBuiltinPopScope();
         return;
 
     case IR::Name::builtin_declare_vars: {

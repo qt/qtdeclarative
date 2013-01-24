@@ -513,14 +513,14 @@ void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR:
     generateFunctionCall(result, __qmljs_foreach_next_property_name, arg);
 }
 
-void InstructionSelection::callBuiltinPushWith(IR::Temp *arg)
+void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
 {
-    generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_push_with, arg, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_push_with_scope, arg, Assembler::ContextRegister);
 }
 
-void InstructionSelection::callBuiltinPopWith()
+void InstructionSelection::callBuiltinPopScope()
 {
-    generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_pop_with, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_pop_scope, Assembler::ContextRegister);
 }
 
 void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &name)

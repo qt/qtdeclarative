@@ -281,8 +281,8 @@ struct Name: Expr {
         builtin_get_exception,
         builtin_foreach_iterator_object,
         builtin_foreach_next_property_name,
-        builtin_push_with,
-        builtin_pop_with,
+        builtin_push_with_scope,
+        builtin_pop_scope,
         builtin_declare_vars,
         builtin_define_property,
         builtin_define_getter_setter

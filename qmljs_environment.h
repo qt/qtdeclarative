@@ -103,8 +103,8 @@ struct ExecutionContext
     Value getBindingValue(ExecutionContext *scope, String *name, bool strict) const;
     bool deleteBinding(ExecutionContext *ctx, String *name);
 
-    ExecutionContext *pushWithObject(Object *with);
-    ExecutionContext *popWithObject();
+    ExecutionContext *createWithScope(Object *with);
+    ExecutionContext *popScope();
 
     void initCallContext(ExecutionContext *parent, const Value that, FunctionObject *f, Value *args, unsigned argc);
     void leaveCallContext();

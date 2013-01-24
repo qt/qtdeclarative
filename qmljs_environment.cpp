@@ -170,7 +170,7 @@ bool ExecutionContext::deleteBinding(ExecutionContext *scope, String *name)
     return false;
 }
 
-ExecutionContext *ExecutionContext::pushWithObject(Object *with)
+ExecutionContext *ExecutionContext::createWithScope(Object *with)
 {
     ExecutionContext *withCtx = engine->newContext();
     withCtx->init(this, with);
@@ -178,7 +178,7 @@ ExecutionContext *ExecutionContext::pushWithObject(Object *with)
     return withCtx;
 }
 
-ExecutionContext *ExecutionContext::popWithObject()
+ExecutionContext *ExecutionContext::popScope()
 {
     assert(engine->current == this);
     assert(withObject != 0);

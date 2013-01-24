@@ -275,11 +275,11 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         case Instr::instr_callBuiltin::builtin_get_exception:
             TEMP(instr.targetTempIndex) = __qmljs_get_exception(context);
             break;
-        case Instr::instr_callBuiltin::builtin_push_with:
-            context = __qmljs_builtin_push_with(TEMP(instr.argTemp), context);
+        case Instr::instr_callBuiltin::builtin_push_with_scope:
+            context = __qmljs_builtin_push_with_scope(TEMP(instr.argTemp), context);
             break;
-        case Instr::instr_callBuiltin::builtin_pop_with:
-            context = __qmljs_builtin_pop_with(context);
+        case Instr::instr_callBuiltin::builtin_pop_scope:
+            context = __qmljs_builtin_pop_scope(context);
             break;
         default:
             assert(!"TODO!");

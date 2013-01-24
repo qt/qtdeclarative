@@ -805,18 +805,18 @@ void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR:
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinPushWith(IR::Temp *arg)
+void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
 {
     Instruction::CallBuiltin call;
-    call.builtin = Instruction::CallBuiltin::builtin_push_with;
+    call.builtin = Instruction::CallBuiltin::builtin_push_with_scope;
     call.argTemp = arg->index;
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinPopWith()
+void InstructionSelection::callBuiltinPopScope()
 {
     Instruction::CallBuiltin call;
-    call.builtin = Instruction::CallBuiltin::builtin_pop_with;
+    call.builtin = Instruction::CallBuiltin::builtin_pop_scope;
     addInstruction(call);
 }
 

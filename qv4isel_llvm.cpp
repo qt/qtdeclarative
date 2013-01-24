@@ -405,14 +405,14 @@ void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR:
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinPushWith(IR::Temp *arg)
+void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinPopWith()
+void InstructionSelection::callBuiltinPopScope()
 {
     // TODO
     assert(!"TODO!");
