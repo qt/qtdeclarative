@@ -589,7 +589,7 @@ inline Value __qmljs_mod(Value left, Value right, ExecutionContext *ctx)
 {
     TRACE2(left, right);
 
-    if (Value::integerCompatible(left, right))
+    if (Value::integerCompatible(left, right) && right.integerValue() != 0)
         return Value::fromInt32(left.integerValue() % right.integerValue());
 
     double lval = __qmljs_to_number(left, ctx);
