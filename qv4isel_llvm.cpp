@@ -370,13 +370,6 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinRethrow()
-{
-    // TODO
-    assert(!"TODO!");
-    Q_UNREACHABLE();
-}
-
 void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
 {
     // TODO
