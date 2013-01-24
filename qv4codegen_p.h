@@ -385,6 +385,7 @@ protected:
     virtual bool visit(AST::UiSourceElement *ast);
 
     void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
+    void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
 
 private:
     QString _fileName;

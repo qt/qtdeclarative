@@ -1152,7 +1152,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::Assign: {
         IR::Expr* right = *expression(ast->right);
         if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember()))
-            throwSyntaxError(ast->operatorToken, QCoreApplication::translate("qv4codegen", "left-hand side of assignment operator is not an lvalue"));
+            throwReferenceError(ast->operatorToken, QCoreApplication::translate("qv4codegen", "left-hand side of assignment operator is not an lvalue"));
 
         if (_expr.accept(nx)) {
             move(left, right);
@@ -2604,6 +2604,16 @@ void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
         _context->throwSyntaxError(msg);
     else if (_errorHandler)
         _errorHandler->syntaxError(msg);
+    else
+        Q_ASSERT(!"No error handler available.");
+}
+
+void Codegen::throwReferenceError(const SourceLocation &loc, const QString &detail)
+{
+    if (_context)
+        _context->throwReferenceError(VM::Value::fromString(_context, detail));
+    else if (_errorHandler)
+        throwSyntaxError(loc, detail);
     else
         Q_ASSERT(!"No error handler available.");
 }
