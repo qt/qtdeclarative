@@ -847,6 +847,15 @@ void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QSt
     addInstruction(call);
 }
 
+void InstructionSelection::callBuiltinDefineArrayProperty(IR::Temp *object, int index, IR::Temp *value)
+{
+    Instruction::CallBuiltinDefineArrayProperty call;
+    call.objectTemp = object->index;
+    call.index = index;
+    call.valueTemp = value->index;
+    addInstruction(call);
+}
+
 ptrdiff_t InstructionSelection::addInstructionHelper(Instr::Type type, Instr &instr)
 {
 #ifdef MOTH_THREADED_INTERPRETER

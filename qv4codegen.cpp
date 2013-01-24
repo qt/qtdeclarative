@@ -1025,11 +1025,28 @@ bool Codegen::visit(ArrayLiteral *ast)
     const unsigned t = _block->newTemp();
     move(_block->TEMP(t), _block->NEW(_block->NAME(QStringLiteral("Array"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
     int index = 0;
+    unsigned value = 0;
     for (ElementList *it = ast->elements; it; it = it->next) {
         for (Elision *elision = it->elision; elision; elision = elision->next)
             ++index;
         Result expr = expression(it->expression);
-        move(subscript(_block->TEMP(t), _block->CONST(IR::NumberType, index)), *expr);
+
+        IR::ExprList *args = _function->New<IR::ExprList>();
+        IR::ExprList *current = args;
+        current->expr = _block->TEMP(t);
+        current->next = _function->New<IR::ExprList>();
+        current = current->next;
+        current->expr = _block->CONST(IR::NumberType, index);
+        current->next = _function->New<IR::ExprList>();
+        current = current->next;
+
+        if (!value)
+            value = _block->newTemp();
+        move(_block->TEMP(value), *expr);
+        // __qmljs_builtin_define_property(Value object, String *name, Value val, ExecutionContext *ctx)
+        current->expr = _block->TEMP(value);
+        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_define_array_property, 0, 0), args));
+
         ++index;
     }
     if (ast->elision) {

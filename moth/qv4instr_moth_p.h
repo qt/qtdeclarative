@@ -32,6 +32,7 @@
     F(CallBuiltinDeclareVar, callBuiltinDeclareVar) \
     F(CallBuiltinDefineGetterSetter, callBuiltinDefineGetterSetter) \
     F(CallBuiltinDefineProperty, callBuiltinDefineProperty) \
+    F(CallBuiltinDefineArrayProperty, callBuiltinDefineArrayProperty) \
     F(CreateValue, createValue) \
     F(CreateProperty, createProperty) \
     F(CreateActivationProperty, createActivationProperty) \
@@ -240,6 +241,12 @@ union Instr
         VM::String *name;
         int valueTemp;
     };
+    struct instr_callBuiltinDefineArrayProperty {
+        MOTH_INSTR_HEADER
+        int objectTemp;
+        int index;
+        int valueTemp;
+    };
     struct instr_createValue {
         MOTH_INSTR_HEADER
         int func;
@@ -342,6 +349,7 @@ union Instr
     instr_callBuiltinDeclareVar callBuiltinDeclareVar;
     instr_callBuiltinDefineGetterSetter callBuiltinDefineGetterSetter;
     instr_callBuiltinDefineProperty callBuiltinDefineProperty;
+    instr_callBuiltinDefineArrayProperty callBuiltinDefineArrayProperty;
     instr_createValue createValue;
     instr_createProperty createProperty;
     instr_createActivationProperty createActivationProperty;

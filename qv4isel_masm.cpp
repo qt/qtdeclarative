@@ -541,6 +541,12 @@ void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QSt
                          object, identifier(name), value, Assembler::ContextRegister);
 }
 
+void InstructionSelection::callBuiltinDefineArrayProperty(IR::Temp *object, int index, IR::Temp *value)
+{
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_array_property,
+                         object, Assembler::TrustedImm32(index), value, Assembler::ContextRegister);
+}
+
 void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
 {
     int argc = prepareVariableArguments(args);

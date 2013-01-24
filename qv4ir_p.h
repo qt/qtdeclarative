@@ -285,6 +285,7 @@ struct Name: Expr {
         builtin_pop_scope,
         builtin_declare_vars,
         builtin_define_property,
+        builtin_define_array_property,
         builtin_define_getter_setter
     };
 

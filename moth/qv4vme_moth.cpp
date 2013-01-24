@@ -339,6 +339,10 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         __qmljs_builtin_define_property(TEMP(instr.objectTemp), instr.name, TEMP(instr.valueTemp), context);
     MOTH_END_INSTR(CallBuiltinDefineProperty)
 
+    MOTH_BEGIN_INSTR(CallBuiltinDefineArrayProperty)
+        __qmljs_builtin_define_array_property(TEMP(instr.objectTemp), instr.index, TEMP(instr.valueTemp), context);
+    MOTH_END_INSTR(CallBuiltinDefineArrayProperty)
+
     MOTH_BEGIN_INSTR(CreateValue)
         int argStart = instr.args - context->variableCount();
         VM::Value *args = stack + argStart;
