@@ -1303,7 +1303,7 @@ bool Codegen::visit(DeleteExpression *ast)
         if (_function->isStrict)
             throwSyntaxError(ast->deleteToken, "Delete of an unqualified identifier in strict mode.");
         // can't delete an argument, just evaluate expr for side effects
-        _expr.accept(nx);
+        _expr.code = _block->CONST(IR::BoolType, 0);
         return false;
     }
     if (_function->isStrict && (*expr)->asName())
