@@ -441,6 +441,13 @@ void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QSt
     Q_UNREACHABLE();
 }
 
+void InstructionSelection::callBuiltinDefineArrayProperty(IR::Temp *object, int index, IR::Temp *value)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
 void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
 {
     // TODO

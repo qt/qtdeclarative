@@ -90,6 +90,7 @@ public: // methods from InstructionSelection:
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name);
     virtual void callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter);
     virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value);
+    virtual void callBuiltinDefineArrayProperty(IR::Temp *object, int index, IR::Temp *value);
     virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);
     virtual void callProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result);
     virtual void constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result);
