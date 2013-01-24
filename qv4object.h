@@ -152,8 +152,8 @@ struct Object: Managed {
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p) const;
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const;
 
-    bool inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx);
-    bool inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
+    void inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx);
+    void inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(String *name, Value value);

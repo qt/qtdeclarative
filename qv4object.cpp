@@ -102,32 +102,26 @@ Value Object::getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p
     return getValue(ctx, p);
 }
 
-bool Object::inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx)
+void Object::inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx)
 {
     bool hasProperty = false;
     Value v = __get__(ctx, name, &hasProperty);
-    if (!hasProperty)
-        return false;
     Value result = op(v, rhs, ctx);
     __put__(ctx, name, result);
-    return true;
 }
 
-bool Object::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx)
+void Object::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx)
 {
     uint idx = index.asArrayIndex();
     if (idx < UINT_MAX) {
         bool hasProperty = false;
         Value v = __get__(ctx, idx, &hasProperty);
-        if (!hasProperty)
-            return false;
         v = op(v, rhs, ctx);
         __put__(ctx, idx, v);
-        return true;
     }
     String *name = index.toString(ctx);
     assert(name);
-    return inplaceBinOp(rhs, name, op, ctx);
+    inplaceBinOp(rhs, name, op, ctx);
 }
 
 void Object::defineDefaultProperty(String *name, Value value)
