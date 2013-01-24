@@ -384,6 +384,8 @@ protected:
     virtual bool visit(AST::UiScriptBinding *ast);
     virtual bool visit(AST::UiSourceElement *ast);
 
+    void throwSyntaxErrorOnEvalOrArgumentsInStrictMode(IR::Expr* expr, const AST::SourceLocation &loc);
+
     void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
     void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
 

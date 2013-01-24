@@ -305,7 +305,7 @@ protected:
 
     virtual bool visit(VariableDeclaration *ast)
     {
-        if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == "arguments"))
+        if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
             _cg->throwSyntaxError(ast->identifierToken, QCoreApplication::translate("qv4codegen", "Variable name may not be eval or arguments in strict mode"));
         checkName(ast->name, ast->identifierToken);
         if (ast->name == QLatin1String("arguments"))
@@ -1138,11 +1138,7 @@ bool Codegen::visit(BinaryExpression *ast)
     }
 
     IR::Expr* left = *expression(ast->left);
-    if (_function->isStrict) {
-        if (IR::Name *n = left->asName())
-            if (*n->id == QLatin1String("eval") || *n->id == QLatin1String("arguments"))
-            throwSyntaxError(ast->left->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Variable name may not be eval or arguments in strict mode"));
-    }
+    throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation());
 
     switch (ast->op) {
     case QSOperator::Or:
@@ -1531,15 +1527,8 @@ bool Codegen::visit(ObjectLiteral *ast)
 
 bool Codegen::visit(PostDecrementExpression *ast)
 {
-    // ###
-    //    Throw a SyntaxError exception if the following conditions are all true:
-    //    Type(lhs) is Reference is true
-    //    IsStrictReference(lhs) is true
-    //    Type(GetBase(lhs)) is Environment Record
-    //    GetReferencedName(lhs) is either "eval" or "arguments"
-
-
     Result expr = expression(ast->base);
+    throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken);
     if (_expr.accept(nx)) {
         move(*expr, unop(IR::OpDecrement, *expr));
     } else {
@@ -1553,14 +1542,8 @@ bool Codegen::visit(PostDecrementExpression *ast)
 
 bool Codegen::visit(PostIncrementExpression *ast)
 {
-    // ###
-    //    Throw a SyntaxError exception if the following conditions are all true:
-    //    Type(lhs) is Reference is true
-    //    IsStrictReference(lhs) is true
-    //    Type(GetBase(lhs)) is Environment Record
-    //    GetReferencedName(lhs) is either "eval" or "arguments"
-
     Result expr = expression(ast->base);
+    throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken);
     if (_expr.accept(nx)) {
         move(*expr, unop(IR::OpIncrement, *expr));
     } else {
@@ -1574,14 +1557,8 @@ bool Codegen::visit(PostIncrementExpression *ast)
 
 bool Codegen::visit(PreDecrementExpression *ast)
 {
-    // ###
-    //    Throw a SyntaxError exception if the following conditions are all true:
-    //    Type(lhs) is Reference is true
-    //    IsStrictReference(lhs) is true
-    //    Type(GetBase(lhs)) is Environment Record
-    //    GetReferencedName(lhs) is either "eval" or "arguments"
-
     Result expr = expression(ast->expression);
+    throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken);
     move(*expr, unop(IR::OpDecrement, *expr));
     if (_expr.accept(nx)) {
         // nothing to do
@@ -1593,14 +1570,8 @@ bool Codegen::visit(PreDecrementExpression *ast)
 
 bool Codegen::visit(PreIncrementExpression *ast)
 {
-    // ###
-    //    Throw a SyntaxError exception if the following conditions are all true:
-    //    Type(lhs) is Reference is true
-    //    IsStrictReference(lhs) is true
-    //    Type(GetBase(lhs)) is Environment Record
-    //    GetReferencedName(lhs) is either "eval" or "arguments"
-
     Result expr = expression(ast->expression);
+    throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken);
     move(*expr, unop(IR::OpIncrement, *expr));
     if (_expr.accept(nx)) {
         // nothing to do
@@ -2386,8 +2357,8 @@ bool Codegen::visit(ThrowStatement *ast)
 bool Codegen::visit(TryStatement *ast)
 {
     if (_function->isStrict && ast->catchExpression &&
-        (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments")))
-            throwSyntaxError(ast->catchExpression->identifierToken, QCoreApplication::translate("qv4codegen", "Catch variable name may not be eval or arguments in strict mode"));
+            (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments")))
+        throwSyntaxError(ast->catchExpression->identifierToken, QCoreApplication::translate("qv4codegen", "Catch variable name may not be eval or arguments in strict mode"));
 
     IR::BasicBlock *tryBody = _function->newBasicBlock();
     IR::BasicBlock *catchBody = ast->catchExpression ?  _function->newBasicBlock() : 0;
@@ -2590,6 +2561,17 @@ bool Codegen::visit(UiSourceElement *)
 {
     assert(!"not implemented");
     return false;
+}
+
+void Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(IR::Expr *expr, const SourceLocation& loc)
+{
+    if (!_env->isStrict)
+        return;
+    IR::Name *n = expr->asName();
+    if (!n)
+        return;
+    if (*n->id == QLatin1String("eval") || *n->id == QLatin1String("arguments"))
+        throwSyntaxError(loc, QCoreApplication::translate("qv4codegen", "Variable name may not be eval or arguments in strict mode"));
 }
 
 void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)

@@ -22,15 +22,11 @@ S11.2.1_A3_T2 failing
 S11.2.1_A3_T3 failing
 S11.2.1_A4_T3 failing
 11.2.3-3_3 failing
-11.3.1-2-1-s failing
-11.3.1-2-2-s failing
 S11.3.1_A2.2_T1 failing
 S11.3.1_A4_T1 failing
 S11.3.1_A4_T2 failing
 S11.3.1_A4_T3 failing
 S11.3.1_A4_T4 failing
-11.3.2-2-1-s failing
-11.3.2-2-2-s failing
 S11.3.2_A2.2_T1 failing
 S11.3.2_A4_T1 failing
 S11.3.2_A4_T2 failing
@@ -47,10 +43,6 @@ S11.3.2_A4_T4 failing
 11.4.1-5-2 failing
 S11.4.1_A1 failing
 S11.4.1_A2.1 failing
-11.4.4-2-1-s failing
-11.4.4-2-2-s failing
-11.4.5-2-1-s failing
-11.4.5-2-2-s failing
 S11.5.3_A4_T2 failing
 S11.8.6_A3 failing
 S11.8.6_A5_T2 failing
