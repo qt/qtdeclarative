@@ -431,7 +431,7 @@ class TestSuite(object):
           else:
             logging.warning("Unexpected path %s", full_path)
             rel_path = full_path
-          if self.ShouldRun(rel_path, tests):
+          if self.ShouldRun(rel_path, tests) and not rel_path.startswith("intl402/"):
             basename = path.basename(full_path)[:-3]
             name = rel_path.split(path.sep)[:-1] + [basename]
             if EXCLUDE_LIST.count(basename) >= 1 or self.expectations.testsToSkip.count(basename) >= 1:
