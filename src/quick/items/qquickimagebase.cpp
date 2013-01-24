@@ -207,6 +207,7 @@ void QQuickImageBase::load()
             options |= QQuickPixmap::Asynchronous;
         if (d->cache)
             options |= QQuickPixmap::Cache;
+        d->pix.clear(this);
         d->pix.load(qmlEngine(this), d->url, d->sourcesize, options);
 
         if (d->pix.isLoading()) {
