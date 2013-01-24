@@ -1120,32 +1120,33 @@ bool Codegen::visit(BinaryExpression *ast)
         return false;
     }
 
-    Result left = expression(ast->left);
+    IR::Expr* left = *expression(ast->left);
     if (_function->isStrict) {
         if (IR::Name *n = left->asName())
             if (*n->id == QLatin1String("eval") || *n->id == QLatin1String("arguments"))
             throwSyntaxError(ast->left->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Variable name may not be eval or arguments in strict mode"));
     }
-    Result right = expression(ast->right);
 
     switch (ast->op) {
     case QSOperator::Or:
     case QSOperator::And:
         break;
 
-    case QSOperator::Assign:
+    case QSOperator::Assign: {
+        IR::Expr* right = *expression(ast->right);
         if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember()))
             throwSyntaxError(ast->operatorToken, QCoreApplication::translate("qv4codegen", "left-hand side of assignment operator is not an lvalue"));
 
         if (_expr.accept(nx)) {
-            move(*left, *right);
+            move(left, right);
         } else {
             const unsigned t = _block->newTemp();
-            move(_block->TEMP(t), *right);
-            move(*left, _block->TEMP(t));
-            _expr.code = *left;
+            move(_block->TEMP(t), right);
+            move(left, _block->TEMP(t));
+            _expr.code = left;
         }
         break;
+    }
 
     case QSOperator::InplaceAnd:
     case QSOperator::InplaceSub:
@@ -1158,16 +1159,17 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceRightShift:
     case QSOperator::InplaceURightShift:
     case QSOperator::InplaceXor: {
+        IR::Expr* right = *expression(ast->right);
         if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember()))
             throwSyntaxError(ast->operatorToken, QCoreApplication::translate("qv4codegen", "left-hand side of inplace operator is not an lvalue"));
 
         if (_expr.accept(nx)) {
-            move(*left, *right, baseOp(ast->op));
+            move(left, right, baseOp(ast->op));
         } else {
             const unsigned t = _block->newTemp();
-            move(_block->TEMP(t), *right);
-            move(*left, _block->TEMP(t), baseOp(ast->op));
-            _expr.code = *left;
+            move(_block->TEMP(t), right);
+            move(left, _block->TEMP(t), baseOp(ast->op));
+            _expr.code = left;
         }
         break;
     }
@@ -1181,11 +1183,19 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::Le:
     case QSOperator::Lt:
     case QSOperator::StrictEqual:
-    case QSOperator::StrictNotEqual:
+    case QSOperator::StrictNotEqual: {
+        if (!left->asTemp() && !left->asConst()) {
+            const unsigned t = _block->newTemp();
+            move(_block->TEMP(t), left);
+            left = _block->TEMP(t);
+        }
+
+        IR::Expr* right = *expression(ast->right);
+
         if (_expr.accept(cx)) {
-            cjump(binop(IR::binaryOperator(ast->op), *left, *right), _expr.iftrue, _expr.iffalse);
+            cjump(binop(IR::binaryOperator(ast->op), left, right), _expr.iftrue, _expr.iffalse);
         } else {
-            IR::Expr *e = binop(IR::binaryOperator(ast->op), *left, *right);
+            IR::Expr *e = binop(IR::binaryOperator(ast->op), left, right);
             if (e->asConst() || e->asString())
                 _expr.code = e;
             else {
@@ -1195,6 +1205,7 @@ bool Codegen::visit(BinaryExpression *ast)
             }
         }
         break;
+    }
 
     case QSOperator::Add:
     case QSOperator::BitAnd:
@@ -1207,7 +1218,15 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::RShift:
     case QSOperator::Sub:
     case QSOperator::URShift: {
-        IR::Expr *e = binop(IR::binaryOperator(ast->op), *left, *right);
+        if (!left->asTemp() && !left->asConst()) {
+            const unsigned t = _block->newTemp();
+            move(_block->TEMP(t), left);
+            left = _block->TEMP(t);
+        }
+
+        IR::Expr* right = *expression(ast->right);
+
+        IR::Expr *e = binop(IR::binaryOperator(ast->op), left, right);
         if (e->asConst() || e->asString())
             _expr.code = e;
         else {
