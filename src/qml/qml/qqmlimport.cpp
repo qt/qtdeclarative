@@ -1344,6 +1344,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 
 QQmlImportDatabase::~QQmlImportDatabase()
 {
+    qDeleteAll(qmldirCache);
     qmldirCache.clear();
 }
 
