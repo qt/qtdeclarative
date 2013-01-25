@@ -104,6 +104,7 @@ public:
         Type_ForeachIteratorObject
     };
 
+    Object *asObject() { return reinterpret_cast<Object *>(this); }
     ArrayObject *asArrayObject() { return type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
     FunctionObject *asFunctionObject() { return type == Type_FunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
     BooleanObject *asBooleanObject() { return type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }

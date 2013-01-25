@@ -153,51 +153,6 @@ double Value::toInteger(double number)
     return std::signbit(number) ? -v : v;
 }
 
-Object *Value::asObject() const
-{
-    return isObject() ? objectValue() : 0;
-}
-
-FunctionObject *Value::asFunctionObject() const
-{
-    return isObject() ? objectValue()->asFunctionObject() : 0;
-}
-
-BooleanObject *Value::asBooleanObject() const
-{
-    return isObject() ? objectValue()->asBooleanObject() : 0;
-}
-
-NumberObject *Value::asNumberObject() const
-{
-    return isObject() ? objectValue()->asNumberObject() : 0;
-}
-
-StringObject *Value::asStringObject() const
-{
-    return isObject() ? objectValue()->asStringObject() : 0;
-}
-
-DateObject *Value::asDateObject() const
-{
-    return isObject() ? objectValue()->asDateObject() : 0;
-}
-
-RegExpObject *Value::asRegExpObject() const
-{
-    return isObject() ? objectValue()->asRegExpObject() : 0;
-}
-
-ArrayObject *Value::asArrayObject() const
-{
-    return isObject() ? objectValue()->asArrayObject() : 0;
-}
-
-ErrorObject *Value::asErrorObject() const
-{
-    return isObject() ? objectValue()->asErrorObject() : 0;
-}
-
 Value Value::property(ExecutionContext *ctx, String *name) const
 {
     return isObject() ? objectValue()->__get__(ctx, name) : undefinedValue();

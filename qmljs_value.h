@@ -47,21 +47,12 @@
 #include <QtCore/qnumeric.h>
 #include <qv4string.h>
 #include <QtCore/QDebug>
+#include <qv4managed.h>
 
 namespace QQmlJS {
 namespace VM {
 
 struct String;
-struct Object;
-struct BooleanObject;
-struct NumberObject;
-struct StringObject;
-struct ArrayObject;
-struct DateObject;
-struct FunctionObject;
-struct RegExpObject;
-struct ErrorObject;
-struct ArgumentsObject;
 struct ExecutionContext;
 struct ExecutionEngine;
 struct Value;
@@ -87,6 +78,7 @@ struct Value
                 int int_32;
 #if CPU(X86_64)
 #else
+                Managed *m;
                 Object *o;
                 String *s;
 #endif
@@ -170,12 +162,18 @@ struct Value
     Object *objectValue() const {
         return (Object *)(val & ~(quint64(Type_Mask) << Tag_Shift));
     }
+    Managed *managed() const {
+        return (Managed *)(val & ~(quint64(Type_Mask) << Tag_Shift));
+    }
 #else
     String *stringValue() const {
         return s;
     }
     Object *objectValue() const {
         return o;
+    }
+    Managed *managed() const {
+        return m;
     }
 #endif
 
@@ -414,6 +412,52 @@ inline uint Value::asArrayLength(ExecutionContext *ctx, bool *ok) const
         return UINT_MAX;
     }
     return idx;
+}
+
+
+inline Object *Value::asObject() const
+{
+    return isObject() ? objectValue() : 0;
+}
+
+inline FunctionObject *Value::asFunctionObject() const
+{
+    return isObject() ? managed()->asFunctionObject() : 0;
+}
+
+inline BooleanObject *Value::asBooleanObject() const
+{
+    return isObject() ? managed()->asBooleanObject() : 0;
+}
+
+inline NumberObject *Value::asNumberObject() const
+{
+    return isObject() ? managed()->asNumberObject() : 0;
+}
+
+inline StringObject *Value::asStringObject() const
+{
+    return isObject() ? managed()->asStringObject() : 0;
+}
+
+inline DateObject *Value::asDateObject() const
+{
+    return isObject() ? managed()->asDateObject() : 0;
+}
+
+inline RegExpObject *Value::asRegExpObject() const
+{
+    return isObject() ? managed()->asRegExpObject() : 0;
+}
+
+inline ArrayObject *Value::asArrayObject() const
+{
+    return isObject() ? managed()->asArrayObject() : 0;
+}
+
+inline ErrorObject *Value::asErrorObject() const
+{
+    return isObject() ? managed()->asErrorObject() : 0;
 }
 
 
