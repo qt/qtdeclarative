@@ -543,7 +543,7 @@ public:
         }
     }
 
-    void getCollectables(QVector<Object *> &objects) const;
+    void markObjects() const;
 
     void push_front(Value v) {
         if (!sparse) {

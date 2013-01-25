@@ -116,14 +116,14 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     return result;
 }
 
-void ArgumentsObject::getCollectables(QVector<Object *> &objects)
+void ArgumentsObject::markObjects()
 {
     for (int i = 0; i < mappedArguments.size(); ++i) {
         Object *o = mappedArguments.at(i).asObject();
         if (o)
-            objects.append(o);
+            o->mark();
     }
-    Object::getCollectables(objects);
+    Object::markObjects();
 }
 
 

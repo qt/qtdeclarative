@@ -164,7 +164,7 @@ struct Object: Managed {
     void defineReadonlyProperty(String *name, Value value);
 
 protected:
-    virtual void getCollectables(QVector<Object *> &objects);
+    virtual void markObjects();
 
     friend struct ObjectIterator;
 };
@@ -178,7 +178,7 @@ struct ForEachIteratorObject: Object {
     Value nextPropertyName() { return it.nextPropertyNameAsString(); }
 
 protected:
-    virtual void getCollectables(QVector<Object *> &objects);
+    virtual void markObjects();
 };
 
 struct BooleanObject: Object {

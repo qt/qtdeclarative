@@ -628,18 +628,19 @@ bool Array::setLength(uint newLen) {
     return ok;
 }
 
-void Array::getCollectables(QVector<Object *> &objects) const {
+void Array::markObjects() const
+{
     uint i = sparse ? 0 : offset;
     for (; i < (uint)values.size(); ++i) {
         const PropertyDescriptor &pd = values.at(i);
         if (pd.isData()) {
             if (Object *o = pd.value.asObject())
-                objects.append(o);
+                o->mark();
          } else if (pd.isAccessor()) {
             if (pd.get)
-                objects.append(pd.get);
+                pd.get->mark();
             if (pd.set)
-                objects.append(pd.set);
+                pd.set->mark();
         }
     }
 }

@@ -402,13 +402,13 @@ bool BoundFunction::hasInstance(ExecutionContext *ctx, const Value &value)
     return target->hasInstance(ctx, value);
 }
 
-void BoundFunction::getCollectables(QVector<Object *> &objects)
+void BoundFunction::markObjects()
 {
-    FunctionObject::getCollectables(objects);
-    objects.append(target);
+    target->mark();
     if (Object *o = boundThis.asObject())
-        objects.append(o);
+        o->mark();
     for (int i = 0; i < boundArgs.size(); ++i)
         if (Object *o = boundArgs.at(i).asObject())
-            objects.append(o);
+            o->mark();
+    FunctionObject::markObjects();
 }

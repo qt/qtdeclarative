@@ -77,7 +77,7 @@ struct ArgumentsObject: Object {
 
     bool defineOwnProperty(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc);
 
-    virtual void getCollectables(QVector<Object *> &objects);
+    virtual void markObjects();
 };
 
 }

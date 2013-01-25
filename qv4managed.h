@@ -71,8 +71,15 @@ public:
     void *operator new(size_t size, MemoryManager *mm);
     void operator delete(void *ptr);
 
+    inline void mark() {
+        if (markBit)
+            return;
+        markBit = 1;
+        markObjects();
+    }
+
 protected:
-    virtual void getCollectables(QVector<Object *> &objects) = 0;
+    virtual void markObjects() = 0;
 
     union {
         Managed *nextFree;

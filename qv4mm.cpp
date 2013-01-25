@@ -165,29 +165,15 @@ void MemoryManager::scribble(Managed *obj, int c, int size) const
         ::memset((void *)(obj + 1), c, size - sizeof(Managed));
 }
 
-std::size_t MemoryManager::mark(const QVector<Object *> &objects)
+void MemoryManager::mark(const QVector<Object *> &objects)
 {
-    std::size_t marks = 0;
-
-    QVector<Object *> kids;
-    kids.reserve(32);
-
     foreach (Object *o, objects) {
         if (!o)
             continue;
-
-        Managed *obj = o;
-        assert(obj->inUse);
-        if (obj->markBit == 0) {
-            obj->markBit = 1;
-            ++marks;
-            static_cast<Managed *>(o)->getCollectables(kids);
-            marks += mark(kids);
-            kids.resize(0);
-        }
+        o->mark();
     }
 
-    return marks;
+    return;
 }
 
 std::size_t MemoryManager::sweep()

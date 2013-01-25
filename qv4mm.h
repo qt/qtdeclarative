@@ -111,7 +111,7 @@ protected:
 
 private:
     void collectRoots(QVector<VM::Object *> &roots) const;
-    static std::size_t mark(const QVector<Object *> &objects);
+    static void mark(const QVector<Object *> &objects);
     std::size_t sweep();
     std::size_t sweep(char *chunkStart, std::size_t chunkSize, size_t size);
 

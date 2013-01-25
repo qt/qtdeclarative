@@ -168,10 +168,10 @@ void Object::defineReadonlyProperty(String *name, Value value)
     pd->value = value;
 }
 
-void Object::getCollectables(QVector<Object *> &objects)
+void Object::markObjects()
 {
     if (prototype)
-        objects.append(prototype);
+        prototype->mark();
 
     if (members) {
         for (PropertyTable::iterator it = members->begin(), eit = members->end(); it < eit; ++it) {
@@ -180,16 +180,16 @@ void Object::getCollectables(QVector<Object *> &objects)
             PropertyDescriptor &pd = (*it)->descriptor;
             if (pd.isData()) {
                 if (Object *o = pd.value.asObject())
-                    objects.append(o);
+                    o->mark();
             } else if (pd.isAccessor()) {
                 if (pd.get)
-                    objects.append(pd.get);
+                    pd.get->mark();
                 if (pd.set)
-                    objects.append(pd.set);
+                    pd.set->mark();
             }
         }
     }
-    array.getCollectables(objects);
+    array.markObjects();
 }
 
 // Section 8.12.1
@@ -660,10 +660,10 @@ void ArrayObject::init(ExecutionContext *context)
 
 
 
-void ForEachIteratorObject::getCollectables(QVector<Object *> &objects)
+void ForEachIteratorObject::markObjects()
 {
-    Object::getCollectables(objects);
+    Object::markObjects();
     if (it.object)
-        objects.append(it.object);
+        it.object->mark();
 }
 

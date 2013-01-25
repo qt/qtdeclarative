@@ -210,7 +210,7 @@ struct BoundFunction: FunctionObject {
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
     virtual Value construct(ExecutionContext *context, Value *args, int argc);
     virtual bool hasInstance(ExecutionContext *ctx, const Value &value);
-    virtual void getCollectables(QVector<Object *> &objects);
+    virtual void markObjects();
 };
 
 } // namespace VM
