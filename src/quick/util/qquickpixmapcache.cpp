@@ -565,6 +565,8 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             mutex.lock();
             if (!cancelled.contains(runningJob))
                 runningJob->postReply(errorCode, errorStr, readSize, t);
+            else
+                delete t;
             mutex.unlock();
 
         }
