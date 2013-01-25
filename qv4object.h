@@ -126,16 +126,16 @@ struct Object: Managed {
     PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name);
     PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, uint index);
 
-    virtual Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
+    Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
     Value __get__(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
 
     void __put__(ExecutionContext *ctx, String *name, Value value);
     void __put__(ExecutionContext *ctx, uint index, Value value);
 
-    virtual bool __hasProperty__(const ExecutionContext *ctx, String *name) const;
-    virtual bool __hasProperty__(const ExecutionContext *ctx, uint index) const;
-    virtual bool __delete__(ExecutionContext *ctx, String *name);
-    virtual bool __delete__(ExecutionContext *ctx, uint index);
+    bool __hasProperty__(const ExecutionContext *ctx, String *name) const;
+    bool __hasProperty__(const ExecutionContext *ctx, uint index) const;
+    bool __delete__(ExecutionContext *ctx, String *name);
+    bool __delete__(ExecutionContext *ctx, uint index);
     bool __defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *current, const PropertyDescriptor *desc);
     bool __defineOwnProperty__(ExecutionContext *ctx, String *name, const PropertyDescriptor *desc);
     bool __defineOwnProperty__(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc);
