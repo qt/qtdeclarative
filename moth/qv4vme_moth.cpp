@@ -18,6 +18,27 @@
 using namespace QQmlJS;
 using namespace QQmlJS::Moth;
 
+class FunctionState: public Debugging::FunctionState
+{
+public:
+    FunctionState(QQmlJS::VM::ExecutionContext *context, const uchar **code)
+        : Debugging::FunctionState(context)
+        , stack(0)
+        , stackSize(0)
+        , code(code)
+    {}
+
+    virtual VM::Value *temp(unsigned idx) { return stack + idx; }
+
+    void setStack(VM::Value *stack, unsigned stackSize)
+    { this->stack = stack; this->stackSize = stackSize; }
+
+private:
+    VM::Value *stack;
+    unsigned stackSize;
+    const uchar **code;
+};
+
 #define MOTH_BEGIN_INSTR_COMMON(I) { \
     const InstrMeta<(int)Instr::I>::DataType &instr = InstrMeta<(int)Instr::I>::data(*genericInstr); \
     code += InstrMeta<(int)Instr::I>::Size; \
@@ -53,70 +74,58 @@ using namespace QQmlJS::Moth;
 
 #endif
 
-static inline VM::Value *tempValue(QQmlJS::VM::ExecutionContext *context, VM::Value* stack, int index)
+static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
+                                     VM::Value* stack,
+                                     const Instr::Param &param
+#if !defined(QT_NO_DEBUG)
+                                     , unsigned stackSize
+#endif
+                                     )
 {
 #ifdef DO_TRACE_INSTR
-    const char *kind;
-    int pos;
-    if (index < 0) {
-        kind = "arg";
-        pos = -index - 1;
-    } else if (index < (int) context->variableCount()) {
-        kind = "local";
-        pos = index;
+    if (param.isValue()) {
+        fprintf(stderr, "    value\n");
+    } else if (param.isArgument()) {
+        fprintf(stderr, "    argument %d\n", param.index);
+    } else if (param.isLocal()) {
+        fprintf(stderr, "    local %d\n", param.index);
+    } else if (param.isTemp()) {
+        fprintf(stderr, "    temp %d\n", param.index);
     } else {
-        kind = "temp";
-        pos = index - context->variableCount();
+        Q_ASSERT(!"INVALID");
     }
-    fprintf(stderr, "    tempValue: index = %d : %s = %d\n",
-          index, kind, pos);
 #endif // DO_TRACE_INSTR
 
-    if (index < 0) {
-        const int arg = -index - 1;
-
+    if (param.isValue()) {
+        return const_cast<VM::Value *>(&param.value);
+    } else if (param.isArgument()) {
+        const unsigned arg = param.index;
         Q_ASSERT(arg >= 0);
         Q_ASSERT((unsigned) arg < context->argumentCount);
         Q_ASSERT(context->arguments);
-
         return context->arguments + arg;
-    } else if (index < (int) context->variableCount()) {
+    } else if (param.isLocal()) {
+        const unsigned index = param.index;
         Q_ASSERT(index >= 0);
+        Q_ASSERT(index < context->variableCount());
         Q_ASSERT(context->locals);
-
         return context->locals + index;
+    } else if (param.isTemp()) {
+        Q_ASSERT(param.index < stackSize);
+        return stack + param.index;
     } else {
-        int off = index - context->variableCount();
-
-        Q_ASSERT(off >= 0);
-
-        return stack + off;
+        Q_UNIMPLEMENTED();
+        return 0;
     }
 }
 
-class FunctionState: public Debugging::FunctionState
-{
-public:
-    FunctionState(QQmlJS::VM::ExecutionContext *context, const uchar **code)
-        : Debugging::FunctionState(context)
-        , stack(0)
-        , stackSize(0)
-        , code(code)
-    {}
-
-    virtual VM::Value *temp(unsigned idx) { return stack + idx; }
-
-    void setStack(VM::Value *stack, unsigned stackSize)
-    { this->stack = stack; this->stackSize = stackSize; }
-
-private:
-    VM::Value *stack;
-    unsigned stackSize;
-    const uchar **code;
-};
-
-#define TEMP(index) *tempValue(context, stack, index)
-#define TEMPPTR(index) tempValue(context, stack, index)
+#if defined(QT_NO_DEBUG)
+# define VALUE(param) *getValueRef(context, stack, param)
+# define VALUEPTR(param) getValueRef(context, stack, param)
+#else
+# define VALUE(param) *getValueRef(context, stack, param, stackSize)
+# define VALUEPTR(param) getValueRef(context, stack, param, stackSize)
+#endif
 
 VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *code
 #ifdef MOTH_THREADED_INTERPRETER
@@ -154,51 +163,42 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 #endif
 
     MOTH_BEGIN_INSTR(MoveTemp)
-        VM::Value tmp = TEMP(instr.fromTempIndex);
-        TEMP(instr.toTempIndex) = tmp;
+        VALUE(instr.result) = VALUE(instr.source);
     MOTH_END_INSTR(MoveTemp)
 
     MOTH_BEGIN_INSTR(LoadValue)
-        TEMP(instr.targetTempIndex) = instr.value;
+//        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());
+        VALUE(instr.result) = VALUE(instr.value);
     MOTH_END_INSTR(LoadValue)
 
     MOTH_BEGIN_INSTR(LoadClosure)
-        VM::Value c = __qmljs_init_closure(instr.value, context);
-        TEMP(instr.targetTempIndex) = c;
+        VALUE(instr.result) = __qmljs_init_closure(instr.value, context);
     MOTH_END_INSTR(LoadClosure)
 
     MOTH_BEGIN_INSTR(LoadName)
         TRACE(inline, "property name = %s", instr.name->toQString().toUtf8().constData());
-        VM::Value val = __qmljs_get_activation_property(context, instr.name);
-        TEMP(instr.targetTempIndex) = val;
+        VALUE(instr.result) = __qmljs_get_activation_property(context, instr.name);
     MOTH_END_INSTR(LoadName)
 
     MOTH_BEGIN_INSTR(StoreName)
         TRACE(inline, "property name = %s", instr.name->toQString().toUtf8().constData());
-        VM::Value source = instr.sourceIsTemp ? TEMP(instr.source.tempIndex) : instr.source.value;
-        __qmljs_set_activation_property(context, instr.name, source);
+        __qmljs_set_activation_property(context, instr.name, VALUE(instr.source));
     MOTH_END_INSTR(StoreName)
 
     MOTH_BEGIN_INSTR(LoadElement)
-        TEMP(instr.targetTempIndex) = __qmljs_get_element(context, TEMP(instr.base), TEMP(instr.index));
+        VALUE(instr.result) = __qmljs_get_element(context, VALUE(instr.base), VALUE(instr.index));
     MOTH_END_INSTR(LoadElement)
 
     MOTH_BEGIN_INSTR(StoreElement)
-        VM::Value source = instr.sourceIsTemp ? TEMP(instr.source.tempIndex) : instr.source.value;
-        __qmljs_set_element(context, TEMP(instr.base), TEMP(instr.index), source);
+        __qmljs_set_element(context, VALUE(instr.base), VALUE(instr.index), VALUE(instr.source));
     MOTH_END_INSTR(StoreElement)
 
     MOTH_BEGIN_INSTR(LoadProperty)
-        TRACE(inline, "base temp = %d, property name = %s", instr.baseTemp, instr.name->toQString().toUtf8().constData());
-        VM::Value base = TEMP(instr.baseTemp);
-        TEMP(instr.targetTempIndex) = __qmljs_get_property(context, base, instr.name);
+        VALUE(instr.result) = __qmljs_get_property(context, VALUE(instr.base), instr.name);
     MOTH_END_INSTR(LoadProperty)
 
     MOTH_BEGIN_INSTR(StoreProperty)
-        TRACE(inline, "base temp = %d, property name = %s", instr.baseTemp, instr.name->toQString().toUtf8().constData());
-        VM::Value base = TEMP(instr.baseTemp);
-        VM::Value source = instr.sourceIsTemp ? TEMP(instr.source.tempIndex) : instr.source.value;
-        __qmljs_set_property(context, base, instr.name, source);
+        __qmljs_set_property(context, VALUE(instr.base), instr.name, VALUE(instr.source));
     MOTH_END_INSTR(StoreProperty)
 
     MOTH_BEGIN_INSTR(Push)
@@ -211,7 +211,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_BEGIN_INSTR(CallValue)
 #ifdef DO_TRACE_INSTR
         if (Debugging::Debugger *debugger = context->engine->debugger) {
-            if (VM::FunctionObject *o = (TEMP(instr.destIndex)).asFunctionObject()) {
+            if (VM::FunctionObject *o = (VALUE(instr.dest)).asFunctionObject()) {
                 if (Debugging::FunctionDebugInfo *info = debugger->debugInfo(o)) {
                     QString n = debugger->name(o);
                     std::cerr << "*** Call to \"" << (n.isNull() ? "<no name>" : qPrintable(n)) << "\" defined @" << info->startLine << ":" << info->startColumn << std::endl;
@@ -219,37 +219,28 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
             }
         }
 #endif // DO_TRACE_INSTR
-        int argStart = instr.args - context->variableCount();
-        TRACE(Call, "value index = %d, argStart = %d, argc = %d, result temp index = %d", instr.destIndex, argStart, instr.argc, instr.targetTempIndex);
-        VM::Value *args = stack + argStart;
-        VM::Value result = __qmljs_call_value(context, VM::Value::undefinedValue(), TEMP(instr.destIndex), args, instr.argc);
-        TEMP(instr.targetTempIndex) = result;
+        Q_ASSERT(instr.args + instr.argc < stackSize);
+        VM::Value *args = stack + instr.args;
+        VALUE(instr.result) = __qmljs_call_value(context, VM::Value::undefinedValue(), VALUE(instr.dest), args, instr.argc);
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
-        int argStart = instr.args - context->variableCount();
-    // TODO: change this assert everywhere to include a minimum
-    // TODO: the args calculation is duplicate code, fix that
-        VM::Value *args = stack + argStart;
-        VM::Value base = TEMP(instr.baseTemp);
-        TEMP(instr.targetTempIndex) = __qmljs_call_property(context, base, instr.name, args, instr.argc);
+        TRACE(property name, "%s", qPrintable(instr.name->toQString()));
+        Q_ASSERT(instr.args + instr.argc < stackSize);
+        VM::Value *args = stack + instr.args;
+        VALUE(instr.result) = __qmljs_call_property(context, VALUE(instr.base), instr.name, args, instr.argc);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallElement)
-        int argStart = instr.args - context->variableCount();
-    // TODO: change this assert everywhere to include a minimum
-    // TODO: the args calculation is duplicate code, fix that
-        VM::Value *args = stack + argStart;
-        VM::Value base = TEMP(instr.baseTemp);
-        TEMP(instr.targetTempIndex) = __qmljs_call_element(context, base, TEMP(instr.index), args, instr.argc);
+        Q_ASSERT(instr.args + instr.argc < stackSize);
+        VM::Value *args = stack + instr.args;
+        VALUE(instr.result) = __qmljs_call_element(context, VALUE(instr.base), VALUE(instr.index), args, instr.argc);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallActivationProperty)
-        int argStart = instr.args - context->variableCount();
-    // TODO: change this assert everywhere to include a minimum
-    // TODO: the args calculation is duplicate code, fix that
-        VM::Value *args = stack + argStart;
-        TEMP(instr.targetTempIndex) = __qmljs_call_activation_property(context, instr.name, args, instr.argc);
+        Q_ASSERT(instr.args + instr.argc < stackSize);
+        VM::Value *args = stack + instr.args;
+        VALUE(instr.result) = __qmljs_call_activation_property(context, instr.name, args, instr.argc);
     MOTH_END_INSTR(CallActivationProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltin)
@@ -257,116 +248,115 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         switch (instr.builtin) {
         case Instr::instr_callBuiltin::builtin_throw:
             TRACE(builtin_throw, "Throwing now...%s", "");
-            __qmljs_builtin_throw(TEMP(instr.argTemp), context);
+            __qmljs_builtin_throw(VALUE(instr.arg), context);
             break;
         case Instr::instr_callBuiltin::builtin_create_exception_handler: {
             TRACE(builtin_create_exception_handler, "%s", "");
             void *buf = __qmljs_create_exception_handler(context);
-            // The targetTempIndex is the only value we need from the instr to
+            // The resultIndex is the only value we need from the instr to
             // continue execution when an exception is caught.
-            int targetTempIndex = instr.targetTempIndex;
+            VM::Value *result = getValueRef(context, stack, instr.result, stackSize);
             int didThrow = setjmp(* static_cast<jmp_buf *>(buf));
             // Two ways to come here: after a create, or after a throw.
             if (didThrow)
                 // At this point, the interpreter state can be anything but
                 // valid, so first restore the state. This includes all relevant
                 // locals.
-                restoreState(context, targetTempIndex, code);
+                restoreState(context, result, code);
             else
                 // Save the state and any variables we need when catching an
                 // exception, so we can restore the state at that point.
-                saveState(context, targetTempIndex, code);
-            TEMP(targetTempIndex) = VM::Value::fromInt32(didThrow);
+                saveState(context, result, code);
+            *result = VM::Value::fromInt32(didThrow);
         } break;
         case Instr::instr_callBuiltin::builtin_delete_exception_handler:
             TRACE(builtin_delete_exception_handler, "%s", "");
             __qmljs_delete_exception_handler(context);
             break;
         case Instr::instr_callBuiltin::builtin_get_exception:
-            TEMP(instr.targetTempIndex) = __qmljs_get_exception(context);
+            TRACE(builtin_get_exception, "%s", "");
+            VALUE(instr.result) = __qmljs_get_exception(context);
             break;
         case Instr::instr_callBuiltin::builtin_push_with_scope:
-            context = __qmljs_builtin_push_with_scope(TEMP(instr.argTemp), context);
+            TRACE(builtin_push_with_scope, "%s", "");
+            context = __qmljs_builtin_push_with_scope(VALUE(instr.arg), context);
             break;
         case Instr::instr_callBuiltin::builtin_pop_scope:
+            TRACE(builtin_pop_scope, "%s", "");
             context = __qmljs_builtin_pop_scope(context);
             break;
         default:
-            assert(!"TODO!");
-            Q_UNREACHABLE();
+            Q_UNIMPLEMENTED();
+            return VM::Value();
         }
     MOTH_END_INSTR(CallBuiltin)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachIteratorObject)
-        VM::Value &obj = TEMP(instr.argTemp);
-        VM::Value it = __qmljs_foreach_iterator_object(obj, context);
-        TEMP(instr.targetTempIndex) = it;
+        VALUE(instr.result) = __qmljs_foreach_iterator_object(VALUE(instr.arg), context);
     MOTH_END_INSTR(CallBuiltinForeachIteratorObject)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachNextPropertyName)
-        VM::Value &iter = TEMP(instr.argTemp);
-        VM::Value val = __qmljs_foreach_next_property_name(iter);
-        TEMP(instr.targetTempIndex) = val;
+        VALUE(instr.result) = __qmljs_foreach_next_property_name(VALUE(instr.arg));
     MOTH_END_INSTR(CallBuiltinForeachNextPropertyName)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteMember)
-        TEMP(instr.targetTempIndex) = __qmljs_delete_member(context, TEMP(instr.base), instr.member);
+        VALUE(instr.result) = __qmljs_delete_member(context, VALUE(instr.base), instr.member);
     MOTH_END_INSTR(CallBuiltinDeleteMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteSubscript)
-        TEMP(instr.targetTempIndex) = __qmljs_delete_subscript(context, TEMP(instr.base), TEMP(instr.index));
+        VALUE(instr.result) = __qmljs_delete_subscript(context, VALUE(instr.base), VALUE(instr.index));
     MOTH_END_INSTR(CallBuiltinDeleteSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteName)
-        TEMP(instr.targetTempIndex) = __qmljs_delete_name(context, instr.name);
+        VALUE(instr.result) = __qmljs_delete_name(context, instr.name);
     MOTH_END_INSTR(CallBuiltinDeleteName)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofMember)
-        TEMP(instr.targetTempIndex) = __qmljs_builtin_typeof_member(TEMP(instr.base), instr.member, context);
+        VALUE(instr.result) = __qmljs_builtin_typeof_member(VALUE(instr.base), instr.member, context);
     MOTH_END_INSTR(CallBuiltinTypeofMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofSubscript)
-        TEMP(instr.targetTempIndex) = __qmljs_builtin_typeof_element(TEMP(instr.base), TEMP(instr.index), context);
+        VALUE(instr.result) = __qmljs_builtin_typeof_element(VALUE(instr.base), VALUE(instr.index), context);
     MOTH_END_INSTR(CallBuiltinTypeofSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofName)
-        TEMP(instr.targetTempIndex) = __qmljs_builtin_typeof_name(instr.name, context);
+        VALUE(instr.result) = __qmljs_builtin_typeof_name(instr.name, context);
     MOTH_END_INSTR(CallBuiltinTypeofName)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofValue)
-        TEMP(instr.targetTempIndex) = __qmljs_builtin_typeof(TEMP(instr.tempIndex), context);
+        VALUE(instr.result) = __qmljs_builtin_typeof(VALUE(instr.value), context);
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncMember)
-        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_increment_member(TEMP(instr.base), instr.member, context);
+        VALUE(instr.result) = __qmljs_builtin_post_increment_member(VALUE(instr.base), instr.member, context);
     MOTH_END_INSTR(CallBuiltinTypeofMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncSubscript)
-        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_increment_element(TEMP(instr.base), TEMP(instr.index), context);
+        VALUE(instr.result) = __qmljs_builtin_post_increment_element(VALUE(instr.base), VALUE(instr.index), context);
     MOTH_END_INSTR(CallBuiltinTypeofSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncName)
-        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_increment_name(instr.name, context);
+        VALUE(instr.result) = __qmljs_builtin_post_increment_name(instr.name, context);
     MOTH_END_INSTR(CallBuiltinTypeofName)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncValue)
-        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_increment(TEMPPTR(instr.tempIndex), context);
+        VALUE(instr.result) = __qmljs_builtin_post_increment(VALUEPTR(instr.value), context);
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecMember)
-        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_decrement_member(TEMP(instr.base), instr.member, context);
+        VALUE(instr.result) = __qmljs_builtin_post_decrement_member(VALUE(instr.base), instr.member, context);
     MOTH_END_INSTR(CallBuiltinTypeofMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecSubscript)
-        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_decrement_element(TEMP(instr.base), TEMP(instr.index), context);
+        VALUE(instr.result) = __qmljs_builtin_post_decrement_element(VALUE(instr.base), VALUE(instr.index), context);
     MOTH_END_INSTR(CallBuiltinTypeofSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecName)
-        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_decrement_name(instr.name, context);
+        VALUE(instr.result) = __qmljs_builtin_post_decrement_name(instr.name, context);
     MOTH_END_INSTR(CallBuiltinTypeofName)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecValue)
-        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_decrement(TEMPPTR(instr.tempIndex), context);
+        VALUE(instr.result) = __qmljs_builtin_post_decrement(VALUEPTR(instr.value), context);
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeclareVar)
@@ -374,34 +364,34 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinDeclareVar)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineGetterSetter)
-        __qmljs_builtin_define_getter_setter(TEMP(instr.objectTemp), instr.name, TEMP(instr.getterTemp), TEMP(instr.setterTemp), context);
+        __qmljs_builtin_define_getter_setter(VALUE(instr.object), instr.name, VALUE(instr.getter), VALUE(instr.setter), context);
     MOTH_END_INSTR(CallBuiltinDefineGetterSetter)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineProperty)
-        __qmljs_builtin_define_property(TEMP(instr.objectTemp), instr.name, TEMP(instr.valueTemp), context);
+        __qmljs_builtin_define_property(VALUE(instr.object), instr.name, VALUE(instr.value), context);
     MOTH_END_INSTR(CallBuiltinDefineProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineArrayProperty)
-        __qmljs_builtin_define_array_property(TEMP(instr.objectTemp), instr.index, TEMP(instr.valueTemp), context);
+        __qmljs_builtin_define_array_property(VALUE(instr.object), instr.index, VALUE(instr.value), context);
     MOTH_END_INSTR(CallBuiltinDefineArrayProperty)
 
     MOTH_BEGIN_INSTR(CreateValue)
-        int argStart = instr.args - context->variableCount();
-        VM::Value *args = stack + argStart;
-        TEMP(instr.targetTempIndex) = __qmljs_construct_value(context, TEMP(instr.func), args, instr.argc);
+        Q_ASSERT(instr.args + instr.argc < stackSize);
+        VM::Value *args = stack + instr.args;
+        VALUE(instr.result) = __qmljs_construct_value(context, VALUE(instr.func), args, instr.argc);
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
-        int argStart = instr.args - context->variableCount();
-        VM::Value *args = stack + argStart;
-        TEMP(instr.targetTempIndex) = __qmljs_construct_property(context, TEMP(instr.base), instr.name, args, instr.argc);
+        Q_ASSERT(instr.args + instr.argc < stackSize);
+        VM::Value *args = stack + instr.args;
+        VALUE(instr.result) = __qmljs_construct_property(context, VALUE(instr.base), instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
-        TRACE(inline, "property name = %s, argc = %d", instr.name->toQString().toUtf8().constData(), instr.argc);
-        int argStart = instr.args - context->variableCount();
-        VM::Value *args = stack + argStart;
-        TEMP(instr.targetTempIndex) = __qmljs_construct_activation_property(context, instr.name, args, instr.argc);
+        TRACE(inline, "property name = %s, args = %d, argc = %d", instr.name->toQString().toUtf8().constData(), instr.args, instr.argc);
+        Q_ASSERT(instr.args + instr.argc < stackSize);
+        VM::Value *args = stack + instr.args;
+        VALUE(instr.result) = __qmljs_construct_activation_property(context, instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateActivationProperty)
 
     MOTH_BEGIN_INSTR(Jump)
@@ -409,51 +399,48 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(Jump)
 
     MOTH_BEGIN_INSTR(CJump)
-        if (__qmljs_to_boolean(TEMP(instr.tempIndex), context))
+        uint cond = __qmljs_to_boolean(VALUE(instr.condition), context);
+        TRACE(condition, "%s", cond ? "TRUE" : "FALSE");
+        if (cond)
             code = ((uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(CJump)
 
     MOTH_BEGIN_INSTR(Unop)
-        TEMP(instr.targetTempIndex) = instr.alu(TEMP(instr.e), context);
+        VALUE(instr.result) = instr.alu(VALUE(instr.source), context);
     MOTH_END_INSTR(Unop)
 
     MOTH_BEGIN_INSTR(Binop)
-        VM::Value lhs = instr.lhsIsTemp ? TEMP(instr.lhs.tempIndex) : instr.lhs.value;
-        VM::Value rhs = instr.rhsIsTemp ? TEMP(instr.rhs.tempIndex) : instr.rhs.value;
-        TEMP(instr.targetTempIndex) = instr.alu(lhs, rhs, context);
+        VALUE(instr.result) = instr.alu(VALUE(instr.lhs), VALUE(instr.rhs), context);
     MOTH_END_INSTR(Binop)
 
     MOTH_BEGIN_INSTR(Ret)
-        VM::Value result = TEMP(instr.tempIndex);
+        VM::Value &result = VALUE(instr.result);
 //        TRACE(Ret, "returning value %s", result.toString(context)->toQString().toUtf8().constData());
         return result;
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(LoadThis)
-        TEMP(instr.targetTempIndex) = __qmljs_get_thisObject(context);
+        VALUE(instr.result) = __qmljs_get_thisObject(context);
     MOTH_END_INSTR(LoadThis)
 
     MOTH_BEGIN_INSTR(InplaceElementOp)
-        VM::Value source = instr.sourceIsTemp ? TEMP(instr.source.tempIndex) : instr.source.value;
-        instr.alu(TEMP(instr.targetBase),
-                  TEMP(instr.targetIndex),
-                  source,
+        instr.alu(VALUE(instr.base),
+                  VALUE(instr.index),
+                  VALUE(instr.source),
                   context);
     MOTH_END_INSTR(InplaceElementOp)
 
     MOTH_BEGIN_INSTR(InplaceMemberOp)
-        VM::Value source = instr.sourceIsTemp ? TEMP(instr.source.tempIndex) : instr.source.value;
-        instr.alu(source,
-                  TEMP(instr.targetBase),
-                  instr.targetMember,
+        instr.alu(VALUE(instr.source),
+                  VALUE(instr.base),
+                  instr.member,
                   context);
     MOTH_END_INSTR(InplaceMemberOp)
 
     MOTH_BEGIN_INSTR(InplaceNameOp)
-        TRACE(name, "%s", instr.targetName->toQString().toUtf8().constData());
-        VM::Value source = instr.sourceIsTemp ? TEMP(instr.source.tempIndex) : instr.source.value;
-        instr.alu(source,
-                  instr.targetName,
+        TRACE(name, "%s", instr.name->toQString().toUtf8().constData());
+        instr.alu(VALUE(instr.source),
+                  instr.name,
                   context);
     MOTH_END_INSTR(InplaceNameOp)
 
@@ -487,16 +474,16 @@ VM::Value VME::exec(VM::ExecutionContext *ctxt, const uchar *code)
     return vme(ctxt, code);
 }
 
-void VME::restoreState(VM::ExecutionContext *context, int &targetTempIndex, const uchar *&code)
+void VME::restoreState(VM::ExecutionContext *context, VM::Value *&target, const uchar *&code)
 {
     VM::ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
-    targetTempIndex = handler.targetTempIndex;
+    target = handler.target;
     code = handler.code;
 }
 
-void VME::saveState(VM::ExecutionContext *context, int targetTempIndex, const uchar *code)
+void VME::saveState(VM::ExecutionContext *context, VM::Value *target, const uchar *code)
 {
     VM::ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
-    handler.targetTempIndex = targetTempIndex;
+    handler.target = target;
     handler.code = code;
 }

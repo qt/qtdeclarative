@@ -86,12 +86,44 @@ private:
         Instruction();
     };
 
+    Instr::Param getParam(IR::Expr *e)
+    {
+        Q_ASSERT(e);
+
+        typedef Instr::Param Param;
+        if (IR::Const *c = e->asConst()) {
+            return Param::createValue(convertToValue(c));
+        } else if (IR::Temp *t = e->asTemp()) {
+            const int index = t->index;
+            if (index < 0) {
+                return Param::createArgument(-index - 1);
+            } else {
+                const int localCount = _function->locals.size();
+                if (index < localCount)
+                    return Param::createLocal(index);
+                else
+                    return Param::createTemp(index - localCount);
+            }
+        } else {
+            Q_UNIMPLEMENTED();
+            return Param();
+        }
+    }
+
+    Instr::Param getResultParam(IR::Temp *result)
+    {
+        if (result)
+            return getParam(result);
+        else
+            return Instr::Param::createTemp(scratchTempIndex());
+    }
+
     void simpleMove(IR::Move *);
     void prepareCallArgs(IR::ExprList *, quint32 &, quint32 &);
 
-    int outgoingArgumentTempStart() const { return _function->tempCount; }
+    int outgoingArgumentTempStart() const { return _function->tempCount - _function->locals.size(); }
     int scratchTempIndex() const { return outgoingArgumentTempStart() + _function->maxNumberOfArguments; }
-    int frameSize() const { return scratchTempIndex() + 1 - _function->locals.size(); }
+    int frameSize() const { return scratchTempIndex() + 1; }
 
     template <int Instr>
     inline ptrdiff_t addInstruction(const InstrData<Instr> &data);

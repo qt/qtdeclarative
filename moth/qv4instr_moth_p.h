@@ -75,9 +75,53 @@ namespace Moth {
 
 union Instr
 {
-    union ValueOrTemp {
+    struct Param {
+        enum {
+            ValueType    = 0,
+            ArgumentType = 1,
+            LocalType    = 2,
+            TempType     = 3
+        };
         VM::Value value;
-        int tempIndex;
+        unsigned type  : 2;
+        unsigned index : 30;
+
+        bool isValue() const { return type == ValueType; }
+        bool isArgument() const { return type == ArgumentType; }
+        bool isLocal() const { return type == LocalType; }
+        bool isTemp() const { return type == TempType; }
+
+        static Param createValue(const VM::Value &v)
+        {
+            Param p;
+            p.type = ValueType;
+            p.value = v;
+            return p;
+        }
+
+        static Param createArgument(unsigned idx)
+        {
+            Param p;
+            p.type = ArgumentType;
+            p.index = idx;
+            return p;
+        }
+
+        static Param createLocal(unsigned idx)
+        {
+            Param p;
+            p.type = LocalType;
+            p.index = idx;
+            return p;
+        }
+
+        static Param createTemp(unsigned idx)
+        {
+            Param p;
+            p.type = TempType;
+            p.index = idx;
+            return p;
+        }
     };
 
     enum Type {
@@ -86,63 +130,59 @@ union Instr
 
     struct instr_common {
         MOTH_INSTR_HEADER
-        int tempIndex;
     };
     struct instr_ret {
         MOTH_INSTR_HEADER
-        int tempIndex;
+        Param result;
     }; 
     struct instr_loadValue {
         MOTH_INSTR_HEADER
-        int targetTempIndex;
-        VM::Value value;
+        Param value;
+        Param result;
     };
     struct instr_moveTemp {
         MOTH_INSTR_HEADER
-        int fromTempIndex;
-        int toTempIndex;
+        Param source;
+        Param result;
     };
     struct instr_loadClosure {
         MOTH_INSTR_HEADER
         VM::Function *value;
-        int targetTempIndex;
+        Param result;
     };
     struct instr_loadName {
         MOTH_INSTR_HEADER
         VM::String *name;
-        int targetTempIndex;
+        Param result;
     };
     struct instr_storeName {
         MOTH_INSTR_HEADER
         VM::String *name;
-        ValueOrTemp source;
-        unsigned sourceIsTemp:1;
+        Param source;
     };
     struct instr_loadProperty {
         MOTH_INSTR_HEADER
-        int baseTemp;
-        int targetTempIndex;
         VM::String *name;
+        Param base;
+        Param result;
     };
     struct instr_storeProperty {
         MOTH_INSTR_HEADER
-        int baseTemp;
         VM::String *name;
-        ValueOrTemp source;
-        unsigned sourceIsTemp:1;
+        Param base;
+        Param source;
     };
     struct instr_loadElement {
         MOTH_INSTR_HEADER
-        int base;
-        int index;
-        int targetTempIndex;
+        Param base;
+        Param index;
+        Param result;
     };
     struct instr_storeElement {
         MOTH_INSTR_HEADER
-        int base;
-        int index;
-        ValueOrTemp source;
-        unsigned sourceIsTemp:1;
+        Param base;
+        Param index;
+        Param source;
     };
     struct instr_push {
         MOTH_INSTR_HEADER
@@ -152,31 +192,31 @@ union Instr
         MOTH_INSTR_HEADER
         quint32 argc;
         quint32 args;
-        int destIndex;
-        int targetTempIndex;
+        Param dest;
+        Param result;
     };
     struct instr_callProperty {
         MOTH_INSTR_HEADER
         VM::String *name;
-        int baseTemp;
         quint32 argc;
         quint32 args;
-        int targetTempIndex;
+        Param base;
+        Param result;
     };
     struct instr_callElement {
         MOTH_INSTR_HEADER
-        int index;
-        int baseTemp;
+        Param base;
+        Param index;
         quint32 argc;
         quint32 args;
-        int targetTempIndex;
+        Param result;
     };
     struct instr_callActivationProperty {
         MOTH_INSTR_HEADER
         VM::String *name;
         quint32 argc;
         quint32 args;
-        int targetTempIndex;
+        Param result;
     };
     struct instr_callBuiltin {
         MOTH_INSTR_HEADER
@@ -188,147 +228,147 @@ union Instr
             builtin_push_with_scope,
             builtin_pop_scope
         } builtin;
-        int argTemp;
-        int targetTempIndex;
+        Param arg;
+        Param result;
     };
     struct instr_callBuiltinForeachIteratorObject {
         MOTH_INSTR_HEADER
-        int argTemp;
-        int targetTempIndex;
+        Param arg;
+        Param result;
     };
     struct instr_callBuiltinForeachNextPropertyName {
         MOTH_INSTR_HEADER
-        int argTemp;
-        int targetTempIndex;
+        Param arg;
+        Param result;
     };
     struct instr_callBuiltinDeleteMember {
         MOTH_INSTR_HEADER
-        int base;
         VM::String *member;
-        int targetTempIndex;
+        Param base;
+        Param result;
     };
     struct instr_callBuiltinDeleteSubscript {
         MOTH_INSTR_HEADER
-        int base;
-        int index;
-        int targetTempIndex;
+        Param base;
+        Param index;
+        Param result;
     };
     struct instr_callBuiltinDeleteName {
         MOTH_INSTR_HEADER
         VM::String *name;
-        int targetTempIndex;
+        Param result;
     };
     struct instr_callBuiltinTypeofMember {
         MOTH_INSTR_HEADER
-        int base;
         VM::String *member;
-        int targetTempIndex;
+        Param base;
+        Param result;
     };
     struct instr_callBuiltinTypeofSubscript {
         MOTH_INSTR_HEADER
-        int base;
-        int index;
-        int targetTempIndex;
+        Param base;
+        Param index;
+        Param result;
     };
     struct instr_callBuiltinTypeofName {
         MOTH_INSTR_HEADER
         VM::String *name;
-        int targetTempIndex;
+        Param result;
     };
     struct instr_callBuiltinTypeofValue {
         MOTH_INSTR_HEADER
-        int tempIndex;
-        int targetTempIndex;
+        Param value;
+        Param result;
     };
     struct instr_callBuiltinPostIncMember {
         MOTH_INSTR_HEADER
-        int base;
+        Param base;
         VM::String *member;
-        int targetTempIndex;
+        Param result;
     };
     struct instr_callBuiltinPostIncSubscript {
         MOTH_INSTR_HEADER
-        int base;
-        int index;
-        int targetTempIndex;
+        Param base;
+        Param index;
+        Param result;
     };
     struct instr_callBuiltinPostIncName {
         MOTH_INSTR_HEADER
         VM::String *name;
-        int targetTempIndex;
+        Param result;
     };
     struct instr_callBuiltinPostIncValue {
         MOTH_INSTR_HEADER
-        int tempIndex;
-        int targetTempIndex;
+        Param value;
+        Param result;
     };
     struct instr_callBuiltinPostDecMember {
         MOTH_INSTR_HEADER
-        int base;
+        Param base;
         VM::String *member;
-        int targetTempIndex;
+        Param result;
     };
     struct instr_callBuiltinPostDecSubscript {
         MOTH_INSTR_HEADER
-        int base;
-        int index;
-        int targetTempIndex;
+        Param base;
+        Param index;
+        Param result;
     };
     struct instr_callBuiltinPostDecName {
         MOTH_INSTR_HEADER
         VM::String *name;
-        int targetTempIndex;
+        Param result;
     };
     struct instr_callBuiltinPostDecValue {
         MOTH_INSTR_HEADER
-        int tempIndex;
-        int targetTempIndex;
+        Param value;
+        Param result;
     };
     struct instr_callBuiltinDeclareVar {
         MOTH_INSTR_HEADER
-        bool isDeletable;
         VM::String *varName;
+        bool isDeletable;
     };
     struct instr_callBuiltinDefineGetterSetter {
         MOTH_INSTR_HEADER
-        int objectTemp;
         VM::String *name;
-        int getterTemp;
-        int setterTemp;
+        Param object;
+        Param getter;
+        Param setter;
     };
     struct instr_callBuiltinDefineProperty {
         MOTH_INSTR_HEADER
-        int objectTemp;
         VM::String *name;
-        int valueTemp;
+        Param object;
+        Param value;
     };
     struct instr_callBuiltinDefineArrayProperty {
         MOTH_INSTR_HEADER
-        int objectTemp;
+        Param object;
+        Param value;
         int index;
-        int valueTemp;
     };
     struct instr_createValue {
         MOTH_INSTR_HEADER
-        int func;
         quint32 argc;
         quint32 args;
-        int targetTempIndex;
+        Param func;
+        Param result;
     };
     struct instr_createProperty {
         MOTH_INSTR_HEADER
-        int base;
         VM::String *name;
         quint32 argc;
         quint32 args;
-        int targetTempIndex;
+        Param base;
+        Param result;
     };
     struct instr_createActivationProperty {
         MOTH_INSTR_HEADER
         VM::String *name;
         quint32 argc;
         quint32 args;
-        int targetTempIndex;
+        Param result;
     };
     struct instr_jump {
         MOTH_INSTR_HEADER
@@ -337,49 +377,44 @@ union Instr
     struct instr_cjump {
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
-        int tempIndex;
+        Param condition;
     };
     struct instr_unop {
         MOTH_INSTR_HEADER
         VM::Value (*alu)(const VM::Value value, VM::ExecutionContext *ctx);
-        int e;
-        int targetTempIndex;
+        Param source;
+        Param result;
     };
     struct instr_binop {
         MOTH_INSTR_HEADER
         VM::Value (*alu)(const VM::Value , const VM::Value, VM::ExecutionContext *);
-        int targetTempIndex;
-        ValueOrTemp lhs;
-        ValueOrTemp rhs;
-        unsigned lhsIsTemp:1;
-        unsigned rhsIsTemp:1;
+        Param lhs;
+        Param rhs;
+        Param result;
     };
     struct instr_loadThis {
         MOTH_INSTR_HEADER
-        int targetTempIndex;
+        Param result;
     };
     struct instr_inplaceElementOp {
         MOTH_INSTR_HEADER
         void (*alu)(VM::Value, VM::Value, VM::Value, VM::ExecutionContext *);
-        int targetBase;
-        int targetIndex;
-        ValueOrTemp source;
-        unsigned sourceIsTemp:1;
+        Param base;
+        Param index;
+        Param source;
     };
     struct instr_inplaceMemberOp {
         MOTH_INSTR_HEADER
         void (*alu)(VM::Value, VM::Value, VM::String *, VM::ExecutionContext *);
-        int targetBase;
-        VM::String *targetMember;
-        ValueOrTemp source;
-        unsigned sourceIsTemp:1;
+        VM::String *member;
+        Param base;
+        Param source;
     };
     struct instr_inplaceNameOp {
         MOTH_INSTR_HEADER
         void (*alu)(VM::Value, VM::String *, VM::ExecutionContext *);
-        VM::String *targetName;
-        ValueOrTemp source;
-        unsigned sourceIsTemp:1;
+        VM::String *name;
+        Param source;
     };
 
     instr_common common;

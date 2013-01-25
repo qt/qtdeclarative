@@ -12,28 +12,18 @@ namespace {
 
 QTextStream qout(stderr, QIODevice::WriteOnly);
 
-static unsigned toValueOrTemp(IR::Expr *e, Instr::ValueOrTemp &vot)
-{
-    if (IR::Const *c = e->asConst()) {
-        vot.value = convertToValue(c);
-        return 0;
-    } else if (IR::Temp *t = e->asTemp()) {
-        vot.tempIndex = t->index;
-        return 1;
-    } else {
-        Q_UNREACHABLE();
-    }
-}
-
-#undef DEBUG_TEMP_COMPRESSION
+//#define DEBUG_TEMP_COMPRESSION
+#ifdef DEBUG_TEMP_COMPRESSION
+#  define DBTC(x) x
+#else // !DEBUG_TEMP_COMPRESSION
+#  define DBTC(x)
+#endif // DEBUG_TEMP_COMPRESSION
 class CompressTemps: public IR::StmtVisitor, IR::ExprVisitor
 {
 public:
     void run(IR::Function *function)
     {
-#ifdef DEBUG_TEMP_COMPRESSION
-        qDebug() << "starting on function" << (*function->name) << "with" << function->tempCount << "temps.";
-#endif // DEBUG_TEMP_COMPRESSION
+        DBTC(qDebug() << "starting on function" << (*function->name) << "with" << function->tempCount << "temps.";)
 
         _seenTemps.clear();
         _nextFree = 0;
@@ -57,27 +47,21 @@ public:
         int maxUsed = _nextFree;
 
         foreach (IR::BasicBlock *block, function->basicBlocks) {
-#ifdef DEBUG_TEMP_COMPRESSION
-            qDebug("L%d:", block->index);
-#endif // DEBUG_TEMP_COMPRESSION
+            DBTC(qDebug("L%d:", block->index));
 
             for (int i = 0, ei = block->statements.size(); i < ei; ++i ) {
                 _currentStatement = block->statements[i];
                 if (i == 0)
                     expireOld();
 
-#ifdef DEBUG_TEMP_COMPRESSION
-                _currentStatement->dump(qout);qout<<endl<<flush;
-#endif // DEBUG_TEMP_COMPRESSION
+                DBTC(_currentStatement->dump(qout);qout<<endl<<flush;)
 
                 if (_currentStatement->d)
                     _currentStatement->accept(this);
             }
             maxUsed = std::max(maxUsed, _nextFree);
         }
-#ifdef DEBUG_TEMP_COMPRESSION
-        qDebug() << "function" << (*function->name) << "uses" << maxUsed << "temps.";
-#endif // DEBUG_TEMP_COMPRESSION
+        DBTC(qDebug() << "function" << (*function->name) << "uses" << maxUsed << "temps.";)
         function->tempCount = maxUsed + _localCount;
     }
 
@@ -131,9 +115,7 @@ private:
     int remap(int tempIndex) {
         for (ActiveTemps::const_iterator i = _active.begin(), ei = _active.end(); i < ei; ++i) {
             if (i->first == tempIndex) {
-#ifdef DEBUG_TEMP_COMPRESSION
-                qDebug() << "    lookup" << (tempIndex + _localCount) << "->" << (i->second + _localCount);
-#endif // DEBUG_TEMP_COMPRESSION
+                DBTC(qDebug() << "    lookup" << (tempIndex + _localCount) << "->" << (i->second + _localCount);)
                 return i->second;
             }
         }
@@ -147,9 +129,7 @@ private:
         if (_nextFree <= firstFree)
             _nextFree = firstFree + 1;
         _active.prepend(qMakePair(tempIndex, firstFree));
-#ifdef DEBUG_TEMP_COMPRESSION
-        qDebug() << "    add" << (tempIndex + _localCount) << "->" << (firstFree+ _localCount);
-#endif // DEBUG_TEMP_COMPRESSION
+        DBTC(qDebug() << "    add" << (tempIndex + _localCount) << "->" << (firstFree+ _localCount);)
     }
 
     int expireOld() {
@@ -171,9 +151,7 @@ private:
                 inUse[p.second] = true;
                 ++i;
             } else {
-#ifdef DEBUG_TEMP_COMPRESSION
-                qDebug() << "    remove" << (p.first + _localCount) << "->" << (p.second + _localCount);
-#endif // DEBUG_TEMP_COMPRESSION
+                DBTC(qDebug() << "    remove" << (p.first + _localCount) << "->" << (p.second + _localCount);)
                 _active.remove(i);
             }
         }
@@ -192,6 +170,7 @@ private:
     int _nextFree;
     int _pinnedCount;
 };
+#undef DBTC
 
 typedef VM::Value (*ALUFunction)(const VM::Value, const VM::Value, VM::ExecutionContext*);
 inline ALUFunction aluOpFunction(IR::AluOp op)
@@ -297,7 +276,8 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     qSwap(codeNext, _codeNext);
     qSwap(codeEnd, _codeEnd);
 
-    CompressTemps().run(_function);
+    // TODO: FIXME: fix the temp compression with the new temp index layout.
+//    CompressTemps().run(_function);
 
     int locals = frameSize();
     assert(locals >= 0);
@@ -333,8 +313,8 @@ void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Te
 {
     Instruction::CallValue call;
     prepareCallArgs(args, call.argc, call.args);
-    call.destIndex = value->index;
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.dest = getParam(value);
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
@@ -342,10 +322,10 @@ void InstructionSelection::callProperty(IR::Temp *base, const QString &name, IR:
 {
     // call the property on the loaded base
     Instruction::CallProperty call;
-    call.baseTemp = base->index;
+    call.base = getParam(base);
     call.name = engine()->newString(name);
     prepareCallArgs(args, call.argc, call.args);
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
@@ -353,10 +333,10 @@ void InstructionSelection::callSubscript(IR::Temp *base, IR::Temp *index, IR::Ex
 {
     // call the property on the loaded base
     Instruction::CallElement call;
-    call.baseTemp = base->index;
-    call.index = index->index;
+    call.base = getParam(base);
+    call.index = getParam(index);
     prepareCallArgs(args, call.argc, call.args);
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
@@ -367,33 +347,33 @@ void InstructionSelection::constructActivationProperty(IR::Name *func,
     Instruction::CreateActivationProperty create;
     create.name = engine()->newString(*func->id);
     prepareCallArgs(args, create.argc, create.args);
-    create.targetTempIndex = result->index;
+    create.result = getResultParam(result);
     addInstruction(create);
 }
 
 void InstructionSelection::constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
 {
     Instruction::CreateProperty create;
-    create.base = base->index;
+    create.base = getParam(base);
     create.name = engine()->newString(name);
     prepareCallArgs(args, create.argc, create.args);
-    create.targetTempIndex = result->index;
+    create.result = getResultParam(result);
     addInstruction(create);
 }
 
 void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
 {
     Instruction::CreateValue create;
-    create.func = value->index;
+    create.func = getParam(value);
     prepareCallArgs(args, create.argc, create.args);
-    create.targetTempIndex = result->index;
+    create.result = getResultParam(result);
     addInstruction(create);
 }
 
 void InstructionSelection::loadThisObject(IR::Temp *temp)
 {
     Instruction::LoadThis load;
-    load.targetTempIndex = temp->index;
+    load.result = getResultParam(temp);
     addInstruction(load);
 }
 
@@ -402,26 +382,27 @@ void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Temp *targetTem
     assert(sourceConst);
 
     Instruction::LoadValue load;
-    load.targetTempIndex = targetTemp->index;
-    load.value = convertToValue(sourceConst);
+    load.value = getParam(sourceConst);
+    load.result = getResultParam(targetTemp);
     addInstruction(load);
 }
 
 void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
 {
     Instruction::LoadValue load;
-    load.value = VM::Value::fromString(engine()->newString(str));
-    load.targetTempIndex = targetTemp->index;
+    load.value = Instr::Param::createValue(VM::Value::fromString(engine()->newString(str)));
+    load.result = getResultParam(targetTemp);
     addInstruction(load);
 }
 
 void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp)
 {
     Instruction::LoadValue load;
-    load.value = VM::Value::fromObject(engine()->newRegExpObject(
-                                           *sourceRegexp->value,
-                                           sourceRegexp->flags));
-    load.targetTempIndex = targetTemp->index;
+    load.value = Instr::Param::createValue(
+                VM::Value::fromObject(engine()->newRegExpObject(
+                                          *sourceRegexp->value,
+                                          sourceRegexp->flags)));
+    load.result = getResultParam(targetTemp);
     addInstruction(load);
 }
 
@@ -429,14 +410,14 @@ void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *
 {
     Instruction::LoadName load;
     load.name = engine()->newString(name);
-    load.targetTempIndex = temp->index;
+    load.result = getResultParam(temp);
     addInstruction(load);
 }
 
 void InstructionSelection::setActivationProperty(IR::Expr *source, const QString &targetName)
 {
     Instruction::StoreName store;
-    store.sourceIsTemp = toValueOrTemp(source, store.source);
+    store.source = getParam(source);
     store.name = engine()->newString(targetName);
     addInstruction(store);
 }
@@ -447,51 +428,51 @@ void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
     assert(vmFunc);
     Instruction::LoadClosure load;
     load.value = vmFunc;
-    load.targetTempIndex = target->index;
+    load.result = getResultParam(target);
     addInstruction(load);
 }
 
 void InstructionSelection::getProperty(IR::Temp *base, const QString &name, IR::Temp *target)
 {
     Instruction::LoadProperty load;
-    load.baseTemp = base->index;
+    load.base = getParam(base);
     load.name = engine()->newString(name);
-    load.targetTempIndex = target->index;
+    load.result = getResultParam(target);
     addInstruction(load);
 }
 
 void InstructionSelection::setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
 {
     Instruction::StoreProperty store;
-    store.baseTemp = targetBase->index;
+    store.base = getParam(targetBase);
     store.name = engine()->newString(targetName);
-    store.sourceIsTemp = toValueOrTemp(source, store.source);
+    store.source = getParam(source);
     addInstruction(store);
 }
 
 void InstructionSelection::getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target)
 {
     Instruction::LoadElement load;
-    load.base = base->index;
-    load.index = index->index;
-    load.targetTempIndex = target->index;
+    load.base = getParam(base);
+    load.index = getParam(index);
+    load.result = getResultParam(target);
     addInstruction(load);
 }
 
 void InstructionSelection::setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex)
 {
     Instruction::StoreElement store;
-    store.base = targetBase->index;
-    store.index = targetIndex->index;
-    store.sourceIsTemp = toValueOrTemp(source, store.source);
+    store.base = getParam(targetBase);
+    store.index = getParam(targetIndex);
+    store.source = getParam(source);
     addInstruction(store);
 }
 
 void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
 {
     Instruction::MoveTemp move;
-    move.fromTempIndex = sourceTemp->index;
-    move.toTempIndex = targetTemp->index;
+    move.source = getParam(sourceTemp);
+    move.result = getResultParam(targetTemp);
     addInstruction(move);
 }
 
@@ -512,8 +493,8 @@ void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *
     if (op) {
         Instruction::Unop unop;
         unop.alu = op;
-        unop.e = sourceTemp->index;
-        unop.targetTempIndex = targetTemp->index;
+        unop.source = getParam(sourceTemp);
+        unop.result = getResultParam(targetTemp);
         addInstruction(unop);
     } else {
         qWarning("  UNOP1");
@@ -524,9 +505,9 @@ void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr 
 {
     Instruction::Binop binop;
     binop.alu = aluOpFunction(oper);
-    binop.lhsIsTemp = toValueOrTemp(leftSource, binop.lhs);
-    binop.rhsIsTemp = toValueOrTemp(rightSource, binop.rhs);
-    binop.targetTempIndex = target->index;
+    binop.lhs = getParam(leftSource);
+    binop.rhs = getParam(rightSource);
+    binop.result = getResultParam(target);
     addInstruction(binop);
 }
 
@@ -551,8 +532,8 @@ void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, c
     if (op) {
         Instruction::InplaceNameOp ieo;
         ieo.alu = op;
-        ieo.targetName = engine()->newString(targetName);
-        ieo.sourceIsTemp = toValueOrTemp(sourceExpr, ieo.source);
+        ieo.name = engine()->newString(targetName);
+        ieo.source = getParam(sourceExpr);
         addInstruction(ieo);
     }
 }
@@ -577,9 +558,9 @@ void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr
 
     Instruction::InplaceElementOp ieo;
     ieo.alu = op;
-    ieo.targetBase = targetBaseTemp->index;
-    ieo.targetIndex = targetIndexTemp->index;
-    ieo.sourceIsTemp = toValueOrTemp(sourceExpr, ieo.source);
+    ieo.base = getParam(targetBaseTemp);
+    ieo.index = getParam(targetIndexTemp);
+    ieo.source = getParam(sourceExpr);
     addInstruction(ieo);
 }
 
@@ -603,9 +584,9 @@ void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR:
 
     Instruction::InplaceMemberOp imo;
     imo.alu = op;
-    imo.targetBase = targetBase->index;
-    imo.targetMember = engine()->newString(targetName);
-    imo.sourceIsTemp = toValueOrTemp(source, imo.source);
+    imo.base = getParam(targetBase);
+    imo.member = engine()->newString(targetName);
+    imo.source = getParam(source);
     addInstruction(imo);
 }
 
@@ -623,7 +604,7 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
     if (singleArgIsTemp) {
         // We pass single arguments as references to the stack, but only if it's not a local or an argument.
         argc = 1;
-        args = e->expr->asTemp()->index;
+        args = e->expr->asTemp()->index - _function->locals.size();
     } else if (e) {
         // We need to move all the temps into the function arg array
         int argLocation = outgoingArgumentTempStart();
@@ -632,8 +613,8 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
         args = argLocation;
         while (e) {
             Instruction::MoveTemp move;
-            move.fromTempIndex = e->expr->asTemp()->index;
-            move.toTempIndex = argLocation;
+            move.source = getParam(e->expr);
+            move.result = Instr::Param::createTemp(argLocation);
             addInstruction(move);
             ++argLocation;
             ++argc;
@@ -656,24 +637,24 @@ void InstructionSelection::visitJump(IR::Jump *s)
 
 void InstructionSelection::visitCJump(IR::CJump *s)
 {
-    int tempIndex;
+    Instr::Param condition;
     if (IR::Temp *t = s->cond->asTemp()) {
-        tempIndex = t->index;
+        condition = getResultParam(t);
     } else if (IR::Binop *b = s->cond->asBinop()) {
-        tempIndex = scratchTempIndex();
+        condition = getResultParam(0);
         Instruction::Binop binop;
         binop.alu = aluOpFunction(b->op);
-        binop.lhsIsTemp = toValueOrTemp(b->left, binop.lhs);
-        binop.rhsIsTemp = toValueOrTemp(b->right, binop.rhs);
-        binop.targetTempIndex = tempIndex;
+        binop.lhs = getParam(b->left);
+        binop.rhs = getParam(b->right);
+        binop.result = condition;
         addInstruction(binop);
     } else {
-        Q_UNREACHABLE();
+        Q_UNIMPLEMENTED();
     }
 
     Instruction::CJump jump;
     jump.offset = 0;
-    jump.tempIndex = tempIndex;
+    jump.condition = condition;
     ptrdiff_t trueLoc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
     _patches[s->iftrue].append(trueLoc);
 
@@ -688,7 +669,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 void InstructionSelection::visitRet(IR::Ret *s)
 {
     Instruction::Ret ret;
-    ret.tempIndex = s->expr->index;
+    ret.result = getParam(s->expr);
     addInstruction(ret);
 }
 
@@ -697,25 +678,25 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
     Instruction::CallActivationProperty call;
     call.name = engine()->newString(*func->id);
     prepareCallArgs(args, call.argc, call.args);
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result)
 {
     Instruction::CallBuiltinTypeofMember call;
-    call.base = base->index;
+    call.base = getParam(base);
     call.member = engine()->identifier(name);
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
 {
     Instruction::CallBuiltinTypeofSubscript call;
-    call.base = base->index;
-    call.index = index->index;
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.base = getParam(base);
+    call.index = getParam(index);
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
@@ -723,33 +704,33 @@ void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *
 {
     Instruction::CallBuiltinTypeofName call;
     call.name = engine()->identifier(name);
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinTypeofValue(IR::Temp *value, IR::Temp *result)
 {
     Instruction::CallBuiltinTypeofValue call;
-    call.tempIndex = value->index;
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.value = getParam(value);
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result)
 {
     Instruction::CallBuiltinDeleteMember call;
-    call.base = base->index;
+    call.base = getParam(base);
     call.member = engine()->newString(name);
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
 {
     Instruction::CallBuiltinDeleteSubscript call;
-    call.base = base->index;
-    call.index = index->index;
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.base = getParam(base);
+    call.index = getParam(index);
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
@@ -757,33 +738,33 @@ void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *
 {
     Instruction::CallBuiltinDeleteName call;
     call.name = engine()->newString(name);
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
 {
     Instruction::LoadValue load;
-    load.value = VM::Value::fromBoolean(false);
-    load.targetTempIndex = result ? result->index : scratchTempIndex();
+    load.value = Instr::Param::createValue(VM::Value::fromBoolean(false));
+    load.result = getResultParam(result);
     addInstruction(load);
 }
 
 void InstructionSelection::callBuiltinPostDecrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
 {
     Instruction::CallBuiltinPostDecMember call;
-    call.base = base->index;
+    call.base = getParam(base);
     call.member = engine()->identifier(name);
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinPostDecrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
 {
     Instruction::CallBuiltinPostDecSubscript call;
-    call.base = base->index;
-    call.index = index->index;
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.base = getParam(base);
+    call.index = getParam(index);
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
@@ -791,33 +772,33 @@ void InstructionSelection::callBuiltinPostDecrementName(const QString &name, IR:
 {
     Instruction::CallBuiltinPostDecName call;
     call.name = engine()->identifier(name);
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinPostDecrementValue(IR::Temp *value, IR::Temp *result)
 {
     Instruction::CallBuiltinPostDecValue call;
-    call.tempIndex = value->index;
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.value = getParam(value);
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinPostIncrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
 {
     Instruction::CallBuiltinPostIncMember call;
-    call.base = base->index;
+    call.base = getParam(base);
     call.member = engine()->identifier(name);
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinPostIncrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
 {
     Instruction::CallBuiltinPostIncSubscript call;
-    call.base = base->index;
-    call.index = index->index;
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.base = getParam(base);
+    call.index = getParam(index);
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
@@ -825,15 +806,15 @@ void InstructionSelection::callBuiltinPostIncrementName(const QString &name, IR:
 {
     Instruction::CallBuiltinPostIncName call;
     call.name = engine()->identifier(name);
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result)
 {
     Instruction::CallBuiltinPostIncValue call;
-    call.tempIndex = value->index;
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.value = getParam(value);
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
@@ -841,7 +822,7 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
 {
     Instruction::CallBuiltin call;
     call.builtin = Instruction::CallBuiltin::builtin_throw;
-    call.argTemp = arg->index;
+    call.arg = getParam(arg);
     addInstruction(call);
 }
 
@@ -849,7 +830,7 @@ void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
 {
     Instruction::CallBuiltin call;
     call.builtin = Instruction::CallBuiltin::builtin_create_exception_handler;
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
@@ -864,23 +845,23 @@ void InstructionSelection::callBuiltinGetException(IR::Temp *result)
 {
     Instruction::CallBuiltin call;
     call.builtin = Instruction::CallBuiltin::builtin_get_exception;
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result)
 {
     Instruction::CallBuiltinForeachIteratorObject call;
-    call.argTemp = arg->index;
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.arg = getParam(arg);
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result)
 {
     Instruction::CallBuiltinForeachNextPropertyName call;
-    call.argTemp = arg->index;
-    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    call.arg = getParam(arg);
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 
@@ -888,7 +869,7 @@ void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
 {
     Instruction::CallBuiltin call;
     call.builtin = Instruction::CallBuiltin::builtin_push_with_scope;
-    call.argTemp = arg->index;
+    call.arg = getParam(arg);
     addInstruction(call);
 }
 
@@ -910,28 +891,28 @@ void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &
 void InstructionSelection::callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter)
 {
     Instruction::CallBuiltinDefineGetterSetter call;
-    call.objectTemp = object->index;
+    call.object = getParam(object);
     call.name = engine()->newString(name);
-    call.getterTemp = getter->index;
-    call.setterTemp = setter->index;
+    call.getter = getParam(getter);
+    call.setter = getParam(setter);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value)
 {
     Instruction::CallBuiltinDefineProperty call;
-    call.objectTemp = object->index;
+    call.object = getParam(object);
     call.name = engine()->newString(name);
-    call.valueTemp = value->index;
+    call.value = getParam(value);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinDefineArrayProperty(IR::Temp *object, int index, IR::Temp *value)
 {
     Instruction::CallBuiltinDefineArrayProperty call;
-    call.objectTemp = object->index;
+    call.object = getParam(object);
     call.index = index;
-    call.valueTemp = value->index;
+    call.value = getParam(value);
     addInstruction(call);
 }
 

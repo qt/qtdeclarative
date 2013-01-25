@@ -135,7 +135,7 @@ checktarget.depends = all
 QMAKE_EXTRA_TARGETS += checktarget
 
 checkmothtarget.target = check-interpreter
-checkmothtarget.commands = python $$TESTSCRIPT --command=\"$$V4CMD --interpret\" --parallel --with-test-expectations --update-expectations
+checkmothtarget.commands = python $$TESTSCRIPT --command=\"$$V4CMD --interpret\" --parallel --with-test-expectations
 checkmothtarget.depends = all
 QMAKE_EXTRA_TARGETS += checkmothtarget
 

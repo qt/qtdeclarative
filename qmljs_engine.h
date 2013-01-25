@@ -160,7 +160,7 @@ struct ExecutionEngine
     struct ExceptionHandler {
         ExecutionContext *context;
         const uchar *code; // Interpreter state
-        int targetTempIndex; // Interpreter state
+        Value *target; // Interpreter state
         jmp_buf stackFrame;
     };
 

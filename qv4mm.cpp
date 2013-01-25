@@ -293,9 +293,9 @@ void MemoryManager::setExecutionEngine(ExecutionEngine *engine)
 
 void MemoryManager::dumpStats() const
 {
+#ifdef DETAILED_MM_STATS
     std::cerr << "=================" << std::endl;
     std::cerr << "Allocation stats:" << std::endl;
-#ifdef DETAILED_MM_STATS
     std::cerr << "Requests for each chunk size:" << std::endl;
     for (int i = 0; i < m_d->allocSizeCounters.size(); ++i) {
         if (unsigned count = m_d->allocSizeCounters[i]) {

@@ -27,8 +27,8 @@ public:
 #endif
 
 private:
-    static void restoreState(VM::ExecutionContext *context, int &targetTempIndex, const uchar *&code);
-    static void saveState(VM::ExecutionContext *context, int targetTempIndex, const uchar *code);
+    static void restoreState(VM::ExecutionContext *context, VM::Value *&target, const uchar *&code);
+    static void saveState(VM::ExecutionContext *context, VM::Value *target, const uchar *code);
 };
 
 } // namespace Moth
