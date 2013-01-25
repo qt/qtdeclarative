@@ -118,6 +118,7 @@ void Object::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ct
         Value v = __get__(ctx, idx, &hasProperty);
         v = op(v, rhs, ctx);
         __put__(ctx, idx, v);
+        return;
     }
     String *name = index.toString(ctx);
     assert(name);
