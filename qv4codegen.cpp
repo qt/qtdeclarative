@@ -2279,7 +2279,7 @@ bool Codegen::visit(LocalForStatement *ast)
 
 bool Codegen::visit(ReturnStatement *ast)
 {
-    if (_mode == GlobalCode)
+    if (_mode != FunctionCode)
         throwSyntaxError(ast->returnToken, QCoreApplication::translate("qv4codegen", "Return statement outside of function"));
     if (ast->expression) {
         Result expr = expression(ast->expression);
