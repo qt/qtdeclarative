@@ -71,7 +71,6 @@ struct RegExpObject: Object {
     bool global;
     RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bool global);
     virtual QString className() { return QStringLiteral("RegExp"); }
-    virtual RegExpObject *asRegExpObject() { return this; }
 };
 
 

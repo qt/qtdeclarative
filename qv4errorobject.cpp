@@ -75,6 +75,8 @@ using namespace QQmlJS::VM;
 
 ErrorObject::ErrorObject(ExecutionEngine* engine, const Value &message)
 {
+    type = Type_ErrorObject;
+
     if (message.type() != Value::Undefined_Type)
         defineDefaultProperty(engine->identifier(QStringLiteral("message")), message);
 }

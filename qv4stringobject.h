@@ -53,7 +53,6 @@ struct StringObject: Object {
     PropertyDescriptor tmpProperty;
     StringObject(ExecutionContext *ctx, const Value &value);
     virtual QString className() { return QStringLiteral("String"); }
-    virtual StringObject *asStringObject() { return this; }
 
     PropertyDescriptor *getIndex(ExecutionContext *ctx, uint index);
 };

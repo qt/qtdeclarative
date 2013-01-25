@@ -68,6 +68,8 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
     : value(value)
     , global(global)
 {
+    type = Type_RegExpObject;
+
     if (!members)
         members.reset(new PropertyTable());
     lastIndexProperty = members->insert(engine->identifier(QStringLiteral("lastIndex")));

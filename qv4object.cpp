@@ -646,7 +646,9 @@ Value Object::call(ExecutionContext *context, Value , Value *, int)
 
 void ArrayObject::init(ExecutionContext *context)
 {
+    type = Type_ArrayObject;
     isArray = true;
+
     if (!members)
         members.reset(new PropertyTable());
     PropertyDescriptor *pd = members->insert(context->engine->id_length);

@@ -47,6 +47,8 @@ namespace VM {
 ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount)
     : context(context)
 {
+    type = Type_ArgumentsObject;
+
     defineDefaultProperty(context->engine->id_length, Value::fromInt32(actualParameterCount));
     if (context->strictMode) {
         for (uint i = 0; i < context->argumentCount; ++i)

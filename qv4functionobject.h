@@ -143,12 +143,14 @@ struct FunctionObject: Object {
         , varList(0)
         , formalParameterCount(0)
         , varCount(0)
-        { needsActivation = false;
-          usesArgumentsObject = false;
-          strictMode = false; }
+    {
+        type = Type_FunctionObject;
+        needsActivation = false;
+        usesArgumentsObject = false;
+        strictMode = false;
+    }
 
     virtual QString className() { return QStringLiteral("Function"); }
-    virtual FunctionObject *asFunctionObject() { return this; }
     virtual bool hasInstance(ExecutionContext *ctx, const Value &value);
 
     virtual Value construct(ExecutionContext *context, Value *args, int argc);

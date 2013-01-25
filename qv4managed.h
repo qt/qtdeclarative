@@ -56,6 +56,17 @@ struct ObjectPrototype;
 struct ExecutionContext;
 struct ScriptFunction;
 
+struct BooleanObject;
+struct NumberObject;
+struct StringObject;
+struct ArrayObject;
+struct DateObject;
+struct FunctionObject;
+struct RegExpObject;
+struct ErrorObject;
+struct ArgumentsObject;
+struct ForeachIteratorObject;
+
 struct Managed
 {
 private:
@@ -64,7 +75,8 @@ private:
     void operator = (const Managed &other);
 
 protected:
-    Managed() : markBit(0), inUse(1), extensible(true), isArray(false), isArgumentsObject(false), isString(false), isBuiltinFunction(false), unused(0) { }
+    Managed() : markBit(0), inUse(1), extensible(true),
+        isArray(false), isArgumentsObject(false), isString(false), isBuiltinFunction(false), type(Type_Object), unused(0) { }
     virtual ~Managed();
 
 public:
@@ -77,6 +89,31 @@ public:
         markBit = 1;
         markObjects();
     }
+
+    enum Type {
+        Type_Object = 0,
+        Type_ArrayObject,
+        Type_FunctionObject,
+        Type_BooleanObject,
+        Type_NumberObject,
+        Type_StringObject,
+        Type_DateObject,
+        Type_RegExpObject,
+        Type_ErrorObject,
+        Type_ArgumentsObject,
+        Type_ForeachIteratorObject
+    };
+
+    ArrayObject *asArrayObject() { return type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
+    FunctionObject *asFunctionObject() { return type == Type_FunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
+    BooleanObject *asBooleanObject() { return type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
+    NumberObject *asNumberObject() { return type == Type_NumberObject ? reinterpret_cast<NumberObject *>(this) : 0; }
+    StringObject *asStringObject() { return type == Type_StringObject ? reinterpret_cast<StringObject *>(this) : 0; }
+    DateObject *asDateObject() { return type == Type_DateObject ? reinterpret_cast<DateObject *>(this) : 0; }
+    RegExpObject *asRegExpObject() { return type == Type_RegExpObject ? reinterpret_cast<RegExpObject *>(this) : 0; }
+    ErrorObject *asErrorObject() { return type == Type_ErrorObject ? reinterpret_cast<ErrorObject *>(this) : 0; }
+    ArgumentsObject *asArgumentsObject() { return type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
+    ForeachIteratorObject *asForeachIteratorObject() { return type == Type_ForeachIteratorObject ? reinterpret_cast<ForeachIteratorObject *>(this) : 0; }
 
 protected:
     virtual void markObjects() = 0;
@@ -94,10 +131,11 @@ protected:
             quintptr needsActivation : 1; // used by FunctionObject
             quintptr usesArgumentsObject : 1; // used by FunctionObject
             quintptr strictMode : 1; // used by FunctionObject
+            quintptr type : 4;
 #if CPU(X86_64)
-            quintptr unused  : 55;
+            quintptr unused  : 50;
 #elif CPU(X86)
-            quintptr unused  : 23;
+            quintptr unused  : 18;
 #else
 #error "implement me"
 #endif

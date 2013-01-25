@@ -111,15 +111,6 @@ struct Object: Managed {
     virtual ~Object();
 
     virtual QString className() { return QStringLiteral("Object"); }
-    virtual BooleanObject *asBooleanObject() { return 0; }
-    virtual NumberObject *asNumberObject() { return 0; }
-    virtual StringObject *asStringObject() { return 0; }
-    virtual DateObject *asDateObject() { return 0; }
-    virtual ArrayObject *asArrayObject() { return 0; }
-    virtual FunctionObject *asFunctionObject() { return 0; }
-    virtual RegExpObject *asRegExpObject() { return 0; }
-    virtual ErrorObject *asErrorObject() { return 0; }
-    virtual ArgumentsObject *asArgumentsObject() { return 0; }
 
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, uint index);
@@ -172,7 +163,7 @@ protected:
 struct ForEachIteratorObject: Object {
     ObjectIterator it;
     ForEachIteratorObject(ExecutionContext *ctx, Object *o)
-        : it(ctx, o, ObjectIterator::EnumberableOnly|ObjectIterator::WithProtoChain) {}
+        : it(ctx, o, ObjectIterator::EnumberableOnly|ObjectIterator::WithProtoChain) { type = Type_ForeachIteratorObject; }
     virtual QString className() { return QStringLiteral("__ForEachIteratorObject"); }
 
     Value nextPropertyName() { return it.nextPropertyNameAsString(); }
@@ -183,16 +174,14 @@ protected:
 
 struct BooleanObject: Object {
     Value value;
-    BooleanObject(const Value &value): value(value) {}
+    BooleanObject(const Value &value): value(value) { type = Type_BooleanObject; }
     virtual QString className() { return QStringLiteral("Boolean"); }
-    virtual BooleanObject *asBooleanObject() { return this; }
 };
 
 struct NumberObject: Object {
     Value value;
-    NumberObject(const Value &value): value(value) {}
+    NumberObject(const Value &value): value(value) { type = Type_NumberObject; }
     virtual QString className() { return QStringLiteral("Number"); }
-    virtual NumberObject *asNumberObject() { return this; }
 };
 
 struct ArrayObject: Object {
@@ -200,7 +189,6 @@ struct ArrayObject: Object {
     ArrayObject(ExecutionContext *ctx, const Array &value): Object(value) { init(ctx); array.setLengthUnchecked(array.length()); }
     void init(ExecutionContext *context);
     virtual QString className() { return QStringLiteral("Array"); }
-    virtual ArrayObject *asArrayObject() { return this; }
 };
 
 

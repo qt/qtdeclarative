@@ -50,7 +50,6 @@ namespace VM {
 struct ErrorObject: Object {
     ErrorObject(ExecutionEngine* engine, const Value &message);
     virtual QString className() { return QStringLiteral("Error"); }
-    virtual ErrorObject *asErrorObject() { return this; }
 
     virtual struct SyntaxErrorObject *asSyntaxError() { return 0; }
 
