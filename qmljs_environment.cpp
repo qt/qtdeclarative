@@ -251,13 +251,25 @@ void ExecutionContext::destroy()
 
 bool ExecutionContext::deleteProperty(String *name)
 {
+    bool hasWith = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
         if (ctx->withObject) {
+            hasWith = true;
             if (ctx->withObject->__hasProperty__(this, name))
                 return ctx->withObject->__delete__(this, name);
         } else {
             if (ctx->activation && ctx->activation->__hasProperty__(this, name))
                 return ctx->activation->__delete__(this, name);
+        }
+        if (FunctionObject *f = ctx->function) {
+            if (f->needsActivation || hasWith) {
+                for (unsigned int i = 0; i < f->varCount; ++i)
+                    if (f->varList[i]->isEqualTo(name))
+                        return false;
+                for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
+                    if (f->formalParameterList[i]->isEqualTo(name))
+                        return false;
+            }
         }
     }
     if (strictMode)

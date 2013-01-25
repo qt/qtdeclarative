@@ -1322,6 +1322,10 @@ bool Codegen::visit(DeleteExpression *ast)
         _expr.code = _block->CONST(IR::BoolType, 1);
         return false;
     }
+    if (expr->asTemp() && expr->asTemp()->index >=  _env->members.size()) {
+        _expr.code = _block->CONST(IR::BoolType, 1);
+        return false;
+    }
 
     IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(reference(expr));

@@ -32,9 +32,6 @@ S11.3.2_A4_T1 failing
 S11.3.2_A4_T2 failing
 S11.3.2_A4_T3 failing
 S11.3.2_A4_T4 failing
-11.4.1-2-5 failing
-11.4.1-4.a-5 failing
-S11.4.1_A2.1 failing
 S11.5.3_A4_T2 failing
 S11.8.6_A3 failing
 S11.8.6_A5_T2 failing
@@ -96,3 +93,5 @@ Sbp_A4_T1 failing
 Sbp_A4_T2 failing
 S12.4_A1 failing
 S15.2.4.4_A14 failing
+# Try/catch scoping issue
+S12.14_A4 failing
