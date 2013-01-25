@@ -1297,19 +1297,34 @@ bool Codegen::visit(ConditionalExpression *ast)
 
 bool Codegen::visit(DeleteExpression *ast)
 {
-    Result expr = expression(ast->expression);
-    if ((*expr)->asTemp() && (*expr)->asTemp()->index < 0) {
-        // expr points to a function argument
-        if (_function->isStrict)
+    IR::Expr* expr = *expression(ast->expression);
+    // Temporaries cannot be deleted
+    if (expr->asTemp() && expr->asTemp()->index < _env->members.size()) {
+        // Trying to delete a function argument might throw.
+        if (_function->isStrict && expr->asTemp()->index < 0)
             throwSyntaxError(ast->deleteToken, "Delete of an unqualified identifier in strict mode.");
-        // can't delete an argument, just evaluate expr for side effects
         _expr.code = _block->CONST(IR::BoolType, 0);
         return false;
     }
-    if (_function->isStrict && (*expr)->asName())
+    if (_function->isStrict && expr->asName())
         throwSyntaxError(ast->deleteToken, "Delete of an unqualified identifier in strict mode.");
+
+    // [[11.4.1]] Return true if it's not a reference
+    if (expr->asConst() || expr->asString()) {
+        _expr.code = _block->CONST(IR::BoolType, 1);
+        return false;
+    }
+
+    // Return values from calls are also not a reference, but we have to
+    // perform the call to allow for side effects.
+    if (expr->asCall()) {
+        _block->EXP(expr);
+        _expr.code = _block->CONST(IR::BoolType, 1);
+        return false;
+    }
+
     IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(reference(*expr));
+    args->init(reference(expr));
     _expr.code = call(_block->NAME(IR::Name::builtin_delete, ast->deleteToken.startLine, ast->deleteToken.startColumn), args);
     return false;
 }
