@@ -128,7 +128,11 @@ static const char vertexShaderCode[] =
     "        fTex = vPosTex.zw;\n"
     "#endif\n"
     "        highp float currentSize = mix(vData.z, vData.w, t * t);\n"
+#if defined (Q_OS_BLACKBERRY)
+    "        highp float fade = 1.;\n"
+#else
     "        lowp float fade = 1.;\n"
+#endif
     "        highp float fadeIn = min(t * 10., 1.);\n"
     "        highp float fadeOut = 1. - clamp((t - 0.75) * 4.,0., 1.);\n"
     "\n"
