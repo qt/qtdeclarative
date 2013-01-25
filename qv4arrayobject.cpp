@@ -103,7 +103,7 @@ void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
 uint ArrayPrototype::getLength(ExecutionContext *ctx, Object *o)
 {
-    if (o->isArray)
+    if (o->isArrayObject())
         return o->array.length();
     return o->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
 }
@@ -213,7 +213,7 @@ Value ArrayPrototype::method_pop(ExecutionContext *ctx)
     uint len = getLength(ctx, instance);
 
     if (!len) {
-        if (!instance->isArray)
+        if (!instance->isArrayObject())
             instance->__put__(ctx, ctx->engine->id_length, Value::fromInt32(0));
         return Value::undefinedValue();
     }
@@ -221,7 +221,7 @@ Value ArrayPrototype::method_pop(ExecutionContext *ctx)
     Value result = instance->__get__(ctx, len - 1);
 
     instance->__delete__(ctx, len - 1);
-    if (instance->isArray)
+    if (instance->isArrayObject())
         instance->array.setLengthUnchecked(len - 1);
     else
         instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(len - 1));
@@ -241,7 +241,7 @@ Value ArrayPrototype::method_push(ExecutionContext *ctx)
             instance->__put__(ctx, idx.toString(ctx), ctx->argument(i));
         }
         double newLen = l + ctx->argumentCount;
-        if (!instance->isArray)
+        if (!instance->isArrayObject())
             instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
         else
             ctx->throwRangeError(Value::fromString(ctx, QStringLiteral("Array.prototype.push: Overflow")));
@@ -264,7 +264,7 @@ Value ArrayPrototype::method_push(ExecutionContext *ctx)
             instance->__put__(ctx, len + i, ctx->argument(i));
     }
     uint newLen = len + ctx->argumentCount;
-    if (!instance->isArray)
+    if (!instance->isArrayObject())
         instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
 
     if (newLen < INT_MAX)
@@ -302,7 +302,7 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
     uint len = getLength(ctx, instance);
 
     if (!len) {
-        if (!instance->isArray)
+        if (!instance->isArrayObject())
             instance->__put__(ctx, ctx->engine->id_length, Value::fromInt32(0));
         return Value::undefinedValue();
     }
@@ -330,7 +330,7 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
         instance->__delete__(ctx, len - 1);
     }
 
-    if (!instance->isArray)
+    if (!instance->isArrayObject())
         instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(len - 1));
     return result;
 }
@@ -474,7 +474,7 @@ Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
             instance->__put__(ctx, i, ctx->argument(i));
     }
     uint newLen = len + ctx->argumentCount;
-    if (!instance->isArray)
+    if (!instance->isArrayObject())
         instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
 
     if (newLen < INT_MAX)
@@ -506,7 +506,7 @@ Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
         fromIndex = (uint) f;
     }
 
-    if (instance->isString) {
+    if (instance->isStringObject()) {
         for (uint k = fromIndex; k < len; ++k) {
             bool exists;
             Value v = instance->__get__(ctx, k, &exists);

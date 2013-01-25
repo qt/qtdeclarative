@@ -76,7 +76,7 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterC
             __defineOwnProperty__(context, i, &pd);
         }
         defineDefaultProperty(context, QStringLiteral("callee"), Value::fromObject(context->function));
-        isArgumentsObject = true;
+        isNonStrictArgumentsObject = true;
     }
 }
 
@@ -97,12 +97,12 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
         pd->value = mappedArguments.at(index);
     }
 
-    isArgumentsObject = false;
+    isNonStrictArgumentsObject = false;
     bool strict = ctx->strictMode;
     ctx->strictMode = false;
     bool result = Object::__defineOwnProperty__(ctx, index, desc);
     ctx->strictMode = strict;
-    isArgumentsObject = true;
+    isNonStrictArgumentsObject = true;
 
     if (isMapped && desc->isData()) {
         if (desc->type != PropertyDescriptor::Generic) {

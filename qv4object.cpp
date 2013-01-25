@@ -209,7 +209,7 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, uint index
     PropertyDescriptor *p = array.at(index);
     if(p && p->type != PropertyDescriptor::Generic)
         return p;
-    if (isString)
+    if (isStringObject())
         return static_cast<StringObject *>(this)->getIndex(ctx, index);
 
     return 0;
@@ -241,7 +241,7 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, uin
         PropertyDescriptor *p = o->array.at(index);
         if(p && p->type != PropertyDescriptor::Generic)
             return p;
-        if (o->isString) {
+        if (o->isStringObject()) {
             p = static_cast<StringObject *>(o)->getIndex(ctx, index);
             if (p)
                 return p;
@@ -306,7 +306,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
                 goto reject;
         } else if (!pd->isWritable())
             goto reject;
-        else if (isArray && name->isEqualTo(ctx->engine->id_length)) {
+        else if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
             bool ok;
             uint l = value.asArrayLength(ctx, &ok);
             if (!ok)
@@ -492,7 +492,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
 
     PropertyDescriptor *current;
 
-    if (isArray && name->isEqualTo(ctx->engine->id_length)) {
+    if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
         PropertyDescriptor *lp = array.getLengthProperty();
         if (desc->isEmpty() || desc->isSubset(lp))
             return true;
@@ -541,10 +541,10 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
     PropertyDescriptor *current;
 
     // 15.4.5.1, 4b
-    if (isArray && index >= array.length() && !array.getLengthProperty()->isWritable())
+    if (isArrayObject() && index >= array.length() && !array.getLengthProperty()->isWritable())
         goto reject;
 
-    if (isArgumentsObject)
+    if (isNonStrictArgumentsObject)
         return static_cast<ArgumentsObject *>(this)->defineOwnProperty(ctx, index, desc);
 
     // Clause 1
@@ -647,7 +647,6 @@ Value Object::call(ExecutionContext *context, Value , Value *, int)
 void ArrayObject::init(ExecutionContext *context)
 {
     type = Type_ArrayObject;
-    isArray = true;
 
     if (!members)
         members.reset(new PropertyTable());

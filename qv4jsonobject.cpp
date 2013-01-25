@@ -895,7 +895,7 @@ Value JsonObject::method_stringify(ExecutionContext *ctx)
     Object *o = ctx->argument(1).asObject();
     if (o) {
         stringify.replacerFunction = o->asFunctionObject();
-        if (o->isArray) {
+        if (o->isArrayObject()) {
             for (uint i = 0; i < o->array.length(); ++i) {
                 Value v = o->__get__(ctx, i);
                 if (v.asNumberObject() || v.asStringObject() || v.isNumber())

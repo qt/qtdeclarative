@@ -79,7 +79,6 @@ StringObject::StringObject(ExecutionContext *ctx, const Value &value)
     : value(value)
 {
     type = Type_StringObject;
-    isString = true;
 
     tmpProperty.type = PropertyDescriptor::Data;
     tmpProperty.enumberable = PropertyDescriptor::Enabled;

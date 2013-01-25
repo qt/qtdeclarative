@@ -76,7 +76,7 @@ private:
 
 protected:
     Managed() : markBit(0), inUse(1), extensible(true),
-        isArray(false), isArgumentsObject(false), isString(false), isBuiltinFunction(false), type(Type_Object), unused(0) { }
+        isNonStrictArgumentsObject(false), isBuiltinFunction(false), type(Type_Object), unused(0) { }
     virtual ~Managed();
 
 public:
@@ -116,6 +116,9 @@ public:
     ArgumentsObject *asArgumentsObject() { return type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
     ForeachIteratorObject *asForeachIteratorObject() { return type == Type_ForeachIteratorObject ? reinterpret_cast<ForeachIteratorObject *>(this) : 0; }
 
+    bool isArrayObject() const { return type == Type_ArrayObject; }
+    bool isStringObject() const { return type == Type_StringObject; }
+
 protected:
     virtual void markObjects() = 0;
 
@@ -125,18 +128,16 @@ protected:
             quintptr markBit :  1;
             quintptr inUse   :  1;
             quintptr extensible : 1; // used by Object
-            quintptr isArray : 1; // used by Object & Array
-            quintptr isArgumentsObject : 1;
-            quintptr isString : 1; // used by Object & StringObject
+            quintptr isNonStrictArgumentsObject : 1;
             quintptr isBuiltinFunction : 1; // used by FunctionObject
             quintptr needsActivation : 1; // used by FunctionObject
             quintptr usesArgumentsObject : 1; // used by FunctionObject
             quintptr strictMode : 1; // used by FunctionObject
             quintptr type : 4;
 #if CPU(X86_64)
-            quintptr unused  : 50;
+            quintptr unused  : 51;
 #elif CPU(X86)
-            quintptr unused  : 18;
+            quintptr unused  : 19;
 #else
 #error "implement me"
 #endif
