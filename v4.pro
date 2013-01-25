@@ -10,7 +10,7 @@ OBJECTS_DIR=.obj
 isEmpty(LLVM_INSTALL_DIR):LLVM_INSTALL_DIR=$$(LLVM_INSTALL_DIR)
 !isEmpty(LLVM_INSTALL_DIR):LLVM_CONFIG=$$LLVM_INSTALL_DIR/bin/llvm-config
 
-LIBS += -rdynamic
+!macx-clang*:LIBS += -rdynamic
 
 SOURCES += main.cpp \
     qv4codegen.cpp \
