@@ -519,6 +519,7 @@ QSGPlainTexture::QSGPlainTexture()
     , m_dirty_bind_options(false)
     , m_owns_texture(true)
     , m_mipmaps_generated(false)
+    , m_retain_image(false)
 {
 }
 
@@ -713,6 +714,8 @@ void QSGPlainTexture::bind()
     m_texture_rect = QRectF(0, 0, 1, 1);
 
     m_dirty_bind_options = false;
+    if (!m_retain_image)
+        m_image = QImage();
 }
 
 
