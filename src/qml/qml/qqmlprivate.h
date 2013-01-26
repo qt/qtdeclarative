@@ -58,8 +58,6 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qvariant.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -264,7 +262,5 @@ namespace QQmlPrivate
 }
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLPRIVATE_H

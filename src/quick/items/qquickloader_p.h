@@ -44,8 +44,6 @@
 
 #include "qquickimplicitsizeitem_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickLoaderPrivate;
@@ -114,7 +112,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickLoader)
-
-QT_END_HEADER
 
 #endif // QQUICKLOADER_P_H

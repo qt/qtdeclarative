@@ -44,8 +44,6 @@
 
 #include "private/qabstractanimationjob_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class Q_QML_PRIVATE_EXPORT QAnimationGroupJob : public QAbstractAnimationJob
@@ -85,7 +83,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif //QANIMATIONGROUPJOB_P_H

@@ -51,8 +51,6 @@
 
 #include <private/qintrusivelist_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
@@ -138,7 +136,5 @@ private:
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPixmap::Options)
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQUICKPIXMAPCACHE_H

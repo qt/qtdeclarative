@@ -48,8 +48,6 @@
 #include <QtCore/qsharedpointer.h>
 #include <private/qtquickglobal_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickActionEvent;
@@ -204,7 +202,5 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickStateOperation)
 QML_DECLARE_TYPE(QQuickState)
-
-QT_END_HEADER
 
 #endif // QQUICKSTATE_H

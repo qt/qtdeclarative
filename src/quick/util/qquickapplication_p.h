@@ -46,8 +46,6 @@
 #include <qqml.h>
 #include <private/qtquickglobal_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -80,7 +78,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickApplication)
-
-QT_END_HEADER
 
 #endif // QQUICKAPPLICATION_P_H

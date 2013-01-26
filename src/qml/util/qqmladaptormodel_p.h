@@ -48,8 +48,6 @@
 
 #include <private/qqmlguard_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;

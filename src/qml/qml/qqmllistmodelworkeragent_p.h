@@ -60,8 +60,6 @@
 
 #include <private/qv8engine_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -153,8 +151,6 @@ private:
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QQmlListModelWorkerAgent::VariantRef)
-
-QT_END_HEADER
 
 #endif // QQUICKLISTMODELWORKERAGENT_P_H
 

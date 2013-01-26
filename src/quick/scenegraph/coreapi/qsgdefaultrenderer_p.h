@@ -47,8 +47,6 @@
 #include <QtGui/private/qdatabuffer_p.h>
 #include "qsgrendernode_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class Q_QUICK_PRIVATE_EXPORT QSGDefaultRenderer : public QSGRenderer
@@ -90,7 +88,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QMLRENDERER_H

@@ -45,8 +45,6 @@
 #include <QtQml/qtqmlglobal.h>
 #include <QtCore/qobject.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -75,7 +73,5 @@ Q_DECLARE_INTERFACE(QQmlTypesExtensionInterface, "org.qt-project.Qt.QQmlTypesExt
 Q_DECLARE_INTERFACE(QQmlExtensionInterface, QQmlExtensionInterface_iid)
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLEXTENSIONINTERFACE_H

@@ -45,8 +45,6 @@
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/qsgnode.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QGlyphs;
@@ -79,7 +77,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // DEFAULT_GLYPHNODE_H

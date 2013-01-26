@@ -47,8 +47,6 @@
 #include <QtCore/qobject.h>
 #include <QPalette>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickSystemPalettePrivate;
@@ -114,7 +112,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickSystemPalette)
-
-QT_END_HEADER
 
 #endif // QQUICKSYSTEMPALETTE_H

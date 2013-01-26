@@ -69,8 +69,6 @@
 #  undef CONST
 #endif
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QTextStream;
@@ -613,7 +611,5 @@ private:
 } // end of namespace QQmlJS
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QV4IR_P_H

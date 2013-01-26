@@ -48,8 +48,6 @@
 
 #include <QtCore/qobject.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimation;
@@ -126,7 +124,5 @@ Q_SIGNALS:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickTransition)
-
-QT_END_HEADER
 
 #endif // QQUICKTRANSITION_H

@@ -52,8 +52,6 @@
 #include <QtGui/qfont.h>
 #include <QtGui/qaccessible.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
@@ -445,7 +443,5 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickItem)
 QML_DECLARE_TYPE(QQuickTransform)
-
-QT_END_HEADER
 
 #endif // QQUICKITEM_H

@@ -45,8 +45,6 @@
 #include <QtGui/QImage>
 #include <private/qtquickglobal_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickWindow;
@@ -85,7 +83,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QSGRenderLoop_P_H

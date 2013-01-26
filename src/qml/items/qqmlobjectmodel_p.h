@@ -46,8 +46,6 @@
 #include <QtQml/qqml.h>
 #include <QtCore/qobject.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QObject;
@@ -168,7 +166,5 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQmlInstanceModel)
 QML_DECLARE_TYPE(QQmlObjectModel)
 QML_DECLARE_TYPEINFO(QQmlObjectModel, QML_HAS_ATTACHED_PROPERTIES)
-
-QT_END_HEADER
 
 #endif // QQMLINSTANCEMODEL_P_H

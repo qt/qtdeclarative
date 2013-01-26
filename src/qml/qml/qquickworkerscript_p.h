@@ -60,8 +60,6 @@
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qurl.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -124,7 +122,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickWorkerScript)
-
-QT_END_HEADER
 
 #endif // QQUICKWORKERSCRIPT_P_H

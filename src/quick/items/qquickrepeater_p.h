@@ -44,8 +44,6 @@
 
 #include "qquickitem.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQmlChangeSet;
@@ -103,7 +101,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickRepeater)
-
-QT_END_HEADER
 
 #endif // QQUICKREPEATER_P_H

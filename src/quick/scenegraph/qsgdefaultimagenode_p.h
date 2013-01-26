@@ -46,8 +46,6 @@
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/qsgtexturematerial.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class SmoothTextureMaterial : public QSGTextureMaterial
@@ -102,7 +100,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

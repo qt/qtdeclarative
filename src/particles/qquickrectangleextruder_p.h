@@ -44,8 +44,6 @@
 
 #include "qquickparticleextruder_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickRectangleExtruder : public QQuickParticleExtruder
@@ -80,7 +78,5 @@ protected:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // RectangleEXTRUDER_H

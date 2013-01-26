@@ -50,8 +50,6 @@
 #include <QtCore/qbytearray.h>
 #include <QtCore/qmetaobject.h>
 
-QT_BEGIN_HEADER
-
 #define QML_VERSION     0x020000
 #define QML_VERSION_STR "2.0"
 
@@ -469,7 +467,5 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QObject)
 Q_DECLARE_METATYPE(QVariant)
-
-QT_END_HEADER
 
 #endif // QQML_H

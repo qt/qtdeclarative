@@ -62,8 +62,6 @@
 #include <QElapsedTimer>
 #endif
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickContext2DCommandBuffer;
@@ -256,7 +254,5 @@ public:
 
 QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQuickContext2D)
-
-QT_END_HEADER
 
 #endif // QQUICKCONTEXT2D_P_H

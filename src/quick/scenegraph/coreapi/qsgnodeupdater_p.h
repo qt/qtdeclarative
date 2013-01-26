@@ -45,8 +45,6 @@
 #include <private/qtquickglobal_p.h>
 #include <QtGui/private/qdatabuffer_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QSGNode;
@@ -95,7 +93,5 @@ protected:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // NODEUPDATER_P_H

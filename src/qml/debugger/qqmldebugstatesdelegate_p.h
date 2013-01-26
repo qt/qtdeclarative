@@ -57,8 +57,6 @@
 #include <QtCore/QList>
 #include <QtCore/QPointer>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -95,7 +93,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLDEBUGSTATESDELEGATE_P_H

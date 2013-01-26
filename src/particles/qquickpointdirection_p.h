@@ -43,8 +43,6 @@
 #define POINTVECTOR_H
 #include "qquickdirection_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickPointDirection : public QQuickDirection
@@ -129,5 +127,4 @@ private:
 };
 
 QT_END_NAMESPACE
-QT_END_HEADER
 #endif // POINTVECTOR_H

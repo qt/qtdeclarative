@@ -54,8 +54,6 @@
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QFont>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 namespace QQuickValueTypes {
@@ -364,7 +362,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQUICKVALUETYPES_P_H

@@ -46,8 +46,6 @@
 
 #include <private/qquickpath_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQmlChangeSet;
@@ -281,6 +279,5 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickPathView)
 QML_DECLARE_TYPEINFO(QQuickPathView, QML_HAS_ATTACHED_PROPERTIES)
-QT_END_HEADER
 
 #endif // QQUICKPATHVIEW_P_H

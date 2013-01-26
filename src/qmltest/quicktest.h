@@ -44,8 +44,6 @@
 
 #include <QtQuickTest/quicktestglobal.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 Q_QUICK_TEST_EXPORT int quick_test_main(int argc, char **argv, const char *name, const char *sourceDir);
@@ -81,7 +79,5 @@ Q_QUICK_TEST_EXPORT int quick_test_main(int argc, char **argv, const char *name,
 #endif
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

@@ -51,8 +51,6 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qstring.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickBasePositionerPrivate;
@@ -317,7 +315,5 @@ QML_DECLARE_TYPE(QQuickFlow)
 
 QML_DECLARE_TYPE(QQuickBasePositioner)
 QML_DECLARE_TYPEINFO(QQuickBasePositioner, QML_HAS_ATTACHED_PROPERTIES)
-
-QT_END_HEADER
 
 #endif // QQUICKPOSITIONERS_P_H

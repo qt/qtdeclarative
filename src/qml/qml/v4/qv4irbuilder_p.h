@@ -46,8 +46,6 @@
 
 #include "qv4ir_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QV4IRBuilder : public QQmlJS::AST::Visitor
@@ -237,7 +235,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QV4IRBUILDER_P_H 

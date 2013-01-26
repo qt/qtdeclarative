@@ -46,8 +46,6 @@
 #include <private/qtquickglobal_p.h>
 #include <QtGui/qtextoption.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickTextPrivate;
@@ -294,7 +292,5 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickText)
 QML_DECLARE_TYPE(QQuickTextLine)
-
-QT_END_HEADER
 
 #endif // QQUICKTEXT_P_H

@@ -48,8 +48,6 @@
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qshareddata.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -156,7 +154,5 @@ private:
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QJSValue)
-
-QT_END_HEADER
 
 #endif

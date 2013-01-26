@@ -46,8 +46,6 @@
 #include <private/qtquickglobal_p.h>
 #include <QtCore/qstringlist.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickMouseEvent;
@@ -251,7 +249,5 @@ QML_DECLARE_TYPE(QQuickDrag)
 QML_DECLARE_TYPEINFO(QQuickDrag, QML_HAS_ATTACHED_PROPERTIES)
 #endif
 QML_DECLARE_TYPE(QQuickMouseArea)
-
-QT_END_HEADER
 
 #endif // QQUICKMOUSEAREA_P_H

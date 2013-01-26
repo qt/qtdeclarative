@@ -60,8 +60,6 @@
 #include <QtQuick/private/qsgcontext_p.h>
 
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickWindow;
@@ -103,5 +101,4 @@ private:
 
 QT_END_NAMESPACE
 
-QT_END_HEADER
 #endif // DESIGNERWINDOWMANAGER_P_H

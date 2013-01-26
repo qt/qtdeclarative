@@ -45,8 +45,6 @@
 #include "qquickitem.h"
 #include <private/qtquickglobal_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickFlickablePrivate;
@@ -277,7 +275,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickFlickable)
-
-QT_END_HEADER
 
 #endif // QQUICKFLICKABLE_P_H

@@ -58,8 +58,6 @@
 #include "qqmlopenmetaobject_p.h"
 #include <qqml.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -375,8 +373,6 @@ private:
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(ListModel *);
-
-QT_END_HEADER
 
 #endif // QQUICKLISTMODEL_P_P_H
 

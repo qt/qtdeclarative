@@ -45,8 +45,6 @@
 #include "qquickimagebase_p.h"
 #include <QtQuick/qsgtextureprovider.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickImagePrivate;
@@ -114,6 +112,4 @@ private:
 
 QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQuickImage)
-QT_END_HEADER
-
 #endif // QQUICKIMAGE_P_H

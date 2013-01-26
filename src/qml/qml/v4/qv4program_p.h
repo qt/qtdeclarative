@@ -60,8 +60,6 @@
 #  pragma warning( disable : 4200 )
 #endif
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 struct QV4Program {
@@ -125,8 +123,6 @@ QV4Program::BindingReferenceList *QV4Program::signalTable(int signalIndex) const
 }
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QV4PROGRAM_P_H
 

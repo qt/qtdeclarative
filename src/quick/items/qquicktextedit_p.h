@@ -46,8 +46,6 @@
 
 #include <QtGui/qtextoption.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickTextEditPrivate;
@@ -350,7 +348,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickTextEdit)
-
-QT_END_HEADER
 
 #endif // QQUICKTEXTEDIT_P_H

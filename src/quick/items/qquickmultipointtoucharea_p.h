@@ -50,8 +50,6 @@
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickMultiPointTouchArea;
@@ -270,7 +268,5 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQuickTouchPoint)
 QML_DECLARE_TYPE(QQuickGrabGestureEvent)
 QML_DECLARE_TYPE(QQuickMultiPointTouchArea)
-
-QT_END_HEADER
 
 #endif // QQUICKMULTIPOINTTOUCHAREA_H

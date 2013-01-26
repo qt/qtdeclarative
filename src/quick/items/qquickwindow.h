@@ -48,8 +48,6 @@
 #include <QtGui/qwindow.h>
 #include <QtGui/qevent.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
@@ -172,8 +170,6 @@ private:
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QQuickWindow *)
-
-QT_END_HEADER
 
 #endif // QQUICKWINDOW_H
 

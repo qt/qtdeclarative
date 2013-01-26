@@ -46,8 +46,6 @@
 #include <QtGui/qopengl.h>
 #include <QRectF>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QSGGeometryData;
@@ -294,7 +292,5 @@ int QSGGeometry::sizeOfIndex() const
 }
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QSGGEOMETRY_H

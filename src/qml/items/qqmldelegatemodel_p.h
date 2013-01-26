@@ -52,8 +52,6 @@
 #include <private/qv8engine_p.h>
 #include <private/qqmlglobal_p.h>
 
-QT_BEGIN_HEADER
-
 Q_DECLARE_METATYPE(QModelIndex)
 
 QT_BEGIN_NAMESPACE
@@ -232,7 +230,5 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQmlDelegateModel)
 QML_DECLARE_TYPEINFO(QQmlDelegateModel, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QQmlDataGroup)
-
-QT_END_HEADER
 
 #endif // QQMLDATAMODEL_P_H

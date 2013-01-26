@@ -46,8 +46,6 @@
 
 #include <private/qqmlguard_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickListView;
@@ -204,7 +202,5 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPEINFO(QQuickListView, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QQuickListView)
 QML_DECLARE_TYPE(QQuickViewSection)
-
-QT_END_HEADER
 
 #endif // QQUICKLISTVIEW_P_H

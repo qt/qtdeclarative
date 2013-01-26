@@ -44,8 +44,6 @@
 
 #include <qqml.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickPackagePrivate;
@@ -90,7 +88,5 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickPackage)
 QML_DECLARE_TYPEINFO(QQuickPackage, QML_HAS_ATTACHED_PROPERTIES)
-
-QT_END_HEADER
 
 #endif // QQUICKPACKAGE_H

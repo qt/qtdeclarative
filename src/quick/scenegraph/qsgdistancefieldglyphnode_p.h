@@ -47,8 +47,6 @@
 
 #include <QtQuick/private/qquicktext_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QSGContext;
@@ -111,8 +109,6 @@ private:
     uint m_dirtyGeometry: 1;
     uint m_dirtyMaterial: 1;
 };
-
-QT_END_HEADER
 
 QT_END_NAMESPACE
 

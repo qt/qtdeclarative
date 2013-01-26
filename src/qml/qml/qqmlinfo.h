@@ -46,8 +46,6 @@
 #include <QtCore/qurl.h>
 #include <QtQml/qqmlerror.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -97,7 +95,5 @@ Q_QML_EXPORT QQmlInfo qmlInfo(const QObject *me, const QQmlError &error);
 Q_QML_EXPORT QQmlInfo qmlInfo(const QObject *me, const QList<QQmlError> &errors);
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLINFO_H

@@ -48,8 +48,6 @@
 
 #include <private/qtqmlglobal_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQmlTimerPrivate;
@@ -105,7 +103,5 @@ private Q_SLOTS:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQmlTimer)
-
-QT_END_HEADER
 
 #endif

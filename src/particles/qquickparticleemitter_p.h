@@ -51,8 +51,6 @@
 #include <QList>
 #include <QPair>
 #include <QPointF>
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickParticleEmitter : public QQuickItem
@@ -344,7 +342,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // PARTICLEEMITTER_H

@@ -61,8 +61,6 @@
 
 Q_DECLARE_METATYPE(v8::Handle<v8::Value>)
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQmlTypeNameCache;
@@ -102,8 +100,6 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QV4COMPILER_P_H
 

@@ -46,8 +46,6 @@
 #include <private/qquicksprite_p.h>
 #include <QTime>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QSGContext;
@@ -377,7 +375,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQUICKANIMATEDSPRITE_P_H

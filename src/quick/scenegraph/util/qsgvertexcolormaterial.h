@@ -44,8 +44,6 @@
 
 #include <QtQuick/qsgmaterial.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class Q_QUICK_EXPORT QSGVertexColorMaterial : public QSGMaterial
@@ -61,7 +59,5 @@ protected:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // VERTEXCOLORMATERIAL_H

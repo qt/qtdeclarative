@@ -46,8 +46,6 @@
 #include <QUrl>
 #include <QImage>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickMaskExtruder : public QQuickParticleExtruder
@@ -88,7 +86,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // MASKEXTRUDER_H

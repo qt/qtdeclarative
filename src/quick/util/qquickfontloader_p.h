@@ -47,8 +47,6 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qurl.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickFontLoaderPrivate;
@@ -88,8 +86,6 @@ Q_SIGNALS:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickFontLoader)
-
-QT_END_HEADER
 
 #endif // QQUICKFONTLOADER_H
 

@@ -46,8 +46,6 @@
 
 #include <QtCore/qobject.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQmlBindPrivate;
@@ -90,7 +88,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQmlBind)
-
-QT_END_HEADER
 
 #endif

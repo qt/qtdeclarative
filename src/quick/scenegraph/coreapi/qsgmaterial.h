@@ -45,8 +45,6 @@
 #include <QtQuick/qtquickglobal.h>
 #include <qopenglshaderprogram.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QSGMaterial;
@@ -142,7 +140,5 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSGMaterial::Flags)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGMaterialShader::RenderState::DirtyStates)
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

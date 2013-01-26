@@ -54,8 +54,6 @@
 #include "private/qabstractanimationjob_p.h"
 #include <QtGui/qcolor.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimationPrivate;
@@ -459,7 +457,5 @@ QML_DECLARE_TYPE(QQuickSequentialAnimation)
 QML_DECLARE_TYPE(QQuickParallelAnimation)
 QML_DECLARE_TYPE(QQuickVector3dAnimation)
 QML_DECLARE_TYPE(QQuickRotationAnimation)
-
-QT_END_HEADER
 
 #endif // QQUICKANIMATION_H

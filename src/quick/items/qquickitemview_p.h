@@ -44,8 +44,6 @@
 
 #include "qquickflickable_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQmlChangeSet;
@@ -351,8 +349,6 @@ public:
 
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQUICKITEMVIEW_P_H
 

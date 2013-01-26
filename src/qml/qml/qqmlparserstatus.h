@@ -45,8 +45,6 @@
 #include <QtQml/qtqmlglobal.h>
 #include <QtCore/qobject.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -71,7 +69,5 @@ private:
 Q_DECLARE_INTERFACE(QQmlParserStatus, QQmlParserStatus_iid)
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLPARSERSTATUS_H

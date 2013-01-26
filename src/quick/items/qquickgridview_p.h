@@ -46,8 +46,6 @@
 
 #include <private/qqmlguard_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickGridViewAttached;
@@ -143,7 +141,5 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickGridView)
 QML_DECLARE_TYPEINFO(QQuickGridView, QML_HAS_ATTACHED_PROPERTIES)
-
-QT_END_HEADER
 
 #endif // QQUICKGRIDVIEW_P_H

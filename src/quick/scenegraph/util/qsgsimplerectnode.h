@@ -45,8 +45,6 @@
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgflatcolormaterial.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class Q_QUICK_EXPORT QSGSimpleRectNode : public QSGGeometryNode
@@ -69,7 +67,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // SOLIDRECTNODE_H
