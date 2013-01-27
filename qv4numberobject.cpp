@@ -96,9 +96,15 @@ void NumberPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
 Value NumberPrototype::method_toString(ExecutionContext *ctx)
 {
-    NumberObject *thisObject = ctx->thisObject.asNumberObject();
-    if (!thisObject)
-        ctx->throwTypeError();
+    double num;
+    if (ctx->thisObject.isNumber()) {
+        num = ctx->thisObject.asDouble();
+    } else {
+        NumberObject *thisObject = ctx->thisObject.asNumberObject();
+        if (!thisObject)
+            ctx->throwTypeError();
+        num = thisObject->value.asDouble();
+    }
 
     Value arg = ctx->argument(0);
     if (!arg.isUndefined()) {
@@ -109,7 +115,6 @@ Value NumberPrototype::method_toString(ExecutionContext *ctx)
             return Value::undefinedValue();
         }
 
-        double num = thisObject->value.asDouble();
         if (std::isnan(num)) {
             return Value::fromString(ctx, QStringLiteral("NaN"));
         } else if (qIsInf(num)) {
@@ -147,8 +152,7 @@ Value NumberPrototype::method_toString(ExecutionContext *ctx)
         }
     }
 
-    Value internalValue = thisObject->value;
-    String *str = internalValue.toString(ctx);
+    String *str = Value::fromDouble(num).toString(ctx);
     return Value::fromString(str);
 }
 

@@ -71,11 +71,17 @@ void BooleanPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
 Value BooleanPrototype::method_toString(ExecutionContext *ctx)
 {
-    BooleanObject *thisObject = ctx->thisObject.asBooleanObject();
-    if (!thisObject)
-        ctx->throwTypeError();
+    bool result;
+    if (ctx->thisObject.isBoolean()) {
+        result = ctx->thisObject.booleanValue();
+    } else {
+        BooleanObject *thisObject = ctx->thisObject.asBooleanObject();
+        if (!thisObject)
+            ctx->throwTypeError();
+        result = thisObject->value.booleanValue();
+    }
 
-    return Value::fromString(ctx, QLatin1String(thisObject->value.booleanValue() ? "true" : "false"));
+    return Value::fromString(ctx, QLatin1String(result ? "true" : "false"));
 }
 
 Value BooleanPrototype::method_valueOf(ExecutionContext *ctx)
