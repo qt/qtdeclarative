@@ -234,6 +234,15 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         TEMP(instr.targetTempIndex) = __qmljs_call_property(context, base, instr.name, args, instr.argc);
     MOTH_END_INSTR(CallProperty)
 
+    MOTH_BEGIN_INSTR(CallElement)
+        int argStart = instr.args - context->variableCount();
+    // TODO: change this assert everywhere to include a minimum
+    // TODO: the args calculation is duplicate code, fix that
+        VM::Value *args = stack + argStart;
+        VM::Value base = TEMP(instr.baseTemp);
+        TEMP(instr.targetTempIndex) = __qmljs_call_element(context, base, TEMP(instr.index), args, instr.argc);
+    MOTH_END_INSTR(CallProperty)
+
     MOTH_BEGIN_INSTR(CallActivationProperty)
         int argStart = instr.args - context->variableCount();
     // TODO: change this assert everywhere to include a minimum

@@ -580,7 +580,7 @@ Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index)
     uint idx = index.asArrayIndex();
 
     if (type != Value::Object_Type) {
-        if (type == Value::String_Type) {
+        if (type == Value::String_Type && idx < UINT_MAX) {
             String *str = object.stringValue();
             if (idx >= (uint)str->toQString().length())
                 return Value::undefinedValue();
@@ -757,6 +757,23 @@ Value __qmljs_call_property(ExecutionContext *context, Value that, String *name,
     Object *baseObject = thisObject.objectValue();
 
     Value func = baseObject->__get__(context, name);
+    Object *o = func.asObject();
+    if (!o)
+        context->throwTypeError();
+
+    return o->call(context, thisObject, args, argc);
+}
+
+Value __qmljs_call_element(ExecutionContext *context, Value that, Value index, Value *args, int argc)
+{
+    Value thisObject = that;
+    if (!thisObject.isObject())
+        thisObject = __qmljs_to_object(thisObject, context);
+
+    assert(thisObject.isObject());
+    Object *baseObject = thisObject.objectValue();
+
+    Value func = baseObject->__get__(context, index.toString(context));
     Object *o = func.asObject();
     if (!o)
         context->throwTypeError();

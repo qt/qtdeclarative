@@ -47,6 +47,7 @@ protected:
     virtual void callBuiltinDefineArrayProperty(IR::Temp *object, int index, IR::Temp *value);
     virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);
     virtual void callProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result);
+    virtual void callSubscript(IR::Temp *base, IR::Temp *index, IR::ExprList *args, IR::Temp *result);
     virtual void constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result);
     virtual void constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result);
     virtual void constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);

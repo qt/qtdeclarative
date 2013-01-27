@@ -135,6 +135,9 @@ void InstructionSelection::visitMove(IR::Move *s)
                 } else if (Member *member = c->base->asMember()) {
                     callProperty(member->base, *member->name, c->args, t);
                     return;
+                } else if (Subscript *s = c->base->asSubscript()) {
+                    callSubscript(s->base, s->index, c->args, t);
+                    return;
                 } else if (IR::Temp *value = c->base->asTemp()) {
                     callValue(value, c->args, t);
                     return;
@@ -210,6 +213,8 @@ void InstructionSelection::visitExp(IR::Exp *s)
             callValue(value, c->args, 0);
         } else if (Member *member = c->base->asMember()) {
             callProperty(member->base, *member->name, c->args, 0);
+        } else if (Subscript *s = c->base->asSubscript()) {
+            callSubscript(s->base, s->index, c->args, 0);
         } else {
             Q_UNIMPLEMENTED();
         }

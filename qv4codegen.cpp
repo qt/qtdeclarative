@@ -684,11 +684,8 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
 
 IR::Expr *Codegen::call(IR::Expr *base, IR::ExprList *args)
 {
-    if (base->asMember() || base->asName() || base->asTemp())
-        return _block->CALL(base, args);
-    const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), base);
-    return _block->CALL(_block->TEMP(t), args);
+    base = reference(base);
+    return _block->CALL(base, args);
 }
 
 void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)

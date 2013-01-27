@@ -674,6 +674,7 @@ protected:
     virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value);
     virtual void callBuiltinDefineArrayProperty(IR::Temp *object, int index, IR::Temp *value);
     virtual void callProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result);
+    virtual void callSubscript(IR::Temp *base, IR::Temp *index, IR::ExprList *args, IR::Temp *result);
     virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);
     virtual void loadThisObject(IR::Temp *temp);
     virtual void loadConst(IR::Const *sourceConst, IR::Temp *targetTemp);

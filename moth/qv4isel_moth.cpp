@@ -349,6 +349,17 @@ void InstructionSelection::callProperty(IR::Temp *base, const QString &name, IR:
     addInstruction(call);
 }
 
+void InstructionSelection::callSubscript(IR::Temp *base, IR::Temp *index, IR::ExprList *args, IR::Temp *result)
+{
+    // call the property on the loaded base
+    Instruction::CallElement call;
+    call.baseTemp = base->index;
+    call.index = index->index;
+    prepareCallArgs(args, call.argc, call.args);
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
 void InstructionSelection::constructActivationProperty(IR::Name *func,
                                                        IR::ExprList *args,
                                                        IR::Temp *result)

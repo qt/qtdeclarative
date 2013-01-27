@@ -740,6 +740,17 @@ void InstructionSelection::callProperty(IR::Temp *base, const QString &name,
                          Assembler::TrustedImm32(argc));
 }
 
+void InstructionSelection::callSubscript(IR::Temp *base, IR::Temp *index, IR::ExprList *args, IR::Temp *result)
+{
+    assert(base != 0);
+
+    int argc = prepareVariableArguments(args);
+    generateFunctionCall(result, __qmljs_call_element,
+                         Assembler::ContextRegister, base, index,
+                         baseAddressForCallArguments(),
+                         Assembler::TrustedImm32(argc));
+}
+
 String *InstructionSelection::identifier(const QString &s)
 {
     return engine()->identifier(s);
