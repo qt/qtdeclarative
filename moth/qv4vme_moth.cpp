@@ -243,53 +243,47 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         VALUE(instr.result) = __qmljs_call_activation_property(context, instr.name, args, instr.argc);
     MOTH_END_INSTR(CallActivationProperty)
 
-    MOTH_BEGIN_INSTR(CallBuiltin)
-        // TODO: split this into separate instructions
-        switch (instr.builtin) {
-        case Instr::instr_callBuiltin::builtin_throw:
-            TRACE(builtin_throw, "Throwing now...%s", "");
-            __qmljs_builtin_throw(VALUE(instr.arg), context);
-            break;
-        case Instr::instr_callBuiltin::builtin_create_exception_handler: {
-            TRACE(builtin_create_exception_handler, "%s", "");
-            void *buf = __qmljs_create_exception_handler(context);
-            // The resultIndex is the only value we need from the instr to
-            // continue execution when an exception is caught.
-            VM::Value *result = getValueRef(context, stack, instr.result, stackSize);
-            int didThrow = setjmp(* static_cast<jmp_buf *>(buf));
-            // Two ways to come here: after a create, or after a throw.
-            if (didThrow)
-                // At this point, the interpreter state can be anything but
-                // valid, so first restore the state. This includes all relevant
-                // locals.
-                restoreState(context, result, code);
-            else
-                // Save the state and any variables we need when catching an
-                // exception, so we can restore the state at that point.
-                saveState(context, result, code);
-            *result = VM::Value::fromInt32(didThrow);
-        } break;
-        case Instr::instr_callBuiltin::builtin_delete_exception_handler:
-            TRACE(builtin_delete_exception_handler, "%s", "");
-            __qmljs_delete_exception_handler(context);
-            break;
-        case Instr::instr_callBuiltin::builtin_get_exception:
-            TRACE(builtin_get_exception, "%s", "");
-            VALUE(instr.result) = __qmljs_get_exception(context);
-            break;
-        case Instr::instr_callBuiltin::builtin_push_with_scope:
-            TRACE(builtin_push_with_scope, "%s", "");
-            context = __qmljs_builtin_push_with_scope(VALUE(instr.arg), context);
-            break;
-        case Instr::instr_callBuiltin::builtin_pop_scope:
-            TRACE(builtin_pop_scope, "%s", "");
-            context = __qmljs_builtin_pop_scope(context);
-            break;
-        default:
-            Q_UNIMPLEMENTED();
-            return VM::Value();
-        }
-    MOTH_END_INSTR(CallBuiltin)
+    MOTH_BEGIN_INSTR(CallBuiltinThrow)
+        __qmljs_builtin_throw(VALUE(instr.arg), context);
+    MOTH_END_INSTR(CallBuiltinThrow)
+
+    MOTH_BEGIN_INSTR(CallBuiltinCreateExceptionHandler)
+        void *buf = __qmljs_create_exception_handler(context);
+        // The result is the only value we need from the instr to
+        // continue execution when an exception is caught.
+        VM::Value *result = getValueRef(context, stack, instr.result
+#if !defined(QT_NO_DEBUG)
+                                        , stackSize
+#endif
+                                        );
+        int didThrow = setjmp(* static_cast<jmp_buf *>(buf));
+        // Two ways to come here: after a create, or after a throw.
+        if (didThrow)
+            // At this point, the interpreter state can be anything but
+            // valid, so first restore the state.
+            restoreState(context, result, code);
+        else
+            // Save the state and any variables we need when catching an
+            // exception, so we can restore the state at that point.
+            saveState(context, result, code);
+        *result = VM::Value::fromInt32(didThrow);
+    MOTH_END_INSTR(CallBuiltinCreateExceptionHandler)
+
+    MOTH_BEGIN_INSTR(CallBuiltinDeleteExceptionHandler)
+        __qmljs_delete_exception_handler(context);
+    MOTH_END_INSTR(CallBuiltinDeleteExceptionHandler)
+
+    MOTH_BEGIN_INSTR(CallBuiltinGetException)
+        VALUE(instr.result) = __qmljs_get_exception(context);
+    MOTH_END_INSTR(CallBuiltinGetException)
+
+    MOTH_BEGIN_INSTR(CallBuiltinPushScope)
+        context = __qmljs_builtin_push_with_scope(VALUE(instr.arg), context);
+    MOTH_END_INSTR(CallBuiltinPushScope)
+
+    MOTH_BEGIN_INSTR(CallBuiltinPopScope)
+        context = __qmljs_builtin_pop_scope(context);
+    MOTH_END_INSTR(CallBuiltinPopScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachIteratorObject)
         VALUE(instr.result) = __qmljs_foreach_iterator_object(VALUE(instr.arg), context);

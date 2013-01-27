@@ -20,7 +20,12 @@
     F(CallProperty, callProperty) \
     F(CallElement, callElement) \
     F(CallActivationProperty, callActivationProperty) \
-    F(CallBuiltin, callBuiltin) \
+    F(CallBuiltinThrow, callBuiltinThrow) \
+    F(CallBuiltinCreateExceptionHandler, callBuiltinCreateExceptionHandler) \
+    F(CallBuiltinDeleteExceptionHandler, callBuiltinDeleteExceptionHandler) \
+    F(CallBuiltinGetException, callBuiltinGetException) \
+    F(CallBuiltinPushScope, callBuiltinPushScope) \
+    F(CallBuiltinPopScope, callBuiltinPopScope) \
     F(CallBuiltinForeachIteratorObject, callBuiltinForeachIteratorObject) \
     F(CallBuiltinForeachNextPropertyName, callBuiltinForeachNextPropertyName) \
     F(CallBuiltinDeleteMember, callBuiltinDeleteMember) \
@@ -218,18 +223,27 @@ union Instr
         quint32 args;
         Param result;
     };
-    struct instr_callBuiltin {
+    struct instr_callBuiltinThrow {
         MOTH_INSTR_HEADER
-        enum {
-            builtin_throw,
-            builtin_create_exception_handler,
-            builtin_delete_exception_handler,
-            builtin_get_exception,
-            builtin_push_with_scope,
-            builtin_pop_scope
-        } builtin;
         Param arg;
+    };
+    struct instr_callBuiltinCreateExceptionHandler {
+        MOTH_INSTR_HEADER
         Param result;
+    };
+    struct instr_callBuiltinDeleteExceptionHandler {
+        MOTH_INSTR_HEADER
+    };
+    struct instr_callBuiltinGetException {
+        MOTH_INSTR_HEADER
+        Param result;
+    };
+    struct instr_callBuiltinPushScope {
+        MOTH_INSTR_HEADER
+        Param arg;
+    };
+    struct instr_callBuiltinPopScope {
+        MOTH_INSTR_HEADER
     };
     struct instr_callBuiltinForeachIteratorObject {
         MOTH_INSTR_HEADER
@@ -433,7 +447,12 @@ union Instr
     instr_callProperty callProperty;
     instr_callElement callElement;
     instr_callActivationProperty callActivationProperty;
-    instr_callBuiltin callBuiltin;
+    instr_callBuiltinThrow callBuiltinThrow;
+    instr_callBuiltinCreateExceptionHandler callBuiltinCreateExceptionHandler;
+    instr_callBuiltinDeleteExceptionHandler callBuiltinDeleteExceptionHandler;
+    instr_callBuiltinGetException callBuiltinGetException;
+    instr_callBuiltinPushScope callBuiltinPushScope;
+    instr_callBuiltinPopScope callBuiltinPopScope;
     instr_callBuiltinForeachIteratorObject callBuiltinForeachIteratorObject;
     instr_callBuiltinForeachNextPropertyName callBuiltinForeachNextPropertyName;
     instr_callBuiltinDeleteMember callBuiltinDeleteMember;

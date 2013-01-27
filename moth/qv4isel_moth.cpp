@@ -820,31 +820,27 @@ void InstructionSelection::callBuiltinPostIncrementValue(IR::Temp *value, IR::Te
 
 void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
 {
-    Instruction::CallBuiltin call;
-    call.builtin = Instruction::CallBuiltin::builtin_throw;
+    Instruction::CallBuiltinThrow call;
     call.arg = getParam(arg);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
 {
-    Instruction::CallBuiltin call;
-    call.builtin = Instruction::CallBuiltin::builtin_create_exception_handler;
+    Instruction::CallBuiltinCreateExceptionHandler call;
     call.result = getResultParam(result);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinDeleteExceptionHandler()
 {
-    Instruction::CallBuiltin call;
-    call.builtin = Instruction::CallBuiltin::builtin_delete_exception_handler;
+    Instruction::CallBuiltinDeleteExceptionHandler call;
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinGetException(IR::Temp *result)
 {
-    Instruction::CallBuiltin call;
-    call.builtin = Instruction::CallBuiltin::builtin_get_exception;
+    Instruction::CallBuiltinGetException call;
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -867,16 +863,14 @@ void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR:
 
 void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
 {
-    Instruction::CallBuiltin call;
-    call.builtin = Instruction::CallBuiltin::builtin_push_with_scope;
+    Instruction::CallBuiltinPushScope call;
     call.arg = getParam(arg);
     addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinPopScope()
 {
-    Instruction::CallBuiltin call;
-    call.builtin = Instruction::CallBuiltin::builtin_pop_scope;
+    Instruction::CallBuiltinPopScope call;
     addInstruction(call);
 }
 
