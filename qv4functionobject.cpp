@@ -206,6 +206,8 @@ void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("apply"), method_apply, 2);
     defineDefaultProperty(ctx, QStringLiteral("call"), method_call, 1);
     defineDefaultProperty(ctx, QStringLiteral("bind"), method_bind, 1);
+
+    defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(0));
 }
 
 Value FunctionPrototype::method_toString(ExecutionContext *ctx)
