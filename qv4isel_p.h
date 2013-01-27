@@ -89,6 +89,14 @@ public: // to implement by subclasses:
     virtual void callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result) = 0;
     virtual void callBuiltinDeleteName(const QString &name, IR::Temp *result) = 0;
     virtual void callBuiltinDeleteValue(IR::Temp *result) = 0;
+    virtual void callBuiltinPostDecrementMember(IR::Temp *base, const QString &name, IR::Temp *result) = 0;
+    virtual void callBuiltinPostDecrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result) = 0;
+    virtual void callBuiltinPostDecrementName(const QString &name, IR::Temp *result) = 0;
+    virtual void callBuiltinPostDecrementValue(IR::Temp *value, IR::Temp *result) = 0;
+    virtual void callBuiltinPostIncrementMember(IR::Temp *base, const QString &name, IR::Temp *result) = 0;
+    virtual void callBuiltinPostIncrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result) = 0;
+    virtual void callBuiltinPostIncrementName(const QString &name, IR::Temp *result) = 0;
+    virtual void callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result) = 0;
     virtual void callBuiltinThrow(IR::Temp *arg) = 0;
     virtual void callBuiltinCreateExceptionHandler(IR::Temp *result) = 0;
     virtual void callBuiltinDeleteExceptionHandler() = 0;

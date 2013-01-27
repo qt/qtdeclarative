@@ -30,6 +30,14 @@
     F(CallBuiltinTypeofSubscript, callBuiltinTypeofSubscript) \
     F(CallBuiltinTypeofName, callBuiltinTypeofName) \
     F(CallBuiltinTypeofValue, callBuiltinTypeofValue) \
+    F(CallBuiltinPostIncMember, callBuiltinPostIncMember) \
+    F(CallBuiltinPostIncSubscript, callBuiltinPostIncSubscript) \
+    F(CallBuiltinPostIncName, callBuiltinPostIncName) \
+    F(CallBuiltinPostIncValue, callBuiltinPostIncValue) \
+    F(CallBuiltinPostDecMember, callBuiltinPostDecMember) \
+    F(CallBuiltinPostDecSubscript, callBuiltinPostDecSubscript) \
+    F(CallBuiltinPostDecName, callBuiltinPostDecName) \
+    F(CallBuiltinPostDecValue, callBuiltinPostDecValue) \
     F(CallBuiltinDeclareVar, callBuiltinDeclareVar) \
     F(CallBuiltinDefineGetterSetter, callBuiltinDefineGetterSetter) \
     F(CallBuiltinDefineProperty, callBuiltinDefineProperty) \
@@ -232,6 +240,50 @@ union Instr
         int tempIndex;
         int targetTempIndex;
     };
+    struct instr_callBuiltinPostIncMember {
+        MOTH_INSTR_HEADER
+        int base;
+        VM::String *member;
+        int targetTempIndex;
+    };
+    struct instr_callBuiltinPostIncSubscript {
+        MOTH_INSTR_HEADER
+        int base;
+        int index;
+        int targetTempIndex;
+    };
+    struct instr_callBuiltinPostIncName {
+        MOTH_INSTR_HEADER
+        VM::String *name;
+        int targetTempIndex;
+    };
+    struct instr_callBuiltinPostIncValue {
+        MOTH_INSTR_HEADER
+        int tempIndex;
+        int targetTempIndex;
+    };
+    struct instr_callBuiltinPostDecMember {
+        MOTH_INSTR_HEADER
+        int base;
+        VM::String *member;
+        int targetTempIndex;
+    };
+    struct instr_callBuiltinPostDecSubscript {
+        MOTH_INSTR_HEADER
+        int base;
+        int index;
+        int targetTempIndex;
+    };
+    struct instr_callBuiltinPostDecName {
+        MOTH_INSTR_HEADER
+        VM::String *name;
+        int targetTempIndex;
+    };
+    struct instr_callBuiltinPostDecValue {
+        MOTH_INSTR_HEADER
+        int tempIndex;
+        int targetTempIndex;
+    };
     struct instr_callBuiltinDeclareVar {
         MOTH_INSTR_HEADER
         bool isDeletable;
@@ -356,6 +408,14 @@ union Instr
     instr_callBuiltinTypeofSubscript callBuiltinTypeofSubscript;
     instr_callBuiltinTypeofName callBuiltinTypeofName;
     instr_callBuiltinTypeofValue callBuiltinTypeofValue;
+    instr_callBuiltinPostIncMember callBuiltinPostIncMember;
+    instr_callBuiltinPostIncSubscript callBuiltinPostIncSubscript;
+    instr_callBuiltinPostIncName callBuiltinPostIncName;
+    instr_callBuiltinPostIncValue callBuiltinPostIncValue;
+    instr_callBuiltinPostDecMember callBuiltinPostDecMember;
+    instr_callBuiltinPostDecSubscript callBuiltinPostDecSubscript;
+    instr_callBuiltinPostDecName callBuiltinPostDecName;
+    instr_callBuiltinPostDecValue callBuiltinPostDecValue;
     instr_callBuiltinDeclareVar callBuiltinDeclareVar;
     instr_callBuiltinDefineGetterSetter callBuiltinDefineGetterSetter;
     instr_callBuiltinDefineProperty callBuiltinDefineProperty;

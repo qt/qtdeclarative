@@ -116,6 +116,7 @@ private:
 };
 
 #define TEMP(index) *tempValue(context, stack, index)
+#define TEMPPTR(index) tempValue(context, stack, index)
 
 VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *code
 #ifdef MOTH_THREADED_INTERPRETER
@@ -334,6 +335,38 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofValue)
         TEMP(instr.targetTempIndex) = __qmljs_builtin_typeof(TEMP(instr.tempIndex), context);
+    MOTH_END_INSTR(CallBuiltinTypeofValue)
+
+    MOTH_BEGIN_INSTR(CallBuiltinPostIncMember)
+        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_increment_member(TEMP(instr.base), instr.member, context);
+    MOTH_END_INSTR(CallBuiltinTypeofMember)
+
+    MOTH_BEGIN_INSTR(CallBuiltinPostIncSubscript)
+        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_increment_element(TEMP(instr.base), TEMP(instr.index), context);
+    MOTH_END_INSTR(CallBuiltinTypeofSubscript)
+
+    MOTH_BEGIN_INSTR(CallBuiltinPostIncName)
+        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_increment_name(instr.name, context);
+    MOTH_END_INSTR(CallBuiltinTypeofName)
+
+    MOTH_BEGIN_INSTR(CallBuiltinPostIncValue)
+        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_increment(TEMPPTR(instr.tempIndex), context);
+    MOTH_END_INSTR(CallBuiltinTypeofValue)
+
+    MOTH_BEGIN_INSTR(CallBuiltinPostDecMember)
+        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_decrement_member(TEMP(instr.base), instr.member, context);
+    MOTH_END_INSTR(CallBuiltinTypeofMember)
+
+    MOTH_BEGIN_INSTR(CallBuiltinPostDecSubscript)
+        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_decrement_element(TEMP(instr.base), TEMP(instr.index), context);
+    MOTH_END_INSTR(CallBuiltinTypeofSubscript)
+
+    MOTH_BEGIN_INSTR(CallBuiltinPostDecName)
+        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_decrement_name(instr.name, context);
+    MOTH_END_INSTR(CallBuiltinTypeofName)
+
+    MOTH_BEGIN_INSTR(CallBuiltinPostDecValue)
+        TEMP(instr.targetTempIndex) = __qmljs_builtin_post_decrement(TEMPPTR(instr.tempIndex), context);
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeclareVar)

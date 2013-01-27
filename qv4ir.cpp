@@ -224,6 +224,10 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_typeof";
     case Name::builtin_delete:
         return "builtin_delete";
+    case Name::builtin_postincrement:
+        return "builtin_postincrement";
+    case Name::builtin_postdecrement:
+        return "builtin_postdecrement";
     case Name::builtin_throw:
         return "builtin_throw";
     case Name::builtin_create_exception_handler:

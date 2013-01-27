@@ -906,6 +906,162 @@ Value __qmljs_builtin_typeof_element(Value base, Value index, ExecutionContext *
     return __qmljs_builtin_typeof(obj.objectValue()->__get__(context, name), context);
 }
 
+Value __qmljs_builtin_post_increment(Value *val, ExecutionContext *ctx)
+{
+    if (val->isInteger() && val->integerValue() < INT_MAX) {
+        Value retval = *val;
+        val->int_32 += 1;
+        return retval;
+    }
+
+    double d = __qmljs_to_number(*val, ctx);
+    *val = Value::fromDouble(d + 1);
+    return Value::fromDouble(d);
+}
+
+Value __qmljs_builtin_post_increment_name(String *name, ExecutionContext *context)
+{
+    Value v = context->getProperty(name);
+    Value retval;
+
+    if (v.isInteger() && v.integerValue() < INT_MAX) {
+        retval = v;
+        v.int_32 += 1;
+    } else {
+        double d = __qmljs_to_number(v, context);
+        retval = Value::fromDouble(d);
+        v = Value::fromDouble(d + 1);
+    }
+
+    context->setProperty(name, v);
+    return retval;
+}
+
+Value __qmljs_builtin_post_increment_member(Value base, String *name, ExecutionContext *context)
+{
+    Object *o = __qmljs_to_object(base, context).objectValue();
+
+    Value v = o->__get__(context, name);
+    Value retval;
+
+    if (v.isInteger() && v.integerValue() < INT_MAX) {
+        retval = v;
+        v.int_32 += 1;
+    } else {
+        double d = __qmljs_to_number(v, context);
+        retval = Value::fromDouble(d);
+        v = Value::fromDouble(d + 1);
+    }
+
+    o->__put__(context, name, v);
+    return retval;
+}
+
+Value __qmljs_builtin_post_increment_element(Value base, Value index, ExecutionContext *context)
+{
+    Object *o = __qmljs_to_object(base, context).objectValue();
+
+    uint idx = index.asArrayIndex();
+
+    if (idx == UINT_MAX) {
+        String *s = index.toString(context);
+        return __qmljs_builtin_post_increment_member(base, s, context);
+    }
+
+    Value v = o->__get__(context, idx);
+    Value retval;
+
+    if (v.isInteger() && v.integerValue() < INT_MAX) {
+        retval = v;
+        v.int_32 += 1;
+    } else {
+        double d = __qmljs_to_number(v, context);
+        retval = Value::fromDouble(d);
+        v = Value::fromDouble(d + 1);
+    }
+
+    o->__put__(context, idx, v);
+    return retval;
+}
+
+Value __qmljs_builtin_post_decrement(Value *val, ExecutionContext *ctx)
+{
+    if (val->isInteger() && val->integerValue() > INT_MIN) {
+        Value retval = *val;
+        val->int_32 -= 1;
+        return retval;
+    }
+
+    double d = __qmljs_to_number(*val, ctx);
+    *val = Value::fromDouble(d - 1);
+    return Value::fromDouble(d);
+}
+
+Value __qmljs_builtin_post_decrement_name(String *name, ExecutionContext *context)
+{
+    Value v = context->getProperty(name);
+    Value retval;
+
+    if (v.isInteger() && v.integerValue() > INT_MIN) {
+        retval = v;
+        v.int_32 -= 1;
+    } else {
+        double d = __qmljs_to_number(v, context);
+        retval = Value::fromDouble(d);
+        v = Value::fromDouble(d - 1);
+    }
+
+    context->setProperty(name, v);
+    return retval;
+}
+
+Value __qmljs_builtin_post_decrement_member(Value base, String *name, ExecutionContext *context)
+{
+    Object *o = __qmljs_to_object(base, context).objectValue();
+
+    Value v = o->__get__(context, name);
+    Value retval;
+
+    if (v.isInteger() && v.integerValue() > INT_MIN) {
+        retval = v;
+        v.int_32 -= 1;
+    } else {
+        double d = __qmljs_to_number(v, context);
+        retval = Value::fromDouble(d);
+        v = Value::fromDouble(d - 1);
+    }
+
+    o->__put__(context, name, v);
+    return retval;
+}
+
+Value __qmljs_builtin_post_decrement_element(Value base, Value index, ExecutionContext *context)
+{
+    Object *o = __qmljs_to_object(base, context).objectValue();
+
+    uint idx = index.asArrayIndex();
+
+    if (idx == UINT_MAX) {
+        String *s = index.toString(context);
+        return __qmljs_builtin_post_decrement_member(base, s, context);
+    }
+
+    Value v = o->__get__(context, idx);
+    Value retval;
+
+    if (v.isInteger() && v.integerValue() > INT_MIN) {
+        retval = v;
+        v.int_32 -= 1;
+    } else {
+        double d = __qmljs_to_number(v, context);
+        retval = Value::fromDouble(d);
+        v = Value::fromDouble(d - 1);
+    }
+
+    o->__put__(context, idx, v);
+    return retval;
+}
+
 void __qmljs_builtin_throw(Value val, ExecutionContext *context)
 {
     __qmljs_throw(val, context);

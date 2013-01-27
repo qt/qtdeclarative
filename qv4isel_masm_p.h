@@ -165,6 +165,10 @@ public:
         FunctionPtr externalFunction;
         const char* functionName;
     };
+    struct PointerToValue {
+        PointerToValue(IR::Temp *value) : value(value) {}
+        IR::Temp *value;
+    };
 
     void callAbsolute(const char* functionName, FunctionPtr function) {
         CallToLink ctl;
@@ -196,6 +200,14 @@ public:
     }
 
 #ifdef VALUE_FITS_IN_REGISTER
+    void loadArgument(PointerToValue temp, RegisterID dest)
+    {
+        assert(temp.value);
+
+        Pointer addr = loadTempAddress(dest, temp.value);
+        loadArgument(addr, dest);
+    }
+
     void loadArgument(IR::Temp* temp, RegisterID dest)
     {
         if (!temp) {
@@ -295,6 +307,14 @@ public:
         move(TrustedImm32(value.int_32), ScratchRegister);
         push(ScratchRegister);
 #endif
+    }
+
+    void push(PointerToValue temp)
+    {
+        assert (temp.value);
+
+        Pointer ptr = loadTempAddress(ScratchRegister, temp.value);
+        push(ptr);
     }
 
     void push(IR::Temp* temp)
@@ -401,6 +421,8 @@ public:
     { return sizeof(void*); }
     static inline int sizeOfArgument(VM::String* string)
     { return sizeof(string); }
+    static inline int sizeOfArgument(const PointerToValue &)
+    { return sizeof(void *); }
     static inline int sizeOfArgument(TrustedImmPtr)
     { return sizeof(void*); }
     static inline int sizeOfArgument(TrustedImm32)
@@ -661,6 +683,14 @@ protected:
     virtual void callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result);
     virtual void callBuiltinDeleteName(const QString &name, IR::Temp *result);
     virtual void callBuiltinDeleteValue(IR::Temp *result);
+    virtual void callBuiltinPostDecrementMember(IR::Temp *base, const QString &name, IR::Temp *result);
+    virtual void callBuiltinPostDecrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result);
+    virtual void callBuiltinPostDecrementName(const QString &name, IR::Temp *result);
+    virtual void callBuiltinPostDecrementValue(IR::Temp *value, IR::Temp *result);
+    virtual void callBuiltinPostIncrementMember(IR::Temp *base, const QString &name, IR::Temp *result);
+    virtual void callBuiltinPostIncrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result);
+    virtual void callBuiltinPostIncrementName(const QString &name, IR::Temp *result);
+    virtual void callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result);
     virtual void callBuiltinThrow(IR::Temp *arg);
     virtual void callBuiltinCreateExceptionHandler(IR::Temp *result);
     virtual void callBuiltinDeleteExceptionHandler();

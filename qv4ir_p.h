@@ -275,6 +275,8 @@ struct Name: Expr {
         builtin_invalid,
         builtin_typeof,
         builtin_delete,
+        builtin_postincrement,
+        builtin_postdecrement,
         builtin_throw,
         builtin_create_exception_handler,
         builtin_delete_exception_handler,

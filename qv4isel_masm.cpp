@@ -478,6 +478,46 @@ void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
     _asm->storeValue(Value::fromBoolean(false), result);
 }
 
+void InstructionSelection::callBuiltinPostIncrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_builtin_post_increment_member, base, identifier(name), Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinPostIncrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_builtin_post_increment_element, base, index, Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinPostIncrementName(const QString &name, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_builtin_post_increment_name, identifier(name), Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_builtin_post_increment, Assembler::PointerToValue(value), Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinPostDecrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_builtin_post_decrement_member, base, identifier(name), Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinPostDecrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_builtin_post_decrement_element, base, index, Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinPostDecrementName(const QString &name, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_builtin_post_decrement_name, identifier(name), Assembler::ContextRegister);
+}
+
+void InstructionSelection::callBuiltinPostDecrementValue(IR::Temp *value, IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_builtin_post_decrement, Assembler::PointerToValue(value), Assembler::ContextRegister);
+}
+
 void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
 {
     generateFunctionCall(Assembler::Void, __qmljs_builtin_throw, arg, Assembler::ContextRegister);

@@ -267,6 +267,40 @@ void InstructionSelection::callBuiltin(IR::Call *call, IR::Temp *result)
         }
     } break;
 
+    case IR::Name::builtin_postincrement: {
+        if (IR::Member *m = call->args->expr->asMember()) {
+            callBuiltinPostIncrementMember(m->base->asTemp(), *m->name, result);
+            return;
+        } else if (IR::Subscript *ss = call->args->expr->asSubscript()) {
+            callBuiltinPostIncrementSubscript(ss->base->asTemp(), ss->index->asTemp(), result);
+            return;
+        } else if (IR::Name *n = call->args->expr->asName()) {
+            callBuiltinPostIncrementName(*n->id, result);
+            return;
+        } else if (IR::Temp *arg = call->args->expr->asTemp()){
+            assert(arg != 0);
+            callBuiltinPostIncrementValue(arg, result);
+            return;
+        }
+    } break;
+
+    case IR::Name::builtin_postdecrement: {
+        if (IR::Member *m = call->args->expr->asMember()) {
+            callBuiltinPostDecrementMember(m->base->asTemp(), *m->name, result);
+            return;
+        } else if (IR::Subscript *ss = call->args->expr->asSubscript()) {
+            callBuiltinPostDecrementSubscript(ss->base->asTemp(), ss->index->asTemp(), result);
+            return;
+        } else if (IR::Name *n = call->args->expr->asName()) {
+            callBuiltinPostDecrementName(*n->id, result);
+            return;
+        } else if (IR::Temp *arg = call->args->expr->asTemp()){
+            assert(arg != 0);
+            callBuiltinPostDecrementValue(arg, result);
+            return;
+        }
+    } break;
+
     case IR::Name::builtin_throw: {
         IR::Temp *arg = call->args->expr->asTemp();
         assert(arg != 0);

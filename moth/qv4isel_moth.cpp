@@ -769,6 +769,74 @@ void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
     addInstruction(load);
 }
 
+void InstructionSelection::callBuiltinPostDecrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
+{
+    Instruction::CallBuiltinPostDecMember call;
+    call.base = base->index;
+    call.member = engine()->identifier(name);
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinPostDecrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+{
+    Instruction::CallBuiltinPostDecSubscript call;
+    call.base = base->index;
+    call.index = index->index;
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinPostDecrementName(const QString &name, IR::Temp *result)
+{
+    Instruction::CallBuiltinPostDecName call;
+    call.name = engine()->identifier(name);
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinPostDecrementValue(IR::Temp *value, IR::Temp *result)
+{
+    Instruction::CallBuiltinPostDecValue call;
+    call.tempIndex = value->index;
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinPostIncrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
+{
+    Instruction::CallBuiltinPostIncMember call;
+    call.base = base->index;
+    call.member = engine()->identifier(name);
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinPostIncrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+{
+    Instruction::CallBuiltinPostIncSubscript call;
+    call.base = base->index;
+    call.index = index->index;
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinPostIncrementName(const QString &name, IR::Temp *result)
+{
+    Instruction::CallBuiltinPostIncName call;
+    call.name = engine()->identifier(name);
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
+void InstructionSelection::callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result)
+{
+    Instruction::CallBuiltinPostIncValue call;
+    call.tempIndex = value->index;
+    call.targetTempIndex = result ? result->index : scratchTempIndex();
+    addInstruction(call);
+}
+
 void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
 {
     Instruction::CallBuiltin call;

@@ -100,6 +100,16 @@ Value __qmljs_builtin_typeof_name(String *name, ExecutionContext *context);
 Value __qmljs_builtin_typeof_member(Value base, String *name, ExecutionContext *context);
 Value __qmljs_builtin_typeof_element(Value base, Value index, ExecutionContext *context);
 
+Value __qmljs_builtin_post_increment(Value *val, ExecutionContext *ctx);
+Value __qmljs_builtin_post_increment_name(String *name, ExecutionContext *context);
+Value __qmljs_builtin_post_increment_member(Value base, String *name, ExecutionContext *context);
+Value __qmljs_builtin_post_increment_element(Value base, Value index, ExecutionContext *context);
+
+Value __qmljs_builtin_post_decrement(Value *val, ExecutionContext *ctx);
+Value __qmljs_builtin_post_decrement_name(String *name, ExecutionContext *context);
+Value __qmljs_builtin_post_decrement_member(Value base, String *name, ExecutionContext *context);
+Value __qmljs_builtin_post_decrement_element(Value base, Value index, ExecutionContext *context);
+
 void __qmljs_builtin_throw(Value val, ExecutionContext *context);
 void __qmljs_builtin_rethrow(ExecutionContext *context);
 ExecutionContext *__qmljs_builtin_push_with_scope(Value o, ExecutionContext *ctx);
