@@ -1095,17 +1095,12 @@ bool Codegen::visit(BinaryExpression *ast)
             condition(ast->right, _expr.iftrue, _expr.iffalse);
         } else {
             IR::BasicBlock *iftrue = _function->newBasicBlock();
-            IR::BasicBlock *iffalse = _function->newBasicBlock();
             IR::BasicBlock *endif = _function->newBasicBlock();
 
             const unsigned r = _block->newTemp();
 
-            condition(ast->left, iftrue, iffalse);
-            _block = iffalse;
-
-            move(_block->TEMP(r), _block->CONST(IR::BoolType, 0));
-            _block->JUMP(endif);
-
+            move(_block->TEMP(r), *expression(ast->left));
+            cjump(_block->TEMP(r), iftrue, endif);
             _block = iftrue;
             move(_block->TEMP(r), *expression(ast->right));
             _block->JUMP(endif);
