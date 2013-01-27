@@ -324,6 +324,8 @@ protected:
 
     virtual bool visit(FunctionExpression *ast)
     {
+        if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
+            _cg->throwSyntaxError(ast->identifierToken, QCoreApplication::translate("qv4codegen", "Function name may not be eval or arguments in strict mode"));
         enterFunction(ast, ast->name.toString(), ast->formals, ast->body);
         return true;
     }
@@ -346,6 +348,8 @@ protected:
 
     virtual bool visit(FunctionDeclaration *ast)
     {
+        if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
+            _cg->throwSyntaxError(ast->identifierToken, QCoreApplication::translate("qv4codegen", "Function name may not be eval or arguments in strict mode"));
         enterFunction(ast, ast->name.toString(), ast->formals, ast->body, ast);
         return true;
     }
