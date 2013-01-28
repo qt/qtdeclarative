@@ -46,7 +46,7 @@ namespace QQmlJS {
 namespace VM {
 
 
-int Value::toUInt16(ExecutionContext *ctx)
+int Value::toUInt16(ExecutionContext *ctx) const
 {
     return __qmljs_to_uint16(*this, ctx);
 }

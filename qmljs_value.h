@@ -198,8 +198,8 @@ struct Value
     static int toInt32(double value);
     static unsigned int toUInt32(double value);
 
-    int toUInt16(ExecutionContext *ctx);
-    int toInt32(ExecutionContext *ctx);
+    int toUInt16(ExecutionContext *ctx) const;
+    int toInt32(ExecutionContext *ctx) const;
     unsigned int toUInt32(ExecutionContext *ctx) const;
 
     Bool toBoolean(ExecutionContext *ctx) const;
@@ -343,7 +343,7 @@ inline Value Value::fromObject(Object *o)
     return v;
 }
 
-inline int Value::toInt32(ExecutionContext *ctx)
+inline int Value::toInt32(ExecutionContext *ctx) const
 {
     if (isConvertibleToInt())
         return int_32;
