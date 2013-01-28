@@ -69,6 +69,22 @@ Function::~Function()
     delete[] codeData;
 }
 
+FunctionObject::FunctionObject(ExecutionContext *scope)
+    : scope(scope)
+    , name(0)
+    , formalParameterList(0)
+    , varList(0)
+    , formalParameterCount(0)
+    , varCount(0)
+{
+    prototype = scope->engine->functionPrototype;
+
+    type = Type_FunctionObject;
+    needsActivation = false;
+    usesArgumentsObject = false;
+    strictMode = false;
+}
+
 bool FunctionObject::hasInstance(ExecutionContext *ctx, const Value &value)
 {
     if (! value.isObject())
@@ -320,8 +336,6 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
     pd->configurable = PropertyDescriptor::Disabled;
     pd->value = Value::fromObject(proto);
 
-    prototype = scope->engine->functionPrototype;
-
     if (scope->strictMode) {
         FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, __qmljs_throw_type_error);
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
@@ -365,8 +379,6 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     , boundThis(boundThis)
     , boundArgs(boundArgs)
 {
-    prototype = scope->engine->functionPrototype;
-
     int len = target->__get__(scope, scope->engine->id_length).toUInt32(scope);
     len -= boundArgs.size();
     if (len < 0)

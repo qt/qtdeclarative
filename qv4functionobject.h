@@ -136,19 +136,7 @@ struct FunctionObject: Object {
     unsigned int formalParameterCount;
     unsigned int varCount;
 
-    FunctionObject(ExecutionContext *scope)
-        : scope(scope)
-        , name(0)
-        , formalParameterList(0)
-        , varList(0)
-        , formalParameterCount(0)
-        , varCount(0)
-    {
-        type = Type_FunctionObject;
-        needsActivation = false;
-        usesArgumentsObject = false;
-        strictMode = false;
-    }
+    FunctionObject(ExecutionContext *scope);
 
     virtual QString className() { return QStringLiteral("Function"); }
     virtual bool hasInstance(ExecutionContext *ctx, const Value &value);
