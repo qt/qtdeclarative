@@ -1165,7 +1165,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceURightShift:
     case QSOperator::InplaceXor: {
         IR::Expr* right = *expression(ast->right);
-        if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember()))
+        if (!left->isLValue())
             throwSyntaxError(ast->operatorToken, QCoreApplication::translate("qv4codegen", "left-hand side of inplace operator is not an lvalue"));
 
         if (_expr.accept(nx)) {
