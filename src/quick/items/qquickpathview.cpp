@@ -42,6 +42,7 @@
 #include "qquickpathview_p.h"
 #include "qquickpathview_p_p.h"
 #include "qquickwindow.h"
+#include "qquickflickablebehavior_p.h" //Contains flicking behavior defines
 
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qqmlglobal_p.h>
@@ -55,22 +56,6 @@
 #include <QtGui/qstylehints.h>
 #include <QtCore/qmath.h>
 #include <math.h>
-
-// The number of samples to use in calculating the velocity of a flick
-#ifndef QML_FLICK_SAMPLEBUFFER
-#define QML_FLICK_SAMPLEBUFFER 1
-#endif
-
-// The number of samples to discard when calculating the flick velocity.
-// Touch panels often produce inaccurate results as the finger is lifted.
-#ifndef QML_FLICK_DISCARDSAMPLES
-#define QML_FLICK_DISCARDSAMPLES 0
-#endif
-
-// The default maximum velocity of a flick.
-#ifndef QML_FLICK_DEFAULTMAXVELOCITY
-#define QML_FLICK_DEFAULTMAXVELOCITY 2500
-#endif
 
 
 QT_BEGIN_NAMESPACE
