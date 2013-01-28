@@ -55,6 +55,9 @@ struct StringObject: Object {
     virtual QString className() { return QStringLiteral("String"); }
 
     PropertyDescriptor *getIndex(ExecutionContext *ctx, uint index);
+
+protected:
+    virtual void markObjects();
 };
 
 struct StringCtor: FunctionObject

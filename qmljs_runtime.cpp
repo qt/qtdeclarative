@@ -134,10 +134,10 @@ Function *__qmljs_register_function(ExecutionContext *ctx, String *name,
 
     for (unsigned i = 0; i < formalCount; ++i)
         if (formals[i])
-            f->formals.append(formals[i]->toQString());
+            f->formals.append(formals[i]);
     for (unsigned i = 0; i < localCount; ++i)
         if (locals[i])
-            f->locals.append(locals[i]->toQString());
+            f->locals.append(locals[i]);
 
     return f;
 }
@@ -741,7 +741,7 @@ Value __qmljs_call_activation_property(ExecutionContext *context, String *name, 
 
     Value thisObject = base ? Value::fromObject(base) : Value::undefinedValue();
 
-    if (o == context->engine->evalFunction && name == context->engine->id_eval)
+    if (o == context->engine->evalFunction && name->isEqualTo(context->engine->id_eval))
         return static_cast<EvalFunction *>(o)->evalCall(context, thisObject, args, argc, true);
 
     return o->call(context, thisObject, args, argc);

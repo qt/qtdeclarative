@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 #include <qmljs_engine.h>
+#include <qmljs_value.h>
 #include <qv4object.h>
 #include <qv4objectproto.h>
 #include <qv4arrayobject.h>
@@ -59,36 +60,16 @@
 namespace QQmlJS {
 namespace VM {
 
-class StringPool
-{
-    QHash<QString, String*> strings;
-public:
-    ~StringPool()
-    {
-        qDeleteAll(strings);
-    }
-
-    String *newString(const QString &s)
-    {
-        QHash<QString, String*>::const_iterator it = strings.find(s);
-        if (it != strings.end())
-            return it.value();
-        String *str = new String(s);
-        strings.insert(s, str);
-        return str;
-    }
-};
-
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : memoryManager(new QQmlJS::VM::MemoryManager)
     , iselFactory(factory)
     , debugger(0)
     , globalObject(Value::nullValue())
+    , globalCode(0)
     , exception(Value::nullValue())
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
-    stringPool.reset(new StringPool);
     memoryManager->setExecutionEngine(this);
 
     rootContext = newContext();
@@ -250,12 +231,12 @@ ExecutionContext *ExecutionEngine::newContext()
 
 String *ExecutionEngine::identifier(const QString &s)
 {
-    return stringPool->newString(s);
+    return new (memoryManager) String(s);
 }
 
 Function *ExecutionEngine::newFunction(const QString &name)
 {
-    VM::Function *f = new VM::Function(name);
+    VM::Function *f = new VM::Function(identifier(name));
     functions.append(f);
     return f;
 }
@@ -297,7 +278,7 @@ FunctionObject *ExecutionEngine::newObjectCtor(ExecutionContext *ctx)
 
 String *ExecutionEngine::newString(const QString &s)
 {
-    return stringPool->newString(s);
+    return new (memoryManager) String(s);
 }
 
 Object *ExecutionEngine::newStringObject(ExecutionContext *ctx, const Value &value)
@@ -465,6 +446,41 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
         pd.enumberable = PropertyDescriptor::Enabled;
         argumentsAccessors[i] = pd;
     }
+}
+
+void ExecutionEngine::markObjects()
+{
+    globalObject.mark();
+
+    if (globalCode)
+        globalCode->mark();
+
+    exception.mark();
+
+    for (int i = 0; i < argumentsAccessors.size(); ++i) {
+        const PropertyDescriptor &pd = argumentsAccessors.at(i);
+        pd.get->mark();
+        pd.set->mark();
+    }
+
+
+    for (int i = 0; i < functions.size(); ++i)
+        functions.at(i)->mark();
+
+    id_length->mark();
+    id_prototype->mark();
+    id_constructor->mark();
+    id_arguments->mark();
+    id_caller->mark();
+    id_this->mark();
+    id___proto__->mark();
+    id_enumerable->mark();
+    id_configurable->mark();
+    id_writable->mark();
+    id_value->mark();
+    id_get->mark();
+    id_set->mark();
+    id_eval->mark();
 }
 
 } // namespace VM

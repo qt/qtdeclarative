@@ -177,10 +177,11 @@ void Object::markObjects()
         for (PropertyTable::iterator it = members->begin(), eit = members->end(); it < eit; ++it) {
             if (!(*it))
                 continue;
+            (*it)->name->mark();
             PropertyDescriptor &pd = (*it)->descriptor;
             if (pd.isData()) {
-                if (Object *o = pd.value.asObject())
-                    o->mark();
+                if (Managed *m = pd.value.asManaged())
+                    m->mark();
             } else if (pd.isAccessor()) {
                 if (pd.get)
                     pd.get->mark();

@@ -106,6 +106,8 @@ struct ExecutionEngine
 
     Value globalObject;
 
+    VM::Function *globalCode;
+
     Value objectCtor;
     Value stringCtor;
     Value numberCtor;
@@ -167,7 +169,6 @@ struct ExecutionEngine
     QVector<ExceptionHandler> unwindStack;
     Value exception;
 
-    QScopedPointer<class StringPool> stringPool;
     QVector<Function *> functions;
 
     ExecutionEngine(EvalISelFactory *iselFactory);
@@ -222,6 +223,8 @@ struct ExecutionEngine
     Object *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
 
     void requireArgumentsAccessors(int n);
+
+    void markObjects();
 };
 
 } // namespace VM

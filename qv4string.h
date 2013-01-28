@@ -42,12 +42,15 @@
 #define QV4STRING_H
 
 #include <QtCore/qstring.h>
-#include <QtCore/QHash>
+#include <qv4managed.h>
 
 namespace QQmlJS {
 namespace VM {
 
-struct String {
+struct String : public Managed {
+    String(const QString &text)
+        : _text(text) { type = Type_String; stringHash = InvalidHashValue; }
+
     inline bool isEqualTo(const String *other) const {
         if (this == other)
             return true;
@@ -61,10 +64,10 @@ struct String {
     }
 
     inline unsigned hashValue() const {
-        if (_hashValue == InvalidHashValue)
+        if (stringHash == InvalidHashValue)
             createHashValue();
 
-        return _hashValue;
+        return stringHash;
     }
     enum {
         InvalidArrayIndex = 0xffffffff,
@@ -72,26 +75,21 @@ struct String {
         InvalidHashValue  = 0xffffffff
     };
     uint asArrayIndex() const {
-        if (_hashValue == InvalidHashValue)
+        if (stringHash == InvalidHashValue)
             createHashValue();
-        if (_hashValue > LargestHashedArrayIndex)
+        if (stringHash > LargestHashedArrayIndex)
             return InvalidArrayIndex;
-        if (_hashValue < LargestHashedArrayIndex)
-            return _hashValue;
+        if (stringHash < LargestHashedArrayIndex)
+            return stringHash;
         return asArrayIndexSlow();
     }
     uint asArrayIndexSlow() const;
     uint toUInt(bool *ok) const;
 
 private:
-    friend class StringPool;
-    String(const QString &text)
-        : _text(text), _hashValue(InvalidHashValue) {}
-
-private:
     void createHashValue() const;
+
     QString _text;
-    mutable unsigned _hashValue;
 };
 
 }

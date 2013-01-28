@@ -240,6 +240,7 @@ struct Value
         return b;
     }
 
+    Managed *asManaged() const;
     Object *asObject() const;
     FunctionObject *asFunctionObject() const;
     BooleanObject *asBooleanObject() const;
@@ -256,6 +257,12 @@ struct Value
 
     // Section 9.12
     bool sameValue(Value other) const;
+
+    void mark() const {
+        Managed *m = asManaged();
+        if (m)
+            m->mark();
+    }
 };
 
 inline Value Value::undefinedValue()
@@ -414,6 +421,13 @@ inline uint Value::asArrayLength(ExecutionContext *ctx, bool *ok) const
     return idx;
 }
 
+
+inline Managed *Value::asManaged() const
+{
+    if (isObject() || isString())
+        return managed();
+    return 0;
+}
 
 inline Object *Value::asObject() const
 {

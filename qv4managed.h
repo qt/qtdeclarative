@@ -51,6 +51,7 @@ namespace QQmlJS {
 namespace VM {
 
 class MemoryManager;
+struct String;
 struct Object;
 struct ObjectPrototype;
 struct ExecutionContext;
@@ -75,8 +76,19 @@ private:
     void operator = (const Managed &other);
 
 protected:
-    Managed() : markBit(0), inUse(1), extensible(true),
-        isNonStrictArgumentsObject(false), isBuiltinFunction(false), type(Type_Object), unused(0) { }
+    Managed()
+        : markBit(0)
+        , inUse(1)
+        , extensible(1)
+        , isNonStrictArgumentsObject(0)
+        , isBuiltinFunction(0)
+        , needsActivation(0)
+        , usesArgumentsObject(0)
+        , strictMode(0)
+        , type(Type_Invalid)
+        , unused(0)
+        , stringHash(0)
+    {}
     virtual ~Managed();
 
 public:
@@ -87,11 +99,14 @@ public:
         if (markBit)
             return;
         markBit = 1;
-        markObjects();
+        if (type != Type_String)
+            markObjects();
     }
 
     enum Type {
-        Type_Object = 0,
+        Type_Invalid,
+        Type_String,
+        Type_Object,
         Type_ArrayObject,
         Type_FunctionObject,
         Type_BooleanObject,
@@ -104,6 +119,7 @@ public:
         Type_ForeachIteratorObject
     };
 
+    String *asString() { return reinterpret_cast<String *>(this); }
     Object *asObject() { return reinterpret_cast<Object *>(this); }
     ArrayObject *asArrayObject() { return type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
     FunctionObject *asFunctionObject() { return type == Type_FunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
@@ -120,7 +136,7 @@ public:
     bool isStringObject() const { return type == Type_StringObject; }
 
 protected:
-    virtual void markObjects() = 0;
+    virtual void markObjects() {}
 
     union {
         Managed *nextFree;
@@ -134,25 +150,14 @@ protected:
             quintptr usesArgumentsObject : 1; // used by FunctionObject
             quintptr strictMode : 1; // used by FunctionObject
             quintptr type : 4;
-#if CPU(X86_64)
-            quintptr unused  : 51;
-#elif CPU(X86)
-            quintptr unused  : 19;
-#else
-#error "implement me"
-#endif
+            quintptr unused  : 20;
+            mutable quintptr stringHash : 32;
         };
     };
 
 private:
     friend class MemoryManager;
-    friend struct Object;
-    friend struct ObjectPrototype;
-    friend class Array;
-    friend struct ArrayPrototype;
-    friend struct FunctionObject;
     friend struct ExecutionContext;
-    friend struct ScriptFunction;
 };
 
 }

@@ -100,6 +100,12 @@ PropertyDescriptor *StringObject::getIndex(ExecutionContext *ctx, uint index)
     return &tmpProperty;
 }
 
+void StringObject::markObjects()
+{
+    value.stringValue()->mark();
+    Object::markObjects();
+}
+
 
 StringCtor::StringCtor(ExecutionContext *scope)
     : FunctionObject(scope)

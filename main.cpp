@@ -399,6 +399,7 @@ int main(int argc, char *argv[])
                                                                                 /*strictMode =*/ false, /*inheritContext =*/ false);
                 if (!f)
                     continue;
+                vm.globalCode = f;
 
                 ctx->strictMode = f->isStrict;
                 if (debugger)

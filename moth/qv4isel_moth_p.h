@@ -131,7 +131,10 @@ private:
     void patchJumpAddresses();
     uchar *squeezeCode() const;
 
+    VM::String *identifier(const QString &s);
+
     IR::Function *_function;
+    VM::Function *_vmFunction;
     IR::BasicBlock *_block;
 
     QHash<IR::BasicBlock *, QVector<ptrdiff_t> > _patches;

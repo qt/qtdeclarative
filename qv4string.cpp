@@ -41,6 +41,7 @@
 
 #include "qv4string.h"
 #include "qmljs_runtime.h"
+#include <QtCore/QHash>
 
 namespace QQmlJS {
 namespace VM {
@@ -71,8 +72,8 @@ static uint toArrayIndex(const QChar *ch, const QChar *end)
 
 uint String::asArrayIndexSlow() const
 {
-    if (_hashValue < LargestHashedArrayIndex)
-        return _hashValue;
+    if (stringHash < LargestHashedArrayIndex)
+        return stringHash;
 
     const QChar *ch = _text.constData();
     const QChar *end = ch + _text.length();
@@ -83,10 +84,10 @@ uint String::toUInt(bool *ok) const
 {
     *ok = true;
 
-    if (_hashValue == InvalidHashValue)
+    if (stringHash == InvalidHashValue)
         createHashValue();
-    if (_hashValue < LargestHashedArrayIndex)
-        return _hashValue;
+    if (stringHash < LargestHashedArrayIndex)
+        return stringHash;
 
     double d = __qmljs_string_to_number(this);
     uint l = (uint)d;
@@ -102,10 +103,10 @@ void String::createHashValue() const
     const QChar *end = ch + _text.length();
 
     // array indices get their number as hash value, for large numbers we set to INT_MAX
-    _hashValue = toArrayIndex(ch, end);
-    if (_hashValue < UINT_MAX) {
-        if (_hashValue > INT_MAX)
-            _hashValue = INT_MAX;
+    stringHash = toArrayIndex(ch, end);
+    if (stringHash < UINT_MAX) {
+        if (stringHash > INT_MAX)
+            stringHash = INT_MAX;
         return;
     }
 
@@ -116,7 +117,7 @@ void String::createHashValue() const
     }
 
     // set highest bit to mark it as a non number
-    _hashValue = h | 0xf0000000;
+    stringHash = h | 0xf0000000;
 }
 
 }

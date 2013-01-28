@@ -245,6 +245,7 @@ inline ALUFunction aluOpFunction(IR::AluOp op)
 InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module)
     : EvalInstructionSelection(engine, module)
     , _function(0)
+    , _vmFunction(0)
     , _block(0)
     , _codeStart(0)
     , _codeNext(0)
@@ -269,6 +270,7 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     uchar *codeEnd = codeStart + codeSize;
 
     qSwap(_function, function);
+    qSwap(_vmFunction, vmFunction);
     qSwap(block, _block);
     qSwap(patches, _patches);
     qSwap(addrs, _addrs);
@@ -295,10 +297,11 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
 
     patchJumpAddresses();
 
-    vmFunction->code = VME::exec;
-    vmFunction->codeData = squeezeCode();
+    _vmFunction->code = VME::exec;
+    _vmFunction->codeData = squeezeCode();
 
     qSwap(_function, function);
+    qSwap(_vmFunction, vmFunction);
     qSwap(block, _block);
     qSwap(patches, _patches);
     qSwap(addrs, _addrs);
@@ -323,7 +326,7 @@ void InstructionSelection::callProperty(IR::Temp *base, const QString &name, IR:
     // call the property on the loaded base
     Instruction::CallProperty call;
     call.base = getParam(base);
-    call.name = engine()->newString(name);
+    call.name = identifier(name);
     prepareCallArgs(args, call.argc, call.args);
     call.result = getResultParam(result);
     addInstruction(call);
@@ -345,7 +348,7 @@ void InstructionSelection::constructActivationProperty(IR::Name *func,
                                                        IR::Temp *result)
 {
     Instruction::CreateActivationProperty create;
-    create.name = engine()->newString(*func->id);
+    create.name = identifier(*func->id);
     prepareCallArgs(args, create.argc, create.args);
     create.result = getResultParam(result);
     addInstruction(create);
@@ -355,7 +358,7 @@ void InstructionSelection::constructProperty(IR::Temp *base, const QString &name
 {
     Instruction::CreateProperty create;
     create.base = getParam(base);
-    create.name = engine()->newString(name);
+    create.name = identifier(name);
     prepareCallArgs(args, create.argc, create.args);
     create.result = getResultParam(result);
     addInstruction(create);
@@ -390,7 +393,7 @@ void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Temp *targetTem
 void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
 {
     Instruction::LoadValue load;
-    load.value = Instr::Param::createValue(VM::Value::fromString(engine()->newString(str)));
+    load.value = Instr::Param::createValue(VM::Value::fromString(identifier(str)));
     load.result = getResultParam(targetTemp);
     addInstruction(load);
 }
@@ -409,7 +412,7 @@ void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *target
 void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *temp)
 {
     Instruction::LoadName load;
-    load.name = engine()->newString(name);
+    load.name = identifier(name);
     load.result = getResultParam(temp);
     addInstruction(load);
 }
@@ -418,7 +421,7 @@ void InstructionSelection::setActivationProperty(IR::Expr *source, const QString
 {
     Instruction::StoreName store;
     store.source = getParam(source);
-    store.name = engine()->newString(targetName);
+    store.name = identifier(targetName);
     addInstruction(store);
 }
 
@@ -436,7 +439,7 @@ void InstructionSelection::getProperty(IR::Temp *base, const QString &name, IR::
 {
     Instruction::LoadProperty load;
     load.base = getParam(base);
-    load.name = engine()->newString(name);
+    load.name = identifier(name);
     load.result = getResultParam(target);
     addInstruction(load);
 }
@@ -445,7 +448,7 @@ void InstructionSelection::setProperty(IR::Expr *source, IR::Temp *targetBase, c
 {
     Instruction::StoreProperty store;
     store.base = getParam(targetBase);
-    store.name = engine()->newString(targetName);
+    store.name = identifier(targetName);
     store.source = getParam(source);
     addInstruction(store);
 }
@@ -532,7 +535,7 @@ void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, c
     if (op) {
         Instruction::InplaceNameOp ieo;
         ieo.alu = op;
-        ieo.name = engine()->newString(targetName);
+        ieo.name = identifier(targetName);
         ieo.source = getParam(sourceExpr);
         addInstruction(ieo);
     }
@@ -585,7 +588,7 @@ void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR:
     Instruction::InplaceMemberOp imo;
     imo.alu = op;
     imo.base = getParam(targetBase);
-    imo.member = engine()->newString(targetName);
+    imo.member = identifier(targetName);
     imo.source = getParam(source);
     addInstruction(imo);
 }
@@ -676,7 +679,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
 void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result)
 {
     Instruction::CallActivationProperty call;
-    call.name = engine()->newString(*func->id);
+    call.name = identifier(*func->id);
     prepareCallArgs(args, call.argc, call.args);
     call.result = getResultParam(result);
     addInstruction(call);
@@ -686,7 +689,7 @@ void InstructionSelection::callBuiltinTypeofMember(IR::Temp *base, const QString
 {
     Instruction::CallBuiltinTypeofMember call;
     call.base = getParam(base);
-    call.member = engine()->identifier(name);
+    call.member = identifier(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -703,7 +706,7 @@ void InstructionSelection::callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *
 void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *result)
 {
     Instruction::CallBuiltinTypeofName call;
-    call.name = engine()->identifier(name);
+    call.name = identifier(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -720,7 +723,7 @@ void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString
 {
     Instruction::CallBuiltinDeleteMember call;
     call.base = getParam(base);
-    call.member = engine()->newString(name);
+    call.member = identifier(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -737,7 +740,7 @@ void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *
 void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *result)
 {
     Instruction::CallBuiltinDeleteName call;
-    call.name = engine()->newString(name);
+    call.name = identifier(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -754,7 +757,7 @@ void InstructionSelection::callBuiltinPostDecrementMember(IR::Temp *base, const 
 {
     Instruction::CallBuiltinPostDecMember call;
     call.base = getParam(base);
-    call.member = engine()->identifier(name);
+    call.member = identifier(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -771,7 +774,7 @@ void InstructionSelection::callBuiltinPostDecrementSubscript(IR::Temp *base, IR:
 void InstructionSelection::callBuiltinPostDecrementName(const QString &name, IR::Temp *result)
 {
     Instruction::CallBuiltinPostDecName call;
-    call.name = engine()->identifier(name);
+    call.name = identifier(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -788,7 +791,7 @@ void InstructionSelection::callBuiltinPostIncrementMember(IR::Temp *base, const 
 {
     Instruction::CallBuiltinPostIncMember call;
     call.base = getParam(base);
-    call.member = engine()->identifier(name);
+    call.member = identifier(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -805,7 +808,7 @@ void InstructionSelection::callBuiltinPostIncrementSubscript(IR::Temp *base, IR:
 void InstructionSelection::callBuiltinPostIncrementName(const QString &name, IR::Temp *result)
 {
     Instruction::CallBuiltinPostIncName call;
-    call.name = engine()->identifier(name);
+    call.name = identifier(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -878,7 +881,7 @@ void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &
 {
     Instruction::CallBuiltinDeclareVar call;
     call.isDeletable = deletable;
-    call.varName = engine()->newString(name);
+    call.varName = identifier(name);
     addInstruction(call);
 }
 
@@ -886,7 +889,7 @@ void InstructionSelection::callBuiltinDefineGetterSetter(IR::Temp *object, const
 {
     Instruction::CallBuiltinDefineGetterSetter call;
     call.object = getParam(object);
-    call.name = engine()->newString(name);
+    call.name = identifier(name);
     call.getter = getParam(getter);
     call.setter = getParam(setter);
     addInstruction(call);
@@ -896,7 +899,7 @@ void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QSt
 {
     Instruction::CallBuiltinDefineProperty call;
     call.object = getParam(object);
-    call.name = engine()->newString(name);
+    call.name = identifier(name);
     call.value = getParam(value);
     addInstruction(call);
 }
@@ -962,4 +965,11 @@ uchar *InstructionSelection::squeezeCode() const
     uchar *squeezed = new uchar[codeSize];
     ::memcpy(squeezed, _codeStart, codeSize);
     return squeezed;
+}
+
+VM::String *InstructionSelection::identifier(const QString &s)
+{
+    VM::String *str = engine()->identifier(s);
+    _vmFunction->identifiers.append(str);
+    return str;
 }

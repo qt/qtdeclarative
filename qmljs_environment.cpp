@@ -277,6 +277,21 @@ bool ExecutionContext::deleteProperty(String *name)
     return true;
 }
 
+void ExecutionContext::mark()
+{
+    thisObject.mark();
+    if (function)
+        function->mark();
+    for (unsigned arg = 0, lastArg = formalCount(); arg < lastArg; ++arg)
+        arguments[arg].mark();
+    for (unsigned local = 0, lastLocal = variableCount(); local < lastLocal; ++local)
+        locals[local].mark();
+    if (activation)
+        activation->mark();
+    if (withObject)
+        withObject->mark();
+}
+
 void ExecutionContext::setProperty(String *name, Value value)
 {
 //    qDebug() << "=== SetProperty" << value.toString(this)->toQString();
@@ -294,14 +309,14 @@ void ExecutionContext::setProperty(String *name, Value value)
                 return;
         }
     }
-    if (strictMode || name == engine->id_this)
+    if (strictMode || name->isEqualTo(engine->id_this))
         throwReferenceError(Value::fromString(name));
     engine->globalObject.objectValue()->__put__(this, name, value);
 }
 
 Value ExecutionContext::getProperty(String *name)
 {
-    if (name == engine->id_this)
+    if (name->isEqualTo(engine->id_this))
         return thisObject;
 
     bool hasWith = false;
@@ -342,7 +357,7 @@ Value ExecutionContext::getProperty(String *name)
 
 Value ExecutionContext::getPropertyNoThrow(String *name)
 {
-    if (name == engine->id_this)
+    if (name->isEqualTo(engine->id_this))
         return thisObject;
 
     bool hasWith = false;
@@ -380,7 +395,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
 {
     *base = 0;
 
-    if (name == engine->id_this)
+    if (name->isEqualTo(engine->id_this))
         return thisObject;
 
     bool hasWith = false;

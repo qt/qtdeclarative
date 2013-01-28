@@ -46,10 +46,10 @@ VM::Function *EvalInstructionSelection::createFunctionMapping(VM::ExecutionEngin
 
     foreach (const QString *formal, irFunction->formals)
         if (formal)
-            vmFunction->formals.append(*formal);
+            vmFunction->formals.append(engine->identifier(*formal));
     foreach (const QString *local, irFunction->locals)
         if (local)
-            vmFunction->locals.append(*local);
+            vmFunction->locals.append(engine->identifier(*local));
 
     foreach (IR::Function *function, irFunction->nestedFunctions)
         createFunctionMapping(engine, function);

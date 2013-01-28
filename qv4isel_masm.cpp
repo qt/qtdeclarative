@@ -606,7 +606,7 @@ void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Temp *targetTem
 
 void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
 {
-    Value v = Value::fromString(engine()->newString(str));
+    Value v = Value::fromString(identifier(str));
     _asm->storeValue(v, targetTemp);
 }
 
@@ -793,7 +793,9 @@ void InstructionSelection::callSubscript(IR::Temp *base, IR::Temp *index, IR::Ex
 
 String *InstructionSelection::identifier(const QString &s)
 {
-    return engine()->identifier(s);
+    String *str = engine()->identifier(s);
+    _vmFunction->identifiers.append(str);
+    return str;
 }
 
 void InstructionSelection::constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result)

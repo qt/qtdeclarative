@@ -69,6 +69,21 @@ Function::~Function()
     delete[] codeData;
 }
 
+void Function::mark()
+{
+    if (name)
+        name->mark();
+    for (int i = 0; i < formals.size(); ++i)
+        formals.at(i)->mark();
+    for (int i = 0; i < locals.size(); ++i)
+        locals.at(i)->mark();
+    for (int i = 0; i < generatedValues.size(); ++i)
+        if (Managed *m = generatedValues.at(i).asManaged())
+            m->mark();
+    for (int i = 0; i < identifiers.size(); ++i)
+        identifiers.at(i)->mark();
+}
+
 FunctionObject::FunctionObject(ExecutionContext *scope)
     : scope(scope)
     , name(0)
@@ -144,6 +159,18 @@ Value FunctionObject::call(ExecutionContext *context, Value thisObject, Value *a
     Value result = call(ctx);
     ctx->leaveCallContext();
     return result;
+}
+
+void FunctionObject::markObjects()
+{
+    if (name)
+        name->mark();
+    for (uint i = 0; i < formalParameterCount; ++i)
+        formalParameterList[i]->mark();
+    for (uint i = 0; i < varCount; ++i)
+        varList[i]->mark();
+    scope->mark();
+    Object::markObjects();
 }
 
 Value FunctionObject::call(ExecutionContext *ctx)
@@ -305,25 +332,26 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
 
     MemoryManager::GCBlocker gcBlocker(scope->engine->memoryManager);
 
-    if (!function->name.isEmpty())
-        name = scope->engine->identifier(function->name);
+    name = function->name;
     needsActivation = function->needsActivation();
     usesArgumentsObject = function->usesArgumentsObject;
     strictMode = function->isStrict;
     formalParameterCount = function->formals.size();
+    // ### no need to copy
     if (formalParameterCount) {
         formalParameterList = new String*[formalParameterCount];
         for (unsigned int i = 0; i < formalParameterCount; ++i) {
-            formalParameterList[i] = scope->engine->identifier(function->formals.at(i));
+            formalParameterList[i] = function->formals.at(i);
         }
     }
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(formalParameterCount));
 
     varCount = function->locals.size();
+    // ### no need to copy
     if (varCount) {
         varList = new String*[varCount];
         for (unsigned int i = 0; i < varCount; ++i) {
-            varList[i] = scope->engine->identifier(function->locals.at(i));
+            varList[i] = function->locals.at(i);
         }
     }
 
@@ -356,6 +384,12 @@ Value ScriptFunction::call(VM::ExecutionContext *ctx)
 {
     assert(function->code);
     return function->code(ctx, function->codeData);
+}
+
+void ScriptFunction::markObjects()
+{
+    function->mark();
+    FunctionObject::markObjects();
 }
 
 
@@ -419,10 +453,10 @@ bool BoundFunction::hasInstance(ExecutionContext *ctx, const Value &value)
 void BoundFunction::markObjects()
 {
     target->mark();
-    if (Object *o = boundThis.asObject())
-        o->mark();
+    if (Managed *m = boundThis.asManaged())
+        m->mark();
     for (int i = 0; i < boundArgs.size(); ++i)
-        if (Object *o = boundArgs.at(i).asObject())
-            o->mark();
+        if (Managed *m = boundArgs.at(i).asManaged())
+            m->mark();
     FunctionObject::markObjects();
 }

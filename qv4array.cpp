@@ -634,8 +634,8 @@ void Array::markObjects() const
     for (; i < (uint)values.size(); ++i) {
         const PropertyDescriptor &pd = values.at(i);
         if (pd.isData()) {
-            if (Object *o = pd.value.asObject())
-                o->mark();
+            if (Managed *m = pd.value.asManaged())
+                m->mark();
          } else if (pd.isAccessor()) {
             if (pd.get)
                 pd.get->mark();

@@ -121,9 +121,9 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 void ArgumentsObject::markObjects()
 {
     for (int i = 0; i < mappedArguments.size(); ++i) {
-        Object *o = mappedArguments.at(i).asObject();
-        if (o)
-            o->mark();
+        Managed *m = mappedArguments.at(i).asManaged();
+        if (m)
+            m->mark();
     }
     Object::markObjects();
 }

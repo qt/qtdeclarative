@@ -104,8 +104,6 @@ protected:
 
     void scribble(Managed *obj, int c, int size) const;
 
-    void collectRootsOnStack(QVector<Managed *> &roots) const;
-
     ExecutionEngine *engine() const;
 
 #ifdef DETAILED_MM_STATS
@@ -113,8 +111,8 @@ protected:
 #endif // DETAILED_MM_STATS
 
 private:
-    void collectRoots(QVector<VM::Managed *> &roots) const;
-    static void mark(const QVector<Managed *> &objects);
+    void collectFromStack() const;
+    void mark();
     std::size_t sweep();
     std::size_t sweep(char *chunkStart, std::size_t chunkSize, size_t size);
 

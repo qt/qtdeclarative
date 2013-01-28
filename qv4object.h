@@ -104,7 +104,7 @@ struct Object: Managed {
     Array array;
 
     Object()
-        : prototype(0) {}
+        : prototype(0) { type = Type_Object; }
     Object(const Array &a)
         : prototype(0), array(a) {}
 

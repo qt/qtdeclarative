@@ -99,22 +99,23 @@ struct TypeErrorPrototype;
 struct URIErrorPrototype;
 
 struct Function {
-    QString name;
+    String *name;
 
     VM::Value (*code)(VM::ExecutionContext *, const uchar *);
     const uchar *codeData;
     JSC::MacroAssemblerCodeRef codeRef;
 
-    QList<QString> formals;
-    QList<QString> locals;
+    QList<String *> formals;
+    QList<String *> locals;
     QVector<Value> generatedValues;
+    QVector<String *> identifiers;
 
     bool hasNestedFunctions  : 1;
     bool hasDirectEval       : 1;
     bool usesArgumentsObject : 1;
     bool isStrict            : 1;
 
-    Function(const QString &name)
+    Function(String *name)
         : name(name)
         , code(0)
         , codeData(0)
@@ -126,6 +127,8 @@ struct Function {
     ~Function();
 
     inline bool needsActivation() const { return hasNestedFunctions || hasDirectEval || usesArgumentsObject; }
+
+    void mark();
 };
 
 struct FunctionObject: Object {
@@ -145,6 +148,8 @@ struct FunctionObject: Object {
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 
     virtual struct ScriptFunction *asScriptFunction() { return 0; }
+
+    virtual void markObjects();
 
 protected:
     virtual Value call(ExecutionContext *ctx);
@@ -187,6 +192,8 @@ struct ScriptFunction: FunctionObject {
     virtual Value call(ExecutionContext *ctx);
 
     virtual ScriptFunction *asScriptFunction() { return this; }
+
+    virtual void markObjects();
 };
 
 struct BoundFunction: FunctionObject {

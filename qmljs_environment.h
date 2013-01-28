@@ -133,6 +133,8 @@ struct ExecutionContext
             return arguments[index];
         return Value::undefinedValue();
     }
+
+    void mark();
 };
 
 

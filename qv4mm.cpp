@@ -142,6 +142,7 @@ Managed *MemoryManager::alloc(std::size_t size)
         qSort(m_d->heapChunks);
         char *chunk = (char *)allocation.memory.base();
         char *end = chunk + allocation.memory.size() - size;
+        memset(chunk, 0, allocation.memory.size());
         Managed **last = &m_d->smallItems[pos];
         while (chunk <= end) {
             Managed *o = reinterpret_cast<Managed *>(chunk);
@@ -166,13 +167,17 @@ void MemoryManager::scribble(Managed *obj, int c, int size) const
         ::memset((void *)(obj + 1), c, size - sizeof(Managed));
 }
 
-void MemoryManager::mark(const QVector<Managed *> &objects)
+void MemoryManager::mark()
 {
-    foreach (Managed *m, objects) {
-        if (!m)
-            continue;
-        m->mark();
-    }
+    m_d->engine->markObjects();
+
+    for (ExecutionContext *ctxt = engine()->current; ctxt; ctxt = ctxt->parent)
+        ctxt->mark();
+
+    for (QHash<Managed *, uint>::const_iterator it = m_d->protectedObject.begin(); it != m_d->protectedObject.constEnd(); ++it)
+        it.key()->mark();
+
+    collectFromStack();
 
     return;
 }
@@ -240,14 +245,8 @@ void MemoryManager::runGC()
 //    QTime t; t.start();
 
 //    qDebug() << ">>>>>>>>runGC";
-    QVector<Managed *> roots;
-    collectRoots(roots);
-//    std::cerr << "GC: found " << roots.size()
-//              << " roots in " << t.elapsed()
-//              << "ms" << std::endl;
 
-//    t.restart();
-    /*std::size_t marks =*/ mark(roots);
+    mark();
 //    std::cerr << "GC: marked " << marks
 //              << " objects in " << t.elapsed()
 //              << "ms" << std::endl;
@@ -322,64 +321,33 @@ void MemoryManager::willAllocate(std::size_t size)
 
 #endif // DETAILED_MM_STATS
 
-void MemoryManager::collectRoots(QVector<Managed *> &roots) const
-{
-    add(roots, m_d->engine->globalObject);
-    add(roots, m_d->engine->exception);
-
-    for (int i = 0; i < m_d->engine->argumentsAccessors.size(); ++i) {
-        const PropertyDescriptor &pd = m_d->engine->argumentsAccessors.at(i);
-        add(roots, Value::fromObject(pd.get));
-        add(roots, Value::fromObject(pd.set));
-    }
-
-    for (ExecutionContext *ctxt = engine()->current; ctxt; ctxt = ctxt->parent) {
-        add(roots, ctxt->thisObject);
-        if (ctxt->function)
-            roots.append(ctxt->function);
-        for (unsigned arg = 0, lastArg = ctxt->formalCount(); arg < lastArg; ++arg)
-            add(roots, ctxt->arguments[arg]);
-        for (unsigned local = 0, lastLocal = ctxt->variableCount(); local < lastLocal; ++local)
-            add(roots, ctxt->locals[local]);
-        if (ctxt->activation)
-            roots.append(ctxt->activation);
-        if (ctxt->withObject)
-            roots.append(ctxt->withObject);
-    }
-
-    for (int i = 0; i < m_d->engine->functions.size(); ++i) {
-        Function* f = m_d->engine->functions.at(i);
-        for (int k = 0; k < f->generatedValues.count(); ++k)
-            add(roots, f->generatedValues.at(k));
-    }
-
-    collectRootsOnStack(roots);
-
-    for (QHash<Managed *, uint>::const_iterator it = m_d->protectedObject.begin(); it != m_d->protectedObject.constEnd(); ++it)
-        roots.append(it.key());
-}
-
-void MemoryManager::collectRootsOnStack(QVector<VM::Managed *> &roots) const
+void MemoryManager::collectFromStack() const
 {
     if (!m_d->heapChunks.count())
         return;
 
-    Value valueOnStack = Value::undefinedValue();
+    quintptr valueOnStack = 0;
 
-    void* stackTop = 0;
 #if USE(PTHREADS)
 #if OS(DARWIN)
+    void* stackTop = 0;
     stackTop = pthread_get_stackaddr_np(pthread_self());
+    quintptr *top = static_cast<quintptr *>(stackTop);
 #else
+    void* stackBottom = 0;
     pthread_attr_t attr;
     pthread_getattr_np(pthread_self(), &attr);
     size_t stackSize = 0;
-    pthread_attr_getstack(&attr, &stackTop, &stackSize);
-#endif
-#endif
+    pthread_attr_getstack(&attr, &stackBottom, &stackSize);
+    pthread_attr_destroy(&attr);
 
-    Value* top = reinterpret_cast<Value*>(stackTop) - 1;
-    Value* current = (&valueOnStack) + 1;
+    quintptr *top = static_cast<quintptr *>(stackBottom) + stackSize/sizeof(quintptr);
+#endif
+#endif
+//    qDebug() << "stack:" << hex << stackTop << stackSize << (stackTop + stackSize);
+
+    quintptr *current = (&valueOnStack) + 1;
+//    qDebug() << "collectFromStack" << top << current << &valueOnStack;
 
     char** heapChunkBoundaries = (char**)alloca(m_d->heapChunks.count() * 2 * sizeof(char*));
     char** heapChunkBoundariesEnd = heapChunkBoundaries + 2 * m_d->heapChunks.count();
@@ -391,18 +359,21 @@ void MemoryManager::collectRootsOnStack(QVector<VM::Managed *> &roots) const
     }
 
     for (; current < top; ++current) {
-        Object* possibleObject = current->asObject();
-        if (!possibleObject)
-            continue;
+        char* genericPtr =
+#if CPU(X86_64)
+                reinterpret_cast<char *>((*current) & ~(quint64(Value::Type_Mask) << Value::Tag_Shift));
+#else
+                reinterpret_cast<char *>(*current);
+#endif
 
-        char* genericPtr = reinterpret_cast<char*>(possibleObject);
         if (genericPtr < *heapChunkBoundaries || genericPtr >= *(heapChunkBoundariesEnd - 1))
             continue;
         int index = qLowerBound(heapChunkBoundaries, heapChunkBoundariesEnd, genericPtr) - heapChunkBoundaries;
         // An odd index means the pointer is _before_ the end of a heap chunk and therefore valid.
         if (index & 1) {
             int size = m_d->heapChunks.at(index >> 1).chunkSize;
-            Managed *m = possibleObject;
+            Managed *m = reinterpret_cast<Managed *>(genericPtr);
+//            qDebug() << "   inside" << size << m;
 
             if (((quintptr)m - (quintptr)heapChunkBoundaries[index-1]) % size)
                 // wrongly aligned value, skip it
@@ -412,7 +383,8 @@ void MemoryManager::collectRootsOnStack(QVector<VM::Managed *> &roots) const
                 // Skip pointers to already freed objects, they are bogus as well
                 continue;
 
-            roots.append(possibleObject);
+            m->mark();
+//            qDebug() << "       marking";
         }
     }
 }
