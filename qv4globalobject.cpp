@@ -311,6 +311,7 @@ EvalFunction::EvalFunction(ExecutionContext *scope)
     : FunctionObject(scope)
 {
     name = scope->engine->id_eval;
+    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
 }
 
 Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc, bool directCall)
