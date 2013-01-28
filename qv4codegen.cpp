@@ -726,10 +726,6 @@ void Codegen::statement(ExpressionNode *ast)
 {
     if (! ast) {
         return;
-    } else if (_mode == EvalCode) {
-        Result e = expression(ast);
-        if (*e)
-            move(_block->TEMP(_returnAddress), *e);
     } else {
         Result r(nx);
         qSwap(_expr, r);
@@ -2091,7 +2087,13 @@ bool Codegen::visit(EmptyStatement *)
 
 bool Codegen::visit(ExpressionStatement *ast)
 {
-    statement(ast->expression);
+    if (_mode == EvalCode) {
+        Result e = expression(ast->expression);
+        if (*e)
+            move(_block->TEMP(_returnAddress), *e);
+    } else {
+        statement(ast->expression);
+    }
     return false;
 }
 
