@@ -64,6 +64,7 @@ struct MemoryManager::Data
     };
 
     QVector<Chunk> heapChunks;
+    QHash<Managed *, uint> protectedObject;
 
     // statistics:
 #ifdef DETAILED_MM_STATS
@@ -165,12 +166,12 @@ void MemoryManager::scribble(Managed *obj, int c, int size) const
         ::memset((void *)(obj + 1), c, size - sizeof(Managed));
 }
 
-void MemoryManager::mark(const QVector<Object *> &objects)
+void MemoryManager::mark(const QVector<Managed *> &objects)
 {
-    foreach (Object *o, objects) {
-        if (!o)
+    foreach (Managed *m, objects) {
+        if (!m)
             continue;
-        o->mark();
+        m->mark();
     }
 
     return;
@@ -239,7 +240,7 @@ void MemoryManager::runGC()
 //    QTime t; t.start();
 
 //    qDebug() << ">>>>>>>>runGC";
-    QVector<Object *> roots;
+    QVector<Managed *> roots;
     collectRoots(roots);
 //    std::cerr << "GC: found " << roots.size()
 //              << " roots in " << t.elapsed()
@@ -268,7 +269,18 @@ MemoryManager::~MemoryManager()
     sweep();
 }
 
-static inline void add(QVector<Object *> &values, const Value &v)
+void MemoryManager::protect(Managed *m)
+{
+    ++m_d->protectedObject[m];
+}
+
+void MemoryManager::unprotect(Managed *m)
+{
+    if (!--m_d->protectedObject[m])
+        m_d->protectedObject.remove(m);
+}
+
+static inline void add(QVector<Managed *> &values, const Value &v)
 {
     if (Object *o = v.asObject())
         values.append(o);
@@ -310,7 +322,7 @@ void MemoryManager::willAllocate(std::size_t size)
 
 #endif // DETAILED_MM_STATS
 
-void MemoryManager::collectRoots(QVector<VM::Object *> &roots) const
+void MemoryManager::collectRoots(QVector<Managed *> &roots) const
 {
     add(roots, m_d->engine->globalObject);
     add(roots, m_d->engine->exception);
@@ -342,9 +354,12 @@ void MemoryManager::collectRoots(QVector<VM::Object *> &roots) const
     }
 
     collectRootsOnStack(roots);
+
+    for (QHash<Managed *, uint>::const_iterator it = m_d->protectedObject.begin(); it != m_d->protectedObject.constEnd(); ++it)
+        roots.append(it.key());
 }
 
-void MemoryManager::collectRootsOnStack(QVector<VM::Object *> &roots) const
+void MemoryManager::collectRootsOnStack(QVector<VM::Managed *> &roots) const
 {
     if (!m_d->heapChunks.count())
         return;

@@ -73,6 +73,9 @@ public:
     MemoryManager();
     ~MemoryManager();
 
+    void protect(Managed *m);
+    void unprotect(Managed *m);
+
     // TODO: this is only for 64bit (and x86 with SSE/AVX), so exend it for other architectures to be slightly more efficient (meaning, align on 8-byte boundaries).
     // Note: all occurances of "16" in alloc/dealloc are also due to the alignment.
     static inline std::size_t align(std::size_t size)
@@ -101,7 +104,7 @@ protected:
 
     void scribble(Managed *obj, int c, int size) const;
 
-    void collectRootsOnStack(QVector<VM::Object *> &roots) const;
+    void collectRootsOnStack(QVector<Managed *> &roots) const;
 
     ExecutionEngine *engine() const;
 
@@ -110,8 +113,8 @@ protected:
 #endif // DETAILED_MM_STATS
 
 private:
-    void collectRoots(QVector<VM::Object *> &roots) const;
-    static void mark(const QVector<Object *> &objects);
+    void collectRoots(QVector<VM::Managed *> &roots) const;
+    static void mark(const QVector<Managed *> &objects);
     std::size_t sweep();
     std::size_t sweep(char *chunkStart, std::size_t chunkSize, size_t size);
 
