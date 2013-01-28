@@ -38,7 +38,7 @@
     \snippet particles/imageparticle/content/allatonce.qml 0
 
     Colored shows a simple ImageParticle with some color variation.
-    \snippet particles/imageparticle/content/colored.qml 0
+    \snippet quick/particles/imageparticle/content/colored.qml 0
 
     Color Table sets the color over life on the particles to provide a fixed rainbow effect.
     \snippet particles/imageparticle/content/colortable.qml 0
