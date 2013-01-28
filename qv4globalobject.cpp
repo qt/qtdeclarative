@@ -370,6 +370,12 @@ Value EvalFunction::call(ExecutionContext *context, Value thisObject, Value *arg
     return evalCall(context, thisObject, args, argc, false);
 }
 
+Value EvalFunction::construct(ExecutionContext *ctx)
+{
+    ctx->throwTypeError();
+    return Value::undefinedValue();
+}
+
 QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ctx,
                                                 const QString &fileName, const QString &source,
                                                 QQmlJS::Codegen::Mode mode,
