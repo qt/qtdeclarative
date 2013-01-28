@@ -199,7 +199,6 @@ public:
         addPtr(TrustedImm32(ptr.offset), ptr.base, dest);
     }
 
-#ifdef VALUE_FITS_IN_REGISTER
     void loadArgument(PointerToValue temp, RegisterID dest)
     {
         assert(temp.value);
@@ -208,6 +207,7 @@ public:
         loadArgument(addr, dest);
     }
 
+#ifdef VALUE_FITS_IN_REGISTER
     void loadArgument(IR::Temp* temp, RegisterID dest)
     {
         if (!temp) {
