@@ -219,7 +219,7 @@ Because we don't want the text to appear at the bottom instantly but rather move
 we add a transition between our two states.
 
 \c from and \c to define the states between which the transition will run.
-In this case, we want a transition from the default state to our \li down state.
+In this case, we want a transition from the default state to our \e down state.
 
 Because we want the same transition to be run in reverse when changing back from the \e down state to the default state,
 we set \c reversible to \c true.
