@@ -55,6 +55,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QString>
 #include <iostream>
+#include <alloca.h>
 
 using namespace QQmlJS::VM;
 
@@ -342,10 +343,11 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
 
     bool strict = f->isStrict || (directCall && context->strictMode);
 
-    ExecutionContext k;
+    uint size = requiredMemoryForExecutionContect(this, argc);
+    ExecutionContext *k = static_cast<ExecutionContext *>(alloca(size));
 
     if (strict) {
-        ctx = &k;
+        ctx = k;
         ctx->initCallContext(context, context->thisObject, this, args, argc);
     }
 

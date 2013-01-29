@@ -135,8 +135,12 @@ struct ExecutionContext
     }
 
     void mark();
+
 };
 
+/* Function *f, int argc */
+#define requiredMemoryForExecutionContect(f, argc) \
+    sizeof(ExecutionContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount))
 
 
 } // namespace VM

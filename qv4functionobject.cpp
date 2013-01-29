@@ -131,8 +131,8 @@ Value FunctionObject::construct(ExecutionContext *context, Value *args, int argc
     if (proto.isObject())
         obj->prototype = proto.objectValue();
 
-    ExecutionContext k;
-    ExecutionContext *ctx = needsActivation ? context->engine->newContext() : &k;
+    uint size = requiredMemoryForExecutionContect(this, argc);
+    ExecutionContext *ctx = static_cast<ExecutionContext *>(needsActivation ? malloc(size) : alloca(size));
 
     ctx->initCallContext(context, Value::fromObject(obj), this, args, argc);
     Value result = construct(ctx);
@@ -145,8 +145,9 @@ Value FunctionObject::construct(ExecutionContext *context, Value *args, int argc
 
 Value FunctionObject::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
 {
-    ExecutionContext k;
-    ExecutionContext *ctx = needsActivation ? context->engine->newContext() : &k;
+    uint size = requiredMemoryForExecutionContect(this, argc);
+    ExecutionContext *ctx = static_cast<ExecutionContext *>(needsActivation ? malloc(size) : alloca(size));
+
 
     ctx->initCallContext(context, thisObject, this, args, argc);
     if (isBuiltinFunction) {

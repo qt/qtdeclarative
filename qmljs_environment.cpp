@@ -507,20 +507,21 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
             thisObject = thisObject.toObject(this);
     }
 
+    locals = function->varCount ? reinterpret_cast<Value *>(this + 1) : 0;
+    if (locals)
+        std::fill(locals, locals + function->varCount, Value::undefinedValue());
+
     arguments = args;
     argumentCount = argc;
     if (function->needsActivation || argc < function->formalParameterCount){
         argumentCount = qMax(argc, function->formalParameterCount);
-        arguments = new Value[argumentCount];
+        arguments = reinterpret_cast<Value *>(this + 1) + function->varCount;
         if (argc)
             std::copy(args, args + argc, arguments);
         if (argc < function->formalParameterCount)
             std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
     }
 
-    locals = function->varCount ? new Value[function->varCount] : 0;
-    if (locals)
-        std::fill(locals, locals + function->varCount, Value::undefinedValue());
 
     activation = 0;
     withObject = 0;
@@ -539,10 +540,8 @@ void ExecutionContext::initCallContext(ExecutionContext *parent, const Value tha
 
 void ExecutionContext::leaveCallContext()
 {
-    if (!function->needsActivation) {
-        delete[] locals;
+    if (!function->needsActivation)
         locals = 0;
-    }
     engine->current = parent;
     parent = 0;
 
