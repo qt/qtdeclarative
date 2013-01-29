@@ -41,13 +41,12 @@
 #ifndef QMLJS_VALUE_H
 #define QMLJS_VALUE_H
 
-#include <wtf/Platform.h>
-
 #include <QtCore/QString>
 #include <QtCore/qnumeric.h>
-#include <qv4string.h>
+#include "qv4global.h"
+#include "qv4string.h"
 #include <QtCore/QDebug>
-#include <qv4managed.h>
+#include "qv4managed.h"
 
 namespace QQmlJS {
 namespace VM {
@@ -64,7 +63,7 @@ double __qmljs_to_number(Value value, ExecutionContext *ctx);
 typedef uint Bool;
 
 
-struct Value
+struct Q_V4_EXPORT Value
 {
     union {
         quint64 val;

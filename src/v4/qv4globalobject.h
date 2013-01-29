@@ -41,13 +41,14 @@
 #ifndef QV4GLOBALOBJECT_H
 #define QV4GLOBALOBJECT_H
 
+#include "qv4global.h"
 #include "qv4functionobject.h"
 
 namespace QQmlJS {
 
 namespace VM {
 
-struct EvalFunction : FunctionObject
+struct Q_V4_EXPORT EvalFunction : FunctionObject
 {
     EvalFunction(ExecutionContext *scope);
 

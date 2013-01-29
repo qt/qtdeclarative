@@ -42,6 +42,7 @@
 #ifndef QV4ARRAY_H
 #define QV4ARRAY_H
 
+#include "qv4global.h"
 #include <QtCore/qmap.h>
 #include <qmljs_value.h>
 #include <qv4propertydescriptor.h>
@@ -147,7 +148,7 @@ inline SparseArrayNode *SparseArrayNode::upperBound(uint akey)
 
 
 
-struct Q_CORE_EXPORT SparseArray
+struct Q_V4_EXPORT SparseArray
 {
     SparseArray();
     ~SparseArray() {

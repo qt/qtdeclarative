@@ -30,6 +30,7 @@
 #ifndef QV4GC_H
 #define QV4GC_H
 
+#include "qv4global.h"
 #include "qv4object.h"
 
 #include <QScopedPointer>
@@ -41,7 +42,7 @@ namespace VM {
 
 struct Managed;
 
-class MemoryManager
+class Q_V4_EXPORT MemoryManager
 {
     MemoryManager(const MemoryManager &);
     MemoryManager &operator=(const MemoryManager&);

@@ -30,6 +30,7 @@
 #ifndef QV4ISEL_P_H
 #define QV4ISEL_P_H
 
+#include "qv4global.h"
 #include "qv4ir_p.h"
 
 #include <qglobal.h>
@@ -42,7 +43,7 @@ struct ExecutionEngine;
 struct Function;
 } // namespace VM
 
-class EvalInstructionSelection
+class Q_V4_EXPORT EvalInstructionSelection
 {
 public:
     EvalInstructionSelection(VM::ExecutionEngine *engine, IR::Module *module);
@@ -60,7 +61,7 @@ private:
     QHash<IR::Function *, VM::Function *> _irToVM;
 };
 
-class EvalISelFactory
+class Q_V4_EXPORT EvalISelFactory
 {
 public:
     virtual ~EvalISelFactory() = 0;
@@ -68,7 +69,7 @@ public:
 };
 
 namespace IR {
-class InstructionSelection: protected IR::StmtVisitor
+class Q_V4_EXPORT InstructionSelection: protected IR::StmtVisitor
 {
 public:
     virtual ~InstructionSelection() = 0;

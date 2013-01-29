@@ -40,24 +40,24 @@
 ****************************************************************************/
 
 #ifndef QMLJS_NO_LLVM
-#  include "qv4_llvm_p.h"
+#  include "private/qv4_llvm_p.h"
 #endif
 
-#include "debugging.h"
-#include "qv4object.h"
-#include "qmljs_runtime.h"
-#include "qv4functionobject.h"
-#include "qv4errorobject.h"
-#include "qv4globalobject.h"
-#include "qv4codegen_p.h"
-#include "qv4isel_masm_p.h"
-#include "qv4isel_moth_p.h"
-#include "qv4vme_moth_p.h"
-#include "qv4syntaxchecker_p.h"
-#include "qv4objectproto.h"
-#include "qv4isel_p.h"
-#include "qv4mm.h"
-#include "qmljs_environment.h"
+#include "private/debugging.h"
+#include "private/qv4object.h"
+#include "private/qmljs_runtime.h"
+#include "private/qv4functionobject.h"
+#include "private/qv4errorobject.h"
+#include "private/qv4globalobject.h"
+#include "private/qv4codegen_p.h"
+#include "private/qv4isel_masm_p.h"
+#include "private/qv4isel_moth_p.h"
+#include "private/qv4vme_moth_p.h"
+#include "private/qv4syntaxchecker_p.h"
+#include "private/qv4objectproto.h"
+#include "private/qv4isel_p.h"
+#include "private/qv4mm.h"
+#include "private/qmljs_environment.h"
 
 #include <QtCore>
 #include <private/qqmljsengine_p.h>
@@ -72,7 +72,7 @@ namespace builtins {
 
 using namespace QQmlJS::VM;
 
-struct Print: FunctionObject
+struct Q_V4_EXPORT Print: FunctionObject
 {
     Print(ExecutionContext *scope): FunctionObject(scope) {
         name = scope->engine->newString("print");
@@ -91,7 +91,7 @@ struct Print: FunctionObject
     }
 };
 
-struct TestHarnessError: FunctionObject
+struct Q_V4_EXPORT TestHarnessError: FunctionObject
 {
     TestHarnessError(ExecutionContext *scope, bool &errorInTestHarness): FunctionObject(scope), errorOccurred(errorInTestHarness) {
         name = scope->engine->newString("$ERROR");
@@ -114,7 +114,7 @@ struct TestHarnessError: FunctionObject
     bool &errorOccurred;
 };
 
-struct GC: public FunctionObject
+struct Q_V4_EXPORT GC: public FunctionObject
 {
     GC(ExecutionContext* scope)
         : FunctionObject(scope)

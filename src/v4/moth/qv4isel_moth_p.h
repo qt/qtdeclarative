@@ -1,6 +1,7 @@
 #ifndef QV4ISEL_MOTH_P_H
 #define QV4ISEL_MOTH_P_H
 
+#include "qv4global.h"
 #include "qv4isel_p.h"
 #include "qv4ir_p.h"
 #include "qv4object.h"
@@ -9,7 +10,7 @@
 namespace QQmlJS {
 namespace Moth {
 
-class InstructionSelection:
+class Q_V4_EXPORT InstructionSelection:
         public IR::InstructionSelection,
         public EvalInstructionSelection
 {
@@ -145,7 +146,7 @@ private:
     uchar *_codeEnd;
 };
 
-class ISelFactory: public EvalISelFactory
+class Q_V4_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}

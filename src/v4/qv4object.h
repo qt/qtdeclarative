@@ -41,6 +41,7 @@
 #ifndef QMLJS_OBJECTS_H
 #define QMLJS_OBJECTS_H
 
+#include "qv4global.h"
 #include "qmljs_runtime.h"
 #include "qmljs_engine.h"
 #include "qmljs_environment.h"
@@ -98,7 +99,7 @@ struct TypeErrorPrototype;
 struct URIErrorPrototype;
 
 
-struct Object: Managed {
+struct Q_V4_EXPORT Object: Managed {
     Object *prototype;
     QScopedPointer<PropertyTable> members;
     Array array;

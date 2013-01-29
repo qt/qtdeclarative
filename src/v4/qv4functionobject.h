@@ -41,6 +41,7 @@
 #ifndef QV4FUNCTIONOBJECT_H
 #define QV4FUNCTIONOBJECT_H
 
+#include "qv4global.h"
 #include "qmljs_runtime.h"
 #include "qmljs_engine.h"
 #include "qmljs_environment.h"
@@ -60,6 +61,9 @@
 #include <QtCore/QScopedPointer>
 #include <cstdio>
 #include <cassert>
+
+#include <config.h>
+#include <assembler/MacroAssemblerCodeRef.h>
 
 namespace QQmlJS {
 
@@ -131,7 +135,7 @@ struct Function {
     void mark();
 };
 
-struct FunctionObject: Object {
+struct Q_V4_EXPORT FunctionObject: Object {
     ExecutionContext *scope;
     String *name;
     String * const *formalParameterList;

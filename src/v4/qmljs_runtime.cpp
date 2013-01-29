@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 
+#include "qv4global.h"
 #include "debugging.h"
 #include "qmljs_runtime.h"
 #include "qv4object.h"
@@ -56,7 +57,7 @@
 #include <typeinfo>
 #include <stdlib.h>
 
-#include "3rdparty/double-conversion/double-conversion.h"
+#include "../3rdparty/double-conversion/double-conversion.h"
 
 namespace QQmlJS {
 namespace VM {
@@ -845,7 +846,7 @@ void __qmljs_throw(Value value, ExecutionContext *context)
     longjmp(handler.stackFrame, 1);
 }
 
-void *__qmljs_create_exception_handler(ExecutionContext *context)
+Q_V4_EXPORT void * __qmljs_create_exception_handler(ExecutionContext *context)
 {
     context->engine->exception = Value::undefinedValue();
     context->engine->unwindStack.append(ExecutionEngine::ExceptionHandler());

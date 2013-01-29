@@ -80,10 +80,11 @@
 #include "qv4_llvm_p.h"
 #include "qv4ir_p.h"
 #include "qv4string.h"
+#include "qv4global.h"
 
 namespace QQmlJS {
 
-int compileWithLLVM(IR::Module *module, const QString &fileName, LLVMOutputType outputType, int (*exec)(void *))
+Q_V4_EXPORT int compileWithLLVM(IR::Module *module, const QString &fileName, LLVMOutputType outputType, int (*exec)(void *))
 {
     Q_ASSERT(module);
     Q_ASSERT(exec || outputType != LLVMOutputJit);

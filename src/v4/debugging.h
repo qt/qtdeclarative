@@ -30,6 +30,7 @@
 #ifndef DEBUGGING_H
 #define DEBUGGING_H
 
+#include "qv4global.h"
 #include "qmljs_engine.h"
 #include "qmljs_environment.h"
 
@@ -94,7 +95,7 @@ struct CallInfo
     {}
 };
 
-class Debugger
+class Q_V4_EXPORT Debugger
 {
 public:
     Debugger(VM::ExecutionEngine *_engine);

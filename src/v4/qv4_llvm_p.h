@@ -30,6 +30,7 @@
 #ifndef QV4_LLVM_P_H
 #define QV4_LLVM_P_H
 
+#include "qv4global.h"
 #include "qv4ir_p.h"
 
 #include <QtCore/QString>
@@ -45,7 +46,7 @@ enum LLVMOutputType {
     LLVMOutputObject = 3 // .o
 };
 
-int compileWithLLVM(IR::Module *module, const QString &fileName,  LLVMOutputType outputType, int (*exec)(void *));
+Q_V4_EXPORT int compileWithLLVM(IR::Module *module, const QString &fileName, LLVMOutputType outputType, int (*)(void *));
 
 } // QQmlJS
 

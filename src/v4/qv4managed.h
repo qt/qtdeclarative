@@ -45,6 +45,7 @@
 #include <QtCore/QVector>
 #include <QtCore/QDebug>
 #include <wtf/Platform.h>
+#include "qv4global.h"
 
 namespace QQmlJS {
 
@@ -69,7 +70,7 @@ struct ArgumentsObject;
 struct JSONObject;
 struct ForeachIteratorObject;
 
-struct Managed
+struct Q_V4_EXPORT Managed
 {
 private:
     void *operator new(size_t);

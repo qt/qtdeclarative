@@ -41,6 +41,7 @@
 #ifndef QV4CODEGEN_P_H
 #define QV4CODEGEN_P_H
 
+#include "qv4global.h"
 #include "qv4ir_p.h"
 #include <private/qqmljsastvisitor_p.h>
 #include <QtCore/QStringList>
@@ -67,7 +68,7 @@ public:
     virtual void syntaxError(VM::DiagnosticMessage *message) = 0;
 };
 
-class Codegen: protected AST::Visitor
+class Q_V4_EXPORT Codegen: protected AST::Visitor
 {
 public:
     Codegen(VM::ExecutionContext *ctx, bool strict);

@@ -41,6 +41,7 @@
 #ifndef QMLJS_ENVIRONMENT_H
 #define QMLJS_ENVIRONMENT_H
 
+#include "qv4global.h"
 #include <qmljs_runtime.h>
 
 namespace QQmlJS {
@@ -52,7 +53,7 @@ struct ExecutionEngine;
 struct ExecutionContext;
 struct DeclarativeEnvironment;
 
-struct DiagnosticMessage
+struct Q_V4_EXPORT DiagnosticMessage
 {
     enum { Error, Warning };
 

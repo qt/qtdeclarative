@@ -41,6 +41,7 @@
 #ifndef QV4ISEL_MASM_P_H
 #define QV4ISEL_MASM_P_H
 
+#include "qv4global.h"
 #include "qv4ir_p.h"
 #include "qv4isel_p.h"
 #include "qv4isel_util_p.h"
@@ -663,7 +664,7 @@ private:
     QList<CallToLink> _callsToLink;
 };
 
-class InstructionSelection:
+class Q_V4_EXPORT InstructionSelection:
         protected IR::InstructionSelection,
         public EvalInstructionSelection
 {
@@ -783,7 +784,7 @@ private:
     Assembler* _asm;
 };
 
-class ISelFactory: public EvalISelFactory
+class Q_V4_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}

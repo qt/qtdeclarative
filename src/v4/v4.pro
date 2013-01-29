@@ -1,10 +1,19 @@
-QT = core-private qmldevtools-private
-CONFIG -= app_bundle
-CONFIG += console
+TARGET = QtV4
+QT_PRIVATE = core-private qmldevtools-private
+
+CONFIG += internal_module
 
 LLVM_CONFIG=llvm-config
 
 OBJECTS_DIR=.obj
+
+load(qt_build_config)
+load(qt_module)
+
+CONFIG += warn_off
+
+#win32-msvc*|win32-icc:QMAKE_LFLAGS += /BASE:0x66000000 #TODO ??!
+
 
 # Pick up the qmake variable or environment variable for LLVM_INSTALL_DIR. If either was set, change the LLVM_CONFIG to use that.
 isEmpty(LLVM_INSTALL_DIR):LLVM_INSTALL_DIR=$$(LLVM_INSTALL_DIR)
@@ -12,7 +21,7 @@ isEmpty(LLVM_INSTALL_DIR):LLVM_INSTALL_DIR=$$(LLVM_INSTALL_DIR)
 
 !macx-clang*:LIBS += -rdynamic
 
-SOURCES += main.cpp \
+SOURCES += \
     qv4codegen.cpp \
     qv4ir.cpp \
     qmljs_engine.cpp \
@@ -46,6 +55,7 @@ SOURCES += main.cpp \
     qv4regexp.cpp
 
 HEADERS += \
+    qv4global.h \
     qv4codegen_p.h \
     qv4ir_p.h \
     qmljs_engine.h \
@@ -126,8 +136,8 @@ linux-g++*:isEqual(QT_ARCH,i386) {
     QMAKE_CXXFLAGS += -march=pentium4 -msse2 -mfpmath=sse
 }
 
-TESTSCRIPT=$$PWD/tests/test262.py
-V4CMD = $$OUT_PWD/v4
+TESTSCRIPT=$$PWD/../../tests/test262.py
+V4CMD = $$OUT_PWD/../tools/v4
 
 checktarget.target = check
 checktarget.commands = python $$TESTSCRIPT --command=$$V4CMD --parallel --with-test-expectations --update-expectations
@@ -141,5 +151,5 @@ QMAKE_EXTRA_TARGETS += checkmothtarget
 
 
 include(moth/moth.pri)
-include(3rdparty/masm/masm.pri)
-include(3rdparty/double-conversion/double-conversion.pri)
+include(../3rdparty/masm/masm.pri)
+include(../3rdparty/double-conversion/double-conversion.pri)

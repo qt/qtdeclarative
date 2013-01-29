@@ -6,6 +6,7 @@ SOURCES += $$PWD/assembler/MacroAssemblerARM.cpp
 SOURCES += $$PWD/assembler/MacroAssemblerSH4.cpp
 SOURCES += $$PWD/assembler/LinkBuffer.cpp
 
+HEADERS += $$PWD/wtf/*.h
 SOURCES += $$PWD/wtf/PrintStream.cpp
 HEADERS += $$PWD/wtf/PrintStream.h
 

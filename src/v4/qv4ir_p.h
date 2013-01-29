@@ -52,14 +52,12 @@
 // We mean it.
 //
 
+#include "qv4global.h"
 #include <private/qqmljsmemorypool_p.h>
 
 #include <QtCore/QVector>
 #include <QtCore/QString>
 #include <QtCore/QBitArray>
-
-#include <config.h>
-#include <assembler/MacroAssemblerCodeRef.h>
 
 QT_BEGIN_HEADER
 
@@ -589,7 +587,7 @@ struct Ret: Stmt {
     virtual void dump(QTextStream &out, Mode);
 };
 
-struct Module {
+struct Q_V4_EXPORT Module {
     MemoryPool pool;
     QVector<Function *> functions;
     Function *rootFunction;

@@ -41,9 +41,10 @@
 #ifndef QMLJS_ENGINE_H
 #define QMLJS_ENGINE_H
 
-#include <qv4isel_p.h>
-#include <qv4object.h>
-#include <qmljs_environment.h>
+#include "qv4global.h"
+#include "qv4isel_p.h"
+#include "qv4object.h"
+#include "qmljs_environment.h"
 #include <setjmp.h>
 
 #include <wtf/PassRefPtr.h>
@@ -94,7 +95,7 @@ struct EvalFunction;
 
 class RegExp;
 
-struct ExecutionEngine
+struct Q_V4_EXPORT ExecutionEngine
 {
     MemoryManager *memoryManager;
     EvalISelFactory *iselFactory;

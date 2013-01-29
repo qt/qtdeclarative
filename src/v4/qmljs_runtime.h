@@ -41,8 +41,9 @@
 #ifndef QMLJS_RUNTIME_H
 #define QMLJS_RUNTIME_H
 
-#include <qmljs_value.h>
-#include <qmljs_math.h>
+#include "qmljs_value.h"
+#include "qmljs_math.h"
+
 
 #include <QtCore/QString>
 #include <QtCore/qnumeric.h>
