@@ -41,6 +41,7 @@
 
 #include "qv4managed.h"
 #include "qv4mm.h"
+#include "qv4errorobject.h"
 
 using namespace QQmlJS::VM;
 
@@ -64,4 +65,77 @@ void Managed::operator delete(void *ptr)
 
     Managed *m = static_cast<Managed *>(ptr);
     m->~Managed();
+}
+
+
+QString Managed::className() const
+{
+    const char *s = 0;
+    switch (Type(type)) {
+    case Type_Invalid:
+    case Type_String:
+        return QString();
+    case Type_Object:
+        s = "Object";
+        break;
+    case Type_ArrayObject:
+        s = "Array";
+        break;
+    case Type_FunctionObject:
+        s = "Function";
+        break;
+    case Type_BooleanObject:
+        s = "Boolean";
+        break;
+    case Type_NumberObject:
+        s = "Number";
+        break;
+    case Type_StringObject:
+        s = "String";
+        break;
+    case Type_DateObject:
+        s = "Date";
+        break;
+    case Type_RegExpObject:
+        s = "RegExp";
+        break;
+    case Type_ErrorObject:
+        switch (static_cast<const ErrorObject *>(this)->errorType) {
+        case ErrorObject::Error:
+            s = "Error";
+            break;
+        case ErrorObject::EvalError:
+            s = "EvalError";
+            break;
+        case ErrorObject::RangeError:
+            s = "RangeError";
+            break;
+        case ErrorObject::ReferenceError:
+            s = "ReferenceError";
+            break;
+        case ErrorObject::SyntaxError:
+            s = "SyntaxError";
+            break;
+        case ErrorObject::TypeError:
+            s = "TypeError";
+            break;
+        case ErrorObject::URIError:
+            s = "URIError";
+            break;
+        }
+        break;
+    case Type_ArgumentsObject:
+        s = "Arguments";
+        break;
+    case Type_JSONObject:
+        s = "JSON";
+        break;
+    case Type_MathObject:
+        s = "Math";
+        break;
+    case Type_ForeachIteratorObject:
+        s = "__ForeachIterator";
+        break;
+    }
+    return QString::fromLatin1(s);
 }

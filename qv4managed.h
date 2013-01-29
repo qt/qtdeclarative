@@ -66,6 +66,7 @@ struct FunctionObject;
 struct RegExpObject;
 struct ErrorObject;
 struct ArgumentsObject;
+struct JSONObject;
 struct ForeachIteratorObject;
 
 struct Managed
@@ -116,6 +117,8 @@ public:
         Type_RegExpObject,
         Type_ErrorObject,
         Type_ArgumentsObject,
+        Type_JSONObject,
+        Type_MathObject,
         Type_ForeachIteratorObject
     };
 
@@ -130,10 +133,13 @@ public:
     RegExpObject *asRegExpObject() { return type == Type_RegExpObject ? reinterpret_cast<RegExpObject *>(this) : 0; }
     ErrorObject *asErrorObject() { return type == Type_ErrorObject ? reinterpret_cast<ErrorObject *>(this) : 0; }
     ArgumentsObject *asArgumentsObject() { return type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
+    JSONObject *asJSONObject() { return type == Type_JSONObject ? reinterpret_cast<JSONObject *>(this) : 0; }
     ForeachIteratorObject *asForeachIteratorObject() { return type == Type_ForeachIteratorObject ? reinterpret_cast<ForeachIteratorObject *>(this) : 0; }
 
     bool isArrayObject() const { return type == Type_ArrayObject; }
     bool isStringObject() const { return type == Type_StringObject; }
+
+    QString className() const;
 
 protected:
     virtual void markObjects() {}
@@ -149,8 +155,8 @@ protected:
             quintptr needsActivation : 1; // used by FunctionObject
             quintptr usesArgumentsObject : 1; // used by FunctionObject
             quintptr strictMode : 1; // used by FunctionObject
-            quintptr type : 4;
-            quintptr unused  : 20;
+            quintptr type : 8;
+            quintptr unused  : 16;
             mutable quintptr stringHash : 32;
         };
     };

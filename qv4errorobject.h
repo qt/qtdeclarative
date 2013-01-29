@@ -48,8 +48,18 @@ namespace QQmlJS {
 namespace VM {
 
 struct ErrorObject: Object {
+    enum ErrorType {
+        Error,
+        EvalError,
+        RangeError,
+        ReferenceError,
+        SyntaxError,
+        TypeError,
+        URIError
+    };
+    ErrorType errorType;
+
     ErrorObject(ExecutionEngine* engine, const Value &message);
-    virtual QString className() { return QStringLiteral("Error"); }
 
     virtual struct SyntaxErrorObject *asSyntaxError() { return 0; }
 
@@ -59,25 +69,21 @@ protected:
 
 struct EvalErrorObject: ErrorObject {
     EvalErrorObject(ExecutionContext *ctx);
-    virtual QString className() { return QStringLiteral("EvalError"); }
 };
 
 struct RangeErrorObject: ErrorObject {
     RangeErrorObject(ExecutionContext *ctx);
     RangeErrorObject(ExecutionContext *ctx, const QString &msg);
-    virtual QString className() { return QStringLiteral("RangeError"); }
 };
 
 struct ReferenceErrorObject: ErrorObject {
     ReferenceErrorObject(ExecutionContext *ctx);
     ReferenceErrorObject(ExecutionContext *ctx, const QString &msg);
-    virtual QString className() { return QStringLiteral("ReferenceError"); }
 };
 
 struct SyntaxErrorObject: ErrorObject {
     SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *msg);
     ~SyntaxErrorObject() { delete msg; }
-    virtual QString className() { return QStringLiteral("SyntaxError"); }
 
     virtual SyntaxErrorObject *asSyntaxError() { return this; }
     DiagnosticMessage *message() { return msg; }
@@ -89,13 +95,11 @@ private:
 struct TypeErrorObject: ErrorObject {
     TypeErrorObject(ExecutionContext *ctx);
     TypeErrorObject(ExecutionContext *ctx, const QString &msg);
-    virtual QString className() { return QStringLiteral("TypeError"); }
 };
 
 struct URIErrorObject: ErrorObject {
     URIErrorObject(ExecutionContext *ctx);
     URIErrorObject(ExecutionContext *ctx, Value);
-    virtual QString className() { return QStringLiteral("URIError"); }
 };
 
 struct ErrorCtor: FunctionObject

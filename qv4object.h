@@ -110,8 +110,6 @@ struct Object: Managed {
 
     virtual ~Object();
 
-    virtual QString className() { return QStringLiteral("Object"); }
-
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, uint index);
     PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name);
@@ -162,7 +160,6 @@ struct ForEachIteratorObject: Object {
     ObjectIterator it;
     ForEachIteratorObject(ExecutionContext *ctx, Object *o)
         : it(ctx, o, ObjectIterator::EnumberableOnly|ObjectIterator::WithProtoChain) { type = Type_ForeachIteratorObject; }
-    virtual QString className() { return QStringLiteral("__ForEachIteratorObject"); }
 
     Value nextPropertyName() { return it.nextPropertyNameAsString(); }
 
@@ -173,20 +170,17 @@ protected:
 struct BooleanObject: Object {
     Value value;
     BooleanObject(const Value &value): value(value) { type = Type_BooleanObject; }
-    virtual QString className() { return QStringLiteral("Boolean"); }
 };
 
 struct NumberObject: Object {
     Value value;
     NumberObject(const Value &value): value(value) { type = Type_NumberObject; }
-    virtual QString className() { return QStringLiteral("Number"); }
 };
 
 struct ArrayObject: Object {
     ArrayObject(ExecutionContext *ctx) { init(ctx); }
     ArrayObject(ExecutionContext *ctx, const Array &value): Object(value) { init(ctx); array.setLengthUnchecked(array.length()); }
     void init(ExecutionContext *context);
-    virtual QString className() { return QStringLiteral("Array"); }
 };
 
 

@@ -141,7 +141,6 @@ struct FunctionObject: Object {
 
     FunctionObject(ExecutionContext *scope);
 
-    virtual QString className() { return QStringLiteral("Function"); }
     virtual bool hasInstance(ExecutionContext *ctx, const Value &value);
 
     virtual Value construct(ExecutionContext *context, Value *args, int argc);

@@ -70,7 +70,6 @@ struct RegExpObject: Object {
     PropertyDescriptor *lastIndexProperty;
     bool global;
     RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bool global);
-    virtual QString className() { return QStringLiteral("RegExp"); }
 };
 
 

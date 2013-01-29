@@ -48,7 +48,6 @@ namespace VM {
 
 struct JsonObject : Object {
     JsonObject(ExecutionContext *context);
-    virtual QString className() { return QStringLiteral("JSON"); }
 
     static Value method_parse(ExecutionContext *ctx);
     static Value method_stringify(ExecutionContext *ctx);

@@ -51,7 +51,6 @@ namespace VM {
 struct DateObject: Object {
     Value value;
     DateObject(const Value &value): value(value) { type = Type_DateObject; }
-    virtual QString className() { return QStringLiteral("Date"); }
 };
 
 struct DateCtor: FunctionObject

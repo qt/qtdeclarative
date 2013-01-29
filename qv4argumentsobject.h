@@ -72,7 +72,6 @@ struct ArgumentsObject: Object {
     ExecutionContext *context;
     QVector<Value> mappedArguments;
     ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount);
-    virtual QString className() { return QStringLiteral("Arguments"); }
 
     bool defineOwnProperty(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc);
 

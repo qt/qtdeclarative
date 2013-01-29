@@ -865,6 +865,7 @@ QString Stringify::JA(ArrayObject *a)
 JsonObject::JsonObject(ExecutionContext *context)
     : Object()
 {
+    type = Type_JSONObject;
     prototype = context->engine->objectPrototype;
 
     defineDefaultProperty(context, QStringLiteral("parse"), method_parse, 2);

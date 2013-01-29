@@ -640,7 +640,7 @@ Value __qmljs_foreach_next_property_name(Value foreach_iterator)
     assert(foreach_iterator.isObject());
 
     ForEachIteratorObject *it = static_cast<ForEachIteratorObject *>(foreach_iterator.objectValue());
-    assert(it->className() == QLatin1String("__ForEachIteratorObject"));
+    assert(it->asForeachIteratorObject());
 
     return it->nextPropertyName();
 }
