@@ -140,7 +140,7 @@ void StringPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString);
-    defineDefaultProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
+    defineDefaultProperty(ctx, QStringLiteral("valueOf"), method_toString); // valueOf and toString are identical
     defineDefaultProperty(ctx, QStringLiteral("charAt"), method_charAt, 1);
     defineDefaultProperty(ctx, QStringLiteral("charCodeAt"), method_charCodeAt, 1);
     defineDefaultProperty(ctx, QStringLiteral("concat"), method_concat, 1);
@@ -161,7 +161,7 @@ void StringPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("trim"), method_trim);
 }
 
-QString StringPrototype::getThisString(ExecutionContext *ctx)
+static QString getThisString(ExecutionContext *ctx)
 {
     String* str = 0;
     Value thisObject = ctx->thisObject;
@@ -174,77 +174,86 @@ QString StringPrototype::getThisString(ExecutionContext *ctx)
     return str->toQString();
 }
 
-Value StringPrototype::method_toString(ExecutionContext *ctx)
+static QString getThisString(ExecutionContext *parentCtx, Value thisObject)
 {
-    StringObject *o = ctx->thisObject.asStringObject();
+    if (thisObject.isString())
+        return thisObject.stringValue()->toQString();
+
+    String* str = 0;
+    if (StringObject *thisString = thisObject.asStringObject())
+        str = thisString->value.stringValue();
+    else if (thisObject.isUndefined() || thisObject.isNull())
+        parentCtx->throwTypeError();
+    else
+        str = thisObject.toString(parentCtx);
+    return str->toQString();
+}
+
+Value StringPrototype::method_toString(ExecutionContext *parentCtx, Value thisObject, Value *, int)
+{
+    if (thisObject.isString())
+        return thisObject;
+
+    StringObject *o = thisObject.asStringObject();
     if (!o)
-        ctx->throwTypeError();
+        parentCtx->throwTypeError();
     return o->value;
 }
 
-Value StringPrototype::method_valueOf(ExecutionContext *ctx)
+Value StringPrototype::method_charAt(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
 {
-    StringObject *o = ctx->thisObject.asStringObject();
-    if (!o)
-        ctx->throwTypeError();
-    return o->value;
-}
-
-Value StringPrototype::method_charAt(ExecutionContext *ctx)
-{
-    const QString str = getThisString(ctx);
+    const QString str = getThisString(parentCtx, thisObject);
 
     int pos = 0;
-    if (ctx->argumentCount > 0)
-        pos = (int) ctx->argument(0).toInteger(ctx);
+    if (argc > 0)
+        pos = (int) argv[0].toInteger(parentCtx);
 
     QString result;
     if (pos >= 0 && pos < str.length())
         result += str.at(pos);
 
-    return Value::fromString(ctx, result);
+    return Value::fromString(parentCtx, result);
 }
 
-Value StringPrototype::method_charCodeAt(ExecutionContext *ctx)
+Value StringPrototype::method_charCodeAt(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
 {
-    const QString str = getThisString(ctx);
+    const QString str = getThisString(parentCtx, thisObject);
 
     int pos = 0;
-    if (ctx->argumentCount > 0)
-        pos = (int) ctx->argument(0).toInteger(ctx);
+    if (argc > 0)
+        pos = (int) argv[0].toInteger(parentCtx);
 
-    double result = qSNaN();
 
     if (pos >= 0 && pos < str.length())
-        result = str.at(pos).unicode();
+        return Value::fromInt32(str.at(pos).unicode());
 
-    return Value::fromDouble(result);
+    return Value::fromDouble(qSNaN());
 }
 
-Value StringPrototype::method_concat(ExecutionContext *ctx)
+Value StringPrototype::method_concat(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
 {
-    QString value = getThisString(ctx);
+    QString value = getThisString(parentCtx, thisObject);
 
-    for (unsigned i = 0; i < ctx->argumentCount; ++i) {
-        Value v = __qmljs_to_string(ctx->argument(i), ctx);
+    for (unsigned i = 0; i < argc; ++i) {
+        Value v = __qmljs_to_string(argv[i], parentCtx);
         assert(v.isString());
         value += v.stringValue()->toQString();
     }
 
-    return Value::fromString(ctx, value);
+    return Value::fromString(parentCtx, value);
 }
 
-Value StringPrototype::method_indexOf(ExecutionContext *ctx)
+Value StringPrototype::method_indexOf(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
 {
-    QString value = getThisString(ctx);
+    QString value = getThisString(parentCtx, thisObject);
 
     QString searchString;
-    if (ctx->argumentCount)
-        searchString = ctx->argument(0).toString(ctx)->toQString();
+    if (argc)
+        searchString = argv[0].toString(parentCtx)->toQString();
 
     int pos = 0;
-    if (ctx->argumentCount > 1)
-        pos = (int) ctx->argument(1).toInteger(ctx);
+    if (argc > 1)
+        pos = (int) argv[1].toInteger(parentCtx);
 
     int index = -1;
     if (! value.isEmpty())
@@ -253,18 +262,18 @@ Value StringPrototype::method_indexOf(ExecutionContext *ctx)
     return Value::fromDouble(index);
 }
 
-Value StringPrototype::method_lastIndexOf(ExecutionContext *ctx)
+Value StringPrototype::method_lastIndexOf(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
 {
-    const QString value = getThisString(ctx);
+    const QString value = getThisString(parentCtx, thisObject);
 
     QString searchString;
-    if (ctx->argumentCount) {
-        Value v = __qmljs_to_string(ctx->argument(0), ctx);
+    if (argc) {
+        Value v = __qmljs_to_string(argv[0], parentCtx);
         searchString = v.stringValue()->toQString();
     }
 
-    Value posArg = ctx->argument(1);
-    double position = __qmljs_to_number(posArg, ctx);
+    Value posArg = argc > 1 ? argv[1] : Value::undefinedValue();
+    double position = __qmljs_to_number(posArg, parentCtx);
     if (std::isnan(position))
         position = +qInf();
     else
@@ -277,56 +286,57 @@ Value StringPrototype::method_lastIndexOf(ExecutionContext *ctx)
     return Value::fromDouble(index);
 }
 
-Value StringPrototype::method_localeCompare(ExecutionContext *ctx)
+Value StringPrototype::method_localeCompare(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
 {
-    const QString value = getThisString(ctx);
-    const QString that = ctx->argument(0).toString(ctx)->toQString();
+    const QString value = getThisString(parentCtx, thisObject);
+    const QString that = (argc ? argv[0] : Value::undefinedValue()).toString(parentCtx)->toQString();
     return Value::fromDouble(QString::localeAwareCompare(value, that));
 }
 
-Value StringPrototype::method_match(ExecutionContext *ctx)
+Value StringPrototype::method_match(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
 {
-    if (ctx->thisObject.isUndefined() || ctx->thisObject.isNull())
-        __qmljs_throw_type_error(ctx);
+    if (thisObject.isUndefined() || thisObject.isNull())
+        __qmljs_throw_type_error(parentCtx);
 
-    String *s = ctx->thisObject.toString(ctx);
+    String *s = thisObject.toString(parentCtx);
 
-    Value regexp = ctx->argument(0);
+    Value regexp = argc ? argv[0] : Value::undefinedValue();
     RegExpObject *rx = regexp.asRegExpObject();
     if (!rx)
-        rx = ctx->engine->regExpCtor.asFunctionObject()->construct(ctx, &regexp, 1).asRegExpObject();
+        rx = parentCtx->engine->regExpCtor.asFunctionObject()->construct(parentCtx, &regexp, 1).asRegExpObject();
 
     if (!rx)
         // ### CHECK
-        __qmljs_throw_type_error(ctx);
+        __qmljs_throw_type_error(parentCtx);
 
     bool global = rx->global;
 
-    FunctionObject *exec = ctx->engine->regExpPrototype->__get__(ctx, ctx->engine->identifier(QStringLiteral("exec")), 0).asFunctionObject();
+    // ### use the standard builtin function, not the one that might be redefined in the proto
+    FunctionObject *exec = parentCtx->engine->regExpPrototype->__get__(parentCtx, parentCtx->engine->identifier(QStringLiteral("exec")), 0).asFunctionObject();
 
     Value arg = Value::fromString(s);
     if (!global)
-        return exec->call(ctx, Value::fromObject(rx), &arg, 1);
+        return exec->call(parentCtx, Value::fromObject(rx), &arg, 1);
 
-    String *lastIndex = ctx->engine->identifier(QStringLiteral("lastIndex"));
-    rx->__put__(ctx, lastIndex, Value::fromDouble(0.));
-    ArrayObject *a = ctx->engine->newArrayObject(ctx);
+    String *lastIndex = parentCtx->engine->identifier(QStringLiteral("lastIndex"));
+    rx->__put__(parentCtx, lastIndex, Value::fromInt32(0));
+    ArrayObject *a = parentCtx->engine->newArrayObject(parentCtx);
 
     double previousLastIndex = 0;
     uint n = 0;
     while (1) {
-        Value result = exec->call(ctx, Value::fromObject(rx), &arg, 1);
+        Value result = exec->call(parentCtx, Value::fromObject(rx), &arg, 1);
         if (result.isNull())
             break;
         assert(result.isObject());
-        double thisIndex = rx->__get__(ctx, lastIndex, 0).toInteger(ctx);
+        double thisIndex = rx->__get__(parentCtx, lastIndex, 0).toInteger(parentCtx);
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
-            rx->__put__(ctx, lastIndex, Value::fromDouble(previousLastIndex));
+            rx->__put__(parentCtx, lastIndex, Value::fromDouble(previousLastIndex));
         } else {
             previousLastIndex = thisIndex;
         }
-        Value matchStr = result.objectValue()->__get__(ctx, (uint)0, (bool *)0);
+        Value matchStr = result.objectValue()->__get__(parentCtx, (uint)0, (bool *)0);
         a->array.set(n, matchStr);
         ++n;
     }

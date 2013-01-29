@@ -72,17 +72,14 @@ struct StringPrototype: StringObject
     StringPrototype(ExecutionContext *ctx): StringObject(ctx, Value::fromString(ctx, QString())) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
-    static QString getThisString(ExecutionContext *ctx);
-
-    static Value method_toString(ExecutionContext *ctx);
-    static Value method_valueOf(ExecutionContext *ctx);
-    static Value method_charAt(ExecutionContext *ctx);
-    static Value method_charCodeAt(ExecutionContext *ctx);
-    static Value method_concat(ExecutionContext *ctx);
-    static Value method_indexOf(ExecutionContext *ctx);
-    static Value method_lastIndexOf(ExecutionContext *ctx);
-    static Value method_localeCompare(ExecutionContext *ctx);
-    static Value method_match(ExecutionContext *ctx);
+    static Value method_toString(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_charAt(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_charCodeAt(ExecutionContext *, Value thisObject, Value *argv, int argc);
+    static Value method_concat(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_indexOf(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_lastIndexOf(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_localeCompare(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_match(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
     static Value method_replace(ExecutionContext *ctx);
     static Value method_search(ExecutionContext *ctx);
     static Value method_slice(ExecutionContext *ctx);

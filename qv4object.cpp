@@ -151,6 +151,15 @@ void Object::defineDefaultProperty(ExecutionContext *context, const QString &nam
     defineDefaultProperty(s, Value::fromObject(function));
 }
 
+void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(ExecutionContext *, Value, Value *, int), int argumentCount)
+{
+    Q_UNUSED(argumentCount);
+    String *s = context->engine->identifier(name);
+    FunctionObject* function = context->engine->newBuiltinFunction(context, s, code);
+    function->defineReadonlyProperty(context->engine->id_length, Value::fromInt32(argumentCount));
+    defineDefaultProperty(s, Value::fromObject(function));
+}
+
 void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value)
 {
     defineReadonlyProperty(engine->identifier(name), value);

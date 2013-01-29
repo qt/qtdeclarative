@@ -174,11 +174,21 @@ struct FunctionPrototype: FunctionObject
     static Value method_bind(ExecutionContext *ctx);
 };
 
-struct BuiltinFunction: FunctionObject {
+struct BuiltinFunctionOld: FunctionObject {
     Value (*code)(ExecutionContext *);
 
-    BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
+    BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
     virtual Value call(ExecutionContext *ctx) { return code(ctx); }
+    virtual Value construct(ExecutionContext *ctx);
+};
+
+struct BuiltinFunction: FunctionObject {
+    Value (*code)(ExecutionContext *parentContext, Value thisObject, Value *args, int argc);
+
+    BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *, Value, Value *, int));
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc) {
+        return code(context, thisObject, args, argc);
+    }
     virtual Value construct(ExecutionContext *ctx);
 };
 

@@ -381,7 +381,21 @@ void ScriptFunction::markObjects()
 }
 
 
-BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
+BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
+    : FunctionObject(scope)
+    , code(code)
+{
+    this->name = name;
+    isBuiltinFunction = true;
+}
+
+Value BuiltinFunctionOld::construct(ExecutionContext *ctx)
+{
+    ctx->throwTypeError();
+    return Value::undefinedValue();
+}
+
+BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *, Value, Value *, int))
     : FunctionObject(scope)
     , code(code)
 {
@@ -394,6 +408,7 @@ Value BuiltinFunction::construct(ExecutionContext *ctx)
     ctx->throwTypeError();
     return Value::undefinedValue();
 }
+
 
 BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)
     : FunctionObject(scope)
