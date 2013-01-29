@@ -45,6 +45,7 @@
 #include "qv4ir_p.h"
 #include "qv4objectproto.h"
 #include "qv4globalobject.h"
+#include "qv4stringobject.h"
 #include "private/qlocale_tools_p.h"
 
 #include <QtCore/qmath.h>
@@ -747,14 +748,18 @@ Value __qmljs_call_activation_property(ExecutionContext *context, String *name, 
     return o->call(context, thisObject, args, argc);
 }
 
-Value __qmljs_call_property(ExecutionContext *context, Value that, String *name, Value *args, int argc)
+Value __qmljs_call_property(ExecutionContext *context, Value thisObject, String *name, Value *args, int argc)
 {
-    Value thisObject = that;
-    if (!thisObject.isObject())
-        thisObject = __qmljs_to_object(thisObject, context);
+    Object *baseObject;
+    if (thisObject.isString()) {
+        baseObject = context->engine->stringPrototype;
+    } else {
+        if (!thisObject.isObject())
+            thisObject = __qmljs_to_object(thisObject, context);
 
-    assert(thisObject.isObject());
-    Object *baseObject = thisObject.objectValue();
+        assert(thisObject.isObject());
+       baseObject = thisObject.objectValue();
+    }
 
     Value func = baseObject->__get__(context, name);
     FunctionObject *o = func.asFunctionObject();
