@@ -2815,6 +2815,14 @@ void QQuickWindow::setColor(const QColor &color)
     if (color == d->clearColor)
         return;
 
+    if (color.alpha() != d->clearColor.alpha()) {
+        QSurfaceFormat fmt = format();
+        if (color.alpha() < 255)
+            fmt.setAlphaBufferSize(8);
+        else
+            fmt.setAlphaBufferSize(-1);
+        setFormat(fmt);
+    }
     d->clearColor = color;
     emit colorChanged(color);
     d->dirtyItem(contentItem());
