@@ -214,10 +214,10 @@ Value MathObject::method_min(ExecutionContext *ctx)
     return Value::fromDouble(mx);
 }
 
-Value MathObject::method_pow(ExecutionContext *ctx)
+Value MathObject::method_pow(ExecutionContext *parentCtx, Value, Value *argv, int argc)
 {
-    double x = ctx->argument(0).toNumber(ctx);
-    double y = ctx->argument(1).toNumber(ctx);
+    double x = argc > 0 ? argv[0].toNumber(parentCtx) : qSNaN();
+    double y = argc > 1 ? argv[1].toNumber(parentCtx) : qSNaN();
 
     if (std::isnan(y))
         return Value::fromDouble(qSNaN());
@@ -246,14 +246,14 @@ Value MathObject::method_pow(ExecutionContext *ctx)
     else if (qIsInf(x) && copySign(1.0, x) == -1.0) {
         if (y > 0) {
             if (::fmod(y, 2.0) == 1.0)
-                return Value::number(ctx, -qInf());
+                return Value::fromDouble(-qInf());
             else
-                return Value::number(ctx, qInf());
+                return Value::fromDouble(qInf());
         } else if (y < 0) {
             if (::fmod(-y, 2.0) == 1.0)
-                return Value::number(ctx, copySign(0, -1.0));
+                return Value::fromDouble(copySign(0, -1.0));
             else
-                return Value::number(ctx, 0);
+                return Value::fromDouble(0);
         }
     }
 #endif

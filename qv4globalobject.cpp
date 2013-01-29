@@ -592,63 +592,63 @@ Value GlobalFunctions::method_isFinite(ExecutionContext *context)
 }
 
 /// decodeURI [15.1.3.1]
-Value GlobalFunctions::method_decodeURI(ExecutionContext *context)
+Value GlobalFunctions::method_decodeURI(ExecutionContext *parentCtx, Value, Value *argv, int argc)
 {
-    if (context->argumentCount == 0)
+    if (argc == 0)
         return Value::undefinedValue();
 
-    QString uriString = context->argument(0).toString(context)->toQString();
+    QString uriString = argv[0].toString(parentCtx)->toQString();
     bool ok;
     QString out = decode(uriString, QString::fromUtf8(uriReserved) + QString::fromUtf8("#"), &ok);
     if (!ok)
-        context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
+        parentCtx->throwURIError(Value::fromString(parentCtx, QStringLiteral("malformed URI sequence")));
 
-    return Value::fromString(context, out);
+    return Value::fromString(parentCtx, out);
 }
 
 /// decodeURIComponent [15.1.3.2]
-Value GlobalFunctions::method_decodeURIComponent(ExecutionContext *context)
+Value GlobalFunctions::method_decodeURIComponent(ExecutionContext *parentCtx, Value, Value *argv, int argc)
 {
-    if (context->argumentCount == 0)
+    if (argc == 0)
         return Value::undefinedValue();
 
-    QString uriString = context->argument(0).toString(context)->toQString();
+    QString uriString = argv[0].toString(parentCtx)->toQString();
     bool ok;
     QString out = decode(uriString, QString(), &ok);
     if (!ok)
-        context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
+        parentCtx->throwURIError(Value::fromString(parentCtx, QStringLiteral("malformed URI sequence")));
 
-    return Value::fromString(context, out);
+    return Value::fromString(parentCtx, out);
 }
 
 /// encodeURI [15.1.3.3]
-Value GlobalFunctions::method_encodeURI(ExecutionContext *context)
+Value GlobalFunctions::method_encodeURI(ExecutionContext *parentCtx, Value, Value *argv, int argc)
 {
-    if (context->argumentCount == 0)
+    if (argc == 0)
         return Value::undefinedValue();
 
-    QString uriString = context->argument(0).toString(context)->toQString();
+    QString uriString = argv[0].toString(parentCtx)->toQString();
     bool ok;
     QString out = encode(uriString, QLatin1String(uriReserved) + QLatin1String(uriUnescaped) + QString::fromUtf8("#"), &ok);
     if (!ok)
-        context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
+        parentCtx->throwURIError(Value::fromString(parentCtx, QStringLiteral("malformed URI sequence")));
 
-    return Value::fromString(context, out);
+    return Value::fromString(parentCtx, out);
 }
 
 /// encodeURIComponent [15.1.3.4]
-Value GlobalFunctions::method_encodeURIComponent(ExecutionContext *context)
+Value GlobalFunctions::method_encodeURIComponent(ExecutionContext *parentCtx, Value, Value *argv, int argc)
 {
-    if (context->argumentCount == 0)
+    if (argc == 0)
         return Value::undefinedValue();
 
-    QString uriString = context->argument(0).toString(context)->toQString();
+    QString uriString = argv[0].toString(parentCtx)->toQString();
     bool ok;
     QString out = encode(uriString, QString(uriUnescaped), &ok);
     if (!ok)
-        context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
+        parentCtx->throwURIError(Value::fromString(parentCtx, QStringLiteral("malformed URI sequence")));
 
-    return Value::fromString(context, out);
+    return Value::fromString(parentCtx, out);
 }
 
 Value GlobalFunctions::method_escape(ExecutionContext *context)

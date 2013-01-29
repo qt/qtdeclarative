@@ -64,7 +64,7 @@ struct MathObject: Object
     static Value method_log(ExecutionContext *ctx);
     static Value method_max(ExecutionContext *ctx);
     static Value method_min(ExecutionContext *ctx);
-    static Value method_pow(ExecutionContext *ctx);
+    static Value method_pow(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
     static Value method_random(ExecutionContext *ctx);
     static Value method_round(ExecutionContext *ctx);
     static Value method_sin(ExecutionContext *ctx);

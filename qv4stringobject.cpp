@@ -234,7 +234,7 @@ Value StringPrototype::method_concat(ExecutionContext *parentCtx, Value thisObje
 {
     QString value = getThisString(parentCtx, thisObject);
 
-    for (unsigned i = 0; i < argc; ++i) {
+    for (int i = 0; i < argc; ++i) {
         Value v = __qmljs_to_string(argv[i], parentCtx);
         assert(v.isString());
         value += v.stringValue()->toQString();
@@ -607,17 +607,17 @@ Value StringPrototype::method_split(ExecutionContext *ctx)
     return result;
 }
 
-Value StringPrototype::method_substr(ExecutionContext *ctx)
+Value StringPrototype::method_substr(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
 {
-    const QString value = getThisString(ctx);
+    const QString value = getThisString(parentCtx, thisObject);
 
     double start = 0;
-    if (ctx->argumentCount > 0)
-        start = ctx->argument(0).toInteger(ctx);
+    if (argc > 0)
+        start = argv[0].toInteger(parentCtx);
 
     double length = +qInf();
-    if (ctx->argumentCount > 1)
-        length = ctx->argument(1).toInteger(ctx);
+    if (argc > 1)
+        length = argv[1].toInteger(parentCtx);
 
     double count = value.length();
     if (start < 0)
@@ -627,23 +627,23 @@ Value StringPrototype::method_substr(ExecutionContext *ctx)
 
     qint32 x = Value::toInt32(start);
     qint32 y = Value::toInt32(length);
-    return Value::fromString(ctx, value.mid(x, y));
+    return Value::fromString(parentCtx, value.mid(x, y));
 }
 
-Value StringPrototype::method_substring(ExecutionContext *ctx)
+Value StringPrototype::method_substring(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
 {
-    QString value = getThisString(ctx);
+    QString value = getThisString(parentCtx, thisObject);
     int length = value.length();
 
     double start = 0;
     double end = length;
 
-    if (ctx->argumentCount > 0)
-        start = ctx->argument(0).toInteger(ctx);
+    if (argc > 0)
+        start = argv[0].toInteger(parentCtx);
 
-    Value endValue = ctx->argument(1);
+    Value endValue = argc > 1 ? argv[1] : Value::undefinedValue();
     if (!endValue.isUndefined())
-        end = endValue.toInteger(ctx);
+        end = endValue.toInteger(parentCtx);
 
     if (std::isnan(start) || start < 0)
         start = 0;
@@ -665,7 +665,7 @@ Value StringPrototype::method_substring(ExecutionContext *ctx)
 
     qint32 x = (int)start;
     qint32 y = (int)(end - start);
-    return Value::fromString(ctx, value.mid(x, y));
+    return Value::fromString(parentCtx, value.mid(x, y));
 }
 
 Value StringPrototype::method_toLowerCase(ExecutionContext *ctx)
@@ -690,14 +690,15 @@ Value StringPrototype::method_toLocaleUpperCase(ExecutionContext *ctx)
     return method_toUpperCase(ctx);
 }
 
-Value StringPrototype::method_fromCharCode(ExecutionContext *ctx)
+Value StringPrototype::method_fromCharCode(ExecutionContext *parentCtx, Value, Value *argv, int argc)
 {
-    QString str;
-    for (unsigned i = 0; i < ctx->argumentCount; ++i) {
-        QChar c(ctx->argument(i).toUInt16(ctx));
-        str += c;
+    QString str(argc, Qt::Uninitialized);
+    QChar *ch = str.data();
+    for (int i = 0; i < argc; ++i) {
+        *ch = QChar(argv[i].toUInt16(parentCtx));
+        ++ch;
     }
-    return Value::fromString(ctx, str);
+    return Value::fromString(parentCtx, str);
 }
 
 Value StringPrototype::method_trim(ExecutionContext *ctx)
