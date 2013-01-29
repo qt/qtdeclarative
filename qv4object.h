@@ -132,8 +132,6 @@ struct Object: Managed {
     bool __defineOwnProperty__(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc);
     bool __defineOwnProperty__(ExecutionContext *ctx, const QString &name, const PropertyDescriptor *desc);
 
-    virtual Value call(ExecutionContext *context, Value, Value *, int);
-
     //
     // helpers
     //

@@ -521,14 +521,14 @@ Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int type
     Object *oo = object.objectValue();
 
     Value conv = oo->__get__(ctx, meth1);
-    if (Object *o = conv.asObject()) {
+    if (FunctionObject *o = conv.asFunctionObject()) {
         Value r = o->call(ctx, object, 0, 0);
         if (r.isPrimitive())
             return r;
     }
 
     conv = oo->__get__(ctx, meth2);
-    if (Object *o = conv.asObject()) {
+    if (FunctionObject *o = conv.asFunctionObject()) {
         Value r = o->call(ctx, object, 0, 0);
         if (r.isPrimitive())
             return r;
@@ -735,7 +735,7 @@ Value __qmljs_call_activation_property(ExecutionContext *context, String *name, 
 {
     Object *base;
     Value func = context->getPropertyAndBase(name, &base);
-    Object *o = func.asObject();
+    FunctionObject *o = func.asFunctionObject();
     if (!o)
         context->throwTypeError();
 
@@ -757,7 +757,7 @@ Value __qmljs_call_property(ExecutionContext *context, Value that, String *name,
     Object *baseObject = thisObject.objectValue();
 
     Value func = baseObject->__get__(context, name);
-    Object *o = func.asObject();
+    FunctionObject *o = func.asFunctionObject();
     if (!o)
         context->throwTypeError();
 
@@ -774,7 +774,7 @@ Value __qmljs_call_element(ExecutionContext *context, Value that, Value index, V
     Object *baseObject = thisObject.objectValue();
 
     Value func = baseObject->__get__(context, index.toString(context));
-    Object *o = func.asObject();
+    FunctionObject *o = func.asFunctionObject();
     if (!o)
         context->throwTypeError();
 
@@ -783,7 +783,7 @@ Value __qmljs_call_element(ExecutionContext *context, Value that, Value index, V
 
 Value __qmljs_call_value(ExecutionContext *context, Value thisObject, Value func, Value *args, int argc)
 {
-    Object *o = func.asObject();
+    FunctionObject *o = func.asFunctionObject();
     if (!o)
         context->throwTypeError();
     return o->call(context, thisObject, args, argc);

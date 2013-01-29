@@ -639,12 +639,6 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, c
 }
 
 
-Value Object::call(ExecutionContext *context, Value , Value *, int)
-{
-    context->throwTypeError();
-    return Value::undefinedValue();
-}
-
 void ArrayObject::init(ExecutionContext *context)
 {
     type = Type_ArrayObject;
