@@ -363,6 +363,62 @@ void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
     Q_UNREACHABLE();
 }
 
+void InstructionSelection::callBuiltinPostDecrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinPostDecrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinPostDecrementName(const QString &name, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinPostDecrementValue(IR::Temp *value, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinPostIncrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinPostIncrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinPostIncrementName(const QString &name, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
 void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
 {
     // TODO
@@ -456,6 +512,13 @@ void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Te
 }
 
 void InstructionSelection::callProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
+void InstructionSelection::callSubscript(IR::Temp *base, IR::Temp *index, IR::ExprList *args, IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
