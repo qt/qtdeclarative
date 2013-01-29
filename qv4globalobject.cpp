@@ -428,7 +428,7 @@ QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
 
             QStringList inheritedLocals;
             if (inheritContext)
-                for (String **i = ctx->variables(), **ei = i + ctx->variableCount(); i < ei; ++i)
+                for (String * const *i = ctx->variables(), * const *ei = i + ctx->variableCount(); i < ei; ++i)
                     inheritedLocals.append(*i ? (*i)->toQString() : QString());
 
             Codegen cg(ctx, strictMode);

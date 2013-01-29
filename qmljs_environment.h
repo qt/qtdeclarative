@@ -83,9 +83,9 @@ struct ExecutionContext
     unsigned int argumentCount;
     Value *locals;
 
-    String **formals() const;
+    String * const *formals() const;
     unsigned int formalCount() const;
-    String **variables() const;
+    String * const *variables() const;
     unsigned int variableCount() const;
 
     bool strictMode;

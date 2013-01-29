@@ -188,7 +188,7 @@ ExecutionContext *ExecutionContext::popScope()
     return engine->current;
 }
 
-String **ExecutionContext::formals() const
+String * const *ExecutionContext::formals() const
 {
     return function ? function->formalParameterList : 0;
 }
@@ -198,7 +198,7 @@ unsigned int ExecutionContext::formalCount() const
     return function ? function->formalParameterCount : 0;
 }
 
-String **ExecutionContext::variables() const
+String * const *ExecutionContext::variables() const
 {
     return function ? function->varList : 0;
 }

@@ -105,8 +105,8 @@ struct Function {
     const uchar *codeData;
     JSC::MacroAssemblerCodeRef codeRef;
 
-    QList<String *> formals;
-    QList<String *> locals;
+    QVector<String *> formals;
+    QVector<String *> locals;
     QVector<Value> generatedValues;
     QVector<String *> identifiers;
 
@@ -134,8 +134,8 @@ struct Function {
 struct FunctionObject: Object {
     ExecutionContext *scope;
     String *name;
-    String **formalParameterList;
-    String **varList;
+    String * const *formalParameterList;
+    String * const *varList;
     unsigned int formalParameterCount;
     unsigned int varCount;
 

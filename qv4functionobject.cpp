@@ -165,10 +165,11 @@ void FunctionObject::markObjects()
 {
     if (name)
         name->mark();
-    for (uint i = 0; i < formalParameterCount; ++i)
-        formalParameterList[i]->mark();
-    for (uint i = 0; i < varCount; ++i)
-        varList[i]->mark();
+    // these are marked in VM::Function:
+//    for (uint i = 0; i < formalParameterCount; ++i)
+//        formalParameterList[i]->mark();
+//    for (uint i = 0; i < varCount; ++i)
+//        varList[i]->mark();
     scope->mark();
     Object::markObjects();
 }
@@ -337,23 +338,11 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
     usesArgumentsObject = function->usesArgumentsObject;
     strictMode = function->isStrict;
     formalParameterCount = function->formals.size();
-    // ### no need to copy
-    if (formalParameterCount) {
-        formalParameterList = new String*[formalParameterCount];
-        for (unsigned int i = 0; i < formalParameterCount; ++i) {
-            formalParameterList[i] = function->formals.at(i);
-        }
-    }
+    formalParameterList = function->formals.constData();
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(formalParameterCount));
 
     varCount = function->locals.size();
-    // ### no need to copy
-    if (varCount) {
-        varList = new String*[varCount];
-        for (unsigned int i = 0; i < varCount; ++i) {
-            varList[i] = function->locals.at(i);
-        }
-    }
+    varList = function->locals.constData();
 
     Object *proto = scope->engine->newObject();
     proto->defineDefaultProperty(scope->engine->id_constructor, Value::fromObject(this));
@@ -376,8 +365,6 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
 
 ScriptFunction::~ScriptFunction()
 {
-    delete[] formalParameterList;
-    delete[] varList;
 }
 
 Value ScriptFunction::call(VM::ExecutionContext *ctx)
