@@ -52,24 +52,24 @@ struct MathObject: Object
     MathObject(ExecutionContext *ctx);
     virtual QString className() { return QStringLiteral("Math"); }
 
-    static Value method_abs(ExecutionContext *ctx);
-    static Value method_acos(ExecutionContext *ctx);
-    static Value method_asin(ExecutionContext *ctx);
-    static Value method_atan(ExecutionContext *ctx);
-    static Value method_atan2(ExecutionContext *ctx);
-    static Value method_ceil(ExecutionContext *ctx);
-    static Value method_cos(ExecutionContext *ctx);
-    static Value method_exp(ExecutionContext *ctx);
-    static Value method_floor(ExecutionContext *ctx);
-    static Value method_log(ExecutionContext *ctx);
-    static Value method_max(ExecutionContext *ctx);
-    static Value method_min(ExecutionContext *ctx);
+    static Value method_abs(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_acos(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_asin(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_atan(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_atan2(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_ceil(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_cos(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_exp(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_floor(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_log(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_max(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_min(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
     static Value method_pow(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_random(ExecutionContext *ctx);
-    static Value method_round(ExecutionContext *ctx);
-    static Value method_sin(ExecutionContext *ctx);
-    static Value method_sqrt(ExecutionContext *ctx);
-    static Value method_tan(ExecutionContext *ctx);
+    static Value method_random(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_round(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_sin(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_sqrt(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_tan(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
 };
 
 } // namespace VM
