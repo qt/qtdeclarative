@@ -46,8 +46,9 @@
 namespace QQmlJS {
 namespace VM {
 
-static uint toArrayIndex(const QChar *ch, const QChar *end)
+static uint toArrayIndex(const QChar *ch, const QChar *end, bool *ok)
 {
+    *ok = false;
     uint i = ch->unicode() - '0';
     if (i > 9)
         return String::InvalidArrayIndex;
@@ -67,26 +68,17 @@ static uint toArrayIndex(const QChar *ch, const QChar *end)
         i = n;
         ++ch;
     }
+    *ok = true;
     return i;
-}
-
-uint String::asArrayIndexSlow() const
-{
-    if (stringHash < LargestHashedArrayIndex)
-        return stringHash;
-
-    const QChar *ch = _text.constData();
-    const QChar *end = ch + _text.length();
-    return toArrayIndex(ch, end);
 }
 
 uint String::toUInt(bool *ok) const
 {
     *ok = true;
 
-    if (stringHash == InvalidHashValue)
+    if (subtype == StringType_Unknown)
         createHashValue();
-    if (stringHash < LargestHashedArrayIndex)
+    if (subtype == StringType_ArrayIndex)
         return stringHash;
 
     double d = __qmljs_string_to_number(this);
@@ -102,11 +94,11 @@ void String::createHashValue() const
     const QChar *ch = _text.constData();
     const QChar *end = ch + _text.length();
 
-    // array indices get their number as hash value, for large numbers we set to INT_MAX
-    stringHash = toArrayIndex(ch, end);
-    if (stringHash < UINT_MAX) {
-        if (stringHash > INT_MAX)
-            stringHash = INT_MAX;
+    // array indices get their number as hash value
+    bool ok;
+    stringHash = toArrayIndex(ch, end, &ok);
+    if (ok) {
+        subtype = StringType_ArrayIndex;
         return;
     }
 
@@ -116,8 +108,8 @@ void String::createHashValue() const
         ++ch;
     }
 
-    // set highest bit to mark it as a non number
-    stringHash = h | 0xf0000000;
+    stringHash = h;
+    subtype = StringType_Regular;
 }
 
 }

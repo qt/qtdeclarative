@@ -48,15 +48,25 @@ namespace QQmlJS {
 namespace VM {
 
 struct String : public Managed {
+    enum StringType {
+        StringType_Unknown,
+        StringType_ArrayIndex,
+        StringType_Regular,
+        StringType_Identifier,
+    };
+
     String(const QString &text)
-        : _text(text), stringHash(0)
-    { type = Type_String; stringHash = InvalidHashValue; }
+        : _text(text), stringHash(InvalidHashValue)
+    { type = Type_String; subtype = StringType_Unknown; }
 
     inline bool isEqualTo(const String *other) const {
         if (this == other)
             return true;
-        else if (other && hashValue() == other->hashValue())
+        else if (hashValue() == other->hashValue()) {
+            if (subtype == StringType_ArrayIndex && other->subtype == StringType_ArrayIndex)
+                return true;
             return toQString() == other->toQString();
+        }
         return false;
     }
 
@@ -65,26 +75,22 @@ struct String : public Managed {
     }
 
     inline unsigned hashValue() const {
-        if (stringHash == InvalidHashValue)
+        if (subtype == StringType_Unknown)
             createHashValue();
 
         return stringHash;
     }
     enum {
         InvalidArrayIndex = 0xffffffff,
-        LargestHashedArrayIndex = 0x7fffffff,
         InvalidHashValue  = 0xffffffff
     };
     uint asArrayIndex() const {
-        if (stringHash == InvalidHashValue)
+        if (subtype == StringType_Unknown)
             createHashValue();
-        if (stringHash > LargestHashedArrayIndex)
-            return InvalidArrayIndex;
-        if (stringHash < LargestHashedArrayIndex)
+        if (subtype == StringType_ArrayIndex)
             return stringHash;
-        return asArrayIndexSlow();
+        return UINT_MAX;
     }
-    uint asArrayIndexSlow() const;
     uint toUInt(bool *ok) const;
 
 private:
