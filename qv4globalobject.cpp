@@ -283,8 +283,8 @@ static QString decode(const QString &input, const QString &reservedSet, bool *ok
 
                     ushort l = ushort(((uc - 0x10000) & 0x3FF) + 0xDC00);
                     ushort h = ushort((((uc - 0x10000) >> 10) & 0x3FF) + 0xD800);
-                    output.append(QChar(l));
                     output.append(QChar(h));
+                    output.append(QChar(l));
                 }
             } else {
                 QChar z(b);
