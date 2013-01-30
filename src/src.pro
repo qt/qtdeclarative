@@ -1,3 +1,3 @@
 TEMPLATE = subdirs
-SUBDIRS = v4 tools
+SUBDIRS = v4
 CONFIG += ordered

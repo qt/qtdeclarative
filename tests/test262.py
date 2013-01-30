@@ -113,7 +113,7 @@ EXCLUDE_LIST = [x.getAttribute("id") for x in EXCLUDE_LIST]
 
 def BuildOptions():
   result = optparse.OptionParser()
-  result.add_option("--command", default=path.abspath(rootDir + "/../v4"), help="The command-line to run")
+  result.add_option("--command", default="v4", help="The command-line to run")
   result.add_option("--tests", default=path.abspath(rootDir + '/test262'),
                     help="Path to the tests")
   result.add_option("--cat", default=False, action="store_true",

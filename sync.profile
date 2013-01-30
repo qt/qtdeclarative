@@ -1,8 +1,8 @@
 %modules = ( # path to module name map
-    "QtV4" => "$basedir/src",
+    "QtV4" => "$basedir/src/v4",
 );
 %moduleheaders = ( # restrict the module headers to those found in relative path
-    #"QtV4" => "3rdparty/masm;v4;",
+#    "QtV4" => "../3rdparty/;../v4;",
 );
 @allmoduleheadersprivate = (
     "QtV4"
