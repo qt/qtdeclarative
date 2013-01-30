@@ -54,9 +54,9 @@ Value BooleanCtor::construct(ExecutionContext *ctx)
     return Value::fromObject(ctx->engine->newBooleanObject(Value::fromBoolean(n)));
 }
 
-Value BooleanCtor::call(ExecutionContext *ctx)
+Value BooleanCtor::call(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
 {
-    bool value = ctx->argumentCount ? ctx->argument(0).toBoolean(ctx) : 0;
+    bool value = argc ? argv[0].toBoolean(parentCtx) : 0;
     return Value::fromBoolean(value);
 }
 

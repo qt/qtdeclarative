@@ -53,7 +53,7 @@ struct NumberCtor: FunctionObject
     NumberCtor(ExecutionContext *scope);
 
     virtual Value construct(ExecutionContext *ctx);
-    virtual Value call(ExecutionContext *ctx);
+    virtual Value call(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
 };
 
 struct NumberPrototype: NumberObject

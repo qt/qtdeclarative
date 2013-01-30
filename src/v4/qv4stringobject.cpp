@@ -122,13 +122,13 @@ Value StringCtor::construct(ExecutionContext *ctx)
     return Value::fromObject(ctx->engine->newStringObject(ctx, value));
 }
 
-Value StringCtor::call(ExecutionContext *ctx)
+Value StringCtor::call(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
 {
     Value value;
-    if (ctx->argumentCount)
-        value = Value::fromString(ctx->argument(0).toString(ctx));
+    if (argc)
+        value = Value::fromString(argv[0].toString(parentCtx));
     else
-        value = Value::fromString(ctx, QString());
+        value = Value::fromString(parentCtx, QString());
     return value;
 }
 

@@ -53,7 +53,7 @@ struct BooleanCtor: FunctionObject
     BooleanCtor(ExecutionContext *scope);
 
     virtual Value construct(ExecutionContext *ctx);
-    virtual Value call(ExecutionContext *ctx);
+    virtual Value call(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
 };
 
 struct BooleanPrototype: BooleanObject

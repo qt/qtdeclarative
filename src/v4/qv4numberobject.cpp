@@ -60,9 +60,9 @@ Value NumberCtor::construct(ExecutionContext *ctx)
     return Value::fromObject(ctx->engine->newNumberObject(Value::fromDouble(d)));
 }
 
-Value NumberCtor::call(ExecutionContext *ctx)
+Value NumberCtor::call(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
 {
-    double d = ctx->argumentCount ? ctx->argument(0).toNumber(ctx) : 0;
+    double d = argc ? argv[0].toNumber(parentCtx) : 0.;
     return Value::fromDouble(d);
 }
 
