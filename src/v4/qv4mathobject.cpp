@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qv4mathobject.h"
+#include "qv4objectproto.h"
 
 #include <cmath>
 #include <qmath.h>
@@ -52,6 +53,7 @@ static const double qt_PI = 2.0 * ::asin(1.0);
 MathObject::MathObject(ExecutionContext *ctx)
 {
     type = Type_MathObject;
+    prototype = ctx->engine->objectPrototype;
 
     defineReadonlyProperty(ctx->engine, QStringLiteral("E"), Value::fromDouble(::exp(1.0)));
     defineReadonlyProperty(ctx->engine, QStringLiteral("LN2"), Value::fromDouble(::log(2.0)));

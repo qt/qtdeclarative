@@ -100,7 +100,7 @@ bool ExecutionContext::hasBinding(String *name) const
 void ExecutionContext::createMutableBinding(String *name, bool deletable)
 {
     if (!activation)
-        activation = engine->newActivationObject();
+        activation = engine->newObject();
 
     if (activation->__hasProperty__(this, name))
         return;

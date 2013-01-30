@@ -196,7 +196,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     glo->defineDefaultProperty(rootContext, QStringLiteral("SyntaxError"), syntaxErrorCtor);
     glo->defineDefaultProperty(rootContext, QStringLiteral("TypeError"), typeErrorCtor);
     glo->defineDefaultProperty(rootContext, QStringLiteral("URIError"), uRIErrorCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("Math"), Value::fromObject(newMathObject(rootContext)));
+    glo->defineDefaultProperty(rootContext, QStringLiteral("Math"), Value::fromObject(new (memoryManager) MathObject(rootContext)));
     glo->defineDefaultProperty(rootContext, QStringLiteral("JSON"), Value::fromObject(new (memoryManager) JsonObject(rootContext)));
 
     glo->defineReadonlyProperty(this, QStringLiteral("undefined"), Value::undefinedValue());
@@ -275,11 +275,6 @@ Object *ExecutionEngine::newObject()
     return object;
 }
 
-FunctionObject *ExecutionEngine::newObjectCtor(ExecutionContext *ctx)
-{
-    return new (memoryManager) ObjectCtor(ctx);
-}
-
 String *ExecutionEngine::newString(const QString &s)
 {
     return new (memoryManager) String(s);
@@ -290,18 +285,11 @@ String *ExecutionEngine::newIdentifier(const QString &text)
     return identifierCache->insert(text);
 }
 
-
-
 Object *ExecutionEngine::newStringObject(ExecutionContext *ctx, const Value &value)
 {
     StringObject *object = new (memoryManager) StringObject(ctx, value);
     object->prototype = stringPrototype;
     return object;
-}
-
-FunctionObject *ExecutionEngine::newStringCtor(ExecutionContext *ctx)
-{
-    return new (memoryManager) StringCtor(ctx);
 }
 
 Object *ExecutionEngine::newNumberObject(const Value &value)
@@ -311,21 +299,11 @@ Object *ExecutionEngine::newNumberObject(const Value &value)
     return object;
 }
 
-FunctionObject *ExecutionEngine::newNumberCtor(ExecutionContext *ctx)
-{
-    return new (memoryManager) NumberCtor(ctx);
-}
-
 Object *ExecutionEngine::newBooleanObject(const Value &value)
 {
     Object *object = new (memoryManager) BooleanObject(value);
     object->prototype = booleanPrototype;
     return object;
-}
-
-FunctionObject *ExecutionEngine::newBooleanCtor(ExecutionContext *ctx)
-{
-    return new (memoryManager) BooleanCtor(ctx);
 }
 
 Object *ExecutionEngine::newFunctionObject(ExecutionContext *ctx)
@@ -349,21 +327,11 @@ ArrayObject *ExecutionEngine::newArrayObject(ExecutionContext *ctx, const Array 
     return object;
 }
 
-FunctionObject *ExecutionEngine::newArrayCtor(ExecutionContext *ctx)
-{
-    return new (memoryManager) ArrayCtor(ctx);
-}
-
 Object *ExecutionEngine::newDateObject(const Value &value)
 {
     Object *object = new (memoryManager) DateObject(value);
     object->prototype = datePrototype;
     return object;
-}
-
-FunctionObject *ExecutionEngine::newDateCtor(ExecutionContext *ctx)
-{
-    return new (memoryManager) DateCtor(ctx);
 }
 
 RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
@@ -384,11 +352,6 @@ RegExpObject *ExecutionEngine::newRegExpObject(PassRefPtr<RegExp> re, bool globa
     RegExpObject *object = new (memoryManager) RegExpObject(this, re, global);
     object->prototype = regExpPrototype;
     return object;
-}
-
-FunctionObject *ExecutionEngine::newRegExpCtor(ExecutionContext *ctx)
-{
-    return new (memoryManager) RegExpCtor(ctx);
 }
 
 Object *ExecutionEngine::newErrorObject(const Value &value)
@@ -421,18 +384,6 @@ Object *ExecutionEngine::newRangeErrorObject(ExecutionContext *ctx, const QStrin
 Object *ExecutionEngine::newURIErrorObject(ExecutionContext *ctx, Value message)
 {
     return new (memoryManager) URIErrorObject(ctx, message);
-}
-
-Object *ExecutionEngine::newMathObject(ExecutionContext *ctx)
-{
-    MathObject *object = new (memoryManager) MathObject(ctx);
-    object->prototype = objectPrototype;
-    return object;
-}
-
-Object *ExecutionEngine::newActivationObject()
-{
-    return new (memoryManager) Object();
 }
 
 Object *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object *o)

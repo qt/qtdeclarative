@@ -188,33 +188,22 @@ struct Q_V4_EXPORT ExecutionEngine
     BoundFunction *newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
 
     Object *newObject();
-    FunctionObject *newObjectCtor(ExecutionContext *ctx);
 
     String *newString(const QString &s);
     String *newIdentifier(const QString &text);
 
-
     Object *newStringObject(ExecutionContext *ctx, const Value &value);
-    FunctionObject *newStringCtor(ExecutionContext *ctx);
-
     Object *newNumberObject(const Value &value);
-    FunctionObject *newNumberCtor(ExecutionContext *ctx);
-
     Object *newBooleanObject(const Value &value);
-    FunctionObject *newBooleanCtor(ExecutionContext *ctx);
-
     Object *newFunctionObject(ExecutionContext *ctx);
 
     ArrayObject *newArrayObject(ExecutionContext *ctx);
     ArrayObject *newArrayObject(ExecutionContext *ctx, const Array &value);
-    FunctionObject *newArrayCtor(ExecutionContext *ctx);
 
     Object *newDateObject(const Value &value);
-    FunctionObject *newDateCtor(ExecutionContext *ctx);
 
     RegExpObject *newRegExpObject(const QString &pattern, int flags);
     RegExpObject *newRegExpObject(PassRefPtr<RegExp> re, bool global);
-    FunctionObject *newRegExpCtor(ExecutionContext *ctx);
 
     Object *newErrorObject(const Value &value);
     Object *newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message);
@@ -222,9 +211,6 @@ struct Q_V4_EXPORT ExecutionEngine
     Object *newTypeErrorObject(ExecutionContext *ctx, const QString &message);
     Object *newRangeErrorObject(ExecutionContext *ctx, const QString &message);
     Object *newURIErrorObject(ExecutionContext *ctx, Value message);
-
-    Object *newMathObject(ExecutionContext *ctx);
-    Object *newActivationObject();
 
     Object *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
 
