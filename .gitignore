@@ -1,6 +1,6 @@
 *.o
 Makefile
-v4
+src/tools/v4
 udis86_itab.*
 *.pyc
 *.pro.user
