@@ -88,8 +88,8 @@ protected:
         , usesArgumentsObject(0)
         , strictMode(0)
         , type(Type_Invalid)
+        , subtype(0)
         , unused(0)
-        , stringHash(0)
     {}
     virtual ~Managed();
 
@@ -157,8 +157,12 @@ protected:
             quintptr usesArgumentsObject : 1; // used by FunctionObject
             quintptr strictMode : 1; // used by FunctionObject
             quintptr type : 8;
-            quintptr unused  : 16;
-            mutable quintptr stringHash : 32;
+            quintptr subtype : 8;
+#if CPU(X86_64)
+            quintptr unused  : 40;
+#else
+            quintptr unused  : 8;
+#endif
         };
     };
 

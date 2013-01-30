@@ -49,7 +49,8 @@ namespace VM {
 
 struct String : public Managed {
     String(const QString &text)
-        : _text(text) { type = Type_String; stringHash = InvalidHashValue; }
+        : _text(text), stringHash(0)
+    { type = Type_String; stringHash = InvalidHashValue; }
 
     inline bool isEqualTo(const String *other) const {
         if (this == other)
@@ -90,6 +91,7 @@ private:
     void createHashValue() const;
 
     QString _text;
+    mutable uint stringHash;
 };
 
 }

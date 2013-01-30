@@ -57,7 +57,6 @@ struct ErrorObject: Object {
         TypeError,
         URIError
     };
-    ErrorType errorType;
 
     ErrorObject(ExecutionEngine* engine, const Value &message);
 

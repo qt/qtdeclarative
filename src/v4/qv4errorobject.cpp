@@ -74,9 +74,9 @@
 using namespace QQmlJS::VM;
 
 ErrorObject::ErrorObject(ExecutionEngine* engine, const Value &message)
-    : errorType(Error)
 {
     type = Type_ErrorObject;
+    subtype = Error;
 
     if (message.type() != Value::Undefined_Type)
         defineDefaultProperty(engine->identifier(QStringLiteral("message")), message);
@@ -91,7 +91,7 @@ SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *m
     : ErrorObject(ctx->engine, message ? Value::fromString(message->buildFullMessage(ctx)) : ctx->argument(0))
     , msg(message)
 {
-    errorType = SyntaxError;
+    subtype = SyntaxError;
     prototype = ctx->engine->syntaxErrorPrototype;
     setNameProperty(ctx);
 }
@@ -101,7 +101,7 @@ SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *m
 EvalErrorObject::EvalErrorObject(ExecutionContext *ctx)
     : ErrorObject(ctx->engine, ctx->argument(0))
 {
-    errorType = EvalError;
+    subtype = EvalError;
     setNameProperty(ctx);
     prototype = ctx->engine->evalErrorPrototype;
 }
@@ -109,7 +109,7 @@ EvalErrorObject::EvalErrorObject(ExecutionContext *ctx)
 RangeErrorObject::RangeErrorObject(ExecutionContext *ctx)
     : ErrorObject(ctx->engine, ctx->argument(0))
 {
-    errorType = RangeError;
+    subtype = RangeError;
     setNameProperty(ctx);
     prototype = ctx->engine->rangeErrorPrototype;
 }
@@ -117,7 +117,7 @@ RangeErrorObject::RangeErrorObject(ExecutionContext *ctx)
 RangeErrorObject::RangeErrorObject(ExecutionContext *ctx, const QString &msg)
     : ErrorObject(ctx->engine, Value::fromString(ctx,msg))
 {
-    errorType = RangeError;
+    subtype = RangeError;
     setNameProperty(ctx);
     prototype = ctx->engine->rangeErrorPrototype;
 }
@@ -125,7 +125,7 @@ RangeErrorObject::RangeErrorObject(ExecutionContext *ctx, const QString &msg)
 ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx)
     : ErrorObject(ctx->engine, ctx->argument(0))
 {
-    errorType = ReferenceError;
+    subtype = ReferenceError;
     setNameProperty(ctx);
     prototype = ctx->engine->referenceErrorPrototype;
 }
@@ -133,7 +133,7 @@ ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx)
 ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx, const QString &msg)
     : ErrorObject(ctx->engine, Value::fromString(ctx,msg))
 {
-    errorType = ReferenceError;
+    subtype = ReferenceError;
     setNameProperty(ctx);
     prototype = ctx->engine->referenceErrorPrototype;
 }
@@ -141,7 +141,7 @@ ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx, const QString 
 TypeErrorObject::TypeErrorObject(ExecutionContext *ctx)
     : ErrorObject(ctx->engine, ctx->argument(0))
 {
-    errorType = TypeError;
+    subtype = TypeError;
     setNameProperty(ctx);
     prototype = ctx->engine->typeErrorPrototype;
 }
@@ -149,7 +149,7 @@ TypeErrorObject::TypeErrorObject(ExecutionContext *ctx)
 TypeErrorObject::TypeErrorObject(ExecutionContext *ctx, const QString &msg)
     : ErrorObject(ctx->engine, Value::fromString(ctx,msg))
 {
-    errorType = TypeError;
+    subtype = TypeError;
     setNameProperty(ctx);
     prototype = ctx->engine->typeErrorPrototype;
 }
@@ -157,7 +157,7 @@ TypeErrorObject::TypeErrorObject(ExecutionContext *ctx, const QString &msg)
 URIErrorObject::URIErrorObject(ExecutionContext *ctx)
     : ErrorObject(ctx->engine, ctx->argument(0))
 {
-    errorType = URIError;
+    subtype = URIError;
     setNameProperty(ctx);
     prototype = ctx->engine->uRIErrorPrototype;
 }
@@ -165,7 +165,7 @@ URIErrorObject::URIErrorObject(ExecutionContext *ctx)
 URIErrorObject::URIErrorObject(ExecutionContext *ctx, Value msg)
     : ErrorObject(ctx->engine, msg)
 {
-    errorType = URIError;
+    subtype = URIError;
     setNameProperty(ctx);
     prototype = ctx->engine->uRIErrorPrototype;
 }
