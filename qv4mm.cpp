@@ -58,6 +58,7 @@ struct MemoryManager::Data
 
     enum { MaxItemSize = 256 };
     Managed *smallItems[MaxItemSize/16];
+    uint nChunks[MaxItemSize/16];
     struct Chunk {
         PageAllocation memory;
         int chunkSize;
@@ -77,6 +78,7 @@ struct MemoryManager::Data
         , engine(0)
     {
         memset(smallItems, 0, sizeof(smallItems));
+        memset(nChunks, 0, sizeof(nChunks));
         scribble = qgetenv("MM_NO_SCRIBBLE").isEmpty();
         aggressiveGC = !qgetenv("MM_AGGRESSIVE_GC").isEmpty();
     }
@@ -133,7 +135,11 @@ Managed *MemoryManager::alloc(std::size_t size)
 
     // no free item available, allocate a new chunk
     {
-        std::size_t allocSize = std::max(size, CHUNK_SIZE);
+        // allocate larger chunks at a time to avoid excessive GC, but cap at 64M chunks
+        uint shift = ++m_d->nChunks[pos];
+        if (shift > 10)
+            shift = 10;
+        std::size_t allocSize = std::max(size, CHUNK_SIZE*(1 << shift));
         allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
         Data::Chunk allocation;
         allocation.memory = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
