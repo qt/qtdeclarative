@@ -71,6 +71,12 @@ DEFINE_BOOL_CONFIG_OPTION(qmlFlashMode, QML_FLASH_MODE)
 DEFINE_BOOL_CONFIG_OPTION(qmlTranslucentMode, QML_TRANSLUCENT_MODE)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
+
+#ifndef QSG_NO_RENDERER_TIMING
+static bool qsg_render_timing = !qgetenv("QML_RENDERER_TIMING").isEmpty();
+static QElapsedTimer qsg_renderer_timer;
+#endif
+
 /*
     Comments about this class from Gunnar:
 
@@ -463,10 +469,20 @@ QSGMaterialShader *QSGContext::prepareMaterial(QSGMaterial *material)
     if (shader)
         return shader;
 
+#ifndef QSG_NO_RENDERER_TIMING
+    if (qsg_render_timing)
+        qsg_renderer_timer.start();
+#endif
+
     shader = material->createShader();
     shader->compile();
     shader->initialize();
     d->materials[type] = shader;
+
+#ifndef QSG_NO_RENDERER_TIMING
+    if (qsg_render_timing)
+        printf("   - compiling material: %dms\n", (int) qsg_renderer_timer.elapsed());
+#endif
 
     return shader;
 }

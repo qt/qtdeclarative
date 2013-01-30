@@ -65,6 +65,12 @@
 #include <QHash>
 #endif
 
+#ifndef QSG_NO_RENDERER_TIMING
+static bool qsg_render_timing = !qgetenv("QML_RENDERER_TIMING").isEmpty();
+static QElapsedTimer qsg_renderer_timer;
+#endif
+
+
 QT_BEGIN_NAMESPACE
 
 inline static bool isPowerOfTwo(int x)
@@ -596,20 +602,42 @@ void QSGPlainTexture::bind()
 
     m_dirty_texture = false;
 
+#ifndef QSG_NO_RENDERER_TIMING
+    if (qsg_render_timing)
+        qsg_renderer_timer.start();
+#endif
 
     if (m_image.isNull()) {
-        if (m_texture_id && m_owns_texture)
+        if (m_texture_id && m_owns_texture) {
             glDeleteTextures(1, &m_texture_id);
+#ifndef QSG_NO_RENDERER_TIMING
+            if (qsg_render_timing) {
+                printf("   - texture deleted in %dms (size: %dx%d)\n",
+                       (int) qsg_renderer_timer.elapsed(),
+                       m_texture_size.width(),
+                       m_texture_size.height());
+            }
+#endif
+        }
         m_texture_id = 0;
         m_texture_size = QSize();
         m_has_mipmaps = false;
         m_has_alpha = false;
+
+
+
         return;
     }
 
     if (m_texture_id == 0)
         glGenTextures(1, &m_texture_id);
     glBindTexture(GL_TEXTURE_2D, m_texture_id);
+
+#ifndef QSG_NO_RENDERER_TIMING
+    int bindTime = 0;
+    if (qsg_render_timing)
+        bindTime = qsg_renderer_timer.elapsed();
+#endif
 
     // ### TODO: check for out-of-memory situations...
     int w = m_image.width();
@@ -619,20 +647,67 @@ void QSGPlainTexture::bind()
                  ? m_image
                  : m_image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
+#ifndef QSG_NO_RENDERER_TIMING
+    int convertTime = 0;
+    if (qsg_render_timing)
+        convertTime = qsg_renderer_timer.elapsed();
+#endif
+
     updateBindOptions(m_dirty_bind_options);
 
 #ifdef QT_OPENGL_ES
         qsg_swizzleBGRAToRGBA(&tmp);
+#ifndef QSG_NO_RENDERER_TIMING
+    int swizzleTime = 0;
+    if (qsg_render_timing)
+        swizzleTime = qsg_renderer_timer.elapsed();
+#endif
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp.constBits());
 #else
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tmp.constBits());
 #endif
+
+#ifndef QSG_NO_RENDERER_TIMING
+    int uploadTime = 0;
+    if (qsg_render_timing)
+        uploadTime = qsg_renderer_timer.elapsed();
+#endif
+
 
     if (m_has_mipmaps) {
         QOpenGLContext *ctx = QOpenGLContext::currentContext();
         ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
         m_mipmaps_generated = true;
     }
+
+#ifndef QSG_NO_RENDERER_TIMING
+    int mipmapTime = 0;
+    if (qsg_render_timing) {
+        mipmapTime = qsg_renderer_timer.elapsed();
+
+#ifdef QT_OPENGL_ES
+        printf("   - plaintexture(%dx%d) bind=%d, convert=%d, swizzle=%d, upload=%d, mipmap=%d, total=%d\n",
+               m_texture_size.width(), m_texture_size.height(),
+               bindTime,
+               convertTime - bindTime,
+               swizzleTime - convertTime,
+               uploadTime - swizzleTime,
+               mipmapTime - uploadTime,
+               (int) qsg_renderer_timer.elapsed());
+#else
+        printf("   - plaintexture(%dx%d): bind=%d, convert=%d, upload=%d, mipmap=%d, total=%d\n",
+               m_texture_size.width(), m_texture_size.height(),
+               bindTime,
+               convertTime - bindTime,
+               uploadTime - convertTime,
+               mipmapTime - uploadTime,
+               (int) qsg_renderer_timer.elapsed());
+#endif
+
+    }
+
+#endif
+
 
     m_texture_size = QSize(w, h);
     m_texture_rect = QRectF(0, 0, 1, 1);

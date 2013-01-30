@@ -133,8 +133,7 @@ static inline int qsgrl_animation_interval() {
 }
 
 
-#define QQUICK_WINDOW_TIMING
-#ifdef QQUICK_WINDOW_TIMING
+#ifndef QSG_NO_WINDOW_TIMING
 static bool qquick_window_timing = !qgetenv("QML_WINDOW_TIMING").isEmpty();
 static QTime threadTimer;
 static int syncTime;
@@ -537,7 +536,7 @@ void QSGRenderThread::sync()
 
 void QSGRenderThread::syncAndRender()
 {
-#ifdef QQUICK_WINDOW_TIMING
+#ifndef QSG_NO_WINDOW_TIMING
     if (qquick_window_timing)
         sinceLastTime = threadTimer.restart();
 #endif
@@ -556,7 +555,7 @@ void QSGRenderThread::syncAndRender()
         sync();
     }
 
-#ifdef QQUICK_WINDOW_TIMING
+#ifndef QSG_NO_WINDOW_TIMING
     if (qquick_window_timing)
         syncTime = threadTimer.elapsed();
 #endif
@@ -570,7 +569,7 @@ void QSGRenderThread::syncAndRender()
         }
         gl->makeCurrent(w.window);
         d->renderSceneGraph(w.size);
-#ifdef QQUICK_WINDOW_TIMING
+#ifndef QSG_NO_WINDOW_TIMING
         if (qquick_window_timing && i == 0)
             renderTime = threadTimer.elapsed();
 #endif
@@ -579,7 +578,7 @@ void QSGRenderThread::syncAndRender()
     }
     RLDEBUG("    Render:  - rendering done");
 
-#ifdef QQUICK_WINDOW_TIMING
+#ifndef QSG_NO_WINDOW_TIMING
         if (qquick_window_timing)
             qDebug("window Time: sinceLast=%d, sync=%d, first render=%d, after final swap=%d",
                    sinceLastTime,
@@ -885,10 +884,10 @@ void QSGThreadedRenderLoop::polishAndSync()
     if (!anyoneShowing())
         return;
 
-#ifdef QQUICK_WINDOW_TIMING
+#ifndef QSG_NO_WINDOW_TIMING
     QElapsedTimer timer;
-    int polishTime;
-    int waitTime;
+    int polishTime = 0;
+    int waitTime = 0;
     if (qquick_window_timing)
         timer.start();
 #endif
@@ -899,7 +898,7 @@ void QSGThreadedRenderLoop::polishAndSync()
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(w.window);
         d->polishItems();
     }
-#ifdef QQUICK_WINDOW_TIMING
+#ifndef QSG_NO_WINDOW_TIMING
     if (qquick_window_timing)
         polishTime = timer.elapsed();
 #endif
@@ -916,7 +915,7 @@ void QSGThreadedRenderLoop::polishAndSync()
 
     QCoreApplication::postEvent(m_thread, event);
     RLDEBUG("GUI:  - wait for sync...");
-#ifdef QQUICK_WINDOW_TIMING
+#ifndef QSG_NO_WINDOW_TIMING
     if (qquick_window_timing)
         waitTime = timer.elapsed();
 #endif
@@ -925,7 +924,7 @@ void QSGThreadedRenderLoop::polishAndSync()
     m_thread->mutex.unlock();
     RLDEBUG("GUI:  - unlocked after sync...");
 
-#ifdef QQUICK_WINDOW_TIMING
+#ifndef QSG_NO_WINDOW_TIMING
     if (qquick_window_timing)
         qDebug(" - polish=%d, wait=%d, sync=%d", polishTime, waitTime - polishTime, int(timer.elapsed() - waitTime));
 #endif
