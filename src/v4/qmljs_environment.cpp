@@ -492,61 +492,48 @@ void ExecutionContext::throwURIError(Value msg)
     throwError(Value::fromObject(engine->newURIErrorObject(this, msg)));
 }
 
-void ExecutionContext::initCallContext(ExecutionContext *parent, const Value that, FunctionObject *f, Value *args, unsigned argc)
+void ExecutionContext::initCallContext(ExecutionContext *parent)
 {
-    MemoryManager::GCBlocker blockGC(parent->engine->memoryManager);
-
     engine = parent->engine;
     this->parent = parent;
-    outer = f->scope;
+    outer = function->scope;
     engine->current = this;
 
-    function = f;
-    strictMode = f->strictMode;
+    activation = 0;
+    withObject = 0;
 
-    thisObject = that;
-    if (!strictMode && !thisObject.isObject()) {
-        if (thisObject.isUndefined() || thisObject.isNull())
-            thisObject = engine->globalObject;
-        else
-            thisObject = thisObject.toObject(this);
+    strictMode = function->strictMode;
+
+    if (function->varCount) {
+        locals = reinterpret_cast<Value *>(this + 1);
+        std::fill(locals, locals + function->varCount, Value::undefinedValue());
     }
 
-    locals = function->varCount ? reinterpret_cast<Value *>(this + 1) : 0;
-    if (locals)
-        std::fill(locals, locals + function->varCount, Value::undefinedValue());
-
-    arguments = args;
-    argumentCount = argc;
-    if (function->needsActivation || argc < function->formalParameterCount){
+    uint argc = argumentCount;
+    if (function->needsActivation || argumentCount < function->formalParameterCount){
+        Value *args = arguments;
         argumentCount = qMax(argc, function->formalParameterCount);
         arguments = reinterpret_cast<Value *>(this + 1) + function->varCount;
         if (argc)
             std::copy(args, args + argc, arguments);
         if (argc < function->formalParameterCount)
             std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
-    }
 
-
-    activation = 0;
-    withObject = 0;
-
-    if (function->usesArgumentsObject) {
-        ArgumentsObject *args = new (engine->memoryManager) ArgumentsObject(this, function->formalParameterCount, argc);
-        args->prototype = engine->objectPrototype;
-        Value arguments = Value::fromObject(args);
-        createMutableBinding(engine->id_arguments, false);
-        setMutableBinding(this, engine->id_arguments, arguments);
+        if (function->usesArgumentsObject) {
+            ArgumentsObject *args = new (engine->memoryManager) ArgumentsObject(this, function->formalParameterCount, argc);
+            args->prototype = engine->objectPrototype;
+            Value arguments = Value::fromObject(args);
+            createMutableBinding(engine->id_arguments, false);
+            setMutableBinding(this, engine->id_arguments, arguments);
+        }
     }
 
     if (engine->debugger)
-        engine->debugger->aboutToCall(f, this);
+        engine->debugger->aboutToCall(function, this);
 }
 
 void ExecutionContext::leaveCallContext()
 {
-    if (!function->needsActivation)
-        locals = 0;
     engine->current = parent;
     parent = 0;
 

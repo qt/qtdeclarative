@@ -107,7 +107,7 @@ struct ExecutionContext
     ExecutionContext *createWithScope(Object *with);
     ExecutionContext *popScope();
 
-    void initCallContext(ExecutionContext *parent, const Value that, FunctionObject *f, Value *args, unsigned argc);
+    void initCallContext(ExecutionContext *parent);
     void leaveCallContext();
 
     void wireUpPrototype();

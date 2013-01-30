@@ -134,7 +134,12 @@ Value FunctionObject::construct(ExecutionContext *context, Value *args, int argc
     uint size = requiredMemoryForExecutionContect(this, argc);
     ExecutionContext *ctx = static_cast<ExecutionContext *>(needsActivation ? malloc(size) : alloca(size));
 
-    ctx->initCallContext(context, Value::fromObject(obj), this, args, argc);
+    ctx->thisObject = Value::fromObject(obj);
+    ctx->function = this;
+    ctx->arguments = args;
+    ctx->argumentCount = argc;
+
+    ctx->initCallContext(context);
     Value result = construct(ctx);
     ctx->leaveCallContext();
 
@@ -148,15 +153,24 @@ Value FunctionObject::call(ExecutionContext *context, Value thisObject, Value *a
     uint size = requiredMemoryForExecutionContect(this, argc);
     ExecutionContext *ctx = static_cast<ExecutionContext *>(needsActivation ? malloc(size) : alloca(size));
 
-
-    ctx->initCallContext(context, thisObject, this, args, argc);
-    if (isBuiltinFunction) {
+    if (!strictMode && !thisObject.isObject()) {
         // Built-in functions allow for the this object to be null or undefined. This overrides
         // the behaviour of changing thisObject to the global object if null/undefined and allows
         // the built-in functions for example to throw a type error if null is passed.
-        if (thisObject.isNull() || thisObject.isUndefined())
-            ctx->thisObject = thisObject;
+        if (thisObject.isUndefined() || thisObject.isNull()) {
+            if (!isBuiltinFunction)
+                thisObject = context->engine->globalObject;
+        } else {
+            thisObject = thisObject.toObject(context);
+        }
     }
+
+    ctx->thisObject = thisObject;
+    ctx->function = this;
+    ctx->arguments = args;
+    ctx->argumentCount = argc;
+
+    ctx->initCallContext(context);
     Value result = call(ctx);
     ctx->leaveCallContext();
     return result;

@@ -378,7 +378,11 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
 
     if (strict) {
         ctx = k;
-        ctx->initCallContext(context, context->thisObject, this, args, argc);
+        ctx->thisObject = directCall ? context->thisObject : context->engine->globalObject;
+        ctx->function = this;
+        ctx->arguments = args;
+        ctx->argumentCount = argc;
+        ctx->initCallContext(context);
     }
 
     // set the correct strict mode flag on the context
