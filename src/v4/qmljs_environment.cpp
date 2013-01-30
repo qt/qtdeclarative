@@ -316,6 +316,8 @@ void ExecutionContext::setProperty(String *name, Value value)
 
 Value ExecutionContext::getProperty(String *name)
 {
+    name->makeIdentifier(this);
+
     if (name->isEqualTo(engine->id_this))
         return thisObject;
 
@@ -357,6 +359,8 @@ Value ExecutionContext::getProperty(String *name)
 
 Value ExecutionContext::getPropertyNoThrow(String *name)
 {
+    name->makeIdentifier(this);
+
     if (name->isEqualTo(engine->id_this))
         return thisObject;
 
@@ -394,6 +398,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
 Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
 {
     *base = 0;
+    name->makeIdentifier(this);
 
     if (name->isEqualTo(engine->id_this))
         return thisObject;
