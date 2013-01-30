@@ -56,6 +56,7 @@
 #include <qv4dateobject.h>
 #include <qv4jsonobject.h>
 #include <qv4stringobject.h>
+#include <qv4identifier.h>
 
 namespace QQmlJS {
 namespace VM {
@@ -72,24 +73,26 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     memoryManager->setExecutionEngine(this);
 
+    identifierCache = new Identifiers(this);
+
     rootContext = newContext();
     rootContext->init(this);
     current = rootContext;
 
-    id_length = identifier(QStringLiteral("length"));
-    id_prototype = identifier(QStringLiteral("prototype"));
-    id_constructor = identifier(QStringLiteral("constructor"));
-    id_arguments = identifier(QStringLiteral("arguments"));
-    id_caller = identifier(QStringLiteral("caller"));
-    id_this = identifier(QStringLiteral("this"));
-    id___proto__ = identifier(QStringLiteral("__proto__"));
-    id_enumerable = identifier(QStringLiteral("enumerable"));
-    id_configurable = identifier(QStringLiteral("configurable"));
-    id_writable = identifier(QStringLiteral("writable"));
-    id_value = identifier(QStringLiteral("value"));
-    id_get = identifier(QStringLiteral("get"));
-    id_set = identifier(QStringLiteral("set"));
-    id_eval = identifier(QStringLiteral("eval"));
+    id_length = newIdentifier(QStringLiteral("length"));
+    id_prototype = newIdentifier(QStringLiteral("prototype"));
+    id_constructor = newIdentifier(QStringLiteral("constructor"));
+    id_arguments = newIdentifier(QStringLiteral("arguments"));
+    id_caller = newIdentifier(QStringLiteral("caller"));
+    id_this = newIdentifier(QStringLiteral("this"));
+    id___proto__ = newIdentifier(QStringLiteral("__proto__"));
+    id_enumerable = newIdentifier(QStringLiteral("enumerable"));
+    id_configurable = newIdentifier(QStringLiteral("configurable"));
+    id_writable = newIdentifier(QStringLiteral("writable"));
+    id_value = newIdentifier(QStringLiteral("value"));
+    id_get = newIdentifier(QStringLiteral("get"));
+    id_set = newIdentifier(QStringLiteral("set"));
+    id_eval = newIdentifier(QStringLiteral("eval"));
 
     objectPrototype = new (memoryManager) ObjectPrototype();
     stringPrototype = new (memoryManager) StringPrototype(rootContext);
@@ -229,14 +232,9 @@ ExecutionContext *ExecutionEngine::newContext()
     return new ExecutionContext();
 }
 
-String *ExecutionEngine::identifier(const QString &s)
-{
-    return new (memoryManager) String(s);
-}
-
 Function *ExecutionEngine::newFunction(const QString &name)
 {
-    VM::Function *f = new VM::Function(identifier(name));
+    VM::Function *f = new VM::Function(newIdentifier(name));
     functions.append(f);
     return f;
 }
@@ -286,6 +284,13 @@ String *ExecutionEngine::newString(const QString &s)
 {
     return new (memoryManager) String(s);
 }
+
+String *ExecutionEngine::newIdentifier(const QString &text)
+{
+    return identifierCache->insert(text);
+}
+
+
 
 Object *ExecutionEngine::newStringObject(ExecutionContext *ctx, const Value &value)
 {
@@ -456,6 +461,8 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
 
 void ExecutionEngine::markObjects()
 {
+    identifierCache->mark();
+
     globalObject.mark();
 
     if (globalCode)

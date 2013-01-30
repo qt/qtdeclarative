@@ -61,7 +61,6 @@ struct PropertyTableEntry {
           index(-1)
     { }
 
-    inline bool hasName(String *n) const { return name->isEqualTo(n); }
     inline unsigned hashValue() const { return name->hashValue(); }
 };
 
@@ -114,7 +113,7 @@ public:
     {
         if (_properties) {
             for (PropertyTableEntry *prop = _buckets[name->hashValue() % _bucketCount]; prop; prop = prop->next) {
-                if (prop && (prop->name == name || prop->hasName(name)))
+                if (prop && prop->name->isEqualTo(name))
                     return prop;
             }
         }
@@ -126,7 +125,7 @@ public:
     {
         if (_properties) {
             for (PropertyTableEntry *prop = _buckets[name->hashValue() % _bucketCount]; prop; prop = prop->next) {
-                if (prop && (prop->name == name || prop->hasName(name)))
+                if (prop && prop->name->isEqualTo(name))
                     return &prop->descriptor;
             }
         }

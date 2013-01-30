@@ -188,7 +188,7 @@ Value ArrayPrototype::method_join(ExecutionContext *ctx)
         //
         // crazy!
         //
-        Value r6 = self.property(ctx, ctx->engine->identifier(QStringLiteral("0")));
+        Value r6 = self.property(ctx, ctx->engine->newString(QStringLiteral("0")));
         if (!(r6.isUndefined() || r6.isNull()))
             R = r6.toString(ctx)->toQString();
 

@@ -793,7 +793,7 @@ void InstructionSelection::callSubscript(IR::Temp *base, IR::Temp *index, IR::Ex
 
 String *InstructionSelection::identifier(const QString &s)
 {
-    String *str = engine()->identifier(s);
+    String *str = engine()->newIdentifier(s);
     _vmFunction->identifiers.append(str);
     return str;
 }

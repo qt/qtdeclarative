@@ -969,7 +969,7 @@ uchar *InstructionSelection::squeezeCode() const
 
 VM::String *InstructionSelection::identifier(const QString &s)
 {
-    VM::String *str = engine()->identifier(s);
+    VM::String *str = engine()->newIdentifier(s);
     _vmFunction->identifiers.append(str);
     return str;
 }

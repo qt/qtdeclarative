@@ -68,6 +68,7 @@ HEADERS += \
     qv4isel_p.h \
     qv4isel_util_p.h \
     debugging.h \
+    qv4identifier.h \
     qv4mm.h \
     qv4managed.h \
     qv4array.h \

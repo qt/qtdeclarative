@@ -312,13 +312,13 @@ Value StringPrototype::method_match(ExecutionContext *parentCtx, Value thisObjec
     bool global = rx->global;
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
-    FunctionObject *exec = parentCtx->engine->regExpPrototype->__get__(parentCtx, parentCtx->engine->identifier(QStringLiteral("exec")), 0).asFunctionObject();
+    FunctionObject *exec = parentCtx->engine->regExpPrototype->__get__(parentCtx, parentCtx->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
 
     Value arg = Value::fromString(s);
     if (!global)
         return exec->call(parentCtx, Value::fromObject(rx), &arg, 1);
 
-    String *lastIndex = parentCtx->engine->identifier(QStringLiteral("lastIndex"));
+    String *lastIndex = parentCtx->engine->newString(QStringLiteral("lastIndex"));
     rx->__put__(parentCtx, lastIndex, Value::fromInt32(0));
     ArrayObject *a = parentCtx->engine->newArrayObject(parentCtx);
 

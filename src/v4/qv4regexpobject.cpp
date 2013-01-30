@@ -72,7 +72,7 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
 
     if (!members)
         members.reset(new PropertyTable());
-    lastIndexProperty = members->insert(engine->identifier(QStringLiteral("lastIndex")));
+    lastIndexProperty = members->insert(engine->newIdentifier(QStringLiteral("lastIndex")));
     lastIndexProperty->type = PropertyDescriptor::Data;
     lastIndexProperty->writable = PropertyDescriptor::Enabled;
     lastIndexProperty->enumberable = PropertyDescriptor::Disabled;
@@ -80,10 +80,10 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
     lastIndexProperty->value = Value::fromInt32(0);
     if (!this->value.get())
         return;
-    defineReadonlyProperty(engine->identifier(QStringLiteral("source")), Value::fromString(engine->newString(this->value->pattern())));
-    defineReadonlyProperty(engine->identifier(QStringLiteral("global")), Value::fromBoolean(global));
-    defineReadonlyProperty(engine->identifier(QStringLiteral("ignoreCase")), Value::fromBoolean(this->value->ignoreCase()));
-    defineReadonlyProperty(engine->identifier(QStringLiteral("multiline")), Value::fromBoolean(this->value->multiLine()));
+    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("source")), Value::fromString(engine->newString(this->value->pattern())));
+    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("global")), Value::fromBoolean(global));
+    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("ignoreCase")), Value::fromBoolean(this->value->ignoreCase()));
+    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("multiline")), Value::fromBoolean(this->value->multiLine()));
 }
 
 

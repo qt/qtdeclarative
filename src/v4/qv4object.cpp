@@ -74,7 +74,7 @@ Object::~Object()
 
 void Object::__put__(ExecutionContext *ctx, const QString &name, const Value &value)
 {
-    __put__(ctx, ctx->engine->identifier(name), value);
+    __put__(ctx, ctx->engine->newString(name), value);
 }
 
 Value Object::getValue(ExecutionContext *ctx, const PropertyDescriptor *p) const
@@ -139,13 +139,13 @@ void Object::defineDefaultProperty(String *name, Value value)
 
 void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value value)
 {
-    defineDefaultProperty(context->engine->identifier(name), value);
+    defineDefaultProperty(context->engine->newIdentifier(name), value);
 }
 
 void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(ExecutionContext *), int argumentCount)
 {
     Q_UNUSED(argumentCount);
-    String *s = context->engine->identifier(name);
+    String *s = context->engine->newIdentifier(name);
     FunctionObject* function = context->engine->newBuiltinFunction(context, s, code);
     function->defineReadonlyProperty(context->engine->id_length, Value::fromInt32(argumentCount));
     defineDefaultProperty(s, Value::fromObject(function));
@@ -154,7 +154,7 @@ void Object::defineDefaultProperty(ExecutionContext *context, const QString &nam
 void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(ExecutionContext *, Value, Value *, int), int argumentCount)
 {
     Q_UNUSED(argumentCount);
-    String *s = context->engine->identifier(name);
+    String *s = context->engine->newIdentifier(name);
     FunctionObject* function = context->engine->newBuiltinFunction(context, s, code);
     function->defineReadonlyProperty(context->engine->id_length, Value::fromInt32(argumentCount));
     defineDefaultProperty(s, Value::fromObject(function));
@@ -162,7 +162,7 @@ void Object::defineDefaultProperty(ExecutionContext *context, const QString &nam
 
 void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value)
 {
-    defineReadonlyProperty(engine->identifier(name), value);
+    defineReadonlyProperty(engine->newIdentifier(name), value);
 }
 
 void Object::defineReadonlyProperty(String *name, Value value)
@@ -268,6 +268,8 @@ Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
     if (idx != String::InvalidArrayIndex)
         return __get__(ctx, idx, hasProperty);
 
+    name->makeIdentifier(ctx);
+
     if (name->isEqualTo(ctx->engine->id___proto__)) {
         if (hasProperty)
             *hasProperty = true;
@@ -306,6 +308,8 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
     uint idx = name->asArrayIndex();
     if (idx != String::InvalidArrayIndex)
         return __put__(ctx, idx, value);
+
+    name->makeIdentifier(ctx);
 
     PropertyDescriptor *pd  = __getOwnProperty__(ctx, name);
     // clause 1
@@ -448,6 +452,8 @@ bool Object::__hasProperty__(const ExecutionContext *ctx, String *name) const
     if (idx != String::InvalidArrayIndex)
         return __hasProperty__(ctx, idx);
 
+    name->makeIdentifier(ctx);
+
     if (members && members->find(name) != 0)
         return true;
 
@@ -469,6 +475,8 @@ bool Object::__delete__(ExecutionContext *ctx, String *name)
     uint idx = name->asArrayIndex();
     if (idx != String::InvalidArrayIndex)
         return __delete__(ctx, idx);
+
+    name->makeIdentifier(ctx);
 
     if (members) {
         if (PropertyTableEntry *entry = members->findEntry(name)) {
@@ -499,6 +507,8 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
     uint idx = name->asArrayIndex();
     if (idx != String::InvalidArrayIndex)
         return __defineOwnProperty__(ctx, idx, desc);
+
+    name->makeIdentifier(ctx);
 
     PropertyDescriptor *current;
 
@@ -644,7 +654,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *cu
 
 bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, const PropertyDescriptor *desc)
 {
-    return __defineOwnProperty__(ctx, ctx->engine->identifier(name), desc);
+    return __defineOwnProperty__(ctx, ctx->engine->newString(name), desc);
 }
 
 

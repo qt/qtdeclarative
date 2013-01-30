@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qv4string.h"
+#include "qv4identifier.h"
 #include "qmljs_runtime.h"
 #include <QtCore/QHash>
 
@@ -87,6 +88,11 @@ uint String::toUInt(bool *ok) const
         return l;
     *ok = false;
     return UINT_MAX;
+}
+
+void String::makeIdentifierImpl(const ExecutionContext *ctx)
+{
+    ctx->engine->identifierCache->toIdentifier(this);
 }
 
 void String::createHashValue() const

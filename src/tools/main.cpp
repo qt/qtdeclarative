@@ -149,7 +149,7 @@ static void showException(QQmlJS::VM::ExecutionContext *ctx)
             std::cerr << qPrintable(msg->buildFullMessage(ctx)->toQString()) << std::endl;
         }
     } else {
-        std::cerr << "Uncaught exception: " << qPrintable(e->__get__(ctx, ctx->engine->identifier(QStringLiteral("message")), 0).toString(ctx)->toQString()) << std::endl;
+        std::cerr << "Uncaught exception: " << qPrintable(e->__get__(ctx, ctx->engine->newString(QStringLiteral("message")), 0).toString(ctx)->toQString()) << std::endl;
     }
 }
 
@@ -167,7 +167,7 @@ int executeLLVMCode(void *codePtr)
     VM::ExecutionContext *ctx = vm.rootContext;
 
     QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
-    globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
+    globalObject->__put__(ctx, vm.newIdentifier(QStringLiteral("print")),
                           QQmlJS::VM::Value::fromObject(new (ctx->engine->memoryManager) builtins::Print(ctx)));
 
     void * buf = __qmljs_create_exception_handler(ctx);
@@ -371,16 +371,16 @@ int main(int argc, char *argv[])
         QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
         QQmlJS::VM::Object *print = new (ctx->engine->memoryManager) builtins::Print(ctx);
         print->prototype = ctx->engine->objectPrototype;
-        globalObject->__put__(ctx, vm.identifier(QStringLiteral("print")),
+        globalObject->__put__(ctx, vm.newIdentifier(QStringLiteral("print")),
                                   QQmlJS::VM::Value::fromObject(print));
         QQmlJS::VM::Object *gc = new (ctx->engine->memoryManager) builtins::GC(ctx);
         gc->prototype = ctx->engine->objectPrototype;
-        globalObject->__put__(ctx, vm.identifier(QStringLiteral("gc")),
+        globalObject->__put__(ctx, vm.newIdentifier(QStringLiteral("gc")),
                                   QQmlJS::VM::Value::fromObject(gc));
 
         bool errorInTestHarness = false;
         if (!qgetenv("IN_TEST_HARNESS").isEmpty())
-            globalObject->__put__(ctx, vm.identifier(QStringLiteral("$ERROR")),
+            globalObject->__put__(ctx, vm.newIdentifier(QStringLiteral("$ERROR")),
                                   QQmlJS::VM::Value::fromObject(new (ctx->engine->memoryManager) builtins::TestHarnessError(ctx, errorInTestHarness)));
 
         foreach (const QString &fn, args) {

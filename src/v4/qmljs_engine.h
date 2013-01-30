@@ -92,6 +92,7 @@ struct SyntaxErrorPrototype;
 struct TypeErrorPrototype;
 struct URIErrorPrototype;
 struct EvalFunction;
+struct Identifiers;
 
 class RegExp;
 
@@ -102,6 +103,8 @@ struct Q_V4_EXPORT ExecutionEngine
     ExecutionContext *current;
     ExecutionContext *rootContext;
     WTF::BumpPointerAllocator bumperPointerAllocator; // Used by Yarr Regex engine.
+
+    Identifiers *identifierCache;
 
     Debugging::Debugger *debugger;
 
@@ -177,8 +180,6 @@ struct Q_V4_EXPORT ExecutionEngine
 
     ExecutionContext *newContext();
 
-    String *identifier(const QString &s);
-
     VM::Function *newFunction(const QString &name);
 
     FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
@@ -190,6 +191,9 @@ struct Q_V4_EXPORT ExecutionEngine
     FunctionObject *newObjectCtor(ExecutionContext *ctx);
 
     String *newString(const QString &s);
+    String *newIdentifier(const QString &text);
+
+
     Object *newStringObject(ExecutionContext *ctx, const Value &value);
     FunctionObject *newStringCtor(ExecutionContext *ctx);
 

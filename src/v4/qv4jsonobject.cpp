@@ -282,7 +282,7 @@ bool Parser::parseMember(Object *o)
     if (!parseValue(&val))
         return false;
 
-    PropertyDescriptor *p = o->members->insert(context->engine->identifier(key));
+    PropertyDescriptor *p = o->members->insert(context->engine->newIdentifier(key));
     p->value = val;
 
     END;
@@ -702,7 +702,7 @@ QString Stringify::Str(const QString &key, Value value)
     QString result;
 
     if (Object *o = value.asObject()) {
-        FunctionObject *toJSON = o->__get__(ctx, ctx->engine->identifier(QStringLiteral("toJSON"))).asFunctionObject();
+        FunctionObject *toJSON = o->__get__(ctx, ctx->engine->newString(QStringLiteral("toJSON"))).asFunctionObject();
         if (toJSON) {
             Value arg = Value::fromString(ctx, key);
             value = toJSON->call(ctx, value, &arg, 1);

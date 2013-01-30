@@ -79,7 +79,7 @@ ErrorObject::ErrorObject(ExecutionEngine* engine, const Value &message)
     subtype = Error;
 
     if (message.type() != Value::Undefined_Type)
-        defineDefaultProperty(engine->identifier(QStringLiteral("message")), message);
+        defineDefaultProperty(engine->newString(QStringLiteral("message")), message);
 }
 
 void ErrorObject::setNameProperty(ExecutionContext *ctx)

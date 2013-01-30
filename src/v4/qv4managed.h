@@ -161,7 +161,7 @@ protected:
             quintptr strictMode : 1; // used by FunctionObject
             quintptr type : 5;
             mutable quintptr subtype : 3;
-            quintptr stringIdentifier : 16;
+            mutable quintptr stringIdentifier : 16;
 #if CPU(X86_64)
             quintptr unused  : 32;
 #endif
@@ -171,6 +171,7 @@ protected:
 private:
     friend class MemoryManager;
     friend struct ExecutionContext;
+    friend struct Identifiers;
 };
 
 }

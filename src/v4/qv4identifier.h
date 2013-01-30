@@ -38,80 +38,70 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4STRING_H
-#define QV4STRING_H
+#ifndef QV4IDENTIFIER_H
+#define QV4IDENTIFIER_H
 
-#include <QtCore/qstring.h>
-#include <qv4managed.h>
+#include <qv4string.h>
+#include <qmljs_engine.h>
+#include <limits.h>
 
 namespace QQmlJS {
 namespace VM {
 
-struct ExecutionEngine;
+struct Identifiers
+{
+    ExecutionEngine *engine;
+    uint currentIndex;
+    QHash<QString, String *> identifiers;
+public:
 
-struct String : public Managed {
-    enum StringType {
-        StringType_Unknown,
-        StringType_Regular,
-        StringType_Identifier,
-        StringType_ArrayIndex
-    };
+    Identifiers(ExecutionEngine *engine) : engine(engine), currentIndex(0) {}
 
-    String(const QString &text)
-        : _text(text), stringHash(InvalidHashValue)
-    { type = Type_String; subtype = StringType_Unknown; }
+    String *insert(const QString &s)
+    {
+        QHash<QString, String*>::const_iterator it = identifiers.find(s);
+        if (it != identifiers.constEnd())
+            return it.value();
 
-    inline bool isEqualTo(const String *other) const {
-        if (this == other)
-            return true;
-        if (hashValue() != other->hashValue())
-            return false;
-        if (subtype == other->subtype) {
-            if (subtype == StringType_ArrayIndex)
-                return true;
-            if (subtype == StringType_Identifier)
-                return stringIdentifier == other->stringIdentifier;
+        String *str = engine->newString(s);
+        str->createHashValue();
+        if (str->subtype == String::StringType_ArrayIndex)
+            return str;
+
+        str->stringIdentifier = currentIndex;
+        if (currentIndex <= USHRT_MAX) {
+            str->subtype = String::StringType_Identifier;
+            ++currentIndex;
+            identifiers.insert(s, str);
         }
-        return toQString() == other->toQString();
+        return str;
     }
 
-    inline const QString &toQString() const {
-        return _text;
-    }
-
-    inline unsigned hashValue() const {
-        if (subtype == StringType_Unknown)
-            createHashValue();
-
-        return stringHash;
-    }
-    enum {
-        InvalidArrayIndex = 0xffffffff,
-        InvalidHashValue  = 0xffffffff
-    };
-    uint asArrayIndex() const {
-        if (subtype == StringType_Unknown)
-            createHashValue();
-        if (subtype == StringType_ArrayIndex)
-            return stringHash;
-        return UINT_MAX;
-    }
-    uint toUInt(bool *ok) const;
-
-    void makeIdentifier(const ExecutionContext *ctx) {
-        if (subtype == StringType_Identifier)
+    void toIdentifier(String *s) {
+        if (s->subtype >= String::StringType_Identifier)
             return;
-        makeIdentifierImpl(ctx);
+        if (s->subtype == String::StringType_Unknown)
+            s->createHashValue();
+        if (s->subtype >= String::StringType_Identifier)
+            return;
+        QHash<QString, String*>::const_iterator it = identifiers.find(s->toQString());
+        if (it != identifiers.constEnd()) {
+            s->subtype = String::StringType_Identifier;
+            s->stringIdentifier = (*it)->stringIdentifier;
+            return;
+        }
+        s->stringIdentifier = currentIndex;
+        if (currentIndex <= USHRT_MAX) {
+            s->subtype = String::StringType_Identifier;
+            ++currentIndex;
+            identifiers.insert(s->toQString(), s);
+        }
     }
 
-    void makeIdentifierImpl(const ExecutionContext *ctx);
-
-private:
-    friend struct Identifiers;
-    void createHashValue() const;
-
-    QString _text;
-    mutable uint stringHash;
+    void mark() {
+        for (QHash<QString, String *>::const_iterator it = identifiers.constBegin(); it != identifiers.constEnd(); ++it)
+            (*it)->mark();
+    }
 };
 
 }

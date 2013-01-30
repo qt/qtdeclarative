@@ -376,7 +376,7 @@ Value ObjectPrototype::method_toString(ExecutionContext *ctx)
 Value ObjectPrototype::method_toLocaleString(ExecutionContext *ctx)
 {
     Object *o = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
-    Value ts = o->__get__(ctx, ctx->engine->identifier(QStringLiteral("toString")));
+    Value ts = o->__get__(ctx, ctx->engine->newString(QStringLiteral("toString")));
     FunctionObject *f = ts.asFunctionObject();
     if (!f)
         __qmljs_throw_type_error(ctx);
@@ -540,19 +540,19 @@ Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Prope
 
     if (desc->isData()) {
         pd.value = desc->value;
-        o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("value")), &pd);
+        o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("value")), &pd);
         pd.value = Value::fromBoolean(desc->writable == PropertyDescriptor::Enabled ? true : false);
-        o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("writable")), &pd);
+        o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("writable")), &pd);
     } else {
         pd.value = desc->get ? Value::fromObject(desc->get) : Value::undefinedValue();
-        o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("get")), &pd);
+        o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("get")), &pd);
         pd.value = desc->set ? Value::fromObject(desc->set) : Value::undefinedValue();
-        o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("set")), &pd);
+        o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("set")), &pd);
     }
     pd.value = Value::fromBoolean(desc->enumberable == PropertyDescriptor::Enabled ? true : false);
-    o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("enumerable")), &pd);
+    o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("enumerable")), &pd);
     pd.value = Value::fromBoolean(desc->configurable == PropertyDescriptor::Enabled ? true : false);
-    o->__defineOwnProperty__(ctx, engine->identifier(QStringLiteral("configurable")), &pd);
+    o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("configurable")), &pd);
 
     return Value::fromObject(o);
 }
