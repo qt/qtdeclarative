@@ -276,10 +276,16 @@ Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
         return Value::fromObject(prototype);
     }
 
-    if (PropertyDescriptor *p = __getPropertyDescriptor__(ctx, name)) {
-        if (hasProperty)
-            *hasProperty = true;
-        return getValue(ctx, p);
+    Object *o = this;
+    while (o) {
+        if (o->members) {
+            if (PropertyDescriptor *p = o->members->find(name)) {
+                if (hasProperty)
+                    *hasProperty = true;
+                return getValue(ctx, p);
+            }
+        }
+        o = o->prototype;
     }
 
     if (hasProperty)
@@ -289,11 +295,28 @@ Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 
 Value Object::__get__(ExecutionContext *ctx, uint index, bool *hasProperty)
 {
-    const PropertyDescriptor *p = __getPropertyDescriptor__(ctx, index);
-    if (p && p->type != PropertyDescriptor::Generic) {
+    PropertyDescriptor *pd = 0;
+    Object *o = this;
+    while (o) {
+        PropertyDescriptor *p = o->array.at(index);
+        if (p && p->type != PropertyDescriptor::Generic) {
+            pd = p;
+            break;
+        }
+        if (o->isStringObject()) {
+            p = static_cast<StringObject *>(o)->getIndex(ctx, index);
+            if (p) {
+                pd = p;
+                break;
+            }
+        }
+        o = o->prototype;
+    }
+
+    if (pd) {
         if (hasProperty)
             *hasProperty = true;
-        return getValue(ctx, p);
+        return getValue(ctx, pd);
     }
 
     if (hasProperty)
