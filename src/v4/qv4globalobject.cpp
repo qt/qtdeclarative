@@ -147,8 +147,9 @@ static QString unescape(const QString &input)
     return result;
 }
 
-static const char uriReserved[] = ";/?:@&=+$,";
-static const char uriUnescaped[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()";
+static const char uriReserved[] = ";/?:@&=+$,#";
+static const char uriUnescaped[] = "-_.!~*'()";
+static const char uriUnescapedReserved[] = "-_.!~*'();/?:@&=+$,#";
 
 static void addEscapeSequence(QString &output, uchar ch)
 {
@@ -157,7 +158,7 @@ static void addEscapeSequence(QString &output, uchar ch)
     output.append(QLatin1Char(toHex(ch & 0xf)));
 }
 
-static QString encode(const QString &input, const QString &unescapedSet, bool *ok)
+static QString encode(const QString &input, const char *unescapedSet, bool *ok)
 {
     *ok = true;
     QString output;
@@ -165,7 +166,22 @@ static QString encode(const QString &input, const QString &unescapedSet, bool *o
     int i = 0;
     while (i < length) {
         const QChar c = input.at(i);
-        if (!unescapedSet.contains(c)) {
+        bool escape = true;
+        if ((c.unicode() >= 'a' && c.unicode() <= 'z') ||
+            (c.unicode() >= 'A' && c.unicode() <= 'Z') ||
+            (c.unicode() >= '0' && c.unicode() <= '9')) {
+            escape = false;
+        } else {
+            const char *r = unescapedSet;
+            while (*r) {
+                if (*r == c.unicode()) {
+                    escape = false;
+                    break;
+                }
+                ++r;
+            }
+        }
+        if (escape) {
             uint uc = c.unicode();
             if ((uc >= 0xDC00) && (uc <= 0xDFFF)) {
                 *ok = false;
@@ -211,10 +227,16 @@ static QString encode(const QString &input, const QString &unescapedSet, bool *o
     return output;
 }
 
-static QString decode(const QString &input, const QString &reservedSet, bool *ok)
+enum DecodeMode {
+    DecodeAll,
+    DecodeNonReserved
+};
+
+static QString decode(const QString &input, DecodeMode decodeMode, bool *ok)
 {
     *ok = true;
     QString output;
+    output.reserve(input.length());
     const int length = input.length();
     int i = 0;
     const QChar percent = QLatin1Char('%');
@@ -287,11 +309,19 @@ static QString decode(const QString &input, const QString &reservedSet, bool *ok
                     output.append(QChar(l));
                 }
             } else {
-                QChar z(b);
-                if (!reservedSet.contains(z)) {
-                    output.append(z);
+                if (decodeMode == DecodeNonReserved && b <= 0x40) {
+                    const char *r = uriReserved;
+                    while (*r) {
+                        if (*r == b)
+                            break;
+                        ++r;
+                    }
+                    if (*r)
+                        output.append(input.mid(start, i - start + 1));
+                    else
+                        output.append(QChar(b));
                 } else {
-                    output.append(input.mid(start, i - start + 1));
+                    output.append(QChar(b));
                 }
             }
         } else {
@@ -599,7 +629,7 @@ Value GlobalFunctions::method_decodeURI(ExecutionContext *parentCtx, Value, Valu
 
     QString uriString = argv[0].toString(parentCtx)->toQString();
     bool ok;
-    QString out = decode(uriString, QString::fromUtf8(uriReserved) + QString::fromUtf8("#"), &ok);
+    QString out = decode(uriString, DecodeNonReserved, &ok);
     if (!ok)
         parentCtx->throwURIError(Value::fromString(parentCtx, QStringLiteral("malformed URI sequence")));
 
@@ -614,7 +644,7 @@ Value GlobalFunctions::method_decodeURIComponent(ExecutionContext *parentCtx, Va
 
     QString uriString = argv[0].toString(parentCtx)->toQString();
     bool ok;
-    QString out = decode(uriString, QString(), &ok);
+    QString out = decode(uriString, DecodeAll, &ok);
     if (!ok)
         parentCtx->throwURIError(Value::fromString(parentCtx, QStringLiteral("malformed URI sequence")));
 
@@ -629,7 +659,7 @@ Value GlobalFunctions::method_encodeURI(ExecutionContext *parentCtx, Value, Valu
 
     QString uriString = argv[0].toString(parentCtx)->toQString();
     bool ok;
-    QString out = encode(uriString, QLatin1String(uriReserved) + QLatin1String(uriUnescaped) + QString::fromUtf8("#"), &ok);
+    QString out = encode(uriString, uriUnescapedReserved, &ok);
     if (!ok)
         parentCtx->throwURIError(Value::fromString(parentCtx, QStringLiteral("malformed URI sequence")));
 
@@ -644,7 +674,7 @@ Value GlobalFunctions::method_encodeURIComponent(ExecutionContext *parentCtx, Va
 
     QString uriString = argv[0].toString(parentCtx)->toQString();
     bool ok;
-    QString out = encode(uriString, QString(uriUnescaped), &ok);
+    QString out = encode(uriString, uriUnescaped, &ok);
     if (!ok)
         parentCtx->throwURIError(Value::fromString(parentCtx, QStringLiteral("malformed URI sequence")));
 
