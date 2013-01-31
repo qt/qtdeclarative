@@ -1,5 +1,6 @@
 TARGET = QtV4
 QT_PRIVATE = core-private qmldevtools-private
+QT = core
 
 CONFIG += internal_module
 
