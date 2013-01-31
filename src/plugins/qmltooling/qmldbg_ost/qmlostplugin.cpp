@@ -145,6 +145,4 @@ void QmlOstPlugin::readyRead()
     d->debugServer->receiveMessage(content);
 }
 
-Q_EXPORT_PLUGIN2(qmlostplugin, QmlOstPlugin)
-
 QT_END_NAMESPACE

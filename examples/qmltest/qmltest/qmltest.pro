@@ -1,11 +1,26 @@
 TEMPLATE=app
 TARGET=tst_qmltestexample
-CONFIG += qmltestcase
+
 SOURCES += tst_qmltest.cpp
 
-# Note: Normally, tests are auto-installed to a test-specific directory. Overwritten here
-# so this one will end up in the examples tree.
-target.path = $$[QT_INSTALL_EXAMPLES]/qmltest
+!QTDIR_build {
+# This is the code actual testcases should use:
+
+CONFIG += qmltestcase
+
+TESTDATA += tst_basic.qml tst_item.qml
+
+} else {
+# This code exists solely for the purpose of building this example
+# inside the examples/ hierarchy.
+
+QT += qml qmltest
+
+macx: CONFIG -= app_bundle
+
+target.path = $$[QT_INSTALL_EXAMPLES]/qmltest/qmltest
 qml.files = tst_basic.qml tst_item.qml
-qml.path = $$[QT_INSTALL_EXAMPLES]/qmltest
+qml.path = $$[QT_INSTALL_EXAMPLES]/qmltest/qmltest
 INSTALLS += target qml
+
+}

@@ -58,8 +58,8 @@ QT_BEGIN_NAMESPACE
     To write a QML extension plugin:
     
     \list
-    \li Subclass QQmlExtensionPlugin, implement registerTypes() method
-    to register types using qmlRegisterType(), and export the class using the Q_EXPORT_PLUGIN2() macro
+    \li Subclass QQmlExtensionPlugin, implement registerTypes() method to register types
+    using qmlRegisterType(), and export the class using the Q_PLUGIN_METADATA() macro
     \li Write an appropriate project file for the plugin
     \li Create a \l{Module Definition qmldir Files}{qmldir file} to describe the plugin
     \endlist
@@ -140,7 +140,7 @@ QT_BEGIN_NAMESPACE
     Constructs a QML extension plugin with the given \a parent.
 
     Note that this constructor is invoked automatically by the
-    Q_EXPORT_PLUGIN2() macro, so there is no need for calling it
+    Q_PLUGIN_METADATA() macro, so there is no need for calling it
     explicitly.
 */
 QQmlExtensionPlugin::QQmlExtensionPlugin(QObject *parent)

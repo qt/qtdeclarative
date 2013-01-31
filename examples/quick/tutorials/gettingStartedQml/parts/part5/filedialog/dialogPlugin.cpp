@@ -52,6 +52,3 @@ void DialogPlugin::registerTypes(const char *uri){
     //qRegisterMetaType<QQmlListProperty<QString> > ("QQmlListProperty<QString>");
         
 }
-
-//FileDialog is the plugin name (same as the TARGET in the project file) and DialogPlugin is the plugin classs
-Q_EXPORT_PLUGIN2(FileDialog, DialogPlugin);
