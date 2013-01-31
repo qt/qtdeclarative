@@ -1,4 +1,3 @@
-
 HEADERS += $$PWD/assembler/*.h
 SOURCES += $$PWD/assembler/ARMAssembler.cpp
 SOURCES += $$PWD/assembler/ARMv7Assembler.cpp
@@ -31,28 +30,6 @@ HEADERS += $$PWD/wtf/PageReservation.h
 SOURCES += $$PWD/stubs/WTFStubs.cpp
 HEADERS += $$PWD/stubs/WTFStubs.h
 
-DEFINES += WTF_EXPORT_PRIVATE="" JS_EXPORT_PRIVATE=""
-
-DEFINES += ENABLE_LLINT=0
-DEFINES += ENABLE_DFG_JIT=0
-DEFINES += ENABLE_JIT=1
-DEFINES += ENABLE_JIT_CONSTANT_BLINDING=0
-DEFINES += ENABLE_ASSEMBLER=1
-
-DEFINES += BUILDING_QT__
-
-INCLUDEPATH += $$PWD/jit
-INCLUDEPATH += $$PWD/assembler
-INCLUDEPATH += $$PWD/runtime
-INCLUDEPATH += $$PWD/wtf
-INCLUDEPATH += $$PWD/stubs
-INCLUDEPATH += $$PWD/stubs/wtf
-INCLUDEPATH += $$PWD
-
-DEFINES += WTF_USE_UDIS86=1
-INCLUDEPATH += $$PWD/disassembler
-INCLUDEPATH += $$PWD/disassembler/udis86
-INCLUDEPATH += $$_OUT_PWD
 SOURCES += $$PWD/disassembler/Disassembler.cpp
 SOURCES += $$PWD/disassembler/UDis86Disassembler.cpp
 SOURCES += $$PWD/disassembler/udis86/udis86.c
@@ -63,7 +40,6 @@ SOURCES += $$PWD/disassembler/udis86/udis86_syn-att.c
 SOURCES += $$PWD/disassembler/udis86/udis86_syn.c
 SOURCES += $$PWD/disassembler/udis86/udis86_syn-intel.c
 
-DEFINES += ENABLE_YARR_JIT=0
 SOURCES += \
     $$PWD/yarr/YarrCanonicalizeUCS2.cpp \
     $$PWD/yarr/YarrInterpreter.cpp \

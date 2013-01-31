@@ -1,4 +1,4 @@
-INCLUDEPATH += $PWD
+INCLUDEPATH += $$PWD
 VPATH += $$PWD
 SOURCES += $$PWD/*.cc
 HEADERS += $$PWD/*.h

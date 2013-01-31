@@ -124,11 +124,6 @@ GEN_LLVM_RUNTIME_FLAGS -= -pedantic
 gen_llvm_runtime.target = llvm_runtime
 gen_llvm_runtime.commands = clang -O2 -emit-llvm -c $(INCPATH) $$GEN_LLVM_RUNTIME_FLAGS -DQMLJS_LLVM_RUNTIME llvm_runtime.cpp -o $$LLVM_RUNTIME_BC
 
-
-} else {
-
-DEFINES += QMLJS_NO_LLVM
-
 }
 
 # Use SSE2 floating point math on 32 bit instead of the default
@@ -155,3 +150,4 @@ QMAKE_EXTRA_TARGETS += checkmothtarget
 include(moth/moth.pri)
 include(../3rdparty/masm/masm.pri)
 include(../3rdparty/double-conversion/double-conversion.pri)
+include(v4.pri)

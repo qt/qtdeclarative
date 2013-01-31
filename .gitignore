@@ -7,3 +7,4 @@ udis86_itab.*
 *.bc
 *.ll
 RegExpJitTables.h
+.qmake.cache
