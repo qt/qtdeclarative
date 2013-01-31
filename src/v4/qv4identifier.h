@@ -45,6 +45,8 @@
 #include <qmljs_engine.h>
 #include <limits.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -104,7 +106,9 @@ public:
     }
 };
 
-}
-}
+} // namespace VM
+} // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif

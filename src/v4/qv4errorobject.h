@@ -44,6 +44,8 @@
 #include "qv4object.h"
 #include "qv4functionobject.h"
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -201,5 +203,7 @@ struct URIErrorPrototype: URIErrorObject
 
 } // end of namespace VM
 } // end of namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QV4ECMAOBJECTS_P_H

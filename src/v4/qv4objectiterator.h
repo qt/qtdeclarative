@@ -43,6 +43,8 @@
 
 #include "qmljs_value.h"
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -73,7 +75,9 @@ struct ObjectIterator
     Value nextPropertyNameAsString();
 };
 
-}
-}
+} // namespace VM
+} // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif

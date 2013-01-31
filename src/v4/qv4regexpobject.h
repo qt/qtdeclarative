@@ -61,8 +61,9 @@
 #include <cstdio>
 #include <cassert>
 
-namespace QQmlJS {
+QT_BEGIN_NAMESPACE
 
+namespace QQmlJS {
 namespace VM {
 
 struct RegExpObject: Object {
@@ -92,9 +93,9 @@ struct RegExpPrototype: RegExpObject
     static Value method_compile(ExecutionContext *ctx);
 };
 
-
-
 } // namespace VM
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QMLJS_OBJECTS_H

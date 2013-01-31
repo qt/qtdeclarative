@@ -54,6 +54,8 @@
 #include <yarr/Yarr.h>
 #include <yarr/YarrInterpreter.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -88,5 +90,7 @@ private:
 
 } // end of namespace VM
 } // end of namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QV4REGEXP_H

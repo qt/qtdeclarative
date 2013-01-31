@@ -32,6 +32,8 @@
 
 #include <QtCore/qglobal.h>
 
+QT_BEGIN_NAMESPACE
+
 #ifndef QT_STATIC
 #  if defined(QT_BUILD_V4_LIB)
 #    define Q_V4_EXPORT Q_DECL_EXPORT
@@ -41,5 +43,7 @@
 #else
 #  define Q_V4_EXPORT
 #endif
+
+QT_END_NAMESPACE
 
 #endif // QV4GLOBAL_H

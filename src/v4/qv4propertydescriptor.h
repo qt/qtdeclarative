@@ -43,6 +43,8 @@
 
 #include "qmljs_value.h"
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -163,7 +165,9 @@ struct PropertyDescriptor {
     }
 };
 
-}
-}
+} // namespace VM
+} // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif

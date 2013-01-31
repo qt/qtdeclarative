@@ -47,6 +47,8 @@
 #include <wtf/Platform.h>
 #include "qv4global.h"
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 
 namespace VM {
@@ -176,5 +178,7 @@ private:
 
 }
 }
+
+QT_END_NAMESPACE
 
 #endif

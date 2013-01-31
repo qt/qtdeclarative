@@ -54,6 +54,8 @@
 
 #include <new>
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -635,5 +637,7 @@ public:
 
 }
 }
+
+QT_END_NAMESPACE
 
 #endif // QMAP_H

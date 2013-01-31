@@ -36,6 +36,8 @@
 
 #include <QHash>
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 
 namespace IR {
@@ -137,5 +139,7 @@ private: // TODO: use opaque d-pointers here
 
 } // namespace Debugging
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // DEBUGGING_H

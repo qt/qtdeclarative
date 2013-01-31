@@ -60,6 +60,8 @@
 #  define TRACE2(x, y)
 #endif // TRACE1
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -858,5 +860,7 @@ inline Bool __qmljs_strict_equal(Value x, Value y)
 
 } // namespace VM
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QMLJS_RUNTIME_H

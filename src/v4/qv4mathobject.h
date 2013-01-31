@@ -43,8 +43,9 @@
 
 #include "qv4object.h"
 
-namespace QQmlJS {
+QT_BEGIN_NAMESPACE
 
+namespace QQmlJS {
 namespace VM {
 
 struct MathObject: Object
@@ -74,5 +75,7 @@ struct MathObject: Object
 
 } // namespace VM
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QMLJS_OBJECTS_H

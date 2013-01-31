@@ -44,8 +44,9 @@
 #include "qv4global.h"
 #include "qv4functionobject.h"
 
-namespace QQmlJS {
+QT_END_NAMESPACE
 
+namespace QQmlJS {
 namespace VM {
 
 struct Q_V4_EXPORT EvalFunction : FunctionObject
@@ -80,5 +81,7 @@ struct GlobalFunctions
 
 } // namespace VM
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QMLJS_OBJECTS_H

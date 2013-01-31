@@ -44,6 +44,8 @@
 #include <qv4object.h>
 #include <qv4functionobject.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -80,6 +82,8 @@ struct ArgumentsObject: Object {
 
 }
 }
+
+QT_END_NAMESPACE
 
 #endif
 

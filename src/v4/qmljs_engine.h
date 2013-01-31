@@ -50,6 +50,8 @@
 #include <wtf/PassRefPtr.h>
 #include <wtf/BumpPointerAllocator.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 
 namespace Debugging {
@@ -221,5 +223,7 @@ struct Q_V4_EXPORT ExecutionEngine
 
 } // namespace VM
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif

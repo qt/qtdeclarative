@@ -37,6 +37,8 @@
 
 #define DETAILED_MM_STATS
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -124,5 +126,7 @@ protected:
 
 } // namespace VM
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QV4GC_H

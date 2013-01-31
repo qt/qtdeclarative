@@ -45,6 +45,8 @@
 #include "qv4functionobject.h"
 #include <QtCore/qnumeric.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -91,5 +93,7 @@ struct ArrayPrototype: ArrayObject
 
 } // end of namespace VM
 } // end of namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QV4ECMAOBJECTS_P_H

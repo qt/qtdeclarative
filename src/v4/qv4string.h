@@ -44,6 +44,8 @@
 #include <QtCore/qstring.h>
 #include <qv4managed.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -114,7 +116,9 @@ private:
     mutable uint stringHash;
 };
 
-}
-}
+} // namespace VM
+} // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif

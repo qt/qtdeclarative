@@ -48,6 +48,8 @@
 
 #if !defined(QMLJS_LLVM_RUNTIME) && 1 //CPU(X86_64)
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -101,6 +103,8 @@ static inline Value mul_int32(int a, int b)
 
 } // namespace VM
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // !defined(QMLJS_LLVM_RUNTIME) && 1 //CPU(X86_64)
 #endif // QMLJS_MATH_H

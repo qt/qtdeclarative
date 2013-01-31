@@ -61,8 +61,9 @@
 #include <cstdio>
 #include <cassert>
 
-namespace QQmlJS {
+QT_BEGIN_NAMESPACE
 
+namespace QQmlJS {
 namespace VM {
 
 struct Value;
@@ -188,5 +189,7 @@ struct ArrayObject: Object {
 
 } // namespace VM
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QMLJS_OBJECTS_H

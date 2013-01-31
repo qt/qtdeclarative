@@ -65,8 +65,9 @@
 #include <config.h>
 #include <assembler/MacroAssemblerCodeRef.h>
 
-namespace QQmlJS {
+QT_BEGIN_NAMESPACE
 
+namespace QQmlJS {
 namespace VM {
 
 struct Value;
@@ -225,5 +226,7 @@ struct BoundFunction: FunctionObject {
 
 } // namespace VM
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QMLJS_OBJECTS_H

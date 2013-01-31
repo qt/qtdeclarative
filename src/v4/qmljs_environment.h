@@ -44,6 +44,8 @@
 #include "qv4global.h"
 #include <qmljs_runtime.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -146,5 +148,7 @@ struct ExecutionContext
 
 } // namespace VM
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif

@@ -43,6 +43,8 @@
 
 #include <qv4object.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -54,8 +56,10 @@ struct JsonObject : Object {
 
 };
 
-}
-}
+} // namespace VM
+} // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif
 

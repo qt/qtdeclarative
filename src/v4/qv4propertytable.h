@@ -44,6 +44,8 @@
 #include "qmljs_value.h"
 #include "qv4propertydescriptor.h"
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -217,7 +219,9 @@ private:
     int _allocated: 27;
 };
 
-}
-}
+} // namespace VM
+} // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif

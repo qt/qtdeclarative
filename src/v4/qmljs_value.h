@@ -48,6 +48,8 @@
 #include <QtCore/QDebug>
 #include "qv4managed.h"
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace VM {
 
@@ -476,5 +478,7 @@ inline ErrorObject *Value::asErrorObject() const
 
 } // namespace VM
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif
