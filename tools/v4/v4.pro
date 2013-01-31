@@ -14,4 +14,9 @@ INCLUDEPATH += ../../src/3rdparty/masm/disassembler
 DEFINES += WTF_EXPORT_PRIVATE="" JS_EXPORT_PRIVATE=""
 DEFINES += ENABLE_JIT_CONSTANT_BLINDING=0 ENABLE_LLINT=0
 
+llvm {
+   # TODO LLVM support doesn't work correctly
+} else {
+    DEFINES += QMLJS_NO_LLVM
+}
 load(qt_tool)
