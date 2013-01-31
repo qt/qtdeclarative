@@ -1872,7 +1872,8 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
             foreach (const QString &inheritedLocal, inheritedLocals) {
                 function->LOCAL(inheritedLocal);
                 unsigned tempIndex = entryBlock->newTemp();
-                Environment::Member member = { Environment::UndefinedMember, tempIndex, 0 };
+                Environment::Member member = { Environment::UndefinedMember,
+                                               static_cast<int>(tempIndex), 0 };
                 _env->members.insert(inheritedLocal, member);
             }
         }
