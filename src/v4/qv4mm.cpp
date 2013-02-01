@@ -361,7 +361,7 @@ void MemoryManager::collectFromStack() const
     for (QVector<Data::Chunk>::Iterator it = m_d->heapChunks.begin(), end =
          m_d->heapChunks.end(); it != end; ++it) {
         heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base());
-        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base()) + it->memory.size();
+        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base()) + it->memory.size() - it->chunkSize;
     }
 
     for (; current < top; ++current) {
