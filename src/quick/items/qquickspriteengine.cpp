@@ -429,7 +429,7 @@ QImage QQuickSpriteEngine::assembledImage()
     }
 
     //maxFrames is max number in a line of the texture
-    QImage image(w, h, QImage::Format_ARGB32);
+    QImage image(w, h, QImage::Format_ARGB32_Premultiplied);
     image.fill(0);
     QPainter p(&image);
     int y = 0;
