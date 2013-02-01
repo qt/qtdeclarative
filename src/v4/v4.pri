@@ -1,4 +1,4 @@
-
+include(llvm_installation.pri)
 include(../3rdparty/masm/masm-defs.pri)
 
 !llvm: DEFINES += QMLJS_NO_LLVM

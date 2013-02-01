@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#ifndef QMLJS_NO_LLVM
+#ifdef QMLJS_WITH_LLVM
 #  include "private/qv4_llvm_p.h"
-#endif
+#endif // QMLJS_WITH_LLVM
 
 #include "private/debugging.h"
 #include "private/qv4object.h"
@@ -153,7 +153,7 @@ static void showException(QQmlJS::VM::ExecutionContext *ctx)
     }
 }
 
-#ifndef QMLJS_NO_LLVM
+#ifdef QMLJS_WITH_LLVM
 int executeLLVMCode(void *codePtr)
 {
     using namespace QQmlJS;
@@ -260,8 +260,7 @@ int evaluateCompiledCode(const QStringList &files)
 
     return EXIT_SUCCESS;
 }
-
-#endif
+#endif // QMLJS_WITH_LLVM
 
 
 int main(int argc, char *argv[])
@@ -278,9 +277,9 @@ int main(int argc, char *argv[])
         use_llvm_jit
     } mode = use_masm;
 
-#ifndef QMLJS_NO_LLVM
+#ifdef QMLJS_WITH_LLVM
     QQmlJS::LLVMOutputType fileType = QQmlJS::LLVMOutputObject;
-#endif // QMLJS_NO_LLVM
+#endif // QMLJS_WITH_LLVM
     bool enableDebugging = false;
 
     if (!args.isEmpty()) {
@@ -301,7 +300,7 @@ int main(int argc, char *argv[])
             args.removeFirst();
         }
 
-#ifndef QMLJS_NO_LLVM
+#ifdef QMLJS_WITH_LLVM
         if (args.first() == QLatin1String("--compile")) {
             mode = use_llvm_compiler;
             args.removeFirst();
@@ -328,7 +327,7 @@ int main(int argc, char *argv[])
             mode = use_llvm_jit;
             args.removeFirst();
         }
-#endif // QMLJS_NO_LLVM
+#endif // QMLJS_WITH_LLVM
         if (args.first() == QLatin1String("--help")) {
             std::cerr << "Usage: v4 [|--debug|-d] [|--jit|--interpret|--compile|--aot|--llvm-jit] file..." << std::endl;
             return EXIT_SUCCESS;
@@ -336,20 +335,20 @@ int main(int argc, char *argv[])
     }
 
     switch (mode) {
-#ifdef QMLJS_NO_LLVM
-    case use_llvm_compiler:
-    case use_llvm_runtime:
-    case use_llvm_jit:
-        std::cerr << "LLVM backend was not built, compiler is unavailable." << std::endl;
-        return EXIT_FAILURE;
-#else // QMLJS_NO_LLVM
+#ifdef QMLJS_WITH_LLVM
     case use_llvm_jit:
         return compileFiles(args, QQmlJS::LLVMOutputJit);
     case use_llvm_compiler:
         return compileFiles(args, fileType);
     case use_llvm_runtime:
         return evaluateCompiledCode(args);
-#endif // QMLJS_NO_LLVM
+#else // !QMLJS_WITH_LLVM
+    case use_llvm_compiler:
+    case use_llvm_runtime:
+    case use_llvm_jit:
+        std::cerr << "LLVM backend was not built, compiler is unavailable." << std::endl;
+        return EXIT_FAILURE;
+#endif // QMLJS_WITH_LLVM
     case use_masm:
     case use_moth: {
         QScopedPointer<QQmlJS::EvalISelFactory> iSelFactory;

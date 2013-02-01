@@ -4,7 +4,7 @@ QT = core
 
 CONFIG += internal_module
 
-LLVM_CONFIG=llvm-config
+include(v4.pri)
 
 OBJECTS_DIR=.obj
 
@@ -14,11 +14,6 @@ load(qt_module)
 CONFIG += warn_off
 
 #win32-msvc*|win32-icc:QMAKE_LFLAGS += /BASE:0x66000000 #TODO ??!
-
-
-# Pick up the qmake variable or environment variable for LLVM_INSTALL_DIR. If either was set, change the LLVM_CONFIG to use that.
-isEmpty(LLVM_INSTALL_DIR):LLVM_INSTALL_DIR=$$(LLVM_INSTALL_DIR)
-!isEmpty(LLVM_INSTALL_DIR):LLVM_CONFIG=$$LLVM_INSTALL_DIR/bin/llvm-config
 
 !macx-clang*:LIBS += -rdynamic
 
@@ -93,7 +88,7 @@ HEADERS += \
     qv4objectiterator.h \
     qv4regexp.h
 
-llvm {
+llvm-libs {
 
 SOURCES += \
     qv4isel_llvm.cpp
@@ -104,6 +99,7 @@ HEADERS += \
 
 LLVM_RUNTIME_BC = $$PWD/llvm_runtime.bc
 DEFINES += LLVM_RUNTIME="\"\\\"$$LLVM_RUNTIME_BC\\\"\""
+DEFINES += QMLJS_WITH_LLVM
 
 INCLUDEPATH += \
     $$system($$LLVM_CONFIG --includedir)
@@ -122,8 +118,7 @@ GEN_LLVM_RUNTIME_FLAGS = $$system($$LLVM_CONFIG --cppflags)
 GEN_LLVM_RUNTIME_FLAGS -= -pedantic
 
 gen_llvm_runtime.target = llvm_runtime
-gen_llvm_runtime.commands = clang -O2 -emit-llvm -c $(INCPATH) $$GEN_LLVM_RUNTIME_FLAGS -DQMLJS_LLVM_RUNTIME llvm_runtime.cpp -o $$LLVM_RUNTIME_BC
-
+gen_llvm_runtime.commands = clang -O2 -emit-llvm -c -I$$PWD -I$$PWD/../3rdparty/masm $$join(QT.core.includes, " -I", "-I") $$GEN_LLVM_RUNTIME_FLAGS -DQMLJS_LLVM_RUNTIME llvm_runtime.cpp -o $$LLVM_RUNTIME_BC
 }
 
 # Use SSE2 floating point math on 32 bit instead of the default
@@ -150,4 +145,3 @@ QMAKE_EXTRA_TARGETS += checkmothtarget
 include(moth/moth.pri)
 include(../3rdparty/masm/masm.pri)
 include(../3rdparty/double-conversion/double-conversion.pri)
-include(v4.pri)
