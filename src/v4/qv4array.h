@@ -553,10 +553,9 @@ public:
             if (!offset)
                 getHeadRoom();
 
-            PropertyDescriptor pd;
-            fillDescriptor(&pd, v);
             --offset;
-            values[offset] = pd;
+            PropertyDescriptor &pd = values[offset];
+            fillDescriptor(&pd, v);
         } else {
             uint idx = allocValue(v);
             sparse->push_front(idx);
@@ -590,9 +589,10 @@ public:
     }
     void push_back(Value v) {
         if (!sparse) {
-            PropertyDescriptor pd;
+            if (len + offset >= (uint)values.size())
+                values.resize(values.size() + 1);
+            PropertyDescriptor &pd = values[len + offset];
             fillDescriptor(&pd, v);
-            values.append(pd);
         } else {
             uint idx = allocValue(v);
             sparse->push_back(idx, len);
