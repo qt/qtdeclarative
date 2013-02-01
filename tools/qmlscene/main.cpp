@@ -501,7 +501,7 @@ int main(int argc, char ** argv)
             }
 
             if (window) {
-                QSurfaceFormat surfaceFormat;
+                QSurfaceFormat surfaceFormat = window->requestedFormat();
                 if (options.multisample)
                     surfaceFormat.setSamples(16);
                 if (options.transparent) {
