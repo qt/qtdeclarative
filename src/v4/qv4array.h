@@ -367,7 +367,7 @@ class Array
     friend struct ArrayPrototype;
 
     uint len;
-    PropertyDescriptor *lengthProperty;
+    ArrayObject *arrayObject;
     union {
         uint freeList;
         uint offset;
@@ -429,7 +429,7 @@ class Array
     }
 
 public:
-    Array() : len(0), lengthProperty(0), offset(0), sparse(0) {}
+    Array() : len(0), arrayObject(0), offset(0), sparse(0) {}
     Array(const Array &other);
     ~Array() { delete sparse; }
     void initSparse();
@@ -437,14 +437,9 @@ public:
     uint length() const { return len; }
     bool setLength(uint newLen);
 
-    void setLengthProperty(PropertyDescriptor *pd) { lengthProperty = pd; }
-    PropertyDescriptor *getLengthProperty() { return lengthProperty; }
+    void setArrayObject(ArrayObject *a) { arrayObject = a; }
 
-    void setLengthUnchecked(uint l) {
-        len = l;
-        if (lengthProperty)
-            lengthProperty->value = Value::fromUInt32(l);
-    }
+    void setLengthUnchecked(uint l);
 
     PropertyDescriptor *insert(uint index) {
         PropertyDescriptor *pd;

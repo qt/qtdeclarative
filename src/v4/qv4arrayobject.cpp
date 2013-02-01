@@ -654,7 +654,7 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
     Value thisArg = ctx->argument(1);
 
     ArrayObject *a = ctx->engine->newArrayObject(ctx);
-    a->array.setLength(len);
+    a->array.setLengthUnchecked(len);
 
     for (uint k = 0; k < len; ++k) {
         bool exists;

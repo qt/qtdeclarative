@@ -420,7 +420,7 @@ Value StringPrototype::method_replace(ExecutionContext *ctx)
             offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
         }
         if (regExp->global)
-            regExp->lastIndexProperty->value = Value::fromUInt32(0);
+            regExp->lastIndexProperty(ctx)->value = Value::fromUInt32(0);
         numStringMatches = matchOffsets.size() / (regExp->value->captureCount() * 2);
         numCaptures = regExp->value->captureCount();
     } else {

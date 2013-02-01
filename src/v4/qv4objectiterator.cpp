@@ -128,10 +128,13 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
         PropertyTableEntry *pt = current->members->_properties[tableIndex];
         ++tableIndex;
         // ### check that it's not a repeated attribute
-        if (pt && (!(flags & EnumberableOnly) || pt->descriptor.isEnumerable())) {
-            *name = pt->name;
-            p = &pt->descriptor;
-            return p;
+        if (pt) {
+            PropertyDescriptor *pd = current->members->values.data() + pt->valueIndex;
+            if (!(flags & EnumberableOnly) || pd->isEnumerable()) {
+                *name = pt->name;
+                p = pd;
+                return p;
+            }
         }
     }
     return 0;

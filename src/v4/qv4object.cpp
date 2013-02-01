@@ -187,11 +187,13 @@ void Object::markObjects()
             if (!(*it))
                 continue;
             (*it)->name->mark();
-            PropertyDescriptor &pd = (*it)->descriptor;
+        }
+        for (int i = 0; i < (uint)members->values.size(); ++i) {
+            const PropertyDescriptor &pd = members->values.at(i);
             if (pd.isData()) {
                 if (Managed *m = pd.value.asManaged())
                     m->mark();
-            } else if (pd.isAccessor()) {
+             } else if (pd.isAccessor()) {
                 if (pd.get)
                     pd.get->mark();
                 if (pd.set)
@@ -503,7 +505,7 @@ bool Object::__delete__(ExecutionContext *ctx, String *name)
 
     if (members) {
         if (PropertyTableEntry *entry = members->findEntry(name)) {
-            if (entry->descriptor.isConfigurable()) {
+            if (members->values[entry->valueIndex].isConfigurable()) {
                 members->remove(entry);
                 return true;
             }
@@ -536,7 +538,8 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
     PropertyDescriptor *current;
 
     if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
-        PropertyDescriptor *lp = array.getLengthProperty();
+        PropertyDescriptor *lp = members->values.data(); // length is always the first property
+        assert(lp == members->find(ctx->engine->id_length));
         if (desc->isEmpty() || desc->isSubset(lp))
             return true;
         if (!lp->isWritable() || desc->type == PropertyDescriptor::Accessor || desc->isConfigurable() || desc->isEnumerable())
@@ -584,7 +587,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
     PropertyDescriptor *current;
 
     // 15.4.5.1, 4b
-    if (isArrayObject() && index >= array.length() && !array.getLengthProperty()->isWritable())
+    if (isArrayObject() && index >= array.length() && !members->values.at(0).isWritable())
         goto reject;
 
     if (isNonStrictArgumentsObject)
@@ -693,7 +696,8 @@ void ArrayObject::init(ExecutionContext *context)
     pd->enumberable = PropertyDescriptor::Disabled;
     pd->configurable = PropertyDescriptor::Disabled;
     pd->value = Value::fromInt32(0);
-    array.setLengthProperty(pd);
+    array.setArrayObject(this);
+    assert(pd = members->values.data());
 }
 
 

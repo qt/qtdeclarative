@@ -68,7 +68,7 @@ namespace VM {
 
 struct RegExpObject: Object {
     RefPtr<RegExp> value;
-    PropertyDescriptor *lastIndexProperty;
+    PropertyDescriptor *lastIndexProperty(ExecutionContext *ctx);
     bool global;
     RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bool global);
 };

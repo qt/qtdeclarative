@@ -72,7 +72,7 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
 
     if (!members)
         members.reset(new PropertyTable());
-    lastIndexProperty = members->insert(engine->newIdentifier(QStringLiteral("lastIndex")));
+    PropertyDescriptor *lastIndexProperty = members->insert(engine->newIdentifier(QStringLiteral("lastIndex")));
     lastIndexProperty->type = PropertyDescriptor::Data;
     lastIndexProperty->writable = PropertyDescriptor::Enabled;
     lastIndexProperty->enumberable = PropertyDescriptor::Disabled;
@@ -85,6 +85,12 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
     defineReadonlyProperty(engine->newIdentifier(QStringLiteral("ignoreCase")), Value::fromBoolean(this->value->ignoreCase()));
     defineReadonlyProperty(engine->newIdentifier(QStringLiteral("multiline")), Value::fromBoolean(this->value->multiLine()));
 }
+
+PropertyDescriptor *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
+{
+    return members->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex")));
+}
+
 
 
 RegExpCtor::RegExpCtor(ExecutionContext *scope)
@@ -167,16 +173,16 @@ Value RegExpPrototype::method_exec(ExecutionContext *ctx)
     arg = __qmljs_to_string(arg, ctx);
     QString s = arg.stringValue()->toQString();
 
-    int offset = r->global ? r->lastIndexProperty->value.toInt32(ctx) : 0;
+    int offset = r->global ? r->lastIndexProperty(ctx)->value.toInt32(ctx) : 0;
     if (offset < 0 || offset > s.length()) {
-        r->lastIndexProperty->value = Value::fromInt32(0);
+        r->lastIndexProperty(ctx)->value = Value::fromInt32(0);
         return Value::nullValue();
     }
 
     uint* matchOffsets = (uint*)alloca(r->value->captureCount() * 2 * sizeof(uint));
     int result = r->value->match(s, offset, matchOffsets);
     if (result == -1) {
-        r->lastIndexProperty->value = Value::fromInt32(0);
+        r->lastIndexProperty(ctx)->value = Value::fromInt32(0);
         return Value::nullValue();
     }
 
@@ -195,7 +201,7 @@ Value RegExpPrototype::method_exec(ExecutionContext *ctx)
     array->__put__(ctx, QLatin1String("input"), arg);
 
     if (r->global)
-        r->lastIndexProperty->value = Value::fromInt32(matchOffsets[1]);
+        r->lastIndexProperty(ctx)->value = Value::fromInt32(matchOffsets[1]);
 
     return Value::fromObject(array);
 }

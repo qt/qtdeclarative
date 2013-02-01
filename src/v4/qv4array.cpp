@@ -464,7 +464,7 @@ SparseArrayNode *SparseArray::insert(uint akey)
 
 Array::Array(const Array &other)
     : len(other.len)
-    , lengthProperty(0)
+    , arrayObject(0)
     , values(other.values)
     , sparse(0)
 {
@@ -581,7 +581,18 @@ void Array::initSparse()
     }
 }
 
+void Array::setLengthUnchecked(uint l)
+{
+    len = l;
+    if (arrayObject) {
+        // length is always the first property of an array
+        PropertyDescriptor &lengthProperty = arrayObject->members->values[0];
+        lengthProperty.value = Value::fromUInt32(l);
+    }
+}
+
 bool Array::setLength(uint newLen) {
+    const PropertyDescriptor *lengthProperty = arrayObject->members->values.constData();
     if (lengthProperty && !lengthProperty->isWritable())
         return false;
     uint oldLen = length();
