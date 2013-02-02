@@ -70,6 +70,10 @@ static bool qsg_render_timing = !qgetenv("QML_RENDERER_TIMING").isEmpty();
 static QElapsedTimer qsg_renderer_timer;
 #endif
 
+#ifndef GL_BGRA
+#define GL_BGRA 0x80E1
+#endif
+
 
 QT_BEGIN_NAMESPACE
 
@@ -530,7 +534,6 @@ QSGPlainTexture::~QSGPlainTexture()
         glDeleteTextures(1, &m_texture_id);
 }
 
-#ifdef QT_OPENGL_ES
 void qsg_swizzleBGRAToRGBA(QImage *image)
 {
     const int width = image->width();
@@ -541,7 +544,6 @@ void qsg_swizzleBGRAToRGBA(QImage *image)
             p[x] = ((p[x] << 16) & 0xff0000) | ((p[x] >> 16) & 0xff) | (p[x] & 0xff00ff00);
     }
 }
-#endif
 
 void QSGPlainTexture::setImage(const QImage &image)
 {
@@ -656,17 +658,31 @@ void QSGPlainTexture::bind()
 
     updateBindOptions(m_dirty_bind_options);
 
+    GLenum externalFormat = GL_RGBA;
+    GLenum internalFormat = GL_RGBA;
+
+    const char *extensions = (const char *) glGetString(GL_EXTENSIONS);
+    if (strstr(extensions, "GL_EXT_bgra")) {
+        externalFormat = GL_BGRA;
 #ifdef QT_OPENGL_ES
+        internalFormat = GL_BGRA;
+#endif
+    } else if (strstr(extensions, "GL_APPLE_texture_format_BGRA8888")) {
+        externalFormat = GL_BGRA;
+    } else if (strstr(extensions, "GL_EXT_texture_format_BGRA8888")
+               || strstr(extensions, "GL_IMG_texture_format_BGRA8888")) {
+        externalFormat = GL_BGRA;
+        internalFormat = GL_BGRA;
+    } else {
         qsg_swizzleBGRAToRGBA(&tmp);
+    }
+
 #ifndef QSG_NO_RENDERER_TIMING
     int swizzleTime = 0;
     if (qsg_render_timing)
         swizzleTime = qsg_renderer_timer.elapsed();
 #endif
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp.constBits());
-#else
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tmp.constBits());
-#endif
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
 
 #ifndef QSG_NO_RENDERER_TIMING
     int uploadTime = 0;
@@ -686,24 +702,16 @@ void QSGPlainTexture::bind()
     if (qsg_render_timing) {
         mipmapTime = qsg_renderer_timer.elapsed();
 
-#ifdef QT_OPENGL_ES
-        printf("   - plaintexture(%dx%d) bind=%d, convert=%d, swizzle=%d, upload=%d, mipmap=%d, total=%d\n",
+        printf("   - plaintexture(%dx%d) bind=%d, convert=%d, swizzle=%d (%s->%s), upload=%d, mipmap=%d, total=%d\n",
                m_texture_size.width(), m_texture_size.height(),
                bindTime,
                convertTime - bindTime,
                swizzleTime - convertTime,
+               externalFormat == GL_BGRA ? "BGRA" : "RGBA",
+               internalFormat == GL_BGRA ? "BGRA" : "RGBA",
                uploadTime - swizzleTime,
                mipmapTime - uploadTime,
                (int) qsg_renderer_timer.elapsed());
-#else
-        printf("   - plaintexture(%dx%d): bind=%d, convert=%d, upload=%d, mipmap=%d, total=%d\n",
-               m_texture_size.width(), m_texture_size.height(),
-               bindTime,
-               convertTime - bindTime,
-               uploadTime - convertTime,
-               mipmapTime - uploadTime,
-               (int) qsg_renderer_timer.elapsed());
-#endif
 
     }
 
