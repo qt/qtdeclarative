@@ -112,9 +112,6 @@ public:
         _properties[prop->index] = 0;
         prop->next = _freeList;
         _freeList = prop;
-        // ### empty space in value array
-        values[prop->valueIndex].type = PropertyDescriptor::Generic;
-        values[prop->valueIndex].writable = PropertyDescriptor::Undefined;
     }
 
     PropertyTableEntry *findEntry(String *name) const
@@ -129,22 +126,22 @@ public:
         return 0;
     }
 
-    PropertyDescriptor *find(String *name)
+    uint find(String *name)
     {
         if (_properties) {
             for (PropertyTableEntry *prop = _buckets[name->hashValue() % _bucketCount]; prop; prop = prop->next) {
                 if (prop && prop->name->isEqualTo(name))
-                    return values.data() + prop->valueIndex;
+                    return prop->valueIndex;
             }
         }
 
-        return 0;
+        return UINT_MAX;
     }
 
-    PropertyDescriptor *insert(String *name)
+    PropertyTableEntry *insert(String *name)
     {
         if (PropertyTableEntry *prop = findEntry(name))
-            return values.data() + prop->valueIndex;
+            return prop;
 
         if (_propertyCount == _allocated) {
             if (! _allocated)
@@ -179,9 +176,10 @@ public:
             bucket = prop;
         }
 
-        prop->valueIndex = values.size();
-        values.resize(values.size() + 1);
-        return values.data() + prop->valueIndex;
+        return prop;
+//        prop->valueIndex = values.size();
+//        values.resize(values.size() + 1);
+//        return values.data() + prop->valueIndex;
     }
 
 private:
@@ -227,7 +225,6 @@ private:
     int _bucketCount;
     int _primeIdx: 5;
     int _allocated: 27;
-    QVector<PropertyDescriptor> values;
 };
 
 } // namespace VM

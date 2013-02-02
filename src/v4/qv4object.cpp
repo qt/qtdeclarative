@@ -129,7 +129,7 @@ void Object::defineDefaultProperty(String *name, Value value)
 {
     if (!members)
         members.reset(new PropertyTable());
-    PropertyDescriptor *pd = members->insert(name);
+    PropertyDescriptor *pd = insertMember(name);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Enabled;
     pd->enumberable = PropertyDescriptor::Disabled;
@@ -169,7 +169,7 @@ void Object::defineReadonlyProperty(String *name, Value value)
 {
     if (!members)
         members.reset(new PropertyTable());
-    PropertyDescriptor *pd = members->insert(name);
+    PropertyDescriptor *pd = insertMember(name);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Disabled;
     pd->enumberable = PropertyDescriptor::Disabled;
@@ -188,8 +188,8 @@ void Object::markObjects()
                 continue;
             (*it)->name->mark();
         }
-        for (int i = 0; i < (uint)members->values.size(); ++i) {
-            const PropertyDescriptor &pd = members->values.at(i);
+        for (int i = 0; i < (uint)memberData.size(); ++i) {
+            const PropertyDescriptor &pd = memberData.at(i);
             if (pd.isData()) {
                 if (Managed *m = pd.value.asManaged())
                     m->mark();
@@ -204,6 +204,19 @@ void Object::markObjects()
     array.markObjects();
 }
 
+PropertyDescriptor *Object::insertMember(String *s)
+{
+    if (!members)
+        members.reset(new PropertyTable);
+
+    PropertyTableEntry *e = members->insert(s);
+    if (e->valueIndex == UINT_MAX) {
+        e->valueIndex = memberData.size();
+        memberData.resize(memberData.size() + 1);
+    }
+    return memberData.data() + e->valueIndex;
+}
+
 // Section 8.12.1
 PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, String *name)
 {
@@ -211,8 +224,11 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, String *na
     if (idx != String::InvalidArrayIndex)
         return __getOwnProperty__(ctx, idx);
 
-    if (members)
-        return members->find(name);
+    if (members) {
+        uint idx = members->find(name);
+        if (idx < UINT_MAX)
+            return memberData.data() + idx;
+    }
     return 0;
 }
 
@@ -238,8 +254,9 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, Str
     Object *o = this;
     while (o) {
         if (o->members) {
-            if (PropertyDescriptor *p = o->members->find(name))
-                return p;
+            uint idx = o->members->find(name);
+            if (idx < UINT_MAX)
+                return o->memberData.data() + idx;
         }
         o = o->prototype;
     }
@@ -281,10 +298,11 @@ Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
     Object *o = this;
     while (o) {
         if (o->members) {
-            if (PropertyDescriptor *p = o->members->find(name)) {
+            uint idx = o->members->find(name);
+            if (idx < UINT_MAX) {
                 if (hasProperty)
                     *hasProperty = true;
-                return getValue(ctx, p);
+                return getValue(ctx, o->memberData.data() + idx);
             }
         }
         o = o->prototype;
@@ -398,7 +416,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
     }
 
     {
-        PropertyDescriptor *p = members->insert(name);
+        PropertyDescriptor *p = insertMember(name);
         p->type = PropertyDescriptor::Data;
         p->value = value;
         p->configurable = PropertyDescriptor::Enabled;
@@ -479,7 +497,7 @@ bool Object::__hasProperty__(const ExecutionContext *ctx, String *name) const
 
     name->makeIdentifier(ctx);
 
-    if (members && members->find(name) != 0)
+    if (members && members->find(name) != UINT_MAX)
         return true;
 
     return prototype ? prototype->__hasProperty__(ctx, name) : false;
@@ -505,8 +523,12 @@ bool Object::__delete__(ExecutionContext *ctx, String *name)
 
     if (members) {
         if (PropertyTableEntry *entry = members->findEntry(name)) {
-            if (members->values[entry->valueIndex].isConfigurable()) {
+            PropertyDescriptor &pd = memberData[entry->valueIndex];
+            if (pd.isConfigurable()) {
                 members->remove(entry);
+                // ### leaves a hole in memberData
+                pd.type = PropertyDescriptor::Generic;
+                pd.writable = PropertyDescriptor::Undefined;
                 return true;
             }
             if (ctx->strictMode)
@@ -538,8 +560,8 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
     PropertyDescriptor *current;
 
     if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
-        PropertyDescriptor *lp = members->values.data(); // length is always the first property
-        assert(lp == members->find(ctx->engine->id_length));
+        PropertyDescriptor *lp = memberData.data() + ArrayObject::LengthPropertyIndex;
+        assert(0 == members->find(ctx->engine->id_length));
         if (desc->isEmpty() || desc->isSubset(lp))
             return true;
         if (!lp->isWritable() || desc->type == PropertyDescriptor::Accessor || desc->isConfigurable() || desc->isEnumerable())
@@ -569,7 +591,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
         if (!extensible)
             goto reject;
         // clause 4
-        PropertyDescriptor *pd = members->insert(name);
+        PropertyDescriptor *pd = insertMember(name);
         *pd = *desc;
         pd->fullyPopulated();
         return true;
@@ -587,7 +609,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
     PropertyDescriptor *current;
 
     // 15.4.5.1, 4b
-    if (isArrayObject() && index >= array.length() && !members->values.at(0).isWritable())
+    if (isArrayObject() && index >= array.length() && !memberData.at(ArrayObject::LengthPropertyIndex).isWritable())
         goto reject;
 
     if (isNonStrictArgumentsObject)
@@ -690,14 +712,14 @@ void ArrayObject::init(ExecutionContext *context)
 
     if (!members)
         members.reset(new PropertyTable());
-    PropertyDescriptor *pd = members->insert(context->engine->id_length);
+    PropertyDescriptor *pd = insertMember(context->engine->id_length);
+    assert(pd == memberData.constData() + LengthPropertyIndex);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Enabled;
     pd->enumberable = PropertyDescriptor::Disabled;
     pd->configurable = PropertyDescriptor::Disabled;
     pd->value = Value::fromInt32(0);
     array.setArrayObject(this);
-    assert(pd = members->values.data());
 }
 
 

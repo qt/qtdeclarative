@@ -103,6 +103,7 @@ struct URIErrorPrototype;
 struct Q_V4_EXPORT Object: Managed {
     Object *prototype;
     QScopedPointer<PropertyTable> members;
+    QVector<PropertyDescriptor> memberData;
     Array array;
 
     Object()
@@ -153,6 +154,8 @@ struct Q_V4_EXPORT Object: Managed {
     void defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value);
     void defineReadonlyProperty(String *name, Value value);
 
+    PropertyDescriptor *insertMember(String *s);
+
 protected:
     virtual void markObjects();
 
@@ -181,6 +184,10 @@ struct NumberObject: Object {
 };
 
 struct ArrayObject: Object {
+    enum {
+        LengthPropertyIndex = 0
+    };
+
     ArrayObject(ExecutionContext *ctx) { init(ctx); }
     ArrayObject(ExecutionContext *ctx, const Array &value): Object(value) { init(ctx); array.setLengthUnchecked(array.length()); }
     void init(ExecutionContext *context);

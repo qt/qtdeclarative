@@ -282,7 +282,7 @@ bool Parser::parseMember(Object *o)
     if (!parseValue(&val))
         return false;
 
-    PropertyDescriptor *p = o->members->insert(context->engine->newIdentifier(key));
+    PropertyDescriptor *p = o->insertMember(context->engine->newIdentifier(key));
     p->value = val;
 
     END;

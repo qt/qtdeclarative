@@ -586,13 +586,13 @@ void Array::setLengthUnchecked(uint l)
     len = l;
     if (arrayObject) {
         // length is always the first property of an array
-        PropertyDescriptor &lengthProperty = arrayObject->members->values[0];
+        PropertyDescriptor &lengthProperty = arrayObject->memberData[ArrayObject::LengthPropertyIndex];
         lengthProperty.value = Value::fromUInt32(l);
     }
 }
 
 bool Array::setLength(uint newLen) {
-    const PropertyDescriptor *lengthProperty = arrayObject->members->values.constData();
+    const PropertyDescriptor *lengthProperty = arrayObject->memberData.constData() + ArrayObject::LengthPropertyIndex;
     if (lengthProperty && !lengthProperty->isWritable())
         return false;
     uint oldLen = length();

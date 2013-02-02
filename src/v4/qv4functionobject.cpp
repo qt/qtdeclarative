@@ -361,7 +361,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
 
     Object *proto = scope->engine->newObject();
     proto->defineDefaultProperty(scope->engine->id_constructor, Value::fromObject(this));
-    PropertyDescriptor *pd = members->insert(scope->engine->id_prototype);
+    PropertyDescriptor *pd = insertMember(scope->engine->id_prototype);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Enabled;
     pd->enumberable = PropertyDescriptor::Disabled;
@@ -440,8 +440,8 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
     pd.configurable = PropertyDescriptor::Disabled;
     pd.enumberable = PropertyDescriptor::Disabled;
-    *members->insert(scope->engine->id_arguments) = pd;
-    *members->insert(scope->engine->id_caller) = pd;
+    *insertMember(scope->engine->id_arguments) = pd;
+    *insertMember(scope->engine->id_caller) = pd;
 }
 
 Value BoundFunction::call(ExecutionContext *context, Value, Value *args, int argc)

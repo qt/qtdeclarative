@@ -72,7 +72,7 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
 
     if (!members)
         members.reset(new PropertyTable());
-    PropertyDescriptor *lastIndexProperty = members->insert(engine->newIdentifier(QStringLiteral("lastIndex")));
+    PropertyDescriptor *lastIndexProperty = insertMember(engine->newIdentifier(QStringLiteral("lastIndex")));
     lastIndexProperty->type = PropertyDescriptor::Data;
     lastIndexProperty->writable = PropertyDescriptor::Enabled;
     lastIndexProperty->enumberable = PropertyDescriptor::Disabled;
@@ -88,7 +88,8 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
 
 PropertyDescriptor *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
 {
-    return members->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex")));
+    assert(0 == members->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex"))));
+    return &memberData[0];
 }
 
 
