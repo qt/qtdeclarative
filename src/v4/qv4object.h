@@ -422,6 +422,7 @@ protected:
     virtual void markObjects();
 
     friend struct ObjectIterator;
+    friend struct ObjectPrototype;
 };
 
 struct ForEachIteratorObject: Object {
