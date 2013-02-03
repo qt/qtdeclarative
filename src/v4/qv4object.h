@@ -107,18 +107,19 @@ struct Q_V4_EXPORT Object: Managed {
     uint memberDataAlloc;
     PropertyDescriptor *memberData;
 
-    uint arrayLen;
     union {
         uint arrayFreeList;
         uint arrayOffset;
     };
-    QVector<PropertyDescriptor> arrayData;
+    uint arrayDataLen;
+    uint arrayAlloc;
+    PropertyDescriptor *arrayData;
     SparseArray *sparseArray;
 
     Object()
         : prototype(0)
         , memberDataSize(0), memberDataAlloc(0), memberData(0)
-        , arrayLen(0), arrayOffset(0), sparseArray(0) { type = Type_Object; }
+        , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), sparseArray(0) { type = Type_Object; }
 
     virtual ~Object();
 
@@ -167,7 +168,7 @@ struct Q_V4_EXPORT Object: Managed {
 
     // Array handling
 
-    void fillDescriptor(PropertyDescriptor *pd, Value v)
+    static void fillDescriptor(PropertyDescriptor *pd, Value v)
     {
         pd->type = PropertyDescriptor::Data;
         pd->writable = PropertyDescriptor::Enabled;
@@ -178,10 +179,9 @@ struct Q_V4_EXPORT Object: Managed {
 
     uint allocArrayValue() {
         uint idx = arrayFreeList;
-        if (arrayData.size() <= (int)arrayFreeList)
-            arrayData.resize(++arrayFreeList);
-        else
-            arrayFreeList = arrayData.at(arrayFreeList).value.integerValue();
+        if (arrayAlloc <= arrayFreeList)
+            arrayReserve(arrayAlloc + 1);
+        arrayFreeList = arrayData[arrayFreeList].value.integerValue();
         return idx;
     }
 
@@ -200,44 +200,42 @@ struct Q_V4_EXPORT Object: Managed {
     }
 
     PropertyDescriptor *arrayDecriptor(uint index) {
-        PropertyDescriptor *pd = arrayData.data() + index;
-        if (!sparseArray)
-            pd += arrayOffset;
-        return pd;
+        return arrayData + index;
     }
     const PropertyDescriptor *arrayDecriptor(uint index) const {
-        const PropertyDescriptor *pd = arrayData.data() + index;
-        if (!sparseArray)
-            pd += arrayOffset;
-        return pd;
+        return arrayData + index;
     }
 
     void getArrayHeadRoom() {
         assert(!sparseArray && !arrayOffset);
-        arrayOffset = qMax(arrayData.size() >> 2, 16);
-        QVector<PropertyDescriptor> newValues(arrayData.size() + arrayOffset);
-        memcpy(newValues.data() + arrayOffset, arrayData.constData(), arrayData.size()*sizeof(PropertyDescriptor));
-        arrayData = newValues;
+        arrayOffset = qMax(arrayDataLen >> 2, (uint)16);
+        PropertyDescriptor *newArray = new PropertyDescriptor[arrayOffset + arrayAlloc];
+        memcpy(newArray + arrayOffset, arrayData, arrayDataLen*sizeof(PropertyDescriptor));
+        delete [] arrayData;
+        arrayData = newArray + arrayOffset;
     }
 
 public:
     void copyArrayData(Object *other);
     void initSparse();
 
-    uint arrayLength() const { return arrayLen; }
+    uint arrayLength() const;
     bool setArrayLength(uint newLen);
 
     void setArrayLengthUnchecked(uint l);
 
     PropertyDescriptor *arrayInsert(uint index) {
         PropertyDescriptor *pd;
-        if (!sparseArray && (index < 0x1000 || index < arrayLen + (arrayLen >> 2))) {
-            if (index + arrayOffset >= (uint)arrayData.size()) {
-                arrayData.resize(arrayOffset + index + 1);
-                for (uint i = arrayLen + 1; i < index; ++i) {
+        if (!sparseArray && (index < 0x1000 || index < arrayDataLen + (arrayDataLen >> 2))) {
+            if (index >= arrayAlloc)
+                arrayReserve(index + 1);
+            if (index >= arrayDataLen) {
+                for (uint i = arrayDataLen; i < index; ++i) {
                     arrayData[i].type = PropertyDescriptor::Generic;
+                    arrayData[i].writable = PropertyDescriptor::Undefined;
                     arrayData[i].value.tag = Value::_Undefined_Type;
                 }
+                arrayDataLen = index + 1;
             }
             pd = arrayDecriptor(index);
         } else {
@@ -247,7 +245,7 @@ public:
                 n->value = allocArrayValue();
             pd = arrayDecriptor(n->value);
         }
-        if (index >= arrayLen)
+        if (index >= arrayLength())
             setArrayLengthUnchecked(index + 1);
         return pd;
     }
@@ -262,10 +260,10 @@ public:
     }
 
     bool deleteArrayIndex(uint index) {
-        if (index >= arrayLen)
-            return true;
         PropertyDescriptor *pd = 0;
         if (!sparseArray) {
+            if (index >= arrayDataLen)
+                return true;
             pd = arrayAt(index);
         } else {
             SparseArrayNode *n = sparseArray->findNode(index);
@@ -277,80 +275,63 @@ public:
         if (!pd->isConfigurable())
             return false;
         pd->type = PropertyDescriptor::Generic;
-        pd->value.tag = Value::_Undefined_Type;
+        pd->value = Value::undefinedValue();
         if (sparseArray) {
             pd->value.int_32 = arrayFreeList;
-            arrayFreeList = pd - arrayData.constData();
+            arrayFreeList = pd - arrayData;
         }
         return true;
     }
 
     PropertyDescriptor *arrayAt(uint index) {
         if (!sparseArray) {
-            if (index >= arrayData.size() - arrayOffset)
+            if (index >= arrayDataLen)
                 return 0;
-            return arrayData.data() + index + arrayOffset;
+            return arrayData + index;
         } else {
             SparseArrayNode *n = sparseArray->findNode(index);
             if (!n)
                 return 0;
-            return arrayData.data() + n->value;
+            return arrayData + n->value;
         }
     }
 
     const PropertyDescriptor *nonSparseArrayAt(uint index) const {
         if (sparseArray)
             return 0;
-        index += arrayOffset;
-        if (index >= (uint)arrayData.size())
+        if (index >= arrayDataLen)
             return 0;
-        return arrayData.constData() + index;
+        return arrayData + index;
     }
 
     PropertyDescriptor *nonSparseArrayAtRef(uint index) {
         if (sparseArray)
             return 0;
-        index += arrayOffset;
-        if (index >= (uint)arrayData.size())
+        if (index >= arrayDataLen)
             return 0;
-        return arrayData.data() + index;
+        return arrayData + index;
     }
 
     const PropertyDescriptor *arrayAt(uint index) const {
         if (!sparseArray) {
-            if (index >= arrayData.size() - arrayOffset)
+            if (index >= arrayDataLen)
                 return 0;
-            return arrayData.constData() + index + arrayOffset;
+            return arrayData + index;
         } else {
             SparseArrayNode *n = sparseArray->findNode(index);
             if (!n)
                 return 0;
-            return arrayData.constData() + n->value;
+            return arrayData + n->value;
         }
     }
 
     void markArrayObjects() const;
 
-    void push_front(Value v) {
-        if (!sparseArray) {
-            if (!arrayOffset)
-                getArrayHeadRoom();
-
-            PropertyDescriptor pd;
-            fillDescriptor(&pd, v);
-            --arrayOffset;
-            arrayData[arrayOffset] = pd;
-        } else {
-            uint idx = allocArrayValue(v);
-            sparseArray->push_front(idx);
-        }
-        setArrayLengthUnchecked(arrayLen + 1);
-    }
     PropertyDescriptor *front() {
         PropertyDescriptor *pd = 0;
         if (!sparseArray) {
-            if (arrayLen)
-                pd = arrayData.data() + arrayOffset;
+            if (arrayDataLen)
+                pd = arrayData;
         } else {
             SparseArrayNode *n = sparseArray->findNode(0);
             if (n)
@@ -360,63 +341,28 @@ public:
             return 0;
         return pd;
     }
-    void pop_front() {
-        if (!arrayLen)
-            return;
-        if (!sparseArray) {
-            ++arrayOffset;
-        } else {
-            uint idx = sparseArray->pop_front();
-            freeArrayValue(idx);
-        }
-        setArrayLengthUnchecked(arrayLen - 1);
-    }
     void push_back(Value v) {
+        uint idx = arrayLength();
         if (!sparseArray) {
-            PropertyDescriptor pd;
-            fillDescriptor(&pd, v);
-            arrayData.append(pd);
+            if (idx >= arrayAlloc)
+                arrayReserve(idx + 1);
+            fillDescriptor(arrayData + idx, v);
+            arrayDataLen = idx + 1;
         } else {
             uint idx = allocArrayValue(v);
-            sparseArray->push_back(idx, arrayLen);
+            sparseArray->push_back(idx, arrayLength());
         }
-        setArrayLengthUnchecked(arrayLen + 1);
-    }
-    PropertyDescriptor *back() {
-        PropertyDescriptor *pd = 0;
-        if (!sparseArray) {
-            if (arrayLen)
-                pd = arrayData.data() + arrayOffset + arrayLen;
-        } else {
-            SparseArrayNode *n = sparseArray->findNode(arrayLen - 1);
-            if (n)
-                pd = arrayDecriptor(n->value);
-        }
-        if (pd && pd->type == PropertyDescriptor::Generic)
-            return 0;
-        return pd;
-    }
-    void pop_back() {
-        if (!arrayLen)
-            return;
-        if (!sparseArray) {
-            arrayData.resize(arrayData.size() - 1);
-        } else {
-            uint idx = sparseArray->pop_back(arrayLen);
-            if (idx != UINT_MAX)
-                freeArrayValue(idx);
-        }
-        setArrayLengthUnchecked(arrayLen - 1);
+        setArrayLengthUnchecked(idx + 1);
     }
 
-    SparseArrayNode *sparseArrayLowerBound(uint idx) { return sparseArray ? sparseArray->lowerBound(idx) : 0; }
     SparseArrayNode *sparseArrayBegin() { return sparseArray ? sparseArray->begin() : 0; }
     SparseArrayNode *sparseArrayEnd() { return sparseArray ? sparseArray->end() : 0; }
 
     void arrayConcat(const ArrayObject *other);
-    void arraySort(ExecutionContext *context, Object *thisObject, const Value &comparefn, uint arrayLen);
-    Value arrayIndexOf(Value v, uint fromIndex, uint arrayLen, ExecutionContext *ctx, Object *o);
+    void arraySort(ExecutionContext *context, Object *thisObject, const Value &comparefn, uint arrayDataLen);
+    Value arrayIndexOf(Value v, uint fromIndex, uint arrayDataLen, ExecutionContext *ctx, Object *o);
 
+    void arrayReserve(uint n);
 
 protected:
     virtual void markObjects();
@@ -452,13 +398,29 @@ struct ArrayObject: Object {
     };
 
     ArrayObject(ExecutionContext *ctx) { init(ctx); }
-    ArrayObject(ExecutionContext *ctx, const QVector<PropertyDescriptor> &value): Object() {
-        init(ctx);
-        arrayData = value;
-        setArrayLengthUnchecked(value.size());
-    }
     void init(ExecutionContext *context);
 };
+
+inline uint Object::arrayLength() const
+{
+    if (isArrayObject()) {
+        // length is always the first property of an array
+        Value v = memberData[ArrayObject::LengthPropertyIndex].value;
+        if (v.isInteger())
+            return v.integerValue();
+        return Value::toUInt32(v.doubleValue());
+    }
+    return 0;
+}
+
+inline void Object::setArrayLengthUnchecked(uint l)
+{
+    if (isArrayObject()) {
+        // length is always the first property of an array
+        PropertyDescriptor &lengthProperty = memberData[ArrayObject::LengthPropertyIndex];
+        lengthProperty.value = Value::fromUInt32(l);
+    }
+}
 
 
 } // namespace VM

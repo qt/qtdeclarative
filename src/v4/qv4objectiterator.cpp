@@ -101,7 +101,7 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
             arrayIndex = UINT_MAX;
         }
         // dense arrays
-        while (arrayIndex < current->arrayLength()) {
+        while (arrayIndex < current->arrayDataLen) {
             p = current->arrayAt(arrayIndex);
             ++arrayIndex;
             if (p && p->type != PropertyDescriptor::Generic && (!(flags & EnumberableOnly) || p->isEnumerable())) {

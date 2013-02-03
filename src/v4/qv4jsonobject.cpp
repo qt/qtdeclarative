@@ -897,7 +897,8 @@ Value JsonObject::method_stringify(ExecutionContext *ctx)
     if (o) {
         stringify.replacerFunction = o->asFunctionObject();
         if (o->isArrayObject()) {
-            for (uint i = 0; i < o->arrayLength(); ++i) {
+            uint arrayLen = o->arrayLength();
+            for (uint i = 0; i < arrayLen; ++i) {
                 Value v = o->__get__(ctx, i);
                 if (v.asNumberObject() || v.asStringObject() || v.isNumber())
                     v = __qmljs_to_string(v, ctx);

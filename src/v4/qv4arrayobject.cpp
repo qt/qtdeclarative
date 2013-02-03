@@ -62,11 +62,14 @@ Value ArrayCtor::call(ExecutionContext *ctx)
             return Value::undefinedValue();
         }
 
+        if (len < 0x1000)
+            a->arrayReserve(len);
     } else {
         len = ctx->argumentCount;
-        for (unsigned int i = 0; i < len; ++i) {
-            a->arraySet(i, ctx->argument(i));
-        }
+        a->arrayReserve(len);
+        for (unsigned int i = 0; i < len; ++i)
+            fillDescriptor(a->arrayData + i, ctx->argument(i));
+        a->arrayDataLen = len;
     }
     a->setArrayLengthUnchecked(len);
 
@@ -138,14 +141,13 @@ Value ArrayPrototype::method_concat(ExecutionContext *ctx)
     }
 
     for (uint i = 0; i < ctx->argumentCount; ++i) {
-        quint32 k = result->arrayLength();
         Value arg = ctx->argument(i);
 
         if (ArrayObject *elt = arg.asArrayObject())
             result->arrayConcat(elt);
 
         else
-            result->arraySet(k, arg);
+            result->arraySet(getLength(ctx, result), arg);
     }
 
     return Value::fromObject(result);
@@ -252,25 +254,37 @@ Value ArrayPrototype::method_push(ExecutionContext *ctx)
     bool protoHasArray = false;
     Object *p = instance;
     while ((p = p->prototype))
-        if (p->arrayLength())
+        if (p->arrayDataLen)
             protoHasArray = true;
 
-    if (!protoHasArray && len == instance->arrayLength()) {
+    if (!protoHasArray && instance->arrayDataLen <= len) {
         for (uint i = 0; i < ctx->argumentCount; ++i) {
             Value v = ctx->argument(i);
-            instance->push_back(v);
+
+            if (!instance->sparseArray) {
+                if (len >= instance->arrayAlloc)
+                    instance->arrayReserve(len + 1);
+                fillDescriptor(instance->arrayData + len, v);
+                instance->arrayDataLen = len + 1;
+            } else {
+                uint i = instance->allocArrayValue(v);
+                instance->sparseArray->push_back(i, len);
+            }
+            ++len;
         }
     } else {
         for (uint i = 0; i < ctx->argumentCount; ++i)
             instance->__put__(ctx, len + i, ctx->argument(i));
+        len += ctx->argumentCount;
     }
-    uint newLen = len + ctx->argumentCount;
-    if (!instance->isArrayObject())
-        instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
+    if (instance->isArrayObject())
+        instance->setArrayLengthUnchecked(len);
+    else
+        instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(len));
 
-    if (newLen < INT_MAX)
-        return Value::fromInt32(newLen);
-    return Value::fromDouble((double)newLen);
+    if (len < INT_MAX)
+        return Value::fromInt32(len);
+    return Value::fromDouble((double)len);
 
 }
 
@@ -313,11 +327,21 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
     bool protoHasArray = false;
     Object *p = instance;
     while ((p = p->prototype))
-        if (p->arrayLength())
+        if (p->arrayDataLen)
             protoHasArray = true;
 
-    if (!protoHasArray && len >= instance->arrayLength()) {
-        instance->pop_front();
+    if (!protoHasArray && instance->arrayDataLen <= len) {
+        if (!instance->sparseArray) {
+            if (instance->arrayDataLen) {
+                ++instance->arrayOffset;
+                ++instance->arrayData;
+                --instance->arrayDataLen;
+                --instance->arrayAlloc;
+            }
+        } else {
+            uint idx = instance->sparseArray->pop_front();
+            instance->freeArrayValue(idx);
+        }
     } else {
         // do it the slow way
         for (uint k = 1; k < len; ++k) {
@@ -331,7 +355,9 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
         instance->__delete__(ctx, len - 1);
     }
 
-    if (!instance->isArrayObject())
+    if (instance->isArrayObject())
+        instance->setArrayLengthUnchecked(len - 1);
+    else
         instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(len - 1));
     return result;
 }
@@ -365,8 +391,9 @@ Value ArrayPrototype::method_slice(ExecutionContext *ctx)
     for (uint i = start; i < end; ++i) {
         bool exists;
         Value v = o->__get__(ctx, i, &exists);
-        if (exists)
+        if (exists) {
             result->arraySet(n, v);
+        }
         ++n;
     }
     return Value::fromObject(result);
@@ -399,8 +426,8 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
 
     uint deleteCount = (uint)qMin(qMax(ctx->argument(1).toInteger(ctx), 0.), (double)(len - start));
 
-    newArray->arrayData.resize(deleteCount);
-    PropertyDescriptor *pd = newArray->arrayData.data();
+    newArray->arrayReserve(deleteCount);
+    PropertyDescriptor *pd = newArray->arrayData;
     for (uint i = 0; i < deleteCount; ++i) {
         pd->type = PropertyDescriptor::Data;
         pd->writable = PropertyDescriptor::Enabled;
@@ -409,6 +436,7 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
         pd->value = instance->__get__(ctx, start + i);
         ++pd;
     }
+    newArray->arrayDataLen = deleteCount;
     newArray->setArrayLengthUnchecked(deleteCount);
 
     uint itemCount = ctx->argumentCount < 2 ? 0 : ctx->argumentCount - 2;
@@ -454,13 +482,25 @@ Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
     bool protoHasArray = false;
     Object *p = instance;
     while ((p = p->prototype))
-        if (p->arrayLength())
+        if (p->arrayDataLen)
             protoHasArray = true;
 
-    if (!protoHasArray && len >= instance->arrayLength()) {
+    if (!protoHasArray && instance->arrayDataLen <= len) {
         for (int i = ctx->argumentCount - 1; i >= 0; --i) {
             Value v = ctx->argument(i);
-            instance->push_front(v);
+
+            if (!instance->sparseArray) {
+                if (!instance->arrayOffset)
+                    instance->getArrayHeadRoom();
+
+                --instance->arrayOffset;
+                --instance->arrayData;
+                ++instance->arrayDataLen;
+                fillDescriptor(instance->arrayData, v);
+            } else {
+                uint idx = instance->allocArrayValue(v);
+                instance->sparseArray->push_front(idx);
+            }
         }
     } else {
         for (uint k = len; k > 0; --k) {
@@ -474,8 +514,11 @@ Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
         for (uint i = 0; i < ctx->argumentCount; ++i)
             instance->__put__(ctx, i, ctx->argument(i));
     }
+
     uint newLen = len + ctx->argumentCount;
-    if (!instance->isArrayObject())
+    if (instance->isArrayObject())
+        instance->setArrayLengthUnchecked(newLen);
+    else
         instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
 
     if (newLen < INT_MAX)
@@ -655,6 +698,7 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
     Value thisArg = ctx->argument(1);
 
     ArrayObject *a = ctx->engine->newArrayObject(ctx);
+    a->arrayReserve(len);
     a->setArrayLengthUnchecked(len);
 
     for (uint k = 0; k < len; ++k) {
@@ -686,6 +730,7 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
     Value thisArg = ctx->argument(1);
 
     ArrayObject *a = ctx->engine->newArrayObject(ctx);
+    a->arrayReserve(len);
 
     uint to = 0;
     for (uint k = 0; k < len; ++k) {
