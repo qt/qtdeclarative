@@ -195,7 +195,7 @@ Value RegExpPrototype::method_exec(ExecutionContext *ctx)
         Value entry = Value::undefinedValue();
         if (start != -1 && end != -1)
             entry = Value::fromString(ctx, s.mid(start, end - start));
-        array->array.push_back(entry);
+        array->push_back(entry);
     }
 
     array->__put__(ctx, QLatin1String("index"), Value::fromInt32(result));

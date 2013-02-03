@@ -320,13 +320,6 @@ ArrayObject *ExecutionEngine::newArrayObject(ExecutionContext *ctx)
     return object;
 }
 
-ArrayObject *ExecutionEngine::newArrayObject(ExecutionContext *ctx, const Array &value)
-{
-    ArrayObject *object = new (memoryManager) ArrayObject(ctx, value);
-    object->prototype = arrayPrototype;
-    return object;
-}
-
 Object *ExecutionEngine::newDateObject(const Value &value)
 {
     Object *object = new (memoryManager) DateObject(value);

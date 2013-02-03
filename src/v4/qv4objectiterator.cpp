@@ -76,20 +76,20 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
                 return s->__getOwnProperty__(context, *index);
             }
             flags &= ~CurrentIsString;
-            arrayNode = current->array.sparseArrayBegin();
+            arrayNode = current->sparseArrayBegin();
             // iterate until we're past the end of the string
             while (arrayNode && arrayNode->key() < slen)
                 arrayNode = arrayNode->nextNode();
         }
 
         if (!arrayIndex)
-            arrayNode = current->array.sparseArrayBegin();
+            arrayNode = current->sparseArrayBegin();
 
         // sparse arrays
         if (arrayNode) {
-            while (arrayNode != current->array.sparseArrayEnd()) {
+            while (arrayNode != current->sparseArrayEnd()) {
                 int k = arrayNode->key();
-                p = current->array.arrayAt(k);
+                p = current->arrayAt(k);
                 arrayNode = arrayNode->nextNode();
                 if (p && (!(flags & EnumberableOnly) || p->isEnumerable())) {
                     arrayIndex = k + 1;
@@ -101,8 +101,8 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
             arrayIndex = UINT_MAX;
         }
         // dense arrays
-        while (arrayIndex < current->array.arrayLength()) {
-            p = current->array.arrayAt(arrayIndex);
+        while (arrayIndex < current->arrayLength()) {
+            p = current->arrayAt(arrayIndex);
             ++arrayIndex;
             if (p && p->type != PropertyDescriptor::Generic && (!(flags & EnumberableOnly) || p->isEnumerable())) {
                 *index = arrayIndex - 1;

@@ -150,13 +150,12 @@ Value ObjectPrototype::method_getOwnPropertyNames(ExecutionContext *ctx)
         ctx->throwTypeError();
 
     ArrayObject *array = ctx->engine->newArrayObject(ctx)->asArrayObject();
-    Array &a = array->array;
     ObjectIterator it(ctx, O, ObjectIterator::NoFlags);
     while (1) {
         Value v = it.nextPropertyNameAsString();
         if (v.isNull())
             break;
-        a.push_back(v);
+        array->push_back(v);
     }
     return Value::fromObject(array);
 }
@@ -354,7 +353,7 @@ Value ObjectPrototype::method_keys(ExecutionContext *ctx)
             key = Value::fromDouble(index);
             key = __qmljs_to_string(key, ctx);
         }
-        a->array.push_back(key);
+        a->push_back(key);
     }
 
     return Value::fromObject(a);

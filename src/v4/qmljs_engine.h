@@ -200,7 +200,7 @@ struct Q_V4_EXPORT ExecutionEngine
     Object *newFunctionObject(ExecutionContext *ctx);
 
     ArrayObject *newArrayObject(ExecutionContext *ctx);
-    ArrayObject *newArrayObject(ExecutionContext *ctx, const Array &value);
+//    ArrayObject *newArrayObject(ExecutionContext *ctx, const Array &value);
 
     Object *newDateObject(const Value &value);
 

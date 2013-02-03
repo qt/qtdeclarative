@@ -70,6 +70,7 @@ using namespace QQmlJS::VM;
 //
 Object::~Object()
 {
+    delete sparseArray;
 }
 
 void Object::__put__(ExecutionContext *ctx, const QString &name, const Value &value)
@@ -201,7 +202,7 @@ void Object::markObjects()
             }
         }
     }
-    array.markArrayObjects();
+    markArrayObjects();
 }
 
 PropertyDescriptor *Object::insertMember(String *s)
@@ -234,7 +235,7 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, String *na
 
 PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, uint index)
 {
-    PropertyDescriptor *p = array.arrayAt(index);
+    PropertyDescriptor *p = arrayAt(index);
     if(p && p->type != PropertyDescriptor::Generic)
         return p;
     if (isStringObject())
@@ -267,7 +268,7 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, uin
 {
     Object *o = this;
     while (o) {
-        PropertyDescriptor *p = o->array.arrayAt(index);
+        PropertyDescriptor *p = o->arrayAt(index);
         if(p && p->type != PropertyDescriptor::Generic)
             return p;
         if (o->isStringObject()) {
@@ -318,7 +319,7 @@ Value Object::__get__(ExecutionContext *ctx, uint index, bool *hasProperty)
     PropertyDescriptor *pd = 0;
     Object *o = this;
     while (o) {
-        PropertyDescriptor *p = o->array.arrayAt(index);
+        PropertyDescriptor *p = o->arrayAt(index);
         if (p && p->type != PropertyDescriptor::Generic) {
             pd = p;
             break;
@@ -368,7 +369,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
             uint l = value.asArrayLength(ctx, &ok);
             if (!ok)
                 ctx->throwRangeError(value);
-            ok = array.setArrayLength(l);
+            ok = setArrayLength(l);
             if (!ok)
                 goto reject;
         } else {
@@ -480,7 +481,7 @@ void Object::__put__(ExecutionContext *ctx, uint index, Value value)
         return;
     }
 
-    array.arraySet(index, value);
+    arraySet(index, value);
     return;
 
   reject:
@@ -505,7 +506,7 @@ bool Object::__hasProperty__(const ExecutionContext *ctx, String *name) const
 
 bool Object::__hasProperty__(const ExecutionContext *ctx, uint index) const
 {
-    const PropertyDescriptor *p = array.arrayAt(index);
+    const PropertyDescriptor *p = arrayAt(index);
     if (p && p->type != PropertyDescriptor::Generic)
         return true;
 
@@ -541,7 +542,7 @@ bool Object::__delete__(ExecutionContext *ctx, String *name)
 
 bool Object::__delete__(ExecutionContext *ctx, uint index)
 {
-    if (array.deleteArrayIndex(index))
+    if (deleteArrayIndex(index))
         return true;
     if (ctx->strictMode)
         __qmljs_throw_type_error(ctx);
@@ -572,7 +573,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
             uint l = desc->value.asArrayLength(ctx, &ok);
             if (!ok)
                 ctx->throwRangeError(desc->value);
-            succeeded = array.setArrayLength(l);
+            succeeded = setArrayLength(l);
         }
         if (desc->writable == PropertyDescriptor::Disabled)
             lp->writable = PropertyDescriptor::Disabled;
@@ -609,7 +610,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
     PropertyDescriptor *current;
 
     // 15.4.5.1, 4b
-    if (isArrayObject() && index >= array.arrayLength() && !memberData.at(ArrayObject::LengthPropertyIndex).isWritable())
+    if (isArrayObject() && index >= arrayLength() && !memberData.at(ArrayObject::LengthPropertyIndex).isWritable())
         goto reject;
 
     if (isNonStrictArgumentsObject)
@@ -622,7 +623,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
         if (!extensible)
             goto reject;
         // clause 4
-        PropertyDescriptor *pd = array.arrayInsert(index);
+        PropertyDescriptor *pd = arrayInsert(index);
         *pd = *desc;
         pd->fullyPopulated();
         return true;
@@ -706,6 +707,201 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, c
 }
 
 
+void Object::copyArrayData(Object *other)
+{
+    arrayLen = other->arrayLen;
+    arrayData = other->arrayData;
+    arrayFreeList = other->arrayFreeList;
+    if (other->sparseArray)
+        sparseArray = new SparseArray(*other->sparseArray);
+    if (isArrayObject())
+        setArrayLengthUnchecked(arrayLen);
+}
+
+
+Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
+{
+    bool protoHasArray = false;
+    Object *p = o;
+    while ((p = p->prototype))
+        if (p->arrayLength())
+            protoHasArray = true;
+
+    if (protoHasArray) {
+        // lets be safe and slow
+        for (uint i = fromIndex; i < endIndex; ++i) {
+            bool exists;
+            Value value = o->__get__(ctx, i, &exists);
+            if (exists && __qmljs_strict_equal(value, v))
+                return Value::fromDouble(i);
+        }
+    } else if (sparseArray) {
+        for (SparseArrayNode *n = sparseArray->lowerBound(fromIndex); n && n->key() < endIndex; n = n->nextNode()) {
+            bool exists;
+            Value value = o->getValueChecked(ctx, arrayDecriptor(n->value), &exists);
+            if (exists && __qmljs_strict_equal(value, v))
+                return Value::fromDouble(n->key());
+        }
+    } else {
+        if ((int) endIndex > arrayData.size())
+            endIndex = arrayData.size();
+        PropertyDescriptor *pd = arrayData.data() + arrayOffset;
+        PropertyDescriptor *end = pd + endIndex;
+        pd += fromIndex;
+        while (pd < end) {
+            bool exists;
+            Value value = o->getValueChecked(ctx, pd, &exists);
+            if (exists && __qmljs_strict_equal(value, v))
+                return Value::fromDouble(pd - arrayOffset - arrayData.constData());
+            ++pd;
+        }
+    }
+    return Value::fromInt32(-1);
+}
+
+void Object::arrayConcat(const ArrayObject *other)
+{
+    int newLen = arrayLen + other->arrayLength();
+    if (other->sparseArray)
+        initSparse();
+    if (sparseArray) {
+        if (other->sparseArray) {
+            for (const SparseArrayNode *it = other->sparseArray->begin(); it != other->sparseArray->end(); it = it->nextNode())
+                arraySet(arrayLen + it->key(), other->arrayDecriptor(it->value));
+        } else {
+            int oldSize = arrayData.size();
+            arrayData.resize(oldSize + other->arrayLength());
+            memcpy(arrayData.data() + oldSize, other->arrayData.constData() + other->arrayOffset, other->arrayLength()*sizeof(PropertyDescriptor));
+            for (uint i = 0; i < other->arrayLength(); ++i) {
+                SparseArrayNode *n = sparseArray->insert(arrayLen + i);
+                n->value = oldSize + i;
+            }
+        }
+    } else {
+        int oldSize = arrayData.size();
+        arrayData.resize(oldSize + other->arrayLength());
+        memcpy(arrayData.data() + oldSize, other->arrayData.constData() + other->arrayOffset, other->arrayLength()*sizeof(PropertyDescriptor));
+    }
+    setArrayLengthUnchecked(newLen);
+}
+
+void Object::arraySort(ExecutionContext *context, Object *thisObject, const Value &comparefn, uint len)
+{
+    if (sparseArray) {
+        context->throwUnimplemented("Object::sort unimplemented for sparse arrays");
+        return;
+        delete sparseArray;
+    }
+
+    ArrayElementLessThan lessThan(context, thisObject, comparefn);
+    if (len > arrayData.size() - arrayOffset)
+        len = arrayData.size() - arrayOffset;
+    PropertyDescriptor *begin = arrayData.begin() + arrayOffset;
+    std::sort(begin, begin + len, lessThan);
+}
+
+
+void Object::initSparse()
+{
+    if (!sparseArray) {
+        sparseArray = new SparseArray;
+        for (int i = arrayOffset; i < arrayData.size(); ++i) {
+            SparseArrayNode *n = sparseArray->insert(i - arrayOffset);
+            n->value = i;
+        }
+
+        if (arrayOffset) {
+            int o = arrayOffset;
+            for (int i = 0; i < o - 1; ++i) {
+                arrayData[i].type = PropertyDescriptor::Generic;
+                arrayData[i].value = Value::fromInt32(i + 1);
+            }
+            arrayData[o - 1].type = PropertyDescriptor::Generic;
+            arrayData[o - 1].value = Value::fromInt32(arrayData.size());
+            arrayFreeList = 0;
+        } else {
+            arrayFreeList = arrayData.size();
+        }
+    }
+}
+
+void Object::setArrayLengthUnchecked(uint l)
+{
+    arrayLen = l;
+    if (isArrayObject()) {
+        // length is always the first property of an array
+        PropertyDescriptor &lengthProperty = memberData[ArrayObject::LengthPropertyIndex];
+        lengthProperty.value = Value::fromUInt32(l);
+    }
+}
+
+bool Object::setArrayLength(uint newLen) {
+    assert(isArrayObject());
+    const PropertyDescriptor *lengthProperty = memberData.constData() + ArrayObject::LengthPropertyIndex;
+    if (lengthProperty && !lengthProperty->isWritable())
+        return false;
+    uint oldLen = arrayLength();
+    bool ok = true;
+    if (newLen < oldLen) {
+        if (sparseArray) {
+            SparseArrayNode *begin = sparseArray->lowerBound(newLen);
+            SparseArrayNode *it = sparseArray->end()->previousNode();
+            while (1) {
+                PropertyDescriptor &pd = arrayData[it->value];
+                if (pd.type != PropertyDescriptor::Generic && !pd.isConfigurable()) {
+                    ok = false;
+                    newLen = it->key() + 1;
+                    break;
+                }
+                pd.type = PropertyDescriptor::Generic;
+                pd.value.tag = Value::_Undefined_Type;
+                pd.value.int_32 = arrayFreeList;
+                arrayFreeList = it->value;
+                bool brk = (it == begin);
+                SparseArrayNode *prev = it->previousNode();
+                sparseArray->erase(it);
+                if (brk)
+                    break;
+                it = prev;
+            }
+        } else {
+            PropertyDescriptor *it = arrayData.data() + arrayData.size();
+            const PropertyDescriptor *begin = arrayData.constData() + arrayOffset + newLen;
+            while (--it >= begin) {
+                if (it->type != PropertyDescriptor::Generic && !it->isConfigurable()) {
+                    ok = false;
+                    newLen = it - arrayData.data() + arrayOffset + 1;
+                    break;
+                }
+            }
+            arrayData.resize(newLen + arrayOffset);
+        }
+    } else {
+        if (newLen >= 0x100000)
+            initSparse();
+    }
+    setArrayLengthUnchecked(newLen);
+    return ok;
+}
+
+void Object::markArrayObjects() const
+{
+    uint i = sparseArray ? 0 : arrayOffset;
+    for (; i < (uint)arrayData.size(); ++i) {
+        const PropertyDescriptor &pd = arrayData.at(i);
+        if (pd.isData()) {
+            if (Managed *m = pd.value.asManaged())
+                m->mark();
+         } else if (pd.isAccessor()) {
+            if (pd.get)
+                pd.get->mark();
+            if (pd.set)
+                pd.set->mark();
+        }
+    }
+}
+
+
 void ArrayObject::init(ExecutionContext *context)
 {
     type = Type_ArrayObject;
@@ -719,7 +915,6 @@ void ArrayObject::init(ExecutionContext *context)
     pd->enumberable = PropertyDescriptor::Disabled;
     pd->configurable = PropertyDescriptor::Disabled;
     pd->value = Value::fromInt32(0);
-    array.setArrayObject(this);
 }
 
 

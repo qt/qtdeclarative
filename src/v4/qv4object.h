@@ -104,12 +104,18 @@ struct Q_V4_EXPORT Object: Managed {
     Object *prototype;
     QScopedPointer<PropertyTable> members;
     QVector<PropertyDescriptor> memberData;
-    Array array;
+
+    uint arrayLen;
+    union {
+        uint arrayFreeList;
+        uint arrayOffset;
+    };
+    QVector<PropertyDescriptor> arrayData;
+    SparseArray *sparseArray;
 
     Object()
-        : prototype(0) { type = Type_Object; }
-    Object(const Array &a)
-        : prototype(0), array(a) {}
+        : prototype(0)
+        , arrayLen(0), arrayOffset(0), sparseArray(0) { type = Type_Object; }
 
     virtual ~Object();
 
@@ -156,6 +162,259 @@ struct Q_V4_EXPORT Object: Managed {
 
     PropertyDescriptor *insertMember(String *s);
 
+    // Array handling
+
+    void fillDescriptor(PropertyDescriptor *pd, Value v)
+    {
+        pd->type = PropertyDescriptor::Data;
+        pd->writable = PropertyDescriptor::Enabled;
+        pd->enumberable = PropertyDescriptor::Enabled;
+        pd->configurable = PropertyDescriptor::Enabled;
+        pd->value = v;
+    }
+
+    uint allocArrayValue() {
+        uint idx = arrayFreeList;
+        if (arrayData.size() <= (int)arrayFreeList)
+            arrayData.resize(++arrayFreeList);
+        else
+            arrayFreeList = arrayData.at(arrayFreeList).value.integerValue();
+        return idx;
+    }
+
+    uint allocArrayValue(Value v) {
+        uint idx = allocArrayValue();
+        PropertyDescriptor *pd = &arrayData[idx];
+        fillDescriptor(pd, v);
+        return idx;
+    }
+    void freeArrayValue(int idx) {
+        PropertyDescriptor &pd = arrayData[idx];
+        pd.type = PropertyDescriptor::Generic;
+        pd.value.tag = Value::_Undefined_Type;
+        pd.value.int_32 = arrayFreeList;
+        arrayFreeList = idx;
+    }
+
+    PropertyDescriptor *arrayDecriptor(uint index) {
+        PropertyDescriptor *pd = arrayData.data() + index;
+        if (!sparseArray)
+            pd += arrayOffset;
+        return pd;
+    }
+    const PropertyDescriptor *arrayDecriptor(uint index) const {
+        const PropertyDescriptor *pd = arrayData.data() + index;
+        if (!sparseArray)
+            pd += arrayOffset;
+        return pd;
+    }
+
+    void getArrayHeadRoom() {
+        assert(!sparseArray && !arrayOffset);
+        arrayOffset = qMax(arrayData.size() >> 2, 16);
+        QVector<PropertyDescriptor> newValues(arrayData.size() + arrayOffset);
+        memcpy(newValues.data() + arrayOffset, arrayData.constData(), arrayData.size()*sizeof(PropertyDescriptor));
+        arrayData = newValues;
+    }
+
+public:
+    void copyArrayData(Object *other);
+    void initSparse();
+
+    uint arrayLength() const { return arrayLen; }
+    bool setArrayLength(uint newLen);
+
+    void setArrayLengthUnchecked(uint l);
+
+    PropertyDescriptor *arrayInsert(uint index) {
+        PropertyDescriptor *pd;
+        if (!sparseArray && (index < 0x1000 || index < arrayLen + (arrayLen >> 2))) {
+            if (index + arrayOffset >= (uint)arrayData.size()) {
+                arrayData.resize(arrayOffset + index + 1);
+                for (uint i = arrayLen + 1; i < index; ++i) {
+                    arrayData[i].type = PropertyDescriptor::Generic;
+                    arrayData[i].value.tag = Value::_Undefined_Type;
+                }
+            }
+            pd = arrayDecriptor(index);
+        } else {
+            initSparse();
+            SparseArrayNode *n = sparseArray->insert(index);
+            if (n->value == UINT_MAX)
+                n->value = allocArrayValue();
+            pd = arrayDecriptor(n->value);
+        }
+        if (index >= arrayLen)
+            setArrayLengthUnchecked(index + 1);
+        return pd;
+    }
+
+    void arraySet(uint index, const PropertyDescriptor *pd) {
+        *arrayInsert(index) = *pd;
+    }
+
+    void arraySet(uint index, Value value) {
+        PropertyDescriptor *pd = arrayInsert(index);
+        fillDescriptor(pd, value);
+    }
+
+    bool deleteArrayIndex(uint index) {
+        if (index >= arrayLen)
+            return true;
+        PropertyDescriptor *pd = 0;
+        if (!sparseArray) {
+            pd = arrayAt(index);
+        } else {
+            SparseArrayNode *n = sparseArray->findNode(index);
+            if (n)
+                pd = arrayDecriptor(n->value);
+        }
+        if (!pd || pd->type == PropertyDescriptor::Generic)
+            return true;
+        if (!pd->isConfigurable())
+            return false;
+        pd->type = PropertyDescriptor::Generic;
+        pd->value.tag = Value::_Undefined_Type;
+        if (sparseArray) {
+            pd->value.int_32 = arrayFreeList;
+            arrayFreeList = pd - arrayData.constData();
+        }
+        return true;
+    }
+
+    PropertyDescriptor *arrayAt(uint index) {
+        if (!sparseArray) {
+            if (index >= arrayData.size() - arrayOffset)
+                return 0;
+            return arrayData.data() + index + arrayOffset;
+        } else {
+            SparseArrayNode *n = sparseArray->findNode(index);
+            if (!n)
+                return 0;
+            return arrayData.data() + n->value;
+        }
+    }
+
+    const PropertyDescriptor *nonSparseArrayAt(uint index) const {
+        if (sparseArray)
+            return 0;
+        index += arrayOffset;
+        if (index >= (uint)arrayData.size())
+            return 0;
+        return arrayData.constData() + index;
+    }
+
+    PropertyDescriptor *nonSparseArrayAtRef(uint index) {
+        if (sparseArray)
+            return 0;
+        index += arrayOffset;
+        if (index >= (uint)arrayData.size())
+            return 0;
+        return arrayData.data() + index;
+    }
+
+    const PropertyDescriptor *arrayAt(uint index) const {
+        if (!sparseArray) {
+            if (index >= arrayData.size() - arrayOffset)
+                return 0;
+            return arrayData.constData() + index + arrayOffset;
+        } else {
+            SparseArrayNode *n = sparseArray->findNode(index);
+            if (!n)
+                return 0;
+            return arrayData.constData() + n->value;
+        }
+    }
+
+    void markArrayObjects() const;
+
+    void push_front(Value v) {
+        if (!sparseArray) {
+            if (!arrayOffset)
+                getArrayHeadRoom();
+
+            PropertyDescriptor pd;
+            fillDescriptor(&pd, v);
+            --arrayOffset;
+            arrayData[arrayOffset] = pd;
+        } else {
+            uint idx = allocArrayValue(v);
+            sparseArray->push_front(idx);
+        }
+        setArrayLengthUnchecked(arrayLen + 1);
+    }
+    PropertyDescriptor *front() {
+        PropertyDescriptor *pd = 0;
+        if (!sparseArray) {
+            if (arrayLen)
+                pd = arrayData.data() + arrayOffset;
+        } else {
+            SparseArrayNode *n = sparseArray->findNode(0);
+            if (n)
+                pd = arrayDecriptor(n->value);
+        }
+        if (pd && pd->type == PropertyDescriptor::Generic)
+            return 0;
+        return pd;
+    }
+    void pop_front() {
+        if (!arrayLen)
+            return;
+        if (!sparseArray) {
+            ++arrayOffset;
+        } else {
+            uint idx = sparseArray->pop_front();
+            freeArrayValue(idx);
+        }
+        setArrayLengthUnchecked(arrayLen - 1);
+    }
+    void push_back(Value v) {
+        if (!sparseArray) {
+            PropertyDescriptor pd;
+            fillDescriptor(&pd, v);
+            arrayData.append(pd);
+        } else {
+            uint idx = allocArrayValue(v);
+            sparseArray->push_back(idx, arrayLen);
+        }
+        setArrayLengthUnchecked(arrayLen + 1);
+    }
+    PropertyDescriptor *back() {
+        PropertyDescriptor *pd = 0;
+        if (!sparseArray) {
+            if (arrayLen)
+                pd = arrayData.data() + arrayOffset + arrayLen;
+        } else {
+            SparseArrayNode *n = sparseArray->findNode(arrayLen - 1);
+            if (n)
+                pd = arrayDecriptor(n->value);
+        }
+        if (pd && pd->type == PropertyDescriptor::Generic)
+            return 0;
+        return pd;
+    }
+    void pop_back() {
+        if (!arrayLen)
+            return;
+        if (!sparseArray) {
+            arrayData.resize(arrayData.size() - 1);
+        } else {
+            uint idx = sparseArray->pop_back(arrayLen);
+            if (idx != UINT_MAX)
+                freeArrayValue(idx);
+        }
+        setArrayLengthUnchecked(arrayLen - 1);
+    }
+
+    SparseArrayNode *sparseArrayLowerBound(uint idx) { return sparseArray ? sparseArray->lowerBound(idx) : 0; }
+    SparseArrayNode *sparseArrayBegin() { return sparseArray ? sparseArray->begin() : 0; }
+    SparseArrayNode *sparseArrayEnd() { return sparseArray ? sparseArray->end() : 0; }
+
+    void arrayConcat(const ArrayObject *other);
+    void arraySort(ExecutionContext *context, Object *thisObject, const Value &comparefn, uint arrayLen);
+    Value arrayIndexOf(Value v, uint fromIndex, uint arrayLen, ExecutionContext *ctx, Object *o);
+
+
 protected:
     virtual void markObjects();
 
@@ -189,7 +448,11 @@ struct ArrayObject: Object {
     };
 
     ArrayObject(ExecutionContext *ctx) { init(ctx); }
-    ArrayObject(ExecutionContext *ctx, const Array &value): Object(value) { init(ctx); array.setArrayLengthUnchecked(array.arrayLength()); }
+    ArrayObject(ExecutionContext *ctx, const QVector<PropertyDescriptor> &value): Object() {
+        init(ctx);
+        arrayData = value;
+        setArrayLengthUnchecked(value.size());
+    }
     void init(ExecutionContext *context);
 };
 

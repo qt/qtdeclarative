@@ -295,7 +295,7 @@ bool Parser::parseMember(Object *o)
 Value Parser::parseArray()
 {
     BEGIN << "parseArray";
-    Array array;
+    ArrayObject *array = context->engine->newArrayObject(context);
 
     if (++nestingLevel > nestingLimit) {
         lastError = QJsonParseError::DeepNesting;
@@ -314,7 +314,7 @@ Value Parser::parseArray()
             Value val;
             if (!parseValue(&val))
                 return Value::undefinedValue();
-            array.arraySet(index, val);
+            array->arraySet(index, val);
             QChar token = nextToken();
             if (token == EndArray)
                 break;
@@ -329,11 +329,11 @@ Value Parser::parseArray()
         }
     }
 
-    DEBUG << "size =" << array.arrayLength();
+    DEBUG << "size =" << array->arrayLength();
     END;
 
     --nestingLevel;
-    return Value::fromObject(context->engine->newArrayObject(context, array));
+    return Value::fromObject(array);
 }
 
 /*
@@ -832,7 +832,7 @@ QString Stringify::JA(ArrayObject *a)
     indent += gap;
 
     QStringList partial;
-    uint len = a->array.arrayLength();
+    uint len = a->arrayLength();
     for (uint i = 0; i < len; ++i) {
         bool exists;
         Value v = a->__get__(ctx, i, &exists);
@@ -897,7 +897,7 @@ Value JsonObject::method_stringify(ExecutionContext *ctx)
     if (o) {
         stringify.replacerFunction = o->asFunctionObject();
         if (o->isArrayObject()) {
-            for (uint i = 0; i < o->array.arrayLength(); ++i) {
+            for (uint i = 0; i < o->arrayLength(); ++i) {
                 Value v = o->__get__(ctx, i);
                 if (v.asNumberObject() || v.asStringObject() || v.isNumber())
                     v = __qmljs_to_string(v, ctx);

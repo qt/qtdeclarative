@@ -337,7 +337,7 @@ Value StringPrototype::method_match(ExecutionContext *parentCtx, Value thisObjec
             previousLastIndex = thisIndex;
         }
         Value matchStr = result.objectValue()->__get__(parentCtx, (uint)0, (bool *)0);
-        a->array.arraySet(n, matchStr);
+        a->arraySet(n, matchStr);
         ++n;
     }
     if (!n)
@@ -543,7 +543,7 @@ Value StringPrototype::method_split(ExecutionContext *ctx)
 
     if (separatorValue.isUndefined()) {
         if (limitValue.isUndefined()) {
-            array->array.push_back(Value::fromString(ctx, text));
+            array->push_back(Value::fromString(ctx, text));
             return result;
         }
         return Value::fromString(ctx, text.left(limitValue.toInteger(ctx)));
@@ -569,40 +569,40 @@ Value StringPrototype::method_split(ExecutionContext *ctx)
             if (result == JSC::Yarr::offsetNoMatch)
                 break;
 
-            array->array.push_back(Value::fromString(ctx, text.mid(offset, matchOffsets[0] - offset)));
+            array->push_back(Value::fromString(ctx, text.mid(offset, matchOffsets[0] - offset)));
             offset = qMax(offset + 1, matchOffsets[1]);
 
-            if (array->array.arrayLength() >= limit)
+            if (array->arrayLength() >= limit)
                 break;
 
             for (int i = 1; i < re->value->captureCount(); ++i) {
                 uint start = matchOffsets[i * 2];
                 uint end = matchOffsets[i * 2 + 1];
-                array->array.push_back(Value::fromString(ctx, text.mid(start, end - start)));
-                if (array->array.arrayLength() >= limit)
+                array->push_back(Value::fromString(ctx, text.mid(start, end - start)));
+                if (array->arrayLength() >= limit)
                     break;
             }
         }
-        if (array->array.arrayLength() < limit)
-            array->array.push_back(Value::fromString(ctx, text.mid(offset)));
+        if (array->arrayLength() < limit)
+            array->push_back(Value::fromString(ctx, text.mid(offset)));
     } else {
         QString separator = separatorValue.toString(ctx)->toQString();
         if (separator.isEmpty()) {
             for (uint i = 0; i < qMin(limit, uint(text.length())); ++i)
-                array->array.push_back(Value::fromString(ctx, text.mid(i, 1)));
+                array->push_back(Value::fromString(ctx, text.mid(i, 1)));
             return result;
         }
 
         int start = 0;
         int end;
         while ((end = text.indexOf(separator, start)) != -1) {
-            array->array.push_back(Value::fromString(ctx, text.mid(start, end - start)));
+            array->push_back(Value::fromString(ctx, text.mid(start, end - start)));
             start = end + separator.size();
-            if (array->array.arrayLength() >= limit)
+            if (array->arrayLength() >= limit)
                 break;
         }
-        if (array->array.arrayLength() < limit && start != -1)
-            array->array.push_back(Value::fromString(ctx, text.mid(start)));
+        if (array->arrayLength() < limit && start != -1)
+            array->push_back(Value::fromString(ctx, text.mid(start)));
     }
     return result;
 }
