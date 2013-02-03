@@ -103,7 +103,9 @@ struct URIErrorPrototype;
 struct Q_V4_EXPORT Object: Managed {
     Object *prototype;
     QScopedPointer<PropertyTable> members;
-    QVector<PropertyDescriptor> memberData;
+    uint memberDataSize;
+    uint memberDataAlloc;
+    PropertyDescriptor *memberData;
 
     uint arrayLen;
     union {
@@ -115,6 +117,7 @@ struct Q_V4_EXPORT Object: Managed {
 
     Object()
         : prototype(0)
+        , memberDataSize(0), memberDataAlloc(0), memberData(0)
         , arrayLen(0), arrayOffset(0), sparseArray(0) { type = Type_Object; }
 
     virtual ~Object();

@@ -70,6 +70,7 @@ using namespace QQmlJS::VM;
 //
 Object::~Object()
 {
+    delete memberData;
     delete sparseArray;
 }
 
@@ -189,8 +190,8 @@ void Object::markObjects()
                 continue;
             (*it)->name->mark();
         }
-        for (int i = 0; i < (uint)memberData.size(); ++i) {
-            const PropertyDescriptor &pd = memberData.at(i);
+        for (int i = 0; i < memberDataSize; ++i) {
+            const PropertyDescriptor &pd = memberData[i];
             if (pd.isData()) {
                 if (Managed *m = pd.value.asManaged())
                     m->mark();
@@ -212,10 +213,17 @@ PropertyDescriptor *Object::insertMember(String *s)
 
     PropertyTableEntry *e = members->insert(s);
     if (e->valueIndex == UINT_MAX) {
-        e->valueIndex = memberData.size();
-        memberData.resize(memberData.size() + 1);
+        if (memberDataSize == memberDataAlloc) {
+            memberDataAlloc = qMax((uint)8, 2*memberDataAlloc);
+            PropertyDescriptor *newMemberData = new PropertyDescriptor[memberDataAlloc];
+            memcpy(newMemberData, memberData, sizeof(PropertyDescriptor)*memberDataSize);
+            delete memberData;
+            memberData = newMemberData;
+        }
+        e->valueIndex = memberDataSize;
+        ++memberDataSize;
     }
-    return memberData.data() + e->valueIndex;
+    return memberData + e->valueIndex;
 }
 
 // Section 8.12.1
@@ -228,7 +236,7 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, String *na
     if (members) {
         uint idx = members->find(name);
         if (idx < UINT_MAX)
-            return memberData.data() + idx;
+            return memberData + idx;
     }
     return 0;
 }
@@ -257,7 +265,7 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, Str
         if (o->members) {
             uint idx = o->members->find(name);
             if (idx < UINT_MAX)
-                return o->memberData.data() + idx;
+                return o->memberData + idx;
         }
         o = o->prototype;
     }
@@ -303,7 +311,7 @@ Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
             if (idx < UINT_MAX) {
                 if (hasProperty)
                     *hasProperty = true;
-                return getValue(ctx, o->memberData.data() + idx);
+                return getValue(ctx, o->memberData + idx);
             }
         }
         o = o->prototype;
@@ -561,7 +569,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
     PropertyDescriptor *current;
 
     if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
-        PropertyDescriptor *lp = memberData.data() + ArrayObject::LengthPropertyIndex;
+        PropertyDescriptor *lp = memberData + ArrayObject::LengthPropertyIndex;
         assert(0 == members->find(ctx->engine->id_length));
         if (desc->isEmpty() || desc->isSubset(lp))
             return true;
@@ -610,7 +618,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
     PropertyDescriptor *current;
 
     // 15.4.5.1, 4b
-    if (isArrayObject() && index >= arrayLength() && !memberData.at(ArrayObject::LengthPropertyIndex).isWritable())
+    if (isArrayObject() && index >= arrayLength() && !memberData[ArrayObject::LengthPropertyIndex].isWritable())
         goto reject;
 
     if (isNonStrictArgumentsObject)
@@ -837,7 +845,7 @@ void Object::setArrayLengthUnchecked(uint l)
 
 bool Object::setArrayLength(uint newLen) {
     assert(isArrayObject());
-    const PropertyDescriptor *lengthProperty = memberData.constData() + ArrayObject::LengthPropertyIndex;
+    const PropertyDescriptor *lengthProperty = memberData + ArrayObject::LengthPropertyIndex;
     if (lengthProperty && !lengthProperty->isWritable())
         return false;
     uint oldLen = arrayLength();
@@ -909,7 +917,7 @@ void ArrayObject::init(ExecutionContext *context)
     if (!members)
         members.reset(new PropertyTable());
     PropertyDescriptor *pd = insertMember(context->engine->id_length);
-    assert(pd == memberData.constData() + LengthPropertyIndex);
+    assert(pd == memberData + LengthPropertyIndex);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Enabled;
     pd->enumberable = PropertyDescriptor::Disabled;

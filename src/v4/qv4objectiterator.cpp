@@ -129,7 +129,7 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
         ++tableIndex;
         // ### check that it's not a repeated attribute
         if (pt) {
-            PropertyDescriptor *pd = current->memberData.data() + pt->valueIndex;
+            PropertyDescriptor *pd = current->memberData + pt->valueIndex;
             if (!(flags & EnumberableOnly) || pd->isEnumerable()) {
                 *name = pt->name;
                 p = pd;
