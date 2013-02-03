@@ -337,7 +337,7 @@ Value StringPrototype::method_match(ExecutionContext *parentCtx, Value thisObjec
             previousLastIndex = thisIndex;
         }
         Value matchStr = result.objectValue()->__get__(parentCtx, (uint)0, (bool *)0);
-        a->array.set(n, matchStr);
+        a->array.arraySet(n, matchStr);
         ++n;
     }
     if (!n)
@@ -572,18 +572,18 @@ Value StringPrototype::method_split(ExecutionContext *ctx)
             array->array.push_back(Value::fromString(ctx, text.mid(offset, matchOffsets[0] - offset)));
             offset = qMax(offset + 1, matchOffsets[1]);
 
-            if (array->array.length() >= limit)
+            if (array->array.arrayLength() >= limit)
                 break;
 
             for (int i = 1; i < re->value->captureCount(); ++i) {
                 uint start = matchOffsets[i * 2];
                 uint end = matchOffsets[i * 2 + 1];
                 array->array.push_back(Value::fromString(ctx, text.mid(start, end - start)));
-                if (array->array.length() >= limit)
+                if (array->array.arrayLength() >= limit)
                     break;
             }
         }
-        if (array->array.length() < limit)
+        if (array->array.arrayLength() < limit)
             array->array.push_back(Value::fromString(ctx, text.mid(offset)));
     } else {
         QString separator = separatorValue.toString(ctx)->toQString();
@@ -598,10 +598,10 @@ Value StringPrototype::method_split(ExecutionContext *ctx)
         while ((end = text.indexOf(separator, start)) != -1) {
             array->array.push_back(Value::fromString(ctx, text.mid(start, end - start)));
             start = end + separator.size();
-            if (array->array.length() >= limit)
+            if (array->array.arrayLength() >= limit)
                 break;
         }
-        if (array->array.length() < limit && start != -1)
+        if (array->array.arrayLength() < limit && start != -1)
             array->array.push_back(Value::fromString(ctx, text.mid(start)));
     }
     return result;

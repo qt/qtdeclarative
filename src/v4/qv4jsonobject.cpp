@@ -314,7 +314,7 @@ Value Parser::parseArray()
             Value val;
             if (!parseValue(&val))
                 return Value::undefinedValue();
-            array.set(index, val);
+            array.arraySet(index, val);
             QChar token = nextToken();
             if (token == EndArray)
                 break;
@@ -329,7 +329,7 @@ Value Parser::parseArray()
         }
     }
 
-    DEBUG << "size =" << array.length();
+    DEBUG << "size =" << array.arrayLength();
     END;
 
     --nestingLevel;
@@ -832,7 +832,7 @@ QString Stringify::JA(ArrayObject *a)
     indent += gap;
 
     QStringList partial;
-    uint len = a->array.length();
+    uint len = a->array.arrayLength();
     for (uint i = 0; i < len; ++i) {
         bool exists;
         Value v = a->__get__(ctx, i, &exists);
@@ -897,7 +897,7 @@ Value JsonObject::method_stringify(ExecutionContext *ctx)
     if (o) {
         stringify.replacerFunction = o->asFunctionObject();
         if (o->isArrayObject()) {
-            for (uint i = 0; i < o->array.length(); ++i) {
+            for (uint i = 0; i < o->array.arrayLength(); ++i) {
                 Value v = o->__get__(ctx, i);
                 if (v.asNumberObject() || v.asStringObject() || v.isNumber())
                     v = __qmljs_to_string(v, ctx);

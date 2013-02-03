@@ -82,7 +82,7 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterC
 
 bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc)
 {
-    PropertyDescriptor *pd = array.at(index);
+    PropertyDescriptor *pd = array.arrayAt(index);
     PropertyDescriptor map;
     bool isMapped = false;
     if (pd && index < (uint)mappedArguments.size())

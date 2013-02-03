@@ -62,10 +62,10 @@ Value ArrayCtor::call(ExecutionContext *ctx)
             return Value::undefinedValue();
         }
 
-        value.setLengthUnchecked(len);
+        value.setArrayLengthUnchecked(len);
     } else {
         for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
-            value.set(i, ctx->argument(i));
+            value.arraySet(i, ctx->argument(i));
         }
     }
 
@@ -104,7 +104,7 @@ void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
 uint ArrayPrototype::getLength(ExecutionContext *ctx, Object *o)
 {
     if (o->isArrayObject())
-        return o->array.length();
+        return o->array.arrayLength();
     return o->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
 }
 
@@ -133,18 +133,18 @@ Value ArrayPrototype::method_concat(ExecutionContext *ctx)
         result = instance->array;
     else {
         QString v = ctx->thisObject.toString(ctx)->toQString();
-        result.set(0, Value::fromString(ctx, v));
+        result.arraySet(0, Value::fromString(ctx, v));
     }
 
     for (uint i = 0; i < ctx->argumentCount; ++i) {
-        quint32 k = result.length();
+        quint32 k = result.arrayLength();
         Value arg = ctx->argument(i);
 
         if (ArrayObject *elt = arg.asArrayObject())
-            result.concat(elt->array);
+            result.arrayConcat(elt->array);
 
         else
-            result.set(k, arg);
+            result.arraySet(k, arg);
     }
 
     return Value::fromObject(ctx->engine->newArrayObject(ctx, result));
@@ -176,7 +176,7 @@ Value ArrayPrototype::method_join(ExecutionContext *ctx)
 
     // ### FIXME
     if (ArrayObject *a = self.asArrayObject()) {
-        for (uint i = 0; i < a->array.length(); ++i) {
+        for (uint i = 0; i < a->array.arrayLength(); ++i) {
             if (i)
                 R += r4;
 
@@ -222,7 +222,7 @@ Value ArrayPrototype::method_pop(ExecutionContext *ctx)
 
     instance->__delete__(ctx, len - 1);
     if (instance->isArrayObject())
-        instance->array.setLengthUnchecked(len - 1);
+        instance->array.setArrayLengthUnchecked(len - 1);
     else
         instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(len - 1));
     return result;
@@ -251,10 +251,10 @@ Value ArrayPrototype::method_push(ExecutionContext *ctx)
     bool protoHasArray = false;
     Object *p = instance;
     while ((p = p->prototype))
-        if (p->array.length())
+        if (p->array.arrayLength())
             protoHasArray = true;
 
-    if (!protoHasArray && len == instance->array.length()) {
+    if (!protoHasArray && len == instance->array.arrayLength()) {
         for (uint i = 0; i < ctx->argumentCount; ++i) {
             Value v = ctx->argument(i);
             instance->array.push_back(v);
@@ -312,10 +312,10 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
     bool protoHasArray = false;
     Object *p = instance;
     while ((p = p->prototype))
-        if (p->array.length())
+        if (p->array.arrayLength())
             protoHasArray = true;
 
-    if (!protoHasArray && len >= instance->array.length()) {
+    if (!protoHasArray && len >= instance->array.arrayLength()) {
         instance->array.pop_front();
     } else {
         // do it the slow way
@@ -365,7 +365,7 @@ Value ArrayPrototype::method_slice(ExecutionContext *ctx)
         bool exists;
         Value v = o->__get__(ctx, i, &exists);
         if (exists)
-            result.set(n, v);
+            result.arraySet(n, v);
         ++n;
     }
     return Value::fromObject(ctx->engine->newArrayObject(ctx, result));
@@ -378,7 +378,7 @@ Value ArrayPrototype::method_sort(ExecutionContext *ctx)
     uint len = getLength(ctx, instance);
 
     Value comparefn = ctx->argument(0);
-    instance->array.sort(ctx, instance, comparefn, len);
+    instance->array.arraySort(ctx, instance, comparefn, len);
     return ctx->thisObject;
 }
 
@@ -398,8 +398,8 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
 
     uint deleteCount = (uint)qMin(qMax(ctx->argument(1).toInteger(ctx), 0.), (double)(len - start));
 
-    newArray->array.values.resize(deleteCount);
-    PropertyDescriptor *pd = newArray->array.values.data();
+    newArray->array.arrayData.resize(deleteCount);
+    PropertyDescriptor *pd = newArray->array.arrayData.data();
     for (uint i = 0; i < deleteCount; ++i) {
         pd->type = PropertyDescriptor::Data;
         pd->writable = PropertyDescriptor::Enabled;
@@ -408,7 +408,7 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
         pd->value = instance->__get__(ctx, start + i);
         ++pd;
     }
-    newArray->array.setLengthUnchecked(deleteCount);
+    newArray->array.setArrayLengthUnchecked(deleteCount);
 
     uint itemCount = ctx->argumentCount < 2 ? 0 : ctx->argumentCount - 2;
 
@@ -417,7 +417,7 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
             bool exists;
             Value v = instance->__get__(ctx, k + deleteCount, &exists);
             if (exists)
-                instance->array.set(k + itemCount, v);
+                instance->array.arraySet(k + itemCount, v);
             else
                 instance->__delete__(ctx, k + itemCount);
         }
@@ -429,7 +429,7 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
             bool exists;
             Value v = instance->__get__(ctx, k + deleteCount - 1, &exists);
             if (exists)
-                instance->array.set(k + itemCount - 1, v);
+                instance->array.arraySet(k + itemCount - 1, v);
             else
                 instance->__delete__(ctx, k + itemCount - 1);
             --k;
@@ -437,7 +437,7 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
     }
 
     for (uint i = 0; i < itemCount; ++i)
-        instance->array.set(start + i, ctx->argument(i + 2));
+        instance->array.arraySet(start + i, ctx->argument(i + 2));
 
     ctx->strictMode = true;
     instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(len - deleteCount + itemCount));
@@ -453,10 +453,10 @@ Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
     bool protoHasArray = false;
     Object *p = instance;
     while ((p = p->prototype))
-        if (p->array.length())
+        if (p->array.arrayLength())
             protoHasArray = true;
 
-    if (!protoHasArray && len >= instance->array.length()) {
+    if (!protoHasArray && len >= instance->array.arrayLength()) {
         for (int i = ctx->argumentCount - 1; i >= 0; --i) {
             Value v = ctx->argument(i);
             instance->array.push_front(v);
@@ -516,7 +516,7 @@ Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
         return Value::fromInt32(-1);
     }
 
-    return instance->array.indexOf(searchValue, fromIndex, len, ctx, instance);
+    return instance->array.arrayIndexOf(searchValue, fromIndex, len, ctx, instance);
 }
 
 Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
@@ -654,7 +654,7 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
     Value thisArg = ctx->argument(1);
 
     ArrayObject *a = ctx->engine->newArrayObject(ctx);
-    a->array.setLengthUnchecked(len);
+    a->array.setArrayLengthUnchecked(len);
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
@@ -667,7 +667,7 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
         args[1] = Value::fromDouble(k);
         args[2] = ctx->thisObject;
         Value mapped = callback->call(ctx, thisArg, args, 3);
-        a->array.set(k, mapped);
+        a->array.arraySet(k, mapped);
     }
     return Value::fromObject(a);
 }
@@ -699,7 +699,7 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
         args[2] = ctx->thisObject;
         Value selected = callback->call(ctx, thisArg, args, 3);
         if (__qmljs_to_boolean(selected, ctx)) {
-            a->array.set(to, v);
+            a->array.arraySet(to, v);
             ++to;
         }
     }

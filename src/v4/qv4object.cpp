@@ -201,7 +201,7 @@ void Object::markObjects()
             }
         }
     }
-    array.markObjects();
+    array.markArrayObjects();
 }
 
 PropertyDescriptor *Object::insertMember(String *s)
@@ -234,7 +234,7 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, String *na
 
 PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, uint index)
 {
-    PropertyDescriptor *p = array.at(index);
+    PropertyDescriptor *p = array.arrayAt(index);
     if(p && p->type != PropertyDescriptor::Generic)
         return p;
     if (isStringObject())
@@ -267,7 +267,7 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, uin
 {
     Object *o = this;
     while (o) {
-        PropertyDescriptor *p = o->array.at(index);
+        PropertyDescriptor *p = o->array.arrayAt(index);
         if(p && p->type != PropertyDescriptor::Generic)
             return p;
         if (o->isStringObject()) {
@@ -318,7 +318,7 @@ Value Object::__get__(ExecutionContext *ctx, uint index, bool *hasProperty)
     PropertyDescriptor *pd = 0;
     Object *o = this;
     while (o) {
-        PropertyDescriptor *p = o->array.at(index);
+        PropertyDescriptor *p = o->array.arrayAt(index);
         if (p && p->type != PropertyDescriptor::Generic) {
             pd = p;
             break;
@@ -368,7 +368,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
             uint l = value.asArrayLength(ctx, &ok);
             if (!ok)
                 ctx->throwRangeError(value);
-            ok = array.setLength(l);
+            ok = array.setArrayLength(l);
             if (!ok)
                 goto reject;
         } else {
@@ -480,7 +480,7 @@ void Object::__put__(ExecutionContext *ctx, uint index, Value value)
         return;
     }
 
-    array.set(index, value);
+    array.arraySet(index, value);
     return;
 
   reject:
@@ -505,7 +505,7 @@ bool Object::__hasProperty__(const ExecutionContext *ctx, String *name) const
 
 bool Object::__hasProperty__(const ExecutionContext *ctx, uint index) const
 {
-    const PropertyDescriptor *p = array.at(index);
+    const PropertyDescriptor *p = array.arrayAt(index);
     if (p && p->type != PropertyDescriptor::Generic)
         return true;
 
@@ -541,7 +541,7 @@ bool Object::__delete__(ExecutionContext *ctx, String *name)
 
 bool Object::__delete__(ExecutionContext *ctx, uint index)
 {
-    if (array.deleteIndex(index))
+    if (array.deleteArrayIndex(index))
         return true;
     if (ctx->strictMode)
         __qmljs_throw_type_error(ctx);
@@ -572,7 +572,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
             uint l = desc->value.asArrayLength(ctx, &ok);
             if (!ok)
                 ctx->throwRangeError(desc->value);
-            succeeded = array.setLength(l);
+            succeeded = array.setArrayLength(l);
         }
         if (desc->writable == PropertyDescriptor::Disabled)
             lp->writable = PropertyDescriptor::Disabled;
@@ -609,7 +609,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
     PropertyDescriptor *current;
 
     // 15.4.5.1, 4b
-    if (isArrayObject() && index >= array.length() && !memberData.at(ArrayObject::LengthPropertyIndex).isWritable())
+    if (isArrayObject() && index >= array.arrayLength() && !memberData.at(ArrayObject::LengthPropertyIndex).isWritable())
         goto reject;
 
     if (isNonStrictArgumentsObject)
@@ -622,7 +622,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
         if (!extensible)
             goto reject;
         // clause 4
-        PropertyDescriptor *pd = array.insert(index);
+        PropertyDescriptor *pd = array.arrayInsert(index);
         *pd = *desc;
         pd->fullyPopulated();
         return true;

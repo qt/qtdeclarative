@@ -189,7 +189,7 @@ struct ArrayObject: Object {
     };
 
     ArrayObject(ExecutionContext *ctx) { init(ctx); }
-    ArrayObject(ExecutionContext *ctx, const Array &value): Object(value) { init(ctx); array.setLengthUnchecked(array.length()); }
+    ArrayObject(ExecutionContext *ctx, const Array &value): Object(value) { init(ctx); array.setArrayLengthUnchecked(array.arrayLength()); }
     void init(ExecutionContext *context);
 };
 
