@@ -225,7 +225,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
-        TRACE(property name, "%s", qPrintable(instr.name->toQString()));
+        TRACE(property name, "%s, args=%u, argc=%u", qPrintable(instr.name->toQString()), instr.args, instr.argc);
         Q_ASSERT(instr.args + instr.argc < stackSize);
         VM::Value *args = stack + instr.args;
         VALUE(instr.result) = __qmljs_call_property(context, VALUE(instr.base), instr.name, args, instr.argc);

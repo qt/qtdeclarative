@@ -400,11 +400,13 @@ void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
 
 void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp)
 {
+    VM::Value v = VM::Value::fromObject(engine()->newRegExpObject(
+                                            *sourceRegexp->value,
+                                            sourceRegexp->flags));
+    _vmFunction->generatedValues.append(v);
+
     Instruction::LoadValue load;
-    load.value = Instr::Param::createValue(
-                VM::Value::fromObject(engine()->newRegExpObject(
-                                          *sourceRegexp->value,
-                                          sourceRegexp->flags)));
+    load.value = Instr::Param::createValue(v);
     load.result = getResultParam(targetTemp);
     addInstruction(load);
 }
