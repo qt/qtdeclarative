@@ -36,7 +36,7 @@ SOURCES += \
     debugging.cpp \
     qv4mm.cpp \
     qv4managed.cpp \
-    qv4array.cpp \
+    qv4sparsearray.cpp \
     qv4arrayobject.cpp \
     qv4argumentsobject.cpp \
     qv4booleanobject.cpp \
@@ -72,7 +72,7 @@ HEADERS += \
     qv4identifier.h \
     qv4mm.h \
     qv4managed.h \
-    qv4array.h \
+    qv4sparsearray.h \
     qv4arrayobject.h \
     qv4argumentsobject.h \
     qv4booleanobject.h \

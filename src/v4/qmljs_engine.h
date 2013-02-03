@@ -61,7 +61,6 @@ class Debugger;
 namespace VM {
 
 struct Value;
-class Array;
 struct Function;
 struct Object;
 struct BooleanObject;
@@ -200,7 +199,6 @@ struct Q_V4_EXPORT ExecutionEngine
     Object *newFunctionObject(ExecutionContext *ctx);
 
     ArrayObject *newArrayObject(ExecutionContext *ctx);
-//    ArrayObject *newArrayObject(ExecutionContext *ctx, const Array &value);
 
     Object *newDateObject(const Value &value);
 
