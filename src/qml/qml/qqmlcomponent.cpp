@@ -664,7 +664,7 @@ void QQmlComponentPrivate::loadUrl(const QUrl &newUrl, QQmlComponent::Compilatio
 
     if (newUrl.isEmpty()) {
         QQmlError error;
-        error.setDescription(q->tr("Invalid empty URL"));
+        error.setDescription(QQmlComponent::tr("Invalid empty URL"));
         state.errors << error;
         return;
     }

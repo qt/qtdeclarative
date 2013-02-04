@@ -2289,7 +2289,7 @@ void QQmlScriptBlob::done()
             error.setUrl(finalUrl());
             error.setLine(script.location.line);
             error.setColumn(script.location.column);
-            error.setDescription(typeLoader()->tr("Script %1 unavailable").arg(script.script->url().toString()));
+            error.setDescription(QQmlTypeLoader::tr("Script %1 unavailable").arg(script.script->url().toString()));
             errors.prepend(error);
             setError(errors);
         }
