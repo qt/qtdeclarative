@@ -283,7 +283,7 @@ public:
         return true;
     }
 
-    PropertyDescriptor *arrayAt(uint index) {
+    PropertyDescriptor *arrayAt(uint index) const {
         if (!sparseArray) {
             if (index >= arrayDataLen)
                 return 0;
@@ -296,33 +296,12 @@ public:
         }
     }
 
-    const PropertyDescriptor *nonSparseArrayAt(uint index) const {
+    PropertyDescriptor *nonSparseArrayAt(uint index) const {
         if (sparseArray)
             return 0;
         if (index >= arrayDataLen)
             return 0;
         return arrayData + index;
-    }
-
-    PropertyDescriptor *nonSparseArrayAtRef(uint index) {
-        if (sparseArray)
-            return 0;
-        if (index >= arrayDataLen)
-            return 0;
-        return arrayData + index;
-    }
-
-    const PropertyDescriptor *arrayAt(uint index) const {
-        if (!sparseArray) {
-            if (index >= arrayDataLen)
-                return 0;
-            return arrayData + index;
-        } else {
-            SparseArrayNode *n = sparseArray->findNode(index);
-            if (!n)
-                return 0;
-            return arrayData + n->value;
-        }
     }
 
     void markArrayObjects() const;

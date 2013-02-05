@@ -616,7 +616,7 @@ void __qmljs_set_element(ExecutionContext *ctx, Value object, Value index, Value
 
     uint idx = index.asArrayIndex();
     if (idx < UINT_MAX) {
-        PropertyDescriptor *p = o->nonSparseArrayAtRef(idx);
+        PropertyDescriptor *p = o->nonSparseArrayAt(idx);
         if (p && p->type == PropertyDescriptor::Data && p->isWritable()) {
             p->value = value;
             return;
