@@ -249,6 +249,14 @@ void QSGContext::initialize(QOpenGLContext *context)
 {
     Q_D(QSGContext);
 
+    // Sanity check the surface format, in case it was overridden by the application
+    QSurfaceFormat requested = defaultSurfaceFormat();
+    QSurfaceFormat actual = context->format();
+    if (requested.depthBufferSize() > 0 && actual.depthBufferSize() <= 0)
+        qWarning("QSGContext::initialize: depth buffer support missing, expect rendering errors");
+    if (requested.stencilBufferSize() > 0 && actual.stencilBufferSize() <= 0)
+        qWarning("QSGContext::initialize: stencil buffer support missing, expect rendering errors");
+
     Q_ASSERT(!d->gl);
     d->gl = context;
 
