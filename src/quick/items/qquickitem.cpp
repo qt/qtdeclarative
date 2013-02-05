@@ -3808,14 +3808,15 @@ void QQuickItem::forceActiveFocus()
 */
 QQuickItem *QQuickItem::childAt(qreal x, qreal y) const
 {
-    // XXX todo - should this include transform etc.?
     const QList<QQuickItem *> children = childItems();
     for (int i = children.count()-1; i >= 0; --i) {
         QQuickItem *child = children.at(i);
-        if (child->isVisible() && child->x() <= x
-                && child->x() + child->width() >= x
-                && child->y() <= y
-                && child->y() + child->height() >= y)
+        // Map coordinates to the child element's coordinate space
+        QPointF point = mapToItem(child, QPointF(x, y));
+        if (child->isVisible() && point.x() >= 0
+                && child->width() >= point.x()
+                && point.y() >= 0
+                && child->height() >= point.y())
             return child;
     }
     return 0;
