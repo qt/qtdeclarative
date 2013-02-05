@@ -43,6 +43,7 @@
 #include <QtCore/QMutex>
 #include <QtCore/QWaitCondition>
 #include <QtCore/QAnimationDriver>
+#include <QtCore/QQueue>
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
@@ -184,6 +185,12 @@ const QEvent::Type WM_Grab              = QEvent::Type(QEvent::User + 9);
 // Passed by the RT to the RL to trigger animations to be advanced.
 const QEvent::Type WM_AdvanceAnimations = QEvent::Type(QEvent::User + 10);
 
+// Passed by the RT to the RL when animations start
+const QEvent::Type WM_AnimationsStarted = QEvent::Type(QEvent::User + 11);
+
+// Passed by the RT to the RL when animations stop
+const QEvent::Type WM_AnimationsStopped = QEvent::Type(QEvent::User + 12);
+
 template <typename T> T *windowFor(const QList<T> list, QQuickWindow *window)
 {
     for (int i=0; i<list.size(); ++i) {
@@ -237,6 +244,48 @@ public:
 };
 
 
+class QSGRenderThreadEventQueue : public QQueue<QEvent *>
+{
+public:
+    QSGRenderThreadEventQueue()
+        : waiting(false)
+    {
+    }
+
+    void addEvent(QEvent *e) {
+        mutex.lock();
+        enqueue(e);
+        if (waiting)
+            condition.wakeOne();
+        mutex.unlock();
+    }
+
+    QEvent *takeEvent(bool wait) {
+        mutex.lock();
+        if (size() == 0 && wait) {
+            waiting = true;
+            condition.wait(&mutex);
+            waiting = false;
+        }
+        QEvent *e = dequeue();
+        mutex.unlock();
+        return e;
+    }
+
+    bool hasMoreEvents() {
+        mutex.lock();
+        bool has = !isEmpty();
+        mutex.unlock();
+        return has;
+    }
+
+private:
+    QMutex mutex;
+    QWaitCondition condition;
+    bool waiting;
+};
+
+
 class QSGRenderThread : public QThread
 {
     Q_OBJECT
@@ -253,6 +302,7 @@ public:
         , shouldExit(false)
         , allowMainThreadProcessing(true)
         , animationRequestsPending(0)
+        , stopEventProcessing(false)
     {
         sg->moveToThread(this);
     }
@@ -270,17 +320,21 @@ public:
     void requestRepaint()
     {
         if (sleeping)
-            exit();
+            stopEventProcessing = true;
         if (m_windows.size() > 0)
             pendingUpdate |= RepaintRequest;
     }
+
+    void processEventsAndWaitForMore();
+    void processEvents();
+    void postEvent(QEvent *e);
 
 public slots:
     void animationStarted() {
         RLDEBUG("    Render: animationStarted()");
         animationRunning = true;
         if (sleeping)
-            exit();
+            stopEventProcessing = true;
     }
 
     void animationStopped() {
@@ -320,6 +374,10 @@ public:
         QSize size;
     };
     QList<Window> m_windows;
+
+    // Local event queue stuff...
+    bool stopEventProcessing;
+    QSGRenderThreadEventQueue eventQueue;
 };
 
 bool QSGRenderThread::event(QEvent *e)
@@ -353,14 +411,14 @@ bool QSGRenderThread::event(QEvent *e)
         }
 
         if (sleeping && m_windows.size())
-            exit();
+            stopEventProcessing = true;
 
         return true; }
 
     case WM_RequestSync:
         RLDEBUG("    Render: WM_RequestSync");
         if (sleeping)
-            exit();
+            stopEventProcessing = true;
         if (m_windows.size() > 0)
             pendingUpdate |= SyncRequest;
         return true;
@@ -382,7 +440,7 @@ bool QSGRenderThread::event(QEvent *e)
             invalidateOpenGL(wme->window, wme->inDestructor);
             shouldExit = !gl;
             if (sleeping)
-                exit();
+                stopEventProcessing = true;
         } else {
             RLDEBUG1("    Render:  - not releasing anything because we have active windows...");
         }
@@ -413,6 +471,14 @@ bool QSGRenderThread::event(QEvent *e)
         mutex.unlock();
         return true;
     }
+
+    case WM_AnimationsStarted:
+        animationStarted();
+        break;
+
+    case WM_AnimationsStopped:
+        animationStopped();
+        break;
 
     default:
         break;
@@ -531,6 +597,8 @@ void QSGRenderThread::sync()
 
     waitCondition.wakeOne();
     mutex.unlock();
+
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
 }
 
 
@@ -559,6 +627,7 @@ void QSGRenderThread::syncAndRender()
     if (qquick_window_timing)
         syncTime = threadTimer.elapsed();
 #endif
+    RLDEBUG("    Render:  - rendering starting");
 
     for (int i=0; i<m_windows.size(); ++i) {
         Window &w = const_cast<Window &>(m_windows.at(i));
@@ -588,6 +657,38 @@ void QSGRenderThread::syncAndRender()
 #endif
 }
 
+
+
+void QSGRenderThread::postEvent(QEvent *e)
+{
+    eventQueue.addEvent(e);
+}
+
+
+
+void QSGRenderThread::processEvents()
+{
+    RLDEBUG1("    Render: processEvents()");
+    while (eventQueue.hasMoreEvents()) {
+        QEvent *e = eventQueue.takeEvent(false);
+        event(e);
+        delete e;
+    }
+    RLDEBUG1("    Render:  - done with processEvents()");
+}
+
+void QSGRenderThread::processEventsAndWaitForMore()
+{
+    RLDEBUG1("    Render: processEventsAndWaitForMore()");
+    stopEventProcessing = false;
+    while (!stopEventProcessing) {
+        QEvent *e = eventQueue.takeEvent(true);
+        event(e);
+        delete e;
+    }
+    RLDEBUG1("    Render:  - done with processEventsAndWaitForMore()");
+}
+
 void QSGRenderThread::run()
 {
     RLDEBUG1("    Render: run()");
@@ -601,14 +702,14 @@ void QSGRenderThread::run()
             syncAndRender();
         }
 
+        processEvents();
         QCoreApplication::processEvents();
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
 
         if (!shouldExit
             && ((!animationRunning && pendingUpdate == 0) || m_windows.size() == 0)) {
             RLDEBUG("    Render: enter event loop (going to sleep)");
             sleeping = true;
-            exec();
+            processEventsAndWaitForMore();
             sleeping = false;
         }
 
@@ -630,8 +731,6 @@ QSGThreadedRenderLoop::QSGThreadedRenderLoop()
 
     m_exhaust_delay = get_env_int("QML_EXHAUST_DELAY", 5);
 
-    connect(m_animation_driver, SIGNAL(started()), m_thread, SLOT(animationStarted()));
-    connect(m_animation_driver, SIGNAL(stopped()), m_thread, SLOT(animationStopped()));
     connect(m_animation_driver, SIGNAL(started()), this, SLOT(animationStarted()));
     connect(m_animation_driver, SIGNAL(stopped()), this, SLOT(animationStopped()));
 
@@ -664,6 +763,7 @@ void QSGThreadedRenderLoop::animationStarted()
     RLDEBUG("GUI: animationStarted()");
     if (!anyoneShowing() && m_animation_timer == 0)
         m_animation_timer = startTimer(qsgrl_animation_interval());
+    m_thread->postEvent(new QEvent(WM_AnimationsStarted));
 }
 
 void QSGThreadedRenderLoop::animationStopped()
@@ -673,6 +773,7 @@ void QSGThreadedRenderLoop::animationStopped()
         killTimer(m_animation_timer);
         m_animation_timer = 0;
     }
+    m_thread->postEvent(new QEvent(WM_AnimationsStopped));
 }
 
 
@@ -763,7 +864,7 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
     if (!window->handle())
         window->create();
 
-    QCoreApplication::postEvent(m_thread, new WMExposeEvent(window));
+    m_thread->postEvent(new WMExposeEvent(window));
 
     // Start render thread if it is not running
     if (!m_thread->isRunning()) {
@@ -798,7 +899,7 @@ void QSGThreadedRenderLoop::handleObscurity(QQuickWindow *window)
 {
     RLDEBUG1("GUI: handleObscurity");
     if (m_thread->isRunning())
-        QCoreApplication::postEvent(m_thread, new WMWindowEvent(window, WM_Obscure));
+        m_thread->postEvent(new WMWindowEvent(window, WM_Obscure));
 
     if (!anyoneShowing() && m_animation_driver->isRunning() && m_animation_timer == 0) {
         m_animation_timer = startTimer(qsgrl_animation_interval());
@@ -871,7 +972,7 @@ void QSGThreadedRenderLoop::releaseResources(QQuickWindow *window, bool inDestru
     m_thread->mutex.lock();
     if (m_thread->isRunning() && !m_thread->shouldExit) {
         RLDEBUG1("GUI:  - posting release request to render thread");
-        QCoreApplication::postEvent(m_thread, new WMTryReleaseEvent(window, inDestructor));
+        m_thread->postEvent(new WMTryReleaseEvent(window, inDestructor));
         m_thread->waitCondition.wait(&m_thread->mutex);
     }
     m_thread->mutex.unlock();
@@ -913,7 +1014,7 @@ void QSGThreadedRenderLoop::polishAndSync()
     m_thread->guiIsLocked = true;
     QEvent *event = new QEvent(WM_RequestSync);
 
-    QCoreApplication::postEvent(m_thread, event);
+    m_thread->postEvent(event);
     RLDEBUG("GUI:  - wait for sync...");
 #ifndef QSG_NO_WINDOW_TIMING
     if (qquick_window_timing)
@@ -1005,7 +1106,7 @@ QImage QSGThreadedRenderLoop::grab(QQuickWindow *window)
     QImage result;
     m_thread->mutex.lock();
     RLDEBUG1("GUI: - locking, posting grab event");
-    QCoreApplication::postEvent(m_thread, new WMGrabEvent(window, &result));
+    m_thread->postEvent(new WMGrabEvent(window, &result));
     m_thread->waitCondition.wait(&m_thread->mutex);
     RLDEBUG1("GUI: - locking, grab done, unlocking");
     m_thread->mutex.unlock();
@@ -1032,8 +1133,7 @@ void QSGThreadedRenderLoop::resize(QQuickWindow *w, const QSize &size)
         return;
 
     RLDEBUG("GUI:  - posting resize event...");
-    WMResizeEvent *e = new WMResizeEvent(w, size);
-    QCoreApplication::postEvent(m_thread, e);
+    m_thread->postEvent(new WMResizeEvent(w, size));
 
     polishAndSync();
 }
