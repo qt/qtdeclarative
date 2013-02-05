@@ -851,8 +851,10 @@ void Object::initSparse()
     if (!sparseArray) {
         sparseArray = new SparseArray;
         for (int i = 0; i < arrayDataLen; ++i) {
-            SparseArrayNode *n = sparseArray->insert(i);
-            n->value = i + arrayOffset;
+            if (arrayData[i].type != PropertyDescriptor::Generic) {
+                SparseArrayNode *n = sparseArray->insert(i);
+                n->value = i + arrayOffset;
+            }
         }
 
         uint off = arrayOffset;
