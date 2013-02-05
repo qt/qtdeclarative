@@ -70,7 +70,7 @@ struct PropertyTableEntry {
 class PropertyTable
 {
     Q_DISABLE_COPY(PropertyTable)
-    friend class ArrayObject;
+    friend struct ArrayObject;
 
 public:
     PropertyTable()
