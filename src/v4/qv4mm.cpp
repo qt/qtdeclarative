@@ -79,7 +79,7 @@ struct MemoryManager::Data
     {
         memset(smallItems, 0, sizeof(smallItems));
         memset(nChunks, 0, sizeof(nChunks));
-        scribble = qgetenv("MM_NO_SCRIBBLE").isEmpty();
+        scribble = !qgetenv("MM_SCRIBBLE").isEmpty();
         aggressiveGC = !qgetenv("MM_AGGRESSIVE_GC").isEmpty();
     }
 
@@ -167,11 +167,9 @@ Managed *MemoryManager::alloc(std::size_t size)
     return m;
 }
 
-void MemoryManager::scribble(Managed *obj, int c, int size) const
-{
-    if (m_d->scribble)
+#define SCRIBBLE(obj, c, size) \
+    if (m_d->scribble) \
         ::memset((void *)(obj + 1), c, size - sizeof(Managed));
-}
 
 void MemoryManager::mark()
 {
@@ -222,7 +220,7 @@ std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t
 
                 m->nextFree = *f;
                 f = &m->nextFree;
-                //scribble(m, 0x99, size);
+                SCRIBBLE(m, 0x99, size);
                 ++freedCount;
             }
         }

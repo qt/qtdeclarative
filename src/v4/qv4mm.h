@@ -105,8 +105,6 @@ protected:
     // TODO: try to inline
     Managed *alloc(std::size_t size);
 
-    void scribble(Managed *obj, int c, int size) const;
-
     ExecutionEngine *engine() const;
 
 #ifdef DETAILED_MM_STATS
