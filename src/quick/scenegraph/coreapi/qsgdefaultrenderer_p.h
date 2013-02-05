@@ -76,7 +76,6 @@ private:
     QDataBuffer<RenderGroup> m_renderGroups;
 
     bool m_rebuild_lists;
-    bool m_needs_sorting;
     bool m_sort_front_to_back;
     bool m_render_node_added;
     int m_currentRenderOrder;
