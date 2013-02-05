@@ -259,30 +259,6 @@ public:
         fillDescriptor(pd, value);
     }
 
-    bool deleteArrayIndex(uint index) {
-        PropertyDescriptor *pd = 0;
-        if (!sparseArray) {
-            if (index >= arrayDataLen)
-                return true;
-            pd = arrayAt(index);
-        } else {
-            SparseArrayNode *n = sparseArray->findNode(index);
-            if (n)
-                pd = arrayDecriptor(n->value);
-        }
-        if (!pd || pd->type == PropertyDescriptor::Generic)
-            return true;
-        if (!pd->isConfigurable())
-            return false;
-        pd->type = PropertyDescriptor::Generic;
-        pd->value = Value::undefinedValue();
-        if (sparseArray) {
-            pd->value.int_32 = arrayFreeList;
-            arrayFreeList = pd - arrayData;
-        }
-        return true;
-    }
-
     PropertyDescriptor *arrayAt(uint index) const {
         if (!sparseArray) {
             if (index >= arrayDataLen)
@@ -306,20 +282,6 @@ public:
 
     void markArrayObjects() const;
 
-    PropertyDescriptor *front() {
-        PropertyDescriptor *pd = 0;
-        if (!sparseArray) {
-            if (arrayDataLen)
-                pd = arrayData;
-        } else {
-            SparseArrayNode *n = sparseArray->findNode(0);
-            if (n)
-                pd = arrayDecriptor(n->value);
-        }
-        if (pd && pd->type == PropertyDescriptor::Generic)
-            return 0;
-        return pd;
-    }
     void push_back(Value v) {
         uint idx = arrayLength();
         if (!sparseArray) {

@@ -322,7 +322,19 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
         return Value::undefinedValue();
     }
 
-    Value result = instance->getValueChecked(ctx, instance->front());
+    PropertyDescriptor *front = 0;
+    if (!instance->sparseArray) {
+        if (instance->arrayDataLen)
+            front = instance->arrayData;
+    } else {
+        SparseArrayNode *n = instance->sparseArray->findNode(0);
+        if (n)
+            front = instance->arrayDecriptor(n->value);
+    }
+    if (front && front->type == PropertyDescriptor::Generic)
+        front = 0;
+
+    Value result = instance->getValueChecked(ctx, front);
 
     bool protoHasArray = false;
     Object *p = instance;

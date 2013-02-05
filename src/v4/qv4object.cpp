@@ -551,8 +551,29 @@ bool Object::__delete__(ExecutionContext *ctx, String *name)
 
 bool Object::__delete__(ExecutionContext *ctx, uint index)
 {
-    if (deleteArrayIndex(index))
+    PropertyDescriptor *pd = 0;
+    if (!sparseArray) {
+        if (index >= arrayDataLen)
+            return true;
+        pd = arrayAt(index);
+    } else {
+        SparseArrayNode *n = sparseArray->findNode(index);
+        if (n)
+            pd = arrayDecriptor(n->value);
+    }
+    if (!pd || pd->type == PropertyDescriptor::Generic)
         return true;
+
+    if (pd->isConfigurable()) {
+        pd->type = PropertyDescriptor::Generic;
+        pd->value = Value::undefinedValue();
+        if (sparseArray) {
+            pd->value.int_32 = arrayFreeList;
+            arrayFreeList = pd - arrayData;
+        }
+        return true;
+    }
+
     if (ctx->strictMode)
         __qmljs_throw_type_error(ctx);
     return false;
