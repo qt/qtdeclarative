@@ -830,7 +830,7 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
+void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result, IR::Temp *)
 {
     Instruction::CallBuiltinCreateExceptionHandler call;
     call.result = getResultParam(result);

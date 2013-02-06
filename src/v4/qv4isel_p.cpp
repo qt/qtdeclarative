@@ -307,9 +307,11 @@ void InstructionSelection::callBuiltin(IR::Call *call, IR::Temp *result)
         callBuiltinThrow(arg);
     } return;
 
-    case IR::Name::builtin_create_exception_handler:
-        callBuiltinCreateExceptionHandler(result);
+    case IR::Name::builtin_create_exception_handler: {
+        IR::Temp *arg = call->args->expr->asTemp();
+        callBuiltinCreateExceptionHandler(result, arg);
         return;
+    }
 
     case IR::Name::builtin_delete_exception_handler:
         callBuiltinDeleteExceptionHandler();

@@ -43,7 +43,7 @@ protected:
     virtual void callBuiltinPostIncrementName(const QString &name, IR::Temp *result);
     virtual void callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result);
     virtual void callBuiltinThrow(IR::Temp *arg);
-    virtual void callBuiltinCreateExceptionHandler(IR::Temp *result);
+    virtual void callBuiltinCreateExceptionHandler(IR::Temp *result, IR::Temp *contextTemp);
     virtual void callBuiltinDeleteExceptionHandler();
     virtual void callBuiltinGetException(IR::Temp *result);
     virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result);

@@ -427,7 +427,7 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
+void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result, IR::Temp *contextTemp)
 {
     // TODO
     assert(!"TODO!");

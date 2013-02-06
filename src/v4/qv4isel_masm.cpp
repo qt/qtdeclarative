@@ -523,10 +523,13 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
     generateFunctionCall(Assembler::Void, __qmljs_builtin_throw, arg, Assembler::ContextRegister);
 }
 
-void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
+void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result, IR::Temp *contextTemp)
 {
+    Address contextAddr = _asm->loadTempAddress(Assembler::ScratchRegister, contextTemp);
+    _asm->storePtr(Assembler::ContextRegister, contextAddr);
     generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_create_exception_handler, Assembler::ContextRegister);
     generateFunctionCall(Assembler::ReturnValueRegister, setjmp, Assembler::ReturnValueRegister);
+    _asm->loadPtr(contextAddr, Assembler::ContextRegister);
     Address addr = _asm->loadTempAddress(Assembler::ScratchRegister, result);
     _asm->store32(Assembler::ReturnValueRegister, addr);
     addr.offset += 4;

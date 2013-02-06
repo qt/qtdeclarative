@@ -256,7 +256,9 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
                                         , stackSize
 #endif
                                         );
+        VM::ExecutionContext *oldContext = context;
         int didThrow = setjmp(* static_cast<jmp_buf *>(buf));
+        context = oldContext;
         // Two ways to come here: after a create, or after a throw.
         if (didThrow)
             // At this point, the interpreter state can be anything but
