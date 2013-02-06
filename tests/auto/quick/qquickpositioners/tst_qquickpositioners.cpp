@@ -290,7 +290,7 @@ tst_qquickpositioners::tst_qquickpositioners()
 
 void tst_qquickpositioners::test_horizontal()
 {
-    QQuickView *window = createView(testFile("horizontal.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("horizontal.qml")));
 
     window->rootObject()->setProperty("testRightToLeft", false);
 
@@ -313,13 +313,11 @@ void tst_qquickpositioners::test_horizontal()
     QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QCOMPARE(row->width(), 110.0);
     QCOMPARE(row->height(), 50.0);
-
-    delete window;
 }
 
 void tst_qquickpositioners::test_horizontal_rtl()
 {
-    QQuickView *window = createView(testFile("horizontal.qml"));
+      QScopedPointer<QQuickView> window(createView(testFile("horizontal.qml")));
 
     window->rootObject()->setProperty("testRightToLeft", true);
 
@@ -352,12 +350,11 @@ void tst_qquickpositioners::test_horizontal_rtl()
     QCOMPARE(three->x(), 90.0);
     QCOMPARE(three->y(), 0.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_horizontal_spacing()
 {
-    QQuickView *window = createView(testFile("horizontal-spacing.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("horizontal-spacing.qml")));
 
     window->rootObject()->setProperty("testRightToLeft", false);
 
@@ -381,12 +378,11 @@ void tst_qquickpositioners::test_horizontal_spacing()
     QCOMPARE(row->width(), 130.0);
     QCOMPARE(row->height(), 50.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_horizontal_spacing_rightToLeft()
 {
-    QQuickView *window = createView(testFile("horizontal-spacing.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("horizontal-spacing.qml")));
 
     window->rootObject()->setProperty("testRightToLeft", true);
 
@@ -410,12 +406,11 @@ void tst_qquickpositioners::test_horizontal_spacing_rightToLeft()
     QCOMPARE(row->width(), 130.0);
     QCOMPARE(row->height(), 50.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_horizontal_animated()
 {
-    QQuickView *window = createView(testFile("horizontal-animated.qml"), false);
+    QScopedPointer<QQuickView> window(createView(testFile("horizontal-animated.qml"), false));
 
     window->rootObject()->setProperty("testRightToLeft", false);
 
@@ -433,7 +428,7 @@ void tst_qquickpositioners::test_horizontal_animated()
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(three->x(), -100.0);
 
-    QVERIFY(QTest::qWaitForWindowExposed(window)); //It may not relayout until the next frame, so it needs to be drawn
+    QVERIFY(QTest::qWaitForWindowExposed(window.data())); //It may not relayout until the next frame, so it needs to be drawn
 
     QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QVERIFY(row);
@@ -464,12 +459,11 @@ void tst_qquickpositioners::test_horizontal_animated()
     QTRY_COMPARE(two->x(), 50.0);
     QTRY_COMPARE(three->x(), 100.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_horizontal_animated_rightToLeft()
 {
-    QQuickView *window = createView(testFile("horizontal-animated.qml"), false);
+    QScopedPointer<QQuickView> window(createView(testFile("horizontal-animated.qml"), false));
 
     window->rootObject()->setProperty("testRightToLeft", true);
 
@@ -487,7 +481,7 @@ void tst_qquickpositioners::test_horizontal_animated_rightToLeft()
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(three->x(), -100.0);
 
-    QVERIFY(QTest::qWaitForWindowExposed(window)); //It may not relayout until the next frame, so it needs to be drawn
+    QVERIFY(QTest::qWaitForWindowExposed(window.data())); //It may not relayout until the next frame, so it needs to be drawn
 
     QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QVERIFY(row);
@@ -520,12 +514,11 @@ void tst_qquickpositioners::test_horizontal_animated_rightToLeft()
     QTRY_COMPARE(one->x(), 100.0);
     QTRY_COMPARE(two->x(), 50.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_horizontal_animated_disabled()
 {
-    QQuickView *window = createView(testFile("horizontal-animated-disabled.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("horizontal-animated-disabled.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -558,7 +551,6 @@ void tst_qquickpositioners::test_horizontal_animated_disabled()
     QTRY_COMPARE(two->x(), 50.0);
     QTRY_COMPARE(three->x(), 100.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::populateTransitions(const QString &positionerObjectName)
@@ -578,7 +570,8 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
     QaimModel model_targetItems_transitionFrom;
     QaimModel model_displacedItems_transitionVia;
 
-    QQuickView *window = QQuickViewTestUtil::createView();
+    QScopedPointer<QQuickView> window(QQuickViewTestUtil::createView());
+
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("usePopulateTransition", usePopulateTransition);
     ctxt->setContextProperty("enableAddTransition", true);
@@ -594,6 +587,7 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
     QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
     window->show();
+    QTest::qWaitForWindowExposed(window.data());
     qApp->processEvents();
 
     if (!dynamicallyPopulate && usePopulateTransition) {
@@ -629,8 +623,6 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
     model.insertItem(0, "new item", "");
     QTRY_COMPARE(window->rootObject()->property("addTransitionsDone").toInt(), 1);
     QTRY_COMPARE(window->rootObject()->property("populateTransitionsDone").toInt(), 0);
-
-    delete window;
 }
 
 void tst_qquickpositioners::populateTransitions_data()
@@ -659,7 +651,7 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     QaimModel model_targetItems_transitionFrom;
     QaimModel model_displacedItems_transitionVia;
 
-    QQuickView *window = QQuickViewTestUtil::createView();
+    QScopedPointer<QQuickView> window(QQuickViewTestUtil::createView());
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("usePopulateTransition", QVariant(false));
     ctxt->setContextProperty("enableAddTransition", QVariant(true));
@@ -669,6 +661,7 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
     window->setSource(testFileUrl("transitions.qml"));
     window->show();
+    QTest::qWaitForWindowExposed(window.data());
     qApp->processEvents();
 
     QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
@@ -735,8 +728,6 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     }
 
     checkItemPositions(positioner, &model, window->rootObject()->property("incrementalSize").toInt());
-
-    delete window;
 }
 
 void tst_qquickpositioners::addTransitions_data()
@@ -772,7 +763,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     QaimModel model_targetItems_transitionFrom;
     QaimModel model_displacedItems_transitionVia;
 
-    QQuickView *window = QQuickViewTestUtil::createView();
+    QScopedPointer<QQuickView> window(QQuickViewTestUtil::createView());
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("usePopulateTransition", QVariant(false));
     ctxt->setContextProperty("enableAddTransition", QVariant(false));
@@ -782,6 +773,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
     window->setSource(testFileUrl("transitions.qml"));
     window->show();
+    QTest::qWaitForWindowExposed(window.data());
     qApp->processEvents();
 
     QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
@@ -844,8 +836,6 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     }
 
     checkItemPositions(positioner, &model, window->rootObject()->property("incrementalSize").toInt());
-
-    delete window;
 }
 
 void tst_qquickpositioners::moveTransitions_data()
@@ -931,7 +921,7 @@ void tst_qquickpositioners::checkItemPositions(QQuickItem *positioner, QaimModel
 
 void tst_qquickpositioners::test_vertical()
 {
-    QQuickView *window = createView(testFile("vertical.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("vertical.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -954,12 +944,11 @@ void tst_qquickpositioners::test_vertical()
     QCOMPARE(column->height(), 80.0);
     QCOMPARE(column->width(), 50.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_vertical_spacing()
 {
-    QQuickView *window = createView(testFile("vertical-spacing.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("vertical-spacing.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -981,12 +970,11 @@ void tst_qquickpositioners::test_vertical_spacing()
     QCOMPARE(column->height(), 100.0);
     QCOMPARE(column->width(), 50.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_vertical_animated()
 {
-    QQuickView *window = createView(testFile("vertical-animated.qml"), false);
+    QScopedPointer<QQuickView> window(createView(testFile("vertical-animated.qml"), false));
 
     //Note that they animate in
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
@@ -1001,7 +989,7 @@ void tst_qquickpositioners::test_vertical_animated()
     QVERIFY(three != 0);
     QCOMPARE(three->y(), -100.0);
 
-    QVERIFY(QTest::qWaitForWindowExposed(window)); //It may not relayout until the next frame, so it needs to be drawn
+    QVERIFY(QTest::qWaitForWindowExposed(window.data())); //It may not relayout until the next frame, so it needs to be drawn
 
     QQuickItem *column = window->rootObject()->findChild<QQuickItem*>("column");
     QVERIFY(column);
@@ -1031,12 +1019,11 @@ void tst_qquickpositioners::test_vertical_animated()
     QTRY_COMPARE(two->y(), 50.0);
     QTRY_COMPARE(three->y(), 100.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_grid()
 {
-    QQuickView *window = createView(testFile("gridtest.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("gridtest.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -1065,12 +1052,11 @@ void tst_qquickpositioners::test_grid()
     QCOMPARE(grid->width(), 100.0);
     QCOMPARE(grid->height(), 100.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_grid_topToBottom()
 {
-    QQuickView *window = createView(testFile("grid-toptobottom.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("grid-toptobottom.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -1099,12 +1085,11 @@ void tst_qquickpositioners::test_grid_topToBottom()
     QCOMPARE(grid->width(), 100.0);
     QCOMPARE(grid->height(), 120.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_grid_rightToLeft()
 {
-    QQuickView *window = createView(testFile("gridtest.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("gridtest.qml")));
 
     window->rootObject()->setProperty("testRightToLeft", true);
 
@@ -1148,12 +1133,11 @@ void tst_qquickpositioners::test_grid_rightToLeft()
     QCOMPARE(five->x(), 140.0);
     QCOMPARE(five->y(), 50.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_grid_spacing()
 {
-    QQuickView *window = createView(testFile("grid-spacing.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("grid-spacing.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -1181,12 +1165,11 @@ void tst_qquickpositioners::test_grid_spacing()
     QCOMPARE(grid->width(), 128.0);
     QCOMPARE(grid->height(), 104.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_grid_row_column_spacing()
 {
-    QQuickView *window = createView(testFile("grid-row-column-spacing.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("grid-row-column-spacing.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -1214,12 +1197,11 @@ void tst_qquickpositioners::test_grid_row_column_spacing()
     QCOMPARE(grid->width(), 142.0);
     QCOMPARE(grid->height(), 107.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_grid_animated()
 {
-    QQuickView *window = createView(testFile("grid-animated.qml"), false);
+    QScopedPointer<QQuickView> window(createView(testFile("grid-animated.qml"), false));
 
     window->rootObject()->setProperty("testRightToLeft", false);
 
@@ -1249,7 +1231,7 @@ void tst_qquickpositioners::test_grid_animated()
     QCOMPARE(five->x(), -100.0);
     QCOMPARE(five->y(), -100.0);
 
-    QVERIFY(QTest::qWaitForWindowExposed(window)); //It may not relayout until the next frame, so it needs to be drawn
+    QVERIFY(QTest::qWaitForWindowExposed(window.data())); //It may not relayout until the next frame, so it needs to be drawn
 
     QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
     QVERIFY(grid);
@@ -1299,12 +1281,11 @@ void tst_qquickpositioners::test_grid_animated()
     QTRY_COMPARE(five->x(), 50.0);
     QTRY_COMPARE(five->y(), 50.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_grid_animated_rightToLeft()
 {
-    QQuickView *window = createView(testFile("grid-animated.qml"), false);
+    QScopedPointer<QQuickView> window(createView(testFile("grid-animated.qml"), false));
 
     window->rootObject()->setProperty("testRightToLeft", true);
 
@@ -1334,7 +1315,7 @@ void tst_qquickpositioners::test_grid_animated_rightToLeft()
     QCOMPARE(five->x(), -100.0);
     QCOMPARE(five->y(), -100.0);
 
-    QVERIFY(QTest::qWaitForWindowExposed(window)); //It may not relayout until the next frame, so it needs to be drawn
+    QVERIFY(QTest::qWaitForWindowExposed(window.data())); //It may not relayout until the next frame, so it needs to be drawn
 
     QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
     QVERIFY(grid);
@@ -1384,12 +1365,11 @@ void tst_qquickpositioners::test_grid_animated_rightToLeft()
     QTRY_COMPARE(five->x(), 50.0);
     QTRY_COMPARE(five->y(), 50.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_grid_zero_columns()
 {
-    QQuickView *window = createView(testFile("gridzerocolumns.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("gridzerocolumns.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -1417,12 +1397,11 @@ void tst_qquickpositioners::test_grid_zero_columns()
     QCOMPARE(grid->width(), 170.0);
     QCOMPARE(grid->height(), 60.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_grid_H_alignment()
 {
-    QQuickView *window = createView(testFile("gridtest.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("gridtest.qml")));
 
     window->rootObject()->setProperty("testHAlignment", QQuickGrid::AlignHCenter);
 
@@ -1497,12 +1476,11 @@ void tst_qquickpositioners::test_grid_H_alignment()
     QCOMPARE(grid->width(), 100.0);
     QCOMPARE(grid->height(), 100.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_grid_V_alignment()
 {
-    QQuickView *window = createView(testFile("gridtest.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("gridtest.qml")));
 
     window->rootObject()->setProperty("testVAlignment", QQuickGrid::AlignVCenter);
 
@@ -1541,12 +1519,11 @@ void tst_qquickpositioners::test_grid_V_alignment()
     QCOMPARE(five->x(), 50.0);
     QCOMPARE(five->y(), 90.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_propertychanges()
 {
-    QQuickView *window = createView(testFile("propertychangestest.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("propertychangestest.qml")));
 
     QQuickGrid *grid = qobject_cast<QQuickGrid*>(window->rootObject());
     QVERIFY(grid != 0);
@@ -1600,12 +1577,11 @@ void tst_qquickpositioners::test_propertychanges()
     QCOMPARE(columnsSpy.count(),2);
     QCOMPARE(rowsSpy.count(),2);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_repeater()
 {
-    QQuickView *window = createView(testFile("repeatertest.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("repeatertest.qml")));
 
     QQuickRectangle *one = findItem<QQuickRectangle>(window->contentItem(), "one");
     QVERIFY(one != 0);
@@ -1623,12 +1599,11 @@ void tst_qquickpositioners::test_repeater()
     QCOMPARE(three->x(), 100.0);
     QCOMPARE(three->y(), 0.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_flow()
 {
-    QQuickView *window = createView(testFile("flowtest.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("flowtest.qml")));
 
     window->rootObject()->setProperty("testRightToLeft", false);
 
@@ -1659,12 +1634,11 @@ void tst_qquickpositioners::test_flow()
     QCOMPARE(flow->width(), 90.0);
     QCOMPARE(flow->height(), 120.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_flow_rightToLeft()
 {
-    QQuickView *window = createView(testFile("flowtest.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("flowtest.qml")));
 
     window->rootObject()->setProperty("testRightToLeft", true);
 
@@ -1695,12 +1669,11 @@ void tst_qquickpositioners::test_flow_rightToLeft()
     QCOMPARE(flow->width(), 90.0);
     QCOMPARE(flow->height(), 120.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_flow_topToBottom()
 {
-    QQuickView *window = createView(testFile("flowtest-toptobottom.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("flowtest-toptobottom.qml")));
 
     window->rootObject()->setProperty("testRightToLeft", false);
 
@@ -1748,12 +1721,11 @@ void tst_qquickpositioners::test_flow_topToBottom()
     QCOMPARE(five->x(), 40.0);
     QCOMPARE(five->y(), 50.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_flow_resize()
 {
-    QQuickView *window = createView(testFile("flowtest.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("flowtest.qml")));
 
     QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(root);
@@ -1782,12 +1754,11 @@ void tst_qquickpositioners::test_flow_resize()
     QTRY_COMPARE(five->x(), 50.0);
     QTRY_COMPARE(five->y(), 50.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_flow_resize_rightToLeft()
 {
-    QQuickView *window = createView(testFile("flowtest.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("flowtest.qml")));
 
     QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(root);
@@ -1816,12 +1787,11 @@ void tst_qquickpositioners::test_flow_resize_rightToLeft()
     QCOMPARE(five->x(), 65.0);
     QCOMPARE(five->y(), 50.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_flow_implicit_resize()
 {
-    QQuickView *window = createView(testFile("flow-testimplicitsize.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("flow-testimplicitsize.qml")));
     QVERIFY(window->rootObject() != 0);
 
     QQuickFlow *flow = window->rootObject()->findChild<QQuickFlow*>("flow");
@@ -1845,7 +1815,6 @@ void tst_qquickpositioners::test_flow_implicit_resize()
     QCOMPARE(flow->width(), 220.0);
     QCOMPARE(flow->height(), 50.0);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_conflictinganchors()
@@ -1962,10 +1931,10 @@ void tst_qquickpositioners::test_mirroring()
     objectNames << "one" << "two" << "three" << "four" << "five";
 
     foreach (const QString qmlFile, qmlFiles) {
-        QQuickView *windowA = createView(testFile(qmlFile));
+        QScopedPointer<QQuickView> windowA(createView(testFile(qmlFile)));
         QQuickItem *rootA = qobject_cast<QQuickItem*>(windowA->rootObject());
 
-        QQuickView *windowB = createView(testFile(qmlFile));
+        QScopedPointer<QQuickView> windowB(createView(testFile(qmlFile)));
         QQuickItem *rootB = qobject_cast<QQuickItem*>(windowB->rootObject());
 
         rootA->setProperty("testRightToLeft", true); // layoutDirection: Qt.RightToLeft
@@ -2007,15 +1976,13 @@ void tst_qquickpositioners::test_mirroring()
             QQuickItem *itemB = rootB->findChild<QQuickItem*>(objectName);
             QTRY_COMPARE(itemA->x(), itemB->x());
         }
-        delete windowA;
-        delete windowB;
     }
 }
 
 void tst_qquickpositioners::test_allInvisible()
 {
     //QTBUG-19361
-    QQuickView *window = createView(testFile("allInvisible.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("allInvisible.qml")));
 
     QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(root);
@@ -2034,7 +2001,7 @@ void tst_qquickpositioners::test_attachedproperties()
 {
     QFETCH(QString, filename);
 
-    QQuickView *window = createView(filename);
+    QScopedPointer<QQuickView> window(createView(filename));
     QVERIFY(window->rootObject() != 0);
 
     QQuickRectangle *greenRect = window->rootObject()->findChild<QQuickRectangle *>("greenRect");
@@ -2066,7 +2033,6 @@ void tst_qquickpositioners::test_attachedproperties()
     isLast = yellowRect->property("isLastItem").toBool();
     QVERIFY(isLast == true);
 
-    delete window;
 }
 
 void tst_qquickpositioners::test_attachedproperties_data()
@@ -2081,7 +2047,7 @@ void tst_qquickpositioners::test_attachedproperties_data()
 
 void tst_qquickpositioners::test_attachedproperties_dynamic()
 {
-    QQuickView *window = createView(testFile("attachedproperties-dynamic.qml"));
+    QScopedPointer<QQuickView> window(createView(testFile("attachedproperties-dynamic.qml")));
     QVERIFY(window->rootObject() != 0);
 
     QQuickRow *row = window->rootObject()->findChild<QQuickRow *>("pos");
@@ -2132,7 +2098,6 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     QTRY_VERIFY(rect1->property("firstItem").toBool() == false);
     QTRY_VERIFY(rect1->property("lastItem").toBool() == true);
 
-    delete window;
 }
 
 QQuickView *tst_qquickpositioners::createView(const QString &filename, bool wait)
