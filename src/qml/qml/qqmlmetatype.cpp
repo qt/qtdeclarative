@@ -1531,7 +1531,7 @@ QQmlType *QQmlMetaType::qmlType(const QHashedStringRef &name, const QHashedStrin
     QReadLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
-    QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.find(name);
+    QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.constFind(name);
     while (it != data->nameToType.end() && it.key() == name) {
         // XXX version_major<0 just a kludge for QQmlPropertyPrivate::initProperty
         if (version_major < 0 || (*it)->availableInVersion(module, version_major,version_minor))
@@ -1565,7 +1565,7 @@ QQmlType *QQmlMetaType::qmlType(const QMetaObject *metaObject, const QHashedStri
     QReadLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
-    QQmlMetaTypeData::MetaObjects::const_iterator it = data->metaObjectToType.find(metaObject);
+    QQmlMetaTypeData::MetaObjects::const_iterator it = data->metaObjectToType.constFind(metaObject);
     while (it != data->metaObjectToType.end() && it.key() == metaObject) {
         QQmlType *t = *it;
         if (version_major < 0 || t->availableInVersion(module, version_major,version_minor))
