@@ -370,7 +370,7 @@ void MemoryManager::collectFromStack() const
                 reinterpret_cast<char *>(*current);
 #endif
 
-        if (genericPtr < *heapChunkBoundaries || genericPtr > *(heapChunkBoundariesEnd - 1))
+        if (genericPtr < *heapChunkBoundaries || genericPtr > *heapChunkBoundariesEnd)
             continue;
         int index = qLowerBound(heapChunkBoundaries, heapChunkBoundariesEnd, genericPtr) - heapChunkBoundaries;
         // An odd index means the pointer is _before_ the end of a heap chunk and therefore valid.
