@@ -32,6 +32,10 @@
 #include <wtf/Assertions.h>
 #include <wtf/UnusedParam.h>
 
+#if (OS(DARWIN) && CPU(X86_64))
+#include <stdlib.h>
+#endif
+
 namespace WTF {
 
 void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, bool executable, bool includesGuardPages)
