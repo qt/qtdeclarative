@@ -551,10 +551,10 @@ inline Value __qmljs_add(Value left, Value right, ExecutionContext *ctx)
 {
     TRACE2(left, right);
 
-#ifndef QMLJS_LLVM_RUNTIME
+#ifdef QMLJS_INLINE_MATH
     if (Value::integerCompatible(left, right))
         return add_int32(left.integerValue(), right.integerValue());
-#endif // QMLJS_LLVM_RUNTIME
+#endif
 
     if (Value::bothDouble(left, right))
         return Value::fromDouble(left.doubleValue() + right.doubleValue());
@@ -566,10 +566,10 @@ inline Value __qmljs_sub(Value left, Value right, ExecutionContext *ctx)
 {
     TRACE2(left, right);
 
-#ifndef QMLJS_LLVM_RUNTIME
+#ifdef QMLJS_INLINE_MATH
     if (Value::integerCompatible(left, right))
         return sub_int32(left.integerValue(), right.integerValue());
-#endif // QMLJS_LLVM_RUNTIME
+#endif
 
     double lval = __qmljs_to_number(left, ctx);
     double rval = __qmljs_to_number(right, ctx);
@@ -580,10 +580,10 @@ inline Value __qmljs_mul(Value left, Value right, ExecutionContext *ctx)
 {
     TRACE2(left, right);
 
-#ifndef QMLJS_LLVM_RUNTIME
+#ifdef QMLJS_INLINE_MATH
     if (Value::integerCompatible(left, right))
         return mul_int32(left.integerValue(), right.integerValue());
-#endif // QMLJS_LLVM_RUNTIME
+#endif
 
     double lval = __qmljs_to_number(left, ctx);
     double rval = __qmljs_to_number(right, ctx);

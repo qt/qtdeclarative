@@ -46,7 +46,11 @@
 #endif // QMLJS_LLVM_RUNTIME
 #include <cmath>
 
-#if !defined(QMLJS_LLVM_RUNTIME) && 1 //CPU(X86_64)
+#if !defined(QMLJS_LLVM_RUNTIME) && COMPILER(GCC) && (CPU(X86_64) || CPU(X86))
+#define QMLJS_INLINE_MATH
+#endif
+
+#if defined(QMLJS_INLINE_MATH)
 
 QT_BEGIN_NAMESPACE
 
@@ -106,5 +110,5 @@ static inline Value mul_int32(int a, int b)
 
 QT_END_NAMESPACE
 
-#endif // !defined(QMLJS_LLVM_RUNTIME) && 1 //CPU(X86_64)
+#endif // defined(QMLJS_INLINE_MATH)
 #endif // QMLJS_MATH_H
