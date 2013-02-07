@@ -370,25 +370,25 @@ InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Modu
     , _block(0)
     , _function(0)
     , _vmFunction(0)
-    , _asm(0)
+    , _as(0)
 {
 }
 
 InstructionSelection::~InstructionSelection()
 {
-    delete _asm;
+    delete _as;
 }
 
 void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
 {
     qSwap(_function, function);
     qSwap(_vmFunction, vmFunction);
-    Assembler* oldAssembler = _asm;
-    _asm = new Assembler(_function);
+    Assembler* oldAssembler = _as;
+    _as = new Assembler(_function);
 
     int locals = (_function->tempCount - _function->locals.size() + _function->maxNumberOfArguments) + 1;
     locals = (locals + 1) & ~1;
-    _asm->enterStandardStackFrame(locals);
+    _as->enterStandardStackFrame(locals);
 
     int contextPointer = 0;
 #ifndef VALUE_FITS_IN_REGISTER
@@ -398,38 +398,38 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     contextPointer++;
 #endif
 #if CPU(X86)
-    _asm->loadPtr(addressForArgument(contextPointer), Assembler::ContextRegister);
+    _as->loadPtr(addressForArgument(contextPointer), Assembler::ContextRegister);
 #elif CPU(X86_64) || CPU(ARM)
-    _asm->move(_asm->registerForArgument(contextPointer), Assembler::ContextRegister);
+    _as->move(_as->registerForArgument(contextPointer), Assembler::ContextRegister);
 #else
     assert(!"TODO");
 #endif
 
     foreach (IR::BasicBlock *block, _function->basicBlocks) {
         _block = block;
-        _asm->registerBlock(_block);
+        _as->registerBlock(_block);
         foreach (IR::Stmt *s, block->statements) {
             s->accept(this);
         }
     }
 
-    _asm->leaveStandardStackFrame(locals);
+    _as->leaveStandardStackFrame(locals);
 #ifndef VALUE_FITS_IN_REGISTER
     // Emulate ret(n) instruction
     // Pop off return address into scratch register ...
-    _asm->pop(Assembler::ScratchRegister);
+    _as->pop(Assembler::ScratchRegister);
     // ... and overwrite the invisible argument with
     // the return address.
-    _asm->poke(Assembler::ScratchRegister);
+    _as->poke(Assembler::ScratchRegister);
 #endif
-    _asm->ret();
+    _as->ret();
 
-    _asm->link(_vmFunction);
+    _as->link(_vmFunction);
 
     qSwap(_vmFunction, vmFunction);
     qSwap(_function, function);
-    delete _asm;
-    _asm = oldAssembler;
+    delete _as;
+    _as = oldAssembler;
 }
 
 void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result)
@@ -474,7 +474,7 @@ void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *
 
 void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
 {
-    _asm->storeValue(Value::fromBoolean(false), result);
+    _as->storeValue(Value::fromBoolean(false), result);
 }
 
 void InstructionSelection::callBuiltinPostIncrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
@@ -524,15 +524,15 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
 
 void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result, IR::Temp *contextTemp)
 {
-    Address contextAddr = _asm->loadTempAddress(Assembler::ScratchRegister, contextTemp);
-    _asm->storePtr(Assembler::ContextRegister, contextAddr);
+    Address contextAddr = _as->loadTempAddress(Assembler::ScratchRegister, contextTemp);
+    _as->storePtr(Assembler::ContextRegister, contextAddr);
     generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_create_exception_handler, Assembler::ContextRegister);
     generateFunctionCall(Assembler::ReturnValueRegister, setjmp, Assembler::ReturnValueRegister);
-    _asm->loadPtr(contextAddr, Assembler::ContextRegister);
-    Address addr = _asm->loadTempAddress(Assembler::ScratchRegister, result);
-    _asm->store32(Assembler::ReturnValueRegister, addr);
+    _as->loadPtr(contextAddr, Assembler::ContextRegister);
+    Address addr = _as->loadTempAddress(Assembler::ScratchRegister, result);
+    _as->store32(Assembler::ReturnValueRegister, addr);
     addr.offset += 4;
-    _asm->store32(Assembler::TrustedImm32(Value::Boolean_Type), addr);
+    _as->store32(Assembler::TrustedImm32(Value::Boolean_Type), addr);
 }
 
 void InstructionSelection::callBuiltinDeleteExceptionHandler()
@@ -603,13 +603,13 @@ void InstructionSelection::loadThisObject(IR::Temp *temp)
 
 void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Temp *targetTemp)
 {
-    _asm->storeValue(convertToValue(sourceConst), targetTemp);
+    _as->storeValue(convertToValue(sourceConst), targetTemp);
 }
 
 void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
 {
     Value v = Value::fromString(identifier(str));
-    _asm->storeValue(v, targetTemp);
+    _as->storeValue(v, targetTemp);
 }
 
 void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp)
@@ -617,7 +617,7 @@ void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *target
     Value v = Value::fromObject(engine()->newRegExpObject(*sourceRegexp->value,
                                                           sourceRegexp->flags));
     _vmFunction->generatedValues.append(v);
-    _asm->storeValue(v, targetTemp);
+    _as->storeValue(v, targetTemp);
 }
 
 void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *temp)
@@ -661,7 +661,7 @@ void InstructionSelection::setElement(IR::Expr *source, IR::Temp *targetBase, IR
 
 void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
 {
-    _asm->copyValue(targetTemp, sourceTemp);
+    _as->copyValue(targetTemp, sourceTemp);
 }
 
 #define setOp(op, opName, operation) \
@@ -683,13 +683,13 @@ void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *
     } // switch
 
     if (op)
-        _asm->generateFunctionCallImp(targetTemp, opName, op, sourceTemp,
+        _as->generateFunctionCallImp(targetTemp, opName, op, sourceTemp,
                                       Assembler::ContextRegister);
 }
 
 void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
 {
-    _asm->generateBinOp(oper, target, leftSource, rightSource);
+    _as->generateBinOp(oper, target, leftSource, rightSource);
 }
 
 void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, const QString &targetName)
@@ -713,7 +713,7 @@ void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, c
         break;
     }
     if (op) {
-        _asm->generateFunctionCallImp(Assembler::Void, opName, op, sourceExpr, identifier(targetName), Assembler::ContextRegister);
+        _as->generateFunctionCallImp(Assembler::Void, opName, op, sourceExpr, identifier(targetName), Assembler::ContextRegister);
     }
 }
 
@@ -739,7 +739,7 @@ void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr
     }
 
     if (op) {
-        _asm->generateFunctionCallImp(Assembler::Void, opName, op, targetBaseTemp, targetIndexTemp, sourceExpr, Assembler::ContextRegister);
+        _as->generateFunctionCallImp(Assembler::Void, opName, op, targetBaseTemp, targetIndexTemp, sourceExpr, Assembler::ContextRegister);
     }
 }
 
@@ -766,7 +766,7 @@ void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR:
 
     if (op) {
         String* member = identifier(targetName);
-        _asm->generateFunctionCallImp(Assembler::Void, opName, op, source, targetBase, member, Assembler::ContextRegister);
+        _as->generateFunctionCallImp(Assembler::Void, opName, op, source, targetBase, member, Assembler::ContextRegister);
     }
 }
 
@@ -823,32 +823,32 @@ void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, I
 
 void InstructionSelection::visitJump(IR::Jump *s)
 {
-    _asm->jumpToBlock(_block, s->target);
+    _as->jumpToBlock(_block, s->target);
 }
 
 void InstructionSelection::visitCJump(IR::CJump *s)
 {
     if (IR::Temp *t = s->cond->asTemp()) {
-        Address temp = _asm->loadTempAddress(Assembler::ScratchRegister, t);
+        Address temp = _as->loadTempAddress(Assembler::ScratchRegister, t);
         Address tag = temp;
         tag.offset += offsetof(VM::Value, tag);
-        Assembler::Jump booleanConversion = _asm->branch32(Assembler::NotEqual, tag, Assembler::TrustedImm32(VM::Value::Boolean_Type));
+        Assembler::Jump booleanConversion = _as->branch32(Assembler::NotEqual, tag, Assembler::TrustedImm32(VM::Value::Boolean_Type));
 
         Address data = temp;
         data.offset += offsetof(VM::Value, int_32);
-        _asm->load32(data, Assembler::ReturnValueRegister);
-        Assembler::Jump testBoolean = _asm->jump();
+        _as->load32(data, Assembler::ReturnValueRegister);
+        Assembler::Jump testBoolean = _as->jump();
 
-        booleanConversion.link(_asm);
+        booleanConversion.link(_as);
         {
             generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_to_boolean, t, Assembler::ContextRegister);
         }
 
-        testBoolean.link(_asm);
-        Assembler::Jump target = _asm->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister, Assembler::TrustedImm32(0));
-        _asm->addPatch(s->iftrue, target);
+        testBoolean.link(_as);
+        Assembler::Jump target = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister, Assembler::TrustedImm32(0));
+        _as->addPatch(s->iftrue, target);
 
-        _asm->jumpToBlock(_block, s->iffalse);
+        _as->jumpToBlock(_block, s->iffalse);
         return;
     } else if (IR::Binop *b = s->cond->asBinop()) {
         if ((b->left->asTemp() || b->left->asConst()) &&
@@ -869,12 +869,12 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             case IR::OpIn: setOp(op, opName, __qmljs_cmp_in); break;
             } // switch
 
-            _asm->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, op, b->left, b->right, Assembler::ContextRegister);
+            _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, op, b->left, b->right, Assembler::ContextRegister);
 
-            Assembler::Jump target = _asm->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister, Assembler::TrustedImm32(0));
-            _asm->addPatch(s->iftrue, target);
+            Assembler::Jump target = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister, Assembler::TrustedImm32(0));
+            _as->addPatch(s->iftrue, target);
 
-            _asm->jumpToBlock(_block, s->iffalse);
+            _as->jumpToBlock(_block, s->iffalse);
             return;
         } else {
             assert(!"wip");
@@ -889,10 +889,10 @@ void InstructionSelection::visitRet(IR::Ret *s)
 {
     if (IR::Temp *t = s->expr->asTemp()) {
 #ifdef VALUE_FITS_IN_REGISTER
-        _asm->copyValue(Assembler::ReturnValueRegister, t);
+        _as->copyValue(Assembler::ReturnValueRegister, t);
 #else
-        _asm->loadPtr(addressForArgument(0), Assembler::ReturnValueRegister);
-        _asm->copyValue(Address(Assembler::ReturnValueRegister, 0), t);
+        _as->loadPtr(addressForArgument(0), Assembler::ReturnValueRegister);
+        _as->copyValue(Address(Assembler::ReturnValueRegister, 0), t);
 #endif
         return;
     }
@@ -911,7 +911,7 @@ int InstructionSelection::prepareVariableArguments(IR::ExprList* args)
     for (IR::ExprList *it = args; it; it = it->next, ++i) {
         IR::Temp *arg = it->expr->asTemp();
         assert(arg != 0);
-        _asm->copyValue(argumentAddressForCall(i), arg);
+        _as->copyValue(argumentAddressForCall(i), arg);
     }
 
     return argc;
@@ -923,13 +923,13 @@ void InstructionSelection::callRuntimeMethodImp(IR::Temp *result, const char* na
     assert(baseName != 0);
 
     int argc = prepareVariableArguments(args);
-    _asm->generateFunctionCallImp(result, name, method, Assembler::ContextRegister, identifier(*baseName->id), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    _as->generateFunctionCallImp(result, name, method, Assembler::ContextRegister, identifier(*baseName->id), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
 }
 
 void InstructionSelection::callRuntimeMethodImp(IR::Temp *result, const char* name, BuiltinMethod method, IR::ExprList *args)
 {
     int argc = prepareVariableArguments(args);
-    _asm->generateFunctionCallImp(result, name, method, Assembler::ContextRegister, baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    _as->generateFunctionCallImp(result, name, method, Assembler::ContextRegister, baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
 }
 
 

@@ -731,7 +731,7 @@ protected:
     Address addressForArgument(int index) const
     {
         if (index < Assembler::RegisterArgumentCount)
-            return Address(_asm->registerForArgument(index), 0);
+            return Address(_as->registerForArgument(index), 0);
 
         // StackFrameRegister points to its old value on the stack, and above
         // it we have the return address, hence the need to step over two
@@ -767,7 +767,7 @@ private:
     #define isel_stringIfy(s) isel_stringIfyx(s)
 
     #define generateFunctionCall(t, function, ...) \
-        _asm->generateFunctionCallImp(t, isel_stringIfy(function), function, __VA_ARGS__)
+        _as->generateFunctionCallImp(t, isel_stringIfy(function), function, __VA_ARGS__)
 
     int prepareVariableArguments(IR::ExprList* args);
 
@@ -781,7 +781,7 @@ private:
     IR::BasicBlock *_block;
     IR::Function* _function;
     VM::Function* _vmFunction;
-    Assembler* _asm;
+    Assembler* _as;
 };
 
 class Q_V4_EXPORT ISelFactory: public EvalISelFactory
