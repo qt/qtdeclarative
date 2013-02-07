@@ -19,7 +19,9 @@ INCLUDEPATH += $$PWD/stubs
 INCLUDEPATH += $$PWD/stubs/wtf
 INCLUDEPATH += $$PWD
 
-DEFINES += WTF_USE_UDIS86=1
+if(isEqual(QT_ARCH, "i386")|isEqual(QT_ARCH, "x86_64")):!win*: DEFINES += WTF_USE_UDIS86=1
+else: DEFINES += WTF_USE_UDIS86=0
+
 INCLUDEPATH += $$PWD/disassembler
 INCLUDEPATH += $$PWD/disassembler/udis86
 INCLUDEPATH += $$_OUT_PWD

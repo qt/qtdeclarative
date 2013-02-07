@@ -32,13 +32,15 @@ HEADERS += $$PWD/stubs/WTFStubs.h
 
 SOURCES += $$PWD/disassembler/Disassembler.cpp
 SOURCES += $$PWD/disassembler/UDis86Disassembler.cpp
-SOURCES += $$PWD/disassembler/udis86/udis86.c
-SOURCES += $$PWD/disassembler/udis86/udis86_decode.c
-SOURCES += $$PWD/disassembler/udis86/udis86_input.c
-SOURCES += $$PWD/disassembler/udis86/udis86_itab_holder.c
-SOURCES += $$PWD/disassembler/udis86/udis86_syn-att.c
-SOURCES += $$PWD/disassembler/udis86/udis86_syn.c
-SOURCES += $$PWD/disassembler/udis86/udis86_syn-intel.c
+contains(DEFINES, WTF_USE_UDIS86=1) {
+    SOURCES += $$PWD/disassembler/udis86/udis86.c
+    SOURCES += $$PWD/disassembler/udis86/udis86_decode.c
+    SOURCES += $$PWD/disassembler/udis86/udis86_input.c
+    SOURCES += $$PWD/disassembler/udis86/udis86_itab_holder.c
+    SOURCES += $$PWD/disassembler/udis86/udis86_syn-att.c
+    SOURCES += $$PWD/disassembler/udis86/udis86_syn.c
+    SOURCES += $$PWD/disassembler/udis86/udis86_syn-intel.c
+}
 
 SOURCES += \
     $$PWD/yarr/YarrCanonicalizeUCS2.cpp \

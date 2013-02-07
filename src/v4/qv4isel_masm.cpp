@@ -52,7 +52,7 @@
 #include <iostream>
 #include <cassert>
 
-#ifndef NO_UDIS86
+#if USE(UDIS86)
 #  include <udis86.h>
 #endif
 
