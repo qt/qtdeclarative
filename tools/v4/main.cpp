@@ -72,7 +72,7 @@ namespace builtins {
 
 using namespace QQmlJS::VM;
 
-struct Q_V4_EXPORT Print: FunctionObject
+struct Print: FunctionObject
 {
     Print(ExecutionContext *scope): FunctionObject(scope) {
         name = scope->engine->newString("print");
@@ -91,7 +91,7 @@ struct Q_V4_EXPORT Print: FunctionObject
     }
 };
 
-struct Q_V4_EXPORT TestHarnessError: FunctionObject
+struct TestHarnessError: FunctionObject
 {
     TestHarnessError(ExecutionContext *scope, bool &errorInTestHarness): FunctionObject(scope), errorOccurred(errorInTestHarness) {
         name = scope->engine->newString("$ERROR");
@@ -114,7 +114,7 @@ struct Q_V4_EXPORT TestHarnessError: FunctionObject
     bool &errorOccurred;
 };
 
-struct Q_V4_EXPORT GC: public FunctionObject
+struct GC: public FunctionObject
 {
     GC(ExecutionContext* scope)
         : FunctionObject(scope)
