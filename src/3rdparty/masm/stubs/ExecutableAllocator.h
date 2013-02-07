@@ -45,8 +45,12 @@
 #include <RefCounted.h>
 #include <wtf/PageBlock.h>
 
+#if OS(WINDOWS)
+#include <windows.h>
+#else
 #include <sys/mman.h>
 #include <unistd.h>
+#endif
 
 namespace JSC {
 
@@ -58,14 +62,22 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
     {
         size_t pageSize = WTF::pageSize();
         m_size = (m_size + pageSize - 1) & ~(pageSize - 1);
+#if OS(WINDOWS)
+        m_data = VirtualAlloc(0, m_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+#else
 #if OS(DARWIN)
 #  define MAP_ANONYMOUS MAP_ANON
 #endif
         m_data = mmap(0, m_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#endif
     }
     ~ExecutableMemoryHandle()
     {
+#if OS(WINDOWS)
+        VirtualFree(m_data, 0, MEM_RELEASE);
+#else
         munmap(m_data, m_size);
+#endif
     }
 
     inline void shrink(size_t) {
@@ -96,8 +108,13 @@ struct ExecutableAllocator {
         size_t pageSize = WTF::pageSize();
         size_t iaddr = reinterpret_cast<size_t>(addr);
         size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
+#if OS(WINDOWS)
+        DWORD oldProtect;
+        VirtualProtect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), PAGE_EXECUTE_READWRITE, &oldProtect);
+#else
         int mode = PROT_READ | PROT_WRITE | PROT_EXEC;
         mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode);
+#endif
     }
 };
 
