@@ -43,6 +43,7 @@
 
 #include <RefPtr.h>
 #include <RefCounted.h>
+#include <wtf/PageBlock.h>
 
 #include <sys/mman.h>
 #include <unistd.h>
@@ -55,7 +56,7 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
     ExecutableMemoryHandle(int size)
         : m_size(size)
     {
-        static size_t pageSize = sysconf(_SC_PAGESIZE);
+        size_t pageSize = WTF::pageSize();
         m_size = (m_size + pageSize - 1) & ~(pageSize - 1);
 #if OS(DARWIN)
 #  define MAP_ANONYMOUS MAP_ANON
@@ -92,7 +93,7 @@ struct ExecutableAllocator {
 
     static void makeExecutable(void* addr, int size)
     {
-        static size_t pageSize = sysconf(_SC_PAGESIZE);
+        size_t pageSize = WTF::pageSize();
         size_t iaddr = reinterpret_cast<size_t>(addr);
         size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
         int mode = PROT_READ | PROT_WRITE | PROT_EXEC;
