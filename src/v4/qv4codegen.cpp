@@ -55,6 +55,10 @@
 #include <iostream>
 #include <cassert>
 
+#ifdef CONST
+#undef CONST
+#endif
+
 using namespace QQmlJS;
 using namespace AST;
 

@@ -59,6 +59,10 @@
 #include <QtCore/QString>
 #include <QtCore/QBitArray>
 
+#ifdef CONST
+#undef CONST
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QTextStream;
