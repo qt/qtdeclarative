@@ -44,7 +44,7 @@
 #include <QChar>
 
 typedef unsigned char LChar;
-typedef uint16_t UChar;
+typedef unsigned short UChar;
 
 namespace Unicode {
     inline UChar toLower(UChar ch) {
