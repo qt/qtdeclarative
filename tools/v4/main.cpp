@@ -65,7 +65,6 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
 
-#include <sys/mman.h>
 #include <iostream>
 
 namespace builtins {
