@@ -347,6 +347,15 @@ void MemoryManager::collectFromStack() const
 
     quintptr *top = static_cast<quintptr *>(stackBottom) + stackSize/sizeof(quintptr);
 #endif
+#elif OS(WINDOWS)
+#if COMPILER(MSVC)
+    NT_TIB *tib;
+    __asm {
+        mov eax, fs:[0x18]
+        mov [tib], eax
+    }
+#endif
+    quintptr *top = static_cast<quintptr*>(tib->StackBase);
 #endif
 //    qDebug() << "stack:" << hex << stackTop << stackSize << (stackTop + stackSize);
 
