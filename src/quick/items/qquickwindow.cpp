@@ -1155,8 +1155,6 @@ bool QQuickWindow::event(QEvent *e)
     case QEvent::Leave:
         d->clearHover();
         d->lastMousePosition = QPoint();
-        if (d->mouseGrabberItem)
-            d->mouseGrabberItem->ungrabMouse();
         break;
 #ifndef QT_NO_DRAGANDDROP
     case QEvent::DragEnter:
@@ -1174,6 +1172,8 @@ bool QQuickWindow::event(QEvent *e)
         if (d->activeFocusItem)
             qGuiApp->inputMethod()->commit();
 #endif
+        if (d->mouseGrabberItem)
+            d->mouseGrabberItem->ungrabMouse();
         break;
     default:
         break;

@@ -941,7 +941,7 @@ v8::Handle<v8::Object> QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV8F
         v8::Local<v8::Value> v = (*args)[1];
         if (!v->IsObject() || v->IsArray()) {
             *error = true;
-            qmlInfo(loader) << loader->tr("setSource: value is not an object");
+            qmlInfo(loader) << QQuickLoader::tr("setSource: value is not an object");
         } else {
             *error = false;
             valuemap = v8::Local<v8::Object>::Cast(v);

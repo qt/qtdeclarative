@@ -3275,6 +3275,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
     bool inputMethodAttributesChanged = m_textDirty || m_selDirty;
 #endif
     bool alignmentChanged = false;
+    bool textChanged = false;
 
     if (m_textDirty) {
         // do validation
@@ -3309,6 +3310,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
         }
 
         if (m_textDirty) {
+            textChanged = true;
             m_textDirty = false;
 #ifndef QT_NO_IM
             m_preeditDirty = false;
@@ -3344,7 +3346,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 #endif
     emitUndoRedoChanged();
 
-    if (!emitCursorPositionChanged() && alignmentChanged)
+    if (!emitCursorPositionChanged() && (alignmentChanged || textChanged))
         q->updateCursorRectangle();
 
     return true;

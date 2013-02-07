@@ -88,7 +88,7 @@ QT_BEGIN_NAMESPACE
     box of the Emitter.
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::Emitter::emitting
+    \qmlproperty bool QtQuick.Particles2::Emitter::enabled
 
     If set to false, the emitter will cease emissions until it is set to true.
 

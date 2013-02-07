@@ -2512,7 +2512,7 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Local<v8:
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(info.This());
 
     const int v = value->Uint32Value();
-    if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4) && v > 0 && v <= 255) {
+    if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4) && v >= 0 && v <= 255) {
         const quint32 w = r->image.width();
         const quint32 row = (index / 4) / w;
         const quint32 col = (index / 4) % w;

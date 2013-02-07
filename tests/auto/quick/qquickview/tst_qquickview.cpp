@@ -153,8 +153,7 @@ void tst_QQuickView::resizemodeitem()
 
     // size update from view
     view->resize(QSize(200,300));
-    QTest::qWait(50);
-    QCOMPARE(item->width(), 200.0);
+    QTRY_COMPARE(item->width(), 200.0);
     QCOMPARE(item->height(), 300.0);
     QCOMPARE(view->size(), QSize(200, 300));
     QCOMPARE(view->size(), view->sizeHint());

@@ -6,6 +6,7 @@ SUBDIRS += affectors \
     system
 
 EXAMPLE_FILES = \
+    images.qrc \
     itemparticle
 
 #Install shared images too

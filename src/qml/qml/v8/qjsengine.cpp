@@ -349,7 +349,6 @@ QJSValue QJSEngine::create(int type, const void *ptr)
 
 /*!
     \internal
-    \since 4.5
     convert \a value to \a type, store the result in \a ptr
 */
 bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)

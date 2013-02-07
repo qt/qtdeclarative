@@ -3089,6 +3089,14 @@ void tst_qquicktextinput::cursorRectangle()
     input.setHAlign(leftToRight ? QQuickTextInput::AlignRight : QQuickTextInput::AlignLeft);
     r = input.cursorRectangle();
     QCOMPARE(r.left(), leftToRight ? input.width() : 0);
+
+    QSignalSpy cursorRectangleSpy(&input, SIGNAL(cursorRectangleChanged()));
+
+    QString widerText = shortText;
+    widerText[1] = 'W'; // Assumes shortText is at least two characters long.
+    input.setText(widerText);
+
+    QCOMPARE(cursorRectangleSpy.count(), 1);
 }
 
 void tst_qquicktextinput::readOnly()
