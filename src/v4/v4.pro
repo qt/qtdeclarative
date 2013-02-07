@@ -13,7 +13,7 @@ CONFIG += warn_off
 
 #win32-msvc*|win32-icc:QMAKE_LFLAGS += /BASE:0x66000000 #TODO ??!
 
-!macx-clang*:LIBS += -rdynamic
+!macx-clang*:!win*:LIBS += -rdynamic
 
 SOURCES += \
     qv4codegen.cpp \
