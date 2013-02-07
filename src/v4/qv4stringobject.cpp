@@ -62,7 +62,7 @@
 #include <qv4codegen_p.h>
 #include <qv4isel_masm_p.h>
 
-#ifndef Q_WS_WIN
+#ifndef Q_OS_WIN
 #  include <time.h>
 #  ifndef Q_OS_VXWORKS
 #    include <sys/time.h>

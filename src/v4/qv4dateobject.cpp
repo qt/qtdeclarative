@@ -61,7 +61,7 @@
 #include <qv4codegen_p.h>
 #include <qv4isel_masm_p.h>
 
-#ifndef Q_WS_WIN
+#ifndef Q_OS_WIN
 #  include <time.h>
 #  ifndef Q_OS_VXWORKS
 #    include <sys/time.h>
@@ -294,7 +294,7 @@ static inline double MakeDate(double day, double time)
 
 static inline double DaylightSavingTA(double t)
 {
-#ifndef Q_WS_WIN
+#ifndef Q_OS_WIN
     long int tt = (long int)(t / msPerSecond);
     struct tm tmtm;
     if (!localtime_r((const time_t*)&tt, &tmtm))
@@ -319,7 +319,7 @@ static inline double UTC(double t)
 
 static inline double currentTime()
 {
-#ifndef Q_WS_WIN
+#ifndef Q_OS_WIN
     struct timeval tv;
 
     gettimeofday(&tv, 0);
@@ -640,7 +640,7 @@ static inline QString ToLocaleTimeString(double t)
 
 static double getLocalTZA()
 {
-#ifndef Q_WS_WIN
+#ifndef Q_OS_WIN
     struct tm t;
     time_t curr;
     time(&curr);
