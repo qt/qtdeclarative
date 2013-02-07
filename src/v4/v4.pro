@@ -6,8 +6,6 @@ CONFIG += internal_module
 
 include(v4.pri)
 
-OBJECTS_DIR=.obj
-
 load(qt_build_config)
 load(qt_module)
 
