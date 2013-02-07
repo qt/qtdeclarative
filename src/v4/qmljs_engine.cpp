@@ -201,7 +201,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     glo->defineReadonlyProperty(this, QStringLiteral("undefined"), Value::undefinedValue());
     glo->defineReadonlyProperty(this, QStringLiteral("NaN"), Value::fromDouble(nan("")));
-    glo->defineReadonlyProperty(this, QStringLiteral("Infinity"), Value::fromDouble(INFINITY));
+    glo->defineReadonlyProperty(this, QStringLiteral("Infinity"), Value::fromDouble(Q_INFINITY));
 
     evalFunction = new (memoryManager) EvalFunction(rootContext);
     glo->defineDefaultProperty(rootContext, QStringLiteral("eval"), Value::fromObject(evalFunction));

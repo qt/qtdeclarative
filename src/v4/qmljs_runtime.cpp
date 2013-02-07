@@ -469,9 +469,9 @@ double __qmljs_string_to_number(const String *string)
     double d = qstrtod(begin, &end, &ok);
     if (end - begin != ba.size()) {
         if (ba == "Infinity" || ba == "+Infinity")
-            d = INFINITY;
+            d = Q_INFINITY;
         else if (ba == "-Infinity")
-            d = -INFINITY;
+            d = -Q_INFINITY;
         else
             d = nan("");
     }

@@ -589,9 +589,9 @@ Value GlobalFunctions::method_parseFloat(ExecutionContext *context)
     // 4:
     if (trimmed.startsWith(QLatin1String("Infinity"))
             || trimmed.startsWith(QLatin1String("+Infinity")))
-        return Value::fromDouble(INFINITY);
+        return Value::fromDouble(Q_INFINITY);
     if (trimmed.startsWith("-Infinity"))
-        return Value::fromDouble(-INFINITY);
+        return Value::fromDouble(-Q_INFINITY);
     QByteArray ba = trimmed.toLatin1();
     bool ok;
     const char *begin = ba.constData();
