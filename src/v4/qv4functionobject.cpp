@@ -335,7 +335,7 @@ Value FunctionPrototype::method_bind(ExecutionContext *ctx)
     return Value::fromObject(f);
 }
 
-ScriptFunction::ScriptFunction(ExecutionContext *scope, VM::Function *function)
+ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     : FunctionObject(scope)
     , function(function)
 {
@@ -382,7 +382,7 @@ ScriptFunction::~ScriptFunction()
 {
 }
 
-Value ScriptFunction::call(VM::ExecutionContext *ctx)
+Value ScriptFunction::call(ExecutionContext *ctx)
 {
     assert(function->code);
     return function->code(ctx, function->codeData);
