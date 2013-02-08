@@ -52,6 +52,8 @@
 #include <cmath>
 #include <cassert>
 
+#include <wtf/MathExtras.h>
+
 #ifdef DO_TRACE_INSTR
 #  define TRACE1(x) fprintf(stderr, "    %s\n", __FUNCTION__);
 #  define TRACE2(x, y) fprintf(stderr, "    %s\n", __FUNCTION__);
@@ -306,7 +308,7 @@ inline Bool __qmljs_to_boolean(Value value, ExecutionContext *ctx)
     case Value::Object_Type:
         return true;
     default: // double
-        if (! value.doubleValue() || std::isnan(value.doubleValue()))
+        if (! value.doubleValue() || isnan(value.doubleValue()))
             return false;
         return true;
     }
@@ -361,11 +363,11 @@ inline unsigned short __qmljs_to_uint16(Value value, ExecutionContext *ctx)
     if ((number >= 0 && number < D16))
         return static_cast<ushort>(number);
 
-    if (!std::isfinite(number))
+    if (!isfinite(number))
         return +0;
 
     double d = ::floor(::fabs(number));
-    if (std::signbit(number))
+    if (signbit(number))
         d = -d;
 
     number = ::fmod(d , D16);

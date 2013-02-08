@@ -64,7 +64,7 @@ namespace VM {
 
 QString numberToString(double num, int radix = 10)
 {
-    if (std::isnan(num)) {
+    if (isnan(num)) {
         return QStringLiteral("NaN");
     } else if (qIsInf(num)) {
         return QLatin1String(num < 0 ? "-Infinity" : "Infinity");

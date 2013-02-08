@@ -42,6 +42,8 @@
 #include <qv4object.h>
 #include <qv4objectproto.h>
 
+#include <wtf/MathExtras.h>
+
 namespace QQmlJS {
 namespace VM {
 
@@ -104,11 +106,11 @@ int Value::toInt32(double number)
         return static_cast<int>(number);
 
 
-    if (!std::isfinite(number))
+    if (!isfinite(number))
         return 0;
 
     double d = ::floor(::fabs(number));
-    if (std::signbit(number))
+    if (signbit(number))
         d = -d;
 
     number = ::fmod(d , D32);
@@ -127,11 +129,11 @@ unsigned int Value::toUInt32(double number)
     if ((number >= 0 && number < D32))
         return static_cast<uint>(number);
 
-    if (!std::isfinite(number))
+    if (!isfinite(number))
         return +0;
 
     double d = ::floor(::fabs(number));
-    if (std::signbit(number))
+    if (signbit(number))
         d = -d;
 
     number = ::fmod(d , D32);
@@ -144,12 +146,12 @@ unsigned int Value::toUInt32(double number)
 
 double Value::toInteger(double number)
 {
-    if (std::isnan(number))
+    if (isnan(number))
         return +0;
-    else if (! number || std::isinf(number))
+    else if (! number || isinf(number))
         return number;
     const double v = floor(fabs(number));
-    return std::signbit(number) ? -v : v;
+    return signbit(number) ? -v : v;
 }
 
 Value Value::property(ExecutionContext *ctx, String *name) const

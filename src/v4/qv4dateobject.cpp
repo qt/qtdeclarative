@@ -61,6 +61,8 @@
 #include <qv4codegen_p.h>
 #include <qv4isel_masm_p.h>
 
+#include <wtf/MathExtras.h>
+
 #ifndef Q_OS_WIN
 #  include <time.h>
 #  ifndef Q_OS_VXWORKS
@@ -572,7 +574,7 @@ static inline double ParseString(const QString &s)
 */
 static inline QDateTime ToDateTime(double t, Qt::TimeSpec spec)
 {
-    if (std::isnan(t))
+    if (isnan(t))
         return QDateTime();
     if (spec == Qt::LocalTime)
         t = LocalTime(t);
@@ -588,7 +590,7 @@ static inline QDateTime ToDateTime(double t, Qt::TimeSpec spec)
 
 static inline QString ToString(double t)
 {
-    if (std::isnan(t))
+    if (isnan(t))
         return QStringLiteral("Invalid Date");
     QString str = ToDateTime(t, Qt::LocalTime).toString() + QStringLiteral(" GMT");
     double tzoffset = LocalTZA + DaylightSavingTA(t);
@@ -608,7 +610,7 @@ static inline QString ToString(double t)
 
 static inline QString ToUTCString(double t)
 {
-    if (std::isnan(t))
+    if (isnan(t))
         return QStringLiteral("Invalid Date");
     return ToDateTime(t, Qt::UTC).toString() + QStringLiteral(" GMT");
 }
@@ -858,7 +860,7 @@ Value DatePrototype::method_getTime(ExecutionContext *ctx)
 Value DatePrototype::method_getYear(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = YearFromTime(LocalTime(t)) - 1900;
     return Value::fromDouble(t);
 }
@@ -866,7 +868,7 @@ Value DatePrototype::method_getYear(ExecutionContext *ctx)
 Value DatePrototype::method_getFullYear(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = YearFromTime(LocalTime(t));
     return Value::fromDouble(t);
 }
@@ -874,7 +876,7 @@ Value DatePrototype::method_getFullYear(ExecutionContext *ctx)
 Value DatePrototype::method_getUTCFullYear(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = YearFromTime(t);
     return Value::fromDouble(t);
 }
@@ -882,7 +884,7 @@ Value DatePrototype::method_getUTCFullYear(ExecutionContext *ctx)
 Value DatePrototype::method_getMonth(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = MonthFromTime(LocalTime(t));
     return Value::fromDouble(t);
 }
@@ -890,7 +892,7 @@ Value DatePrototype::method_getMonth(ExecutionContext *ctx)
 Value DatePrototype::method_getUTCMonth(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = MonthFromTime(t);
     return Value::fromDouble(t);
 }
@@ -898,7 +900,7 @@ Value DatePrototype::method_getUTCMonth(ExecutionContext *ctx)
 Value DatePrototype::method_getDate(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = DateFromTime(LocalTime(t));
     return Value::fromDouble(t);
 }
@@ -906,7 +908,7 @@ Value DatePrototype::method_getDate(ExecutionContext *ctx)
 Value DatePrototype::method_getUTCDate(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = DateFromTime(t);
     return Value::fromDouble(t);
 }
@@ -914,7 +916,7 @@ Value DatePrototype::method_getUTCDate(ExecutionContext *ctx)
 Value DatePrototype::method_getDay(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = WeekDay(LocalTime(t));
     return Value::fromDouble(t);
 }
@@ -922,7 +924,7 @@ Value DatePrototype::method_getDay(ExecutionContext *ctx)
 Value DatePrototype::method_getUTCDay(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = WeekDay(t);
     return Value::fromDouble(t);
 }
@@ -930,7 +932,7 @@ Value DatePrototype::method_getUTCDay(ExecutionContext *ctx)
 Value DatePrototype::method_getHours(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = HourFromTime(LocalTime(t));
     return Value::fromDouble(t);
 }
@@ -938,7 +940,7 @@ Value DatePrototype::method_getHours(ExecutionContext *ctx)
 Value DatePrototype::method_getUTCHours(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = HourFromTime(t);
     return Value::fromDouble(t);
 }
@@ -946,7 +948,7 @@ Value DatePrototype::method_getUTCHours(ExecutionContext *ctx)
 Value DatePrototype::method_getMinutes(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = MinFromTime(LocalTime(t));
     return Value::fromDouble(t);
 }
@@ -954,7 +956,7 @@ Value DatePrototype::method_getMinutes(ExecutionContext *ctx)
 Value DatePrototype::method_getUTCMinutes(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = MinFromTime(t);
     return Value::fromDouble(t);
 }
@@ -962,7 +964,7 @@ Value DatePrototype::method_getUTCMinutes(ExecutionContext *ctx)
 Value DatePrototype::method_getSeconds(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = SecFromTime(LocalTime(t));
     return Value::fromDouble(t);
 }
@@ -970,7 +972,7 @@ Value DatePrototype::method_getSeconds(ExecutionContext *ctx)
 Value DatePrototype::method_getUTCSeconds(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = SecFromTime(t);
     return Value::fromDouble(t);
 }
@@ -978,7 +980,7 @@ Value DatePrototype::method_getUTCSeconds(ExecutionContext *ctx)
 Value DatePrototype::method_getMilliseconds(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = msFromTime(LocalTime(t));
     return Value::fromDouble(t);
 }
@@ -986,7 +988,7 @@ Value DatePrototype::method_getMilliseconds(ExecutionContext *ctx)
 Value DatePrototype::method_getUTCMilliseconds(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = msFromTime(t);
     return Value::fromDouble(t);
 }
@@ -994,7 +996,7 @@ Value DatePrototype::method_getUTCMilliseconds(ExecutionContext *ctx)
 Value DatePrototype::method_getTimezoneOffset(ExecutionContext *ctx)
 {
     double t = getThisDate(ctx);
-    if (! std::isnan(t))
+    if (! isnan(t))
         t = (t - LocalTime(t)) / msPerMinute;
     return Value::fromDouble(t);
 }
@@ -1184,13 +1186,13 @@ Value DatePrototype::method_setYear(ExecutionContext *ctx)
         ctx->throwTypeError();
 
     double t = self->value.asDouble();
-    if (std::isnan(t))
+    if (isnan(t))
         t = 0;
     else
         t = LocalTime(t);
     double year = ctx->argument(0).toNumber(ctx);
     double r;
-    if (std::isnan(year)) {
+    if (isnan(year)) {
         r = qSNaN();
     } else {
         if ((Value::toInteger(year) >= 0) && (Value::toInteger(year) <= 99))
@@ -1225,7 +1227,7 @@ Value DatePrototype::method_setFullYear(ExecutionContext *ctx)
         ctx->throwTypeError();
 
     double t = LocalTime(self->value.asDouble());
-    if (std::isnan(t))
+    if (isnan(t))
         t = 0;
     double year = ctx->argument(0).toNumber(ctx);
     double month = (ctx->argumentCount < 2) ? MonthFromTime(t) : ctx->argument(1).toNumber(ctx);
@@ -1265,7 +1267,7 @@ Value DatePrototype::method_toISOString(ExecutionContext *ctx)
         ctx->throwTypeError();
 
     double t = self->value.asDouble();
-    if (!std::isfinite(t))
+    if (!isfinite(t))
         ctx->throwRangeError(ctx->thisObject);
 
     QString result;
@@ -1301,7 +1303,7 @@ Value DatePrototype::method_toJSON(ExecutionContext *ctx)
     Value O = __qmljs_to_object(ctx->thisObject, ctx);
     Value tv = __qmljs_to_primitive(O, ctx, NUMBER_HINT);
 
-    if (tv.isNumber() && !std::isfinite(tv.toNumber(ctx)))
+    if (tv.isNumber() && !isfinite(tv.toNumber(ctx)))
         return Value::nullValue();
 
     FunctionObject *toIso = O.objectValue()->__get__(ctx, ctx->engine->newString(QStringLiteral("toISOString"))).asFunctionObject();

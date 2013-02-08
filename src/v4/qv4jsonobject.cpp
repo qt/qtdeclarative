@@ -48,6 +48,7 @@
 #include <qstack.h>
 #include <qstringlist.h>
 
+#include <wtf/MathExtras.h>
 
 namespace QQmlJS {
 namespace VM {
@@ -737,7 +738,7 @@ QString Stringify::Str(const QString &key, Value value)
 
     if (value.isNumber()) {
         double d = value.toNumber(ctx);
-        return std::isfinite(d) ? value.toString(ctx)->toQString() : QStringLiteral("null");
+        return isfinite(d) ? value.toString(ctx)->toQString() : QStringLiteral("null");
     }
 
     if (Object *o = value.asObject()) {

@@ -274,7 +274,7 @@ Value StringPrototype::method_lastIndexOf(ExecutionContext *parentCtx, Value thi
 
     Value posArg = argc > 1 ? argv[1] : Value::undefinedValue();
     double position = __qmljs_to_number(posArg, parentCtx);
-    if (std::isnan(position))
+    if (isnan(position))
         position = +qInf();
     else
         position = trunc(position);
@@ -645,10 +645,10 @@ Value StringPrototype::method_substring(ExecutionContext *parentCtx, Value thisO
     if (!endValue.isUndefined())
         end = endValue.toInteger(parentCtx);
 
-    if (std::isnan(start) || start < 0)
+    if (isnan(start) || start < 0)
         start = 0;
 
-    if (std::isnan(end) || end < 0)
+    if (isnan(end) || end < 0)
         end = 0;
 
     if (start > length)

@@ -115,7 +115,7 @@ Value NumberPrototype::method_toString(ExecutionContext *ctx)
             return Value::undefinedValue();
         }
 
-        if (std::isnan(num)) {
+        if (isnan(num)) {
             return Value::fromString(ctx, QStringLiteral("NaN"));
         } else if (qIsInf(num)) {
             return Value::fromString(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity"));
@@ -186,7 +186,7 @@ Value NumberPrototype::method_toFixed(ExecutionContext *ctx)
     if (ctx->argumentCount > 0)
         fdigits = ctx->argument(0).toInteger(ctx);
 
-    if (std::isnan(fdigits))
+    if (isnan(fdigits))
         fdigits = 0;
 
     if (fdigits < 0 || fdigits > 20)
@@ -194,7 +194,7 @@ Value NumberPrototype::method_toFixed(ExecutionContext *ctx)
 
     double v = thisObject->value.asDouble();
     QString str;
-    if (std::isnan(v))
+    if (isnan(v))
         str = QString::fromLatin1("NaN");
     else if (qIsInf(v))
         str = QString::fromLatin1(v < 0 ? "-Infinity" : "Infinity");

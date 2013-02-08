@@ -57,6 +57,8 @@
 #include <iostream>
 #include <alloca.h>
 
+#include <wtf/MathExtras.h>
+
 using namespace QQmlJS::VM;
 
 static inline char toHex(char c)
@@ -611,7 +613,7 @@ Value GlobalFunctions::method_isNaN(ExecutionContext *context)
         return Value::fromBoolean(false);
 
     double d = v.toNumber(context);
-    return Value::fromBoolean(std::isnan(d));
+    return Value::fromBoolean(isnan(d));
 }
 
 /// isFinite [15.1.2.5]
@@ -622,7 +624,7 @@ Value GlobalFunctions::method_isFinite(ExecutionContext *context)
         return Value::fromBoolean(true);
 
     double d = v.toNumber(context);
-    return Value::fromBoolean(std::isfinite(d));
+    return Value::fromBoolean(isfinite(d));
 }
 
 /// decodeURI [15.1.3.1]

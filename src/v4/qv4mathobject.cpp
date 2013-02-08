@@ -206,7 +206,7 @@ Value MathObject::method_max(ExecutionContext *parentCtx, Value thisObject, Valu
     double mx = -qInf();
     for (unsigned i = 0; i < argc; ++i) {
         double x = argv[i].toNumber(parentCtx);
-        if (x > mx || std::isnan(x))
+        if (x > mx || isnan(x))
             mx = x;
     }
     return Value::fromDouble(mx);
@@ -218,7 +218,7 @@ Value MathObject::method_min(ExecutionContext *parentCtx, Value thisObject, Valu
     for (unsigned i = 0; i < argc; ++i) {
         double x = argv[i].toNumber(parentCtx);
         if ((x == 0 && mx == x && copySign(1.0, x) == -1.0)
-                || (x < mx) || std::isnan(x)) {
+                || (x < mx) || isnan(x)) {
             mx = x;
         }
     }
@@ -230,12 +230,12 @@ Value MathObject::method_pow(ExecutionContext *parentCtx, Value, Value *argv, in
     double x = argc > 0 ? argv[0].toNumber(parentCtx) : qSNaN();
     double y = argc > 1 ? argv[1].toNumber(parentCtx) : qSNaN();
 
-    if (std::isnan(y))
+    if (isnan(y))
         return Value::fromDouble(qSNaN());
 
     if (y == 0) {
         return Value::fromDouble(1);
-    } else if (((x == 1) || (x == -1)) && std::isinf(y)) {
+    } else if (((x == 1) || (x == -1)) && isinf(y)) {
         return Value::fromDouble(qSNaN());
     } else if (((x == 0) && copySign(1.0, x) == 1.0) && (y < 0)) {
         return Value::fromDouble(qInf());
