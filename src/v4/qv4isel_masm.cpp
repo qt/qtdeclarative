@@ -59,6 +59,8 @@ using namespace QQmlJS;
 using namespace QQmlJS::MASM;
 using namespace QQmlJS::VM;
 
+const Assembler::VoidType Assembler::Void;
+
 Assembler::Assembler(IR::Function* function)
     : _function(function)
 {
