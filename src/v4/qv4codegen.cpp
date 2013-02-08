@@ -326,12 +326,29 @@ protected:
         return true;
     }
 
+    virtual bool visit(ExpressionStatement *ast)
+    {
+        if (FunctionExpression* expr = AST::cast<AST::FunctionExpression*>(ast->expression)) {
+            enterFunction(expr, /*enterName*/ true);
+            Node::accept(expr->formals, this);
+            Node::accept(expr->body, this);
+            leaveEnvironment();
+            return false;
+        }
+        return true;
+    }
+
     virtual bool visit(FunctionExpression *ast)
+    {
+        enterFunction(ast, /*enterName*/ false);
+        return true;
+    }
+
+    void enterFunction(FunctionExpression *ast, bool enterName)
     {
         if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
             _cg->throwSyntaxError(ast->identifierToken, QCoreApplication::translate("qv4codegen", "Function name may not be eval or arguments in strict mode"));
-        enterFunction(ast, ast->name.toString(), ast->formals, ast->body);
-        return true;
+        enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : 0);
     }
 
     virtual void endVisit(FunctionExpression *)
@@ -352,9 +369,7 @@ protected:
 
     virtual bool visit(FunctionDeclaration *ast)
     {
-        if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
-            _cg->throwSyntaxError(ast->identifierToken, QCoreApplication::translate("qv4codegen", "Function name may not be eval or arguments in strict mode"));
-        enterFunction(ast, ast->name.toString(), ast->formals, ast->body, ast);
+        enterFunction(ast, /*enterName*/ true);
         return true;
     }
 
@@ -374,12 +389,12 @@ protected:
     }
 
 private:
-    void enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionDeclaration *decl = 0)
+    void enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionExpression *expr = 0)
     {
         bool wasStrict = false;
         if (_env) {
             _env->hasNestedFunctions = true;
-            _env->enter(name, Environment::FunctionDefinition, decl);
+            _env->enter(name, Environment::FunctionDefinition, expr);
             if (name == QLatin1String("arguments"))
                 _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
             wasStrict = _env->isStrict;

@@ -131,7 +131,7 @@ protected:
         struct Member {
             MemberType type;
             int index;
-            AST::FunctionDeclaration *function;
+            AST::FunctionExpression *function;
         };
         typedef QMap<QString, Member> MemberMap;
 
@@ -184,7 +184,7 @@ protected:
             return false;
         }
 
-        void enter(const QString &name, MemberType type, AST::FunctionDeclaration *function = 0)
+        void enter(const QString &name, MemberType type, AST::FunctionExpression *function = 0)
         {
             if (! name.isEmpty()) {
                 MemberMap::iterator it = members.find(name);
