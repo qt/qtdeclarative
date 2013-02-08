@@ -119,6 +119,7 @@ Value __qmljs_builtin_post_decrement_element(Value base, Value index, ExecutionC
 void __qmljs_builtin_throw(Value val, ExecutionContext *context);
 void __qmljs_builtin_rethrow(ExecutionContext *context);
 ExecutionContext *__qmljs_builtin_push_with_scope(Value o, ExecutionContext *ctx);
+ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, ExecutionContext *ctx);
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx);
 void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name);
 void __qmljs_builtin_define_property(Value object, String *name, Value val, ExecutionContext *ctx);

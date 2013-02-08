@@ -600,6 +600,11 @@ void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
     generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_push_with_scope, arg, Assembler::ContextRegister);
 }
 
+void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionVarName)
+{
+    generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_push_catch_scope, identifier(exceptionVarName), Assembler::ContextRegister);
+}
+
 void InstructionSelection::callBuiltinPopScope()
 {
     generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_pop_scope, Assembler::ContextRegister);

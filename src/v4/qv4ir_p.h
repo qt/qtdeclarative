@@ -284,6 +284,7 @@ struct Name: Expr {
         builtin_foreach_iterator_object,
         builtin_foreach_next_property_name,
         builtin_push_with_scope,
+        builtin_push_catch_scope,
         builtin_pop_scope,
         builtin_declare_vars,
         builtin_define_property,
@@ -612,7 +613,7 @@ struct Function {
     QList<const QString *> locals;
     QVector<Function *> nestedFunctions;
 
-    int insideWith;
+    int insideWithOrCatch;
 
     uint hasDirectEval: 1;
     uint usesArgumentsObject : 1;
@@ -626,7 +627,7 @@ struct Function {
         , pool(&module->pool)
         , tempCount(0)
         , maxNumberOfArguments(0)
-        , insideWith(0)
+        , insideWithOrCatch(0)
         , hasDirectEval(false)
         , usesArgumentsObject(false)
         , isStrict(false)

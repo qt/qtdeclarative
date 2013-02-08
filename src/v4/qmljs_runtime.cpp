@@ -1211,6 +1211,11 @@ ExecutionContext *__qmljs_builtin_push_with_scope(Value o, ExecutionContext *ctx
     return ctx->createWithScope(obj);
 }
 
+ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, ExecutionContext *ctx)
+{
+    return ctx->createCatchScope(exceptionVarName);
+}
+
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx)
 {
     return ctx->popScope();

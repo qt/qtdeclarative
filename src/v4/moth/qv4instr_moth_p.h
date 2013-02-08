@@ -25,6 +25,7 @@
     F(CallBuiltinDeleteExceptionHandler, callBuiltinDeleteExceptionHandler) \
     F(CallBuiltinGetException, callBuiltinGetException) \
     F(CallBuiltinPushScope, callBuiltinPushScope) \
+    F(CallBuiltinPushCatchScope, callBuiltinPushCatchScope) \
     F(CallBuiltinPopScope, callBuiltinPopScope) \
     F(CallBuiltinForeachIteratorObject, callBuiltinForeachIteratorObject) \
     F(CallBuiltinForeachNextPropertyName, callBuiltinForeachNextPropertyName) \
@@ -242,6 +243,10 @@ union Instr
         MOTH_INSTR_HEADER
         Param arg;
     };
+    struct instr_callBuiltinPushCatchScope {
+        MOTH_INSTR_HEADER
+        VM::String *varName;
+    };
     struct instr_callBuiltinPopScope {
         MOTH_INSTR_HEADER
     };
@@ -452,6 +457,7 @@ union Instr
     instr_callBuiltinDeleteExceptionHandler callBuiltinDeleteExceptionHandler;
     instr_callBuiltinGetException callBuiltinGetException;
     instr_callBuiltinPushScope callBuiltinPushScope;
+    instr_callBuiltinPushCatchScope callBuiltinPushCatchScope;
     instr_callBuiltinPopScope callBuiltinPopScope;
     instr_callBuiltinForeachIteratorObject callBuiltinForeachIteratorObject;
     instr_callBuiltinForeachNextPropertyName callBuiltinForeachNextPropertyName;

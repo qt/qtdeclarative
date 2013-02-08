@@ -88,6 +88,9 @@ struct ExecutionContext
     unsigned int argumentCount;
     Value *locals;
 
+    String *exceptionVarName;
+    Value exceptionValue;
+
     String * const *formals() const;
     unsigned int formalCount() const;
     String * const *variables() const;
@@ -100,6 +103,7 @@ struct ExecutionContext
 
     void init(ExecutionEngine *e);
     void init(ExecutionContext *p, Object *with);
+    void initForCatch(ExecutionContext *p, String *exceptionVarName);
     void destroy();
 
     bool hasBinding(String *name) const;
@@ -109,6 +113,7 @@ struct ExecutionContext
     bool deleteBinding(ExecutionContext *ctx, String *name);
 
     ExecutionContext *createWithScope(Object *with);
+    ExecutionContext *createCatchScope(String* exceptionVarName);
     ExecutionContext *popScope();
 
     void initCallContext(ExecutionContext *parent);

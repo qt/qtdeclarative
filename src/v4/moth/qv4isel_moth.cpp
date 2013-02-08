@@ -873,6 +873,13 @@ void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
     addInstruction(call);
 }
 
+void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionVarName)
+{
+    Instruction::CallBuiltinPushCatchScope call;
+    call.varName = identifier(exceptionVarName);
+    addInstruction(call);
+}
+
 void InstructionSelection::callBuiltinPopScope()
 {
     Instruction::CallBuiltinPopScope call;

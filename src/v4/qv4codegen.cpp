@@ -849,7 +849,7 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
     assert(expr.code);
     initializer = *expr;
 
-    if (! _env->parent || _function->insideWith) {
+    if (! _env->parent || _function->insideWithOrCatch) {
         // it's global code.
         move(_block->NAME(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), initializer);
     } else {
@@ -1374,7 +1374,7 @@ IR::Expr *Codegen::identifier(const QString &name, int line, int col)
 {
     int index = _env->findMember(name);
 
-    if (! _function->hasDirectEval && !_function->insideWith && _env->parent) {
+    if (! _function->hasDirectEval && !_function->insideWithOrCatch && _env->parent) {
         if (index != -1) {
             return _block->TEMP(index);
         }
@@ -2444,23 +2444,20 @@ bool Codegen::visit(TryStatement *ast)
         move(_block->TEMP(inCatch), _block->CONST(IR::BoolType, true));
         move(_block->TEMP(hasException), _block->CONST(IR::BoolType, false));
 
-        const int exception = _block->newTemp();
-        move(_block->TEMP(exception), _block->CALL(_block->NAME(IR::Name::builtin_get_exception, 0, 0), 0));
+        IR::ExprList *catchScopeArgs = _function->New<IR::ExprList>();
+        catchScopeArgs->init(_block->NAME(ast->catchExpression->name.toString(), ast->catchExpression->identifierToken.startLine, ast->catchExpression->identifierToken.startColumn));
+        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_catch_scope, 0, 0), catchScopeArgs));
 
-        // the variable used in the catch statement is local and hides any global
-        // variable with the same name.
-        const Environment::Member undefinedMember = { Environment::UndefinedMember, -1 , 0 };
-        const Environment::Member catchMember = { Environment::VariableDefinition, exception, 0 };
-        Environment::Member m = _env->members.value(ast->catchExpression->name.toString(), undefinedMember);
-        _env->members.insert(ast->catchExpression->name.toString(), catchMember);
+        ++_function->insideWithOrCatch;
+        {
+            ScopeAndFinally scope(_scopeAndFinally);
+            _scopeAndFinally = &scope;
+            statement(ast->catchExpression->statement);
+            _scopeAndFinally = scope.parent;
+        }
+        --_function->insideWithOrCatch;
 
-        statement(ast->catchExpression->statement);
-
-        // reset the variable name to the one from the outer scope
-        if (m.type == Environment::UndefinedMember)
-            _env->members.remove(ast->catchExpression->name.toString());
-        else
-            _env->members.insert(ast->catchExpression->name.toString(), m);
+        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0)));
         _block->JUMP(finallyBody);
     }
 
@@ -2489,12 +2486,14 @@ bool Codegen::visit(TryStatement *ast)
 
 void Codegen::unwindException(Codegen::ScopeAndFinally *outest)
 {
+    int savedDepthForWidthOrCatch = _function->insideWithOrCatch;
     ScopeAndFinally *scopeAndFinally = _scopeAndFinally;
     qSwap(_scopeAndFinally, scopeAndFinally);
     while (_scopeAndFinally != outest) {
         if (_scopeAndFinally->popScope) {
             _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0)));
             _scopeAndFinally = _scopeAndFinally->parent;
+            --_function->insideWithOrCatch;
         } else {
             _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), _scopeAndFinally->deleteExceptionArgs));
             ScopeAndFinally *tc = _scopeAndFinally;
@@ -2504,6 +2503,7 @@ void Codegen::unwindException(Codegen::ScopeAndFinally *outest)
         }
     }
     qSwap(_scopeAndFinally, scopeAndFinally);
+    _function->insideWithOrCatch = savedDepthForWidthOrCatch;
 }
 
 bool Codegen::visit(VariableStatement *ast)
@@ -2546,14 +2546,14 @@ bool Codegen::visit(WithStatement *ast)
     args->init(_block->TEMP(withObject));
     _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_with_scope, 0, 0), args));
 
-    ++_function->insideWith;
+    ++_function->insideWithOrCatch;
     {
         ScopeAndFinally scope(_scopeAndFinally);
         _scopeAndFinally = &scope;
         statement(ast->statement);
         _scopeAndFinally = scope.parent;
     }
-    --_function->insideWith;
+    --_function->insideWithOrCatch;
     _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
 
     IR::BasicBlock *next = _function->newBasicBlock();

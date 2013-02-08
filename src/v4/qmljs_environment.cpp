@@ -178,10 +178,18 @@ ExecutionContext *ExecutionContext::createWithScope(Object *with)
     return withCtx;
 }
 
+ExecutionContext *ExecutionContext::createCatchScope(String *exceptionVarName)
+{
+    ExecutionContext *catchCtx = engine->newContext();
+    catchCtx->initForCatch(this, exceptionVarName);
+    engine->current = catchCtx;
+    return catchCtx;
+}
+
 ExecutionContext *ExecutionContext::popScope()
 {
     assert(engine->current == this);
-    assert(withObject != 0);
+    assert(withObject != 0 || exceptionVarName != 0);
 
     engine->current = parent;
     parent = 0;
@@ -222,6 +230,8 @@ void ExecutionContext::init(ExecutionEngine *eng)
     arguments = 0;
     argumentCount = 0;
     locals = 0;
+    exceptionVarName = 0;
+    exceptionValue = Value::undefinedValue();
     strictMode = false;
     activation = 0;
     withObject = 0;
@@ -242,9 +252,29 @@ void ExecutionContext::init(ExecutionContext *p, Object *with)
     arguments = 0;
     argumentCount = 0;
     locals = 0;
+    exceptionVarName = 0;
+    exceptionValue = Value::undefinedValue();
     strictMode = false;
     activation = 0;
     withObject = with;
+}
+
+void ExecutionContext::initForCatch(ExecutionContext *p, String *exceptionVarName)
+{
+    engine = p->engine;
+    parent = p;
+    outer = p;
+    thisObject = p->thisObject;
+
+    function = 0;
+    arguments = 0;
+    argumentCount = 0;
+    locals = 0;
+    this->exceptionVarName = exceptionVarName;
+    exceptionValue = engine->exception;
+    strictMode = p->strictMode;
+    activation = 0;
+    withObject = 0;
 }
 
 void ExecutionContext::destroy()
@@ -265,6 +295,8 @@ bool ExecutionContext::deleteProperty(String *name)
             if (ctx->activation && ctx->activation->__hasProperty__(this, name))
                 return ctx->activation->__delete__(this, name);
         }
+        if (ctx->exceptionVarName && ctx->exceptionVarName->isEqualTo(name))
+            return false;
         if (FunctionObject *f = ctx->function) {
             if (f->needsActivation || hasWith) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
@@ -294,6 +326,9 @@ void ExecutionContext::mark()
         activation->mark();
     if (withObject)
         withObject->mark();
+    if (exceptionVarName)
+        exceptionVarName->mark();
+    exceptionValue.mark();
 }
 
 void ExecutionContext::setProperty(String *name, Value value)
@@ -307,6 +342,9 @@ void ExecutionContext::setProperty(String *name, Value value)
                 w->__put__(ctx, name, value);
                 return;
             }
+        } else if (ctx->exceptionVarName && ctx->exceptionVarName->isEqualTo(name)) {
+            ctx->exceptionValue = value;
+            return;
         } else {
 //            qDebug() << ctx << "setting mutable binding";
             if (ctx->setMutableBinding(this, name, value))
@@ -326,6 +364,7 @@ Value ExecutionContext::getProperty(String *name)
         return thisObject;
 
     bool hasWith = false;
+    bool hasCatchScope = false;
 //    qDebug() << "=== getProperty" << name->toQString();
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
         if (Object *w = ctx->withObject) {
@@ -340,8 +379,14 @@ Value ExecutionContext::getProperty(String *name)
             continue;
         }
 
+        if (ctx->exceptionVarName) {
+            hasCatchScope = true;
+            if (ctx->exceptionVarName->isEqualTo(name))
+                return ctx->exceptionValue;
+        }
+
         if (FunctionObject *f = ctx->function) {
-            if (f->needsActivation || hasWith) {
+            if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
                         return ctx->locals[i];
@@ -369,6 +414,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
         return thisObject;
 
     bool hasWith = false;
+    bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
         if (Object *w = ctx->withObject) {
             hasWith = true;
@@ -379,8 +425,14 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             continue;
         }
 
+        if (ctx->exceptionVarName) {
+            hasCatchScope = true;
+            if (ctx->exceptionVarName->isEqualTo(name))
+                return ctx->exceptionValue;
+        }
+
         if (FunctionObject *f = ctx->function) {
-            if (f->needsActivation || hasWith) {
+            if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
                         return ctx->locals[i];
@@ -408,6 +460,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
         return thisObject;
 
     bool hasWith = false;
+    bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
         if (Object *w = ctx->withObject) {
             hasWith = true;
@@ -420,8 +473,14 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             continue;
         }
 
+        if (ctx->exceptionVarName) {
+            hasCatchScope = true;
+            if (ctx->exceptionVarName->isEqualTo(name))
+                return ctx->exceptionValue;
+        }
+
         if (FunctionObject *f = ctx->function) {
-            if (f->needsActivation || hasWith) {
+            if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
                         return ctx->locals[i];
@@ -502,6 +561,9 @@ void ExecutionContext::initCallContext(ExecutionContext *parent)
     this->parent = parent;
     outer = function->scope;
     engine->current = this;
+
+    exceptionVarName = 0;
+    exceptionValue = Value::undefinedValue();
 
     activation = 0;
     withObject = 0;

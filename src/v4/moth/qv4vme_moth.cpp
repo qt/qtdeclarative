@@ -283,6 +283,10 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         context = __qmljs_builtin_push_with_scope(VALUE(instr.arg), context);
     MOTH_END_INSTR(CallBuiltinPushScope)
 
+    MOTH_BEGIN_INSTR(CallBuiltinPushCatchScope)
+         context = __qmljs_builtin_push_catch_scope(instr.varName, context);
+    MOTH_END_INSTR(CallBuiltinPushCatchScope)
+
     MOTH_BEGIN_INSTR(CallBuiltinPopScope)
         context = __qmljs_builtin_pop_scope(context);
     MOTH_END_INSTR(CallBuiltinPopScope)
