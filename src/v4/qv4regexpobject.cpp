@@ -59,7 +59,7 @@
 #include <cassert>
 #include <typeinfo>
 #include <iostream>
-#include <alloca.h>
+#include "qv4alloca_p.h"
 
 using namespace QQmlJS::VM;
 

@@ -41,7 +41,7 @@
 
 #include <iostream>
 #include <cstdlib>
-#include <alloca.h>
+#include "qv4alloca_p.h"
 
 using namespace QQmlJS::VM;
 using namespace WTF;

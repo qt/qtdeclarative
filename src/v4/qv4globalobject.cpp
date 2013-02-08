@@ -55,7 +55,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QString>
 #include <iostream>
-#include <alloca.h>
+#include "qv4alloca_p.h"
 
 #include <wtf/MathExtras.h>
 

@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-#include <alloca.h>
+#include "qv4alloca_p.h"
 
 #ifdef DO_TRACE_INSTR
 #  define TRACE_INSTR(I) fprintf(stderr, "executing a %s\n", #I);
