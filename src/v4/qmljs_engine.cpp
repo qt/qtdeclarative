@@ -200,7 +200,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     glo->defineDefaultProperty(rootContext, QStringLiteral("JSON"), Value::fromObject(new (memoryManager) JsonObject(rootContext)));
 
     glo->defineReadonlyProperty(this, QStringLiteral("undefined"), Value::undefinedValue());
-    glo->defineReadonlyProperty(this, QStringLiteral("NaN"), Value::fromDouble(nan("")));
+    glo->defineReadonlyProperty(this, QStringLiteral("NaN"), Value::fromDouble(std::numeric_limits<double>::quiet_NaN()));
     glo->defineReadonlyProperty(this, QStringLiteral("Infinity"), Value::fromDouble(Q_INFINITY));
 
     evalFunction = new (memoryManager) EvalFunction(rootContext);

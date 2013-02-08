@@ -473,7 +473,7 @@ double __qmljs_string_to_number(const String *string)
         else if (ba == "-Infinity")
             d = -Q_INFINITY;
         else
-            d = nan("");
+            d = std::numeric_limits<double>::quiet_NaN();
     }
     return d;
 }

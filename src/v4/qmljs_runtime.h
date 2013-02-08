@@ -318,7 +318,7 @@ inline double __qmljs_to_number(Value value, ExecutionContext *ctx)
 {
     switch (value.type()) {
     case Value::Undefined_Type:
-        return nan("");
+        return std::numeric_limits<double>::quiet_NaN();
     case Value::Null_Type:
         return 0;
     case Value::Boolean_Type:

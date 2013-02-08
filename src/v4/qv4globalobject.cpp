@@ -523,7 +523,7 @@ Value GlobalFunctions::method_parseInt(ExecutionContext *context)
     bool stripPrefix = true; // 7
     if (R) { // 8
         if (R < 2 || R > 36)
-            return Value::fromDouble(nan("")); // 8a
+            return Value::fromDouble(std::numeric_limits<double>::quiet_NaN()); // 8a
         if (R != 16)
             stripPrefix = false; // 8b
     } else { // 9
@@ -540,13 +540,13 @@ Value GlobalFunctions::method_parseInt(ExecutionContext *context)
     // 11: Z is progressively built below
     // 13: this is handled by the toInt function
     if (pos == end) // 12
-        return Value::fromDouble(nan(""));
+        return Value::fromDouble(std::numeric_limits<double>::quiet_NaN());
     bool overflow = false;
     qint64 v_overflow;
     unsigned overflow_digit_count = 0;
     int d = toInt(*pos++, R);
     if (d == -1)
-        return Value::fromDouble(nan(""));
+        return Value::fromDouble(std::numeric_limits<double>::quiet_NaN());
     qint64 v = d;
     while (pos != end) {
         d = toInt(*pos++, R);
@@ -600,7 +600,7 @@ Value GlobalFunctions::method_parseFloat(ExecutionContext *context)
     const char *end = 0;
     double d = qstrtod(begin, &end, &ok);
     if (end - begin == 0)
-        return Value::fromDouble(nan("")); // 3
+        return Value::fromDouble(std::numeric_limits<double>::quiet_NaN()); // 3
     else
         return Value::fromDouble(d);
 }
