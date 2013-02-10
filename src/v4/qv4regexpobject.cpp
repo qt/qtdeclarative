@@ -65,13 +65,12 @@ using namespace QQmlJS::VM;
 
 
 RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bool global)
-    : value(value)
+    : Object(engine)
+    , value(value)
     , global(global)
 {
     type = Type_RegExpObject;
 
-    if (!members)
-        members.reset(new PropertyTable());
     PropertyDescriptor *lastIndexProperty = insertMember(engine->newIdentifier(QStringLiteral("lastIndex")));
     lastIndexProperty->type = PropertyDescriptor::Data;
     lastIndexProperty->writable = PropertyDescriptor::Enabled;
@@ -88,7 +87,7 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
 
 PropertyDescriptor *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
 {
-    assert(0 == members->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex"))));
+    assert(0 == internalClass->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex"))));
     return &memberData[0];
 }
 

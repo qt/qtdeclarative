@@ -51,6 +51,7 @@ using namespace QQmlJS::VM;
 static const double qt_PI = 2.0 * ::asin(1.0);
 
 MathObject::MathObject(ExecutionContext *ctx)
+    : Object(ctx->engine)
 {
     type = Type_MathObject;
     prototype = ctx->engine->objectPrototype;

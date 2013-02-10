@@ -74,6 +74,7 @@
 using namespace QQmlJS::VM;
 
 ErrorObject::ErrorObject(ExecutionEngine* engine, const Value &message)
+    : Object(engine)
 {
     type = Type_ErrorObject;
     subtype = Error;

@@ -52,7 +52,7 @@ namespace VM {
 
 struct DateObject: Object {
     Value value;
-    DateObject(const Value &value): value(value) { type = Type_DateObject; }
+    DateObject(ExecutionEngine *engine, const Value &value): Object(engine), value(value) { type = Type_DateObject; }
 };
 
 struct DateCtor: FunctionObject
@@ -65,7 +65,7 @@ struct DateCtor: FunctionObject
 
 struct DatePrototype: DateObject
 {
-    DatePrototype(): DateObject(Value::fromDouble(qSNaN())) {}
+    DatePrototype(ExecutionEngine *engine): DateObject(engine, Value::fromDouble(qSNaN())) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
     static double getThisDate(ExecutionContext *ctx);

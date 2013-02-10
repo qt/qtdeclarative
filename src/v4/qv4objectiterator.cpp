@@ -41,6 +41,7 @@
 #include "qv4objectiterator.h"
 #include "qv4object.h"
 #include "qv4stringobject.h"
+#include "qv4identifier.h"
 
 namespace QQmlJS {
 namespace VM {
@@ -51,11 +52,15 @@ ObjectIterator::ObjectIterator(ExecutionContext *context, Object *o, uint flags)
     , current(o)
     , arrayNode(0)
     , arrayIndex(0)
-    , tableIndex(0)
+    , currentClass(0)
+    , memberIndex(0)
     , flags(flags)
 {
-    if (current && current->asStringObject())
-        this->flags |= CurrentIsString;
+    if (current) {
+        currentClass = current->internalClass;
+        if (current->asStringObject())
+            this->flags |= CurrentIsString;
+    }
 }
 
 PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
@@ -110,7 +115,7 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
             }
         }
 
-        if (!current->members || tableIndex >= (uint)current->members->_propertyCount) {
+        if (memberIndex == currentClass->size) {
             if (flags & WithProtoChain)
                 current = current->prototype;
             else
@@ -122,19 +127,20 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
 
 
             arrayIndex = 0;
-            tableIndex = 0;
+            memberIndex = 0;
+            if (current)
+                currentClass = current->internalClass;
             continue;
         }
-        PropertyTableEntry *pt = current->members->_properties[tableIndex];
-        ++tableIndex;
+        String *n = currentClass->nameMap.at(memberIndex);
+        assert(n);
         // ### check that it's not a repeated attribute
-        if (pt) {
-            PropertyDescriptor *pd = current->memberData + pt->valueIndex;
-            if (!(flags & EnumberableOnly) || pd->isEnumerable()) {
-                *name = pt->name;
-                p = pd;
-                return p;
-            }
+
+        p = current->memberData + memberIndex;
+        ++memberIndex;
+        if (!(flags & EnumberableOnly) || p->isEnumerable()) {
+            *name = n;
+            return p;
         }
     }
     return 0;

@@ -78,8 +78,8 @@ Value ArrayCtor::call(ExecutionContext *ctx)
 
 void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
     ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
     ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("isArray"), method_isArray, 1);
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);

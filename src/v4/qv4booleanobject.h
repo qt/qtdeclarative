@@ -60,7 +60,7 @@ struct BooleanCtor: FunctionObject
 
 struct BooleanPrototype: BooleanObject
 {
-    BooleanPrototype(): BooleanObject(Value::fromBoolean(false)) {}
+    BooleanPrototype(ExecutionEngine *engine): BooleanObject(engine, Value::fromBoolean(false)) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
     static Value method_toString(ExecutionContext *ctx);

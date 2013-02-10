@@ -38,64 +38,42 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4ECMAOBJECTS_P_H
-#define QV4ECMAOBJECTS_P_H
+#ifndef QV4INTERNALCLASS_H
+#define QV4INTERNALCLASS_H
 
-#include "qv4object.h"
-#include "qv4functionobject.h"
-#include <QtCore/qnumeric.h>
+#include <QHash>
+#include <QVector>
 
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 namespace VM {
 
-struct ObjectCtor: FunctionObject
-{
-    ObjectCtor(ExecutionContext *scope);
+struct String;
+struct ExecutionEngine;
+struct Object;
 
-    virtual Value construct(ExecutionContext *ctx);
-    virtual Value call(ExecutionContext *ctx);
-};
+struct InternalClass {
+    ExecutionEngine *engine;
+    QHash<uint, uint> propertyTable; // id to valueIndex
+    QVector<String *> nameMap;
+    QHash<int, InternalClass *> transitions; // id to next class, positive means add, negative delete
+    uint size;
 
-struct ObjectPrototype: Object
-{
-    ObjectPrototype(ExecutionEngine *engine) : Object(engine) {}
+    InternalClass(ExecutionEngine *engine) : engine(engine), size(0) {}
 
-    void init(ExecutionContext *ctx, const Value &ctor);
+    uint getOrAddMember(Object *object, String *string);
+    void removeMember(Object *object, uint id);
+    uint find(String *s);
 
-    static Value method_getPrototypeOf(ExecutionContext *ctx);
-    static Value method_getOwnPropertyDescriptor(ExecutionContext *ctx);
-    static Value method_getOwnPropertyNames(ExecutionContext *ctx);
-    static Value method_create(ExecutionContext *ctx);
-    static Value method_defineProperty(ExecutionContext *ctx);
-    static Value method_defineProperties(ExecutionContext *ctx);
-    static Value method_seal(ExecutionContext *ctx);
-    static Value method_freeze(ExecutionContext *ctx);
-    static Value method_preventExtensions(ExecutionContext *ctx);
-    static Value method_isSealed(ExecutionContext *ctx);
-    static Value method_isFrozen(ExecutionContext *ctx);
-    static Value method_isExtensible(ExecutionContext *ctx);
-    static Value method_keys(ExecutionContext *ctx);
-
-    static Value method_toString(ExecutionContext *ctx);
-    static Value method_toLocaleString(ExecutionContext *ctx);
-    static Value method_valueOf(ExecutionContext *ctx);
-    static Value method_hasOwnProperty(ExecutionContext *ctx);
-    static Value method_isPrototypeOf(ExecutionContext *ctx);
-    static Value method_propertyIsEnumerable(ExecutionContext *ctx);
-
-    static Value method_defineGetter(ExecutionContext *ctx);
-    static Value method_defineSetter(ExecutionContext *ctx);
-
-    static void toPropertyDescriptor(ExecutionContext *ctx, Value v, PropertyDescriptor *desc);
-    static Value fromPropertyDescriptor(ExecutionContext *ctx, const PropertyDescriptor *desc);
+private:
+    InternalClass(const InternalClass &other);
 };
 
 
-} // end of namespace VM
-} // end of namespace QQmlJS
+} // namespace VM
+} // namespace QQmlJS
 
 QT_END_NAMESPACE
 
-#endif // QV4ECMAOBJECTS_P_H
+#endif

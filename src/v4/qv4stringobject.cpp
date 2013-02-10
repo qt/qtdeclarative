@@ -76,7 +76,7 @@
 using namespace QQmlJS::VM;
 
 StringObject::StringObject(ExecutionContext *ctx, const Value &value)
-    : value(value)
+    : Object(ctx->engine), value(value)
 {
     type = Type_StringObject;
 

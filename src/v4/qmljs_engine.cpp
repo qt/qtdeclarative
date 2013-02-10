@@ -75,6 +75,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     identifierCache = new Identifiers(this);
 
+    emptyClass = new InternalClass(this);
     rootContext = newContext();
     rootContext->init(this);
     current = rootContext;
@@ -94,12 +95,12 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     id_set = newIdentifier(QStringLiteral("set"));
     id_eval = newIdentifier(QStringLiteral("eval"));
 
-    objectPrototype = new (memoryManager) ObjectPrototype();
+    objectPrototype = new (memoryManager) ObjectPrototype(this);
     stringPrototype = new (memoryManager) StringPrototype(rootContext);
-    numberPrototype = new (memoryManager) NumberPrototype();
-    booleanPrototype = new (memoryManager) BooleanPrototype();
+    numberPrototype = new (memoryManager) NumberPrototype(this);
+    booleanPrototype = new (memoryManager) BooleanPrototype(this);
     arrayPrototype = new (memoryManager) ArrayPrototype(rootContext);
-    datePrototype = new (memoryManager) DatePrototype();
+    datePrototype = new (memoryManager) DatePrototype(this);
     functionPrototype = new (memoryManager) FunctionPrototype(rootContext);
     regExpPrototype = new (memoryManager) RegExpPrototype(this);
     errorPrototype = new (memoryManager) ErrorPrototype(this);
@@ -270,7 +271,7 @@ BoundFunction *ExecutionEngine::newBoundFunction(ExecutionContext *scope, Functi
 
 Object *ExecutionEngine::newObject()
 {
-    Object *object = new (memoryManager) Object();
+    Object *object = new (memoryManager) Object(this);
     object->prototype = objectPrototype;
     return object;
 }
@@ -294,14 +295,14 @@ Object *ExecutionEngine::newStringObject(ExecutionContext *ctx, const Value &val
 
 Object *ExecutionEngine::newNumberObject(const Value &value)
 {
-    NumberObject *object = new (memoryManager) NumberObject(value);
+    NumberObject *object = new (memoryManager) NumberObject(this, value);
     object->prototype = numberPrototype;
     return object;
 }
 
 Object *ExecutionEngine::newBooleanObject(const Value &value)
 {
-    Object *object = new (memoryManager) BooleanObject(value);
+    Object *object = new (memoryManager) BooleanObject(this, value);
     object->prototype = booleanPrototype;
     return object;
 }
@@ -322,7 +323,7 @@ ArrayObject *ExecutionEngine::newArrayObject(ExecutionContext *ctx)
 
 Object *ExecutionEngine::newDateObject(const Value &value)
 {
-    Object *object = new (memoryManager) DateObject(value);
+    Object *object = new (memoryManager) DateObject(this, value);
     object->prototype = datePrototype;
     return object;
 }

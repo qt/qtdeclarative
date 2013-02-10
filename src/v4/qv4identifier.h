@@ -73,8 +73,8 @@ public:
         str->stringIdentifier = currentIndex;
         if (currentIndex <= USHRT_MAX) {
             str->subtype = String::StringType_Identifier;
-            ++currentIndex;
             identifiers.insert(s, str);
+            ++currentIndex;
         }
         return str;
     }
@@ -95,8 +95,8 @@ public:
         s->stringIdentifier = currentIndex;
         if (currentIndex <= USHRT_MAX) {
             s->subtype = String::StringType_Identifier;
-            ++currentIndex;
             identifiers.insert(s->toQString(), s);
+            ++currentIndex;
         }
     }
 

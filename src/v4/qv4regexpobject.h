@@ -50,7 +50,6 @@
 #include "qv4isel_p.h"
 #include "qv4managed.h"
 #include "qv4propertydescriptor.h"
-#include "qv4propertytable.h"
 #include "qv4objectiterator.h"
 #include "qv4regexp.h"
 

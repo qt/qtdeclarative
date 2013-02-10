@@ -85,7 +85,8 @@ void Function::mark()
 }
 
 FunctionObject::FunctionObject(ExecutionContext *scope)
-    : scope(scope)
+    : Object(scope->engine)
+    , scope(scope)
     , name(0)
     , formalParameterList(0)
     , varList(0)
@@ -258,15 +259,16 @@ Value FunctionCtor::call(ExecutionContext *ctx)
 
 void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
     ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
+
+    defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(0));
     defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
     defineDefaultProperty(ctx, QStringLiteral("apply"), method_apply, 2);
     defineDefaultProperty(ctx, QStringLiteral("call"), method_call, 1);
     defineDefaultProperty(ctx, QStringLiteral("bind"), method_bind, 1);
 
-    defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(0));
 }
 
 Value FunctionPrototype::method_toString(ExecutionContext *ctx)

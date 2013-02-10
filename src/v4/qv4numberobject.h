@@ -60,7 +60,7 @@ struct NumberCtor: FunctionObject
 
 struct NumberPrototype: NumberObject
 {
-    NumberPrototype(): NumberObject(Value::fromDouble(0)) {}
+    NumberPrototype(ExecutionEngine *engine): NumberObject(engine, Value::fromDouble(0)) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
     static Value method_toString(ExecutionContext *ctx);

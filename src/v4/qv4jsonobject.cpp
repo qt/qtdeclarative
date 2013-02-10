@@ -268,8 +268,6 @@ Value Parser::parseObject()
 bool Parser::parseMember(Object *o)
 {
     BEGIN << "parseMember";
-    if (!o->members)
-        o->members.reset(new PropertyTable());
 
     QString key;
     if (!parseString(&key))
@@ -864,7 +862,7 @@ QString Stringify::JA(ArrayObject *a)
 
 
 JsonObject::JsonObject(ExecutionContext *context)
-    : Object()
+    : Object(context->engine)
 {
     type = Type_JSONObject;
     prototype = context->engine->objectPrototype;

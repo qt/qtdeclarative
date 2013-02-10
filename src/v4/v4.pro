@@ -29,6 +29,7 @@ SOURCES += \
     debugging.cpp \
     qv4mm.cpp \
     qv4managed.cpp \
+    qv4internalclass.cpp \
     qv4sparsearray.cpp \
     qv4arrayobject.cpp \
     qv4argumentsobject.cpp \
@@ -65,6 +66,7 @@ HEADERS += \
     qv4identifier.h \
     qv4mm.h \
     qv4managed.h \
+    qv4internalclass.h \
     qv4sparsearray.h \
     qv4arrayobject.h \
     qv4argumentsobject.h \
@@ -82,7 +84,6 @@ HEADERS += \
     qv4stringobject.h \
     qv4string.h \
     qv4propertydescriptor.h \
-    qv4propertytable.h \
     qv4objectiterator.h \
     qv4regexp.h
 

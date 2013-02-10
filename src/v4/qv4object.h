@@ -51,7 +51,7 @@
 #include "qv4isel_p.h"
 #include "qv4managed.h"
 #include "qv4propertydescriptor.h"
-#include "qv4propertytable.h"
+#include "qv4internalclass.h"
 #include "qv4objectiterator.h"
 #include "qv4regexp.h"
 
@@ -102,8 +102,7 @@ struct URIErrorPrototype;
 
 struct Q_V4_EXPORT Object: Managed {
     Object *prototype;
-    QScopedPointer<PropertyTable> members;
-    uint memberDataSize;
+    InternalClass *internalClass;
     uint memberDataAlloc;
     PropertyDescriptor *memberData;
 
@@ -116,11 +115,7 @@ struct Q_V4_EXPORT Object: Managed {
     PropertyDescriptor *arrayData;
     SparseArray *sparseArray;
 
-    Object()
-        : prototype(0)
-        , memberDataSize(0), memberDataAlloc(0), memberData(0)
-        , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), sparseArray(0) { type = Type_Object; }
-
+    Object(ExecutionEngine *engine);
     virtual ~Object();
 
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
@@ -315,7 +310,7 @@ protected:
 struct ForEachIteratorObject: Object {
     ObjectIterator it;
     ForEachIteratorObject(ExecutionContext *ctx, Object *o)
-        : it(ctx, o, ObjectIterator::EnumberableOnly|ObjectIterator::WithProtoChain) { type = Type_ForeachIteratorObject; }
+        : Object(ctx->engine), it(ctx, o, ObjectIterator::EnumberableOnly|ObjectIterator::WithProtoChain) { type = Type_ForeachIteratorObject; }
 
     Value nextPropertyName() { return it.nextPropertyNameAsString(); }
 
@@ -325,12 +320,12 @@ protected:
 
 struct BooleanObject: Object {
     Value value;
-    BooleanObject(const Value &value): value(value) { type = Type_BooleanObject; }
+    BooleanObject(ExecutionEngine *engine, const Value &value): Object(engine), value(value) { type = Type_BooleanObject; }
 };
 
 struct NumberObject: Object {
     Value value;
-    NumberObject(const Value &value): value(value) { type = Type_NumberObject; }
+    NumberObject(ExecutionEngine *engine, const Value &value): Object(engine), value(value) { type = Type_NumberObject; }
 };
 
 struct ArrayObject: Object {
@@ -338,7 +333,7 @@ struct ArrayObject: Object {
         LengthPropertyIndex = 0
     };
 
-    ArrayObject(ExecutionContext *ctx) { init(ctx); }
+    ArrayObject(ExecutionContext *ctx) : Object(ctx->engine) { init(ctx); }
     void init(ExecutionContext *context);
 };
 

@@ -65,9 +65,16 @@
 using namespace QQmlJS::VM;
 
 
-//
-// Object
-//
+Object::Object(ExecutionEngine *engine)
+    : prototype(0)
+    , internalClass(engine->emptyClass)
+    , memberDataAlloc(0), memberData(0)
+    , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), sparseArray(0)
+{
+    type = Type_Object;
+}
+
+
 Object::~Object()
 {
     delete [] memberData;
@@ -130,8 +137,6 @@ void Object::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ct
 
 void Object::defineDefaultProperty(String *name, Value value)
 {
-    if (!members)
-        members.reset(new PropertyTable());
     PropertyDescriptor *pd = insertMember(name);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Enabled;
@@ -170,8 +175,6 @@ void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name
 
 void Object::defineReadonlyProperty(String *name, Value value)
 {
-    if (!members)
-        members.reset(new PropertyTable());
     PropertyDescriptor *pd = insertMember(name);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Disabled;
@@ -185,23 +188,16 @@ void Object::markObjects()
     if (prototype)
         prototype->mark();
 
-    if (members) {
-        for (PropertyTable::iterator it = members->begin(), eit = members->end(); it < eit; ++it) {
-            if (!(*it))
-                continue;
-            (*it)->name->mark();
-        }
-        for (int i = 0; i < memberDataSize; ++i) {
-            const PropertyDescriptor &pd = memberData[i];
-            if (pd.isData()) {
-                if (Managed *m = pd.value.asManaged())
-                    m->mark();
-             } else if (pd.isAccessor()) {
-                if (pd.get)
-                    pd.get->mark();
-                if (pd.set)
-                    pd.set->mark();
-            }
+    for (int i = 0; i < internalClass->size; ++i) {
+        const PropertyDescriptor &pd = memberData[i];
+        if (pd.isData()) {
+            if (Managed *m = pd.value.asManaged())
+                m->mark();
+         } else if (pd.isAccessor()) {
+            if (pd.get)
+                pd.get->mark();
+            if (pd.set)
+                pd.set->mark();
         }
     }
     markArrayObjects();
@@ -209,22 +205,16 @@ void Object::markObjects()
 
 PropertyDescriptor *Object::insertMember(String *s)
 {
-    if (!members)
-        members.reset(new PropertyTable);
+    uint idx = internalClass->getOrAddMember(this, s);
 
-    PropertyTableEntry *e = members->insert(s);
-    if (e->valueIndex == UINT_MAX) {
-        if (memberDataSize == memberDataAlloc) {
-            memberDataAlloc = qMax((uint)8, 2*memberDataAlloc);
-            PropertyDescriptor *newMemberData = new PropertyDescriptor[memberDataAlloc];
-            memcpy(newMemberData, memberData, sizeof(PropertyDescriptor)*memberDataSize);
-            delete [] memberData;
-            memberData = newMemberData;
-        }
-        e->valueIndex = memberDataSize;
-        ++memberDataSize;
+    if (idx >= memberDataAlloc) {
+        memberDataAlloc = qMax((uint)8, 2*memberDataAlloc);
+        PropertyDescriptor *newMemberData = new PropertyDescriptor[memberDataAlloc];
+        memcpy(newMemberData, memberData, sizeof(PropertyDescriptor)*idx);
+        delete [] memberData;
+        memberData = newMemberData;
     }
-    return memberData + e->valueIndex;
+    return memberData + idx;
 }
 
 // Section 8.12.1
@@ -234,11 +224,10 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, String *na
     if (idx != String::InvalidArrayIndex)
         return __getOwnProperty__(ctx, idx);
 
-    if (members) {
-        uint idx = members->find(name);
-        if (idx < UINT_MAX)
-            return memberData + idx;
-    }
+    uint member = internalClass->find(name);
+    if (member < UINT_MAX)
+        return memberData + member;
+
     return 0;
 }
 
@@ -263,11 +252,10 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, Str
 
     Object *o = this;
     while (o) {
-        if (o->members) {
-            uint idx = o->members->find(name);
-            if (idx < UINT_MAX)
-                return o->memberData + idx;
-        }
+        uint idx = o->internalClass->find(name);
+        if (idx < UINT_MAX)
+            return o->memberData + idx;
+
         o = o->prototype;
     }
     return 0;
@@ -307,14 +295,13 @@ Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 
     Object *o = this;
     while (o) {
-        if (o->members) {
-            uint idx = o->members->find(name);
-            if (idx < UINT_MAX) {
-                if (hasProperty)
-                    *hasProperty = true;
-                return getValue(ctx, o->memberData + idx);
-            }
+        uint idx = o->internalClass->find(name);
+        if (idx < UINT_MAX) {
+            if (hasProperty)
+                *hasProperty = true;
+            return getValue(ctx, o->memberData + idx);
         }
+
         o = o->prototype;
     }
 
@@ -406,9 +393,6 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
     }
 
     cont:
-
-    if (!members)
-        members.reset(new PropertyTable());
 
 
     // clause 4
@@ -507,7 +491,7 @@ bool Object::__hasProperty__(const ExecutionContext *ctx, String *name) const
 
     name->makeIdentifier(ctx);
 
-    if (members && members->find(name) != UINT_MAX)
+    if (internalClass->find(name) != UINT_MAX)
         return true;
 
     return prototype ? prototype->__hasProperty__(ctx, name) : false;
@@ -531,21 +515,19 @@ bool Object::__delete__(ExecutionContext *ctx, String *name)
 
     name->makeIdentifier(ctx);
 
-    if (members) {
-        if (PropertyTableEntry *entry = members->findEntry(name)) {
-            PropertyDescriptor &pd = memberData[entry->valueIndex];
-            if (pd.isConfigurable()) {
-                members->remove(entry);
-                // ### leaves a hole in memberData
-                pd.type = PropertyDescriptor::Generic;
-                pd.writable = PropertyDescriptor::Undefined;
-                return true;
-            }
-            if (ctx->strictMode)
-                __qmljs_throw_type_error(ctx);
-            return false;
+    uint memberIdx = internalClass->find(name);
+    if (memberIdx != UINT_MAX) {
+        PropertyDescriptor &pd = memberData[memberIdx];
+        if (pd.isConfigurable()) {
+            internalClass->removeMember(this, name->stringIdentifier);
+            memmove(memberData + memberIdx, memberData + memberIdx + 1, (internalClass->size - memberIdx)*sizeof(PropertyDescriptor));
+            return true;
         }
+        if (ctx->strictMode)
+            __qmljs_throw_type_error(ctx);
+        return false;
     }
+
     return true;
 }
 
@@ -592,7 +574,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
 
     if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
         PropertyDescriptor *lp = memberData + ArrayObject::LengthPropertyIndex;
-        assert(0 == members->find(ctx->engine->id_length));
+        assert(0 == internalClass->find(ctx->engine->id_length));
         if (desc->isEmpty() || desc->isSubset(lp))
             return true;
         if (!lp->isWritable() || desc->type == PropertyDescriptor::Accessor || desc->isConfigurable() || desc->isEnumerable())
@@ -611,9 +593,6 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
             goto reject;
         return true;
     }
-
-    if (!members)
-        members.reset(new PropertyTable());
 
     // Clause 1
     current = __getOwnProperty__(ctx, name);
@@ -982,8 +961,6 @@ void ArrayObject::init(ExecutionContext *context)
 {
     type = Type_ArrayObject;
 
-    if (!members)
-        members.reset(new PropertyTable());
     PropertyDescriptor *pd = insertMember(context->engine->id_length);
     assert(pd == memberData + LengthPropertyIndex);
     pd->type = PropertyDescriptor::Data;

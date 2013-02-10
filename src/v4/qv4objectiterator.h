@@ -42,6 +42,7 @@
 #define QV4OBJECTITERATOR_H
 
 #include "qmljs_value.h"
+#include <qv4internalclass.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,7 +67,8 @@ struct ObjectIterator
     Object *current;
     SparseArrayNode *arrayNode;
     uint arrayIndex;
-    uint tableIndex;
+    InternalClass *currentClass;
+    uint memberIndex;
     uint flags;
 
     ObjectIterator(ExecutionContext *context, Object *o, uint flags);

@@ -94,6 +94,7 @@ struct TypeErrorPrototype;
 struct URIErrorPrototype;
 struct EvalFunction;
 struct Identifiers;
+struct InternalClass;
 
 class RegExp;
 
@@ -175,6 +176,8 @@ struct Q_V4_EXPORT ExecutionEngine
     Value exception;
 
     QVector<Function *> functions;
+
+    InternalClass *emptyClass;
 
     ExecutionEngine(EvalISelFactory *iselFactory);
     ~ExecutionEngine();

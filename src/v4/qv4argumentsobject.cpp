@@ -45,7 +45,7 @@ namespace VM {
 
 
 ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount)
-    : context(context)
+    : Object(context->engine), context(context)
 {
     type = Type_ArgumentsObject;
 
