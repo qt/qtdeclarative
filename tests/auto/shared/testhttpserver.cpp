@@ -137,7 +137,19 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
         bodyData = bodyFile.readAll();
     }
 
-    waitData = expectFile.readAll();
+    QByteArray line;
+    bool headers_done = false;
+    while (!(line = expectFile.readLine()).isEmpty()) {
+        line.replace('\r', "");
+        if (line.at(0) == '\n') {
+            headers_done = true;
+            continue;
+        }
+        if (headers_done)
+            waitData.body.append(line);
+        else
+            waitData.headers.append(line);
+    }
     /*
     while (waitData.endsWith('\n'))
         waitData = waitData.left(waitData.count() - 1);
@@ -199,39 +211,38 @@ void TestHTTPServer::readyRead()
     QTcpSocket *socket = qobject_cast<QTcpSocket *>(sender());
     if (!socket || socket->state() == QTcpSocket::ClosingState) return;
 
-    QByteArray ba = socket->readAll();
-
     if (!dirs.isEmpty()) {
-        serveGET(socket, ba);
+        serveGET(socket, socket->readAll());
         return;
     }
 
-    if (m_hasFailed || waitData.isEmpty()) {
-        qWarning() << "TestHTTPServer: Unexpected data" << ba;
+    if (m_hasFailed || (waitData.body.isEmpty() && waitData.headers.count() == 0)) {
+        qWarning() << "TestHTTPServer: Unexpected data" << socket->readAll();
         return;
     }
 
-    for (int ii = 0; ii < ba.count(); ++ii) {
-        const char c = ba.at(ii);
-        if (c == '\r' && waitData.isEmpty())
-           continue;
-        else if (!waitData.isEmpty() && c == waitData.at(0))
-            waitData = waitData.mid(1);
-        else if (c == '\r')
-            continue;
-        else {
-            QByteArray data = ba.mid(ii);
-            qWarning() << "TestHTTPServer: Unexpected data" << data << "\nExpected: " << waitData;
+    QByteArray line;
+    while (!(line = socket->readLine()).isEmpty()) {
+        line.replace('\r', "");
+        if (line.at(0) == '\n') {
+            QByteArray data = socket->readAll();
+            if (waitData.body != data) {
+                qWarning() << "TestHTTPServer: Unexpected data" << data << "\nExpected: " << waitData.body;
+                m_hasFailed = true;
+                socket->disconnectFromHost();
+                return;
+            }
+        }
+        else if (!waitData.headers.contains(line)) {
+            qWarning() << "TestHTTPServer: Unexpected header:" << line << "\nExpected headers: " << waitData.headers;
             m_hasFailed = true;
             socket->disconnectFromHost();
             return;
         }
     }
 
-    if (waitData.isEmpty()) {
-        socket->write(replyData);
-        socket->disconnectFromHost();
-    }
+    socket->write(replyData);
+    socket->disconnectFromHost();
 }
 
 bool TestHTTPServer::reply(QTcpSocket *socket, const QByteArray &fileName)
