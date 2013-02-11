@@ -90,6 +90,11 @@ struct MemoryManager::Data
     }
 };
 
+#define SCRIBBLE(obj, c, size) \
+    if (m_d->scribble) \
+        ::memset((void *)(obj + 1), c, size - sizeof(Managed));
+
+
 namespace QQmlJS { namespace VM {
 
 bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::Chunk &b)
@@ -152,10 +157,9 @@ Managed *MemoryManager::alloc(std::size_t size)
         Managed **last = &m_d->smallItems[pos];
         while (chunk <= end) {
             Managed *o = reinterpret_cast<Managed *>(chunk);
-            o->inUse = 0;
-            o->markBit = 0;
+            o->_data = 0;
             *last = o;
-            last = &o->nextFree;
+            last = o->nextFreeRef();
             chunk += size;
         }
         *last = 0;
@@ -163,13 +167,9 @@ Managed *MemoryManager::alloc(std::size_t size)
     }
 
   found:
-    m_d->smallItems[pos] = m->nextFree;
+    m_d->smallItems[pos] = m->nextFree();
     return m;
 }
-
-#define SCRIBBLE(obj, c, size) \
-    if (m_d->scribble) \
-        ::memset((void *)(obj + 1), c, size - sizeof(Managed));
 
 void MemoryManager::mark()
 {
@@ -181,6 +181,20 @@ void MemoryManager::mark()
     for (QHash<Managed *, uint>::const_iterator it = m_d->protectedObject.begin(); it != m_d->protectedObject.constEnd(); ++it)
         it.key()->mark();
 
+#if CPU(X86_64)
+    // push all caller saved registers to the stack, so we can find the objects living in these registers
+    quintptr regs[5];
+    asm(
+        "mov %%rbp, %0\n"
+        "mov %%r12, %1\n"
+        "mov %%r13, %2\n"
+        "mov %%r14, %3\n"
+        "mov %%r15, %4\n"
+        : "=m" (regs[0]), "=m" (regs[1]), "=m" (regs[2]), "=m" (regs[3]), "=m" (regs[4])
+        :
+        :
+    );
+#endif
     collectFromStack();
 
     return;
@@ -203,23 +217,22 @@ std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t
 
     Managed **f = &m_d->smallItems[size >> 4];
 
-    for (char *chunk = chunkStart, *chunkEnd = chunk + chunkSize - size; chunk <= chunkEnd; ) {
+    for (char *chunk = chunkStart, *chunkEnd = chunk + chunkSize - size; chunk <= chunkEnd; chunk += size) {
         Managed *m = reinterpret_cast<Managed *>(chunk);
 //        qDebug("chunk @ %p, size = %lu, in use: %s, mark bit: %s",
 //               chunk, m->size, (m->inUse ? "yes" : "no"), (m->markBit ? "true" : "false"));
 
         assert((intptr_t) chunk % 16 == 0);
 
-        chunk = chunk + size;
         if (m->inUse) {
             if (m->markBit) {
                 m->markBit = 0;
             } else {
-//                qDebug() << "-- collecting it." << m << *f << &m->nextFree;
+//                qDebug() << "-- collecting it." << m << *f << m->nextFree();
                 m->~Managed();
 
-                m->nextFree = *f;
-                f = &m->nextFree;
+                m->setNextFree(*f);
+                *f = m;
                 SCRIBBLE(m, 0x99, size);
                 ++freedCount;
             }
@@ -360,7 +373,7 @@ void MemoryManager::collectFromStack() const
 //    qDebug() << "stack:" << hex << stackTop << stackSize << (stackTop + stackSize);
 
     quintptr *current = (&valueOnStack) + 1;
-//    qDebug() << "collectFromStack" << top << current << &valueOnStack;
+//    qDebug() << "collectFromStack";// << top << current << &valueOnStack;
 
     char** heapChunkBoundaries = (char**)alloca(m_d->heapChunks.count() * 2 * sizeof(char*));
     char** heapChunkBoundariesEnd = heapChunkBoundaries + 2 * m_d->heapChunks.count();
@@ -370,6 +383,7 @@ void MemoryManager::collectFromStack() const
         heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base());
         heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base()) + it->memory.size() - it->chunkSize;
     }
+    assert(i == m_d->heapChunks.count() * 2);
 
     for (; current < top; ++current) {
         char* genericPtr =
@@ -379,14 +393,15 @@ void MemoryManager::collectFromStack() const
                 reinterpret_cast<char *>(*current);
 #endif
 
-        if (genericPtr < *heapChunkBoundaries || genericPtr > *heapChunkBoundariesEnd)
+        if (genericPtr < *heapChunkBoundaries || genericPtr > *(heapChunkBoundariesEnd - 1))
             continue;
         int index = qLowerBound(heapChunkBoundaries, heapChunkBoundariesEnd, genericPtr) - heapChunkBoundaries;
         // An odd index means the pointer is _before_ the end of a heap chunk and therefore valid.
+        assert(index >= 0 && index < m_d->heapChunks.count() * 2);
         if (index & 1) {
             int size = m_d->heapChunks.at(index >> 1).chunkSize;
             Managed *m = reinterpret_cast<Managed *>(genericPtr);
-//            qDebug() << "   inside" << size << m;
+//            qDebug() << "   inside" << size;
 
             if (((quintptr)m - (quintptr)heapChunkBoundaries[index-1]) % size)
                 // wrongly aligned value, skip it
@@ -396,8 +411,8 @@ void MemoryManager::collectFromStack() const
                 // Skip pointers to already freed objects, they are bogus as well
                 continue;
 
-            m->mark();
 //            qDebug() << "       marking";
+            m->mark();
         }
     }
 }

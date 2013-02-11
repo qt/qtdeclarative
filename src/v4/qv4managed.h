@@ -81,21 +81,8 @@ private:
 
 protected:
     Managed()
-        : markBit(0)
-        , inUse(1)
-        , extensible(1)
-        , isNonStrictArgumentsObject(0)
-        , isBuiltinFunction(0)
-        , needsActivation(0)
-        , usesArgumentsObject(0)
-        , strictMode(0)
-        , type(Type_Invalid)
-        , subtype(0)
-        , stringIdentifier(0)
-#if CPU(X86_64)
-        , unused(0)
-#endif
-    {}
+        : _data(0)
+    { inUse = 1; extensible = 1; }
     virtual ~Managed();
 
 public:
@@ -147,26 +134,33 @@ public:
 
     QString className() const;
 
+    Managed **nextFreeRef() {
+        return reinterpret_cast<Managed **>(this);
+    }
+    Managed *nextFree() {
+        return *reinterpret_cast<Managed **>(this);
+    }
+    void setNextFree(Managed *m) {
+        *reinterpret_cast<Managed **>(this) = m;
+    }
+
 protected:
     virtual void markObjects() {}
 
     union {
-        Managed *nextFree;
+        uint _data;
         struct {
-            quintptr markBit :  1;
-            quintptr inUse   :  1;
-            quintptr extensible : 1; // used by Object
-            quintptr isNonStrictArgumentsObject : 1;
-            quintptr isBuiltinFunction : 1; // used by FunctionObject
-            quintptr needsActivation : 1; // used by FunctionObject
-            quintptr usesArgumentsObject : 1; // used by FunctionObject
-            quintptr strictMode : 1; // used by FunctionObject
-            quintptr type : 5;
-            mutable quintptr subtype : 3;
-            mutable quintptr stringIdentifier : 16;
-#if CPU(X86_64)
-            quintptr unused  : 32;
-#endif
+            uint markBit :  1;
+            uint inUse   :  1;
+            uint extensible : 1; // used by Object
+            uint isNonStrictArgumentsObject : 1;
+            uint isBuiltinFunction : 1; // used by FunctionObject
+            uint needsActivation : 1; // used by FunctionObject
+            uint usesArgumentsObject : 1; // used by FunctionObject
+            uint strictMode : 1; // used by FunctionObject
+            uint type : 5;
+            mutable uint subtype : 3;
+            uint unused : 16;
         };
     };
 

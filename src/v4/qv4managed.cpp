@@ -47,8 +47,7 @@ using namespace QQmlJS::VM;
 
 Managed::~Managed()
 {
-    nextFree = 0;
-    inUse = 0;
+    _data = 0;
 }
 
 void *Managed::operator new(size_t size, MemoryManager *mm)
