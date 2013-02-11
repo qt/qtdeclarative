@@ -39,38 +39,36 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLEXTENSIONPLUGIN_H
-#define QQMLEXTENSIONPLUGIN_H
+#ifndef QQMLEXTENSIONPLUGIN_P_H
+#define QQMLEXTENSIONPLUGIN_P_H
 
-#include <QtCore/qplugin.h>
-#include <QtCore/QUrl>
-#include <QtQml/qqmlextensioninterface.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/private/qobject_p.h>
+#include "qqmlextensionplugin.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQmlEngine;
-class QQmlExtensionPluginPrivate;
-
-class Q_QML_EXPORT QQmlExtensionPlugin
-    : public QObject
-    , public QQmlExtensionInterface
+class QQmlExtensionPluginPrivate : public QObjectPrivate
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QQmlExtensionPlugin)
-    Q_INTERFACES(QQmlExtensionInterface)
-    Q_INTERFACES(QQmlTypesExtensionInterface)
+    Q_DECLARE_PUBLIC(QQmlExtensionPlugin)
+
 public:
-    explicit QQmlExtensionPlugin(QObject *parent = 0);
-    ~QQmlExtensionPlugin();
+    static QQmlExtensionPluginPrivate* get(QQmlExtensionPlugin *e) { return e->d_func(); }
 
-    QUrl baseUrl() const;
+    QUrl baseUrl;
 
-    virtual void registerTypes(const char *uri) = 0;
-    virtual void initializeEngine(QQmlEngine *engine, const char *uri);
-
-    Q_DISABLE_COPY(QQmlExtensionPlugin)
 };
 
 QT_END_NAMESPACE
 
-#endif // QQMLEXTENSIONPLUGIN_H
+#endif // QQMLEXTENSIONPLUGIN_P_H

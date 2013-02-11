@@ -49,6 +49,8 @@
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qreadwritelock.h>
 #include <QtQml/qqmlextensioninterface.h>
+#include <QtQml/qqmlextensionplugin.h>
+#include <private/qqmlextensionplugin_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmltypenamecache_p.h>
 #include <private/qqmlengine_p.h>
@@ -1683,6 +1685,10 @@ bool QQmlImportDatabase::importPlugin(const QString &filePath, const QString &ur
 
                     QQmlMetaType::setTypeRegistrationNamespace(typeNamespace);
 
+                    if (QQmlExtensionPlugin *plugin = qobject_cast<QQmlExtensionPlugin *>(instance)) {
+                        // Set the directory, not the library file itself
+                        QQmlExtensionPluginPrivate::get(plugin)->baseUrl = QUrl::fromLocalFile(fileInfo.absolutePath());
+                    }
                     iface->registerTypes(moduleId);
 
                     registrationFailures = QQmlMetaType::typeRegistrationFailures();

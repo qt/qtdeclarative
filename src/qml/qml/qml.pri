@@ -133,7 +133,8 @@ HEADERS += \
     $$PWD/qqmlconnections_p.h \
     $$PWD/qqmltimer_p.h \
     $$PWD/qqmlbind_p.h \
-    $$PWD/qqmlplatform_p.h
+    $$PWD/qqmlplatform_p.h \
+    $$PWD/qqmlextensionplugin_p.h
 
 
 include(parser/parser.pri)
