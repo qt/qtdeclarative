@@ -61,11 +61,7 @@ class QQuickDefaultTextureFactory : public QQuickTextureFactory
 {
     Q_OBJECT
 public:
-    QQuickDefaultTextureFactory(const QImage &i)
-        : im(i)
-    {
-    }
-
+    QQuickDefaultTextureFactory(const QImage &i);
     QSGTexture *createTexture(QQuickWindow *window) const;
     QSize textureSize() const { return im.size(); }
     int textureByteCount() const { return im.byteCount(); }

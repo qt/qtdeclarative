@@ -91,6 +91,17 @@ static inline QString imageId(const QUrl &url)
     return url.toString(QUrl::RemoveScheme | QUrl::RemoveAuthority).mid(1);
 }
 
+QQuickDefaultTextureFactory::QQuickDefaultTextureFactory(const QImage &image)
+{
+    if (image.format() == QImage::Format_ARGB32_Premultiplied
+            || image.format() == QImage::Format_RGB32) {
+        im = image;
+    } else {
+        im = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    }
+}
+
+
 QSGTexture *QQuickDefaultTextureFactory::createTexture(QQuickWindow *) const
 {
     QSGPlainTexture *t = new QSGPlainTexture();
