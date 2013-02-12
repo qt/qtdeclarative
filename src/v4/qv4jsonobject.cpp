@@ -282,6 +282,10 @@ bool Parser::parseMember(Object *o)
         return false;
 
     PropertyDescriptor *p = o->insertMember(context->engine->newIdentifier(key));
+    p->type = PropertyDescriptor::Data;
+    p->writable = PropertyDescriptor::Enabled;
+    p->enumberable = PropertyDescriptor::Enabled;
+    p->configurable = PropertyDescriptor::Enabled;
     p->value = val;
 
     END;
