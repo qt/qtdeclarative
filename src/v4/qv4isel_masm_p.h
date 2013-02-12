@@ -63,14 +63,13 @@ public:
 #if CPU(X86)
 
 #undef VALUE_FITS_IN_REGISTER
+#undef ARGUMENTS_IN_REGISTERS
 
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
     static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
     static const RegisterID ContextRegister = JSC::X86Registers::esi;
     static const RegisterID ReturnValueRegister = JSC::X86Registers::eax;
     static const RegisterID ScratchRegister = JSC::X86Registers::ecx;
-    static const RegisterID CalleeSavedFirstRegister = ScratchRegister;
-    static const RegisterID CalleeSavedLastRegister = ScratchRegister;
     static const RegisterID IntegerOpRegister = JSC::X86Registers::eax;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 
@@ -83,9 +82,13 @@ public:
         // Not reached.
         return JSC::X86Registers::eax;
     }
+
+    inline void platformEnterStandardStackFrame() {}
+    inline void platformLeaveStandardStackFrame() {}
 #elif CPU(X86_64)
 
 #define VALUE_FITS_IN_REGISTER
+#define ARGUMENTS_IN_REGISTERS
 
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
     static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
@@ -111,17 +114,18 @@ public:
         assert(index >= 0 && index < RegisterArgumentCount);
         return regs[index];
     };
+    inline void platformEnterStandardStackFrame() {}
+    inline void platformLeaveStandardStackFrame() {}
 #elif CPU(ARM)
 
 #undef VALUE_FITS_IN_REGISTER
+#define ARGUMENTS_IN_REGISTERS
 
     static const RegisterID StackFrameRegister = JSC::ARMRegisters::r4;
     static const RegisterID StackPointerRegister = JSC::ARMRegisters::sp;
     static const RegisterID ContextRegister = JSC::ARMRegisters::r5;
     static const RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
     static const RegisterID ScratchRegister = JSC::ARMRegisters::r6;
-    static const RegisterID CalleeSavedFirstRegister = JSC::ARMRegisters::r4;
-    static const RegisterID CalleeSavedLastRegister = JSC::ARMRegisters::r11;
     static const RegisterID IntegerOpRegister = JSC::X86Registers::r0;
     static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
 
@@ -138,6 +142,14 @@ public:
         assert(index >= 0 && index < RegisterArgumentCount);
         return static_cast<RegisterID>(JSC::ARMRegisters::r0 + index);
     };
+    inline void platformEnterStandardStackFrame()
+    {
+        push(JSC::ARMRegisters::lr);
+    }
+    inline void platformLeaveStandardStackFrame()
+    {
+        pop(JSC::ARMRegisters::lr);
+    }
 #else
 #error Argh.
 #endif

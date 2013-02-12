@@ -59,6 +59,45 @@ using namespace QQmlJS;
 using namespace QQmlJS::MASM;
 using namespace QQmlJS::VM;
 
+/* Platform/Calling convention/Architecture specific section */
+
+#if CPU(X86_64)
+static const Assembler::RegisterID calleeSavedRegisters[] = {
+    // Not used: JSC::X86Registers::rbx,
+    // Not used: JSC::X86Registers::r10,
+    // Not used: JSC::X86Registers::r13,
+    JSC::X86Registers::r14
+    // Not used: JSC::X86Registers::r15,
+};
+#endif
+
+#if CPU(X86)
+static const Assembler::RegisterID calleeSavedRegisters[] = {
+    // Not used: JSC::X86Registers::ebx,
+    JSC::X86Registers::esi
+    // Not used: JSC::X86Registers::edi,
+};
+#endif
+
+#if CPU(ARM)
+static const Assembler::RegisterID calleeSavedRegisters[] = {
+    // ### FIXME: push multi-register push instruction, remove unused registers.
+    JSC::ARMRegisters::r4,
+    JSC::ARMRegisters::r5,
+    JSC::ARMRegisters::r6,
+    JSC::ARMRegisters::r7,
+    JSC::ARMRegisters::r8,
+    JSC::ARMRegisters::r9,
+    JSC::ARMRegisters::r10,
+    JSC::ARMRegisters::r11
+};
+#endif
+
+static const int calleeSavedRegisterCount = sizeof(calleeSavedRegisters) / sizeof(calleeSavedRegisters[0]);
+
+/* End of platform/calling convention/architecture specific section */
+
+
 const Assembler::VoidType Assembler::Void;
 
 Assembler::Assembler(IR::Function* function)
@@ -124,38 +163,32 @@ void Assembler::storeValue(VM::Value value, IR::Temp* destination)
 
 void Assembler::enterStandardStackFrame(int locals)
 {
-#if CPU(ARM)
-    push(JSC::ARMRegisters::lr);
-#endif
+    platformEnterStandardStackFrame();
+
+    // ### FIXME: Handle through calleeSavedRegisters mechanism
+    // or eliminate StackFrameRegister altogether.
     push(StackFrameRegister);
     move(StackPointerRegister, StackFrameRegister);
 
-    // space for the locals and the ContextRegister
-    int32_t frameSize = locals * sizeof(QQmlJS::VM::Value) + sizeof(void*);
+    // space for the locals and callee saved registers
+    int32_t frameSize = locals * sizeof(QQmlJS::VM::Value) + sizeof(void*) * calleeSavedRegisterCount;
 
 #if CPU(X86) || CPU(X86_64)
     frameSize = (frameSize + 15) & ~15; // align on 16 byte boundaries for MMX
 #endif
     subPtr(TrustedImm32(frameSize), StackPointerRegister);
 
-#if CPU(X86) || CPU(ARM)
-    for (int saveReg = CalleeSavedFirstRegister; saveReg <= CalleeSavedLastRegister; ++saveReg)
-        push(static_cast<RegisterID>(saveReg));
-#endif
-    // save the ContextRegister
-    storePtr(ContextRegister, StackPointerRegister);
+    for (int i = 0; i < calleeSavedRegisterCount; ++i)
+        storePtr(calleeSavedRegisters[i], Address(StackPointerRegister, i * sizeof(void*)));
 }
 
 void Assembler::leaveStandardStackFrame(int locals)
 {
-    // restore the ContextRegister
-    loadPtr(StackPointerRegister, ContextRegister);
+    // restore the callee saved registers
+    for (int i = calleeSavedRegisterCount - 1; i >= 0; --i)
+        loadPtr(Address(StackPointerRegister, i * sizeof(void*)), calleeSavedRegisters[i]);
 
-#if CPU(X86) || CPU(ARM)
-    for (int saveReg = CalleeSavedLastRegister; saveReg >= CalleeSavedFirstRegister; --saveReg)
-        pop(static_cast<RegisterID>(saveReg));
-#endif
-    // space for the locals and the ContextRegister
+    // space for the locals and the callee saved registers
     int32_t frameSize = locals * sizeof(QQmlJS::VM::Value) + sizeof(void*);
 #if CPU(X86) || CPU(X86_64)
     frameSize = (frameSize + 15) & ~15; // align on 16 byte boundaries for MMX
@@ -163,9 +196,7 @@ void Assembler::leaveStandardStackFrame(int locals)
     addPtr(TrustedImm32(frameSize), StackPointerRegister);
 
     pop(StackFrameRegister);
-#if CPU(ARM)
-    pop(JSC::ARMRegisters::lr);
-#endif
+    platformLeaveStandardStackFrame();
 }
 
 
@@ -401,12 +432,11 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     // That shifts the index the context pointer argument by one.
     contextPointer++;
 #endif
-#if CPU(X86)
-    _as->loadPtr(addressForArgument(contextPointer), Assembler::ContextRegister);
-#elif CPU(X86_64) || CPU(ARM)
+
+#ifdef ARGUMENTS_IN_REGISTERS
     _as->move(_as->registerForArgument(contextPointer), Assembler::ContextRegister);
 #else
-    assert(!"TODO");
+    _as->loadPtr(addressForArgument(contextPointer), Assembler::ContextRegister);
 #endif
 
     foreach (IR::BasicBlock *block, _function->basicBlocks) {
