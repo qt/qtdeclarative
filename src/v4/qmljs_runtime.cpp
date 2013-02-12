@@ -708,7 +708,7 @@ Value __qmljs_get_property_lookup(ExecutionContext *ctx, Value object, int looku
         }
 
         if (p)
-            return o->getValue(ctx, p);
+            return p->type == PropertyDescriptor::Data ? p->value : o->getValue(ctx, p);
         else
             return object.objectValue()->__get__(ctx, l->name);
     }
@@ -891,7 +891,7 @@ Value __qmljs_call_property_lookup(ExecutionContext *context, Value thisObject, 
 
     Value func;
     if (p)
-        func = baseObject->getValue(context, p);
+        func =  p->type == PropertyDescriptor::Data ? p->value : baseObject->getValue(context, p);
     else
         func = baseObject->__get__(context, l->name);
 
