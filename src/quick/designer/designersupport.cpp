@@ -125,6 +125,7 @@ QImage DesignerSupport::renderImageForItem(QQuickItem *referencedItem, const QRe
          return QImage();
     renderTexture->setRect(boundingRect);
     renderTexture->setSize(imageSize);
+    renderTexture->setItem(QQuickItemPrivate::get(referencedItem)->rootNode());
     renderTexture->markDirtyTexture();
     renderTexture->updateTexture();
 
