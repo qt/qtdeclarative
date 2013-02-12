@@ -57,7 +57,7 @@ void PieChart::setName(const QString &name)
 
 QQmlListProperty<PieSlice> PieChart::slices()
 {
-    return QQmlListProperty<PieSlice>(this, 0, &PieChart::append_slice);
+    return QQmlListProperty<PieSlice>(this, 0, &PieChart::append_slice, 0, 0, 0);
 }
 
 void PieChart::append_slice(QQmlListProperty<PieSlice> *list, PieSlice *slice)
@@ -68,4 +68,3 @@ void PieChart::append_slice(QQmlListProperty<PieSlice> *list, PieSlice *slice)
         chart->m_slices.append(slice);
     }
 }
-
