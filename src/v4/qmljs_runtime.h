@@ -93,6 +93,7 @@ extern "C" {
 // context
 Value __qmljs_call_activation_property(ExecutionContext *, String *name, Value *args, int argc);
 Value __qmljs_call_property(ExecutionContext *context, Value that, String *name, Value *args, int argc);
+Value __qmljs_call_property_lookup(ExecutionContext *context, Value thisObject, uint index, Value *args, int argc);
 Value __qmljs_call_element(ExecutionContext *context, Value that, Value index, Value *args, int argc);
 Value __qmljs_call_value(ExecutionContext *context, Value thisObject, Value func, Value *args, int argc);
 
@@ -167,6 +168,10 @@ void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, Value 
 void __qmljs_set_property(ExecutionContext *ctx, Value object, String *name, Value value);
 Value __qmljs_get_property(ExecutionContext *ctx, Value object, String *name);
 Value __qmljs_get_activation_property(ExecutionContext *ctx, String *name);
+
+Value __qmljs_get_property_lookup(ExecutionContext *ctx, Value object, int lookupIndex);
+void __qmljs_set_property_lookup(ExecutionContext *ctx, Value object, int lookupIndex, Value value);
+
 
 Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index);
 void __qmljs_set_element(ExecutionContext *ctx, Value object, Value index, Value value);

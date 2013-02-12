@@ -89,6 +89,7 @@ void Object::__put__(ExecutionContext *ctx, const QString &name, const Value &va
 
 Value Object::getValue(ExecutionContext *ctx, const PropertyDescriptor *p) const
 {
+    assert(p->type != PropertyDescriptor::Generic);
     if (p->isData())
         return p->value;
     if (!p->get)
@@ -110,6 +111,30 @@ Value Object::getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p
     if (!*exists)
         return Value::undefinedValue();
     return getValue(ctx, p);
+}
+
+void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, Value value)
+{
+    if (pd->isAccessor()) {
+            if (pd->set) {
+                Value args[1];
+                args[0] = value;
+                pd->set->call(ctx, Value::fromObject(this), args, 1);
+                return;
+            }
+            goto reject;
+    }
+
+    if (!pd->isWritable())
+        goto reject;
+
+    pd->value = value;
+    return;
+
+  reject:
+    if (ctx->strictMode)
+        __qmljs_throw_type_error(ctx);
+
 }
 
 void Object::inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx)

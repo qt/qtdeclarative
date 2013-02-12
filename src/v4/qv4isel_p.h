@@ -51,6 +51,8 @@ public:
 
     VM::Function *vmFunction(IR::Function *f);
 
+    void setUseFastLookups(bool b) { useFastLookups = b; }
+
 protected:
     VM::Function *createFunctionMapping(VM::ExecutionEngine *engine, IR::Function *irFunction);
     VM::ExecutionEngine *engine() const { return _engine; }
@@ -59,6 +61,8 @@ protected:
 private:
     VM::ExecutionEngine *_engine;
     QHash<IR::Function *, VM::Function *> _irToVM;
+protected:
+    bool useFastLookups;
 };
 
 class Q_V4_EXPORT EvalISelFactory

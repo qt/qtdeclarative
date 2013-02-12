@@ -676,6 +676,61 @@ Value __qmljs_get_activation_property(ExecutionContext *ctx, String *name)
     return ctx->getProperty(name);
 }
 
+Value __qmljs_get_property_lookup(ExecutionContext *ctx, Value object, int lookupIndex)
+{
+    Lookup *l = ctx->lookups + lookupIndex;
+    if (Object *o = object.asObject()) {
+        if (o->internalClass == l->internalClass)
+            return o->getValue(ctx, o->memberData + l->index);
+
+        uint idx = o->internalClass->find(l->name);
+        if (idx < UINT_MAX) {
+            l->internalClass = o->internalClass;
+            l->index = idx;
+            return o->getValue(ctx, o->memberData + idx);
+        }
+
+        return object.objectValue()->__get__(ctx, l->name);
+    } else if (object.isString() && l->name->isEqualTo(ctx->engine->id_length)) {
+        return Value::fromInt32(object.stringValue()->toQString().length());
+    } else {
+        object = __qmljs_to_object(object, ctx);
+
+        if (object.isObject()) {
+            return object.objectValue()->__get__(ctx, l->name);
+        } else {
+            ctx->throwTypeError();
+            return Value::undefinedValue();
+        }
+    }
+}
+
+void __qmljs_set_property_lookup(ExecutionContext *ctx, Value object, int lookupIndex, Value value)
+{
+    if (! object.isObject())
+        object = __qmljs_to_object(object, ctx);
+
+    Object *o = object.objectValue();
+    Lookup *l = ctx->lookups + lookupIndex;
+
+    if (l->index != ArrayObject::LengthPropertyIndex || !o->isArrayObject()) {
+        if (o->internalClass == l->internalClass) {
+            o->putValue(ctx, o->memberData + l->index, value);
+            return;
+        }
+
+        uint idx = o->internalClass->find(l->name);
+        if (idx < UINT_MAX) {
+            l->internalClass = o->internalClass;
+            l->index = idx;
+            return o->putValue(ctx, o->memberData + idx, value);
+        }
+    }
+
+    o->__put__(ctx, l->name, value);
+}
+
+
 Value __qmljs_get_thisObject(ExecutionContext *ctx)
 {
     return ctx->thisObject;
@@ -763,6 +818,43 @@ Value __qmljs_call_property(ExecutionContext *context, Value thisObject, String 
     }
 
     Value func = baseObject->__get__(context, name);
+    FunctionObject *o = func.asFunctionObject();
+    if (!o)
+        context->throwTypeError();
+
+    return o->call(context, thisObject, args, argc);
+}
+
+Value __qmljs_call_property_lookup(ExecutionContext *context, Value thisObject, uint index, Value *args, int argc)
+{
+    Lookup *l = context->lookups + index;
+
+    Object *baseObject;
+    if (thisObject.isString()) {
+        baseObject = context->engine->stringPrototype;
+    } else {
+        if (!thisObject.isObject())
+            thisObject = __qmljs_to_object(thisObject, context);
+
+       assert(thisObject.isObject());
+       baseObject = thisObject.objectValue();
+    }
+
+
+    Value func;
+
+    if (baseObject->internalClass == l->internalClass) {
+        func = baseObject->getValue(context, baseObject->memberData + l->index);
+    } else {
+        uint idx = baseObject->internalClass->find(l->name);
+        if (idx < UINT_MAX) {
+            l->internalClass = baseObject->internalClass;
+            l->index = idx;
+            func = baseObject->getValue(context, baseObject->memberData + idx);
+        } else {
+            func = baseObject->__get__(context, l->name);
+        }
+    }
     FunctionObject *o = func.asFunctionObject();
     if (!o)
         context->throwTypeError();

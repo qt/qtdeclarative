@@ -92,6 +92,7 @@ FunctionObject::FunctionObject(ExecutionContext *scope)
     , varList(0)
     , formalParameterCount(0)
     , varCount(0)
+    , function(0)
 {
     prototype = scope->engine->functionPrototype;
 
@@ -339,8 +340,8 @@ Value FunctionPrototype::method_bind(ExecutionContext *ctx)
 
 ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     : FunctionObject(scope)
-    , function(function)
 {
+    this->function = function;
     assert(function);
     assert(function->code);
 

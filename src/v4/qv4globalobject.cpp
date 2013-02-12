@@ -375,15 +375,15 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
 
     bool strict = f->isStrict || (directCall && context->strictMode);
 
-    uint size = requiredMemoryForExecutionContect(this, argc);
+    uint size = requiredMemoryForExecutionContect(this, 0);
     ExecutionContext *k = static_cast<ExecutionContext *>(alloca(size));
 
     if (strict) {
         ctx = k;
         ctx->thisObject = directCall ? context->thisObject : context->engine->globalObject;
         ctx->function = this;
-        ctx->arguments = args;
-        ctx->argumentCount = argc;
+        ctx->arguments = 0;
+        ctx->argumentCount = 0;
         ctx->initCallContext(context);
     }
 
@@ -472,6 +472,8 @@ QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
             Codegen cg(ctx, strictMode);
             IR::Function *globalIRCode = cg(fileName, program, &module, mode, inheritedLocals);
             QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(vm, &module));
+            if (inheritContext)
+                isel->setUseFastLookups(false);
             if (globalIRCode)
                 globalCode = isel->vmFunction(globalIRCode);
         }

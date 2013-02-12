@@ -778,9 +778,12 @@ private:
 #define callRuntimeMethod(result, function, ...) \
     callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
 
+    uint addLookup(VM::String *name);
+
     IR::BasicBlock *_block;
     IR::Function* _function;
     VM::Function* _vmFunction;
+    QVector<VM::Lookup> _lookups;
     Assembler* _as;
 };
 

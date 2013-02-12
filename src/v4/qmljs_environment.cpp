@@ -217,6 +217,8 @@ void ExecutionContext::init(ExecutionEngine *eng)
     thisObject = eng->globalObject;
 
     function = 0;
+    lookups = 0;
+
     arguments = 0;
     argumentCount = 0;
     locals = 0;
@@ -235,6 +237,8 @@ void ExecutionContext::init(ExecutionContext *p, Object *with)
     thisObject = p->thisObject;
 
     function = 0;
+    lookups = parent->lookups;
+
     arguments = 0;
     argumentCount = 0;
     locals = 0;
@@ -503,6 +507,9 @@ void ExecutionContext::initCallContext(ExecutionContext *parent)
     withObject = 0;
 
     strictMode = function->strictMode;
+
+    if (function->function)
+        lookups = function->function->lookups;
 
     if (function->varCount) {
         locals = reinterpret_cast<Value *>(this + 1);

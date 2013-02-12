@@ -383,8 +383,10 @@ InstructionSelection::~InstructionSelection()
 
 void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
 {
+    QVector<Lookup> lookups;
     qSwap(_function, function);
     qSwap(_vmFunction, vmFunction);
+    qSwap(_lookups, lookups);
     Assembler* oldAssembler = _as;
     _as = new Assembler(_function);
 
@@ -428,8 +430,14 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
 
     _as->link(_vmFunction);
 
+    if (_lookups.size()) {
+        _vmFunction->lookups = new Lookup[_lookups.size()];
+        memcpy(_vmFunction->lookups, _lookups.constData(), _lookups.size()*sizeof(Lookup));
+    }
+
     qSwap(_vmFunction, vmFunction);
     qSwap(_function, function);
+    qSwap(_lookups, lookups);
     delete _as;
     _as = oldAssembler;
 }
@@ -643,12 +651,24 @@ void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
 
 void InstructionSelection::getProperty(IR::Temp *base, const QString &name, IR::Temp *target)
 {
-    generateFunctionCall(target, __qmljs_get_property, Assembler::ContextRegister, base, identifier(name));
+    if (useFastLookups) {
+        VM::String *s = identifier(name);
+        uint index = addLookup(s);
+        generateFunctionCall(target, __qmljs_get_property_lookup, Assembler::ContextRegister, base, Assembler::TrustedImm32(index));
+    } else {
+        generateFunctionCall(target, __qmljs_get_property, Assembler::ContextRegister, base, identifier(name));
+    }
 }
 
 void InstructionSelection::setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_set_property, Assembler::ContextRegister, targetBase, identifier(targetName), source);
+    if (useFastLookups) {
+        VM::String *s = identifier(targetName);
+        uint index = addLookup(s);
+        generateFunctionCall(Assembler::Void, __qmljs_set_property_lookup, Assembler::ContextRegister, targetBase, Assembler::TrustedImm32(index), source);
+    } else {
+        generateFunctionCall(Assembler::Void, __qmljs_set_property, Assembler::ContextRegister, targetBase, identifier(targetName), source);
+    }
 }
 
 void InstructionSelection::getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target)
@@ -778,10 +798,20 @@ void InstructionSelection::callProperty(IR::Temp *base, const QString &name,
     assert(base != 0);
 
     int argc = prepareVariableArguments(args);
-    generateFunctionCall(result, __qmljs_call_property,
-                         Assembler::ContextRegister, base, identifier(name),
-                         baseAddressForCallArguments(),
-                         Assembler::TrustedImm32(argc));
+    VM::String *s = identifier(name);
+
+    if (useFastLookups) {
+        uint index = addLookup(s);
+        generateFunctionCall(result, __qmljs_call_property_lookup,
+                             Assembler::ContextRegister, base, Assembler::TrustedImm32(index),
+                             baseAddressForCallArguments(),
+                             Assembler::TrustedImm32(argc));
+    } else {
+        generateFunctionCall(result, __qmljs_call_property,
+                             Assembler::ContextRegister, base, s,
+                             baseAddressForCallArguments(),
+                             Assembler::TrustedImm32(argc));
+    }
 }
 
 void InstructionSelection::callSubscript(IR::Temp *base, IR::Temp *index, IR::ExprList *args, IR::Temp *result)
@@ -935,3 +965,13 @@ void InstructionSelection::callRuntimeMethodImp(IR::Temp *result, const char* na
 }
 
 
+uint InstructionSelection::addLookup(VM::String *name)
+{
+    uint index = (uint)_lookups.size();
+    VM::Lookup l;
+    l.internalClass = 0;
+    l.index = 0;
+    l.name = name;
+    _lookups.append(l);
+    return index;
+}

@@ -18,6 +18,7 @@ using namespace QQmlJS::IR;
 
 EvalInstructionSelection::EvalInstructionSelection(VM::ExecutionEngine *engine, Module *module)
     : _engine(engine)
+    , useFastLookups(true)
 {
     assert(engine);
     assert(module);

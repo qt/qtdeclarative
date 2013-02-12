@@ -68,6 +68,7 @@ namespace VM {
 
 struct Value;
 struct Function;
+struct Lookup;
 struct Object;
 struct ObjectIterator;
 struct BooleanObject;
@@ -146,6 +147,8 @@ struct Q_V4_EXPORT Object: Managed {
     Value getValue(ExecutionContext *ctx, const PropertyDescriptor *p) const;
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p) const;
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const;
+
+    void putValue(ExecutionContext *ctx, PropertyDescriptor *pd, Value value);
 
     void inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx);
     void inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);

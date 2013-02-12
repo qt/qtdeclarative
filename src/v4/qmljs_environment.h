@@ -54,6 +54,7 @@ struct Object;
 struct ExecutionEngine;
 struct ExecutionContext;
 struct DeclarativeEnvironment;
+struct Lookup;
 
 struct Q_V4_EXPORT DiagnosticMessage
 {
@@ -81,6 +82,7 @@ struct ExecutionContext
     Value thisObject;
 
     FunctionObject *function;
+    Lookup *lookups;
 
     Value *arguments;
     unsigned int argumentCount;

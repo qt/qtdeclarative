@@ -400,6 +400,7 @@ int main(int argc, char *argv[])
                 vm.globalCode = f;
 
                 ctx->strictMode = f->isStrict;
+                ctx->lookups = f->lookups;
                 if (debugger)
                     debugger->aboutToCall(0, ctx);
                 QQmlJS::VM::Value result = f->code(ctx, f->codeData);

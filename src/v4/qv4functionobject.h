@@ -100,6 +100,13 @@ struct ReferenceErrorPrototype;
 struct SyntaxErrorPrototype;
 struct TypeErrorPrototype;
 struct URIErrorPrototype;
+struct InternalClass;
+
+struct Lookup {
+    InternalClass *internalClass;
+    uint index;
+    String *name;
+};
 
 struct Function {
     String *name;
@@ -113,6 +120,8 @@ struct Function {
     QVector<Value> generatedValues;
     QVector<String *> identifiers;
 
+    Lookup *lookups;
+
     bool hasNestedFunctions  : 1;
     bool hasDirectEval       : 1;
     bool usesArgumentsObject : 1;
@@ -122,6 +131,7 @@ struct Function {
         : name(name)
         , code(0)
         , codeData(0)
+        , lookups(0)
         , hasNestedFunctions(0)
         , hasDirectEval(false)
         , usesArgumentsObject(false)
@@ -141,6 +151,7 @@ struct Q_V4_EXPORT FunctionObject: Object {
     String * const *varList;
     unsigned int formalParameterCount;
     unsigned int varCount;
+    VM::Function *function;
 
     FunctionObject(ExecutionContext *scope);
 
@@ -196,8 +207,6 @@ struct BuiltinFunction: FunctionObject {
 };
 
 struct ScriptFunction: FunctionObject {
-    VM::Function *function;
-
     ScriptFunction(ExecutionContext *scope, VM::Function *function);
     virtual ~ScriptFunction();
 
