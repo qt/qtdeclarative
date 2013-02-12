@@ -80,9 +80,9 @@ QPainter* QQuickContext2DTile::createPainter(bool smooth, bool antialiasing)
 #endif
 
         if (antialiasing)
-            m_painter.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing | QPainter::TextAntialiasing, true);
+            m_painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing, true);
         else
-            m_painter.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing | QPainter::TextAntialiasing, false);
+            m_painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing, false);
 
         if (smooth)
             m_painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
