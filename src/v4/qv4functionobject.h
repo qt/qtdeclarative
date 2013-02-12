@@ -103,7 +103,8 @@ struct URIErrorPrototype;
 struct InternalClass;
 
 struct Lookup {
-    InternalClass *internalClass;
+    InternalClass *mainClass;
+    InternalClass *protoClass;
     uint index;
     String *name;
 };

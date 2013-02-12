@@ -969,7 +969,8 @@ uint InstructionSelection::addLookup(VM::String *name)
 {
     uint index = (uint)_lookups.size();
     VM::Lookup l;
-    l.internalClass = 0;
+    l.mainClass = 0;
+    l.protoClass = 0;
     l.index = 0;
     l.name = name;
     _lookups.append(l);

@@ -680,18 +680,40 @@ Value __qmljs_get_property_lookup(ExecutionContext *ctx, Value object, int looku
 {
     Lookup *l = ctx->lookups + lookupIndex;
     if (Object *o = object.asObject()) {
-        if (o->internalClass == l->internalClass)
-            return o->getValue(ctx, o->memberData + l->index);
-
-        uint idx = o->internalClass->find(l->name);
-        if (idx < UINT_MAX) {
-            l->internalClass = o->internalClass;
-            l->index = idx;
-            return o->getValue(ctx, o->memberData + idx);
+        PropertyDescriptor *p = 0;
+        if (o->internalClass == l->mainClass) {
+            if (!l->protoClass) {
+                p = o->memberData + l->index;
+            } else if (o->prototype && o->prototype->internalClass == l->protoClass) {
+                p = o->prototype->memberData + l->index;
+            }
         }
 
-        return object.objectValue()->__get__(ctx, l->name);
-    } else if (object.isString() && l->name->isEqualTo(ctx->engine->id_length)) {
+        if (!p) {
+            uint idx = o->internalClass->find(l->name);
+            if (idx < UINT_MAX) {
+                l->mainClass = o->internalClass;
+                l->protoClass = 0;
+                l->index = idx;
+                p = o->memberData + idx;
+            } else if (o->prototype) {
+                idx = o->prototype->internalClass->find(l->name);
+                if (idx < UINT_MAX) {
+                    l->mainClass = o->internalClass;
+                    l->protoClass = o->prototype->internalClass;
+                    l->index = idx;
+                    p = o->prototype->memberData + idx;
+                }
+            }
+        }
+
+        if (p)
+            return o->getValue(ctx, p);
+        else
+            return object.objectValue()->__get__(ctx, l->name);
+    }
+
+    if (object.isString() && l->name->isEqualTo(ctx->engine->id_length)) {
         return Value::fromInt32(object.stringValue()->toQString().length());
     } else {
         object = __qmljs_to_object(object, ctx);
@@ -714,14 +736,14 @@ void __qmljs_set_property_lookup(ExecutionContext *ctx, Value object, int lookup
     Lookup *l = ctx->lookups + lookupIndex;
 
     if (l->index != ArrayObject::LengthPropertyIndex || !o->isArrayObject()) {
-        if (o->internalClass == l->internalClass) {
+        if (o->internalClass == l->mainClass) {
             o->putValue(ctx, o->memberData + l->index, value);
             return;
         }
 
         uint idx = o->internalClass->find(l->name);
         if (idx < UINT_MAX) {
-            l->internalClass = o->internalClass;
+            l->mainClass = o->internalClass;
             l->index = idx;
             return o->putValue(ctx, o->memberData + idx, value);
         }
@@ -840,21 +862,39 @@ Value __qmljs_call_property_lookup(ExecutionContext *context, Value thisObject, 
        baseObject = thisObject.objectValue();
     }
 
-
-    Value func;
-
-    if (baseObject->internalClass == l->internalClass) {
-        func = baseObject->getValue(context, baseObject->memberData + l->index);
-    } else {
-        uint idx = baseObject->internalClass->find(l->name);
-        if (idx < UINT_MAX) {
-            l->internalClass = baseObject->internalClass;
-            l->index = idx;
-            func = baseObject->getValue(context, baseObject->memberData + idx);
-        } else {
-            func = baseObject->__get__(context, l->name);
+    PropertyDescriptor *p = 0;
+    if (baseObject->internalClass == l->mainClass) {
+        if (!l->protoClass) {
+            p = baseObject->memberData + l->index;
+        } else if (baseObject->prototype && baseObject->prototype->internalClass == l->protoClass) {
+            p = baseObject->prototype->memberData + l->index;
         }
     }
+
+    if (!p) {
+        uint idx = baseObject->internalClass->find(l->name);
+        if (idx < UINT_MAX) {
+            l->mainClass = baseObject->internalClass;
+            l->protoClass = 0;
+            l->index = idx;
+            p = baseObject->memberData + idx;
+        } else if (baseObject->prototype) {
+            idx = baseObject->prototype->internalClass->find(l->name);
+            if (idx < UINT_MAX) {
+                l->mainClass = baseObject->internalClass;
+                l->protoClass = baseObject->prototype->internalClass;
+                l->index = idx;
+                p = baseObject->prototype->memberData + idx;
+            }
+        }
+    }
+
+    Value func;
+    if (p)
+        func = baseObject->getValue(context, p);
+    else
+        func = baseObject->__get__(context, l->name);
+
     FunctionObject *o = func.asFunctionObject();
     if (!o)
         context->throwTypeError();
