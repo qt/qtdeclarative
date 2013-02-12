@@ -55,12 +55,12 @@ struct String : public Managed {
     enum StringType {
         StringType_Unknown,
         StringType_Regular,
-        StringType_Identifier,
+        StringType_UInt,
         StringType_ArrayIndex
     };
 
     String(const QString &text)
-        : _text(text), stringHash(InvalidHashValue)
+        : _text(text), stringHash(UINT_MAX), identifier(UINT_MAX)
     { type = Type_String; subtype = StringType_Unknown; }
 
     inline bool isEqualTo(const String *other) const {
@@ -68,12 +68,11 @@ struct String : public Managed {
             return true;
         if (hashValue() != other->hashValue())
             return false;
-        if (subtype == other->subtype) {
-            if (subtype == StringType_ArrayIndex)
-                return true;
-            if (subtype == StringType_Identifier)
-                return stringIdentifier == other->stringIdentifier;
-        }
+        if (identifier != UINT_MAX && identifier == other->identifier)
+            return true;
+        if (subtype >= StringType_UInt && subtype == other->subtype)
+            return true;
+
         return toQString() == other->toQString();
     }
 
@@ -87,10 +86,6 @@ struct String : public Managed {
 
         return stringHash;
     }
-    enum {
-        InvalidArrayIndex = 0xffffffff,
-        InvalidHashValue  = 0xffffffff
-    };
     uint asArrayIndex() const {
         if (subtype == StringType_Unknown)
             createHashValue();
@@ -101,19 +96,18 @@ struct String : public Managed {
     uint toUInt(bool *ok) const;
 
     void makeIdentifier(const ExecutionContext *ctx) {
-        if (subtype == StringType_Identifier)
+        if (identifier != UINT_MAX)
             return;
         makeIdentifierImpl(ctx);
     }
 
     void makeIdentifierImpl(const ExecutionContext *ctx);
 
-private:
-    friend struct Identifiers;
     void createHashValue() const;
 
     QString _text;
     mutable uint stringHash;
+    mutable uint identifier;
 };
 
 } // namespace VM

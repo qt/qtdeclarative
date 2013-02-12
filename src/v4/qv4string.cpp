@@ -52,20 +52,20 @@ static uint toArrayIndex(const QChar *ch, const QChar *end, bool *ok)
     *ok = false;
     uint i = ch->unicode() - '0';
     if (i > 9)
-        return String::InvalidArrayIndex;
+        return UINT_MAX;
     ++ch;
     // reject "01", "001", ...
     if (i == 0 && ch != end)
-        return String::InvalidArrayIndex;
+        return UINT_MAX;
 
     while (ch < end) {
         uint x = ch->unicode() - '0';
         if (x > 9)
-            return String::InvalidArrayIndex;
+            return UINT_MAX;
         uint n = i*10 + x;
         if (n < i)
             // overflow
-            return String::InvalidArrayIndex;
+            return UINT_MAX;
         i = n;
         ++ch;
     }
@@ -79,9 +79,10 @@ uint String::toUInt(bool *ok) const
 
     if (subtype == StringType_Unknown)
         createHashValue();
-    if (subtype == StringType_ArrayIndex)
+    if (subtype >= StringType_UInt)
         return stringHash;
 
+    // ### this conversion shouldn't be required
     double d = __qmljs_string_to_number(this);
     uint l = (uint)d;
     if (d == l)
@@ -104,7 +105,7 @@ void String::createHashValue() const
     bool ok;
     stringHash = toArrayIndex(ch, end, &ok);
     if (ok) {
-        subtype = StringType_ArrayIndex;
+        subtype = (stringHash == UINT_MAX) ? StringType_UInt : StringType_ArrayIndex;
         return;
     }
 

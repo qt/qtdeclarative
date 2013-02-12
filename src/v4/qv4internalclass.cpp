@@ -60,7 +60,7 @@ InternalClass::InternalClass(const QQmlJS::VM::InternalClass &other)
 uint InternalClass::getOrAddMember(Object *object, String *string)
 {
     engine->identifierCache->toIdentifier(string);
-    uint id = string->stringIdentifier;
+    uint id = string->identifier;
 
     QHash<uint, uint>::const_iterator it = propertyTable.constFind(id);
     if (it != propertyTable.constEnd())
@@ -115,7 +115,7 @@ void InternalClass::removeMember(Object *object, uint id)
 uint InternalClass::find(String *string)
 {
     engine->identifierCache->toIdentifier(string);
-    uint id = string->stringIdentifier;
+    uint id = string->identifier;
 
     QHash<uint, uint>::const_iterator it = propertyTable.constFind(id);
     if (it != propertyTable.constEnd())

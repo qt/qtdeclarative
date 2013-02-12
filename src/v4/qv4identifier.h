@@ -70,9 +70,8 @@ public:
         if (str->subtype == String::StringType_ArrayIndex)
             return str;
 
-        str->stringIdentifier = currentIndex;
+        str->identifier = currentIndex;
         if (currentIndex <= USHRT_MAX) {
-            str->subtype = String::StringType_Identifier;
             identifiers.insert(s, str);
             ++currentIndex;
         }
@@ -80,21 +79,19 @@ public:
     }
 
     void toIdentifier(String *s) {
-        if (s->subtype >= String::StringType_Identifier)
+        if (s->identifier != UINT_MAX)
             return;
         if (s->subtype == String::StringType_Unknown)
             s->createHashValue();
-        if (s->subtype >= String::StringType_Identifier)
+        if (s->subtype == String::StringType_ArrayIndex)
             return;
         QHash<QString, String*>::const_iterator it = identifiers.find(s->toQString());
         if (it != identifiers.constEnd()) {
-            s->subtype = String::StringType_Identifier;
-            s->stringIdentifier = (*it)->stringIdentifier;
+            s->identifier = (*it)->identifier;
             return;
         }
-        s->stringIdentifier = currentIndex;
+        s->identifier = currentIndex;
         if (currentIndex <= USHRT_MAX) {
-            s->subtype = String::StringType_Identifier;
             identifiers.insert(s->toQString(), s);
             ++currentIndex;
         }

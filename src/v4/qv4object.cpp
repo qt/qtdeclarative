@@ -69,7 +69,7 @@ Object::Object(ExecutionEngine *engine)
     : prototype(0)
     , internalClass(engine->emptyClass)
     , memberDataAlloc(0), memberData(0)
-    , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), sparseArray(0)
+    , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayData(0), sparseArray(0)
 {
     type = Type_Object;
 }
@@ -221,7 +221,7 @@ PropertyDescriptor *Object::insertMember(String *s)
 PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, String *name)
 {
     uint idx = name->asArrayIndex();
-    if (idx != String::InvalidArrayIndex)
+    if (idx != UINT_MAX)
         return __getOwnProperty__(ctx, idx);
 
     uint member = internalClass->find(name);
@@ -246,7 +246,7 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, uint index
 PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, String *name)
 {
     uint idx = name->asArrayIndex();
-    if (idx != String::InvalidArrayIndex)
+    if (idx != UINT_MAX)
         return __getPropertyDescriptor__(ctx, idx);
 
 
@@ -282,7 +282,7 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, uin
 Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     uint idx = name->asArrayIndex();
-    if (idx != String::InvalidArrayIndex)
+    if (idx != UINT_MAX)
         return __get__(ctx, idx, hasProperty);
 
     name->makeIdentifier(ctx);
@@ -346,7 +346,7 @@ Value Object::__get__(ExecutionContext *ctx, uint index, bool *hasProperty)
 void Object::__put__(ExecutionContext *ctx, String *name, Value value)
 {
     uint idx = name->asArrayIndex();
-    if (idx != String::InvalidArrayIndex)
+    if (idx != UINT_MAX)
         return __put__(ctx, idx, value);
 
     name->makeIdentifier(ctx);
@@ -486,7 +486,7 @@ void Object::__put__(ExecutionContext *ctx, uint index, Value value)
 bool Object::__hasProperty__(const ExecutionContext *ctx, String *name) const
 {
     uint idx = name->asArrayIndex();
-    if (idx != String::InvalidArrayIndex)
+    if (idx != UINT_MAX)
         return __hasProperty__(ctx, idx);
 
     name->makeIdentifier(ctx);
@@ -510,7 +510,7 @@ bool Object::__hasProperty__(const ExecutionContext *ctx, uint index) const
 bool Object::__delete__(ExecutionContext *ctx, String *name)
 {
     uint idx = name->asArrayIndex();
-    if (idx != String::InvalidArrayIndex)
+    if (idx != UINT_MAX)
         return __delete__(ctx, idx);
 
     name->makeIdentifier(ctx);
@@ -519,7 +519,7 @@ bool Object::__delete__(ExecutionContext *ctx, String *name)
     if (memberIdx != UINT_MAX) {
         PropertyDescriptor &pd = memberData[memberIdx];
         if (pd.isConfigurable()) {
-            internalClass->removeMember(this, name->stringIdentifier);
+            internalClass->removeMember(this, name->identifier);
             memmove(memberData + memberIdx, memberData + memberIdx + 1, (internalClass->size - memberIdx)*sizeof(PropertyDescriptor));
             return true;
         }
@@ -565,7 +565,7 @@ bool Object::__delete__(ExecutionContext *ctx, uint index)
 bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const PropertyDescriptor *desc)
 {
     uint idx = name->asArrayIndex();
-    if (idx != String::InvalidArrayIndex)
+    if (idx != UINT_MAX)
         return __defineOwnProperty__(ctx, idx, desc);
 
     name->makeIdentifier(ctx);
