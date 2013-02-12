@@ -99,17 +99,14 @@ void InternalClass::removeMember(Object *object, uint id)
     }
 
     // create a new class and add it to the tree
-    InternalClass *newClass = new InternalClass(*this);
-    newClass->propertyTable.remove(id);
-    newClass->nameMap.remove(propIdx);
-    --newClass->size;
-    for (QHash<uint, uint>::iterator it = newClass->propertyTable.begin(); it != newClass->propertyTable.end(); ++it) {
-        if ((*it) > propIdx)
-            --(*it);
+    object->internalClass = engine->emptyClass;
+    for (int i = 0; i < nameMap.size(); ++i) {
+        if (i == propIdx)
+            continue;
+        object->internalClass->getOrAddMember(object, nameMap.at(i));
     }
 
-    transitions.insert(toRemove, newClass);
-    object->internalClass = newClass;
+    transitions.insert(toRemove, object->internalClass);
 }
 
 uint InternalClass::find(String *string)
