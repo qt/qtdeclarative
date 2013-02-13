@@ -184,11 +184,13 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine, const 
 
     QHash<QByteArray, QSet<QByteArray> > extensions;
     foreach (const QQmlType *ty, QQmlMetaType::qmlTypes()) {
-        qmlTypesByCppName[ty->metaObject()->className()].insert(ty);
-        if (ty->isExtendedType()) {
-            extensions[ty->typeName()].insert(ty->metaObject()->className());
+        if (!ty->isComposite()) {
+            qmlTypesByCppName[ty->metaObject()->className()].insert(ty);
+            if (ty->isExtendedType())
+                extensions[ty->typeName()].insert(ty->metaObject()->className());
+            collectReachableMetaObjects(ty, &metas);
         }
-        collectReachableMetaObjects(ty, &metas);
+        // TODO actually handle composite types
     }
 
     // Adjust exports of the base object if there are extensions.
