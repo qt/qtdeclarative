@@ -716,7 +716,7 @@ void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
         _block->MOVE(_block->TEMP(t), source);
         source = _block->TEMP(t);
     }
-    if (target->asName() && source->asConst()) {
+    if (!target->asTemp() && source->asConst()) {
         unsigned t = _block->newTemp();
         _block->MOVE(_block->TEMP(t), source);
         source = _block->TEMP(t);

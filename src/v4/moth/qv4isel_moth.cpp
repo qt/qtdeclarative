@@ -446,7 +446,7 @@ void InstructionSelection::getProperty(IR::Temp *base, const QString &name, IR::
     addInstruction(load);
 }
 
-void InstructionSelection::setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
+void InstructionSelection::setProperty(IR::Temp *source, IR::Temp *targetBase, const QString &targetName)
 {
     Instruction::StoreProperty store;
     store.base = getParam(targetBase);

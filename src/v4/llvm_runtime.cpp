@@ -431,7 +431,7 @@ void __qmljs_llvm_set_activation_property(ExecutionContext *ctx, String *name, V
 
 void __qmljs_llvm_get_property(ExecutionContext *ctx, Value *result, Value *object, String *name)
 {
-    *result = __qmljs_get_property(ctx, *object, name);
+    __qmljs_get_property(ctx, result, object, name);
 }
 
 void __qmljs_llvm_call_property(ExecutionContext *context, Value *result, const Value *base, String *name, Value *args, int argc)
@@ -456,7 +456,7 @@ void __qmljs_llvm_set_element(ExecutionContext *ctx, Value *object, Value *index
 
 void __qmljs_llvm_set_property(ExecutionContext *ctx, Value *object, String *name, Value *value)
 {
-    __qmljs_set_property(ctx, *object, name, *value);
+    __qmljs_set_property(ctx, object, name, value);
 }
 
 void __qmljs_llvm_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name)

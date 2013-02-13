@@ -569,11 +569,10 @@ Value __qmljs_new_string_object(ExecutionContext *ctx, String *string)
     return Value::fromObject(ctx->engine->newStringObject(ctx, value));
 }
 
-void __qmljs_set_property(ExecutionContext *ctx, Value object, String *name, Value value)
+void __qmljs_set_property(ExecutionContext *ctx, const Value *object, String *name, const Value *value)
 {
-    if (! object.isObject())
-        object = __qmljs_to_object(object, ctx);
-    object.objectValue()->__put__(ctx, name, value);
+    Object *o = object->isObject() ? object->objectValue() : __qmljs_to_object(*object, ctx).objectValue();
+    o->__put__(ctx, name, *value);
 }
 
 Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index)
@@ -653,22 +652,20 @@ void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, const 
     ctx->setProperty(name, *value);
 }
 
-Value __qmljs_get_property(ExecutionContext *ctx, Value object, String *name)
+void __qmljs_get_property(ExecutionContext *ctx, Value *result, Value *object, String *name)
 {
-    if (object.isObject()) {
-        return object.objectValue()->__get__(ctx, name);
-    } else if (object.isString() && name->isEqualTo(ctx->engine->id_length)) {
-        return Value::fromInt32(object.stringValue()->toQString().length());
+    Value res;
+    Object *o = object->asObject();
+    if (o) {
+        res = o->__get__(ctx, name);
+    } else if (object->isString() && name->isEqualTo(ctx->engine->id_length)) {
+        res = Value::fromInt32(object->stringValue()->toQString().length());
     } else {
-        object = __qmljs_to_object(object, ctx);
-
-        if (object.isObject()) {
-            return object.objectValue()->__get__(ctx, name);
-        } else {
-            ctx->throwTypeError();
-            return Value::undefinedValue();
-        }
+        o = __qmljs_to_object(*object, ctx).objectValue();
+        res = o->__get__(ctx, name);
     }
+    if (result)
+        *result = res;
 }
 
 void __qmljs_get_activation_property(ExecutionContext *ctx, Value *result, String *name)
@@ -676,10 +673,11 @@ void __qmljs_get_activation_property(ExecutionContext *ctx, Value *result, Strin
     *result = ctx->getProperty(name);
 }
 
-Value __qmljs_get_property_lookup(ExecutionContext *ctx, Value object, int lookupIndex)
+void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Value *object, int lookupIndex)
 {
+    Value res;
     Lookup *l = ctx->lookups + lookupIndex;
-    if (Object *o = object.asObject()) {
+    if (Object *o = object->asObject()) {
         PropertyDescriptor *p = 0;
         if (o->internalClass == l->mainClass) {
             if (!l->protoClass) {
@@ -708,36 +706,29 @@ Value __qmljs_get_property_lookup(ExecutionContext *ctx, Value object, int looku
         }
 
         if (p)
-            return p->type == PropertyDescriptor::Data ? p->value : o->getValue(ctx, p);
+            res = p->type == PropertyDescriptor::Data ? p->value : o->getValue(ctx, p);
         else
-            return object.objectValue()->__get__(ctx, l->name);
-    }
-
-    if (object.isString() && l->name->isEqualTo(ctx->engine->id_length)) {
-        return Value::fromInt32(object.stringValue()->toQString().length());
+            res = o->__get__(ctx, l->name);
     } else {
-        object = __qmljs_to_object(object, ctx);
-
-        if (object.isObject()) {
-            return object.objectValue()->__get__(ctx, l->name);
+        if (object->isString() && l->name->isEqualTo(ctx->engine->id_length)) {
+            res = Value::fromInt32(object->stringValue()->toQString().length());
         } else {
-            ctx->throwTypeError();
-            return Value::undefinedValue();
+            o = __qmljs_to_object(*object, ctx).objectValue();
+            res = o->__get__(ctx, l->name);
         }
     }
+    if (result)
+        *result = res;
 }
 
-void __qmljs_set_property_lookup(ExecutionContext *ctx, Value object, int lookupIndex, Value value)
+void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value *object, int lookupIndex, const Value *value)
 {
-    if (! object.isObject())
-        object = __qmljs_to_object(object, ctx);
-
-    Object *o = object.objectValue();
+    Object *o = object->isObject() ? object->objectValue() : __qmljs_to_object(*object, ctx).objectValue();
     Lookup *l = ctx->lookups + lookupIndex;
 
     if (l->index != ArrayObject::LengthPropertyIndex || !o->isArrayObject()) {
         if (o->internalClass == l->mainClass) {
-            o->putValue(ctx, o->memberData + l->index, value);
+            o->putValue(ctx, o->memberData + l->index, *value);
             return;
         }
 
@@ -745,11 +736,11 @@ void __qmljs_set_property_lookup(ExecutionContext *ctx, Value object, int lookup
         if (idx < UINT_MAX) {
             l->mainClass = o->internalClass;
             l->index = idx;
-            return o->putValue(ctx, o->memberData + idx, value);
+            return o->putValue(ctx, o->memberData + idx, *value);
         }
     }
 
-    o->__put__(ctx, l->name, value);
+    o->__put__(ctx, l->name, *value);
 }
 
 

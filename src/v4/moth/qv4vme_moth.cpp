@@ -194,11 +194,11 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(StoreElement)
 
     MOTH_BEGIN_INSTR(LoadProperty)
-        VALUE(instr.result) = __qmljs_get_property(context, VALUE(instr.base), instr.name);
+        __qmljs_get_property(context, VALUEPTR(instr.result), VALUEPTR(instr.base), instr.name);
     MOTH_END_INSTR(LoadProperty)
 
     MOTH_BEGIN_INSTR(StoreProperty)
-        __qmljs_set_property(context, VALUE(instr.base), instr.name, VALUE(instr.source));
+        __qmljs_set_property(context, VALUEPTR(instr.base), instr.name, VALUEPTR(instr.source));
     MOTH_END_INSTR(StoreProperty)
 
     MOTH_BEGIN_INSTR(Push)

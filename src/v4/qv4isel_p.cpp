@@ -146,8 +146,8 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Member *m = s->target->asMember()) {
             if (IR::Temp *base = m->base->asTemp()) {
-                if (s->source->asTemp() || s->source->asConst()) {
-                    setProperty(s->source, base, *m->name);
+                if (s->source->asTemp()) {
+                    setProperty(s->source->asTemp(), base, *m->name);
                     return;
                 }
             }

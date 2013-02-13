@@ -625,7 +625,7 @@ void InstructionSelection::getProperty(IR::Temp *sourceBase, const QString &sour
                 _llvmFunction->arg_begin(), t, base, name);
 }
 
-void InstructionSelection::setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
+void InstructionSelection::setProperty(IR::Temp *source, IR::Temp *targetBase, const QString &targetName)
 {
     llvm::Value *base = getLLVMTempReference(targetBase);
     llvm::Value *name = getIdentifier(targetName);

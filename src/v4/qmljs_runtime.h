@@ -166,12 +166,12 @@ Value __qmljs_new_boolean_object(ExecutionContext *ctx, bool boolean);
 Value __qmljs_new_number_object(ExecutionContext *ctx, double n);
 Value __qmljs_new_string_object(ExecutionContext *ctx, String *string);
 void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, const Value *value);
-void __qmljs_set_property(ExecutionContext *ctx, Value object, String *name, Value value);
-Value __qmljs_get_property(ExecutionContext *ctx, Value object, String *name);
+void __qmljs_set_property(ExecutionContext *ctx, const Value *object, String *name, const Value *value);
+void __qmljs_get_property(ExecutionContext *ctx, Value *result, Value *object, String *name);
 void __qmljs_get_activation_property(ExecutionContext *ctx, Value *result, String *name);
 
-Value __qmljs_get_property_lookup(ExecutionContext *ctx, Value object, int lookupIndex);
-void __qmljs_set_property_lookup(ExecutionContext *ctx, Value object, int lookupIndex, Value value);
+void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Value *object, int lookupIndex);
+void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value *object, int lookupIndex, const Value *value);
 
 
 Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index);

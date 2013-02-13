@@ -689,20 +689,24 @@ void InstructionSelection::getProperty(IR::Temp *base, const QString &name, IR::
     if (useFastLookups) {
         VM::String *s = identifier(name);
         uint index = addLookup(s);
-        generateFunctionCall(target, __qmljs_get_property_lookup, Assembler::ContextRegister, base, Assembler::TrustedImm32(index));
+        generateFunctionCall(Assembler::Void, __qmljs_get_property_lookup, Assembler::ContextRegister, Assembler::PointerToValue(target),
+                             Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
     } else {
-        generateFunctionCall(target, __qmljs_get_property, Assembler::ContextRegister, base, identifier(name));
+        generateFunctionCall(Assembler::Void, __qmljs_get_property, Assembler::ContextRegister, Assembler::PointerToValue(target),
+                             Assembler::PointerToValue(base), identifier(name));
     }
 }
 
-void InstructionSelection::setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
+void InstructionSelection::setProperty(IR::Temp *source, IR::Temp *targetBase, const QString &targetName)
 {
     if (useFastLookups) {
         VM::String *s = identifier(targetName);
         uint index = addLookup(s);
-        generateFunctionCall(Assembler::Void, __qmljs_set_property_lookup, Assembler::ContextRegister, targetBase, Assembler::TrustedImm32(index), source);
+        generateFunctionCall(Assembler::Void, __qmljs_set_property_lookup, Assembler::ContextRegister, Assembler::PointerToValue(targetBase),
+                             Assembler::TrustedImm32(index), Assembler::PointerToValue(source));
     } else {
-        generateFunctionCall(Assembler::Void, __qmljs_set_property, Assembler::ContextRegister, targetBase, identifier(targetName), source);
+        generateFunctionCall(Assembler::Void, __qmljs_set_property, Assembler::ContextRegister, Assembler::PointerToValue(targetBase),
+                             identifier(targetName), Assembler::PointerToValue(source));
     }
 }
 
