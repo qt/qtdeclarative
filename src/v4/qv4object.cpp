@@ -141,7 +141,8 @@ void Object::inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *c
 {
     bool hasProperty = false;
     Value v = __get__(ctx, name, &hasProperty);
-    Value result = op(v, rhs, ctx);
+    Value result;
+    op(ctx, &result, &v, &rhs);
     __put__(ctx, name, result);
 }
 
@@ -151,8 +152,9 @@ void Object::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ct
     if (idx < UINT_MAX) {
         bool hasProperty = false;
         Value v = __get__(ctx, idx, &hasProperty);
-        v = op(v, rhs, ctx);
-        __put__(ctx, idx, v);
+        Value result;
+        op(ctx, &result, &v, &rhs);
+        __put__(ctx, idx, result);
         return;
     }
     String *name = index.toString(ctx);

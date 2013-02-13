@@ -216,40 +216,41 @@ Value __qmljs_delete_name(ExecutionContext *ctx, String *name)
     return Value::fromBoolean(ctx->deleteProperty(name));
 }
 
-Value __qmljs_add_helper(Value left, Value right, ExecutionContext *ctx)
+void __qmljs_add_helper(ExecutionContext *ctx, Value *result, const Value *left, const Value *right)
 {
-    Value pleft = __qmljs_to_primitive(left, ctx, PREFERREDTYPE_HINT);
-    Value pright = __qmljs_to_primitive(right, ctx, PREFERREDTYPE_HINT);
+    Value pleft = __qmljs_to_primitive(*left, ctx, PREFERREDTYPE_HINT);
+    Value pright = __qmljs_to_primitive(*right, ctx, PREFERREDTYPE_HINT);
     if (pleft.isString() || pright.isString()) {
         if (!pleft.isString())
             pleft = __qmljs_to_string(pleft, ctx);
         if (!pright.isString())
             pright = __qmljs_to_string(pright, ctx);
         String *string = __qmljs_string_concat(ctx, pleft.stringValue(), pright.stringValue());
-        return Value::fromString(string);
+        *result = Value::fromString(string);
+        return;
     }
     double x = __qmljs_to_number(pleft, ctx);
     double y = __qmljs_to_number(pright, ctx);
-    return Value::fromDouble(x + y);
+    *result = Value::fromDouble(x + y);
 }
 
-Value __qmljs_instanceof(Value left, Value right, ExecutionContext *ctx)
+void __qmljs_instanceof(ExecutionContext *ctx, Value *result, const Value *left, const Value *right)
 {
-    FunctionObject *function = right.asFunctionObject();
+    FunctionObject *function = right->asFunctionObject();
     if (!function)
         __qmljs_throw_type_error(ctx);
 
-    bool r = function->hasInstance(ctx, left);
-    return Value::fromBoolean(r);
+    bool r = function->hasInstance(ctx, *left);
+    *result = Value::fromBoolean(r);
 }
 
-Value __qmljs_in(Value left, Value right, ExecutionContext *ctx)
+void __qmljs_in(ExecutionContext *ctx, Value *result, const Value *left, const Value *right)
 {
-    if (!right.isObject())
+    if (!right->isObject())
         __qmljs_throw_type_error(ctx);
-    String *s = left.toString(ctx);
-    bool r = right.objectValue()->__hasProperty__(ctx, s);
-    return Value::fromBoolean(r);
+    String *s = left->toString(ctx);
+    bool r = right->objectValue()->__hasProperty__(ctx, s);
+    *result = Value::fromBoolean(r);
 }
 
 void __qmljs_inplace_bit_and_name(Value value, String *name, ExecutionContext *ctx)

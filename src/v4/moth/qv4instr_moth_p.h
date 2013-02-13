@@ -406,7 +406,7 @@ union Instr
     };
     struct instr_binop {
         MOTH_INSTR_HEADER
-        VM::Value (*alu)(const VM::Value , const VM::Value, VM::ExecutionContext *);
+        VM::BinOp alu;
         Param lhs;
         Param rhs;
         Param result;

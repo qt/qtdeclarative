@@ -506,8 +506,9 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
 void ExecutionContext::inplaceBitOp(Value value, String *name, BinOp op)
 {
     Value lhs = getProperty(name);
-    value = op(lhs, value, this);
-    setProperty(name, value);
+    Value result;
+    op(this, &result, &lhs, &value);
+    setProperty(name, result);
 }
 
 void ExecutionContext::throwError(Value value)

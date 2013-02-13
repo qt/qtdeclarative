@@ -251,7 +251,7 @@ const Assembler::BinaryOperationInfo Assembler::binaryOperations[QQmlJS::IR::Las
     NULL_OP // OpOr
 };
 
-void Assembler::generateBinOp(IR::AluOp operation, IR::Temp* target, IR::Expr* left, IR::Expr* right)
+void Assembler::generateBinOp(IR::AluOp operation, IR::Temp* target, IR::Temp *left, IR::Temp *right)
 {
     const BinaryOperationInfo& info = binaryOperations[operation];
     if (!info.fallbackImplementation) {
@@ -332,7 +332,8 @@ void Assembler::generateBinOp(IR::AluOp operation, IR::Temp* target, IR::Expr* l
     }
 
     // Fallback
-    generateFunctionCallImp(target, info.name, info.fallbackImplementation, left, right, ContextRegister);
+    generateFunctionCallImp(Assembler::Void, info.name, info.fallbackImplementation, ContextRegister,
+                            Assembler::PointerToValue(target), Assembler::PointerToValue(left), Assembler::PointerToValue(right));
 
     if (binOpFinished.isSet())
         binOpFinished.link(this);
@@ -748,7 +749,7 @@ void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *
                                       Assembler::ContextRegister);
 }
 
-void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
+void InstructionSelection::binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp *rightSource, IR::Temp *target)
 {
     _as->generateBinOp(oper, target, leftSource, rightSource);
 }

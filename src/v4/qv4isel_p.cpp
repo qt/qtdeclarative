@@ -124,9 +124,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                     return;
                 }
             } else if (IR::Binop *b = s->source->asBinop()) {
-                if ((b->left->asTemp() || b->left->asConst())
-                        && (b->right->asTemp() || b->right->asConst())) {
-                    binop(b->op, b->left, b->right, t);
+                if (b->left->asTemp() && b->right->asTemp()) {
+                    binop(b->op, b->left->asTemp(), b->right->asTemp(), t);
                     return;
                 }
             } else if (IR::Call *c = s->source->asCall()) {
@@ -160,8 +159,8 @@ void InstructionSelection::visitMove(IR::Move *s)
     } else {
         // inplace assignment, e.g. x += 1, ++x, ...
         if (IR::Temp *t = s->target->asTemp()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                binop(s->op, t, s->source, t);
+            if (s->source->asTemp()) {
+                binop(s->op, t, s->source->asTemp(), t);
                 return;
             }
         } else if (IR::Name *n = s->target->asName()) {

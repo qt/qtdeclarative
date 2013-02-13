@@ -683,13 +683,13 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
         }
     }
 
-    if (!left->asTemp() && !left->asConst()) {
+    if (!left->asTemp()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), left);
         left = _block->TEMP(t);
     }
 
-    if (!right->asTemp() && !right->asConst()) {
+    if (!right->asTemp()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), right);
         right = _block->TEMP(t);
@@ -716,7 +716,7 @@ void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
         _block->MOVE(_block->TEMP(t), source);
         source = _block->TEMP(t);
     }
-    if (!target->asTemp() && source->asConst()) {
+    if (source->asConst() && (!target->asTemp() || op != IR::OpInvalid)) {
         unsigned t = _block->newTemp();
         _block->MOVE(_block->TEMP(t), source);
         source = _block->TEMP(t);

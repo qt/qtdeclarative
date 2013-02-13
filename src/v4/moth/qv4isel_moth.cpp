@@ -172,8 +172,7 @@ private:
 };
 #undef DBTC
 
-typedef VM::Value (*ALUFunction)(const VM::Value, const VM::Value, VM::ExecutionContext*);
-inline ALUFunction aluOpFunction(IR::AluOp op)
+inline VM::BinOp aluOpFunction(IR::AluOp op)
 {
     switch (op) {
     case IR::OpInvalid:
@@ -506,7 +505,7 @@ void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *
     }
 }
 
-void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Temp *target)
+void InstructionSelection::binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp *rightSource, IR::Temp *target)
 {
     Instruction::Binop binop;
     binop.alu = aluOpFunction(oper);

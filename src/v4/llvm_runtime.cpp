@@ -105,107 +105,107 @@ bool __qmljs_llvm_to_boolean(ExecutionContext *ctx, const Value *value)
 
 void __qmljs_llvm_bit_and(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_bit_and(*left, *right, ctx);
+    __qmljs_bit_and(ctx, result, left, right);
 }
 
 void __qmljs_llvm_bit_or(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_bit_or(*left, *right, ctx);
+    __qmljs_bit_or(ctx, result, left, right);
 }
 
 void __qmljs_llvm_bit_xor(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_bit_xor(*left, *right, ctx);
+    __qmljs_bit_xor(ctx, result, left, right);
 }
 
 void __qmljs_llvm_add(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_add(*left, *right, ctx);
+    __qmljs_add(ctx, result, left, right);
 }
 
 void __qmljs_llvm_sub(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_sub(*left, *right, ctx);
+    __qmljs_sub(ctx, result, left, right);
 }
 
 void __qmljs_llvm_mul(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_mul(*left, *right, ctx);
+    __qmljs_mul(ctx, result, left, right);
 }
 
 void __qmljs_llvm_div(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_div(*left, *right, ctx);
+    __qmljs_div(ctx, result, left, right);
 }
 
 void __qmljs_llvm_mod(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_mod(*left, *right, ctx);
+    __qmljs_mod(ctx, result, left, right);
 }
 
 void __qmljs_llvm_shl(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_shl(*left, *right, ctx);
+    __qmljs_shl(ctx, result, left, right);
 }
 
 void __qmljs_llvm_shr(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_shr(*left, *right, ctx);
+    __qmljs_shr(ctx, result, left, right);
 }
 
 void __qmljs_llvm_ushr(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_ushr(*left, *right, ctx);
+    __qmljs_ushr(ctx, result, left, right);
 }
 
 void __qmljs_llvm_gt(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_gt(*left, *right, ctx);
+    __qmljs_gt(ctx, result, left, right);
 }
 
 void __qmljs_llvm_lt(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_lt(*left, *right, ctx);
+    __qmljs_lt(ctx, result, left, right);
 }
 
 void __qmljs_llvm_ge(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_ge(*left, *right, ctx);
+    __qmljs_ge(ctx, result, left, right);
 }
 
 void __qmljs_llvm_le(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_le(*left, *right, ctx);
+    __qmljs_le(ctx, result, left, right);
 }
 
 void __qmljs_llvm_eq(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_eq(*left, *right, ctx);
+    __qmljs_eq(ctx, result, left, right);
 }
 
 void __qmljs_llvm_ne(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_ne(*left, *right, ctx);
+    __qmljs_ne(ctx, result, left, right);
 }
 
 void __qmljs_llvm_se(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_se(*left, *right, ctx);
+    __qmljs_se(ctx, result, left, right);
 }
 
 void __qmljs_llvm_sne(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_sne(*left, *right, ctx);
+    __qmljs_sne(ctx, result, left, right);
 }
 
 void __qmljs_llvm_instanceof(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_instanceof(*left, *right, ctx);
+    __qmljs_instanceof(ctx, result, left, right);
 }
 
 void __qmljs_llvm_in(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    *result = __qmljs_in(*left, *right, ctx);
+    __qmljs_in(ctx, result, left, right);
 }
 
 void __qmljs_llvm_uplus(ExecutionContext *ctx, Value *result, const Value *value)
