@@ -1567,9 +1567,13 @@ bool Codegen::visit(PostDecrementExpression *ast)
         throwReferenceError(ast->base->lastSourceLocation(), "Invalid left-hand side expression in postfix operation");
     throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken);
 
-    IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(*expr);
-    _expr.code = call(_block->NAME(IR::Name::builtin_postdecrement, ast->lastSourceLocation().startLine, ast->lastSourceLocation().startColumn), args);
+    if (_expr.accept(nx)) {
+        move(*expr, unop(IR::OpDecrement, *expr));
+    } else {
+        IR::ExprList *args = _function->New<IR::ExprList>();
+        args->init(*expr);
+        _expr.code = call(_block->NAME(IR::Name::builtin_postdecrement, ast->lastSourceLocation().startLine, ast->lastSourceLocation().startColumn), args);
+    }
     return false;
 }
 
@@ -1580,9 +1584,13 @@ bool Codegen::visit(PostIncrementExpression *ast)
         throwReferenceError(ast->base->lastSourceLocation(), "Invalid left-hand side expression in postfix operation");
     throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken);
 
-    IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(*expr);
-    _expr.code = call(_block->NAME(IR::Name::builtin_postincrement, ast->lastSourceLocation().startLine, ast->lastSourceLocation().startColumn), args);
+    if (_expr.accept(nx)) {
+        move(*expr, unop(IR::OpIncrement, *expr));
+    } else {
+        IR::ExprList *args = _function->New<IR::ExprList>();
+        args->init(*expr);
+        _expr.code = call(_block->NAME(IR::Name::builtin_postincrement, ast->lastSourceLocation().startLine, ast->lastSourceLocation().startColumn), args);
+    }
     return false;
 }
 
