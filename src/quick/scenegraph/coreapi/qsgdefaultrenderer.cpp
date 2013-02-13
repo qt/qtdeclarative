@@ -135,8 +135,8 @@ QSGDefaultRenderer::QSGDefaultRenderer(QSGContext *context)
     , m_render_node_added(false)
     , m_currentRenderOrder(1)
 {
-    QStringList args = qApp->arguments();
 #if defined(QML_RUNTIME_TESTING)
+    QStringList args = qApp->arguments();
     m_render_opaque_nodes = !args.contains(QLatin1String("--no-opaque-nodes"));
     m_render_alpha_nodes = !args.contains(QLatin1String("--no-alpha-nodes"));
 #endif
