@@ -408,20 +408,6 @@ public:
     void enterStandardStackFrame(int locals);
     void leaveStandardStackFrame(int locals);
 
-    void callFunctionPrologue()
-    {
-#if CPU(X86)
-        // Callee might clobber it :(
-        push(ContextRegister);
-#endif
-    }
-    void callFunctionEpilogue()
-    {
-#if CPU(X86)
-        pop(ContextRegister);
-#endif
-    }
-
     static inline int sizeOfArgument(VoidType)
     { return 0; }
     static inline int sizeOfArgument(RegisterID)
@@ -476,8 +462,6 @@ public:
     template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
     void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
-        callFunctionPrologue();
-
         int totalNumberOfArgs = 5;
 
         // If necessary reserve space for the return value on the stack and
@@ -514,8 +498,6 @@ public:
 
         if (stackSizeToCorrect)
             add32(TrustedImm32(stackSizeToCorrect), StackPointerRegister);
-
-        callFunctionEpilogue();
     }
 
     template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
