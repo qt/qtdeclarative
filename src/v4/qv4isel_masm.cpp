@@ -993,12 +993,6 @@ void InstructionSelection::callRuntimeMethodImp(IR::Temp *result, const char* na
     _as->generateFunctionCallImp(result, name, method, Assembler::ContextRegister, identifier(*baseName->id), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
 }
 
-void InstructionSelection::callRuntimeMethodImp(IR::Temp *result, const char* name, BuiltinMethod method, IR::ExprList *args)
-{
-    int argc = prepareVariableArguments(args);
-    _as->generateFunctionCallImp(result, name, method, Assembler::ContextRegister, baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
-}
-
 
 uint InstructionSelection::addLookup(VM::String *name)
 {

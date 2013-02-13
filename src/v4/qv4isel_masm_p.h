@@ -769,7 +769,6 @@ private:
     typedef VM::Value (*ActivationMethod)(VM::ExecutionContext *, VM::String *name, VM::Value *args, int argc);
     typedef VM::Value (*BuiltinMethod)(VM::ExecutionContext *, VM::Value *args, int argc);
     void callRuntimeMethodImp(IR::Temp *result, const char* name, ActivationMethod method, IR::Expr *base, IR::ExprList *args);
-    void callRuntimeMethodImp(IR::Temp *result, const char* name, BuiltinMethod method, IR::ExprList *args);
 #define callRuntimeMethod(result, function, ...) \
     callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
 
