@@ -584,7 +584,7 @@ void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::setActivationProperty(IR::Expr *source, const QString &targetName)
+void InstructionSelection::setActivationProperty(IR::Temp *source, const QString &targetName)
 {
     llvm::Value *name = getIdentifier(targetName);
     llvm::Value *src = toValuePtr(source);

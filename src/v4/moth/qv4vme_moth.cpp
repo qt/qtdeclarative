@@ -177,12 +177,12 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 
     MOTH_BEGIN_INSTR(LoadName)
         TRACE(inline, "property name = %s", instr.name->toQString().toUtf8().constData());
-        VALUE(instr.result) = __qmljs_get_activation_property(context, instr.name);
+        __qmljs_get_activation_property(context, VALUEPTR(instr.result), instr.name);
     MOTH_END_INSTR(LoadName)
 
     MOTH_BEGIN_INSTR(StoreName)
         TRACE(inline, "property name = %s", instr.name->toQString().toUtf8().constData());
-        __qmljs_set_activation_property(context, instr.name, VALUE(instr.source));
+        __qmljs_set_activation_property(context, instr.name, VALUEPTR(instr.source));
     MOTH_END_INSTR(StoreName)
 
     MOTH_BEGIN_INSTR(LoadElement)
@@ -240,7 +240,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_BEGIN_INSTR(CallActivationProperty)
         Q_ASSERT(instr.args + instr.argc < stackSize);
         VM::Value *args = stack + instr.args;
-        VALUE(instr.result) = __qmljs_call_activation_property(context, instr.name, args, instr.argc);
+        __qmljs_call_activation_property(context, VALUEPTR(instr.result), instr.name, args, instr.argc);
     MOTH_END_INSTR(CallActivationProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltinThrow)
@@ -391,7 +391,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         TRACE(inline, "property name = %s, args = %d, argc = %d", instr.name->toQString().toUtf8().constData(), instr.args, instr.argc);
         Q_ASSERT(instr.args + instr.argc < stackSize);
         VM::Value *args = stack + instr.args;
-        VALUE(instr.result) = __qmljs_construct_activation_property(context, instr.name, args, instr.argc);
+        __qmljs_construct_activation_property(context, VALUEPTR(instr.result), instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateActivationProperty)
 
     MOTH_BEGIN_INSTR(Jump)

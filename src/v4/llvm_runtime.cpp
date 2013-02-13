@@ -400,7 +400,7 @@ String *__qmljs_llvm_identifier_from_utf8(ExecutionContext *ctx, const char *str
 
 void __qmljs_llvm_call_activation_property(ExecutionContext *context, Value *result, String *name, Value *args, int argc)
 {
-    *result = __qmljs_call_activation_property(context, name, args, argc);
+    __qmljs_call_activation_property(context, result, name, args, argc);
 }
 
 void __qmljs_llvm_call_value(ExecutionContext *context, Value *result, const Value *thisObject, const Value *func, Value *args, int argc)
@@ -411,7 +411,7 @@ void __qmljs_llvm_call_value(ExecutionContext *context, Value *result, const Val
 
 void __qmljs_llvm_construct_activation_property(ExecutionContext *context, Value *result, String *name, Value *args, int argc)
 {
-    *result = __qmljs_construct_activation_property(context, name, args, argc);
+    __qmljs_construct_activation_property(context, result, name, args, argc);
 }
 
 void __qmljs_llvm_construct_value(ExecutionContext *context, Value *result, const Value *func, Value *args, int argc)
@@ -421,12 +421,12 @@ void __qmljs_llvm_construct_value(ExecutionContext *context, Value *result, cons
 
 void __qmljs_llvm_get_activation_property(ExecutionContext *ctx, Value *result, String *name)
 {
-    *result = __qmljs_get_activation_property(ctx, name);
+    __qmljs_get_activation_property(ctx, result, name);
 }
 
 void __qmljs_llvm_set_activation_property(ExecutionContext *ctx, String *name, Value *value)
 {
-    __qmljs_set_activation_property(ctx, name, *value);
+    __qmljs_set_activation_property(ctx, name, value);
 }
 
 void __qmljs_llvm_get_property(ExecutionContext *ctx, Value *result, Value *object, String *name)

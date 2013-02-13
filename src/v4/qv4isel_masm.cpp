@@ -668,13 +668,13 @@ void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *target
 void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *temp)
 {
     String *propertyName = identifier(name);
-    generateFunctionCall(temp, __qmljs_get_activation_property, Assembler::ContextRegister, propertyName);
+    generateFunctionCall(Assembler::Void, __qmljs_get_activation_property, Assembler::ContextRegister, Assembler::PointerToValue(temp), propertyName);
 }
 
-void InstructionSelection::setActivationProperty(IR::Expr *source, const QString &targetName)
+void InstructionSelection::setActivationProperty(IR::Temp *source, const QString &targetName)
 {
     String *propertyName = identifier(targetName);
-    generateFunctionCall(Assembler::Void, __qmljs_set_activation_property, Assembler::ContextRegister, propertyName, source);
+    generateFunctionCall(Assembler::Void, __qmljs_set_activation_property, Assembler::ContextRegister, propertyName, Assembler::PointerToValue(source));
 }
 
 void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
@@ -990,7 +990,9 @@ void InstructionSelection::callRuntimeMethodImp(IR::Temp *result, const char* na
     assert(baseName != 0);
 
     int argc = prepareVariableArguments(args);
-    _as->generateFunctionCallImp(result, name, method, Assembler::ContextRegister, identifier(*baseName->id), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    _as->generateFunctionCallImp(Assembler::Void, name, method, Assembler::ContextRegister, Assembler::PointerToValue(result),
+                                 identifier(*baseName->id), baseAddressForCallArguments(),
+                                 Assembler::TrustedImm32(argc));
 }
 
 

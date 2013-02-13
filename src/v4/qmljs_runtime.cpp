@@ -648,9 +648,9 @@ Value __qmljs_foreach_next_property_name(Value foreach_iterator)
 }
 
 
-void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, Value value)
+void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, const Value *value)
 {
-    ctx->setProperty(name, value);
+    ctx->setProperty(name, *value);
 }
 
 Value __qmljs_get_property(ExecutionContext *ctx, Value object, String *name)
@@ -671,9 +671,9 @@ Value __qmljs_get_property(ExecutionContext *ctx, Value object, String *name)
     }
 }
 
-Value __qmljs_get_activation_property(ExecutionContext *ctx, String *name)
+void __qmljs_get_activation_property(ExecutionContext *ctx, Value *result, String *name)
 {
-    return ctx->getProperty(name);
+    *result = ctx->getProperty(name);
 }
 
 Value __qmljs_get_property_lookup(ExecutionContext *ctx, Value object, int lookupIndex)
@@ -810,7 +810,7 @@ uint __qmljs_equal(Value x, Value y, ExecutionContext *ctx)
     return false;
 }
 
-Value __qmljs_call_activation_property(ExecutionContext *context, String *name, Value *args, int argc)
+void __qmljs_call_activation_property(ExecutionContext *context, Value *result, String *name, Value *args, int argc)
 {
     Object *base;
     Value func = context->getPropertyAndBase(name, &base);
@@ -820,10 +820,16 @@ Value __qmljs_call_activation_property(ExecutionContext *context, String *name, 
 
     Value thisObject = base ? Value::fromObject(base) : Value::undefinedValue();
 
-    if (o == context->engine->evalFunction && name->isEqualTo(context->engine->id_eval))
-        return static_cast<EvalFunction *>(o)->evalCall(context, thisObject, args, argc, true);
+    if (o == context->engine->evalFunction && name->isEqualTo(context->engine->id_eval)) {
+        Value res = static_cast<EvalFunction *>(o)->evalCall(context, thisObject, args, argc, true);
+        if (result)
+            *result = res;
+        return;
+    }
 
-    return o->call(context, thisObject, args, argc);
+    Value res = o->call(context, thisObject, args, argc);
+    if (result)
+        *result = res;
 }
 
 Value __qmljs_call_property(ExecutionContext *context, Value thisObject, String *name, Value *args, int argc)
@@ -927,10 +933,12 @@ Value __qmljs_call_value(ExecutionContext *context, Value thisObject, Value func
     return o->call(context, thisObject, args, argc);
 }
 
-Value __qmljs_construct_activation_property(ExecutionContext *context, String *name, Value *args, int argc)
+void __qmljs_construct_activation_property(ExecutionContext *context, Value *result, String *name, Value *args, int argc)
 {
     Value func = context->getProperty(name);
-    return __qmljs_construct_value(context, func, args, argc);
+    Value res = __qmljs_construct_value(context, func, args, argc);
+    if (result)
+        *result = res;
 }
 
 Value __qmljs_construct_value(ExecutionContext *context, Value func, Value *args, int argc)

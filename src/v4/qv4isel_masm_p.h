@@ -214,10 +214,12 @@ public:
 
     void loadArgument(PointerToValue temp, RegisterID dest)
     {
-        assert(temp.value);
-
-        Pointer addr = loadTempAddress(dest, temp.value);
-        loadArgument(addr, dest);
+        if (!temp.value) {
+            loadArgument(TrustedImmPtr(0), dest);
+        } else {
+            Pointer addr = loadTempAddress(dest, temp.value);
+            loadArgument(addr, dest);
+        }
     }
 
 #ifdef VALUE_FITS_IN_REGISTER
@@ -707,7 +709,7 @@ protected:
     virtual void loadString(const QString &str, IR::Temp *targetTemp);
     virtual void loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp);
     virtual void getActivationProperty(const QString &name, IR::Temp *temp);
-    virtual void setActivationProperty(IR::Expr *source, const QString &targetName);
+    virtual void setActivationProperty(IR::Temp *source, const QString &targetName);
     virtual void initClosure(IR::Closure *closure, IR::Temp *target);
     virtual void getProperty(IR::Temp *base, const QString &name, IR::Temp *target);
     virtual void setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName);
@@ -766,8 +768,7 @@ private:
 
     int prepareVariableArguments(IR::ExprList* args);
 
-    typedef VM::Value (*ActivationMethod)(VM::ExecutionContext *, VM::String *name, VM::Value *args, int argc);
-    typedef VM::Value (*BuiltinMethod)(VM::ExecutionContext *, VM::Value *args, int argc);
+    typedef void (*ActivationMethod)(VM::ExecutionContext *, VM::Value *result, VM::String *name, VM::Value *args, int argc);
     void callRuntimeMethodImp(IR::Temp *result, const char* name, ActivationMethod method, IR::Expr *base, IR::ExprList *args);
 #define callRuntimeMethod(result, function, ...) \
     callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)

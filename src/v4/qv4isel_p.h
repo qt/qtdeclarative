@@ -126,7 +126,7 @@ public: // to implement by subclasses:
     virtual void loadString(const QString &str, IR::Temp *targetTemp) = 0;
     virtual void loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp) = 0;
     virtual void getActivationProperty(const QString &name, IR::Temp *temp) = 0;
-    virtual void setActivationProperty(IR::Expr *source, const QString &targetName) = 0;
+    virtual void setActivationProperty(IR::Temp *source, const QString &targetName) = 0;
     virtual void initClosure(IR::Closure *closure, IR::Temp *target) = 0;
     virtual void getProperty(IR::Temp *base, const QString &name, IR::Temp *target) = 0;
     virtual void setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName) = 0;

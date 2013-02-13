@@ -419,7 +419,7 @@ void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *
     addInstruction(load);
 }
 
-void InstructionSelection::setActivationProperty(IR::Expr *source, const QString &targetName)
+void InstructionSelection::setActivationProperty(IR::Temp *source, const QString &targetName)
 {
     Instruction::StoreName store;
     store.source = getParam(source);

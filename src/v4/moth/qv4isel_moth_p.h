@@ -66,7 +66,7 @@ protected:
     virtual void loadString(const QString &str, IR::Temp *targetTemp);
     virtual void loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp);
     virtual void getActivationProperty(const QString &name, IR::Temp *temp);
-    virtual void setActivationProperty(IR::Expr *source, const QString &targetName);
+    virtual void setActivationProperty(IR::Temp *source, const QString &targetName);
     virtual void initClosure(IR::Closure *closure, IR::Temp *target);
     virtual void getProperty(IR::Temp *base, const QString &name, IR::Temp *target);
     virtual void setProperty(IR::Expr *source, IR::Temp *targetBase, const QString &targetName);

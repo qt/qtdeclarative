@@ -73,8 +73,8 @@ void InstructionSelection::visitMove(IR::Move *s)
 {
     if (s->op == IR::OpInvalid) {
         if (IR::Name *n = s->target->asName()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                setActivationProperty(s->source, *n->id);
+            if (s->source->asTemp()) {
+                setActivationProperty(s->source->asTemp(), *n->id);
                 return;
             }
         } else if (IR::Temp *t = s->target->asTemp()) {
