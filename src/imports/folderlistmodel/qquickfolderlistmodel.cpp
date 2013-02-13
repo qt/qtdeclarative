@@ -159,8 +159,10 @@ void QQuickFolderListModelPrivate::_q_directoryUpdated(const QString &directory,
         data = list;
         q->beginRemoveRows(parent, fromIndex, toIndex);
         q->endRemoveRows();
-        q->beginInsertRows(parent, fromIndex, list.size()-1);
-        q->endInsertRows();
+        if (list.size() > 0) {
+            q->beginInsertRows(parent, fromIndex, list.size()-1);
+            q->endInsertRows();
+        }
         emit q->rowCountChanged();
     } else if (data.size() < list.size()) {
         //qDebug() << "File added. FromIndex: " << fromIndex << " toIndex: " << toIndex << " list size: " << list.size();
