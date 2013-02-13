@@ -520,42 +520,50 @@ void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
 
 void InstructionSelection::callBuiltinPostIncrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_builtin_post_increment_member, base, identifier(name), Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment_member, Assembler::ContextRegister,
+                         Assembler::PointerToValue(result), Assembler::PointerToValue(base), identifier(name));
 }
 
 void InstructionSelection::callBuiltinPostIncrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_builtin_post_increment_element, base, index, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment_element, Assembler::ContextRegister,
+                         Assembler::PointerToValue(result), Assembler::PointerToValue(base), Assembler::PointerToValue(index));
 }
 
 void InstructionSelection::callBuiltinPostIncrementName(const QString &name, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_builtin_post_increment_name, identifier(name), Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment_name, Assembler::ContextRegister,
+                         Assembler::PointerToValue(result), identifier(name));
 }
 
 void InstructionSelection::callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_builtin_post_increment, Assembler::PointerToValue(value), Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment, Assembler::ContextRegister,
+                         Assembler::PointerToValue(result), Assembler::PointerToValue(value));
 }
 
 void InstructionSelection::callBuiltinPostDecrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_builtin_post_decrement_member, base, identifier(name), Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement_member, Assembler::ContextRegister,
+                         Assembler::PointerToValue(result), Assembler::PointerToValue(base), identifier(name));
 }
 
 void InstructionSelection::callBuiltinPostDecrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_builtin_post_decrement_element, base, index, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement_element, Assembler::ContextRegister,
+                         Assembler::PointerToValue(result), Assembler::PointerToValue(base), Assembler::PointerToValue(index));
 }
 
 void InstructionSelection::callBuiltinPostDecrementName(const QString &name, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_builtin_post_decrement_name, identifier(name), Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement_name, Assembler::ContextRegister,
+                         Assembler::PointerToValue(result), identifier(name));
 }
 
 void InstructionSelection::callBuiltinPostDecrementValue(IR::Temp *value, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_builtin_post_decrement, Assembler::PointerToValue(value), Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement, Assembler::ContextRegister,
+                         Assembler::PointerToValue(result), Assembler::PointerToValue(value));
 }
 
 void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
@@ -927,9 +935,8 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         _as->jumpToBlock(_block, s->iffalse);
         return;
     } else if (IR::Binop *b = s->cond->asBinop()) {
-        if ((b->left->asTemp() || b->left->asConst()) &&
-            (b->right->asTemp() || b->right->asConst())) {
-            Bool (*op)(const Value, const Value, ExecutionContext *ctx) = 0;
+        if (b->left->asTemp() && b->right->asTemp()) {
+            VM::CmpOp op = 0;
             const char *opName = 0;
             switch (b->op) {
             default: Q_UNREACHABLE(); assert(!"todo"); break;
@@ -945,7 +952,8 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             case IR::OpIn: setOp(op, opName, __qmljs_cmp_in); break;
             } // switch
 
-            _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, op, b->left, b->right, Assembler::ContextRegister);
+            _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, op, Assembler::ContextRegister,
+                                         Assembler::PointerToValue(b->left->asTemp()), Assembler::PointerToValue(b->right->asTemp()));
 
             Assembler::Jump target = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister, Assembler::TrustedImm32(0));
             _as->addPatch(s->iftrue, target);

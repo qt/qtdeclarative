@@ -328,35 +328,35 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncMember)
-        VALUE(instr.result) = __qmljs_builtin_post_increment_member(VALUE(instr.base), instr.member, context);
+        __qmljs_builtin_post_increment_member(context, VALUEPTR(instr.result), VALUEPTR(instr.base), instr.member);
     MOTH_END_INSTR(CallBuiltinTypeofMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncSubscript)
-        VALUE(instr.result) = __qmljs_builtin_post_increment_element(VALUE(instr.base), VALUE(instr.index), context);
+        __qmljs_builtin_post_increment_element(context, VALUEPTR(instr.result), VALUEPTR(instr.base), VALUEPTR(instr.index));
     MOTH_END_INSTR(CallBuiltinTypeofSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncName)
-        VALUE(instr.result) = __qmljs_builtin_post_increment_name(instr.name, context);
+        __qmljs_builtin_post_increment_name(context, VALUEPTR(instr.result), instr.name);
     MOTH_END_INSTR(CallBuiltinTypeofName)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncValue)
-        VALUE(instr.result) = __qmljs_builtin_post_increment(VALUEPTR(instr.value), context);
+        __qmljs_builtin_post_increment(context, VALUEPTR(instr.result), VALUEPTR(instr.value));
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecMember)
-        VALUE(instr.result) = __qmljs_builtin_post_decrement_member(VALUE(instr.base), instr.member, context);
+        __qmljs_builtin_post_decrement_member(context, VALUEPTR(instr.result), VALUEPTR(instr.base), instr.member);
     MOTH_END_INSTR(CallBuiltinTypeofMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecSubscript)
-        VALUE(instr.result) = __qmljs_builtin_post_decrement_element(VALUE(instr.base), VALUE(instr.index), context);
+        __qmljs_builtin_post_decrement_element(context, VALUEPTR(instr.result), VALUEPTR(instr.base), VALUEPTR(instr.index));
     MOTH_END_INSTR(CallBuiltinTypeofSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecName)
-        VALUE(instr.result) = __qmljs_builtin_post_decrement_name(instr.name, context);
+        __qmljs_builtin_post_decrement_name(context, VALUEPTR(instr.result), instr.name);
     MOTH_END_INSTR(CallBuiltinTypeofName)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecValue)
-        VALUE(instr.result) = __qmljs_builtin_post_decrement(VALUEPTR(instr.value), context);
+        __qmljs_builtin_post_decrement(context, VALUEPTR(instr.result), VALUEPTR(instr.value));
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeclareVar)

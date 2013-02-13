@@ -695,8 +695,8 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
         right = _block->TEMP(t);
     }
 
-    assert(left->asTemp() || left->asConst());
-    assert(right->asTemp() || right->asConst());
+    assert(left->asTemp());
+    assert(right->asTemp());
 
     return _block->BINOP(op, left, right);
 }

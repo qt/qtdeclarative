@@ -106,15 +106,15 @@ Value __qmljs_builtin_typeof_name(String *name, ExecutionContext *context);
 Value __qmljs_builtin_typeof_member(Value base, String *name, ExecutionContext *context);
 Value __qmljs_builtin_typeof_element(Value base, Value index, ExecutionContext *context);
 
-Value __qmljs_builtin_post_increment(Value *val, ExecutionContext *ctx);
-Value __qmljs_builtin_post_increment_name(String *name, ExecutionContext *context);
-Value __qmljs_builtin_post_increment_member(Value base, String *name, ExecutionContext *context);
-Value __qmljs_builtin_post_increment_element(Value base, Value index, ExecutionContext *context);
+void __qmljs_builtin_post_increment(ExecutionContext *ctx, Value *result, Value *val);
+void __qmljs_builtin_post_increment_name(ExecutionContext *context, Value *result, String *name);
+void __qmljs_builtin_post_increment_member(ExecutionContext *context, Value *result, const Value *base, String *name);
+void __qmljs_builtin_post_increment_element(ExecutionContext *context, Value *result, const Value *base, const Value *index);
 
-Value __qmljs_builtin_post_decrement(Value *val, ExecutionContext *ctx);
-Value __qmljs_builtin_post_decrement_name(String *name, ExecutionContext *context);
-Value __qmljs_builtin_post_decrement_member(Value base, String *name, ExecutionContext *context);
-Value __qmljs_builtin_post_decrement_element(Value base, Value index, ExecutionContext *context);
+void __qmljs_builtin_post_decrement(ExecutionContext *ctx, Value *result, Value *val);
+void __qmljs_builtin_post_decrement_name(ExecutionContext *context, Value *result, String *name);
+void __qmljs_builtin_post_decrement_member(ExecutionContext *context, Value *result, const Value *base, String *name);
+void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *result, const Value *base, const Value *index);
 
 void __qmljs_builtin_throw(Value val, ExecutionContext *context);
 void __qmljs_builtin_rethrow(ExecutionContext *context);
@@ -285,16 +285,17 @@ void __qmljs_inplace_shl_member(ExecutionContext *ctx, const Value *base, String
 void __qmljs_inplace_shr_member(ExecutionContext *ctx, const Value *base, String *name, const Value *rhs);
 void __qmljs_inplace_ushr_member(ExecutionContext *ctx, const Value *base, String *name, const Value *rhs);
 
-Bool __qmljs_cmp_gt(Value left, Value right, ExecutionContext *ctx);
-Bool __qmljs_cmp_lt(Value left, Value right, ExecutionContext *ctx);
-Bool __qmljs_cmp_ge(Value left, Value right, ExecutionContext *ctx);
-Bool __qmljs_cmp_le(Value left, Value right, ExecutionContext *ctx);
-Bool __qmljs_cmp_eq(Value left, Value right, ExecutionContext *ctx);
-Bool __qmljs_cmp_ne(Value left, Value right, ExecutionContext *ctx);
-Bool __qmljs_cmp_se(Value left, Value right, ExecutionContext *ctx);
-Bool __qmljs_cmp_sne(Value left, Value right, ExecutionContext *ctx);
-Bool __qmljs_cmp_instanceof(Value left, Value right, ExecutionContext *ctx);
-Bool __qmljs_cmp_in(Value left, Value right, ExecutionContext *ctx);
+typedef Bool (*CmpOp)(ExecutionContext *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_gt(ExecutionContext *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_lt(ExecutionContext *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_ge(ExecutionContext *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_le(ExecutionContext *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_eq(ExecutionContext *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_ne(ExecutionContext *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_se(ExecutionContext *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_sne(ExecutionContext *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_instanceof(ExecutionContext *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_in(ExecutionContext *ctx, const Value *left, const Value *right);
 
 // type conversion and testing
 inline Value __qmljs_to_primitive(Value value, ExecutionContext *ctx, int typeHint)
@@ -690,42 +691,42 @@ inline void __qmljs_gt(ExecutionContext *ctx, Value *result, const Value *left, 
 {
     TRACE2(left, right);
 
-    *result = Value::fromBoolean(__qmljs_cmp_gt(*left, *right, ctx));
+    *result = Value::fromBoolean(__qmljs_cmp_gt(ctx, left, right));
 }
 
 inline void __qmljs_lt(ExecutionContext *ctx, Value *result, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
-    *result = Value::fromBoolean(__qmljs_cmp_lt(*left, *right, ctx));
+    *result = Value::fromBoolean(__qmljs_cmp_lt(ctx, left, right));
 }
 
 inline void __qmljs_ge(ExecutionContext *ctx, Value *result, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
-    *result = Value::fromBoolean(__qmljs_cmp_ge(*left, *right, ctx));
+    *result = Value::fromBoolean(__qmljs_cmp_ge(ctx, left, right));
 }
 
 inline void __qmljs_le(ExecutionContext *ctx, Value *result, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
-    *result = Value::fromBoolean(__qmljs_cmp_le(*left, *right, ctx));
+    *result = Value::fromBoolean(__qmljs_cmp_le(ctx, left, right));
 }
 
 inline void __qmljs_eq(ExecutionContext *ctx, Value *result, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
-    *result = Value::fromBoolean(__qmljs_cmp_eq(*left, *right, ctx));
+    *result = Value::fromBoolean(__qmljs_cmp_eq(ctx, left, right));
 }
 
 inline void __qmljs_ne(ExecutionContext *ctx, Value *result, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
-    *result = Value::fromBoolean(!__qmljs_cmp_eq(*left, *right, ctx));
+    *result = Value::fromBoolean(!__qmljs_cmp_eq(ctx, left, right));
 }
 
 inline void __qmljs_se(ExecutionContext *, Value *result, const Value *left, const Value *right)
@@ -744,137 +745,137 @@ inline void __qmljs_sne(ExecutionContext *, Value *result, const Value *left, co
     *result = Value::fromBoolean(r);
 }
 
-inline Bool __qmljs_cmp_gt(Value left, Value right, ExecutionContext *ctx)
+inline Bool __qmljs_cmp_gt(ExecutionContext *ctx, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
-    left = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
-    right = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
+    Value l = __qmljs_to_primitive(*left, ctx, NUMBER_HINT);
+    Value r = __qmljs_to_primitive(*right, ctx, NUMBER_HINT);
 
-    if (Value::integerCompatible(left, right))
-        return left.integerValue() > right.integerValue();
-    if (Value::bothDouble(left, right)) {
-        return left.doubleValue() > right.doubleValue();
-    } else if (left.isString() && right.isString()) {
-        return __qmljs_string_compare(ctx, right.stringValue(), left.stringValue());
+    if (Value::integerCompatible(l, r))
+        return l.integerValue() > r.integerValue();
+    if (Value::bothDouble(l, r)) {
+        return l.doubleValue() > r.doubleValue();
+    } else if (l.isString() && r.isString()) {
+        return __qmljs_string_compare(ctx, r.stringValue(), l.stringValue());
     } else {
-        double l = __qmljs_to_number(left, ctx);
-        double r = __qmljs_to_number(right, ctx);
-        return l > r;
+        double dl = __qmljs_to_number(l, ctx);
+        double dr = __qmljs_to_number(r, ctx);
+        return dl > dr;
     }
 }
 
-inline Bool __qmljs_cmp_lt(Value left, Value right, ExecutionContext *ctx)
+inline Bool __qmljs_cmp_lt(ExecutionContext *ctx, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
-    left = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
-    right = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
+    Value l = __qmljs_to_primitive(*left, ctx, NUMBER_HINT);
+    Value r = __qmljs_to_primitive(*right, ctx, NUMBER_HINT);
 
-    if (Value::integerCompatible(left, right))
-        return left.integerValue() < right.integerValue();
-    if (Value::bothDouble(left, right)) {
-        return left.doubleValue() < right.doubleValue();
-    } else if (left.isString() && right.isString()) {
-        return __qmljs_string_compare(ctx, left.stringValue(), right.stringValue());
+    if (Value::integerCompatible(l, r))
+        return l.integerValue() < r.integerValue();
+    if (Value::bothDouble(l, r)) {
+        return l.doubleValue() < r.doubleValue();
+    } else if (l.isString() && r.isString()) {
+        return __qmljs_string_compare(ctx, l.stringValue(), r.stringValue());
     } else {
-        double l = __qmljs_to_number(left, ctx);
-        double r = __qmljs_to_number(right, ctx);
-        return l < r;
+        double dl = __qmljs_to_number(l, ctx);
+        double dr = __qmljs_to_number(r, ctx);
+        return dl < dr;
     }
 }
 
-inline Bool __qmljs_cmp_ge(Value left, Value right, ExecutionContext *ctx)
+inline Bool __qmljs_cmp_ge(ExecutionContext *ctx, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
-    left = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
-    right = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
+    Value l = __qmljs_to_primitive(*left, ctx, NUMBER_HINT);
+    Value r = __qmljs_to_primitive(*right, ctx, NUMBER_HINT);
 
-    if (Value::integerCompatible(left, right))
-        return left.integerValue() >= right.integerValue();
-    if (Value::bothDouble(left, right)) {
-        return left.doubleValue() >= right.doubleValue();
-    } else if (left.isString() && right.isString()) {
-        return !__qmljs_string_compare(ctx, left.stringValue(), right.stringValue());
+    if (Value::integerCompatible(l, r))
+        return l.integerValue() >= r.integerValue();
+    if (Value::bothDouble(l, r)) {
+        return l.doubleValue() >= r.doubleValue();
+    } else if (l.isString() && r.isString()) {
+        return !__qmljs_string_compare(ctx, l.stringValue(), r.stringValue());
     } else {
-        double l = __qmljs_to_number(left, ctx);
-        double r = __qmljs_to_number(right, ctx);
-        return l >= r;
+        double dl = __qmljs_to_number(l, ctx);
+        double dr = __qmljs_to_number(r, ctx);
+        return dl >= dr;
     }
 }
 
-inline Bool __qmljs_cmp_le(Value left, Value right, ExecutionContext *ctx)
+inline Bool __qmljs_cmp_le(ExecutionContext *ctx, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
-    left = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
-    right = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
+    Value l = __qmljs_to_primitive(*left, ctx, NUMBER_HINT);
+    Value r = __qmljs_to_primitive(*right, ctx, NUMBER_HINT);
 
-    if (Value::integerCompatible(left, right))
-        return left.integerValue() <= right.integerValue();
-    if (Value::bothDouble(left, right)) {
-        return left.doubleValue() <= right.doubleValue();
-    } else if (left.isString() && right.isString()) {
-        return !__qmljs_string_compare(ctx, right.stringValue(), left.stringValue());
+    if (Value::integerCompatible(l, r))
+        return l.integerValue() <= r.integerValue();
+    if (Value::bothDouble(l, r)) {
+        return l.doubleValue() <= r.doubleValue();
+    } else if (l.isString() && r.isString()) {
+        return !__qmljs_string_compare(ctx, r.stringValue(), l.stringValue());
     } else {
-        double l = __qmljs_to_number(left, ctx);
-        double r = __qmljs_to_number(right, ctx);
-        return l <= r;
+        double dl = __qmljs_to_number(l, ctx);
+        double dr = __qmljs_to_number(r, ctx);
+        return dl <= dr;
     }
 }
 
-inline Bool __qmljs_cmp_eq(Value left, Value right, ExecutionContext *ctx)
+inline Bool __qmljs_cmp_eq(ExecutionContext *ctx, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
     // need to test for doubles first as NaN != NaN
-    if (Value::bothDouble(left, right))
-        return left.doubleValue() == right.doubleValue();
-    if (left.val == right.val)
+    if (Value::bothDouble(*left, *right))
+        return left->doubleValue() == right->doubleValue();
+    if (left->val == right->val)
         return true;
-    if (left.isString() && right.isString())
-        return __qmljs_string_equal(left.stringValue(), right.stringValue());
+    if (left->isString() && right->isString())
+        return __qmljs_string_equal(left->stringValue(), right->stringValue());
 
-    return __qmljs_equal(left, right, ctx);
+    return __qmljs_equal(*left, *right, ctx);
 }
 
-inline Bool __qmljs_cmp_ne(Value left, Value right, ExecutionContext *ctx)
+inline Bool __qmljs_cmp_ne(ExecutionContext *ctx, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
-    return !__qmljs_cmp_eq(left, right, ctx);
+    return !__qmljs_cmp_eq(ctx, left, right);
 }
 
-inline Bool __qmljs_cmp_se(Value left, Value right, ExecutionContext *)
+inline Bool __qmljs_cmp_se(ExecutionContext *, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
-    return __qmljs_strict_equal(left, right);
+    return __qmljs_strict_equal(*left, *right);
 }
 
-inline Bool __qmljs_cmp_sne(Value left, Value right, ExecutionContext *)
+inline Bool __qmljs_cmp_sne(ExecutionContext *, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
-    return ! __qmljs_strict_equal(left, right);
+    return ! __qmljs_strict_equal(*left, *right);
 }
 
-inline Bool __qmljs_cmp_instanceof(Value left, Value right, ExecutionContext *ctx)
+inline Bool __qmljs_cmp_instanceof(ExecutionContext *ctx, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
     Value v;
-    __qmljs_instanceof(ctx, &v, &left, &right);
+    __qmljs_instanceof(ctx, &v, left, right);
     return v.booleanValue();
 }
 
-inline uint __qmljs_cmp_in(Value left, Value right, ExecutionContext *ctx)
+inline uint __qmljs_cmp_in(ExecutionContext *ctx, const Value *left, const Value *right)
 {
     TRACE2(left, right);
 
     Value v;
-    __qmljs_in(ctx, &v, &left, &right);
+    __qmljs_in(ctx, &v, left, right);
     return v.booleanValue();
 }
 
