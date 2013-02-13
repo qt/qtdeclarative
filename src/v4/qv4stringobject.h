@@ -58,7 +58,8 @@ struct StringObject: Object {
     PropertyDescriptor *getIndex(ExecutionContext *ctx, uint index);
 
 protected:
-    virtual void markObjects();
+    static const ManagedVTable static_vtbl;
+    static void markObjects(Managed *that);
 };
 
 struct StringCtor: FunctionObject

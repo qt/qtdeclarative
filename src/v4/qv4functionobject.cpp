@@ -94,6 +94,7 @@ FunctionObject::FunctionObject(ExecutionContext *scope)
     , varCount(0)
     , function(0)
 {
+    vtbl = &static_vtbl;
     prototype = scope->engine->functionPrototype;
 
     type = Type_FunctionObject;
@@ -178,17 +179,21 @@ Value FunctionObject::call(ExecutionContext *context, Value thisObject, Value *a
     return result;
 }
 
-void FunctionObject::markObjects()
+void FunctionObject::markObjects(Managed *that)
 {
-    if (name)
-        name->mark();
+    FunctionObject *o = static_cast<FunctionObject *>(that);
+    if (o->name)
+        o->name->mark();
     // these are marked in VM::Function:
 //    for (uint i = 0; i < formalParameterCount; ++i)
 //        formalParameterList[i]->mark();
 //    for (uint i = 0; i < varCount; ++i)
 //        varList[i]->mark();
-    scope->mark();
-    Object::markObjects();
+    o->scope->mark();
+    if (o->function)
+        o->function->mark();
+
+    Object::markObjects(that);
 }
 
 Value FunctionObject::call(ExecutionContext *ctx)
@@ -201,6 +206,12 @@ Value FunctionObject::construct(ExecutionContext *ctx)
 {
     return call(ctx);
 }
+
+const ManagedVTable FunctionObject::static_vtbl =
+{
+    FunctionObject::markObjects
+};
+
 
 
 FunctionCtor::FunctionCtor(ExecutionContext *scope)
@@ -398,12 +409,6 @@ Value ScriptFunction::call(ExecutionContext *ctx)
     return function->code(ctx, function->codeData);
 }
 
-void ScriptFunction::markObjects()
-{
-    function->mark();
-    FunctionObject::markObjects();
-}
-
 
 BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
     : FunctionObject(scope)
@@ -440,6 +445,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     , boundThis(boundThis)
     , boundArgs(boundArgs)
 {
+    vtbl = &static_vtbl;
     int len = target->__get__(scope, scope->engine->id_length).toUInt32(scope);
     len -= boundArgs.size();
     if (len < 0)
@@ -477,13 +483,19 @@ bool BoundFunction::hasInstance(ExecutionContext *ctx, const Value &value)
     return target->hasInstance(ctx, value);
 }
 
-void BoundFunction::markObjects()
+void BoundFunction::markObjects(Managed *that)
 {
-    target->mark();
-    if (Managed *m = boundThis.asManaged())
+    BoundFunction *o = static_cast<BoundFunction *>(that);
+    o->target->mark();
+    if (Managed *m = o->boundThis.asManaged())
         m->mark();
-    for (int i = 0; i < boundArgs.size(); ++i)
-        if (Managed *m = boundArgs.at(i).asManaged())
+    for (int i = 0; i < o->boundArgs.size(); ++i)
+        if (Managed *m = o->boundArgs.at(i).asManaged())
             m->mark();
-    FunctionObject::markObjects();
+    FunctionObject::markObjects(that);
 }
+
+const ManagedVTable BoundFunction::static_vtbl =
+{
+    BoundFunction::markObjects
+};

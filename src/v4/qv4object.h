@@ -117,7 +117,7 @@ struct Q_V4_EXPORT Object: Managed {
     SparseArray *sparseArray;
 
     Object(ExecutionEngine *engine);
-    virtual ~Object();
+    ~Object();
 
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, uint index);
@@ -304,7 +304,8 @@ public:
     void arrayReserve(uint n);
 
 protected:
-    virtual void markObjects();
+    static const ManagedVTable static_vtbl;
+    static void markObjects(Managed *that);
 
     friend struct ObjectIterator;
     friend struct ObjectPrototype;
@@ -313,12 +314,16 @@ protected:
 struct ForEachIteratorObject: Object {
     ObjectIterator it;
     ForEachIteratorObject(ExecutionContext *ctx, Object *o)
-        : Object(ctx->engine), it(ctx, o, ObjectIterator::EnumberableOnly|ObjectIterator::WithProtoChain) { type = Type_ForeachIteratorObject; }
+        : Object(ctx->engine), it(ctx, o, ObjectIterator::EnumberableOnly|ObjectIterator::WithProtoChain) {
+        vtbl = &static_vtbl;
+        type = Type_ForeachIteratorObject;
+    }
 
     Value nextPropertyName() { return it.nextPropertyNameAsString(); }
 
 protected:
-    virtual void markObjects();
+    static const ManagedVTable static_vtbl;
+    static void markObjects(Managed *that);
 };
 
 struct BooleanObject: Object {

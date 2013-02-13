@@ -77,7 +77,8 @@ struct ArgumentsObject: Object {
 
     bool defineOwnProperty(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc);
 
-    virtual void markObjects();
+    static const ManagedVTable static_vtbl;
+    static void markObjects(Managed *that);
 };
 
 }

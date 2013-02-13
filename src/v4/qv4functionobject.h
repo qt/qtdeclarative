@@ -163,11 +163,12 @@ struct Q_V4_EXPORT FunctionObject: Object {
 
     virtual struct ScriptFunction *asScriptFunction() { return 0; }
 
-    virtual void markObjects();
-
 protected:
     virtual Value call(ExecutionContext *ctx);
     virtual Value construct(ExecutionContext *ctx);
+
+    static const ManagedVTable static_vtbl;
+    static void markObjects(Managed *that);
 };
 
 struct FunctionCtor: FunctionObject
@@ -214,8 +215,6 @@ struct ScriptFunction: FunctionObject {
     virtual Value call(ExecutionContext *ctx);
 
     virtual ScriptFunction *asScriptFunction() { return this; }
-
-    virtual void markObjects();
 };
 
 struct BoundFunction: FunctionObject {
@@ -229,7 +228,9 @@ struct BoundFunction: FunctionObject {
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
     virtual Value construct(ExecutionContext *context, Value *args, int argc);
     virtual bool hasInstance(ExecutionContext *ctx, const Value &value);
-    virtual void markObjects();
+
+    static const ManagedVTable static_vtbl;
+    static void markObjects(Managed *that);
 };
 
 } // namespace VM

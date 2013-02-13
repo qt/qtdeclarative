@@ -71,6 +71,7 @@ Object::Object(ExecutionEngine *engine)
     , memberDataAlloc(0), memberData(0)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayData(0), sparseArray(0)
 {
+    vtbl = &static_vtbl;
     type = Type_Object;
 }
 
@@ -210,13 +211,14 @@ void Object::defineReadonlyProperty(String *name, Value value)
     pd->value = value;
 }
 
-void Object::markObjects()
+void Object::markObjects(Managed *that)
 {
-    if (prototype)
-        prototype->mark();
+    Object *o = static_cast<Object *>(that);
+    if (o->prototype)
+        o->prototype->mark();
 
-    for (int i = 0; i < internalClass->size; ++i) {
-        const PropertyDescriptor &pd = memberData[i];
+    for (int i = 0; i < o->internalClass->size; ++i) {
+        const PropertyDescriptor &pd = o->memberData[i];
         if (pd.isData()) {
             if (Managed *m = pd.value.asManaged())
                 m->mark();
@@ -227,7 +229,7 @@ void Object::markObjects()
                 pd.set->mark();
         }
     }
-    markArrayObjects();
+    o->markArrayObjects();
 }
 
 PropertyDescriptor *Object::insertMember(String *s)
@@ -983,6 +985,10 @@ void Object::markArrayObjects() const
     }
 }
 
+const ManagedVTable Object::static_vtbl =
+{
+    Object::markObjects
+};
 
 void ArrayObject::init(ExecutionContext *context)
 {
@@ -999,10 +1005,15 @@ void ArrayObject::init(ExecutionContext *context)
 
 
 
-void ForEachIteratorObject::markObjects()
+void ForEachIteratorObject::markObjects(Managed *that)
 {
-    Object::markObjects();
-    if (it.object)
-        it.object->mark();
+    ForEachIteratorObject *o = static_cast<ForEachIteratorObject *>(that);
+    Object::markObjects(that);
+    if (o->it.object)
+        o->it.object->mark();
 }
 
+const ManagedVTable ForEachIteratorObject::static_vtbl =
+{
+    ForEachIteratorObject::markObjects
+};

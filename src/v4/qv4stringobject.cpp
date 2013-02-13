@@ -78,6 +78,7 @@ using namespace QQmlJS::VM;
 StringObject::StringObject(ExecutionContext *ctx, const Value &value)
     : Object(ctx->engine), value(value)
 {
+    vtbl = &static_vtbl;
     type = Type_StringObject;
 
     tmpProperty.type = PropertyDescriptor::Data;
@@ -100,11 +101,17 @@ PropertyDescriptor *StringObject::getIndex(ExecutionContext *ctx, uint index)
     return &tmpProperty;
 }
 
-void StringObject::markObjects()
+void StringObject::markObjects(Managed *that)
 {
-    value.stringValue()->mark();
-    Object::markObjects();
+    StringObject *o = static_cast<StringObject *>(that);
+    o->value.stringValue()->mark();
+    Object::markObjects(that);
 }
+
+const ManagedVTable StringObject::static_vtbl =
+{
+    StringObject::markObjects
+};
 
 
 StringCtor::StringCtor(ExecutionContext *scope)

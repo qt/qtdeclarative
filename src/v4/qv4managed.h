@@ -71,6 +71,12 @@ struct ErrorObject;
 struct ArgumentsObject;
 struct JSONObject;
 struct ForeachIteratorObject;
+struct Managed;
+
+struct ManagedVTable
+{
+    void (*markObjects)(Managed *);
+};
 
 struct Q_V4_EXPORT Managed
 {
@@ -81,7 +87,7 @@ private:
 
 protected:
     Managed()
-        : _data(0)
+        : vtbl(&static_vtbl), _data(0)
     { inUse = 1; extensible = 1; }
     virtual ~Managed();
 
@@ -93,8 +99,8 @@ public:
         if (markBit)
             return;
         markBit = 1;
-        if (type != Type_String)
-            markObjects();
+        if (vtbl->markObjects)
+            vtbl->markObjects(this);
     }
 
     enum Type {
@@ -145,8 +151,9 @@ public:
     }
 
 protected:
-    virtual void markObjects() {}
 
+    static const ManagedVTable static_vtbl;
+    const ManagedVTable *vtbl;
     union {
         uint _data;
         struct {

@@ -45,6 +45,12 @@
 
 using namespace QQmlJS::VM;
 
+const ManagedVTable Managed::static_vtbl =
+{
+    0 // markObjects
+};
+
+
 Managed::~Managed()
 {
     _data = 0;

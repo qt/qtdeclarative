@@ -43,6 +43,7 @@
 namespace QQmlJS {
 namespace VM {
 
+
 static Value throwTypeError(ExecutionContext *ctx)
 {
     ctx->throwTypeError();
@@ -52,6 +53,7 @@ static Value throwTypeError(ExecutionContext *ctx)
 ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount)
     : Object(context->engine), context(context)
 {
+    vtbl = &static_vtbl;
     type = Type_ArgumentsObject;
 
     defineDefaultProperty(context->engine->id_length, Value::fromInt32(actualParameterCount));
@@ -123,16 +125,6 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     return result;
 }
 
-void ArgumentsObject::markObjects()
-{
-    for (int i = 0; i < mappedArguments.size(); ++i) {
-        Managed *m = mappedArguments.at(i).asManaged();
-        if (m)
-            m->mark();
-    }
-    Object::markObjects();
-}
-
 
 Value ArgumentsGetterFunction::call(ExecutionContext *ctx, Value thisObject, Value *, int)
 {
@@ -160,6 +152,24 @@ Value ArgumentsSetterFunction::call(ExecutionContext *ctx, Value thisObject, Val
     o->context->arguments[index] = argc ? args[0] : Value::undefinedValue();
     return Value::undefinedValue();
 }
+
+void ArgumentsObject::markObjects(Managed *that)
+{
+    ArgumentsObject *o = static_cast<ArgumentsObject *>(that);
+    for (int i = 0; i < o->mappedArguments.size(); ++i) {
+        Managed *m = o->mappedArguments.at(i).asManaged();
+        if (m)
+            m->mark();
+    }
+    Object::markObjects(that);
+}
+
+
+const ManagedVTable ArgumentsObject::static_vtbl =
+{
+    ArgumentsObject::markObjects
+};
+
 
 
 }
