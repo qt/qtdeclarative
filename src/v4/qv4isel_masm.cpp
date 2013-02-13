@@ -754,9 +754,9 @@ void InstructionSelection::binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp 
     _as->generateBinOp(oper, target, leftSource, rightSource);
 }
 
-void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, const QString &targetName)
+void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Temp *rightSource, const QString &targetName)
 {
-    void (*op)(const Value value, String *name, ExecutionContext *ctx) = 0;
+    VM::InplaceBinOpName op = 0;
     const char *opName = 0;
     switch (oper) {
     case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_name); break;
@@ -775,13 +775,13 @@ void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, c
         break;
     }
     if (op) {
-        _as->generateFunctionCallImp(Assembler::Void, opName, op, sourceExpr, identifier(targetName), Assembler::ContextRegister);
+        _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::ContextRegister, identifier(targetName), Assembler::PointerToValue(rightSource));
     }
 }
 
-void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp)
+void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Temp *source, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp)
 {
-    void (*op)(Value base, Value index, Value value, ExecutionContext *ctx) = 0;
+    VM::InplaceBinOpElement op = 0;
     const char *opName = 0;
     switch (oper) {
     case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_element); break;
@@ -801,13 +801,15 @@ void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr
     }
 
     if (op) {
-        _as->generateFunctionCallImp(Assembler::Void, opName, op, targetBaseTemp, targetIndexTemp, sourceExpr, Assembler::ContextRegister);
+        _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::ContextRegister,
+                                     Assembler::PointerToValue(targetBaseTemp), Assembler::PointerToValue(targetIndexTemp),
+                                     Assembler::PointerToValue(source));
     }
 }
 
-void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
+void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Temp *source, IR::Temp *targetBase, const QString &targetName)
 {
-    void (*op)(Value value, Value base, String *name, ExecutionContext *ctx) = 0;
+    VM::InplaceBinOpMember op = 0;
     const char *opName = 0;
     switch (oper) {
     case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_member); break;
@@ -828,7 +830,9 @@ void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR:
 
     if (op) {
         String* member = identifier(targetName);
-        _as->generateFunctionCallImp(Assembler::Void, opName, op, source, targetBase, member, Assembler::ContextRegister);
+        _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::ContextRegister,
+                                     Assembler::PointerToValue(targetBase), identifier(targetName),
+                                     Assembler::PointerToValue(source));
     }
 }
 

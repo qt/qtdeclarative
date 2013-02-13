@@ -424,24 +424,22 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(LoadThis)
 
     MOTH_BEGIN_INSTR(InplaceElementOp)
-        instr.alu(VALUE(instr.base),
-                  VALUE(instr.index),
-                  VALUE(instr.source),
-                  context);
+        instr.alu(context,
+                  VALUEPTR(instr.base),
+                  VALUEPTR(instr.index),
+                  VALUEPTR(instr.source));
     MOTH_END_INSTR(InplaceElementOp)
 
     MOTH_BEGIN_INSTR(InplaceMemberOp)
-        instr.alu(VALUE(instr.source),
-                  VALUE(instr.base),
+        instr.alu(context,
+                  VALUEPTR(instr.base),
                   instr.member,
-                  context);
+                  VALUEPTR(instr.source));
     MOTH_END_INSTR(InplaceMemberOp)
 
     MOTH_BEGIN_INSTR(InplaceNameOp)
         TRACE(name, "%s", instr.name->toQString().toUtf8().constData());
-        instr.alu(VALUE(instr.source),
-                  instr.name,
-                  context);
+        instr.alu(context, instr.name, VALUEPTR(instr.source));
     MOTH_END_INSTR(InplaceNameOp)
 
 #ifdef MOTH_THREADED_INTERPRETER

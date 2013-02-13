@@ -164,19 +164,19 @@ void InstructionSelection::visitMove(IR::Move *s)
                 return;
             }
         } else if (IR::Name *n = s->target->asName()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                inplaceNameOp(s->op, s->source, *n->id);
+            if (s->source->asTemp()) {
+                inplaceNameOp(s->op, s->source->asTemp(), *n->id);
                 return;
             }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                inplaceElementOp(s->op, s->source, ss->base->asTemp(),
+            if (s->source->asTemp()) {
+                inplaceElementOp(s->op, s->source->asTemp(), ss->base->asTemp(),
                                  ss->index->asTemp());
                 return;
             }
         } else if (IR::Member *m = s->target->asMember()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                inplaceMemberOp(s->op, s->source, m->base->asTemp(), *m->name);
+            if (s->source->asTemp()) {
+                inplaceMemberOp(s->op, s->source->asTemp(), m->base->asTemp(), *m->name);
                 return;
             }
         }

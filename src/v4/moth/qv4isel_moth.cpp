@@ -515,9 +515,9 @@ void InstructionSelection::binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp 
     addInstruction(binop);
 }
 
-void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, const QString &targetName)
+void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Temp *rightSource, const QString &targetName)
 {
-    void (*op)(VM::Value value, VM::String *name, VM::ExecutionContext *ctx) = 0;
+    VM::InplaceBinOpName op = 0;
     switch (oper) {
     case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_name; break;
     case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_name; break;
@@ -537,14 +537,14 @@ void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, c
         Instruction::InplaceNameOp ieo;
         ieo.alu = op;
         ieo.name = identifier(targetName);
-        ieo.source = getParam(sourceExpr);
+        ieo.source = getParam(rightSource);
         addInstruction(ieo);
     }
 }
 
-void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp)
+void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Temp *source, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp)
 {
-    void (*op)(VM::Value base, VM::Value index, VM::Value value, VM::ExecutionContext *ctx) = 0;
+    VM::InplaceBinOpElement op = 0;
     switch (oper) {
     case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_element; break;
     case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_element; break;
@@ -564,13 +564,13 @@ void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr
     ieo.alu = op;
     ieo.base = getParam(targetBaseTemp);
     ieo.index = getParam(targetIndexTemp);
-    ieo.source = getParam(sourceExpr);
+    ieo.source = getParam(source);
     addInstruction(ieo);
 }
 
-void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
+void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Temp *source, IR::Temp *targetBase, const QString &targetName)
 {
-    void (*op)(VM::Value value, VM::Value base, VM::String *name, VM::ExecutionContext *ctx) = 0;
+    VM::InplaceBinOpMember op = 0;
     switch (oper) {
     case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_member; break;
     case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_member; break;

@@ -134,7 +134,7 @@ struct ExecutionContext
     Value getProperty(String *name);
     Value getPropertyNoThrow(String *name);
     Value getPropertyAndBase(String *name, Object **base);
-    void inplaceBitOp(Value value, String *name, BinOp op);
+    void inplaceBitOp(String *name, const QQmlJS::VM::Value *value, BinOp op);
     bool deleteProperty(String *name);
 
     inline Value argument(unsigned int index = 0)

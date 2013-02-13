@@ -417,21 +417,21 @@ union Instr
     };
     struct instr_inplaceElementOp {
         MOTH_INSTR_HEADER
-        void (*alu)(VM::Value, VM::Value, VM::Value, VM::ExecutionContext *);
+        VM::InplaceBinOpElement alu;
         Param base;
         Param index;
         Param source;
     };
     struct instr_inplaceMemberOp {
         MOTH_INSTR_HEADER
-        void (*alu)(VM::Value, VM::Value, VM::String *, VM::ExecutionContext *);
+        VM::InplaceBinOpMember alu;
         VM::String *member;
         Param base;
         Param source;
     };
     struct instr_inplaceNameOp {
         MOTH_INSTR_HEADER
-        void (*alu)(VM::Value, VM::String *, VM::ExecutionContext *);
+        VM::InplaceBinOpName alu;
         VM::String *name;
         Param source;
     };

@@ -253,191 +253,191 @@ void __qmljs_in(ExecutionContext *ctx, Value *result, const Value *left, const V
     *result = Value::fromBoolean(r);
 }
 
-void __qmljs_inplace_bit_and_name(Value value, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_bit_and_name(ExecutionContext *ctx, String *name, const Value *value)
 {
-    ctx->inplaceBitOp(value, name, __qmljs_bit_and);
+    ctx->inplaceBitOp(name, value, __qmljs_bit_and);
 }
 
-void __qmljs_inplace_bit_or_name(Value value, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_bit_or_name(ExecutionContext *ctx, String *name, const Value *value)
 {
-    ctx->inplaceBitOp(value, name, __qmljs_bit_or);
+    ctx->inplaceBitOp(name, value, __qmljs_bit_or);
 }
 
-void __qmljs_inplace_bit_xor_name(Value value, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_bit_xor_name(ExecutionContext *ctx, String *name, const Value *value)
 {
-    ctx->inplaceBitOp(value, name, __qmljs_bit_xor);
+    ctx->inplaceBitOp(name, value, __qmljs_bit_xor);
 }
 
-void __qmljs_inplace_add_name(Value value, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_add_name(ExecutionContext *ctx, String *name, const Value *value)
 {
-    ctx->inplaceBitOp(value, name, __qmljs_add);
+    ctx->inplaceBitOp(name, value, __qmljs_add);
 }
 
-void __qmljs_inplace_sub_name(Value value, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_sub_name(ExecutionContext *ctx, String *name, const Value *value)
 {
-    ctx->inplaceBitOp(value, name, __qmljs_sub);
+    ctx->inplaceBitOp(name, value, __qmljs_sub);
 }
 
-void __qmljs_inplace_mul_name(Value value, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_mul_name(ExecutionContext *ctx, String *name, const Value *value)
 {
-    ctx->inplaceBitOp(value, name, __qmljs_mul);
+    ctx->inplaceBitOp(name, value, __qmljs_mul);
 }
 
-void __qmljs_inplace_div_name(Value value, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_div_name(ExecutionContext *ctx, String *name, const Value *value)
 {
-    ctx->inplaceBitOp(value, name, __qmljs_div);
+    ctx->inplaceBitOp(name, value, __qmljs_div);
 }
 
-void __qmljs_inplace_mod_name(Value value, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_mod_name(ExecutionContext *ctx, String *name, const Value *value)
 {
-    ctx->inplaceBitOp(value, name, __qmljs_mod);
+    ctx->inplaceBitOp(name, value, __qmljs_mod);
 }
 
-void __qmljs_inplace_shl_name(Value value, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_shl_name(ExecutionContext *ctx, String *name, const Value *value)
 {
-    ctx->inplaceBitOp(value, name, __qmljs_shl);
+    ctx->inplaceBitOp(name, value, __qmljs_shl);
 }
 
-void __qmljs_inplace_shr_name(Value value, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_shr_name(ExecutionContext *ctx, String *name, const Value *value)
 {
-    ctx->inplaceBitOp(value, name, __qmljs_shr);
+    ctx->inplaceBitOp(name, value, __qmljs_shr);
 }
 
-void __qmljs_inplace_ushr_name(Value value, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_ushr_name(ExecutionContext *ctx, String *name, const Value *value)
 {
-    ctx->inplaceBitOp(value, name, __qmljs_ushr);
+    ctx->inplaceBitOp(name, value, __qmljs_ushr);
 }
 
-void __qmljs_inplace_bit_and_element(Value base, Value index, Value value, ExecutionContext *ctx)
+void __qmljs_inplace_bit_and_element(ExecutionContext *ctx, const Value *base, const Value *index, const Value *rhs)
 {
-    Object *obj = base.toObject(ctx).objectValue();
-    obj->inplaceBinOp(value, index, __qmljs_bit_and, ctx);
+    Object *obj = base->toObject(ctx).objectValue();
+    obj->inplaceBinOp(ctx, __qmljs_bit_and, index, rhs);
 }
 
-void __qmljs_inplace_bit_or_element(Value base, Value index, Value value, ExecutionContext *ctx)
+void __qmljs_inplace_bit_or_element(ExecutionContext *ctx, const Value *base, const Value *index, const Value *rhs)
 {
-    Object *obj = base.toObject(ctx).objectValue();
-    obj->inplaceBinOp(value, index, __qmljs_bit_or, ctx);
+    Object *obj = base->toObject(ctx).objectValue();
+    obj->inplaceBinOp(ctx, __qmljs_bit_or, index, rhs);
 }
 
-void __qmljs_inplace_bit_xor_element(Value base, Value index, Value value, ExecutionContext *ctx)
+void __qmljs_inplace_bit_xor_element(ExecutionContext *ctx, const Value *base, const Value *index, const Value *rhs)
 {
-    Object *obj = base.toObject(ctx).objectValue();
-    obj->inplaceBinOp(value, index, __qmljs_bit_xor, ctx);
+    Object *obj = base->toObject(ctx).objectValue();
+    obj->inplaceBinOp(ctx, __qmljs_bit_xor, index, rhs);
 }
 
-void __qmljs_inplace_add_element(Value base, Value index, Value value, ExecutionContext *ctx)
+void __qmljs_inplace_add_element(ExecutionContext *ctx, const Value *base, const Value *index, const Value *rhs)
 {
-    Object *obj = base.toObject(ctx).objectValue();
-    obj->inplaceBinOp(value, index, __qmljs_add, ctx);
+    Object *obj = base->toObject(ctx).objectValue();
+    obj->inplaceBinOp(ctx, __qmljs_add, index, rhs);
 }
 
-void __qmljs_inplace_sub_element(Value base, Value index, Value value, ExecutionContext *ctx)
+void __qmljs_inplace_sub_element(ExecutionContext *ctx, const Value *base, const Value *index, const Value *rhs)
 {
-    Object *obj = base.toObject(ctx).objectValue();
-    obj->inplaceBinOp(value, index, __qmljs_sub, ctx);
+    Object *obj = base->toObject(ctx).objectValue();
+    obj->inplaceBinOp(ctx, __qmljs_sub, index, rhs);
 }
 
-void __qmljs_inplace_mul_element(Value base, Value index, Value value, ExecutionContext *ctx)
+void __qmljs_inplace_mul_element(ExecutionContext *ctx, const Value *base, const Value *index, const Value *rhs)
 {
-    Object *obj = base.toObject(ctx).objectValue();
-    obj->inplaceBinOp(value, index, __qmljs_mul, ctx);
+    Object *obj = base->toObject(ctx).objectValue();
+    obj->inplaceBinOp(ctx, __qmljs_mul, index, rhs);
 }
 
-void __qmljs_inplace_div_element(Value base, Value index, Value value, ExecutionContext *ctx)
+void __qmljs_inplace_div_element(ExecutionContext *ctx, const Value *base, const Value *index, const Value *rhs)
 {
-    Object *obj = base.toObject(ctx).objectValue();
-    obj->inplaceBinOp(value, index, __qmljs_div, ctx);
+    Object *obj = base->toObject(ctx).objectValue();
+    obj->inplaceBinOp(ctx, __qmljs_div, index, rhs);
 }
 
-void __qmljs_inplace_mod_element(Value base, Value index, Value value, ExecutionContext *ctx)
+void __qmljs_inplace_mod_element(ExecutionContext *ctx, const Value *base, const Value *index, const Value *rhs)
 {
-    Object *obj = base.toObject(ctx).objectValue();
-    obj->inplaceBinOp(value, index, __qmljs_mod, ctx);
+    Object *obj = base->toObject(ctx).objectValue();
+    obj->inplaceBinOp(ctx, __qmljs_mod, index, rhs);
 }
 
-void __qmljs_inplace_shl_element(Value base, Value index, Value value, ExecutionContext *ctx)
+void __qmljs_inplace_shl_element(ExecutionContext *ctx, const Value *base, const Value *index, const Value *rhs)
 {
-    Object *obj = base.toObject(ctx).objectValue();
-    obj->inplaceBinOp(value, index, __qmljs_shl, ctx);
+    Object *obj = base->toObject(ctx).objectValue();
+    obj->inplaceBinOp(ctx, __qmljs_shl, index, rhs);
 }
 
-void __qmljs_inplace_shr_element(Value base, Value index, Value value, ExecutionContext *ctx)
+void __qmljs_inplace_shr_element(ExecutionContext *ctx, const Value *base, const Value *index, const Value *rhs)
 {
-    Object *obj = base.toObject(ctx).objectValue();
-    obj->inplaceBinOp(value, index, __qmljs_shr, ctx);
+    Object *obj = base->toObject(ctx).objectValue();
+    obj->inplaceBinOp(ctx, __qmljs_shr, index, rhs);
 }
 
-void __qmljs_inplace_ushr_element(Value base, Value index, Value value, ExecutionContext *ctx)
+void __qmljs_inplace_ushr_element(ExecutionContext *ctx, const Value *base, const Value *index, const Value *rhs)
 {
-    Object *obj = base.toObject(ctx).objectValue();
-    obj->inplaceBinOp(value, index, __qmljs_ushr, ctx);
+    Object *obj = base->toObject(ctx).objectValue();
+    obj->inplaceBinOp(ctx, __qmljs_ushr, index, rhs);
 }
 
-void __qmljs_inplace_bit_and_member(Value value, Value base, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_bit_and_member(ExecutionContext *ctx, const Value *base, String *name, const Value *rhs)
 {
-    Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, name, __qmljs_bit_and, ctx);
+    Object *o = base->toObject(ctx).objectValue();
+    o->inplaceBinOp(ctx, __qmljs_bit_and, name, rhs);
 }
 
-void __qmljs_inplace_bit_or_member(Value value, Value base, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_bit_or_member(ExecutionContext *ctx, const Value *base, String *name, const Value *rhs)
 {
-    Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, name, __qmljs_bit_or, ctx);
+    Object *o = base->toObject(ctx).objectValue();
+    o->inplaceBinOp(ctx, __qmljs_bit_or, name, rhs);
 }
 
-void __qmljs_inplace_bit_xor_member(Value value, Value base, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_bit_xor_member(ExecutionContext *ctx, const Value *base, String *name, const Value *rhs)
 {
-    Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, name, __qmljs_bit_xor, ctx);
+    Object *o = base->toObject(ctx).objectValue();
+    o->inplaceBinOp(ctx, __qmljs_bit_xor, name, rhs);
 }
 
-void __qmljs_inplace_add_member(Value value, Value base, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_add_member(ExecutionContext *ctx, const Value *base, String *name, const Value *rhs)
 {
-    Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, name, __qmljs_add, ctx);
+    Object *o = base->toObject(ctx).objectValue();
+    o->inplaceBinOp(ctx, __qmljs_add, name, rhs);
 }
 
-void __qmljs_inplace_sub_member(Value value, Value base, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_sub_member(ExecutionContext *ctx, const Value *base, String *name, const Value *rhs)
 {
-    Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, name, __qmljs_sub, ctx);
+    Object *o = base->toObject(ctx).objectValue();
+    o->inplaceBinOp(ctx, __qmljs_sub, name, rhs);
 }
 
-void __qmljs_inplace_mul_member(Value value, Value base, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_mul_member(ExecutionContext *ctx, const Value *base, String *name, const Value *rhs)
 {
-    Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, name, __qmljs_mul, ctx);
+    Object *o = base->toObject(ctx).objectValue();
+    o->inplaceBinOp(ctx, __qmljs_mul, name, rhs);
 }
 
-void __qmljs_inplace_div_member(Value value, Value base, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_div_member(ExecutionContext *ctx, const Value *base, String *name, const Value *rhs)
 {
-    Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, name, __qmljs_div, ctx);
+    Object *o = base->toObject(ctx).objectValue();
+    o->inplaceBinOp(ctx, __qmljs_div, name, rhs);
 }
 
-void __qmljs_inplace_mod_member(Value value, Value base, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_mod_member(ExecutionContext *ctx, const Value *base, String *name, const Value *rhs)
 {
-    Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, name, __qmljs_mod, ctx);
+    Object *o = base->toObject(ctx).objectValue();
+    o->inplaceBinOp(ctx, __qmljs_mod, name, rhs);
 }
 
-void __qmljs_inplace_shl_member(Value value, Value base, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_shl_member(ExecutionContext *ctx, const Value *base, String *name, const Value *rhs)
 {
-    Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, name, __qmljs_shl, ctx);
+    Object *o = base->toObject(ctx).objectValue();
+    o->inplaceBinOp(ctx, __qmljs_shl, name, rhs);
 }
 
-void __qmljs_inplace_shr_member(Value value, Value base, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_shr_member(ExecutionContext *ctx, const Value *base, String *name, const Value *rhs)
 {
-    Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, name, __qmljs_shr, ctx);
+    Object *o = base->toObject(ctx).objectValue();
+    o->inplaceBinOp(ctx, __qmljs_shr, name, rhs);
 }
 
-void __qmljs_inplace_ushr_member(Value value, Value base, String *name, ExecutionContext *ctx)
+void __qmljs_inplace_ushr_member(ExecutionContext *ctx, const Value *base, String *name, const Value *rhs)
 {
-    Object *o = base.toObject(ctx).objectValue();
-    o->inplaceBinOp(value, name, __qmljs_ushr, ctx);
+    Object *o = base->toObject(ctx).objectValue();
+    o->inplaceBinOp(ctx, __qmljs_ushr, name, rhs);
 }
 
 String *__qmljs_string_from_utf8(ExecutionContext *ctx, const char *s)

@@ -150,8 +150,8 @@ struct Q_V4_EXPORT Object: Managed {
 
     void putValue(ExecutionContext *ctx, PropertyDescriptor *pd, Value value);
 
-    void inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx);
-    void inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx);
+    void inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value *rhs);
+    void inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value *index, const Value *rhs);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(String *name, Value value);

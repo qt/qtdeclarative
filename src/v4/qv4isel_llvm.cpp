@@ -714,7 +714,7 @@ void InstructionSelection::binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp 
     }
 }
 
-void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, const QString &targetName)
+void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Temp *rightSource, const QString &targetName)
 {
     const char *opName = 0;
     switch (oper) {
@@ -736,14 +736,14 @@ void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Expr *sourceExpr, c
 
     if (opName) {
         llvm::Value *dst = getIdentifier(targetName);
-        llvm::Value *src = toValuePtr(sourceExpr);
+        llvm::Value *src = toValuePtr(rightSource);
         CreateCall3(getRuntimeFunction(opName),
                     _llvmFunction->arg_begin(), dst, src);
         return;
     }
 }
 
-void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp)
+void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Temp *source, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp)
 {
     const char *opName = 0;
     switch (oper) {
@@ -766,13 +766,13 @@ void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Expr *sourceExpr
     if (opName) {
         llvm::Value *base = getLLVMTemp(targetBaseTemp);
         llvm::Value *index = getLLVMTemp(targetIndexTemp);
-        llvm::Value *value = toValuePtr(sourceExpr);
+        llvm::Value *value = toValuePtr(source);
         CreateCall4(getRuntimeFunction(opName),
                     _llvmFunction->arg_begin(), base, index, value);
     }
 }
 
-void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Expr *source, IR::Temp *targetBase, const QString &targetName)
+void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Temp *source, IR::Temp *targetBase, const QString &targetName)
 {
     const char *opName = 0;
     switch (oper) {

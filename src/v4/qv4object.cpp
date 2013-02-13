@@ -137,29 +137,29 @@ void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, Value value
 
 }
 
-void Object::inplaceBinOp(Value rhs, String *name, BinOp op, ExecutionContext *ctx)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value *rhs)
 {
     bool hasProperty = false;
     Value v = __get__(ctx, name, &hasProperty);
     Value result;
-    op(ctx, &result, &v, &rhs);
+    op(ctx, &result, &v, rhs);
     __put__(ctx, name, result);
 }
 
-void Object::inplaceBinOp(Value rhs, Value index, BinOp op, ExecutionContext *ctx)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value *index, const Value *rhs)
 {
-    uint idx = index.asArrayIndex();
+    uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
         bool hasProperty = false;
         Value v = __get__(ctx, idx, &hasProperty);
         Value result;
-        op(ctx, &result, &v, &rhs);
+        op(ctx, &result, &v, rhs);
         __put__(ctx, idx, result);
         return;
     }
-    String *name = index.toString(ctx);
+    String *name = index->toString(ctx);
     assert(name);
-    inplaceBinOp(rhs, name, op, ctx);
+    inplaceBinOp(ctx, op, name, rhs);
 }
 
 void Object::defineDefaultProperty(String *name, Value value)
