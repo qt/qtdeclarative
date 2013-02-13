@@ -267,6 +267,7 @@ void ExecutionContext::initForCatch(ExecutionContext *p, String *exceptionVarNam
     thisObject = p->thisObject;
 
     function = 0;
+    lookups = parent->lookups;
     arguments = 0;
     argumentCount = 0;
     locals = 0;
