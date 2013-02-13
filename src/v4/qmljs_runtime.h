@@ -160,7 +160,7 @@ String *__qmljs_identifier_from_utf8(ExecutionContext *ctx, const char *s);
 
 // objects
 Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int typeHint);
-Value __qmljs_throw_type_error(ExecutionContext *ctx);
+void __qmljs_throw_type_error(ExecutionContext *ctx);
 Value __qmljs_new_object(ExecutionContext *ctx);
 Value __qmljs_new_boolean_object(ExecutionContext *ctx, bool boolean);
 Value __qmljs_new_number_object(ExecutionContext *ctx, double n);
@@ -407,7 +407,7 @@ inline Value __qmljs_to_string(Value value, ExecutionContext *ctx)
         if (prim.isPrimitive())
             return __qmljs_to_string(prim, ctx);
         else
-            return __qmljs_throw_type_error(ctx);
+            __qmljs_throw_type_error(ctx);
         break;
     }
     case Value::Integer_Type:
@@ -425,7 +425,7 @@ inline Value __qmljs_to_object(Value value, ExecutionContext *ctx)
     switch (value.type()) {
     case Value::Undefined_Type:
     case Value::Null_Type:
-        return __qmljs_throw_type_error(ctx);
+        __qmljs_throw_type_error(ctx);
         break;
     case Value::Boolean_Type:
         return __qmljs_new_boolean_object(ctx, value.booleanValue());

@@ -338,6 +338,13 @@ Value FunctionPrototype::method_bind(ExecutionContext *ctx)
     return Value::fromObject(f);
 }
 
+
+static Value throwTypeError(ExecutionContext *ctx)
+{
+    ctx->throwTypeError();
+    return Value::undefinedValue();
+}
+
 ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     : FunctionObject(scope)
 {
@@ -372,7 +379,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     pd->value = Value::fromObject(proto);
 
     if (scope->strictMode) {
-        FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, __qmljs_throw_type_error);
+        FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
         pd.configurable = PropertyDescriptor::Disabled;
         pd.enumberable = PropertyDescriptor::Disabled;
@@ -439,7 +446,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
         len = 0;
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(len));
 
-    FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, __qmljs_throw_type_error);
+    FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
     PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
     pd.configurable = PropertyDescriptor::Disabled;
     pd.enumberable = PropertyDescriptor::Disabled;

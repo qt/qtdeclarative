@@ -235,23 +235,21 @@ Value __qmljs_add_helper(Value left, Value right, ExecutionContext *ctx)
 
 Value __qmljs_instanceof(Value left, Value right, ExecutionContext *ctx)
 {
-    if (FunctionObject *function = right.asFunctionObject()) {
-        bool r = function->hasInstance(ctx, left);
-        return Value::fromBoolean(r);
-    }
+    FunctionObject *function = right.asFunctionObject();
+    if (!function)
+        __qmljs_throw_type_error(ctx);
 
-    return __qmljs_throw_type_error(ctx);
+    bool r = function->hasInstance(ctx, left);
+    return Value::fromBoolean(r);
 }
 
 Value __qmljs_in(Value left, Value right, ExecutionContext *ctx)
 {
-    if (right.isObject()) {
-        String *s = left.toString(ctx);
-        bool r = right.objectValue()->__hasProperty__(ctx, s);
-        return Value::fromBoolean(r);
-    } else {
-        return __qmljs_throw_type_error(ctx);
-    }
+    if (!right.isObject())
+        __qmljs_throw_type_error(ctx);
+    String *s = left.toString(ctx);
+    bool r = right.objectValue()->__hasProperty__(ctx, s);
+    return Value::fromBoolean(r);
 }
 
 void __qmljs_inplace_bit_and_name(Value value, String *name, ExecutionContext *ctx)
@@ -540,10 +538,9 @@ Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int type
     return Value::undefinedValue();
 }
 
-Value __qmljs_throw_type_error(ExecutionContext *ctx)
+void __qmljs_throw_type_error(ExecutionContext *ctx)
 {
     ctx->throwTypeError();
-    return Value::undefinedValue();
 }
 
 Value __qmljs_new_object(ExecutionContext *ctx)

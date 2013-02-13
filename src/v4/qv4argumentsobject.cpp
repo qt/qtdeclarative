@@ -43,6 +43,11 @@
 namespace QQmlJS {
 namespace VM {
 
+static Value throwTypeError(ExecutionContext *ctx)
+{
+    ctx->throwTypeError();
+    return Value::undefinedValue();
+}
 
 ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount)
     : Object(context->engine), context(context)
@@ -53,7 +58,7 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterC
     if (context->strictMode) {
         for (uint i = 0; i < context->argumentCount; ++i)
             Object::__put__(context, QString::number(i), context->arguments[i]);
-        FunctionObject *thrower = context->engine->newBuiltinFunction(context, 0, __qmljs_throw_type_error);
+        FunctionObject *thrower = context->engine->newBuiltinFunction(context, 0, throwTypeError);
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
         pd.configurable = PropertyDescriptor::Disabled;
         pd.enumberable = PropertyDescriptor::Disabled;
