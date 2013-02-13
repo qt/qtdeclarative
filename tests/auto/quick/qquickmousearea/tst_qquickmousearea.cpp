@@ -88,6 +88,7 @@ private slots:
 #ifndef QT_NO_CURSOR
     void cursorShape();
 #endif
+    void moveAndReleaseWithoutPress();
 
 private:
     void acceptedButton_data();
@@ -1401,6 +1402,29 @@ void tst_QQuickMouseArea::cursorShape()
     QCOMPARE(spy.count(), 2);
 }
 #endif
+
+void tst_QQuickMouseArea::moveAndReleaseWithoutPress()
+{
+    QQuickView *window = createView();
+
+    window->setSource(testFileUrl("moveAndReleaseWithoutPress.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QObject *root = window->rootObject();
+    QVERIFY(root);
+
+    QTest::mousePress(window, Qt::LeftButton, 0, QPoint(100,100));
+
+    QTest::mouseMove(window, QPoint(110,110), 50);
+    QTRY_COMPARE(root->property("hadMove").toBool(), false);
+
+    QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(110,110));
+    QTRY_COMPARE(root->property("hadRelease").toBool(), false);
+
+    delete window;
+}
 
 QTEST_MAIN(tst_QQuickMouseArea)
 
