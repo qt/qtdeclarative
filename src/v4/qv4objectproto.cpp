@@ -475,11 +475,11 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
 
     desc->enumberable = PropertyDescriptor::Undefined;
     if (o->__hasProperty__(ctx, ctx->engine->id_enumerable))
-        desc->enumberable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_enumerable), ctx) ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
+        desc->enumberable = o->__get__(ctx, ctx->engine->id_enumerable).toBoolean() ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
 
     desc->configurable = PropertyDescriptor::Undefined;
     if (o->__hasProperty__(ctx, ctx->engine->id_configurable))
-        desc->configurable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_configurable), ctx) ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
+        desc->configurable = o->__get__(ctx, ctx->engine->id_configurable).toBoolean() ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
 
     desc->get = 0;
     if (o->__hasProperty__(ctx, ctx->engine->id_get)) {
@@ -513,7 +513,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     if (o->__hasProperty__(ctx, ctx->engine->id_writable)) {
         if (desc->isAccessor())
             ctx->throwTypeError();
-        desc->writable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_writable), ctx) ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
+        desc->writable = o->__get__(ctx, ctx->engine->id_writable).toBoolean() ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
         // writable forces it to be a data descriptor
         desc->value = Value::undefinedValue();
     }

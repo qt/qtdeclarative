@@ -74,11 +74,6 @@ int Value::toUInt16(ExecutionContext *ctx) const
     return (unsigned short)number;
 }
 
-Bool Value::toBoolean(ExecutionContext *ctx) const
-{
-    return __qmljs_to_boolean(*this, ctx);
-}
-
 double Value::toInteger(ExecutionContext *ctx) const
 {
     if (isConvertibleToInt())

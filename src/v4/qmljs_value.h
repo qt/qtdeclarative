@@ -48,6 +48,8 @@
 #include <QtCore/QDebug>
 #include "qv4managed.h"
 
+#include <wtf/MathExtras.h>
+
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
@@ -205,7 +207,7 @@ struct Q_V4_EXPORT Value
     int toInt32(ExecutionContext *ctx) const;
     unsigned int toUInt32(ExecutionContext *ctx) const;
 
-    Bool toBoolean(ExecutionContext *ctx) const;
+    Bool toBoolean() const;
     double toInteger(ExecutionContext *ctx) const;
     double toNumber(ExecutionContext *ctx) const;
     String *toString(ExecutionContext *ctx) const;
@@ -351,6 +353,26 @@ inline Value Value::fromObject(Object *o)
     v.o = o;
 #endif
     return v;
+}
+
+inline Bool Value::toBoolean() const
+{
+    switch (type()) {
+    case Value::Undefined_Type:
+    case Value::Null_Type:
+        return false;
+    case Value::Boolean_Type:
+    case Value::Integer_Type:
+        return (bool)int_32;
+    case Value::String_Type:
+        return stringValue()->toQString().length() > 0;
+    case Value::Object_Type:
+        return true;
+    default: // double
+        if (! doubleValue() || isnan(doubleValue()))
+            return false;
+        return true;
+    }
 }
 
 inline String *Value::toString(ExecutionContext *ctx) const

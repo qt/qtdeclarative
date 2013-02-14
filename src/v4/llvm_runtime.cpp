@@ -101,7 +101,7 @@ void __qmljs_llvm_init_closure(ExecutionContext *ctx, Value *result,
 
 bool __qmljs_llvm_to_boolean(ExecutionContext *ctx, const Value *value)
 {
-    return __qmljs_to_boolean(*value, ctx);
+    return __qmljs_to_boolean(*value);
 }
 
 void __qmljs_llvm_bit_and(ExecutionContext *ctx, Value *result, Value *left, Value *right)

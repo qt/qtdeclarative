@@ -487,6 +487,12 @@ Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int type
     return Value::undefinedValue();
 }
 
+Bool __qmljs_to_boolean(const Value &value)
+{
+    return value.toBoolean();
+}
+
+
 Object *__qmljs_convert_to_object(ExecutionContext *ctx, const Value &value)
 {
     assert(!value.isObject());

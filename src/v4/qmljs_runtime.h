@@ -167,7 +167,7 @@ Value __qmljs_get_thisObject(ExecutionContext *ctx);
 
 // type conversion and testing
 Value __qmljs_to_primitive(const Value &value, ExecutionContext *ctx, int typeHint);
-Bool __qmljs_to_boolean(const Value &value, ExecutionContext *ctx);
+Bool __qmljs_to_boolean(const Value &value);
 double __qmljs_to_number(const Value &value, ExecutionContext *ctx);
 Value __qmljs_to_string(const Value &value, ExecutionContext *ctx);
 Q_V4_EXPORT String *__qmljs_convert_to_string(ExecutionContext *ctx, const Value &value);
@@ -284,26 +284,6 @@ inline Value __qmljs_to_primitive(const Value &value, ExecutionContext *ctx, int
     return __qmljs_default_value(value, ctx, typeHint);
 }
 
-inline Bool __qmljs_to_boolean(const Value &value, ExecutionContext *ctx)
-{
-    switch (value.type()) {
-    case Value::Undefined_Type:
-    case Value::Null_Type:
-        return false;
-    case Value::Boolean_Type:
-    case Value::Integer_Type:
-        return (bool)value.int_32;
-    case Value::String_Type:
-        return value.stringValue()->toQString().length() > 0;
-    case Value::Object_Type:
-        return true;
-    default: // double
-        if (! value.doubleValue() || isnan(value.doubleValue()))
-            return false;
-        return true;
-    }
-}
-
 inline double __qmljs_to_number(const Value &value, ExecutionContext *ctx)
 {
     switch (value.type()) {
@@ -387,11 +367,11 @@ inline void __qmljs_compl(ExecutionContext *ctx, Value *result, const Value &val
     *result = Value::fromInt32(~n);
 }
 
-inline void __qmljs_not(ExecutionContext *ctx, Value *result, const Value &value)
+inline void __qmljs_not(ExecutionContext *, Value *result, const Value &value)
 {
     TRACE1(value);
 
-    bool b = __qmljs_to_boolean(value, ctx);
+    bool b = value.toBoolean();
     *result = Value::fromBoolean(!b);
 }
 

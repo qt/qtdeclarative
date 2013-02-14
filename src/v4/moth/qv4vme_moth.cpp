@@ -399,7 +399,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(Jump)
 
     MOTH_BEGIN_INSTR(CJump)
-        uint cond = __qmljs_to_boolean(VALUE(instr.condition), context);
+        uint cond = __qmljs_to_boolean(VALUE(instr.condition));
         TRACE(condition, "%s", cond ? "TRUE" : "FALSE");
         if (cond)
             code = ((uchar *)&instr.offset) + instr.offset;

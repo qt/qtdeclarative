@@ -642,7 +642,7 @@ Value ArrayPrototype::method_every(ExecutionContext *ctx)
         args[1] = Value::fromDouble(k);
         args[2] = ctx->thisObject;
         Value r = callback->call(ctx, thisArg, args, 3);
-        ok = __qmljs_to_boolean(r, ctx);
+        ok = r.toBoolean();
     }
     return Value::fromBoolean(ok);
 }
@@ -670,7 +670,7 @@ Value ArrayPrototype::method_some(ExecutionContext *ctx)
         args[1] = Value::fromDouble(k);
         args[2] = ctx->thisObject;
         Value r = callback->call(ctx, thisArg, args, 3);
-        if (__qmljs_to_boolean(r, ctx))
+        if (r.toBoolean())
             return Value::fromBoolean(true);
     }
     return Value::fromBoolean(false);
@@ -762,7 +762,7 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
         args[1] = Value::fromDouble(k);
         args[2] = ctx->thisObject;
         Value selected = callback->call(ctx, thisArg, args, 3);
-        if (__qmljs_to_boolean(selected, ctx)) {
+        if (selected.toBoolean()) {
             a->arraySet(to, v);
             ++to;
         }

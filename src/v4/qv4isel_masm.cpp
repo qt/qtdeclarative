@@ -930,7 +930,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
         booleanConversion.link(_as);
         {
-            generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_to_boolean, Assembler::PointerToValue(t), Assembler::ContextRegister);
+            generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_to_boolean, Assembler::PointerToValue(t));
         }
 
         testBoolean.link(_as);

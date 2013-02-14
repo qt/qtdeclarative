@@ -53,13 +53,13 @@ BooleanCtor::BooleanCtor(ExecutionContext *scope)
 
 Value BooleanCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
-    bool n = argc ? args[0].toBoolean(ctx) : false;
+    bool n = argc ? args[0].toBoolean() : false;
     return Value::fromObject(ctx->engine->newBooleanObject(Value::fromBoolean(n)));
 }
 
 Value BooleanCtor::call(Managed *, ExecutionContext *parentCtx, const Value &thisObject, Value *argv, int argc)
 {
-    bool value = argc ? argv[0].toBoolean(parentCtx) : 0;
+    bool value = argc ? argv[0].toBoolean() : 0;
     return Value::fromBoolean(value);
 }
 
