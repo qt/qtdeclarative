@@ -156,8 +156,14 @@ struct Q_V4_EXPORT FunctionObject: Object {
 
     FunctionObject(ExecutionContext *scope);
 
-    virtual Value construct(ExecutionContext *context, Value *args, int argc);
-    virtual Value call(ExecutionContext *, Value, Value *, int);
+    static Value construct(Managed *that, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+    inline Value construct(ExecutionContext *context, Value *args, int argc) {
+        return vtbl->construct(this, context, args, argc);
+    }
+    inline Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc) {
+        return vtbl->call(this, context, thisObject, args, argc);
+    }
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -169,8 +175,11 @@ struct FunctionCtor: FunctionObject
 {
     FunctionCtor(ExecutionContext *scope);
 
-    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
+    static Value construct(Managed *that, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct FunctionPrototype: FunctionObject
@@ -188,24 +197,35 @@ struct BuiltinFunctionOld: FunctionObject {
     Value (*code)(ExecutionContext *);
 
     BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-    virtual Value construct(ExecutionContext *ctx, Value *, int);
+
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct BuiltinFunction: FunctionObject {
     Value (*code)(ExecutionContext *parentContext, Value thisObject, Value *args, int argc);
 
     BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *, Value, Value *, int));
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-    virtual Value construct(ExecutionContext *ctx, Value *, int);
+
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct ScriptFunction: FunctionObject {
     ScriptFunction(ExecutionContext *scope, VM::Function *function);
-    virtual ~ScriptFunction();
+    ~ScriptFunction();
 
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-    virtual Value construct(ExecutionContext *context, Value *args, int argc);
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct BoundFunction: FunctionObject {
@@ -214,10 +234,10 @@ struct BoundFunction: FunctionObject {
     QVector<Value> boundArgs;
 
     BoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
-    virtual ~BoundFunction() {}
+    ~BoundFunction() {}
 
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
-    virtual Value construct(ExecutionContext *context, Value *args, int argc);
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
 
     static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);

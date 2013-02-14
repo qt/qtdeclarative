@@ -54,8 +54,11 @@ struct NumberCtor: FunctionObject
 {
     NumberCtor(ExecutionContext *scope);
 
-    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
-    virtual Value call(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value construct(Managed *that, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct NumberPrototype: NumberObject

@@ -74,10 +74,11 @@ using namespace QQmlJS::VM;
 struct Print: FunctionObject
 {
     Print(ExecutionContext *scope): FunctionObject(scope) {
+        vtbl = &static_vtbl;
         name = scope->engine->newString("print");
     }
 
-    virtual Value call(ExecutionContext *ctx, Value, Value *args, int argc)
+    static Value call(Managed *, ExecutionContext *ctx, const Value &, Value *args, int argc)
     {
         for (int i = 0; i < argc; ++i) {
             String *s = args[i].toString(ctx);
@@ -88,21 +89,30 @@ struct Print: FunctionObject
         std::cout << std::endl;
         return Value::undefinedValue();
     }
+
+    static const ManagedVTable static_vtbl;
 };
+
+DEFINE_MANAGED_VTABLE(Print);
 
 struct GC: public FunctionObject
 {
     GC(ExecutionContext* scope)
         : FunctionObject(scope)
     {
+        vtbl = &static_vtbl;
         name = scope->engine->newString("gc");
     }
-    virtual Value call(ExecutionContext *ctx, Value, Value *, int)
+    static Value call(Managed *, ExecutionContext *ctx, const Value &, Value *args, int argc)
     {
         ctx->engine->memoryManager->runGC();
         return Value::undefinedValue();
     }
+
+    static const ManagedVTable static_vtbl;
 };
+
+DEFINE_MANAGED_VTABLE(GC);
 
 } // builtins
 

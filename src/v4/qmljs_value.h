@@ -475,6 +475,13 @@ inline ErrorObject *Value::asErrorObject() const
     return isObject() ? managed()->asErrorObject() : 0;
 }
 
+// ###
+inline Value Managed::construct(ExecutionContext *context, Value *args, int argc) {
+    return vtbl->construct(this, context, args, argc);
+}
+inline Value Managed::call(ExecutionContext *context, const Value &thisObject, Value *args, int argc) {
+    return vtbl->call(this, context, thisObject, args, argc);
+}
 
 } // namespace VM
 } // namespace QQmlJS

@@ -55,8 +55,11 @@ struct ArrayCtor: FunctionObject
 {
     ArrayCtor(ExecutionContext *scope);
 
-    virtual Value construct(ExecutionContext *ctx, Value *argv, int argc);
-    virtual Value call(ExecutionContext *ctx, Value thisObject, Value *argv, int argc);
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct ArrayPrototype: ArrayObject

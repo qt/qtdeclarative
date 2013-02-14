@@ -71,19 +71,20 @@
 using namespace QQmlJS::VM;
 
 
-//
-// Object
-//
+DEFINE_MANAGED_VTABLE(ObjectCtor);
+
 ObjectCtor::ObjectCtor(ExecutionContext *scope)
     : FunctionObject(scope)
 {
+    vtbl = &static_vtbl;
 }
 
-Value ObjectCtor::construct(ExecutionContext *ctx, Value *args, int argc)
+Value ObjectCtor::construct(Managed *that, ExecutionContext *ctx, Value *args, int argc)
 {
+    ObjectCtor *ctor = static_cast<ObjectCtor *>(that);
     if (!argc || args[0].isUndefined() || args[0].isNull()) {
         Object *obj = ctx->engine->newObject();
-        Value proto = __get__(ctx, ctx->engine->id_prototype);
+        Value proto = ctor->__get__(ctx, ctx->engine->id_prototype);
         if (proto.isObject())
             obj->prototype = proto.objectValue();
         return Value::fromObject(obj);
@@ -91,7 +92,7 @@ Value ObjectCtor::construct(ExecutionContext *ctx, Value *args, int argc)
     return __qmljs_to_object(args[0], ctx);
 }
 
-Value ObjectCtor::call(ExecutionContext *ctx, Value /*thisObject*/, Value *args, int argc)
+Value ObjectCtor::call(Managed *, ExecutionContext *ctx, const Value &/*thisObject*/, Value *args, int argc)
 {
     if (!argc || args[0].isUndefined() || args[0].isNull())
         return Value::fromObject(ctx->engine->newObject());

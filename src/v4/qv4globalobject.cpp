@@ -339,10 +339,12 @@ static QString decode(const QString &input, DecodeMode decodeMode, bool *ok)
     return QString();
 }
 
+DEFINE_MANAGED_VTABLE(EvalFunction);
 
 EvalFunction::EvalFunction(ExecutionContext *scope)
     : FunctionObject(scope)
 {
+    vtbl = &static_vtbl;
     name = scope->engine->id_eval;
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
 }
@@ -402,17 +404,17 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
 }
 
 
-Value EvalFunction::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
+Value EvalFunction::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
 {
     // indirect call
-    return evalCall(context, thisObject, args, argc, false);
+    return static_cast<EvalFunction *>(that)->evalCall(context, thisObject, args, argc, false);
 }
 
-Value EvalFunction::construct(ExecutionContext *ctx, Value *, int)
-{
-    ctx->throwTypeError();
-    return Value::undefinedValue();
-}
+//Value EvalFunction::construct(ExecutionContext *ctx, Value *, int)
+//{
+//    ctx->throwTypeError();
+//    return Value::undefinedValue();
+//}
 
 QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ctx,
                                                 const QString &fileName, const QString &source,

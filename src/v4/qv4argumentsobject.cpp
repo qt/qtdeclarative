@@ -50,12 +50,7 @@ static Value throwTypeError(ExecutionContext *ctx)
     return Value::undefinedValue();
 }
 
-const ManagedVTable ArgumentsObject::static_vtbl =
-{
-    ArgumentsObject::markObjects,
-    Managed::hasInstance,
-    ManagedVTable::EndOfVTable
-};
+DEFINE_MANAGED_VTABLE(ArgumentsObject);
 
 ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount)
     : Object(context->engine), context(context)
@@ -132,9 +127,11 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     return result;
 }
 
+DEFINE_MANAGED_VTABLE(ArgumentsGetterFunction);
 
-Value ArgumentsGetterFunction::call(ExecutionContext *ctx, Value thisObject, Value *, int)
+Value ArgumentsGetterFunction::call(Managed *getter, ExecutionContext *ctx, const Value &thisObject, Value *, int)
 {
+    ArgumentsGetterFunction *g = static_cast<ArgumentsGetterFunction *>(getter);
     Object *that = thisObject.asObject();
     if (!that)
         __qmljs_throw_type_error(ctx);
@@ -142,12 +139,15 @@ Value ArgumentsGetterFunction::call(ExecutionContext *ctx, Value thisObject, Val
     if (!o)
         __qmljs_throw_type_error(ctx);
 
-    assert(index < o->context->argumentCount);
-    return o->context->argument(index);
+    assert(g->index < o->context->argumentCount);
+    return o->context->argument(g->index);
 }
 
-Value ArgumentsSetterFunction::call(ExecutionContext *ctx, Value thisObject, Value *args, int argc)
+DEFINE_MANAGED_VTABLE(ArgumentsSetterFunction);
+
+Value ArgumentsSetterFunction::call(Managed *setter, ExecutionContext *ctx, const Value &thisObject, Value *args, int argc)
 {
+    ArgumentsSetterFunction *s = static_cast<ArgumentsSetterFunction *>(setter);
     Object *that = thisObject.asObject();
     if (!that)
         __qmljs_throw_type_error(ctx);
@@ -155,8 +155,8 @@ Value ArgumentsSetterFunction::call(ExecutionContext *ctx, Value thisObject, Val
     if (!o)
         __qmljs_throw_type_error(ctx);
 
-    assert(index < o->context->argumentCount);
-    o->context->arguments[index] = argc ? args[0] : Value::undefinedValue();
+    assert(s->index < o->context->argumentCount);
+    o->context->arguments[s->index] = argc ? args[0] : Value::undefinedValue();
     return Value::undefinedValue();
 }
 

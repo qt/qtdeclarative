@@ -64,6 +64,8 @@
 using namespace QQmlJS::VM;
 
 
+DEFINE_MANAGED_VTABLE(FunctionObject);
+
 Function::~Function()
 {
     delete[] codeData;
@@ -127,16 +129,18 @@ bool FunctionObject::hasInstance(Managed *that, ExecutionContext *ctx, const Val
     return false;
 }
 
-Value FunctionObject::construct(ExecutionContext *context, Value *, int)
+Value FunctionObject::construct(Managed *that, ExecutionContext *context, Value *, int)
 {
+    FunctionObject *f = static_cast<FunctionObject *>(that);
+
     Object *obj = context->engine->newObject();
-    Value proto = __get__(context, context->engine->id_prototype);
+    Value proto = f->__get__(context, context->engine->id_prototype);
     if (proto.isObject())
         obj->prototype = proto.objectValue();
     return Value::fromObject(obj);
 }
 
-Value FunctionObject::call(ExecutionContext *, Value, Value *, int)
+Value FunctionObject::call(Managed *, ExecutionContext *, const Value &, Value *, int)
 {
     return Value::undefinedValue();
 }
@@ -158,23 +162,19 @@ void FunctionObject::markObjects(Managed *that)
     Object::markObjects(that);
 }
 
-const ManagedVTable FunctionObject::static_vtbl =
-{
-    FunctionObject::markObjects,
-    FunctionObject::hasInstance,
-    ManagedVTable::EndOfVTable
-};
 
-
+DEFINE_MANAGED_VTABLE(FunctionCtor);
 
 FunctionCtor::FunctionCtor(ExecutionContext *scope)
     : FunctionObject(scope)
 {
+    vtbl = &static_vtbl;
 }
 
 // 15.3.2
-Value FunctionCtor::construct(ExecutionContext *ctx, Value *args, int argc)
+Value FunctionCtor::construct(Managed *that, ExecutionContext *ctx, Value *args, int argc)
 {
+    FunctionCtor *f = static_cast<FunctionCtor *>(that);
     MemoryManager::GCBlocker gcBlocker(ctx->engine->memoryManager);
 
     QString arguments;
@@ -207,7 +207,7 @@ Value FunctionCtor::construct(ExecutionContext *ctx, Value *args, int argc)
 
     IR::Module module;
 
-    Codegen cg(ctx, strictMode);
+    Codegen cg(ctx, f->strictMode);
     IR::Function *irf = cg(QString(), fe, &module);
 
     QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(ctx->engine, &module));
@@ -217,9 +217,9 @@ Value FunctionCtor::construct(ExecutionContext *ctx, Value *args, int argc)
 }
 
 // 15.3.1: This is equivalent to new Function(...)
-Value FunctionCtor::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
+Value FunctionCtor::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
 {
-    return construct(context, args, argc);
+    return construct(that, context, args, argc);
 }
 
 void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -309,9 +309,12 @@ static Value throwTypeError(ExecutionContext *ctx)
     return Value::undefinedValue();
 }
 
+DEFINE_MANAGED_VTABLE(ScriptFunction);
+
 ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     : FunctionObject(scope)
 {
+    vtbl = &static_vtbl;
     this->function = function;
     assert(function);
     assert(function->code);
@@ -356,24 +359,25 @@ ScriptFunction::~ScriptFunction()
 {
 }
 
-Value ScriptFunction::construct(ExecutionContext *context, Value *args, int argc)
+Value ScriptFunction::construct(Managed *that, ExecutionContext *context, Value *args, int argc)
 {
-    assert(function->code);
+    ScriptFunction *f = static_cast<ScriptFunction *>(that);
+    assert(f->function->code);
     Object *obj = context->engine->newObject();
-    Value proto = __get__(context, context->engine->id_prototype);
+    Value proto = f->__get__(context, context->engine->id_prototype);
     if (proto.isObject())
         obj->prototype = proto.objectValue();
 
-    uint size = requiredMemoryForExecutionContect(this, argc);
-    ExecutionContext *ctx = static_cast<ExecutionContext *>(needsActivation ? malloc(size) : alloca(size));
+    uint size = requiredMemoryForExecutionContect(f, argc);
+    ExecutionContext *ctx = static_cast<ExecutionContext *>(f->needsActivation ? malloc(size) : alloca(size));
 
     ctx->thisObject = Value::fromObject(obj);
-    ctx->function = this;
+    ctx->function = f;
     ctx->arguments = args;
     ctx->argumentCount = argc;
 
     ctx->initCallContext(context);
-    Value result = function->code(ctx, function->codeData);
+    Value result = f->function->code(ctx, f->function->codeData);
     ctx->leaveCallContext();
 
     if (result.isObject())
@@ -381,104 +385,109 @@ Value ScriptFunction::construct(ExecutionContext *context, Value *args, int argc
     return Value::fromObject(obj);
 }
 
-Value ScriptFunction::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
+Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
 {
-    assert(function->code);
-    uint size = requiredMemoryForExecutionContect(this, argc);
-    ExecutionContext *ctx = static_cast<ExecutionContext *>(needsActivation ? malloc(size) : alloca(size));
+    ScriptFunction *f = static_cast<ScriptFunction *>(that);
+    assert(f->function->code);
+    uint size = requiredMemoryForExecutionContect(f, argc);
+    ExecutionContext *ctx = static_cast<ExecutionContext *>(f->needsActivation ? malloc(size) : alloca(size));
 
-    if (!strictMode && !thisObject.isObject()) {
+    ctx->thisObject = thisObject;
+    if (!f->strictMode && !thisObject.isObject()) {
         // Built-in functions allow for the this object to be null or undefined. This overrides
         // the behaviour of changing thisObject to the global object if null/undefined and allows
         // the built-in functions for example to throw a type error if null is passed.
         if (thisObject.isUndefined() || thisObject.isNull()) {
-            if (!isBuiltinFunction)
-                thisObject = context->engine->globalObject;
+            if (!f->isBuiltinFunction)
+                ctx->thisObject = context->engine->globalObject;
         } else {
-            thisObject = thisObject.toObject(context);
+            ctx->thisObject = thisObject.toObject(context);
         }
     }
 
-    ctx->thisObject = thisObject;
-    ctx->function = this;
+    ctx->function = f;
     ctx->arguments = args;
     ctx->argumentCount = argc;
 
     ctx->initCallContext(context);
-    Value result = function->code(ctx, function->codeData);
+    Value result = f->function->code(ctx, f->function->codeData);
     ctx->leaveCallContext();
     return result;
 }
 
 
+
+DEFINE_MANAGED_VTABLE(BuiltinFunctionOld);
 
 BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
     : FunctionObject(scope)
     , code(code)
 {
+    vtbl = &static_vtbl;
     this->name = name;
     isBuiltinFunction = true;
 }
 
-Value BuiltinFunctionOld::construct(ExecutionContext *ctx, Value *, int)
+Value BuiltinFunctionOld::construct(Managed *, ExecutionContext *ctx, Value *, int)
 {
     ctx->throwTypeError();
     return Value::undefinedValue();
 }
 
-Value BuiltinFunctionOld::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
+Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
 {
-    uint size = requiredMemoryForExecutionContect(this, argc);
-    ExecutionContext *ctx = static_cast<ExecutionContext *>(needsActivation ? malloc(size) : alloca(size));
+    BuiltinFunctionOld *f = static_cast<BuiltinFunctionOld *>(that);
+    uint size = requiredMemoryForExecutionContect(f, argc);
+    ExecutionContext *ctx = static_cast<ExecutionContext *>(f->needsActivation ? malloc(size) : alloca(size));
 
-    if (!strictMode && !thisObject.isObject()) {
+    ctx->thisObject = thisObject;
+    if (!f->strictMode && !thisObject.isObject()) {
         // Built-in functions allow for the this object to be null or undefined. This overrides
         // the behaviour of changing thisObject to the global object if null/undefined and allows
         // the built-in functions for example to throw a type error if null is passed.
         if (thisObject.isUndefined() || thisObject.isNull()) {
-            if (!isBuiltinFunction)
-                thisObject = context->engine->globalObject;
+            if (!f->isBuiltinFunction)
+                ctx->thisObject = context->engine->globalObject;
         } else {
-            thisObject = thisObject.toObject(context);
+            ctx->thisObject = thisObject.toObject(context);
         }
     }
 
-    ctx->thisObject = thisObject;
-    ctx->function = this;
+    ctx->function = f;
     ctx->arguments = args;
     ctx->argumentCount = argc;
 
     ctx->initCallContext(context);
-    Value result = code(ctx);
+    Value result = f->code(ctx);
     ctx->leaveCallContext();
     return result;
 }
+
+
+DEFINE_MANAGED_VTABLE(BuiltinFunction);
 
 BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *, Value, Value *, int))
     : FunctionObject(scope)
     , code(code)
 {
+    vtbl = &static_vtbl;
     this->name = name;
     isBuiltinFunction = true;
 }
 
-Value BuiltinFunction::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
+Value BuiltinFunction::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
 {
-    return code(context, thisObject, args, argc);
+    BuiltinFunction *f = static_cast<BuiltinFunction *>(that);
+    return f->code(context, thisObject, args, argc);
 }
 
-Value BuiltinFunction::construct(ExecutionContext *ctx, Value *, int)
+Value BuiltinFunction::construct(Managed *, ExecutionContext *ctx, Value *, int)
 {
     ctx->throwTypeError();
     return Value::undefinedValue();
 }
 
-const ManagedVTable BoundFunction::static_vtbl =
-{
-    BoundFunction::markObjects,
-    BoundFunction::hasInstance,
-    ManagedVTable::EndOfVTable
-};
+DEFINE_MANAGED_VTABLE(BoundFunction);
 
 BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)
     : FunctionObject(scope)
@@ -501,22 +510,24 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     *insertMember(scope->engine->id_caller) = pd;
 }
 
-Value BoundFunction::call(ExecutionContext *context, Value, Value *args, int argc)
+Value BoundFunction::call(Managed *that, ExecutionContext *context, const Value &, Value *args, int argc)
 {
-    Value *newArgs = static_cast<Value *>(alloca(sizeof(Value)*(boundArgs.size() + argc)));
-    memcpy(newArgs, boundArgs.constData(), boundArgs.size()*sizeof(Value));
-    memcpy(newArgs + boundArgs.size(), args, argc*sizeof(Value));
+    BoundFunction *f = static_cast<BoundFunction *>(that);
+    Value *newArgs = static_cast<Value *>(alloca(sizeof(Value)*(f->boundArgs.size() + argc)));
+    memcpy(newArgs, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
+    memcpy(newArgs + f->boundArgs.size(), args, argc*sizeof(Value));
 
-    return target->call(context, boundThis, newArgs, boundArgs.size() + argc);
+    return f->target->call(context, f->boundThis, newArgs, f->boundArgs.size() + argc);
 }
 
-Value BoundFunction::construct(ExecutionContext *context, Value *args, int argc)
+Value BoundFunction::construct(Managed *that, ExecutionContext *context, Value *args, int argc)
 {
-    Value *newArgs = static_cast<Value *>(alloca(sizeof(Value)*(boundArgs.size() + argc)));
-    memcpy(newArgs, boundArgs.constData(), boundArgs.size()*sizeof(Value));
-    memcpy(newArgs + boundArgs.size(), args, argc*sizeof(Value));
+    BoundFunction *f = static_cast<BoundFunction *>(that);
+    Value *newArgs = static_cast<Value *>(alloca(sizeof(Value)*(f->boundArgs.size() + argc)));
+    memcpy(newArgs, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
+    memcpy(newArgs + f->boundArgs.size(), args, argc*sizeof(Value));
 
-    return target->construct(context, newArgs, boundArgs.size() + argc);
+    return f->target->construct(context, newArgs, f->boundArgs.size() + argc);
 }
 
 bool BoundFunction::hasInstance(Managed *that, ExecutionContext *ctx, const Value &value)

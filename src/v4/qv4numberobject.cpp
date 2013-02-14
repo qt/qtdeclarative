@@ -48,19 +48,21 @@
 
 using namespace QQmlJS::VM;
 
+DEFINE_MANAGED_VTABLE(NumberCtor);
 
 NumberCtor::NumberCtor(ExecutionContext *scope)
     : FunctionObject(scope)
 {
+    vtbl = &static_vtbl;
 }
 
-Value NumberCtor::construct(ExecutionContext *ctx, Value *args, int argc)
+Value NumberCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
     double d = argc ? args[0].toNumber(ctx) : 0.;
     return Value::fromObject(ctx->engine->newNumberObject(Value::fromDouble(d)));
 }
 
-Value NumberCtor::call(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value NumberCtor::call(Managed *m, ExecutionContext *parentCtx, const Value &thisObject, Value *argv, int argc)
 {
     double d = argc ? argv[0].toNumber(parentCtx) : 0.;
     return Value::fromDouble(d);

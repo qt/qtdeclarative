@@ -106,50 +106,71 @@ struct ErrorCtor: FunctionObject
 {
     ErrorCtor(ExecutionContext *scope);
 
-    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
-    virtual Value call(ExecutionContext *ctx, Value thisObject, Value *args, int argc);
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct EvalErrorCtor: ErrorCtor
 {
-    EvalErrorCtor(ExecutionContext *scope): ErrorCtor(scope) {}
+    EvalErrorCtor(ExecutionContext *scope): ErrorCtor(scope) { vtbl = &static_vtbl; }
 
-    virtual Value construct(ExecutionContext *ctx, Value *, int argc);
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct RangeErrorCtor: ErrorCtor
 {
-    RangeErrorCtor(ExecutionContext *scope): ErrorCtor(scope) {}
+    RangeErrorCtor(ExecutionContext *scope): ErrorCtor(scope) { vtbl = &static_vtbl; }
 
-    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct ReferenceErrorCtor: ErrorCtor
 {
-    ReferenceErrorCtor(ExecutionContext *scope): ErrorCtor(scope) {}
+    ReferenceErrorCtor(ExecutionContext *scope): ErrorCtor(scope) { vtbl = &static_vtbl; }
 
-    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct SyntaxErrorCtor: ErrorCtor
 {
-    SyntaxErrorCtor(ExecutionContext *scope): ErrorCtor(scope) {}
+    SyntaxErrorCtor(ExecutionContext *scope): ErrorCtor(scope) { vtbl = &static_vtbl; }
 
-    virtual Value construct(ExecutionContext *ctx, Value *, int);
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct TypeErrorCtor: ErrorCtor
 {
-    TypeErrorCtor(ExecutionContext *scope): ErrorCtor(scope) {}
+    TypeErrorCtor(ExecutionContext *scope): ErrorCtor(scope) { vtbl = &static_vtbl; }
 
-    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct URIErrorCtor: ErrorCtor
 {
-    URIErrorCtor(ExecutionContext *scope): ErrorCtor(scope) {}
+    URIErrorCtor(ExecutionContext *scope): ErrorCtor(scope) { vtbl = &static_vtbl; }
 
-    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 
@@ -165,37 +186,37 @@ struct ErrorPrototype: ErrorObject
 
 struct EvalErrorPrototype: EvalErrorObject
 {
-    EvalErrorPrototype(ExecutionContext *ctx): EvalErrorObject(ctx, Value::undefinedValue()) {}
+    EvalErrorPrototype(ExecutionContext *ctx): EvalErrorObject(ctx, Value::undefinedValue()) { vtbl = &static_vtbl; }
     void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
 };
 
 struct RangeErrorPrototype: RangeErrorObject
 {
-    RangeErrorPrototype(ExecutionContext *ctx): RangeErrorObject(ctx, Value::undefinedValue()) {}
+    RangeErrorPrototype(ExecutionContext *ctx): RangeErrorObject(ctx, Value::undefinedValue()) { vtbl = &static_vtbl; }
     void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
 };
 
 struct ReferenceErrorPrototype: ReferenceErrorObject
 {
-    ReferenceErrorPrototype(ExecutionContext *ctx): ReferenceErrorObject(ctx, Value::undefinedValue()) {}
+    ReferenceErrorPrototype(ExecutionContext *ctx): ReferenceErrorObject(ctx, Value::undefinedValue()) { vtbl = &static_vtbl; }
     void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
 };
 
 struct SyntaxErrorPrototype: SyntaxErrorObject
 {
-    SyntaxErrorPrototype(ExecutionContext *ctx): SyntaxErrorObject(ctx, 0) {}
+    SyntaxErrorPrototype(ExecutionContext *ctx): SyntaxErrorObject(ctx, 0) { vtbl = &static_vtbl; }
     void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
 };
 
 struct TypeErrorPrototype: TypeErrorObject
 {
-    TypeErrorPrototype(ExecutionContext *ctx): TypeErrorObject(ctx, Value::undefinedValue()) {}
+    TypeErrorPrototype(ExecutionContext *ctx): TypeErrorObject(ctx, Value::undefinedValue()) { vtbl = &static_vtbl; }
     void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
 };
 
 struct URIErrorPrototype: URIErrorObject
 {
-    URIErrorPrototype(ExecutionContext *ctx): URIErrorObject(ctx, Value::undefinedValue()) {}
+    URIErrorPrototype(ExecutionContext *ctx): URIErrorObject(ctx, Value::undefinedValue()) { vtbl = &static_vtbl; }
     void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
 };
 

@@ -43,18 +43,21 @@
 
 using namespace QQmlJS::VM;
 
+DEFINE_MANAGED_VTABLE(BooleanCtor);
+
 BooleanCtor::BooleanCtor(ExecutionContext *scope)
     : FunctionObject(scope)
 {
+    vtbl = &static_vtbl;
 }
 
-Value BooleanCtor::construct(ExecutionContext *ctx, Value *args, int argc)
+Value BooleanCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
     bool n = argc ? args[0].toBoolean(ctx) : false;
     return Value::fromObject(ctx->engine->newBooleanObject(Value::fromBoolean(n)));
 }
 
-Value BooleanCtor::call(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value BooleanCtor::call(Managed *, ExecutionContext *parentCtx, const Value &thisObject, Value *argv, int argc)
 {
     bool value = argc ? argv[0].toBoolean(parentCtx) : 0;
     return Value::fromBoolean(value);

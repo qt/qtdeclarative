@@ -658,13 +658,15 @@ static double getLocalTZA()
 #endif
 }
 
+DEFINE_MANAGED_VTABLE(DateCtor);
 
 DateCtor::DateCtor(ExecutionContext *scope)
     : FunctionObject(scope)
 {
+    vtbl = &static_vtbl;
 }
 
-Value DateCtor::construct(ExecutionContext *ctx, Value *args, int argc)
+Value DateCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
     double t = 0;
 
@@ -702,7 +704,7 @@ Value DateCtor::construct(ExecutionContext *ctx, Value *args, int argc)
     return Value::fromObject(d);
 }
 
-Value DateCtor::call(ExecutionContext *ctx, Value, Value *, int)
+Value DateCtor::call(Managed *, ExecutionContext *ctx, const Value &, Value *, int)
 {
     double t = currentTime();
     return Value::fromString(ctx, ToString(t));

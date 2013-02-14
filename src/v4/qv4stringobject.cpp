@@ -75,6 +75,8 @@
 
 using namespace QQmlJS::VM;
 
+DEFINE_MANAGED_VTABLE(StringObject);
+
 StringObject::StringObject(ExecutionContext *ctx, const Value &value)
     : Object(ctx->engine), value(value)
 {
@@ -108,18 +110,15 @@ void StringObject::markObjects(Managed *that)
     Object::markObjects(that);
 }
 
-const ManagedVTable StringObject::static_vtbl =
-{
-    StringObject::markObjects
-};
-
+DEFINE_MANAGED_VTABLE(StringCtor);
 
 StringCtor::StringCtor(ExecutionContext *scope)
     : FunctionObject(scope)
 {
+    vtbl = &static_vtbl;
 }
 
-Value StringCtor::construct(ExecutionContext *ctx, Value *argv, int argc)
+Value StringCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int argc)
 {
     Value value;
     if (argc)
@@ -129,7 +128,7 @@ Value StringCtor::construct(ExecutionContext *ctx, Value *argv, int argc)
     return Value::fromObject(ctx->engine->newStringObject(ctx, value));
 }
 
-Value StringCtor::call(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value StringCtor::call(Managed *, ExecutionContext *parentCtx, const Value &thisObject, Value *argv, int argc)
 {
     Value value;
     if (argc)

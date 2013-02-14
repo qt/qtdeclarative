@@ -44,12 +44,15 @@
 
 using namespace QQmlJS::VM;
 
+DEFINE_MANAGED_VTABLE(ArrayCtor);
+
 ArrayCtor::ArrayCtor(ExecutionContext *scope)
     : FunctionObject(scope)
 {
+    vtbl = &static_vtbl;
 }
 
-Value ArrayCtor::construct(ExecutionContext *ctx, Value *argv, int argc)
+Value ArrayCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int argc)
 {
     ArrayObject *a = ctx->engine->newArrayObject(ctx);
     uint len;
@@ -74,9 +77,9 @@ Value ArrayCtor::construct(ExecutionContext *ctx, Value *argv, int argc)
     return Value::fromObject(a);
 }
 
-Value ArrayCtor::call(ExecutionContext *ctx, Value thisObject, Value *argv, int argc)
+Value ArrayCtor::call(Managed *that, ExecutionContext *ctx, const Value &thisObject, Value *argv, int argc)
 {
-    return construct(ctx, argv, argc);
+    return construct(that, ctx, argv, argc);
 }
 
 void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)

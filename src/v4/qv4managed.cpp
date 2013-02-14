@@ -47,8 +47,11 @@ using namespace QQmlJS::VM;
 
 const ManagedVTable Managed::static_vtbl =
 {
+    "Managed",
     0 /*markObjects*/,
-    Managed::hasInstance,
+    hasInstance,
+    construct,
+    call,
     ManagedVTable::EndOfVTable
 };
 
@@ -150,4 +153,14 @@ QString Managed::className() const
 bool Managed::hasInstance(Managed *, ExecutionContext *ctx, const Value &)
 {
     ctx->throwTypeError();
+}
+
+Value Managed::construct(Managed *, ExecutionContext *context, Value *, int)
+{
+    context->throwTypeError();
+}
+
+Value Managed::call(Managed *, ExecutionContext *context, const Value &, Value *, int)
+{
+    context->throwTypeError();
 }

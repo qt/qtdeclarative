@@ -59,8 +59,11 @@ struct DateCtor: FunctionObject
 {
     DateCtor(ExecutionContext *scope);
 
-    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
-    virtual Value call(ExecutionContext *ctx, Value, Value *, int);
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct DatePrototype: DateObject

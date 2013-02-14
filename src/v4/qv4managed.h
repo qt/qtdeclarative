@@ -50,7 +50,6 @@
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
-
 namespace VM {
 
 class MemoryManager;
@@ -80,10 +79,25 @@ struct ManagedVTable
     enum _EndOfVTable {
         EndOfVTable
     };
+    const char *className;
     void (*markObjects)(Managed *);
     bool (*hasInstance)(Managed *, ExecutionContext *ctx, const Value &value);
+    Value (*construct)(Managed *, ExecutionContext *context, Value *args, int argc);
+    Value (*call)(Managed *, ExecutionContext *context, const Value &thisObject, Value *args, int argc);
     _EndOfVTable endofVTable;
 };
+
+#define DEFINE_MANAGED_VTABLE(classname) \
+const ManagedVTable classname::static_vtbl =    \
+{                                               \
+    #classname,                                 \
+    markObjects,                                \
+    hasInstance,                                \
+    construct,                                  \
+    call,                                       \
+    ManagedVTable::EndOfVTable                  \
+}
+
 
 struct Q_V4_EXPORT Managed
 {
@@ -160,8 +174,12 @@ public:
     inline bool hasInstance(ExecutionContext *ctx, const Value &v) {
         return vtbl->hasInstance(this, ctx, v);
     }
+    inline Value construct(ExecutionContext *context, Value *args, int argc);
+    inline Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc);
 
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
+    static Value construct(Managed *, ExecutionContext *context, Value *, int);
+    static Value call(Managed *, ExecutionContext *, const Value &, Value *, int);
 
 protected:
 

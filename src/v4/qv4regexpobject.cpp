@@ -91,14 +91,15 @@ PropertyDescriptor *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
     return &memberData[0];
 }
 
-
+DEFINE_MANAGED_VTABLE(RegExpCtor);
 
 RegExpCtor::RegExpCtor(ExecutionContext *scope)
     : FunctionObject(scope)
 {
+    vtbl = &static_vtbl;
 }
 
-Value RegExpCtor::construct(ExecutionContext *ctx, Value *argv, int argc)
+Value RegExpCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int argc)
 {
     Value r = argc > 0 ? argv[0] : Value::undefinedValue();
     Value f = argc > 1 ? argv[1] : Value::undefinedValue();
@@ -142,14 +143,14 @@ Value RegExpCtor::construct(ExecutionContext *ctx, Value *argv, int argc)
     return Value::fromObject(o);
 }
 
-Value RegExpCtor::call(ExecutionContext *ctx, Value thisObject, Value *argv, int argc)
+Value RegExpCtor::call(Managed *that, ExecutionContext *ctx, const Value &thisObject, Value *argv, int argc)
 {
     if (argc > 0 && argv[0].asRegExpObject()) {
         if (argc == 1 || argv[1].isUndefined())
             return argv[0];
     }
 
-    return construct(ctx, argv, argc);
+    return construct(that, ctx, argv, argc);
 }
 
 void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)

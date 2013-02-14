@@ -59,10 +59,13 @@ struct Q_V4_EXPORT EvalFunction : FunctionObject
                                              QQmlJS::Codegen::Mode mode, bool strictMode,
                                              bool inheritContext);
 
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
     Value evalCall(ExecutionContext *context, Value thisObject, Value *args, int argc, bool directCall);
 
-    Value construct(ExecutionContext *ctx, Value *, int);
+    using Managed::construct;
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct GlobalFunctions

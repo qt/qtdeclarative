@@ -64,6 +64,7 @@
 
 using namespace QQmlJS::VM;
 
+DEFINE_MANAGED_VTABLE(Object);
 
 Object::Object(ExecutionEngine *engine)
     : prototype(0)
@@ -985,13 +986,6 @@ void Object::markArrayObjects() const
     }
 }
 
-const ManagedVTable Object::static_vtbl =
-{
-    Object::markObjects,
-    Managed::hasInstance,
-    ManagedVTable::EndOfVTable
-};
-
 void ArrayObject::init(ExecutionContext *context)
 {
     type = Type_ArrayObject;
@@ -1006,6 +1000,7 @@ void ArrayObject::init(ExecutionContext *context)
 }
 
 
+DEFINE_MANAGED_VTABLE(ForEachIteratorObject);
 
 void ForEachIteratorObject::markObjects(Managed *that)
 {
@@ -1014,10 +1009,3 @@ void ForEachIteratorObject::markObjects(Managed *that)
     if (o->it.object)
         o->it.object->mark();
 }
-
-const ManagedVTable ForEachIteratorObject::static_vtbl =
-{
-    ForEachIteratorObject::markObjects,
-    Managed::hasInstance,
-    ManagedVTable::EndOfVTable
-};
