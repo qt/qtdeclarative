@@ -50,6 +50,13 @@ static Value throwTypeError(ExecutionContext *ctx)
     return Value::undefinedValue();
 }
 
+const ManagedVTable ArgumentsObject::static_vtbl =
+{
+    ArgumentsObject::markObjects,
+    Managed::hasInstance,
+    ManagedVTable::EndOfVTable
+};
+
 ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount)
     : Object(context->engine), context(context)
 {
@@ -163,14 +170,6 @@ void ArgumentsObject::markObjects(Managed *that)
     }
     Object::markObjects(that);
 }
-
-
-const ManagedVTable ArgumentsObject::static_vtbl =
-{
-    ArgumentsObject::markObjects
-};
-
-
 
 }
 }

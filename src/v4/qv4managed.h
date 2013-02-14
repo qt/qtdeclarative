@@ -72,10 +72,17 @@ struct ArgumentsObject;
 struct JSONObject;
 struct ForeachIteratorObject;
 struct Managed;
+struct Value;
+
 
 struct ManagedVTable
 {
+    enum _EndOfVTable {
+        EndOfVTable
+    };
     void (*markObjects)(Managed *);
+    bool (*hasInstance)(Managed *, ExecutionContext *ctx, const Value *value);
+    _EndOfVTable endofVTable;
 };
 
 struct Q_V4_EXPORT Managed
@@ -150,10 +157,17 @@ public:
         *reinterpret_cast<Managed **>(this) = m;
     }
 
+    inline bool hasInstance(ExecutionContext *ctx, const Value *v) {
+        return vtbl->hasInstance(this, ctx, v);
+    }
+
+    static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value *value);
+
 protected:
 
     static const ManagedVTable static_vtbl;
     const ManagedVTable *vtbl;
+
     union {
         uint _data;
         struct {

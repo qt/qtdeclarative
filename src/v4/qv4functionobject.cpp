@@ -103,24 +103,24 @@ FunctionObject::FunctionObject(ExecutionContext *scope)
     strictMode = false;
 }
 
-bool FunctionObject::hasInstance(ExecutionContext *ctx, const Value &value)
+bool FunctionObject::hasInstance(Managed *that, ExecutionContext *ctx, const Value *value)
 {
-    if (! value.isObject())
+    FunctionObject *f = static_cast<FunctionObject *>(that);
+
+    Object *v = value->asObject();
+    if (!v)
         return false;
 
-    Value o = __get__(ctx, ctx->engine->id_prototype);
-    if (! o.isObject()) {
+    Object *o = f->__get__(ctx, ctx->engine->id_prototype).asObject();
+    if (!o)
         ctx->throwTypeError();
-        return false;
-    }
 
-    Object *v = value.objectValue();
     while (v) {
         v = v->prototype;
 
         if (! v)
             break;
-        else if (o.objectValue() == v)
+        else if (o == v)
             return true;
     }
 
@@ -209,7 +209,9 @@ Value FunctionObject::construct(ExecutionContext *ctx)
 
 const ManagedVTable FunctionObject::static_vtbl =
 {
-    FunctionObject::markObjects
+    FunctionObject::markObjects,
+    FunctionObject::hasInstance,
+    ManagedVTable::EndOfVTable
 };
 
 
@@ -438,6 +440,12 @@ Value BuiltinFunction::construct(ExecutionContext *ctx)
     return Value::undefinedValue();
 }
 
+const ManagedVTable BoundFunction::static_vtbl =
+{
+    BoundFunction::markObjects,
+    BoundFunction::hasInstance,
+    ManagedVTable::EndOfVTable
+};
 
 BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)
     : FunctionObject(scope)
@@ -478,9 +486,10 @@ Value BoundFunction::construct(ExecutionContext *context, Value *args, int argc)
     return target->construct(context, newArgs, boundArgs.size() + argc);
 }
 
-bool BoundFunction::hasInstance(ExecutionContext *ctx, const Value &value)
+bool BoundFunction::hasInstance(Managed *that, ExecutionContext *ctx, const Value *value)
 {
-    return target->hasInstance(ctx, value);
+    BoundFunction *f = static_cast<BoundFunction *>(that);
+    return FunctionObject::hasInstance(f->target, ctx, value);
 }
 
 void BoundFunction::markObjects(Managed *that)
@@ -494,8 +503,3 @@ void BoundFunction::markObjects(Managed *that)
             m->mark();
     FunctionObject::markObjects(that);
 }
-
-const ManagedVTable BoundFunction::static_vtbl =
-{
-    BoundFunction::markObjects
-};

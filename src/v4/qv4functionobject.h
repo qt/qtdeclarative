@@ -156,8 +156,6 @@ struct Q_V4_EXPORT FunctionObject: Object {
 
     FunctionObject(ExecutionContext *scope);
 
-    virtual bool hasInstance(ExecutionContext *ctx, const Value &value);
-
     virtual Value construct(ExecutionContext *context, Value *args, int argc);
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 
@@ -169,6 +167,7 @@ protected:
 
     static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);
+    static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value *value);
 };
 
 struct FunctionCtor: FunctionObject
@@ -227,10 +226,10 @@ struct BoundFunction: FunctionObject {
 
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
     virtual Value construct(ExecutionContext *context, Value *args, int argc);
-    virtual bool hasInstance(ExecutionContext *ctx, const Value &value);
 
     static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);
+    static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value *value);
 };
 
 } // namespace VM

@@ -236,11 +236,11 @@ void __qmljs_add_helper(ExecutionContext *ctx, Value *result, const Value *left,
 
 void __qmljs_instanceof(ExecutionContext *ctx, Value *result, const Value *left, const Value *right)
 {
-    FunctionObject *function = right->asFunctionObject();
-    if (!function)
+    Object *o = right->asObject();
+    if (!o)
         __qmljs_throw_type_error(ctx);
 
-    bool r = function->hasInstance(ctx, *left);
+    bool r = o->hasInstance(ctx, left);
     *result = Value::fromBoolean(r);
 }
 

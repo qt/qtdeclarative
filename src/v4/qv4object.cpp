@@ -987,7 +987,9 @@ void Object::markArrayObjects() const
 
 const ManagedVTable Object::static_vtbl =
 {
-    Object::markObjects
+    Object::markObjects,
+    Managed::hasInstance,
+    ManagedVTable::EndOfVTable
 };
 
 void ArrayObject::init(ExecutionContext *context)
@@ -1015,5 +1017,7 @@ void ForEachIteratorObject::markObjects(Managed *that)
 
 const ManagedVTable ForEachIteratorObject::static_vtbl =
 {
-    ForEachIteratorObject::markObjects
+    ForEachIteratorObject::markObjects,
+    Managed::hasInstance,
+    ManagedVTable::EndOfVTable
 };
