@@ -201,13 +201,13 @@ Bool __qmljs_equal(const Value &x, const Value &y, ExecutionContext *ctx);
 Bool __qmljs_strict_equal(const Value &x, const Value &y);
 
 // unary operators
-typedef Value (*UnaryOpName)(const Value &, ExecutionContext* ctx);
-Value __qmljs_uplus(const Value &value, ExecutionContext *ctx);
-Value __qmljs_uminus(const Value &value, ExecutionContext *ctx);
-Value __qmljs_compl(const Value &value, ExecutionContext *ctx);
-Value __qmljs_not(const Value &value, ExecutionContext *ctx);
-Value __qmljs_increment(const Value &value, ExecutionContext *ctx);
-Value __qmljs_decrement(const Value &value, ExecutionContext *ctx);
+typedef void (*UnaryOpName)(Value *, const Value &, ExecutionContext* ctx);
+void __qmljs_uplus(Value *result, const Value &value, ExecutionContext *ctx);
+void __qmljs_uminus(Value *result, const Value &value, ExecutionContext *ctx);
+void __qmljs_compl(Value *result, const Value &value, ExecutionContext *ctx);
+void __qmljs_not(Value *result, const Value &value, ExecutionContext *ctx);
+void __qmljs_increment(Value *result, const Value &value, ExecutionContext *ctx);
+void __qmljs_decrement(Value *result, const Value &value, ExecutionContext *ctx);
 
 Value __qmljs_delete_subscript(ExecutionContext *ctx, const Value &base, Value index);
 Value __qmljs_delete_member(ExecutionContext *ctx, const Value &base, String *name);
@@ -481,30 +481,32 @@ inline Value __qmljs_default_value(const Value &value, ExecutionContext *ctx, in
 }
 
 
-inline Value __qmljs_uplus(const Value &value, ExecutionContext *ctx)
+inline void __qmljs_uplus(Value *result, const Value &value, ExecutionContext *ctx)
 {
     TRACE1(value);
 
-    Value copy = value;
-    if (copy.tryIntegerConversion())
-        return copy;
+    *result = value;
+    if (result->tryIntegerConversion())
+        return;
 
     double n = __qmljs_to_number(value, ctx);
-    return Value::fromDouble(n);
+    *result = Value::fromDouble(n);
 }
 
-inline Value __qmljs_uminus(const Value &value, ExecutionContext *ctx)
+inline void __qmljs_uminus(Value *result, const Value &value, ExecutionContext *ctx)
 {
     TRACE1(value);
 
     // +0 != -0, so we need to convert to double when negating 0
     if (value.isInteger() && value.integerValue())
-        return Value::fromInt32(-value.integerValue());
-    double n = __qmljs_to_number(value, ctx);
-    return Value::fromDouble(-n);
+        *result = Value::fromInt32(-value.integerValue());
+    else {
+        double n = __qmljs_to_number(value, ctx);
+        *result = Value::fromDouble(-n);
+    }
 }
 
-inline Value __qmljs_compl(const Value &value, ExecutionContext *ctx)
+inline void __qmljs_compl(Value *result, const Value &value, ExecutionContext *ctx)
 {
     TRACE1(value);
 
@@ -514,15 +516,15 @@ inline Value __qmljs_compl(const Value &value, ExecutionContext *ctx)
     else
         n = Value::toInt32(__qmljs_to_number(value, ctx));
 
-    return Value::fromInt32(~n);
+    *result = Value::fromInt32(~n);
 }
 
-inline Value __qmljs_not(const Value &value, ExecutionContext *ctx)
+inline void __qmljs_not(Value *result, const Value &value, ExecutionContext *ctx)
 {
     TRACE1(value);
 
     bool b = __qmljs_to_boolean(value, ctx);
-    return Value::fromBoolean(!b);
+    *result = Value::fromBoolean(!b);
 }
 
 // binary operators

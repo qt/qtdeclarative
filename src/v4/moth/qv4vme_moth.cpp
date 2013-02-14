@@ -406,7 +406,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CJump)
 
     MOTH_BEGIN_INSTR(Unop)
-        VALUE(instr.result) = instr.alu(VALUE(instr.source), context);
+        instr.alu(VALUEPTR(instr.result), VALUE(instr.source), context);
     MOTH_END_INSTR(Unop)
 
     MOTH_BEGIN_INSTR(Binop)

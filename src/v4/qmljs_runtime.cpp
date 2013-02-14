@@ -1289,26 +1289,28 @@ void __qmljs_builtin_define_getter_setter(Value object, String *name, Value gett
     o->__defineOwnProperty__(ctx, name, &pd);
 }
 
-Value __qmljs_increment(const Value &value, ExecutionContext *ctx)
+void __qmljs_increment(Value *result, const Value &value, ExecutionContext *ctx)
 {
     TRACE1(value);
 
     if (value.isInteger())
-        return Value::fromInt32(value.integerValue() + 1);
-
-    double d = __qmljs_to_number(value, ctx);
-    return Value::fromDouble(d + 1);
+        *result = Value::fromInt32(value.integerValue() + 1);
+    else {
+        double d = __qmljs_to_number(value, ctx);
+        *result = Value::fromDouble(d + 1);
+    }
 }
 
-Value __qmljs_decrement(const Value &value, ExecutionContext *ctx)
+void __qmljs_decrement(Value *result, const Value &value, ExecutionContext *ctx)
 {
     TRACE1(value);
 
     if (value.isInteger())
-        return Value::fromInt32(value.integerValue() - 1);
-
-    double d = __qmljs_to_number(value, ctx);
-    return Value::fromDouble(d - 1);
+        *result = Value::fromInt32(value.integerValue() - 1);
+    else {
+        double d = __qmljs_to_number(value, ctx);
+        *result = Value::fromDouble(d - 1);
+    }
 }
 
 } // extern "C"

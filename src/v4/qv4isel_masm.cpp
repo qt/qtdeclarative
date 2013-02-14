@@ -739,7 +739,7 @@ void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
 
 void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp)
 {
-    Value (*op)(const Value& value, ExecutionContext *ctx) = 0;
+    VM::UnaryOpName op = 0;
     const char *opName = 0;
     switch (oper) {
     case IR::OpIfTrue: assert(!"unreachable"); break;
@@ -753,7 +753,7 @@ void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *
     } // switch
 
     if (op)
-        _as->generateFunctionCallImp(targetTemp, opName, op, Assembler::PointerToValue(sourceTemp),
+        _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::PointerToValue(targetTemp), Assembler::PointerToValue(sourceTemp),
                                       Assembler::ContextRegister);
 }
 
