@@ -159,9 +159,9 @@ void Debugger::leaveFunction(FunctionState *state)
     _callStack[callIndex(state->context())].state = 0;
 }
 
-void Debugger::aboutToThrow(VM::Value *value)
+void Debugger::aboutToThrow(const VM::Value &value)
 {
-    qDebug() << "*** We are about to throw...:" << value->toString(currentState()->context())->toQString();
+    qDebug() << "*** We are about to throw...:" << value.toString(currentState()->context())->toQString();
 }
 
 FunctionState *Debugger::currentState() const

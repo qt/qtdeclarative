@@ -568,7 +568,7 @@ void InstructionSelection::callBuiltinPostDecrementValue(IR::Temp *value, IR::Te
 
 void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_throw, arg, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_throw, Assembler::ContextRegister, Assembler::PointerToValue(arg));
 }
 
 void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result, IR::Temp *contextTemp)

@@ -117,7 +117,7 @@ public: // execution hooks
     void justLeft(VM::ExecutionContext *context);
     void enterFunction(FunctionState *state);
     void leaveFunction(FunctionState *state);
-    void aboutToThrow(VM::Value *value);
+    void aboutToThrow(const VM::Value &value);
 
 public: // debugging hooks
     FunctionState *currentState() const;

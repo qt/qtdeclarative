@@ -511,9 +511,9 @@ void ExecutionContext::inplaceBitOp(String *name, const Value &value, BinOp op)
     setProperty(name, result);
 }
 
-void ExecutionContext::throwError(Value value)
+void ExecutionContext::throwError(const Value &value)
 {
-    __qmljs_builtin_throw(value, this);
+    __qmljs_builtin_throw(this, value);
 }
 
 void ExecutionContext::throwError(const QString &message)

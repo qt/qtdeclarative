@@ -121,7 +121,7 @@ struct ExecutionContext
 
     void wireUpPrototype();
 
-    void throwError(Value value);
+    void throwError(const Value &value);
     void throwError(const QString &message);
     void throwSyntaxError(DiagnosticMessage *message);
     void throwTypeError();

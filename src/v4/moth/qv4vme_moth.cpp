@@ -244,7 +244,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallActivationProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltinThrow)
-        __qmljs_builtin_throw(VALUE(instr.arg), context);
+        __qmljs_builtin_throw(context, VALUE(instr.arg));
     MOTH_END_INSTR(CallBuiltinThrow)
 
     MOTH_BEGIN_INSTR(CallBuiltinCreateExceptionHandler)

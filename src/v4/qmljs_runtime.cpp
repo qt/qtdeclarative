@@ -975,12 +975,12 @@ void __qmljs_construct_property(ExecutionContext *context, Value *result, const 
     context->throwTypeError();
 }
 
-void __qmljs_throw(Value value, ExecutionContext *context)
+void __qmljs_throw(ExecutionContext *context, const Value &value)
 {
     assert(!context->engine->unwindStack.isEmpty());
 
     if (context->engine->debugger)
-        context->engine->debugger->aboutToThrow(&value);
+        context->engine->debugger->aboutToThrow(value);
 
     ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
 
@@ -1228,9 +1228,9 @@ void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *re
     o->__put__(context, idx, v);
 }
 
-void __qmljs_builtin_throw(Value val, ExecutionContext *context)
+void __qmljs_builtin_throw(ExecutionContext *context, const Value &val)
 {
-    __qmljs_throw(val, context);
+    __qmljs_throw(context, val);
 }
 
 ExecutionContext *__qmljs_builtin_push_with_scope(Value o, ExecutionContext *ctx)
