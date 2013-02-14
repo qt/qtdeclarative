@@ -702,7 +702,7 @@ Value DateCtor::construct(ExecutionContext *ctx, Value *args, int argc)
     return Value::fromObject(d);
 }
 
-Value DateCtor::call(ExecutionContext *ctx)
+Value DateCtor::call(ExecutionContext *ctx, Value, Value *, int)
 {
     double t = currentTime();
     return Value::fromString(ctx, ToString(t));

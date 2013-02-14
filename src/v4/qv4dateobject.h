@@ -60,7 +60,7 @@ struct DateCtor: FunctionObject
     DateCtor(ExecutionContext *scope);
 
     virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
-    virtual Value call(ExecutionContext *ctx);
+    virtual Value call(ExecutionContext *ctx, Value, Value *, int);
 };
 
 struct DatePrototype: DateObject
