@@ -161,10 +161,6 @@ String *__qmljs_identifier_from_utf8(ExecutionContext *ctx, const char *s);
 // objects
 Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int typeHint);
 void __qmljs_throw_type_error(ExecutionContext *ctx);
-Value __qmljs_new_object(ExecutionContext *ctx);
-Value __qmljs_new_boolean_object(ExecutionContext *ctx, bool boolean);
-Value __qmljs_new_number_object(ExecutionContext *ctx, double n);
-Value __qmljs_new_string_object(ExecutionContext *ctx, String *string);
 void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, const Value& value);
 void __qmljs_set_property(ExecutionContext *ctx, const Value &object, String *name, const Value &value);
 void __qmljs_get_property(ExecutionContext *ctx, Value *result, const Value &object, String *name);
@@ -192,7 +188,8 @@ double __qmljs_to_integer(const Value &value, ExecutionContext *ctx);
 int __qmljs_to_int32(const Value &value, ExecutionContext *ctx);
 unsigned short __qmljs_to_uint16(const Value &value, ExecutionContext *ctx);
 Value __qmljs_to_string(const Value &value, ExecutionContext *ctx);
-Value __qmljs_to_object(const Value &value, ExecutionContext *ctx);
+Value __qmljs_to_object(ExecutionContext *ctx, const Value &value);
+Object *__qmljs_convert_to_object(ExecutionContext *ctx, const Value &value);
 //uint __qmljs_check_object_coercible(Context *ctx, Value *result, Value *value);
 Bool __qmljs_is_callable(const Value &value, ExecutionContext *ctx);
 Value __qmljs_default_value(const Value &value, ExecutionContext *ctx, int typeHint);
@@ -426,32 +423,11 @@ inline Value __qmljs_to_string(const Value &value, ExecutionContext *ctx)
     } // switch
 }
 
-inline Value __qmljs_to_object(const Value &value, ExecutionContext *ctx)
+inline Value __qmljs_to_object(ExecutionContext *ctx, const Value &value)
 {
     if (value.isObject())
         return value;
-
-    switch (value.type()) {
-    case Value::Undefined_Type:
-    case Value::Null_Type:
-        __qmljs_throw_type_error(ctx);
-        break;
-    case Value::Boolean_Type:
-        return __qmljs_new_boolean_object(ctx, value.booleanValue());
-        break;
-    case Value::String_Type:
-        return __qmljs_new_string_object(ctx, value.stringValue());
-        break;
-    case Value::Object_Type:
-        Q_UNREACHABLE();
-        break;
-    case Value::Integer_Type:
-        return __qmljs_new_number_object(ctx, value.int_32);
-        break;
-    default: // double
-        return __qmljs_new_number_object(ctx, value.doubleValue());
-        break;
-    }
+    return Value::fromObject(__qmljs_convert_to_object(ctx, value));
 }
 
 /*

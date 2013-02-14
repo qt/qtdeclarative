@@ -218,7 +218,7 @@ Value ArrayPrototype::method_join(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_pop(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
 
     if (!len) {
@@ -239,7 +239,7 @@ Value ArrayPrototype::method_pop(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_push(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
 
     if (len + ctx->argumentCount < len) {
@@ -296,7 +296,7 @@ Value ArrayPrototype::method_push(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
     uint length = getLength(ctx, instance);
 
     int lo = 0, hi = length - 1;
@@ -319,7 +319,7 @@ Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_shift(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
 
     if (!len) {
@@ -382,7 +382,7 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_slice(ExecutionContext *ctx)
 {
-    Object *o = ctx->thisObject.toObject(ctx).objectValue();
+    Object *o = ctx->thisObject.toObject(ctx);
 
     ArrayObject *result = ctx->engine->newArrayObject(ctx);
     uint len = o->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
@@ -419,7 +419,7 @@ Value ArrayPrototype::method_slice(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_sort(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
 
@@ -430,7 +430,7 @@ Value ArrayPrototype::method_sort(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_splice(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
 
     ArrayObject *newArray = ctx->engine->newArrayObject(ctx);
@@ -494,7 +494,7 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
 
     bool protoHasArray = false;
@@ -546,7 +546,7 @@ Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
     if (!len)
         return Value::fromInt32(-1);
@@ -583,7 +583,7 @@ Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
     if (!len)
         return Value::fromInt32(-1);
@@ -620,7 +620,7 @@ Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_every(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
 
@@ -649,7 +649,7 @@ Value ArrayPrototype::method_every(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_some(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
 
@@ -678,7 +678,7 @@ Value ArrayPrototype::method_some(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_forEach(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
 
@@ -705,7 +705,7 @@ Value ArrayPrototype::method_forEach(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_map(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
 
@@ -737,7 +737,7 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_filter(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
 
@@ -772,7 +772,7 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_reduce(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
 
@@ -814,7 +814,7 @@ Value ArrayPrototype::method_reduce(ExecutionContext *ctx)
 
 Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
 {
-    Object *instance = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
 

@@ -75,11 +75,6 @@ String *Value::toString(ExecutionContext *ctx) const
     return v.stringValue();
 }
 
-Value Value::toObject(ExecutionContext *ctx) const
-{
-    return __qmljs_to_object(*this, ctx);
-}
-
 bool Value::sameValue(Value other) const {
     if (val == other.val)
         return true;

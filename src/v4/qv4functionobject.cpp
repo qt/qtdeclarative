@@ -397,7 +397,7 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
             if (!f->isBuiltinFunction)
                 ctx->thisObject = context->engine->globalObject;
         } else {
-            ctx->thisObject = thisObject.toObject(context);
+            ctx->thisObject = Value::fromObject(thisObject.toObject(context));
         }
     }
 
@@ -445,7 +445,7 @@ Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const V
             if (!f->isBuiltinFunction)
                 ctx->thisObject = context->engine->globalObject;
         } else {
-            ctx->thisObject = thisObject.toObject(context);
+            ctx->thisObject = Value::fromObject(thisObject.toObject(context));
         }
     }
 

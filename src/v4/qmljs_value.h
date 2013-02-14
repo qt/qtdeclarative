@@ -60,6 +60,7 @@ struct Value;
 
 extern "C" {
 double __qmljs_to_number(const Value &value, ExecutionContext *ctx);
+Object *__qmljs_convert_to_object(ExecutionContext *ctx, const Value &value);
 }
 
 typedef uint Bool;
@@ -207,7 +208,7 @@ struct Q_V4_EXPORT Value
     double toInteger(ExecutionContext *ctx) const;
     double toNumber(ExecutionContext *ctx) const;
     String *toString(ExecutionContext *ctx) const;
-    Value toObject(ExecutionContext *ctx) const;
+    Object *toObject(ExecutionContext *ctx) const;
 
     inline bool isPrimitive() const { return !isObject(); }
 #if CPU(X86_64)
@@ -349,6 +350,13 @@ inline Value Value::fromObject(Object *o)
     v.o = o;
 #endif
     return v;
+}
+
+inline Object *Value::toObject(ExecutionContext *ctx) const
+{
+    if (isObject())
+        return objectValue();
+    return __qmljs_convert_to_object(ctx, *this);
 }
 
 inline int Value::toInt32(ExecutionContext *ctx) const

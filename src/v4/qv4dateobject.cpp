@@ -1302,7 +1302,7 @@ Value DatePrototype::method_toISOString(ExecutionContext *ctx)
 
 Value DatePrototype::method_toJSON(ExecutionContext *ctx)
 {
-    Value O = __qmljs_to_object(ctx->thisObject, ctx);
+    Value O = __qmljs_to_object(ctx, ctx->thisObject);
     Value tv = __qmljs_to_primitive(O, ctx, NUMBER_HINT);
 
     if (tv.isNumber() && !isfinite(tv.toNumber(ctx)))

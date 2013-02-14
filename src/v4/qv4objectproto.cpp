@@ -89,14 +89,14 @@ Value ObjectCtor::construct(Managed *that, ExecutionContext *ctx, Value *args, i
             obj->prototype = proto.objectValue();
         return Value::fromObject(obj);
     }
-    return __qmljs_to_object(args[0], ctx);
+    return __qmljs_to_object(ctx, args[0]);
 }
 
 Value ObjectCtor::call(Managed *, ExecutionContext *ctx, const Value &/*thisObject*/, Value *args, int argc)
 {
     if (!argc || args[0].isUndefined() || args[0].isNull())
         return Value::fromObject(ctx->engine->newObject());
-    return __qmljs_to_object(args[0], ctx);
+    return __qmljs_to_object(ctx, args[0]);
 }
 
 void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -208,7 +208,7 @@ Value ObjectPrototype::method_defineProperties(ExecutionContext *ctx)
     if (!O.isObject())
         ctx->throwTypeError();
 
-    Object *o = ctx->argument(1).toObject(ctx).objectValue();
+    Object *o = ctx->argument(1).toObject(ctx);
 
     ObjectIterator it(ctx, o, ObjectIterator::EnumberableOnly);
     while (1) {
@@ -372,7 +372,7 @@ Value ObjectPrototype::method_toString(ExecutionContext *ctx)
     } else if (ctx->thisObject.isNull()) {
         return Value::fromString(ctx, QStringLiteral("[object Null]"));
     } else {
-        Value obj = __qmljs_to_object(ctx->thisObject, ctx);
+        Value obj = __qmljs_to_object(ctx, ctx->thisObject);
         QString className = obj.objectValue()->className();
         return Value::fromString(ctx, QString::fromUtf8("[object %1]").arg(className));
     }
@@ -380,7 +380,7 @@ Value ObjectPrototype::method_toString(ExecutionContext *ctx)
 
 Value ObjectPrototype::method_toLocaleString(ExecutionContext *ctx)
 {
-    Object *o = __qmljs_to_object(ctx->thisObject, ctx).objectValue();
+    Object *o = ctx->thisObject.toObject(ctx);
     Value ts = o->__get__(ctx, ctx->engine->newString(QStringLiteral("toString")));
     FunctionObject *f = ts.asFunctionObject();
     if (!f)
@@ -390,14 +390,14 @@ Value ObjectPrototype::method_toLocaleString(ExecutionContext *ctx)
 
 Value ObjectPrototype::method_valueOf(ExecutionContext *ctx)
 {
-    return ctx->thisObject.toObject(ctx);
+    return Value::fromObject(ctx->thisObject.toObject(ctx));
 }
 
 Value ObjectPrototype::method_hasOwnProperty(ExecutionContext *ctx)
 {
     String *P = ctx->argument(0).toString(ctx);
-    Value O = ctx->thisObject.toObject(ctx);
-    bool r = O.objectValue()->__getOwnProperty__(ctx, P) != 0;
+    Object *O = ctx->thisObject.toObject(ctx);
+    bool r = O->__getOwnProperty__(ctx, P) != 0;
     return Value::fromBoolean(r);
 }
 
@@ -407,7 +407,7 @@ Value ObjectPrototype::method_isPrototypeOf(ExecutionContext *ctx)
     if (! V.isObject())
         return Value::fromBoolean(false);
 
-    Object *O = ctx->thisObject.toObject(ctx).objectValue();
+    Object *O = ctx->thisObject.toObject(ctx);
     Object *proto = V.objectValue()->prototype;
     while (proto) {
         if (O == proto)
@@ -421,7 +421,7 @@ Value ObjectPrototype::method_propertyIsEnumerable(ExecutionContext *ctx)
 {
     String *p = ctx->argument(0).toString(ctx);
 
-    Object *o = ctx->thisObject.toObject(ctx).objectValue();
+    Object *o = ctx->thisObject.toObject(ctx);
     PropertyDescriptor *pd = o->__getOwnProperty__(ctx, p);
     return Value::fromBoolean(pd && pd->isEnumerable());
 }
@@ -436,7 +436,7 @@ Value ObjectPrototype::method_defineGetter(ExecutionContext *ctx)
     if (!f)
         __qmljs_throw_type_error(ctx);
 
-    Object *o = ctx->thisObject.toObject(ctx).objectValue();
+    Object *o = ctx->thisObject.toObject(ctx);
 
     PropertyDescriptor pd = PropertyDescriptor::fromAccessor(f, 0);
     pd.configurable = PropertyDescriptor::Enabled;
@@ -455,7 +455,7 @@ Value ObjectPrototype::method_defineSetter(ExecutionContext *ctx)
     if (!f)
         __qmljs_throw_type_error(ctx);
 
-    Object *o = ctx->thisObject.toObject(ctx).objectValue();
+    Object *o = ctx->thisObject.toObject(ctx);
 
     PropertyDescriptor pd = PropertyDescriptor::fromAccessor(0, f);
     pd.configurable = PropertyDescriptor::Enabled;
