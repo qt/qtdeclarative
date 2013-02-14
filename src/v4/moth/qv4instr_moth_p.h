@@ -400,7 +400,7 @@ union Instr
     };
     struct instr_unop {
         MOTH_INSTR_HEADER
-        VM::Value (*alu)(const VM::Value value, VM::ExecutionContext *ctx);
+        VM::UnaryOpName alu;
         Param source;
         Param result;
     };

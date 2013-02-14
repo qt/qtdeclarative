@@ -500,12 +500,12 @@ void InstructionSelection::callBuiltinTypeofValue(IR::Temp *value, IR::Temp *res
 
 void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_delete_member, Assembler::ContextRegister, base, identifier(name));
+    generateFunctionCall(result, __qmljs_delete_member, Assembler::ContextRegister, Assembler::PointerToValue(base), identifier(name));
 }
 
 void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_delete_subscript, Assembler::ContextRegister, base, index);
+    generateFunctionCall(result, __qmljs_delete_subscript, Assembler::ContextRegister, Assembler::PointerToValue(base), index);
 }
 
 void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *result)
@@ -739,7 +739,7 @@ void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
 
 void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp)
 {
-    Value (*op)(const Value value, ExecutionContext *ctx) = 0;
+    Value (*op)(const Value& value, ExecutionContext *ctx) = 0;
     const char *opName = 0;
     switch (oper) {
     case IR::OpIfTrue: assert(!"unreachable"); break;
@@ -753,7 +753,7 @@ void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *
     } // switch
 
     if (op)
-        _as->generateFunctionCallImp(targetTemp, opName, op, sourceTemp,
+        _as->generateFunctionCallImp(targetTemp, opName, op, Assembler::PointerToValue(sourceTemp),
                                       Assembler::ContextRegister);
 }
 
@@ -925,7 +925,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
         booleanConversion.link(_as);
         {
-            generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_to_boolean, t, Assembler::ContextRegister);
+            generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_to_boolean, Assembler::PointerToValue(t), Assembler::ContextRegister);
         }
 
         testBoolean.link(_as);

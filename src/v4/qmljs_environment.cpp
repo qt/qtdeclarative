@@ -113,7 +113,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     activation->__defineOwnProperty__(this, name, &desc);
 }
 
-bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, Value value)
+bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, const Value &value)
 {
     // ### throw if scope->strict is true, and it would change an immutable binding
     if (function) {
@@ -332,7 +332,7 @@ void ExecutionContext::mark()
     exceptionValue.mark();
 }
 
-void ExecutionContext::setProperty(String *name, Value value)
+void ExecutionContext::setProperty(String *name, const Value& value)
 {
 //    qDebug() << "=== SetProperty" << value.toString(this)->toQString();
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
@@ -503,11 +503,11 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
 
 
 
-void ExecutionContext::inplaceBitOp(String *name, const Value *value, BinOp op)
+void ExecutionContext::inplaceBitOp(String *name, const Value &value, BinOp op)
 {
     Value lhs = getProperty(name);
     Value result;
-    op(this, &result, &lhs, value);
+    op(this, &result, lhs, value);
     setProperty(name, result);
 }
 

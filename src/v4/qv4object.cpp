@@ -114,7 +114,7 @@ Value Object::getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p
     return getValue(ctx, p);
 }
 
-void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, Value value)
+void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value &value)
 {
     if (pd->isAccessor()) {
             if (pd->set) {
@@ -138,27 +138,27 @@ void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, Value value
 
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value *rhs)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value &rhs)
 {
     bool hasProperty = false;
     Value v = __get__(ctx, name, &hasProperty);
     Value result;
-    op(ctx, &result, &v, rhs);
+    op(ctx, &result, v, rhs);
     __put__(ctx, name, result);
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value *index, const Value *rhs)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, const Value &rhs)
 {
-    uint idx = index->asArrayIndex();
+    uint idx = index.asArrayIndex();
     if (idx < UINT_MAX) {
         bool hasProperty = false;
         Value v = __get__(ctx, idx, &hasProperty);
         Value result;
-        op(ctx, &result, &v, rhs);
+        op(ctx, &result, v, rhs);
         __put__(ctx, idx, result);
         return;
     }
-    String *name = index->toString(ctx);
+    String *name = index.toString(ctx);
     assert(name);
     inplaceBinOp(ctx, op, name, rhs);
 }
@@ -372,7 +372,7 @@ Value Object::__get__(ExecutionContext *ctx, uint index, bool *hasProperty)
 
 
 // Section 8.12.5
-void Object::__put__(ExecutionContext *ctx, String *name, Value value)
+void Object::__put__(ExecutionContext *ctx, String *name, const Value &value)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -453,7 +453,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, Value value)
         __qmljs_throw_type_error(ctx);
 }
 
-void Object::__put__(ExecutionContext *ctx, uint index, Value value)
+void Object::__put__(ExecutionContext *ctx, uint index, const Value &value)
 {
     PropertyDescriptor *pd  = __getOwnProperty__(ctx, index);
     // clause 1

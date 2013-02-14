@@ -59,7 +59,7 @@ struct ExecutionEngine;
 struct Value;
 
 extern "C" {
-double __qmljs_to_number(Value value, ExecutionContext *ctx);
+double __qmljs_to_number(const Value &value, ExecutionContext *ctx);
 }
 
 typedef uint Bool;

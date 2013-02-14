@@ -108,7 +108,7 @@ struct ExecutionContext
 
     bool hasBinding(String *name) const;
     void createMutableBinding(String *name, bool deletable);
-    bool setMutableBinding(ExecutionContext *scope, String *name, Value value);
+    bool setMutableBinding(ExecutionContext *scope, String *name, const Value &value);
     Value getBindingValue(ExecutionContext *scope, String *name, bool strict) const;
     bool deleteBinding(ExecutionContext *ctx, String *name);
 
@@ -130,11 +130,11 @@ struct ExecutionContext
     void throwURIError(Value msg);
     void throwUnimplemented(const QString &message);
 
-    void setProperty(String *name, Value value);
+    void setProperty(String *name, const Value &value);
     Value getProperty(String *name);
     Value getPropertyNoThrow(String *name);
     Value getPropertyAndBase(String *name, Object **base);
-    void inplaceBitOp(String *name, const QQmlJS::VM::Value *value, BinOp op);
+    void inplaceBitOp(String *name, const QQmlJS::VM::Value &value, BinOp op);
     bool deleteProperty(String *name);
 
     inline Value argument(unsigned int index = 0)

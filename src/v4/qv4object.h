@@ -127,8 +127,8 @@ struct Q_V4_EXPORT Object: Managed {
     Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
     Value __get__(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
 
-    void __put__(ExecutionContext *ctx, String *name, Value value);
-    void __put__(ExecutionContext *ctx, uint index, Value value);
+    void __put__(ExecutionContext *ctx, String *name, const Value &value);
+    void __put__(ExecutionContext *ctx, uint index, const Value &value);
 
     bool __hasProperty__(const ExecutionContext *ctx, String *name) const;
     bool __hasProperty__(const ExecutionContext *ctx, uint index) const;
@@ -148,10 +148,10 @@ struct Q_V4_EXPORT Object: Managed {
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p) const;
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const;
 
-    void putValue(ExecutionContext *ctx, PropertyDescriptor *pd, Value value);
+    void putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value &value);
 
-    void inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value *rhs);
-    void inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value *index, const Value *rhs);
+    void inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value &rhs);
+    void inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, const Value &rhs);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(String *name, Value value);

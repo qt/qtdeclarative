@@ -81,7 +81,7 @@ struct ManagedVTable
         EndOfVTable
     };
     void (*markObjects)(Managed *);
-    bool (*hasInstance)(Managed *, ExecutionContext *ctx, const Value *value);
+    bool (*hasInstance)(Managed *, ExecutionContext *ctx, const Value &value);
     _EndOfVTable endofVTable;
 };
 
@@ -157,11 +157,11 @@ public:
         *reinterpret_cast<Managed **>(this) = m;
     }
 
-    inline bool hasInstance(ExecutionContext *ctx, const Value *v) {
+    inline bool hasInstance(ExecutionContext *ctx, const Value &v) {
         return vtbl->hasInstance(this, ctx, v);
     }
 
-    static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value *value);
+    static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
 
 protected:
 

@@ -147,7 +147,7 @@ QString Managed::className() const
     return QString::fromLatin1(s);
 }
 
-bool Managed::hasInstance(Managed *, ExecutionContext *ctx, const Value *)
+bool Managed::hasInstance(Managed *, ExecutionContext *ctx, const Value &)
 {
     ctx->throwTypeError();
 }

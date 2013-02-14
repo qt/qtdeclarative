@@ -105,107 +105,107 @@ bool __qmljs_llvm_to_boolean(ExecutionContext *ctx, const Value *value)
 
 void __qmljs_llvm_bit_and(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_bit_and(ctx, result, left, right);
+    __qmljs_bit_and(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_bit_or(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_bit_or(ctx, result, left, right);
+    __qmljs_bit_or(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_bit_xor(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_bit_xor(ctx, result, left, right);
+    __qmljs_bit_xor(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_add(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_add(ctx, result, left, right);
+    __qmljs_add(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_sub(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_sub(ctx, result, left, right);
+    __qmljs_sub(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_mul(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_mul(ctx, result, left, right);
+    __qmljs_mul(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_div(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_div(ctx, result, left, right);
+    __qmljs_div(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_mod(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_mod(ctx, result, left, right);
+    __qmljs_mod(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_shl(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_shl(ctx, result, left, right);
+    __qmljs_shl(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_shr(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_shr(ctx, result, left, right);
+    __qmljs_shr(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_ushr(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_ushr(ctx, result, left, right);
+    __qmljs_ushr(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_gt(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_gt(ctx, result, left, right);
+    __qmljs_gt(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_lt(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_lt(ctx, result, left, right);
+    __qmljs_lt(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_ge(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_ge(ctx, result, left, right);
+    __qmljs_ge(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_le(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_le(ctx, result, left, right);
+    __qmljs_le(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_eq(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_eq(ctx, result, left, right);
+    __qmljs_eq(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_ne(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_ne(ctx, result, left, right);
+    __qmljs_ne(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_se(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_se(ctx, result, left, right);
+    __qmljs_se(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_sne(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_sne(ctx, result, left, right);
+    __qmljs_sne(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_instanceof(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_instanceof(ctx, result, left, right);
+    __qmljs_instanceof(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_in(ExecutionContext *ctx, Value *result, Value *left, Value *right)
 {
-    __qmljs_in(ctx, result, left, right);
+    __qmljs_in(ctx, result, *left, *right);
 }
 
 void __qmljs_llvm_uplus(ExecutionContext *ctx, Value *result, const Value *value)
@@ -230,167 +230,167 @@ void __qmljs_llvm_not(ExecutionContext *ctx, Value *result, const Value *value)
 
 void __qmljs_llvm_inplace_bit_and_name(ExecutionContext *ctx, String *dest, Value *src)
 {
-    __qmljs_inplace_bit_and_name(ctx, dest, src);
+    __qmljs_inplace_bit_and_name(ctx, dest, *src);
 }
 
 void __qmljs_llvm_inplace_bit_or_name(ExecutionContext *ctx, String *dest, Value *src)
 {
-    __qmljs_inplace_bit_or_name(ctx, dest, src);
+    __qmljs_inplace_bit_or_name(ctx, dest, *src);
 }
 
 void __qmljs_llvm_inplace_bit_xor_name(ExecutionContext *ctx, String *dest, Value *src)
 {
-    __qmljs_inplace_bit_xor_name(ctx, dest, src);
+    __qmljs_inplace_bit_xor_name(ctx, dest, *src);
 }
 
 void __qmljs_llvm_inplace_add_name(ExecutionContext *ctx, String *dest, Value *src)
 {
-    __qmljs_inplace_add_name(ctx, dest, src);
+    __qmljs_inplace_add_name(ctx, dest, *src);
 }
 
 void __qmljs_llvm_inplace_sub_name(ExecutionContext *ctx, String *dest, Value *src)
 {
-    __qmljs_inplace_sub_name(ctx, dest, src);
+    __qmljs_inplace_sub_name(ctx, dest, *src);
 }
 
 void __qmljs_llvm_inplace_mul_name(ExecutionContext *ctx, String *dest, Value *src)
 {
-    __qmljs_inplace_mul_name(ctx, dest, src);
+    __qmljs_inplace_mul_name(ctx, dest, *src);
 }
 
 void __qmljs_llvm_inplace_div_name(ExecutionContext *ctx, String *dest, Value *src)
 {
-    __qmljs_inplace_div_name(ctx, dest, src);
+    __qmljs_inplace_div_name(ctx, dest, *src);
 }
 
 void __qmljs_llvm_inplace_mod_name(ExecutionContext *ctx, String *dest, Value *src)
 {
-    __qmljs_inplace_mod_name(ctx, dest, src);
+    __qmljs_inplace_mod_name(ctx, dest, *src);
 }
 
 void __qmljs_llvm_inplace_shl_name(ExecutionContext *ctx, String *dest, Value *src)
 {
-    __qmljs_inplace_shl_name(ctx, dest, src);
+    __qmljs_inplace_shl_name(ctx, dest, *src);
 }
 
 void __qmljs_llvm_inplace_shr_name(ExecutionContext *ctx, String *dest, Value *src)
 {
-    __qmljs_inplace_shr_name(ctx, dest, src);
+    __qmljs_inplace_shr_name(ctx, dest, *src);
 }
 
 void __qmljs_llvm_inplace_ushr_name(ExecutionContext *ctx, String *dest, Value *src)
 {
-    __qmljs_inplace_ushr_name(ctx, dest, src);
+    __qmljs_inplace_ushr_name(ctx, dest, *src);
 }
 
 void __qmljs_llvm_inplace_bit_and_element(ExecutionContext *ctx, Value *base, Value *index, Value *value)
 {
-    __qmljs_inplace_bit_and_element(ctx, base, index, value);
+    __qmljs_inplace_bit_and_element(ctx, *base, *index, *value);
 }
 
 void __qmljs_llvm_inplace_bit_or_element(ExecutionContext *ctx, Value *base, Value *index, Value *value)
 {
-    __qmljs_inplace_bit_or_element(ctx, base, index, value);
+    __qmljs_inplace_bit_or_element(ctx, *base, *index, *value);
 }
 
 void __qmljs_llvm_inplace_bit_xor_element(ExecutionContext *ctx, Value *base, Value *index, Value *value)
 {
-    __qmljs_inplace_bit_xor_element(ctx, base, index, value);
+    __qmljs_inplace_bit_xor_element(ctx, *base, *index, *value);
 }
 
 void __qmljs_llvm_inplace_add_element(ExecutionContext *ctx, Value *base, Value *index, Value *value)
 {
-    __qmljs_inplace_add_element(ctx, base, index, value);
+    __qmljs_inplace_add_element(ctx, *base, *index, *value);
 }
 
 void __qmljs_llvm_inplace_sub_element(ExecutionContext *ctx, Value *base, Value *index, Value *value)
 {
-    __qmljs_inplace_sub_element(ctx, base, index, value);
+    __qmljs_inplace_sub_element(ctx, *base, *index, *value);
 }
 
 void __qmljs_llvm_inplace_mul_element(ExecutionContext *ctx, Value *base, Value *index, Value *value)
 {
-    __qmljs_inplace_mul_element(ctx, base, index, value);
+    __qmljs_inplace_mul_element(ctx, *base, *index, *value);
 }
 
 void __qmljs_llvm_inplace_div_element(ExecutionContext *ctx, Value *base, Value *index, Value *value)
 {
-    __qmljs_inplace_div_element(ctx, base, index, value);
+    __qmljs_inplace_div_element(ctx, *base, *index, *value);
 }
 
 void __qmljs_llvm_inplace_mod_element(ExecutionContext *ctx, Value *base, Value *index, Value *value)
 {
-    __qmljs_inplace_mod_element(ctx, base, index, value);
+    __qmljs_inplace_mod_element(ctx, *base, *index, *value);
 }
 
 void __qmljs_llvm_inplace_shl_element(ExecutionContext *ctx, Value *base, Value *index, Value *value)
 {
-    __qmljs_inplace_shl_element(ctx, base, index, value);
+    __qmljs_inplace_shl_element(ctx, *base, *index, *value);
 }
 
 void __qmljs_llvm_inplace_shr_element(ExecutionContext *ctx, Value *base, Value *index, Value *value)
 {
-    __qmljs_inplace_shr_element(ctx, base, index, value);
+    __qmljs_inplace_shr_element(ctx, *base, *index, *value);
 }
 
 void __qmljs_llvm_inplace_ushr_element(ExecutionContext *ctx, Value *base, Value *index, Value *value)
 {
-    __qmljs_inplace_ushr_element(ctx, base, index, value);
+    __qmljs_inplace_ushr_element(ctx, *base, *index, *value);
 }
 
 void __qmljs_llvm_inplace_bit_and_member(ExecutionContext *ctx, Value *value, Value *base, String *member)
 {
-    __qmljs_inplace_bit_and_member(ctx, base, member, value);
+    __qmljs_inplace_bit_and_member(ctx, *base, member, *value);
 }
 
 void __qmljs_llvm_inplace_bit_or_member(ExecutionContext *ctx, Value *value, Value *base, String *member)
 {
-    __qmljs_inplace_bit_or_member(ctx, base, member, value);
+    __qmljs_inplace_bit_or_member(ctx, *base, member, *value);
 }
 
 void __qmljs_llvm_inplace_bit_xor_member(ExecutionContext *ctx, Value *value, Value *base, String *member)
 {
-    __qmljs_inplace_bit_xor_member(ctx, base, member, value);
+    __qmljs_inplace_bit_xor_member(ctx, *base, member, *value);
 }
 
 void __qmljs_llvm_inplace_add_member(ExecutionContext *ctx, Value *value, Value *base, String *member)
 {
-    __qmljs_inplace_add_member(ctx, base, member, value);
+    __qmljs_inplace_add_member(ctx, *base, member, *value);
 }
 
 void __qmljs_llvm_inplace_sub_member(ExecutionContext *ctx, Value *value, Value *base, String *member)
 {
-    __qmljs_inplace_sub_member(ctx, base, member, value);
+    __qmljs_inplace_sub_member(ctx, *base, member, *value);
 }
 
 void __qmljs_llvm_inplace_mul_member(ExecutionContext *ctx, Value *value, Value *base, String *member)
 {
-    __qmljs_inplace_mul_member(ctx, base, member, value);
+    __qmljs_inplace_mul_member(ctx, *base, member, *value);
 }
 
 void __qmljs_llvm_inplace_div_member(ExecutionContext *ctx, Value *value, Value *base, String *member)
 {
-    __qmljs_inplace_div_member(ctx, base, member, value);
+    __qmljs_inplace_div_member(ctx, *base, member, *value);
 }
 
 void __qmljs_llvm_inplace_mod_member(ExecutionContext *ctx, Value *value, Value *base, String *member)
 {
-    __qmljs_inplace_mod_member(ctx, base, member, value);
+    __qmljs_inplace_mod_member(ctx, *base, member, *value);
 }
 
 void __qmljs_llvm_inplace_shl_member(ExecutionContext *ctx, Value *value, Value *base, String *member)
 {
-    __qmljs_inplace_shl_member(ctx, base, member, value);
+    __qmljs_inplace_shl_member(ctx, *base, member, *value);
 }
 
 void __qmljs_llvm_inplace_shr_member(ExecutionContext *ctx, Value *value, Value *base, String *member)
 {
-    __qmljs_inplace_shr_member(ctx, base, member, value);
+    __qmljs_inplace_shr_member(ctx, *base, member, *value);
 }
 
 void __qmljs_llvm_inplace_ushr_member(ExecutionContext *ctx, Value *value, Value *base, String *member)
 {
-    __qmljs_inplace_ushr_member(ctx, base, member, value);
+    __qmljs_inplace_ushr_member(ctx, *base, member, *value);
 }
 
 String *__qmljs_llvm_identifier_from_utf8(ExecutionContext *ctx, const char *str)
@@ -426,12 +426,12 @@ void __qmljs_llvm_get_activation_property(ExecutionContext *ctx, Value *result, 
 
 void __qmljs_llvm_set_activation_property(ExecutionContext *ctx, String *name, Value *value)
 {
-    __qmljs_set_activation_property(ctx, name, value);
+    __qmljs_set_activation_property(ctx, name, *value);
 }
 
 void __qmljs_llvm_get_property(ExecutionContext *ctx, Value *result, Value *object, String *name)
 {
-    __qmljs_get_property(ctx, result, object, name);
+    __qmljs_get_property(ctx, result, *object, name);
 }
 
 void __qmljs_llvm_call_property(ExecutionContext *context, Value *result, const Value *base, String *name, Value *args, int argc)
@@ -456,7 +456,7 @@ void __qmljs_llvm_set_element(ExecutionContext *ctx, Value *object, Value *index
 
 void __qmljs_llvm_set_property(ExecutionContext *ctx, Value *object, String *name, Value *value)
 {
-    __qmljs_set_property(ctx, object, name, value);
+    __qmljs_set_property(ctx, *object, name, *value);
 }
 
 void __qmljs_llvm_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name)

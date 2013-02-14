@@ -482,7 +482,7 @@ void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
 
 void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp)
 {
-    VM::Value (*op)(const VM::Value value, VM::ExecutionContext *ctx) = 0;
+    VM::Value (*op)(const VM::Value& value, VM::ExecutionContext *ctx) = 0;
     switch (oper) {
     case IR::OpIfTrue: assert(!"unreachable"); break;
     case IR::OpNot: op = VM::__qmljs_not; break;

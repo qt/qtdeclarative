@@ -182,7 +182,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 
     MOTH_BEGIN_INSTR(StoreName)
         TRACE(inline, "property name = %s", instr.name->toQString().toUtf8().constData());
-        __qmljs_set_activation_property(context, instr.name, VALUEPTR(instr.source));
+        __qmljs_set_activation_property(context, instr.name, VALUE(instr.source));
     MOTH_END_INSTR(StoreName)
 
     MOTH_BEGIN_INSTR(LoadElement)
@@ -194,11 +194,11 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(StoreElement)
 
     MOTH_BEGIN_INSTR(LoadProperty)
-        __qmljs_get_property(context, VALUEPTR(instr.result), VALUEPTR(instr.base), instr.name);
+        __qmljs_get_property(context, VALUEPTR(instr.result), VALUE(instr.base), instr.name);
     MOTH_END_INSTR(LoadProperty)
 
     MOTH_BEGIN_INSTR(StoreProperty)
-        __qmljs_set_property(context, VALUEPTR(instr.base), instr.name, VALUEPTR(instr.source));
+        __qmljs_set_property(context, VALUE(instr.base), instr.name, VALUE(instr.source));
     MOTH_END_INSTR(StoreProperty)
 
     MOTH_BEGIN_INSTR(Push)
@@ -328,11 +328,11 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncMember)
-        __qmljs_builtin_post_increment_member(context, VALUEPTR(instr.result), VALUEPTR(instr.base), instr.member);
+        __qmljs_builtin_post_increment_member(context, VALUEPTR(instr.result), VALUE(instr.base), instr.member);
     MOTH_END_INSTR(CallBuiltinTypeofMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncSubscript)
-        __qmljs_builtin_post_increment_element(context, VALUEPTR(instr.result), VALUEPTR(instr.base), VALUEPTR(instr.index));
+        __qmljs_builtin_post_increment_element(context, VALUEPTR(instr.result), VALUE(instr.base), VALUEPTR(instr.index));
     MOTH_END_INSTR(CallBuiltinTypeofSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncName)
@@ -344,11 +344,11 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecMember)
-        __qmljs_builtin_post_decrement_member(context, VALUEPTR(instr.result), VALUEPTR(instr.base), instr.member);
+        __qmljs_builtin_post_decrement_member(context, VALUEPTR(instr.result), VALUE(instr.base), instr.member);
     MOTH_END_INSTR(CallBuiltinTypeofMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecSubscript)
-        __qmljs_builtin_post_decrement_element(context, VALUEPTR(instr.result), VALUEPTR(instr.base), VALUEPTR(instr.index));
+        __qmljs_builtin_post_decrement_element(context, VALUEPTR(instr.result), VALUE(instr.base), VALUE(instr.index));
     MOTH_END_INSTR(CallBuiltinTypeofSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecName)
@@ -410,7 +410,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(Unop)
 
     MOTH_BEGIN_INSTR(Binop)
-        instr.alu(context, VALUEPTR(instr.result), VALUEPTR(instr.lhs), VALUEPTR(instr.rhs));
+        instr.alu(context, VALUEPTR(instr.result), VALUE(instr.lhs), VALUE(instr.rhs));
     MOTH_END_INSTR(Binop)
 
     MOTH_BEGIN_INSTR(Ret)
@@ -425,21 +425,21 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 
     MOTH_BEGIN_INSTR(InplaceElementOp)
         instr.alu(context,
-                  VALUEPTR(instr.base),
-                  VALUEPTR(instr.index),
-                  VALUEPTR(instr.source));
+                  VALUE(instr.base),
+                  VALUE(instr.index),
+                  VALUE(instr.source));
     MOTH_END_INSTR(InplaceElementOp)
 
     MOTH_BEGIN_INSTR(InplaceMemberOp)
         instr.alu(context,
-                  VALUEPTR(instr.base),
+                  VALUE(instr.base),
                   instr.member,
-                  VALUEPTR(instr.source));
+                  VALUE(instr.source));
     MOTH_END_INSTR(InplaceMemberOp)
 
     MOTH_BEGIN_INSTR(InplaceNameOp)
         TRACE(name, "%s", instr.name->toQString().toUtf8().constData());
-        instr.alu(context, instr.name, VALUEPTR(instr.source));
+        instr.alu(context, instr.name, VALUE(instr.source));
     MOTH_END_INSTR(InplaceNameOp)
 
 #ifdef MOTH_THREADED_INTERPRETER

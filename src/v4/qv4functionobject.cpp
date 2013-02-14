@@ -103,11 +103,11 @@ FunctionObject::FunctionObject(ExecutionContext *scope)
     strictMode = false;
 }
 
-bool FunctionObject::hasInstance(Managed *that, ExecutionContext *ctx, const Value *value)
+bool FunctionObject::hasInstance(Managed *that, ExecutionContext *ctx, const Value &value)
 {
     FunctionObject *f = static_cast<FunctionObject *>(that);
 
-    Object *v = value->asObject();
+    Object *v = value.asObject();
     if (!v)
         return false;
 
@@ -514,7 +514,7 @@ Value BoundFunction::construct(ExecutionContext *context, Value *args, int argc)
     return target->construct(context, newArgs, boundArgs.size() + argc);
 }
 
-bool BoundFunction::hasInstance(Managed *that, ExecutionContext *ctx, const Value *value)
+bool BoundFunction::hasInstance(Managed *that, ExecutionContext *ctx, const Value &value)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
     return FunctionObject::hasInstance(f->target, ctx, value);
