@@ -77,10 +77,10 @@ struct Print: FunctionObject
         name = scope->engine->newString("print");
     }
 
-    virtual Value call(ExecutionContext *ctx)
+    virtual Value call(ExecutionContext *ctx, Value, Value *args, int argc)
     {
-        for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
-            String *s = ctx->argument(i).toString(ctx);
+        for (int i = 0; i < argc; ++i) {
+            String *s = args[i].toString(ctx);
             if (i)
                 std::cout << ' ';
             std::cout << qPrintable(s->toQString());
@@ -90,29 +90,6 @@ struct Print: FunctionObject
     }
 };
 
-struct TestHarnessError: FunctionObject
-{
-    TestHarnessError(ExecutionContext *scope, bool &errorInTestHarness): FunctionObject(scope), errorOccurred(errorInTestHarness) {
-        name = scope->engine->newString("$ERROR");
-    }
-
-    virtual Value call(ExecutionContext *ctx)
-    {
-        errorOccurred = true;
-
-        for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
-            String *s = ctx->argument(i).toString(ctx);
-            if (i)
-                std::cerr << ' ';
-            std::cerr << qPrintable(s->toQString());
-        }
-        std::cerr << std::endl;
-        return Value::undefinedValue();
-    }
-
-    bool &errorOccurred;
-};
-
 struct GC: public FunctionObject
 {
     GC(ExecutionContext* scope)
@@ -120,7 +97,7 @@ struct GC: public FunctionObject
     {
         name = scope->engine->newString("gc");
     }
-    virtual Value call(ExecutionContext *ctx)
+    virtual Value call(ExecutionContext *ctx, Value, Value *, int)
     {
         ctx->engine->memoryManager->runGC();
         return Value::undefinedValue();
@@ -376,11 +353,6 @@ int main(int argc, char *argv[])
         globalObject->__put__(ctx, vm.newIdentifier(QStringLiteral("gc")),
                                   QQmlJS::VM::Value::fromObject(gc));
 
-        bool errorInTestHarness = false;
-        if (!qgetenv("IN_TEST_HARNESS").isEmpty())
-            globalObject->__put__(ctx, vm.newIdentifier(QStringLiteral("$ERROR")),
-                                  QQmlJS::VM::Value::fromObject(new (ctx->engine->memoryManager) builtins::TestHarnessError(ctx, errorInTestHarness)));
-
         foreach (const QString &fn, args) {
             QFile file(fn);
             if (file.open(QFile::ReadOnly)) {
@@ -411,8 +383,6 @@ int main(int argc, char *argv[])
                         std::cout << "exit value: " << qPrintable(result.toString(ctx)->toQString()) << std::endl;
                 }
 
-                if (errorInTestHarness)
-                    return EXIT_FAILURE;
             } else {
                 std::cerr << "Error: cannot open file " << fn.toUtf8().constData() << std::endl;
                 return EXIT_FAILURE;
