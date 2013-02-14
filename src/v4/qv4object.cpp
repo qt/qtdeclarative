@@ -141,7 +141,7 @@ void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value
 
   reject:
     if (ctx->strictMode)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
 }
 
@@ -457,7 +457,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, const Value &value)
 
   reject:
     if (ctx->strictMode)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 }
 
 void Object::__put__(ExecutionContext *ctx, uint index, const Value &value)
@@ -515,7 +515,7 @@ void Object::__put__(ExecutionContext *ctx, uint index, const Value &value)
 
   reject:
     if (ctx->strictMode)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 }
 
 // Section 8.12.6
@@ -560,7 +560,7 @@ bool Object::__delete__(ExecutionContext *ctx, String *name)
             return true;
         }
         if (ctx->strictMode)
-            __qmljs_throw_type_error(ctx);
+            ctx->throwTypeError();
         return false;
     }
 
@@ -593,7 +593,7 @@ bool Object::__delete__(ExecutionContext *ctx, uint index)
     }
 
     if (ctx->strictMode)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
     return false;
 }
 
@@ -646,7 +646,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
     return __defineOwnProperty__(ctx, current, desc);
 reject:
   if (ctx->strictMode)
-      __qmljs_throw_type_error(ctx);
+      ctx->throwTypeError();
   return false;
 }
 
@@ -677,7 +677,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
     return __defineOwnProperty__(ctx, current, desc);
 reject:
   if (ctx->strictMode)
-      __qmljs_throw_type_error(ctx);
+      ctx->throwTypeError();
   return false;
 }
 
@@ -741,7 +741,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *cu
     return true;
   reject:
     if (ctx->strictMode)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
     return false;
 }
 

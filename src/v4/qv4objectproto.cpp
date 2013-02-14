@@ -197,7 +197,7 @@ Value ObjectPrototype::method_defineProperty(ExecutionContext *ctx)
     toPropertyDescriptor(ctx, attributes, &pd);
 
     if (!O.objectValue()->__defineOwnProperty__(ctx, name, &pd))
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     return O;
 }
@@ -225,7 +225,7 @@ Value ObjectPrototype::method_defineProperties(ExecutionContext *ctx)
         else
             ok = O.objectValue()->__defineOwnProperty__(ctx, index, &n);
         if (!ok)
-            __qmljs_throw_type_error(ctx);
+            ctx->throwTypeError();
     }
 
     return O;
@@ -234,7 +234,7 @@ Value ObjectPrototype::method_defineProperties(ExecutionContext *ctx)
 Value ObjectPrototype::method_seal(ExecutionContext *ctx)
 {
     if (!ctx->argument(0).isObject())
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Object *o = ctx->argument(0).objectValue();
     o->extensible = false;
@@ -254,7 +254,7 @@ Value ObjectPrototype::method_seal(ExecutionContext *ctx)
 Value ObjectPrototype::method_freeze(ExecutionContext *ctx)
 {
     if (!ctx->argument(0).isObject())
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Object *o = ctx->argument(0).objectValue();
     o->extensible = false;
@@ -276,7 +276,7 @@ Value ObjectPrototype::method_freeze(ExecutionContext *ctx)
 Value ObjectPrototype::method_preventExtensions(ExecutionContext *ctx)
 {
     if (!ctx->argument(0).isObject())
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Object *o = ctx->argument(0).objectValue();
     o->extensible = false;
@@ -286,7 +286,7 @@ Value ObjectPrototype::method_preventExtensions(ExecutionContext *ctx)
 Value ObjectPrototype::method_isSealed(ExecutionContext *ctx)
 {
     if (!ctx->argument(0).isObject())
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Object *o = ctx->argument(0).objectValue();
     if (o->extensible)
@@ -308,7 +308,7 @@ Value ObjectPrototype::method_isSealed(ExecutionContext *ctx)
 Value ObjectPrototype::method_isFrozen(ExecutionContext *ctx)
 {
     if (!ctx->argument(0).isObject())
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Object *o = ctx->argument(0).objectValue();
     if (o->extensible)
@@ -330,7 +330,7 @@ Value ObjectPrototype::method_isFrozen(ExecutionContext *ctx)
 Value ObjectPrototype::method_isExtensible(ExecutionContext *ctx)
 {
     if (!ctx->argument(0).isObject())
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Object *o = ctx->argument(0).objectValue();
     return Value::fromBoolean(o->extensible);
@@ -339,7 +339,7 @@ Value ObjectPrototype::method_isExtensible(ExecutionContext *ctx)
 Value ObjectPrototype::method_keys(ExecutionContext *ctx)
 {
     if (!ctx->argument(0).isObject())
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Object *o = ctx->argument(0).objectValue();
 
@@ -384,7 +384,7 @@ Value ObjectPrototype::method_toLocaleString(ExecutionContext *ctx)
     Value ts = o->__get__(ctx, ctx->engine->newString(QStringLiteral("toString")));
     FunctionObject *f = ts.asFunctionObject();
     if (!f)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
     return f->call(ctx, Value::fromObject(o), 0, 0);
 }
 
@@ -429,12 +429,12 @@ Value ObjectPrototype::method_propertyIsEnumerable(ExecutionContext *ctx)
 Value ObjectPrototype::method_defineGetter(ExecutionContext *ctx)
 {
     if (ctx->argumentCount < 2)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
     String *prop = ctx->argument(0).toString(ctx);
 
     FunctionObject *f = ctx->argument(1).asFunctionObject();
     if (!f)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Object *o = ctx->thisObject.toObject(ctx);
 
@@ -448,12 +448,12 @@ Value ObjectPrototype::method_defineGetter(ExecutionContext *ctx)
 Value ObjectPrototype::method_defineSetter(ExecutionContext *ctx)
 {
     if (ctx->argumentCount < 2)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
     String *prop = ctx->argument(0).toString(ctx);
 
     FunctionObject *f = ctx->argument(1).asFunctionObject();
     if (!f)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Object *o = ctx->thisObject.toObject(ctx);
 
@@ -467,7 +467,7 @@ Value ObjectPrototype::method_defineSetter(ExecutionContext *ctx)
 void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, PropertyDescriptor *desc)
 {
     if (!v.isObject())
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Object *o = v.objectValue();
 
@@ -490,7 +490,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
         } else if (get.isUndefined()) {
             desc->get = (FunctionObject *)0x1;
         } else {
-            __qmljs_throw_type_error(ctx);
+            ctx->throwTypeError();
         }
         desc->type = PropertyDescriptor::Accessor;
     }
@@ -504,7 +504,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
         } else if (set.isUndefined()) {
             desc->set = (FunctionObject *)0x1;
         } else {
-            __qmljs_throw_type_error(ctx);
+            ctx->throwTypeError();
         }
         desc->type = PropertyDescriptor::Accessor;
     }
@@ -512,7 +512,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     desc->writable = PropertyDescriptor::Undefined;
     if (o->__hasProperty__(ctx, ctx->engine->id_writable)) {
         if (desc->isAccessor())
-            __qmljs_throw_type_error(ctx);
+            ctx->throwTypeError();
         desc->writable = __qmljs_to_boolean(o->__get__(ctx, ctx->engine->id_writable), ctx) ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
         // writable forces it to be a data descriptor
         desc->value = Value::undefinedValue();
@@ -520,7 +520,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
 
     if (o->__hasProperty__(ctx, ctx->engine->id_value)) {
         if (desc->isAccessor())
-            __qmljs_throw_type_error(ctx);
+            ctx->throwTypeError();
         desc->value = o->__get__(ctx, ctx->engine->id_value);
         desc->type = PropertyDescriptor::Data;
     }

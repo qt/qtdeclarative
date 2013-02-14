@@ -1311,7 +1311,7 @@ Value DatePrototype::method_toJSON(ExecutionContext *ctx)
     FunctionObject *toIso = O.objectValue()->__get__(ctx, ctx->engine->newString(QStringLiteral("toISOString"))).asFunctionObject();
 
     if (!toIso)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     return toIso->call(ctx, ctx->thisObject, 0, 0);
 }

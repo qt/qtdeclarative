@@ -482,7 +482,7 @@ QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
 
         if (! globalCode)
             // ### should be a syntax error
-            __qmljs_throw_type_error(ctx);
+            ctx->throwTypeError();
     }
 
     return globalCode;

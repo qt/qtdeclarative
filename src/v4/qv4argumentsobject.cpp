@@ -128,7 +128,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     }
 
     if (ctx->strictMode && !result)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
     return result;
 }
 
@@ -139,10 +139,10 @@ Value ArgumentsGetterFunction::call(Managed *getter, ExecutionContext *ctx, cons
     ArgumentsGetterFunction *g = static_cast<ArgumentsGetterFunction *>(getter);
     Object *that = thisObject.asObject();
     if (!that)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
     ArgumentsObject *o = that->asArgumentsObject();
     if (!o)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     assert(g->index < o->context->argumentCount);
     return o->context->argument(g->index);
@@ -155,10 +155,10 @@ Value ArgumentsSetterFunction::call(Managed *setter, ExecutionContext *ctx, cons
     ArgumentsSetterFunction *s = static_cast<ArgumentsSetterFunction *>(setter);
     Object *that = thisObject.asObject();
     if (!that)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
     ArgumentsObject *o = that->asArgumentsObject();
     if (!o)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     assert(s->index < o->context->argumentCount);
     o->context->arguments[s->index] = argc ? args[0] : Value::undefinedValue();

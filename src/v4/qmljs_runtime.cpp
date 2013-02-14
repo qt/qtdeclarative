@@ -201,7 +201,7 @@ void __qmljs_instanceof(ExecutionContext *ctx, Value *result, const Value &left,
 {
     Object *o = right.asObject();
     if (!o)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     bool r = o->hasInstance(ctx, left);
     *result = Value::fromBoolean(r);
@@ -210,7 +210,7 @@ void __qmljs_instanceof(ExecutionContext *ctx, Value *result, const Value &left,
 void __qmljs_in(ExecutionContext *ctx, Value *result, const Value &left, const Value &right)
 {
     if (!right.isObject())
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
     String *s = left.toString(ctx);
     bool r = right.objectValue()->__hasProperty__(ctx, s);
     *result = Value::fromBoolean(r);
@@ -487,18 +487,13 @@ Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int type
     return Value::undefinedValue();
 }
 
-void __qmljs_throw_type_error(ExecutionContext *ctx)
-{
-    ctx->throwTypeError();
-}
-
 Object *__qmljs_convert_to_object(ExecutionContext *ctx, const Value &value)
 {
     assert(!value.isObject());
     switch (value.type()) {
     case Value::Undefined_Type:
     case Value::Null_Type:
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
     case Value::Boolean_Type:
         return ctx->engine->newBooleanObject(value);
     case Value::String_Type:
@@ -531,7 +526,7 @@ String *__qmljs_convert_to_string(ExecutionContext *ctx, const Value &value)
         if (prim.isPrimitive())
             return __qmljs_convert_to_string(ctx, prim);
         else
-            __qmljs_throw_type_error(ctx);
+            ctx->throwTypeError();
     }
     case Value::Integer_Type:
         return __qmljs_string_from_number(ctx, value.int_32).stringValue();

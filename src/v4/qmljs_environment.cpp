@@ -166,7 +166,7 @@ bool ExecutionContext::deleteBinding(ExecutionContext *scope, String *name)
         activation->__delete__(scope, name);
 
     if (scope->strictMode)
-        __qmljs_throw_type_error(scope);
+        scope->throwTypeError();
     return false;
 }
 

@@ -146,7 +146,6 @@ String *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *seco
 
 // objects
 Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int typeHint);
-void __qmljs_throw_type_error(ExecutionContext *ctx);
 void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, const Value& value);
 void __qmljs_set_property(ExecutionContext *ctx, const Value &object, String *name, const Value &value);
 void __qmljs_get_property(ExecutionContext *ctx, Value *result, const Value &object, String *name);

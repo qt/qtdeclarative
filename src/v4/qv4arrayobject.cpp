@@ -626,7 +626,7 @@ Value ArrayPrototype::method_every(ExecutionContext *ctx)
 
     FunctionObject *callback = ctx->argument(0).asFunctionObject();
     if (!callback)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Value thisArg = ctx->argument(1);
 
@@ -655,7 +655,7 @@ Value ArrayPrototype::method_some(ExecutionContext *ctx)
 
     FunctionObject *callback = ctx->argument(0).asFunctionObject();
     if (!callback)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Value thisArg = ctx->argument(1);
 
@@ -684,7 +684,7 @@ Value ArrayPrototype::method_forEach(ExecutionContext *ctx)
 
     FunctionObject *callback = ctx->argument(0).asFunctionObject();
     if (!callback)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Value thisArg = ctx->argument(1);
 
@@ -711,7 +711,7 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
 
     FunctionObject *callback = ctx->argument(0).asFunctionObject();
     if (!callback)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Value thisArg = ctx->argument(1);
 
@@ -743,7 +743,7 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
 
     FunctionObject *callback = ctx->argument(0).asFunctionObject();
     if (!callback)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Value thisArg = ctx->argument(1);
 
@@ -778,7 +778,7 @@ Value ArrayPrototype::method_reduce(ExecutionContext *ctx)
 
     FunctionObject *callback = ctx->argument(0).asFunctionObject();
     if (!callback)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     uint k = 0;
     Value acc;
@@ -793,7 +793,7 @@ Value ArrayPrototype::method_reduce(ExecutionContext *ctx)
             ++k;
         }
         if (!kPresent)
-            __qmljs_throw_type_error(ctx);
+            ctx->throwTypeError();
     }
 
     while (k < len) {
@@ -820,11 +820,11 @@ Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
 
     FunctionObject *callback = ctx->argument(0).asFunctionObject();
     if (!callback)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     if (len == 0) {
         if (ctx->argumentCount == 1)
-            __qmljs_throw_type_error(ctx);
+            ctx->throwTypeError();
         return ctx->argument(1);
     }
 
@@ -841,7 +841,7 @@ Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
             --k;
         }
         if (!kPresent)
-            __qmljs_throw_type_error(ctx);
+            ctx->throwTypeError();
     }
 
     while (k > 0) {

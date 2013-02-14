@@ -234,7 +234,7 @@ Value ErrorPrototype::method_toString(ExecutionContext *ctx)
 {
     Object *o = ctx->thisObject.asObject();
     if (!o)
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     Value name = o->__get__(ctx, ctx->engine->newString(QString::fromLatin1("name")));
     QString qname;

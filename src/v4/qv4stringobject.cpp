@@ -302,7 +302,7 @@ Value StringPrototype::method_localeCompare(ExecutionContext *parentCtx, Value t
 Value StringPrototype::method_match(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
 {
     if (thisObject.isUndefined() || thisObject.isNull())
-        __qmljs_throw_type_error(parentCtx);
+        parentCtx->throwTypeError();
 
     String *s = thisObject.toString(parentCtx);
 
@@ -313,7 +313,7 @@ Value StringPrototype::method_match(ExecutionContext *parentCtx, Value thisObjec
 
     if (!rx)
         // ### CHECK
-        __qmljs_throw_type_error(parentCtx);
+        parentCtx->throwTypeError();
 
     bool global = rx->global;
 
@@ -710,7 +710,7 @@ Value StringPrototype::method_fromCharCode(ExecutionContext *parentCtx, Value, V
 Value StringPrototype::method_trim(ExecutionContext *ctx)
 {
     if (ctx->thisObject.isNull() || ctx->thisObject.isUndefined())
-        __qmljs_throw_type_error(ctx);
+        ctx->throwTypeError();
 
     QString s = __qmljs_to_string(ctx->thisObject, ctx).stringValue()->toQString();
     const QChar *chars = s.constData();
