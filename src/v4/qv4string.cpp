@@ -73,6 +73,21 @@ static uint toArrayIndex(const QChar *ch, const QChar *end, bool *ok)
     return i;
 }
 
+const ManagedVTable String::static_vtbl =
+{
+    call,
+    construct,
+    0 /*markObjects*/,
+    destroy,
+    hasInstance,
+    "String",
+};
+
+void String::destroy(Managed *that)
+{
+    static_cast<String*>(that)->~String();
+}
+
 uint String::toUInt(bool *ok) const
 {
     *ok = true;

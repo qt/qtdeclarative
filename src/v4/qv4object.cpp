@@ -82,6 +82,12 @@ Object::~Object()
     delete [] memberData;
     delete [] (arrayData - (sparseArray ? 0 : arrayOffset));
     delete sparseArray;
+    _data = 0;
+}
+
+void Object::destroy(Managed *that)
+{
+    static_cast<Object *>(that)->~Object();
 }
 
 void Object::__put__(ExecutionContext *ctx, const QString &name, const Value &value)

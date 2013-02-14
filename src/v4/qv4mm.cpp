@@ -229,7 +229,7 @@ std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t
                 m->markBit = 0;
             } else {
 //                qDebug() << "-- collecting it." << m << *f << m->nextFree();
-                m->~Managed();
+                m->vtbl->destroy(m);
 
                 m->setNextFree(*f);
                 *f = m;

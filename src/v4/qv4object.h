@@ -305,6 +305,7 @@ public:
 
 protected:
     static const ManagedVTable static_vtbl;
+    static void destroy(Managed *that);
     static void markObjects(Managed *that);
 
     friend struct ObjectIterator;

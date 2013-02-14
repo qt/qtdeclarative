@@ -69,6 +69,11 @@ struct RegExpObject: Object {
     PropertyDescriptor *lastIndexProperty(ExecutionContext *ctx);
     bool global;
     RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bool global);
+    ~RegExpObject() {}
+
+protected:
+    static const ManagedVTable static_vtbl;
+    static void destroy(Managed *that);
 };
 
 

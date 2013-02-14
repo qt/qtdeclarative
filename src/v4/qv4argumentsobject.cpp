@@ -89,6 +89,11 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterC
     }
 }
 
+void ArgumentsObject::destroy(Managed *that)
+{
+    static_cast<ArgumentsObject *>(that)->~ArgumentsObject();
+}
+
 bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc)
 {
     PropertyDescriptor *pd = arrayAt(index);

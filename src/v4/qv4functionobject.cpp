@@ -355,10 +355,6 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     }
 }
 
-ScriptFunction::~ScriptFunction()
-{
-}
-
 Value ScriptFunction::construct(Managed *that, ExecutionContext *context, Value *args, int argc)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
@@ -508,6 +504,11 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     pd.enumberable = PropertyDescriptor::Disabled;
     *insertMember(scope->engine->id_arguments) = pd;
     *insertMember(scope->engine->id_caller) = pd;
+}
+
+void BoundFunction::destroy(Managed *that)
+{
+    static_cast<BoundFunction *>(that)->~BoundFunction();
 }
 
 Value BoundFunction::call(Managed *that, ExecutionContext *context, const Value &, Value *args, int argc)

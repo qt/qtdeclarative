@@ -61,7 +61,8 @@ struct String : public Managed {
 
     String(const QString &text)
         : _text(text), stringHash(UINT_MAX), identifier(UINT_MAX)
-    { type = Type_String; subtype = StringType_Unknown; }
+    { vtbl = &static_vtbl; type = Type_String; subtype = StringType_Unknown; }
+    ~String() { _data = 0; }
 
     inline bool isEqualTo(const String *other) const {
         if (this == other)
@@ -108,6 +109,10 @@ struct String : public Managed {
     QString _text;
     mutable uint stringHash;
     mutable uint identifier;
+
+protected:
+    static void destroy(Managed *);
+    static const ManagedVTable static_vtbl;
 };
 
 } // namespace VM

@@ -76,26 +76,23 @@ struct Value;
 
 struct ManagedVTable
 {
-    enum _EndOfVTable {
-        EndOfVTable
-    };
-    const char *className;
-    void (*markObjects)(Managed *);
-    bool (*hasInstance)(Managed *, ExecutionContext *ctx, const Value &value);
-    Value (*construct)(Managed *, ExecutionContext *context, Value *args, int argc);
     Value (*call)(Managed *, ExecutionContext *context, const Value &thisObject, Value *args, int argc);
-    _EndOfVTable endofVTable;
+    Value (*construct)(Managed *, ExecutionContext *context, Value *args, int argc);
+    void (*markObjects)(Managed *);
+    void (*destroy)(Managed *);
+    bool (*hasInstance)(Managed *, ExecutionContext *ctx, const Value &value);
+    const char *className;
 };
 
 #define DEFINE_MANAGED_VTABLE(classname) \
 const ManagedVTable classname::static_vtbl =    \
 {                                               \
-    #classname,                                 \
-    markObjects,                                \
-    hasInstance,                                \
-    construct,                                  \
     call,                                       \
-    ManagedVTable::EndOfVTable                  \
+    construct,                                  \
+    markObjects,                                \
+    destroy,                                    \
+    hasInstance,                                \
+    #classname                                  \
 }
 
 
@@ -110,7 +107,6 @@ protected:
     Managed()
         : vtbl(&static_vtbl), _data(0)
     { inUse = 1; extensible = 1; }
-    virtual ~Managed();
 
 public:
     void *operator new(size_t size, MemoryManager *mm);
@@ -177,6 +173,7 @@ public:
     inline Value construct(ExecutionContext *context, Value *args, int argc);
     inline Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc);
 
+    static void destroy(Managed *that) { that->_data = 0; }
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
     static Value construct(Managed *, ExecutionContext *context, Value *, int);
     static Value call(Managed *, ExecutionContext *, const Value &, Value *, int);
@@ -184,6 +181,7 @@ public:
 protected:
 
     static const ManagedVTable static_vtbl;
+
     const ManagedVTable *vtbl;
 
     union {

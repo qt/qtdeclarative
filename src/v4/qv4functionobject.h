@@ -219,7 +219,6 @@ protected:
 
 struct ScriptFunction: FunctionObject {
     ScriptFunction(ExecutionContext *scope, VM::Function *function);
-    ~ScriptFunction();
 
     static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
@@ -236,10 +235,12 @@ struct BoundFunction: FunctionObject {
     BoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
     ~BoundFunction() {}
 
+
     static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
 
     static const ManagedVTable static_vtbl;
+    static void destroy(Managed *);
     static void markObjects(Managed *that);
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
 };

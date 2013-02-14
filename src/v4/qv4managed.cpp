@@ -47,19 +47,14 @@ using namespace QQmlJS::VM;
 
 const ManagedVTable Managed::static_vtbl =
 {
-    "Managed",
-    0 /*markObjects*/,
-    hasInstance,
-    construct,
     call,
-    ManagedVTable::EndOfVTable
+    construct,
+    0 /*markObjects*/,
+    destroy,
+    hasInstance,
+    "Managed",
 };
 
-
-Managed::~Managed()
-{
-    _data = 0;
-}
 
 void *Managed::operator new(size_t size, MemoryManager *mm)
 {

@@ -80,11 +80,14 @@ struct ArgumentsObject: Object {
     ExecutionContext *context;
     QVector<Value> mappedArguments;
     ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount);
+    ~ArgumentsObject() {}
 
     bool defineOwnProperty(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc);
 
-    static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);
+protected:
+    static const ManagedVTable static_vtbl;
+    static void destroy(Managed *);
 };
 
 }

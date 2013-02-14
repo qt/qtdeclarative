@@ -87,11 +87,14 @@ struct ReferenceErrorObject: ErrorObject {
 struct SyntaxErrorObject: ErrorObject {
     SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *msg);
     ~SyntaxErrorObject() { delete msg; }
+    static void destroy(Managed *that) { static_cast<SyntaxErrorObject *>(that)->~SyntaxErrorObject(); }
 
     DiagnosticMessage *message() { return msg; }
 
 private:
     DiagnosticMessage *msg;
+protected:
+    static const ManagedVTable static_vtbl;
 };
 
 struct TypeErrorObject: ErrorObject {

@@ -63,6 +63,7 @@
 
 using namespace QQmlJS::VM;
 
+DEFINE_MANAGED_VTABLE(RegExpObject);
 
 RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bool global)
     : Object(engine)
@@ -83,6 +84,11 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
     defineReadonlyProperty(engine->newIdentifier(QStringLiteral("global")), Value::fromBoolean(global));
     defineReadonlyProperty(engine->newIdentifier(QStringLiteral("ignoreCase")), Value::fromBoolean(this->value->ignoreCase()));
     defineReadonlyProperty(engine->newIdentifier(QStringLiteral("multiline")), Value::fromBoolean(this->value->multiLine()));
+}
+
+void RegExpObject::destroy(Managed *that)
+{
+    static_cast<RegExpObject *>(that)->~RegExpObject();
 }
 
 PropertyDescriptor *RegExpObject::lastIndexProperty(ExecutionContext *ctx)

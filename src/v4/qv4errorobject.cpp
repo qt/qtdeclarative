@@ -88,10 +88,13 @@ void ErrorObject::setNameProperty(ExecutionContext *ctx)
     defineDefaultProperty(ctx, QLatin1String("name"), Value::fromString(ctx, className()));
 }
 
+DEFINE_MANAGED_VTABLE(SyntaxErrorObject);
+
 SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message)
     : ErrorObject(ctx->engine, message ? Value::fromString(message->buildFullMessage(ctx)) : ctx->argument(0))
     , msg(message)
 {
+    vtbl = &static_vtbl;
     subtype = SyntaxError;
     prototype = ctx->engine->syntaxErrorPrototype;
     setNameProperty(ctx);
