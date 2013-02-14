@@ -51,7 +51,6 @@ namespace VM {
 struct MathObject: Object
 {
     MathObject(ExecutionContext *ctx);
-    virtual QString className() { return QStringLiteral("Math"); }
 
     static Value method_abs(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
     static Value method_acos(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
