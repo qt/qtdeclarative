@@ -217,7 +217,7 @@ void __qmljs_throw(Value value, ExecutionContext *context);
 // actually returns a jmp_buf *
 Q_V4_EXPORT void *__qmljs_create_exception_handler(ExecutionContext *context);
 void __qmljs_delete_exception_handler(ExecutionContext *context);
-Value __qmljs_get_exception(ExecutionContext *context);
+void __qmljs_get_exception(ExecutionContext *context, Value *result);
 
 // binary operators
 typedef void (*BinOp)(ExecutionContext *ctx, Value *result, const Value &left, const Value &right);

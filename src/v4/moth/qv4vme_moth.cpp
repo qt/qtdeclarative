@@ -276,7 +276,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinDeleteExceptionHandler)
 
     MOTH_BEGIN_INSTR(CallBuiltinGetException)
-        VALUE(instr.result) = __qmljs_get_exception(context);
+        __qmljs_get_exception(context, VALUEPTR(instr.result));
     MOTH_END_INSTR(CallBuiltinGetException)
 
     MOTH_BEGIN_INSTR(CallBuiltinPushScope)

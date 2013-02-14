@@ -486,7 +486,7 @@ void __qmljs_llvm_delete_exception_handler(ExecutionContext *context)
 
 void __qmljs_llvm_get_exception(ExecutionContext *context, Value *result)
 {
-    *result = __qmljs_get_exception(context);
+    __qmljs_get_exception(context, result);
 }
 
 void __qmljs_llvm_foreach_iterator_object(ExecutionContext *context, Value *result, Value *in)

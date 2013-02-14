@@ -1013,9 +1013,9 @@ void __qmljs_delete_exception_handler(ExecutionContext *context)
     context->engine->unwindStack.pop_back();
 }
 
-Value __qmljs_get_exception(ExecutionContext *context)
+void __qmljs_get_exception(ExecutionContext *context, Value *result)
 {
-    return context->engine->exception;
+    *result = context->engine->exception;
 }
 
 void __qmljs_builtin_typeof(ExecutionContext *ctx, Value *result, const Value &value)

@@ -591,7 +591,7 @@ void InstructionSelection::callBuiltinDeleteExceptionHandler()
 
 void InstructionSelection::callBuiltinGetException(IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_get_exception, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_get_exception, Assembler::ContextRegister, Assembler::PointerToValue(result));
 }
 
 void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result)
