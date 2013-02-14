@@ -127,27 +127,12 @@ bool FunctionObject::hasInstance(Managed *that, ExecutionContext *ctx, const Val
     return false;
 }
 
-Value FunctionObject::construct(ExecutionContext *context, Value *args, int argc)
+Value FunctionObject::construct(ExecutionContext *context, Value *, int)
 {
     Object *obj = context->engine->newObject();
     Value proto = __get__(context, context->engine->id_prototype);
     if (proto.isObject())
         obj->prototype = proto.objectValue();
-
-    uint size = requiredMemoryForExecutionContect(this, argc);
-    ExecutionContext *ctx = static_cast<ExecutionContext *>(needsActivation ? malloc(size) : alloca(size));
-
-    ctx->thisObject = Value::fromObject(obj);
-    ctx->function = this;
-    ctx->arguments = args;
-    ctx->argumentCount = argc;
-
-    ctx->initCallContext(context);
-    Value result = call(ctx);
-    ctx->leaveCallContext();
-
-    if (result.isObject())
-        return result;
     return Value::fromObject(obj);
 }
 
@@ -399,6 +384,32 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 ScriptFunction::~ScriptFunction()
 {
 }
+
+Value ScriptFunction::construct(ExecutionContext *context, Value *args, int argc)
+{
+    Object *obj = context->engine->newObject();
+    Value proto = __get__(context, context->engine->id_prototype);
+    if (proto.isObject())
+        obj->prototype = proto.objectValue();
+
+    uint size = requiredMemoryForExecutionContect(this, argc);
+    ExecutionContext *ctx = static_cast<ExecutionContext *>(needsActivation ? malloc(size) : alloca(size));
+
+    ctx->thisObject = Value::fromObject(obj);
+    ctx->function = this;
+    ctx->arguments = args;
+    ctx->argumentCount = argc;
+
+    ctx->initCallContext(context);
+    Value result = call(ctx);
+    ctx->leaveCallContext();
+
+    if (result.isObject())
+        return result;
+    return Value::fromObject(obj);
+}
+
+
 
 Value ScriptFunction::call(ExecutionContext *ctx)
 {

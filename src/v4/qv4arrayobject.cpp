@@ -49,31 +49,34 @@ ArrayCtor::ArrayCtor(ExecutionContext *scope)
 {
 }
 
-Value ArrayCtor::call(ExecutionContext *ctx)
+Value ArrayCtor::construct(ExecutionContext *ctx, Value *argv, int argc)
 {
     ArrayObject *a = ctx->engine->newArrayObject(ctx);
     uint len;
-    if (ctx->argumentCount == 1 && ctx->argument(0).isNumber()) {
+    if (argc == 1 && argv[0].isNumber()) {
         bool ok;
-        len = ctx->argument(0).asArrayLength(ctx, &ok);
+        len = argv[0].asArrayLength(ctx, &ok);
 
-        if (!ok) {
-            ctx->throwRangeError(ctx->argument(0));
-            return Value::undefinedValue();
-        }
+        if (!ok)
+            ctx->throwRangeError(argv[0]);
 
         if (len < 0x1000)
             a->arrayReserve(len);
     } else {
-        len = ctx->argumentCount;
+        len = argc;
         a->arrayReserve(len);
         for (unsigned int i = 0; i < len; ++i)
-            fillDescriptor(a->arrayData + i, ctx->argument(i));
+            fillDescriptor(a->arrayData + i, argv[i]);
         a->arrayDataLen = len;
     }
     a->setArrayLengthUnchecked(len);
 
     return Value::fromObject(a);
+}
+
+Value ArrayCtor::call(ExecutionContext *ctx, Value thisObject, Value *argv, int argc)
+{
+    return construct(ctx, argv, argc);
 }
 
 void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)

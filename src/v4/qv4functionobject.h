@@ -210,6 +210,7 @@ struct ScriptFunction: FunctionObject {
     ScriptFunction(ExecutionContext *scope, VM::Function *function);
     virtual ~ScriptFunction();
 
+    virtual Value construct(ExecutionContext *context, Value *args, int argc);
     virtual Value call(ExecutionContext *ctx);
 
     virtual ScriptFunction *asScriptFunction() { return this; }
