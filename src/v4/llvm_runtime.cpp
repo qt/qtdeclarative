@@ -506,17 +506,17 @@ void __qmljs_llvm_get_this_object(ExecutionContext *ctx, Value *result)
 
 void __qmljs_llvm_delete_subscript(ExecutionContext *ctx, Value *result, Value *base, Value *index)
 {
-    *result = __qmljs_delete_subscript(ctx, *base, *index);
+    __qmljs_delete_subscript(ctx, result, *base, *index);
 }
 
 void __qmljs_llvm_delete_member(ExecutionContext *ctx, Value *result, Value *base, String *name)
 {
-    *result = __qmljs_delete_member(ctx, *base, name);
+    __qmljs_delete_member(ctx, result, *base, name);
 }
 
 void __qmljs_llvm_delete_name(ExecutionContext *ctx, Value *result, String *name)
 {
-    *result = __qmljs_delete_name(ctx, name);
+    __qmljs_delete_name(ctx, result, name);
 }
 
 } // extern "C"

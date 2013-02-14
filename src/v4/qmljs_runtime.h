@@ -209,9 +209,9 @@ void __qmljs_not(Value *result, const Value &value, ExecutionContext *ctx);
 void __qmljs_increment(Value *result, const Value &value, ExecutionContext *ctx);
 void __qmljs_decrement(Value *result, const Value &value, ExecutionContext *ctx);
 
-Value __qmljs_delete_subscript(ExecutionContext *ctx, const Value &base, Value index);
-Value __qmljs_delete_member(ExecutionContext *ctx, const Value &base, String *name);
-Value __qmljs_delete_name(ExecutionContext *ctx, String *name);
+void __qmljs_delete_subscript(ExecutionContext *ctx, Value *result, const Value &base, const Value &index);
+void __qmljs_delete_member(ExecutionContext *ctx, Value *result, const Value &base, String *name);
+void __qmljs_delete_name(ExecutionContext *ctx, Value *result, String *name);
 
 void __qmljs_throw(Value value, ExecutionContext *context);
 // actually returns a jmp_buf *

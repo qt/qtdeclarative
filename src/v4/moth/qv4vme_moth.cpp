@@ -300,15 +300,15 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinForeachNextPropertyName)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteMember)
-        VALUE(instr.result) = __qmljs_delete_member(context, VALUE(instr.base), instr.member);
+        __qmljs_delete_member(context, VALUEPTR(instr.result), VALUE(instr.base), instr.member);
     MOTH_END_INSTR(CallBuiltinDeleteMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteSubscript)
-        VALUE(instr.result) = __qmljs_delete_subscript(context, VALUE(instr.base), VALUE(instr.index));
+        __qmljs_delete_subscript(context, VALUEPTR(instr.result), VALUE(instr.base), VALUE(instr.index));
     MOTH_END_INSTR(CallBuiltinDeleteSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteName)
-        VALUE(instr.result) = __qmljs_delete_name(context, instr.name);
+        __qmljs_delete_name(context, VALUEPTR(instr.result), instr.name);
     MOTH_END_INSTR(CallBuiltinDeleteName)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofMember)

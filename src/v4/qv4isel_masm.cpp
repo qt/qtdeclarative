@@ -500,17 +500,17 @@ void InstructionSelection::callBuiltinTypeofValue(IR::Temp *value, IR::Temp *res
 
 void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_delete_member, Assembler::ContextRegister, Assembler::PointerToValue(base), identifier(name));
+    generateFunctionCall(Assembler::Void, __qmljs_delete_member, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(base), identifier(name));
 }
 
 void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_delete_subscript, Assembler::ContextRegister, Assembler::PointerToValue(base), index);
+    generateFunctionCall(Assembler::Void, __qmljs_delete_subscript, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(base), Assembler::PointerToValue(index));
 }
 
 void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_delete_name, Assembler::ContextRegister, identifier(name));
+    generateFunctionCall(Assembler::Void, __qmljs_delete_name, Assembler::ContextRegister, Assembler::PointerToValue(result), identifier(name));
 }
 
 void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)

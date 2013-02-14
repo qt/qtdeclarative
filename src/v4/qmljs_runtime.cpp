@@ -189,7 +189,7 @@ Value __qmljs_string_literal_function(ExecutionContext *ctx)
     return Value::fromString(ctx->engine->newString(QStringLiteral("function")));
 }
 
-Value __qmljs_delete_subscript(ExecutionContext *ctx, const Value &base, Value index)
+void __qmljs_delete_subscript(ExecutionContext *ctx, Value *result, const Value &base, const Value &index)
 {
     if (Object *o = base.asObject()) {
         uint n = UINT_MAX;
@@ -197,23 +197,31 @@ Value __qmljs_delete_subscript(ExecutionContext *ctx, const Value &base, Value i
             n = index.integerValue();
         else if (index.isDouble())
             n = index.doubleValue();
-        if (n < UINT_MAX)
-            return Value::fromBoolean(o->__delete__(ctx, n));
+        if (n < UINT_MAX) {
+            Value res = Value::fromBoolean(o->__delete__(ctx, n));
+            if (result)
+                *result = res;
+            return;
+        }
     }
 
     String *name = index.toString(ctx);
-    return __qmljs_delete_member(ctx, base, name);
+    __qmljs_delete_member(ctx, result, base, name);
 }
 
-Value __qmljs_delete_member(ExecutionContext *ctx, const Value &base, String *name)
+void __qmljs_delete_member(ExecutionContext *ctx, Value *result, const Value &base, String *name)
 {
     Value obj = base.toObject(ctx);
-    return Value::fromBoolean(obj.objectValue()->__delete__(ctx, name));
+    Value res = Value::fromBoolean(obj.objectValue()->__delete__(ctx, name));
+    if (result)
+        *result = res;
 }
 
-Value __qmljs_delete_name(ExecutionContext *ctx, String *name)
+void __qmljs_delete_name(ExecutionContext *ctx, Value *result, String *name)
 {
-    return Value::fromBoolean(ctx->deleteProperty(name));
+    Value res = Value::fromBoolean(ctx->deleteProperty(name));
+    if (result)
+        *result = res;
 }
 
 void __qmljs_add_helper(ExecutionContext *ctx, Value *result, const Value &left, const Value &right)
