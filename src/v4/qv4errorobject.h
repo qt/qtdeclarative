@@ -49,6 +49,8 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace VM {
 
+struct SyntaxErrorObject;
+
 struct ErrorObject: Object {
     enum ErrorType {
         Error,
@@ -62,7 +64,7 @@ struct ErrorObject: Object {
 
     ErrorObject(ExecutionEngine* engine, const Value &message);
 
-    virtual struct SyntaxErrorObject *asSyntaxError() { return 0; }
+    SyntaxErrorObject *asSyntaxError();
 
 protected:
     void setNameProperty(ExecutionContext *ctx);
@@ -86,7 +88,6 @@ struct SyntaxErrorObject: ErrorObject {
     SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *msg);
     ~SyntaxErrorObject() { delete msg; }
 
-    virtual SyntaxErrorObject *asSyntaxError() { return this; }
     DiagnosticMessage *message() { return msg; }
 
 private:
@@ -220,6 +221,11 @@ struct URIErrorPrototype: URIErrorObject
     void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
 };
 
+
+inline SyntaxErrorObject *ErrorObject::asSyntaxError()
+{
+    return subtype == SyntaxError ? static_cast<SyntaxErrorObject *>(this) : 0;
+}
 
 } // end of namespace VM
 } // end of namespace QQmlJS
