@@ -647,7 +647,7 @@ void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Te
 {
     int argc = prepareVariableArguments(args);
     IR::Temp* thisObject = 0;
-    generateFunctionCall(result, __qmljs_call_value, Assembler::ContextRegister, thisObject, value, baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    generateFunctionCall(Assembler::Void, __qmljs_call_value, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(thisObject), Assembler::PointerToValue(value), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
 }
 
 void InstructionSelection::loadThisObject(IR::Temp *temp)
@@ -854,13 +854,15 @@ void InstructionSelection::callProperty(IR::Temp *base, const QString &name,
 
     if (useFastLookups) {
         uint index = addLookup(s);
-        generateFunctionCall(result, __qmljs_call_property_lookup,
-                             Assembler::ContextRegister, base, Assembler::TrustedImm32(index),
+        generateFunctionCall(Assembler::Void, __qmljs_call_property_lookup,
+                             Assembler::ContextRegister, Assembler::PointerToValue(result),
+                             Assembler::PointerToValue(base), Assembler::TrustedImm32(index),
                              baseAddressForCallArguments(),
                              Assembler::TrustedImm32(argc));
     } else {
-        generateFunctionCall(result, __qmljs_call_property,
-                             Assembler::ContextRegister, base, s,
+        generateFunctionCall(Assembler::Void, __qmljs_call_property,
+                             Assembler::ContextRegister, Assembler::PointerToValue(result),
+                             Assembler::PointerToValue(base), s,
                              baseAddressForCallArguments(),
                              Assembler::TrustedImm32(argc));
     }
@@ -871,8 +873,9 @@ void InstructionSelection::callSubscript(IR::Temp *base, IR::Temp *index, IR::Ex
     assert(base != 0);
 
     int argc = prepareVariableArguments(args);
-    generateFunctionCall(result, __qmljs_call_element,
-                         Assembler::ContextRegister, base, index,
+    generateFunctionCall(Assembler::Void, __qmljs_call_element,
+                         Assembler::ContextRegister, Assembler::PointerToValue(result),
+                         Assembler::PointerToValue(base), Assembler::PointerToValue(index),
                          baseAddressForCallArguments(),
                          Assembler::TrustedImm32(argc));
 }

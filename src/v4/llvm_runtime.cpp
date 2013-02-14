@@ -405,8 +405,7 @@ void __qmljs_llvm_call_activation_property(ExecutionContext *context, Value *res
 
 void __qmljs_llvm_call_value(ExecutionContext *context, Value *result, const Value *thisObject, const Value *func, Value *args, int argc)
 {
-    Value that = thisObject ? *thisObject : Value::undefinedValue();
-    *result = __qmljs_call_value(context, that, *func, args, argc);
+    __qmljs_call_value(context, result, thisObject, *func, args, argc);
 }
 
 void __qmljs_llvm_construct_activation_property(ExecutionContext *context, Value *result, String *name, Value *args, int argc)
@@ -436,7 +435,7 @@ void __qmljs_llvm_get_property(ExecutionContext *ctx, Value *result, Value *obje
 
 void __qmljs_llvm_call_property(ExecutionContext *context, Value *result, const Value *base, String *name, Value *args, int argc)
 {
-    *result = __qmljs_call_property(context, *base, name, args, argc);
+    __qmljs_call_property(context, result, *base, name, args, argc);
 }
 
 void __qmljs_llvm_construct_property(ExecutionContext *context, Value *result, const Value *base, String *name, Value *args, int argc)

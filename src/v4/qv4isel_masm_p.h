@@ -461,10 +461,10 @@ public:
         int currentRegisterIndex;
     };
 
-    template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+    template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
+    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
     {
-        int totalNumberOfArgs = 5;
+        int totalNumberOfArgs = 6;
 
         // If necessary reserve space for the return value on the stack and
         // pass the pointer to it as the first hidden parameter.
@@ -477,6 +477,7 @@ public:
         }
 
         ArgumentLoader l(this, totalNumberOfArgs);
+        l.load(arg6);
         l.load(arg5);
         l.load(arg4);
         l.load(arg3);
@@ -500,6 +501,12 @@ public:
 
         if (stackSizeToCorrect)
             add32(TrustedImm32(stackSizeToCorrect), StackPointerRegister);
+    }
+
+    template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
+    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+    {
+        generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, arg4, arg5, VoidType());
     }
 
     template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4>

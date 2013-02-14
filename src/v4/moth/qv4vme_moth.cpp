@@ -221,20 +221,20 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
 #endif // DO_TRACE_INSTR
         Q_ASSERT(instr.args + instr.argc < stackSize);
         VM::Value *args = stack + instr.args;
-        VALUE(instr.result) = __qmljs_call_value(context, VM::Value::undefinedValue(), VALUE(instr.dest), args, instr.argc);
+        __qmljs_call_value(context, VALUEPTR(instr.result), /*thisObject*/0, VALUE(instr.dest), args, instr.argc);
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
         TRACE(property name, "%s, args=%u, argc=%u", qPrintable(instr.name->toQString()), instr.args, instr.argc);
         Q_ASSERT(instr.args + instr.argc < stackSize);
         VM::Value *args = stack + instr.args;
-        VALUE(instr.result) = __qmljs_call_property(context, VALUE(instr.base), instr.name, args, instr.argc);
+        __qmljs_call_property(context, VALUEPTR(instr.result), VALUE(instr.base), instr.name, args, instr.argc);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallElement)
         Q_ASSERT(instr.args + instr.argc < stackSize);
         VM::Value *args = stack + instr.args;
-        VALUE(instr.result) = __qmljs_call_element(context, VALUE(instr.base), VALUE(instr.index), args, instr.argc);
+        __qmljs_call_element(context, VALUEPTR(instr.result), VALUE(instr.base), VALUE(instr.index), args, instr.argc);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallActivationProperty)

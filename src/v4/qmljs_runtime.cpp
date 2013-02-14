@@ -821,8 +821,9 @@ void __qmljs_call_activation_property(ExecutionContext *context, Value *result, 
         *result = res;
 }
 
-Value __qmljs_call_property(ExecutionContext *context, Value thisObject, String *name, Value *args, int argc)
+void __qmljs_call_property(ExecutionContext *context, Value *result, const Value &thatObject, String *name, Value *args, int argc)
 {
+    Value thisObject = thatObject;
     Object *baseObject;
     if (thisObject.isString()) {
         baseObject = context->engine->stringPrototype;
@@ -839,11 +840,14 @@ Value __qmljs_call_property(ExecutionContext *context, Value thisObject, String 
     if (!o)
         context->throwTypeError();
 
-    return o->call(context, thisObject, args, argc);
+    Value res = o->call(context, thisObject, args, argc);
+    if (result)
+        *result = res;
 }
 
-Value __qmljs_call_property_lookup(ExecutionContext *context, Value thisObject, uint index, Value *args, int argc)
+void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, const Value &thatObject, uint index, Value *args, int argc)
 {
+    Value thisObject = thatObject;
     Lookup *l = context->lookups + index;
 
     Object *baseObject;
@@ -894,10 +898,12 @@ Value __qmljs_call_property_lookup(ExecutionContext *context, Value thisObject, 
     if (!o)
         context->throwTypeError();
 
-    return o->call(context, thisObject, args, argc);
+    Value res = o->call(context, thisObject, args, argc);
+    if (result)
+        *result = res;
 }
 
-Value __qmljs_call_element(ExecutionContext *context, Value that, Value index, Value *args, int argc)
+void __qmljs_call_element(ExecutionContext *context, Value *result, const Value &that, const Value &index, Value *args, int argc)
 {
     Value thisObject = that;
     if (!thisObject.isObject())
@@ -911,15 +917,19 @@ Value __qmljs_call_element(ExecutionContext *context, Value that, Value index, V
     if (!o)
         context->throwTypeError();
 
-    return o->call(context, thisObject, args, argc);
+    Value res = o->call(context, thisObject, args, argc);
+    if (result)
+        *result = res;
 }
 
-Value __qmljs_call_value(ExecutionContext *context, Value thisObject, Value func, Value *args, int argc)
+void __qmljs_call_value(ExecutionContext *context, Value *result, const Value *thisObject, const Value &func, Value *args, int argc)
 {
     FunctionObject *o = func.asFunctionObject();
     if (!o)
         context->throwTypeError();
-    return o->call(context, thisObject, args, argc);
+    Value res = o->call(context, thisObject ? *thisObject : Value::undefinedValue(), args, argc);
+    if (result)
+        *result = res;
 }
 
 void __qmljs_construct_activation_property(ExecutionContext *context, Value *result, String *name, Value *args, int argc)
