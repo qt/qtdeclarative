@@ -79,7 +79,7 @@ ErrorObject::ErrorObject(ExecutionEngine* engine, const Value &message)
     type = Type_ErrorObject;
     subtype = Error;
 
-    if (message.type() != Value::Undefined_Type)
+    if (!message.isUndefined())
         defineDefaultProperty(engine->newString(QStringLiteral("message")), message);
 }
 
@@ -99,72 +99,64 @@ SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *m
 
 
 
-EvalErrorObject::EvalErrorObject(ExecutionContext *ctx)
-    : ErrorObject(ctx->engine, ctx->argument(0))
+EvalErrorObject::EvalErrorObject(ExecutionContext *ctx, const Value &message)
+    : ErrorObject(ctx->engine, message)
 {
     subtype = EvalError;
     setNameProperty(ctx);
     prototype = ctx->engine->evalErrorPrototype;
 }
 
-RangeErrorObject::RangeErrorObject(ExecutionContext *ctx)
-    : ErrorObject(ctx->engine, ctx->argument(0))
+RangeErrorObject::RangeErrorObject(ExecutionContext *ctx, const Value &message)
+    : ErrorObject(ctx->engine, message)
 {
     subtype = RangeError;
     setNameProperty(ctx);
     prototype = ctx->engine->rangeErrorPrototype;
 }
 
-RangeErrorObject::RangeErrorObject(ExecutionContext *ctx, const QString &msg)
-    : ErrorObject(ctx->engine, Value::fromString(ctx,msg))
+RangeErrorObject::RangeErrorObject(ExecutionContext *ctx, const QString &message)
+    : ErrorObject(ctx->engine, Value::fromString(ctx,message))
 {
     subtype = RangeError;
     setNameProperty(ctx);
     prototype = ctx->engine->rangeErrorPrototype;
 }
 
-ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx)
-    : ErrorObject(ctx->engine, ctx->argument(0))
+ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx, const Value &message)
+    : ErrorObject(ctx->engine, message)
 {
     subtype = ReferenceError;
     setNameProperty(ctx);
     prototype = ctx->engine->referenceErrorPrototype;
 }
 
-ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx, const QString &msg)
-    : ErrorObject(ctx->engine, Value::fromString(ctx,msg))
+ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx, const QString &message)
+    : ErrorObject(ctx->engine, Value::fromString(ctx,message))
 {
     subtype = ReferenceError;
     setNameProperty(ctx);
     prototype = ctx->engine->referenceErrorPrototype;
 }
 
-TypeErrorObject::TypeErrorObject(ExecutionContext *ctx)
-    : ErrorObject(ctx->engine, ctx->argument(0))
+TypeErrorObject::TypeErrorObject(ExecutionContext *ctx, const Value &message)
+    : ErrorObject(ctx->engine, message)
 {
     subtype = TypeError;
     setNameProperty(ctx);
     prototype = ctx->engine->typeErrorPrototype;
 }
 
-TypeErrorObject::TypeErrorObject(ExecutionContext *ctx, const QString &msg)
-    : ErrorObject(ctx->engine, Value::fromString(ctx,msg))
+TypeErrorObject::TypeErrorObject(ExecutionContext *ctx, const QString &message)
+    : ErrorObject(ctx->engine, Value::fromString(ctx,message))
 {
     subtype = TypeError;
     setNameProperty(ctx);
     prototype = ctx->engine->typeErrorPrototype;
 }
 
-URIErrorObject::URIErrorObject(ExecutionContext *ctx)
-    : ErrorObject(ctx->engine, ctx->argument(0))
-{
-    subtype = URIError;
-    setNameProperty(ctx);
-    prototype = ctx->engine->uRIErrorPrototype;
-}
-
-URIErrorObject::URIErrorObject(ExecutionContext *ctx, Value msg)
-    : ErrorObject(ctx->engine, msg)
+URIErrorObject::URIErrorObject(ExecutionContext *ctx, const Value &message)
+    : ErrorObject(ctx->engine, message)
 {
     subtype = URIError;
     setNameProperty(ctx);
@@ -177,44 +169,44 @@ ErrorCtor::ErrorCtor(ExecutionContext *scope)
 {
 }
 
-Value ErrorCtor::construct(ExecutionContext *ctx)
+Value ErrorCtor::construct(ExecutionContext *context, Value *args, int argc)
 {
-    return Value::fromObject(ctx->engine->newErrorObject(ctx->argument(0)));
+    return Value::fromObject(context->engine->newErrorObject(argc ? args[0] : Value::undefinedValue()));
 }
 
-Value ErrorCtor::call(ExecutionContext *ctx)
+Value ErrorCtor::call(ExecutionContext *ctx, Value thisObject, Value *args, int argc)
 {
-    return construct(ctx);
+    return construct(ctx, args, argc);
 }
 
-Value EvalErrorCtor::construct(ExecutionContext *ctx)
+Value EvalErrorCtor::construct(ExecutionContext *ctx, Value *args, int argc)
 {
-    return Value::fromObject(new (ctx->engine->memoryManager) EvalErrorObject(ctx));
+    return Value::fromObject(new (ctx->engine->memoryManager) EvalErrorObject(ctx, argc ? args[0] : Value::undefinedValue()));
 }
 
-Value RangeErrorCtor::construct(ExecutionContext *ctx)
+Value RangeErrorCtor::construct(ExecutionContext *ctx, Value *args, int argc)
 {
-    return Value::fromObject(new (ctx->engine->memoryManager) RangeErrorObject(ctx));
+    return Value::fromObject(new (ctx->engine->memoryManager) RangeErrorObject(ctx, argc ? args[0] : Value::undefinedValue()));
 }
 
-Value ReferenceErrorCtor::construct(ExecutionContext *ctx)
+Value ReferenceErrorCtor::construct(ExecutionContext *ctx, Value *args, int argc)
 {
-    return Value::fromObject(new (ctx->engine->memoryManager) ReferenceErrorObject(ctx));
+    return Value::fromObject(new (ctx->engine->memoryManager) ReferenceErrorObject(ctx, argc ? args[0] : Value::undefinedValue()));
 }
 
-Value SyntaxErrorCtor::construct(ExecutionContext *ctx)
+Value SyntaxErrorCtor::construct(ExecutionContext *ctx, Value *, int)
 {
     return Value::fromObject(new (ctx->engine->memoryManager) SyntaxErrorObject(ctx, 0));
 }
 
-Value TypeErrorCtor::construct(ExecutionContext *ctx)
+Value TypeErrorCtor::construct(ExecutionContext *ctx, Value *args, int argc)
 {
-    return Value::fromObject(new (ctx->engine->memoryManager) TypeErrorObject(ctx));
+    return Value::fromObject(new (ctx->engine->memoryManager) TypeErrorObject(ctx, argc ? args[0] : Value::undefinedValue()));
 }
 
-Value URIErrorCtor::construct(ExecutionContext *ctx)
+Value URIErrorCtor::construct(ExecutionContext *ctx, Value *args, int argc)
 {
-    return Value::fromObject(new (ctx->engine->memoryManager) URIErrorObject(ctx));
+    return Value::fromObject(new (ctx->engine->memoryManager) URIErrorObject(ctx, argc ? args[0] : Value::undefinedValue()));
 }
 
 void ErrorPrototype::init(ExecutionContext *ctx, const Value &ctor, Object *obj)

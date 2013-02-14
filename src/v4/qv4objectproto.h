@@ -54,8 +54,8 @@ struct ObjectCtor: FunctionObject
 {
     ObjectCtor(ExecutionContext *scope);
 
-    virtual Value construct(ExecutionContext *ctx);
-    virtual Value call(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
+    virtual Value call(ExecutionContext *ctx, Value, Value *args, int argc);
 };
 
 struct ObjectPrototype: Object

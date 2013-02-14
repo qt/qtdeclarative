@@ -79,18 +79,23 @@ ObjectCtor::ObjectCtor(ExecutionContext *scope)
 {
 }
 
-Value ObjectCtor::construct(ExecutionContext *ctx)
+Value ObjectCtor::construct(ExecutionContext *ctx, Value *args, int argc)
 {
-    if (!ctx->argumentCount || ctx->argument(0).isUndefined() || ctx->argument(0).isNull())
-        return ctx->thisObject;
-    return __qmljs_to_object(ctx->argument(0), ctx);
+    if (!argc || args[0].isUndefined() || args[0].isNull()) {
+        Object *obj = ctx->engine->newObject();
+        Value proto = __get__(ctx, ctx->engine->id_prototype);
+        if (proto.isObject())
+            obj->prototype = proto.objectValue();
+        return Value::fromObject(obj);
+    }
+    return __qmljs_to_object(args[0], ctx);
 }
 
-Value ObjectCtor::call(ExecutionContext *ctx)
+Value ObjectCtor::call(ExecutionContext *ctx, Value /*thisObject*/, Value *args, int argc)
 {
-    if (!ctx->argumentCount || ctx->argument(0).isUndefined() || ctx->argument(0).isNull())
+    if (!argc || args[0].isUndefined() || args[0].isNull())
         return Value::fromObject(ctx->engine->newObject());
-    return __qmljs_to_object(ctx->argument(0), ctx);
+    return __qmljs_to_object(args[0], ctx);
 }
 
 void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)

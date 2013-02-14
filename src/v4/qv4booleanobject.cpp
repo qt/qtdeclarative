@@ -48,9 +48,9 @@ BooleanCtor::BooleanCtor(ExecutionContext *scope)
 {
 }
 
-Value BooleanCtor::construct(ExecutionContext *ctx)
+Value BooleanCtor::construct(ExecutionContext *ctx, Value *args, int argc)
 {
-    const double n = ctx->argument(0).toBoolean(ctx);
+    bool n = argc ? args[0].toBoolean(ctx) : false;
     return Value::fromObject(ctx->engine->newBooleanObject(Value::fromBoolean(n)));
 }
 

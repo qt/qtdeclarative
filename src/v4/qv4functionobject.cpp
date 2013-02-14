@@ -222,22 +222,22 @@ FunctionCtor::FunctionCtor(ExecutionContext *scope)
 }
 
 // 15.3.2
-Value FunctionCtor::construct(ExecutionContext *ctx)
+Value FunctionCtor::construct(ExecutionContext *ctx, Value *args, int argc)
 {
     MemoryManager::GCBlocker gcBlocker(ctx->engine->memoryManager);
 
-    QString args;
+    QString arguments;
     QString body;
-    if (ctx->argumentCount > 0) {
-        for (uint i = 0; i < ctx->argumentCount - 1; ++i) {
+    if (argc > 0) {
+        for (uint i = 0; i < argc - 1; ++i) {
             if (i)
-                args += QLatin1String(", ");
-            args += ctx->argument(i).toString(ctx)->toQString();
+                arguments += QLatin1String(", ");
+            arguments += args[i].toString(ctx)->toQString();
         }
-        body = ctx->argument(ctx->argumentCount - 1).toString(ctx)->toQString();
+        body = args[argc - 1].toString(ctx)->toQString();
     }
 
-    QString function = QLatin1String("function(") + args + QLatin1String("){") + body + QLatin1String("}");
+    QString function = QLatin1String("function(") + arguments + QLatin1String("){") + body + QLatin1String("}");
 
     QQmlJS::Engine ee, *engine = &ee;
     Lexer lexer(engine);
@@ -256,7 +256,7 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
 
     IR::Module module;
 
-    Codegen cg(ctx, ctx->strictMode);
+    Codegen cg(ctx, strictMode);
     IR::Function *irf = cg(QString(), fe, &module);
 
     QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(ctx->engine, &module));
@@ -266,9 +266,9 @@ Value FunctionCtor::construct(ExecutionContext *ctx)
 }
 
 // 15.3.1: This is equivalent to new Function(...)
-Value FunctionCtor::call(ExecutionContext *ctx)
+Value FunctionCtor::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
 {
-    return construct(ctx);
+    return construct(context, args, argc);
 }
 
 void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -420,7 +420,7 @@ BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Va
     isBuiltinFunction = true;
 }
 
-Value BuiltinFunctionOld::construct(ExecutionContext *ctx)
+Value BuiltinFunctionOld::construct(ExecutionContext *ctx, Value *, int)
 {
     ctx->throwTypeError();
     return Value::undefinedValue();
@@ -434,7 +434,7 @@ BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, Value (*
     isBuiltinFunction = true;
 }
 
-Value BuiltinFunction::construct(ExecutionContext *ctx)
+Value BuiltinFunction::construct(ExecutionContext *ctx, Value *, int)
 {
     ctx->throwTypeError();
     return Value::undefinedValue();

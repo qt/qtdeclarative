@@ -62,7 +62,7 @@ struct Q_V4_EXPORT EvalFunction : FunctionObject
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
     Value evalCall(ExecutionContext *context, Value thisObject, Value *args, int argc, bool directCall);
 
-    Value construct(ExecutionContext *ctx);
+    Value construct(ExecutionContext *ctx, Value *, int);
 };
 
 struct GlobalFunctions

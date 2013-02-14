@@ -174,8 +174,8 @@ struct FunctionCtor: FunctionObject
 {
     FunctionCtor(ExecutionContext *scope);
 
-    virtual Value construct(ExecutionContext *ctx);
-    virtual Value call(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
 };
 
 struct FunctionPrototype: FunctionObject
@@ -194,7 +194,7 @@ struct BuiltinFunctionOld: FunctionObject {
 
     BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
     virtual Value call(ExecutionContext *ctx) { return code(ctx); }
-    virtual Value construct(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx, Value *, int);
 };
 
 struct BuiltinFunction: FunctionObject {
@@ -204,7 +204,7 @@ struct BuiltinFunction: FunctionObject {
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc) {
         return code(context, thisObject, args, argc);
     }
-    virtual Value construct(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx, Value *, int);
 };
 
 struct ScriptFunction: FunctionObject {

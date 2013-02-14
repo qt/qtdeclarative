@@ -664,15 +664,15 @@ DateCtor::DateCtor(ExecutionContext *scope)
 {
 }
 
-Value DateCtor::construct(ExecutionContext *ctx)
+Value DateCtor::construct(ExecutionContext *ctx, Value *args, int argc)
 {
     double t = 0;
 
-    if (ctx->argumentCount == 0)
+    if (argc == 0)
         t = currentTime();
 
-    else if (ctx->argumentCount == 1) {
-        Value arg = ctx->argument(0);
+    else if (argc == 1) {
+        Value arg = args[0];
         if (DateObject *d = arg.asDateObject())
             arg = d->value;
         else
@@ -684,14 +684,14 @@ Value DateCtor::construct(ExecutionContext *ctx)
             t = TimeClip(arg.toNumber(ctx));
     }
 
-    else { // ctx->argumentCount > 1
-        double year  = ctx->argument(0).toNumber(ctx);
-        double month = ctx->argument(1).toNumber(ctx);
-        double day  = ctx->argumentCount >= 3 ? ctx->argument(2).toNumber(ctx) : 1;
-        double hours = ctx->argumentCount >= 4 ? ctx->argument(3).toNumber(ctx) : 0;
-        double mins = ctx->argumentCount >= 5 ? ctx->argument(4).toNumber(ctx) : 0;
-        double secs = ctx->argumentCount >= 6 ? ctx->argument(5).toNumber(ctx) : 0;
-        double ms    = ctx->argumentCount >= 7 ? ctx->argument(6).toNumber(ctx) : 0;
+    else { // argc > 1
+        double year  = args[0].toNumber(ctx);
+        double month = args[1].toNumber(ctx);
+        double day  = argc >= 3 ? args[2].toNumber(ctx) : 1;
+        double hours = argc >= 4 ? args[3].toNumber(ctx) : 0;
+        double mins = argc >= 5 ? args[4].toNumber(ctx) : 0;
+        double secs = argc >= 6 ? args[5].toNumber(ctx) : 0;
+        double ms    = argc >= 7 ? args[6].toNumber(ctx) : 0;
         if (year >= 0 && year <= 99)
             year += 1900;
         t = MakeDate(MakeDay(year, month, day), MakeTime(hours, mins, secs, ms));

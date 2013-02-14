@@ -69,16 +69,16 @@ protected:
 };
 
 struct EvalErrorObject: ErrorObject {
-    EvalErrorObject(ExecutionContext *ctx);
+    EvalErrorObject(ExecutionContext *ctx, const Value &message);
 };
 
 struct RangeErrorObject: ErrorObject {
-    RangeErrorObject(ExecutionContext *ctx);
+    RangeErrorObject(ExecutionContext *ctx, const Value &message);
     RangeErrorObject(ExecutionContext *ctx, const QString &msg);
 };
 
 struct ReferenceErrorObject: ErrorObject {
-    ReferenceErrorObject(ExecutionContext *ctx);
+    ReferenceErrorObject(ExecutionContext *ctx, const Value &message);
     ReferenceErrorObject(ExecutionContext *ctx, const QString &msg);
 };
 
@@ -94,63 +94,62 @@ private:
 };
 
 struct TypeErrorObject: ErrorObject {
-    TypeErrorObject(ExecutionContext *ctx);
+    TypeErrorObject(ExecutionContext *ctx, const Value &message);
     TypeErrorObject(ExecutionContext *ctx, const QString &msg);
 };
 
 struct URIErrorObject: ErrorObject {
-    URIErrorObject(ExecutionContext *ctx);
-    URIErrorObject(ExecutionContext *ctx, Value);
+    URIErrorObject(ExecutionContext *ctx, const Value &message);
 };
 
 struct ErrorCtor: FunctionObject
 {
     ErrorCtor(ExecutionContext *scope);
 
-    virtual Value construct(ExecutionContext *ctx);
-    virtual Value call(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *context, Value *args, int argc);
+    virtual Value call(ExecutionContext *ctx, Value thisObject, Value *args, int argc);
 };
 
 struct EvalErrorCtor: ErrorCtor
 {
     EvalErrorCtor(ExecutionContext *scope): ErrorCtor(scope) {}
 
-    virtual Value construct(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx, Value *, int argc);
 };
 
 struct RangeErrorCtor: ErrorCtor
 {
     RangeErrorCtor(ExecutionContext *scope): ErrorCtor(scope) {}
 
-    virtual Value construct(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
 };
 
 struct ReferenceErrorCtor: ErrorCtor
 {
     ReferenceErrorCtor(ExecutionContext *scope): ErrorCtor(scope) {}
 
-    virtual Value construct(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
 };
 
 struct SyntaxErrorCtor: ErrorCtor
 {
     SyntaxErrorCtor(ExecutionContext *scope): ErrorCtor(scope) {}
 
-    virtual Value construct(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx, Value *, int);
 };
 
 struct TypeErrorCtor: ErrorCtor
 {
     TypeErrorCtor(ExecutionContext *scope): ErrorCtor(scope) {}
 
-    virtual Value construct(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
 };
 
 struct URIErrorCtor: ErrorCtor
 {
     URIErrorCtor(ExecutionContext *scope): ErrorCtor(scope) {}
 
-    virtual Value construct(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
 };
 
 
@@ -166,19 +165,19 @@ struct ErrorPrototype: ErrorObject
 
 struct EvalErrorPrototype: EvalErrorObject
 {
-    EvalErrorPrototype(ExecutionContext *ctx): EvalErrorObject(ctx) {}
+    EvalErrorPrototype(ExecutionContext *ctx): EvalErrorObject(ctx, Value::undefinedValue()) {}
     void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
 };
 
 struct RangeErrorPrototype: RangeErrorObject
 {
-    RangeErrorPrototype(ExecutionContext *ctx): RangeErrorObject(ctx) {}
+    RangeErrorPrototype(ExecutionContext *ctx): RangeErrorObject(ctx, Value::undefinedValue()) {}
     void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
 };
 
 struct ReferenceErrorPrototype: ReferenceErrorObject
 {
-    ReferenceErrorPrototype(ExecutionContext *ctx): ReferenceErrorObject(ctx) {}
+    ReferenceErrorPrototype(ExecutionContext *ctx): ReferenceErrorObject(ctx, Value::undefinedValue()) {}
     void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
 };
 
@@ -190,13 +189,13 @@ struct SyntaxErrorPrototype: SyntaxErrorObject
 
 struct TypeErrorPrototype: TypeErrorObject
 {
-    TypeErrorPrototype(ExecutionContext *ctx): TypeErrorObject(ctx) {}
+    TypeErrorPrototype(ExecutionContext *ctx): TypeErrorObject(ctx, Value::undefinedValue()) {}
     void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
 };
 
 struct URIErrorPrototype: URIErrorObject
 {
-    URIErrorPrototype(ExecutionContext *ctx): URIErrorObject(ctx) {}
+    URIErrorPrototype(ExecutionContext *ctx): URIErrorObject(ctx, Value::undefinedValue()) {}
     void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
 };
 

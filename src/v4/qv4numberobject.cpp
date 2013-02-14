@@ -54,9 +54,9 @@ NumberCtor::NumberCtor(ExecutionContext *scope)
 {
 }
 
-Value NumberCtor::construct(ExecutionContext *ctx)
+Value NumberCtor::construct(ExecutionContext *ctx, Value *args, int argc)
 {
-    double d = ctx->argumentCount ? ctx->argument(0).toNumber(ctx) : 0;
+    double d = argc ? args[0].toNumber(ctx) : 0.;
     return Value::fromObject(ctx->engine->newNumberObject(Value::fromDouble(d)));
 }
 

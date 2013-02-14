@@ -408,7 +408,7 @@ Value EvalFunction::call(ExecutionContext *context, Value thisObject, Value *arg
     return evalCall(context, thisObject, args, argc, false);
 }
 
-Value EvalFunction::construct(ExecutionContext *ctx)
+Value EvalFunction::construct(ExecutionContext *ctx, Value *, int)
 {
     ctx->throwTypeError();
     return Value::undefinedValue();
