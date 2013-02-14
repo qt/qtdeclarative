@@ -103,7 +103,7 @@ struct GC: public FunctionObject
         vtbl = &static_vtbl;
         name = scope->engine->newString("gc");
     }
-    static Value call(Managed *, ExecutionContext *ctx, const Value &, Value *args, int argc)
+    static Value call(Managed *, ExecutionContext *ctx, const Value &, Value *, int)
     {
         ctx->engine->memoryManager->runGC();
         return Value::undefinedValue();
