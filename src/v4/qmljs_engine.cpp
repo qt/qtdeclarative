@@ -80,6 +80,15 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     rootContext->init(this);
     current = rootContext;
 
+    id_undefined = newIdentifier(QStringLiteral("undefined"));
+    id_null = newIdentifier(QStringLiteral("null"));
+    id_true = newIdentifier(QStringLiteral("true"));
+    id_false = newIdentifier(QStringLiteral("false"));
+    id_boolean = newIdentifier(QStringLiteral("boolean"));
+    id_number = newIdentifier(QStringLiteral("number"));
+    id_string = newIdentifier(QStringLiteral("string"));
+    id_object = newIdentifier(QStringLiteral("object"));
+    id_function = newIdentifier(QStringLiteral("function"));
     id_length = newIdentifier(QStringLiteral("length"));
     id_prototype = newIdentifier(QStringLiteral("prototype"));
     id_constructor = newIdentifier(QStringLiteral("constructor"));

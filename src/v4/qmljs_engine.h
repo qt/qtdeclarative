@@ -150,6 +150,15 @@ struct Q_V4_EXPORT ExecutionEngine
 
     QVector<PropertyDescriptor> argumentsAccessors;
 
+    String *id_undefined;
+    String *id_null;
+    String *id_true;
+    String *id_false;
+    String *id_boolean;
+    String *id_number;
+    String *id_string;
+    String *id_object;
+    String *id_function;
     String *id_length;
     String *id_prototype;
     String *id_constructor;

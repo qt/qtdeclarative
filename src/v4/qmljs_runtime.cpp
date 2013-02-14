@@ -144,51 +144,6 @@ Function *__qmljs_register_function(ExecutionContext *ctx, String *name,
     return f;
 }
 
-Value __qmljs_string_literal_undefined(ExecutionContext *ctx)
-{
-    return Value::fromString(ctx->engine->newString(QStringLiteral("undefined")));
-}
-
-Value __qmljs_string_literal_null(ExecutionContext *ctx)
-{
-    return Value::fromString(ctx->engine->newString(QStringLiteral("null")));
-}
-
-Value __qmljs_string_literal_true(ExecutionContext *ctx)
-{
-    return Value::fromString(ctx->engine->newString(QStringLiteral("true")));
-}
-
-Value __qmljs_string_literal_false(ExecutionContext *ctx)
-{
-    return Value::fromString(ctx->engine->newString(QStringLiteral("false")));
-}
-
-Value __qmljs_string_literal_object(ExecutionContext *ctx)
-{
-    return Value::fromString(ctx->engine->newString(QStringLiteral("object")));
-}
-
-Value __qmljs_string_literal_boolean(ExecutionContext *ctx)
-{
-    return Value::fromString(ctx->engine->newString(QStringLiteral("boolean")));
-}
-
-Value __qmljs_string_literal_number(ExecutionContext *ctx)
-{
-    return Value::fromString(ctx->engine->newString(QStringLiteral("number")));
-}
-
-Value __qmljs_string_literal_string(ExecutionContext *ctx)
-{
-    return Value::fromString(ctx->engine->newString(QStringLiteral("string")));
-}
-
-Value __qmljs_string_literal_function(ExecutionContext *ctx)
-{
-    return Value::fromString(ctx->engine->newString(QStringLiteral("function")));
-}
-
 void __qmljs_delete_subscript(ExecutionContext *ctx, Value *result, const Value &base, const Value &index)
 {
     if (Object *o = base.asObject()) {
@@ -448,19 +403,9 @@ void __qmljs_inplace_ushr_member(ExecutionContext *ctx, const Value &base, Strin
     o->inplaceBinOp(ctx, __qmljs_ushr, name, rhs);
 }
 
-String *__qmljs_string_from_utf8(ExecutionContext *ctx, const char *s)
-{
-    return ctx->engine->newString(QString::fromUtf8(s));
-}
-
 String *__qmljs_identifier_from_utf8(ExecutionContext *ctx, const char *s)
 {
     return ctx->engine->newString(QString::fromUtf8(s));
-}
-
-int __qmljs_string_length(ExecutionContext *, String *string)
-{
-    return string->toQString().length();
 }
 
 double __qmljs_string_to_number(const String *string)
@@ -504,11 +449,6 @@ Bool __qmljs_string_equal(String *left, String *right)
 String *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *second)
 {
     return ctx->engine->newString(first->toQString() + second->toQString());
-}
-
-Bool __qmljs_is_function(Value value)
-{
-    return value.objectValue()->asFunctionObject() != 0;
 }
 
 Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int typeHint)
@@ -572,6 +512,33 @@ Object *__qmljs_convert_to_object(ExecutionContext *ctx, const Value &value)
     }
 }
 
+String *__qmljs_convert_to_string(ExecutionContext *ctx, const Value &value)
+{
+    switch (value.type()) {
+    case Value::Undefined_Type:
+        return ctx->engine->id_undefined;
+    case Value::Null_Type:
+        return ctx->engine->id_null;
+    case Value::Boolean_Type:
+        if (value.booleanValue())
+            return ctx->engine->id_true;
+        else
+            return ctx->engine->id_false;
+    case Value::String_Type:
+        return value.stringValue();
+    case Value::Object_Type: {
+        Value prim = __qmljs_to_primitive(value, ctx, STRING_HINT);
+        if (prim.isPrimitive())
+            return __qmljs_convert_to_string(ctx, prim);
+        else
+            __qmljs_throw_type_error(ctx);
+    }
+    case Value::Integer_Type:
+        return __qmljs_string_from_number(ctx, value.int_32).stringValue();
+    default: // double
+        return __qmljs_string_from_number(ctx, value.doubleValue()).stringValue();
+    } // switch
+}
 
 void __qmljs_set_property(ExecutionContext *ctx, const Value &object, String *name, const Value &value)
 {
@@ -925,7 +892,7 @@ void __qmljs_call_element(ExecutionContext *context, Value *result, const Value 
     Value thisObject = Value::fromObject(baseObject);
 
     Value func = baseObject->__get__(context, index.toString(context));
-    FunctionObject *o = func.asFunctionObject();
+    Object *o = func.asObject();
     if (!o)
         context->throwTypeError();
 
@@ -936,7 +903,7 @@ void __qmljs_call_element(ExecutionContext *context, Value *result, const Value 
 
 void __qmljs_call_value(ExecutionContext *context, Value *result, const Value *thisObject, const Value &func, Value *args, int argc)
 {
-    FunctionObject *o = func.asFunctionObject();
+    Object *o = func.asObject();
     if (!o)
         context->throwTypeError();
     Value res = o->call(context, thisObject ? *thisObject : Value::undefinedValue(), args, argc);
@@ -952,7 +919,7 @@ void __qmljs_construct_activation_property(ExecutionContext *context, Value *res
 
 void __qmljs_construct_value(ExecutionContext *context, Value *result, const Value &func, Value *args, int argc)
 {
-    if (FunctionObject *f = func.asFunctionObject()) {
+    if (Object *f = func.asObject()) {
         Value res = f->construct(context, args, argc);
         if (result)
             *result = res;
@@ -967,7 +934,7 @@ void __qmljs_construct_property(ExecutionContext *context, Value *result, const 
     Object *thisObject = base.toObject(context);
 
     Value func = thisObject->__get__(context, name);
-    if (FunctionObject *f = func.asFunctionObject()) {
+    if (Object *f = func.asObject()) {
         Value res = f->construct(context, args, argc);
         if (result)
             *result = res;
@@ -1024,29 +991,31 @@ void __qmljs_builtin_typeof(ExecutionContext *ctx, Value *result, const Value &v
 {
     if (!result)
         return;
+    String *res = 0;
     switch (value.type()) {
     case Value::Undefined_Type:
-        *result =__qmljs_string_literal_undefined(ctx);
+        res = ctx->engine->id_undefined;
         break;
     case Value::Null_Type:
-        *result = __qmljs_string_literal_object(ctx);
+        res = ctx->engine->id_object;
         break;
     case Value::Boolean_Type:
-        *result =__qmljs_string_literal_boolean(ctx);
+        res = ctx->engine->id_boolean;
         break;
     case Value::String_Type:
-        *result = __qmljs_string_literal_string(ctx);
+        res = ctx->engine->id_string;
         break;
     case Value::Object_Type:
-        if (__qmljs_is_callable(value, ctx))
-            *result =__qmljs_string_literal_function(ctx);
+        if (value.objectValue()->asFunctionObject())
+            res = ctx->engine->id_function;
         else
-            *result = __qmljs_string_literal_object(ctx); // ### implementation-defined
+            res = ctx->engine->id_object; // ### implementation-defined
         break;
     default:
-        *result =__qmljs_string_literal_number(ctx);
+        res = ctx->engine->id_number;
         break;
     }
+    *result = Value::fromString(res);
 }
 
 void __qmljs_builtin_typeof_name(ExecutionContext *context, Value *result, String *name)

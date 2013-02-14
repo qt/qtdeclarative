@@ -41,6 +41,7 @@
 #ifndef QMLJS_RUNTIME_H
 #define QMLJS_RUNTIME_H
 
+#include "qv4global.h"
 #include "qmljs_value.h"
 #include "qmljs_math.h"
 
@@ -135,28 +136,13 @@ VM::Function *__qmljs_register_function(ExecutionContext *ctx, String *name,
                                         String **formals, unsigned formalCount,
                                         String **locals, unsigned localCount);
 
-Bool __qmljs_is_function(Value value);
-
-// string literals
-Value __qmljs_string_literal_undefined(ExecutionContext *ctx);
-Value __qmljs_string_literal_null(ExecutionContext *ctx);
-Value __qmljs_string_literal_true(ExecutionContext *ctx);
-Value __qmljs_string_literal_false(ExecutionContext *ctx);
-Value __qmljs_string_literal_object(ExecutionContext *ctx);
-Value __qmljs_string_literal_boolean(ExecutionContext *ctx);
-Value __qmljs_string_literal_number(ExecutionContext *ctx);
-Value __qmljs_string_literal_string(ExecutionContext *ctx);
-Value __qmljs_string_literal_function(ExecutionContext *ctx);
 
 // strings
-String *__qmljs_string_from_utf8(ExecutionContext *ctx, const char *s);
-int __qmljs_string_length(ExecutionContext *ctx, String *string);
 double __qmljs_string_to_number(const String *string);
 Value __qmljs_string_from_number(ExecutionContext *ctx, double number);
 Bool __qmljs_string_compare(ExecutionContext *ctx, String *left, String *right);
 Bool __qmljs_string_equal(String *left, String *right);
 String *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *second);
-String *__qmljs_identifier_from_utf8(ExecutionContext *ctx, const char *s);
 
 // objects
 Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int typeHint);
@@ -184,14 +170,10 @@ Value __qmljs_get_thisObject(ExecutionContext *ctx);
 Value __qmljs_to_primitive(const Value &value, ExecutionContext *ctx, int typeHint);
 Bool __qmljs_to_boolean(const Value &value, ExecutionContext *ctx);
 double __qmljs_to_number(const Value &value, ExecutionContext *ctx);
-double __qmljs_to_integer(const Value &value, ExecutionContext *ctx);
-int __qmljs_to_int32(const Value &value, ExecutionContext *ctx);
-unsigned short __qmljs_to_uint16(const Value &value, ExecutionContext *ctx);
 Value __qmljs_to_string(const Value &value, ExecutionContext *ctx);
+Q_V4_EXPORT String *__qmljs_convert_to_string(ExecutionContext *ctx, const Value &value);
 Value __qmljs_to_object(ExecutionContext *ctx, const Value &value);
 Object *__qmljs_convert_to_object(ExecutionContext *ctx, const Value &value);
-//uint __qmljs_check_object_coercible(Context *ctx, Value *result, Value *value);
-Bool __qmljs_is_callable(const Value &value, ExecutionContext *ctx);
 Value __qmljs_default_value(const Value &value, ExecutionContext *ctx, int typeHint);
 
 Bool __qmljs_equal(const Value &x, const Value &y, ExecutionContext *ctx);
@@ -313,7 +295,7 @@ inline Bool __qmljs_to_boolean(const Value &value, ExecutionContext *ctx)
     case Value::Integer_Type:
         return (bool)value.int_32;
     case Value::String_Type:
-        return __qmljs_string_length(ctx, value.stringValue()) > 0;
+        return value.stringValue()->toQString().length() > 0;
     case Value::Object_Type:
         return true;
     default: // double
@@ -345,82 +327,11 @@ inline double __qmljs_to_number(const Value &value, ExecutionContext *ctx)
     }
 }
 
-inline double __qmljs_to_integer(const Value &value, ExecutionContext *ctx)
-{
-    if (value.isConvertibleToInt())
-        return value.int_32;
-
-    return Value::toInteger(__qmljs_to_number(value, ctx));
-}
-
-inline int __qmljs_to_int32(const Value &value, ExecutionContext *ctx)
-{
-    if (value.isConvertibleToInt())
-        return value.int_32;
-
-    return Value::toInt32(__qmljs_to_number(value, ctx));
-}
-
-inline unsigned short __qmljs_to_uint16(const Value &value, ExecutionContext *ctx)
-{
-    if (value.isConvertibleToInt())
-        return (ushort)(uint)value.integerValue();
-
-    double number = __qmljs_to_number(value, ctx);
-
-    double D16 = 65536.0;
-    if ((number >= 0 && number < D16))
-        return static_cast<ushort>(number);
-
-    if (!isfinite(number))
-        return +0;
-
-    double d = ::floor(::fabs(number));
-    if (signbit(number))
-        d = -d;
-
-    number = ::fmod(d , D16);
-
-    if (number < 0)
-        number += D16;
-
-    return (unsigned short)number;
-}
-
 inline Value __qmljs_to_string(const Value &value, ExecutionContext *ctx)
 {
-    switch (value.type()) {
-    case Value::Undefined_Type:
-        return __qmljs_string_literal_undefined(ctx);
-        break;
-    case Value::Null_Type:
-        return __qmljs_string_literal_null(ctx);
-        break;
-    case Value::Boolean_Type:
-        if (value.booleanValue())
-            return __qmljs_string_literal_true(ctx);
-        else
-            return __qmljs_string_literal_false(ctx);
-        break;
-    case Value::String_Type:
+    if (value.isString())
         return value;
-        break;
-    case Value::Object_Type: {
-        Value prim = __qmljs_to_primitive(value, ctx, STRING_HINT);
-        if (prim.isPrimitive())
-            return __qmljs_to_string(prim, ctx);
-        else
-            __qmljs_throw_type_error(ctx);
-        break;
-    }
-    case Value::Integer_Type:
-        return __qmljs_string_from_number(ctx, value.int_32);
-        break;
-    default: // double
-        return __qmljs_string_from_number(ctx, value.doubleValue());
-        break;
-
-    } // switch
+    return Value::fromString(__qmljs_convert_to_string(ctx, value));
 }
 
 inline Value __qmljs_to_object(ExecutionContext *ctx, const Value &value)
@@ -430,27 +341,6 @@ inline Value __qmljs_to_object(ExecutionContext *ctx, const Value &value)
     return Value::fromObject(__qmljs_convert_to_object(ctx, value));
 }
 
-/*
-inline uint __qmljs_check_object_coercible(Context *ctx, Value *result, Value *value)
-{
-    switch (value->type()) {
-    case Value::Undefined_Type:
-    case Value::Null_Type:
-        *result = __qmljs_throw_type_error(ctx);
-        return false;
-    default:
-        return true;
-    }
-}
-*/
-
-inline Bool __qmljs_is_callable(const Value &value, ExecutionContext * /*ctx*/)
-{
-    if (value.isObject())
-        return __qmljs_is_function(value);
-    else
-        return false;
-}
 
 inline Value __qmljs_default_value(const Value &value, ExecutionContext *ctx, int typeHint)
 {

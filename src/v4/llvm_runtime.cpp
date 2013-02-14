@@ -41,6 +41,7 @@
 
 #include "qmljs_runtime.h"
 #include "qmljs_environment.h"
+#include "qmljs_engine.h"
 #include <stdio.h>
 #include <setjmp.h>
 
@@ -80,7 +81,7 @@ void __qmljs_llvm_init_number(Value *result, double value)
 
 void __qmljs_llvm_init_string(ExecutionContext *ctx, Value *result, const char *str)
 {
-    *result = Value::fromString(__qmljs_string_from_utf8(ctx, str));
+    *result = Value::fromString(ctx->engine->newString(QString::fromUtf8(str)));
 }
 
 void __qmljs_llvm_init_closure(ExecutionContext *ctx, Value *result,
@@ -395,7 +396,7 @@ void __qmljs_llvm_inplace_ushr_member(ExecutionContext *ctx, Value *value, Value
 
 String *__qmljs_llvm_identifier_from_utf8(ExecutionContext *ctx, const char *str)
 {
-    return __qmljs_identifier_from_utf8(ctx, str); // ### make it unique
+    return ctx->engine->newIdentifier(QString::fromUtf8(str));
 }
 
 void __qmljs_llvm_call_activation_property(ExecutionContext *context, Value *result, String *name, Value *args, int argc)

@@ -50,7 +50,28 @@ namespace VM {
 
 int Value::toUInt16(ExecutionContext *ctx) const
 {
-    return __qmljs_to_uint16(*this, ctx);
+    if (isConvertibleToInt())
+        return (ushort)(uint)integerValue();
+
+    double number = __qmljs_to_number(*this, ctx);
+
+    double D16 = 65536.0;
+    if ((number >= 0 && number < D16))
+        return static_cast<ushort>(number);
+
+    if (!isfinite(number))
+        return +0;
+
+    double d = ::floor(::fabs(number));
+    if (signbit(number))
+        d = -d;
+
+    number = ::fmod(d , D16);
+
+    if (number < 0)
+        number += D16;
+
+    return (unsigned short)number;
 }
 
 Bool Value::toBoolean(ExecutionContext *ctx) const
@@ -60,19 +81,15 @@ Bool Value::toBoolean(ExecutionContext *ctx) const
 
 double Value::toInteger(ExecutionContext *ctx) const
 {
-    return __qmljs_to_integer(*this, ctx);
+    if (isConvertibleToInt())
+        return int_32;
+
+    return Value::toInteger(__qmljs_to_number(*this, ctx));
 }
 
 double Value::toNumber(ExecutionContext *ctx) const
 {
     return __qmljs_to_number(*this, ctx);
-}
-
-String *Value::toString(ExecutionContext *ctx) const
-{
-    Value v = __qmljs_to_string(*this, ctx);
-    assert(v.isString());
-    return v.stringValue();
 }
 
 bool Value::sameValue(Value other) const {
