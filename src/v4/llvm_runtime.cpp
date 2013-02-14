@@ -95,7 +95,7 @@ void __qmljs_llvm_init_closure(ExecutionContext *ctx, Value *result,
                                                hasNestedFunctions,
                                                formals, formalCount,
                                                locals, localCount);
-    *result = __qmljs_init_closure(clos, ctx);
+    __qmljs_init_closure(ctx, result, clos);
 }
 
 bool __qmljs_llvm_to_boolean(ExecutionContext *ctx, const Value *value)

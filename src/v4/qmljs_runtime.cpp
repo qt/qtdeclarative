@@ -114,10 +114,10 @@ QString numberToString(double num, int radix = 10)
 
 extern "C" {
 
-Value __qmljs_init_closure(VM::Function *clos, ExecutionContext *ctx)
+void __qmljs_init_closure(ExecutionContext *ctx, Value *result, VM::Function *clos)
 {
     assert(clos);
-    return Value::fromObject(ctx->engine->newScriptFunction(ctx, clos));
+    *result = Value::fromObject(ctx->engine->newScriptFunction(ctx, clos));
 }
 
 Function *__qmljs_register_function(ExecutionContext *ctx, String *name,

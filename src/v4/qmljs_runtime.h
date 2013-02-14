@@ -127,7 +127,7 @@ void __qmljs_builtin_define_array_property(Value object, int index, Value val, E
 void __qmljs_builtin_define_getter_setter(Value object, String *name, Value getter, Value setter, ExecutionContext *ctx);
 
 // constructors
-Value __qmljs_init_closure(VM::Function *clos, ExecutionContext *ctx);
+void __qmljs_init_closure(ExecutionContext *ctx, Value *result, VM::Function *clos);
 VM::Function *__qmljs_register_function(ExecutionContext *ctx, String *name,
                                         bool hasDirectEval,
                                         bool usesArgumentsObject, bool isStrict,

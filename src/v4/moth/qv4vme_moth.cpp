@@ -172,7 +172,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(LoadValue)
 
     MOTH_BEGIN_INSTR(LoadClosure)
-        VALUE(instr.result) = __qmljs_init_closure(instr.value, context);
+        __qmljs_init_closure(context, VALUEPTR(instr.result), instr.value);
     MOTH_END_INSTR(LoadClosure)
 
     MOTH_BEGIN_INSTR(LoadName)

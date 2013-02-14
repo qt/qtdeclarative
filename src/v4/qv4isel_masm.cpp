@@ -690,7 +690,7 @@ void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
 {
     VM::Function *vmFunc = vmFunction(closure->value);
     assert(vmFunc);
-    generateFunctionCall(target, __qmljs_init_closure, Assembler::TrustedImmPtr(vmFunc), Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_init_closure, Assembler::ContextRegister, Assembler::PointerToValue(target), Assembler::TrustedImmPtr(vmFunc));
 }
 
 void InstructionSelection::getProperty(IR::Temp *base, const QString &name, IR::Temp *target)
