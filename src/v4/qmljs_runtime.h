@@ -101,10 +101,10 @@ void __qmljs_construct_activation_property(ExecutionContext *, Value *result, St
 Value __qmljs_construct_property(ExecutionContext *context, Value base, String *name, Value *args, int argc);
 Value __qmljs_construct_value(ExecutionContext *context, Value func, Value *args, int argc);
 
-Value __qmljs_builtin_typeof(Value val, ExecutionContext *ctx);
-Value __qmljs_builtin_typeof_name(String *name, ExecutionContext *context);
+void __qmljs_builtin_typeof(ExecutionContext *ctx, Value *result, const Value &val);
+void __qmljs_builtin_typeof_name(ExecutionContext *context, Value* result, String *name);
 void __qmljs_builtin_typeof_member(ExecutionContext* context, Value* result, const Value &base, String *name);
-Value __qmljs_builtin_typeof_element(Value base, Value index, ExecutionContext *context);
+void __qmljs_builtin_typeof_element(ExecutionContext* context, Value *result, const Value &base, const Value &index);
 
 void __qmljs_builtin_post_increment(ExecutionContext *ctx, Value *result, Value *val);
 void __qmljs_builtin_post_increment_name(ExecutionContext *context, Value *result, String *name);

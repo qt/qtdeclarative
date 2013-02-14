@@ -1006,50 +1006,54 @@ Value __qmljs_get_exception(ExecutionContext *context)
     return context->engine->exception;
 }
 
-Value __qmljs_builtin_typeof(Value value, ExecutionContext *ctx)
+void __qmljs_builtin_typeof(ExecutionContext *ctx, Value *result, const Value &value)
 {
+    if (!result)
+        return;
     switch (value.type()) {
     case Value::Undefined_Type:
-        return __qmljs_string_literal_undefined(ctx);
+        *result =__qmljs_string_literal_undefined(ctx);
         break;
     case Value::Null_Type:
-        return __qmljs_string_literal_object(ctx);
+        *result = __qmljs_string_literal_object(ctx);
         break;
     case Value::Boolean_Type:
-        return __qmljs_string_literal_boolean(ctx);
+        *result =__qmljs_string_literal_boolean(ctx);
         break;
     case Value::String_Type:
-        return __qmljs_string_literal_string(ctx);
+        *result = __qmljs_string_literal_string(ctx);
         break;
     case Value::Object_Type:
         if (__qmljs_is_callable(value, ctx))
-            return __qmljs_string_literal_function(ctx);
+            *result =__qmljs_string_literal_function(ctx);
         else
-            return __qmljs_string_literal_object(ctx); // ### implementation-defined
+            *result = __qmljs_string_literal_object(ctx); // ### implementation-defined
         break;
     default:
-        return __qmljs_string_literal_number(ctx);
+        *result =__qmljs_string_literal_number(ctx);
         break;
     }
 }
 
-Value __qmljs_builtin_typeof_name(String *name, ExecutionContext *context)
+void __qmljs_builtin_typeof_name(ExecutionContext *context, Value *result, String *name)
 {
-    return __qmljs_builtin_typeof(context->getPropertyNoThrow(name), context);
+    if (result)
+        __qmljs_builtin_typeof(context, result, context->getPropertyNoThrow(name));
 }
 
 void __qmljs_builtin_typeof_member(ExecutionContext *context, Value *result, const Value &base, String *name)
 {
     Value obj = base.toObject(context);
     if (result)
-        *result = __qmljs_builtin_typeof(obj.objectValue()->__get__(context, name), context);
+        __qmljs_builtin_typeof(context, result, obj.objectValue()->__get__(context, name));
 }
 
-Value __qmljs_builtin_typeof_element(Value base, Value index, ExecutionContext *context)
+void __qmljs_builtin_typeof_element(ExecutionContext *context, Value *result, const Value &base, const Value &index)
 {
     String *name = index.toString(context);
     Value obj = base.toObject(context);
-    return __qmljs_builtin_typeof(obj.objectValue()->__get__(context, name), context);
+    if (result)
+        __qmljs_builtin_typeof(context, result, obj.objectValue()->__get__(context, name));
 }
 
 void __qmljs_builtin_post_increment(ExecutionContext *ctx, Value *result, Value *val)

@@ -465,7 +465,7 @@ void __qmljs_llvm_builtin_declare_var(ExecutionContext *ctx, bool deletable, Str
 
 void __qmljs_llvm_typeof(ExecutionContext *ctx, Value *result, const Value *value)
 {
-    *result = __qmljs_builtin_typeof(*value, ctx);
+    __qmljs_builtin_typeof(ctx, result, *value);
 }
 
 void __qmljs_llvm_throw(ExecutionContext *context, Value *value)

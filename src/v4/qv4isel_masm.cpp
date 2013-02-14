@@ -485,17 +485,17 @@ void InstructionSelection::callBuiltinTypeofMember(IR::Temp *base, const QString
 
 void InstructionSelection::callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_builtin_typeof_element, base, index, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof_element, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(base), Assembler::PointerToValue(index));
 }
 
 void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_builtin_typeof_name, identifier(name), Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof_name, Assembler::ContextRegister, Assembler::PointerToValue(result), identifier(name));
 }
 
 void InstructionSelection::callBuiltinTypeofValue(IR::Temp *value, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_builtin_typeof, value, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(value));
 }
 
 void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result)

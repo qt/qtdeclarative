@@ -316,15 +316,15 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinTypeofMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofSubscript)
-        VALUE(instr.result) = __qmljs_builtin_typeof_element(VALUE(instr.base), VALUE(instr.index), context);
+        __qmljs_builtin_typeof_element(context, VALUEPTR(instr.result), VALUE(instr.base), VALUE(instr.index));
     MOTH_END_INSTR(CallBuiltinTypeofSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofName)
-        VALUE(instr.result) = __qmljs_builtin_typeof_name(instr.name, context);
+        __qmljs_builtin_typeof_name(context, VALUEPTR(instr.result), instr.name);
     MOTH_END_INSTR(CallBuiltinTypeofName)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofValue)
-        VALUE(instr.result) = __qmljs_builtin_typeof(VALUE(instr.value), context);
+        __qmljs_builtin_typeof(context, VALUEPTR(instr.result), VALUE(instr.value));
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncMember)
