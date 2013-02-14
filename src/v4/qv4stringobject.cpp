@@ -119,11 +119,11 @@ StringCtor::StringCtor(ExecutionContext *scope)
 {
 }
 
-Value StringCtor::construct(ExecutionContext *ctx)
+Value StringCtor::construct(ExecutionContext *ctx, Value *argv, int argc)
 {
     Value value;
-    if (ctx->argumentCount)
-        value = Value::fromString(ctx->argument(0).toString(ctx));
+    if (argc)
+        value = Value::fromString(argv[0].toString(ctx));
     else
         value = Value::fromString(ctx, QString());
     return Value::fromObject(ctx->engine->newStringObject(ctx, value));

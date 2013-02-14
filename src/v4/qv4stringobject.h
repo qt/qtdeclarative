@@ -66,7 +66,7 @@ struct StringCtor: FunctionObject
 {
     StringCtor(ExecutionContext *scope);
 
-    virtual Value construct(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx, Value *argv, int argc);
     virtual Value call(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
 };
 

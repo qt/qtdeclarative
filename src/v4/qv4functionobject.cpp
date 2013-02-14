@@ -143,7 +143,7 @@ Value FunctionObject::construct(ExecutionContext *context, Value *args, int argc
     ctx->argumentCount = argc;
 
     ctx->initCallContext(context);
-    Value result = construct(ctx);
+    Value result = call(ctx);
     ctx->leaveCallContext();
 
     if (result.isObject())
@@ -200,11 +200,6 @@ Value FunctionObject::call(ExecutionContext *ctx)
 {
     Q_UNUSED(ctx);
     return Value::undefinedValue();
-}
-
-Value FunctionObject::construct(ExecutionContext *ctx)
-{
-    return call(ctx);
 }
 
 const ManagedVTable FunctionObject::static_vtbl =

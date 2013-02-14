@@ -106,7 +106,7 @@ struct ErrorCtor: FunctionObject
 {
     ErrorCtor(ExecutionContext *scope);
 
-    virtual Value construct(ExecutionContext *context, Value *args, int argc);
+    virtual Value construct(ExecutionContext *ctx, Value *args, int argc);
     virtual Value call(ExecutionContext *ctx, Value thisObject, Value *args, int argc);
 };
 

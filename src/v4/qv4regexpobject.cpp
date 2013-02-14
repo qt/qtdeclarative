@@ -98,10 +98,10 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
 {
 }
 
-Value RegExpCtor::construct(ExecutionContext *ctx)
+Value RegExpCtor::construct(ExecutionContext *ctx, Value *argv, int argc)
 {
-    Value r = ctx->argumentCount > 0 ? ctx->argument(0) : Value::undefinedValue();
-    Value f = ctx->argumentCount > 1 ? ctx->argument(1) : Value::undefinedValue();
+    Value r = argc > 0 ? argv[0] : Value::undefinedValue();
+    Value f = argc > 1 ? argv[1] : Value::undefinedValue();
     if (RegExpObject *re = r.asRegExpObject()) {
         if (!f.isUndefined())
             ctx->throwTypeError();
@@ -142,14 +142,14 @@ Value RegExpCtor::construct(ExecutionContext *ctx)
     return Value::fromObject(o);
 }
 
-Value RegExpCtor::call(ExecutionContext *ctx)
+Value RegExpCtor::call(ExecutionContext *ctx, Value thisObject, Value *argv, int argc)
 {
-    if (ctx->argumentCount > 0 && ctx->argument(0).asRegExpObject()) {
-        if (ctx->argumentCount == 1 || ctx->argument(1).isUndefined())
-            return ctx->argument(0);
+    if (argc > 0 && argv[0].asRegExpObject()) {
+        if (argc == 1 || argv[1].isUndefined())
+            return argv[0];
     }
 
-    return construct(ctx);
+    return construct(ctx, argv, argc);
 }
 
 void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)

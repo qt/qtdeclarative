@@ -163,7 +163,6 @@ struct Q_V4_EXPORT FunctionObject: Object {
 
 protected:
     virtual Value call(ExecutionContext *ctx);
-    virtual Value construct(ExecutionContext *ctx);
 
     static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);

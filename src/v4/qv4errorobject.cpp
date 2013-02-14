@@ -169,9 +169,9 @@ ErrorCtor::ErrorCtor(ExecutionContext *scope)
 {
 }
 
-Value ErrorCtor::construct(ExecutionContext *context, Value *args, int argc)
+Value ErrorCtor::construct(ExecutionContext *ctx, Value *args, int argc)
 {
-    return Value::fromObject(context->engine->newErrorObject(argc ? args[0] : Value::undefinedValue()));
+    return Value::fromObject(ctx->engine->newErrorObject(argc ? args[0] : Value::undefinedValue()));
 }
 
 Value ErrorCtor::call(ExecutionContext *ctx, Value thisObject, Value *args, int argc)

@@ -76,8 +76,8 @@ struct RegExpCtor: FunctionObject
 {
     RegExpCtor(ExecutionContext *scope);
 
-    virtual Value construct(ExecutionContext *ctx);
-    virtual Value call(ExecutionContext *ctx);
+    virtual Value construct(ExecutionContext *ctx, Value *argv, int argc);
+    virtual Value call(ExecutionContext *ctx, Value thisObject, Value *argv, int argc);
 };
 
 struct RegExpPrototype: RegExpObject
