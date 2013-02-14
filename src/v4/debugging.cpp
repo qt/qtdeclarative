@@ -114,8 +114,8 @@ FunctionDebugInfo *Debugger::debugInfo(VM::FunctionObject *function) const
     if (!function)
         return 0;
 
-    if (VM::ScriptFunction *sf = function->asScriptFunction())
-        return _functionInfo[irFunction(sf->function)];
+    if (function->function)
+        return _functionInfo[irFunction(function->function)];
     else
         return 0;
 }

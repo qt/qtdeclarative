@@ -159,8 +159,6 @@ struct Q_V4_EXPORT FunctionObject: Object {
     virtual Value construct(ExecutionContext *context, Value *args, int argc);
     virtual Value call(ExecutionContext *, Value, Value *, int);
 
-    virtual struct ScriptFunction *asScriptFunction() { return 0; }
-
 protected:
     static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);
@@ -198,9 +196,7 @@ struct BuiltinFunction: FunctionObject {
     Value (*code)(ExecutionContext *parentContext, Value thisObject, Value *args, int argc);
 
     BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *, Value, Value *, int));
-    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc) {
-        return code(context, thisObject, args, argc);
-    }
+    virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
     virtual Value construct(ExecutionContext *ctx, Value *, int);
 };
 
@@ -210,8 +206,6 @@ struct ScriptFunction: FunctionObject {
 
     virtual Value call(ExecutionContext *context, Value thisObject, Value *args, int argc);
     virtual Value construct(ExecutionContext *context, Value *args, int argc);
-
-    virtual ScriptFunction *asScriptFunction() { return this; }
 };
 
 struct BoundFunction: FunctionObject {

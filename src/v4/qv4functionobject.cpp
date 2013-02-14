@@ -462,6 +462,11 @@ BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, Value (*
     isBuiltinFunction = true;
 }
 
+Value BuiltinFunction::call(ExecutionContext *context, Value thisObject, Value *args, int argc)
+{
+    return code(context, thisObject, args, argc);
+}
+
 Value BuiltinFunction::construct(ExecutionContext *ctx, Value *, int)
 {
     ctx->throwTypeError();
