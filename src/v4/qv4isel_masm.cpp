@@ -753,8 +753,8 @@ void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *
     } // switch
 
     if (op)
-        _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::PointerToValue(targetTemp), Assembler::PointerToValue(sourceTemp),
-                                      Assembler::ContextRegister);
+        _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::ContextRegister, Assembler::PointerToValue(targetTemp),
+                                     Assembler::PointerToValue(sourceTemp));
 }
 
 void InstructionSelection::binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp *rightSource, IR::Temp *target)

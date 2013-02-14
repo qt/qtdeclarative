@@ -201,13 +201,13 @@ Bool __qmljs_equal(const Value &x, const Value &y, ExecutionContext *ctx);
 Bool __qmljs_strict_equal(const Value &x, const Value &y);
 
 // unary operators
-typedef void (*UnaryOpName)(Value *, const Value &, ExecutionContext* ctx);
-void __qmljs_uplus(Value *result, const Value &value, ExecutionContext *ctx);
-void __qmljs_uminus(Value *result, const Value &value, ExecutionContext *ctx);
-void __qmljs_compl(Value *result, const Value &value, ExecutionContext *ctx);
-void __qmljs_not(Value *result, const Value &value, ExecutionContext *ctx);
-void __qmljs_increment(Value *result, const Value &value, ExecutionContext *ctx);
-void __qmljs_decrement(Value *result, const Value &value, ExecutionContext *ctx);
+typedef void (*UnaryOpName)(ExecutionContext *, Value *, const Value &);
+void __qmljs_uplus(ExecutionContext *ctx, Value *result, const Value &value);
+void __qmljs_uminus(ExecutionContext *ctx, Value *result, const Value &value);
+void __qmljs_compl(ExecutionContext *ctx, Value *result, const Value &value);
+void __qmljs_not(ExecutionContext *ctx, Value *result, const Value &value);
+void __qmljs_increment(ExecutionContext *ctx, Value *result, const Value &value);
+void __qmljs_decrement(ExecutionContext *ctx, Value *result, const Value &value);
 
 void __qmljs_delete_subscript(ExecutionContext *ctx, Value *result, const Value &base, const Value &index);
 void __qmljs_delete_member(ExecutionContext *ctx, Value *result, const Value &base, String *name);
@@ -481,7 +481,7 @@ inline Value __qmljs_default_value(const Value &value, ExecutionContext *ctx, in
 }
 
 
-inline void __qmljs_uplus(Value *result, const Value &value, ExecutionContext *ctx)
+inline void __qmljs_uplus(ExecutionContext *ctx, Value *result, const Value &value)
 {
     TRACE1(value);
 
@@ -493,7 +493,7 @@ inline void __qmljs_uplus(Value *result, const Value &value, ExecutionContext *c
     *result = Value::fromDouble(n);
 }
 
-inline void __qmljs_uminus(Value *result, const Value &value, ExecutionContext *ctx)
+inline void __qmljs_uminus(ExecutionContext *ctx, Value *result, const Value &value)
 {
     TRACE1(value);
 
@@ -506,7 +506,7 @@ inline void __qmljs_uminus(Value *result, const Value &value, ExecutionContext *
     }
 }
 
-inline void __qmljs_compl(Value *result, const Value &value, ExecutionContext *ctx)
+inline void __qmljs_compl(ExecutionContext *ctx, Value *result, const Value &value)
 {
     TRACE1(value);
 
@@ -519,7 +519,7 @@ inline void __qmljs_compl(Value *result, const Value &value, ExecutionContext *c
     *result = Value::fromInt32(~n);
 }
 
-inline void __qmljs_not(Value *result, const Value &value, ExecutionContext *ctx)
+inline void __qmljs_not(ExecutionContext *ctx, Value *result, const Value &value)
 {
     TRACE1(value);
 

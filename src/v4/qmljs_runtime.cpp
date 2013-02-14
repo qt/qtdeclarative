@@ -1297,7 +1297,7 @@ void __qmljs_builtin_define_getter_setter(Value object, String *name, Value gett
     o->__defineOwnProperty__(ctx, name, &pd);
 }
 
-void __qmljs_increment(Value *result, const Value &value, ExecutionContext *ctx)
+void __qmljs_increment(ExecutionContext *ctx, Value *result, const Value &value)
 {
     TRACE1(value);
 
@@ -1309,7 +1309,7 @@ void __qmljs_increment(Value *result, const Value &value, ExecutionContext *ctx)
     }
 }
 
-void __qmljs_decrement(Value *result, const Value &value, ExecutionContext *ctx)
+void __qmljs_decrement(ExecutionContext *ctx, Value *result, const Value &value)
 {
     TRACE1(value);
 

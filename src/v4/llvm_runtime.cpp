@@ -210,22 +210,22 @@ void __qmljs_llvm_in(ExecutionContext *ctx, Value *result, Value *left, Value *r
 
 void __qmljs_llvm_uplus(ExecutionContext *ctx, Value *result, const Value *value)
 {
-    __qmljs_uplus(result, *value, ctx);
+    __qmljs_uplus(ctx, result, *value);
 }
 
 void __qmljs_llvm_uminus(ExecutionContext *ctx, Value *result, const Value *value)
 {
-    __qmljs_uminus(result, *value, ctx);
+    __qmljs_uminus(ctx, result, *value);
 }
 
 void __qmljs_llvm_compl(ExecutionContext *ctx, Value *result, const Value *value)
 {
-    __qmljs_compl(result, *value, ctx);
+    __qmljs_compl(ctx, result, *value);
 }
 
 void __qmljs_llvm_not(ExecutionContext *ctx, Value *result, const Value *value)
 {
-    __qmljs_not(result, *value, ctx);
+    __qmljs_not(ctx, result, *value);
 }
 
 void __qmljs_llvm_inplace_bit_and_name(ExecutionContext *ctx, String *dest, Value *src)
