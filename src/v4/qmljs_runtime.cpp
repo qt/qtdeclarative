@@ -1028,10 +1028,11 @@ Value __qmljs_builtin_typeof_name(String *name, ExecutionContext *context)
     return __qmljs_builtin_typeof(context->getPropertyNoThrow(name), context);
 }
 
-Value __qmljs_builtin_typeof_member(Value base, String *name, ExecutionContext *context)
+void __qmljs_builtin_typeof_member(ExecutionContext *context, Value *result, const Value &base, String *name)
 {
     Value obj = base.toObject(context);
-    return __qmljs_builtin_typeof(obj.objectValue()->__get__(context, name), context);
+    if (result)
+        *result = __qmljs_builtin_typeof(obj.objectValue()->__get__(context, name), context);
 }
 
 Value __qmljs_builtin_typeof_element(Value base, Value index, ExecutionContext *context)

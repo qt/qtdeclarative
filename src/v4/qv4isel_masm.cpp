@@ -480,7 +480,7 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
 
 void InstructionSelection::callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_builtin_typeof_member, base, identifier(name), Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof_member, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(base), identifier(name));
 }
 
 void InstructionSelection::callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)

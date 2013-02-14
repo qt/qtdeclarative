@@ -103,7 +103,7 @@ Value __qmljs_construct_value(ExecutionContext *context, Value func, Value *args
 
 Value __qmljs_builtin_typeof(Value val, ExecutionContext *ctx);
 Value __qmljs_builtin_typeof_name(String *name, ExecutionContext *context);
-Value __qmljs_builtin_typeof_member(Value base, String *name, ExecutionContext *context);
+void __qmljs_builtin_typeof_member(ExecutionContext* context, Value* result, const Value &base, String *name);
 Value __qmljs_builtin_typeof_element(Value base, Value index, ExecutionContext *context);
 
 void __qmljs_builtin_post_increment(ExecutionContext *ctx, Value *result, Value *val);

@@ -312,7 +312,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinDeleteName)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofMember)
-        VALUE(instr.result) = __qmljs_builtin_typeof_member(VALUE(instr.base), instr.member, context);
+        __qmljs_builtin_typeof_member(context, VALUEPTR(instr.result), VALUE(instr.base), instr.member);
     MOTH_END_INSTR(CallBuiltinTypeofMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofSubscript)
