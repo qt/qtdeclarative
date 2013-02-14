@@ -445,7 +445,7 @@ void __qmljs_llvm_construct_property(ExecutionContext *context, Value *result, c
 
 void __qmljs_llvm_get_element(ExecutionContext *ctx, Value *result, Value *object, Value *index)
 {
-    *result = __qmljs_get_element(ctx, *object, *index);
+    __qmljs_get_element(ctx, result, *object, *index);
 }
 
 void __qmljs_llvm_set_element(ExecutionContext *ctx, Value *object, Value *index, Value *value)

@@ -115,7 +115,7 @@ public: // methods from InstructionSelection:
     virtual void getProperty(IR::Temp *sourceBase, const QString &sourceName, IR::Temp *target);
     virtual void setProperty(IR::Temp *source, IR::Temp *targetBase, const QString &targetName);
     virtual void getElement(IR::Temp *sourceBase, IR::Temp *sourceIndex, IR::Temp *target);
-    virtual void setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex);
+    virtual void setElement(IR::Temp *source, IR::Temp *targetBase, IR::Temp *targetIndex);
     virtual void copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp);
     virtual void unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp);
     virtual void binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp *rightSource, IR::Temp *target);

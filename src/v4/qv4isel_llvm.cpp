@@ -647,7 +647,7 @@ void InstructionSelection::getElement(IR::Temp *sourceBase, IR::Temp *sourceInde
                 _llvmFunction->arg_begin(), t, base, index);
 }
 
-void InstructionSelection::setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex)
+void InstructionSelection::setElement(IR::Temp *source, IR::Temp *targetBase, IR::Temp *targetIndex)
 {
     llvm::Value *base = getLLVMTempReference(targetBase);
     llvm::Value *index = getLLVMTempReference(targetIndex);

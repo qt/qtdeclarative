@@ -174,8 +174,8 @@ void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Val
 void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value &object, int lookupIndex, const Value &value);
 
 
-Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index);
-void __qmljs_set_element(ExecutionContext *ctx, Value object, Value index, Value value);
+void __qmljs_get_element(ExecutionContext *ctx, Value *retval, const Value &object, const Value &index);
+void __qmljs_set_element(ExecutionContext *ctx, const Value &object, const Value &index, const Value &value);
 
 // For each
 Value __qmljs_foreach_iterator_object(Value in, ExecutionContext *ctx);
@@ -428,6 +428,9 @@ inline Value __qmljs_to_string(const Value &value, ExecutionContext *ctx)
 
 inline Value __qmljs_to_object(const Value &value, ExecutionContext *ctx)
 {
+    if (value.isObject())
+        return value;
+
     switch (value.type()) {
     case Value::Undefined_Type:
     case Value::Null_Type:
@@ -440,7 +443,7 @@ inline Value __qmljs_to_object(const Value &value, ExecutionContext *ctx)
         return __qmljs_new_string_object(ctx, value.stringValue());
         break;
     case Value::Object_Type:
-        return value;
+        Q_UNREACHABLE();
         break;
     case Value::Integer_Type:
         return __qmljs_new_number_object(ctx, value.int_32);

@@ -463,7 +463,7 @@ void InstructionSelection::getElement(IR::Temp *base, IR::Temp *index, IR::Temp 
     addInstruction(load);
 }
 
-void InstructionSelection::setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex)
+void InstructionSelection::setElement(IR::Temp *source, IR::Temp *targetBase, IR::Temp *targetIndex)
 {
     Instruction::StoreElement store;
     store.base = getParam(targetBase);

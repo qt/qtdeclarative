@@ -131,7 +131,7 @@ public: // to implement by subclasses:
     virtual void getProperty(IR::Temp *base, const QString &name, IR::Temp *target) = 0;
     virtual void setProperty(IR::Temp *source, IR::Temp *targetBase, const QString &targetName) = 0;
     virtual void getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target) = 0;
-    virtual void setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex) = 0;
+    virtual void setElement(IR::Temp *source, IR::Temp *targetBase, IR::Temp *targetIndex) = 0;
     virtual void copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp) = 0;
     virtual void unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp) = 0;
     virtual void binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp *rightSource, IR::Temp *target) = 0;

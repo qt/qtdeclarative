@@ -186,7 +186,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(StoreName)
 
     MOTH_BEGIN_INSTR(LoadElement)
-        VALUE(instr.result) = __qmljs_get_element(context, VALUE(instr.base), VALUE(instr.index));
+         __qmljs_get_element(context, VALUEPTR(instr.result), VALUE(instr.base), VALUE(instr.index));
     MOTH_END_INSTR(LoadElement)
 
     MOTH_BEGIN_INSTR(StoreElement)

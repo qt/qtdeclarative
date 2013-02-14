@@ -151,8 +151,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                 }
             }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                setElement(s->source, ss->base->asTemp(), ss->index->asTemp());
+            if (s->source->asTemp()) {
+                setElement(s->source->asTemp(), ss->base->asTemp(), ss->index->asTemp());
                 return;
             }
         }

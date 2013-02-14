@@ -581,43 +581,52 @@ void __qmljs_set_property(ExecutionContext *ctx, const Value &object, String *na
     o->__put__(ctx, name, value);
 }
 
-Value __qmljs_get_element(ExecutionContext *ctx, Value object, Value index)
+void __qmljs_get_element(ExecutionContext *ctx, Value *result, const Value &object, const Value &index)
 {
     uint type = object.type();
     uint idx = index.asArrayIndex();
 
-    if (type != Value::Object_Type) {
+    Object *o = object.asObject();
+    if (!o) {
         if (type == Value::String_Type && idx < UINT_MAX) {
             String *str = object.stringValue();
-            if (idx >= (uint)str->toQString().length())
-                return Value::undefinedValue();
+            if (idx >= (uint)str->toQString().length()) {
+                if (result)
+                    *result = Value::undefinedValue();
+                return;
+            }
             const QString s = str->toQString().mid(idx, 1);
-            return Value::fromString(ctx, s);
+            if (result)
+                *result = Value::fromString(ctx, s);
+            return;
         }
 
-        object = __qmljs_to_object(object, ctx);
+        o = __qmljs_to_object(object, ctx).objectValue();
     }
-
-    Object *o = object.objectValue();
 
     if (idx < UINT_MAX) {
         const PropertyDescriptor *p = o->nonSparseArrayAt(idx);
-        if (p && p->type == PropertyDescriptor::Data)
-            return p->value;
+        if (p && p->type == PropertyDescriptor::Data) {
+            if (result)
+                *result = p->value;
+            return;
+        }
 
-        return o->__get__(ctx, idx);
+        Value res = o->__get__(ctx, idx);
+        if (result)
+            *result = res;
+        return;
     }
 
     String *name = index.toString(ctx);
-    return o->__get__(ctx, name);
+    Value res = o->__get__(ctx, name);
+    if (result)
+        *result = res;
 }
 
-void __qmljs_set_element(ExecutionContext *ctx, Value object, Value index, Value value)
+void __qmljs_set_element(ExecutionContext *ctx, const Value &object, const Value &index, const Value &value)
 {
-    if (!object.isObject())
-        object = __qmljs_to_object(object, ctx);
-
-    Object *o = object.objectValue();
+    Object *o = __qmljs_to_object(object, ctx).objectValue();
 
     uint idx = index.asArrayIndex();
     if (idx < UINT_MAX) {

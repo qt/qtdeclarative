@@ -721,12 +721,14 @@ void InstructionSelection::setProperty(IR::Temp *source, IR::Temp *targetBase, c
 
 void InstructionSelection::getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target)
 {
-    generateFunctionCall(target, __qmljs_get_element, Assembler::ContextRegister, base, index);
+    generateFunctionCall(Assembler::Void, __qmljs_get_element, Assembler::ContextRegister,
+                         Assembler::PointerToValue(target), Assembler::PointerToValue(base), Assembler::PointerToValue(index));
 }
 
-void InstructionSelection::setElement(IR::Expr *source, IR::Temp *targetBase, IR::Temp *targetIndex)
+void InstructionSelection::setElement(IR::Temp *source, IR::Temp *targetBase, IR::Temp *targetIndex)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_set_element, Assembler::ContextRegister, targetBase, targetIndex, source);
+    generateFunctionCall(Assembler::Void, __qmljs_set_element, Assembler::ContextRegister,
+                         Assembler::PointerToValue(targetBase), Assembler::PointerToValue(targetIndex), Assembler::PointerToValue(source));
 }
 
 void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
