@@ -98,8 +98,8 @@ void __qmljs_call_element(ExecutionContext *context, Value *result, const Value 
 void __qmljs_call_value(ExecutionContext *context, Value *result, const Value *thisObject, const Value &func, Value *args, int argc);
 
 void __qmljs_construct_activation_property(ExecutionContext *, Value *result, String *name, Value *args, int argc);
-Value __qmljs_construct_property(ExecutionContext *context, Value base, String *name, Value *args, int argc);
-Value __qmljs_construct_value(ExecutionContext *context, Value func, Value *args, int argc);
+void __qmljs_construct_property(ExecutionContext *context, Value *result, const Value &base, String *name, Value *args, int argc);
+void __qmljs_construct_value(ExecutionContext *context, Value *result, const Value &func, Value *args, int argc);
 
 void __qmljs_builtin_typeof(ExecutionContext *ctx, Value *result, const Value &val);
 void __qmljs_builtin_typeof_name(ExecutionContext *context, Value* result, String *name);

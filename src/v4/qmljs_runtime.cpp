@@ -935,32 +935,36 @@ void __qmljs_call_value(ExecutionContext *context, Value *result, const Value *t
 void __qmljs_construct_activation_property(ExecutionContext *context, Value *result, String *name, Value *args, int argc)
 {
     Value func = context->getProperty(name);
-    Value res = __qmljs_construct_value(context, func, args, argc);
-    if (result)
-        *result = res;
+    __qmljs_construct_value(context, result, func, args, argc);
 }
 
-Value __qmljs_construct_value(ExecutionContext *context, Value func, Value *args, int argc)
+void __qmljs_construct_value(ExecutionContext *context, Value *result, const Value &func, Value *args, int argc)
 {
-    if (FunctionObject *f = func.asFunctionObject())
-        return f->construct(context, args, argc);
+    if (FunctionObject *f = func.asFunctionObject()) {
+        Value res = f->construct(context, args, argc);
+        if (result)
+            *result = res;
+        return;
+    }
 
     context->throwTypeError();
-    return Value::undefinedValue();
 }
 
-Value __qmljs_construct_property(ExecutionContext *context, Value base, String *name, Value *args, int argc)
+void __qmljs_construct_property(ExecutionContext *context, Value *result, const Value &base, String *name, Value *args, int argc)
 {
     Value thisObject = base;
     if (!thisObject.isObject())
         thisObject = __qmljs_to_object(base, context);
 
     Value func = thisObject.objectValue()->__get__(context, name);
-    if (FunctionObject *f = func.asFunctionObject())
-        return f->construct(context, args, argc);
+    if (FunctionObject *f = func.asFunctionObject()) {
+        Value res = f->construct(context, args, argc);
+        if (result)
+            *result = res;
+        return;
+    }
 
     context->throwTypeError();
-    return Value::undefinedValue();
 }
 
 void __qmljs_throw(Value value, ExecutionContext *context)

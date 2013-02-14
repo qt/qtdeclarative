@@ -897,7 +897,7 @@ void InstructionSelection::constructActivationProperty(IR::Name *func, IR::ExprL
 void InstructionSelection::constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
 {
     int argc = prepareVariableArguments(args);
-    generateFunctionCall(result, __qmljs_construct_property, Assembler::ContextRegister, base, identifier(name), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    generateFunctionCall(Assembler::Void, __qmljs_construct_property, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(base), identifier(name), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
 }
 
 void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
@@ -905,7 +905,7 @@ void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, I
     assert(value != 0);
 
     int argc = prepareVariableArguments(args);
-    generateFunctionCall(result, __qmljs_construct_value, Assembler::ContextRegister, value, baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    generateFunctionCall(Assembler::Void, __qmljs_construct_value, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(value), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
 }
 
 void InstructionSelection::visitJump(IR::Jump *s)

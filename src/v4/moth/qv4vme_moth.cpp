@@ -378,13 +378,13 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_BEGIN_INSTR(CreateValue)
         Q_ASSERT(instr.args + instr.argc < stackSize);
         VM::Value *args = stack + instr.args;
-        VALUE(instr.result) = __qmljs_construct_value(context, VALUE(instr.func), args, instr.argc);
+        __qmljs_construct_value(context, VALUEPTR(instr.result), VALUE(instr.func), args, instr.argc);
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
         Q_ASSERT(instr.args + instr.argc < stackSize);
         VM::Value *args = stack + instr.args;
-        VALUE(instr.result) = __qmljs_construct_property(context, VALUE(instr.base), instr.name, args, instr.argc);
+        __qmljs_construct_property(context, VALUEPTR(instr.result), VALUE(instr.base), instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)

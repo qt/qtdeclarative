@@ -415,7 +415,7 @@ void __qmljs_llvm_construct_activation_property(ExecutionContext *context, Value
 
 void __qmljs_llvm_construct_value(ExecutionContext *context, Value *result, const Value *func, Value *args, int argc)
 {
-    *result = __qmljs_construct_value(context, *func, args, argc);
+    __qmljs_construct_value(context, result, *func, args, argc);
 }
 
 void __qmljs_llvm_get_activation_property(ExecutionContext *ctx, Value *result, String *name)
@@ -440,7 +440,7 @@ void __qmljs_llvm_call_property(ExecutionContext *context, Value *result, const 
 
 void __qmljs_llvm_construct_property(ExecutionContext *context, Value *result, const Value *base, String *name, Value *args, int argc)
 {
-    *result = __qmljs_construct_property(context, *base, name, args, argc);
+    __qmljs_construct_property(context, result, *base, name, args, argc);
 }
 
 void __qmljs_llvm_get_element(ExecutionContext *ctx, Value *result, Value *object, Value *index)
