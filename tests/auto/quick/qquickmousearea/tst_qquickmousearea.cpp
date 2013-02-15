@@ -89,6 +89,8 @@ private slots:
     void cursorShape();
 #endif
     void moveAndReleaseWithoutPress();
+    void nestedStopAtBounds();
+    void nestedStopAtBounds_data();
 
 private:
     void acceptedButton_data();
@@ -1424,6 +1426,72 @@ void tst_QQuickMouseArea::moveAndReleaseWithoutPress()
     QTRY_COMPARE(root->property("hadRelease").toBool(), false);
 
     delete window;
+}
+
+void tst_QQuickMouseArea::nestedStopAtBounds_data()
+{
+    QTest::addColumn<bool>("transpose");
+    QTest::addColumn<bool>("invert");
+
+    QTest::newRow("left") << false << false;
+    QTest::newRow("right") << false << true;
+    QTest::newRow("top") << true << false;
+    QTest::newRow("bottom") << true << true;
+}
+
+void tst_QQuickMouseArea::nestedStopAtBounds()
+{
+    QFETCH(bool, transpose);
+    QFETCH(bool, invert);
+
+    QQuickView view;
+    view.setSource(testFileUrl("nestedStopAtBounds.qml"));
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QVERIFY(view.rootObject());
+
+    QQuickMouseArea *outer =  view.rootObject()->findChild<QQuickMouseArea*>("outer");
+    QVERIFY(outer);
+
+    QQuickMouseArea *inner = outer->findChild<QQuickMouseArea*>("inner");
+    QVERIFY(inner);
+    inner->drag()->setAxis(transpose ? QQuickDrag::YAxis : QQuickDrag::XAxis);
+    inner->setX(invert ? 100 : 0);
+    inner->setY(invert ? 100 : 0);
+
+    const int threshold = qApp->styleHints()->startDragDistance();
+
+    QPoint position(200, 200);
+    int &axis = transpose ? position.ry() : position.rx();
+
+    // drag toward the aligned boundary.  Outer mouse area dragged.
+    QTest::mousePress(&view, Qt::LeftButton, 0, position);
+    QTest::qWait(10);
+    axis += invert ? threshold * 2 : -threshold * 2;
+    QTest::mouseMove(&view, position);
+    axis += invert ? threshold : -threshold;
+    QTest::mouseMove(&view, position);
+    QCOMPARE(outer->drag()->active(), true);
+    QCOMPARE(inner->drag()->active(), false);
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
+
+    QVERIFY(!outer->drag()->active());
+
+    axis = 200;
+    outer->setX(50);
+    outer->setY(50);
+
+    // drag away from the aligned boundary.  Inner mouse area dragged.
+    QTest::mousePress(&view, Qt::LeftButton, 0, position);
+    QTest::qWait(10);
+    axis += invert ? -threshold * 2 : threshold * 2;
+    QTest::mouseMove(&view, position);
+    axis += invert ? -threshold : threshold;
+    QTest::mouseMove(&view, position);
+    QCOMPARE(outer->drag()->active(), false);
+    QCOMPARE(inner->drag()->active(), true);
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
 }
 
 QTEST_MAIN(tst_QQuickMouseArea)
