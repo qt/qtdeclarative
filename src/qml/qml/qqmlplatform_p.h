@@ -46,8 +46,6 @@
 #include <qqml.h>
 #include <private/qtqmlglobal_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class Q_QML_PRIVATE_EXPORT QQmlPlatform : public QObject
@@ -68,7 +66,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQmlPlatform)
-
-QT_END_HEADER
 
 #endif // QQMLPLATFORM_P_H
