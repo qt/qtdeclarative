@@ -67,7 +67,7 @@ public:
     void bind();
 
     QSize textureSize() const { return m_size; }
-    int textureId() const { return m_texture_id; }
+    int textureId() const;
 
     bool hasAlphaChannel() const { return false; }
     bool hasMipmaps() const { return false; }
@@ -76,6 +76,7 @@ public:
     QSize m_size;
     QSize m_paddedSize;
     GLuint m_texture_id;
+    bool m_uploaded;
 };
 
 #endif // ETCPROVIDER_H

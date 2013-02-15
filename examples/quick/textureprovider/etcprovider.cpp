@@ -86,7 +86,7 @@ unsigned short getPaddedHeight(ETCHeader *pHeader)
 }
 
 EtcTexture::EtcTexture()
-    : m_texture_id(0)
+    : m_texture_id(0), m_uploaded(false)
 {
 
 }
@@ -97,14 +97,22 @@ EtcTexture::~EtcTexture()
         glDeleteTextures(1, &m_texture_id);
 }
 
+int EtcTexture::textureId() const
+{
+    if (m_texture_id == 0)
+        glGenTextures(1, &const_cast<EtcTexture *>(this)->m_texture_id);
+    return m_texture_id;
+}
+
 void EtcTexture::bind()
 {
-    if (m_texture_id) {
+    if (m_uploaded && m_texture_id) {
         glBindTexture(GL_TEXTURE_2D, m_texture_id);
         return;
     }
 
-    glGenTextures(1, &m_texture_id);
+    if (m_texture_id == 0)
+        glGenTextures(1, &m_texture_id);
     glBindTexture(GL_TEXTURE_2D, m_texture_id);
 
 #ifdef ETC_DEBUG
@@ -129,6 +137,7 @@ void EtcTexture::bind()
         return;
     }
 
+    m_uploaded = true;
     updateBindOptions(true);
 }
 
