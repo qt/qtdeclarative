@@ -23,7 +23,7 @@ EvalInstructionSelection::EvalInstructionSelection(VM::ExecutionEngine *engine, 
     assert(engine);
     assert(module);
 
-    createFunctionMapping(engine, module->rootFunction);
+    createFunctionMapping(0, module->rootFunction);
     foreach (IR::Function *f, module->functions) {
         assert(_irToVM.contains(f));
     }
@@ -35,29 +35,32 @@ EvalInstructionSelection::~EvalInstructionSelection()
 EvalISelFactory::~EvalISelFactory()
 {}
 
-VM::Function *EvalInstructionSelection::createFunctionMapping(VM::ExecutionEngine *engine, Function *irFunction)
+VM::Function *EvalInstructionSelection::createFunctionMapping(VM::Function *outer, Function *irFunction)
 {
-    VM::Function *vmFunction = engine->newFunction(irFunction->name ? *irFunction->name : QString());
+    VM::Function *vmFunction = _engine->newFunction(irFunction->name ? *irFunction->name : QString());
     _irToVM.insert(irFunction, vmFunction);
 
     vmFunction->hasDirectEval = irFunction->hasDirectEval;
     vmFunction->usesArgumentsObject = irFunction->usesArgumentsObject;
     vmFunction->hasNestedFunctions = !irFunction->nestedFunctions.isEmpty();
     vmFunction->isStrict = irFunction->isStrict;
+    vmFunction->outer = outer;
+
+    if (outer)
+        outer->nestedFunctions.append(vmFunction);
 
     foreach (const QString *formal, irFunction->formals)
         if (formal)
-            vmFunction->formals.append(engine->newString(*formal));
+            vmFunction->formals.append(_engine->newString(*formal));
     foreach (const QString *local, irFunction->locals)
         if (local)
-            vmFunction->locals.append(engine->newString(*local));
+            vmFunction->locals.append(_engine->newString(*local));
 
     foreach (IR::Function *function, irFunction->nestedFunctions)
-        createFunctionMapping(engine, function);
+        createFunctionMapping(vmFunction, function);
 
-
-    if (engine->debugger)
-        engine->debugger->mapFunction(vmFunction, irFunction);
+    if (_engine->debugger)
+        _engine->debugger->mapFunction(vmFunction, irFunction);
 
     return vmFunction;
 }

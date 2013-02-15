@@ -54,7 +54,7 @@ public:
     void setUseFastLookups(bool b) { useFastLookups = b; }
 
 protected:
-    VM::Function *createFunctionMapping(VM::ExecutionEngine *engine, IR::Function *irFunction);
+    VM::Function *createFunctionMapping(VM::Function *outer, IR::Function *irFunction);
     VM::ExecutionEngine *engine() const { return _engine; }
     virtual void run(VM::Function *vmFunction, IR::Function *function) = 0;
 
