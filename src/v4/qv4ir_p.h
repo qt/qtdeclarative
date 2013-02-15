@@ -309,10 +309,12 @@ struct Name: Expr {
 
 struct Temp: Expr {
     int index;
+    int scope; // how many scopes outside the current one?
 
-    void init(int index)
+    void init(int index, int scope = 0)
     {
         this->index = index;
+        this->scope = scope;
     }
 
     virtual void accept(ExprVisitor *v) { v->visitTemp(this); }
@@ -612,6 +614,7 @@ struct Function {
     QList<const QString *> formals;
     QList<const QString *> locals;
     QVector<Function *> nestedFunctions;
+    Function *outer;
 
     int insideWithOrCatch;
 
@@ -622,11 +625,12 @@ struct Function {
 
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
 
-    Function(Module *module, const QString &name)
+    Function(Module *module, Function *outer, const QString &name)
         : module(module)
         , pool(&module->pool)
         , tempCount(0)
         , maxNumberOfArguments(0)
+        , outer(outer)
         , insideWithOrCatch(0)
         , hasDirectEval(false)
         , usesArgumentsObject(false)
@@ -685,7 +689,7 @@ struct BasicBlock {
 
     unsigned newTemp();
 
-    Temp *TEMP(int index);
+    Temp *TEMP(int index, uint scope = 0);
 
     Expr *CONST(Type type, double value);
     Expr *STRING(const QString *value);

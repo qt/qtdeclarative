@@ -86,21 +86,25 @@ union Instr
             ValueType    = 0,
             ArgumentType = 1,
             LocalType    = 2,
-            TempType     = 3
+            TempType     = 3,
+            ScopedLocalType  = 4
         };
         VM::Value value;
-        unsigned type  : 2;
-        unsigned index : 30;
+        unsigned type  : 3;
+        unsigned scope : 29;
+        unsigned index;
 
         bool isValue() const { return type == ValueType; }
         bool isArgument() const { return type == ArgumentType; }
         bool isLocal() const { return type == LocalType; }
         bool isTemp() const { return type == TempType; }
+        bool isScopedLocal() const { return type == ScopedLocalType; }
 
         static Param createValue(const VM::Value &v)
         {
             Param p;
             p.type = ValueType;
+            p.scope = 0;
             p.value = v;
             return p;
         }
@@ -109,6 +113,7 @@ union Instr
         {
             Param p;
             p.type = ArgumentType;
+            p.scope = 0;
             p.index = idx;
             return p;
         }
@@ -117,6 +122,7 @@ union Instr
         {
             Param p;
             p.type = LocalType;
+            p.scope = 0;
             p.index = idx;
             return p;
         }
@@ -125,6 +131,16 @@ union Instr
         {
             Param p;
             p.type = TempType;
+            p.scope = 0;
+            p.index = idx;
+            return p;
+        }
+
+        static Param createScopedLocal(unsigned idx, uint scope)
+        {
+            Param p;
+            p.type = ScopedLocalType;
+            p.scope = scope;
             p.index = idx;
             return p;
         }

@@ -59,7 +59,7 @@ namespace MASM {
 class Assembler : public JSC::MacroAssembler
 {
 public:
-    Assembler(IR::Function* function);
+    Assembler(IR::Function* function, VM::Function *vmFunction);
 #if CPU(X86)
 
 #undef VALUE_FITS_IN_REGISTER
@@ -684,7 +684,8 @@ public:
     void link(VM::Function *vmFunc);
 
 private:
-    IR::Function* _function;
+    IR::Function *_function;
+    VM::Function *_vmFunction;
     QHash<IR::BasicBlock *, Label> _addrs;
     QHash<IR::BasicBlock *, QVector<Jump> > _patches;
     QList<CallToLink> _callsToLink;

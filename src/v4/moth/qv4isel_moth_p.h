@@ -99,12 +99,14 @@ private:
             const int index = t->index;
             if (index < 0) {
                 return Param::createArgument(-index - 1);
-            } else {
+            } else if (!t->scope) {
                 const int localCount = _function->locals.size();
                 if (index < localCount)
                     return Param::createLocal(index);
                 else
                     return Param::createTemp(index - localCount);
+            } else {
+                return Param::createScopedLocal(t->index, t->scope);
             }
         } else {
             Q_UNIMPLEMENTED();

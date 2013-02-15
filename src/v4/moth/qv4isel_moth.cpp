@@ -602,7 +602,7 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
         const int idx = e->expr->asTemp()->index;
         // We can only pass a reference into the stack, which holds temps that
         // are not arguments (idx >= 0) nor locals (idx >= localCound).
-        singleArgIsTemp = idx >= _function->locals.size();
+        singleArgIsTemp = idx >= _function->locals.size() && e->expr->asTemp()->scope == 0;
     }
 
     if (singleArgIsTemp) {

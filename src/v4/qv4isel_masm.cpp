@@ -100,8 +100,8 @@ static const int calleeSavedRegisterCount = sizeof(calleeSavedRegisters) / sizeo
 
 const Assembler::VoidType Assembler::Void;
 
-Assembler::Assembler(IR::Function* function)
-    : _function(function)
+Assembler::Assembler(IR::Function* function, VM::Function *vmFunction)
+    : _function(function), _vmFunction(vmFunction)
 {
 }
 
@@ -124,14 +124,30 @@ void Assembler::addPatch(IR::BasicBlock* targetBlock, Jump targetJump)
 Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, IR::Temp *t)
 {
     int32_t offset = 0;
+    int scope = t->scope;
+    VM::Function *f = _vmFunction;
+    RegisterID context = ContextRegister;
+    if (scope) {
+        loadPtr(Address(ContextRegister, offsetof(ExecutionContext, outer)), ScratchRegister);
+        --scope;
+        f = f->outer;
+        context = ScratchRegister;
+        while (scope) {
+            loadPtr(Address(context, offsetof(ExecutionContext, outer)), context);
+            f = f->outer;
+            --scope;
+        }
+    }
     if (t->index < 0) {
+        assert(t->scope == 0);
         const int arg = -t->index - 1;
-        loadPtr(Address(ContextRegister, offsetof(ExecutionContext, arguments)), reg);
+        loadPtr(Address(context, offsetof(ExecutionContext, arguments)), reg);
         offset = arg * sizeof(Value);
-    } else if (t->index < _function->locals.size()) {
-        loadPtr(Address(ContextRegister, offsetof(ExecutionContext, locals)), reg);
+    } else if (t->index < f->locals.size()) {
+        loadPtr(Address(context, offsetof(ExecutionContext, locals)), reg);
         offset = t->index * sizeof(Value);
     } else {
+        assert(t->scope == 0);
         const int arg = _function->maxNumberOfArguments + t->index - _function->locals.size() + 1;
         // StackFrameRegister points to its old value on the stack, so even for the first temp we need to
         // subtract at least sizeof(Value).
@@ -420,7 +436,7 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     qSwap(_vmFunction, vmFunction);
     qSwap(_lookups, lookups);
     Assembler* oldAssembler = _as;
-    _as = new Assembler(_function);
+    _as = new Assembler(_function, _vmFunction);
 
     int locals = (_function->tempCount - _function->locals.size() + _function->maxNumberOfArguments) + 1;
     locals = (locals + 1) & ~1;

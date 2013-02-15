@@ -113,7 +113,7 @@ struct ComputeUseDef: IR::StmtVisitor, IR::ExprVisitor
     virtual void visitRet(IR::Ret *s) { s->expr->accept(this); }
 
     virtual void visitTemp(IR::Temp *e) {
-        if (e->index < 0)
+        if (e->index < 0 || e->scope != 0)
             return;
 
         if (! _stmt->d->uses.contains(e->index))
@@ -134,10 +134,11 @@ struct ComputeUseDef: IR::StmtVisitor, IR::ExprVisitor
 
     virtual void visitMove(IR::Move *s) {
         if (IR::Temp *t = s->target->asTemp()) {
-            if (t->index >= 0) {
-                if (! _stmt->d->defs.contains(t->index))
-                    _stmt->d->defs.append(t->index);
-            }
+            if (t->index < 0 || t->scope != 0)
+                return;
+
+            if (! _stmt->d->defs.contains(t->index))
+                _stmt->d->defs.append(t->index);
         } else {
             s->target->accept(this);
         }
@@ -1377,23 +1378,31 @@ bool Codegen::visit(FunctionExpression *ast)
 
 IR::Expr *Codegen::identifier(const QString &name, int line, int col)
 {
-    int index = _env->findMember(name);
+    uint scope = 0;
+    Environment *e = _env;
+    IR::Function *f = _function;
 
-    if (! _function->hasDirectEval && !_function->insideWithOrCatch && _env->parent) {
+    while (f && e->parent) {
+        if ((f->usesArgumentsObject && name == "arguments") || (!f->isStrict && f->hasDirectEval) || f->insideWithOrCatch)
+            break;
+        int index = e->findMember(name);
+        assert (index < e->members.size());
         if (index != -1) {
-            return _block->TEMP(index);
+            return _block->TEMP(index, scope);
         }
-        index = indexOfArgument(&name);
-        if (index != -1) {
-            return _block->TEMP(-(index + 1));
+        if (!scope) {
+            // ### should be able to do this for outer scopes as well
+            index = indexOfArgument(&name);
+            if (index != -1) {
+                return _block->TEMP(-(index + 1), scope);
+            }
         }
+        ++scope;
+        e = e->parent;
+        f = f->outer;
     }
 
-    if (index >= _env->members.size()) {
-        // named local variable, e.g. in a catch statement
-        return _block->TEMP(index);
-    }
-
+    // global context or with. Lookup by name
     return _block->NAME(name, line, col);
 
 }

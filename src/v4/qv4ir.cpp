@@ -274,6 +274,8 @@ void Temp::dump(QTextStream &out)
     } else {
         out << '%' << index; // temp
     }
+    if (scope)
+        out << "@" << scope;
 }
 
 void Closure::dump(QTextStream &out)
@@ -400,7 +402,7 @@ void Ret::dump(QTextStream &out, Mode)
 
 Function *Module::newFunction(const QString &name, Function *outer)
 {
-    Function *f = new Function(this, name);
+    Function *f = new Function(this, outer, name);
     functions.append(f);
     if (!outer) {
         assert(!rootFunction);
@@ -463,10 +465,10 @@ unsigned BasicBlock::newTemp()
     return function->tempCount++;
 }
 
-Temp *BasicBlock::TEMP(int index)
+Temp *BasicBlock::TEMP(int index, uint scope)
 { 
     Temp *e = function->New<Temp>();
-    e->init(index);
+    e->init(index, scope);
     return e;
 }
 

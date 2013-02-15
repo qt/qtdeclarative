@@ -84,13 +84,15 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
 {
 #ifdef DO_TRACE_INSTR
     if (param.isValue()) {
-        fprintf(stderr, "    value\n");
+        fprintf(stderr, "    value %s\n", param.value.toString(context)->toQString().toUtf8().constData());
     } else if (param.isArgument()) {
         fprintf(stderr, "    argument %d\n", param.index);
     } else if (param.isLocal()) {
         fprintf(stderr, "    local %d\n", param.index);
     } else if (param.isTemp()) {
         fprintf(stderr, "    temp %d\n", param.index);
+    } else if (param.isScopedLocal()) {
+        fprintf(stderr, "    temp %d@%d\n", param.index, param.scope);
     } else {
         Q_ASSERT(!"INVALID");
     }
@@ -113,6 +115,16 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
     } else if (param.isTemp()) {
         Q_ASSERT(param.index < stackSize);
         return stack + param.index;
+    } else if (param.isScopedLocal()) {
+        VM::ExecutionContext *c = context;
+        uint scope = param.scope;
+        while (scope--)
+            c = c->outer;
+        const unsigned index = param.index;
+        Q_ASSERT(index >= 0);
+        Q_ASSERT(index < c->variableCount());
+        Q_ASSERT(c->locals);
+        return c->locals + index;
     } else {
         Q_UNIMPLEMENTED();
         return 0;
@@ -225,7 +237,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
-        TRACE(property name, "%s, args=%u, argc=%u", qPrintable(instr.name->toQString()), instr.args, instr.argc);
+        TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(instr.name->toQString()), instr.args, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
         Q_ASSERT(instr.args + instr.argc < stackSize);
         VM::Value *args = stack + instr.args;
         __qmljs_call_property(context, VALUEPTR(instr.result), VALUE(instr.base), instr.name, args, instr.argc);
@@ -235,7 +247,7 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         Q_ASSERT(instr.args + instr.argc < stackSize);
         VM::Value *args = stack + instr.args;
         __qmljs_call_element(context, VALUEPTR(instr.result), VALUE(instr.base), VALUE(instr.index), args, instr.argc);
-    MOTH_END_INSTR(CallProperty)
+    MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallActivationProperty)
         Q_ASSERT(instr.args + instr.argc < stackSize);
