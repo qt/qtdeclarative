@@ -492,12 +492,12 @@ void __qmljs_llvm_get_exception(ExecutionContext *context, Value *result)
 
 void __qmljs_llvm_foreach_iterator_object(ExecutionContext *context, Value *result, Value *in)
 {
-    *result = __qmljs_foreach_iterator_object(*in, context);
+    __qmljs_foreach_iterator_object(context, result, *in);
 }
 
 void __qmljs_llvm_foreach_next_property_name(Value *result, Value *it)
 {
-    *result = __qmljs_foreach_next_property_name(*it);
+    __qmljs_foreach_next_property_name(result, *it);
 }
 
 void __qmljs_llvm_get_this_object(ExecutionContext *ctx, Value *result)

@@ -292,11 +292,11 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinPopScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachIteratorObject)
-        VALUE(instr.result) = __qmljs_foreach_iterator_object(VALUE(instr.arg), context);
+        __qmljs_foreach_iterator_object(context, VALUEPTR(instr.result), VALUE(instr.arg));
     MOTH_END_INSTR(CallBuiltinForeachIteratorObject)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachNextPropertyName)
-        VALUE(instr.result) = __qmljs_foreach_next_property_name(VALUE(instr.arg));
+        __qmljs_foreach_next_property_name(VALUEPTR(instr.result), VALUE(instr.arg));
     MOTH_END_INSTR(CallBuiltinForeachNextPropertyName)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteMember)
@@ -364,15 +364,15 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinDeclareVar)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineGetterSetter)
-        __qmljs_builtin_define_getter_setter(VALUE(instr.object), instr.name, VALUE(instr.getter), VALUE(instr.setter), context);
+        __qmljs_builtin_define_getter_setter(context, VALUE(instr.object), instr.name, VALUEPTR(instr.getter), VALUEPTR(instr.setter));
     MOTH_END_INSTR(CallBuiltinDefineGetterSetter)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineProperty)
-        __qmljs_builtin_define_property(VALUE(instr.object), instr.name, VALUE(instr.value), context);
+        __qmljs_builtin_define_property(context, VALUE(instr.object), instr.name, VALUEPTR(instr.value));
     MOTH_END_INSTR(CallBuiltinDefineProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineArrayProperty)
-        __qmljs_builtin_define_array_property(VALUE(instr.object), instr.index, VALUE(instr.value), context);
+        __qmljs_builtin_define_array_property(context, VALUE(instr.object), instr.index, VALUEPTR(instr.value));
     MOTH_END_INSTR(CallBuiltinDefineArrayProperty)
 
     MOTH_BEGIN_INSTR(CreateValue)

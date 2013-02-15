@@ -119,13 +119,13 @@ void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *re
 
 void __qmljs_builtin_throw(ExecutionContext *context, const Value &val);
 void __qmljs_builtin_rethrow(ExecutionContext *context);
-ExecutionContext *__qmljs_builtin_push_with_scope(Value o, ExecutionContext *ctx);
+ExecutionContext *__qmljs_builtin_push_with_scope(const Value &o, ExecutionContext *ctx);
 ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, ExecutionContext *ctx);
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx);
 void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name);
-void __qmljs_builtin_define_property(Value object, String *name, Value val, ExecutionContext *ctx);
-void __qmljs_builtin_define_array_property(Value object, int index, Value val, ExecutionContext *ctx);
-void __qmljs_builtin_define_getter_setter(Value object, String *name, Value getter, Value setter, ExecutionContext *ctx);
+void __qmljs_builtin_define_property(ExecutionContext *ctx, const Value &object, String *name, Value *val);
+void __qmljs_builtin_define_array_property(ExecutionContext *ctx, const Value &object, int index, Value *val);
+void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &object, String *name, const Value *getter, const Value *setter);
 
 // constructors
 void __qmljs_init_closure(ExecutionContext *ctx, Value *result, VM::Function *clos);
@@ -159,8 +159,8 @@ void __qmljs_get_element(ExecutionContext *ctx, Value *retval, const Value &obje
 void __qmljs_set_element(ExecutionContext *ctx, const Value &object, const Value &index, const Value &value);
 
 // For each
-Value __qmljs_foreach_iterator_object(Value in, ExecutionContext *ctx);
-Value __qmljs_foreach_next_property_name(Value foreach_iterator);
+void __qmljs_foreach_iterator_object(ExecutionContext *ctx, Value *result, const Value &in);
+void __qmljs_foreach_next_property_name(Value *result, const Value &foreach_iterator);
 
 // context
 Value __qmljs_get_thisObject(ExecutionContext *ctx);

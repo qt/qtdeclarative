@@ -609,23 +609,23 @@ void __qmljs_set_element(ExecutionContext *ctx, const Value &object, const Value
     o->__put__(ctx, name, value);
 }
 
-Value __qmljs_foreach_iterator_object(Value in, ExecutionContext *ctx)
+void __qmljs_foreach_iterator_object(ExecutionContext *ctx, Value *result, const Value &in)
 {
     Object *o = 0;
     if (!in.isNull() && !in.isUndefined())
         o = in.toObject(ctx);
     Object *it = ctx->engine->newForEachIteratorObject(ctx, o);
-    return Value::fromObject(it);
+    *result = Value::fromObject(it);
 }
 
-Value __qmljs_foreach_next_property_name(Value foreach_iterator)
+void __qmljs_foreach_next_property_name(Value *result, const Value &foreach_iterator)
 {
     assert(foreach_iterator.isObject());
 
     ForEachIteratorObject *it = static_cast<ForEachIteratorObject *>(foreach_iterator.objectValue());
     assert(it->asForeachIteratorObject());
 
-    return it->nextPropertyName();
+    *result = it->nextPropertyName();
 }
 
 
@@ -1211,7 +1211,7 @@ void __qmljs_builtin_throw(ExecutionContext *context, const Value &val)
     __qmljs_throw(context, val);
 }
 
-ExecutionContext *__qmljs_builtin_push_with_scope(Value o, ExecutionContext *ctx)
+ExecutionContext *__qmljs_builtin_push_with_scope(const Value &o, ExecutionContext *ctx)
 {
     Object *obj = o.toObject(ctx);
     return ctx->createWithScope(obj);
@@ -1232,13 +1232,13 @@ void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *
     ctx->createMutableBinding(name, deletable);
 }
 
-void __qmljs_builtin_define_property(Value object, String *name, Value val, ExecutionContext *ctx)
+void __qmljs_builtin_define_property(ExecutionContext *ctx, const Value &object, String *name, Value *val)
 {
     Object *o = object.asObject();
     assert(o);
 
     PropertyDescriptor pd;
-    pd.value = val;
+    pd.value = val ? *val : Value::undefinedValue();
     pd.type = PropertyDescriptor::Data;
     pd.writable = PropertyDescriptor::Enabled;
     pd.enumberable = PropertyDescriptor::Enabled;
@@ -1246,13 +1246,13 @@ void __qmljs_builtin_define_property(Value object, String *name, Value val, Exec
     o->__defineOwnProperty__(ctx, name, &pd);
 }
 
-void __qmljs_builtin_define_array_property(Value object, int index, Value val, ExecutionContext *ctx)
+void __qmljs_builtin_define_array_property(ExecutionContext *ctx, const Value &object, int index, Value *val)
 {
     Object *o = object.asObject();
     assert(o);
 
     PropertyDescriptor pd;
-    pd.value = val;
+    pd.value = val ? *val : Value::undefinedValue();
     pd.type = PropertyDescriptor::Data;
     pd.writable = PropertyDescriptor::Enabled;
     pd.enumberable = PropertyDescriptor::Enabled;
@@ -1260,14 +1260,14 @@ void __qmljs_builtin_define_array_property(Value object, int index, Value val, E
     o->__defineOwnProperty__(ctx, index, &pd);
 }
 
-void __qmljs_builtin_define_getter_setter(Value object, String *name, Value getter, Value setter, ExecutionContext *ctx)
+void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &object, String *name, const Value *getter, const Value *setter)
 {
     Object *o = object.asObject();
     assert(o);
 
     PropertyDescriptor pd;
-    pd.get = getter.asFunctionObject();
-    pd.set = setter.asFunctionObject();
+    pd.get = getter ? getter->asFunctionObject() : 0;
+    pd.set = setter ? setter->asFunctionObject() : 0;
     pd.type = PropertyDescriptor::Accessor;
     pd.writable = PropertyDescriptor::Undefined;
     pd.enumberable = PropertyDescriptor::Enabled;

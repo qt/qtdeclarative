@@ -603,17 +603,17 @@ void InstructionSelection::callBuiltinGetException(IR::Temp *result)
 
 void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_foreach_iterator_object, arg, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_foreach_iterator_object, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::Reference(arg), Assembler::ContextRegister);
 }
 
 void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result)
 {
-    generateFunctionCall(result, __qmljs_foreach_next_property_name, arg);
+    generateFunctionCall(Assembler::Void, __qmljs_foreach_next_property_name, Assembler::PointerToValue(result), Assembler::Reference(arg));
 }
 
 void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
 {
-    generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_push_with_scope, arg, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_push_with_scope, Assembler::Reference(arg), Assembler::ContextRegister);
 }
 
 void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionVarName)
@@ -634,20 +634,20 @@ void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &
 
 void InstructionSelection::callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_getter_setter,
-                         object, identifier(name), getter, setter, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_getter_setter, Assembler::ContextRegister,
+                         Assembler::Reference(object), identifier(name), Assembler::PointerToValue(getter), Assembler::PointerToValue(setter));
 }
 
 void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_property,
-                         object, identifier(name), value, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_property, Assembler::ContextRegister,
+                         Assembler::Reference(object), identifier(name), Assembler::PointerToValue(value));
 }
 
 void InstructionSelection::callBuiltinDefineArrayProperty(IR::Temp *object, int index, IR::Temp *value)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_array_property,
-                         object, Assembler::TrustedImm32(index), value, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_array_property, Assembler::ContextRegister,
+                         Assembler::Reference(object), Assembler::TrustedImm32(index), Assembler::PointerToValue(value));
 }
 
 void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
