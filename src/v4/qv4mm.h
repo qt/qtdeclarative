@@ -31,7 +31,6 @@
 #define QV4GC_H
 
 #include "qv4global.h"
-#include "qv4object.h"
 
 #include <QScopedPointer>
 
@@ -42,6 +41,7 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace VM {
 
+struct ExecutionEngine;
 struct Managed;
 
 class Q_V4_EXPORT MemoryManager
@@ -120,7 +120,6 @@ private:
 protected:
     QScopedPointer<Data> m_d;
 };
-
 
 } // namespace VM
 } // namespace QQmlJS

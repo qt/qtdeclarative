@@ -42,7 +42,7 @@
 #define QV4STRING_H
 
 #include <QtCore/qstring.h>
-#include <qv4managed.h>
+#include "qv4managed.h"
 
 QT_BEGIN_NAMESPACE
 

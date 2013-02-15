@@ -48,7 +48,8 @@ SOURCES += \
     qv4string.cpp \
     qv4objectiterator.cpp \
     qv4regexp.cpp \
-    qv4unwindhelper.cpp
+    qv4unwindhelper.cpp \
+    qv4v8.cpp
 
 HEADERS += \
     qv4global.h \
@@ -88,7 +89,9 @@ HEADERS += \
     qv4objectiterator.h \
     qv4regexp.h \
     qv4unwindhelper.h \
-    qv4unwindhelper_p-dw2.h
+    qv4unwindhelper_p-dw2.h \
+    qv4v8.h \
+    qcalculatehash_p.h
 
 llvm-libs {
 
