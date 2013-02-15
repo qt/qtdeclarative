@@ -1172,7 +1172,7 @@ bool Codegen::visit(BinaryExpression *ast)
             const unsigned t = _block->newTemp();
             move(_block->TEMP(t), right);
             move(left, _block->TEMP(t));
-            _expr.code = left;
+            _expr.code = _block->TEMP(t);
         }
         break;
     }
