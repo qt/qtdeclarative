@@ -125,10 +125,10 @@ struct Function {
 
     Lookup *lookups;
 
-    bool hasNestedFunctions  : 1;
-    bool hasDirectEval       : 1;
-    bool usesArgumentsObject : 1;
-    bool isStrict            : 1;
+    bool hasNestedFunctions;
+    bool hasDirectEval;
+    bool usesArgumentsObject;
+    bool isStrict;
 
     Function(String *name)
         : name(name)

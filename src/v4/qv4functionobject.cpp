@@ -390,12 +390,8 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
 
     ctx->thisObject = thisObject;
     if (!f->strictMode && !thisObject.isObject()) {
-        // Built-in functions allow for the this object to be null or undefined. This overrides
-        // the behaviour of changing thisObject to the global object if null/undefined and allows
-        // the built-in functions for example to throw a type error if null is passed.
         if (thisObject.isUndefined() || thisObject.isNull()) {
-            if (!f->isBuiltinFunction)
-                ctx->thisObject = context->engine->globalObject;
+            ctx->thisObject = context->engine->globalObject;
         } else {
             ctx->thisObject = Value::fromObject(thisObject.toObject(context));
         }
@@ -441,12 +437,8 @@ Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const V
         // Built-in functions allow for the this object to be null or undefined. This overrides
         // the behaviour of changing thisObject to the global object if null/undefined and allows
         // the built-in functions for example to throw a type error if null is passed.
-        if (thisObject.isUndefined() || thisObject.isNull()) {
-            if (!f->isBuiltinFunction)
-                ctx->thisObject = context->engine->globalObject;
-        } else {
+        if (!thisObject.isUndefined() && !thisObject.isNull())
             ctx->thisObject = Value::fromObject(thisObject.toObject(context));
-        }
     }
 
     ctx->function = f;
