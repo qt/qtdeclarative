@@ -2081,7 +2081,7 @@ bool Codegen::visit(ContinueStatement *ast)
 
 bool Codegen::visit(DebuggerStatement *)
 {
-    assert(!"not implemented");
+    Q_UNIMPLEMENTED();
     return false;
 }
 
