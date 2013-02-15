@@ -182,6 +182,10 @@ public:
         PointerToValue(IR::Temp *value) : value(value) {}
         IR::Temp *value;
     };
+    struct Reference {
+        Reference(IR::Temp *value) : value(value) {}
+        IR::Temp *value;
+    };
 
     void callAbsolute(const char* functionName, FunctionPtr function) {
         CallToLink ctl;
@@ -220,6 +224,13 @@ public:
             Pointer addr = loadTempAddress(dest, temp.value);
             loadArgument(addr, dest);
         }
+    }
+
+    void loadArgument(Reference temp, RegisterID dest)
+    {
+        assert(temp.value);
+        Pointer addr = loadTempAddress(dest, temp.value);
+        loadArgument(addr, dest);
     }
 
 #ifdef VALUE_FITS_IN_REGISTER
@@ -326,6 +337,16 @@ public:
 
     void push(PointerToValue temp)
     {
+        if (temp.value) {
+            Pointer ptr = loadTempAddress(ScratchRegister, temp.value);
+            push(ptr);
+        } else {
+            push(TrustedImmPtr(0));
+        }
+    }
+
+    void push(Reference temp)
+    {
         assert (temp.value);
 
         Pointer ptr = loadTempAddress(ScratchRegister, temp.value);
@@ -423,6 +444,8 @@ public:
     static inline int sizeOfArgument(VM::String* string)
     { return sizeof(string); }
     static inline int sizeOfArgument(const PointerToValue &)
+    { return sizeof(void *); }
+    static inline int sizeOfArgument(const Reference &)
     { return sizeof(void *); }
     static inline int sizeOfArgument(TrustedImmPtr)
     { return sizeof(void*); }

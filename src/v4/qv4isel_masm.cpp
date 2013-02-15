@@ -333,7 +333,7 @@ void Assembler::generateBinOp(IR::AluOp operation, IR::Temp* target, IR::Temp *l
 
     // Fallback
     generateFunctionCallImp(Assembler::Void, info.name, info.fallbackImplementation, ContextRegister,
-                            Assembler::PointerToValue(target), Assembler::PointerToValue(left), Assembler::PointerToValue(right));
+                            Assembler::PointerToValue(target), Assembler::Reference(left), Assembler::Reference(right));
 
     if (binOpFinished.isSet())
         binOpFinished.link(this);
@@ -480,12 +480,15 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
 
 void InstructionSelection::callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof_member, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(base), identifier(name));
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof_member, Assembler::ContextRegister,
+            Assembler::PointerToValue(result), Assembler::Reference(base), identifier(name));
 }
 
 void InstructionSelection::callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof_element, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(base), Assembler::PointerToValue(index));
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof_element,
+            Assembler::ContextRegister, Assembler::PointerToValue(result),
+            Assembler::Reference(base), Assembler::Reference(index));
 }
 
 void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *result)
@@ -495,17 +498,20 @@ void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *
 
 void InstructionSelection::callBuiltinTypeofValue(IR::Temp *value, IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(value));
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof, Assembler::ContextRegister,
+            Assembler::PointerToValue(result), Assembler::Reference(value));
 }
 
 void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_delete_member, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(base), identifier(name));
+    generateFunctionCall(Assembler::Void, __qmljs_delete_member, Assembler::ContextRegister,
+            Assembler::PointerToValue(result), Assembler::Reference(base), identifier(name));
 }
 
 void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_delete_subscript, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(base), Assembler::PointerToValue(index));
+    generateFunctionCall(Assembler::Void, __qmljs_delete_subscript, Assembler::ContextRegister,
+            Assembler::PointerToValue(result), Assembler::Reference(base), Assembler::Reference(index));
 }
 
 void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *result)
@@ -527,7 +533,7 @@ void InstructionSelection::callBuiltinPostIncrementMember(IR::Temp *base, const 
 void InstructionSelection::callBuiltinPostIncrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
 {
     generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment_element, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(base), Assembler::PointerToValue(index));
+                         Assembler::PointerToValue(result), Assembler::Reference(base), Assembler::PointerToValue(index));
 }
 
 void InstructionSelection::callBuiltinPostIncrementName(const QString &name, IR::Temp *result)
@@ -545,13 +551,14 @@ void InstructionSelection::callBuiltinPostIncrementValue(IR::Temp *value, IR::Te
 void InstructionSelection::callBuiltinPostDecrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
 {
     generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement_member, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(base), identifier(name));
+                         Assembler::PointerToValue(result), Assembler::Reference(base), identifier(name));
 }
 
 void InstructionSelection::callBuiltinPostDecrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
 {
     generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement_element, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(base), Assembler::PointerToValue(index));
+                         Assembler::PointerToValue(result), Assembler::Reference(base),
+                         Assembler::Reference(index));
 }
 
 void InstructionSelection::callBuiltinPostDecrementName(const QString &name, IR::Temp *result)
@@ -568,7 +575,7 @@ void InstructionSelection::callBuiltinPostDecrementValue(IR::Temp *value, IR::Te
 
 void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_throw, Assembler::ContextRegister, Assembler::PointerToValue(arg));
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_throw, Assembler::ContextRegister, Assembler::Reference(arg));
 }
 
 void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result, IR::Temp *contextTemp)
@@ -647,7 +654,9 @@ void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Te
 {
     int argc = prepareVariableArguments(args);
     IR::Temp* thisObject = 0;
-    generateFunctionCall(Assembler::Void, __qmljs_call_value, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(thisObject), Assembler::PointerToValue(value), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    generateFunctionCall(Assembler::Void, __qmljs_call_value, Assembler::ContextRegister,
+            Assembler::PointerToValue(result), Assembler::PointerToValue(thisObject),
+            Assembler::Reference(value), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
 }
 
 void InstructionSelection::loadThisObject(IR::Temp *temp)
@@ -683,7 +692,8 @@ void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *
 void InstructionSelection::setActivationProperty(IR::Temp *source, const QString &targetName)
 {
     String *propertyName = identifier(targetName);
-    generateFunctionCall(Assembler::Void, __qmljs_set_activation_property, Assembler::ContextRegister, propertyName, Assembler::PointerToValue(source));
+    generateFunctionCall(Assembler::Void, __qmljs_set_activation_property,
+            Assembler::ContextRegister, propertyName, Assembler::Reference(source));
 }
 
 void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
@@ -699,10 +709,10 @@ void InstructionSelection::getProperty(IR::Temp *base, const QString &name, IR::
         VM::String *s = identifier(name);
         uint index = addLookup(s);
         generateFunctionCall(Assembler::Void, __qmljs_get_property_lookup, Assembler::ContextRegister, Assembler::PointerToValue(target),
-                             Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
+                             Assembler::Reference(base), Assembler::TrustedImm32(index));
     } else {
         generateFunctionCall(Assembler::Void, __qmljs_get_property, Assembler::ContextRegister, Assembler::PointerToValue(target),
-                             Assembler::PointerToValue(base), identifier(name));
+                             Assembler::Reference(base), identifier(name));
     }
 }
 
@@ -711,24 +721,28 @@ void InstructionSelection::setProperty(IR::Temp *source, IR::Temp *targetBase, c
     if (useFastLookups) {
         VM::String *s = identifier(targetName);
         uint index = addLookup(s);
-        generateFunctionCall(Assembler::Void, __qmljs_set_property_lookup, Assembler::ContextRegister, Assembler::PointerToValue(targetBase),
-                             Assembler::TrustedImm32(index), Assembler::PointerToValue(source));
+        generateFunctionCall(Assembler::Void, __qmljs_set_property_lookup,
+                Assembler::ContextRegister, Assembler::Reference(targetBase),
+                Assembler::TrustedImm32(index), Assembler::Reference(source));
     } else {
-        generateFunctionCall(Assembler::Void, __qmljs_set_property, Assembler::ContextRegister, Assembler::PointerToValue(targetBase),
-                             identifier(targetName), Assembler::PointerToValue(source));
+        generateFunctionCall(Assembler::Void, __qmljs_set_property, Assembler::ContextRegister,
+                Assembler::Reference(targetBase),
+                identifier(targetName), Assembler::Reference(source));
     }
 }
 
 void InstructionSelection::getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target)
 {
     generateFunctionCall(Assembler::Void, __qmljs_get_element, Assembler::ContextRegister,
-                         Assembler::PointerToValue(target), Assembler::PointerToValue(base), Assembler::PointerToValue(index));
+                         Assembler::PointerToValue(target), Assembler::Reference(base),
+                         Assembler::Reference(index));
 }
 
 void InstructionSelection::setElement(IR::Temp *source, IR::Temp *targetBase, IR::Temp *targetIndex)
 {
     generateFunctionCall(Assembler::Void, __qmljs_set_element, Assembler::ContextRegister,
-                         Assembler::PointerToValue(targetBase), Assembler::PointerToValue(targetIndex), Assembler::PointerToValue(source));
+                         Assembler::Reference(targetBase), Assembler::Reference(targetIndex),
+                         Assembler::Reference(source));
 }
 
 void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
@@ -756,7 +770,7 @@ void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *
 
     if (op)
         _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::ContextRegister, Assembler::PointerToValue(targetTemp),
-                                     Assembler::PointerToValue(sourceTemp));
+                                     Assembler::Reference(sourceTemp));
 }
 
 void InstructionSelection::binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp *rightSource, IR::Temp *target)
@@ -785,7 +799,8 @@ void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Temp *rightSource, 
         break;
     }
     if (op) {
-        _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::ContextRegister, identifier(targetName), Assembler::PointerToValue(rightSource));
+        _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::ContextRegister,
+                identifier(targetName), Assembler::Reference(rightSource));
     }
 }
 
@@ -812,8 +827,8 @@ void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Temp *source, IR
 
     if (op) {
         _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::ContextRegister,
-                                     Assembler::PointerToValue(targetBaseTemp), Assembler::PointerToValue(targetIndexTemp),
-                                     Assembler::PointerToValue(source));
+                                     Assembler::Reference(targetBaseTemp), Assembler::Reference(targetIndexTemp),
+                                     Assembler::Reference(source));
     }
 }
 
@@ -841,8 +856,8 @@ void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Temp *source, IR:
     if (op) {
         String* member = identifier(targetName);
         _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::ContextRegister,
-                                     Assembler::PointerToValue(targetBase), identifier(targetName),
-                                     Assembler::PointerToValue(source));
+                                     Assembler::Reference(targetBase), identifier(targetName),
+                                     Assembler::Reference(source));
     }
 }
 
@@ -858,13 +873,13 @@ void InstructionSelection::callProperty(IR::Temp *base, const QString &name,
         uint index = addLookup(s);
         generateFunctionCall(Assembler::Void, __qmljs_call_property_lookup,
                              Assembler::ContextRegister, Assembler::PointerToValue(result),
-                             Assembler::PointerToValue(base), Assembler::TrustedImm32(index),
+                             Assembler::Reference(base), Assembler::TrustedImm32(index),
                              baseAddressForCallArguments(),
                              Assembler::TrustedImm32(argc));
     } else {
         generateFunctionCall(Assembler::Void, __qmljs_call_property,
                              Assembler::ContextRegister, Assembler::PointerToValue(result),
-                             Assembler::PointerToValue(base), s,
+                             Assembler::Reference(base), s,
                              baseAddressForCallArguments(),
                              Assembler::TrustedImm32(argc));
     }
@@ -877,7 +892,7 @@ void InstructionSelection::callSubscript(IR::Temp *base, IR::Temp *index, IR::Ex
     int argc = prepareVariableArguments(args);
     generateFunctionCall(Assembler::Void, __qmljs_call_element,
                          Assembler::ContextRegister, Assembler::PointerToValue(result),
-                         Assembler::PointerToValue(base), Assembler::PointerToValue(index),
+                         Assembler::Reference(base), Assembler::Reference(index),
                          baseAddressForCallArguments(),
                          Assembler::TrustedImm32(argc));
 }
@@ -899,7 +914,8 @@ void InstructionSelection::constructActivationProperty(IR::Name *func, IR::ExprL
 void InstructionSelection::constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
 {
     int argc = prepareVariableArguments(args);
-    generateFunctionCall(Assembler::Void, __qmljs_construct_property, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(base), identifier(name), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    generateFunctionCall(Assembler::Void, __qmljs_construct_property, Assembler::ContextRegister,
+            Assembler::PointerToValue(result), Assembler::Reference(base), identifier(name), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
 }
 
 void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
@@ -907,7 +923,8 @@ void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, I
     assert(value != 0);
 
     int argc = prepareVariableArguments(args);
-    generateFunctionCall(Assembler::Void, __qmljs_construct_value, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::PointerToValue(value), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    generateFunctionCall(Assembler::Void, __qmljs_construct_value, Assembler::ContextRegister,
+            Assembler::PointerToValue(result), Assembler::Reference(value), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
 }
 
 void InstructionSelection::visitJump(IR::Jump *s)
@@ -930,7 +947,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
         booleanConversion.link(_as);
         {
-            generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_to_boolean, Assembler::PointerToValue(t));
+            generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_to_boolean, Assembler::Reference(t));
         }
 
         testBoolean.link(_as);
@@ -958,7 +975,8 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             } // switch
 
             _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, op, Assembler::ContextRegister,
-                                         Assembler::PointerToValue(b->left->asTemp()), Assembler::PointerToValue(b->right->asTemp()));
+                                         Assembler::Reference(b->left->asTemp()),
+                                         Assembler::Reference(b->right->asTemp()));
 
             Assembler::Jump target = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister, Assembler::TrustedImm32(0));
             _as->addPatch(s->iftrue, target);
