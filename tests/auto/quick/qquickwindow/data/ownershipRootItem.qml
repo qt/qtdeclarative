@@ -10,6 +10,6 @@ Window.Window {
     RootItemAccessor {
         id:accessor
         objectName:"accessor"
-        Component.onCompleted:accessor.rootItem();
+        Component.onCompleted:accessor.contentItem();
     }
 }

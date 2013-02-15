@@ -96,13 +96,14 @@ private:
     bool anyoneShowing();
     void initialize();
 
+    void maybePostPolishRequest();
+
     void waitForReleaseComplete();
 
     void polishAndSync();
 
     struct Window {
         QQuickWindow *window;
-        uint pendingUpdate : 1;
     };
 
     QSGRenderThread *m_thread;
@@ -112,6 +113,8 @@ private:
     int m_animation_timer;
     int m_update_timer;
     int m_exhaust_delay;
+
+    bool m_sync_triggered_update;
 };
 
 

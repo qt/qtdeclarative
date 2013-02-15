@@ -284,8 +284,11 @@ private slots:
 
 
     void constantUpdates();
+    void constantUpdatesOnWindow_data();
+    void constantUpdatesOnWindow();
     void mouseFiltering();
     void headless();
+    void noUpdateWhenNothingChanges();
 
     void touchEvent_basic();
     void touchEvent_propagation();
@@ -334,6 +337,55 @@ void tst_qquickwindow::constantUpdates()
     ConstantUpdateItem item(window.contentItem());
     window.show();
     QTRY_VERIFY(item.iterations > 60);
+}
+
+void tst_qquickwindow::constantUpdatesOnWindow_data()
+{
+    QTest::addColumn<bool>("blockedGui");
+    QTest::addColumn<QByteArray>("signal");
+
+    QQuickWindow window;
+    window.setGeometry(100, 100, 300, 200);
+    window.show();
+    QTest::qWaitForWindowExposed(&window);
+    bool threaded = window.openglContext()->thread() != QGuiApplication::instance()->thread();
+
+    if (threaded) {
+        QTest::newRow("blocked, beforeSync") << true << QByteArray(SIGNAL(beforeSynchronizing()));
+        QTest::newRow("blocked, beforeRender") << true << QByteArray(SIGNAL(beforeRendering()));
+        QTest::newRow("blocked, afterRender") << true << QByteArray(SIGNAL(afterRendering()));
+        QTest::newRow("blocked, swapped") << true << QByteArray(SIGNAL(frameSwapped()));
+    }
+    QTest::newRow("unblocked, beforeSync") << false << QByteArray(SIGNAL(beforeSynchronizing()));
+    QTest::newRow("unblocked, beforeRender") << false << QByteArray(SIGNAL(beforeRendering()));
+    QTest::newRow("unblocked, afterRender") << false << QByteArray(SIGNAL(afterRendering()));
+    QTest::newRow("unblocked, swapped") << false << QByteArray(SIGNAL(frameSwapped()));
+}
+
+void tst_qquickwindow::constantUpdatesOnWindow()
+{
+    QFETCH(bool, blockedGui);
+    QFETCH(QByteArray, signal);
+
+    QQuickWindow window;
+    window.setGeometry(100, 100, 300, 200);
+
+    connect(&window, signal.constData(), &window, SLOT(update()), Qt::DirectConnection);
+    window.show();
+    QTRY_VERIFY(window.isExposed());
+
+    QSignalSpy catcher(&window, SIGNAL(frameSwapped()));
+    if (blockedGui)
+        QTest::qSleep(1000);
+    else {
+        window.update();
+        QTest::qWait(1000);
+    }
+    window.hide();
+
+    // We should expect 60, but under loaded conditions we could be skipping
+    // frames, so don't expect too much.
+    QVERIFY(catcher.size() > 10);
 }
 
 void tst_qquickwindow::touchEvent_basic()
@@ -989,6 +1041,28 @@ void tst_qquickwindow::headless()
     QImage newContent = window->grabWindow();
 
     QCOMPARE(originalContent, newContent);
+}
+
+void tst_qquickwindow::noUpdateWhenNothingChanges()
+{
+    QQuickWindow window;
+    window.setGeometry(100, 100, 300, 200);
+
+    QQuickRectangle rect(window.contentItem());
+
+    window.show();
+    QTRY_VERIFY(window.isExposed());
+
+    if (window.openglContext()->thread() == QGuiApplication::instance()->thread()) {
+        QSKIP("Only threaded renderloop implements this feature");
+        return;
+    }
+
+    QSignalSpy spy(&window, SIGNAL(frameSwapped()));
+    rect.update();
+    QTest::qWait(500);
+
+    QCOMPARE(spy.size(), 0);
 }
 
 void tst_qquickwindow::focusObject()

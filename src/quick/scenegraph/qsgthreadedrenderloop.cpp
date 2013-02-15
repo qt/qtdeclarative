@@ -103,10 +103,12 @@ QT_BEGIN_NAMESPACE
 #endif
 
 #if defined (QSG_RENDER_LOOP_DEBUG_FULL)
-#  define RLDEBUG1(x) qDebug("%s : %4d - %s", __FILE__, __LINE__, x);
-#  define RLDEBUG(x) qDebug("%s : %4d - %s", __FILE__, __LINE__, x);
+QElapsedTimer qsgrl_timer;
+#  define RLDEBUG1(x) qDebug("(%6d) %s : %4d - %s", (int) qsgrl_timer.elapsed(), __FILE__, __LINE__, x);
+#  define RLDEBUG(x) qDebug("(%6d) %s : %4d - %s", (int) qsgrl_timer.elapsed(), __FILE__, __LINE__, x);
 #elif defined (QSG_RENDER_LOOP_DEBUG_BASIC)
-#  define RLDEBUG1(x) qDebug("%s : %4d - %s", __FILE__, __LINE__, x);
+QElapsedTimer qsgrl_timer;
+#  define RLDEBUG1(x) qDebug("(%6d) %s : %4d - %s", (int) qsgrl_timer.elapsed(), __FILE__, __LINE__, x);
 #  define RLDEBUG(x)
 #else
 #  define RLDEBUG1(x)
@@ -181,15 +183,6 @@ const QEvent::Type WM_UpdateLater       = QEvent::Type(QEvent::User + 8);
 // Passed by the RL to the RT when a QQuickWindow::grabWindow() is
 // called.
 const QEvent::Type WM_Grab              = QEvent::Type(QEvent::User + 9);
-
-// Passed by the RT to the RL to trigger animations to be advanced.
-const QEvent::Type WM_AdvanceAnimations = QEvent::Type(QEvent::User + 10);
-
-// Passed by the RT to the RL when animations start
-const QEvent::Type WM_AnimationsStarted = QEvent::Type(QEvent::User + 11);
-
-// Passed by the RT to the RL when animations stop
-const QEvent::Type WM_AnimationsStopped = QEvent::Type(QEvent::User + 12);
 
 template <typename T> T *windowFor(const QList<T> list, QQuickWindow *window)
 {
@@ -297,14 +290,13 @@ public:
         , sg(QSGContext::createDefaultContext())
         , pendingUpdate(0)
         , sleeping(false)
-        , animationRunning(false)
+        , syncResultedInChanges(false)
         , guiIsLocked(false)
         , shouldExit(false)
-        , allowMainThreadProcessing(true)
-        , animationRequestsPending(0)
         , stopEventProcessing(false)
     {
         sg->moveToThread(this);
+        vsyncDelta = QGuiApplication::primaryScreen()->refreshRate();
     }
 
 
@@ -330,16 +322,9 @@ public:
     void postEvent(QEvent *e);
 
 public slots:
-    void animationStarted() {
-        RLDEBUG("    Render: animationStarted()");
-        animationRunning = true;
-        if (sleeping)
-            stopEventProcessing = true;
-    }
-
-    void animationStopped() {
-        RLDEBUG("    Render: animationStopped()");
-        animationRunning = false;
+    void sceneGraphChanged() {
+        RLDEBUG("    Render: sceneGraphChanged()");
+        syncResultedInChanges = true;
     }
 
 public:
@@ -356,13 +341,12 @@ public:
 
     uint pendingUpdate : 2;
     uint sleeping : 1;
-    uint animationRunning : 1;
+    uint syncResultedInChanges : 1;
 
     volatile bool guiIsLocked;
     volatile bool shouldExit;
 
-    volatile bool allowMainThreadProcessing;
-    volatile int animationRequestsPending;
+    float vsyncDelta;
 
     QMutex mutex;
     QWaitCondition waitCondition;
@@ -472,12 +456,10 @@ bool QSGRenderThread::event(QEvent *e)
         return true;
     }
 
-    case WM_AnimationsStarted:
-        animationStarted();
-        break;
-
-    case WM_AnimationsStopped:
-        animationStopped();
+    case WM_RequestRepaint:
+        // When GUI posts this event, it is followed by a polishAndSync, so we mustn't
+        // exit the event loop yet.
+        pendingUpdate |= RepaintRequest;
         break;
 
     default:
@@ -590,7 +572,13 @@ void QSGRenderThread::sync()
         }
         gl->makeCurrent(w.window);
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(w.window);
+        bool hadRenderer = d->renderer != 0;
         d->syncSceneGraph();
+        if (!hadRenderer && d->renderer) {
+            RLDEBUG("    Render:  - renderer was created, hooking up changed signal");
+            syncResultedInChanges = true;
+            connect(d->renderer, SIGNAL(sceneGraphChanged()), this, SLOT(sceneGraphChanged()), Qt::DirectConnection);
+        }
     }
 
     RLDEBUG("    Render:  - unlocking after sync");
@@ -608,19 +596,26 @@ void QSGRenderThread::syncAndRender()
     if (qquick_window_timing)
         sinceLastTime = threadTimer.restart();
 #endif
+    QElapsedTimer waitTimer;
+    waitTimer.start();
+
     RLDEBUG("    Render: syncAndRender()");
 
-    // This animate request will get there after the sync
-    if (animationRunning && animationRequestsPending < 2) {
-        RLDEBUG("    Render:  - posting animate to gui..");
-        ++animationRequestsPending;
-        QCoreApplication::postEvent(wm, new QEvent(WM_AdvanceAnimations));
+    syncResultedInChanges = false;
 
-    }
+    bool repaintRequested = pendingUpdate & RepaintRequest;
 
     if (pendingUpdate & SyncRequest) {
         RLDEBUG("    Render:  - update pending, doing sync");
         sync();
+    }
+
+    if (!syncResultedInChanges && !(repaintRequested)) {
+        RLDEBUG("    Render:  - no changes, rendering aborted");
+        int waitTime = vsyncDelta - (int) waitTimer.elapsed();
+        if (waitTime > 0)
+            msleep(waitTime);
+        return;
     }
 
 #ifndef QSG_NO_WINDOW_TIMING
@@ -668,25 +663,25 @@ void QSGRenderThread::postEvent(QEvent *e)
 
 void QSGRenderThread::processEvents()
 {
-    RLDEBUG1("    Render: processEvents()");
+    RLDEBUG("    Render: processEvents()");
     while (eventQueue.hasMoreEvents()) {
         QEvent *e = eventQueue.takeEvent(false);
         event(e);
         delete e;
     }
-    RLDEBUG1("    Render:  - done with processEvents()");
+    RLDEBUG("    Render:  - done with processEvents()");
 }
 
 void QSGRenderThread::processEventsAndWaitForMore()
 {
-    RLDEBUG1("    Render: processEventsAndWaitForMore()");
+    RLDEBUG("    Render: processEventsAndWaitForMore()");
     stopEventProcessing = false;
     while (!stopEventProcessing) {
         QEvent *e = eventQueue.takeEvent(true);
         event(e);
         delete e;
     }
-    RLDEBUG1("    Render:  - done with processEventsAndWaitForMore()");
+    RLDEBUG("    Render:  - done with processEventsAndWaitForMore()");
 }
 
 void QSGRenderThread::run()
@@ -706,7 +701,7 @@ void QSGRenderThread::run()
         QCoreApplication::processEvents();
 
         if (!shouldExit
-            && ((!animationRunning && pendingUpdate == 0) || m_windows.size() == 0)) {
+            && (pendingUpdate == 0 || m_windows.size() == 0)) {
             RLDEBUG("    Render: enter event loop (going to sleep)");
             sleeping = true;
             processEventsAndWaitForMore();
@@ -723,7 +718,12 @@ void QSGRenderThread::run()
 QSGThreadedRenderLoop::QSGThreadedRenderLoop()
     : m_animation_timer(0)
     , m_update_timer(0)
+    , m_sync_triggered_update(false)
 {
+#if defined(QSG_RENDER_LOOP_DEBUG_BASIC) || defined (QSG_RENDER_LOOP_DEBUG_FULL)
+    qsgrl_timer.start();
+#endif
+
     m_thread = new QSGRenderThread(this);
     m_thread->moveToThread(m_thread);
 
@@ -736,6 +736,14 @@ QSGThreadedRenderLoop::QSGThreadedRenderLoop()
 
     m_animation_driver->install();
     RLDEBUG1("GUI: QSGThreadedRenderLoop() created");
+}
+
+void QSGThreadedRenderLoop::maybePostPolishRequest()
+{
+    if (m_update_timer == 0) {
+        RLDEBUG("GUI:  - posting update");
+        m_update_timer = startTimer(m_exhaust_delay, Qt::PreciseTimer);
+    }
 }
 
 QAnimationDriver *QSGThreadedRenderLoop::animationDriver() const
@@ -763,7 +771,7 @@ void QSGThreadedRenderLoop::animationStarted()
     RLDEBUG("GUI: animationStarted()");
     if (!anyoneShowing() && m_animation_timer == 0)
         m_animation_timer = startTimer(qsgrl_animation_interval());
-    m_thread->postEvent(new QEvent(WM_AnimationsStarted));
+    maybePostPolishRequest();
 }
 
 void QSGThreadedRenderLoop::animationStopped()
@@ -773,7 +781,6 @@ void QSGThreadedRenderLoop::animationStopped()
         killTimer(m_animation_timer);
         m_animation_timer = 0;
     }
-    m_thread->postEvent(new QEvent(WM_AnimationsStopped));
 }
 
 
@@ -790,7 +797,6 @@ void QSGThreadedRenderLoop::show(QQuickWindow *window)
 
     Window win;
     win.window = window;
-    win.pendingUpdate = false;
     m_windows << win;
 }
 
@@ -869,7 +875,6 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
     // Start render thread if it is not running
     if (!m_thread->isRunning()) {
         m_thread->shouldExit = false;
-        m_thread->animationRunning = m_animation_driver->isRunning();
 
         RLDEBUG1("GUI: - starting render thread...");
         m_thread->start();
@@ -919,27 +924,19 @@ void QSGThreadedRenderLoop::maybeUpdate(QQuickWindow *window)
 
     RLDEBUG("GUI: maybeUpdate...");
     Window *w = windowFor(m_windows, window);
-    if (!w || w->pendingUpdate || !m_thread->isRunning()) {
+    if (!w || !m_thread->isRunning()) {
         return;
     }
 
     // Call this function from the Gui thread later as startTimer cannot be
     // called from the render thread.
     if (QThread::currentThread() == m_thread) {
-        RLDEBUG("GUI:  - on render thread, posting update later");
-        QCoreApplication::postEvent(this, new WMWindowEvent(window, WM_UpdateLater));
+        RLDEBUG("GUI:  - on render thread, will update later..");
+        m_sync_triggered_update = true;
         return;
     }
 
-
-    w->pendingUpdate = true;
-
-    if (m_update_timer > 0) {
-        return;
-    }
-
-    RLDEBUG("GUI:  - posting update");
-    m_update_timer = startTimer(m_animation_driver->isRunning() ? m_exhaust_delay : 0, Qt::PreciseTimer);
+    maybePostPolishRequest();
 }
 
 /*!
@@ -956,6 +953,7 @@ void QSGThreadedRenderLoop::update(QQuickWindow *window)
     }
 
     RLDEBUG("Gui: update called");
+    m_thread->postEvent(new QEvent(WM_RequestRepaint));
     maybeUpdate(window);
 }
 
@@ -985,6 +983,8 @@ void QSGThreadedRenderLoop::polishAndSync()
     if (!anyoneShowing())
         return;
 
+    RLDEBUG("GUI: polishAndSync()");
+
 #ifndef QSG_NO_WINDOW_TIMING
     QElapsedTimer timer;
     int polishTime = 0;
@@ -992,7 +992,7 @@ void QSGThreadedRenderLoop::polishAndSync()
     if (qquick_window_timing)
         timer.start();
 #endif
-    RLDEBUG("GUI: polishAndSync()");
+
     // Polish as the last thing we do before we allow the sync to take place
     for (int i=0; i<m_windows.size(); ++i) {
         const Window &w = m_windows.at(i);
@@ -1004,17 +1004,13 @@ void QSGThreadedRenderLoop::polishAndSync()
         polishTime = timer.elapsed();
 #endif
 
-    RLDEBUG("GUI:  - clearing update flags...");
-    for (int i=0; i<m_windows.size(); ++i) {
-        m_windows[i].pendingUpdate = false;
-    }
+    m_sync_triggered_update = false;
 
     RLDEBUG("GUI:  - lock for sync...");
     m_thread->mutex.lock();
     m_thread->guiIsLocked = true;
-    QEvent *event = new QEvent(WM_RequestSync);
+    m_thread->postEvent(new QEvent(WM_RequestSync));
 
-    m_thread->postEvent(event);
     RLDEBUG("GUI:  - wait for sync...");
 #ifndef QSG_NO_WINDOW_TIMING
     if (qquick_window_timing)
@@ -1026,8 +1022,26 @@ void QSGThreadedRenderLoop::polishAndSync()
     RLDEBUG("GUI:  - unlocked after sync...");
 
 #ifndef QSG_NO_WINDOW_TIMING
+    int syncTime = timer.elapsed();
+#endif
+
+    killTimer(m_update_timer);
+    m_update_timer = 0;
+
+    if (m_animation_driver->isRunning()) {
+        RLDEBUG("GUI:  - animations advancing");
+        m_animation_driver->advance();
+        RLDEBUG("GUI:  - animations done");
+
+        // We need to trigger another sync to keep animations running...
+        maybePostPolishRequest();
+    } else if (m_sync_triggered_update) {
+        maybePostPolishRequest();
+    }
+
+#ifndef QSG_NO_WINDOW_TIMING
     if (qquick_window_timing)
-        qDebug(" - polish=%d, wait=%d, sync=%d", polishTime, waitTime - polishTime, int(timer.elapsed() - waitTime));
+        qDebug(" - polish=%d, wait=%d, sync=%d -- animations=%d", polishTime, waitTime - polishTime, syncTime - waitTime, int(timer.elapsed() - syncTime));
 #endif
 }
 
@@ -1037,37 +1051,11 @@ bool QSGThreadedRenderLoop::event(QEvent *e)
 
     case QEvent::Timer:
         if (static_cast<QTimerEvent *>(e)->timerId() == m_animation_timer) {
-            RLDEBUG("Gui: QEvent::Timer -> non-visual animation");
+            RLDEBUG("GUI: QEvent::Timer -> non-visual animation");
             m_animation_driver->advance();
         } else if (static_cast<QTimerEvent *>(e)->timerId() == m_update_timer) {
-            RLDEBUG("Gui: QEvent::Timer -> polishAndSync()");
-            killTimer(m_update_timer);
-            m_update_timer = 0;
+            RLDEBUG("GUI: QEvent::Timer -> Polish & Sync");
             polishAndSync();
-        }
-        return true;
-
-    case WM_UpdateLater: {
-        QQuickWindow *window = static_cast<WMWindowEvent *>(e)->window;
-        // The window might have gone away...
-        if (windowFor(m_windows, window))
-            maybeUpdate(window);
-        return true; }
-
-    case WM_AdvanceAnimations:
-        --m_thread->animationRequestsPending;
-        RLDEBUG("GUI: WM_AdvanceAnimations");
-        if (m_animation_driver->isRunning()) {
-#ifdef QQUICK_CANVAS_TIMING
-            QElapsedTimer timer;
-            timer.start();
-#endif
-            m_animation_driver->advance();
-            RLDEBUG("GUI:  - animations advanced..");
-#ifdef QQUICK_CANVAS_TIMING
-            if (qquick_canvas_timing)
-                qDebug(" - animation: %d", (int) timer.elapsed());
-#endif
         }
         return true;
 
