@@ -44,7 +44,6 @@
 #include <QtCore/QString>
 #include <QtCore/QVector>
 #include <QtCore/QDebug>
-#include <wtf/Platform.h>
 #include "qv4global.h"
 
 QT_BEGIN_NAMESPACE
