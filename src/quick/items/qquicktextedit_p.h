@@ -48,6 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickTextDocument;
 class QQuickTextEditPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
 {
@@ -99,6 +100,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
 #endif
     Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
+    Q_PROPERTY(QQuickTextDocument *textDocument READ textDocument FINAL)
 
 public:
     QQuickTextEdit(QQuickItem *parent=0);
@@ -247,6 +249,8 @@ public:
     Q_INVOKABLE QString getText(int start, int end) const;
     Q_INVOKABLE QString getFormattedText(int start, int end) const;
 
+    QQuickTextDocument *textDocument();
+
 Q_SIGNALS:
     void textChanged();
     void contentSizeChanged();
@@ -339,6 +343,7 @@ protected:
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData);
 
     friend class QQuickTextUtil;
+    friend class QQuickTextDocument;
 
 private:
     Q_DISABLE_COPY(QQuickTextEdit)

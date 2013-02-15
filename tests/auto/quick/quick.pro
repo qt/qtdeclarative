@@ -60,6 +60,7 @@ QUICKTESTS =  \
     qquickshadereffect \
     qquickspritesequence \
     qquicktext \
+    qquicktextdocument \
     qquicktextedit \
     qquicktextinput \
     qquickvisualdatamodel \

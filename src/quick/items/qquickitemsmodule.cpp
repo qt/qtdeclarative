@@ -49,6 +49,7 @@
 #include "qquicktext_p.h"
 #include "qquicktextinput_p.h"
 #include "qquicktextedit_p.h"
+#include "qquicktextdocument.h"
 #include "qquickimage_p.h"
 #include "qquickborderimage_p.h"
 #include "qquickscalegrid_p_p.h"
@@ -177,6 +178,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickFlickableVisibleArea>();
     qRegisterMetaType<QQuickAnchorLine>("QQuickAnchorLine");
     QQmlMetaType::setQQuickAnchorLineCompareFunction(compareQQuickAnchorLines);
+
+    qmlRegisterType<QQuickTextDocument>();
+
 
     qmlRegisterUncreatableType<QQuickKeyNavigationAttached>(uri,major,minor,"KeyNavigation",QQuickKeyNavigationAttached::tr("KeyNavigation is only available via attached properties"));
     qmlRegisterUncreatableType<QQuickKeysAttached>(uri,major,minor,"Keys",QQuickKeysAttached::tr("Keys is only available via attached properties"));

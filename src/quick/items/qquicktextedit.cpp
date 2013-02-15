@@ -61,6 +61,7 @@
 #include <private/qtextengine_p.h>
 #include <private/qsgadaptationlayer_p.h>
 
+#include "qquicktextdocument.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -2177,6 +2178,25 @@ void QQuickTextEdit::remove(int start, int end)
     cursor.setPosition(end, QTextCursor::KeepAnchor);
     cursor.removeSelectedText();
     d->control->updateCursorRectangle(false);
+}
+
+/*!
+    \qmlproperty TextDocument QtQuick2::TextEdit::textDocument
+    \since 5.1
+
+    Returns the QQuickTextDocument of this TextEdit.
+    It can be used to implement syntax highlighting using
+    \l QSyntaxHighlighter.
+
+    \sa QQuickTextDocument
+*/
+
+QQuickTextDocument *QQuickTextEdit::textDocument()
+{
+    Q_D(QQuickTextEdit);
+    if (!d->quickDocument)
+        d->quickDocument = new QQuickTextDocument(this);
+    return d->quickDocument;
 }
 
 QT_END_NAMESPACE
