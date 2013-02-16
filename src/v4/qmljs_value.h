@@ -244,6 +244,7 @@ struct Q_V4_EXPORT Value
         return b;
     }
 
+    String *asString() const;
     Managed *asManaged() const;
     Object *asObject() const;
     FunctionObject *asFunctionObject() const;
@@ -459,6 +460,12 @@ inline uint Value::asArrayLength(ExecutionContext *ctx, bool *ok) const
     return idx;
 }
 
+inline String *Value::asString() const
+{
+    if (isString())
+        return stringValue();
+    return 0;
+}
 
 inline Managed *Value::asManaged() const
 {

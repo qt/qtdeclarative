@@ -549,22 +549,22 @@ void __qmljs_set_property(ExecutionContext *ctx, const Value &object, String *na
 
 void __qmljs_get_element(ExecutionContext *ctx, Value *result, const Value &object, const Value &index)
 {
-    uint type = object.type();
     uint idx = index.asArrayIndex();
 
     Object *o = object.asObject();
     if (!o) {
-        if (type == Value::String_Type && idx < UINT_MAX) {
-            String *str = object.stringValue();
-            if (idx >= (uint)str->toQString().length()) {
+        if (idx < UINT_MAX) {
+            if (String *str = object.asString()) {
+                if (idx >= (uint)str->toQString().length()) {
+                    if (result)
+                        *result = Value::undefinedValue();
+                    return;
+                }
+                const QString s = str->toQString().mid(idx, 1);
                 if (result)
-                    *result = Value::undefinedValue();
+                    *result = Value::fromString(ctx, s);
                 return;
             }
-            const QString s = str->toQString().mid(idx, 1);
-            if (result)
-                *result = Value::fromString(ctx, s);
-            return;
         }
 
         o = __qmljs_convert_to_object(ctx, object);
