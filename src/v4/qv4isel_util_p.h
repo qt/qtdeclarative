@@ -35,6 +35,16 @@
 
 namespace QQmlJS {
 
+inline bool isNegative(double d)
+{
+    uchar *dch = (uchar *)&d;
+    if (QSysInfo::ByteOrder == QSysInfo::BigEndian)
+        return (dch[0] & 0x80);
+    else
+        return (dch[7] & 0x80);
+
+}
+
 inline VM::Value convertToValue(IR::Const *c)
 {
     switch (c->type) {
@@ -47,7 +57,7 @@ inline VM::Value convertToValue(IR::Const *c)
     case IR::NumberType: {
         int ival = (int)c->value;
         // +0 != -0, so we need to convert to double when negating 0
-        if (ival == c->value && c->value != -0) {
+        if (ival == c->value && !(c->value == 0 && isNegative(c->value))) {
             return VM::Value::fromInt32(ival);
         } else {
             return VM::Value::fromDouble(c->value);
