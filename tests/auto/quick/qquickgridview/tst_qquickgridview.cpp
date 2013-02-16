@@ -4308,22 +4308,22 @@ void tst_QQuickGridView::snapOneRow_data()
     QTest::addColumn<qreal>("startExtent");
 
     QTest::newRow("vertical, left to right") << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 240.0 << 0.0;
+        << QPoint(20, 160) << QPoint(20, 20) << 100.0 << 240.0 << 0.0;
 
     QTest::newRow("horizontal, left to right") << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 240.0 << 0.0;
+        << QPoint(160, 20) << QPoint(20, 20) << 100.0 << 240.0 << 0.0;
 
     QTest::newRow("horizontal, right to left") << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -240.0 - 240.0 << -240.0;
+        << QPoint(20, 20) << QPoint(160, 20) << -340.0 << -240.0 - 240.0 << -240.0;
 
     QTest::newRow("vertical, left to right, enforce range") << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 340.0 << -20.0;
+        << QPoint(20, 160) << QPoint(20, 20) << 100.0 << 340.0 << -20.0;
 
     QTest::newRow("horizontal, left to right, enforce range") << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 340.0 << -20.0;
+        << QPoint(160, 20) << QPoint(20, 20) << 100.0 << 340.0 << -20.0;
 
     QTest::newRow("horizontal, right to left, enforce range") << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -240.0 - 240.0 - 100.0 << -220.0;
+        << QPoint(20, 20) << QPoint(160, 20) << -340.0 << -240.0 - 240.0 - 100.0 << -220.0;
 }
 
 void tst_QQuickGridView::snapOneRow()
