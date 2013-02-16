@@ -648,14 +648,24 @@ public:
         load32(addr, ScratchRegister);
         and32(TrustedImm32(0x1f), ScratchRegister);
         urshift32(ScratchRegister, reg);
-        return Jump();
+#if CPU(X86) || CPU(X86_64)
+        m_assembler.testl_rr(reg, reg);
+        return Jump(m_assembler.jCC(x86Condition(Signed)));
+#else
+#error "Implement me: Branch if result is negative"
+#endif
     }
 
     Jump inline_ushr32(TrustedImm32 imm, RegisterID reg)
     {
         imm.m_value &= 0x1f;
         urshift32(imm, reg);
-        return Jump();
+#if CPU(X86) || CPU(X86_64)
+        m_assembler.testl_rr(reg, reg);
+        return Jump(m_assembler.jCC(x86Condition(Signed)));
+#else
+#error "Implement me: Branch if result is negative"
+#endif
     }
 
     Jump inline_and32(Address addr, RegisterID reg)
