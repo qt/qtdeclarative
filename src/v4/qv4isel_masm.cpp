@@ -360,7 +360,7 @@ static void printDisassembledOutputWithCalls(const char* output, const QHash<voi
     QByteArray processedOutput(output);
     for (QHash<void*, const char*>::ConstIterator it = functions.begin(), end = functions.end();
          it != end; ++it) {
-        QByteArray ptrString = QByteArray::number(qlonglong(it.key()), 16);
+        QByteArray ptrString = QByteArray::number(quintptr(it.key()), 16);
         ptrString.prepend("0x");
         processedOutput = processedOutput.replace(ptrString, it.value());
     }
