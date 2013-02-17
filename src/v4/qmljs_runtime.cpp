@@ -726,9 +726,9 @@ void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value &object, int
 }
 
 
-Value __qmljs_get_thisObject(ExecutionContext *ctx)
+void __qmljs_get_thisObject(ExecutionContext *ctx, Value *result)
 {
-    return ctx->thisObject;
+    *result = ctx->thisObject;
 }
 
 uint __qmljs_equal(const Value &x, const Value &y, ExecutionContext *ctx)

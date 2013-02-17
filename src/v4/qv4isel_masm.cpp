@@ -677,7 +677,7 @@ void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Te
 
 void InstructionSelection::loadThisObject(IR::Temp *temp)
 {
-    generateFunctionCall(temp, __qmljs_get_thisObject, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::Void, __qmljs_get_thisObject, Assembler::ContextRegister, Assembler::PointerToValue(temp));
 }
 
 void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Temp *targetTemp)
