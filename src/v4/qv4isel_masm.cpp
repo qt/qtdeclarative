@@ -205,7 +205,7 @@ void Assembler::leaveStandardStackFrame(int locals)
         loadPtr(Address(StackPointerRegister, i * sizeof(void*)), calleeSavedRegisters[i]);
 
     // space for the locals and the callee saved registers
-    int32_t frameSize = locals * sizeof(QQmlJS::VM::Value) + sizeof(void*);
+    int32_t frameSize = locals * sizeof(QQmlJS::VM::Value) + sizeof(void*) * calleeSavedRegisterCount;
 #if CPU(X86) || CPU(X86_64)
     frameSize = (frameSize + 15) & ~15; // align on 16 byte boundaries for MMX
 #endif
