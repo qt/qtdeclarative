@@ -64,6 +64,7 @@ public:
 
 #undef VALUE_FITS_IN_REGISTER
 #undef ARGUMENTS_IN_REGISTERS
+#define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
 
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
     static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
@@ -89,6 +90,7 @@ public:
 
 #define VALUE_FITS_IN_REGISTER
 #define ARGUMENTS_IN_REGISTERS
+#define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
 
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
     static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
@@ -120,6 +122,7 @@ public:
 
 #undef VALUE_FITS_IN_REGISTER
 #define ARGUMENTS_IN_REGISTERS
+#undef HAVE_ALU_OPS_WITH_MEM_OPERAND
 
     static const RegisterID StackFrameRegister = JSC::ARMRegisters::r4;
     static const RegisterID StackPointerRegister = JSC::ARMRegisters::sp;
@@ -572,7 +575,12 @@ public:
 
     Jump inline_add32(Address addr, RegisterID reg)
     {
+#if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         return branchAdd32(Overflow, addr, reg);
+#else
+        load32(addr, ScratchRegister);
+        return branchAdd32(Overflow, ScratchRegister, reg);
+#endif
     }
 
     Jump inline_add32(TrustedImm32 imm, RegisterID reg)
@@ -582,7 +590,12 @@ public:
 
     Jump inline_sub32(Address addr, RegisterID reg)
     {
+#if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         return branchSub32(Overflow, addr, reg);
+#else
+        load32(addr, ScratchRegister);
+        return branchSub32(Overflow, ScratchRegister, reg);
+#endif
     }
 
     Jump inline_sub32(TrustedImm32 imm, RegisterID reg)
@@ -592,7 +605,12 @@ public:
 
     Jump inline_mul32(Address addr, RegisterID reg)
     {
+#if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         return branchMul32(Overflow, addr, reg);
+#else
+        load32(addr, ScratchRegister);
+        return branchMul32(Overflow, ScratchRegister, reg);
+#endif
     }
 
     Jump inline_mul32(TrustedImm32 imm, RegisterID reg)
@@ -647,7 +665,12 @@ public:
 
     Jump inline_and32(Address addr, RegisterID reg)
     {
+#if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         and32(addr, reg);
+#else
+        load32(addr, ScratchRegister);
+        and32(ScratchRegister, reg);
+#endif
         return Jump();
     }
 
@@ -659,7 +682,12 @@ public:
 
     Jump inline_or32(Address addr, RegisterID reg)
     {
+#if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         or32(addr, reg);
+#else
+        load32(addr, ScratchRegister);
+        or32(ScratchRegister, reg);
+#endif
         return Jump();
     }
 
@@ -671,7 +699,12 @@ public:
 
     Jump inline_xor32(Address addr, RegisterID reg)
     {
+#if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         xor32(addr, reg);
+#else
+        load32(addr, ScratchRegister);
+        xor32(ScratchRegister, reg);
+#endif
         return Jump();
     }
 
