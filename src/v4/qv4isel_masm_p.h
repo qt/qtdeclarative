@@ -455,37 +455,23 @@ public:
     static inline int sizeOfArgument(TrustedImm32)
     { return 4; }
 
-    struct ArgumentLoader
+    template <int argumentNumber, typename T>
+    int loadArgumentOnStackOrRegister(const T &value)
     {
-        ArgumentLoader(Assembler* _assembler, int totalNumberOfArguments)
-            : assembler(_assembler)
-            , stackSpaceForArguments(0)
-            , currentRegisterIndex(qMin(totalNumberOfArguments - 1, RegisterArgumentCount - 1))
-        {
+        if (argumentNumber < RegisterArgumentCount) {
+            loadArgument(value, registerForArgument(argumentNumber));
+            return 0;
+        } else {
+            push(value);
+            return sizeOfArgument(value);
         }
+    }
 
-        template <typename T>
-        void load(T argument)
-        {
-            if (currentRegisterIndex >= 0) {
-                assembler->loadArgument(argument, registerForArgument(currentRegisterIndex));
-                --currentRegisterIndex;
-            } else {
-                assembler->push(argument);
-                stackSpaceForArguments += sizeOfArgument(argument);
-            }
-        }
-
-        void load(VoidType)
-        {
-            if (currentRegisterIndex >= 0)
-                --currentRegisterIndex;
-        }
-
-        Assembler *assembler;
-        int stackSpaceForArguments;
-        int currentRegisterIndex;
-    };
+    template <int argumentNumber>
+    int loadArgumentOnStackOrRegister(const VoidType &value)
+    {
+        return 0;
+    }
 
     template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
     void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
@@ -502,26 +488,24 @@ public:
             returnValueOnStack = true;
         }
 
-        ArgumentLoader l(this, totalNumberOfArgs);
-        l.load(arg6);
-        l.load(arg5);
-        l.load(arg4);
-        l.load(arg3);
-        l.load(arg2);
-        l.load(arg1);
+        int stackSpaceUsedForArgs = 0;
+        stackSpaceUsedForArgs += loadArgumentOnStackOrRegister<5>(arg6);
+        stackSpaceUsedForArgs += loadArgumentOnStackOrRegister<4>(arg5);
+        stackSpaceUsedForArgs += loadArgumentOnStackOrRegister<3>(arg4);
+        stackSpaceUsedForArgs += loadArgumentOnStackOrRegister<2>(arg3);
+        stackSpaceUsedForArgs += loadArgumentOnStackOrRegister<1>(arg2);
+        stackSpaceUsedForArgs += loadArgumentOnStackOrRegister<0>(arg1);
 
         if (returnValueOnStack) {
             // Load address of return value
-            l.load(Pointer(StackPointerRegister, l.stackSpaceForArguments));
+            push(Pointer(StackPointerRegister, stackSpaceUsedForArgs));
         }
 
         callAbsolute(functionName, function);
 
-        int stackSizeToCorrect = l.stackSpaceForArguments;
-        if (returnValueOnStack) {
-            stackSizeToCorrect -= sizeof(void*); // Callee removed the hidden argument (address of return value)
+        int stackSizeToCorrect = stackSpaceUsedForArgs;
+        if (returnValueOnStack)
             stackSizeToCorrect += sizeOfReturnValueOnStack;
-        }
 
         storeArgument(ReturnValueRegister, r);
 
