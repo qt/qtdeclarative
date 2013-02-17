@@ -465,7 +465,7 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     }
 
     _as->leaveStandardStackFrame(locals);
-#ifndef VALUE_FITS_IN_REGISTER
+#ifndef ARGUMENTS_IN_REGISTERS
     // Emulate ret(n) instruction
     // Pop off return address into scratch register ...
     _as->pop(Assembler::ScratchRegister);
