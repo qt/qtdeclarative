@@ -126,7 +126,7 @@ public:
     static const RegisterID ContextRegister = JSC::ARMRegisters::r5;
     static const RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
     static const RegisterID ScratchRegister = JSC::ARMRegisters::r6;
-    static const RegisterID IntegerOpRegister = JSC::X86Registers::r0;
+    static const RegisterID IntegerOpRegister = JSC::ARMRegisters::r0;
     static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
 
     static const int RegisterSize = 4;
