@@ -1011,7 +1011,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 void InstructionSelection::visitRet(IR::Ret *s)
 {
     if (IR::Temp *t = s->expr->asTemp()) {
-#ifdef VALUE_FITS_IN_REGISTER
+#if defined(ARGUMENTS_IN_REGISTERS) && defined(VALUE_FITS_IN_REGISTER)
         _as->copyValue(Assembler::ReturnValueRegister, t);
 #else
         _as->loadPtr(addressForArgument(0), Assembler::ReturnValueRegister);

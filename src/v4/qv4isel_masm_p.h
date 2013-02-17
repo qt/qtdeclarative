@@ -147,11 +147,22 @@ public:
     };
     inline void platformEnterStandardStackFrame()
     {
+        // Move the register arguments onto the stack as if they were
+        // pushed by the caller, just like on ia32. This gives us consistent
+        // access to the parameters if we need to.
+        push(JSC::ARMRegisters::r3);
+        push(JSC::ARMRegisters::r2);
+        push(JSC::ARMRegisters::r1);
+        push(JSC::ARMRegisters::r0);
         push(JSC::ARMRegisters::lr);
     }
     inline void platformLeaveStandardStackFrame()
     {
         pop(JSC::ARMRegisters::lr);
+        push(JSC::ARMRegisters::r0);
+        push(JSC::ARMRegisters::r1);
+        push(JSC::ARMRegisters::r2);
+        push(JSC::ARMRegisters::r3);
     }
 #else
 #error Argh.
@@ -775,13 +786,10 @@ protected:
 
     Address addressForArgument(int index) const
     {
-        if (index < Assembler::RegisterArgumentCount)
-            return Address(_as->registerForArgument(index), 0);
-
         // StackFrameRegister points to its old value on the stack, and above
         // it we have the return address, hence the need to step over two
         // values before reaching the first argument.
-        return Address(Assembler::StackFrameRegister, (index - Assembler::RegisterArgumentCount + 2) * sizeof(void*));
+        return Address(Assembler::StackFrameRegister, (index + 2) * sizeof(void*));
     }
 
     // Some run-time functions take (Value* args, int argc). This function is for populating
