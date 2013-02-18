@@ -194,15 +194,24 @@ void QSGGuiThreadRenderLoop::hide(QQuickWindow *window)
     cd->cleanupNodesOnShutdown();
 
     if (m_windows.size() == 0) {
-        sg->invalidate();
-        delete gl;
-        gl = 0;
+        if (!cd->persistentSceneGraph) {
+            sg->invalidate();
+            if (!cd->persistentGLContext) {
+                delete gl;
+                gl = 0;
+            }
+        }
     }
 }
 
 void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
 {
     hide(window);
+    if (m_windows.size() == 0) {
+        sg->invalidate();
+        delete gl;
+        gl = 0;
+    }
 }
 
 void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
@@ -297,7 +306,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 void QSGGuiThreadRenderLoop::exposureChanged(QQuickWindow *window)
 {
     if (window->isExposed())
-        maybeUpdate(window);
+        renderWindow(window);
 }
 
 QImage QSGGuiThreadRenderLoop::grab(QQuickWindow *window)
