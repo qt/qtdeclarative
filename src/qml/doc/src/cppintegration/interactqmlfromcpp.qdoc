@@ -147,8 +147,8 @@ custom element \c PushButton with a \c buttonText property that internally
 reflects the value of a \c m_buttonText member variable. Modifying the member
 variable directly like this is not a good idea:
 
-\badcode
-// BAD!
+\code
+//bad code
 QQmlComponent component(engine, "MyButton.qml");
 PushButton *button = qobject_cast<PushButton*>(component.create());
 button->m_buttonText = "Click me";

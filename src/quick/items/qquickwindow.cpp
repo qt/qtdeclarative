@@ -1250,7 +1250,7 @@ bool QQuickWindowPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouse
             event->setAccepted(me->isAccepted());
             if (me->isAccepted())
                 return true;
-            if (mouseGrabberItem && !event->buttons())
+            if (mouseGrabberItem)
                 mouseGrabberItem->ungrabMouse();
         }
     }
