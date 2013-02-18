@@ -112,6 +112,10 @@ QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
 
         if (m_attachee->window()) //It might not be assigned to a window yet
             windowChanged(m_attachee->window());
+    } else {
+        QQuickWindow *window = qobject_cast<QQuickWindow*>(attachee);
+        if (window)
+            windowChanged(window);
     }
 }
 
