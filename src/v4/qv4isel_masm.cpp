@@ -211,7 +211,14 @@ void Assembler::leaveStandardStackFrame(int locals)
 #if CPU(X86) || CPU(X86_64)
     frameSize = (frameSize + 15) & ~15; // align on 16 byte boundaries for MMX
 #endif
+    // Work around bug in ARMv7Assembler.h where add32(imm, sp, sp) doesn't
+    // work well for large immediates.
+#if CPU(ARM_THUMB2)
+    move(TrustedImm32(frameSize), Assembler::ScratchRegister);
+    add32(Assembler::ScratchRegister, StackPointerRegister);
+#else
     addPtr(TrustedImm32(frameSize), StackPointerRegister);
+#endif
 
     pop(StackFrameRegister);
     platformLeaveStandardStackFrame();
