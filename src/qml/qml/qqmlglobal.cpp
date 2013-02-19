@@ -44,6 +44,7 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/QCoreApplication>
 
 QT_BEGIN_NAMESPACE
 
@@ -357,7 +358,7 @@ Q_AUTOTEST_EXPORT QQmlColorProvider *QQml_colorProvider(void)
 
 
 QQmlGuiProvider::~QQmlGuiProvider() {}
-QObject *QQmlGuiProvider::application(QObject *) { return 0; }
+QObject *QQmlGuiProvider::application(QObject *) { return new QQmlApplication(); }
 QStringList QQmlGuiProvider::fontFamilies() { return QStringList(); }
 bool QQmlGuiProvider::openUrlExternally(QUrl &) { return false; }
 
@@ -383,8 +384,7 @@ Q_QML_PRIVATE_EXPORT QQmlGuiProvider *QQml_setGuiProvider(QQmlGuiProvider *newPr
 static QQmlGuiProvider **getGuiProvider(void)
 {
     if (guiProvider == 0) {
-        qWarning() << "Warning: QQml_guiProvider: no GUI provider has been set!";
-        static QQmlGuiProvider nullGuiProvider;
+        static QQmlGuiProvider nullGuiProvider; //Still provides an application with no GUI support
         guiProvider = &nullGuiProvider;
     }
 
@@ -395,6 +395,53 @@ Q_AUTOTEST_EXPORT QQmlGuiProvider *QQml_guiProvider(void)
 {
     static QQmlGuiProvider **providerPtr = getGuiProvider();
     return *providerPtr;
+}
+
+//Docs in qqmlengine.cpp
+QQmlApplication::QQmlApplication(QObject *parent)
+    : QObject(*(new QQmlApplicationPrivate),parent)
+{
+    connect(QCoreApplication::instance(), SIGNAL(aboutToQuit()),
+            this, SIGNAL(aboutToQuit()));
+}
+
+QQmlApplication::QQmlApplication(QQmlApplicationPrivate &dd, QObject *parent)
+    : QObject(dd, parent)
+{
+    connect(QCoreApplication::instance(), SIGNAL(aboutToQuit()),
+            this, SIGNAL(aboutToQuit()));
+}
+
+QStringList QQmlApplication::args()
+{
+    Q_D(QQmlApplication);
+    if (!d->argsInit) {
+        d->argsInit = true;
+        d->args = QCoreApplication::arguments();
+    }
+    return d->args;
+}
+
+QString QQmlApplication::name() const
+{
+    return QCoreApplication::instance()->applicationName();
+}
+
+QString QQmlApplication::version() const
+{
+    return QCoreApplication::instance()->applicationVersion();
+}
+
+void QQmlApplication::setName(const QString &arg)
+{
+    QCoreApplication::instance()->setApplicationName(arg);
+    emit nameChanged(); //Note that we don't get notified if it's changed from C++
+}
+
+void QQmlApplication::setVersion(const QString &arg)
+{
+    QCoreApplication::instance()->setApplicationVersion(arg);
+    emit versionChanged(); //Note that we don't get notified if it's changed from C++
 }
 
 QT_END_NAMESPACE

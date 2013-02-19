@@ -437,13 +437,31 @@ The following functions are also on the Qt object.
     \li Qt.RightToLeft - Text and graphics elements should be positioned
                         from right to left.
     \endlist
-
+    \row
+    \li \c application.arguments
+    \li This is a string list of the arguments the executable was invoked with.
+    \row
+    \li \c application.name
+    \li This is the application name set on the QCoreApplication instance. This property can be written
+    to in order to set the application name.
+    \row
+    \li \c application.version
+    \li This is the application version set on the QCoreApplication instance. This property can be written
+    to in order to set the application name.
     \endtable
+
+    The object also has one signal, aboutToQuit(), which is the same as \l QCoreApplication::aboutToQuit().
 
     The following example uses the \c application object to indicate
     whether the application is currently active:
 
     \snippet qml/application.qml document
+
+    Note that when using QML without a QGuiApplication, the following properties will be undefined:
+    \list
+    \li application.active
+    \li application.layoutDirection
+    \endlist
 */
 
 /*!

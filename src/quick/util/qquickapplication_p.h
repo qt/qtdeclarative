@@ -44,13 +44,14 @@
 
 #include <QtCore/QObject>
 #include <qqml.h>
+#include <QtQml/private/qqmlglobal_p.h>
 #include <private/qtquickglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 
 class QQuickApplicationPrivate;
-class Q_AUTOTEST_EXPORT QQuickApplication : public QObject
+class Q_AUTOTEST_EXPORT QQuickApplication : public QQmlApplication
 {
     Q_OBJECT
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)
