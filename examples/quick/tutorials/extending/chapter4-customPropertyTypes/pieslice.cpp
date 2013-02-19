@@ -60,7 +60,7 @@ void PieSlice::paint(QPainter *painter)
 {
     QPen pen(m_color, 2);
     painter->setPen(pen);
-    painter->setRenderHints(QPainter::HighQualityAntialiasing, true);
-    painter->drawPie(boundingRect(), 90 * 16, 290 * 16);
+    painter->setRenderHints(QPainter::Antialiasing, true);
+    painter->drawPie(boundingRect().adjusted(1, 1, -1, -1), 90 * 16, 290 * 16);
 }
 

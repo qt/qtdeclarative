@@ -2099,7 +2099,7 @@ void QQuickTextInput::insert(int position, const QString &text)
 }
 
 /*!
-    \qmlmethod string QtQuick2::TextInput::getText(int start, int end)
+    \qmlmethod QtQuick2::TextInput::remove(int start, int end)
 
     Removes the section of text that is between the \a start and \a end positions from the TextInput.
 */
