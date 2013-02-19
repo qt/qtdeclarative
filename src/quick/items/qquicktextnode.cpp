@@ -1105,6 +1105,7 @@ void QQuickTextNode::addImage(const QRectF &rect, const QImage &image)
     QSGTexture *texture = m_context->createTexture(image);
     m_textures.append(texture);
     node->setTargetRect(rect);
+    node->setInnerTargetRect(rect);
     node->setTexture(texture);
     appendChildNode(node);
     node->update();
