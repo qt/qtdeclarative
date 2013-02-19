@@ -1,11 +1,11 @@
 TEMPLATE = subdirs
 
+qtHaveModule(quick): SUBDIRS += networkaccessmanagerfactory xmlhttprequest
+
 SUBDIRS += \
-          networkaccessmanagerfactory \
           plugins \
           referenceexamples \
-          shell \
-          xmlhttprequest
+          shell
 
 EXAMPLE_FILES = \
     dynamicscene \
