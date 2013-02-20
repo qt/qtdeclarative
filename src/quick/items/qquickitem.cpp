@@ -78,6 +78,10 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_NO_DEBUG
+static bool qsg_leak_check = !qgetenv("QML_LEAK_CHECK").isEmpty();
+#endif
+
 #ifdef FOCUS_DEBUG
 void printFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1);
 void printFocusTree(QQuickItem *item, QQuickItem *scope, int depth)
@@ -1965,9 +1969,11 @@ static void qt_print_item_count()
 QQuickItem::~QQuickItem()
 {
 #ifndef QT_NO_DEBUG
-    --qt_item_count;
-    if (qt_item_count < 0)
-        qDebug("Item destroyed after qt_print_item_count() was called.");
+    if (qsg_leak_check) {
+        --qt_item_count;
+        if (qt_item_count < 0)
+            qDebug("Item destroyed after qt_print_item_count() was called.");
+    }
 #endif
 
     Q_D(QQuickItem);
@@ -2546,11 +2552,13 @@ QQuickItemPrivate::~QQuickItemPrivate()
 void QQuickItemPrivate::init(QQuickItem *parent)
 {
 #ifndef QT_NO_DEBUG
-    ++qt_item_count;
-    static bool atexit_registered = false;
-    if (!atexit_registered) {
-        atexit(qt_print_item_count);
-        atexit_registered = true;
+    if (qsg_leak_check) {
+        ++qt_item_count;
+        static bool atexit_registered = false;
+        if (!atexit_registered) {
+            atexit(qt_print_item_count);
+            atexit_registered = true;
+        }
     }
 #endif
 

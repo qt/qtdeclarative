@@ -65,6 +65,10 @@
 #include <QHash>
 #endif
 
+#ifndef QT_NO_DEBUG
+static bool qsg_leak_check = !qgetenv("QML_LEAK_CHECK").isEmpty();
+#endif
+
 #ifndef QSG_NO_RENDERER_TIMING
 static bool qsg_render_timing = !qgetenv("QML_RENDERER_TIMING").isEmpty();
 static QElapsedTimer qsg_renderer_timer;
@@ -182,7 +186,7 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     --qt_debug_texture_count;
 
     if (qt_debug_texture_count < 0)
-        qDebug("Material destroyed after qt_debug_print_texture_count() was called.");
+        qDebug("Texture destroyed after qt_debug_print_texture_count() was called.");
 }
 
 #endif // QT_NO_DEBUG
@@ -269,7 +273,8 @@ QSGTexture::QSGTexture()
     : QObject(*(new QSGTexturePrivate))
 {
 #ifndef QT_NO_DEBUG
-    qt_debug_add_texture(this);
+    if (qsg_leak_check)
+        qt_debug_add_texture(this);
 #endif
 }
 
@@ -279,7 +284,8 @@ QSGTexture::QSGTexture()
 QSGTexture::~QSGTexture()
 {
 #ifndef QT_NO_DEBUG
-    qt_debug_remove_texture(this);
+    if (qsg_leak_check)
+        qt_debug_remove_texture(this);
 #endif
 }
 
