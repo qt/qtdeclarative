@@ -320,6 +320,8 @@ private slots:
 
     void showHideAnimate();
 
+    void testExpose();
+
 #ifndef QT_NO_CURSOR
     void cursor();
 #endif
@@ -1373,6 +1375,28 @@ void tst_qquickwindow::showHideAnimate()
 
     QTRY_VERIFY(created->opacity() > 0.5);
     QTRY_VERIFY(created->opacity() < 0.5);
+}
+
+void tst_qquickwindow::testExpose()
+{
+    QQuickWindow window;
+    window.setGeometry(100, 100, 300, 200);
+
+    window.show();
+    QTRY_VERIFY(window.isExposed());
+
+    QSignalSpy swapSpy(&window, SIGNAL(frameSwapped()));
+
+    // exhaust pending exposes, as some platforms send us plenty
+    // while showing the first time
+    QTest::qWait(1000);
+    while (swapSpy.size() != 0) {
+        swapSpy.clear();
+        QTest::qWait(100);
+    }
+
+    QWindowSystemInterface::handleExposeEvent(&window, QRegion(10, 10, 20, 20));
+    QTRY_COMPARE(swapSpy.size(), 1);
 }
 
 QTEST_MAIN(tst_qquickwindow)

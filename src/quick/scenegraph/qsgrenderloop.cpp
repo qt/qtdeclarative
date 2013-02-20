@@ -305,8 +305,10 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
 void QSGGuiThreadRenderLoop::exposureChanged(QQuickWindow *window)
 {
-    if (window->isExposed())
+    if (window->isExposed()) {
+        m_windows[window].updatePending = true;
         renderWindow(window);
+    }
 }
 
 QImage QSGGuiThreadRenderLoop::grab(QQuickWindow *window)

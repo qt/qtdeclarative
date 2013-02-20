@@ -372,6 +372,8 @@ bool QSGRenderThread::event(QEvent *e)
         RLDEBUG1("    Render: WM_Expose");
         WMExposeEvent *se = static_cast<WMExposeEvent *>(e);
 
+        pendingUpdate |= RepaintRequest;
+
         if (windowFor(m_windows, se->window)) {
             RLDEBUG1("    Render:  - window already added...");
             return true;
