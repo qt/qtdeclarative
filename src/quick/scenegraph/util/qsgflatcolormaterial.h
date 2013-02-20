@@ -43,7 +43,7 @@
 #define FLATCOLORMATERIAL_H
 
 #include <QtQuick/qsgmaterial.h>
-#include <qcolor.h>
+#include <QtGui/qcolor.h>
 
 QT_BEGIN_HEADER
 
