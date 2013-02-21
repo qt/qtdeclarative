@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -82,15 +82,15 @@ public:
 
     // Text Interface
     // selection (ignored for now)
-    void selection(int selectionIndex, int *startOffset, int *endOffset) const { *startOffset = 0; *endOffset = 0; }
+    void selection(int /* selectionIndex */, int *startOffset, int *endOffset) const { *startOffset = 0; *endOffset = 0; }
     int selectionCount() const { return 0; }
-    void addSelection(int startOffset, int endOffset) {}
-    void removeSelection(int selectionIndex) {}
-    void setSelection(int selectionIndex, int startOffset, int endOffset) {}
+    void addSelection(int /* startOffset */, int /* endOffset */) {}
+    void removeSelection(int /* selectionIndex */) {}
+    void setSelection(int /* selectionIndex */, int /* startOffset */, int /* endOffset */) {}
 
     // cursor
     int cursorPosition() const { return 0; }
-    void setCursorPosition(int position) {}
+    void setCursorPosition(int /* position */) {}
 
     // text
     QString text(int startOffset, int endOffset) const { return text(QAccessible::Name).mid(startOffset, endOffset - startOffset); }
@@ -103,11 +103,11 @@ public:
     int characterCount() const { return text(QAccessible::Name).count(); }
 
     // character <-> geometry
-    QRect characterRect(int offset) const { return QRect(); }
-    int offsetAtPoint(const QPoint &point) const { return -1; }
+    QRect characterRect(int /* offset */) const { return QRect(); }
+    int offsetAtPoint(const QPoint & /* point */) const { return -1; }
 
-    void scrollToSubstring(int startIndex, int endIndex) {}
-    QString attributes(int offset, int *startOffset, int *endOffset) const { return QString(); }
+    void scrollToSubstring(int /* startIndex */, int /* endIndex */) {}
+    QString attributes(int /* offset */, int * /* startOffset */, int * /* endOffset */) const { return QString(); }
 
 protected:
     QQuickItem *item() const { return static_cast<QQuickItem*>(object()); }

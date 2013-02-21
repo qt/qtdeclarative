@@ -1,4 +1,4 @@
-requires(contains(QT_CONFIG,opengl))
+requires(qtHaveModule(opengl))
 
 QT += opengl
 CONFIG += console

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -1350,8 +1350,8 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     that is not needed for the normal display of the delegate in a \l Loader which
     can load additional components when needed.
 
-    The GridView will layout the items based on the size of the root item
-    in the delegate.
+    The item size of the GridView is determined by cellHeight and cellWidth. It will not resize the items
+    based on the size of the root item in the delegate.
 
     \note Delegates are instantiated as needed and may be destroyed at any time.
     State should \e never be stored in a delegate.

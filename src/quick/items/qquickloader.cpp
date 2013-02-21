@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -941,7 +941,7 @@ v8::Handle<v8::Object> QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV8F
         v8::Local<v8::Value> v = (*args)[1];
         if (!v->IsObject() || v->IsArray()) {
             *error = true;
-            qmlInfo(loader) << loader->tr("setSource: value is not an object");
+            qmlInfo(loader) << QQuickLoader::tr("setSource: value is not an object");
         } else {
             *error = false;
             valuemap = v8::Local<v8::Object>::Cast(v);

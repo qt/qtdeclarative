@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -714,7 +714,7 @@ static v8::Handle<v8::Value> ctx2d_shear(const v8::Arguments &args)
 
 /*!
     \qmlproperty real QtQuick2::Context2D::globalAlpha
-     Holds the the current alpha value applied to rendering operations.
+     Holds the current alpha value applied to rendering operations.
      The value must be in the range from 0.0 (fully transparent) to 1.0 (fully opque).
      The default value is 1.0.
 */
@@ -744,7 +744,7 @@ static void ctx2d_globalAlpha_set(v8::Local<v8::String>, v8::Local<v8::Value> va
 
 /*!
     \qmlproperty string QtQuick2::Context2D::globalCompositeOperation
-     Holds the the current the current composition operation, from the list below:
+     Holds the current the current composition operation, from the list below:
      \list
      \li source-atop      - A atop B. Display the source image wherever both images are opaque.
                            Display the destination image wherever the destination image is opaque but the source image is transparent.
@@ -1239,7 +1239,7 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
 // line styles
 /*!
     \qmlproperty string QtQuick2::Context2D::lineCap
-     Holds the the current line cap style.
+     Holds the current line cap style.
      The possible line cap styles are:
     \list
     \li butt - the end of each line has a flat edge perpendicular to the direction of the line, this is the default line cap value.
@@ -1294,7 +1294,7 @@ static void ctx2d_lineCap_set(v8::Local<v8::String>, v8::Local<v8::Value> value,
 
 /*!
     \qmlproperty string QtQuick2::Context2D::lineJoin
-     Holds the the current line join style. A join exists at any point in a subpath
+     Holds the current line join style. A join exists at any point in a subpath
      shared by two consecutive lines. When a subpath is closed, then a join also exists
      at its first point (equivalent to its last point) connecting the first and last lines in the subpath.
 
@@ -1352,7 +1352,7 @@ static void ctx2d_lineJoin_set(v8::Local<v8::String>, v8::Local<v8::Value> value
 
 /*!
     \qmlproperty real QtQuick2::Context2D::lineWidth
-     Holds the the current line width. Values that are not finite values greater than zero are ignored.
+     Holds the current line width. Values that are not finite values greater than zero are ignored.
  */
 v8::Handle<v8::Value> ctx2d_lineWidth(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -2513,7 +2513,7 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Local<v8:
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(info.This());
 
     const int v = value->Uint32Value();
-    if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4) && v > 0 && v <= 255) {
+    if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4) && v >= 0 && v <= 255) {
         const quint32 w = r->image.width();
         const quint32 row = (index / 4) / w;
         const quint32 col = (index / 4) % w;

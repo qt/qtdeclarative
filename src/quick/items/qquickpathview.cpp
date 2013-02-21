@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -193,7 +193,7 @@ void QQuickPathView::initItem(int index, QQuickItem *item)
         if (att) {
             att->m_view = this;
             qreal percent = d->positionOfIndex(index);
-            if (percent < 1.0) {
+            if (percent < 1.0 && d->path) {
                 foreach (const QString &attr, d->path->attributes())
                     att->setValue(attr.toUtf8(), d->path->attributeAt(attr, percent));
                 item->setZ(d->requestedZ);
@@ -227,8 +227,10 @@ QQmlOpenMetaObjectType *QQuickPathViewPrivate::attachedType()
     if (!attType) {
         // pre-create one metatype to share with all attached objects
         attType = new QQmlOpenMetaObjectType(&QQuickPathViewAttached::staticMetaObject, qmlEngine(q));
-        foreach (const QString &attr, path->attributes())
-            attType->createProperty(attr.toUtf8());
+        if (path) {
+            foreach (const QString &attr, path->attributes())
+                attType->createProperty(attr.toUtf8());
+        }
     }
 
     return attType;
@@ -423,6 +425,8 @@ void QQuickPathView::pathUpdated()
 
 void QQuickPathViewPrivate::updateItem(QQuickItem *item, qreal percent)
 {
+    if (!path)
+        return;
     if (QQuickPathViewAttached *att = attached(item)) {
         if (qFuzzyCompare(att->m_percent, percent))
             return;

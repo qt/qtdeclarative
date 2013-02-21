@@ -53,7 +53,7 @@ PRIVATETESTS += \
     v4 \
     qqmltimer
 
-!contains(QT_CONFIG, no-widgets) {
+qtHaveModule(widgets) {
     PUBLICTESTS += \
         qjsengine \
         qjsvalue

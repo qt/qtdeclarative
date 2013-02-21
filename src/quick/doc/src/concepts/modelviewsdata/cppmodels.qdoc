@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -49,14 +49,16 @@ via the \e modelData role.
 Here is a ListView with a delegate that references its model item's
 value using the \c modelData role:
 
-\snippet examples/quick/modelviews/stringlistmodel/view.qml 0
+\snippet quick/models/stringlistmodel/view.qml 0
 
 A Qt application can load this QML document and set the value of \c myModel
 to a QStringList:
 
-\snippet examples/quick/modelviews/stringlistmodel/main.cpp 0
+\snippet quick/models/stringlistmodel/main.cpp 0
 
-The complete example is available in Qt's \l {quick/modelviews/stringlistmodel}{examples/quick/modelviews/stringlistmodel} directory.
+The complete source code for this example is available in
+\l {quick/modelviews/stringlistmodel}{examples/quick/modelviews/stringlistmodel}
+within the Qt install directory.
 
 \b{Note:} There is no way for the view to know that the contents of a QStringList
 have changed.  If the QStringList changes, it will be necessary to reset
@@ -68,15 +70,15 @@ the model by calling QQmlContext::setContextProperty() again.
 A list of QObject* values can also be used as a model. A QList<QObject*> provides
 the properties of the objects in the list as roles.
 
-The following application creates a \c DataObject class that with
+The following application creates a \c DataObject class with
 Q_PROPERTY values that will be accessible as named roles when a
 QList<DataObject*> is exposed to QML:
 
-\snippet examples/quick/modelviews/objectlistmodel/dataobject.h 0
+\snippet quick/models/objectlistmodel/dataobject.h 0
 \dots 4
-\snippet examples/quick/modelviews/objectlistmodel/dataobject.h 1
+\snippet quick/models/objectlistmodel/dataobject.h 1
 \codeline
-\snippet examples/quick/modelviews/objectlistmodel/main.cpp 0
+\snippet quick/models/objectlistmodel/main.cpp 0
 \dots
 
 The QObject* is available as the \c modelData property.  As a convenience,
@@ -84,17 +86,19 @@ the properties of the object are also made available directly in the
 delegate's context. Here, \c view.qml references the \c DataModel properties in
 the ListView delegate:
 
-\snippet examples/quick/modelviews/objectlistmodel/view.qml 0
+\snippet quick/models/objectlistmodel/view.qml 0
 
-Note the use of the fully qualified access to the \c color property.
+Note the use of \c color property with qualifier.
 The properties of the object are not replicated in the \c model
-object, since they are easily available via the \c modelData
+object, as they are easily available via the \c modelData
 object.
 
-The complete example is available in Qt's \l {quick/modelviews/objectlistmodel}{examples/quick/modelviews/objectlistmodel} directory.
+The complete source code for this example is available in
+\l {quick/modelviews/objectlistmodel}{examples/quick/modelviews/objectlistmodel}
+within the Qt install directory.
 
 Note: There is no way for the view to know that the contents of a QList
-have changed.  If the QList changes, it will be necessary to reset
+has changed.  If the QList changes, it is necessary to reset
 the model by calling QQmlContext::setContextProperty() again.
 
 
@@ -103,10 +107,11 @@ the model by calling QQmlContext::setContextProperty() again.
 A model can be defined by subclassing QAbstractItemModel. This is the
 best approach if you have a more complex model that cannot be supported
 by the other approaches. A QAbstractItemModel can also automatically
-notify a QML view when the model data has changed.
+notify a QML view when the model data changes.
 
-The roles of a QAbstractItemModel subclass can be exposed to QML by calling
-QAbstractItemModel::setRoleNames(). The default role names set by Qt are:
+The roles of a QAbstractItemModel subclass can be exposed to QML by
+reimplementing QAbstractItemModel::roleNames(). The default role names
+set by Qt are:
 
 \table
 \header
@@ -120,39 +125,42 @@ QAbstractItemModel::setRoleNames(). The default role names set by Qt are:
 \li decoration
 \endtable
 
-Here is an application with a QAbstractListModel subclass named \c AnimalModel
-that has \e type and \e size roles. It reimplements QAbstractItemModel::roleNames() to set the
-role names for accessing the properties via QML:
+Here is an application with a QAbstractListModel subclass named \c AnimalModel,
+which exposes the \e type and \e sizes roles. It reimplements
+QAbstractItemModel::roleNames() to expose the role names, so that they can be
+accessed via QML:
 
-\snippet examples/quick/modelviews/abstractitemmodel/model.h 0
+\snippet quick/models/abstractitemmodel/model.h 0
 \dots
-\snippet examples/quick/modelviews/abstractitemmodel/model.h 1
+\snippet quick/models/abstractitemmodel/model.h 1
 \dots
-\snippet examples/quick/modelviews/abstractitemmodel/model.h 2
+\snippet quick/models/abstractitemmodel/model.h 2
 \codeline
-\snippet examples/quick/modelviews/abstractitemmodel/model.cpp 0
+\snippet quick/models/abstractitemmodel/model.cpp 0
 \codeline
-\snippet examples/quick/modelviews/abstractitemmodel/main.cpp 0
+\snippet quick/models/abstractitemmodel/main.cpp 0
 \dots
 
 This model is displayed by a ListView delegate that accesses the \e type and \e size
 roles:
 
-\snippet examples/quick/modelviews/abstractitemmodel/view.qml 0
+\snippet quick/models/abstractitemmodel/view.qml 0
 
 QML views are automatically updated when the model changes. Remember the model
 must follow the standard rules for model changes and notify the view when
 the model has changed by using QAbstractItemModel::dataChanged(),
-QAbstractItemModel::beginInsertRows(), etc. See the \l {Model subclassing reference} for
+QAbstractItemModel::beginInsertRows(), and so on. See the \l {Model subclassing reference} for
 more information.
 
-The complete example is available in Qt's \l {quick/modelviews/abstractitemmodel}{examples/quick/modelviews/abstractitemmodel} directory.
+The complete source code for this example is available in
+\l {quick/modelviews/abstractitemmodel}{examples/quick/modelviews/abstractitemmodel}
+within the Qt install directory.
 
 QAbstractItemModel presents a hierarchy of tables, but the views currently provided by QML
 can only display list data.
-In order to display child lists of a hierarchical model
-the VisualDataModel element provides several properties and functions for use
-with models of type QAbstractItemModel:
+In order to display the child lists of a hierarchical model,
+use the VisualDataModel type, which provides the following properties and functions to be used
+with list models of QAbstractItemModel type:
 
 \list
 \li \e hasModelChildren role property to determine whether a node has child nodes.

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -527,10 +527,13 @@ void QQuickTextPrivate::updateSize()
         }
         if (internalWidthUpdate)
             return;
-        if (wrapMode != QQuickText::NoWrap && q->widthValid())
+
+        extra->doc->setPageSize(QSizeF());
+        if (q->widthValid() && (wrapMode != QQuickText::NoWrap || extra->doc->idealWidth() < q->width()))
             extra->doc->setTextWidth(q->width());
         else
             extra->doc->setTextWidth(extra->doc->idealWidth()); // ### Text does not align if width is not set (QTextDoc bug)
+
         widthExceeded = extra->doc->textWidth() < extra->doc->idealWidth();
         QSizeF dsize = extra->doc->size();
         layedOutTextRect = QRectF(QPointF(0,0), dsize);

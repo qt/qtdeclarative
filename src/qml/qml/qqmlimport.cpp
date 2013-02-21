@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -207,10 +207,6 @@ public:
     mutable QFieldList<QQmlImportNamespace, &QQmlImportNamespace::nextNamespace> qualifiedSets;
 
     QQmlTypeLoader *typeLoader;
-
-    static inline QString tr(const char *str) {
-        return QQmlImportDatabase::tr(str);
-    }
 
     static bool locateQmldir(const QString &uri, int vmaj, int vmin,
                              QQmlImportDatabase *database,
@@ -735,7 +731,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                         // The reason is that the lower level may add url and line/column numbering information.
                         QQmlError poppedError = errors->takeFirst();
                         QQmlError error;
-                        error.setDescription(tr("plugin cannot be loaded for module \"%1\": %2").arg(uri).arg(poppedError.description()));
+                        error.setDescription(QQmlImportDatabase::tr("plugin cannot be loaded for module \"%1\": %2").arg(uri).arg(poppedError.description()));
                         error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
                         errors->prepend(error);
                     }
@@ -744,7 +740,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
             } else {
                 if (errors) {
                     QQmlError error;
-                    error.setDescription(tr("module \"%1\" plugin \"%2\" not found").arg(uri).arg(plugin.name));
+                    error.setDescription(QQmlImportDatabase::tr("module \"%1\" plugin \"%2\" not found").arg(uri).arg(plugin.name));
                     error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
                     errors->prepend(error);
                 }
@@ -1035,9 +1031,9 @@ bool QQmlImportsPrivate::addLibraryImport(const QString& uri, const QString &pre
             if (inserted->qmlDirComponents.isEmpty() && inserted->qmlDirScripts.isEmpty()) {
                 QQmlError error;
                 if (QQmlMetaType::isAnyModule(uri))
-                    error.setDescription(tr("module \"%1\" version %2.%3 is not installed").arg(uri).arg(vmaj).arg(vmin));
+                    error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed").arg(uri).arg(vmaj).arg(vmin));
                 else
-                    error.setDescription(tr("module \"%1\" is not installed").arg(uri));
+                    error.setDescription(QQmlImportDatabase::tr("module \"%1\" is not installed").arg(uri));
                 errors->prepend(error);
                 return false;
             } else if ((vmaj >= 0) && (vmin >= 0) && qmldir) {
@@ -1082,7 +1078,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
         if (!QQmlFile::bundleDirectoryExists(dir, typeLoader->engine())) {
             if (!isImplicitImport) {
                 QQmlError error;
-                error.setDescription(tr("\"%1\": no such directory").arg(uri));
+                error.setDescription(QQmlImportDatabase::tr("\"%1\": no such directory").arg(uri));
                 error.setUrl(QUrl(qmldirUrl));
                 errors->prepend(error);
             }
@@ -1107,7 +1103,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
         if (!typeLoader->directoryExists(dir)) {
             if (!isImplicitImport) {
                 QQmlError error;
-                error.setDescription(tr("\"%1\": no such directory").arg(uri));
+                error.setDescription(QQmlImportDatabase::tr("\"%1\": no such directory").arg(uri));
                 error.setUrl(QUrl(qmldirUrl));
                 errors->prepend(error);
             }
@@ -1127,7 +1123,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
 
         if (!isImplicitImport) {
             QQmlError error;
-            error.setDescription(tr("import \"%1\" has no qmldir and no namespace").arg(importUri));
+            error.setDescription(QQmlImportDatabase::tr("import \"%1\" has no qmldir and no namespace").arg(importUri));
             error.setUrl(QUrl(qmldirUrl));
             errors->prepend(error);
         }
@@ -1187,9 +1183,9 @@ bool QQmlImportsPrivate::updateQmldirContent(const QString &uri, const QString &
                     if (uri != QLatin1String(".")) {
                         QQmlError error;
                         if (QQmlMetaType::isAnyModule(uri))
-                            error.setDescription(tr("module \"%1\" version %2.%3 is not installed").arg(uri).arg(vmaj).arg(vmin));
+                            error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed").arg(uri).arg(vmaj).arg(vmin));
                         else
-                            error.setDescription(tr("module \"%1\" is not installed").arg(uri));
+                            error.setDescription(QQmlImportDatabase::tr("module \"%1\" is not installed").arg(uri));
                         errors->prepend(error);
                         return false;
                     }
@@ -1344,6 +1340,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 
 QQmlImportDatabase::~QQmlImportDatabase()
 {
+    qDeleteAll(qmldirCache);
     qmldirCache.clear();
 }
 

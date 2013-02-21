@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -2328,7 +2328,7 @@ void tst_qquicktextedit::cursorDelegate()
 void tst_qquicktextedit::remoteCursorDelegate()
 {
     TestHTTPServer server(SERVER_PORT);
-    server.serveDirectory(dataDirectory());
+    server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     QQuickView view;
 

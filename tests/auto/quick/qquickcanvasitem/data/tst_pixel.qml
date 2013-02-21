@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtTest 1.0
 
 CanvasTestCase {
    id:testCase
@@ -7,6 +8,13 @@ CanvasTestCase {
    function test_createImageData(row) {
        var canvas = createCanvasObject(row);
        var ctx = canvas.getContext('2d');
+       var imageData = ctx.createImageData(1, 1);
+       var imageDataValues = imageData.data;
+       imageDataValues[0] = 255;
+       imageDataValues[0] = 0;
+       if (imageDataValues[0] != 0)
+           qtest_fail('ImageData value access fail, expecting 0, got ' + imageDataValues[0]);
+
        ctx.reset();
        canvas.destroy()
   }

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -116,9 +116,10 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
 
     Also, note that Repeater is \l {Item}-based, and can only repeat \l {Item}-derived objects.
     For example, it cannot be used to repeat QtObjects:
-    \badcode
+    \code
+    //bad code
     Item {
-        //XXX does not work! Can't repeat QtObject as it doesn't derive from Item.
+        Can't repeat QtObject as it doesn't derive from Item.
         Repeater {
             model: 10
             QtObject {}

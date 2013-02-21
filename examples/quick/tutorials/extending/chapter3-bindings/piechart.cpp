@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -75,8 +75,8 @@ void PieChart::paint(QPainter *painter)
 {
     QPen pen(m_color, 2);
     painter->setPen(pen);
-    painter->setRenderHints(QPainter::HighQualityAntialiasing, true);
-    painter->drawPie(boundingRect(), 90 * 16, 290 * 16);
+    painter->setRenderHints(QPainter::Antialiasing, true);
+    painter->drawPie(boundingRect().adjusted(1, 1, -1, -1), 90 * 16, 290 * 16);
 }
 
 void PieChart::clearChart()

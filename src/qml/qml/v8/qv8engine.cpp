@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -813,6 +813,12 @@ QDateTime QV8Engine::qtDateTimeFromJsDate(double jsDate)
 
 v8::Persistent<v8::Object> *QV8Engine::findOwnerAndStrength(QObject *object, bool *shouldBeStrong)
 {
+    QQmlData *data = QQmlData::get(object);
+    if (data && data->rootObjectInCreation) { // When the object is still being created it may not show up to the GC.
+        *shouldBeStrong = true;
+        return 0;
+    }
+
     QObject *parent = object->parent();
     if (!parent) {
         // if the object has JS ownership, the object's v8object owns the lifetime of the persistent value.

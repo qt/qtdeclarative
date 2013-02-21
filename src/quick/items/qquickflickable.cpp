@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -2038,6 +2038,11 @@ bool QQuickFlickable::sendMouseEvent(QQuickItem *item, QMouseEvent *event)
 
     QQuickWindow *c = window();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
+    if (grabber == this && d->stealMouse) {
+        // we are already the grabber and we do want the mouse event to ourselves.
+        return true;
+    }
+
     bool grabberDisabled = grabber && !grabber->isEnabled();
     bool stealThisEvent = d->stealMouse;
     if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab() || grabberDisabled)) {

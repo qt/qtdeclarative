@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -349,7 +349,6 @@ QJSValue QJSEngine::create(int type, const void *ptr)
 
 /*!
     \internal
-    \since 4.5
     convert \a value to \a type, store the result in \a ptr
 */
 bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)

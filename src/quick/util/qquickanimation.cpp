@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -918,7 +918,7 @@ void QQuickScriptAction::setScript(const QQmlScriptString &script)
 
 /*!
     \qmlproperty string QtQuick2::ScriptAction::scriptName
-    This property holds the the name of the StateChangeScript to run.
+    This property holds the name of the StateChangeScript to run.
 
     This property is only valid when ScriptAction is used as part of a transition.
     If both script and scriptName are set, scriptName will be used.

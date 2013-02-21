@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -127,13 +127,12 @@ static const char vertexShaderCode[] =
     "#elif defined(DEFORM)\n"
     "        fTex = vPosTex.zw;\n"
     "#endif\n"
-#if !defined(Q_OS_BLACKBERRY)
     "        highp float currentSize = mix(vData.z, vData.w, t * t);\n"
+#if defined (Q_OS_BLACKBERRY)
+    "        highp float fade = 1.;\n"
 #else
-    "        highp float mixWorkaround = (vData.w - vData.z) * t * t;\n"
-    "        highp float currentSize = mixWorkaround + vData.z;\n"
-#endif
     "        lowp float fade = 1.;\n"
+#endif
     "        highp float fadeIn = min(t * 10., 1.);\n"
     "        highp float fadeOut = 1. - clamp((t - 0.75) * 4.,0., 1.);\n"
     "\n"

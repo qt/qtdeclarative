@@ -1,5 +1,5 @@
 QT += qml quick core-private
-!contains(QT_CONFIG, no-widgets):QT += widgets
+qtHaveModule(widgets): QT += widgets
 
 SOURCES += main.cpp
 

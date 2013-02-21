@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -114,6 +114,7 @@ const char *QSGVertexColorMaterialShader::fragmentShader() const {
     colored geometry in the scene graph.
 
     \inmodule QtQuick
+    \ingroup qtquick-scenegraph-materials
 
     The vertex color material will give each vertex in a geometry a color. Pixels between
     vertices will be linearly interpolated. The colors can contain transparency.

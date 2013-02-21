@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -42,7 +42,6 @@
 import QtQuick 2.0
 import "content"
 
-
 Rectangle {
     id: window
 
@@ -56,11 +55,9 @@ Rectangle {
         anchors.margins: 10
         width: parent.width
 
-
         Row {
             spacing: 6
             width: column.width
-            height: column.h
 
             Text {
                 id: subjectLabel
@@ -71,6 +68,7 @@ Rectangle {
                 text: "Subject:"
                 y: 3
             }
+
             Rectangle {
                 id: subjectBorder
                 Accessible.role: Accessible.EditableText
@@ -88,19 +86,18 @@ Rectangle {
                     text: "Vacation plans"
                     KeyNavigation.tab: textEdit
                 }
-
             }
-
         }
+
         Rectangle {
             id: textBorder
             Accessible.role: Accessible.EditableText
-            property alias text : textEdit.text
+            property alias text: textEdit.text
             border.width: 1
             border.color: "black"
             width: parent.width - 2
-
             height: 200
+
             TextEdit {
                 id: textEdit
                 y: 3
@@ -113,6 +110,7 @@ Rectangle {
                 KeyNavigation.priority: KeyNavigation.BeforeItem
             }
         }
+
         Text {
             id : status
             width: column.width
@@ -120,23 +118,30 @@ Rectangle {
 
         Row {
             spacing: 6
-            Button { id: sendButton; width: 100; height: column.h + 20; text: "Send";
-                onClicked : { status.text = "Send" }
+            Button {
+                id: sendButton
+                width: 100; height: 20
+                text: "Send"
+                onClicked: { status.text = "Send" }
                 KeyNavigation.tab: discardButton
             }
-            Button { id: discardButton; width: 100; height: column.h + 20; text: "Discard";
-                onClicked : { status.text = "Discard" }
+            Button { id: discardButton
+                width: 100; height: 20
+                text: "Discard"
+                onClicked: { status.text = "Discard" }
                 KeyNavigation.tab: checkBox
             }
         }
 
         Row {
             spacing: 6
+
             Checkbox {
                 id: checkBox
                 checked: false
                 KeyNavigation.tab: slider
             }
+
             Slider {
                 id: slider
                 value: 10

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -1552,7 +1552,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     You can subclass QQuickItem to provide your own custom visual item
     that inherits these features.
 
-    \section2 Custom Items using Scene Graph
+    \section1 Custom Scene Graph Items
 
     All visual QML items are rendered using the scene graph, a
     low-level, high-performance rendering stack, closely tied to
@@ -1570,7 +1570,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     To read more about how the scene graph rendering works, see
     \l{Scene Graph and Rendering}
 
-    \section2 Custom Items using QPainter
+    \section1 Custom QPainter Items
 
     The QQuickItem provides a subclass, QQuickPaintedItem, which
     allows the users to render content using QPainter.
@@ -1686,13 +1686,89 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
 /*!
     \enum QQuickItem::ItemChange
-    \internal
+    \brief Used in conjunction with QQuickItem::itemChange() to notify
+    the item about certain types of changes.
+
+    \value ItemChildAddedChange A child was added. ItemChangeData::item contains
+    the added child.
+
+    \value ItemChildRemovedChange A child was removed. ItemChangeData::item
+    contains the removed child.
+
+    \value ItemSceneChange The item was added to or removed from a scene. The
+    QQuickWindow rendering the scene is specified in using ItemChangeData::window.
+    The window parameter is null when the item is removed from a scene.
+
+    \value ItemVisibleHasChanged The item's visibility has changed.
+    ItemChangeData::boolValue contains the new visibility.
+
+    \value ItemParentHasChanged The item's parent has changed.
+    ItemChangeData::item contains the new parent.
+
+    \value ItemOpacityHasChanged The item's opacity has changed.
+    ItemChangeData::realValue contains the new opacity.
+
+    \value ItemActiveFocusHasChanged The item's focus has changed.
+    ItemChangeData::boolValue contains whether the item has focus or not.
+
+    \value ItemRotationHasChanged The item's rotation has changed.
+    ItemChangeData::realValue contains the new rotation.
 */
 
 /*!
     \class QQuickItem::ItemChangeData
-    \internal
+    \inmodule QtQuick
+    \brief Adds supplimentary information to the QQuickItem::itemChange()
+    function.
+
+    The meaning of each member of this class is defined by the change type.
+
+    \sa QQuickItem::ItemChange
 */
+
+/*!
+    \fn QQuickItem::ItemChangeData::ItemChangeData(QQuickItem *)
+    \internal
+ */
+
+/*!
+    \fn QQuickItem::ItemChangeData::ItemChangeData(QQuickWindow *)
+    \internal
+ */
+
+/*!
+    \fn QQuickItem::ItemChangeData::ItemChangeData(qreal)
+    \internal
+ */
+
+/*!
+    \fn QQuickItem::ItemChangeData::ItemChangeData(bool)
+    \internal
+ */
+
+/*!
+    \variable QQuickItem::ItemChangeData::realValue
+    Contains supplimentary information to the QQuickItem::itemChange() function.
+    \sa QQuickItem::ItemChange
+ */
+
+/*!
+    \variable QQuickItem::ItemChangeData::boolValue
+    Contains supplimentary information to the QQuickItem::itemChange() function.
+    \sa QQuickItem::ItemChange
+ */
+
+/*!
+    \variable QQuickItem::ItemChangeData::item
+    Contains supplimentary information to the QQuickItem::itemChange() function.
+    \sa QQuickItem::ItemChange
+ */
+
+/*!
+    \variable QQuickItem::ItemChangeData::window
+    Contains supplimentary information to the QQuickItem::itemChange() function.
+    \sa QQuickItem::ItemChange
+ */
 
 /*!
     \enum QQuickItem::TransformOrigin
@@ -2141,6 +2217,11 @@ void QQuickItem::stackAfter(const QQuickItem *sibling)
 
 /*!
   Returns the window in which this item is rendered.
+
+  The item does not have a window until it has been assigned into a scene. To
+  get notification about this, reimplement the itemChange() function and
+  listen for the ItemSceneChange change. The itemChange() function is called
+  both when the item is entered into a scene and when it is removed from a scene.
   */
 QQuickWindow *QQuickItem::window() const
 {
@@ -2972,9 +3053,11 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
 }
 
 /*!
-    Called by the rendering thread, as a result of
-    QQuickItem::update(), when it is time to sync the state of the QML
-    objects with the scene graph objects.
+    Called on the render thread when it is time to sync the state
+    of the item with the scene graph.
+
+    The function is called as a result of QQuickItem::update(), if
+    the user has set the QQuickItem::ItemHasContents flag on the item.
 
     The function should return the root of the scene graph subtree for
     this item. Most implementations will return a single
@@ -3005,10 +3088,16 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     the visual outcome is identical.
 
     \warning It is crucial that OpenGL operations and interaction with
-    the scene graph happens exclusively on the rendering thread,
+    the scene graph happens exclusively on the render thread,
     primarily during the QQuickItem::updatePaintNode() call. The best
     rule of thumb is to only use classes with the "QSG" prefix inside
     the QQuickItem::updatePaintNode() function.
+
+    \warning This function is called on the render thread. This means any
+    QObjects or thread local storage that is created will have affinity to the
+    render thread, so apply caution when doing anything other than rendering
+    in this function. Similarily for signals, these will be emitted on the render
+    thread and will thus often be delivered via queued connections.
 
     \sa QSGMaterial, QSGSimpleMaterial, QSGGeometryNode, QSGGeometry,
     QSGFlatColorMaterial, QSGTextureMaterial, QSGNode::markDirty()
@@ -4162,7 +4251,10 @@ void QQuickItemPrivate::deliverDragEvent(QEvent *e)
 #endif // QT_NO_DRAGANDDROP
 
 /*!
-  \internal
+    Called when \a change occurs for this item.
+
+    \a value contains extra information relating to the change, when
+    applicable.
   */
 void QQuickItem::itemChange(ItemChange change, const ItemChangeData &value)
 {

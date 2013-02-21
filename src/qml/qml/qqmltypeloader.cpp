@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -2289,7 +2289,7 @@ void QQmlScriptBlob::done()
             error.setUrl(finalUrl());
             error.setLine(script.location.line);
             error.setColumn(script.location.column);
-            error.setDescription(typeLoader()->tr("Script %1 unavailable").arg(script.script->url().toString()));
+            error.setDescription(QQmlTypeLoader::tr("Script %1 unavailable").arg(script.script->url().toString()));
             errors.prepend(error);
             setError(errors);
         }

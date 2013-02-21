@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -207,6 +207,7 @@ void QQuickImageBase::load()
             options |= QQuickPixmap::Asynchronous;
         if (d->cache)
             options |= QQuickPixmap::Cache;
+        d->pix.clear(this);
         d->pix.load(qmlEngine(this), d->url, d->sourcesize, options);
 
         if (d->pix.isLoading()) {

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -60,12 +60,7 @@ static const char qt_particles_template_vertex_code[] =
         "    highp float size = qt_ParticleData.z;\n"
         "    highp float endSize = qt_ParticleData.w;\n"
         "    highp float t = (qt_Timestamp - qt_ParticleData.x) / qt_ParticleData.y;\n"
-#if !defined(Q_OS_BLACKBERRY)
         "    highp float currentSize = mix(size, endSize, t * t);\n"
-#else
-        "    highp float mixWorkaround = (endSize - size) * t * t;\n"
-        "    highp float currentSize = mixWorkaround + size;\n"
-#endif
         "    if (t < 0. || t > 1.)\n"
         "        currentSize = 0.;\n"
         "    highp vec2 pos = qt_ParticlePos\n"

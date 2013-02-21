@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -127,7 +127,7 @@ typedef QPair<int, int> QQuickXmlListRange;
 
     For example, if there is an XML document like this:
 
-    \quotefile qml/xmlrole.xml
+    \quotefile qml/xmlrole.qml
     Here are some valid XPath expressions for XmlRole queries on this document:
 
     \snippet qml/xmlrole.qml 0

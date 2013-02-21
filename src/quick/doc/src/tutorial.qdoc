@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -59,7 +59,7 @@ Tutorial chapters:
 \title QML Tutorial 1 - Basic Types
 \contentspage QML Tutorial
 \previouspage QML Tutorial
-\nextpage QML Tutorial 2 - QML Component
+\nextpage QML Tutorial 2 - QML Components
 
 This first program is a very simple "Hello world" example that introduces some basic QML concepts.
 The picture below is a screenshot of this program.
@@ -68,7 +68,7 @@ The picture below is a screenshot of this program.
 
 Here is the QML code for the application:
 
-\snippet tutorials/helloworld/tutorial1.qml 0
+\snippet quick/tutorials/helloworld/tutorial1.qml 0
 
 \section1 Walkthrough
 
@@ -77,11 +77,11 @@ Here is the QML code for the application:
 First, we need to import the types that we need for this example. Most QML files will import the built-in QML
 types (like \l{Rectangle}, \l{Image}, ...) that come with Qt, using:
 
-\snippet tutorials/helloworld/tutorial1.qml 3
+\snippet quick/tutorials/helloworld/tutorial1.qml 3
 
 \section2 Rectangle element
 
-\snippet tutorials/helloworld/tutorial1.qml 1
+\snippet quick/tutorials/helloworld/tutorial1.qml 1
 
 We declare a root element of type \l{Rectangle}. It is one of the basic building blocks you can use to create an application in QML.
 We give it an \c{id} to be able to refer to it later. In this case, we call it "page".
@@ -90,7 +90,7 @@ The \l{Rectangle} element contains many other properties (such as \c x and \c y)
 
 \section2 Text element
 
-\snippet tutorials/helloworld/tutorial1.qml 2
+\snippet quick/tutorials/helloworld/tutorial1.qml 2
 
 We add a \l Text element as a child of the root Rectangle element that displays the text 'Hello world!'.
 
@@ -133,37 +133,37 @@ The component's filename must always start with a capital letter.
 
 Here is the QML code for \c Cell.qml:
 
-\snippet tutorials/helloworld/Cell.qml 0
+\snippet quick/tutorials/helloworld/Cell.qml 0
 
 \section1 Walkthrough
 
 \section2 The Cell Component
 
-\snippet tutorials/helloworld/Cell.qml 1
+\snippet quick/tutorials/helloworld/Cell.qml 1
 
 The root element of our component is an \l Item with the \c id \e container.
 An \l Item is the most basic visual element in QML and is often used as a container for other elements.
 
-\snippet tutorials/helloworld/Cell.qml 4
+\snippet quick/tutorials/helloworld/Cell.qml 4
 
 We declare a \c cellColor property. This property is accessible from  \e outside our component, this allows us
 to instantiate the cells with different colors.
 This property is just an alias to an existing property - the color of the rectangle that compose the cell
 (see \l{Property Binding in QML}).
 
-\snippet tutorials/helloworld/Cell.qml 5
+\snippet quick/tutorials/helloworld/Cell.qml 5
 
 We want our component to also have a signal that we call \e clicked with a \e cellColor parameter of type \e color.
 We will use this signal to change the color of the text in the main QML file later.
 
-\snippet tutorials/helloworld/Cell.qml 2
+\snippet quick/tutorials/helloworld/Cell.qml 2
 
 Our cell component is basically a colored rectangle with the \c id \e rectangle.
 
 The \c anchors.fill property is a convenient way to set the size of an element.
 In this case the rectangle will have the same size as its parent (see \l{anchor-layout}{Anchor-Based Layout}).
 
-\snippet tutorials/helloworld/Cell.qml 3
+\snippet quick/tutorials/helloworld/Cell.qml 3
 
 In order to change the color of the text when clicking on a cell, we create a \l MouseArea element with
 the same size as its parent.
@@ -175,11 +175,11 @@ When this signal is triggered we want to emit our own \e clicked signal with the
 
 In our main QML file, we use our \c Cell component to create the color picker:
 
-\snippet tutorials/helloworld/tutorial2.qml 0
+\snippet quick/tutorials/helloworld/tutorial2.qml 0
 
 We create the color picker by putting 6 cells with different colors in a grid.
 
-\snippet tutorials/helloworld/tutorial2.qml 1
+\snippet quick/tutorials/helloworld/tutorial2.qml 1
 
 When the \e clicked signal of our cell is triggered, we want to set the color of the text to the \e cellColor passed as a parameter.
 We can react to any signal of our component through a property of the name \e 'onSignalName' (see \l{Signal Attributes}).
@@ -190,7 +190,7 @@ We can react to any signal of our component through a property of the name \e 'o
 \inqmlmodule QtQuick 2
 \title QML Tutorial 3 - States and Transitions
 \contentspage QML Tutorial
-\previouspage QML Tutorial 2 - QML Component
+\previouspage QML Tutorial 2 - QML Components
 
 In this chapter, we make this example a little bit more dynamic by introducing states and transitions.
 
@@ -200,11 +200,11 @@ We want our text to move to the bottom of the screen, rotate and become red when
 
 Here is the QML code:
 
-\snippet tutorials/helloworld/tutorial3.qml 0
+\snippet quick/tutorials/helloworld/tutorial3.qml 0
 
 \section1 Walkthrough
 
-\snippet tutorials/helloworld/tutorial3.qml 2
+\snippet quick/tutorials/helloworld/tutorial3.qml 2
 
 First, we create a new \e down state for our text element.
 This state will be activated when the \l MouseArea is pressed, and deactivated when it is released.
@@ -213,13 +213,13 @@ The \e down state includes a set of property changes from our implicit \e {defau
 (the items as they were initially defined in the QML).
 Specifically, we set the \c y property of the text to \c 160, the rotation to \c 180 and the \c color to red.
 
-\snippet tutorials/helloworld/tutorial3.qml 3
+\snippet quick/tutorials/helloworld/tutorial3.qml 3
 
 Because we don't want the text to appear at the bottom instantly but rather move smoothly,
 we add a transition between our two states.
 
 \c from and \c to define the states between which the transition will run.
-In this case, we want a transition from the default state to our \li down state.
+In this case, we want a transition from the default state to our \e down state.
 
 Because we want the same transition to be run in reverse when changing back from the \e down state to the default state,
 we set \c reversible to \c true.

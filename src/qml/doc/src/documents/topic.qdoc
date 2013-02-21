@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -91,14 +91,14 @@ separation between UI definition and logic implementation.
 In the following example, the client developer defines a \c Button type with
 a document in a file:
 
-\snippet qml/qml-extending-types/components/Button.qml 0
+\snippet ../src/quick/doc/snippets/qml/qml-extending-types/components/Button.qml 0
 
 The \c Button type can then be used in an application:
 
 \table
 \row
-\li \snippet qml/qml-extending-types/components/application.qml 0
-\li \image qml-extending-types.png
+\li \snippet ../src/quick/doc/snippets/qml/qml-extending-types/components/application.qml 0
+\li \image button-types.png
 \endtable
 
 Please see the documentation about \l{qtqml-documents-definetypes.html}

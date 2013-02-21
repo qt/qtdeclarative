@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -189,23 +189,23 @@ project
 The \c main.qml and \c background.png files will be packaged as resource files. This is
 done in the \c example.qrc resource collection file:
 
-\quotefile qml/qtbinding/resources/example.qrc
+\quotefile ../src/qml/doc/snippets/qml/qtbinding/resources/example.qrc
 
 Since \c background.png is a resource file, \c main.qml can refer to it using the relative
 path specified in \c example.qrc:
 
-\snippet qml/qtbinding/resources/main.qml 0
+\snippet ../src/qml/doc/snippets/qml/qtbinding/resources/main.qml 0
 
 To allow QML to locate resource files correctly, the \c main.cpp loads the main QML
 file, \c main.qml, as a resource file using the \c qrc scheme:
 
-\snippet qml/qtbinding/resources/main.cpp 0
+\snippet ../src/qml/doc/snippets/qml/qtbinding/resources/main.cpp 0
 
 Finally \c project.pro uses the RESOURCES variable to indicate that \c example.qrc should
 be used to build the application resources:
 
-\quotefile qml/qtbinding/resources/resources.pro
+\quotefile ../src/qml/doc/snippets/qml/qtbinding/resources/resources.pro
 
 See \l {The Qt Resource System} for more information.
 
-
+*/

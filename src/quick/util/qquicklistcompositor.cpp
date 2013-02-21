@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -336,7 +336,7 @@ inline QQuickListCompositor::Range *QQuickListCompositor::erase(
 }
 
 /*!
-    Sets the the number (\a count) of possible groups that items may belong to in a compositor.
+    Sets the number (\a count) of possible groups that items may belong to in a compositor.
 */
 
 void QQuickListCompositor::setGroupCount(int count)

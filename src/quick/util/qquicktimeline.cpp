@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -49,6 +49,7 @@
 #include <QCoreApplication>
 #include <QEasingCurve>
 #include <QTime>
+#include <QtNumeric>
 
 QT_BEGIN_NAMESPACE
 
@@ -386,7 +387,7 @@ void QQuickTimeLine::set(QQuickTimeLineValue &timeLineValue, qreal value)
 */
 int QQuickTimeLine::accel(QQuickTimeLineValue &timeLineValue, qreal velocity, qreal acceleration)
 {
-    if (acceleration == 0.0f)
+    if (qFuzzyIsNull(acceleration) || qIsNaN(acceleration))
         return -1;
 
     if ((velocity > 0.0f) == (acceleration > 0.0f))
@@ -412,7 +413,7 @@ int QQuickTimeLine::accel(QQuickTimeLineValue &timeLineValue, qreal velocity, qr
 */
 int QQuickTimeLine::accel(QQuickTimeLineValue &timeLineValue, qreal velocity, qreal acceleration, qreal maxDistance)
 {
-    if (maxDistance == 0.0f || acceleration == 0.0f)
+    if (qFuzzyIsNull(maxDistance) || qIsNaN(maxDistance) || qFuzzyIsNull(acceleration) || qIsNaN(acceleration))
         return -1;
 
     Q_ASSERT(acceleration > 0.0f && maxDistance > 0.0f);
@@ -441,7 +442,7 @@ int QQuickTimeLine::accel(QQuickTimeLineValue &timeLineValue, qreal velocity, qr
 */
 int QQuickTimeLine::accelDistance(QQuickTimeLineValue &timeLineValue, qreal velocity, qreal distance)
 {
-    if (distance == 0.0f || velocity == 0.0f)
+    if (qFuzzyIsNull(distance) || qIsNaN(distance) || qFuzzyIsNull(velocity) || qIsNaN(velocity))
         return -1;
 
     Q_ASSERT((distance >= 0.0f) == (velocity >= 0.0f));

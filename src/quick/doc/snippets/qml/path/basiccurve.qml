@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -43,6 +43,7 @@ import QtQuick 2.0
 
 Canvas {
     width: 400; height: 200
+    contextType: "2d"
 
     Path {
         id: myPath

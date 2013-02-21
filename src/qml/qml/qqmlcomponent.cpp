@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -664,7 +664,7 @@ void QQmlComponentPrivate::loadUrl(const QUrl &newUrl, QQmlComponent::Compilatio
 
     if (newUrl.isEmpty()) {
         QQmlError error;
-        error.setDescription(q->tr("Invalid empty URL"));
+        error.setDescription(QQmlComponent::tr("Invalid empty URL"));
         state.errors << error;
         return;
     }
@@ -794,7 +794,7 @@ QObject *QQmlComponent::create(QQmlContext *context)
     When QQmlComponent constructs an instance, it occurs in three steps:
     \list 1
     \li The object hierarchy is created, and constant values are assigned.
-    \li Property bindings are evaluated for the the first time.
+    \li Property bindings are evaluated for the first time.
     \li If applicable, QQmlParserStatus::componentComplete() is called on objects.
     \endlist 
     QQmlComponent::beginCreate() differs from QQmlComponent::create() in that it
@@ -1137,9 +1137,9 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
 
     As of QtQuick 1.1, this method accepts an optional \a properties argument that specifies a
     map of initial property values for the created object. These values are applied before object
-    creation is finalized. (This is more efficient than setting property values after object creation,
+    creation is finalized. This is more efficient than setting property values after object creation,
     particularly where large sets of property values are defined, and also allows property bindings
-    to be set up before the object is created.)
+    to be set up (using \l{Qt::binding}{Qt.binding}) before the object is created.
 
     The \a properties argument is specified as a map of property-value items. For example, the code
     below creates an object with initial \c x and \c y values of 100 and 200, respectively:

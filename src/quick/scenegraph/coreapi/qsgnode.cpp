@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -59,10 +59,19 @@ static void qt_print_node_count()
 #endif
 
 /*!
+    \group qtquick-scenegraph-nodes
+    \title Qt Quick Scene Graph Node classes
+    \brief Nodes that can be used as part of the scene graph.
+
+    This page lists the nodes in \l {Qt Quick}'s \l {scene graph}{Qt Quick Scene Graph}.
+ */
+
+/*!
     \class QSGNode
     \brief The QSGNode class is the base class for all nodes in the scene graph.
 
     \inmodule QtQuick
+    \ingroup qtquick-scenegraph-nodes
 
     The QSGNode class can be used as a child container. Children are added with
     the appendChildNode(), prependChildNode(), insertChildNodeBefore() and
@@ -739,6 +748,7 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
     \brief The QSGGeometryNode class is used for all rendered content in the scene graph.
 
     \inmodule QtQuick
+    \ingroup qtquick-scenegraph-nodes
 
     The QSGGeometryNode consists of geometry and material. The geometry defines the mesh,
     the vertices and their structure, to be drawn. The Material defines how the shape is
@@ -964,6 +974,7 @@ void QSGGeometryNode::setInheritedOpacity(qreal opacity)
     \brief The QSGClipNode class implements the clipping functionality in the scene graph.
 
     \inmodule QtQuick
+    \ingroup qtquick-scenegraph-nodes
 
     Clipping applies to the node's subtree and can be nested. Multiple clip nodes will be
     accumulated by intersecting all their geometries. The accumulation happens
@@ -1052,6 +1063,7 @@ void QSGClipNode::setClipRect(const QRectF &rect)
     \brief The QSGTransformNode class implements transformations in the scene graph
 
     \inmodule QtQuick
+    \ingroup qtquick-scenegraph-nodes
 
     Transformations apply the node's subtree and can be nested. Multiple transform nodes
     will be accumulated by intersecting all their matrices. The accumulation happens
@@ -1188,6 +1200,7 @@ void QSGRootNode::notifyNodeChange(QSGNode *node, DirtyState state)
     \brief The QSGOpacityNode class is used to change opacity of nodes.
 
     \inmodule QtQuick
+    \ingroup qtquick-scenegraph-nodes
 
     Opacity applies to its subtree and can be nested. Multiple opacity nodes
     will be accumulated by multiplying their opacity. The accumulation happens

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -56,6 +56,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QImageReader>
 #include <QQuickWindow>
+#include <QQuickImageProvider>
 
 #include "../../shared/util.h"
 #include "../../shared/testhttpserver.h"
@@ -102,6 +103,7 @@ private slots:
     void sourceSize();
     void progressAndStatusChanges();
     void sourceSizeChanges();
+    void correctStatus();
 
 private:
     QQmlEngine engine;
@@ -865,6 +867,55 @@ void tst_qquickimage::progressAndStatusChanges()
     QTRY_VERIFY(progressSpy.count() > 2);
     QTRY_COMPARE(statusSpy.count(), 4);
 
+    delete obj;
+}
+
+class TestQImageProvider : public QQuickImageProvider
+{
+public:
+    TestQImageProvider() : QQuickImageProvider(Image) {}
+
+    QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize)
+    {
+        if (id == QLatin1String("first-image.png")) {
+            QTest::qWait(50);
+            int width = 100;
+            int height = 100;
+            QImage image(width, height, QImage::Format_RGB32);
+            image.fill(QColor("yellow").rgb());
+            if (size)
+                *size = QSize(width, height);
+            return image;
+        }
+
+        QTest::qWait(400);
+        int width = 100;
+        int height = 100;
+        QImage image(width, height, QImage::Format_RGB32);
+        image.fill(QColor("green").rgb());
+        if (size)
+            *size = QSize(width, height);
+        return image;
+    }
+};
+
+void tst_qquickimage::correctStatus()
+{
+    QQmlEngine engine;
+    engine.addImageProvider(QLatin1String("test"), new TestQImageProvider());
+
+    QQmlComponent component(&engine, testFileUrl("correctStatus.qml"));
+    QObject *obj = component.create();
+    QVERIFY(obj);
+
+    QTest::qWait(200);
+
+    // at this point image1 should be attempting to load second-image.png,
+    // and should be in the loading state. Without a clear prior to that load,
+    // the status can mistakenly be in the ready state.
+    QCOMPARE(obj->property("status").toInt(), int(QQuickImage::Loading));
+
+    QTest::qWait(400);
     delete obj;
 }
 

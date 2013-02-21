@@ -5,12 +5,12 @@ PUBLICTESTS += \
     rendernode \
     qquickpixmapcache
 
-!contains(QT_CONFIG, no-widgets): PUBLICTESTS += nodes
+qtHaveModule(widgets): PUBLICTESTS += nodes
 
 !cross_compile: PRIVATETESTS += examples
 
 # This test requires the qtconcurrent module
-!contains(QT_CONFIG, concurrent):PUBLICTESTS -= qquickpixmapcache
+!qtHaveModule(concurrent): PUBLICTESTS -= qquickpixmapcache
 
 PRIVATETESTS += \
     qquickanimations \
@@ -28,13 +28,14 @@ PRIVATETESTS += \
     qquickxmllistmodel
 
 # This test requires the xmlpatterns module
-!contains(QT_CONFIG,xmlpatterns):PRIVATETESTS -= qquickxmllistmodel
+!qtHaveModule(xmlpatterns): PRIVATETESTS -= qquickxmllistmodel
 
 QUICKTESTS =  \
     qquickaccessible \
     qquickanchors \
     qquickanimatedimage \
     qquickanimatedsprite \
+    qquickdynamicpropertyanimation \
     qquickborderimage \
     qquickwindow \
     qquickdrag \

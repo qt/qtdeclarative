@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -44,6 +44,7 @@
 #include <private/qqmlglobal_p.h>
 
 #include <QtCore/qdebug.h>
+#include <QtCore/qcoreapplication.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -513,8 +514,15 @@ bool RewriteSignalHandler::visit(AST::IdentifierExpression *e)
     return false;
 }
 
-static QString unnamed_error_string(QLatin1String(QT_TR_NOOP("Signal uses unnamed parameter followed by named parameter.")));
-static QString global_error_string(QLatin1String(QT_TR_NOOP("Signal parameter \"%1\" hides global variable.")));
+static inline QString msgUnnamedErrorString()
+{
+    return QCoreApplication::translate("QQmlRewrite", "Signal uses unnamed parameter followed by named parameter.");
+}
+
+static inline QString msgGlobalErrorString(const QString &p)
+{
+    return QCoreApplication::translate("QQmlRewrite", "Signal parameter \"%1\" hides global variable.").arg(p);
+}
 
 #define EXIT_ON_ERROR(error) \
 { \
@@ -543,9 +551,9 @@ QString RewriteSignalHandler::createParameterString(const QList<QHashedString> &
         if (param.isEmpty())
             unnamedParam = true;
         else if (unnamedParam)
-            EXIT_ON_ERROR(unnamed_error_string)
+            EXIT_ON_ERROR(msgUnnamedErrorString())
         else if (illegalNames.contains(param))
-            EXIT_ON_ERROR(global_error_string.arg(param))
+            EXIT_ON_ERROR(msgGlobalErrorString(param))
         ++_parameterCountForJS;
         parameters += param;
         if (i < parameterNameList.count()-1)

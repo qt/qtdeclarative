@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -1105,6 +1105,7 @@ void QQuickTextNode::addImage(const QRectF &rect, const QImage &image)
     QSGTexture *texture = m_context->createTexture(image);
     m_textures.append(texture);
     node->setTargetRect(rect);
+    node->setInnerTargetRect(rect);
     node->setTexture(texture);
     appendChildNode(node);
     node->update();

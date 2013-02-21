@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -28,8 +28,8 @@
 
 /*!
     \title Scenegraph Painted Item Example
-    \brief Shows how to implement QPainter-based custom scenegraph items
-    \example quick/painteditem/textballoons
+    \brief Shows how to implement QPainter-based custom scenegraph items.
+    \example quick/customitems/painteditem
     \ingroup qtquickexamples
 
     The Painted Item example shows how to use the QML Scene Graph framework to

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -447,6 +447,29 @@ static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QTouchEvent::Touc
     return me;
 }
 
+bool QQuickWindowPrivate::checkIfDoubleClicked(ulong newPressEventTimestamp)
+{
+    bool doubleClicked;
+
+    if (touchMousePressTimestamp == 0) {
+        // just initialize the variable
+        touchMousePressTimestamp = newPressEventTimestamp;
+        doubleClicked = false;
+    } else {
+        ulong timeBetweenPresses = newPressEventTimestamp - touchMousePressTimestamp;
+        ulong doubleClickInterval = static_cast<ulong>(qApp->styleHints()->
+                mouseDoubleClickInterval());
+        doubleClicked = timeBetweenPresses < doubleClickInterval;
+        if (doubleClicked) {
+            touchMousePressTimestamp = 0;
+        } else {
+            touchMousePressTimestamp = newPressEventTimestamp;
+        }
+    }
+
+    return doubleClicked;
+}
+
 bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *event)
 {
     Q_Q(QQuickWindow);
@@ -463,9 +486,6 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
             if (!item->contains(pos))
                 break;
 
-            bool doubleClick = event->timestamp() - touchMousePressTimestamp
-                            < static_cast<ulong>(qApp->styleHints()->mouseDoubleClickInterval());
-            touchMousePressTimestamp = event->timestamp();
             // Store the id already here and restore it to -1 if the event does not get
             // accepted. Cannot defer setting the new value because otherwise if the event
             // handler spins the event loop all subsequent moves and releases get lost.
@@ -489,8 +509,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                     item->ungrabMouse();
             }
 
-            if (doubleClick && mousePress->isAccepted()) {
-                touchMousePressTimestamp = 0;
+            if (mousePress->isAccepted() && checkIfDoubleClicked(event->timestamp())) {
                 QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event, item));
                 q->sendEvent(item, mouseDoubleClick.data());
                 event->setAccepted(mouseDoubleClick->isAccepted());
@@ -840,87 +859,63 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
 
     For easily displaying a scene from a QML file, see \l{QQuickView}.
 
-    \section1 Scene Graph and Rendering
 
-    The QQuickWindow uses a scene graph on top of OpenGL to render. This scene graph is disconnected
-    from the QML scene and potentially lives in another thread, depending on the platform
-    implementation. Since the rendering scene graph lives independently from the QML scene, it can
-    also be completely released without affecting the state of the QML scene.
 
-    The sceneGraphInitialized() signal is emitted on the rendering thread before the QML scene is
-    rendered to the screen for the first time. If the rendering scene graph has been released
-    the signal will be emitted again before the next frame is rendered.
+    \section1 Rendering
 
-    The rendering of each frame is broken down into the following
-    steps, in the given order:
+    QQuickWindow uses a scene graph on top of OpenGL to
+    render. This scene graph is disconnected from the QML scene and
+    potentially lives in another thread, depending on the platform
+    implementation. Since the rendering scene graph lives
+    independently from the QML scene, it can also be completely
+    released without affecting the state of the QML scene.
 
-    \list 1
+    The sceneGraphInitialized() signal is emitted on the rendering
+    thread before the QML scene is rendered to the screen for the
+    first time. If the rendering scene graph has been released, the
+    signal will be emitted again before the next frame is rendered.
 
-    \li The QQuickWindow::beforeSynchronizing() signal is emitted.
-    Applications can make direct connections (Qt::DirectConnection)
-    to this signal to do any preparation required before calls to
-    QQuickItem::updatePaintNode().
 
-    \li Synchronization of the QML state into the scene graph. This is
-    done by calling the QQuickItem::updatePaintNode() function on all
-    items that have changed since the previous frame. When a dedicated
-    rendering thread is used, the GUI thread is blocked during this
-    synchroniation. This is the only time the QML items and the nodes
-    in the scene graph interact.
+    \section2 Integration with OpenGL
 
-    \li The window to be rendered is made current using
-    QOpenGLContext::makeCurrent().
+    It is possible to integrate OpenGL calls directly into the
+    QQuickWindow using the same OpenGL context as the Qt Quick Scene
+    Graph. This is done by connecting to the
+    QQuickWindow::beforeRendering() or QQuickWindow::afterRendering()
+    signal.
 
-    \li The QQuickWindow::beforeRendering() signal is
-    emitted. Applications can make direct connections
-    (Qt::DirectConnection) to this signal to use custom OpenGL calls
-    which will then stack visually beneath the QML scene.
+    \note When using QQuickWindow::beforeRendering(), make sure to
+    disable clearing before rendering with
+    QQuickWindow::setClearBeforeRendering().
 
-    \li Items that have specified QSGNode::UsesPreprocess, will have their
-    QSGNode::preprocess() function invoked.
 
-    \li The QQuickWindow is cleared according to what is specified
-    using QQuickWindow::setClearBeforeRendering() and
-    QQuickWindow::setClearColor().
+    \section2 Exposure and Visibility
 
-    \li The scene graph is rendered.
+    When a QQuickWindow instance is deliberately hidden with hide() or
+    setVisible(false), it will stop rendering and its scene graph and
+    OpenGL context might be released. The sceneGraphInvalidated()
+    signal will be emitted when this happens.
 
-    \li The QQuickWindow::afterRendering() signal is
-    emitted. Applications can make direct connections
-    (Qt::DirectConnection) to this signal to use custom OpenGL calls
-    which will then stack visually over the QML scene.
+    \warning It is crucial that OpenGL operations and interaction with
+    the scene graph happens exclusively on the rendering thread,
+    primarily during the updatePaintNode() phase.
 
-    \li The rendered frame is swapped and QQuickWindow::frameSwapped()
-    is emitted.
-
-    \endlist
-
-    All of the above happen on the rendering thread, when applicable.
-
-    While the scene graph is being rendered on the rendering thread, the GUI will process animations
-    for the next frame. This means that as long as users are not using scene graph API
-    directly, the added complexity of a rendering thread can be completely ignored.
-
-    When a QQuickWindow is programatically hidden with hide() or setVisible(false), it will
-    stop rendering and its scene graph and OpenGL context might be released. The
-    sceneGraphInvalidated() signal will be emitted when this happens.
-
-    \warning It is crucial that OpenGL operations and interaction with the scene graph happens
-    exclusively on the rendering thread, primarily during the updatePaintNode() phase.
-
-    \warning As signals related to rendering might be emitted from the rendering thread,
-    connections should be made using Qt::DirectConnection
+    \warning As signals related to rendering might be emitted from the
+    rendering thread, connections should be made using
+    Qt::DirectConnection.
 
 
     \section2 Resource Management
 
-    QML will typically try to cache images, scene graph nodes, etc to improve performance, but in
-    some low-memory scenarios it might be required to aggressively release these resources. The
-    releaseResources() can be used to force clean up of certain resources. Calling releaseResources()
-    may result in the entire scene graph and its OpenGL context being deleted. The
+    QML will try to cache images and scene graph nodes to
+    improve performance, but in some low-memory scenarios it might be
+    required to aggressively release these resources. The
+    releaseResources() can be used to force the clean up of certain
+    resources. Calling releaseResources() may result in the entire
+    scene graph and its OpenGL context being deleted. The
     sceneGraphInvalidated() signal will be emitted when this happens.
 
-    \sa {OpenGL Under QML Example}
+    \sa {OpenGL Under QML}
 
 */
 
@@ -1134,8 +1129,6 @@ bool QQuickWindow::event(QEvent *e)
     case QEvent::Leave:
         d->clearHover();
         d->lastMousePosition = QPoint();
-        if (d->mouseGrabberItem)
-            d->mouseGrabberItem->ungrabMouse();
         break;
 #ifndef QT_NO_DRAGANDDROP
     case QEvent::DragEnter:
@@ -1153,6 +1146,8 @@ bool QQuickWindow::event(QEvent *e)
         if (d->activeFocusItem)
             qGuiApp->inputMethod()->commit();
 #endif
+        if (d->mouseGrabberItem)
+            d->mouseGrabberItem->ungrabMouse();
         break;
     default:
         break;
@@ -1223,7 +1218,7 @@ bool QQuickWindowPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouse
             event->setAccepted(me->isAccepted());
             if (me->isAccepted())
                 return true;
-            if (mouseGrabberItem && !event->buttons())
+            if (mouseGrabberItem)
                 mouseGrabberItem->ungrabMouse();
         }
     }

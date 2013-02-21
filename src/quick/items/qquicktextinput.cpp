@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -2099,7 +2099,7 @@ void QQuickTextInput::insert(int position, const QString &text)
 }
 
 /*!
-    \qmlmethod string QtQuick2::TextInput::getText(int start, int end)
+    \qmlmethod QtQuick2::TextInput::remove(int start, int end)
 
     Removes the section of text that is between the \a start and \a end positions from the TextInput.
 */
@@ -3275,6 +3275,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
     bool inputMethodAttributesChanged = m_textDirty || m_selDirty;
 #endif
     bool alignmentChanged = false;
+    bool textChanged = false;
 
     if (m_textDirty) {
         // do validation
@@ -3309,6 +3310,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
         }
 
         if (m_textDirty) {
+            textChanged = true;
             m_textDirty = false;
 #ifndef QT_NO_IM
             m_preeditDirty = false;
@@ -3344,7 +3346,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 #endif
     emitUndoRedoChanged();
 
-    if (!emitCursorPositionChanged() && alignmentChanged)
+    if (!emitCursorPositionChanged() && (alignmentChanged || textChanged))
         q->updateCursorRectangle();
 
     return true;

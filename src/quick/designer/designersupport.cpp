@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -125,6 +125,7 @@ QImage DesignerSupport::renderImageForItem(QQuickItem *referencedItem, const QRe
          return QImage();
     renderTexture->setRect(boundingRect);
     renderTexture->setSize(imageSize);
+    renderTexture->setItem(QQuickItemPrivate::get(referencedItem)->rootNode());
     renderTexture->markDirtyTexture();
     renderTexture->updateTexture();
 
