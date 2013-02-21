@@ -38,53 +38,54 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtQuick.Window 2.0 as Window
+import QtQuick 2.1
+import QtQuick.Window 2.1
 
 Item {
     id: root
     width: 400
     height: 200
-    Item {
-        id: main
-        state: "orientation " + Window.Screen.orientation
 
-        property bool landscapeWindow: Window.Screen.primaryOrientation == Qt.LandscapeOrientation
-        property real baseWidth: landscapeWindow ? root.height : root.width
-        property real baseHeight: landscapeWindow ? root.width : root.height
-        property real rotationDelta: landscapeWindow ? -90 : 0
+    function orientationToString(o) {
+        switch (o) {
+        case Qt.PrimaryOrientation:
+            return "primary";
+        case Qt.PortraitOrientation:
+            return "portrait";
+        case Qt.LandscapeOrientation:
+            return "landscape";
+        case Qt.InvertedPortraitOrientation:
+            return "inverted portrait";
+        case Qt.InvertedLandscapeOrientation:
+            return "inverted landscape";
+        }
+        return "unknown";
+    }
 
-        rotation: rotationDelta
-        width: main.baseWidth
-        height: main.baseHeight
+    Grid {
         anchors.centerIn: parent
+        columns: 2
+        spacing: 8
 
         Text {
-            text: "Screen is " + Window.Screen.width + "x" + Window.Screen.height + " and primarily orientation " + Window.Screen.primaryOrientation
-            anchors.centerIn:parent
+            text: "Screen \"" + Screen.name + "\":"
+            font.bold: true
         }
+        Item { width: 1; height: 1 } // spacer
 
+        Text { text: "dimensions" }
+        Text { text: Screen.width + "x" + Screen.height }
 
-        states: [
-            State {
-                name: "orientation " + Qt.LandscapeOrientation
-                PropertyChanges { target: main; rotation: 90 + rotationDelta; width: main.baseHeight; height: main.baseWidth }
-            },
-            State {
-                name: "orientation " + Qt.InvertedPortraitOrientation
-                PropertyChanges { target: main; rotation: 180 + rotationDelta; }
-            },
-            State {
-                name: "orientation " + Qt.InvertedLandscapeOrientation
-                PropertyChanges { target: main; rotation: 270 + rotationDelta; width: main.baseHeight; height: main.baseWidth }
-            }
-        ]
+        Text { text: "logical pixel density" }
+        Text { text: Screen.logicalPixelDensity.toFixed(2) + " dots/mm" }
 
-        transitions: Transition {
-            SequentialAnimation {
-                RotationAnimation { direction: RotationAnimation.Shortest; duration: 300; easing.type: Easing.InOutQuint  }
-                NumberAnimation { properties: "x,y,width,height"; duration: 300; easing.type: Easing.InOutQuint }
-            }
-        }
+        Text { text: "available virtual desktop" }
+        Text { text: Screen.desktopAvailableWidth + "x" + Screen.desktopAvailableHeight }
+
+        Text { text: "orientation" }
+        Text { text: orientationToString(Screen.orientation) + " (" + Screen.orientation + ")" }
+
+        Text { text: "primary orientation" }
+        Text { text: orientationToString(Screen.primaryOrientation) + " (" + Screen.primaryOrientation + ")" }
     }
 }
