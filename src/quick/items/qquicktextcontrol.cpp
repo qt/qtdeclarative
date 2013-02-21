@@ -359,7 +359,7 @@ void QQuickTextControlPrivate::setCursorPosition(int pos, QTextCursor::MoveMode 
 
     if (mode != QTextCursor::KeepAnchor) {
         selectedWordOnDoubleClick = QTextCursor();
-        selectedBlockOnTrippleClick = QTextCursor();
+        selectedBlockOnTripleClick = QTextCursor();
     }
 }
 
@@ -527,18 +527,18 @@ void QQuickTextControlPrivate::extendBlockwiseSelection(int suggestedNewPosition
     Q_Q(QQuickTextControl);
 
     // if inside the initial selected line keep that
-    if (suggestedNewPosition >= selectedBlockOnTrippleClick.selectionStart()
-        && suggestedNewPosition <= selectedBlockOnTrippleClick.selectionEnd()) {
-        q->setTextCursor(selectedBlockOnTrippleClick);
+    if (suggestedNewPosition >= selectedBlockOnTripleClick.selectionStart()
+        && suggestedNewPosition <= selectedBlockOnTripleClick.selectionEnd()) {
+        q->setTextCursor(selectedBlockOnTripleClick);
         return;
     }
 
-    if (suggestedNewPosition < selectedBlockOnTrippleClick.position()) {
-        cursor.setPosition(selectedBlockOnTrippleClick.selectionEnd());
+    if (suggestedNewPosition < selectedBlockOnTripleClick.position()) {
+        cursor.setPosition(selectedBlockOnTripleClick.selectionEnd());
         cursor.setPosition(suggestedNewPosition, QTextCursor::KeepAnchor);
         cursor.movePosition(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
     } else {
-        cursor.setPosition(selectedBlockOnTrippleClick.selectionStart());
+        cursor.setPosition(selectedBlockOnTripleClick.selectionStart());
         cursor.setPosition(suggestedNewPosition, QTextCursor::KeepAnchor);
         cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
         cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor);
@@ -791,8 +791,8 @@ void QQuickTextControl::timerEvent(QTimerEvent *e)
         d->cursorOn = !d->cursorOn;
 
         d->repaintCursor();
-    } else if (e->timerId() == d->trippleClickTimer.timerId()) {
-        d->trippleClickTimer.stop();
+    } else if (e->timerId() == d->tripleClickTimer.timerId()) {
+        d->tripleClickTimer.stop();
     }
 }
 
@@ -1022,17 +1022,17 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
     commitPreedit();
 #endif
 
-    if (trippleClickTimer.isActive()
-        && ((pos - trippleClickPoint).toPoint().manhattanLength() < qApp->styleHints()->startDragDistance())) {
+    if (tripleClickTimer.isActive()
+        && ((pos - tripleClickPoint).toPoint().manhattanLength() < qApp->styleHints()->startDragDistance())) {
 
         cursor.movePosition(QTextCursor::StartOfBlock);
         cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
         cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor);
-        selectedBlockOnTrippleClick = cursor;
+        selectedBlockOnTripleClick = cursor;
 
         anchorOnMousePress = QString();
 
-        trippleClickTimer.stop();
+        tripleClickTimer.stop();
     } else {
         int cursorPos = q->hitTest(pos, Qt::FuzzyHit);
         if (cursorPos == -1) {
@@ -1046,7 +1046,7 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
                 selectedWordOnDoubleClick.select(QTextCursor::WordUnderCursor);
             }
 
-            if (selectedBlockOnTrippleClick.hasSelection())
+            if (selectedBlockOnTripleClick.hasSelection())
                 extendBlockwiseSelection(cursorPos);
             else if (selectedWordOnDoubleClick.hasSelection())
                 extendWordwiseSelection(cursorPos, pos.x());
@@ -1079,7 +1079,7 @@ void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mou
         if (!(mousePressed
               || editable
               || selectedWordOnDoubleClick.hasSelection()
-              || selectedBlockOnTrippleClick.hasSelection()))
+              || selectedBlockOnTripleClick.hasSelection()))
             return;
 
         const QTextCursor oldSelection = cursor;
@@ -1114,7 +1114,7 @@ void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mou
             selectedWordOnDoubleClick.select(QTextCursor::WordUnderCursor);
         }
 
-        if (selectedBlockOnTrippleClick.hasSelection())
+        if (selectedBlockOnTripleClick.hasSelection())
             extendBlockwiseSelection(newCursorPos);
         else if (selectedWordOnDoubleClick.hasSelection())
             extendWordwiseSelection(newCursorPos, mouseX);
@@ -1219,8 +1219,8 @@ void QQuickTextControlPrivate::mouseDoubleClickEvent(QMouseEvent *e, const QPoin
         cursorIsFocusIndicator = false;
         selectedWordOnDoubleClick = cursor;
 
-        trippleClickPoint = pos;
-        trippleClickTimer.start(qApp->styleHints()->mouseDoubleClickInterval(), q);
+        tripleClickPoint = pos;
+        tripleClickTimer.start(qApp->styleHints()->mouseDoubleClickInterval(), q);
         if (doEmit) {
             selectionChanged();
 #ifndef QT_NO_CLIPBOARD
