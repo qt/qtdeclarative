@@ -172,7 +172,9 @@ public:
         , highlightMoveVelocity(400), highlightResizeVelocity(400), highlightResizeDuration(-1)
         , sectionCriteria(0), currentSectionItem(0), nextSectionItem(0)
         , overshootDist(0.0), correctFlick(false), inFlickCorrection(false)
-    {}
+    {
+        highlightMoveDuration = -1; //override default value set in base class
+    }
     ~QQuickListViewPrivate() {
         delete highlightPosAnimator;
         delete highlightSizeAnimator;
