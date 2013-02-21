@@ -1872,6 +1872,8 @@ void tst_qquicktextedit::mouseSelection()
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, p2);
     QTRY_COMPARE(textEditObject->selectedText(), selectedText);
 
+    QTest::qWait(QGuiApplication::styleHints()->mouseDoubleClickInterval() + 10);
+
     // Clicking and shift to clicking between the same points should select the same text.
     textEditObject->setCursorPosition(0);
     if (clicks > 1)
