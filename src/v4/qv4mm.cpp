@@ -387,7 +387,7 @@ void MemoryManager::collectFromStack() const
 
     for (; current < top; ++current) {
         char* genericPtr =
-#if CPU(X86_64)
+#if QT_POINTER_SIZE == 8
                 reinterpret_cast<char *>((*current) & ~(quint64(Value::Type_Mask) << Value::Tag_Shift));
 #else
                 reinterpret_cast<char *>(*current);

@@ -81,8 +81,7 @@ struct Q_V4_EXPORT Value
             union {
                 uint uint_32;
                 int int_32;
-#if CPU(X86_64)
-#else
+#if QT_POINTER_SIZE == 4
                 Managed *m;
                 Object *o;
                 String *s;
@@ -133,7 +132,7 @@ struct Q_V4_EXPORT Value
     inline bool isInteger() const { return tag == _Integer_Type; }
     inline bool isDouble() const { return (tag & NotDouble_Mask) != NotDouble_Mask; }
     inline bool isNumber() const { return tag == _Integer_Type || (tag & NotDouble_Mask) != NotDouble_Mask; }
-#if CPU(X86_64)
+#if QT_POINTER_SIZE == 8
     inline bool isString() const { return (tag & Type_Mask) == String_Type; }
     inline bool isObject() const { return (tag & Type_Mask) == Object_Type; }
 #else
@@ -160,7 +159,7 @@ struct Q_V4_EXPORT Value
         return int_32;
     }
 
-#if CPU(X86_64)
+#if QT_POINTER_SIZE == 8
     String *stringValue() const {
         return (String *)(val & ~(quint64(Type_Mask) << Tag_Shift));
     }
@@ -214,7 +213,7 @@ struct Q_V4_EXPORT Value
     Object *toObject(ExecutionContext *ctx) const;
 
     inline bool isPrimitive() const { return !isObject(); }
-#if CPU(X86_64)
+#if QT_POINTER_SIZE == 8
     inline bool integerCompatible() const {
         const quint64 mask = quint64(ConvertibleToInt) << 32;
         return (val & mask) == mask;
@@ -273,7 +272,7 @@ struct Q_V4_EXPORT Value
 inline Value Value::undefinedValue()
 {
     Value v;
-#if CPU(X86_64)
+#if QT_POINTER_SIZE == 8
     v.val = quint64(_Undefined_Type) << Tag_Shift;
 #else
     v.tag = _Undefined_Type;
@@ -285,7 +284,7 @@ inline Value Value::undefinedValue()
 inline Value Value::nullValue()
 {
     Value v;
-#if CPU(X86_64)
+#if QT_POINTER_SIZE == 8
     v.val = quint64(_Null_Type) << Tag_Shift;
 #else
     v.tag = _Null_Type;
@@ -332,7 +331,7 @@ inline Value Value::fromUInt32(uint i)
 inline Value Value::fromString(String *s)
 {
     Value v;
-#if CPU(X86_64)
+#if QT_POINTER_SIZE == 8
     v.val = (quint64)s;
     v.val |= quint64(_String_Type) << Tag_Shift;
 #else
@@ -345,7 +344,7 @@ inline Value Value::fromString(String *s)
 inline Value Value::fromObject(Object *o)
 {
     Value v;
-#if CPU(X86_64)
+#if QT_POINTER_SIZE == 8
     v.val = (quint64)o;
     v.val |= quint64(_Object_Type) << Tag_Shift;
 #else
