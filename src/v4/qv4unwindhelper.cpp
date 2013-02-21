@@ -1,0 +1,37 @@
+#include <qv4unwindhelper.h>
+
+#include <wtf/Platform.h>
+
+#if CPU(X86_64) && OS(LINUX)
+#  define USE_DW2_HELPER
+#elif CPU(X86) && OS(LINUX)
+#  define USE_DW2_HELPER
+#elif OS(WINDOWS)
+    // SJLJ will unwind on Windows
+#  define USE_NULL_HELPER
+#elif OS(IOS)
+    // SJLJ will unwind on iOS
+#  define USE_NULL_HELPER
+#elif OS(ANDROID)
+#  warning "TODO!"
+#  define USE_NULL_HELPER
+#else
+#  warning "Unsupported/untested platform!"
+#  define USE_NULL_HELPER
+#endif
+
+#ifdef USE_DW2_HELPER
+#  include <qv4unwindhelper_p-dw2.h>
+#endif // USE_DW2_HELPER
+
+#ifdef USE_NULL_HELPER
+using namespace QQmlJS::VM;
+UnwindHelper *UnwindHelper::create() { return 0; }
+UnwindHelper::UnwindHelper() {}
+UnwindHelper::~UnwindHelper() {}
+void UnwindHelper::registerFunction(Function *function);
+void UnwindHelper::registerFunctions(QVector<Function *> functions);
+void UnwindHelper::deregisterFunction(Function *function);
+void UnwindHelper::deregisterFunctions(QVector<Function *> functions);
+#endif // USE_NULL_HELPER
+

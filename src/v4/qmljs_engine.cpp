@@ -57,6 +57,7 @@
 #include <qv4jsonobject.h>
 #include <qv4stringobject.h>
 #include <qv4identifier.h>
+#include <qv4unwindhelper.h>
 
 namespace QQmlJS {
 namespace VM {
@@ -70,6 +71,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , exception(Value::nullValue())
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
+    unwindHelper = UnwindHelper::create();
 
     memoryManager->setExecutionEngine(this);
 
@@ -233,6 +235,9 @@ ExecutionEngine::~ExecutionEngine()
     delete globalObject.asObject();
     rootContext->destroy();
     delete rootContext;
+    if (unwindHelper)
+        unwindHelper->deregisterFunctions(functions);
+    delete unwindHelper;
     qDeleteAll(functions);
     delete memoryManager;
 }

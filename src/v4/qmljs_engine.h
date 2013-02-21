@@ -76,6 +76,7 @@ struct ArgumentsObject;
 struct ExecutionContext;
 struct ExecutionEngine;
 class MemoryManager;
+class UnwindHelper;
 
 struct ObjectPrototype;
 struct StringPrototype;
@@ -101,6 +102,7 @@ class RegExp;
 struct Q_V4_EXPORT ExecutionEngine
 {
     MemoryManager *memoryManager;
+    UnwindHelper *unwindHelper;
     EvalISelFactory *iselFactory;
     ExecutionContext *current;
     ExecutionContext *rootContext;

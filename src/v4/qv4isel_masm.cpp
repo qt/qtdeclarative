@@ -44,6 +44,7 @@
 #include "qv4object.h"
 #include "qv4functionobject.h"
 #include "qv4regexpobject.h"
+#include "qv4unwindhelper.h"
 
 #include <assembler/LinkBuffer.h>
 #include <WTFStubs.h>
@@ -483,6 +484,7 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     _as->poke(Assembler::ScratchRegister);
 #endif
     _as->ret();
+    // TODO: add a label and a nop, so we can determine the exact function length
 
     _as->link(_vmFunction);
 
@@ -490,6 +492,9 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
         _vmFunction->lookups = new Lookup[_lookups.size()];
         memcpy(_vmFunction->lookups, _lookups.constData(), _lookups.size()*sizeof(Lookup));
     }
+
+    if (engine()->unwindHelper)
+        engine()->unwindHelper->registerFunction(_vmFunction);
 
     qSwap(_vmFunction, vmFunction);
     qSwap(_function, function);

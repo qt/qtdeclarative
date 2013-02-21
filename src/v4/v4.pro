@@ -47,7 +47,8 @@ SOURCES += \
     qv4stringobject.cpp \
     qv4string.cpp \
     qv4objectiterator.cpp \
-    qv4regexp.cpp
+    qv4regexp.cpp \
+    qv4unwindhelper.cpp
 
 HEADERS += \
     qv4global.h \
@@ -85,7 +86,9 @@ HEADERS += \
     qv4string.h \
     qv4propertydescriptor.h \
     qv4objectiterator.h \
-    qv4regexp.h
+    qv4regexp.h \
+    qv4unwindhelper.h \
+    qv4unwindhelper_p-dw2.h
 
 llvm-libs {
 
