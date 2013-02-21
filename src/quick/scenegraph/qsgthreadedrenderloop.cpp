@@ -168,9 +168,6 @@ const QEvent::Type WM_RequestSync       = QEvent::Type(QEvent::User + 4);
 // typically a result of QQuickWindow::update().
 const QEvent::Type WM_RequestRepaint    = QEvent::Type(QEvent::User + 5);
 
-// Passed by the RL to the RT when a window has changed size.
-const QEvent::Type WM_Resize            = QEvent::Type(QEvent::User + 6);
-
 // Passed by the RL to the RT to free up maybe release SG and GL contexts
 // if no windows are rendering.
 const QEvent::Type WM_TryRelease        = QEvent::Type(QEvent::User + 7);
@@ -212,14 +209,6 @@ public:
 
     bool inDestructor;
 };
-
-class WMResizeEvent : public WMWindowEvent
-{
-public:
-    WMResizeEvent(QQuickWindow *c, const QSize &s) : WMWindowEvent(c, WM_Resize), size(s) { }
-    QSize size;
-};
-
 
 class WMExposeEvent : public WMWindowEvent
 {
@@ -374,7 +363,8 @@ bool QSGRenderThread::event(QEvent *e)
 
         pendingUpdate |= RepaintRequest;
 
-        if (windowFor(m_windows, se->window)) {
+        if (Window *w = windowFor(m_windows, se->window)) {
+            w->size = se->size;
             RLDEBUG1("    Render:  - window already added...");
             return true;
         }
@@ -408,14 +398,6 @@ bool QSGRenderThread::event(QEvent *e)
         if (m_windows.size() > 0)
             pendingUpdate |= SyncRequest;
         return true;
-
-    case WM_Resize: {
-        RLDEBUG("    Render: WM_Resize");
-        WMResizeEvent *re = static_cast<WMResizeEvent *>(e);
-        Window *w = windowFor(m_windows, re->window);
-        w->size = re->size;
-        // No need to wake up here as we will get a sync shortly.. (see QSGThreadedRenderLoop::resize());
-        return true; }
 
     case WM_TryRelease:
         RLDEBUG1("    Render: WM_TryRelease");
@@ -1086,27 +1068,6 @@ QImage QSGThreadedRenderLoop::grab(QQuickWindow *window)
     return result;
 }
 
-/*
-    Notify the render thread that the window is now a new size. Then
-    locks GUI until render has adapted.
- */
-
-void QSGThreadedRenderLoop::resize(QQuickWindow *w, const QSize &size)
-{
-    RLDEBUG1("GUI: resize");
-
-    if (!m_thread->isRunning() || !m_windows.size() || !w->isExposed() || windowFor(m_windows, w) == 0) {
-        return;
-    }
-
-    if (size.width() == 0 || size.height() == 0)
-        return;
-
-    RLDEBUG("GUI:  - posting resize event...");
-    m_thread->postEvent(new WMResizeEvent(w, size));
-
-    polishAndSync();
-}
 
 #include "qsgthreadedrenderloop.moc"
 

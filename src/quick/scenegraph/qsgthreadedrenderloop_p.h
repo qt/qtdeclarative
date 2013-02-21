@@ -69,8 +69,6 @@ public:
 
     QImage grab(QQuickWindow *);
 
-    void resize(QQuickWindow *, const QSize &);
-
     void update(QQuickWindow *window);
     void maybeUpdate(QQuickWindow *window);
     QSGContext *sceneGraphContext() const;

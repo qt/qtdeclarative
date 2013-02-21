@@ -95,7 +95,6 @@ public:
     void renderWindow(QQuickWindow *window);
     void exposureChanged(QQuickWindow *window);
     QImage grab(QQuickWindow *window);
-    void resize(QQuickWindow *window, const QSize &size);
 
     void maybeUpdate(QQuickWindow *window);
     void update(QQuickWindow *window) { maybeUpdate(window); } // identical for this implementation.
@@ -331,12 +330,6 @@ QImage QSGGuiThreadRenderLoop::grab(QQuickWindow *window)
     QImage grabbed = grabContent;
     grabContent = QImage();
     return grabbed;
-}
-
-
-
-void QSGGuiThreadRenderLoop::resize(QQuickWindow *, const QSize &)
-{
 }
 
 
