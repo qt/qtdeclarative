@@ -15,3 +15,4 @@ mkspecs
 src/v4/Qt5V4_resource.rc
 src/v4/Qt5V4d_resource.rc
 *.pdb
+tools/fdegen/fdegen
