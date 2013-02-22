@@ -47,3 +47,7 @@ exampledirs += ../../../examples/qml \
                snippets
 
 imagedirs   += images
+
+navigation.landingpage = "Qt QML"
+navigation.cppclassespage = "Qt QML C++ Classes"
+navigation.qmltypespage = "Qt QML QML Types"
