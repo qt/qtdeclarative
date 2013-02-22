@@ -132,6 +132,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
 
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged FINAL)
     Q_PROPERTY(bool activeFocus READ hasActiveFocus NOTIFY activeFocusChanged FINAL)
+    Q_PROPERTY(bool activeFocusOnTab READ activeFocusOnTab WRITE setActiveFocusOnTab NOTIFY activeFocusOnTabChanged FINAL)
 
     Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged)
     Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged)
@@ -261,6 +262,9 @@ public:
     bool smooth() const;
     void setSmooth(bool);
 
+    bool activeFocusOnTab() const;
+    void setActiveFocusOnTab(bool);
+
     bool antialiasing() const;
     void setAntialiasing(bool);
 
@@ -345,6 +349,7 @@ Q_SIGNALS:
     void stateChanged(const QString &);
     void focusChanged(bool);
     void activeFocusChanged(bool);
+    void activeFocusOnTabChanged(bool);
     void parentChanged(QQuickItem *);
     void transformOriginChanged(TransformOrigin);
     void smoothChanged(bool);

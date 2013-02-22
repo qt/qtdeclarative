@@ -396,8 +396,8 @@ public:
     bool antialiasing:1;
     bool focus:1;
     bool activeFocus:1;
-    bool notifiedFocus:1;
     // Bit 16
+    bool notifiedFocus:1;
     bool notifiedActiveFocus:1;
     bool filtersChildMouseEvents:1;
     bool explicitVisible:1;
@@ -413,8 +413,8 @@ public:
     bool isAccessible:1;
     bool culled:1;
     bool hasCursor:1;
-    // bool dummy:1
     // Bit 32
+    bool activeFocusOnTab:1;
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,
@@ -483,6 +483,8 @@ public:
     QTransform windowToItemTransform() const;
     QTransform itemToWindowTransform() const;
     void itemToParentTransform(QTransform &) const;
+
+    static bool focusNextPrev(QQuickItem *item, bool forward);
 
     qreal x;
     qreal y;

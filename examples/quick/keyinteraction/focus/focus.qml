@@ -44,7 +44,7 @@ import "Core"
 Rectangle {
     id: window
     
-    width: 800; height: 480
+    width: 800; height: 640
     color: "#3E606F"
 
     FocusScope {
@@ -53,17 +53,24 @@ Rectangle {
         width: parent.width; height: parent.height
         focus: true
 
-        GridMenu {
-            id: gridMenu
-            width: parent.width; height: 320
+        TabMenu {
+            id: tabMenu
+            y: 160; width: parent.width; height: 160
 
             focus: true
-            interactive: parent.activeFocus
+            activeFocusOnTab: true
+        }
+
+        GridMenu {
+            id: gridMenu
+            y: 320; width: parent.width; height: 320
+            activeFocusOnTab: true
         }
 
         ListMenu {
             id: listMenu
-            y: 320; width: parent.width; height: 320
+            y: 640; width: parent.width; height: 320
+            activeFocusOnTab: true
         }
 
         Rectangle { 
@@ -73,11 +80,28 @@ Rectangle {
             opacity: 0 
         }
 
-        states: State {
-            name: "showListViews"
-            PropertyChanges { target: gridMenu; y: -160 }
-            PropertyChanges { target: listMenu; y: 160 }
-        }
+        states:  [
+            State {
+                name: "showTabViews"
+                PropertyChanges { target: tabMenu; y:  160 }
+                PropertyChanges { target: gridMenu; y: 320 }
+                PropertyChanges { target: listMenu; y: 640 }
+            },
+
+            State {
+                name: "showGridViews"
+                PropertyChanges { target: tabMenu; y:    0 }
+                PropertyChanges { target: gridMenu; y: 160 }
+                PropertyChanges { target: listMenu; y: 480 }
+            },
+
+            State {
+                name: "showListViews"
+                PropertyChanges { target: tabMenu; y: -160 }
+                PropertyChanges { target: gridMenu; y: 0 }
+                PropertyChanges { target: listMenu; y: 320 }
+            }
+        ]
 
         transitions: Transition {
             NumberAnimation { properties: "y"; duration: 600; easing.type: Easing.OutQuint }

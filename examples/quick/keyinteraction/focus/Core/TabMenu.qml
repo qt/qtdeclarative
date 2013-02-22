@@ -41,11 +41,9 @@
 import QtQuick 2.0
 
 FocusScope {
-    property alias interactive: gridView.interactive
-
     onActiveFocusChanged: {
         if (activeFocus) 
-            mainView.state = "showGridViews"
+            mainView.state = "showTabViews"
     }
 
     Rectangle {
@@ -56,49 +54,49 @@ FocusScope {
             GradientStop { position: 1.0; color: Qt.darker("#193441") }
         }
 
-        GridView {
-            id: gridView
+        Row {
+            id: tabView
             anchors.fill: parent; anchors.leftMargin: 20; anchors.rightMargin: 20
-            cellWidth: 152; cellHeight: 152
-            focus: true
-            model: 12
+            Repeater {
+                activeFocusOnTab: false
+                model: 5
+                Item {
+                    id: container
+                    width: 152; height: 152
+                    activeFocusOnTab: true
+                    focus: true
 
-            KeyNavigation.up: tabMenu
-            KeyNavigation.down: listMenu
-            KeyNavigation.left: contextMenu
+                    KeyNavigation.up: listMenu
+                    KeyNavigation.down: gridMenu
 
-            delegate: Item {
-                id: container
-                width: GridView.view.cellWidth; height: GridView.view.cellHeight
+                    Rectangle {
+                        id: content
+                        color: "transparent"
+                        antialiasing: true
+                        anchors.fill: parent; anchors.margins: 20; radius: 10
 
-                Rectangle {
-                    id: content
-                    color: "transparent"
-                    antialiasing: true
-                    anchors.fill: parent; anchors.margins: 20; radius: 10
-
-                    Rectangle { color: "#91AA9D"; anchors.fill: parent; anchors.margins: 3; radius: 8; antialiasing: true }
-                    Image { source: "images/qt-logo.png"; anchors.centerIn: parent }
-                }
-
-                MouseArea {
-                    id: mouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-
-                    onClicked: {
-                        container.GridView.view.currentIndex = index
-                        container.forceActiveFocus()
+                        Rectangle { color: "#91AA9D"; anchors.fill: parent; anchors.margins: 3; radius: 8; antialiasing: true }
+                        Image { source: "images/qt-logo.png"; anchors.centerIn: parent }
                     }
-                }
 
-                states: State {
-                    name: "active"; when: container.activeFocus
-                    PropertyChanges { target: content; color: "#FCFFF5"; scale: 1.1 }
-                }
+                    MouseArea {
+                        id: mouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
 
-                transitions: Transition {
-                    NumberAnimation { properties: "scale"; duration: 100 }
+                        onClicked: {
+                            container.forceActiveFocus()
+                        }
+                    }
+
+                    states: State {
+                        name: "active"; when: container.activeFocus
+                        PropertyChanges { target: content; color: "#FCFFF5"; scale: 1.1 }
+                    }
+
+                    transitions: Transition {
+                        NumberAnimation { properties: "scale"; duration: 100 }
+                    }
                 }
             }
         }

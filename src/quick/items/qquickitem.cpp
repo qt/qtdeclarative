@@ -1863,6 +1863,11 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 */
 
 /*!
+    \fn void QQuickItem::activeFocusOnTabChanged(bool)
+    \internal
+*/
+
+/*!
     \fn void QQuickItem::childrenChanged()
     \internal
 */
@@ -2020,6 +2025,93 @@ QQuickItem::~QQuickItem()
 
     delete d->_anchors; d->_anchors = 0;
     delete d->_stateGroup; d->_stateGroup = 0;
+}
+
+/*!
+    \internal
+    \brief QQuickItemPrivate::focusNextPrev focuses the next/prev item in the tab-focus-chain
+    \param item The item that currently has the focus
+    \param forward The direction
+    \return Whether the next item in the focus chain is found or not
+
+    If \a next is true, the next item visited will be in depth-first order relative to \a item.
+    If \a next is false, the next item visited will be in reverse depth-first order relative to \a item.
+*/
+bool QQuickItemPrivate::focusNextPrev(QQuickItem *item, bool forward)
+{
+    Q_ASSERT(item);
+    Q_ASSERT(item->activeFocusOnTab());
+
+    QQuickItem *from = 0;
+    if (forward) {
+       from = item->parentItem();
+    } else {
+        if (!item->childItems().isEmpty())
+            from = item->childItems().first();
+        else
+            from = item->parentItem();
+    }
+    bool skip = false;
+    QQuickItem *current = item;
+    do {
+        skip = false;
+        QQuickItem *last = current;
+
+        bool hasChildren = !current->childItems().isEmpty() && current->isEnabled() && current->isVisible();
+
+        // coming from parent: check children
+        if (hasChildren && from == current->parentItem()) {
+            if (forward) {
+                current = current->childItems().first();
+            } else {
+                current = current->childItems().last();
+                if (!current->childItems().isEmpty())
+                    skip = true;
+            }
+        } else if (hasChildren && forward && from != current->childItems().last()) {
+            // not last child going forwards
+            int nextChild = current->childItems().indexOf(from) + 1;
+            current = current->childItems().at(nextChild);
+        } else if (hasChildren && !forward && from != current->childItems().first()) {
+            // not first child going backwards
+            int prevChild = current->childItems().indexOf(from) - 1;
+            current = current->childItems().at(prevChild);
+            if (!current->childItems().isEmpty())
+                skip = true;
+        // back to the parent
+        } else if (current->parentItem()) {
+            current = current->parentItem();
+            // we would evaluate the parent twice, thus we skip
+            if (forward) {
+                skip = true;
+            } else if (!forward && !current->childItems().isEmpty()) {
+                if (last != current->childItems().first()) {
+                    skip = true;
+                } else if (last == current->childItems().first()) {
+                    if (current->isFocusScope() && current->activeFocusOnTab() && current->hasActiveFocus())
+                        skip = true;
+                }
+            }
+        } else if (hasChildren) {
+            // Wrap around after checking all items forward
+            if (forward) {
+                current = current->childItems().first();
+            } else {
+                current = current->childItems().last();
+                if (!current->childItems().isEmpty())
+                    skip = true;
+            }
+        }
+
+        from = last;
+    } while (skip || !current->activeFocusOnTab() || !current->isEnabled() || !current->isVisible());
+
+    if (current == item)
+        return false;
+
+    current->forceActiveFocus();
+
+    return true;
 }
 
 /*!
@@ -2522,6 +2614,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , isAccessible(false)
     , culled(false)
     , hasCursor(false)
+    , activeFocusOnTab(false)
     , dirtyAttributes(0)
     , nextDirtyItem(0)
     , prevDirtyItem(0)
@@ -4170,6 +4263,23 @@ void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
         else
             extra->keyHandler->keyReleased(e, true);
     }
+
+    if (e->isAccepted())
+        return;
+
+    //only care about KeyPress now
+    if (q->activeFocusOnTab() && e->type() == QEvent::KeyPress) {
+        bool res = false;
+        if (!(e->modifiers() & (Qt::ControlModifier | Qt::AltModifier))) {  //### Add MetaModifier?
+            if (e->key() == Qt::Key_Backtab
+                || (e->key() == Qt::Key_Tab && (e->modifiers() & Qt::ShiftModifier)))
+                res = QQuickItemPrivate::focusNextPrev(q, false);
+            else if (e->key() == Qt::Key_Tab)
+                res = QQuickItemPrivate::focusNextPrev(q, true);
+            if (res)
+                e->setAccepted(true);
+        }
+    }
 }
 
 #ifndef QT_NO_IM
@@ -5329,6 +5439,53 @@ void QQuickItem::setSmooth(bool smooth)
     d->dirty(QQuickItemPrivate::Smooth);
 
     emit smoothChanged(smooth);
+}
+
+/*!
+    \qmlproperty bool QtQuick2::Item::activeFocusOnTab
+
+    This property holds whether the item wants to be in tab focus
+    chain. By default this is set to false.
+
+    The tab focus chain traverses elements by visiting first the
+    parent, and then its children in the order they occur in the
+    children property. Pressing the tab key on an item in the tab
+    focus chain will move keyboard focus to the next item in the
+    chain. Pressing BackTab (normally Shift+Tab) will move focus
+    to the previous item.
+
+    To set up a manual tab focus chain, see \l KeyNavigation. Tab
+    key events used by Keys or KeyNavigation have precedence over
+    focus chain behavior, ignore the events in other key handlers
+    to allow it to propagate.
+*/
+/*!
+    \property QQuickItem::activeFocusOnTab
+
+    This property holds whether the item wants to be in tab focus
+    chain. By default this is set to false.
+*/
+bool QQuickItem::activeFocusOnTab() const
+{
+    Q_D(const QQuickItem);
+    return d->activeFocusOnTab;
+}
+void QQuickItem::setActiveFocusOnTab(bool activeFocusOnTab)
+{
+    Q_D(QQuickItem);
+    if (d->activeFocusOnTab == activeFocusOnTab)
+        return;
+
+    if (window()) {
+        if ((this == window()->activeFocusItem()) && !activeFocusOnTab) {
+            qWarning("QQuickItem: Cannot set activeFocusOnTab to false once item is the active focus item.");
+            return;
+        }
+    }
+
+    d->activeFocusOnTab = activeFocusOnTab;
+
+    emit activeFocusOnTabChanged(activeFocusOnTab);
 }
 
 /*!
