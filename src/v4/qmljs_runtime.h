@@ -600,12 +600,12 @@ inline void __qmljs_sne(ExecutionContext *, Value *result, const Value &left, co
 inline Bool __qmljs_cmp_gt(ExecutionContext *ctx, const Value &left, const Value &right)
 {
     TRACE2(left, right);
+    if (Value::integerCompatible(left, right))
+        return left.integerValue() > right.integerValue();
 
     Value l = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
     Value r = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
 
-    if (Value::integerCompatible(l, r))
-        return l.integerValue() > r.integerValue();
     if (Value::bothDouble(l, r)) {
         return l.doubleValue() > r.doubleValue();
     } else if (l.isString() && r.isString()) {
@@ -620,12 +620,12 @@ inline Bool __qmljs_cmp_gt(ExecutionContext *ctx, const Value &left, const Value
 inline Bool __qmljs_cmp_lt(ExecutionContext *ctx, const Value &left, const Value &right)
 {
     TRACE2(left, right);
+    if (Value::integerCompatible(left, right))
+        return left.integerValue() < right.integerValue();
 
     Value l = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
     Value r = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
 
-    if (Value::integerCompatible(l, r))
-        return l.integerValue() < r.integerValue();
     if (Value::bothDouble(l, r)) {
         return l.doubleValue() < r.doubleValue();
     } else if (l.isString() && r.isString()) {
@@ -640,12 +640,12 @@ inline Bool __qmljs_cmp_lt(ExecutionContext *ctx, const Value &left, const Value
 inline Bool __qmljs_cmp_ge(ExecutionContext *ctx, const Value &left, const Value &right)
 {
     TRACE2(left, right);
+    if (Value::integerCompatible(left, right))
+        return left.integerValue() >= right.integerValue();
 
     Value l = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
     Value r = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
 
-    if (Value::integerCompatible(l, r))
-        return l.integerValue() >= r.integerValue();
     if (Value::bothDouble(l, r)) {
         return l.doubleValue() >= r.doubleValue();
     } else if (l.isString() && r.isString()) {
@@ -660,12 +660,12 @@ inline Bool __qmljs_cmp_ge(ExecutionContext *ctx, const Value &left, const Value
 inline Bool __qmljs_cmp_le(ExecutionContext *ctx, const Value &left, const Value &right)
 {
     TRACE2(left, right);
+    if (Value::integerCompatible(left, right))
+        return left.integerValue() <= right.integerValue();
 
     Value l = __qmljs_to_primitive(left, ctx, NUMBER_HINT);
     Value r = __qmljs_to_primitive(right, ctx, NUMBER_HINT);
 
-    if (Value::integerCompatible(l, r))
-        return l.integerValue() <= r.integerValue();
     if (Value::bothDouble(l, r)) {
         return l.doubleValue() <= r.doubleValue();
     } else if (l.isString() && r.isString()) {
