@@ -40,91 +40,97 @@
 
 import QtQuick 2.0
 import "../contents"
+import "../../shared"
+
 Item {
-  id:container
-  width:320
-  height:480
+    id:container
+    width:320
+    height:480
 
-  Column {
-    spacing:5
-    anchors.fill:parent
-    Text { font.pointSize:15; text:"Quadratic Curve"; anchors.horizontalCenter:parent.horizontalCenter}
+    Column {
+        spacing:5
+        anchors.fill: parent
+        anchors.topMargin: 12
 
-    Canvas {
-      id:canvas
-      width:320
-      height:280
-      property string strokeStyle:"steelblue"
-      property string fillStyle:"yellow"
-      property int lineWidth:lineWidthCtrl.value
-      property bool fill:true
-      property bool stroke:true
-      property real alpha:alphaCtrl.value
-      property real scaleX : scaleXCtrl.value
-      property real scaleY : scaleYCtrl.value
-      property real rotate : rotateCtrl.value
-      antialiasing: true
+        Text {
+            font.pointSize: 24
+            font.bold: true
+            text: "Quadratic Curve"
+            anchors.horizontalCenter: parent.horizontalCenter
+            color: "#777"
+        }
 
-      onLineWidthChanged:requestPaint();
-      onFillChanged:requestPaint();
-      onStrokeChanged:requestPaint();
-      onAlphaChanged:requestPaint();
-      onScaleXChanged:requestPaint();
-      onScaleYChanged:requestPaint();
-      onRotateChanged:requestPaint();
-      Behavior on scaleX { SpringAnimation { spring: 2; damping: 0.2; loops:Animation.Infinite } }
-      Behavior on scaleY { SpringAnimation { spring: 2; damping: 0.2; loops:Animation.Infinite} }
-      Behavior on rotate { SpringAnimation { spring: 2; damping: 0.2; loops:Animation.Infinite} }
+        Canvas {
+            id: canvas
+            width: 320
+            height: 280
 
-      onPaint: {
-          var ctx = canvas.getContext('2d');
-          ctx.save();
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.globalAlpha = canvas.alpha;
-          ctx.strokeStyle = canvas.strokeStyle;
-          ctx.fillStyle = canvas.fillStyle;
-          ctx.lineWidth = canvas.lineWidth;
-          ctx.scale(canvas.scaleX, canvas.scaleY);
-          ctx.rotate(canvas.rotate);
-          // ![0]
-          ctx.beginPath();
-          ctx.moveTo(75,25);
-          ctx.quadraticCurveTo(25,25,25,62.5);
-          ctx.quadraticCurveTo(25,100,50,100);
-          ctx.quadraticCurveTo(50,120,30,125);
-          ctx.quadraticCurveTo(60,120,65,100);
-          ctx.quadraticCurveTo(125,100,125,62.5);
-          ctx.quadraticCurveTo(125,25,75,25);
-          ctx.closePath();
-          // ![0]
-          if (canvas.fill)
-             ctx.fill();
-          if (canvas.stroke)
-             ctx.stroke();
+            property color strokeStyle:  Qt.darker(fillStyle, 1.3)
+            property color fillStyle: "#14aaff" // blue
+            property int lineWidth: lineWidthCtrl.value
+            property bool fill: true
+            property bool stroke: true
+            property real alpha: 1.0
+            property real scale : scaleCtrl.value
+            property real rotate : rotateCtrl.value
 
+            antialiasing: true
 
-          // ![1]
-          ctx.fillStyle="green";
-          ctx.font = "Bold 15px";
+            onLineWidthChanged:requestPaint();
+            onFillChanged:requestPaint();
+            onStrokeChanged:requestPaint();
+            onScaleChanged:requestPaint();
+            onRotateChanged:requestPaint();
 
-          ctx.fillText("QML酷毙了", 30, 60);
-          // ![1]
-          ctx.restore();
-      }
-    }
+            onPaint: {
+                var ctx = canvas.getContext('2d');
+                var originX = 75
+                var originY = 75
 
-    Rectangle {
-        id:controls
-        width:320
-        height:150
-        Column {
-          spacing:3
-          Slider {id:lineWidthCtrl; width:300; height:20; min:1; max:10; init:2; name:"Line width"}
-          Slider {id:scaleXCtrl; width:300; height:20; min:0.1; max:10; init:1; name:"ScaleX"}
-          Slider {id:scaleYCtrl; width:300; height:20; min:0.1; max:10; init:1; name:"ScaleY"}
-          Slider {id:rotateCtrl; width:300; height:20; min:0; max:Math.PI*2; init:0; name:"Rotate"}
-          Slider {id:alphaCtrl; width:300; height:20; min:0; max:1; init:1; name:"Alpha"}
+                ctx.save();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.translate(originX, originX);
+                ctx.strokeStyle = canvas.strokeStyle;
+                ctx.fillStyle = canvas.fillStyle;
+                ctx.lineWidth = canvas.lineWidth;
+
+                ctx.translate(originX, originY)
+                ctx.rotate(canvas.rotate);
+                ctx.scale(canvas.scale, canvas.scale);
+                ctx.translate(-originX, -originY)
+
+                // ![0]
+                ctx.beginPath();
+                ctx.moveTo(75,25);
+                ctx.quadraticCurveTo(25,25,25,62.5);
+                ctx.quadraticCurveTo(25,100,50,100);
+                ctx.quadraticCurveTo(50,120,30,125);
+                ctx.quadraticCurveTo(60,120,65,100);
+                ctx.quadraticCurveTo(125,100,125,62.5);
+                ctx.quadraticCurveTo(125,25,75,25);
+                ctx.closePath();
+                // ![0]
+
+                if (canvas.fill)
+                    ctx.fill();
+                if (canvas.stroke)
+                    ctx.stroke();
+
+                ctx.restore();
+
+                // ![1]
+                ctx.fillStyle = "white";
+                ctx.font = "Bold 17px";
+                ctx.fillText("Qt Quick", 110, 140);
+                // ![1]
+            }
         }
     }
-  }
+    Column {
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 12
+        Slider {id:lineWidthCtrl; min:1; max:10; init:2; name:"Outline"}
+        Slider {id:scaleCtrl; min:0.1; max:10; init:1; name:"Scale"}
+        Slider {id:rotateCtrl; min:0; max:Math.PI*2; init:0; name:"Rotate"}
+    }
 }

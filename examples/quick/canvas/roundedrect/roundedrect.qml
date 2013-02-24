@@ -40,84 +40,82 @@
 
 import QtQuick 2.0
 import "../contents"
+import "../../shared"
+
 Item {
-  id:container
-  width:320
-  height:480
+    id:container
+    width: 320
+    height: 480
 
-  Column {
-    spacing:5
-    anchors.fill:parent
-    Text { font.pointSize:15; text:"Rounded rectangle"; anchors.horizontalCenter:parent.horizontalCenter}
-    Canvas {
-        id:canvas
-        width:320
-        height:280
-        antialiasing: true
+    Column {
+        spacing: 6
+        anchors.fill: parent
+        anchors.topMargin: 12
+        Text {
+            font.pointSize: 24
+            font.bold: true
+            text: "Rounded rectangle"
+            anchors.horizontalCenter: parent.horizontalCenter
+            color: "#777"
+        }
+        Canvas {
+            id: canvas
+            width: 320
+            height: 280
+            antialiasing: true
 
-        property int radius: rCtrl.value
-        property int rectx: rxCtrl.value
-        property int recty: ryCtrl.value
-        property int rectWidth: width - 2*rectx
-        property int rectHeight: height - 2*recty
-        property string strokeStyle:"blue"
-        property string fillStyle:"steelblue"
-        property int lineWidth:lineWidthCtrl.value
-        property bool fill:true
-        property bool stroke:true
-        property real alpha:alphaCtrl.value
+            property int radius: rCtrl.value
+            property int rectx: 60
+            property int recty: 60
+            property int rectWidth: width - 2*rectx
+            property int rectHeight: height - 2*recty
+            property color strokeStyle:  Qt.darker(fillStyle, 1.4)
+            property color fillStyle: "#ae32a0" // purple
+            property int lineWidth: lineWidthCtrl.value
+            property bool fill: true
+            property bool stroke: true
+            property real alpha: 1.0
 
-        onLineWidthChanged:requestPaint();
-        onFillChanged:requestPaint();
-        onStrokeChanged:requestPaint();
-        onRadiusChanged:requestPaint();
-        onRectxChanged:requestPaint();
-        onRectyChanged:requestPaint();
-        onAlphaChanged:requestPaint();
+            onLineWidthChanged:requestPaint();
+            onFillChanged:requestPaint();
+            onStrokeChanged:requestPaint();
+            onRadiusChanged:requestPaint();
 
-        onPaint: {
-            var ctx = getContext("2d");
-            ctx.save();
-            ctx.clearRect(0,0,canvas.width, canvas.height);
-            ctx.strokeStyle = canvas.strokeStyle;
-            ctx.lineWidth = canvas.lineWidth
-            ctx.fillStyle = canvas.fillStyle
-            ctx.globalAlpha = canvas.alpha
-            ctx.beginPath();
-            ctx.moveTo(rectx+radius,recty);                 // top side
-            ctx.lineTo(rectx+rectWidth-radius,recty);
-            // draw top right corner
-            ctx.arcTo(rectx+rectWidth,recty,rectx+rectWidth,recty+radius,radius);
-            ctx.lineTo(rectx+rectWidth,recty+rectHeight-radius);    // right side
-            // draw bottom right corner
-            ctx.arcTo(rectx+rectWidth,recty+rectHeight,rectx+rectWidth-radius,recty+rectHeight,radius);
-            ctx.lineTo(rectx+radius,recty+rectHeight);              // bottom side
-            // draw bottom left corner
-            ctx.arcTo(rectx,recty+rectHeight,rectx,recty+rectHeight-radius,radius);
-            ctx.lineTo(rectx,recty+radius);                 // left side
-            // draw top left corner
-            ctx.arcTo(rectx,recty,rectx+radius,recty,radius);
-            ctx.closePath();
-            if (canvas.fill)
-                ctx.fill();
-            if (canvas.stroke)
-                ctx.stroke();
-            ctx.restore();
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.save();
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                ctx.strokeStyle = canvas.strokeStyle;
+                ctx.lineWidth = canvas.lineWidth
+                ctx.fillStyle = canvas.fillStyle
+                ctx.globalAlpha = canvas.alpha
+                ctx.beginPath();
+                ctx.moveTo(rectx+radius,recty);                 // top side
+                ctx.lineTo(rectx+rectWidth-radius,recty);
+                // draw top right corner
+                ctx.arcTo(rectx+rectWidth,recty,rectx+rectWidth,recty+radius,radius);
+                ctx.lineTo(rectx+rectWidth,recty+rectHeight-radius);    // right side
+                // draw bottom right corner
+                ctx.arcTo(rectx+rectWidth,recty+rectHeight,rectx+rectWidth-radius,recty+rectHeight,radius);
+                ctx.lineTo(rectx+radius,recty+rectHeight);              // bottom side
+                // draw bottom left corner
+                ctx.arcTo(rectx,recty+rectHeight,rectx,recty+rectHeight-radius,radius);
+                ctx.lineTo(rectx,recty+radius);                 // left side
+                // draw top left corner
+                ctx.arcTo(rectx,recty,rectx+radius,recty,radius);
+                ctx.closePath();
+                if (canvas.fill)
+                    ctx.fill();
+                if (canvas.stroke)
+                    ctx.stroke();
+                ctx.restore();
+            }
         }
     }
-
-    Rectangle {
-        id:controls
-        width:320
-        height:150
-        Column {
-          spacing:3
-          Slider {id:lineWidthCtrl; width:300; height:20; min:1; max:10; init:2; name:"Line width"}
-          Slider {id:rxCtrl; width:300; height:20; min:5; max:30; init:10; name:"rectx"}
-          Slider {id:ryCtrl; width:300; height:20; min:5; max:30; init:10; name:"recty"}
-          Slider {id:rCtrl; width:300; height:20; min:10; max:100; init:40; name:"Radius"}
-          Slider {id:alphaCtrl; width:300; height:20; min:0; max:1; init:1; name:"Alpha"}
-        }
+    Column {
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 12
+        Slider {id: lineWidthCtrl ; min: 1 ; max: 10; init: 2 ; name: "Outline"}
+        Slider {id: rCtrl ; min: 10 ; max: 80 ; init: 40 ; name: "Radius"}
     }
-  }
 }

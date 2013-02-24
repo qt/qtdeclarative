@@ -42,73 +42,75 @@
 import QtQuick 2.0
 
 Item {
-    id:slider
-    property real min:0
-    property real max:1
-    property real value: min + (max - min) * (bar.x / (foo.width - bar.width))
-    property real init:min+(max-min)/2
-    property string name:"Slider"
+    id: slider
+    height: 26
+    width: 320
+
+    property real min: 0
+    property real max: 1
+    property real value: min + (max - min) * mousearea.value
+    property real init: min+(max-min)/2
+    property string name: "Slider"
+    property color color: "#0066cc"
 
     Component.onCompleted: setValue(init)
     function setValue(v) {
        if (min < max)
-          bar.x = v/(max - min) * (foo.width - bar.width);
+          handle.x = Math.round( v / (max - min) *
+                                (mousearea.drag.maximumX - mousearea.drag.minimumX)
+                                + mousearea.drag.minimumX);
     }
     Rectangle {
         id:sliderName
-        anchors.left:parent.left
+        anchors.left: parent.left
+        anchors.leftMargin: 16
         height: childrenRect.height
-        width:childrenRect.width
-        anchors.verticalCenter:parent.verticalCenter
+        width: Math.max(44, childrenRect.width)
+        anchors.verticalCenter: parent.verticalCenter
         Text {
-           text:slider.name
-           font.pointSize:12
-         }
+            text: slider.name + ":"
+            font.pointSize: 12
+            color: "#333"
+        }
     }
-    Item {
+
+    Rectangle{
         id: foo
-        height: 6
-        width: parent.width - 4 - sliderName.width
-        anchors.verticalCenter:parent.verticalCenter
-        anchors.left:sliderName.right
-        anchors.leftMargin:5
+        width: parent.width - 8 - sliderName.width
+        color: "#eee"
+        height: 7
+        radius: 3
+        antialiasing: true
+        border.color: Qt.darker(color, 1.2)
+        anchors.left: sliderName.right
+        anchors.right: parent.right
+        anchors.leftMargin: 10
+        anchors.rightMargin: 24
+        anchors.verticalCenter: parent.verticalCenter
+
         Rectangle {
             height: parent.height
             anchors.left: parent.left
-            anchors.right: bar.horizontalCenter
-            color: "blue"
+            anchors.right: handle.horizontalCenter
+            color: slider.color
             radius: 3
+            border.width: 1
+            border.color: Qt.darker(color, 1.3)
+            opacity: 0.8
         }
-        Rectangle {
-            height: parent.height
-            anchors.left: bar.horizontalCenter
-            anchors.right: parent.right
-            color: "gray"
-            radius: 3
-        }
-        Rectangle {
-            anchors.fill: parent
-            color: "transparent"
-            radius: 3
-            border.width: 2
-            border.color: "black"
-        }
-
-        Rectangle {
-            id: bar
-            y: -7
-            width: 20
-            height: 20
-            radius: 15
-            color: "white"
-            border.width: 2
-            border.color: "black"
+        Image {
+            id: handle
+            source: "images/slider_handle.png"
+            anchors.verticalCenter: parent.verticalCenter
             MouseArea {
+                id: mousearea
                 anchors.fill: parent
+                anchors.margins: -4
                 drag.target: parent
                 drag.axis: Drag.XAxis
-                drag.minimumX: 0
-                drag.maximumX: foo.width - parent.width
+                drag.minimumX: Math.round(-handle.width / 2 + 3)
+                drag.maximumX: Math.round(foo.width - handle.width/2 - 3)
+                property real value: (handle.x - drag.minimumX) / (drag.maximumX - drag.minimumX)
             }
         }
     }
