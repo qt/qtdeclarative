@@ -206,6 +206,7 @@ private slots:
     void destroyItemOnCreation();
 
     void parentBinding();
+    void defaultHighlightMoveDuration();
 
 private:
     template <class T> void items(const QUrl &source, bool forceLayout);
@@ -6799,6 +6800,18 @@ void tst_QQuickListView::parentBinding()
     QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 
     delete window;
+}
+
+void tst_QQuickListView::defaultHighlightMoveDuration()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0; ListView {}", QUrl::fromLocalFile(""));
+
+    QObject *obj = component.create();
+    QVERIFY(obj);
+
+    QCOMPARE(obj->property("highlightMoveDuration").toInt(), -1);
 }
 
 QTEST_MAIN(tst_QQuickListView)

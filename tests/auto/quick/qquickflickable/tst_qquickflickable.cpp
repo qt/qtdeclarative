@@ -91,6 +91,8 @@ private slots:
     void cancelOnMouseGrab();
     void clickAndDragWhenTransformed();
     void flickTwiceUsingTouches();
+    void nestedStopAtBounds();
+    void nestedStopAtBounds_data();
 
 private:
     void flickWithTouch(QWindow *window, QTouchDevice *touchDevice);
@@ -1306,6 +1308,75 @@ void tst_qquickflickable::flickWithTouch(QWindow *window, QTouchDevice *touchDev
     QTest::touchEvent(window, touchDevice)
         .release(0, QPoint(100, 240), window);
     QTest::qWait(1);
+}
+
+void tst_qquickflickable::nestedStopAtBounds_data()
+{
+    QTest::addColumn<bool>("transpose");
+    QTest::addColumn<bool>("invert");
+
+    QTest::newRow("left") << false << false;
+    QTest::newRow("right") << false << true;
+    QTest::newRow("top") << true << false;
+    QTest::newRow("bottom") << true << true;
+}
+
+void tst_qquickflickable::nestedStopAtBounds()
+{
+    QFETCH(bool, transpose);
+    QFETCH(bool, invert);
+
+    QQuickView view;
+    view.setSource(testFileUrl("nestedStopAtBounds.qml"));
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QVERIFY(view.rootObject());
+
+    QQuickFlickable *outer = qobject_cast<QQuickFlickable*>(view.rootObject());
+    QVERIFY(outer);
+
+    QQuickFlickable *inner = outer->findChild<QQuickFlickable*>("innerFlickable");
+    QVERIFY(inner);
+    inner->setFlickableDirection(transpose ? QQuickFlickable::VerticalFlick : QQuickFlickable::HorizontalFlick);
+    inner->setContentX(invert ? 0 : 100);
+    inner->setContentY(invert ? 0 : 100);
+
+    const int threshold = qApp->styleHints()->startDragDistance();
+
+    QPoint position(200, 200);
+    int &axis = transpose ? position.ry() : position.rx();
+
+    // drag toward the aligned boundary.  Outer flickable dragged.
+    QTest::mousePress(&view, Qt::LeftButton, 0, position);
+    QTest::qWait(10);
+    axis += invert ? threshold * 2 : -threshold * 2;
+    QTest::mouseMove(&view, position);
+    axis += invert ? threshold : -threshold;
+    QTest::mouseMove(&view, position);
+    QCOMPARE(outer->isDragging(), true);
+    QCOMPARE(inner->isDragging(), false);
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
+
+    QVERIFY(!outer->isDragging());
+    QTRY_VERIFY(!outer->isMoving());
+
+    axis = 200;
+    outer->setContentX(50);
+    outer->setContentY(50);
+
+    // drag away from the aligned boundary.  Inner flickable dragged.
+    QTest::mousePress(&view, Qt::LeftButton, 0, position);
+    QTest::qWait(10);
+    axis += invert ? -threshold * 2 : threshold * 2;
+    QTest::mouseMove(&view, position);
+    axis += invert ? -threshold : threshold;
+    QTest::mouseMove(&view, position);
+    QCOMPARE(outer->isDragging(), false);
+    QCOMPARE(inner->isDragging(), true);
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
+
+    QTRY_VERIFY(!outer->isMoving());
 }
 
 QTEST_MAIN(tst_qquickflickable)

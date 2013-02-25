@@ -81,8 +81,8 @@ protected:
     virtual QVariant updateValue(const QString &key, const QVariant &input);
 
     template<class DerivedType>
-    QQmlPropertyMap(DerivedType *derived, QObject *parent)
-        : QObject(*allocatePrivate(), parent)
+    QQmlPropertyMap(DerivedType *derived, QObject *parentObj)
+        : QObject(*allocatePrivate(), parentObj)
     {
         Q_UNUSED(derived)
         init(&DerivedType::staticMetaObject);

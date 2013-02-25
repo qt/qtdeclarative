@@ -35,6 +35,7 @@ QUICKTESTS =  \
     qquickanchors \
     qquickanimatedimage \
     qquickanimatedsprite \
+    qquickdynamicpropertyanimation \
     qquickborderimage \
     qquickwindow \
     qquickdrag \

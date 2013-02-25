@@ -140,8 +140,8 @@ class QSGSimpleMaterial : public QSGMaterial
 {
 public:
 #ifndef qdoc
-    QSGSimpleMaterial(const State &state, PtrShaderCreateFunc func)
-        : m_state(state)
+    QSGSimpleMaterial(const State &aState, PtrShaderCreateFunc func)
+        : m_state(aState)
         , m_func(func)
     {
     }

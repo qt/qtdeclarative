@@ -126,7 +126,7 @@ public:
     void cancelPreedit();
 #endif
 
-    QPointF trippleClickPoint;
+    QPointF tripleClickPoint;
     QPointF mousePressPos;
 
     QTextCharFormat lastCharFormat;
@@ -134,12 +134,12 @@ public:
     QTextDocument *doc;
     QTextCursor cursor;
     QTextCursor selectedWordOnDoubleClick;
-    QTextCursor selectedBlockOnTrippleClick;
+    QTextCursor selectedBlockOnTripleClick;
     QString anchorOnMousePress;
     QString linkToCopy;
 
     QBasicTimer cursorBlinkTimer;
-    QBasicTimer trippleClickTimer;
+    QBasicTimer tripleClickTimer;
 
 #ifndef QT_NO_IM
     int preeditCursor;
