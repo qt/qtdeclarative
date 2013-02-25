@@ -55,7 +55,7 @@ class QQuickFolderListModelPrivate
 public:
     QQuickFolderListModelPrivate(QQuickFolderListModel *q)
         : q_ptr(q),
-          sortField(QQuickFolderListModel::Name), sortReversed(false), showDirs(true), showDirsFirst(false), showDots(false), showOnlyReadable(false)
+          sortField(QQuickFolderListModel::Name), sortReversed(false), showDirs(true), showDirsFirst(false), showDotAndDotDot(false), showOnlyReadable(false)
     {
         nameFilters << QLatin1String("*");
     }
@@ -72,7 +72,7 @@ public:
     bool sortReversed;
     bool showDirs;
     bool showDirsFirst;
-    bool showDots;
+    bool showDotAndDotDot;
     bool showOnlyReadable;
 
     ~QQuickFolderListModelPrivate() {}
@@ -681,15 +681,15 @@ void  QQuickFolderListModel::setShowDirsFirst(bool on)
 bool QQuickFolderListModel::showDotAndDotDot() const
 {
     Q_D(const QQuickFolderListModel);
-    return d->showDots;
+    return d->showDotAndDotDot;
 }
 
 void  QQuickFolderListModel::setShowDotAndDotDot(bool on)
 {
     Q_D(QQuickFolderListModel);
 
-    if (on != d->showDots) {
-        d->fileInfoThread.setShowDotDot(on);
+    if (on != d->showDotAndDotDot) {
+        d->fileInfoThread.setShowDotAndDotDot(on);
     }
 }
 
