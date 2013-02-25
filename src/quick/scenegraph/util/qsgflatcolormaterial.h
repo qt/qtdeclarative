@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef FLATCOLORMATERIAL_H
-#define FLATCOLORMATERIAL_H
+#ifndef QSGFLATCOLORMATERIAL_H
+#define QSGFLATCOLORMATERIAL_H
 
 #include <QtQuick/qsgmaterial.h>
 #include <qcolor.h>

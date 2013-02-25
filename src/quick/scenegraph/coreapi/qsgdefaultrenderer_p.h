@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QMLRENDERER_H
-#define QMLRENDERER_H
+#ifndef QSGDEFAULTRENDERER_P_H
+#define QSGDEFAULTRENDERER_P_H
 
 #include "qsgrenderer_p.h"
 

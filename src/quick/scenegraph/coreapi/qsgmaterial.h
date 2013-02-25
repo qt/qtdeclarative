@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef MATERIAL_H
-#define MATERIAL_H
+#ifndef QSGMATERIAL_H
+#define QSGMATERIAL_H
 
 #include <QtQuick/qtquickglobal.h>
 #include <qopenglshaderprogram.h>

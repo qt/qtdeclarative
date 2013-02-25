@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef RENDERER_H
-#define RENDERER_H
+#ifndef QSGRENDERER_P_H
+#define QSGRENDERER_P_H
 
 #include <qset.h>
 #include <qhash.h>
@@ -239,4 +239,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // RENDERER_H
+#endif

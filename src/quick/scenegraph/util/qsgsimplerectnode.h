@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef SOLIDRECTNODE_H
-#define SOLIDRECTNODE_H
+#ifndef QSGSIMPLERECTNODE_H
+#define QSGSIMPLERECTNODE_H
 
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgflatcolormaterial.h>

@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef NODE_H
-#define NODE_H
+#ifndef QSGNODE_H
+#define QSGNODE_H
 
 #include <QtQuick/qsggeometry.h>
 #include <QtGui/QMatrix4x4>
@@ -333,4 +333,4 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::Flags)
 
 QT_END_NAMESPACE
 
-#endif // NODE_H
+#endif // QSGNODE_H

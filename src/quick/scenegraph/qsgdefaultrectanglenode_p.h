@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 
-#ifndef DEFAULT_RECTANGLENODE_H
-#define DEFAULT_RECTANGLENODE_H
+#ifndef QSGDEFAULTRECTANGLENODE_P_H
+#define QSGDEFAULTRECTANGLENODE_P_H
 
 #include <private/qsgadaptationlayer_p.h>
 

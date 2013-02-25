@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef DISTANCEFIELDTEXTMATERIAL_H
-#define DISTANCEFIELDTEXTMATERIAL_H
+#ifndef QSGDISTANCEFIELDGLYPHNODE_P_P_H
+#define QSGDISTANCEFIELDGLYPHNODE_P_P_H
 
 #include <QtQuick/qsgmaterial.h>
 #include "qsgdistancefieldglyphnode_p.h"
@@ -141,4 +141,4 @@ public:
 
 QT_END_NAMESPACE
 
-#endif // DISTANCEFIELDTEXTMATERIAL_H
+#endif

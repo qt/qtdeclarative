@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef AREAALLOCATOR_H
-#define AREAALLOCATOR_H
+#ifndef QSGAREAALLOCATOR_P_H
+#define QSGAREAALLOCATOR_P_H
 
 #include <private/qtquickglobal_p.h>
 #include <QtCore/qsize.h>

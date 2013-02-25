@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef ADAPTATIONINTERFACES_H
-#define ADAPTATIONINTERFACES_H
+#ifndef QSGADAPTATIONLAYER_P_H
+#define QSGADAPTATIONLAYER_P_H
 
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgtexture.h>

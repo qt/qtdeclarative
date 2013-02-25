@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef TEXTUREMATERIAL_H
-#define TEXTUREMATERIAL_H
+#ifndef QSGTEXTUREMATERIAL_H
+#define QSGTEXTUREMATERIAL_H
 
 #include <QtQuick/qsgmaterial.h>
 #include <QtQuick/qsgtexture.h>
@@ -92,4 +92,4 @@ public:
 
 QT_END_NAMESPACE
 
-#endif // TEXTUREMATERIAL_H
+#endif

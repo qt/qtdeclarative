@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef DEFAULT_GLYPHNODE_H
-#define DEFAULT_GLYPHNODE_H
+#ifndef QSGDEFAULTGLYPHNODE_P_H
+#define QSGDEFAULTGLYPHNODE_P_H
 
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/qsgnode.h>
@@ -78,4 +78,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // DEFAULT_GLYPHNODE_H
+#endif

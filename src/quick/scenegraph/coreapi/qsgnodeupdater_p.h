@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef NODEUPDATER_P_H
-#define NODEUPDATER_P_H
+#ifndef QSGNODEUPDATER_P_H
+#define QSGNODEUPDATER_P_H
 
 #include <private/qtquickglobal_p.h>
 #include <QtGui/private/qdatabuffer_p.h>
@@ -94,4 +94,4 @@ protected:
 
 QT_END_NAMESPACE
 
-#endif // NODEUPDATER_P_H
+#endif

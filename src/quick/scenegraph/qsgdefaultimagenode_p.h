@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 
-#ifndef DEFAULT_PIXMAPNODE_H
-#define DEFAULT_PIXMAPNODE_H
+#ifndef QSGDEFAULTIMAGENODE_P_H
+#define QSGDEFAULTIMAGENODE_P_H
 
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/qsgtexturematerial.h>
