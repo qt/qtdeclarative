@@ -190,9 +190,10 @@ QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
     , hasCanvasWindow(false)
     , available(false)
     , contextInitialized(false)
-    , renderTarget(QQuickCanvasItem::FramebufferObject)
+    , renderTarget(QQuickCanvasItem::Image)
     , renderStrategy(QQuickCanvasItem::Cooperative)
 {
+    antialiasing = true;
 }
 
 QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
