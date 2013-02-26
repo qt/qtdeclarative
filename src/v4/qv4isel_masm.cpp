@@ -65,8 +65,9 @@ using namespace QQmlJS::VM;
 static const Assembler::RegisterID calleeSavedRegisters[] = {
     // Not used: JSC::X86Registers::rbx,
     // Not used: JSC::X86Registers::r10,
+    JSC::X86Registers::r12, // LocalsRegister
     // Not used: JSC::X86Registers::r13,
-    JSC::X86Registers::r14
+    JSC::X86Registers::r14 // ContextRegister
     // Not used: JSC::X86Registers::r15,
 };
 #endif
@@ -74,8 +75,8 @@ static const Assembler::RegisterID calleeSavedRegisters[] = {
 #if CPU(X86)
 static const Assembler::RegisterID calleeSavedRegisters[] = {
     // Not used: JSC::X86Registers::ebx,
-    JSC::X86Registers::esi
-    // Not used: JSC::X86Registers::edi,
+    JSC::X86Registers::esi, // ContextRegister
+    JSC::X86Registers::edi  // LocalsRegister
 };
 #endif
 
@@ -93,7 +94,7 @@ static const Assembler::RegisterID calleeSavedRegisters[] = {
 };
 #endif
 
-static const int calleeSavedRegisterCount = sizeof(calleeSavedRegisters) / sizeof(calleeSavedRegisters[0]);
+const int Assembler::calleeSavedRegisterCount = sizeof(calleeSavedRegisters) / sizeof(calleeSavedRegisters[0]);
 
 /* End of platform/calling convention/architecture specific section */
 
@@ -149,10 +150,9 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, IR::Temp *t)
     } else {
         assert(t->scope == 0);
         const int arg = _function->maxNumberOfArguments + t->index - _function->locals.size() + 1;
-        // StackFrameRegister points to its old value on the stack, so even for the first temp we need to
-        // subtract at least sizeof(Value).
         offset = - sizeof(Value) * (arg + 1);
-        reg = StackFrameRegister;
+        offset -= sizeof(void*) * calleeSavedRegisterCount;
+        reg = LocalsRegister;
     }
     return Pointer(reg, offset);
 }
@@ -195,14 +195,16 @@ void Assembler::enterStandardStackFrame(int locals)
     subPtr(TrustedImm32(frameSize), StackPointerRegister);
 
     for (int i = 0; i < calleeSavedRegisterCount; ++i)
-        storePtr(calleeSavedRegisters[i], Address(StackPointerRegister, i * sizeof(void*)));
+        storePtr(calleeSavedRegisters[i], Address(StackFrameRegister, -(i + 1) * sizeof(void*)));
+
+    move(StackFrameRegister, LocalsRegister);
 }
 
 void Assembler::leaveStandardStackFrame(int locals)
 {
     // restore the callee saved registers
     for (int i = calleeSavedRegisterCount - 1; i >= 0; --i)
-        loadPtr(Address(StackPointerRegister, i * sizeof(void*)), calleeSavedRegisters[i]);
+        loadPtr(Address(StackFrameRegister, -(i + 1) * sizeof(void*)), calleeSavedRegisters[i]);
 
     // space for the locals and the callee saved registers
     int32_t frameSize = locals * sizeof(QQmlJS::VM::Value) + sizeof(void*) * calleeSavedRegisterCount;

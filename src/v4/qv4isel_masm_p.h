@@ -68,6 +68,7 @@ public:
 
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
     static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
+    static const RegisterID LocalsRegister = JSC::X86Registers::edi;
     static const RegisterID ContextRegister = JSC::X86Registers::esi;
     static const RegisterID ReturnValueRegister = JSC::X86Registers::eax;
     static const RegisterID ScratchRegister = JSC::X86Registers::ecx;
@@ -94,6 +95,7 @@ public:
 
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
     static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
+    static const RegisterID LocalsRegister = JSC::X86Registers::r12;
     static const RegisterID ContextRegister = JSC::X86Registers::r14;
     static const RegisterID ReturnValueRegister = JSC::X86Registers::eax;
     static const RegisterID ScratchRegister = JSC::X86Registers::r10;
@@ -167,6 +169,7 @@ public:
 #else
 #error Argh.
 #endif
+    static const int calleeSavedRegisterCount;
 
     // Explicit type to allow distinguishing between
     // pushing an address itself or the value it points
@@ -797,8 +800,9 @@ protected:
     Pointer argumentAddressForCall(int argument)
     {
         const int index = _function->maxNumberOfArguments - argument;
-        return Pointer(Assembler::StackFrameRegister, sizeof(VM::Value) * (-index)
+        return Pointer(Assembler::LocalsRegister, sizeof(VM::Value) * (-index)
                                                       - sizeof(void*) // size of ebp
+                                                  - sizeof(void*) * Assembler::calleeSavedRegisterCount
                        );
     }
     Pointer baseAddressForCallArguments()
