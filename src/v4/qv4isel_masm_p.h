@@ -181,7 +181,7 @@ public:
         {}
     };
 
-    struct VoidType {};
+    struct VoidType { VoidType() {} };
     static const VoidType Void;
 
 
