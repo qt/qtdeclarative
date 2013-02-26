@@ -661,7 +661,6 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
 
                 case IR::OpInstanceof:
                 case IR::OpIn:
-                    assert(!"unreachabe");
                     break;
 
                 case IR::OpIfTrue: // unary ops
