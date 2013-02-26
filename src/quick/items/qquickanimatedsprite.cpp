@@ -365,7 +365,7 @@ QQuickAnimatedSprite::QQuickAnimatedSprite(QQuickItem *parent) :
     QQuickItem(parent)
     , m_node(0)
     , m_material(0)
-    , m_sprite(new QQuickSprite)
+    , m_sprite(new QQuickSprite(this))
     , m_spriteEngine(0)
     , m_curFrame(0)
     , m_pleaseReset(false)
@@ -540,7 +540,7 @@ QSGGeometryNode* QQuickAnimatedSprite::buildNode()
 
     m_material = new QQuickAnimatedSpriteMaterial();
 
-    QImage image = m_spriteEngine->assembledImage();
+    QImage image = m_spriteEngine->assembledImage(); //Engine prints errors if there are any
     if (image.isNull())
         return 0;
     m_sheetSize = QSizeF(image.size());
