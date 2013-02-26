@@ -78,6 +78,11 @@
 
 QT_BEGIN_NAMESPACE
 
+
+#ifndef QT_NO_DEBUG
+static bool qsg_leak_check = !qgetenv("QML_LEAK_CHECK").isEmpty();
+#endif
+
 // The cache limit describes the maximum "junk" in the cache.
 static int cache_limit = 2048 * 1024; // 2048 KB cache limit for embedded in qpixmapcache.cpp
 
@@ -741,7 +746,9 @@ QQuickPixmapStore::~QQuickPixmapStore()
 {
     m_destroying = true;
 
+#ifndef QT_NO_DEBUG
     int leakedPixmaps = 0;
+#endif
     QList<QQuickPixmapData*> cachedData = m_cache.values();
 
     // Prevent unreferencePixmap() from assuming it needs to kick
@@ -753,7 +760,9 @@ QQuickPixmapStore::~QQuickPixmapStore()
     foreach (QQuickPixmapData* pixmap, cachedData) {
         int currRefCount = pixmap->refCount;
         if (currRefCount) {
+#ifndef QT_NO_DEBUG
             leakedPixmaps++;
+#endif
             while (currRefCount > 0) {
                 pixmap->release();
                 currRefCount--;
@@ -766,8 +775,10 @@ QQuickPixmapStore::~QQuickPixmapStore()
         shrinkCache(20);
     }
 
-    if (leakedPixmaps)
+#ifndef QT_NO_DEBUG
+    if (leakedPixmaps && qsg_leak_check)
         qDebug("Number of leaked pixmaps: %i", leakedPixmaps);
+#endif
 }
 
 void QQuickPixmapStore::unreferencePixmap(QQuickPixmapData *data)
