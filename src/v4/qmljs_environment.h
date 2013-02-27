@@ -121,14 +121,14 @@ struct ExecutionContext
 
     void wireUpPrototype();
 
-    void throwError(const Value &value);
-    void throwError(const QString &message);
-    void throwSyntaxError(DiagnosticMessage *message);
-    void throwTypeError();
-    void throwReferenceError(Value value);
-    void throwRangeError(Value value);
-    void throwURIError(Value msg);
-    void throwUnimplemented(const QString &message);
+    void Q_NORETURN throwError(const Value &value);
+    void Q_NORETURN throwError(const QString &message);
+    void Q_NORETURN throwSyntaxError(DiagnosticMessage *message);
+    void Q_NORETURN throwTypeError();
+    void Q_NORETURN throwReferenceError(Value value);
+    void Q_NORETURN throwRangeError(Value value);
+    void Q_NORETURN throwURIError(Value msg);
+    void Q_NORETURN throwUnimplemented(const QString &message);
 
     void setProperty(String *name, const Value &value);
     Value getProperty(String *name);

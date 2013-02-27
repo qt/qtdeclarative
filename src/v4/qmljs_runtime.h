@@ -117,8 +117,8 @@ void __qmljs_builtin_post_decrement_name(ExecutionContext *context, Value *resul
 void __qmljs_builtin_post_decrement_member(ExecutionContext *context, Value *result, const Value &base, String *name);
 void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *result, const Value &base, const Value &index);
 
-void __qmljs_builtin_throw(ExecutionContext *context, const Value &val);
-void __qmljs_builtin_rethrow(ExecutionContext *context);
+void Q_NORETURN __qmljs_builtin_throw(ExecutionContext *context, const Value &val);
+void Q_NORETURN __qmljs_builtin_rethrow(ExecutionContext *context);
 ExecutionContext *__qmljs_builtin_push_with_scope(const Value &o, ExecutionContext *ctx);
 ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, ExecutionContext *ctx);
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx);
@@ -191,7 +191,7 @@ void __qmljs_delete_subscript(ExecutionContext *ctx, Value *result, const Value 
 void __qmljs_delete_member(ExecutionContext *ctx, Value *result, const Value &base, String *name);
 void __qmljs_delete_name(ExecutionContext *ctx, Value *result, String *name);
 
-void __qmljs_throw(ExecutionContext*, const Value &value);
+void Q_NORETURN __qmljs_throw(ExecutionContext*, const Value &value);
 // actually returns a jmp_buf *
 Q_V4_EXPORT void *__qmljs_create_exception_handler(ExecutionContext *context);
 void __qmljs_delete_exception_handler(ExecutionContext *context);
