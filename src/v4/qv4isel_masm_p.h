@@ -458,8 +458,8 @@ public:
     { return 8; } // Size of value
     static inline int sizeOfArgument(const Pointer&)
     { return sizeof(void*); }
-    static inline int sizeOfArgument(VM::String* string)
-    { return sizeof(string); }
+    static inline int sizeOfArgument(VM::String*)
+    { return sizeof(VM::String); }
     static inline int sizeOfArgument(const PointerToValue &)
     { return sizeof(void *); }
     static inline int sizeOfArgument(const Reference &)
