@@ -2,7 +2,7 @@
 
 #include <wtf/Platform.h>
 
-#if CPU(X86_64) && OS(LINUX)
+#if CPU(X86_64) && (OS(LINUX) || OS(MAC_OS_X))
 #  define USE_DW2_HELPER
 #elif CPU(X86) && OS(LINUX)
 #  define USE_DW2_HELPER
