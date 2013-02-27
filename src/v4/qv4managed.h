@@ -111,6 +111,7 @@ protected:
 public:
     void *operator new(size_t size, MemoryManager *mm);
     void operator delete(void *ptr);
+    void operator delete(void *ptr, MemoryManager *mm);
 
     inline void mark() {
         if (markBit)

@@ -72,6 +72,12 @@ void Managed::operator delete(void *ptr)
     m->~Managed();
 }
 
+void Managed::operator delete(void *ptr, MemoryManager *mm)
+{
+    Q_UNUSED(mm);
+
+    operator delete(ptr);
+}
 
 QString Managed::className() const
 {
