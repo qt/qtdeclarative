@@ -181,8 +181,19 @@ void MemoryManager::mark()
     for (QHash<Managed *, uint>::const_iterator it = m_d->protectedObject.begin(); it != m_d->protectedObject.constEnd(); ++it)
         it.key()->mark();
 
-#if CPU(X86_64)
     // push all caller saved registers to the stack, so we can find the objects living in these registers
+#if COMPILER(MSVC)
+#  if CPU(X86_64)
+    HANDLE thread = GetCurrentThread();
+    WOW64_CONTEXT ctxt;
+    /*bool success =*/ Wow64GetThreadContext(thread, &ctxt);
+#  elif CPU(X86)
+    HANDLE thread = GetCurrentThread();
+    CONTEXT ctxt;
+    /*bool success =*/ GetThreadContext(thread, &ctxt);
+#  endif // CPU
+#elif COMPILER(CLANG) || COMPILER(GCC)
+#  if CPU(X86_64)
     quintptr regs[5];
     asm(
         "mov %%rbp, %0\n"
@@ -194,10 +205,10 @@ void MemoryManager::mark()
         :
         :
     );
-#endif
-    collectFromStack();
+#  endif // CPU
+#endif // COMPILER
 
-    return;
+    collectFromStack();
 }
 
 std::size_t MemoryManager::sweep()
@@ -346,11 +357,11 @@ void MemoryManager::collectFromStack() const
     quintptr valueOnStack = 0;
 
 #if USE(PTHREADS)
-#if OS(DARWIN)
+#  if OS(DARWIN)
     void* stackTop = 0;
     stackTop = pthread_get_stackaddr_np(pthread_self());
     quintptr *top = static_cast<quintptr *>(stackTop);
-#else
+#  else
     void* stackBottom = 0;
     pthread_attr_t attr;
     pthread_getattr_np(pthread_self(), &attr);
@@ -359,16 +370,16 @@ void MemoryManager::collectFromStack() const
     pthread_attr_destroy(&attr);
 
     quintptr *top = static_cast<quintptr *>(stackBottom) + stackSize/sizeof(quintptr);
-#endif
+#  endif
 #elif OS(WINDOWS)
-#if COMPILER(MSVC)
-    NT_TIB *tib;
-    __asm {
-        mov eax, fs:[0x18]
-        mov [tib], eax
-    }
-#endif
+#  if COMPILER(MSVC)
+    PNT_TIB tib = (PNT_TIB)NtCurrentTeb();
     quintptr *top = static_cast<quintptr*>(tib->StackBase);
+#  else
+#    error "Unsupported compiler: no way to get the top-of-stack."
+#  endif
+#else
+#  error "Unsupported platform: no way to get the top-of-stack."
 #endif
 //    qDebug() << "stack:" << hex << stackTop << stackSize << (stackTop + stackSize);
 
