@@ -64,6 +64,7 @@ class Q_QUICK_EXPORT QQuickWindow : public QWindow
     Q_PRIVATE_PROPERTY(QQuickWindow::d_func(), QQmlListProperty<QObject> data READ data DESIGNABLE false)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
     Q_PROPERTY(QQuickItem* contentItem READ contentItem CONSTANT FINAL)
+    Q_PROPERTY(QQuickItem* activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged REVISION 1)
     Q_CLASSINFO("DefaultProperty", "data")
     Q_DECLARE_PRIVATE(QQuickWindow)
 public:
@@ -129,6 +130,7 @@ Q_SIGNALS:
     void beforeRendering();
     void afterRendering();
     void colorChanged(const QColor &);
+    Q_REVISION(1) void activeFocusItemChanged();
 
 public Q_SLOTS:
     void update();

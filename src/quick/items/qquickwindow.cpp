@@ -403,6 +403,8 @@ void QQuickWindowPrivate::init(QQuickWindow *c)
     QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
     QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
     QObject::connect(context, SIGNAL(invalidated()), q, SLOT(cleanupSceneGraph()), Qt::DirectConnection);
+
+    QObject::connect(q, SIGNAL(focusObjectChanged(QObject*)), q, SIGNAL(activeFocusItemChanged()));
 }
 
 /*!
@@ -2983,6 +2985,14 @@ QColor QQuickWindow::color() const
     The default value is 1.0.
 
     \since Qt 5.1
+ */
+
+/*!
+    \qmlproperty Item QtQuick.Window2::Window::activeFocusItem
+    \since Qt 5.1
+
+    The item which currently has active focus or \c null if there is
+    no item with active focus.
  */
 
 #include "moc_qquickwindow.cpp"
