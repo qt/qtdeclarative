@@ -29,9 +29,9 @@ using namespace QQmlJS::VM;
 UnwindHelper *UnwindHelper::create() { return 0; }
 UnwindHelper::UnwindHelper() {}
 UnwindHelper::~UnwindHelper() {}
-void UnwindHelper::registerFunction(Function *function);
-void UnwindHelper::registerFunctions(QVector<Function *> functions);
-void UnwindHelper::deregisterFunction(Function *function);
-void UnwindHelper::deregisterFunctions(QVector<Function *> functions);
+void UnwindHelper::registerFunction(Function *function) {Q_UNUSED(function);}
+void UnwindHelper::registerFunctions(QVector<Function *> functions) {Q_UNUSED(functions);}
+void UnwindHelper::deregisterFunction(Function *function) {Q_UNUSED(function);}
+void UnwindHelper::deregisterFunctions(QVector<Function *> functions) {Q_UNUSED(functions);}
 #endif // USE_NULL_HELPER
 
