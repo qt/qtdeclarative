@@ -40,6 +40,17 @@ contains(DEFINES, WTF_USE_UDIS86=1) {
     SOURCES += $$PWD/disassembler/udis86/udis86_syn-att.c
     SOURCES += $$PWD/disassembler/udis86/udis86_syn.c
     SOURCES += $$PWD/disassembler/udis86/udis86_syn-intel.c
+
+    ITAB = $$PWD/disassembler/udis86/optable.xml
+    udis86.output = udis86_itab.h
+    udis86.input = ITAB
+    udis86.CONFIG += no_link
+    udis86.commands = python $$PWD/disassembler/udis86/itab.py ${QMAKE_FILE_IN}
+    QMAKE_EXTRA_COMPILERS += udis86
+
+    udis86_tab_cfile.target = $$OUT_PWD/udis86_itab.c
+    udis86_tab_cfile.depends = udis86_itab.h
+    QMAKE_EXTRA_TARGETS += udis86_tab_cfile
 }
 
 SOURCES += \
@@ -56,17 +67,6 @@ retgen.input = retgen.script
 retgen.CONFIG += no_link
 retgen.commands = python $$retgen.script > ${QMAKE_FILE_OUT}
 QMAKE_EXTRA_COMPILERS += retgen
-
-ITAB = $$PWD/disassembler/udis86/optable.xml
-udis86.output = udis86_itab.h
-udis86.input = ITAB
-udis86.CONFIG += no_link
-udis86.commands = python $$PWD/disassembler/udis86/itab.py ${QMAKE_FILE_IN}
-QMAKE_EXTRA_COMPILERS += udis86
-
-udis86_tab_cfile.target = $$OUT_PWD/udis86_itab.c
-udis86_tab_cfile.depends = udis86_itab.h
-QMAKE_EXTRA_TARGETS += udis86_tab_cfile
 
 # Taken from WebKit/Tools/qmake/mkspecs/features/unix/default_post.prf
 linux-g++* {
