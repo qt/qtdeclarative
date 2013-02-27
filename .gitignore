@@ -1,4 +1,5 @@
 *.o
+*.obj
 Makefile
 Makefile.*
 src/tools/v4
@@ -9,3 +10,8 @@ udis86_itab.*
 *.ll
 RegExpJitTables.h
 .qmake.cache
+include/QtV4
+mkspecs
+src/v4/Qt5V4_resource.rc
+src/v4/Qt5V4d_resource.rc
+*.pdb
