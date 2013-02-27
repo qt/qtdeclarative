@@ -62,7 +62,7 @@ struct Value;
 
 extern "C" {
 double __qmljs_to_number(const Value &value, ExecutionContext *ctx);
-String *__qmljs_convert_to_string(ExecutionContext *ctx, const Value &value);
+Q_V4_EXPORT String *__qmljs_convert_to_string(ExecutionContext *ctx, const Value &value);
 Object *__qmljs_convert_to_object(ExecutionContext *ctx, const Value &value);
 }
 
