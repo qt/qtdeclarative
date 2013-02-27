@@ -586,7 +586,7 @@ void ExecutionContext::initCallContext(ExecutionContext *parent)
         argumentCount = qMax(argc, function->formalParameterCount);
         arguments = reinterpret_cast<Value *>(this + 1) + function->varCount;
         if (argc)
-            std::copy(args, args + argc, arguments);
+            ::memcpy(arguments, args, argc * sizeof(Value));
         if (argc < function->formalParameterCount)
             std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
 
