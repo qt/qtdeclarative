@@ -909,7 +909,7 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     scene graph and its OpenGL context being deleted. The
     sceneGraphInvalidated() signal will be emitted when this happens.
 
-    \sa {OpenGL Under QML}
+    \sa {Scene Graph - OpenGL Under QML}
 
 */
 

@@ -1,2 +1,7 @@
 TEMPLATE = subdirs
-SUBDIRS += customgeometry simplematerial openglunderqml
+SUBDIRS += \
+        customgeometry \
+        openglunderqml \
+        simplematerial \
+        textureinsgnode \
+        textureinthread \

@@ -142,7 +142,7 @@
     the unique QSGSimpleMaterialShader implementation must be
     instantiated with a unique C++ type.
 
-    \sa {Simple Material Example}
+    \sa {Scene Graph - Simple Material}
  */
 
 /*!

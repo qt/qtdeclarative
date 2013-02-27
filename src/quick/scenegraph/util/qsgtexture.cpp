@@ -232,6 +232,8 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     If the texture is used in such a way that atlas is not preferable,
     the function removedFromAtlas() can be used to extract a
     non-atlassed copy.
+
+    \sa {Scene Graph - Rendering FBOs}, {Scene Graph - Rendering FBOs in a thread}
  */
 
 /*!
