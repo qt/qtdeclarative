@@ -77,8 +77,11 @@ void QQuickWindowPrivate::updateFocusItemTransform()
     Q_Q(QQuickWindow);
 #ifndef QT_NO_IM
     QQuickItem *focus = q->activeFocusItem();
-    if (focus && qApp->focusObject() == focus)
-        qApp->inputMethod()->setInputItemTransform(QQuickItemPrivate::get(focus)->itemToWindowTransform());
+    if (focus && qApp->focusObject() == focus) {
+        QQuickItemPrivate *focusPrivate = QQuickItemPrivate::get(focus);
+        qApp->inputMethod()->setInputItemTransform(focusPrivate->itemToWindowTransform());
+        qApp->inputMethod()->setInputItemRectangle(QRectF(0, 0, focusPrivate->width, focusPrivate->height));
+    }
 #endif
 }
 
@@ -690,6 +693,7 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
             }
             afi = afi->parentItem();
         }
+        updateFocusItemTransform();
 
         QFocusEvent event(QEvent::FocusIn, Qt::OtherFocusReason);
         q->sendEvent(newActiveFocusItem, &event);
@@ -771,6 +775,7 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
     if (newActiveFocusItem) {
         Q_ASSERT(newActiveFocusItem == scope);
         activeFocusItem = scope;
+        updateFocusItemTransform();
 
         QFocusEvent event(QEvent::FocusIn, Qt::OtherFocusReason);
         q->sendEvent(newActiveFocusItem, &event);

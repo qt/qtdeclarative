@@ -635,6 +635,13 @@ void QQuickTextEditPrivate::mirrorChange()
     }
 }
 
+#ifndef QT_NO_IM
+Qt::InputMethodHints QQuickTextEditPrivate::effectiveInputMethodHints() const
+{
+    return inputMethodHints | Qt::ImhMultiLine;
+}
+#endif
+
 QQuickTextEdit::VAlignment QQuickTextEdit::vAlign() const
 {
     Q_D(const QQuickTextEdit);
@@ -1632,7 +1639,7 @@ QVariant QQuickTextEdit::inputMethodQuery(Qt::InputMethodQuery property) const
         v = (bool)(flags() & ItemAcceptsInputMethod);
         break;
     case Qt::ImHints:
-        v = (int)inputMethodHints();
+        v = (int)d->effectiveInputMethodHints();
         break;
     default:
         v = d->control->inputMethodQuery(property);

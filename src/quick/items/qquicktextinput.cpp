@@ -1910,7 +1910,7 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
         else
             return QVariant(d->selectionStart());
     default:
-        return QVariant();
+        return QQuickItem::inputMethodQuery(property);
     }
 }
 #endif // QT_NO_IM

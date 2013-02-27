@@ -106,6 +106,10 @@ public:
 
     void setNativeCursorEnabled(bool enabled) { control->setCursorWidth(enabled ? 1 : 0); }
 
+#ifndef QT_NO_IM
+    Qt::InputMethodHints effectiveInputMethodHints() const;
+#endif
+
     QColor color;
     QColor selectionColor;
     QColor selectedTextColor;
