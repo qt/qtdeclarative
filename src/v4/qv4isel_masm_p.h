@@ -128,6 +128,7 @@ public:
 
     static const RegisterID StackFrameRegister = JSC::ARMRegisters::r4;
     static const RegisterID StackPointerRegister = JSC::ARMRegisters::sp;
+    static const RegisterID LocalsRegister = JSC::ARMRegisters::r7;
     static const RegisterID ContextRegister = JSC::ARMRegisters::r5;
     static const RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
     static const RegisterID ScratchRegister = JSC::ARMRegisters::r6;
