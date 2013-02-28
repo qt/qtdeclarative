@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -42,7 +42,6 @@
 #include "qquickfiledialog_p.h"
 #include <QQuickItem>
 #include <private/qguiapplication_p.h>
-#include <qpa/qplatformintegration.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -56,8 +55,10 @@ QT_BEGIN_NAMESPACE
     \internal
 
     AbstractFileDialog provides only the API for implementing a file dialog.
-    The implementation (e.g. a Window or Item) can be provided as \l implementation,
-    which is the default property (the only allowed child element).
+    The implementation (e.g. a Window or preferably an Item, in case it is
+    shown on a device that doesn't support multiple windows) can be provided as
+    \l implementation, which is the default property (the only allowed child
+    element).
 */
 
 /*!
@@ -77,8 +78,8 @@ QT_BEGIN_NAMESPACE
     \inmodule QtQuick.Dialogs
     \internal
 
-    The QQuickFileDialog class is a concrete subclass of \l
-    QQuickAbstractFileDialog, but it is abstract from the QML perspective
+    The QQuickFileDialog class is a concrete subclass of
+    \l QQuickAbstractFileDialog, but it is abstract from the QML perspective
     because it needs to enclose a graphical implementation. It exists in order
     to provide accessors and helper functions which the QML implementation will
     need.
@@ -91,8 +92,6 @@ QT_BEGIN_NAMESPACE
 */
 QQuickFileDialog::QQuickFileDialog(QObject *parent)
     : QQuickAbstractFileDialog(parent)
-    , m_implementation(0)
-    , m_dialogWindow(0)
 {
 }
 
@@ -117,51 +116,6 @@ QList<QUrl> QQuickFileDialog::fileUrls()
 
     This property holds whether the dialog is visible. By default this is false.
 */
-void QQuickFileDialog::setVisible(bool v)
-{
-    if (m_visible == v) return;
-    m_visible = v;
-    // For a pure QML implementation, there is no helper.
-    // But m_implementation is probably either an Item or a Window at this point.
-    if (!m_dialogWindow) {
-        m_dialogWindow = qobject_cast<QWindow *>(m_implementation);
-        if (!m_dialogWindow) {
-            QQuickItem *dlgItem = qobject_cast<QQuickItem *>(m_implementation);
-            if (dlgItem) {
-                m_dialogWindow = dlgItem->window();
-                // An Item-based dialog implementation doesn't come with a window, so
-                // we have to instantiate one iff the platform allows it.
-                if (!m_dialogWindow && QGuiApplicationPrivate::platformIntegration()->
-                        hasCapability(QPlatformIntegration::MultipleWindows)) {
-                    QQuickWindow *win = new QQuickWindow;
-                    m_dialogWindow = win;
-                    dlgItem->setParentItem(win->contentItem());
-                    m_dialogWindow->setMinimumSize(QSize(dlgItem->width(), dlgItem->height()));
-                }
-
-                QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent());
-                // qDebug() << "item implementation" << dlgItem << "has window" << m_dialogWindow << "and parent" << parentItem;
-
-                // If the platform does not support multiple windows, but the dialog is
-                // implemented as an Item, then just reparent it and make it visible.
-                // TODO QTBUG-29818: put it into a fake Item-based window, when we have a reusable self-decorated one.
-                if (parentItem && !m_dialogWindow)
-                    dlgItem->setParentItem(parentItem);
-            }
-        }
-        if (m_dialogWindow)
-            connect(m_dialogWindow, SIGNAL(visibleChanged(bool)), this, SLOT(visibleChanged(bool)));
-    }
-    if (m_dialogWindow) {
-        if (v) {
-            m_dialogWindow->setTransientParent(parentWindow());
-            m_dialogWindow->setTitle(title());
-            m_dialogWindow->setModality(m_modality);
-        }
-        m_dialogWindow->setVisible(v);
-    }
-    emit visibilityChanged();
-}
 
 /*!
     \qmlproperty bool AbstractFileDialog::filePaths
@@ -219,12 +173,5 @@ QUrl QQuickFileDialog::pathFolder(const QString &path)
     The QML object which implements the actual file dialog. Should be either a
     \l Window or an \l Item.
 */
-void QQuickFileDialog::setImplementation(QObject *obj)
-{
-    m_implementation = obj;
-    if (m_dialogWindow)
-        disconnect(this, SLOT(visibleChanged(bool)));
-    m_dialogWindow = 0;
-}
 
 QT_END_NAMESPACE

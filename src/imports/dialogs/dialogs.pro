@@ -4,15 +4,17 @@ TARGETPATH = QtQuick/Dialogs
 IMPORT_VERSION = 1.0
 
 SOURCES += \
-    plugin.cpp \
     qquickabstractfiledialog.cpp \
     qquickplatformfiledialog.cpp \
-    qquickfiledialog.cpp
+    qquickfiledialog.cpp \
+    qquickabstractdialog.cpp \
+    plugin.cpp
 
 HEADERS += \
     qquickabstractfiledialog_p.h \
     qquickplatformfiledialog_p.h \
-    qquickfiledialog_p.h
+    qquickfiledialog_p.h \
+    qquickabstractdialog_p.h
 
 QML_FILES += \
     DefaultFileDialog.qml \

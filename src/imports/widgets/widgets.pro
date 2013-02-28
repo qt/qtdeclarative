@@ -4,13 +4,15 @@ TARGETPATH = QtQuick/PrivateWidgets
 IMPORT_VERSION = 1.0
 
 SOURCES += \
-    widgetsplugin.cpp \
     qquickqfiledialog.cpp \
-    ../dialogs/qquickabstractfiledialog.cpp
+    ../dialogs/qquickabstractfiledialog.cpp \
+    ../dialogs/qquickabstractdialog.cpp \
+    widgetsplugin.cpp
 
 HEADERS += \
     qquickqfiledialog_p.h \
-    ../dialogs/qquickabstractfiledialog_p.h
+    ../dialogs/qquickabstractfiledialog_p.h \
+    ../dialogs/qquickabstractdialog_p.h
 
 QT += quick-private gui-private core-private qml-private v8-private widgets
 

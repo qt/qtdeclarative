@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -60,21 +60,17 @@ QT_BEGIN_NAMESPACE
 class QQuickFileDialog : public QQuickAbstractFileDialog
 {
     Q_OBJECT
-    Q_PROPERTY(QObject* implementation READ implementation WRITE setImplementation DESIGNABLE false)
+    Q_PROPERTY(QObject* implementation READ qmlImplementation WRITE setQmlImplementation DESIGNABLE false)
     Q_CLASSINFO("DefaultProperty", "implementation")    // AbstractFileDialog in QML can have only one child
 
 public:
     explicit QQuickFileDialog(QObject *parent = 0);
     ~QQuickFileDialog();
-    QObject* implementation() { return m_implementation; }
     virtual QList<QUrl> fileUrls();
 
 signals:
 
 public Q_SLOTS:
-    void setImplementation(QObject* obj);
-    virtual void setVisible(bool v);
-
     void clearSelection();
     bool addSelection(QString path);
 
@@ -85,8 +81,6 @@ protected:
     Q_INVOKABLE QUrl pathFolder(const QString &path);
 
 private:
-    QObject *m_implementation;
-    QWindow *m_dialogWindow;
     QStringList m_selections;
 
     Q_DISABLE_COPY(QQuickFileDialog)

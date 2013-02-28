@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -48,6 +48,8 @@
 
 //#define PURE_QML_ONLY
 
+#define DIALOGS_MAJOR_MINOR 1, 0
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -73,66 +75,53 @@ class QtQuick2DialogsPlugin : public QQmlExtensionPlugin
 public:
     QtQuick2DialogsPlugin() : QQmlExtensionPlugin() { }
 
-    virtual void initializeEngine(QQmlEngine *, const char *uri) {
-        bool needQml = false;
+    virtual void registerTypes(const char *uri) {
+        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Dialogs"));
         QDir qmlDir(baseUrl().toLocalFile());
-        // If there is no support for native dialogs on the platform, we need to
-        // either re-use QFileDialog, or register a QML implementation instead.
-#ifdef PURE_QML_ONLY
-        needQml = true;
-#else
-        if (!QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(QPlatformTheme::FileDialog)) {
-            needQml = true;
-            // If there is not a QApplication, there's no point in trying to load
-            // widget-based dialogs, because a runtime error will occur.
-            if (QCoreApplication::instance()->metaObject()->className() == QLatin1String("QApplication")) {
-                // Test whether PrivateWidgets can load.  It's not currently possible
-                // to use the given engine for that, so we need to create a temporary one.
-                // That doesn't work in registerTypes either, which is why it's done here.
-                QString dialogQmlPath(qmlDir.filePath("WidgetFileDialog.qml"));
-                QQmlEngine tempEngine;
-                QQmlComponent widgetDialogComponent(&tempEngine);
-                QFile widgetDialogQmlFile(dialogQmlPath);
-                widgetDialogQmlFile.open(QIODevice::ReadOnly);
-                widgetDialogComponent.setData(widgetDialogQmlFile.readAll(), QUrl());
+        QDir widgetsDir(baseUrl().toLocalFile());
+        // TODO: find the directory by searching rather than assuming a relative path
+        widgetsDir.cd("../PrivateWidgets");
 
-                switch (widgetDialogComponent.status()) {
-                case QQmlComponent::Ready:
-                    needQml = (qmlRegisterType(QUrl::fromLocalFile(dialogQmlPath), uri, 1, 0, "FileDialog") < 0);
-                    // returns -1 unless we omit the module from qmldir, because otherwise
-                    // QtQuick.Dialogs is already a protected namespace
-                    // after the qmldir having been parsed.  (QQmlImportDatabase::importPlugin)
-                    // But omitting the module from qmldir results in this warning:
-                    // "Module 'QtQuick.Dialogs' does not contain a module identifier directive -
-                    // it cannot be protected from external registrations."
-                    // TODO register all types in registerTypes, to avoid the warning
-                    // But, in that case we cannot check for existence by trying to instantiate the component.
-                    // So it will have to just look for a file (qmldir?) and assume
-                    // that whatever modules are installed are also in working order.
-                    break;
-                default:
-                    break;
-                }
-            }
+        // Prefer the QPA dialog helpers if the platform supports them.
+        // Else if there is a QWidget-based implementation, check whether it's
+        // possible to instantiate it from Qt Quick.
+        // Otherwise fall back to a pure-QML implementation.
+
+        // FileDialog
+#ifndef PURE_QML_ONLY
+        if (QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(QPlatformTheme::FileDialog))
+            qmlRegisterType<QQuickPlatformFileDialog>(uri, DIALOGS_MAJOR_MINOR, "FileDialog");
+        else
+#endif
+            registerWidgetOrQmlImplementation<QQuickFileDialog>(widgetsDir, "WidgetFileDialog.qml",
+                qmlDir, "DefaultFileDialog.qml", "FileDialog", uri);
+    }
+
+protected:
+    template <class WrapperType>
+    void registerWidgetOrQmlImplementation(QDir widgetsDir, QString widgetQmlFile,
+            QDir qmlDir, QString qmlFile, const char *qmlName, const char *uri) {
+        bool needQml = true;
+#ifndef PURE_QML_ONLY
+        // If there is a qmldir and we have a QApplication instance (as opposed to a
+        // widget-free QGuiApplication), assume that the widget-based dialog will work.
+        if (widgetsDir.exists("qmldir") && !widgetQmlFile.isEmpty() &&
+                !qstrcmp(QCoreApplication::instance()->metaObject()->className(), "QApplication")) {
+            QString dialogQmlPath = qmlDir.filePath(widgetQmlFile);
+            if (qmlRegisterType(QUrl::fromLocalFile(dialogQmlPath), uri, DIALOGS_MAJOR_MINOR, qmlName) >= 0)
+                needQml = false;
+            // qDebug() << "registering" << qmlName << " as " << dialogQmlPath << "success?" << needQml;
         }
 #endif
         if (needQml) {
-            QString dialogQmlPath = qmlDir.filePath("DefaultFileDialog.qml");
-            qmlRegisterType<QQuickFileDialog>(uri, 1, 0, "AbstractFileDialog"); // implementation wrapper
-            // qDebug() << "registering FileDialog as " << dialogQmlPath << "success?" <<
-            qmlRegisterType(QUrl::fromLocalFile(dialogQmlPath), uri, 1, 0, "FileDialog");
+            QString dialogQmlPath = qmlDir.filePath(qmlFile);
+            QByteArray abstractTypeName = QByteArray("Abstract") + qmlName;
+            qmlRegisterType<WrapperType>(uri, DIALOGS_MAJOR_MINOR, abstractTypeName); // implementation wrapper
+            // qDebug() << "registering" << qmlName << " as " << dialogQmlPath << "success?" <<
+            qmlRegisterType(QUrl::fromLocalFile(dialogQmlPath), uri, DIALOGS_MAJOR_MINOR, qmlName);
         }
     }
 
-    virtual void registerTypes(const char *uri) {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Dialogs"));
-
-#ifndef PURE_QML_ONLY
-        // Prefer the QPA file dialog helper if the platform supports it
-        if (QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(QPlatformTheme::FileDialog))
-            qmlRegisterType<QQuickPlatformFileDialog>(uri, 1, 0, "FileDialog");
-#endif
-    }
 };
 
 QT_END_NAMESPACE

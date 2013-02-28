@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -49,16 +49,14 @@
 QT_BEGIN_NAMESPACE
 
 QQuickAbstractFileDialog::QQuickAbstractFileDialog(QObject *parent)
-    : QObject(parent)
+    : QQuickAbstractDialog(parent)
     , m_dlgHelper(0)
-    , m_parentWindow(0)
     , m_options(QSharedPointer<QFileDialogOptions>(new QFileDialogOptions()))
-    , m_visible(false)
-    , m_modality(Qt::WindowModal)
     , m_selectExisting(true)
     , m_selectMultiple(false)
     , m_selectFolder(false)
 {
+    connect(this, SIGNAL(accepted()), this, SIGNAL(selectionAccepted()));
 }
 
 QQuickAbstractFileDialog::~QQuickAbstractFileDialog()
@@ -67,27 +65,17 @@ QQuickAbstractFileDialog::~QQuickAbstractFileDialog()
 
 void QQuickAbstractFileDialog::setVisible(bool v)
 {
-    if (m_visible == v) return;
-    m_visible = v;
-    if (helper()) {
-        if (v) {
-            helper()->setOptions(m_options);
-            helper()->setFilter();
-            m_visible = helper()->show(Qt::Dialog, m_modality, parentWindow());
-            emit filterSelected();
-        } else {
-            helper()->hide();
-        }
+    if (helper() && v) {
+        m_dlgHelper->setOptions(m_options);
+        m_dlgHelper->setFilter();
+        emit filterSelected();
     }
-
-    emit visibilityChanged();
+    QQuickAbstractDialog::setVisible(v);
 }
 
-void QQuickAbstractFileDialog::setModality(Qt::WindowModality m)
+QString QQuickAbstractFileDialog::title() const
 {
-    if (m_modality == m) return;
-    m_modality = m;
-    emit modalityChanged();
+    return m_options->windowTitle();
 }
 
 void QQuickAbstractFileDialog::setTitle(QString t)
@@ -177,24 +165,6 @@ QList<QUrl> QQuickAbstractFileDialog::fileUrls()
     return ret;
 }
 
-void QQuickAbstractFileDialog::accept()
-{
-    setVisible(false);
-    emit accepted();
-}
-
-void QQuickAbstractFileDialog::reject()
-{
-    setVisible(false);
-    emit rejected();
-}
-
-void QQuickAbstractFileDialog::visibleChanged(bool v)
-{
-    m_visible = v;
-    emit visibilityChanged();
-}
-
 void QQuickAbstractFileDialog::updateModes()
 {
     // The 4 possible modes are AnyFile, ExistingFile, Directory, ExistingFiles
@@ -220,14 +190,6 @@ void QQuickAbstractFileDialog::updateModes()
     m_options->setAcceptMode(m_selectExisting ?
                            QFileDialogOptions::AcceptOpen : QFileDialogOptions::AcceptSave);
     emit fileModeChanged();
-}
-
-QQuickWindow *QQuickAbstractFileDialog::parentWindow()
-{
-    QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent());
-    if (parentItem)
-        m_parentWindow = parentItem->window();
-    return m_parentWindow;
 }
 
 QT_END_NAMESPACE

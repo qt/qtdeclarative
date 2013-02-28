@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLATFORMFILEDIALOG_P_H
-#define QQUICKPLATFORMFILEDIALOG_P_H
+#ifndef QQUICKABSTRACTDIALOG_P_H
+#define QQUICKABSTRACTDIALOG_P_H
 
 //
 //  W A R N I N G
@@ -53,26 +53,81 @@
 // We mean it.
 //
 
-#include "qquickabstractfiledialog_p.h"
+#include <QtQml>
+#include <QQuickView>
+#include <QtGui/qpa/qplatformdialoghelper.h>
+#include <qpa/qplatformtheme.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPlatformFileDialog : public QQuickAbstractFileDialog
+class QQuickAbstractDialog : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibilityChanged)
+    Q_PROPERTY(Qt::WindowModality modality READ modality WRITE setModality NOTIFY modalityChanged)
+    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
+    Q_PROPERTY(int x READ x WRITE setX NOTIFY geometryChanged)
+    Q_PROPERTY(int y READ y WRITE setY NOTIFY geometryChanged)
+    Q_PROPERTY(int width READ width WRITE setWidth NOTIFY geometryChanged)
+    Q_PROPERTY(int height READ height WRITE setHeight NOTIFY geometryChanged)
 
 public:
-    QQuickPlatformFileDialog(QObject *parent = 0);
-    virtual ~QQuickPlatformFileDialog();
+    QQuickAbstractDialog(QObject *parent = 0);
+    virtual ~QQuickAbstractDialog();
+
+    bool isVisible() const { return m_visible; }
+    Qt::WindowModality modality() const { return m_modality; }
+    virtual QString title() const = 0;
+    QObject* qmlImplementation() { return m_qmlImplementation; }
+
+    int x() const;
+    int y() const;
+    int width() const;
+    int height() const;
+
+    virtual void setVisible(bool v);
+    virtual void setModality(Qt::WindowModality m);
+    virtual void setTitle(QString t) = 0;
+    void setQmlImplementation(QObject* obj);
+    void setX(int arg);
+    void setY(int arg);
+    void setWidth(int arg);
+    void setHeight(int arg);
+
+public Q_SLOTS:
+    void open() { setVisible(true); }
+    void close() { setVisible(false); }
+
+Q_SIGNALS:
+    void visibilityChanged();
+    void geometryChanged();
+    void modalityChanged();
+    void titleChanged();
+    void accepted();
+    void rejected();
+
+protected Q_SLOTS:
+    void accept();
+    void reject();
+    void visibleChanged(bool v);
+    void windowGeometryChanged();
 
 protected:
-    QPlatformFileDialogHelper *helper();
+    virtual QPlatformDialogHelper *helper() = 0;
+    QQuickWindow *parentWindow();
 
-    Q_DISABLE_COPY(QQuickPlatformFileDialog)
+protected:
+    QQuickWindow *m_parentWindow;
+    bool m_visible;
+    Qt::WindowModality m_modality;
+
+protected: // variables for pure-QML implementations only
+    QObject *m_qmlImplementation;
+    QWindow *m_dialogWindow;
+
+    Q_DISABLE_COPY(QQuickAbstractDialog)
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPlatformFileDialog *)
-
-#endif // QQUICKPLATFORMFILEDIALOG_P_H
+#endif // QQUICKABSTRACTDIALOG_P_H

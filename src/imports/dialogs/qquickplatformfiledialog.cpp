@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Dialogs 1
     \ingroup qtquick-visual
     \brief Dialog component for choosing files from a local filesystem.
-    \since 5.1
+    \since Qt 5.1
 
     FileDialog provides a basic file chooser: it allows the user to select
     existing files and/or directories, or create new filenames. The dialog is
@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
     chooses a file:
 
     \qml
-    import QtQuick 2.0
+    import QtQuick 2.1
     import QtQuick.Dialogs 1.0
 
     FileDialog {

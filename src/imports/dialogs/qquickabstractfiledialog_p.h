@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -57,32 +57,27 @@
 #include <QQuickView>
 #include <QtGui/qpa/qplatformdialoghelper.h>
 #include <qpa/qplatformtheme.h>
+#include "qquickabstractdialog_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickAbstractFileDialog : public QObject
+class QQuickAbstractFileDialog : public QQuickAbstractDialog
 {
     Q_OBJECT
-    Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibilityChanged)
-    Q_PROPERTY(Qt::WindowModality modality READ modality WRITE setModality NOTIFY modalityChanged)
-    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
     Q_PROPERTY(bool selectExisting READ selectExisting WRITE setSelectExisting NOTIFY fileModeChanged)
     Q_PROPERTY(bool selectMultiple READ selectMultiple WRITE setSelectMultiple NOTIFY fileModeChanged)
     Q_PROPERTY(bool selectFolder READ selectFolder WRITE setSelectFolder NOTIFY fileModeChanged)
     Q_PROPERTY(QString folder READ folder WRITE setFolder NOTIFY folderChanged)
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters NOTIFY nameFiltersChanged)
     Q_PROPERTY(QString selectedNameFilter READ selectedNameFilter WRITE selectNameFilter NOTIFY filterSelected)
-    Q_PROPERTY(QUrl fileUrl READ fileUrl NOTIFY accepted)
-    Q_PROPERTY(QList<QUrl> fileUrls READ fileUrls NOTIFY accepted)
-    // TODO: QTBUG-29817: provide x y width and height (after QPlatformDialogHelper provides it)
+    Q_PROPERTY(QUrl fileUrl READ fileUrl NOTIFY selectionAccepted)
+    Q_PROPERTY(QList<QUrl> fileUrls READ fileUrls NOTIFY selectionAccepted)
 
 public:
     QQuickAbstractFileDialog(QObject *parent = 0);
     virtual ~QQuickAbstractFileDialog();
 
-    bool isVisible() const { return m_visible; }
-    Qt::WindowModality modality() const { return m_modality; }
-    QString title() const { return m_options->windowTitle(); }
+    virtual QString title() const;
     bool selectExisting() const { return m_selectExisting; }
     bool selectMultiple() const { return m_selectMultiple; }
     bool selectFolder() const { return m_selectFolder; }
@@ -93,10 +88,7 @@ public:
     virtual QList<QUrl> fileUrls();
 
 public Q_SLOTS:
-    void open() { setVisible(true); }
-    void close() { setVisible(false); }
-    virtual void setVisible(bool v);
-    void setModality(Qt::WindowModality m);
+    void setVisible(bool v);
     void setTitle(QString t);
     void setSelectExisting(bool s);
     void setSelectMultiple(bool s);
@@ -106,32 +98,18 @@ public Q_SLOTS:
     void selectNameFilter(QString f);
 
 Q_SIGNALS:
-    void visibilityChanged();
-    void modalityChanged();
-    void titleChanged();
     void folderChanged();
     void nameFiltersChanged();
     void filterSelected();
     void fileModeChanged();
-    void accepted();
-    void rejected();
-
-protected Q_SLOTS:
-    void accept();
-    void reject();
-    void visibleChanged(bool v);
+    void selectionAccepted();
 
 protected:
-    virtual QPlatformFileDialogHelper *helper() = 0;
     void updateModes();
-    QQuickWindow *parentWindow();
 
 protected:
     QPlatformFileDialogHelper *m_dlgHelper;
-    QQuickWindow *m_parentWindow;
     QSharedPointer<QFileDialogOptions> m_options;
-    bool m_visible;
-    Qt::WindowModality m_modality;
     bool m_selectExisting;
     bool m_selectMultiple;
     bool m_selectFolder;
