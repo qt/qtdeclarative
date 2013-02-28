@@ -124,6 +124,7 @@ public:
 public slots:
     void finished();
     void downloadProgress(qint64, qint64);
+    void manualFinished(QNetworkReply*);
 
 private:
     QQmlDataLoader *l;
@@ -181,6 +182,14 @@ void QQmlDataLoaderNetworkReplyProxy::downloadProgress(qint64 bytesReceived, qin
     Q_ASSERT(qobject_cast<QNetworkReply *>(sender()));
     QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
     l->networkReplyProgress(reply, bytesReceived, bytesTotal);
+}
+
+// This function is for when you want to shortcut the signals and call directly
+void QQmlDataLoaderNetworkReplyProxy::manualFinished(QNetworkReply *reply)
+{
+    qint64 replySize = reply->size();
+    l->networkReplyProgress(reply, replySize, replySize);
+    l->networkReplyFinished(reply);
 }
 
 
@@ -1008,17 +1017,23 @@ void QQmlDataLoader::loadThread(QQmlDataBlob *blob)
     } else {
 
         QNetworkReply *reply = m_thread->networkAccessManager()->get(QNetworkRequest(blob->m_url));
-        QObject *nrp = m_thread->networkReplyProxy();
-        QObject::connect(reply, SIGNAL(downloadProgress(qint64,qint64)), 
-                         nrp, SLOT(downloadProgress(qint64,qint64)));
-        QObject::connect(reply, SIGNAL(finished()), 
-                         nrp, SLOT(finished()));
+        QQmlDataLoaderNetworkReplyProxy *nrp = m_thread->networkReplyProxy();
+        blob->addref();
         m_networkReplies.insert(reply, blob);
+
+        if (reply->isFinished()) {
+            nrp->manualFinished(reply);
+        } else {
+            QObject::connect(reply, SIGNAL(downloadProgress(qint64,qint64)),
+                             nrp, SLOT(downloadProgress(qint64,qint64)));
+            QObject::connect(reply, SIGNAL(finished()),
+                             nrp, SLOT(finished()));
+        }
+
 #ifdef DATABLOB_DEBUG
         qWarning("QQmlDataBlob: requested %s", qPrintable(blob->url().toString()));
 #endif
 
-        blob->addref();
     }
 }
 
