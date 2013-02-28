@@ -159,7 +159,9 @@ QSGNode *BezierCurve::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 
         vertices[i].set(x, y);
     }
+    node->markDirty(QSGNode::DirtyGeometry);
 //! [8]
+
 
 //! [9]
     return node;
