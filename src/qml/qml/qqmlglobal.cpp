@@ -54,6 +54,7 @@ QQmlValueTypeProvider::QQmlValueTypeProvider()
 
 QQmlValueTypeProvider::~QQmlValueTypeProvider()
 {
+    QQml_removeValueTypeProvider(this);
 }
 
 QQmlValueType *QQmlValueTypeProvider::createValueType(int type)
@@ -266,13 +267,13 @@ bool QQmlValueTypeProvider::store(int, const void *, void *, size_t) { return fa
 bool QQmlValueTypeProvider::read(int, const void *, size_t, int, void *) { return false; }
 bool QQmlValueTypeProvider::write(int, const void *, void *, size_t) { return false; }
 
+Q_GLOBAL_STATIC(QQmlValueTypeProvider, nullValueTypeProvider)
 static QQmlValueTypeProvider *valueTypeProvider = 0;
 
 static QQmlValueTypeProvider **getValueTypeProvider(void)
 {
     if (valueTypeProvider == 0) {
-        static QQmlValueTypeProvider nullValueTypeProvider;
-        valueTypeProvider = &nullValueTypeProvider;
+        valueTypeProvider = nullValueTypeProvider;
     }
 
     return &valueTypeProvider;
@@ -283,6 +284,34 @@ Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *newPr
     static QQmlValueTypeProvider **providerPtr = getValueTypeProvider();
     newProvider->next = *providerPtr;
     *providerPtr = newProvider;
+}
+
+Q_QML_PRIVATE_EXPORT void QQml_removeValueTypeProvider(QQmlValueTypeProvider *oldProvider)
+{
+    if (oldProvider == nullValueTypeProvider) {
+        // don't remove the null provider
+        // we get here when the QtQml library is being unloaded
+        return;
+    }
+
+    // the only entry with next = 0 is the null provider
+    Q_ASSERT(oldProvider->next);
+
+    QQmlValueTypeProvider *prev = valueTypeProvider;
+    if (prev == oldProvider) {
+        valueTypeProvider = oldProvider->next;
+        return;
+    }
+
+    // singly-linked list removal
+    for ( ; prev; prev = prev->next) {
+        if (prev->next != oldProvider)
+            continue;               // this is not the provider you're looking for
+        prev->next = oldProvider->next;
+        return;
+    }
+
+    qWarning("QQml_removeValueTypeProvider: was asked to remove provider %p but it was not found", oldProvider);
 }
 
 Q_AUTOTEST_EXPORT QQmlValueTypeProvider *QQml_valueTypeProvider(void)

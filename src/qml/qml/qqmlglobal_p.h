@@ -271,6 +271,7 @@ private:
     virtual bool write(int, const void *, void *, size_t);
 
     friend Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *);
+    friend Q_QML_PRIVATE_EXPORT void QQml_removeValueTypeProvider(QQmlValueTypeProvider *);
 
     QQmlValueTypeProvider *next;
 };
