@@ -87,7 +87,7 @@ public:
         , documentDirty(true), dirty(false), richText(false), cursorVisible(false), cursorPending(false)
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
         , selectByMouse(false), canPaste(false), canPasteValid(false), hAlignImplicit(true)
-        , textCached(true), inLayout(false)
+        , textCached(true), inLayout(false), selectByKeyboard(false), selectByKeyboardSet(false)
     {
     }
 
@@ -168,6 +168,8 @@ public:
     bool hAlignImplicit:1;
     bool textCached:1;
     bool inLayout:1;
+    bool selectByKeyboard:1;
+    bool selectByKeyboardSet:1;
 };
 
 QT_END_NAMESPACE

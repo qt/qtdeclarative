@@ -90,6 +90,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
 #ifndef QT_NO_IM
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged)
 #endif
+    Q_PROPERTY(bool selectByKeyboard READ selectByKeyboard WRITE setSelectByKeyboard NOTIFY selectByKeyboardChanged REVISION 1)
     Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged)
     Q_PROPERTY(SelectionMode mouseSelectionMode READ mouseSelectionMode WRITE setMouseSelectionMode NOTIFY mouseSelectionModeChanged)
     Q_PROPERTY(bool canPaste READ canPaste NOTIFY canPasteChanged)
@@ -201,6 +202,9 @@ public:
     void setInputMethodHints(Qt::InputMethodHints hints);
 #endif
 
+    bool selectByKeyboard() const;
+    void setSelectByKeyboard(bool);
+
     bool selectByMouse() const;
     void setSelectByMouse(bool);
 
@@ -274,6 +278,7 @@ Q_SIGNALS:
     void activeFocusOnPressChanged(bool activeFocusOnPressed);
     void persistentSelectionChanged(bool isPersistentSelection);
     void textMarginChanged(qreal textMargin);
+    Q_REVISION(1) void selectByKeyboardChanged(bool selectByKeyboard);
     void selectByMouseChanged(bool selectByMouse);
     void mouseSelectionModeChanged(SelectionMode mode);
     void linkActivated(const QString &link);

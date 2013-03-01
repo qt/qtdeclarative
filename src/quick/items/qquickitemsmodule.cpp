@@ -158,6 +158,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickScale>(uri,major,minor,"Scale");
     qmlRegisterType<QQuickText>(uri,major,minor,"Text");
     qmlRegisterType<QQuickTextEdit>(uri,major,minor,"TextEdit");
+    qmlRegisterType<QQuickTextEdit,1>(uri,2,1,"TextEdit");
     qmlRegisterType<QQuickTextInput>(uri,major,minor,"TextInput");
     qmlRegisterType<QQuickViewSection>(uri,major,minor,"ViewSection");
 

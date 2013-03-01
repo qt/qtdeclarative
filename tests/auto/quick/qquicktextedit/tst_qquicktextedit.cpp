@@ -134,6 +134,9 @@ private slots:
     void dragMouseSelection();
     void mouseSelectionMode_accessors();
     void selectByMouse();
+    void selectByKeyboard();
+    void keyboardSelection_data();
+    void keyboardSelection();
     void renderType();
     void inputMethodHints();
 
@@ -2061,6 +2064,127 @@ void tst_qquicktextedit::selectByMouse()
     QCOMPARE(edit->selectByMouse(), false);
     QCOMPARE(spy.count(), 2);
     QCOMPARE(spy.at(1).at(0).toBool(), false);
+}
+
+void tst_qquicktextedit::selectByKeyboard()
+{
+    QQmlComponent oldComponent(&engine);
+    oldComponent.setData("import QtQuick 2.0\n TextEdit { selectByKeyboard: true }", QUrl());
+    QVERIFY(!oldComponent.create());
+
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.1\n TextEdit { }", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(object.data());
+    QVERIFY(edit);
+
+    QSignalSpy spy(edit, SIGNAL(selectByKeyboardChanged(bool)));
+
+    QCOMPARE(edit->isReadOnly(), false);
+    QCOMPARE(edit->selectByKeyboard(), true);
+
+    edit->setReadOnly(true);
+    QCOMPARE(edit->selectByKeyboard(), false);
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.at(0).at(0).toBool(), false);
+
+    edit->setSelectByKeyboard(true);
+    QCOMPARE(edit->selectByKeyboard(), true);
+    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.at(1).at(0).toBool(), true);
+
+    edit->setReadOnly(false);
+    QCOMPARE(edit->selectByKeyboard(), true);
+    QCOMPARE(spy.count(), 2);
+
+    edit->setSelectByKeyboard(false);
+    QCOMPARE(edit->selectByKeyboard(), false);
+    QCOMPARE(spy.count(), 3);
+    QCOMPARE(spy.at(2).at(0).toBool(), false);
+}
+
+Q_DECLARE_METATYPE(QKeySequence::StandardKey)
+
+void tst_qquicktextedit::keyboardSelection_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<bool>("readOnly");
+    QTest::addColumn<bool>("selectByKeyboard");
+    QTest::addColumn<int>("cursorPosition");
+    QTest::addColumn<QKeySequence::StandardKey>("standardKey");
+    QTest::addColumn<QString>("selectedText");
+
+    QTest::newRow("editable - select first char")
+            << QStringLiteral("editable - select first char") << false << true << 0 << QKeySequence::SelectNextChar << QStringLiteral("e");
+    QTest::newRow("editable - select first word")
+            << QStringLiteral("editable - select first char") << false << true << 0 << QKeySequence::SelectNextWord << QStringLiteral("editable ");
+
+    QTest::newRow("editable - cannot select first char")
+            << QStringLiteral("editable - cannot select first char") << false << false << 0 << QKeySequence::SelectNextChar << QStringLiteral("");
+    QTest::newRow("editable - cannot select first word")
+            << QStringLiteral("editable - cannot select first word") << false << false << 0 << QKeySequence::SelectNextWord << QStringLiteral("");
+
+    QTest::newRow("editable - select last char")
+            << QStringLiteral("editable - select last char") << false << true << 27 << QKeySequence::SelectPreviousChar << QStringLiteral("r");
+    QTest::newRow("editable - select last word")
+            << QStringLiteral("editable - select last word") << false << true << 27 << QKeySequence::SelectPreviousWord << QStringLiteral("word");
+
+    QTest::newRow("editable - cannot select last char")
+            << QStringLiteral("editable - cannot select last char") << false << false << 35 << QKeySequence::SelectPreviousChar << QStringLiteral("");
+    QTest::newRow("editable - cannot select last word")
+            << QStringLiteral("editable - cannot select last word") << false << false << 35 << QKeySequence::SelectPreviousWord << QStringLiteral("");
+
+    QTest::newRow("read-only - cannot select first char")
+            << QStringLiteral("read-only - cannot select first char") << true << false << 0 << QKeySequence::SelectNextChar << QStringLiteral("");
+    QTest::newRow("read-only - cannot select first word")
+            << QStringLiteral("read-only - cannot select first word") << true << false << 0 << QKeySequence::SelectNextWord << QStringLiteral("");
+
+    QTest::newRow("read-only - cannot select last char")
+            << QStringLiteral("read-only - cannot select last char") << true << false << 35 << QKeySequence::SelectPreviousChar << QStringLiteral("");
+    QTest::newRow("read-only - cannot select last word")
+            << QStringLiteral("read-only - cannot select last word") << true << false << 35 << QKeySequence::SelectPreviousWord << QStringLiteral("");
+
+    QTest::newRow("read-only - select first char")
+            << QStringLiteral("read-only - select first char") << true << true << 0 << QKeySequence::SelectNextChar << QStringLiteral("r");
+    QTest::newRow("read-only - select first word")
+            << QStringLiteral("read-only - select first word") << true << true << 0 << QKeySequence::SelectNextWord << QStringLiteral("read");
+
+    QTest::newRow("read-only - select last char")
+            << QStringLiteral("read-only - select last char") << true << true << 28 << QKeySequence::SelectPreviousChar << QStringLiteral("r");
+    QTest::newRow("read-only - select last word")
+            << QStringLiteral("read-only - select last word") << true << true << 28 << QKeySequence::SelectPreviousWord << QStringLiteral("word");
+}
+
+void tst_qquicktextedit::keyboardSelection()
+{
+    QFETCH(QString, text);
+    QFETCH(bool, readOnly);
+    QFETCH(bool, selectByKeyboard);
+    QFETCH(int, cursorPosition);
+    QFETCH(QKeySequence::StandardKey, standardKey);
+    QFETCH(QString, selectedText);
+
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.1\n TextEdit { focus: true }", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(object.data());
+    QVERIFY(edit);
+
+    edit->setText(text);
+    edit->setReadOnly(readOnly);
+    edit->setSelectByKeyboard(selectByKeyboard);
+    edit->setCursorPosition(cursorPosition);
+
+    QQuickWindow window;
+    edit->setParentItem(window.contentItem());
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+    QVERIFY(edit->hasActiveFocus());
+
+    simulateKeys(&window, standardKey);
+
+    QCOMPARE(edit->selectedText(), selectedText);
 }
 
 void tst_qquicktextedit::renderType()

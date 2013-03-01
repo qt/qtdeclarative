@@ -1238,6 +1238,44 @@ void QQuickTextEdit::componentComplete()
     if (d->cursorComponent && isCursorVisible())
         QQuickTextUtil::createCursor(d);
 }
+
+/*!
+    \qmlproperty bool QtQuick2::TextEdit::selectByKeyboard
+    \since QtQuick 2.1
+
+    Defaults to true when the editor is editable, and false
+    when read-only.
+
+    If true, the user can use the keyboard to select text
+    even if the editor is read-only. If false, the user
+    cannot use the keyboard to select text even if the
+    editor is editable.
+
+    \sa readOnly
+*/
+bool QQuickTextEdit::selectByKeyboard() const
+{
+    Q_D(const QQuickTextEdit);
+    if (d->selectByKeyboardSet)
+        return d->selectByKeyboard;
+    return !isReadOnly();
+}
+
+void QQuickTextEdit::setSelectByKeyboard(bool on)
+{
+    Q_D(QQuickTextEdit);
+    bool was = selectByKeyboard();
+    d->selectByKeyboardSet = true;
+    if (was != on) {
+        d->selectByKeyboard = on;
+        if (on)
+            d->control->setTextInteractionFlags(d->control->textInteractionFlags() | Qt::TextSelectableByKeyboard);
+        else
+            d->control->setTextInteractionFlags(d->control->textInteractionFlags() & ~Qt::TextSelectableByKeyboard);
+        emit selectByKeyboardChanged(on);
+    }
+}
+
 /*!
     \qmlproperty bool QtQuick2::TextEdit::selectByMouse
 
@@ -1316,8 +1354,12 @@ void QQuickTextEdit::setReadOnly(bool r)
     Qt::TextInteractionFlags flags = Qt::LinksAccessibleByMouse;
     if (d->selectByMouse)
         flags = flags | Qt::TextSelectableByMouse;
+    if (d->selectByKeyboardSet && d->selectByKeyboard)
+        flags = flags | Qt::TextSelectableByKeyboard;
+    else if (!d->selectByKeyboardSet && !r)
+        flags = flags | Qt::TextSelectableByKeyboard;
     if (!r)
-        flags = flags | Qt::TextSelectableByKeyboard | Qt::TextEditable;
+        flags = flags | Qt::TextEditable;
     d->control->setTextInteractionFlags(flags);
     if (!r)
         d->control->moveCursor(QTextCursor::End);
@@ -1327,6 +1369,8 @@ void QQuickTextEdit::setReadOnly(bool r)
 #endif
     q_canPasteChanged();
     emit readOnlyChanged(r);
+    if (!d->selectByKeyboardSet)
+        emit selectByKeyboardChanged(!r);
 }
 
 bool QQuickTextEdit::isReadOnly() const
