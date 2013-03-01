@@ -1237,13 +1237,13 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const Value &object,
     Object *o = object.asObject();
     assert(o);
 
-    PropertyDescriptor pd;
-    pd.value = val ? *val : Value::undefinedValue();
-    pd.type = PropertyDescriptor::Data;
-    pd.writable = PropertyDescriptor::Enabled;
-    pd.enumberable = PropertyDescriptor::Enabled;
-    pd.configurable = PropertyDescriptor::Enabled;
-    o->__defineOwnProperty__(ctx, name, &pd);
+
+    PropertyDescriptor *pd = o->insertMember(name);
+    pd->value = val ? *val : Value::undefinedValue();
+    pd->type = PropertyDescriptor::Data;
+    pd->writable = PropertyDescriptor::Enabled;
+    pd->enumberable = PropertyDescriptor::Enabled;
+    pd->configurable = PropertyDescriptor::Enabled;
 }
 
 void __qmljs_builtin_define_array_property(ExecutionContext *ctx, const Value &object, int index, Value *val)
