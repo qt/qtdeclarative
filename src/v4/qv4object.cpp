@@ -910,8 +910,10 @@ void Object::arrayReserve(uint n)
         }
         arrayAlloc = qMax(n, 2*arrayAlloc);
         PropertyDescriptor *newArrayData = new PropertyDescriptor[arrayAlloc];
-        memcpy(newArrayData, arrayData, sizeof(PropertyDescriptor)*arrayDataLen);
-        delete [] (arrayData - off);
+        if (arrayData) {
+            memcpy(newArrayData, arrayData, sizeof(PropertyDescriptor)*arrayDataLen);
+            delete [] (arrayData - off);
+        }
         arrayData = newArrayData;
         if (sparseArray) {
             for (uint i = arrayFreeList; i < arrayAlloc; ++i) {
