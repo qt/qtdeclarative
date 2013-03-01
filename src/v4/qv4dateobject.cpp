@@ -52,6 +52,7 @@
 #include <qmath.h>
 #include <qnumeric.h>
 #include <cassert>
+#include <time.h>
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -63,15 +64,14 @@
 
 #include <wtf/MathExtras.h>
 
-#ifndef Q_OS_WIN
-#  include <time.h>
+#ifdef Q_OS_WIN
+#  include <windows.h>
+#else
 #  ifndef Q_OS_VXWORKS
 #    include <sys/time.h>
 #  else
 #    include "qplatformdefs.h"
 #  endif
-#else
-#  include <windows.h>
 #endif
 
 using namespace QQmlJS::VM;
@@ -296,17 +296,16 @@ static inline double MakeDate(double day, double time)
 
 static inline double DaylightSavingTA(double t)
 {
-#ifndef Q_OS_WIN
-    long int tt = (long int)(t / msPerSecond);
     struct tm tmtm;
-    if (!localtime_r((const time_t*)&tt, &tmtm))
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+    __time64_t  tt = (__time64_t)(t / msPerSecond);
+    if (!_localtime64_s(&tmtm, &tt))
+#else
+    long int tt = (long int)(t / msPerSecond);
+    if (!localtime_r((const time_t*) &tt, &tmtm))
+#endif
         return 0;
     return (tmtm.tm_isdst > 0) ? msPerHour : 0;
-#else
-    Q_UNUSED(t);
-    /// ### implement me
-    return 0;
-#endif
 }
 
 static inline double LocalTime(double t)
