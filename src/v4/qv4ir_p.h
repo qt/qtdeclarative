@@ -70,6 +70,16 @@ class QQmlType;
 
 namespace QQmlJS {
 
+inline bool isNegative(double d)
+{
+    uchar *dch = (uchar *)&d;
+    if (QSysInfo::ByteOrder == QSysInfo::BigEndian)
+        return (dch[0] & 0x80);
+    else
+        return (dch[7] & 0x80);
+
+}
+
 namespace VM {
 struct ExecutionContext;
 struct Value;
