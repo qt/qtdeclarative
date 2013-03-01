@@ -2454,10 +2454,7 @@ bool Codegen::visit(TryStatement *ast)
     }
 
     int hasException = _block->newTemp();
-    int contextTemp = _block->newTemp();
-    IR::ExprList *createExceptionArgs = _function->New<IR::ExprList>();
-    createExceptionArgs->init(_block->TEMP(contextTemp));
-    move(_block->TEMP(hasException), _block->CALL(_block->NAME(IR::Name::builtin_create_exception_handler, 0, 0), createExceptionArgs));
+    move(_block->TEMP(hasException), _block->CALL(_block->NAME(IR::Name::builtin_create_exception_handler, 0, 0), 0));
 
     // Pass the hidden "inCatch" and "hasException" TEMPs to the
     // builtin_delete_exception_handler, in order to have those TEMPs alive for

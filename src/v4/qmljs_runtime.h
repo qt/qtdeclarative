@@ -89,6 +89,9 @@ struct ArrayObject;
 struct ErrorObject;
 struct ExecutionEngine;
 
+struct Exception {
+};
+
 extern "C" {
 
 // context

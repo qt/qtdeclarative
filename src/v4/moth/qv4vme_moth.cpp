@@ -139,7 +139,8 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
 # define VALUEPTR(param) getValueRef(context, stack, param, stackSize)
 #endif
 
-VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *code
+VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
+        VM::Value *stack, unsigned stackSize
 #ifdef MOTH_THREADED_INTERPRETER
         , void ***storeJumpTable
 #endif
@@ -161,8 +162,6 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     }
 #endif
 
-    VM::Value *stack = 0;
-    unsigned stackSize = 0;
     FunctionState state(context, &code);
 
 #ifdef MOTH_THREADED_INTERPRETER
@@ -260,31 +259,35 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
     MOTH_END_INSTR(CallBuiltinThrow)
 
     MOTH_BEGIN_INSTR(CallBuiltinCreateExceptionHandler)
-        void *buf = __qmljs_create_exception_handler(context);
-        // The result is the only value we need from the instr to
-        // continue execution when an exception is caught.
+        __qmljs_create_exception_handler(context);
         VM::Value *result = getValueRef(context, stack, instr.result
 #if !defined(QT_NO_DEBUG)
                                         , stackSize
 #endif
                                         );
-        VM::ExecutionContext *oldContext = context;
-        int didThrow = setjmp(* static_cast<jmp_buf *>(buf));
-        context = oldContext;
-        // Two ways to come here: after a create, or after a throw.
-        if (didThrow)
-            // At this point, the interpreter state can be anything but
-            // valid, so first restore the state.
-            restoreState(context, result, code);
-        else
-            // Save the state and any variables we need when catching an
-            // exception, so we can restore the state at that point.
-            saveState(context, result, code);
-        *result = VM::Value::fromInt32(didThrow);
+         try {
+            *result = VM::Value::fromInt32(0);
+            const uchar *tryCode = code;
+            run(context, tryCode, stack, stackSize);
+            code = tryCode;
+        } catch (const VM::Exception &) {
+            try {
+                *result = VM::Value::fromInt32(1);
+                const uchar *catchCode = code;
+                run(context, catchCode, stack, stackSize);
+                code = catchCode;
+            } catch (const VM::Exception &) {
+                *result = VM::Value::fromInt32(1);
+                const uchar *catchCode = code;
+                run(context, catchCode, stack, stackSize);
+                code = catchCode;
+            }
+        }
     MOTH_END_INSTR(CallBuiltinCreateExceptionHandler)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteExceptionHandler)
         __qmljs_delete_exception_handler(context);
+        return VM::Value();
     MOTH_END_INSTR(CallBuiltinDeleteExceptionHandler)
 
     MOTH_BEGIN_INSTR(CallBuiltinGetException)
@@ -473,8 +476,8 @@ void **VME::instructionJumpTable()
 {
     static void **jumpTable = 0;
     if (!jumpTable) {
-        VME dummy;
-        dummy(0, 0, &jumpTable);
+        const uchar *code = 0;
+        VME().run(0, code, 0, 0, &jumpTable);
     }
     return jumpTable;
 }
@@ -483,7 +486,7 @@ void **VME::instructionJumpTable()
 VM::Value VME::exec(VM::ExecutionContext *ctxt, const uchar *code)
 {
     VME vme;
-    return vme(ctxt, code);
+    return vme.run(ctxt, code);
 }
 
 void VME::restoreState(VM::ExecutionContext *context, VM::Value *&target, const uchar *&code)

@@ -216,6 +216,7 @@ public:
     void registerBlock(IR::BasicBlock*);
     void jumpToBlock(IR::BasicBlock* current, IR::BasicBlock *target);
     void addPatch(IR::BasicBlock* targetBlock, Jump targetJump);
+    void addPatch(DataLabelPtr patch, Label target);
 
     Pointer loadTempAddress(RegisterID reg, IR::Temp *t);
 
@@ -723,6 +724,12 @@ private:
     QHash<IR::BasicBlock *, Label> _addrs;
     QHash<IR::BasicBlock *, QVector<Jump> > _patches;
     QList<CallToLink> _callsToLink;
+
+    struct DataLabelPatch {
+        DataLabelPtr dataLabel;
+        Label target;
+    };
+    QList<DataLabelPatch> _dataLabelPatches;
 };
 
 class Q_V4_EXPORT InstructionSelection:
@@ -754,7 +761,7 @@ protected:
     virtual void callBuiltinPostIncrementName(const QString &name, IR::Temp *result);
     virtual void callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result);
     virtual void callBuiltinThrow(IR::Temp *arg);
-    virtual void callBuiltinCreateExceptionHandler(IR::Temp *result, IR::Temp *contextTemp);
+    virtual void callBuiltinCreateExceptionHandler(IR::Temp *result);
     virtual void callBuiltinDeleteExceptionHandler();
     virtual void callBuiltinGetException(IR::Temp *result);
     virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result);

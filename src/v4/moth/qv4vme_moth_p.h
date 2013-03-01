@@ -16,17 +16,18 @@ class VME
 public:
     static VM::Value exec(VM::ExecutionContext *, const uchar *);
 
-    VM::Value operator()(QQmlJS::VM::ExecutionContext *, const uchar *code
-#ifdef MOTH_THREADED_INTERPRETER
-            , void ***storeJumpTable = 0
-#endif
-            );
-
 #ifdef MOTH_THREADED_INTERPRETER
     static void **instructionJumpTable();
 #endif
 
 private:
+    VM::Value run(QQmlJS::VM::ExecutionContext *, const uchar *&code,
+            VM::Value *stack = 0, unsigned stackSize = 0
+#ifdef MOTH_THREADED_INTERPRETER
+            , void ***storeJumpTable = 0
+#endif
+            );
+
     static void restoreState(VM::ExecutionContext *context, VM::Value *&target, const uchar *&code);
     static void saveState(VM::ExecutionContext *context, VM::Value *target, const uchar *code);
 };

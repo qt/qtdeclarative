@@ -123,6 +123,14 @@ void Assembler::addPatch(IR::BasicBlock* targetBlock, Jump targetJump)
     _patches[targetBlock].append(targetJump);
 }
 
+void Assembler::addPatch(DataLabelPtr patch, Label target)
+{
+    DataLabelPatch p;
+    p.dataLabel = patch;
+    p.target = target;
+    _dataLabelPatches.append(p);
+}
+
 Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, IR::Temp *t)
 {
     int32_t offset = 0;
@@ -420,6 +428,9 @@ void Assembler::link(VM::Function *vmFunc)
         functions[ctl.externalFunction.value()] = ctl.functionName;
     }
 
+    foreach (const DataLabelPatch &p, _dataLabelPatches)
+        linkBuffer.patch(p.dataLabel, linkBuffer.locationOf(p.target));
+
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
 #if OS(LINUX)
@@ -630,22 +641,64 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
     generateFunctionCall(Assembler::Void, __qmljs_builtin_throw, Assembler::ContextRegister, Assembler::Reference(arg));
 }
 
-void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result, IR::Temp *contextTemp)
+static void *tryWrapper(ExecutionContext *context, void *localsPtr, void *(*exceptionEntryPointInCallingFunction)(ExecutionContext*, void*, int))
 {
-    Address contextAddr = _as->loadTempAddress(Assembler::ScratchRegister, contextTemp);
-    _as->storePtr(Assembler::ContextRegister, contextAddr);
-    generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_create_exception_handler, Assembler::ContextRegister);
-    generateFunctionCall(Assembler::ReturnValueRegister, setjmp, Assembler::ReturnValueRegister);
-    _as->loadPtr(contextAddr, Assembler::ContextRegister);
+    void *addressToContinueAt = 0;
+    try {
+        addressToContinueAt = exceptionEntryPointInCallingFunction(context, localsPtr, 0);
+    } catch (const Exception&) {
+        try {
+            addressToContinueAt = exceptionEntryPointInCallingFunction(context, localsPtr, 1);
+        } catch (const Exception&) {
+            addressToContinueAt = exceptionEntryPointInCallingFunction(context, localsPtr, 1);
+        }
+    }
+    return addressToContinueAt;
+}
+
+void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
+{
+    generateFunctionCall(Assembler::Void, __qmljs_create_exception_handler, Assembler::ContextRegister);
+
+    // Call tryWrapper, which is going to re-enter the same function again below.
+    // When tryWrapper returns, it returns the with address of where to continue.
+    Assembler::DataLabelPtr movePatch = _as->moveWithPatch(Assembler::TrustedImmPtr(0), Assembler::ScratchRegister);
+    generateFunctionCall(Assembler::ReturnValueRegister, tryWrapper, Assembler::ContextRegister, Assembler::LocalsRegister, Assembler::ScratchRegister);
+    _as->jump(Assembler::ReturnValueRegister);
+
+    // tryWrapper calls us at this place with arg3 == 0 if we're supposed to execute the try block
+    // and arg == 1 if we caught an exception. The generated IR takes care of returning from this
+    // call when deleteExceptionHandler is called.
+    _as->addPatch(movePatch, _as->label());
+    _as->enterStandardStackFrame(/*locals*/0);
+#ifdef ARGUMENTS_IN_REGISTERS
+    _as->move(Assembler::registerForArgument(0), Assembler::ContextRegister);
+    _as->move(Assembler::registerForArgument(1), Assembler::LocalsRegister);
+#else
+    _as->loadPtr(addressForArgument(0), Assembler::ContextRegister);
+    _as->loadPtr(addressForArgument(1), Assembler::LocalsRegister);
+#endif
+
     Address addr = _as->loadTempAddress(Assembler::ScratchRegister, result);
+#ifdef ARGUMENTS_IN_REGISTERS
+    _as->store32(Assembler::registerForArgument(2), addr);
+#else
+    _as->load32(addressForArgument(2), Assembler::ReturnValueRegister);
     _as->store32(Assembler::ReturnValueRegister, addr);
+#endif
     addr.offset += 4;
     _as->store32(Assembler::TrustedImm32(Value::Boolean_Type), addr);
 }
 
 void InstructionSelection::callBuiltinDeleteExceptionHandler()
 {
+    // This assumes that we're in code that was called by tryWrapper, so we return to try wrapper
+    // with the address that we'd like to continue at, which is right after the ret below.
     generateFunctionCall(Assembler::Void, __qmljs_delete_exception_handler, Assembler::ContextRegister);
+    Assembler::DataLabelPtr continuation = _as->moveWithPatch(Assembler::TrustedImmPtr(0), Assembler::ReturnValueRegister);
+    _as->leaveStandardStackFrame(/*locals*/0);
+    _as->ret();
+    _as->addPatch(continuation, _as->label());
 }
 
 void InstructionSelection::callBuiltinGetException(IR::Temp *result)

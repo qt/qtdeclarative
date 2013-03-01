@@ -964,7 +964,7 @@ void __qmljs_throw(ExecutionContext *context, const Value &value)
 
     context->engine->exception = value;
 
-    longjmp(handler.stackFrame, 1);
+    throw Exception();
 }
 
 Q_V4_EXPORT void * __qmljs_create_exception_handler(ExecutionContext *context)

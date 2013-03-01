@@ -369,28 +369,28 @@ int main(int argc, char *argv[])
                 const QString code = QString::fromUtf8(file.readAll());
                 file.close();
 
-                void * buf = __qmljs_create_exception_handler(ctx);
-                if (setjmp(*(jmp_buf *)buf)) {
+                __qmljs_create_exception_handler(ctx);
+                try {
+                    QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode,
+                                                                                    /*strictMode =*/ false, /*inheritContext =*/ false);
+                    if (!f)
+                        continue;
+                    vm.globalCode = f;
+
+                    ctx->strictMode = f->isStrict;
+                    ctx->lookups = f->lookups;
+                    if (debugger)
+                        debugger->aboutToCall(0, ctx);
+                    QQmlJS::VM::Value result = f->code(ctx, f->codeData);
+                    if (debugger)
+                        debugger->justLeft(ctx);
+                    if (!result.isUndefined()) {
+                        if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
+                            std::cout << "exit value: " << qPrintable(result.toString(ctx)->toQString()) << std::endl;
+                    }
+                } catch (const QQmlJS::VM::Exception&) {
                     showException(ctx);
                     return EXIT_FAILURE;
-                }
-
-                QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode,
-                                                                                /*strictMode =*/ false, /*inheritContext =*/ false);
-                if (!f)
-                    continue;
-                vm.globalCode = f;
-
-                ctx->strictMode = f->isStrict;
-                ctx->lookups = f->lookups;
-                if (debugger)
-                    debugger->aboutToCall(0, ctx);
-                QQmlJS::VM::Value result = f->code(ctx, f->codeData);
-                if (debugger)
-                    debugger->justLeft(ctx);
-                if (!result.isUndefined()) {
-                    if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
-                        std::cout << "exit value: " << qPrintable(result.toString(ctx)->toQString()) << std::endl;
                 }
 
             } else {
