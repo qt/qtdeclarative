@@ -59,6 +59,8 @@ struct MemoryManager::Data
     enum { MaxItemSize = 256 };
     Managed *smallItems[MaxItemSize/16];
     uint nChunks[MaxItemSize/16];
+    uint availableItems[MaxItemSize/16];
+    uint allocCount[MaxItemSize/16];
     struct Chunk {
         PageAllocation memory;
         int chunkSize;
@@ -79,6 +81,8 @@ struct MemoryManager::Data
     {
         memset(smallItems, 0, sizeof(smallItems));
         memset(nChunks, 0, sizeof(nChunks));
+        memset(availableItems, 0, sizeof(availableItems));
+        memset(allocCount, 0, sizeof(allocCount));
         scribble = !qgetenv("MM_SCRIBBLE").isEmpty();
         aggressiveGC = !qgetenv("MM_AGGRESSIVE_GC").isEmpty();
     }
@@ -122,6 +126,7 @@ Managed *MemoryManager::alloc(std::size_t size)
     assert(size % 16 == 0);
 
     size_t pos = size >> 4;
+    ++m_d->allocCount[pos];
 
     // fits into a small bucket
     assert(size < MemoryManager::Data::MaxItemSize);
@@ -131,7 +136,7 @@ Managed *MemoryManager::alloc(std::size_t size)
         goto found;
 
     // try to free up space, otherwise allocate
-    if (!m_d->aggressiveGC) {
+    if (m_d->allocCount[pos] > (m_d->availableItems[pos] >> 1) && !m_d->aggressiveGC) {
         runGC();
         m = m_d->smallItems[pos];
         if (m)
@@ -164,6 +169,7 @@ Managed *MemoryManager::alloc(std::size_t size)
         }
         *last = 0;
         m = m_d->smallItems[pos];
+        m_d->availableItems[pos] += allocation.memory.size()/size - 1;
     }
 
   found:
@@ -284,6 +290,7 @@ void MemoryManager::runGC()
 //    std::cerr << "GC: sweep freed " << freedCount
 //              << " objects in " << t.elapsed()
 //              << "ms" << std::endl;
+    memset(m_d->allocCount, 0, sizeof(m_d->allocCount));
 }
 
 void MemoryManager::setEnableGC(bool enableGC)
