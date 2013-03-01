@@ -1935,6 +1935,15 @@ void Codegen::linearize(IR::Function *function)
             //            }
             //        }
 
+#  if 0
+            if (! s->d->liveIn.isEmpty()) {
+                qout << " // lives in:";
+                for (int i = 0; i < s->d->liveIn.size(); ++i) {
+                    if (s->d->liveIn.testBit(i))
+                        qout << " %" << i;
+                }
+            }
+#  else
             if (! s->d->liveOut.isEmpty()) {
                 qout << " // lives out:";
                 for (int i = 0; i < s->d->liveOut.size(); ++i) {
@@ -1942,6 +1951,7 @@ void Codegen::linearize(IR::Function *function)
                         qout << " %" << i;
                 }
             }
+#  endif
 #else
             qout << "    " << str;
 #endif

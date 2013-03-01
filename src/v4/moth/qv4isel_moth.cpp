@@ -25,7 +25,6 @@ public:
     {
         DBTC(qDebug() << "starting on function" << (*function->name) << "with" << function->tempCount << "temps.";)
 
-        _seenTemps.clear();
         _nextFree = 0;
         _active.reserve(function->tempCount);
         _localCount = function->locals.size();
@@ -34,7 +33,7 @@ public:
         foreach (IR::BasicBlock *block, function->basicBlocks) {
             if (IR::Stmt *last = block->terminator()) {
                 const QBitArray &liveOut = last->d->liveOut;
-                for (int i = 0, ei = liveOut.size(); i < ei; ++i) {
+                for (int i = _localCount, ei = liveOut.size(); i < ei; ++i) {
                     if (liveOut.at(i) && !pinned.contains(i)) {
                         pinned.append(i);
                         add(i - _localCount, _nextFree);
@@ -65,7 +64,7 @@ public:
         function->tempCount = maxUsed + _localCount;
     }
 
-private:
+protected:
     virtual void visitConst(IR::Const *) {}
     virtual void visitString(IR::String *) {}
     virtual void visitRegExp(IR::RegExp *) {}
@@ -81,15 +80,12 @@ private:
     virtual void visitJump(IR::Jump *) {}
     virtual void visitCJump(IR::CJump *s) { s->cond->accept(this); }
     virtual void visitRet(IR::Ret *s) { s->expr->accept(this); }
+    virtual void visitTry(IR::Try *t) { visitTemp(t->exceptionVar); }
 
     virtual void visitTemp(IR::Temp *e) {
-        if (_seenTemps.contains(e))
+        if (e->scope) // scoped local
             return;
-        _seenTemps.insert(e);
-
-        if (e->index < 0)
-            return;
-        if (e->index < _localCount) // don't optimise locals yet.
+        if (e->index < _localCount) // local or argument
             return;
 
         e->index = remap(e->index - _localCount) + _localCount;
@@ -112,6 +108,7 @@ private:
         s->source->accept(this);
     }
 
+private:
     int remap(int tempIndex) {
         for (ActiveTemps::const_iterator i = _active.begin(), ei = _active.end(); i < ei; ++i) {
             if (i->first == tempIndex) {
@@ -164,7 +161,6 @@ private:
 private:
     typedef QVector<QPair<int, int> > ActiveTemps;
     ActiveTemps _active;
-    QSet<IR::Temp *> _seenTemps;
     IR::Stmt *_currentStatement;
     int _localCount;
     int _nextFree;
@@ -277,8 +273,8 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     qSwap(codeNext, _codeNext);
     qSwap(codeEnd, _codeEnd);
 
-    // TODO: FIXME: fix the temp compression with the new temp index layout.
-//    CompressTemps().run(_function);
+    if (qgetenv("NO_OPT").isEmpty())
+        CompressTemps().run(_function);
 
     int locals = frameSize();
     assert(locals >= 0);
