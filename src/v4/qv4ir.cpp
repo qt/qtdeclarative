@@ -44,6 +44,7 @@
 
 #include <QtCore/qtextstream.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/qset.h>
 #include <cmath>
 #include <cassert>
 
@@ -139,6 +140,127 @@ AluOp binaryOperator(int op)
     default: return OpInvalid;
     }
 }
+
+struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
+{
+    CloneExpr clone;
+    QSet<Expr *> subexpressions; // contains all the non-cloned subexpressions in the given function
+    Expr *uniqueExpr;
+
+    RemoveSharedExpressions(): uniqueExpr(0) {}
+
+    void operator()(IR::Function *function)
+    {
+        subexpressions.clear();
+
+        foreach (BasicBlock *block, function->basicBlocks) {
+            clone.setBasicBlock(block);
+
+            foreach (Stmt *s, block->statements) {
+                s->accept(this);
+            }
+        }
+    }
+
+    template <typename _Expr>
+    _Expr *cleanup(_Expr *expr)
+    {
+        if (subexpressions.contains(expr)) {
+             // the cloned expression is unique by definition
+            // so we don't need to add it to `subexpressions'.
+            return clone(expr);
+        }
+
+        subexpressions.insert(expr);
+        IR::Expr *e = expr;
+        qSwap(uniqueExpr, e);
+        expr->accept(this);
+        qSwap(uniqueExpr, e);
+        return static_cast<_Expr *>(e);
+    }
+
+    // statements
+    virtual void visitExp(Exp *s)
+    {
+        s->expr = cleanup(s->expr);
+    }
+
+    virtual void visitEnter(Enter *s)
+    {
+        s->expr = cleanup(s->expr);
+    }
+
+    virtual void visitLeave(Leave *)
+    {
+        // nothing to do for Leave statements
+    }
+
+    virtual void visitMove(Move *s)
+    {
+        s->target = cleanup(s->target);
+        s->source = cleanup(s->source);
+    }
+
+    virtual void visitJump(Jump *)
+    {
+        // nothing to do for Jump statements
+    }
+
+    virtual void visitCJump(CJump *s)
+    {
+        s->cond = cleanup(s->cond);
+    }
+
+    virtual void visitRet(Ret *s)
+    {
+        s->expr = cleanup(s->expr);
+    }
+
+
+    // expressions
+    virtual void visitConst(Const *) {}
+    virtual void visitString(String *) {}
+    virtual void visitRegExp(RegExp *) {}
+    virtual void visitName(Name *) {}
+    virtual void visitTemp(Temp *) {}
+    virtual void visitClosure(Closure *) {}
+
+    virtual void visitUnop(Unop *e)
+    {
+        e->expr = cleanup(e->expr);
+    }
+
+    virtual void visitBinop(Binop *e)
+    {
+        e->left = cleanup(e->left);
+        e->right = cleanup(e->right);
+    }
+
+    virtual void visitCall(Call *e)
+    {
+        e->base = cleanup(e->base);
+        for (IR::ExprList *it = e->args; it; it = it->next)
+            it->expr = cleanup(it->expr);
+    }
+
+    virtual void visitNew(New *e)
+    {
+        e->base = cleanup(e->base);
+        for (IR::ExprList *it = e->args; it; it = it->next)
+            it->expr = cleanup(it->expr);
+    }
+
+    virtual void visitSubscript(Subscript *e)
+    {
+        e->base = cleanup(e->base);
+        e->index = cleanup(e->index);
+    }
+
+    virtual void visitMember(Member *e)
+    {
+        e->base = cleanup(e->base);
+    }
+};
 
 void Const::dump(QTextStream &out)
 {
@@ -460,6 +582,12 @@ void Function::dump(QTextStream &out, Stmt::Mode mode)
     out << '}' << endl;
 }
 
+void Function::removeSharedExpressions()
+{
+    RemoveSharedExpressions removeSharedExpressions;
+    removeSharedExpressions(this);
+}
+
 unsigned BasicBlock::newTemp()
 {
     return function->tempCount++;
@@ -666,6 +794,89 @@ void BasicBlock::dump(QTextStream &out, Stmt::Mode mode)
         s->dump(out, mode);
         out << endl;
     }
+}
+
+CloneExpr::CloneExpr(BasicBlock *block)
+    : block(block), cloned(0)
+{
+}
+
+void CloneExpr::setBasicBlock(BasicBlock *block)
+{
+    this->block = block;
+}
+
+ExprList *CloneExpr::clone(ExprList *list)
+{
+    if (! list)
+        return 0;
+
+    ExprList *clonedList = block->function->New<IR::ExprList>();
+    clonedList->init(clone(list->expr), clone(list->next));
+    return clonedList;
+}
+
+void CloneExpr::visitConst(Const *e)
+{
+    cloned = block->CONST(e->type, e->value);
+}
+
+void CloneExpr::visitString(String *e)
+{
+    cloned = block->STRING(e->value);
+}
+
+void CloneExpr::visitRegExp(RegExp *e)
+{
+    cloned = block->REGEXP(e->value, e->flags);
+}
+
+void CloneExpr::visitName(Name *e)
+{
+    if (e->id)
+        cloned = block->NAME(*e->id, e->line, e->column);
+    else
+        cloned = block->NAME(e->builtin, e->line, e->column);
+}
+
+void CloneExpr::visitTemp(Temp *e)
+{
+    cloned = block->TEMP(e->index, e->scope);
+}
+
+void CloneExpr::visitClosure(Closure *e)
+{
+    cloned = block->CLOSURE(e->value);
+}
+
+void CloneExpr::visitUnop(Unop *e)
+{
+    cloned = block->UNOP(e->op, clone(e->expr));
+}
+
+void CloneExpr::visitBinop(Binop *e)
+{
+    cloned = block->BINOP(e->op, clone(e->left), clone(e->right));
+}
+
+void CloneExpr::visitCall(Call *e)
+{
+    cloned = block->CALL(clone(e->base), clone(e->args));
+}
+
+void CloneExpr::visitNew(New *e)
+{
+    cloned = block->NEW(clone(e->base), clone(e->args));
+}
+
+void CloneExpr::visitSubscript(Subscript *e)
+{
+    cloned = block->SUBSCRIPT(clone(e->base), clone(e->index));
+}
+
+void CloneExpr::visitMember(Member *e)
+{
+    cloned = block->MEMBER(clone(e->base), e->name);
 }
 
 } // end of namespace IR

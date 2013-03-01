@@ -1799,6 +1799,7 @@ void Codegen::linearize(IR::Function *function)
     function->basicBlocks = trace;
 
 #ifndef QV4_NO_LIVENESS
+    function->removeSharedExpressions();
     liveness(function);
 #endif
 

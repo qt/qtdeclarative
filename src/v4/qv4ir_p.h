@@ -655,6 +655,8 @@ struct Function {
     inline BasicBlock *insertBasicBlock(BasicBlock *block) { basicBlocks.append(block); return block; }
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
+
+    void removeSharedExpressions();
 };
 
 struct BasicBlock {
@@ -719,6 +721,50 @@ struct BasicBlock {
     Stmt *RET(Temp *expr);
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
+};
+
+class CloneExpr: protected IR::ExprVisitor
+{
+public:
+    explicit CloneExpr(IR::BasicBlock *block = 0);
+
+    void setBasicBlock(IR::BasicBlock *block);
+
+    template <typename _Expr>
+    _Expr *operator()(_Expr *expr)
+    {
+        return clone(expr);
+    }
+
+    template <typename _Expr>
+    _Expr *clone(_Expr *expr)
+    {
+        Expr *c = expr;
+        qSwap(cloned, c);
+        expr->accept(this);
+        qSwap(cloned, c);
+        return static_cast<_Expr *>(c);
+    }
+
+protected:
+    IR::ExprList *clone(IR::ExprList *list);
+
+    virtual void visitConst(Const *);
+    virtual void visitString(String *);
+    virtual void visitRegExp(RegExp *);
+    virtual void visitName(Name *);
+    virtual void visitTemp(Temp *);
+    virtual void visitClosure(Closure *);
+    virtual void visitUnop(Unop *);
+    virtual void visitBinop(Binop *);
+    virtual void visitCall(Call *);
+    virtual void visitNew(New *);
+    virtual void visitSubscript(Subscript *);
+    virtual void visitMember(Member *);
+
+private:
+    IR::BasicBlock *block;
+    IR::Expr *cloned;
 };
 
 } // end of namespace IR
