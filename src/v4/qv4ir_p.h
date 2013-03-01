@@ -153,6 +153,7 @@ AluOp binaryOperator(int op);
 const char *opname(IR::AluOp op);
 
 enum Type {
+    MissingType, // Used to indicate holes in array initialization (e.g. [,,])
     UndefinedType,
     NullType,
     BoolType,
@@ -288,7 +289,7 @@ struct Name: Expr {
         builtin_pop_scope,
         builtin_declare_vars,
         builtin_define_property,
-        builtin_define_array_property,
+        builtin_define_array,
         builtin_define_getter_setter
     };
 

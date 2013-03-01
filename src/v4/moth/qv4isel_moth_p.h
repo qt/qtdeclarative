@@ -54,7 +54,7 @@ protected:
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name);
     virtual void callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter);
     virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value);
-    virtual void callBuiltinDefineArrayProperty(IR::Temp *object, int index, IR::Temp *value);
+    virtual void callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args);
     virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);
     virtual void callProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result);
     virtual void callSubscript(IR::Temp *base, IR::Temp *index, IR::ExprList *args, IR::Temp *result);
@@ -90,9 +90,9 @@ private:
 
     Instr::Param getParam(IR::Expr *e)
     {
-        Q_ASSERT(e);
-
         typedef Instr::Param Param;
+        assert(e);
+
         if (IR::Const *c = e->asConst()) {
             return Param::createValue(convertToValue(c));
         } else if (IR::Temp *t = e->asTemp()) {

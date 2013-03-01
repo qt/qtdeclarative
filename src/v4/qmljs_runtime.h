@@ -124,7 +124,7 @@ ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, Exe
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx);
 void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name);
 void __qmljs_builtin_define_property(ExecutionContext *ctx, const Value &object, String *name, Value *val);
-void __qmljs_builtin_define_array_property(ExecutionContext *ctx, const Value &object, int index, Value *val);
+void __qmljs_builtin_define_array(ExecutionContext *ctx, Value *array, QQmlJS::VM::Value *values, uint length);
 void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &object, String *name, const Value *getter, const Value *setter);
 
 // constructors

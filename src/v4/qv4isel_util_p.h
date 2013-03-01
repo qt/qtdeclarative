@@ -45,9 +45,19 @@ inline bool isNegative(double d)
 
 }
 
+inline VM::Value nonExistantValue()
+{
+    VM::Value v;
+    v.tag = VM::Value::Undefined_Type;
+    v.uint_32 = UINT_MAX;
+    return v;
+}
+
 inline VM::Value convertToValue(IR::Const *c)
 {
     switch (c->type) {
+    case IR::MissingType:
+        return nonExistantValue();
     case IR::NullType:
         return VM::Value::nullValue();
     case IR::UndefinedType:

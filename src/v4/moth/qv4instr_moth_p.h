@@ -47,7 +47,7 @@
     F(CallBuiltinDeclareVar, callBuiltinDeclareVar) \
     F(CallBuiltinDefineGetterSetter, callBuiltinDefineGetterSetter) \
     F(CallBuiltinDefineProperty, callBuiltinDefineProperty) \
-    F(CallBuiltinDefineArrayProperty, callBuiltinDefineArrayProperty) \
+    F(CallBuiltinDefineArray, callBuiltinDefineArray) \
     F(CreateValue, createValue) \
     F(CreateProperty, createProperty) \
     F(CreateActivationProperty, createActivationProperty) \
@@ -377,11 +377,11 @@ union Instr
         Param object;
         Param value;
     };
-    struct instr_callBuiltinDefineArrayProperty {
+    struct instr_callBuiltinDefineArray {
         MOTH_INSTR_HEADER
-        Param object;
-        Param value;
-        int index;
+        quint32 argc;
+        quint32 args;
+        Param result;
     };
     struct instr_createValue {
         MOTH_INSTR_HEADER
@@ -495,7 +495,7 @@ union Instr
     instr_callBuiltinDeclareVar callBuiltinDeclareVar;
     instr_callBuiltinDefineGetterSetter callBuiltinDefineGetterSetter;
     instr_callBuiltinDefineProperty callBuiltinDefineProperty;
-    instr_callBuiltinDefineArrayProperty callBuiltinDefineArrayProperty;
+    instr_callBuiltinDefineArray callBuiltinDefineArray;
     instr_createValue createValue;
     instr_createProperty createProperty;
     instr_createActivationProperty createActivationProperty;

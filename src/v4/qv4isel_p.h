@@ -114,7 +114,7 @@ public: // to implement by subclasses:
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name) = 0;
     virtual void callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter) = 0;
     virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value) = 0;
-    virtual void callBuiltinDefineArrayProperty(IR::Temp *object, int index, IR::Temp *value) = 0;
+    virtual void callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args) = 0;
     virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result) = 0;
     virtual void callProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result) = 0;
     virtual void callSubscript(IR::Temp *base, IR::Temp *index, IR::ExprList *args, IR::Temp *result) = 0;

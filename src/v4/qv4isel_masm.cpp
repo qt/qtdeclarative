@@ -674,10 +674,12 @@ void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QSt
                          Assembler::Reference(object), identifier(name), Assembler::PointerToValue(value));
 }
 
-void InstructionSelection::callBuiltinDefineArrayProperty(IR::Temp *object, int index, IR::Temp *value)
+void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_array_property, Assembler::ContextRegister,
-                         Assembler::Reference(object), Assembler::TrustedImm32(index), Assembler::PointerToValue(value));
+    int length = prepareVariableArguments(args);
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_array, Assembler::ContextRegister,
+                         Assembler::PointerToValue(result),
+                         baseAddressForCallArguments(), Assembler::TrustedImm32(length));
 }
 
 void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
@@ -1046,9 +1048,9 @@ int InstructionSelection::prepareVariableArguments(IR::ExprList* args)
 
     int i = 0;
     for (IR::ExprList *it = args; it; it = it->next, ++i) {
-        IR::Temp *arg = it->expr->asTemp();
-        assert(arg != 0);
-        _as->copyValue(argumentAddressForCall(i), arg);
+//        IR::Temp *arg = it->expr->asTemp();
+//        assert(arg != 0);
+        _as->copyValue(argumentAddressForCall(i), it->expr);
     }
 
     return argc;

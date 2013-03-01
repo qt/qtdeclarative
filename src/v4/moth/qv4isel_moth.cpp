@@ -597,7 +597,7 @@ void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Temp *source, IR:
 void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint32 &args)
 {
     bool singleArgIsTemp = false;
-    if (e && e->next == 0) {
+    if (e && e->next == 0 && e->expr->asTemp()) {
         // ok, only 1 argument in the call...
         const int idx = e->expr->asTemp()->index;
         // We can only pass a reference into the stack, which holds temps that
@@ -912,12 +912,11 @@ void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QSt
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDefineArrayProperty(IR::Temp *object, int index, IR::Temp *value)
+void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args)
 {
-    Instruction::CallBuiltinDefineArrayProperty call;
-    call.object = getParam(object);
-    call.index = index;
-    call.value = getParam(value);
+    Instruction::CallBuiltinDefineArray call;
+    prepareCallArgs(args, call.argc, call.args);
+    call.result = getResultParam(result);
     addInstruction(call);
 }
 

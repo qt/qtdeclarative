@@ -308,6 +308,22 @@ protected:
         return true;
     }
 
+    virtual bool visit(ArrayLiteral *ast)
+    {
+        int index = 0;
+        for (ElementList *it = ast->elements; it; it = it->next) {
+            for (Elision *elision = it->elision; elision; elision = elision->next)
+                ++index;
+            ++index;
+        }
+        if (ast->elision) {
+            for (Elision *elision = ast->elision->next; elision; elision = elision->next)
+                ++index;
+        }
+        _env->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, index);
+        return true;
+    }
+
     virtual bool visit(VariableDeclaration *ast)
     {
         if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
@@ -1043,39 +1059,51 @@ bool Codegen::visit(Expression *ast)
 
 bool Codegen::visit(ArrayLiteral *ast)
 {
-    const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), _block->NEW(_block->NAME(QStringLiteral("Array"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
-    int index = 0;
-    unsigned value = 0;
+    IR::ExprList *args = 0;
+    IR::ExprList *current = 0;
     for (ElementList *it = ast->elements; it; it = it->next) {
-        for (Elision *elision = it->elision; elision; elision = elision->next)
-            ++index;
+        for (Elision *elision = it->elision; elision; elision = elision->next) {
+            IR::ExprList *arg = _function->New<IR::ExprList>();
+            if (!current) {
+                args = arg;
+            } else {
+                current->next = arg;
+            }
+            current = arg;
+            current->expr = _block->CONST(IR::MissingType, 0);
+        }
         Result expr = expression(it->expression);
 
-        IR::ExprList *args = _function->New<IR::ExprList>();
-        IR::ExprList *current = args;
-        current->expr = _block->TEMP(t);
-        current->next = _function->New<IR::ExprList>();
-        current = current->next;
-        current->expr = _block->CONST(IR::NumberType, index);
-        current->next = _function->New<IR::ExprList>();
-        current = current->next;
+        IR::ExprList *arg = _function->New<IR::ExprList>();
+        if (!current) {
+            args = arg;
+        } else {
+            current->next = arg;
+        }
+        current = arg;
 
-        if (!value)
-            value = _block->newTemp();
-        move(_block->TEMP(value), *expr);
-        // __qmljs_builtin_define_property(Value object, String *name, Value val, ExecutionContext *ctx)
-        current->expr = _block->TEMP(value);
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_define_array_property, 0, 0), args));
+        IR::Expr *exp = *expr;
+        if (exp->asTemp() || exp->asConst()) {
+            current->expr = exp;
+        } else {
+            unsigned value = _block->newTemp();
+            move(_block->TEMP(value), exp);
+            current->expr = _block->TEMP(value);
+        }
+    }
+    for (Elision *elision = ast->elision; elision; elision = elision->next) {
+        IR::ExprList *arg = _function->New<IR::ExprList>();
+        if (!current) {
+            args = arg;
+        } else {
+            current->next = arg;
+        }
+        current = arg;
+        current->expr = _block->CONST(IR::MissingType, 0);
+    }
 
-        ++index;
-    }
-    if (ast->elision) {
-        for (Elision *elision = ast->elision->next; elision; elision = elision->next)
-            ++index;
-        // ### the new string leaks
-        move(member(_block->TEMP(t), _function->newString(QStringLiteral("length"))), _block->CONST(IR::NumberType, index + 1));
-    }
+    const unsigned t = _block->newTemp();
+    move(_block->TEMP(t), _block->CALL(_block->NAME(IR::Name::builtin_define_array, 0, 0), args));
     _expr.code = _block->TEMP(t);
     return false;
 }

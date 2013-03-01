@@ -398,21 +398,9 @@ void InstructionSelection::callBuiltin(IR::Call *call, IR::Temp *result)
         callBuiltinDefineProperty(object, *name->id, value);
     } return;
 
-    case IR::Name::builtin_define_array_property: {
-        if (!call->args)
-            return;
-        IR::ExprList *args = call->args;
-        IR::Temp *object = args->expr->asTemp();
-        assert(object);
-        args = args->next;
-        assert(args);
-        IR::Const *index = args->expr->asConst();
-        args = args->next;
-        assert(args);
-        IR::Temp *value = args->expr->asTemp();
-
-        callBuiltinDefineArrayProperty(object, int(index->value), value);
-    } return;
+    case IR::Name::builtin_define_array:
+        callBuiltinDefineArray(result, call->args);
+        return;
 
     default:
         break;

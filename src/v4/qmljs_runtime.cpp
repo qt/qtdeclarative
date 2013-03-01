@@ -1246,18 +1246,35 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const Value &object,
     pd->configurable = PropertyDescriptor::Enabled;
 }
 
-void __qmljs_builtin_define_array_property(ExecutionContext *ctx, const Value &object, int index, Value *val)
+void __qmljs_builtin_define_array(ExecutionContext *ctx, Value *array, Value *values, uint length)
 {
-    Object *o = object.asObject();
-    assert(o);
+    ArrayObject *a = ctx->engine->newArrayObject(ctx);
 
-    PropertyDescriptor pd;
-    pd.value = val ? *val : Value::undefinedValue();
-    pd.type = PropertyDescriptor::Data;
-    pd.writable = PropertyDescriptor::Enabled;
-    pd.enumberable = PropertyDescriptor::Enabled;
-    pd.configurable = PropertyDescriptor::Enabled;
-    o->__defineOwnProperty__(ctx, index, &pd);
+    // ### FIXME: We need to allocate the array data to avoid crashes other places
+    // This should rather be done when required
+    a->arrayReserve(length);
+    if (length) {
+        PropertyDescriptor *pd = a->arrayData;
+        for (uint i = 0; i < length; ++i) {
+            if (values[i].isUndefined() && values[i].uint_32 == UINT_MAX) {
+                pd->value = Value::undefinedValue();
+                pd->type = PropertyDescriptor::Generic;
+                pd->writable = PropertyDescriptor::Undefined;
+                pd->enumberable = PropertyDescriptor::Undefined;
+                pd->configurable = PropertyDescriptor::Undefined;
+            } else {
+                pd->value = values[i];
+                pd->type = PropertyDescriptor::Data;
+                pd->writable = PropertyDescriptor::Enabled;
+                pd->enumberable = PropertyDescriptor::Enabled;
+                pd->configurable = PropertyDescriptor::Enabled;
+            }
+            ++pd;
+        }
+        a->arrayDataLen = length;
+        a->setArrayLengthUnchecked(length);
+    }
+    *array = Value::fromObject(a);
 }
 
 void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &object, String *name, const Value *getter, const Value *setter)

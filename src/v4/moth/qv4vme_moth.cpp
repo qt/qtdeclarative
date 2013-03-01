@@ -383,9 +383,11 @@ VM::Value VME::operator()(QQmlJS::VM::ExecutionContext *context, const uchar *co
         __qmljs_builtin_define_property(context, VALUE(instr.object), instr.name, VALUEPTR(instr.value));
     MOTH_END_INSTR(CallBuiltinDefineProperty)
 
-    MOTH_BEGIN_INSTR(CallBuiltinDefineArrayProperty)
-        __qmljs_builtin_define_array_property(context, VALUE(instr.object), instr.index, VALUEPTR(instr.value));
-    MOTH_END_INSTR(CallBuiltinDefineArrayProperty)
+    MOTH_BEGIN_INSTR(CallBuiltinDefineArray)
+        Q_ASSERT(instr.args + instr.argc < stackSize);
+        VM::Value *args = stack + instr.args;
+        __qmljs_builtin_define_array(context, VALUEPTR(instr.result), args, instr.argc);
+    MOTH_END_INSTR(CallBuiltinDefineArray)
 
     MOTH_BEGIN_INSTR(CreateValue)
         Q_ASSERT(instr.args + instr.argc < stackSize);
