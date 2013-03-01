@@ -51,6 +51,7 @@ SOURCES += \
     $$PWD/qqmlmemoryprofiler.cpp \
     $$PWD/qqmlplatform.cpp \
     $$PWD/qqmlbinding.cpp \
+    $$PWD/qqmlabstracturlinterceptor.cpp \
     $$PWD/qqmlapplicationengine.cpp
 
 HEADERS += \
@@ -123,6 +124,7 @@ HEADERS += \
     $$PWD/qqmlplatform_p.h \
     $$PWD/qqmlbinding_p.h \
     $$PWD/qqmlextensionplugin_p.h \
+    $$PWD/qqmlabstracturlinterceptor_p.h \
     $$PWD/qqmlapplicationengine_p.h \
     $$PWD/qqmlapplicationengine.h
 

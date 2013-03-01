@@ -48,6 +48,7 @@
 #include "qqmlengine_p.h"
 #include "qqmlengine.h"
 #include "qqmlinfo.h"
+#include "qqmlabstracturlinterceptor_p.h"
 #include <private/qv4bindings_p.h>
 #include <private/qv8bindings_p.h>
 
@@ -431,6 +432,7 @@ QUrl QQmlContextData::resolvedUrl(const QUrl &src)
 {
     QQmlContextData *ctxt = this;
 
+    QUrl resolved;
     if (src.isRelative() && !src.isEmpty()) {
         if (ctxt) {
             while(ctxt) {
@@ -441,14 +443,20 @@ QUrl QQmlContextData::resolvedUrl(const QUrl &src)
             }
 
             if (ctxt)
-                return ctxt->url.resolved(src);
+                resolved = ctxt->url.resolved(src);
             else if (engine)
-                return engine->baseUrl().resolved(src);
+                resolved = engine->baseUrl().resolved(src);
         }
-        return QUrl();
     } else {
-        return src;
+        resolved = src;
     }
+
+    if (resolved.isEmpty()) //relative but no ctxt
+        return resolved;
+
+    if (engine && engine->urlInterceptor())
+        resolved = engine->urlInterceptor()->intercept(resolved, QQmlAbstractUrlInterceptor::UrlString);
+    return resolved;
 }
 
 

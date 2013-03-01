@@ -51,6 +51,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlAbstractUrlInterceptor;
 
 class Q_QML_EXPORT QQmlImageProviderBase
 {
@@ -118,6 +119,9 @@ public:
     QQmlNetworkAccessManagerFactory *networkAccessManagerFactory() const;
 
     QNetworkAccessManager *networkAccessManager() const;
+
+    void setUrlInterceptor(QQmlAbstractUrlInterceptor* urlInterceptor);
+    QQmlAbstractUrlInterceptor* urlInterceptor() const;
 
     void addImageProvider(const QString &id, QQmlImageProviderBase *);
     QQmlImageProviderBase *imageProvider(const QString &id) const;

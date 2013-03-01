@@ -66,6 +66,7 @@
 #include <private/qv8debugservice_p.h>
 #include <private/qdebugmessageservice_p.h>
 #include "qqmlincubator.h"
+#include "qqmlabstracturlinterceptor_p.h"
 #include <private/qv8profilerservice_p.h>
 #include <private/qqmlboundsignal_p.h>
 
@@ -509,7 +510,7 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
   outputWarningsToStdErr(true), sharedContext(0), sharedScope(0),
   cleanup(0), erroredBindings(0), inProgressCreations(0),
   workerScriptEngine(0), activeVME(0),
-  networkAccessManager(0), networkAccessManagerFactory(0),
+  networkAccessManager(0), networkAccessManagerFactory(0), urlInterceptor(0),
   scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
   incubatorCount(0), incubationController(0), mutex(QMutex::Recursive)
 {
@@ -923,6 +924,35 @@ QQmlContext *QQmlEngine::rootContext() const
     Q_D(const QQmlEngine);
     return d->rootContext;
 }
+
+/*!
+  \internal
+  This API is private for 5.1
+
+  Sets the \a urlInterceptor to be used when resolving URLs in QML.
+  This also applies to URLs used for loading script files and QML types.
+  This should not be modifed while the engine is loading files, or URL
+  selection may be inconsistent.
+*/
+void QQmlEngine::setUrlInterceptor(QQmlAbstractUrlInterceptor *urlInterceptor)
+{
+    Q_D(QQmlEngine);
+    d->urlInterceptor = urlInterceptor;
+}
+
+/*!
+  \internal
+  This API is private for 5.1
+
+  Returns the current QQmlAbstractUrlInterceptor. It must not be modified outside
+  the GUI thread.
+*/
+QQmlAbstractUrlInterceptor *QQmlEngine::urlInterceptor() const
+{
+    Q_D(const QQmlEngine);
+    return d->urlInterceptor;
+}
+
 
 /*!
   Sets the \a factory to use for creating QNetworkAccessManager(s).
