@@ -2171,10 +2171,12 @@ bool Codegen::visit(ForEachStatement *ast)
 
     enterLoop(ast, foreachend, foreachin);
 
-    int iterator = _block->newTemp();
-    move(_block->TEMP(iterator), *expression(ast->expression));
+    int objectToIterateOn = _block->newTemp();
+    move(_block->TEMP(objectToIterateOn), *expression(ast->expression));
     IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(_block->TEMP(iterator));
+    args->init(_block->TEMP(objectToIterateOn));
+
+    int iterator = _block->newTemp();
     move(_block->TEMP(iterator), _block->CALL(_block->NAME(IR::Name::builtin_foreach_iterator_object, 0, 0), args));
 
     _block->JUMP(foreachin);
