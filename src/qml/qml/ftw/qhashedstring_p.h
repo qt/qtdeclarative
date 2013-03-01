@@ -262,8 +262,9 @@ public:
     inline uint16_t *utf16Data() const { return (uint16_t *)strData->data(); }
 
     inline bool equals(v8::Handle<v8::String> string) const {
-        return isQString()?string->Equals(utf16Data(), length):
-                           string->Equals(cStrData(), length);
+        v8::Local<v8::String> data = isQString() ? v8::String::New(utf16Data(), length)
+                                                 : v8::String::New(cStrData(), length);
+        return string->Equals(data);
     }
 
     inline bool symbolEquals(const QHashedV8String &string) const {
@@ -1183,8 +1184,11 @@ QString QHashedV8String::toString() const
     QString result;
     result.reserve(m_hash.length);
 
+    v8::String::Value value(m_string);
+    Q_ASSERT(*value != NULL);
+    uint16_t* string = *value;
     for (int i = 0; i < m_hash.length; ++i)
-        result.append(m_string->GetCharacter(i));
+        result.append(string[i]);
 
     return result;
 }

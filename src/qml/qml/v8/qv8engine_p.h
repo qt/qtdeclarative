@@ -629,8 +629,10 @@ v8::Handle<v8::String> QV8Engine::bindingFlagKey() const
 // unqualified name in QV8ContextWrapper.
 bool QV8Engine::startsWithUpper(v8::Handle<v8::String> string)
 {
-    uint16_t c = string->GetCharacter(0);
-    return (c >= 'A' && c <= 'Z') || 
+    v8::String::Value value(string);
+    Q_ASSERT(*value != NULL);
+    uint16_t c = **value;
+    return (c >= 'A' && c <= 'Z') ||
            (c > 127 && QChar::category(c) == QChar::Letter_Uppercase);
 }
 
