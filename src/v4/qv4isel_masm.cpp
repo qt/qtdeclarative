@@ -172,6 +172,28 @@ void Assembler::copyValue(Result result, Source source)
 #endif
 }
 
+template <typename Result>
+void Assembler::copyValue(Result result, IR::Expr* source)
+{
+#ifdef VALUE_FITS_IN_REGISTER
+    // Use ReturnValueRegister as "scratch" register because loadArgument
+    // and storeArgument are functions that may need a scratch register themselves.
+    loadArgument(source, ReturnValueRegister);
+    storeArgument(ReturnValueRegister, result);
+#else
+    if (IR::Temp *temp = source->asTemp()) {
+        loadDouble(temp, FPGpr0);
+        storeDouble(FPGpr0, result);
+    } else if (IR::Const *c = source->asConst()) {
+        VM::Value v = convertToValue(c);
+        storeValue(v, result);
+    } else {
+        assert(! "not implemented");
+    }
+#endif
+}
+
+
 void Assembler::storeValue(VM::Value value, IR::Temp* destination)
 {
     Address addr = loadTempAddress(ScratchRegister, destination);

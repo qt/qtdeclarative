@@ -432,6 +432,8 @@ public:
 
     template <typename Result, typename Source>
     void copyValue(Result result, Source source);
+    template <typename Result>
+    void copyValue(Result result, IR::Expr* source);
 
     void storeValue(VM::Value value, Address destination)
     {
