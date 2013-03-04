@@ -1137,9 +1137,9 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
 
     As of QtQuick 1.1, this method accepts an optional \a properties argument that specifies a
     map of initial property values for the created object. These values are applied before object
-    creation is finalized. (This is more efficient than setting property values after object creation,
+    creation is finalized. This is more efficient than setting property values after object creation,
     particularly where large sets of property values are defined, and also allows property bindings
-    to be set up before the object is created.)
+    to be set up (using \l{Qt::binding}{Qt.binding}) before the object is created.
 
     The \a properties argument is specified as a map of property-value items. For example, the code
     below creates an object with initial \c x and \c y values of 100 and 200, respectively:

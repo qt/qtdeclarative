@@ -59,10 +59,10 @@ public:
     void setTexture(QSGTexture *texture);
     QSGTexture *texture() const { return m_texture; }
 
-    void setMipmapFiltering(QSGTexture::Filtering filtering) { m_mipmap_filtering = filtering; }
+    void setMipmapFiltering(QSGTexture::Filtering filteringType) { m_mipmap_filtering = filteringType; }
     QSGTexture::Filtering mipmapFiltering() const { return (QSGTexture::Filtering) m_mipmap_filtering; }
 
-    void setFiltering(QSGTexture::Filtering filtering) { m_filtering = filtering; }
+    void setFiltering(QSGTexture::Filtering filteringType) { m_filtering = filteringType; }
     QSGTexture::Filtering filtering() const { return (QSGTexture::Filtering)  m_filtering; }
 
     void setHorizontalWrapMode(QSGTexture::WrapMode mode) { m_horizontal_wrap = mode; }

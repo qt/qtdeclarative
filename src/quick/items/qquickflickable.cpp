@@ -1018,9 +1018,9 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     if (q->yflick()) {
         qreal dy = event->localPos().y() - pressPos.y();
         bool overThreshold = QQuickWindowPrivate::dragOverThreshold(dy, Qt::YAxis, event);
+        if (vData.dragStartOffset == 0)
+            vData.dragStartOffset = dy;
         if (overThreshold || elapsedSincePress > 200) {
-            if (!vMoved)
-                vData.dragStartOffset = dy;
             qreal newY = dy + vData.pressPos - vData.dragStartOffset;
             // Recalculate bounds in case margins have changed, but use the content
             // size estimate taken at the start of the drag in case the drag causes
@@ -1031,23 +1031,20 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                 newY = minY + (newY - minY) / 2;
             if (newY < maxY && maxY - minY <= 0)
                 newY = maxY + (newY - maxY) / 2;
-            if (boundsBehavior == QQuickFlickable::StopAtBounds && (newY > minY || newY < maxY)) {
-                rejectY = true;
-                if (newY < maxY) {
-                    newY = maxY;
-                    rejectY = false;
-                }
-                if (newY > minY) {
-                    newY = minY;
-                    rejectY = false;
-                }
+            if (boundsBehavior == QQuickFlickable::StopAtBounds && newY <= maxY) {
+                newY = maxY;
+                rejectY = vData.pressPos == maxY && dy < 0;
+            }
+            if (boundsBehavior == QQuickFlickable::StopAtBounds && newY >= minY) {
+                newY = minY;
+                rejectY = vData.pressPos == minY && dy > 0;
             }
             if (!rejectY && stealMouse && dy != 0.0) {
                 clearTimeline();
                 vData.move.setValue(newY);
                 vMoved = true;
             }
-            if (overThreshold)
+            if (!rejectY && overThreshold)
                 stealY = true;
         }
     }
@@ -1055,9 +1052,9 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     if (q->xflick()) {
         qreal dx = event->localPos().x() - pressPos.x();
         bool overThreshold = QQuickWindowPrivate::dragOverThreshold(dx, Qt::XAxis, event);
+        if (hData.dragStartOffset == 0)
+            hData.dragStartOffset = dx;
         if (overThreshold || elapsedSincePress > 200) {
-            if (!hMoved)
-                hData.dragStartOffset = dx;
             qreal newX = dx + hData.pressPos - hData.dragStartOffset;
             const qreal minX = hData.dragMinBound + hData.startMargin;
             const qreal maxX = hData.dragMaxBound - hData.endMargin;
@@ -1065,24 +1062,22 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                 newX = minX + (newX - minX) / 2;
             if (newX < maxX && maxX - minX <= 0)
                 newX = maxX + (newX - maxX) / 2;
-            if (boundsBehavior == QQuickFlickable::StopAtBounds && (newX > minX || newX < maxX)) {
-                rejectX = true;
-                if (newX < maxX) {
-                    newX = maxX;
-                    rejectX = false;
-                }
-                if (newX > minX) {
-                    newX = minX;
-                    rejectX = false;
-                }
+            if (boundsBehavior == QQuickFlickable::StopAtBounds && newX <= maxX) {
+                newX = maxX;
+                rejectX = hData.pressPos == maxX && dx < 0;
             }
+            if (boundsBehavior == QQuickFlickable::StopAtBounds && newX >= minX) {
+                newX = minX;
+                rejectX = hData.pressPos == minX && dx > 0;
+            }
+
             if (!rejectX && stealMouse && dx != 0.0) {
                 clearTimeline();
                 hData.move.setValue(newX);
                 hMoved = true;
             }
 
-            if (overThreshold)
+            if (!rejectX && overThreshold)
                 stealX = true;
         }
     }
