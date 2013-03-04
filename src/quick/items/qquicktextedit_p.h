@@ -329,6 +329,7 @@ protected:
     void keyPressEvent(QKeyEvent *);
     void keyReleaseEvent(QKeyEvent *);
     void focusInEvent(QFocusEvent *event);
+    void focusOutEvent(QFocusEvent *event);
 
     // mouse filter?
     void mousePressEvent(QMouseEvent *event);
@@ -338,8 +339,6 @@ protected:
 #ifndef QT_NO_IM
     void inputMethodEvent(QInputMethodEvent *e);
 #endif
-    virtual void itemChange(ItemChange, const ItemChangeData &);
-
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData);
 
     friend class QQuickTextUtil;

@@ -1601,30 +1601,7 @@ void QQuickTextEdit::inputMethodEvent(QInputMethodEvent *event)
     if (wasComposing != isInputMethodComposing())
         emit inputMethodComposingChanged();
 }
-#endif // QT_NO_IM
 
-void QQuickTextEdit::itemChange(ItemChange change, const ItemChangeData &value)
-{
-    Q_D(QQuickTextEdit);
-    if (change == ItemActiveFocusHasChanged) {
-        setCursorVisible(value.boolValue);
-        QFocusEvent focusEvent(value.boolValue ? QEvent::FocusIn : QEvent::FocusOut);
-        d->control->processEvent(&focusEvent, QPointF(-d->xoff, -d->yoff));
-        if (value.boolValue) {
-            q_updateAlignment();
-#ifndef QT_NO_IM
-            connect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
-                    this, SLOT(q_updateAlignment()));
-        } else {
-            disconnect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
-                       this, SLOT(q_updateAlignment()));
-#endif
-        }
-    }
-    QQuickItem::itemChange(change, value);
-}
-
-#ifndef QT_NO_IM
 /*!
 \overload
 Returns the value of the given \a property.
@@ -2070,12 +2047,36 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
 
 void QQuickTextEdit::focusInEvent(QFocusEvent *event)
 {
-    Q_D(const QQuickTextEdit);
-#ifndef QT_NO_IM
-    if (d->focusOnPress && !isReadOnly())
-        qGuiApp->inputMethod()->show();
-#endif
+    Q_D(QQuickTextEdit);
+    d->handleFocusEvent(event);
     QQuickImplicitSizeItem::focusInEvent(event);
+}
+
+void QQuickTextEdit::focusOutEvent(QFocusEvent *event)
+{
+    Q_D(QQuickTextEdit);
+    d->handleFocusEvent(event);
+    QQuickImplicitSizeItem::focusOutEvent(event);
+}
+
+void QQuickTextEditPrivate::handleFocusEvent(QFocusEvent *event)
+{
+    Q_Q(QQuickTextEdit);
+    bool focus = event->type() == QEvent::FocusIn;
+    q->setCursorVisible(focus);
+    control->processEvent(event, QPointF(-xoff, -yoff));
+    if (focus) {
+        q->q_updateAlignment();
+#ifndef QT_NO_IM
+        if (focusOnPress && !q->isReadOnly())
+            qGuiApp->inputMethod()->show();
+        q->connect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+                q, SLOT(q_updateAlignment()));
+    } else {
+        q->disconnect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+                   q, SLOT(q_updateAlignment()));
+#endif
+    }
 }
 
 void QQuickTextEdit::q_canPasteChanged()

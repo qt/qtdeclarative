@@ -105,6 +105,7 @@ public:
     Qt::LayoutDirection textDirection(const QString &text) const;
 
     void setNativeCursorEnabled(bool enabled) { control->setCursorWidth(enabled ? 1 : 0); }
+    void handleFocusEvent(QFocusEvent *event);
 
 #ifndef QT_NO_IM
     Qt::InputMethodHints effectiveInputMethodHints() const;
