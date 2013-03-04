@@ -57,6 +57,19 @@ InternalClass::InternalClass(const QQmlJS::VM::InternalClass &other)
 {
 }
 
+InternalClass *InternalClass::addMember(String *string)
+{
+    engine->identifierCache->toIdentifier(string);
+    uint id = string->identifier;
+
+    InternalClass *newClass = new InternalClass(*this);
+    newClass->propertyTable.insert(id, size);
+    newClass->nameMap.append(string);
+    ++newClass->size;
+    transitions.insert(id, newClass);
+    return newClass;
+}
+
 uint InternalClass::getOrAddMember(Object *object, String *string)
 {
     engine->identifierCache->toIdentifier(string);

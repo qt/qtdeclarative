@@ -77,11 +77,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     identifierCache = new Identifiers(this);
 
-    emptyClass = new InternalClass(this);
-    rootContext = newContext();
-    rootContext->init(this);
-    current = rootContext;
-
     id_undefined = newIdentifier(QStringLiteral("undefined"));
     id_null = newIdentifier(QStringLiteral("null"));
     id_true = newIdentifier(QStringLiteral("true"));
@@ -105,6 +100,12 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     id_get = newIdentifier(QStringLiteral("get"));
     id_set = newIdentifier(QStringLiteral("set"));
     id_eval = newIdentifier(QStringLiteral("eval"));
+
+    emptyClass = new InternalClass(this);
+    arrayClass = emptyClass->addMember(id_length);
+    rootContext = newContext();
+    rootContext->init(this);
+    current = rootContext;
 
     objectPrototype = new (memoryManager) ObjectPrototype(this);
     stringPrototype = new (memoryManager) StringPrototype(rootContext);

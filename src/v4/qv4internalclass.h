@@ -66,6 +66,7 @@ struct InternalClass {
     void removeMember(Object *object, uint id);
     uint find(String *s);
 
+    InternalClass *addMember(String *string);
 private:
     InternalClass(const InternalClass &other);
 };

@@ -148,6 +148,9 @@ struct Q_V4_EXPORT ExecutionEngine
     TypeErrorPrototype *typeErrorPrototype;
     URIErrorPrototype *uRIErrorPrototype;
 
+    InternalClass *emptyClass;
+    InternalClass *arrayClass;
+
     EvalFunction *evalFunction;
 
     QVector<PropertyDescriptor> argumentsAccessors;
@@ -187,8 +190,6 @@ struct Q_V4_EXPORT ExecutionEngine
     Value exception;
 
     QVector<Function *> functions;
-
-    InternalClass *emptyClass;
 
     ExecutionEngine(EvalISelFactory *iselFactory);
     ~ExecutionEngine();

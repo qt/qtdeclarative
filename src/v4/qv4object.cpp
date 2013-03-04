@@ -997,9 +997,10 @@ void Object::markArrayObjects() const
 void ArrayObject::init(ExecutionContext *context)
 {
     type = Type_ArrayObject;
+    internalClass = context->engine->arrayClass;
 
-    PropertyDescriptor *pd = insertMember(context->engine->id_length);
-    assert(pd == memberData + LengthPropertyIndex);
+    memberData = new PropertyDescriptor[4];
+    PropertyDescriptor *pd = memberData + LengthPropertyIndex;
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Enabled;
     pd->enumberable = PropertyDescriptor::Disabled;
