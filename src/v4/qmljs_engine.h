@@ -102,7 +102,6 @@ class RegExp;
 struct Q_V4_EXPORT ExecutionEngine
 {
     MemoryManager *memoryManager;
-    UnwindHelper *unwindHelper;
     EvalISelFactory *iselFactory;
     ExecutionContext *current;
     ExecutionContext *rootContext;

@@ -115,6 +115,7 @@ struct Function {
     VM::Value (*code)(VM::ExecutionContext *, const uchar *);
     const uchar *codeData;
     JSC::MacroAssemblerCodeRef codeRef;
+    QByteArray unwindInfo; // CIE+FDE on x86/x86-64
 
     QVector<String *> formals;
     QVector<String *> locals;

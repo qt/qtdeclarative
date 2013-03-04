@@ -422,6 +422,8 @@ void Assembler::link(VM::Function *vmFunc)
 
     JSC::JSGlobalData dummy;
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
+    uint32_t codeSize = linkBuffer.offsetOf(label());
+
     QHash<void*, const char*> functions;
     foreach (CallToLink ctl, _callsToLink) {
         linkBuffer.link(ctl.call, ctl.externalFunction);
@@ -456,6 +458,7 @@ void Assembler::link(VM::Function *vmFunc)
     }
 
     vmFunc->code = (Value (*)(VM::ExecutionContext *, const uchar *)) vmFunc->codeRef.code().executableAddress();
+    vmFunc->unwindInfo = UnwindHelper::createUnwindInfo(vmFunc, codeSize);
 }
 
 InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module)
@@ -517,7 +520,6 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     _as->poke(Assembler::ScratchRegister);
 #endif
     _as->ret();
-    // TODO: add a label and a nop, so we can determine the exact function length
 
     _as->link(_vmFunction);
 
@@ -526,8 +528,7 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
         memcpy(_vmFunction->lookups, _lookups.constData(), _lookups.size()*sizeof(Lookup));
     }
 
-    if (engine()->unwindHelper)
-        engine()->unwindHelper->registerFunction(_vmFunction);
+    UnwindHelper::registerFunction(_vmFunction);
 
     qSwap(_vmFunction, vmFunction);
     qSwap(_function, function);

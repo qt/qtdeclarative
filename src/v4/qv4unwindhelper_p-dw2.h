@@ -46,55 +46,6 @@ static const int address_range_offset = 32;
 #endif
 } // anonymous namespace
 
-namespace {
-struct EHInfo {
-    unsigned char *cie_and_fde;
-    unsigned char *fde;
-
-    EHInfo(unsigned char *cie_and_fde, unsigned char *fde)
-        : cie_and_fde(cie_and_fde), fde(fde)
-    {
-        Q_ASSERT(cie_and_fde);
-        Q_ASSERT(fde);
-
-        __register_frame(fde);
-    }
-
-    ~EHInfo()
-    {
-        Q_ASSERT(cie_and_fde);
-        Q_ASSERT(fde);
-
-        __deregister_frame(fde);
-
-        delete[] cie_and_fde;
-    }
-};
-} // anonymous namespace
-
-struct Function;
-
-struct UnwindHelper::Private
-{
-    QHash<Function *, EHInfo *> ehInfoForFunction;
-};
-
-UnwindHelper *UnwindHelper::create()
-{
-    return new UnwindHelper;
-}
-
-UnwindHelper::UnwindHelper()
-    : p(new Private)
-{}
-
-UnwindHelper::~UnwindHelper()
-{
-    foreach (Function *f, p->ehInfoForFunction.keys())
-        deregisterFunction(f);
-    delete p;
-}
-
 void UnwindHelper::registerFunctions(QVector<Function *> functions)
 {
     foreach (Function *f, functions) registerFunction(f);
@@ -102,12 +53,9 @@ void UnwindHelper::registerFunctions(QVector<Function *> functions)
 
 void UnwindHelper::deregisterFunction(Function *function)
 {
-    QHash<Function *, EHInfo *>::iterator i = p->ehInfoForFunction.find(function);
-    if (i == p->ehInfoForFunction.end())
+    if (function->unwindInfo.isEmpty())
         return;
-
-    delete i.value();
-    p->ehInfoForFunction.erase(i);
+    __deregister_frame(function->unwindInfo.data() + fde_offset);
 }
 
 void UnwindHelper::deregisterFunctions(QVector<Function *> functions)
@@ -133,17 +81,25 @@ void writeIntPtrValue(unsigned char *addr, intptr_t val)
 
 void UnwindHelper::registerFunction(Function *function)
 {
-    unsigned char *cie_and_fde = new unsigned char[sizeof(cie_fde_data)];
+    if (function->unwindInfo.isEmpty())
+        return;
+    __register_frame(function->unwindInfo.data() + fde_offset);
+}
+
+QByteArray UnwindHelper::createUnwindInfo(Function *f, size_t functionSize)
+{
+    QByteArray info;
+    info.resize(sizeof(cie_fde_data));
+
+    unsigned char *cie_and_fde = reinterpret_cast<unsigned char *>(info.data());
     memcpy(cie_and_fde, cie_fde_data, sizeof(cie_fde_data));
 
-    intptr_t ptr = static_cast<char *>(function->codeRef.code().executableAddress()) - static_cast<char *>(0);
+    intptr_t ptr = static_cast<char *>(f->codeRef.code().executableAddress()) - static_cast<char *>(0);
     writeIntPtrValue(cie_and_fde + initial_location_offset, ptr);
 
-    size_t len = function->codeRef.size();
-    writeIntPtrValue(cie_and_fde + address_range_offset, len);
+    writeIntPtrValue(cie_and_fde + address_range_offset, functionSize);
 
-    p->ehInfoForFunction.insert(function, new EHInfo(cie_and_fde,
-                                                     cie_and_fde + fde_offset));
+    return info;
 }
 
 } // VM namespace

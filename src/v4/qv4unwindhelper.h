@@ -10,24 +10,13 @@ struct Function;
 
 class UnwindHelper
 {
-    Q_DISABLE_COPY(UnwindHelper)
-
-private:
-    UnwindHelper();
-
 public:
-    ~UnwindHelper();
+    static QByteArray createUnwindInfo(Function*f, size_t functionSize);
 
-    static UnwindHelper *create();
-
-    void registerFunction(Function *function);
-    void registerFunctions(QVector<Function *> functions);
-    void deregisterFunction(Function *function);
-    void deregisterFunctions(QVector<Function *> functions);
-
-private:
-    struct Private;
-    Private *p;
+    static void registerFunction(Function *function);
+    static void registerFunctions(QVector<Function *> functions);
+    static void deregisterFunction(Function *function);
+    static void deregisterFunctions(QVector<Function *> functions);
 };
 
 } // VM namespace

@@ -71,7 +71,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , exception(Value::nullValue())
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
-    unwindHelper = UnwindHelper::create();
 
     memoryManager->setExecutionEngine(this);
 
@@ -236,9 +235,7 @@ ExecutionEngine::~ExecutionEngine()
     delete globalObject.asObject();
     rootContext->destroy();
     delete rootContext;
-    if (unwindHelper)
-        unwindHelper->deregisterFunctions(functions);
-    delete unwindHelper;
+    UnwindHelper::deregisterFunctions(functions);
     qDeleteAll(functions);
     delete memoryManager;
 }
