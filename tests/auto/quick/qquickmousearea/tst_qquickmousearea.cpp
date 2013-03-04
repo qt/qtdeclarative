@@ -583,15 +583,13 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
     QVERIFY(!window->rootObject()->property("canceled").toBool());
     QVERIFY(!window->rootObject()->property("released").toBool());
 
-    QTest::qWait(200);
+    QWindow *secondWindow = qvariant_cast<QWindow*>(window->rootObject()->property("secondWindow"));
+    secondWindow->setProperty("visible", true);
+    QTest::qWaitForWindowActive(secondWindow);
 
-    QEvent windowDeactivateEvent(QEvent::WindowDeactivate);
-    QGuiApplication::sendEvent(window, &windowDeactivateEvent);
     QVERIFY(!window->rootObject()->property("pressed").toBool());
     QVERIFY(window->rootObject()->property("canceled").toBool());
     QVERIFY(!window->rootObject()->property("released").toBool());
-
-    QTest::qWait(200);
 
     //press again
     QGuiApplication::sendEvent(window, &pressEvent);
