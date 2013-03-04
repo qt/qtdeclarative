@@ -488,6 +488,7 @@ public:
     template <int argumentNumber>
     int loadArgumentOnStackOrRegister(const VoidType &value)
     {
+        Q_UNUSED(value);
         return 0;
     }
 
