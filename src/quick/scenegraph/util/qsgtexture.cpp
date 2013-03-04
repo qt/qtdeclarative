@@ -48,7 +48,7 @@
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlglobal_p.h>
 
-#if defined(Q_OS_LINUX) && !defined(Q_OS_LINUX_ANDROID)
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
 #define CAN_BACKTRACE_EXECINFO
 #endif
 

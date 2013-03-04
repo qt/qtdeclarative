@@ -63,7 +63,7 @@
 #include <QtCore/qnumeric.h>
 #include <private/qquickwindow_p.h>
 
-#if defined(Q_OS_QNX) || defined(Q_OS_LINUX_ANDROID)
+#if defined(Q_OS_QNX) || defined(Q_OS_ANDROID)
 #include <ctype.h>
 #endif
 

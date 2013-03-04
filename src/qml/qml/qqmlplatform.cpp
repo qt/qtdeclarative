@@ -59,7 +59,7 @@ QQmlPlatform::~QQmlPlatform()
 
 QString QQmlPlatform::os()
 {
-#if defined(Q_OS_LINUX_ANDROID)
+#if defined(Q_OS_ANDROID)
     return QLatin1String("android");
 #elif defined(Q_OS_BLACKBERRY)
     return QLatin1String("blackberry");
