@@ -836,9 +836,9 @@ void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDeleteExceptionHandler()
+void InstructionSelection::callBuiltinFinishTry()
 {
-    Instruction::CallBuiltinDeleteExceptionHandler call;
+    Instruction::CallBuiltinFinishTry call;
     addInstruction(call);
 }
 

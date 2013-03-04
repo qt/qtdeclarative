@@ -217,12 +217,12 @@ protected:
     struct ScopeAndFinally {
         ScopeAndFinally *parent;
         AST::Finally *finally;
-        IR::ExprList *deleteExceptionArgs;
+        IR::ExprList *finishTryArgs;
         bool popScope;
 
-        ScopeAndFinally(ScopeAndFinally *parent) : parent(parent), finally(0), deleteExceptionArgs(0), popScope(true) {}
-        ScopeAndFinally(ScopeAndFinally *parent, AST::Finally *finally, IR::ExprList *deleteExceptionArgs)
-        : parent(parent), finally(finally), deleteExceptionArgs(deleteExceptionArgs), popScope(false)
+        ScopeAndFinally(ScopeAndFinally *parent) : parent(parent), finally(0), finishTryArgs(0), popScope(true) {}
+        ScopeAndFinally(ScopeAndFinally *parent, AST::Finally *finally, IR::ExprList *finishTryArgs)
+        : parent(parent), finally(finally), finishTryArgs(finishTryArgs), popScope(false)
         {}
     };
 

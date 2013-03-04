@@ -692,7 +692,7 @@ void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
     _as->store32(Assembler::TrustedImm32(Value::Boolean_Type), addr);
 }
 
-void InstructionSelection::callBuiltinDeleteExceptionHandler()
+void InstructionSelection::callBuiltinFinishTry()
 {
     // This assumes that we're in code that was called by tryWrapper, so we return to try wrapper
     // with the address that we'd like to continue at, which is right after the ret below.

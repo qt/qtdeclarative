@@ -287,9 +287,9 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
         }
     MOTH_END_INSTR(CallBuiltinCreateExceptionHandler)
 
-    MOTH_BEGIN_INSTR(CallBuiltinDeleteExceptionHandler)
+    MOTH_BEGIN_INSTR(CallBuiltinFinishTry)
         return VM::Value();
-    MOTH_END_INSTR(CallBuiltinDeleteExceptionHandler)
+    MOTH_END_INSTR(CallBuiltinFinishTry)
 
     MOTH_BEGIN_INSTR(CallBuiltinGetException)
         __qmljs_get_exception(context, VALUEPTR(instr.result));

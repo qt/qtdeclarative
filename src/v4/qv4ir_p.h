@@ -290,7 +290,7 @@ struct Name: Expr {
         builtin_postdecrement,
         builtin_throw,
         builtin_create_exception_handler,
-        builtin_delete_exception_handler,
+        builtin_finish_try,
         builtin_get_exception,
         builtin_foreach_iterator_object,
         builtin_foreach_next_property_name,

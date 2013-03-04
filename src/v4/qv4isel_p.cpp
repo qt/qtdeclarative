@@ -315,8 +315,8 @@ void InstructionSelection::callBuiltin(IR::Call *call, IR::Temp *result)
         return;
     }
 
-    case IR::Name::builtin_delete_exception_handler:
-        callBuiltinDeleteExceptionHandler();
+    case IR::Name::builtin_finish_try:
+        callBuiltinFinishTry();
         return;
 
     case IR::Name::builtin_get_exception:

@@ -2471,14 +2471,14 @@ bool Codegen::visit(TryStatement *ast)
     // Pass the hidden "inCatch" and "hasException" TEMPs to the
     // builtin_delete_exception_handler, in order to have those TEMPs alive for
     // the duration of the exception handling block.
-    IR::ExprList *deleteExceptionArgs = _function->New<IR::ExprList>();
-    deleteExceptionArgs->init(_block->TEMP(hasException));
+    IR::ExprList *finishTryArgs = _function->New<IR::ExprList>();
+    finishTryArgs->init(_block->TEMP(hasException));
     if (inCatch) {
-        deleteExceptionArgs->next = _function->New<IR::ExprList>();
-        deleteExceptionArgs->next->init(_block->TEMP(inCatch));
+        finishTryArgs->next = _function->New<IR::ExprList>();
+        finishTryArgs->next->init(_block->TEMP(inCatch));
     }
 
-    ScopeAndFinally tcf(_scopeAndFinally, ast->finallyExpression, deleteExceptionArgs);
+    ScopeAndFinally tcf(_scopeAndFinally, ast->finallyExpression, finishTryArgs);
     _scopeAndFinally = &tcf;
 
     _block->CJUMP(_block->TEMP(hasException), catchBody ? catchBody : finallyBody, tryBody);
@@ -2528,7 +2528,7 @@ bool Codegen::visit(TryStatement *ast)
 
     int exception_to_rethrow  = _block->newTemp();
     move(_block->TEMP(exception_to_rethrow), _block->CALL(_block->NAME(IR::Name::builtin_get_exception, 0, 0), 0));
-    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), deleteExceptionArgs));
+    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_finish_try, 0, 0), finishTryArgs));
 
     if (ast->finallyExpression && ast->finallyExpression->statement)
         statement(ast->finallyExpression->statement);
@@ -2555,7 +2555,7 @@ void Codegen::unwindException(Codegen::ScopeAndFinally *outest)
             _scopeAndFinally = _scopeAndFinally->parent;
             --_function->insideWithOrCatch;
         } else {
-            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), _scopeAndFinally->deleteExceptionArgs));
+            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_finish_try, 0, 0), _scopeAndFinally->finishTryArgs));
             ScopeAndFinally *tc = _scopeAndFinally;
             _scopeAndFinally = tc->parent;
             if (tc->finally && tc->finally->statement)

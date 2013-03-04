@@ -354,8 +354,8 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_throw";
     case Name::builtin_create_exception_handler:
         return "builtin_create_exception_handler";
-    case Name::builtin_delete_exception_handler:
-        return "builtin_delete_exception_handler";
+    case Name::builtin_finish_try:
+        return "builtin_finish_try";
     case Name::builtin_get_exception:
         return "builtin_get_exception";
     case IR::Name::builtin_foreach_iterator_object:

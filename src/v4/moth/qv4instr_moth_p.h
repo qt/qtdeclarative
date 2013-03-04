@@ -22,7 +22,7 @@
     F(CallActivationProperty, callActivationProperty) \
     F(CallBuiltinThrow, callBuiltinThrow) \
     F(CallBuiltinCreateExceptionHandler, callBuiltinCreateExceptionHandler) \
-    F(CallBuiltinDeleteExceptionHandler, callBuiltinDeleteExceptionHandler) \
+    F(CallBuiltinFinishTry, callBuiltinFinishTry) \
     F(CallBuiltinGetException, callBuiltinGetException) \
     F(CallBuiltinPushScope, callBuiltinPushScope) \
     F(CallBuiltinPushCatchScope, callBuiltinPushCatchScope) \
@@ -248,7 +248,7 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
-    struct instr_callBuiltinDeleteExceptionHandler {
+    struct instr_callBuiltinFinishTry {
         MOTH_INSTR_HEADER
     };
     struct instr_callBuiltinGetException {
@@ -470,7 +470,7 @@ union Instr
     instr_callActivationProperty callActivationProperty;
     instr_callBuiltinThrow callBuiltinThrow;
     instr_callBuiltinCreateExceptionHandler callBuiltinCreateExceptionHandler;
-    instr_callBuiltinDeleteExceptionHandler callBuiltinDeleteExceptionHandler;
+    instr_callBuiltinFinishTry callBuiltinFinishTry;
     instr_callBuiltinGetException callBuiltinGetException;
     instr_callBuiltinPushScope callBuiltinPushScope;
     instr_callBuiltinPushCatchScope callBuiltinPushCatchScope;

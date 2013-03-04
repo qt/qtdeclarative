@@ -434,7 +434,7 @@ void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinDeleteExceptionHandler()
+void InstructionSelection::callBuiltinFinishTry()
 {
     // TODO
     assert(!"TODO!");
@@ -1146,9 +1146,8 @@ void InstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
             _llvmValue = CreateLoad(result);
             return;
 
-        case IR::Name::builtin_delete_exception_handler:
-            CreateCall(getRuntimeFunction("__qmljs_llvm_delete_exception_handler"),
-                       _llvmFunction->arg_begin());
+        case IR::Name::builtin_finish_try:
+            // ### FIXME.
             return;
 
         case IR::Name::builtin_get_exception:

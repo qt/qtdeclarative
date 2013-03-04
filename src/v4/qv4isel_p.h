@@ -104,7 +104,7 @@ public: // to implement by subclasses:
     virtual void callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result) = 0;
     virtual void callBuiltinThrow(IR::Temp *arg) = 0;
     virtual void callBuiltinCreateExceptionHandler(IR::Temp *result) = 0;
-    virtual void callBuiltinDeleteExceptionHandler() = 0;
+    virtual void callBuiltinFinishTry() = 0;
     virtual void callBuiltinGetException(IR::Temp *result) = 0;
     virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result) = 0;
     virtual void callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result) = 0;
