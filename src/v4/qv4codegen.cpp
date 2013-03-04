@@ -1786,15 +1786,16 @@ void Codegen::linearize(IR::Function *function)
     trace.append(exitBlock);
 
     QVarLengthArray<IR::BasicBlock*> blocksToDelete;
-    foreach (IR::BasicBlock *b, function->basicBlocks)
+    foreach (IR::BasicBlock *b, function->basicBlocks) {
         if (!V.contains(b)) {
-                foreach (IR::BasicBlock *out, b->out) {
-                    int idx = out->in.indexOf(b);
-                    if (idx >= 0)
-                        out->in.remove(idx);
-                }
-                blocksToDelete.append(b);
+            foreach (IR::BasicBlock *out, b->out) {
+                int idx = out->in.indexOf(b);
+                if (idx >= 0)
+                    out->in.remove(idx);
             }
+            blocksToDelete.append(b);
+        }
+    }
     qDeleteAll(blocksToDelete);
     function->basicBlocks = trace;
 
@@ -1972,6 +1973,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     IR::ExprList *throwArgs = function->New<IR::ExprList>();
     throwArgs->expr = throwBlock->TEMP(returnAddress);
     throwBlock->EXP(throwBlock->CALL(throwBlock->NAME(IR::Name::builtin_throw, /*line*/0, /*column*/0), throwArgs));
+    throwBlock->JUMP(exitBlock);
     Loop *loop = 0;
 
     qSwap(_function, function);
@@ -2450,6 +2452,13 @@ bool Codegen::visit(TryStatement *ast)
     // We always need a finally body to clean up the exception handler
     IR::BasicBlock *finallyBody = _function->newBasicBlock();
 
+    IR::BasicBlock *throwBlock = _function->newBasicBlock();
+    IR::ExprList *throwArgs = _function->New<IR::ExprList>();
+    throwArgs->expr = throwBlock->TEMP(_returnAddress);
+    throwBlock->EXP(throwBlock->CALL(throwBlock->NAME(IR::Name::builtin_throw, /*line*/0, /*column*/0), throwArgs));
+    throwBlock->JUMP(catchBody ? catchBody : finallyBody);
+    qSwap(_throwBlock, throwBlock);
+
     int inCatch = 0;
     if (catchBody) {
         inCatch = _block->newTemp();
@@ -2512,12 +2521,14 @@ bool Codegen::visit(TryStatement *ast)
 
     _scopeAndFinally = tcf.parent;
 
+    qSwap(_throwBlock, throwBlock);
+
     IR::BasicBlock *after = _function->newBasicBlock();
     _block = finallyBody;
 
-    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), deleteExceptionArgs));
     int exception_to_rethrow  = _block->newTemp();
     move(_block->TEMP(exception_to_rethrow), _block->CALL(_block->NAME(IR::Name::builtin_get_exception, 0, 0), 0));
+    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_delete_exception_handler, 0, 0), deleteExceptionArgs));
 
     if (ast->finallyExpression && ast->finallyExpression->statement)
         statement(ast->finallyExpression->statement);
