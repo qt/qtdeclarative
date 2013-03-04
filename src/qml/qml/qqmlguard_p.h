@@ -201,7 +201,7 @@ template<class T>
 T *QQmlGuard<T>::object() const 
 { 
     return static_cast<T *>(o); 
-};
+}
 
 template<class T>
 void QQmlGuard<T>::setObject(T *g) 
