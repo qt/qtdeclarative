@@ -393,7 +393,14 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
     bool cstrict = ctx->strictMode;
     ctx->strictMode = strict;
 
-    Value result = f->code(ctx, f->codeData);
+    Value result = Value::undefinedValue();
+    try {
+        result = f->code(ctx, f->codeData);
+    } catch (Exception &ex) {
+        if (strict)
+            ex.partiallyUnwindContext(ctx->parent);
+        throw;
+    }
 
     ctx->strictMode = cstrict;
 

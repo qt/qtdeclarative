@@ -373,7 +373,13 @@ Value ScriptFunction::construct(Managed *that, ExecutionContext *context, Value 
     ctx->argumentCount = argc;
 
     ctx->initCallContext(context);
-    Value result = f->function->code(ctx, f->function->codeData);
+    Value result = Value::undefinedValue();
+    try {
+        result = f->function->code(ctx, f->function->codeData);
+    } catch (Exception &ex) {
+        ex.partiallyUnwindContext(ctx->parent);
+        throw;
+    }
     ctx->leaveCallContext();
 
     if (result.isObject())
@@ -402,7 +408,13 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
     ctx->argumentCount = argc;
 
     ctx->initCallContext(context);
-    Value result = f->function->code(ctx, f->function->codeData);
+    Value result = Value::undefinedValue();
+    try {
+        result = f->function->code(ctx, f->function->codeData);
+    } catch (Exception &ex) {
+        ex.partiallyUnwindContext(ctx->parent);
+        throw;
+    }
     ctx->leaveCallContext();
     return result;
 }
@@ -446,7 +458,14 @@ Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const V
     ctx->argumentCount = argc;
 
     ctx->initCallContext(context);
-    Value result = f->code(ctx);
+    Value result = Value::undefinedValue();
+    try {
+        result = f->code(ctx);
+    } catch (Exception &ex) {
+        ex.partiallyUnwindContext(ctx->parent);
+        throw;
+    }
+
     ctx->leaveCallContext();
     return result;
 }

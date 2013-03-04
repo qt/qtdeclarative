@@ -476,13 +476,14 @@ void __qmljs_llvm_throw(ExecutionContext *context, Value *value)
 
 void __qmljs_llvm_create_exception_handler(ExecutionContext *context, Value *result)
 {
-    void *buf = __qmljs_create_exception_handler(context);
-    *result = Value::fromInt32(setjmp(* static_cast<jmp_buf *>(buf)));
+    // ### FIXME.
+    __qmljs_create_exception_handler(context);
+    *result = Value::undefinedValue();
 }
 
 void __qmljs_llvm_delete_exception_handler(ExecutionContext *context)
 {
-    __qmljs_delete_exception_handler(context);
+    // ### FIXME.
 }
 
 void __qmljs_llvm_get_exception(ExecutionContext *context, Value *result)

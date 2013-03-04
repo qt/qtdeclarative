@@ -179,14 +179,6 @@ struct Q_V4_EXPORT ExecutionEngine
     String *id_set;
     String *id_eval;
 
-    struct ExceptionHandler {
-        ExecutionContext *context;
-        const uchar *code; // Interpreter state
-        Value *target; // Interpreter state
-        jmp_buf stackFrame;
-    };
-
-    QVector<ExceptionHandler> unwindStack;
     Value exception;
 
     QVector<Function *> functions;

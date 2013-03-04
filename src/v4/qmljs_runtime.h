@@ -89,7 +89,16 @@ struct ArrayObject;
 struct ErrorObject;
 struct ExecutionEngine;
 
-struct Exception {
+struct Q_V4_EXPORT Exception {
+    explicit Exception(ExecutionContext *throwingContext);
+    ~Exception();
+
+    void accept(ExecutionContext *catchingContext);
+
+    void partiallyUnwindContext(ExecutionContext *catchingContext);
+private:
+    ExecutionContext *throwingContext;
+    bool accepted;
 };
 
 extern "C" {
@@ -196,8 +205,7 @@ void __qmljs_delete_name(ExecutionContext *ctx, Value *result, String *name);
 
 void Q_NORETURN __qmljs_throw(ExecutionContext*, const Value &value);
 // actually returns a jmp_buf *
-Q_V4_EXPORT void *__qmljs_create_exception_handler(ExecutionContext *context);
-void __qmljs_delete_exception_handler(ExecutionContext *context);
+Q_V4_EXPORT void __qmljs_create_exception_handler(ExecutionContext *context);
 void __qmljs_get_exception(ExecutionContext *context, Value *result);
 
 // binary operators

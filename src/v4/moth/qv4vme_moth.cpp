@@ -270,13 +270,15 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
             const uchar *tryCode = code;
             run(context, tryCode, stack, stackSize);
             code = tryCode;
-        } catch (const VM::Exception &) {
+        } catch (VM::Exception &ex) {
+            ex.accept(context);
             try {
                 *result = VM::Value::fromInt32(1);
                 const uchar *catchCode = code;
                 run(context, catchCode, stack, stackSize);
                 code = catchCode;
-            } catch (const VM::Exception &) {
+            } catch (VM::Exception &ex) {
+                ex.accept(context);
                 *result = VM::Value::fromInt32(1);
                 const uchar *catchCode = code;
                 run(context, catchCode, stack, stackSize);
@@ -286,7 +288,6 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallBuiltinCreateExceptionHandler)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteExceptionHandler)
-        __qmljs_delete_exception_handler(context);
         return VM::Value();
     MOTH_END_INSTR(CallBuiltinDeleteExceptionHandler)
 
@@ -487,18 +488,4 @@ VM::Value VME::exec(VM::ExecutionContext *ctxt, const uchar *code)
 {
     VME vme;
     return vme.run(ctxt, code);
-}
-
-void VME::restoreState(VM::ExecutionContext *context, VM::Value *&target, const uchar *&code)
-{
-    VM::ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
-    target = handler.target;
-    code = handler.code;
-}
-
-void VME::saveState(VM::ExecutionContext *context, VM::Value *target, const uchar *code)
-{
-    VM::ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
-    handler.target = target;
-    handler.code = code;
 }

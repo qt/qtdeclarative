@@ -388,7 +388,8 @@ int main(int argc, char *argv[])
                         if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
                             std::cout << "exit value: " << qPrintable(result.toString(ctx)->toQString()) << std::endl;
                     }
-                } catch (const QQmlJS::VM::Exception&) {
+                } catch (QQmlJS::VM::Exception& ex) {
+                    ex.accept(ctx);
                     showException(ctx);
                     return EXIT_FAILURE;
                 }

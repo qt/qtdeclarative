@@ -112,6 +112,38 @@ QString numberToString(double num, int radix = 10)
     return str;
 }
 
+Exception::Exception(ExecutionContext *throwingContext)
+{
+    this->throwingContext = throwingContext;
+    accepted = false;
+}
+
+Exception::~Exception()
+{
+    assert(accepted);
+}
+
+void Exception::accept(ExecutionContext *catchingContext)
+{
+    assert(!accepted);
+    accepted = true;
+    partiallyUnwindContext(catchingContext);
+}
+
+void Exception::partiallyUnwindContext(ExecutionContext *catchingContext)
+{
+    if (!throwingContext)
+        return;
+    ExecutionContext *context = throwingContext;
+    while (context != catchingContext) {
+        ExecutionContext *parent = context->parent;
+        if (!context->withObject)
+            context->leaveCallContext();
+        context = parent;
+    }
+    throwingContext = context;
+}
+
 extern "C" {
 
 void __qmljs_init_closure(ExecutionContext *ctx, Value *result, VM::Function *clos)
@@ -955,40 +987,17 @@ void __qmljs_construct_property(ExecutionContext *context, Value *result, const 
 
 void __qmljs_throw(ExecutionContext *context, const Value &value)
 {
-    assert(!context->engine->unwindStack.isEmpty());
-
     if (context->engine->debugger)
         context->engine->debugger->aboutToThrow(value);
 
-    ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
-
-    // clean up call contexts
-    while (context != handler.context) {
-        ExecutionContext *parent = context->parent;
-        if (!context->withObject)
-            context->leaveCallContext();
-        context = parent;
-    }
-
     context->engine->exception = value;
 
-    throw Exception();
+    throw Exception(context);
 }
 
-Q_V4_EXPORT void * __qmljs_create_exception_handler(ExecutionContext *context)
+Q_V4_EXPORT void __qmljs_create_exception_handler(ExecutionContext *context)
 {
     context->engine->exception = Value::undefinedValue();
-    context->engine->unwindStack.append(ExecutionEngine::ExceptionHandler());
-    ExecutionEngine::ExceptionHandler &handler = context->engine->unwindStack.last();
-    handler.context = context;
-    return handler.stackFrame;
-}
-
-void __qmljs_delete_exception_handler(ExecutionContext *context)
-{
-    assert(!context->engine->unwindStack.isEmpty());
-
-    context->engine->unwindStack.pop_back();
 }
 
 void __qmljs_get_exception(ExecutionContext *context, Value *result)

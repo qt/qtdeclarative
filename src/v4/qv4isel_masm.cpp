@@ -646,10 +646,12 @@ static void *tryWrapper(ExecutionContext *context, void *localsPtr, void *(*exce
     void *addressToContinueAt = 0;
     try {
         addressToContinueAt = exceptionEntryPointInCallingFunction(context, localsPtr, 0);
-    } catch (const Exception&) {
+    } catch (Exception& ex) {
+        ex.accept(context);
         try {
             addressToContinueAt = exceptionEntryPointInCallingFunction(context, localsPtr, 1);
-        } catch (const Exception&) {
+        } catch (Exception& ex) {
+            ex.accept(context);
             addressToContinueAt = exceptionEntryPointInCallingFunction(context, localsPtr, 1);
         }
     }
@@ -694,7 +696,6 @@ void InstructionSelection::callBuiltinDeleteExceptionHandler()
 {
     // This assumes that we're in code that was called by tryWrapper, so we return to try wrapper
     // with the address that we'd like to continue at, which is right after the ret below.
-    generateFunctionCall(Assembler::Void, __qmljs_delete_exception_handler, Assembler::ContextRegister);
     Assembler::DataLabelPtr continuation = _as->moveWithPatch(Assembler::TrustedImmPtr(0), Assembler::ReturnValueRegister);
     _as->leaveStandardStackFrame(/*locals*/0);
     _as->ret();
