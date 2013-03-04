@@ -824,8 +824,7 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     QQuickView *window = createView();
     window->setSource(testFileUrl("mouseonflickableonpinch.qml"));
     window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->rootObject() != 0);
     QRect windowRect = QRect(window->position(), window->size());
     QCursor::setPos(windowRect.center());
