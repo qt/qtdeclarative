@@ -448,7 +448,15 @@ Bool __qmljs_string_equal(String *left, String *right)
 
 String *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *second)
 {
-    return ctx->engine->newString(first->toQString() + second->toQString());
+    const QString &a = first->toQString();
+    const QString &b = second->toQString();
+    QString newStr(a.length() + b.length(), Qt::Uninitialized);
+    QChar *data = newStr.data();
+    memcpy(data, a.constData(), a.length()*sizeof(QChar));
+    data += a.length();
+    memcpy(data, b.constData(), b.length()*sizeof(QChar));
+
+    return ctx->engine->newString(newStr);
 }
 
 Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int typeHint)
