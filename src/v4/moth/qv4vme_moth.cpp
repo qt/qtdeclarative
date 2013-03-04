@@ -230,26 +230,26 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
             }
         }
 #endif // DO_TRACE_INSTR
-        Q_ASSERT(instr.args + instr.argc < stackSize);
+        Q_ASSERT(instr.args + instr.argc <= stackSize);
         VM::Value *args = stack + instr.args;
         __qmljs_call_value(context, VALUEPTR(instr.result), /*thisObject*/0, VALUE(instr.dest), args, instr.argc);
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
         TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(instr.name->toQString()), instr.args, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
-        Q_ASSERT(instr.args + instr.argc < stackSize);
+        Q_ASSERT(instr.args + instr.argc <= stackSize);
         VM::Value *args = stack + instr.args;
         __qmljs_call_property(context, VALUEPTR(instr.result), VALUE(instr.base), instr.name, args, instr.argc);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallElement)
-        Q_ASSERT(instr.args + instr.argc < stackSize);
+        Q_ASSERT(instr.args + instr.argc <= stackSize);
         VM::Value *args = stack + instr.args;
         __qmljs_call_element(context, VALUEPTR(instr.result), VALUE(instr.base), VALUE(instr.index), args, instr.argc);
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallActivationProperty)
-        Q_ASSERT(instr.args + instr.argc < stackSize);
+        Q_ASSERT(instr.args + instr.argc <= stackSize);
         VM::Value *args = stack + instr.args;
         __qmljs_call_activation_property(context, VALUEPTR(instr.result), instr.name, args, instr.argc);
     MOTH_END_INSTR(CallActivationProperty)
@@ -387,26 +387,26 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallBuiltinDefineProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineArray)
-        Q_ASSERT(instr.args + instr.argc < stackSize);
+        Q_ASSERT(instr.args + instr.argc <= stackSize);
         VM::Value *args = stack + instr.args;
         __qmljs_builtin_define_array(context, VALUEPTR(instr.result), args, instr.argc);
     MOTH_END_INSTR(CallBuiltinDefineArray)
 
     MOTH_BEGIN_INSTR(CreateValue)
-        Q_ASSERT(instr.args + instr.argc < stackSize);
+        Q_ASSERT(instr.args + instr.argc <= stackSize);
         VM::Value *args = stack + instr.args;
         __qmljs_construct_value(context, VALUEPTR(instr.result), VALUE(instr.func), args, instr.argc);
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
-        Q_ASSERT(instr.args + instr.argc < stackSize);
+        Q_ASSERT(instr.args + instr.argc <= stackSize);
         VM::Value *args = stack + instr.args;
         __qmljs_construct_property(context, VALUEPTR(instr.result), VALUE(instr.base), instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
         TRACE(inline, "property name = %s, args = %d, argc = %d", instr.name->toQString().toUtf8().constData(), instr.args, instr.argc);
-        Q_ASSERT(instr.args + instr.argc < stackSize);
+        Q_ASSERT(instr.args + instr.argc <= stackSize);
         VM::Value *args = stack + instr.args;
         __qmljs_construct_activation_property(context, VALUEPTR(instr.result), instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateActivationProperty)
