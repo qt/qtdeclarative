@@ -2774,7 +2774,7 @@ void tst_qquicktextinput::cursorDelegate()
 void tst_qquicktextinput::remoteCursorDelegate()
 {
     TestHTTPServer server(SERVER_PORT);
-    server.serveDirectory(dataDirectory());
+    server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     QQuickView view;
 
