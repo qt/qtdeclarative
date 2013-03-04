@@ -1534,6 +1534,11 @@ void QQuickItemPrivate::setAccessibleFlagAndListener()
     }
 }
 
+/*!
+Clears all sub focus items from \a scope.
+If \a focus is true, sets the scope's subFocusItem
+to be this item.
+*/
 void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 {
     Q_Q(QQuickItem);

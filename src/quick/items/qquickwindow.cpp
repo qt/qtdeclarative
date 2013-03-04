@@ -608,6 +608,11 @@ void QQuickWindowPrivate::translateTouchEvent(QTouchEvent *touchEvent)
     touchEvent->setTouchPoints(touchPoints);
 }
 
+/*!
+Set the focus inside \a scope to be \a item.
+If the scope contains the active focus item, it will be changed to \a item.
+Calls notifyFocusChangesRecur for all changed items.
+*/
 void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions options)
 {
     Q_Q(QQuickWindow);
@@ -627,13 +632,13 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
     QQuickItemPrivate *scopePrivate = scope ? QQuickItemPrivate::get(scope) : 0;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
-    QQuickItem *oldActiveFocusItem = 0;
     QQuickItem *newActiveFocusItem = 0;
 
     QVarLengthArray<QQuickItem *, 20> changed;
 
     // Does this change the active focus?
     if (item == contentItem || (scopePrivate->activeFocus && item->isEnabled())) {
+        QQuickItem *oldActiveFocusItem = 0;
         oldActiveFocusItem = activeFocusItem;
         newActiveFocusItem = item;
         while (newActiveFocusItem->isFocusScope()
