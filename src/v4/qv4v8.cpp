@@ -440,4 +440,35 @@ String::Value::Value(Handle<v8::Value> obj)
 }
 
 
+
+
+Handle<Primitive> Undefined()
+{
+    Handle<Primitive> val;
+    val.val = VM::Value::undefinedValue().val;
+    return val;
+}
+
+Handle<Primitive> Null()
+{
+    Handle<Primitive> val;
+    val.val = VM::Value::nullValue().val;
+    return val;
+}
+
+Handle<Boolean> True()
+{
+    Handle<Primitive> val;
+    val.val = VM::Value::fromBoolean(true).val;
+    return val;
+}
+
+Handle<Boolean> False()
+{
+    Handle<Primitive> val;
+    val.val = VM::Value::fromBoolean(false).val;
+    return val;
+}
+
+
 }

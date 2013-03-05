@@ -2024,10 +2024,10 @@ Handle<Primitive> V8EXPORT Null();
 Handle<Boolean> V8EXPORT True();
 Handle<Boolean> V8EXPORT False();
 
-Handle<Primitive> Undefined(Isolate* isolate);
-Handle<Primitive> Null(Isolate* isolate);
-Handle<Boolean> True(Isolate* isolate);
-Handle<Boolean> False(Isolate* isolate);
+Handle<Primitive> Undefined(Isolate*) { return Undefined(); }
+Handle<Primitive> Null(Isolate*) { return Null(); }
+Handle<Boolean> True(Isolate*) { return True(); }
+Handle<Boolean> False(Isolate*) { return False(); }
 
 
 
