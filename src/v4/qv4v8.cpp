@@ -126,11 +126,6 @@ Local<String> Value::ToString() const
     return Local<String>::New(Value::NewFromInternalValue(QQmlJS::VM::Value::fromString(ConstValuePtr(this)->toString(currentEngine()->current)).val));
 }
 
-Local<String> Value::ToDetailString() const
-{
-    return ToString();
-}
-
 Local<Integer> Value::ToInteger() const
 {
     return Local<Integer>::New(Value::NewFromInternalValue(QQmlJS::VM::Value::fromDouble(ConstValuePtr(this)->toInteger(currentEngine()->current)).val));
@@ -438,5 +433,11 @@ String::AsciiValue::AsciiValue(Handle<v8::Value> obj)
 {
     str = obj->ToString()->asQString().toLatin1();
 }
+
+String::Value::Value(Handle<v8::Value> obj)
+{
+    str = obj->ToString()->asQString();
+}
+
 
 }
