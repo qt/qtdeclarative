@@ -442,6 +442,16 @@ QMatrix4x4 QSGMaterialShader::RenderState::modelViewMatrix() const
     return static_cast<const QSGRenderer *>(m_data)->currentModelViewMatrix();
 }
 
+/*!
+    Returns the projection matrix.
+ */
+
+QMatrix4x4 QSGMaterialShader::RenderState::projectionMatrix() const
+{
+    Q_ASSERT(m_data);
+    return static_cast<const QSGRenderer *>(m_data)->currentProjectionMatrix();
+}
+
 
 
 /*!

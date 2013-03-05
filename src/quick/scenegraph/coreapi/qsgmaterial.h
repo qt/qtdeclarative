@@ -69,6 +69,7 @@ public:
         float opacity() const;
         QMatrix4x4 combinedMatrix() const;
         QMatrix4x4 modelViewMatrix() const;
+        QMatrix4x4 projectionMatrix() const;
         QRect viewportRect() const;
         QRect deviceRect() const;
         float determinant() const;
