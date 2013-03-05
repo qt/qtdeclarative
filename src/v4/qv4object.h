@@ -102,6 +102,12 @@ struct URIErrorPrototype;
 
 
 struct Q_V4_EXPORT Object: Managed {
+
+    class ExternalResource {
+    public:
+        virtual ~ExternalResource() {}
+    };
+
     Object *prototype;
     InternalClass *internalClass;
     uint memberDataAlloc;
@@ -115,6 +121,7 @@ struct Q_V4_EXPORT Object: Managed {
     uint arrayAlloc;
     PropertyDescriptor *arrayData;
     SparseArray *sparseArray;
+    ExternalResource *externalResource;
 
     Object(ExecutionEngine *engine);
     ~Object();

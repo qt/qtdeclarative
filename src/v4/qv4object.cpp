@@ -71,6 +71,7 @@ Object::Object(ExecutionEngine *engine)
     , internalClass(engine->emptyClass)
     , memberDataAlloc(0), memberData(0)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayData(0), sparseArray(0)
+    , externalResource(0)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
@@ -79,6 +80,7 @@ Object::Object(ExecutionEngine *engine)
 
 Object::~Object()
 {
+    delete externalResource;
     delete [] memberData;
     delete [] (arrayData - (sparseArray ? 0 : arrayOffset));
     delete sparseArray;
