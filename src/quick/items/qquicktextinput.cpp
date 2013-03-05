@@ -2500,7 +2500,10 @@ void QQuickTextInputPrivate::handleFocusEvent(QFocusEvent *event)
             updatePasswordEchoEditing(false);//QQuickTextInputPrivate sets it on key events, but doesn't deal with focus events
         }
 
-        if (!persistentSelection)
+        if (event->reason() != Qt::ActiveWindowFocusReason
+                && event->reason() != Qt::PopupFocusReason
+                && hasSelectedText()
+                && !persistentSelection)
             deselect();
 
 #ifndef QT_NO_IM
