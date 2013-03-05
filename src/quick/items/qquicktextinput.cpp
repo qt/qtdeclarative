@@ -2477,40 +2477,44 @@ void QQuickTextInput::moveCursorSelection(int pos, SelectionMode mode)
 
 void QQuickTextInput::focusInEvent(QFocusEvent *event)
 {
-    Q_D(const QQuickTextInput);
-#ifndef QT_NO_IM
-    if (d->focusOnPress && !d->m_readOnly)
-        qGuiApp->inputMethod()->show();
-#endif
+    Q_D(QQuickTextInput);
+    d->handleFocusEvent(event);
     QQuickImplicitSizeItem::focusInEvent(event);
 }
 
-void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
+void QQuickTextInputPrivate::handleFocusEvent(QFocusEvent *event)
 {
-    Q_D(QQuickTextInput);
-    if (change == ItemActiveFocusHasChanged) {
-        bool hasFocus = value.boolValue;
-        setCursorVisible(hasFocus);
-        if (!hasFocus && (d->m_passwordEchoEditing || d->m_passwordEchoTimer.isActive())) {
-            d->updatePasswordEchoEditing(false);//QQuickTextInputPrivate sets it on key events, but doesn't deal with focus events
+    Q_Q(QQuickTextInput);
+    bool focus = event->gotFocus();
+    q->setCursorVisible(focus);
+    if (focus) {
+        q->q_updateAlignment();
+#ifndef QT_NO_IM
+        if (focusOnPress && !m_readOnly)
+            qGuiApp->inputMethod()->show();
+        q->connect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+                   q, SLOT(q_updateAlignment()));
+#endif
+    } else {
+        if ((m_passwordEchoEditing || m_passwordEchoTimer.isActive())) {
+            updatePasswordEchoEditing(false);//QQuickTextInputPrivate sets it on key events, but doesn't deal with focus events
         }
 
-        if (!hasFocus) {
-            if (!d->persistentSelection)
-                d->deselect();
+        if (!persistentSelection)
+            deselect();
+
 #ifndef QT_NO_IM
-            disconnect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
-                       this, SLOT(q_updateAlignment()));
+        q->disconnect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+                      q, SLOT(q_updateAlignment()));
 #endif
-        } else {
-            q_updateAlignment();
-#ifndef QT_NO_IM
-            connect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
-                    this, SLOT(q_updateAlignment()));
-#endif
-        }
     }
-    QQuickItem::itemChange(change, value);
+}
+
+void QQuickTextInput::focusOutEvent(QFocusEvent *event)
+{
+    Q_D(QQuickTextInput);
+    d->handleFocusEvent(event);
+    QQuickImplicitSizeItem::focusOutEvent(event);
 }
 
 #ifndef QT_NO_IM
