@@ -17,7 +17,7 @@ CONFIG += warn_off
 
 SOURCES += \
     qv4codegen.cpp \
-    qv4ir.cpp \
+    qv4jsir.cpp \
     qmljs_engine.cpp \
     qmljs_environment.cpp \
     qmljs_runtime.cpp \
@@ -53,7 +53,7 @@ SOURCES += \
 HEADERS += \
     qv4global.h \
     qv4codegen_p.h \
-    qv4ir_p.h \
+    qv4jsir_p.h \
     qmljs_engine.h \
     qmljs_environment.h \
     qmljs_runtime.h \

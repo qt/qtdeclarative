@@ -56,7 +56,7 @@
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
-#include <qv4ir_p.h>
+#include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
 #include <qv4isel_masm_p.h>
 

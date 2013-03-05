@@ -31,7 +31,7 @@
 #define QV4ISEL_UTIL_P_H
 
 #include "qmljs_runtime.h"
-#include "qv4ir_p.h"
+#include "qv4jsir_p.h"
 
 namespace QQmlJS {
 

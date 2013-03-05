@@ -3,7 +3,7 @@
 
 #include "qv4global.h"
 #include "qv4isel_p.h"
-#include "qv4ir_p.h"
+#include "qv4jsir_p.h"
 #include "qv4object.h"
 #include "qv4instr_moth_p.h"
 

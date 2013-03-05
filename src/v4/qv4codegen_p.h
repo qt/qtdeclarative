@@ -42,7 +42,7 @@
 #define QV4CODEGEN_P_H
 
 #include "qv4global.h"
-#include "qv4ir_p.h"
+#include "qv4jsir_p.h"
 #include <private/qqmljsastvisitor_p.h>
 #include <QtCore/QStringList>
 #include <assert.h>

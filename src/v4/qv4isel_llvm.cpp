@@ -78,7 +78,7 @@
 // with very unfriendly names that collide with class fields in LLVM.
 #include "qv4isel_llvm_p.h"
 #include "qv4_llvm_p.h"
-#include "qv4ir_p.h"
+#include "qv4jsir_p.h"
 #include "qv4string.h"
 #include "qv4global.h"
 

@@ -31,7 +31,7 @@
 #define QV4ISEL_P_H
 
 #include "qv4global.h"
-#include "qv4ir_p.h"
+#include "qv4jsir_p.h"
 
 #include <qglobal.h>
 #include <QHash>

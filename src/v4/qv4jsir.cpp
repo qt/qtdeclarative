@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qv4ir_p.h"
+#include "qv4jsir_p.h"
 #include <private/qqmljsast_p.h>
 
 #include <QtCore/qtextstream.h>
