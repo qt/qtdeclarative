@@ -1539,7 +1539,7 @@ void QQuickTextEdit::mousePressEvent(QMouseEvent *event)
     d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
     if (d->focusOnPress){
         bool hadActiveFocus = hasActiveFocus();
-        forceActiveFocus();
+        forceActiveFocus(Qt::MouseFocusReason);
         // re-open input panel on press if already focused
 #ifndef QT_NO_IM
         if (hasActiveFocus() && hadActiveFocus && !isReadOnly())

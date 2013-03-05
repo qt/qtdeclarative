@@ -274,6 +274,7 @@ public:
     bool hasActiveFocus() const;
     bool hasFocus() const;
     void setFocus(bool);
+    void setFocus(bool focus, Qt::FocusReason reason);
     bool isFocusScope() const;
     QQuickItem *scopedFocusItem() const;
 
@@ -318,6 +319,7 @@ public:
     Q_INVOKABLE void mapFromItem(QQmlV8Function*) const;
     Q_INVOKABLE void mapToItem(QQmlV8Function*) const;
     Q_INVOKABLE void forceActiveFocus();
+    Q_INVOKABLE void forceActiveFocus(Qt::FocusReason reason);
     Q_INVOKABLE QQuickItem *childAt(qreal x, qreal y) const;
 
 #ifndef QT_NO_IM

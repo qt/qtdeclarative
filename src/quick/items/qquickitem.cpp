@@ -2083,7 +2083,7 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
             while (!scopeItem->isFocusScope() && scopeItem->parentItem())
                 scopeItem = scopeItem->parentItem();
             if (d->window) {
-                QQuickWindowPrivate::get(d->window)->clearFocusInScope(scopeItem, scopeFocusedItem,
+                QQuickWindowPrivate::get(d->window)->clearFocusInScope(scopeItem, scopeFocusedItem, Qt::OtherFocusReason,
                                                                 QQuickWindowPrivate::DontChangeFocusProperty);
                 if (scopeFocusedItem != this)
                     QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(this, true);
@@ -2146,7 +2146,7 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
                 emit scopeFocusedItem->focusChanged(false);
             } else {
                 if (d->window) {
-                    QQuickWindowPrivate::get(d->window)->setFocusInScope(scopeItem, scopeFocusedItem,
+                    QQuickWindowPrivate::get(d->window)->setFocusInScope(scopeItem, scopeFocusedItem, Qt::OtherFocusReason,
                                                                   QQuickWindowPrivate::DontChangeFocusProperty);
                 } else {
                     QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(scopeItem, true);
@@ -3772,29 +3772,44 @@ void QQuickItem::mapToItem(QQmlV8Function *args) const
 
 /*!
     \qmlmethod QtQuick2::Item::forceActiveFocus()
+    \overload
 
     Forces active focus on the item.
 
     This method sets focus on the item and ensures that all ancestor
     FocusScope objects in the object hierarchy are also given \l focus.
 
-    \sa activeFocus
-*/
-/*!
-    Forces active focus on the item.
-
-    This method sets focus on the item and ensures that all ancestor
-    FocusScope objects in the object hierarchy are also given \l focus.
+    The reason for the focus change will be \a Qt::OtherFocusReason. Use
+    the overloaded method to specify the focus reason to enable better
+    handling of the focus change.
 
     \sa activeFocus
 */
 void QQuickItem::forceActiveFocus()
 {
-    setFocus(true);
+    forceActiveFocus(Qt::OtherFocusReason);
+}
+
+/*!
+    \qmlmethod QtQuick2::Item::forceActiveFocus(Qt::FocusReason reason)
+
+    Forces active focus on the item with the given \a reason.
+
+    This method sets focus on the item and ensures that all ancestor
+    FocusScope objects in the object hierarchy are also given \l focus.
+
+    \since 5.1
+
+    \sa activeFocus, Qt::FocusReason
+*/
+
+void QQuickItem::forceActiveFocus(Qt::FocusReason reason)
+{
+    setFocus(true, reason);
     QQuickItem *parent = parentItem();
     while (parent) {
         if (parent->flags() & QQuickItem::ItemIsFocusScope) {
-            parent->setFocus(true);
+            parent->setFocus(true, reason);
         }
         parent = parent->parentItem();
     }
@@ -5081,7 +5096,7 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
             q->ungrabMouse();
         if (scope && !effectiveEnable && activeFocus) {
             windowPriv->clearFocusInScope(
-                    scope, q,  QQuickWindowPrivate::DontChangeFocusProperty | QQuickWindowPrivate::DontChangeSubFocusItem);
+                    scope, q, Qt::OtherFocusReason, QQuickWindowPrivate::DontChangeFocusProperty | QQuickWindowPrivate::DontChangeSubFocusItem);
         }
     }
 
@@ -5092,7 +5107,7 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
 
     if (window && scope && effectiveEnable && focus) {
         QQuickWindowPrivate::get(window)->setFocusInScope(
-                scope, q, QQuickWindowPrivate::DontChangeFocusProperty | QQuickWindowPrivate::DontChangeSubFocusItem);
+                scope, q, Qt::OtherFocusReason, QQuickWindowPrivate::DontChangeFocusProperty | QQuickWindowPrivate::DontChangeSubFocusItem);
     }
 
     emit q->enabledChanged();
@@ -6006,6 +6021,11 @@ bool QQuickItem::hasFocus() const
 
 void QQuickItem::setFocus(bool focus)
 {
+    setFocus(focus, Qt::OtherFocusReason);
+}
+
+void QQuickItem::setFocus(bool focus, Qt::FocusReason reason)
+{
     Q_D(QQuickItem);
     if (d->focus == focus)
         return;
@@ -6017,9 +6037,9 @@ void QQuickItem::setFocus(bool focus)
             scope = scope->parentItem();
         if (d->window) {
             if (focus)
-                QQuickWindowPrivate::get(d->window)->setFocusInScope(scope, this);
+                QQuickWindowPrivate::get(d->window)->setFocusInScope(scope, this, reason);
             else
-                QQuickWindowPrivate::get(d->window)->clearFocusInScope(scope, this);
+                QQuickWindowPrivate::get(d->window)->clearFocusInScope(scope, this, reason);
         } else {
             // do the focus changes from setFocusInScope/clearFocusInScope that are
             // unrelated to a window

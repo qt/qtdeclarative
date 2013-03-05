@@ -224,17 +224,17 @@ void QQuickWindow::hideEvent(QHideEvent *)
 }
 
 /*! \reimp */
-void QQuickWindow::focusOutEvent(QFocusEvent *)
+void QQuickWindow::focusOutEvent(QFocusEvent *ev)
 {
     Q_D(QQuickWindow);
-    d->contentItem->setFocus(false);
+    d->contentItem->setFocus(false, ev->reason());
 }
 
 /*! \reimp */
-void QQuickWindow::focusInEvent(QFocusEvent *)
+void QQuickWindow::focusInEvent(QFocusEvent *ev)
 {
     Q_D(QQuickWindow);
-    d->contentItem->setFocus(true);
+    d->contentItem->setFocus(true, ev->reason());
     d->updateFocusItemTransform();
 }
 
@@ -608,7 +608,7 @@ void QQuickWindowPrivate::translateTouchEvent(QTouchEvent *touchEvent)
     touchEvent->setTouchPoints(touchPoints);
 }
 
-void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, FocusOptions options)
+void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions options)
 {
     Q_Q(QQuickWindow);
 
@@ -648,7 +648,7 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
 #endif
 
             activeFocusItem = 0;
-            QFocusEvent event(QEvent::FocusOut, Qt::OtherFocusReason);
+            QFocusEvent event(QEvent::FocusOut, reason);
             q->sendEvent(oldActiveFocusItem, &event);
 
             QQuickItem *afi = oldActiveFocusItem;
@@ -695,7 +695,7 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
         }
         updateFocusItemTransform();
 
-        QFocusEvent event(QEvent::FocusIn, Qt::OtherFocusReason);
+        QFocusEvent event(QEvent::FocusIn, reason);
         q->sendEvent(newActiveFocusItem, &event);
     }
 
@@ -705,7 +705,7 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
         notifyFocusChangesRecur(changed.data(), changed.count() - 1);
 }
 
-void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item, FocusOptions options)
+void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions options)
 {
     Q_Q(QQuickWindow);
 
@@ -745,7 +745,7 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
 #endif
 
         activeFocusItem = 0;
-        QFocusEvent event(QEvent::FocusOut, Qt::OtherFocusReason);
+        QFocusEvent event(QEvent::FocusOut, reason);
         q->sendEvent(oldActiveFocusItem, &event);
 
         QQuickItem *afi = oldActiveFocusItem;
@@ -777,7 +777,7 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         activeFocusItem = scope;
         updateFocusItemTransform();
 
-        QFocusEvent event(QEvent::FocusIn, Qt::OtherFocusReason);
+        QFocusEvent event(QEvent::FocusIn, reason);
         q->sendEvent(newActiveFocusItem, &event);
     }
 
