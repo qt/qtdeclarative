@@ -418,13 +418,13 @@ Local<Value> Script::Run()
     Handle<Context> context = m_context;
     if (!context.IsEmpty())
         context = Context::GetCurrent();
-    QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(context->GetEngine()->rootContext, m_origin.m_fileName, m_script, QQmlJS::Codegen::GlobalCode,
+    QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(context->GetEngine()->rootContext, m_origin.m_fileName, m_script, QQmlJS::Codegen::EvalCode,
                                                                     /*strictMode =*/ false, /*inheritContext =*/ false);
     if (!f)
         return Local<Value>();
 
     QQmlJS::VM::Value result = context->GetEngine()->run(f);
-    return Local<Boolean>::New(Value::NewFromInternalValue(result.val));
+    return Local<Value>::New(Value::NewFromInternalValue(result.val));
 }
 
 ScriptOrigin::ScriptOrigin(Handle<Value> resource_name, Handle<Integer> resource_line_offset, Handle<Integer> resource_column_offset)
