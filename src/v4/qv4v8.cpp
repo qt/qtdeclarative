@@ -111,6 +111,18 @@ bool Value::StrictEquals(Handle<Value> that) const
     return __qmljs_strict_equal(*ConstValuePtr(this), *ConstValuePtr(&that));
 }
 
+VM::Value Value::vmValue() const
+{
+    return *ConstValuePtr(this);
+}
+
+Handle<Value> Value::fromVmValue(const VM::Value &vmValue)
+{
+    Handle<Value> res;
+    res.val = vmValue.val;
+    return res;
+}
+
 Local<Boolean> Value::ToBoolean() const
 {
     return Local<Boolean>::New(Value::NewFromInternalValue(QQmlJS::VM::Value::fromBoolean(ConstValuePtr(this)->toBoolean()).val));
@@ -470,5 +482,39 @@ Handle<Boolean> False()
     return val;
 }
 
+Handle<Value> ThrowException(Handle<Value> exception)
+{
+    __qmljs_throw(currentEngine()->current, exception->vmValue());
+    return Handle<Value>();
+}
+
+
+Local<Value> Exception::ReferenceError(Handle<String> message)
+{
+    Q_UNUSED(message);
+    VM::Object *o = currentEngine()->newReferenceErrorObject(currentEngine()->current, message->ToString()->asQString());
+    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+}
+
+Local<Value> Exception::SyntaxError(Handle<String> message)
+{
+    Q_UNUSED(message);
+    VM::Object *o = currentEngine()->newSyntaxErrorObject(currentEngine()->current, 0);
+    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+}
+
+Local<Value> Exception::TypeError(Handle<String> message)
+{
+    Q_UNUSED(message);
+    VM::Object *o = currentEngine()->newTypeErrorObject(currentEngine()->current, message->ToString()->asQString());
+    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+}
+
+Local<Value> Exception::Error(Handle<String> message)
+{
+    Q_UNUSED(message);
+    VM::Object *o = currentEngine()->newErrorObject(VM::Value::fromString(currentEngine()->current, message->ToString()->asQString()));
+    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+}
 
 }

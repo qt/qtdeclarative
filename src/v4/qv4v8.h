@@ -966,6 +966,9 @@ class V8EXPORT Value : public Data {
       return res;
   }
 
+  QQmlJS::VM::Value vmValue() const;
+  static Handle<Value> fromVmValue(const QQmlJS::VM::Value &vmValue);
+
 };
 
 
@@ -2048,7 +2051,6 @@ Handle<Value> V8EXPORT ThrowException(Handle<Value> exception);
  */
 class V8EXPORT Exception {
  public:
-  static Local<Value> RangeError(Handle<String> message);
   static Local<Value> ReferenceError(Handle<String> message);
   static Local<Value> SyntaxError(Handle<String> message);
   static Local<Value> TypeError(Handle<String> message);
