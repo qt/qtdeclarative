@@ -647,6 +647,9 @@ void tst_qquickflickable::movingAndFlicking()
     QVERIFY(flickable->isFlicking());
     QCOMPARE(flickable->isFlickingHorizontally(), horizontalEnabled);
     QCOMPARE(flickable->isFlickingVertically(), verticalEnabled);
+    // contentX/contentY are either unchanged, or moving is true when the value changed.
+    QCOMPARE(flickable->property("movingInContentX").value<bool>(), true);
+    QCOMPARE(flickable->property("movingInContentY").value<bool>(), true);
 
     QCOMPARE(moveSpy.count(), 1);
     QCOMPARE(vMoveSpy.count(), verticalEnabled ? 1 : 0);
@@ -810,6 +813,11 @@ void tst_qquickflickable::movingAndDragging()
     QVERIFY(flickable->isDragging());
     QCOMPARE(flickable->isDraggingHorizontally(), horizontalEnabled);
     QCOMPARE(flickable->isDraggingVertically(), verticalEnabled);
+    // contentX/contentY are either unchanged, or moving and dragging are true when the value changes.
+    QCOMPARE(flickable->property("movingInContentX").value<bool>(), true);
+    QCOMPARE(flickable->property("movingInContentY").value<bool>(), true);
+    QCOMPARE(flickable->property("draggingInContentX").value<bool>(), true);
+    QCOMPARE(flickable->property("draggingInContentY").value<bool>(), true);
 
     QCOMPARE(moveSpy.count(), 1);
     QCOMPARE(vMoveSpy.count(), verticalEnabled ? 1 : 0);
