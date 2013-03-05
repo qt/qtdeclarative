@@ -833,11 +833,11 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     \brief Creates a new top-level window
 
     The Window object creates a new top-level window for a QtQuick scene. It automatically sets up the
-    window for use with QtQuick 2.0 graphical types.
+    window for use with QtQuick 2.x graphical types.
 
     To use this type, you will need to import the module with the following line:
     \code
-    import QtQuick.Window 2.0
+    import QtQuick.Window 2.1
     \endcode
 
     Restricting this import will allow you to have a QML environment without access to window system features.
@@ -2850,13 +2850,134 @@ QColor QQuickWindow::color() const
  */
 
 /*!
-    \qmlproperty string QtQuick.Window2::Window::modality
+    \qmlproperty Qt::WindowModality QtQuick.Window2::Window::modality
 
     The modality of the window.
 
     A modal window prevents other windows from receiving input events.
     Possible values are Qt.NonModal (the default), Qt.WindowModal,
     and Qt.ApplicationModal.
+ */
+
+/*!
+    \qmlproperty Qt::WindowFlags QtQuick.Window2::Window::flags
+
+    The window flags of the window.
+
+    The window flags control the window's appearance in the windowing system,
+    whether it's a dialog, popup, or a regular window, and whether it should
+    have a title bar, etc.
+
+    The flags which you read from this property might differ from the ones
+    that you set if the requested flags could not be fulfilled.
+ */
+
+/*!
+    \qmlproperty int QtQuick.Window2::Window::x
+    \qmlproperty int QtQuick.Window2::Window::y
+    \qmlproperty int QtQuick.Window2::Window::width
+    \qmlproperty int QtQuick.Window2::Window::height
+
+    Defines the window's position and size.
+
+    The (x,y) position is relative to the \l Screen if there is only one,
+    or to the virtual desktop (arrangement of multiple screens).
+
+    \qml
+    Window { x: 100; y: 100; width: 100; height: 100 }
+    \endqml
+
+    \image screen-and-window-dimensions.jpg
+ */
+
+/*!
+    \qmlproperty int QtQuick.Window2::Window::minimumWidth
+    \qmlproperty int QtQuick.Window2::Window::minimumHeight
+    \since Qt 5.1
+
+    Defines the window's minimum size.
+
+    This is a hint to the window manager to prevent resizing below the specified
+    width and height.
+ */
+
+/*!
+    \qmlproperty int QtQuick.Window2::Window::maximumWidth
+    \qmlproperty int QtQuick.Window2::Window::maximumHeight
+    \since Qt 5.1
+
+    Defines the window's maximum size.
+
+    This is a hint to the window manager to prevent resizing above the specified
+    width and height.
+ */
+
+/*!
+    \qmlproperty bool QtQuick.Window2::Window::visible
+
+    Whether the window is visible on the screen.
+
+    Setting visible to false is the same as setting \l visibility to Hidden.
+
+    \sa visibility
+ */
+
+/*!
+    \qmlproperty QWindow::Visibility QtQuick.Window2::Window::visibility
+
+    The screen-occupation state of the window.
+
+    Visibility is whether the window should appear in the windowing system as
+    normal, minimized, maximized, fullscreen or hidden.
+
+    To set the visibility to AutomaticVisibility means to give the window a
+    default visible state, which might be fullscreen or windowed depending on
+    the platform. However when reading the visibility property you will always
+    get the actual state, never AutomaticVisibility.
+
+    When a window is not visible its visibility is Hidden, and setting
+    visibility to Hidden is the same as setting \l visible to false.
+
+    \sa visible
+    \since Qt 5.1
+ */
+
+/*!
+    \qmlproperty Qt::ScreenOrientation QtQuick.Window2::Window::contentOrientation
+
+    This is a hint to the window manager in case it needs to display
+    additional content like popups, dialogs, status bars, or similar
+    in relation to the window.
+
+    The recommended orientation is \l Screen.orientation, but
+    an application doesn't have to support all possible orientations,
+    and thus can opt to ignore the current screen orientation.
+
+    The difference between the window and the content orientation
+    determines how much to rotate the content by.
+
+    The default value is Qt::PrimaryOrientation.
+
+    \sa Screen
+
+    \since Qt 5.1
+ */
+
+/*!
+    \qmlproperty real QtQuick.Window2::Window::opacity
+
+    The opacity of the window.
+
+    If the windowing system supports window opacity, this can be used to fade the
+    window in and out, or to make it semitransparent.
+
+    A value of 1.0 or above is treated as fully opaque, whereas a value of 0.0 or below
+    is treated as fully transparent. Values inbetween represent varying levels of
+    translucency between the two extremes.
+
+    The default value is 1.0.
+
+    \since Qt 5.1
  */
 
 #include "moc_qquickwindow.cpp"
