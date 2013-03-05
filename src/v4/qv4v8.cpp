@@ -48,6 +48,7 @@
 #include "qv4functionobject.h"
 #include "qmljs_value.h"
 #include "qv4isel_masm_p.h"
+#include "qv4globalobject.h"
 
 #include <QThreadStorage>
 
@@ -239,11 +240,9 @@ struct Context::Private
 {
     Private()
     {
-        iselFactory.reset(new QQmlJS::MASM::ISelFactory);
-        engine.reset(new QQmlJS::VM::ExecutionEngine(iselFactory.data()));
+        engine.reset(new QQmlJS::VM::ExecutionEngine);
     }
 
-    QScopedPointer<QQmlJS::EvalISelFactory> iselFactory;
     QScopedPointer<QQmlJS::VM::ExecutionEngine> engine;
 };
 
@@ -419,7 +418,13 @@ Local<Value> Script::Run()
     Handle<Context> context = m_context;
     if (!context.IsEmpty())
         context = Context::GetCurrent();
-    // ###
+    QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(context->GetEngine()->rootContext, m_origin.m_fileName, m_script, QQmlJS::Codegen::GlobalCode,
+                                                                    /*strictMode =*/ false, /*inheritContext =*/ false);
+    if (!f)
+        return Local<Value>();
+
+    QQmlJS::VM::Value result = context->GetEngine()->run(f);
+    return Local<Boolean>::New(Value::NewFromInternalValue(result.val));
 }
 
 ScriptOrigin::ScriptOrigin(Handle<Value> resource_name, Handle<Integer> resource_line_offset, Handle<Integer> resource_column_offset)

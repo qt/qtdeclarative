@@ -695,6 +695,7 @@ class ScriptOrigin {
 private:
   QString m_fileName;
   int m_lineNumber, m_columnNumber;
+  friend class Script;
 };
 
 
