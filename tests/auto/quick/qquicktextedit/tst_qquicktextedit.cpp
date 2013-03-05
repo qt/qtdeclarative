@@ -117,6 +117,7 @@ private slots:
     void color();
     void textMargin();
     void persistentSelection();
+    void selectionOnFocusOut();
     void focusOnPress();
     void selection();
     void isRightToLeft_data();
@@ -1161,6 +1162,48 @@ void tst_qquicktextedit::persistentSelection()
     edit->setFocus(true);
     QCOMPARE(edit->property("selected").toString(), QLatin1String("ell"));
 
+}
+
+void tst_qquicktextedit::selectionOnFocusOut()
+{
+    QQuickView window(testFileUrl("focusOutSelection.qml"));
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+
+    QPoint p1(25, 35);
+    QPoint p2(25, 85);
+
+    QQuickTextEdit *edit1 = window.rootObject()->findChild<QQuickTextEdit*>("text1");
+    QQuickTextEdit *edit2 = window.rootObject()->findChild<QQuickTextEdit*>("text2");
+
+    QTest::mouseClick(&window, Qt::LeftButton, 0, p1);
+    QVERIFY(edit1->hasActiveFocus());
+    QVERIFY(!edit2->hasActiveFocus());
+
+    edit1->selectAll();
+    QCOMPARE(edit1->selectedText(), QLatin1String("text 1"));
+
+    QTest::mouseClick(&window, Qt::LeftButton, 0, p2);
+
+    QCOMPARE(edit1->selectedText(), QLatin1String(""));
+    QVERIFY(!edit1->hasActiveFocus());
+    QVERIFY(edit2->hasActiveFocus());
+
+    edit2->selectAll();
+    QCOMPARE(edit2->selectedText(), QLatin1String("text 2"));
+
+
+    edit2->setFocus(false, Qt::ActiveWindowFocusReason);
+    QVERIFY(!edit2->hasActiveFocus());
+    QCOMPARE(edit2->selectedText(), QLatin1String("text 2"));
+
+    edit2->setFocus(true);
+    QVERIFY(edit2->hasActiveFocus());
+
+    edit2->setFocus(false, Qt::PopupFocusReason);
+    QVERIFY(!edit2->hasActiveFocus());
+    QCOMPARE(edit2->selectedText(), QLatin1String("text 2"));
 }
 
 void tst_qquicktextedit::focusOnPress()

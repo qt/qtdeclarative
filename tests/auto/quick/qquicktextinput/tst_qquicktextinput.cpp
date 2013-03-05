@@ -167,6 +167,7 @@ private slots:
     void openInputPanel();
     void setHAlignClearCache();
     void focusOutClearSelection();
+    void focusOutNotClearSelection();
 
     void echoMode();
     void passwordEchoDelay();
@@ -3495,6 +3496,49 @@ void tst_qquicktextinput::focusOutClearSelection()
     QGuiApplication::processEvents();
     //The input lost the focus selection should be cleared
     QTRY_COMPARE(input.selectedText(), QLatin1String(""));
+}
+
+void tst_qquicktextinput::focusOutNotClearSelection()
+{
+    QQuickView view;
+    QQuickTextInput input;
+    input.setText(QLatin1String("Hello world"));
+    input.setFocus(true);
+    input.setParentItem(view.contentItem());
+    input.componentComplete();
+    view.show();
+    view.requestActivate();
+    QTest::qWaitForWindowActive(&view);
+
+    QVERIFY(input.hasActiveFocus());
+    input.select(2,5);
+    QTRY_COMPARE(input.selectedText(), QLatin1String("llo"));
+
+    // The selection should not be cleared when the focus
+    // out event has one of the following reason:
+    // Qt::ActiveWindowFocusReason
+    // Qt::PopupFocusReason
+
+    input.setFocus(false, Qt::ActiveWindowFocusReason);
+    QGuiApplication::processEvents();
+    QTRY_COMPARE(input.selectedText(), QLatin1String("llo"));
+    QTRY_COMPARE(input.hasActiveFocus(), false);
+
+    input.setFocus(true);
+    QTRY_COMPARE(input.hasActiveFocus(), true);
+
+    input.setFocus(false, Qt::PopupFocusReason);
+    QGuiApplication::processEvents();
+    QTRY_COMPARE(input.selectedText(), QLatin1String("llo"));
+    QTRY_COMPARE(input.hasActiveFocus(), false);
+
+    input.setFocus(true);
+    QTRY_COMPARE(input.hasActiveFocus(), true);
+
+    input.setFocus(false, Qt::OtherFocusReason);
+    QGuiApplication::processEvents();
+    QTRY_COMPARE(input.selectedText(), QLatin1String(""));
+    QTRY_COMPARE(input.hasActiveFocus(), false);
 }
 
 void tst_qquicktextinput::geometrySignals()
