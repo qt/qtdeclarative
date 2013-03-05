@@ -102,7 +102,7 @@ class RegExp;
 struct Q_V4_EXPORT ExecutionEngine
 {
     MemoryManager *memoryManager;
-    EvalISelFactory *iselFactory;
+    QScopedPointer<EvalISelFactory> iselFactory;
     ExecutionContext *current;
     ExecutionContext *rootContext;
     WTF::BumpPointerAllocator bumperPointerAllocator; // Used by Yarr Regex engine.
@@ -182,7 +182,7 @@ struct Q_V4_EXPORT ExecutionEngine
 
     QVector<Function *> functions;
 
-    ExecutionEngine(EvalISelFactory *iselFactory);
+    ExecutionEngine(EvalISelFactory *iselFactory = 0);
     ~ExecutionEngine();
 
     ExecutionContext *newContext();
@@ -223,6 +223,28 @@ struct Q_V4_EXPORT ExecutionEngine
     void requireArgumentsAccessors(int n);
 
     void markObjects();
+
+    Value run(VM::Function *function, ExecutionContext *ctx = 0);
+};
+
+template <typename T>
+struct TemporaryAssignment
+{
+    TemporaryAssignment(T &var, const T& temporaryValue)
+        : variable(var)
+        , savedValue(var)
+    {
+        variable = temporaryValue;
+    }
+    ~TemporaryAssignment()
+    {
+        variable = savedValue;
+    }
+    T &variable;
+    T savedValue;
+private:
+    TemporaryAssignment(const TemporaryAssignment<T>&);
+    TemporaryAssignment operator=(const TemporaryAssignment<T>&);
 };
 
 } // namespace VM

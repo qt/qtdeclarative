@@ -337,14 +337,14 @@ int main(int argc, char *argv[])
 #endif // QMLJS_WITH_LLVM
     case use_masm:
     case use_moth: {
-        QScopedPointer<QQmlJS::EvalISelFactory> iSelFactory;
+        QQmlJS::EvalISelFactory* iSelFactory = 0;
         if (mode == use_moth) {
-            iSelFactory.reset(new QQmlJS::Moth::ISelFactory);
+            iSelFactory = new QQmlJS::Moth::ISelFactory;
         } else {
-            iSelFactory.reset(new QQmlJS::MASM::ISelFactory);
+            iSelFactory = new QQmlJS::MASM::ISelFactory;
         }
 
-        QQmlJS::VM::ExecutionEngine vm(iSelFactory.data());
+        QQmlJS::VM::ExecutionEngine vm(iSelFactory);
 
         QScopedPointer<QQmlJS::Debugging::Debugger> debugger;
         if (enableDebugging)
@@ -375,15 +375,7 @@ int main(int argc, char *argv[])
                                                                                     /*strictMode =*/ false, /*inheritContext =*/ false);
                     if (!f)
                         continue;
-                    vm.globalCode = f;
-
-                    ctx->strictMode = f->isStrict;
-                    ctx->lookups = f->lookups;
-                    if (debugger)
-                        debugger->aboutToCall(0, ctx);
-                    QQmlJS::VM::Value result = f->code(ctx, f->codeData);
-                    if (debugger)
-                        debugger->justLeft(ctx);
+                    QQmlJS::VM::Value result = vm.run(f);
                     if (!result.isUndefined()) {
                         if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
                             std::cout << "exit value: " << qPrintable(result.toString(ctx)->toQString()) << std::endl;

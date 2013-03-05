@@ -58,19 +58,24 @@
 #include <qv4stringobject.h>
 #include <qv4identifier.h>
 #include <qv4unwindhelper.h>
+#include "qv4isel_masm_p.h"
+#include "debugging.h"
 
 namespace QQmlJS {
 namespace VM {
 
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : memoryManager(new QQmlJS::VM::MemoryManager)
-    , iselFactory(factory)
     , debugger(0)
     , globalObject(Value::nullValue())
     , globalCode(0)
     , exception(Value::nullValue())
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
+
+    if (!factory)
+        factory = new MASM::ISelFactory;
+    iselFactory.reset(factory);
 
     memoryManager->setExecutionEngine(this);
 
@@ -451,6 +456,26 @@ void ExecutionEngine::markObjects()
     id_get->mark();
     id_set->mark();
     id_eval->mark();
+}
+
+Value ExecutionEngine::run(Function *function, ExecutionContext *ctx)
+{
+    if (!ctx)
+        ctx = rootContext;
+
+    TemporaryAssignment<Function*>(globalCode, function);
+
+    // ### Would be better to have a SavedExecutionState object that
+    // saves this and restores it in the destructor (to survive an exception).
+    ctx->strictMode = function->isStrict;
+    ctx->lookups = function->lookups;
+
+    if (debugger)
+        debugger->aboutToCall(0, ctx);
+    QQmlJS::VM::Value result = function->code(ctx, function->codeData);
+    if (debugger)
+        debugger->justLeft(ctx);
+    return result;
 }
 
 } // namespace VM
