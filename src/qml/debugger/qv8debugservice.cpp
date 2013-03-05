@@ -88,6 +88,7 @@ void DebugMessageDispatchHandler()
     QMetaObject::invokeMethod(v8ServiceInstancePtr, "processDebugMessages", Qt::QueuedConnection);
 }
 
+/* ### FIXME: v4
 void DebugMessageHandler(const v8::Debug::Message& message)
 {
     v8::DebugEvent event = message.GetEvent();
@@ -102,6 +103,7 @@ void DebugMessageHandler(const v8::Debug::Message& message)
 
     v8ServiceInstancePtr->debugMessageHandler(QJSConverter::toString(message.GetJSON()));
 }
+*/
 
 class QV8DebugServicePrivate : public QQmlDebugServicePrivate
 {
@@ -186,18 +188,20 @@ void QV8DebugService::signalEmitted(const QString &signal)
 // executed in the gui thread
 void QV8DebugService::init()
 {
-    v8::Debug::SetMessageHandler2(DebugMessageHandler);
-    v8::Debug::SetDebugMessageDispatchHandler(DebugMessageDispatchHandler);
+//    ### FIXME: v4
+//    v8::Debug::SetMessageHandler2(DebugMessageHandler);
+//    v8::Debug::SetDebugMessageDispatchHandler(DebugMessageDispatchHandler);
     QV4Compiler::enableV4(false);
 }
 
 // executed in the gui thread
 void QV8DebugService::scheduledDebugBreak(bool schedule)
 {
-    if (schedule)
-        v8::Debug::DebugBreak();
-    else
-        v8::Debug::CancelDebugBreak();
+//    ### FIXME: v4
+//    if (schedule)
+//        v8::Debug::DebugBreak();
+//    else
+//        v8::Debug::CancelDebugBreak();
 }
 
 // executed in the debugger thread
@@ -267,7 +271,7 @@ void QV8DebugService::messageReceived(const QByteArray &message)
 
 void QV8DebugService::sendDebugMessage(const QString &message)
 {
-    v8::Debug::SendCommand(message.utf16(), message.size());
+//  ### FIXME: v4  v8::Debug::SendCommand(message.utf16(), message.size());
 }
 
 void QV8DebugService::processDebugMessages()
@@ -275,7 +279,7 @@ void QV8DebugService::processDebugMessages()
     Q_D(QV8DebugService);
     v8::HandleScope handleScope;
     v8::Context::Scope contextScope(d->engine->context());
-    v8::Debug::ProcessDebugMessages();
+//  ### FIXME: v4  v8::Debug::ProcessDebugMessages();
 }
 
 QByteArray QV8DebugServicePrivate::packMessage(const QString &type, const QString &message)

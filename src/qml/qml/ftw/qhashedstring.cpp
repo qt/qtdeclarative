@@ -44,14 +44,14 @@
 
 inline quint32 stringHash(const QChar* data, int length)
 {
-    quint32 rv = calculateHash<quint16>((quint16*)data, length) >> HashedString::kHashShift;
+    quint32 rv = calculateHash((quint16*)data, length);
     Q_ASSERT(rv == v8::String::ComputeHash((uint16_t*)data, length));
     return rv;
 }
 
 inline quint32 stringHash(const char *data, int length)
 {
-    quint32 rv = calculateHash<quint8>((quint8*)data, length) >> HashedString::kHashShift;
+    quint32 rv = calculateHash((quint8*)data, length);
     Q_ASSERT(rv == v8::String::ComputeHash((char *)data, length));
     return rv;
 }

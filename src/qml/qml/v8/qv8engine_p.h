@@ -208,14 +208,14 @@ public:
     QQmlV8Handle &operator=(const QQmlV8Handle &other) { d = other.d; return *this; }
 
     static QQmlV8Handle fromHandle(v8::Handle<v8::Value> h) {
-        return QQmlV8Handle(*h);
+        return QQmlV8Handle(h);
     }
     v8::Handle<v8::Value> toHandle() const {
-        return v8::Handle<v8::Value>((v8::Value *)d);
+        return v8::Value::NewFromInternalValue(d);
     }
 private:
-    QQmlV8Handle(void *d) : d(d) {}
-    void *d;
+    QQmlV8Handle(v8::Handle<v8::Value> h) : d(h.val) {}
+    quint64 d;
 };
 
 class QObject;
