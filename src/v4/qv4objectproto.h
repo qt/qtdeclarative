@@ -69,7 +69,7 @@ struct ObjectPrototype: Object
 
     static Value method_getPrototypeOf(ExecutionContext *ctx);
     static Value method_getOwnPropertyDescriptor(ExecutionContext *ctx);
-    static Value method_getOwnPropertyNames(ExecutionContext *ctx);
+    static Value method_getOwnPropertyNames(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
     static Value method_create(ExecutionContext *ctx);
     static Value method_defineProperty(ExecutionContext *ctx);
     static Value method_defineProperties(ExecutionContext *ctx);

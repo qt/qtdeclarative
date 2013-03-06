@@ -50,6 +50,7 @@
 #include "qv4isel_masm_p.h"
 #include "qv4globalobject.h"
 #include "qv4regexpobject.h"
+#include "qv4objectproto.h"
 #include <QThreadStorage>
 
 using namespace QQmlJS;
@@ -702,36 +703,46 @@ bool Object::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSet
 
 Local<Array> Object::GetPropertyNames()
 {
-    Q_UNIMPLEMENTED();
+    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    assert(o);
+
+    VM::ArrayObject *array = currentEngine()->newArrayObject(currentEngine()->current)->asArrayObject();
+    ObjectIterator it(currentEngine()->current, o, ObjectIterator::WithProtoChain);
+    while (1) {
+        VM::Value v = it.nextPropertyNameAsString();
+        if (v.isNull())
+            break;
+        array->push_back(v);
+    }
+    return Local<Array>::New(Value::fromVmValue(VM::Value::fromObject(array)));
 }
 
 Local<Array> Object::GetOwnPropertyNames()
 {
-    Q_UNIMPLEMENTED();
+    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    assert(o);
+    VM::Value arg = VM::Value::fromObject(o);
+    VM::Value result = ObjectPrototype::method_getOwnPropertyNames(currentEngine()->current, VM::Value::undefinedValue(), &arg, 1);
+    return Local<Array>::New((Value::fromVmValue(result)));
 }
 
 Local<Value> Object::GetPrototype()
 {
     Local<Value> result;
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
-    if (!o)
-        return result;
+    assert(o);
     return Local<Value>::New(Value::fromVmValue(QQmlJS::VM::Value::fromObject(o->prototype)));
 }
 
 bool Object::SetPrototype(Handle<Value> prototype)
 {
-    Q_UNIMPLEMENTED();
-}
-
-Local<String> Object::GetConstructorName()
-{
-    Q_UNIMPLEMENTED();
-}
-
-int Object::InternalFieldCount()
-{
-    Q_UNIMPLEMENTED();
+    QQmlJS::VM::Object *p = ConstValuePtr(*prototype)->asObject();
+    if (!p)
+        return false;
+    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    assert(o);
+    o->prototype = p;
+    return true;
 }
 
 Local<Value> Object::GetInternalField(int index)
@@ -762,12 +773,15 @@ Object::ExternalResource *Object::GetExternalResource()
 
 bool Object::HasOwnProperty(Handle<String> key)
 {
-    Q_UNIMPLEMENTED();
+    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    assert(o);
+    QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
+    return o->__getOwnProperty__(ctx, ValuePtr(&key)->toString(ctx));
 }
 
 int Object::GetIdentityHash()
 {
-    Q_UNIMPLEMENTED();
+    return (quintptr)ConstValuePtr(this)->asObject() >> 2;
 }
 
 bool Object::SetHiddenValue(Handle<String> key, Handle<Value> value)
@@ -787,17 +801,29 @@ Local<Object> Object::Clone()
 
 bool Object::IsCallable()
 {
-    Q_UNIMPLEMENTED();
+    return ConstValuePtr(this)->asFunctionObject();
 }
 
 Local<Value> Object::CallAsFunction(Handle<Object> recv, int argc, Handle<Value> argv[])
 {
-    Q_UNIMPLEMENTED();
+    VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
+    if (!f)
+        return Local<Value>();
+    VM::Value retval = f->call(currentEngine()->current, recv->vmValue(),
+                               reinterpret_cast<QQmlJS::VM::Value*>(argv),
+                               argc);
+    return Local<Value>::New(Value::fromVmValue(retval));
 }
 
 Local<Value> Object::CallAsConstructor(int argc, Handle<Value> argv[])
 {
-    Q_UNIMPLEMENTED();
+    VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
+    if (!f)
+        return Local<Value>();
+    VM::Value retval = f->construct(currentEngine()->current,
+                                    reinterpret_cast<QQmlJS::VM::Value*>(argv),
+                                    argc);
+    return Local<Value>::New(Value::fromVmValue(retval));
 }
 
 Local<Object> Object::New()
@@ -814,13 +840,18 @@ Object *Object::Cast(Value *obj)
 
 uint32_t Array::Length() const
 {
-    Q_UNIMPLEMENTED();
+    VM::ArrayObject *a = ConstValuePtr(this)->asArrayObject();
+    assert(a);
+    return a->arrayLength();
 }
 
 Local<Array> Array::New(int length)
 {
-    VM::Object *o = currentEngine()->newArrayObject(currentEngine()->current);
-    return Local<Array>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+    VM::ArrayObject *a = currentEngine()->newArrayObject(currentEngine()->current);
+    if (length < 0x1000)
+        a->arrayReserve(length);
+
+    return Local<Array>::New(Value::fromVmValue(VM::Value::fromObject(a)));
 }
 
 Array *Array::Cast(Value *obj)
@@ -831,12 +862,20 @@ Array *Array::Cast(Value *obj)
 
 Local<Object> Function::NewInstance() const
 {
-    Q_UNIMPLEMENTED();
+    VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
+    assert(f);
+    VM::Value retval = f->construct(currentEngine()->current, 0, 0);
+    return Local<Object>::New(Value::fromVmValue(retval));
 }
 
 Local<Object> Function::NewInstance(int argc, Handle<Value> argv[]) const
 {
-    Q_UNIMPLEMENTED();
+    VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
+    assert(f);
+    VM::Value retval = f->construct(currentEngine()->current,
+                                    reinterpret_cast<QQmlJS::VM::Value*>(argv),
+                                    argc);
+    return Local<Object>::New(Value::fromVmValue(retval));
 }
 
 Local<Value> Function::Call(Handle<Object> thisObj, int argc, Handle<Value> argv[])
