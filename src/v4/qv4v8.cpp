@@ -150,7 +150,7 @@ Local<Value> Script::Run()
         return Local<Value>();
 
     QQmlJS::VM::Value result = context->GetEngine()->run(f);
-    return Local<Value>::New(Value::NewFromInternalValue(result.val));
+    return Local<Value>::New(Value::fromVmValue(result));
 }
 
 Local<Value> Script::Run(Handle<Object> qml)
@@ -328,37 +328,37 @@ bool Value::IsError() const
 
 Local<Boolean> Value::ToBoolean() const
 {
-    return Local<Boolean>::New(Value::NewFromInternalValue(QQmlJS::VM::Value::fromBoolean(ConstValuePtr(this)->toBoolean()).val));
+    return Local<Boolean>::New(Value::fromVmValue(VM::Value::fromBoolean(ConstValuePtr(this)->toBoolean())));
 }
 
 Local<Number> Value::ToNumber() const
 {
-    return Local<Number>::New(Value::NewFromInternalValue(QQmlJS::VM::Value::fromDouble(ConstValuePtr(this)->toNumber(currentEngine()->current)).val));
+    return Local<Number>::New(Value::fromVmValue(VM::Value::fromDouble(ConstValuePtr(this)->toNumber(currentEngine()->current))));
 }
 
 Local<String> Value::ToString() const
 {
-    return Local<String>::New(Value::NewFromInternalValue(QQmlJS::VM::Value::fromString(ConstValuePtr(this)->toString(currentEngine()->current)).val));
+    return Local<String>::New(Value::fromVmValue(VM::Value::fromString(ConstValuePtr(this)->toString(currentEngine()->current))));
 }
 
 Local<Object> Value::ToObject() const
 {
-    return Local<Object>::New(Value::NewFromInternalValue(QQmlJS::VM::Value::fromObject(ConstValuePtr(this)->toObject(currentEngine()->current)).val));
+    return Local<Object>::New(Value::fromVmValue(QQmlJS::VM::Value::fromObject(ConstValuePtr(this)->toObject(currentEngine()->current))));
 }
 
 Local<Integer> Value::ToInteger() const
 {
-    return Local<Integer>::New(Value::NewFromInternalValue(QQmlJS::VM::Value::fromDouble(ConstValuePtr(this)->toInteger(currentEngine()->current)).val));
+    return Local<Integer>::New(Value::fromVmValue(QQmlJS::VM::Value::fromDouble(ConstValuePtr(this)->toInteger(currentEngine()->current))));
 }
 
 Local<Uint32> Value::ToUint32() const
 {
-    return Local<Uint32>::New(Value::NewFromInternalValue(QQmlJS::VM::Value::fromUInt32(ConstValuePtr(this)->toUInt32(currentEngine()->current)).val));
+    return Local<Uint32>::New(Value::fromVmValue(QQmlJS::VM::Value::fromUInt32(ConstValuePtr(this)->toUInt32(currentEngine()->current))));
 }
 
 Local<Int32> Value::ToInt32() const
 {
-    return Local<Int32>::New(Value::NewFromInternalValue(QQmlJS::VM::Value::fromInt32(ConstValuePtr(this)->toInt32(currentEngine()->current)).val));
+    return Local<Int32>::New(Value::fromVmValue(QQmlJS::VM::Value::fromInt32(ConstValuePtr(this)->toInt32(currentEngine()->current))));
 }
 
 Local<Uint32> Value::ToArrayIndex() const
@@ -499,13 +499,13 @@ String *String::Cast(v8::Value *obj)
 Local<String> String::New(const char *data, int length)
 {
     QQmlJS::VM::Value v = QQmlJS::VM::Value::fromString(currentEngine()->current, QString::fromLatin1(data, length));
-    return Local<String>::New(v8::Value::NewFromInternalValue(v.val));
+    return Local<String>::New(v8::Value::fromVmValue(v));
 }
 
 Local<String> String::New(const uint16_t *data, int length)
 {
     QQmlJS::VM::Value v = QQmlJS::VM::Value::fromString(currentEngine()->current, QString((const QChar *)data, length));
-    return Local<String>::New(v8::Value::NewFromInternalValue(v.val));
+    return Local<String>::New(v8::Value::fromVmValue(v));
 }
 
 Local<String> String::NewSymbol(const char *data, int length)
@@ -631,24 +631,20 @@ bool Object::Set(uint32_t index, Handle<Value> value)
 
 Local<Value> Object::Get(Handle<Value> key)
 {
-    Local<Value> result;
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
-    if (!o)
-        return result;
+    assert(o);
     QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
     QQmlJS::VM::Value prop = o->__get__(ctx, ValuePtr(&key)->toString(ctx));
-    return Local<Value>::New(Value::NewFromInternalValue(prop.val));
+    return Local<Value>::New(Value::fromVmValue(prop));
 }
 
 Local<Value> Object::Get(uint32_t key)
 {
-    Local<Value> result;
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
-    if (!o)
-        return result;
+    assert(o);
     QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
     QQmlJS::VM::Value prop = o->__get__(ctx, key);
-    return Local<Value>::New(Value::NewFromInternalValue(prop.val));
+    return Local<Value>::New(Value::fromVmValue(prop));
 }
 
 bool Object::Has(Handle<String> key)
@@ -695,7 +691,7 @@ Local<Value> Object::GetPrototype()
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     if (!o)
         return result;
-    return Local<Value>::New(Value::NewFromInternalValue(QQmlJS::VM::Value::fromObject(o->prototype).val));
+    return Local<Value>::New(Value::fromVmValue(QQmlJS::VM::Value::fromObject(o->prototype)));
 }
 
 bool Object::SetPrototype(Handle<Value> prototype)
@@ -825,7 +821,7 @@ Local<Value> Function::Call(Handle<Object> thisObj, int argc, Handle<Value> argv
                                        *ConstValuePtr(&thisObj),
                                        reinterpret_cast<QQmlJS::VM::Value*>(argv),
                                        argc);
-    return Local<Value>::New(Value::NewFromInternalValue(result.val));
+    return Local<Value>::New(Value::fromVmValue(result));
 }
 
 Handle<Value> Function::GetName() const
@@ -1227,9 +1223,9 @@ Isolate *Isolate::GetCurrent()
 }
 
 
-void V8::SetFlagsFromString(const char *str, int length)
+void V8::SetFlagsFromString(const char *, int)
 {
-    Q_UNIMPLEMENTED();
+    // we can safely ignore these
 }
 
 void V8::SetUserObjectComparisonCallbackFunction(UserObjectComparisonCallback)
@@ -1338,7 +1334,7 @@ Persistent<Context> Context::New(ExtensionConfiguration *extensions, Handle<Obje
 
 Local<Object> Context::Global()
 {
-    return Local<Object>::New(Value::NewFromInternalValue(d->engine->globalObject.val));
+    return Local<Object>::New(Value::fromVmValue(d->engine->globalObject));
 }
 
 Local<Context> Context::GetCurrent()
