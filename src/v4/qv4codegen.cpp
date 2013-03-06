@@ -189,6 +189,42 @@ void liveness(IR::Function *function)
     } while (changed);
 }
 
+static inline bool isDeadAssignment(IR::Stmt *stmt, int localCount)
+{
+    IR::Move *move = stmt->asMove();
+    if (!move || move->op != IR::OpInvalid)
+        return false;
+    IR::Temp *target = move->target->asTemp();
+    if (!target)
+        return false;
+    if (target->scope || target->index < localCount)
+        return false;
+
+    if (IR::Name *n = move->source->asName()) {
+        if (*n->id != QStringLiteral("this"))
+            return false;
+    } else if (!move->source->asConst() && !move->source->asTemp()) {
+        return false;
+    }
+
+    return !stmt->d->liveOut.at(target->index);
+}
+
+void removeDeadAssignments(IR::Function *function)
+{
+    const int localCount = function->locals.size();
+    foreach (IR::BasicBlock *bb, function->basicBlocks) {
+        QVector<IR::Stmt *> &statements = bb->statements;
+        for (int i = 0; i < statements.size(); ) {
+//            qout<<"removeDeadAssignments: considering ";statements.at(i)->dump(qout);qout<<"\n";qout.flush();
+            if (isDeadAssignment(statements.at(i), localCount))
+                statements.remove(i);
+            else
+                ++i;
+        }
+    }
+}
+
 } // end of anonymous namespace
 
 class Codegen::ScanFunctions: Visitor
@@ -1807,6 +1843,9 @@ void Codegen::linearize(IR::Function *function)
     function->removeSharedExpressions();
     liveness(function);
 #endif
+
+    if (qgetenv("NO_OPT").isEmpty())
+        removeDeadAssignments(function);
 
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
