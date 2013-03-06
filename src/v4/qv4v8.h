@@ -142,8 +142,8 @@ class HeapObject;
 class Isolate;
 }
 
-void gcProtect(void *handle);
-void gcUnprotect(void *handle);
+void V8EXPORT gcProtect(void *handle);
+void V8EXPORT gcUnprotect(void *handle);
 
 // --- Weak Handles ---
 
@@ -462,7 +462,7 @@ template <class T> class Persistent : public Handle<T> {
    * Creates an empty persistent handle that doesn't point to any
    * storage cell.
    */
-  Persistent();
+  Persistent() {}
 
   /**
    * Creates a persistent handle for the same storage cell as the
@@ -522,7 +522,9 @@ template <class T> class Persistent : public Handle<T> {
        HandleOperations<T>::unProtect(this);
   }
 
-  void Dispose(Isolate* isolate);
+  void Dispose(Isolate*) {
+      Dispose();
+  }
 
   /**
    * Make the reference to this object weak.  When only weak handles
@@ -559,12 +561,7 @@ class V8EXPORT HandleScope {
    * Closes the handle scope and returns the value as a handle in the
    * previous scope, which is the new current scope after the call.
    */
-  template <class T> Local<T> Close(Handle<T> value);
-
-  /**
-   * Counts the number of allocated handles.
-   */
-  static int NumberOfHandles();
+  template <class T> Local<T> Close(Handle<T> value) { return Local<T>::New(value); }
 };
 
 
@@ -581,9 +578,10 @@ class V8EXPORT Data {
 /**
  * The origin, within a file, of a script.
  */
-class ScriptOrigin {
- public:
-    ScriptOrigin() : m_lineNumber(0), m_columnNumber(0) {}
+class V8EXPORT ScriptOrigin {
+public:
+  ScriptOrigin() : m_lineNumber(0), m_columnNumber(0) {}
+
   ScriptOrigin(
       Handle<Value> resource_name,
       Handle<Integer> resource_line_offset = Handle<Integer>(),
@@ -975,14 +973,14 @@ class V8EXPORT Value : public Data {
 /**
  * The superclass of primitive values.  See ECMA-262 4.3.2.
  */
-class Primitive : public Value { };
+class V8EXPORT Primitive : public Value { };
 
 
 /**
  * A primitive boolean value (ECMA-262, 4.3.14).  Either the true
  * or false value.
  */
-class Boolean : public Primitive {
+class V8EXPORT Boolean : public Primitive {
  public:
   V8EXPORT bool Value() const;
   static Handle<Boolean> New(bool value);
@@ -992,7 +990,7 @@ class Boolean : public Primitive {
 /**
  * A JavaScript string value (ECMA-262, 4.3.17).
  */
-class String : public Primitive {
+class V8EXPORT String : public Primitive {
  public:
   /**
    * Returns the number of characters in this string.
@@ -1208,7 +1206,7 @@ class String : public Primitive {
   class V8EXPORT Value {
    public:
     explicit Value(Handle<v8::Value> obj);
-    ~Value();
+    ~Value() {}
     uint16_t* operator*() { return (uint16_t *)str.data(); }
     const uint16_t* operator*() const { return str.utf16(); }
     int length() const { return str.length(); }
@@ -1228,7 +1226,7 @@ class String : public Primitive {
 /**
  * A JavaScript number value (ECMA-262, 4.3.20)
  */
-class Number : public Primitive {
+class V8EXPORT Number : public Primitive {
  public:
   V8EXPORT double Value() const;
   V8EXPORT static Local<Number> New(double value);
@@ -1239,7 +1237,7 @@ class Number : public Primitive {
 /**
  * A JavaScript value representing a signed integer.
  */
-class Integer : public Number {
+class V8EXPORT Integer : public Number {
  public:
   V8EXPORT static Local<Integer> New(int32_t value);
   V8EXPORT static Local<Integer> NewFromUnsigned(uint32_t value);
@@ -1253,7 +1251,7 @@ class Integer : public Number {
 /**
  * A JavaScript value representing a 32-bit signed integer.
  */
-class Int32 : public Integer {
+class V8EXPORT Int32 : public Integer {
  public:
   V8EXPORT int32_t Value() const;
  private:
@@ -1264,7 +1262,7 @@ class Int32 : public Integer {
 /**
  * A JavaScript value representing a 32-bit unsigned integer.
  */
-class Uint32 : public Integer {
+class V8EXPORT Uint32 : public Integer {
  public:
   V8EXPORT uint32_t Value() const;
  private:
@@ -1317,7 +1315,7 @@ enum AccessControl {
 /**
  * A JavaScript object (ECMA-262, 4.3.3)
  */
-class Object : public Value {
+class V8EXPORT Object : public Value {
  public:
   V8EXPORT bool Set(Handle<Value> key,
                     Handle<Value> value,
@@ -1464,7 +1462,7 @@ class Object : public Value {
 /**
  * An instance of the built-in array constructor (ECMA-262, 15.4.2).
  */
-class Array : public Object {
+class V8EXPORT Array : public Object {
  public:
   V8EXPORT uint32_t Length() const;
 
@@ -1481,7 +1479,7 @@ class Array : public Object {
 /**
  * A JavaScript function object (ECMA-262, 15.3).
  */
-class Function : public Object {
+class V8EXPORT Function : public Object {
  public:
   V8EXPORT Local<Object> NewInstance() const;
   V8EXPORT Local<Object> NewInstance(int argc, Handle<Value> argv[]) const;
@@ -1498,7 +1496,7 @@ class Function : public Object {
 /**
  * An instance of the built-in Date constructor (ECMA-262, 15.9).
  */
-class Date : public Object {
+class V8EXPORT Date : public Object {
  public:
   V8EXPORT static Local<Value> New(double time);
 
@@ -1530,7 +1528,7 @@ class Date : public Object {
 /**
  * A Number object (ECMA-262, 4.3.21).
  */
-class NumberObject : public Object {
+class V8EXPORT NumberObject : public Object {
  public:
   V8EXPORT static Local<Value> New(double value);
 
@@ -1547,7 +1545,7 @@ class NumberObject : public Object {
 /**
  * A Boolean object (ECMA-262, 4.3.15).
  */
-class BooleanObject : public Object {
+class V8EXPORT BooleanObject : public Object {
  public:
   V8EXPORT static Local<Value> New(bool value);
 
@@ -1564,7 +1562,7 @@ class BooleanObject : public Object {
 /**
  * A String object (ECMA-262, 4.3.18).
  */
-class StringObject : public Object {
+class V8EXPORT StringObject : public Object {
  public:
   V8EXPORT static Local<Value> New(Handle<String> value);
 
@@ -1581,7 +1579,7 @@ class StringObject : public Object {
 /**
  * An instance of the built-in RegExp constructor (ECMA-262, 15.10).
  */
-class RegExp : public Object {
+class V8EXPORT RegExp : public Object {
  public:
   /**
    * Regular expression flag bits. They can be or'ed to enable a set
@@ -1634,7 +1632,7 @@ class RegExp : public Object {
  * value Unwrap should be used, all other operations on that object will lead
  * to unpredictable results.
  */
-class External : public Value {
+class V8EXPORT External : public Value {
  public:
   V8EXPORT static Local<Value> Wrap(void* data);
   static void* Unwrap(Handle<Value> obj);
@@ -1666,7 +1664,7 @@ class V8EXPORT Template : public Data {
  * including the receiver, the number and values of arguments, and
  * the holder of the function.
  */
-class Arguments {
+class V8EXPORT Arguments {
  public:
   int Length() const;
   Local<Value> operator[](int i) const;
@@ -2027,10 +2025,10 @@ Handle<Primitive> V8EXPORT Null();
 Handle<Boolean> V8EXPORT True();
 Handle<Boolean> V8EXPORT False();
 
-Handle<Primitive> Undefined(Isolate*) { return Undefined(); }
-Handle<Primitive> Null(Isolate*) { return Null(); }
-Handle<Boolean> True(Isolate*) { return True(); }
-Handle<Boolean> False(Isolate*) { return False(); }
+inline Handle<Primitive> Undefined(Isolate*) { return Undefined(); }
+inline Handle<Primitive> Null(Isolate*) { return Null(); }
+inline Handle<Boolean> True(Isolate*) { return True(); }
+inline Handle<Boolean> False(Isolate*) { return False(); }
 
 
 
@@ -2447,6 +2445,13 @@ private:
 };
 
 DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Context)
+
+template<typename T>
+void Persistent<T>::MakeWeak(void* parameters, WeakReferenceCallback callback)
+{
+    Q_UNIMPLEMENTED();
+}
+
 
 
 }  // namespace v8

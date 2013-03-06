@@ -55,11 +55,18 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
-
+#include "qv4v8.h"
 QT_BEGIN_NAMESPACE
 
-uint32_t calculateHash(const quint8* chars, int length);
-uint32_t calculateHash(const quint16* chars, int length);
+inline uint32_t calculateHash(const quint8* chars, int length)
+{
+    return v8::String::ComputeHash((char *)chars, length);
+}
+
+inline uint32_t calculateHash(const quint16* chars, int length)
+{
+    return v8::String::ComputeHash((uint16_t *)chars, length);
+}
 
 QT_END_NAMESPACE
 
