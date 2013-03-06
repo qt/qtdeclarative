@@ -677,7 +677,8 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
 }
 
 typedef void *(*MiddleOfFunctionEntryPoint(ExecutionContext *, void *localsPtr));
-static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunctionEntryPoint tryBody, MiddleOfFunctionEntryPoint catchBody)
+static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunctionEntryPoint tryBody, MiddleOfFunctionEntryPoint catchBody,
+                        VM::String *exceptionVarName)
 {
     void *addressToContinueAt = 0;
     try {
@@ -685,7 +686,9 @@ static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunc
     } catch (Exception& ex) {
         ex.accept(context);
         try {
-            addressToContinueAt = catchBody(context, localsPtr);
+            ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(exceptionVarName, context);
+            addressToContinueAt = catchBody(catchContext, localsPtr);
+            context = __qmljs_builtin_pop_scope(catchContext);
         } catch (Exception& ex) {
             ex.accept(context);
             addressToContinueAt = catchBody(context, localsPtr);
@@ -706,7 +709,8 @@ void InstructionSelection::visitTry(IR::Try *t)
     _reentryBlocks.insert(t->catchBlock);
 
     generateFunctionCall(Assembler::ReturnValueRegister, tryWrapper, Assembler::ContextRegister, Assembler::LocalsRegister,
-                         Assembler::ReentryBlock(t->tryBlock), Assembler::ReentryBlock(t->catchBlock));
+                         Assembler::ReentryBlock(t->tryBlock), Assembler::ReentryBlock(t->catchBlock),
+                         identifier(t->exceptionVarName));
     _as->jump(Assembler::ReturnValueRegister);
 }
 
@@ -738,11 +742,6 @@ void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR:
 void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
 {
     generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_push_with_scope, Assembler::Reference(arg), Assembler::ContextRegister);
-}
-
-void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionVarName)
-{
-    generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_push_catch_scope, identifier(exceptionVarName), Assembler::ContextRegister);
 }
 
 void InstructionSelection::callBuiltinPopScope()

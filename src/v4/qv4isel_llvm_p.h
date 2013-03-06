@@ -94,7 +94,6 @@ public: // methods from InstructionSelection:
     virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result);
     virtual void callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result);
     virtual void callBuiltinPushWithScope(IR::Temp *arg);
-    virtual void callBuiltinPushCatchScope(const QString &exceptionVarName){}
     virtual void callBuiltinPopScope();
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name);
     virtual void callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter);

@@ -682,6 +682,7 @@ void InstructionSelection::visitTry(IR::Try *t)
     Instruction::EnterTry enterTry;
     enterTry.tryOffset = 0;
     enterTry.catchOffset = 0;
+    enterTry.exceptionVarName = identifier(t->exceptionVarName);
     ptrdiff_t enterTryLoc = addInstruction(enterTry);
 
     ptrdiff_t tryLoc = enterTryLoc + (((const char *)&enterTry.tryOffset) - ((const char *)&enterTry));
@@ -876,13 +877,6 @@ void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
 {
     Instruction::CallBuiltinPushScope call;
     call.arg = getParam(arg);
-    addInstruction(call);
-}
-
-void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionVarName)
-{
-    Instruction::CallBuiltinPushCatchScope call;
-    call.varName = identifier(exceptionVarName);
     addInstruction(call);
 }
 

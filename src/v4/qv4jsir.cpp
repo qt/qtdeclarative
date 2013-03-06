@@ -366,8 +366,6 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_foreach_next_property_name";
     case IR::Name::builtin_push_with_scope:
         return "builtin_push_with_scope";
-    case IR::Name::builtin_push_catch_scope:
-        return "builtin_push_catch_scope";
     case IR::Name::builtin_pop_scope:
         return "builtin_pop_scope";
     case IR::Name::builtin_declare_vars:
@@ -526,7 +524,7 @@ void Ret::dump(QTextStream &out, Mode)
 
 void Try::dump(QTextStream &out, Stmt::Mode mode)
 {
-    out << "try L" << tryBlock->index << "; catch L" << catchBlock->index << ';';
+    out << "try L" << tryBlock->index << "; catch exception as " << exceptionVarName << " and go to L" << catchBlock->index << ';';
 }
 
 Function *Module::newFunction(const QString &name, Function *outer)
@@ -793,13 +791,13 @@ Stmt *BasicBlock::RET(Temp *expr)
     return s;
 }
 
-Stmt *BasicBlock::TRY(BasicBlock *tryBlock, BasicBlock *catchBlock)
+Stmt *BasicBlock::TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString &exceptionVarName)
 {
     if (isTerminated())
         return 0;
 
     Try *t = function->New<Try>();
-    t->init(tryBlock, catchBlock);
+    t->init(tryBlock, catchBlock, exceptionVarName);
     statements.append(t);
 
     assert(! out.contains(tryBlock));

@@ -2475,7 +2475,7 @@ bool Codegen::visit(TryStatement *ast)
     ScopeAndFinally tcf(_scopeAndFinally, ast->finallyExpression, finishTryArgs);
     _scopeAndFinally = &tcf;
 
-    _block->TRY(tryBody, catchBody);
+    _block->TRY(tryBody, catchBody, ast->catchExpression ? ast->catchExpression->name.toString() : QString());
 
     _block = tryBody;
     statement(ast->statement);
@@ -2494,21 +2494,15 @@ bool Codegen::visit(TryStatement *ast)
     move(_block->TEMP(hasException), _block->CONST(IR::BoolType, true));
 
     if (ast->catchExpression) {
-        IR::ExprList *catchScopeArgs = _function->New<IR::ExprList>();
-        catchScopeArgs->init(_block->NAME(ast->catchExpression->name.toString(), ast->catchExpression->identifierToken.startLine, ast->catchExpression->identifierToken.startColumn));
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_catch_scope, 0, 0), catchScopeArgs));
-
         ++_function->insideWithOrCatch;
         {
-            ScopeAndFinally scope(_scopeAndFinally);
+            ScopeAndFinally scope(_scopeAndFinally, ScopeAndFinally::CatchScope);
             _scopeAndFinally = &scope;
             statement(ast->catchExpression->statement);
             _scopeAndFinally = scope.parent;
         }
         --_function->insideWithOrCatch;
-
         move(_block->TEMP(hasException), _block->CONST(IR::BoolType, false));
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0)));
     }
     _block->JUMP(finallyBody);
 
@@ -2543,16 +2537,22 @@ void Codegen::unwindException(Codegen::ScopeAndFinally *outest)
     ScopeAndFinally *scopeAndFinally = _scopeAndFinally;
     qSwap(_scopeAndFinally, scopeAndFinally);
     while (_scopeAndFinally != outest) {
-        if (_scopeAndFinally->popScope) {
+        switch (_scopeAndFinally->type) {
+        case ScopeAndFinally::WithScope:
             _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0)));
+            // fall through
+        case ScopeAndFinally::CatchScope:
             _scopeAndFinally = _scopeAndFinally->parent;
             --_function->insideWithOrCatch;
-        } else {
+            break;
+        case ScopeAndFinally::TryScope: {
             _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_finish_try, 0, 0), _scopeAndFinally->finishTryArgs));
             ScopeAndFinally *tc = _scopeAndFinally;
             _scopeAndFinally = tc->parent;
             if (tc->finally && tc->finally->statement)
                 statement(tc->finally->statement);
+            break;
+        }
         }
     }
     qSwap(_scopeAndFinally, scopeAndFinally);

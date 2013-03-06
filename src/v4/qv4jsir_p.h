@@ -296,7 +296,6 @@ struct Name: Expr {
         builtin_foreach_iterator_object,
         builtin_foreach_next_property_name,
         builtin_push_with_scope,
-        builtin_push_catch_scope,
         builtin_pop_scope,
         builtin_declare_vars,
         builtin_define_property,
@@ -608,11 +607,13 @@ struct Ret: Stmt {
 struct Try: Stmt {
     BasicBlock *tryBlock;
     BasicBlock *catchBlock;
+    QString exceptionVarName;
 
-    void init(BasicBlock *tryBlock, BasicBlock *catchBlock)
+    void init(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString &exceptionVarName)
     {
         this->tryBlock = tryBlock;
         this->catchBlock = catchBlock;
+        this->exceptionVarName = exceptionVarName;
     }
 
     virtual Stmt *asTerminator() { return this; }
@@ -749,7 +750,7 @@ struct BasicBlock {
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
     Stmt *RET(Temp *expr);
-    Stmt *TRY(BasicBlock *tryBlock, BasicBlock *catchBlock);
+    Stmt *TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString &exceptionVarName);
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 };

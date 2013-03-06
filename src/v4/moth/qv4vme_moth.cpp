@@ -267,9 +267,11 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
         } catch (VM::Exception &ex) {
             ex.accept(context);
             try {
+                VM::ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(instr.exceptionVarName, context);
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
-                run(context, catchCode, stack, stackSize);
+                run(catchContext, catchCode, stack, stackSize);
                 code = catchCode;
+                context = __qmljs_builtin_pop_scope(catchContext);
             } catch (VM::Exception &ex) {
                 ex.accept(context);
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
@@ -290,10 +292,6 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
     MOTH_BEGIN_INSTR(CallBuiltinPushScope)
         context = __qmljs_builtin_push_with_scope(VALUE(instr.arg), context);
     MOTH_END_INSTR(CallBuiltinPushScope)
-
-    MOTH_BEGIN_INSTR(CallBuiltinPushCatchScope)
-         context = __qmljs_builtin_push_catch_scope(instr.varName, context);
-    MOTH_END_INSTR(CallBuiltinPushCatchScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPopScope)
         context = __qmljs_builtin_pop_scope(context);

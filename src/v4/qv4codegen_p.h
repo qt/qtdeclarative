@@ -215,14 +215,20 @@ protected:
     };
 
     struct ScopeAndFinally {
+        enum ScopeType {
+            WithScope,
+            TryScope,
+            CatchScope
+        };
+
         ScopeAndFinally *parent;
         AST::Finally *finally;
         IR::ExprList *finishTryArgs;
-        bool popScope;
+        ScopeType type;
 
-        ScopeAndFinally(ScopeAndFinally *parent) : parent(parent), finally(0), finishTryArgs(0), popScope(true) {}
+        ScopeAndFinally(ScopeAndFinally *parent, ScopeType t = WithScope) : parent(parent), finally(0), finishTryArgs(0), type(t) {}
         ScopeAndFinally(ScopeAndFinally *parent, AST::Finally *finally, IR::ExprList *finishTryArgs)
-        : parent(parent), finally(finally), finishTryArgs(finishTryArgs), popScope(false)
+        : parent(parent), finally(finally), finishTryArgs(finishTryArgs), type(TryScope)
         {}
     };
 

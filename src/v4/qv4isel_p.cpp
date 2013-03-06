@@ -335,12 +335,6 @@ void InstructionSelection::callBuiltin(IR::Call *call, IR::Temp *result)
         callBuiltinPushWithScope(arg);
     } return;
 
-    case IR::Name::builtin_push_catch_scope: {
-        IR::Name *arg = call->args->expr->asName();
-        assert(arg != 0);
-        callBuiltinPushCatchScope(*arg->id);
-    } return;
-
     case IR::Name::builtin_pop_scope:
         callBuiltinPopScope();
         return;
