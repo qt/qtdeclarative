@@ -509,7 +509,10 @@ template <class T> class Persistent : public Handle<T> {
    */
   static Persistent<T> New(Handle<T> that)
   {
-      return Persistent<T>(that);
+      Persistent<T> result;
+      result.Handle<T>::operator =(that);
+      HandleOperations<T>::protect(&result);
+      return result;
   }
 
   /**
