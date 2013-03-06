@@ -701,7 +701,7 @@ void tst_qquickimage::imageCrash_QTBUG_22125()
     }
 
     // shouldn't crash when deleting cancelled QQmlPixmapReplys.
-    QTest::qWait(520); // Delay mode delays for 500 ms.
+    server.sendDelayedItem();
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 }

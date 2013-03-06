@@ -2353,6 +2353,7 @@ void tst_qquicktextedit::remoteCursorDelegate()
 
     QCOMPARE(component.status(), QQmlComponent::Loading);
     QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
+    server.sendDelayedItem();
 
     // Wait for component to load.
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);

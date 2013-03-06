@@ -2797,6 +2797,7 @@ void tst_qquicktextinput::remoteCursorDelegate()
 
     QCOMPARE(component.status(), QQmlComponent::Loading);
     QVERIFY(!textInputObject->findChild<QQuickItem*>("cursorInstance"));
+    server.sendDelayedItem();
 
     // Wait for component to load.
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);

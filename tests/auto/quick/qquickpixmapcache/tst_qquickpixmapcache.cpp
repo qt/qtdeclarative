@@ -419,6 +419,7 @@ void tst_qquickpixmapcache::lockingCrash()
         p->clear();
         QVERIFY(p->isNull());
         delete p;
+        server.sendDelayedItem();
     }
 }
 

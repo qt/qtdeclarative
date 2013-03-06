@@ -284,6 +284,11 @@ bool TestHTTPServer::reply(QTcpSocket *socket, const QByteArray &fileName)
     return true;
 }
 
+void TestHTTPServer::sendDelayedItem()
+{
+    sendOne();
+}
+
 void TestHTTPServer::sendOne()
 {
     if (!toSend.isEmpty()) {

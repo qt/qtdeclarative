@@ -1173,6 +1173,7 @@ void tst_qqmlxmlhttprequest::stateChangeCallingContext()
     QQmlComponent component(&engine, testFileUrl("stateChangeCallingContext.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
+    server.sendDelayedItem();
     QTRY_VERIFY(object->property("success").toBool() == true);
     delete object;
 }

@@ -52,6 +52,15 @@
 #define SERVER_PORT 14458
 #define SERVER_ADDR "http://localhost:14458"
 
+class SlowComponent : public QQmlComponent
+{
+    Q_OBJECT
+public:
+    SlowComponent() {
+        QTest::qSleep(500);
+    }
+};
+
 class PeriodicIncubationController : public QObject,
     public QQmlIncubationController
 {
@@ -81,6 +90,8 @@ public:
     tst_QQuickLoader();
 
 private slots:
+    void cleanup();
+
     void sourceOrComponent();
     void sourceOrComponent_data();
     void clear();
@@ -120,9 +131,15 @@ private:
     QQmlEngine engine;
 };
 
+void tst_QQuickLoader::cleanup()
+{
+    // clear components. otherwise we even bypass the test server by using the cache.
+    engine.clearComponentCache();
+}
 
 tst_QQuickLoader::tst_QQuickLoader()
 {
+    qmlRegisterType<SlowComponent>("LoaderTest", 1, 0, "SlowComponent");
 }
 
 void tst_QQuickLoader::sourceOrComponent()
@@ -462,12 +479,14 @@ void tst_QQuickLoader::networkComponent()
                 " Component { id: comp; NW.Rect120x60 {} }\n"
                 " Loader { sourceComponent: comp } }")
             , dataDirectory());
+    QCOMPARE(component.status(), QQmlComponent::Loading);
+    server.sendDelayedItem();
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
 
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
 
-    QQuickLoader *loader = qobject_cast<QQuickLoader*>(item->QQuickItem::children().at(1));
+    QQuickLoader *loader = qobject_cast<QQuickLoader*>(item->children().at(1));
     QVERIFY(loader);
     QTRY_VERIFY(loader->status() == QQuickLoader::Ready);
 
@@ -1024,6 +1043,11 @@ void tst_QQuickLoader::simultaneousSyncAsync()
 
 void tst_QQuickLoader::loadedSignal()
 {
+    PeriodicIncubationController *controller = new PeriodicIncubationController;
+    QQmlIncubationController *previous = engine.incubationController();
+    engine.setIncubationController(controller);
+    delete previous;
+
     {
         // ensure that triggering loading (by setting active = true)
         // and then immediately setting active to false, causes the
@@ -1042,8 +1066,9 @@ void tst_QQuickLoader::loadedSignal()
         QVERIFY(obj->property("success").toBool());
 
         QMetaObject::invokeMethod(obj, "triggerMultipleLoad");
+        controller->start();
         QTest::qWait(100);
-        QCOMPARE(obj->property("loadCount").toInt(), 1); // only one loaded signal should be emitted.
+        QTRY_COMPARE(obj->property("loadCount").toInt(), 1); // only one loaded signal should be emitted.
         QVERIFY(obj->property("success").toBool());
 
         delete obj;
