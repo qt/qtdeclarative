@@ -1139,7 +1139,10 @@ Local<Object> AccessorInfo::Holder() const
 
 Local<FunctionTemplate> FunctionTemplate::New(InvocationCallback callback, Handle<Value> data)
 {
-    Q_UNIMPLEMENTED();
+    FunctionTemplate *ft = new FunctionTemplate;
+    ft->m_callback = callback;
+    ft->m_data = Persistent<Value>::New(data);
+    return Local<FunctionTemplate>::New(Handle<FunctionTemplate>(ft));
 }
 
 Local<Function> FunctionTemplate::GetFunction()
@@ -1149,18 +1152,23 @@ Local<Function> FunctionTemplate::GetFunction()
 
 Local<ObjectTemplate> FunctionTemplate::InstanceTemplate()
 {
-    Q_UNIMPLEMENTED();
+    if (!*m_instanceTemplate)
+        m_instanceTemplate = ObjectTemplate::New();
+    return m_instanceTemplate;
 }
 
 Local<ObjectTemplate> FunctionTemplate::PrototypeTemplate()
 {
-    Q_UNIMPLEMENTED();
+    if (!*m_prototypeTemplate)
+        m_prototypeTemplate = ObjectTemplate::New();
+    return m_prototypeTemplate;
 }
 
 
 Local<ObjectTemplate> ObjectTemplate::New()
 {
-    Q_UNIMPLEMENTED();
+    ObjectTemplate *ot = new ObjectTemplate;
+    return Local<ObjectTemplate>::New(Handle<ObjectTemplate>(ot));
 }
 
 Local<Object> ObjectTemplate::NewInstance()

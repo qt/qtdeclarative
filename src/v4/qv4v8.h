@@ -574,9 +574,10 @@ class V8EXPORT HandleScope {
 /**
  * The superclass of values and API object templates.
  */
-class V8EXPORT Data {
+class V8EXPORT Data  : public QSharedData {
 };
 
+DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Data)
 
 /**
  * The origin, within a file, of a script.
@@ -1884,6 +1885,11 @@ class V8EXPORT FunctionTemplate : public Template {
    */
   Local<ObjectTemplate> PrototypeTemplate();
 
+private:
+  InvocationCallback m_callback;
+  Persistent<Value> m_data;
+  Local<ObjectTemplate> m_instanceTemplate;
+  Local<ObjectTemplate> m_prototypeTemplate;
 };
 
 
