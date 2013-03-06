@@ -527,6 +527,26 @@ inline Value Managed::call(ExecutionContext *context, const Value &thisObject, V
     return vtbl->call(this, context, thisObject, args, argc);
 }
 
+class PersistentValue
+{
+public:
+    PersistentValue();
+    PersistentValue(MemoryManager *mm, const Value &val);
+    PersistentValue(const PersistentValue &other);
+    PersistentValue &operator=(const PersistentValue &other);
+    ~PersistentValue();
+
+    Value *operator->() { return &m_value; }
+    Value *operator*() { return &m_value; }
+
+    operator Value() const { return m_value; }
+
+private:
+    Managed *asManaged() { return m_memoryManager ? m_value.asManaged() : 0; }
+    MemoryManager *m_memoryManager;
+    Value m_value;
+};
+
 } // namespace VM
 } // namespace QQmlJS
 

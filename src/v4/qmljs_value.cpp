@@ -41,6 +41,7 @@
 #include <qmljs_engine.h>
 #include <qv4object.h>
 #include <qv4objectproto.h>
+#include "qv4mm.h"
 
 #include <wtf/MathExtras.h>
 
@@ -164,6 +165,47 @@ double Value::toInteger(double number)
 Value Value::property(ExecutionContext *ctx, String *name) const
 {
     return isObject() ? objectValue()->__get__(ctx, name) : undefinedValue();
+}
+
+PersistentValue::PersistentValue()
+    : m_memoryManager(0)
+    , m_value(Value::undefinedValue())
+{
+}
+
+PersistentValue::PersistentValue(MemoryManager *mm, const Value &val)
+    : m_memoryManager(mm)
+    , m_value(val)
+{
+    assert(mm);
+    if (Managed *m = asManaged())
+        m_memoryManager->protect(m);
+}
+
+PersistentValue::PersistentValue(const PersistentValue &other)
+    : m_memoryManager(other.m_memoryManager)
+    , m_value(other.m_value)
+{
+    if (Managed *m = asManaged())
+        m_memoryManager->protect(m);
+}
+
+PersistentValue &PersistentValue::operator=(const PersistentValue &other)
+{
+    if (this == &other)
+        return *this;
+    if (Managed *m = asManaged())
+        m_memoryManager->unprotect(m);
+    m_memoryManager = other.m_memoryManager;
+    m_value = other.m_value;
+    if (Managed *m = asManaged())
+        m_memoryManager->protect(m);
+}
+
+PersistentValue::~PersistentValue()
+{
+    if (Managed *m = asManaged())
+        m_memoryManager->unprotect(m);
 }
 
 

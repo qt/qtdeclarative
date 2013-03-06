@@ -102,7 +102,7 @@ struct Q_V4_EXPORT Exception {
 private:
     ExecutionContext *throwingContext;
     bool accepted;
-    Value exception;
+    PersistentValue exception;
 };
 
 extern "C" {
