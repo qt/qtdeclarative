@@ -99,6 +99,8 @@ struct InternalClass;
 
 class RegExp;
 
+typedef bool (*ExternalResourceComparison)(const VM::Value &a, const VM::Value &b);
+
 struct Q_V4_EXPORT ExecutionEngine
 {
     MemoryManager *memoryManager;
@@ -181,6 +183,8 @@ struct Q_V4_EXPORT ExecutionEngine
     Value exception;
 
     QVector<Function *> functions;
+
+    ExternalResourceComparison externalResourceComparison;
 
     ExecutionEngine(EvalISelFactory *iselFactory = 0);
     ~ExecutionEngine();

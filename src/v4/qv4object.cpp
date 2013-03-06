@@ -782,14 +782,14 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
         for (uint i = fromIndex; i < endIndex; ++i) {
             bool exists;
             Value value = o->__get__(ctx, i, &exists);
-            if (exists && __qmljs_strict_equal(value, v))
+            if (exists && __qmljs_strict_equal(value, v, ctx))
                 return Value::fromDouble(i);
         }
     } else if (sparseArray) {
         for (SparseArrayNode *n = sparseArray->lowerBound(fromIndex); n != sparseArray->end() && n->key() < endIndex; n = n->nextNode()) {
             bool exists;
             Value value = o->getValueChecked(ctx, arrayDecriptor(n->value), &exists);
-            if (exists && __qmljs_strict_equal(value, v))
+            if (exists && __qmljs_strict_equal(value, v, ctx))
                 return Value::fromDouble(n->key());
         }
     } else {
@@ -801,7 +801,7 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
         while (pd < end) {
             bool exists;
             Value value = o->getValueChecked(ctx, pd, &exists);
-            if (exists && __qmljs_strict_equal(value, v))
+            if (exists && __qmljs_strict_equal(value, v, ctx))
                 return Value::fromDouble(pd - arrayData);
             ++pd;
         }

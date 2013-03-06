@@ -188,7 +188,7 @@ Object *__qmljs_convert_to_object(ExecutionContext *ctx, const Value &value);
 Value __qmljs_default_value(const Value &value, ExecutionContext *ctx, int typeHint);
 
 Bool __qmljs_equal(const Value &x, const Value &y, ExecutionContext *ctx);
-Bool __qmljs_strict_equal(const Value &x, const Value &y);
+Bool __qmljs_strict_equal(const Value &x, const Value &y, QQmlJS::VM::ExecutionContext *ctx);
 
 // unary operators
 typedef void (*UnaryOpName)(ExecutionContext *, Value *, const Value &);
@@ -592,19 +592,19 @@ inline void __qmljs_ne(ExecutionContext *ctx, Value *result, const Value &left, 
     *result = Value::fromBoolean(!__qmljs_cmp_eq(ctx, left, right));
 }
 
-inline void __qmljs_se(ExecutionContext *, Value *result, const Value &left, const Value &right)
+inline void __qmljs_se(ExecutionContext *ctx, Value *result, const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    bool r = __qmljs_strict_equal(left, right);
+    bool r = __qmljs_strict_equal(left, right, ctx);
     *result = Value::fromBoolean(r);
 }
 
-inline void __qmljs_sne(ExecutionContext *, Value *result, const Value &left, const Value &right)
+inline void __qmljs_sne(ExecutionContext *ctx, Value *result, const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    bool r = ! __qmljs_strict_equal(left, right);
+    bool r = ! __qmljs_strict_equal(left, right, ctx);
     *result = Value::fromBoolean(r);
 }
 
@@ -710,18 +710,18 @@ inline Bool __qmljs_cmp_ne(ExecutionContext *ctx, const Value &left, const Value
     return !__qmljs_cmp_eq(ctx, left, right);
 }
 
-inline Bool __qmljs_cmp_se(ExecutionContext *, const Value &left, const Value &right)
+inline Bool __qmljs_cmp_se(ExecutionContext *ctx, const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    return __qmljs_strict_equal(left, right);
+    return __qmljs_strict_equal(left, right, ctx);
 }
 
-inline Bool __qmljs_cmp_sne(ExecutionContext *, const Value &left, const Value &right)
+inline Bool __qmljs_cmp_sne(ExecutionContext *ctx, const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    return ! __qmljs_strict_equal(left, right);
+    return ! __qmljs_strict_equal(left, right, ctx);
 }
 
 inline Bool __qmljs_cmp_instanceof(ExecutionContext *ctx, const Value &left, const Value &right)
@@ -740,19 +740,6 @@ inline uint __qmljs_cmp_in(ExecutionContext *ctx, const Value &left, const Value
     Value v;
     __qmljs_in(ctx, &v, left, right);
     return v.booleanValue();
-}
-
-inline Bool __qmljs_strict_equal(const Value &x, const Value &y)
-{
-    TRACE2(x, y);
-
-    if (x.isDouble() || y.isDouble())
-        return x.asDouble() == y.asDouble();
-    if (x.rawValue() == y.rawValue())
-        return true;
-    if (x.isString() && y.isString())
-        return __qmljs_string_equal(x.stringValue(), y.stringValue());
-    return false;
 }
 
 } // extern "C"

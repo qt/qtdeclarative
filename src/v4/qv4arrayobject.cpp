@@ -572,7 +572,7 @@ Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
         for (uint k = fromIndex; k < len; ++k) {
             bool exists;
             Value v = instance->__get__(ctx, k, &exists);
-            if (exists && __qmljs_strict_equal(v, searchValue))
+            if (exists && __qmljs_strict_equal(v, searchValue, ctx))
                 return Value::fromDouble(k);
         }
         return Value::fromInt32(-1);
@@ -612,7 +612,7 @@ Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
         --k;
         bool exists;
         Value v = instance->__get__(ctx, k, &exists);
-        if (exists && __qmljs_strict_equal(v, searchValue))
+        if (exists && __qmljs_strict_equal(v, searchValue, ctx))
             return Value::fromDouble(k);
     }
     return Value::fromInt32(-1);

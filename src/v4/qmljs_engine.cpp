@@ -70,6 +70,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , globalObject(Value::nullValue())
     , globalCode(0)
     , exception(Value::nullValue())
+    , externalResourceComparison(0)
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 

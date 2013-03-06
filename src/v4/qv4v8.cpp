@@ -398,7 +398,7 @@ bool Value::Equals(Handle<Value> that) const
 
 bool Value::StrictEquals(Handle<Value> that) const
 {
-    return __qmljs_strict_equal(*ConstValuePtr(this), *ConstValuePtr(&that));
+    return __qmljs_strict_equal(*ConstValuePtr(this), *ConstValuePtr(&that), currentEngine()->current);
 }
 
 VM::Value Value::vmValue() const
@@ -1228,9 +1228,21 @@ void V8::SetFlagsFromString(const char *, int)
     // we can safely ignore these
 }
 
-void V8::SetUserObjectComparisonCallbackFunction(UserObjectComparisonCallback)
+static UserObjectComparisonCallback userObjectComparisonCallback = 0;
+
+static bool v8ExternalResourceComparison(const VM::Value &a, const VM::Value &b)
 {
-    Q_UNIMPLEMENTED();
+    if (!userObjectComparisonCallback)
+        return false;
+    Local<Object> la = Local<Object>::New(Value::fromVmValue(a));
+    Local<Object> lb = Local<Object>::New(Value::fromVmValue(b));
+    return userObjectComparisonCallback(la, lb);
+}
+
+void V8::SetUserObjectComparisonCallbackFunction(UserObjectComparisonCallback callback)
+{
+    userObjectComparisonCallback = callback;
+    currentEngine()->externalResourceComparison = v8ExternalResourceComparison;
 }
 
 void V8::AddGCPrologueCallback(GCPrologueCallback callback, GCType gc_type_filter)
