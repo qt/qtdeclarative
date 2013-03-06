@@ -50,6 +50,10 @@
 #include "qv4isel_masm_p.h"
 #include "qv4globalobject.h"
 #include "qv4regexpobject.h"
+#include "qv4dateobject.h"
+#include "qv4numberobject.h"
+#include "qv4booleanobject.h"
+#include "qv4stringobject.h"
 #include "qv4objectproto.h"
 #include <QThreadStorage>
 
@@ -892,12 +896,16 @@ Local<Value> Function::Call(Handle<Object> thisObj, int argc, Handle<Value> argv
 
 Handle<Value> Function::GetName() const
 {
-    Q_UNIMPLEMENTED();
+    QQmlJS::VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
+    if (!f)
+        return Handle<Value>();
+    return Value::fromVmValue(VM::Value::fromString(f->name));
 }
 
 ScriptOrigin Function::GetScriptOrigin() const
 {
     Q_UNIMPLEMENTED();
+    return ScriptOrigin();
 }
 
 Function *Function::Cast(Value *obj)
@@ -914,7 +922,9 @@ Local<Value> Date::New(double time)
 
 double Date::NumberValue() const
 {
-    Q_UNIMPLEMENTED();
+    DateObject *d = ConstValuePtr(this)->asDateObject();
+    assert(d);
+    return d->value.doubleValue();
 }
 
 Date *Date::Cast(Value *obj)
@@ -936,7 +946,9 @@ Local<Value> NumberObject::New(double value)
 
 double NumberObject::NumberValue() const
 {
-    Q_UNIMPLEMENTED();
+    VM::NumberObject *n = ConstValuePtr(this)->asNumberObject();
+    assert(n);
+    return n->value.doubleValue();
 }
 
 NumberObject *NumberObject::Cast(Value *obj)
@@ -952,7 +964,9 @@ Local<Value> BooleanObject::New(bool value)
 
 bool BooleanObject::BooleanValue() const
 {
-    Q_UNIMPLEMENTED();
+    VM::BooleanObject *b = ConstValuePtr(this)->asBooleanObject();
+    assert(b);
+    return b->value.booleanValue();
 }
 
 BooleanObject *BooleanObject::Cast(Value *obj)
@@ -968,7 +982,9 @@ Local<Value> StringObject::New(Handle<String> value)
 
 Local<String> StringObject::StringValue() const
 {
-    Q_UNIMPLEMENTED();
+    VM::StringObject *s = ConstValuePtr(this)->asStringObject();
+    assert(s);
+    return Local<String>::New(Value::fromVmValue(s->value));
 }
 
 StringObject *StringObject::Cast(Value *obj)
@@ -991,12 +1007,25 @@ Local<RegExp> RegExp::New(Handle<String> pattern, RegExp::Flags flags)
 
 Local<String> RegExp::GetSource() const
 {
-    Q_UNIMPLEMENTED();
+    RegExpObject *re = ConstValuePtr(this)->asRegExpObject();
+    assert(re);
+    return Local<String>::New(Value::fromVmValue(VM::Value::fromString(currentEngine()->current, re->value->pattern())));
 }
 
 RegExp::Flags RegExp::GetFlags() const
 {
-    Q_UNIMPLEMENTED();
+    RegExpObject *re = ConstValuePtr(this)->asRegExpObject();
+    assert(re);
+
+    int f = 0;
+    if (re->global)
+        f |= kGlobal;
+    if (re->value->ignoreCase())
+        f |= kIgnoreCase;
+    if (re->value->multiLine())
+        f |= kMultiline;
+
+    return (RegExp::Flags)f;
 }
 
 RegExp *RegExp::Cast(Value *obj)
