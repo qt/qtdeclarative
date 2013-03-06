@@ -16,12 +16,12 @@
     F(LoadProperty, loadProperty) \
     F(StoreProperty, storeProperty) \
     F(Push, push) \
+    F(EnterTry, enterTry) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
     F(CallElement, callElement) \
     F(CallActivationProperty, callActivationProperty) \
     F(CallBuiltinThrow, callBuiltinThrow) \
-    F(CallBuiltinCreateExceptionHandler, callBuiltinCreateExceptionHandler) \
     F(CallBuiltinFinishTry, callBuiltinFinishTry) \
     F(CallBuiltinGetException, callBuiltinGetException) \
     F(CallBuiltinPushScope, callBuiltinPushScope) \
@@ -210,6 +210,11 @@ union Instr
         MOTH_INSTR_HEADER
         quint32 value;
     };
+    struct instr_enterTry {
+        MOTH_INSTR_HEADER
+        ptrdiff_t tryOffset;
+        ptrdiff_t catchOffset;
+    };
     struct instr_callValue {
         MOTH_INSTR_HEADER
         quint32 argc;
@@ -243,10 +248,6 @@ union Instr
     struct instr_callBuiltinThrow {
         MOTH_INSTR_HEADER
         Param arg;
-    };
-    struct instr_callBuiltinCreateExceptionHandler {
-        MOTH_INSTR_HEADER
-        Param result;
     };
     struct instr_callBuiltinFinishTry {
         MOTH_INSTR_HEADER
@@ -464,12 +465,12 @@ union Instr
     instr_loadProperty loadProperty;
     instr_storeProperty storeProperty;
     instr_push push;
+    instr_enterTry enterTry;
     instr_callValue callValue;
     instr_callProperty callProperty;
     instr_callElement callElement;
     instr_callActivationProperty callActivationProperty;
     instr_callBuiltinThrow callBuiltinThrow;
-    instr_callBuiltinCreateExceptionHandler callBuiltinCreateExceptionHandler;
     instr_callBuiltinFinishTry callBuiltinFinishTry;
     instr_callBuiltinGetException callBuiltinGetException;
     instr_callBuiltinPushScope callBuiltinPushScope;

@@ -258,34 +258,26 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
         __qmljs_builtin_throw(context, VALUE(instr.arg));
     MOTH_END_INSTR(CallBuiltinThrow)
 
-    MOTH_BEGIN_INSTR(CallBuiltinCreateExceptionHandler)
+    MOTH_BEGIN_INSTR(EnterTry)
         __qmljs_create_exception_handler(context);
-        VM::Value *result = getValueRef(context, stack, instr.result
-#if !defined(QT_NO_DEBUG)
-                                        , stackSize
-#endif
-                                        );
-         try {
-            *result = VM::Value::fromInt32(0);
-            const uchar *tryCode = code;
+        try {
+            const uchar *tryCode = ((uchar *)&instr.tryOffset) + instr.tryOffset;
             run(context, tryCode, stack, stackSize);
             code = tryCode;
         } catch (VM::Exception &ex) {
             ex.accept(context);
             try {
-                *result = VM::Value::fromInt32(1);
-                const uchar *catchCode = code;
+                const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
                 run(context, catchCode, stack, stackSize);
                 code = catchCode;
             } catch (VM::Exception &ex) {
                 ex.accept(context);
-                *result = VM::Value::fromInt32(1);
-                const uchar *catchCode = code;
+                const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
                 run(context, catchCode, stack, stackSize);
                 code = catchCode;
             }
         }
-    MOTH_END_INSTR(CallBuiltinCreateExceptionHandler)
+    MOTH_END_INSTR(EnterTry)
 
     MOTH_BEGIN_INSTR(CallBuiltinFinishTry)
         return VM::Value();

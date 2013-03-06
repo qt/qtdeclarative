@@ -24,6 +24,7 @@ protected:
     virtual void visitJump(IR::Jump *);
     virtual void visitCJump(IR::CJump *);
     virtual void visitRet(IR::Ret *);
+    virtual void visitTry(IR::Try *);
 
     virtual void callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result);
     virtual void callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result);
@@ -43,7 +44,6 @@ protected:
     virtual void callBuiltinPostIncrementName(const QString &name, IR::Temp *result);
     virtual void callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result);
     virtual void callBuiltinThrow(IR::Temp *arg);
-    virtual void callBuiltinCreateExceptionHandler(IR::Temp *result);
     virtual void callBuiltinFinishTry();
     virtual void callBuiltinGetException(IR::Temp *result);
     virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result);

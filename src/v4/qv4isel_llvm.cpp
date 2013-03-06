@@ -1140,12 +1140,6 @@ void InstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
             _llvmValue = llvm::UndefValue::get(_valueTy);
             return;
 
-        case IR::Name::builtin_create_exception_handler:
-            CreateCall2(getRuntimeFunction("__qmljs_llvm_create_exception_handler"),
-                        _llvmFunction->arg_begin(), result);
-            _llvmValue = CreateLoad(result);
-            return;
-
         case IR::Name::builtin_finish_try:
             // ### FIXME.
             return;

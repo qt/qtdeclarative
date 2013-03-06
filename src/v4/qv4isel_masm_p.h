@@ -205,6 +205,11 @@ public:
         IR::Temp *value;
     };
 
+    struct ReentryBlock {
+        ReentryBlock(IR::BasicBlock *b) : block(b) {}
+        IR::BasicBlock *block;
+    };
+
     void callAbsolute(const char* functionName, FunctionPtr function) {
         CallToLink ctl;
         ctl.call = call();
@@ -217,6 +222,7 @@ public:
     void jumpToBlock(IR::BasicBlock* current, IR::BasicBlock *target);
     void addPatch(IR::BasicBlock* targetBlock, Jump targetJump);
     void addPatch(DataLabelPtr patch, Label target);
+    void addPatch(DataLabelPtr patch, IR::BasicBlock *target);
 
     Pointer loadTempAddress(RegisterID reg, IR::Temp *t);
 
@@ -250,6 +256,13 @@ public:
         assert(temp.value);
         Pointer addr = loadTempAddress(dest, temp.value);
         loadArgument(addr, dest);
+    }
+
+    void loadArgument(ReentryBlock block, RegisterID dest)
+    {
+        assert(block.block);
+        DataLabelPtr patch = moveWithPatch(TrustedImmPtr(0), dest);
+        addPatch(patch, block.block);
     }
 
 #ifdef VALUE_FITS_IN_REGISTER
@@ -372,6 +385,14 @@ public:
         push(ptr);
     }
 
+    void push(ReentryBlock block)
+    {
+        assert(block.block);
+        DataLabelPtr patch = moveWithPatch(TrustedImmPtr(0), ScratchRegister);
+        push(ScratchRegister);
+        addPatch(patch, block.block);
+    }
+
     void push(IR::Temp* temp)
     {
         if (temp) {
@@ -467,6 +488,8 @@ public:
     static inline int sizeOfArgument(const PointerToValue &)
     { return sizeof(void *); }
     static inline int sizeOfArgument(const Reference &)
+    { return sizeof(void *); }
+    static inline int sizeOfArgument(const ReentryBlock &)
     { return sizeof(void *); }
     static inline int sizeOfArgument(TrustedImmPtr)
     { return sizeof(void*); }
@@ -731,6 +754,8 @@ private:
         Label target;
     };
     QList<DataLabelPatch> _dataLabelPatches;
+
+    QHash<IR::BasicBlock *, QVector<DataLabelPtr> > _labelPatches;
 };
 
 class Q_V4_EXPORT InstructionSelection:
@@ -762,7 +787,6 @@ protected:
     virtual void callBuiltinPostIncrementName(const QString &name, IR::Temp *result);
     virtual void callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result);
     virtual void callBuiltinThrow(IR::Temp *arg);
-    virtual void callBuiltinCreateExceptionHandler(IR::Temp *result);
     virtual void callBuiltinFinishTry();
     virtual void callBuiltinGetException(IR::Temp *result);
     virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result);
@@ -829,6 +853,7 @@ protected:
     virtual void visitJump(IR::Jump *);
     virtual void visitCJump(IR::CJump *);
     virtual void visitRet(IR::Ret *);
+    virtual void visitTry(IR::Try *);
 
 private:
     #define isel_stringIfyx(s) #s
@@ -851,6 +876,7 @@ private:
     VM::Function* _vmFunction;
     QVector<VM::Lookup> _lookups;
     Assembler* _as;
+    QSet<IR::BasicBlock*> _reentryBlocks;
 };
 
 class Q_V4_EXPORT ISelFactory: public EvalISelFactory

@@ -131,6 +131,11 @@ void Assembler::addPatch(DataLabelPtr patch, Label target)
     _dataLabelPatches.append(p);
 }
 
+void Assembler::addPatch(DataLabelPtr patch, IR::BasicBlock *target)
+{
+    _labelPatches[target].append(patch);
+}
+
 Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, IR::Temp *t)
 {
     int32_t offset = 0;
@@ -410,14 +415,16 @@ static void printDisassembledOutputWithCalls(const char* output, const QHash<voi
 
 void Assembler::link(VM::Function *vmFunc)
 {
-    QHashIterator<IR::BasicBlock *, QVector<Jump> > it(_patches);
-    while (it.hasNext()) {
-        it.next();
-        IR::BasicBlock *block = it.key();
-        Label target = _addrs.value(block);
-        assert(target.isSet());
-        foreach (Jump jump, it.value())
-            jump.linkTo(target, this);
+    {
+        QHashIterator<IR::BasicBlock *, QVector<Jump> > it(_patches);
+        while (it.hasNext()) {
+            it.next();
+            IR::BasicBlock *block = it.key();
+            Label target = _addrs.value(block);
+            assert(target.isSet());
+            foreach (Jump jump, it.value())
+                jump.linkTo(target, this);
+        }
     }
 
     JSC::JSGlobalData dummy;
@@ -432,6 +439,18 @@ void Assembler::link(VM::Function *vmFunc)
 
     foreach (const DataLabelPatch &p, _dataLabelPatches)
         linkBuffer.patch(p.dataLabel, linkBuffer.locationOf(p.target));
+
+    {
+        QHashIterator<IR::BasicBlock *, QVector<DataLabelPtr> > it(_labelPatches);
+        while (it.hasNext()) {
+            it.next();
+            IR::BasicBlock *block = it.key();
+            Label target = _addrs.value(block);
+            assert(target.isSet());
+            foreach (DataLabelPtr label, it.value())
+                linkBuffer.patch(label, linkBuffer.locationOf(target));
+        }
+    }
 
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
@@ -478,9 +497,11 @@ InstructionSelection::~InstructionSelection()
 void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
 {
     QVector<Lookup> lookups;
+    QSet<IR::BasicBlock*> reentryBlocks;
     qSwap(_function, function);
     qSwap(_vmFunction, vmFunction);
     qSwap(_lookups, lookups);
+    qSwap(_reentryBlocks, reentryBlocks);
     Assembler* oldAssembler = _as;
     _as = new Assembler(_function, _vmFunction);
 
@@ -505,6 +526,18 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     foreach (IR::BasicBlock *block, _function->basicBlocks) {
         _block = block;
         _as->registerBlock(_block);
+
+        if (_reentryBlocks.contains(_block)) {
+            _as->enterStandardStackFrame(/*locals*/0);
+#ifdef ARGUMENTS_IN_REGISTERS
+            _as->move(Assembler::registerForArgument(0), Assembler::ContextRegister);
+            _as->move(Assembler::registerForArgument(1), Assembler::LocalsRegister);
+#else
+            _as->loadPtr(addressForArgument(0), Assembler::ContextRegister);
+            _as->loadPtr(addressForArgument(1), Assembler::LocalsRegister);
+#endif
+        }
+
         foreach (IR::Stmt *s, block->statements) {
             s->accept(this);
         }
@@ -533,6 +566,7 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     qSwap(_vmFunction, vmFunction);
     qSwap(_function, function);
     qSwap(_lookups, lookups);
+    qSwap(_reentryBlocks, reentryBlocks);
     delete _as;
     _as = oldAssembler;
 }
@@ -642,55 +676,38 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
     generateFunctionCall(Assembler::Void, __qmljs_builtin_throw, Assembler::ContextRegister, Assembler::Reference(arg));
 }
 
-static void *tryWrapper(ExecutionContext *context, void *localsPtr, void *(*exceptionEntryPointInCallingFunction)(ExecutionContext*, void*, int))
+typedef void *(*MiddleOfFunctionEntryPoint(ExecutionContext *, void *localsPtr));
+static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunctionEntryPoint tryBody, MiddleOfFunctionEntryPoint catchBody)
 {
     void *addressToContinueAt = 0;
     try {
-        addressToContinueAt = exceptionEntryPointInCallingFunction(context, localsPtr, 0);
+        addressToContinueAt = tryBody(context, localsPtr);
     } catch (Exception& ex) {
         ex.accept(context);
         try {
-            addressToContinueAt = exceptionEntryPointInCallingFunction(context, localsPtr, 1);
+            addressToContinueAt = catchBody(context, localsPtr);
         } catch (Exception& ex) {
             ex.accept(context);
-            addressToContinueAt = exceptionEntryPointInCallingFunction(context, localsPtr, 1);
+            addressToContinueAt = catchBody(context, localsPtr);
         }
     }
     return addressToContinueAt;
 }
 
-void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
+void InstructionSelection::visitTry(IR::Try *t)
 {
     generateFunctionCall(Assembler::Void, __qmljs_create_exception_handler, Assembler::ContextRegister);
 
-    // Call tryWrapper, which is going to re-enter the same function again below.
-    // When tryWrapper returns, it returns the with address of where to continue.
-    Assembler::DataLabelPtr movePatch = _as->moveWithPatch(Assembler::TrustedImmPtr(0), Assembler::ScratchRegister);
-    generateFunctionCall(Assembler::ReturnValueRegister, tryWrapper, Assembler::ContextRegister, Assembler::LocalsRegister, Assembler::ScratchRegister);
+    // Call tryWrapper, which is going to re-enter the same function at the address of the try block. At then end
+    // of the try function the JIT code will return with the address of the sub-sequent instruction, which tryWrapper
+    // returns and to which we jump to.
+
+    _reentryBlocks.insert(t->tryBlock);
+    _reentryBlocks.insert(t->catchBlock);
+
+    generateFunctionCall(Assembler::ReturnValueRegister, tryWrapper, Assembler::ContextRegister, Assembler::LocalsRegister,
+                         Assembler::ReentryBlock(t->tryBlock), Assembler::ReentryBlock(t->catchBlock));
     _as->jump(Assembler::ReturnValueRegister);
-
-    // tryWrapper calls us at this place with arg3 == 0 if we're supposed to execute the try block
-    // and arg == 1 if we caught an exception. The generated IR takes care of returning from this
-    // call when deleteExceptionHandler is called.
-    _as->addPatch(movePatch, _as->label());
-    _as->enterStandardStackFrame(/*locals*/0);
-#ifdef ARGUMENTS_IN_REGISTERS
-    _as->move(Assembler::registerForArgument(0), Assembler::ContextRegister);
-    _as->move(Assembler::registerForArgument(1), Assembler::LocalsRegister);
-#else
-    _as->loadPtr(addressForArgument(0), Assembler::ContextRegister);
-    _as->loadPtr(addressForArgument(1), Assembler::LocalsRegister);
-#endif
-
-    Address addr = _as->loadTempAddress(Assembler::ScratchRegister, result);
-#ifdef ARGUMENTS_IN_REGISTERS
-    _as->store32(Assembler::registerForArgument(2), addr);
-#else
-    _as->load32(addressForArgument(2), Assembler::ReturnValueRegister);
-    _as->store32(Assembler::ReturnValueRegister, addr);
-#endif
-    addr.offset += 4;
-    _as->store32(Assembler::TrustedImm32(Value::Boolean_Type), addr);
 }
 
 void InstructionSelection::callBuiltinFinishTry()

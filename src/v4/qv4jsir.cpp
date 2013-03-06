@@ -216,6 +216,10 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
         s->expr = cleanup(s->expr);
     }
 
+    virtual void visitTry(Try *)
+    {
+        // nothing to do for Try statements
+    }
 
     // expressions
     virtual void visitConst(Const *) {}
@@ -352,8 +356,6 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_postdecrement";
     case Name::builtin_throw:
         return "builtin_throw";
-    case Name::builtin_create_exception_handler:
-        return "builtin_create_exception_handler";
     case Name::builtin_finish_try:
         return "builtin_finish_try";
     case Name::builtin_get_exception:
@@ -520,6 +522,11 @@ void Ret::dump(QTextStream &out, Mode)
         expr->dump(out);
     }
     out << ';';
+}
+
+void Try::dump(QTextStream &out, Stmt::Mode mode)
+{
+    out << "try L" << tryBlock->index << "; catch L" << catchBlock->index << ';';
 }
 
 Function *Module::newFunction(const QString &name, Function *outer)
@@ -784,6 +791,30 @@ Stmt *BasicBlock::RET(Temp *expr)
     s->init(expr);
     statements.append(s);
     return s;
+}
+
+Stmt *BasicBlock::TRY(BasicBlock *tryBlock, BasicBlock *catchBlock)
+{
+    if (isTerminated())
+        return 0;
+
+    Try *t = function->New<Try>();
+    t->init(tryBlock, catchBlock);
+    statements.append(t);
+
+    assert(! out.contains(tryBlock));
+    out.append(tryBlock);
+
+    assert(! out.contains(catchBlock));
+    out.append(catchBlock);
+
+    assert(! tryBlock->in.contains(this));
+    tryBlock->in.append(this);
+
+    assert(! catchBlock->in.contains(this));
+    catchBlock->in.append(this);
+
+    return t;
 }
 
 void BasicBlock::dump(QTextStream &out, Stmt::Mode mode)

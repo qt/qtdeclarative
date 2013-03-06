@@ -116,6 +116,7 @@ struct Move;
 struct Jump;
 struct CJump;
 struct Ret;
+struct Try;
 
 enum AluOp {
     OpInvalid = 0,
@@ -195,6 +196,7 @@ struct StmtVisitor {
     virtual void visitJump(Jump *) = 0;
     virtual void visitCJump(CJump *) = 0;
     virtual void visitRet(Ret *) = 0;
+    virtual void visitTry(Try *) = 0;
 };
 
 struct Expr {
@@ -289,7 +291,6 @@ struct Name: Expr {
         builtin_postincrement,
         builtin_postdecrement,
         builtin_throw,
-        builtin_create_exception_handler,
         builtin_finish_try,
         builtin_get_exception,
         builtin_foreach_iterator_object,
@@ -488,6 +489,7 @@ struct Stmt {
     virtual Jump *asJump() { return 0; }
     virtual CJump *asCJump() { return 0; }
     virtual Ret *asRet() { return 0; }
+    virtual Try *asTry() { return 0; }
     virtual void dump(QTextStream &out, Mode mode = HIR) = 0;
 
     void destroyData() {
@@ -601,6 +603,24 @@ struct Ret: Stmt {
     virtual Ret *asRet() { return this; }
 
     virtual void dump(QTextStream &out, Mode);
+};
+
+struct Try: Stmt {
+    BasicBlock *tryBlock;
+    BasicBlock *catchBlock;
+
+    void init(BasicBlock *tryBlock, BasicBlock *catchBlock)
+    {
+        this->tryBlock = tryBlock;
+        this->catchBlock = catchBlock;
+    }
+
+    virtual Stmt *asTerminator() { return this; }
+
+    virtual void accept(StmtVisitor *v) { v->visitTry(this); }
+    virtual Try *asTry() { return this; }
+
+    virtual void dump(QTextStream &out, Mode mode);
 };
 
 struct Q_V4_EXPORT Module {
@@ -729,6 +749,7 @@ struct BasicBlock {
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
     Stmt *RET(Temp *expr);
+    Stmt *TRY(BasicBlock *tryBlock, BasicBlock *catchBlock);
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 };

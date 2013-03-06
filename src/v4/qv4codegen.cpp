@@ -111,6 +111,7 @@ struct ComputeUseDef: IR::StmtVisitor, IR::ExprVisitor
     virtual void visitJump(IR::Jump *) {}
     virtual void visitCJump(IR::CJump *s) { s->cond->accept(this); }
     virtual void visitRet(IR::Ret *s) { s->expr->accept(this); }
+    virtual void visitTry(IR::Try *) {}
 
     virtual void visitTemp(IR::Temp *e) {
         if (e->index < 0 || e->scope != 0)
@@ -1769,6 +1770,9 @@ void Codegen::linearize(IR::Function *function)
                         trace(cj->iffalse, V, output);
                     else
                         trace(cj->iftrue, V, output);
+                } else if (IR::Try *t = term->asTry()) {
+                    trace(t->tryBlock, V, output);
+                    trace(t->catchBlock, V, output);
                 }
             }
 
@@ -2448,7 +2452,7 @@ bool Codegen::visit(TryStatement *ast)
         throwSyntaxError(ast->catchExpression->identifierToken, QCoreApplication::translate("qv4codegen", "Catch variable name may not be eval or arguments in strict mode"));
 
     IR::BasicBlock *tryBody = _function->newBasicBlock();
-    IR::BasicBlock *catchBody = ast->catchExpression ?  _function->newBasicBlock() : 0;
+    IR::BasicBlock *catchBody =  _function->newBasicBlock();
     // We always need a finally body to clean up the exception handler
     IR::BasicBlock *finallyBody = _function->newBasicBlock();
 
@@ -2456,52 +2460,40 @@ bool Codegen::visit(TryStatement *ast)
     IR::ExprList *throwArgs = _function->New<IR::ExprList>();
     throwArgs->expr = throwBlock->TEMP(_returnAddress);
     throwBlock->EXP(throwBlock->CALL(throwBlock->NAME(IR::Name::builtin_throw, /*line*/0, /*column*/0), throwArgs));
-    throwBlock->JUMP(catchBody ? catchBody : finallyBody);
+    throwBlock->JUMP(catchBody);
     qSwap(_throwBlock, throwBlock);
 
-    int inCatch = 0;
-    if (catchBody) {
-        inCatch = _block->newTemp();
-        move(_block->TEMP(inCatch), _block->CONST(IR::BoolType, false));
-    }
-
     int hasException = _block->newTemp();
-    move(_block->TEMP(hasException), _block->CALL(_block->NAME(IR::Name::builtin_create_exception_handler, 0, 0), 0));
+    move(_block->TEMP(hasException), _block->CONST(IR::BoolType, false));
 
-    // Pass the hidden "inCatch" and "hasException" TEMPs to the
+    // Pass the hidden "needRethrow" TEMP to the
     // builtin_delete_exception_handler, in order to have those TEMPs alive for
     // the duration of the exception handling block.
     IR::ExprList *finishTryArgs = _function->New<IR::ExprList>();
     finishTryArgs->init(_block->TEMP(hasException));
-    if (inCatch) {
-        finishTryArgs->next = _function->New<IR::ExprList>();
-        finishTryArgs->next->init(_block->TEMP(inCatch));
-    }
 
     ScopeAndFinally tcf(_scopeAndFinally, ast->finallyExpression, finishTryArgs);
     _scopeAndFinally = &tcf;
 
-    _block->CJUMP(_block->TEMP(hasException), catchBody ? catchBody : finallyBody, tryBody);
+    _block->TRY(tryBody, catchBody);
 
     _block = tryBody;
     statement(ast->statement);
     _block->JUMP(finallyBody);
 
-    // regular flow does not go into the catch statement
-    if (catchBody) {
-        _block = catchBody;
+    _block = catchBody;
 
-        if (inCatch != 0) {
-            // check if an exception got thrown within catch. Go to finally
-            // and then rethrow
-            IR::BasicBlock *b = _function->newBasicBlock();
-            _block->CJUMP(_block->TEMP(inCatch), finallyBody, b);
-            _block = b;
-        }
-        // if we have finally we need to clear the exception here, so we don't rethrow
-        move(_block->TEMP(inCatch), _block->CONST(IR::BoolType, true));
-        move(_block->TEMP(hasException), _block->CONST(IR::BoolType, false));
+    if (ast->catchExpression) {
+        // check if an exception got thrown within catch. Go to finally
+        // and then rethrow
+        IR::BasicBlock *b = _function->newBasicBlock();
+        _block->CJUMP(_block->TEMP(hasException), finallyBody, b);
+        _block = b;
+    }
 
+    move(_block->TEMP(hasException), _block->CONST(IR::BoolType, true));
+
+    if (ast->catchExpression) {
         IR::ExprList *catchScopeArgs = _function->New<IR::ExprList>();
         catchScopeArgs->init(_block->NAME(ast->catchExpression->name.toString(), ast->catchExpression->identifierToken.startLine, ast->catchExpression->identifierToken.startColumn));
         _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_catch_scope, 0, 0), catchScopeArgs));
@@ -2515,9 +2507,10 @@ bool Codegen::visit(TryStatement *ast)
         }
         --_function->insideWithOrCatch;
 
+        move(_block->TEMP(hasException), _block->CONST(IR::BoolType, false));
         _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0)));
-        _block->JUMP(finallyBody);
     }
+    _block->JUMP(finallyBody);
 
     _scopeAndFinally = tcf.parent;
 
