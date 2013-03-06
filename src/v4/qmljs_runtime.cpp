@@ -112,9 +112,10 @@ QString numberToString(double num, int radix = 10)
     return str;
 }
 
-Exception::Exception(ExecutionContext *throwingContext)
+Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue)
 {
     this->throwingContext = throwingContext;
+    this->exception = exceptionValue;
     accepted = false;
 }
 
@@ -1009,19 +1010,7 @@ void __qmljs_throw(ExecutionContext *context, const Value &value)
     if (context->engine->debugger)
         context->engine->debugger->aboutToThrow(value);
 
-    context->engine->exception = value;
-
-    throw Exception(context);
-}
-
-Q_V4_EXPORT void __qmljs_create_exception_handler(ExecutionContext *context)
-{
-    context->engine->exception = Value::undefinedValue();
-}
-
-void __qmljs_get_exception(ExecutionContext *context, Value *result)
-{
-    *result = context->engine->exception;
+    throw Exception(context, value);
 }
 
 void __qmljs_builtin_typeof(ExecutionContext *ctx, Value *result, const Value &value)
@@ -1253,9 +1242,9 @@ ExecutionContext *__qmljs_builtin_push_with_scope(const Value &o, ExecutionConte
     return ctx->createWithScope(obj);
 }
 
-ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, ExecutionContext *ctx)
+ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, const Value &exceptionValue, ExecutionContext *ctx)
 {
-    return ctx->createCatchScope(exceptionVarName);
+    return ctx->createCatchScope(exceptionVarName, exceptionValue);
 }
 
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx)

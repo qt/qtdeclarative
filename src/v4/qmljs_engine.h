@@ -180,8 +180,6 @@ struct Q_V4_EXPORT ExecutionEngine
     String *id_set;
     String *id_eval;
 
-    Value exception;
-
     QVector<Function *> functions;
 
     ExternalResourceComparison externalResourceComparison;

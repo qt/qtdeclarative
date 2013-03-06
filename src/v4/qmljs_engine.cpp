@@ -69,7 +69,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , debugger(0)
     , globalObject(Value::nullValue())
     , globalCode(0)
-    , exception(Value::nullValue())
     , externalResourceComparison(0)
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
@@ -430,8 +429,6 @@ void ExecutionEngine::markObjects()
 
     if (globalCode)
         globalCode->mark();
-
-    exception.mark();
 
     for (int i = 0; i < argumentsAccessors.size(); ++i) {
         const PropertyDescriptor &pd = argumentsAccessors.at(i);

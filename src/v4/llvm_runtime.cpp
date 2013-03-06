@@ -474,21 +474,9 @@ void __qmljs_llvm_throw(ExecutionContext *context, Value *value)
     __qmljs_throw(context, *value);
 }
 
-void __qmljs_llvm_create_exception_handler(ExecutionContext *context, Value *result)
-{
-    // ### FIXME.
-    __qmljs_create_exception_handler(context);
-    *result = Value::undefinedValue();
-}
-
 void __qmljs_llvm_delete_exception_handler(ExecutionContext *context)
 {
     // ### FIXME.
-}
-
-void __qmljs_llvm_get_exception(ExecutionContext *context, Value *result)
-{
-    __qmljs_get_exception(context, result);
 }
 
 void __qmljs_llvm_foreach_iterator_object(ExecutionContext *context, Value *result, Value *in)

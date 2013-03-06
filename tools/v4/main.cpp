@@ -116,11 +116,11 @@ DEFINE_MANAGED_VTABLE(GC);
 
 } // builtins
 
-static void showException(QQmlJS::VM::ExecutionContext *ctx)
+static void showException(QQmlJS::VM::ExecutionContext *ctx, const QQmlJS::VM::Value &exception)
 {
-    QQmlJS::VM::ErrorObject *e = ctx->engine->exception.asErrorObject();
+    QQmlJS::VM::ErrorObject *e = exception.asErrorObject();
     if (!e) {
-        std::cerr << "Uncaught exception: " << qPrintable(ctx->engine->exception.toString(ctx)->toQString()) << std::endl;
+        std::cerr << "Uncaught exception: " << qPrintable(exception.toString(ctx)->toQString()) << std::endl;
         return;
     }
 
@@ -369,7 +369,6 @@ int main(int argc, char *argv[])
                 const QString code = QString::fromUtf8(file.readAll());
                 file.close();
 
-                __qmljs_create_exception_handler(ctx);
                 try {
                     QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode,
                                                                                     /*strictMode =*/ false, /*inheritContext =*/ false);
@@ -382,7 +381,7 @@ int main(int argc, char *argv[])
                     }
                 } catch (QQmlJS::VM::Exception& ex) {
                     ex.accept(ctx);
-                    showException(ctx);
+                    showException(ctx, ex.value());
                     return EXIT_FAILURE;
                 }
 

@@ -680,18 +680,19 @@ typedef void *(*MiddleOfFunctionEntryPoint(ExecutionContext *, void *localsPtr))
 static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunctionEntryPoint tryBody, MiddleOfFunctionEntryPoint catchBody,
                         VM::String *exceptionVarName, Value *exceptionVar)
 {
+    *exceptionVar = Value::undefinedValue();
     void *addressToContinueAt = 0;
     try {
         addressToContinueAt = tryBody(context, localsPtr);
     } catch (Exception& ex) {
         ex.accept(context);
-        __qmljs_get_exception(context, exceptionVar);
+        *exceptionVar = ex.value();
         try {
-            ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(exceptionVarName, context);
+            ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(exceptionVarName, ex.value(), context);
             addressToContinueAt = catchBody(catchContext, localsPtr);
             context = __qmljs_builtin_pop_scope(catchContext);
         } catch (Exception& ex) {
-            __qmljs_get_exception(context, exceptionVar);
+            *exceptionVar = ex.value();
             ex.accept(context);
             addressToContinueAt = catchBody(context, localsPtr);
         }
@@ -701,8 +702,6 @@ static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunc
 
 void InstructionSelection::visitTry(IR::Try *t)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_create_exception_handler, Assembler::ContextRegister);
-
     // Call tryWrapper, which is going to re-enter the same function at the address of the try block. At then end
     // of the try function the JIT code will return with the address of the sub-sequent instruction, which tryWrapper
     // returns and to which we jump to.

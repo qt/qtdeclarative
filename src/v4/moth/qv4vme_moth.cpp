@@ -259,23 +259,23 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallBuiltinThrow)
 
     MOTH_BEGIN_INSTR(EnterTry)
-        __qmljs_create_exception_handler(context);
+        VALUE(instr.exceptionVar) = VM::Value::undefinedValue();
         try {
             const uchar *tryCode = ((uchar *)&instr.tryOffset) + instr.tryOffset;
             run(context, tryCode, stack, stackSize);
             code = tryCode;
         } catch (VM::Exception &ex) {
             ex.accept(context);
-            __qmljs_get_exception(context, VALUEPTR(instr.exceptionVar));
+            VALUE(instr.exceptionVar) = ex.value();
             try {
-                VM::ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(instr.exceptionVarName, context);
+                VM::ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(instr.exceptionVarName, ex.value(), context);
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
                 run(catchContext, catchCode, stack, stackSize);
                 code = catchCode;
                 context = __qmljs_builtin_pop_scope(catchContext);
             } catch (VM::Exception &ex) {
                 ex.accept(context);
-                __qmljs_get_exception(context, VALUEPTR(instr.exceptionVar));
+                VALUE(instr.exceptionVar) = ex.value();
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
                 run(context, catchCode, stack, stackSize);
                 code = catchCode;

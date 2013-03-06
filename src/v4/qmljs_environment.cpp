@@ -178,10 +178,10 @@ ExecutionContext *ExecutionContext::createWithScope(Object *with)
     return withCtx;
 }
 
-ExecutionContext *ExecutionContext::createCatchScope(String *exceptionVarName)
+ExecutionContext *ExecutionContext::createCatchScope(String *exceptionVarName, const Value &exceptionValue)
 {
     ExecutionContext *catchCtx = engine->newContext();
-    catchCtx->initForCatch(this, exceptionVarName);
+    catchCtx->initForCatch(this, exceptionVarName, exceptionValue);
     engine->current = catchCtx;
     return catchCtx;
 }
@@ -235,8 +235,6 @@ void ExecutionContext::init(ExecutionEngine *eng)
     strictMode = false;
     activation = 0;
     withObject = 0;
-
-    eng->exception = Value::undefinedValue();
 }
 
 void ExecutionContext::init(ExecutionContext *p, Object *with)
@@ -259,7 +257,7 @@ void ExecutionContext::init(ExecutionContext *p, Object *with)
     withObject = with;
 }
 
-void ExecutionContext::initForCatch(ExecutionContext *p, String *exceptionVarName)
+void ExecutionContext::initForCatch(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
 {
     engine = p->engine;
     parent = p;
@@ -272,7 +270,7 @@ void ExecutionContext::initForCatch(ExecutionContext *p, String *exceptionVarNam
     argumentCount = 0;
     locals = 0;
     this->exceptionVarName = exceptionVarName;
-    exceptionValue = engine->exception;
+    this->exceptionValue = exceptionValue;
     strictMode = p->strictMode;
     activation = 0;
     withObject = 0;

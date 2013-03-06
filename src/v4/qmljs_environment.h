@@ -103,7 +103,7 @@ struct ExecutionContext
 
     void init(ExecutionEngine *e);
     void init(ExecutionContext *p, Object *with);
-    void initForCatch(ExecutionContext *p, String *exceptionVarName);
+    void initForCatch(ExecutionContext *p, String *exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
     void destroy();
 
     bool hasBinding(String *name) const;
@@ -113,7 +113,7 @@ struct ExecutionContext
     bool deleteBinding(ExecutionContext *ctx, String *name);
 
     ExecutionContext *createWithScope(Object *with);
-    ExecutionContext *createCatchScope(String* exceptionVarName);
+    ExecutionContext *createCatchScope(String* exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
     ExecutionContext *popScope();
 
     void initCallContext(ExecutionContext *parent);

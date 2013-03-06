@@ -90,15 +90,19 @@ struct ErrorObject;
 struct ExecutionEngine;
 
 struct Q_V4_EXPORT Exception {
-    explicit Exception(ExecutionContext *throwingContext);
+    explicit Exception(ExecutionContext *throwingContext, const Value &exceptionValue);
     ~Exception();
 
     void accept(ExecutionContext *catchingContext);
 
     void partiallyUnwindContext(ExecutionContext *catchingContext);
+
+    Value value() const { return exception; }
+
 private:
     ExecutionContext *throwingContext;
     bool accepted;
+    Value exception;
 };
 
 extern "C" {
@@ -132,7 +136,7 @@ void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *re
 void Q_NORETURN __qmljs_builtin_throw(ExecutionContext *context, const Value &val);
 void Q_NORETURN __qmljs_builtin_rethrow(ExecutionContext *context);
 ExecutionContext *__qmljs_builtin_push_with_scope(const Value &o, ExecutionContext *ctx);
-ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, ExecutionContext *ctx);
+ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, const QQmlJS::VM::Value &exceptionValue, ExecutionContext *ctx);
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx);
 void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name);
 void __qmljs_builtin_define_property(ExecutionContext *ctx, const Value &object, String *name, Value *val);
@@ -204,9 +208,6 @@ void __qmljs_delete_member(ExecutionContext *ctx, Value *result, const Value &ba
 void __qmljs_delete_name(ExecutionContext *ctx, Value *result, String *name);
 
 void Q_NORETURN __qmljs_throw(ExecutionContext*, const Value &value);
-// actually returns a jmp_buf *
-Q_V4_EXPORT void __qmljs_create_exception_handler(ExecutionContext *context);
-void __qmljs_get_exception(ExecutionContext *context, Value *result);
 
 // binary operators
 typedef void (*BinOp)(ExecutionContext *ctx, Value *result, const Value &left, const Value &right);
