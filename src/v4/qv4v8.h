@@ -733,6 +733,11 @@ class V8EXPORT Message {
    * Returns the number, 1-based, of the line where the error occurred.
    */
   int GetLineNumber() const;
+
+private:
+  QString m_message;
+  QString m_resourceName;
+  int m_lineNumber;
 };
 
 

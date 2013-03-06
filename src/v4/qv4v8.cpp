@@ -88,17 +88,17 @@ ScriptOrigin::ScriptOrigin(Handle<Value> resource_name, Handle<Integer> resource
 
 Handle<Value> ScriptOrigin::ResourceName() const
 {
-    Q_UNIMPLEMENTED();
+    return Value::fromVmValue(VM::Value::fromString(currentEngine()->current, m_fileName));
 }
 
 Handle<Integer> ScriptOrigin::ResourceLineOffset() const
 {
-    Q_UNIMPLEMENTED();
+    return Integer::New(m_lineNumber);
 }
 
 Handle<Integer> ScriptOrigin::ResourceColumnOffset() const
 {
-    Q_UNIMPLEMENTED();
+    return Integer::New(m_columnNumber);
 }
 
 
@@ -178,17 +178,17 @@ void Script::SetData(Handle<String> data)
 
 Local<String> Message::Get() const
 {
-    Q_UNIMPLEMENTED();
+    return Local<String>::New(Value::fromVmValue(VM::Value::fromString(currentEngine()->current, m_message)));
 }
 
 Handle<Value> Message::GetScriptResourceName() const
 {
-    Q_UNIMPLEMENTED();
+    return Value::fromVmValue(VM::Value::fromString(currentEngine()->current, m_resourceName));
 }
 
 int Message::GetLineNumber() const
 {
-    Q_UNIMPLEMENTED();
+    return m_lineNumber;
 }
 
 
@@ -370,7 +370,7 @@ Local<Int32> Value::ToInt32() const
 
 Local<Uint32> Value::ToArrayIndex() const
 {
-    Q_UNIMPLEMENTED();
+    return Local<Uint32>::New(Value::fromVmValue(QQmlJS::VM::Value::fromUInt32(ConstValuePtr(this)->asArrayIndex())));
 }
 
 bool Value::BooleanValue() const
@@ -385,17 +385,17 @@ double Value::NumberValue() const
 
 int64_t Value::IntegerValue() const
 {
-    Q_UNIMPLEMENTED();
+    return (int64_t)ConstValuePtr(this)->toInteger(currentEngine()->current);
 }
 
 uint32_t Value::Uint32Value() const
 {
-    Q_UNIMPLEMENTED();
+    return ConstValuePtr(this)->toUInt32(currentEngine()->current);
 }
 
 int32_t Value::Int32Value() const
 {
-    Q_UNIMPLEMENTED();
+    return ConstValuePtr(this)->toInt32(currentEngine()->current);
 }
 
 bool Value::Equals(Handle<Value> that) const
@@ -434,32 +434,39 @@ Handle<Boolean> Boolean::New(bool value)
 
 int String::Length() const
 {
-    Q_UNIMPLEMENTED();
+    return asVMString()->toQString().length();
 }
 
 uint32_t String::Hash() const
 {
-    Q_UNIMPLEMENTED();
+    return asVMString()->hashValue();
 }
 
 
 String::CompleteHashData String::CompleteHash() const
 {
+    VM::String *s = asVMString();
     CompleteHashData data;
-    data.hash = asVMString()->hashValue();
-    data.length = asQString().length();
-    data.symbol_id = 0; // ###
+    data.hash = s->hashValue();
+    data.length = s->toQString().length();
+    data.symbol_id = s->identifier;
     return data;
 }
 
 uint32_t String::ComputeHash(uint16_t *string, int length)
 {
-    Q_UNIMPLEMENTED();
+    // ### unefficient
+    QString s = QString::fromUtf16((ushort *)string, length);
+    VM::String *vmString = currentEngine()->newString(s);
+    return vmString->hashValue();
 }
 
 uint32_t String::ComputeHash(char *string, int length)
 {
-    Q_UNIMPLEMENTED();
+    // ### unefficient
+    QString s = QString::fromLatin1((char *)string, length);
+    VM::String *vmString = currentEngine()->newString(s);
+    return vmString->hashValue();
 }
 
 bool String::Equals(uint16_t *str, int length)
@@ -479,7 +486,8 @@ uint16_t String::GetCharacter(int index)
 
 int String::Write(uint16_t *buffer, int start, int length, int options) const
 {
-    Q_UNIMPLEMENTED();
+    // ### do we use options?
+    memcpy(buffer + start, asQString().constData(), length*sizeof(QChar));
 }
 
 v8::Local<String> String::Empty()
@@ -517,7 +525,9 @@ Local<String> String::New(const uint16_t *data, int length)
 
 Local<String> String::NewSymbol(const char *data, int length)
 {
-    Q_UNIMPLEMENTED();
+    QString str = QString::fromLatin1(data, length);
+    VM::String *vmString = currentEngine()->newIdentifier(str);
+    return Local<String>::New(v8::Value::fromVmValue(VM::Value::fromString(vmString)));
 }
 
 Local<String> String::NewExternal(String::ExternalStringResource *resource)
@@ -630,10 +640,12 @@ struct ExternalResourceWrapper : public QQmlJS::VM::Object::ExternalResource
 
 bool Object::Set(Handle<Value> key, Handle<Value> value, PropertyAttribute attribs)
 {
+    Q_UNIMPLEMENTED();
 }
 
 bool Object::Set(uint32_t index, Handle<Value> value)
 {
+    Q_UNIMPLEMENTED();
 }
 
 Local<Value> Object::Get(Handle<Value> key)
@@ -657,24 +669,30 @@ Local<Value> Object::Get(uint32_t key)
 bool Object::Has(Handle<String> key)
 {
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
-    if (!o)
-        return false;
+    assert(o);
     return o->__hasProperty__(currentEngine()->current, ValuePtr(&key)->asString());
 }
 
 bool Object::Delete(Handle<String> key)
 {
-    Q_UNIMPLEMENTED();
+    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    assert(o);
+    return o->__delete__(currentEngine()->current, ValuePtr(&key)->asString());
 }
 
 bool Object::Has(uint32_t index)
 {
-    Q_UNIMPLEMENTED();
+    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    if (!o)
+        return false;
+    return o->__hasProperty__(currentEngine()->current, index);
 }
 
 bool Object::Delete(uint32_t index)
 {
-    Q_UNIMPLEMENTED();
+    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    assert(o);
+    return o->__delete__(currentEngine()->current, index);
 }
 
 bool Object::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSetter setter, Handle<Value> data, AccessControl settings, PropertyAttribute attribute)
