@@ -49,7 +49,7 @@
 #include "qmljs_value.h"
 #include "qv4isel_masm_p.h"
 #include "qv4globalobject.h"
-
+#include "qv4regexpobject.h"
 #include <QThreadStorage>
 
 using namespace QQmlJS;
@@ -108,7 +108,13 @@ Local<Script> Script::New(Handle<String> source,
                          Handle<String> script_data,
                          CompileFlags flags)
 {
-    Q_UNIMPLEMENTED();
+    Script *s = new Script;
+    s->m_script = source->ToString()->asQString();
+    if (origin)
+        s->m_origin = *origin;
+    s->m_flags = flags;
+    s->m_context = Handle<Context>();
+    return Local<Script>::New(Handle<Script>(s));
 }
 
 
@@ -116,7 +122,8 @@ Local<Script> Script::New(Handle<String> source,
                          Handle<Value> file_name,
                          CompileFlags flags)
 {
-    Q_UNIMPLEMENTED();
+    ScriptOrigin origin(file_name);
+    return New(source, &origin, 0, Handle<String>(), flags);
 }
 
 Local<Script> Script::Compile(Handle<String> source, ScriptOrigin *origin, ScriptData *pre_data, Handle<String> script_data, Script::CompileFlags flags)
@@ -421,7 +428,7 @@ bool Boolean::Value() const
 
 Handle<Boolean> Boolean::New(bool value)
 {
-    Q_UNIMPLEMENTED();
+    return Value::fromVmValue(VM::Value::fromBoolean(value));
 }
 
 
@@ -550,7 +557,7 @@ double Number::Value() const
 
 Local<Number> Number::New(double value)
 {
-    Q_UNIMPLEMENTED();
+    return Local<Number>::New(Value::fromVmValue(VM::Value::fromDouble(value)));
 }
 
 Number *Number::Cast(v8::Value *obj)
@@ -560,12 +567,12 @@ Number *Number::Cast(v8::Value *obj)
 
 Local<Integer> Integer::New(int32_t value)
 {
-    Q_UNIMPLEMENTED();
+    return Local<Integer>::New(Value::fromVmValue(VM::Value::fromInt32(value)));
 }
 
 Local<Integer> Integer::NewFromUnsigned(uint32_t value)
 {
-    Q_UNIMPLEMENTED();
+    return Local<Integer>::New(Value::fromVmValue(VM::Value::fromUInt32(value)));
 }
 
 Local<Integer> Integer::New(int32_t value, Isolate *)
@@ -777,7 +784,8 @@ Local<Value> Object::CallAsConstructor(int argc, Handle<Value> argv[])
 
 Local<Object> Object::New()
 {
-    Q_UNIMPLEMENTED();
+    VM::Object *o = currentEngine()->newObject();
+    return Local<Object>::New(Value::fromVmValue(VM::Value::fromObject(o)));
 }
 
 Object *Object::Cast(Value *obj)
@@ -793,7 +801,8 @@ uint32_t Array::Length() const
 
 Local<Array> Array::New(int length)
 {
-    Q_UNIMPLEMENTED();
+    VM::Object *o = currentEngine()->newArrayObject(currentEngine()->current);
+    return Local<Array>::New(Value::fromVmValue(VM::Value::fromObject(o)));
 }
 
 Array *Array::Cast(Value *obj)
@@ -842,7 +851,8 @@ Function *Function::Cast(Value *obj)
 
 Local<Value> Date::New(double time)
 {
-    Q_UNIMPLEMENTED();
+    VM::Object *o = currentEngine()->newDateObject(VM::Value::fromDouble(time));
+    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
 }
 
 double Date::NumberValue() const
@@ -863,7 +873,8 @@ void Date::DateTimeConfigurationChangeNotification()
 
 Local<Value> NumberObject::New(double value)
 {
-    Q_UNIMPLEMENTED();
+    VM::Object *o = currentEngine()->newNumberObject(VM::Value::fromDouble(value));
+    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
 }
 
 double NumberObject::NumberValue() const
@@ -878,7 +889,8 @@ NumberObject *NumberObject::Cast(Value *obj)
 
 Local<Value> BooleanObject::New(bool value)
 {
-    Q_UNIMPLEMENTED();
+    VM::Object *o = currentEngine()->newBooleanObject(VM::Value::fromBoolean(value));
+    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
 }
 
 bool BooleanObject::BooleanValue() const
@@ -893,7 +905,8 @@ BooleanObject *BooleanObject::Cast(Value *obj)
 
 Local<Value> StringObject::New(Handle<String> value)
 {
-    Q_UNIMPLEMENTED();
+    VM::Object *o = currentEngine()->newStringObject(currentEngine()->current, VM::Value::fromString(value->vmValue().asString()));
+    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
 }
 
 Local<String> StringObject::StringValue() const
@@ -908,7 +921,15 @@ StringObject *StringObject::Cast(Value *obj)
 
 Local<RegExp> RegExp::New(Handle<String> pattern, RegExp::Flags flags)
 {
-    Q_UNIMPLEMENTED();
+    int f = 0;
+    if (flags & kGlobal)
+        f |= IR::RegExp::RegExp_Global;
+    if (flags & kIgnoreCase)
+        f |= IR::RegExp::RegExp_IgnoreCase;
+    if (flags & kMultiline)
+        f |= IR::RegExp::RegExp_Multiline;
+    VM::Object *o = currentEngine()->newRegExpObject(pattern->asQString(), f);
+    return Local<RegExp>::New(Value::fromVmValue(VM::Value::fromObject(o)));
 }
 
 Local<String> RegExp::GetSource() const
@@ -1185,7 +1206,7 @@ Isolate::~Isolate()
 
 Isolate *Isolate::New()
 {
-    Q_UNIMPLEMENTED();
+    assert(!"Isolate::New()");
 }
 
 void Isolate::Enter()
@@ -1245,19 +1266,22 @@ void V8::SetUserObjectComparisonCallbackFunction(UserObjectComparisonCallback ca
     currentEngine()->externalResourceComparison = v8ExternalResourceComparison;
 }
 
-void V8::AddGCPrologueCallback(GCPrologueCallback callback, GCType gc_type_filter)
+void V8::AddGCPrologueCallback(GCPrologueCallback, GCType)
 {
-    Q_UNIMPLEMENTED();
+    // not required currently as we don't have weak Persistent references.
+    // not having them will lead to some leaks in QQmlVMEMetaObejct, but shouldn't matter otherwise
 }
 
-void V8::RemoveGCPrologueCallback(GCPrologueCallback callback)
+void V8::RemoveGCPrologueCallback(GCPrologueCallback)
 {
-    Q_UNIMPLEMENTED();
+    assert(!"RemoveGCPrologueCallback();");
 }
 
 void V8::AddImplicitReferences(Persistent<Object> parent, Persistent<Value> *children, size_t length)
 {
-    Q_UNIMPLEMENTED();
+    // not required currently as we don't have weak Persistent references.
+    // not having them will lead to some leaks in QQmlVMEMetaObejct, but shouldn't matter otherwise
+    assert(!"AddImplicitReferences();");
 }
 
 bool V8::Initialize()
