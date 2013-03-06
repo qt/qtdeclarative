@@ -655,7 +655,9 @@ struct Function {
     uint usesArgumentsObject : 1;
     uint isStrict: 1;
     uint isNamedExpression : 1;
-    uint unused : 28;
+    uint hasTry: 1;
+    uint hasWith: 1;
+    uint unused : 26;
 
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
 
@@ -670,6 +672,8 @@ struct Function {
         , usesArgumentsObject(false)
         , isStrict(false)
         , isNamedExpression(false)
+        , hasTry(false)
+        , hasWith(false)
         , unused(0)
     { this->name = newString(name); }
 

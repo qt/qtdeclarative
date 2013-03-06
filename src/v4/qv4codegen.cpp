@@ -231,6 +231,233 @@ void removeDeadAssignments(IR::Function *function)
     }
 }
 
+class ConstantPropagation: public IR::StmtVisitor, public IR::ExprVisitor
+{
+    struct Value {
+        enum Type {
+            InvalidType = 0,
+            UndefinedType,
+            NullType,
+            BoolType,
+            NumberType,
+            ThisType,
+            StringType
+        } type;
+
+        union {
+            double numberValue;
+            IR::String *stringValue;
+        };
+
+        Value()
+            : type(InvalidType), stringValue(0)
+        {}
+
+        explicit Value(IR::String *str)
+            : type(StringType), stringValue(str)
+        {}
+
+        explicit Value(Type t)
+            : type(t), stringValue(0)
+        {}
+
+        Value(Type t, double val)
+            : type(t), numberValue(val)
+        {}
+
+        bool isValid() const
+        { return type != InvalidType; }
+
+        bool operator<(const Value &other) const
+        {
+            if (type < other.type)
+                return true;
+            if (type == Value::NumberType && other.type == Value::NumberType) {
+                if (numberValue == 0 && other.numberValue == 0)
+                    return isNegative(numberValue) && !isNegative(other.numberValue);
+                else
+                    return numberValue < other.numberValue;
+            }
+            if (type == Value::BoolType && other.type == Value::BoolType)
+                return numberValue < other.numberValue;
+            if (type == Value::StringType && other.type == Value::StringType)
+                return *stringValue->value < *other.stringValue->value;
+            return false;
+        }
+
+        bool operator==(const Value &other) const
+        {
+            if (type != other.type)
+                return false;
+            if (type == Value::NumberType && other.type == Value::NumberType) {
+                if (numberValue == 0 && other.numberValue == 0)
+                    return isNegative(numberValue) == isNegative(other.numberValue);
+                else
+                    return numberValue == other.numberValue;
+            }
+            if (type == Value::BoolType && other.type == Value::BoolType)
+                return numberValue == other.numberValue;
+            if (type == Value::StringType && other.type == Value::StringType)
+                return *stringValue->value == *other.stringValue->value;
+            return false;
+        }
+    };
+
+public:
+    void run(IR::Function *function)
+    {
+        if (function->hasTry)
+            return;
+        localCount = function->locals.size();
+        if (function->hasWith) {
+            thisTemp = -1;
+        } else {
+            IR::BasicBlock *entryBlock = function->basicBlocks.at(0);
+            thisTemp = entryBlock->newTemp();
+            IR::Move *fetchThis = function->New<IR::Move>();
+            fetchThis->init(entryBlock->TEMP(thisTemp),
+                            entryBlock->NAME(QStringLiteral("this"), 0, 0),
+                            IR::OpInvalid);
+            entryBlock->statements.prepend(fetchThis);
+        }
+
+        foreach (IR::BasicBlock *block, function->basicBlocks) {
+//            qDebug()<<"--- Starting with BB"<<block->index;
+            reset();
+            QVector<IR::Stmt *> &statements = block->statements;
+            foreach (IR::Stmt *stmt, statements) {
+//                qout<<"*** ";stmt->dump(qout);qout<<"\n";qout.flush();
+                stmt->accept(this);
+            }
+        }
+    }
+
+protected:
+    virtual void visitConst(IR::Const *) {}
+    virtual void visitString(IR::String *) {}
+    virtual void visitRegExp(IR::RegExp *) {}
+    virtual void visitName(IR::Name *) {}
+    virtual void visitClosure(IR::Closure *) {}
+    virtual void visitUnop(IR::Unop *e) { e->expr->accept(this); }
+    virtual void visitBinop(IR::Binop *e) { e->left->accept(this); e->right->accept(this); }
+    virtual void visitSubscript(IR::Subscript *e) { e->base->accept(this); e->index->accept(this); }
+    virtual void visitMember(IR::Member *e) { e->base->accept(this); }
+    virtual void visitExp(IR::Exp *s) { s->expr->accept(this); }
+    virtual void visitEnter(IR::Enter *) {}
+    virtual void visitLeave(IR::Leave *) {}
+    virtual void visitJump(IR::Jump *) {}
+    virtual void visitCJump(IR::CJump *s) { s->cond->accept(this); }
+    virtual void visitRet(IR::Ret *s) { s->expr->accept(this); }
+    virtual void visitTry(IR::Try *) {}
+
+    virtual void visitCall(IR::Call *e) {
+        e->base->accept(this);
+        for (IR::ExprList *it = e->args; it; it = it->next)
+            it->expr->accept(this);
+    }
+
+    virtual void visitNew(IR::New *e) {
+        e->base->accept(this);
+        for (IR::ExprList *it = e->args; it; it = it->next)
+            it->expr->accept(this);
+    }
+
+    virtual void visitTemp(IR::Temp *e) {
+        if (e->scope)
+            return;
+
+        const int replacement = tempReplacement.value(e->index, -1);
+        if (replacement != -1) {
+//            qDebug() << "+++ Replacing" << e->index << "with" << replacement;
+            e->index = replacement;
+        }
+    }
+
+    virtual void visitMove(IR::Move *s) {
+        IR::Temp *targetTemp = s->target->asTemp();
+        if (targetTemp && targetTemp->index >= localCount && !targetTemp->scope) {
+            if (s->op == IR::OpInvalid) {
+                if (IR::Name *n = s->source->asName()) {
+                    if (thisTemp != -1) {
+                        if (*n->id == QStringLiteral("this")) {
+                            check(targetTemp->index, Value(Value::ThisType));
+                            return;
+                        }
+                    }
+                } else if (IR::Const *c = s->source->asConst()) {
+                    Value value;
+                    switch (c->type) {
+                    case IR::UndefinedType: value.type = Value::UndefinedType; break;
+                    case IR::NullType: value.type = Value::NullType; break;
+                    case IR::BoolType: value.type = Value::BoolType; value.numberValue = c->value == 0 ? 0 : 1; break;
+                    case IR::NumberType: value.type = Value::NumberType; value.numberValue = c->value; break;
+                    default: Q_ASSERT("unknown const type"); return;
+                    }
+                    check(targetTemp->index, value);
+                    return;
+                } else if (IR::String *str = s->source->asString()) {
+                    check(targetTemp->index, Value(str));
+                    return;
+                }
+            }
+            invalidate(targetTemp->index, Value());
+        } else {
+            s->target->accept(this);
+        }
+
+        s->source->accept(this);
+    }
+
+    void invalidate(int &targetTempIndex, const Value &value)
+    {
+        QMap<int, Value>::iterator it = valueForTemp.find(targetTempIndex);
+        if (it != valueForTemp.end()) {
+            if (it.value() == value)
+                return;
+            tempForValue.remove(it.value());
+            valueForTemp.erase(it);
+        }
+
+        QMap<int, int>::iterator it2 = tempReplacement.find(targetTempIndex);
+        if (it2 != tempReplacement.end()) {
+            tempReplacement.erase(it2);
+        }
+    }
+
+    void check(int &targetTempIndex, const Value &value)
+    {
+        Q_ASSERT(value.isValid());
+
+        invalidate(targetTempIndex, value);
+
+        int replacementTemp = tempForValue.value(value, -1);
+        if (replacementTemp == -1) {
+//            qDebug() << "+++ inserting temp" << targetTempIndex;
+            tempForValue.insert(value, targetTempIndex);
+            valueForTemp.insert(targetTempIndex, value);
+        } else {
+//            qDebug() << "+++ temp" << targetTempIndex << "can be replaced with" << replacementTemp;
+            tempReplacement.insert(targetTempIndex, replacementTemp);
+        }
+    }
+
+    void reset()
+    {
+        tempForValue.clear();
+        tempReplacement.clear();
+        if (thisTemp != -1)
+            tempForValue.insert(Value(Value::ThisType), thisTemp);
+    }
+
+private:
+    QMap<Value, int> tempForValue;
+    QMap<int, Value> valueForTemp;
+    QMap<int, int> tempReplacement;
+
+    int localCount;
+    int thisTemp;
+};
+
 } // end of anonymous namespace
 
 class Codegen::ScanFunctions: Visitor
@@ -1847,8 +2074,12 @@ void Codegen::linearize(IR::Function *function)
     qDeleteAll(blocksToDelete);
     function->basicBlocks = trace;
 
-#ifndef QV4_NO_LIVENESS
     function->removeSharedExpressions();
+
+    if (qgetenv("NO_OPT").isEmpty())
+        ConstantPropagation().run(function);
+
+#ifndef QV4_NO_LIVENESS
     liveness(function);
 #endif
 
@@ -2505,6 +2736,8 @@ bool Codegen::visit(ThrowStatement *ast)
 
 bool Codegen::visit(TryStatement *ast)
 {
+    _function->hasTry = true;
+
     if (_function->isStrict && ast->catchExpression &&
             (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments")))
         throwSyntaxError(ast->catchExpression->identifierToken, QCoreApplication::translate("qv4codegen", "Catch variable name may not be eval or arguments in strict mode"));
@@ -2649,6 +2882,8 @@ bool Codegen::visit(WhileStatement *ast)
 
 bool Codegen::visit(WithStatement *ast)
 {
+    _function->hasWith = true;
+
     IR::BasicBlock *withBlock = _function->newBasicBlock();
 
     _block->JUMP(withBlock);
