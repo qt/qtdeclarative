@@ -429,7 +429,7 @@ void Assembler::link(VM::Function *vmFunc)
 
     JSC::JSGlobalData dummy;
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
-    uint32_t codeSize = linkBuffer.offsetOf(label());
+    vmFunc->codeSize = linkBuffer.offsetOf(label());
 
     QHash<void*, const char*> functions;
     foreach (CallToLink ctl, _callsToLink) {
@@ -477,7 +477,6 @@ void Assembler::link(VM::Function *vmFunc)
     }
 
     vmFunc->code = (Value (*)(VM::ExecutionContext *, const uchar *)) vmFunc->codeRef.code().executableAddress();
-    vmFunc->unwindInfo = UnwindHelper::createUnwindInfo(vmFunc, codeSize);
 }
 
 InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module)

@@ -30,6 +30,5 @@ void UnwindHelper::registerFunction(Function *function) {Q_UNUSED(function);}
 void UnwindHelper::registerFunctions(QVector<Function *> functions) {Q_UNUSED(functions);}
 void UnwindHelper::deregisterFunction(Function *function) {Q_UNUSED(function);}
 void UnwindHelper::deregisterFunctions(QVector<Function *> functions) {Q_UNUSED(functions);}
-QByteArray UnwindHelper::createUnwindInfo(Function*, size_t) { return QByteArray(); }
 #endif // USE_NULL_HELPER
 

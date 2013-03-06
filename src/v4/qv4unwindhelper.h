@@ -11,8 +11,6 @@ struct Function;
 class UnwindHelper
 {
 public:
-    static QByteArray createUnwindInfo(Function*f, size_t functionSize);
-
     static void registerFunction(Function *function);
     static void registerFunctions(QVector<Function *> functions);
     static void deregisterFunction(Function *function);

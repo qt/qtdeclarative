@@ -146,6 +146,9 @@ checkmothtarget.commands = python $$TESTSCRIPT --command=\"$$V4CMD --interpret\"
 checkmothtarget.depends = all
 QMAKE_EXTRA_TARGETS += checkmothtarget
 
+linux*|mac {
+    LIBS += -ldl
+}
 
 include(moth/moth.pri)
 include(../3rdparty/masm/masm.pri)

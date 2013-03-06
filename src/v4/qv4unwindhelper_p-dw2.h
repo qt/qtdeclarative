@@ -5,10 +5,11 @@
 #include <qv4functionobject.h>
 #include <wtf/Platform.h>
 
-#include <QtCore/QHash>
+#include <QMap>
+#include <QMutex>
 
-extern "C" void __register_frame(void*);
-extern "C" void __deregister_frame(void*);
+#define __USE_GNU
+#include <dlfcn.h>
 
 namespace QQmlJS {
 namespace VM {
@@ -46,21 +47,35 @@ static const int address_range_offset = 32;
 #endif
 } // anonymous namespace
 
-void UnwindHelper::registerFunctions(QVector<Function *> functions)
+static QMutex functionProtector;
+static QMap<quintptr, Function*> allFunctions;
+
+static Function *lookupFunction(void *pc)
 {
-    foreach (Function *f, functions) registerFunction(f);
+    quintptr key = reinterpret_cast<quintptr>(pc);
+    QMap<quintptr, Function*>::ConstIterator it = allFunctions.lowerBound(key);
+    if (it != allFunctions.begin() && allFunctions.count() > 0)
+        --it;
+    if (it == allFunctions.end())
+        return 0;
+
+    quintptr codeStart = reinterpret_cast<quintptr>((*it)->code);
+    if (key < codeStart || key >= codeStart + (*it)->codeSize)
+        return 0;
+    return *it;
 }
 
 void UnwindHelper::deregisterFunction(Function *function)
 {
-    if (function->unwindInfo.isEmpty())
-        return;
-    __deregister_frame(function->unwindInfo.data() + fde_offset);
+    QMutexLocker locker(&functionProtector);
+    allFunctions.remove(reinterpret_cast<quintptr>(function->code));
 }
 
 void UnwindHelper::deregisterFunctions(QVector<Function *> functions)
 {
-    foreach (Function *f, functions) deregisterFunction(f);
+    QMutexLocker locker(&functionProtector);
+    foreach (Function *f, functions)
+        allFunctions.remove(reinterpret_cast<quintptr>(f->code));
 }
 
 namespace {
@@ -81,12 +96,18 @@ void writeIntPtrValue(unsigned char *addr, intptr_t val)
 
 void UnwindHelper::registerFunction(Function *function)
 {
-    if (function->unwindInfo.isEmpty())
-        return;
-    __register_frame(function->unwindInfo.data() + fde_offset);
+    QMutexLocker locker(&functionProtector);
+    allFunctions.insert(reinterpret_cast<quintptr>(function->code), function);
 }
 
-QByteArray UnwindHelper::createUnwindInfo(Function *f, size_t functionSize)
+void UnwindHelper::registerFunctions(QVector<Function *> functions)
+{
+    QMutexLocker locker(&functionProtector);
+    foreach (Function *f, functions)
+        allFunctions.insert(reinterpret_cast<quintptr>(f->code), f);
+}
+
+static void createUnwindInfo(Function *f)
 {
     QByteArray info;
     info.resize(sizeof(cie_fde_data));
@@ -97,12 +118,46 @@ QByteArray UnwindHelper::createUnwindInfo(Function *f, size_t functionSize)
     intptr_t ptr = static_cast<char *>(f->codeRef.code().executableAddress()) - static_cast<char *>(0);
     writeIntPtrValue(cie_and_fde + initial_location_offset, ptr);
 
-    writeIntPtrValue(cie_and_fde + address_range_offset, functionSize);
+    writeIntPtrValue(cie_and_fde + address_range_offset, f->codeSize);
 
-    return info;
+    f->unwindInfo = info;
 }
 
 } // VM namespace
 } // QQmlJS namespace
+
+extern "C" {
+
+struct bases
+{
+    void *tbase;
+    void *dbase;
+    void *func;
+};
+
+Q_V4_EXPORT void *_Unwind_Find_FDE(void *pc, struct bases *bases)
+{
+    typedef void *(*Old_Unwind_Find_FDE)(void *pc, struct bases *bases);
+    static Old_Unwind_Find_FDE oldFunction = 0;
+    if (!oldFunction)
+        oldFunction = (Old_Unwind_Find_FDE)dlsym(RTLD_NEXT, "_Unwind_Find_FDE");
+
+    {
+        QMutexLocker locker(&QQmlJS::VM::functionProtector);
+        QQmlJS::VM::Function *function = QQmlJS::VM::lookupFunction(pc);
+        if (function) {
+            bases->tbase = 0;
+            bases->dbase = 0;
+            bases->func = reinterpret_cast<void*>(function->code);
+            if (function->unwindInfo.isEmpty())
+                QQmlJS::VM::createUnwindInfo(function);
+            return function->unwindInfo.data() + QQmlJS::VM::fde_offset;
+        }
+    }
+
+    return oldFunction(pc, bases);
+}
+
+}
 
 #endif // QV4UNWINDHELPER_PDW2_H

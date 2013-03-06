@@ -115,6 +115,7 @@ struct Function {
     VM::Value (*code)(VM::ExecutionContext *, const uchar *);
     const uchar *codeData;
     JSC::MacroAssemblerCodeRef codeRef;
+    quint32 codeSize;
     QByteArray unwindInfo; // CIE+FDE on x86/x86-64
 
     QVector<String *> formals;
@@ -135,6 +136,7 @@ struct Function {
         : name(name)
         , code(0)
         , codeData(0)
+        , codeSize(0)
         , outer(0)
         , lookups(0)
         , hasNestedFunctions(0)
