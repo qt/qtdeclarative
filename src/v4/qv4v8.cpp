@@ -492,7 +492,7 @@ String::ExternalStringResource *String::GetExternalStringResource() const
 
 String *String::Cast(v8::Value *obj)
 {
-    Q_UNIMPLEMENTED();
+    return static_cast<String *>(obj);
 }
 
 
@@ -555,7 +555,7 @@ Local<Number> Number::New(double value)
 
 Number *Number::Cast(v8::Value *obj)
 {
-    Q_UNIMPLEMENTED();
+    return static_cast<Number *>(obj);
 }
 
 Local<Integer> Integer::New(int32_t value)
@@ -587,7 +587,7 @@ int64_t Integer::Value() const
 
 Integer *Integer::Cast(v8::Value *obj)
 {
-    Q_UNIMPLEMENTED();
+    return static_cast<Integer *>(obj);
 }
 
 int32_t Int32::Value() const
@@ -782,7 +782,7 @@ Local<Object> Object::New()
 
 Object *Object::Cast(Value *obj)
 {
-    Q_UNIMPLEMENTED();
+    return static_cast<Object *>(obj);
 }
 
 
@@ -798,7 +798,7 @@ Local<Array> Array::New(int length)
 
 Array *Array::Cast(Value *obj)
 {
-    Q_UNIMPLEMENTED();
+    return static_cast<Array *>(obj);
 }
 
 
@@ -836,7 +836,7 @@ ScriptOrigin Function::GetScriptOrigin() const
 
 Function *Function::Cast(Value *obj)
 {
-    Q_UNIMPLEMENTED();
+    return static_cast<Function *>(obj);
 }
 
 
@@ -852,7 +852,7 @@ double Date::NumberValue() const
 
 Date *Date::Cast(Value *obj)
 {
-    Q_UNIMPLEMENTED();
+    return static_cast<Date *>(obj);
 }
 
 void Date::DateTimeConfigurationChangeNotification()
@@ -873,7 +873,7 @@ double NumberObject::NumberValue() const
 
 NumberObject *NumberObject::Cast(Value *obj)
 {
-    Q_UNIMPLEMENTED();
+    return static_cast<NumberObject *>(obj);
 }
 
 Local<Value> BooleanObject::New(bool value)
@@ -888,7 +888,7 @@ bool BooleanObject::BooleanValue() const
 
 BooleanObject *BooleanObject::Cast(Value *obj)
 {
-    Q_UNIMPLEMENTED();
+    return static_cast<BooleanObject *>(obj);
 }
 
 Local<Value> StringObject::New(Handle<String> value)
@@ -903,7 +903,7 @@ Local<String> StringObject::StringValue() const
 
 StringObject *StringObject::Cast(Value *obj)
 {
-    Q_UNIMPLEMENTED();
+    return static_cast<StringObject *>(obj);
 }
 
 Local<RegExp> RegExp::New(Handle<String> pattern, RegExp::Flags flags)
@@ -923,7 +923,7 @@ RegExp::Flags RegExp::GetFlags() const
 
 RegExp *RegExp::Cast(Value *obj)
 {
-    Q_UNIMPLEMENTED();
+    return static_cast<RegExp *>(obj);
 }
 
 Local<Value> External::Wrap(void *data)
@@ -943,7 +943,7 @@ Local<External> External::New(void *value)
 
 External *External::Cast(v8::Value *obj)
 {
-    Q_UNIMPLEMENTED();
+    return static_cast<External *>(obj);
 }
 
 void *External::Value() const
