@@ -3998,8 +3998,8 @@ void QQuickItemPrivate::setState(const QString &state)
 
     This property holds the name of the current state of the item.
 
-    If the item is in its default state — that is, no explicit state has been
-    set — then this property holds an empty string. Likewise, you can return
+    If the item is in its default state, that is, no explicit state has been
+    set, then this property holds an empty string. Likewise, you can return
     an item to its default state by setting this property to an empty string.
 
     \sa {Qt Quick States}
@@ -4009,8 +4009,8 @@ void QQuickItemPrivate::setState(const QString &state)
 
     This property holds the name of the current state of the item.
 
-    If the item is in its default state — that is, no explicit state has been
-    set — then this property holds an empty string. Likewise, you can return
+    If the item is in its default state, that is, no explicit state has been
+    set, then this property holds an empty string. Likewise, you can return
     an item to its default state by setting this property to an empty string.
 
     \sa {Qt Quick States}
