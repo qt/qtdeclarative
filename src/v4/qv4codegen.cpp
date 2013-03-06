@@ -111,7 +111,7 @@ struct ComputeUseDef: IR::StmtVisitor, IR::ExprVisitor
     virtual void visitJump(IR::Jump *) {}
     virtual void visitCJump(IR::CJump *s) { s->cond->accept(this); }
     virtual void visitRet(IR::Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(IR::Try *) {}
+    virtual void visitTry(IR::Try *t) { t->exceptionVar->accept(this); }
 
     virtual void visitTemp(IR::Temp *e) {
         if (e->index < 0 || e->scope != 0)
@@ -2475,7 +2475,11 @@ bool Codegen::visit(TryStatement *ast)
     ScopeAndFinally tcf(_scopeAndFinally, ast->finallyExpression, finishTryArgs);
     _scopeAndFinally = &tcf;
 
-    _block->TRY(tryBody, catchBody, ast->catchExpression ? ast->catchExpression->name.toString() : QString());
+    int exception_to_rethrow  = _block->newTemp();
+
+    _block->TRY(tryBody, catchBody,
+                ast->catchExpression ? ast->catchExpression->name.toString() : QString(),
+                _block->TEMP(exception_to_rethrow));
 
     _block = tryBody;
     statement(ast->statement);
@@ -2513,8 +2517,6 @@ bool Codegen::visit(TryStatement *ast)
     IR::BasicBlock *after = _function->newBasicBlock();
     _block = finallyBody;
 
-    int exception_to_rethrow  = _block->newTemp();
-    move(_block->TEMP(exception_to_rethrow), _block->CALL(_block->NAME(IR::Name::builtin_get_exception, 0, 0), 0));
     _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_finish_try, 0, 0), finishTryArgs));
 
     if (ast->finallyExpression && ast->finallyExpression->statement)

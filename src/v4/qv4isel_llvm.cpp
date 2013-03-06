@@ -441,13 +441,6 @@ void InstructionSelection::callBuiltinFinishTry()
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinGetException(IR::Temp *result)
-{
-    // TODO
-    assert(!"TODO!");
-    Q_UNREACHABLE();
-}
-
 void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result)
 {
     // TODO
@@ -1142,12 +1135,6 @@ void InstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
 
         case IR::Name::builtin_finish_try:
             // ### FIXME.
-            return;
-
-        case IR::Name::builtin_get_exception:
-            CreateCall2(getRuntimeFunction("__qmljs_llvm_get_exception"),
-                        _llvmFunction->arg_begin(), result);
-            _llvmValue = CreateLoad(result);
             return;
 
         case IR::Name::builtin_foreach_iterator_object:

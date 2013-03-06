@@ -45,7 +45,6 @@ protected:
     virtual void callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result);
     virtual void callBuiltinThrow(IR::Temp *arg);
     virtual void callBuiltinFinishTry();
-    virtual void callBuiltinGetException(IR::Temp *result);
     virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result);
     virtual void callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result);
     virtual void callBuiltinPushWithScope(IR::Temp *arg);

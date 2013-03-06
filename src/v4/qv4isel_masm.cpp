@@ -678,18 +678,20 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
 
 typedef void *(*MiddleOfFunctionEntryPoint(ExecutionContext *, void *localsPtr));
 static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunctionEntryPoint tryBody, MiddleOfFunctionEntryPoint catchBody,
-                        VM::String *exceptionVarName)
+                        VM::String *exceptionVarName, Value *exceptionVar)
 {
     void *addressToContinueAt = 0;
     try {
         addressToContinueAt = tryBody(context, localsPtr);
     } catch (Exception& ex) {
         ex.accept(context);
+        __qmljs_get_exception(context, exceptionVar);
         try {
             ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(exceptionVarName, context);
             addressToContinueAt = catchBody(catchContext, localsPtr);
             context = __qmljs_builtin_pop_scope(catchContext);
         } catch (Exception& ex) {
+            __qmljs_get_exception(context, exceptionVar);
             ex.accept(context);
             addressToContinueAt = catchBody(context, localsPtr);
         }
@@ -710,7 +712,7 @@ void InstructionSelection::visitTry(IR::Try *t)
 
     generateFunctionCall(Assembler::ReturnValueRegister, tryWrapper, Assembler::ContextRegister, Assembler::LocalsRegister,
                          Assembler::ReentryBlock(t->tryBlock), Assembler::ReentryBlock(t->catchBlock),
-                         identifier(t->exceptionVarName));
+                         identifier(t->exceptionVarName), Assembler::PointerToValue(t->exceptionVar));
     _as->jump(Assembler::ReturnValueRegister);
 }
 
@@ -722,11 +724,6 @@ void InstructionSelection::callBuiltinFinishTry()
     _as->leaveStandardStackFrame(/*locals*/0);
     _as->ret();
     _as->addPatch(continuation, _as->label());
-}
-
-void InstructionSelection::callBuiltinGetException(IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_get_exception, Assembler::ContextRegister, Assembler::PointerToValue(result));
 }
 
 void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result)

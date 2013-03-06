@@ -23,7 +23,6 @@
     F(CallActivationProperty, callActivationProperty) \
     F(CallBuiltinThrow, callBuiltinThrow) \
     F(CallBuiltinFinishTry, callBuiltinFinishTry) \
-    F(CallBuiltinGetException, callBuiltinGetException) \
     F(CallBuiltinPushScope, callBuiltinPushScope) \
     F(CallBuiltinPopScope, callBuiltinPopScope) \
     F(CallBuiltinForeachIteratorObject, callBuiltinForeachIteratorObject) \
@@ -214,6 +213,7 @@ union Instr
         ptrdiff_t tryOffset;
         ptrdiff_t catchOffset;
         VM::String *exceptionVarName;
+        Param exceptionVar;
     };
     struct instr_callValue {
         MOTH_INSTR_HEADER
@@ -251,10 +251,6 @@ union Instr
     };
     struct instr_callBuiltinFinishTry {
         MOTH_INSTR_HEADER
-    };
-    struct instr_callBuiltinGetException {
-        MOTH_INSTR_HEADER
-        Param result;
     };
     struct instr_callBuiltinPushScope {
         MOTH_INSTR_HEADER
@@ -468,7 +464,6 @@ union Instr
     instr_callActivationProperty callActivationProperty;
     instr_callBuiltinThrow callBuiltinThrow;
     instr_callBuiltinFinishTry callBuiltinFinishTry;
-    instr_callBuiltinGetException callBuiltinGetException;
     instr_callBuiltinPushScope callBuiltinPushScope;
     instr_callBuiltinPopScope callBuiltinPopScope;
     instr_callBuiltinForeachIteratorObject callBuiltinForeachIteratorObject;

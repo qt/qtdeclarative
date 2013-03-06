@@ -683,6 +683,7 @@ void InstructionSelection::visitTry(IR::Try *t)
     enterTry.tryOffset = 0;
     enterTry.catchOffset = 0;
     enterTry.exceptionVarName = identifier(t->exceptionVarName);
+    enterTry.exceptionVar = getParam(t->exceptionVar);
     ptrdiff_t enterTryLoc = addInstruction(enterTry);
 
     ptrdiff_t tryLoc = enterTryLoc + (((const char *)&enterTry.tryOffset) - ((const char *)&enterTry));
@@ -847,13 +848,6 @@ void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
 void InstructionSelection::callBuiltinFinishTry()
 {
     Instruction::CallBuiltinFinishTry call;
-    addInstruction(call);
-}
-
-void InstructionSelection::callBuiltinGetException(IR::Temp *result)
-{
-    Instruction::CallBuiltinGetException call;
-    call.result = getResultParam(result);
     addInstruction(call);
 }
 

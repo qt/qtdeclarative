@@ -314,10 +314,6 @@ void InstructionSelection::callBuiltin(IR::Call *call, IR::Temp *result)
         callBuiltinFinishTry();
         return;
 
-    case IR::Name::builtin_get_exception:
-        callBuiltinGetException(result);
-        return;
-
     case IR::Name::builtin_foreach_iterator_object: {
         IR::Temp *arg = call->args->expr->asTemp();
         assert(arg != 0);
