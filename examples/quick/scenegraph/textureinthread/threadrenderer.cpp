@@ -46,10 +46,13 @@
 
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLFramebufferObject>
+#include <QtGui/QGuiApplication>
+#include <QtGui/QOffscreenSurface>
 
 #include <QtQuick/QQuickWindow>
 #include <qsgsimpletexturenode.h>
 
+QList<QThread *> ThreadRenderer::threads;
 
 /*
  * The render thread shares a context with the scene graph and will
@@ -60,37 +63,39 @@ class RenderThread : public QThread
 {
     Q_OBJECT
 public:
-    RenderThread(const QSize &size)
+    RenderThread(const QSize &size, QOpenGLContext *context)
         : m_renderFbo(0)
         , m_displayFbo(0)
         , m_logoRenderer(0)
+        , m_fakeSurface(0)
         , m_size(size)
     {
-        // Since we're using queued connections, we need affinity to the rendering thread.
-        moveToThread(this);
+        ThreadRenderer::threads << this;
 
         // Set up the QOpenGLContext to use for rendering in this thread. It is sharing
         // memory space with the GL context of the scene graph. This constructor is called
         // during updatePaintNode, so we are currently on the scene graph thread with the
         // scene graph's OpenGL context current.
-        QOpenGLContext *current = QOpenGLContext::currentContext();
         m_context = new QOpenGLContext();
-        m_context->setShareContext(current);
-        m_context->setFormat(current->format());
-        m_context->create();
+        m_context->setShareContext(context);
+        m_context->setFormat(context->format());
         m_context->moveToThread(this);
 
-        // We need a non-visible surface to make current...
-        m_fakeSurface = new QWindow();
-        m_fakeSurface->setGeometry(0, 0, 64, 64);
-        m_fakeSurface->setSurfaceType(QWindow::OpenGLSurface);
-        m_fakeSurface->setFormat(current->format());
+        // We need a non-visible surface to make current in the other thread
+        // and QWindows must be created and managed on the GUI thread.
+        m_fakeSurface = new QOffscreenSurface();
+        m_fakeSurface->setFormat(context->format());
         m_fakeSurface->create();
     }
+
+    void setSurface(QOffscreenSurface *surface) { m_fakeSurface = surface; }
 
 public slots:
     void renderNext()
     {
+        if (!m_context->isValid())
+            m_context->create();
+
         m_context->makeCurrent(m_fakeSurface);
 
         if (!m_renderFbo) {
@@ -119,6 +124,23 @@ public slots:
         emit textureReady(m_displayFbo->texture(), m_size);
     }
 
+    void shutDown()
+    {
+        m_context->makeCurrent(m_fakeSurface);
+        delete m_renderFbo;
+        delete m_displayFbo;
+        delete m_logoRenderer;
+        m_context->doneCurrent();
+        delete m_context;
+
+        // schedule this to be deleted only after we're done cleaning up
+        m_fakeSurface->deleteLater();
+
+        // Stop event processing, move the thread to GUI and make sure it is deleted.
+        exit();
+        moveToThread(QGuiApplication::instance()->thread());
+    }
+
 signals:
     void textureReady(int id, const QSize &size);
 
@@ -128,7 +150,7 @@ private:
 
     LogoRenderer *m_logoRenderer;
 
-    QWindow *m_fakeSurface;
+    QOffscreenSurface *m_fakeSurface;
     QOpenGLContext *m_context;
     QSize m_size;
 };
@@ -209,19 +231,35 @@ private:
 
 
 ThreadRenderer::ThreadRenderer()
+    : m_renderThread(0)
 {
     setFlag(ItemHasContents, true);
+    polish();
 }
 
+void ThreadRenderer::updatePolish()
+{
+    if (!window() || !window()->openglContext())
+        return;
 
+    m_renderThread = new RenderThread(QSize(512, 512), window()->openglContext());
+    m_renderThread->moveToThread(m_renderThread);
+    m_renderThread->start();
+    connect(window(), SIGNAL(sceneGraphInvalidated()), m_renderThread, SLOT(shutDown()), Qt::QueuedConnection);
+}
 
 QSGNode *ThreadRenderer::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
+    if (!m_renderThread) {
+        polish();
+        update();
+        return 0;
+    }
+
     TextureNode *node = static_cast<TextureNode *>(oldNode);
 
     if (!node) {
         node = new TextureNode(window());
-        m_renderThread = new RenderThread(QSize(512, 512));
 
         /* Set up connections to get the production of FBO textures in sync with vsync on the
          * rendering thread.
@@ -241,9 +279,6 @@ QSGNode *ThreadRenderer::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         connect(node, SIGNAL(pendingNewTexture()), window(), SLOT(update()), Qt::QueuedConnection);
         connect(window(), SIGNAL(beforeRendering()), node, SLOT(prepareNode()), Qt::DirectConnection);
         connect(node, SIGNAL(textureInUse()), m_renderThread, SLOT(renderNext()), Qt::QueuedConnection);
-
-        // Start the render thread and enter let it process events.
-        m_renderThread->start();
 
         // Get the production of FBO textures started..
         QMetaObject::invokeMethod(m_renderThread, "renderNext", Qt::QueuedConnection);
