@@ -374,12 +374,20 @@ void Object::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Val
 
 PropertyFlags Object::query(Managed *m, ExecutionContext *ctx, String *name)
 {
-    return PropertyFlags(0); /* ### */
+    Object *that = static_cast<Object *>(m);
+    PropertyDescriptor *pd = that->__getPropertyDescriptor__(ctx, name);
+    if (!pd || pd->type == PropertyDescriptor::Generic)
+        return PropertyFlags(0);
+    return pd->propertyFlags();
 }
 
 PropertyFlags Object::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
 {
-    return PropertyFlags(0); /* ### */
+    Object *that = static_cast<Object *>(m);
+    PropertyDescriptor *pd = that->__getPropertyDescriptor__(ctx, index);
+    if (!pd || pd->type == PropertyDescriptor::Generic)
+        return PropertyFlags(0);
+    return pd->propertyFlags();
 }
 
 bool Object::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
