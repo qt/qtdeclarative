@@ -189,6 +189,8 @@ public:
     Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc);
     Value get(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
     Value getIndexed(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
+    void put(ExecutionContext *ctx, String *name, const Value &value);
+    void putIndexed(ExecutionContext *ctx, uint index, const Value &value);
 
     static void destroy(Managed *that) { that->_data = 0; }
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);

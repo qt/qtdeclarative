@@ -356,11 +356,11 @@ int main(int argc, char *argv[])
         QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
         QQmlJS::VM::Object *print = new (ctx->engine->memoryManager) builtins::Print(ctx);
         print->prototype = ctx->engine->objectPrototype;
-        globalObject->__put__(ctx, vm.newIdentifier(QStringLiteral("print")),
+        globalObject->put(ctx, vm.newIdentifier(QStringLiteral("print")),
                                   QQmlJS::VM::Value::fromObject(print));
         QQmlJS::VM::Object *gc = new (ctx->engine->memoryManager) builtins::GC(ctx);
         gc->prototype = ctx->engine->objectPrototype;
-        globalObject->__put__(ctx, vm.newIdentifier(QStringLiteral("gc")),
+        globalObject->put(ctx, vm.newIdentifier(QStringLiteral("gc")),
                                   QQmlJS::VM::Value::fromObject(gc));
 
         foreach (const QString &fn, args) {

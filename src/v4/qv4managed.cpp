@@ -183,3 +183,13 @@ Value Managed::getIndexed(ExecutionContext *ctx, uint index, bool *hasProperty)
 {
     return vtbl->getIndexed(this, ctx, index, hasProperty);
 }
+
+void Managed::put(ExecutionContext *ctx, String *name, const Value &value)
+{
+    vtbl->put(this, ctx, name, value);
+}
+
+void Managed::putIndexed(ExecutionContext *ctx, uint index, const Value &value)
+{
+    vtbl->putIndexed(this, ctx, index, value);
+}

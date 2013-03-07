@@ -43,6 +43,7 @@
 #include "qv4identifier.h"
 #include "qmljs_runtime.h"
 #include "qv4objectproto.h"
+#include "qv4stringobject.h"
 #include <QtCore/QHash>
 
 namespace QQmlJS {
@@ -121,12 +122,16 @@ Value String::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *ha
 
 void String::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
 {
-    /* ### */
+    String *that = static_cast<String *>(m);
+    Object *o = ctx->engine->newStringObject(ctx, Value::fromString(that));
+    o->put(ctx, name, value);
 }
 
 void String::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value)
 {
-    /* ### */
+    String *that = static_cast<String *>(m);
+    Object *o = ctx->engine->newStringObject(ctx, Value::fromString(that));
+    o->putIndexed(ctx, index, value);
 }
 
 PropertyFlags String::query(Managed *m, ExecutionContext *ctx, String *name)

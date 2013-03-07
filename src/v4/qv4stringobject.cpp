@@ -325,7 +325,7 @@ Value StringPrototype::method_match(ExecutionContext *parentCtx, Value thisObjec
         return exec->call(parentCtx, Value::fromObject(rx), &arg, 1);
 
     String *lastIndex = parentCtx->engine->newString(QStringLiteral("lastIndex"));
-    rx->__put__(parentCtx, lastIndex, Value::fromInt32(0));
+    rx->put(parentCtx, lastIndex, Value::fromInt32(0));
     ArrayObject *a = parentCtx->engine->newArrayObject(parentCtx);
 
     double previousLastIndex = 0;
@@ -338,7 +338,7 @@ Value StringPrototype::method_match(ExecutionContext *parentCtx, Value thisObjec
         double thisIndex = rx->get(parentCtx, lastIndex, 0).toInteger(parentCtx);
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
-            rx->__put__(parentCtx, lastIndex, Value::fromDouble(previousLastIndex));
+            rx->put(parentCtx, lastIndex, Value::fromDouble(previousLastIndex));
         } else {
             previousLastIndex = thisIndex;
         }

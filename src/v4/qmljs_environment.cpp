@@ -130,7 +130,7 @@ bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, 
     }
 
     if (activation && activation->__hasProperty__(scope, name)) {
-        activation->__put__(scope, name, value);
+        activation->put(scope, name, value);
         return true;
     }
 
@@ -338,7 +338,7 @@ void ExecutionContext::setProperty(String *name, const Value& value)
 //            qDebug() << ctx << "hasWith";
             if (w->__hasProperty__(ctx, name)) {
 //                qDebug() << "   withHasProp";
-                w->__put__(ctx, name, value);
+                w->put(ctx, name, value);
                 return;
             }
         } else if (ctx->exceptionVarName && ctx->exceptionVarName->isEqualTo(name)) {
@@ -352,7 +352,7 @@ void ExecutionContext::setProperty(String *name, const Value& value)
     }
     if (strictMode || name->isEqualTo(engine->id_this))
         throwReferenceError(Value::fromString(name));
-    engine->globalObject.objectValue()->__put__(this, name, value);
+    engine->globalObject.objectValue()->put(this, name, value);
 }
 
 Value ExecutionContext::getProperty(String *name)

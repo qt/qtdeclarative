@@ -223,7 +223,7 @@ Value ArrayPrototype::method_pop(ExecutionContext *ctx)
 
     if (!len) {
         if (!instance->isArrayObject())
-            instance->__put__(ctx, ctx->engine->id_length, Value::fromInt32(0));
+            instance->put(ctx, ctx->engine->id_length, Value::fromInt32(0));
         return Value::undefinedValue();
     }
 
@@ -233,7 +233,7 @@ Value ArrayPrototype::method_pop(ExecutionContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len - 1);
     else
-        instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(len - 1));
+        instance->put(ctx, ctx->engine->id_length, Value::fromDouble(len - 1));
     return result;
 }
 
@@ -247,11 +247,11 @@ Value ArrayPrototype::method_push(ExecutionContext *ctx)
         double l = len;
         for (double i = 0; i < ctx->argumentCount; ++i) {
             Value idx = Value::fromDouble(l + i);
-            instance->__put__(ctx, idx.toString(ctx), ctx->argument(i));
+            instance->put(ctx, idx.toString(ctx), ctx->argument(i));
         }
         double newLen = l + ctx->argumentCount;
         if (!instance->isArrayObject())
-            instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
+            instance->put(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
         else
             ctx->throwRangeError(Value::fromString(ctx, QStringLiteral("Array.prototype.push: Overflow")));
         return Value::fromDouble(newLen);
@@ -280,13 +280,13 @@ Value ArrayPrototype::method_push(ExecutionContext *ctx)
         }
     } else {
         for (uint i = 0; i < ctx->argumentCount; ++i)
-            instance->__put__(ctx, len + i, ctx->argument(i));
+            instance->putIndexed(ctx, len + i, ctx->argument(i));
         len += ctx->argumentCount;
     }
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len);
     else
-        instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(len));
+        instance->put(ctx, ctx->engine->id_length, Value::fromDouble(len));
 
     if (len < INT_MAX)
         return Value::fromInt32(len);
@@ -306,11 +306,11 @@ Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
         Value lval = instance->getIndexed(ctx, lo, &loExists);
         Value hval = instance->getIndexed(ctx, hi, &hiExists);
         if (hiExists)
-            instance->__put__(ctx, lo, hval);
+            instance->putIndexed(ctx, lo, hval);
         else
             instance->__delete__(ctx, lo);
         if (loExists)
-            instance->__put__(ctx, hi, lval);
+            instance->putIndexed(ctx, hi, lval);
         else
             instance->__delete__(ctx, hi);
     }
@@ -324,7 +324,7 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
 
     if (!len) {
         if (!instance->isArrayObject())
-            instance->__put__(ctx, ctx->engine->id_length, Value::fromInt32(0));
+            instance->put(ctx, ctx->engine->id_length, Value::fromInt32(0));
         return Value::undefinedValue();
     }
 
@@ -366,7 +366,7 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
             bool exists;
             Value v = instance->getIndexed(ctx, k, &exists);
             if (exists)
-                instance->__put__(ctx, k - 1, v);
+                instance->putIndexed(ctx, k - 1, v);
             else
                 instance->__delete__(ctx, k - 1);
         }
@@ -376,7 +376,7 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len - 1);
     else
-        instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(len - 1));
+        instance->put(ctx, ctx->engine->id_length, Value::fromDouble(len - 1));
     return result;
 }
 
@@ -487,7 +487,7 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
         instance->arraySet(start + i, ctx->argument(i + 2));
 
     ctx->strictMode = true;
-    instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(len - deleteCount + itemCount));
+    instance->put(ctx, ctx->engine->id_length, Value::fromDouble(len - deleteCount + itemCount));
 
     return Value::fromObject(newArray);
 }
@@ -525,19 +525,19 @@ Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
             bool exists;
             Value v = instance->getIndexed(ctx, k - 1, &exists);
             if (exists)
-                instance->__put__(ctx, k + ctx->argumentCount - 1, v);
+                instance->putIndexed(ctx, k + ctx->argumentCount - 1, v);
             else
                 instance->__delete__(ctx, k + ctx->argumentCount - 1);
         }
         for (uint i = 0; i < ctx->argumentCount; ++i)
-            instance->__put__(ctx, i, ctx->argument(i));
+            instance->putIndexed(ctx, i, ctx->argument(i));
     }
 
     uint newLen = len + ctx->argumentCount;
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(newLen);
     else
-        instance->__put__(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
+        instance->put(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
 
     if (newLen < INT_MAX)
         return Value::fromInt32(newLen);

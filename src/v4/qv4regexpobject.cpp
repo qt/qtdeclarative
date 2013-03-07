@@ -204,8 +204,8 @@ Value RegExpPrototype::method_exec(ExecutionContext *ctx)
         array->push_back(entry);
     }
 
-    array->__put__(ctx, QLatin1String("index"), Value::fromInt32(result));
-    array->__put__(ctx, QLatin1String("input"), arg);
+    array->put(ctx, QLatin1String("index"), Value::fromInt32(result));
+    array->put(ctx, QLatin1String("input"), arg);
 
     if (r->global)
         r->lastIndexProperty(ctx)->value = Value::fromInt32(matchOffsets[1]);

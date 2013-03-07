@@ -715,7 +715,7 @@ QString Stringify::Str(const QString &key, Value value)
     if (replacerFunction) {
         Object *holder = ctx->engine->newObject();
         Value holderValue = Value::fromObject(holder);
-        holder->__put__(ctx, QString(), value);
+        holder->put(ctx, QString(), value);
         Value args[2];
         args[0] = Value::fromString(ctx, key);
         args[1] = value;

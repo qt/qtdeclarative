@@ -92,9 +92,9 @@ void Object::destroy(Managed *that)
     static_cast<Object *>(that)->~Object();
 }
 
-void Object::__put__(ExecutionContext *ctx, const QString &name, const Value &value)
+void Object::put(ExecutionContext *ctx, const QString &name, const Value &value)
 {
-    __put__(ctx, ctx->engine->newString(name), value);
+    put(ctx, ctx->engine->newString(name), value);
 }
 
 Value Object::getValue(ExecutionContext *ctx, const PropertyDescriptor *p) const
@@ -159,13 +159,37 @@ void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value
 
 }
 
+void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value &thisObject, const Value &value)
+{
+    if (pd->isAccessor()) {
+            if (pd->set) {
+                Value args[1];
+                args[0] = value;
+                pd->set->call(ctx, thisObject, args, 1);
+                return;
+            }
+            goto reject;
+    }
+
+    if (!pd->isWritable())
+        goto reject;
+
+    pd->value = value;
+    return;
+
+  reject:
+    if (ctx->strictMode)
+        ctx->throwTypeError();
+
+}
+
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value &rhs)
 {
     bool hasProperty = false;
     Value v = get(ctx, name, &hasProperty);
     Value result;
     op(ctx, &result, v, rhs);
-    __put__(ctx, name, result);
+    put(ctx, name, result);
 }
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, const Value &rhs)
@@ -176,7 +200,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, c
         Value v = getIndexed(ctx, idx, &hasProperty);
         Value result;
         op(ctx, &result, v, rhs);
-        __put__(ctx, idx, result);
+        putIndexed(ctx, idx, result);
         return;
     }
     String *name = index.toString(ctx);
@@ -328,8 +352,49 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(const ExecutionContext *ct
     return 0;
 }
 
+Value Object::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+{
+    return static_cast<Object *>(m)->internalGet(ctx, name, hasProperty);
+}
+
+Value Object::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+{
+    return static_cast<Object *>(m)->internalGetIndexed(ctx, index, hasProperty);
+}
+
+void Object::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
+{
+    static_cast<Object *>(m)->internalPut(ctx, name, value);
+}
+
+void Object::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value)
+{
+    static_cast<Object *>(m)->internalPutIndexed(ctx, index, value);
+}
+
+PropertyFlags Object::query(Managed *m, ExecutionContext *ctx, String *name)
+{
+    return PropertyFlags(0); /* ### */
+}
+
+PropertyFlags Object::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
+{
+    return PropertyFlags(0); /* ### */
+}
+
+bool Object::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
+{
+    return static_cast<Object *>(m)->__delete__(ctx, name);
+}
+
+bool Object::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
+{
+    return static_cast<Object *>(m)->__delete__(ctx, index);
+}
+
+
 // Section 8.12.3
-Value Object::get(ExecutionContext *ctx, String *name, bool *hasProperty)
+Value Object::internalGet(ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -360,7 +425,7 @@ Value Object::get(ExecutionContext *ctx, String *name, bool *hasProperty)
     return Value::undefinedValue();
 }
 
-Value Object::getIndexed(ExecutionContext *ctx, uint index, bool *hasProperty)
+Value Object::internalGetIndexed(ExecutionContext *ctx, uint index, bool *hasProperty)
 {
     PropertyDescriptor *pd = 0;
     Object *o = this;
@@ -393,11 +458,11 @@ Value Object::getIndexed(ExecutionContext *ctx, uint index, bool *hasProperty)
 
 
 // Section 8.12.5
-void Object::__put__(ExecutionContext *ctx, String *name, const Value &value)
+void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return __put__(ctx, idx, value);
+        return putIndexed(ctx, idx, value);
 
     name->makeIdentifier(ctx);
 
@@ -474,7 +539,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, const Value &value)
         ctx->throwTypeError();
 }
 
-void Object::__put__(ExecutionContext *ctx, uint index, const Value &value)
+void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &value)
 {
     PropertyDescriptor *pd  = __getOwnProperty__(ctx, index);
     // clause 1

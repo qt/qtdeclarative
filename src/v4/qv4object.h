@@ -132,13 +132,6 @@ struct Q_V4_EXPORT Object: Managed {
     PropertyDescriptor *__getPropertyDescriptor__(const ExecutionContext *ctx, String *name) const;
     PropertyDescriptor *__getPropertyDescriptor__(const ExecutionContext *ctx, uint index) const;
 
-    Value get(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
-    Value getIndexed(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
-
-    // -> vtable
-    void __put__(ExecutionContext *ctx, String *name, const Value &value);
-    void __put__(ExecutionContext *ctx, uint index, const Value &value);
-
     bool __hasProperty__(const ExecutionContext *ctx, String *name) const {
         PropertyDescriptor *pd = __getPropertyDescriptor__(ctx, name);
         return pd && pd->type != PropertyDescriptor::Generic;
@@ -159,7 +152,7 @@ struct Q_V4_EXPORT Object: Managed {
     //
     // helpers
     //
-    void __put__(ExecutionContext *ctx, const QString &name, const Value &value);
+    void put(ExecutionContext *ctx, const QString &name, const Value &value);
 
     Value getValue(ExecutionContext *ctx, const PropertyDescriptor *p) const;
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p) const;
@@ -167,6 +160,7 @@ struct Q_V4_EXPORT Object: Managed {
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const;
 
     void putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value &value);
+    void putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value &thisObject, const Value &value);
 
     void inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value &rhs);
     void inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, const Value &rhs);
@@ -321,26 +315,28 @@ public:
 
     void arrayReserve(uint n);
 
+    using Managed::get;
+    using Managed::getIndexed;
+    using Managed::put;
+    using Managed::putIndexed;
 protected:
     static const ManagedVTable static_vtbl;
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
-    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
-    { return static_cast<Object *>(m)->get(ctx, name, hasProperty); }
-    static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
-    { return static_cast<Object *>(m)->getIndexed(ctx, index, hasProperty); }
-    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
-    { static_cast<Object *>(m)->__put__(ctx, name, value); }
-    static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value)
-    { static_cast<Object *>(m)->__put__(ctx, index, value); }
-    static PropertyFlags query(Managed *m, ExecutionContext *ctx, String *name)
-    { return PropertyFlags(0); /* ### */ }
-    static PropertyFlags queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
-    { return PropertyFlags(0); /* ### */ }
-    static bool deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
-    { return static_cast<Object *>(m)->__delete__(ctx, name); }
-    static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
-    { return static_cast<Object *>(m)->__delete__(ctx, index); }
+    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty);
+    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+    static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value);
+    static PropertyFlags query(Managed *m, ExecutionContext *ctx, String *name);
+    static PropertyFlags queryIndexed(Managed *m, ExecutionContext *ctx, uint index);
+    static bool deleteProperty(Managed *m, ExecutionContext *ctx, String *name);
+    static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index);
+
+private:
+    Value internalGet(ExecutionContext *ctx, String *name, bool *hasProperty);
+    Value internalGetIndexed(ExecutionContext *ctx, uint index, bool *hasProperty);
+    void internalPut(ExecutionContext *ctx, String *name, const Value &value);
+    void internalPutIndexed(ExecutionContext *ctx, uint index, const Value &value);
 
     friend struct ObjectIterator;
     friend struct ObjectPrototype;
