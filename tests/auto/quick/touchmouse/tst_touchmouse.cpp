@@ -148,7 +148,7 @@ private slots:
     void initTestCase();
 
     void simpleTouchEvent();
-    void eventFilter();
+    void testEventFilter();
     void mouse();
     void touchOverMouse();
     void mouseOverTouch();
@@ -303,7 +303,7 @@ void tst_TouchMouse::simpleTouchEvent()
     delete window;
 }
 
-void tst_TouchMouse::eventFilter()
+void tst_TouchMouse::testEventFilter()
 {
 //    // install event filter on item and see that it can grab events
 //    QQuickView *window = createView();
