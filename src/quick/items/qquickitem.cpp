@@ -3007,8 +3007,6 @@ QList<QQuickItem *> QQuickItem::childItems() const
 
   If clipping is enabled, an item will clip its own painting, as well
   as the painting of its children, to its bounding rectangle.
-
-  Non-rectangular clipping regions are not supported for performance reasons.
 */
 /*!
   \property QQuickItem::clip
@@ -3018,8 +3016,6 @@ QList<QQuickItem *> QQuickItem::childItems() const
   as the painting of its children, to its bounding rectangle. If you set
   clipping during an item's paint operation, remember to re-set it to
   prevent clipping the rest of your scene.
-
-  Non-rectangular clipping regions are not supported for performance reasons.
 */
 bool QQuickItem::clip() const
 {
