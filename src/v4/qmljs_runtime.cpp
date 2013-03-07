@@ -510,14 +510,14 @@ Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int type
     assert(object.isObject());
     Object *oo = object.objectValue();
 
-    Value conv = oo->__get__(ctx, meth1);
+    Value conv = oo->get(ctx, meth1);
     if (FunctionObject *o = conv.asFunctionObject()) {
         Value r = o->call(ctx, object, 0, 0);
         if (r.isPrimitive())
             return r;
     }
 
-    conv = oo->__get__(ctx, meth2);
+    conv = oo->get(ctx, meth2);
     if (FunctionObject *o = conv.asFunctionObject()) {
         Value r = o->call(ctx, object, 0, 0);
         if (r.isPrimitive())
@@ -619,14 +619,14 @@ void __qmljs_get_element(ExecutionContext *ctx, Value *result, const Value &obje
             return;
         }
 
-        Value res = o->__get__(ctx, idx);
+        Value res = o->getIndexed(ctx, idx);
         if (result)
             *result = res;
         return;
     }
 
     String *name = index.toString(ctx);
-    Value res = o->__get__(ctx, name);
+    Value res = o->get(ctx, name);
     if (result)
         *result = res;
 }
@@ -680,12 +680,12 @@ void __qmljs_get_property(ExecutionContext *ctx, Value *result, const Value &obj
     Value res;
     Object *o = object.asObject();
     if (o) {
-        res = o->__get__(ctx, name);
+        res = o->get(ctx, name);
     } else if (object.isString() && name->isEqualTo(ctx->engine->id_length)) {
         res = Value::fromInt32(object.stringValue()->toQString().length());
     } else {
         o = __qmljs_convert_to_object(ctx, object);
-        res = o->__get__(ctx, name);
+        res = o->get(ctx, name);
     }
     if (result)
         *result = res;
@@ -731,13 +731,13 @@ void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Val
         if (p)
             res = p->type == PropertyDescriptor::Data ? p->value : o->getValue(ctx, p);
         else
-            res = o->__get__(ctx, l->name);
+            res = o->get(ctx, l->name);
     } else {
         if (object.isString() && l->name->isEqualTo(ctx->engine->id_length)) {
             res = Value::fromInt32(object.stringValue()->toQString().length());
         } else {
             o = __qmljs_convert_to_object(ctx, object);
-            res = o->__get__(ctx, l->name);
+            res = o->get(ctx, l->name);
         }
     }
     if (result)
@@ -879,7 +879,7 @@ void __qmljs_call_property(ExecutionContext *context, Value *result, const Value
         baseObject = thisObject.objectValue();
     }
 
-    Value func = baseObject->__get__(context, name);
+    Value func = baseObject->get(context, name);
     FunctionObject *o = func.asFunctionObject();
     if (!o)
         context->throwTypeError();
@@ -936,7 +936,7 @@ void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, cons
     if (p)
         func =  p->type == PropertyDescriptor::Data ? p->value : baseObject->getValue(context, p);
     else
-        func = baseObject->__get__(context, l->name);
+        func = baseObject->get(context, l->name);
 
     FunctionObject *o = func.asFunctionObject();
     if (!o)
@@ -952,7 +952,7 @@ void __qmljs_call_element(ExecutionContext *context, Value *result, const Value 
     Object *baseObject = that.toObject(context);
     Value thisObject = Value::fromObject(baseObject);
 
-    Value func = baseObject->__get__(context, index.toString(context));
+    Value func = baseObject->get(context, index.toString(context));
     Object *o = func.asObject();
     if (!o)
         context->throwTypeError();
@@ -994,7 +994,7 @@ void __qmljs_construct_property(ExecutionContext *context, Value *result, const 
 {
     Object *thisObject = base.toObject(context);
 
-    Value func = thisObject->__get__(context, name);
+    Value func = thisObject->get(context, name);
     if (Object *f = func.asObject()) {
         Value res = f->construct(context, args, argc);
         if (result)
@@ -1056,7 +1056,7 @@ void __qmljs_builtin_typeof_member(ExecutionContext *context, Value *result, con
 {
     Object *obj = base.toObject(context);
     Value res;
-    __qmljs_builtin_typeof(context, &res, obj->__get__(context, name));
+    __qmljs_builtin_typeof(context, &res, obj->get(context, name));
     if (result)
         *result = res;
 }
@@ -1066,7 +1066,7 @@ void __qmljs_builtin_typeof_element(ExecutionContext *context, Value *result, co
     String *name = index.toString(context);
     Object *obj = base.toObject(context);
     Value res;
-    __qmljs_builtin_typeof(context, &res, obj->__get__(context, name));
+    __qmljs_builtin_typeof(context, &res, obj->get(context, name));
     if (result)
         *result = res;
 }
@@ -1108,7 +1108,7 @@ void __qmljs_builtin_post_increment_member(ExecutionContext *context, Value *res
 {
     Object *o = base.toObject(context);
 
-    Value v = o->__get__(context, name);
+    Value v = o->get(context, name);
 
     if (v.isInteger() && v.integerValue() < INT_MAX) {
         if (result)
@@ -1135,7 +1135,7 @@ void __qmljs_builtin_post_increment_element(ExecutionContext *context, Value *re
         return __qmljs_builtin_post_increment_member(context, result, base, s);
     }
 
-    Value v = o->__get__(context, idx);
+    Value v = o->getIndexed(context, idx);
 
     if (v.isInteger() && v.integerValue() < INT_MAX) {
         if (result)
@@ -1188,7 +1188,7 @@ void __qmljs_builtin_post_decrement_member(ExecutionContext *context, Value *res
 {
     Object *o = base.toObject(context);
 
-    Value v = o->__get__(context, name);
+    Value v = o->get(context, name);
 
     if (v.isInteger() && v.integerValue() > INT_MIN) {
         if (result)
@@ -1215,7 +1215,7 @@ void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *re
         return __qmljs_builtin_post_decrement_member(context, result, base, s);
     }
 
-    Value v = o->__get__(context, idx);
+    Value v = o->getIndexed(context, idx);
 
     if (v.isInteger() && v.integerValue() > INT_MIN) {
         if (result)
@@ -1267,7 +1267,7 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const Value &object,
     pd->value = val ? *val : Value::undefinedValue();
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Enabled;
-    pd->enumberable = PropertyDescriptor::Enabled;
+    pd->enumerable = PropertyDescriptor::Enabled;
     pd->configurable = PropertyDescriptor::Enabled;
 }
 
@@ -1285,13 +1285,13 @@ void __qmljs_builtin_define_array(ExecutionContext *ctx, Value *array, Value *va
                 pd->value = Value::undefinedValue();
                 pd->type = PropertyDescriptor::Generic;
                 pd->writable = PropertyDescriptor::Undefined;
-                pd->enumberable = PropertyDescriptor::Undefined;
+                pd->enumerable = PropertyDescriptor::Undefined;
                 pd->configurable = PropertyDescriptor::Undefined;
             } else {
                 pd->value = values[i];
                 pd->type = PropertyDescriptor::Data;
                 pd->writable = PropertyDescriptor::Enabled;
-                pd->enumberable = PropertyDescriptor::Enabled;
+                pd->enumerable = PropertyDescriptor::Enabled;
                 pd->configurable = PropertyDescriptor::Enabled;
             }
             ++pd;
@@ -1313,7 +1313,7 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &ob
     pd->set = setter ? setter->asFunctionObject() : 0;
     pd->type = PropertyDescriptor::Accessor;
     pd->writable = PropertyDescriptor::Undefined;
-    pd->enumberable = PropertyDescriptor::Enabled;
+    pd->enumerable = PropertyDescriptor::Enabled;
     pd->configurable = PropertyDescriptor::Enabled;
 }
 

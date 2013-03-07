@@ -115,7 +115,7 @@ uint ArrayPrototype::getLength(ExecutionContext *ctx, Object *o)
 {
     if (o->isArrayObject())
         return o->arrayLength();
-    return o->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
+    return o->get(ctx, ctx->engine->id_length).toUInt32(ctx);
 }
 
 Value ArrayPrototype::method_isArray(ExecutionContext *ctx)
@@ -189,7 +189,7 @@ Value ArrayPrototype::method_join(ExecutionContext *ctx)
             if (i)
                 R += r4;
 
-            Value e = a->__get__(ctx, i);
+            Value e = a->getIndexed(ctx, i);
             if (! (e.isUndefined() || e.isNull()))
                 R += e.toString(ctx)->toQString();
         }
@@ -227,7 +227,7 @@ Value ArrayPrototype::method_pop(ExecutionContext *ctx)
         return Value::undefinedValue();
     }
 
-    Value result = instance->__get__(ctx, len - 1);
+    Value result = instance->getIndexed(ctx, len - 1);
 
     instance->__delete__(ctx, len - 1);
     if (instance->isArrayObject())
@@ -303,8 +303,8 @@ Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
 
     for (; lo < hi; ++lo, --hi) {
         bool loExists, hiExists;
-        Value lval = instance->__get__(ctx, lo, &loExists);
-        Value hval = instance->__get__(ctx, hi, &hiExists);
+        Value lval = instance->getIndexed(ctx, lo, &loExists);
+        Value hval = instance->getIndexed(ctx, hi, &hiExists);
         if (hiExists)
             instance->__put__(ctx, lo, hval);
         else
@@ -364,7 +364,7 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
         // do it the slow way
         for (uint k = 1; k < len; ++k) {
             bool exists;
-            Value v = instance->__get__(ctx, k, &exists);
+            Value v = instance->getIndexed(ctx, k, &exists);
             if (exists)
                 instance->__put__(ctx, k - 1, v);
             else
@@ -385,7 +385,7 @@ Value ArrayPrototype::method_slice(ExecutionContext *ctx)
     Object *o = ctx->thisObject.toObject(ctx);
 
     ArrayObject *result = ctx->engine->newArrayObject(ctx);
-    uint len = o->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
+    uint len = o->get(ctx, ctx->engine->id_length).toUInt32(ctx);
     double s = ctx->argument(0).toInteger(ctx);
     uint start;
     if (s < 0)
@@ -408,7 +408,7 @@ Value ArrayPrototype::method_slice(ExecutionContext *ctx)
     uint n = 0;
     for (uint i = start; i < end; ++i) {
         bool exists;
-        Value v = o->__get__(ctx, i, &exists);
+        Value v = o->getIndexed(ctx, i, &exists);
         if (exists) {
             result->arraySet(n, v);
         }
@@ -449,9 +449,9 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
     for (uint i = 0; i < deleteCount; ++i) {
         pd->type = PropertyDescriptor::Data;
         pd->writable = PropertyDescriptor::Enabled;
-        pd->enumberable = PropertyDescriptor::Enabled;
+        pd->enumerable = PropertyDescriptor::Enabled;
         pd->configurable = PropertyDescriptor::Enabled;
-        pd->value = instance->__get__(ctx, start + i);
+        pd->value = instance->getIndexed(ctx, start + i);
         ++pd;
     }
     newArray->arrayDataLen = deleteCount;
@@ -462,7 +462,7 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
     if (itemCount < deleteCount) {
         for (uint k = start; k < len - deleteCount; ++k) {
             bool exists;
-            Value v = instance->__get__(ctx, k + deleteCount, &exists);
+            Value v = instance->getIndexed(ctx, k + deleteCount, &exists);
             if (exists)
                 instance->arraySet(k + itemCount, v);
             else
@@ -474,7 +474,7 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
         uint k = len - deleteCount;
         while (k > start) {
             bool exists;
-            Value v = instance->__get__(ctx, k + deleteCount - 1, &exists);
+            Value v = instance->getIndexed(ctx, k + deleteCount - 1, &exists);
             if (exists)
                 instance->arraySet(k + itemCount - 1, v);
             else
@@ -523,7 +523,7 @@ Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
     } else {
         for (uint k = len; k > 0; --k) {
             bool exists;
-            Value v = instance->__get__(ctx, k - 1, &exists);
+            Value v = instance->getIndexed(ctx, k - 1, &exists);
             if (exists)
                 instance->__put__(ctx, k + ctx->argumentCount - 1, v);
             else
@@ -571,7 +571,7 @@ Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
     if (instance->isStringObject()) {
         for (uint k = fromIndex; k < len; ++k) {
             bool exists;
-            Value v = instance->__get__(ctx, k, &exists);
+            Value v = instance->getIndexed(ctx, k, &exists);
             if (exists && __qmljs_strict_equal(v, searchValue, ctx))
                 return Value::fromDouble(k);
         }
@@ -611,7 +611,7 @@ Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
     for (uint k = fromIndex; k > 0;) {
         --k;
         bool exists;
-        Value v = instance->__get__(ctx, k, &exists);
+        Value v = instance->getIndexed(ctx, k, &exists);
         if (exists && __qmljs_strict_equal(v, searchValue, ctx))
             return Value::fromDouble(k);
     }
@@ -633,7 +633,7 @@ Value ArrayPrototype::method_every(ExecutionContext *ctx)
     bool ok = true;
     for (uint k = 0; ok && k < len; ++k) {
         bool exists;
-        Value v = instance->__get__(ctx, k, &exists);
+        Value v = instance->getIndexed(ctx, k, &exists);
         if (!exists)
             continue;
 
@@ -661,7 +661,7 @@ Value ArrayPrototype::method_some(ExecutionContext *ctx)
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
-        Value v = instance->__get__(ctx, k, &exists);
+        Value v = instance->getIndexed(ctx, k, &exists);
         if (!exists)
             continue;
 
@@ -690,7 +690,7 @@ Value ArrayPrototype::method_forEach(ExecutionContext *ctx)
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
-        Value v = instance->__get__(ctx, k, &exists);
+        Value v = instance->getIndexed(ctx, k, &exists);
         if (!exists)
             continue;
 
@@ -721,7 +721,7 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
-        Value v = instance->__get__(ctx, k, &exists);
+        Value v = instance->getIndexed(ctx, k, &exists);
         if (!exists)
             continue;
 
@@ -753,7 +753,7 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
     uint to = 0;
     for (uint k = 0; k < len; ++k) {
         bool exists;
-        Value v = instance->__get__(ctx, k, &exists);
+        Value v = instance->getIndexed(ctx, k, &exists);
         if (!exists)
             continue;
 
@@ -787,7 +787,7 @@ Value ArrayPrototype::method_reduce(ExecutionContext *ctx)
     } else {
         bool kPresent = false;
         while (k < len && !kPresent) {
-            Value v = instance->__get__(ctx, k, &kPresent);
+            Value v = instance->getIndexed(ctx, k, &kPresent);
             if (kPresent)
                 acc = v;
             ++k;
@@ -798,7 +798,7 @@ Value ArrayPrototype::method_reduce(ExecutionContext *ctx)
 
     while (k < len) {
         bool kPresent;
-        Value v = instance->__get__(ctx, k, &kPresent);
+        Value v = instance->getIndexed(ctx, k, &kPresent);
         if (kPresent) {
             Value args[4];
             args[0] = acc;
@@ -835,7 +835,7 @@ Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
     } else {
         bool kPresent = false;
         while (k > 0 && !kPresent) {
-            Value v = instance->__get__(ctx, k - 1, &kPresent);
+            Value v = instance->getIndexed(ctx, k - 1, &kPresent);
             if (kPresent)
                 acc = v;
             --k;
@@ -846,7 +846,7 @@ Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
 
     while (k > 0) {
         bool kPresent;
-        Value v = instance->__get__(ctx, k - 1, &kPresent);
+        Value v = instance->getIndexed(ctx, k - 1, &kPresent);
         if (kPresent) {
             Value args[4];
             args[0] = acc;

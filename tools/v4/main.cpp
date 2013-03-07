@@ -135,7 +135,7 @@ static void showException(QQmlJS::VM::ExecutionContext *ctx, const QQmlJS::VM::V
             std::cerr << qPrintable(msg->buildFullMessage(ctx)->toQString()) << std::endl;
         }
     } else {
-        std::cerr << "Uncaught exception: " << qPrintable(e->__get__(ctx, ctx->engine->newString(QStringLiteral("message")), 0).toString(ctx)->toQString()) << std::endl;
+        std::cerr << "Uncaught exception: " << qPrintable(e->get(ctx, ctx->engine->newString(QStringLiteral("message")), 0).toString(ctx)->toQString()) << std::endl;
     }
 }
 

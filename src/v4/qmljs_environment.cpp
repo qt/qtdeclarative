@@ -109,7 +109,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     desc.type = PropertyDescriptor::Data;
     desc.configurable = deletable ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
     desc.writable = PropertyDescriptor::Enabled;
-    desc.enumberable = PropertyDescriptor::Enabled;
+    desc.enumerable = PropertyDescriptor::Enabled;
     activation->__defineOwnProperty__(this, name, &desc);
 }
 
@@ -153,7 +153,7 @@ Value ExecutionContext::getBindingValue(ExecutionContext *scope, String *name, b
 
     if (activation) {
         bool hasProperty = false;
-        Value v = activation->__get__(scope, name, &hasProperty);
+        Value v = activation->get(scope, name, &hasProperty);
         if (hasProperty)
             return v;
     }
@@ -370,7 +370,7 @@ Value ExecutionContext::getProperty(String *name)
             hasWith = true;
 //            qDebug() << ctx << "hasWith";
             bool hasProperty = false;
-            Value v = w->__get__(ctx, name, &hasProperty);
+            Value v = w->get(ctx, name, &hasProperty);
             if (hasProperty) {
 //                qDebug() << "   withHasProp";
                 return v;
@@ -396,7 +396,7 @@ Value ExecutionContext::getProperty(String *name)
         }
         if (ctx->activation) {
             bool hasProperty = false;
-            Value v = ctx->activation->__get__(ctx, name, &hasProperty);
+            Value v = ctx->activation->get(ctx, name, &hasProperty);
             if (hasProperty)
                 return v;
         }
@@ -418,7 +418,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
         if (Object *w = ctx->withObject) {
             hasWith = true;
             bool hasProperty = false;
-            Value v = w->__get__(ctx, name, &hasProperty);
+            Value v = w->get(ctx, name, &hasProperty);
             if (hasProperty)
                 return v;
             continue;
@@ -442,7 +442,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
         }
         if (ctx->activation) {
             bool hasProperty = false;
-            Value v = ctx->activation->__get__(ctx, name, &hasProperty);
+            Value v = ctx->activation->get(ctx, name, &hasProperty);
             if (hasProperty)
                 return v;
         }
@@ -464,7 +464,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
         if (Object *w = ctx->withObject) {
             hasWith = true;
             bool hasProperty = false;
-            Value v = w->__get__(ctx, name, &hasProperty);
+            Value v = w->get(ctx, name, &hasProperty);
             if (hasProperty) {
                 *base = w;
                 return v;
@@ -490,7 +490,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
         }
         if (ctx->activation) {
             bool hasProperty = false;
-            Value v = ctx->activation->__get__(ctx, name, &hasProperty);
+            Value v = ctx->activation->get(ctx, name, &hasProperty);
             if (hasProperty)
                 return v;
         }
@@ -614,7 +614,7 @@ void ExecutionContext::wireUpPrototype()
 {
     assert(thisObject.isObject());
 
-    Value proto = function->__get__(this, engine->id_prototype);
+    Value proto = function->get(this, engine->id_prototype);
     if (proto.isObject())
         thisObject.objectValue()->prototype = proto.objectValue();
     else

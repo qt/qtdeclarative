@@ -284,7 +284,7 @@ bool Parser::parseMember(Object *o)
     PropertyDescriptor *p = o->insertMember(context->engine->newIdentifier(key));
     p->type = PropertyDescriptor::Data;
     p->writable = PropertyDescriptor::Enabled;
-    p->enumberable = PropertyDescriptor::Enabled;
+    p->enumerable = PropertyDescriptor::Enabled;
     p->configurable = PropertyDescriptor::Enabled;
     p->value = val;
 
@@ -705,7 +705,7 @@ QString Stringify::Str(const QString &key, Value value)
     QString result;
 
     if (Object *o = value.asObject()) {
-        FunctionObject *toJSON = o->__get__(ctx, ctx->engine->newString(QStringLiteral("toJSON"))).asFunctionObject();
+        FunctionObject *toJSON = o->get(ctx, ctx->engine->newString(QStringLiteral("toJSON"))).asFunctionObject();
         if (toJSON) {
             Value arg = Value::fromString(ctx, key);
             value = toJSON->call(ctx, value, &arg, 1);
@@ -801,7 +801,7 @@ QString Stringify::JO(Object *o)
     } else {
         for (int i = 0; i < propertyList.size(); ++i) {
             bool exists;
-            Value v = o->__get__(ctx, propertyList.at(i), &exists);
+            Value v = o->get(ctx, propertyList.at(i), &exists);
             if (!exists)
                 continue;
             QString member = makeMember(propertyList.at(i)->toQString(), v);
@@ -838,7 +838,7 @@ QString Stringify::JA(ArrayObject *a)
     uint len = a->arrayLength();
     for (uint i = 0; i < len; ++i) {
         bool exists;
-        Value v = a->__get__(ctx, i, &exists);
+        Value v = a->getIndexed(ctx, i, &exists);
         if (!exists) {
             partial += QStringLiteral("null");
             continue;
@@ -902,7 +902,7 @@ Value JsonObject::method_stringify(ExecutionContext *ctx)
         if (o->isArrayObject()) {
             uint arrayLen = o->arrayLength();
             for (uint i = 0; i < arrayLen; ++i) {
-                Value v = o->__get__(ctx, i);
+                Value v = o->getIndexed(ctx, i);
                 if (v.asNumberObject() || v.asStringObject() || v.isNumber())
                     v = __qmljs_to_string(v, ctx);
                 if (v.isString()) {

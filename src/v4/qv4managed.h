@@ -72,7 +72,6 @@ struct ForeachIteratorObject;
 struct Managed;
 struct Value;
 
-
 struct ManagedVTable
 {
     Value (*call)(Managed *, ExecutionContext *context, const Value &thisObject, Value *args, int argc);
@@ -80,6 +79,14 @@ struct ManagedVTable
     void (*markObjects)(Managed *);
     void (*destroy)(Managed *);
     bool (*hasInstance)(Managed *, ExecutionContext *ctx, const Value &value);
+    Value (*get)(Managed *, ExecutionContext *ctx, String *name, bool *hasProperty);
+    Value (*getIndexed)(Managed *, ExecutionContext *ctx, uint index, bool *hasProperty);
+    void (*put)(Managed *, ExecutionContext *ctx, String *name, const Value &value);
+    void (*putIndexed)(Managed *, ExecutionContext *ctx, uint index, const Value &value);
+    PropertyFlags (*query)(Managed *, ExecutionContext *ctx, String *name);
+    PropertyFlags (*queryIndexed)(Managed *, ExecutionContext *ctx, uint index);
+    bool (*deleteProperty)(Managed *m, ExecutionContext *ctx, String *name);
+    bool (*deleteIndexedProperty)(Managed *m, ExecutionContext *ctx, uint index);
     const char *className;
 };
 
@@ -91,6 +98,14 @@ const ManagedVTable classname::static_vtbl =    \
     markObjects,                                \
     destroy,                                    \
     hasInstance,                                \
+    get,                                        \
+    getIndexed,                                 \
+    put,                                        \
+    putIndexed,                                 \
+    query,                                      \
+    queryIndexed,                               \
+    deleteProperty,                             \
+    deleteIndexedProperty,                      \
     #classname                                  \
 }
 
@@ -170,8 +185,10 @@ public:
     inline bool hasInstance(ExecutionContext *ctx, const Value &v) {
         return vtbl->hasInstance(this, ctx, v);
     }
-    inline Value construct(ExecutionContext *context, Value *args, int argc);
-    inline Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc);
+    Value construct(ExecutionContext *context, Value *args, int argc);
+    Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc);
+    Value get(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
+    Value getIndexed(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
 
     static void destroy(Managed *that) { that->_data = 0; }
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);

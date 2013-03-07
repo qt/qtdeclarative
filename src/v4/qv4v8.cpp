@@ -658,7 +658,7 @@ Local<Value> Object::Get(Handle<Value> key)
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
     QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
-    QQmlJS::VM::Value prop = o->__get__(ctx, ValuePtr(&key)->toString(ctx));
+    QQmlJS::VM::Value prop = o->get(ctx, ValuePtr(&key)->toString(ctx));
     return Local<Value>::New(Value::fromVmValue(prop));
 }
 
@@ -667,7 +667,7 @@ Local<Value> Object::Get(uint32_t key)
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
     QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
-    QQmlJS::VM::Value prop = o->__get__(ctx, key);
+    QQmlJS::VM::Value prop = o->getIndexed(ctx, key);
     return Local<Value>::New(Value::fromVmValue(prop));
 }
 

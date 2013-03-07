@@ -113,7 +113,7 @@ bool FunctionObject::hasInstance(Managed *that, ExecutionContext *ctx, const Val
     if (!v)
         return false;
 
-    Object *o = f->__get__(ctx, ctx->engine->id_prototype).asObject();
+    Object *o = f->get(ctx, ctx->engine->id_prototype).asObject();
     if (!o)
         ctx->throwTypeError();
 
@@ -134,7 +134,7 @@ Value FunctionObject::construct(Managed *that, ExecutionContext *context, Value 
     FunctionObject *f = static_cast<FunctionObject *>(that);
 
     Object *obj = context->engine->newObject();
-    Value proto = f->__get__(context, context->engine->id_prototype);
+    Value proto = f->get(context, context->engine->id_prototype);
     if (proto.isObject())
         obj->prototype = proto.objectValue();
     return Value::fromObject(obj);
@@ -253,9 +253,9 @@ Value FunctionPrototype::method_apply(ExecutionContext *ctx)
     QVector<Value> args;
 
     if (Object *arr = arg.asObject()) {
-        quint32 len = arr->__get__(ctx, ctx->engine->id_length).toUInt32(ctx);
+        quint32 len = arr->get(ctx, ctx->engine->id_length).toUInt32(ctx);
         for (quint32 i = 0; i < len; ++i) {
-            Value a = arr->__get__(ctx, i);
+            Value a = arr->getIndexed(ctx, i);
             args.append(a);
         }
     } else if (!(arg.isUndefined() || arg.isNull())) {
@@ -341,7 +341,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     PropertyDescriptor *pd = insertMember(scope->engine->id_prototype);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Enabled;
-    pd->enumberable = PropertyDescriptor::Disabled;
+    pd->enumerable = PropertyDescriptor::Disabled;
     pd->configurable = PropertyDescriptor::Disabled;
     pd->value = Value::fromObject(proto);
 
@@ -349,7 +349,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
         FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
         pd.configurable = PropertyDescriptor::Disabled;
-        pd.enumberable = PropertyDescriptor::Disabled;
+        pd.enumerable = PropertyDescriptor::Disabled;
         __defineOwnProperty__(scope, QStringLiteral("caller"), &pd);
         __defineOwnProperty__(scope, QStringLiteral("arguments"), &pd);
     }
@@ -360,7 +360,7 @@ Value ScriptFunction::construct(Managed *that, ExecutionContext *context, Value 
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
     assert(f->function->code);
     Object *obj = context->engine->newObject();
-    Value proto = f->__get__(context, context->engine->id_prototype);
+    Value proto = f->get(context, context->engine->id_prototype);
     if (proto.isObject())
         obj->prototype = proto.objectValue();
 
@@ -503,7 +503,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     , boundArgs(boundArgs)
 {
     vtbl = &static_vtbl;
-    int len = target->__get__(scope, scope->engine->id_length).toUInt32(scope);
+    int len = target->get(scope, scope->engine->id_length).toUInt32(scope);
     len -= boundArgs.size();
     if (len < 0)
         len = 0;
@@ -512,7 +512,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
     PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
     pd.configurable = PropertyDescriptor::Disabled;
-    pd.enumberable = PropertyDescriptor::Disabled;
+    pd.enumerable = PropertyDescriptor::Disabled;
     *insertMember(scope->engine->id_arguments) = pd;
     *insertMember(scope->engine->id_caller) = pd;
 }

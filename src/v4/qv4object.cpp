@@ -115,6 +115,18 @@ Value Object::getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p
     return getValue(ctx, p);
 }
 
+Value Object::getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, const Value &thisObject) const
+{
+    if (!p || p->type == PropertyDescriptor::Generic)
+        return Value::undefinedValue();
+    if (p->isData())
+        return p->value;
+    if (!p->get)
+        return Value::undefinedValue();
+
+    return p->get->call(ctx, thisObject, 0, 0);
+}
+
 Value Object::getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const
 {
     *exists = p && p->type != PropertyDescriptor::Generic;
@@ -150,7 +162,7 @@ void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value &rhs)
 {
     bool hasProperty = false;
-    Value v = __get__(ctx, name, &hasProperty);
+    Value v = get(ctx, name, &hasProperty);
     Value result;
     op(ctx, &result, v, rhs);
     __put__(ctx, name, result);
@@ -161,7 +173,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, c
     uint idx = index.asArrayIndex();
     if (idx < UINT_MAX) {
         bool hasProperty = false;
-        Value v = __get__(ctx, idx, &hasProperty);
+        Value v = getIndexed(ctx, idx, &hasProperty);
         Value result;
         op(ctx, &result, v, rhs);
         __put__(ctx, idx, result);
@@ -177,7 +189,7 @@ void Object::defineDefaultProperty(String *name, Value value)
     PropertyDescriptor *pd = insertMember(name);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Enabled;
-    pd->enumberable = PropertyDescriptor::Disabled;
+    pd->enumerable = PropertyDescriptor::Disabled;
     pd->configurable = PropertyDescriptor::Enabled;
     pd->value = value;
 }
@@ -215,7 +227,7 @@ void Object::defineReadonlyProperty(String *name, Value value)
     PropertyDescriptor *pd = insertMember(name);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Disabled;
-    pd->enumberable = PropertyDescriptor::Disabled;
+    pd->enumerable = PropertyDescriptor::Disabled;
     pd->configurable = PropertyDescriptor::Disabled;
     pd->value = value;
 }
@@ -317,11 +329,11 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(const ExecutionContext *ct
 }
 
 // Section 8.12.3
-Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
+Value Object::get(ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return __get__(ctx, idx, hasProperty);
+        return getIndexed(ctx, idx, hasProperty);
 
     name->makeIdentifier(ctx);
 
@@ -348,7 +360,7 @@ Value Object::__get__(ExecutionContext *ctx, String *name, bool *hasProperty)
     return Value::undefinedValue();
 }
 
-Value Object::__get__(ExecutionContext *ctx, uint index, bool *hasProperty)
+Value Object::getIndexed(ExecutionContext *ctx, uint index, bool *hasProperty)
 {
     PropertyDescriptor *pd = 0;
     Object *o = this;
@@ -452,7 +464,7 @@ void Object::__put__(ExecutionContext *ctx, String *name, const Value &value)
         p->type = PropertyDescriptor::Data;
         p->value = value;
         p->configurable = PropertyDescriptor::Enabled;
-        p->enumberable = PropertyDescriptor::Enabled;
+        p->enumerable = PropertyDescriptor::Enabled;
         p->writable = PropertyDescriptor::Enabled;
         return;
     }
@@ -673,7 +685,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *cu
     if (!current->isConfigurable()) {
         if (desc->isConfigurable())
             goto reject;
-        if (desc->enumberable != PropertyDescriptor::Undefined && desc->enumberable != current->enumberable)
+        if (desc->enumerable != PropertyDescriptor::Undefined && desc->enumerable != current->enumerable)
             goto reject;
     }
 
@@ -757,7 +769,7 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
         // lets be safe and slow
         for (uint i = fromIndex; i < endIndex; ++i) {
             bool exists;
-            Value value = o->__get__(ctx, i, &exists);
+            Value value = o->getIndexed(ctx, i, &exists);
             if (exists && __qmljs_strict_equal(value, v, ctx))
                 return Value::fromDouble(i);
         }
@@ -981,7 +993,7 @@ void ArrayObject::init(ExecutionContext *context)
     PropertyDescriptor *pd = memberData + LengthPropertyIndex;
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Enabled;
-    pd->enumberable = PropertyDescriptor::Disabled;
+    pd->enumerable = PropertyDescriptor::Disabled;
     pd->configurable = PropertyDescriptor::Disabled;
     pd->value = Value::fromInt32(0);
 }

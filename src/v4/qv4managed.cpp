@@ -52,6 +52,14 @@ const ManagedVTable Managed::static_vtbl =
     0 /*markObjects*/,
     destroy,
     hasInstance,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
     "Managed",
 };
 
@@ -164,4 +172,14 @@ Value Managed::construct(Managed *, ExecutionContext *context, Value *, int)
 Value Managed::call(Managed *, ExecutionContext *context, const Value &, Value *, int)
 {
     context->throwTypeError();
+}
+
+Value Managed::get(ExecutionContext *ctx, String *name, bool *hasProperty)
+{
+    return vtbl->get(this, ctx, name, hasProperty);
+}
+
+Value Managed::getIndexed(ExecutionContext *ctx, uint index, bool *hasProperty)
+{
+    return vtbl->getIndexed(this, ctx, index, hasProperty);
 }

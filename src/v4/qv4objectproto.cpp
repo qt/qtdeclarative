@@ -84,7 +84,7 @@ Value ObjectCtor::construct(Managed *that, ExecutionContext *ctx, Value *args, i
     ObjectCtor *ctor = static_cast<ObjectCtor *>(that);
     if (!argc || args[0].isUndefined() || args[0].isNull()) {
         Object *obj = ctx->engine->newObject();
-        Value proto = ctor->__get__(ctx, ctx->engine->id_prototype);
+        Value proto = ctor->get(ctx, ctx->engine->id_prototype);
         if (proto.isObject())
             obj->prototype = proto.objectValue();
         return Value::fromObject(obj);
@@ -381,7 +381,7 @@ Value ObjectPrototype::method_toString(ExecutionContext *ctx)
 Value ObjectPrototype::method_toLocaleString(ExecutionContext *ctx)
 {
     Object *o = ctx->thisObject.toObject(ctx);
-    Value ts = o->__get__(ctx, ctx->engine->newString(QStringLiteral("toString")));
+    Value ts = o->get(ctx, ctx->engine->newString(QStringLiteral("toString")));
     FunctionObject *f = ts.asFunctionObject();
     if (!f)
         ctx->throwTypeError();
@@ -440,7 +440,7 @@ Value ObjectPrototype::method_defineGetter(ExecutionContext *ctx)
 
     PropertyDescriptor pd = PropertyDescriptor::fromAccessor(f, 0);
     pd.configurable = PropertyDescriptor::Enabled;
-    pd.enumberable = PropertyDescriptor::Enabled;
+    pd.enumerable = PropertyDescriptor::Enabled;
     o->__defineOwnProperty__(ctx, prop, &pd);
     return Value::undefinedValue();
 }
@@ -459,7 +459,7 @@ Value ObjectPrototype::method_defineSetter(ExecutionContext *ctx)
 
     PropertyDescriptor pd = PropertyDescriptor::fromAccessor(0, f);
     pd.configurable = PropertyDescriptor::Enabled;
-    pd.enumberable = PropertyDescriptor::Enabled;
+    pd.enumerable = PropertyDescriptor::Enabled;
     o->__defineOwnProperty__(ctx, prop, &pd);
     return Value::undefinedValue();
 }
@@ -473,17 +473,17 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
 
     desc->type = PropertyDescriptor::Generic;
 
-    desc->enumberable = PropertyDescriptor::Undefined;
+    desc->enumerable = PropertyDescriptor::Undefined;
     if (o->__hasProperty__(ctx, ctx->engine->id_enumerable))
-        desc->enumberable = o->__get__(ctx, ctx->engine->id_enumerable).toBoolean() ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
+        desc->enumerable = o->get(ctx, ctx->engine->id_enumerable).toBoolean() ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
 
     desc->configurable = PropertyDescriptor::Undefined;
     if (o->__hasProperty__(ctx, ctx->engine->id_configurable))
-        desc->configurable = o->__get__(ctx, ctx->engine->id_configurable).toBoolean() ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
+        desc->configurable = o->get(ctx, ctx->engine->id_configurable).toBoolean() ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
 
     desc->get = 0;
     if (o->__hasProperty__(ctx, ctx->engine->id_get)) {
-        Value get = o->__get__(ctx, ctx->engine->id_get);
+        Value get = o->get(ctx, ctx->engine->id_get);
         FunctionObject *f = get.asFunctionObject();
         if (f) {
             desc->get = f;
@@ -497,7 +497,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
 
     desc->set = 0;
     if (o->__hasProperty__(ctx, ctx->engine->id_set)) {
-        Value set = o->__get__(ctx, ctx->engine->id_set);
+        Value set = o->get(ctx, ctx->engine->id_set);
         FunctionObject *f = set.asFunctionObject();
         if (f) {
             desc->set = f;
@@ -513,7 +513,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     if (o->__hasProperty__(ctx, ctx->engine->id_writable)) {
         if (desc->isAccessor())
             ctx->throwTypeError();
-        desc->writable = o->__get__(ctx, ctx->engine->id_writable).toBoolean() ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
+        desc->writable = o->get(ctx, ctx->engine->id_writable).toBoolean() ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
         // writable forces it to be a data descriptor
         desc->value = Value::undefinedValue();
     }
@@ -521,7 +521,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     if (o->__hasProperty__(ctx, ctx->engine->id_value)) {
         if (desc->isAccessor())
             ctx->throwTypeError();
-        desc->value = o->__get__(ctx, ctx->engine->id_value);
+        desc->value = o->get(ctx, ctx->engine->id_value);
         desc->type = PropertyDescriptor::Data;
     }
 
@@ -540,7 +540,7 @@ Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Prope
     PropertyDescriptor pd;
     pd.type = PropertyDescriptor::Data;
     pd.writable = PropertyDescriptor::Enabled;
-    pd.enumberable = PropertyDescriptor::Enabled;
+    pd.enumerable = PropertyDescriptor::Enabled;
     pd.configurable = PropertyDescriptor::Enabled;
 
     if (desc->isData()) {
@@ -554,7 +554,7 @@ Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Prope
         pd.value = desc->set ? Value::fromObject(desc->set) : Value::undefinedValue();
         o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("set")), &pd);
     }
-    pd.value = Value::fromBoolean(desc->enumberable == PropertyDescriptor::Enabled ? true : false);
+    pd.value = Value::fromBoolean(desc->enumerable == PropertyDescriptor::Enabled ? true : false);
     o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("enumerable")), &pd);
     pd.value = Value::fromBoolean(desc->configurable == PropertyDescriptor::Enabled ? true : false);
     o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("configurable")), &pd);

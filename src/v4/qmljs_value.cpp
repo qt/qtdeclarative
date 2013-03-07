@@ -164,7 +164,7 @@ double Value::toInteger(double number)
 
 Value Value::property(ExecutionContext *ctx, String *name) const
 {
-    return isObject() ? objectValue()->__get__(ctx, name) : undefinedValue();
+    return isObject() ? objectValue()->get(ctx, name) : undefinedValue();
 }
 
 PersistentValue::PersistentValue()

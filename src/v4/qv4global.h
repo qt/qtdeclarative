@@ -44,6 +44,18 @@ QT_BEGIN_NAMESPACE
 #  define Q_V4_EXPORT
 #endif
 
+namespace QQmlJS {
+namespace VM {
+
+enum PropertyFlags {
+    Writable = 0x1,
+    Enumerable = 0x2,
+    Configurable = 0x4
+};
+
+}
+}
+
 QT_END_NAMESPACE
 
 #endif // QV4GLOBAL_H

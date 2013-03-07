@@ -41,6 +41,7 @@
 #ifndef QV4PROPERTYDESCRIPTOR_H
 #define QV4PROPERTYDESCRIPTOR_H
 
+#include "qv4global.h"
 #include "qmljs_value.h"
 
 QT_BEGIN_NAMESPACE
@@ -70,15 +71,26 @@ struct PropertyDescriptor {
     };
     uint type : 8;
     uint writable : 8;
-    uint enumberable : 8;
+    uint enumerable : 8;
     uint configurable : 8;
+
+    PropertyFlags propertyFlags() {
+        int f = 0;
+        if (writable == Enabled)
+            f |= Writable;
+        if (configurable == Enabled)
+            f |= Configurable;
+        if (enumerable == Enabled)
+            f |= Enumerable;
+        return PropertyFlags(f);
+    }
 
     static inline PropertyDescriptor fromValue(Value v) {
         PropertyDescriptor pd;
         pd.value = v;
         pd.type = Data;
         pd.writable = Undefined;
-        pd.enumberable = Undefined;
+        pd.enumerable = Undefined;
         pd.configurable = Undefined;
         return pd;
     }
@@ -88,7 +100,7 @@ struct PropertyDescriptor {
         pd.set = setter;
         pd.type = Accessor;
         pd.writable = Undefined;
-        pd.enumberable = Undefined;
+        pd.enumerable = Undefined;
         pd.configurable = Undefined;
         return pd;
     }
@@ -109,8 +121,8 @@ struct PropertyDescriptor {
             if ((quintptr)set == 0x1)
                 set = 0;
         }
-        if (enumberable == Undefined)
-            enumberable = Disabled;
+        if (enumerable == Undefined)
+            enumerable = Disabled;
         if (configurable == Undefined)
             configurable = Disabled;
     }
@@ -120,16 +132,16 @@ struct PropertyDescriptor {
     inline bool isGeneric() const { return type == Generic && writable == Undefined; }
 
     inline bool isWritable() const { return writable == Enabled; }
-    inline bool isEnumerable() const { return enumberable == Enabled; }
+    inline bool isEnumerable() const { return enumerable == Enabled; }
     inline bool isConfigurable() const { return configurable == Enabled; }
 
     inline bool isEmpty() const {
-        return type == Generic && writable == Undefined && enumberable == Undefined && configurable == Undefined;
+        return type == Generic && writable == Undefined && enumerable == Undefined && configurable == Undefined;
     }
     inline bool isSubset(PropertyDescriptor *other) const {
         if (type != Generic && type != other->type)
             return false;
-        if (enumberable != Undefined && enumberable != other->enumberable)
+        if (enumerable != Undefined && enumerable != other->enumerable)
             return false;
         if (configurable != Undefined && configurable != other->configurable)
             return false;
@@ -146,8 +158,8 @@ struct PropertyDescriptor {
         return true;
     }
     inline void operator+=(const PropertyDescriptor &other) {
-        if (other.enumberable != Undefined)
-            enumberable = other.enumberable;
+        if (other.enumerable != Undefined)
+            enumerable = other.enumerable;
         if (other.configurable != Undefined)
             configurable = other.configurable;
         if (other.writable != Undefined)

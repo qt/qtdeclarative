@@ -1307,7 +1307,7 @@ Value DatePrototype::method_toJSON(ExecutionContext *ctx)
     if (tv.isNumber() && !isfinite(tv.toNumber(ctx)))
         return Value::nullValue();
 
-    FunctionObject *toIso = O.objectValue()->__get__(ctx, ctx->engine->newString(QStringLiteral("toISOString"))).asFunctionObject();
+    FunctionObject *toIso = O.objectValue()->get(ctx, ctx->engine->newString(QStringLiteral("toISOString"))).asFunctionObject();
 
     if (!toIso)
         ctx->throwTypeError();

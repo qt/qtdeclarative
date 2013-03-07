@@ -416,7 +416,7 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
         set->prototype = functionPrototype;
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(get, set);
         pd.configurable = PropertyDescriptor::Enabled;
-        pd.enumberable = PropertyDescriptor::Enabled;
+        pd.enumerable = PropertyDescriptor::Enabled;
         argumentsAccessors[i] = pd;
     }
 }

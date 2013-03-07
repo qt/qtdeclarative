@@ -112,6 +112,15 @@ struct String : public Managed {
 
 protected:
     static void destroy(Managed *);
+    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty);
+    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+    static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value);
+    static PropertyFlags query(Managed *m, ExecutionContext *ctx, String *name);
+    static PropertyFlags queryIndexed(Managed *m, ExecutionContext *ctx, uint index);
+    static bool deleteProperty(Managed *m, ExecutionContext *ctx, String *name);
+    static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index);
+
     static const ManagedVTable static_vtbl;
 };
 

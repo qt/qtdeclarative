@@ -129,12 +129,11 @@ struct Q_V4_EXPORT Object: Managed {
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, uint index);
 
-    // -> vtable
     PropertyDescriptor *__getPropertyDescriptor__(const ExecutionContext *ctx, String *name) const;
     PropertyDescriptor *__getPropertyDescriptor__(const ExecutionContext *ctx, uint index) const;
 
-    Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
-    Value __get__(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
+    Value get(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
+    Value getIndexed(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
 
     // -> vtable
     void __put__(ExecutionContext *ctx, String *name, const Value &value);
@@ -148,6 +147,8 @@ struct Q_V4_EXPORT Object: Managed {
         PropertyDescriptor *pd = __getPropertyDescriptor__(ctx, index);
         return pd && pd->type != PropertyDescriptor::Generic;
     }
+
+    // -> vtable
     bool __delete__(ExecutionContext *ctx, String *name);
     bool __delete__(ExecutionContext *ctx, uint index);
     bool __defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *current, const PropertyDescriptor *desc);
@@ -162,6 +163,7 @@ struct Q_V4_EXPORT Object: Managed {
 
     Value getValue(ExecutionContext *ctx, const PropertyDescriptor *p) const;
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p) const;
+    Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, const Value &thisObject) const;
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const;
 
     void putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value &value);
@@ -186,7 +188,7 @@ struct Q_V4_EXPORT Object: Managed {
     {
         pd->type = PropertyDescriptor::Data;
         pd->writable = PropertyDescriptor::Enabled;
-        pd->enumberable = PropertyDescriptor::Enabled;
+        pd->enumerable = PropertyDescriptor::Enabled;
         pd->configurable = PropertyDescriptor::Enabled;
         pd->value = v;
     }
@@ -323,6 +325,22 @@ protected:
     static const ManagedVTable static_vtbl;
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
+    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+    { return static_cast<Object *>(m)->get(ctx, name, hasProperty); }
+    static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+    { return static_cast<Object *>(m)->getIndexed(ctx, index, hasProperty); }
+    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
+    { static_cast<Object *>(m)->__put__(ctx, name, value); }
+    static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value)
+    { static_cast<Object *>(m)->__put__(ctx, index, value); }
+    static PropertyFlags query(Managed *m, ExecutionContext *ctx, String *name)
+    { return PropertyFlags(0); /* ### */ }
+    static PropertyFlags queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
+    { return PropertyFlags(0); /* ### */ }
+    static bool deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
+    { return static_cast<Object *>(m)->__delete__(ctx, name); }
+    static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
+    { return static_cast<Object *>(m)->__delete__(ctx, index); }
 
     friend struct ObjectIterator;
     friend struct ObjectPrototype;

@@ -65,7 +65,7 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterC
         FunctionObject *thrower = context->engine->newBuiltinFunction(context, 0, throwTypeError);
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
         pd.configurable = PropertyDescriptor::Disabled;
-        pd.enumberable = PropertyDescriptor::Disabled;
+        pd.enumerable = PropertyDescriptor::Disabled;
         __defineOwnProperty__(context, QStringLiteral("callee"), &pd);
         __defineOwnProperty__(context, QStringLiteral("caller"), &pd);
     } else {
@@ -79,7 +79,7 @@ ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterC
         pd.type = PropertyDescriptor::Data;
         pd.writable = PropertyDescriptor::Enabled;
         pd.configurable = PropertyDescriptor::Enabled;
-        pd.enumberable = PropertyDescriptor::Enabled;
+        pd.enumerable = PropertyDescriptor::Enabled;
         for (uint i = numAccessors; i < qMin((uint)actualParameterCount, context->argumentCount); ++i) {
             pd.value = context->argument(i);
             __defineOwnProperty__(context, i, &pd);
@@ -107,7 +107,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
         pd->type = PropertyDescriptor::Data;
         pd->writable = PropertyDescriptor::Enabled;
         pd->configurable = PropertyDescriptor::Enabled;
-        pd->enumberable = PropertyDescriptor::Enabled;
+        pd->enumerable = PropertyDescriptor::Enabled;
         pd->value = mappedArguments.at(index);
     }
 

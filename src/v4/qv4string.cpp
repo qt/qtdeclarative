@@ -42,6 +42,7 @@
 #include "qv4string.h"
 #include "qv4identifier.h"
 #include "qmljs_runtime.h"
+#include "qv4objectproto.h"
 #include <QtCore/QHash>
 
 namespace QQmlJS {
@@ -80,12 +81,73 @@ const ManagedVTable String::static_vtbl =
     0 /*markObjects*/,
     destroy,
     hasInstance,
+    get,
+    getIndexed,
+    put,
+    putIndexed,
+    query,
+    queryIndexed,
+    deleteProperty,
+    deleteIndexedProperty,
     "String",
 };
 
 void String::destroy(Managed *that)
 {
     static_cast<String*>(that)->~String();
+}
+
+Value String::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+{
+    String *that = static_cast<String *>(m);
+    if (name == ctx->engine->id_length)
+        return Value::fromInt32(that->_text.length());
+    PropertyDescriptor *pd = ctx->engine->objectPrototype->__getPropertyDescriptor__(ctx, name);
+    return ctx->engine->objectPrototype->getValueChecked(ctx, pd, Value::fromString(that));
+}
+
+Value String::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+{
+    String *that = static_cast<String *>(m);
+    if (index < that->_text.length()) {
+        if (hasProperty)
+            *hasProperty = true;
+        return Value::fromString(ctx, that->toQString().mid(index, 1));
+    }
+    if (hasProperty)
+        *hasProperty = false;
+    return Value::undefinedValue();
+}
+
+void String::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
+{
+    /* ### */
+}
+
+void String::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value)
+{
+    /* ### */
+}
+
+PropertyFlags String::query(Managed *m, ExecutionContext *ctx, String *name)
+{
+    return PropertyFlags(0);
+}
+
+PropertyFlags String::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
+{
+    String *that = static_cast<String *>(m);
+    return (index < that->_text.length()) ? PropertyFlags(Enumerable) : PropertyFlags(0);
+}
+
+bool String::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
+{
+    return false;
+}
+
+bool String::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
+{
+    return false;
 }
 
 uint String::toUInt(bool *ok) const

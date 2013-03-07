@@ -84,7 +84,7 @@ StringObject::StringObject(ExecutionContext *ctx, const Value &value)
     type = Type_StringObject;
 
     tmpProperty.type = PropertyDescriptor::Data;
-    tmpProperty.enumberable = PropertyDescriptor::Enabled;
+    tmpProperty.enumerable = PropertyDescriptor::Enabled;
     tmpProperty.writable = PropertyDescriptor::Disabled;
     tmpProperty.configurable = PropertyDescriptor::Disabled;
     tmpProperty.value = Value::undefinedValue();
@@ -318,7 +318,7 @@ Value StringPrototype::method_match(ExecutionContext *parentCtx, Value thisObjec
     bool global = rx->global;
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
-    FunctionObject *exec = parentCtx->engine->regExpPrototype->__get__(parentCtx, parentCtx->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
+    FunctionObject *exec = parentCtx->engine->regExpPrototype->get(parentCtx, parentCtx->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
 
     Value arg = Value::fromString(s);
     if (!global)
@@ -335,14 +335,14 @@ Value StringPrototype::method_match(ExecutionContext *parentCtx, Value thisObjec
         if (result.isNull())
             break;
         assert(result.isObject());
-        double thisIndex = rx->__get__(parentCtx, lastIndex, 0).toInteger(parentCtx);
+        double thisIndex = rx->get(parentCtx, lastIndex, 0).toInteger(parentCtx);
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
             rx->__put__(parentCtx, lastIndex, Value::fromDouble(previousLastIndex));
         } else {
             previousLastIndex = thisIndex;
         }
-        Value matchStr = result.objectValue()->__get__(parentCtx, (uint)0, (bool *)0);
+        Value matchStr = result.objectValue()->getIndexed(parentCtx, 0, (bool *)0);
         a->arraySet(n, matchStr);
         ++n;
     }

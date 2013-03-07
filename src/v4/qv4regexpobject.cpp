@@ -75,7 +75,7 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
     PropertyDescriptor *lastIndexProperty = insertMember(engine->newIdentifier(QStringLiteral("lastIndex")));
     lastIndexProperty->type = PropertyDescriptor::Data;
     lastIndexProperty->writable = PropertyDescriptor::Enabled;
-    lastIndexProperty->enumberable = PropertyDescriptor::Disabled;
+    lastIndexProperty->enumerable = PropertyDescriptor::Disabled;
     lastIndexProperty->configurable = PropertyDescriptor::Disabled;
     lastIndexProperty->value = Value::fromInt32(0);
     if (!this->value.get())
