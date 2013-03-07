@@ -152,6 +152,7 @@ int executeLLVMCode(void *codePtr)
     VM::ExecutionEngine vm(iSelFactory.data());
     VM::ExecutionContext *ctx = vm.rootContext;
 
+#if THIS_NEEDS_TO_BE_FIXED
     QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
     globalObject->__put__(ctx, vm.newIdentifier(QStringLiteral("print")),
                           QQmlJS::VM::Value::fromObject(new (ctx->engine->memoryManager) builtins::Print(ctx)));
@@ -163,6 +164,10 @@ int executeLLVMCode(void *codePtr)
     }
 
     code(ctx);
+#else
+    Q_UNUSED(ctx);
+    Q_UNUSED(code);
+#endif
     return EXIT_SUCCESS;
 }
 

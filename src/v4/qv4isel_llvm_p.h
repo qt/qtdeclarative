@@ -126,6 +126,7 @@ public: // visitor methods for StmtVisitor:
     virtual void visitJump(IR::Jump *);
     virtual void visitCJump(IR::CJump *);
     virtual void visitRet(IR::Ret *);
+    virtual void visitTry(IR::Try *);
 
 private:
     llvm::Function *getRuntimeFunction(llvm::StringRef str);

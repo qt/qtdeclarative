@@ -971,6 +971,13 @@ void InstructionSelection::visitRet(IR::Ret *s)
     CreateRetVoid();
 }
 
+void InstructionSelection::visitTry(IR::Try *)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
 #if 0
 void InstructionSelection::visitString(IR::String *e)
 {
