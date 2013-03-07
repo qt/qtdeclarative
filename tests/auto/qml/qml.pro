@@ -23,7 +23,6 @@ PUBLICTESTS += \
     qqmlqt \
     qqmltranslation \
     qqmlxmlhttprequest \
-    qqmlparser \
     qtqmlmodules \
     qquickfolderlistmodel
 
@@ -48,6 +47,7 @@ PRIVATETESTS += \
     qqmllistcompositor \
     qqmllistmodel \
     qqmllistmodelworkerscript \
+    qqmlparser \
     qquickworkerscript \
     qqmlbundle \
     qrcqml \
