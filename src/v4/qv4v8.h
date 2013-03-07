@@ -133,15 +133,6 @@ class StackTrace;
 class StackFrame;
 class Isolate;
 
-namespace internal {
-
-class Arguments;
-class Object;
-class Heap;
-class HeapObject;
-class Isolate;
-}
-
 void V8EXPORT gcProtect(void *handle);
 void V8EXPORT gcUnprotect(void *handle);
 
@@ -1685,7 +1676,7 @@ class V8EXPORT Arguments {
  */
 class V8EXPORT AccessorInfo {
  public:
-  AccessorInfo(internal::Object** args);
+  AccessorInfo();
   Isolate* GetIsolate() const;
   Local<Value> Data() const;
   Local<Object> This() const;

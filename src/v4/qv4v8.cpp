@@ -1111,7 +1111,7 @@ Isolate *Arguments::GetIsolate() const
 }
 
 
-AccessorInfo::AccessorInfo(internal::Object **args)
+AccessorInfo::AccessorInfo()
 {
     Q_UNIMPLEMENTED();
 }
