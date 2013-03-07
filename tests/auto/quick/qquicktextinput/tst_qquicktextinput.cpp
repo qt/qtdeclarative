@@ -2774,6 +2774,7 @@ void tst_qquicktextinput::cursorDelegate()
 
 void tst_qquicktextinput::remoteCursorDelegate()
 {
+    QSKIP("This test is unstable");
     TestHTTPServer server(SERVER_PORT);
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
@@ -2807,6 +2808,7 @@ void tst_qquicktextinput::remoteCursorDelegate()
 
 void tst_qquicktextinput::cursorVisible()
 {
+    QSKIP("This test is unstable");
     QQuickTextInput input;
     input.componentComplete();
     QSignalSpy spy(&input, SIGNAL(cursorVisibleChanged(bool)));
