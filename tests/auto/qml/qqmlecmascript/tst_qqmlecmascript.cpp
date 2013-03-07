@@ -1491,7 +1491,7 @@ void tst_qqmlecmascript::componentCreation()
     if (creationError.isEmpty()) {
         QVERIFY(created);
 
-        QObject *expectedParent;
+        QObject *expectedParent = reinterpret_cast<QObject *>(quintptr(-1));
         if (createdParent == QLatin1String("obj")) {
             expectedParent = object;
         } else if ((createdParent == QLatin1String("null")) || createdParent.isEmpty()) {
