@@ -392,12 +392,12 @@ PropertyFlags Object::queryIndexed(Managed *m, ExecutionContext *ctx, uint index
 
 bool Object::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
 {
-    return static_cast<Object *>(m)->__delete__(ctx, name);
+    return static_cast<Object *>(m)->internalDeleteProperty(ctx, name);
 }
 
 bool Object::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
 {
-    return static_cast<Object *>(m)->__delete__(ctx, index);
+    return static_cast<Object *>(m)->internalDeleteIndexedProperty(ctx, index);
 }
 
 
@@ -606,11 +606,11 @@ void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &
 }
 
 // Section 8.12.7
-bool Object::__delete__(ExecutionContext *ctx, String *name)
+bool Object::internalDeleteProperty(ExecutionContext *ctx, String *name)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return __delete__(ctx, idx);
+        return deleteIndexedProperty(ctx, idx);
 
     name->makeIdentifier(ctx);
 
@@ -630,7 +630,7 @@ bool Object::__delete__(ExecutionContext *ctx, String *name)
     return true;
 }
 
-bool Object::__delete__(ExecutionContext *ctx, uint index)
+bool Object::internalDeleteIndexedProperty(ExecutionContext *ctx, uint index)
 {
     PropertyDescriptor *pd = 0;
     if (!sparseArray) {

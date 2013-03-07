@@ -682,7 +682,7 @@ bool Object::Delete(Handle<String> key)
 {
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
-    return o->__delete__(currentEngine()->current, ValuePtr(&key)->asString());
+    return o->deleteProperty(currentEngine()->current, ValuePtr(&key)->asString());
 }
 
 bool Object::Has(uint32_t index)
@@ -697,7 +697,7 @@ bool Object::Delete(uint32_t index)
 {
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
-    return o->__delete__(currentEngine()->current, index);
+    return o->deleteIndexedProperty(currentEngine()->current, index);
 }
 
 bool Object::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSetter setter, Handle<Value> data, AccessControl settings, PropertyAttribute attribute)

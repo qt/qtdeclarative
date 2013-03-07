@@ -163,7 +163,7 @@ Value ExecutionContext::getBindingValue(ExecutionContext *scope, String *name, b
 bool ExecutionContext::deleteBinding(ExecutionContext *scope, String *name)
 {
     if (activation)
-        activation->__delete__(scope, name);
+        activation->deleteProperty(scope, name);
 
     if (scope->strictMode)
         scope->throwTypeError();
@@ -289,10 +289,10 @@ bool ExecutionContext::deleteProperty(String *name)
         if (ctx->withObject) {
             hasWith = true;
             if (ctx->withObject->__hasProperty__(this, name))
-                return ctx->withObject->__delete__(this, name);
+                return ctx->withObject->deleteProperty(this, name);
         } else {
             if (ctx->activation && ctx->activation->__hasProperty__(this, name))
-                return ctx->activation->__delete__(this, name);
+                return ctx->activation->deleteProperty(this, name);
         }
         if (ctx->exceptionVarName && ctx->exceptionVarName->isEqualTo(name))
             return false;

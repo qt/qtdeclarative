@@ -229,7 +229,7 @@ Value ArrayPrototype::method_pop(ExecutionContext *ctx)
 
     Value result = instance->getIndexed(ctx, len - 1);
 
-    instance->__delete__(ctx, len - 1);
+    instance->deleteIndexedProperty(ctx, len - 1);
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len - 1);
     else
@@ -308,11 +308,11 @@ Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
         if (hiExists)
             instance->putIndexed(ctx, lo, hval);
         else
-            instance->__delete__(ctx, lo);
+            instance->deleteIndexedProperty(ctx, lo);
         if (loExists)
             instance->putIndexed(ctx, hi, lval);
         else
-            instance->__delete__(ctx, hi);
+            instance->deleteIndexedProperty(ctx, hi);
     }
     return Value::fromObject(instance);
 }
@@ -368,9 +368,9 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
             if (exists)
                 instance->putIndexed(ctx, k - 1, v);
             else
-                instance->__delete__(ctx, k - 1);
+                instance->deleteIndexedProperty(ctx, k - 1);
         }
-        instance->__delete__(ctx, len - 1);
+        instance->deleteIndexedProperty(ctx, len - 1);
     }
 
     if (instance->isArrayObject())
@@ -466,10 +466,10 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
             if (exists)
                 instance->arraySet(k + itemCount, v);
             else
-                instance->__delete__(ctx, k + itemCount);
+                instance->deleteIndexedProperty(ctx, k + itemCount);
         }
         for (uint k = len; k > len - deleteCount + itemCount; --k)
-            instance->__delete__(ctx, k - 1);
+            instance->deleteIndexedProperty(ctx, k - 1);
     } else if (itemCount > deleteCount) {
         uint k = len - deleteCount;
         while (k > start) {
@@ -478,7 +478,7 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
             if (exists)
                 instance->arraySet(k + itemCount - 1, v);
             else
-                instance->__delete__(ctx, k + itemCount - 1);
+                instance->deleteIndexedProperty(ctx, k + itemCount - 1);
             --k;
         }
     }
@@ -527,7 +527,7 @@ Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
             if (exists)
                 instance->putIndexed(ctx, k + ctx->argumentCount - 1, v);
             else
-                instance->__delete__(ctx, k + ctx->argumentCount - 1);
+                instance->deleteIndexedProperty(ctx, k + ctx->argumentCount - 1);
         }
         for (uint i = 0; i < ctx->argumentCount; ++i)
             instance->putIndexed(ctx, i, ctx->argument(i));

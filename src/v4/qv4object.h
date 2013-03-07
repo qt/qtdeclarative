@@ -141,9 +141,6 @@ struct Q_V4_EXPORT Object: Managed {
         return pd && pd->type != PropertyDescriptor::Generic;
     }
 
-    // -> vtable
-    bool __delete__(ExecutionContext *ctx, String *name);
-    bool __delete__(ExecutionContext *ctx, uint index);
     bool __defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *current, const PropertyDescriptor *desc);
     bool __defineOwnProperty__(ExecutionContext *ctx, String *name, const PropertyDescriptor *desc);
     bool __defineOwnProperty__(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc);
@@ -319,6 +316,8 @@ public:
     using Managed::getIndexed;
     using Managed::put;
     using Managed::putIndexed;
+    using Managed::deleteProperty;
+    using Managed::deleteIndexedProperty;
 protected:
     static const ManagedVTable static_vtbl;
     static void destroy(Managed *that);
@@ -337,6 +336,8 @@ private:
     Value internalGetIndexed(ExecutionContext *ctx, uint index, bool *hasProperty);
     void internalPut(ExecutionContext *ctx, String *name, const Value &value);
     void internalPutIndexed(ExecutionContext *ctx, uint index, const Value &value);
+    bool internalDeleteProperty(ExecutionContext *ctx, String *name);
+    bool internalDeleteIndexedProperty(ExecutionContext *ctx, uint index);
 
     friend struct ObjectIterator;
     friend struct ObjectPrototype;
