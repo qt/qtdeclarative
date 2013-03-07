@@ -1111,29 +1111,31 @@ Isolate *Arguments::GetIsolate() const
 }
 
 
-AccessorInfo::AccessorInfo()
+AccessorInfo::AccessorInfo(const VM::Value &thisObject, const VM::Value &data)
 {
-    Q_UNIMPLEMENTED();
+    m_this = Persistent<Object>::New(Value::fromVmValue(thisObject));
+    m_data = Persistent<Object>::New(Value::fromVmValue(data));
 }
 
 Isolate *AccessorInfo::GetIsolate() const
 {
-    Q_UNIMPLEMENTED();
+    return Isolate::GetCurrent();
 }
 
 Local<Value> AccessorInfo::Data() const
 {
-    Q_UNIMPLEMENTED();
+    return Local<Value>::New(m_data);
 }
 
 Local<Object> AccessorInfo::This() const
 {
-    Q_UNIMPLEMENTED();
+    return Local<Object>::New(m_this);
 }
 
 Local<Object> AccessorInfo::Holder() const
 {
-    Q_UNIMPLEMENTED();
+    // ### FIXME
+    return Local<Object>::New(m_this);
 }
 
 

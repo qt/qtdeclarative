@@ -1676,12 +1676,14 @@ class V8EXPORT Arguments {
  */
 class V8EXPORT AccessorInfo {
  public:
-  AccessorInfo();
+  AccessorInfo(const QQmlJS::VM::Value &thisObject, const QQmlJS::VM::Value &data);
   Isolate* GetIsolate() const;
   Local<Value> Data() const;
   Local<Object> This() const;
   Local<Object> Holder() const;
-
+private:
+  Persistent<Value> m_this;
+  Persistent<Value> m_data;
 };
 
 
