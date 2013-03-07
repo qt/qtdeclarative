@@ -310,7 +310,7 @@ struct Handle {
     template <typename Source>
     static Handle<T> Cast(Handle<Source> that)
     {
-        return that.As<T>();
+        return that.template As<T>();
     }
 
     template <typename Target>
