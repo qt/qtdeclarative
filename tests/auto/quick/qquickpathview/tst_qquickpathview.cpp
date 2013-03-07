@@ -310,34 +310,34 @@ void tst_QQuickPathView::insertModel_data()
 
     // We have 8 items, with currentIndex == 4
     QTest::newRow("insert after current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 6 << 1 << 5. << 4;
+        << int(QQuickPathView::StrictlyEnforceRange) << 6 << 1 << qreal(5.) << 4;
     QTest::newRow("insert before current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 1 << 4. << 5;
+        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 1 << qreal(4.)<< 5;
     QTest::newRow("insert multiple after current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 5 << 2 << 6. << 4;
+        << int(QQuickPathView::StrictlyEnforceRange) << 5 << 2 << qreal(6.) << 4;
     QTest::newRow("insert multiple before current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 1 << 2 << 4. << 6;
+        << int(QQuickPathView::StrictlyEnforceRange) << 1 << 2 << qreal(4.) << 6;
     QTest::newRow("insert at end")
-        << int(QQuickPathView::StrictlyEnforceRange) << 8 << 1 << 5. << 4;
+        << int(QQuickPathView::StrictlyEnforceRange) << 8 << 1 << qreal(5.) << 4;
     QTest::newRow("insert at beginning")
-        << int(QQuickPathView::StrictlyEnforceRange) << 0 << 1 << 4. << 5;
+        << int(QQuickPathView::StrictlyEnforceRange) << 0 << 1 << qreal(4.) << 5;
     QTest::newRow("insert at current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 4 << 1 << 4. << 5;
+        << int(QQuickPathView::StrictlyEnforceRange) << 4 << 1 << qreal(4.) << 5;
 
     QTest::newRow("no range - insert after current")
-        << int(QQuickPathView::NoHighlightRange) << 6 << 1 << 5. << 4;
+        << int(QQuickPathView::NoHighlightRange) << 6 << 1 << qreal(5.) << 4;
     QTest::newRow("no range - insert before current")
-        << int(QQuickPathView::NoHighlightRange) << 2 << 1 << 4. << 5;
+        << int(QQuickPathView::NoHighlightRange) << 2 << 1 << qreal(4.) << 5;
     QTest::newRow("no range - insert multiple after current")
-        << int(QQuickPathView::NoHighlightRange) << 5 << 2 << 6. << 4;
+        << int(QQuickPathView::NoHighlightRange) << 5 << 2 << qreal(6.) << 4;
     QTest::newRow("no range - insert multiple before current")
-        << int(QQuickPathView::NoHighlightRange) << 1 << 2 << 4. << 6;
+        << int(QQuickPathView::NoHighlightRange) << 1 << 2 << qreal(4.) << 6;
     QTest::newRow("no range - insert at end")
-        << int(QQuickPathView::NoHighlightRange) << 8 << 1 << 5. << 4;
+        << int(QQuickPathView::NoHighlightRange) << 8 << 1 << qreal(5.) << 4;
     QTest::newRow("no range - insert at beginning")
-        << int(QQuickPathView::NoHighlightRange) << 0 << 1 << 4. << 5;
+        << int(QQuickPathView::NoHighlightRange) << 0 << 1 << qreal(4.) << 5;
     QTest::newRow("no range - insert at current")
-        << int(QQuickPathView::NoHighlightRange) << 4 << 1 << 4. << 5;
+        << int(QQuickPathView::NoHighlightRange) << 4 << 1 << qreal(4.) << 5;
 }
 
 void tst_QQuickPathView::insertModel()
@@ -398,38 +398,38 @@ void tst_QQuickPathView::removeModel_data()
 
     // We have 8 items, with currentIndex == 4
     QTest::newRow("remove after current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 6 << 1 << 3. << 4;
+        << int(QQuickPathView::StrictlyEnforceRange) << 6 << 1 << qreal(3.) << 4;
     QTest::newRow("remove before current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 1 << 4. << 3;
+        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 1 << qreal(4.) << 3;
     QTest::newRow("remove multiple after current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 5 << 2 << 2. << 4;
+        << int(QQuickPathView::StrictlyEnforceRange) << 5 << 2 << qreal(2.) << 4;
     QTest::newRow("remove multiple before current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 1 << 2 << 4. << 2;
+        << int(QQuickPathView::StrictlyEnforceRange) << 1 << 2 << qreal(4.) << 2;
     QTest::newRow("remove last")
-        << int(QQuickPathView::StrictlyEnforceRange) << 7 << 1 << 3. << 4;
+        << int(QQuickPathView::StrictlyEnforceRange) << 7 << 1 << qreal(3.) << 4;
     QTest::newRow("remove first")
-        << int(QQuickPathView::StrictlyEnforceRange) << 0 << 1 << 4. << 3;
+        << int(QQuickPathView::StrictlyEnforceRange) << 0 << 1 << qreal(4.) << 3;
     QTest::newRow("remove current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 4 << 1 << 3. << 4;
+        << int(QQuickPathView::StrictlyEnforceRange) << 4 << 1 << qreal(3.) << 4;
     QTest::newRow("remove all")
-        << int(QQuickPathView::StrictlyEnforceRange) << 0 << 8 << 0. << 0;
+        << int(QQuickPathView::StrictlyEnforceRange) << 0 << 8 << qreal(0.) << 0;
 
     QTest::newRow("no range - remove after current")
-        << int(QQuickPathView::NoHighlightRange) << 6 << 1 << 3. << 4;
+        << int(QQuickPathView::NoHighlightRange) << 6 << 1 << qreal(3.) << 4;
     QTest::newRow("no range - remove before current")
-        << int(QQuickPathView::NoHighlightRange) << 2 << 1 << 4. << 3;
+        << int(QQuickPathView::NoHighlightRange) << 2 << 1 << qreal(4.) << 3;
     QTest::newRow("no range - remove multiple after current")
-        << int(QQuickPathView::NoHighlightRange) << 5 << 2 << 2. << 4;
+        << int(QQuickPathView::NoHighlightRange) << 5 << 2 << qreal(2.) << 4;
     QTest::newRow("no range - remove multiple before current")
-        << int(QQuickPathView::NoHighlightRange) << 1 << 2 << 4. << 2;
+        << int(QQuickPathView::NoHighlightRange) << 1 << 2 << qreal(4.) << 2;
     QTest::newRow("no range - remove last")
-        << int(QQuickPathView::NoHighlightRange) << 7 << 1 << 3. << 4;
+        << int(QQuickPathView::NoHighlightRange) << 7 << 1 << qreal(3.) << 4;
     QTest::newRow("no range - remove first")
-        << int(QQuickPathView::NoHighlightRange) << 0 << 1 << 4. << 3;
+        << int(QQuickPathView::NoHighlightRange) << 0 << 1 << qreal(4.) << 3;
     QTest::newRow("no range - remove current offset")
-        << int(QQuickPathView::NoHighlightRange) << 4 << 1 << 4. << 4;
+        << int(QQuickPathView::NoHighlightRange) << 4 << 1 << qreal(4.) << 4;
     QTest::newRow("no range - remove all")
-        << int(QQuickPathView::NoHighlightRange) << 0 << 8 << 0. << 0;
+        << int(QQuickPathView::NoHighlightRange) << 0 << 8 << qreal(0.) << 0;
 }
 
 void tst_QQuickPathView::removeModel()
@@ -489,40 +489,40 @@ void tst_QQuickPathView::moveModel_data()
 
     // We have 8 items, with currentIndex == 4
     QTest::newRow("move after current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 5 << 6 << 1 << 4. << 4;
+        << int(QQuickPathView::StrictlyEnforceRange) << 5 << 6 << 1 << qreal(4.) << 4;
     QTest::newRow("move before current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 3 << 1 << 4. << 4;
+        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 3 << 1 << qreal(4.) << 4;
     QTest::newRow("move before current to after")
-        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 6 << 1 << 5. << 3;
+        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 6 << 1 << qreal(5.) << 3;
     QTest::newRow("move multiple after current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 5 << 6 << 2 << 4. << 4;
+        << int(QQuickPathView::StrictlyEnforceRange) << 5 << 6 << 2 << qreal(4.) << 4;
     QTest::newRow("move multiple before current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 0 << 1 << 2 << 4. << 4;
+        << int(QQuickPathView::StrictlyEnforceRange) << 0 << 1 << 2 << qreal(4.) << 4;
     QTest::newRow("move before current to end")
-        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 7 << 1 << 5. << 3;
+        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 7 << 1 << qreal(5.) << 3;
     QTest::newRow("move last to beginning")
-        << int(QQuickPathView::StrictlyEnforceRange) << 7 << 0 << 1 << 3. << 5;
+        << int(QQuickPathView::StrictlyEnforceRange) << 7 << 0 << 1 << qreal(3.) << 5;
     QTest::newRow("move current")
-        << int(QQuickPathView::StrictlyEnforceRange) << 4 << 6 << 1 << 2. << 6;
+        << int(QQuickPathView::StrictlyEnforceRange) << 4 << 6 << 1 << qreal(2.) << 6;
 
     QTest::newRow("no range - move after current")
-        << int(QQuickPathView::NoHighlightRange) << 5 << 6 << 1 << 4. << 4;
+        << int(QQuickPathView::NoHighlightRange) << 5 << 6 << 1 << qreal(4.) << 4;
     QTest::newRow("no range - move before current")
-        << int(QQuickPathView::NoHighlightRange) << 2 << 3 << 1 << 4. << 4;
+        << int(QQuickPathView::NoHighlightRange) << 2 << 3 << 1 << qreal(4.) << 4;
     QTest::newRow("no range - move before current to after")
-        << int(QQuickPathView::NoHighlightRange) << 2 << 6 << 1 << 5. << 3;
+        << int(QQuickPathView::NoHighlightRange) << 2 << 6 << 1 << qreal(5.) << 3;
     QTest::newRow("no range - move multiple after current")
-        << int(QQuickPathView::NoHighlightRange) << 5 << 6 << 2 << 4. << 4;
+        << int(QQuickPathView::NoHighlightRange) << 5 << 6 << 2 << qreal(4.) << 4;
     QTest::newRow("no range - move multiple before current")
-        << int(QQuickPathView::NoHighlightRange) << 0 << 1 << 2 << 4. << 4;
+        << int(QQuickPathView::NoHighlightRange) << 0 << 1 << 2 << qreal(4.) << 4;
     QTest::newRow("no range - move before current to end")
-        << int(QQuickPathView::NoHighlightRange) << 2 << 7 << 1 << 5. << 3;
+        << int(QQuickPathView::NoHighlightRange) << 2 << 7 << 1 << qreal(5.) << 3;
     QTest::newRow("no range - move last to beginning")
-        << int(QQuickPathView::NoHighlightRange) << 7 << 0 << 1 << 3. << 5;
+        << int(QQuickPathView::NoHighlightRange) << 7 << 0 << 1 << qreal(3.) << 5;
     QTest::newRow("no range - move current")
-        << int(QQuickPathView::NoHighlightRange) << 4 << 6 << 1 << 4. << 6;
+        << int(QQuickPathView::NoHighlightRange) << 4 << 6 << 1 << qreal(4.) << 6;
     QTest::newRow("no range - move multiple incl. current")
-        << int(QQuickPathView::NoHighlightRange) << 0 << 1 << 5 << 4. << 5;
+        << int(QQuickPathView::NoHighlightRange) << 0 << 1 << 5 << qreal(4.) << 5;
 }
 
 void tst_QQuickPathView::moveModel()
@@ -1998,11 +1998,11 @@ void tst_QQuickPathView::indexAt_itemAt_data()
     QTest::addColumn<qreal>("y");
     QTest::addColumn<int>("index");
 
-    QTest::newRow("Item 0 - 585, 95") << 585. << 95. << 0;
-    QTest::newRow("Item 0 - 660, 165") << 660. << 165. << 0;
-    QTest::newRow("No Item a - 580, 95") << 580. << 95. << -1;
-    QTest::newRow("No Item b - 585, 85") << 585. << 85. << -1;
-    QTest::newRow("Item 7 - 360, 200") << 360. << 200. << 7;
+    QTest::newRow("Item 0 - 585, 95") << qreal(585.) << qreal(95.) << 0;
+    QTest::newRow("Item 0 - 660, 165") << qreal(660.) << qreal(165.) << 0;
+    QTest::newRow("No Item a - 580, 95") << qreal(580.) << qreal(95.) << -1;
+    QTest::newRow("No Item b - 585, 85") << qreal(585.) << qreal(85.) << -1;
+    QTest::newRow("Item 7 - 360, 200") << qreal(360.) << qreal(200.) << 7;
 }
 
 void tst_QQuickPathView::cacheItemCount()
