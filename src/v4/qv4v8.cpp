@@ -548,7 +548,12 @@ Local<String> String::NewSymbol(const char *data, int length)
 {
     QString str = QString::fromLatin1(data, length);
     VM::String *vmString = currentEngine()->newIdentifier(str);
-    return Local<String>::New(v8::Value::fromVmValue(VM::Value::fromString(vmString)));
+    return New(vmString);
+}
+
+Local<String> String::New(VM::String *s)
+{
+    return Local<String>::New(v8::Value::fromVmValue(VM::Value::fromString(s)));
 }
 
 Local<String> String::NewExternal(String::ExternalStringResource *resource)
@@ -1210,52 +1215,177 @@ Local<ObjectTemplate> FunctionTemplate::PrototypeTemplate()
 class V4V8Object : public VM::Object
 {
 public:
-    V4V8Object(VM::ExecutionEngine *engine)
+    V4V8Object(VM::ExecutionEngine *engine, ObjectTemplate *tmpl)
         : VM::Object(engine)
     {
         vtbl = &static_vtbl;
+        m_template = Persistent<ObjectTemplate>(tmpl);
     }
 
+    Persistent<ObjectTemplate> m_template;
+
 protected:
+    AccessorInfo namedAccessorInfo()
+    {
+        // ### thisObject?
+        return AccessorInfo(VM::Value::fromObject(this), m_template->m_namedPropertyData);
+    }
+    AccessorInfo fallbackAccessorInfo()
+    {
+        // ### thisObject?
+        return AccessorInfo(VM::Value::fromObject(this), m_template->m_fallbackPropertyData);
+    }
+    AccessorInfo indexedAccessorInfo()
+    {
+        // ### thisObject?
+        return AccessorInfo(VM::Value::fromObject(this), m_template->m_namedPropertyData);
+    }
+
     static const ManagedVTable static_vtbl;
 
     static VM::Value get(Managed *m, ExecutionContext *ctx, VM::String *name, bool *hasProperty)
     {
-        return VM::Object::get(m, ctx, name, hasProperty);
+        V4V8Object *that = static_cast<V4V8Object*>(m);
+        if (that->m_template->m_namedPropertyGetter) {
+            Handle<Value> result = that->m_template->m_namedPropertyGetter(String::New(name), that->namedAccessorInfo());
+            if (!result.IsEmpty()) {
+                if (hasProperty)
+                    *hasProperty = true;
+                return result->vmValue();
+            }
+        }
+
+        bool hasProp = false;
+        VM::Value result = VM::Object::get(m, ctx, name, &hasProp);
+
+        if (!hasProp && that->m_template->m_fallbackPropertyGetter) {
+            Handle<Value> fallbackResult = that->m_template->m_fallbackPropertyGetter(String::New(name), that->fallbackAccessorInfo());
+            if (!fallbackResult.IsEmpty()) {
+                if (hasProperty)
+                    *hasProperty = true;
+                return fallbackResult->vmValue();
+            }
+        }
+
+        if (hasProperty)
+            *hasProperty = hasProp;
+        return result;
     }
 
     static VM::Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
     {
+        V4V8Object *that = static_cast<V4V8Object*>(m);
+        if (that->m_template->m_indexedPropertyGetter) {
+            Handle<Value> result = that->m_template->m_indexedPropertyGetter(index, that->indexedAccessorInfo());
+            if (!result.IsEmpty()) {
+                if (hasProperty)
+                    *hasProperty = true;
+                return result->vmValue();
+            }
+        }
         return VM::Object::getIndexed(m, ctx, index, hasProperty);
     }
 
     static void put(Managed *m, ExecutionContext *ctx, VM::String *name, const VM::Value &value)
     {
-        VM::Object::put(m, ctx, name, value);
+        Local<Value> v8Value = Local<Value>::New(Value::fromVmValue(value));
+        V4V8Object *that = static_cast<V4V8Object*>(m);
+        if (that->m_template->m_namedPropertySetter) {
+            Handle<Value> result = that->m_template->m_namedPropertySetter(String::New(name), v8Value, that->namedAccessorInfo());
+            if (!result.IsEmpty())
+                return;
+        }
+        PropertyDescriptor *pd  = that->__getOwnProperty__(ctx, name);
+        if (pd)
+            that->putValue(ctx, pd, value);
+        else if (that->m_template->m_fallbackPropertySetter)
+            that->m_template->m_fallbackPropertySetter(String::New(name), v8Value, that->fallbackAccessorInfo());
+        else
+            VM::Object::put(m, ctx, name, value);
     }
 
     static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const VM::Value &value)
     {
+        V4V8Object *that = static_cast<V4V8Object*>(m);
+        if (that->m_template->m_indexedPropertySetter) {
+            Handle<Value> result = that->m_template->m_indexedPropertySetter(index, Local<Value>::New(Value::fromVmValue(value)), that->indexedAccessorInfo());
+            if (!result.IsEmpty())
+                return;
+        }
         VM::Object::putIndexed(m, ctx, index, value);
+    }
+
+    static PropertyFlags propertyAttributesToFlags(const Handle<Value> &attr)
+    {
+        int flags = 0;
+        int intAttr = attr->ToInt32()->Value();
+        if (!(intAttr & ReadOnly))
+            flags |= VM::Writable;
+        if (!(intAttr & DontDelete))
+            flags |= VM::Configurable;
+        if (!(intAttr & DontEnum))
+            flags |= VM::Enumerable;
+        return PropertyFlags(flags);
     }
 
     static PropertyFlags query(Managed *m, ExecutionContext *ctx, VM::String *name)
     {
-        return VM::Object::query(m, ctx, name);
+        V4V8Object *that = static_cast<V4V8Object*>(m);
+        if (that->m_template->m_namedPropertyQuery) {
+            Handle<Value> result = that->m_template->m_namedPropertyQuery(String::New(name), that->namedAccessorInfo());
+            if (!result.IsEmpty())
+                return propertyAttributesToFlags(result);
+        }
+        PropertyFlags flags = VM::Object::query(m, ctx, name);
+        if (flags == 0 && that->m_template->m_fallbackPropertySetter) {
+            Handle<Value> result = that->m_template->m_fallbackPropertyQuery(String::New(name), that->fallbackAccessorInfo());
+            if (!result.IsEmpty())
+                return propertyAttributesToFlags(result);
+        }
+
+        return flags;
     }
 
     static PropertyFlags queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
     {
+        V4V8Object *that = static_cast<V4V8Object*>(m);
+        if (that->m_template->m_indexedPropertyQuery) {
+            Handle<Value> result = that->m_template->m_indexedPropertyQuery(index, that->indexedAccessorInfo());
+            if (!result.IsEmpty())
+                return propertyAttributesToFlags(result);
+        }
+
         return VM::Object::queryIndexed(m, ctx, index);
     }
 
     static bool deleteProperty(Managed *m, ExecutionContext *ctx, VM::String *name)
     {
-        return VM::Object::deleteProperty(m, ctx, name);
+        V4V8Object *that = static_cast<V4V8Object*>(m);
+        if (that->m_template->m_namedPropertyDeleter) {
+            Handle<Boolean> result = that->m_template->m_namedPropertyDeleter(String::New(name), that->namedAccessorInfo());
+            if (!result.IsEmpty())
+                return result->Value();
+        }
+
+        bool result = VM::Object::deleteProperty(m, ctx, name);
+
+        if (that->m_template->m_fallbackPropertyDeleter) {
+            Handle<Boolean> interceptResult = that->m_template->m_fallbackPropertyDeleter(String::New(name), that->fallbackAccessorInfo());
+            if (!interceptResult.IsEmpty())
+                result = interceptResult->Value();
+        }
+
+        return result;
     }
 
     static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
     {
+        V4V8Object *that = static_cast<V4V8Object*>(m);
+        if (that->m_template->m_indexedPropertyDeleter) {
+            Handle<Boolean> result = that->m_template->m_indexedPropertyDeleter(index, that->indexedAccessorInfo());
+            if (!result.IsEmpty())
+                return result->Value();
+        }
         return VM::Object::deleteIndexedProperty(m, ctx, index);
     }
 };
@@ -1332,7 +1462,7 @@ Local<ObjectTemplate> ObjectTemplate::New()
 Local<Object> ObjectTemplate::NewInstance()
 {
     VM::ExecutionEngine *engine = currentEngine();
-    VM::Object *o = new (engine->memoryManager) V4V8Object(engine);
+    VM::Object *o = new (engine->memoryManager) V4V8Object(engine, this);
     o->prototype = engine->objectPrototype;
 
     foreach (const Accessor &acc, m_accessors) {
@@ -1363,17 +1493,32 @@ void ObjectTemplate::SetAccessor(Handle<String> name, AccessorGetter getter, Acc
 
 void ObjectTemplate::SetNamedPropertyHandler(NamedPropertyGetter getter, NamedPropertySetter setter, NamedPropertyQuery query, NamedPropertyDeleter deleter, NamedPropertyEnumerator enumerator, Handle<Value> data)
 {
-    Q_UNIMPLEMENTED();
+    m_namedPropertyGetter = getter;
+    m_namedPropertySetter = setter;
+    m_namedPropertyQuery = query;
+    m_namedPropertyDeleter = deleter;
+    m_namedPropertyEnumerator = enumerator;
+    m_namedPropertyData = Persistent<Value>::New(data);
 }
 
 void ObjectTemplate::SetFallbackPropertyHandler(NamedPropertyGetter getter, NamedPropertySetter setter, NamedPropertyQuery query, NamedPropertyDeleter deleter, NamedPropertyEnumerator enumerator, Handle<Value> data)
 {
-    Q_UNIMPLEMENTED();
+    m_fallbackPropertyGetter = getter;
+    m_fallbackPropertySetter = setter;
+    m_fallbackPropertyQuery = query;
+    m_fallbackPropertyDeleter = deleter;
+    m_fallbackPropertyEnumerator = enumerator;
+    m_fallbackPropertyData = Persistent<Value>::New(data);
 }
 
 void ObjectTemplate::SetIndexedPropertyHandler(IndexedPropertyGetter getter, IndexedPropertySetter setter, IndexedPropertyQuery query, IndexedPropertyDeleter deleter, IndexedPropertyEnumerator enumerator, Handle<Value> data)
 {
-    Q_UNIMPLEMENTED();
+    m_indexedPropertyGetter = getter;
+    m_indexedPropertySetter = setter;
+    m_indexedPropertyQuery = query;
+    m_indexedPropertyDeleter = deleter;
+    m_indexedPropertyEnumerator = enumerator;
+    m_indexedPropertyData = Persistent<Value>::New(data);
 }
 
 int ObjectTemplate::InternalFieldCount()

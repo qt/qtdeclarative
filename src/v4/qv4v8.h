@@ -1165,6 +1165,8 @@ class V8EXPORT String : public Primitive {
   /** Creates a symbol. Returns one if it exists already.*/
   static Local<String> NewSymbol(const char* data, int length = -1);
 
+  V8EXPORT static Local<String> New(QQmlJS::VM::String *s);
+
   /**
    * Creates a new external string using the data defined in the given
    * resource. When the external string is no longer live on V8's heap the
@@ -2024,6 +2026,27 @@ class V8EXPORT ObjectTemplate : public Template {
   };
 
   QVector<Accessor> m_accessors;
+
+  NamedPropertyGetter m_namedPropertyGetter;
+  NamedPropertySetter m_namedPropertySetter;
+  NamedPropertyQuery m_namedPropertyQuery;
+  NamedPropertyDeleter m_namedPropertyDeleter;
+  NamedPropertyEnumerator m_namedPropertyEnumerator;
+  Persistent<Value> m_namedPropertyData;
+
+  NamedPropertyGetter m_fallbackPropertyGetter;
+  NamedPropertySetter m_fallbackPropertySetter;
+  NamedPropertyQuery m_fallbackPropertyQuery;
+  NamedPropertyDeleter m_fallbackPropertyDeleter;
+  NamedPropertyEnumerator m_fallbackPropertyEnumerator;
+  Persistent<Value> m_fallbackPropertyData;
+
+  IndexedPropertyGetter m_indexedPropertyGetter;
+  IndexedPropertySetter m_indexedPropertySetter;
+  IndexedPropertyQuery m_indexedPropertyQuery;
+  IndexedPropertyDeleter m_indexedPropertyDeleter;
+  IndexedPropertyEnumerator m_indexedPropertyEnumerator;
+  Persistent<Value> m_indexedPropertyData;
  };
 
 DEFINE_REFCOUNTED_HANDLE_OPERATIONS(ObjectTemplate)
