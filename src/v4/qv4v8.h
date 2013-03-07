@@ -1649,6 +1649,7 @@ class V8EXPORT Template : public Data {
   void Set(const char* name, Handle<Data> value);
  };
 
+DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Template)
 
 /**
  * The argument information given to function call callbacks.  This
@@ -1676,7 +1677,7 @@ class V8EXPORT Arguments {
  */
 class V8EXPORT AccessorInfo {
  public:
-  AccessorInfo(const QQmlJS::VM::Value &thisObject, const QQmlJS::VM::Value &data);
+  AccessorInfo(const QQmlJS::VM::Value &thisObject, const Persistent<Value> &data);
   Isolate* GetIsolate() const;
   Local<Value> Data() const;
   Local<Object> This() const;
@@ -1885,6 +1886,8 @@ private:
   Local<ObjectTemplate> m_prototypeTemplate;
 };
 
+DEFINE_REFCOUNTED_HANDLE_OPERATIONS(FunctionTemplate)
+
 
 /**
  * An ObjectTemplate is used to create objects at runtime.
@@ -2013,8 +2016,17 @@ class V8EXPORT ObjectTemplate : public Template {
    */
   void MarkAsUseUserObjectComparison();
 
+  struct Accessor {
+      Persistent<Value> getter;
+      Persistent<Value> setter;
+      Persistent<String> name;
+      PropertyAttribute attribute;
+  };
+
+  QVector<Accessor> m_accessors;
  };
 
+DEFINE_REFCOUNTED_HANDLE_OPERATIONS(ObjectTemplate)
 
 // --- Statics ---
 

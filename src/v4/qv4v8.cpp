@@ -662,8 +662,12 @@ struct ExternalResourceWrapper : public QQmlJS::VM::Object::ExternalResource
 
 bool Object::Set(Handle<Value> key, Handle<Value> value, PropertyAttribute attribs)
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    assert(o);
+    QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
+    o->put(ctx, ValuePtr(&key)->toString(ctx), *ValuePtr(&value));
+    // ### attribs
+    return true;
 }
 
 bool Object::Set(uint32_t index, Handle<Value> value)
@@ -1147,10 +1151,10 @@ Isolate *Arguments::GetIsolate() const
 }
 
 
-AccessorInfo::AccessorInfo(const VM::Value &thisObject, const VM::Value &data)
+AccessorInfo::AccessorInfo(const VM::Value &thisObject, const Persistent<Value> &data)
 {
     m_this = Persistent<Object>::New(Value::fromVmValue(thisObject));
-    m_data = Persistent<Object>::New(Value::fromVmValue(data));
+    m_data = data;
 }
 
 Isolate *AccessorInfo::GetIsolate() const
@@ -1203,6 +1207,121 @@ Local<ObjectTemplate> FunctionTemplate::PrototypeTemplate()
     return m_prototypeTemplate;
 }
 
+class V4V8Object : public VM::Object
+{
+public:
+    V4V8Object(VM::ExecutionEngine *engine)
+        : VM::Object(engine)
+    {
+        vtbl = &static_vtbl;
+    }
+
+protected:
+    static const ManagedVTable static_vtbl;
+
+    static VM::Value get(Managed *m, ExecutionContext *ctx, VM::String *name, bool *hasProperty)
+    {
+        return VM::Object::get(m, ctx, name, hasProperty);
+    }
+
+    static VM::Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+    {
+        return VM::Object::getIndexed(m, ctx, index, hasProperty);
+    }
+
+    static void put(Managed *m, ExecutionContext *ctx, VM::String *name, const VM::Value &value)
+    {
+        VM::Object::put(m, ctx, name, value);
+    }
+
+    static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const VM::Value &value)
+    {
+        VM::Object::putIndexed(m, ctx, index, value);
+    }
+
+    static PropertyFlags query(Managed *m, ExecutionContext *ctx, VM::String *name)
+    {
+        return VM::Object::query(m, ctx, name);
+    }
+
+    static PropertyFlags queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
+    {
+        return VM::Object::queryIndexed(m, ctx, index);
+    }
+
+    static bool deleteProperty(Managed *m, ExecutionContext *ctx, VM::String *name)
+    {
+        return VM::Object::deleteProperty(m, ctx, name);
+    }
+
+    static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
+    {
+        return VM::Object::deleteIndexedProperty(m, ctx, index);
+    }
+};
+
+DEFINE_MANAGED_VTABLE(V4V8Object);
+
+struct V8AccessorGetter: FunctionObject {
+    AccessorGetter getter;
+    Persistent<Value> data;
+    Persistent<String> name;
+
+    V8AccessorGetter(ExecutionContext *scope, const Handle<String> &name, const AccessorGetter &getter, Handle<Value> data)
+        : FunctionObject(scope)
+    {
+        vtbl = &static_vtbl;
+        this->getter = getter;
+        this->data = Persistent<Value>::New(data);
+        this->name = Persistent<String>::New(name);
+    }
+
+    using Object::construct;
+
+    static VM::Value call(Managed *that, ExecutionContext *context, const VM::Value &thisObject, VM::Value *args, int argc)
+    {
+        V8AccessorGetter *getter = static_cast<V8AccessorGetter*>(that);
+        AccessorInfo info(thisObject, getter->data);
+        return getter->getter(Local<String>::New(getter->name), info)->vmValue();
+    }
+
+protected:
+    static const ManagedVTable static_vtbl;
+};
+
+DEFINE_MANAGED_VTABLE(V8AccessorGetter);
+
+struct V8AccessorSetter: FunctionObject {
+    AccessorSetter setter;
+    Persistent<Value> data;
+    Persistent<String> name;
+
+    V8AccessorSetter(ExecutionContext *scope, const Handle<String> &name, const AccessorSetter &setter, Handle<Value> data)
+        : FunctionObject(scope)
+    {
+        vtbl = &static_vtbl;
+        this->setter = setter;
+        this->data = Persistent<Value>::New(data);
+        this->name = Persistent<String>::New(name);
+    }
+
+    using Object::construct;
+
+    static VM::Value call(Managed *that, ExecutionContext *context, const VM::Value &thisObject, VM::Value *args, int argc)
+    {
+        if (!argc)
+            return VM::Value::undefinedValue();
+        V8AccessorSetter *setter = static_cast<V8AccessorSetter*>(that);
+        AccessorInfo info(thisObject, setter->data);
+        setter->setter(Local<String>::New(setter->name), Local<Value>::New(Value::fromVmValue(args[0])), info);
+        return VM::Value::undefinedValue();
+    }
+
+protected:
+    static const ManagedVTable static_vtbl;
+};
+
+DEFINE_MANAGED_VTABLE(V8AccessorSetter);
 
 Local<ObjectTemplate> ObjectTemplate::New()
 {
@@ -1212,13 +1331,34 @@ Local<ObjectTemplate> ObjectTemplate::New()
 
 Local<Object> ObjectTemplate::NewInstance()
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    VM::ExecutionEngine *engine = currentEngine();
+    VM::Object *o = new (engine->memoryManager) V4V8Object(engine);
+    o->prototype = engine->objectPrototype;
+
+    foreach (const Accessor &acc, m_accessors) {
+        VM::PropertyDescriptor *pd = o->insertMember(acc.name->asVMString());
+        *pd = VM::PropertyDescriptor::fromAccessor(acc.getter->vmValue().asFunctionObject(),
+                                                   acc.setter->vmValue().asFunctionObject());
+        pd->writable = VM::PropertyDescriptor::Undefined;
+        pd->configurable = acc.attribute & DontDelete ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
+        pd->enumerable = acc.attribute & DontEnum ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
+    }
+
+    return Local<Object>::New(Value::fromVmValue(VM::Value::fromObject(o)));
 }
 
 void ObjectTemplate::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSetter setter, Handle<Value> data, AccessControl settings, PropertyAttribute attribute)
 {
-    Q_UNIMPLEMENTED();
+    VM::ExecutionEngine *engine = currentEngine();
+
+    Accessor a;
+    VM::FunctionObject *wrappedGetter = getter ? new (engine->memoryManager) V8AccessorGetter(engine->rootContext, name, getter, data) : 0;
+    a.getter = Persistent<Value>::New(Value::fromVmValue(VM::Value::fromObject(wrappedGetter)));
+    VM::FunctionObject *wrappedSetter = setter ? new (engine->memoryManager) V8AccessorSetter(engine->rootContext, name, setter, data) : 0;
+    a.setter = Persistent<Value>::New(Value::fromVmValue(VM::Value::fromObject(wrappedSetter)));
+    a.attribute = attribute;
+    a.name = Persistent<String>::New(name);
+    m_accessors << a;
 }
 
 void ObjectTemplate::SetNamedPropertyHandler(NamedPropertyGetter getter, NamedPropertySetter setter, NamedPropertyQuery query, NamedPropertyDeleter deleter, NamedPropertyEnumerator enumerator, Handle<Value> data)
