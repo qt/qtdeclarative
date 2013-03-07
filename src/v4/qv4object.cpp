@@ -97,7 +97,7 @@ void Object::put(ExecutionContext *ctx, const QString &name, const Value &value)
     put(ctx, ctx->engine->newString(name), value);
 }
 
-Value Object::getValue(ExecutionContext *ctx, const PropertyDescriptor *p) const
+Value Object::getValue(const Value &thisObject, ExecutionContext *ctx, const PropertyDescriptor *p)
 {
     assert(p->type != PropertyDescriptor::Generic);
     if (p->isData())
@@ -105,34 +105,7 @@ Value Object::getValue(ExecutionContext *ctx, const PropertyDescriptor *p) const
     if (!p->get)
         return Value::undefinedValue();
 
-    return p->get->call(ctx, Value::fromObject(const_cast<Object *>(this)), 0, 0);
-}
-
-Value Object::getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p) const
-{
-    if (!p || p->type == PropertyDescriptor::Generic)
-        return Value::undefinedValue();
-    return getValue(ctx, p);
-}
-
-Value Object::getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, const Value &thisObject) const
-{
-    if (!p || p->type == PropertyDescriptor::Generic)
-        return Value::undefinedValue();
-    if (p->isData())
-        return p->value;
-    if (!p->get)
-        return Value::undefinedValue();
-
     return p->get->call(ctx, thisObject, 0, 0);
-}
-
-Value Object::getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const
-{
-    *exists = p && p->type != PropertyDescriptor::Generic;
-    if (!*exists)
-        return Value::undefinedValue();
-    return getValue(ctx, p);
 }
 
 void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value &value)

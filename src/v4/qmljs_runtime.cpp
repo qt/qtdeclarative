@@ -678,14 +678,12 @@ void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, const 
 void __qmljs_get_property(ExecutionContext *ctx, Value *result, const Value &object, String *name)
 {
     Value res;
-    Object *o = object.asObject();
-    if (o) {
-        res = o->get(ctx, name);
-    } else if (object.isString() && name->isEqualTo(ctx->engine->id_length)) {
-        res = Value::fromInt32(object.stringValue()->toQString().length());
+    Managed *m = object.asManaged();
+    if (m) {
+        res = m->get(ctx, name);
     } else {
-        o = __qmljs_convert_to_object(ctx, object);
-        res = o->get(ctx, name);
+        m = __qmljs_convert_to_object(ctx, object);
+        res = m->get(ctx, name);
     }
     if (result)
         *result = res;
@@ -733,8 +731,8 @@ void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Val
         else
             res = o->get(ctx, l->name);
     } else {
-        if (object.isString() && l->name->isEqualTo(ctx->engine->id_length)) {
-            res = Value::fromInt32(object.stringValue()->toQString().length());
+        if (Managed *m = object.asManaged()) {
+            res = m->get(ctx, l->name);
         } else {
             o = __qmljs_convert_to_object(ctx, object);
             res = o->get(ctx, l->name);
@@ -868,15 +866,10 @@ void __qmljs_call_activation_property(ExecutionContext *context, Value *result, 
 void __qmljs_call_property(ExecutionContext *context, Value *result, const Value &thatObject, String *name, Value *args, int argc)
 {
     Value thisObject = thatObject;
-    Object *baseObject;
-    if (thisObject.isString()) {
-        baseObject = context->engine->stringPrototype;
-    } else {
-        if (!thisObject.isObject())
-            thisObject = Value::fromObject(__qmljs_convert_to_object(context, thisObject));
-
-        assert(thisObject.isObject());
-        baseObject = thisObject.objectValue();
+    Managed *baseObject = thisObject.asManaged();
+    if (!baseObject) {
+        baseObject = __qmljs_convert_to_object(context, thisObject);
+        thisObject = Value::fromObject(static_cast<Object *>(baseObject));
     }
 
     Value func = baseObject->get(context, name);

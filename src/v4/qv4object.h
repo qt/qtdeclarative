@@ -151,10 +151,22 @@ struct Q_V4_EXPORT Object: Managed {
     //
     void put(ExecutionContext *ctx, const QString &name, const Value &value);
 
-    Value getValue(ExecutionContext *ctx, const PropertyDescriptor *p) const;
-    Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p) const;
-    Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, const Value &thisObject) const;
-    Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const;
+    static Value getValue(const Value &thisObject, ExecutionContext *ctx, const PropertyDescriptor *p);
+    Value getValue(ExecutionContext *ctx, const PropertyDescriptor *p) const {
+        return getValue(Value::fromObject(const_cast<Object *>(this)), ctx, p);
+    }
+    Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p) const {
+        if (!p || p->type == PropertyDescriptor::Generic)
+            return Value::undefinedValue();
+        return getValue(Value::fromObject(const_cast<Object *>(this)), ctx, p);
+    }
+    Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const {
+        *exists = p && p->type != PropertyDescriptor::Generic;
+        if (!*exists)
+            return Value::undefinedValue();
+        return getValue(Value::fromObject(const_cast<Object *>(this)), ctx, p);
+    }
+
 
     void putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value &value);
     void putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value &thisObject, const Value &value);

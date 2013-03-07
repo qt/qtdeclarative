@@ -101,10 +101,20 @@ void String::destroy(Managed *that)
 Value String::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     String *that = static_cast<String *>(m);
-    if (name == ctx->engine->id_length)
+    if (name == ctx->engine->id_length) {
+        if (hasProperty)
+            *hasProperty = true;
         return Value::fromInt32(that->_text.length());
-    PropertyDescriptor *pd = ctx->engine->objectPrototype->__getPropertyDescriptor__(ctx, name);
-    return ctx->engine->objectPrototype->getValueChecked(ctx, pd, Value::fromString(that));
+    }
+    PropertyDescriptor *pd = ctx->engine->stringPrototype->__getPropertyDescriptor__(ctx, name);
+    if (!pd || pd->type == PropertyDescriptor::Generic) {
+        if (hasProperty)
+            *hasProperty = false;
+        return Value::undefinedValue();
+    }
+    if (hasProperty)
+        *hasProperty = true;
+    return ctx->engine->stringPrototype->getValue(Value::fromString(that), ctx, pd);
 }
 
 Value String::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
@@ -115,9 +125,15 @@ Value String::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *ha
             *hasProperty = true;
         return Value::fromString(ctx, that->toQString().mid(index, 1));
     }
+    PropertyDescriptor *pd = ctx->engine->stringPrototype->__getPropertyDescriptor__(ctx, index);
+    if (!pd || pd->type == PropertyDescriptor::Generic) {
+        if (hasProperty)
+            *hasProperty = false;
+        return Value::undefinedValue();
+    }
     if (hasProperty)
-        *hasProperty = false;
-    return Value::undefinedValue();
+        *hasProperty = true;
+    return ctx->engine->stringPrototype->getValue(Value::fromString(that), ctx, pd);
 }
 
 void String::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
