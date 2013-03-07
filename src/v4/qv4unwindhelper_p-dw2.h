@@ -65,19 +65,6 @@ static Function *lookupFunction(void *pc)
     return *it;
 }
 
-void UnwindHelper::deregisterFunction(Function *function)
-{
-    QMutexLocker locker(&functionProtector);
-    allFunctions.remove(reinterpret_cast<quintptr>(function->code));
-}
-
-void UnwindHelper::deregisterFunctions(QVector<Function *> functions)
-{
-    QMutexLocker locker(&functionProtector);
-    foreach (Function *f, functions)
-        allFunctions.remove(reinterpret_cast<quintptr>(f->code));
-}
-
 namespace {
 void writeIntPtrValue(unsigned char *addr, intptr_t val)
 {
@@ -94,21 +81,10 @@ void writeIntPtrValue(unsigned char *addr, intptr_t val)
 }
 } // anonymous namespace
 
-void UnwindHelper::registerFunction(Function *function)
+static void ensureUnwindInfo(Function *f)
 {
-    QMutexLocker locker(&functionProtector);
-    allFunctions.insert(reinterpret_cast<quintptr>(function->code), function);
-}
-
-void UnwindHelper::registerFunctions(QVector<Function *> functions)
-{
-    QMutexLocker locker(&functionProtector);
-    foreach (Function *f, functions)
-        allFunctions.insert(reinterpret_cast<quintptr>(f->code), f);
-}
-
-static void createUnwindInfo(Function *f)
-{
+    if (!f->unwindInfo.isEmpty())
+        return;
     QByteArray info;
     info.resize(sizeof(cie_fde_data));
 
@@ -123,9 +99,59 @@ static void createUnwindInfo(Function *f)
     f->unwindInfo = info;
 }
 
+#if defined(Q_OS_DARWIN)
+extern "C" void __register_frame(void *fde);
+extern "C" void __deregister_frame(void *fde);
+#endif
+
+static void registerFunctionUnlocked(Function *f)
+{
+    allFunctions.insert(reinterpret_cast<quintptr>(f->code), f);
+#if defined(Q_OS_DARWIN)
+    ensureUnwindInfo(f);
+    __register_frame(f->unwindInfo.data() + fde_offset);
+#endif
+}
+
+static void deregisterFunctionUnlocked(Function *f)
+{
+    allFunctions.remove(reinterpret_cast<quintptr>(f->code));
+#if defined(Q_OS_DARWIN)
+    if (!f->unwindInfo.isEmpty())
+        __deregister_frame(f->unwindInfo.data() + fde_offset);
+#endif
+}
+
+void UnwindHelper::registerFunction(Function *function)
+{
+    QMutexLocker locker(&functionProtector);
+    registerFunctionUnlocked(function);
+}
+
+void UnwindHelper::registerFunctions(QVector<Function *> functions)
+{
+    QMutexLocker locker(&functionProtector);
+    foreach (Function *f, functions)
+        registerFunctionUnlocked(f);
+}
+
+void UnwindHelper::deregisterFunction(Function *function)
+{
+    QMutexLocker locker(&functionProtector);
+    deregisterFunctionUnlocked(function);
+}
+
+void UnwindHelper::deregisterFunctions(QVector<Function *> functions)
+{
+    QMutexLocker locker(&functionProtector);
+    foreach (Function *f, functions)
+        deregisterFunctionUnlocked(f);
+}
+
 } // VM namespace
 } // QQmlJS namespace
 
+#if defined(Q_OS_LINUX)
 extern "C" {
 
 struct bases
@@ -149,8 +175,7 @@ Q_V4_EXPORT void *_Unwind_Find_FDE(void *pc, struct bases *bases)
             bases->tbase = 0;
             bases->dbase = 0;
             bases->func = reinterpret_cast<void*>(function->code);
-            if (function->unwindInfo.isEmpty())
-                QQmlJS::VM::createUnwindInfo(function);
+            QQmlJS::VM::ensureUnwindInfo(function);
             return function->unwindInfo.data() + QQmlJS::VM::fde_offset;
         }
     }
@@ -159,5 +184,6 @@ Q_V4_EXPORT void *_Unwind_Find_FDE(void *pc, struct bases *bases)
 }
 
 }
+#endif
 
 #endif // QV4UNWINDHELPER_PDW2_H
