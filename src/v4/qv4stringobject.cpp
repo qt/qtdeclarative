@@ -93,7 +93,7 @@ StringObject::StringObject(ExecutionContext *ctx, const Value &value)
     defineReadonlyProperty(ctx->engine->id_length, Value::fromUInt32(value.stringValue()->toQString().length()));
 }
 
-PropertyDescriptor *StringObject::getIndex(ExecutionContext *ctx, uint index)
+PropertyDescriptor *StringObject::getIndex(const ExecutionContext *ctx, uint index) const
 {
     QString str = value.stringValue()->toQString();
     if (index >= (uint)str.length())

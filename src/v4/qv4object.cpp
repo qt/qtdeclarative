@@ -281,14 +281,14 @@ PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, uint index
 }
 
 // Section 8.12.2
-PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, String *name)
+PropertyDescriptor *Object::__getPropertyDescriptor__(const ExecutionContext *ctx, String *name) const
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
         return __getPropertyDescriptor__(ctx, idx);
 
 
-    Object *o = this;
+    const Object *o = this;
     while (o) {
         uint idx = o->internalClass->find(name);
         if (idx < UINT_MAX)
@@ -299,15 +299,15 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, Str
     return 0;
 }
 
-PropertyDescriptor *Object::__getPropertyDescriptor__(ExecutionContext *ctx, uint index)
+PropertyDescriptor *Object::__getPropertyDescriptor__(const ExecutionContext *ctx, uint index) const
 {
-    Object *o = this;
+    const Object *o = this;
     while (o) {
         PropertyDescriptor *p = o->arrayAt(index);
         if(p && p->type != PropertyDescriptor::Generic)
             return p;
         if (o->isStringObject()) {
-            p = static_cast<StringObject *>(o)->getIndex(ctx, index);
+            p = static_cast<const StringObject *>(o)->getIndex(ctx, index);
             if (p)
                 return p;
         }
@@ -518,30 +518,6 @@ void Object::__put__(ExecutionContext *ctx, uint index, const Value &value)
   reject:
     if (ctx->strictMode)
         ctx->throwTypeError();
-}
-
-// Section 8.12.6
-bool Object::__hasProperty__(const ExecutionContext *ctx, String *name) const
-{
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX)
-        return __hasProperty__(ctx, idx);
-
-    name->makeIdentifier(ctx);
-
-    if (internalClass->find(name) != UINT_MAX)
-        return true;
-
-    return prototype ? prototype->__hasProperty__(ctx, name) : false;
-}
-
-bool Object::__hasProperty__(const ExecutionContext *ctx, uint index) const
-{
-    const PropertyDescriptor *p = arrayAt(index);
-    if (p && p->type != PropertyDescriptor::Generic)
-        return true;
-
-    return prototype ? prototype->__hasProperty__(ctx, index) : false;
 }
 
 // Section 8.12.7

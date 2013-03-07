@@ -52,10 +52,10 @@ namespace VM {
 
 struct StringObject: Object {
     Value value;
-    PropertyDescriptor tmpProperty;
+    mutable PropertyDescriptor tmpProperty;
     StringObject(ExecutionContext *ctx, const Value &value);
 
-    PropertyDescriptor *getIndex(ExecutionContext *ctx, uint index);
+    PropertyDescriptor *getIndex(const ExecutionContext *ctx, uint index) const;
 
 protected:
     static const ManagedVTable static_vtbl;

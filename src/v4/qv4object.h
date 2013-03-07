@@ -128,17 +128,26 @@ struct Q_V4_EXPORT Object: Managed {
 
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, uint index);
-    PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, String *name);
-    PropertyDescriptor *__getPropertyDescriptor__(ExecutionContext *ctx, uint index);
+
+    // -> vtable
+    PropertyDescriptor *__getPropertyDescriptor__(const ExecutionContext *ctx, String *name) const;
+    PropertyDescriptor *__getPropertyDescriptor__(const ExecutionContext *ctx, uint index) const;
 
     Value __get__(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
     Value __get__(ExecutionContext *ctx, uint index, bool *hasProperty = 0);
 
+    // -> vtable
     void __put__(ExecutionContext *ctx, String *name, const Value &value);
     void __put__(ExecutionContext *ctx, uint index, const Value &value);
 
-    bool __hasProperty__(const ExecutionContext *ctx, String *name) const;
-    bool __hasProperty__(const ExecutionContext *ctx, uint index) const;
+    bool __hasProperty__(const ExecutionContext *ctx, String *name) const {
+        PropertyDescriptor *pd = __getPropertyDescriptor__(ctx, name);
+        return pd && pd->type != PropertyDescriptor::Generic;
+    }
+    bool __hasProperty__(const ExecutionContext *ctx, uint index) const {
+        PropertyDescriptor *pd = __getPropertyDescriptor__(ctx, index);
+        return pd && pd->type != PropertyDescriptor::Generic;
+    }
     bool __delete__(ExecutionContext *ctx, String *name);
     bool __delete__(ExecutionContext *ctx, uint index);
     bool __defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *current, const PropertyDescriptor *desc);
