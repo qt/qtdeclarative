@@ -255,7 +255,7 @@ struct HandleOperations
         static void unProtect(Handle<Type> *) {} \
         static bool isEmpty(const Handle<Type> *handle) \
         { \
-            return handle->object != 0; \
+            return handle->object == 0; \
         } \
         static Type *get(const Handle<Type> *handle) \
         { \
@@ -1896,6 +1896,7 @@ class V8EXPORT FunctionTemplate : public Template {
   Local<ObjectTemplate> PrototypeTemplate();
 
 private:
+  friend class V4V8Function;
   InvocationCallback m_callback;
   Persistent<Value> m_data;
   Local<ObjectTemplate> m_instanceTemplate;

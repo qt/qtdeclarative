@@ -77,6 +77,16 @@ Object::Object(ExecutionEngine *engine)
     type = Type_Object;
 }
 
+Object::Object(ExecutionContext *context)
+    : prototype(0)
+    , internalClass(context->engine->emptyClass)
+    , memberDataAlloc(0), memberData(0)
+    , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayData(0), sparseArray(0)
+    , externalResource(0)
+{
+    vtbl = &static_vtbl;
+    type = Type_Object;
+}
 
 Object::~Object()
 {

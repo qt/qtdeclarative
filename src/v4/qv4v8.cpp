@@ -1192,44 +1192,34 @@ Local<Object> AccessorInfo::Holder() const
     return Local<Object>::New(m_this);
 }
 
-
-Local<FunctionTemplate> FunctionTemplate::New(InvocationCallback callback, Handle<Value> data)
-{
-    FunctionTemplate *ft = new FunctionTemplate;
-    ft->m_callback = callback;
-    ft->m_data = Persistent<Value>::New(data);
-    return Local<FunctionTemplate>::New(Handle<FunctionTemplate>(ft));
-}
-
-Local<Function> FunctionTemplate::GetFunction()
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
-}
-
-Local<ObjectTemplate> FunctionTemplate::InstanceTemplate()
-{
-    if (m_instanceTemplate.IsEmpty())
-        m_instanceTemplate = ObjectTemplate::New();
-    return m_instanceTemplate;
-}
-
-Local<ObjectTemplate> FunctionTemplate::PrototypeTemplate()
-{
-    if (m_prototypeTemplate.IsEmpty())
-        m_prototypeTemplate = ObjectTemplate::New();
-    return m_prototypeTemplate;
-}
-
 template <typename BaseClass>
 class V4V8Object : public BaseClass
 {
 public:
     V4V8Object(VM::ExecutionEngine *engine, ObjectTemplate *tmpl)
-        : BaseClass(engine)
+        : BaseClass(engine->current)
     {
         this->vtbl = &static_vtbl;
         m_template = Persistent<ObjectTemplate>(tmpl);
+        if (m_template.IsEmpty())
+            m_template = Persistent<ObjectTemplate>::New(ObjectTemplate::New());
+
+        foreach (const ObjectTemplate::Accessor &acc, m_template->m_accessors) {
+            VM::PropertyDescriptor *pd = this->insertMember(acc.name->asVMString());
+            *pd = VM::PropertyDescriptor::fromAccessor(acc.getter->vmValue().asFunctionObject(),
+                                                       acc.setter->vmValue().asFunctionObject());
+            pd->writable = VM::PropertyDescriptor::Undefined;
+            pd->configurable = acc.attribute & DontDelete ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
+            pd->enumerable = acc.attribute & DontEnum ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
+        }
+
+        foreach (const Template::Property &p, m_template->m_properties) {
+            VM::PropertyDescriptor *pd = this->insertMember(p.name->asVMString());
+            *pd = VM::PropertyDescriptor::fromValue(p.value->vmValue());
+            pd->writable = p.attributes & ReadOnly ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
+            pd->configurable = p.attributes & DontDelete ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
+            pd->enumerable = p.attributes & DontEnum ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
+        }
     }
 
     Persistent<ObjectTemplate> m_template;
@@ -1404,6 +1394,71 @@ template<>
 DEFINE_MANAGED_VTABLE(V4V8Object<VM::Object>);
 template<>
 DEFINE_MANAGED_VTABLE(V4V8Object<VM::FunctionObject>);
+template<>
+DEFINE_MANAGED_VTABLE(V4V8Object<VM::FunctionPrototype>);
+
+struct V4V8Function : public V4V8Object<VM::FunctionObject>
+{
+    V4V8Function(VM::ExecutionEngine *engine, ObjectTemplate *tmpl, FunctionTemplate *functionTemplate)
+        : V4V8Object<VM::FunctionObject>(engine, tmpl)
+    {
+        vtbl = &static_vtbl;
+        m_functionTemplate = Persistent<FunctionTemplate>(functionTemplate);
+    }
+
+protected:
+    static const ManagedVTable static_vtbl;
+
+    static VM::Value call(VM::Managed *m, ExecutionContext *context, const VM::Value &thisObject, VM::Value *args, int argc)
+    {
+        V4V8Function *that = static_cast<V4V8Function*>(m);
+        Arguments arguments(args, argc, thisObject, false, that->m_functionTemplate->m_data);
+        return that->m_functionTemplate->m_callback(arguments)->vmValue();
+    }
+
+    static VM::Value construct(VM::Managed *m, ExecutionContext *context, VM::Value *args, int argc)
+    {
+        V4V8Function *that = static_cast<V4V8Function*>(m);
+        Arguments arguments(args, argc, VM::Value::undefinedValue(), true, that->m_functionTemplate->m_data);
+        return that->m_functionTemplate->m_callback(arguments)->vmValue();
+    }
+
+    Persistent<FunctionTemplate> m_functionTemplate;
+};
+
+DEFINE_MANAGED_VTABLE(V4V8Function);
+
+Local<FunctionTemplate> FunctionTemplate::New(InvocationCallback callback, Handle<Value> data)
+{
+    FunctionTemplate *ft = new FunctionTemplate;
+    ft->m_callback = callback;
+    ft->m_data = Persistent<Value>::New(data);
+    return Local<FunctionTemplate>::New(Handle<FunctionTemplate>(ft));
+}
+
+Local<Function> FunctionTemplate::GetFunction()
+{
+    VM::ExecutionEngine *engine = currentEngine();
+    VM::Object *o = new (engine->memoryManager) V4V8Function(engine, m_instanceTemplate.get(), this);
+    VM::Object *proto = new (engine->memoryManager) V4V8Object<VM::FunctionPrototype>(engine, m_prototypeTemplate.get());
+    o->prototype = proto;
+    return Local<Function>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+}
+
+Local<ObjectTemplate> FunctionTemplate::InstanceTemplate()
+{
+    if (m_instanceTemplate.IsEmpty())
+        m_instanceTemplate = ObjectTemplate::New();
+    return m_instanceTemplate;
+}
+
+Local<ObjectTemplate> FunctionTemplate::PrototypeTemplate()
+{
+    if (m_prototypeTemplate.IsEmpty())
+        m_prototypeTemplate = ObjectTemplate::New();
+    return m_prototypeTemplate;
+}
+
 
 struct V8AccessorGetter: FunctionObject {
     AccessorGetter getter;
@@ -1477,23 +1532,6 @@ Local<Object> ObjectTemplate::NewInstance()
     VM::ExecutionEngine *engine = currentEngine();
     VM::Object *o = new (engine->memoryManager) V4V8Object<VM::Object>(engine, this);
     o->prototype = engine->objectPrototype;
-
-    foreach (const Accessor &acc, m_accessors) {
-        VM::PropertyDescriptor *pd = o->insertMember(acc.name->asVMString());
-        *pd = VM::PropertyDescriptor::fromAccessor(acc.getter->vmValue().asFunctionObject(),
-                                                   acc.setter->vmValue().asFunctionObject());
-        pd->writable = VM::PropertyDescriptor::Undefined;
-        pd->configurable = acc.attribute & DontDelete ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
-        pd->enumerable = acc.attribute & DontEnum ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
-    }
-
-    foreach (const Property &p, m_properties) {
-        VM::PropertyDescriptor *pd = o->insertMember(p.name->asVMString());
-        *pd = VM::PropertyDescriptor::fromValue(p.value->vmValue());
-        pd->writable = p.attributes & ReadOnly ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
-        pd->configurable = p.attributes & DontDelete ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
-        pd->enumerable = p.attributes & DontEnum ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
-    }
 
     return Local<Object>::New(Value::fromVmValue(VM::Value::fromObject(o)));
 }

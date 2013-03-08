@@ -124,6 +124,7 @@ struct Q_V4_EXPORT Object: Managed {
     ExternalResource *externalResource;
 
     Object(ExecutionEngine *engine);
+    Object(ExecutionContext *context);
     ~Object();
 
     PropertyDescriptor *__getOwnProperty__(ExecutionContext *ctx, String *name);
