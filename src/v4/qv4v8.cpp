@@ -168,11 +168,13 @@ Local<Value> Script::Run()
 Local<Value> Script::Run(Handle<Object> qml)
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Value> Script::Id()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 void Script::SetData(Handle<String> data)
@@ -200,47 +202,56 @@ int Message::GetLineNumber() const
 Local<StackFrame> StackTrace::GetFrame(uint32_t index) const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 int StackTrace::GetFrameCount() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Array> StackTrace::AsArray()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<StackTrace> StackTrace::CurrentStackTrace(int frame_limit, StackTrace::StackTraceOptions options)
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 
 int StackFrame::GetLineNumber() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 int StackFrame::GetColumn() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<String> StackFrame::GetScriptName() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<String> StackFrame::GetScriptNameOrSourceURL() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<String> StackFrame::GetFunctionName() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 
@@ -296,6 +307,7 @@ bool Value::IsNumber() const
 bool Value::IsExternal() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 bool Value::IsInt32() const
@@ -306,6 +318,7 @@ bool Value::IsInt32() const
 bool Value::IsUint32() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 bool Value::IsDate() const
@@ -493,6 +506,7 @@ int String::Write(uint16_t *buffer, int start, int length, int options) const
 {
     // ### do we use options?
     memcpy(buffer + start, asQString().constData(), length*sizeof(QChar));
+    Q_UNREACHABLE();
 }
 
 v8::Local<String> String::Empty()
@@ -503,11 +517,13 @@ v8::Local<String> String::Empty()
 bool String::IsExternal() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 String::ExternalStringResource *String::GetExternalStringResource() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 String *String::Cast(v8::Value *obj)
@@ -538,6 +554,7 @@ Local<String> String::NewSymbol(const char *data, int length)
 Local<String> String::NewExternal(String::ExternalStringResource *resource)
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 QString String::asQString() const
@@ -646,11 +663,13 @@ struct ExternalResourceWrapper : public QQmlJS::VM::Object::ExternalResource
 bool Object::Set(Handle<Value> key, Handle<Value> value, PropertyAttribute attribs)
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 bool Object::Set(uint32_t index, Handle<Value> value)
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Value> Object::Get(Handle<Value> key)
@@ -703,6 +722,7 @@ bool Object::Delete(uint32_t index)
 bool Object::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSetter setter, Handle<Value> data, AccessControl settings, PropertyAttribute attribute)
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Array> Object::GetPropertyNames()
@@ -752,6 +772,7 @@ bool Object::SetPrototype(Handle<Value> prototype)
 Local<Value> Object::GetInternalField(int index)
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 void Object::SetInternalField(int index, Handle<Value> value)
@@ -791,16 +812,19 @@ int Object::GetIdentityHash()
 bool Object::SetHiddenValue(Handle<String> key, Handle<Value> value)
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Value> Object::GetHiddenValue(Handle<String> key)
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Object> Object::Clone()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 bool Object::IsCallable()
@@ -1036,16 +1060,19 @@ RegExp *RegExp::Cast(Value *obj)
 Local<Value> External::Wrap(void *data)
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 void *External::Unwrap(Handle<v8::Value> obj)
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<External> External::New(void *value)
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 External *External::Cast(v8::Value *obj)
@@ -1056,6 +1083,7 @@ External *External::Cast(v8::Value *obj)
 void *External::Value() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 
@@ -1073,41 +1101,49 @@ void Template::Set(const char *name, Handle<Data> value)
 int Arguments::Length() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Value> Arguments::operator [](int i) const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Function> Arguments::Callee() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Object> Arguments::This() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Object> Arguments::Holder() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 bool Arguments::IsConstructCall() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Value> Arguments::Data() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Isolate *Arguments::GetIsolate() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 
@@ -1150,6 +1186,7 @@ Local<FunctionTemplate> FunctionTemplate::New(InvocationCallback callback, Handl
 Local<Function> FunctionTemplate::GetFunction()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<ObjectTemplate> FunctionTemplate::InstanceTemplate()
@@ -1176,6 +1213,7 @@ Local<ObjectTemplate> ObjectTemplate::New()
 Local<Object> ObjectTemplate::NewInstance()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 void ObjectTemplate::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSetter setter, Handle<Value> data, AccessControl settings, PropertyAttribute attribute)
@@ -1201,6 +1239,7 @@ void ObjectTemplate::SetIndexedPropertyHandler(IndexedPropertyGetter getter, Ind
 int ObjectTemplate::InternalFieldCount()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 void ObjectTemplate::SetInternalFieldCount(int value)
@@ -1211,6 +1250,7 @@ void ObjectTemplate::SetInternalFieldCount(int value)
 bool ObjectTemplate::HasExternalResource()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 void ObjectTemplate::SetHasExternalResource(bool value)
@@ -1303,6 +1343,7 @@ Isolate::~Isolate()
 Isolate *Isolate::New()
 {
     assert(!"Isolate::New()");
+    Q_UNREACHABLE();
 }
 
 void Isolate::Enter()
@@ -1330,6 +1371,7 @@ void Isolate::SetData(void *data)
 void *Isolate::GetData()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Isolate *Isolate::GetCurrent()
@@ -1383,21 +1425,25 @@ void V8::AddImplicitReferences(Persistent<Object> parent, Persistent<Value> *chi
 bool V8::Initialize()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 bool V8::Dispose()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 bool V8::IdleNotification(int hint)
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 void V8::LowMemoryNotification()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 TryCatch::TryCatch()
@@ -1413,21 +1459,25 @@ TryCatch::~TryCatch()
 bool TryCatch::HasCaught() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Handle<Value> TryCatch::ReThrow()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Value> TryCatch::Exception() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Message> TryCatch::Message() const
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 void TryCatch::Reset()
@@ -1477,16 +1527,19 @@ Local<Context> Context::GetCurrent()
 Local<Context> Context::GetCalling()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Object> Context::GetCallingQmlGlobal()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Local<Value> Context::GetCallingScriptData()
 {
     Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 void Context::Enter()
