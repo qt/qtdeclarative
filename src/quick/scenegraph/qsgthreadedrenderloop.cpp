@@ -523,37 +523,6 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor)
     }
 }
 
-void QSGRenderThread::initializeOpenGL()
-{
-    RLDEBUG1("    Render: initializeOpenGL()");
-    QWindow *win = m_windows.at(0).window;
-    bool temp = false;
-
-    // Workaround for broken expose logic... We should not get an
-    // expose when the size of a window is invalid, but we sometimes do.
-    // On Mac this leads to harmless, yet annoying, console warnings
-    if (m_windows.at(0).size.isEmpty()) {
-        temp = true;
-        win = new QWindow();
-        win->setFormat(m_windows.at(0).window->requestedFormat());
-        win->setSurfaceType(QWindow::OpenGLSurface);
-        win->setGeometry(0, 0, 64, 64);
-        win->create();
-    }
-
-    gl = new QOpenGLContext();
-    // Pick up the surface format from one of them
-    gl->setFormat(win->requestedFormat());
-    gl->create();
-    if (!gl->makeCurrent(win))
-        qWarning("QQuickWindow: makeCurrent() failed...");
-    sg->initialize(gl);
-
-    if (temp) {
-        delete win;
-    }
-}
-
 /*!
     Enters the mutex lock to make sure GUI is blocking and performs
     sync, then wakes GUI.
@@ -692,10 +661,10 @@ void QSGRenderThread::run()
     while (!shouldExit) {
 
         if (m_windows.size() > 0) {
-            if (!gl)
-                initializeOpenGL();
-            if (!sg->isReady())
+            if (!sg->isReady()) {
+                gl->makeCurrent(m_windows.at(0).window);
                 sg->initialize(gl);
+            }
             syncAndRender();
         }
 
@@ -879,6 +848,15 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
         m_thread->shouldExit = false;
 
         RLDEBUG1("GUI: - starting render thread...");
+
+        if (!m_thread->gl) {
+            QOpenGLContext *ctx = new QOpenGLContext();
+            ctx->setFormat(window->requestedFormat());
+            ctx->create();
+            ctx->moveToThread(m_thread);
+            m_thread->gl = ctx;
+        }
+
         m_thread->start();
 
     } else {
