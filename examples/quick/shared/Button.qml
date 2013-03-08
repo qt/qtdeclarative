@@ -43,14 +43,31 @@ import QtQuick 2.0
 Item {
     id: container
 
-    property string text: "Button"
-    property string subText: ""
+    property alias text: buttonLabel.text
+    property alias label: buttonLabel
     signal clicked
     property alias containsMouse: mouseArea.containsMouse
     property alias pressed: mouseArea.pressed
-    implicitHeight: col.height
-    height: implicitHeight
-    width: buttonLabel.width + 20
+    implicitHeight: buttonLabel.implicitHeight
+    implicitWidth: buttonLabel.implicitWidth
+    height: buttonLabel.implicitHeight + 12
+    width: Math.max(80, implicitWidth + 8)
+
+    SystemPalette { id: palette }
+
+    Rectangle {
+        id: frame
+        anchors.fill: parent
+        color: palette.button
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: mouseArea.pressed ? Qt.darker(palette.button, 1.3) : palette.button }
+            GradientStop { position: 1.0; color: Qt.darker(palette.button, 1.3) }
+        }
+        antialiasing: true
+        radius: 5
+        border.color: Qt.darker(palette.button, 1.5)
+        border.width: 1
+    }
 
     MouseArea {
         id: mouseArea
@@ -59,33 +76,12 @@ Item {
         hoverEnabled: true
     }
 
-    Column {
-        spacing: 2
-        id: col
-        anchors.verticalCenter: parent.verticalCenter
+    Text {
+        id: buttonLabel
         width: parent.width
-        Text {
-            id: buttonLabel
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.right: parent.right
-            anchors.rightMargin: 10
-            text: container.text
-            color: "black"
-            font.pixelSize: 22
-            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-            styleColor: "white"
-            style: Text.Raised
-
-        }
-        Text {
-            id: buttonLabel2
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            text: container.subText
-            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-            color: "#666"
-            font.pixelSize: 12
-        }
+        horizontalAlignment: Text.Center
+        text: container.text
+        color: palette.buttonText
+        anchors.verticalCenter: parent.verticalCenter
     }
 }

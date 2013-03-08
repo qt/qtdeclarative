@@ -41,62 +41,56 @@
 import QtQuick 2.0
 
 Item {
-    height: label.height + 4
-    width: label.width + height + 4
+    id: root
+    implicitHeight: frame.height
+    implicitWidth: row.implicitWidth
+    width: implicitWidth
+    height: implicitHeight
     property alias text: label.text
     property bool checked
     property alias pressed: mouseArea.pressed
-    Rectangle {
-        antialiasing: true
-        border.color: "white"
-        color: "transparent"
-        anchors.fill: gradientRect
-        anchors.rightMargin: 1
-        anchors.bottomMargin: 1
-        radius: 3
-    }
-    Rectangle {
-        border.color: "black"
-        anchors.fill: gradientRect
-        anchors.leftMargin: 1
-        anchors.topMargin: 1
-        radius: 3
-    }
-    Rectangle {
-        id: gradientRect
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: mouseArea.pressed ? "darkgrey" : "#CCCCCC" }
-            GradientStop { position: 0.6; color: "#887766" }
-            GradientStop { position: 1.0; color: mouseArea.pressed ? "white" : "#333333" }
+    signal clicked
+
+    SystemPalette { id: palette }
+
+    Row {
+        id: row
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: 6
+        Rectangle {
+            id: frame
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: mouseArea.pressed ? Qt.darker(palette.button, 1.3) : palette.button }
+                GradientStop { position: 1.0; color: Qt.darker(palette.button, 1.3) }
+            }
+            height: label.implicitHeight * 1.5
+            width: height
+            anchors.margins: 1
+            radius: 3
+            antialiasing: true
+            border.color: Qt.darker(palette.button, 1.5)
+            Image {
+                id: theX
+                source: "images/checkmark.png"
+                anchors.fill: frame
+                anchors.margins: frame.width / 5
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                visible: checked
+            }
         }
-        anchors.verticalCenter: parent.verticalCenter
-        height: parent.height
-        width: height
-        anchors.margins: 1
-        radius: 3
-    }
-    Text {
-        id: theX
-        anchors.centerIn: gradientRect
-        text: checked ? "✓" : ""
-    }
-    Text {
-        anchors.centerIn: gradientRect
-        anchors.horizontalCenterOffset: 0.5
-        anchors.verticalCenterOffset: 0.5
-        color: "white"
-        text: theX.text
-    }
-    Text {
-        id: label
-        color: "#EEEEDD"
-        anchors.left: gradientRect.right
-        anchors.leftMargin: 6
-        anchors.verticalCenter: parent.verticalCenter
+        Text {
+            id: label
+            color: palette.text
+            anchors.verticalCenter: frame.verticalCenter
+        }
     }
     MouseArea {
         id: mouseArea
         anchors.fill: parent
-        onClicked: parent.checked = !parent.checked
+        onClicked: {
+            parent.checked = !parent.checked
+            parent.clicked()
+        }
     }
 }

@@ -46,19 +46,15 @@ Rectangle {
 
     width: 580
     height: 360
-    color: "#444444"
+    color: palette.window
+    SystemPalette { id: palette }
 
     Rectangle {
         id: toolbar
         width: parent.width
         height: 40
-        border.color: "black"
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "#444444" }
-            GradientStop { position: 0.3; color: "grey" }
-            GradientStop { position: 0.85; color: "grey" }
-            GradientStop { position: 1.0; color: "white" }
-        }
+        color: Qt.darker(palette.window, 1.1)
+        border.color: Qt.darker(palette.window, 1.3)
         Row {
             spacing: 6
             anchors.verticalCenter: parent.verticalCenter
@@ -66,17 +62,17 @@ Rectangle {
             anchors.leftMargin: 8
             height: parent.height - 6
             width: parent.width
-            ToolButton {
+            Button {
                 text: "Open"
                 anchors.verticalCenter: parent.verticalCenter
                 onClicked: fileDialog.open()
             }
-            ToolButton {
+            Button {
                 text: "Close"
                 anchors.verticalCenter: parent.verticalCenter
                 onClicked: fileDialog.close()
             }
-            ToolButton {
+            Button {
                 text: "/tmp"
                 anchors.verticalCenter: parent.verticalCenter
                 // TODO: QTBUG-29814 This isn't portable, but we don't expose QDir::tempPath to QML yet.
@@ -107,7 +103,7 @@ Rectangle {
         anchors.margins: 8
         spacing: 8
         Text {
-            color: "white"
+            color: palette.windowText
             font.bold: true
             text: "File dialog properties:"
         }
@@ -139,23 +135,29 @@ Rectangle {
             Binding on checked { value: fileDialog.visible }
         }
         Text {
-            color: "#EEEEDD"
+            color: palette.windowText
             text: "<b>current view folder:</b> " + fileDialog.folder
         }
         Text {
-            color: "#EEEEDD"
-            text: "<b>name filters:</b> {" + fileDialog.nameFilters + "}; current filter: " + fileDialog.selectedNameFilter
+            color: palette.windowText
+            text: "<b>name filters:</b> {" + fileDialog.nameFilters + "}"
             width: parent.width
             wrapMode: Text.Wrap
         }
         Text {
-            color: "#EEEEDD"
+            color: palette.windowText
+            text: "<b>current filter:</b>" + fileDialog.selectedNameFilter
+            width: parent.width
+            wrapMode: Text.Wrap
+        }
+        Text {
+            color: palette.windowText
             text: "<b>chosen files:</b> " + fileDialog.fileUrls
             width: parent.width
             wrapMode: Text.Wrap
         }
         Text {
-            color: "#EEEEDD"
+            color: palette.windowText
             text: "<b>chosen single path:</b> " + fileDialog.fileUrl
             width: parent.width
             wrapMode: Text.Wrap

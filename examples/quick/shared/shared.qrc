@@ -6,7 +6,6 @@
         <file>Slider.qml</file>
         <file>images/slider_handle.png</file>
         <file>CheckBox.qml</file>
-        <file>ToolButton.qml</file>
         <file>images/back.png</file>
         <file>images/next.png</file>
     </qresource>
