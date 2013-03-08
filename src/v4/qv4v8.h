@@ -834,7 +834,7 @@ class V8EXPORT StackFrame {
 /**
  * The superclass of all JavaScript values and objects.
  */
-class V8EXPORT Value : public Data {
+class V8EXPORT Value {
  public:
   /**
    * Returns true if this value is the undefined value.  See ECMA-262
@@ -1647,9 +1647,9 @@ class V8EXPORT External : public Value {
 class V8EXPORT Template : public Data {
  public:
   /** Adds a property to each instance created by this template.*/
-  void Set(Handle<String> name, Handle<Data> value,
+  void Set(Handle<String> name, Handle<Value> value,
            PropertyAttribute attributes = None);
-  void Set(const char* name, Handle<Data> value);
+  void Set(const char* name, Handle<Value> value);
  };
 
 DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Template)

@@ -1104,12 +1104,12 @@ void *External::Value() const
 }
 
 
-void Template::Set(Handle<String> name, Handle<Data> value, PropertyAttribute attributes)
+void Template::Set(Handle<String> name, Handle<Value> value, PropertyAttribute attributes)
 {
     Q_UNIMPLEMENTED();
 }
 
-void Template::Set(const char *name, Handle<Data> value)
+void Template::Set(const char *name, Handle<Value> value)
 {
     Q_UNIMPLEMENTED();
 }
