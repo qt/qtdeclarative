@@ -456,7 +456,9 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
 
     name->makeIdentifier(ctx);
 
-    PropertyDescriptor *pd  = __getOwnProperty__(ctx, name);
+    uint member = internalClass->find(name);
+    PropertyDescriptor *pd = (member < UINT_MAX) ? memberData + member : 0;
+
     // clause 1
     if (pd) {
         if (pd->isAccessor()) {
@@ -531,7 +533,12 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
 
 void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &value)
 {
-    PropertyDescriptor *pd  = __getOwnProperty__(ctx, index);
+    PropertyDescriptor *pd = arrayAt(index);
+    if (pd && pd->type == PropertyDescriptor::Generic)
+        pd = 0;
+    if (!pd && isStringObject())
+        pd = static_cast<StringObject *>(this)->getIndex(ctx, index);
+
     // clause 1
     if (pd) {
         if (pd->isAccessor()) {
@@ -676,7 +683,11 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
     }
 
     // Clause 1
-    current = __getOwnProperty__(ctx, name);
+    {
+        uint member = internalClass->find(name);
+        current = (member < UINT_MAX) ? memberData + member : 0;
+    }
+
     if (!current) {
         // clause 3
         if (!extensible)
@@ -707,7 +718,12 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
         return static_cast<ArgumentsObject *>(this)->defineOwnProperty(ctx, index, desc);
 
     // Clause 1
-    current = __getOwnProperty__(ctx, index);
+    current = arrayAt(index);
+    if (current && current->type == PropertyDescriptor::Generic)
+        current = 0;
+    if (!current && isStringObject())
+        current = static_cast<StringObject *>(this)->getIndex(ctx, index);
+
     if (!current) {
         // clause 3
         if (!extensible)
