@@ -296,7 +296,7 @@ public:
         , stopEventProcessing(false)
     {
         sg->moveToThread(this);
-        vsyncDelta = QGuiApplication::primaryScreen()->refreshRate();
+        vsyncDelta = qsgrl_animation_interval();
     }
 
 
