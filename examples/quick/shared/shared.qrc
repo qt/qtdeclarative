@@ -8,5 +8,7 @@
         <file>CheckBox.qml</file>
         <file>images/back.png</file>
         <file>images/next.png</file>
+        <file>images/qt-logo.png</file>
+        <file>images/checkmark.png</file>
     </qresource>
 </RCC>

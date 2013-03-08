@@ -39,20 +39,36 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtQuick.Window 2.0
+import QtQuick.Window 2.1
 
+//! [splash-properties]
 Window {
-    width: 640
-    height: 480
-    visible: true //It's false by default
-    property Component self
-    Component.onCompleted: self = Qt.createComponent("Window.qml")
-    Text{
-        text: "Hello World!"
-        anchors.centerIn: parent
+    visible: true
+    width: splashImage.width
+    height: splashImage.height
+    color: "transparent"
+    title: "Splash Window"
+    modality: Qt.ApplicationModal
+    flags: Qt.SplashScreen
+    property int timeout: 2000
+//! [splash-properties]
+//! [screen-properties]
+    x: (Screen.width - splashImage.width) / 2
+    y: (Screen.height - splashImage.height) / 2
+//! [screen-properties]
+
+    Image {
+        id: splashImage
+        source: "../../shared/images/qt-logo.png"
+        MouseArea {
+            anchors.fill: parent
+            onClicked: Qt.quit()
+        }
     }
-    MouseArea{
-        anchors.fill: parent
-        onClicked: self.createObject();
+    //! [timer]
+    Timer {
+        interval: timeout; running: true; repeat: false
+        onTriggered: visible = false
     }
+    //! [timer]
 }
