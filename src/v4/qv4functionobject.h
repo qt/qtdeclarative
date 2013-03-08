@@ -131,6 +131,7 @@ struct Function {
     bool hasDirectEval;
     bool usesArgumentsObject;
     bool isStrict;
+    bool isNamedExpression;
 
     Function(String *name)
         : name(name)
@@ -143,6 +144,7 @@ struct Function {
         , hasDirectEval(false)
         , usesArgumentsObject(false)
         , isStrict(false)
+        , isNamedExpression(false)
     {}
     ~Function();
 

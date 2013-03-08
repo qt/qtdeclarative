@@ -45,6 +45,7 @@ VM::Function *EvalInstructionSelection::createFunctionMapping(VM::Function *oute
     vmFunction->hasNestedFunctions = !irFunction->nestedFunctions.isEmpty();
     vmFunction->isStrict = irFunction->isStrict;
     vmFunction->outer = outer;
+    vmFunction->isNamedExpression = irFunction->isNamedExpression;
 
     if (outer)
         outer->nestedFunctions.append(vmFunction);

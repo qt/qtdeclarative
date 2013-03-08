@@ -654,7 +654,8 @@ struct Function {
     uint hasDirectEval: 1;
     uint usesArgumentsObject : 1;
     uint isStrict: 1;
-    uint unused : 29;
+    uint isNamedExpression : 1;
+    uint unused : 28;
 
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
 
@@ -668,6 +669,7 @@ struct Function {
         , hasDirectEval(false)
         , usesArgumentsObject(false)
         , isStrict(false)
+        , isNamedExpression(false)
         , unused(0)
     { this->name = newString(name); }
 

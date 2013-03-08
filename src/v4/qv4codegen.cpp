@@ -404,11 +404,11 @@ protected:
         return true;
     }
 
-    void enterFunction(FunctionExpression *ast, bool enterName)
+    void enterFunction(FunctionExpression *ast, bool enterName, bool isExpression = true)
     {
         if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
             _cg->throwSyntaxError(ast->identifierToken, QCoreApplication::translate("qv4codegen", "Function name may not be eval or arguments in strict mode"));
-        enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : 0);
+        enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : 0, isExpression);
     }
 
     virtual void endVisit(FunctionExpression *)
@@ -418,7 +418,7 @@ protected:
 
     virtual bool visit(PropertyGetterSetter *ast)
     {
-        enterFunction(ast, QString(), ast->formals, ast->functionBody);
+        enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/0, /*isExpression*/false);
         return true;
     }
 
@@ -429,7 +429,7 @@ protected:
 
     virtual bool visit(FunctionDeclaration *ast)
     {
-        enterFunction(ast, /*enterName*/ true);
+        enterFunction(ast, /*enterName*/ true, /*isExpression */false);
         return true;
     }
 
@@ -449,7 +449,7 @@ protected:
     }
 
 private:
-    void enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionExpression *expr = 0)
+    void enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionExpression *expr, bool isExpression)
     {
         bool wasStrict = false;
         if (_env) {
@@ -462,6 +462,8 @@ private:
 
         enterEnvironment(ast);
         checkForArguments(formals);
+
+        _env->isNamedFunctionExpression = isExpression && !name.isEmpty();
 
         if (body)
             checkDirectivePrologue(body->elements);
@@ -1977,6 +1979,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     function->usesArgumentsObject = (_env->usesArgumentsObject == Environment::ArgumentsObjectUsed);
     function->maxNumberOfArguments = _env->maxNumberOfArguments;
     function->isStrict = _env->isStrict;
+    function->isNamedExpression = _env->isNamedFunctionExpression;
 
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (_mode == FunctionCode) {

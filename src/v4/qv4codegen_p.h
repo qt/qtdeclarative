@@ -140,6 +140,7 @@ protected:
         bool hasDirectEval;
         bool hasNestedFunctions;
         bool isStrict;
+        bool isNamedFunctionExpression;
         enum UsesArgumentsObject {
             ArgumentsObjectUnknown,
             ArgumentsObjectNotUsed,
@@ -154,6 +155,7 @@ protected:
             , hasDirectEval(false)
             , hasNestedFunctions(false)
             , isStrict(false)
+            , isNamedFunctionExpression(false)
             , usesArgumentsObject(ArgumentsObjectUnknown)
         {
             if (parent && parent->isStrict)

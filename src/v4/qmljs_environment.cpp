@@ -400,6 +400,11 @@ Value ExecutionContext::getProperty(String *name)
             if (hasProperty)
                 return v;
         }
+        if (FunctionObject *f = ctx->function) {
+            if (f->function && f->function->isNamedExpression
+                && name->isEqualTo(f->function->name))
+                return Value::fromObject(ctx->function);
+        }
     }
     throwReferenceError(Value::fromString(name));
     return Value::undefinedValue();
@@ -445,6 +450,11 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             Value v = ctx->activation->get(ctx, name, &hasProperty);
             if (hasProperty)
                 return v;
+        }
+        if (FunctionObject *f = ctx->function) {
+            if (f->function && f->function->isNamedExpression
+                && name->isEqualTo(f->function->name))
+                return Value::fromObject(ctx->function);
         }
     }
     return Value::undefinedValue();
@@ -493,6 +503,11 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             Value v = ctx->activation->get(ctx, name, &hasProperty);
             if (hasProperty)
                 return v;
+        }
+        if (FunctionObject *f = ctx->function) {
+            if (f->function && f->function->isNamedExpression
+                && name->isEqualTo(f->function->name))
+                return Value::fromObject(ctx->function);
         }
     }
     throwReferenceError(Value::fromString(name));
