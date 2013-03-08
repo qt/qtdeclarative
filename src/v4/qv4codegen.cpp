@@ -135,14 +135,17 @@ struct ComputeUseDef: IR::StmtVisitor, IR::ExprVisitor
 
     virtual void visitMove(IR::Move *s) {
         if (IR::Temp *t = s->target->asTemp()) {
-            if (t->index < 0 || t->scope != 0)
-                return;
-
-            if (! _stmt->d->defs.contains(t->index))
-                _stmt->d->defs.append(t->index);
+            if (t->index >= 0 && t->scope == 0) // only collect unscoped locals and temps
+                if (! _stmt->d->defs.contains(t->index))
+                    _stmt->d->defs.append(t->index);
         } else {
+            // source was not a temp, but maybe a sub-expression has a temp
+            // (e.g. base expressions for subscripts/member-access),
+            // so visit it.
             s->target->accept(this);
         }
+        // whatever the target expr was, always visit the source expr to collect
+        // temps there.
         s->source->accept(this);
     }
 };
