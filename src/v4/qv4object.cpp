@@ -168,8 +168,7 @@ void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value &rhs)
 {
-    bool hasProperty = false;
-    Value v = get(ctx, name, &hasProperty);
+    Value v = get(ctx, name);
     Value result;
     op(ctx, &result, v, rhs);
     put(ctx, name, result);
