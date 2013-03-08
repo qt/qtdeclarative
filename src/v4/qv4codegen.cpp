@@ -111,7 +111,10 @@ struct ComputeUseDef: IR::StmtVisitor, IR::ExprVisitor
     virtual void visitJump(IR::Jump *) {}
     virtual void visitCJump(IR::CJump *s) { s->cond->accept(this); }
     virtual void visitRet(IR::Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(IR::Try *t) { t->exceptionVar->accept(this); }
+    virtual void visitTry(IR::Try *t) {
+        if (! _stmt->d->defs.contains(t->exceptionVar->index))
+            _stmt->d->defs.append(t->exceptionVar->index);
+    }
 
     virtual void visitTemp(IR::Temp *e) {
         if (e->index < 0 || e->scope != 0)
