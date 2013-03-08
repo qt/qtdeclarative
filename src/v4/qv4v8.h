@@ -82,6 +82,7 @@
 #include "qv4managed.h"
 #include "qv4mm.h"
 #include "qv4string.h"
+#include <QStack>
 
 namespace QQmlJS {
 namespace VM {
@@ -2062,6 +2063,8 @@ class V8EXPORT ObjectTemplate : public Template {
   IndexedPropertyDeleter m_indexedPropertyDeleter;
   IndexedPropertyEnumerator m_indexedPropertyEnumerator;
   Persistent<Value> m_indexedPropertyData;
+  private:
+  ObjectTemplate();
  };
 
 DEFINE_REFCOUNTED_HANDLE_OPERATIONS(ObjectTemplate)
@@ -2220,12 +2223,12 @@ class V8EXPORT Isolate {
    */
   void* GetData();
 
-  Context *GetCurrentContext() { return m_currentContext; }
+  Context *GetCurrentContext() { return m_contextStack.top(); }
 
   private:
       friend class Context;
       Isolate* m_lastIsolate;
-      Context* m_currentContext;
+      QStack<Context*> m_contextStack;
 };
 
 

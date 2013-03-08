@@ -105,6 +105,7 @@ struct String : public Managed {
     void makeIdentifierImpl(const ExecutionContext *ctx);
 
     void createHashValue() const;
+    static uint createHashValue(const QChar *ch, int length);
 
     QString _text;
     mutable uint stringHash;

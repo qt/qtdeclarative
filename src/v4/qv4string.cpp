@@ -217,5 +217,24 @@ void String::createHashValue() const
     subtype = StringType_Regular;
 }
 
+uint String::createHashValue(const QChar *ch, int length)
+{
+    const QChar *end = ch + length;
+
+    // array indices get their number as hash value
+    bool ok;
+    uint stringHash = toArrayIndex(ch, end, &ok);
+    if (ok)
+        return stringHash;
+
+    uint h = 0xffffffff;
+    while (ch < end) {
+        h = 31 * h + ch->unicode();
+        ++ch;
+    }
+
+    return h;
+}
+
 }
 }
