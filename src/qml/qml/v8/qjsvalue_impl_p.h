@@ -372,7 +372,7 @@ inline bool QJSValuePrivate::isCallable() const
         return true;
     if (isObject()) {
         // Our C++ wrappers register function handlers but not always act as callables.
-        return v8::Object::Cast(*m_value)->IsCallable();
+        return v8::Object::Cast(m_value.get())->IsCallable();
     }
     return false;
 }
@@ -592,7 +592,7 @@ inline void QJSValuePrivate::setProperty(v8::Handle<v8::String> name, QJSValuePr
 //    if (attribs & (QJSValue::PropertyGetter | QJSValue::PropertySetter)) {
 //        engine()->originalGlobalObject()->defineGetterOrSetter(*this, name, value->m_value, attribs);
 //    } else {
-        v8::Object::Cast(*m_value)->Set(name, value->m_value, v8::PropertyAttribute(attribs & QJSConverter::PropertyAttributeMask));
+        v8::Object::Cast(m_value.get())->Set(name, value->m_value, v8::PropertyAttribute(attribs & QJSConverter::PropertyAttributeMask));
 //    }
 }
 
@@ -620,7 +620,7 @@ inline void QJSValuePrivate::setProperty(quint32 index, QJSValuePrivate* value, 
     }
 
     v8::HandleScope handleScope;
-    v8::Object::Cast(*m_value)->Set(index, value->m_value);
+    v8::Object::Cast(m_value.get())->Set(index, value->m_value);
 }
 
 inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::property(const QString& name) const
@@ -654,7 +654,7 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::property(T name) con
 {
     Q_ASSERT(isObject());
     v8::HandleScope handleScope;
-    v8::Handle<v8::Object> self(v8::Object::Cast(*m_value));
+    v8::Handle<v8::Object> self(v8::Object::Cast(m_value.get()));
 
     v8::TryCatch tryCatch;
     v8::Handle<v8::Value> result = self->Get(name);
@@ -738,14 +738,14 @@ QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::call(QJSValuePrivate* thisO
     v8::Handle<v8::Object> recv;
 
     if (!thisObject || !thisObject->isObject()) {
-        recv = v8::Handle<v8::Object>(v8::Object::Cast(*e->global()));
+        recv = v8::Handle<v8::Object>(v8::Object::Cast(e->global().get()));
     } else {
         if (!thisObject->assignEngine(e)) {
             qWarning("QJSValue::call() failed: cannot call function with thisObject created in a different engine");
             return new QJSValuePrivate(engine());
         }
 
-        recv = v8::Handle<v8::Object>(v8::Object::Cast(*thisObject->m_value));
+        recv = v8::Handle<v8::Object>(v8::Object::Cast(thisObject->m_value.get()));
     }
 
     if (argc < 0) {
@@ -754,7 +754,7 @@ QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::call(QJSValuePrivate* thisO
     }
 
     v8::TryCatch tryCatch;
-    v8::Handle<v8::Value> result = v8::Object::Cast(*m_value)->CallAsFunction(recv, argc, argv);
+    v8::Handle<v8::Value> result = v8::Object::Cast(m_value.get())->CallAsFunction(recv, argc, argv);
 
     if (result.IsEmpty()) {
         result = tryCatch.Exception();
@@ -777,7 +777,7 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::callAsConstructor(in
     }
 
     v8::TryCatch tryCatch;
-    v8::Handle<v8::Value> result = v8::Object::Cast(*m_value)->CallAsConstructor(argc, argv);
+    v8::Handle<v8::Value> result = v8::Object::Cast(m_value.get())->CallAsConstructor(argc, argv);
 
     if (result.IsEmpty())
         result = tryCatch.Exception();

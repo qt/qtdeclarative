@@ -102,7 +102,7 @@ QT_BEGIN_NAMESPACE
 // a handle, qFatal() is called.
 // #define QML_GLOBAL_HANDLE_DEBUGGING
 
-#define V8ENGINE() ((QV8Engine *)v8::External::Cast(*args.Data())->Value())
+#define V8ENGINE() ((QV8Engine *)v8::External::Cast(args.Data().get())->Value())
 #define V8FUNCTION(function, engine) v8::FunctionTemplate::New(function, v8::External::New((QV8Engine*)engine))->GetFunction()
 #define V8THROW_ERROR(string) { \
     v8::ThrowException(v8::Exception::Error(v8::String::New(string))); \
@@ -112,7 +112,7 @@ QT_BEGIN_NAMESPACE
     v8::ThrowException(v8::Exception::TypeError(v8::String::New(string))); \
     return v8::Handle<v8::Value>(); \
 }
-#define V8ENGINE_ACCESSOR() ((QV8Engine *)v8::External::Cast(*info.Data())->Value());
+#define V8ENGINE_ACCESSOR() ((QV8Engine *)v8::External::Cast(info.Data().get())->Value());
 #define V8THROW_ERROR_SETTER(string) { \
     v8::ThrowException(v8::Exception::Error(v8::String::New(string))); \
     return; \

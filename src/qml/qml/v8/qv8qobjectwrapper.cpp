@@ -277,7 +277,7 @@ static v8::Handle<v8::Value> GenericValueGetter(v8::Local<v8::String>, const v8:
     if (QQmlData::wasDeleted(object)) return v8::Undefined();
 
     QQmlPropertyData *property =
-        (QQmlPropertyData *)v8::External::Cast(*info.Data())->Value();
+            (QQmlPropertyData *)v8::External::Cast(info.Data().get())->Value();
 
     QQmlEngine *engine = resource->engine->engine();
     QQmlEnginePrivate *ep = engine?QQmlEnginePrivate::get(engine):0;
@@ -894,7 +894,7 @@ static void FastValueSetter(v8::Local<v8::String>, v8::Local<v8::Value> value,
     QObject *object = resource->object;
 
     QQmlPropertyData *property =
-        (QQmlPropertyData *)v8::External::Cast(*info.Data())->Value();
+            (QQmlPropertyData *)v8::External::Cast(info.Data().get())->Value();
 
     int index = property->coreIndex;
 

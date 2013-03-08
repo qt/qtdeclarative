@@ -77,7 +77,7 @@ void QV8SequenceWrapper::init(QV8Engine *engine)
     m_sort = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(Sort)->GetFunction());
     m_arrayPrototype = qPersistentNew<v8::Value>(v8::Array::New(1)->GetPrototype());
     v8::Local<v8::Script> defaultSortCompareScript = v8::Script::Compile(engine->toString(defaultSortString));
-    m_defaultSortComparer = qPersistentNew<v8::Function>(v8::Handle<v8::Function>(v8::Function::Cast(*defaultSortCompareScript->Run())));
+    m_defaultSortComparer = qPersistentNew<v8::Function>(v8::Handle<v8::Function>(v8::Function::Cast(defaultSortCompareScript->Run().get())));
 
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
@@ -277,7 +277,7 @@ v8::Handle<v8::Value> QV8SequenceWrapper::Sort(const v8::Arguments &args)
         if (length > 1) {
             v8::Handle<v8::Function> jsCompareFn = sr->engine->sequenceWrapper()->m_defaultSortComparer;
             if (argCount == 1 && args[0]->IsFunction())
-                jsCompareFn = v8::Handle<v8::Function>(v8::Function::Cast(*args[0]));
+                jsCompareFn = v8::Handle<v8::Function>(v8::Function::Cast(args[0].get()));
 
             sr->sort(jsCompareFn);
         }
