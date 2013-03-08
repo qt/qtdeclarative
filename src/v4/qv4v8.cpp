@@ -769,7 +769,7 @@ Local<Value> Object::GetPrototype()
 
 bool Object::SetPrototype(Handle<Value> prototype)
 {
-    QQmlJS::VM::Object *p = ConstValuePtr(*prototype)->asObject();
+    QQmlJS::VM::Object *p = ConstValuePtr(&prototype)->asObject();
     if (!p)
         return false;
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
@@ -1066,22 +1066,28 @@ RegExp *RegExp::Cast(Value *obj)
     return static_cast<RegExp *>(obj);
 }
 
+struct VoidStarWrapper : public VM::Object::ExternalResource
+{
+    void *data;
+};
+
 Local<Value> External::Wrap(void *data)
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return New(data);
 }
 
 void *External::Unwrap(Handle<v8::Value> obj)
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return obj.As<External>()->Value();
 }
 
 Local<External> External::New(void *value)
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    VM::Object *o = currentEngine()->newObject();
+    VoidStarWrapper *wrapper = new VoidStarWrapper;
+    wrapper->data = value;
+    o->externalResource = wrapper;
+    return Local<v8::External>::New(v8::Value::fromVmValue(VM::Value::fromObject(o)));
 }
 
 External *External::Cast(v8::Value *obj)
@@ -1091,8 +1097,10 @@ External *External::Cast(v8::Value *obj)
 
 void *External::Value() const
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    VM::Object *o = ConstValuePtr(this)->asObject();
+    if (!o || !o->externalResource)
+        return 0;
+    return static_cast<VoidStarWrapper*>(o->externalResource)->data;
 }
 
 
@@ -1200,25 +1208,26 @@ Local<Function> FunctionTemplate::GetFunction()
 
 Local<ObjectTemplate> FunctionTemplate::InstanceTemplate()
 {
-    if (!*m_instanceTemplate)
+    if (m_instanceTemplate.IsEmpty())
         m_instanceTemplate = ObjectTemplate::New();
     return m_instanceTemplate;
 }
 
 Local<ObjectTemplate> FunctionTemplate::PrototypeTemplate()
 {
-    if (!*m_prototypeTemplate)
+    if (m_prototypeTemplate.IsEmpty())
         m_prototypeTemplate = ObjectTemplate::New();
     return m_prototypeTemplate;
 }
 
-class V4V8Object : public VM::Object
+template <typename BaseClass>
+class V4V8Object : public BaseClass
 {
 public:
     V4V8Object(VM::ExecutionEngine *engine, ObjectTemplate *tmpl)
-        : VM::Object(engine)
+        : BaseClass(engine)
     {
-        vtbl = &static_vtbl;
+        this->vtbl = &static_vtbl;
         m_template = Persistent<ObjectTemplate>(tmpl);
     }
 
@@ -1243,7 +1252,7 @@ protected:
 
     static const ManagedVTable static_vtbl;
 
-    static VM::Value get(Managed *m, ExecutionContext *ctx, VM::String *name, bool *hasProperty)
+    static VM::Value get(VM::Managed *m, ExecutionContext *ctx, VM::String *name, bool *hasProperty)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_namedPropertyGetter) {
@@ -1256,7 +1265,7 @@ protected:
         }
 
         bool hasProp = false;
-        VM::Value result = VM::Object::get(m, ctx, name, &hasProp);
+        VM::Value result = BaseClass::get(m, ctx, name, &hasProp);
 
         if (!hasProp && that->m_template->m_fallbackPropertyGetter) {
             Handle<Value> fallbackResult = that->m_template->m_fallbackPropertyGetter(String::New(name), that->fallbackAccessorInfo());
@@ -1272,7 +1281,7 @@ protected:
         return result;
     }
 
-    static VM::Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+    static VM::Value getIndexed(VM::Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_indexedPropertyGetter) {
@@ -1283,10 +1292,10 @@ protected:
                 return result->vmValue();
             }
         }
-        return VM::Object::getIndexed(m, ctx, index, hasProperty);
+        return BaseClass::getIndexed(m, ctx, index, hasProperty);
     }
 
-    static void put(Managed *m, ExecutionContext *ctx, VM::String *name, const VM::Value &value)
+    static void put(VM::Managed *m, ExecutionContext *ctx, VM::String *name, const VM::Value &value)
     {
         Local<Value> v8Value = Local<Value>::New(Value::fromVmValue(value));
         V4V8Object *that = static_cast<V4V8Object*>(m);
@@ -1301,10 +1310,10 @@ protected:
         else if (that->m_template->m_fallbackPropertySetter)
             that->m_template->m_fallbackPropertySetter(String::New(name), v8Value, that->fallbackAccessorInfo());
         else
-            VM::Object::put(m, ctx, name, value);
+            BaseClass::put(m, ctx, name, value);
     }
 
-    static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const VM::Value &value)
+    static void putIndexed(VM::Managed *m, ExecutionContext *ctx, uint index, const VM::Value &value)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_indexedPropertySetter) {
@@ -1312,7 +1321,7 @@ protected:
             if (!result.IsEmpty())
                 return;
         }
-        VM::Object::putIndexed(m, ctx, index, value);
+        BaseClass::putIndexed(m, ctx, index, value);
     }
 
     static PropertyFlags propertyAttributesToFlags(const Handle<Value> &attr)
@@ -1328,7 +1337,7 @@ protected:
         return PropertyFlags(flags);
     }
 
-    static PropertyFlags query(Managed *m, ExecutionContext *ctx, VM::String *name)
+    static PropertyFlags query(VM::Managed *m, ExecutionContext *ctx, VM::String *name)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_namedPropertyQuery) {
@@ -1336,7 +1345,7 @@ protected:
             if (!result.IsEmpty())
                 return propertyAttributesToFlags(result);
         }
-        PropertyFlags flags = VM::Object::query(m, ctx, name);
+        PropertyFlags flags = BaseClass::query(m, ctx, name);
         if (flags == 0 && that->m_template->m_fallbackPropertySetter) {
             Handle<Value> result = that->m_template->m_fallbackPropertyQuery(String::New(name), that->fallbackAccessorInfo());
             if (!result.IsEmpty())
@@ -1346,7 +1355,7 @@ protected:
         return flags;
     }
 
-    static PropertyFlags queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
+    static PropertyFlags queryIndexed(VM::Managed *m, ExecutionContext *ctx, uint index)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_indexedPropertyQuery) {
@@ -1355,10 +1364,10 @@ protected:
                 return propertyAttributesToFlags(result);
         }
 
-        return VM::Object::queryIndexed(m, ctx, index);
+        return BaseClass::queryIndexed(m, ctx, index);
     }
 
-    static bool deleteProperty(Managed *m, ExecutionContext *ctx, VM::String *name)
+    static bool deleteProperty(VM::Managed *m, ExecutionContext *ctx, VM::String *name)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_namedPropertyDeleter) {
@@ -1367,7 +1376,7 @@ protected:
                 return result->Value();
         }
 
-        bool result = VM::Object::deleteProperty(m, ctx, name);
+        bool result = BaseClass::deleteProperty(m, ctx, name);
 
         if (that->m_template->m_fallbackPropertyDeleter) {
             Handle<Boolean> interceptResult = that->m_template->m_fallbackPropertyDeleter(String::New(name), that->fallbackAccessorInfo());
@@ -1378,7 +1387,7 @@ protected:
         return result;
     }
 
-    static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
+    static bool deleteIndexedProperty(VM::Managed *m, ExecutionContext *ctx, uint index)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_indexedPropertyDeleter) {
@@ -1386,11 +1395,14 @@ protected:
             if (!result.IsEmpty())
                 return result->Value();
         }
-        return VM::Object::deleteIndexedProperty(m, ctx, index);
+        return BaseClass::deleteIndexedProperty(m, ctx, index);
     }
 };
 
-DEFINE_MANAGED_VTABLE(V4V8Object);
+template<>
+DEFINE_MANAGED_VTABLE(V4V8Object<VM::Object>);
+template<>
+DEFINE_MANAGED_VTABLE(V4V8Object<VM::FunctionObject>);
 
 struct V8AccessorGetter: FunctionObject {
     AccessorGetter getter;
@@ -1462,7 +1474,7 @@ Local<ObjectTemplate> ObjectTemplate::New()
 Local<Object> ObjectTemplate::NewInstance()
 {
     VM::ExecutionEngine *engine = currentEngine();
-    VM::Object *o = new (engine->memoryManager) V4V8Object(engine, this);
+    VM::Object *o = new (engine->memoryManager) V4V8Object<VM::Object>(engine, this);
     o->prototype = engine->objectPrototype;
 
     foreach (const Accessor &acc, m_accessors) {

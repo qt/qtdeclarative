@@ -305,7 +305,8 @@ struct Handle {
     bool IsEmpty() const { return HandleOperations<T>::isEmpty(this); }
 
     T *operator->() const { return HandleOperations<T>::get(this); }
-    T *operator*() const { return HandleOperations<T>::get(this); }
+
+    T *get() const { return HandleOperations<T>::get(this); }
 
     template <typename Source>
     static Handle<T> Cast(Handle<Source> that)
@@ -395,7 +396,7 @@ template <class T> class Local : public Handle<T> {
  public:
   Local() {}
   template <class S> Local(Local<S> that)
-      : Handle<T>(reinterpret_cast<T*>(*that)) {
+      : Handle<T>(Handle<T>::Cast(that)) {
     /**
      * This check fails when trying to convert between incompatible
      * handles. For example, converting from a Handle<String> to a
@@ -410,7 +411,7 @@ template <class T> class Local : public Handle<T> {
     // that the handle isn't empty before doing the checked cast.
     if (that.IsEmpty()) return Local<T>();
 #endif
-    return Local<T>(T::Cast(*that));
+    return Local<T>::New(Handle<T>::Cast(that));
   }
 
   template <class S> Local<S> As() {
@@ -467,7 +468,7 @@ template <class T> class Persistent : public Handle<T> {
    * is allowed as String is a subclass of Value.
    */
   template <class S> Persistent(Persistent<S> that)
-      : Handle<T>(reinterpret_cast<T*>(*that)) {
+      : Handle<T>(Handle<T>::Cast(that)) {
       HandleOperations<T>::protect(this);
   }
 
