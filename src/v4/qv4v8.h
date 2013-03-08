@@ -1650,6 +1650,13 @@ class V8EXPORT Template : public Data {
   void Set(Handle<String> name, Handle<Value> value,
            PropertyAttribute attributes = None);
   void Set(const char* name, Handle<Value> value);
+
+  struct Property {
+      Persistent<String> name;
+      Persistent<Value> value;
+      PropertyAttribute attributes;
+  };
+  QVector<Property> m_properties;
  };
 
 DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Template)

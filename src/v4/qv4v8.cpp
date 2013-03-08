@@ -1106,12 +1106,16 @@ void *External::Value() const
 
 void Template::Set(Handle<String> name, Handle<Value> value, PropertyAttribute attributes)
 {
-    Q_UNIMPLEMENTED();
+    Property p;
+    p.name = Persistent<String>::New(name);
+    p.value = Persistent<Value>::New(value);
+    p.attributes = attributes;
+    m_properties << p;
 }
 
 void Template::Set(const char *name, Handle<Value> value)
 {
-    Q_UNIMPLEMENTED();
+    Set(String::New(name), value);
 }
 
 
@@ -1484,6 +1488,14 @@ Local<Object> ObjectTemplate::NewInstance()
         pd->writable = VM::PropertyDescriptor::Undefined;
         pd->configurable = acc.attribute & DontDelete ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
         pd->enumerable = acc.attribute & DontEnum ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
+    }
+
+    foreach (const Property &p, m_properties) {
+        VM::PropertyDescriptor *pd = o->insertMember(p.name->asVMString());
+        *pd = VM::PropertyDescriptor::fromValue(p.value->vmValue());
+        pd->writable = p.attributes & ReadOnly ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
+        pd->configurable = p.attributes & DontDelete ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
+        pd->enumerable = p.attributes & DontEnum ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
     }
 
     return Local<Object>::New(Value::fromVmValue(VM::Value::fromObject(o)));
