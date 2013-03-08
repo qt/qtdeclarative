@@ -79,24 +79,6 @@ String *DiagnosticMessage::buildFullMessage(ExecutionContext *ctx) const
     return ctx->engine->newString(msg);
 }
 
-bool ExecutionContext::hasBinding(String *name) const
-{
-    if (!function)
-        return false;
-
-    for (unsigned int i = 0; i < function->varCount; ++i) {
-        if (function->varList[i]->isEqualTo(name))
-            return true;
-    }
-    for (unsigned int i = 0; i < function->formalParameterCount; ++i) {
-        if (function->formalParameterList[i]->isEqualTo(name))
-            return true;
-    }
-    if (activation)
-        return activation->__hasProperty__(this, name);
-    return false;
-}
-
 void ExecutionContext::createMutableBinding(String *name, bool deletable)
 {
     if (!activation)
