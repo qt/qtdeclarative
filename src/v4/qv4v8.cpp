@@ -1119,52 +1119,49 @@ void Template::Set(const char *name, Handle<Value> value)
 }
 
 
+Arguments::Arguments(const VM::Value *args, int argc, const VM::Value &thisObject, bool isConstructor, const Persistent<Value> &data)
+{
+    for (int i = 0; i < argc; ++i)
+        m_args << Persistent<Value>::New(Value::fromVmValue(args[i]));
+    m_thisObject = Persistent<Object>::New(Value::fromVmValue(thisObject));
+    m_isConstructor = isConstructor;
+    m_data = Persistent<Value>::New(data);
+}
+
 int Arguments::Length() const
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return m_args.size();
 }
 
 Local<Value> Arguments::operator [](int i) const
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
-}
-
-Local<Function> Arguments::Callee() const
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return Local<Value>::New(m_args.at(i));
 }
 
 Local<Object> Arguments::This() const
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return Local<Object>::New(m_thisObject);
 }
 
 Local<Object> Arguments::Holder() const
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    // ### FIXME.
+    return Local<Object>::New(m_thisObject);
 }
 
 bool Arguments::IsConstructCall() const
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return m_isConstructor;
 }
 
 Local<Value> Arguments::Data() const
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return Local<Value>::New(m_data);
 }
 
 Isolate *Arguments::GetIsolate() const
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return Isolate::GetCurrent();
 }
 
 

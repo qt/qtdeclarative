@@ -1669,15 +1669,21 @@ DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Template)
  */
 class V8EXPORT Arguments {
  public:
+    Arguments(const QQmlJS::VM::Value *args, int argc, const QQmlJS::VM::Value &thisObject, bool isConstructor,
+              const Persistent<Value> &data);
   int Length() const;
   Local<Value> operator[](int i) const;
-  Local<Function> Callee() const;
   Local<Object> This() const;
   Local<Object> Holder() const;
   bool IsConstructCall() const;
   Local<Value> Data() const;
   Isolate* GetIsolate() const;
 
+private:
+  QVector<Persistent<Value> > m_args;
+  Persistent<Object> m_thisObject;
+  bool m_isConstructor;
+  Persistent<Value> m_data;
 };
 
 
