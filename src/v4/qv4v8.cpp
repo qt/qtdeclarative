@@ -217,12 +217,26 @@ Local<Value> Script::Run()
     if (context.IsEmpty())
         context = Context::GetCurrent();
     ASSERT(context.get());
-    QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(context->GetEngine()->rootContext, m_origin.m_fileName, m_script, QQmlJS::Codegen::EvalCode,
-                                                                    /*strictMode =*/ false, /*inheritContext =*/ false);
-    if (!f)
-        return Local<Value>();
+    VM::ExecutionEngine *engine = context->GetEngine();
+    VM::ExecutionContext *ctx = engine->current;
 
-    QQmlJS::VM::Value result = context->GetEngine()->run(f);
+    VM::Value result = VM::Value::undefinedValue();
+    try {
+        QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(engine->rootContext, m_origin.m_fileName, m_script, QQmlJS::Codegen::EvalCode,
+                                                                        /*strictMode =*/ false, /*inheritContext =*/ false);
+        if (!f)
+            __qmljs_throw(engine->current, VM::Value::fromObject(engine->newSyntaxErrorObject(engine->current, 0)));
+
+        result = context->GetEngine()->run(f);
+    } catch (VM::Exception &e) {
+        Isolate *i = Isolate::GetCurrent();
+        if (i->tryCatch) {
+            i->tryCatch->hasCaughtException = true;
+            i->tryCatch->exception = Local<Value>::New(Value::fromVmValue(e.value()));
+        }
+        e.accept(ctx);
+    }
+
     return Local<Value>::New(Value::fromVmValue(result));
 }
 
@@ -232,14 +246,26 @@ Local<Value> Script::Run(Handle<Object> qml)
     if (context.IsEmpty())
         context = Context::GetCurrent();
     ASSERT(context.get());
-
     VM::ExecutionEngine *engine = context->GetEngine();
+    VM::ExecutionContext *ctx = engine->current;
 
-    VM::EvalFunction *eval = new (engine->memoryManager) VM::EvalFunction(engine->rootContext, qml->vmValue().asObject());
+    VM::Value result = VM::Value::undefinedValue();
 
-    VM::Value arg = VM::Value::fromString(engine->current, m_script);
+    try {
 
-    VM::Value result = eval->evalCall(engine->rootContext, VM::Value::undefinedValue(), &arg, 1, /*directCall*/ false);
+        VM::EvalFunction *eval = new (engine->memoryManager) VM::EvalFunction(engine->rootContext, qml->vmValue().asObject());
+
+        VM::Value arg = VM::Value::fromString(engine->current, m_script);
+
+        result = eval->evalCall(engine->rootContext, VM::Value::undefinedValue(), &arg, 1, /*directCall*/ false);
+    } catch (VM::Exception &e) {
+        Isolate *i = Isolate::GetCurrent();
+        if (i->tryCatch) {
+            i->tryCatch->hasCaughtException = true;
+            i->tryCatch->exception = Local<Value>::New(Value::fromVmValue(e.value()));
+        }
+        e.accept(ctx);
+    }
     return Local<Value>::New(Value::fromVmValue(result));
 }
 
@@ -576,6 +602,8 @@ int String::Write(uint16_t *buffer, int start, int length, int options) const
         length = asQString().length();
     if (length == 0)
         return 0;
+    if (asQString().length() < length)
+        length = asQString().length();
     // ### do we use options?
     memcpy(buffer + start, asQString().constData(), length*sizeof(QChar));
     return length;
@@ -1752,6 +1780,7 @@ static QThreadStorage<Isolate*> currentIsolate;
 
 Isolate::Isolate()
     : m_lastIsolate(0)
+    , tryCatch(0)
 {
 }
 
@@ -1865,20 +1894,25 @@ void V8::LowMemoryNotification()
     Q_UNREACHABLE();
 }
 
+
 TryCatch::TryCatch()
 {
-    Q_UNIMPLEMENTED();
+    Isolate *i = Isolate::GetCurrent();
+
+    hasCaughtException = false;
+    parent = i->tryCatch;
+    i->tryCatch = this;
 }
 
 TryCatch::~TryCatch()
 {
-    Q_UNIMPLEMENTED();
+    Isolate *i = Isolate::GetCurrent();
+    i->tryCatch = parent;
 }
 
 bool TryCatch::HasCaught() const
 {
-    Q_UNIMPLEMENTED();
-    return false;
+    return hasCaughtException;
 }
 
 Handle<Value> TryCatch::ReThrow()
@@ -1889,19 +1923,18 @@ Handle<Value> TryCatch::ReThrow()
 
 Local<Value> TryCatch::Exception() const
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return exception;
 }
 
 Local<Message> TryCatch::Message() const
 {
     Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return Local<v8::Message>::New(Handle<v8::Message>(new v8::Message(QString(), QString(), 0)));
 }
 
 void TryCatch::Reset()
 {
-    Q_UNIMPLEMENTED();
+    hasCaughtException = false;
 }
 
 

@@ -83,6 +83,7 @@
 #include "qv4mm.h"
 #include "qv4string.h"
 #include <QStack>
+#include <QSharedData>
 
 namespace QQmlJS {
 namespace VM {
@@ -90,6 +91,7 @@ struct Value;
 struct String;
 struct ExecutionEngine;
 struct Object;
+struct MemoryManager;
 }
 }
 
@@ -133,6 +135,7 @@ class AccessorInfo;
 class StackTrace;
 class StackFrame;
 class Isolate;
+class TryCatch;
 
 void V8EXPORT gcProtect(void *handle);
 void V8EXPORT gcUnprotect(void *handle);
@@ -456,6 +459,9 @@ template <class T> class Persistent : public Handle<T> {
    * storage cell.
    */
   Persistent() {}
+  ~Persistent() {
+      HandleOperations<T>::unProtect(this);
+  }
 
   /**
    * Creates a persistent handle for the same storage cell as the
@@ -516,6 +522,8 @@ template <class T> class Persistent : public Handle<T> {
    */
   void Dispose() {
        HandleOperations<T>::unProtect(this);
+       HandleOperations<T>::deref(this);
+       HandleOperations<T>::init(this);
   }
 
   void Dispose(Isolate*) {
@@ -529,7 +537,6 @@ template <class T> class Persistent : public Handle<T> {
    * it the object reference and the given parameters.
    */
   void MakeWeak(void* parameters, WeakReferenceCallback callback);
-
 };
 
 
@@ -714,8 +721,11 @@ DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Script)
 /**
  * An error message.
  */
-class V8EXPORT Message {
+class V8EXPORT Message : public QSharedData {
  public:
+    Message(const QString &message, const QString &resourceName, int lineNumber)
+        : m_message(message), m_resourceName(resourceName), m_lineNumber(lineNumber) {}
+
   Local<String> Get() const;
   /**
    * Returns the resource name for the script from where the function causing
@@ -2227,8 +2237,11 @@ class V8EXPORT Isolate {
 
   private:
       friend class Context;
+      friend class TryCatch;
+      friend class Script;
       Isolate* m_lastIsolate;
       QStack<Context*> m_contextStack;
+      TryCatch *tryCatch;
 };
 
 
@@ -2315,7 +2328,6 @@ class V8EXPORT V8 {
   static void LowMemoryNotification();
 };
 
-
 /**
  * An external exception handler.
  */
@@ -2373,6 +2385,11 @@ class V8EXPORT TryCatch {
    */
   void Reset();
 
+private:
+    friend class Script;
+    TryCatch *parent;
+    bool hasCaughtException;
+    Local<Value> exception;
 };
 
 
