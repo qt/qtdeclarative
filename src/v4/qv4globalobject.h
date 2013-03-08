@@ -52,6 +52,7 @@ namespace VM {
 struct Q_V4_EXPORT EvalFunction : FunctionObject
 {
     EvalFunction(ExecutionContext *scope);
+    EvalFunction(ExecutionContext *scope, Object *qmlActivation);
 
     static QQmlJS::VM::Function *parseSource(QQmlJS::VM::ExecutionContext *ctx,
                                              const QString &fileName,
@@ -63,6 +64,8 @@ struct Q_V4_EXPORT EvalFunction : FunctionObject
 
     using Managed::construct;
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+    Object *qmlActivation;
 
 protected:
     static const ManagedVTable static_vtbl;

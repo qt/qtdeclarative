@@ -343,10 +343,20 @@ DEFINE_MANAGED_VTABLE(EvalFunction);
 
 EvalFunction::EvalFunction(ExecutionContext *scope)
     : FunctionObject(scope)
+    , qmlActivation(0)
 {
     vtbl = &static_vtbl;
     name = scope->engine->id_eval;
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
+}
+
+EvalFunction::EvalFunction(ExecutionContext *scope, Object *qmlActivation)
+    : FunctionObject(scope)
+{
+    vtbl = &static_vtbl;
+    name = scope->engine->id_eval;
+    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
+    this->qmlActivation = qmlActivation;
 }
 
 Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc, bool directCall)
@@ -376,9 +386,11 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
         return Value::undefinedValue();
 
     bool strict = f->isStrict || (directCall && context->strictMode);
+    if (qmlActivation)
+        strict = true;
 
     uint size = requiredMemoryForExecutionContect(this, 0);
-    ExecutionContext *k = static_cast<ExecutionContext *>(alloca(size));
+    ExecutionContext *k = static_cast<ExecutionContext *>(malloc(size));
 
     if (strict) {
         ctx = k;
@@ -387,6 +399,8 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
         ctx->arguments = 0;
         ctx->argumentCount = 0;
         ctx->initCallContext(context);
+
+        ctx->activation = qmlActivation;
     }
 
     // set the correct strict mode flag on the context

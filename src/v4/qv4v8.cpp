@@ -228,8 +228,19 @@ Local<Value> Script::Run()
 
 Local<Value> Script::Run(Handle<Object> qml)
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    Handle<Context> context = m_context;
+    if (context.IsEmpty())
+        context = Context::GetCurrent();
+    ASSERT(context.get());
+
+    VM::ExecutionEngine *engine = context->GetEngine();
+
+    VM::EvalFunction *eval = new (engine->memoryManager) VM::EvalFunction(engine->rootContext, qml->vmValue().asObject());
+
+    VM::Value arg = VM::Value::fromString(engine->current, m_script);
+
+    VM::Value result = eval->evalCall(engine->rootContext, VM::Value::undefinedValue(), &arg, 1, /*directCall*/ false);
+    return Local<Value>::New(Value::fromVmValue(result));
 }
 
 Local<Value> Script::Id()
@@ -263,56 +274,56 @@ int Message::GetLineNumber() const
 Local<StackFrame> StackTrace::GetFrame(uint32_t index) const
 {
     Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return Local<StackFrame>();
 }
 
 int StackTrace::GetFrameCount() const
 {
     Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return 0;
 }
 
 Local<Array> StackTrace::AsArray()
 {
     Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return Local<Array>();
 }
 
 Local<StackTrace> StackTrace::CurrentStackTrace(int frame_limit, StackTrace::StackTraceOptions options)
 {
     Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return Local<StackTrace>();
 }
 
 
 int StackFrame::GetLineNumber() const
 {
     Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return 0;
 }
 
 int StackFrame::GetColumn() const
 {
     Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return 0;
 }
 
 Local<String> StackFrame::GetScriptName() const
 {
     Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return Local<String>();
 }
 
 Local<String> StackFrame::GetScriptNameOrSourceURL() const
 {
     Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return Local<String>();
 }
 
 Local<String> StackFrame::GetFunctionName() const
 {
     Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return Local<String>();
 }
 
 
@@ -956,7 +967,8 @@ Object *Object::Cast(Value *obj)
 uint32_t Array::Length() const
 {
     VM::ArrayObject *a = ConstValuePtr(this)->asArrayObject();
-    assert(a);
+    if (!a)
+        return 0;
     return a->arrayLength();
 }
 
@@ -1866,7 +1878,7 @@ TryCatch::~TryCatch()
 bool TryCatch::HasCaught() const
 {
     Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return false;
 }
 
 Handle<Value> TryCatch::ReThrow()
@@ -1939,8 +1951,15 @@ Local<Context> Context::GetCalling()
 
 Local<Object> Context::GetCallingQmlGlobal()
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    VM::ExecutionEngine *engine = GetCurrent()->GetEngine();
+    VM::ExecutionContext *ctx = engine->current;
+    while (ctx && ctx->outer != engine->rootContext)
+        ctx = ctx->outer;
+
+    if (!ctx)
+        return Local<Object>();
+
+    return Local<Object>::New(Value::fromVmValue(VM::Value::fromObject(ctx->activation)));
 }
 
 Local<Value> Context::GetCallingScriptData()
