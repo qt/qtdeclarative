@@ -69,18 +69,29 @@ namespace v8 {
 #define ValuePtr(obj) reinterpret_cast<QQmlJS::VM::Value*>(obj)
 #define ConstValuePtr(obj) reinterpret_cast<const QQmlJS::VM::Value*>(obj)
 
-void gcProtect(void *handle)
+void *gcProtect(void *handle)
 {
     Q_D(handle);
-    if (VM::Managed *m = d->asManaged())
+    if (VM::Managed *m = d->asManaged()) {
         currentEngine()->memoryManager->protect(m);
+        return currentEngine()->memoryManager;
+    }
 }
 
-void gcUnprotect(void *handle)
+void gcProtect(void *memoryManager, void *handle)
 {
     Q_D(handle);
     if (VM::Managed *m = d->asManaged())
-        currentEngine()->memoryManager->unprotect(m);
+        if (memoryManager)
+            static_cast<VM::MemoryManager *>(memoryManager)->protect(m);
+}
+
+void gcUnprotect(void *memoryManager, void *handle)
+{
+    Q_D(handle);
+    if (VM::Managed *m = d->asManaged())
+        if (memoryManager)
+            static_cast<VM::MemoryManager *>(memoryManager)->unprotect(m);
 }
 
 struct V8AccessorGetter: FunctionObject {
@@ -177,6 +188,7 @@ Local<Script> Script::New(Handle<String> source,
     s->m_script = source->ToString()->asQString();
     if (origin)
         s->m_origin = *origin;
+    qDebug() << "script" << s << (flags & QmlMode) << source->asQString();
     s->m_flags = flags;
     s->m_context = Handle<Context>();
     return Local<Script>::New(Handle<Script>(s));
@@ -197,6 +209,7 @@ Local<Script> Script::Compile(Handle<String> source, ScriptOrigin *origin, Scrip
     s->m_script = source->ToString()->asQString();
     if (origin)
         s->m_origin = *origin;
+    qDebug() << "script" << s << (flags & QmlMode) << source->asQString();
     s->m_flags = flags;
     s->m_context = Context::GetCurrent();
     return Local<Script>::New(Handle<Script>(s));
@@ -213,6 +226,7 @@ Local<Script> Script::Compile(Handle<String> source,
 
 Local<Value> Script::Run()
 {
+    qDebug() << "run" << this;
     Handle<Context> context = m_context;
     if (context.IsEmpty())
         context = Context::GetCurrent();
@@ -242,6 +256,7 @@ Local<Value> Script::Run()
 
 Local<Value> Script::Run(Handle<Object> qml)
 {
+    qDebug() << "runQml" << this;
     Handle<Context> context = m_context;
     if (context.IsEmpty())
         context = Context::GetCurrent();

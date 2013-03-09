@@ -137,8 +137,9 @@ class StackFrame;
 class Isolate;
 class TryCatch;
 
-void V8EXPORT gcProtect(void *handle);
-void V8EXPORT gcUnprotect(void *handle);
+V8EXPORT void *gcProtect(void *handle);
+V8EXPORT void gcProtect(void *memoryManager, void *handle);
+V8EXPORT void gcUnprotect(void *memoryManager, void *handle);
 
 // --- Weak Handles ---
 
@@ -212,14 +213,19 @@ struct HandleOperations
     {
     }
 
-    static void protect(Handle<T> *handle)
+    static void *protect(Handle<T> *handle)
     {
-        gcProtect(handle);
+        return gcProtect(handle);
     }
 
-    static void unProtect(Handle<T> *handle)
+    static void protect(void *memoryManager, Handle<T> *handle)
     {
-        gcUnprotect(handle);
+        gcProtect(memoryManager, handle);
+    }
+
+    static void unProtect(void *memoryManager, Handle<T> *handle)
+    {
+        gcUnprotect(memoryManager, handle);
     }
 
     static bool isEmpty(const Handle<T> *handle)
@@ -255,8 +261,9 @@ struct HandleOperations
                 handle->object = 0; \
             } \
         } \
-        static void protect(Handle<Type> *) {} \
-        static void unProtect(Handle<Type> *) {} \
+        static void *protect(Handle<Type> *) { return 0; } \
+        static void protect(void *, Handle<Type> *) {} \
+        static void unProtect(void *, Handle<Type> *) {} \
         static bool isEmpty(const Handle<Type> *handle) \
         { \
             return handle->object == 0; \
@@ -460,7 +467,24 @@ template <class T> class Persistent : public Handle<T> {
    */
   Persistent() {}
   ~Persistent() {
-      HandleOperations<T>::unProtect(this);
+      HandleOperations<T>::unProtect(m_memoryManager, this);
+  }
+
+  Persistent(const Persistent &other)
+      : Handle<T>(other)
+      , m_memoryManager(other.m_memoryManager)
+  {
+      HandleOperations<T>::protect(m_memoryManager, this);
+  }
+
+  Persistent &operator =(const Persistent &other)
+  {
+      if (&other == this)
+          return *this;
+      HandleOperations<T>::unProtect(m_memoryManager, this);
+      Handle<T>::operator =(other);
+      m_memoryManager = other.m_memoryManager;
+      HandleOperations<T>::protect(m_memoryManager, this);
   }
 
   /**
@@ -476,12 +500,13 @@ template <class T> class Persistent : public Handle<T> {
    */
   template <class S> Persistent(Persistent<S> that)
       : Handle<T>(Handle<T>::Cast(that)) {
-      HandleOperations<T>::protect(this);
+      m_memoryManager = that.m_memoryManager;
+      HandleOperations<T>::protect(m_memoryManager, this);
   }
 
   template <class S> Persistent(S* that) : Handle<T>(that)
   {
-      HandleOperations<T>::protect(this);
+      m_memoryManager = HandleOperations<T>::protect(this);
   }
 
   /**
@@ -491,7 +516,7 @@ template <class T> class Persistent : public Handle<T> {
   template <class S> explicit Persistent(Handle<S> that)
       : Handle<T>(*that)
   {
-      HandleOperations<T>::protect(this);
+      m_memoryManager = HandleOperations<T>::protect(this);
   }
 
   template <class S> static Persistent<T> Cast(Persistent<S> that) {
@@ -510,7 +535,7 @@ template <class T> class Persistent : public Handle<T> {
   {
       Persistent<T> result;
       result.Handle<T>::operator =(that);
-      HandleOperations<T>::protect(&result);
+      result.m_memoryManager = HandleOperations<T>::protect(&result);
       return result;
   }
 
@@ -521,7 +546,8 @@ template <class T> class Persistent : public Handle<T> {
    * cell remain and IsEmpty will still return false.
    */
   void Dispose() {
-       HandleOperations<T>::unProtect(this);
+       HandleOperations<T>::unProtect(m_memoryManager, this);
+       m_memoryManager = 0;
        HandleOperations<T>::deref(this);
        HandleOperations<T>::init(this);
   }
@@ -537,6 +563,8 @@ template <class T> class Persistent : public Handle<T> {
    * it the object reference and the given parameters.
    */
   void MakeWeak(void* parameters, WeakReferenceCallback callback);
+public:
+  void *m_memoryManager;
 };
 
 
