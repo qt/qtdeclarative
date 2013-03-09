@@ -59,6 +59,11 @@
 
 #include "../3rdparty/double-conversion/double-conversion.h"
 
+#if USE(LIBUNWIND_DEBUG)
+#include <libunwind.h>
+#include <execinfo.h>
+#endif
+
 namespace QQmlJS {
 namespace VM {
 
@@ -1002,6 +1007,26 @@ void __qmljs_throw(ExecutionContext *context, const Value &value)
 {
     if (context->engine->debugger)
         context->engine->debugger->aboutToThrow(value);
+
+#if USE(LIBUNWIND_DEBUG)
+    printf("about to throw exception. walking stack first with libunwind:\n");
+    unw_cursor_t cursor; unw_context_t uc;
+    unw_word_t ip, sp;
+
+    unw_getcontext(&uc);
+    unw_init_local(&cursor, &uc);
+    while (unw_step(&cursor) > 0) {
+        unw_get_reg(&cursor, UNW_REG_IP, &ip);
+        unw_get_reg(&cursor, UNW_REG_SP, &sp);
+        printf("ip = %lx, sp = %lx ", (long) ip, (long) sp);
+        void * const addr = (void*)ip;
+        char **symbol = backtrace_symbols(&addr, 1);
+        printf("%s", symbol[0]);
+        free(symbol);
+        printf("\n");
+    }
+    printf("stack walked. throwing exception now...\n");
+#endif
 
     throw Exception(context, value);
 }

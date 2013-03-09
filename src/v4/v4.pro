@@ -150,6 +150,18 @@ linux*|mac {
     LIBS += -ldl
 }
 
+debug-with-libunwind {
+    UW_INC=$$(LIBUNWIND_INCLUDES)
+    isEmpty(UW_INC): error("Please set LIBUNWIND_INCLUDES")
+    INCLUDEPATH += $$UW_INC
+    UW_LIBS=$$(LIBUNWIND_LIBS)
+    isEmpty(UW_LIBS): error("Please set LIBUNWIND_LIBS")
+    LIBS += -L$$UW_LIBS
+    equals(QT_ARCH, arm): LIBS += -lunwind-arm
+    LIBS += -lunwind-dwarf-common -lunwind-dwarf-local -lunwind-elf32 -lunwind
+    DEFINES += WTF_USE_LIBUNWIND_DEBUG=1
+}
+
 include(moth/moth.pri)
 include(../3rdparty/masm/masm.pri)
 include(../3rdparty/double-conversion/double-conversion.pri)
