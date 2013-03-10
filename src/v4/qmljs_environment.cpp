@@ -129,7 +129,7 @@ bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, 
             }
     }
 
-    if (activation && activation->__hasProperty__(scope, name)) {
+    if (activation && (qmlObject || activation->__hasProperty__(scope, name))) {
         activation->put(scope, name, value);
         return true;
     }
@@ -233,6 +233,7 @@ void ExecutionContext::init(ExecutionEngine *eng)
     exceptionVarName = 0;
     exceptionValue = Value::undefinedValue();
     strictMode = false;
+    qmlObject = false;
     activation = 0;
     withObject = 0;
 }
@@ -253,6 +254,7 @@ void ExecutionContext::init(ExecutionContext *p, Object *with)
     exceptionVarName = 0;
     exceptionValue = Value::undefinedValue();
     strictMode = false;
+    qmlObject = false;
     activation = 0;
     withObject = with;
 }
@@ -272,6 +274,7 @@ void ExecutionContext::initForCatch(ExecutionContext *p, String *exceptionVarNam
     this->exceptionVarName = exceptionVarName;
     this->exceptionValue = exceptionValue;
     strictMode = p->strictMode;
+    qmlObject = false;
     activation = 0;
     withObject = 0;
 }
@@ -584,6 +587,7 @@ void ExecutionContext::initCallContext(ExecutionContext *parent)
     withObject = 0;
 
     strictMode = function->strictMode;
+    qmlObject = false;
 
     if (function->function)
         lookups = function->function->lookups;

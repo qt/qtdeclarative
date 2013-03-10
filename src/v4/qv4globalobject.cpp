@@ -401,6 +401,7 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
         ctx->initCallContext(context);
 
         ctx->activation = qmlActivation;
+        ctx->qmlObject = qmlActivation;
     }
 
     // set the correct strict mode flag on the context

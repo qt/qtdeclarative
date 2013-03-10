@@ -97,6 +97,7 @@ struct ExecutionContext
     unsigned int variableCount() const;
 
     bool strictMode;
+    bool qmlObject; // ## temporary until we do proper QML contexts
 
     Object *activation;
     Object *withObject;
