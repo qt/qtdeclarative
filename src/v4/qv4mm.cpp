@@ -388,7 +388,6 @@ void MemoryManager::collectFromStack() const
 #else
 #  error "Unsupported platform: no way to get the top-of-stack."
 #endif
-//    qDebug() << "stack:" << hex << stackTop << stackSize << (stackTop + stackSize);
 
     quintptr *current = (&valueOnStack) + 1;
 //    qDebug() << "collectFromStack";// << top << current << &valueOnStack;
@@ -398,7 +397,7 @@ void MemoryManager::collectFromStack() const
     int i = 0;
     for (QVector<Data::Chunk>::Iterator it = m_d->heapChunks.begin(), end =
          m_d->heapChunks.end(); it != end; ++it) {
-        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base());
+        heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base()) - 1;
         heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base()) + it->memory.size() - it->chunkSize;
     }
     assert(i == m_d->heapChunks.count() * 2);
@@ -421,7 +420,7 @@ void MemoryManager::collectFromStack() const
             Managed *m = reinterpret_cast<Managed *>(genericPtr);
 //            qDebug() << "   inside" << size;
 
-            if (((quintptr)m - (quintptr)heapChunkBoundaries[index-1]) % size)
+            if (((quintptr)m - (quintptr)heapChunkBoundaries[index-1] - 1   ) % size)
                 // wrongly aligned value, skip it
                 continue;
 
