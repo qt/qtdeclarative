@@ -1582,11 +1582,17 @@ protected:
 
 DEFINE_MANAGED_VTABLE(V4V8Function);
 
+FunctionTemplate::FunctionTemplate(InvocationCallback callback, Handle<Value> data)
+    : m_callback(callback)
+{
+    m_instanceTemplate = Local<ObjectTemplate>();
+    m_prototypeTemplate = Local<ObjectTemplate>();
+    m_data = Persistent<Value>::New(data);
+}
+
 Local<FunctionTemplate> FunctionTemplate::New(InvocationCallback callback, Handle<Value> data)
 {
-    FunctionTemplate *ft = new FunctionTemplate;
-    ft->m_callback = callback;
-    ft->m_data = Persistent<Value>::New(data);
+    FunctionTemplate *ft = new FunctionTemplate(callback, data);
     return Local<FunctionTemplate>::New(Handle<FunctionTemplate>(ft));
 }
 
@@ -1612,7 +1618,6 @@ Local<ObjectTemplate> FunctionTemplate::PrototypeTemplate()
         m_prototypeTemplate = ObjectTemplate::New();
     return m_prototypeTemplate;
 }
-
 
 
 Local<ObjectTemplate> ObjectTemplate::New()
