@@ -114,7 +114,14 @@ struct V8AccessorGetter: FunctionObject {
     {
         V8AccessorGetter *getter = static_cast<V8AccessorGetter*>(that);
         AccessorInfo info(thisObject, getter->data);
-        return getter->getter(Local<String>::New(getter->name), info)->vmValue();
+        VM::Value result = VM::Value::undefinedValue();
+        try {
+            result = getter->getter(Local<String>::New(getter->name), info)->vmValue();
+        } catch (VM::Exception &e) {
+            Isolate::GetCurrent()->setException(e.value());
+            e.accept(context);
+        }
+        return result;
     }
 
 protected:
@@ -145,7 +152,12 @@ struct V8AccessorSetter: FunctionObject {
             return VM::Value::undefinedValue();
         V8AccessorSetter *setter = static_cast<V8AccessorSetter*>(that);
         AccessorInfo info(thisObject, setter->data);
-        setter->setter(Local<String>::New(setter->name), Local<Value>::New(Value::fromVmValue(args[0])), info);
+        try {
+            setter->setter(Local<String>::New(setter->name), Local<Value>::New(Value::fromVmValue(args[0])), info);
+        } catch (VM::Exception &e) {
+            Isolate::GetCurrent()->setException(e.value());
+            e.accept(context);
+        }
         return VM::Value::undefinedValue();
     }
 
@@ -243,11 +255,7 @@ Local<Value> Script::Run()
 
         result = context->GetEngine()->run(f);
     } catch (VM::Exception &e) {
-        Isolate *i = Isolate::GetCurrent();
-        if (i->tryCatch) {
-            i->tryCatch->hasCaughtException = true;
-            i->tryCatch->exception = Local<Value>::New(Value::fromVmValue(e.value()));
-        }
+        Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
     }
 
@@ -274,11 +282,7 @@ Local<Value> Script::Run(Handle<Object> qml)
 
         result = eval->evalCall(engine->rootContext, VM::Value::undefinedValue(), &arg, 1, /*directCall*/ false);
     } catch (VM::Exception &e) {
-        Isolate *i = Isolate::GetCurrent();
-        if (i->tryCatch) {
-            i->tryCatch->hasCaughtException = true;
-            i->tryCatch->exception = Local<Value>::New(Value::fromVmValue(e.value()));
-        }
+        Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
     }
     return Local<Value>::New(Value::fromVmValue(result));
@@ -785,9 +789,16 @@ bool Object::Set(Handle<Value> key, Handle<Value> value, PropertyAttribute attri
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
     QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
-    o->put(ctx, ValuePtr(&key)->toString(ctx), *ValuePtr(&value));
-    // ### attribs
-    return true;
+    bool result = true;
+    try {
+        o->put(ctx, ValuePtr(&key)->toString(ctx), *ValuePtr(&value));
+        // ### attribs
+    } catch (VM::Exception &e) {
+        Isolate::GetCurrent()->setException(e.value());
+        e.accept(ctx);
+        result = false;
+    }
+    return result;
 }
 
 bool Object::Set(uint32_t index, Handle<Value> value)
@@ -801,7 +812,13 @@ Local<Value> Object::Get(Handle<Value> key)
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
     QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
-    QQmlJS::VM::Value prop = o->get(ctx, ValuePtr(&key)->toString(ctx));
+    QQmlJS::VM::Value prop = VM::Value::undefinedValue();
+    try {
+        prop = o->get(ctx, ValuePtr(&key)->toString(ctx));
+    } catch (VM::Exception &e) {
+        Isolate::GetCurrent()->setException(e.value());
+        e.accept(ctx);
+    }
     return Local<Value>::New(Value::fromVmValue(prop));
 }
 
@@ -810,7 +827,13 @@ Local<Value> Object::Get(uint32_t key)
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
     QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
-    QQmlJS::VM::Value prop = o->getIndexed(ctx, key);
+    QQmlJS::VM::Value prop = VM::Value::undefinedValue();
+    try {
+        prop = o->getIndexed(ctx, key);
+    } catch (VM::Exception &e) {
+        Isolate::GetCurrent()->setException(e.value());
+        e.accept(ctx);
+    }
     return Local<Value>::New(Value::fromVmValue(prop));
 }
 
@@ -825,7 +848,15 @@ bool Object::Delete(Handle<String> key)
 {
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
-    return o->deleteProperty(currentEngine()->current, ValuePtr(&key)->asString());
+    bool result = false;
+    ExecutionContext *ctx = currentEngine()->current;
+    try {
+        result = o->deleteProperty(ctx, ValuePtr(&key)->asString());
+    } catch (VM::Exception &e) {
+        Isolate::GetCurrent()->setException(e.value());
+        e.accept(ctx);
+    }
+    return result;
 }
 
 bool Object::Has(uint32_t index)
@@ -840,7 +871,15 @@ bool Object::Delete(uint32_t index)
 {
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
-    return o->deleteIndexedProperty(currentEngine()->current, index);
+    ExecutionContext *ctx = currentEngine()->current;
+    bool result = false;
+    try {
+        result = o->deleteIndexedProperty(ctx, index);
+    } catch (VM::Exception &e) {
+        Isolate::GetCurrent()->setException(e.value());
+        e.accept(ctx);
+    }
+    return result;
 }
 
 bool Object::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSetter setter, Handle<Value> data, AccessControl settings, PropertyAttribute attribute)
@@ -1840,6 +1879,14 @@ void *Isolate::GetData()
 {
     Q_UNIMPLEMENTED();
     Q_UNREACHABLE();
+}
+
+void Isolate::setException(const VM::Value &ex)
+{
+    if (tryCatch) {
+        tryCatch->hasCaughtException = true;
+        tryCatch->exception = Local<Value>::New(Value::fromVmValue(ex));
+    }
 }
 
 Isolate *Isolate::GetCurrent()

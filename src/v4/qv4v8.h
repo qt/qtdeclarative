@@ -2263,11 +2263,11 @@ class V8EXPORT Isolate {
   void* GetData();
 
   Context *GetCurrentContext() { return m_contextStack.top(); }
+  void setException(const QQmlJS::VM::Value &ex);
 
   private:
       friend class Context;
       friend class TryCatch;
-      friend class Script;
       Isolate* m_lastIsolate;
       QStack<Context*> m_contextStack;
       TryCatch *tryCatch;
@@ -2415,7 +2415,7 @@ class V8EXPORT TryCatch {
   void Reset();
 
 private:
-    friend class Script;
+    friend class Isolate;
     TryCatch *parent;
     bool hasCaughtException;
     Local<Value> exception;
