@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,47 +39,62 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include "qquickqfiledialog_p.h"
-#include "qquickqcolordialog_p.h"
+#ifndef QQUICKABSTRACTCOLORDIALOG_P_H
+#define QQUICKABSTRACTCOLORDIALOG_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQml>
+#include <QQuickView>
+#include <QtGui/qpa/qplatformdialoghelper.h>
+#include <qpa/qplatformtheme.h>
+#include "qquickabstractdialog_p.h"
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule QtQuick.PrivateWidgets 1
-    \title QWidget QML Types
-    \ingroup qmlmodules
-    \brief Provides QML types for certain QWidgets
-    \internal
-
-    This QML module contains types which should not be depended upon in QtQuick
-    applications, but are available if the Widgets module is linked. It is
-    recommended to load components from this module conditionally, if at all,
-    and to provide fallback implementations in case they fail to load.
-
-    \code
-    import QtQuick.PrivateWidgets 1.0
-    \endcode
-
-    \since 5.1
-*/
-
-class QtQuick2PrivateWidgetsPlugin : public QQmlExtensionPlugin
+class QQuickAbstractColorDialog : public QQuickAbstractDialog
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+    Q_PROPERTY(bool showAlphaChannel READ showAlphaChannel WRITE setShowAlphaChannel NOTIFY showAlphaChannelChanged)
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
 
 public:
-    virtual void registerTypes(const char *uri)
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.PrivateWidgets"));
+    QQuickAbstractColorDialog(QObject *parent = 0);
+    virtual ~QQuickAbstractColorDialog();
 
-        qmlRegisterType<QQuickQFileDialog>(uri, 1, 0, "QtFileDialog");
-        qmlRegisterType<QQuickQColorDialog>(uri, 1, 0, "QtColorDialog");
-    }
+    virtual QString title() const;
+    bool showAlphaChannel() const;
+    QColor color() const { return m_color; }
+
+public Q_SLOTS:
+    void setVisible(bool v);
+    void setModality(Qt::WindowModality m);
+    void setTitle(QString t);
+    void setColor(QColor arg);
+    void setShowAlphaChannel(bool arg);
+
+Q_SIGNALS:
+    void showAlphaChannelChanged();
+    void colorChanged();
+    void selectionAccepted();
+
+protected:
+    QPlatformColorDialogHelper *m_dlgHelper;
+    QSharedPointer<QColorDialogOptions> m_options;
+    QColor m_color;
+
+    Q_DISABLE_COPY(QQuickAbstractColorDialog)
 };
 
 QT_END_NAMESPACE
 
-#include "widgetsplugin.moc"
+#endif // QQUICKABSTRACTCOLORDIALOG_P_H

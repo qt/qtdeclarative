@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,47 +39,77 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include "qquickqfiledialog_p.h"
-#include "qquickqcolordialog_p.h"
+#include "qquickabstractcolordialog_p.h"
+#include "qquickitem.h"
+
+#include <private/qguiapplication_p.h>
+#include <QWindow>
+#include <QQuickWindow>
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule QtQuick.PrivateWidgets 1
-    \title QWidget QML Types
-    \ingroup qmlmodules
-    \brief Provides QML types for certain QWidgets
-    \internal
-
-    This QML module contains types which should not be depended upon in QtQuick
-    applications, but are available if the Widgets module is linked. It is
-    recommended to load components from this module conditionally, if at all,
-    and to provide fallback implementations in case they fail to load.
-
-    \code
-    import QtQuick.PrivateWidgets 1.0
-    \endcode
-
-    \since 5.1
-*/
-
-class QtQuick2PrivateWidgetsPlugin : public QQmlExtensionPlugin
+QQuickAbstractColorDialog::QQuickAbstractColorDialog(QObject *parent)
+    : QQuickAbstractDialog(parent)
+    , m_dlgHelper(0)
+    , m_options(QSharedPointer<QColorDialogOptions>(new QColorDialogOptions()))
 {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+    // On the Mac, modality doesn't work unless you call exec().  But this is a reasonable default anyway.
+    m_modality = Qt::NonModal;
+    connect(this, SIGNAL(accepted()), this, SIGNAL(selectionAccepted()));
+}
 
-public:
-    virtual void registerTypes(const char *uri)
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.PrivateWidgets"));
+QQuickAbstractColorDialog::~QQuickAbstractColorDialog()
+{
+}
 
-        qmlRegisterType<QQuickQFileDialog>(uri, 1, 0, "QtFileDialog");
-        qmlRegisterType<QQuickQColorDialog>(uri, 1, 0, "QtColorDialog");
+void QQuickAbstractColorDialog::setVisible(bool v)
+{
+    if (helper() && v) {
+        m_dlgHelper->setOptions(m_options);
     }
-};
+    QQuickAbstractDialog::setVisible(v);
+}
+
+void QQuickAbstractColorDialog::setModality(Qt::WindowModality m)
+{
+#ifdef Q_OS_MAC
+    // On the Mac, modality doesn't work unless you call exec()
+    m_modality = Qt::NonModal;
+    emit modalityChanged();
+    return;
+#endif
+    QQuickAbstractDialog::setModality(m);
+}
+
+QString QQuickAbstractColorDialog::title() const
+{
+    return m_options->windowTitle();
+}
+
+bool QQuickAbstractColorDialog::showAlphaChannel() const
+{
+    return m_options->testOption(QColorDialogOptions::ShowAlphaChannel);
+}
+
+void QQuickAbstractColorDialog::setTitle(QString t)
+{
+    if (m_options->windowTitle() == t) return;
+    m_options->setWindowTitle(t);
+    emit titleChanged();
+}
+
+void QQuickAbstractColorDialog::setColor(QColor arg)
+{
+    if (m_color != arg) {
+        m_color = arg;
+        emit colorChanged();
+    }
+}
+
+void QQuickAbstractColorDialog::setShowAlphaChannel(bool arg)
+{
+    m_options->setOption(QColorDialogOptions::ShowAlphaChannel, arg);
+    emit showAlphaChannelChanged();
+}
 
 QT_END_NAMESPACE
-
-#include "widgetsplugin.moc"

@@ -44,6 +44,9 @@
 #include "qquickfiledialog_p.h"
 #include "qquickabstractfiledialog_p.h"
 #include "qquickplatformfiledialog_p.h"
+#include "qquickcolordialog_p.h"
+#include "qquickabstractcolordialog_p.h"
+#include "qquickplatformcolordialog_p.h"
 #include <private/qguiapplication_p.h>
 
 //#define PURE_QML_ONLY
@@ -95,6 +98,15 @@ public:
 #endif
             registerWidgetOrQmlImplementation<QQuickFileDialog>(widgetsDir, "WidgetFileDialog.qml",
                 qmlDir, "DefaultFileDialog.qml", "FileDialog", uri);
+
+        // ColorDialog
+#ifndef PURE_QML_ONLY
+        if (QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(QPlatformTheme::ColorDialog))
+            qmlRegisterType<QQuickPlatformColorDialog>(uri, DIALOGS_MAJOR_MINOR, "ColorDialog");
+        else
+#endif
+            registerWidgetOrQmlImplementation<QQuickColorDialog>(widgetsDir, "WidgetColorDialog.qml",
+                qmlDir, "DefaultColorDialog.qml", "ColorDialog", uri);
     }
 
 protected:

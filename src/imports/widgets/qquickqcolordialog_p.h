@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,47 +39,40 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include "qquickqfiledialog_p.h"
-#include "qquickqcolordialog_p.h"
+#ifndef QQUICKQCOLORDIALOG_P_H
+#define QQUICKQCOLORDIALOG_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include "../dialogs/qquickabstractcolordialog_p.h"
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule QtQuick.PrivateWidgets 1
-    \title QWidget QML Types
-    \ingroup qmlmodules
-    \brief Provides QML types for certain QWidgets
-    \internal
-
-    This QML module contains types which should not be depended upon in QtQuick
-    applications, but are available if the Widgets module is linked. It is
-    recommended to load components from this module conditionally, if at all,
-    and to provide fallback implementations in case they fail to load.
-
-    \code
-    import QtQuick.PrivateWidgets 1.0
-    \endcode
-
-    \since 5.1
-*/
-
-class QtQuick2PrivateWidgetsPlugin : public QQmlExtensionPlugin
+class QQuickQColorDialog : public QQuickAbstractColorDialog
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    virtual void registerTypes(const char *uri)
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.PrivateWidgets"));
+    QQuickQColorDialog(QObject *parent = 0);
+    virtual ~QQuickQColorDialog();
 
-        qmlRegisterType<QQuickQFileDialog>(uri, 1, 0, "QtFileDialog");
-        qmlRegisterType<QQuickQColorDialog>(uri, 1, 0, "QtColorDialog");
-    }
+protected:
+    QPlatformColorDialogHelper *helper();
+
+    Q_DISABLE_COPY(QQuickQColorDialog)
 };
 
 QT_END_NAMESPACE
 
-#include "widgetsplugin.moc"
+QML_DECLARE_TYPE(QQuickQColorDialog *)
+
+#endif // QQUICKQCOLORDIALOG_P_H
