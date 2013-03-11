@@ -23,8 +23,6 @@ QML_FILES += \
     qml/TextField.qml \
     qml/qmldir \
     images/folder.png \
-    images/titlebar.png \
-    images/titlebar.sci \
     images/up.png
 
 QT += quick-private gui-private core-private

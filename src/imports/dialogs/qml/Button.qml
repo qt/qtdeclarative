@@ -41,49 +41,47 @@
 import QtQuick 2.1
 
 Item {
-    height: label.implicitHeight * 2
-    width: Math.max(label.implicitWidth * 1.2, height * 2.5);
-    anchors.verticalCenter: parent.verticalCenter
-    property alias text: label.text
-    property string tooltip
+    id: container
+
+    property alias text: buttonLabel.text
+    property alias label: buttonLabel
     signal clicked
+    property alias containsMouse: mouseArea.containsMouse
+    property alias pressed: mouseArea.pressed
+    implicitHeight: buttonLabel.implicitHeight
+    implicitWidth: buttonLabel.implicitWidth
+    height: buttonLabel.implicitHeight + 12
+    width: Math.max(80, implicitWidth + 8)
+
     SystemPalette { id: palette }
+
     Rectangle {
-        antialiasing: true
-        border.color: mouseArea.pressed ? palette.highlight : palette.light
-        color: "transparent"
+        id: frame
         anchors.fill: parent
-        anchors.rightMargin: 1
-        anchors.bottomMargin: 1
-        radius: 3
-    }
-    Rectangle {
-        border.color: palette.dark
-        anchors.fill: parent
-        anchors.leftMargin: 1
-        anchors.topMargin: 1
-        radius: 3
-    }
-    Rectangle {
+        color: palette.button
         gradient: Gradient {
-            GradientStop { position: 0.0; color: mouseArea.pressed ? palette.dark : palette.light }
-            GradientStop { position: 0.2; color: palette.button }
-            GradientStop { position: 0.8; color: palette.button }
-            GradientStop { position: 1.0; color: mouseArea.pressed ? palette.light : palette.dark }
+            GradientStop { position: 0.0; color: mouseArea.pressed ? Qt.darker(palette.button, 1.3) : palette.button }
+            GradientStop { position: 1.0; color: Qt.darker(palette.button, 1.3) }
         }
-        anchors.fill: parent
-        anchors.margins: 1
-        radius: 3
-    }
-    Text {
-        id: label
-        anchors.centerIn: parent
-        color: palette.buttonText
+        antialiasing: true
+        radius: 5
+        border.color: Qt.darker(palette.button, 1.5)
+        border.width: 1
     }
 
     MouseArea {
         id: mouseArea
         anchors.fill: parent
-        onClicked: parent.clicked()
+        onClicked: container.clicked()
+        hoverEnabled: true
+    }
+
+    Text {
+        id: buttonLabel
+        width: parent.width
+        horizontalAlignment: Text.Center
+        text: container.text
+        color: palette.buttonText
+        anchors.verticalCenter: parent.verticalCenter
     }
 }

@@ -53,16 +53,9 @@ Item {
     Rectangle {
         id: rect
         anchors.fill: parent
-        anchors.leftMargin: -radius
-        border.color: palette.light
         radius: height / 4
-        antialiasing: true
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: palette.dark }
-            GradientStop { position: 0.2; color: palette.button }
-            GradientStop { position: 0.8; color: palette.button }
-            GradientStop { position: 1.0; color: palette.light }
-        }
+        color: palette.button
+        border.color: Qt.darker(palette.button, 1.5)
     }
 
     TextInput {

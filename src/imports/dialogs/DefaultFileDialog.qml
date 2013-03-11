@@ -213,7 +213,7 @@ AbstractFileDialog {
             delegate: folderDelegate
             highlight: Rectangle {
                 color: "transparent"
-                border.color: palette.midlight
+                border.color: Qt.darker(palette.window, 1.3)
             }
             highlightMoveDuration: 0
             highlightMoveVelocity: -1
@@ -257,11 +257,10 @@ AbstractFileDialog {
             id: titleBar
             width: parent.width
             height: currentPathField.height * 1.5
-            BorderImage {
-                source: "images/titlebar.sci"
+            Rectangle {
                 anchors.fill: parent
-                anchors.topMargin: -7
-                anchors.bottomMargin: -7
+                color: Qt.darker(palette.window, 1.1)
+                border.color: Qt.darker(palette.window, 1.3)
             }
             Rectangle {
                 id: upButton
@@ -291,7 +290,7 @@ AbstractFileDialog {
                 anchors.left: parent.left; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
                 anchors.leftMargin: textX; anchors.rightMargin: 4
                 text: root.urlToPath(view.model.folder)
-                color: "white"
+                color: palette.text
                 elide: Text.ElideLeft; horizontalAlignment: Text.AlignRight; verticalAlignment: Text.AlignVCenter
                 MouseArea {
                     anchors.fill: parent
@@ -320,12 +319,8 @@ AbstractFileDialog {
             width: parent.width
             height: buttonRow.height + buttonRow.spacing * 2
             anchors.bottom: parent.bottom
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: palette.dark }
-                GradientStop { position: 0.3; color: palette.mid }
-                GradientStop { position: 0.85; color: palette.mid }
-                GradientStop { position: 1.0; color: palette.light }
-            }
+            color: Qt.darker(palette.window, 1.1)
+            border.color: Qt.darker(palette.window, 1.3)
 
             Row {
                 id: buttonRow
