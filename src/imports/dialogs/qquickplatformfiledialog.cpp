@@ -77,7 +77,7 @@ QT_BEGIN_NAMESPACE
             Qt.quit()
         }
         onRejected: {
-            console.log("Cancelled")
+            console.log("Canceled")
             Qt.quit()
         }
         Component.onCompleted: visible = true
