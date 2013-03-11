@@ -116,7 +116,7 @@ struct Function {
     const uchar *codeData;
     JSC::MacroAssemblerCodeRef codeRef;
     quint32 codeSize;
-    QByteArray unwindInfo; // CIE+FDE on x86/x86-64
+    QByteArray unwindInfo; // CIE+FDE on x86/x86-64. Stored directly in code on ARM.
 
     QVector<String *> formals;
     QVector<String *> locals;

@@ -83,15 +83,17 @@ static const Assembler::RegisterID calleeSavedRegisters[] = {
 
 #if CPU(ARM)
 static const Assembler::RegisterID calleeSavedRegisters[] = {
-    // ### FIXME: push multi-register push instruction, remove unused registers.
-    JSC::ARMRegisters::r4,
-    JSC::ARMRegisters::r5,
-    JSC::ARMRegisters::r6,
-    JSC::ARMRegisters::r7,
-    JSC::ARMRegisters::r8,
-    JSC::ARMRegisters::r9,
+    // ### FIXME: remove unused registers.
+    // Keep these in reverse order and make sure to also edit the unwind program in
+    // qv4unwindhelper_p-arm.h when changing this list.
+    JSC::ARMRegisters::r12,
     JSC::ARMRegisters::r10,
-    JSC::ARMRegisters::r11
+    JSC::ARMRegisters::r9,
+    JSC::ARMRegisters::r8,
+    JSC::ARMRegisters::r7,
+    JSC::ARMRegisters::r6,
+    JSC::ARMRegisters::r5,
+    JSC::ARMRegisters::r4
 };
 #endif
 
@@ -415,6 +417,13 @@ static void printDisassembledOutputWithCalls(const char* output, const QHash<voi
 
 void Assembler::link(VM::Function *vmFunc)
 {
+    Label endOfCode = label();
+#ifdef Q_PROCESSOR_ARM
+    // Let the ARM exception table follow right after that
+    for (int i = 0, nops = UnwindHelper::unwindInfoSize() / 2; i < nops; ++i)
+        nop();
+#endif
+
     {
         QHashIterator<IR::BasicBlock *, QVector<Jump> > it(_patches);
         while (it.hasNext()) {
@@ -429,7 +438,7 @@ void Assembler::link(VM::Function *vmFunc)
 
     JSC::JSGlobalData dummy;
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
-    vmFunc->codeSize = linkBuffer.offsetOf(label());
+    vmFunc->codeSize = linkBuffer.offsetOf(endOfCode);
 
     QHash<void*, const char*> functions;
     foreach (CallToLink ctl, _callsToLink) {
@@ -451,6 +460,10 @@ void Assembler::link(VM::Function *vmFunc)
                 linkBuffer.patch(label, linkBuffer.locationOf(target));
         }
     }
+
+#ifdef Q_PROCESSOR_ARM
+    UnwindHelper::writeARMUnwindInfo(linkBuffer.debugAddress(), linkBuffer.offsetOf(endOfCode));
+#endif
 
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {

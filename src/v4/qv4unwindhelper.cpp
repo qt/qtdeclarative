@@ -6,14 +6,13 @@
 #  define USE_DW2_HELPER
 #elif CPU(X86) && OS(LINUX)
 #  define USE_DW2_HELPER
+#elif CPU(ARM) && OS(LINUX)
+# define USE_ARM_HELPER
 #elif OS(WINDOWS)
     // SJLJ will unwind on Windows
 #  define USE_NULL_HELPER
 #elif OS(IOS)
     // SJLJ will unwind on iOS
-#  define USE_NULL_HELPER
-#elif OS(ANDROID)
-#  warning "TODO!"
 #  define USE_NULL_HELPER
 #else
 #  warning "Unsupported/untested platform!"
@@ -23,6 +22,10 @@
 #ifdef USE_DW2_HELPER
 #  include <qv4unwindhelper_p-dw2.h>
 #endif // USE_DW2_HELPER
+
+#ifdef USE_ARM_HELPER
+#  include <qv4unwindhelper_p-arm.h>
+#endif // USE_ARM_HELPER
 
 #ifdef USE_NULL_HELPER
 using namespace QQmlJS::VM;

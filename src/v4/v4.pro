@@ -90,6 +90,7 @@ HEADERS += \
     qv4regexp.h \
     qv4unwindhelper.h \
     qv4unwindhelper_p-dw2.h \
+    qv4unwindhelper_p-arm.h \
     qv4v8.h \
     qcalculatehash_p.h
 

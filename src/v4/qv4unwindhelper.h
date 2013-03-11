@@ -15,6 +15,10 @@ public:
     static void registerFunctions(QVector<Function *> functions);
     static void deregisterFunction(Function *function);
     static void deregisterFunctions(QVector<Function *> functions);
+#ifdef Q_PROCESSOR_ARM
+    static int unwindInfoSize();
+    static void writeARMUnwindInfo(void *codeAddr, int codeSize);
+#endif
 };
 
 } // VM namespace
