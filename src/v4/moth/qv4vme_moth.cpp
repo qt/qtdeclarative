@@ -74,6 +74,42 @@ private:
 
 #endif
 
+#ifdef WITH_STATS
+namespace {
+struct VMStats {
+    quint64 paramIsValue;
+    quint64 paramIsArg;
+    quint64 paramIsLocal;
+    quint64 paramIsTemp;
+    quint64 paramIsScopedLocal;
+
+    VMStats()
+        : paramIsValue(0)
+        , paramIsArg(0)
+        , paramIsLocal(0)
+        , paramIsTemp(0)
+        , paramIsScopedLocal(0)
+    {}
+
+    ~VMStats()
+    { show(); }
+
+    void show() {
+        fprintf(stderr, "VM stats:\n");
+        fprintf(stderr, "         value: %lu\n", paramIsValue);
+        fprintf(stderr, "           arg: %lu\n", paramIsArg);
+        fprintf(stderr, "         local: %lu\n", paramIsLocal);
+        fprintf(stderr, "          temp: %lu\n", paramIsTemp);
+        fprintf(stderr, "  scoped local: %lu\n", paramIsScopedLocal);
+    }
+};
+static VMStats vmStats;
+#define VMSTATS(what) ++vmStats.what
+}
+#else // !WITH_STATS
+#define VMSTATS(what) {}
+#endif // WITH_STATS
+
 static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
                                      VM::Value* stack,
                                      const Instr::Param &param
@@ -99,23 +135,28 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
 #endif // DO_TRACE_INSTR
 
     if (param.isValue()) {
+        VMSTATS(paramIsValue);
         return const_cast<VM::Value *>(&param.value);
     } else if (param.isArgument()) {
+        VMSTATS(paramIsArg);
         const unsigned arg = param.index;
         Q_ASSERT(arg >= 0);
         Q_ASSERT((unsigned) arg < context->argumentCount);
         Q_ASSERT(context->arguments);
         return context->arguments + arg;
     } else if (param.isLocal()) {
+        VMSTATS(paramIsLocal);
         const unsigned index = param.index;
         Q_ASSERT(index >= 0);
         Q_ASSERT(index < context->variableCount());
         Q_ASSERT(context->locals);
         return context->locals + index;
     } else if (param.isTemp()) {
+        VMSTATS(paramIsTemp);
         Q_ASSERT(param.index < stackSize);
         return stack + param.index;
     } else if (param.isScopedLocal()) {
+        VMSTATS(paramIsScopedLocal);
         VM::ExecutionContext *c = context;
         uint scope = param.scope;
         while (scope--)
@@ -132,8 +173,13 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
 }
 
 #if defined(QT_NO_DEBUG)
-# define VALUE(param) *getValueRef(context, stack, param)
-# define VALUEPTR(param) getValueRef(context, stack, param)
+# define VALUE(param) *(VALUEPTR(param))
+
+// The non-temp case might need some tweaking for QML: there it would probably be a value instead of a local.
+# define VALUEPTR(param) \
+    param.isTemp() ? stack + param.index \
+                   : (param.isLocal() ? context->locals + param.index \
+                                      : getValueRef(context, stack, param))
 #else
 # define VALUE(param) *getValueRef(context, stack, param, stackSize)
 # define VALUEPTR(param) getValueRef(context, stack, param, stackSize)
