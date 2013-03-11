@@ -48,6 +48,7 @@
 
 #if !defined(QMLJS_LLVM_RUNTIME) && COMPILER(GCC) && (CPU(X86_64) || CPU(X86))
 #define QMLJS_INLINE_MATH
+#define QMLJS_READONLY __attribute((const))
 #endif
 
 #if defined(QMLJS_INLINE_MATH)
@@ -57,7 +58,7 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace VM {
 
-static inline Value add_int32(int a, int b)
+static inline QMLJS_READONLY Value add_int32(int a, int b)
 {
     quint8 overflow = 0;
     int aa = a;
@@ -73,7 +74,7 @@ static inline Value add_int32(int a, int b)
     return Value::fromDouble((double)a + (double)b);
 }
 
-static inline Value sub_int32(int a, int b)
+static inline QMLJS_READONLY Value sub_int32(int a, int b)
 {
     quint8 overflow = 0;
     int aa = a;
@@ -89,7 +90,7 @@ static inline Value sub_int32(int a, int b)
     return Value::fromDouble((double)a - (double)b);
 }
 
-static inline Value mul_int32(int a, int b)
+static inline QMLJS_READONLY Value mul_int32(int a, int b)
 {
     quint8 overflow = 0;
     int aa = a;
@@ -111,4 +112,9 @@ static inline Value mul_int32(int a, int b)
 QT_END_NAMESPACE
 
 #endif // defined(QMLJS_INLINE_MATH)
+
+#ifdef QMLJS_READONLY
+#undef QMLJS_READONLY
+#endif
+
 #endif // QMLJS_MATH_H
