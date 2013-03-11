@@ -60,6 +60,7 @@ private slots:
     void valueSource();
     void behavior();
     void deleteOnUpdate();
+    void zeroDuration();
 
 private:
     QQmlEngine engine;
@@ -233,6 +234,28 @@ void tst_qquicksmoothedanimation::deleteOnUpdate()
 
     //don't crash
     QTest::qWait(500);
+
+    delete rect;
+}
+
+void tst_qquicksmoothedanimation::zeroDuration()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, testFileUrl("smoothedanimationZeroDuration.qml"));
+
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QVERIFY(rect);
+
+    QQuickRectangle *theRect = rect->findChild<QQuickRectangle*>("theRect");
+    QVERIFY(theRect);
+
+    QQuickSmoothedAnimation *easeX = rect->findChild<QQuickSmoothedAnimation*>("easeX");
+    QVERIFY(easeX);
+    QVERIFY(easeX->isRunning());
+
+    QTRY_VERIFY(!easeX->isRunning());
+    QTRY_COMPARE(theRect->x(), qreal(200));
 
     delete rect;
 }
