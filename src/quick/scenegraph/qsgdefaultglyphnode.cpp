@@ -48,7 +48,8 @@
 QT_BEGIN_NAMESPACE
 
 QSGDefaultGlyphNode::QSGDefaultGlyphNode()
-    : m_material(0)
+    : m_style(QQuickText::Normal)
+    , m_material(0)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
 {
     m_geometry.setDrawingMode(GL_TRIANGLES);
@@ -74,22 +75,62 @@ void QSGDefaultGlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &gl
     if (m_material != 0)
         delete m_material;
 
-    QRawFont font = glyphs.rawFont();
-    m_material = new QSGTextMaskMaterial(font);
-    m_material->setColor(m_color);
-
-    QRectF boundingRect;
-    m_material->populate(position, glyphs.glyphIndexes(), glyphs.positions(), geometry(),
-                         &boundingRect, &m_baseLine);
-
-    setMaterial(m_material);
-    setBoundingRect(boundingRect);
-
-    markDirty(DirtyGeometry);
+    m_position = position;
+    m_glyphs = glyphs;
 
 #ifdef QML_RUNTIME_TESTING
     description = QLatin1String("glyphs");
 #endif
+}
+
+void QSGDefaultGlyphNode::setStyle(QQuickText::TextStyle style)
+{
+    if (m_style == style)
+        return;
+    m_style = style;
+}
+
+void QSGDefaultGlyphNode::setStyleColor(const QColor &color)
+{
+    if (m_styleColor == color)
+        return;
+    m_styleColor = color;
+}
+
+void QSGDefaultGlyphNode::update()
+{
+    QRawFont font = m_glyphs.rawFont();
+    QMargins margins(0, 0, 0, 0);
+
+    if (m_style == QQuickText::Normal) {
+        m_material = new QSGTextMaskMaterial(font);
+    } else if (m_style == QQuickText::Outline) {
+        QSGOutlinedTextMaterial *material = new QSGOutlinedTextMaterial(font);
+        material->setStyleColor(m_styleColor);
+        m_material = material;
+        margins = QMargins(1, 1, 1, 1);
+    } else {
+        QSGStyledTextMaterial *material = new QSGStyledTextMaterial(font);
+        if (m_style == QQuickText::Sunken) {
+            material->setStyleShift(QPointF(0, -1));
+            margins.setTop(1);
+        } else if (m_style == QQuickText::Raised) {
+            material->setStyleShift(QPointF(0, 1));
+            margins.setBottom(1);
+        }
+        material->setStyleColor(m_styleColor);
+        m_material = material;
+    }
+
+    m_material->setColor(m_color);
+
+    QRectF boundingRect;
+    m_material->populate(m_position, m_glyphs.glyphIndexes(), m_glyphs.positions(), geometry(),
+                         &boundingRect, &m_baseLine, margins);
+    setBoundingRect(boundingRect);
+
+    setMaterial(m_material);
+    markDirty(DirtyGeometry);
 }
 
 QT_END_NAMESPACE
