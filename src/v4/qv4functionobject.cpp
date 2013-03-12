@@ -100,7 +100,7 @@ FunctionObject::FunctionObject(ExecutionContext *scope)
     prototype = scope->engine->functionPrototype;
 
     type = Type_FunctionObject;
-    needsActivation = false;
+    needsActivation = true;
     usesArgumentsObject = false;
     strictMode = false;
 }
