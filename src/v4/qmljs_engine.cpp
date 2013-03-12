@@ -238,7 +238,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 ExecutionEngine::~ExecutionEngine()
 {
     delete globalObject.asObject();
-    rootContext->destroy();
     delete rootContext;
     UnwindHelper::deregisterFunctions(functions);
     qDeleteAll(functions);

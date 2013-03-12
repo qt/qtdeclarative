@@ -279,12 +279,6 @@ void ExecutionContext::initForCatch(ExecutionContext *p, String *exceptionVarNam
     withObject = 0;
 }
 
-void ExecutionContext::destroy()
-{
-    delete[] arguments;
-    delete[] locals;
-}
-
 bool ExecutionContext::deleteProperty(String *name)
 {
     bool hasWith = false;

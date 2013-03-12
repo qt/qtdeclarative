@@ -105,7 +105,6 @@ struct ExecutionContext
     void init(ExecutionEngine *e);
     void init(ExecutionContext *p, Object *with);
     void initForCatch(ExecutionContext *p, String *exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
-    void destroy();
 
     bool hasBinding(String *name) const;
     void createMutableBinding(String *name, bool deletable);
