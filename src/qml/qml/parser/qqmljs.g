@@ -127,15 +127,15 @@
 **
 ****************************************************************************/
 
-#include <QtCore/QtDebug>
-#include <QtCore/QCoreApplication>
-
-#include <string.h>
-
 #include "qqmljsengine_p.h"
 #include "qqmljslexer_p.h"
 #include "qqmljsast_p.h"
 #include "qqmljsmemorypool_p.h"
+
+#include <QtCore/qdebug.h>
+#include <QtCore/qcoreapplication.h>
+
+#include <string.h>
 
 ./
 
@@ -212,8 +212,8 @@
 #include "qqmljsast_p.h"
 #include "qqmljsengine_p.h"
 
-#include <QtCore/QList>
-#include <QtCore/QString>
+#include <QtCore/qlist.h>
+#include <QtCore/qstring.h>
 
 QT_QML_BEGIN_NAMESPACE
 
@@ -391,7 +391,8 @@ protected:
 /.
 
 #include "qqmljsparser_p.h"
-#include <QVarLengthArray>
+
+#include <QtCore/qvarlengtharray.h>
 
 //
 //  W A R N I N G

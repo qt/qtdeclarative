@@ -44,9 +44,9 @@
 #include "qqmljsmemorypool_p.h"
 #include "qqmljskeywords_p.h"
 
-#include <QtCore/QCoreApplication>
-#include <QtCore/QVarLengthArray>
-#include <QtCore/QDebug>
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qvarlengtharray.h>
+#include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
