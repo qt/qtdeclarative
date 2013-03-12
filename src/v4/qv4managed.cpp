@@ -77,6 +77,8 @@ void Managed::operator delete(void *ptr)
         return;
 
     Managed *m = static_cast<Managed *>(ptr);
+    m->vtbl = 0;
+    m->_data = 0;
     m->~Managed();
 }
 

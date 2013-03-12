@@ -163,6 +163,10 @@ debug-with-libunwind {
     DEFINES += WTF_USE_LIBUNWIND_DEBUG=1
 }
 
+valgrind {
+    DEFINES += V4_USE_VALGRIND
+}
+
 include(moth/moth.pri)
 include(../3rdparty/masm/masm.pri)
 include(../3rdparty/double-conversion/double-conversion.pri)

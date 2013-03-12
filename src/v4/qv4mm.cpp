@@ -43,6 +43,11 @@
 #include <cstdlib>
 #include "qv4alloca_p.h"
 
+#ifdef V4_USE_VALGRIND
+#include <valgrind/valgrind.h>
+#include <valgrind/memcheck.h>
+#endif
+
 using namespace QQmlJS::VM;
 using namespace WTF;
 
@@ -112,6 +117,9 @@ MemoryManager::MemoryManager()
     : m_d(new Data(true))
 {
     setEnableGC(true);
+#ifdef V4_USE_VALGRIND
+    VALGRIND_CREATE_MEMPOOL(this, 0, true);
+#endif
 }
 
 Managed *MemoryManager::alloc(std::size_t size)
@@ -170,9 +178,16 @@ Managed *MemoryManager::alloc(std::size_t size)
         *last = 0;
         m = m_d->smallItems[pos];
         m_d->availableItems[pos] += allocation.memory.size()/size - 1;
+#ifdef V4_USE_VALGRIND
+        VALGRIND_MAKE_MEM_NOACCESS(allocation.memory, allocation.chunkSize);
+#endif
     }
 
   found:
+#ifdef V4_USE_VALGRIND
+    VALGRIND_MEMPOOL_ALLOC(this, m, size);
+#endif
+
     m_d->smallItems[pos] = m->nextFree();
     return m;
 }
@@ -234,6 +249,9 @@ std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t
 
     Managed **f = &m_d->smallItems[size >> 4];
 
+#ifdef V4_USE_VALGRIND
+    VALGRIND_DISABLE_ERROR_REPORTING;
+#endif
     for (char *chunk = chunkStart, *chunkEnd = chunk + chunkSize - size; chunk <= chunkEnd; chunk += size) {
         Managed *m = reinterpret_cast<Managed *>(chunk);
 //        qDebug("chunk @ %p, size = %lu, in use: %s, mark bit: %s",
@@ -246,15 +264,25 @@ std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t
                 m->markBit = 0;
             } else {
 //                qDebug() << "-- collecting it." << m << *f << m->nextFree();
+#ifdef V4_USE_VALGRIND
+                VALGRIND_ENABLE_ERROR_REPORTING;
+#endif
                 m->vtbl->destroy(m);
 
                 m->setNextFree(*f);
+#ifdef V4_USE_VALGRIND
+                VALGRIND_DISABLE_ERROR_REPORTING;
+                VALGRIND_MEMPOOL_FREE(this, m);
+#endif
                 *f = m;
                 SCRIBBLE(m, 0x99, size);
                 ++freedCount;
             }
         }
     }
+#ifdef V4_USE_VALGRIND
+    VALGRIND_ENABLE_ERROR_REPORTING;
+#endif
 
     return freedCount;
 }
@@ -358,10 +386,10 @@ void MemoryManager::willAllocate(std::size_t size)
 
 void MemoryManager::collectFromStack() const
 {
+    quintptr valueOnStack = 0;
+
     if (!m_d->heapChunks.count())
         return;
-
-    quintptr valueOnStack = 0;
 
 #if USE(PTHREADS)
 #  if OS(DARWIN)
@@ -391,6 +419,10 @@ void MemoryManager::collectFromStack() const
 
     quintptr *current = (&valueOnStack) + 1;
 //    qDebug() << "collectFromStack";// << top << current << &valueOnStack;
+
+#if V4_USE_VALGRIND
+    VALGRIND_MAKE_MEM_DEFINED(current, (top - current)*sizeof(quintptr));
+#endif
 
     char** heapChunkBoundaries = (char**)alloca(m_d->heapChunks.count() * 2 * sizeof(char*));
     char** heapChunkBoundariesEnd = heapChunkBoundaries + 2 * m_d->heapChunks.count();
