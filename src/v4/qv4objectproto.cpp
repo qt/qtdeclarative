@@ -173,7 +173,7 @@ Value ObjectPrototype::method_create(ExecutionContext *ctx)
         ctx->throwTypeError();
 
     Object *newObject = ctx->engine->newObject();
-    newObject->prototype = O.objectValue();
+    newObject->prototype = O.asObject();
 
     Value objValue = Value::fromObject(newObject);
     if (ctx->argumentCount > 1 && !ctx->argument(1).isUndefined()) {
