@@ -969,6 +969,7 @@ void QSGThreadedRenderLoop::polishAndSync()
     QElapsedTimer timer;
     int polishTime = 0;
     int waitTime = 0;
+    int syncTime;
     if (qquick_window_timing)
         timer.start();
 #endif
@@ -1002,7 +1003,8 @@ void QSGThreadedRenderLoop::polishAndSync()
     RLDEBUG("GUI:  - unlocked after sync...");
 
 #ifndef QSG_NO_WINDOW_TIMING
-    int syncTime = timer.elapsed();
+    if (qquick_window_timing)
+        syncTime = timer.elapsed();
 #endif
 
     killTimer(m_update_timer);
