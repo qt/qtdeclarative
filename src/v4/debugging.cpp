@@ -212,3 +212,83 @@ IR::Function *Debugger::irFunction(VM::Function *vmf) const
 {
     return _vmToIr[vmf];
 }
+
+static void realDumpValue(VM::Value v, VM::ExecutionContext *ctx, std::string prefix)
+{
+    using namespace VM;
+    using namespace std;
+    cout << prefix << "tag: " << hex << v.tag << dec << endl << prefix << "\t-> ";
+    switch (v.type()) {
+    case Value::Undefined_Type: cout << "Undefined" << endl; return;
+    case Value::Null_Type: cout << "Null" << endl; return;
+    case Value::Boolean_Type: cout << "Boolean"; break;
+    case Value::Integer_Type: cout << "Integer"; break;
+    case Value::Object_Type: cout << "Object"; break;
+    case Value::String_Type: cout << "String"; break;
+    default: cout << "UNKNOWN" << endl; return;
+    }
+    cout << endl;
+
+    if (v.isBoolean()) {
+        cout << prefix << "\t-> " << (v.booleanValue() ? "TRUE" : "FALSE") << endl;
+        return;
+    }
+
+    if (v.isInteger()) {
+        cout << prefix << "\t-> " << v.integerValue() << endl;
+        return;
+    }
+
+    if (v.isDouble()) {
+        cout << prefix << "\t-> " << v.doubleValue() << endl;
+        return;
+    }
+
+    if (v.isString()) {
+        // maybe check something on the Managed object?
+        cout << prefix << "\t-> @" << hex << v.stringValue() << endl;
+        cout << prefix << "\t-> \"" << qPrintable(v.stringValue()->toQString()) << "\"" << endl;
+        return;
+    }
+
+    Object *o = v.objectValue();
+    if (!o)
+        return;
+
+    cout << prefix << "\t-> @" << hex << o << endl;
+    cout << prefix << "object type: " << o->internalType() << endl << prefix << "\t-> ";
+    switch (o->internalType()) {
+    case VM::Managed::Type_Invalid: cout << "Invalid"; break;
+    case VM::Managed::Type_String: cout << "String"; break;
+    case VM::Managed::Type_Object: cout << "Object"; break;
+    case VM::Managed::Type_ArrayObject: cout << "ArrayObject"; break;
+    case VM::Managed::Type_FunctionObject: cout << "FunctionObject"; break;
+    case VM::Managed::Type_BooleanObject: cout << "BooleanObject"; break;
+    case VM::Managed::Type_NumberObject: cout << "NumberObject"; break;
+    case VM::Managed::Type_StringObject: cout << "StringObject"; break;
+    case VM::Managed::Type_DateObject: cout << "DateObject"; break;
+    case VM::Managed::Type_RegExpObject: cout << "RegExpObject"; break;
+    case VM::Managed::Type_ErrorObject: cout << "ErrorObject"; break;
+    case VM::Managed::Type_ArgumentsObject: cout << "ArgumentsObject"; break;
+    case VM::Managed::Type_JSONObject: cout << "JSONObject"; break;
+    case VM::Managed::Type_MathObject: cout << "MathObject"; break;
+    case VM::Managed::Type_ForeachIteratorObject: cout << "ForeachIteratorObject"; break;
+    default: cout << "UNKNOWN" << endl; return;
+    }
+    cout << endl;
+
+    cout << prefix << "properties:" << endl;
+    ForEachIteratorObject it(ctx, o);
+    for (Value name = it.nextPropertyName(); !name.isNull(); name = it.nextPropertyName()) {
+        cout << prefix << "\t\"" << qPrintable(name.stringValue()->toQString()) << "\"" << endl;
+        PropertyDescriptor *d = o->__getOwnProperty__(ctx, name.stringValue());
+        Value pval = o->getValue(ctx, d);
+        cout << prefix << "\tvalue:" << endl;
+        realDumpValue(pval, ctx, prefix + "\t");
+    }
+}
+
+void dumpValue(VM::Value v, VM::ExecutionContext *ctx)
+{
+    realDumpValue(v, ctx, std::string(""));
+}

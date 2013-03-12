@@ -203,6 +203,10 @@ public:
     static Value construct(Managed *, ExecutionContext *context, Value *, int);
     static Value call(Managed *, ExecutionContext *, const Value &, Value *, int);
 
+    uint internalType() const {
+        return type;
+    }
+
 protected:
 
     static const ManagedVTable static_vtbl;
