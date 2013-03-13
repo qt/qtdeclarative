@@ -91,7 +91,7 @@ struct Value;
 struct String;
 struct ExecutionEngine;
 struct Object;
-struct MemoryManager;
+class MemoryManager;
 }
 }
 
@@ -125,7 +125,7 @@ class Date;
 class ImplementationUtilities;
 class Signature;
 class AccessorSignature;
-template <class T> class Handle;
+template <class T> struct Handle;
 template <class T> class Local;
 template <class T> class Persistent;
 class FunctionTemplate;
@@ -485,6 +485,7 @@ template <class T> class Persistent : public Handle<T> {
       Handle<T>::operator =(other);
       m_memoryManager = other.m_memoryManager;
       HandleOperations<T>::protect(m_memoryManager, this);
+      return *this;
   }
 
   /**
@@ -2547,6 +2548,9 @@ DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Context)
 template<typename T>
 void Persistent<T>::MakeWeak(void* parameters, WeakReferenceCallback callback)
 {
+    Q_UNUSED(parameters);
+    Q_UNUSED(callback);
+
     Q_UNIMPLEMENTED();
 }
 
