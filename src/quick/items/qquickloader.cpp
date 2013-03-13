@@ -887,15 +887,18 @@ void QQuickLoader::setAsynchronous(bool a)
 void QQuickLoaderPrivate::_q_updateSize(bool loaderGeometryChanged)
 {
     Q_Q(QQuickLoader);
-    if (!item || updatingSize)
+    if (!item)
         return;
-
-    updatingSize = true;
 
     if (loaderGeometryChanged && q->widthValid())
         item->setWidth(q->width());
     if (loaderGeometryChanged && q->heightValid())
         item->setHeight(q->height());
+
+    if (updatingSize)
+        return;
+
+    updatingSize = true;
 
     q->setImplicitSize(getImplicitWidth(), getImplicitHeight());
 
