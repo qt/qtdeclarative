@@ -245,19 +245,27 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         return;
     }
 
+    bool current = false;
+
     if (!gl) {
         gl = new QOpenGLContext();
         gl->setFormat(masterWindow->requestedFormat());
-        gl->create();
-        if (!gl->makeCurrent(masterWindow))
-            qWarning("QQuickWindow: makeCurrent() failed...");
-        sg->initialize(gl);
+        if (!gl->create()) {
+            delete gl;
+            gl = 0;
+        }
+        current = gl->makeCurrent(masterWindow);
+        if (current)
+            sg->initialize(gl);
     } else {
-        gl->makeCurrent(masterWindow);
+        current = gl->makeCurrent(masterWindow);
     }
 
     bool alsoSwap = data.updatePending;
     data.updatePending = false;
+
+    if (!current)
+        return;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     cd->polishItems();
