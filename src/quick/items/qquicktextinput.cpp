@@ -1229,10 +1229,11 @@ Qt::InputMethodHints QQuickTextInputPrivate::effectiveInputMethodHints() const
     Specifies how the text should be displayed in the TextInput.
     \list
     \li TextInput.Normal - Displays the text as it is. (Default)
-    \li TextInput.Password - Displays asterisks instead of characters.
+    \li TextInput.Password - Displays platform-dependent password mask
+    characters instead of the actual characters.
     \li TextInput.NoEcho - Displays nothing.
     \li TextInput.PasswordEchoOnEdit - Displays characters as they are entered
-    while editing, otherwise displays asterisks.
+    while editing, otherwise identical to \c TextInput.Password.
     \endlist
 */
 QQuickTextInput::EchoMode QQuickTextInput::echoMode() const
@@ -2199,7 +2200,8 @@ void QQuickTextInput::selectWord()
    \qmlproperty string QtQuick2::TextInput::passwordCharacter
 
    This is the character displayed when echoMode is set to Password or
-   PasswordEchoOnEdit. By default it is an asterisk.
+   PasswordEchoOnEdit. By default it is the password character used by
+   the platform theme.
 
    If this property is set to a string with more than one character,
    the first character is used. If the string is empty, the value
