@@ -150,7 +150,7 @@ QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeNa
     if (!ret) {//Usually when a type name is "found" but invalid
         //qDebug() << ret << urlString << QQmlMetaType::qmlType(url);
         if (!errors) // Cannot list errors properly, just quit
-            qFatal(QQmlMetaType::typeRegistrationFailures().join('\n').toLatin1().constData());
+            qFatal("%s", QQmlMetaType::typeRegistrationFailures().join('\n').toLatin1().constData());
         QQmlError error;
         error.setDescription(QQmlMetaType::typeRegistrationFailures().join('\n'));
         errors->prepend(error);
