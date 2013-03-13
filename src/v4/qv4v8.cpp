@@ -1069,18 +1069,30 @@ Local<Object> Function::NewInstance() const
 {
     VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     assert(f);
-    VM::Value retval = f->construct(currentEngine()->current, 0, 0);
-    return Local<Object>::New(Value::fromVmValue(retval));
+    VM::ExecutionContext *context = currentEngine()->current;
+    QQmlJS::VM::Value result = VM::Value::undefinedValue();
+    try {
+        result = f->construct(context, 0, 0);
+    } catch (VM::Exception &e) {
+        Isolate::GetCurrent()->setException(e.value());
+        e.accept(context);
+    }
+    return Local<Object>::New(Value::fromVmValue(result));
 }
 
 Local<Object> Function::NewInstance(int argc, Handle<Value> argv[]) const
 {
     VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     assert(f);
-    VM::Value retval = f->construct(currentEngine()->current,
-                                    reinterpret_cast<QQmlJS::VM::Value*>(argv),
-                                    argc);
-    return Local<Object>::New(Value::fromVmValue(retval));
+    VM::ExecutionContext *context = currentEngine()->current;
+    QQmlJS::VM::Value result = VM::Value::undefinedValue();
+    try {
+        result = f->construct(context, reinterpret_cast<QQmlJS::VM::Value*>(argv), argc);
+    } catch (VM::Exception &e) {
+        Isolate::GetCurrent()->setException(e.value());
+        e.accept(context);
+    }
+    return Local<Object>::New(Value::fromVmValue(result));
 }
 
 Local<Value> Function::Call(Handle<Object> thisObj, int argc, Handle<Value> argv[])
@@ -1088,10 +1100,15 @@ Local<Value> Function::Call(Handle<Object> thisObj, int argc, Handle<Value> argv
     QQmlJS::VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     if (!f)
         return Local<Value>();
-    QQmlJS::VM::Value result = f->call(currentEngine()->current,
-                                       *ConstValuePtr(&thisObj),
-                                       reinterpret_cast<QQmlJS::VM::Value*>(argv),
-                                       argc);
+    VM::ExecutionContext *context = currentEngine()->current;
+    QQmlJS::VM::Value result = VM::Value::undefinedValue();
+    try {
+        result = f->call(context, *ConstValuePtr(&thisObj),
+                         reinterpret_cast<QQmlJS::VM::Value*>(argv), argc);
+    } catch (VM::Exception &e) {
+        Isolate::GetCurrent()->setException(e.value());
+        e.accept(context);
+    }
     return Local<Value>::New(Value::fromVmValue(result));
 }
 
