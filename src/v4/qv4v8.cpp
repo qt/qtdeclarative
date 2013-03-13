@@ -280,7 +280,7 @@ Local<Value> Script::Run(Handle<Object> qml)
 
         VM::Value arg = VM::Value::fromString(engine->current, m_script);
 
-        result = eval->evalCall(engine->rootContext, VM::Value::undefinedValue(), &arg, 1, /*directCall*/ false);
+        result = eval->evalCall(engine->current, VM::Value::undefinedValue(), &arg, 1, /*directCall*/ false);
     } catch (VM::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
