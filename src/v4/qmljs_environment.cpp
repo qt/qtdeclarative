@@ -186,13 +186,30 @@ ExecutionContext *ExecutionContext::createCatchScope(String *exceptionVarName, c
     return catchCtx;
 }
 
+ExecutionContext *ExecutionContext::createCallScope(FunctionObject *f, const Value &thisObject, Value *args, int argc)
+{
+    uint size = requiredMemoryForExecutionContect(f, argc);
+    ExecutionContext *ctx = static_cast<ExecutionContext *>(malloc(size));
+    ctx->function = f;
+    ctx->thisObject = thisObject;
+    ctx->arguments = args;
+    ctx->argumentCount = argc;
+    ctx->initCallContext(this);
+    engine->current = ctx;
+    return ctx;
+}
+
+
 ExecutionContext *ExecutionContext::popScope()
 {
     assert(engine->current == this);
-    assert(withObject != 0 || exceptionVarName != 0);
 
     engine->current = parent;
     parent = 0;
+
+    if (engine->debugger)
+        engine->debugger->justLeft(this);
+
     return engine->current;
 }
 
@@ -570,6 +587,7 @@ void ExecutionContext::throwURIError(Value msg)
 void ExecutionContext::initCallContext(ExecutionContext *parent)
 {
     engine = parent->engine;
+    assert(engine->current == parent);
     this->parent = parent;
     outer = function->scope;
     engine->current = this;
@@ -612,15 +630,6 @@ void ExecutionContext::initCallContext(ExecutionContext *parent)
 
     if (engine->debugger)
         engine->debugger->aboutToCall(function, this);
-}
-
-void ExecutionContext::leaveCallContext()
-{
-    engine->current = parent;
-    parent = 0;
-
-    if (engine->debugger)
-        engine->debugger->justLeft(this);
 }
 
 void ExecutionContext::wireUpPrototype()

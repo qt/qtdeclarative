@@ -141,12 +141,8 @@ void Exception::partiallyUnwindContext(ExecutionContext *catchingContext)
     if (!throwingContext)
         return;
     ExecutionContext *context = throwingContext;
-    while (context != catchingContext) {
-        ExecutionContext *parent = context->parent;
-        if (!context->withObject)
-            context->leaveCallContext();
-        context = parent;
-    }
+    while (context != catchingContext)
+        context = context->popScope();
     throwingContext = context;
 }
 

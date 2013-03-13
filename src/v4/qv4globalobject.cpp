@@ -359,17 +359,23 @@ EvalFunction::EvalFunction(ExecutionContext *scope, Object *qmlActivation)
     this->qmlActivation = qmlActivation;
 }
 
-Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Value *args, int argc, bool directCall)
+Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject*/, Value *args, int argc, bool directCall)
 {
     if (argc < 1)
         return Value::undefinedValue();
 
-    ExecutionContext *ctx = context;
+    ExecutionEngine *engine = parentContext->engine;
+    ExecutionContext *ctx = parentContext;
 
     if (!directCall) {
-        // the context for eval should be the global scope
-        while (ctx->parent)
-            ctx = ctx->parent;
+        // the context for eval should be the global scope, so we fake a root
+        // context
+        ctx = parentContext->engine->newContext();
+        ctx->init(parentContext->engine);
+        ctx->activation = engine->globalObject.asObject();
+        ctx->strictMode = engine->rootContext->strictMode;
+        ctx->parent = parentContext;
+        ctx->engine->current = ctx;
     }
 
     if (!args[0].isString())
@@ -378,30 +384,22 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
     const QString code = args[0].stringValue()->toQString();
     bool inheritContext = !ctx->strictMode;
 
-    QQmlJS::VM::Function *f = parseSource(context, QStringLiteral("eval code"),
+    QQmlJS::VM::Function *f = parseSource(ctx, QStringLiteral("eval code"),
                                           code, QQmlJS::Codegen::EvalCode,
-                                          (directCall && context->strictMode), inheritContext);
+                                          (directCall && parentContext->strictMode), inheritContext);
 
     if (!f)
         return Value::undefinedValue();
 
-    bool strict = f->isStrict || (directCall && context->strictMode);
+    bool strict = f->isStrict || (ctx->strictMode);
     if (qmlActivation)
         strict = true;
 
-    uint size = requiredMemoryForExecutionContect(this, 0);
-    ExecutionContext *k = static_cast<ExecutionContext *>(malloc(size));
-
     if (strict) {
+        ExecutionContext *k = ctx->createCallScope(this, ctx->thisObject, 0, 0);
+        k->activation = qmlActivation;
+        k->qmlObject = qmlActivation;
         ctx = k;
-        ctx->thisObject = directCall ? context->thisObject : context->engine->globalObject;
-        ctx->function = this;
-        ctx->arguments = 0;
-        ctx->argumentCount = 0;
-        ctx->initCallContext(context);
-
-        ctx->activation = qmlActivation;
-        ctx->qmlObject = qmlActivation;
     }
 
     // set the correct strict mode flag on the context
@@ -412,15 +410,16 @@ Value EvalFunction::evalCall(ExecutionContext *context, Value /*thisObject*/, Va
     try {
         result = f->code(ctx, f->codeData);
     } catch (Exception &ex) {
+        ctx->strictMode = cstrict;
         if (strict)
-            ex.partiallyUnwindContext(ctx->parent);
+            ex.partiallyUnwindContext(parentContext);
         throw;
     }
 
     ctx->strictMode = cstrict;
 
-    if (strict)
-        ctx->leaveCallContext();
+    while (engine->current != parentContext)
+        engine->current->popScope();
 
     return result;
 }

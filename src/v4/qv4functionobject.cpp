@@ -364,15 +364,8 @@ Value ScriptFunction::construct(Managed *that, ExecutionContext *context, Value 
     if (proto.isObject())
         obj->prototype = proto.objectValue();
 
-    uint size = requiredMemoryForExecutionContect(f, argc);
-    ExecutionContext *ctx = static_cast<ExecutionContext *>(f->needsActivation ? malloc(size) : alloca(size));
+    ExecutionContext *ctx = context->createCallScope(f, Value::fromObject(obj), args, argc);
 
-    ctx->thisObject = Value::fromObject(obj);
-    ctx->function = f;
-    ctx->arguments = args;
-    ctx->argumentCount = argc;
-
-    ctx->initCallContext(context);
     Value result = Value::undefinedValue();
     try {
         result = f->function->code(ctx, f->function->codeData);
@@ -380,7 +373,7 @@ Value ScriptFunction::construct(Managed *that, ExecutionContext *context, Value 
         ex.partiallyUnwindContext(ctx->parent);
         throw;
     }
-    ctx->leaveCallContext();
+    ctx->popScope();
 
     if (result.isObject())
         return result;
@@ -391,10 +384,8 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
     assert(f->function->code);
-    uint size = requiredMemoryForExecutionContect(f, argc);
-    ExecutionContext *ctx = static_cast<ExecutionContext *>(f->needsActivation ? malloc(size) : alloca(size));
+    ExecutionContext *ctx = context->createCallScope(f, thisObject, args, argc);
 
-    ctx->thisObject = thisObject;
     if (!f->strictMode && !thisObject.isObject()) {
         if (thisObject.isUndefined() || thisObject.isNull()) {
             ctx->thisObject = context->engine->globalObject;
@@ -403,11 +394,6 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
         }
     }
 
-    ctx->function = f;
-    ctx->arguments = args;
-    ctx->argumentCount = argc;
-
-    ctx->initCallContext(context);
     Value result = Value::undefinedValue();
     try {
         result = f->function->code(ctx, f->function->codeData);
@@ -415,7 +401,7 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
         ex.partiallyUnwindContext(ctx->parent);
         throw;
     }
-    ctx->leaveCallContext();
+    ctx->popScope();
     return result;
 }
 
@@ -441,8 +427,7 @@ Value BuiltinFunctionOld::construct(Managed *, ExecutionContext *ctx, Value *, i
 Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
 {
     BuiltinFunctionOld *f = static_cast<BuiltinFunctionOld *>(that);
-    uint size = requiredMemoryForExecutionContect(f, argc);
-    ExecutionContext *ctx = static_cast<ExecutionContext *>(f->needsActivation ? malloc(size) : alloca(size));
+    ExecutionContext *ctx = context->createCallScope(f, thisObject, args, argc);
 
     ctx->thisObject = thisObject;
     if (!f->strictMode && !thisObject.isObject()) {
@@ -453,11 +438,6 @@ Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const V
             ctx->thisObject = Value::fromObject(thisObject.toObject(context));
     }
 
-    ctx->function = f;
-    ctx->arguments = args;
-    ctx->argumentCount = argc;
-
-    ctx->initCallContext(context);
     Value result = Value::undefinedValue();
     try {
         result = f->code(ctx);
@@ -466,7 +446,7 @@ Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const V
         throw;
     }
 
-    ctx->leaveCallContext();
+    ctx->popScope();
     return result;
 }
 

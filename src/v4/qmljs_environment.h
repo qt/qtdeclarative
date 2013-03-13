@@ -114,10 +114,10 @@ struct ExecutionContext
 
     ExecutionContext *createWithScope(Object *with);
     ExecutionContext *createCatchScope(String* exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
+    ExecutionContext *createCallScope(FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
     ExecutionContext *popScope();
 
     void initCallContext(ExecutionContext *parent);
-    void leaveCallContext();
 
     void wireUpPrototype();
 
