@@ -228,6 +228,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #endif
 
     qmlRegisterType<QQuickGrid, 1>(uri, 2, 1, "Grid");
+    qmlRegisterType<QQuickTextEdit, 1>(uri, 2, 1, "TextEdit");
 }
 
 void QQuickItemsModule::defineModule()

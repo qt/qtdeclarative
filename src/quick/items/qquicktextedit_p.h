@@ -100,7 +100,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
 #endif
     Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
-    Q_PROPERTY(QQuickTextDocument *textDocument READ textDocument FINAL)
+    Q_PROPERTY(QQuickTextDocument *textDocument READ textDocument FINAL REVISION 1)
 
 public:
     QQuickTextEdit(QQuickItem *parent=0);

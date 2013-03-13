@@ -3887,7 +3887,7 @@ void QQuickItem::forceActiveFocus()
     This method sets focus on the item and ensures that all ancestor
     FocusScope objects in the object hierarchy are also given \l focus.
 
-    \since 5.1
+    \since QtQuick 2.1
 
     \sa activeFocus, Qt::FocusReason
 */

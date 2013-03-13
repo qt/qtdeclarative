@@ -2190,7 +2190,7 @@ void QQuickTextEdit::remove(int start, int end)
 
 /*!
     \qmlproperty TextDocument QtQuick2::TextEdit::textDocument
-    \since 5.1
+    \since QtQuick 2.1
 
     Returns the QQuickTextDocument of this TextEdit.
     It can be used to implement syntax highlighting using
