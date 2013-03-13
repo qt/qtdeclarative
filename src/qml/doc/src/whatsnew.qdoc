@@ -30,10 +30,10 @@
 \page qtqml-releasenotes.html
 \inqmlmodule QtQuick 2.0
 
-\section1 Qt 5.0
+\section1 Qt QML in Qt 5
 
-The QtQml C++ module is new in Qt 5. It provides the QML engine and implements
-the QML language supporting infrastructure.
+The \l{Qt QML} module is new in Qt 5.0. It provides the QML engine and
+implements the QML language supporting infrastructure.
 
 (Prior to Qt 5, this functionality was provided by the QtDeclarative module, which
 has now been replaced by the new QtQml and QtQuick C++ modules. See the
@@ -100,4 +100,3 @@ has now been replaced by the new QtQml and QtQuick C++ modules. See the
 \endlist
 
 */
-
