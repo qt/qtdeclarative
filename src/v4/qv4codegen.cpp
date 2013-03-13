@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qv4codegen_p.h"
+#include "qv4util.h"
 #include "debugging.h"
 
 #include <QtCore/QCoreApplication>
@@ -618,10 +619,12 @@ private:
 
 class Codegen::ScanFunctions: Visitor
 {
+    typedef TemporaryAssignment<bool> TemporaryBoolAssignment;
 public:
     ScanFunctions(Codegen *cg)
         : _cg(cg)
         , _env(0)
+        , _inCondition(false)
     {
     }
 
@@ -772,6 +775,9 @@ protected:
     virtual bool visit(ExpressionStatement *ast)
     {
         if (FunctionExpression* expr = AST::cast<AST::FunctionExpression*>(ast->expression)) {
+            if (checkForBestPractices() && _inCondition)
+                _cg->throwSyntaxError(expr->functionToken, QCoreApplication::translate("qv4codegen", "conditional function or closure declaration"));
+
             enterFunction(expr, /*enterName*/ true);
             Node::accept(expr->formals, this);
             Node::accept(expr->body, this);
@@ -799,8 +805,16 @@ protected:
         leaveEnvironment();
     }
 
+    virtual bool visit(ObjectLiteral *ast)
+    {
+        TemporaryBoolAssignment inCondition(_inCondition, false);
+        Node::accept(ast->properties, this);
+        return false;
+    }
+
     virtual bool visit(PropertyGetterSetter *ast)
     {
+        TemporaryBoolAssignment inCondition(_inCondition, false);
         enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/0, /*isExpression*/false);
         return true;
     }
@@ -831,6 +845,68 @@ protected:
         return true;
     }
 
+    virtual bool visit(IfStatement *ast) {
+        TemporaryBoolAssignment inCondition(_inCondition, true);
+
+        Node::accept(ast->expression, this);
+        Node::accept(ast->ok, this);
+        Node::accept(ast->ko, this);
+
+        return false;
+    }
+
+    virtual bool visit(WhileStatement *ast) {
+        TemporaryBoolAssignment inCondition(_inCondition, true);
+        Node::accept(ast->expression, this);
+        Node::accept(ast->statement, this);
+        return false;
+    }
+
+    virtual bool visit(DoWhileStatement *ast) {
+        if (_env->isStrict) {
+            TemporaryBoolAssignment inCondition(_inCondition, true);
+            Node::accept(ast->statement, this);
+            Node::accept(ast->expression, this);
+            return false;
+        }
+
+        return true;
+    }
+
+    virtual bool visit(ForStatement *ast) {
+        TemporaryBoolAssignment inCondition(_inCondition, true);
+        Node::accept(ast->initialiser, this);
+        Node::accept(ast->condition, this);
+        Node::accept(ast->expression, this);
+        Node::accept(ast->statement, this);
+        return false;
+    }
+
+    virtual bool visit(LocalForStatement *ast) {
+        TemporaryBoolAssignment inCondition(_inCondition, true);
+        Node::accept(ast->declarations, this);
+        Node::accept(ast->condition, this);
+        Node::accept(ast->expression, this);
+        Node::accept(ast->statement, this);
+        return false;
+    }
+
+    virtual bool visit(ForEachStatement *ast) {
+        TemporaryBoolAssignment inCondition(_inCondition, true);
+        Node::accept(ast->initialiser, this);
+        Node::accept(ast->expression, this);
+        Node::accept(ast->statement, this);
+        return false;
+    }
+
+    virtual bool visit(LocalForEachStatement *ast) {
+        TemporaryBoolAssignment inCondition(_inCondition, true);
+        Node::accept(ast->declaration, this);
+        Node::accept(ast->expression, this);
+        Node::accept(ast->statement, this);
+        return false;
+    }
+
 private:
     void enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionExpression *expr, bool isExpression)
     {
@@ -856,7 +932,7 @@ private:
             for (FormalParameterList *it = formals; it; it = it->next) {
                 QString arg = it->name.toString();
                 if (args.contains(arg))
-                    _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "Duplicate parameter name '%1' in strict mode").arg(arg));
+                    _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "Duplicate parameter name '%1' is not allowed in strict mode").arg(arg));
                 if (arg == QLatin1String("eval") || arg == QLatin1String("arguments"))
                     _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "'%1' cannot be used as parameter name in strict mode").arg(arg));
                 args += arg;
@@ -864,10 +940,21 @@ private:
         }
     }
 
+    bool checkForBestPractices() const
+    {
+        // Please note: if this is somehow made conditional "the proper way",
+        // then please verify the code generation. There is no guarantee that
+        // the whole path through the back-ends is correct if this returns
+        // false. Actually, it has not been tested at all.
+        return true;
+    }
 
+private: // fields:
     Codegen *_cg;
     Environment *_env;
     QStack<Environment *> _envStack;
+
+    bool _inCondition;
 };
 
 Codegen::Codegen(VM::ExecutionContext *context, bool strict)
