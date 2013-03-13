@@ -799,8 +799,19 @@ bool Object::Set(Handle<Value> key, Handle<Value> value, PropertyAttribute attri
 
 bool Object::Set(uint32_t index, Handle<Value> value)
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    assert(o);
+    QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
+    bool result = true;
+    try {
+        o->putIndexed(ctx, index, *ValuePtr(&value));
+        // ### attribs
+    } catch (VM::Exception &e) {
+        Isolate::GetCurrent()->setException(e.value());
+        e.accept(ctx);
+        result = false;
+    }
+    return result;
 }
 
 Local<Value> Object::Get(Handle<Value> key)
