@@ -773,6 +773,7 @@ private:
   int m_lineNumber;
 };
 
+DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Message)
 
 /**
  * Representation of a JavaScript stack trace. The information collected is a
