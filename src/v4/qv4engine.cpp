@@ -107,7 +107,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     emptyClass = new InternalClass(this);
     arrayClass = emptyClass->addMember(id_length);
-    rootContext = newContext();
+    rootContext = new ExecutionContext();
     rootContext->init(this);
     current = rootContext;
 
@@ -244,9 +244,45 @@ ExecutionEngine::~ExecutionEngine()
     delete memoryManager;
 }
 
-ExecutionContext *ExecutionEngine::newContext()
+ExecutionContext *ExecutionEngine::newWithContext(Object *with)
 {
-    return new ExecutionContext();
+    ExecutionContext *withCtx = new ExecutionContext();
+    withCtx->init(current, with);
+    current = withCtx;
+    return withCtx;
+}
+
+ExecutionContext *ExecutionEngine::newCatchContext(String *exceptionVarName, const Value &exceptionValue)
+{
+    ExecutionContext *catchCtx = new ExecutionContext();
+    catchCtx->initForCatch(current, exceptionVarName, exceptionValue);
+    current = catchCtx;
+    return catchCtx;
+}
+
+ExecutionContext *ExecutionEngine::newCallContext(FunctionObject *f, const Value &thisObject, Value *args, int argc)
+{
+    uint size = requiredMemoryForExecutionContect(f, argc);
+    ExecutionContext *ctx = static_cast<ExecutionContext *>(malloc(size));
+    ctx->function = f;
+    ctx->thisObject = thisObject;
+    ctx->arguments = args;
+    ctx->argumentCount = argc;
+    ctx->initCallContext(current);
+    current = ctx;
+    return ctx;
+}
+
+ExecutionContext *ExecutionEngine::popContext()
+{
+    ExecutionContext *oldCtx = current;
+    current = current->parent;
+    oldCtx->parent = 0;
+
+    if (debugger)
+        debugger->justLeft(oldCtx);
+
+    return current;
 }
 
 Function *ExecutionEngine::newFunction(const QString &name)

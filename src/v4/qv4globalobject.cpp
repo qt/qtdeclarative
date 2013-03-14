@@ -370,7 +370,7 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
     if (!directCall) {
         // the context for eval should be the global scope, so we fake a root
         // context
-        ctx = parentContext->engine->newContext();
+        ctx = new ExecutionContext();
         ctx->init(parentContext->engine);
         ctx->activation = engine->globalObject.asObject();
         ctx->strictMode = engine->rootContext->strictMode;
@@ -396,7 +396,7 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
         strict = true;
 
     if (strict) {
-        ExecutionContext *k = ctx->createCallScope(this, ctx->thisObject, 0, 0);
+        ExecutionContext *k = ctx->engine->newCallContext(this, ctx->thisObject, 0, 0);
         k->activation = qmlActivation;
         k->qmlObject = qmlActivation;
         ctx = k;
@@ -419,7 +419,7 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
     ctx->strictMode = cstrict;
 
     while (engine->current != parentContext)
-        engine->current->popScope();
+        engine->popContext();
 
     return result;
 }

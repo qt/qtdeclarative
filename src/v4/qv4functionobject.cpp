@@ -364,7 +364,7 @@ Value ScriptFunction::construct(Managed *that, ExecutionContext *context, Value 
     if (proto.isObject())
         obj->prototype = proto.objectValue();
 
-    ExecutionContext *ctx = context->createCallScope(f, Value::fromObject(obj), args, argc);
+    ExecutionContext *ctx = context->engine->newCallContext(f, Value::fromObject(obj), args, argc);
 
     Value result = Value::undefinedValue();
     try {
@@ -373,7 +373,7 @@ Value ScriptFunction::construct(Managed *that, ExecutionContext *context, Value 
         ex.partiallyUnwindContext(ctx->parent);
         throw;
     }
-    ctx->popScope();
+    ctx->engine->popContext();
 
     if (result.isObject())
         return result;
@@ -384,7 +384,7 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
     assert(f->function->code);
-    ExecutionContext *ctx = context->createCallScope(f, thisObject, args, argc);
+    ExecutionContext *ctx = context->engine->newCallContext(f, thisObject, args, argc);
 
     if (!f->strictMode && !thisObject.isObject()) {
         if (thisObject.isUndefined() || thisObject.isNull()) {
@@ -401,7 +401,7 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
         ex.partiallyUnwindContext(ctx->parent);
         throw;
     }
-    ctx->popScope();
+    ctx->engine->popContext();
     return result;
 }
 
@@ -427,7 +427,7 @@ Value BuiltinFunctionOld::construct(Managed *, ExecutionContext *ctx, Value *, i
 Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
 {
     BuiltinFunctionOld *f = static_cast<BuiltinFunctionOld *>(that);
-    ExecutionContext *ctx = context->createCallScope(f, thisObject, args, argc);
+    ExecutionContext *ctx = context->engine->newCallContext(f, thisObject, args, argc);
 
     ctx->thisObject = thisObject;
     if (!f->strictMode && !thisObject.isObject()) {
@@ -446,7 +446,7 @@ Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const V
         throw;
     }
 
-    ctx->popScope();
+    ctx->engine->popContext();
     return result;
 }
 

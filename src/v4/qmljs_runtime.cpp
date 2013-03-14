@@ -142,7 +142,7 @@ void Exception::partiallyUnwindContext(ExecutionContext *catchingContext)
         return;
     ExecutionContext *context = throwingContext;
     while (context != catchingContext)
-        context = context->popScope();
+        context = context->engine->popContext();
     throwingContext = context;
 }
 
@@ -1253,17 +1253,17 @@ void __qmljs_builtin_throw(ExecutionContext *context, const Value &val)
 ExecutionContext *__qmljs_builtin_push_with_scope(const Value &o, ExecutionContext *ctx)
 {
     Object *obj = o.toObject(ctx);
-    return ctx->createWithScope(obj);
+    return ctx->engine->newWithContext(obj);
 }
 
 ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, const Value &exceptionValue, ExecutionContext *ctx)
 {
-    return ctx->createCatchScope(exceptionVarName, exceptionValue);
+    return ctx->engine->newCatchContext(exceptionVarName, exceptionValue);
 }
 
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx)
 {
-    return ctx->popScope();
+    return ctx->engine->popContext();
 }
 
 void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name)

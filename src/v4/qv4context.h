@@ -111,11 +111,6 @@ struct ExecutionContext
     Value getBindingValue(ExecutionContext *scope, String *name, bool strict) const;
     bool deleteBinding(ExecutionContext *ctx, String *name);
 
-    ExecutionContext *createWithScope(Object *with);
-    ExecutionContext *createCatchScope(String* exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
-    ExecutionContext *createCallScope(FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
-    ExecutionContext *popScope();
-
     void initCallContext(ExecutionContext *parent);
 
     void wireUpPrototype();

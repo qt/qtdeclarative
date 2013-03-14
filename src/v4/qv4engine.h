@@ -187,7 +187,10 @@ struct Q_V4_EXPORT ExecutionEngine
     ExecutionEngine(EvalISelFactory *iselFactory = 0);
     ~ExecutionEngine();
 
-    ExecutionContext *newContext();
+    ExecutionContext *newWithContext(Object *with);
+    ExecutionContext *newCatchContext(String* exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
+    ExecutionContext *newCallContext(FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
+    ExecutionContext *popContext();
 
     VM::Function *newFunction(const QString &name);
 
