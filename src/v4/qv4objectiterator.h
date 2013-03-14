@@ -41,7 +41,7 @@
 #ifndef QV4OBJECTITERATOR_H
 #define QV4OBJECTITERATOR_H
 
-#include "qmljs_value.h"
+#include "qv4value.h"
 #include <qv4internalclass.h>
 
 QT_BEGIN_NAMESPACE

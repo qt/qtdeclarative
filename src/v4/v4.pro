@@ -21,7 +21,7 @@ SOURCES += \
     qv4engine.cpp \
     qv4context.cpp \
     qmljs_runtime.cpp \
-    qmljs_value.cpp \
+    qv4value.cpp \
     qv4syntaxchecker.cpp \
     qv4isel_masm.cpp \
     llvm_runtime.cpp \
@@ -59,7 +59,7 @@ HEADERS += \
     qv4context.h \
     qmljs_runtime.h \
     qmljs_math.h \
-    qmljs_value.h \
+    qv4value.h \
     qv4syntaxchecker_p.h \
     qv4isel_masm_p.h \
     qv4isel_p.h \

@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 #include <qv4engine.h>
-#include <qmljs_value.h>
+#include <qv4value.h>
 #include <qv4object.h>
 #include <qv4objectproto.h>
 #include <qv4arrayobject.h>

@@ -44,7 +44,7 @@
 
 #include "qv4global.h"
 #include <QtCore/qmap.h>
-#include <qmljs_value.h>
+#include <qv4value.h>
 #include <qv4propertydescriptor.h>
 #include <assert.h>
 

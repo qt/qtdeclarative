@@ -41,7 +41,7 @@
 
 #include "qv4globalobject.h"
 #include "qv4mm.h"
-#include "qmljs_value.h"
+#include "qv4value.h"
 #include "qv4context.h"
 
 #include <private/qqmljsengine_p.h>

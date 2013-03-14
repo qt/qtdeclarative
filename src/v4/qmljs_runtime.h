@@ -42,7 +42,7 @@
 #define QMLJS_RUNTIME_H
 
 #include "qv4global.h"
-#include "qmljs_value.h"
+#include "qv4value.h"
 #include "qmljs_math.h"
 
 

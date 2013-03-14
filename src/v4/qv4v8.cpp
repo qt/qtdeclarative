@@ -46,7 +46,7 @@
 #include "qv4mm.h"
 #include "qv4managed.h"
 #include "qv4functionobject.h"
-#include "qmljs_value.h"
+#include "qv4value.h"
 #include "qv4isel_masm_p.h"
 #include "qv4globalobject.h"
 #include "qv4regexpobject.h"

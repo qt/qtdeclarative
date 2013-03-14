@@ -42,7 +42,7 @@
 #define QV4PROPERTYDESCRIPTOR_H
 
 #include "qv4global.h"
-#include "qmljs_value.h"
+#include "qv4value.h"
 
 QT_BEGIN_NAMESPACE
 

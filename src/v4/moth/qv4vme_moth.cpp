@@ -1,6 +1,6 @@
 #include "qv4vme_moth_p.h"
 #include "qv4instr_moth_p.h"
-#include "qmljs_value.h"
+#include "qv4value.h"
 #include "debugging.h"
 
 #include <iostream>
