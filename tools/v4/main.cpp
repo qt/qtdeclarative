@@ -57,7 +57,7 @@
 #include "private/qv4objectproto.h"
 #include "private/qv4isel_p.h"
 #include "private/qv4mm.h"
-#include "private/qmljs_environment.h"
+#include "private/qv4context.h"
 
 #include <QtCore>
 #include <private/qqmljsengine_p.h>

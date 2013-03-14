@@ -19,7 +19,7 @@ SOURCES += \
     qv4codegen.cpp \
     qv4jsir.cpp \
     qmljs_engine.cpp \
-    qmljs_environment.cpp \
+    qv4context.cpp \
     qmljs_runtime.cpp \
     qmljs_value.cpp \
     qv4syntaxchecker.cpp \
@@ -56,7 +56,7 @@ HEADERS += \
     qv4codegen_p.h \
     qv4jsir_p.h \
     qmljs_engine.h \
-    qmljs_environment.h \
+    qv4context.h \
     qmljs_runtime.h \
     qmljs_math.h \
     qmljs_value.h \

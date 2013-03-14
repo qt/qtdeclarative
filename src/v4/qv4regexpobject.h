@@ -43,7 +43,7 @@
 
 #include "qmljs_runtime.h"
 #include "qmljs_engine.h"
-#include "qmljs_environment.h"
+#include "qv4context.h"
 #include "qv4functionobject.h"
 #include "qv4string.h"
 #include "qv4codegen_p.h"

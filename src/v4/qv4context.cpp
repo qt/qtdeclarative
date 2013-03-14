@@ -41,7 +41,7 @@
 
 #include <QString>
 #include "debugging.h"
-#include <qmljs_environment.h>
+#include <qv4context.h>
 #include <qv4object.h>
 #include <qv4objectproto.h>
 #include "qv4mm.h"

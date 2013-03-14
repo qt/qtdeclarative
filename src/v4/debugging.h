@@ -32,7 +32,7 @@
 
 #include "qv4global.h"
 #include "qmljs_engine.h"
-#include "qmljs_environment.h"
+#include "qv4context.h"
 
 #include <QHash>
 

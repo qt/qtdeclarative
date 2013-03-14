@@ -50,7 +50,7 @@
 #include <QtCore/QStack>
 #include <private/qqmljsast_p.h>
 #include <qmljs_runtime.h>
-#include <qmljs_environment.h>
+#include <qv4context.h>
 #include <cmath>
 #include <iostream>
 #include <cassert>

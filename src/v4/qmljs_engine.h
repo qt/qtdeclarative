@@ -44,7 +44,7 @@
 #include "qv4global.h"
 #include "qv4isel_p.h"
 #include "qv4object.h"
-#include "qmljs_environment.h"
+#include "qv4context.h"
 #include <setjmp.h>
 
 #include <wtf/PassRefPtr.h>
