@@ -58,7 +58,7 @@ HEADERS += \
     qv4engine.h \
     qv4context.h \
     qv4runtime.h \
-    qmljs_math.h \
+    qv4math.h \
     qv4value.h \
     qv4syntaxchecker_p.h \
     qv4isel_masm_p.h \

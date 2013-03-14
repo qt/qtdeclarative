@@ -43,7 +43,7 @@
 
 #include "qv4global.h"
 #include "qv4value.h"
-#include "qmljs_math.h"
+#include "qv4math.h"
 
 
 #include <QtCore/QString>
