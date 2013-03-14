@@ -581,28 +581,34 @@ void ExecutionContext::initCallContext(ExecutionEngine *engine)
     if (function->function)
         lookups = function->function->lookups;
 
-    if (function->varCount || function->formalParameterCount) {
-        locals = new Value[function->varCount + function->formalParameterCount];
-        std::fill(locals, locals + function->varCount, Value::undefinedValue());
-    }
-
     uint argc = argumentCount;
-    if (function->needsActivation || argumentCount < function->formalParameterCount){
-        Value *args = arguments;
-        argumentCount = qMax(argc, function->formalParameterCount);
-        arguments = locals + function->varCount;
-        if (argc)
-            ::memcpy(arguments, args, argc * sizeof(Value));
-        if (argc < function->formalParameterCount)
-            std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
+    uint valuesToAlloc = function->varCount;
+    bool copyArgs = function->needsActivation || argumentCount < function->formalParameterCount;
+    if (copyArgs)
+        valuesToAlloc += qMax(argc, function->formalParameterCount);
 
-        if (function->usesArgumentsObject) {
-            ArgumentsObject *args = new (engine->memoryManager) ArgumentsObject(this, function->formalParameterCount, argc);
-            args->prototype = engine->objectPrototype;
-            Value arguments = Value::fromObject(args);
-            createMutableBinding(engine->id_arguments, false);
-            setMutableBinding(this, engine->id_arguments, arguments);
+    if (valuesToAlloc) {
+        locals = new Value[valuesToAlloc];
+        if (function->varCount)
+            std::fill(locals, locals + function->varCount, Value::undefinedValue());
+
+        if (copyArgs) {
+            Value *args = arguments;
+            argumentCount = qMax(argc, function->formalParameterCount);
+            arguments = locals + function->varCount;
+            if (argc)
+                ::memcpy(arguments, args, argc * sizeof(Value));
+            if (argc < function->formalParameterCount)
+                std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
+
         }
+    }
+    if (function->usesArgumentsObject) {
+        ArgumentsObject *args = new (engine->memoryManager) ArgumentsObject(this, function->formalParameterCount, argc);
+        args->prototype = engine->objectPrototype;
+        Value arguments = Value::fromObject(args);
+        createMutableBinding(engine->id_arguments, false);
+        setMutableBinding(this, engine->id_arguments, arguments);
     }
 
     if (engine->debugger)
