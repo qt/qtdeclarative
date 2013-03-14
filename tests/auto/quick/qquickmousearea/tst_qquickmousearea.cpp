@@ -276,20 +276,22 @@ void tst_QQuickMouseArea::dragging()
 
     // First move event triggers drag, second is acted upon.
     // This is due to possibility of higher stacked area taking precedence.
-
+    // The item is moved relative to the position of the mouse when the drag
+    // was triggered, this prevents a sudden change in position when the drag
+    // threshold is exceeded.
     QTest::mouseMove(window, QPoint(111,111), 50);
     QTest::mouseMove(window, QPoint(116,116), 50);
     QTest::mouseMove(window, QPoint(122,122), 50);
 
     QTRY_VERIFY(drag->active());
-    QTRY_COMPARE(blackRect->x(), 72.0);
-    QCOMPARE(blackRect->y(), 72.0);
+    QTRY_COMPARE(blackRect->x(), 61.0);
+    QCOMPARE(blackRect->y(), 61.0);
 
     QTest::mouseRelease(window, button, 0, QPoint(122,122));
 
     QTRY_VERIFY(!drag->active());
-    QCOMPARE(blackRect->x(), 72.0);
-    QCOMPARE(blackRect->y(), 72.0);
+    QCOMPARE(blackRect->x(), 61.0);
+    QCOMPARE(blackRect->y(), 61.0);
 
     delete window;
 }
@@ -384,14 +386,14 @@ void tst_QQuickMouseArea::setDragOnPressed()
     QTest::qWait(50);
 
     QVERIFY(drag->active());
-    QCOMPARE(target->x(), 72.0);
+    QCOMPARE(target->x(), 61.0);
     QCOMPARE(target->y(), 50.0);
 
     QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(122,122));
     QTest::qWait(50);
 
     QVERIFY(!drag->active());
-    QCOMPARE(target->x(), 72.0);
+    QCOMPARE(target->x(), 61.0);
     QCOMPARE(target->y(), 50.0);
 
     delete window;
@@ -1052,8 +1054,8 @@ void tst_QQuickMouseArea::disableAfterPress()
     QTRY_COMPARE(mousePositionSpy.count(), 2);
 
     QVERIFY(drag->active());
-    QCOMPARE(blackRect->x(), 72.0);
-    QCOMPARE(blackRect->y(), 72.0);
+    QCOMPARE(blackRect->x(), 61.0);
+    QCOMPARE(blackRect->y(), 61.0);
 
     mouseArea->setEnabled(false);
 
@@ -1065,8 +1067,8 @@ void tst_QQuickMouseArea::disableAfterPress()
     QTRY_COMPARE(mousePositionSpy.count(), 4);
 
     QVERIFY(drag->active());
-    QCOMPARE(blackRect->x(), 94.0);
-    QCOMPARE(blackRect->y(), 94.0);
+    QCOMPARE(blackRect->x(), 83.0);
+    QCOMPARE(blackRect->y(), 83.0);
 
     QVERIFY(mouseArea->pressed());
     QVERIFY(mouseArea->hovered());
@@ -1076,8 +1078,8 @@ void tst_QQuickMouseArea::disableAfterPress()
     QTRY_COMPARE(mouseReleaseSpy.count(), 1);
 
     QVERIFY(!drag->active());
-    QCOMPARE(blackRect->x(), 94.0);
-    QCOMPARE(blackRect->y(), 94.0);
+    QCOMPARE(blackRect->x(), 83.0);
+    QCOMPARE(blackRect->y(), 83.0);
 
     QVERIFY(!mouseArea->pressed());
     QVERIFY(!mouseArea->hovered()); // since hover is not enabled
@@ -1348,25 +1350,25 @@ void tst_QQuickMouseArea::changeAxis()
     QTest::mouseMove(view, QPoint(122, 122));
 
     QTRY_VERIFY(drag->active());
-    QCOMPARE(blackRect->x(), 72.0);
-    QCOMPARE(blackRect->y(), 72.0);
+    QCOMPARE(blackRect->x(), 61.0);
+    QCOMPARE(blackRect->y(), 61.0);
     QCOMPARE(drag->axis(), QQuickDrag::XAndYAxis);
 
     /* When blackRect.x becomes bigger than 75, the drag axis is changed to
      * Drag.YAxis by the QML code. Verify that this happens, and that the drag
      * movement is effectively constrained to the Y axis. */
-    QTest::mouseMove(view, QPoint(133, 133));
+    QTest::mouseMove(view, QPoint(144, 144));
 
     QTRY_COMPARE(blackRect->x(), 83.0);
     QTRY_COMPARE(blackRect->y(), 83.0);
     QTRY_COMPARE(drag->axis(), QQuickDrag::YAxis);
 
-    QTest::mouseMove(view, QPoint(144, 144));
+    QTest::mouseMove(view, QPoint(155, 155));
 
     QTRY_COMPARE(blackRect->y(), 94.0);
     QCOMPARE(blackRect->x(), 83.0);
 
-    QTest::mouseRelease(view, Qt::LeftButton, 0, QPoint(144, 144));
+    QTest::mouseRelease(view, Qt::LeftButton, 0, QPoint(155, 155));
 
     QTRY_VERIFY(!drag->active());
     QCOMPARE(blackRect->x(), 83.0);

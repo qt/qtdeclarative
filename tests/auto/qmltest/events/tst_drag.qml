@@ -47,6 +47,10 @@ Rectangle{
     width:200
     height:200
 
+    TestUtil {
+        id: util
+    }
+
     Rectangle {
         id:container
         width:20
@@ -67,8 +71,8 @@ Rectangle{
         when:windowShown
         function test_mouseDrag() {
             mouseDrag(container, 10, 10, 20, 30);
-            compare(container.x, 20);
-            compare(container.y, 30);
+            compare(container.x, 20 - util.dragThreshold - 1);
+            compare(container.y, 30 - util.dragThreshold - 1);
         }
     }
 }

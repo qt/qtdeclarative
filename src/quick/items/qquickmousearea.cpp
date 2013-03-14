@@ -828,6 +828,7 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
                 || QQuickWindowPrivate::dragOverThreshold(dragPos.y() - startPos.y(), Qt::YAxis, event))) {
             setKeepMouseGrab(true);
             d->stealMouse = true;
+            d->startScene = event->windowPos();
         }
 
         d->moved = true;
