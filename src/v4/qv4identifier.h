@@ -42,7 +42,7 @@
 #define QV4IDENTIFIER_H
 
 #include <qv4string.h>
-#include <qmljs_engine.h>
+#include <qv4engine.h>
 #include <limits.h>
 
 QT_BEGIN_NAMESPACE

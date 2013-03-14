@@ -27,7 +27,7 @@
 **
 ****************************************************************************/
 
-#include "qmljs_engine.h"
+#include "qv4engine.h"
 #include "qv4object.h"
 #include "qv4objectproto.h"
 #include "qv4mm.h"

@@ -31,7 +31,7 @@
 #define DEBUGGING_H
 
 #include "qv4global.h"
-#include "qmljs_engine.h"
+#include "qv4engine.h"
 #include "qv4context.h"
 
 #include <QHash>

@@ -43,7 +43,7 @@
 
 #include "qv4global.h"
 #include "qmljs_runtime.h"
-#include "qmljs_engine.h"
+#include "qv4engine.h"
 #include "qv4context.h"
 #include "qv4sparsearray.h"
 #include "qv4string.h"

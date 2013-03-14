@@ -41,7 +41,7 @@
 
 #include <qv4internalclass.h>
 #include <qv4string.h>
-#include <qmljs_engine.h>
+#include <qv4engine.h>
 #include <qv4identifier.h>
 
 namespace QQmlJS {

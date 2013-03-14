@@ -41,7 +41,7 @@
 
 #include "qv4regexp.h"
 
-#include "qmljs_engine.h"
+#include "qv4engine.h"
 
 namespace QQmlJS {
 namespace VM {

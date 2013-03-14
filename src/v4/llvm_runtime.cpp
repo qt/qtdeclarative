@@ -41,7 +41,7 @@
 
 #include "qmljs_runtime.h"
 #include "qv4context.h"
-#include "qmljs_engine.h"
+#include "qv4engine.h"
 #include <stdio.h>
 #include <setjmp.h>
 

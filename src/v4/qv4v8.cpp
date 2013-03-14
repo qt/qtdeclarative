@@ -41,7 +41,7 @@
 
 #include "qv4v8.h"
 
-#include "qmljs_engine.h"
+#include "qv4engine.h"
 #include "qmljs_runtime.h"
 #include "qv4mm.h"
 #include "qv4managed.h"
