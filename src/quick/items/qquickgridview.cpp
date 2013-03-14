@@ -463,7 +463,7 @@ void QQuickGridViewPrivate::resetColumns()
 {
     Q_Q(QQuickGridView);
     qreal length = flow == QQuickGridView::FlowLeftToRight ? q->width() : q->height();
-    columns = (int)qMax((length + colSize()/2) / colSize(), qreal(1.));
+    columns = qMax(1, qFloor(length / colSize()));
 }
 
 FxViewItem *QQuickGridViewPrivate::newViewItem(int modelIndex, QQuickItem *item)

@@ -1097,7 +1097,7 @@ void QQuickTextEdit::setFocusOnPress(bool on)
     \qmlproperty bool QtQuick2::TextEdit::persistentSelection
 
     Whether the TextEdit should keep the selection visible when it loses active focus to another
-    item in the scene. By default this is set to true;
+    item in the scene. By default this is set to false.
 */
 bool QQuickTextEdit::persistentSelection() const
 {

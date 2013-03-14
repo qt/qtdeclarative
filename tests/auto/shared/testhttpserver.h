@@ -64,6 +64,9 @@ public:
     void addAlias(const QString &filename, const QString &aliasName);
     void addRedirect(const QString &filename, const QString &redirectName);
 
+    // In Delay mode, each item needs one call to this function to be sent
+    void sendDelayedItem();
+
 private slots:
     void newConnection();
     void disconnected();

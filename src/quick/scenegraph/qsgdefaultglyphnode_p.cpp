@@ -96,7 +96,7 @@ const char *QSGTextMaskMaterialData::fragmentShader() const {
         "uniform sampler2D texture;                     \n"
         "uniform lowp vec4 color;                       \n"
         "void main() {                                  \n"
-        "    gl_FragColor = vec4(texture2D(texture, sampleCoord).rgb, 1.0); \n"
+        "    gl_FragColor = vec4(texture2D(texture, sampleCoord).rgb * color.a, 1.0); \n"
         "}";
 }
 

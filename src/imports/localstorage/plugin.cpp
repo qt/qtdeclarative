@@ -503,7 +503,7 @@ using the Offline Storage API.
 
 \section3 Open or create a databaseData
 \code
-import QtQuick.LocalStorage 2.0 as LS
+import QtQuick.LocalStorage 2.0 as Sql
 
 db = Sql.openDatabaseSync(identifier, version, description, estimated_size, callback(db))
 \endcode

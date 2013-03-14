@@ -1014,6 +1014,12 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     bool prevHMoved = hMoved;
     bool prevVMoved = vMoved;
 
+    bool moveY = false;
+    bool moveX = false;
+
+    qreal newY = 0;
+    qreal newX = 0;
+
     qint64 elapsedSincePress = computeCurrentTime(event) - lastPressTime;
     if (q->yflick()) {
         qreal dy = event->localPos().y() - pressPos.y();
@@ -1021,7 +1027,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         if (vData.dragStartOffset == 0)
             vData.dragStartOffset = dy;
         if (overThreshold || elapsedSincePress > 200) {
-            qreal newY = dy + vData.pressPos - vData.dragStartOffset;
+            newY = dy + vData.pressPos - vData.dragStartOffset;
             // Recalculate bounds in case margins have changed, but use the content
             // size estimate taken at the start of the drag in case the drag causes
             // the estimate to be altered
@@ -1041,8 +1047,8 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
             }
             if (!rejectY && stealMouse && dy != 0.0) {
                 clearTimeline();
-                vData.move.setValue(newY);
                 vMoved = true;
+                moveY = true;
             }
             if (!rejectY && overThreshold)
                 stealY = true;
@@ -1055,7 +1061,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         if (hData.dragStartOffset == 0)
             hData.dragStartOffset = dx;
         if (overThreshold || elapsedSincePress > 200) {
-            qreal newX = dx + hData.pressPos - hData.dragStartOffset;
+            newX = dx + hData.pressPos - hData.dragStartOffset;
             const qreal minX = hData.dragMinBound + hData.startMargin;
             const qreal maxX = hData.dragMaxBound - hData.endMargin;
             if (newX > minX)
@@ -1073,8 +1079,8 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
 
             if (!rejectX && stealMouse && dx != 0.0) {
                 clearTimeline();
-                hData.move.setValue(newX);
                 hMoved = true;
+                moveX = true;
             }
 
             if (!rejectX && overThreshold)
@@ -1101,6 +1107,11 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         draggingStarting();
         q->movementStarting();
     }
+
+    if (moveY)
+        vData.move.setValue(newY);
+    if (moveX)
+        hData.move.setValue(newX);
 
     qint64 currentTimestamp = computeCurrentTime(event);
     qreal elapsed = qreal(currentTimestamp - (lastPos.isNull() ? lastPressTime : lastPosTime)) / 1000.;

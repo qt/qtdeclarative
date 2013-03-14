@@ -91,7 +91,7 @@ QQmlEngineDebugClient::QQmlEngineDebugClient(
 quint32 QQmlEngineDebugClient::addWatch(
         const QmlDebugPropertyReference &property, bool *success)
 {
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled) {
         id = getId();
@@ -117,7 +117,7 @@ quint32 QQmlEngineDebugClient::addWatch(
         const QmlDebugObjectReference &object, const QString &expr,
         bool *success)
 {
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled) {
         id = getId();
@@ -133,7 +133,7 @@ quint32 QQmlEngineDebugClient::addWatch(
 quint32 QQmlEngineDebugClient::addWatch(
         const QmlDebugObjectReference &object, bool *success)
 {
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled) {
         id = getId();
@@ -169,7 +169,7 @@ void QQmlEngineDebugClient::removeWatch(quint32 id, bool *success)
 quint32 QQmlEngineDebugClient::queryAvailableEngines(bool *success)
 {
     m_engines.clear();
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled) {
         id = getId();
@@ -186,7 +186,7 @@ quint32 QQmlEngineDebugClient::queryRootContexts(
         const QmlDebugEngineReference &engine, bool *success)
 {
     m_rootContext = QmlDebugContextReference();
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled && engine.debugId != -1) {
         id = getId();
@@ -203,7 +203,7 @@ quint32 QQmlEngineDebugClient::queryObject(
         const QmlDebugObjectReference &object, bool *success)
 {
     m_object = QmlDebugObjectReference();
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled && object.debugId != -1) {
         id = getId();
@@ -221,7 +221,7 @@ quint32 QQmlEngineDebugClient::queryObjectsForLocation(
         const QString &file, int lineNumber, int columnNumber, bool *success)
 {
     m_objects.clear();
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled) {
         id = getId();
@@ -239,7 +239,7 @@ quint32 QQmlEngineDebugClient::queryObjectRecursive(
         const QmlDebugObjectReference &object, bool *success)
 {
     m_object = QmlDebugObjectReference();
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled && object.debugId != -1) {
         id = getId();
@@ -257,7 +257,7 @@ quint32 QQmlEngineDebugClient::queryObjectsForLocationRecursive(const QString &f
         int lineNumber, int columnNumber, bool *success)
 {
      m_objects.clear();
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled) {
         id = getId();
@@ -275,7 +275,7 @@ quint32 QQmlEngineDebugClient::queryExpressionResult(
         int objectDebugId, const QString &expr, bool *success)
 {
     m_exprResult = QVariant();
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled) {
         id = getId();
@@ -293,7 +293,7 @@ quint32 QQmlEngineDebugClient::queryExpressionResultBC(
         int objectDebugId, const QString &expr, bool *success)
 {
     m_exprResult = QVariant();
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled) {
         id = getId();
@@ -314,7 +314,7 @@ quint32 QQmlEngineDebugClient::setBindingForObject(
         QString source, int line,
         bool *success)
 {
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled && objectDebugId != -1) {
         id = getId();
@@ -333,7 +333,7 @@ quint32 QQmlEngineDebugClient::resetBindingForObject(
         const QString &propertyName,
         bool *success)
 {
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled && objectDebugId != -1) {
         id = getId();
@@ -350,7 +350,7 @@ quint32 QQmlEngineDebugClient::setMethodBody(
         int objectDebugId, const QString &methodName,
         const QString &methodBody, bool *success)
 {
-    quint32 id;
+    quint32 id = -1;
     *success = false;
     if (state() == QQmlDebugClient::Enabled && objectDebugId != -1) {
         id = getId();

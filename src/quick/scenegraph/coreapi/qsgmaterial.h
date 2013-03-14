@@ -43,7 +43,7 @@
 #define QSGMATERIAL_H
 
 #include <QtQuick/qtquickglobal.h>
-#include <qopenglshaderprogram.h>
+#include <QtGui/qopenglshaderprogram.h>
 
 QT_BEGIN_NAMESPACE
 

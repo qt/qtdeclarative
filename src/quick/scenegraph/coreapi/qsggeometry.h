@@ -44,7 +44,7 @@
 
 #include <QtQuick/qtquickglobal.h>
 #include <QtGui/qopengl.h>
-#include <QRectF>
+#include <QtCore/QRectF>
 
 QT_BEGIN_NAMESPACE
 

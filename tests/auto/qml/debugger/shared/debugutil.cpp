@@ -111,7 +111,7 @@ QString QQmlDebugProcess::state()
         if (m_process.exitStatus() == QProcess::CrashExit)
             stateStr += " (crashed!)";
         else
-            stateStr += ", return value" + m_process.exitCode();
+            stateStr += ", return value " + QString::number(m_process.exitCode());
         break;
     }
     case QProcess::Starting: stateStr = "starting"; break;
