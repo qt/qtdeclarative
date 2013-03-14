@@ -249,7 +249,7 @@ ExecutionEngine::~ExecutionEngine()
 void ExecutionEngine::initRootContext()
 {
     ensureContextStackSize();
-    rootContext = new ExecutionContext();
+    rootContext = new (memoryManager) ExecutionContext();
     rootContext->init(this);
     current = rootContext;
     contextStack[0] = rootContext;
@@ -274,7 +274,7 @@ ExecutionContext *ExecutionEngine::newWithContext(Object *with)
     ensureContextStackSize();
     assert(contextStack[contextStackPosition + 1] == 0);
 
-    ExecutionContext *ctx = new ExecutionContext();
+    ExecutionContext *ctx = new (memoryManager) ExecutionContext();
     ctx->init(current, with);
     current = ctx;
 
@@ -287,7 +287,7 @@ ExecutionContext *ExecutionEngine::newCatchContext(String *exceptionVarName, con
     ensureContextStackSize();
     assert(contextStack[contextStackPosition + 1] == 0);
 
-    ExecutionContext *ctx = new ExecutionContext();
+    ExecutionContext *ctx = new (memoryManager) ExecutionContext();
     ctx->initForCatch(current, exceptionVarName, exceptionValue);
     current = ctx;
 
@@ -300,8 +300,7 @@ ExecutionContext *ExecutionEngine::newCallContext(FunctionObject *f, const Value
     ensureContextStackSize();
     assert(contextStack[contextStackPosition + 1] == 0);
 
-    uint size = requiredMemoryForExecutionContect(f, argc);
-    current = static_cast<ExecutionContext *>(malloc(size));
+    current = new (memoryManager) ExecutionContext();
     current->function = f;
     current->thisObject = thisObject;
     current->arguments = args;

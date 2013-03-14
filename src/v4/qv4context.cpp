@@ -79,6 +79,8 @@ String *DiagnosticMessage::buildFullMessage(ExecutionContext *ctx) const
     return ctx->engine->newString(msg);
 }
 
+DEFINE_MANAGED_VTABLE(ExecutionContext);
+
 void ExecutionContext::createMutableBinding(String *name, bool deletable)
 {
     if (!activation)
@@ -262,22 +264,64 @@ bool ExecutionContext::deleteProperty(String *name)
     return true;
 }
 
-void ExecutionContext::mark()
+void ExecutionContext::destroy(Managed *that)
 {
-    thisObject.mark();
-    if (function)
-        function->mark();
-    for (unsigned arg = 0, lastArg = formalCount(); arg < lastArg; ++arg)
-        arguments[arg].mark();
-    for (unsigned local = 0, lastLocal = variableCount(); local < lastLocal; ++local)
-        locals[local].mark();
-    if (activation)
-        activation->mark();
-    if (withObject)
-        withObject->mark();
-    if (exceptionVarName)
-        exceptionVarName->mark();
-    exceptionValue.mark();
+    ExecutionContext *ctx = static_cast<ExecutionContext *>(that);
+    if (ctx->locals)
+        delete [] ctx->locals;
+    ctx->_data = 0;
+    ctx->vtbl = 0;
+}
+
+void ExecutionContext::markObjects(Managed *that)
+{
+    ExecutionContext *ctx = static_cast<ExecutionContext *>(that);
+    ctx->thisObject.mark();
+    if (ctx->function)
+        ctx->function->mark();
+    for (unsigned arg = 0, lastArg = ctx->formalCount(); arg < lastArg; ++arg)
+        ctx->arguments[arg].mark();
+    for (unsigned local = 0, lastLocal = ctx->variableCount(); local < lastLocal; ++local)
+        ctx->locals[local].mark();
+    if (ctx->activation)
+        ctx->activation->mark();
+    if (ctx->withObject)
+        ctx->withObject->mark();
+    if (ctx->exceptionVarName)
+        ctx->exceptionVarName->mark();
+    ctx->exceptionValue.mark();
+}
+
+Value ExecutionContext::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+{
+}
+
+Value ExecutionContext::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+{
+}
+
+void ExecutionContext::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
+{
+}
+
+void ExecutionContext::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value)
+{
+}
+
+PropertyFlags ExecutionContext::query(Managed *m, ExecutionContext *ctx, String *name)
+{
+}
+
+PropertyFlags ExecutionContext::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
+{
+}
+
+bool ExecutionContext::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
+{
+}
+
+bool ExecutionContext::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
+{
 }
 
 void ExecutionContext::setProperty(String *name, const Value& value)
@@ -537,8 +581,8 @@ void ExecutionContext::initCallContext(ExecutionEngine *engine)
     if (function->function)
         lookups = function->function->lookups;
 
-    if (function->varCount) {
-        locals = reinterpret_cast<Value *>(this + 1);
+    if (function->varCount || function->formalParameterCount) {
+        locals = new Value[function->varCount + function->formalParameterCount];
         std::fill(locals, locals + function->varCount, Value::undefinedValue());
     }
 
@@ -546,7 +590,7 @@ void ExecutionContext::initCallContext(ExecutionEngine *engine)
     if (function->needsActivation || argumentCount < function->formalParameterCount){
         Value *args = arguments;
         argumentCount = qMax(argc, function->formalParameterCount);
-        arguments = reinterpret_cast<Value *>(this + 1) + function->varCount;
+        arguments = locals + function->varCount;
         if (argc)
             ::memcpy(arguments, args, argc * sizeof(Value));
         if (argc < function->formalParameterCount)

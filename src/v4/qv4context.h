@@ -43,6 +43,7 @@
 
 #include "qv4global.h"
 #include <qmljs_runtime.h>
+#include "qv4managed.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -74,7 +75,7 @@ struct Q_V4_EXPORT DiagnosticMessage
     String *buildFullMessage(ExecutionContext *ctx) const;
 };
 
-struct ExecutionContext
+struct ExecutionContext : public Managed
 {
     ExecutionEngine *engine;
     ExecutionContext *outer;
@@ -100,6 +101,11 @@ struct ExecutionContext
 
     Object *activation;
     Object *withObject;
+
+    ExecutionContext()
+        : Managed()
+        , locals(0)
+    { vtbl = &static_vtbl; }
 
     void init(ExecutionEngine *e);
     void init(ExecutionContext *p, Object *with);
@@ -137,13 +143,20 @@ struct ExecutionContext
         return Value::undefinedValue();
     }
 
-    void mark();
+protected:
+    static void destroy(Managed *that);
+    static void markObjects(Managed *that);
+    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty);
+    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+    static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value);
+    static PropertyFlags query(Managed *m, ExecutionContext *ctx, String *name);
+    static PropertyFlags queryIndexed(Managed *m, ExecutionContext *ctx, uint index);
+    static bool deleteProperty(Managed *m, ExecutionContext *ctx, String *name);
+    static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index);
 
+    static const ManagedVTable static_vtbl;
 };
-
-/* Function *f, int argc */
-#define requiredMemoryForExecutionContect(f, argc) \
-    sizeof(ExecutionContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount))
 
 
 } // namespace VM
