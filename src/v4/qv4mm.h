@@ -34,7 +34,7 @@
 
 #include <QScopedPointer>
 
-#define DETAILED_MM_STATS
+//#define DETAILED_MM_STATS
 
 QT_BEGIN_NAMESPACE
 

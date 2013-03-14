@@ -51,7 +51,7 @@
 using namespace QQmlJS::VM;
 using namespace WTF;
 
-static const std::size_t CHUNK_SIZE = 65536;
+static const std::size_t CHUNK_SIZE = 1024*32;
 
 struct MemoryManager::Data
 {
@@ -60,6 +60,7 @@ struct MemoryManager::Data
     bool scribble;
     bool aggressiveGC;
     ExecutionEngine *engine;
+    quintptr *stackTop;
 
     enum { MaxItemSize = 256 };
     Managed *smallItems[MaxItemSize/16];
@@ -83,6 +84,7 @@ struct MemoryManager::Data
         : enableGC(enableGC)
         , gcBlocked(false)
         , engine(0)
+        , stackTop(0)
     {
         memset(smallItems, 0, sizeof(smallItems));
         memset(nChunks, 0, sizeof(nChunks));
@@ -120,6 +122,32 @@ MemoryManager::MemoryManager()
 #ifdef V4_USE_VALGRIND
     VALGRIND_CREATE_MEMPOOL(this, 0, true);
 #endif
+
+#if USE(PTHREADS)
+#  if OS(DARWIN)
+    void *st = pthread_get_stackaddr_np(pthread_self());
+    m_d->stackTop = static_cast<quintptr *>(st);
+#  else
+    void* stackBottom = 0;
+    pthread_attr_t attr;
+    pthread_getattr_np(pthread_self(), &attr);
+    size_t stackSize = 0;
+    pthread_attr_getstack(&attr, &stackBottom, &stackSize);
+    pthread_attr_destroy(&attr);
+
+    m_d->stackTop = static_cast<quintptr *>(stackBottom) + stackSize/sizeof(quintptr);
+#  endif
+#elif OS(WINDOWS)
+#  if COMPILER(MSVC)
+    PNT_TIB tib = (PNT_TIB)NtCurrentTeb();
+    m_d->stackTop = static_cast<quintptr*>(tib->StackBase);
+#  else
+#    error "Unsupported compiler: no way to get the top-of-stack."
+#  endif
+#else
+#  error "Unsupported platform: no way to get the top-of-stack."
+#endif
+
 }
 
 Managed *MemoryManager::alloc(std::size_t size)
@@ -157,7 +185,7 @@ Managed *MemoryManager::alloc(std::size_t size)
         uint shift = ++m_d->nChunks[pos];
         if (shift > 10)
             shift = 10;
-        std::size_t allocSize = std::max(size, CHUNK_SIZE*(1 << shift));
+        std::size_t allocSize = CHUNK_SIZE*(1 << shift)*size;
         allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
         Data::Chunk allocation;
         allocation.memory = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
@@ -392,37 +420,11 @@ void MemoryManager::collectFromStack() const
     if (!m_d->heapChunks.count())
         return;
 
-#if USE(PTHREADS)
-#  if OS(DARWIN)
-    void* stackTop = 0;
-    stackTop = pthread_get_stackaddr_np(pthread_self());
-    quintptr *top = static_cast<quintptr *>(stackTop);
-#  else
-    void* stackBottom = 0;
-    pthread_attr_t attr;
-    pthread_getattr_np(pthread_self(), &attr);
-    size_t stackSize = 0;
-    pthread_attr_getstack(&attr, &stackBottom, &stackSize);
-    pthread_attr_destroy(&attr);
-
-    quintptr *top = static_cast<quintptr *>(stackBottom) + stackSize/sizeof(quintptr);
-#  endif
-#elif OS(WINDOWS)
-#  if COMPILER(MSVC)
-    PNT_TIB tib = (PNT_TIB)NtCurrentTeb();
-    quintptr *top = static_cast<quintptr*>(tib->StackBase);
-#  else
-#    error "Unsupported compiler: no way to get the top-of-stack."
-#  endif
-#else
-#  error "Unsupported platform: no way to get the top-of-stack."
-#endif
-
     quintptr *current = (&valueOnStack) + 1;
 //    qDebug() << "collectFromStack";// << top << current << &valueOnStack;
 
 #if V4_USE_VALGRIND
-    VALGRIND_MAKE_MEM_DEFINED(current, (top - current)*sizeof(quintptr));
+    VALGRIND_MAKE_MEM_DEFINED(current, (m_d->stackTop - current)*sizeof(quintptr));
 #endif
 
     char** heapChunkBoundaries = (char**)alloca(m_d->heapChunks.count() * 2 * sizeof(char*));
@@ -435,7 +437,7 @@ void MemoryManager::collectFromStack() const
     }
     assert(i == m_d->heapChunks.count() * 2);
 
-    for (; current < top; ++current) {
+    for (; current < m_d->stackTop; ++current) {
         char* genericPtr =
 #if QT_POINTER_SIZE == 8
                 reinterpret_cast<char *>((*current) & ~(quint64(Value::Type_Mask) << Value::Tag_Shift));
