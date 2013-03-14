@@ -204,7 +204,7 @@ QImage QQuickTextureFactory::image() const
     \image imageprovider.png
 
     A complete example is available in Qt's 
-    \l {qml/imageprovider}{examples/qml/imageprovider}
+    \l {qml/imageprovider}{examples/quick/imageprovider}
     directory. Note the example registers the provider via a \l{QQmlExtensionPlugin}{plugin}
     instead of registering it in the application \c main() function as shown above.
 
