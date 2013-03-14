@@ -77,7 +77,6 @@ struct Q_V4_EXPORT DiagnosticMessage
 struct ExecutionContext
 {
     ExecutionEngine *engine;
-    ExecutionContext *parent;
     ExecutionContext *outer;
     Value thisObject;
 
@@ -111,7 +110,7 @@ struct ExecutionContext
     Value getBindingValue(ExecutionContext *scope, String *name, bool strict) const;
     bool deleteBinding(ExecutionContext *ctx, String *name);
 
-    void initCallContext(ExecutionContext *parent);
+    void initCallContext(QQmlJS::VM::ExecutionEngine *engine);
 
     void wireUpPrototype();
 

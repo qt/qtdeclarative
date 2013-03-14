@@ -370,12 +370,7 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
     if (!directCall) {
         // the context for eval should be the global scope, so we fake a root
         // context
-        ctx = new ExecutionContext();
-        ctx->init(parentContext->engine);
-        ctx->activation = engine->globalObject.asObject();
-        ctx->strictMode = engine->rootContext->strictMode;
-        ctx->parent = parentContext;
-        ctx->engine->current = ctx;
+        ctx = engine->pushGlobalContext();
     }
 
     if (!args[0].isString())

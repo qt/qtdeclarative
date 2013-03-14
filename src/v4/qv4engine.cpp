@@ -66,6 +66,9 @@ namespace VM {
 
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : memoryManager(new QQmlJS::VM::MemoryManager)
+    , contextStack(0)
+    , contextStackPosition(0)
+    , contextStackSize(0)
     , debugger(0)
     , globalObject(Value::nullValue())
     , globalCode(0)
@@ -107,9 +110,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     emptyClass = new InternalClass(this);
     arrayClass = emptyClass->addMember(id_length);
-    rootContext = new ExecutionContext();
-    rootContext->init(this);
-    current = rootContext;
+    initRootContext();
 
     objectPrototype = new (memoryManager) ObjectPrototype(this);
     stringPrototype = new (memoryManager) StringPrototype(rootContext);
@@ -239,49 +240,98 @@ ExecutionEngine::~ExecutionEngine()
 {
     delete globalObject.asObject();
     delete rootContext;
+    delete [] contextStack;
     UnwindHelper::deregisterFunctions(functions);
     qDeleteAll(functions);
     delete memoryManager;
 }
 
+void ExecutionEngine::initRootContext()
+{
+    ensureContextStackSize();
+    rootContext = new ExecutionContext();
+    rootContext->init(this);
+    current = rootContext;
+    contextStack[0] = rootContext;
+}
+
+void ExecutionEngine::ensureContextStackSize()
+{
+    if (contextStackPosition < contextStackSize - 1)
+        return;
+
+    const int stackSize = qMax(32, 2*contextStackSize);
+    ExecutionContext **newStack = new ExecutionContext *[stackSize];
+    if (contextStack)
+        memcpy(newStack, contextStack, contextStackSize*sizeof(ExecutionContext *));
+    memset(newStack + contextStackSize, 0, (stackSize - contextStackSize)*sizeof(ExecutionContext *));
+    contextStackSize = stackSize;
+    contextStack = newStack;
+}
+
 ExecutionContext *ExecutionEngine::newWithContext(Object *with)
 {
-    ExecutionContext *withCtx = new ExecutionContext();
-    withCtx->init(current, with);
-    current = withCtx;
-    return withCtx;
+    ensureContextStackSize();
+    assert(contextStack[contextStackPosition + 1] == 0);
+
+    ExecutionContext *ctx = new ExecutionContext();
+    ctx->init(current, with);
+    current = ctx;
+
+    contextStack[++contextStackPosition] = current;
+    return current;
 }
 
 ExecutionContext *ExecutionEngine::newCatchContext(String *exceptionVarName, const Value &exceptionValue)
 {
-    ExecutionContext *catchCtx = new ExecutionContext();
-    catchCtx->initForCatch(current, exceptionVarName, exceptionValue);
-    current = catchCtx;
-    return catchCtx;
+    ensureContextStackSize();
+    assert(contextStack[contextStackPosition + 1] == 0);
+
+    ExecutionContext *ctx = new ExecutionContext();
+    ctx->initForCatch(current, exceptionVarName, exceptionValue);
+    current = ctx;
+
+    contextStack[++contextStackPosition] = current;
+    return current;
 }
 
 ExecutionContext *ExecutionEngine::newCallContext(FunctionObject *f, const Value &thisObject, Value *args, int argc)
 {
+    ensureContextStackSize();
+    assert(contextStack[contextStackPosition + 1] == 0);
+
     uint size = requiredMemoryForExecutionContect(f, argc);
-    ExecutionContext *ctx = static_cast<ExecutionContext *>(malloc(size));
-    ctx->function = f;
-    ctx->thisObject = thisObject;
-    ctx->arguments = args;
-    ctx->argumentCount = argc;
-    ctx->initCallContext(current);
-    current = ctx;
-    return ctx;
+    current = static_cast<ExecutionContext *>(malloc(size));
+    current->function = f;
+    current->thisObject = thisObject;
+    current->arguments = args;
+    current->argumentCount = argc;
+    current->initCallContext(this);
+
+    contextStack[++contextStackPosition] = current;
+    return current;
+}
+
+ExecutionContext *ExecutionEngine::pushGlobalContext()
+{
+    ensureContextStackSize();
+    assert(contextStack[contextStackPosition + 1] == 0);
+
+    current = rootContext;
+
+    contextStack[++contextStackPosition] = current;
+    return current;
 }
 
 ExecutionContext *ExecutionEngine::popContext()
 {
-    ExecutionContext *oldCtx = current;
-    current = current->parent;
-    oldCtx->parent = 0;
+    assert(current == contextStack[contextStackPosition]);
 
     if (debugger)
-        debugger->justLeft(oldCtx);
+        debugger->justLeft(current);
 
+    contextStack[contextStackPosition] = 0;
+    current = contextStack[--contextStackPosition];
     return current;
 }
 

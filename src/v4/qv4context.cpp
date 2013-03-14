@@ -176,7 +176,6 @@ unsigned int ExecutionContext::variableCount() const
 void ExecutionContext::init(ExecutionEngine *eng)
 {
     engine = eng;
-    parent = 0;
     outer = 0;
     thisObject = eng->globalObject;
 
@@ -197,12 +196,11 @@ void ExecutionContext::init(ExecutionEngine *eng)
 void ExecutionContext::init(ExecutionContext *p, Object *with)
 {
     engine = p->engine;
-    parent = p;
     outer = p;
     thisObject = p->thisObject;
 
     function = 0;
-    lookups = parent->lookups;
+    lookups = p->lookups;
 
     arguments = 0;
     argumentCount = 0;
@@ -218,12 +216,11 @@ void ExecutionContext::init(ExecutionContext *p, Object *with)
 void ExecutionContext::initForCatch(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
 {
     engine = p->engine;
-    parent = p;
     outer = p;
     thisObject = p->thisObject;
 
     function = 0;
-    lookups = parent->lookups;
+    lookups = p->lookups;
     arguments = 0;
     argumentCount = 0;
     locals = 0;
@@ -523,13 +520,10 @@ void ExecutionContext::throwURIError(Value msg)
     throwError(Value::fromObject(engine->newURIErrorObject(this, msg)));
 }
 
-void ExecutionContext::initCallContext(ExecutionContext *parent)
+void ExecutionContext::initCallContext(ExecutionEngine *engine)
 {
-    engine = parent->engine;
-    assert(engine->current == parent);
-    this->parent = parent;
+    this->engine = engine;
     outer = function->scope;
-    engine->current = this;
 
     exceptionVarName = 0;
     exceptionValue = Value::undefinedValue();

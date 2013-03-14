@@ -370,7 +370,7 @@ Value ScriptFunction::construct(Managed *that, ExecutionContext *context, Value 
     try {
         result = f->function->code(ctx, f->function->codeData);
     } catch (Exception &ex) {
-        ex.partiallyUnwindContext(ctx->parent);
+        ex.partiallyUnwindContext(context);
         throw;
     }
     ctx->engine->popContext();
@@ -398,7 +398,7 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
     try {
         result = f->function->code(ctx, f->function->codeData);
     } catch (Exception &ex) {
-        ex.partiallyUnwindContext(ctx->parent);
+        ex.partiallyUnwindContext(context);
         throw;
     }
     ctx->engine->popContext();
@@ -442,7 +442,7 @@ Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const V
     try {
         result = f->code(ctx);
     } catch (Exception &ex) {
-        ex.partiallyUnwindContext(ctx->parent);
+        ex.partiallyUnwindContext(context);
         throw;
     }
 

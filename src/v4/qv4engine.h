@@ -105,8 +105,14 @@ struct Q_V4_EXPORT ExecutionEngine
 {
     MemoryManager *memoryManager;
     QScopedPointer<EvalISelFactory> iselFactory;
+
+    ExecutionContext **contextStack;
+    int contextStackPosition;
+    int contextStackSize;
+
     ExecutionContext *current;
     ExecutionContext *rootContext;
+
     WTF::BumpPointerAllocator bumperPointerAllocator; // Used by Yarr Regex engine.
 
     Identifiers *identifierCache;
@@ -190,6 +196,7 @@ struct Q_V4_EXPORT ExecutionEngine
     ExecutionContext *newWithContext(Object *with);
     ExecutionContext *newCatchContext(String* exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
     ExecutionContext *newCallContext(FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
+    ExecutionContext *pushGlobalContext();
     ExecutionContext *popContext();
 
     VM::Function *newFunction(const QString &name);
@@ -230,6 +237,9 @@ struct Q_V4_EXPORT ExecutionEngine
     void markObjects();
 
     Value run(VM::Function *function, ExecutionContext *ctx = 0);
+
+    void initRootContext();
+    void ensureContextStackSize();
 };
 
 template <typename T>
