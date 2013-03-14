@@ -42,7 +42,7 @@
 #define QMLJS_ENVIRONMENT_H
 
 #include "qv4global.h"
-#include <qmljs_runtime.h>
+#include <qv4runtime.h>
 #include "qv4managed.h"
 
 QT_BEGIN_NAMESPACE

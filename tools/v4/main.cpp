@@ -45,7 +45,7 @@
 
 #include "private/debugging.h"
 #include "private/qv4object.h"
-#include "private/qmljs_runtime.h"
+#include "private/qv4runtime.h"
 #include "private/qv4functionobject.h"
 #include "private/qv4errorobject.h"
 #include "private/qv4globalobject.h"

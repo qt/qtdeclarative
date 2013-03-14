@@ -41,7 +41,7 @@
 
 #include "qv4string.h"
 #include "qv4identifier.h"
-#include "qmljs_runtime.h"
+#include "qv4runtime.h"
 #include "qv4objectproto.h"
 #include "qv4stringobject.h"
 #include <QtCore/QHash>

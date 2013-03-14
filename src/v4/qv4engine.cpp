@@ -50,7 +50,7 @@
 #include <qv4mathobject.h>
 #include <qv4numberobject.h>
 #include <qv4regexpobject.h>
-#include <qmljs_runtime.h>
+#include <qv4runtime.h>
 #include "qv4mm.h"
 #include <qv4argumentsobject.h>
 #include <qv4dateobject.h>

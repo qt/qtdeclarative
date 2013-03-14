@@ -1,7 +1,7 @@
 #ifndef QV4VME_MOTH_P_H
 #define QV4VME_MOTH_P_H
 
-#include "qmljs_runtime.h"
+#include "qv4runtime.h"
 #include "qv4instr_moth_p.h"
 
 namespace QQmlJS {

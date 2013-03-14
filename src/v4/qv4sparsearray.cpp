@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qv4sparsearray.h"
-#include "qmljs_runtime.h"
+#include "qv4runtime.h"
 #include "qv4object.h"
 #include "qv4functionobject.h"
 #include <stdlib.h>

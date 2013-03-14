@@ -20,7 +20,7 @@ SOURCES += \
     qv4jsir.cpp \
     qv4engine.cpp \
     qv4context.cpp \
-    qmljs_runtime.cpp \
+    qv4runtime.cpp \
     qv4value.cpp \
     qv4syntaxchecker.cpp \
     qv4isel_masm.cpp \
@@ -57,7 +57,7 @@ HEADERS += \
     qv4jsir_p.h \
     qv4engine.h \
     qv4context.h \
-    qmljs_runtime.h \
+    qv4runtime.h \
     qmljs_math.h \
     qv4value.h \
     qv4syntaxchecker_p.h \

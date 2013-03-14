@@ -46,7 +46,7 @@
 #include "qv4isel_p.h"
 #include "qv4isel_util_p.h"
 #include "qv4object.h"
-#include "qmljs_runtime.h"
+#include "qv4runtime.h"
 
 #include <QtCore/QHash>
 #include <config.h>

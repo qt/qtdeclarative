@@ -41,7 +41,7 @@
 #ifndef QV4REGEXPOBJECT_H
 #define QV4REGEXPOBJECT_H
 
-#include "qmljs_runtime.h"
+#include "qv4runtime.h"
 #include "qv4engine.h"
 #include "qv4context.h"
 #include "qv4functionobject.h"

@@ -42,7 +42,7 @@
 #include "qv4v8.h"
 
 #include "qv4engine.h"
-#include "qmljs_runtime.h"
+#include "qv4runtime.h"
 #include "qv4mm.h"
 #include "qv4managed.h"
 #include "qv4functionobject.h"

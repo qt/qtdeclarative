@@ -49,7 +49,7 @@
 #include <QtCore/QBitArray>
 #include <QtCore/QStack>
 #include <private/qqmljsast_p.h>
-#include <qmljs_runtime.h>
+#include <qv4runtime.h>
 #include <qv4context.h>
 #include <cmath>
 #include <iostream>

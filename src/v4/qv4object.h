@@ -42,7 +42,7 @@
 #define QMLJS_OBJECTS_H
 
 #include "qv4global.h"
-#include "qmljs_runtime.h"
+#include "qv4runtime.h"
 #include "qv4engine.h"
 #include "qv4context.h"
 #include "qv4sparsearray.h"

@@ -41,7 +41,7 @@
 
 #include "qv4global.h"
 #include "debugging.h"
-#include "qmljs_runtime.h"
+#include "qv4runtime.h"
 #include "qv4object.h"
 #include "qv4jsir_p.h"
 #include "qv4objectproto.h"
