@@ -2114,7 +2114,7 @@ bool QQuickItemPrivate::focusNextPrev(QQuickItem *item, bool forward)
     if (current == item)
         return false;
 
-    current->forceActiveFocus();
+    current->forceActiveFocus(forward ? Qt::TabFocusReason : Qt::BacktabFocusReason);
 
     return true;
 }
