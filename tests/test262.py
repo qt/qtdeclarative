@@ -305,7 +305,7 @@ class TestCase(object):
 
   def Execute(self, command):
     if IsWindows():
-      args = '"%s"' % command
+      args = '%s' % command
     else:
       args = command.split(" ")
     stdout = TempFile(prefix="test262-out-")
@@ -431,7 +431,7 @@ class TestSuite(object):
           else:
             logging.warning("Unexpected path %s", full_path)
             rel_path = full_path
-          if self.ShouldRun(rel_path, tests) and not rel_path.startswith("intl402/"):
+          if self.ShouldRun(rel_path, tests) and not rel_path.startswith("intl402" + os.sep):
             basename = path.basename(full_path)[:-3]
             name = rel_path.split(path.sep)[:-1] + [basename]
             if EXCLUDE_LIST.count(basename) >= 1 or self.expectations.testsToSkip.count(basename) >= 1:
@@ -524,6 +524,8 @@ class TestSuite(object):
 
 def Main():
   # Some date tests rely on being run in pacific time.
+  # Uncomment the next line for more logging info.
+  #logging.basicConfig(level=logging.DEBUG)
   os.environ["TZ"] = "PST8PDT"
   parser = BuildOptions()
   (options, args) = parser.parse_args()
