@@ -124,8 +124,8 @@ const char *UNCAUGHT = "uncaught";
 //const char *PAUSE = "pause";
 //const char *RESUME = "resume";
 
-const char *BLOCKMODE = "-qmljsdebugger=port:3771,block";
-const char *NORMALMODE = "-qmljsdebugger=port:3771";
+const char *BLOCKMODE = "-qmljsdebugger=port:3771,3800,block";
+const char *NORMALMODE = "-qmljsdebugger=port:3771,3800";
 const char *TEST_QMLFILE = "test.qml";
 const char *TEST_JSFILE = "test.js";
 const char *TIMER_QMLFILE = "timer.qml";
@@ -1015,7 +1015,8 @@ bool tst_QQmlDebugJS::init(const QString &qmlFile, bool blockMode)
         return false;
     }
 
-    connection->connectToHost("127.0.0.1", 3771);
+    const int port = process->debugPort();
+    connection->connectToHost("127.0.0.1", port);
     if (!connection->waitForConnected()) {
         qDebug() << "could not connect to host!";
         return false;

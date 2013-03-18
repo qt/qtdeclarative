@@ -54,7 +54,8 @@ class QTcpServerConnectionPrivate {
 public:
     QTcpServerConnectionPrivate();
 
-    int port;
+    int portFrom;
+    int portTo;
     bool block;
     QString hostaddress;
     QTcpSocket *socket;
@@ -65,7 +66,8 @@ public:
 };
 
 QTcpServerConnectionPrivate::QTcpServerConnectionPrivate() :
-    port(0),
+    portFrom(0),
+    portTo(0),
     block(false),
     socket(0),
     protocol(0),
@@ -135,10 +137,12 @@ bool QTcpServerConnection::waitForMessage()
     return d->protocol->waitForReadyRead(-1);
 }
 
-void QTcpServerConnection::setPort(int port, bool block, const QString &hostaddress)
+void QTcpServerConnection::setPortRange(int portFrom, int portTo, bool block,
+                                        const QString &hostaddress)
 {
     Q_D(QTcpServerConnection);
-    d->port = port;
+    d->portFrom = portFrom;
+    d->portTo = portTo;
     d->block = block;
     d->hostaddress = hostaddress;
 
@@ -163,10 +167,20 @@ void QTcpServerConnection::listen()
     } else {
         hostaddress = QHostAddress::Any;
     }
-    if (d->tcpServer->listen(hostaddress, d->port))
-        qDebug("QML Debugger: Waiting for connection on port %d...", d->port);
-    else
-        qWarning("QML Debugger: Unable to listen to port %d.", d->port);
+    int port = d->portFrom;
+    do {
+        if (d->tcpServer->listen(hostaddress, port)) {
+            qDebug("QML Debugger: Waiting for connection on port %d...", port);
+            break;
+        }
+        ++port;
+    } while (port <= d->portTo);
+    if (port > d->portTo) {
+        if (d->portFrom == d->portTo)
+            qWarning("QML Debugger: Unable to listen to port %d.", d->portFrom);
+        else
+            qWarning("QML Debugger: Unable to listen to ports %d - %d.", d->portFrom, d->portTo);
+    }
 }
 
 

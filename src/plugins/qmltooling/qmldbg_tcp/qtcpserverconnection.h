@@ -61,7 +61,7 @@ public:
     ~QTcpServerConnection();
 
     void setServer(QQmlDebugServer *server);
-    void setPort(int port, bool bock, const QString &hostaddress);
+    void setPortRange(int portFrom, int portTo, bool bock, const QString &hostaddress);
 
     bool isConnected() const;
     void send(const QList<QByteArray> &messages);
