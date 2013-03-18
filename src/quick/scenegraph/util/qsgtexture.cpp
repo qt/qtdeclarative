@@ -675,8 +675,6 @@ void QSGPlainTexture::bind()
 #ifdef QT_OPENGL_ES
         internalFormat = GL_BGRA;
 #endif
-    } else if (strstr(extensions, "GL_APPLE_texture_format_BGRA8888")) {
-        externalFormat = GL_BGRA;
     } else if (strstr(extensions, "GL_EXT_texture_format_BGRA8888")
                || strstr(extensions, "GL_IMG_texture_format_BGRA8888")) {
         externalFormat = GL_BGRA;
