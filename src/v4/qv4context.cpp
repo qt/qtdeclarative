@@ -294,10 +294,14 @@ void ExecutionContext::markObjects(Managed *that)
 
 Value ExecutionContext::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
+    Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 Value ExecutionContext::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
 {
+    Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 void ExecutionContext::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
@@ -310,18 +314,26 @@ void ExecutionContext::putIndexed(Managed *m, ExecutionContext *ctx, uint index,
 
 PropertyFlags ExecutionContext::query(Managed *m, ExecutionContext *ctx, String *name)
 {
+    Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 PropertyFlags ExecutionContext::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
 {
+    Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 bool ExecutionContext::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
 {
+    Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 bool ExecutionContext::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
 {
+    Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 void ExecutionContext::setProperty(String *name, const Value& value)

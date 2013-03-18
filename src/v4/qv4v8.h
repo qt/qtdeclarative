@@ -1207,7 +1207,7 @@ class V8EXPORT String : public Primitive {
   /** Creates a symbol. Returns one if it exists already.*/
   static Local<String> NewSymbol(const char* data, int length = -1);
 
-  V8EXPORT static Local<String> New(QQmlJS::VM::String *s);
+  static Local<String> New(QQmlJS::VM::String *s);
 
   /**
    * Creates a new external string using the data defined in the given
