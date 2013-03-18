@@ -621,8 +621,9 @@ class Codegen::ScanFunctions: Visitor
 {
     typedef TemporaryAssignment<bool> TemporaryBoolAssignment;
 public:
-    ScanFunctions(Codegen *cg)
+    ScanFunctions(Codegen *cg, const QString &sourceCode)
         : _cg(cg)
+        , _sourceCode(sourceCode)
         , _env(0)
         , _inFuncBody(false)
         , _allowFuncDecls(true)
@@ -660,7 +661,13 @@ protected:
             if (StatementSourceElement *stmt = cast<StatementSourceElement *>(it->element)) {
                 if (ExpressionStatement *expr = cast<ExpressionStatement *>(stmt->statement)) {
                     if (StringLiteral *strLit = cast<StringLiteral *>(expr->expression)) {
-                        if (strLit->value == QLatin1String("use strict")) {
+                        // Use the source code, because the StringLiteral's
+                        // value might have escape sequences in it, which is not
+                        // allowed.
+                        if (strLit->literalToken.length < 2)
+                            continue;
+                        QStringRef str = _sourceCode.midRef(strLit->literalToken.offset + 1, strLit->literalToken.length - 2);
+                        if (str == QStringLiteral("use strict")) {
                             _env->isStrict = true;
                         } else {
                             // TODO: give a warning.
@@ -964,6 +971,7 @@ private:
 
 private: // fields:
     Codegen *_cg;
+    const QString _sourceCode;
     Environment *_env;
     QStack<Environment *> _envStack;
 
@@ -1009,8 +1017,11 @@ Codegen::Codegen(ErrorHandler *errorHandler, bool strictMode)
 {
 }
 
-IR::Function *Codegen::operator()(const QString &fileName, Program *node,
-                                  IR::Module *module, Mode mode,
+IR::Function *Codegen::operator()(const QString &fileName,
+                                  const QString &sourceCode,
+                                  Program *node,
+                                  IR::Module *module,
+                                  Mode mode,
                                   const QStringList &inheritedLocals)
 {
     assert(node);
@@ -1019,7 +1030,7 @@ IR::Function *Codegen::operator()(const QString &fileName, Program *node,
     _module = module;
     _env = 0;
 
-    ScanFunctions scan(this);
+    ScanFunctions scan(this, sourceCode);
     scan(node);
 
     IR::Function *globalCode = defineFunction(QStringLiteral("%entry"), node, 0,
@@ -1041,13 +1052,16 @@ IR::Function *Codegen::operator()(const QString &fileName, Program *node,
     return globalCode;
 }
 
-IR::Function *Codegen::operator()(const QString &fileName, AST::FunctionExpression *ast, IR::Module *module)
+IR::Function *Codegen::operator()(const QString &fileName,
+                                  const QString &sourceCode,
+                                  AST::FunctionExpression *ast,
+                                  IR::Module *module)
 {
     _fileName = fileName;
     _module = module;
     _env = 0;
 
-    ScanFunctions scan(this);
+    ScanFunctions scan(this, sourceCode);
     // fake a global environment
     scan.enterEnvironment(0);
     scan(ast);

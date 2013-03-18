@@ -488,7 +488,7 @@ QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
                     inheritedLocals.append(*i ? (*i)->toQString() : QString());
 
             Codegen cg(ctx, strictMode);
-            IR::Function *globalIRCode = cg(fileName, program, &module, mode, inheritedLocals);
+            IR::Function *globalIRCode = cg(fileName, source, program, &module, mode, inheritedLocals);
             QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(vm, &module));
             if (inheritContext)
                 isel->setUseFastLookups(false);

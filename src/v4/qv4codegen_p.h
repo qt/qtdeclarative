@@ -80,8 +80,16 @@ public:
         FunctionCode
     };
 
-    IR::Function *operator()(const QString &fileName, AST::Program *ast, IR::Module *module, Mode mode = GlobalCode, const QStringList &inheritedLocals = QStringList());
-    IR::Function *operator()(const QString &fileName, AST::FunctionExpression *ast, IR::Module *module);
+    IR::Function *operator()(const QString &fileName,
+                             const QString &sourceCode,
+                             AST::Program *ast,
+                             IR::Module *module,
+                             Mode mode = GlobalCode,
+                             const QStringList &inheritedLocals = QStringList());
+    IR::Function *operator()(const QString &fileName,
+                             const QString &sourceCode,
+                             AST::FunctionExpression *ast,
+                             IR::Module *module);
 
 protected:
     enum Format { ex, cx, nx };

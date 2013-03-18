@@ -208,7 +208,7 @@ Value FunctionCtor::construct(Managed *that, ExecutionContext *ctx, Value *args,
     IR::Module module;
 
     Codegen cg(ctx, f->strictMode);
-    IR::Function *irf = cg(QString(), fe, &module);
+    IR::Function *irf = cg(QString(), function, fe, &module);
 
     QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(ctx->engine, &module));
     VM::Function *vmf = isel->vmFunction(irf);
