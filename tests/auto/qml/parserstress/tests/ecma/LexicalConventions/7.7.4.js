@@ -135,9 +135,10 @@ new TestCase( SECTION, "\\x1E1",      String.fromCharCode(30)+"1",         "\x1E
 new TestCase( SECTION, "\\x0F0",      String.fromCharCode(15)+"0",         "\x0F0" );
 
 // G is out of hex range
-
+/* Invalid testcase: we no longer silently ignore invalid hexadecimal escape sequences.
 new TestCase( SECTION, "\\xG",        "xG",                                 "\xG" );
 new TestCase( SECTION, "\\xCG",       "xCG",      				"\xCG" );
+*/
 
 // DoubleStringCharacter::EscapeSequence::CharacterEscapeSequence::\ NonEscapeCharacter
 new TestCase( SECTION, "\\a",    "a",        "\a" );
