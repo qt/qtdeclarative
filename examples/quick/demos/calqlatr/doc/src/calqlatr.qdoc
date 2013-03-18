@@ -27,7 +27,7 @@
 
 /*!
     \title QML Demo - Calqlatr
-    \example quick/demos/calqlatr
+    \example demos/calqlatr
     \brief This is an example calculator written in QML.
     \image qml-calqlatr-demo-small.png
     \ingroup qmldemos

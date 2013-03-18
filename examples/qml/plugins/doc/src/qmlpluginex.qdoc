@@ -27,7 +27,7 @@
 
 /*!
     \title QML Plugin Example
-    \example qml/plugins
+    \example plugins
 
     \brief This example creates a C++ plugin extension by subclassing QQmlExtensionPlugin.
 

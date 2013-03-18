@@ -27,7 +27,7 @@
 
 /*!
     \title QtQuick.Particles Examples - Affectors
-    \example quick/particles/system
+    \example particles/system
     \brief This is a collection of examples using Affectors in the QML particle system.
     \image qml-system-example.png
 
