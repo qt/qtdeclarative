@@ -75,15 +75,9 @@ using namespace QQmlJS;
 
 class Check: public AST::Visitor
 {
-    Engine *engine;
     QList<AST::Node *> nodeStack;
 
 public:
-    Check(Engine *engine)
-        : engine(engine)
-    {
-    }
-
     void operator()(AST::Node *node)
     {
         AST::Node::accept(node, this);
@@ -206,7 +200,7 @@ void tst_qqmlparser::qmlParser()
     else
         parser.parseProgram();
 
-    check::Check chk(&engine);
+    check::Check chk;
     chk(parser.rootNode());
 }
 #endif
