@@ -624,7 +624,8 @@ public:
     ScanFunctions(Codegen *cg)
         : _cg(cg)
         , _env(0)
-        , _inCondition(false)
+        , _inFuncBody(false)
+        , _allowFuncDecls(true)
     {
     }
 
@@ -775,7 +776,7 @@ protected:
     virtual bool visit(ExpressionStatement *ast)
     {
         if (FunctionExpression* expr = AST::cast<AST::FunctionExpression*>(ast->expression)) {
-            if (checkForBestPractices() && _inCondition)
+            if (!_allowFuncDecls)
                 _cg->throwSyntaxError(expr->functionToken, QCoreApplication::translate("qv4codegen", "conditional function or closure declaration"));
 
             enterFunction(expr, /*enterName*/ true);
@@ -807,14 +808,14 @@ protected:
 
     virtual bool visit(ObjectLiteral *ast)
     {
-        TemporaryBoolAssignment inCondition(_inCondition, false);
+        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
         Node::accept(ast->properties, this);
         return false;
     }
 
     virtual bool visit(PropertyGetterSetter *ast)
     {
-        TemporaryBoolAssignment inCondition(_inCondition, false);
+        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
         enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/0, /*isExpression*/false);
         return true;
     }
@@ -835,6 +836,13 @@ protected:
         leaveEnvironment();
     }
 
+    virtual bool visit(FunctionBody *ast)
+    {
+        TemporaryBoolAssignment inFuncBody(_inFuncBody, true);
+        Node::accept(ast->elements, this);
+        return false;
+    }
+
     virtual bool visit(WithStatement *ast)
     {
         if (_env->isStrict) {
@@ -846,9 +854,9 @@ protected:
     }
 
     virtual bool visit(IfStatement *ast) {
-        TemporaryBoolAssignment inCondition(_inCondition, true);
-
         Node::accept(ast->expression, this);
+
+        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_inFuncBody);
         Node::accept(ast->ok, this);
         Node::accept(ast->ko, this);
 
@@ -856,54 +864,68 @@ protected:
     }
 
     virtual bool visit(WhileStatement *ast) {
-        TemporaryBoolAssignment inCondition(_inCondition, true);
         Node::accept(ast->expression, this);
+
+        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_inFuncBody);
         Node::accept(ast->statement, this);
+
         return false;
     }
 
     virtual bool visit(DoWhileStatement *ast) {
-        if (_env->isStrict) {
-            TemporaryBoolAssignment inCondition(_inCondition, true);
+        {
+            TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
             Node::accept(ast->statement, this);
-            Node::accept(ast->expression, this);
-            return false;
         }
-
-        return true;
+        Node::accept(ast->expression, this);
+        return false;
     }
 
     virtual bool visit(ForStatement *ast) {
-        TemporaryBoolAssignment inCondition(_inCondition, true);
         Node::accept(ast->initialiser, this);
         Node::accept(ast->condition, this);
         Node::accept(ast->expression, this);
+
+        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
         Node::accept(ast->statement, this);
+
         return false;
     }
 
     virtual bool visit(LocalForStatement *ast) {
-        TemporaryBoolAssignment inCondition(_inCondition, true);
         Node::accept(ast->declarations, this);
         Node::accept(ast->condition, this);
         Node::accept(ast->expression, this);
+
+        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
         Node::accept(ast->statement, this);
+
         return false;
     }
 
     virtual bool visit(ForEachStatement *ast) {
-        TemporaryBoolAssignment inCondition(_inCondition, true);
         Node::accept(ast->initialiser, this);
         Node::accept(ast->expression, this);
+
+        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
         Node::accept(ast->statement, this);
+
         return false;
     }
 
     virtual bool visit(LocalForEachStatement *ast) {
-        TemporaryBoolAssignment inCondition(_inCondition, true);
         Node::accept(ast->declaration, this);
         Node::accept(ast->expression, this);
+
+        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
         Node::accept(ast->statement, this);
+
+        return false;
+    }
+
+    virtual bool visit(Block *ast) {
+        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _env->isStrict ? false : _allowFuncDecls);
+        Node::accept(ast->statements, this);
         return false;
     }
 
@@ -940,21 +962,13 @@ private:
         }
     }
 
-    bool checkForBestPractices() const
-    {
-        // Please note: if this is somehow made conditional "the proper way",
-        // then please verify the code generation. There is no guarantee that
-        // the whole path through the back-ends is correct if this returns
-        // false. Actually, it has not been tested at all.
-        return true;
-    }
-
 private: // fields:
     Codegen *_cg;
     Environment *_env;
     QStack<Environment *> _envStack;
 
-    bool _inCondition;
+    bool _inFuncBody;
+    bool _allowFuncDecls;
 };
 
 Codegen::Codegen(VM::ExecutionContext *context, bool strict)
