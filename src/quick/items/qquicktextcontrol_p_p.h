@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QTEXTCONTROL_P_P_H
-#define QTEXTCONTROL_P_P_H
+#ifndef QQUICKTEXTCONTROL_P_P_H
+#define QQUICKTEXTCONTROL_P_P_H
 
 //
 //  W A R N I N G

@@ -58,11 +58,14 @@
 #include "qquicktextcontrol_p.h"
 
 #include <QtQml/qqml.h>
+#include <QtCore/qlist.h>
 
 QT_BEGIN_NAMESPACE
 class QTextLayout;
 class QQuickTextDocumentWithImageResources;
 class QQuickTextControl;
+class QQuickTextNode;
+class QSGSimpleRectNode;
 class QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
 {
 public:
@@ -70,10 +73,26 @@ public:
 
     typedef QQuickTextEdit Public;
 
+    struct Node {
+        explicit Node(int startPos, QQuickTextNode* node)
+            : m_startPos(startPos), m_node(node), m_dirty(false) { }
+        QQuickTextNode* textNode() const { return m_node; }
+        void moveStartPos(int delta) { Q_ASSERT(m_startPos + delta > 0); m_startPos += delta; }
+        int startPos() const { return m_startPos; }
+        void setDirty() { m_dirty = true; }
+        bool dirty() const { return m_dirty; }
+
+    private:
+        int m_startPos;
+        QQuickTextNode* m_node;
+        bool m_dirty;
+    };
+
+
     QQuickTextEditPrivate()
         : color(QRgb(0xFF000000)), selectionColor(QRgb(0xFF000080)), selectedTextColor(QRgb(0xFFFFFFFF))
         , textMargin(0.0), xoff(0), yoff(0), font(sourceFont), cursorComponent(0), cursorItem(0), document(0), control(0)
-        , quickDocument(0)
+        , quickDocument(0), frameDecorationsNode(0), cursorNode(0)
         , lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
         , hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop)
         , format(QQuickTextEdit::PlainText), wrapMode(QQuickTextEdit::NoWrap)
@@ -84,10 +103,11 @@ public:
         , inputMethodHints(Qt::ImhNone)
 #endif
         , updateType(UpdatePaintNode)
-        , documentDirty(true), dirty(false), richText(false), cursorVisible(false), cursorPending(false)
+        , dirty(false), richText(false), cursorVisible(false), cursorPending(false)
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
         , selectByMouse(false), canPaste(false), canPasteValid(false), hAlignImplicit(true)
         , textCached(true), inLayout(false), selectByKeyboard(false), selectByKeyboardSet(false)
+        , hadSelection(false)
     {
     }
 
@@ -131,6 +151,9 @@ public:
     QQuickTextDocumentWithImageResources *document;
     QQuickTextControl *control;
     QQuickTextDocument *quickDocument;
+    QList<Node*> textNodeMap;
+    QQuickTextNode *frameDecorationsNode;
+    QSGSimpleRectNode *cursorNode;
 
     int lastSelectionStart;
     int lastSelectionEnd;
@@ -154,7 +177,6 @@ public:
 #endif
     UpdateType updateType;
 
-    bool documentDirty : 1;
     bool dirty : 1;
     bool richText : 1;
     bool cursorVisible : 1;
@@ -170,6 +192,7 @@ public:
     bool inLayout:1;
     bool selectByKeyboard:1;
     bool selectByKeyboardSet:1;
+    bool hadSelection : 1;
 };
 
 QT_END_NAMESPACE

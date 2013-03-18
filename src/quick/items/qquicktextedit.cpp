@@ -46,6 +46,7 @@
 #include "qquickevents_p_p.h"
 #include "qquickwindow.h"
 #include "qquicktextnode_p.h"
+#include "qquicktextnodeengine_p.h"
 #include "qquicktextutil_p.h"
 #include <QtQuick/qsgsimplerectnode.h>
 
@@ -55,6 +56,7 @@
 #include <QtGui/qpainter.h>
 #include <QtGui/qtextobject.h>
 #include <QtCore/qmath.h>
+#include <QtCore/qalgorithms.h>
 
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlproperty_p.h>
@@ -118,6 +120,11 @@ TextEdit {
     The link must be in rich text or HTML format and the
     \a link string provides access to the particular link.
 */
+
+// This is a pretty arbitrary figure. The idea is that we don't want to break down the document
+// into text nodes corresponding to a text block each so that the glyph node grouping doesn't become pointless.
+static const int nodeBreakingSize = 300;
+
 QQuickTextEdit::QQuickTextEdit(QQuickItem *parent)
 : QQuickImplicitSizeItem(*(new QQuickTextEditPrivate), parent)
 {
@@ -410,7 +417,7 @@ void QQuickTextEdit::setFont(const QFont &font)
             moveCursorDelegate();
         }
         updateSize();
-        updateDocument();
+        updateWholeDocument();
 #ifndef QT_NO_IM
         updateInputMethod(Qt::ImCursorRectangle | Qt::ImFont);
 #endif
@@ -446,7 +453,7 @@ void QQuickTextEdit::setColor(const QColor &color)
         return;
 
     d->color = color;
-    updateDocument();
+    updateWholeDocument();
     emit colorChanged(d->color);
 }
 
@@ -468,7 +475,7 @@ void QQuickTextEdit::setSelectionColor(const QColor &color)
         return;
 
     d->selectionColor = color;
-    updateDocument();
+    updateWholeDocument();
     emit selectionColorChanged(d->selectionColor);
 }
 
@@ -490,7 +497,7 @@ void QQuickTextEdit::setSelectedTextColor(const QColor &color)
         return;
 
     d->selectedTextColor = color;
-    updateDocument();
+    updateWholeDocument();
     emit selectedTextColorChanged(d->selectedTextColor);
 }
 
@@ -1205,6 +1212,7 @@ void QQuickTextEdit::geometryChanged(const QRectF &newGeometry,
     Q_D(QQuickTextEdit);
     if (newGeometry.width() != oldGeometry.width() && widthValid() && !d->inLayout) {
         updateSize();
+        updateWholeDocument();
         moveCursorDelegate();
     }
     QQuickImplicitSizeItem::geometryChanged(newGeometry, oldGeometry);
@@ -1492,7 +1500,7 @@ void QQuickTextEdit::select(int start, int end)
     d->control->setTextCursor(cursor);
 
     // QTBUG-11100
-    updateSelectionMarkers();
+    updateSelection();
 }
 
 /*!
@@ -1679,6 +1687,15 @@ void QQuickTextEdit::triggerPreprocess()
     update();
 }
 
+typedef QQuickTextEditPrivate::Node TextNode;
+typedef QList<TextNode*>::iterator TextNodeIterator;
+
+
+static bool comesBefore(TextNode* n1, TextNode* n2)
+{
+    return n1->startPos() < n2->startPos();
+}
+
 QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData)
 {
     Q_UNUSED(updatePaintNodeData);
@@ -1692,45 +1709,144 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
     d->updateType = QQuickTextEditPrivate::UpdateNone;
 
-    QSGNode *currentNode = oldNode;
-    if (oldNode == 0 || d->documentDirty) {
-        d->documentDirty = false;
+    QSGTransformNode *rootNode = static_cast<QSGTransformNode *>(oldNode);
+    TextNodeIterator nodeIterator = d->textNodeMap.begin();
+    while (nodeIterator != d->textNodeMap.end() && !(*nodeIterator)->dirty())
+        ++nodeIterator;
 
-        QQuickTextNode *node = 0;
-        if (oldNode == 0) {
-            node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
-            currentNode = node;
-        } else {
-            node = static_cast<QQuickTextNode *>(oldNode);
+
+    if (!oldNode || nodeIterator < d->textNodeMap.end()) {
+
+        if (!oldNode)
+            rootNode = new QSGTransformNode;
+
+        int firstDirtyPos = 0;
+        if (nodeIterator != d->textNodeMap.end()) {
+            firstDirtyPos = (*nodeIterator)->startPos();
+            do {
+                rootNode->removeChildNode((*nodeIterator)->textNode());
+                delete (*nodeIterator)->textNode();
+                delete *nodeIterator;
+                nodeIterator = d->textNodeMap.erase(nodeIterator);
+            } while (nodeIterator != d->textNodeMap.end() && (*nodeIterator)->dirty());
         }
 
-        node->setUseNativeRenderer(d->renderType == NativeRendering);
-        node->deleteContent();
-        node->setMatrix(QMatrix4x4());
+        // FIXME: the text decorations could probably be handled separately (only updated for affected textFrames)
+        if (d->frameDecorationsNode) {
+            rootNode->removeChildNode(d->frameDecorationsNode);
+            delete d->frameDecorationsNode;
+        }
+        d->frameDecorationsNode = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
+        d->frameDecorationsNode->initEngine(QColor(), QColor(), QColor());
 
-        node->addTextDocument(QPointF(d->xoff, d->yoff), d->document, d->color, QQuickText::Normal, QColor(),
-                              QColor(), d->selectionColor, d->selectedTextColor, selectionStart(),
-                              selectionEnd() - 1);  // selectionEnd() returns first char after
-                                                    // selection
+
+        QQuickTextNode *node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
+        node->setUseNativeRenderer(d->renderType == NativeRendering);
+        node->initEngine(d->color, d->selectedTextColor, d->selectionColor);
+
+
+        int sizeCounter = 0;
+        int prevBlockStart = firstDirtyPos;
+        QPointF basePosition(d->xoff, d->yoff);
+        QPointF nodeOffset;
+        TextNode *firstCleanNode = (nodeIterator != d->textNodeMap.end()) ? *nodeIterator : 0;
+
+        QList<QTextFrame *> frames;
+        frames.append(d->document->rootFrame());
+
+        while (!frames.isEmpty()) {
+            QTextFrame *textFrame = frames.takeFirst();
+            frames.append(textFrame->childFrames());
+            d->frameDecorationsNode->m_engine->addFrameDecorations(d->document, textFrame);
+
+            if (textFrame->firstPosition() > textFrame->lastPosition()
+                    && textFrame->frameFormat().position() != QTextFrameFormat::InFlow) {
+                QRectF rect = d->document->documentLayout()->frameBoundingRect(textFrame);
+
+                if (!node->m_engine->hasContents()) {
+                    nodeOffset = rect.topLeft();
+                    QMatrix4x4 transformMatrix;
+                    transformMatrix.translate(nodeOffset.x(), nodeOffset.y());
+                    node->setMatrix(transformMatrix);
+                }
+                const int pos = textFrame->firstPosition() - 1;
+                QTextBlock block = textFrame->firstCursorPosition().block();
+                node->m_engine->setCurrentLine(block.layout()->lineForTextPosition(pos - block.position()));
+                node->m_engine->addTextObject(QPointF(0, 0), block.charFormat(), QQuickTextNodeEngine::Unselected, d->document,
+                                              pos, textFrame->frameFormat().position());
+            } else {
+
+                QTextFrame::iterator it = textFrame->begin();
+
+                while (!it.atEnd()) {
+                    QTextBlock block = it.currentBlock();
+                    ++it;
+                    if (block.position() < firstDirtyPos)
+                        continue;
+
+                    if (!node->m_engine->hasContents()) {
+                        nodeOffset = d->document->documentLayout()->blockBoundingRect(block).topLeft();
+                        QMatrix4x4 transformMatrix;
+                        transformMatrix.translate(nodeOffset.x(), nodeOffset.y());
+                        node->setMatrix(transformMatrix);
+                    }
+
+                    node->m_engine->addTextBlock(d->document, block, basePosition - nodeOffset, d->color, QColor(), selectionStart(), selectionEnd() - 1);
+                    sizeCounter += block.length();
+
+                    if ((it.atEnd() && frames.isEmpty()) || (firstCleanNode && block.next().position() >= firstCleanNode->startPos())) // last node that needed replacing or last block of the last frame
+                        break;
+
+                    if (sizeCounter > nodeBreakingSize) {
+                        sizeCounter = 0;
+                        node->m_engine->addToSceneGraph(node, QQuickText::Normal, QColor());
+                        nodeIterator = d->textNodeMap.insert(nodeIterator, new TextNode(prevBlockStart, node));
+                        ++nodeIterator;
+                        rootNode->appendChildNode(node);
+                        prevBlockStart = block.next().position();
+                        node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
+                        node->setUseNativeRenderer(d->renderType == NativeRendering);
+                        node->initEngine(d->color, d->selectedTextColor, d->selectionColor);
+                    }
+                }
+            }
+        }
+        node->m_engine->addToSceneGraph(node, QQuickText::Normal, QColor());
+        nodeIterator = d->textNodeMap.insert(nodeIterator, new TextNode(prevBlockStart, node));
+        ++nodeIterator;
+        rootNode->appendChildNode(node);
+        d->frameDecorationsNode->m_engine->addToSceneGraph(d->frameDecorationsNode, QQuickText::Normal, QColor());
+        // Now prepend the frame decorations since we want them rendered first, with the text nodes and cursor in front.
+        rootNode->prependChildNode(d->frameDecorationsNode);
+
+        Q_ASSERT(nodeIterator == d->textNodeMap.end() || (*nodeIterator) == firstCleanNode);
+        // Update the position of the subsequent text blocks.
+        if (firstCleanNode) {
+            QPointF oldOffset = firstCleanNode->textNode()->matrix().map(QPointF(0,0));
+            QPointF currentOffset = d->document->documentLayout()->blockBoundingRect(d->document->findBlock(firstCleanNode->startPos())).topLeft();
+            QPointF delta = currentOffset - oldOffset;
+            while (nodeIterator != d->textNodeMap.end()) {
+                QMatrix4x4 transformMatrix = (*nodeIterator)->textNode()->matrix();
+                transformMatrix.translate(delta.x(), delta.y());
+                (*nodeIterator)->textNode()->setMatrix(transformMatrix);
+                ++nodeIterator;
+            }
+
+        }
     }
 
     if (d->cursorComponent == 0 && !isReadOnly()) {
-        QQuickTextNode *node = static_cast<QQuickTextNode *>(currentNode);
-
         QColor color = (!d->cursorVisible || !d->control->cursorOn())
                 ? QColor(0, 0, 0, 0)
                 : d->color;
-
-        if (node->cursorNode() == 0) {
-            node->setCursor(cursorRectangle(), color);
-        } else {
-            node->cursorNode()->setRect(cursorRectangle());
-            node->cursorNode()->setColor(color);
-        }
-
+        if (d->cursorNode)
+            rootNode->removeChildNode(d->cursorNode);
+        delete d->cursorNode;
+        d->cursorNode = new QSGSimpleRectNode(cursorRectangle(), color);
+        rootNode->appendChildNode(d->cursorNode);
     }
 
-    return currentNode;
+    return rootNode;
 }
 
 /*!
@@ -1818,27 +1934,28 @@ void QQuickTextEditPrivate::init()
     control->setAcceptRichText(false);
     control->setCursorIsFocusIndicator(true);
 
-    qmlobject_connect(control, QQuickTextControl, SIGNAL(updateRequest()), q, QQuickTextEdit, SLOT(updateDocument()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(updateCursorRequest()), q, QQuickTextEdit, SLOT(updateCursor()));
-    qmlobject_connect(control, QQuickTextControl, SIGNAL(textChanged()), q, QQuickTextEdit, SLOT(q_textChanged()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(selectionChanged()), q, QQuickTextEdit, SIGNAL(selectedTextChanged()));
-    qmlobject_connect(control, QQuickTextControl, SIGNAL(selectionChanged()), q, QQuickTextEdit, SLOT(updateSelectionMarkers()));
-    qmlobject_connect(control, QQuickTextControl, SIGNAL(cursorPositionChanged()), q, QQuickTextEdit, SLOT(updateSelectionMarkers()));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(selectionChanged()), q, QQuickTextEdit, SLOT(updateSelection()));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(cursorPositionChanged()), q, QQuickTextEdit, SLOT(updateSelection()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(cursorPositionChanged()), q, QQuickTextEdit, SIGNAL(cursorPositionChanged()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(cursorRectangleChanged()), q, QQuickTextEdit, SLOT(moveCursorDelegate()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(linkActivated(QString)), q, QQuickTextEdit, SIGNAL(linkActivated(QString)));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(textChanged()), q, QQuickTextEdit, SLOT(q_textChanged()));
 #ifndef QT_NO_CLIPBOARD
     qmlobject_connect(QGuiApplication::clipboard(), QClipboard, SIGNAL(dataChanged()), q, QQuickTextEdit, SLOT(q_canPasteChanged()));
 #endif
     qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(undoAvailable(bool)), q, QQuickTextEdit, SIGNAL(canUndoChanged()));
     qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(redoAvailable(bool)), q, QQuickTextEdit, SIGNAL(canRedoChanged()));
     qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(imagesLoaded()), q, QQuickTextEdit, SLOT(updateSize()));
+    QObject::connect(document, &QQuickTextDocumentWithImageResources::contentsChange, q, &QQuickTextEdit::q_contentsChange);
 
     document->setDefaultFont(font);
     document->setDocumentMargin(textMargin);
     document->setUndoRedoEnabled(false); // flush undo buffer.
     document->setUndoRedoEnabled(true);
     updateDefaultTextOption();
+    q->updateSize();
 }
 
 void QQuickTextEdit::q_textChanged()
@@ -1857,6 +1974,44 @@ void QQuickTextEdit::q_textChanged()
     emit textChanged();
 }
 
+void QQuickTextEdit::markDirtyNodesForRange(int start, int end, int charDelta)
+{
+    Q_D(QQuickTextEdit);
+    if (start == end)
+        return;
+    TextNode dummyNode(start, 0);
+    TextNodeIterator it = qLowerBound(d->textNodeMap.begin(), d->textNodeMap.end(), &dummyNode, &comesBefore);
+    // qLowerBound gives us the first node past the start of the affected portion, rewind by one if we can.
+    if (it != d->textNodeMap.begin())
+        --it;
+
+    // mark the affected nodes as dirty
+    while (it != d->textNodeMap.constEnd()) {
+        if ((*it)->startPos() <= end)
+            (*it)->setDirty();
+        else if (charDelta)
+            (*it)->moveStartPos(charDelta);
+        else
+            return;
+        ++it;
+    }
+}
+
+void QQuickTextEdit::q_contentsChange(int pos, int charsRemoved, int charsAdded)
+{
+    Q_D(QQuickTextEdit);
+
+    const int editRange = pos + qMax(charsAdded, charsRemoved);
+    const int delta = charsAdded - charsRemoved;
+
+    markDirtyNodesForRange(pos, editRange, delta);
+
+    if (isComponentComplete()) {
+        d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
+        update();
+    }
+}
+
 void QQuickTextEdit::moveCursorDelegate()
 {
     Q_D(QQuickTextEdit);
@@ -1871,9 +2026,21 @@ void QQuickTextEdit::moveCursorDelegate()
     d->cursorItem->setY(cursorRect.y());
 }
 
-void QQuickTextEdit::updateSelectionMarkers()
+void QQuickTextEdit::updateSelection()
 {
     Q_D(QQuickTextEdit);
+
+    // No need for node updates when we go from an empty selection to another empty selection
+    if (d->control->textCursor().hasSelection() || d->hadSelection) {
+        markDirtyNodesForRange(qMin(d->lastSelectionStart, d->control->textCursor().selectionStart()), qMax(d->control->textCursor().selectionEnd(), d->lastSelectionEnd), 0);
+        if (isComponentComplete()) {
+            d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
+            update();
+        }
+    }
+
+    d->hadSelection = d->control->textCursor().hasSelection();
+
     if (d->lastSelectionStart != d->control->textCursor().selectionStart()) {
         d->lastSelectionStart = d->control->textCursor().selectionStart();
         emit selectionStartChanged();
@@ -1938,70 +2105,70 @@ qreal QQuickTextEditPrivate::getImplicitWidth() const
 void QQuickTextEdit::updateSize()
 {
     Q_D(QQuickTextEdit);
-    if (isComponentComplete()) {
-        qreal naturalWidth = d->implicitWidth;
-        // ### assumes that if the width is set, the text will fill to edges
-        // ### (unless wrap is false, then clipping will occur)
-        if (widthValid()) {
-            if (!d->requireImplicitWidth) {
-                emit implicitWidthChanged();
-                // if the implicitWidth is used, then updateSize() has already been called (recursively)
-                if (d->requireImplicitWidth)
-                    return;
-            }
-            if (d->requireImplicitWidth) {
-                d->document->setTextWidth(-1);
-                naturalWidth = d->document->idealWidth();
-
-                const bool wasInLayout = d->inLayout;
-                d->inLayout = true;
-                setImplicitWidth(naturalWidth);
-                d->inLayout = wasInLayout;
-                if (d->inLayout)    // probably the result of a binding loop, but by letting it
-                    return;         // get this far we'll get a warning to that effect.
-            }
-            if (d->document->textWidth() != width())
-                d->document->setTextWidth(width());
-        } else {
-            d->document->setTextWidth(-1);
-        }
-
-        //### need to confirm cost of always setting these
-        qreal newWidth = d->document->idealWidth();
-        if ((!widthValid() || d->wrapMode == NoWrap) && d->document->textWidth() != newWidth)
-            d->document->setTextWidth(newWidth); // ### Text does not align if width is not set or the idealWidth exceeds the textWidth (QTextDoc bug)
-        // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
-        qreal iWidth = -1;
-        if (!widthValid() && !d->requireImplicitWidth)
-            iWidth = newWidth;
-
-        QFontMetricsF fm(d->font);
-        qreal newHeight = d->document->isEmpty() ? qCeil(fm.height()) : d->document->size().height();
-
-        if (iWidth > -1)
-            setImplicitSize(iWidth, newHeight);
-        else
-            setImplicitHeight(newHeight);
-
-        d->xoff = QQuickTextUtil::alignedX(d->document->size().width(), width(), effectiveHAlign());
-        d->yoff = QQuickTextUtil::alignedY(d->document->size().height(), height(), d->vAlign);
-        setBaselineOffset(fm.ascent() + d->yoff + d->textMargin);
-
-        QSizeF size(newWidth, newHeight);
-        if (d->contentSize != size) {
-            d->contentSize = size;
-            emit contentSizeChanged();
-        }
-    } else {
+    if (!isComponentComplete()) {
         d->dirty = true;
+        return;
     }
-    updateDocument();
+
+    qreal naturalWidth = d->implicitWidth;
+
+    qreal newWidth = d->document->idealWidth();
+    // ### assumes that if the width is set, the text will fill to edges
+    // ### (unless wrap is false, then clipping will occur)
+    if (widthValid()) {
+        if (!d->requireImplicitWidth) {
+            emit implicitWidthChanged();
+            // if the implicitWidth is used, then updateSize() has already been called (recursively)
+            if (d->requireImplicitWidth)
+                return;
+        }
+        if (d->requireImplicitWidth) {
+            d->document->setTextWidth(-1);
+            naturalWidth = d->document->idealWidth();
+
+            const bool wasInLayout = d->inLayout;
+            d->inLayout = true;
+            setImplicitWidth(naturalWidth);
+            d->inLayout = wasInLayout;
+            if (d->inLayout)    // probably the result of a binding loop, but by letting it
+                return;         // get this far we'll get a warning to that effect.
+        }
+        if (d->document->textWidth() != width())
+            d->document->setTextWidth(width());
+        //### need to confirm cost of always setting these
+    } else if (d->wrapMode == NoWrap && d->document->textWidth() != newWidth) {
+        d->document->setTextWidth(newWidth); // ### Text does not align if width is not set or the idealWidth exceeds the textWidth (QTextDoc bug)
+    } else {
+        d->document->setTextWidth(-1);
+    }
+
+    QFontMetricsF fm(d->font);
+    qreal newHeight = d->document->isEmpty() ? qCeil(fm.height()) : d->document->size().height();
+
+    // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
+    if (!widthValid() && !d->requireImplicitWidth)
+        setImplicitSize(newWidth, newHeight);
+    else
+        setImplicitHeight(newHeight);
+
+    d->xoff = qMax(qreal(0), QQuickTextUtil::alignedX(d->document->size().width(), width(), effectiveHAlign()));
+    d->yoff = QQuickTextUtil::alignedY(d->document->size().height(), height(), d->vAlign);
+    setBaselineOffset(fm.ascent() + d->yoff + d->textMargin);
+
+    QSizeF size(newWidth, newHeight);
+    if (d->contentSize != size) {
+        d->contentSize = size;
+        emit contentSizeChanged();
+    }
 }
 
-void QQuickTextEdit::updateDocument()
+void QQuickTextEdit::updateWholeDocument()
 {
     Q_D(QQuickTextEdit);
-    d->documentDirty = true;
+    if (!d->textNodeMap.isEmpty()) {
+        Q_FOREACH (TextNode* node, d->textNodeMap)
+            node->setDirty();
+    }
 
     if (isComponentComplete()) {
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
@@ -2023,7 +2190,7 @@ void QQuickTextEdit::q_updateAlignment()
     Q_D(QQuickTextEdit);
     if (d->determineHorizontalAlignment()) {
         d->updateDefaultTextOption();
-        d->xoff = QQuickTextUtil::alignedX(d->document->size().width(), width(), effectiveHAlign());
+        d->xoff = qMax(qreal(0), QQuickTextUtil::alignedX(d->document->size().width(), width(), effectiveHAlign()));
         moveCursorDelegate();
     }
 }

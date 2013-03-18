@@ -138,6 +138,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void textChanged();
+    void contentsChange(int from, int charsRemoved, int charsAdded);
     void undoAvailable(bool b);
     void redoAvailable(bool b);
     void currentCharFormatChanged(const QTextCharFormat &format);
