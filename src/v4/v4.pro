@@ -92,7 +92,8 @@ HEADERS += \
     qv4unwindhelper_p-dw2.h \
     qv4unwindhelper_p-arm.h \
     qv4v8.h \
-    qcalculatehash_p.h
+    qcalculatehash_p.h \
+    qv4util.h
 
 llvm-libs {
 

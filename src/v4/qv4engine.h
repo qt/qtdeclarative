@@ -38,12 +38,13 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QMLJS_ENGINE_H
-#define QMLJS_ENGINE_H
+#ifndef QV4ENGINE_H
+#define QV4ENGINE_H
 
 #include "qv4global.h"
 #include "qv4isel_p.h"
 #include "qv4object.h"
+#include "qv4util.h"
 #include "qv4context.h"
 #include <setjmp.h>
 
@@ -242,29 +243,9 @@ struct Q_V4_EXPORT ExecutionEngine
     void ensureContextStackSize();
 };
 
-template <typename T>
-struct TemporaryAssignment
-{
-    TemporaryAssignment(T &var, const T& temporaryValue)
-        : variable(var)
-        , savedValue(var)
-    {
-        variable = temporaryValue;
-    }
-    ~TemporaryAssignment()
-    {
-        variable = savedValue;
-    }
-    T &variable;
-    T savedValue;
-private:
-    TemporaryAssignment(const TemporaryAssignment<T>&);
-    TemporaryAssignment operator=(const TemporaryAssignment<T>&);
-};
-
 } // namespace VM
 } // namespace QQmlJS
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QV4ENGINE_H
