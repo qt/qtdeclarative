@@ -288,6 +288,8 @@ Value StringPrototype::method_lastIndexOf(ExecutionContext *parentCtx, Value thi
     int pos = trunc(qMin(qMax(position, 0.0), double(value.length())));
     if (!searchString.isEmpty() && pos == value.length())
         --pos;
+    if (searchString.isNull() && pos == 0)
+        return Value::fromDouble(-1);
     int index = value.lastIndexOf(searchString, pos);
     return Value::fromDouble(index);
 }
