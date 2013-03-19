@@ -200,8 +200,10 @@ Value NumberPrototype::method_toFixed(ExecutionContext *ctx)
         str = QString::fromLatin1("NaN");
     else if (qIsInf(v))
         str = QString::fromLatin1(v < 0 ? "-Infinity" : "Infinity");
-    else
+    else if (v < 1.e21)
         str = QString::number(v, 'f', int (fdigits));
+    else
+        return __qmljs_string_from_number(ctx, v);
     return Value::fromString(ctx, str);
 }
 
