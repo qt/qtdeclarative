@@ -15,3 +15,4 @@ OTHER_FILES += \
     data/RenderOrder.qml \
     data/MessUpState.qml \
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
+CONFIG+=insignificant_test
