@@ -495,8 +495,11 @@ inline void __qmljs_mod(ExecutionContext *ctx, Value *result, const Value &left,
     TRACE2(left, right);
 
     if (Value::integerCompatible(left, right) && right.integerValue() != 0) {
-        *result = Value::fromInt32(left.integerValue() % right.integerValue());
-        return;
+        int intRes = left.integerValue() % right.integerValue();
+        if (intRes != 0 || left.integerValue() >= 0) {
+            *result = Value::fromInt32(intRes);
+            return;
+        }
     }
 
     double lval = __qmljs_to_number(left, ctx);
