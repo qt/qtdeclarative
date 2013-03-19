@@ -207,6 +207,7 @@ private slots:
 
     void parentBinding();
     void defaultHighlightMoveDuration();
+    void accessEmptyCurrentItem_QTBUG_30227();
 
 private:
     template <class T> void items(const QUrl &source, bool forceLayout);
@@ -6812,6 +6813,21 @@ void tst_QQuickListView::defaultHighlightMoveDuration()
     QVERIFY(obj);
 
     QCOMPARE(obj->property("highlightMoveDuration").toInt(), -1);
+}
+
+void tst_QQuickListView::accessEmptyCurrentItem_QTBUG_30227()
+{
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("emptymodel.qml"));
+
+    QQuickListView *listview = window->rootObject()->findChild<QQuickListView*>();
+    QTRY_VERIFY(listview != 0);
+
+    QMetaObject::invokeMethod(window->rootObject(), "remove");
+    QVERIFY(window->rootObject()->property("isCurrentItemNull").toBool());
+
+    QMetaObject::invokeMethod(window->rootObject(), "add");
+    QVERIFY(!window->rootObject()->property("isCurrentItemNull").toBool());
 }
 
 QTEST_MAIN(tst_QQuickListView)
