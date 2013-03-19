@@ -791,6 +791,11 @@ protected:
             Node::accept(expr->body, this);
             leaveEnvironment();
             return false;
+        } else {
+            SourceLocation firstToken = ast->firstSourceLocation();
+            if (_sourceCode.midRef(firstToken.offset, firstToken.length) == QStringLiteral("function")) {
+                _cg->throwSyntaxError(firstToken, QCoreApplication::translate("qv4codegen", "unexpected token"));
+            }
         }
         return true;
     }
