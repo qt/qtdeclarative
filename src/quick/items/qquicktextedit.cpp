@@ -1265,8 +1265,8 @@ void QQuickTextEdit::setSelectByKeyboard(bool on)
 {
     Q_D(QQuickTextEdit);
     bool was = selectByKeyboard();
-    d->selectByKeyboardSet = true;
-    if (was != on) {
+    if (!d->selectByKeyboardSet || was != on) {
+        d->selectByKeyboardSet = true;
         d->selectByKeyboard = on;
         if (on)
             d->control->setTextInteractionFlags(d->control->textInteractionFlags() | Qt::TextSelectableByKeyboard);

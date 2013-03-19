@@ -2171,8 +2171,8 @@ void tst_qquicktextedit::keyboardSelection()
     QVERIFY(edit);
 
     edit->setText(text);
-    edit->setReadOnly(readOnly);
     edit->setSelectByKeyboard(selectByKeyboard);
+    edit->setReadOnly(readOnly);
     edit->setCursorPosition(cursorPosition);
 
     QQuickWindow window;
