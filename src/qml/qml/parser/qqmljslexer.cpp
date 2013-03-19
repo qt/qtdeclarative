@@ -782,22 +782,11 @@ again:
                     return T_ERROR;
 
                 case '\r':
-                    if (isLineTerminatorSequence() == 2) {
-                        _tokenText += QLatin1Char('\r');
-                        u = QLatin1Char('\n');
-                    } else {
-                        u = QLatin1Char('\r');
-                    }
-                    scanChar();
-                    break;
-
                 case '\n':
                 case 0x2028u:
                 case 0x2029u:
-                    u = _char;
                     scanChar();
-                    break;
-
+                    continue;
 
                 default:
                     // non escape character
