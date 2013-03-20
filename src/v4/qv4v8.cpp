@@ -1664,7 +1664,7 @@ Local<Function> FunctionTemplate::GetFunction()
     VM::ExecutionEngine *engine = currentEngine();
     VM::Object *o = new (engine->memoryManager) V4V8Function(engine, this);
     VM::Object *proto = new (engine->memoryManager) V4V8Object<VM::FunctionPrototype>(engine, m_prototypeTemplate.get());
-    o->prototype = proto;
+    o->put(engine->current, engine->id_prototype, VM::Value::fromObject(proto));
     return Local<Function>::New(Value::fromVmValue(VM::Value::fromObject(o)));
 }
 
@@ -1759,13 +1759,14 @@ void ObjectTemplate::SetInternalFieldCount(int value)
 
 bool ObjectTemplate::HasExternalResource()
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    // we always reserve the space for the external resource
+    return true;
 }
 
 void ObjectTemplate::SetHasExternalResource(bool value)
 {
-    Q_UNIMPLEMENTED();
+    // no need for this, we always reserve the space for the external resource
+    Q_UNUSED(value);
 }
 
 void ObjectTemplate::MarkAsUseUserObjectComparison()
