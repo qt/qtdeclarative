@@ -4,13 +4,13 @@ import Test 1.0
 Rectangle {
     id: root
 
-    width: 320
-    height: 480
+    width: 160
+    height: 240
     color: "black"
 
     Rectangle {
-        width: 160
-        height: 240
+        width: root.width / 2
+        height: root.height / 2
         anchors.top: parent.top
         anchors.left: parent.left
         color: "red"
@@ -18,32 +18,32 @@ Rectangle {
     }
 
     Rectangle {
-        width: 160
-        height: 240
+        width: root.width / 2
+        height: root.height / 2
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         color: "red"
     }
 
     ClearItem {
-        width: 160
-        height: 240
+        width: root.width / 2
+        height: root.height / 2
         anchors.centerIn: parent
         color: "white"
         clip: true
     }
 
     Rectangle {
-        width: 160
-        height: 240
+        width: root.width / 2
+        height: root.height / 2
         anchors.top: parent.top
         anchors.right: parent.right
         color: "blue"
     }
 
     Rectangle {
-        width: 160
-        height: 240
+        width: root.width / 2
+        height: root.height / 2
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         color: "blue"
