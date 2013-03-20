@@ -957,6 +957,7 @@ private:
         checkForArguments(formals);
 
         _env->isNamedFunctionExpression = isExpression && !name.isEmpty();
+        _env->formals = formals;
 
         if (body)
             checkDirectivePrologue(body->elements);

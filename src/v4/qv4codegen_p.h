@@ -44,6 +44,7 @@
 #include "qv4global.h"
 #include "qv4jsir_p.h"
 #include <private/qqmljsastvisitor_p.h>
+#include <private/qqmljsast_p.h>
 #include <QtCore/QStringList>
 #include <assert.h>
 
@@ -144,6 +145,7 @@ protected:
         typedef QMap<QString, Member> MemberMap;
 
         MemberMap members;
+        AST::FormalParameterList *formals;
         int maxNumberOfArguments;
         bool hasDirectEval;
         bool hasNestedFunctions;
@@ -159,6 +161,7 @@ protected:
 
         Environment(Environment *parent)
             : parent(parent)
+            , formals(0)
             , maxNumberOfArguments(0)
             , hasDirectEval(false)
             , hasNestedFunctions(false)
@@ -197,6 +200,9 @@ protected:
         void enter(const QString &name, MemberType type, AST::FunctionExpression *function = 0)
         {
             if (! name.isEmpty()) {
+                for (AST::FormalParameterList *it = formals; it; it = it->next)
+                    if (it->name == name)
+                        return;
                 MemberMap::iterator it = members.find(name);
                 if (it == members.end()) {
                     Member m;
