@@ -48,8 +48,6 @@
 
 #include <private/qtquickglobal_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class Q_AUTOTEST_EXPORT QQuickPen : public QObject
@@ -177,7 +175,5 @@ QML_DECLARE_TYPE(QQuickPen)
 QML_DECLARE_TYPE(QQuickGradientStop)
 QML_DECLARE_TYPE(QQuickGradient)
 QML_DECLARE_TYPE(QQuickRectangle)
-
-QT_END_HEADER
 
 #endif // QQUICKRECTANGLE_P_H

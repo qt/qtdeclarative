@@ -48,8 +48,6 @@
 #include <private/qmetaobject_p.h>
 #include <private/qv8engine_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -273,6 +271,7 @@ private:
     virtual bool write(int, const void *, void *, size_t);
 
     friend Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *);
+    friend Q_QML_PRIVATE_EXPORT void QQml_removeValueTypeProvider(QQmlValueTypeProvider *);
 
     QQmlValueTypeProvider *next;
 };
@@ -314,8 +313,53 @@ public:
 Q_QML_PRIVATE_EXPORT QQmlGuiProvider *QQml_setGuiProvider(QQmlGuiProvider *);
 Q_AUTOTEST_EXPORT QQmlGuiProvider *QQml_guiProvider();
 
-QT_END_NAMESPACE
+class QQmlApplicationPrivate;
 
-QT_END_HEADER
+class Q_QML_PRIVATE_EXPORT QQmlApplication : public QObject
+{
+    //Application level logic, subclassed by QtQuick if available via QQmlGuiProvider
+    Q_OBJECT
+    Q_PROPERTY(QStringList arguments READ args CONSTANT)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(QString version READ version WRITE setVersion NOTIFY versionChanged)
+public:
+    QQmlApplication(QObject* parent=0);
+
+    QStringList args();
+
+    QString name() const;
+    QString version() const;
+
+public Q_SLOTS:
+    void setName(const QString &arg);
+    void setVersion(const QString &arg);
+
+Q_SIGNALS:
+    void aboutToQuit();
+
+    void nameChanged();
+    void versionChanged();
+
+protected:
+    QQmlApplication(QQmlApplicationPrivate &dd, QObject* parent=0);
+
+private:
+    Q_DISABLE_COPY(QQmlApplication);
+    Q_DECLARE_PRIVATE(QQmlApplication);
+};
+
+class QQmlApplicationPrivate : public QObjectPrivate
+{
+    Q_DECLARE_PUBLIC(QQmlApplication)
+public:
+    QQmlApplicationPrivate() {
+        argsInit = false;
+    }
+
+    bool argsInit;
+    QStringList args;
+};
+
+QT_END_NAMESPACE
 
 #endif // QQMLGLOBAL_H

@@ -51,8 +51,6 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qstring.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickBasePositionerPrivate;
@@ -222,6 +220,9 @@ class Q_AUTOTEST_EXPORT QQuickGrid : public QQuickBasePositioner
     Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
+    Q_PROPERTY(HAlignment horizontalItemAlignment READ hItemAlign WRITE setHItemAlign NOTIFY horizontalAlignmentChanged REVISION 1)
+    Q_PROPERTY(HAlignment effectiveHorizontalItemAlignment READ effectiveHAlign NOTIFY effectiveHorizontalAlignmentChanged REVISION 1)
+    Q_PROPERTY(VAlignment verticalItemAlignment READ vItemAlign WRITE setVItemAlign NOTIFY verticalAlignmentChanged REVISION 1)
 
 public:
     QQuickGrid(QQuickItem *parent=0);
@@ -249,6 +250,22 @@ public:
     void setLayoutDirection (Qt::LayoutDirection);
     Qt::LayoutDirection effectiveLayoutDirection() const;
 
+    Q_ENUMS(HAlignment)
+    Q_ENUMS(VAlignment)
+    enum HAlignment { AlignLeft = Qt::AlignLeft,
+                       AlignRight = Qt::AlignRight,
+                       AlignHCenter = Qt::AlignHCenter};
+    enum VAlignment { AlignTop = Qt::AlignTop,
+                       AlignBottom = Qt::AlignBottom,
+                       AlignVCenter = Qt::AlignVCenter };
+
+    HAlignment hItemAlign() const;
+    void setHItemAlign(HAlignment align);
+    HAlignment effectiveHAlign() const;
+
+    VAlignment vItemAlign() const;
+    void setVItemAlign(VAlignment align);
+
 Q_SIGNALS:
     void rowsChanged();
     void columnsChanged();
@@ -257,6 +274,9 @@ Q_SIGNALS:
     void effectiveLayoutDirectionChanged();
     void rowSpacingChanged();
     void columnSpacingChanged();
+    Q_REVISION(1) void horizontalAlignmentChanged(HAlignment alignment);
+    Q_REVISION(1) void effectiveHorizontalAlignmentChanged(HAlignment alignment);
+    Q_REVISION(1) void verticalAlignmentChanged(VAlignment alignment);
 
 protected:
     virtual void doPositioning(QSizeF *contentSize);
@@ -270,6 +290,8 @@ private:
     bool m_useRowSpacing;
     bool m_useColumnSpacing;
     Flow m_flow;
+    HAlignment m_hItemAlign;
+    VAlignment m_vItemAlign;
     Q_DISABLE_COPY(QQuickGrid)
 };
 
@@ -317,7 +339,5 @@ QML_DECLARE_TYPE(QQuickFlow)
 
 QML_DECLARE_TYPE(QQuickBasePositioner)
 QML_DECLARE_TYPEINFO(QQuickBasePositioner, QML_HAS_ATTACHED_PROPERTIES)
-
-QT_END_HEADER
 
 #endif // QQUICKPOSITIONERS_P_H

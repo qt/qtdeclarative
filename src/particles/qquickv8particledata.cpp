@@ -386,7 +386,7 @@ static void particleData_set_ ## VARIABLE (v8::Local<v8::String>, v8::Local<v8::
     r->datum-> SETTER ( value->NumberValue() );\
 }
 
-#define REGISTER_ACCESSOR(FT, ENGINE, VARIABLE, NAME) FT ->PrototypeTemplate()->SetAccessor( v8::String::New( #NAME ), particleData_get_ ## VARIABLE , particleData_set_ ## VARIABLE , v8::External::Wrap(ENGINE))
+#define REGISTER_ACCESSOR(FT, ENGINE, VARIABLE, NAME) FT ->PrototypeTemplate()->SetAccessor( v8::String::New( #NAME ), particleData_get_ ## VARIABLE , particleData_set_ ## VARIABLE , v8::External::New(ENGINE))
 
 COLOR_GETTER_AND_SETTER(r, red)
 COLOR_GETTER_AND_SETTER(g, green)

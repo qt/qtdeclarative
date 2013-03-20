@@ -71,8 +71,8 @@
 #include "qqmljsast_p.h"
 #include "qqmljsengine_p.h"
 
-#include <QtCore/QList>
-#include <QtCore/QString>
+#include <QtCore/qlist.h>
+#include <QtCore/qstring.h>
 
 QT_QML_BEGIN_NAMESPACE
 
@@ -101,7 +101,8 @@ public:
       AST::FunctionDeclaration *FunctionDeclaration;
       AST::Node *Node;
       AST::PropertyName *PropertyName;
-      AST::PropertyNameAndValueList *PropertyNameAndValueList;
+      AST::PropertyAssignment *PropertyAssignment;
+      AST::PropertyAssignmentList *PropertyAssignmentList;
       AST::SourceElement *SourceElement;
       AST::SourceElements *SourceElements;
       AST::Statement *Statement;
@@ -244,9 +245,9 @@ protected:
 
 
 
-#define J_SCRIPT_REGEXPLITERAL_RULE1 79
+#define J_SCRIPT_REGEXPLITERAL_RULE1 81
 
-#define J_SCRIPT_REGEXPLITERAL_RULE2 80
+#define J_SCRIPT_REGEXPLITERAL_RULE2 82
 
 QT_QML_END_NAMESPACE
 

@@ -46,8 +46,6 @@
 #include <QtCore/QObject>
 #include <QtGui/QImage>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QSGTexturePrivate;
@@ -126,7 +124,5 @@ public:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

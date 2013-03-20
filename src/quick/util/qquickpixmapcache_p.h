@@ -51,8 +51,6 @@
 
 #include <private/qintrusivelist_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
@@ -63,11 +61,7 @@ class QQuickDefaultTextureFactory : public QQuickTextureFactory
 {
     Q_OBJECT
 public:
-    QQuickDefaultTextureFactory(const QImage &i)
-        : im(i)
-    {
-    }
-
+    QQuickDefaultTextureFactory(const QImage &i);
     QSGTexture *createTexture(QQuickWindow *window) const;
     QSize textureSize() const { return im.size(); }
     int textureByteCount() const { return im.byteCount(); }
@@ -138,7 +132,5 @@ private:
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPixmap::Options)
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQUICKPIXMAPCACHE_H

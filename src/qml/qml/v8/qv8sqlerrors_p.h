@@ -55,8 +55,6 @@
 
 #include <QtCore/qglobal.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 #define SQLEXCEPTION_UNKNOWN_ERR 1
 #define SQLEXCEPTION_DATABASE_ERR 2
@@ -71,7 +69,5 @@ class QV8Engine;
 void qt_add_sqlexceptions(QV8Engine *engine);
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QV8SQLERRORS_P_H

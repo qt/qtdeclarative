@@ -59,8 +59,6 @@
 #include <private/qqmlimport_p.h>
 #include <private/qqmlengine_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 template <typename _Key, typename _Value>
@@ -242,8 +240,6 @@ private:
 
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QV4COMPILER_P_P_H
 

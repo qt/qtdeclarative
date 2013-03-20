@@ -43,8 +43,6 @@
 #define ATTRACTORAFFECTOR_H
 #include "qquickparticleaffector_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickAttractorAffector : public QQuickParticleAffector
@@ -163,5 +161,4 @@ Proportion m_proportionalToDistance;
 };
 
 QT_END_NAMESPACE
-QT_END_HEADER
 #endif // ATTRACTORAFFECTOR_H

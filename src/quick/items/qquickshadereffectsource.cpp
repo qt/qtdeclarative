@@ -53,6 +53,7 @@
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlFboOverlay, QML_FBO_OVERLAY)
+DEFINE_BOOL_CONFIG_OPTION(qmlFboFlushBeforeDetach, QML_FBO_FLUSH_BEFORE_DETACH)
 
 namespace
 {
@@ -75,6 +76,8 @@ namespace
 
     BindableFbo::~BindableFbo()
     {
+        if (qmlFboFlushBeforeDetach())
+            glFlush();
         if (m_depthStencil)
             m_depthStencil->detach();
     }

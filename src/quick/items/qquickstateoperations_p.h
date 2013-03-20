@@ -49,8 +49,6 @@
 
 #include <QtQml/qqmlscriptstring.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickParentChangePrivate;
@@ -212,8 +210,6 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQuickParentChange)
 QML_DECLARE_TYPE(QQuickAnchorSet)
 QML_DECLARE_TYPE(QQuickAnchorChanges)
-
-QT_END_HEADER
 
 #endif // QQUICKSTATEOPERATIONS_P_H
 

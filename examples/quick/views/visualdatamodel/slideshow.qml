@@ -40,6 +40,7 @@
 
 import QtQuick 2.0
 import QtQuick.XmlListModel 2.0
+import QtQml.Models 2.1
 
 Rectangle {
     id: root
@@ -50,7 +51,7 @@ Rectangle {
 
     color: "black"
 
-    VisualDataModel {
+    DelegateModel {
         id: visualModel
 
         model: XmlListModel {
@@ -97,14 +98,14 @@ Rectangle {
                         name: "inDisplay";
                         ParentChange { target: image; parent: imageContainer; x: 75; y: 75; width: 150; height: 150 }
                         PropertyChanges { target: image; z: 2 }
-                        PropertyChanges { target: delegateItem; VisualDataModel.inItems: false }
+                        PropertyChanges { target: delegateItem; DelegateModel.inItems: false }
                     },
                     State {
                         when: root.displayItem !== delegateItem
                         name: "inList";
                         ParentChange { target: image; parent: delegateItem; x: 2; y: 2; width: 75; height: 75 }
                         PropertyChanges { target: image; z: 1 }
-                        PropertyChanges { target: delegateItem; VisualDataModel.inItems: true }
+                        PropertyChanges { target: delegateItem; DelegateModel.inItems: true }
                     }
                 ]
 
@@ -112,7 +113,7 @@ Rectangle {
                     Transition {
                         from: "inList"
                         SequentialAnimation {
-                            PropertyAction { target: delegateItem; property: "VisualDataModel.inPersistedItems"; value: true }
+                            PropertyAction { target: delegateItem; property: "DelegateModel.inPersistedItems"; value: true }
                             ParentAnimation {
                                 target: image;
                                 via: root
@@ -126,7 +127,7 @@ Rectangle {
                                 target: image
                                 NumberAnimation { target: image; properties: "x,y,width,height"; duration: 1000 }
                             }
-                            PropertyAction { target: delegateItem; property: "VisualDataModel.inPersistedItems"; value: false }
+                            PropertyAction { target: delegateItem; property: "DelegateModel.inPersistedItems"; value: false }
                         }
                     }
                 ]

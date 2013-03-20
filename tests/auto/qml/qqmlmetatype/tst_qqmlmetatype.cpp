@@ -41,12 +41,16 @@
 
 #include <qtest.h>
 #include <qqml.h>
+#include <qqmlprivate.h>
+#include <qqmlengine.h>
+#include <qqmlcomponent.h>
 
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlpropertyvalueinterceptor_p.h>
 #include <private/qhashedstring_p.h>
+#include "../../shared/util.h"
 
-class tst_qqmlmetatype : public QObject
+class tst_qqmlmetatype : public QQmlDataTest
 {
     Q_OBJECT
 public:
@@ -60,6 +64,8 @@ private slots:
     void qmlPropertyValueInterceptorCast();
     void qmlType();
     void invalidQmlTypeName();
+    void registrationType();
+    void compositeType();
 
     void isList();
 
@@ -76,6 +82,13 @@ public:
     int foo() { return 0; }
 };
 QML_DECLARE_TYPE(TestType);
+
+QObject *testTypeProvider(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
+    return new TestType();
+}
 
 class ParserStatusTestType : public QObject, public QQmlParserStatus
 {
@@ -108,10 +121,15 @@ QML_DECLARE_TYPE(ValueInterceptorTestType);
 
 void tst_qqmlmetatype::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     qmlRegisterType<TestType>("Test", 1, 0, "TestType");
+    qmlRegisterSingletonType<TestType>("Test", 1, 0, "TestTypeSingleton", testTypeProvider);
     qmlRegisterType<ParserStatusTestType>("Test", 1, 0, "ParserStatusTestType");
     qmlRegisterType<ValueSourceTestType>("Test", 1, 0, "ValueSourceTestType");
     qmlRegisterType<ValueInterceptorTestType>("Test", 1, 0, "ValueInterceptorTestType");
+
+    QUrl testTypeUrl(testFileUrl("CompositeType.qml"));
+    qmlRegisterType(testTypeUrl, "Test", 1, 0, "TestTypeComposite");
 }
 
 void tst_qqmlmetatype::qmlParserStatusCast()
@@ -226,6 +244,44 @@ void tst_qqmlmetatype::defaultObject()
     QVERIFY(QQmlMetaType::defaultProperty(&o).name() == 0);
     QVERIFY(QQmlMetaType::defaultProperty(&p).name() == 0);
     QCOMPARE(QString(QQmlMetaType::defaultProperty(&t).name()), QString("foo"));
+}
+
+void tst_qqmlmetatype::registrationType()
+{
+    QQmlType *type = QQmlMetaType::qmlType(QString("TestType"), QString("Test"), 1, 0);
+    QVERIFY(type);
+    QVERIFY(!type->isInterface());
+    QVERIFY(!type->isSingleton());
+    QVERIFY(!type->isComposite());
+
+    type = QQmlMetaType::qmlType(QString("TestTypeSingleton"), QString("Test"), 1, 0);
+    QVERIFY(type);
+    QVERIFY(!type->isInterface());
+    QVERIFY(type->isSingleton());
+    QVERIFY(!type->isComposite());
+
+    type = QQmlMetaType::qmlType(QString("TestTypeComposite"), QString("Test"), 1, 0);
+    QVERIFY(type);
+    QVERIFY(!type->isInterface());
+    QVERIFY(!type->isSingleton());
+    QVERIFY(type->isComposite());
+}
+
+void tst_qqmlmetatype::compositeType()
+{
+    QQmlEngine engine;
+
+    //Loading the test file also loads all composite types it imports
+    QQmlComponent c(&engine, testFileUrl("testImplicitComposite.qml"));
+    QObject* obj = c.create();
+    QVERIFY(obj);
+
+    QQmlType *type = QQmlMetaType::qmlType(QString("ImplicitType"), QString(""), 1, 0);
+    QVERIFY(type);
+    QVERIFY(type->module() == QLatin1String(""));
+    QVERIFY(type->elementName() == QLatin1String("ImplicitType"));
+    QCOMPARE(type->qmlTypeName(), QLatin1String("ImplicitType"));
+    QCOMPARE(type->sourceUrl(), testFileUrl("ImplicitType.qml"));
 }
 
 QTEST_MAIN(tst_qqmlmetatype)

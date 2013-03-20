@@ -651,7 +651,7 @@ QString ProcessAST::asString(AST::UiQualifiedId *node) const
     QString s;
 
     for (AST::UiQualifiedId *it = node; it; it = it->next) {
-        s.append(it->name.toString());
+        s.append(it->name);
 
         if (it->next)
             s.append(QLatin1Char('.'));

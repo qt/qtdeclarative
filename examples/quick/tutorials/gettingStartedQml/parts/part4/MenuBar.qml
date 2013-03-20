@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQml.Models 2.1
 
 Rectangle {
     id: menuBar
@@ -105,7 +106,7 @@ Rectangle {
     }
 
     //a list of visual items already have delegates handling their display
-    VisualItemModel{
+    ObjectModel{
         id: menuListModel
 
         FileMenu{

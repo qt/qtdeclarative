@@ -84,10 +84,9 @@ void tst_QQuickPinchArea::cleanupTestCase()
 }
 void tst_QQuickPinchArea::pinchProperties()
 {
-    QQuickView *window = createView();
+    QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
-    window->requestActivate();
     QVERIFY(window->rootObject() != 0);
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
@@ -195,8 +194,6 @@ void tst_QQuickPinchArea::pinchProperties()
 
     QCOMPARE(rotMinSpy.count(),1);
     QCOMPARE(rotMaxSpy.count(),1);
-
-    delete window;
 }
 
 QTouchEvent::TouchPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i)
@@ -211,10 +208,10 @@ QTouchEvent::TouchPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickIt
 void tst_QQuickPinchArea::scale()
 {
     QQuickView *window = createView();
+    QScopedPointer<QQuickView> scope(window);
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->rootObject() != 0);
     qApp->processEvents();
 
@@ -267,17 +264,15 @@ void tst_QQuickPinchArea::scale()
         pinchSequence.release(0, p1, window).release(1, p2, window).commit();
     }
     QVERIFY(!root->property("pinchActive").toBool());
-
-    delete window;
 }
 
 void tst_QQuickPinchArea::pan()
 {
     QQuickView *window = createView();
+    QScopedPointer<QQuickView> scope(window);
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->rootObject() != 0);
     qApp->processEvents();
 
@@ -327,18 +322,16 @@ void tst_QQuickPinchArea::pan()
 
     QTest::touchEvent(window, device).release(0, p1, window).release(1, p2, window);
     QVERIFY(!root->property("pinchActive").toBool());
-
-    delete window;
 }
 
 // test pinch, release one point, touch again to continue pinch
 void tst_QQuickPinchArea::retouch()
 {
     QQuickView *window = createView();
+    QScopedPointer<QQuickView> scope(window);
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->rootObject() != 0);
     qApp->processEvents();
 
@@ -413,8 +406,6 @@ void tst_QQuickPinchArea::retouch()
         QCOMPARE(startedSpy.count(), 2);
         QCOMPARE(finishedSpy.count(), 1);
     }
-
-    delete window;
 }
 
 void tst_QQuickPinchArea::transformedPinchArea_data()
@@ -449,10 +440,10 @@ void tst_QQuickPinchArea::transformedPinchArea()
     QFETCH(bool, shouldPinch);
 
     QQuickView *view = createView();
+    QScopedPointer<QQuickView> scope(view);
     view->setSource(testFileUrl("transformedPinchArea.qml"));
     view->show();
-    view->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(view));
+    QVERIFY(QTest::qWaitForWindowExposed(view));
     QVERIFY(view->rootObject() != 0);
     qApp->processEvents();
 
@@ -475,8 +466,6 @@ void tst_QQuickPinchArea::transformedPinchArea()
         pinchSequence.release(0, p1, view).release(1, p2, view).commit();
         QCOMPARE(pinchArea->property("pinching").toBool(), false);
     }
-
-    delete view;
 }
 
 QQuickView *tst_QQuickPinchArea::createView()

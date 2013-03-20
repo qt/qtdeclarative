@@ -78,6 +78,11 @@
 
 QT_BEGIN_NAMESPACE
 
+
+#ifndef QT_NO_DEBUG
+static bool qsg_leak_check = !qgetenv("QML_LEAK_CHECK").isEmpty();
+#endif
+
 // The cache limit describes the maximum "junk" in the cache.
 static int cache_limit = 2048 * 1024; // 2048 KB cache limit for embedded in qpixmapcache.cpp
 
@@ -90,6 +95,17 @@ static inline QString imageId(const QUrl &url)
 {
     return url.toString(QUrl::RemoveScheme | QUrl::RemoveAuthority).mid(1);
 }
+
+QQuickDefaultTextureFactory::QQuickDefaultTextureFactory(const QImage &image)
+{
+    if (image.format() == QImage::Format_ARGB32_Premultiplied
+            || image.format() == QImage::Format_RGB32) {
+        im = image;
+    } else {
+        im = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    }
+}
+
 
 QSGTexture *QQuickDefaultTextureFactory::createTexture(QQuickWindow *) const
 {
@@ -730,7 +746,9 @@ QQuickPixmapStore::~QQuickPixmapStore()
 {
     m_destroying = true;
 
+#ifndef QT_NO_DEBUG
     int leakedPixmaps = 0;
+#endif
     QList<QQuickPixmapData*> cachedData = m_cache.values();
 
     // Prevent unreferencePixmap() from assuming it needs to kick
@@ -742,7 +760,9 @@ QQuickPixmapStore::~QQuickPixmapStore()
     foreach (QQuickPixmapData* pixmap, cachedData) {
         int currRefCount = pixmap->refCount;
         if (currRefCount) {
+#ifndef QT_NO_DEBUG
             leakedPixmaps++;
+#endif
             while (currRefCount > 0) {
                 pixmap->release();
                 currRefCount--;
@@ -755,8 +775,10 @@ QQuickPixmapStore::~QQuickPixmapStore()
         shrinkCache(20);
     }
 
-    if (leakedPixmaps)
+#ifndef QT_NO_DEBUG
+    if (leakedPixmaps && qsg_leak_check)
         qDebug("Number of leaked pixmaps: %i", leakedPixmaps);
+#endif
 }
 
 void QQuickPixmapStore::unreferencePixmap(QQuickPixmapData *data)
@@ -997,6 +1019,17 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
     if (localFile.isEmpty()) 
         return 0;
+
+    // check for "retina" high-dpi and use @2x file if it exixts
+    if (qApp->devicePixelRatio() > 1) {
+        const int dotIndex = localFile.lastIndexOf(QLatin1Char('.'));
+        if (dotIndex != -1) {
+            QString retinaFile = localFile;
+            retinaFile.insert(dotIndex, QStringLiteral("@2x"));
+            if (QFile(retinaFile).exists())
+                localFile = retinaFile;
+        }
+    }
 
     QFile f(localFile);
     QSize readSize;

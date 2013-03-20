@@ -46,8 +46,6 @@
 #include "qquickparticlesystem_p.h"
 #include "qquickparticleextruder_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickParticleAffector : public QQuickItem
@@ -196,5 +194,4 @@ private:
 };
 
 QT_END_NAMESPACE
-QT_END_HEADER
 #endif // PARTICLEAFFECTOR_H

@@ -48,8 +48,6 @@
 #include "qquickparticleaffector_p.h"
 #include "qquickdirection_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickCustomAffector : public QQuickParticleAffector
@@ -158,5 +156,4 @@ private:
 };
 
 QT_END_NAMESPACE
-QT_END_HEADER
 #endif // CUSTOMAFFECTOR_H

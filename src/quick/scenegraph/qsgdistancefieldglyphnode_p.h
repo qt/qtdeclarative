@@ -39,15 +39,13 @@
 **
 ****************************************************************************/
 
-#ifndef DISTANCEFIELD_GLYPHNODE_H
-#define DISTANCEFIELD_GLYPHNODE_H
+#ifndef QSGDISTANCEFIELDGLYPHNODE_P_H
+#define QSGDISTANCEFIELDGLYPHNODE_P_H
 
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/qsgtexture.h>
 
 #include <QtQuick/private/qquicktext_p.h>
-
-QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
@@ -112,8 +110,6 @@ private:
     uint m_dirtyMaterial: 1;
 };
 
-QT_END_HEADER
-
 QT_END_NAMESPACE
 
-#endif // DISTANCEFIELD_GLYPHNODE_H
+#endif

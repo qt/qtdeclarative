@@ -46,8 +46,6 @@
 #include <QtCore/qurl.h>
 #include <QtQml/qqmldebug.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
@@ -114,7 +112,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQUICKVIEW_H

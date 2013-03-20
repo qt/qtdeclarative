@@ -46,8 +46,6 @@
 
 #include <QtQuick/qquickitem.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class TestCase : public QQuickItem
@@ -88,7 +86,5 @@ Q_SIGNALS:
 QML_DECLARE_TYPE(TestCase)
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

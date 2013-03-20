@@ -53,8 +53,6 @@
 #include <private/qquickpixmapcache_p.h>
 #include <private/qtquickglobal_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickSprite;
@@ -322,7 +320,5 @@ inline int spriteCount(QQmlListProperty<QQuickSprite> *p)
 }
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQUICKSPRITEENGINE_P_H

@@ -51,8 +51,6 @@
 #ifndef QQUICKSHADEREFFECTMESH_P_H
 #define QQUICKSHADEREFFECTMESH_P_H
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QSGGeometry;
@@ -100,7 +98,5 @@ inline QColor qt_premultiply_color(const QColor &c)
 
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQUICKSHADEREFFECTMESH_P_H

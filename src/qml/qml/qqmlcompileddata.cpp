@@ -105,7 +105,7 @@ void QQmlCompiledData::destroy()
 QQmlCompiledData::~QQmlCompiledData()
 {
     if (isRegisteredWithEngine)
-        QQmlEnginePrivate::get(engine)->unregisterCompositeType(this);
+        QQmlEnginePrivate::get(engine)->unregisterInternalCompositeType(this);
 
     clear();
 

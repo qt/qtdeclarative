@@ -1,11 +1,15 @@
-import QtQuick 2.0
+import QtQuick 2.1
 
 Item {
     width: 640
     height: 480
     property bool testRightToLeft: false
+    property int testHAlignment: Grid.AlignLeft;
+    property int testVAlignment: Grid.AlignTop;
     Grid {
         layoutDirection: testRightToLeft ? Qt.RightToLeft : Qt.LeftToRight
+        horizontalItemAlignment: testHAlignment
+        verticalItemAlignment: testVAlignment
         objectName: "grid"
         columns: 3
         Rectangle {

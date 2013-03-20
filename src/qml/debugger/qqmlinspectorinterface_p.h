@@ -56,8 +56,6 @@
 #include <QtQml/qtqmlglobal.h>
 #include <private/qqmlglobal_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -80,7 +78,5 @@ public:
 Q_DECLARE_INTERFACE(QQmlInspectorInterface, QQmlInspectorInterface_iid)
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLINSPECTORINTERFACE_H

@@ -50,8 +50,6 @@
 #include <QtQuick/private/qquickpixmapcache_p.h>
 #include <private/qtquickglobal_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickScaleGrid : public QObject
@@ -125,7 +123,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickScaleGrid)
-
-QT_END_HEADER
 
 #endif // QQUICKSCALEGRID_P_P_H

@@ -43,35 +43,34 @@
 #define QQMLEXTENSIONPLUGIN_H
 
 #include <QtCore/qplugin.h>
-
+#include <QtCore/QUrl>
 #include <QtQml/qqmlextensioninterface.h>
-
-QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-
 class QQmlEngine;
+class QQmlExtensionPluginPrivate;
 
-class Q_QML_EXPORT QQmlExtensionPlugin : public QObject, 
-                                                         public QQmlExtensionInterface
+class Q_QML_EXPORT QQmlExtensionPlugin
+    : public QObject
+    , public QQmlExtensionInterface
 {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(QQmlExtensionPlugin)
     Q_INTERFACES(QQmlExtensionInterface)
     Q_INTERFACES(QQmlTypesExtensionInterface)
 public:
     explicit QQmlExtensionPlugin(QObject *parent = 0);
     ~QQmlExtensionPlugin();
 
+    QUrl baseUrl() const;
+
     virtual void registerTypes(const char *uri) = 0;
     virtual void initializeEngine(QQmlEngine *engine, const char *uri);
 
-private:
     Q_DISABLE_COPY(QQmlExtensionPlugin)
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLEXTENSIONPLUGIN_H

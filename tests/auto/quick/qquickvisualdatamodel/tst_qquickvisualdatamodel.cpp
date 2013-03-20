@@ -52,9 +52,9 @@
 #include <QtQuick/qquickview.h>
 #include <private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
-#include <QtQuick/private/qquickvisualdatamodel_p.h>
+#include <QtQml/private/qqmldelegatemodel_p.h>
 #include <private/qqmlvaluetype_p.h>
-#include <private/qquickchangeset_p.h>
+#include <private/qqmlchangeset_p.h>
 #include <private/qqmlengine_p.h>
 #include <math.h>
 #include <QtGui/qstandarditemmodel.h>
@@ -360,21 +360,21 @@ public:
     int indexCreated;
 
 public Q_SLOTS:
-    void initItem(int index, QQuickItem *item)
+    void initItem(int index, QObject *item)
     {
-        itemInitialized = item;
+        itemInitialized = qobject_cast<QQuickItem*>(item);
         indexInitialized = index;
     }
 
-    void createdItem(int index, QQuickItem *item)
+    void createdItem(int index, QObject *item)
     {
-        itemCreated = item;
+        itemCreated = qobject_cast<QQuickItem*>(item);
         indexCreated = index;
     }
 
-    void destroyingItem(QQuickItem *item)
+    void destroyingItem(QObject *item)
     {
-        itemDestroyed = item;
+        itemDestroyed = qobject_cast<QQuickItem*>(item);
     }
 };
 
@@ -452,9 +452,9 @@ private:
 
     template <int N> void get_verify(
             const SingleRoleModel &model,
-            QQuickVisualDataModel *visualModel,
-            QQuickVisualDataGroup *visibleItems,
-            QQuickVisualDataGroup *selectedItems,
+            QQmlDelegateModel *visualModel,
+            QQmlDelegateModelGroup *visibleItems,
+            QQmlDelegateModelGroup *selectedItems,
             const int (&mIndex)[N],
             const int (&iIndex)[N],
             const int (&vIndex)[N],
@@ -467,7 +467,7 @@ private:
     QQmlEngine engine;
 };
 
-Q_DECLARE_METATYPE(QQuickChangeSet)
+Q_DECLARE_METATYPE(QQmlChangeSet)
 
 template <typename T> static T evaluate(QObject *scope, const QString &expression)
 {
@@ -489,7 +489,7 @@ template <> void evaluate<void>(QObject *scope, const QString &expression)
 void tst_qquickvisualdatamodel::initTestCase()
 {
     QQmlDataTest::initTestCase();
-    qRegisterMetaType<QQuickChangeSet>();
+    qRegisterMetaType<QQmlChangeSet>();
 
     qmlRegisterType<SingleRoleModel>("tst_qquickvisualdatamodel", 1, 0, "SingleRoleModel");
     qmlRegisterType<DataObject>("tst_qquickvisualdatamodel", 1, 0, "DataObject");
@@ -517,7 +517,7 @@ void tst_qquickvisualdatamodel::rootIndex()
 
     engine.rootContext()->setContextProperty("myModel", &model);
 
-    QQuickVisualDataModel *obj = qobject_cast<QQuickVisualDataModel*>(c.create());
+    QQmlDelegateModel *obj = qobject_cast<QQmlDelegateModel*>(c.create());
     QVERIFY(obj != 0);
 
     QMetaObject::invokeMethod(obj, "setRoot");
@@ -611,7 +611,7 @@ void tst_qquickvisualdatamodel::childChanged()
     QQuickItem *contentItem = listview->contentItem();
     QVERIFY(contentItem != 0);
 
-    QQuickVisualDataModel *vdm = listview->findChild<QQuickVisualDataModel*>("visualModel");
+    QQmlDelegateModel *vdm = listview->findChild<QQmlDelegateModel*>("visualModel");
     vdm->setRootIndex(QVariant::fromValue(model.indexFromItem(model.item(1,0))));
     QCOMPARE(listview->count(), 1);
 
@@ -922,7 +922,7 @@ void tst_qquickvisualdatamodel::noDelegate()
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
     QVERIFY(listview != 0);
 
-    QQuickVisualDataModel *vdm = listview->findChild<QQuickVisualDataModel*>("visualModel");
+    QQmlDelegateModel *vdm = listview->findChild<QQmlDelegateModel*>("visualModel");
     QVERIFY(vdm != 0);
     QCOMPARE(vdm->count(), 3);
 
@@ -1052,15 +1052,15 @@ void tst_qquickvisualdatamodel::qaimRowsMoved()
     SingleRoleModel model(list);
     engine.rootContext()->setContextProperty("myModel", &model);
 
-    QQuickVisualDataModel *obj = qobject_cast<QQuickVisualDataModel*>(c.create());
+    QQmlDelegateModel *obj = qobject_cast<QQmlDelegateModel*>(c.create());
     QVERIFY(obj != 0);
 
-    QSignalSpy spy(obj, SIGNAL(modelUpdated(QQuickChangeSet,bool)));
+    QSignalSpy spy(obj, SIGNAL(modelUpdated(QQmlChangeSet,bool)));
     model.emitMove(sourceFirst, sourceLast, destinationChild);
     QCOMPARE(spy.count(), 1);
 
     QCOMPARE(spy[0].count(), 2);
-    QQuickChangeSet changeSet = spy[0][0].value<QQuickChangeSet>();
+    QQmlChangeSet changeSet = spy[0][0].value<QQmlChangeSet>();
     QCOMPARE(changeSet.removes().count(), 1);
     QCOMPARE(changeSet.removes().at(0).index, expectFrom);
     QCOMPARE(changeSet.removes().at(0).count, expectCount);
@@ -1115,11 +1115,11 @@ void tst_qquickvisualdatamodel::subtreeRowsMoved()
     QQmlComponent component(&engine, testFileUrl("visualdatamodel.qml"));
 
     QScopedPointer<QObject> object(component.create());
-    QQuickVisualDataModel *vdm = qobject_cast<QQuickVisualDataModel*>(object.data());
+    QQmlDelegateModel *vdm = qobject_cast<QQmlDelegateModel*>(object.data());
     QVERIFY(vdm);
 
-    QSignalSpy spy(vdm, SIGNAL(modelUpdated(QQuickChangeSet,bool)));
-    QQuickChangeSet changeSet;
+    QSignalSpy spy(vdm, SIGNAL(modelUpdated(QQmlChangeSet,bool)));
+    QQmlChangeSet changeSet;
 
     QCOMPARE(vdm->count(), 4);
 
@@ -1127,7 +1127,7 @@ void tst_qquickvisualdatamodel::subtreeRowsMoved()
     model.move(QModelIndex(), 1, model.index(0, 0), 3, 2);
     QCOMPARE(vdm->count(), 2);
     QCOMPARE(spy.count(), 1);
-    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.removes().count(), 1);
     QCOMPARE(changeSet.removes().at(0).index, 1);
     QCOMPARE(changeSet.removes().at(0).count, 2);
@@ -1137,7 +1137,7 @@ void tst_qquickvisualdatamodel::subtreeRowsMoved()
     model.move(model.index(0, 0), 4, QModelIndex(), 2, 1);
     QCOMPARE(vdm->count(), 3);
     QCOMPARE(spy.count(), 2);
-    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.removes().count(), 0);
     QCOMPARE(changeSet.inserts().count(), 1);
     QCOMPARE(changeSet.inserts().at(0).index, 2);
@@ -1147,11 +1147,11 @@ void tst_qquickvisualdatamodel::subtreeRowsMoved()
     QCOMPARE(vdm->rootIndex().value<QModelIndex>(), model.index(2, 0));
     QCOMPARE(vdm->count(), 3);
     QCOMPARE(spy.count(), 4);
-    changeSet = spy.at(2).at(0).value<QQuickChangeSet>();
+    changeSet = spy.at(2).at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.removes().count(), 1);
     QCOMPARE(changeSet.removes().at(0).index, 0);
     QCOMPARE(changeSet.removes().at(0).count, 3);
-    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.inserts().count(), 1);
     QCOMPARE(changeSet.inserts().at(0).index, 0);
     QCOMPARE(changeSet.inserts().at(0).count, 3);
@@ -1182,7 +1182,7 @@ void tst_qquickvisualdatamodel::subtreeRowsMoved()
     QCOMPARE(vdm->rootIndex().value<QModelIndex>(), QModelIndex());
     QCOMPARE(vdm->count(), 0);
     QCOMPARE(spy.count(), 5);
-    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.removes().count(), 1);
     QCOMPARE(changeSet.removes().at(0).index, 0);
     QCOMPARE(changeSet.removes().at(0).count, 3);
@@ -1192,7 +1192,7 @@ void tst_qquickvisualdatamodel::subtreeRowsMoved()
     QCOMPARE(vdm->rootIndex().value<QModelIndex>(), QModelIndex());
     QCOMPARE(vdm->count(), 2);
     QCOMPARE(spy.count(), 6);
-    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.removes().count(), 0);
     QCOMPARE(changeSet.inserts().count(), 1);
     QCOMPARE(changeSet.inserts().at(0).index, 0);
@@ -1211,17 +1211,17 @@ void tst_qquickvisualdatamodel::watchedRoles()
     QQmlComponent component(&engine, testFileUrl("visualdatamodel.qml"));
 
     QScopedPointer<QObject> object(component.create());
-    QQuickVisualDataModel *vdm = qobject_cast<QQuickVisualDataModel*>(object.data());
+    QQmlDelegateModel *vdm = qobject_cast<QQmlDelegateModel*>(object.data());
     QVERIFY(vdm);
 
     // VisualDataModel doesn't initialize model data until the first item is requested.
-    QQuickItem *item = vdm->item(0);
+    QQuickItem *item = qobject_cast<QQuickItem*>(vdm->object(0));
     QVERIFY(item);
     vdm->release(item);
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);  // Ensure released items are deleted before test exits.
 
-    QSignalSpy spy(vdm, SIGNAL(modelUpdated(QQuickChangeSet,bool)));
-    QQuickChangeSet changeSet;
+    QSignalSpy spy(vdm, SIGNAL(modelUpdated(QQmlChangeSet,bool)));
+    QQmlChangeSet changeSet;
 
     QCOMPARE(vdm->count(), 30);
 
@@ -1238,13 +1238,13 @@ void tst_qquickvisualdatamodel::watchedRoles()
 
     emit model.dataChanged(model.index(0), model.index(4));
     QCOMPARE(spy.count(), 1);
-    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 0);
     QCOMPARE(changeSet.changes().at(0).count, 5);
 
     emit model.dataChanged(model.index(1), model.index(6), QVector<int>() << QaimModel::Name);
     QCOMPARE(spy.count(), 2);
-    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 1);
     QCOMPARE(changeSet.changes().at(0).count, 6);
 
@@ -1255,7 +1255,7 @@ void tst_qquickvisualdatamodel::watchedRoles()
 
     emit model.dataChanged(model.index(0), model.index(4));
     QCOMPARE(spy.count(), 3);
-    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 0);
     QCOMPARE(changeSet.changes().at(0).count, 5);
 
@@ -1264,7 +1264,7 @@ void tst_qquickvisualdatamodel::watchedRoles()
 
     emit model.dataChanged(model.index(8), model.index(8), QVector<int>() << QaimModel::Number);
     QCOMPARE(spy.count(), 4);
-    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 8);
     QCOMPARE(changeSet.changes().at(0).count, 1);
 
@@ -1272,19 +1272,19 @@ void tst_qquickvisualdatamodel::watchedRoles()
 
     emit model.dataChanged(model.index(0), model.index(4));
     QCOMPARE(spy.count(), 5);
-    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 0);
     QCOMPARE(changeSet.changes().at(0).count, 5);
 
     emit model.dataChanged(model.index(1), model.index(6), QVector<int>() << QaimModel::Name);
     QCOMPARE(spy.count(), 6);
-    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 1);
     QCOMPARE(changeSet.changes().at(0).count, 6);
 
     emit model.dataChanged(model.index(8), model.index(8), QVector<int>() << QaimModel::Number);
     QCOMPARE(spy.count(), 7);
-    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 8);
     QCOMPARE(changeSet.changes().at(0).count, 1);
 }
@@ -1301,29 +1301,29 @@ void tst_qquickvisualdatamodel::hasModelChildren()
     QQmlComponent component(&engine, testFileUrl("visualdatamodel.qml"));
 
     QScopedPointer<QObject> object(component.create());
-    QQuickVisualDataModel *vdm = qobject_cast<QQuickVisualDataModel*>(object.data());
+    QQmlDelegateModel *vdm = qobject_cast<QQmlDelegateModel*>(object.data());
     QVERIFY(vdm);
 
     QCOMPARE(vdm->count(), 4);
 
     QQuickItem *item = 0;
 
-    item = vdm->item(0);
+    item = qobject_cast<QQuickItem*>(vdm->object(0));
     QVERIFY(item);
     QCOMPARE(item->property("modelChildren").toBool(), true);
     vdm->release(item);
 
-    item = vdm->item(1);
+    item = qobject_cast<QQuickItem*>(vdm->object(1));
     QVERIFY(item);
     QCOMPARE(item->property("modelChildren").toBool(), false);
     vdm->release(item);
 
-    item = vdm->item(2);
+    item = qobject_cast<QQuickItem*>(vdm->object(2));
     QVERIFY(item);
     QCOMPARE(item->property("modelChildren").toBool(), true);
     vdm->release(item);
 
-    item = vdm->item(3);
+    item = qobject_cast<QQuickItem*>(vdm->object(3));
     QVERIFY(item);
     QCOMPARE(item->property("modelChildren").toBool(), false);
     vdm->release(item);
@@ -1351,14 +1351,14 @@ void tst_qquickvisualdatamodel::setValue()
     QQmlComponent component(&engine, testFileUrl("visualdatamodel.qml"));
 
     QScopedPointer<QObject> object(component.create());
-    QQuickVisualDataModel *vdm = qobject_cast<QQuickVisualDataModel*>(object.data());
+    QQmlDelegateModel *vdm = qobject_cast<QQmlDelegateModel*>(object.data());
     QVERIFY(vdm);
 
     QCOMPARE(vdm->count(), 3);
 
     QQuickItem *item = 0;
 
-    item = vdm->item(0);
+    item = qobject_cast<QQuickItem*>(vdm->object(0));
     QVERIFY(item);
     QCOMPARE(evaluate<QString>(item, "display"), QString("Row 1 Item"));
     evaluate<void>(item, "display = 'Changed Item 1'");
@@ -1412,7 +1412,7 @@ void tst_qquickvisualdatamodel::remove()
     QQuickItem *contentItem = listview->contentItem();
     QVERIFY(contentItem != 0);
 
-    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel *>(qvariant_cast<QObject *>(listview->model()));
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel *>(qvariant_cast<QObject *>(listview->model()));
     QVERIFY(visualModel);
 
     {
@@ -1521,7 +1521,7 @@ void tst_qquickvisualdatamodel::move()
     QQuickItem *contentItem = listview->contentItem();
     QVERIFY(contentItem != 0);
 
-    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel *>(qvariant_cast<QObject *>(listview->model()));
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel *>(qvariant_cast<QObject *>(listview->model()));
     QVERIFY(visualModel);
 
     {
@@ -1710,13 +1710,13 @@ void tst_qquickvisualdatamodel::groups()
     QQuickItem *contentItem = listview->contentItem();
     QVERIFY(contentItem != 0);
 
-    QQuickVisualDataModel *visualModel = listview->findChild<QQuickVisualDataModel *>("visualModel");
+    QQmlDelegateModel *visualModel = listview->findChild<QQmlDelegateModel *>("visualModel");
     QVERIFY(visualModel);
 
-    QQuickVisualDataGroup *visibleItems = listview->findChild<QQuickVisualDataGroup *>("visibleItems");
+    QQmlDelegateModelGroup *visibleItems = listview->findChild<QQmlDelegateModelGroup *>("visibleItems");
     QVERIFY(visibleItems);
 
-    QQuickVisualDataGroup *selectedItems = listview->findChild<QQuickVisualDataGroup *>("selectedItems");
+    QQmlDelegateModelGroup *selectedItems = listview->findChild<QQmlDelegateModelGroup *>("selectedItems");
     QVERIFY(selectedItems);
 
     const bool f = false;
@@ -1939,9 +1939,9 @@ void tst_qquickvisualdatamodel::groups()
 
 template <int N> void tst_qquickvisualdatamodel::get_verify(
         const SingleRoleModel &model,
-        QQuickVisualDataModel *visualModel,
-        QQuickVisualDataGroup *visibleItems,
-        QQuickVisualDataGroup *selectedItems,
+        QQmlDelegateModel *visualModel,
+        QQmlDelegateModelGroup *visibleItems,
+        QQmlDelegateModelGroup *selectedItems,
         const int (&mIndex)[N],
         const int (&iIndex)[N],
         const int (&vIndex)[N],
@@ -2030,13 +2030,13 @@ void tst_qquickvisualdatamodel::get()
     QQuickItem *contentItem = listview->contentItem();
     QVERIFY(contentItem != 0);
 
-    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel *>(qvariant_cast<QObject *>(listview->model()));
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel *>(qvariant_cast<QObject *>(listview->model()));
     QVERIFY(visualModel);
 
-    QQuickVisualDataGroup *visibleItems = visualModel->findChild<QQuickVisualDataGroup *>("visibleItems");
+    QQmlDelegateModelGroup *visibleItems = visualModel->findChild<QQmlDelegateModelGroup *>("visibleItems");
     QVERIFY(visibleItems);
 
-    QQuickVisualDataGroup *selectedItems = visualModel->findChild<QQuickVisualDataGroup *>("selectedItems");
+    QQmlDelegateModelGroup *selectedItems = visualModel->findChild<QQmlDelegateModelGroup *>("selectedItems");
     QVERIFY(selectedItems);
 
     QV8Engine *v8Engine = QQmlEnginePrivate::getV8Engine(ctxt->engine());
@@ -2154,7 +2154,7 @@ void tst_qquickvisualdatamodel::get()
 void tst_qquickvisualdatamodel::invalidGroups()
 {
     QUrl source = testFileUrl("groups-invalid.qml");
-    QTest::ignoreMessage(QtWarningMsg, (source.toString() + ":12:9: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("Group names must start with a lower case letter")).toUtf8());
+    QTest::ignoreMessage(QtWarningMsg, (source.toString() + ":12:9: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("Group names must start with a lower case letter")).toUtf8());
 
     QQmlComponent component(&engine, source);
     QScopedPointer<QObject> object(component.create());
@@ -2326,7 +2326,7 @@ void tst_qquickvisualdatamodel::create()
     QQuickItem *contentItem = listview->contentItem();
     QVERIFY(contentItem != 0);
 
-    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel *>(qvariant_cast<QObject *>(listview->model()));
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel *>(qvariant_cast<QObject *>(listview->model()));
     QVERIFY(visualModel);
 
     QCOMPARE(listview->count(), 20);
@@ -2440,7 +2440,7 @@ void tst_qquickvisualdatamodel::incompleteModel()
 
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
 
-    QQuickVisualDataModel *model = qobject_cast<QQuickVisualDataModel *>(object.data());
+    QQmlDelegateModel *model = qobject_cast<QQmlDelegateModel *>(object.data());
     QVERIFY(model);
 
     QSignalSpy itemsSpy(model->items(), SIGNAL(countChanged()));
@@ -3665,67 +3665,67 @@ void tst_qquickvisualdatamodel::warnings_data()
     QTest::newRow("insert < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.insert(-2, {\"number\": \"eight\"})")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("insert: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("insert: index out of range"))
             << 4;
 
     QTest::newRow("insert > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.insert(8, {\"number\": \"eight\"})")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("insert: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("insert: index out of range"))
             << 4;
 
     QTest::newRow("create < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.create(-2, {\"number\": \"eight\"})")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("create: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("create: index out of range"))
             << 4;
 
     QTest::newRow("create > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.create(8, {\"number\": \"eight\"})")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("create: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("create: index out of range"))
             << 4;
 
     QTest::newRow("resolve from < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(-2, 3)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("resolve: from index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("resolve: from index out of range"))
             << 4;
 
     QTest::newRow("resolve from > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(8, 3)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("resolve: from index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("resolve: from index out of range"))
             << 4;
 
     QTest::newRow("resolve to < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(3, -2)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("resolve: to index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("resolve: to index out of range"))
             << 4;
 
     QTest::newRow("resolve to > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(3, 8)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("resolve: to index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("resolve: to index out of range"))
             << 4;
 
     QTest::newRow("resolve from invalid index")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(\"two\", 3)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("resolve: from index invalid"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("resolve: from index invalid"))
             << 4;
 
     QTest::newRow("resolve to invalid index")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(3, \"two\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("resolve: to index invalid"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("resolve: to index invalid"))
             << 4;
 
     QTest::newRow("resolve already resolved item")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(3, 2)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("resolve: from is not an unresolved item"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("resolve: from is not an unresolved item"))
             << 4;
 
     QTest::newRow("resolve already resolved item")
@@ -3733,193 +3733,193 @@ void tst_qquickvisualdatamodel::warnings_data()
             << QString("{ items.insert(0, {\"number\": \"eight\"});"
                        "items.insert(1, {\"number\": \"seven\"});"
                        "items.resolve(0, 1)}")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("resolve: to is not a model item"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("resolve: to is not a model item"))
             << 6;
 
     QTest::newRow("remove index < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.remove(-2, 1)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("remove: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("remove: index out of range"))
             << 4;
 
     QTest::newRow("remove index == length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.remove(4, 1)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("remove: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("remove: index out of range"))
             << 4;
 
     QTest::newRow("remove index > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.remove(9, 1)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("remove: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("remove: index out of range"))
             << 4;
 
     QTest::newRow("remove invalid index")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.remove(\"nine\", 1)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("remove: invalid index"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("remove: invalid index"))
             << 4;
 
     QTest::newRow("remove count < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.remove(1, -2)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("remove: invalid count"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("remove: invalid count"))
             << 4;
 
     QTest::newRow("remove index + count > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.remove(2, 4, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("remove: invalid count"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("remove: invalid count"))
             << 4;
 
     QTest::newRow("addGroups index < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.addGroups(-2, 1, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("addGroups: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("addGroups: index out of range"))
             << 4;
 
     QTest::newRow("addGroups index == length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.addGroups(4, 1, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("addGroups: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("addGroups: index out of range"))
             << 4;
 
     QTest::newRow("addGroups index > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.addGroups(9, 1, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("addGroups: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("addGroups: index out of range"))
             << 4;
 
     QTest::newRow("addGroups count < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.addGroups(1, -2, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("addGroups: invalid count"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("addGroups: invalid count"))
             << 4;
 
     QTest::newRow("addGroups index + count > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.addGroups(2, 4, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("addGroups: invalid count"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("addGroups: invalid count"))
             << 4;
 
     QTest::newRow("removeGroups index < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.removeGroups(-2, 1, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("removeGroups: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("removeGroups: index out of range"))
             << 4;
 
     QTest::newRow("removeGroups index == length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.removeGroups(4, 1, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("removeGroups: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("removeGroups: index out of range"))
             << 4;
 
     QTest::newRow("removeGroups index > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.removeGroups(9, 1, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("removeGroups: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("removeGroups: index out of range"))
             << 4;
 
     QTest::newRow("removeGroups count < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.removeGroups(1, -2, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("removeGroups: invalid count"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("removeGroups: invalid count"))
             << 4;
 
     QTest::newRow("removeGroups index + count > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.removeGroups(2, 4, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("removeGroups: invalid count"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("removeGroups: invalid count"))
             << 4;
 
     QTest::newRow("setGroups index < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.setGroups(-2, 1, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("setGroups: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("setGroups: index out of range"))
             << 4;
 
     QTest::newRow("setGroups index == length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.setGroups(4, 1, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("setGroups: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("setGroups: index out of range"))
             << 4;
 
     QTest::newRow("setGroups index > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.setGroups(9, 1, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("setGroups: index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("setGroups: index out of range"))
             << 4;
 
     QTest::newRow("setGroups count < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.setGroups(1, -2, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("setGroups: invalid count"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("setGroups: invalid count"))
             << 4;
 
     QTest::newRow("setGroups index + count > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.setGroups(2, 4, \"selected\")")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("setGroups: invalid count"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("setGroups: invalid count"))
             << 4;
 
     QTest::newRow("move from < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(-2, 1, 1)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("move: from index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("move: from index out of range"))
             << 4;
 
     QTest::newRow("move from == length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(4, 1, 1)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("move: from index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("move: from index out of range"))
             << 4;
 
     QTest::newRow("move from > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(9, 1, 1)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("move: from index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("move: from index out of range"))
             << 4;
 
     QTest::newRow("move invalid from")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(\"nine\", 1, 1)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("move: invalid from index"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("move: invalid from index"))
             << 4;
 
     QTest::newRow("move to < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(1, -2, 1)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("move: to index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("move: to index out of range"))
             << 4;
 
     QTest::newRow("move to == length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(1, 4, 1)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("move: to index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("move: to index out of range"))
             << 4;
 
     QTest::newRow("move to > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(1, 9, 1)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("move: to index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("move: to index out of range"))
             << 4;
 
     QTest::newRow("move invalid to")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(1, \"nine\", 1)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("move: invalid to index"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("move: invalid to index"))
             << 4;
 
     QTest::newRow("move count < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(1, 1, -2)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("move: invalid count"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("move: invalid count"))
             << 4;
 
     QTest::newRow("move from + count > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(2, 1, 4)")
-            << ("<Unknown File>: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("move: from index out of range"))
+            << ("<Unknown File>: QML VisualDataGroup: " + QQmlDelegateModelGroup::tr("move: from index out of range"))
             << 4;
 }
 
@@ -3961,19 +3961,19 @@ void tst_qquickvisualdatamodel::invalidAttachment()
     QCOMPARE(component.errors().count(), 0);
 
     QVariant property = object->property("invalidVdm");
-    QCOMPARE(property.userType(), qMetaTypeId<QQuickVisualDataModel *>());
-    QVERIFY(!property.value<QQuickVisualDataModel *>());
+    QCOMPARE(property.userType(), qMetaTypeId<QQmlDelegateModel *>());
+    QVERIFY(!property.value<QQmlDelegateModel *>());
 
     QQuickItem *item = findItem<QQuickItem>(static_cast<QQuickItem *>(object.data()), "delegate");
     QVERIFY(item);
 
     property = item->property("validVdm");
-    QCOMPARE(property.userType(), qMetaTypeId<QQuickVisualDataModel *>());
-    QVERIFY(property.value<QQuickVisualDataModel *>());
+    QCOMPARE(property.userType(), qMetaTypeId<QQmlDelegateModel *>());
+    QVERIFY(property.value<QQmlDelegateModel *>());
 
     property = item->property("invalidVdm");
-    QCOMPARE(property.userType(), qMetaTypeId<QQuickVisualDataModel *>());
-    QVERIFY(!property.value<QQuickVisualDataModel *>());
+    QCOMPARE(property.userType(), qMetaTypeId<QQmlDelegateModel *>());
+    QVERIFY(!property.value<QQmlDelegateModel *>());
 }
 
 void tst_qquickvisualdatamodel::asynchronousInsert_data()
@@ -4005,15 +4005,15 @@ void tst_qquickvisualdatamodel::asynchronousInsert()
 
     engine.rootContext()->setContextProperty("myModel", &model);
 
-    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel*>(c.create());
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create());
     QVERIFY(visualModel);
 
     ItemRequester requester;
-    connect(visualModel, SIGNAL(initItem(int,QQuickItem*)), &requester, SLOT(initItem(int,QQuickItem*)));
-    connect(visualModel, SIGNAL(createdItem(int,QQuickItem*)), &requester, SLOT(createdItem(int,QQuickItem*)));
-    connect(visualModel, SIGNAL(destroyingItem(QQuickItem*)), &requester, SLOT(destroyingItem(QQuickItem*)));
+    connect(visualModel, SIGNAL(initItem(int,QObject*)), &requester, SLOT(initItem(int,QObject*)));
+    connect(visualModel, SIGNAL(createdItem(int,QObject*)), &requester, SLOT(createdItem(int,QObject*)));
+    connect(visualModel, SIGNAL(destroyingItem(QObject*)), &requester, SLOT(destroyingItem(QObject*)));
 
-    QQuickItem *item = visualModel->item(requestIndex, true);
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, true));
     QVERIFY(!item);
 
     QVERIFY(!requester.itemInitialized);
@@ -4025,7 +4025,7 @@ void tst_qquickvisualdatamodel::asynchronousInsert()
         newItems.append(qMakePair(QLatin1String("New item") + QString::number(i), QString(QLatin1String(""))));
     model.insertItems(insertIndex, newItems);
 
-    item = visualModel->item(completeIndex, false);
+    item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex, false));
     QVERIFY(item);
 
     QCOMPARE(requester.itemInitialized, item);
@@ -4070,15 +4070,15 @@ void tst_qquickvisualdatamodel::asynchronousRemove()
 
     engine.rootContext()->setContextProperty("myModel", &model);
 
-    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel*>(c.create());
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create());
     QVERIFY(visualModel);
 
     ItemRequester requester;
-    connect(visualModel, SIGNAL(initItem(int,QQuickItem*)), &requester, SLOT(initItem(int,QQuickItem*)));
-    connect(visualModel, SIGNAL(createdItem(int,QQuickItem*)), &requester, SLOT(createdItem(int,QQuickItem*)));
-    connect(visualModel, SIGNAL(destroyingItem(QQuickItem*)), &requester, SLOT(destroyingItem(QQuickItem*)));
+    connect(visualModel, SIGNAL(initItem(int,QObject*)), &requester, SLOT(initItem(int,QObject*)));
+    connect(visualModel, SIGNAL(createdItem(int,QObject*)), &requester, SLOT(createdItem(int,QObject*)));
+    connect(visualModel, SIGNAL(destroyingItem(QObject*)), &requester, SLOT(destroyingItem(QObject*)));
 
-    QQuickItem *item = visualModel->item(requestIndex, true);
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, true));
     QVERIFY(!item);
 
     QVERIFY(!requester.itemInitialized);
@@ -4098,7 +4098,7 @@ void tst_qquickvisualdatamodel::asynchronousRemove()
         QCOMPARE(requester.itemCreated, requester.itemInitialized);
         QCOMPARE(requester.itemDestroyed, requester.itemInitialized);
     } else {
-        item = visualModel->item(completeIndex, false);
+        item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex, false));
         QVERIFY(item);
 
         QCOMPARE(requester.itemInitialized, item);
@@ -4148,15 +4148,15 @@ void tst_qquickvisualdatamodel::asynchronousMove()
 
     engine.rootContext()->setContextProperty("myModel", &model);
 
-    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel*>(c.create());
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create());
     QVERIFY(visualModel);
 
     ItemRequester requester;
-    connect(visualModel, SIGNAL(initItem(int,QQuickItem*)), &requester, SLOT(initItem(int,QQuickItem*)));
-    connect(visualModel, SIGNAL(createdItem(int,QQuickItem*)), &requester, SLOT(createdItem(int,QQuickItem*)));
-    connect(visualModel, SIGNAL(destroyingItem(QQuickItem*)), &requester, SLOT(destroyingItem(QQuickItem*)));
+    connect(visualModel, SIGNAL(initItem(int,QObject*)), &requester, SLOT(initItem(int,QObject*)));
+    connect(visualModel, SIGNAL(createdItem(int,QObject*)), &requester, SLOT(createdItem(int,QObject*)));
+    connect(visualModel, SIGNAL(destroyingItem(QObject*)), &requester, SLOT(destroyingItem(QObject*)));
 
-    QQuickItem *item = visualModel->item(requestIndex, true);
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, true));
     QVERIFY(!item);
 
     QVERIFY(!requester.itemInitialized);
@@ -4165,7 +4165,7 @@ void tst_qquickvisualdatamodel::asynchronousMove()
 
     model.moveItems(from, to, count);
 
-    item = visualModel->item(completeIndex, false);
+    item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex, false));
     QVERIFY(item);
 
 
@@ -4196,10 +4196,10 @@ void tst_qquickvisualdatamodel::asynchronousCancel()
 
     engine.rootContext()->setContextProperty("myModel", &model);
 
-    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel*>(c.create());
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create());
     QVERIFY(visualModel);
 
-    QQuickItem *item = visualModel->item(requestIndex, true);
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, true));
     QVERIFY(!item);
     QCOMPARE(controller.incubatingObjectCount(), 1);
 
@@ -4221,10 +4221,10 @@ void tst_qquickvisualdatamodel::invalidContext()
     QQmlComponent c(&engine, testFileUrl("visualdatamodel.qml"));
 
 
-    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel*>(c.create(context.data()));
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create(context.data()));
     QVERIFY(visualModel);
 
-    QQuickItem *item = visualModel->item(4, false);
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(4, false));
     QVERIFY(item);
     visualModel->release(item);
 
@@ -4232,7 +4232,7 @@ void tst_qquickvisualdatamodel::invalidContext()
 
     model.insertItem(4, "new item", "");
 
-    item = visualModel->item(4, false);
+    item = qobject_cast<QQuickItem*>(visualModel->object(4, false));
     QVERIFY(!item);
 }
 

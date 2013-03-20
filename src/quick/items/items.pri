@@ -21,6 +21,7 @@ HEADERS += \
     $$PWD/qquicktextinput_p_p.h \
     $$PWD/qquicktextcontrol_p.h \
     $$PWD/qquicktextcontrol_p_p.h \
+    $$PWD/qquicktextdocument.h \
     $$PWD/qquicktextedit_p.h \
     $$PWD/qquicktextedit_p_p.h \
     $$PWD/qquicktextutil_p.h \
@@ -38,10 +39,6 @@ HEADERS += \
     $$PWD/qquickflickable_p.h \
     $$PWD/qquickflickable_p_p.h \
     $$PWD/qquicklistview_p.h \
-    $$PWD/qquickvisualadaptormodel_p.h \
-    $$PWD/qquickvisualdatamodel_p.h \
-    $$PWD/qquickvisualdatamodel_p_p.h \
-    $$PWD/qquickvisualitemmodel_p.h \
     $$PWD/qquickrepeater_p.h \
     $$PWD/qquickrepeater_p_p.h \
     $$PWD/qquickgridview_p.h \
@@ -74,9 +71,7 @@ HEADERS += \
     $$PWD/qquickitemview_p_p.h \
     $$PWD/qquickitemviewtransition_p.h \
     $$PWD/qquickscreen_p.h \
-    $$PWD/qquickwindowmodule_p.h \
-    $$PWD/qquickwindowmanager_p.h \
-    $$PWD/qquickthreadedwindowmanager_p.h
+    $$PWD/qquickwindowmodule_p.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -91,6 +86,7 @@ SOURCES += \
     $$PWD/qquicktextnode.cpp \
     $$PWD/qquicktextinput.cpp \
     $$PWD/qquicktextcontrol.cpp \
+    $$PWD/qquicktextdocument.cpp \
     $$PWD/qquicktextedit.cpp \
     $$PWD/qquicktextutil.cpp \
     $$PWD/qquickimagebase.cpp \
@@ -101,9 +97,6 @@ SOURCES += \
     $$PWD/qquickpincharea.cpp \
     $$PWD/qquickflickable.cpp \
     $$PWD/qquicklistview.cpp \
-    $$PWD/qquickvisualadaptormodel.cpp \
-    $$PWD/qquickvisualdatamodel.cpp \
-    $$PWD/qquickvisualitemmodel.cpp \
     $$PWD/qquickrepeater.cpp \
     $$PWD/qquickgridview.cpp \
     $$PWD/qquickpathview.cpp \
@@ -128,9 +121,7 @@ SOURCES += \
     $$PWD/qquickitemview.cpp \
     $$PWD/qquickitemviewtransition.cpp \
     $$PWD/qquickwindowmodule.cpp \
-    $$PWD/qquickscreen.cpp \
-    $$PWD/qquickwindowmanager.cpp \
-    $$PWD/qquickthreadedwindowmanager.cpp
+    $$PWD/qquickscreen.cpp
 
 SOURCES += \
     $$PWD/qquickshadereffect.cpp \

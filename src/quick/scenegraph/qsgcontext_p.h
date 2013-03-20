@@ -54,8 +54,6 @@
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/private/qsgdepthstencilbuffer_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -69,7 +67,7 @@ class QQuickWindow;
 class QSGTexture;
 class QSGMaterial;
 class QSGMaterialShader;
-class QQuickWindowManager;
+class QSGRenderLoop;
 
 class QOpenGLContext;
 class QOpenGLFramebufferObject;
@@ -127,7 +125,7 @@ public:
     virtual QAnimationDriver *createAnimationDriver(QObject *parent);
 
     static QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image);
-    static QQuickWindowManager *createWindowManager();
+    static QSGRenderLoop *createWindowManager();
 
 
 public slots:
@@ -139,7 +137,5 @@ signals:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QSGCONTEXT_H

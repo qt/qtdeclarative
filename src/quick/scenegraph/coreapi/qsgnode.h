@@ -39,15 +39,13 @@
 **
 ****************************************************************************/
 
-#ifndef NODE_H
-#define NODE_H
+#ifndef QSGNODE_H
+#define QSGNODE_H
 
 #include <QtQuick/qsggeometry.h>
 #include <QtGui/QMatrix4x4>
 
 #include <float.h>
-
-QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
@@ -335,6 +333,4 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::Flags)
 
 QT_END_NAMESPACE
 
-QT_END_HEADER
-
-#endif // NODE_H
+#endif // QSGNODE_H

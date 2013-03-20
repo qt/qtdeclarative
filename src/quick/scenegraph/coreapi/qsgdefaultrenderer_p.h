@@ -39,15 +39,13 @@
 **
 ****************************************************************************/
 
-#ifndef QMLRENDERER_H
-#define QMLRENDERER_H
+#ifndef QSGDEFAULTRENDERER_P_H
+#define QSGDEFAULTRENDERER_P_H
 
 #include "qsgrenderer_p.h"
 
 #include <QtGui/private/qdatabuffer_p.h>
 #include "qsgrendernode_p.h"
-
-QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
@@ -78,7 +76,6 @@ private:
     QDataBuffer<RenderGroup> m_renderGroups;
 
     bool m_rebuild_lists;
-    bool m_needs_sorting;
     bool m_sort_front_to_back;
     bool m_render_node_added;
     int m_currentRenderOrder;
@@ -90,7 +87,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QMLRENDERER_H

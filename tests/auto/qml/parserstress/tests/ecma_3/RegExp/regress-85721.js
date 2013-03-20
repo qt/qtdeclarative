@@ -111,11 +111,11 @@ testRegExp([status], [re], [str], [result], [expect]);
 //# Some things for avoiding backslashitis later on.
 $esc        = '\\\\';     
 $Period      = '\.';
-$space      = '\040';              $tab         = '\t';
+$space      = '\x20';              $tab         = '\t';
 $OpenBR     = '\\[';               $CloseBR     = '\\]';
 $OpenParen  = '\\(';               $CloseParen  = '\\)';
-$NonASCII   = '\x80-\xff';         $ctrl        = '\000-\037';
-$CRlist     = '\n\015';  //# note: this should really be only \015.
+$NonASCII   = '\x80-\xff';         $ctrl        = '\0-\x1f';
+$CRlist     = '\n\x0d';  //# note: this should really be only \015.
 // Items 19, 20, 21
 $qtext = '[^' + $esc + $NonASCII + $CRlist + '\"]';						  // # for within "..."
 $dtext = '[^' + $esc + $NonASCII + $CRlist + $OpenBR + $CloseBR + ']';    // # for within [...]
@@ -226,7 +226,7 @@ $route_addr =
   '>';                           // #                 >
 
 //# Item 3: phrase........
-$phrase_ctrl = '\000-\010\012-\037'; // # like ctrl, but without tab
+$phrase_ctrl = '\0-\x08\x0a-\x1f'; // # like ctrl, but without tab
 
 //# Like atom-char, but without listing space, and uses phrase_ctrl.
 //# Since the class is negated, this matches the same as atom-char plus space and tab

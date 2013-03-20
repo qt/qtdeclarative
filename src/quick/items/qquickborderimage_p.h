@@ -44,7 +44,6 @@
 
 #include "qquickimagebase_p.h"
 
-QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QQuickScaleGrid;
@@ -102,6 +101,5 @@ private:
 
 QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQuickBorderImage)
-QT_END_HEADER
 
 #endif // QQUICKBORDERIMAGE_P_H

@@ -45,8 +45,6 @@
 #include "qquickcontext2d_p.h"
 #include <QOpenGLFramebufferObject>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickContext2DTexture;
@@ -103,8 +101,6 @@ public:
 private:
     QImage m_image;
 };
-QT_END_HEADER
-
 QT_END_NAMESPACE
 
 #endif // QQUICKCONTEXT2DTILE_P_H

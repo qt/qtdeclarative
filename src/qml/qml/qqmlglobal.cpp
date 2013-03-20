@@ -44,6 +44,7 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/QCoreApplication>
 
 QT_BEGIN_NAMESPACE
 
@@ -54,6 +55,7 @@ QQmlValueTypeProvider::QQmlValueTypeProvider()
 
 QQmlValueTypeProvider::~QQmlValueTypeProvider()
 {
+    QQml_removeValueTypeProvider(this);
 }
 
 QQmlValueType *QQmlValueTypeProvider::createValueType(int type)
@@ -266,13 +268,13 @@ bool QQmlValueTypeProvider::store(int, const void *, void *, size_t) { return fa
 bool QQmlValueTypeProvider::read(int, const void *, size_t, int, void *) { return false; }
 bool QQmlValueTypeProvider::write(int, const void *, void *, size_t) { return false; }
 
+Q_GLOBAL_STATIC(QQmlValueTypeProvider, nullValueTypeProvider)
 static QQmlValueTypeProvider *valueTypeProvider = 0;
 
 static QQmlValueTypeProvider **getValueTypeProvider(void)
 {
     if (valueTypeProvider == 0) {
-        static QQmlValueTypeProvider nullValueTypeProvider;
-        valueTypeProvider = &nullValueTypeProvider;
+        valueTypeProvider = nullValueTypeProvider;
     }
 
     return &valueTypeProvider;
@@ -283,6 +285,34 @@ Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *newPr
     static QQmlValueTypeProvider **providerPtr = getValueTypeProvider();
     newProvider->next = *providerPtr;
     *providerPtr = newProvider;
+}
+
+Q_QML_PRIVATE_EXPORT void QQml_removeValueTypeProvider(QQmlValueTypeProvider *oldProvider)
+{
+    if (oldProvider == nullValueTypeProvider) {
+        // don't remove the null provider
+        // we get here when the QtQml library is being unloaded
+        return;
+    }
+
+    // the only entry with next = 0 is the null provider
+    Q_ASSERT(oldProvider->next);
+
+    QQmlValueTypeProvider *prev = valueTypeProvider;
+    if (prev == oldProvider) {
+        valueTypeProvider = oldProvider->next;
+        return;
+    }
+
+    // singly-linked list removal
+    for ( ; prev; prev = prev->next) {
+        if (prev->next != oldProvider)
+            continue;               // this is not the provider you're looking for
+        prev->next = oldProvider->next;
+        return;
+    }
+
+    qWarning("QQml_removeValueTypeProvider: was asked to remove provider %p but it was not found", oldProvider);
 }
 
 Q_AUTOTEST_EXPORT QQmlValueTypeProvider *QQml_valueTypeProvider(void)
@@ -328,7 +358,7 @@ Q_AUTOTEST_EXPORT QQmlColorProvider *QQml_colorProvider(void)
 
 
 QQmlGuiProvider::~QQmlGuiProvider() {}
-QObject *QQmlGuiProvider::application(QObject *) { return 0; }
+QObject *QQmlGuiProvider::application(QObject *) { return new QQmlApplication(); }
 QStringList QQmlGuiProvider::fontFamilies() { return QStringList(); }
 bool QQmlGuiProvider::openUrlExternally(QUrl &) { return false; }
 
@@ -354,8 +384,7 @@ Q_QML_PRIVATE_EXPORT QQmlGuiProvider *QQml_setGuiProvider(QQmlGuiProvider *newPr
 static QQmlGuiProvider **getGuiProvider(void)
 {
     if (guiProvider == 0) {
-        qWarning() << "Warning: QQml_guiProvider: no GUI provider has been set!";
-        static QQmlGuiProvider nullGuiProvider;
+        static QQmlGuiProvider nullGuiProvider; //Still provides an application with no GUI support
         guiProvider = &nullGuiProvider;
     }
 
@@ -366,6 +395,53 @@ Q_AUTOTEST_EXPORT QQmlGuiProvider *QQml_guiProvider(void)
 {
     static QQmlGuiProvider **providerPtr = getGuiProvider();
     return *providerPtr;
+}
+
+//Docs in qqmlengine.cpp
+QQmlApplication::QQmlApplication(QObject *parent)
+    : QObject(*(new QQmlApplicationPrivate),parent)
+{
+    connect(QCoreApplication::instance(), SIGNAL(aboutToQuit()),
+            this, SIGNAL(aboutToQuit()));
+}
+
+QQmlApplication::QQmlApplication(QQmlApplicationPrivate &dd, QObject *parent)
+    : QObject(dd, parent)
+{
+    connect(QCoreApplication::instance(), SIGNAL(aboutToQuit()),
+            this, SIGNAL(aboutToQuit()));
+}
+
+QStringList QQmlApplication::args()
+{
+    Q_D(QQmlApplication);
+    if (!d->argsInit) {
+        d->argsInit = true;
+        d->args = QCoreApplication::arguments();
+    }
+    return d->args;
+}
+
+QString QQmlApplication::name() const
+{
+    return QCoreApplication::instance()->applicationName();
+}
+
+QString QQmlApplication::version() const
+{
+    return QCoreApplication::instance()->applicationVersion();
+}
+
+void QQmlApplication::setName(const QString &arg)
+{
+    QCoreApplication::instance()->setApplicationName(arg);
+    emit nameChanged(); //Note that we don't get notified if it's changed from C++
+}
+
+void QQmlApplication::setVersion(const QString &arg)
+{
+    QCoreApplication::instance()->setApplicationVersion(arg);
+    emit versionChanged(); //Note that we don't get notified if it's changed from C++
 }
 
 QT_END_NAMESPACE

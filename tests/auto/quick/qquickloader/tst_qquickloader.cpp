@@ -126,6 +126,7 @@ private slots:
 
     void parented();
     void sizeBound();
+    void QTBUG_30183();
 
 private:
     QQmlEngine engine;
@@ -1126,6 +1127,22 @@ void tst_QQuickLoader::sizeBound()
     delete root;
 }
 
+void tst_QQuickLoader::QTBUG_30183()
+{
+    QQmlComponent component(&engine, testFileUrl("/QTBUG_30183.qml"));
+    QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
+    QVERIFY(loader != 0);
+    QCOMPARE(loader->width(), 240.0);
+    QCOMPARE(loader->height(), 120.0);
+
+    // the loaded item must follow the size
+    QQuickItem *rect = qobject_cast<QQuickItem*>(loader->item());
+    QVERIFY(rect);
+    QCOMPARE(rect->width(), 240.0);
+    QCOMPARE(rect->height(), 120.0);
+
+    delete loader;
+}
 
 QTEST_MAIN(tst_QQuickLoader)
 

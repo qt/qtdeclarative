@@ -40,14 +40,12 @@
 ****************************************************************************/
 
 
-#ifndef DEFAULT_RECTANGLENODE_H
-#define DEFAULT_RECTANGLENODE_H
+#ifndef QSGDEFAULTRECTANGLENODE_P_H
+#define QSGDEFAULTRECTANGLENODE_P_H
 
 #include <private/qsgadaptationlayer_p.h>
 
 #include <QtQuick/qsgvertexcolormaterial.h>
-
-QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
@@ -103,7 +101,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

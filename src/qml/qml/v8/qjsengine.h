@@ -49,8 +49,6 @@
 #include <QtCore/qobject.h>
 #include <QtQml/qjsvalue.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -136,7 +134,5 @@ inline QVariant qjsvalue_cast<QVariant>(const QJSValue &value)
 }
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QJSENGINE_H

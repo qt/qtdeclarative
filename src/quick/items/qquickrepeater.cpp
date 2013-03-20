@@ -41,16 +41,18 @@
 
 #include "qquickrepeater_p.h"
 #include "qquickrepeater_p_p.h"
-#include "qquickvisualdatamodel_p.h"
 
 #include <private/qqmlglobal_p.h>
-#include <private/qquicklistaccessor_p.h>
-#include <private/qquickchangeset_p.h>
+#include <private/qqmllistaccessor_p.h>
+#include <private/qqmlchangeset_p.h>
+#include <private/qqmldelegatemodel_p.h>
+
+#include <QtQml/QQmlInfo>
 
 QT_BEGIN_NAMESPACE
 
 QQuickRepeaterPrivate::QQuickRepeaterPrivate()
-    : model(0), ownModel(false), inRequest(false), dataSourceIsObject(false), itemCount(0), createFrom(-1)
+    : model(0), ownModel(false), inRequest(false), dataSourceIsObject(false), delegateValidated(false), itemCount(0), createFrom(-1)
 {
 }
 
@@ -193,18 +195,18 @@ void QQuickRepeater::setModel(const QVariant &model)
 
     clear();
     if (d->model) {
-        disconnect(d->model, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
-                this, SLOT(modelUpdated(QQuickChangeSet,bool)));
-        disconnect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
-        disconnect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
-//        disconnect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
+        disconnect(d->model, SIGNAL(modelUpdated(QQmlChangeSet,bool)),
+                this, SLOT(modelUpdated(QQmlChangeSet,bool)));
+        disconnect(d->model, SIGNAL(createdItem(int,QObject*)), this, SLOT(createdItem(int,QObject*)));
+        disconnect(d->model, SIGNAL(initItem(int,QObject*)), this, SLOT(initItem(int,QObject*)));
+//        disconnect(d->model, SIGNAL(destroyingItem(QObject*)), this, SLOT(destroyingItem(QObject*)));
     }
     d->dataSource = model;
     QObject *object = qvariant_cast<QObject*>(model);
     d->dataSourceAsObject = object;
     d->dataSourceIsObject = object != 0;
-    QQuickVisualModel *vim = 0;
-    if (object && (vim = qobject_cast<QQuickVisualModel *>(object))) {
+    QQmlInstanceModel *vim = 0;
+    if (object && (vim = qobject_cast<QQmlInstanceModel *>(object))) {
         if (d->ownModel) {
             delete d->model;
             d->ownModel = false;
@@ -212,20 +214,20 @@ void QQuickRepeater::setModel(const QVariant &model)
         d->model = vim;
     } else {
         if (!d->ownModel) {
-            d->model = new QQuickVisualDataModel(qmlContext(this));
+            d->model = new QQmlDelegateModel(qmlContext(this));
             d->ownModel = true;
             if (isComponentComplete())
-                static_cast<QQuickVisualDataModel *>(d->model)->componentComplete();
+                static_cast<QQmlDelegateModel *>(d->model)->componentComplete();
         }
-        if (QQuickVisualDataModel *dataModel = qobject_cast<QQuickVisualDataModel*>(d->model))
+        if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model))
             dataModel->setModel(model);
     }
     if (d->model) {
-        connect(d->model, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
-                this, SLOT(modelUpdated(QQuickChangeSet,bool)));
-        connect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
-        connect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
-//        connect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
+        connect(d->model, SIGNAL(modelUpdated(QQmlChangeSet,bool)),
+                this, SLOT(modelUpdated(QQmlChangeSet,bool)));
+        connect(d->model, SIGNAL(createdItem(int,QObject*)), this, SLOT(createdItem(int,QObject*)));
+        connect(d->model, SIGNAL(initItem(int,QObject*)), this, SLOT(initItem(int,QObject*)));
+//        connect(d->model, SIGNAL(destroyingItem(QObject*)), this, SLOT(destroyingItem(QObject*)));
         regenerate();
     }
     emit modelChanged();
@@ -269,7 +271,7 @@ QQmlComponent *QQuickRepeater::delegate() const
 {
     Q_D(const QQuickRepeater);
     if (d->model) {
-        if (QQuickVisualDataModel *dataModel = qobject_cast<QQuickVisualDataModel*>(d->model))
+        if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model))
             return dataModel->delegate();
     }
 
@@ -279,18 +281,20 @@ QQmlComponent *QQuickRepeater::delegate() const
 void QQuickRepeater::setDelegate(QQmlComponent *delegate)
 {
     Q_D(QQuickRepeater);
-    if (QQuickVisualDataModel *dataModel = qobject_cast<QQuickVisualDataModel*>(d->model))
+    if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model))
        if (delegate == dataModel->delegate())
            return;
 
     if (!d->ownModel) {
-        d->model = new QQuickVisualDataModel(qmlContext(this));
+        d->model = new QQmlDelegateModel(qmlContext(this));
         d->ownModel = true;
     }
-    if (QQuickVisualDataModel *dataModel = qobject_cast<QQuickVisualDataModel*>(d->model)) {
+
+    if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model)) {
         dataModel->setDelegate(delegate);
         regenerate();
         emit delegateChanged();
+        d->delegateValidated = false;
     }
 }
 
@@ -325,7 +329,7 @@ void QQuickRepeater::componentComplete()
 {
     Q_D(QQuickRepeater);
     if (d->model && d->ownModel)
-        static_cast<QQuickVisualDataModel *>(d->model)->componentComplete();
+        static_cast<QQmlDelegateModel *>(d->model)->componentComplete();
     QQuickItem::componentComplete();
     regenerate();
     if (d->model && d->model->count())
@@ -350,6 +354,7 @@ void QQuickRepeater::clear()
             QQuickItem *item = d->deletables.at(i);
             if (complete)
                 emit itemRemoved(i, item);
+            item->setParentItem(0);
             d->model->release(item);
         }
     }
@@ -382,8 +387,17 @@ void QQuickRepeaterPrivate::createItems()
     inRequest = true;
     for (int ii = createFrom; ii < itemCount; ++ii) {
         if (!deletables.at(ii)) {
-            QQuickItem *item = model->item(ii, false);
+            QObject *object = model->object(ii, false);
+            QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
             if (!item) {
+                if (object) {
+                    model->release(object);
+                    if (!delegateValidated) {
+                        delegateValidated = true;
+                        QObject* delegate = q->delegate();
+                        qmlInfo(delegate ? delegate : q) << q->tr("Delegate must be of Item type");
+                    }
+                }
                 createFrom = ii;
                 break;
             }
@@ -407,19 +421,21 @@ void QQuickRepeaterPrivate::createItems()
     inRequest = false;
 }
 
-void QQuickRepeater::createdItem(int, QQuickItem *)
+void QQuickRepeater::createdItem(int, QObject *)
 {
     Q_D(QQuickRepeater);
     if (!d->inRequest)
         d->createItems();
 }
 
-void QQuickRepeater::initItem(int, QQuickItem *item)
+void QQuickRepeater::initItem(int, QObject *object)
 {
-    item->setParentItem(parentItem());
+    QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
+    if (item)
+        item->setParentItem(parentItem());
 }
 
-void QQuickRepeater::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
+void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
 {
     Q_D(QQuickRepeater);
 
@@ -435,7 +451,7 @@ void QQuickRepeater::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
 
     int difference = 0;
     QHash<int, QVector<QPointer<QQuickItem> > > moved;
-    foreach (const QQuickChangeSet::Remove &remove, changeSet.removes()) {
+    foreach (const QQmlChangeSet::Remove &remove, changeSet.removes()) {
         int index = qMin(remove.index, d->deletables.count());
         int count = qMin(remove.index + remove.count, d->deletables.count()) - index;
         if (remove.isMove()) {
@@ -447,8 +463,10 @@ void QQuickRepeater::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
             QQuickItem *item = d->deletables.at(index);
             d->deletables.remove(index);
             emit itemRemoved(index, item);
-            if (item)
+            if (item) {
+                item->setParentItem(0);
                 d->model->release(item);
+            }
             --d->itemCount;
         }
 
@@ -456,7 +474,7 @@ void QQuickRepeater::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
     }
 
     d->createFrom = -1;
-    foreach (const QQuickChangeSet::Insert &insert, changeSet.inserts()) {
+    foreach (const QQmlChangeSet::Insert &insert, changeSet.inserts()) {
         int index = qMin(insert.index, d->deletables.count());
         if (insert.isMove()) {
             QVector<QPointer<QQuickItem> > items = moved.value(insert.moveId);

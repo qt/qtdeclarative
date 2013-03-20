@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef RENDERER_H
-#define RENDERER_H
+#ifndef QSGRENDERER_P_H
+#define QSGRENDERER_P_H
 
 #include <qset.h>
 #include <qhash.h>
@@ -54,8 +54,6 @@
 #include <QtQuick/qsgtexture.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
-
-QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
@@ -241,6 +239,4 @@ private:
 
 QT_END_NAMESPACE
 
-QT_END_HEADER
-
-#endif // RENDERER_H
+#endif

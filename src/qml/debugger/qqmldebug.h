@@ -44,8 +44,6 @@
 
 #include <QtQml/qtqmlglobal.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -62,7 +60,5 @@ static QQmlDebuggingEnabler qmlEnableDebuggingHelper(true);
 #endif
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLDEBUG_H

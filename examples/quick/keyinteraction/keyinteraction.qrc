@@ -8,5 +8,6 @@
         <file>focus/Core/GridMenu.qml</file>
         <file>focus/Core/ListMenu.qml</file>
         <file>focus/Core/ListViewDelegate.qml</file>
+        <file>focus/Core/TabMenu.qml</file>
     </qresource>
 </RCC>

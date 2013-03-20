@@ -152,9 +152,8 @@ void tst_qquickanimatedimage::mirror_running()
 
     QQuickView window;
     window.setSource(testFileUrl("hearts.qml"));
-    window.requestActivate();
     window.show();
-    QTest::qWaitForWindowActive(&window);
+    QTest::qWaitForWindowExposed(&window);
 
     QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(window.rootObject());
     QVERIFY(anim);

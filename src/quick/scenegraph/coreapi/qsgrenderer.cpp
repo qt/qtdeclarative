@@ -60,8 +60,7 @@ QT_BEGIN_NAMESPACE
 
 
 
-#define QSG_RENDERER_TIMING
-#ifdef QSG_RENDERER_TIMING
+#ifndef QSG_NO_RENDERER_TIMING
 static bool qsg_render_timing = !qgetenv("QML_RENDERER_TIMING").isEmpty();
 static QTime frameTimer;
 static int preprocessTime;
@@ -237,7 +236,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     m_is_rendering = true;
 
 
-#ifdef QSG_RENDERER_TIMING
+#ifndef QSG_NO_RENDERER_TIMING
     if (qsg_render_timing)
         frameTimer.start();
     int bindTime = 0;
@@ -248,7 +247,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     preprocess();
 
     bindable.bind();
-#ifdef QSG_RENDERER_TIMING
+#ifndef QSG_NO_RENDERER_TIMING
     if (qsg_render_timing)
         bindTime = frameTimer.elapsed();
 #endif
@@ -269,7 +268,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
 #endif
 
     render();
-#ifdef QSG_RENDERER_TIMING
+#ifndef QSG_NO_RENDERER_TIMING
     if (qsg_render_timing)
         renderTime = frameTimer.elapsed();
 #endif
@@ -289,9 +288,9 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
         m_index_buffer_bound = false;
     }
 
-#ifdef QSG_RENDERER_TIMING
+#ifndef QSG_NO_RENDERER_TIMING
     if (qsg_render_timing) {
-        printf(" - Breakdown of frametime: preprocess=%d, updates=%d, binding=%d, render=%d, total=%d\n",
+        printf(" - Breakdown of render time: preprocess=%d, updates=%d, binding=%d, render=%d, total=%d\n",
                preprocessTime,
                updatePassTime - preprocessTime,
                bindTime - updatePassTime,
@@ -379,7 +378,7 @@ void QSGRenderer::preprocess()
         }
     }
 
-#ifdef QSG_RENDERER_TIMING
+#ifndef QSG_NO_RENDERER_TIMING
     if (qsg_render_timing)
         preprocessTime = frameTimer.elapsed();
 #endif
@@ -387,7 +386,7 @@ void QSGRenderer::preprocess()
     nodeUpdater()->setToplevelOpacity(context()->renderAlpha());
     nodeUpdater()->updateStates(m_root_node);
 
-#ifdef QSG_RENDERER_TIMING
+#ifndef QSG_NO_RENDERER_TIMING
     if (qsg_render_timing)
         updatePassTime = frameTimer.elapsed();
 #endif

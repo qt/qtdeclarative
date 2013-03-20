@@ -47,8 +47,6 @@
 #include <QUrl>
 #include <QAbstractListModel>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -164,7 +162,5 @@ private:
 //![class end]
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQUICKFOLDERLISTMODEL_H

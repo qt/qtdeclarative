@@ -39,12 +39,10 @@
 **
 ****************************************************************************/
 
-#ifndef VERTEXCOLORMATERIAL_H
-#define VERTEXCOLORMATERIAL_H
+#ifndef QSGVERTEXCOLORMATERIAL_H
+#define QSGVERTEXCOLORMATERIAL_H
 
 #include <QtQuick/qsgmaterial.h>
-
-QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
@@ -61,7 +59,5 @@ protected:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // VERTEXCOLORMATERIAL_H

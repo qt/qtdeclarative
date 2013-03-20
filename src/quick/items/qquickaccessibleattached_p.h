@@ -52,8 +52,6 @@
 #include <QtGui/qaccessible.h>
 #include <private/qtquickglobal_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -164,8 +162,6 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickAccessibleAttached)
 QML_DECLARE_TYPEINFO(QQuickAccessibleAttached, QML_HAS_ATTACHED_PROPERTIES)
-
-QT_END_HEADER
 
 #endif // QT_NO_ACCESSIBILITY
 

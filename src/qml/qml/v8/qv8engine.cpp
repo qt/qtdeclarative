@@ -54,6 +54,7 @@
 #include <private/qqmllocale_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
+#include <private/qqmlplatform_p.h>
 
 #include "qscript_impl_p.h"
 #include "qv8domerrors_p.h"
@@ -125,6 +126,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, ContextOwnership ownership)
     , m_ownsV8Context(ownership == CreateNewContext)
     , m_xmlHttpRequestData(0)
     , m_listModelData(0)
+    , m_platform(0)
     , m_application(0)
 {
     QML_MEMORY_SCOPE_STRING("QV8Engine::QV8Engine");
@@ -629,6 +631,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt->Set(v8::String::New("binding"), V8FUNCTION(binding, this));
 
     if (m_engine) {
+        qt->SetAccessor(v8::String::New("platform"), getPlatform, 0, v8::External::New(this));
         qt->SetAccessor(v8::String::New("application"), getApplication, 0, v8::External::New(this));
 #ifndef QT_NO_IM
         qt->SetAccessor(v8::String::New("inputMethod"), getInputMethod, 0, v8::External::New(this));
@@ -1446,9 +1449,19 @@ int QV8Engine::consoleCountHelper(const QString &file, quint16 line, quint16 col
     return number;
 }
 
+v8::Handle<v8::Value> QV8Engine::getPlatform(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Cast(*info.Data())->Value());
+    if (!engine->m_platform) {
+        // Only allocate a platform object once
+        engine->m_platform = new QQmlPlatform(engine->m_engine);
+    }
+    return engine->newQObject(engine->m_platform);
+}
+
 v8::Handle<v8::Value> QV8Engine::getApplication(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Unwrap(info.Data()));
+    QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Cast(*info.Data())->Value());
     if (!engine->m_application) {
         // Only allocate an application object once
         engine->m_application = QQml_guiProvider()->application(engine->m_engine);
@@ -1459,7 +1472,7 @@ v8::Handle<v8::Value> QV8Engine::getApplication(v8::Local<v8::String>, const v8:
 #ifndef QT_NO_IM
 v8::Handle<v8::Value> QV8Engine::getInputMethod(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Unwrap(info.Data()));
+    QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Cast(*info.Data())->Value());
     return engine->newQObject(QQml_guiProvider()->inputMethod(), CppOwnership);
 }
 #endif

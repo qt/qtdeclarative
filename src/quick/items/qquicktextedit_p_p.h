@@ -73,6 +73,7 @@ public:
     QQuickTextEditPrivate()
         : color(QRgb(0xFF000000)), selectionColor(QRgb(0xFF000080)), selectedTextColor(QRgb(0xFFFFFFFF))
         , textMargin(0.0), xoff(0), yoff(0), font(sourceFont), cursorComponent(0), cursorItem(0), document(0), control(0)
+        , quickDocument(0)
         , lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
         , hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop)
         , format(QQuickTextEdit::PlainText), wrapMode(QQuickTextEdit::NoWrap)
@@ -86,7 +87,7 @@ public:
         , documentDirty(true), dirty(false), richText(false), cursorVisible(false), cursorPending(false)
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
         , selectByMouse(false), canPaste(false), canPasteValid(false), hAlignImplicit(true)
-        , textCached(true), inLayout(false)
+        , textCached(true), inLayout(false), selectByKeyboard(false), selectByKeyboardSet(false)
     {
     }
 
@@ -104,6 +105,11 @@ public:
     Qt::LayoutDirection textDirection(const QString &text) const;
 
     void setNativeCursorEnabled(bool enabled) { control->setCursorWidth(enabled ? 1 : 0); }
+    void handleFocusEvent(QFocusEvent *event);
+
+#ifndef QT_NO_IM
+    Qt::InputMethodHints effectiveInputMethodHints() const;
+#endif
 
     QColor color;
     QColor selectionColor;
@@ -124,6 +130,7 @@ public:
     QQuickItem* cursorItem;
     QQuickTextDocumentWithImageResources *document;
     QQuickTextControl *control;
+    QQuickTextDocument *quickDocument;
 
     int lastSelectionStart;
     int lastSelectionEnd;
@@ -161,6 +168,8 @@ public:
     bool hAlignImplicit:1;
     bool textCached:1;
     bool inLayout:1;
+    bool selectByKeyboard:1;
+    bool selectByKeyboardSet:1;
 };
 
 QT_END_NAMESPACE

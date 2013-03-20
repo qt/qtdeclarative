@@ -23,6 +23,11 @@ SUBDIRS = accessibility \
             particles \
             demos
 
+# Widget dependent examples
+qtHaveModule(widgets) {
+    SUBDIRS += embeddedinwidgets
+}
+
 EXAMPLE_FILES = \
     ui-components \
     shared

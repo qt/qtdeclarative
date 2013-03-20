@@ -70,7 +70,7 @@ static inline int qt_next_power_of_two(int v)
 QSGPainterTexture::QSGPainterTexture()
     : QSGPlainTexture()
 {
-
+    m_retain_image = true;
 }
 
 #ifdef QT_OPENGL_ES

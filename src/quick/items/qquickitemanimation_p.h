@@ -46,8 +46,6 @@
 
 #include <QtQuick/private/qquickanimation_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickParentAnimationPrivate;
@@ -197,7 +195,5 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQuickParentAnimation)
 QML_DECLARE_TYPE(QQuickAnchorAnimation)
 QML_DECLARE_TYPE(QQuickPathAnimation)
-
-QT_END_HEADER
 
 #endif // QQUICKITEMANIMATION_H

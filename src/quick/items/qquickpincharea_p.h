@@ -44,8 +44,6 @@
 
 #include "qquickitem.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class Q_AUTOTEST_EXPORT QQuickPinch : public QObject
@@ -300,8 +298,6 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQuickPinch)
 QML_DECLARE_TYPE(QQuickPinchEvent)
 QML_DECLARE_TYPE(QQuickPinchArea)
-
-QT_END_HEADER
 
 #endif // QQUICKPINCHAREA_H
 

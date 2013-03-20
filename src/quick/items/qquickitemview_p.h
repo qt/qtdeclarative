@@ -44,11 +44,9 @@
 
 #include "qquickflickable_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
-class QQuickChangeSet;
+class QQmlChangeSet;
 
 class QQuickItemViewPrivate;
 
@@ -257,10 +255,10 @@ protected:
 
 protected slots:
     void destroyRemoved();
-    void createdItem(int index, QQuickItem *item);
-    virtual void initItem(int index, QQuickItem *item);
-    void modelUpdated(const QQuickChangeSet &changeSet, bool reset);
-    void destroyingItem(QQuickItem *item);
+    void createdItem(int index, QObject *item);
+    virtual void initItem(int index, QObject *item);
+    void modelUpdated(const QQmlChangeSet &changeSet, bool reset);
+    void destroyingItem(QObject *item);
     void animStopped();
     void trackedPositionChanged();
 
@@ -351,8 +349,6 @@ public:
 
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQUICKITEMVIEW_P_H
 

@@ -48,6 +48,7 @@
 #include <QStandardPaths>
 #include <QSignalSpy>
 #include <QDebug>
+#include <QBuffer>
 #include <QQmlComponent>
 #include <QQmlNetworkAccessManagerFactory>
 #include <QQmlExpression>
@@ -63,6 +64,7 @@ public:
 private slots:
     void rootContext();
     void networkAccessManager();
+    void synchronousNetworkAccessManager();
     void baseUrl();
     void contextForObject();
     void offlineStoragePath();
@@ -126,6 +128,53 @@ void tst_qqmlengine::networkAccessManager()
     QVERIFY(engine->networkAccessManager() == factory.manager);
     delete engine;
 }
+
+class ImmediateReply : public QNetworkReply {
+
+    Q_OBJECT
+
+public:
+    ImmediateReply() {
+        setFinished(true);
+    }
+    virtual qint64 readData(char* , qint64 ) {
+        return 0;
+    }
+    virtual void abort() { }
+};
+
+class ImmediateManager : public QNetworkAccessManager {
+
+    Q_OBJECT
+
+public:
+    ImmediateManager(QObject *parent = 0) : QNetworkAccessManager(parent) {
+    }
+
+    QNetworkReply *createRequest(Operation, const QNetworkRequest & , QIODevice * outgoingData = 0) {
+        Q_UNUSED(outgoingData);
+        return new ImmediateReply;
+    }
+};
+
+class ImmediateFactory : public QQmlNetworkAccessManagerFactory {
+
+public:
+    QNetworkAccessManager *create(QObject *) {
+        return new ImmediateManager;
+    }
+};
+
+void tst_qqmlengine::synchronousNetworkAccessManager()
+{
+    ImmediateFactory factory;
+    QQmlEngine engine;
+    engine.setNetworkAccessManagerFactory(&factory);
+    QQmlComponent c(&engine, QUrl("myScheme://test.qml"));
+    // reply is finished, so should not be in loading state.
+    QVERIFY(!c.isLoading());
+}
+
 
 void tst_qqmlengine::baseUrl()
 {

@@ -131,13 +131,12 @@ QSGDefaultRenderer::QSGDefaultRenderer(QSGContext *context)
     , m_transparentNodes(64)
     , m_renderGroups(4)
     , m_rebuild_lists(false)
-    , m_needs_sorting(false)
     , m_sort_front_to_back(false)
     , m_render_node_added(false)
     , m_currentRenderOrder(1)
 {
-    QStringList args = qApp->arguments();
 #if defined(QML_RUNTIME_TESTING)
+    QStringList args = qApp->arguments();
     m_render_opaque_nodes = !args.contains(QLatin1String("--no-opaque-nodes"));
     m_render_alpha_nodes = !args.contains(QLatin1String("--no-alpha-nodes"));
 #endif
@@ -212,6 +211,8 @@ void QSGDefaultRenderer::render()
     m_currentProgram = 0;
     m_currentMatrix = 0;
 
+    bool sortNodes = m_rebuild_lists;
+
     if (m_rebuild_lists) {
         m_opaqueNodes.reset();
         m_transparentNodes.reset();
@@ -228,7 +229,7 @@ void QSGDefaultRenderer::render()
     int debugtimeLists = debugTimer.elapsed();
 #endif
 
-    if (m_needs_sorting) {
+    if (sortNodes) {
         if (!m_opaqueNodes.isEmpty()) {
             bool (*lessThan)(QSGNode *, QSGNode *);
             lessThan = m_sort_front_to_back ? nodeLessThanWithRenderOrder : nodeLessThan;
@@ -240,7 +241,6 @@ void QSGDefaultRenderer::render()
                 start = end;
             }
         }
-        m_needs_sorting = false;
     }
 
 #ifdef RENDERER_DEBUG

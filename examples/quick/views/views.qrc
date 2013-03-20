@@ -63,7 +63,7 @@
         <file>pathview/pics/VideoPlayer_48.png</file>
         <file>visualdatamodel/slideshow.qml</file>
         <file>visualdatamodel/dragselection.qml</file>
-        <file>visualitemmodel/visualitemmodel.qml</file>
+        <file>objectmodel/objectmodel.qml</file>
         <file>views.qml</file>
     </qresource>
 </RCC>

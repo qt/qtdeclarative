@@ -46,8 +46,6 @@
 
 #include <private/qqmlguard_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickListView;
@@ -96,7 +94,7 @@ private:
 };
 
 
-class QQuickVisualModel;
+class QQmlInstanceModel;
 class QQuickListViewAttached;
 class Q_AUTOTEST_EXPORT QQuickListView : public QQuickItemView
 {
@@ -169,7 +167,7 @@ protected:
     virtual void viewportMoved(Qt::Orientations orient);
     virtual void keyPressEvent(QKeyEvent *);
     virtual void geometryChanged(const QRectF &newGeometry,const QRectF &oldGeometry);
-    virtual void initItem(int index, QQuickItem *item);
+    virtual void initItem(int index, QObject *item);
 };
 
 class QQuickListViewAttached : public QQuickItemViewAttached
@@ -204,7 +202,5 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPEINFO(QQuickListView, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QQuickListView)
 QML_DECLARE_TYPE(QQuickViewSection)
-
-QT_END_HEADER
 
 #endif // QQUICKLISTVIEW_P_H

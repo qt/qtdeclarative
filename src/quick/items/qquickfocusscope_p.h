@@ -44,8 +44,6 @@
 
 #include "qquickitem.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class Q_AUTOTEST_EXPORT QQuickFocusScope : public QQuickItem
@@ -59,7 +57,5 @@ public:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickFocusScope)
-
-QT_END_HEADER
 
 #endif // QQUICKFOCUSSCOPE_P_H

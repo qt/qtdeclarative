@@ -42,8 +42,6 @@
 #ifndef QQuickANGLEDDIRECTION_H
 #define QQuickANGLEDDIRECTION_H
 #include "qquickdirection_p.h"
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickAngleDirection : public QQuickDirection
@@ -127,5 +125,4 @@ qreal m_magnitudeVariation;
 };
 
 QT_END_NAMESPACE
-QT_END_HEADER
 #endif // QQuickANGLEDDIRECTION_H

@@ -82,11 +82,9 @@ private:
     QStringList findQmlFiles(const QDir &);
 
     QQmlEngine engine;
-
-    QQuickWindow *window;
 };
 
-tst_examples::tst_examples() : window(0)
+tst_examples::tst_examples()
 {
     // Add files to exclude here
     excludedFiles << "examples/quick/canvas/tiger/tiger.qml"; // QTBUG-26528
@@ -94,7 +92,7 @@ tst_examples::tst_examples() : window(0)
 
     // Add directories you want excluded here (don't add examples/, because they install to examples/qtdeclarative/)
     excludedDirs << "shared"; //Not an example
-    excludedDirs << "qtquick/text/fonts"; // QTBUG-21415
+    excludedDirs << "quick/text/fonts"; // QTBUG-29004
     excludedDirs << "snippets/qml/path"; //No root QQuickItem
     excludedDirs << "tutorials/gettingStartedQml"; //C++ example, but no cpp files in root dir
 
@@ -120,7 +118,6 @@ tst_examples::tst_examples() : window(0)
 
 tst_examples::~tst_examples()
 {
-    delete window;
 }
 
 void tst_examples::init()
@@ -260,6 +257,9 @@ void tst_examples::sgexamples_data()
 void tst_examples::sgexamples()
 {
     QFETCH(QString, file);
+    QQuickWindow window;
+    window.setPersistentOpenGLContext(true);
+    window.setPersistentSceneGraph(true);
 
     QQmlComponent component(&engine, QUrl::fromLocalFile(file));
     if (component.status() == QQmlComponent::Error)
@@ -272,13 +272,11 @@ void tst_examples::sgexamples()
         component.completeCreate();
     QVERIFY(root);
 
-    if (!window) {
-        window = new QQuickWindow();
-        window->resize(240, 320);
-        window->show();
-        QVERIFY(QTest::qWaitForWindowExposed(window));
-    }
-    root->setParentItem(window->contentItem());
+    window.resize(240, 320);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    root->setParentItem(window.contentItem());
     component.completeCreate();
 
     qApp->processEvents();
@@ -303,6 +301,8 @@ void tst_examples::sgsnippets_data()
 
 void tst_examples::sgsnippets()
 {
+    QQuickWindow window;
+
     QFETCH(QString, file);
 
     QQmlComponent component(&engine, QUrl::fromLocalFile(file));
@@ -316,13 +316,11 @@ void tst_examples::sgsnippets()
         component.completeCreate();
     QVERIFY(root);
 
-    if (!window) {
-        window = new QQuickWindow();
-        window->resize(240, 320);
-        window->show();
-        QVERIFY(QTest::qWaitForWindowExposed(window));
-    }
-    root->setParentItem(window->contentItem());
+    window.resize(240, 320);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    root->setParentItem(window.contentItem());
     component.completeCreate();
 
     qApp->processEvents();

@@ -284,8 +284,11 @@ private slots:
 
 
     void constantUpdates();
+    void constantUpdatesOnWindow_data();
+    void constantUpdatesOnWindow();
     void mouseFiltering();
     void headless();
+    void noUpdateWhenNothingChanges();
 
     void touchEvent_basic();
     void touchEvent_propagation();
@@ -312,6 +315,13 @@ private slots:
 
     void ownershipRootItem();
 
+    void hideThenDelete_data();
+    void hideThenDelete();
+
+    void showHideAnimate();
+
+    void testExpose();
+
 #ifndef QT_NO_CURSOR
     void cursor();
 #endif
@@ -329,6 +339,56 @@ void tst_qquickwindow::constantUpdates()
     ConstantUpdateItem item(window.contentItem());
     window.show();
     QTRY_VERIFY(item.iterations > 60);
+}
+
+void tst_qquickwindow::constantUpdatesOnWindow_data()
+{
+    QTest::addColumn<bool>("blockedGui");
+    QTest::addColumn<QByteArray>("signal");
+
+    QQuickWindow window;
+    window.setGeometry(100, 100, 300, 200);
+    window.show();
+    QTest::qWaitForWindowExposed(&window);
+    bool threaded = window.openglContext()->thread() != QGuiApplication::instance()->thread();
+
+    if (threaded) {
+        QTest::newRow("blocked, beforeSync") << true << QByteArray(SIGNAL(beforeSynchronizing()));
+        QTest::newRow("blocked, beforeRender") << true << QByteArray(SIGNAL(beforeRendering()));
+        QTest::newRow("blocked, afterRender") << true << QByteArray(SIGNAL(afterRendering()));
+        QTest::newRow("blocked, swapped") << true << QByteArray(SIGNAL(frameSwapped()));
+    }
+    QTest::newRow("unblocked, beforeSync") << false << QByteArray(SIGNAL(beforeSynchronizing()));
+    QTest::newRow("unblocked, beforeRender") << false << QByteArray(SIGNAL(beforeRendering()));
+    QTest::newRow("unblocked, afterRender") << false << QByteArray(SIGNAL(afterRendering()));
+    QTest::newRow("unblocked, swapped") << false << QByteArray(SIGNAL(frameSwapped()));
+}
+
+void tst_qquickwindow::constantUpdatesOnWindow()
+{
+    QSKIP("This test fails frequently on the present overworked CI mac machines");
+    QFETCH(bool, blockedGui);
+    QFETCH(QByteArray, signal);
+
+    QQuickWindow window;
+    window.setGeometry(100, 100, 300, 200);
+
+    connect(&window, signal.constData(), &window, SLOT(update()), Qt::DirectConnection);
+    window.show();
+    QTRY_VERIFY(window.isExposed());
+
+    QSignalSpy catcher(&window, SIGNAL(frameSwapped()));
+    if (blockedGui)
+        QTest::qSleep(1000);
+    else {
+        window.update();
+        QTest::qWait(1000);
+    }
+    window.hide();
+
+    // We should expect 60, but under loaded conditions we could be skipping
+    // frames, so don't expect too much.
+    QVERIFY(catcher.size() > 10);
 }
 
 void tst_qquickwindow::touchEvent_basic()
@@ -945,6 +1005,8 @@ void tst_qquickwindow::headless()
     QScopedPointer<QObject> cleanup(created);
 
     QQuickWindow* window = qobject_cast<QQuickWindow*>(created);
+    window->setPersistentOpenGLContext(false);
+    window->setPersistentSceneGraph(false);
     QVERIFY(window);
     window->show();
 
@@ -984,6 +1046,28 @@ void tst_qquickwindow::headless()
     QCOMPARE(originalContent, newContent);
 }
 
+void tst_qquickwindow::noUpdateWhenNothingChanges()
+{
+    QQuickWindow window;
+    window.setGeometry(100, 100, 300, 200);
+
+    QQuickRectangle rect(window.contentItem());
+
+    window.show();
+    QTRY_VERIFY(window.isExposed());
+
+    if (window.openglContext()->thread() == QGuiApplication::instance()->thread()) {
+        QSKIP("Only threaded renderloop implements this feature");
+        return;
+    }
+
+    QSignalSpy spy(&window, SIGNAL(frameSwapped()));
+    rect.update();
+    QTest::qWait(500);
+
+    QCOMPARE(spy.size(), 0);
+}
+
 void tst_qquickwindow::focusObject()
 {
     QQmlEngine engine;
@@ -996,6 +1080,11 @@ void tst_qquickwindow::focusObject()
 
     QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickItem *item1 = window->findChild<QQuickItem*>("item1");
     QVERIFY(item1);
@@ -1206,6 +1295,110 @@ void tst_qquickwindow::cursor()
     QCOMPARE(window.cursor().shape(), Qt::SizeAllCursor);
 }
 #endif
+
+void tst_qquickwindow::hideThenDelete_data()
+{
+    QTest::addColumn<bool>("persistentSG");
+    QTest::addColumn<bool>("persistentGL");
+
+    QTest::newRow("persistent:SG=false,GL=false") << false << false;
+    QTest::newRow("persistent:SG=true,GL=false") << true << false;
+    QTest::newRow("persistent:SG=false,GL=true") << false << true;
+    QTest::newRow("persistent:SG=true,GL=true") << true << true;
+}
+
+void tst_qquickwindow::hideThenDelete()
+{
+    if (QGuiApplication::platformName() == QStringLiteral("xcb")) {
+        QSKIP("For some obscure reason this test fails in CI only");
+        return;
+    }
+
+    QFETCH(bool, persistentSG);
+    QFETCH(bool, persistentGL);
+
+    QSignalSpy *openglDestroyed = 0;
+    QSignalSpy *sgInvalidated = 0;
+
+    {
+        QQuickWindow window;
+        window.setColor(Qt::red);
+
+        window.setPersistentSceneGraph(persistentSG);
+        window.setPersistentOpenGLContext(persistentGL);
+
+        window.resize(400, 300);
+        window.show();
+
+        QTest::qWaitForWindowExposed(&window);
+
+        openglDestroyed = new QSignalSpy(window.openglContext(), SIGNAL(aboutToBeDestroyed()));
+        sgInvalidated = new QSignalSpy(&window, SIGNAL(sceneGraphInvalidated()));
+
+        window.hide();
+
+        QTRY_VERIFY(!window.isExposed());
+
+        if (!persistentSG) {
+            QVERIFY(sgInvalidated->size() > 0);
+            if (!persistentGL)
+                QVERIFY(openglDestroyed->size() > 0);
+            else
+                QVERIFY(openglDestroyed->size() == 0);
+        } else {
+            QVERIFY(sgInvalidated->size() == 0);
+            QVERIFY(openglDestroyed->size() == 0);
+        }
+    }
+
+    QVERIFY(sgInvalidated->size() > 0);
+    QVERIFY(openglDestroyed->size() > 0);
+}
+
+void tst_qquickwindow::showHideAnimate()
+{
+    // This test tries to mimick a bug triggered in the qquickanimatedimage test
+    // A window is shown, then removed again before it is exposed. This left
+    // traces in the render loop which prevent other animations from running
+    // later on.
+    {
+        QQuickWindow window;
+        window.resize(400, 300);
+        window.show();
+    }
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("showHideAnimate.qml"));
+    QQuickItem* created = qobject_cast<QQuickItem *>(component.create());
+
+    QVERIFY(created);
+
+    QTRY_VERIFY(created->opacity() > 0.5);
+    QTRY_VERIFY(created->opacity() < 0.5);
+}
+
+void tst_qquickwindow::testExpose()
+{
+    QQuickWindow window;
+    window.setGeometry(100, 100, 300, 200);
+
+    window.show();
+    QTRY_VERIFY(window.isExposed());
+
+    QSignalSpy swapSpy(&window, SIGNAL(frameSwapped()));
+
+    // exhaust pending exposes, as some platforms send us plenty
+    // while showing the first time
+    QTest::qWait(1000);
+    while (swapSpy.size() != 0) {
+        swapSpy.clear();
+        QTest::qWait(100);
+    }
+
+    QWindowSystemInterface::handleExposeEvent(&window, QRegion(10, 10, 20, 20));
+    QTRY_COMPARE(swapSpy.size(), 1);
+}
 
 QTEST_MAIN(tst_qquickwindow)
 

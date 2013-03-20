@@ -145,7 +145,7 @@ void tst_QQuickWorkerScript::messaging_data()
 
 void tst_QQuickWorkerScript::messaging_sendQObjectList()
 {
-    // Not allowed to send QObjects other than QQuickListModelWorkerAgent
+    // Not allowed to send QObjects other than QQmlListModelWorkerAgent
     // instances. If objects are sent in a list, they will be sent as 'undefined'
     // js values.
 

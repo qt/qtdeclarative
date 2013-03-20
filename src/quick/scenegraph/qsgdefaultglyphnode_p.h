@@ -39,13 +39,11 @@
 **
 ****************************************************************************/
 
-#ifndef DEFAULT_GLYPHNODE_H
-#define DEFAULT_GLYPHNODE_H
+#ifndef QSGDEFAULTGLYPHNODE_P_H
+#define QSGDEFAULTGLYPHNODE_P_H
 
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/qsgnode.h>
-
-QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
@@ -80,6 +78,4 @@ private:
 
 QT_END_NAMESPACE
 
-QT_END_HEADER
-
-#endif // DEFAULT_GLYPHNODE_H
+#endif

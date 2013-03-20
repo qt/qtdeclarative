@@ -47,8 +47,6 @@
 #include <QtGui/qpixmap.h>
 #include <QtQml/qqmlengine.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -86,7 +84,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQUICKIMAGEPROVIDER_H

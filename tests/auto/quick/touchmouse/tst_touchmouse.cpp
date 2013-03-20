@@ -148,7 +148,7 @@ private slots:
     void initTestCase();
 
     void simpleTouchEvent();
-    void eventFilter();
+    void testEventFilter();
     void mouse();
     void touchOverMouse();
     void mouseOverTouch();
@@ -303,7 +303,7 @@ void tst_TouchMouse::simpleTouchEvent()
     delete window;
 }
 
-void tst_TouchMouse::eventFilter()
+void tst_TouchMouse::testEventFilter()
 {
 //    // install event filter on item and see that it can grab events
 //    QQuickView *window = createView();
@@ -824,8 +824,7 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     QQuickView *window = createView();
     window->setSource(testFileUrl("mouseonflickableonpinch.qml"));
     window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->rootObject() != 0);
     QRect windowRect = QRect(window->position(), window->size());
     QCursor::setPos(windowRect.center());

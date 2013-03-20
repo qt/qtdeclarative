@@ -45,7 +45,7 @@ FocusScope {
 
     onActiveFocusChanged: {
         if (activeFocus) 
-            mainView.state = ""
+            mainView.state = "showGridViews"
     }
 
     Rectangle {
@@ -63,6 +63,7 @@ FocusScope {
             focus: true
             model: 12
 
+            KeyNavigation.up: tabMenu
             KeyNavigation.down: listMenu
             KeyNavigation.left: contextMenu
 

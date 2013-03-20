@@ -47,8 +47,6 @@
 
 #include <QtCore/qobject.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQmlProperty;
@@ -94,7 +92,5 @@ Q_SIGNALS:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickSmoothedAnimation)
-
-QT_END_HEADER
 
 #endif // QQUICKSMOOTHEDANIMATION_H

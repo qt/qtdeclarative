@@ -102,8 +102,8 @@ QT_BEGIN_NAMESPACE
 // a handle, qFatal() is called.
 // #define QML_GLOBAL_HANDLE_DEBUGGING
 
-#define V8ENGINE() ((QV8Engine *)v8::External::Unwrap(args.Data()))
-#define V8FUNCTION(function, engine) v8::FunctionTemplate::New(function, v8::External::Wrap((QV8Engine*)engine))->GetFunction()
+#define V8ENGINE() ((QV8Engine *)v8::External::Cast(*args.Data())->Value())
+#define V8FUNCTION(function, engine) v8::FunctionTemplate::New(function, v8::External::New((QV8Engine*)engine))->GetFunction()
 #define V8THROW_ERROR(string) { \
     v8::ThrowException(v8::Exception::Error(v8::String::New(string))); \
     return v8::Handle<v8::Value>(); \
@@ -112,7 +112,7 @@ QT_BEGIN_NAMESPACE
     v8::ThrowException(v8::Exception::TypeError(v8::String::New(string))); \
     return v8::Handle<v8::Value>(); \
 }
-#define V8ENGINE_ACCESSOR() ((QV8Engine *)v8::External::Unwrap(info.Data()));
+#define V8ENGINE_ACCESSOR() ((QV8Engine *)v8::External::Cast(*info.Data())->Value());
 #define V8THROW_ERROR_SETTER(string) { \
     v8::ThrowException(v8::Exception::Error(v8::String::New(string))); \
     return; \
@@ -427,6 +427,7 @@ public:
     void addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> handle);
     void addRelationshipForGC(QObject *object, QObject *other);
 
+    static v8::Handle<v8::Value> getPlatform(v8::Local<v8::String> property, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> getApplication(v8::Local<v8::String> property, const v8::AccessorInfo &info);
 #ifndef QT_NO_IM
     static v8::Handle<v8::Value> getInputMethod(v8::Local<v8::String> property, const v8::AccessorInfo &info);
@@ -480,6 +481,7 @@ protected:
 
     QHash<QString, quint32> m_consoleCount;
 
+    QObject *m_platform;
     QObject *m_application;
 
     QVariant toBasicVariant(v8::Handle<v8::Value>);
@@ -627,8 +629,10 @@ v8::Handle<v8::String> QV8Engine::bindingFlagKey() const
 // unqualified name in QV8ContextWrapper.
 bool QV8Engine::startsWithUpper(v8::Handle<v8::String> string)
 {
-    uint16_t c = string->GetCharacter(0);
-    return (c >= 'A' && c <= 'Z') || 
+    v8::String::Value value(string);
+    Q_ASSERT(*value != NULL);
+    uint16_t c = **value;
+    return (c >= 'A' && c <= 'Z') ||
            (c > 127 && QChar::category(c) == QChar::Letter_Uppercase);
 }
 

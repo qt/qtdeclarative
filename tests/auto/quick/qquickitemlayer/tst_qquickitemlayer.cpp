@@ -266,7 +266,7 @@ void tst_QQuickItemLayer::layerVisibility()
 
     view.show();
 
-    QTest::qWaitForWindowActive(&view);
+    QTest::qWaitForWindowExposed(&view);
 
     QImage fb = view.grabWindow();
     uint pixel = fb.pixel(0, 0);

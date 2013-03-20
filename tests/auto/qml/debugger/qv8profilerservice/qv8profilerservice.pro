@@ -13,5 +13,4 @@ TESTDATA = data/*
 QT += qml testlib gui-private
 
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
-
-mac:CONFIG+=insignificant_test #QTBUG-29975
+CONFIG+=insignificant_test

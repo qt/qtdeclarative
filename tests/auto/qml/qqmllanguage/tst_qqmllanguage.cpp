@@ -139,6 +139,7 @@ private slots:
     void registrationOrder();
     void readonly();
     void receivers();
+    void registeredCompositeType();
 
     void basicRemote_data();
     void basicRemote();
@@ -467,6 +468,9 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("invalidTypeName.4") << "invalidTypeName.4.qml" << "invalidTypeName.4.errors.txt" << false;
 
     QTest::newRow("Major version isolation") << "majorVersionIsolation.qml" << "majorVersionIsolation.errors.txt" << false;
+
+    QTest::newRow("badCompositeRegistration.1") << "badCompositeRegistration.1.qml" << "badCompositeRegistration.1.errors.txt" << false;
+    QTest::newRow("badCompositeRegistration.2") << "badCompositeRegistration.2.qml" << "badCompositeRegistration.2.errors.txt" << false;
 }
 
 
@@ -2771,6 +2775,10 @@ void tst_qqmllanguage::initTestCase()
     QQmlMetaType::registerCustomStringConverter(qMetaTypeId<MyCustomVariantType>(), myCustomVariantTypeConverter);
 
     registerTypes();
+    // Registered here because it uses testFileUrl
+    qmlRegisterType(testFileUrl("CompositeType.qml"), "Test", 1, 0, "RegisteredCompositeType");
+    qmlRegisterType(testFileUrl("CompositeType.DoesNotExist.qml"), "Test", 1, 0, "RegisteredCompositeType2");
+    qmlRegisterType(testFileUrl("invalidRoot.1.qml"), "Test", 1, 0, "RegisteredCompositeType3");
 
     // Registering the TestType class in other modules should have no adverse effects
     qmlRegisterType<TestType>("org.qtproject.TestPre", 1, 0, "Test");
@@ -2915,6 +2923,17 @@ void tst_qqmllanguage::receivers()
     delete o;
 }
 
+void tst_qqmllanguage::registeredCompositeType()
+{
+    QQmlComponent component(&engine, testFileUrl("registeredCompositeType.qml"));
+
+    VERIFY_ERRORS(0);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    delete o;
+}
+
 // QTBUG-18268
 void tst_qqmllanguage::remoteLoadCrash()
 {
@@ -3053,6 +3072,8 @@ void tst_qqmllanguage::literals_data()
     QTest::newRow("fp3") << "n5" << QVariant(3e-12);
     QTest::newRow("fp4") << "n6" << QVariant(3e+12);
     QTest::newRow("fp5") << "n7" << QVariant(0.1e9);
+    QTest::newRow("large-int1") << "n8" << QVariant((double) 1152921504606846976);
+    QTest::newRow("large-int2") << "n9" << QVariant(100000000000000000000.);
 
     QTest::newRow("special1") << "c1" << QVariant(QString("\b"));
     QTest::newRow("special2") << "c2" << QVariant(QString("\f"));
@@ -3064,8 +3085,8 @@ void tst_qqmllanguage::literals_data()
     QTest::newRow("special8") << "c8" << QVariant(QString("\""));
     QTest::newRow("special9") << "c9" << QVariant(QString("\\"));
     // We don't handle octal escape sequences
-    QTest::newRow("special11") << "c10" << QVariant(QString(1, QChar(0xa9)));
-    QTest::newRow("special12") << "c11" << QVariant(QString(1, QChar(0x00A9)));
+    QTest::newRow("special10") << "c10" << QVariant(QString(1, QChar(0xa9)));
+    QTest::newRow("special11") << "c11" << QVariant(QString(1, QChar(0x00A9)));
 }
 
 void tst_qqmllanguage::literals()

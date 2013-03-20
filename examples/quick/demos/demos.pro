@@ -8,4 +8,5 @@ SUBDIRS = samegame \
 EXAMPLE_FILES = \
     clocks \
     photoviewer \
+    photosurface \
     rssnews

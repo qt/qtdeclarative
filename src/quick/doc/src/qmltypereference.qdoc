@@ -285,6 +285,19 @@ Data Storage
 */
 
 /*!
+\qmlmodule QtQuick 2
+\brief The QtQuick 2 module provides graphical primitives for use in QML.
+
+The QtQuick 2 module provides graphical primitive types. They can be used with the following import
+\code
+import QtQuick 2.1
+\endcode
+
+For a more detailed listing of types in the QtQuick 2 import, see the \l{qtquick-qmltypereference.html}{QtQuick 2 type reference page}.
+For more details about the QtQuick 2 module, see the \l{QtQuick} module page.
+*/
+
+/*!
     \qmlbasictype color
     \ingroup qtquickbasictypes
     \brief an ARGB color value.

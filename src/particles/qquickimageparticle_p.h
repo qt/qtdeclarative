@@ -48,8 +48,6 @@
 #include <QtQuick/qsgsimplematerial.h>
 #include <QtGui/qcolor.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class ImageMaterialData;
@@ -442,5 +440,4 @@ private:
 };
 
 QT_END_NAMESPACE
-QT_END_HEADER
 #endif // ULTRAPARTICLE_H

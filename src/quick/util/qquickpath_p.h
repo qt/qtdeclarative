@@ -50,8 +50,6 @@
 #include <QtCore/QObject>
 #include <QtGui/QPainterPath>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickCurve;
@@ -445,7 +443,5 @@ QML_DECLARE_TYPE(QQuickPathArc)
 QML_DECLARE_TYPE(QQuickPathSvg)
 QML_DECLARE_TYPE(QQuickPathPercent)
 QML_DECLARE_TYPE(QQuickPath)
-
-QT_END_HEADER
 
 #endif // QQUICKPATH_H

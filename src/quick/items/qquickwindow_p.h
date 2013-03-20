@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
 
 //Make it easy to identify and customize the root item if needed
 
-class QQuickWindowManager;
+class QSGRenderLoop;
 
 class QQuickRootItem : public QQuickItem
 {
@@ -163,8 +163,8 @@ public:
     };
     Q_DECLARE_FLAGS(FocusOptions, FocusOption)
 
-    void setFocusInScope(QQuickItem *scope, QQuickItem *item, FocusOptions = 0);
-    void clearFocusInScope(QQuickItem *scope, QQuickItem *item, FocusOptions = 0);
+    void setFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = 0);
+    void clearFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = 0);
     static void notifyFocusChangesRecur(QQuickItem **item, int remaining);
 
     void updateFocusItemTransform();
@@ -200,7 +200,7 @@ public:
     QSGContext *context;
     QSGRenderer *renderer;
 
-    QQuickWindowManager *windowManager;
+    QSGRenderLoop *windowManager;
 
     QColor clearColor;
 

@@ -27,11 +27,11 @@
 
 /*!
     \example quick/scenegraph/customgeometry
-    \title Custom Geometry Example
+    \title Scene Graph - Custom Geometry
     \ingroup qtquickexamples
     \brief Shows how to implement a custom geometry in the Qt Quick Scene Graph.
 
-    \brief The custom geometry example shows how to create a QQuickItem which
+    The custom geometry example shows how to create a QQuickItem which
     uses the scene graph API to build a custom geometry for the scene
     graph. It does this by creating a BezierCurve item which is made
     part of the CustomGeometry module and makes use of this in a QML

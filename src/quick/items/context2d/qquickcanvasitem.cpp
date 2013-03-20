@@ -190,9 +190,10 @@ QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
     , hasCanvasWindow(false)
     , available(false)
     , contextInitialized(false)
-    , renderTarget(QQuickCanvasItem::FramebufferObject)
+    , renderTarget(QQuickCanvasItem::Image)
     , renderStrategy(QQuickCanvasItem::Cooperative)
 {
+    antialiasing = true;
 }
 
 QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
@@ -245,7 +246,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     results in faster rendering.
 
     The default render target is Canvas.Image and the default renderStrategy is
-    Canvas.Threaded.
+    Canvas.Cooperative.
 
     \section1 Tiled Canvas
     The Canvas item supports tiled rendering by setting \l canvasSize, \l tileSize

@@ -38,7 +38,6 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qtest.h>
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -46,17 +45,9 @@
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>
 
-class tst_compile : public QObject
+int main()
 {
-    Q_OBJECT
-public:
-    tst_compile() { }
-
-private slots:
     // Nothing - this test just makes sure that the QmlDevTools headers
     // are present, and that we can link against the library.
-};
-
-QTEST_MAIN(tst_compile)
-
-#include "tst_compile.moc"
+    return 0;
+}

@@ -3,6 +3,7 @@
         <file>LauncherList.qml</file>
         <file>SimpleLauncherDelegate.qml</file>
         <file>Button.qml</file>
+        <file>CheckBox.qml</file>
         <file>images/back.png</file>
         <file>images/next.png</file>
     </qresource>

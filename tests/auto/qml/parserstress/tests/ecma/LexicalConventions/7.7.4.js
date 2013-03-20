@@ -76,53 +76,6 @@ new TestCase( SECTION, "\\v",        String.fromCharCode(0x000B),        "\v" );
 
 // DoubleStringCharacters:DoubleStringCharacter::EscapeSequence::OctalEscapeSequence
 
-new TestCase( SECTION, "\\00",      String.fromCharCode(0x0000),    "\00" );
-new TestCase( SECTION, "\\01",      String.fromCharCode(0x0001),    "\01" );
-new TestCase( SECTION, "\\02",      String.fromCharCode(0x0002),    "\02" );
-new TestCase( SECTION, "\\03",      String.fromCharCode(0x0003),    "\03" );
-new TestCase( SECTION, "\\04",      String.fromCharCode(0x0004),    "\04" );
-new TestCase( SECTION, "\\05",      String.fromCharCode(0x0005),    "\05" );
-new TestCase( SECTION, "\\06",      String.fromCharCode(0x0006),    "\06" );
-new TestCase( SECTION, "\\07",      String.fromCharCode(0x0007),    "\07" );
-
-new TestCase( SECTION, "\\010",      String.fromCharCode(0x0008),    "\010" );
-new TestCase( SECTION, "\\011",      String.fromCharCode(0x0009),    "\011" );
-new TestCase( SECTION, "\\012",      String.fromCharCode(0x000A),    "\012" );
-new TestCase( SECTION, "\\013",      String.fromCharCode(0x000B),    "\013" );
-new TestCase( SECTION, "\\014",      String.fromCharCode(0x000C),    "\014" );
-new TestCase( SECTION, "\\015",      String.fromCharCode(0x000D),    "\015" );
-new TestCase( SECTION, "\\016",      String.fromCharCode(0x000E),    "\016" );
-new TestCase( SECTION, "\\017",      String.fromCharCode(0x000F),    "\017" );
-new TestCase( SECTION, "\\020",      String.fromCharCode(0x0010),    "\020" );
-new TestCase( SECTION, "\\042",      String.fromCharCode(0x0022),    "\042" );
-
-new TestCase( SECTION, "\\0",      String.fromCharCode(0x0000),    "\0" );
-new TestCase( SECTION, "\\1",      String.fromCharCode(0x0001),    "\1" );
-new TestCase( SECTION, "\\2",      String.fromCharCode(0x0002),    "\2" );
-new TestCase( SECTION, "\\3",      String.fromCharCode(0x0003),    "\3" );
-new TestCase( SECTION, "\\4",      String.fromCharCode(0x0004),    "\4" );
-new TestCase( SECTION, "\\5",      String.fromCharCode(0x0005),    "\5" );
-new TestCase( SECTION, "\\6",      String.fromCharCode(0x0006),    "\6" );
-new TestCase( SECTION, "\\7",      String.fromCharCode(0x0007),    "\7" );
-
-new TestCase( SECTION, "\\10",      String.fromCharCode(0x0008),    "\10" );
-new TestCase( SECTION, "\\11",      String.fromCharCode(0x0009),    "\11" );
-new TestCase( SECTION, "\\12",      String.fromCharCode(0x000A),    "\12" );
-new TestCase( SECTION, "\\13",      String.fromCharCode(0x000B),    "\13" );
-new TestCase( SECTION, "\\14",      String.fromCharCode(0x000C),    "\14" );
-new TestCase( SECTION, "\\15",      String.fromCharCode(0x000D),    "\15" );
-new TestCase( SECTION, "\\16",      String.fromCharCode(0x000E),    "\16" );
-new TestCase( SECTION, "\\17",      String.fromCharCode(0x000F),    "\17" );
-new TestCase( SECTION, "\\20",      String.fromCharCode(0x0010),    "\20" );
-new TestCase( SECTION, "\\42",      String.fromCharCode(0x0022),    "\42" );
-
-new TestCase( SECTION, "\\000",      String.fromCharCode(0),        "\000" );
-new TestCase( SECTION, "\\111",      String.fromCharCode(73),       "\111" );
-new TestCase( SECTION, "\\222",      String.fromCharCode(146),      "\222" );
-new TestCase( SECTION, "\\333",      String.fromCharCode(219),      "\333" );
-
-//  following line commented out as it causes a compile time error
-//    new TestCase( SECTION, "\\444",      "444",                         "\444" );
 
 // DoubleStringCharacters:DoubleStringCharacter::EscapeSequence::HexEscapeSequence
 /*
@@ -182,9 +135,10 @@ new TestCase( SECTION, "\\x1E1",      String.fromCharCode(30)+"1",         "\x1E
 new TestCase( SECTION, "\\x0F0",      String.fromCharCode(15)+"0",         "\x0F0" );
 
 // G is out of hex range
-
+/* Invalid testcase: we no longer silently ignore invalid hexadecimal escape sequences.
 new TestCase( SECTION, "\\xG",        "xG",                                 "\xG" );
 new TestCase( SECTION, "\\xCG",       "xCG",      				"\xCG" );
+*/
 
 // DoubleStringCharacter::EscapeSequence::CharacterEscapeSequence::\ NonEscapeCharacter
 new TestCase( SECTION, "\\a",    "a",        "\a" );
@@ -202,13 +156,10 @@ new TestCase( SECTION, "\\o",    "o",        "\o" );
 new TestCase( SECTION, "\\p",    "p",        "\p" );
 new TestCase( SECTION, "\\q",    "q",        "\q" );
 new TestCase( SECTION, "\\s",    "s",        "\s" );
-new TestCase( SECTION, "\\u",    "u",        "\u" );
 
 new TestCase( SECTION, "\\w",    "w",        "\w" );
-new TestCase( SECTION, "\\x",    "x",        "\x" );
 new TestCase( SECTION, "\\y",    "y",        "\y" );
 new TestCase( SECTION, "\\z",    "z",        "\z" );
-new TestCase( SECTION, "\\9",    "9",        "\9" );
 
 new TestCase( SECTION, "\\A",    "A",        "\A" );
 new TestCase( SECTION, "\\B",    "B",        "\B" );

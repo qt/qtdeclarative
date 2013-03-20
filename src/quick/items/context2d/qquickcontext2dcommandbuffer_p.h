@@ -45,8 +45,6 @@
 #include <QtCore/qmutex.h>
 #include "qquickcontext2d_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickCanvasItem;
@@ -265,8 +263,6 @@ private:
     QVector<QQmlRefPointer<QQuickCanvasPixmap> > pixmaps;
     QMutex queueLock;
 };
-
-QT_END_HEADER
 
 QT_END_NAMESPACE
 

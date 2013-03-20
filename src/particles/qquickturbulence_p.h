@@ -44,8 +44,6 @@
 #include "qquickparticleaffector_p.h"
 #include <QQmlListProperty>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickParticlePainter;
@@ -112,5 +110,4 @@ private:
 };
 
 QT_END_NAMESPACE
-QT_END_HEADER
 #endif // TURBULENCEAFFECTOR_H

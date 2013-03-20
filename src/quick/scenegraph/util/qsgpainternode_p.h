@@ -50,8 +50,6 @@
 
 #include <QtGui/qcolor.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QOpenGLFramebufferObject;
@@ -150,8 +148,6 @@ private:
     bool m_dirtyRenderTarget;
     bool m_dirtyTexture;
 };
-
-QT_END_HEADER
 
 QT_END_NAMESPACE
 

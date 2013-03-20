@@ -46,8 +46,9 @@
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlopenmetaobject_p.h>
-#include <private/qquickchangeset_p.h>
+#include <private/qqmlchangeset_p.h>
 
+#include <QtQml/qqmlinfo.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
@@ -117,7 +118,7 @@ QQuickPathViewPrivate::QQuickPathViewPrivate()
     , offset(0.0), offsetAdj(0.0), mappedRange(1.0), mappedCache(0.0)
     , stealMouse(false), ownModel(false), interactive(true), haveHighlightRange(true)
     , autoHighlight(true), highlightUp(false), layoutScheduled(false)
-    , moving(false), flicking(false), dragging(false), inRequest(false)
+    , moving(false), flicking(false), dragging(false), inRequest(false), delegateValidated(false)
     , dragMargin(0), deceleration(100), maximumFlickVelocity(QML_FLICK_DEFAULTMAXVELOCITY)
     , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset), flickDuration(0)
     , firstIndex(-1), pathItems(-1), requestedIndex(-1), cacheSize(0), requestedZ(0)
@@ -150,8 +151,18 @@ QQuickItem *QQuickPathViewPrivate::getItem(int modelIndex, qreal z, bool async)
     requestedIndex = modelIndex;
     requestedZ = z;
     inRequest = true;
-    QQuickItem *item = model->item(modelIndex, async);
-    if (item) {
+    QObject *object = model->object(modelIndex, async);
+    QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
+    if (!item) {
+        if (object) {
+            model->release(object);
+            if (!delegateValidated) {
+                delegateValidated = true;
+                QObject* delegate = q->delegate();
+                qmlInfo(delegate ? delegate : q) << q->tr("Delegate must be of Item type");
+            }
+        }
+    } else {
         item->setParentItem(q);
         requestedIndex = -1;
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
@@ -161,9 +172,10 @@ QQuickItem *QQuickPathViewPrivate::getItem(int modelIndex, qreal z, bool async)
     return item;
 }
 
-void QQuickPathView::createdItem(int index, QQuickItem *item)
+void QQuickPathView::createdItem(int index, QObject *object)
 {
     Q_D(QQuickPathView);
+    QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
     if (d->requestedIndex != index) {
         qPathViewAttachedType = d->attachedType();
         QQuickPathViewAttached *att = static_cast<QQuickPathViewAttached *>(qmlAttachedPropertiesObject<QQuickPathView>(item));
@@ -181,10 +193,11 @@ void QQuickPathView::createdItem(int index, QQuickItem *item)
     }
 }
 
-void QQuickPathView::initItem(int index, QQuickItem *item)
+void QQuickPathView::initItem(int index, QObject *object)
 {
     Q_D(QQuickPathView);
-    if (d->requestedIndex == index) {
+    QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
+    if (item && d->requestedIndex == index) {
         QQuickItemPrivate::get(item)->setCulled(true);
         item->setParentItem(this);
         qPathViewAttachedType = d->attachedType();
@@ -209,10 +222,14 @@ void QQuickPathViewPrivate::releaseItem(QQuickItem *item)
         return;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     itemPrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
-    if (model->release(item) == 0) {
+    QQmlInstanceModel::ReleaseFlags flags = model->release(item);
+    if (!flags) {
         // item was not destroyed, and we no longer reference it.
         if (QQuickPathViewAttached *att = attached(item))
             att->setOnPath(false);
+    } else if (flags & QQmlInstanceModel::Destroyed) {
+        // but we still reference it
+        item->setParentItem(0);
     }
 }
 
@@ -619,19 +636,19 @@ void QQuickPathView::setModel(const QVariant &model)
         return;
 
     if (d->model) {
-        qmlobject_disconnect(d->model, QQuickVisualModel, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
-                             this, QQuickPathView, SLOT(modelUpdated(QQuickChangeSet,bool)));
-        qmlobject_disconnect(d->model, QQuickVisualModel, SIGNAL(createdItem(int,QQuickItem*)),
-                             this, QQuickPathView, SLOT(createdItem(int,QQuickItem*)));
-        qmlobject_disconnect(d->model, QQuickVisualModel, SIGNAL(initItem(int,QQuickItem*)),
-                             this, QQuickPathView, SLOT(initItem(int,QQuickItem*)));
+        qmlobject_disconnect(d->model, QQmlInstanceModel, SIGNAL(modelUpdated(QQmlChangeSet,bool)),
+                             this, QQuickPathView, SLOT(modelUpdated(QQmlChangeSet,bool)));
+        qmlobject_disconnect(d->model, QQmlInstanceModel, SIGNAL(createdItem(int,QObject*)),
+                             this, QQuickPathView, SLOT(createdItem(int,QObject*)));
+        qmlobject_disconnect(d->model, QQmlInstanceModel, SIGNAL(initItem(int,QObject*)),
+                             this, QQuickPathView, SLOT(initItem(int,QObject*)));
         d->clear();
     }
 
     d->modelVariant = model;
     QObject *object = qvariant_cast<QObject*>(model);
-    QQuickVisualModel *vim = 0;
-    if (object && (vim = qobject_cast<QQuickVisualModel *>(object))) {
+    QQmlInstanceModel *vim = 0;
+    if (object && (vim = qobject_cast<QQmlInstanceModel *>(object))) {
         if (d->ownModel) {
             delete d->model;
             d->ownModel = false;
@@ -639,23 +656,23 @@ void QQuickPathView::setModel(const QVariant &model)
         d->model = vim;
     } else {
         if (!d->ownModel) {
-            d->model = new QQuickVisualDataModel(qmlContext(this));
+            d->model = new QQmlDelegateModel(qmlContext(this));
             d->ownModel = true;
             if (isComponentComplete())
-                static_cast<QQuickVisualDataModel *>(d->model.data())->componentComplete();
+                static_cast<QQmlDelegateModel *>(d->model.data())->componentComplete();
         }
-        if (QQuickVisualDataModel *dataModel = qobject_cast<QQuickVisualDataModel*>(d->model))
+        if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model))
             dataModel->setModel(model);
     }
     int oldModelCount = d->modelCount;
     d->modelCount = 0;
     if (d->model) {
-        qmlobject_connect(d->model, QQuickVisualModel, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
-                          this, QQuickPathView, SLOT(modelUpdated(QQuickChangeSet,bool)));
-        qmlobject_connect(d->model, QQuickVisualModel, SIGNAL(createdItem(int,QQuickItem*)),
-                          this, QQuickPathView, SLOT(createdItem(int,QQuickItem*)));
-        qmlobject_connect(d->model, QQuickVisualModel, SIGNAL(initItem(int,QQuickItem*)),
-                          this, QQuickPathView, SLOT(initItem(int,QQuickItem*)));
+        qmlobject_connect(d->model, QQmlInstanceModel, SIGNAL(modelUpdated(QQmlChangeSet,bool)),
+                          this, QQuickPathView, SLOT(modelUpdated(QQmlChangeSet,bool)));
+        qmlobject_connect(d->model, QQmlInstanceModel, SIGNAL(createdItem(int,QObject*)),
+                          this, QQuickPathView, SLOT(createdItem(int,QObject*)));
+        qmlobject_connect(d->model, QQmlInstanceModel, SIGNAL(initItem(int,QObject*)),
+                          this, QQuickPathView, SLOT(initItem(int,QObject*)));
         d->modelCount = d->model->count();
     }
     if (isComponentComplete()) {
@@ -1210,7 +1227,7 @@ QQmlComponent *QQuickPathView::delegate() const
 {
     Q_D(const QQuickPathView);
      if (d->model) {
-        if (QQuickVisualDataModel *dataModel = qobject_cast<QQuickVisualDataModel*>(d->model))
+        if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model))
             return dataModel->delegate();
     }
 
@@ -1223,10 +1240,10 @@ void QQuickPathView::setDelegate(QQmlComponent *delegate)
     if (delegate == this->delegate())
         return;
     if (!d->ownModel) {
-        d->model = new QQuickVisualDataModel(qmlContext(this));
+        d->model = new QQmlDelegateModel(qmlContext(this));
         d->ownModel = true;
     }
-    if (QQuickVisualDataModel *dataModel = qobject_cast<QQuickVisualDataModel*>(d->model)) {
+    if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model)) {
         int oldCount = dataModel->count();
         dataModel->setDelegate(delegate);
         d->modelCount = dataModel->count();
@@ -1234,6 +1251,7 @@ void QQuickPathView::setDelegate(QQmlComponent *delegate)
         if (oldCount != dataModel->count())
             emit countChanged();
         emit delegateChanged();
+        d->delegateValidated = false;
     }
 }
 
@@ -1821,7 +1839,7 @@ void QQuickPathView::componentComplete()
 {
     Q_D(QQuickPathView);
     if (d->model && d->ownModel)
-        static_cast<QQuickVisualDataModel *>(d->model.data())->componentComplete();
+        static_cast<QQmlDelegateModel *>(d->model.data())->componentComplete();
 
     QQuickItem::componentComplete();
 
@@ -1983,7 +2001,7 @@ void QQuickPathView::refill()
         d->releaseItem(d->itemCache.takeLast());
 }
 
-void QQuickPathView::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
+void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
 {
     Q_D(QQuickPathView);
     if (!d->model || !d->model->isValid() || !d->path || !isComponentComplete())
@@ -2004,7 +2022,7 @@ void QQuickPathView::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
     int moveOffset;
     bool currentChanged = false;
     bool changedOffset = false;
-    foreach (const QQuickChangeSet::Remove &r, changeSet.removes()) {
+    foreach (const QQmlChangeSet::Remove &r, changeSet.removes()) {
         if (moveId == -1 && d->currentIndex >= r.index + r.count) {
             d->currentIndex -= r.count;
             currentChanged = true;
@@ -2030,7 +2048,7 @@ void QQuickPathView::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
         }
         d->modelCount -= r.count;
     }
-    foreach (const QQuickChangeSet::Insert &i, changeSet.inserts()) {
+    foreach (const QQmlChangeSet::Insert &i, changeSet.inserts()) {
         if (d->modelCount) {
             if (moveId == -1 && i.index <= d->currentIndex) {
                 d->currentIndex += i.count;
@@ -2082,7 +2100,7 @@ void QQuickPathView::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
         emit countChanged();
 }
 
-void QQuickPathView::destroyingItem(QQuickItem *item)
+void QQuickPathView::destroyingItem(QObject *item)
 {
     Q_UNUSED(item);
 }

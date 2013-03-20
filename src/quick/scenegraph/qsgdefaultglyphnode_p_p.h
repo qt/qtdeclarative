@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef TEXTMASKMATERIAL_H
-#define TEXTMASKMATERIAL_H
+#ifndef QSGDEFAULTGLYPHNODE_P_P_H
+#define QSGDEFAULTGLYPHNODE_P_P_H
 
 #include <qcolor.h>
 #include <QtQuick/qsgmaterial.h>
@@ -93,4 +93,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // TEXTMASKMATERIAL_H
+#endif

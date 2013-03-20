@@ -132,7 +132,7 @@ void tst_QQuickMouseArea::dragProperties()
 
     window->setSource(testFileUrl("dragproperties.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QQuickMouseArea *mouseRegion = window->rootObject()->findChild<QQuickMouseArea*>("mouseregion");
@@ -218,7 +218,7 @@ void tst_QQuickMouseArea::resetDrag()
     window->rootContext()->setContextProperty("haveTarget", QVariant(true));
     window->setSource(testFileUrl("dragreset.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QQuickMouseArea *mouseRegion = window->rootObject()->findChild<QQuickMouseArea*>("mouseregion");
@@ -250,7 +250,7 @@ void tst_QQuickMouseArea::dragging()
 
     window->setSource(testFileUrl("dragging.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->rootObject() != 0);
 
@@ -305,8 +305,7 @@ void tst_QQuickMouseArea::invalidDrag()
 
     window->setSource(testFileUrl("dragging.qml"));
     window->show();
-    window->requestActivate();
-    QTest::qWait(20);
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QQuickMouseArea *mouseRegion = window->rootObject()->findChild<QQuickMouseArea*>("mouseregion");
@@ -357,8 +356,7 @@ void tst_QQuickMouseArea::setDragOnPressed()
 
     window->setSource(testFileUrl("setDragOnPressed.qml"));
     window->show();
-    window->requestActivate();
-    QTest::qWait(20);
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QQuickMouseArea *mouseArea = qobject_cast<QQuickMouseArea *>(window->rootObject());
@@ -412,7 +410,7 @@ void tst_QQuickMouseArea::updateMouseAreaPosOnClick()
     QQuickView *window = createView();
     window->setSource(testFileUrl("updateMousePosOnClick.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QQuickMouseArea *mouseRegion = window->rootObject()->findChild<QQuickMouseArea*>("mouseregion");
@@ -441,7 +439,7 @@ void tst_QQuickMouseArea::updateMouseAreaPosOnResize()
     QQuickView *window = createView();
     window->setSource(testFileUrl("updateMousePosOnResize.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QQuickMouseArea *mouseRegion = window->rootObject()->findChild<QQuickMouseArea*>("mouseregion");
@@ -478,7 +476,7 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
         QQuickView *window = createView();
         window->setSource(testFileUrl("clickandhold.qml"));
         window->show();
-        window->requestActivate();
+        QTest::qWaitForWindowExposed(window);
         QVERIFY(window->rootObject() != 0);
         QQuickMouseArea *mouseArea = qobject_cast<QQuickMouseArea*>(window->rootObject()->children().first());
         QVERIFY(mouseArea);
@@ -511,7 +509,7 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
         QQuickView *window = createView();
         window->setSource(testFileUrl("noclickandhold.qml"));
         window->show();
-        window->requestActivate();
+        QTest::qWaitForWindowExposed(window);
         QVERIFY(window->rootObject() != 0);
 
         QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
@@ -535,7 +533,7 @@ void tst_QQuickMouseArea::onMousePressRejected()
     QQuickView *window = createView();
     window->setSource(testFileUrl("rejectEvent.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
     QVERIFY(window->rootObject()->property("enabled").toBool());
 
@@ -572,7 +570,7 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
     QQuickView *window = createView();
     window->setSource(testFileUrl("pressedCanceled.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
     QVERIFY(!window->rootObject()->property("pressed").toBool());
     QVERIFY(!window->rootObject()->property("canceled").toBool());
@@ -585,15 +583,13 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
     QVERIFY(!window->rootObject()->property("canceled").toBool());
     QVERIFY(!window->rootObject()->property("released").toBool());
 
-    QTest::qWait(200);
+    QWindow *secondWindow = qvariant_cast<QWindow*>(window->rootObject()->property("secondWindow"));
+    secondWindow->setProperty("visible", true);
+    QTest::qWaitForWindowActive(secondWindow);
 
-    QEvent windowDeactivateEvent(QEvent::WindowDeactivate);
-    QGuiApplication::sendEvent(window, &windowDeactivateEvent);
     QVERIFY(!window->rootObject()->property("pressed").toBool());
     QVERIFY(window->rootObject()->property("canceled").toBool());
     QVERIFY(!window->rootObject()->property("released").toBool());
-
-    QTest::qWait(200);
 
     //press again
     QGuiApplication::sendEvent(window, &pressEvent);
@@ -621,7 +617,7 @@ void tst_QQuickMouseArea::doubleClick()
     QQuickView *window = createView();
     window->setSource(testFileUrl("doubleclick.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QQuickMouseArea *mouseArea = window->rootObject()->findChild<QQuickMouseArea *>("mousearea");
@@ -659,7 +655,7 @@ void tst_QQuickMouseArea::clickTwice()
     QQuickView *window = createView();
     window->setSource(testFileUrl("clicktwice.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QQuickMouseArea *mouseArea = window->rootObject()->findChild<QQuickMouseArea *>("mousearea");
@@ -696,7 +692,7 @@ void tst_QQuickMouseArea::invalidClick()
     QQuickView *window = createView();
     window->setSource(testFileUrl("doubleclick.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QQuickMouseArea *mouseArea = window->rootObject()->findChild<QQuickMouseArea *>("mousearea");
@@ -730,7 +726,7 @@ void tst_QQuickMouseArea::pressedOrdering()
     QQuickView *window = createView();
     window->setSource(testFileUrl("pressedOrdering.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QCOMPARE(window->rootObject()->property("value").toString(), QLatin1String("base"));
@@ -758,7 +754,7 @@ void tst_QQuickMouseArea::preventStealing()
 
     window->setSource(testFileUrl("preventstealing.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
@@ -822,7 +818,7 @@ void tst_QQuickMouseArea::clickThrough()
     QQuickView *window = createView();
     window->setSource(testFileUrl("clickThrough.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QTest::mousePress(window, Qt::LeftButton, 0, QPoint(100,100));
@@ -857,7 +853,7 @@ void tst_QQuickMouseArea::clickThrough()
     window = createView();
     window->setSource(testFileUrl("clickThrough2.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QTest::mousePress(window, Qt::LeftButton, 0, QPoint(100,100));
@@ -1016,8 +1012,7 @@ void tst_QQuickMouseArea::disableAfterPress()
     QQuickView *window = createView();
     window->setSource(testFileUrl("dragging.qml"));
     window->show();
-    window->requestActivate();
-    QTest::qWait(20);
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QQuickMouseArea *mouseArea = window->rootObject()->findChild<QQuickMouseArea*>("mouseregion");
@@ -1166,7 +1161,7 @@ void tst_QQuickMouseArea::transformedMouseArea()
     QQuickView *window = createView();
     window->setSource(testFileUrl("transformedMouseArea.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(window->rootObject() != 0);
 
     QQuickMouseArea *mouseArea = window->rootObject()->findChild<QQuickMouseArea *>("mouseArea");
@@ -1284,7 +1279,7 @@ void tst_QQuickMouseArea::pressedMultipleButtons()
     QQuickView *view = createView();
     view->setSource(testFileUrl("simple.qml"));
     view->show();
-    view->requestActivate();
+    QTest::qWaitForWindowExposed(view);
     QVERIFY(view->rootObject() != 0);
 
     QQuickMouseArea *mouseArea = view->rootObject()->findChild<QQuickMouseArea *>("mousearea");
@@ -1321,7 +1316,7 @@ void tst_QQuickMouseArea::changeAxis()
 
     view->setSource(testFileUrl("changeAxis.qml"));
     view->show();
-    view->requestActivate();
+    QTest::qWaitForWindowExposed(view);
     QTRY_VERIFY(view->rootObject() != 0);
 
     QQuickMouseArea *mouseRegion = view->rootObject()->findChild<QQuickMouseArea*>("mouseregion");
@@ -1413,7 +1408,7 @@ void tst_QQuickMouseArea::moveAndReleaseWithoutPress()
 
     window->setSource(testFileUrl("moveAndReleaseWithoutPress.qml"));
     window->show();
-    window->requestActivate();
+    QTest::qWaitForWindowExposed(window);
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QObject *root = window->rootObject();

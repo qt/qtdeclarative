@@ -45,8 +45,6 @@
 #include <qqml.h>
 #include <QObject>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickPath;
@@ -92,7 +90,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickPathInterpolator)
-
-QT_END_HEADER
 
 #endif // QQUICKPATHINTERPOLATOR_P_H
