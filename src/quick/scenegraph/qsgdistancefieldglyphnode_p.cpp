@@ -43,6 +43,8 @@
 #include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtGui/qopenglfunctions.h>
+#include <QtGui/qsurface.h>
+#include <QtGui/qwindow.h>
 #include <qmath.h>
 
 QT_BEGIN_NAMESPACE
@@ -115,7 +117,6 @@ void QSGDistanceFieldTextMaterialShader::updateAlphaRange(ThresholdFunc threshol
     float combinedScale = m_fontScale * m_matrixScale;
     float base = thresholdFunc(combinedScale);
     float range = spreadFunc(combinedScale);
-
     float alphaMin = qMax(0.0f, base - range);
     float alphaMax = qMin(base + range, 1.0f);
     program()->setUniformValue(m_alphaMin_id, GLfloat(alphaMin));
@@ -157,7 +158,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
     }
     if (state.isMatrixDirty()) {
         program()->setUniformValue(m_matrix_id, state.combinedMatrix());
-        m_matrixScale = qSqrt(qAbs(state.determinant()));
+        m_matrixScale = qSqrt(qAbs(state.determinant())) * state.devicePixelRatio();
         updateRange = true;
     }
     if (updateRange) {

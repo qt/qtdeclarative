@@ -348,6 +348,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
         renderer->setViewportRect(QRect(QPoint(0, 0), size * devicePixelRatio));
     }
     renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size));
+    renderer->setDevicePixelRatio(q->devicePixelRatio());
 
     context->renderNextFrame(renderer, fboId);
     emit q->afterRendering();

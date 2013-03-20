@@ -131,6 +131,7 @@ void QQuickShaderEffectSourceNode::markDirtyTexture()
 QQuickShaderEffectTexture::QQuickShaderEffectTexture(QQuickItem *shaderSource)
     : QSGDynamicTexture()
     , m_item(0)
+    , m_device_pixel_ratio(1)
     , m_format(GL_RGBA)
     , m_renderer(0)
     , m_fbo(0)
@@ -313,6 +314,7 @@ void QQuickShaderEffectTexture::grab()
         m_renderer = m_context->createRenderer();
         connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()));
     }
+    m_renderer->setDevicePixelRatio(m_device_pixel_ratio);
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
 
     bool deleteFboLater = false;
@@ -960,11 +962,12 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
                       : m_textureSize;
     Q_ASSERT(!textureSize.isEmpty());
 
-    // Crate large textures on high-dpi displays.
-    if (sourceItem() && sourceItem()->window())
-        textureSize *= sourceItem()->window()->devicePixelRatio();
-
     QQuickItemPrivate *d = static_cast<QQuickItemPrivate *>(QObjectPrivate::get(this));
+
+    // Crate large textures on high-dpi displays.
+    if (sourceItem())
+        textureSize *= d->window->devicePixelRatio();
+
     const QSize minTextureSize = d->sceneGraphContext()->minimumFBOSize();
     // Keep power-of-two by doubling the size.
     while (textureSize.width() < minTextureSize.width())
@@ -972,6 +975,7 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     while (textureSize.height() < minTextureSize.height())
         textureSize.rheight() *= 2;
 
+    m_texture->setDevicePixelRatio(d->window->devicePixelRatio());
     m_texture->setSize(textureSize);
     m_texture->setRecursive(m_recursive);
     m_texture->setFormat(GLenum(m_format));
