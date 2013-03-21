@@ -162,10 +162,10 @@ public:
     inline void platformLeaveStandardStackFrame()
     {
         pop(JSC::ARMRegisters::lr);
-        push(JSC::ARMRegisters::r0);
-        push(JSC::ARMRegisters::r1);
-        push(JSC::ARMRegisters::r2);
-        push(JSC::ARMRegisters::r3);
+        pop(JSC::ARMRegisters::r0);
+        pop(JSC::ARMRegisters::r1);
+        pop(JSC::ARMRegisters::r2);
+        pop(JSC::ARMRegisters::r3);
     }
 #else
 #error Argh.
