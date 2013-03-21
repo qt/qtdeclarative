@@ -122,7 +122,7 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
     if (param.isValue()) {
         fprintf(stderr, "    value %s\n", param.value.toString(context)->toQString().toUtf8().constData());
     } else if (param.isArgument()) {
-        fprintf(stderr, "    argument %d\n", param.index);
+        fprintf(stderr, "    argument %d@%d\n", param.index, param.scope);
     } else if (param.isLocal()) {
         fprintf(stderr, "    local %d\n", param.index);
     } else if (param.isTemp()) {
@@ -139,11 +139,15 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
         return const_cast<VM::Value *>(&param.value);
     } else if (param.isArgument()) {
         VMSTATS(paramIsArg);
+        VM::ExecutionContext *c = context;
+        uint scope = param.scope;
+        while (scope--)
+            c = c->outer;
         const unsigned arg = param.index;
         Q_ASSERT(arg >= 0);
-        Q_ASSERT((unsigned) arg < context->argumentCount);
-        Q_ASSERT(context->arguments);
-        return context->arguments + arg;
+        Q_ASSERT((unsigned) arg < c->argumentCount);
+        Q_ASSERT(c->arguments);
+        return c->arguments + arg;
     } else if (param.isLocal()) {
         VMSTATS(paramIsLocal);
         const unsigned index = param.index;

@@ -96,7 +96,7 @@ private:
         } else if (V4IR::Temp *t = e->asTemp()) {
             const int index = t->index;
             if (index < 0) {
-                return Param::createArgument(-index - 1);
+                return Param::createArgument(-index - 1, t->scope);
             } else if (!t->scope) {
                 const int localCount = _function->locals.size();
                 if (index < localCount)

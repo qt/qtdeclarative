@@ -107,11 +107,11 @@ union Instr
             return p;
         }
 
-        static Param createArgument(unsigned idx)
+        static Param createArgument(unsigned idx, uint scope)
         {
             Param p;
             p.type = ArgumentType;
-            p.scope = 0;
+            p.scope = scope;
             p.index = idx;
             return p;
         }

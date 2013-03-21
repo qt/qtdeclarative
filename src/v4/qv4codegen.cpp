@@ -1967,13 +1967,8 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
             return _block->TEMP(index, scope);
         }
         const int argIdx = f->indexOfArgument(&name);
-        if (!scope) {
-            // ### should be able to do this for outer scopes as well
-            if (argIdx != -1) {
-                return _block->TEMP(-(argIdx + 1), scope);
-            }
-        } else if (argIdx != -1)
-            break;
+        if (argIdx != -1)
+            return _block->TEMP(-(argIdx + 1), scope);
         ++scope;
         e = e->parent;
         f = f->outer;
