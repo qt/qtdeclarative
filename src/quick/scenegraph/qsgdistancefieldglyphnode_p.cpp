@@ -144,8 +144,8 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
     if (oldMaterial == 0
            || material->color() != oldMaterial->color()
            || state.isOpacityDirty()) {
-        QVector4D color(material->color().redF(), material->color().greenF(),
-                        material->color().blueF(), material->color().alphaF());
+        QColor c = material->color();
+        QVector4D color(c.redF(), c.greenF(), c.blueF(), c.alphaF());
         color *= state.opacity();
         program()->setUniformValue(m_color_id, color);
     }
@@ -202,6 +202,14 @@ QSGMaterialType *QSGDistanceFieldTextMaterial::type() const
 {
     static QSGMaterialType type;
     return &type;
+}
+
+void QSGDistanceFieldTextMaterial::setColor(const QColor &color)
+{
+    m_color = QColor::fromRgbF(color.redF() * color.alphaF(),
+                               color.greenF() * color.alphaF(),
+                               color.blueF() * color.alphaF(),
+                               color.alphaF());
 }
 
 QSGMaterialShader *QSGDistanceFieldTextMaterial::createShader() const
@@ -276,8 +284,8 @@ void DistanceFieldStyledTextMaterialShader::updateState(const RenderState &state
     if (oldMaterial == 0
            || material->styleColor() != oldMaterial->styleColor()
            || (state.isOpacityDirty())) {
-        QVector4D color(material->styleColor().redF(), material->styleColor().greenF(),
-                        material->styleColor().blueF(), material->styleColor().alphaF());
+        QColor c = material->styleColor();
+        QVector4D color(c.redF(), c.greenF(), c.blueF(), c.alphaF());
         color *= state.opacity();
         program()->setUniformValue(m_styleColor_id, color);
     }
@@ -290,6 +298,14 @@ QSGDistanceFieldStyledTextMaterial::QSGDistanceFieldStyledTextMaterial()
 
 QSGDistanceFieldStyledTextMaterial::~QSGDistanceFieldStyledTextMaterial()
 {
+}
+
+void QSGDistanceFieldStyledTextMaterial::setStyleColor(const QColor &color)
+{
+    m_styleColor = QColor::fromRgbF(color.redF() * color.alphaF(),
+                                    color.greenF() * color.alphaF(),
+                                    color.blueF() * color.alphaF(),
+                                    color.alphaF());
 }
 
 int QSGDistanceFieldStyledTextMaterial::compare(const QSGMaterial *o) const
