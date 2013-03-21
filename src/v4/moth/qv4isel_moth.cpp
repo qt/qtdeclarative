@@ -10,66 +10,66 @@ using namespace QQmlJS::Moth;
 
 namespace {
 
-inline VM::BinOp aluOpFunction(IR::AluOp op)
+inline VM::BinOp aluOpFunction(V4IR::AluOp op)
 {
     switch (op) {
-    case IR::OpInvalid:
+    case V4IR::OpInvalid:
         return 0;
-    case IR::OpIfTrue:
+    case V4IR::OpIfTrue:
         return 0;
-    case IR::OpNot:
+    case V4IR::OpNot:
         return 0;
-    case IR::OpUMinus:
+    case V4IR::OpUMinus:
         return 0;
-    case IR::OpUPlus:
+    case V4IR::OpUPlus:
         return 0;
-    case IR::OpCompl:
+    case V4IR::OpCompl:
         return 0;
-    case IR::OpBitAnd:
+    case V4IR::OpBitAnd:
         return VM::__qmljs_bit_and;
-    case IR::OpBitOr:
+    case V4IR::OpBitOr:
         return VM::__qmljs_bit_or;
-    case IR::OpBitXor:
+    case V4IR::OpBitXor:
         return VM::__qmljs_bit_xor;
-    case IR::OpAdd:
+    case V4IR::OpAdd:
         return VM::__qmljs_add;
-    case IR::OpSub:
+    case V4IR::OpSub:
         return VM::__qmljs_sub;
-    case IR::OpMul:
+    case V4IR::OpMul:
         return VM::__qmljs_mul;
-    case IR::OpDiv:
+    case V4IR::OpDiv:
         return VM::__qmljs_div;
-    case IR::OpMod:
+    case V4IR::OpMod:
         return VM::__qmljs_mod;
-    case IR::OpLShift:
+    case V4IR::OpLShift:
         return VM::__qmljs_shl;
-    case IR::OpRShift:
+    case V4IR::OpRShift:
         return VM::__qmljs_shr;
-    case IR::OpURShift:
+    case V4IR::OpURShift:
         return VM::__qmljs_ushr;
-    case IR::OpGt:
+    case V4IR::OpGt:
         return VM::__qmljs_gt;
-    case IR::OpLt:
+    case V4IR::OpLt:
         return VM::__qmljs_lt;
-    case IR::OpGe:
+    case V4IR::OpGe:
         return VM::__qmljs_ge;
-    case IR::OpLe:
+    case V4IR::OpLe:
         return VM::__qmljs_le;
-    case IR::OpEqual:
+    case V4IR::OpEqual:
         return VM::__qmljs_eq;
-    case IR::OpNotEqual:
+    case V4IR::OpNotEqual:
         return VM::__qmljs_ne;
-    case IR::OpStrictEqual:
+    case V4IR::OpStrictEqual:
         return VM::__qmljs_se;
-    case IR::OpStrictNotEqual:
+    case V4IR::OpStrictNotEqual:
         return VM::__qmljs_sne;
-    case IR::OpInstanceof:
+    case V4IR::OpInstanceof:
         return VM::__qmljs_instanceof;
-    case IR::OpIn:
+    case V4IR::OpIn:
         return VM::__qmljs_in;
-    case IR::OpAnd:
+    case V4IR::OpAnd:
         return 0;
-    case IR::OpOr:
+    case V4IR::OpOr:
         return 0;
     default:
         assert(!"Unknown AluOp");
@@ -79,7 +79,7 @@ inline VM::BinOp aluOpFunction(IR::AluOp op)
 
 } // anonymous namespace
 
-InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module)
+InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, V4IR::Module *module)
     : EvalInstructionSelection(engine, module)
     , _function(0)
     , _vmFunction(0)
@@ -94,12 +94,12 @@ InstructionSelection::~InstructionSelection()
 {
 }
 
-void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
+void InstructionSelection::run(VM::Function *vmFunction, V4IR::Function *function)
 {
-    IR::BasicBlock *block;
+    V4IR::BasicBlock *block;
 
-    QHash<IR::BasicBlock *, QVector<ptrdiff_t> > patches;
-    QHash<IR::BasicBlock *, ptrdiff_t> addrs;
+    QHash<V4IR::BasicBlock *, QVector<ptrdiff_t> > patches;
+    QHash<V4IR::BasicBlock *, ptrdiff_t> addrs;
 
     int codeSize = 4096;
     uchar *codeStart = new uchar[codeSize];
@@ -125,7 +125,7 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     foreach (_block, _function->basicBlocks) {
         _addrs.insert(_block, _codeNext - _codeStart);
 
-        foreach (IR::Stmt *s, _block->statements)
+        foreach (V4IR::Stmt *s, _block->statements)
             s->accept(this);
     }
 
@@ -146,7 +146,7 @@ void InstructionSelection::run(VM::Function *vmFunction, IR::Function *function)
     delete[] codeStart;
 }
 
-void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
 {
     Instruction::CallValue call;
     prepareCallArgs(args, call.argc, call.args);
@@ -155,7 +155,7 @@ void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Te
     addInstruction(call);
 }
 
-void InstructionSelection::callProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result)
 {
     // call the property on the loaded base
     Instruction::CallProperty call;
@@ -166,7 +166,7 @@ void InstructionSelection::callProperty(IR::Temp *base, const QString &name, IR:
     addInstruction(call);
 }
 
-void InstructionSelection::callSubscript(IR::Temp *base, IR::Temp *index, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::ExprList *args, V4IR::Temp *result)
 {
     // call the property on the loaded base
     Instruction::CallElement call;
@@ -177,9 +177,9 @@ void InstructionSelection::callSubscript(IR::Temp *base, IR::Temp *index, IR::Ex
     addInstruction(call);
 }
 
-void InstructionSelection::constructActivationProperty(IR::Name *func,
-                                                       IR::ExprList *args,
-                                                       IR::Temp *result)
+void InstructionSelection::constructActivationProperty(V4IR::Name *func,
+                                                       V4IR::ExprList *args,
+                                                       V4IR::Temp *result)
 {
     Instruction::CreateActivationProperty create;
     create.name = identifier(*func->id);
@@ -188,7 +188,7 @@ void InstructionSelection::constructActivationProperty(IR::Name *func,
     addInstruction(create);
 }
 
-void InstructionSelection::constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result)
 {
     Instruction::CreateProperty create;
     create.base = getParam(base);
@@ -198,7 +198,7 @@ void InstructionSelection::constructProperty(IR::Temp *base, const QString &name
     addInstruction(create);
 }
 
-void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
 {
     Instruction::CreateValue create;
     create.func = getParam(value);
@@ -207,14 +207,14 @@ void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, I
     addInstruction(create);
 }
 
-void InstructionSelection::loadThisObject(IR::Temp *temp)
+void InstructionSelection::loadThisObject(V4IR::Temp *temp)
 {
     Instruction::LoadThis load;
     load.result = getResultParam(temp);
     addInstruction(load);
 }
 
-void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Temp *targetTemp)
+void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
 {
     assert(sourceConst);
 
@@ -224,7 +224,7 @@ void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Temp *targetTem
     addInstruction(load);
 }
 
-void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
+void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp)
 {
     Instruction::LoadValue load;
     load.value = Instr::Param::createValue(VM::Value::fromString(identifier(str)));
@@ -232,7 +232,7 @@ void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
     addInstruction(load);
 }
 
-void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp)
+void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
 {
     VM::Value v = VM::Value::fromObject(engine()->newRegExpObject(
                                             *sourceRegexp->value,
@@ -245,7 +245,7 @@ void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *target
     addInstruction(load);
 }
 
-void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *temp)
+void InstructionSelection::getActivationProperty(const QString &name, V4IR::Temp *temp)
 {
     Instruction::LoadName load;
     load.name = identifier(name);
@@ -253,7 +253,7 @@ void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *
     addInstruction(load);
 }
 
-void InstructionSelection::setActivationProperty(IR::Temp *source, const QString &targetName)
+void InstructionSelection::setActivationProperty(V4IR::Temp *source, const QString &targetName)
 {
     Instruction::StoreName store;
     store.source = getParam(source);
@@ -261,7 +261,7 @@ void InstructionSelection::setActivationProperty(IR::Temp *source, const QString
     addInstruction(store);
 }
 
-void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
+void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *target)
 {
     VM::Function *vmFunc = vmFunction(closure->value);
     assert(vmFunc);
@@ -271,7 +271,7 @@ void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
     addInstruction(load);
 }
 
-void InstructionSelection::getProperty(IR::Temp *base, const QString &name, IR::Temp *target)
+void InstructionSelection::getProperty(V4IR::Temp *base, const QString &name, V4IR::Temp *target)
 {
     Instruction::LoadProperty load;
     load.base = getParam(base);
@@ -280,7 +280,7 @@ void InstructionSelection::getProperty(IR::Temp *base, const QString &name, IR::
     addInstruction(load);
 }
 
-void InstructionSelection::setProperty(IR::Temp *source, IR::Temp *targetBase, const QString &targetName)
+void InstructionSelection::setProperty(V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName)
 {
     Instruction::StoreProperty store;
     store.base = getParam(targetBase);
@@ -289,7 +289,7 @@ void InstructionSelection::setProperty(IR::Temp *source, IR::Temp *targetBase, c
     addInstruction(store);
 }
 
-void InstructionSelection::getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target)
+void InstructionSelection::getElement(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *target)
 {
     Instruction::LoadElement load;
     load.base = getParam(base);
@@ -298,7 +298,7 @@ void InstructionSelection::getElement(IR::Temp *base, IR::Temp *index, IR::Temp 
     addInstruction(load);
 }
 
-void InstructionSelection::setElement(IR::Temp *source, IR::Temp *targetBase, IR::Temp *targetIndex)
+void InstructionSelection::setElement(V4IR::Temp *source, V4IR::Temp *targetBase, V4IR::Temp *targetIndex)
 {
     Instruction::StoreElement store;
     store.base = getParam(targetBase);
@@ -307,7 +307,7 @@ void InstructionSelection::setElement(IR::Temp *source, IR::Temp *targetBase, IR
     addInstruction(store);
 }
 
-void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
+void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
     Instruction::MoveTemp move;
     move.source = getParam(sourceTemp);
@@ -315,17 +315,17 @@ void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
     addInstruction(move);
 }
 
-void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp)
+void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
     VM::UnaryOpName op = 0;
     switch (oper) {
-    case IR::OpIfTrue: assert(!"unreachable"); break;
-    case IR::OpNot: op = VM::__qmljs_not; break;
-    case IR::OpUMinus: op = VM::__qmljs_uminus; break;
-    case IR::OpUPlus: op = VM::__qmljs_uplus; break;
-    case IR::OpCompl: op = VM::__qmljs_compl; break;
-    case IR::OpIncrement: op = VM::__qmljs_increment; break;
-    case IR::OpDecrement: op = VM::__qmljs_decrement; break;
+    case V4IR::OpIfTrue: assert(!"unreachable"); break;
+    case V4IR::OpNot: op = VM::__qmljs_not; break;
+    case V4IR::OpUMinus: op = VM::__qmljs_uminus; break;
+    case V4IR::OpUPlus: op = VM::__qmljs_uplus; break;
+    case V4IR::OpCompl: op = VM::__qmljs_compl; break;
+    case V4IR::OpIncrement: op = VM::__qmljs_increment; break;
+    case V4IR::OpDecrement: op = VM::__qmljs_decrement; break;
     default: assert(!"unreachable"); break;
     } // switch
 
@@ -340,7 +340,7 @@ void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *
     }
 }
 
-void InstructionSelection::binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp *rightSource, IR::Temp *target)
+void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Temp *leftSource, V4IR::Temp *rightSource, V4IR::Temp *target)
 {
     Instruction::Binop binop;
     binop.alu = aluOpFunction(oper);
@@ -350,21 +350,21 @@ void InstructionSelection::binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp 
     addInstruction(binop);
 }
 
-void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Temp *rightSource, const QString &targetName)
+void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName)
 {
     VM::InplaceBinOpName op = 0;
     switch (oper) {
-    case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_name; break;
-    case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_name; break;
-    case IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_name; break;
-    case IR::OpAdd: op = VM::__qmljs_inplace_add_name; break;
-    case IR::OpSub: op = VM::__qmljs_inplace_sub_name; break;
-    case IR::OpMul: op = VM::__qmljs_inplace_mul_name; break;
-    case IR::OpDiv: op = VM::__qmljs_inplace_div_name; break;
-    case IR::OpMod: op = VM::__qmljs_inplace_mod_name; break;
-    case IR::OpLShift: op = VM::__qmljs_inplace_shl_name; break;
-    case IR::OpRShift: op = VM::__qmljs_inplace_shr_name; break;
-    case IR::OpURShift: op = VM::__qmljs_inplace_ushr_name; break;
+    case V4IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_name; break;
+    case V4IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_name; break;
+    case V4IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_name; break;
+    case V4IR::OpAdd: op = VM::__qmljs_inplace_add_name; break;
+    case V4IR::OpSub: op = VM::__qmljs_inplace_sub_name; break;
+    case V4IR::OpMul: op = VM::__qmljs_inplace_mul_name; break;
+    case V4IR::OpDiv: op = VM::__qmljs_inplace_div_name; break;
+    case V4IR::OpMod: op = VM::__qmljs_inplace_mod_name; break;
+    case V4IR::OpLShift: op = VM::__qmljs_inplace_shl_name; break;
+    case V4IR::OpRShift: op = VM::__qmljs_inplace_shr_name; break;
+    case V4IR::OpURShift: op = VM::__qmljs_inplace_ushr_name; break;
     default: break;
     }
 
@@ -377,21 +377,21 @@ void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Temp *rightSource, 
     }
 }
 
-void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Temp *source, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp)
+void InstructionSelection::inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBaseTemp, V4IR::Temp *targetIndexTemp)
 {
     VM::InplaceBinOpElement op = 0;
     switch (oper) {
-    case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_element; break;
-    case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_element; break;
-    case IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_element; break;
-    case IR::OpAdd: op = VM::__qmljs_inplace_add_element; break;
-    case IR::OpSub: op = VM::__qmljs_inplace_sub_element; break;
-    case IR::OpMul: op = VM::__qmljs_inplace_mul_element; break;
-    case IR::OpDiv: op = VM::__qmljs_inplace_div_element; break;
-    case IR::OpMod: op = VM::__qmljs_inplace_mod_element; break;
-    case IR::OpLShift: op = VM::__qmljs_inplace_shl_element; break;
-    case IR::OpRShift: op = VM::__qmljs_inplace_shr_element; break;
-    case IR::OpURShift: op = VM::__qmljs_inplace_ushr_element; break;
+    case V4IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_element; break;
+    case V4IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_element; break;
+    case V4IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_element; break;
+    case V4IR::OpAdd: op = VM::__qmljs_inplace_add_element; break;
+    case V4IR::OpSub: op = VM::__qmljs_inplace_sub_element; break;
+    case V4IR::OpMul: op = VM::__qmljs_inplace_mul_element; break;
+    case V4IR::OpDiv: op = VM::__qmljs_inplace_div_element; break;
+    case V4IR::OpMod: op = VM::__qmljs_inplace_mod_element; break;
+    case V4IR::OpLShift: op = VM::__qmljs_inplace_shl_element; break;
+    case V4IR::OpRShift: op = VM::__qmljs_inplace_shr_element; break;
+    case V4IR::OpURShift: op = VM::__qmljs_inplace_ushr_element; break;
     default: break;
     }
 
@@ -403,21 +403,21 @@ void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Temp *source, IR
     addInstruction(ieo);
 }
 
-void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Temp *source, IR::Temp *targetBase, const QString &targetName)
+void InstructionSelection::inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName)
 {
     VM::InplaceBinOpMember op = 0;
     switch (oper) {
-    case IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_member; break;
-    case IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_member; break;
-    case IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_member; break;
-    case IR::OpAdd: op = VM::__qmljs_inplace_add_member; break;
-    case IR::OpSub: op = VM::__qmljs_inplace_sub_member; break;
-    case IR::OpMul: op = VM::__qmljs_inplace_mul_member; break;
-    case IR::OpDiv: op = VM::__qmljs_inplace_div_member; break;
-    case IR::OpMod: op = VM::__qmljs_inplace_mod_member; break;
-    case IR::OpLShift: op = VM::__qmljs_inplace_shl_member; break;
-    case IR::OpRShift: op = VM::__qmljs_inplace_shr_member; break;
-    case IR::OpURShift: op = VM::__qmljs_inplace_ushr_member; break;
+    case V4IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_member; break;
+    case V4IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_member; break;
+    case V4IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_member; break;
+    case V4IR::OpAdd: op = VM::__qmljs_inplace_add_member; break;
+    case V4IR::OpSub: op = VM::__qmljs_inplace_sub_member; break;
+    case V4IR::OpMul: op = VM::__qmljs_inplace_mul_member; break;
+    case V4IR::OpDiv: op = VM::__qmljs_inplace_div_member; break;
+    case V4IR::OpMod: op = VM::__qmljs_inplace_mod_member; break;
+    case V4IR::OpLShift: op = VM::__qmljs_inplace_shl_member; break;
+    case V4IR::OpRShift: op = VM::__qmljs_inplace_shr_member; break;
+    case V4IR::OpURShift: op = VM::__qmljs_inplace_ushr_member; break;
     default: break;
     }
 
@@ -429,7 +429,7 @@ void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Temp *source, IR:
     addInstruction(imo);
 }
 
-void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint32 &args)
+void InstructionSelection::prepareCallArgs(V4IR::ExprList *e, quint32 &argc, quint32 &args)
 {
     bool singleArgIsTemp = false;
     if (e && e->next == 0 && e->expr->asTemp()) {
@@ -465,7 +465,7 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
     }
 }
 
-void InstructionSelection::visitJump(IR::Jump *s)
+void InstructionSelection::visitJump(V4IR::Jump *s)
 {
     Instruction::Jump jump;
     jump.offset = 0;
@@ -474,12 +474,12 @@ void InstructionSelection::visitJump(IR::Jump *s)
     _patches[s->target].append(loc);
 }
 
-void InstructionSelection::visitCJump(IR::CJump *s)
+void InstructionSelection::visitCJump(V4IR::CJump *s)
 {
     Instr::Param condition;
-    if (IR::Temp *t = s->cond->asTemp()) {
+    if (V4IR::Temp *t = s->cond->asTemp()) {
         condition = getResultParam(t);
-    } else if (IR::Binop *b = s->cond->asBinop()) {
+    } else if (V4IR::Binop *b = s->cond->asBinop()) {
         condition = getResultParam(0);
         Instruction::Binop binop;
         binop.alu = aluOpFunction(b->op);
@@ -505,14 +505,14 @@ void InstructionSelection::visitCJump(IR::CJump *s)
     }
 }
 
-void InstructionSelection::visitRet(IR::Ret *s)
+void InstructionSelection::visitRet(V4IR::Ret *s)
 {
     Instruction::Ret ret;
     ret.result = getParam(s->expr);
     addInstruction(ret);
 }
 
-void InstructionSelection::visitTry(IR::Try *t)
+void InstructionSelection::visitTry(V4IR::Try *t)
 {
     Instruction::EnterTry enterTry;
     enterTry.tryOffset = 0;
@@ -528,7 +528,7 @@ void InstructionSelection::visitTry(IR::Try *t)
     _patches[t->catchBlock].append(catchLoc);
 }
 
-void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
 {
     Instruction::CallActivationProperty call;
     call.name = identifier(*func->id);
@@ -537,7 +537,7 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinTypeofMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinTypeofMember call;
     call.base = getParam(base);
@@ -546,7 +546,7 @@ void InstructionSelection::callBuiltinTypeofMember(IR::Temp *base, const QString
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+void InstructionSelection::callBuiltinTypeofSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result)
 {
     Instruction::CallBuiltinTypeofSubscript call;
     call.base = getParam(base);
@@ -555,7 +555,7 @@ void InstructionSelection::callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinTypeofName(const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinTypeofName call;
     call.name = identifier(name);
@@ -563,7 +563,7 @@ void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinTypeofValue(IR::Temp *value, IR::Temp *result)
+void InstructionSelection::callBuiltinTypeofValue(V4IR::Temp *value, V4IR::Temp *result)
 {
     Instruction::CallBuiltinTypeofValue call;
     call.value = getParam(value);
@@ -571,7 +571,7 @@ void InstructionSelection::callBuiltinTypeofValue(IR::Temp *value, IR::Temp *res
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinDeleteMember call;
     call.base = getParam(base);
@@ -580,7 +580,7 @@ void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result)
 {
     Instruction::CallBuiltinDeleteSubscript call;
     call.base = getParam(base);
@@ -589,7 +589,7 @@ void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteName(const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinDeleteName call;
     call.name = identifier(name);
@@ -597,7 +597,7 @@ void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteValue(V4IR::Temp *result)
 {
     Instruction::LoadValue load;
     load.value = Instr::Param::createValue(VM::Value::fromBoolean(false));
@@ -605,7 +605,7 @@ void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
     addInstruction(load);
 }
 
-void InstructionSelection::callBuiltinPostDecrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinPostDecrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinPostDecMember call;
     call.base = getParam(base);
@@ -614,7 +614,7 @@ void InstructionSelection::callBuiltinPostDecrementMember(IR::Temp *base, const 
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinPostDecrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+void InstructionSelection::callBuiltinPostDecrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result)
 {
     Instruction::CallBuiltinPostDecSubscript call;
     call.base = getParam(base);
@@ -623,7 +623,7 @@ void InstructionSelection::callBuiltinPostDecrementSubscript(IR::Temp *base, IR:
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinPostDecrementName(const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinPostDecrementName(const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinPostDecName call;
     call.name = identifier(name);
@@ -631,7 +631,7 @@ void InstructionSelection::callBuiltinPostDecrementName(const QString &name, IR:
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinPostDecrementValue(IR::Temp *value, IR::Temp *result)
+void InstructionSelection::callBuiltinPostDecrementValue(V4IR::Temp *value, V4IR::Temp *result)
 {
     Instruction::CallBuiltinPostDecValue call;
     call.value = getParam(value);
@@ -639,7 +639,7 @@ void InstructionSelection::callBuiltinPostDecrementValue(IR::Temp *value, IR::Te
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinPostIncrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinPostIncrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinPostIncMember call;
     call.base = getParam(base);
@@ -648,7 +648,7 @@ void InstructionSelection::callBuiltinPostIncrementMember(IR::Temp *base, const 
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinPostIncrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+void InstructionSelection::callBuiltinPostIncrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result)
 {
     Instruction::CallBuiltinPostIncSubscript call;
     call.base = getParam(base);
@@ -657,7 +657,7 @@ void InstructionSelection::callBuiltinPostIncrementSubscript(IR::Temp *base, IR:
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinPostIncrementName(const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinPostIncName call;
     call.name = identifier(name);
@@ -665,7 +665,7 @@ void InstructionSelection::callBuiltinPostIncrementName(const QString &name, IR:
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result)
+void InstructionSelection::callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR::Temp *result)
 {
     Instruction::CallBuiltinPostIncValue call;
     call.value = getParam(value);
@@ -673,7 +673,7 @@ void InstructionSelection::callBuiltinPostIncrementValue(IR::Temp *value, IR::Te
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
+void InstructionSelection::callBuiltinThrow(V4IR::Temp *arg)
 {
     Instruction::CallBuiltinThrow call;
     call.arg = getParam(arg);
@@ -686,7 +686,7 @@ void InstructionSelection::callBuiltinFinishTry()
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result)
+void InstructionSelection::callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result)
 {
     Instruction::CallBuiltinForeachIteratorObject call;
     call.arg = getParam(arg);
@@ -694,7 +694,7 @@ void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::T
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result)
+void InstructionSelection::callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result)
 {
     Instruction::CallBuiltinForeachNextPropertyName call;
     call.arg = getParam(arg);
@@ -702,7 +702,7 @@ void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR:
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
+void InstructionSelection::callBuiltinPushWithScope(V4IR::Temp *arg)
 {
     Instruction::CallBuiltinPushScope call;
     call.arg = getParam(arg);
@@ -723,7 +723,7 @@ void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter)
+void InstructionSelection::callBuiltinDefineGetterSetter(V4IR::Temp *object, const QString &name, V4IR::Temp *getter, V4IR::Temp *setter)
 {
     Instruction::CallBuiltinDefineGetterSetter call;
     call.object = getParam(object);
@@ -733,7 +733,7 @@ void InstructionSelection::callBuiltinDefineGetterSetter(IR::Temp *object, const
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value)
+void InstructionSelection::callBuiltinDefineProperty(V4IR::Temp *object, const QString &name, V4IR::Temp *value)
 {
     Instruction::CallBuiltinDefineProperty call;
     call.object = getParam(object);
@@ -742,7 +742,7 @@ void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QSt
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args)
+void InstructionSelection::callBuiltinDefineArray(V4IR::Temp *result, V4IR::ExprList *args)
 {
     Instruction::CallBuiltinDefineArray call;
     prepareCallArgs(args, call.argc, call.args);
@@ -779,7 +779,7 @@ ptrdiff_t InstructionSelection::addInstructionHelper(Instr::Type type, Instr &in
 
 void InstructionSelection::patchJumpAddresses()
 {
-    typedef QHash<IR::BasicBlock *, QVector<ptrdiff_t> >::ConstIterator PatchIt;
+    typedef QHash<V4IR::BasicBlock *, QVector<ptrdiff_t> >::ConstIterator PatchIt;
     for (PatchIt i = _patches.begin(), ei = _patches.end(); i != ei; ++i) {
         Q_ASSERT(_addrs.contains(i.key()));
         ptrdiff_t target = _addrs.value(i.key());

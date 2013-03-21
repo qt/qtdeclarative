@@ -94,17 +94,17 @@ Debugger::~Debugger()
     qDeleteAll(_functionInfo.values());
 }
 
-void Debugger::addFunction(IR::Function *function)
+void Debugger::addFunction(V4IR::Function *function)
 {
     _functionInfo.insert(function, new FunctionDebugInfo(function));
 }
 
-void Debugger::setSourceLocation(IR::Function *function, unsigned line, unsigned column)
+void Debugger::setSourceLocation(V4IR::Function *function, unsigned line, unsigned column)
 {
     _functionInfo[function]->setSourceLocation(line, column);
 }
 
-void Debugger::mapFunction(VM::Function *vmf, IR::Function *irf)
+void Debugger::mapFunction(VM::Function *vmf, V4IR::Function *irf)
 {
     _vmToIr.insert(vmf, irf);
 }
@@ -208,7 +208,7 @@ int Debugger::callIndex(VM::ExecutionContext *context)
     return -1;
 }
 
-IR::Function *Debugger::irFunction(VM::Function *vmf) const
+V4IR::Function *Debugger::irFunction(VM::Function *vmf) const
 {
     return _vmToIr[vmf];
 }

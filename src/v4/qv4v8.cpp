@@ -1225,11 +1225,11 @@ Local<RegExp> RegExp::New(Handle<String> pattern, RegExp::Flags flags)
 {
     int f = 0;
     if (flags & kGlobal)
-        f |= IR::RegExp::RegExp_Global;
+        f |= V4IR::RegExp::RegExp_Global;
     if (flags & kIgnoreCase)
-        f |= IR::RegExp::RegExp_IgnoreCase;
+        f |= V4IR::RegExp::RegExp_IgnoreCase;
     if (flags & kMultiline)
-        f |= IR::RegExp::RegExp_Multiline;
+        f |= V4IR::RegExp::RegExp_Multiline;
     VM::Object *o = currentEngine()->newRegExpObject(pattern->asQString(), f);
     return Local<RegExp>::New(Value::fromVmValue(VM::Value::fromObject(o)));
 }

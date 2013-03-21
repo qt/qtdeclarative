@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 
-namespace IR {
+namespace V4IR {
 struct BasicBlock;
 struct Function;
 } // namespace IR
@@ -53,7 +53,7 @@ struct FunctionDebugInfo { // TODO: use opaque d-pointers here
     QString name;
     unsigned startLine, startColumn;
 
-    FunctionDebugInfo(IR::Function *function):
+    FunctionDebugInfo(V4IR::Function *function):
         startLine(0), startColumn(0)
     {
         if (function->name)
@@ -104,9 +104,9 @@ public:
     ~Debugger();
 
 public: // compile-time interface
-    void addFunction(IR::Function *function);
-    void setSourceLocation(IR::Function *function, unsigned line, unsigned column);
-    void mapFunction(VM::Function *vmf, IR::Function *irf);
+    void addFunction(V4IR::Function *function);
+    void setSourceLocation(V4IR::Function *function, unsigned line, unsigned column);
+    void mapFunction(VM::Function *vmf, V4IR::Function *irf);
 
 public: // run-time querying interface
     FunctionDebugInfo *debugInfo(VM::FunctionObject *function) const;
@@ -128,12 +128,12 @@ public: // debugging hooks
 
 private:
     int callIndex(VM::ExecutionContext *context);
-    IR::Function *irFunction(VM::Function *vmf) const;
+    V4IR::Function *irFunction(VM::Function *vmf) const;
 
 private: // TODO: use opaque d-pointers here
     VM::ExecutionEngine *_engine;
-    QHash<IR::Function *, FunctionDebugInfo *> _functionInfo;
-    QHash<VM::Function *, IR::Function *> _vmToIr;
+    QHash<V4IR::Function *, FunctionDebugInfo *> _functionInfo;
+    QHash<VM::Function *, V4IR::Function *> _vmToIr;
     QVector<CallInfo> _callStack;
 };
 

@@ -51,7 +51,7 @@
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
-namespace IR {
+namespace V4IR {
 
 const char *typeName(Type t)
 {
@@ -141,7 +141,7 @@ AluOp binaryOperator(int op)
     }
 }
 
-struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
+struct RemoveSharedExpressions: V4IR::StmtVisitor, V4IR::ExprVisitor
 {
     CloneExpr clone;
     QSet<Expr *> subexpressions; // contains all the non-cloned subexpressions in the given function
@@ -149,7 +149,7 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
 
     RemoveSharedExpressions(): uniqueExpr(0) {}
 
-    void operator()(IR::Function *function)
+    void operator()(V4IR::Function *function)
     {
         subexpressions.clear();
 
@@ -172,7 +172,7 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
         }
 
         subexpressions.insert(expr);
-        IR::Expr *e = expr;
+        V4IR::Expr *e = expr;
         qSwap(uniqueExpr, e);
         expr->accept(this);
         qSwap(uniqueExpr, e);
@@ -243,14 +243,14 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
     virtual void visitCall(Call *e)
     {
         e->base = cleanup(e->base);
-        for (IR::ExprList *it = e->args; it; it = it->next)
+        for (V4IR::ExprList *it = e->args; it; it = it->next)
             it->expr = cleanup(it->expr);
     }
 
     virtual void visitNew(New *e)
     {
         e->base = cleanup(e->base);
-        for (IR::ExprList *it = e->args; it; it = it->next)
+        for (V4IR::ExprList *it = e->args; it; it = it->next)
             it->expr = cleanup(it->expr);
     }
 
@@ -269,13 +269,13 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
 void Const::dump(QTextStream &out)
 {
     switch (type) {
-    case QQmlJS::IR::UndefinedType:
+    case QQmlJS::V4IR::UndefinedType:
         out << "undefined";
         break;
-    case QQmlJS::IR::NullType:
+    case QQmlJS::V4IR::NullType:
         out << "null";
         break;
-    case QQmlJS::IR::BoolType:
+    case QQmlJS::V4IR::BoolType:
         out << (value ? "true" : "false");
         break;
     default:
@@ -358,21 +358,21 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_throw";
     case Name::builtin_finish_try:
         return "builtin_finish_try";
-    case IR::Name::builtin_foreach_iterator_object:
+    case V4IR::Name::builtin_foreach_iterator_object:
         return "builtin_foreach_iterator_object";
-    case IR::Name::builtin_foreach_next_property_name:
+    case V4IR::Name::builtin_foreach_next_property_name:
         return "builtin_foreach_next_property_name";
-    case IR::Name::builtin_push_with_scope:
+    case V4IR::Name::builtin_push_with_scope:
         return "builtin_push_with_scope";
-    case IR::Name::builtin_pop_scope:
+    case V4IR::Name::builtin_pop_scope:
         return "builtin_pop_scope";
-    case IR::Name::builtin_declare_vars:
+    case V4IR::Name::builtin_declare_vars:
         return "builtin_declare_vars";
-    case IR::Name::builtin_define_property:
+    case V4IR::Name::builtin_define_property:
         return "builtin_define_property";
-    case IR::Name::builtin_define_array:
+    case V4IR::Name::builtin_define_array:
         return "builtin_define_array";
-    case IR::Name::builtin_define_getter_setter:
+    case V4IR::Name::builtin_define_getter_setter:
         return "builtin_define_getter_setter";
     }
     return "builtin_(###FIXME)";
@@ -551,8 +551,8 @@ Function::~Function()
 {
     // destroy the Stmt::Data blocks manually, because memory pool cleanup won't
     // call the Stmt destructors.
-    foreach (IR::BasicBlock *b, basicBlocks)
-        foreach (IR::Stmt *s, b->statements)
+    foreach (V4IR::BasicBlock *b, basicBlocks)
+        foreach (V4IR::Stmt *s, b->statements)
             s->destroyData();
 
     qDeleteAll(basicBlocks);
@@ -840,7 +840,7 @@ ExprList *CloneExpr::clone(ExprList *list)
     if (! list)
         return 0;
 
-    ExprList *clonedList = block->function->New<IR::ExprList>();
+    ExprList *clonedList = block->function->New<V4IR::ExprList>();
     clonedList->init(clone(list->expr), clone(list->next));
     return clonedList;
 }

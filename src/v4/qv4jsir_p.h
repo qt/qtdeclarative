@@ -85,7 +85,7 @@ struct ExecutionContext;
 struct Value;
 }
 
-namespace IR {
+namespace V4IR {
 
 struct BasicBlock;
 struct Function;
@@ -161,7 +161,7 @@ enum AluOp {
     LastAluOp = OpOr
 };
 AluOp binaryOperator(int op);
-const char *opname(IR::AluOp op);
+const char *opname(V4IR::AluOp op);
 
 enum Type {
     MissingType, // Used to indicate holes in array initialization (e.g. [,,])
@@ -752,7 +752,7 @@ struct BasicBlock {
     Stmt *ENTER(Expr *expr);
     Stmt *LEAVE();
 
-    Stmt *MOVE(Expr *target, Expr *source, AluOp op = IR::OpInvalid);
+    Stmt *MOVE(Expr *target, Expr *source, AluOp op = V4IR::OpInvalid);
 
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
@@ -762,12 +762,12 @@ struct BasicBlock {
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 };
 
-class CloneExpr: protected IR::ExprVisitor
+class CloneExpr: protected V4IR::ExprVisitor
 {
 public:
-    explicit CloneExpr(IR::BasicBlock *block = 0);
+    explicit CloneExpr(V4IR::BasicBlock *block = 0);
 
-    void setBasicBlock(IR::BasicBlock *block);
+    void setBasicBlock(V4IR::BasicBlock *block);
 
     template <typename _Expr>
     _Expr *operator()(_Expr *expr)
@@ -786,7 +786,7 @@ public:
     }
 
 protected:
-    IR::ExprList *clone(IR::ExprList *list);
+    V4IR::ExprList *clone(V4IR::ExprList *list);
 
     virtual void visitConst(Const *);
     virtual void visitString(String *);
@@ -802,8 +802,8 @@ protected:
     virtual void visitMember(Member *);
 
 private:
-    IR::BasicBlock *block;
-    IR::Expr *cloned;
+    V4IR::BasicBlock *block;
+    V4IR::Expr *cloned;
 };
 
 } // end of namespace IR

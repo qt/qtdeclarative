@@ -43,18 +43,18 @@ inline VM::Value nonExistantValue()
     return v;
 }
 
-inline VM::Value convertToValue(IR::Const *c)
+inline VM::Value convertToValue(V4IR::Const *c)
 {
     switch (c->type) {
-    case IR::MissingType:
+    case V4IR::MissingType:
         return nonExistantValue();
-    case IR::NullType:
+    case V4IR::NullType:
         return VM::Value::nullValue();
-    case IR::UndefinedType:
+    case V4IR::UndefinedType:
         return VM::Value::undefinedValue();
-    case IR::BoolType:
+    case V4IR::BoolType:
         return VM::Value::fromBoolean(c->value != 0);
-    case IR::NumberType: {
+    case V4IR::NumberType: {
         int ival = (int)c->value;
         // +0 != -0, so we need to convert to double when negating 0
         if (ival == c->value && !(c->value == 0 && isNegative(c->value))) {

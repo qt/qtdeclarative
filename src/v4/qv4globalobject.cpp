@@ -442,7 +442,7 @@ QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
     MemoryManager::GCBlocker gcBlocker(ctx->engine->memoryManager);
 
     VM::ExecutionEngine *vm = ctx->engine;
-    IR::Module module;
+    V4IR::Module module;
     VM::Function *globalCode = 0;
 
     {
@@ -488,7 +488,7 @@ QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
                     inheritedLocals.append(*i ? (*i)->toQString() : QString());
 
             Codegen cg(ctx, strictMode);
-            IR::Function *globalIRCode = cg(fileName, source, program, &module, mode, inheritedLocals);
+            V4IR::Function *globalIRCode = cg(fileName, source, program, &module, mode, inheritedLocals);
             QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(vm, &module));
             if (inheritContext)
                 isel->setUseFastLookups(false);

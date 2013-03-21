@@ -59,7 +59,7 @@ namespace MASM {
 class Assembler : public JSC::MacroAssembler
 {
 public:
-    Assembler(IR::Function* function, VM::Function *vmFunction);
+    Assembler(V4IR::Function* function, VM::Function *vmFunction);
 #if CPU(X86)
 
 #undef VALUE_FITS_IN_REGISTER
@@ -197,17 +197,17 @@ public:
         const char* functionName;
     };
     struct PointerToValue {
-        PointerToValue(IR::Temp *value) : value(value) {}
-        IR::Temp *value;
+        PointerToValue(V4IR::Temp *value) : value(value) {}
+        V4IR::Temp *value;
     };
     struct Reference {
-        Reference(IR::Temp *value) : value(value) {}
-        IR::Temp *value;
+        Reference(V4IR::Temp *value) : value(value) {}
+        V4IR::Temp *value;
     };
 
     struct ReentryBlock {
-        ReentryBlock(IR::BasicBlock *b) : block(b) {}
-        IR::BasicBlock *block;
+        ReentryBlock(V4IR::BasicBlock *b) : block(b) {}
+        V4IR::BasicBlock *block;
     };
 
     void callAbsolute(const char* functionName, FunctionPtr function) {
@@ -218,13 +218,13 @@ public:
         _callsToLink.append(ctl);
     }
 
-    void registerBlock(IR::BasicBlock*);
-    void jumpToBlock(IR::BasicBlock* current, IR::BasicBlock *target);
-    void addPatch(IR::BasicBlock* targetBlock, Jump targetJump);
+    void registerBlock(V4IR::BasicBlock*);
+    void jumpToBlock(V4IR::BasicBlock* current, V4IR::BasicBlock *target);
+    void addPatch(V4IR::BasicBlock* targetBlock, Jump targetJump);
     void addPatch(DataLabelPtr patch, Label target);
-    void addPatch(DataLabelPtr patch, IR::BasicBlock *target);
+    void addPatch(DataLabelPtr patch, V4IR::BasicBlock *target);
 
-    Pointer loadTempAddress(RegisterID reg, IR::Temp *t);
+    Pointer loadTempAddress(RegisterID reg, V4IR::Temp *t);
 
     void loadArgument(RegisterID source, RegisterID dest)
     {
@@ -266,7 +266,7 @@ public:
     }
 
 #ifdef VALUE_FITS_IN_REGISTER
-    void loadArgument(IR::Temp* temp, RegisterID dest)
+    void loadArgument(V4IR::Temp* temp, RegisterID dest)
     {
         if (!temp) {
             VM::Value undefined = VM::Value::undefinedValue();
@@ -277,13 +277,13 @@ public:
         }
     }
 
-    void loadArgument(IR::Const* c, RegisterID dest)
+    void loadArgument(V4IR::Const* c, RegisterID dest)
     {
         VM::Value v = convertToValue(c);
         move(TrustedImm64(v.val), dest);
     }
 
-    void loadArgument(IR::Expr* expr, RegisterID dest)
+    void loadArgument(V4IR::Expr* expr, RegisterID dest)
     {
         if (!expr) {
             VM::Value undefined = VM::Value::undefinedValue();
@@ -297,7 +297,7 @@ public:
         }
     }
 #else
-    void loadArgument(IR::Expr*, RegisterID)
+    void loadArgument(V4IR::Expr*, RegisterID)
     {
         assert(!"unimplemented: expression in loadArgument");
     }
@@ -315,7 +315,7 @@ public:
             move(imm32, dest);
     }
 
-    void storeArgument(RegisterID src, IR::Temp *temp)
+    void storeArgument(RegisterID src, V4IR::Temp *temp)
     {
         if (temp) {
             Pointer addr = loadTempAddress(ScratchRegister, temp);
@@ -393,7 +393,7 @@ public:
         addPatch(patch, block.block);
     }
 
-    void push(IR::Temp* temp)
+    void push(V4IR::Temp* temp)
     {
         if (temp) {
             Address addr = loadTempAddress(ScratchRegister, temp);
@@ -407,20 +407,20 @@ public:
         }
     }
 
-    void push(IR::Const* c)
+    void push(V4IR::Const* c)
     {
         VM::Value v = convertToValue(c);
         push(v);
     }
 
-    void push(IR::Expr* e)
+    void push(V4IR::Expr* e)
     {
         if (!e) {
             VM::Value undefined = VM::Value::undefinedValue();
             push(undefined);
-        } else if (IR::Const *c = e->asConst())
+        } else if (V4IR::Const *c = e->asConst())
             push(c);
-        else if (IR::Temp *t = e->asTemp()) {
+        else if (V4IR::Temp *t = e->asTemp()) {
             push(t);
         } else {
             assert(!"Trying to push an expression that is not a Temp or Const");
@@ -439,14 +439,14 @@ public:
     }
 
     using JSC::MacroAssembler::loadDouble;
-    void loadDouble(IR::Temp* temp, FPRegisterID dest)
+    void loadDouble(V4IR::Temp* temp, FPRegisterID dest)
     {
         Pointer ptr = loadTempAddress(ScratchRegister, temp);
         loadDouble(ptr, dest);
     }
 
     using JSC::MacroAssembler::storeDouble;
-    void storeDouble(FPRegisterID source, IR::Temp* temp)
+    void storeDouble(FPRegisterID source, V4IR::Temp* temp)
     {
         Pointer ptr = loadTempAddress(ScratchRegister, temp);
         storeDouble(source, ptr);
@@ -455,7 +455,7 @@ public:
     template <typename Result, typename Source>
     void copyValue(Result result, Source source);
     template <typename Result>
-    void copyValue(Result result, IR::Expr* source);
+    void copyValue(Result result, V4IR::Expr* source);
 
     void storeValue(VM::Value value, Address destination)
     {
@@ -468,7 +468,7 @@ public:
 #endif
     }
 
-    void storeValue(VM::Value value, IR::Temp* temp);
+    void storeValue(VM::Value value, V4IR::Temp* temp);
 
     void enterStandardStackFrame(int locals);
     void leaveStandardStackFrame(int locals);
@@ -477,9 +477,9 @@ public:
     { return 0; }
     static inline int sizeOfArgument(RegisterID)
     { return RegisterSize; }
-    static inline int sizeOfArgument(IR::Temp*)
+    static inline int sizeOfArgument(V4IR::Temp*)
     { return 8; } // Size of value
-    static inline int sizeOfArgument(IR::Expr*)
+    static inline int sizeOfArgument(V4IR::Expr*)
     { return 8; } // Size of value
     static inline int sizeOfArgument(const Pointer&)
     { return sizeof(void*); }
@@ -595,9 +595,9 @@ public:
         ImmRegBinOp inlineImmRegOp;
     };
 
-    static const BinaryOperationInfo binaryOperations[QQmlJS::IR::LastAluOp + 1];
+    static const BinaryOperationInfo binaryOperations[QQmlJS::V4IR::LastAluOp + 1];
 
-    void generateBinOp(IR::AluOp operation, IR::Temp* target, IR::Temp* left, IR::Temp* right);
+    void generateBinOp(V4IR::AluOp operation, V4IR::Temp* target, V4IR::Temp* left, V4IR::Temp* right);
 
     Jump inline_add32(Address addr, RegisterID reg)
     {
@@ -743,10 +743,10 @@ public:
     void link(VM::Function *vmFunc);
 
 private:
-    IR::Function *_function;
+    V4IR::Function *_function;
     VM::Function *_vmFunction;
-    QHash<IR::BasicBlock *, Label> _addrs;
-    QHash<IR::BasicBlock *, QVector<Jump> > _patches;
+    QHash<V4IR::BasicBlock *, Label> _addrs;
+    QHash<V4IR::BasicBlock *, QVector<Jump> > _patches;
     QList<CallToLink> _callsToLink;
 
     struct DataLabelPatch {
@@ -755,67 +755,67 @@ private:
     };
     QList<DataLabelPatch> _dataLabelPatches;
 
-    QHash<IR::BasicBlock *, QVector<DataLabelPtr> > _labelPatches;
+    QHash<V4IR::BasicBlock *, QVector<DataLabelPtr> > _labelPatches;
 };
 
 class Q_V4_EXPORT InstructionSelection:
-        protected IR::InstructionSelection,
+        protected V4IR::InstructionSelection,
         public EvalInstructionSelection
 {
 public:
-    InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module);
+    InstructionSelection(VM::ExecutionEngine *engine, V4IR::Module *module);
     ~InstructionSelection();
 
-    virtual void run(VM::Function *vmFunction, IR::Function *function);
+    virtual void run(VM::Function *vmFunction, V4IR::Function *function);
 
 protected:
-    virtual void callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result);
-    virtual void callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result);
-    virtual void callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result);
-    virtual void callBuiltinTypeofName(const QString &name, IR::Temp *result);
-    virtual void callBuiltinTypeofValue(IR::Temp *value, IR::Temp *result);
-    virtual void callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result);
-    virtual void callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result);
-    virtual void callBuiltinDeleteName(const QString &name, IR::Temp *result);
-    virtual void callBuiltinDeleteValue(IR::Temp *result);
-    virtual void callBuiltinPostDecrementMember(IR::Temp *base, const QString &name, IR::Temp *result);
-    virtual void callBuiltinPostDecrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result);
-    virtual void callBuiltinPostDecrementName(const QString &name, IR::Temp *result);
-    virtual void callBuiltinPostDecrementValue(IR::Temp *value, IR::Temp *result);
-    virtual void callBuiltinPostIncrementMember(IR::Temp *base, const QString &name, IR::Temp *result);
-    virtual void callBuiltinPostIncrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result);
-    virtual void callBuiltinPostIncrementName(const QString &name, IR::Temp *result);
-    virtual void callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result);
-    virtual void callBuiltinThrow(IR::Temp *arg);
+    virtual void callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
+    virtual void callBuiltinTypeofMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
+    virtual void callBuiltinTypeofSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
+    virtual void callBuiltinTypeofName(const QString &name, V4IR::Temp *result);
+    virtual void callBuiltinTypeofValue(V4IR::Temp *value, V4IR::Temp *result);
+    virtual void callBuiltinDeleteMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
+    virtual void callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
+    virtual void callBuiltinDeleteName(const QString &name, V4IR::Temp *result);
+    virtual void callBuiltinDeleteValue(V4IR::Temp *result);
+    virtual void callBuiltinPostDecrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
+    virtual void callBuiltinPostDecrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
+    virtual void callBuiltinPostDecrementName(const QString &name, V4IR::Temp *result);
+    virtual void callBuiltinPostDecrementValue(V4IR::Temp *value, V4IR::Temp *result);
+    virtual void callBuiltinPostIncrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
+    virtual void callBuiltinPostIncrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
+    virtual void callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result);
+    virtual void callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR::Temp *result);
+    virtual void callBuiltinThrow(V4IR::Temp *arg);
     virtual void callBuiltinFinishTry();
-    virtual void callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result);
-    virtual void callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result);
-    virtual void callBuiltinPushWithScope(IR::Temp *arg);
+    virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result);
+    virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result);
+    virtual void callBuiltinPushWithScope(V4IR::Temp *arg);
     virtual void callBuiltinPopScope();
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name);
-    virtual void callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter);
-    virtual void callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value);
-    virtual void callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args);
-    virtual void callProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result);
-    virtual void callSubscript(IR::Temp *base, IR::Temp *index, IR::ExprList *args, IR::Temp *result);
-    virtual void callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);
-    virtual void loadThisObject(IR::Temp *temp);
-    virtual void loadConst(IR::Const *sourceConst, IR::Temp *targetTemp);
-    virtual void loadString(const QString &str, IR::Temp *targetTemp);
-    virtual void loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp);
-    virtual void getActivationProperty(const QString &name, IR::Temp *temp);
-    virtual void setActivationProperty(IR::Temp *source, const QString &targetName);
-    virtual void initClosure(IR::Closure *closure, IR::Temp *target);
-    virtual void getProperty(IR::Temp *base, const QString &name, IR::Temp *target);
-    virtual void setProperty(IR::Temp *source, IR::Temp *targetBase, const QString &targetName);
-    virtual void getElement(IR::Temp *base, IR::Temp *index, IR::Temp *target);
-    virtual void setElement(IR::Temp *source, IR::Temp *targetBase, IR::Temp *targetIndex);
-    virtual void copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp);
-    virtual void unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp);
-    virtual void binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp *rightSource, IR::Temp *target);
-    virtual void inplaceNameOp(IR::AluOp oper, IR::Temp *rightSource, const QString &targetName);
-    virtual void inplaceElementOp(IR::AluOp oper, IR::Temp *source, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp);
-    virtual void inplaceMemberOp(IR::AluOp oper, IR::Temp *source, IR::Temp *targetBase, const QString &targetName);
+    virtual void callBuiltinDefineGetterSetter(V4IR::Temp *object, const QString &name, V4IR::Temp *getter, V4IR::Temp *setter);
+    virtual void callBuiltinDefineProperty(V4IR::Temp *object, const QString &name, V4IR::Temp *value);
+    virtual void callBuiltinDefineArray(V4IR::Temp *result, V4IR::ExprList *args);
+    virtual void callProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
+    virtual void callSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::ExprList *args, V4IR::Temp *result);
+    virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
+    virtual void loadThisObject(V4IR::Temp *temp);
+    virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp);
+    virtual void loadString(const QString &str, V4IR::Temp *targetTemp);
+    virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp);
+    virtual void getActivationProperty(const QString &name, V4IR::Temp *temp);
+    virtual void setActivationProperty(V4IR::Temp *source, const QString &targetName);
+    virtual void initClosure(V4IR::Closure *closure, V4IR::Temp *target);
+    virtual void getProperty(V4IR::Temp *base, const QString &name, V4IR::Temp *target);
+    virtual void setProperty(V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName);
+    virtual void getElement(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *target);
+    virtual void setElement(V4IR::Temp *source, V4IR::Temp *targetBase, V4IR::Temp *targetIndex);
+    virtual void copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
+    virtual void unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
+    virtual void binop(V4IR::AluOp oper, V4IR::Temp *leftSource, V4IR::Temp *rightSource, V4IR::Temp *target);
+    virtual void inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName);
+    virtual void inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBaseTemp, V4IR::Temp *targetIndexTemp);
+    virtual void inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName);
 
     typedef Assembler::Address Address;
     typedef Assembler::Pointer Pointer;
@@ -844,14 +844,14 @@ protected:
     }
 
     VM::String *identifier(const QString &s);
-    virtual void constructActivationProperty(IR::Name *func, IR::ExprList *args, IR::Temp *result);
-    virtual void constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result);
-    virtual void constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result);
+    virtual void constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
+    virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
+    virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
 
-    virtual void visitJump(IR::Jump *);
-    virtual void visitCJump(IR::CJump *);
-    virtual void visitRet(IR::Ret *);
-    virtual void visitTry(IR::Try *);
+    virtual void visitJump(V4IR::Jump *);
+    virtual void visitCJump(V4IR::CJump *);
+    virtual void visitRet(V4IR::Ret *);
+    virtual void visitTry(V4IR::Try *);
 
 private:
     #define isel_stringIfyx(s) #s
@@ -860,28 +860,28 @@ private:
     #define generateFunctionCall(t, function, ...) \
         _as->generateFunctionCallImp(t, isel_stringIfy(function), function, __VA_ARGS__)
 
-    int prepareVariableArguments(IR::ExprList* args);
+    int prepareVariableArguments(V4IR::ExprList* args);
 
     typedef void (*ActivationMethod)(VM::ExecutionContext *, VM::Value *result, VM::String *name, VM::Value *args, int argc);
-    void callRuntimeMethodImp(IR::Temp *result, const char* name, ActivationMethod method, IR::Expr *base, IR::ExprList *args);
+    void callRuntimeMethodImp(V4IR::Temp *result, const char* name, ActivationMethod method, V4IR::Expr *base, V4IR::ExprList *args);
 #define callRuntimeMethod(result, function, ...) \
     callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
 
     uint addLookup(VM::String *name);
 
-    IR::BasicBlock *_block;
-    IR::Function* _function;
+    V4IR::BasicBlock *_block;
+    V4IR::Function* _function;
     VM::Function* _vmFunction;
     QVector<VM::Lookup> _lookups;
     Assembler* _as;
-    QSet<IR::BasicBlock*> _reentryBlocks;
+    QSet<V4IR::BasicBlock*> _reentryBlocks;
 };
 
 class Q_V4_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine, IR::Module *module)
+    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine, V4IR::Module *module)
     { return new InstructionSelection(engine, module); }
 };
 

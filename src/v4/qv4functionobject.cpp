@@ -205,10 +205,10 @@ Value FunctionCtor::construct(Managed *that, ExecutionContext *ctx, Value *args,
     if (!fe)
         ctx->throwSyntaxError(0);
 
-    IR::Module module;
+    V4IR::Module module;
 
     Codegen cg(ctx, f->strictMode);
-    IR::Function *irf = cg(QString(), function, fe, &module);
+    V4IR::Function *irf = cg(QString(), function, fe, &module);
 
     QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(ctx->engine, &module));
     VM::Function *vmf = isel->vmFunction(irf);

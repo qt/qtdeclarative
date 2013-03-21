@@ -436,12 +436,12 @@ Object *ExecutionEngine::newDateObject(const Value &value)
 
 RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
 {
-    bool global = (flags & IR::RegExp::RegExp_Global);
+    bool global = (flags & V4IR::RegExp::RegExp_Global);
     bool ignoreCase = false;
     bool multiline = false;
-    if (flags & IR::RegExp::RegExp_IgnoreCase)
+    if (flags & V4IR::RegExp::RegExp_IgnoreCase)
         ignoreCase = true;
-    if (flags & IR::RegExp::RegExp_Multiline)
+    if (flags & V4IR::RegExp::RegExp_Multiline)
         multiline = true;
 
     return newRegExpObject(RegExp::create(this, pattern, ignoreCase, multiline), global);
