@@ -264,6 +264,11 @@ bool ExecutionContext::deleteProperty(String *name)
     return true;
 }
 
+bool ExecutionContext::needsOwnArguments() const
+{
+    return function && (function->needsActivation || argumentCount < function->formalParameterCount);
+}
+
 void ExecutionContext::destroy(Managed *that)
 {
     ExecutionContext *ctx = static_cast<ExecutionContext *>(that);
@@ -279,7 +284,7 @@ void ExecutionContext::markObjects(Managed *that)
     ctx->thisObject.mark();
     if (ctx->function)
         ctx->function->mark();
-    for (unsigned arg = 0, lastArg = ctx->formalCount(); arg < lastArg; ++arg)
+    for (unsigned arg = 0, lastArg = ctx->argumentCount; arg < lastArg; ++arg)
         ctx->arguments[arg].mark();
     for (unsigned local = 0, lastLocal = ctx->variableCount(); local < lastLocal; ++local)
         ctx->locals[local].mark();
@@ -595,7 +600,7 @@ void ExecutionContext::initCallContext(ExecutionEngine *engine)
 
     uint argc = argumentCount;
     uint valuesToAlloc = function->varCount;
-    bool copyArgs = function->needsActivation || argumentCount < function->formalParameterCount;
+    bool copyArgs = needsOwnArguments();
     if (copyArgs)
         valuesToAlloc += qMax(argc, function->formalParameterCount);
 

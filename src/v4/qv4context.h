@@ -143,6 +143,8 @@ struct ExecutionContext : public Managed
         return Value::undefinedValue();
     }
 
+    bool needsOwnArguments() const;
+
 protected:
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
