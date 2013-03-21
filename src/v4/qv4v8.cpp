@@ -314,14 +314,14 @@ int Message::GetLineNumber() const
 
 Local<StackFrame> StackTrace::GetFrame(uint32_t index) const
 {
-    Q_UNIMPLEMENTED();
-    return Local<StackFrame>();
+    if (index >= (uint)frames.size())
+        return Local<StackFrame>();
+    return frames.at(index);
 }
 
 int StackTrace::GetFrameCount() const
 {
-    Q_UNIMPLEMENTED();
-    return 0;
+    return frames.size();
 }
 
 Local<Array> StackTrace::AsArray()
@@ -332,39 +332,54 @@ Local<Array> StackTrace::AsArray()
 
 Local<StackTrace> StackTrace::CurrentStackTrace(int frame_limit, StackTrace::StackTraceOptions options)
 {
-    Q_UNIMPLEMENTED();
-    return Local<StackTrace>();
+    StackTrace *trace = new StackTrace;
+    VM::ExecutionEngine *engine = currentEngine();
+    VM::ExecutionContext **root = engine->contextStack;
+    VM::ExecutionContext **current = root + engine->contextStackPosition;
+    while (current >= root && frame_limit) {
+        StackFrame *frame = new StackFrame(Value::fromVmValue(VM::Value::fromString(engine->id_null)),
+                                           Value::fromVmValue(VM::Value::fromString((*current)->function ? (*current)->function->name : engine->id_null)),
+                                           0, 0);
+        trace->frames.append(frame);
+        --frame_limit;
+        --current;
+    }
+
+    return Local<StackTrace>::New(Handle<StackTrace>(trace));
 }
 
 
 int StackFrame::GetLineNumber() const
 {
-    Q_UNIMPLEMENTED();
-    return 0;
+    return m_lineNumber;
 }
 
 int StackFrame::GetColumn() const
 {
-    Q_UNIMPLEMENTED();
-    return 0;
+    return m_columnNumber;
 }
 
 Local<String> StackFrame::GetScriptName() const
 {
-    Q_UNIMPLEMENTED();
-    return Local<String>();
+    return Local<String>::New(m_scriptName);
 }
 
 Local<String> StackFrame::GetScriptNameOrSourceURL() const
 {
-    Q_UNIMPLEMENTED();
-    return Local<String>();
+    return Local<String>::New(m_scriptName);
 }
 
 Local<String> StackFrame::GetFunctionName() const
 {
-    Q_UNIMPLEMENTED();
-    return Local<String>();
+    return Local<String>::New(m_functionName);
+}
+
+StackFrame::StackFrame(Handle<String> script, Handle<String> function, int line, int column)
+    : m_lineNumber(line)
+    , m_columnNumber(column)
+{
+    m_scriptName = Persistent<String>::New(script);
+    m_functionName = Persistent<String>::New(function);
 }
 
 

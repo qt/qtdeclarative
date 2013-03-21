@@ -780,7 +780,8 @@ DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Message)
  * snapshot of the execution stack and the information remains valid after
  * execution continues.
  */
-class V8EXPORT StackTrace {
+class V8EXPORT StackTrace : public QSharedData
+{
  public:
   /**
    * Flags that determine what information is placed captured for each
@@ -823,13 +824,18 @@ class V8EXPORT StackTrace {
   static Local<StackTrace> CurrentStackTrace(
       int frame_limit,
       StackTraceOptions options = kOverview);
+
+  private:
+  QVector<Local<StackFrame> > frames;
 };
+
+DEFINE_REFCOUNTED_HANDLE_OPERATIONS(StackTrace)
 
 
 /**
  * A single JavaScript stack frame.
  */
-class V8EXPORT StackFrame {
+class V8EXPORT StackFrame : public QSharedData {
  public:
   /**
    * Returns the number, 1-based, of the line for the associate function call.
@@ -866,8 +872,16 @@ class V8EXPORT StackFrame {
    */
   Local<String> GetFunctionName() const;
 
+private:
+  friend class StackTrace;
+  StackFrame(Handle<String> script, Handle<String> function, int line, int column);
+  int m_lineNumber;
+  int m_columnNumber;
+  Persistent<String> m_scriptName;
+  Persistent<String> m_functionName;
 };
 
+DEFINE_REFCOUNTED_HANDLE_OPERATIONS(StackFrame)
 
 // --- Value ---
 
