@@ -402,7 +402,8 @@ void Assembler::generateBinOp(V4IR::AluOp operation, V4IR::Temp* target, V4IR::T
         binOpFinished.link(this);
 }
 #if OS(LINUX)
-static void printDisassembledOutputWithCalls(const char* output, const QHash<void*, const char*>& functions)
+static void printDisassembledOutputWithCalls(const char* output, const QHash<void*, const char*>& functions,
+                                             const QVector<String*> &identifiers)
 {
     QByteArray processedOutput(output);
     for (QHash<void*, const char*>::ConstIterator it = functions.begin(), end = functions.end();
@@ -410,6 +411,13 @@ static void printDisassembledOutputWithCalls(const char* output, const QHash<voi
         QByteArray ptrString = QByteArray::number(quintptr(it.key()), 16);
         ptrString.prepend("0x");
         processedOutput = processedOutput.replace(ptrString, it.value());
+    }
+    for (QVector<String*>::ConstIterator it = identifiers.begin(), end = identifiers.end();
+         it != end; ++it) {
+        QByteArray ptrString = QByteArray::number(quintptr(*it), 16);
+        ptrString.prepend("0x");
+        QByteArray replacement = "\"" + (*it)->toQString().toUtf8() + "\"";
+        processedOutput = processedOutput.replace(ptrString, replacement);
     }
     fprintf(stderr, "%s\n", processedOutput.constData());
 }
@@ -475,13 +483,19 @@ void Assembler::link(VM::Function *vmFunc)
 #endif
 
         QByteArray name = _function->name->toUtf8();
+        if (name.isEmpty()) {
+            name = QByteArray::number(quintptr(_function), 16);
+            name.prepend("IR::Function(0x");
+            name.append(")");
+        }
         vmFunc->codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
 
         WTF::setDataFile(stderr);
 #if OS(LINUX)
         fclose(disasmStream);
 #if CPU(X86) || CPU(X86_64)
-        printDisassembledOutputWithCalls(disasmOutput, functions);
+        QHash<void*, String*> idents;
+        printDisassembledOutputWithCalls(disasmOutput, functions, _vmFunction->identifiers);
 #endif
         free(disasmOutput);
 #endif
