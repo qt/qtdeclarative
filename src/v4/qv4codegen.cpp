@@ -1966,13 +1966,14 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
         if (index != -1) {
             return _block->TEMP(index, scope);
         }
+        const int argIdx = f->indexOfArgument(&name);
         if (!scope) {
             // ### should be able to do this for outer scopes as well
-            index = indexOfArgument(&name);
-            if (index != -1) {
-                return _block->TEMP(-(index + 1), scope);
+            if (argIdx != -1) {
+                return _block->TEMP(-(argIdx + 1), scope);
             }
-        }
+        } else if (argIdx != -1)
+            break;
         ++scope;
         e = e->parent;
         f = f->outer;
@@ -2597,15 +2598,6 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_mode, mode);
 
     return function;
-}
-
-int Codegen::indexOfArgument(const QStringRef &string) const
-{
-    for (int i = _function->formals.size() - 1; i >= 0; --i) {
-        if (*_function->formals.at(i) == string)
-            return i;
-    }
-    return -1;
 }
 
 bool Codegen::visit(IdentifierPropertyName *ast)

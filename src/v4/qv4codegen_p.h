@@ -283,7 +283,6 @@ protected:
                                  AST::SourceElements *body,
                                  Mode mode = FunctionCode,
                                  const QStringList &inheritedLocals = QStringList());
-    int indexOfArgument(const QStringRef &string) const;
 
     void unwindException(ScopeAndFinally *outest);
 

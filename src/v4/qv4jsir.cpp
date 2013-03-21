@@ -593,6 +593,14 @@ void Function::removeSharedExpressions()
     removeSharedExpressions(this);
 }
 
+int Function::indexOfArgument(const QStringRef &string) const
+{
+    for (int i = formals.size() - 1; i >= 0; --i) {
+        if (*formals.at(i) == string)
+            return i;
+    }
+    return -1;
+}
 unsigned BasicBlock::newTemp()
 {
     return function->tempCount++;

@@ -695,6 +695,8 @@ struct Function {
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 
     void removeSharedExpressions();
+
+    int indexOfArgument(const QStringRef &string) const;
 };
 
 struct BasicBlock {
