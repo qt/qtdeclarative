@@ -665,6 +665,10 @@ Expr *BasicBlock::CALL(Expr *base, ExprList *args)
 { 
     Call *e = function->New<Call>();
     e->init(base, args);
+    int argc = 0;
+    for (ExprList *it = args; it; it = it->next)
+        ++argc;
+    function->maxNumberOfArguments = qMax(function->maxNumberOfArguments, argc);
     return e;
 }
 
