@@ -229,7 +229,8 @@ protected:
             uint strictMode : 1; // used by FunctionObject
             uint type : 5;
             mutable uint subtype : 3;
-            uint unused : 16;
+            uint externalComparison : 1;
+            uint unused : 15;
         };
     };
 

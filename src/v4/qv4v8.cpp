@@ -933,7 +933,7 @@ Local<Array> Object::GetPropertyNames()
     assert(o);
 
     VM::ArrayObject *array = currentEngine()->newArrayObject(currentEngine()->current)->asArrayObject();
-    ObjectIterator it(currentEngine()->current, o, ObjectIterator::WithProtoChain);
+    ObjectIterator it(currentEngine()->current, o, ObjectIterator::WithProtoChain|ObjectIterator::EnumberableOnly);
     while (1) {
         VM::Value v = it.nextPropertyNameAsString();
         if (v.isNull())
@@ -948,8 +948,15 @@ Local<Array> Object::GetOwnPropertyNames()
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
     VM::Value arg = VM::Value::fromObject(o);
-    VM::Value result = ObjectPrototype::method_getOwnPropertyNames(currentEngine()->current, VM::Value::undefinedValue(), &arg, 1);
-    return Local<Array>::New((Value::fromVmValue(result)));
+    ArrayObject *array = currentEngine()->newArrayObject(currentEngine()->current)->asArrayObject();
+    ObjectIterator it(currentEngine()->current, o, ObjectIterator::EnumberableOnly);
+    while (1) {
+        VM::Value v = it.nextPropertyNameAsString();
+        if (v.isNull())
+            break;
+        array->push_back(v);
+    }
+    return Local<Array>::New(Value::fromVmValue(VM::Value::fromObject(array)));
 }
 
 Local<Value> Object::GetPrototype()
@@ -1709,6 +1716,7 @@ Local<Object> ObjectTemplate::NewInstance()
     VM::ExecutionEngine *engine = currentEngine();
     VM::Object *o = new (engine->memoryManager) V4V8Object<VM::Object>(engine, this);
     o->prototype = engine->objectPrototype;
+    o->externalComparison = m_useUserComparison;
 
     return Local<Object>::New(Value::fromVmValue(VM::Value::fromObject(o)));
 }
@@ -1786,7 +1794,7 @@ void ObjectTemplate::SetHasExternalResource(bool value)
 
 void ObjectTemplate::MarkAsUseUserObjectComparison()
 {
-    Q_UNIMPLEMENTED();
+    m_useUserComparison = true;
 }
 
 ObjectTemplate::ObjectTemplate()
@@ -1808,6 +1816,8 @@ ObjectTemplate::ObjectTemplate()
     m_indexedPropertyQuery = 0;
     m_indexedPropertyDeleter = 0;
     m_indexedPropertyEnumerator = 0;
+
+    m_useUserComparison = false;
 }
 
 Handle<Primitive> Undefined()

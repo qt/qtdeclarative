@@ -2118,6 +2118,8 @@ class V8EXPORT ObjectTemplate : public Template {
   IndexedPropertyDeleter m_indexedPropertyDeleter;
   IndexedPropertyEnumerator m_indexedPropertyEnumerator;
   Persistent<Value> m_indexedPropertyData;
+
+  bool m_useUserComparison;
   private:
   ObjectTemplate();
  };

@@ -787,8 +787,8 @@ uint __qmljs_equal(const Value &x, const Value &y, ExecutionContext *ctx)
         case Value::String_Type:
             return x.stringValue()->isEqualTo(y.stringValue());
         case Value::Object_Type:
-            if (x.objectValue()->externalResource && y.objectValue()->externalResource)
-                return ctx->engine->externalResourceComparison(x, y);
+            if (x.objectValue()->externalComparison || y.objectValue()->externalComparison)
+                return x.objectValue()->externalComparison && y.objectValue()->externalComparison && ctx->engine->externalResourceComparison(x, y);
             return x.objectValue() == y.objectValue();
         default: // double
             return x.doubleValue() == y.doubleValue();
@@ -837,7 +837,7 @@ Bool __qmljs_strict_equal(const Value &x, const Value &y, ExecutionContext *ctx)
         return false;
     if (x.isString())
         return __qmljs_string_equal(x.stringValue(), y.stringValue());
-    if (x.isObject() && x.objectValue()->externalResource && y.objectValue()->externalResource)
+    if (x.isObject() && x.objectValue()->externalComparison && y.objectValue()->externalComparison)
         return ctx->engine->externalResourceComparison(x, y);
     return false;
 }
