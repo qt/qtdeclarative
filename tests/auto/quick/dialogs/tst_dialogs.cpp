@@ -82,7 +82,6 @@ void tst_dialogs::fileDialogDefaultModality()
     int visibilityChangedCount = spyVisibilityChanged.count();
     // Can't hide by clicking the main window, because dialog is modal.
     QTest::mouseClick(window, Qt::LeftButton, 0, QPoint(1000, 100));
-#ifdef Q_OS_MAC
     /*
         On the Mac, if you send an event directly to a window, the modal dialog
         doesn't block the event, so the window will process it normally. This
@@ -91,9 +90,11 @@ void tst_dialogs::fileDialogDefaultModality()
         and Qt will not even see the event. But simulating real events in the
         test framework is generally unstable. So there isn't a good way to test
         modality on the mac.
+        This test sometimes fails on other platforms too.  Maybe it's not reliable
+        to try to click the main window in a location which is outside the
+        dialog, without checking or guaranteeing it somehow.
     */
-    QSKIP("Modality test doesn't work on Mac OS");
-#endif
+    QSKIP("Modality test is flaky in general and doesn't work at all on MacOS");
     // So we expect no change in visibility.
     QCOMPARE(spyVisibilityChanged.count(), visibilityChangedCount);
 
