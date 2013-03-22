@@ -313,17 +313,19 @@ public Q_SLOTS:
 
 private Q_SLOTS:
     void q_textChanged();
-    void updateSelectionMarkers();
+    void q_contentsChange(int, int, int);
+    void updateSelection();
     void moveCursorDelegate();
     void createCursor();
     void q_canPasteChanged();
-    void updateDocument();
+    void updateWholeDocument();
     void updateCursor();
     void q_updateAlignment();
     void updateSize();
     void triggerPreprocess();
 
 private:
+    void markDirtyNodesForRange(int start, int end, int charDelta);
     void updateTotalLines();
 
 protected:

@@ -8,7 +8,8 @@ SOURCES += \
     $$PWD/qqmlobjectmodel.cpp \
     $$PWD/qqmltimer.cpp \
     $$PWD/qquickpackage.cpp \
-    $$PWD/qquickworkerscript.cpp
+    $$PWD/qquickworkerscript.cpp \
+    $$PWD/qqmlinstantiator.cpp
 
 HEADERS += \
     $$PWD/qqmlbind_p.h \
@@ -22,5 +23,6 @@ HEADERS += \
     $$PWD/qqmlobjectmodel_p.h \
     $$PWD/qqmltimer_p.h \
     $$PWD/qquickpackage_p.h \
-    $$PWD/qquickworkerscript_p.h
-
+    $$PWD/qquickworkerscript_p.h \
+    $$PWD/qqmlinstantiator_p.h \
+    $$PWD/qqmlinstantiator_p_p.h
