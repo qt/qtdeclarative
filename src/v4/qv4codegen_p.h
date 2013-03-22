@@ -200,9 +200,11 @@ protected:
         void enter(const QString &name, MemberType type, AST::FunctionExpression *function = 0)
         {
             if (! name.isEmpty()) {
-                for (AST::FormalParameterList *it = formals; it; it = it->next)
-                    if (it->name == name)
-                        return;
+                if (type != FunctionDefinition) {
+                    for (AST::FormalParameterList *it = formals; it; it = it->next)
+                        if (it->name == name)
+                            return;
+                }
                 MemberMap::iterator it = members.find(name);
                 if (it == members.end()) {
                     Member m;
