@@ -386,27 +386,32 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
     if (!f)
         return Value::undefinedValue();
 
-    bool strict = f->isStrict || (ctx->strictMode);
+    strictMode = f->isStrict || (ctx->strictMode);
     if (qmlActivation)
-        strict = true;
+        strictMode = true;
 
-    if (strict) {
+    usesArgumentsObject = f->usesArgumentsObject;
+    needsActivation = f->needsActivation();
+
+    if (strictMode) {
         ExecutionContext *k = ctx->engine->newCallContext(this, ctx->thisObject, 0, 0);
-        k->activation = qmlActivation;
-        k->qmlObject = qmlActivation;
+        if (qmlActivation) {
+            k->activation = qmlActivation;
+            k->qmlObject = qmlActivation;
+        }
         ctx = k;
     }
 
     // set the correct strict mode flag on the context
     bool cstrict = ctx->strictMode;
-    ctx->strictMode = strict;
+    ctx->strictMode = strictMode;
 
     Value result = Value::undefinedValue();
     try {
         result = f->code(ctx, f->codeData);
     } catch (Exception &ex) {
         ctx->strictMode = cstrict;
-        if (strict)
+        if (strictMode)
             ex.partiallyUnwindContext(parentContext);
         throw;
     }
