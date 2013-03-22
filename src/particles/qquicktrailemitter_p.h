@@ -44,8 +44,6 @@
 #include "qquickparticleemitter_p.h"
 #include "qquickparticleaffector_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickTrailEmitter : public QQuickParticleEmitter
@@ -164,5 +162,4 @@ private:
 };
 
 QT_END_NAMESPACE
-QT_END_HEADER
 #endif // FOLLOWEMITTER_H

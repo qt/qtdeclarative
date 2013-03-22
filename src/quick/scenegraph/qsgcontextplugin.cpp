@@ -157,7 +157,7 @@ QQuickTextureFactory *QSGContext::createTextureFactoryFromImage(const QImage &im
     specific window manager.
  */
 
-QQuickWindowManager *QSGContext::createWindowManager()
+QSGRenderLoop *QSGContext::createWindowManager()
 {
     QSGAdaptionPluginData *plugin = contextFactory();
     if (plugin->factory)

@@ -159,8 +159,10 @@ void QQuickFolderListModelPrivate::_q_directoryUpdated(const QString &directory,
         data = list;
         q->beginRemoveRows(parent, fromIndex, toIndex);
         q->endRemoveRows();
-        q->beginInsertRows(parent, fromIndex, list.size()-1);
-        q->endInsertRows();
+        if (list.size() > 0) {
+            q->beginInsertRows(parent, fromIndex, list.size()-1);
+            q->endInsertRows();
+        }
         emit q->rowCountChanged();
     } else if (data.size() < list.size()) {
         //qDebug() << "File added. FromIndex: " << fromIndex << " toIndex: " << toIndex << " list size: " << list.size();
@@ -334,10 +336,10 @@ QVariant QQuickFolderListModel::data(const QModelIndex &index, int role) const
             rv = d->data.at(index.row()).size();
             break;
         case FileLastModifiedRole:
-            rv = d->data.at(index.row()).lastModified().date().toString(Qt::ISODate) + " " + d->data.at(index.row()).lastModified().time().toString();
+            rv = d->data.at(index.row()).lastModified();
             break;
         case FileLastReadRole:
-            rv = d->data.at(index.row()).lastRead().date().toString(Qt::ISODate) + " " + d->data.at(index.row()).lastRead().time().toString();
+            rv = d->data.at(index.row()).lastRead();
             break;
         case FileIsDirRole:
             rv = d->data.at(index.row()).isDir();

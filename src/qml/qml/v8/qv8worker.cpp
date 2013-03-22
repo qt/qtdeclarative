@@ -41,8 +41,8 @@
 
 #include "qv8worker_p.h"
 
-#include <private/qquicklistmodel_p.h>
-#include <private/qquicklistmodelworkeragent_p.h>
+#include <private/qqmllistmodel_p.h>
+#include <private/qqmllistmodelworkeragent_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -242,9 +242,9 @@ void QV8Worker::serialize(QByteArray &data, v8::Handle<v8::Value> v, QV8Engine *
     } else if (engine->isQObject(v)) {
         // XXX TODO: Generalize passing objects between the main thread and worker scripts so 
         // that others can trivially plug in their elements.
-        QQuickListModel *lm = qobject_cast<QQuickListModel *>(engine->toQObject(v));
+        QQmlListModel *lm = qobject_cast<QQmlListModel *>(engine->toQObject(v));
         if (lm && lm->agent()) {
-            QQuickListModelWorkerAgent *agent = lm->agent();
+            QQmlListModelWorkerAgent *agent = lm->agent();
             agent->addref();
             push(data, valueheader(WorkerListModel));
             push(data, (void *)agent);
@@ -347,10 +347,10 @@ v8::Handle<v8::Value> QV8Worker::deserialize(const char *&data, QV8Engine *engin
     case WorkerListModel:
     {
         void *ptr = popPtr(data);
-        QQuickListModelWorkerAgent *agent = (QQuickListModelWorkerAgent *)ptr;
+        QQmlListModelWorkerAgent *agent = (QQmlListModelWorkerAgent *)ptr;
         v8::Handle<v8::Value> rv = engine->newQObject(agent);
         if (rv->IsObject()) {
-            QQuickListModelWorkerAgent::VariantRef ref(agent);
+            QQmlListModelWorkerAgent::VariantRef ref(agent);
             QVariant var = qVariantFromValue(ref);
             rv->ToObject()->SetHiddenValue(v8::String::New("qml::ref"), engine->fromVariant(var));
         }

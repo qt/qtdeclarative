@@ -1009,9 +1009,8 @@ void tst_qquickstates::anchorRewindBug()
     view->setSource(testFileUrl("anchorRewindBug.qml"));
 
     view->show();
-    view->requestActivate();
 
-    QVERIFY(QTest::qWaitForWindowActive(view));
+    QVERIFY(QTest::qWaitForWindowExposed(view));
 
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(view->rootObject());
     QVERIFY(rect != 0);

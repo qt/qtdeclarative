@@ -8,6 +8,10 @@ QtObject {
     property QtObject myProperty4
     property MyQmlObject myProperty5
     property MyQmlObject myProperty6
+    property CompositeType myProperty7
+    property CompositeType myProperty8
+    property CompositeType2 myProperty9
+    property CompositeType2 myPropertyA
 
     myProperty: CompositeType {}
     myProperty2: CompositeType2 {}
@@ -15,4 +19,8 @@ QtObject {
     myProperty4: CompositeType4 {}
     myProperty5: CompositeType2 {}
     myProperty6: CompositeType4 {}
+    myProperty7: CompositeType {}
+    myProperty8: CompositeType5 {}
+    myProperty9: CompositeType2 {}
+    myPropertyA: CompositeType6 {}
 }

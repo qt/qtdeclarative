@@ -27,7 +27,7 @@
 
 /*!
     \example quick/scenegraph/openglunderqml
-    \title OpenGL Under QML
+    \title Scene Graph - OpenGL Under QML
     \ingroup qtquickexamples
     \brief Shows how to render OpenGL under a Qt Quick scene.
 

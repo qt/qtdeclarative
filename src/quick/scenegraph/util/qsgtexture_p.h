@@ -112,6 +112,7 @@ protected:
     uint m_dirty_bind_options : 1;
     uint m_owns_texture : 1;
     uint m_mipmaps_generated : 1;
+    uint m_retain_image: 1;
 };
 
 QT_END_NAMESPACE

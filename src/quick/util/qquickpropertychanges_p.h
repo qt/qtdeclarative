@@ -45,8 +45,6 @@
 #include "qquickstatechangescript_p.h"
 #include <private/qqmlcustomparser_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickPropertyChangesPrivate;
@@ -104,7 +102,5 @@ public:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickPropertyChanges)
-
-QT_END_HEADER
 
 #endif // QQUICKPROPERTYCHANGES_H

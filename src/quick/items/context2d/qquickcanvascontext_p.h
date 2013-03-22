@@ -46,8 +46,6 @@
 #include <private/qv8engine_p.h>
 
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickCanvasItem;
@@ -82,7 +80,5 @@ Q_SIGNALS:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif //QQUICKCANVASCONTEXT_P_H

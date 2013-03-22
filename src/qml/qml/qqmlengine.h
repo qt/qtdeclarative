@@ -49,8 +49,6 @@
 #include <QtQml/qqmlerror.h>
 #include <QtQml/qqmldebug.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -144,6 +142,7 @@ public:
     static void setObjectOwnership(QObject *, ObjectOwnership);
     static ObjectOwnership objectOwnership(QObject *);
 protected:
+    QQmlEngine(QQmlEnginePrivate &dd, QObject *p);
     virtual bool event(QEvent *);
 
 Q_SIGNALS:
@@ -156,7 +155,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLENGINE_H

@@ -51,8 +51,7 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickgridview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
-#include <QtQuick/private/qquickvisualitemmodel_p.h>
-#include <QtQml/private/qquicklistmodel_p.h>
+#include <QtQml/private/qqmllistmodel_p.h>
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"
@@ -2435,7 +2434,7 @@ void tst_QQuickGridView::modelChanges()
     QQuickGridView *gridView = window->rootObject()->findChild<QQuickGridView*>("gridView");
     QTRY_VERIFY(gridView);
 
-    QQuickListModel *alternateModel = window->rootObject()->findChild<QQuickListModel*>("alternateModel");
+    QQmlListModel *alternateModel = window->rootObject()->findChild<QQmlListModel*>("alternateModel");
     QTRY_VERIFY(alternateModel);
     QVariant modelVariant = QVariant::fromValue<QObject *>(alternateModel);
     QSignalSpy modelSpy(gridView, SIGNAL(modelChanged()));
@@ -2871,7 +2870,8 @@ void tst_QQuickGridView::enforceRange_rightToLeft()
     ctxt->setContextProperty("testTopToBottom", QVariant(true));
 
     window->setSource(testFileUrl("gridview-enforcerange.qml"));
-    qApp->processEvents();
+    window->show();
+    QTRY_VERIFY(window->isExposed());
     QVERIFY(window->rootObject() != 0);
 
     QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");

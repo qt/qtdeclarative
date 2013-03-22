@@ -44,8 +44,6 @@
 
 #include <private/qquicktransitionmanager_p_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
@@ -210,7 +208,5 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickViewTransitionAttached)
 QML_DECLARE_TYPEINFO(QQuickViewTransitionAttached, QML_HAS_ATTACHED_PROPERTIES)
-
-QT_END_HEADER
 
 #endif // QQUICKITEMVIEWTRANSITION_P_P_H

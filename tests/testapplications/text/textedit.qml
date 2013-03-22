@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.1
 
 Rectangle {
     height: 360; width: 640
@@ -75,6 +75,7 @@ Rectangle {
             wrapMode: { wrapvalue.model.get(wrapvalue.currentIndex).value }
             smooth: { smoothvalue.model.get(smoothvalue.currentIndex).value }
             selectByMouse: { mousevalue.model.get(mousevalue.currentIndex).value }
+            selectByKeyboard: { keyboardvalue.model.get(keyboardvalue.currentIndex).value }
             onLinkActivated: { bordercolor.border.color = "red" }
             Rectangle { id: bordercolor; color: "transparent"; border.color: "green"; anchors.fill: parent }
         }
@@ -226,6 +227,10 @@ Rectangle {
             ControlView {
                 id: mousevalue
                 controlname: "Mouse"
+                model: ListModel { ListElement { name: "Off"; value: false } ListElement { name: "On"; value: true } } }
+            ControlView {
+                id: keyboardvalue
+                controlname: "Keyboard"
                 model: ListModel { ListElement { name: "Off"; value: false } ListElement { name: "On"; value: true } } }
             ControlView {
                 id: halignvalue

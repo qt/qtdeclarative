@@ -44,8 +44,6 @@
 
 #include <QtQuick/qsgmaterial.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 template <typename State>
@@ -214,8 +212,6 @@ Q_INLINE_TEMPLATE void QSGSimpleMaterialShader<State>::updateState(const RenderS
 }
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 
 #endif

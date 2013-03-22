@@ -107,9 +107,6 @@ new TestCase( SECTION, "isFinite( '0xaa' )",    true,               isFinite( "0
 new TestCase( SECTION, "isFinite( '0x0A' )",    true,               isFinite( "0x0A" ) );
 new TestCase( SECTION, "isFinite( '0xAA' )",    true,               isFinite( "0xAA" ) );
 
-new TestCase( SECTION, "isFinite( 077 )",       true,               isFinite( 077 ) );
-new TestCase( SECTION, "isFinite( '077' )",     true,               isFinite( "077" ) );
-
 new TestCase( SECTION, "isFinite( new String('Infinity') )",        false,      isFinite(new String("Infinity")) );
 new TestCase( SECTION, "isFinite( new String('-Infinity') )",       false,      isFinite(new String("-Infinity")) );
 

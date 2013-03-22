@@ -45,8 +45,6 @@
 #include <QtQuick/qquickitem.h>
 #include <QtGui/qcolor.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickPaintedItemPrivate;
@@ -124,7 +122,5 @@ private:
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPaintedItem::PerformanceHints)
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQUICKPAINTEDITEM_P_H

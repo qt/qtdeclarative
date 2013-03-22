@@ -46,11 +46,8 @@
 
 #include <private/qqmlguard_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
-class QQuickVisualModel;
 class QQuickGridViewAttached;
 class QQuickGridViewPrivate;
 class Q_AUTOTEST_EXPORT QQuickGridView : public QQuickItemView
@@ -112,7 +109,7 @@ protected:
     virtual void viewportMoved(Qt::Orientations);
     virtual void keyPressEvent(QKeyEvent *);
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
-    virtual void initItem(int index, QQuickItem *item);
+    virtual void initItem(int index, QObject *item);
 };
 
 class QQuickGridViewAttached : public QQuickItemViewAttached
@@ -144,7 +141,5 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickGridView)
 QML_DECLARE_TYPEINFO(QQuickGridView, QML_HAS_ATTACHED_PROPERTIES)
-
-QT_END_HEADER
 
 #endif // QQUICKGRIDVIEW_P_H

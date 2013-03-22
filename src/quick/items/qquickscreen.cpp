@@ -54,20 +54,29 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickScreenAttached
     \inqmlmodule QtQuick.Window 2
     \ingroup qtquick-visual-utility
-    \brief The Screen attached object provides information about the Screen an Item is displayed on.
+    \brief The Screen attached object provides information about the Screen an Item or Window is displayed on.
 
-    The Screen attached object is only valid inside Item or Item derived types, after component completion.
-    Inside these items it refers to the screen that the item is currently being displayed on.
+    The Screen attached object is valid inside Item or Item derived types,
+    after component completion. Inside these items it refers to the screen that
+    the item is currently being displayed on.
+
+    The attached object is also valid inside Window or Window derived types,
+    after component completion. In that case it refers to the screen where the
+    Window was created. It is generally better to access the Screen from the
+    relevant Item instead, because on a multi-screen desktop computer, the user
+    can drag a Window into a position where it spans across multiple screens.
+    In that case some Items will be on one screen, and others on a different
+    screen.
 
     To use this type, you will need to import the module with the following line:
     \code
     import QtQuick.Window 2.0
     \endcode
+    It is a separate import in order to allow you to have a QML environment
+    without access to window system features.
 
-    Note that the Screen type is not valid at Component.onCompleted, because the Item has not been displayed on
-    a screen by this time.
-
-    Restricting this import will allow you to have a QML environment without access to window system features.
+    Note that the Screen type is not valid at Component.onCompleted, because
+    the Item or Window has not been displayed on a screen by this time.
 */
 
 /*!
@@ -86,13 +95,32 @@ QT_BEGIN_NAMESPACE
     \qmlattachedproperty Qt::ScreenOrientation QtQuick.Window2::Screen::primaryOrientation
     \readonly
 
-    This contains the primary orientation of the screen.
+    This contains the primary orientation of the screen.  If the
+    screen's height is greater than its width, then the orientation is
+    Qt.PortraitOrientation; otherwise it is Qt.LandscapeOrientation.
+
+    If you are designing an application which changes its layout depending on
+    device orientation, you probably want to use primaryOrientation to
+    determine the layout. That is because on a desktop computer, you can expect
+    primaryOrientation to change when the user rotates the screen via the
+    operating system's control panel, even if the computer does not contain an
+    accelerometer. Likewise on most handheld computers which do have
+    accelerometers, the operating system will rotate the whole screen
+    automatically, so again you will see the primaryOrientation change.
 */
 /*!
     \qmlattachedproperty Qt::ScreenOrientation QtQuick.Window2::Screen::orientation
     \readonly
 
-    This contains the current orientation of the screen.
+    This contains the current orientation of the screen, from the accelerometer
+    (if any). On a desktop computer, this value typically does not change.
+
+    If primaryOrientation == orientation, it means that the screen
+    automatically rotates all content which is displayed, depending on how you
+    hold it. But if orientation changes while primaryOrientation does NOT
+    change, then probably you are using a device which does not rotate its own
+    display. In that case you may need to use \l Item.rotation or
+    \l Item.transform to rotate your content.
 */
 /*!
     \qmlattachedmethod int QtQuick.Window2::Screen::angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b)
@@ -112,6 +140,10 @@ QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
 
         if (m_attachee->window()) //It might not be assigned to a window yet
             windowChanged(m_attachee->window());
+    } else {
+        QQuickWindow *window = qobject_cast<QQuickWindow*>(attachee);
+        if (window)
+            windowChanged(window);
     }
 }
 

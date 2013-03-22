@@ -68,15 +68,52 @@ Rectangle {
         anchors.rightMargin: 16
     }
 
-    Button {
+    Item {
         id: button
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.right:image.left
-        text: name
-        subText: description
-        onClicked: exampleItem.exampleUrl = url;
+        implicitHeight: col.height
+        height: implicitHeight
+        width: buttonLabel.width + 20
+
+        MouseArea {
+            id: mouseArea
+            anchors.fill: parent
+            onClicked: exampleItem.exampleUrl = url
+            hoverEnabled: true
+        }
+
+        Column {
+            spacing: 2
+            id: col
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width
+            Text {
+                id: buttonLabel
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                text: name
+                color: "black"
+                font.pixelSize: 22
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                styleColor: "white"
+                style: Text.Raised
+
+            }
+            Text {
+                id: buttonLabel2
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                text: description
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                color: "#666"
+                font.pixelSize: 12
+            }
+        }
     }
 
     Rectangle {

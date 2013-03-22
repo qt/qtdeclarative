@@ -1,0 +1,72 @@
+import QtQuick.tooling 1.1
+
+// This file describes the plugin-supplied types contained in the library.
+// It is used for QML tooling purposes only.
+//
+// This file was auto-generated with the command 'qmlplugindump QtQuick.Dialogs 1.0'.
+
+Module {
+    Component {
+        name: "QQuickAbstractFileDialog"
+        prototype: "QObject"
+        Property { name: "visible"; type: "bool" }
+        Property { name: "modality"; type: "Qt::WindowModality" }
+        Property { name: "title"; type: "string" }
+        Property { name: "selectExisting"; type: "bool" }
+        Property { name: "selectMultiple"; type: "bool" }
+        Property { name: "selectFolder"; type: "bool" }
+        Property { name: "folder"; type: "string" }
+        Property { name: "nameFilters"; type: "QStringList" }
+        Property { name: "selectedNameFilter"; type: "string" }
+        Property { name: "filePath"; type: "string"; isReadonly: true }
+        Property { name: "filePaths"; type: "QStringList"; isReadonly: true }
+        Signal { name: "visibilityChanged" }
+        Signal { name: "filterSelected" }
+        Signal { name: "fileModeChanged" }
+        Signal { name: "accepted" }
+        Signal { name: "rejected" }
+        Method { name: "open" }
+        Method { name: "close" }
+        Method {
+            name: "setVisible"
+            Parameter { name: "v"; type: "bool" }
+        }
+        Method {
+            name: "setModality"
+            Parameter { name: "m"; type: "Qt::WindowModality" }
+        }
+        Method {
+            name: "setTitle"
+            Parameter { name: "t"; type: "string" }
+        }
+        Method {
+            name: "setSelectExisting"
+            Parameter { name: "s"; type: "bool" }
+        }
+        Method {
+            name: "setSelectMultiple"
+            Parameter { name: "s"; type: "bool" }
+        }
+        Method {
+            name: "setSelectFolder"
+            Parameter { name: "s"; type: "bool" }
+        }
+        Method {
+            name: "setFolder"
+            Parameter { name: "f"; type: "string" }
+        }
+        Method {
+            name: "setNameFilters"
+            Parameter { name: "f"; type: "QStringList" }
+        }
+        Method {
+            name: "selectNameFilter"
+            Parameter { name: "f"; type: "string" }
+        }
+    }
+    Component {
+        name: "QQuickQFileDialog"
+        prototype: "QQuickAbstractFileDialog"
+        exports: ["QtQuick.PrivateWidgets/QtFileDialog 1.0"]
+    }
+}

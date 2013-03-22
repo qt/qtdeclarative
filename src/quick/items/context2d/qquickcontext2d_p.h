@@ -62,15 +62,12 @@
 #include <QElapsedTimer>
 #endif
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickContext2DCommandBuffer;
 class QQuickContext2DTexture;
 class QQuickPixmap;
 class QSGTexture;
-class QQuickWindowManager;
 class QSurface;
 class QOpenGLContext;
 
@@ -240,7 +237,6 @@ public:
     v8::Local<v8::Value> m_strokeStyle;
     v8::Handle<v8::Value> m_v8path;
     QV8Engine *m_v8engine;
-    QQuickWindowManager *m_windowManager;
     QSurface *m_surface;
     QOpenGLContext *m_glContext;
     v8::Persistent<v8::Object> m_v8value;
@@ -258,7 +254,5 @@ public:
 
 QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQuickContext2D)
-
-QT_END_HEADER
 
 #endif // QQUICKCONTEXT2D_P_H

@@ -1,3 +1,4 @@
+option(host_build)
 QT       = core qmldevtools-private
 SOURCES += main.cpp
 

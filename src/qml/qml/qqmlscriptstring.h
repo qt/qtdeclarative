@@ -47,8 +47,6 @@
 #include <QtCore/qshareddata.h>
 #include <QtCore/qmetatype.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -85,8 +83,6 @@ private:
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QQmlScriptString)
-
-QT_END_HEADER
 
 #endif // QQMLSCRIPTSTRING_H
 

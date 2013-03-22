@@ -53,8 +53,6 @@
 #include <QtCore/QWaitCondition>
 #include <QtCore/QThread>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickContext2DTile;
@@ -179,8 +177,6 @@ private:
     QPainter m_painter;
     QSGPlainTexture*  m_texture;
 };
-
-QT_END_HEADER
 
 QT_END_NAMESPACE
 

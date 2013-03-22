@@ -53,6 +53,12 @@
 // We mean it.
 //
 
+#include "qqmljslexer_p.h"
+
+QT_QML_BEGIN_NAMESPACE
+
+namespace QQmlJS {
+
 static inline int classify2(const QChar *s, bool qmlMode) {
   if (s[0].unicode() == 'a') {
     if (s[1].unicode() == 's') {
@@ -88,6 +94,13 @@ static inline int classify3(const QChar *s, bool qmlMode) {
       }
     }
   }
+  else if (s[0].unicode() == 'g') {
+    if (s[1].unicode() == 'e') {
+      if (s[2].unicode() == 't') {
+        return Lexer::T_GET;
+      }
+    }
+  }
   else if (s[0].unicode() == 'i') {
     if (s[1].unicode() == 'n') {
       if (s[2].unicode() == 't') {
@@ -99,6 +112,13 @@ static inline int classify3(const QChar *s, bool qmlMode) {
     if (s[1].unicode() == 'e') {
       if (s[2].unicode() == 'w') {
         return Lexer::T_NEW;
+      }
+    }
+  }
+  else if (s[0].unicode() == 's') {
+    if (s[1].unicode() == 'e') {
+      if (s[2].unicode() == 't') {
+        return Lexer::T_SET;
       }
     }
   }
@@ -309,7 +329,7 @@ static inline int classify5(const QChar *s, bool qmlMode) {
       if (s[2].unicode() == 'p') {
         if (s[3].unicode() == 'e') {
           if (s[4].unicode() == 'r') {
-            return qmlMode ? int(Lexer::T_SUPER) : int(Lexer::T_IDENTIFIER);
+            return qmlMode ? int(Lexer::T_SUPER) : int(Lexer::T_RESERVED_WORD);
           }
         }
       }
@@ -856,5 +876,9 @@ int Lexer::classify(const QChar *s, int n, bool qmlMode) {
     default: return Lexer::T_IDENTIFIER;
   } // switch
 }
+
+} // namespace QQmlJS
+
+QT_QML_END_NAMESPACE
 
 #endif // QQMLJSKEYWORDS_P_H

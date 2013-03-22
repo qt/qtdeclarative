@@ -158,7 +158,7 @@ public:
 #endif
     void hideCursor();
     void showCursor();
-
+    void handleFocusEvent(QFocusEvent *event);
 
     struct MaskInputData {
         enum Casemode { NoCaseMode, Upper, Lower };

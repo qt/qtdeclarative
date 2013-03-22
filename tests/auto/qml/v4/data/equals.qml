@@ -44,5 +44,8 @@ QtObject {
     property bool test32: true != zero
     property bool test33: true == 1
     property bool test34: true != 1
+
+    property bool test35: "a\
+b" === "ab"
 }
 

@@ -44,7 +44,6 @@
 
 #include <private/qtqmlglobal_p.h>
 
-QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QUrl;
@@ -76,6 +75,4 @@ public:
 #define QML_MEMORY_SCOPE_STRING(s)      QQmlMemoryScope _qml_memory_scope(s)
 
 QT_END_NAMESPACE
-QT_END_HEADER
-
 #endif // QQMLMEMORYPROFILER_H

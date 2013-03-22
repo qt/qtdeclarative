@@ -40,10 +40,10 @@
 ****************************************************************************/
 
 #include "qquickgridview_p.h"
-#include "qquickvisualitemmodel_p.h"
 #include "qquickflickable_p_p.h"
 #include "qquickitemview_p_p.h"
 
+#include <private/qqmlobjectmodel_p.h>
 #include <private/qquicksmoothedanimation_p_p.h>
 
 #include <QtGui/qevent.h>
@@ -209,7 +209,7 @@ public:
 
     virtual void setPosition(qreal pos);
     virtual void layoutVisibleItems(int fromModelIndex = 0);
-    virtual bool applyInsertionChange(const QQuickChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView);
+    virtual bool applyInsertionChange(const QQmlChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView);
     virtual void translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult);
     virtual bool needsRefillForAddedOrRemovedIndex(int index) const;
 
@@ -2105,13 +2105,16 @@ void QQuickGridView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
     QQuickItemView::geometryChanged(newGeometry, oldGeometry);
 }
 
-void QQuickGridView::initItem(int index, QQuickItem *item)
+void QQuickGridView::initItem(int index, QObject *obj)
 {
-    QQuickItemView::initItem(index, item);
-    QQuickGridViewAttached *attached = static_cast<QQuickGridViewAttached *>(
-            qmlAttachedPropertiesObject<QQuickGridView>(item));
-    if (attached)
-        attached->setView(this);
+    QQuickItemView::initItem(index, obj);
+    QQuickItem *item = qmlobject_cast<QQuickItem*>(obj);
+    if (item) {
+        QQuickGridViewAttached *attached = static_cast<QQuickGridViewAttached *>(
+                qmlAttachedPropertiesObject<QQuickGridView>(item));
+        if (attached)
+            attached->setView(this);
+    }
 }
 
 /*!
@@ -2286,7 +2289,7 @@ void QQuickGridView::moveCurrentIndexRight()
     }
 }
 
-bool QQuickGridViewPrivate::applyInsertionChange(const QQuickChangeSet::Insert &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
+bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
 {
     Q_Q(QQuickGridView);
 

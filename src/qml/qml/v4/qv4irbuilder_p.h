@@ -46,8 +46,6 @@
 
 #include "qv4ir_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QV4IRBuilder : public QQmlJS::AST::Visitor
@@ -139,7 +137,9 @@ protected:
     virtual bool visit(QQmlJS::AST::StatementSourceElement *ast);
 
     // object literals
-    virtual bool visit(QQmlJS::AST::PropertyNameAndValueList *ast);
+    virtual bool visit(QQmlJS::AST::PropertyAssignmentList *ast);
+    virtual bool visit(QQmlJS::AST::PropertyNameAndValue *ast);
+    virtual bool visit(QQmlJS::AST::PropertyGetterSetter *ast);
     virtual bool visit(QQmlJS::AST::IdentifierPropertyName *ast);
     virtual bool visit(QQmlJS::AST::StringLiteralPropertyName *ast);
     virtual bool visit(QQmlJS::AST::NumericLiteralPropertyName *ast);
@@ -235,7 +235,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QV4IRBUILDER_P_H 

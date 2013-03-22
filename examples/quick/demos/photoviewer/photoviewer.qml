@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQml.Models 2.1
 import "PhotoViewerCore"
 
 Rectangle {
@@ -58,7 +59,7 @@ Rectangle {
         ListElement { tag: "Prague" }
     }
 
-    VisualDataModel { id: albumVisualModel; model: photosModel; delegate: AlbumDelegate {} }
+    DelegateModel { id: albumVisualModel; model: photosModel; delegate: AlbumDelegate {} }
 
     GridView {
         id: albumView; width: parent.width; height: parent.height; cellWidth: 210; cellHeight: 220

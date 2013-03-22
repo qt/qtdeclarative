@@ -61,8 +61,6 @@
 #include <QtCore/qbytearray.h>
 #include <QtCore/qxmlstream.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -162,7 +160,5 @@ QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QQmlCustomParserProperty)
 Q_DECLARE_METATYPE(QQmlCustomParserNode)
-
-QT_END_HEADER
 
 #endif

@@ -31,7 +31,7 @@ PRIVATETESTS += \
 !qtHaveModule(xmlpatterns): PRIVATETESTS -= qquickxmllistmodel
 
 QUICKTESTS =  \
-    qquickaccessible \
+#    qquickaccessible \
     qquickanchors \
     qquickanimatedimage \
     qquickanimatedsprite \
@@ -61,6 +61,7 @@ QUICKTESTS =  \
     qquickshadereffect \
     qquickspritesequence \
     qquicktext \
+    qquicktextdocument \
     qquicktextedit \
     qquicktextinput \
     qquickvisualdatamodel \
@@ -68,6 +69,7 @@ QUICKTESTS =  \
     qquickcanvasitem \
     qquickscreen \
     touchmouse \
+    dialogs \
 
 
 SUBDIRS += $$PUBLICTESTS

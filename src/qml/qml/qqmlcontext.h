@@ -48,8 +48,6 @@
 #include <QtCore/qmetatype.h>
 #include <QtCore/qvariant.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -106,7 +104,5 @@ private:
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QList<QObject*>)
-
-QT_END_HEADER
 
 #endif // QQMLCONTEXT_H

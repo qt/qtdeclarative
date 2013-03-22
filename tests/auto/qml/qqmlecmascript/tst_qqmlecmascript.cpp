@@ -266,6 +266,9 @@ private slots:
     void deleteLaterObjectMethodCall();
     void automaticSemicolon();
     void compatibilitySemicolon();
+    void incrDecrSemicolon1();
+    void incrDecrSemicolon2();
+    void incrDecrSemicolon_error1();
     void unaryExpression();
     void switchStatement();
     void withStatement();
@@ -285,6 +288,8 @@ private slots:
     void propertyOverride();
     void concatenatedStringPropertyAccess();
     void jsOwnedObjectsDeletedOnEngineDestroy();
+    void numberParsing();
+    void stringParsing();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -1792,10 +1797,7 @@ void tst_qqmlecmascript::functionErrors()
     object = componentTwo.create();
     QVERIFY(object != 0);
 
-    QString srpname = object->property("srp_name").toString();
-    
-    warning = url + QLatin1String(":16: TypeError: Property 'scarceResource' of object ") + srpname
-                  + QLatin1String(" is not a function");
+    warning = url + QLatin1String(":16: TypeError: Property 'scarceResource' of object [object Object] is not a function");
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData()); // we expect a meaningful warning to be printed.
     QMetaObject::invokeMethod(object, "retrieveScarceResource");
     delete object;
@@ -4111,8 +4113,7 @@ void tst_qqmlecmascript::scarceResources_other()
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // not yet assigned, so should not be valid
     eo = qobject_cast<ScarceResourceObject*>(QQmlProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
-    srp_name = object->property("srp_name").toString();
-    expectedWarning = varComponentTwelve.url().toString() + QLatin1String(":16: TypeError: Property 'scarceResource' of object ") + srp_name + QLatin1String(" is not a function");
+    expectedWarning = varComponentTwelve.url().toString() + QLatin1String(":16: TypeError: Property 'scarceResource' of object [object Object] is not a function");
     QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
     QMetaObject::invokeMethod(object, "retrieveScarceResource");
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // due to exception, assignment will NOT have occurred.
@@ -4184,8 +4185,7 @@ void tst_qqmlecmascript::scarceResources_other()
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // not yet assigned, so should not be valid
     eo = qobject_cast<ScarceResourceObject*>(QQmlProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
-    srp_name = object->property("srp_name").toString();
-    expectedWarning = variantComponentTwelve.url().toString() + QLatin1String(":16: TypeError: Property 'scarceResource' of object ") + srp_name + QLatin1String(" is not a function");
+    expectedWarning = variantComponentTwelve.url().toString() + QLatin1String(":16: TypeError: Property 'scarceResource' of object [object Object] is not a function");
     QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
     QMetaObject::invokeMethod(object, "retrieveScarceResource");
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // due to exception, assignment will NOT have occurred.
@@ -6625,6 +6625,27 @@ void tst_qqmlecmascript::compatibilitySemicolon()
     QVERIFY(object != 0);
 }
 
+void tst_qqmlecmascript::incrDecrSemicolon1()
+{
+    QQmlComponent component(&engine, testFileUrl("incrDecrSemicolon1.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+}
+
+void tst_qqmlecmascript::incrDecrSemicolon2()
+{
+    QQmlComponent component(&engine, testFileUrl("incrDecrSemicolon2.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+}
+
+void tst_qqmlecmascript::incrDecrSemicolon_error1()
+{
+    QQmlComponent component(&engine, testFileUrl("incrDecrSemicolon_error1.qml"));
+    QObject *object = component.create();
+    QVERIFY(object == 0);
+}
+
 void tst_qqmlecmascript::unaryExpression()
 {
     QQmlComponent component(&engine, testFileUrl("unaryExpression.qml"));
@@ -7341,6 +7362,34 @@ void tst_qqmlecmascript::jsOwnedObjectsDeletedOnEngineDestroy()
     QCOMPARE(spy2.count(), 1);
 
     delete object;
+}
+
+void tst_qqmlecmascript::numberParsing()
+{
+    for (int i = 1; i < 8; ++i) {
+        QString file("numberParsing.%1.qml");
+        file = file.arg(i);
+        QQmlComponent component(&engine, testFileUrl(file));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+    }
+    for (int i = 1; i < 3; ++i) {
+        QString file("numberParsing_error.%1.qml");
+        file = file.arg(i);
+        QQmlComponent component(&engine, testFileUrl(file));
+        QVERIFY(!component.errors().isEmpty());
+    }
+}
+
+void tst_qqmlecmascript::stringParsing()
+{
+    for (int i = 1; i < 7; ++i) {
+        QString file("stringParsing_error.%1.qml");
+        file = file.arg(i);
+        QQmlComponent component(&engine, testFileUrl(file));
+        QObject *object = component.create();
+        QVERIFY(object == 0);
+    }
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

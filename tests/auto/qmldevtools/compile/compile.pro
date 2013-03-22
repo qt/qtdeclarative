@@ -1,9 +1,12 @@
-CONFIG += testcase
+option(host_build)
 TARGET = tst_compile
-QT = core qmldevtools-private testlib
+force_bootstrap: \
+    QT = bootstrap-private
+else: \
+    QT = core
+QT += qmldevtools-private
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_compile.cpp
 
-CONFIG += parallel_test
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

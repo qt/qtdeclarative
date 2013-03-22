@@ -133,7 +133,7 @@ static QQuickItem *childAt_helper(QQuickItem *item, int x, int y)
             return 0;
     }
 
-    QScopedPointer<QAccessibleInterface> accessibleInterface(QAccessible::queryAccessibleInterface(item));
+    QAccessibleInterface *accessibleInterface = QAccessible::queryAccessibleInterface(item);
     // this item has no Accessible attached property
     if (!accessibleInterface)
         return 0;

@@ -106,7 +106,7 @@ during the updatePaintNode() call. The rule of thumb is to only
 use classes with the "QSG" prefix inside the
 QQuickItem::updatePaintNode() function.
 
-For more details, see the \l {Custom Geometry Example}.
+For more details, see the \l {Scene Graph - Custom Geometry}.
 
 \section3 Preprocessing
 
@@ -140,7 +140,7 @@ type.
 Below is a complete list of material classes:
 \annotatedlist{qtquick-scenegraph-materials}
 
-For more details, see the \l {Simple Material Example}
+For more details, see the \l {Scene Graph - Simple Material}
 
 
 \section2 Convenience Nodes
@@ -280,21 +280,19 @@ needed to perform the rendering. The downside is that Qt Quick decides
 when to call the signals and this is the only time the OpenGL
 application is allowed to draw. 
 
-The \l {OpenGL Under QML} example gives an example on how to use use
-these signals.
-
+The \l {Scene Graph - OpenGL Under QML} example gives an example on
+how to use use these signals.
 
 The other alternative is to create a FramebufferObject, render into it
 and use the result as a textured node in the scene graph, for instance
-using a QSGSimpleTextureNode. A simple way of doing the same is to use
-a QQuickPaintedItem with QQuickPaintedItem::FramebufferObject as
-render target and by calling QPainter::beginNativePainting() before
-the OpenGL rendering and QPainter::endNativePainting() after. When
-OpenGL content is integrated with a texture and FramebufferObject, the
-application has more control over when the content is rendered. For
-instance, the application can create a second QOpenGLContext on the
-GUI thread which shares memory with the scene graph's OpenGL context
-and drive the rendering manually.
+using a QSGSimpleTextureNode. The \l {Scene Graph - Rendering FBOs}
+and \l {Scene Graph - Rendering FBOs in a thread} examples show how
+this can be done in an optimal manner.
+
+A simple way of doing the same is to use a QQuickPaintedItem with
+QQuickPaintedItem::FramebufferObject as render target and by calling
+QPainter::beginNativePainting() before the OpenGL rendering and
+QPainter::endNativePainting() after.
 
 \warning When mixing OpenGL content with scene graph rendering, it is
 important the application does not leave the OpenGL context in a state

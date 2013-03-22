@@ -137,8 +137,14 @@ public:
     virtual bool visit(Elision *) { return true; }
     virtual void endVisit(Elision *) {}
 
-    virtual bool visit(PropertyNameAndValueList *) { return true; }
-    virtual void endVisit(PropertyNameAndValueList *) {}
+    virtual bool visit(PropertyAssignmentList *) { return true; }
+    virtual void endVisit(PropertyAssignmentList *) {}
+
+    virtual bool visit(PropertyNameAndValue *) { return true; }
+    virtual void endVisit(PropertyNameAndValue *) {}
+
+    virtual bool visit(PropertyGetterSetter *) { return true; }
+    virtual void endVisit(PropertyGetterSetter *) {}
 
     virtual bool visit(NestedExpression *) { return true; }
     virtual void endVisit(NestedExpression *) {}

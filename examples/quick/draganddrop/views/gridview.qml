@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQml.Models 2.1
 
 GridView {
     id: root
@@ -50,7 +51,7 @@ GridView {
     }
 
 //! [0]
-    model: VisualDataModel {
+    model: DelegateModel {
 //! [0]
         id: visualModel
         model: ListModel {
@@ -84,7 +85,7 @@ GridView {
         delegate: MouseArea {
             id: delegateRoot
 
-            property int visualIndex: VisualDataModel.itemsIndex
+            property int visualIndex: DelegateModel.itemsIndex
 
             width: 80; height: 80
             drag.target: icon

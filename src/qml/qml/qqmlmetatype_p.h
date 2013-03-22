@@ -84,6 +84,8 @@ public:
     static QQmlType *qmlType(const QMetaObject *);
     static QQmlType *qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, int version_major, int version_minor);
     static QQmlType *qmlType(int);
+    static QQmlType *qmlType(const QUrl &url);
+    static QQmlType *qmlTypeFromIndex(int);
 
     static QMetaProperty defaultProperty(const QMetaObject *);
     static QMetaProperty defaultProperty(QObject *);
@@ -164,6 +166,7 @@ public:
 
     bool isSingleton() const;
     bool isInterface() const;
+    bool isComposite() const;
     int typeId() const;
     int qListTypeId() const;
 
@@ -206,6 +209,7 @@ public:
         QHash<QQmlEngine *, QObject *> qobjectApis;
     };
     SingletonInstanceInfo *singletonInstanceInfo() const;
+    QUrl sourceUrl() const;
 
     int enumValue(const QHashedStringRef &, bool *ok) const;
     int enumValue(const QHashedCStringRef &, bool *ok) const;
@@ -217,17 +221,20 @@ private:
 
     enum RegistrationType {
         CppType = 0,
-        SingletonType = 1
-        // In the future, we should register all types via QQmlType, including Composite types.
+        SingletonType = 1,
+        InterfaceType = 2,
+        CompositeType = 3
     };
     friend QString registrationTypeString(RegistrationType);
     friend bool checkRegistration(RegistrationType, QQmlMetaTypeData *, const char *, const QString &);
     friend int registerType(const QQmlPrivate::RegisterType &);
     friend int registerSingletonType(const QQmlPrivate::RegisterSingletonType &);
     friend int registerInterface(const QQmlPrivate::RegisterInterface &);
+    friend int registerCompositeType(const QQmlPrivate::RegisterCompositeType &);
     QQmlType(int, const QQmlPrivate::RegisterInterface &);
     QQmlType(int, const QString &, const QQmlPrivate::RegisterSingletonType &);
     QQmlType(int, const QString &, const QQmlPrivate::RegisterType &);
+    QQmlType(int, const QString &, const QQmlPrivate::RegisterCompositeType &);
     ~QQmlType();
 
     QQmlTypePrivate *d;
@@ -249,8 +256,8 @@ public:
     QList<QQmlType*> singletonTypes(int) const;
 
 private:
-    friend int registerType(const QQmlPrivate::RegisterType &);
-    friend int registerSingletonType(const QQmlPrivate::RegisterSingletonType &);
+    //Used by register functions and creates the QQmlTypeModule for them
+    friend void addTypeToData(QQmlType* type, QQmlMetaTypeData *data);
     friend struct QQmlMetaTypeData;
 
     QQmlTypeModule();

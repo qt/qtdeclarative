@@ -46,8 +46,6 @@
 
 #include <QtGui/qmatrix4x4.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickTranslatePrivate;
@@ -153,7 +151,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickTranslate)
-
-QT_END_HEADER
 
 #endif

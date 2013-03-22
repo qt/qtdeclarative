@@ -50,8 +50,6 @@
 #include <QtCore/qabstractitemmodel.h>
 #include <private/qv8engine_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -206,7 +204,5 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickXmlListModel)
 QML_DECLARE_TYPE(QQuickXmlListModelRole)
-
-QT_END_HEADER
 
 #endif // QQUICKXMLLISTMODEL_H

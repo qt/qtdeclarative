@@ -48,8 +48,6 @@
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qhash.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QSGDepthStencilBufferManager;
@@ -136,7 +134,5 @@ private:
 extern uint qHash(const QSGDepthStencilBuffer::Format &format);
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

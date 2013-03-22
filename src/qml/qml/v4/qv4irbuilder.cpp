@@ -358,7 +358,19 @@ bool QV4IRBuilder::visit(AST::StatementSourceElement *)
 }
 
 // object literals
-bool QV4IRBuilder::visit(AST::PropertyNameAndValueList *)
+bool QV4IRBuilder::visit(AST::PropertyAssignmentList *)
+{
+    Q_ASSERT(!"unreachable");
+    return false;
+}
+
+bool QV4IRBuilder::visit(AST::PropertyNameAndValue *)
+{
+    Q_ASSERT(!"unreachable");
+    return false;
+}
+
+bool QV4IRBuilder::visit(AST::PropertyGetterSetter *)
 {
     Q_ASSERT(!"unreachable");
     return false;

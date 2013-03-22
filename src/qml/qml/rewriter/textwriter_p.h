@@ -47,7 +47,6 @@
 #include <QtCore/QString>
 #include <QtCore/QList>
 
-QT_BEGIN_HEADER
 QT_QML_BEGIN_NAMESPACE
 
 namespace QQmlJS {
@@ -92,6 +91,4 @@ public:
 } // end of namespace QQmlJS
 
 QT_QML_END_NAMESPACE
-QT_END_HEADER
-
 #endif // TEXTWRITER_H

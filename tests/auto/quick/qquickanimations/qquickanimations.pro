@@ -1,4 +1,5 @@
 CONFIG += testcase
+mac:CONFIG+=insignificant_test # QTBUG-29062
 TARGET = tst_qquickanimations
 SOURCES += tst_qquickanimations.cpp
 

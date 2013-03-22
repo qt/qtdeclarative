@@ -380,3 +380,20 @@
    \endcode
 
   */
+
+/*!
+  \fn int qmlRegisterType(const QUrl &url, const char *uri, int versionMajor, int versionMinor, const char *qmlName);
+  \relates QQmlEngine
+
+  This function registers a type in the QML system with the name \a qmlName, in the library imported from \a uri having the
+  version number composed from \a versionMajor and \a versionMinor. The type is defined by the QML file located at \a url. The
+  url must be an absolute URL, i.e. url.isRelative() == false.
+
+  Normally QML files can be loaded as types directly from other QML files, or using a qmldir file. This function allows
+  registration of files to types from a C++ module, such as when the type mapping needs to be procedurally determined at startup.
+
+  #include <QtQml> to use this function.
+
+  Returns non-zero if the registration was sucessful.
+*/
+

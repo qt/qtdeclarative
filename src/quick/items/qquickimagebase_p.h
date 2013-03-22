@@ -45,8 +45,6 @@
 #include "qquickimplicitsizeitem_p.h"
 #include <private/qtquickglobal_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickImageBasePrivate;
@@ -113,7 +111,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQUICKIMAGEBASE_P_H

@@ -55,7 +55,8 @@
 
 #include "qqmljsglobal_p.h"
 #include "qqmljsgrammar_p.h"
-#include <QtCore/QString>
+
+#include <QtCore/qstring.h>
 
 QT_QML_BEGIN_NAMESPACE
 
@@ -121,12 +122,14 @@ public:
     enum Error {
         NoError,
         IllegalCharacter,
+        IllegalHexNumber,
         UnclosedStringLiteral,
         IllegalEscapeSequence,
         IllegalUnicodeEscapeSequence,
         UnclosedComment,
         IllegalExponentIndicator,
-        IllegalIdentifier
+        IllegalIdentifier,
+        IllegalHexadecimalEscapeSequence
     };
 
     enum RegExpBodyPrefix {
@@ -201,6 +204,7 @@ private:
 
     void syncProhibitAutomaticSemicolon();
     QChar decodeUnicodeEscapeCharacter(bool *ok);
+    QChar decodeHexEscapeCharacter(bool *ok);
 
 private:
     Engine *_engine;
@@ -211,6 +215,7 @@ private:
     QStringRef _tokenSpell;
 
     const QChar *_codePtr;
+    const QChar *_endPtr;
     const QChar *_lastLinePtr;
     const QChar *_tokenLinePtr;
     const QChar *_tokenStartPtr;

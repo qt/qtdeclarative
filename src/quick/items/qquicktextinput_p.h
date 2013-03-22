@@ -46,8 +46,6 @@
 #include <QtGui/qtextoption.h>
 #include <QtGui/qvalidator.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickTextInputPrivate;
@@ -334,9 +332,9 @@ protected:
 #endif
     void mouseUngrabEvent();
     bool event(QEvent *e);
+    void focusOutEvent(QFocusEvent *event);
     void focusInEvent(QFocusEvent *event);
     void timerEvent(QTimerEvent *event);
-    virtual void itemChange(ItemChange, const ItemChangeData &);
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data);
 
 public Q_SLOTS:
@@ -414,7 +412,5 @@ QML_DECLARE_TYPE(QQuickIntValidator)
 QML_DECLARE_TYPE(QQuickDoubleValidator)
 QML_DECLARE_TYPE(QRegExpValidator)
 #endif
-
-QT_END_HEADER
 
 #endif // QQUICKTEXTINPUT_P_H

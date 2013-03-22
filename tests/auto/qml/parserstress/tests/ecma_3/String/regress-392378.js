@@ -55,7 +55,7 @@ function test()
  
   expect = ["", undefined, ""] + '';
   actual = "y".split(/(x)?\1y/) + '';
-  reportCompare(expect, actual, summary + ': "y".split(/(x)?\1y/)');
+  reportCompare(expect, actual, summary + ': "y".split(/(x)?\\1y/)');
 
   expect = ["", undefined, ""] + '';
   actual = "y".split(/(x)?y/) + '';

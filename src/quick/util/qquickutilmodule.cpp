@@ -45,7 +45,6 @@
 #include "qquickbehavior_p.h"
 #include "qquicksmoothedanimation_p.h"
 #include "qquickfontloader_p.h"
-#include "qquickpackage_p.h"
 #include "qquickpropertychanges_p.h"
 #include "qquickspringanimation_p.h"
 #include "qquickstategroup_p.h"
@@ -73,7 +72,6 @@ void QQuickUtilModule::defineModule()
     qmlRegisterType<QQuickSmoothedAnimation>("QtQuick",2,0,"SmoothedAnimation");
     qmlRegisterType<QQuickFontLoader>("QtQuick",2,0,"FontLoader");
     qmlRegisterType<QQuickNumberAnimation>("QtQuick",2,0,"NumberAnimation");
-    qmlRegisterType<QQuickPackage>("QtQuick",2,0,"Package");
     qmlRegisterType<QQuickParallelAnimation>("QtQuick",2,0,"ParallelAnimation");
     qmlRegisterType<QQuickPauseAnimation>("QtQuick",2,0,"PauseAnimation");
     qmlRegisterType<QQuickPropertyAction>("QtQuick",2,0,"PropertyAction");

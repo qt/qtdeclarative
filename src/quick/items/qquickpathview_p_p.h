@@ -55,7 +55,6 @@
 
 #include "qquickpathview_p.h"
 #include "qquickitem_p.h"
-#include "qquickvisualdatamodel_p.h"
 
 #include <QtQml/qqml.h>
 #include <QtCore/qdatetime.h>
@@ -63,6 +62,7 @@
 
 #include <private/qquickanimation_p_p.h>
 #include <private/qqmlguard_p.h>
+#include <private/qqmldelegatemodel_p.h>
 #include <private/qquicktimeline_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -152,6 +152,7 @@ public:
     bool dragging : 1;
     bool requestedOnPath : 1;
     bool inRequest : 1;
+    bool delegateValidated : 1;
     QElapsedTimer timer;
     qint64 lastPosTime;
     QPointF lastPos;
@@ -168,7 +169,7 @@ public:
     qreal requestedZ;
     QList<QQuickItem *> items;
     QList<QQuickItem *> itemCache;
-    QQmlGuard<QQuickVisualModel> model;
+    QQmlGuard<QQmlInstanceModel> model;
     QVariant modelVariant;
     enum MovementReason { Other, SetIndex, Mouse };
     MovementReason moveReason;

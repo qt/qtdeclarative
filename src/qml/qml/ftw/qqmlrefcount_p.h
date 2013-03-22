@@ -56,8 +56,6 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qatomic.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -192,7 +190,5 @@ QQmlRefPointer<T> &QQmlRefPointer<T>::take(T *other)
 }
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLREFCOUNT_P_H

@@ -328,6 +328,7 @@ QQuickPixmap::Status QQuickSpriteEngine::status()//Composed status of all Sprite
     null = loading = ready = 0;
     foreach (QQuickSprite* s, m_sprites) {
         switch (s->m_pix.status()) {
+            // ### Maybe add an error message here, because this null shouldn't be reached but when it does, the image fails without an error message.
             case QQuickPixmap::Null : null++; break;
             case QQuickPixmap::Loading : loading++; break;
             case QQuickPixmap::Error : return QQuickPixmap::Error;
@@ -429,7 +430,7 @@ QImage QQuickSpriteEngine::assembledImage()
     }
 
     //maxFrames is max number in a line of the texture
-    QImage image(w, h, QImage::Format_ARGB32);
+    QImage image(w, h, QImage::Format_ARGB32_Premultiplied);
     image.fill(0);
     QPainter p(&image);
     int y = 0;

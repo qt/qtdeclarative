@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef ADAPTATIONINTERFACES_H
-#define ADAPTATIONINTERFACES_H
+#ifndef QSGADAPTATIONLAYER_P_H
+#define QSGADAPTATIONLAYER_P_H
 
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgtexture.h>
@@ -58,8 +58,6 @@
 
 // ### remove
 #include <QtQuick/private/qquicktext_p.h>
-
-QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
@@ -291,7 +289,5 @@ inline bool QSGDistanceFieldGlyphCache::containsGlyph(glyph_t glyph)
 
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

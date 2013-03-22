@@ -44,8 +44,6 @@
 
 #include <qqml.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -58,7 +56,5 @@ public:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQmlTypeNotAvailable)
-
-QT_END_HEADER
 
 #endif // QQMLTYPENOTAVAILABLE_H

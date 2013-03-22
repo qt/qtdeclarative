@@ -50,8 +50,6 @@
 #include "qquickspriteengine_p.h"
 #include <QDebug>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickSprite : public QQuickStochasticState
@@ -316,5 +314,4 @@ private:
 };
 
 QT_END_NAMESPACE
-QT_END_HEADER
 #endif // QQUICKSPRITE_P_H

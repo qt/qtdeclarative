@@ -46,8 +46,6 @@
 #include <private/qquickshadereffect_p.h>
 #include <QSignalMapper>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QSGNode;
@@ -113,7 +111,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif //HEADER_GUARD

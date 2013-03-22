@@ -256,28 +256,6 @@ new TestCase( SECTION,  "parseFloat('          0XD')",        0,         parseFl
 new TestCase( SECTION,  "parseFloat('          0XE')",        0,         parseFloat("          0XE"));
 new TestCase( SECTION,  "parseFloat('          0XF')",        0,         parseFloat("          0XF"));
 
-// A StringNumericLiteral may not use octal notation
-
-new TestCase( SECTION,  "parseFloat('          00')",        0,         parseFloat("          00"));
-new TestCase( SECTION,  "parseFloat('          01')",        1,         parseFloat("          01"));
-new TestCase( SECTION,  "parseFloat('          02')",        2,         parseFloat("          02"));
-new TestCase( SECTION,  "parseFloat('          03')",        3,         parseFloat("          03"));
-new TestCase( SECTION,  "parseFloat('          04')",        4,         parseFloat("          04"));
-new TestCase( SECTION,  "parseFloat('          05')",        5,         parseFloat("          05"));
-new TestCase( SECTION,  "parseFloat('          06')",        6,         parseFloat("          06"));
-new TestCase( SECTION,  "parseFloat('          07')",        7,         parseFloat("          07"));
-new TestCase( SECTION,  "parseFloat('          010')",       10,        parseFloat("          010"));
-new TestCase( SECTION,  "parseFloat('          011')",       11,        parseFloat("          011"));
-
-// A StringNumericLIteral may have any number of leading 0 digits
-
-new TestCase( SECTION,  "parseFloat('          001')",        1,         parseFloat("          001"));
-new TestCase( SECTION,  "parseFloat('          0001')",       1,         parseFloat("          0001"));
-
-// A StringNumericLIteral may have any number of leading 0 digits
-
-new TestCase( SECTION,  "parseFloat(001)",        1,         parseFloat(001));
-new TestCase( SECTION,  "parseFloat(0001)",       1,         parseFloat(0001));
 
 // make sure it'          s reflexive
 new TestCase( SECTION,  "parseFloat( '                    '          +Math.PI+'          ')",      Math.PI,        parseFloat( '                    '          +Math.PI+'          '));

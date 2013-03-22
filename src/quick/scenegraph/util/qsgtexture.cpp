@@ -48,7 +48,7 @@
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlglobal_p.h>
 
-#if defined(Q_OS_LINUX) && !defined(Q_OS_LINUX_ANDROID)
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
 #define CAN_BACKTRACE_EXECINFO
 #endif
 
@@ -64,6 +64,20 @@
 #include <execinfo.h>
 #include <QHash>
 #endif
+
+#ifndef QT_NO_DEBUG
+static bool qsg_leak_check = !qgetenv("QML_LEAK_CHECK").isEmpty();
+#endif
+
+#ifndef QSG_NO_RENDERER_TIMING
+static bool qsg_render_timing = !qgetenv("QML_RENDERER_TIMING").isEmpty();
+static QElapsedTimer qsg_renderer_timer;
+#endif
+
+#ifndef GL_BGRA
+#define GL_BGRA 0x80E1
+#endif
+
 
 QT_BEGIN_NAMESPACE
 
@@ -172,7 +186,7 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     --qt_debug_texture_count;
 
     if (qt_debug_texture_count < 0)
-        qDebug("Material destroyed after qt_debug_print_texture_count() was called.");
+        qDebug("Texture destroyed after qt_debug_print_texture_count() was called.");
 }
 
 #endif // QT_NO_DEBUG
@@ -218,6 +232,8 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     If the texture is used in such a way that atlas is not preferable,
     the function removedFromAtlas() can be used to extract a
     non-atlassed copy.
+
+    \sa {Scene Graph - Rendering FBOs}, {Scene Graph - Rendering FBOs in a thread}
  */
 
 /*!
@@ -259,7 +275,8 @@ QSGTexture::QSGTexture()
     : QObject(*(new QSGTexturePrivate))
 {
 #ifndef QT_NO_DEBUG
-    qt_debug_add_texture(this);
+    if (qsg_leak_check)
+        qt_debug_add_texture(this);
 #endif
 }
 
@@ -269,7 +286,8 @@ QSGTexture::QSGTexture()
 QSGTexture::~QSGTexture()
 {
 #ifndef QT_NO_DEBUG
-    qt_debug_remove_texture(this);
+    if (qsg_leak_check)
+        qt_debug_remove_texture(this);
 #endif
 }
 
@@ -513,6 +531,7 @@ QSGPlainTexture::QSGPlainTexture()
     , m_dirty_bind_options(false)
     , m_owns_texture(true)
     , m_mipmaps_generated(false)
+    , m_retain_image(false)
 {
 }
 
@@ -523,7 +542,6 @@ QSGPlainTexture::~QSGPlainTexture()
         glDeleteTextures(1, &m_texture_id);
 }
 
-#ifdef QT_OPENGL_ES
 void qsg_swizzleBGRAToRGBA(QImage *image)
 {
     const int width = image->width();
@@ -534,7 +552,6 @@ void qsg_swizzleBGRAToRGBA(QImage *image)
             p[x] = ((p[x] << 16) & 0xff0000) | ((p[x] >> 16) & 0xff) | (p[x] & 0xff00ff00);
     }
 }
-#endif
 
 void QSGPlainTexture::setImage(const QImage &image)
 {
@@ -596,20 +613,42 @@ void QSGPlainTexture::bind()
 
     m_dirty_texture = false;
 
+#ifndef QSG_NO_RENDERER_TIMING
+    if (qsg_render_timing)
+        qsg_renderer_timer.start();
+#endif
 
     if (m_image.isNull()) {
-        if (m_texture_id && m_owns_texture)
+        if (m_texture_id && m_owns_texture) {
             glDeleteTextures(1, &m_texture_id);
+#ifndef QSG_NO_RENDERER_TIMING
+            if (qsg_render_timing) {
+                printf("   - texture deleted in %dms (size: %dx%d)\n",
+                       (int) qsg_renderer_timer.elapsed(),
+                       m_texture_size.width(),
+                       m_texture_size.height());
+            }
+#endif
+        }
         m_texture_id = 0;
         m_texture_size = QSize();
         m_has_mipmaps = false;
         m_has_alpha = false;
+
+
+
         return;
     }
 
     if (m_texture_id == 0)
         glGenTextures(1, &m_texture_id);
     glBindTexture(GL_TEXTURE_2D, m_texture_id);
+
+#ifndef QSG_NO_RENDERER_TIMING
+    int bindTime = 0;
+    if (qsg_render_timing)
+        bindTime = qsg_renderer_timer.elapsed();
+#endif
 
     // ### TODO: check for out-of-memory situations...
     int w = m_image.width();
@@ -619,14 +658,46 @@ void QSGPlainTexture::bind()
                  ? m_image
                  : m_image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
+#ifndef QSG_NO_RENDERER_TIMING
+    int convertTime = 0;
+    if (qsg_render_timing)
+        convertTime = qsg_renderer_timer.elapsed();
+#endif
+
     updateBindOptions(m_dirty_bind_options);
 
+    GLenum externalFormat = GL_RGBA;
+    GLenum internalFormat = GL_RGBA;
+
+    const char *extensions = (const char *) glGetString(GL_EXTENSIONS);
+    if (strstr(extensions, "GL_EXT_bgra")) {
+        externalFormat = GL_BGRA;
 #ifdef QT_OPENGL_ES
-        qsg_swizzleBGRAToRGBA(&tmp);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp.constBits());
-#else
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tmp.constBits());
+        internalFormat = GL_BGRA;
 #endif
+    } else if (strstr(extensions, "GL_APPLE_texture_format_BGRA8888")) {
+        externalFormat = GL_BGRA;
+    } else if (strstr(extensions, "GL_EXT_texture_format_BGRA8888")
+               || strstr(extensions, "GL_IMG_texture_format_BGRA8888")) {
+        externalFormat = GL_BGRA;
+        internalFormat = GL_BGRA;
+    } else {
+        qsg_swizzleBGRAToRGBA(&tmp);
+    }
+
+#ifndef QSG_NO_RENDERER_TIMING
+    int swizzleTime = 0;
+    if (qsg_render_timing)
+        swizzleTime = qsg_renderer_timer.elapsed();
+#endif
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
+
+#ifndef QSG_NO_RENDERER_TIMING
+    int uploadTime = 0;
+    if (qsg_render_timing)
+        uploadTime = qsg_renderer_timer.elapsed();
+#endif
+
 
     if (m_has_mipmaps) {
         QOpenGLContext *ctx = QOpenGLContext::currentContext();
@@ -634,10 +705,33 @@ void QSGPlainTexture::bind()
         m_mipmaps_generated = true;
     }
 
+#ifndef QSG_NO_RENDERER_TIMING
+    int mipmapTime = 0;
+    if (qsg_render_timing) {
+        mipmapTime = qsg_renderer_timer.elapsed();
+
+        printf("   - plaintexture(%dx%d) bind=%d, convert=%d, swizzle=%d (%s->%s), upload=%d, mipmap=%d, total=%d\n",
+               m_texture_size.width(), m_texture_size.height(),
+               bindTime,
+               convertTime - bindTime,
+               swizzleTime - convertTime,
+               externalFormat == GL_BGRA ? "BGRA" : "RGBA",
+               internalFormat == GL_BGRA ? "BGRA" : "RGBA",
+               uploadTime - swizzleTime,
+               mipmapTime - uploadTime,
+               (int) qsg_renderer_timer.elapsed());
+
+    }
+
+#endif
+
+
     m_texture_size = QSize(w, h);
     m_texture_rect = QRectF(0, 0, 1, 1);
 
     m_dirty_bind_options = false;
+    if (!m_retain_image)
+        m_image = QImage();
 }
 
 

@@ -55,8 +55,6 @@
 #include "qqmlxmlhttprequest_p.h"
 #include "qqmlscriptstring.h"
 #include "qqmlglobal_p.h"
-#include "qquicklistmodel_p.h"
-#include "qquickworkerscript_p.h"
 #include "qqmlcomponent_p.h"
 #include "qqmlnetworkaccessmanagerfactory.h"
 #include "qqmldirparser_p.h"
@@ -89,9 +87,15 @@
 
 #include <private/qqmllocale_p.h>
 
-#include "qqmlbind_p.h"
-#include "qqmlconnections_p.h"
-#include "qqmltimer_p.h"
+#include <private/qqmlbind_p.h>
+#include <private/qqmlconnections_p.h>
+#include <private/qqmltimer_p.h>
+#include <private/qqmllistmodel_p.h>
+#include <private/qqmlplatform_p.h>
+#include <private/qquickpackage_p.h>
+#include <private/qqmldelegatemodel_p.h>
+#include <private/qqmlobjectmodel_p.h>
+#include <private/qquickworkerscript_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #include <qt_windows.h>
@@ -180,15 +184,20 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
     qmlRegisterType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections");
     qmlRegisterType<QQmlTimer>(uri, versionMajor, versionMinor,"Timer");
     qmlRegisterCustomType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections", new QQmlConnectionsParser);
+    qmlRegisterType<QQmlInstanceModel>();
 }
 
 
 // These QtQuick types' implementation resides in the QtQml module
 void QQmlEnginePrivate::registerQtQuick2Types(const char *uri, int versionMajor, int versionMinor)
 {
-    qmlRegisterType<QQuickListElement>(uri, versionMajor, versionMinor, "ListElement");
-    qmlRegisterCustomType<QQuickListModel>(uri, versionMajor, versionMinor, "ListModel", new QQuickListModelParser);
+    qmlRegisterType<QQmlListElement>(uri, versionMajor, versionMinor, "ListElement"); // Now in QtQml.Models, here for compatibility
+    qmlRegisterCustomType<QQmlListModel>(uri, versionMajor, versionMinor, "ListModel", new QQmlListModelParser); // Now in QtQml.Models, here for compatibility
     qmlRegisterType<QQuickWorkerScript>(uri, versionMajor, versionMinor, "WorkerScript");
+    qmlRegisterType<QQuickPackage>(uri, versionMajor, versionMinor, "Package");
+    qmlRegisterType<QQmlDelegateModel>(uri, versionMajor, versionMinor, "VisualDataModel");
+    qmlRegisterType<QQmlDelegateModelGroup>(uri, versionMajor, versionMinor, "VisualDataGroup");
+    qmlRegisterType<QQmlObjectModel>(uri, versionMajor, versionMinor, "VisualItemModel");
 }
 
 void QQmlEnginePrivate::defineQtQuick2Module()
@@ -359,6 +368,36 @@ The following functions are also on the Qt object.
 */
 
 /*!
+    \qmlproperty object Qt::platform
+    \since QtQml 2.1
+
+    The \c platform object provides info about the underlying platform.
+
+    Its properties are:
+
+    \table
+    \row
+    \li \c platform.os
+    \li
+
+    This read-only property contains the name of the operating system.
+
+    Possible values are:
+
+    \list
+        \li \c "android" - Android
+        \li \c "blackberry" - BlackBerry OS
+        \li \c "ios" - Apple iOS
+        \li \c "linux" - Linux
+        \li \c "mac" - Mac OS X
+        \li \c "unix" - Other Unix-based OS
+        \li \c "windows" - Windows
+        \li \c "wince" - Windows CE
+    \endlist
+    \endtable
+*/
+
+/*!
     \qmlproperty object Qt::application
     \since QtQuick 1.1
 
@@ -398,13 +437,31 @@ The following functions are also on the Qt object.
     \li Qt.RightToLeft - Text and graphics elements should be positioned
                         from right to left.
     \endlist
-
+    \row
+    \li \c application.arguments
+    \li This is a string list of the arguments the executable was invoked with.
+    \row
+    \li \c application.name
+    \li This is the application name set on the QCoreApplication instance. This property can be written
+    to in order to set the application name.
+    \row
+    \li \c application.version
+    \li This is the application version set on the QCoreApplication instance. This property can be written
+    to in order to set the application name.
     \endtable
+
+    The object also has one signal, aboutToQuit(), which is the same as \l QCoreApplication::aboutToQuit().
 
     The following example uses the \c application object to indicate
     whether the application is currently active:
 
     \snippet qml/application.qml document
+
+    Note that when using QML without a QGuiApplication, the following properties will be undefined:
+    \list
+    \li application.active
+    \li application.layoutDirection
+    \endlist
 */
 
 /*!
@@ -751,6 +808,16 @@ QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
 */
 QQmlEngine::QQmlEngine(QObject *parent)
 : QJSEngine(*new QQmlEnginePrivate(this), parent)
+{
+    Q_D(QQmlEngine);
+    d->init();
+}
+
+/*!
+* \internal
+*/
+QQmlEngine::QQmlEngine(QQmlEnginePrivate &dd, QObject *parent)
+: QJSEngine(dd, parent)
 {
     Q_D(QQmlEngine);
     d->init();
@@ -2023,7 +2090,7 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
     }
 }
 
-void QQmlEnginePrivate::registerCompositeType(QQmlCompiledData *data)
+void QQmlEnginePrivate::registerInternalCompositeType(QQmlCompiledData *data)
 {
     QByteArray name = data->rootPropertyCache->className();
 
@@ -2058,7 +2125,7 @@ void QQmlEnginePrivate::registerCompositeType(QQmlCompiledData *data)
     m_compositeTypes.insert(ptr_type, data);
 }
 
-void QQmlEnginePrivate::unregisterCompositeType(QQmlCompiledData *data)
+void QQmlEnginePrivate::unregisterInternalCompositeType(QQmlCompiledData *data)
 {
     int ptr_type = data->metaTypeId;
     int lst_type = data->listMetaTypeId;

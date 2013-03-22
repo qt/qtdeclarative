@@ -40,7 +40,6 @@
 ****************************************************************************/
 
 #include "qqmlbundle_p.h"
-#include <QtCore/QtCore>
 #include <iostream>
 #include <cstdlib>
 

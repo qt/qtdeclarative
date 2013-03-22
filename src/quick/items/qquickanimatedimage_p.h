@@ -46,8 +46,6 @@
 
 #ifndef QT_NO_MOVIE
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QMovie;
@@ -107,8 +105,6 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickAnimatedImage)
-
-QT_END_HEADER
 
 #endif // QT_NO_MOVIE
 

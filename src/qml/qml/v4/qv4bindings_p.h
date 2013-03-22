@@ -59,8 +59,6 @@
 #include "private/qv4instruction_p.h"
 #include "private/qpointervaluepair_p.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 struct QV4Program;
@@ -169,8 +167,6 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QV4BINDINGS_P_H
 

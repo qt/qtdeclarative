@@ -39,13 +39,11 @@
 **
 ****************************************************************************/
 
-#ifndef FLATCOLORMATERIAL_H
-#define FLATCOLORMATERIAL_H
+#ifndef QSGFLATCOLORMATERIAL_H
+#define QSGFLATCOLORMATERIAL_H
 
 #include <QtQuick/qsgmaterial.h>
 #include <QtGui/qcolor.h>
-
-QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
@@ -66,7 +64,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // FLATCOLORMATERIAL_H

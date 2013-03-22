@@ -175,6 +175,8 @@ private:
     };
 
     void ensureFocus(QWindow *w) {
+        if (w->width() <=0 || w->height() <= 0)
+            w->setGeometry(100, 100, 400, 300);
         w->show();
         w->requestActivate();
         QTest::qWaitForWindowActive(w);
@@ -269,10 +271,6 @@ void tst_qquickitem::simpleFocus()
 {
     QQuickWindow window;
     ensureFocus(&window);
-
-#ifdef Q_OS_MAC
-    QSKIP("QTBUG-24094: fails on Mac OS X 10.7");
-#endif
 
     QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
 
@@ -732,7 +730,7 @@ void tst_qquickitem::focusSubItemInNonFocusScope()
     QQuickView *view = new QQuickView;
     view->setSource(testFileUrl("focusSubItemInNonFocusScope.qml"));
     view->show();
-    qApp->processEvents();
+    QTest::qWaitForWindowActive(view);
 
     QQuickItem *dummyItem = view->rootObject()->findChild<QQuickItem *>("dummyItem");
     QVERIFY(dummyItem);

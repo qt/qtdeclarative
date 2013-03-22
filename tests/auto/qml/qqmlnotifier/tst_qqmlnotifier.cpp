@@ -161,7 +161,7 @@ public:
 private slots:
     void initTestCase() Q_DECL_OVERRIDE;
     void cleanupTestCase();
-    void connectNotify();
+    void testConnectNotify();
 
     void removeV4Binding();
     void removeV4Binding2();
@@ -215,7 +215,7 @@ void tst_qqmlnotifier::cleanupTestCase()
     exportedObject = 0;
 }
 
-void tst_qqmlnotifier::connectNotify()
+void tst_qqmlnotifier::testConnectNotify()
 {
     createObjects();
 

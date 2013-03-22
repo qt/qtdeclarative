@@ -23,8 +23,9 @@ PUBLICTESTS += \
     qqmlqt \
     qqmltranslation \
     qqmlxmlhttprequest \
-    qqmlparser \
-    qquickfolderlistmodel
+    qtqmlmodules \
+    qquickfolderlistmodel \
+    qqmlapplicationengine
 
 PRIVATETESTS += \
     animation \
@@ -42,11 +43,12 @@ PRIVATETESTS += \
     qqmlvaluetypes \
     qqmlvaluetypeproviders \
     qqmlbinding \
-    qquickchangeset \
+    qqmlchangeset \
     qqmlconnections \
-    qquicklistcompositor \
-    qquicklistmodel \
-    qquicklistmodelworkerscript \
+    qqmllistcompositor \
+    qqmllistmodel \
+    qqmllistmodelworkerscript \
+    qqmlparser \
     qquickworkerscript \
     qqmlbundle \
     qrcqml \

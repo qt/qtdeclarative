@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQml.Models 2.1
 
 Item {
     id: root
@@ -59,7 +60,7 @@ Item {
 
                 width: 64
                 height: 64
-                enabled: packageRoot.VisualDataModel.inSelected
+                enabled: packageRoot.DelegateModel.inSelected
 
                 drag.target: draggable
 
@@ -83,7 +84,7 @@ Item {
                 }
                 DropArea {
                     anchors.fill: parent
-                    onEntered: selectedItems.move(0, visualModel.items.get(packageRoot.VisualDataModel.itemsIndex), selectedItems.count)
+                    onEntered: selectedItems.move(0, visualModel.items.get(packageRoot.DelegateModel.itemsIndex), selectedItems.count)
                 }
             }
             Item {
@@ -112,7 +113,7 @@ Item {
                 border.width: 2
                 border.color: "#007423"
 
-                state: root.dragging && packageRoot.VisualDataModel.inSelected ? "selected" : "visible"
+                state: root.dragging && packageRoot.DelegateModel.inSelected ? "selected" : "visible"
 
                 Text {
                     anchors.fill: parent
@@ -126,7 +127,7 @@ Item {
                 Rectangle {
                     anchors { right: parent.right; top: parent.top; margins: 3 }
                     width: 12; height: 12
-                    color: packageRoot.VisualDataModel.inSelected ? "black" : "white"
+                    color: packageRoot.DelegateModel.inSelected ? "black" : "white"
                     radius: 6
 
                     border.color: "white"
@@ -134,7 +135,7 @@ Item {
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: packageRoot.VisualDataModel.inSelected = !packageRoot.VisualDataModel.inSelected
+                        onClicked: packageRoot.DelegateModel.inSelected = !packageRoot.DelegateModel.inSelected
                     }
                 }
 
@@ -142,19 +143,19 @@ Item {
                     State {
                         name: "selected"
                         ParentChange { target: content; parent: selectionContainer; x: 3; y: 3 }
-                        PropertyChanges { target: packageRoot; VisualDataModel.inItems: visibleContainer.drag.active }
+                        PropertyChanges { target: packageRoot; DelegateModel.inItems: visibleContainer.drag.active }
                         PropertyChanges { target: gradientStart; color: "#017423" }
                         PropertyChanges { target: gradientStart; color: "#007423" }
                     }, State {
                         name: "visible"
-                        PropertyChanges { target: packageRoot; VisualDataModel.inItems: true }
+                        PropertyChanges { target: packageRoot; DelegateModel.inItems: true }
                         ParentChange { target: content; parent: visibleContainer; x: 3; y: 3 }
                         PropertyChanges { target: gradientStart; color: "#8AC953" }
                         PropertyChanges { target: gradientStart; color: "#8BC953" }
                     }
                 ]
                 transitions: Transition {
-                    PropertyAction { target: packageRoot; properties: "VisualDataModel.inItems" }
+                    PropertyAction { target: packageRoot; properties: "DelegateModel.inItems" }
                     ParentAnimation {
                         target: content
                         NumberAnimation { target: content; properties: "x,y"; duration: 500 }
@@ -165,7 +166,7 @@ Item {
         }
     }
 
-    VisualDataModel {
+    DelegateModel {
         id: visualModel
         model: 35
         delegate: packageDelegate

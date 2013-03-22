@@ -55,8 +55,6 @@
 #include "../../shared/util.h"
 
 
-typedef QSharedPointer<QAccessibleInterface> QAI;
-
 #define EXPECT(cond) \
     do { \
         if (!errorAt && !(cond)) { \
@@ -82,14 +80,11 @@ static int verifyHierarchy(QAccessibleInterface *iface)
         // navigate Ancestor...
         QAccessibleInterface *parent = if2->parent();
         EXPECT(iface->object() == parent->object());
-        delete parent;
 
         // verify children...
         if (!errorAt)
             errorAt = verifyHierarchy(if2);
-        delete if2;
     }
-    delete middleChild;
 
     --treelevel;
     return errorAt;
@@ -149,7 +144,6 @@ void tst_QQuickAccessible::commonTests()
     QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(view);
     QVERIFY(iface);
 
-    delete iface;
     delete view;
 }
 
@@ -274,7 +268,7 @@ void tst_QQuickAccessible::quickAttachedProperties()
 
 void tst_QQuickAccessible::basicPropertiesTest()
 {
-    QAI app = QAI(QAccessible::queryAccessibleInterface(qApp));
+    QAccessibleInterface *app = QAccessible::queryAccessibleInterface(qApp);
     QCOMPARE(app->childCount(), 0);
 
     QQuickView *window = new QQuickView();
@@ -282,19 +276,19 @@ void tst_QQuickAccessible::basicPropertiesTest()
     window->show();
     QCOMPARE(app->childCount(), 1);
 
-    QAI iface = QAI(QAccessible::queryAccessibleInterface(window));
-    QVERIFY(iface.data());
+    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(window);
+    QVERIFY(iface);
     QCOMPARE(iface->childCount(), 1);
 
-    QAI item = QAI(iface->child(0));
-    QVERIFY(item.data());
+    QAccessibleInterface *item = iface->child(0);
+    QVERIFY(item);
     QCOMPARE(item->childCount(), 2);
     QCOMPARE(item->rect().size(), QSize(400, 400));
     QCOMPARE(item->role(), QAccessible::Pane);
-    QCOMPARE(iface->indexOfChild(item.data()), 0);
+    QCOMPARE(iface->indexOfChild(item), 0);
 
-    QAI text = QAI(item->child(0));
-    QVERIFY(text.data());
+    QAccessibleInterface *text = item->child(0);
+    QVERIFY(text);
     QCOMPARE(text->childCount(), 0);
 
     QCOMPARE(text->text(QAccessible::Name), QLatin1String("Hello Accessibility"));
@@ -302,10 +296,10 @@ void tst_QQuickAccessible::basicPropertiesTest()
     QCOMPARE(text->rect().x(), item->rect().x() + 100);
     QCOMPARE(text->rect().y(), item->rect().y() + 20);
     QCOMPARE(text->role(), QAccessible::StaticText);
-    QCOMPARE(item->indexOfChild(text.data()), 0);
+    QCOMPARE(item->indexOfChild(text), 0);
 
-    QAI text2 = QAI(item->child(1));
-    QVERIFY(text2.data());
+    QAccessibleInterface *text2 = item->child(1);
+    QVERIFY(text2);
     QCOMPARE(text2->childCount(), 0);
 
     QCOMPARE(text2->text(QAccessible::Name), QLatin1String("The Hello 2 accessible text"));
@@ -313,22 +307,22 @@ void tst_QQuickAccessible::basicPropertiesTest()
     QCOMPARE(text2->rect().x(), item->rect().x() + 100);
     QCOMPARE(text2->rect().y(), item->rect().y() + 40);
     QCOMPARE(text2->role(), QAccessible::StaticText);
-    QCOMPARE(item->indexOfChild(text2.data()), 1);
+    QCOMPARE(item->indexOfChild(text2), 1);
 
-    QCOMPARE(iface->indexOfChild(text2.data()), -1);
-    QCOMPARE(text2->indexOfChild(item.data()), -1);
+    QCOMPARE(iface->indexOfChild(text2), -1);
+    QCOMPARE(text2->indexOfChild(item), -1);
 
     delete window;
 }
 
-QAI topLevelChildAt(QAccessibleInterface *iface, int x, int y)
+QAccessibleInterface *topLevelChildAt(QAccessibleInterface *iface, int x, int y)
 {
-    QAI child = QAI(iface->childAt(x, y));
+    QAccessibleInterface *child = iface->childAt(x, y);
     if (!child)
-        return QAI();
+        return 0;
 
-    QAI childOfChild;
-    while (childOfChild = QAI(child->childAt(x, y))) {
+    QAccessibleInterface *childOfChild;
+    while (childOfChild = child->childAt(x, y)) {
         child = childOfChild;
     }
     return child;
@@ -340,45 +334,45 @@ void tst_QQuickAccessible::hitTest()
     window->setSource(testFileUrl("hittest.qml"));
     window->show();
 
-    QAI windowIface = QAI(QAccessible::queryAccessibleInterface(window));
-    QVERIFY(windowIface.data());
-    QAI rootItem = QAI(windowIface->child(0));
+    QAccessibleInterface *windowIface = QAccessible::queryAccessibleInterface(window);
+    QVERIFY(windowIface);
+    QAccessibleInterface *rootItem = windowIface->child(0);
     QRect rootRect = rootItem->rect();
 
     // check the root item from app
-    QAI appIface = QAI(QAccessible::queryAccessibleInterface(qApp));
+    QAccessibleInterface *appIface = QAccessible::queryAccessibleInterface(qApp);
     QVERIFY(appIface);
-    QAI itemHit(appIface->childAt(rootRect.x() + 200, rootRect.y() + 50));
+    QAccessibleInterface *itemHit(appIface->childAt(rootRect.x() + 200, rootRect.y() + 50));
     QVERIFY(itemHit);
     QCOMPARE(rootRect, itemHit->rect());
 
     // hit rect1
-    QAI rect1(rootItem->child(0));
+    QAccessibleInterface *rect1(rootItem->child(0));
     QRect rect1Rect = rect1->rect();
-    QAI rootItemIface = QAI(rootItem->childAt(rect1Rect.x() + 10, rect1Rect.y() + 10));
+    QAccessibleInterface *rootItemIface = rootItem->childAt(rect1Rect.x() + 10, rect1Rect.y() + 10);
     QVERIFY(rootItemIface);
     QCOMPARE(rect1Rect, rootItemIface->rect());
     QCOMPARE(rootItemIface->text(QAccessible::Name), QLatin1String("rect1"));
 
     // should also work from top level (app)
-    QAI app(QAccessible::queryAccessibleInterface(qApp));
-    QAI itemHit2(topLevelChildAt(app.data(), rect1Rect.x() + 10, rect1Rect.y() + 10));
+    QAccessibleInterface *app(QAccessible::queryAccessibleInterface(qApp));
+    QAccessibleInterface *itemHit2(topLevelChildAt(app, rect1Rect.x() + 10, rect1Rect.y() + 10));
     QVERIFY(itemHit2);
     QCOMPARE(itemHit2->rect(), rect1Rect);
     QCOMPARE(itemHit2->text(QAccessible::Name), QLatin1String("rect1"));
 
     // hit rect201
-    QAI rect2(rootItem->child(1));
+    QAccessibleInterface *rect2(rootItem->child(1));
     QVERIFY(rect2);
     // FIXME: This is seems broken on mac
     // QCOMPARE(rect2->rect().translated(rootItem->rect().x(), rootItem->rect().y()), QRect(0, 50, 100, 100));
-    QAI rect20(rect2->child(0));
+    QAccessibleInterface *rect20(rect2->child(0));
     QVERIFY(rect20);
-    QAI rect201(rect20->child(1));
+    QAccessibleInterface *rect201(rect20->child(1));
     QVERIFY(rect201);
 
     QRect rect201Rect = rect201->rect();
-    rootItemIface = QAI(windowIface->childAt(rect201Rect.x() + 20, rect201Rect.y() + 20));
+    rootItemIface = windowIface->childAt(rect201Rect.x() + 20, rect201Rect.y() + 20);
     QVERIFY(rootItemIface);
     QCOMPARE(rootItemIface->rect(), rect201Rect);
     QCOMPARE(rootItemIface->text(QAccessible::Name), QLatin1String("rect201"));
@@ -392,29 +386,29 @@ void tst_QQuickAccessible::checkableTest()
     window->setSource(testFileUrl("checkbuttons.qml"));
     window->show();
 
-    QAI iface = QAI(QAccessible::queryAccessibleInterface(window));
-    QVERIFY(iface.data());
-    QAI root = QAI(iface->child(0));
+    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(window);
+    QVERIFY(iface);
+    QAccessibleInterface *root = iface->child(0);
 
-    QAI button1 = QAI(root->child(0));
+    QAccessibleInterface *button1 = root->child(0);
     QCOMPARE(button1->role(), QAccessible::Button);
     QVERIFY(!(button1->state().checked));
     QVERIFY(!(button1->state().checkable));
 
-    QAI button2 = QAI(root->child(1));
+    QAccessibleInterface *button2 = root->child(1);
     QVERIFY(!(button2->state().checked));
     QVERIFY(button2->state().checkable);
 
-    QAI button3 = QAI(root->child(2));
+    QAccessibleInterface *button3 = root->child(2);
     QVERIFY(button3->state().checked);
     QVERIFY(button3->state().checkable);
 
-    QAI checkBox1 = QAI(root->child(3));
+    QAccessibleInterface *checkBox1 = root->child(3);
     QCOMPARE(checkBox1->role(), QAccessible::CheckBox);
     QVERIFY((checkBox1->state().checked));
     QVERIFY(checkBox1->state().checkable);
 
-    QAI checkBox2 = QAI(root->child(4));
+    QAccessibleInterface *checkBox2 = root->child(4);
     QVERIFY(!(checkBox2->state().checked));
     QVERIFY(checkBox2->state().checkable);
 }

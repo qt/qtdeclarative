@@ -47,8 +47,6 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qstring.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -83,7 +81,5 @@ QDebug Q_QML_EXPORT operator<<(QDebug debug, const QQmlError &error);
 Q_DECLARE_TYPEINFO(QQmlError, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLERROR_H

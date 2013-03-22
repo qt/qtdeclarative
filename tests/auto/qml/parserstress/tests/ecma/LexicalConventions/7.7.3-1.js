@@ -85,16 +85,6 @@ new TestCase( SECTION,
 	      0x100000000 );
 
 new TestCase( SECTION,
-	      "077777777777777777",
-	      2251799813685247,
-	      077777777777777777 );
-
-new TestCase( SECTION,
-	      "077777777777777776",
-	      2251799813685246,
-	      077777777777777776 );
-
-new TestCase( SECTION,
 	      "0x1fffffffffffff",
 	      9007199254740991,
 	      0x1fffffffffffff );

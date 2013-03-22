@@ -60,8 +60,6 @@
 
 #include <private/qqmlpropertycache_p.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 #define FOR_EACH_V4_INSTR(F) \
@@ -480,8 +478,6 @@ private:
 }
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QV4INSTRUCTION_P_H
 

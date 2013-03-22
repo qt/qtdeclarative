@@ -45,8 +45,6 @@
 #include <QtQml/qtqmlglobal.h>
 #include <QtCore/qobject.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -64,7 +62,5 @@ public:
 Q_DECLARE_INTERFACE(QQmlPropertyValueSource, QQmlPropertyValueSource_iid)
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLPROPERTYVALUESOURCE_H

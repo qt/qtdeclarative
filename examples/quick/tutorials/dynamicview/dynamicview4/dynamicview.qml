@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQml.Models 2.1
 
 Rectangle {
     id: root
@@ -112,14 +113,14 @@ Rectangle {
 
                 onEntered: {
                     visualModel.items.move(
-                            drag.source.VisualDataModel.itemsIndex,
-                            dragArea.VisualDataModel.itemsIndex)
+                            drag.source.DelegateModel.itemsIndex,
+                            dragArea.DelegateModel.itemsIndex)
                 }
             }
         }
     }
 //![0]
-    VisualDataModel {
+    DelegateModel {
         id: visualModel
 //![4]
         property var lessThan: [

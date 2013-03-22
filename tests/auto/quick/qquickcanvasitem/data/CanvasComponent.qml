@@ -5,6 +5,7 @@ Component {
         id:canvas
         Canvas {
             id:c
+             antialiasing: false;
              width:100;height:100
              onPaint :{} //this line is needed for some tests (make sure onPaint handler always called
              property alias paintCount:spyPaint.count

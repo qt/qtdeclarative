@@ -45,8 +45,6 @@
 #include <QtQml/qtqmlglobal.h>
 #include <QtCore/qmetaobject.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 
@@ -139,7 +137,5 @@ inline uint qHash (const QQmlProperty &key)
 Q_DECLARE_TYPEINFO(QQmlProperty, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLPROPERTY_H

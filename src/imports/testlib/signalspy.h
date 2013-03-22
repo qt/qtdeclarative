@@ -46,8 +46,6 @@
 
 #include <QtQuick/qquickitem.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class SignalSpy : public QQuickItem
@@ -77,7 +75,5 @@ Q_SIGNALS:
 QML_DECLARE_TYPE(SignalSpy)
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

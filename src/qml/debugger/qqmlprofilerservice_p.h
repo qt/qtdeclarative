@@ -64,8 +64,6 @@
 #include <QtCore/qwaitcondition.h>
 
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 struct Q_AUTOTEST_EXPORT QQmlProfilerData
@@ -291,8 +289,6 @@ struct QQmlCompilingProfiler {
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLPROFILERSERVICE_P_H
 

@@ -43,8 +43,6 @@
 #define QQuickCUMULATIVEDIRECTION_P_H
 #include "qquickdirection_p.h"
 #include <QQmlListProperty>
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickCumulativeDirection : public QQuickDirection
@@ -61,7 +59,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQuickCUMULATIVEDIRECTION_P_H

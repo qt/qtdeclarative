@@ -14,6 +14,9 @@ exists("qqml_enable_gcov") {
 
 QMAKE_DOCS = $$PWD/doc/qtquick.qdocconf
 
+ANDROID_LIB_DEPENDENCY_REPLACEMENTS = \
+    "plugins/platforms/android/libqtforandroid.so:plugins/platforms/android/libqtforandroidGL.so"
+
 load(qt_module)
 
 include(util/util.pri)

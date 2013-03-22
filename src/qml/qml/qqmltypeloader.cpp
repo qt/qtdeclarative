@@ -124,6 +124,7 @@ public:
 public slots:
     void finished();
     void downloadProgress(qint64, qint64);
+    void manualFinished(QNetworkReply*);
 
 private:
     QQmlDataLoader *l;
@@ -181,6 +182,14 @@ void QQmlDataLoaderNetworkReplyProxy::downloadProgress(qint64 bytesReceived, qin
     Q_ASSERT(qobject_cast<QNetworkReply *>(sender()));
     QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
     l->networkReplyProgress(reply, bytesReceived, bytesTotal);
+}
+
+// This function is for when you want to shortcut the signals and call directly
+void QQmlDataLoaderNetworkReplyProxy::manualFinished(QNetworkReply *reply)
+{
+    qint64 replySize = reply->size();
+    l->networkReplyProgress(reply, replySize, replySize);
+    l->networkReplyFinished(reply);
 }
 
 
@@ -1008,17 +1017,23 @@ void QQmlDataLoader::loadThread(QQmlDataBlob *blob)
     } else {
 
         QNetworkReply *reply = m_thread->networkAccessManager()->get(QNetworkRequest(blob->m_url));
-        QObject *nrp = m_thread->networkReplyProxy();
-        QObject::connect(reply, SIGNAL(downloadProgress(qint64,qint64)), 
-                         nrp, SLOT(downloadProgress(qint64,qint64)));
-        QObject::connect(reply, SIGNAL(finished()), 
-                         nrp, SLOT(finished()));
+        QQmlDataLoaderNetworkReplyProxy *nrp = m_thread->networkReplyProxy();
+        blob->addref();
         m_networkReplies.insert(reply, blob);
+
+        if (reply->isFinished()) {
+            nrp->manualFinished(reply);
+        } else {
+            QObject::connect(reply, SIGNAL(downloadProgress(qint64,qint64)),
+                             nrp, SLOT(downloadProgress(qint64,qint64)));
+            QObject::connect(reply, SIGNAL(finished()),
+                             nrp, SLOT(finished()));
+        }
+
 #ifdef DATABLOB_DEBUG
         qWarning("QQmlDataBlob: requested %s", qPrintable(blob->url().toString()));
 #endif
 
-        blob->addref();
     }
 }
 
@@ -2135,12 +2150,12 @@ void QQmlTypeData::resolveTypes()
         TypeReference ref;
 
         QString url;
-        int majorVersion;
-        int minorVersion;
+        int majorVersion = -1;
+        int minorVersion = -1;
         QQmlImportNamespace *typeNamespace = 0;
         QList<QQmlError> errors;
 
-        if (!m_imports.resolveType(parserRef->name, &ref.type, &url, &majorVersion, &minorVersion,
+        if (!m_imports.resolveType(parserRef->name, &ref.type, &majorVersion, &minorVersion,
                                    &typeNamespace, &errors) || typeNamespace) {
             // Known to not be a type:
             //  - known to be a namespace (Namespace {})
@@ -2169,13 +2184,12 @@ void QQmlTypeData::resolveTypes()
             return;
         }
 
-        if (ref.type) {
-            ref.majorVersion = majorVersion;
-            ref.minorVersion = minorVersion;
-        } else {
-            ref.typeData = typeLoader()->getType(QUrl(url));
+        if (ref.type->isComposite()) {
+            ref.typeData = typeLoader()->getType(ref.type->sourceUrl());
             addDependency(ref.typeData);
         }
+        ref.majorVersion = majorVersion;
+        ref.minorVersion = minorVersion;
 
         Q_ASSERT(parserRef->firstUse);
         ref.location = parserRef->firstUse->location.start;

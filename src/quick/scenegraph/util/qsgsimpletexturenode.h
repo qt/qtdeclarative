@@ -46,8 +46,6 @@
 #include <QtQuick/qsggeometry.h>
 #include <QtQuick/qsgtexturematerial.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class Q_QUICK_EXPORT QSGSimpleTextureNode : public QSGGeometryNode
@@ -74,7 +72,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QSGSIMPLETEXTURENODE_H

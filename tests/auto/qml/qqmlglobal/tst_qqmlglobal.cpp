@@ -54,7 +54,7 @@ private slots:
     void initTestCase();
 
     void colorProviderWarning();
-    void guiProviderWarning();
+    void noGuiProviderWarning();
 };
 
 void tst_qqmlglobal::initTestCase()
@@ -68,11 +68,9 @@ void tst_qqmlglobal::colorProviderWarning()
     QQml_colorProvider();
 }
 
-void tst_qqmlglobal::guiProviderWarning()
+void tst_qqmlglobal::noGuiProviderWarning()
 {
-    const QLatin1String expected("Warning: QQml_guiProvider: no GUI provider has been set! ");
-    QTest::ignoreMessage(QtWarningMsg, expected.data());
-    QQml_guiProvider();
+    QVERIFY(QQml_guiProvider()); //No GUI provider, so a default non-zero application instance is returned.
 }
 
 QTEST_MAIN(tst_qqmlglobal)

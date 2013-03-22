@@ -47,8 +47,6 @@
 #include <QtCore/QThread>
 #include <QtGui/QImage>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 class QQuickCanvasContext;
@@ -206,7 +204,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickCanvasItem)
-
-QT_END_HEADER
 
 #endif //QQUICKCANVASITEM_P_H
