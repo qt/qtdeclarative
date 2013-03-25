@@ -78,6 +78,7 @@ struct ExecutionContext;
 struct ExecutionEngine;
 class MemoryManager;
 class UnwindHelper;
+class ExecutableAllocator;
 
 struct ObjectPrototype;
 struct StringPrototype;
@@ -105,6 +106,7 @@ typedef bool (*ExternalResourceComparison)(const VM::Value &a, const VM::Value &
 struct Q_V4_EXPORT ExecutionEngine
 {
     MemoryManager *memoryManager;
+    ExecutableAllocator *executableAllocator;
     QScopedPointer<EvalISelFactory> iselFactory;
 
     ExecutionContext **contextStack;

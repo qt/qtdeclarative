@@ -38,28 +38,84 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef MASM_JSGLOBALDATA_H
-#define MASM_JSGLOBALDATA_H
 
-#include "ExecutableAllocator.h"
-#include "WeakRandom.h"
+#ifndef QV4EXECUTABLEALLOCATOR_H
+#define QV4EXECUTABLEALLOCATOR_H
+
+#include "qv4global.h"
+
+#include <QMultiMap>
+#include <QHash>
+#include <QVector>
+
+namespace WTF {
+struct PageAllocation;
+};
+
+QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 namespace VM {
-class ExecutableAllocator;
-}
-}
 
-namespace JSC {
-
-class JSGlobalData {
+class Q_AUTOTEST_EXPORT ExecutableAllocator
+{
+    struct ChunkOfPages;
 public:
-    JSGlobalData(QQmlJS::VM::ExecutableAllocator *realAllocator)
-        : executableAllocator(realAllocator)
-    {}
-    ExecutableAllocator executableAllocator;
+    struct Allocation;
+
+    ~ExecutableAllocator();
+
+    Allocation *allocate(size_t size);
+    void free(Allocation *allocation);
+
+    struct Allocation
+    {
+        Allocation()
+            : addr(0)
+            , size(0)
+            , free(true)
+            , next(0)
+            , prev(0)
+        {}
+
+        void *start() const;
+
+    private:
+        friend class ExecutableAllocator;
+
+        Allocation *split(size_t dividingSize);
+        bool mergeNext(ExecutableAllocator *allocator);
+        bool mergePrevious(ExecutableAllocator *allocator);
+
+        quintptr addr;
+        uint size : 31; // More than 2GB of function code? nah :)
+        uint free : 1;
+        Allocation *next;
+        Allocation *prev;
+    };
+
+    // for debugging / unit-testing
+    int freeAllocationCount() const { return freeAllocations.count(); }
+    int chunkCount() const { return chunks.count(); }
+
+private:
+    struct ChunkOfPages
+    {
+        ~ChunkOfPages();
+
+        WTF::PageAllocation *pages;
+        Allocation *firstAllocation;
+
+        bool contains(Allocation *alloc) const;
+    };
+
+    QMultiMap<size_t, Allocation*> freeAllocations;
+    QMap<quintptr, ChunkOfPages*> chunks;
 };
 
-}
+} // namespace VM
+} // namespace QQmlJS
 
-#endif // MASM_JSGLOBALDATA_H
+QT_END_NAMESPACE
+
+#endif // QV4EXECUTABLEALLOCATOR_H

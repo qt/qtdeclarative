@@ -59,7 +59,7 @@ namespace MASM {
 class Assembler : public JSC::MacroAssembler
 {
 public:
-    Assembler(V4IR::Function* function, VM::Function *vmFunction);
+    Assembler(V4IR::Function* function, VM::Function *vmFunction, VM::ExecutionEngine *engine);
 #if CPU(X86)
 
 #undef VALUE_FITS_IN_REGISTER
@@ -756,6 +756,8 @@ private:
     QList<DataLabelPatch> _dataLabelPatches;
 
     QHash<V4IR::BasicBlock *, QVector<DataLabelPtr> > _labelPatches;
+
+    VM::ExecutionEngine *_engine;
 };
 
 class Q_V4_EXPORT InstructionSelection:

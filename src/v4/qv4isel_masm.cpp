@@ -104,8 +104,8 @@ const int Assembler::calleeSavedRegisterCount = sizeof(calleeSavedRegisters) / s
 
 const Assembler::VoidType Assembler::Void;
 
-Assembler::Assembler(V4IR::Function* function, VM::Function *vmFunction)
-    : _function(function), _vmFunction(vmFunction)
+Assembler::Assembler(V4IR::Function* function, VM::Function *vmFunction, VM::ExecutionEngine *engine)
+    : _function(function), _vmFunction(vmFunction), _engine(engine)
 {
 }
 
@@ -443,7 +443,7 @@ void Assembler::link(VM::Function *vmFunc)
         }
     }
 
-    JSC::JSGlobalData dummy;
+    JSC::JSGlobalData dummy(_engine->executableAllocator);
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
     vmFunc->codeSize = linkBuffer.offsetOf(endOfCode);
 
@@ -528,7 +528,7 @@ void InstructionSelection::run(VM::Function *vmFunction, V4IR::Function *functio
     qSwap(_lookups, lookups);
     qSwap(_reentryBlocks, reentryBlocks);
     Assembler* oldAssembler = _as;
-    _as = new Assembler(_function, _vmFunction);
+    _as = new Assembler(_function, _vmFunction, engine());
 
     int locals = (_function->tempCount - _function->locals.size() + _function->maxNumberOfArguments) + 1;
     locals = (locals + 1) & ~1;

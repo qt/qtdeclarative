@@ -49,7 +49,8 @@ SOURCES += \
     qv4objectiterator.cpp \
     qv4regexp.cpp \
     qv4unwindhelper.cpp \
-    qv4v8.cpp
+    qv4v8.cpp \
+    qv4executableallocator.cpp
 
 HEADERS += \
     qv4global.h \
@@ -93,7 +94,8 @@ HEADERS += \
     qv4unwindhelper_p-arm.h \
     qv4v8.h \
     qcalculatehash_p.h \
-    qv4util.h
+    qv4util.h \
+    qv4executableallocator.h
 
 llvm-libs {
 

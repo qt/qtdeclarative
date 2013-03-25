@@ -60,12 +60,14 @@
 #include <qv4unwindhelper.h>
 #include "qv4isel_masm_p.h"
 #include "debugging.h"
+#include "qv4executableallocator.h"
 
 namespace QQmlJS {
 namespace VM {
 
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : memoryManager(new QQmlJS::VM::MemoryManager)
+    , executableAllocator(new QQmlJS::VM::ExecutableAllocator)
     , contextStack(0)
     , contextStackPosition(0)
     , contextStackSize(0)
@@ -244,6 +246,7 @@ ExecutionEngine::~ExecutionEngine()
     UnwindHelper::deregisterFunctions(functions);
     qDeleteAll(functions);
     delete memoryManager;
+    delete executableAllocator;
 }
 
 void ExecutionEngine::initRootContext()

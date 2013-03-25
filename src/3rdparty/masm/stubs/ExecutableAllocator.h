@@ -45,6 +45,8 @@
 #include <RefCounted.h>
 #include <wtf/PageBlock.h>
 
+#include <qv4executableallocator.h>
+
 #if OS(WINDOWS)
 #include <windows.h>
 #else
@@ -57,27 +59,15 @@ namespace JSC {
 class JSGlobalData;
 
 struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
-    ExecutableMemoryHandle(int size)
-        : m_size(size)
+    ExecutableMemoryHandle(QQmlJS::VM::ExecutableAllocator *allocator, int size)
+        : m_allocator(allocator)
+        , m_size(size)
     {
-        size_t pageSize = WTF::pageSize();
-        m_size = (m_size + pageSize - 1) & ~(pageSize - 1);
-#if OS(WINDOWS)
-        m_data = VirtualAlloc(0, m_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-#else
-#if OS(DARWIN)
-#  define MAP_ANONYMOUS MAP_ANON
-#endif
-        m_data = mmap(0, m_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-#endif
+        m_allocation = allocator->allocate(size);
     }
     ~ExecutableMemoryHandle()
     {
-#if OS(WINDOWS)
-        VirtualFree(m_data, 0, MEM_RELEASE);
-#else
-        munmap(m_data, m_size);
-#endif
+        m_allocator->free(m_allocation);
     }
 
     inline void shrink(size_t) {
@@ -86,17 +76,22 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
 
     inline bool isManaged() const { return true; }
 
-    void* start() { return m_data; }
+    void* start() { return m_allocation->start(); }
     int sizeInBytes() { return m_size; }
 
-    void* m_data;
+    QQmlJS::VM::ExecutableAllocator *m_allocator;
+    QQmlJS::VM::ExecutableAllocator::Allocation *m_allocation;
     int m_size;
 };
 
 struct ExecutableAllocator {
+    ExecutableAllocator(QQmlJS::VM::ExecutableAllocator *alloc)
+        : realAllocator(alloc)
+    {}
+
     PassRefPtr<ExecutableMemoryHandle> allocate(JSGlobalData&, int size, void*, int)
     {
-        return adoptRef(new ExecutableMemoryHandle(size));
+        return adoptRef(new ExecutableMemoryHandle(realAllocator, size));
     }
 
     static void makeWritable(void*, int)
@@ -116,6 +111,8 @@ struct ExecutableAllocator {
         mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode);
 #endif
     }
+
+    QQmlJS::VM::ExecutableAllocator *realAllocator;
 };
 
 }
