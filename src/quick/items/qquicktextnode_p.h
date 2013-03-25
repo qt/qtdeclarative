@@ -118,6 +118,7 @@ private:
     QScopedPointer<QQuickTextNodeEngine> m_engine;
 
     friend class QQuickTextEdit;
+    friend class QQuickTextEditPrivate;
 };
 
 QT_END_NAMESPACE
