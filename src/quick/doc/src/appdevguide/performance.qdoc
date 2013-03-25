@@ -128,14 +128,14 @@ sorts of optimizations.
 \section2 Type-Conversion
 
 One major cost of using JavaScript is that in most cases when a property from a QML
-element is accessed, a JavaScript object with an external resource containing the
+type is accessed, a JavaScript object with an external resource containing the
 underlying C++ data (or a reference to it) is created.  In most cases, this is fairly
 inexpensive, but in others it can be quite expensive.  One example of where it is
 expensive is assigning a C++ QVariantMap Q_PROPERTY to a QML "variant" property.
 Lists can also be expensive, although sequences of specific types (QList of int,
 qreal, bool, QString, and QUrl) should be inexpensive; other list types involve an
-expensive conversion cost (creating a new JavaScript Array, and adding new elements
-one by one, with per-element conversion from C++ type instance to JavaScript value).
+expensive conversion cost (creating a new JavaScript Array, and adding new types
+one by one, with per-type conversion from C++ type instance to JavaScript value).
 
 Converting between some basic property types (such as "string" and "url" properties)
 can also be expensive.  Using the closest matching property type will avoid unnecessary
@@ -156,7 +156,7 @@ possible.
 
 In the following example, we have a block of code which is run often (in this case, it
 is the contents of an explicit loop; but it could be a commonly-evaluated binding expression,
-for example) and in it, we resolve the element with the "rect" id and its "color" property
+for example) and in it, we resolve the object with the "rect" id and its "color" property
 multiple times:
 
 \qml

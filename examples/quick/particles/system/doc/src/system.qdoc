@@ -32,15 +32,15 @@
     \image qml-system-example.png
 
     This is a collection of small QML examples relating to using Affectors in the particle system.
-    Each example is a small QML file emphasizing a particular element or feature.
+    Each example is a small QML file emphasizing a particular type or feature.
 
-    Dynamic comparison compares using the particle system to getting a similar effect with the following code that dynamically instantiates Image elements.
+    Dynamic comparison compares using the particle system to getting a similar effect with the following code that dynamically instantiates Image types.
     \snippet quick/particles/system/content/dynamiccomparison.qml fake
-    Note how the Image elements are not able to be randomly colorized.
+    Note how the Image objects are not able to be randomly colorized.
 
     Start and Stop simply sets the running and paused states of a ParticleSystem. While the system does not perform any simulation when stopped or paused, a restart restarts the simulation from the beginning, while unpausing resumes the simulation from where it was.
 
-    Timed group changes is an example that highlights the ParticleGroup element. While normally referring to groups with a string name is sufficent, additional effects can be
+    Timed group changes is an example that highlights the ParticleGroup type. While normally referring to groups with a string name is sufficent, additional effects can be
     done by setting properties on groups.
     The first group has a variable duration on it, but always transitions to the second group.
     \snippet quick/particles/system/content/timedgroupchanges.qml 0
@@ -53,7 +53,6 @@
     \snippet quick/particles/system/content/dynamicemitters.qml 0
     Note that this effect, a flurry of flying rainbow spears, would be better served with TrailEmitter. It is only done with dynamic emitters in this example to show the concept more simply.
 
-    Multiple Painters shows how to control paint ordering of individual particles. While the paint ordering of particles within one ImagePainter is not strictly defined, ImageParticle elements follow the normal Z-ordering rules for QtQuick items. This example allow you to paint the inside of the particles above the black borders using a pair of ImageParticles each painting different parts of the same logical particle.
+    Multiple Painters shows how to control paint ordering of individual particles. While the paint ordering of particles within one ImagePainter is not strictly defined, ImageParticle objects follow the normal Z-ordering rules for QtQuick items. This example allow you to paint the inside of the particles above the black borders using a pair of ImageParticles each painting different parts of the same logical particle.
 
 */
-

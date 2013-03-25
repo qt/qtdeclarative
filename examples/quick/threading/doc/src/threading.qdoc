@@ -44,6 +44,6 @@
     \snippet quick/threading/workerscript/workerscript.qml 0
     The workerscript then is free to take a really long time to calculate it:
     \snippet quick/threading/workerscript/workerscript.js 0
-    When it's done, the result returns to the main scene via the WorkerScript element:
+    When it's done, the result returns to the main scene via the WorkerScript type:
     \snippet quick/threading/workerscript/workerscript.qml 1
 */

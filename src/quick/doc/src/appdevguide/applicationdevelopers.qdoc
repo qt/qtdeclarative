@@ -83,7 +83,7 @@ QML code is used in applications.
 \section1 Features And Use-Case Solutions
 
 \list
-\li \l{qtquick-usecase-visual.html}{Visual Elements in QML}
+\li \l{qtquick-usecase-visual.html}{Visual types in QML}
 \li \l{qtquick-usecase-userinput.html}{Responding to User Input in QML}
 \li \l{qtquick-usecase-animations.html}{Animations in QML}
 \li \l{qtquick-usecase-text.html}{Displaying Text in QML}
@@ -110,7 +110,7 @@ For in-depth information about the QML language, please see the
 \section2 What is Qt Quick?
 
 Qt Quick is the standard library of types and functionality for QML.  It
-includes visual elements, interactive elements, animations, models and views,
+includes visual types, interactive types, animations, models and views,
 particle effects and shader effects.  A QML application developer can get
 access to all of that functionality with a single import statement.
 

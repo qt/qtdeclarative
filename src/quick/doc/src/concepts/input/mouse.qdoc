@@ -33,11 +33,11 @@
 
 \tableofcontents
 
-\section1 Mouse Elements
+\section1 Mouse Types
 
 \list
-\li \l{MouseArea} Element
-\li \l{MouseEvent} Object
+\li \l{MouseArea} type
+\li \l{MouseEvent} object
 \endlist
 
 \section1 Mouse Event Handling
@@ -49,7 +49,7 @@ accept mouse events within a defined area.
 
 \section1 Defining a Mouse Area
 
-The \l MouseArea element receives events within a defined area. One quick way
+The \l MouseArea type receives events within a defined area. One quick way
 to define this area is to anchor the \c MouseArea to its parent's area using the
 \c anchors.fill property. If the parent is a \l Rectangle (or any \l Item
 component), then the MouseArea will fill the area defined by the parent's
@@ -59,9 +59,9 @@ definable.
 
 \section1 Receiving Events
 
-The MouseArea element provides
+The MouseArea type provides
 \l{qtqml-syntax-signals.html}{signals and handlers} to detect different
-mouse events. The \l MouseArea element documentation describes these
+mouse events. The \l MouseArea type documentation describes these
 gestures in greater detail:
 
 \list
@@ -96,8 +96,8 @@ positioning even when there are no mouse button presses. Setting the
 \c exited, and \c positionChanged signal and their respective signal handlers.
 
 \snippet qml/mousearea/mousearea-snippet.qml enable handlers
-Additionally, to disable the whole mouse area, set the \c MouseArea
-element's \c enabled property to \c false.
+Additionally, to disable the whole mouse area, set the MouseArea
+\c enabled property to \c false.
 
 \section1 MouseEvent Object
 

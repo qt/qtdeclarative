@@ -42,7 +42,7 @@ to be arranged in a regular layout.
 \section1 Positioners
 
 A set of standard positioners are provided in the basic set of Qt Quick
-graphical elements:
+graphical types:
 
 \generatelist{related}
 

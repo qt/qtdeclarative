@@ -33,7 +33,7 @@
     \ingroup qtquickexamples
 
     This is a collection of small QML examples relating to Canvas item. Each example is
-    a small QML file emphasizing a particular element or feature.
+    a small QML file emphasizing a particular type or feature.
 
     Red heart demonstrates using a bezierCurve API to stroke and fill a red heart.
     \snippet quick/canvas/bezierCurve/bezierCurve.qml 0
@@ -56,4 +56,3 @@
     \snippet quick/canvas/tiger/tiger.qml 0
 
 */
-

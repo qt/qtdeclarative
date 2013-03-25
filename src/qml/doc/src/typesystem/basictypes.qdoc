@@ -132,7 +132,7 @@ property is only invoked when the property is reassigned to a different object v
     The \c int type refers to a whole number, e.g. 0, 10, or -20.
 
     The possible \c int values range from around -2000000000 to around 2000000000,
-    although most elements will only accept a reduced range (which they
+    although most types will only accept a reduced range (which they
     mention in their documentation).
 
     Example:
@@ -673,4 +673,3 @@ property is only invoked when the property is reassigned to a different object v
 
     \sa {QML Basic Types}
 */
-

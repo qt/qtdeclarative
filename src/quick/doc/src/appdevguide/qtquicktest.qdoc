@@ -36,7 +36,7 @@
 
     QtQuickTest is a unit test framework for QML applications.
     Test cases are written as JavaScript functions within a TestCase
-    element:
+    type:
 
     \code
     import QtQuick 2.0
@@ -57,7 +57,7 @@
 
     Functions whose names start with \c{test_} are treated as test cases
     to be executed.  See the documentation for the \l TestCase and
-    \l SignalSpy elements for more information on writing test cases.
+    \l SignalSpy types for more information on writing test cases.
 
     \section1 Running tests
 

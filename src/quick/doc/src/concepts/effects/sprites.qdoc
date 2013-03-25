@@ -79,7 +79,7 @@ immediately.
 
 \section2 Input Format
 
-The file formats accepted by the sprite engine is the same as the file formats accepted by other QML elements,
+The file formats accepted by the sprite engine is the same as the file formats accepted by other QML types,
 such as \l Image. In order to animate the image however, the sprite engine requires the image file to contain
 all of the frames of the animation. They should be arranged in a contiguous line, which may wrap from the right
 edge of the file to a lower row starting from the left edge of the file (and which is placed directly below the
@@ -156,24 +156,24 @@ http://www.imagemagick.org/script/montage.php
 
 \section2 QML Types Using the Sprite Engine
 
-Sprites for the sprite engine can be defined using the \l Sprite element. This element includes the input parameters
+Sprites for the sprite engine can be defined using the \l Sprite type. This type includes the input parameters
 as well as the length of the animation and weighted transitions to other animations. It is purely a data class, and
 does not render anything.
 
-\l SpriteSequence is an element which uses a sprite engine to draw the sprites defined in it. It is a single and
-self-contained sprite engine, and does not interact with other sprite engines. \l Sprite elements can be shared between
-sprite engine using elements, but this is not done automatically. So if you have defined a sprite in one \l SpriteSequence
-you will need to redefine it (or reference the same \l Sprite element) in the sprites property of another \l SpriteSequence
+\l SpriteSequence is a type which uses a sprite engine to draw the sprites defined in it. It is a single and
+self-contained sprite engine, and does not interact with other sprite engines. \l Sprite types can be shared between
+sprite engine using types, but this is not done automatically. So if you have defined a sprite in one \l SpriteSequence
+you will need to redefine it (or reference the same \l Sprite type) in the sprites property of another \l SpriteSequence
 in order to transition to that animation.
 
-Additionally, \l ImageParticle can use \l Sprite elements to define sprites for each particle. This is again a single
-sprite engine per element. This works similarly to SpriteSequence, but it also has the parametrized variability provided
-by the \l ImageParticle element.
+Additionally, \l ImageParticle can use \l Sprite types to define sprites for each particle. This is again a single
+sprite engine per type. This works similarly to SpriteSequence, but it also has the parametrized variability provided
+by the \l ImageParticle type.
 
 \section1 AnimatedSprite
 
-For use-cases which do not need to transition between animations, consider the \l AnimatedSprite element.
-This element displays sprite animations with the same input format, but only one at a time. It also provides more fine-grained
+For use-cases which do not need to transition between animations, consider the \l AnimatedSprite type.
+This type displays sprite animations with the same input format, but only one at a time. It also provides more fine-grained
 manual control, as there is no sprite engine managing the timing and transitions behind the scenes.
 
 */

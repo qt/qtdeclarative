@@ -31,18 +31,17 @@
 
 QtQuick provides the ability to animate properties. Animating properties allows property values to move through
 intermediate values instead of immediately changing to the target value. To animate the position of an item, you can
-animate the properties that controle the item's position, x and y for example, so that the item's position 
+animate the properties that controle the item's position, x and y for example, so that the item's position
 changes each frame on the way to the target position.
 
 \section1 Fluid UIs
 
-QML was designed to facilitate the creation of fluid UIs. These are user interfaces where the UI elements animate when
-they move instead of elements appearing, disappearing, or jumping. Qt Quick provides two simple ways to have UI
-elements move with animation instead of instantly appearing at their new location.
+QML was designed to facilitate the creation of fluid UIs. These are user interfaces where the UI components animate instead of appearing, disappearing, or jumping abruptly. Qt Quick provides two simple ways to have UI
+components move with animation instead of instantly appearing at their new location.
 
 \section2 States and Transitions
 
-QtQuick allows you to declare various UI states in \l State objects. These states are comprised of property changes from a
+Qt Quick allows you to declare various UI states in \l State objects. These states are comprised of property changes from a
 base state, and can be a useful way of organizing your UI logic. Transitions are objects you can associate with an item
 to define how its properties will animate when they change due to a state change.
 

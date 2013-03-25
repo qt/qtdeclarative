@@ -177,7 +177,7 @@ register the C++ model class as a QML type (either
 \l{qtqml-registercpptypes.html}{directly} from a C++ entry-point, or within
 the initialization function of a \l{qtqml-modules-cppplugins.html}
 {QML C++ plugin}, as shown below).  This would allow the model classes to be
-created directly as elements within QML:
+created directly as types within QML:
 
 \table
 \row
@@ -220,5 +220,3 @@ plugins.
 
 
 */
-
-

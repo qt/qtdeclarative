@@ -79,25 +79,25 @@ types (like \l{Rectangle}, \l{Image}, ...) that come with Qt, using:
 
 \snippet quick/tutorials/helloworld/tutorial1.qml 3
 
-\section2 Rectangle element
+\section2 Rectangle Type
 
 \snippet quick/tutorials/helloworld/tutorial1.qml 1
 
-We declare a root element of type \l{Rectangle}. It is one of the basic building blocks you can use to create an application in QML.
+We declare a root object of type \l{Rectangle}. It is one of the basic building blocks you can use to create an application in QML.
 We give it an \c{id} to be able to refer to it later. In this case, we call it "page".
 We also set the \c width, \c height and \c color properties.
-The \l{Rectangle} element contains many other properties (such as \c x and \c y), but these are left at their default values.
+The \l{Rectangle} type contains many other properties (such as \c x and \c y), but these are left at their default values.
 
-\section2 Text element
+\section2 Text Type
 
 \snippet quick/tutorials/helloworld/tutorial1.qml 2
 
-We add a \l Text element as a child of the root Rectangle element that displays the text 'Hello world!'.
+We add a \l Text type as a child of the root Rectangle type that displays the text 'Hello world!'.
 
 The \c y property is used to position the text vertically at 30 pixels from the top of its parent.
 
-The \c anchors.horizontalCenter property refers to the horizontal center of an element.
-In this case, we specify that our text element should be horizontally centered in the \e page element (see \l{anchor-layout}{Anchor-Based Layout}).
+The \c anchors.horizontalCenter property refers to the horizontal center of an type.
+In this case, we specify that our text type should be horizontally centered in the \e page element (see \l{anchor-layout}{Anchor-Based Layout}).
 
 The \c font.pointSize and \c font.bold properties are related to fonts and use the \l{dot properties}{dot notation}.
 
@@ -141,8 +141,8 @@ Here is the QML code for \c Cell.qml:
 
 \snippet quick/tutorials/helloworld/Cell.qml 1
 
-The root element of our component is an \l Item with the \c id \e container.
-An \l Item is the most basic visual element in QML and is often used as a container for other elements.
+The root type of our component is an \l Item with the \c id \e container.
+An \l Item is the most basic visual type in QML and is often used as a container for other types.
 
 \snippet quick/tutorials/helloworld/Cell.qml 4
 
@@ -160,12 +160,12 @@ We will use this signal to change the color of the text in the main QML file lat
 
 Our cell component is basically a colored rectangle with the \c id \e rectangle.
 
-The \c anchors.fill property is a convenient way to set the size of an element.
+The \c anchors.fill property is a convenient way to set the size of a visual type.
 In this case the rectangle will have the same size as its parent (see \l{anchor-layout}{Anchor-Based Layout}).
 
 \snippet quick/tutorials/helloworld/Cell.qml 3
 
-In order to change the color of the text when clicking on a cell, we create a \l MouseArea element with
+In order to change the color of the text when clicking on a cell, we create a \l MouseArea type with
 the same size as its parent.
 
 A \l MouseArea defines a signal called \e clicked.
@@ -206,7 +206,7 @@ Here is the QML code:
 
 \snippet quick/tutorials/helloworld/tutorial3.qml 2
 
-First, we create a new \e down state for our text element.
+First, we create a new \e down state for our text type.
 This state will be activated when the \l MouseArea is pressed, and deactivated when it is released.
 
 The \e down state includes a set of property changes from our implicit \e {default state}
@@ -225,7 +225,7 @@ Because we want the same transition to be run in reverse when changing back from
 we set \c reversible to \c true.
 This is equivalent to writing the two transitions separately.
 
-The \l ParallelAnimation element makes sure that the two types of animations (number and color) start at the same time.
+The \l ParallelAnimation type makes sure that the two types of animations (number and color) start at the same time.
 We could also run them one after the other by using \l SequentialAnimation instead.
 
 For more details on states and transitions, see \l {Qt Quick States} and the \l{quick/animation/states}{states and transitions example}.

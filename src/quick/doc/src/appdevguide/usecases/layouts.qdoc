@@ -27,7 +27,7 @@
 /*!
 \page qtquick-usecase-layouts.html
 \title Use Case - Layouts In QML
-\brief Example of how to create layouts for visual elements in a QML application
+\brief Example of how to create layouts for visual components in a QML application
 
 There are several ways to position items in QML.
 
@@ -65,7 +65,7 @@ For full details, see \l {Positioning with Anchors} and the documentation of the
 
 \section1 Positioners
 
-For the common case of wanting to position a set of elements in a regular pattern, QtQuick provides some positioner
+For the common case of wanting to position a set of types in a regular pattern, Qt Quick provides some positioner
 types. Items placed in a positioner are automatically positioned in some way; for example, a \l Row positions items to be
 horizontally adjacent (forming a row).
 

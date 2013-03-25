@@ -65,7 +65,7 @@
 \section1 Plugin Example
 
     Suppose there is a new \c TimeModel C++ class that should be made available
-    as a new QML element. It provides the current time through \c hour and \c minute
+    as a new QML type. It provides the current time through \c hour and \c minute
     properties.
 
     \snippet qml/plugins/plugin.cpp 0

@@ -69,7 +69,7 @@ and \l {qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}.
 A common task when extending QML is to provide a new QML type that supports some
  custom functionality beyond what is provided by the built-in \l {Qt Quick QML Types}{QtQuick types}.
 For example, this could be done to implement particular data models, or provide
-elements with custom painting and drawing capabilities, or access system features
+types with custom painting and drawing capabilities, or access system features
 like network programming that are not accessible through built-in QML features.
 
 In this tutorial, we will show how to use the C++ classes in the Qt Declarative
@@ -210,8 +210,8 @@ Try out the example yourself with the updated code in Qt's \c examples/quick/tut
 \example quick/tutorials/extending/chapter3-bindings
 
 Property binding is a powerful feature of QML that allows values of different
-elements to be synchronized automatically. It uses signals to notify and update
-other elements' values when property values are changed.
+types to be synchronized automatically. It uses signals to notify and update
+other types' values when property values are changed.
 
 Let's enable property bindings for the \c color property. That means
 if we have code like this:
@@ -245,7 +245,7 @@ Then, we emit this signal in \c setPieSlice():
 
 It's important for \c setColor() to check that the color value has actually changed
 before emitting \c colorChanged(). This ensures the signal is not emitted unnecessarily and
-also prevents loops when other elements respond to the value change.
+also prevents loops when other types respond to the value change.
 
 The use of bindings is essential to QML. You should always add NOTIFY
 signals for properties if they are able to be implemented, so that your

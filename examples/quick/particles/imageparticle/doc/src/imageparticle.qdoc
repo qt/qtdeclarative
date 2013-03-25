@@ -32,7 +32,7 @@
     \image qml-imageparticle-example.png
 
     This is a collection of small QML examples relating to using Affectors in the particle system.
-    Each example is a small QML file emphasizing a particular element or feature.
+    Each example is a small QML file emphasizing a particular type or feature.
 
     All at once shows off several of the features of ImageParticle at the same time.
     \snippet quick/particles/imageparticle/content/allatonce.qml 0

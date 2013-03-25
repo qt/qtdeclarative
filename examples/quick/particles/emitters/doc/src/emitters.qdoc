@@ -31,7 +31,7 @@
     \image qml-emitters-example.png
 
     This is a collection of small QML examples relating to using Emitters in the particle system.
-    Each example is a small QML file emphasizing a particular element or feature.
+    Each example is a small QML file emphasizing a particular type or feature.
 
     Velocity from motion gives the effect of strong particle motion through primarily moving the emitters:
     \snippet quick/particles/emitters/content/velocityfrommotion.qml 0
@@ -54,7 +54,7 @@
     \snippet quick/particles/emitters/content/shapeanddirection.qml 0
     This sends the particles towards the center of the ellipse with proportional speed, keeping the ellipse outline as they move to the center.
 
-    TrailEmitter uses that element to add smoke particles to trail the fire particles in the scene.
+    TrailEmitter uses that type to add smoke particles to trail the fire particles in the scene.
     \snippet quick/particles/emitters/content/customemitter.qml 0
 
 */

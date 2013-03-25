@@ -186,8 +186,8 @@
     \snippet quick/scenegraph/customgeometry/main.qml 1
 
     Our .qml file imports the \c {QtQuick 2.0} module to get the
-    standard elements and also our own \c {CustomGeometry 1.0} module
-    which contains our newly created BezierCurve element.
+    standard types and also our own \c {CustomGeometry 1.0} module
+    which contains our newly created BezierCurve objects.
 
     \snippet quick/scenegraph/customgeometry/main.qml 2
 
@@ -205,4 +205,3 @@
     Finally we overlay a short text outlining what the example shows.
 
  */
-

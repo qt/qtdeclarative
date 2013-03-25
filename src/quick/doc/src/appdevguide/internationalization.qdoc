@@ -34,7 +34,7 @@
 \section1 Internationalizing your Application
 
 The following sections describe various aspects of internationalizing your QML
-source code. If you follow these guides for all the user interface elements in
+source code. If you follow these guides for all the user interface components in
 your application, it becomes possible to localize every aspect of your
 application for different languages and local cultural conventions such as the
 way dates and numbers are formatted.
@@ -278,4 +278,3 @@ SOURCES = *.qml \
 See the \l {Qt Linguist Manual} for more details about Qt localization.
 
 */
-

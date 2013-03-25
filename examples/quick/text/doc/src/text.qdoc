@@ -32,18 +32,18 @@
     \ingroup qtquickexamples
 
     This is a collection of  small QML examples relating to text. Each example is
-    a small QML file, usually containing or emphasizing a particular element or
+    a small QML file, usually containing or emphasizing a particular type or
     feature. You can run and observe the behavior of each example.
 
-    'Hello' shows how to change and animate the letter spacing of a Text element.
+    'Hello' shows how to change and animate the letter spacing of a Text type.
     It uses a sequential animation to first animate the font.letterSpacing property
     from 0 to 50 over 3 seconds and then move the text to a random position on screen:
     \snippet quick/text/fonts/hello.qml letterspacing
 
-    'Fonts' shows different ways of using fonts with the Text element.
+    'Fonts' shows different ways of using fonts with the Text type.
     Simply by name, using the font.family property directly:
     \snippet quick/text/fonts/fonts.qml name
-    or using a FontLoader element:
+    or using a FontLoader type:
     \snippet quick/text/fonts/fonts.qml fontloader
     or using a FontLoader and specifying a local font file:
     \snippet quick/text/fonts/fonts.qml fontloaderlocal
@@ -52,18 +52,18 @@
 
     'Available Fonts' shows how to use the QML global Qt object and a list view
     to display all the fonts available on the system.
-    The ListView element uses the list of fonts available as its model:
+    The ListView type uses the list of fonts available as its model:
     \snippet quick/text/fonts/availableFonts.qml model
     Inside the delegate, the font family is set with the modelData:
     \snippet quick/text/fonts/availableFonts.qml delegate
 
     'Banner' is a simple example showing how to create a banner using a row of text
-    elements and a NumberAnimation.
+    types and a NumberAnimation.
 
-    'Img tag' shows different ways of displaying images in a text elements using
+    'Img tag' shows different ways of displaying images in a text types using
     the <img> tag.
 
-    'Text Layout' shows how to create a more complex layout for a text element.
+    'Text Layout' shows how to create a more complex layout for a text item.
     This example lays out the text in two columns using the onLineLaidOut handler
     that allows you to position and resize each line:
     \snippet quick/text/styledtext-layout.qml layout

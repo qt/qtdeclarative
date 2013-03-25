@@ -289,7 +289,7 @@
    of the given type T as a singleton type.
 
    A QObject singleton type may be referenced via the type name with which it was registered, and this
-   typename may be used as the target in a \l Connections element or otherwise used as any other element id would.
+   typename may be used as the target in a \l Connections type or otherwise used as any other type id would.
    One exception to this is that a QObject singleton type property may not be aliased (because the
    singleton type name does not identify an object within the same component as any other item).
 

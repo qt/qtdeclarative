@@ -77,7 +77,7 @@ QML code invokes a method on the object instance:
 \l{QML:Qt::formatDateTime}{Qt.formatDateTime()} and associated functions.)
 
 If the QML item needs to receive signals from the context property, it can connect to them using the
-\l Connections element. For example, if \c ApplicationData has a signal named \c
+\l Connections type. For example, if \c ApplicationData has a signal named \c
 dataChanged(), this signal can be connected to using an \c onDataChanged handler within
 a \l Connections object:
 

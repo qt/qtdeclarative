@@ -34,9 +34,9 @@
     This example demonstrates a couple of visual effects that you can perform
     with shaders in QtQuick 2.0
 
-    ShaderEffects typically operate on other elements, using a ShaderEffectSource
+    ShaderEffects typically operate on other types, using a ShaderEffectSource
     \snippet quick/shadereffects/shadereffects.qml source
-    In the above snippet, theItem is the id of a complex QML element in the file.
+    In the above snippet, theItem is the id of a complex QML object in the file.
 
     ShaderEffects can use this ShaderEffectSource as a texture in their fragment shader.
     \snippet quick/shadereffects/shadereffects.qml fragment
@@ -49,4 +49,3 @@
     provides more vertices for you to manipulate, enabling many effects.
     \snippet quick/shadereffects/shadereffects.qml vertex
 */
-
