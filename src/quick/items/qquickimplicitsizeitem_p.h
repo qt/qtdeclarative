@@ -51,15 +51,15 @@ class QQuickImplicitSizeItemPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickImplicitSizeItem : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(qreal implicitWidth READ implicitWidth NOTIFY implicitWidthChanged)
-    Q_PROPERTY(qreal implicitHeight READ implicitHeight NOTIFY implicitHeightChanged)
+    Q_PROPERTY(qreal implicitWidth READ implicitWidth NOTIFY implicitWidthChanged2)
+    Q_PROPERTY(qreal implicitHeight READ implicitHeight NOTIFY implicitHeightChanged2)
 
 protected:
     QQuickImplicitSizeItem(QQuickImplicitSizeItemPrivate &dd, QQuickItem *parent);
 
 Q_SIGNALS:
-    void implicitWidthChanged();
-    void implicitHeightChanged();
+    void implicitWidthChanged2();
+    void implicitHeightChanged2();
 
 private:
     Q_DISABLE_COPY(QQuickImplicitSizeItem)
