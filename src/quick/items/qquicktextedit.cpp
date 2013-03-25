@@ -1805,14 +1805,13 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                         transformMatrix.translate(nodeOffset.x(), nodeOffset.y());
                         node->setMatrix(transformMatrix);
                     }
-
                     node->m_engine->addTextBlock(d->document, block, basePosition - nodeOffset, d->color, QColor(), selectionStart(), selectionEnd() - 1);
                     sizeCounter += block.length();
 
                     if ((it.atEnd() && frames.isEmpty()) || (firstCleanNode && block.next().position() >= firstCleanNode->startPos())) // last node that needed replacing or last block of the last frame
                         break;
 
-                    if (sizeCounter > nodeBreakingSize) {
+                    if (sizeCounter > nodeBreakingSize || it.atEnd()) { // text block grouping across text frames might not be a good idea, split it.
                         sizeCounter = 0;
                         node->m_engine->addToSceneGraph(node, QQuickText::Normal, QColor());
                         nodeIterator = d->textNodeMap.insert(nodeIterator, new TextNode(prevBlockStart, node));
@@ -1848,6 +1847,10 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
             }
 
         }
+
+        // Since we iterate over blocks from different text frames that are potentially not sorted
+        // we need to ensure that our list of nodes is sorted again:
+        std::sort(d->textNodeMap.begin(), d->textNodeMap.end(), &comesBefore);
     }
 
     if (d->cursorComponent == 0 && !isReadOnly()) {
