@@ -65,7 +65,6 @@ private:
 class EtcTexture : public QSGTexture
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qml.QmlOstPlugin")
 public:
     EtcTexture();
     ~EtcTexture();
