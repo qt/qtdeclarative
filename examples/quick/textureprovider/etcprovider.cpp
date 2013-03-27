@@ -44,6 +44,7 @@
 #include <QFile>
 #include <QDebug>
 #include <qopenglfunctions.h>
+#include <qqmlfile.h>
 
 //#define ETC_DEBUG
 
@@ -168,10 +169,14 @@ QQuickTextureFactory *EtcProvider::requestTexture(const QString &id, QSize *size
     size->setHeight(0);
     size->setWidth(0);
 
-    // resolve paths relative to qrc file
-    QFile file(QLatin1String(":/textureprovider/") + id);
+    QUrl url = QUrl(id);
+    if (url.isRelative() && !m_baseUrl.isEmpty())
+        url = m_baseUrl.resolved(url);
+    QString path = QQmlFile::urlToLocalFileOrQrc(url);
+
+    QFile file(path);
 #ifdef ETC_DEBUG
-    qDebug() << "requestTexture opening file: " << id;
+    qDebug() << "requestTexture opening file: " << path;
 #endif
     if (file.open(QIODevice::ReadOnly)) {
         ret = new QEtcTextureFactory;
@@ -199,4 +204,9 @@ QQuickTextureFactory *EtcProvider::requestTexture(const QString &id, QSize *size
 #endif
 
     return ret;
+}
+
+void EtcProvider::setBaseUrl(const QUrl &base)
+{
+    m_baseUrl = base;
 }

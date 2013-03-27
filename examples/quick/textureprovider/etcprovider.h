@@ -45,6 +45,7 @@
 #include <qopengl.h>
 #include <QQuickImageProvider>
 #include <QtQuick/QSGTexture>
+#include <QUrl>
 
 class EtcProvider : public QQuickImageProvider
 {
@@ -54,6 +55,11 @@ public:
     {}
 
     QQuickTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize);
+
+    void setBaseUrl(const QUrl &base);
+
+private:
+    QUrl m_baseUrl;
 };
 
 class EtcTexture : public QSGTexture
