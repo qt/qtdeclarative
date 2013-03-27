@@ -72,7 +72,7 @@ For example, this could be done to implement particular data models, or provide
 types with custom painting and drawing capabilities, or access system features
 like network programming that are not accessible through built-in QML features.
 
-In this tutorial, we will show how to use the C++ classes in the Qt Declarative
+In this tutorial, we will show how to use the C++ classes in the Qt Quick
 module to extend QML. The end result will be a simple Pie Chart display implemented by
 several custom QML types connected together through QML features like bindings and
 signals, and made available to the QML runtime through a plugin.
