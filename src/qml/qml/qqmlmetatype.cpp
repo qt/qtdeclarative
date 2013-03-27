@@ -582,16 +582,18 @@ void QQmlTypePrivate::init() const
     while(mo) {
         QQmlType *t = metaTypeData()->metaObjectToType.value(mo);
         if (t) {
-            if (t->d->extraData.cd->extFunc) {
-                QMetaObjectBuilder builder;
-                clone(builder, t->d->extraData.cd->extMetaObject, t->d->baseMetaObject, baseMetaObject);
-                builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
-                QMetaObject *mmo = builder.toMetaObject();
-                mmo->d.superdata = baseMetaObject;
-                if (!metaObjects.isEmpty())
-                    metaObjects.last().metaObject->d.superdata = mmo;
-                QQmlProxyMetaObject::ProxyData data = { mmo, t->d->extraData.cd->extFunc, 0, 0 };
-                metaObjects << data;
+            if (t->d->regType == QQmlType::CppType) {
+                if (t->d->extraData.cd->extFunc) {
+                    QMetaObjectBuilder builder;
+                    clone(builder, t->d->extraData.cd->extMetaObject, t->d->baseMetaObject, baseMetaObject);
+                    builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
+                    QMetaObject *mmo = builder.toMetaObject();
+                    mmo->d.superdata = baseMetaObject;
+                    if (!metaObjects.isEmpty())
+                        metaObjects.last().metaObject->d.superdata = mmo;
+                    QQmlProxyMetaObject::ProxyData data = { mmo, t->d->extraData.cd->extFunc, 0, 0 };
+                    metaObjects << data;
+                }
             }
         }
         mo = mo->d.superdata;
