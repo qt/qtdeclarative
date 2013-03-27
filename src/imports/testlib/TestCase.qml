@@ -430,6 +430,7 @@ Item {
         //trigger dragging
         mouseMove(item, x + util.dragThreshold + 1, y + util.dragThreshold + 1, delay, button)
         mouseMove(item, x + dx, y + dy, delay, button)
+        mouseRelease(item, x + dx, y + dy, button, modifiers, delay)
     }
 
     function mouseClick(item, x, y, button, modifiers, delay) {
