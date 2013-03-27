@@ -2685,6 +2685,23 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
     } else {
         if (o->inherits("QGraphicsItem"))
             qWarning("Cannot add a QtQuick 1.0 item (%s) into a QtQuick 2.0 scene!", o->metaObject()->className());
+        else {
+            QQuickWindow *thisWindow = qmlobject_cast<QQuickWindow *>(o);
+            QQuickItem *item = that;
+            QQuickWindow *itemWindow = that->window();
+            while (!itemWindow && item && item->parentItem()) {
+                item = item->parentItem();
+                itemWindow = item->window();
+            }
+
+            if (thisWindow) {
+                if (itemWindow)
+                    thisWindow->setTransientParent(itemWindow);
+                else
+                    QObject::connect(item, SIGNAL(windowChanged(QQuickWindow*)),
+                                     thisWindow, SLOT(setTransientParent_helper(QQuickWindow*)));
+            }
+        }
 
         // XXX todo - do we really want this behavior?
         o->setParent(that);
@@ -4413,8 +4430,8 @@ void QQuickItemPrivate::deliverDragEvent(QEvent *e)
   */
 void QQuickItem::itemChange(ItemChange change, const ItemChangeData &value)
 {
-    Q_UNUSED(change);
-    Q_UNUSED(value);
+    if (change == ItemSceneChange)
+        emit windowChanged(value.window);
 }
 
 #ifndef QT_NO_IM
