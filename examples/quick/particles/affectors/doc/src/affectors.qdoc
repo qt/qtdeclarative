@@ -32,7 +32,7 @@
     \image qml-affectors-example.png
 
     This is a collection of small QML examples relating to using Affectors in the particle system.
-    Each example is a small QML file emphasizing a particular element or feature.
+    Each example is a small QML file emphasizing a particular type or feature.
 
     Age demonstrates using an Age affector to prematurely end the lives of particles.
     \snippet quick/particles/affectors/content/age.qml 0
@@ -78,7 +78,7 @@
     moves into the lit group after 100ms.
     \snippet quick/particles/affectors/content/groupgoal.qml lit
     The lit group also has TrailEmitters on it for additional fire and smoke, but does not transition anywhere.
-    There are two more GroupGoal elements that allow particles in the unlit group to transition to the lighting group
+    There are two more GroupGoal objects that allow particles in the unlit group to transition to the lighting group
     (and then to the lit group).
     \snippet quick/particles/affectors/content/groupgoal.qml groupgoal-pilot
     The first is just an area bound to the location of an image of a pilot flame. When unlit balls pass through the flame,
@@ -110,4 +110,3 @@
     \snippet quick/particles/affectors/content/wander.qml 0
     There are different movements given by applying the Wander to different attributes of the trajectory, so the example makes it easy to play around and see the difference.
 */
-

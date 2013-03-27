@@ -144,7 +144,7 @@ The \c this keyword is supported when binding properties from JavaScript.
 In all other situations, the value of
 \c this is undefined in QML.
 
-To refer to any element, provide an \c id.  For example:
+To refer to a specific object, provide an \c id.  For example:
 
 \qml
 Item {

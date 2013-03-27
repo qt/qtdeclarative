@@ -249,10 +249,8 @@ QQuickItemView::~QQuickItemView()
 QQuickItem *QQuickItemView::currentItem() const
 {
     Q_D(const QQuickItemView);
-    if (!d->currentItem)
-        return 0;
     const_cast<QQuickItemViewPrivate*>(d)->applyPendingChanges();
-    return d->currentItem->item;
+    return d->currentItem ? d->currentItem->item : 0;
 }
 
 QVariant QQuickItemView::model() const

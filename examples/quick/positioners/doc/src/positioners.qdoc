@@ -32,7 +32,7 @@
     \ingroup qtquickexamples
 
     This is a collection of small QML examples relating to positioners. Each example is
-    a small QML file emphasizing a particular element or feature.
+    a small QML file emphasizing a particular type or feature.
 
     Transitions shows animated transitions when showing or hiding items in a positioner.
     It consists of a scene populated with items in a variety of positioners: Column, Row, Grid and Flow.
@@ -50,4 +50,3 @@
     Attached Properties shows how the Positioner attached property can be used to determine where an item is within a positioner.
     \snippet quick/positioners/positioners-attachedproperties.qml 0
 */
-

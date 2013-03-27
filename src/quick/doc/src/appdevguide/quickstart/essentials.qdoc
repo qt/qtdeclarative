@@ -156,7 +156,7 @@ The value being displayed will vary from 0 to 150 periodically.
 \section1 Defining Custom QML Types for Re-use
 
 One of the most important concepts in QML is that of type re-use.  An
-application will probably have multiple visual elements which are all similar
+application will probably have multiple visual types which are all similar
 (for example, multiple push buttons), and QML allows these sort of things to
 be defined as re-usable, custom types, to minimize code duplication and
 maximize readability.
@@ -175,7 +175,7 @@ That type may now be re-used multiple times in the application, as follows:
 \endtable
 
 
-In this way, modular user interface elements can be built up and re-used within
+In this way, modular user interface types can be built up and re-used within
 an application.
 
 See \l {QML Object Attributes}

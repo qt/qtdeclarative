@@ -47,7 +47,7 @@ manage components and enhance your interface, and storing persistent application
 
 An understanding of JavaScript is helpful to understand parts of this tutorial, but if you don't
 know JavaScript you can still get a feel for how you can integrate backend logic to create and
-control QML elements.
+control QML types.
 
 
 Tutorial chapters:
@@ -92,13 +92,13 @@ One item you may not recognize here
 is the \l SystemPalette item. This provides access to the Qt system palette
 and is used to give the button a more native look-and-feel.
 
-Notice the anchors for the \c Item, \c Button and \c Text elements are set using
+Notice the anchors for the \c Item, \c Button and \c Text types are set using
 \l {qdeclarativeintroduction.html#dot-properties}{group notation} for readability.
 
 \section2 Adding \c Button and \c Block components
 
 The \c Button item in the code above is defined in a separate component file named \c Button.qml.
-To create a functional button, we use the QML elements \l Text and \l MouseArea inside a \l Rectangle.
+To create a functional button, we use the QML types \l Text and \l MouseArea inside a \l Rectangle.
 Here is the \c Button.qml code:
 
 \snippet quick/tutorials/samegame/samegame1/Button.qml 0
@@ -123,13 +123,13 @@ This means that when we dynamically create and resize the block items
 later on in the tutorial, the image will be scaled automatically to the
 correct size.
 
-Notice the relative path for the Image element's \c source property.
-This path is relative to the location of the file that contains the \l Image element.
+Notice the relative path for the Image type's \c source property.
+This path is relative to the location of the file that contains the \l Image type.
 Alternatively, you could set the Image source to an absolute file path or a URL
 that contains an image.
 
 You should be familiar with the code so far. We have just created some basic
-elements to get started. Next, we will populate the game canvas with some blocks.
+types to get started. Next, we will populate the game canvas with some blocks.
 */
 
 
@@ -145,7 +145,7 @@ elements to get started. Next, we will populate the game canvas with some blocks
 
 \section2 Generating the blocks in JavaScript
 
-Now that we've written some basic elements, let's start writing the game.
+Now that we've written some types, let's start writing the game.
 
 The first task is to generate the game blocks. Each time the New Game button
 is clicked, the game canvas is populated with a new, random set of
@@ -169,7 +169,7 @@ and moves the new block to its position on the game canvas. This involves severa
 \list
 
 \li \l {QML:Qt::createComponent()}{Qt.createComponent()} is called to
-   generate an element from \c Block.qml.  If the component is ready,
+   generate a type from \c Block.qml.  If the component is ready,
    we can call \c createObject() to create an instance of the \c Block
    item.
 
@@ -235,11 +235,11 @@ To do this, we have added the following functions to \c samegame.js:
 \li \c{floodMoveCheck(xIdx, yIdx, type)}
 \endlist
 
-As this is a tutorial about QML, not game design, we will only discuss \c handleClick() and \c victoryCheck() below since they interface directly with the QML elements. Note that although the game logic here is written in JavaScript, it could have been written in C++ and then exposed to QML.
+As this is a tutorial about QML, not game design, we will only discuss \c handleClick() and \c victoryCheck() below since they interface directly with the QML types. Note that although the game logic here is written in JavaScript, it could have been written in C++ and then exposed to QML.
 
 \section3 Enabling mouse click interaction
 
-To make it easier for the JavaScript code to interface with the QML elements, we have added an Item called \c gameCanvas to \c samegame.qml. It replaces the background as the item which contains the blocks. It also accepts mouse input from the user.  Here is the item code:
+To make it easier for the JavaScript code to interface with the QML types, we have added an Item called \c gameCanvas to \c samegame.qml. It replaces the background as the item which contains the blocks. It also accepts mouse input from the user.  Here is the item code:
 
 \snippet quick/tutorials/samegame/samegame3/samegame.qml 1
 
@@ -263,7 +263,7 @@ When the player clicks a block and triggers \c handleClick(), \c handleClick() a
 
 This updates the \c gameCanvas.score value and displays a "Game Over" dialog if the game is finished.
 
-The Game Over dialog is created using a \c Dialog element that is defined in \c Dialog.qml. Here is the \c Dialog.qml code. Notice how it is designed to be usable imperatively from the script file, via the functions and signals:
+The Game Over dialog is created using a \c Dialog type that is defined in \c Dialog.qml. Here is the \c Dialog.qml code. Notice how it is designed to be usable imperatively from the script file, via the functions and signals:
 
 \snippet quick/tutorials/samegame/samegame3/Dialog.qml 0
 
@@ -319,7 +319,7 @@ In anticipation of the new block animations, \c Block.qml file is now renamed to
 \section3 Animating block movement
 
 First we will animate the blocks so that they move in a fluid manner. QML has a number of methods for adding fluid
-movement, and in this case we're going to use the \l Behavior element to add a \l SpringAnimation.
+movement, and in this case we're going to use the \l Behavior type to add a \l SpringAnimation.
 In \c BoomBlock.qml, we apply a \l SpringAnimation behavior to the \c x and \c y properties so that the
 block will follow and animate its movement in a spring-like fashion towards the specified position (whose
 values will be set by \c samegame.js).Here is the code added to \c BoomBlock.qml:
@@ -335,18 +335,18 @@ from the top in rows. (Try commenting out \c {enabled: spawned} and see for your
 
 \section3 Animating block opacity changes
 
-Next, we will add a smooth exit animation. For this, we'll use a \l Behavior element, which allows us to specify
+Next, we will add a smooth exit animation. For this, we'll use a \l Behavior type, which allows us to specify
 a default animation when a property change occurs. In this case, when the \c opacity of a Block changes, we will
 animate the opacity value so that it gradually fades in and out, instead of abruptly changing between fully
 visible and invisible. To do this, we'll apply a \l Behavior on the \c opacity property of the \c Image
-element in \c BoomBlock.qml:
+type in \c BoomBlock.qml:
 
 \snippet quick/tutorials/samegame/samegame4/content/BoomBlock.qml 2
 
 Note the \c{opacity: 0} which means the block is transparent when it is first created. We could set the opacity
 in \c samegame.js when we create and destroy the blocks,
 but instead we'll use \l{Qt Quick States}{states}, since this is useful for the next animation we're going to add.
-Initially, we add these States to the root element of \c{BoomBlock.qml}:
+Initially, we add these States to the root type of \c{BoomBlock.qml}:
 \code
     property bool dying: false
     states: [
@@ -371,7 +371,7 @@ Finally, we'll add a cool-looking particle effect to the blocks when they are de
 
 To fully understand this you should read the \l Particles documentation, but it's important to note that \c emitRate is set
 to zero so that particles are not emitted normally.
-Also, we extend the \c dying State, which creates a burst of particles by calling the \c burst() method on the particles element. The code for the states now look
+Also, we extend the \c dying State, which creates a burst of particles by calling the \c burst() method on the particles type. The code for the states now look
 like this:
 
 \snippet quick/tutorials/samegame/samegame4/content/BoomBlock.qml 4
@@ -388,7 +388,7 @@ The theme change here is produced simply by replacing the block images. This can
 Another feature we might want to add to the game is a method of storing and retrieving high scores.
 
 To do this, we will show a dialog when the game is over to request the player's name and add it to a High Scores table.
-This requires a few changes to \c Dialog.qml. In addition to a \c Text element, it now has a
+This requires a few changes to \c Dialog.qml. In addition to a \c Text type, it now has a
 \c TextInput child item for receiving keyboard text input:
 
 \snippet quick/tutorials/samegame/samegame4/content/Dialog.qml 0
@@ -399,7 +399,7 @@ This requires a few changes to \c Dialog.qml. In addition to a \c Text element, 
 
 We'll also add a \c showWithInput() function. The text input will only be visible if this function
 is called instead of \c show(). When the dialog is closed, it emits a \c closed() signal, and
-other elements can retrieve the text entered by the user through an \c inputText property:
+other types can retrieve the text entered by the user through an \c inputText property:
 
 \snippet quick/tutorials/samegame/samegame4/content/Dialog.qml 0
 \snippet quick/tutorials/samegame/samegame4/content/Dialog.qml 1
@@ -450,7 +450,7 @@ or QML from the web service to display the high scores. We don't worry about the
 score data to the web server. If it had returned a QML file (or a URL to a QML file) you could instantiate it in much the same
 way as you did with the blocks.
 
-An alternate way to access and submit web-based data would be to use QML elements designed for this purpose. XmlListModel
+An alternate way to access and submit web-based data would be to use QML types designed for this purpose. XmlListModel
 makes it very easy to fetch and display XML based data such as RSS in a QML application (see the Flickr demo for an example).
 
 
@@ -459,7 +459,7 @@ makes it very easy to fetch and display XML based data such as RSS in a QML appl
 By following this tutorial you've seen how you can write a fully functional application in QML:
 
 \list
-\li Build your application with \l {QML Types provided by the QtQuick Module}{QML elements}
+\li Build your application with \l {QML Types provided by the QtQuick Module}{QML types}
 \li Add application logic \l{Using JavaScript Expressions in QML}{with JavaScript code}
 \li Add animations with \l {Behavior}{Behaviors} and \l{Qt Quick States}{states}
 \li Store persistent application data using, for example, \l{QtQuick.LocalStorage 2}{QtQuick.LocalStorage} or \l XMLHttpRequest

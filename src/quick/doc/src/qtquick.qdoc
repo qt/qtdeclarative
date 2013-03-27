@@ -33,7 +33,7 @@
 The Qt Quick module is the standard library for writing QML applications.
 While the \l{Qt QML} module provides the QML engine and
 language infrastructure, the Qt Quick module provides all the basic
-elements necessary for creating user interfaces with QML. It
+types necessary for creating user interfaces with QML. It
 provides a visual canvas and includes types for creating and animating
 visual components, receiving user input, creating data models and views
 and delayed object instantiation.

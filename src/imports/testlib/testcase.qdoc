@@ -50,7 +50,7 @@
     \section1 Introduction to QML test cases
 
     Test cases are written as JavaScript functions within a TestCase
-    element:
+    type:
 
     \code
     import QtQuick 2.0
@@ -92,7 +92,7 @@
     the test framework will sort the functions on ascending order of name.
     This can help when there are two tests that must be run in order.
 
-    Multiple TestCase elements can be supplied.  The test program will exit
+    Multiple TestCase types can be supplied.  The test program will exit
     once they have all completed.  If a test case doesn't need to run
     (because a precondition has failed), then \l optional can be set to true.
 
@@ -100,7 +100,7 @@
 
     Table data can be provided to a test using a function name that ends
     with "_data". Alternatively, the \c init_data() function can be used
-    to provide default test data for all test functions in a TestCase element:
+    to provide default test data for all test functions in a TestCase type:
 
 
     \code
@@ -251,9 +251,9 @@
     }
     \endcode
 
-    The test application will exit once all \l TestCase elements
+    The test application will exit once all \l TestCase types
     have been triggered and have run.  The \l optional property can
-    be used to exclude a \l TestCase element.
+    be used to exclude a \l TestCase type.
 
     \sa optional, completed
 */
@@ -261,7 +261,7 @@
 /*!
     \qmlproperty bool TestCase::optional
 
-    Multiple \l TestCase elements can be supplied in a test application.
+    Multiple \l TestCase types can be supplied in a test application.
     The application will exit once they have all completed.  If a test case
     does not need to run (because a precondition has failed), then this
     property can be set to true.  The default value is false.
@@ -305,7 +305,7 @@
     This property will be set to true after the QML viewing window has
     been displayed.  Normally test cases run as soon as the test application
     is loaded and before a window is displayed.  If the test case involves
-    visual elements and behaviors, then it may need to be delayed until
+    visual types and behaviors, then it may need to be delayed until
     after the window is shown.
 
     \code
@@ -647,7 +647,7 @@
     \qmlmethod TestCase::initTestCase()
 
     This function is called before any other test functions in the
-    \l TestCase element.  The default implementation does nothing.
+    \l TestCase type.  The default implementation does nothing.
     The application can provide its own implementation to perform
     test case initialization.
 
@@ -658,7 +658,7 @@
     \qmlmethod TestCase::cleanupTestCase()
 
     This function is called after all other test functions in the
-    \l TestCase element have completed.  The default implementation
+    \l TestCase type have completed.  The default implementation
     does nothing.  The application can provide its own implementation
     to perform test case cleanup.
 
@@ -669,7 +669,7 @@
     \qmlmethod TestCase::init()
 
     This function is called before each test function that is
-    executed in the \l TestCase element.  The default implementation
+    executed in the \l TestCase type.  The default implementation
     does nothing.  The application can provide its own implementation
     to perform initialization before each test function.
 
@@ -680,7 +680,7 @@
     \qmlmethod TestCase::cleanup()
 
     This function is called after each test function that is
-    executed in the \l TestCase element.  The default implementation
+    executed in the \l TestCase type.  The default implementation
     does nothing.  The application can provide its own implementation
     to perform cleanup after each test function.
 

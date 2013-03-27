@@ -33,7 +33,7 @@
     \ingroup qtquickexamples
 
     This is a collection of small QML examples relating to animation. Each example is
-    a small QML file emphasizing a particular element or feature.
+    a small QML file emphasizing a particular type or feature.
 
     ColorAnimation demonstrates using a color animation to fade a sky from day to night.
     \snippet quick/animation/basics/color-animation.qml 0
@@ -59,7 +59,7 @@
     States demonstrates how the properties of an item can vary between states.
     It defines several states:
     \snippet quick/animation/states/states.qml 0
-    Note that there is also the implicit 'base state' from properties set directly on elements.
+    Note that there is also the implicit 'base state' from properties set directly on objects.
 
     Transitions takes the States example and animates the property changes by setting transitions:
     \snippet quick/animation/states/transitions.qml 0

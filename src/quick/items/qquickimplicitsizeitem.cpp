@@ -53,7 +53,7 @@ void QQuickImplicitSizeItemPrivate::implicitWidthChanged()
             change.listener->itemImplicitWidthChanged(q);
         }
     }
-    emit q->implicitWidthChanged();
+    emit q->implicitWidthChanged2();
 }
 
 void QQuickImplicitSizeItemPrivate::implicitHeightChanged()
@@ -65,12 +65,14 @@ void QQuickImplicitSizeItemPrivate::implicitHeightChanged()
             change.listener->itemImplicitHeightChanged(q);
         }
     }
-    emit q->implicitHeightChanged();
+    emit q->implicitHeightChanged2();
 }
 
 QQuickImplicitSizeItem::QQuickImplicitSizeItem(QQuickImplicitSizeItemPrivate &dd, QQuickItem *parent)
     : QQuickItem(dd, parent)
 {
+    connect(this, SIGNAL(implicitHeightChanged2()), this, SIGNAL(implicitHeightChanged()));
+    connect(this, SIGNAL(implicitWidthChanged2()), this, SIGNAL(implicitWidthChanged()));
 }
 
 QT_END_NAMESPACE

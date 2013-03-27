@@ -50,7 +50,7 @@ accessible through the delegate.
 \endlist
 
 To visualize data, bind the view's \c model property to a model and the
-\c delegate property to a component or an element.
+\c delegate property to a component or another compatible type.
 
 \section1 Displaying Data with Views
 
@@ -59,7 +59,7 @@ To visualize data, bind the view's \c model property to a model and the
 
     \keyword qtquick-views
     A set of standard views are provided in the basic set of Qt Quick
-    graphical elements:
+    graphical types:
 
     \list
     \li \l{ListView} - arranges items in a horizontal or vertical list
@@ -67,7 +67,7 @@ To visualize data, bind the view's \c model property to a model and the
     \li \l{PathView} - arranges items on a path
     \endlist
 
-    These elements have properties and behaviors exclusive to each element.
+    These types have properties and behaviors exclusive to each type.
     Visit their respective documentation for more information.
 
     \section2 Decorating Views
@@ -75,7 +75,7 @@ To visualize data, bind the view's \c model property to a model and the
     Views allow visual customization through \e decoration properties such as
     the \c header, \c footer, and \c section properties. By binding an object,
     usually another visual object, to these properties, the views are
-    decoratable. A footer may include a \l Rectangle element showcasing borders
+    decoratable. A footer may include a \l Rectangle type showcasing borders
     or a header that displays a logo on top of the list.
 
     Suppose that a specific club wants to decorate its members list with its brand
@@ -86,7 +86,7 @@ To visualize data, bind the view's \c model property to a model and the
 
     The club may decorate the members list by binding visual objects to the \c
     header and \c footer properties. The visual object may be defined inline, in
-    another file, or in a \l {Component} element.
+    another file, or in a \l {Component} type.
     \snippet qml/listview-decorations.qml decorations
     \image listview-decorations.png
 
@@ -114,11 +114,11 @@ To visualize data, bind the view's \c model property to a model and the
     \snippet qml/listview-sections.qml model
     \snippet qml/listview-sections.qml delegate
 
-    The ListView element has the \c section
+    The ListView type has the \c section
     \l{qtqml-syntax-objectattributes.html#Attached-properties-and-attached-signal-handlers}
-    {attached property} that can combine adjacent and related elements into a
+    {attached property} that can combine adjacent and related types into a
     section.  The section's \c property property is for selecting which list
-    element property to use as sections. The \c criteria can dictate how the
+    type property to use as sections. The \c criteria can dictate how the
     section names are displayed and the \c delegate is similar to the views'
     \l {qml-view-delegate}{delegate} property.
     \snippet qml/listview-sections.qml section
@@ -165,7 +165,7 @@ To visualize data, bind the view's \c model property to a model and the
 
     If there is a naming clash between the model's properties and the delegate's
     properties, the roles can be accessed with the qualified \e model name
-    instead. For example, if a \l Text element had \e type or \e age properties,
+    instead. For example, if a \l Text type had \e type or \e age properties,
     the text in the above example would display those property values instead of
     the \e type and \e age values from the model item. In this case, the
     properties could have been referenced as \c model.type and \c model.age
@@ -186,7 +186,7 @@ To visualize data, bind the view's \c model property to a model and the
     case the \e modelData role contains the same data as the named role.
 
     QML provides several types of data models among the built-in set of QML
-    elements. In addition, models can be created with Qt C++ and then made
+    types. In addition, models can be created with Qt C++ and then made
     available to the \l{QQmlEngine}{QMLEngine} for use by
     QML components. For information about creating these models, visit the
     \l{qtquick-modelviewsdata-cppmodels.html}{Using C++ Models with QtQuick Views}
@@ -198,7 +198,7 @@ To visualize data, bind the view's \c model property to a model and the
 
     \section2 ListModel
 
-    ListModel is a simple hierarchy of elements specified in QML.  The
+    ListModel is a simple hierarchy of types specified in QML.  The
     available roles are specified by the \l ListElement properties.
 
     \snippet qml/qml-data-models/listelements.qml model
@@ -226,7 +226,7 @@ To visualize data, bind the view's \c model property to a model and the
     \section2 XmlListModel
 
     XmlListModel allows construction of a model from an XML data source. The roles
-    are specified via the \l XmlRole element. The element needs to be imported.
+    are specified via the \l XmlRole type. The type needs to be imported.
 
     \code
     import QtQuick.XmlListModel 2.0
@@ -260,13 +260,13 @@ To visualize data, bind the view's \c model property to a model and the
     \snippet qml/models/visual-model-and-view.qml visual model and view
 
     Note that in the above example there is no delegate required.
-    The items of the model itself provide the visual elements that
+    The items of the model itself provide the visual types that
     will be positioned by the view.
 
     \section2 Integers as Models
 
     An integer can be used as a model that contains a certain number
-    of elements. In this case, the model does not have any data roles.
+    of types. In this case, the model does not have any data roles.
 
     The following example creates a ListView with five elements:
     \qml
@@ -291,11 +291,11 @@ To visualize data, bind the view's \c model property to a model and the
     \section2 Object Instances as Models
 
     An object instance can be used to specify a model with a single object
-    element. The properties of the object are provided as roles.
+    type. The properties of the object are provided as roles.
 
     The example below creates a list with one item, showing the color of the \e
     myText text. Note the use of the fully qualified \e model.color property to
-    avoid clashing with \e color property of the Text element in the delegate.
+    avoid clashing with \e color property of the Text type in the delegate.
 
     \qml
     Rectangle {

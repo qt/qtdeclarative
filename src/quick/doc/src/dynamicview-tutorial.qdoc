@@ -142,7 +142,7 @@ so that is above other items in the stacking order and isn't obscured as it is d
 \example quick/tutorials/dynamicview/dynamicview3
 
 The next step in our application to move items within the list as they're dragged so that we
-can re-order the list.  To achieve this we introduce three new elements to our application;
+can re-order the list.  To achieve this we introduce three new types to our application;
 VisualDataModel, \l Drag and DropArea.
 
 \snippet quick/tutorials/dynamicview/dynamicview3/dynamicview.qml 0
@@ -169,8 +169,8 @@ to the index of the item it was dragged over.
 
 \snippet quick/tutorials/dynamicview/dynamicview3/dynamicview.qml 3
 
-To move the items within the view we use a VisualDataModel.  The VisualDataModel element is used by
-the view elements to instantiate delegate items from model data and when constructed explicitly can
+To move the items within the view we use a VisualDataModel.  The VisualDataModel type is used by
+the view types to instantiate delegate items from model data and when constructed explicitly can
 be used to filter and re-order the model items provided to ListView.  The
 \l {QtQuick2::VisualDataModel::items}{items} property of VisualDataModel provides access to the
 view's items and allows us to change the visible order without modifying the source model.  To

@@ -52,7 +52,7 @@ forward buttons in music players.
 
 \section1 Text Alignment
 
-(This applies to the \l Text, \l TextInput and \l TextEdit elements.)
+(This applies to the \l Text, \l TextInput and \l TextEdit types.)
 
 When the horizontal alignment of a text item is not explicitly set, the text element is
 automatically aligned to the natural reading direction of the text. By default left-to-right text
@@ -72,9 +72,9 @@ the effective alignment of the text element that takes the mirroring into accoun
 
 \section1 Layout direction of positioners and views
 
-(This applies to the \l Row, \l Grid, \l Flow, \l ListView and \l GridView elements.)
+(This applies to the \l Row, \l Grid, \l Flow, \l ListView and \l GridView types.)
 
-From Qt Quick 1.1 onwards, elements used for horizontal positioning and model views have gained a \c layoutDirection
+From Qt Quick 1.1 onwards, types used for horizontal positioning and model views have gained a \c layoutDirection
 property for controlling the horizontal direction of the layouts. Setting \c layoutDirection to
 \c Qt.RightToLeft causes items to be laid out from the right to left. By default Qt Quick follows
 the left-to-right layout direction.
@@ -91,13 +91,13 @@ views that takes the mirroring into account can be read from the \c effectiveLay
 The attached property \l LayoutMirroring is provided as a convenience for easily implementing right-to-left
 support for existing left-to-right Qt Quick applications. It mirrors the behavior of \l {anchor-layout}
 {Item anchors}, the layout direction of \l{Composing User Interfaces with QML#Positioners}{positioners} and
-\l{qtquick-modelviewsdata-modelview.html}{model views}, and the explicit text alignment of QML text elements.
+\l{qtquick-modelviewsdata-modelview.html}{model views}, and the explicit text alignment of QML text types.
 
 You can enable layout mirroring for a particular \l Item:
 
 \snippet qml/righttoleft.qml 2
 
-Or set all child elements to also inherit the layout direction:
+Or set all child types to also inherit the layout direction:
 
 \snippet qml/righttoleft.qml 3
 
@@ -105,12 +105,12 @@ Applying mirroring in this manner does not change the actual value of the releva
 \c layoutDirection or \c horizontalAlignment properties. The separate read-only property
 \c effectiveLayoutDirection can be used to query the effective layout
 direction of positioners and model views that takes the mirroring into account. Similarly the \l Text,
-\l TextInput and \l TextEdit elements have gained the read-only property \c effectiveHorizontalAlignment
+\l TextInput and \l TextEdit types have gained the read-only property \c effectiveHorizontalAlignment
 for querying the effective visual alignment of text. For anchors, the read only
 \l {Item::anchors.top}{anchors.mirrored} property reflects whether anchors have been mirrored.
 
 Note that application layouts and animations that are defined using \l {Item::}{x} property values (as
-opposed to anchors or positioner elements) are not affected by the \l LayoutMirroring attached property.
+opposed to anchors or positioner types) are not affected by the \l LayoutMirroring attached property.
 Therefore, adding right-to-left support to these types of layouts may require some code changes to your application,
 especially in views that rely on both the anchors and x coordinate-based positioning. Here is one way to use
 the \l LayoutMirroring attached property to apply mirroring to an item that is positioned using \l {Item::}{x}
@@ -118,10 +118,10 @@ coordinates:
 
 \snippet qml/righttoleft.qml 4
 
-Not all layouts should necessarily be mirrored. There are cases where a visual element is positioned to
+Not all layouts should necessarily be mirrored. There are cases where a visual type is positioned to
 the right side of the screen for improved one-handed use, because most people are right-handed, and not
-because of the reading direction. In the case that a child element should not be affected by mirroring,
-set the \l {LayoutMirroring::enabled}{LayoutMirroring.enabled} property for that element to false.
+because of the reading direction. In the case that a child type should not be affected by mirroring,
+set the \l {LayoutMirroring::enabled}{LayoutMirroring.enabled} property for that type to false.
 
 Qt Quick is designed for developing animated, fluid user interfaces. When mirroring your application, remember to test that
 the animations and transitions continue to work as expected. If you do not have the resources to add
@@ -130,7 +130,7 @@ aligned and just make sure that text is translated and aligned properly.
 
 \section1 Mirroring icons
 
-(This applies to \l Image, \l BorderImage and \l AnimatedImage elements.)
+(This applies to \l Image, \l BorderImage and \l AnimatedImage types.)
 
 Most images do not need to be mirrored, but some directional icons, such as arrows, may need to be mirrored.
 The painting of these icons can be mirrored with a dedicated \c mirror property introduced in Qt Quick 1.1:

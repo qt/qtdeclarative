@@ -54,7 +54,7 @@ part of a selection group.
 Each of those states may have certain associated visual appearance (neutral,
 highlighted, expanded, and so forth).
 
-Qt Quick provides a \c{State} element with properties which define its semantics
+Qt Quick provides a \c{State} type with properties which define its semantics
 and can be used to trigger behavior or animations.  See the documentation about
 \l{qtquick-statesanimations-states.html}{Qt Quick States} for more
 information.
@@ -66,7 +66,7 @@ that item will change.  A transition is an "edge" between two states.  It may
 trigger other events to occur, as other parts of the application may have
 behavior which is triggered when a certain state is entered or left.
 
-Qt Quick provides the \c{Transition} element which has properties which define
+Qt Quick provides the \c{Transition} type which has properties which define
 what will occur when the application changes from one state to another.  See
 the documentation on
 \l{qtquick-statesanimations-animations.html#transitions-during-state-changes}
@@ -84,9 +84,9 @@ changed, it can be moved in an fluidly animated fashion so that the eye of the
 user can track the change.
 
 These types of animations are supported in Qt Quick through various animation
-and transition elements.  See the documentation on
+and transition types.  See the documentation on
 \l{qtquick-statesanimations-animations.html}
-{Animations and Transitions In Qt Quick} for information about these elements
+{Animations and Transitions In Qt Quick} for information about these types
 and how to use them.
 
 
@@ -107,7 +107,7 @@ is an example of a QML object
 Please see the documentation about
 \l{qtquick-statesanimations-animations.html#default-animation-as-behaviors}
 {default property animations} for more information about using the \l Behavior
-element to provide default property change animations.
+type to provide default property change animations.
 
 It is important to note, that using default property animations (via the
 \l Behavior type) in combination with state-transition animations can sometimes

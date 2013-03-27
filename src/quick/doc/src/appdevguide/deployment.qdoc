@@ -33,8 +33,8 @@
 
 
 QML documents are loaded and executed by the QML runtime. This includes the
-Declarative UI engine along with the built-in QML elements and plugin modules,
-and it also provides access to third-party QML elements and modules.
+Declarative UI engine along with the built-in QML types and plugin modules,
+and it also provides access to third-party QML types and modules.
 
 Applications that use QML need to invoke the QML runtime in order to
 execute QML documents. This can be done by creating a QQuickView

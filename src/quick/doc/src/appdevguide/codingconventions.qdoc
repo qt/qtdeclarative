@@ -104,12 +104,3 @@ For long scripts, we will put the functions in their own JavaScript file and imp
 \snippet qml/codingconventions/javascript-imports.qml 0
 
 */
-
-
-
-
-
-
-
-
-

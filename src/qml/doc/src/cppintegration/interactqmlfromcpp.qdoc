@@ -143,7 +143,7 @@ or QObject::setProperty() and QObject::property():
 You should always use QObject::setProperty(), QQmlProperty or
 QMetaProperty::write() to change a QML property value, to ensure the QML
 engine is made aware of the property change. For example, say you have a
-custom element \c PushButton with a \c buttonText property that internally
+custom type \c PushButton with a \c buttonText property that internally
 reflects the value of a \c m_buttonText member variable. Modifying the member
 variable directly like this is not a good idea:
 

@@ -47,10 +47,9 @@
     to user input.
     \snippet quick/touchinteraction/pincharea/flickresize.qml 0
 
-    Flickable is a simple example demonstrating the Flickable element. The element inside the flickable is very big, but the flickable itself is very small:
+    Flickable is a simple example demonstrating the Flickable type. The object inside the flickable is very big, but the flickable itself is very small:
     \snippet quick/touchinteraction/flickable/basic-flickable.qml 0
 
-    Corkboards shows a more complex Flickable usecase, with elements on the flickable that respond to mouse and keyboard interaction.
-    This doesn't require special code, the QtQuick elements automatically cooperate with Flickable for accepting the touch events.
+    Corkboards shows a more complex Flickable usecase, with types on the flickable that respond to mouse and keyboard interaction.
+    This doesn't require special code, the Qt Quick types automatically cooperate with Flickable for accepting the touch events.
 */
-

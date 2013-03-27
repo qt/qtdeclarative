@@ -49,9 +49,9 @@ application.  A \l MouseArea can be combined with either an \l Image or a
 \snippet qml/usecases/userinput.qml 0
 
 For more advanced use cases requiring multiple touch points, please read the
-documentation for the \l MultiPointTouchArea element and the \l PinchArea element.
+documentation for the \l MultiPointTouchArea type and the \l PinchArea type.
 
-Note that some elements have their own built in input handling. For example,
+Note that some types have their own built in input handling. For example,
 \l Flickable responds to mouse dragging, mouse wheel scrolling, touch dragging,
 and touch flicking by default.
 
@@ -59,8 +59,8 @@ and touch flicking by default.
 
 Button and key presses, from buttons on a device, a keypad, or a keyboard,
 can all be handled using the \l Keys attached property. This attached property
-is available on all \l Item derived elements, and works with the \l Item::focus property
-to determine which element receives the key event. For simple key handling, you can set the focus
+is available on all \l Item derived types, and works with the \l Item::focus property
+to determine which type receives the key event. For simple key handling, you can set the focus
 to true on a single \l Item and do all your key handling there.
 
 \snippet qml/usecases/userinput-keys.qml 0

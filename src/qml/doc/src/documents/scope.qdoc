@@ -74,11 +74,11 @@ Every JavaScript expression, function or file in QML has its own unique
 variable object.  Local variables declared in one will never conflict
 with local variables declared in another.
 
-\section1 Element Names and Imported JavaScript Files
+\section1 Type Names and Imported JavaScript Files
 
-\l {QML Document}s include import statements that define the element names
+\l {QML Document}s include import statements that define the type names
 and JavaScript files visible to the document.  In addition to their use in the
-QML declaration itself, element names are used by JavaScript code when accessing
+QML declaration itself, type names are used by JavaScript code when accessing
 \l {Attached Properties} and enumeration values.
 
 The effect of an import applies to every property binding, and JavaScript
@@ -130,10 +130,10 @@ Consequently unqualified attached property reads will always resolve to an
 attached property on the scope object, which is not always what the programmer
 intended.
 
-For example, the \l PathView element attaches interpolated value properties to
+For example, the \l PathView type attaches interpolated value properties to
 its delegates depending on their position in the path.  As PathView only
-meaningfully attaches these properties to the root element in the delegate, any
-sub-element that accesses them must explicitly qualify the root object, as shown
+meaningfully attaches these properties to the root object in the delegate, any
+sub-object that accesses them must explicitly qualify the root object, as shown
 below.
 
 \code
@@ -149,7 +149,7 @@ PathView {
 }
 \endcode
 
-If the \l Image element omitted the \c root prefix, it would inadvertently access
+If the \l Image object omitted the \c root prefix, it would inadvertently access
 the unset \c {PathView.scale} attached property on itself.
 
 \section1 Component Scope
@@ -157,21 +157,21 @@ the unset \c {PathView.scale} attached property on itself.
 Each QML component in a QML document defines a logical scope.  Each document
 has at least one root component, but can also have other inline sub-components.
 The component scope is the union of the object ids within the component and the
-component's root element's properties.
+component's root object's properties.
 
 \code
 Item {
     property string title
 
     Text {
-        id: titleElement
+        id: title
         text: "<b>" + title + "</b>"
         font.pixelSize: 22
         anchors.top: parent.top
     }
 
     Text {
-        text: titleElement.text
+        text: title.text
         font.pixelSize: 18
         anchors.bottom: parent.bottom
     }
@@ -180,15 +180,15 @@ Item {
 
 The example above shows a simple QML component that displays a rich text title
 string at the top, and a smaller copy of the same text at the bottom.  The first
-\c Text element directly accesses the component's \c title property when
-forming the text to display.  That the root element's properties are directly
+\c Text type directly accesses the component's \c title property when
+forming the text to display.  That the root type's properties are directly
 accessible makes it trivial to distribute data throughout the component.
 
-The second \c Text element uses an id to access the first's text directly.  IDs
+The second \c Text type uses an id to access the first's text directly.  IDs
 are specified explicitly by the QML programmer so they always take precedence
 over other property names (except for those in the \l {JavaScript Scope}).  For
 example, in the unlikely event that the binding's \l {Binding Scope Object}{scope
-object}  had a \c titleElement property in the previous example, the \c titleElement
+object}  had a \c titletype property in the previous example, the \c titletype
 id would still take precedence.
 
 \section1 Component Instance Hierarchy
@@ -215,13 +215,13 @@ Item {
 \endcode
 
 The component instance hierarchy allows instances of the delegate component
-to access the \c defaultColor property of the \c Item element.  Of course,
+to access the \c defaultColor property of the \c Item type.  Of course,
 had the delegate component had a property called \c defaultColor that would
 have taken precedence.
 
 The component instance scope hierarchy extends to out-of-line components, too.
 In the following example, the \c TitlePage.qml component creates two
-\c TitleText instances.  Even though the \c TitleText element is in a separate
+\c TitleText instances.  Even though the \c TitleText type is in a separate
 file, it still has access to the \c title property when it is used from within
 the \c TitlePage.  QML is a dynamically scoped language - depending on where it
 is used, the \c title property may resolve differently.
@@ -341,7 +341,7 @@ will refer to one or the other, but not both.
 
 \section1 JavaScript Global Object
 
-QML disallows element, id and property names that conflict with the properties
+QML disallows type, id and property names that conflict with the properties
 on the global object to prevent any confusion.  Programmers can be confident
 that \c Math.min(10, 9) will always work as expected!
 

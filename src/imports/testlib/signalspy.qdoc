@@ -48,7 +48,7 @@
     \ingroup qtest::qml
 
     In the following example, a SignalSpy is installed to watch the
-    "clicked" signal on a user-defined Button element.  When the signal
+    "clicked" signal on a user-defined Button type.  When the signal
     is emitted, the \l count property on the spy will be increased.
 
     \code

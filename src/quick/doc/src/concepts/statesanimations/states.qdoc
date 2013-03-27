@@ -42,10 +42,10 @@ will turn off. In the \c caution state, the yellow light is on while the other
 lights are turned off.
 
 In QML, \e states are a set of property configurations defined in a \l State
-element. Different configurations could, for example:
+type. Different configurations could, for example:
 
 \list
-\li Show some UI elements and hide others
+\li Show some UI components and hide others
 \li Present different available actions to the user
 \li Start, stop, or pause animations
 \li Execute some script required in the new state
@@ -59,7 +59,7 @@ property. Each state within a component has a unique \c name, an empty string
 being the default. To change the current state
 of an item, set the \l {Item::}{state} property to the name of the state.
 
-Non-Item objects may use states through the \l StateGroup element.
+Non-Item objects may use states through the \l StateGroup type.
 
 \section1 Creating States
 
@@ -70,21 +70,21 @@ A warning \c signal component may have two states, the \c NORMAL and the
 \c CRITICAL state. Suppose that in the \c NORMAL state, the \c color of the
 signal should be \c green and the warning \c flag is down. Meanwhile, in the
 \c CRITICAL state, the \c color should be \c red and the flag is \c up. We may
-model the states using the \c State element and the color and flag
-configurations with the \c PropertyChanges element.
+model the states using the \c State type and the color and flag
+configurations with the \c PropertyChanges type.
 \snippet qml/states.qml signal states
-The \l PropertyChanges element will change the values of object properties.
+The \l PropertyChanges type will change the values of object properties.
 Objects are referenced through their
 \l{qtqml-syntax-objectattributes.html#the-id-assignment}{id}. Objects outside
 the component are also referenced using the \c id property, exemplified by the
 property change to the external \c flag object.
 
 Further, the state may change by assigning the \c state property with the
-appropriate signal state. A state switch could be in a \l MouseArea element,
+appropriate signal state. A state switch could be in a \l MouseArea type,
 assigning a different state whenever the signal receives a mouse click.
 \snippet qml/states.qml switch states
 
-The State element is not limited to performing modifications on property values.
+The State type is not limited to performing modifications on property values.
 It can also:
 \list
 \li Run some script using \l StateChangeScript
@@ -103,7 +103,7 @@ will load the default state.
 
 \section1 The \c when Property
 
-For convenience, the \l State element has a \c when property that can bind to
+For convenience, the \l State type has a \c when property that can bind to
 expressions to change the state whenever the bound expression evaluates to
 \c true. The \c when property will revert the state back to the
 \l {The Default State}{default state} when the expression evaluates to false.
@@ -114,7 +114,7 @@ The \c bell component will change to the \c RINGING state whenever the
 
 \section1 Animating State Changes
 
-State changes induce abrupt value changes. The \l Transition element allow
+State changes induce abrupt value changes. The \l Transition type allow
 smoother changes during state changes. In transitions, animations and
 interpolation behaviors are definable. The
 \l{qtquick-statesanimations-animations.html}

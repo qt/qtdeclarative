@@ -31,7 +31,7 @@ PRIVATETESTS += \
 !qtHaveModule(xmlpatterns): PRIVATETESTS -= qquickxmllistmodel
 
 QUICKTESTS =  \
-#    qquickaccessible \
+    qquickaccessible \
     qquickanchors \
     qquickanimatedimage \
     qquickanimatedsprite \

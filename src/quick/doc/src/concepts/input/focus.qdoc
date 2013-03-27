@@ -52,7 +52,7 @@ is delivered to it. Otherwise, regular Qt key handling continues.
 stops. Otherwise the event is "bubbled up", by recursively passing it to each
 Item's parent until either the event is accepted, or the root Item is reached.
 
-If the \c {Rectangle} element in the following example has active focus and the \c A key is pressed,
+If the \c {Rectangle} type in the following example has active focus and the \c A key is pressed,
 it will bubble up to its parent. However, pressing the \c B key will bubble up to the root
 item and thus subsequently be ignored.
 
@@ -69,7 +69,7 @@ See also the \l {Keys}{Keys attached property} and \l {KeyNavigation}{KeyNavigat
 
 Whether or not an \l Item has active focus can be queried through the
 property \c {Item::activeFocus} property. For example, here we have a \l Text
-element whose text is determined by whether or not it has active focus.
+type whose text is determined by whether or not it has active focus.
 
 \snippet qml/focus/rectangle.qml active focus
 
@@ -79,7 +79,7 @@ An \l Item requests focus by setting the \c focus property to \c true.
 
 For very simple cases simply setting the \c focus property is sometimes
 sufficient. If we run the following example with \l{qtquick-qmlscene.html}
-{qmlscene}, we see that the \c {keyHandler} element has active focus and
+{qmlscene}, we see that the \c {keyHandler} type has active focus and
 pressing the \c A, \c B, or \c C keys modifies the text appropriately.
 
 \snippet qml/focus/basicwidget.qml focus true
@@ -107,11 +107,11 @@ the second widget receives the focus.
 \image declarative-qmlfocus2.png
 
 Looking at both \c MyWidget and \c window code, the problem is evident - there
-are three elements that set the \c focus property set to \c true. The two
+are three types that set the \c focus property set to \c true. The two
 MyWidget sets the \c focus to \c true and the \c window component also sets the
-focus. Ultimately, only one element can have keyboard focus, and the system has
-to decide which element receives the focus. When the second MyWidget is created,
-it receives the focus because it is the last element to set its \c focus
+focus. Ultimately, only one type can have keyboard focus, and the system has
+to decide which type receives the focus. When the second MyWidget is created,
+it receives the focus because it is the last type to set its \c focus
 property to \c true.
 
 This problem is due to visibility. The \c MyWidget component would like to have
@@ -121,9 +121,9 @@ imported components are requesting the focus.
 
 To solve this problem, the QML introduces a concept known as a \e {focus scope}.
 For existing Qt users, a focus scope is like an automatic focus proxy.
-A focus scope is created by declaring the \l FocusScope element.
+A focus scope is created by declaring the \l FocusScope type.
 
-In the next example, a \l FocusScope element is added to the component, and the
+In the next example, a \l FocusScope type is added to the component, and the
 visual result shown.
 
 \snippet qml/focus/myfocusscopewidget.qml widget in focusscope
@@ -133,23 +133,23 @@ visual result shown.
 
 Conceptually \e {focus scopes} are quite simple.
 \list
-\li Within each focus scope one element may have \c {Item::focus} set to
+\li Within each focus scope one object may have \c {Item::focus} set to
 \c true. If more than one \l Item has the \c focus property set, the
-last element to set the \c focus will have the focus and the others are unset,
+last type to set the \c focus will have the focus and the others are unset,
 similar to when there are no focus scopes.
-\li When a focus scope receives active focus, the contained element with
-\c focus set (if any) also gets the active focus. If this element is
+\li When a focus scope receives active focus, the contained type with
+\c focus set (if any) also gets the active focus. If this type is
 also a \l FocusScope, the proxying behavior continues. Both the
 focus scope and the sub-focused item will have \c activeFocus property set.
 \endlist
 
-Note that, since the FocusScope element is not a visual element, the properties
+Note that, since the FocusScope type is not a visual type, the properties
 of its children need to be exposed to the parent item of the FocusScope. Layouts
-and positioning elements will use these visual and styling properties to create
-the layout. In our example, the \c Column element cannot display the two widgets
+and positioning types will use these visual and styling properties to create
+the layout. In our example, the \c Column type cannot display the two widgets
 properly because the FocusScope lacks visual properties of its own. The MyWidget
 component directly binds to the \c rectangle properties to allow the \c Column
-element to create the layout containing the children of the FocusScope.
+type to create the layout containing the children of the FocusScope.
 
 So far, the example has the second component statically selected. It is trivial
 now to extend this component to make it clickable, and add it to the original
@@ -167,12 +167,12 @@ The MyClickableWidget code:
 
 When a QML \l Item explicitly relinquishes focus (by setting its
 \c focus property to \c false while it has active focus), the
-system does not automatically select another element to receive focus. That is,
+system does not automatically select another type to receive focus. That is,
 it is possible for there to be no currently active focus.
 
 See the \l{declarative/keyinteraction/focus}{Keyboard Focus example} for a
 demonstration of moving keyboard focus between multiple areas using FocusScope
-elements.
+types.
 
 \section1 Advanced uses of Focus Scopes
 
@@ -197,8 +197,8 @@ the current item changes, the \l ListView sets the delegate's \c {Item::focus}
 property. As the \l ListView is a focus scope, this doesn't affect the
 rest of the application. However, if the \l ListView itself has
 active focus this causes the delegate itself to receive active focus.
-In this example, the root element of the delegate is also a focus scope,
-which in turn gives active focus to the \c {Text} element that actually performs
+In this example, the root type of the delegate is also a focus scope,
+which in turn gives active focus to the \c {Text} type that actually performs
 the work of handling the \c {Return} key.
 
 All of the QML view classes, such as \l PathView and \l GridView, behave

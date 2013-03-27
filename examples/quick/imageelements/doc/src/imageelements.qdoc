@@ -27,11 +27,11 @@
 /*!
     \title QML Examples - Image Elements
     \example quick/imageelements
-    \brief This is a collection of QML examples relating to image elements.
+    \brief This is a collection of QML examples relating to image types.
     \image qml-imageelements-example.png
     \ingroup qtquickexamples
 
-    This is a collection of small QML examples relating to image elements.
+    This is a collection of small QML examples relating to image types.
 
     'BorderImage' shows off the various scaling modes of the BorderImage item
     by setting its horizontalTileMode and verticalTileMode properties.
@@ -43,7 +43,7 @@
     \snippet quick/imageelements/content/ShadowRectangle.qml shadow
 
     'AnimatedSprite' shows how to display a simple animation using an
-    AnimatedSprite element:
+    AnimatedSprite object:
     \snippet quick/imageelements/animatedsprite.qml sprite
     The sprite animation will loop 3 times.
 
@@ -57,4 +57,3 @@
     \snippet quick/imageelements/spritesequence.qml animation
     At the end of the animation the bear is set back to its initial state.
 */
-

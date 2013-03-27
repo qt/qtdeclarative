@@ -142,7 +142,7 @@ QML object types can emit signals in reaction to certain events occurring.
 Those signals can be handled by signal handler functions, which can be defined
 by clients to implement custom program logic.
 
-Suppose that a button represented by a Rectangle element has a MouseArea and a
+Suppose that a button represented by a Rectangle type has a MouseArea and a
 Text label. The MouseArea will emit its "pressed" signal when the user presses
 the defined interactive area, which will automatically trigger the
 \l{MouseArea::}{onPressed} handler, which can be defined by clients. The QML

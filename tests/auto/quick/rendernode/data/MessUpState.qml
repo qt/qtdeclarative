@@ -2,18 +2,19 @@ import QtQuick 2.0
 import Test 1.0
 
 Rectangle {
-    width: 320
-    height: 480
+    id: root
+    width: 160
+    height: 240
     color: "black"
     Rectangle {
-        width: 320
-        height: 240
+        width: root.width
+        height: root.height / 2;
         anchors.centerIn: parent
         clip: true
         color: "white"
         Rectangle {
-            width: 160
-            height: 240
+            width: root.width / 2;
+            height: root.height / 2
             anchors.centerIn: parent
             rotation: 45
             color: "blue"
@@ -23,7 +24,7 @@ Rectangle {
             }
             Rectangle {
                 anchors.fill: parent
-                anchors.margins: -50
+                anchors.margins: -100
                 color: "red"
                 opacity: 0.5
             }

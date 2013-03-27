@@ -48,10 +48,10 @@ Rectangle {
 
     AnimatedSprite {
         objectName: "sprite"
-        loops: 3
+        loops: 30
         source: "squarefacesprite.png"
         frameCount: 6
-        frameDuration: 120
+        frameDuration: 240
         width: 160
         height: 160
     }

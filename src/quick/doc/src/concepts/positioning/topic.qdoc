@@ -42,11 +42,11 @@ positioning with coordinate bindings, and layouts.
 Items can be positioned manually.  If the user-interface is going to be
 static, manual positioning provides the most efficient form of positioning.
 
-In any user-interface, the visual elements exist at a particular location in
+In any user-interface, the visual types exist at a particular location in
 the screen coordinates at any instant in time.  While fluidly animated and
 dynamic user-interfaces are a major focus of Qt Quick, statically-positioned
 user interfaces are still a viable option.  What's more, if the position of
-those elements does not change, it can often be more performant to specify
+those types does not change, it can often be more performant to specify
 the position manually than to use the more dynamic positioning methods
 documented in proceeding sections.
 
@@ -145,7 +145,7 @@ There are many well-known layouts which work well in user-interfaces, such as
 grids and lists, rows and columns.  Qt Quick supports these sort of pre-defined
 layouts, which can often be more performant to draw than anchor or
 binding-based layouts.  See the documentation on
-\l{qtquick-positioning-layouts.html}{layout elements} for more
+\l{qtquick-positioning-layouts.html}{layout types} for more
 information about utilizing pre-defined layouts.
 
 
@@ -153,8 +153,8 @@ information about utilizing pre-defined layouts.
 \section1 Right-To-Left Support
 
 The directionality of the written form of a language often has a great impact
-on how the visual elements of a user-interface should be positioned.  Qt Quick
-supports right-to-left positioning of elements through the predefined-layouts
+on how the visual types of a user-interface should be positioned.  Qt Quick
+supports right-to-left positioning of types through the predefined-layouts
 as well as right-to-left text layouts.
 
 Please see the documentation about
@@ -163,4 +163,3 @@ Please see the documentation about
 
 
 */
-
