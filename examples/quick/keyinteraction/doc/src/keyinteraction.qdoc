@@ -25,7 +25,7 @@
 **
 ****************************************************************************/
 /*!
-    \title QtQuick Examples - Key Interaction
+    \title Qt Quick Examples - Key Interaction
     \example quick/keyinteraction
     \brief This is a collection of QML keyboard interaction examples.
     \image qml-keyinteraction-example.png

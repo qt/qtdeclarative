@@ -25,7 +25,7 @@
 **
 ****************************************************************************/
 /*!
-    \title QtQuick Examples - Positioners
+    \title Qt Quick Examples - Positioners
     \example quick/positioners
     \brief This is a collection of QML Positioner examples.
     \image qml-positioners-example.png

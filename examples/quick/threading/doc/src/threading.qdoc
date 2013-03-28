@@ -25,7 +25,7 @@
 **
 ****************************************************************************/
 /*!
-    \title QtQuick Examples - Threading
+    \title Qt Quick Examples - Threading
     \example quick/threading
     \brief This is a collection of QML Multithreading examples.
     \image qml-threading-example.png

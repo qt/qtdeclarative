@@ -25,7 +25,7 @@
 **
 ****************************************************************************/
 /*!
-    \title QtQuick Examples - XMLHttpRequst
+    \title Qt Quick Examples - XMLHttpRequest
     \example qml/xmlhttprequest
     \brief This is a collection of XMLHttpRequest examples
     \image qml-xmlhttprequest-example.png

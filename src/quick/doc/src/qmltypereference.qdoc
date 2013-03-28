@@ -78,10 +78,10 @@ In addition, the QtQuick module provides the following basic types:
 \section1 Object Types
 
 All of the object types provided by QtQuick are based on the \l{Item} type,
-which itself derives from \l{QML::QtObject}.  QML object types provided by
-the \l{qtqml-typereference-topic.html#object-types}{QtQml module}
+which itself derives from \l{QML::QtObject}.  \l{qtqml-typereference-topic.html#object-types}
+{QML object types} provided by the Qt QML module
 (such as \l{QML::QtObject} and \l{QML::Component}) are also available when
-you import QtQuick.
+you import \c QtQuick.
 
 \section2 Visual Types
 
@@ -293,8 +293,8 @@ The QtQuick 2 module provides graphical primitive types. They can be used with t
 import QtQuick 2.1
 \endcode
 
-For a more detailed listing of types in the QtQuick 2 import, see the \l{qtquick-qmltypereference.html}{QtQuick 2 type reference page}.
-For more details about the QtQuick 2 module, see the \l{QtQuick} module page.
+For a more detailed listing of types in the \c QtQuick 2 import, see the \l{Qt Quick QML Types} page.
+For more details about the module itself, see the \l{Qt Quick} module page.
 */
 
 /*!

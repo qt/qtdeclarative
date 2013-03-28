@@ -67,7 +67,7 @@ and \l {qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}.
 \example quick/tutorials/extending/chapter1-basics
 
 A common task when extending QML is to provide a new QML type that supports some
- custom functionality beyond what is provided by the built-in \l {Qt Quick QML Types}{QtQuick types}.
+ custom functionality beyond what is provided by the built-in \l {Qt Quick QML Types}{Qt Quick types}.
 For example, this could be done to implement particular data models, or provide
 types with custom painting and drawing capabilities, or access system features
 like network programming that are not accessible through built-in QML features.

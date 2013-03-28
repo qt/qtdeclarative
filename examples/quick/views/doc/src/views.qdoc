@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \title QtQuick Examples - Views
+    \title Qt Quick Examples - Views
     \example quick/views
     \brief This is a collection of QML model/view examples
     \image qml-modelviews-example.png

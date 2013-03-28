@@ -128,7 +128,7 @@ provided by Qt Quick, please see the \l{Qt Quick} module documentation.
     \list
     \li \l{qtquick-qmlscene.html}{Prototyping with qmlscene}
     \li \l{qtquick-debugging.html}{Debugging QML Applications}
-    \li \l{qtquick-qtquicktest.html}{QtQuickTest: QML Unit Testing Framework}
+    \li \l{qtquick-qtquicktest.html}{Qt Quick Test: QML Unit Testing Framework}
     \endlist
 \li \l{qml-codingconventions.html}{QML Coding Conventions}
 \li \l{qtquick-glossary.html}{Glossary of Terms}

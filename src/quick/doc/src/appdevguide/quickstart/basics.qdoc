@@ -34,25 +34,25 @@
 A QML document defines a hierarchy of objects with a highly-readable,
 structured layout.  Every QML document consists of two parts: an imports
 section and an object declaration section.  The types and functionality most
-common to user interfaces are provided in the \l{QtQuick}
+common to user interfaces are provided in the \c{QtQuick}
 import.
 
 \section2 Importing and Using the QtQuick Module
 
-To use the \l{QtQuick} module, a QML document needs to
+To use the \l{Qt Quick} module, a QML document needs to
 import it.  The import syntax looks like this:
 
 \qml
 import QtQuick 2.0
 \endqml
 
-The types and functionality that \l{QtQuick} provides can now
+The types and functionality that \l{Qt Quick} provides can now
 be used in the QML document!
 
 \section2 Defining an Object Hierarchy
 
 The object declaration in a QML document defines what will be displayed in the
-visual scene.  \l{QtQuick} provides the basic building blocks
+visual scene.  \l{Qt Quick} provides the basic building blocks
 for all user interfaces, including objects to display images and text, and to
 handle user input.
 
@@ -80,8 +80,7 @@ added to the \c children property of the \l Rectangle object, by QML.
 \section2 Putting it Together
 
 The \l Rectangle and \l Text types used in the above example are both provided
-by the \l{QtQuick} import.  To use them, we need to import
-\l{QtQuick}.  Putting the import and object declaration
+by the \c{QtQuick} import.  Putting the import and object declaration
 together, we get a complete QML document:
 
 \qml

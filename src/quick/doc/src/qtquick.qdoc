@@ -41,7 +41,7 @@ and delayed object instantiation.
 The Qt Quick module provides both the \c QtQuick QML module, which supplies
 \l{Qt Quick QML Types}{a set of QML types} for creating user
 interfaces with the QML language, and the \c QtQuick C++ module, which supplies
-\l{Qt Quick Module - C++ Classes}{a set of C++ APIs} for integrating with user interfaces and
+\l{Qt Quick C++ Classes}{a set of C++ APIs} for integrating with user interfaces and
 applications built with QML and the \c QtQuick QML module.
 
 For those new to QML and Qt Quick, please see
@@ -81,7 +81,7 @@ To find out more about using the QML language, see the \l{Qt QML Module Document
 \section1 Qt Quick Module Documentation
 
 \list
-    \li \l{qtquick-qmltypereference.html}{QML Types provided by the QtQuick Module}
+    \li \l{qtquick-qmltypereference.html}{Qt Quick QML Types}
         \list
         \li \l{qtquick-qmltypereference.html#importing-qtquick}{Importing QtQuick}
         \li \l{qtquick-qmltypereference.html#basic-types}{Basic Types}
@@ -111,18 +111,18 @@ To find out more about using the QML language, see the \l{Qt QML Module Document
 
 Additional Qt Quick information:
 \list
-\li \l{Qt Quick Module - C++ Classes} - the C++ API provided by the
+\li \l{Qt Quick C++ Classes} - the C++ API provided by the
     Qt Quick module
 \li \l{Qt Quick QML Types} - a list of QML types provided by the
     \c{QtQuick} import
     \list
-    \li \l{QML Module QtQuick.XmlListModel 2.0}{XML List Model} - contains types
+    \li \l{QtQuick.XmlListModel 2}{XML List Model} - contains types
     for creating models from XML data
-    \li \l{QML Module QtQuick.LocalStorage 2.0}{Local Storage} - a submodule
+    \li \l{QtQuick.LocalStorage 2}{Local Storage} - a submodule
     containing a JavaScript interface for an SQLite database
-    \li \l{QML Module QtQuick.Particles 2.0}{Particles} - provides a particle
+    \li \l{QtQuick.Particles 2}{Particles} - provides a particle
     system for Qt Quick
-    \li \l{QML Module QtQuick.Window 2.0}{Window} - contains types for creating
+    \li \l{QtQuick.Window 2}{Window} - contains types for creating
     top-level windows and accessing screen information
     \endlist
 \li \l{Qt Quick Release Notes} - list of changes and additions in the Qt Quick
@@ -134,7 +134,7 @@ Further information for writing QML applications:
 \list
 \li \l{QML Application Developer Resources}
     - essential information for application development with QML and Qt Quick
-\li \l{Qt Qml} - documentation for the
+\li \l{Qt QML} - documentation for the
     Qt QML module, which provides the QML engine and language infrastructure
 \endlist
 */

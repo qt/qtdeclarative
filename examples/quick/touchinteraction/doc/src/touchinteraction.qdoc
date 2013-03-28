@@ -25,7 +25,7 @@
 **
 ****************************************************************************/
 /*!
-    \title QtQuick Examples - Touch Interaction
+    \title Qt Quick Examples - Touch Interaction
     \example quick/touchinteraction
     \brief This is a collection of QML Touch Interaction examples.
     \image qml-touchinteraction-example.png

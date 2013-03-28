@@ -39,8 +39,8 @@ developers to extend the QML language with custom types and integrate QML code
 with JavaScript and C++.
 
 The Qt QML module provides both the \c QtQml QML module, which supplies
-\l{Qt QML Module - C++ Classes}{a set of core QML types} for creating QML
-applications, and the \c QtQml C++ module, which supplies \l{Qt QML Module - C++ Classes}{a set of C++
+\l{Qt QML QML Types}{a set of core QML types} for creating QML
+applications, and the \c QtQml C++ module, which supplies \l{Qt QML C++ Classes}{a set of C++
 APIs} for extending QML applications with custom types and integrating C++
 implementations with QML applications.
 
@@ -102,7 +102,7 @@ for an introduction to writing QML applications.
         \li \l{qtqml-documents-scope.html}{Scope and Naming Resolution}
         \endlist
 
-    \li \l{qtqml-typereference-topic.html}{QML Types Provided by the QtQml Module}
+    \li \l{qtqml-typereference-topic.html}{QML Types Provided by the Qt QML Module}
         \list
         \li \l{qtqml-typereference-topic.html#importing-qtqml}{Importing \c QtQml}
         \li \l{qtqml-typereference-topic.html#basic-types}{Basic Types}
@@ -170,7 +170,7 @@ for an introduction to writing QML applications.
 
 Additional Qt QML information:
 \list
-\li \l{Qt QML Module - C++ Classes} - the C++ API provided by the
+\li \l{Qt QML C++ Classes} - the C++ API provided by the
     Qt QML module
 \li \l{Qt QML Release Notes} - list of changes and
     additions in the Qt QML module

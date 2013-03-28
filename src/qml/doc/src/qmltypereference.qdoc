@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
 \qmlmodule QtQml 2
-\title Qt Qml QML Types
+\title Qt QML QML Types
 \ingroup qmlmodules
 \brief List of QML types provided by the Qt QML module
 
@@ -60,11 +60,11 @@ and functionality provided by the \c QtQml namespace are also provided by the
 import QtQuick 2.0
 \endqml
 
-See the \l{QtQuick}{QtQuick} module documentation for more information about the
+See the \l{Qt Quick} module documentation for more information about the
 \c QtQuick namespace and what it provides to QML application developers.
 
 The documentation for the types below applies equally to the types of the same
-name provided by the \l{QtQuick}{QtQuick} module, as they are in fact identical.
+name provided by the \l{Qt Quick} module, as they are in fact identical.
 
 \section1 Basic Types
 

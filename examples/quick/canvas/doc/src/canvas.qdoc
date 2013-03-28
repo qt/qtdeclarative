@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \title QtQuick Examples - Canvas
+    \title Qt Quick Examples - Canvas
     \example quick/canvas
     \brief This is a collection of QML Canvas examples.
     \image qml-canvas-example.png
