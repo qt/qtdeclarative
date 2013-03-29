@@ -58,8 +58,8 @@ protected:
     QQuickImplicitSizeItem(QQuickImplicitSizeItemPrivate &dd, QQuickItem *parent);
 
 Q_SIGNALS:
-    void implicitWidthChanged2();
-    void implicitHeightChanged2();
+    Q_REVISION(1) void implicitWidthChanged2();
+    Q_REVISION(1) void implicitHeightChanged2();
 
 private:
     Q_DISABLE_COPY(QQuickImplicitSizeItem)
