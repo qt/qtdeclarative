@@ -65,11 +65,12 @@ using namespace QQmlJS::VM;
 
 DEFINE_MANAGED_VTABLE(RegExpObject);
 
-RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bool global)
+RegExpObject::RegExpObject(ExecutionEngine *engine, RegExp* value, bool global)
     : Object(engine)
     , value(value)
     , global(global)
 {
+    vtbl = &static_vtbl;
     type = Type_RegExpObject;
 
     PropertyDescriptor *lastIndexProperty = insertMember(engine->newIdentifier(QStringLiteral("lastIndex")));
@@ -78,7 +79,7 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
     lastIndexProperty->enumerable = PropertyDescriptor::Disabled;
     lastIndexProperty->configurable = PropertyDescriptor::Disabled;
     lastIndexProperty->value = Value::fromInt32(0);
-    if (!this->value.get())
+    if (!this->value)
         return;
     defineReadonlyProperty(engine->newIdentifier(QStringLiteral("source")), Value::fromString(engine->newString(this->value->pattern())));
     defineReadonlyProperty(engine->newIdentifier(QStringLiteral("global")), Value::fromBoolean(global));
@@ -89,6 +90,14 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bo
 void RegExpObject::destroy(Managed *that)
 {
     static_cast<RegExpObject *>(that)->~RegExpObject();
+}
+
+void RegExpObject::markObjects(Managed *that)
+{
+    RegExpObject *re = static_cast<RegExpObject*>(that);
+    if (re->value)
+        re->value->mark();
+    Object::markObjects(that);
 }
 
 PropertyDescriptor *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
@@ -141,7 +150,7 @@ Value RegExpCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int a
         }
     }
 
-    RefPtr<RegExp> re = RegExp::create(ctx->engine, r.stringValue()->toQString(), ignoreCase, multiLine);
+    RegExp* re = RegExp::create(ctx->engine, r.stringValue()->toQString(), ignoreCase, multiLine);
     if (!re->isValid())
         ctx->throwSyntaxError(0);
 

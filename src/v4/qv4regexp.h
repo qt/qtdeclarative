@@ -44,7 +44,6 @@
 #include <QString>
 #include <QVector>
 
-#include <wtf/RefCounted.h>
 #include <wtf/RefPtr.h>
 #include <wtf/FastAllocBase.h>
 #include <wtf/BumpPointerAllocator.h>
@@ -54,6 +53,8 @@
 #include <yarr/Yarr.h>
 #include <yarr/YarrInterpreter.h>
 
+#include "qv4managed.h"
+
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
@@ -61,11 +62,11 @@ namespace VM {
 
 struct ExecutionEngine;
 
-class RegExp : public RefCounted<RegExp>
+class RegExp : public Managed
 {
 public:
-    static PassRefPtr<RegExp> create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false)
-    { return adoptRef(new RegExp(engine, pattern, ignoreCase, multiline)); }
+    static RegExp* create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
+    ~RegExp();
 
     QString pattern() const { return m_pattern; }
 
@@ -76,6 +77,20 @@ public:
     bool ignoreCase() const { return m_ignoreCase; }
     bool multiLine() const { return m_multiLine; }
     int captureCount() const { return m_subPatternCount + 1; }
+
+protected:
+    static const ManagedVTable static_vtbl;
+    static void destroy(Managed *that);
+    static void markObjects(Managed *that);
+    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty);
+    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+    static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value);
+    static PropertyFlags query(Managed *m, ExecutionContext *ctx, String *name);
+    static PropertyFlags queryIndexed(Managed *m, ExecutionContext *ctx, uint index);
+    static bool deleteProperty(Managed *m, ExecutionContext *ctx, String *name);
+    static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index);
+
 
 private:
     Q_DISABLE_COPY(RegExp);

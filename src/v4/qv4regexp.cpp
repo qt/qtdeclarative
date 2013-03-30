@@ -46,6 +46,8 @@
 namespace QQmlJS {
 namespace VM {
 
+DEFINE_MANAGED_VTABLE(RegExp);
+
 uint RegExp::match(const QString &string, int start, uint *matchOffsets)
 {
     if (!isValid())
@@ -54,12 +56,20 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
     return JSC::Yarr::interpret(m_byteCode.get(), WTF::String(string).characters16(), string.length(), start, matchOffsets);
 }
 
+RegExp* RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline)
+{
+    return new (engine->memoryManager) RegExp(engine, pattern, ignoreCase, multiline);
+}
+
 RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)
     : m_pattern(pattern)
     , m_subPatternCount(0)
     , m_ignoreCase(ignoreCase)
     , m_multiLine(multiline)
 {
+    vtbl = &static_vtbl;
+    type = Type_RegExpObject;
+
     if (!engine)
         return;
     const char* error = 0;
@@ -68,6 +78,58 @@ RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase,
         return;
     m_subPatternCount = yarrPattern.m_numSubpatterns;
     m_byteCode = JSC::Yarr::byteCompile(yarrPattern, &engine->bumperPointerAllocator);
+}
+
+RegExp::~RegExp()
+{
+    _data = 0;
+}
+
+void RegExp::destroy(Managed *that)
+{
+    static_cast<RegExp*>(that)->~RegExp();
+}
+
+void RegExp::markObjects(Managed *that)
+{
+}
+
+Value RegExp::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+{
+    return Value::undefinedValue();
+}
+
+Value RegExp::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+{
+    return Value::undefinedValue();
+}
+
+void RegExp::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
+{
+}
+
+void RegExp::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value)
+{
+}
+
+PropertyFlags RegExp::query(Managed *m, ExecutionContext *ctx, String *name)
+{
+    return PropertyFlags(0);
+}
+
+PropertyFlags RegExp::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
+{
+    return PropertyFlags(0);
+}
+
+bool RegExp::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
+{
+    return false;
+}
+
+bool RegExp::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
+{
+    return false;
 }
 
 } // end of namespace VM

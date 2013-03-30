@@ -48,7 +48,6 @@
 #include "qv4context.h"
 #include <setjmp.h>
 
-#include <wtf/PassRefPtr.h>
 #include <wtf/BumpPointerAllocator.h>
 
 QT_BEGIN_NAMESPACE
@@ -224,7 +223,7 @@ struct Q_V4_EXPORT ExecutionEngine
     Object *newDateObject(const Value &value);
 
     RegExpObject *newRegExpObject(const QString &pattern, int flags);
-    RegExpObject *newRegExpObject(PassRefPtr<RegExp> re, bool global);
+    RegExpObject *newRegExpObject(RegExp* re, bool global);
 
     Object *newErrorObject(const Value &value);
     Object *newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message);

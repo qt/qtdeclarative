@@ -65,15 +65,16 @@ namespace QQmlJS {
 namespace VM {
 
 struct RegExpObject: Object {
-    RefPtr<RegExp> value;
+    RegExp* value;
     PropertyDescriptor *lastIndexProperty(ExecutionContext *ctx);
     bool global;
-    RegExpObject(ExecutionEngine *engine, PassRefPtr<RegExp> value, bool global);
+    RegExpObject(ExecutionEngine *engine, RegExp* value, bool global);
     ~RegExpObject() {}
 
 protected:
     static const ManagedVTable static_vtbl;
     static void destroy(Managed *that);
+    static void markObjects(Managed *that);
 };
 
 
@@ -90,7 +91,7 @@ protected:
 
 struct RegExpPrototype: RegExpObject
 {
-    RegExpPrototype(ExecutionEngine* engine): RegExpObject(engine, RegExp::create(0, QString()), false) {}
+    RegExpPrototype(ExecutionEngine* engine): RegExpObject(engine, RegExp::create(engine, QString()), false) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
     static Value method_exec(ExecutionContext *ctx);

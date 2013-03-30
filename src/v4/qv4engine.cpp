@@ -450,7 +450,7 @@ RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags
     return newRegExpObject(RegExp::create(this, pattern, ignoreCase, multiline), global);
 }
 
-RegExpObject *ExecutionEngine::newRegExpObject(PassRefPtr<RegExp> re, bool global)
+RegExpObject *ExecutionEngine::newRegExpObject(RegExp* re, bool global)
 {
     RegExpObject *object = new (memoryManager) RegExpObject(this, re, global);
     object->prototype = regExpPrototype;

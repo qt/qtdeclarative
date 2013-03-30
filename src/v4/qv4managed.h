@@ -71,6 +71,7 @@ struct JSONObject;
 struct ForeachIteratorObject;
 struct Managed;
 struct Value;
+struct RegExp;
 
 struct ManagedVTable
 {
@@ -150,7 +151,8 @@ public:
         Type_ArgumentsObject,
         Type_JSONObject,
         Type_MathObject,
-        Type_ForeachIteratorObject
+        Type_ForeachIteratorObject,
+        Type_RegExp
     };
 
     String *asString() { return reinterpret_cast<String *>(this); }
@@ -166,6 +168,7 @@ public:
     ArgumentsObject *asArgumentsObject() { return type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
     JSONObject *asJSONObject() { return type == Type_JSONObject ? reinterpret_cast<JSONObject *>(this) : 0; }
     ForeachIteratorObject *asForeachIteratorObject() { return type == Type_ForeachIteratorObject ? reinterpret_cast<ForeachIteratorObject *>(this) : 0; }
+    RegExp *asRegExp() { return type == Type_RegExp ? reinterpret_cast<RegExp *>(this) : 0; }
 
     bool isArrayObject() const { return type == Type_ArrayObject; }
     bool isStringObject() const { return type == Type_StringObject; }
