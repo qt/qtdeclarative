@@ -53,7 +53,6 @@
 #include "qv4propertydescriptor.h"
 #include "qv4internalclass.h"
 #include "qv4objectiterator.h"
-#include "qv4regexp.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>

@@ -46,9 +46,17 @@
 namespace QQmlJS {
 namespace VM {
 
+RegExpCache::~RegExpCache()
+{
+    for (RegExpCache::Iterator it = begin(), e = end();
+         it != e; ++it)
+        it.value()->m_cache = 0;
+    clear();
+}
+
 DEFINE_MANAGED_VTABLE(RegExp);
 
-uint RegExp::match(const QString &string, int start, uint *matchOffsets)
+uint RegExp::match(const QString &string, int start, uint *matchOffsets) const
 {
     if (!isValid())
         return JSC::Yarr::offsetNoMatch;
@@ -58,11 +66,28 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
 
 RegExp* RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline)
 {
-    return new (engine->memoryManager) RegExp(engine, pattern, ignoreCase, multiline);
+    RegExpCacheKey key(pattern, ignoreCase, multiline);
+
+    RegExpCache *cache = engine->regExpCache;
+    if (cache) {
+        if (RegExp *result = cache->value(key))
+            return result;
+    }
+
+    RegExp *result = new (engine->memoryManager) RegExp(engine, pattern, ignoreCase, multiline);
+
+    if (!cache)
+        cache = engine->regExpCache = new RegExpCache;
+
+    result->m_cache = cache;
+    cache->insert(key, result);
+
+    return result;
 }
 
 RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)
     : m_pattern(pattern)
+    , m_cache(0)
     , m_subPatternCount(0)
     , m_ignoreCase(ignoreCase)
     , m_multiLine(multiline)
@@ -82,6 +107,10 @@ RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase,
 
 RegExp::~RegExp()
 {
+    if (m_cache) {
+        RegExpCacheKey key(this);
+        m_cache->remove(key);
+    }
     _data = 0;
 }
 

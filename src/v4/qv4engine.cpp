@@ -75,6 +75,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , globalObject(Value::nullValue())
     , globalCode(0)
     , externalResourceComparison(0)
+    , regExpCache(0)
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
@@ -240,6 +241,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
 ExecutionEngine::~ExecutionEngine()
 {
+    delete regExpCache;
     delete globalObject.asObject();
     delete rootContext;
     delete [] contextStack;

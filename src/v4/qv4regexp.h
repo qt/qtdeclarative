@@ -54,6 +54,7 @@
 #include <yarr/YarrInterpreter.h>
 
 #include "qv4managed.h"
+#include "qv4engine.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -61,6 +62,34 @@ namespace QQmlJS {
 namespace VM {
 
 struct ExecutionEngine;
+
+struct RegExpCacheKey
+{
+    RegExpCacheKey(const QString &pattern, bool ignoreCase, bool multiLine)
+        : pattern(pattern)
+        , ignoreCase(ignoreCase)
+        , multiLine(multiLine)
+    { }
+    explicit inline RegExpCacheKey(const RegExp *re);
+
+    bool operator==(const RegExpCacheKey &other) const
+    { return pattern == other.pattern && ignoreCase == other.ignoreCase && multiLine == other.multiLine; }
+    bool operator!=(const RegExpCacheKey &other) const
+    { return !operator==(other); }
+
+    QString pattern;
+    uint ignoreCase : 1;
+    uint multiLine : 1;
+};
+
+inline uint qHash(const RegExpCacheKey& key, uint seed = 0) Q_DECL_NOTHROW
+{ return qHash(key.pattern, seed); }
+
+class RegExpCache : public QHash<RegExpCacheKey, RegExp*>
+{
+public:
+    ~RegExpCache();
+};
 
 class RegExp : public Managed
 {
@@ -72,7 +101,7 @@ public:
 
     bool isValid() const { return m_byteCode.get(); }
 
-    uint match(const QString& string, int start, uint *matchOffsets);
+    uint match(const QString& string, int start, uint *matchOffsets) const;
 
     bool ignoreCase() const { return m_ignoreCase; }
     bool multiLine() const { return m_multiLine; }
@@ -93,15 +122,24 @@ protected:
 
 
 private:
+    friend class RegExpCache;
     Q_DISABLE_COPY(RegExp);
     RegExp(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline);
 
     const QString m_pattern;
     OwnPtr<JSC::Yarr::BytecodePattern> m_byteCode;
+    RegExpCache *m_cache;
     int m_subPatternCount;
     const bool m_ignoreCase;
     const bool m_multiLine;
 };
+
+inline RegExpCacheKey::RegExpCacheKey(const RegExp *re)
+    : pattern(re->pattern())
+    , ignoreCase(re->ignoreCase())
+    , multiLine(re->multiLine())
+{}
+
 
 } // end of namespace VM
 } // end of namespace QQmlJS
