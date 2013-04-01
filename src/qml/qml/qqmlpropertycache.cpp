@@ -1055,7 +1055,7 @@ QStringList QQmlPropertyCache::propertyNames() const
 struct StaticQtMetaObject : public QObject
 {
     static const QMetaObject *get()
-        { return &static_cast<StaticQtMetaObject*> (0)->staticQtMetaObject; }
+        { return &staticQtMetaObject; }
 };
 
 static int EnumType(const QMetaObject *metaobj, const QByteArray &str, int type)

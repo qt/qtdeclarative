@@ -563,7 +563,7 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
 struct StaticQtMetaObject : public QObject
 {
     static const QMetaObject *get()
-        { return &static_cast<StaticQtMetaObject*> (0)->staticQtMetaObject; }
+        { return &staticQtMetaObject; }
 };
 
 void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)

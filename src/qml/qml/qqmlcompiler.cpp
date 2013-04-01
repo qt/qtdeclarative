@@ -2527,7 +2527,7 @@ bool QQmlCompiler::buildPropertyLiteralAssignment(QQmlScript::Property *prop,
 struct StaticQtMetaObject : public QObject
 {
     static const QMetaObject *get()
-        { return &static_cast<StaticQtMetaObject*> (0)->staticQtMetaObject; }
+        { return &staticQtMetaObject; }
 };
 
 bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
