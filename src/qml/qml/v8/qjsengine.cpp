@@ -195,6 +195,10 @@ QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
 
 /*!
     Destroys this QJSEngine.
+
+    Garbage is not collected from the persistent JS heap during QJSEngine
+    destruction. If you need all memory freed, call collectGarbage manually
+    right before destroying the QJSEngine.
 */
 QJSEngine::~QJSEngine()
 {

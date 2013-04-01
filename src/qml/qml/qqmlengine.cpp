@@ -831,6 +831,8 @@ QQmlEngine::QQmlEngine(QQmlEnginePrivate &dd, QObject *parent)
   Any QQmlContext's created on this engine will be
   invalidated, but not destroyed (unless they are parented to the
   QQmlEngine object).
+
+  See QJSEngine docs for details on cleaning up the JS engine.
 */
 QQmlEngine::~QQmlEngine()
 {
