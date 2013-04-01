@@ -51,7 +51,7 @@ Rectangle {
     }
     ImageParticle {
         system: sys
-        source: "../../images/particle.png"
+        source: "qrc:///particleresources/glowdot.png"
         color: "white"
         colorVariation: 1.0
         alpha: 0.1

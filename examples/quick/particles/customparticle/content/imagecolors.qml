@@ -71,7 +71,7 @@ Rectangle {
             }
             Image {
                 id: particle
-                source: "../../images/particle4.png"
+                source: "qrc:///particleresources/fuzzydot.png"
             }
             //! [vertex]
             vertexShader:"

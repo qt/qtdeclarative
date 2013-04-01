@@ -623,6 +623,22 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     The source image to be used.
 
     If the image is a sprite animation, use the sprite property instead.
+
+    Since Qt 5.2, some default images are provided as resources to aid prototyping:
+    \table
+    \row
+    \li qrc:///particleresources/star.png
+    \li \inlineimage particles/star.png
+    \row
+    \li qrc:///particleresources/glowdot.png
+    \li \inlineimage particles/glowdot.png
+    \row
+    \li qrc:///particleresources/fuzzydot.png
+    \li \inlineimage particles/fuzzydot.png
+    \endtable
+
+    Note that the images are white and semi-transparent, to allow colorization
+    and alpha levels to have maximum effect.
 */
 /*!
     \qmlproperty list<Sprite> QtQuick.Particles2::ImageParticle::sprites

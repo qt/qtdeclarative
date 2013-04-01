@@ -61,7 +61,7 @@ Rectangle {
     ParticleSystem { id: sys1 }
     ImageParticle {
         system: sys1
-        source: "../../images/particle.png"
+        source: "qrc:///particleresources/glowdot.png"
         color: "cyan"
         alpha: 0
         SequentialAnimation on color {
@@ -127,7 +127,7 @@ Rectangle {
             }
         }
         colorVariation: 0.5
-        source: "../../images/star.png"
+        source: "qrc:///particleresources/star.png"
     }
     Emitter {
         id: trailsStars
@@ -149,7 +149,7 @@ Rectangle {
     }
     ParticleSystem { id: sys3; }
     ImageParticle {
-        source: "../../images/particle.png"
+        source: "qrc:///particleresources/glowdot.png"
         system: sys3
         color: "orange"
         alpha: 0
@@ -191,7 +191,7 @@ Rectangle {
     ParticleSystem { id: sys4; }
     ImageParticle {
         system: sys4
-        source: "../../images/star.png"
+        source: "qrc:///particleresources/star.png"
         color: "green"
         alpha: 0
         SequentialAnimation on color {

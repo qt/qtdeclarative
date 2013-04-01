@@ -67,7 +67,7 @@ Rectangle {
         id: particles
         anchors.fill: parent
         ImageParticle {
-            source: "../../images/star.png"
+            source: "qrc:///particleresources/star.png"
             alpha: 0
             colorVariation: 0.6
         }

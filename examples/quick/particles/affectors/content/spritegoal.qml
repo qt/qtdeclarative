@@ -66,7 +66,7 @@ Item {
     ImageParticle {
         system: sys
         groups: ["starfield"]
-        source: "../../images/star.png"
+        source: "qrc:///particleresources/star.png"
         colorVariation: 0.3
         color: "white"
     }
@@ -170,7 +170,7 @@ Item {
         z:0 
         system: sys
         groups: ["exhaust"]
-        source: "../../images/particle4.png"
+        source: "qrc:///particleresources/fuzzydot.png"
 
         color: "orange"
         SequentialAnimation on color {

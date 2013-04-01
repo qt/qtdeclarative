@@ -75,13 +75,13 @@ Rectangle {
 
         ImageParticle {
             groups: ["smoke"]
-            source: "../../images/particle.png"
+            source: "qrc:///particleresources/glowdot.png"
             color: "#11111111"
             colorVariation: 0
         }
         ImageParticle {
             groups: ["flame"]
-            source: "../../images/particle.png"
+            source: "qrc:///particleresources/glowdot.png"
             color: "#11ff400f"
             colorVariation: 0.1
         }

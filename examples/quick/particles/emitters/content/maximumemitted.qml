@@ -53,7 +53,7 @@ Rectangle {
         ImageParticle {
             system: sys
             id: cp
-            source: "../../images/particle.png"
+            source: "qrc:///particleresources/glowdot.png"
             colorVariation: 0.4
             color: "#000000FF"
         }

@@ -58,7 +58,7 @@ Rectangle {
         ImageParticle {
             groups: ["center","edge"]
             anchors.fill: parent
-            source: "../../images/particle.png"
+            source: "qrc:///particleresources/glowdot.png"
             colorVariation: 0.1
             color: "#009999FF"
         }

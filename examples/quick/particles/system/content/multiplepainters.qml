@@ -91,6 +91,6 @@ Rectangle {
         height: 240
         width: root.width
         z: 1
-        source: "../../images/particle.png"
+        source: "qrc:///particleresources/glowdot.png"
     }
 }

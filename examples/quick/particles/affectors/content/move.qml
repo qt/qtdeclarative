@@ -50,7 +50,7 @@ Rectangle {
         ImageParticle {
             groups: ["A"]
             anchors.fill: parent
-            source: "../../images/star.png"
+            source: "qrc:///particleresources/star.png"
             color:"#FF1010"
             redVariation: 0.8
         }
@@ -80,7 +80,7 @@ Rectangle {
         ImageParticle {
             groups: ["B"]
             anchors.fill: parent
-            source: "../../images/star.png"
+            source: "qrc:///particleresources/star.png"
             color:"#10FF10"
             greenVariation: 0.8
         }
@@ -112,7 +112,7 @@ Rectangle {
         ImageParticle {
             groups: ["C"]
             anchors.fill: parent
-            source: "../../images/star.png"
+            source: "qrc:///particleresources/star.png"
             color:"#1010FF"
             blueVariation: 0.8
         }

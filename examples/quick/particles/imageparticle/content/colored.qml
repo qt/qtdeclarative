@@ -50,7 +50,7 @@ Rectangle {
         ImageParticle {
             groups: ["stars"]
             anchors.fill: parent
-            source: "../../images/star.png"
+            source: "qrc:///particleresources/star.png"
         }
         Emitter {
             group: "stars"
@@ -64,7 +64,7 @@ Rectangle {
         // ![0]
         ImageParticle {
             anchors.fill: parent
-            source: "../../images/star.png"
+            source: "qrc:///particleresources/star.png"
             alpha: 0
             alphaVariation: 0.2
             colorVariation: 1.0
