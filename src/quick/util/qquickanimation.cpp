@@ -2565,4 +2565,9 @@ QAbstractAnimationJob* QQuickPropertyAnimation::transition(QQuickStateActions &a
     return initInstance(animator);
 }
 
+QQuickAnimationPropertyUpdater::~QQuickAnimationPropertyUpdater()
+{
+    if (wasDeleted) *wasDeleted = true;
+}
+
 QT_END_NAMESPACE

@@ -303,7 +303,7 @@ class Q_AUTOTEST_EXPORT QQuickAnimationPropertyUpdater : public QQuickBulkValueU
 {
 public:
     QQuickAnimationPropertyUpdater() : interpolatorType(0), interpolator(0), prevInterpolatorType(0), reverse(false), fromSourced(false), fromDefined(false), wasDeleted(0) {}
-    ~QQuickAnimationPropertyUpdater() { if (wasDeleted) *wasDeleted = true; }
+    ~QQuickAnimationPropertyUpdater();
 
     void setValue(qreal v);
 
