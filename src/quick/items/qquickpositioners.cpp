@@ -452,7 +452,6 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
     QQuickPositionerAttached *prevLastProperty = 0;
     QQuickPositionerAttached *lastProperty = 0;
 
-    int visibleItemIndex = 0;
     for (int ii = 0; ii < positionedItems.count(); ++ii) {
         const PositionedItem &child = positionedItems.at(ii);
         if (!child.item)
@@ -468,28 +467,47 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
             property = static_cast<QQuickPositionerAttached *>(qmlAttachedPropertiesObject<QQuickBasePositioner>(child.item, false));
         }
 
-        if (child.isVisible) {
-            if (property) {
-              property->setIndex(visibleItemIndex);
-              property->setIsFirstItem(visibleItemIndex == 0);
+        if (property) {
+            property->setIndex(ii);
+            property->setIsFirstItem(ii == 0);
 
-              if (property->isLastItem())
+            if (property->isLastItem()) {
+                if (prevLastProperty)
+                    prevLastProperty->setIsLastItem(false); // there can be only one last property
                 prevLastProperty = property;
             }
-
-            lastProperty = property;
-            ++visibleItemIndex;
-        } else if (property) {
-            property->setIndex(-1);
-            property->setIsFirstItem(false);
-            property->setIsLastItem(false);
         }
+
+        lastProperty = property;
     }
 
     if (prevLastProperty && prevLastProperty != lastProperty)
         prevLastProperty->setIsLastItem(false);
     if (lastProperty)
         lastProperty->setIsLastItem(true);
+
+    // clear attached properties for unpositioned items
+    for (int ii = 0; ii < unpositionedItems.count(); ++ii) {
+        const PositionedItem &child = unpositionedItems.at(ii);
+        if (!child.item)
+            continue;
+
+        QQuickPositionerAttached *property = 0;
+
+        if (specificProperty) {
+            if (specificPropertyOwner == child.item) {
+                property = specificProperty;
+            }
+        } else {
+            property = static_cast<QQuickPositionerAttached *>(qmlAttachedPropertiesObject<QQuickBasePositioner>(child.item, false));
+        }
+
+        if (property) {
+            property->setIndex(-1);
+            property->setIsFirstItem(false);
+            property->setIsLastItem(false);
+        }
+    }
 }
 
 /*!
