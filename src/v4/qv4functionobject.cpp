@@ -103,6 +103,9 @@ FunctionObject::FunctionObject(ExecutionContext *scope)
     needsActivation = true;
     usesArgumentsObject = false;
     strictMode = false;
+#ifndef QT_NO_DEBUG
+     assert(scope->next != (ExecutionContext *)0x1);
+#endif
 }
 
 bool FunctionObject::hasInstance(Managed *that, ExecutionContext *ctx, const Value &value)
@@ -364,7 +367,8 @@ Value ScriptFunction::construct(Managed *that, ExecutionContext *context, Value 
     if (proto.isObject())
         obj->prototype = proto.objectValue();
 
-    ExecutionContext *ctx = context->engine->newCallContext(f, Value::fromObject(obj), args, argc);
+    quintptr stackSpace[stackContextSize/sizeof(quintptr)];
+    ExecutionContext *ctx = context->engine->newCallContext(stackSpace, f, Value::fromObject(obj), args, argc);
 
     Value result = Value::undefinedValue();
     try {
@@ -384,7 +388,8 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
     assert(f->function->code);
-    ExecutionContext *ctx = context->engine->newCallContext(f, thisObject, args, argc);
+    quintptr stackSpace[stackContextSize/sizeof(quintptr)];
+    ExecutionContext *ctx = context->engine->newCallContext(stackSpace, f, thisObject, args, argc);
 
     if (!f->strictMode && !thisObject.isObject()) {
         if (thisObject.isUndefined() || thisObject.isNull()) {

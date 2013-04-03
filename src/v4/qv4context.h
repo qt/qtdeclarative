@@ -145,6 +145,7 @@ struct ExecutionContext
 /* Function *f, int argc */
 #define requiredMemoryForExecutionContect(f, argc) \
     sizeof(ExecutionContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount))
+#define stackContextSize (sizeof(ExecutionContext) + 32*sizeof(Value))
 
 } // namespace VM
 } // namespace QQmlJS

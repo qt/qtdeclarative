@@ -201,6 +201,7 @@ struct Q_V4_EXPORT ExecutionEngine
     ExecutionContext *newWithContext(Object *with);
     ExecutionContext *newCatchContext(String* exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
     ExecutionContext *newCallContext(FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
+    ExecutionContext *newCallContext(void *stackSpace, FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
     ExecutionContext *pushGlobalContext();
     ExecutionContext *popContext();
 

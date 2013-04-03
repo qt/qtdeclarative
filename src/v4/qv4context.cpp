@@ -542,6 +542,9 @@ void ExecutionContext::initCallContext(ExecutionEngine *engine)
     marked = false;
     this->engine = engine;
     outer = function->scope;
+#ifndef QT_NO_DEBUG
+    assert(outer->next != (ExecutionContext *)0x1);
+#endif
 
     exceptionVarName = 0;
     exceptionValue = Value::undefinedValue();

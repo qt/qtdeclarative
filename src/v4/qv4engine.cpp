@@ -317,6 +317,33 @@ ExecutionContext *ExecutionEngine::newCallContext(FunctionObject *f, const Value
     return current;
 }
 
+ExecutionContext *ExecutionEngine::newCallContext(void *stackSpace, FunctionObject *f, const Value &thisObject, Value *args, int argc)
+{
+    ensureContextStackSize();
+    assert(contextStack[contextStackPosition + 1] == 0);
+
+    uint memory = requiredMemoryForExecutionContect(f, argc);
+    if (f->needsActivation || memory > stackContextSize) {
+        current = memoryManager->allocContext(memory);
+    } else {
+        current = (ExecutionContext *)stackSpace;
+#ifndef QT_NO_DEBUG
+        current->next = (ExecutionContext *)0x1;
+#endif
+    }
+
+    contextStack[++contextStackPosition] = current;
+
+    current->function = f;
+    current->thisObject = thisObject;
+    current->arguments = args;
+    current->argumentCount = argc;
+    current->initCallContext(this);
+
+    return current;
+}
+
+
 ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
     ensureContextStackSize();
