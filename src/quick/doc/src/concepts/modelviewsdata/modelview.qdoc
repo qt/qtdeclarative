@@ -189,7 +189,7 @@ To visualize data, bind the view's \c model property to a model and the
     types. In addition, models can be created with Qt C++ and then made
     available to the \l{QQmlEngine}{QMLEngine} for use by
     QML components. For information about creating these models, visit the
-    \l{qtquick-modelviewsdata-cppmodels.html}{Using C++ Models with QtQuick Views}
+    \l{Using C++ Models with Qt Quick Views}
     and \l{qtqml-typesystem-topic.html#qml-object-types}
     {creating QML types} articles.
 
@@ -329,7 +329,7 @@ To visualize data, bind the view's \c model property to a model and the
     datasets to QML.
 
     For information, visit the
-    \l{qtquick-modelviewsdata-cppmodels.html}{Using C++ Models with QtQuick Views}
+    \l{Using C++ Models with Qt Quick Views}
     article.
 
 

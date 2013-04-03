@@ -48,7 +48,9 @@ int main(int argc, char* argv[])
     QGuiApplication app(argc,argv);
     QQuickView view;
 
-    view.engine()->addImageProvider("etc", new EtcProvider());
+    EtcProvider *provider = new EtcProvider();
+    provider->setBaseUrl(QUrl("qrc:///textureprovider/"));
+    view.engine()->addImageProvider("etc", provider);
 
     view.setSource(QUrl("qrc:///textureprovider/textureprovider.qml"));
     view.show();

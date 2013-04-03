@@ -105,6 +105,9 @@ public:
     qreal currentOpacity() const { return m_current_opacity; }
     qreal determinant() const { return m_current_determinant; }
 
+    void setDevicePixelRatio(qreal ratio) { m_device_pixel_ratio = ratio; }
+    qreal devicePixelRatio() const { return m_device_pixel_ratio; }
+
     void setProjectionMatrixToDeviceRect();
     virtual void setProjectionMatrixToRect(const QRectF &rect);
     void setProjectionMatrix(const QMatrix4x4 &matrix);
@@ -154,6 +157,7 @@ protected:
     QMatrix4x4 m_current_model_view_matrix;
     qreal m_current_opacity;
     qreal m_current_determinant;
+    qreal m_device_pixel_ratio;
     QRect m_current_scissor_rect;
     int m_current_stencil_value;
 

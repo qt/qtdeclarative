@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
   \module QtQuick
-  \title Qt Quick Module C++ Classes
+  \title Qt Quick C++ Classes
   \ingroup modules
 
   \brief The Qt Quick module provides classes for embedding Qt Quick

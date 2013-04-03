@@ -459,12 +459,12 @@ makes it very easy to fetch and display XML based data such as RSS in a QML appl
 By following this tutorial you've seen how you can write a fully functional application in QML:
 
 \list
-\li Build your application with \l {QML Types provided by the QtQuick Module}{QML types}
+\li Build your application with \l {Qt Quick QML Types}{QML types}
 \li Add application logic \l{Using JavaScript Expressions in QML}{with JavaScript code}
 \li Add animations with \l {Behavior}{Behaviors} and \l{Qt Quick States}{states}
 \li Store persistent application data using, for example, \l{QtQuick.LocalStorage 2}{QtQuick.LocalStorage} or \l XMLHttpRequest
 \endlist
 
 There is so much more to learn about QML that we haven't been able to cover in this tutorial. Check out all the
-examples and the \l {QtQuick}{documentation} to see all the things you can do with QML!
+examples and the \l {Qt Quick}{documentation} to see all the things you can do with QML!
 */

@@ -49,7 +49,7 @@ This set of code samples are part of the collection of \l{Qt Examples}.
 \annotatedlist{qtquickexamples}
 
 The following examples show how a QML-based user interface can be combined with C++
-code using the \l{Qt Qml} Module.
+code using the \l{Qt QML} module.
 
 \annotatedlist{qmlextendingexamples}
 
@@ -127,7 +127,7 @@ code using the \l{Qt Qml} Module.
             Elements and Components
         \enddiv
         \list
-        \li \l{QML Types provided by the QtQuick Module}
+        \li \l{Qt Quick QML Types}
         \li \l{external: Qt Mobility QML Plugins}{QML Plugins}
         \li \l{external: Qt Quick Components for Symbian}{Symbian Components}
         \li MeeGo Components

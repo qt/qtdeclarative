@@ -93,6 +93,7 @@ public:
 
     void start(const QStringList &arguments);
     bool waitForSessionStart();
+    int debugPort() const;
 
     QString output() const;
     void stop();
@@ -111,6 +112,7 @@ private:
     QMutex m_mutex;
     bool m_started;
     QStringList m_environment;
+    int m_port;
 };
 
 #endif // DEBUGUTIL_H

@@ -44,6 +44,7 @@
 #include <QHostAddress>
 #include <QDebug>
 #include <QThread>
+#include <QLibraryInfo>
 
 #include <QtQml/qqmlengine.h>
 
@@ -55,7 +56,7 @@
 #define PORT 3769
 #define STR_PORT "3769"
 
-class tst_QQmlDebugService : public QObject
+class tst_QQmlDebugService : public QQmlDataTest
 {
     Q_OBJECT
 private:
@@ -65,6 +66,7 @@ private:
 private slots:
 
     void initTestCase();
+    void checkPortRange();
     void name();
     void version();
     void state();
@@ -78,6 +80,7 @@ private slots:
 
 void tst_QQmlDebugService::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     const QString waitingMsg = QString("QML Debugger: Waiting for connection on port %1...").arg(PORT);
     QTest::ignoreMessage(QtDebugMsg, waitingMsg.toLatin1().constData());
     new QQmlEngine(this);
@@ -94,6 +97,41 @@ void tst_QQmlDebugService::initTestCase()
     QVERIFY(m_conn->isConnected());
 
     QTRY_VERIFY(QQmlDebugService::hasDebuggingClient());
+}
+
+void tst_QQmlDebugService::checkPortRange()
+{
+    QQmlDebugConnection *connection1 = new QQmlDebugConnection();
+    QQmlDebugProcess *process1 = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
+
+    process1->start(QStringList() << QLatin1String("-qmljsdebugger=port:3772, 3774 ") << testFile("test.qml"));
+
+    if (!process1->waitForSessionStart())
+        QFAIL("could not launch application, or did not get 'Waiting for connection'.");
+
+    const int port1 = process1->debugPort();
+    connection1->connectToHost("127.0.0.1", port1);
+    if (!connection1->waitForConnected())
+        QFAIL("could not connect to host!");
+
+    // Second instance
+    QQmlDebugConnection *connection2 = new QQmlDebugConnection();
+    QQmlDebugProcess *process2 = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
+
+    process2->start(QStringList() << QLatin1String("-qmljsdebugger=port:3772,3774") << testFile("test.qml"));
+
+    if (!process2->waitForSessionStart())
+        QFAIL("could not launch application, or did not get 'Waiting for connection'.");
+
+    const int port2 = process2->debugPort();
+    connection2->connectToHost("127.0.0.1", port2);
+    if (!connection2->waitForConnected())
+        QFAIL("could not connect to host!");
+
+    delete connection1;
+    delete process1;
+    delete connection2;
+    delete process2;
 }
 
 void tst_QQmlDebugService::name()

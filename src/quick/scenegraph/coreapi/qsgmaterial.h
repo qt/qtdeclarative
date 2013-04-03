@@ -73,6 +73,7 @@ public:
         QRect viewportRect() const;
         QRect deviceRect() const;
         float determinant() const;
+        float devicePixelRatio() const;
 
         QOpenGLContext *context() const;
 

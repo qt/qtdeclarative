@@ -46,8 +46,8 @@
 #include "qqmldebugclient.h"
 #include "../../../shared/util.h"
 
-#define PORT 13774
-#define STR_PORT "13774"
+#define STR_PORT_FROM "13774"
+#define STR_PORT_TO "13790"
 
 struct QV8ProfilerData
 {
@@ -208,9 +208,9 @@ bool tst_QV8ProfilerService::connect(bool block, const QString &testFile,
     QStringList arguments;
 
     if (block)
-        arguments << QString("-qmljsdebugger=port:" STR_PORT ",block");
+        arguments << QString("-qmljsdebugger=port:" STR_PORT_FROM "," STR_PORT_TO ",block");
     else
-        arguments << QString("-qmljsdebugger=port:" STR_PORT);
+        arguments << QString("-qmljsdebugger=port:" STR_PORT_FROM "," STR_PORT_TO);
 
     arguments << QQmlDataTest::instance()->testFile(testFile);
 
@@ -224,7 +224,7 @@ bool tst_QV8ProfilerService::connect(bool block, const QString &testFile,
         return false;
     }
 
-    m_connection->connectToHost(QLatin1String("127.0.0.1"), PORT);
+    m_connection->connectToHost(QLatin1String("127.0.0.1"), m_process->debugPort());
     if (!m_connection->waitForConnected()) {
         *error = QLatin1String("Could not connect to debugger port.");
         return false;

@@ -260,7 +260,7 @@ public:
     QQmlImportNamespace::Import *addImportToNamespace(QQmlImportNamespace *nameSpace,
                                                       const QString &uri, const QString &url,
                                                       int vmaj, int vmin, QQmlScript::Import::Type type,
-                                                      QList<QQmlError> *errors);
+                                                      QList<QQmlError> *errors, bool lowPrecedence = false);
 };
 
 /*!
@@ -1003,7 +1003,7 @@ QQmlImportNamespace *QQmlImportsPrivate::importNamespace(const QString &prefix) 
 QQmlImportNamespace::Import *QQmlImportsPrivate::addImportToNamespace(QQmlImportNamespace *nameSpace,
                                                                       const QString &uri, const QString &url, int vmaj, int vmin,
                                                                       QQmlScript::Import::Type type,
-                                                                      QList<QQmlError> *errors)
+                                                                      QList<QQmlError> *errors, bool lowPrecedence)
 {
     Q_ASSERT(nameSpace);
     Q_ASSERT(errors);
@@ -1017,7 +1017,11 @@ QQmlImportNamespace::Import *QQmlImportsPrivate::addImportToNamespace(QQmlImport
     import->minversion = vmin;
     import->isLibrary = (type == QQmlScript::Import::Library);
 
-    nameSpace->imports.prepend(import);
+    if (lowPrecedence)
+        nameSpace->imports.append(import);
+    else
+        nameSpace->imports.prepend(import);
+
     return import;
 }
 
@@ -1162,7 +1166,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     if (!url.endsWith(Slash) && !url.endsWith(Backslash))
         url += Slash;
 
-    QQmlImportNamespace::Import *inserted = addImportToNamespace(nameSpace, importUri, url, vmaj, vmin, QQmlScript::Import::File, errors);
+    QQmlImportNamespace::Import *inserted = addImportToNamespace(nameSpace, importUri, url, vmaj, vmin, QQmlScript::Import::File, errors, isImplicitImport);
     Q_ASSERT(inserted);
 
     if (!incomplete && !qmldirIdentifier.isEmpty()) {
@@ -1238,6 +1242,8 @@ bool QQmlImportsPrivate::updateQmldirContent(const QString &uri, const QString &
 
   Adds an implicit "." file import.  This is equivalent to calling addFileImport(), but error
   messages related to the path or qmldir file not existing are suppressed.
+
+  Additionally, this will add the import with lowest instead of highest precedence.
 */
 bool QQmlImports::addImplicitImport(QQmlImportDatabase *importDb, QList<QQmlError> *errors)
 {

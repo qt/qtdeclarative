@@ -25,7 +25,7 @@
 **
 ****************************************************************************/
 /*!
-    \title QtQuick.Particles Examples - Emitters
+    \title Qt Quick Particles Examples - Emitters
     \example quick/particles/emitters
     \brief This is a collection of examples using Emitters in the QML particle system.
     \image qml-emitters-example.png

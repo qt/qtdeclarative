@@ -416,6 +416,12 @@ QMatrix4x4 QSGMaterialShader::RenderState::combinedMatrix() const
     return static_cast<const QSGRenderer *>(m_data)->currentCombinedMatrix();
 }
 
+float QSGMaterialShader::RenderState::devicePixelRatio() const
+{
+    Q_ASSERT(m_data);
+    return static_cast<const QSGRenderer *>(m_data)->devicePixelRatio();
+}
+
 
 
 /*!

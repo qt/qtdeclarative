@@ -43,11 +43,14 @@
 
 #include <QtGui/private/qdistancefield_p.h>
 #include <QtGui/private/qopenglcontext_p.h>
+#include <QtQml/private/qqmlglobal_p.h>
 #include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <qopenglfunctions.h>
 #include <qmath.h>
 
 QT_BEGIN_NAMESPACE
+
+DEFINE_BOOL_CONFIG_OPTION(qmlUseGlyphCacheWorkaround, QML_USE_GLYPHCACHE_WORKAROUND)
 
 QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font)
     : QSGDistanceFieldGlyphCache(man, c, font)
@@ -159,7 +162,7 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage>
         if (glyph.width() != expectedWidth)
             glyph = glyph.copy(0, 0, expectedWidth, glyph.height());
 
-        if (useWorkaroundBrokenFBOReadback()) {
+        if (useWorkaround()) {
             uchar *inBits = glyph.scanLine(0);
             uchar *outBits = texInfo->image.scanLine(int(c.y)) + int(c.x);
             for (int y = 0; y < glyph.height(); ++y) {
@@ -193,7 +196,7 @@ void QSGDefaultDistanceFieldGlyphCache::releaseGlyphs(const QSet<glyph_t> &glyph
 
 void QSGDefaultDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo, int width, int height)
 {
-    if (useWorkaroundBrokenFBOReadback() && texInfo->image.isNull())
+    if (useWorkaround() && texInfo->image.isNull())
         texInfo->image = QImage(width, height, QImage::Format_Indexed8);
 
     while (glGetError() != GL_NO_ERROR) { }
@@ -238,7 +241,7 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
 
     updateTexture(oldTexture, texInfo->texture, texInfo->size);
 
-    if (useWorkaroundBrokenFBOReadback()) {
+    if (useWorkaround()) {
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, oldWidth, oldHeight, GL_ALPHA, GL_UNSIGNED_BYTE, texInfo->image.constBits());
         texInfo->image = texInfo->image.copy(0, 0, width, height);
         glDeleteTextures(1, &oldTexture);
@@ -332,13 +335,14 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
     m_blitProgram->disableAttributeArray(int(QT_TEXTURE_COORDS_ATTR));
 }
 
-bool QSGDefaultDistanceFieldGlyphCache::useWorkaroundBrokenFBOReadback() const
+bool QSGDefaultDistanceFieldGlyphCache::useWorkaround() const
 {
     static bool set = false;
     static bool useWorkaround = false;
     if (!set) {
         QOpenGLContextPrivate *ctx_p = static_cast<QOpenGLContextPrivate *>(QOpenGLContextPrivate::get(ctx));
-        useWorkaround = ctx_p->workaround_brokenFBOReadBack;
+        useWorkaround = ctx_p->workaround_brokenFBOReadBack
+                || qmlUseGlyphCacheWorkaround(); // on some hardware the workaround is faster (see QTBUG-29264)
         set = true;
     }
     return useWorkaround;

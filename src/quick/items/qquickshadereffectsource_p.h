@@ -111,6 +111,8 @@ public:
     bool recursive() const { return bool(m_recursive); }
     void setRecursive(bool recursive);
 
+    void setDevicePixelRatio(qreal ratio) { m_device_pixel_ratio = ratio; }
+
     void scheduleUpdate();
 
     QImage toImage() const;
@@ -128,6 +130,7 @@ private:
     QSGNode *m_item;
     QRectF m_rect;
     QSize m_size;
+    qreal m_device_pixel_ratio;
     GLenum m_format;
 
     QSGRenderer *m_renderer;

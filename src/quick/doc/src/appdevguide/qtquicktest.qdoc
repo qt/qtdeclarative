@@ -28,8 +28,7 @@
 /*!
     \page qtquick-qtquicktest.html
     \inqmlmodule QtQuick 2
-    \title QtQuickTest Reference Documentation
-    \keyword QtQuickTest Reference Documentation
+    \title Qt Quick Test Reference Documentation
     \brief unit testing framework for QML
 
     \section1 Introduction

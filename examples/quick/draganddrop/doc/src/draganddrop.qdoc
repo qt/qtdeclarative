@@ -25,7 +25,7 @@
 **
 ****************************************************************************/
 /*!
-    \title QtQuick Examples - Drag and Drop
+    \title Qt Quick Examples - Drag and Drop
     \example quick/draganddrop
     \brief This is a collection of QML drag and drop examples
     \image qml-draganddrop-example.png

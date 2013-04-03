@@ -89,6 +89,7 @@ QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
     : QObject(parent)
     , m_executable(executable)
     , m_started(false)
+    , m_port(0)
 {
     m_process.setProcessChannelMode(QProcess::MergedChannels);
     m_timer.setSingleShot(true);
@@ -123,6 +124,7 @@ QString QQmlDebugProcess::state()
 void QQmlDebugProcess::start(const QStringList &arguments)
 {
     m_mutex.lock();
+    m_port = 0;
     m_process.setEnvironment(m_environment);
     m_process.start(m_executable, arguments);
     if (!m_process.waitForStarted()) {
@@ -161,6 +163,11 @@ bool QQmlDebugProcess::waitForSessionStart()
     return m_started;
 }
 
+int QQmlDebugProcess::debugPort() const
+{
+    return m_port;
+}
+
 void QQmlDebugProcess::setEnvironment(const QStringList &environment)
 {
     m_environment = environment;
@@ -187,7 +194,9 @@ void QQmlDebugProcess::processAppOutput()
         m_outputBuffer = m_outputBuffer.right(m_outputBuffer.size() - nlIndex - 1);
 
         if (line.contains("QML Debugger:")) {
-            if (line.contains("Waiting for connection ")) {
+            const QRegExp portRx("Waiting for connection on port (\\d+)");
+            if (portRx.indexIn(line) != -1) {
+                m_port = portRx.cap(1).toInt();
                 m_timer.stop();
                 m_started = true;
                 m_eventLoop.quit();
