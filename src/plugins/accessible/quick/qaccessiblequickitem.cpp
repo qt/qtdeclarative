@@ -421,8 +421,13 @@ QString QAccessibleQuickItem::textAtOffset(int offset, QAccessible::TextBoundary
 
 void QAccessibleQuickItem::selection(int selectionIndex, int *startOffset, int *endOffset) const
 {
-    *startOffset = item()->property("selectionStart").toInt();
-    *endOffset = item()->property("selectionEnd").toInt();
+    if (selectionIndex == 0) {
+        *startOffset = item()->property("selectionStart").toInt();
+        *endOffset = item()->property("selectionEnd").toInt();
+    } else {
+        *startOffset = 0;
+        *endOffset = 0;
+    }
 }
 
 int QAccessibleQuickItem::selectionCount() const
