@@ -128,7 +128,8 @@ bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::C
 } } // namespace QQmlJS::VM
 
 MemoryManager::MemoryManager()
-    : m_d(new Data(true))
+    : m_d(new Data(true))\
+    , m_contextList(0)
 {
     setEnableGC(true);
 #ifdef V4_USE_VALGRIND
@@ -279,6 +280,20 @@ std::size_t MemoryManager::sweep()
 
     for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)
         freedCount += sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize);
+
+    ExecutionContext *ctx = m_contextList;
+    ExecutionContext **n = &m_contextList;
+    while (ctx) {
+        ExecutionContext *next = ctx->next;
+        if (!ctx->marked) {
+            free(ctx);
+            *n = next;
+        } else {
+            ctx->marked = false;
+            n = &ctx->next;
+        }
+        ctx = next;
+    }
 
     return freedCount;
 }

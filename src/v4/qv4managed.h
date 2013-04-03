@@ -236,7 +236,6 @@ protected:
 
 private:
     friend class MemoryManager;
-    friend struct ExecutionContext;
     friend struct Identifiers;
 };
 

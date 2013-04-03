@@ -43,6 +43,7 @@
 #define QV4GC_H
 
 #include "qv4global.h"
+#include "qv4context.h"
 
 #include <QScopedPointer>
 
@@ -54,6 +55,7 @@ namespace QQmlJS {
 namespace VM {
 
 struct ExecutionEngine;
+struct ExecutionContext;
 struct Managed;
 
 class Q_V4_EXPORT MemoryManager
@@ -103,6 +105,8 @@ public:
         return o;
     }
 
+    ExecutionContext *allocContext(uint size);
+
     bool isGCBlocked() const;
     void setGCBlocked(bool blockGC);
     void runGC();
@@ -131,7 +135,17 @@ private:
 
 protected:
     QScopedPointer<Data> m_d;
+    ExecutionContext *m_contextList;
 };
+
+inline ExecutionContext *MemoryManager::allocContext(uint size)
+{
+    ExecutionContext *newContext = (ExecutionContext *)malloc(size);
+    newContext->next = m_contextList;
+    m_contextList = newContext;
+    return newContext;
+}
+
 
 } // namespace VM
 } // namespace QQmlJS

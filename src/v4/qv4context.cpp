@@ -79,8 +79,6 @@ String *DiagnosticMessage::buildFullMessage(ExecutionContext *ctx) const
     return ctx->engine->newString(msg);
 }
 
-DEFINE_MANAGED_VTABLE(ExecutionContext);
-
 void ExecutionContext::createMutableBinding(String *name, bool deletable)
 {
     if (!activation)
@@ -177,6 +175,7 @@ unsigned int ExecutionContext::variableCount() const
 
 void ExecutionContext::init(ExecutionEngine *eng)
 {
+    marked = false;
     engine = eng;
     outer = 0;
     thisObject = eng->globalObject;
@@ -184,6 +183,7 @@ void ExecutionContext::init(ExecutionEngine *eng)
     function = 0;
     lookups = 0;
 
+    locals = 0;
     arguments = 0;
     argumentCount = 0;
     locals = 0;
@@ -197,6 +197,7 @@ void ExecutionContext::init(ExecutionEngine *eng)
 
 void ExecutionContext::init(ExecutionContext *p, Object *with)
 {
+    marked = false;
     engine = p->engine;
     outer = p;
     thisObject = p->thisObject;
@@ -204,6 +205,7 @@ void ExecutionContext::init(ExecutionContext *p, Object *with)
     function = 0;
     lookups = p->lookups;
 
+    locals = 0;
     arguments = 0;
     argumentCount = 0;
     locals = 0;
@@ -217,6 +219,7 @@ void ExecutionContext::init(ExecutionContext *p, Object *with)
 
 void ExecutionContext::initForCatch(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
 {
+    marked = false;
     engine = p->engine;
     outer = p;
     thisObject = p->thisObject;
@@ -269,76 +272,29 @@ bool ExecutionContext::needsOwnArguments() const
     return function && (function->needsActivation || argumentCount < function->formalParameterCount);
 }
 
-void ExecutionContext::destroy(Managed *that)
+void ExecutionContext::mark()
 {
-    ExecutionContext *ctx = static_cast<ExecutionContext *>(that);
-    if (ctx->locals)
-        delete [] ctx->locals;
-    ctx->_data = 0;
-    ctx->vtbl = 0;
-}
+    if (marked)
+        return;
+    marked = true;
 
-void ExecutionContext::markObjects(Managed *that)
-{
-    ExecutionContext *ctx = static_cast<ExecutionContext *>(that);
-    ctx->thisObject.mark();
-    if (ctx->function)
-        ctx->function->mark();
-    for (unsigned arg = 0, lastArg = ctx->argumentCount; arg < lastArg; ++arg)
-        ctx->arguments[arg].mark();
-    for (unsigned local = 0, lastLocal = ctx->variableCount(); local < lastLocal; ++local)
-        ctx->locals[local].mark();
-    if (ctx->activation)
-        ctx->activation->mark();
-    if (ctx->withObject)
-        ctx->withObject->mark();
-    if (ctx->exceptionVarName)
-        ctx->exceptionVarName->mark();
-    ctx->exceptionValue.mark();
-}
+    if (outer)
+        outer->mark();
 
-Value ExecutionContext::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
-}
-
-Value ExecutionContext::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
-}
-
-void ExecutionContext::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
-{
-}
-
-void ExecutionContext::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value)
-{
-}
-
-PropertyFlags ExecutionContext::query(Managed *m, ExecutionContext *ctx, String *name)
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
-}
-
-PropertyFlags ExecutionContext::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
-}
-
-bool ExecutionContext::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
-}
-
-bool ExecutionContext::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    thisObject.mark();
+    if (function)
+        function->mark();
+    for (unsigned arg = 0, lastArg = argumentCount; arg < lastArg; ++arg)
+        arguments[arg].mark();
+    for (unsigned local = 0, lastLocal = variableCount(); local < lastLocal; ++local)
+        locals[local].mark();
+    if (activation)
+        activation->mark();
+    if (withObject)
+        withObject->mark();
+    if (exceptionVarName)
+        exceptionVarName->mark();
+    exceptionValue.mark();
 }
 
 void ExecutionContext::setProperty(String *name, const Value& value)
@@ -583,6 +539,7 @@ void ExecutionContext::throwURIError(Value msg)
 
 void ExecutionContext::initCallContext(ExecutionEngine *engine)
 {
+    marked = false;
     this->engine = engine;
     outer = function->scope;
 
@@ -599,27 +556,22 @@ void ExecutionContext::initCallContext(ExecutionEngine *engine)
         lookups = function->function->lookups;
 
     uint argc = argumentCount;
-    uint valuesToAlloc = function->varCount;
-    bool copyArgs = needsOwnArguments();
-    if (copyArgs)
-        valuesToAlloc += qMax(argc, function->formalParameterCount);
 
-    if (valuesToAlloc) {
-        locals = new Value[valuesToAlloc];
-        if (function->varCount)
-            std::fill(locals, locals + function->varCount, Value::undefinedValue());
+    locals = (Value *)(this + 1);
+    if (function->varCount)
+        std::fill(locals, locals + function->varCount, Value::undefinedValue());
 
-        if (copyArgs) {
-            Value *args = arguments;
-            argumentCount = qMax(argc, function->formalParameterCount);
-            arguments = locals + function->varCount;
-            if (argc)
-                ::memcpy(arguments, args, argc * sizeof(Value));
-            if (argc < function->formalParameterCount)
-                std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
+    if (needsOwnArguments()) {
+        Value *args = arguments;
+        argumentCount = qMax(argc, function->formalParameterCount);
+        arguments = locals + function->varCount;
+        if (argc)
+            ::memcpy(arguments, args, argc * sizeof(Value));
+        if (argc < function->formalParameterCount)
+            std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
 
-        }
     }
+
     if (function->usesArgumentsObject) {
         ArgumentsObject *args = new (engine->memoryManager) ArgumentsObject(this, function->formalParameterCount, argc);
         args->prototype = engine->objectPrototype;

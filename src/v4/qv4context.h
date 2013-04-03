@@ -43,7 +43,6 @@
 
 #include "qv4global.h"
 #include <qv4runtime.h>
-#include "qv4managed.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -53,7 +52,6 @@ namespace VM {
 struct Value;
 struct Object;
 struct ExecutionEngine;
-struct ExecutionContext;
 struct DeclarativeEnvironment;
 struct Lookup;
 
@@ -75,8 +73,9 @@ struct Q_V4_EXPORT DiagnosticMessage
     String *buildFullMessage(ExecutionContext *ctx) const;
 };
 
-struct ExecutionContext : public Managed
+struct ExecutionContext
 {
+    ExecutionContext *next; // used in the GC
     ExecutionEngine *engine;
     ExecutionContext *outer;
     Value thisObject;
@@ -91,32 +90,27 @@ struct ExecutionContext : public Managed
     String *exceptionVarName;
     Value exceptionValue;
 
+    bool strictMode;
+    bool qmlObject; // ## temporary until we do proper QML contexts
+    bool marked;
+
+    Object *activation;
+    Object *withObject;
+
     String * const *formals() const;
     unsigned int formalCount() const;
     String * const *variables() const;
     unsigned int variableCount() const;
 
-    bool strictMode;
-    bool qmlObject; // ## temporary until we do proper QML contexts
-
-    Object *activation;
-    Object *withObject;
-
-    ExecutionContext()
-        : Managed()
-        , locals(0)
-    { vtbl = &static_vtbl; }
-
     void init(ExecutionEngine *e);
     void init(ExecutionContext *p, Object *with);
     void initForCatch(ExecutionContext *p, String *exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
+    void initCallContext(QQmlJS::VM::ExecutionEngine *engine);
 
     void createMutableBinding(String *name, bool deletable);
     bool setMutableBinding(ExecutionContext *scope, String *name, const Value &value);
     Value getBindingValue(ExecutionContext *scope, String *name, bool strict) const;
     bool deleteBinding(ExecutionContext *ctx, String *name);
-
-    void initCallContext(QQmlJS::VM::ExecutionEngine *engine);
 
     void wireUpPrototype();
 
@@ -145,21 +139,12 @@ struct ExecutionContext : public Managed
 
     bool needsOwnArguments() const;
 
-protected:
-    static void destroy(Managed *that);
-    static void markObjects(Managed *that);
-    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
-    static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty);
-    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
-    static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value);
-    static PropertyFlags query(Managed *m, ExecutionContext *ctx, String *name);
-    static PropertyFlags queryIndexed(Managed *m, ExecutionContext *ctx, uint index);
-    static bool deleteProperty(Managed *m, ExecutionContext *ctx, String *name);
-    static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index);
-
-    static const ManagedVTable static_vtbl;
+    void mark();
 };
 
+/* Function *f, int argc */
+#define requiredMemoryForExecutionContect(f, argc) \
+    sizeof(ExecutionContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount))
 
 } // namespace VM
 } // namespace QQmlJS

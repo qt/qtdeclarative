@@ -168,6 +168,7 @@ Value ArgumentsSetterFunction::call(Managed *setter, ExecutionContext *ctx, cons
 void ArgumentsObject::markObjects(Managed *that)
 {
     ArgumentsObject *o = static_cast<ArgumentsObject *>(that);
+    o->context->mark();
     for (int i = 0; i < o->mappedArguments.size(); ++i) {
         Managed *m = o->mappedArguments.at(i).asManaged();
         if (m)

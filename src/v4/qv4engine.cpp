@@ -243,7 +243,6 @@ ExecutionEngine::~ExecutionEngine()
 {
     delete regExpCache;
     delete globalObject.asObject();
-    delete rootContext;
     delete [] contextStack;
     UnwindHelper::deregisterFunctions(functions);
     qDeleteAll(functions);
@@ -254,10 +253,10 @@ ExecutionEngine::~ExecutionEngine()
 void ExecutionEngine::initRootContext()
 {
     ensureContextStackSize();
-    rootContext = new (memoryManager) ExecutionContext();
-    rootContext->init(this);
+    rootContext = memoryManager->allocContext(sizeof(ExecutionContext));
     current = rootContext;
     contextStack[0] = rootContext;
+    current->init(this);
 }
 
 void ExecutionEngine::ensureContextStackSize()
@@ -270,6 +269,7 @@ void ExecutionEngine::ensureContextStackSize()
     if (contextStack)
         memcpy(newStack, contextStack, contextStackSize*sizeof(ExecutionContext *));
     memset(newStack + contextStackSize, 0, (stackSize - contextStackSize)*sizeof(ExecutionContext *));
+    delete [] contextStack;
     contextStackSize = stackSize;
     contextStack = newStack;
 }
@@ -279,11 +279,11 @@ ExecutionContext *ExecutionEngine::newWithContext(Object *with)
     ensureContextStackSize();
     assert(contextStack[contextStackPosition + 1] == 0);
 
-    ExecutionContext *ctx = new (memoryManager) ExecutionContext();
-    ctx->init(current, with);
-    current = ctx;
-
+    ExecutionContext *c = current;
+    current = memoryManager->allocContext(sizeof(ExecutionContext));
     contextStack[++contextStackPosition] = current;
+
+    current->init(c, with);
     return current;
 }
 
@@ -292,11 +292,11 @@ ExecutionContext *ExecutionEngine::newCatchContext(String *exceptionVarName, con
     ensureContextStackSize();
     assert(contextStack[contextStackPosition + 1] == 0);
 
-    ExecutionContext *ctx = new (memoryManager) ExecutionContext();
-    ctx->initForCatch(current, exceptionVarName, exceptionValue);
-    current = ctx;
-
+    ExecutionContext *c = current;
+    current = memoryManager->allocContext(sizeof(ExecutionContext));
     contextStack[++contextStackPosition] = current;
+
+    current->initForCatch(c, exceptionVarName, exceptionValue);
     return current;
 }
 
@@ -305,14 +305,15 @@ ExecutionContext *ExecutionEngine::newCallContext(FunctionObject *f, const Value
     ensureContextStackSize();
     assert(contextStack[contextStackPosition + 1] == 0);
 
-    current = new (memoryManager) ExecutionContext();
+    current = memoryManager->allocContext(requiredMemoryForExecutionContect(f, argc));
+    contextStack[++contextStackPosition] = current;
+
     current->function = f;
     current->thisObject = thisObject;
     current->arguments = args;
     current->argumentCount = argc;
     current->initCallContext(this);
 
-    contextStack[++contextStackPosition] = current;
     return current;
 }
 
@@ -530,6 +531,8 @@ void ExecutionEngine::markObjects()
         pd.set->mark();
     }
 
+    for (int i = 0; i <= contextStackPosition; ++i)
+        contextStack[i]->mark();
 
     for (int i = 0; i < functions.size(); ++i)
         functions.at(i)->mark();
