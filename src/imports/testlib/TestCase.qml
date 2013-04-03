@@ -372,8 +372,13 @@ Item {
             modifiers = Qt.NoModifier
         if (delay == undefined)
             delay = -1
-        if (!qtest_events.keyPress(key, modifiers, delay))
-            qtest_fail("window not shown", 2)
+        if (typeof(key) == "string" && key.length == 1) {
+            if (!qtest_events.keyPressChar(key, modifiers, delay))
+                qtest_fail("window not shown", 2)
+        } else {
+            if (!qtest_events.keyPress(key, modifiers, delay))
+                qtest_fail("window not shown", 2)
+        }
     }
 
     function keyRelease(key, modifiers, delay) {
@@ -381,8 +386,13 @@ Item {
             modifiers = Qt.NoModifier
         if (delay == undefined)
             delay = -1
-        if (!qtest_events.keyRelease(key, modifiers, delay))
-            qtest_fail("window not shown", 2)
+        if (typeof(key) == "string" && key.length == 1) {
+            if (!qtest_events.keyReleaseChar(key, modifiers, delay))
+                qtest_fail("window not shown", 2)
+        } else {
+            if (!qtest_events.keyRelease(key, modifiers, delay))
+                qtest_fail("window not shown", 2)
+        }
     }
 
     function keyClick(key, modifiers, delay) {
@@ -390,8 +400,13 @@ Item {
             modifiers = Qt.NoModifier
         if (delay == undefined)
             delay = -1
-        if (!qtest_events.keyClick(key, modifiers, delay))
-            qtest_fail("window not shown", 2)
+        if (typeof(key) == "string" && key.length == 1) {
+            if (!qtest_events.keyClickChar(key, modifiers, delay))
+                qtest_fail("window not shown", 2)
+        } else {
+            if (!qtest_events.keyClick(key, modifiers, delay))
+                qtest_fail("window not shown", 2)
+        }
     }
 
     function mousePress(item, x, y, button, modifiers, delay) {

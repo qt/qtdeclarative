@@ -174,7 +174,8 @@
 
     The keyPress(), keyRelease(), and keyClick() methods can be used
     to simulate keyboard events within unit tests.  The events are
-    delivered to the currently focused QML item.
+    delivered to the currently focused QML item. You can pass either
+    a Qt.Key enum value or a latin1 char (string of length one)
 
     \code
     Rectangle {
@@ -187,6 +188,7 @@
 
             function test_key_click() {
                 keyClick(Qt.Key_Left)
+                keyClick("a")
                 ...
             }
         }
