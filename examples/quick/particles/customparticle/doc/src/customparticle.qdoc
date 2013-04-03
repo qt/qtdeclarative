@@ -27,7 +27,7 @@
 
 /*!
     \title Qt Quick Particles Examples - CustomParticle
-    \example quick/particles/customparticle
+    \example particles/customparticle
     \brief This is a collection of examples using CustomParticle in the QML particle system.
     \image qml-customparticle-example.png
 

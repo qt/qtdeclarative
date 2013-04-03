@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \example quick/scenegraph/customgeometry
+    \example scenegraph/customgeometry
     \title Scene Graph - Custom Geometry
     \ingroup qtquickexamples
     \brief Shows how to implement a custom geometry in the Qt Quick Scene Graph.
