@@ -128,7 +128,7 @@ bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::C
 } } // namespace QQmlJS::VM
 
 MemoryManager::MemoryManager()
-    : m_d(new Data(true))\
+    : m_d(new Data(true))
     , m_contextList(0)
 {
     setEnableGC(true);
