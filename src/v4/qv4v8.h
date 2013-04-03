@@ -79,8 +79,6 @@
 #define V8_H_
 
 #include "qv4global.h"
-#include "qv4managed.h"
-#include "qv4mm.h"
 #include "qv4string.h"
 #include <QStack>
 #include <QSharedData>
