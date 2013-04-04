@@ -700,37 +700,11 @@ void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Val
     Value res;
     Lookup *l = ctx->lookups + lookupIndex;
     if (Object *o = object.asObject()) {
-        PropertyDescriptor *p = 0;
-        if (o->internalClass == l->mainClass) {
-            if (!l->protoClass) {
-                p = o->memberData + l->index;
-            } else if (o->prototype && o->prototype->internalClass == l->protoClass) {
-                p = o->prototype->memberData + l->index;
-            }
-        }
-
-        if (!p) {
-            uint idx = o->internalClass->find(l->name);
-            if (idx < UINT_MAX) {
-                l->mainClass = o->internalClass;
-                l->protoClass = 0;
-                l->index = idx;
-                p = o->memberData + idx;
-            } else if (o->prototype) {
-                idx = o->prototype->internalClass->find(l->name);
-                if (idx < UINT_MAX) {
-                    l->mainClass = o->internalClass;
-                    l->protoClass = o->prototype->internalClass;
-                    l->index = idx;
-                    p = o->prototype->memberData + idx;
-                }
-            }
-        }
-
+        PropertyDescriptor *p = l->lookup(o);
         if (p)
             res = p->type == PropertyDescriptor::Data ? p->value : o->getValue(ctx, p);
         else
-            res = o->get(ctx, l->name);
+            res = Value::undefinedValue();
     } else {
         if (Managed *m = object.asManaged()) {
             res = m->get(ctx, l->name);
@@ -748,18 +722,10 @@ void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value &object, int
     Object *o = object.toObject(ctx);
     Lookup *l = ctx->lookups + lookupIndex;
 
-    if (l->index != ArrayObject::LengthPropertyIndex || !o->isArrayObject()) {
-        if (o->internalClass == l->mainClass) {
-            o->putValue(ctx, o->memberData + l->index, value);
-            return;
-        }
-
-        uint idx = o->internalClass->find(l->name);
-        if (idx < UINT_MAX) {
-            l->mainClass = o->internalClass;
-            l->index = idx;
-            return o->putValue(ctx, o->memberData + idx, value);
-        }
+    PropertyDescriptor *p = l->setterLookup(o);
+    if (p && (l->index != ArrayObject::LengthPropertyIndex || !o->isArrayObject())) {
+        o->putValue(ctx, p, value);
+        return;
     }
 
     o->put(ctx, l->name, value);
@@ -883,55 +849,22 @@ void __qmljs_call_property(ExecutionContext *context, Value *result, const Value
         *result = res;
 }
 
-void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, const Value &thatObject, uint index, Value *args, int argc)
+void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, const Value &thisObject, uint index, Value *args, int argc)
 {
-    Value thisObject = thatObject;
     Lookup *l = context->lookups + index;
 
     Object *baseObject;
-    if (thisObject.isString()) {
-        baseObject = context->engine->stringPrototype;
-    } else {
-        if (!thisObject.isObject())
-            thisObject = Value::fromObject(__qmljs_convert_to_object(context, thisObject));
-
-        assert(thisObject.isObject());
+    if (thisObject.isObject())
         baseObject = thisObject.objectValue();
-    }
-
-    PropertyDescriptor *p = 0;
-    if (baseObject->internalClass == l->mainClass) {
-        if (!l->protoClass) {
-            p = baseObject->memberData + l->index;
-        } else if (baseObject->prototype && baseObject->prototype->internalClass == l->protoClass) {
-            p = baseObject->prototype->memberData + l->index;
-        }
-    }
-
-    if (!p) {
-        uint idx = baseObject->internalClass->find(l->name);
-        if (idx < UINT_MAX) {
-            l->mainClass = baseObject->internalClass;
-            l->protoClass = 0;
-            l->index = idx;
-            p = baseObject->memberData + idx;
-        } else if (baseObject->prototype) {
-            idx = baseObject->prototype->internalClass->find(l->name);
-            if (idx < UINT_MAX) {
-                l->mainClass = baseObject->internalClass;
-                l->protoClass = baseObject->prototype->internalClass;
-                l->index = idx;
-                p = baseObject->prototype->memberData + idx;
-            }
-        }
-    }
-
-    Value func;
-    if (p)
-        func =  p->type == PropertyDescriptor::Data ? p->value : baseObject->getValue(context, p);
+    else if (thisObject.isString())
+        baseObject = context->engine->stringPrototype;
     else
-        func = baseObject->get(context, l->name);
+        baseObject = __qmljs_convert_to_object(context, thisObject);
 
+    PropertyDescriptor *p = l->lookup(baseObject);
+    if (!p)
+        context->throwTypeError();
+    Value func = p->type == PropertyDescriptor::Data ? p->value : baseObject->getValue(context, p);
     FunctionObject *o = func.asFunctionObject();
     if (!o)
         context->throwTypeError();

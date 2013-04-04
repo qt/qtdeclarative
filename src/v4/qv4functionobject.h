@@ -103,10 +103,58 @@ struct URIErrorPrototype;
 struct InternalClass;
 
 struct Lookup {
-    InternalClass *mainClass;
-    InternalClass *protoClass;
+    enum { Size = 4 };
+    InternalClass *classList[Size];
+    int level;
     uint index;
     String *name;
+
+    PropertyDescriptor *lookup(Object *obj) {
+        int i = 0;
+        while (i < level && obj && obj->internalClass == classList[i]) {
+            obj = obj->prototype;
+            ++i;
+        }
+
+        if (index != UINT_MAX && obj->internalClass == classList[i])
+            return obj->memberData + index;
+
+        while (i < Size && obj) {
+            classList[i] = obj->internalClass;
+
+            index = obj->internalClass->find(name);
+            if (index != UINT_MAX) {
+                level = i;
+                return obj->memberData + index;
+            }
+
+            obj = obj->prototype;
+            ++i;
+        }
+        level = i;
+
+        while (obj) {
+            index = obj->internalClass->find(name);
+            if (index != UINT_MAX)
+                return obj->memberData + index;
+
+            obj = obj->prototype;
+        }
+        return 0;
+    }
+
+    PropertyDescriptor *setterLookup(Object *o) {
+        if (o->internalClass == classList[0])
+            return o->memberData + index;
+
+        uint idx = o->internalClass->find(name);
+        if (idx != UINT_MAX) {
+            classList[0] = o->internalClass;
+            index = idx;
+            return o->memberData + index;
+        }
+        return 0;
+    }
 };
 
 struct Function {
