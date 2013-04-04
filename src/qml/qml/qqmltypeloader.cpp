@@ -1659,6 +1659,15 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path)
         QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path));
         return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
     }
+#if defined(Q_OS_ANDROID)
+    else if (path.count() > 7 && path.at(6) == QLatin1Char(':') && path.at(7) == QLatin1Char('/') &&
+           path.startsWith(QLatin1String("assets"), Qt::CaseInsensitive)) {
+        // assets resource url
+        QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path));
+        return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
+    }
+#endif
+
     int lastSlash = path.lastIndexOf(QLatin1Char('/'));
     QStringRef dirPath(&path, 0, lastSlash);
 
@@ -1717,7 +1726,13 @@ bool QQmlTypeLoader::directoryExists(const QString &path)
 {
     if (path.isEmpty())
         return false;
-    if (path.at(0) == QLatin1Char(':')) {
+
+    bool isResource = path.at(0) == QLatin1Char(':');
+#if defined(Q_OS_ANDROID)
+    isResource = isResource || path.startsWith(QLatin1String("assets:/"));
+#endif
+
+    if (isResource) {
         // qrc resource
         QFileInfo fileInfo(path);
         return fileInfo.exists() && fileInfo.isDir();
