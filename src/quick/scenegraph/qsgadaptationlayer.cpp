@@ -52,8 +52,8 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QSG_NO_RENDERER_TIMING
-static bool qsg_render_timing = !qgetenv("QML_RENDERER_TIMING").isEmpty();
+#ifndef QSG_NO_RENDER_TIMING
+static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
 static QElapsedTimer qsg_render_timer;
 #endif
 
@@ -161,7 +161,7 @@ void QSGDistanceFieldGlyphCache::update()
     if (m_pendingGlyphs.isEmpty())
         return;
 
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
         qsg_render_timer.start();
 #endif
@@ -175,7 +175,7 @@ void QSGDistanceFieldGlyphCache::update()
         distanceFields.insert(glyphIndex, distanceField);
     }
 
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     int renderTime = 0;
     int count = m_pendingGlyphs.size();
     if (qsg_render_timing)
@@ -186,7 +186,7 @@ void QSGDistanceFieldGlyphCache::update()
 
     storeGlyphs(distanceFields);
 
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing) {
         printf("   - glyphs: count=%d, render=%d, store=%d, total=%d\n",
                count,
