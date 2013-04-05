@@ -100,7 +100,6 @@ struct ExecutionContext
     // ### move to CallContext
     Value *arguments;
     unsigned int argumentCount;
-    Object *activation;
 
     String * const *formals() const;
     unsigned int formalCount() const;
@@ -108,7 +107,6 @@ struct ExecutionContext
     unsigned int variableCount() const;
 
     void createMutableBinding(String *name, bool deletable);
-    bool setMutableBinding(ExecutionContext *scope, String *name, const Value &value);
 
     void Q_NORETURN throwError(const Value &value);
     void Q_NORETURN throwError(const QString &message);
@@ -140,11 +138,14 @@ struct CallContext : public ExecutionContext
 
     FunctionObject *function;
     Value *locals;
+    Object *activation;
 };
 
 struct GlobalContext : public ExecutionContext
 {
     void init(ExecutionEngine *e);
+
+    Object *global;
 };
 
 struct CatchContext : public ExecutionContext

@@ -199,7 +199,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     //
     VM::Object *glo = newObject(/*rootContext*/);
     globalObject = Value::fromObject(glo);
-    rootContext->activation = glo;
+    rootContext->global = glo;
     rootContext->thisObject = Value::fromObject(glo);
 
     glo->defineDefaultProperty(rootContext, QStringLiteral("Object"), objectCtor);

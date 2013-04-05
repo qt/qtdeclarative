@@ -2108,10 +2108,11 @@ Local<Object> Context::GetCallingQmlGlobal()
     while (ctx && ctx->outer != engine->rootContext)
         ctx = ctx->outer;
 
-    if (!ctx)
+    assert(ctx);
+    if (!ctx->type == ExecutionContext::Type_QmlContext)
         return Local<Object>();
 
-    return Local<Object>::New(Value::fromVmValue(VM::Value::fromObject(ctx->activation)));
+    return Local<Object>::New(Value::fromVmValue(VM::Value::fromObject(static_cast<CallContext *>(ctx)->activation)));
 }
 
 Local<Value> Context::GetCallingScriptData()

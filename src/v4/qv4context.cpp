@@ -81,8 +81,20 @@ String *DiagnosticMessage::buildFullMessage(ExecutionContext *ctx) const
 
 void ExecutionContext::createMutableBinding(String *name, bool deletable)
 {
-    if (!activation)
-        activation = engine->newObject();
+
+    // find the right context to create the binding on
+    Object *activation = engine->globalObject.objectValue();
+    ExecutionContext *ctx = this;
+    while (ctx) {
+        if (ctx->type == Type_CallContext || ctx->type == Type_QmlContext) {
+            CallContext *c = static_cast<CallContext *>(ctx);
+            if (!c->activation)
+                c->activation = engine->newObject();
+            activation = c->activation;
+            break;
+        }
+        ctx = ctx->outer;
+    }
 
     if (activation->__hasProperty__(this, name))
         return;
@@ -93,31 +105,6 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     desc.writable = PropertyDescriptor::Enabled;
     desc.enumerable = PropertyDescriptor::Enabled;
     activation->__defineOwnProperty__(this, name, &desc);
-}
-
-bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, const Value &value)
-{
-    // ### throw if scope->strict is true, and it would change an immutable binding
-    if (type == Type_CallContext) {
-        CallContext *c = static_cast<CallContext *>(this);
-        for (unsigned int i = 0; i < c->function->varCount; ++i)
-            if (c->function->varList[i]->isEqualTo(name)) {
-                c->locals[i] = value;
-                return true;
-            }
-        for (int i = (int)c->function->formalParameterCount - 1; i >= 0; --i)
-            if (c->function->formalParameterList[i]->isEqualTo(name)) {
-                c->arguments[i] = value;
-                return true;
-            }
-    }
-
-    if (activation && (type == Type_QmlContext || activation->__hasProperty__(scope, name))) {
-        activation->put(scope, name, value);
-        return true;
-    }
-
-    return false;
 }
 
 String * const *ExecutionContext::formals() const
@@ -150,11 +137,11 @@ void GlobalContext::init(ExecutionEngine *eng)
     engine = eng;
     outer = 0;
     lookups = 0;
+    global = 0;
 
     // ### remove
     arguments = 0;
     argumentCount = 0;
-    activation = 0;
 }
 
 void WithContext::init(ExecutionContext *p, Object *with)
@@ -172,7 +159,6 @@ void WithContext::init(ExecutionContext *p, Object *with)
     // ### remove
     arguments = 0;
     argumentCount = 0;
-    activation = 0;
 }
 
 void CatchContext::init(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
@@ -191,7 +177,6 @@ void CatchContext::init(ExecutionContext *p, String *exceptionVarName, const Val
     // ### remove
     arguments = 0;
     argumentCount = 0;
-    activation = 0;
 }
 
 void CallContext::initCallContext(ExecutionEngine *engine)
@@ -231,8 +216,14 @@ void CallContext::initCallContext(ExecutionEngine *engine)
         ArgumentsObject *args = new (engine->memoryManager) ArgumentsObject(this, function->formalParameterCount, argc);
         args->prototype = engine->objectPrototype;
         Value arguments = Value::fromObject(args);
-        createMutableBinding(engine->id_arguments, false);
-        setMutableBinding(this, engine->id_arguments, arguments);
+        activation = engine->newObject();
+        PropertyDescriptor desc;
+        desc.value = Value::fromObject(args);
+        desc.type = PropertyDescriptor::Data;
+        desc.configurable = PropertyDescriptor::Disabled;
+        desc.writable = PropertyDescriptor::Enabled;
+        desc.enumerable = PropertyDescriptor::Enabled;
+        activation->__defineOwnProperty__(this, engine->id_arguments, &desc);
     }
 
     if (engine->debugger)
@@ -249,16 +240,11 @@ bool ExecutionContext::deleteProperty(String *name)
             WithContext *w = static_cast<WithContext *>(ctx);
             if (w->withObject->__hasProperty__(this, name))
                 return w->withObject->deleteProperty(this, name);
-        } else {
-            if (ctx->activation && ctx->activation->__hasProperty__(this, name))
-                return ctx->activation->deleteProperty(this, name);
-        }
-        if (ctx->type == Type_CatchContext) {
+        } else if (ctx->type == Type_CatchContext) {
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->exceptionVarName->isEqualTo(name))
                 return false;
-        }
-        if (ctx->type == Type_CallContext) {
+        } else if (ctx->type == Type_CallContext || ctx->type == Type_QmlContext) {
             CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
             if (f->needsActivation || hasWith) {
@@ -269,8 +255,15 @@ bool ExecutionContext::deleteProperty(String *name)
                     if (f->formalParameterList[i]->isEqualTo(name))
                         return false;
             }
+            if (c->activation && c->activation->__hasProperty__(this, name))
+                return c->activation->deleteProperty(this, name);
+        } else if (ctx->type == Type_GlobalContext) {
+            GlobalContext *g = static_cast<GlobalContext *>(ctx);
+            if (g->global->__hasProperty__(this, name))
+                return g->global->deleteProperty(this, name);
         }
     }
+
     if (strictMode)
         throwSyntaxError(0);
     return true;
@@ -294,24 +287,24 @@ void ExecutionContext::mark()
     for (unsigned arg = 0, lastArg = argumentCount; arg < lastArg; ++arg)
         arguments[arg].mark();
 
-    if (type == Type_CallContext) {
+    if (type == Type_CallContext || type == Type_QmlContext) {
         VM::CallContext *c = static_cast<CallContext *>(this);
         for (unsigned local = 0, lastLocal = c->variableCount(); local < lastLocal; ++local)
             c->locals[local].mark();
         c->function->mark();
-    }
-
-    if (activation)
-        activation->mark();
-    if (type == Type_WithContext) {
+        if (c->activation)
+            c->activation->mark();
+    } else if (type == Type_WithContext) {
         WithContext *w = static_cast<WithContext *>(this);
         w->withObject->mark();
-    }
-    if (type == Type_CatchContext) {
+    } else if (type == Type_CatchContext) {
         CatchContext *c = static_cast<CatchContext *>(this);
         if (c->exceptionVarName)
             c->exceptionVarName->mark();
         c->exceptionValue.mark();
+    } else if (type == Type_GlobalContext) {
+        GlobalContext *g = static_cast<GlobalContext *>(this);
+        g->global->mark();
     }
 }
 
@@ -328,8 +321,28 @@ void ExecutionContext::setProperty(String *name, const Value& value)
             static_cast<CatchContext *>(ctx)->exceptionValue = value;
             return;
         } else {
-            if (ctx->setMutableBinding(this, name, value))
+            Object *activation = 0;
+            if (ctx->type == Type_CallContext || ctx->type == Type_QmlContext) {
+                CallContext *c = static_cast<CallContext *>(ctx);
+                for (unsigned int i = 0; i < c->function->varCount; ++i)
+                    if (c->function->varList[i]->isEqualTo(name)) {
+                        c->locals[i] = value;
+                        return;
+                    }
+                for (int i = (int)c->function->formalParameterCount - 1; i >= 0; --i)
+                    if (c->function->formalParameterList[i]->isEqualTo(name)) {
+                        c->arguments[i] = value;
+                        return;
+                    }
+                activation = c->activation;
+            } else if (ctx->type == Type_GlobalContext) {
+                activation = static_cast<GlobalContext *>(ctx)->global;
+            }
+
+            if (activation && (ctx->type == Type_QmlContext || activation->__hasProperty__(this, name))) {
+                activation->put(this, name, value);
                 return;
+            }
         }
     }
     if (strictMode || name->isEqualTo(engine->id_this))
@@ -358,14 +371,14 @@ Value ExecutionContext::getProperty(String *name)
             continue;
         }
 
-        if (ctx->type == Type_CatchContext) {
+        else if (ctx->type == Type_CatchContext) {
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->exceptionVarName->isEqualTo(name))
                 return c->exceptionValue;
         }
 
-        if (ctx->type == Type_CallContext) {
+        else if (ctx->type == Type_CallContext || ctx->type == Type_QmlContext) {
             VM::CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
@@ -376,19 +389,23 @@ Value ExecutionContext::getProperty(String *name)
                     if (f->formalParameterList[i]->isEqualTo(name))
                         return c->arguments[i];
             }
-        }
-        if (ctx->activation) {
-            bool hasProperty = false;
-            Value v = ctx->activation->get(ctx, name, &hasProperty);
-            if (hasProperty)
-                return v;
-        }
-        if (ctx->type == Type_CallContext) {
-            CallContext *c = static_cast<CallContext *>(ctx);
-            FunctionObject *f = c->function;
+            if (c->activation) {
+                bool hasProperty = false;
+                Value v = c->activation->get(c, name, &hasProperty);
+                if (hasProperty)
+                    return v;
+            }
             if (f->function && f->function->isNamedExpression
                 && name->isEqualTo(f->function->name))
                 return Value::fromObject(c->function);
+        }
+
+        else if (ctx->type == Type_GlobalContext) {
+            GlobalContext *g = static_cast<GlobalContext *>(ctx);
+            bool hasProperty = false;
+            Value v = g->global->get(g, name, &hasProperty);
+            if (hasProperty)
+                return v;
         }
     }
     throwReferenceError(Value::fromString(name));
@@ -416,14 +433,14 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             continue;
         }
 
-        if (ctx->type == Type_CatchContext) {
+        else if (ctx->type == Type_CatchContext) {
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->exceptionVarName->isEqualTo(name))
                 return c->exceptionValue;
         }
 
-        if (ctx->type == Type_CallContext) {
+        else if (ctx->type == Type_CallContext || ctx->type == Type_QmlContext) {
             VM::CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
@@ -434,19 +451,23 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
                     if (f->formalParameterList[i]->isEqualTo(name))
                         return c->arguments[i];
             }
-        }
-        if (ctx->activation) {
-            bool hasProperty = false;
-            Value v = ctx->activation->get(ctx, name, &hasProperty);
-            if (hasProperty)
-                return v;
-        }
-        if (ctx->type == Type_CallContext) {
-            CallContext *c = static_cast<CallContext *>(ctx);
-            FunctionObject *f = c->function;
+            if (c->activation) {
+                bool hasProperty = false;
+                Value v = c->activation->get(c, name, &hasProperty);
+                if (hasProperty)
+                    return v;
+            }
             if (f->function && f->function->isNamedExpression
                 && name->isEqualTo(f->function->name))
                 return Value::fromObject(c->function);
+        }
+
+        else if (ctx->type == Type_GlobalContext) {
+            GlobalContext *g = static_cast<GlobalContext *>(ctx);
+            bool hasProperty = false;
+            Value v = g->global->get(g, name, &hasProperty);
+            if (hasProperty)
+                return v;
         }
     }
     return Value::undefinedValue();
@@ -475,14 +496,14 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             continue;
         }
 
-        if (ctx->type == Type_CatchContext) {
+        else if (ctx->type == Type_CatchContext) {
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->exceptionVarName->isEqualTo(name))
                 return c->exceptionValue;
         }
 
-        if (ctx->type == Type_CallContext) {
+        else if (ctx->type == Type_CallContext || ctx->type == Type_QmlContext) {
             VM::CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
@@ -493,19 +514,23 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
                     if (f->formalParameterList[i]->isEqualTo(name))
                         return c->arguments[i];
             }
-        }
-        if (ctx->activation) {
-            bool hasProperty = false;
-            Value v = ctx->activation->get(ctx, name, &hasProperty);
-            if (hasProperty)
-                return v;
-        }
-        if (ctx->type == Type_CallContext) {
-            CallContext *c = static_cast<CallContext *>(ctx);
-            FunctionObject *f = c->function;
+            if (c->activation) {
+                bool hasProperty = false;
+                Value v = c->activation->get(c, name, &hasProperty);
+                if (hasProperty)
+                    return v;
+            }
             if (f->function && f->function->isNamedExpression
                 && name->isEqualTo(f->function->name))
                 return Value::fromObject(c->function);
+        }
+
+        else if (ctx->type == Type_GlobalContext) {
+            GlobalContext *g = static_cast<GlobalContext *>(ctx);
+            bool hasProperty = false;
+            Value v = g->global->get(g, name, &hasProperty);
+            if (hasProperty)
+                return v;
         }
     }
     throwReferenceError(Value::fromString(name));
