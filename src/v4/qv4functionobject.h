@@ -261,18 +261,6 @@ protected:
     static const ManagedVTable static_vtbl;
 };
 
-struct BuiltinFunction: FunctionObject {
-    Value (*code)(ExecutionContext *parentContext, Value thisObject, Value *args, int argc);
-
-    BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *, Value, Value *, int));
-
-    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
-    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
-
-protected:
-    static const ManagedVTable static_vtbl;
-};
-
 struct ScriptFunction: FunctionObject {
     ScriptFunction(ExecutionContext *scope, VM::Function *function);
 

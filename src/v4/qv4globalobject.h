@@ -77,10 +77,10 @@ struct GlobalFunctions
     static Value method_parseFloat(SimpleCallContext *context);
     static Value method_isNaN(SimpleCallContext *context);
     static Value method_isFinite(SimpleCallContext *context);
-    static Value method_decodeURI(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_decodeURIComponent(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_encodeURI(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_encodeURIComponent(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_decodeURI(SimpleCallContext *context);
+    static Value method_decodeURIComponent(SimpleCallContext *context);
+    static Value method_encodeURI(SimpleCallContext *context);
+    static Value method_encodeURIComponent(SimpleCallContext *context);
     static Value method_escape(SimpleCallContext *context);
     static Value method_unescape(SimpleCallContext *context);
 };

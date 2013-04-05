@@ -179,7 +179,6 @@ struct Q_V4_EXPORT Object: Managed {
     void defineDefaultProperty(String *name, Value value);
     void defineDefaultProperty(ExecutionContext *context, const QString &name, Value value);
     void defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(SimpleCallContext *), int count = 0);
-    void defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(ExecutionContext *, Value, Value *, int), int argumentCount = 0);
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value);
     void defineReadonlyProperty(String *name, Value value);

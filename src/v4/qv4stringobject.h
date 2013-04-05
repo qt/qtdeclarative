@@ -78,25 +78,25 @@ struct StringPrototype: StringObject
     StringPrototype(ExecutionContext *ctx): StringObject(ctx, Value::fromString(ctx, QString())) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
-    static Value method_toString(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_charAt(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_charCodeAt(ExecutionContext *, Value thisObject, Value *argv, int argc);
-    static Value method_concat(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_indexOf(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_lastIndexOf(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_localeCompare(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_match(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_toString(SimpleCallContext *context);
+    static Value method_charAt(SimpleCallContext *context);
+    static Value method_charCodeAt(SimpleCallContext *context);
+    static Value method_concat(SimpleCallContext *context);
+    static Value method_indexOf(SimpleCallContext *context);
+    static Value method_lastIndexOf(SimpleCallContext *context);
+    static Value method_localeCompare(SimpleCallContext *context);
+    static Value method_match(SimpleCallContext *context);
     static Value method_replace(SimpleCallContext *ctx);
     static Value method_search(SimpleCallContext *ctx);
     static Value method_slice(SimpleCallContext *ctx);
     static Value method_split(SimpleCallContext *ctx);
-    static Value method_substr(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_substring(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_substr(SimpleCallContext *context);
+    static Value method_substring(SimpleCallContext *context);
     static Value method_toLowerCase(SimpleCallContext *ctx);
     static Value method_toLocaleLowerCase(SimpleCallContext *ctx);
     static Value method_toUpperCase(SimpleCallContext *ctx);
     static Value method_toLocaleUpperCase(SimpleCallContext *ctx);
-    static Value method_fromCharCode(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_fromCharCode(SimpleCallContext *context);
     static Value method_trim(SimpleCallContext *ctx);
 };
 

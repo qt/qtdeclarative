@@ -391,12 +391,6 @@ FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, Str
     return f;
 }
 
-FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *, Value, Value *, int))
-{
-    BuiltinFunction *f = new (memoryManager) BuiltinFunction(scope, name, code);
-    return f;
-}
-
 FunctionObject *ExecutionEngine::newScriptFunction(ExecutionContext *scope, VM::Function *function)
 {
     assert(function);

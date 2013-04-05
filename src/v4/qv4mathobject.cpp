@@ -97,54 +97,54 @@ static double copySign(double x, double y)
     return x;
 }
 
-Value MathObject::method_abs(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_abs(SimpleCallContext *context)
 {
-    if (!argc)
+    if (!context->argumentCount)
         return Value::fromDouble(qSNaN());
 
-    if (argv[0].isInteger()) {
-        int i = argv[0].integerValue();
+    if (context->arguments[0].isInteger()) {
+        int i = context->arguments[0].integerValue();
         return Value::fromInt32(i < 0 ? - i : i);
     }
 
-    double v = argv[0].toNumber(parentCtx);
+    double v = context->arguments[0].toNumber(context);
     if (v == 0) // 0 | -0
         return Value::fromDouble(0);
 
     return Value::fromDouble(v < 0 ? -v : v);
 }
 
-Value MathObject::method_acos(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_acos(SimpleCallContext *context)
 {
-    double v = argc ? argv[0].toNumber(parentCtx) : 2;
+    double v = context->argumentCount ? context->arguments[0].toNumber(context) : 2;
     if (v > 1)
         return Value::fromDouble(qSNaN());
 
     return Value::fromDouble(::acos(v));
 }
 
-Value MathObject::method_asin(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_asin(SimpleCallContext *context)
 {
-    double v = argc ? argv[0].toNumber(parentCtx) : 2;
+    double v = context->argumentCount ? context->arguments[0].toNumber(context) : 2;
     if (v > 1)
         return Value::fromDouble(qSNaN());
     else
         return Value::fromDouble(::asin(v));
 }
 
-Value MathObject::method_atan(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_atan(SimpleCallContext *context)
 {
-    double v = argc ? argv[0].toNumber(parentCtx) : qSNaN();
+    double v = context->argumentCount ? context->arguments[0].toNumber(context) : qSNaN();
     if (v == 0.0)
         return Value::fromDouble(v);
     else
         return Value::fromDouble(::atan(v));
 }
 
-Value MathObject::method_atan2(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_atan2(SimpleCallContext *context)
 {
-    double v1 = argc ? argv[0].toNumber(parentCtx) : qSNaN();
-    double v2 = argc > 1 ? argv[1].toNumber(parentCtx) : qSNaN();
+    double v1 = context->argumentCount ? context->arguments[0].toNumber(context) : qSNaN();
+    double v2 = context->argumentCount > 1 ? context->arguments[1].toNumber(context) : qSNaN();
 
     if ((v1 < 0) && qIsFinite(v1) && qIsInf(v2) && (copySign(1.0, v2) == 1.0))
         return Value::fromDouble(copySign(0, -1.0));
@@ -159,24 +159,24 @@ Value MathObject::method_atan2(ExecutionContext *parentCtx, Value thisObject, Va
     return Value::fromDouble(::atan2(v1, v2));
 }
 
-Value MathObject::method_ceil(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_ceil(SimpleCallContext *context)
 {
-    double v = argc ? argv[0].toNumber(parentCtx) : qSNaN();
+    double v = context->argumentCount ? context->arguments[0].toNumber(context) : qSNaN();
     if (v < 0.0 && v > -1.0)
         return Value::fromDouble(copySign(0, -1.0));
     else
         return Value::fromDouble(::ceil(v));
 }
 
-Value MathObject::method_cos(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_cos(SimpleCallContext *context)
 {
-    double v = argc ? argv[0].toNumber(parentCtx) : qSNaN();
+    double v = context->argumentCount ? context->arguments[0].toNumber(context) : qSNaN();
     return Value::fromDouble(::cos(v));
 }
 
-Value MathObject::method_exp(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_exp(SimpleCallContext *context)
 {
-    double v = argc ? argv[0].toNumber(parentCtx) : qSNaN();
+    double v = context->argumentCount ? context->arguments[0].toNumber(context) : qSNaN();
     if (qIsInf(v)) {
         if (copySign(1.0, v) == -1.0)
             return Value::fromDouble(0);
@@ -187,37 +187,37 @@ Value MathObject::method_exp(ExecutionContext *parentCtx, Value thisObject, Valu
     }
 }
 
-Value MathObject::method_floor(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_floor(SimpleCallContext *context)
 {
-    double v = argc ? argv[0].toNumber(parentCtx) : qSNaN();
+    double v = context->argumentCount ? context->arguments[0].toNumber(context) : qSNaN();
     return Value::fromDouble(::floor(v));
 }
 
-Value MathObject::method_log(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_log(SimpleCallContext *context)
 {
-    double v = argc ? argv[0].toNumber(parentCtx) : qSNaN();
+    double v = context->argumentCount ? context->arguments[0].toNumber(context) : qSNaN();
     if (v < 0)
         return Value::fromDouble(qSNaN());
     else
         return Value::fromDouble(::log(v));
 }
 
-Value MathObject::method_max(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_max(SimpleCallContext *context)
 {
     double mx = -qInf();
-    for (unsigned i = 0; i < argc; ++i) {
-        double x = argv[i].toNumber(parentCtx);
+    for (unsigned i = 0; i < context->argumentCount; ++i) {
+        double x = context->arguments[i].toNumber(context);
         if (x > mx || isnan(x))
             mx = x;
     }
     return Value::fromDouble(mx);
 }
 
-Value MathObject::method_min(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_min(SimpleCallContext *context)
 {
     double mx = qInf();
-    for (unsigned i = 0; i < argc; ++i) {
-        double x = argv[i].toNumber(parentCtx);
+    for (unsigned i = 0; i < context->argumentCount; ++i) {
+        double x = context->arguments[i].toNumber(context);
         if ((x == 0 && mx == x && copySign(1.0, x) == -1.0)
                 || (x < mx) || isnan(x)) {
             mx = x;
@@ -226,10 +226,10 @@ Value MathObject::method_min(ExecutionContext *parentCtx, Value thisObject, Valu
     return Value::fromDouble(mx);
 }
 
-Value MathObject::method_pow(ExecutionContext *parentCtx, Value, Value *argv, int argc)
+Value MathObject::method_pow(SimpleCallContext *context)
 {
-    double x = argc > 0 ? argv[0].toNumber(parentCtx) : qSNaN();
-    double y = argc > 1 ? argv[1].toNumber(parentCtx) : qSNaN();
+    double x = context->argumentCount > 0 ? context->arguments[0].toNumber(context) : qSNaN();
+    double y = context->argumentCount > 1 ? context->arguments[1].toNumber(context) : qSNaN();
 
     if (isnan(y))
         return Value::fromDouble(qSNaN());
@@ -276,33 +276,33 @@ Value MathObject::method_pow(ExecutionContext *parentCtx, Value, Value *argv, in
     return Value::fromDouble(qSNaN());
 }
 
-Value MathObject::method_random(ExecutionContext *, Value, Value *, int)
+Value MathObject::method_random(SimpleCallContext *)
 {
     return Value::fromDouble(qrand() / (double) RAND_MAX);
 }
 
-Value MathObject::method_round(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_round(SimpleCallContext *context)
 {
-    double v = argc ? argv[0].toNumber(parentCtx) : qSNaN();
+    double v = context->argumentCount ? context->arguments[0].toNumber(context) : qSNaN();
     v = copySign(::floor(v + 0.5), v);
     return Value::fromDouble(v);
 }
 
-Value MathObject::method_sin(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_sin(SimpleCallContext *context)
 {
-    double v = argc ? argv[0].toNumber(parentCtx) : qSNaN();
+    double v = context->argumentCount ? context->arguments[0].toNumber(context) : qSNaN();
     return Value::fromDouble(::sin(v));
 }
 
-Value MathObject::method_sqrt(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_sqrt(SimpleCallContext *context)
 {
-    double v = argc ? argv[0].toNumber(parentCtx) : qSNaN();
+    double v = context->argumentCount ? context->arguments[0].toNumber(context) : qSNaN();
     return Value::fromDouble(::sqrt(v));
 }
 
-Value MathObject::method_tan(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value MathObject::method_tan(SimpleCallContext *context)
 {
-    double v = argc ? argv[0].toNumber(parentCtx) : qSNaN();
+    double v = context->argumentCount ? context->arguments[0].toNumber(context) : qSNaN();
     if (v == 0.0)
         return Value::fromDouble(v);
     else

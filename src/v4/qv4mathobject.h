@@ -52,24 +52,24 @@ struct MathObject: Object
 {
     MathObject(ExecutionContext *ctx);
 
-    static Value method_abs(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_acos(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_asin(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_atan(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_atan2(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_ceil(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_cos(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_exp(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_floor(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_log(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_max(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_min(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_pow(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_random(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_round(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_sin(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_sqrt(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_tan(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
+    static Value method_abs(SimpleCallContext *context);
+    static Value method_acos(SimpleCallContext *context);
+    static Value method_asin(SimpleCallContext *context);
+    static Value method_atan(SimpleCallContext *context);
+    static Value method_atan2(SimpleCallContext *context);
+    static Value method_ceil(SimpleCallContext *context);
+    static Value method_cos(SimpleCallContext *context);
+    static Value method_exp(SimpleCallContext *context);
+    static Value method_floor(SimpleCallContext *context);
+    static Value method_log(SimpleCallContext *context);
+    static Value method_max(SimpleCallContext *context);
+    static Value method_min(SimpleCallContext *context);
+    static Value method_pow(SimpleCallContext *context);
+    static Value method_random(SimpleCallContext *context);
+    static Value method_round(SimpleCallContext *context);
+    static Value method_sin(SimpleCallContext *context);
+    static Value method_sqrt(SimpleCallContext *context);
+    static Value method_tan(SimpleCallContext *context);
 };
 
 } // namespace VM

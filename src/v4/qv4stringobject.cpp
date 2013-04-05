@@ -180,7 +180,7 @@ static QString getThisString(ExecutionContext *ctx)
     return str->toQString();
 }
 
-static QString getThisString(ExecutionContext *parentCtx, Value thisObject)
+static QString getThisString(ExecutionContext *context, Value thisObject)
 {
     if (thisObject.isString())
         return thisObject.stringValue()->toQString();
@@ -189,45 +189,45 @@ static QString getThisString(ExecutionContext *parentCtx, Value thisObject)
     if (StringObject *thisString = thisObject.asStringObject())
         str = thisString->value.stringValue();
     else if (thisObject.isUndefined() || thisObject.isNull())
-        parentCtx->throwTypeError();
+        context->throwTypeError();
     else
-        str = thisObject.toString(parentCtx);
+        str = thisObject.toString(context);
     return str->toQString();
 }
 
-Value StringPrototype::method_toString(ExecutionContext *parentCtx, Value thisObject, Value *, int)
+Value StringPrototype::method_toString(SimpleCallContext *context)
 {
-    if (thisObject.isString())
-        return thisObject;
+    if (context->thisObject.isString())
+        return context->thisObject;
 
-    StringObject *o = thisObject.asStringObject();
+    StringObject *o = context->thisObject.asStringObject();
     if (!o)
-        parentCtx->throwTypeError();
+        context->throwTypeError();
     return o->value;
 }
 
-Value StringPrototype::method_charAt(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value StringPrototype::method_charAt(SimpleCallContext *context)
 {
-    const QString str = getThisString(parentCtx, thisObject);
+    const QString str = getThisString(context, context->thisObject);
 
     int pos = 0;
-    if (argc > 0)
-        pos = (int) argv[0].toInteger(parentCtx);
+    if (context->argumentCount > 0)
+        pos = (int) context->arguments[0].toInteger(context);
 
     QString result;
     if (pos >= 0 && pos < str.length())
         result += str.at(pos);
 
-    return Value::fromString(parentCtx, result);
+    return Value::fromString(context, result);
 }
 
-Value StringPrototype::method_charCodeAt(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value StringPrototype::method_charCodeAt(SimpleCallContext *context)
 {
-    const QString str = getThisString(parentCtx, thisObject);
+    const QString str = getThisString(context, context->thisObject);
 
     int pos = 0;
-    if (argc > 0)
-        pos = (int) argv[0].toInteger(parentCtx);
+    if (context->argumentCount > 0)
+        pos = (int) context->arguments[0].toInteger(context);
 
 
     if (pos >= 0 && pos < str.length())
@@ -236,30 +236,30 @@ Value StringPrototype::method_charCodeAt(ExecutionContext *parentCtx, Value this
     return Value::fromDouble(qSNaN());
 }
 
-Value StringPrototype::method_concat(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value StringPrototype::method_concat(SimpleCallContext *context)
 {
-    QString value = getThisString(parentCtx, thisObject);
+    QString value = getThisString(context, context->thisObject);
 
-    for (int i = 0; i < argc; ++i) {
-        Value v = __qmljs_to_string(argv[i], parentCtx);
+    for (int i = 0; i < context->argumentCount; ++i) {
+        Value v = __qmljs_to_string(context->arguments[i], context);
         assert(v.isString());
         value += v.stringValue()->toQString();
     }
 
-    return Value::fromString(parentCtx, value);
+    return Value::fromString(context, value);
 }
 
-Value StringPrototype::method_indexOf(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value StringPrototype::method_indexOf(SimpleCallContext *context)
 {
-    QString value = getThisString(parentCtx, thisObject);
+    QString value = getThisString(context, context->thisObject);
 
     QString searchString;
-    if (argc)
-        searchString = argv[0].toString(parentCtx)->toQString();
+    if (context->argumentCount)
+        searchString = context->arguments[0].toString(context)->toQString();
 
     int pos = 0;
-    if (argc > 1)
-        pos = (int) argv[1].toInteger(parentCtx);
+    if (context->argumentCount > 1)
+        pos = (int) context->arguments[1].toInteger(context);
 
     int index = -1;
     if (! value.isEmpty())
@@ -268,18 +268,18 @@ Value StringPrototype::method_indexOf(ExecutionContext *parentCtx, Value thisObj
     return Value::fromDouble(index);
 }
 
-Value StringPrototype::method_lastIndexOf(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value StringPrototype::method_lastIndexOf(SimpleCallContext *context)
 {
-    const QString value = getThisString(parentCtx, thisObject);
+    const QString value = getThisString(context, context->thisObject);
 
     QString searchString;
-    if (argc) {
-        Value v = __qmljs_to_string(argv[0], parentCtx);
+    if (context->argumentCount) {
+        Value v = __qmljs_to_string(context->arguments[0], context);
         searchString = v.stringValue()->toQString();
     }
 
-    Value posArg = argc > 1 ? argv[1] : Value::undefinedValue();
-    double position = __qmljs_to_number(posArg, parentCtx);
+    Value posArg = context->argumentCount > 1 ? context->arguments[1] : Value::undefinedValue();
+    double position = __qmljs_to_number(posArg, context);
     if (isnan(position))
         position = +qInf();
     else
@@ -294,57 +294,57 @@ Value StringPrototype::method_lastIndexOf(ExecutionContext *parentCtx, Value thi
     return Value::fromDouble(index);
 }
 
-Value StringPrototype::method_localeCompare(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value StringPrototype::method_localeCompare(SimpleCallContext *context)
 {
-    const QString value = getThisString(parentCtx, thisObject);
-    const QString that = (argc ? argv[0] : Value::undefinedValue()).toString(parentCtx)->toQString();
+    const QString value = getThisString(context, context->thisObject);
+    const QString that = (context->argumentCount ? context->arguments[0] : Value::undefinedValue()).toString(context)->toQString();
     return Value::fromDouble(QString::localeAwareCompare(value, that));
 }
 
-Value StringPrototype::method_match(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value StringPrototype::method_match(SimpleCallContext *context)
 {
-    if (thisObject.isUndefined() || thisObject.isNull())
-        parentCtx->throwTypeError();
+    if (context->thisObject.isUndefined() || context->thisObject.isNull())
+        context->throwTypeError();
 
-    String *s = thisObject.toString(parentCtx);
+    String *s = context->thisObject.toString(context);
 
-    Value regexp = argc ? argv[0] : Value::undefinedValue();
+    Value regexp = context->argumentCount ? context->arguments[0] : Value::undefinedValue();
     RegExpObject *rx = regexp.asRegExpObject();
     if (!rx)
-        rx = parentCtx->engine->regExpCtor.asFunctionObject()->construct(parentCtx, &regexp, 1).asRegExpObject();
+        rx = context->engine->regExpCtor.asFunctionObject()->construct(context, &regexp, 1).asRegExpObject();
 
     if (!rx)
         // ### CHECK
-        parentCtx->throwTypeError();
+        context->throwTypeError();
 
     bool global = rx->global;
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
-    FunctionObject *exec = parentCtx->engine->regExpPrototype->get(parentCtx, parentCtx->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
+    FunctionObject *exec = context->engine->regExpPrototype->get(context, context->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
 
     Value arg = Value::fromString(s);
     if (!global)
-        return exec->call(parentCtx, Value::fromObject(rx), &arg, 1);
+        return exec->call(context, Value::fromObject(rx), &arg, 1);
 
-    String *lastIndex = parentCtx->engine->newString(QStringLiteral("lastIndex"));
-    rx->put(parentCtx, lastIndex, Value::fromInt32(0));
-    ArrayObject *a = parentCtx->engine->newArrayObject(parentCtx);
+    String *lastIndex = context->engine->newString(QStringLiteral("lastIndex"));
+    rx->put(context, lastIndex, Value::fromInt32(0));
+    ArrayObject *a = context->engine->newArrayObject(context);
 
     double previousLastIndex = 0;
     uint n = 0;
     while (1) {
-        Value result = exec->call(parentCtx, Value::fromObject(rx), &arg, 1);
+        Value result = exec->call(context, Value::fromObject(rx), &arg, 1);
         if (result.isNull())
             break;
         assert(result.isObject());
-        double thisIndex = rx->get(parentCtx, lastIndex, 0).toInteger(parentCtx);
+        double thisIndex = rx->get(context, lastIndex, 0).toInteger(context);
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
-            rx->put(parentCtx, lastIndex, Value::fromDouble(previousLastIndex));
+            rx->put(context, lastIndex, Value::fromDouble(previousLastIndex));
         } else {
             previousLastIndex = thisIndex;
         }
-        Value matchStr = result.objectValue()->getIndexed(parentCtx, 0, (bool *)0);
+        Value matchStr = result.objectValue()->getIndexed(context, 0, (bool *)0);
         a->arraySet(n, matchStr);
         ++n;
     }
@@ -615,17 +615,17 @@ Value StringPrototype::method_split(SimpleCallContext *ctx)
     return result;
 }
 
-Value StringPrototype::method_substr(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value StringPrototype::method_substr(SimpleCallContext *context)
 {
-    const QString value = getThisString(parentCtx, thisObject);
+    const QString value = getThisString(context, context->thisObject);
 
     double start = 0;
-    if (argc > 0)
-        start = argv[0].toInteger(parentCtx);
+    if (context->argumentCount > 0)
+        start = context->arguments[0].toInteger(context);
 
     double length = +qInf();
-    if (argc > 1)
-        length = argv[1].toInteger(parentCtx);
+    if (context->argumentCount > 1)
+        length = context->arguments[1].toInteger(context);
 
     double count = value.length();
     if (start < 0)
@@ -635,23 +635,23 @@ Value StringPrototype::method_substr(ExecutionContext *parentCtx, Value thisObje
 
     qint32 x = Value::toInt32(start);
     qint32 y = Value::toInt32(length);
-    return Value::fromString(parentCtx, value.mid(x, y));
+    return Value::fromString(context, value.mid(x, y));
 }
 
-Value StringPrototype::method_substring(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc)
+Value StringPrototype::method_substring(SimpleCallContext *context)
 {
-    QString value = getThisString(parentCtx, thisObject);
+    QString value = getThisString(context, context->thisObject);
     int length = value.length();
 
     double start = 0;
     double end = length;
 
-    if (argc > 0)
-        start = argv[0].toInteger(parentCtx);
+    if (context->argumentCount > 0)
+        start = context->arguments[0].toInteger(context);
 
-    Value endValue = argc > 1 ? argv[1] : Value::undefinedValue();
+    Value endValue = context->argumentCount > 1 ? context->arguments[1] : Value::undefinedValue();
     if (!endValue.isUndefined())
-        end = endValue.toInteger(parentCtx);
+        end = endValue.toInteger(context);
 
     if (isnan(start) || start < 0)
         start = 0;
@@ -673,7 +673,7 @@ Value StringPrototype::method_substring(ExecutionContext *parentCtx, Value thisO
 
     qint32 x = (int)start;
     qint32 y = (int)(end - start);
-    return Value::fromString(parentCtx, value.mid(x, y));
+    return Value::fromString(context, value.mid(x, y));
 }
 
 Value StringPrototype::method_toLowerCase(SimpleCallContext *ctx)
@@ -698,15 +698,15 @@ Value StringPrototype::method_toLocaleUpperCase(SimpleCallContext *ctx)
     return method_toUpperCase(ctx);
 }
 
-Value StringPrototype::method_fromCharCode(ExecutionContext *parentCtx, Value, Value *argv, int argc)
+Value StringPrototype::method_fromCharCode(SimpleCallContext *context)
 {
-    QString str(argc, Qt::Uninitialized);
+    QString str(context->argumentCount, Qt::Uninitialized);
     QChar *ch = str.data();
-    for (int i = 0; i < argc; ++i) {
-        *ch = QChar(argv[i].toUInt16(parentCtx));
+    for (int i = 0; i < context->argumentCount; ++i) {
+        *ch = QChar(context->arguments[i].toUInt16(context));
         ++ch;
     }
-    return Value::fromString(parentCtx, str);
+    return Value::fromString(context, str);
 }
 
 Value StringPrototype::method_trim(SimpleCallContext *ctx)

@@ -149,14 +149,14 @@ Value ObjectPrototype::method_getOwnPropertyDescriptor(SimpleCallContext *ctx)
     return fromPropertyDescriptor(ctx, desc);
 }
 
-Value ObjectPrototype::method_getOwnPropertyNames(ExecutionContext *parentCtx, Value, Value *argv, int argc)
+Value ObjectPrototype::method_getOwnPropertyNames(SimpleCallContext *context)
 {
-    Object *O = argc ? argv[0].asObject() : 0;
+    Object *O = context->argumentCount ? context->arguments[0].asObject() : 0;
     if (!O)
-        parentCtx->throwTypeError();
+        context->throwTypeError();
 
-    ArrayObject *array = parentCtx->engine->newArrayObject(parentCtx)->asArrayObject();
-    ObjectIterator it(parentCtx, O, ObjectIterator::NoFlags);
+    ArrayObject *array = context->engine->newArrayObject(context)->asArrayObject();
+    ObjectIterator it(context, O, ObjectIterator::NoFlags);
     while (1) {
         Value v = it.nextPropertyNameAsString();
         if (v.isNull())

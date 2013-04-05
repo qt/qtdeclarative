@@ -463,29 +463,6 @@ Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const V
 }
 
 
-DEFINE_MANAGED_VTABLE(BuiltinFunction);
-
-BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *, Value, Value *, int))
-    : FunctionObject(scope)
-    , code(code)
-{
-    vtbl = &static_vtbl;
-    this->name = name;
-    isBuiltinFunction = true;
-}
-
-Value BuiltinFunction::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
-{
-    BuiltinFunction *f = static_cast<BuiltinFunction *>(that);
-    return f->code(context, thisObject, args, argc);
-}
-
-Value BuiltinFunction::construct(Managed *, ExecutionContext *ctx, Value *, int)
-{
-    ctx->throwTypeError();
-    return Value::undefinedValue();
-}
-
 DEFINE_MANAGED_VTABLE(BoundFunction);
 
 BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)
