@@ -239,7 +239,7 @@ void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
 }
 
-Value FunctionPrototype::method_toString(CallContext *ctx)
+Value FunctionPrototype::method_toString(SimpleCallContext *ctx)
 {
     FunctionObject *fun = ctx->thisObject.asFunctionObject();
     if (!fun)
@@ -248,7 +248,7 @@ Value FunctionPrototype::method_toString(CallContext *ctx)
     return Value::fromString(ctx, QStringLiteral("function() { [code] }"));
 }
 
-Value FunctionPrototype::method_apply(CallContext *ctx)
+Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
 {
     Value thisArg = ctx->argument(0);
 
@@ -273,7 +273,7 @@ Value FunctionPrototype::method_apply(CallContext *ctx)
     return o->call(ctx, thisArg, args.data(), args.size());
 }
 
-Value FunctionPrototype::method_call(CallContext *ctx)
+Value FunctionPrototype::method_call(SimpleCallContext *ctx)
 {
     Value thisArg = ctx->argument(0);
 
@@ -289,7 +289,7 @@ Value FunctionPrototype::method_call(CallContext *ctx)
     return o->call(ctx, thisArg, args.data(), args.size());
 }
 
-Value FunctionPrototype::method_bind(CallContext *ctx)
+Value FunctionPrototype::method_bind(SimpleCallContext *ctx)
 {
     FunctionObject *target = ctx->thisObject.asFunctionObject();
     if (!target)
@@ -306,7 +306,7 @@ Value FunctionPrototype::method_bind(CallContext *ctx)
 }
 
 
-static Value throwTypeError(CallContext *ctx)
+static Value throwTypeError(SimpleCallContext *ctx)
 {
     ctx->throwTypeError();
     return Value::undefinedValue();
@@ -414,7 +414,7 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
 
 DEFINE_MANAGED_VTABLE(BuiltinFunctionOld);
 
-BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(CallContext *))
+BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *))
     : FunctionObject(scope)
     , code(code)
 {
@@ -432,26 +432,33 @@ Value BuiltinFunctionOld::construct(Managed *, ExecutionContext *ctx, Value *, i
 Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
 {
     BuiltinFunctionOld *f = static_cast<BuiltinFunctionOld *>(that);
-    CallContext *ctx = context->engine->newCallContext(f, thisObject, args, argc);
+    SimpleCallContext ctx;
+    ctx.type = ExecutionContext::Type_SimpleCallContext;
+    ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
+    ctx.marked = false;
+    ctx.thisObject = thisObject;
+    ctx.engine = f->scope->engine;
+    ctx.arguments = args;
+    ctx.argumentCount = argc;
+    context->engine->pushContext(&ctx);
 
-    ctx->thisObject = thisObject;
     if (!f->strictMode && !thisObject.isObject()) {
         // Built-in functions allow for the this object to be null or undefined. This overrides
         // the behaviour of changing thisObject to the global object if null/undefined and allows
         // the built-in functions for example to throw a type error if null is passed.
         if (!thisObject.isUndefined() && !thisObject.isNull())
-            ctx->thisObject = Value::fromObject(thisObject.toObject(context));
+            ctx.thisObject = Value::fromObject(thisObject.toObject(context));
     }
 
     Value result = Value::undefinedValue();
     try {
-        result = f->code(ctx);
+        result = f->code(&ctx);
     } catch (Exception &ex) {
         ex.partiallyUnwindContext(context);
         throw;
     }
 
-    ctx->engine->popContext();
+    context->engine->popContext();
     return result;
 }
 

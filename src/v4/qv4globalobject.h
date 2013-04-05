@@ -73,16 +73,16 @@ protected:
 
 struct GlobalFunctions
 {
-    static Value method_parseInt(CallContext *context);
-    static Value method_parseFloat(CallContext *context);
-    static Value method_isNaN(CallContext *context);
-    static Value method_isFinite(CallContext *context);
+    static Value method_parseInt(SimpleCallContext *context);
+    static Value method_parseFloat(SimpleCallContext *context);
+    static Value method_isNaN(SimpleCallContext *context);
+    static Value method_isFinite(SimpleCallContext *context);
     static Value method_decodeURI(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
     static Value method_decodeURIComponent(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
     static Value method_encodeURI(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
     static Value method_encodeURIComponent(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_escape(CallContext *context);
-    static Value method_unescape(CallContext *context);
+    static Value method_escape(SimpleCallContext *context);
+    static Value method_unescape(SimpleCallContext *context);
 };
 
 } // namespace VM

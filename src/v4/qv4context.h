@@ -79,10 +79,10 @@ struct ExecutionContext
 {
     enum Type {
         Type_GlobalContext = 0x1,
-        Type_SimpleCallContext = 0x2,
-        Type_CallContext = 0x3,
-        Type_CatchContext = 0x4,
-        Type_WithContext = 0x5,
+        Type_CatchContext = 0x2,
+        Type_WithContext = 0x3,
+        Type_SimpleCallContext = 0x4,
+        Type_CallContext = 0x5,
         Type_QmlContext = 0x6
     };
 
@@ -127,15 +127,19 @@ struct ExecutionContext
     inline CallContext *asCallContext();
 };
 
-struct CallContext : public ExecutionContext
+struct SimpleCallContext : public ExecutionContext
+{
+    FunctionObject *function;
+    Value *arguments;
+    unsigned int argumentCount;
+};
+
+struct CallContext : public SimpleCallContext
 {
     void initCallContext(QQmlJS::VM::ExecutionEngine *engine);
     bool needsOwnArguments() const;
 
-    FunctionObject *function;
     Value *locals;
-    Value *arguments;
-    unsigned int argumentCount;
     Object *activation;
 };
 
@@ -163,7 +167,7 @@ struct WithContext : public ExecutionContext
 
 inline Value ExecutionContext::argument(unsigned int index)
 {
-    if (type == Type_CallContext) {
+    if (type >= Type_SimpleCallContext) {
         CallContext *ctx = static_cast<CallContext *>(this);
         if (index < ctx->argumentCount)
             return ctx->arguments[index];
@@ -173,7 +177,7 @@ inline Value ExecutionContext::argument(unsigned int index)
 
 inline CallContext *ExecutionContext::asCallContext()
 {
-    return type == Type_CallContext ? static_cast<CallContext *>(this) : 0;
+    return type >= Type_CallContext ? static_cast<CallContext *>(this) : 0;
 }
 
 /* Function *f, int argc */

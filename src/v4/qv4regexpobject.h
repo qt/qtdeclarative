@@ -94,10 +94,10 @@ struct RegExpPrototype: RegExpObject
     RegExpPrototype(ExecutionEngine* engine): RegExpObject(engine, RegExp::create(engine, QString()), false) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
-    static Value method_exec(CallContext *ctx);
-    static Value method_test(CallContext *ctx);
-    static Value method_toString(CallContext *ctx);
-    static Value method_compile(CallContext *ctx);
+    static Value method_exec(SimpleCallContext *ctx);
+    static Value method_test(SimpleCallContext *ctx);
+    static Value method_toString(SimpleCallContext *ctx);
+    static Value method_compile(SimpleCallContext *ctx);
 };
 
 } // namespace VM

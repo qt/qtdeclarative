@@ -203,11 +203,12 @@ struct Q_V4_EXPORT ExecutionEngine
     CallContext *newCallContext(FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
     CallContext *newCallContext(void *stackSpace, FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
     ExecutionContext *pushGlobalContext();
+    void pushContext(SimpleCallContext *context);
     ExecutionContext *popContext();
 
     VM::Function *newFunction(const QString &name);
 
-    FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(CallContext *));
+    FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *));
     FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *, Value, Value *, int));
     FunctionObject *newScriptFunction(ExecutionContext *scope, VM::Function *function);
     BoundFunction *newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
@@ -247,6 +248,16 @@ struct Q_V4_EXPORT ExecutionEngine
     void initRootContext();
     void ensureContextStackSize();
 };
+
+inline void ExecutionEngine::pushContext(SimpleCallContext *context)
+{
+    ensureContextStackSize();
+    assert(contextStack[contextStackPosition + 1] == 0);
+
+    current = context;
+
+    contextStack[++contextStackPosition] = current;
+}
 
 } // namespace VM
 } // namespace QQmlJS

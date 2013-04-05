@@ -86,7 +86,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     Object *activation = engine->globalObject.objectValue();
     ExecutionContext *ctx = this;
     while (ctx) {
-        if (ctx->type == Type_CallContext || ctx->type == Type_QmlContext) {
+        if (ctx->type >= Type_CallContext) {
             CallContext *c = static_cast<CallContext *>(ctx);
             if (!c->activation)
                 c->activation = engine->newObject();
@@ -109,22 +109,22 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 
 String * const *ExecutionContext::formals() const
 {
-    return type == Type_CallContext ? static_cast<const CallContext *>(this)->function->formalParameterList : 0;
+    return type >= Type_CallContext ? static_cast<const CallContext *>(this)->function->formalParameterList : 0;
 }
 
 unsigned int ExecutionContext::formalCount() const
 {
-    return type == Type_CallContext ? static_cast<const CallContext *>(this)->function->formalParameterCount : 0;
+    return type >= Type_CallContext ? static_cast<const CallContext *>(this)->function->formalParameterCount : 0;
 }
 
 String * const *ExecutionContext::variables() const
 {
-    return type == Type_CallContext ? static_cast<const CallContext *>(this)->function->varList : 0;
+    return type >= Type_CallContext ? static_cast<const CallContext *>(this)->function->varList : 0;
 }
 
 unsigned int ExecutionContext::variableCount() const
 {
-    return type == Type_CallContext ? static_cast<const CallContext *>(this)->function->varCount : 0;
+    return type >= Type_CallContext ? static_cast<const CallContext *>(this)->function->varCount : 0;
 }
 
 
@@ -232,7 +232,7 @@ bool ExecutionContext::deleteProperty(String *name)
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->exceptionVarName->isEqualTo(name))
                 return false;
-        } else if (ctx->type == Type_CallContext || ctx->type == Type_QmlContext) {
+        } else if (ctx->type >= Type_CallContext) {
             CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
             if (f->needsActivation || hasWith) {
@@ -268,20 +268,22 @@ void ExecutionContext::mark()
         return;
     marked = true;
 
-    if (outer)
+    if (type != Type_SimpleCallContext && outer)
         outer->mark();
 
     thisObject.mark();
 
-    if (type == Type_CallContext || type == Type_QmlContext) {
+    if (type >= Type_SimpleCallContext) {
         VM::CallContext *c = static_cast<CallContext *>(this);
         for (unsigned arg = 0, lastArg = c->argumentCount; arg < lastArg; ++arg)
             c->arguments[arg].mark();
-        for (unsigned local = 0, lastLocal = c->variableCount(); local < lastLocal; ++local)
-            c->locals[local].mark();
-        c->function->mark();
-        if (c->activation)
-            c->activation->mark();
+        if (type >= Type_CallContext) {
+            for (unsigned local = 0, lastLocal = c->variableCount(); local < lastLocal; ++local)
+                c->locals[local].mark();
+            if (c->activation)
+                c->activation->mark();
+            c->function->mark();
+        }
     } else if (type == Type_WithContext) {
         WithContext *w = static_cast<WithContext *>(this);
         w->withObject->mark();
@@ -310,7 +312,7 @@ void ExecutionContext::setProperty(String *name, const Value& value)
             return;
         } else {
             Object *activation = 0;
-            if (ctx->type == Type_CallContext || ctx->type == Type_QmlContext) {
+            if (ctx->type >= Type_CallContext) {
                 CallContext *c = static_cast<CallContext *>(ctx);
                 for (unsigned int i = 0; i < c->function->varCount; ++i)
                     if (c->function->varList[i]->isEqualTo(name)) {
@@ -366,7 +368,7 @@ Value ExecutionContext::getProperty(String *name)
                 return c->exceptionValue;
         }
 
-        else if (ctx->type == Type_CallContext || ctx->type == Type_QmlContext) {
+        else if (ctx->type >= Type_CallContext) {
             VM::CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
@@ -428,7 +430,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
                 return c->exceptionValue;
         }
 
-        else if (ctx->type == Type_CallContext || ctx->type == Type_QmlContext) {
+        else if (ctx->type >= Type_CallContext) {
             VM::CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
@@ -491,7 +493,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
                 return c->exceptionValue;
         }
 
-        else if (ctx->type == Type_CallContext || ctx->type == Type_QmlContext) {
+        else if (ctx->type >= Type_CallContext) {
             VM::CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
             if (f->needsActivation || hasWith || hasCatchScope) {

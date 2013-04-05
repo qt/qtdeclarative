@@ -66,8 +66,8 @@ struct BooleanPrototype: BooleanObject
     BooleanPrototype(ExecutionEngine *engine): BooleanObject(engine, Value::fromBoolean(false)) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
-    static Value method_toString(CallContext *ctx);
-    static Value method_valueOf(CallContext *ctx);
+    static Value method_toString(SimpleCallContext *ctx);
+    static Value method_valueOf(SimpleCallContext *ctx);
 };
 
 

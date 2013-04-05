@@ -67,29 +67,29 @@ struct ObjectPrototype: Object
 
     void init(ExecutionContext *ctx, const Value &ctor);
 
-    static Value method_getPrototypeOf(CallContext *ctx);
-    static Value method_getOwnPropertyDescriptor(CallContext *ctx);
+    static Value method_getPrototypeOf(SimpleCallContext *ctx);
+    static Value method_getOwnPropertyDescriptor(SimpleCallContext *ctx);
     static Value method_getOwnPropertyNames(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_create(CallContext *ctx);
-    static Value method_defineProperty(CallContext *ctx);
-    static Value method_defineProperties(CallContext *ctx);
-    static Value method_seal(CallContext *ctx);
-    static Value method_freeze(CallContext *ctx);
-    static Value method_preventExtensions(CallContext *ctx);
-    static Value method_isSealed(CallContext *ctx);
-    static Value method_isFrozen(CallContext *ctx);
-    static Value method_isExtensible(CallContext *ctx);
-    static Value method_keys(CallContext *ctx);
+    static Value method_create(SimpleCallContext *ctx);
+    static Value method_defineProperty(SimpleCallContext *ctx);
+    static Value method_defineProperties(SimpleCallContext *ctx);
+    static Value method_seal(SimpleCallContext *ctx);
+    static Value method_freeze(SimpleCallContext *ctx);
+    static Value method_preventExtensions(SimpleCallContext *ctx);
+    static Value method_isSealed(SimpleCallContext *ctx);
+    static Value method_isFrozen(SimpleCallContext *ctx);
+    static Value method_isExtensible(SimpleCallContext *ctx);
+    static Value method_keys(SimpleCallContext *ctx);
 
-    static Value method_toString(CallContext *ctx);
-    static Value method_toLocaleString(CallContext *ctx);
-    static Value method_valueOf(CallContext *ctx);
-    static Value method_hasOwnProperty(CallContext *ctx);
-    static Value method_isPrototypeOf(CallContext *ctx);
-    static Value method_propertyIsEnumerable(CallContext *ctx);
+    static Value method_toString(SimpleCallContext *ctx);
+    static Value method_toLocaleString(SimpleCallContext *ctx);
+    static Value method_valueOf(SimpleCallContext *ctx);
+    static Value method_hasOwnProperty(SimpleCallContext *ctx);
+    static Value method_isPrototypeOf(SimpleCallContext *ctx);
+    static Value method_propertyIsEnumerable(SimpleCallContext *ctx);
 
-    static Value method_defineGetter(CallContext *ctx);
-    static Value method_defineSetter(CallContext *ctx);
+    static Value method_defineGetter(SimpleCallContext *ctx);
+    static Value method_defineSetter(SimpleCallContext *ctx);
 
     static void toPropertyDescriptor(ExecutionContext *ctx, Value v, PropertyDescriptor *desc);
     static Value fromPropertyDescriptor(ExecutionContext *ctx, const PropertyDescriptor *desc);

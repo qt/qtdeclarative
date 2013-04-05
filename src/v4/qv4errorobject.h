@@ -185,7 +185,7 @@ struct ErrorPrototype: ErrorObject
     void init(ExecutionContext *ctx, const Value &ctor) { init(ctx, ctor, this); }
 
     static void init(ExecutionContext *ctx, const Value &ctor, Object *obj);
-    static Value method_toString(CallContext *ctx);
+    static Value method_toString(SimpleCallContext *ctx);
 };
 
 struct EvalErrorPrototype: EvalErrorObject

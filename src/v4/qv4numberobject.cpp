@@ -96,7 +96,7 @@ void NumberPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("toPrecision"), method_toPrecision);
 }
 
-Value NumberPrototype::method_toString(CallContext *ctx)
+Value NumberPrototype::method_toString(SimpleCallContext *ctx)
 {
     double num;
     if (ctx->thisObject.isNumber()) {
@@ -158,7 +158,7 @@ Value NumberPrototype::method_toString(CallContext *ctx)
     return Value::fromString(str);
 }
 
-Value NumberPrototype::method_toLocaleString(CallContext *ctx)
+Value NumberPrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
     NumberObject *thisObject = ctx->thisObject.asNumberObject();
     if (!thisObject)
@@ -168,7 +168,7 @@ Value NumberPrototype::method_toLocaleString(CallContext *ctx)
     return Value::fromString(str);
 }
 
-Value NumberPrototype::method_valueOf(CallContext *ctx)
+Value NumberPrototype::method_valueOf(SimpleCallContext *ctx)
 {
     NumberObject *thisObject = ctx->thisObject.asNumberObject();
     if (!thisObject)
@@ -177,7 +177,7 @@ Value NumberPrototype::method_valueOf(CallContext *ctx)
     return thisObject->value;
 }
 
-Value NumberPrototype::method_toFixed(CallContext *ctx)
+Value NumberPrototype::method_toFixed(SimpleCallContext *ctx)
 {
     NumberObject *thisObject = ctx->thisObject.asNumberObject();
     if (!thisObject)
@@ -207,7 +207,7 @@ Value NumberPrototype::method_toFixed(CallContext *ctx)
     return Value::fromString(ctx, str);
 }
 
-Value NumberPrototype::method_toExponential(CallContext *ctx)
+Value NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 {
     NumberObject *thisObject = ctx->thisObject.asNumberObject();
     if (!thisObject)
@@ -222,7 +222,7 @@ Value NumberPrototype::method_toExponential(CallContext *ctx)
     return Value::fromString(ctx, z);
 }
 
-Value NumberPrototype::method_toPrecision(CallContext *ctx)
+Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 {
     NumberObject *thisObject = ctx->thisObject.asNumberObject();
     if (!thisObject)

@@ -400,7 +400,7 @@ static QString makeReplacementString(const QString &input, const QString& replac
     return result;
 }
 
-Value StringPrototype::method_replace(CallContext *ctx)
+Value StringPrototype::method_replace(SimpleCallContext *ctx)
 {
     QString string;
     if (StringObject *thisString = ctx->thisObject.asStringObject())
@@ -488,7 +488,7 @@ Value StringPrototype::method_replace(CallContext *ctx)
     return Value::fromString(ctx, result);
 }
 
-Value StringPrototype::method_search(CallContext *ctx)
+Value StringPrototype::method_search(SimpleCallContext *ctx)
 {
     QString string;
     if (StringObject *thisString = ctx->thisObject.asStringObject())
@@ -509,7 +509,7 @@ Value StringPrototype::method_search(CallContext *ctx)
     return Value::fromUInt32(result);
 }
 
-Value StringPrototype::method_slice(CallContext *ctx)
+Value StringPrototype::method_slice(SimpleCallContext *ctx)
 {
     const QString text = getThisString(ctx);
     const double length = text.length();
@@ -535,7 +535,7 @@ Value StringPrototype::method_slice(CallContext *ctx)
     return Value::fromString(ctx, text.mid(intStart, count));
 }
 
-Value StringPrototype::method_split(CallContext *ctx)
+Value StringPrototype::method_split(SimpleCallContext *ctx)
 {
     QString text;
     if (StringObject *thisObject = ctx->thisObject.asStringObject())
@@ -676,24 +676,24 @@ Value StringPrototype::method_substring(ExecutionContext *parentCtx, Value thisO
     return Value::fromString(parentCtx, value.mid(x, y));
 }
 
-Value StringPrototype::method_toLowerCase(CallContext *ctx)
+Value StringPrototype::method_toLowerCase(SimpleCallContext *ctx)
 {
     QString value = getThisString(ctx);
     return Value::fromString(ctx, value.toLower());
 }
 
-Value StringPrototype::method_toLocaleLowerCase(CallContext *ctx)
+Value StringPrototype::method_toLocaleLowerCase(SimpleCallContext *ctx)
 {
     return method_toLowerCase(ctx);
 }
 
-Value StringPrototype::method_toUpperCase(CallContext *ctx)
+Value StringPrototype::method_toUpperCase(SimpleCallContext *ctx)
 {
     QString value = getThisString(ctx);
     return Value::fromString(ctx, value.toUpper());
 }
 
-Value StringPrototype::method_toLocaleUpperCase(CallContext *ctx)
+Value StringPrototype::method_toLocaleUpperCase(SimpleCallContext *ctx)
 {
     return method_toUpperCase(ctx);
 }
@@ -709,7 +709,7 @@ Value StringPrototype::method_fromCharCode(ExecutionContext *parentCtx, Value, V
     return Value::fromString(parentCtx, str);
 }
 
-Value StringPrototype::method_trim(CallContext *ctx)
+Value StringPrototype::method_trim(SimpleCallContext *ctx)
 {
     if (ctx->thisObject.isNull() || ctx->thisObject.isUndefined())
         ctx->throwTypeError();

@@ -778,12 +778,12 @@ double DatePrototype::getThisDate(ExecutionContext *ctx)
     }
 }
 
-Value DatePrototype::method_parse(CallContext *ctx)
+Value DatePrototype::method_parse(SimpleCallContext *ctx)
 {
     return Value::fromDouble(ParseString(ctx->argument(0).toString(ctx)->toQString()));
 }
 
-Value DatePrototype::method_UTC(CallContext *ctx)
+Value DatePrototype::method_UTC(SimpleCallContext *ctx)
 {
     const int numArgs = ctx->argumentCount;
     if (numArgs >= 2) {
@@ -803,62 +803,62 @@ Value DatePrototype::method_UTC(CallContext *ctx)
     return Value::undefinedValue();
 }
 
-Value DatePrototype::method_now(CallContext *ctx)
+Value DatePrototype::method_now(SimpleCallContext *ctx)
 {
     Q_UNUSED(ctx);
     double t = currentTime();
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_toString(CallContext *ctx)
+Value DatePrototype::method_toString(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     return Value::fromString(ctx, ToString(t));
 }
 
-Value DatePrototype::method_toDateString(CallContext *ctx)
+Value DatePrototype::method_toDateString(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     return Value::fromString(ctx, ToDateString(t));
 }
 
-Value DatePrototype::method_toTimeString(CallContext *ctx)
+Value DatePrototype::method_toTimeString(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     return Value::fromString(ctx, ToTimeString(t));
 }
 
-Value DatePrototype::method_toLocaleString(CallContext *ctx)
+Value DatePrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     return Value::fromString(ctx, ToLocaleString(t));
 }
 
-Value DatePrototype::method_toLocaleDateString(CallContext *ctx)
+Value DatePrototype::method_toLocaleDateString(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     return Value::fromString(ctx, ToLocaleDateString(t));
 }
 
-Value DatePrototype::method_toLocaleTimeString(CallContext *ctx)
+Value DatePrototype::method_toLocaleTimeString(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     return Value::fromString(ctx, ToLocaleTimeString(t));
 }
 
-Value DatePrototype::method_valueOf(CallContext *ctx)
+Value DatePrototype::method_valueOf(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getTime(CallContext *ctx)
+Value DatePrototype::method_getTime(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getYear(CallContext *ctx)
+Value DatePrototype::method_getYear(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -866,7 +866,7 @@ Value DatePrototype::method_getYear(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getFullYear(CallContext *ctx)
+Value DatePrototype::method_getFullYear(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -874,7 +874,7 @@ Value DatePrototype::method_getFullYear(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getUTCFullYear(CallContext *ctx)
+Value DatePrototype::method_getUTCFullYear(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -882,7 +882,7 @@ Value DatePrototype::method_getUTCFullYear(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getMonth(CallContext *ctx)
+Value DatePrototype::method_getMonth(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -890,7 +890,7 @@ Value DatePrototype::method_getMonth(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getUTCMonth(CallContext *ctx)
+Value DatePrototype::method_getUTCMonth(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -898,7 +898,7 @@ Value DatePrototype::method_getUTCMonth(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getDate(CallContext *ctx)
+Value DatePrototype::method_getDate(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -906,7 +906,7 @@ Value DatePrototype::method_getDate(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getUTCDate(CallContext *ctx)
+Value DatePrototype::method_getUTCDate(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -914,7 +914,7 @@ Value DatePrototype::method_getUTCDate(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getDay(CallContext *ctx)
+Value DatePrototype::method_getDay(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -922,7 +922,7 @@ Value DatePrototype::method_getDay(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getUTCDay(CallContext *ctx)
+Value DatePrototype::method_getUTCDay(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -930,7 +930,7 @@ Value DatePrototype::method_getUTCDay(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getHours(CallContext *ctx)
+Value DatePrototype::method_getHours(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -938,7 +938,7 @@ Value DatePrototype::method_getHours(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getUTCHours(CallContext *ctx)
+Value DatePrototype::method_getUTCHours(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -946,7 +946,7 @@ Value DatePrototype::method_getUTCHours(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getMinutes(CallContext *ctx)
+Value DatePrototype::method_getMinutes(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -954,7 +954,7 @@ Value DatePrototype::method_getMinutes(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getUTCMinutes(CallContext *ctx)
+Value DatePrototype::method_getUTCMinutes(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -962,7 +962,7 @@ Value DatePrototype::method_getUTCMinutes(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getSeconds(CallContext *ctx)
+Value DatePrototype::method_getSeconds(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -970,7 +970,7 @@ Value DatePrototype::method_getSeconds(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getUTCSeconds(CallContext *ctx)
+Value DatePrototype::method_getUTCSeconds(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -978,7 +978,7 @@ Value DatePrototype::method_getUTCSeconds(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getMilliseconds(CallContext *ctx)
+Value DatePrototype::method_getMilliseconds(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -986,7 +986,7 @@ Value DatePrototype::method_getMilliseconds(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getUTCMilliseconds(CallContext *ctx)
+Value DatePrototype::method_getUTCMilliseconds(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -994,7 +994,7 @@ Value DatePrototype::method_getUTCMilliseconds(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_getTimezoneOffset(CallContext *ctx)
+Value DatePrototype::method_getTimezoneOffset(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
     if (! isnan(t))
@@ -1002,7 +1002,7 @@ Value DatePrototype::method_getTimezoneOffset(CallContext *ctx)
     return Value::fromDouble(t);
 }
 
-Value DatePrototype::method_setTime(CallContext *ctx)
+Value DatePrototype::method_setTime(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1012,7 +1012,7 @@ Value DatePrototype::method_setTime(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setMilliseconds(CallContext *ctx)
+Value DatePrototype::method_setMilliseconds(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1024,7 +1024,7 @@ Value DatePrototype::method_setMilliseconds(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setUTCMilliseconds(CallContext *ctx)
+Value DatePrototype::method_setUTCMilliseconds(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1036,7 +1036,7 @@ Value DatePrototype::method_setUTCMilliseconds(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setSeconds(CallContext *ctx)
+Value DatePrototype::method_setSeconds(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1050,7 +1050,7 @@ Value DatePrototype::method_setSeconds(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setUTCSeconds(CallContext *ctx)
+Value DatePrototype::method_setUTCSeconds(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1064,7 +1064,7 @@ Value DatePrototype::method_setUTCSeconds(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setMinutes(CallContext *ctx)
+Value DatePrototype::method_setMinutes(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1079,7 +1079,7 @@ Value DatePrototype::method_setMinutes(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setUTCMinutes(CallContext *ctx)
+Value DatePrototype::method_setUTCMinutes(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1094,7 +1094,7 @@ Value DatePrototype::method_setUTCMinutes(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setHours(CallContext *ctx)
+Value DatePrototype::method_setHours(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1110,7 +1110,7 @@ Value DatePrototype::method_setHours(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setUTCHours(CallContext *ctx)
+Value DatePrototype::method_setUTCHours(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1126,7 +1126,7 @@ Value DatePrototype::method_setUTCHours(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setDate(CallContext *ctx)
+Value DatePrototype::method_setDate(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1139,7 +1139,7 @@ Value DatePrototype::method_setDate(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setUTCDate(CallContext *ctx)
+Value DatePrototype::method_setUTCDate(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1152,7 +1152,7 @@ Value DatePrototype::method_setUTCDate(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setMonth(CallContext *ctx)
+Value DatePrototype::method_setMonth(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1166,7 +1166,7 @@ Value DatePrototype::method_setMonth(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setUTCMonth(CallContext *ctx)
+Value DatePrototype::method_setUTCMonth(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1180,7 +1180,7 @@ Value DatePrototype::method_setUTCMonth(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setYear(CallContext *ctx)
+Value DatePrototype::method_setYear(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1206,7 +1206,7 @@ Value DatePrototype::method_setYear(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setUTCFullYear(CallContext *ctx)
+Value DatePrototype::method_setUTCFullYear(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1221,7 +1221,7 @@ Value DatePrototype::method_setUTCFullYear(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_setFullYear(CallContext *ctx)
+Value DatePrototype::method_setFullYear(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1238,7 +1238,7 @@ Value DatePrototype::method_setFullYear(CallContext *ctx)
     return self->value;
 }
 
-Value DatePrototype::method_toUTCString(CallContext *ctx)
+Value DatePrototype::method_toUTCString(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1261,7 +1261,7 @@ static void addZeroPrefixedInt(QString &str, int num, int nDigits)
     }
 }
 
-Value DatePrototype::method_toISOString(CallContext *ctx)
+Value DatePrototype::method_toISOString(SimpleCallContext *ctx)
 {
     DateObject *self = ctx->thisObject.asDateObject();
     if (!self)
@@ -1299,7 +1299,7 @@ Value DatePrototype::method_toISOString(CallContext *ctx)
     return Value::fromString(ctx, result);
 }
 
-Value DatePrototype::method_toJSON(CallContext *ctx)
+Value DatePrototype::method_toJSON(SimpleCallContext *ctx)
 {
     Value O = __qmljs_to_object(ctx, ctx->thisObject);
     Value tv = __qmljs_to_primitive(O, ctx, NUMBER_HINT);

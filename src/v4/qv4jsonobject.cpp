@@ -876,7 +876,7 @@ JsonObject::JsonObject(ExecutionContext *context)
 }
 
 
-Value JsonObject::method_parse(CallContext *ctx)
+Value JsonObject::method_parse(SimpleCallContext *ctx)
 {
     QString jtext = ctx->argument(0).toString(ctx)->toQString();
 
@@ -892,7 +892,7 @@ Value JsonObject::method_parse(CallContext *ctx)
     return result;
 }
 
-Value JsonObject::method_stringify(CallContext *ctx)
+Value JsonObject::method_stringify(SimpleCallContext *ctx)
 {
     Stringify stringify(ctx);
 

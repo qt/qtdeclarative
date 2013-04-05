@@ -230,7 +230,7 @@ void ErrorPrototype::init(ExecutionContext *ctx, const Value &ctor, Object *obj)
     obj->defineDefaultProperty(ctx, QStringLiteral("name"), Value::fromString(ctx, QStringLiteral("Error")));
 }
 
-Value ErrorPrototype::method_toString(CallContext *ctx)
+Value ErrorPrototype::method_toString(SimpleCallContext *ctx)
 {
     Object *o = ctx->thisObject.asObject();
     if (!o)

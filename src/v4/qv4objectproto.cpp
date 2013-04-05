@@ -128,7 +128,7 @@ void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("__defineSetter__"), method_defineSetter, 0);
 }
 
-Value ObjectPrototype::method_getPrototypeOf(CallContext *ctx)
+Value ObjectPrototype::method_getPrototypeOf(SimpleCallContext *ctx)
 {
     Value o = ctx->argument(0);
     if (! o.isObject())
@@ -138,7 +138,7 @@ Value ObjectPrototype::method_getPrototypeOf(CallContext *ctx)
     return p ? Value::fromObject(p) : Value::nullValue();
 }
 
-Value ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
+Value ObjectPrototype::method_getOwnPropertyDescriptor(SimpleCallContext *ctx)
 {
     Value O = ctx->argument(0);
     if (!O.isObject())
@@ -166,7 +166,7 @@ Value ObjectPrototype::method_getOwnPropertyNames(ExecutionContext *parentCtx, V
     return Value::fromObject(array);
 }
 
-Value ObjectPrototype::method_create(CallContext *ctx)
+Value ObjectPrototype::method_create(SimpleCallContext *ctx)
 {
     Value O = ctx->argument(0);
     if (!O.isObject() && !O.isNull())
@@ -184,7 +184,7 @@ Value ObjectPrototype::method_create(CallContext *ctx)
     return objValue;
 }
 
-Value ObjectPrototype::method_defineProperty(CallContext *ctx)
+Value ObjectPrototype::method_defineProperty(SimpleCallContext *ctx)
 {
     Value O = ctx->argument(0);
     if (!O.isObject())
@@ -202,7 +202,7 @@ Value ObjectPrototype::method_defineProperty(CallContext *ctx)
     return O;
 }
 
-Value ObjectPrototype::method_defineProperties(CallContext *ctx)
+Value ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
 {
     Value O = ctx->argument(0);
     if (!O.isObject())
@@ -231,7 +231,7 @@ Value ObjectPrototype::method_defineProperties(CallContext *ctx)
     return O;
 }
 
-Value ObjectPrototype::method_seal(CallContext *ctx)
+Value ObjectPrototype::method_seal(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
@@ -251,7 +251,7 @@ Value ObjectPrototype::method_seal(CallContext *ctx)
     return ctx->argument(0);
 }
 
-Value ObjectPrototype::method_freeze(CallContext *ctx)
+Value ObjectPrototype::method_freeze(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
@@ -273,7 +273,7 @@ Value ObjectPrototype::method_freeze(CallContext *ctx)
     return ctx->argument(0);
 }
 
-Value ObjectPrototype::method_preventExtensions(CallContext *ctx)
+Value ObjectPrototype::method_preventExtensions(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
@@ -283,7 +283,7 @@ Value ObjectPrototype::method_preventExtensions(CallContext *ctx)
     return ctx->argument(0);
 }
 
-Value ObjectPrototype::method_isSealed(CallContext *ctx)
+Value ObjectPrototype::method_isSealed(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
@@ -305,7 +305,7 @@ Value ObjectPrototype::method_isSealed(CallContext *ctx)
     return Value::fromBoolean(true);
 }
 
-Value ObjectPrototype::method_isFrozen(CallContext *ctx)
+Value ObjectPrototype::method_isFrozen(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
@@ -327,7 +327,7 @@ Value ObjectPrototype::method_isFrozen(CallContext *ctx)
     return Value::fromBoolean(true);
 }
 
-Value ObjectPrototype::method_isExtensible(CallContext *ctx)
+Value ObjectPrototype::method_isExtensible(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
@@ -336,7 +336,7 @@ Value ObjectPrototype::method_isExtensible(CallContext *ctx)
     return Value::fromBoolean(o->extensible);
 }
 
-Value ObjectPrototype::method_keys(CallContext *ctx)
+Value ObjectPrototype::method_keys(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
@@ -365,7 +365,7 @@ Value ObjectPrototype::method_keys(CallContext *ctx)
     return Value::fromObject(a);
 }
 
-Value ObjectPrototype::method_toString(CallContext *ctx)
+Value ObjectPrototype::method_toString(SimpleCallContext *ctx)
 {
     if (ctx->thisObject.isUndefined()) {
         return Value::fromString(ctx, QStringLiteral("[object Undefined]"));
@@ -378,7 +378,7 @@ Value ObjectPrototype::method_toString(CallContext *ctx)
     }
 }
 
-Value ObjectPrototype::method_toLocaleString(CallContext *ctx)
+Value ObjectPrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
     Object *o = ctx->thisObject.toObject(ctx);
     Value ts = o->get(ctx, ctx->engine->newString(QStringLiteral("toString")));
@@ -388,12 +388,12 @@ Value ObjectPrototype::method_toLocaleString(CallContext *ctx)
     return f->call(ctx, Value::fromObject(o), 0, 0);
 }
 
-Value ObjectPrototype::method_valueOf(CallContext *ctx)
+Value ObjectPrototype::method_valueOf(SimpleCallContext *ctx)
 {
     return Value::fromObject(ctx->thisObject.toObject(ctx));
 }
 
-Value ObjectPrototype::method_hasOwnProperty(CallContext *ctx)
+Value ObjectPrototype::method_hasOwnProperty(SimpleCallContext *ctx)
 {
     String *P = ctx->argument(0).toString(ctx);
     Object *O = ctx->thisObject.toObject(ctx);
@@ -401,7 +401,7 @@ Value ObjectPrototype::method_hasOwnProperty(CallContext *ctx)
     return Value::fromBoolean(r);
 }
 
-Value ObjectPrototype::method_isPrototypeOf(CallContext *ctx)
+Value ObjectPrototype::method_isPrototypeOf(SimpleCallContext *ctx)
 {
     Value V = ctx->argument(0);
     if (! V.isObject())
@@ -417,7 +417,7 @@ Value ObjectPrototype::method_isPrototypeOf(CallContext *ctx)
     return Value::fromBoolean(false);
 }
 
-Value ObjectPrototype::method_propertyIsEnumerable(CallContext *ctx)
+Value ObjectPrototype::method_propertyIsEnumerable(SimpleCallContext *ctx)
 {
     String *p = ctx->argument(0).toString(ctx);
 
@@ -426,7 +426,7 @@ Value ObjectPrototype::method_propertyIsEnumerable(CallContext *ctx)
     return Value::fromBoolean(pd && pd->isEnumerable());
 }
 
-Value ObjectPrototype::method_defineGetter(CallContext *ctx)
+Value ObjectPrototype::method_defineGetter(SimpleCallContext *ctx)
 {
     if (ctx->argumentCount < 2)
         ctx->throwTypeError();
@@ -445,7 +445,7 @@ Value ObjectPrototype::method_defineGetter(CallContext *ctx)
     return Value::undefinedValue();
 }
 
-Value ObjectPrototype::method_defineSetter(CallContext *ctx)
+Value ObjectPrototype::method_defineSetter(SimpleCallContext *ctx)
 {
     if (ctx->argumentCount < 2)
         ctx->throwTypeError();
