@@ -98,7 +98,8 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, const Value &value)
 {
     // ### throw if scope->strict is true, and it would change an immutable binding
-    if (function) {
+    if (type == CallContext) {
+        assert(function);
         for (unsigned int i = 0; i < function->varCount; ++i)
             if (function->varList[i]->isEqualTo(name)) {
                 locals[i] = value;
@@ -111,7 +112,7 @@ bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, 
             }
     }
 
-    if (activation && (qmlObject || activation->__hasProperty__(scope, name))) {
+    if (activation && (type == QmlContext || activation->__hasProperty__(scope, name))) {
         activation->put(scope, name, value);
         return true;
     }
@@ -124,7 +125,8 @@ Value ExecutionContext::getBindingValue(ExecutionContext *scope, String *name, b
     Q_UNUSED(strict);
     assert(function);
 
-    if (function) {
+    if (type == CallContext) {
+        assert(function);
         for (unsigned int i = 0; i < function->varCount; ++i)
             if (function->varList[i]->isEqualTo(name))
                 return locals[i];
@@ -175,6 +177,7 @@ unsigned int ExecutionContext::variableCount() const
 
 void ExecutionContext::init(ExecutionEngine *eng)
 {
+    type = GlobalContext;
     marked = false;
     engine = eng;
     outer = 0;
@@ -190,13 +193,13 @@ void ExecutionContext::init(ExecutionEngine *eng)
     exceptionVarName = 0;
     exceptionValue = Value::undefinedValue();
     strictMode = false;
-    qmlObject = false;
     activation = 0;
     withObject = 0;
 }
 
 void ExecutionContext::init(ExecutionContext *p, Object *with)
 {
+    type = WithContext;
     marked = false;
     engine = p->engine;
     outer = p;
@@ -212,13 +215,13 @@ void ExecutionContext::init(ExecutionContext *p, Object *with)
     exceptionVarName = 0;
     exceptionValue = Value::undefinedValue();
     strictMode = false;
-    qmlObject = false;
     activation = 0;
     withObject = with;
 }
 
 void ExecutionContext::initForCatch(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
 {
+    type = CatchContext;
     marked = false;
     engine = p->engine;
     outer = p;
@@ -232,7 +235,6 @@ void ExecutionContext::initForCatch(ExecutionContext *p, String *exceptionVarNam
     this->exceptionVarName = exceptionVarName;
     this->exceptionValue = exceptionValue;
     strictMode = p->strictMode;
-    qmlObject = false;
     activation = 0;
     withObject = 0;
 }
@@ -241,7 +243,7 @@ bool ExecutionContext::deleteProperty(String *name)
 {
     bool hasWith = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
-        if (ctx->withObject) {
+        if (ctx->type == WithContext) {
             hasWith = true;
             if (ctx->withObject->__hasProperty__(this, name))
                 return ctx->withObject->deleteProperty(this, name);
@@ -249,9 +251,10 @@ bool ExecutionContext::deleteProperty(String *name)
             if (ctx->activation && ctx->activation->__hasProperty__(this, name))
                 return ctx->activation->deleteProperty(this, name);
         }
-        if (ctx->exceptionVarName && ctx->exceptionVarName->isEqualTo(name))
+        if (ctx->type == CatchContext && ctx->exceptionVarName->isEqualTo(name))
             return false;
-        if (FunctionObject *f = ctx->function) {
+        if (ctx->type == CallContext) {
+            FunctionObject *f = ctx->function;
             if (f->needsActivation || hasWith) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
@@ -299,20 +302,17 @@ void ExecutionContext::mark()
 
 void ExecutionContext::setProperty(String *name, const Value& value)
 {
-//    qDebug() << "=== SetProperty" << value.toString(this)->toQString();
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
-        if (Object *w = ctx->withObject) {
-//            qDebug() << ctx << "hasWith";
+        if (ctx->type == WithContext) {
+            Object *w = ctx->withObject;
             if (w->__hasProperty__(ctx, name)) {
-//                qDebug() << "   withHasProp";
                 w->put(ctx, name, value);
                 return;
             }
-        } else if (ctx->exceptionVarName && ctx->exceptionVarName->isEqualTo(name)) {
+        } else if (ctx->type == CatchContext && ctx->exceptionVarName->isEqualTo(name)) {
             ctx->exceptionValue = value;
             return;
         } else {
-//            qDebug() << ctx << "setting mutable binding";
             if (ctx->setMutableBinding(this, name, value))
                 return;
         }
@@ -331,27 +331,26 @@ Value ExecutionContext::getProperty(String *name)
 
     bool hasWith = false;
     bool hasCatchScope = false;
-//    qDebug() << "=== getProperty" << name->toQString();
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
-        if (Object *w = ctx->withObject) {
+        if (ctx->type == WithContext) {
+            Object *w = ctx->withObject;
             hasWith = true;
-//            qDebug() << ctx << "hasWith";
             bool hasProperty = false;
             Value v = w->get(ctx, name, &hasProperty);
             if (hasProperty) {
-//                qDebug() << "   withHasProp";
                 return v;
             }
             continue;
         }
 
-        if (ctx->exceptionVarName) {
+        if (ctx->type == CatchContext) {
             hasCatchScope = true;
             if (ctx->exceptionVarName->isEqualTo(name))
                 return ctx->exceptionValue;
         }
 
-        if (FunctionObject *f = ctx->function) {
+        if (ctx->type == CallContext) {
+            FunctionObject *f = ctx->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
@@ -367,7 +366,8 @@ Value ExecutionContext::getProperty(String *name)
             if (hasProperty)
                 return v;
         }
-        if (FunctionObject *f = ctx->function) {
+        if (ctx->type == CallContext) {
+            FunctionObject *f = ctx->function;
             if (f->function && f->function->isNamedExpression
                 && name->isEqualTo(f->function->name))
                 return Value::fromObject(ctx->function);
@@ -387,22 +387,25 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
     bool hasWith = false;
     bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
-        if (Object *w = ctx->withObject) {
+        if (ctx->type == WithContext) {
+            Object *w = ctx->withObject;
             hasWith = true;
             bool hasProperty = false;
             Value v = w->get(ctx, name, &hasProperty);
-            if (hasProperty)
+            if (hasProperty) {
                 return v;
+            }
             continue;
         }
 
-        if (ctx->exceptionVarName) {
+        if (ctx->type == CatchContext) {
             hasCatchScope = true;
             if (ctx->exceptionVarName->isEqualTo(name))
                 return ctx->exceptionValue;
         }
 
-        if (FunctionObject *f = ctx->function) {
+        if (ctx->type == CallContext) {
+            FunctionObject *f = ctx->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
@@ -418,7 +421,8 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             if (hasProperty)
                 return v;
         }
-        if (FunctionObject *f = ctx->function) {
+        if (ctx->type == CallContext) {
+            FunctionObject *f = ctx->function;
             if (f->function && f->function->isNamedExpression
                 && name->isEqualTo(f->function->name))
                 return Value::fromObject(ctx->function);
@@ -438,7 +442,8 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
     bool hasWith = false;
     bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
-        if (Object *w = ctx->withObject) {
+        if (ctx->type == WithContext) {
+            Object *w = ctx->withObject;
             hasWith = true;
             bool hasProperty = false;
             Value v = w->get(ctx, name, &hasProperty);
@@ -449,13 +454,14 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             continue;
         }
 
-        if (ctx->exceptionVarName) {
+        if (ctx->type == CatchContext) {
             hasCatchScope = true;
             if (ctx->exceptionVarName->isEqualTo(name))
                 return ctx->exceptionValue;
         }
 
-        if (FunctionObject *f = ctx->function) {
+        if (ctx->type == CallContext) {
+            FunctionObject *f = ctx->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
@@ -471,7 +477,8 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             if (hasProperty)
                 return v;
         }
-        if (FunctionObject *f = ctx->function) {
+        if (ctx->type == CallContext) {
+            FunctionObject *f = ctx->function;
             if (f->function && f->function->isNamedExpression
                 && name->isEqualTo(f->function->name))
                 return Value::fromObject(ctx->function);
@@ -539,6 +546,7 @@ void ExecutionContext::throwURIError(Value msg)
 
 void ExecutionContext::initCallContext(ExecutionEngine *engine)
 {
+    type = CallContext;
     marked = false;
     this->engine = engine;
     outer = function->scope;
@@ -553,7 +561,6 @@ void ExecutionContext::initCallContext(ExecutionEngine *engine)
     withObject = 0;
 
     strictMode = function->strictMode;
-    qmlObject = false;
 
     if (function->function)
         lookups = function->function->lookups;

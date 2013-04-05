@@ -75,26 +75,37 @@ struct Q_V4_EXPORT DiagnosticMessage
 
 struct ExecutionContext
 {
-    ExecutionContext *next; // used in the GC
+    enum Type {
+        GlobalContext = 0x1,
+        SimpleCallContext = 0x2,
+        CallContext = 0x3,
+        CatchContext = 0x4,
+        WithContext = 0x5,
+        QmlContext = 0x6
+    };
+
     ExecutionEngine *engine;
     ExecutionContext *outer;
     Value thisObject;
+    Value *arguments;
+    unsigned int argumentCount;
+    Type type;
+
+    // ### remove me
+    Object *activation;
 
     FunctionObject *function;
     Lookup *lookups;
 
-    Value *arguments;
-    unsigned int argumentCount;
     Value *locals;
 
+    ExecutionContext *next; // used in the GC
     String *exceptionVarName;
     Value exceptionValue;
 
     bool strictMode;
-    bool qmlObject; // ## temporary until we do proper QML contexts
     bool marked;
 
-    Object *activation;
     Object *withObject;
 
     String * const *formals() const;
