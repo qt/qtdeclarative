@@ -101,7 +101,6 @@ struct ExecutionContext
     Value *arguments;
     unsigned int argumentCount;
     Object *activation;
-    FunctionObject *function;
 
     String * const *formals() const;
     unsigned int formalCount() const;
@@ -110,8 +109,6 @@ struct ExecutionContext
 
     void createMutableBinding(String *name, bool deletable);
     bool setMutableBinding(ExecutionContext *scope, String *name, const Value &value);
-
-    void wireUpPrototype();
 
     void Q_NORETURN throwError(const Value &value);
     void Q_NORETURN throwError(const QString &message);
@@ -131,8 +128,6 @@ struct ExecutionContext
 
     inline Value argument(unsigned int index = 0);
 
-    bool needsOwnArguments() const;
-
     void mark();
 
     inline CallContext *asCallContext();
@@ -141,7 +136,9 @@ struct ExecutionContext
 struct CallContext : public ExecutionContext
 {
     void initCallContext(QQmlJS::VM::ExecutionEngine *engine);
+    bool needsOwnArguments() const;
 
+    FunctionObject *function;
     Value *locals;
 };
 

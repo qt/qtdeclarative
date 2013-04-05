@@ -155,7 +155,6 @@ void GlobalContext::init(ExecutionEngine *eng)
     arguments = 0;
     argumentCount = 0;
     activation = 0;
-    function = 0;
 }
 
 void WithContext::init(ExecutionContext *p, Object *with)
@@ -174,7 +173,6 @@ void WithContext::init(ExecutionContext *p, Object *with)
     arguments = 0;
     argumentCount = 0;
     activation = 0;
-    function = 0;
 }
 
 void CatchContext::init(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
@@ -194,7 +192,6 @@ void CatchContext::init(ExecutionContext *p, String *exceptionVarName, const Val
     arguments = 0;
     argumentCount = 0;
     activation = 0;
-    function = 0;
 }
 
 void CallContext::initCallContext(ExecutionEngine *engine)
@@ -262,7 +259,8 @@ bool ExecutionContext::deleteProperty(String *name)
                 return false;
         }
         if (ctx->type == Type_CallContext) {
-            FunctionObject *f = ctx->function;
+            CallContext *c = static_cast<CallContext *>(ctx);
+            FunctionObject *f = c->function;
             if (f->needsActivation || hasWith) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
@@ -278,9 +276,9 @@ bool ExecutionContext::deleteProperty(String *name)
     return true;
 }
 
-bool ExecutionContext::needsOwnArguments() const
+bool CallContext::needsOwnArguments() const
 {
-    return function && (function->needsActivation || argumentCount < function->formalParameterCount);
+    return function->needsActivation || argumentCount < function->formalParameterCount;
 }
 
 void ExecutionContext::mark()
@@ -293,8 +291,6 @@ void ExecutionContext::mark()
         outer->mark();
 
     thisObject.mark();
-    if (function)
-        function->mark();
     for (unsigned arg = 0, lastArg = argumentCount; arg < lastArg; ++arg)
         arguments[arg].mark();
 
@@ -302,6 +298,7 @@ void ExecutionContext::mark()
         VM::CallContext *c = static_cast<CallContext *>(this);
         for (unsigned local = 0, lastLocal = c->variableCount(); local < lastLocal; ++local)
             c->locals[local].mark();
+        c->function->mark();
     }
 
     if (activation)
@@ -387,10 +384,11 @@ Value ExecutionContext::getProperty(String *name)
                 return v;
         }
         if (ctx->type == Type_CallContext) {
-            FunctionObject *f = ctx->function;
+            CallContext *c = static_cast<CallContext *>(ctx);
+            FunctionObject *f = c->function;
             if (f->function && f->function->isNamedExpression
                 && name->isEqualTo(f->function->name))
-                return Value::fromObject(ctx->function);
+                return Value::fromObject(c->function);
         }
     }
     throwReferenceError(Value::fromString(name));
@@ -444,10 +442,11 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
                 return v;
         }
         if (ctx->type == Type_CallContext) {
-            FunctionObject *f = ctx->function;
+            CallContext *c = static_cast<CallContext *>(ctx);
+            FunctionObject *f = c->function;
             if (f->function && f->function->isNamedExpression
                 && name->isEqualTo(f->function->name))
-                return Value::fromObject(ctx->function);
+                return Value::fromObject(c->function);
         }
     }
     return Value::undefinedValue();
@@ -502,10 +501,11 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
                 return v;
         }
         if (ctx->type == Type_CallContext) {
-            FunctionObject *f = ctx->function;
+            CallContext *c = static_cast<CallContext *>(ctx);
+            FunctionObject *f = c->function;
             if (f->function && f->function->isNamedExpression
                 && name->isEqualTo(f->function->name))
-                return Value::fromObject(ctx->function);
+                return Value::fromObject(c->function);
         }
     }
     throwReferenceError(Value::fromString(name));
@@ -566,17 +566,6 @@ void ExecutionContext::throwRangeError(Value value)
 void ExecutionContext::throwURIError(Value msg)
 {
     throwError(Value::fromObject(engine->newURIErrorObject(this, msg)));
-}
-
-void ExecutionContext::wireUpPrototype()
-{
-    assert(thisObject.isObject());
-
-    Value proto = function->get(this, engine->id_prototype);
-    if (proto.isObject())
-        thisObject.objectValue()->prototype = proto.objectValue();
-    else
-        thisObject.objectValue()->prototype = engine->objectPrototype;
 }
 
 } // namespace VM

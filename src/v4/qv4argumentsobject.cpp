@@ -52,7 +52,7 @@ static Value throwTypeError(ExecutionContext *ctx)
 
 DEFINE_MANAGED_VTABLE(ArgumentsObject);
 
-ArgumentsObject::ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount)
+ArgumentsObject::ArgumentsObject(CallContext *context, int formalParameterCount, int actualParameterCount)
     : Object(context->engine), context(context)
 {
     vtbl = &static_vtbl;

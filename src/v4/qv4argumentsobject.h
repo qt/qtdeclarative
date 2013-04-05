@@ -79,7 +79,7 @@ protected:
 struct ArgumentsObject: Object {
     ExecutionContext *context;
     QVector<Value> mappedArguments;
-    ArgumentsObject(ExecutionContext *context, int formalParameterCount, int actualParameterCount);
+    ArgumentsObject(CallContext *context, int formalParameterCount, int actualParameterCount);
     ~ArgumentsObject() {}
 
     bool defineOwnProperty(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc);

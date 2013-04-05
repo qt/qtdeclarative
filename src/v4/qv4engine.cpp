@@ -367,9 +367,10 @@ ExecutionContext *ExecutionEngine::popContext()
     if (debugger)
         debugger->justLeft(current);
 
-    if (!current->needsOwnArguments()) {
-        current->arguments = 0;
-        current->argumentCount = 0;
+    CallContext *c = current->asCallContext();
+    if (c && !c->needsOwnArguments()) {
+        c->arguments = 0;
+        c->argumentCount = 0;
     }
 
     contextStack[contextStackPosition] = 0;
