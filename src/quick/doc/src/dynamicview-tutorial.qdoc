@@ -57,7 +57,7 @@ directory.
 \previouspage QML Dynamic View Ordering Tutorial
 \nextpage QML Dynamic View Ordering Tutorial 2 - Dragging View Items
 
-\example quick/tutorials/dynamicview/dynamicview1
+\example tutorials/dynamicview/dynamicview1
 
 We begin our application by defining a ListView, a model which will provide data to the view, and a
 delegate which provides a template for constructing items in the view.
@@ -94,7 +94,7 @@ The second part of the application is the ListView itself to which we bind the m
 \previouspage QML Dynamic View Ordering Tutorial 1 - A Simple ListView and Delegate
 \nextpage QML Dynamic View Ordering Tutorial 3 - Moving Dragged Items
 
-\example quick/tutorials/dynamicview/dynamicview2
+\example tutorials/dynamicview/dynamicview2
 
 Now that we have a visible list of items we want to be able to interact with them. We'll start
 by extending the delegate so the visible content can be dragged up and down the screen.  The
@@ -139,7 +139,7 @@ so that is above other items in the stacking order and isn't obscured as it is d
 \previouspage QML Dynamic View Ordering Tutorial 2 - Dragging View Items
 \nextpage QML Dynamic View Ordering Tutorial 4 - Sorting Items
 
-\example quick/tutorials/dynamicview/dynamicview3
+\example tutorials/dynamicview/dynamicview3
 
 The next step in our application to move items within the list as they're dragged so that we
 can re-order the list.  To achieve this we introduce three new types to our application;
@@ -192,7 +192,7 @@ property of the view and bind the \l {QtQuick2::VisualDataModel::model}{model} a
 \contentspage QML Dynamic View Ordering Tutorial
 \previouspage QML Dynamic View Ordering Tutorial 3 - Moving Dragged Items
 
-\example quick/tutorials/dynamicview/dynamicview4
+\example tutorials/dynamicview/dynamicview4
 
 Drag and drop isn't the only way items in a view can be re-ordered, using a VisualDataModel it is
 also possible to sort items based on model data.  To do that we extend our VisualDataModel instance

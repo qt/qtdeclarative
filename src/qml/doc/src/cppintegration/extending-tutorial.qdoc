@@ -64,7 +64,7 @@ and \l {qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}.
 /*!
 \title Chapter 1: Creating a New Type
 
-\example quick/tutorials/extending/chapter1-basics
+\example tutorials/extending/chapter1-basics
 
 A common task when extending QML is to provide a new QML type that supports some
  custom functionality beyond what is provided by the built-in \l {Qt Quick QML Types}{Qt Quick types}.
@@ -162,7 +162,7 @@ Try it yourself with the code in Qt's \c examples/quick/tutorials/extending/chap
 /*!
 \title Chapter 2: Connecting to C++ Methods and Signals
 
-\example quick/tutorials/extending/chapter2-methods
+\example tutorials/extending/chapter2-methods
 
 Suppose we want \c PieChart to have a "clearChart()" method that erases the
 chart and then emits a "chartCleared" signal. Our \c app.qml would be able
@@ -207,7 +207,7 @@ Try out the example yourself with the updated code in Qt's \c examples/quick/tut
 /*!
 \title Chapter 3: Adding Property Bindings
 
-\example quick/tutorials/extending/chapter3-bindings
+\example tutorials/extending/chapter3-bindings
 
 Property binding is a powerful feature of QML that allows values of different
 types to be synchronized automatically. It uses signals to notify and update
@@ -259,7 +259,7 @@ custom QML types may see unexpected behavior if bindings are not implemented.
 /*!
 \title Chapter 4: Using Custom Property Types
 
-\example quick/tutorials/extending/chapter4-customPropertyTypes
+\example tutorials/extending/chapter4-customPropertyTypes
 
 The \c PieChart type currently has a string-type property and a color-type property.
 It could have many other types of properties. For example, it could have an
@@ -343,7 +343,7 @@ Try it out with the code in Qt's \c examples/quick/tutorials/extending/chapter4-
 /*!
 \title Chapter 5: Using List Property Types
 
-\example quick/tutorials/extending/chapter5-listproperties
+\example tutorials/extending/chapter5-listproperties
 
 Right now, a \c PieChart can only have one \c PieSlice. Ideally a chart would
 have multiple slices, with different colors and sizes. To do this, we could
@@ -392,7 +392,7 @@ The complete code can be seen in the updated \c examples/quick/tutorials/extendi
 /*!
 \title Chapter 6: Writing an Extension Plugin
 
-\example quick/tutorials/extending/chapter6-plugins
+\example tutorials/extending/chapter6-plugins
 
 Currently the \c PieChart and \c PieSlice types are used by \c app.qml,
 which is displayed using a QQuickView in a C++ application. An alternative

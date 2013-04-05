@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
     \title QML Examples - Shader Effects
-    \example quick/shadereffects
+    \example shadereffects
     \image qml-shadereffects-example.png
     \brief This is a shader effects example
     \ingroup qtquickexamples
