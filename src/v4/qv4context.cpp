@@ -100,7 +100,6 @@ bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, 
     // ### throw if scope->strict is true, and it would change an immutable binding
     if (type == Type_CallContext) {
         CallContext *c = static_cast<CallContext *>(this);
-        assert(function);
         for (unsigned int i = 0; i < c->function->varCount; ++i)
             if (c->function->varList[i]->isEqualTo(name)) {
                 c->locals[i] = value;
@@ -118,41 +117,6 @@ bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, 
         return true;
     }
 
-    return false;
-}
-
-Value ExecutionContext::getBindingValue(ExecutionContext *scope, String *name, bool strict) const
-{
-    Q_UNUSED(strict);
-    assert(function);
-
-    if (type == Type_CallContext) {
-        assert(function);
-        const CallContext *c = static_cast<const CallContext *>(this);
-        for (unsigned int i = 0; i < function->varCount; ++i)
-            if (c->function->varList[i]->isEqualTo(name))
-                return c->locals[i];
-        for (int i = (int)c->function->formalParameterCount - 1; i >= 0; --i)
-            if (c->function->formalParameterList[i]->isEqualTo(name))
-                return c->arguments[i];
-    }
-
-    if (activation) {
-        bool hasProperty = false;
-        Value v = activation->get(scope, name, &hasProperty);
-        if (hasProperty)
-            return v;
-    }
-    assert(false);
-}
-
-bool ExecutionContext::deleteBinding(ExecutionContext *scope, String *name)
-{
-    if (activation)
-        activation->deleteProperty(scope, name);
-
-    if (scope->strictMode)
-        scope->throwTypeError();
     return false;
 }
 

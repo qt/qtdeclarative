@@ -110,8 +110,6 @@ struct ExecutionContext
 
     void createMutableBinding(String *name, bool deletable);
     bool setMutableBinding(ExecutionContext *scope, String *name, const Value &value);
-    Value getBindingValue(ExecutionContext *scope, String *name, bool strict) const;
-    bool deleteBinding(ExecutionContext *ctx, String *name);
 
     void wireUpPrototype();
 
