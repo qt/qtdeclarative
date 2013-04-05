@@ -99,15 +99,16 @@ bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, 
 {
     // ### throw if scope->strict is true, and it would change an immutable binding
     if (type == Type_CallContext) {
+        CallContext *c = static_cast<CallContext *>(this);
         assert(function);
-        for (unsigned int i = 0; i < function->varCount; ++i)
-            if (function->varList[i]->isEqualTo(name)) {
-                locals[i] = value;
+        for (unsigned int i = 0; i < c->function->varCount; ++i)
+            if (c->function->varList[i]->isEqualTo(name)) {
+                c->locals[i] = value;
                 return true;
             }
-        for (int i = (int)function->formalParameterCount - 1; i >= 0; --i)
-            if (function->formalParameterList[i]->isEqualTo(name)) {
-                arguments[i] = value;
+        for (int i = (int)c->function->formalParameterCount - 1; i >= 0; --i)
+            if (c->function->formalParameterList[i]->isEqualTo(name)) {
+                c->arguments[i] = value;
                 return true;
             }
     }
@@ -127,12 +128,13 @@ Value ExecutionContext::getBindingValue(ExecutionContext *scope, String *name, b
 
     if (type == Type_CallContext) {
         assert(function);
+        const CallContext *c = static_cast<const CallContext *>(this);
         for (unsigned int i = 0; i < function->varCount; ++i)
-            if (function->varList[i]->isEqualTo(name))
-                return locals[i];
-        for (int i = (int)function->formalParameterCount - 1; i >= 0; --i)
-            if (function->formalParameterList[i]->isEqualTo(name))
-                return arguments[i];
+            if (c->function->varList[i]->isEqualTo(name))
+                return c->locals[i];
+        for (int i = (int)c->function->formalParameterCount - 1; i >= 0; --i)
+            if (c->function->formalParameterList[i]->isEqualTo(name))
+                return c->arguments[i];
     }
 
     if (activation) {
@@ -190,7 +192,6 @@ void GlobalContext::init(ExecutionEngine *eng)
     argumentCount = 0;
     activation = 0;
     function = 0;
-    locals = 0;
 }
 
 void WithContext::init(ExecutionContext *p, Object *with)
@@ -210,7 +211,6 @@ void WithContext::init(ExecutionContext *p, Object *with)
     argumentCount = 0;
     activation = 0;
     function = 0;
-    locals = 0;
 }
 
 void CatchContext::init(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
@@ -231,7 +231,6 @@ void CatchContext::init(ExecutionContext *p, String *exceptionVarName, const Val
     argumentCount = 0;
     activation = 0;
     function = 0;
-    locals = 0;
 }
 
 void CallContext::initCallContext(ExecutionEngine *engine)
@@ -334,8 +333,13 @@ void ExecutionContext::mark()
         function->mark();
     for (unsigned arg = 0, lastArg = argumentCount; arg < lastArg; ++arg)
         arguments[arg].mark();
-    for (unsigned local = 0, lastLocal = variableCount(); local < lastLocal; ++local)
-        locals[local].mark();
+
+    if (type == Type_CallContext) {
+        VM::CallContext *c = static_cast<CallContext *>(this);
+        for (unsigned local = 0, lastLocal = c->variableCount(); local < lastLocal; ++local)
+            c->locals[local].mark();
+    }
+
     if (activation)
         activation->mark();
     if (type == Type_WithContext) {
@@ -401,14 +405,15 @@ Value ExecutionContext::getProperty(String *name)
         }
 
         if (ctx->type == Type_CallContext) {
-            FunctionObject *f = ctx->function;
+            VM::CallContext *c = static_cast<CallContext *>(ctx);
+            FunctionObject *f = c->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
-                        return ctx->locals[i];
+                        return c->locals[i];
                 for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
                     if (f->formalParameterList[i]->isEqualTo(name))
-                        return ctx->arguments[i];
+                        return c->arguments[i];
             }
         }
         if (ctx->activation) {
@@ -457,14 +462,15 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
         }
 
         if (ctx->type == Type_CallContext) {
-            FunctionObject *f = ctx->function;
+            VM::CallContext *c = static_cast<CallContext *>(ctx);
+            FunctionObject *f = c->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
-                        return ctx->locals[i];
+                        return c->locals[i];
                 for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
                     if (f->formalParameterList[i]->isEqualTo(name))
-                        return ctx->arguments[i];
+                        return c->arguments[i];
             }
         }
         if (ctx->activation) {
@@ -514,14 +520,15 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
         }
 
         if (ctx->type == Type_CallContext) {
-            FunctionObject *f = ctx->function;
+            VM::CallContext *c = static_cast<CallContext *>(ctx);
+            FunctionObject *f = c->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
-                        return ctx->locals[i];
+                        return c->locals[i];
                 for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
                     if (f->formalParameterList[i]->isEqualTo(name))
-                        return ctx->arguments[i];
+                        return c->arguments[i];
             }
         }
         if (ctx->activation) {

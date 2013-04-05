@@ -72,8 +72,9 @@ VM::Value *FunctionState::argument(unsigned idx)
 
 VM::Value *FunctionState::local(unsigned idx)
 {
-    if (idx < _context->variableCount())
-        return _context->locals + idx;
+    VM::CallContext *c = _context->asCallContext();
+    if (c && idx < c->variableCount())
+        return c->locals + idx;
     return 0;
 }
 

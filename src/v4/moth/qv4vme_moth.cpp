@@ -151,10 +151,11 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
     } else if (param.isLocal()) {
         VMSTATS(paramIsLocal);
         const unsigned index = param.index;
+        VM::CallContext *c = static_cast<VM::CallContext *>(context);
         Q_ASSERT(index >= 0);
         Q_ASSERT(index < context->variableCount());
-        Q_ASSERT(context->locals);
-        return context->locals + index;
+        Q_ASSERT(c->locals);
+        return c->locals + index;
     } else if (param.isTemp()) {
         VMSTATS(paramIsTemp);
         Q_ASSERT(param.index < stackSize);
@@ -166,10 +167,11 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
         while (scope--)
             c = c->outer;
         const unsigned index = param.index;
+        VM::CallContext *cc = static_cast<VM::CallContext *>(c);
         Q_ASSERT(index >= 0);
-        Q_ASSERT(index < c->variableCount());
-        Q_ASSERT(c->locals);
-        return c->locals + index;
+        Q_ASSERT(index < cc->variableCount());
+        Q_ASSERT(cc->locals);
+        return cc->locals + index;
     } else {
         Q_UNIMPLEMENTED();
         return 0;

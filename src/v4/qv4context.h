@@ -73,6 +73,8 @@ struct Q_V4_EXPORT DiagnosticMessage
     String *buildFullMessage(ExecutionContext *ctx) const;
 };
 
+struct CallContext;
+
 struct ExecutionContext
 {
     enum Type {
@@ -100,7 +102,6 @@ struct ExecutionContext
     unsigned int argumentCount;
     Object *activation;
     FunctionObject *function;
-    Value *locals;
 
     String * const *formals() const;
     unsigned int formalCount() const;
@@ -135,11 +136,15 @@ struct ExecutionContext
     bool needsOwnArguments() const;
 
     void mark();
+
+    inline CallContext *asCallContext();
 };
 
 struct CallContext : public ExecutionContext
 {
     void initCallContext(QQmlJS::VM::ExecutionEngine *engine);
+
+    Value *locals;
 };
 
 struct GlobalContext : public ExecutionContext
@@ -170,6 +175,11 @@ inline Value ExecutionContext::argument(unsigned int index)
             return ctx->arguments[index];
     }
     return Value::undefinedValue();
+}
+
+inline CallContext *ExecutionContext::asCallContext()
+{
+    return type == Type_CallContext ? static_cast<CallContext *>(this) : 0;
 }
 
 /* Function *f, int argc */

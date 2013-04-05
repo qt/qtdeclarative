@@ -160,7 +160,7 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
         loadPtr(Address(context, offsetof(ExecutionContext, arguments)), reg);
         offset = arg * sizeof(Value);
     } else if (t->index < f->locals.size()) {
-        loadPtr(Address(context, offsetof(ExecutionContext, locals)), reg);
+        loadPtr(Address(context, offsetof(CallContext, locals)), reg);
         offset = t->index * sizeof(Value);
     } else {
         assert(t->scope == 0);
