@@ -301,7 +301,7 @@ Value FunctionPrototype::method_bind(CallContext *ctx)
         boundArgs += ctx->argument(i);
 
 
-    BoundFunction *f = ctx->engine->newBoundFunction(ctx, target, boundThis, boundArgs);
+    BoundFunction *f = ctx->engine->newBoundFunction(ctx->engine->rootContext, target, boundThis, boundArgs);
     return Value::fromObject(f);
 }
 
