@@ -157,7 +157,7 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
     }
     if (t->index < 0) {
         const int arg = -t->index - 1;
-        loadPtr(Address(context, offsetof(ExecutionContext, arguments)), reg);
+        loadPtr(Address(context, offsetof(CallContext, arguments)), reg);
         offset = arg * sizeof(Value);
     } else if (t->index < f->locals.size()) {
         loadPtr(Address(context, offsetof(CallContext, locals)), reg);

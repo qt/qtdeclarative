@@ -239,7 +239,7 @@ void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
 }
 
-Value FunctionPrototype::method_toString(ExecutionContext *ctx)
+Value FunctionPrototype::method_toString(CallContext *ctx)
 {
     FunctionObject *fun = ctx->thisObject.asFunctionObject();
     if (!fun)
@@ -248,7 +248,7 @@ Value FunctionPrototype::method_toString(ExecutionContext *ctx)
     return Value::fromString(ctx, QStringLiteral("function() { [code] }"));
 }
 
-Value FunctionPrototype::method_apply(ExecutionContext *ctx)
+Value FunctionPrototype::method_apply(CallContext *ctx)
 {
     Value thisArg = ctx->argument(0);
 
@@ -273,7 +273,7 @@ Value FunctionPrototype::method_apply(ExecutionContext *ctx)
     return o->call(ctx, thisArg, args.data(), args.size());
 }
 
-Value FunctionPrototype::method_call(ExecutionContext *ctx)
+Value FunctionPrototype::method_call(CallContext *ctx)
 {
     Value thisArg = ctx->argument(0);
 
@@ -289,7 +289,7 @@ Value FunctionPrototype::method_call(ExecutionContext *ctx)
     return o->call(ctx, thisArg, args.data(), args.size());
 }
 
-Value FunctionPrototype::method_bind(ExecutionContext *ctx)
+Value FunctionPrototype::method_bind(CallContext *ctx)
 {
     FunctionObject *target = ctx->thisObject.asFunctionObject();
     if (!target)
@@ -306,7 +306,7 @@ Value FunctionPrototype::method_bind(ExecutionContext *ctx)
 }
 
 
-static Value throwTypeError(ExecutionContext *ctx)
+static Value throwTypeError(CallContext *ctx)
 {
     ctx->throwTypeError();
     return Value::undefinedValue();
@@ -414,7 +414,7 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
 
 DEFINE_MANAGED_VTABLE(BuiltinFunctionOld);
 
-BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
+BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(CallContext *))
     : FunctionObject(scope)
     , code(code)
 {
@@ -432,7 +432,7 @@ Value BuiltinFunctionOld::construct(Managed *, ExecutionContext *ctx, Value *, i
 Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
 {
     BuiltinFunctionOld *f = static_cast<BuiltinFunctionOld *>(that);
-    ExecutionContext *ctx = context->engine->newCallContext(f, thisObject, args, argc);
+    CallContext *ctx = context->engine->newCallContext(f, thisObject, args, argc);
 
     ctx->thisObject = thisObject;
     if (!f->strictMode && !thisObject.isObject()) {

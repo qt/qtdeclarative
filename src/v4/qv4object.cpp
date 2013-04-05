@@ -205,7 +205,7 @@ void Object::defineDefaultProperty(ExecutionContext *context, const QString &nam
     defineDefaultProperty(context->engine->newIdentifier(name), value);
 }
 
-void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(ExecutionContext *), int argumentCount)
+void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(CallContext *), int argumentCount)
 {
     Q_UNUSED(argumentCount);
     String *s = context->engine->newIdentifier(name);

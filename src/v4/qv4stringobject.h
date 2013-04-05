@@ -86,18 +86,18 @@ struct StringPrototype: StringObject
     static Value method_lastIndexOf(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
     static Value method_localeCompare(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
     static Value method_match(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_replace(ExecutionContext *ctx);
-    static Value method_search(ExecutionContext *ctx);
-    static Value method_slice(ExecutionContext *ctx);
-    static Value method_split(ExecutionContext *ctx);
+    static Value method_replace(CallContext *ctx);
+    static Value method_search(CallContext *ctx);
+    static Value method_slice(CallContext *ctx);
+    static Value method_split(CallContext *ctx);
     static Value method_substr(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
     static Value method_substring(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_toLowerCase(ExecutionContext *ctx);
-    static Value method_toLocaleLowerCase(ExecutionContext *ctx);
-    static Value method_toUpperCase(ExecutionContext *ctx);
-    static Value method_toLocaleUpperCase(ExecutionContext *ctx);
+    static Value method_toLowerCase(CallContext *ctx);
+    static Value method_toLocaleLowerCase(CallContext *ctx);
+    static Value method_toUpperCase(CallContext *ctx);
+    static Value method_toLocaleUpperCase(CallContext *ctx);
     static Value method_fromCharCode(ExecutionContext *parentCtx, Value thisObject, Value *argv, int argc);
-    static Value method_trim(ExecutionContext *ctx);
+    static Value method_trim(CallContext *ctx);
 };
 
 } // end of namespace VM

@@ -243,16 +243,16 @@ struct FunctionPrototype: FunctionObject
     FunctionPrototype(ExecutionContext *ctx): FunctionObject(ctx) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
-    static Value method_toString(ExecutionContext *ctx);
-    static Value method_apply(ExecutionContext *ctx);
-    static Value method_call(ExecutionContext *ctx);
-    static Value method_bind(ExecutionContext *ctx);
+    static Value method_toString(CallContext *ctx);
+    static Value method_apply(CallContext *ctx);
+    static Value method_call(CallContext *ctx);
+    static Value method_bind(CallContext *ctx);
 };
 
 struct BuiltinFunctionOld: FunctionObject {
-    Value (*code)(ExecutionContext *);
+    Value (*code)(CallContext *);
 
-    BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
+    BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(CallContext *));
 
     static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);

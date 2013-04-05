@@ -51,8 +51,8 @@ namespace VM {
 struct JsonObject : Object {
     JsonObject(ExecutionContext *context);
 
-    static Value method_parse(ExecutionContext *ctx);
-    static Value method_stringify(ExecutionContext *ctx);
+    static Value method_parse(CallContext *ctx);
+    static Value method_stringify(CallContext *ctx);
 
 };
 

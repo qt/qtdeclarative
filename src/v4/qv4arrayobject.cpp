@@ -118,24 +118,24 @@ uint ArrayPrototype::getLength(ExecutionContext *ctx, Object *o)
     return o->get(ctx, ctx->engine->id_length).toUInt32(ctx);
 }
 
-Value ArrayPrototype::method_isArray(ExecutionContext *ctx)
+Value ArrayPrototype::method_isArray(CallContext *ctx)
 {
     Value arg = ctx->argument(0);
     bool isArray = arg.asArrayObject();
     return Value::fromBoolean(isArray);
 }
 
-Value ArrayPrototype::method_toString(ExecutionContext *ctx)
+Value ArrayPrototype::method_toString(CallContext *ctx)
 {
     return method_join(ctx);
 }
 
-Value ArrayPrototype::method_toLocaleString(ExecutionContext *ctx)
+Value ArrayPrototype::method_toLocaleString(CallContext *ctx)
 {
     return method_toString(ctx);
 }
 
-Value ArrayPrototype::method_concat(ExecutionContext *ctx)
+Value ArrayPrototype::method_concat(CallContext *ctx)
 {
     ArrayObject *result = ctx->engine->newArrayObject(ctx);
 
@@ -159,7 +159,7 @@ Value ArrayPrototype::method_concat(ExecutionContext *ctx)
     return Value::fromObject(result);
 }
 
-Value ArrayPrototype::method_join(ExecutionContext *ctx)
+Value ArrayPrototype::method_join(CallContext *ctx)
 {
     Value arg = ctx->argument(0);
 
@@ -216,7 +216,7 @@ Value ArrayPrototype::method_join(ExecutionContext *ctx)
     return Value::fromString(ctx, R);
 }
 
-Value ArrayPrototype::method_pop(ExecutionContext *ctx)
+Value ArrayPrototype::method_pop(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
@@ -237,7 +237,7 @@ Value ArrayPrototype::method_pop(ExecutionContext *ctx)
     return result;
 }
 
-Value ArrayPrototype::method_push(ExecutionContext *ctx)
+Value ArrayPrototype::method_push(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
@@ -294,7 +294,7 @@ Value ArrayPrototype::method_push(ExecutionContext *ctx)
 
 }
 
-Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
+Value ArrayPrototype::method_reverse(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
     uint length = getLength(ctx, instance);
@@ -317,7 +317,7 @@ Value ArrayPrototype::method_reverse(ExecutionContext *ctx)
     return Value::fromObject(instance);
 }
 
-Value ArrayPrototype::method_shift(ExecutionContext *ctx)
+Value ArrayPrototype::method_shift(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
@@ -380,7 +380,7 @@ Value ArrayPrototype::method_shift(ExecutionContext *ctx)
     return result;
 }
 
-Value ArrayPrototype::method_slice(ExecutionContext *ctx)
+Value ArrayPrototype::method_slice(CallContext *ctx)
 {
     Object *o = ctx->thisObject.toObject(ctx);
 
@@ -417,7 +417,7 @@ Value ArrayPrototype::method_slice(ExecutionContext *ctx)
     return Value::fromObject(result);
 }
 
-Value ArrayPrototype::method_sort(ExecutionContext *ctx)
+Value ArrayPrototype::method_sort(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
 
@@ -428,7 +428,7 @@ Value ArrayPrototype::method_sort(ExecutionContext *ctx)
     return ctx->thisObject;
 }
 
-Value ArrayPrototype::method_splice(ExecutionContext *ctx)
+Value ArrayPrototype::method_splice(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
@@ -492,7 +492,7 @@ Value ArrayPrototype::method_splice(ExecutionContext *ctx)
     return Value::fromObject(newArray);
 }
 
-Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
+Value ArrayPrototype::method_unshift(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
@@ -544,7 +544,7 @@ Value ArrayPrototype::method_unshift(ExecutionContext *ctx)
     return Value::fromDouble((double)newLen);
 }
 
-Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
+Value ArrayPrototype::method_indexOf(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
@@ -581,7 +581,7 @@ Value ArrayPrototype::method_indexOf(ExecutionContext *ctx)
     return instance->arrayIndexOf(searchValue, fromIndex, len, ctx, instance);
 }
 
-Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
+Value ArrayPrototype::method_lastIndexOf(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
@@ -618,7 +618,7 @@ Value ArrayPrototype::method_lastIndexOf(ExecutionContext *ctx)
     return Value::fromInt32(-1);
 }
 
-Value ArrayPrototype::method_every(ExecutionContext *ctx)
+Value ArrayPrototype::method_every(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
 
@@ -647,7 +647,7 @@ Value ArrayPrototype::method_every(ExecutionContext *ctx)
     return Value::fromBoolean(ok);
 }
 
-Value ArrayPrototype::method_some(ExecutionContext *ctx)
+Value ArrayPrototype::method_some(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
 
@@ -676,7 +676,7 @@ Value ArrayPrototype::method_some(ExecutionContext *ctx)
     return Value::fromBoolean(false);
 }
 
-Value ArrayPrototype::method_forEach(ExecutionContext *ctx)
+Value ArrayPrototype::method_forEach(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
 
@@ -703,7 +703,7 @@ Value ArrayPrototype::method_forEach(ExecutionContext *ctx)
     return Value::undefinedValue();
 }
 
-Value ArrayPrototype::method_map(ExecutionContext *ctx)
+Value ArrayPrototype::method_map(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
 
@@ -735,7 +735,7 @@ Value ArrayPrototype::method_map(ExecutionContext *ctx)
     return Value::fromObject(a);
 }
 
-Value ArrayPrototype::method_filter(ExecutionContext *ctx)
+Value ArrayPrototype::method_filter(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
 
@@ -770,7 +770,7 @@ Value ArrayPrototype::method_filter(ExecutionContext *ctx)
     return Value::fromObject(a);
 }
 
-Value ArrayPrototype::method_reduce(ExecutionContext *ctx)
+Value ArrayPrototype::method_reduce(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
 
@@ -812,7 +812,7 @@ Value ArrayPrototype::method_reduce(ExecutionContext *ctx)
     return acc;
 }
 
-Value ArrayPrototype::method_reduceRight(ExecutionContext *ctx)
+Value ArrayPrototype::method_reduceRight(CallContext *ctx)
 {
     Object *instance = ctx->thisObject.toObject(ctx);
 

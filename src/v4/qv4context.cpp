@@ -138,10 +138,6 @@ void GlobalContext::init(ExecutionEngine *eng)
     outer = 0;
     lookups = 0;
     global = 0;
-
-    // ### remove
-    arguments = 0;
-    argumentCount = 0;
 }
 
 void WithContext::init(ExecutionContext *p, Object *with)
@@ -155,10 +151,6 @@ void WithContext::init(ExecutionContext *p, Object *with)
     lookups = p->lookups;
 
     withObject = with;
-
-    // ### remove
-    arguments = 0;
-    argumentCount = 0;
 }
 
 void CatchContext::init(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
@@ -173,10 +165,6 @@ void CatchContext::init(ExecutionContext *p, String *exceptionVarName, const Val
 
     this->exceptionVarName = exceptionVarName;
     this->exceptionValue = exceptionValue;
-
-    // ### remove
-    arguments = 0;
-    argumentCount = 0;
 }
 
 void CallContext::initCallContext(ExecutionEngine *engine)
@@ -284,11 +272,11 @@ void ExecutionContext::mark()
         outer->mark();
 
     thisObject.mark();
-    for (unsigned arg = 0, lastArg = argumentCount; arg < lastArg; ++arg)
-        arguments[arg].mark();
 
     if (type == Type_CallContext || type == Type_QmlContext) {
         VM::CallContext *c = static_cast<CallContext *>(this);
+        for (unsigned arg = 0, lastArg = c->argumentCount; arg < lastArg; ++arg)
+            c->arguments[arg].mark();
         for (unsigned local = 0, lastLocal = c->variableCount(); local < lastLocal; ++local)
             c->locals[local].mark();
         c->function->mark();

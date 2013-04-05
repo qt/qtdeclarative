@@ -143,11 +143,12 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
         uint scope = param.scope;
         while (scope--)
             c = c->outer;
+        VM::CallContext *cc = static_cast<VM::CallContext *>(c);
         const unsigned arg = param.index;
         Q_ASSERT(arg >= 0);
-        Q_ASSERT((unsigned) arg < c->argumentCount);
-        Q_ASSERT(c->arguments);
-        return c->arguments + arg;
+        Q_ASSERT((unsigned) arg < cc->argumentCount);
+        Q_ASSERT(cc->arguments);
+        return cc->arguments + arg;
     } else if (param.isLocal()) {
         VMSTATS(paramIsLocal);
         const unsigned index = param.index;

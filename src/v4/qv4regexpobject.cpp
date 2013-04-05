@@ -179,7 +179,7 @@ void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("compile"), method_compile, 2);
 }
 
-Value RegExpPrototype::method_exec(ExecutionContext *ctx)
+Value RegExpPrototype::method_exec(CallContext *ctx)
 {
     RegExpObject *r = ctx->thisObject.asRegExpObject();
     if (!r)
@@ -222,13 +222,13 @@ Value RegExpPrototype::method_exec(ExecutionContext *ctx)
     return Value::fromObject(array);
 }
 
-Value RegExpPrototype::method_test(ExecutionContext *ctx)
+Value RegExpPrototype::method_test(CallContext *ctx)
 {
     Value r = method_exec(ctx);
     return Value::fromBoolean(!r.isNull());
 }
 
-Value RegExpPrototype::method_toString(ExecutionContext *ctx)
+Value RegExpPrototype::method_toString(CallContext *ctx)
 {
     RegExpObject *r = ctx->thisObject.asRegExpObject();
     if (!r)
@@ -244,7 +244,7 @@ Value RegExpPrototype::method_toString(ExecutionContext *ctx)
     return Value::fromString(ctx, result);
 }
 
-Value RegExpPrototype::method_compile(ExecutionContext *ctx)
+Value RegExpPrototype::method_compile(CallContext *ctx)
 {
     RegExpObject *r = ctx->thisObject.asRegExpObject();
     if (!r)

@@ -64,10 +64,10 @@ FunctionState::~FunctionState()
 
 VM::Value *FunctionState::argument(unsigned idx)
 {
-    if (idx < _context->argumentCount)
-        return _context->arguments + idx;
-    else
+    VM::CallContext *c = _context->asCallContext();
+    if (!c || idx >= c->argumentCount)
         return 0;
+    return c->arguments + idx;
 }
 
 VM::Value *FunctionState::local(unsigned idx)

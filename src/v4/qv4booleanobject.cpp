@@ -72,7 +72,7 @@ void BooleanPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
 }
 
-Value BooleanPrototype::method_toString(ExecutionContext *ctx)
+Value BooleanPrototype::method_toString(CallContext *ctx)
 {
     bool result;
     if (ctx->thisObject.isBoolean()) {
@@ -87,7 +87,7 @@ Value BooleanPrototype::method_toString(ExecutionContext *ctx)
     return Value::fromString(ctx, QLatin1String(result ? "true" : "false"));
 }
 
-Value BooleanPrototype::method_valueOf(ExecutionContext *ctx)
+Value BooleanPrototype::method_valueOf(CallContext *ctx)
 {
     BooleanObject *thisObject = ctx->thisObject.asBooleanObject();
     if (!thisObject)

@@ -44,7 +44,7 @@ namespace QQmlJS {
 namespace VM {
 
 
-static Value throwTypeError(ExecutionContext *ctx)
+static Value throwTypeError(CallContext *ctx)
 {
     ctx->throwTypeError();
     return Value::undefinedValue();

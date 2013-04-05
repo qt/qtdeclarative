@@ -207,7 +207,7 @@ struct Q_V4_EXPORT ExecutionEngine
 
     VM::Function *newFunction(const QString &name);
 
-    FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *));
+    FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(CallContext *));
     FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *, Value, Value *, int));
     FunctionObject *newScriptFunction(ExecutionContext *scope, VM::Function *function);
     BoundFunction *newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);

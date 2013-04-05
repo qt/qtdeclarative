@@ -385,7 +385,7 @@ Function *ExecutionEngine::newFunction(const QString &name)
     return f;
 }
 
-FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(ExecutionContext *))
+FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(CallContext *))
 {
     BuiltinFunctionOld *f = new (memoryManager) BuiltinFunctionOld(scope, name, code);
     return f;

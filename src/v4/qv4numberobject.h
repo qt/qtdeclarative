@@ -66,12 +66,12 @@ struct NumberPrototype: NumberObject
     NumberPrototype(ExecutionEngine *engine): NumberObject(engine, Value::fromDouble(0)) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
-    static Value method_toString(ExecutionContext *ctx);
-    static Value method_toLocaleString(ExecutionContext *ctx);
-    static Value method_valueOf(ExecutionContext *ctx);
-    static Value method_toFixed(ExecutionContext *ctx);
-    static Value method_toExponential(ExecutionContext *ctx);
-    static Value method_toPrecision(ExecutionContext *ctx);
+    static Value method_toString(CallContext *ctx);
+    static Value method_toLocaleString(CallContext *ctx);
+    static Value method_valueOf(CallContext *ctx);
+    static Value method_toFixed(CallContext *ctx);
+    static Value method_toExponential(CallContext *ctx);
+    static Value method_toPrecision(CallContext *ctx);
 };
 
 

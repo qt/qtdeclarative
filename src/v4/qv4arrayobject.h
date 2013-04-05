@@ -70,28 +70,28 @@ struct ArrayPrototype: ArrayObject
 
     static uint getLength(ExecutionContext *ctx, Object *o);
 
-    static Value method_isArray(ExecutionContext *ctx);
-    static Value method_toString(ExecutionContext *ctx);
-    static Value method_toLocaleString(ExecutionContext *ctx);
-    static Value method_concat(ExecutionContext *ctx);
-    static Value method_join(ExecutionContext *ctx);
-    static Value method_pop(ExecutionContext *ctx);
-    static Value method_push(ExecutionContext *ctx);
-    static Value method_reverse(ExecutionContext *ctx);
-    static Value method_shift(ExecutionContext *ctx);
-    static Value method_slice(ExecutionContext *ctx);
-    static Value method_sort(ExecutionContext *ctx);
-    static Value method_splice(ExecutionContext *ctx);
-    static Value method_unshift(ExecutionContext *ctx);
-    static Value method_indexOf(ExecutionContext *ctx);
-    static Value method_lastIndexOf(ExecutionContext *ctx);
-    static Value method_every(ExecutionContext *ctx);
-    static Value method_some(ExecutionContext *ctx);
-    static Value method_forEach(ExecutionContext *ctx);
-    static Value method_map(ExecutionContext *ctx);
-    static Value method_filter(ExecutionContext *ctx);
-    static Value method_reduce(ExecutionContext *ctx);
-    static Value method_reduceRight(ExecutionContext *ctx);
+    static Value method_isArray(CallContext *ctx);
+    static Value method_toString(CallContext *ctx);
+    static Value method_toLocaleString(CallContext *ctx);
+    static Value method_concat(CallContext *ctx);
+    static Value method_join(CallContext *ctx);
+    static Value method_pop(CallContext *ctx);
+    static Value method_push(CallContext *ctx);
+    static Value method_reverse(CallContext *ctx);
+    static Value method_shift(CallContext *ctx);
+    static Value method_slice(CallContext *ctx);
+    static Value method_sort(CallContext *ctx);
+    static Value method_splice(CallContext *ctx);
+    static Value method_unshift(CallContext *ctx);
+    static Value method_indexOf(CallContext *ctx);
+    static Value method_lastIndexOf(CallContext *ctx);
+    static Value method_every(CallContext *ctx);
+    static Value method_some(CallContext *ctx);
+    static Value method_forEach(CallContext *ctx);
+    static Value method_map(CallContext *ctx);
+    static Value method_filter(CallContext *ctx);
+    static Value method_reduce(CallContext *ctx);
+    static Value method_reduceRight(CallContext *ctx);
 };
 
 

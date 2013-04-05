@@ -97,10 +97,6 @@ struct ExecutionContext
     Lookup *lookups;
     ExecutionContext *next; // used in the GC
 
-    // ### move to CallContext
-    Value *arguments;
-    unsigned int argumentCount;
-
     String * const *formals() const;
     unsigned int formalCount() const;
     String * const *variables() const;
@@ -138,6 +134,8 @@ struct CallContext : public ExecutionContext
 
     FunctionObject *function;
     Value *locals;
+    Value *arguments;
+    unsigned int argumentCount;
     Object *activation;
 };
 

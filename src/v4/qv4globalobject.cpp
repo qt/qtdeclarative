@@ -526,7 +526,7 @@ static inline int toInt(const QChar &qc, int R)
 }
 
 // parseInt [15.1.2.2]
-Value GlobalFunctions::method_parseInt(ExecutionContext *context)
+Value GlobalFunctions::method_parseInt(CallContext *context)
 {
     Value string = context->argument(0);
     Value radix = context->argument(1);
@@ -605,7 +605,7 @@ Value GlobalFunctions::method_parseInt(ExecutionContext *context)
 }
 
 // parseFloat [15.1.2.3]
-Value GlobalFunctions::method_parseFloat(ExecutionContext *context)
+Value GlobalFunctions::method_parseFloat(CallContext *context)
 {
     Value string = context->argument(0);
 
@@ -631,7 +631,7 @@ Value GlobalFunctions::method_parseFloat(ExecutionContext *context)
 }
 
 /// isNaN [15.1.2.4]
-Value GlobalFunctions::method_isNaN(ExecutionContext *context)
+Value GlobalFunctions::method_isNaN(CallContext *context)
 {
     const Value &v = context->argument(0);
     if (v.integerCompatible())
@@ -642,7 +642,7 @@ Value GlobalFunctions::method_isNaN(ExecutionContext *context)
 }
 
 /// isFinite [15.1.2.5]
-Value GlobalFunctions::method_isFinite(ExecutionContext *context)
+Value GlobalFunctions::method_isFinite(CallContext *context)
 {
     const Value &v = context->argument(0);
     if (v.integerCompatible())
@@ -712,7 +712,7 @@ Value GlobalFunctions::method_encodeURIComponent(ExecutionContext *parentCtx, Va
     return Value::fromString(parentCtx, out);
 }
 
-Value GlobalFunctions::method_escape(ExecutionContext *context)
+Value GlobalFunctions::method_escape(CallContext *context)
 {
     if (!context->argumentCount)
         return Value::fromString(context, QStringLiteral("undefined"));
@@ -721,7 +721,7 @@ Value GlobalFunctions::method_escape(ExecutionContext *context)
     return Value::fromString(context, escape(str));
 }
 
-Value GlobalFunctions::method_unescape(ExecutionContext *context)
+Value GlobalFunctions::method_unescape(CallContext *context)
 {
     if (!context->argumentCount)
         return Value::fromString(context, QStringLiteral("undefined"));
