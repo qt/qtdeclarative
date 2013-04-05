@@ -1417,7 +1417,7 @@ class V4V8Object : public BaseClass
 {
 public:
     V4V8Object(VM::ExecutionEngine *engine, ObjectTemplate *tmpl)
-        : BaseClass(engine->current)
+        : BaseClass(engine->rootContext)
     {
         this->vtbl = &static_vtbl;
         m_template = Persistent<ObjectTemplate>(tmpl);
