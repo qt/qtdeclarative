@@ -253,10 +253,10 @@ ExecutionEngine::~ExecutionEngine()
 void ExecutionEngine::initRootContext()
 {
     ensureContextStackSize();
-    rootContext = memoryManager->allocContext(sizeof(ExecutionContext));
+    rootContext = static_cast<GlobalContext *>(memoryManager->allocContext(sizeof(GlobalContext)));
     current = rootContext;
     contextStack[0] = rootContext;
-    current->init(this);
+    rootContext->init(this);
 }
 
 void ExecutionEngine::ensureContextStackSize()
@@ -274,73 +274,78 @@ void ExecutionEngine::ensureContextStackSize()
     contextStack = newStack;
 }
 
-ExecutionContext *ExecutionEngine::newWithContext(Object *with)
+WithContext *ExecutionEngine::newWithContext(Object *with)
 {
     ensureContextStackSize();
     assert(contextStack[contextStackPosition + 1] == 0);
 
-    ExecutionContext *c = current;
-    current = memoryManager->allocContext(sizeof(ExecutionContext));
+    ExecutionContext *p = current;
+    WithContext *w = static_cast<WithContext *>(memoryManager->allocContext(sizeof(WithContext)));
+    current = w;
     contextStack[++contextStackPosition] = current;
 
-    current->init(c, with);
-    return current;
+    w->init(p, with);
+    return w;
 }
 
-ExecutionContext *ExecutionEngine::newCatchContext(String *exceptionVarName, const Value &exceptionValue)
+CatchContext *ExecutionEngine::newCatchContext(String *exceptionVarName, const Value &exceptionValue)
 {
     ensureContextStackSize();
     assert(contextStack[contextStackPosition + 1] == 0);
 
-    ExecutionContext *c = current;
-    current = memoryManager->allocContext(sizeof(ExecutionContext));
+    ExecutionContext *p = current;
+    CatchContext *c = static_cast<CatchContext *>(memoryManager->allocContext(sizeof(CatchContext)));
+    current = c;
     contextStack[++contextStackPosition] = current;
 
-    current->initForCatch(c, exceptionVarName, exceptionValue);
-    return current;
+    c->init(p, exceptionVarName, exceptionValue);
+    return c;
 }
 
-ExecutionContext *ExecutionEngine::newCallContext(FunctionObject *f, const Value &thisObject, Value *args, int argc)
+CallContext *ExecutionEngine::newCallContext(FunctionObject *f, const Value &thisObject, Value *args, int argc)
 {
     ensureContextStackSize();
     assert(contextStack[contextStackPosition + 1] == 0);
 
-    current = memoryManager->allocContext(requiredMemoryForExecutionContect(f, argc));
+    CallContext *c = static_cast<CallContext *>(memoryManager->allocContext(requiredMemoryForExecutionContect(f, argc)));
+    current = c;
     contextStack[++contextStackPosition] = current;
 
-    current->function = f;
-    current->thisObject = thisObject;
-    current->arguments = args;
-    current->argumentCount = argc;
-    current->initCallContext(this);
+    c->function = f;
+    c->thisObject = thisObject;
+    c->arguments = args;
+    c->argumentCount = argc;
+    c->initCallContext(this);
 
-    return current;
+    return c;
 }
 
-ExecutionContext *ExecutionEngine::newCallContext(void *stackSpace, FunctionObject *f, const Value &thisObject, Value *args, int argc)
+CallContext *ExecutionEngine::newCallContext(void *stackSpace, FunctionObject *f, const Value &thisObject, Value *args, int argc)
 {
     ensureContextStackSize();
     assert(contextStack[contextStackPosition + 1] == 0);
 
+    CallContext *c;
     uint memory = requiredMemoryForExecutionContect(f, argc);
     if (f->needsActivation || memory > stackContextSize) {
-        current = memoryManager->allocContext(memory);
+        c = static_cast<CallContext *>(memoryManager->allocContext(memory));
     } else {
-        current = (ExecutionContext *)stackSpace;
+        c = (CallContext *)stackSpace;
 #ifndef QT_NO_DEBUG
-        current->next = (ExecutionContext *)0x1;
+        c->next = (CallContext *)0x1;
 #endif
     }
+    current = c;
 
     contextStack[++contextStackPosition] = current;
 
-    current->function = f;
-    current->thisObject = thisObject;
-    current->arguments = args;
-    current->argumentCount = argc;
-    current->initCallContext(this);
+    c->function = f;
+    c->thisObject = thisObject;
+    c->arguments = args;
+    c->argumentCount = argc;
+    c->initCallContext(this);
 
-    return current;
+    return c;
 }
 
 

@@ -56,7 +56,8 @@ Value __qmljs_llvm_return(ExecutionContext */*ctx*/, Value *result)
 
 Value *__qmljs_llvm_get_argument(ExecutionContext *ctx, int index)
 {
-    return &ctx->arguments[index];
+    assert(ctx->type == ExecutionContext::Type_CallContext);
+    return &static_cast<CallContext *>(ctx)->arguments[index];
 }
 
 void __qmljs_llvm_init_undefined(Value *result)

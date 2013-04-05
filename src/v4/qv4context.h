@@ -76,47 +76,36 @@ struct Q_V4_EXPORT DiagnosticMessage
 struct ExecutionContext
 {
     enum Type {
-        GlobalContext = 0x1,
-        SimpleCallContext = 0x2,
-        CallContext = 0x3,
-        CatchContext = 0x4,
-        WithContext = 0x5,
-        QmlContext = 0x6
+        Type_GlobalContext = 0x1,
+        Type_SimpleCallContext = 0x2,
+        Type_CallContext = 0x3,
+        Type_CatchContext = 0x4,
+        Type_WithContext = 0x5,
+        Type_QmlContext = 0x6
     };
 
-    ExecutionEngine *engine;
-    ExecutionContext *outer;
-    Value thisObject;
-    Value *arguments;
-    unsigned int argumentCount;
     Type type;
-
-    // ### remove me
-    Object *activation;
-
-    FunctionObject *function;
-    Lookup *lookups;
-
-    Value *locals;
-
-    ExecutionContext *next; // used in the GC
-    String *exceptionVarName;
-    Value exceptionValue;
-
     bool strictMode;
     bool marked;
 
-    Object *withObject;
+    Value thisObject;
+
+    ExecutionEngine *engine;
+    ExecutionContext *outer;
+    Lookup *lookups;
+    ExecutionContext *next; // used in the GC
+
+    // ### move to CallContext
+    Value *arguments;
+    unsigned int argumentCount;
+    Object *activation;
+    FunctionObject *function;
+    Value *locals;
 
     String * const *formals() const;
     unsigned int formalCount() const;
     String * const *variables() const;
     unsigned int variableCount() const;
-
-    void init(ExecutionEngine *e);
-    void init(ExecutionContext *p, Object *with);
-    void initForCatch(ExecutionContext *p, String *exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
-    void initCallContext(QQmlJS::VM::ExecutionEngine *engine);
 
     void createMutableBinding(String *name, bool deletable);
     bool setMutableBinding(ExecutionContext *scope, String *name, const Value &value);
@@ -141,22 +130,52 @@ struct ExecutionContext
     void inplaceBitOp(String *name, const QQmlJS::VM::Value &value, BinOp op);
     bool deleteProperty(String *name);
 
-    inline Value argument(unsigned int index = 0)
-    {
-        if (index < argumentCount)
-            return arguments[index];
-        return Value::undefinedValue();
-    }
+    inline Value argument(unsigned int index = 0);
 
     bool needsOwnArguments() const;
 
     void mark();
 };
 
+struct CallContext : public ExecutionContext
+{
+    void initCallContext(QQmlJS::VM::ExecutionEngine *engine);
+};
+
+struct GlobalContext : public ExecutionContext
+{
+    void init(ExecutionEngine *e);
+};
+
+struct CatchContext : public ExecutionContext
+{
+    void init(ExecutionContext *p, String *exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
+
+    String *exceptionVarName;
+    Value exceptionValue;
+};
+
+struct WithContext : public ExecutionContext
+{
+    Object *withObject;
+
+    void init(ExecutionContext *p, Object *with);
+};
+
+inline Value ExecutionContext::argument(unsigned int index)
+{
+    if (type == Type_CallContext) {
+        CallContext *ctx = static_cast<CallContext *>(this);
+        if (index < ctx->argumentCount)
+            return ctx->arguments[index];
+    }
+    return Value::undefinedValue();
+}
+
 /* Function *f, int argc */
 #define requiredMemoryForExecutionContect(f, argc) \
-    sizeof(ExecutionContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount))
-#define stackContextSize (sizeof(ExecutionContext) + 32*sizeof(Value))
+    sizeof(CallContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount))
+#define stackContextSize (sizeof(CallContext) + 32*sizeof(Value))
 
 } // namespace VM
 } // namespace QQmlJS

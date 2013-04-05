@@ -98,7 +98,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, const Value &value)
 {
     // ### throw if scope->strict is true, and it would change an immutable binding
-    if (type == CallContext) {
+    if (type == Type_CallContext) {
         assert(function);
         for (unsigned int i = 0; i < function->varCount; ++i)
             if (function->varList[i]->isEqualTo(name)) {
@@ -112,7 +112,7 @@ bool ExecutionContext::setMutableBinding(ExecutionContext *scope, String *name, 
             }
     }
 
-    if (activation && (type == QmlContext || activation->__hasProperty__(scope, name))) {
+    if (activation && (type == Type_QmlContext || activation->__hasProperty__(scope, name))) {
         activation->put(scope, name, value);
         return true;
     }
@@ -125,7 +125,7 @@ Value ExecutionContext::getBindingValue(ExecutionContext *scope, String *name, b
     Q_UNUSED(strict);
     assert(function);
 
-    if (type == CallContext) {
+    if (type == Type_CallContext) {
         assert(function);
         for (unsigned int i = 0; i < function->varCount; ++i)
             if (function->varList[i]->isEqualTo(name))
@@ -156,104 +156,149 @@ bool ExecutionContext::deleteBinding(ExecutionContext *scope, String *name)
 
 String * const *ExecutionContext::formals() const
 {
-    return function ? function->formalParameterList : 0;
+    return type == Type_CallContext ? static_cast<const CallContext *>(this)->function->formalParameterList : 0;
 }
 
 unsigned int ExecutionContext::formalCount() const
 {
-    return function ? function->formalParameterCount : 0;
+    return type == Type_CallContext ? static_cast<const CallContext *>(this)->function->formalParameterCount : 0;
 }
 
 String * const *ExecutionContext::variables() const
 {
-    return function ? function->varList : 0;
+    return type == Type_CallContext ? static_cast<const CallContext *>(this)->function->varList : 0;
 }
 
 unsigned int ExecutionContext::variableCount() const
 {
-    return function ? function->varCount : 0;
+    return type == Type_CallContext ? static_cast<const CallContext *>(this)->function->varCount : 0;
 }
 
 
-void ExecutionContext::init(ExecutionEngine *eng)
+void GlobalContext::init(ExecutionEngine *eng)
 {
-    type = GlobalContext;
+    type = Type_GlobalContext;
+    strictMode = false;
     marked = false;
+    thisObject = eng->globalObject;
     engine = eng;
     outer = 0;
-    thisObject = eng->globalObject;
-
-    function = 0;
     lookups = 0;
 
-    locals = 0;
+    // ### remove
     arguments = 0;
     argumentCount = 0;
-    locals = 0;
-    exceptionVarName = 0;
-    exceptionValue = Value::undefinedValue();
-    strictMode = false;
     activation = 0;
-    withObject = 0;
+    function = 0;
+    locals = 0;
 }
 
-void ExecutionContext::init(ExecutionContext *p, Object *with)
+void WithContext::init(ExecutionContext *p, Object *with)
 {
-    type = WithContext;
+    type = Type_WithContext;
+    strictMode = false;
     marked = false;
+    thisObject = p->thisObject;
     engine = p->engine;
     outer = p;
-    thisObject = p->thisObject;
-
-    function = 0;
     lookups = p->lookups;
 
-    locals = 0;
-    arguments = 0;
-    argumentCount = 0;
-    locals = 0;
-    exceptionVarName = 0;
-    exceptionValue = Value::undefinedValue();
-    strictMode = false;
-    activation = 0;
     withObject = with;
-}
 
-void ExecutionContext::initForCatch(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
-{
-    type = CatchContext;
-    marked = false;
-    engine = p->engine;
-    outer = p;
-    thisObject = p->thisObject;
-
-    function = 0;
-    lookups = p->lookups;
+    // ### remove
     arguments = 0;
     argumentCount = 0;
+    activation = 0;
+    function = 0;
     locals = 0;
+}
+
+void CatchContext::init(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
+{
+    type = Type_CatchContext;
+    strictMode = p->strictMode;
+    marked = false;
+    thisObject = p->thisObject;
+    engine = p->engine;
+    outer = p;
+    lookups = p->lookups;
+
     this->exceptionVarName = exceptionVarName;
     this->exceptionValue = exceptionValue;
-    strictMode = p->strictMode;
+
+    // ### remove
+    arguments = 0;
+    argumentCount = 0;
     activation = 0;
-    withObject = 0;
+    function = 0;
+    locals = 0;
 }
+
+void CallContext::initCallContext(ExecutionEngine *engine)
+{
+    type = Type_CallContext;
+    strictMode = function->strictMode;
+    marked = false;
+    this->engine = engine;
+    outer = function->scope;
+#ifndef QT_NO_DEBUG
+    assert(outer->next != (ExecutionContext *)0x1);
+#endif
+
+    activation = 0;
+
+    if (function->function)
+        lookups = function->function->lookups;
+
+    uint argc = argumentCount;
+
+    locals = (Value *)(this + 1);
+    if (function->varCount)
+        std::fill(locals, locals + function->varCount, Value::undefinedValue());
+
+    if (needsOwnArguments()) {
+        Value *args = arguments;
+        argumentCount = qMax(argc, function->formalParameterCount);
+        arguments = locals + function->varCount;
+        if (argc)
+            ::memcpy(arguments, args, argc * sizeof(Value));
+        if (argc < function->formalParameterCount)
+            std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
+
+    }
+
+    if (function->usesArgumentsObject) {
+        ArgumentsObject *args = new (engine->memoryManager) ArgumentsObject(this, function->formalParameterCount, argc);
+        args->prototype = engine->objectPrototype;
+        Value arguments = Value::fromObject(args);
+        createMutableBinding(engine->id_arguments, false);
+        setMutableBinding(this, engine->id_arguments, arguments);
+    }
+
+    if (engine->debugger)
+        engine->debugger->aboutToCall(function, this);
+}
+
 
 bool ExecutionContext::deleteProperty(String *name)
 {
     bool hasWith = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
-        if (ctx->type == WithContext) {
+        if (ctx->type == Type_WithContext) {
             hasWith = true;
-            if (ctx->withObject->__hasProperty__(this, name))
-                return ctx->withObject->deleteProperty(this, name);
+            WithContext *w = static_cast<WithContext *>(ctx);
+            if (w->withObject->__hasProperty__(this, name))
+                return w->withObject->deleteProperty(this, name);
         } else {
             if (ctx->activation && ctx->activation->__hasProperty__(this, name))
                 return ctx->activation->deleteProperty(this, name);
         }
-        if (ctx->type == CatchContext && ctx->exceptionVarName->isEqualTo(name))
-            return false;
-        if (ctx->type == CallContext) {
+        if (ctx->type == Type_CatchContext) {
+            CatchContext *c = static_cast<CatchContext *>(ctx);
+            if (c->exceptionVarName->isEqualTo(name))
+                return false;
+        }
+        if (ctx->type == Type_CallContext) {
             FunctionObject *f = ctx->function;
             if (f->needsActivation || hasWith) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
@@ -293,24 +338,29 @@ void ExecutionContext::mark()
         locals[local].mark();
     if (activation)
         activation->mark();
-    if (withObject)
-        withObject->mark();
-    if (exceptionVarName)
-        exceptionVarName->mark();
-    exceptionValue.mark();
+    if (type == Type_WithContext) {
+        WithContext *w = static_cast<WithContext *>(this);
+        w->withObject->mark();
+    }
+    if (type == Type_CatchContext) {
+        CatchContext *c = static_cast<CatchContext *>(this);
+        if (c->exceptionVarName)
+            c->exceptionVarName->mark();
+        c->exceptionValue.mark();
+    }
 }
 
 void ExecutionContext::setProperty(String *name, const Value& value)
 {
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
-        if (ctx->type == WithContext) {
-            Object *w = ctx->withObject;
+        if (ctx->type == Type_WithContext) {
+            Object *w = static_cast<WithContext *>(ctx)->withObject;
             if (w->__hasProperty__(ctx, name)) {
                 w->put(ctx, name, value);
                 return;
             }
-        } else if (ctx->type == CatchContext && ctx->exceptionVarName->isEqualTo(name)) {
-            ctx->exceptionValue = value;
+        } else if (ctx->type == Type_CatchContext && static_cast<CatchContext *>(ctx)->exceptionVarName->isEqualTo(name)) {
+            static_cast<CatchContext *>(ctx)->exceptionValue = value;
             return;
         } else {
             if (ctx->setMutableBinding(this, name, value))
@@ -332,8 +382,8 @@ Value ExecutionContext::getProperty(String *name)
     bool hasWith = false;
     bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
-        if (ctx->type == WithContext) {
-            Object *w = ctx->withObject;
+        if (ctx->type == Type_WithContext) {
+            Object *w = static_cast<WithContext *>(ctx)->withObject;
             hasWith = true;
             bool hasProperty = false;
             Value v = w->get(ctx, name, &hasProperty);
@@ -343,13 +393,14 @@ Value ExecutionContext::getProperty(String *name)
             continue;
         }
 
-        if (ctx->type == CatchContext) {
+        if (ctx->type == Type_CatchContext) {
             hasCatchScope = true;
-            if (ctx->exceptionVarName->isEqualTo(name))
-                return ctx->exceptionValue;
+            CatchContext *c = static_cast<CatchContext *>(ctx);
+            if (c->exceptionVarName->isEqualTo(name))
+                return c->exceptionValue;
         }
 
-        if (ctx->type == CallContext) {
+        if (ctx->type == Type_CallContext) {
             FunctionObject *f = ctx->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
@@ -366,7 +417,7 @@ Value ExecutionContext::getProperty(String *name)
             if (hasProperty)
                 return v;
         }
-        if (ctx->type == CallContext) {
+        if (ctx->type == Type_CallContext) {
             FunctionObject *f = ctx->function;
             if (f->function && f->function->isNamedExpression
                 && name->isEqualTo(f->function->name))
@@ -387,8 +438,8 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
     bool hasWith = false;
     bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
-        if (ctx->type == WithContext) {
-            Object *w = ctx->withObject;
+        if (ctx->type == Type_WithContext) {
+            Object *w = static_cast<WithContext *>(ctx)->withObject;
             hasWith = true;
             bool hasProperty = false;
             Value v = w->get(ctx, name, &hasProperty);
@@ -398,13 +449,14 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             continue;
         }
 
-        if (ctx->type == CatchContext) {
+        if (ctx->type == Type_CatchContext) {
             hasCatchScope = true;
-            if (ctx->exceptionVarName->isEqualTo(name))
-                return ctx->exceptionValue;
+            CatchContext *c = static_cast<CatchContext *>(ctx);
+            if (c->exceptionVarName->isEqualTo(name))
+                return c->exceptionValue;
         }
 
-        if (ctx->type == CallContext) {
+        if (ctx->type == Type_CallContext) {
             FunctionObject *f = ctx->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
@@ -421,7 +473,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             if (hasProperty)
                 return v;
         }
-        if (ctx->type == CallContext) {
+        if (ctx->type == Type_CallContext) {
             FunctionObject *f = ctx->function;
             if (f->function && f->function->isNamedExpression
                 && name->isEqualTo(f->function->name))
@@ -442,8 +494,8 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
     bool hasWith = false;
     bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
-        if (ctx->type == WithContext) {
-            Object *w = ctx->withObject;
+        if (ctx->type == Type_WithContext) {
+            Object *w = static_cast<WithContext *>(ctx)->withObject;
             hasWith = true;
             bool hasProperty = false;
             Value v = w->get(ctx, name, &hasProperty);
@@ -454,13 +506,14 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             continue;
         }
 
-        if (ctx->type == CatchContext) {
+        if (ctx->type == Type_CatchContext) {
             hasCatchScope = true;
-            if (ctx->exceptionVarName->isEqualTo(name))
-                return ctx->exceptionValue;
+            CatchContext *c = static_cast<CatchContext *>(ctx);
+            if (c->exceptionVarName->isEqualTo(name))
+                return c->exceptionValue;
         }
 
-        if (ctx->type == CallContext) {
+        if (ctx->type == Type_CallContext) {
             FunctionObject *f = ctx->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
@@ -477,7 +530,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             if (hasProperty)
                 return v;
         }
-        if (ctx->type == CallContext) {
+        if (ctx->type == Type_CallContext) {
             FunctionObject *f = ctx->function;
             if (f->function && f->function->isNamedExpression
                 && name->isEqualTo(f->function->name))
@@ -542,56 +595,6 @@ void ExecutionContext::throwRangeError(Value value)
 void ExecutionContext::throwURIError(Value msg)
 {
     throwError(Value::fromObject(engine->newURIErrorObject(this, msg)));
-}
-
-void ExecutionContext::initCallContext(ExecutionEngine *engine)
-{
-    type = CallContext;
-    marked = false;
-    this->engine = engine;
-    outer = function->scope;
-#ifndef QT_NO_DEBUG
-    assert(outer->next != (ExecutionContext *)0x1);
-#endif
-
-    exceptionVarName = 0;
-    exceptionValue = Value::undefinedValue();
-
-    activation = 0;
-    withObject = 0;
-
-    strictMode = function->strictMode;
-
-    if (function->function)
-        lookups = function->function->lookups;
-
-    uint argc = argumentCount;
-
-    locals = (Value *)(this + 1);
-    if (function->varCount)
-        std::fill(locals, locals + function->varCount, Value::undefinedValue());
-
-    if (needsOwnArguments()) {
-        Value *args = arguments;
-        argumentCount = qMax(argc, function->formalParameterCount);
-        arguments = locals + function->varCount;
-        if (argc)
-            ::memcpy(arguments, args, argc * sizeof(Value));
-        if (argc < function->formalParameterCount)
-            std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
-
-    }
-
-    if (function->usesArgumentsObject) {
-        ArgumentsObject *args = new (engine->memoryManager) ArgumentsObject(this, function->formalParameterCount, argc);
-        args->prototype = engine->objectPrototype;
-        Value arguments = Value::fromObject(args);
-        createMutableBinding(engine->id_arguments, false);
-        setMutableBinding(this, engine->id_arguments, arguments);
-    }
-
-    if (engine->debugger)
-        engine->debugger->aboutToCall(function, this);
 }
 
 void ExecutionContext::wireUpPrototype()

@@ -394,10 +394,10 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
     needsActivation = f->needsActivation();
 
     if (strictMode) {
-        ExecutionContext *k = ctx->engine->newCallContext(this, ctx->thisObject, 0, 0);
+        CallContext *k = ctx->engine->newCallContext(this, ctx->thisObject, 0, 0);
         if (qmlActivation) {
             k->activation = qmlActivation;
-            k->type = ExecutionContext::QmlContext;
+            k->type = ExecutionContext::Type_QmlContext;
         }
         ctx = k;
     }

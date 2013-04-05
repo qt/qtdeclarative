@@ -114,7 +114,7 @@ struct Q_V4_EXPORT ExecutionEngine
     int contextStackSize;
 
     ExecutionContext *current;
-    ExecutionContext *rootContext;
+    GlobalContext *rootContext;
 
     WTF::BumpPointerAllocator bumperPointerAllocator; // Used by Yarr Regex engine.
 
@@ -198,10 +198,10 @@ struct Q_V4_EXPORT ExecutionEngine
     ExecutionEngine(EvalISelFactory *iselFactory = 0);
     ~ExecutionEngine();
 
-    ExecutionContext *newWithContext(Object *with);
-    ExecutionContext *newCatchContext(String* exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
-    ExecutionContext *newCallContext(FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
-    ExecutionContext *newCallContext(void *stackSpace, FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
+    WithContext *newWithContext(Object *with);
+    CatchContext *newCatchContext(String* exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
+    CallContext *newCallContext(FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
+    CallContext *newCallContext(void *stackSpace, FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
     ExecutionContext *pushGlobalContext();
     ExecutionContext *popContext();
 
