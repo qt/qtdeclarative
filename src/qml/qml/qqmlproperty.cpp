@@ -1558,7 +1558,6 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
             return false;
         }
 
-        typedef QQmlVMEMetaObject VMEMO;
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
         vmemo->setVMEProperty(core.coreIndex, result);

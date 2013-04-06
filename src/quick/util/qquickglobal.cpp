@@ -1014,6 +1014,6 @@ static bool initializeProviders()
     return true;
 }
 
-static bool initialized = initializeProviders();
+Q_CONSTRUCTOR_FUNCTION(initializeProviders)
 
 QT_END_NAMESPACE

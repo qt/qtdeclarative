@@ -249,6 +249,7 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
                                 int selectionStart, int selectionEnd,
                                 int lineStart, int lineCount)
 {
+    Q_UNUSED(position);
     initEngine(color, selectedTextColor, selectionColor, anchorColor);
 
 #ifndef QT_NO_IM
