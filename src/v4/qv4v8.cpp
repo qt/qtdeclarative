@@ -334,17 +334,16 @@ Local<StackTrace> StackTrace::CurrentStackTrace(int frame_limit, StackTrace::Sta
 {
     StackTrace *trace = new StackTrace;
     VM::ExecutionEngine *engine = currentEngine();
-    VM::ExecutionContext **root = engine->contextStack;
-    VM::ExecutionContext **current = root + engine->contextStackPosition;
-    while (current >= root && frame_limit) {
-        if (CallContext *c = (*current)->asCallContext()) {
+    VM::ExecutionContext *current = engine->current;
+    while (current && frame_limit) {
+        if (CallContext *c = current->asCallContext()) {
             StackFrame *frame = new StackFrame(Value::fromVmValue(VM::Value::fromString(engine->id_null)),
                                                Value::fromVmValue(VM::Value::fromString(c->function->name)),
                                                0, 0);
             trace->frames.append(frame);
             --frame_limit;
         }
-        --current;
+        current = current->parent;
     }
 
     return Local<StackTrace>::New(Handle<StackTrace>(trace));

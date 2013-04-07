@@ -109,10 +109,6 @@ struct Q_V4_EXPORT ExecutionEngine
     ExecutableAllocator *executableAllocator;
     QScopedPointer<EvalISelFactory> iselFactory;
 
-    ExecutionContext **contextStack;
-    int contextStackPosition;
-    int contextStackSize;
-
     ExecutionContext *current;
     GlobalContext *rootContext;
 
@@ -245,18 +241,26 @@ struct Q_V4_EXPORT ExecutionEngine
     Value run(VM::Function *function, ExecutionContext *ctx = 0);
 
     void initRootContext();
-    void ensureContextStackSize();
 };
 
 inline void ExecutionEngine::pushContext(SimpleCallContext *context)
 {
-    ensureContextStackSize();
-    assert(contextStack[contextStackPosition + 1] == 0);
-
+    context->parent = current;
     current = context;
-
-    contextStack[++contextStackPosition] = current;
 }
+
+inline ExecutionContext *ExecutionEngine::popContext()
+{
+    CallContext *c = current->asCallContext();
+    if (c && !c->needsOwnArguments()) {
+        c->arguments = 0;
+        c->argumentCount = 0;
+    }
+
+    current = current->parent;
+    return current;
+}
+
 
 } // namespace VM
 } // namespace QQmlJS

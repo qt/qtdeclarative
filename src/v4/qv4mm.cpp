@@ -237,10 +237,6 @@ void MemoryManager::mark()
 {
     m_d->engine->markObjects();
 
-    ExecutionEngine *e = engine();
-    for (int i = 0; i <= e->contextStackPosition; ++i)
-        e->contextStack[i]->mark();
-
     for (QHash<Managed *, uint>::const_iterator it = m_d->protectedObject.begin(); it != m_d->protectedObject.constEnd(); ++it)
         it.key()->mark();
 

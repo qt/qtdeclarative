@@ -213,9 +213,6 @@ void CallContext::initCallContext(ExecutionEngine *engine)
         desc.enumerable = PropertyDescriptor::Enabled;
         activation->__defineOwnProperty__(this, engine->id_arguments, &desc);
     }
-
-    if (engine->debugger)
-        engine->debugger->aboutToCall(function, this);
 }
 
 

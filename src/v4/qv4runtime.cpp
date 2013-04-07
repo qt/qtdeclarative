@@ -119,7 +119,7 @@ QString numberToString(double num, int radix = 10)
 
 Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue)
 {
-    this->throwingContext = throwingContext;
+    this->throwingContext = throwingContext->engine->current;
     this->exception = PersistentValue(throwingContext->engine->memoryManager, exceptionValue);
     accepted = false;
 }

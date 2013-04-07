@@ -93,6 +93,7 @@ struct ExecutionContext
     Value thisObject;
 
     ExecutionEngine *engine;
+    ExecutionContext *parent;
     ExecutionContext *outer;
     Lookup *lookups;
     ExecutionContext *next; // used in the GC
