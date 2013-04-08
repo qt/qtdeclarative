@@ -358,7 +358,7 @@ int main(int argc, char *argv[])
 
         QQmlJS::VM::ExecutionContext *ctx = vm.rootContext;
 
-        QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
+        QQmlJS::VM::Object *globalObject = vm.globalObject;
         QQmlJS::VM::Object *print = new (ctx->engine->memoryManager) builtins::Print(ctx);
         print->prototype = ctx->engine->objectPrototype;
         globalObject->put(ctx, vm.newIdentifier(QStringLiteral("print")),

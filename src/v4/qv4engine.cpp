@@ -69,7 +69,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : memoryManager(new QQmlJS::VM::MemoryManager)
     , executableAllocator(new QQmlJS::VM::ExecutableAllocator)
     , debugger(0)
-    , globalObject(Value::nullValue())
+    , globalObject(0)
     , globalCode(0)
     , externalResourceComparison(0)
     , regExpCache(0)
@@ -194,52 +194,50 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     //
     // set up the global object
     //
-    VM::Object *glo = newObject(/*rootContext*/);
-    globalObject = Value::fromObject(glo);
-    rootContext->global = glo;
-    rootContext->thisObject = Value::fromObject(glo);
+    globalObject = newObject(/*rootContext*/);
+    rootContext->global = globalObject;
+    rootContext->thisObject = Value::fromObject(globalObject);
 
-    glo->defineDefaultProperty(rootContext, QStringLiteral("Object"), objectCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("String"), stringCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("Number"), numberCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("Boolean"), booleanCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("Array"), arrayCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("Function"), functionCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("Date"), dateCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("RegExp"), regExpCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("Error"), errorCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("EvalError"), evalErrorCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("RangeError"), rangeErrorCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("ReferenceError"), referenceErrorCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("SyntaxError"), syntaxErrorCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("TypeError"), typeErrorCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("URIError"), uRIErrorCtor);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("Math"), Value::fromObject(new (memoryManager) MathObject(rootContext)));
-    glo->defineDefaultProperty(rootContext, QStringLiteral("JSON"), Value::fromObject(new (memoryManager) JsonObject(rootContext)));
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("Object"), objectCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("String"), stringCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("Number"), numberCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("Boolean"), booleanCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("Array"), arrayCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("Function"), functionCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("Date"), dateCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("RegExp"), regExpCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("Error"), errorCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("EvalError"), evalErrorCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("RangeError"), rangeErrorCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("ReferenceError"), referenceErrorCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("SyntaxError"), syntaxErrorCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("TypeError"), typeErrorCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("URIError"), uRIErrorCtor);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("Math"), Value::fromObject(new (memoryManager) MathObject(rootContext)));
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("JSON"), Value::fromObject(new (memoryManager) JsonObject(rootContext)));
 
-    glo->defineReadonlyProperty(this, QStringLiteral("undefined"), Value::undefinedValue());
-    glo->defineReadonlyProperty(this, QStringLiteral("NaN"), Value::fromDouble(std::numeric_limits<double>::quiet_NaN()));
-    glo->defineReadonlyProperty(this, QStringLiteral("Infinity"), Value::fromDouble(Q_INFINITY));
+    globalObject->defineReadonlyProperty(this, QStringLiteral("undefined"), Value::undefinedValue());
+    globalObject->defineReadonlyProperty(this, QStringLiteral("NaN"), Value::fromDouble(std::numeric_limits<double>::quiet_NaN()));
+    globalObject->defineReadonlyProperty(this, QStringLiteral("Infinity"), Value::fromDouble(Q_INFINITY));
 
     evalFunction = new (memoryManager) EvalFunction(rootContext);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("eval"), Value::fromObject(evalFunction));
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("eval"), Value::fromObject(evalFunction));
 
-    glo->defineDefaultProperty(rootContext, QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("parseFloat"), GlobalFunctions::method_parseFloat, 1);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("isNaN"), GlobalFunctions::method_isNaN, 1);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("isFinite"), GlobalFunctions::method_isFinite, 1);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("decodeURI"), GlobalFunctions::method_decodeURI, 1);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("decodeURIComponent"), GlobalFunctions::method_decodeURIComponent, 1);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("encodeURI"), GlobalFunctions::method_encodeURI, 1);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("encodeURIComponent"), GlobalFunctions::method_encodeURIComponent, 1);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("escape"), GlobalFunctions::method_escape, 1);
-    glo->defineDefaultProperty(rootContext, QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("parseFloat"), GlobalFunctions::method_parseFloat, 1);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("isNaN"), GlobalFunctions::method_isNaN, 1);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("isFinite"), GlobalFunctions::method_isFinite, 1);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("decodeURI"), GlobalFunctions::method_decodeURI, 1);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("decodeURIComponent"), GlobalFunctions::method_decodeURIComponent, 1);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("encodeURI"), GlobalFunctions::method_encodeURI, 1);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("encodeURIComponent"), GlobalFunctions::method_encodeURIComponent, 1);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("escape"), GlobalFunctions::method_escape, 1);
+    globalObject->defineDefaultProperty(rootContext, QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 }
 
 ExecutionEngine::~ExecutionEngine()
 {
     delete regExpCache;
-    delete globalObject.asObject();
     UnwindHelper::deregisterFunctions(functions);
     qDeleteAll(functions);
     delete memoryManager;
@@ -495,7 +493,7 @@ void ExecutionEngine::markObjects()
 {
     identifierCache->mark();
 
-    globalObject.mark();
+    globalObject->mark();
 
     if (globalCode)
         globalCode->mark();

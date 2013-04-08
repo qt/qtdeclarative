@@ -393,7 +393,7 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
 
     if (!f->strictMode && !thisObject.isObject()) {
         if (thisObject.isUndefined() || thisObject.isNull()) {
-            ctx->thisObject = context->engine->globalObject;
+            ctx->thisObject = Value::fromObject(context->engine->globalObject);
         } else {
             ctx->thisObject = Value::fromObject(thisObject.toObject(context));
         }

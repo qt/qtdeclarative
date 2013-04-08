@@ -83,7 +83,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 {
 
     // find the right context to create the binding on
-    Object *activation = engine->globalObject.objectValue();
+    Object *activation = engine->globalObject;
     ExecutionContext *ctx = this;
     while (ctx) {
         if (ctx->type >= Type_CallContext) {
@@ -133,7 +133,7 @@ void GlobalContext::init(ExecutionEngine *eng)
     type = Type_GlobalContext;
     strictMode = false;
     marked = false;
-    thisObject = eng->globalObject;
+    thisObject = Value::fromObject(eng->globalObject);
     engine = eng;
     outer = 0;
     lookups = 0;
@@ -334,7 +334,7 @@ void ExecutionContext::setProperty(String *name, const Value& value)
     }
     if (strictMode || name->isEqualTo(engine->id_this))
         throwReferenceError(Value::fromString(name));
-    engine->globalObject.objectValue()->put(this, name, value);
+    engine->globalObject->put(this, name, value);
 }
 
 Value ExecutionContext::getProperty(String *name)

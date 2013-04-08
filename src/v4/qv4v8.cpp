@@ -2086,7 +2086,7 @@ Persistent<Context> Context::New(ExtensionConfiguration *extensions, Handle<Obje
 
 Local<Object> Context::Global()
 {
-    return Local<Object>::New(Value::fromVmValue(d->engine->globalObject));
+    return Local<Object>::New(Value::fromVmValue(VM::Value::fromObject(d->engine->globalObject)));
 }
 
 Local<Context> Context::GetCurrent()

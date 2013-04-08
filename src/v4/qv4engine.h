@@ -118,7 +118,7 @@ struct Q_V4_EXPORT ExecutionEngine
 
     Debugging::Debugger *debugger;
 
-    Value globalObject;
+    Object *globalObject;
 
     VM::Function *globalCode;
 
