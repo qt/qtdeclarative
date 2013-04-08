@@ -920,7 +920,12 @@ bool Object::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSet
 
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
-    VM::PropertyDescriptor *pd = o->insertMember(name->asVMString());
+    PropertyAttributes attrs = Attr_Accessor;
+    if (attribute & DontDelete)
+        attrs |= Attr_NotConfigurable;
+    if (attribute & DontEnum)
+        attrs |= Attr_NotEnumerable;
+    VM::PropertyDescriptor *pd = o->insertMember(name->asVMString(), attrs);
     *pd = VM::PropertyDescriptor::fromAccessor(wrappedGetter, wrappedSetter);
     pd->writable = VM::PropertyDescriptor::Undefined;
     pd->configurable = attribute & DontDelete ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
@@ -1424,7 +1429,12 @@ public:
             m_template = Persistent<ObjectTemplate>::New(ObjectTemplate::New());
 
         foreach (const ObjectTemplate::Accessor &acc, m_template->m_accessors) {
-            VM::PropertyDescriptor *pd = this->insertMember(acc.name->asVMString());
+            PropertyAttributes attrs = Attr_Accessor;
+            if (acc.attribute & DontDelete)
+                attrs |= Attr_NotConfigurable;
+            if (acc.attribute & DontEnum)
+                attrs |= Attr_NotEnumerable;
+            VM::PropertyDescriptor *pd = this->insertMember(acc.name->asVMString(), attrs);
             *pd = VM::PropertyDescriptor::fromAccessor(acc.getter->vmValue().asFunctionObject(),
                                                        acc.setter->vmValue().asFunctionObject());
             pd->writable = VM::PropertyDescriptor::Undefined;
@@ -1438,7 +1448,14 @@ public:
     void initProperties(Template *tmpl)
     {
         foreach (const Template::Property &p, tmpl->m_properties) {
-            VM::PropertyDescriptor *pd = this->insertMember(p.name->asVMString());
+            PropertyAttributes attrs = Attr_Default;
+            if (p.attributes & DontDelete)
+                attrs |= Attr_NotConfigurable;
+            if (p.attributes & DontEnum)
+                attrs |= Attr_NotEnumerable;
+            if (p.attributes & ReadOnly)
+                attrs |= Attr_NotWritable;
+            VM::PropertyDescriptor *pd = this->insertMember(p.name->asVMString(), attrs);
             *pd = VM::PropertyDescriptor::fromValue(p.value->vmValue());
             pd->writable = p.attributes & ReadOnly ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
             pd->configurable = p.attributes & DontDelete ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
@@ -1539,20 +1556,20 @@ protected:
         BaseClass::putIndexed(m, ctx, index, value);
     }
 
-    static PropertyFlags propertyAttributesToFlags(const Handle<Value> &attr)
+    static PropertyAttributes propertyAttributesToFlags(const Handle<Value> &attr)
     {
-        int flags = 0;
+        PropertyAttributes flags = 0;
         int intAttr = attr->ToInt32()->Value();
-        if (!(intAttr & ReadOnly))
-            flags |= VM::Writable;
-        if (!(intAttr & DontDelete))
-            flags |= VM::Configurable;
-        if (!(intAttr & DontEnum))
-            flags |= VM::Enumerable;
-        return PropertyFlags(flags);
+        if (intAttr & ReadOnly)
+            flags |= VM::Attr_NotWritable;
+        if (intAttr & DontDelete)
+            flags |= VM::Attr_NotConfigurable;
+        if (intAttr & DontEnum)
+            flags |= VM::Attr_NotEnumerable;
+        return flags;
     }
 
-    static PropertyFlags query(VM::Managed *m, ExecutionContext *ctx, VM::String *name)
+    static PropertyAttributes query(VM::Managed *m, ExecutionContext *ctx, VM::String *name)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_namedPropertyQuery) {
@@ -1560,7 +1577,7 @@ protected:
             if (!result.IsEmpty())
                 return propertyAttributesToFlags(result);
         }
-        PropertyFlags flags = BaseClass::query(m, ctx, name);
+        PropertyAttributes flags = BaseClass::query(m, ctx, name);
         if (flags == 0 && that->m_template->m_fallbackPropertySetter) {
             Handle<Value> result = that->m_template->m_fallbackPropertyQuery(String::New(name), that->fallbackAccessorInfo());
             if (!result.IsEmpty())
@@ -1570,7 +1587,7 @@ protected:
         return flags;
     }
 
-    static PropertyFlags queryIndexed(VM::Managed *m, ExecutionContext *ctx, uint index)
+    static PropertyAttributes queryIndexed(VM::Managed *m, ExecutionContext *ctx, uint index)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_indexedPropertyQuery) {

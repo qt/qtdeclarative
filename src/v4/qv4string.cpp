@@ -150,15 +150,15 @@ void String::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Val
     o->putIndexed(ctx, index, value);
 }
 
-PropertyFlags String::query(Managed *m, ExecutionContext *ctx, String *name)
+PropertyAttributes String::query(Managed *m, ExecutionContext *ctx, String *name)
 {
-    return PropertyFlags(0);
+    return Attr_Invalid;
 }
 
-PropertyFlags String::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
+PropertyAttributes String::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
 {
     String *that = static_cast<String *>(m);
-    return (index < that->_text.length()) ? PropertyFlags(Enumerable) : PropertyFlags(0);
+    return (index < that->_text.length()) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
 }
 
 bool String::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)

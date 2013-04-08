@@ -59,11 +59,17 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace VM {
 
-enum PropertyFlags {
-    Writable = 0x1,
-    Enumerable = 0x2,
-    Configurable = 0x4
+enum {
+    Attr_Default = 0,
+    Attr_Accessor = 0x1,
+    Attr_NotWritable = 0x2,
+    Attr_NotEnumerable = 0x4,
+    Attr_NotConfigurable = 0x8,
+    Attr_ReadOnly = Attr_NotWritable|Attr_NotEnumerable|Attr_NotConfigurable,
+    Attr_Invalid = 0xff
 };
+
+typedef uchar PropertyAttributes;
 
 }
 }

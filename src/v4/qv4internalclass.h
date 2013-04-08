@@ -43,6 +43,7 @@
 
 #include <QHash>
 #include <QVector>
+#include <qv4global.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -57,12 +58,15 @@ struct InternalClass {
     ExecutionEngine *engine;
     QHash<uint, uint> propertyTable; // id to valueIndex
     QVector<String *> nameMap;
+
+    QVector<PropertyAttributes> propertyData;
+
     QHash<int, InternalClass *> transitions; // id to next class, positive means add, negative delete
     uint size;
 
     InternalClass(ExecutionEngine *engine) : engine(engine), size(0) {}
 
-    InternalClass *addMember(String *string, uint *index = 0);
+    InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
     void removeMember(Object *object, uint id);
     uint find(String *s);
 

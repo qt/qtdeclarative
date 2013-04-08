@@ -109,7 +109,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     id_eval = newIdentifier(QStringLiteral("eval"));
 
     emptyClass = new InternalClass(this);
-    arrayClass = emptyClass->addMember(id_length);
+    arrayClass = emptyClass->addMember(id_length, Attr_ReadOnly);
     initRootContext();
 
     objectPrototype = new (memoryManager) ObjectPrototype(this);

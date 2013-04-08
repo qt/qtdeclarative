@@ -1210,7 +1210,7 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const Value &object,
     assert(o);
 
     uint idx = name->asArrayIndex();
-    PropertyDescriptor *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(name);
+    PropertyDescriptor *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(name, Attr_Default);
     pd->value = val ? *val : Value::undefinedValue();
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Enabled;
@@ -1255,7 +1255,7 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &ob
     assert(o);
 
     uint idx = name->asArrayIndex();
-    PropertyDescriptor *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(name);
+    PropertyDescriptor *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(name, Attr_Accessor);
     pd->get = getter ? getter->asFunctionObject() : 0;
     pd->set = setter ? setter->asFunctionObject() : 0;
     pd->type = PropertyDescriptor::Accessor;

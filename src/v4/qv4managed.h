@@ -84,8 +84,8 @@ struct ManagedVTable
     Value (*getIndexed)(Managed *, ExecutionContext *ctx, uint index, bool *hasProperty);
     void (*put)(Managed *, ExecutionContext *ctx, String *name, const Value &value);
     void (*putIndexed)(Managed *, ExecutionContext *ctx, uint index, const Value &value);
-    PropertyFlags (*query)(Managed *, ExecutionContext *ctx, String *name);
-    PropertyFlags (*queryIndexed)(Managed *, ExecutionContext *ctx, uint index);
+    PropertyAttributes (*query)(Managed *, ExecutionContext *ctx, String *name);
+    PropertyAttributes (*queryIndexed)(Managed *, ExecutionContext *ctx, uint index);
     bool (*deleteProperty)(Managed *m, ExecutionContext *ctx, String *name);
     bool (*deleteIndexedProperty)(Managed *m, ExecutionContext *ctx, uint index);
     const char *className;

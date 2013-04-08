@@ -192,7 +192,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, c
 
 void Object::defineDefaultProperty(String *name, Value value)
 {
-    PropertyDescriptor *pd = insertMember(name);
+    PropertyDescriptor *pd = insertMember(name, Attr_Default);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Enabled;
     pd->enumerable = PropertyDescriptor::Disabled;
@@ -221,7 +221,7 @@ void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name
 
 void Object::defineReadonlyProperty(String *name, Value value)
 {
-    PropertyDescriptor *pd = insertMember(name);
+    PropertyDescriptor *pd = insertMember(name, Attr_ReadOnly);
     pd->type = PropertyDescriptor::Data;
     pd->writable = PropertyDescriptor::Disabled;
     pd->enumerable = PropertyDescriptor::Disabled;
@@ -250,10 +250,10 @@ void Object::markObjects(Managed *that)
     o->markArrayObjects();
 }
 
-PropertyDescriptor *Object::insertMember(String *s)
+PropertyDescriptor *Object::insertMember(String *s, PropertyAttributes attributes)
 {
     uint idx;
-    internalClass = internalClass->addMember(s, &idx);
+    internalClass = internalClass->addMember(s, attributes, &idx);
 
     if (idx >= memberDataAlloc) {
         memberDataAlloc = qMax((uint)8, 2*memberDataAlloc);
@@ -346,22 +346,22 @@ void Object::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Val
     static_cast<Object *>(m)->internalPutIndexed(ctx, index, value);
 }
 
-PropertyFlags Object::query(Managed *m, ExecutionContext *ctx, String *name)
+PropertyAttributes Object::query(Managed *m, ExecutionContext *ctx, String *name)
 {
     Object *that = static_cast<Object *>(m);
     PropertyDescriptor *pd = that->__getPropertyDescriptor__(ctx, name);
     if (!pd || pd->type == PropertyDescriptor::Generic)
-        return PropertyFlags(0);
-    return pd->propertyFlags();
+        return Attr_Invalid;
+    return pd->toPropertyAttributes();
 }
 
-PropertyFlags Object::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
+PropertyAttributes Object::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
 {
     Object *that = static_cast<Object *>(m);
     PropertyDescriptor *pd = that->__getPropertyDescriptor__(ctx, index);
     if (!pd || pd->type == PropertyDescriptor::Generic)
-        return PropertyFlags(0);
-    return pd->propertyFlags();
+        return Attr_Invalid;
+    return pd->toPropertyAttributes();
 }
 
 bool Object::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
@@ -509,7 +509,7 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
     }
 
     {
-        PropertyDescriptor *p = insertMember(name);
+        PropertyDescriptor *p = insertMember(name, Attr_Default);
         p->type = PropertyDescriptor::Data;
         p->value = value;
         p->configurable = PropertyDescriptor::Enabled;
@@ -685,7 +685,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
         if (!extensible)
             goto reject;
         // clause 4
-        PropertyDescriptor *pd = insertMember(name);
+        PropertyDescriptor *pd = insertMember(name, desc->toPropertyAttributes());
         *pd = *desc;
         pd->fullyPopulated();
         return true;

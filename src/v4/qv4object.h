@@ -183,7 +183,7 @@ struct Q_V4_EXPORT Object: Managed {
     void defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value);
     void defineReadonlyProperty(String *name, Value value);
 
-    PropertyDescriptor *insertMember(String *s);
+    PropertyDescriptor *insertMember(String *s, PropertyAttributes attributes);
 
     // Array handling
 
@@ -338,8 +338,8 @@ protected:
     static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty);
     static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
     static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value);
-    static PropertyFlags query(Managed *m, ExecutionContext *ctx, String *name);
-    static PropertyFlags queryIndexed(Managed *m, ExecutionContext *ctx, uint index);
+    static PropertyAttributes query(Managed *m, ExecutionContext *ctx, String *name);
+    static PropertyAttributes queryIndexed(Managed *m, ExecutionContext *ctx, uint index);
     static bool deleteProperty(Managed *m, ExecutionContext *ctx, String *name);
     static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index);
 

@@ -141,14 +141,14 @@ void RegExp::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Val
 {
 }
 
-PropertyFlags RegExp::query(Managed *m, ExecutionContext *ctx, String *name)
+PropertyAttributes RegExp::query(Managed *m, ExecutionContext *ctx, String *name)
 {
-    return PropertyFlags(0);
+    return Attr_Invalid;
 }
 
-PropertyFlags RegExp::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
+PropertyAttributes RegExp::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
 {
-    return PropertyFlags(0);
+    return Attr_Invalid;
 }
 
 bool RegExp::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)

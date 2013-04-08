@@ -281,7 +281,7 @@ bool Parser::parseMember(Object *o)
     if (!parseValue(&val))
         return false;
 
-    PropertyDescriptor *p = o->insertMember(context->engine->newIdentifier(key));
+    PropertyDescriptor *p = o->insertMember(context->engine->newIdentifier(key), Attr_Default);
     p->type = PropertyDescriptor::Data;
     p->writable = PropertyDescriptor::Enabled;
     p->enumerable = PropertyDescriptor::Enabled;

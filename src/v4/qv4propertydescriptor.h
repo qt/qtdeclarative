@@ -43,6 +43,7 @@
 
 #include "qv4global.h"
 #include "qv4value.h"
+#include "qv4internalclass.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -51,7 +52,18 @@ namespace VM {
 
 struct FunctionObject;
 
-struct PropertyDescriptor {
+struct Property {
+    union {
+        Value value;
+        struct {
+            FunctionObject *get;
+            FunctionObject *set;
+        };
+    };
+};
+
+struct PropertyDescriptor : public Property
+{
     enum Type {
         Generic,
         Data,
@@ -62,28 +74,10 @@ struct PropertyDescriptor {
         Disabled,
         Enabled
     };
-    union {
-        Value value;
-        struct {
-            FunctionObject *get;
-            FunctionObject *set;
-        };
-    };
     uint type : 8;
     uint writable : 8;
     uint enumerable : 8;
     uint configurable : 8;
-
-    PropertyFlags propertyFlags() {
-        int f = 0;
-        if (writable == Enabled)
-            f |= Writable;
-        if (configurable == Enabled)
-            f |= Configurable;
-        if (enumerable == Enabled)
-            f |= Enumerable;
-        return PropertyFlags(f);
-    }
 
     static inline PropertyDescriptor fromValue(Value v) {
         PropertyDescriptor pd;
@@ -103,6 +97,19 @@ struct PropertyDescriptor {
         pd.enumerable = Undefined;
         pd.configurable = Undefined;
         return pd;
+    }
+
+    PropertyAttributes toPropertyAttributes() const {
+        PropertyAttributes attrs = 0;
+        if (type == Accessor)
+            attrs |= Attr_Accessor;
+        else if (writable != Enabled)
+            attrs |= Attr_NotWritable;
+        if (enumerable != Enabled)
+            attrs |= Attr_NotEnumerable;
+        if (configurable != Enabled)
+            attrs |= Attr_NotConfigurable;
+        return attrs;
     }
 
     // Section 8.10

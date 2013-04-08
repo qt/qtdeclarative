@@ -73,7 +73,8 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, RegExp* value, bool global)
     vtbl = &static_vtbl;
     type = Type_RegExpObject;
 
-    PropertyDescriptor *lastIndexProperty = insertMember(engine->newIdentifier(QStringLiteral("lastIndex")));
+    PropertyDescriptor *lastIndexProperty = insertMember(engine->newIdentifier(QStringLiteral("lastIndex")),
+                                                         Attr_NotEnumerable|Attr_NotConfigurable);
     lastIndexProperty->type = PropertyDescriptor::Data;
     lastIndexProperty->writable = PropertyDescriptor::Enabled;
     lastIndexProperty->enumerable = PropertyDescriptor::Disabled;

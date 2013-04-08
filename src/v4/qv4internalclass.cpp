@@ -52,15 +52,16 @@ InternalClass::InternalClass(const QQmlJS::VM::InternalClass &other)
     : engine(other.engine)
     , propertyTable(other.propertyTable)
     , nameMap(other.nameMap)
+    , propertyData(other.propertyData)
     , transitions()
     , size(other.size)
 {
 }
 
-InternalClass *InternalClass::addMember(String *string, uint *index)
+InternalClass *InternalClass::addMember(String *string, PropertyAttributes data, uint *index)
 {
     engine->identifierCache->toIdentifier(string);
-    uint id = string->identifier;
+    uint id = string->identifier | ((uint)data << 24);
 
     assert(propertyTable.constFind(id) == propertyTable.constEnd());
 
@@ -73,8 +74,9 @@ InternalClass *InternalClass::addMember(String *string, uint *index)
     } else {
         // create a new class and add it to the tree
         InternalClass *newClass = new InternalClass(*this);
-        newClass->propertyTable.insert(id, size);
+        newClass->propertyTable.insert(string->identifier, size);
         newClass->nameMap.append(string);
+        newClass->propertyData.append(data);
         ++newClass->size;
         transitions.insert(id, newClass);
         return newClass;
@@ -100,7 +102,7 @@ void InternalClass::removeMember(Object *object, uint id)
     for (int i = 0; i < nameMap.size(); ++i) {
         if (i == propIdx)
             continue;
-        object->internalClass = object->internalClass->addMember(nameMap.at(i));
+        object->internalClass = object->internalClass->addMember(nameMap.at(i), propertyData.at(i));
     }
 
     transitions.insert(toRemove, object->internalClass);
