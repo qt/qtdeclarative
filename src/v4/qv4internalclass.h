@@ -62,11 +62,10 @@ struct InternalClass {
 
     InternalClass(ExecutionEngine *engine) : engine(engine), size(0) {}
 
-    uint getOrAddMember(Object *object, String *string);
+    InternalClass *addMember(String *string, uint *index = 0);
     void removeMember(Object *object, uint id);
     uint find(String *s);
 
-    InternalClass *addMember(String *string);
 private:
     InternalClass(const InternalClass &other);
 };

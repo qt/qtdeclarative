@@ -57,34 +57,19 @@ InternalClass::InternalClass(const QQmlJS::VM::InternalClass &other)
 {
 }
 
-InternalClass *InternalClass::addMember(String *string)
+InternalClass *InternalClass::addMember(String *string, uint *index)
 {
     engine->identifierCache->toIdentifier(string);
     uint id = string->identifier;
 
-    InternalClass *newClass = new InternalClass(*this);
-    newClass->propertyTable.insert(id, size);
-    newClass->nameMap.append(string);
-    ++newClass->size;
-    transitions.insert(id, newClass);
-    return newClass;
-}
-
-uint InternalClass::getOrAddMember(Object *object, String *string)
-{
-    engine->identifierCache->toIdentifier(string);
-    uint id = string->identifier;
-
-    QHash<uint, uint>::const_iterator it = propertyTable.constFind(id);
-    if (it != propertyTable.constEnd())
-        return it.value();
-
-    // new member, need to transition to a new internal class
+    assert(propertyTable.constFind(id) == propertyTable.constEnd());
 
     QHash<int, InternalClass *>::const_iterator tit = transitions.constFind(id);
 
+    if (index)
+        *index = size;
     if (tit != transitions.constEnd()) {
-        object->internalClass = tit.value();
+        return tit.value();
     } else {
         // create a new class and add it to the tree
         InternalClass *newClass = new InternalClass(*this);
@@ -92,9 +77,8 @@ uint InternalClass::getOrAddMember(Object *object, String *string)
         newClass->nameMap.append(string);
         ++newClass->size;
         transitions.insert(id, newClass);
-        object->internalClass = newClass;
+        return newClass;
     }
-    return size;
 }
 
 void InternalClass::removeMember(Object *object, uint id)
@@ -116,7 +100,7 @@ void InternalClass::removeMember(Object *object, uint id)
     for (int i = 0; i < nameMap.size(); ++i) {
         if (i == propIdx)
             continue;
-        object->internalClass->getOrAddMember(object, nameMap.at(i));
+        object->internalClass = object->internalClass->addMember(nameMap.at(i));
     }
 
     transitions.insert(toRemove, object->internalClass);

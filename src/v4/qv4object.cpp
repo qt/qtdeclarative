@@ -252,7 +252,8 @@ void Object::markObjects(Managed *that)
 
 PropertyDescriptor *Object::insertMember(String *s)
 {
-    uint idx = internalClass->getOrAddMember(this, s);
+    uint idx;
+    internalClass = internalClass->addMember(s, &idx);
 
     if (idx >= memberDataAlloc) {
         memberDataAlloc = qMax((uint)8, 2*memberDataAlloc);
