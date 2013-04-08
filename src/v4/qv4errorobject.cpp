@@ -73,96 +73,74 @@
 
 using namespace QQmlJS::VM;
 
-ErrorObject::ErrorObject(ExecutionEngine* engine, const Value &message)
-    : Object(engine)
+ErrorObject::ErrorObject(ExecutionContext *context, const Value &message, ErrorType t)
+    : Object(context->engine)
 {
     type = Type_ErrorObject;
-    subtype = Error;
+    subtype = t;
 
     if (!message.isUndefined())
-        defineDefaultProperty(engine->newString(QStringLiteral("message")), message);
-}
-
-void ErrorObject::setNameProperty(ExecutionContext *ctx)
-{
-    defineDefaultProperty(ctx, QLatin1String("name"), Value::fromString(ctx, className()));
+        defineDefaultProperty(context->engine->newString(QStringLiteral("message")), message);
+    defineDefaultProperty(context, QLatin1String("name"), Value::fromString(context, className()));
 }
 
 DEFINE_MANAGED_VTABLE(SyntaxErrorObject);
 
 SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message)
-    : ErrorObject(ctx->engine, message ? Value::fromString(message->buildFullMessage(ctx)) : ctx->argument(0))
+    : ErrorObject(ctx, message ? Value::fromString(message->buildFullMessage(ctx)) : ctx->argument(0), SyntaxError)
     , msg(message)
 {
     vtbl = &static_vtbl;
-    subtype = SyntaxError;
     prototype = ctx->engine->syntaxErrorPrototype;
-    setNameProperty(ctx);
 }
 
 
 
 EvalErrorObject::EvalErrorObject(ExecutionContext *ctx, const Value &message)
-    : ErrorObject(ctx->engine, message)
+    : ErrorObject(ctx, message, EvalError)
 {
-    subtype = EvalError;
-    setNameProperty(ctx);
     prototype = ctx->engine->evalErrorPrototype;
 }
 
 RangeErrorObject::RangeErrorObject(ExecutionContext *ctx, const Value &message)
-    : ErrorObject(ctx->engine, message)
+    : ErrorObject(ctx, message, RangeError)
 {
-    subtype = RangeError;
-    setNameProperty(ctx);
     prototype = ctx->engine->rangeErrorPrototype;
 }
 
 RangeErrorObject::RangeErrorObject(ExecutionContext *ctx, const QString &message)
-    : ErrorObject(ctx->engine, Value::fromString(ctx,message))
+    : ErrorObject(ctx, Value::fromString(ctx,message), RangeError)
 {
-    subtype = RangeError;
-    setNameProperty(ctx);
     prototype = ctx->engine->rangeErrorPrototype;
 }
 
 ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx, const Value &message)
-    : ErrorObject(ctx->engine, message)
+    : ErrorObject(ctx, message, ReferenceError)
 {
-    subtype = ReferenceError;
-    setNameProperty(ctx);
     prototype = ctx->engine->referenceErrorPrototype;
 }
 
 ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx, const QString &message)
-    : ErrorObject(ctx->engine, Value::fromString(ctx,message))
+    : ErrorObject(ctx, Value::fromString(ctx,message), ReferenceError)
 {
-    subtype = ReferenceError;
-    setNameProperty(ctx);
     prototype = ctx->engine->referenceErrorPrototype;
 }
 
 TypeErrorObject::TypeErrorObject(ExecutionContext *ctx, const Value &message)
-    : ErrorObject(ctx->engine, message)
+    : ErrorObject(ctx, message, TypeError)
 {
-    subtype = TypeError;
-    setNameProperty(ctx);
     prototype = ctx->engine->typeErrorPrototype;
 }
 
 TypeErrorObject::TypeErrorObject(ExecutionContext *ctx, const QString &message)
-    : ErrorObject(ctx->engine, Value::fromString(ctx,message))
+    : ErrorObject(ctx, Value::fromString(ctx,message), TypeError)
 {
-    subtype = TypeError;
-    setNameProperty(ctx);
     prototype = ctx->engine->typeErrorPrototype;
 }
 
 URIErrorObject::URIErrorObject(ExecutionContext *ctx, const Value &message)
-    : ErrorObject(ctx->engine, message)
+    : ErrorObject(ctx, message, URIError)
 {
-    subtype = URIError;
-    setNameProperty(ctx);
     prototype = ctx->engine->uRIErrorPrototype;
 }
 
@@ -227,7 +205,6 @@ void ErrorPrototype::init(ExecutionContext *ctx, const Value &ctor, Object *obj)
     obj->defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
     obj->defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
     obj->defineDefaultProperty(ctx, QStringLiteral("message"), Value::fromString(ctx, QString()));
-    obj->defineDefaultProperty(ctx, QStringLiteral("name"), Value::fromString(ctx, QStringLiteral("Error")));
 }
 
 Value ErrorPrototype::method_toString(SimpleCallContext *ctx)

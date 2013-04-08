@@ -62,12 +62,9 @@ struct ErrorObject: Object {
         URIError
     };
 
-    ErrorObject(ExecutionEngine* engine, const Value &message);
+    ErrorObject(ExecutionContext *context, const Value &message, ErrorType t = Error);
 
     SyntaxErrorObject *asSyntaxError();
-
-protected:
-    void setNameProperty(ExecutionContext *ctx);
 };
 
 struct EvalErrorObject: ErrorObject {
@@ -181,7 +178,7 @@ protected:
 struct ErrorPrototype: ErrorObject
 {
     // ### shouldn't be undefined
-    ErrorPrototype(ExecutionEngine* engine): ErrorObject(engine, Value::undefinedValue()) {}
+    ErrorPrototype(ExecutionContext *context): ErrorObject(context, Value::undefinedValue()) {}
     void init(ExecutionContext *ctx, const Value &ctor) { init(ctx, ctor, this); }
 
     static void init(ExecutionContext *ctx, const Value &ctor, Object *obj);
