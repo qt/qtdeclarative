@@ -136,9 +136,9 @@ struct PropertyAttributes
     void resolveConfigurable() { configurable_set = true; }
     void resolveEnumerable() { enumerable_set = true; }
 
-    bool writable() const { return m_writable; }
-    bool enumerable() const { return m_enumerable; }
-    bool configurable() const { return m_configurable; }
+    bool isWritable() const { return m_writable; }
+    bool isEnumerable() const { return m_enumerable; }
+    bool isConfigurable() const { return m_configurable; }
 
     void clearType() { m_type = Data; type_set = false; }
     void clearWritable() { m_writable = false; writable_set = false; }

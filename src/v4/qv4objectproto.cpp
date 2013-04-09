@@ -299,7 +299,7 @@ Value ObjectPrototype::method_isSealed(SimpleCallContext *ctx)
         PropertyDescriptor *pd = it.next(&name, &index);
         if (!pd)
             break;
-        if (pd->attrs.configurable())
+        if (pd->attrs.isConfigurable())
             return Value::fromBoolean(false);
     }
     return Value::fromBoolean(true);
@@ -321,7 +321,7 @@ Value ObjectPrototype::method_isFrozen(SimpleCallContext *ctx)
         PropertyDescriptor *pd = it.next(&name, &index);
         if (!pd)
             break;
-            if (pd->isWritable() || pd->isConfigurable())
+            if (pd->attrs.isWritable() || pd->attrs.isConfigurable())
             return Value::fromBoolean(false);
     }
     return Value::fromBoolean(true);
@@ -423,7 +423,7 @@ Value ObjectPrototype::method_propertyIsEnumerable(SimpleCallContext *ctx)
 
     Object *o = ctx->thisObject.toObject(ctx);
     PropertyDescriptor *pd = o->__getOwnProperty__(ctx, p);
-    return Value::fromBoolean(pd && pd->isEnumerable());
+    return Value::fromBoolean(pd && pd->attrs.isEnumerable());
 }
 
 Value ObjectPrototype::method_defineGetter(SimpleCallContext *ctx)
@@ -508,7 +508,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     }
 
     if (o->__hasProperty__(ctx, ctx->engine->id_writable)) {
-        if (desc->isAccessor())
+        if (desc->attrs.isAccessor())
             ctx->throwTypeError();
         desc->attrs.setWritable(o->get(ctx, ctx->engine->id_writable).toBoolean());
         // writable forces it to be a data descriptor
@@ -516,7 +516,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     }
 
     if (o->__hasProperty__(ctx, ctx->engine->id_value)) {
-        if (desc->isAccessor())
+        if (desc->attrs.isAccessor())
             ctx->throwTypeError();
         desc->value = o->get(ctx, ctx->engine->id_value);
         desc->attrs.setType(PropertyAttributes::Data);
@@ -537,10 +537,10 @@ Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Prope
     PropertyDescriptor pd;
     pd.attrs = Attr_Data;
 
-    if (desc->isData()) {
+    if (desc->attrs.isData()) {
         pd.value = desc->value;
         o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("value")), &pd);
-        pd.value = Value::fromBoolean(desc->attrs.writable());
+        pd.value = Value::fromBoolean(desc->attrs.isWritable());
         o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("writable")), &pd);
     } else {
         pd.value = desc->get ? Value::fromObject(desc->get) : Value::undefinedValue();
@@ -548,9 +548,9 @@ Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Prope
         pd.value = desc->set ? Value::fromObject(desc->set) : Value::undefinedValue();
         o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("set")), &pd);
     }
-    pd.value = Value::fromBoolean(desc->attrs.enumerable());
+    pd.value = Value::fromBoolean(desc->attrs.isEnumerable());
     o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("enumerable")), &pd);
-    pd.value = Value::fromBoolean(desc->attrs.configurable());
+    pd.value = Value::fromBoolean(desc->attrs.isConfigurable());
     o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("configurable")), &pd);
 
     return Value::fromObject(o);

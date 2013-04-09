@@ -96,7 +96,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     PropertyDescriptor map;
     bool isMapped = false;
     if (pd && index < (uint)mappedArguments.size())
-        isMapped = pd->isAccessor() && pd->get == context->engine->argumentsAccessors.at(index).get;
+        isMapped = pd->attrs.isAccessor() && pd->get == context->engine->argumentsAccessors.at(index).get;
 
     if (isMapped) {
         map = *pd;
@@ -111,12 +111,12 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     ctx->strictMode = strict;
     isNonStrictArgumentsObject = true;
 
-    if (isMapped && desc->isData()) {
+    if (isMapped && desc->attrs.isData()) {
         if (desc->attrs.type() != PropertyAttributes::Generic) {
             Value arg = desc->value;
             map.set->call(ctx, Value::fromObject(this), &arg, 1);
         }
-        if (desc->attrs.writable())
+        if (desc->attrs.isWritable())
             *pd = map;
     }
 

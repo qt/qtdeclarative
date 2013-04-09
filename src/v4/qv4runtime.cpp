@@ -639,7 +639,7 @@ void __qmljs_set_element(ExecutionContext *ctx, const Value &object, const Value
     uint idx = index.asArrayIndex();
     if (idx < UINT_MAX) {
         PropertyDescriptor *p = o->nonSparseArrayAt(idx);
-        if (p && p->attrs.type() == PropertyAttributes::Data && p->isWritable()) {
+        if (p && p->attrs.type() == PropertyAttributes::Data && p->attrs.isWritable()) {
             p->value = value;
             return;
         }

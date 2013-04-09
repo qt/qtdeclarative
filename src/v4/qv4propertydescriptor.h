@@ -51,6 +51,7 @@ namespace QQmlJS {
 namespace VM {
 
 struct FunctionObject;
+struct PropertyDescriptor;
 
 struct Property {
     union {
@@ -60,6 +61,28 @@ struct Property {
             FunctionObject *set;
         };
     };
+
+    // Section 8.10
+    inline void fullyPopulated(PropertyAttributes *attrs) {
+        if (!attrs->hasType()) {
+            attrs->setType(PropertyAttributes::Data);
+            value = Value::undefinedValue();
+        }
+        if (attrs->type() == PropertyAttributes::Data) {
+            attrs->resolveWritable();
+        } else {
+            attrs->clearWritable();
+            if ((quintptr)get == 0x1)
+                get = 0;
+            if ((quintptr)set == 0x1)
+                set = 0;
+        }
+        attrs->resolveEnumerable();
+        attrs->resolveConfigurable();
+    }
+
+    inline bool isSubset(const PropertyAttributes &attrs, PropertyDescriptor *other) const;
+    inline void merge(PropertyAttributes &attrs, const PropertyDescriptor &other);
 };
 
 struct PropertyDescriptor : public Property
@@ -79,79 +102,49 @@ struct PropertyDescriptor : public Property
         pd.attrs.setType(PropertyAttributes::Accessor);
         return pd;
     }
-
-    PropertyAttributes toPropertyAttributes() const {
-        return attrs;
-    }
-
-    // Section 8.10
-    inline void fullyPopulated() {
-        if (!attrs.hasType()) {
-            attrs.setType(PropertyAttributes::Data);
-            value = Value::undefinedValue();
-        }
-        if (attrs.type() == PropertyAttributes::Data) {
-            attrs.resolveWritable();
-        } else {
-            attrs.clearWritable();
-            if ((quintptr)get == 0x1)
-                get = 0;
-            if ((quintptr)set == 0x1)
-                set = 0;
-        }
-        attrs.resolveEnumerable();
-        attrs.resolveConfigurable();
-    }
-
-    inline bool isData() const { return attrs.isData(); }
-    inline bool isAccessor() const { return attrs.isAccessor(); }
-    inline bool isGeneric() const { return attrs.isGeneric(); }
-
-    inline bool isWritable() const { return attrs.writable(); }
-    inline bool isEnumerable() const { return attrs.enumerable(); }
-    inline bool isConfigurable() const { return attrs.configurable(); }
-
-    inline bool isEmpty() const {
-        return attrs.isEmpty();
-    }
-    inline bool isSubset(PropertyDescriptor *other) const {
-        if (attrs.type() != PropertyAttributes::Generic && attrs.type() != other->attrs.type())
-            return false;
-        if (attrs.hasEnumerable() && attrs.enumerable() != other->attrs.enumerable())
-            return false;
-        if (attrs.hasConfigurable() && attrs.configurable() != other->attrs.configurable())
-            return false;
-        if (attrs.hasWritable() && attrs.writable() != other->attrs.writable())
-            return false;
-        if (attrs.type() == PropertyAttributes::Data && !value.sameValue(other->value))
-            return false;
-        if (attrs.type() == PropertyAttributes::Accessor) {
-            if (get != other->get)
-                return false;
-            if (set != other->set)
-                return false;
-        }
-        return true;
-    }
-    inline void operator+=(const PropertyDescriptor &other) {
-        if (other.attrs.hasEnumerable())
-            attrs.setEnumerable(other.attrs.enumerable());
-        if (other.attrs.hasConfigurable())
-            attrs.setConfigurable(other.attrs.configurable());
-        if (other.attrs.hasWritable())
-            attrs.setWritable(other.attrs.writable());
-        if (other.attrs.type() == PropertyAttributes::Accessor) {
-            attrs.setType(PropertyAttributes::Accessor);
-            if (other.get)
-                get = ((quintptr)other.get == 0x1) ? 0 : other.get;
-            if (other.set)
-                set = ((quintptr)other.set == 0x1) ? 0 : other.set;
-        } else if (other.attrs.type() == PropertyAttributes::Data){
-            attrs.setType(PropertyAttributes::Data);
-            value = other.value;
-        }
-    }
 };
+
+inline bool Property::isSubset(const PropertyAttributes &attrs, PropertyDescriptor *other) const
+{
+    if (attrs.type() != PropertyAttributes::Generic && attrs.type() != other->attrs.type())
+        return false;
+    if (attrs.hasEnumerable() && attrs.isEnumerable() != other->attrs.isEnumerable())
+        return false;
+    if (attrs.hasConfigurable() && attrs.isConfigurable() != other->attrs.isConfigurable())
+        return false;
+    if (attrs.hasWritable() && attrs.isWritable() != other->attrs.isWritable())
+        return false;
+    if (attrs.type() == PropertyAttributes::Data && !value.sameValue(other->value))
+        return false;
+    if (attrs.type() == PropertyAttributes::Accessor) {
+        if (get != other->get)
+            return false;
+        if (set != other->set)
+            return false;
+    }
+    return true;
+}
+
+inline void Property::merge(PropertyAttributes &attrs, const PropertyDescriptor &other)
+{
+    if (other.attrs.hasEnumerable())
+        attrs.setEnumerable(other.attrs.isEnumerable());
+    if (other.attrs.hasConfigurable())
+        attrs.setConfigurable(other.attrs.isConfigurable());
+    if (other.attrs.hasWritable())
+        attrs.setWritable(other.attrs.isWritable());
+    if (other.attrs.type() == PropertyAttributes::Accessor) {
+        attrs.setType(PropertyAttributes::Accessor);
+        if (other.get)
+            get = ((quintptr)other.get == 0x1) ? 0 : other.get;
+        if (other.set)
+            set = ((quintptr)other.set == 0x1) ? 0 : other.set;
+    } else if (other.attrs.type() == PropertyAttributes::Data){
+        attrs.setType(PropertyAttributes::Data);
+        value = other.value;
+    }
+}
+
 
 } // namespace VM
 } // namespace QQmlJS

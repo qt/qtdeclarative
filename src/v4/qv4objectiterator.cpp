@@ -96,7 +96,7 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
                 int k = arrayNode->key();
                 p = current->arrayAt(k);
                 arrayNode = arrayNode->nextNode();
-                if (p && (!(flags & EnumberableOnly) || p->isEnumerable())) {
+                if (p && (!(flags & EnumberableOnly) || p->attrs.isEnumerable())) {
                     arrayIndex = k + 1;
                     *index = k;
                     return p;
@@ -109,7 +109,7 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
         while (arrayIndex < current->arrayDataLen) {
             p = current->arrayAt(arrayIndex);
             ++arrayIndex;
-            if (p && p->attrs.type() != PropertyAttributes::Generic && (!(flags & EnumberableOnly) || p->isEnumerable())) {
+            if (p && p->attrs.type() != PropertyAttributes::Generic && (!(flags & EnumberableOnly) || p->attrs.isEnumerable())) {
                 *index = arrayIndex - 1;
                 return p;
             }
@@ -138,7 +138,7 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
 
         p = current->memberData + memberIndex;
         ++memberIndex;
-        if (!(flags & EnumberableOnly) || p->isEnumerable()) {
+        if (!(flags & EnumberableOnly) || p->attrs.isEnumerable()) {
             *name = n;
             return p;
         }

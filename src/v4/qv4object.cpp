@@ -110,7 +110,7 @@ void Object::put(ExecutionContext *ctx, const QString &name, const Value &value)
 Value Object::getValue(const Value &thisObject, ExecutionContext *ctx, const PropertyDescriptor *p)
 {
     assert(p->attrs.type() != PropertyAttributes::Generic);
-    if (p->isData())
+    if (p->attrs.isData())
         return p->value;
     if (!p->get)
         return Value::undefinedValue();
@@ -120,7 +120,7 @@ Value Object::getValue(const Value &thisObject, ExecutionContext *ctx, const Pro
 
 void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value &value)
 {
-    if (pd->isAccessor()) {
+    if (pd->attrs.isAccessor()) {
             if (pd->set) {
                 Value args[1];
                 args[0] = value;
@@ -130,7 +130,7 @@ void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value
             goto reject;
     }
 
-    if (!pd->isWritable())
+    if (!pd->attrs.isWritable())
         goto reject;
 
     pd->value = value;
@@ -144,7 +144,7 @@ void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value
 
 void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value &thisObject, const Value &value)
 {
-    if (pd->isAccessor()) {
+    if (pd->attrs.isAccessor()) {
             if (pd->set) {
                 Value args[1];
                 args[0] = value;
@@ -154,7 +154,7 @@ void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value
             goto reject;
     }
 
-    if (!pd->isWritable())
+    if (!pd->attrs.isWritable())
         goto reject;
 
     pd->value = value;
@@ -231,10 +231,10 @@ void Object::markObjects(Managed *that)
 
     for (int i = 0; i < o->internalClass->size; ++i) {
         const PropertyDescriptor &pd = o->memberData[i];
-        if (pd.isData()) {
+        if (pd.attrs.isData()) {
             if (Managed *m = pd.value.asManaged())
                 m->mark();
-         } else if (pd.isAccessor()) {
+         } else if (pd.attrs.isAccessor()) {
             if (pd.get)
                 pd.get->mark();
             if (pd.set)
@@ -346,7 +346,7 @@ PropertyAttributes Object::query(Managed *m, ExecutionContext *ctx, String *name
     PropertyDescriptor *pd = that->__getPropertyDescriptor__(ctx, name);
     if (!pd || pd->attrs.type() == PropertyAttributes::Generic)
         return Attr_Invalid;
-    return pd->toPropertyAttributes();
+    return pd->attrs;
 }
 
 PropertyAttributes Object::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
@@ -355,7 +355,7 @@ PropertyAttributes Object::queryIndexed(Managed *m, ExecutionContext *ctx, uint 
     PropertyDescriptor *pd = that->__getPropertyDescriptor__(ctx, index);
     if (!pd || pd->attrs.type() == PropertyAttributes::Generic)
         return Attr_Invalid;
-    return pd->toPropertyAttributes();
+    return pd->attrs;
 }
 
 bool Object::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
@@ -447,11 +447,11 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
 
     // clause 1
     if (pd) {
-        if (pd->isAccessor()) {
+        if (pd->attrs.isAccessor()) {
                 if (pd->set)
                     goto cont;
                 goto reject;
-        } else if (!pd->isWritable())
+        } else if (!pd->attrs.isWritable())
             goto reject;
         else if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
             bool ok;
@@ -470,14 +470,14 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
             goto reject;
     } else {
         if (PropertyDescriptor *p = prototype->__getPropertyDescriptor__(ctx, name)) {
-            if (p->isAccessor()) {
+            if (p->attrs.isAccessor()) {
                 if (p->set)
                     goto cont;
                 goto reject;
             }
             if (!extensible)
                 goto reject;
-            if (!p->isWritable())
+            if (!p->attrs.isWritable())
                 goto reject;
         } else {
             if (!extensible)
@@ -493,7 +493,7 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
         pd = prototype->__getPropertyDescriptor__(ctx, name);
 
     // Clause 5
-    if (pd && pd->isAccessor()) {
+    if (pd && pd->attrs.isAccessor()) {
         assert(pd->set != 0);
 
         Value args[1];
@@ -524,11 +524,11 @@ void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &
 
     // clause 1
     if (pd) {
-        if (pd->isAccessor()) {
+        if (pd->attrs.isAccessor()) {
                 if (pd->set)
                     goto cont;
                 goto reject;
-        } else if (!pd->isWritable())
+        } else if (!pd->attrs.isWritable())
             goto reject;
         else
             pd->value = value;
@@ -538,14 +538,14 @@ void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &
             goto reject;
     } else {
         if (PropertyDescriptor *p = prototype->__getPropertyDescriptor__(ctx, index)) {
-            if (p->isAccessor()) {
+            if (p->attrs.isAccessor()) {
                 if (p->set)
                     goto cont;
                 goto reject;
             }
             if (!extensible)
                 goto reject;
-            if (!p->isWritable())
+            if (!p->attrs.isWritable())
                 goto reject;
         } else {
             if (!extensible)
@@ -560,7 +560,7 @@ void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &
         pd = prototype->__getPropertyDescriptor__(ctx, index);
 
     // Clause 5
-    if (pd && pd->isAccessor()) {
+    if (pd && pd->attrs.isAccessor()) {
         assert(pd->set != 0);
 
         Value args[1];
@@ -589,7 +589,7 @@ bool Object::internalDeleteProperty(ExecutionContext *ctx, String *name)
     uint memberIdx = internalClass->find(name);
     if (memberIdx != UINT_MAX) {
         PropertyDescriptor &pd = memberData[memberIdx];
-        if (pd.isConfigurable()) {
+        if (pd.attrs.isConfigurable()) {
             internalClass->removeMember(this, name->identifier);
             memmove(memberData + memberIdx, memberData + memberIdx + 1, (internalClass->size - memberIdx)*sizeof(PropertyDescriptor));
             return true;
@@ -617,7 +617,7 @@ bool Object::internalDeleteIndexedProperty(ExecutionContext *ctx, uint index)
     if (!pd || pd->attrs.type() == PropertyAttributes::Generic)
         return true;
 
-    if (pd->isConfigurable()) {
+    if (pd->attrs.isConfigurable()) {
         pd->attrs.clear();
         pd->value = Value::undefinedValue();
         if (sparseArray) {
@@ -646,9 +646,9 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
     if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
         PropertyDescriptor *lp = memberData + ArrayObject::LengthPropertyIndex;
         assert(0 == internalClass->find(ctx->engine->id_length));
-        if (desc->isEmpty() || desc->isSubset(lp))
+        if (desc->attrs.isEmpty() || desc->isSubset(desc->attrs, lp))
             return true;
-        if (!lp->isWritable() || desc->attrs.type() == PropertyAttributes::Accessor || desc->isConfigurable() || desc->isEnumerable())
+        if (!lp->attrs.isWritable() || desc->attrs.type() == PropertyAttributes::Accessor || desc->attrs.isConfigurable() || desc->attrs.isEnumerable())
             goto reject;
         bool succeeded = true;
         if (desc->attrs.type() == PropertyAttributes::Data) {
@@ -659,7 +659,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
             succeeded = setArrayLength(l);
         }
         if (desc->attrs.hasWritable())
-            lp->attrs.setWritable(desc->attrs.writable());
+            lp->attrs.setWritable(desc->attrs.isWritable());
         if (!succeeded)
             goto reject;
         return true;
@@ -676,9 +676,9 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
         if (!extensible)
             goto reject;
         // clause 4
-        PropertyDescriptor *pd = insertMember(name, desc->toPropertyAttributes());
+        PropertyDescriptor *pd = insertMember(name, desc->attrs);
         *pd = *desc;
-        pd->fullyPopulated();
+        pd->fullyPopulated(&pd->attrs);
         return true;
     }
 
@@ -694,7 +694,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
     PropertyDescriptor *current;
 
     // 15.4.5.1, 4b
-    if (isArrayObject() && index >= arrayLength() && !memberData[ArrayObject::LengthPropertyIndex].isWritable())
+    if (isArrayObject() && index >= arrayLength() && !memberData[ArrayObject::LengthPropertyIndex].attrs.isWritable())
         goto reject;
 
     if (isNonStrictArgumentsObject)
@@ -714,7 +714,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
         // clause 4
         PropertyDescriptor *pd = arrayInsert(index);
         *pd = *desc;
-        pd->fullyPopulated();
+        pd->fullyPopulated(&pd->attrs);
         return true;
     }
 
@@ -728,31 +728,31 @@ reject:
 bool Object::__defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *current, const PropertyDescriptor *desc)
 {
     // clause 5
-    if (desc->isEmpty())
+    if (desc->attrs.isEmpty())
         return true;
 
     // clause 6
-    if (desc->isSubset(current))
+    if (desc->isSubset(desc->attrs, current))
         return true;
 
     // clause 7
-    if (!current->isConfigurable()) {
-        if (desc->isConfigurable())
+    if (!current->attrs.isConfigurable()) {
+        if (desc->attrs.isConfigurable())
             goto reject;
-        if (desc->attrs.hasEnumerable() && desc->attrs.enumerable() != current->attrs.enumerable())
+        if (desc->attrs.hasEnumerable() && desc->attrs.isEnumerable() != current->attrs.isEnumerable())
             goto reject;
     }
 
     // clause 8
-    if (desc->isGeneric())
+    if (desc->attrs.isGeneric())
         goto accept;
 
     // clause 9
-    if (current->isData() != desc->isData()) {
+    if (current->attrs.isData() != desc->attrs.isData()) {
         // 9a
-        if (!current->isConfigurable())
+        if (!current->attrs.isConfigurable())
             goto reject;
-        if (current->isData()) {
+        if (current->attrs.isData()) {
             // 9b
             current->attrs.setType(PropertyAttributes::Accessor);
             current->attrs.clearWritable();
@@ -764,14 +764,14 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *cu
             current->attrs.setWritable(false);
             current->value = Value::undefinedValue();
         }
-    } else if (current->isData() && desc->isData()) { // clause 10
-        if (!current->isConfigurable() && !current->isWritable()) {
-            if (desc->isWritable() || !current->value.sameValue(desc->value))
+    } else if (current->attrs.isData() && desc->attrs.isData()) { // clause 10
+        if (!current->attrs.isConfigurable() && !current->attrs.isWritable()) {
+            if (desc->attrs.isWritable() || !current->value.sameValue(desc->value))
                 goto reject;
         }
     } else { // clause 10
-        assert(current->isAccessor() && desc->isAccessor());
-        if (!current->isConfigurable()) {
+        assert(current->attrs.isAccessor() && desc->attrs.isAccessor());
+        if (!current->attrs.isConfigurable()) {
             if (desc->get && !(current->get == desc->get || (!current->get && (quintptr)desc->get == 0x1)))
                 goto reject;
             if (desc->set && !(current->set == desc->set || (!current->set && (quintptr)desc->set == 0x1)))
@@ -781,7 +781,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *cu
 
   accept:
 
-    *current += *desc;
+    current->merge(current->attrs, *desc);
     return true;
   reject:
     if (ctx->strictMode)
@@ -973,7 +973,7 @@ void Object::arrayReserve(uint n)
 bool Object::setArrayLength(uint newLen) {
     assert(isArrayObject());
     const PropertyDescriptor *lengthProperty = memberData + ArrayObject::LengthPropertyIndex;
-    if (lengthProperty && !lengthProperty->isWritable())
+    if (lengthProperty && !lengthProperty->attrs.isWritable())
         return false;
     uint oldLen = arrayLength();
     bool ok = true;
@@ -984,7 +984,7 @@ bool Object::setArrayLength(uint newLen) {
                 SparseArrayNode *it = sparseArray->end()->previousNode();
                 while (1) {
                     PropertyDescriptor &pd = arrayData[it->value];
-                    if (pd.attrs.type() != PropertyAttributes::Generic && !pd.isConfigurable()) {
+                    if (pd.attrs.type() != PropertyAttributes::Generic && !pd.attrs.isConfigurable()) {
                         ok = false;
                         newLen = it->key() + 1;
                         break;
@@ -1005,7 +1005,7 @@ bool Object::setArrayLength(uint newLen) {
             PropertyDescriptor *it = arrayData + arrayDataLen;
             const PropertyDescriptor *begin = arrayData + newLen;
             while (--it >= begin) {
-                if (it->attrs.type() != PropertyAttributes::Generic && !it->isConfigurable()) {
+                if (it->attrs.type() != PropertyAttributes::Generic && !it->attrs.isConfigurable()) {
                     ok = false;
                     newLen = it - arrayData + 1;
                     break;
@@ -1025,10 +1025,10 @@ void Object::markArrayObjects() const
 {
     for (uint i = 0; i < arrayDataLen; ++i) {
         const PropertyDescriptor &pd = arrayData[i];
-        if (pd.isData()) {
+        if (pd.attrs.isData()) {
             if (Managed *m = pd.value.asManaged())
                 m->mark();
-         } else if (pd.isAccessor()) {
+         } else if (pd.attrs.isAccessor()) {
             if (pd.get)
                 pd.get->mark();
             if (pd.set)
