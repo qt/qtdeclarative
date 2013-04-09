@@ -192,7 +192,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, c
 
 void Object::defineDefaultProperty(String *name, Value value)
 {
-    PropertyDescriptor *pd = insertMember(name, Attr_Data);
+    PropertyDescriptor *pd = insertMember(name, Attr_Data|Attr_NotEnumerable);
     pd->attrs = Attr_Data|Attr_NotEnumerable;
     pd->value = value;
 }
@@ -658,8 +658,8 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
                 ctx->throwRangeError(desc->value);
             succeeded = setArrayLength(l);
         }
-        if (desc->attrs.hasWritable())
-            lp->attrs.setWritable(desc->attrs.isWritable());
+        if (desc->attrs.hasWritable() && !desc->attrs.isWritable())
+            lp->attrs.setWritable(false);
         if (!succeeded)
             goto reject;
         return true;

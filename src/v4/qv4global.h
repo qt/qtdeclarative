@@ -102,13 +102,15 @@ struct PropertyAttributes
     PropertyAttributes() : m_all(0) {}
     PropertyAttributes(PropertyFlag f) : m_all(0) {
         setType(f & Attr_Accessor ? Accessor : Data);
-        setWritable(!(f & Attr_NotWritable));
+        if (!(f & Attr_Accessor))
+            setWritable(!(f & Attr_NotWritable));
         setEnumerable(!(f & Attr_NotEnumerable));
         setConfigurable(!(f & Attr_NotConfigurable));
     }
     PropertyAttributes(PropertyFlags f) : m_all(0) {
         setType(f & Attr_Accessor ? Accessor : Data);
-        setWritable(!(f & Attr_NotWritable));
+        if (!(f & Attr_Accessor))
+            setWritable(!(f & Attr_NotWritable));
         setEnumerable(!(f & Attr_NotEnumerable));
         setConfigurable(!(f & Attr_NotConfigurable));
     }
