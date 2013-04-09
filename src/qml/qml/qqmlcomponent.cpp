@@ -193,7 +193,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     \qmltype Component
     \instantiates QQmlComponent
     \ingroup qml-utility-elements
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQml 2
     \brief Encapsulates a QML component definition
 
     Components are reusable, encapsulated QML types with well-defined interfaces.
@@ -300,7 +300,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 
 /*!
     \enum QQmlComponent::Status
-    
+
     Specifies the loading status of the QQmlComponent.
 
     \value Null This QQmlComponent has no data.  Call loadUrl() or setData() to add QML content.
@@ -600,7 +600,7 @@ void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
     d->url = url;
 
     QQmlTypeData *typeData = QQmlEnginePrivate::get(d->engine)->typeLoader.getType(data, url);
-    
+
     if (typeData->isCompleteOrError()) {
         d->fromTypeData(typeData);
     } else {
@@ -1313,7 +1313,7 @@ void QQmlComponent::incubateObject(QQmlV8Function *args)
     }
 
     QQmlComponentExtension *e = componentExtension(args->engine());
-    
+
     QV8IncubatorResource *r = new QV8IncubatorResource(args->engine(), mode);
     v8::Local<v8::Object> o = e->incubationConstructor->NewInstance();
     o->SetExternalResource(r);
@@ -1475,7 +1475,7 @@ void QV8IncubatorResource::setInitialState(QObject *o)
         qPersistentDispose(qmlGlobal);
     }
 }
-    
+
 void QV8IncubatorResource::dispose()
 {
     qPersistentDispose(valuemap);

@@ -27,7 +27,7 @@
 
 /*!
     \qmltype String
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQml 2
     \brief The String object represents a string value
 
     The QML String object extends the JS String object with
@@ -48,4 +48,3 @@
     console.log(message.arg(count))
     \endcode
 */
-

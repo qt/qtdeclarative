@@ -44,7 +44,6 @@
 
 /*!
     \page qtquick-effects-particles.html
-    \inqmlmodule QtQuick.Particles 2.0
     \title Using the Qt Quick Particle System
 
     Documentation for all Particle System types can be found on the \l{QtQuick.Particles 2}{QtQuick.Particles} module page.
@@ -132,7 +131,6 @@
 
 /*!
     \page qtquick-particles-performance.html
-    \inqmlmodule QtQuick 2.0
     \title Particle System Performance Guide
 
     The performance of the particle system scales with the number of particles it is maintaining. After prototyping the desired

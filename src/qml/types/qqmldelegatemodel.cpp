@@ -121,7 +121,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 /*!
     \qmltype VisualDataModel
     \instantiates QQmlDelegateModel
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQml 2
     \ingroup qtquick-models
     \brief Encapsulates a model and delegate
 
@@ -2140,7 +2140,7 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
 /*!
     \qmltype DelegateModelGroup
     \instantiates QQmlDelegateModelGroup
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQml 2
     \ingroup qtquick-models
     \brief Encapsulates a filtered set of visual data items
 
@@ -3186,4 +3186,3 @@ v8::Local<v8::Object> QQmlDelegateModelEngineData::array(
 }
 
 QT_END_NAMESPACE
-
