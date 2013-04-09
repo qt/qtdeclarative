@@ -100,10 +100,10 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
         return;
     PropertyDescriptor desc;
     desc.value = Value::undefinedValue();
-    desc.type = PropertyDescriptor::Data;
-    desc.configurable = deletable ? PropertyDescriptor::Enabled : PropertyDescriptor::Disabled;
-    desc.writable = PropertyDescriptor::Enabled;
-    desc.enumerable = PropertyDescriptor::Enabled;
+    desc.attrs.setType(PropertyAttributes::Data);
+    desc.attrs.setConfigurable(deletable);
+    desc.attrs.setWritable(true);
+    desc.attrs.setEnumerable(true);
     activation->__defineOwnProperty__(this, name, &desc);
 }
 
@@ -207,10 +207,7 @@ void CallContext::initCallContext(ExecutionEngine *engine)
         activation = engine->newObject();
         PropertyDescriptor desc;
         desc.value = Value::fromObject(args);
-        desc.type = PropertyDescriptor::Data;
-        desc.configurable = PropertyDescriptor::Disabled;
-        desc.writable = PropertyDescriptor::Enabled;
-        desc.enumerable = PropertyDescriptor::Enabled;
+        desc.attrs = PropertyAttributes(Attr_NotConfigurable);
         activation->__defineOwnProperty__(this, engine->id_arguments, &desc);
     }
 }

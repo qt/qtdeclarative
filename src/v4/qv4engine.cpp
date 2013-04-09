@@ -483,8 +483,8 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
         FunctionObject *set = new (memoryManager) ArgumentsSetterFunction(rootContext, i);
         set->prototype = functionPrototype;
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(get, set);
-        pd.configurable = PropertyDescriptor::Enabled;
-        pd.enumerable = PropertyDescriptor::Enabled;
+        pd.attrs.setConfigurable(true);
+        pd.attrs.setEnumerable(true);
         argumentsAccessors[i] = pd;
     }
 }

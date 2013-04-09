@@ -109,7 +109,7 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
         while (arrayIndex < current->arrayDataLen) {
             p = current->arrayAt(arrayIndex);
             ++arrayIndex;
-            if (p && p->type != PropertyDescriptor::Generic && (!(flags & EnumberableOnly) || p->isEnumerable())) {
+            if (p && p->attrs.type() != PropertyAttributes::Generic && (!(flags & EnumberableOnly) || p->isEnumerable())) {
                 *index = arrayIndex - 1;
                 return p;
             }

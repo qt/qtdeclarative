@@ -107,7 +107,7 @@ Value String::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProp
         return Value::fromInt32(that->_text.length());
     }
     PropertyDescriptor *pd = ctx->engine->stringPrototype->__getPropertyDescriptor__(ctx, name);
-    if (!pd || pd->type == PropertyDescriptor::Generic) {
+    if (!pd || pd->attrs.type() == PropertyAttributes::Generic) {
         if (hasProperty)
             *hasProperty = false;
         return Value::undefinedValue();
@@ -126,7 +126,7 @@ Value String::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *ha
         return Value::fromString(ctx, that->toQString().mid(index, 1));
     }
     PropertyDescriptor *pd = ctx->engine->stringPrototype->__getPropertyDescriptor__(ctx, index);
-    if (!pd || pd->type == PropertyDescriptor::Generic) {
+    if (!pd || pd->attrs.type() == PropertyAttributes::Generic) {
         if (hasProperty)
             *hasProperty = false;
         return Value::undefinedValue();

@@ -75,10 +75,7 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, RegExp* value, bool global)
 
     PropertyDescriptor *lastIndexProperty = insertMember(engine->newIdentifier(QStringLiteral("lastIndex")),
                                                          Attr_NotEnumerable|Attr_NotConfigurable);
-    lastIndexProperty->type = PropertyDescriptor::Data;
-    lastIndexProperty->writable = PropertyDescriptor::Enabled;
-    lastIndexProperty->enumerable = PropertyDescriptor::Disabled;
-    lastIndexProperty->configurable = PropertyDescriptor::Disabled;
+    lastIndexProperty->attrs = Attr_NotEnumerable|Attr_NotConfigurable;
     lastIndexProperty->value = Value::fromInt32(0);
     if (!this->value)
         return;

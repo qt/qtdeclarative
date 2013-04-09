@@ -83,10 +83,7 @@ StringObject::StringObject(ExecutionContext *ctx, const Value &value)
     vtbl = &static_vtbl;
     type = Type_StringObject;
 
-    tmpProperty.type = PropertyDescriptor::Data;
-    tmpProperty.enumerable = PropertyDescriptor::Enabled;
-    tmpProperty.writable = PropertyDescriptor::Disabled;
-    tmpProperty.configurable = PropertyDescriptor::Disabled;
+    tmpProperty.attrs = Attr_NotWritable|Attr_NotConfigurable;
     tmpProperty.value = Value::undefinedValue();
 
     assert(value.isString());

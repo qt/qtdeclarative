@@ -342,17 +342,13 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     Object *proto = scope->engine->newObject();
     proto->defineDefaultProperty(scope->engine->id_constructor, Value::fromObject(this));
     PropertyDescriptor *pd = insertMember(scope->engine->id_prototype, Attr_NotEnumerable|Attr_NotConfigurable);
-    pd->type = PropertyDescriptor::Data;
-    pd->writable = PropertyDescriptor::Enabled;
-    pd->enumerable = PropertyDescriptor::Disabled;
-    pd->configurable = PropertyDescriptor::Disabled;
+    pd->attrs = Attr_Data|Attr_NotEnumerable|Attr_NotConfigurable;
     pd->value = Value::fromObject(proto);
 
     if (scope->strictMode) {
         FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
-        pd.configurable = PropertyDescriptor::Disabled;
-        pd.enumerable = PropertyDescriptor::Disabled;
+        pd.attrs = Attr_Accessor|Attr_NotEnumerable|Attr_NotConfigurable;
         __defineOwnProperty__(scope, QStringLiteral("caller"), &pd);
         __defineOwnProperty__(scope, QStringLiteral("arguments"), &pd);
     }
@@ -480,8 +476,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
 
     FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
     PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
-    pd.configurable = PropertyDescriptor::Disabled;
-    pd.enumerable = PropertyDescriptor::Disabled;
+    pd.attrs = Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable;
     *insertMember(scope->engine->id_arguments, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
     *insertMember(scope->engine->id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
 }

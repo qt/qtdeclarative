@@ -55,9 +55,9 @@ namespace VM {
 
 bool ArrayElementLessThan::operator()(const PropertyDescriptor &p1, const PropertyDescriptor &p2) const
 {
-    if (p1.type == PropertyDescriptor::Generic)
+    if (p1.attrs.type() == PropertyAttributes::Generic)
         return false;
-    if (p2.type == PropertyDescriptor::Generic)
+    if (p2.attrs.type() == PropertyAttributes::Generic)
         return true;
     Value v1 = thisObject->getValue(m_context, &p1);
     Value v2 = thisObject->getValue(m_context, &p2);

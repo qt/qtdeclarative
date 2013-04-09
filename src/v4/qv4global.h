@@ -61,7 +61,7 @@ namespace VM {
 
 
 enum PropertyFlag {
-    Attr_Default = 0,
+    Attr_Data = 0,
     Attr_Accessor = 0x1,
     Attr_NotWritable = 0x2,
     Attr_NotEnumerable = 0x4,
@@ -103,13 +103,13 @@ struct PropertyAttributes
     PropertyAttributes(PropertyFlag f) : m_all(0) {
         setType(f & Attr_Accessor ? Accessor : Data);
         setWritable(!(f & Attr_NotWritable));
-        setEnumberable(!(f & Attr_NotEnumerable));
+        setEnumerable(!(f & Attr_NotEnumerable));
         setConfigurable(!(f & Attr_NotConfigurable));
     }
     PropertyAttributes(PropertyFlags f) : m_all(0) {
         setType(f & Attr_Accessor ? Accessor : Data);
         setWritable(!(f & Attr_NotWritable));
-        setEnumberable(!(f & Attr_NotEnumerable));
+        setEnumerable(!(f & Attr_NotEnumerable));
         setConfigurable(!(f & Attr_NotConfigurable));
     }
     PropertyAttributes(const PropertyAttributes &other) : m_all(other.m_all) {}
@@ -118,13 +118,37 @@ struct PropertyAttributes
     void setType(Type t) { m_type = t; type_set = true; }
     Type type() const { return type_set ? (Type)m_type : Generic; }
 
+    bool isData() const { return type() == PropertyAttributes::Data || writable_set; }
+    bool isAccessor() const { return type() == PropertyAttributes::Accessor; }
+    bool isGeneric() const { return type() == PropertyAttributes::Generic && !writable_set; }
+
+    bool hasType() const { return type_set; }
+    bool hasWritable() const { return writable_set; }
+    bool hasConfigurable() const { return configurable_set; }
+    bool hasEnumerable() const { return enumerable_set; }
+
     void setWritable(bool b) { m_writable = b; writable_set = true; }
     void setConfigurable(bool b) { m_configurable = b; configurable_set = true; }
-    void setEnumberable(bool b) { m_enumerable = b; enumerable_set = true; }
+    void setEnumerable(bool b) { m_enumerable = b; enumerable_set = true; }
+
+    void resolveType() { type_set = true; }
+    void resolveWritable() { writable_set = true; }
+    void resolveConfigurable() { configurable_set = true; }
+    void resolveEnumerable() { enumerable_set = true; }
 
     bool writable() const { return m_writable; }
     bool enumerable() const { return m_enumerable; }
     bool configurable() const { return m_configurable; }
+
+    void clearType() { m_type = Data; type_set = false; }
+    void clearWritable() { m_writable = false; writable_set = false; }
+    void clearEnumerable() { m_enumerable = false; enumerable_set = false; }
+    void clearConfigurable() { m_configurable = false; configurable_set = false; }
+
+    void clear() { m_all = 0; }
+    bool isEmpty() const { return !m_all; }
+
+    uint flags() const { return m_flags; }
 };
 
 }

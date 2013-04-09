@@ -614,7 +614,7 @@ void __qmljs_get_element(ExecutionContext *ctx, Value *result, const Value &obje
 
     if (idx < UINT_MAX) {
         const PropertyDescriptor *p = o->nonSparseArrayAt(idx);
-        if (p && p->type == PropertyDescriptor::Data) {
+        if (p && p->attrs.type() == PropertyAttributes::Data) {
             if (result)
                 *result = p->value;
             return;
@@ -639,7 +639,7 @@ void __qmljs_set_element(ExecutionContext *ctx, const Value &object, const Value
     uint idx = index.asArrayIndex();
     if (idx < UINT_MAX) {
         PropertyDescriptor *p = o->nonSparseArrayAt(idx);
-        if (p && p->type == PropertyDescriptor::Data && p->isWritable()) {
+        if (p && p->attrs.type() == PropertyAttributes::Data && p->isWritable()) {
             p->value = value;
             return;
         }
@@ -702,7 +702,7 @@ void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Val
     if (Object *o = object.asObject()) {
         PropertyDescriptor *p = l->lookup(o);
         if (p)
-            res = p->type == PropertyDescriptor::Data ? p->value : o->getValue(ctx, p);
+            res = p->attrs.type() == PropertyAttributes::Data ? p->value : o->getValue(ctx, p);
         else
             res = Value::undefinedValue();
     } else {
@@ -864,7 +864,7 @@ void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, cons
     PropertyDescriptor *p = l->lookup(baseObject);
     if (!p)
         context->throwTypeError();
-    Value func = p->type == PropertyDescriptor::Data ? p->value : baseObject->getValue(context, p);
+    Value func = p->attrs.type() == PropertyAttributes::Data ? p->value : baseObject->getValue(context, p);
     FunctionObject *o = func.asFunctionObject();
     if (!o)
         context->throwTypeError();
@@ -1210,12 +1210,9 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const Value &object,
     assert(o);
 
     uint idx = name->asArrayIndex();
-    PropertyDescriptor *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(name, Attr_Default);
+    PropertyDescriptor *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(name, Attr_Data);
     pd->value = val ? *val : Value::undefinedValue();
-    pd->type = PropertyDescriptor::Data;
-    pd->writable = PropertyDescriptor::Enabled;
-    pd->enumerable = PropertyDescriptor::Enabled;
-    pd->configurable = PropertyDescriptor::Enabled;
+    pd->attrs = PropertyAttributes(Attr_Data);
 }
 
 void __qmljs_builtin_define_array(ExecutionContext *ctx, Value *array, Value *values, uint length)
@@ -1230,16 +1227,10 @@ void __qmljs_builtin_define_array(ExecutionContext *ctx, Value *array, Value *va
         for (uint i = 0; i < length; ++i) {
             if (values[i].isUndefined() && values[i].uint_32 == UINT_MAX) {
                 pd->value = Value::undefinedValue();
-                pd->type = PropertyDescriptor::Generic;
-                pd->writable = PropertyDescriptor::Undefined;
-                pd->enumerable = PropertyDescriptor::Undefined;
-                pd->configurable = PropertyDescriptor::Undefined;
+                pd->attrs.clear();
             } else {
                 pd->value = values[i];
-                pd->type = PropertyDescriptor::Data;
-                pd->writable = PropertyDescriptor::Enabled;
-                pd->enumerable = PropertyDescriptor::Enabled;
-                pd->configurable = PropertyDescriptor::Enabled;
+                pd->attrs = PropertyAttributes(Attr_Data);
             }
             ++pd;
         }
@@ -1258,10 +1249,7 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &ob
     PropertyDescriptor *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(name, Attr_Accessor);
     pd->get = getter ? getter->asFunctionObject() : 0;
     pd->set = setter ? setter->asFunctionObject() : 0;
-    pd->type = PropertyDescriptor::Accessor;
-    pd->writable = PropertyDescriptor::Undefined;
-    pd->enumerable = PropertyDescriptor::Enabled;
-    pd->configurable = PropertyDescriptor::Enabled;
+    pd->attrs = Attr_Accessor;
 }
 
 void __qmljs_increment(ExecutionContext *ctx, Value *result, const Value &value)

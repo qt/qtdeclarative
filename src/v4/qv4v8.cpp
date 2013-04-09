@@ -922,12 +922,10 @@ bool Object::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSet
     assert(o);
     PropertyAttributes attrs = Attr_Accessor;
     attrs.setConfigurable(!(attribute & DontDelete));
-    attrs.setEnumberable(!(attribute & DontEnum));
+    attrs.setEnumerable(!(attribute & DontEnum));
     VM::PropertyDescriptor *pd = o->insertMember(name->asVMString(), attrs);
     *pd = VM::PropertyDescriptor::fromAccessor(wrappedGetter, wrappedSetter);
-    pd->writable = VM::PropertyDescriptor::Undefined;
-    pd->configurable = attribute & DontDelete ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
-    pd->enumerable = attribute & DontEnum ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
+    pd->attrs = attrs;
     return true;
 }
 
@@ -1429,13 +1427,11 @@ public:
         foreach (const ObjectTemplate::Accessor &acc, m_template->m_accessors) {
             PropertyAttributes attrs = Attr_Accessor;
             attrs.setConfigurable(!(acc.attribute & DontDelete));
-            attrs.setEnumberable(!(acc.attribute & DontEnum));
+            attrs.setEnumerable(!(acc.attribute & DontEnum));
             VM::PropertyDescriptor *pd = this->insertMember(acc.name->asVMString(), attrs);
             *pd = VM::PropertyDescriptor::fromAccessor(acc.getter->vmValue().asFunctionObject(),
                                                        acc.setter->vmValue().asFunctionObject());
-            pd->writable = VM::PropertyDescriptor::Undefined;
-            pd->configurable = acc.attribute & DontDelete ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
-            pd->enumerable = acc.attribute & DontEnum ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
+            pd->attrs = attrs;
         }
 
         initProperties(m_template.get());
@@ -1444,15 +1440,13 @@ public:
     void initProperties(Template *tmpl)
     {
         foreach (const Template::Property &p, tmpl->m_properties) {
-            PropertyAttributes attrs = Attr_Default;
+            PropertyAttributes attrs = Attr_Data;
             attrs.setConfigurable(!(p.attributes & DontDelete));
-            attrs.setEnumberable(!(p.attributes & DontEnum));
+            attrs.setEnumerable(!(p.attributes & DontEnum));
             attrs.setWritable(!(p.attributes & ReadOnly));
             VM::PropertyDescriptor *pd = this->insertMember(p.name->asVMString(), attrs);
             *pd = VM::PropertyDescriptor::fromValue(p.value->vmValue());
-            pd->writable = p.attributes & ReadOnly ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
-            pd->configurable = p.attributes & DontDelete ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
-            pd->enumerable = p.attributes & DontEnum ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
+            pd->attrs = attrs;
         }
     }
 
@@ -1554,7 +1548,7 @@ protected:
         PropertyAttributes flags;
         int intAttr = attr->ToInt32()->Value();
         flags.setWritable(!(intAttr & ReadOnly));
-        flags.setEnumberable(!(intAttr & DontEnum));
+        flags.setEnumerable(!(intAttr & DontEnum));
         flags.setConfigurable(!(intAttr & DontDelete));
         return flags;
     }

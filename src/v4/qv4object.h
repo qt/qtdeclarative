@@ -135,11 +135,11 @@ struct Q_V4_EXPORT Object: Managed {
 
     bool __hasProperty__(const ExecutionContext *ctx, String *name) const {
         PropertyDescriptor *pd = __getPropertyDescriptor__(ctx, name);
-        return pd && pd->type != PropertyDescriptor::Generic;
+        return pd && pd->attrs.type() != PropertyAttributes::Generic;
     }
     bool __hasProperty__(const ExecutionContext *ctx, uint index) const {
         PropertyDescriptor *pd = __getPropertyDescriptor__(ctx, index);
-        return pd && pd->type != PropertyDescriptor::Generic;
+        return pd && pd->attrs.type() != PropertyAttributes::Generic;
     }
 
     bool __defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *current, const PropertyDescriptor *desc);
@@ -157,12 +157,12 @@ struct Q_V4_EXPORT Object: Managed {
         return getValue(Value::fromObject(const_cast<Object *>(this)), ctx, p);
     }
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p) const {
-        if (!p || p->type == PropertyDescriptor::Generic)
+        if (!p || p->attrs.type() == PropertyAttributes::Generic)
             return Value::undefinedValue();
         return getValue(Value::fromObject(const_cast<Object *>(this)), ctx, p);
     }
     Value getValueChecked(ExecutionContext *ctx, const PropertyDescriptor *p, bool *exists) const {
-        *exists = p && p->type != PropertyDescriptor::Generic;
+        *exists = p && p->attrs.type() != PropertyAttributes::Generic;
         if (!*exists)
             return Value::undefinedValue();
         return getValue(Value::fromObject(const_cast<Object *>(this)), ctx, p);
@@ -189,10 +189,7 @@ struct Q_V4_EXPORT Object: Managed {
 
     static void fillDescriptor(PropertyDescriptor *pd, Value v)
     {
-        pd->type = PropertyDescriptor::Data;
-        pd->writable = PropertyDescriptor::Enabled;
-        pd->enumerable = PropertyDescriptor::Enabled;
-        pd->configurable = PropertyDescriptor::Enabled;
+        pd->attrs = PropertyAttributes(Attr_Data);
         pd->value = v;
     }
 
@@ -212,7 +209,7 @@ struct Q_V4_EXPORT Object: Managed {
     }
     void freeArrayValue(int idx) {
         PropertyDescriptor &pd = arrayData[idx];
-        pd.type = PropertyDescriptor::Generic;
+        pd.attrs.clear();
         pd.value.tag = Value::_Undefined_Type;
         pd.value.int_32 = arrayFreeList;
         arrayFreeList = idx;
@@ -250,8 +247,7 @@ public:
                 arrayReserve(index + 1);
             if (index >= arrayDataLen) {
                 for (uint i = arrayDataLen; i < index; ++i) {
-                    arrayData[i].type = PropertyDescriptor::Generic;
-                    arrayData[i].writable = PropertyDescriptor::Undefined;
+                    arrayData[i].attrs.clear();
                     arrayData[i].value.tag = Value::_Undefined_Type;
                 }
                 arrayDataLen = index + 1;

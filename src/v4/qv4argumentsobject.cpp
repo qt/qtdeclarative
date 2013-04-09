@@ -64,8 +64,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context, int formalParameterCount,
             Object::put(context, QString::number(i), context->arguments[i]);
         FunctionObject *thrower = context->engine->newBuiltinFunction(context, 0, throwTypeError);
         PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
-        pd.configurable = PropertyDescriptor::Disabled;
-        pd.enumerable = PropertyDescriptor::Disabled;
+        pd.attrs = Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable;
         __defineOwnProperty__(context, QStringLiteral("callee"), &pd);
         __defineOwnProperty__(context, QStringLiteral("caller"), &pd);
     } else {
@@ -76,10 +75,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context, int formalParameterCount,
             __defineOwnProperty__(context, i, &context->engine->argumentsAccessors.at(i));
         }
         PropertyDescriptor pd;
-        pd.type = PropertyDescriptor::Data;
-        pd.writable = PropertyDescriptor::Enabled;
-        pd.configurable = PropertyDescriptor::Enabled;
-        pd.enumerable = PropertyDescriptor::Enabled;
+        pd.attrs = Attr_Data;
         for (uint i = numAccessors; i < qMin((uint)actualParameterCount, context->argumentCount); ++i) {
             pd.value = context->argument(i);
             __defineOwnProperty__(context, i, &pd);
@@ -104,10 +100,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
     if (isMapped) {
         map = *pd;
-        pd->type = PropertyDescriptor::Data;
-        pd->writable = PropertyDescriptor::Enabled;
-        pd->configurable = PropertyDescriptor::Enabled;
-        pd->enumerable = PropertyDescriptor::Enabled;
+        pd->attrs = Attr_Data;
         pd->value = mappedArguments.at(index);
     }
 
@@ -119,11 +112,11 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     isNonStrictArgumentsObject = true;
 
     if (isMapped && desc->isData()) {
-        if (desc->type != PropertyDescriptor::Generic) {
+        if (desc->attrs.type() != PropertyAttributes::Generic) {
             Value arg = desc->value;
             map.set->call(ctx, Value::fromObject(this), &arg, 1);
         }
-        if (desc->writable != PropertyDescriptor::Disabled)
+        if (desc->attrs.writable())
             *pd = map;
     }
 

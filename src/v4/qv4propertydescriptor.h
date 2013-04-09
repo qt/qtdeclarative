@@ -64,95 +64,68 @@ struct Property {
 
 struct PropertyDescriptor : public Property
 {
-    enum Type {
-        Generic,
-        Data,
-        Accessor
-    };
-    enum State {
-        Undefined,
-        Disabled,
-        Enabled
-    };
-    uint type : 8;
-    uint writable : 8;
-    uint enumerable : 8;
-    uint configurable : 8;
+    PropertyAttributes attrs;
 
     static inline PropertyDescriptor fromValue(Value v) {
         PropertyDescriptor pd;
         pd.value = v;
-        pd.type = Data;
-        pd.writable = Undefined;
-        pd.enumerable = Undefined;
-        pd.configurable = Undefined;
+        pd.attrs.setType(PropertyAttributes::Data);
         return pd;
     }
     static inline PropertyDescriptor fromAccessor(FunctionObject *getter, FunctionObject *setter) {
         PropertyDescriptor pd;
         pd.get = getter;
         pd.set = setter;
-        pd.type = Accessor;
-        pd.writable = Undefined;
-        pd.enumerable = Undefined;
-        pd.configurable = Undefined;
+        pd.attrs.setType(PropertyAttributes::Accessor);
         return pd;
     }
 
     PropertyAttributes toPropertyAttributes() const {
-        PropertyAttributes attrs;
-        attrs.setType(type == Accessor ? PropertyAttributes::Accessor : PropertyAttributes::Data);
-        attrs.setWritable(writable == Enabled);
-        attrs.setEnumberable(enumerable == Enabled);
-        attrs.setConfigurable(configurable == Enabled);
         return attrs;
     }
 
     // Section 8.10
     inline void fullyPopulated() {
-        if (type == Generic) {
-            type = Data;
+        if (!attrs.hasType()) {
+            attrs.setType(PropertyAttributes::Data);
             value = Value::undefinedValue();
         }
-        if (type == Data) {
-            if (writable == Undefined)
-                writable = Disabled;
+        if (attrs.type() == PropertyAttributes::Data) {
+            attrs.resolveWritable();
         } else {
-            writable = Undefined;
+            attrs.clearWritable();
             if ((quintptr)get == 0x1)
                 get = 0;
             if ((quintptr)set == 0x1)
                 set = 0;
         }
-        if (enumerable == Undefined)
-            enumerable = Disabled;
-        if (configurable == Undefined)
-            configurable = Disabled;
+        attrs.resolveEnumerable();
+        attrs.resolveConfigurable();
     }
 
-    inline bool isData() const { return type == Data || writable != Undefined; }
-    inline bool isAccessor() const { return type == Accessor; }
-    inline bool isGeneric() const { return type == Generic && writable == Undefined; }
+    inline bool isData() const { return attrs.isData(); }
+    inline bool isAccessor() const { return attrs.isAccessor(); }
+    inline bool isGeneric() const { return attrs.isGeneric(); }
 
-    inline bool isWritable() const { return writable == Enabled; }
-    inline bool isEnumerable() const { return enumerable == Enabled; }
-    inline bool isConfigurable() const { return configurable == Enabled; }
+    inline bool isWritable() const { return attrs.writable(); }
+    inline bool isEnumerable() const { return attrs.enumerable(); }
+    inline bool isConfigurable() const { return attrs.configurable(); }
 
     inline bool isEmpty() const {
-        return type == Generic && writable == Undefined && enumerable == Undefined && configurable == Undefined;
+        return attrs.isEmpty();
     }
     inline bool isSubset(PropertyDescriptor *other) const {
-        if (type != Generic && type != other->type)
+        if (attrs.type() != PropertyAttributes::Generic && attrs.type() != other->attrs.type())
             return false;
-        if (enumerable != Undefined && enumerable != other->enumerable)
+        if (attrs.hasEnumerable() && attrs.enumerable() != other->attrs.enumerable())
             return false;
-        if (configurable != Undefined && configurable != other->configurable)
+        if (attrs.hasConfigurable() && attrs.configurable() != other->attrs.configurable())
             return false;
-        if (writable != Undefined && writable != other->writable)
+        if (attrs.hasWritable() && attrs.writable() != other->attrs.writable())
             return false;
-        if (type == Data && !value.sameValue(other->value))
+        if (attrs.type() == PropertyAttributes::Data && !value.sameValue(other->value))
             return false;
-        if (type == Accessor) {
+        if (attrs.type() == PropertyAttributes::Accessor) {
             if (get != other->get)
                 return false;
             if (set != other->set)
@@ -161,20 +134,20 @@ struct PropertyDescriptor : public Property
         return true;
     }
     inline void operator+=(const PropertyDescriptor &other) {
-        if (other.enumerable != Undefined)
-            enumerable = other.enumerable;
-        if (other.configurable != Undefined)
-            configurable = other.configurable;
-        if (other.writable != Undefined)
-            writable = other.writable;
-        if (other.type == Accessor) {
-            type = Accessor;
+        if (other.attrs.hasEnumerable())
+            attrs.setEnumerable(other.attrs.enumerable());
+        if (other.attrs.hasConfigurable())
+            attrs.setConfigurable(other.attrs.configurable());
+        if (other.attrs.hasWritable())
+            attrs.setWritable(other.attrs.writable());
+        if (other.attrs.type() == PropertyAttributes::Accessor) {
+            attrs.setType(PropertyAttributes::Accessor);
             if (other.get)
                 get = ((quintptr)other.get == 0x1) ? 0 : other.get;
             if (other.set)
                 set = ((quintptr)other.set == 0x1) ? 0 : other.set;
-        } else if (other.type == Data){
-            type = Data;
+        } else if (other.attrs.type() == PropertyAttributes::Data){
+            attrs.setType(PropertyAttributes::Data);
             value = other.value;
         }
     }

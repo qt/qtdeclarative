@@ -337,7 +337,7 @@ Value ArrayPrototype::method_shift(SimpleCallContext *ctx)
         if (n)
             front = instance->arrayDecriptor(n->value);
     }
-    if (front && front->type == PropertyDescriptor::Generic)
+    if (front && front->attrs.type() == PropertyAttributes::Generic)
         front = 0;
 
     Value result = instance->getValueChecked(ctx, front);
@@ -447,10 +447,7 @@ Value ArrayPrototype::method_splice(SimpleCallContext *ctx)
     newArray->arrayReserve(deleteCount);
     PropertyDescriptor *pd = newArray->arrayData;
     for (uint i = 0; i < deleteCount; ++i) {
-        pd->type = PropertyDescriptor::Data;
-        pd->writable = PropertyDescriptor::Enabled;
-        pd->enumerable = PropertyDescriptor::Enabled;
-        pd->configurable = PropertyDescriptor::Enabled;
+        pd->attrs = Attr_Data;
         pd->value = instance->getIndexed(ctx, start + i);
         ++pd;
     }
