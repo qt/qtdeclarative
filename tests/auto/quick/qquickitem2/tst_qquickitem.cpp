@@ -67,6 +67,8 @@ private slots:
     void activeFocusOnTab();
     void activeFocusOnTab2();
     void activeFocusOnTab3();
+    void activeFocusOnTab4();
+    void activeFocusOnTab5();
 
     void keys();
     void keysProcessingOrder();
@@ -596,6 +598,66 @@ void tst_QQuickItem::activeFocusOnTab3()
     }
 
     item = findItem<QQuickItem>(window->rootObject(), "button1");
+    QVERIFY(item);
+    QVERIFY(item->hasActiveFocus());
+
+    delete window;
+}
+
+void tst_QQuickItem::activeFocusOnTab4()
+{
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(800,600));
+
+    window->setSource(testFileUrl("activeFocusOnTab4.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+
+    // original: button11
+    QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "button11");
+    item->setActiveFocusOnTab(true);
+    QVERIFY(item);
+    QVERIFY(item->hasActiveFocus());
+
+    // Tab: button11->button21
+    QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    item = findItem<QQuickItem>(window->rootObject(), "button21");
+    QVERIFY(item);
+    QVERIFY(item->hasActiveFocus());
+
+    delete window;
+}
+
+void tst_QQuickItem::activeFocusOnTab5()
+{
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(800,600));
+
+    window->setSource(testFileUrl("activeFocusOnTab4.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+
+    // original: button11 in sub1
+    QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "button11");
+    QVERIFY(item);
+    QVERIFY(item->hasActiveFocus());
+
+    QQuickItem *item2 = findItem<QQuickItem>(window->rootObject(), "sub1");
+    item2->setActiveFocusOnTab(true);
+
+    // Tab: button11->button21
+    QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    item = findItem<QQuickItem>(window->rootObject(), "button21");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
