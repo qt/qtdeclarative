@@ -921,10 +921,8 @@ bool Object::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSet
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
     PropertyAttributes attrs = Attr_Accessor;
-    if (attribute & DontDelete)
-        attrs |= Attr_NotConfigurable;
-    if (attribute & DontEnum)
-        attrs |= Attr_NotEnumerable;
+    attrs.setConfigurable(!(attribute & DontDelete));
+    attrs.setEnumberable(!(attribute & DontEnum));
     VM::PropertyDescriptor *pd = o->insertMember(name->asVMString(), attrs);
     *pd = VM::PropertyDescriptor::fromAccessor(wrappedGetter, wrappedSetter);
     pd->writable = VM::PropertyDescriptor::Undefined;
@@ -1430,10 +1428,8 @@ public:
 
         foreach (const ObjectTemplate::Accessor &acc, m_template->m_accessors) {
             PropertyAttributes attrs = Attr_Accessor;
-            if (acc.attribute & DontDelete)
-                attrs |= Attr_NotConfigurable;
-            if (acc.attribute & DontEnum)
-                attrs |= Attr_NotEnumerable;
+            attrs.setConfigurable(!(acc.attribute & DontDelete));
+            attrs.setEnumberable(!(acc.attribute & DontEnum));
             VM::PropertyDescriptor *pd = this->insertMember(acc.name->asVMString(), attrs);
             *pd = VM::PropertyDescriptor::fromAccessor(acc.getter->vmValue().asFunctionObject(),
                                                        acc.setter->vmValue().asFunctionObject());
@@ -1449,12 +1445,9 @@ public:
     {
         foreach (const Template::Property &p, tmpl->m_properties) {
             PropertyAttributes attrs = Attr_Default;
-            if (p.attributes & DontDelete)
-                attrs |= Attr_NotConfigurable;
-            if (p.attributes & DontEnum)
-                attrs |= Attr_NotEnumerable;
-            if (p.attributes & ReadOnly)
-                attrs |= Attr_NotWritable;
+            attrs.setConfigurable(!(p.attributes & DontDelete));
+            attrs.setEnumberable(!(p.attributes & DontEnum));
+            attrs.setWritable(!(p.attributes & ReadOnly));
             VM::PropertyDescriptor *pd = this->insertMember(p.name->asVMString(), attrs);
             *pd = VM::PropertyDescriptor::fromValue(p.value->vmValue());
             pd->writable = p.attributes & ReadOnly ? VM::PropertyDescriptor::Disabled : VM::PropertyDescriptor::Enabled;
@@ -1558,14 +1551,11 @@ protected:
 
     static PropertyAttributes propertyAttributesToFlags(const Handle<Value> &attr)
     {
-        PropertyAttributes flags = 0;
+        PropertyAttributes flags;
         int intAttr = attr->ToInt32()->Value();
-        if (intAttr & ReadOnly)
-            flags |= VM::Attr_NotWritable;
-        if (intAttr & DontDelete)
-            flags |= VM::Attr_NotConfigurable;
-        if (intAttr & DontEnum)
-            flags |= VM::Attr_NotEnumerable;
+        flags.setWritable(!(intAttr & ReadOnly));
+        flags.setEnumberable(!(intAttr & DontEnum));
+        flags.setConfigurable(!(intAttr & DontDelete));
         return flags;
     }
 
@@ -1578,7 +1568,7 @@ protected:
                 return propertyAttributesToFlags(result);
         }
         PropertyAttributes flags = BaseClass::query(m, ctx, name);
-        if (flags == 0 && that->m_template->m_fallbackPropertySetter) {
+        if (flags.type() == PropertyAttributes::Generic && that->m_template->m_fallbackPropertySetter) {
             Handle<Value> result = that->m_template->m_fallbackPropertyQuery(String::New(name), that->fallbackAccessorInfo());
             if (!result.IsEmpty())
                 return propertyAttributesToFlags(result);

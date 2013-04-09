@@ -59,7 +59,8 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace VM {
 
-enum {
+
+enum PropertyFlag {
     Attr_Default = 0,
     Attr_Accessor = 0x1,
     Attr_NotWritable = 0x2,
@@ -69,7 +70,62 @@ enum {
     Attr_Invalid = 0xff
 };
 
-typedef uchar PropertyAttributes;
+Q_DECLARE_FLAGS(PropertyFlags, PropertyFlag);
+Q_DECLARE_OPERATORS_FOR_FLAGS(PropertyFlags);
+
+struct PropertyAttributes
+{
+    union {
+        uchar m_all;
+        struct {
+            uchar m_flags : 4;
+            uchar m_mask : 4;
+        };
+        struct {
+            uchar m_type : 1;
+            uchar m_writable : 1;
+            uchar m_enumerable : 1;
+            uchar m_configurable : 1;
+            uchar type_set : 1;
+            uchar writable_set : 1;
+            uchar enumerable_set : 1;
+            uchar configurable_set : 1;
+        };
+    };
+
+    enum Type {
+        Data = 0,
+        Accessor = 1,
+        Generic = 2
+    };
+
+    PropertyAttributes() : m_all(0) {}
+    PropertyAttributes(PropertyFlag f) : m_all(0) {
+        setType(f & Attr_Accessor ? Accessor : Data);
+        setWritable(!(f & Attr_NotWritable));
+        setEnumberable(!(f & Attr_NotEnumerable));
+        setConfigurable(!(f & Attr_NotConfigurable));
+    }
+    PropertyAttributes(PropertyFlags f) : m_all(0) {
+        setType(f & Attr_Accessor ? Accessor : Data);
+        setWritable(!(f & Attr_NotWritable));
+        setEnumberable(!(f & Attr_NotEnumerable));
+        setConfigurable(!(f & Attr_NotConfigurable));
+    }
+    PropertyAttributes(const PropertyAttributes &other) : m_all(other.m_all) {}
+    PropertyAttributes & operator=(const PropertyAttributes &other) { m_all = other.m_all; return *this; }
+
+    void setType(Type t) { m_type = t; type_set = true; }
+    Type type() const { return type_set ? (Type)m_type : Generic; }
+
+    void setWritable(bool b) { m_writable = b; writable_set = true; }
+    void setConfigurable(bool b) { m_configurable = b; configurable_set = true; }
+    void setEnumberable(bool b) { m_enumerable = b; enumerable_set = true; }
+
+    bool writable() const { return m_writable; }
+    bool enumerable() const { return m_enumerable; }
+    bool configurable() const { return m_configurable; }
+};
 
 }
 }

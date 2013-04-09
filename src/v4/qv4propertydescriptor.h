@@ -100,15 +100,11 @@ struct PropertyDescriptor : public Property
     }
 
     PropertyAttributes toPropertyAttributes() const {
-        PropertyAttributes attrs = 0;
-        if (type == Accessor)
-            attrs |= Attr_Accessor;
-        else if (writable != Enabled)
-            attrs |= Attr_NotWritable;
-        if (enumerable != Enabled)
-            attrs |= Attr_NotEnumerable;
-        if (configurable != Enabled)
-            attrs |= Attr_NotConfigurable;
+        PropertyAttributes attrs;
+        attrs.setType(type == Accessor ? PropertyAttributes::Accessor : PropertyAttributes::Data);
+        attrs.setWritable(writable == Enabled);
+        attrs.setEnumberable(enumerable == Enabled);
+        attrs.setConfigurable(configurable == Enabled);
         return attrs;
     }
 

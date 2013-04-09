@@ -61,7 +61,7 @@ InternalClass::InternalClass(const QQmlJS::VM::InternalClass &other)
 InternalClass *InternalClass::addMember(String *string, PropertyAttributes data, uint *index)
 {
     engine->identifierCache->toIdentifier(string);
-    uint id = string->identifier | ((uint)data << 24);
+    uint id = string->identifier | ((uint)data.m_flags << 23);
 
     assert(propertyTable.constFind(id) == propertyTable.constEnd());
 
