@@ -69,8 +69,8 @@
 static bool qsg_leak_check = !qgetenv("QML_LEAK_CHECK").isEmpty();
 #endif
 
-#ifndef QSG_NO_RENDERER_TIMING
-static bool qsg_render_timing = !qgetenv("QML_RENDERER_TIMING").isEmpty();
+#ifndef QSG_NO_RENDER_TIMING
+static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
 static QElapsedTimer qsg_renderer_timer;
 #endif
 
@@ -613,7 +613,7 @@ void QSGPlainTexture::bind()
 
     m_dirty_texture = false;
 
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
         qsg_renderer_timer.start();
 #endif
@@ -621,7 +621,7 @@ void QSGPlainTexture::bind()
     if (m_image.isNull()) {
         if (m_texture_id && m_owns_texture) {
             glDeleteTextures(1, &m_texture_id);
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
             if (qsg_render_timing) {
                 printf("   - texture deleted in %dms (size: %dx%d)\n",
                        (int) qsg_renderer_timer.elapsed(),
@@ -644,7 +644,7 @@ void QSGPlainTexture::bind()
         glGenTextures(1, &m_texture_id);
     glBindTexture(GL_TEXTURE_2D, m_texture_id);
 
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     int bindTime = 0;
     if (qsg_render_timing)
         bindTime = qsg_renderer_timer.elapsed();
@@ -658,7 +658,7 @@ void QSGPlainTexture::bind()
                  ? m_image
                  : m_image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     int convertTime = 0;
     if (qsg_render_timing)
         convertTime = qsg_renderer_timer.elapsed();
@@ -675,8 +675,6 @@ void QSGPlainTexture::bind()
 #ifdef QT_OPENGL_ES
         internalFormat = GL_BGRA;
 #endif
-    } else if (strstr(extensions, "GL_APPLE_texture_format_BGRA8888")) {
-        externalFormat = GL_BGRA;
     } else if (strstr(extensions, "GL_EXT_texture_format_BGRA8888")
                || strstr(extensions, "GL_IMG_texture_format_BGRA8888")) {
         externalFormat = GL_BGRA;
@@ -685,14 +683,14 @@ void QSGPlainTexture::bind()
         qsg_swizzleBGRAToRGBA(&tmp);
     }
 
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     int swizzleTime = 0;
     if (qsg_render_timing)
         swizzleTime = qsg_renderer_timer.elapsed();
 #endif
     glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
 
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     int uploadTime = 0;
     if (qsg_render_timing)
         uploadTime = qsg_renderer_timer.elapsed();
@@ -705,7 +703,7 @@ void QSGPlainTexture::bind()
         m_mipmaps_generated = true;
     }
 
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     int mipmapTime = 0;
     if (qsg_render_timing) {
         mipmapTime = qsg_renderer_timer.elapsed();

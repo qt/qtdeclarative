@@ -1833,7 +1833,7 @@ void tst_QQuickPathView::snapToItem()
     flick(window.data(), QPoint(200,10), QPoint(10,10), 180);
 
     QVERIFY(pathview->isMoving());
-    QTRY_VERIFY(!pathview->isMoving());
+    QTRY_VERIFY_WITH_TIMEOUT(!pathview->isMoving(), 50000);
 
     QVERIFY(pathview->offset() == qFloor(pathview->offset()));
 

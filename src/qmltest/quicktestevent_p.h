@@ -59,6 +59,10 @@ public Q_SLOTS:
     bool keyRelease(int key, int modifiers, int delay);
     bool keyClick(int key, int modifiers, int delay);
 
+    bool keyPressChar(const QString &character, int modifiers, int delay);
+    bool keyReleaseChar(const QString &character, int modifiers, int delay);
+    bool keyClickChar(const QString &character, int modifiers, int delay);
+
     bool mousePress(QObject *item, qreal x, qreal y, int button,
                     int modifiers, int delay);
     bool mouseRelease(QObject *item, qreal x, qreal y, int button,

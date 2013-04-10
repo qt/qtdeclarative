@@ -5,6 +5,8 @@ description             = Qt QML Reference Documentation
 url                     = http://qt-project.org/doc/qt-$QT_VER/qtqml
 version                 = $QT_VERSION
 
+examplesinstallpath     = qml
+
 qhp.projects            = QtQml
 
 qhp.QtQml.file                = qtqml.qhp

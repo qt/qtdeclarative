@@ -63,7 +63,6 @@ public:
 
     virtual void exposureChanged(QQuickWindow *window) = 0;
     virtual QImage grab(QQuickWindow *window) = 0;
-    virtual void resize(QQuickWindow *window, const QSize &size) = 0;
 
     virtual void update(QQuickWindow *window) = 0;
     virtual void maybeUpdate(QQuickWindow *window) = 0;

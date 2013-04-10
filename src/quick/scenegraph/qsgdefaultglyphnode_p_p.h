@@ -43,24 +43,25 @@
 #define QSGDEFAULTGLYPHNODE_P_P_H
 
 #include <qcolor.h>
+#include <QtGui/private/qopengltextureglyphcache_p.h>
 #include <QtQuick/qsgmaterial.h>
 #include <QtQuick/qsgtexture.h>
 #include <QtQuick/qsggeometry.h>
 #include <qshareddata.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <qrawfont.h>
+#include <qmargins.h>
 
 QT_BEGIN_NAMESPACE
 
-class QFontEngineGlyphCache;
-class QOpenGLTextureGlyphCache;
 class QFontEngine;
 class Geometry;
 class QSGTextMaskMaterial: public QSGMaterial
 {
 public:
-    QSGTextMaskMaterial(const QRawFont &font);
-    ~QSGTextMaskMaterial();
+    QSGTextMaskMaterial(const QRawFont &font,
+                        QFontEngineGlyphCache::Type cacheType = QFontEngineGlyphCache::Raster_RGBMask);
+    virtual ~QSGTextMaskMaterial();
 
     virtual QSGMaterialType *type() const;
     virtual QSGMaterialShader *createShader() const;
@@ -79,16 +80,50 @@ public:
     QOpenGLTextureGlyphCache *glyphCache() const;
     void populate(const QPointF &position,
                   const QVector<quint32> &glyphIndexes, const QVector<QPointF> &glyphPositions,
-                  QSGGeometry *geometry, QRectF *boundingRect, QPointF *baseLine);
+                  QSGGeometry *geometry, QRectF *boundingRect, QPointF *baseLine,
+                  const QMargins &margins = QMargins(0, 0, 0, 0));
 
 private:
     void init();
 
     QSGPlainTexture *m_texture;
+    QFontEngineGlyphCache::Type m_cacheType;
     QExplicitlySharedDataPointer<QFontEngineGlyphCache> m_glyphCache;
     QRawFont m_font;
     QColor m_color;
     QSize m_size;
+};
+
+class QSGStyledTextMaterial : public QSGTextMaskMaterial
+{
+public:
+    QSGStyledTextMaterial(const QRawFont &font);
+    virtual ~QSGStyledTextMaterial() { }
+
+    void setStyleShift(const QPointF &shift) { m_styleShift = shift; }
+    const QPointF &styleShift() const { return m_styleShift; }
+
+    void setStyleColor(const QColor &color) { m_styleColor = color; }
+    const QColor &styleColor() const { return m_styleColor; }
+
+    virtual QSGMaterialType *type() const;
+    virtual QSGMaterialShader *createShader() const;
+
+    int compare(const QSGMaterial *other) const;
+
+private:
+    QPointF m_styleShift;
+    QColor m_styleColor;
+};
+
+class QSGOutlinedTextMaterial : public QSGStyledTextMaterial
+{
+public:
+    QSGOutlinedTextMaterial(const QRawFont &font);
+    ~QSGOutlinedTextMaterial() { }
+
+    QSGMaterialType *type() const;
+    QSGMaterialShader *createShader() const;
 };
 
 QT_END_NAMESPACE

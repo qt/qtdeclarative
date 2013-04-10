@@ -125,6 +125,17 @@ TextEdit {
 // into text nodes corresponding to a text block each so that the glyph node grouping doesn't become pointless.
 static const int nodeBreakingSize = 300;
 
+namespace {
+    class ProtectedLayoutAccessor: public QAbstractTextDocumentLayout
+    {
+    public:
+        inline QTextCharFormat formatAccessor(int pos)
+        {
+            return format(pos);
+        }
+    };
+}
+
 QQuickTextEdit::QQuickTextEdit(QQuickItem *parent)
 : QQuickImplicitSizeItem(*(new QQuickTextEditPrivate), parent)
 {
@@ -1772,9 +1783,11 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                     node->setMatrix(transformMatrix);
                 }
                 const int pos = textFrame->firstPosition() - 1;
+                ProtectedLayoutAccessor *a = static_cast<ProtectedLayoutAccessor *>(d->document->documentLayout());
+                QTextCharFormat format = a->formatAccessor(pos);
                 QTextBlock block = textFrame->firstCursorPosition().block();
                 node->m_engine->setCurrentLine(block.layout()->lineForTextPosition(pos - block.position()));
-                node->m_engine->addTextObject(QPointF(0, 0), block.charFormat(), QQuickTextNodeEngine::Unselected, d->document,
+                node->m_engine->addTextObject(QPointF(0, 0), format, QQuickTextNodeEngine::Unselected, d->document,
                                               pos, textFrame->frameFormat().position());
             } else {
 

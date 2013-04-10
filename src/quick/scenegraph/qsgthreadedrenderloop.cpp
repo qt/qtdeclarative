@@ -136,8 +136,8 @@ static inline int qsgrl_animation_interval() {
 }
 
 
-#ifndef QSG_NO_WINDOW_TIMING
-static bool qquick_window_timing = !qgetenv("QML_WINDOW_TIMING").isEmpty();
+#ifndef QSG_NO_RENDER_TIMING
+static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
 static QTime threadTimer;
 static int syncTime;
 static int renderTime;
@@ -167,9 +167,6 @@ const QEvent::Type WM_RequestSync       = QEvent::Type(QEvent::User + 4);
 // Passed by the RT to itself to trigger another render pass. This is
 // typically a result of QQuickWindow::update().
 const QEvent::Type WM_RequestRepaint    = QEvent::Type(QEvent::User + 5);
-
-// Passed by the RL to the RT when a window has changed size.
-const QEvent::Type WM_Resize            = QEvent::Type(QEvent::User + 6);
 
 // Passed by the RL to the RT to free up maybe release SG and GL contexts
 // if no windows are rendering.
@@ -212,14 +209,6 @@ public:
 
     bool inDestructor;
 };
-
-class WMResizeEvent : public WMWindowEvent
-{
-public:
-    WMResizeEvent(QQuickWindow *c, const QSize &s) : WMWindowEvent(c, WM_Resize), size(s) { }
-    QSize size;
-};
-
 
 class WMExposeEvent : public WMWindowEvent
 {
@@ -374,7 +363,8 @@ bool QSGRenderThread::event(QEvent *e)
 
         pendingUpdate |= RepaintRequest;
 
-        if (windowFor(m_windows, se->window)) {
+        if (Window *w = windowFor(m_windows, se->window)) {
+            w->size = se->size;
             RLDEBUG1("    Render:  - window already added...");
             return true;
         }
@@ -408,14 +398,6 @@ bool QSGRenderThread::event(QEvent *e)
         if (m_windows.size() > 0)
             pendingUpdate |= SyncRequest;
         return true;
-
-    case WM_Resize: {
-        RLDEBUG("    Render: WM_Resize");
-        WMResizeEvent *re = static_cast<WMResizeEvent *>(e);
-        Window *w = windowFor(m_windows, re->window);
-        w->size = re->size;
-        // No need to wake up here as we will get a sync shortly.. (see QSGThreadedRenderLoop::resize());
-        return true; }
 
     case WM_TryRelease:
         RLDEBUG1("    Render: WM_TryRelease");
@@ -563,8 +545,8 @@ void QSGRenderThread::sync()
 
 void QSGRenderThread::syncAndRender()
 {
-#ifndef QSG_NO_WINDOW_TIMING
-    if (qquick_window_timing)
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing)
         sinceLastTime = threadTimer.restart();
 #endif
     QElapsedTimer waitTimer;
@@ -589,8 +571,8 @@ void QSGRenderThread::syncAndRender()
         return;
     }
 
-#ifndef QSG_NO_WINDOW_TIMING
-    if (qquick_window_timing)
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing)
         syncTime = threadTimer.elapsed();
 #endif
     RLDEBUG("    Render:  - rendering starting");
@@ -604,8 +586,8 @@ void QSGRenderThread::syncAndRender()
         }
         gl->makeCurrent(w.window);
         d->renderSceneGraph(w.size);
-#ifndef QSG_NO_WINDOW_TIMING
-        if (qquick_window_timing && i == 0)
+#ifndef QSG_NO_RENDER_TIMING
+        if (qsg_render_timing && i == 0)
             renderTime = threadTimer.elapsed();
 #endif
         gl->swapBuffers(w.window);
@@ -613,8 +595,8 @@ void QSGRenderThread::syncAndRender()
     }
     RLDEBUG("    Render:  - rendering done");
 
-#ifndef QSG_NO_WINDOW_TIMING
-        if (qquick_window_timing)
+#ifndef QSG_NO_RENDER_TIMING
+        if (qsg_render_timing)
             qDebug("window Time: sinceLast=%d, sync=%d, first render=%d, after final swap=%d",
                    sinceLastTime,
                    syncTime,
@@ -965,12 +947,12 @@ void QSGThreadedRenderLoop::polishAndSync()
 
     RLDEBUG("GUI: polishAndSync()");
 
-#ifndef QSG_NO_WINDOW_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     QElapsedTimer timer;
     int polishTime = 0;
     int waitTime = 0;
     int syncTime;
-    if (qquick_window_timing)
+    if (qsg_render_timing)
         timer.start();
 #endif
 
@@ -980,8 +962,8 @@ void QSGThreadedRenderLoop::polishAndSync()
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(w.window);
         d->polishItems();
     }
-#ifndef QSG_NO_WINDOW_TIMING
-    if (qquick_window_timing)
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing)
         polishTime = timer.elapsed();
 #endif
 
@@ -993,8 +975,8 @@ void QSGThreadedRenderLoop::polishAndSync()
     m_thread->postEvent(new QEvent(WM_RequestSync));
 
     RLDEBUG("GUI:  - wait for sync...");
-#ifndef QSG_NO_WINDOW_TIMING
-    if (qquick_window_timing)
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing)
         waitTime = timer.elapsed();
 #endif
     m_thread->waitCondition.wait(&m_thread->mutex);
@@ -1002,8 +984,8 @@ void QSGThreadedRenderLoop::polishAndSync()
     m_thread->mutex.unlock();
     RLDEBUG("GUI:  - unlocked after sync...");
 
-#ifndef QSG_NO_WINDOW_TIMING
-    if (qquick_window_timing)
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing)
         syncTime = timer.elapsed();
 #endif
 
@@ -1021,8 +1003,8 @@ void QSGThreadedRenderLoop::polishAndSync()
         maybePostPolishRequest();
     }
 
-#ifndef QSG_NO_WINDOW_TIMING
-    if (qquick_window_timing)
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing)
         qDebug(" - polish=%d, wait=%d, sync=%d -- animations=%d", polishTime, waitTime - polishTime, syncTime - waitTime, int(timer.elapsed() - syncTime));
 #endif
 }
@@ -1086,27 +1068,6 @@ QImage QSGThreadedRenderLoop::grab(QQuickWindow *window)
     return result;
 }
 
-/*
-    Notify the render thread that the window is now a new size. Then
-    locks GUI until render has adapted.
- */
-
-void QSGThreadedRenderLoop::resize(QQuickWindow *w, const QSize &size)
-{
-    RLDEBUG1("GUI: resize");
-
-    if (!m_thread->isRunning() || !m_windows.size() || !w->isExposed() || windowFor(m_windows, w) == 0) {
-        return;
-    }
-
-    if (size.width() == 0 || size.height() == 0)
-        return;
-
-    RLDEBUG("GUI:  - posting resize event...");
-    m_thread->postEvent(new WMResizeEvent(w, size));
-
-    polishAndSync();
-}
 
 #include "qsgthreadedrenderloop.moc"
 

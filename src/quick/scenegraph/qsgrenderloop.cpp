@@ -58,7 +58,7 @@
 
 QT_BEGIN_NAMESPACE
 
-DEFINE_BOOL_CONFIG_OPTION(qquick_render_timing, QML_RENDER_TIMING)
+DEFINE_BOOL_CONFIG_OPTION(qsg_render_timing, QSG_RENDER_TIMING)
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
@@ -95,7 +95,6 @@ public:
     void renderWindow(QQuickWindow *window);
     void exposureChanged(QQuickWindow *window);
     QImage grab(QQuickWindow *window);
-    void resize(QQuickWindow *window, const QSize &size);
 
     void maybeUpdate(QQuickWindow *window);
     void update(QQuickWindow *window) { maybeUpdate(window); } // identical for this implementation.
@@ -272,17 +271,17 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
     int renderTime = 0, syncTime = 0;
     QTime renderTimer;
-    if (qquick_render_timing())
+    if (qsg_render_timing())
         renderTimer.start();
 
     cd->syncSceneGraph();
 
-    if (qquick_render_timing())
+    if (qsg_render_timing())
         syncTime = renderTimer.elapsed();
 
     cd->renderSceneGraph(window->size());
 
-    if (qquick_render_timing())
+    if (qsg_render_timing())
         renderTime = renderTimer.elapsed() - syncTime;
 
     if (data.grabOnly) {
@@ -295,7 +294,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         cd->fireFrameSwapped();
     }
 
-    if (qquick_render_timing()) {
+    if (qsg_render_timing()) {
         static QTime lastFrameTime = QTime::currentTime();
         const int swapTime = renderTimer.elapsed() - renderTime - syncTime;
         qDebug() << "- Breakdown of frame time; sync:" << syncTime
@@ -331,12 +330,6 @@ QImage QSGGuiThreadRenderLoop::grab(QQuickWindow *window)
     QImage grabbed = grabContent;
     grabContent = QImage();
     return grabbed;
-}
-
-
-
-void QSGGuiThreadRenderLoop::resize(QQuickWindow *, const QSize &)
-{
 }
 
 

@@ -60,8 +60,8 @@ QT_BEGIN_NAMESPACE
 
 
 
-#ifndef QSG_NO_RENDERER_TIMING
-static bool qsg_render_timing = !qgetenv("QML_RENDERER_TIMING").isEmpty();
+#ifndef QSG_NO_RENDER_TIMING
+static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
 static QTime frameTimer;
 static int preprocessTime;
 static int updatePassTime;
@@ -237,7 +237,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     m_is_rendering = true;
 
 
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
         frameTimer.start();
     int bindTime = 0;
@@ -248,7 +248,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     preprocess();
 
     bindable.bind();
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
         bindTime = frameTimer.elapsed();
 #endif
@@ -269,7 +269,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
 #endif
 
     render();
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
         renderTime = frameTimer.elapsed();
 #endif
@@ -289,7 +289,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
         m_index_buffer_bound = false;
     }
 
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing) {
         printf(" - Breakdown of render time: preprocess=%d, updates=%d, binding=%d, render=%d, total=%d\n",
                preprocessTime,
@@ -379,7 +379,7 @@ void QSGRenderer::preprocess()
         }
     }
 
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
         preprocessTime = frameTimer.elapsed();
 #endif
@@ -387,7 +387,7 @@ void QSGRenderer::preprocess()
     nodeUpdater()->setToplevelOpacity(context()->renderAlpha());
     nodeUpdater()->updateStates(m_root_node);
 
-#ifndef QSG_NO_RENDERER_TIMING
+#ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
         updatePassTime = frameTimer.elapsed();
 #endif

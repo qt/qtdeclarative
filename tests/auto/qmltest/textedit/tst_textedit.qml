@@ -74,6 +74,13 @@ Item {
     }
 
     TextEdit {
+        id: txtentry2
+        text: ""
+        height: 20
+        width: 50
+    }
+
+    TextEdit {
         id: txtfunctions
         text: "The quick brown fox jumped over the lazy dog"
         height: 20
@@ -122,6 +129,23 @@ Item {
             keyClick(Qt.Key_L)
             keyClick(Qt.Key_D)
             compare(txtentry.text, "hello world")
+        }
+
+        function test_textentry_char() {
+            txtentry2.focus = true;
+            compare(txtentry2.text, "")
+            keyClick("h")
+            keyClick("e")
+            keyClick("l")
+            keyClick("l")
+            keyClick("o")
+            keyClick(" ")
+            keyClick("W")
+            keyClick("o")
+            keyClick("r")
+            keyClick("l")
+            keyClick("d")
+            compare(txtentry2.text, "hello World")
         }
 
         function test_functions() {

@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
     \title QML Example - Dynamic Scene
-    \example qml/dynamicscene
+    \example dynamicscene
     \brief This example demonstrates creating components dynamically.
     \image qml-dynamicscene-example.png
 */

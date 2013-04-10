@@ -372,8 +372,13 @@ Item {
             modifiers = Qt.NoModifier
         if (delay == undefined)
             delay = -1
-        if (!qtest_events.keyPress(key, modifiers, delay))
-            qtest_fail("window not shown", 2)
+        if (typeof(key) == "string" && key.length == 1) {
+            if (!qtest_events.keyPressChar(key, modifiers, delay))
+                qtest_fail("window not shown", 2)
+        } else {
+            if (!qtest_events.keyPress(key, modifiers, delay))
+                qtest_fail("window not shown", 2)
+        }
     }
 
     function keyRelease(key, modifiers, delay) {
@@ -381,8 +386,13 @@ Item {
             modifiers = Qt.NoModifier
         if (delay == undefined)
             delay = -1
-        if (!qtest_events.keyRelease(key, modifiers, delay))
-            qtest_fail("window not shown", 2)
+        if (typeof(key) == "string" && key.length == 1) {
+            if (!qtest_events.keyReleaseChar(key, modifiers, delay))
+                qtest_fail("window not shown", 2)
+        } else {
+            if (!qtest_events.keyRelease(key, modifiers, delay))
+                qtest_fail("window not shown", 2)
+        }
     }
 
     function keyClick(key, modifiers, delay) {
@@ -390,8 +400,13 @@ Item {
             modifiers = Qt.NoModifier
         if (delay == undefined)
             delay = -1
-        if (!qtest_events.keyClick(key, modifiers, delay))
-            qtest_fail("window not shown", 2)
+        if (typeof(key) == "string" && key.length == 1) {
+            if (!qtest_events.keyClickChar(key, modifiers, delay))
+                qtest_fail("window not shown", 2)
+        } else {
+            if (!qtest_events.keyClick(key, modifiers, delay))
+                qtest_fail("window not shown", 2)
+        }
     }
 
     function mousePress(item, x, y, button, modifiers, delay) {
@@ -426,10 +441,25 @@ Item {
         if (delay == undefined)
             delay = -1
 
+        // Divide dx and dy to have intermediate mouseMove while dragging
+        // Fractions of dx/dy need be superior to the dragThreshold
+        // to make the drag works though
+        var ddx = Math.round(dx/3)
+        if (ddx < (util.dragThreshold + 1))
+            ddx = 0
+        var ddy = Math.round(dy/3)
+        if (ddy < (util.dragThreshold + 1))
+            ddy = 0
+
         mousePress(item, x, y, button, modifiers, delay)
         //trigger dragging
         mouseMove(item, x + util.dragThreshold + 1, y + util.dragThreshold + 1, delay, button)
+        if (ddx > 0 || ddy > 0) {
+            mouseMove(item, x + ddx, y + ddy, delay, button)
+            mouseMove(item, x + 2*ddx, y + 2*ddy, delay, button)
+        }
         mouseMove(item, x + dx, y + dy, delay, button)
+        mouseRelease(item, x + dx, y + dy, button, modifiers, delay)
     }
 
     function mouseClick(item, x, y, button, modifiers, delay) {

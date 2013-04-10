@@ -64,6 +64,10 @@ static QString qrc_string(QLatin1String("qrc"));
 static QString file_string(QLatin1String("file"));
 static QString bundle_string(QLatin1String("bundle"));
 
+#if defined(Q_OS_ANDROID)
+static QString assets_string(QLatin1String("assets"));
+#endif
+
 class QQmlFilePrivate;
 class QQmlFileNetworkReply : public QObject
 {
@@ -484,6 +488,8 @@ bool QQmlFile::connectDownloadProgress(QObject *object, int method)
 Returns true if QQmlFile will open \a url synchronously.
 
 Synchronous urls have a qrc:/, file://, or bundle:// scheme.
+
+\note On Android, urls with assets:/ scheme are also considered synchronous.
 */
 bool QQmlFile::isSynchronous(const QUrl &url)
 {
@@ -491,16 +497,25 @@ bool QQmlFile::isSynchronous(const QUrl &url)
 
     if ((scheme.length() == 4 && 0 == scheme.compare(file_string, Qt::CaseInsensitive)) ||
         (scheme.length() == 6 && 0 == scheme.compare(bundle_string, Qt::CaseInsensitive)) ||
-        (scheme.length() == 3 && 0 == scheme.compare(qrc_string, Qt::CaseInsensitive)))
+        (scheme.length() == 3 && 0 == scheme.compare(qrc_string, Qt::CaseInsensitive))) {
         return true;
-    else
+
+#if defined(Q_OS_ANDROID)
+    } else if (scheme.length() == 6 && 0 == scheme.compare(assets_string, Qt::CaseInsensitive)) {
+        return true;
+#endif
+
+    } else {
         return false;
+    }
 }
 
 /*!
 Returns true if QQmlFile will open \a url synchronously.
 
 Synchronous urls have a qrc:/, file://, or bundle:// scheme.
+
+\note On Android, urls with assets:/ scheme are also considered synchronous.
 */
 bool QQmlFile::isSynchronous(const QString &url)
 {
@@ -528,6 +543,15 @@ bool QQmlFile::isSynchronous(const QString &url)
                url[3] == QLatin1Char(':') && url[4] == QLatin1Char('/');
 
     }
+
+#if defined(Q_OS_ANDROID)
+    else if (f == QLatin1Char('a') || f == QLatin1Char('A')) {
+        return url.length() >= 8 /* assets:/ */ &&
+               url.startsWith(assets_string, Qt::CaseInsensitive) &&
+               url[6] == QLatin1Char(':') && url[7] == QLatin1Char('/');
+
+    }
+#endif
 
     return false;
 }
@@ -559,22 +583,33 @@ bool QQmlFile::isBundle(const QUrl &url)
 Returns true if \a url is a local file that can be opened with QFile.
 
 Local file urls have either a qrc:/ or file:// scheme.
+
+\note On Android, urls with assets:/ scheme are also considered local files.
 */
 bool QQmlFile::isLocalFile(const QUrl &url)
 {
     QString scheme = url.scheme();
 
     if ((scheme.length() == 4 && 0 == scheme.compare(file_string, Qt::CaseInsensitive)) ||
-        (scheme.length() == 3 && 0 == scheme.compare(qrc_string, Qt::CaseInsensitive)))
+        (scheme.length() == 3 && 0 == scheme.compare(qrc_string, Qt::CaseInsensitive))) {
         return true;
-    else
+
+#if defined(Q_OS_ANDROID)
+    } else if (scheme.length() == 6 && 0 == scheme.compare(assets_string, Qt::CaseInsensitive)) {
+        return true;
+#endif
+
+    } else {
         return false;
+    }
 }
 
 /*!
 Returns true if \a url is a local file that can be opened with QFile.
 
 Local file urls have either a qrc:/ or file:// scheme.
+
+\note On Android, urls with assets:/ scheme are also considered local files.
 */
 bool QQmlFile::isLocalFile(const QString &url)
 {
@@ -596,6 +631,14 @@ bool QQmlFile::isLocalFile(const QString &url)
                url[3] == QLatin1Char(':') && url[4] == QLatin1Char('/');
 
     }
+#if defined(Q_OS_ANDROID)
+    else if (f == QLatin1Char('a') || f == QLatin1Char('A')) {
+        return url.length() >= 8 /* assets:/ */ &&
+               url.startsWith(assets_string, Qt::CaseInsensitive) &&
+               url[6] == QLatin1Char(':') && url[7] == QLatin1Char('/');
+
+    }
+#endif
 
     return false;
 }
@@ -611,6 +654,15 @@ QString QQmlFile::urlToLocalFileOrQrc(const QUrl& url)
             return QLatin1Char(':') + url.path();
         return QString();
     }
+
+#if defined(Q_OS_ANDROID)
+    else if (url.scheme().compare(QLatin1String("assets"), Qt::CaseInsensitive) == 0) {
+        if (url.authority().isEmpty())
+            return url.toString();
+        return QString();
+    }
+#endif
+
     return url.toLocalFile();
 }
 
@@ -641,6 +693,12 @@ QString QQmlFile::urlToLocalFileOrQrc(const QString& url)
             return QLatin1Char(':') + url.mid(4);
         return QString();
     }
+
+#if defined(Q_OS_ANDROID)
+    else if (url.startsWith(QLatin1String("assets:"), Qt::CaseInsensitive)) {
+        return url;
+    }
+#endif
 
     return toLocalFile(url);
 }

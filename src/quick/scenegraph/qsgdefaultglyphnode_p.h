@@ -53,22 +53,24 @@ class QSGDefaultGlyphNode: public QSGGlyphNode
 {
 public:
     QSGDefaultGlyphNode();
-    ~QSGDefaultGlyphNode();
+    virtual ~QSGDefaultGlyphNode();
 
     virtual QPointF baseLine() const { return m_baseLine; }
     virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs);
     virtual void setColor(const QColor &color);
 
     virtual void setPreferredAntialiasingMode(AntialiasingMode) { }
-    virtual void setStyle(QQuickText::TextStyle) { }
-    virtual void setStyleColor(const QColor &) { }
+    virtual void setStyle(QQuickText::TextStyle);
+    virtual void setStyleColor(const QColor &);
 
-    virtual void update() { }
+    virtual void update();
 
-private:
+protected:
     QGlyphRun m_glyphs;
     QPointF m_position;
     QColor m_color;
+    QQuickText::TextStyle m_style;
+    QColor m_styleColor;
 
     QPointF m_baseLine;
     QSGTextMaskMaterial *m_material;

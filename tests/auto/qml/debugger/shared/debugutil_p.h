@@ -57,7 +57,7 @@
 class QQmlDebugTest
 {
 public:
-    static bool waitForSignal(QObject *receiver, const char *member, int timeout = 5000);
+    static bool waitForSignal(QObject *receiver, const char *member, int timeout = 10000);
 };
 
 class QQmlDebugTestClient : public QQmlDebugClient

@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.1
 
 Loader {//Just loader, since there's only one.
     source: "focus/focus.qml"
