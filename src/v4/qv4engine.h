@@ -46,6 +46,7 @@
 #include "qv4object.h"
 #include "qv4util.h"
 #include "qv4context.h"
+#include "qv4propertydescriptor.h"
 #include <setjmp.h>
 
 #include <wtf/BumpPointerAllocator.h>
@@ -159,7 +160,7 @@ struct Q_V4_EXPORT ExecutionEngine
 
     EvalFunction *evalFunction;
 
-    QVector<PropertyDescriptor> argumentsAccessors;
+    QVector<Property> argumentsAccessors;
 
     String *id_undefined;
     String *id_null;

@@ -73,9 +73,8 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, RegExp* value, bool global)
     vtbl = &static_vtbl;
     type = Type_RegExpObject;
 
-    PropertyDescriptor *lastIndexProperty = insertMember(engine->newIdentifier(QStringLiteral("lastIndex")),
+    Property *lastIndexProperty = insertMember(engine->newIdentifier(QStringLiteral("lastIndex")),
                                                          Attr_NotEnumerable|Attr_NotConfigurable);
-    lastIndexProperty->attrs = Attr_NotEnumerable|Attr_NotConfigurable;
     lastIndexProperty->value = Value::fromInt32(0);
     if (!this->value)
         return;
@@ -98,7 +97,7 @@ void RegExpObject::markObjects(Managed *that)
     Object::markObjects(that);
 }
 
-PropertyDescriptor *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
+Property *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
 {
     assert(0 == internalClass->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex"))));
     return &memberData[0];

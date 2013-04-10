@@ -281,8 +281,7 @@ bool Parser::parseMember(Object *o)
     if (!parseValue(&val))
         return false;
 
-    PropertyDescriptor *p = o->insertMember(context->engine->newIdentifier(key), Attr_Data);
-    p->attrs = Attr_Data;
+    Property *p = o->insertMember(context->engine->newIdentifier(key), Attr_Data);
     p->value = val;
 
     END;
@@ -782,10 +781,11 @@ QString Stringify::JO(Object *o)
         while (1) {
             String *name;
             uint index;
-            PropertyDescriptor *pd = it.next(&name, &index);
+            PropertyAttributes attrs;
+            Property *pd = it.next(&name, &index, &attrs);
             if (!pd)
                 break;
-            Value v = o->getValueChecked(ctx, pd);
+            Value v = o->getValueChecked(ctx, pd, attrs);
             QString key;
             if (name)
                 key = name->toQString();

@@ -69,7 +69,7 @@ Value ArrayCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int ar
         len = argc;
         a->arrayReserve(len);
         for (unsigned int i = 0; i < len; ++i)
-            fillDescriptor(a->arrayData + i, argv[i]);
+            a->arrayData[i].value = argv[i];
         a->arrayDataLen = len;
     }
     a->setArrayLengthUnchecked(len);
@@ -270,7 +270,9 @@ Value ArrayPrototype::method_push(SimpleCallContext *ctx)
             if (!instance->sparseArray) {
                 if (len >= instance->arrayAlloc)
                     instance->arrayReserve(len + 1);
-                fillDescriptor(instance->arrayData + len, v);
+                instance->arrayData[len].value = v;
+                if (instance->arrayAttributes)
+                    instance->arrayAttributes[len] = Attr_Data;
                 instance->arrayDataLen = len + 1;
             } else {
                 uint i = instance->allocArrayValue(v);
@@ -328,19 +330,12 @@ Value ArrayPrototype::method_shift(SimpleCallContext *ctx)
         return Value::undefinedValue();
     }
 
-    PropertyDescriptor *front = 0;
-    if (!instance->sparseArray) {
-        if (instance->arrayDataLen)
-            front = instance->arrayData;
-    } else {
-        SparseArrayNode *n = instance->sparseArray->findNode(0);
-        if (n)
-            front = instance->arrayDecriptor(n->value);
-    }
-    if (front && front->attrs.type() == PropertyAttributes::Generic)
-        front = 0;
+    Property *front = 0;
+    uint pidx = instance->propertyIndexFromArrayIndex(0);
+    if (pidx < UINT_MAX && (!instance->arrayAttributes || !instance->arrayAttributes[0].isGeneric()))
+            front = instance->arrayData + pidx;
 
-    Value result = instance->getValueChecked(ctx, front);
+    Value result = front ? instance->getValue(ctx, front, instance->arrayAttributes ? instance->arrayAttributes[pidx] : Attr_Data) : Value::undefinedValue();
 
     bool protoHasArray = false;
     Object *p = instance;
@@ -355,6 +350,8 @@ Value ArrayPrototype::method_shift(SimpleCallContext *ctx)
                 ++instance->arrayData;
                 --instance->arrayDataLen;
                 --instance->arrayAlloc;
+                if (instance->arrayAttributes)
+                    ++instance->arrayAttributes;
             }
         } else {
             uint idx = instance->sparseArray->pop_front();
@@ -445,9 +442,8 @@ Value ArrayPrototype::method_splice(SimpleCallContext *ctx)
     uint deleteCount = (uint)qMin(qMax(ctx->argument(1).toInteger(ctx), 0.), (double)(len - start));
 
     newArray->arrayReserve(deleteCount);
-    PropertyDescriptor *pd = newArray->arrayData;
+    Property *pd = newArray->arrayData;
     for (uint i = 0; i < deleteCount; ++i) {
-        pd->attrs = Attr_Data;
         pd->value = instance->getIndexed(ctx, start + i);
         ++pd;
     }
@@ -511,7 +507,11 @@ Value ArrayPrototype::method_unshift(SimpleCallContext *ctx)
                 --instance->arrayOffset;
                 --instance->arrayData;
                 ++instance->arrayDataLen;
-                fillDescriptor(instance->arrayData, v);
+                if (instance->arrayAttributes) {
+                    --instance->arrayAttributes;
+                    *instance->arrayAttributes = Attr_Data;
+                }
+                instance->arrayData->value = v;
             } else {
                 uint idx = instance->allocArrayValue(v);
                 instance->sparseArray->push_front(idx);

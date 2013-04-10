@@ -51,7 +51,6 @@ namespace QQmlJS {
 namespace VM {
 
 struct FunctionObject;
-struct PropertyDescriptor;
 
 struct Property {
     union {
@@ -65,86 +64,85 @@ struct Property {
     // Section 8.10
     inline void fullyPopulated(PropertyAttributes *attrs) {
         if (!attrs->hasType()) {
-            attrs->setType(PropertyAttributes::Data);
             value = Value::undefinedValue();
         }
-        if (attrs->type() == PropertyAttributes::Data) {
-            attrs->resolveWritable();
-        } else {
+        if (attrs->type() == PropertyAttributes::Accessor) {
             attrs->clearWritable();
-            if ((quintptr)get == 0x1)
+            if (get == (FunctionObject *)0x1)
                 get = 0;
-            if ((quintptr)set == 0x1)
+            if (set == (FunctionObject *)0x1)
                 set = 0;
         }
-        attrs->resolveEnumerable();
-        attrs->resolveConfigurable();
+        attrs->resolve();
     }
 
-    inline bool isSubset(const PropertyAttributes &attrs, PropertyDescriptor *other) const;
-    inline void merge(PropertyAttributes &attrs, const PropertyDescriptor &other);
-};
-
-struct PropertyDescriptor : public Property
-{
-    PropertyAttributes attrs;
-
-    static inline PropertyDescriptor fromValue(Value v) {
-        PropertyDescriptor pd;
+    static inline Property fromValue(Value v) {
+        Property pd;
         pd.value = v;
-        pd.attrs.setType(PropertyAttributes::Data);
         return pd;
     }
-    static inline PropertyDescriptor fromAccessor(FunctionObject *getter, FunctionObject *setter) {
-        PropertyDescriptor pd;
+    static inline Property fromAccessor(FunctionObject *getter, FunctionObject *setter) {
+        Property pd;
         pd.get = getter;
         pd.set = setter;
-        pd.attrs.setType(PropertyAttributes::Accessor);
         return pd;
     }
+
+    static Property genericDescriptor() {
+        Property pd;
+        pd.value = Value::deletedValue();
+        return pd;
+    }
+
+    inline bool isSubset(const PropertyAttributes &attrs, const Property &other, PropertyAttributes otherAttrs) const;
+    inline void merge(PropertyAttributes &attrs, const Property &other, PropertyAttributes otherAttrs);
+
+    inline FunctionObject *getter() const { return get; }
+    inline FunctionObject *setter() const { return set; }
+    inline void setGetter(FunctionObject *g) { get = g; }
+    inline void setSetter(FunctionObject *s) { set = s; }
 };
 
-inline bool Property::isSubset(const PropertyAttributes &attrs, PropertyDescriptor *other) const
+inline bool Property::isSubset(const PropertyAttributes &attrs, const Property &other, PropertyAttributes otherAttrs) const
 {
-    if (attrs.type() != PropertyAttributes::Generic && attrs.type() != other->attrs.type())
+    if (attrs.type() != PropertyAttributes::Generic && attrs.type() != otherAttrs.type())
         return false;
-    if (attrs.hasEnumerable() && attrs.isEnumerable() != other->attrs.isEnumerable())
+    if (attrs.hasEnumerable() && attrs.isEnumerable() != otherAttrs.isEnumerable())
         return false;
-    if (attrs.hasConfigurable() && attrs.isConfigurable() != other->attrs.isConfigurable())
+    if (attrs.hasConfigurable() && attrs.isConfigurable() != otherAttrs.isConfigurable())
         return false;
-    if (attrs.hasWritable() && attrs.isWritable() != other->attrs.isWritable())
+    if (attrs.hasWritable() && attrs.isWritable() != otherAttrs.isWritable())
         return false;
-    if (attrs.type() == PropertyAttributes::Data && !value.sameValue(other->value))
+    if (attrs.type() == PropertyAttributes::Data && !value.sameValue(other.value))
         return false;
     if (attrs.type() == PropertyAttributes::Accessor) {
-        if (get != other->get)
+        if (get != other.get)
             return false;
-        if (set != other->set)
+        if (set != other.set)
             return false;
     }
     return true;
 }
 
-inline void Property::merge(PropertyAttributes &attrs, const PropertyDescriptor &other)
+inline void Property::merge(PropertyAttributes &attrs, const Property &other, PropertyAttributes otherAttrs)
 {
-    if (other.attrs.hasEnumerable())
-        attrs.setEnumerable(other.attrs.isEnumerable());
-    if (other.attrs.hasConfigurable())
-        attrs.setConfigurable(other.attrs.isConfigurable());
-    if (other.attrs.hasWritable())
-        attrs.setWritable(other.attrs.isWritable());
-    if (other.attrs.type() == PropertyAttributes::Accessor) {
+    if (otherAttrs.hasEnumerable())
+        attrs.setEnumerable(otherAttrs.isEnumerable());
+    if (otherAttrs.hasConfigurable())
+        attrs.setConfigurable(otherAttrs.isConfigurable());
+    if (otherAttrs.hasWritable())
+        attrs.setWritable(otherAttrs.isWritable());
+    if (otherAttrs.type() == PropertyAttributes::Accessor) {
         attrs.setType(PropertyAttributes::Accessor);
         if (other.get)
-            get = ((quintptr)other.get == 0x1) ? 0 : other.get;
+            get = (other.get == (FunctionObject *)0x1) ? 0 : other.get;
         if (other.set)
-            set = ((quintptr)other.set == 0x1) ? 0 : other.set;
-    } else if (other.attrs.type() == PropertyAttributes::Data){
+            set = (other.set == (FunctionObject *)0x1) ? 0 : other.set;
+    } else if (otherAttrs.type() == PropertyAttributes::Data){
         attrs.setType(PropertyAttributes::Data);
         value = other.value;
     }
 }
-
 
 } // namespace VM
 } // namespace QQmlJS

@@ -145,8 +145,9 @@ Value ObjectPrototype::method_getOwnPropertyDescriptor(SimpleCallContext *ctx)
         ctx->throwTypeError();
 
     String *name = ctx->argument(1).toString(ctx);
-    PropertyDescriptor *desc = O.objectValue()->__getOwnProperty__(ctx, name);
-    return fromPropertyDescriptor(ctx, desc);
+    PropertyAttributes attrs;
+    Property *desc = O.objectValue()->__getOwnProperty__(ctx, name, &attrs);
+    return fromPropertyDescriptor(ctx, desc, attrs);
 }
 
 Value ObjectPrototype::method_getOwnPropertyNames(SimpleCallContext *context)
@@ -193,10 +194,11 @@ Value ObjectPrototype::method_defineProperty(SimpleCallContext *ctx)
     String *name = ctx->argument(1).toString(ctx);
 
     Value attributes = ctx->argument(2);
-    PropertyDescriptor pd;
-    toPropertyDescriptor(ctx, attributes, &pd);
+    Property pd;
+    PropertyAttributes attrs;
+    toPropertyDescriptor(ctx, attributes, &pd, &attrs);
 
-    if (!O.objectValue()->__defineOwnProperty__(ctx, name, &pd))
+    if (!O.objectValue()->__defineOwnProperty__(ctx, name, pd, attrs))
         ctx->throwTypeError();
 
     return O;
@@ -214,16 +216,18 @@ Value ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
     while (1) {
         uint index;
         String *name;
-        PropertyDescriptor *pd = it.next(&name, &index);
+        PropertyAttributes attrs;
+        Property *pd = it.next(&name, &index, &attrs);
         if (!pd)
             break;
-        PropertyDescriptor n;
-        toPropertyDescriptor(ctx, o->getValue(ctx, pd), &n);
+        Property n;
+        PropertyAttributes nattrs;
+        toPropertyDescriptor(ctx, o->getValue(ctx, pd, attrs), &n, &nattrs);
         bool ok;
         if (name)
-            ok = O.objectValue()->__defineOwnProperty__(ctx, name, &n);
+            ok = O.objectValue()->__defineOwnProperty__(ctx, name, n, nattrs);
         else
-            ok = O.objectValue()->__defineOwnProperty__(ctx, index, &n);
+            ok = O.objectValue()->__defineOwnProperty__(ctx, index, n, nattrs);
         if (!ok)
             ctx->throwTypeError();
     }
@@ -239,15 +243,14 @@ Value ObjectPrototype::method_seal(SimpleCallContext *ctx)
     Object *o = ctx->argument(0).objectValue();
     o->extensible = false;
 
-    ObjectIterator it(ctx, o, ObjectIterator::NoFlags);
-    while (1) {
-        uint index;
-        String *name;
-        PropertyDescriptor *pd = it.next(&name, &index);
-        if (!pd)
-            break;
-        pd->attrs.setConfigurable(false);
+    o->internalClass = o->internalClass->sealed();
+
+    o->ensureArrayAttributes();
+    for (uint i = 0; i < o->arrayDataLen; ++i) {
+        if (!o->arrayAttributes[i].isGeneric())
+            o->arrayAttributes[i].setConfigurable(false);
     }
+
     return ctx->argument(0);
 }
 
@@ -259,16 +262,14 @@ Value ObjectPrototype::method_freeze(SimpleCallContext *ctx)
     Object *o = ctx->argument(0).objectValue();
     o->extensible = false;
 
-    ObjectIterator it(ctx, o, ObjectIterator::NoFlags);
-    while (1) {
-        uint index;
-        String *name;
-        PropertyDescriptor *pd = it.next(&name, &index);
-        if (!pd)
-            break;
-        if (pd->attrs.type() == PropertyAttributes::Data)
-            pd->attrs.setWritable(false);
-        pd->attrs.setConfigurable(false);
+    o->internalClass = o->internalClass->frozen();
+
+    o->ensureArrayAttributes();
+    for (uint i = 0; i < o->arrayDataLen; ++i) {
+        if (!o->arrayAttributes[i].isGeneric())
+            o->arrayAttributes[i].setConfigurable(false);
+        if (o->arrayAttributes[i].isData())
+            o->arrayAttributes[i].setWritable(false);
     }
     return ctx->argument(0);
 }
@@ -292,16 +293,21 @@ Value ObjectPrototype::method_isSealed(SimpleCallContext *ctx)
     if (o->extensible)
         return Value::fromBoolean(false);
 
-    ObjectIterator it(ctx, o, ObjectIterator::NoFlags);
-    while (1) {
-        uint index;
-        String *name;
-        PropertyDescriptor *pd = it.next(&name, &index);
-        if (!pd)
-            break;
-        if (pd->attrs.isConfigurable())
-            return Value::fromBoolean(false);
+    if (o->internalClass != o->internalClass->sealed())
+        return Value::fromBoolean(false);
+
+    if (!o->arrayDataLen)
+        return Value::fromBoolean(true);
+
+    if (!o->arrayAttributes)
+        return Value::fromBoolean(false);
+
+    for (uint i = 0; i < o->arrayDataLen; ++i) {
+        if (!o->arrayAttributes[i].isGeneric())
+            if (o->arrayAttributes[i].isConfigurable())
+                return Value::fromBoolean(false);
     }
+
     return Value::fromBoolean(true);
 }
 
@@ -314,16 +320,21 @@ Value ObjectPrototype::method_isFrozen(SimpleCallContext *ctx)
     if (o->extensible)
         return Value::fromBoolean(false);
 
-    ObjectIterator it(ctx, o, ObjectIterator::NoFlags);
-    while (1) {
-        uint index;
-        String *name;
-        PropertyDescriptor *pd = it.next(&name, &index);
-        if (!pd)
-            break;
-            if (pd->attrs.isWritable() || pd->attrs.isConfigurable())
-            return Value::fromBoolean(false);
+    if (o->internalClass != o->internalClass->frozen())
+        return Value::fromBoolean(false);
+
+    if (!o->arrayDataLen)
+        return Value::fromBoolean(true);
+
+    if (!o->arrayAttributes)
+        return Value::fromBoolean(false);
+
+    for (uint i = 0; i < o->arrayDataLen; ++i) {
+        if (!o->arrayAttributes[i].isGeneric())
+            if (o->arrayAttributes[i].isConfigurable() || o->arrayAttributes[i].isWritable())
+                return Value::fromBoolean(false);
     }
+
     return Value::fromBoolean(true);
 }
 
@@ -349,7 +360,7 @@ Value ObjectPrototype::method_keys(SimpleCallContext *ctx)
     while (1) {
         uint index;
         String *name;
-        PropertyDescriptor *pd = it.next(&name, &index);
+        Property *pd = it.next(&name, &index);
         if (!pd)
             break;
         Value key;
@@ -422,8 +433,9 @@ Value ObjectPrototype::method_propertyIsEnumerable(SimpleCallContext *ctx)
     String *p = ctx->argument(0).toString(ctx);
 
     Object *o = ctx->thisObject.toObject(ctx);
-    PropertyDescriptor *pd = o->__getOwnProperty__(ctx, p);
-    return Value::fromBoolean(pd && pd->attrs.isEnumerable());
+    PropertyAttributes attrs;
+    o->__getOwnProperty__(ctx, p, &attrs);
+    return Value::fromBoolean(attrs.isEnumerable());
 }
 
 Value ObjectPrototype::method_defineGetter(SimpleCallContext *ctx)
@@ -438,10 +450,8 @@ Value ObjectPrototype::method_defineGetter(SimpleCallContext *ctx)
 
     Object *o = ctx->thisObject.toObject(ctx);
 
-    PropertyDescriptor pd = PropertyDescriptor::fromAccessor(f, 0);
-    pd.attrs.setConfigurable(true);
-    pd.attrs.setEnumerable(true);
-    o->__defineOwnProperty__(ctx, prop, &pd);
+    Property pd = Property::fromAccessor(f, 0);
+    o->__defineOwnProperty__(ctx, prop, pd, Attr_Accessor);
     return Value::undefinedValue();
 }
 
@@ -457,75 +467,75 @@ Value ObjectPrototype::method_defineSetter(SimpleCallContext *ctx)
 
     Object *o = ctx->thisObject.toObject(ctx);
 
-    PropertyDescriptor pd = PropertyDescriptor::fromAccessor(0, f);
-    pd.attrs.setConfigurable(true);
-    pd.attrs.setEnumerable(true);
-    o->__defineOwnProperty__(ctx, prop, &pd);
+    Property pd = Property::fromAccessor(0, f);
+    o->__defineOwnProperty__(ctx, prop, pd, Attr_Accessor);
     return Value::undefinedValue();
 }
 
-void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, PropertyDescriptor *desc)
+void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Property *desc, PropertyAttributes *attrs)
 {
     if (!v.isObject())
         ctx->throwTypeError();
 
     Object *o = v.objectValue();
 
-    desc->attrs.clear();
-    desc->get = 0;
-    desc->set = 0;
+    attrs->clear();
+    desc->setGetter(0);
+    desc->setSetter(0);
 
     if (o->__hasProperty__(ctx, ctx->engine->id_enumerable))
-        desc->attrs.setEnumerable(o->get(ctx, ctx->engine->id_enumerable).toBoolean());
+        attrs->setEnumerable(o->get(ctx, ctx->engine->id_enumerable).toBoolean());
 
     if (o->__hasProperty__(ctx, ctx->engine->id_configurable))
-        desc->attrs.setConfigurable(o->get(ctx, ctx->engine->id_configurable).toBoolean());
+        attrs->setConfigurable(o->get(ctx, ctx->engine->id_configurable).toBoolean());
 
     if (o->__hasProperty__(ctx, ctx->engine->id_get)) {
         Value get = o->get(ctx, ctx->engine->id_get);
         FunctionObject *f = get.asFunctionObject();
         if (f) {
-            desc->get = f;
+            desc->setGetter(f);
         } else if (get.isUndefined()) {
-            desc->get = (FunctionObject *)0x1;
+            desc->setGetter((FunctionObject *)0x1);
         } else {
             ctx->throwTypeError();
         }
-        desc->attrs.setType(PropertyAttributes::Accessor);
+        attrs->setType(PropertyAttributes::Accessor);
     }
 
     if (o->__hasProperty__(ctx, ctx->engine->id_set)) {
         Value set = o->get(ctx, ctx->engine->id_set);
         FunctionObject *f = set.asFunctionObject();
         if (f) {
-            desc->set = f;
+            desc->setSetter(f);
         } else if (set.isUndefined()) {
-            desc->set = (FunctionObject *)0x1;
+            desc->setSetter((FunctionObject *)0x1);
         } else {
             ctx->throwTypeError();
         }
-        desc->attrs.setType(PropertyAttributes::Accessor);
+        attrs->setType(PropertyAttributes::Accessor);
     }
 
     if (o->__hasProperty__(ctx, ctx->engine->id_writable)) {
-        if (desc->attrs.isAccessor())
+        if (attrs->isAccessor())
             ctx->throwTypeError();
-        desc->attrs.setWritable(o->get(ctx, ctx->engine->id_writable).toBoolean());
+        attrs->setWritable(o->get(ctx, ctx->engine->id_writable).toBoolean());
         // writable forces it to be a data descriptor
         desc->value = Value::undefinedValue();
     }
 
     if (o->__hasProperty__(ctx, ctx->engine->id_value)) {
-        if (desc->attrs.isAccessor())
+        if (attrs->isAccessor())
             ctx->throwTypeError();
         desc->value = o->get(ctx, ctx->engine->id_value);
-        desc->attrs.setType(PropertyAttributes::Data);
+        attrs->setType(PropertyAttributes::Data);
     }
 
+    if (attrs->isGeneric())
+        desc->value = Value::deletedValue();
 }
 
 
-Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const PropertyDescriptor *desc)
+Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Property *desc, PropertyAttributes attrs)
 {
     if (!desc)
         return Value::undefinedValue();
@@ -534,24 +544,22 @@ Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Prope
 //    Let obj be the result of creating a new object as if by the expression new Object() where Object is the standard built-in constructor with that name.
     Object *o = engine->newObject();
 
-    PropertyDescriptor pd;
-    pd.attrs = Attr_Data;
-
-    if (desc->attrs.isData()) {
+    Property pd;
+    if (attrs.isData()) {
         pd.value = desc->value;
-        o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("value")), &pd);
-        pd.value = Value::fromBoolean(desc->attrs.isWritable());
-        o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("writable")), &pd);
+        o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("value")), pd, Attr_Data);
+        pd.value = Value::fromBoolean(attrs.isWritable());
+        o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("writable")), pd, Attr_Data);
     } else {
-        pd.value = desc->get ? Value::fromObject(desc->get) : Value::undefinedValue();
-        o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("get")), &pd);
-        pd.value = desc->set ? Value::fromObject(desc->set) : Value::undefinedValue();
-        o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("set")), &pd);
+        pd.value = desc->getter() ? Value::fromObject(desc->getter()) : Value::undefinedValue();
+        o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("get")), pd, Attr_Data);
+        pd.value = desc->setter() ? Value::fromObject(desc->setter()) : Value::undefinedValue();
+        o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("set")), pd, Attr_Data);
     }
-    pd.value = Value::fromBoolean(desc->attrs.isEnumerable());
-    o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("enumerable")), &pd);
-    pd.value = Value::fromBoolean(desc->attrs.isConfigurable());
-    o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("configurable")), &pd);
+    pd.value = Value::fromBoolean(attrs.isEnumerable());
+    o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("enumerable")), pd, Attr_Data);
+    pd.value = Value::fromBoolean(attrs.isConfigurable());
+    o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("configurable")), pd, Attr_Data);
 
     return Value::fromObject(o);
 }

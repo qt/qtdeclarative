@@ -613,11 +613,13 @@ void __qmljs_get_element(ExecutionContext *ctx, Value *result, const Value &obje
     }
 
     if (idx < UINT_MAX) {
-        const PropertyDescriptor *p = o->nonSparseArrayAt(idx);
-        if (p && p->attrs.type() == PropertyAttributes::Data) {
-            if (result)
-                *result = p->value;
-            return;
+        uint pidx = o->propertyIndexFromArrayIndex(idx);
+        if (pidx < UINT_MAX) {
+            if (!o->arrayAttributes || o->arrayAttributes[pidx].isData()) {
+                if (result)
+                    *result = o->arrayData[pidx].value;
+                return;
+            }
         }
 
         Value res = o->getIndexed(ctx, idx);
@@ -638,10 +640,33 @@ void __qmljs_set_element(ExecutionContext *ctx, const Value &object, const Value
 
     uint idx = index.asArrayIndex();
     if (idx < UINT_MAX) {
-        PropertyDescriptor *p = o->nonSparseArrayAt(idx);
-        if (p && p->attrs.type() == PropertyAttributes::Data && p->attrs.isWritable()) {
-            p->value = value;
-            return;
+        uint pidx = o->propertyIndexFromArrayIndex(idx);
+        if (pidx < UINT_MAX) {
+            if (o->arrayAttributes && !o->arrayAttributes[pidx].isEmpty() && !o->arrayAttributes[pidx].isWritable()) {
+                if (ctx->strictMode)
+                    ctx->throwTypeError();
+                return;
+            }
+
+            Property *p = o->arrayData + pidx;
+            if (!o->arrayAttributes || o->arrayAttributes[pidx].isData()) {
+                p->value = value;
+                return;
+            }
+
+            if (o->arrayAttributes[pidx].isAccessor()) {
+                FunctionObject *setter = p->setter();
+                if (!setter) {
+                    if (ctx->strictMode)
+                        ctx->throwTypeError();
+                    return;
+                }
+
+                Value args[1];
+                args[0] = value;
+                setter->call(ctx, Value::fromObject(o), args, 1);
+                return;
+            }
         }
         o->putIndexed(ctx, idx, value);
         return;
@@ -700,9 +725,10 @@ void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Val
     Value res;
     Lookup *l = ctx->lookups + lookupIndex;
     if (Object *o = object.asObject()) {
-        PropertyDescriptor *p = l->lookup(o);
+        PropertyAttributes attrs;
+        Property *p = l->lookup(o, &attrs);
         if (p)
-            res = p->attrs.type() == PropertyAttributes::Data ? p->value : o->getValue(ctx, p);
+            res = attrs.isData() ? p->value : o->getValue(ctx, p, attrs);
         else
             res = Value::undefinedValue();
     } else {
@@ -722,9 +748,10 @@ void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value &object, int
     Object *o = object.toObject(ctx);
     Lookup *l = ctx->lookups + lookupIndex;
 
-    PropertyDescriptor *p = l->setterLookup(o);
+    bool writable;
+    Property *p = l->setterLookup(o, &writable);
     if (p && (l->index != ArrayObject::LengthPropertyIndex || !o->isArrayObject())) {
-        o->putValue(ctx, p, value);
+        o->putValue(ctx, p, o->internalClass->propertyData[l->index], value);
         return;
     }
 
@@ -861,10 +888,11 @@ void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, cons
     else
         baseObject = __qmljs_convert_to_object(context, thisObject);
 
-    PropertyDescriptor *p = l->lookup(baseObject);
+    PropertyAttributes attrs;
+    Property *p = l->lookup(baseObject, &attrs);
     if (!p)
         context->throwTypeError();
-    Value func = p->attrs.type() == PropertyAttributes::Data ? p->value : baseObject->getValue(context, p);
+    Value func = attrs.isData() ? p->value : baseObject->getValue(context, p, attrs);
     FunctionObject *o = func.asFunctionObject();
     if (!o)
         context->throwTypeError();
@@ -1210,9 +1238,8 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const Value &object,
     assert(o);
 
     uint idx = name->asArrayIndex();
-    PropertyDescriptor *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(name, Attr_Data);
+    Property *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(name, Attr_Data);
     pd->value = val ? *val : Value::undefinedValue();
-    pd->attrs = PropertyAttributes(Attr_Data);
 }
 
 void __qmljs_builtin_define_array(ExecutionContext *ctx, Value *array, Value *values, uint length)
@@ -1223,18 +1250,18 @@ void __qmljs_builtin_define_array(ExecutionContext *ctx, Value *array, Value *va
     // This should rather be done when required
     a->arrayReserve(length);
     if (length) {
-        PropertyDescriptor *pd = a->arrayData;
+        a->arrayDataLen = length;
+        Property *pd = a->arrayData;
         for (uint i = 0; i < length; ++i) {
-            if (values[i].isUndefined() && values[i].uint_32 == UINT_MAX) {
+            if (values[i].isDeleted()) {
+                a->ensureArrayAttributes();
                 pd->value = Value::undefinedValue();
-                pd->attrs.clear();
+                a->arrayAttributes[i].clear();
             } else {
                 pd->value = values[i];
-                pd->attrs = PropertyAttributes(Attr_Data);
             }
             ++pd;
         }
-        a->arrayDataLen = length;
         a->setArrayLengthUnchecked(length);
     }
     *array = Value::fromObject(a);
@@ -1246,10 +1273,9 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &ob
     assert(o);
 
     uint idx = name->asArrayIndex();
-    PropertyDescriptor *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(name, Attr_Accessor);
-    pd->get = getter ? getter->asFunctionObject() : 0;
-    pd->set = setter ? setter->asFunctionObject() : 0;
-    pd->attrs = Attr_Accessor;
+    Property *pd = (idx != UINT_MAX) ? o->arrayInsert(idx, Attr_Accessor) : o->insertMember(name, Attr_Accessor);
+    pd->setGetter(getter ? getter->asFunctionObject() : 0);
+    pd->setSetter(setter ? setter->asFunctionObject() : 0);
 }
 
 void __qmljs_increment(ExecutionContext *ctx, Value *result, const Value &value)

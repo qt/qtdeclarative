@@ -70,7 +70,7 @@ Object::Object(ExecutionEngine *engine)
     : prototype(0)
     , internalClass(engine->emptyClass)
     , memberDataAlloc(0), memberData(0)
-    , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayData(0), sparseArray(0)
+    , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
     , externalResource(0)
 {
     vtbl = &static_vtbl;
@@ -81,7 +81,7 @@ Object::Object(ExecutionContext *context)
     : prototype(0)
     , internalClass(context->engine->emptyClass)
     , memberDataAlloc(0), memberData(0)
-    , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayData(0), sparseArray(0)
+    , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
     , externalResource(0)
 {
     vtbl = &static_vtbl;
@@ -93,6 +93,8 @@ Object::~Object()
     delete externalResource;
     delete [] memberData;
     delete [] (arrayData - (sparseArray ? 0 : arrayOffset));
+    if (arrayAttributes)
+        delete [] (arrayAttributes - (sparseArray ? 0 : arrayOffset));
     delete sparseArray;
     _data = 0;
 }
@@ -107,54 +109,30 @@ void Object::put(ExecutionContext *ctx, const QString &name, const Value &value)
     put(ctx, ctx->engine->newString(name), value);
 }
 
-Value Object::getValue(const Value &thisObject, ExecutionContext *ctx, const PropertyDescriptor *p)
+Value Object::getValue(const Value &thisObject, ExecutionContext *ctx, const Property *p, PropertyAttributes attrs)
 {
-    assert(p->attrs.type() != PropertyAttributes::Generic);
-    if (p->attrs.isData())
+    if (!attrs.isAccessor())
         return p->value;
-    if (!p->get)
+    FunctionObject *getter = p->getter();
+    if (!getter)
         return Value::undefinedValue();
 
-    return p->get->call(ctx, thisObject, 0, 0);
+    return getter->call(ctx, thisObject, 0, 0);
 }
 
-void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value &value)
+void Object::putValue(ExecutionContext *ctx, Property *pd, PropertyAttributes attrs, const Value &value)
 {
-    if (pd->attrs.isAccessor()) {
-            if (pd->set) {
-                Value args[1];
-                args[0] = value;
-                pd->set->call(ctx, Value::fromObject(this), args, 1);
-                return;
-            }
-            goto reject;
-    }
-
-    if (!pd->attrs.isWritable())
+    if (attrs.isAccessor()) {
+        if (pd->set) {
+            Value args[1];
+            args[0] = value;
+            pd->set->call(ctx, Value::fromObject(this), args, 1);
+            return;
+        }
         goto reject;
-
-    pd->value = value;
-    return;
-
-  reject:
-    if (ctx->strictMode)
-        ctx->throwTypeError();
-
-}
-
-void Object::putValue(ExecutionContext *ctx, PropertyDescriptor *pd, const Value &thisObject, const Value &value)
-{
-    if (pd->attrs.isAccessor()) {
-            if (pd->set) {
-                Value args[1];
-                args[0] = value;
-                pd->set->call(ctx, thisObject, args, 1);
-                return;
-            }
-            goto reject;
     }
 
-    if (!pd->attrs.isWritable())
+    if (!attrs.isWritable())
         goto reject;
 
     pd->value = value;
@@ -192,8 +170,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, c
 
 void Object::defineDefaultProperty(String *name, Value value)
 {
-    PropertyDescriptor *pd = insertMember(name, Attr_Data|Attr_NotEnumerable);
-    pd->attrs = Attr_Data|Attr_NotEnumerable;
+    Property *pd = insertMember(name, Attr_Data|Attr_NotEnumerable);
     pd->value = value;
 }
 
@@ -218,8 +195,7 @@ void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name
 
 void Object::defineReadonlyProperty(String *name, Value value)
 {
-    PropertyDescriptor *pd = insertMember(name, Attr_ReadOnly);
-    pd->attrs = Attr_ReadOnly;
+    Property *pd = insertMember(name, Attr_ReadOnly);
     pd->value = value;
 }
 
@@ -230,29 +206,29 @@ void Object::markObjects(Managed *that)
         o->prototype->mark();
 
     for (int i = 0; i < o->internalClass->size; ++i) {
-        const PropertyDescriptor &pd = o->memberData[i];
-        if (pd.attrs.isData()) {
+        const Property &pd = o->memberData[i];
+        if (o->internalClass->propertyData[i].isData()) {
             if (Managed *m = pd.value.asManaged())
                 m->mark();
-         } else if (pd.attrs.isAccessor()) {
-            if (pd.get)
-                pd.get->mark();
-            if (pd.set)
-                pd.set->mark();
+         } else {
+            if (pd.getter())
+                pd.getter()->mark();
+            if (pd.setter())
+                pd.setter()->mark();
         }
     }
     o->markArrayObjects();
 }
 
-PropertyDescriptor *Object::insertMember(String *s, PropertyAttributes attributes)
+Property *Object::insertMember(String *s, PropertyAttributes attributes)
 {
     uint idx;
     internalClass = internalClass->addMember(s, attributes, &idx);
 
     if (idx >= memberDataAlloc) {
         memberDataAlloc = qMax((uint)8, 2*memberDataAlloc);
-        PropertyDescriptor *newMemberData = new PropertyDescriptor[memberDataAlloc];
-        memcpy(newMemberData, memberData, sizeof(PropertyDescriptor)*idx);
+        Property *newMemberData = new Property[memberDataAlloc];
+        memcpy(newMemberData, memberData, sizeof(Property)*idx);
         delete [] memberData;
         memberData = newMemberData;
     }
@@ -260,32 +236,52 @@ PropertyDescriptor *Object::insertMember(String *s, PropertyAttributes attribute
 }
 
 // Section 8.12.1
-PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, String *name)
+Property *Object::__getOwnProperty__(ExecutionContext *ctx, String *name, PropertyAttributes *attrs)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return __getOwnProperty__(ctx, idx);
+        return __getOwnProperty__(ctx, idx, attrs);
 
     uint member = internalClass->find(name);
-    if (member < UINT_MAX)
+    if (member < UINT_MAX) {
+        if (attrs)
+            *attrs = internalClass->propertyData[member];
         return memberData + member;
+    }
 
+    if (attrs)
+        *attrs = Attr_Invalid;
     return 0;
 }
 
-PropertyDescriptor *Object::__getOwnProperty__(ExecutionContext *ctx, uint index)
+Property *Object::__getOwnProperty__(ExecutionContext *ctx, uint index, PropertyAttributes *attrs)
 {
-    PropertyDescriptor *p = arrayAt(index);
-    if (p && p->attrs.type() != PropertyAttributes::Generic)
-        return p;
-    if (isStringObject())
+    uint pidx = propertyIndexFromArrayIndex(index);
+    if (pidx < UINT_MAX) {
+        Property *p = arrayData + pidx;
+        if (!arrayAttributes || arrayAttributes[pidx].isData()) {
+            if (attrs)
+                *attrs = arrayAttributes ? arrayAttributes[pidx] : PropertyAttributes(Attr_Data);
+            return p;
+        } else if (arrayAttributes[pidx].isAccessor()) {
+            if (attrs)
+                *attrs = arrayAttributes ? arrayAttributes[pidx] : PropertyAttributes(Attr_Accessor);
+            return p;
+        }
+    }
+    if (isStringObject()) {
+        if (attrs)
+            *attrs = Attr_NotConfigurable|Attr_NotWritable;
         return static_cast<StringObject *>(this)->getIndex(ctx, index);
+    }
 
+    if (attrs)
+        *attrs = Attr_Invalid;
     return 0;
 }
 
 // Section 8.12.2
-PropertyDescriptor *Object::__getPropertyDescriptor__(const ExecutionContext *ctx, String *name) const
+Property *Object::__getPropertyDescriptor__(const ExecutionContext *ctx, String *name, PropertyAttributes *attrs) const
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -295,28 +291,44 @@ PropertyDescriptor *Object::__getPropertyDescriptor__(const ExecutionContext *ct
     const Object *o = this;
     while (o) {
         uint idx = o->internalClass->find(name);
-        if (idx < UINT_MAX)
+        if (idx < UINT_MAX) {
+            if (attrs)
+                *attrs = o->internalClass->propertyData[idx];
             return o->memberData + idx;
+        }
 
         o = o->prototype;
     }
+    if (attrs)
+        *attrs = Attr_Invalid;
     return 0;
 }
 
-PropertyDescriptor *Object::__getPropertyDescriptor__(const ExecutionContext *ctx, uint index) const
+Property *Object::__getPropertyDescriptor__(const ExecutionContext *ctx, uint index, PropertyAttributes *attrs) const
 {
     const Object *o = this;
     while (o) {
-        PropertyDescriptor *p = o->arrayAt(index);
-        if (p && p->attrs.type() != PropertyAttributes::Generic)
-            return p;
-        if (o->isStringObject()) {
-            p = static_cast<const StringObject *>(o)->getIndex(ctx, index);
-            if (p)
+        uint pidx = o->propertyIndexFromArrayIndex(index);
+        if (pidx < UINT_MAX) {
+            Property *p = o->arrayData + pidx;
+            if (!o->arrayAttributes || !o->arrayAttributes[pidx].isGeneric()) {
+                if (attrs)
+                    *attrs = o->arrayAttributes ? o->arrayAttributes[pidx] : PropertyAttributes(Attr_Data);
                 return p;
+            }
+        }
+        if (o->isStringObject()) {
+            Property *p = static_cast<const StringObject *>(o)->getIndex(ctx, index);
+            if (p) {
+                if (attrs)
+                    *attrs = (Attr_NotWritable|Attr_NotConfigurable);
+                return p;
+            }
         }
         o = o->prototype;
     }
+    if (attrs)
+        *attrs = Attr_Invalid;
     return 0;
 }
 
@@ -342,20 +354,39 @@ void Object::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Val
 
 PropertyAttributes Object::query(Managed *m, ExecutionContext *ctx, String *name)
 {
-    Object *that = static_cast<Object *>(m);
-    PropertyDescriptor *pd = that->__getPropertyDescriptor__(ctx, name);
-    if (!pd || pd->attrs.type() == PropertyAttributes::Generic)
-        return Attr_Invalid;
-    return pd->attrs;
+    uint idx = name->asArrayIndex();
+    if (idx != UINT_MAX)
+        return queryIndexed(m, ctx, idx);
+
+    const Object *o = static_cast<Object *>(m);
+    while (o) {
+        uint idx = o->internalClass->find(name);
+        if (idx < UINT_MAX)
+            return o->internalClass->propertyData[idx];
+
+        o = o->prototype;
+    }
+    return Attr_Invalid;
 }
 
 PropertyAttributes Object::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
 {
-    Object *that = static_cast<Object *>(m);
-    PropertyDescriptor *pd = that->__getPropertyDescriptor__(ctx, index);
-    if (!pd || pd->attrs.type() == PropertyAttributes::Generic)
-        return Attr_Invalid;
-    return pd->attrs;
+    const Object *o = static_cast<Object *>(m);
+    while (o) {
+        uint pidx = o->propertyIndexFromArrayIndex(index);
+        if (pidx < UINT_MAX) {
+            if (o->arrayAttributes)
+                return o->arrayAttributes[pidx];
+            return Attr_Data;
+        }
+        if (o->isStringObject()) {
+            Property *p = static_cast<const StringObject *>(o)->getIndex(ctx, index);
+            if (p)
+                return Attr_Data;
+        }
+        o = o->prototype;
+    }
+    return Attr_Invalid;
 }
 
 bool Object::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
@@ -390,7 +421,7 @@ Value Object::internalGet(ExecutionContext *ctx, String *name, bool *hasProperty
         if (idx < UINT_MAX) {
             if (hasProperty)
                 *hasProperty = true;
-            return getValue(ctx, o->memberData + idx);
+            return getValue(ctx, o->memberData + idx, o->internalClass->propertyData.at(idx));
         }
 
         o = o->prototype;
@@ -403,18 +434,23 @@ Value Object::internalGet(ExecutionContext *ctx, String *name, bool *hasProperty
 
 Value Object::internalGetIndexed(ExecutionContext *ctx, uint index, bool *hasProperty)
 {
-    PropertyDescriptor *pd = 0;
+    Property *pd = 0;
+    PropertyAttributes attrs = Attr_Data;
     Object *o = this;
     while (o) {
-        PropertyDescriptor *p = o->arrayAt(index);
-        if (p && p->attrs.type() != PropertyAttributes::Generic) {
-            pd = p;
-            break;
+        uint pidx = o->propertyIndexFromArrayIndex(index);
+        if (pidx < UINT_MAX) {
+            if (!o->arrayAttributes || !o->arrayAttributes[pidx].isGeneric()) {
+                pd = o->arrayData + pidx;
+                if (o->arrayAttributes)
+                    attrs = o->arrayAttributes[pidx];
+                break;
+            }
         }
         if (o->isStringObject()) {
-            p = static_cast<StringObject *>(o)->getIndex(ctx, index);
-            if (p) {
-                pd = p;
+            pd = static_cast<StringObject *>(o)->getIndex(ctx, index);
+            if (pd) {
+                attrs = (Attr_NotWritable|Attr_NotConfigurable);
                 break;
             }
         }
@@ -424,7 +460,7 @@ Value Object::internalGetIndexed(ExecutionContext *ctx, uint index, bool *hasPro
     if (pd) {
         if (hasProperty)
             *hasProperty = true;
-        return getValue(ctx, pd);
+        return getValue(ctx, pd, attrs);
     }
 
     if (hasProperty)
@@ -443,15 +479,20 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
     name->makeIdentifier(ctx);
 
     uint member = internalClass->find(name);
-    PropertyDescriptor *pd = (member < UINT_MAX) ? memberData + member : 0;
+    Property *pd = 0;
+    PropertyAttributes attrs;
+    if (member < UINT_MAX) {
+        pd = memberData + member;
+        attrs = internalClass->propertyData[member];
+    }
 
     // clause 1
     if (pd) {
-        if (pd->attrs.isAccessor()) {
-                if (pd->set)
-                    goto cont;
-                goto reject;
-        } else if (!pd->attrs.isWritable())
+        if (attrs.isAccessor()) {
+            if (pd->setter())
+                goto cont;
+            goto reject;
+        } else if (!attrs.isWritable())
             goto reject;
         else if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
             bool ok;
@@ -469,15 +510,16 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
         if (!extensible)
             goto reject;
     } else {
-        if (PropertyDescriptor *p = prototype->__getPropertyDescriptor__(ctx, name)) {
-            if (p->attrs.isAccessor()) {
-                if (p->set)
+        PropertyAttributes attrs;
+        if (Property *p = prototype->__getPropertyDescriptor__(ctx, name, &attrs)) {
+            if (attrs.isAccessor()) {
+                if (p->setter())
                     goto cont;
                 goto reject;
             }
             if (!extensible)
                 goto reject;
-            if (!p->attrs.isWritable())
+            if (!attrs.isWritable())
                 goto reject;
         } else {
             if (!extensible)
@@ -489,22 +531,22 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
 
 
     // clause 4
+    // ### should be able to remove these two lines (see call 15 lines above)
     if (!pd && prototype)
-        pd = prototype->__getPropertyDescriptor__(ctx, name);
+        pd = prototype->__getPropertyDescriptor__(ctx, name, &attrs);
 
     // Clause 5
-    if (pd && pd->attrs.isAccessor()) {
-        assert(pd->set != 0);
+    if (pd && attrs.isAccessor()) {
+        assert(pd->setter() != 0);
 
         Value args[1];
         args[0] = value;
-        pd->set->call(ctx, Value::fromObject(this), args, 1);
+        pd->setter()->call(ctx, Value::fromObject(this), args, 1);
         return;
     }
 
     {
-        PropertyDescriptor *p = insertMember(name, Attr_Data);
-        p->attrs = Attr_Data;
+        Property *p = insertMember(name, Attr_Data);
         p->value = value;
         return;
     }
@@ -516,19 +558,33 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
 
 void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &value)
 {
-    PropertyDescriptor *pd = arrayAt(index);
-    if (pd && pd->attrs.type() == PropertyAttributes::Generic)
-        pd = 0;
-    if (!pd && isStringObject())
+    Property *pd = 0;
+    PropertyAttributes attrs;
+
+    uint pidx = propertyIndexFromArrayIndex(index);
+    if (pidx < UINT_MAX) {
+        if (arrayAttributes && arrayAttributes[pidx].isGeneric()) {
+            pidx = UINT_MAX;
+        } else {
+            pd = arrayData + pidx;
+            attrs = arrayAttributes ? arrayAttributes[pidx] : PropertyAttributes(Attr_Data);
+        }
+    }
+
+    if (!pd && isStringObject()) {
         pd = static_cast<StringObject *>(this)->getIndex(ctx, index);
+        if (pd)
+            // not writable
+            goto reject;
+    }
 
     // clause 1
     if (pd) {
-        if (pd->attrs.isAccessor()) {
-                if (pd->set)
-                    goto cont;
-                goto reject;
-        } else if (!pd->attrs.isWritable())
+        if (attrs.isAccessor()) {
+            if (pd->setter())
+                goto cont;
+            goto reject;
+        } else if (!attrs.isWritable())
             goto reject;
         else
             pd->value = value;
@@ -537,15 +593,16 @@ void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &
         if (!extensible)
             goto reject;
     } else {
-        if (PropertyDescriptor *p = prototype->__getPropertyDescriptor__(ctx, index)) {
-            if (p->attrs.isAccessor()) {
-                if (p->set)
+        PropertyAttributes attrs;
+        if (Property *p = prototype->__getPropertyDescriptor__(ctx, index, &attrs)) {
+            if (attrs.isAccessor()) {
+                if (p->setter())
                     goto cont;
                 goto reject;
             }
             if (!extensible)
                 goto reject;
-            if (!p->attrs.isWritable())
+            if (!attrs.isWritable())
                 goto reject;
         } else {
             if (!extensible)
@@ -556,16 +613,17 @@ void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &
     cont:
 
     // clause 4
+    // ### remove and replace with 15 lines above...
     if (!pd && prototype)
-        pd = prototype->__getPropertyDescriptor__(ctx, index);
+        pd = prototype->__getPropertyDescriptor__(ctx, index, &attrs);
 
     // Clause 5
-    if (pd && pd->attrs.isAccessor()) {
-        assert(pd->set != 0);
+    if (pd && attrs.isAccessor()) {
+        assert(pd->setter() != 0);
 
         Value args[1];
         args[0] = value;
-        pd->set->call(ctx, Value::fromObject(this), args, 1);
+        pd->setter()->call(ctx, Value::fromObject(this), args, 1);
         return;
     }
 
@@ -588,10 +646,9 @@ bool Object::internalDeleteProperty(ExecutionContext *ctx, String *name)
 
     uint memberIdx = internalClass->find(name);
     if (memberIdx != UINT_MAX) {
-        PropertyDescriptor &pd = memberData[memberIdx];
-        if (pd.attrs.isConfigurable()) {
+        if (internalClass->propertyData[memberIdx].isConfigurable()) {
             internalClass->removeMember(this, name->identifier);
-            memmove(memberData + memberIdx, memberData + memberIdx + 1, (internalClass->size - memberIdx)*sizeof(PropertyDescriptor));
+            memmove(memberData + memberIdx, memberData + memberIdx + 1, (internalClass->size - memberIdx)*sizeof(Property));
             return true;
         }
         if (ctx->strictMode)
@@ -604,25 +661,20 @@ bool Object::internalDeleteProperty(ExecutionContext *ctx, String *name)
 
 bool Object::internalDeleteIndexedProperty(ExecutionContext *ctx, uint index)
 {
-    PropertyDescriptor *pd = 0;
-    if (!sparseArray) {
-        if (index >= arrayDataLen)
-            return true;
-        pd = arrayAt(index);
-    } else {
-        SparseArrayNode *n = sparseArray->findNode(index);
-        if (n)
-            pd = arrayDecriptor(n->value);
-    }
-    if (!pd || pd->attrs.type() == PropertyAttributes::Generic)
+    uint pidx = propertyIndexFromArrayIndex(index);
+    if (pidx == UINT_MAX)
+        return true;
+    if (arrayAttributes && arrayAttributes[pidx].isGeneric())
         return true;
 
-    if (pd->attrs.isConfigurable()) {
-        pd->attrs.clear();
-        pd->value = Value::undefinedValue();
+    if (!arrayAttributes || arrayAttributes[pidx].isConfigurable()) {
+        arrayData[pidx].value = Value::undefinedValue();
+        if (!arrayAttributes)
+            ensureArrayAttributes();
+        arrayAttributes[pidx].clear();
         if (sparseArray) {
-            pd->value.int_32 = arrayFreeList;
-            arrayFreeList = pd - arrayData;
+            arrayData[pidx].value.int_32 = arrayFreeList;
+            arrayFreeList = pidx;
         }
         return true;
     }
@@ -633,33 +685,35 @@ bool Object::internalDeleteIndexedProperty(ExecutionContext *ctx, uint index)
 }
 
 // Section 8.12.9
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const PropertyDescriptor *desc)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Property &p, PropertyAttributes attrs)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return __defineOwnProperty__(ctx, idx, desc);
+        return __defineOwnProperty__(ctx, idx, p, attrs);
 
     name->makeIdentifier(ctx);
 
-    PropertyDescriptor *current;
+    Property *current;
+    PropertyAttributes *cattrs;
 
     if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
-        PropertyDescriptor *lp = memberData + ArrayObject::LengthPropertyIndex;
-        assert(0 == internalClass->find(ctx->engine->id_length));
-        if (desc->attrs.isEmpty() || desc->isSubset(desc->attrs, lp))
+        assert(ArrayObject::LengthPropertyIndex == internalClass->find(ctx->engine->id_length));
+        Property *lp = memberData + ArrayObject::LengthPropertyIndex;
+        cattrs = internalClass->propertyData.data() + ArrayObject::LengthPropertyIndex;
+        if (attrs.isEmpty() || p.isSubset(attrs, *lp, *cattrs))
             return true;
-        if (!lp->attrs.isWritable() || desc->attrs.type() == PropertyAttributes::Accessor || desc->attrs.isConfigurable() || desc->attrs.isEnumerable())
+        if (!cattrs->isWritable() || attrs.type() == PropertyAttributes::Accessor || attrs.isConfigurable() || attrs.isEnumerable())
             goto reject;
         bool succeeded = true;
-        if (desc->attrs.type() == PropertyAttributes::Data) {
+        if (attrs.type() == PropertyAttributes::Data) {
             bool ok;
-            uint l = desc->value.asArrayLength(ctx, &ok);
+            uint l = p.value.asArrayLength(ctx, &ok);
             if (!ok)
-                ctx->throwRangeError(desc->value);
+                ctx->throwRangeError(p.value);
             succeeded = setArrayLength(l);
         }
-        if (desc->attrs.hasWritable() && !desc->attrs.isWritable())
-            lp->attrs.setWritable(false);
+        if (attrs.hasWritable() && !attrs.isWritable())
+            cattrs->setWritable(false);
         if (!succeeded)
             goto reject;
         return true;
@@ -669,6 +723,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
     {
         uint member = internalClass->find(name);
         current = (member < UINT_MAX) ? memberData + member : 0;
+        cattrs = internalClass->propertyData.data() + member;
     }
 
     if (!current) {
@@ -676,112 +731,128 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
         if (!extensible)
             goto reject;
         // clause 4
-        PropertyDescriptor *pd = insertMember(name, desc->attrs);
-        *pd = *desc;
-        pd->fullyPopulated(&pd->attrs);
+        Property *pd = insertMember(name, attrs);
+        *pd = p;
+        pd->fullyPopulated(&attrs);
         return true;
     }
 
-    return __defineOwnProperty__(ctx, current, desc);
+    return __defineOwnProperty__(ctx, current, name, p, attrs);
 reject:
   if (ctx->strictMode)
       ctx->throwTypeError();
   return false;
 }
 
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Property &p, PropertyAttributes attrs)
 {
-    PropertyDescriptor *current;
+    Property *current = 0;
 
     // 15.4.5.1, 4b
-    if (isArrayObject() && index >= arrayLength() && !memberData[ArrayObject::LengthPropertyIndex].attrs.isWritable())
+    if (isArrayObject() && index >= arrayLength() && !internalClass->propertyData[ArrayObject::LengthPropertyIndex].isWritable())
         goto reject;
 
     if (isNonStrictArgumentsObject)
-        return static_cast<ArgumentsObject *>(this)->defineOwnProperty(ctx, index, desc);
+        return static_cast<ArgumentsObject *>(this)->defineOwnProperty(ctx, index, p, attrs);
 
     // Clause 1
-    current = arrayAt(index);
-    if (current && current->attrs.type() == PropertyAttributes::Generic)
-        current = 0;
-    if (!current && isStringObject())
-        current = static_cast<StringObject *>(this)->getIndex(ctx, index);
+    {
+        uint pidx = propertyIndexFromArrayIndex(index);
+        if (pidx < UINT_MAX && (!arrayAttributes || !arrayAttributes[pidx].isGeneric()))
+            current = arrayData + pidx;
+        if (!current && isStringObject())
+            current = static_cast<StringObject *>(this)->getIndex(ctx, index);
+    }
 
     if (!current) {
         // clause 3
         if (!extensible)
             goto reject;
         // clause 4
-        PropertyDescriptor *pd = arrayInsert(index);
-        *pd = *desc;
-        pd->fullyPopulated(&pd->attrs);
+        Property *pd = arrayInsert(index, attrs);
+        *pd = p;
+        pd->fullyPopulated(&attrs);
         return true;
     }
 
-    return __defineOwnProperty__(ctx, current, desc);
+    return __defineOwnProperty__(ctx, current, 0 /*member*/, p, attrs);
 reject:
   if (ctx->strictMode)
       ctx->throwTypeError();
   return false;
 }
 
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *current, const PropertyDescriptor *desc)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, Property *current, String *member, const Property &p, PropertyAttributes attrs)
 {
     // clause 5
-    if (desc->attrs.isEmpty())
+    if (attrs.isEmpty())
         return true;
 
+    PropertyAttributes cattrs = Attr_Data;
+    if (member)
+        cattrs = internalClass->propertyData[current - memberData];
+    else if (arrayAttributes)
+        cattrs = arrayAttributes[current - arrayData];
+
     // clause 6
-    if (desc->isSubset(desc->attrs, current))
+    if (p.isSubset(attrs, *current, cattrs))
         return true;
 
     // clause 7
-    if (!current->attrs.isConfigurable()) {
-        if (desc->attrs.isConfigurable())
+    if (!cattrs.isConfigurable()) {
+        if (attrs.isConfigurable())
             goto reject;
-        if (desc->attrs.hasEnumerable() && desc->attrs.isEnumerable() != current->attrs.isEnumerable())
+        if (attrs.hasEnumerable() && attrs.isEnumerable() != cattrs.isEnumerable())
             goto reject;
     }
 
     // clause 8
-    if (desc->attrs.isGeneric())
+    if (attrs.isGeneric())
         goto accept;
 
     // clause 9
-    if (current->attrs.isData() != desc->attrs.isData()) {
+    if (cattrs.isData() != attrs.isData()) {
         // 9a
-        if (!current->attrs.isConfigurable())
+        if (!cattrs.isConfigurable())
             goto reject;
-        if (current->attrs.isData()) {
+        if (cattrs.isData()) {
             // 9b
-            current->attrs.setType(PropertyAttributes::Accessor);
-            current->attrs.clearWritable();
-            current->get = 0;
-            current->set = 0;
+            cattrs.setType(PropertyAttributes::Accessor);
+            cattrs.clearWritable();
+            current->setGetter(0);
+            current->setSetter(0);
         } else {
             // 9c
-            current->attrs.setType(PropertyAttributes::Data);
-            current->attrs.setWritable(false);
+            cattrs.setType(PropertyAttributes::Data);
+            cattrs.setWritable(false);
             current->value = Value::undefinedValue();
         }
-    } else if (current->attrs.isData() && desc->attrs.isData()) { // clause 10
-        if (!current->attrs.isConfigurable() && !current->attrs.isWritable()) {
-            if (desc->attrs.isWritable() || !current->value.sameValue(desc->value))
+    } else if (cattrs.isData() && attrs.isData()) { // clause 10
+        if (!cattrs.isConfigurable() && !cattrs.isWritable()) {
+            if (attrs.isWritable() || !current->value.sameValue(p.value))
                 goto reject;
         }
     } else { // clause 10
-        assert(current->attrs.isAccessor() && desc->attrs.isAccessor());
-        if (!current->attrs.isConfigurable()) {
-            if (desc->get && !(current->get == desc->get || (!current->get && (quintptr)desc->get == 0x1)))
+        assert(cattrs.isAccessor() && attrs.isAccessor());
+        if (!cattrs.isConfigurable()) {
+            if (p.getter() && !(current->getter() == p.getter() || (!current->getter() && (quintptr)p.getter() == 0x1)))
                 goto reject;
-            if (desc->set && !(current->set == desc->set || (!current->set && (quintptr)desc->set == 0x1)))
+            if (p.setter() && !(current->setter() == p.setter() || (!current->setter() && (quintptr)p.setter() == 0x1)))
                 goto reject;
         }
     }
 
   accept:
 
-    current->merge(current->attrs, *desc);
+    current->merge(cattrs, p, attrs);
+    if (member) {
+        internalClass = internalClass->changeMember(member, cattrs);
+    } else {
+        if (cattrs != Attr_Data)
+            ensureArrayAttributes();
+        if (arrayAttributes)
+            arrayAttributes[current - arrayData] = cattrs;
+    }
     return true;
   reject:
     if (ctx->strictMode)
@@ -790,9 +861,9 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, PropertyDescriptor *cu
 }
 
 
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, const PropertyDescriptor *desc)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, const Property &p, PropertyAttributes attrs)
 {
-    return __defineOwnProperty__(ctx, ctx->engine->newString(name), desc);
+    return __defineOwnProperty__(ctx, ctx->engine->newString(name), p, attrs);
 }
 
 
@@ -800,7 +871,7 @@ void Object::copyArrayData(Object *other)
 {
     arrayReserve(other->arrayDataLen);
     arrayDataLen = other->arrayDataLen;
-    memcpy(arrayData, other->arrayData, arrayDataLen*sizeof(PropertyDescriptor));
+    memcpy(arrayData, other->arrayData, arrayDataLen*sizeof(Property));
     arrayOffset = 0;
     if (other->sparseArray) {
         sparseArray = new SparseArray(*other->sparseArray);
@@ -819,7 +890,7 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
         if (p->arrayDataLen)
             protoHasArray = true;
 
-    if (protoHasArray) {
+    if (protoHasArray || o->arrayAttributes) {
         // lets be safe and slow
         for (uint i = fromIndex; i < endIndex; ++i) {
             bool exists;
@@ -830,19 +901,19 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
     } else if (sparseArray) {
         for (SparseArrayNode *n = sparseArray->lowerBound(fromIndex); n != sparseArray->end() && n->key() < endIndex; n = n->nextNode()) {
             bool exists;
-            Value value = o->getValueChecked(ctx, arrayDecriptor(n->value), &exists);
+            Value value = o->getValueChecked(ctx, arrayData + n->value, arrayAttributes ? arrayAttributes[n->value] : Attr_Data, &exists);
             if (exists && __qmljs_strict_equal(value, v, ctx))
                 return Value::fromDouble(n->key());
         }
     } else {
         if ((int) endIndex > arrayDataLen)
             endIndex = arrayDataLen;
-        PropertyDescriptor *pd = arrayData;
-        PropertyDescriptor *end = pd + endIndex;
+        Property *pd = arrayData;
+        Property *end = pd + endIndex;
         pd += fromIndex;
         while (pd < end) {
             bool exists;
-            Value value = o->getValueChecked(ctx, pd, &exists);
+            Value value = o->getValueChecked(ctx, pd, arrayAttributes ? arrayAttributes[pd - arrayData] : Attr_Data, &exists);
             if (exists && __qmljs_strict_equal(value, v, ctx))
                 return Value::fromDouble(pd - arrayData);
             ++pd;
@@ -856,14 +927,17 @@ void Object::arrayConcat(const ArrayObject *other)
     int newLen = arrayDataLen + other->arrayLength();
     if (other->sparseArray)
         initSparse();
+    // ### copy attributes as well!
     if (sparseArray) {
         if (other->sparseArray) {
             for (const SparseArrayNode *it = other->sparseArray->begin(); it != other->sparseArray->end(); it = it->nextNode())
-                arraySet(arrayDataLen + it->key(), other->arrayDecriptor(it->value));
+                arraySet(arrayDataLen + it->key(), other->arrayData + it->value);
         } else {
             int oldSize = arrayDataLen;
             arrayReserve(oldSize + other->arrayLength());
-            memcpy(arrayData + oldSize, other->arrayData, other->arrayLength()*sizeof(PropertyDescriptor));
+            memcpy(arrayData + oldSize, other->arrayData, other->arrayLength()*sizeof(Property));
+            if (arrayAttributes)
+                std::fill(arrayAttributes + oldSize, arrayAttributes + oldSize + other->arrayLength(), PropertyAttributes(Attr_Data));
             for (uint i = 0; i < other->arrayLength(); ++i) {
                 SparseArrayNode *n = sparseArray->insert(arrayDataLen + i);
                 n->value = oldSize + i;
@@ -873,13 +947,26 @@ void Object::arrayConcat(const ArrayObject *other)
         int oldSize = arrayLength();
         arrayReserve(oldSize + other->arrayDataLen);
         if (oldSize > arrayDataLen) {
-            PropertyDescriptor generic;
-            generic.attrs.clear();
-            generic.value = Value::undefinedValue();
-            std::fill(arrayData + arrayDataLen, arrayData + oldSize, generic);
+            ensureArrayAttributes();
+            std::fill(arrayAttributes + arrayDataLen, arrayAttributes + oldSize, PropertyAttributes());
         }
         arrayDataLen = oldSize + other->arrayDataLen;
-        memcpy(arrayData + oldSize, other->arrayData, other->arrayDataLen*sizeof(PropertyDescriptor));
+        if (other->arrayAttributes) {
+            for (int i = 0; i < arrayDataLen; ++i) {
+                bool exists;
+                arrayData[oldSize + i].value = const_cast<ArrayObject *>(other)->getIndexed(internalClass->engine->current, i, &exists);
+                if (arrayAttributes)
+                    arrayAttributes[oldSize + i] = Attr_Data;
+                if (!exists) {
+                    ensureArrayAttributes();
+                    arrayAttributes[oldSize + i].clear();
+                }
+            }
+        } else {
+            memcpy(arrayData + oldSize, other->arrayData, other->arrayDataLen*sizeof(Property));
+            if (arrayAttributes)
+                std::fill(arrayAttributes + oldSize, arrayAttributes + oldSize + other->arrayDataLen, PropertyAttributes(Attr_Data));
+        }
     }
     setArrayLengthUnchecked(newLen);
 }
@@ -892,14 +979,34 @@ void Object::arraySort(ExecutionContext *context, Object *thisObject, const Valu
     if (sparseArray) {
         context->throwUnimplemented("Object::sort unimplemented for sparse arrays");
         return;
-        delete sparseArray;
     }
 
-    ArrayElementLessThan lessThan(context, thisObject, comparefn);
     if (len > arrayDataLen)
         len = arrayDataLen;
 
-    PropertyDescriptor *begin = arrayData;
+    // The spec says the sorting goes through a series of get,put and delete operations.
+    // this implies that the attributes don't get sorted around.
+    // behavior of accessor properties is implementation defined. We simply turn them all
+    // into data properties and then sort. This is in line with the sentence above.
+    if (arrayAttributes) {
+        for (uint i = 0; i < len; i++) {
+            if (arrayAttributes[i].isGeneric()) {
+                while (--len > i)
+                    if (!arrayAttributes[len].isGeneric())
+                        break;
+                arrayData[i].value = getValue(context, arrayData + len, arrayAttributes[len]);
+                arrayAttributes[i] = Attr_Data;
+                arrayAttributes[len].clear();
+            } else if (arrayAttributes[i].isAccessor()) {
+                arrayData[i].value = getValue(context, arrayData + i, arrayAttributes[i]);
+                arrayAttributes[i] = Attr_Data;
+            }
+        }
+    }
+
+    ArrayElementLessThan lessThan(context, thisObject, comparefn);
+
+    Property *begin = arrayData;
     std::sort(begin, begin + len, lessThan);
 }
 
@@ -909,7 +1016,7 @@ void Object::initSparse()
     if (!sparseArray) {
         sparseArray = new SparseArray;
         for (int i = 0; i < arrayDataLen; ++i) {
-            if (arrayData[i].attrs.type() != PropertyAttributes::Generic) {
+            if (!arrayAttributes || !arrayAttributes[i].isGeneric()) {
                 SparseArrayNode *n = sparseArray->insert(i);
                 n->value = i + arrayOffset;
             }
@@ -924,14 +1031,11 @@ void Object::initSparse()
             arrayAlloc += off;
             int o = off;
             for (int i = 0; i < o - 1; ++i) {
-                arrayData[i].attrs.clear();
                 arrayData[i].value = Value::fromInt32(i + 1);
             }
-            arrayData[o - 1].attrs.clear();
             arrayData[o - 1].value = Value::fromInt32(arrayDataLen + off);
         }
         for (int i = arrayDataLen + off; i < arrayAlloc; ++i) {
-            arrayData[i].attrs.clear();
             arrayData[i].value = Value::fromInt32(i + 1);
         }
     }
@@ -952,28 +1056,52 @@ void Object::arrayReserve(uint n)
             off = arrayOffset;
         }
         arrayAlloc = qMax(n, 2*arrayAlloc);
-        PropertyDescriptor *newArrayData = new PropertyDescriptor[arrayAlloc];
+        Property *newArrayData = new Property[arrayAlloc];
         if (arrayData) {
-            memcpy(newArrayData, arrayData, sizeof(PropertyDescriptor)*arrayDataLen);
+            memcpy(newArrayData, arrayData, sizeof(Property)*arrayDataLen);
             delete [] (arrayData - off);
         }
         arrayData = newArrayData;
         if (sparseArray) {
             for (uint i = arrayFreeList; i < arrayAlloc; ++i) {
-                arrayData[i].attrs.clear();
+                arrayData[i].value = Value::deletedValue();
                 arrayData[i].value = Value::fromInt32(i + 1);
             }
         } else {
             arrayOffset = 0;
         }
+
+        if (arrayAttributes) {
+            PropertyAttributes *newAttrs = new PropertyAttributes[arrayAlloc];
+            memcpy(newAttrs, arrayAttributes, sizeof(PropertyAttributes)*arrayDataLen);
+            delete [] (arrayAttributes - off);
+
+            arrayAttributes = newAttrs;
+            if (sparseArray) {
+                for (uint i = arrayFreeList; i < arrayAlloc; ++i)
+                    arrayAttributes[i] = Attr_Invalid;
+            }
+        }
     }
+}
+
+void Object::ensureArrayAttributes()
+{
+    if (arrayAttributes)
+        return;
+
+    arrayAttributes = new PropertyAttributes[arrayAlloc];
+    for (uint i = 0; i < arrayDataLen; ++i)
+        arrayAttributes[i] = Attr_Data;
+    for (uint i = arrayDataLen; i < arrayAlloc; ++i)
+        arrayAttributes[i] = Attr_Invalid;
 }
 
 
 bool Object::setArrayLength(uint newLen) {
     assert(isArrayObject());
-    const PropertyDescriptor *lengthProperty = memberData + ArrayObject::LengthPropertyIndex;
-    if (lengthProperty && !lengthProperty->attrs.isWritable())
+    const Property *lengthProperty = memberData + ArrayObject::LengthPropertyIndex;
+    if (lengthProperty && !internalClass->propertyData[ArrayObject::LengthPropertyIndex].isWritable())
         return false;
     uint oldLen = arrayLength();
     bool ok = true;
@@ -983,14 +1111,17 @@ bool Object::setArrayLength(uint newLen) {
             if (begin != sparseArray->end()) {
                 SparseArrayNode *it = sparseArray->end()->previousNode();
                 while (1) {
-                    PropertyDescriptor &pd = arrayData[it->value];
-                    if (pd.attrs.type() != PropertyAttributes::Generic && !pd.attrs.isConfigurable()) {
-                        ok = false;
-                        newLen = it->key() + 1;
-                        break;
+                    Property &pd = arrayData[it->value];
+                    if (arrayAttributes) {
+                        if (!arrayAttributes[it->value].isConfigurable()) {
+                            ok = false;
+                            newLen = it->key() + 1;
+                            break;
+                        } else {
+                            arrayAttributes[it->value].clear();
+                        }
                     }
-                    pd.attrs.clear();
-                    pd.value.tag = Value::_Undefined_Type;
+                    pd.value.tag = Value::_Deleted_Type;
                     pd.value.int_32 = arrayFreeList;
                     arrayFreeList = it->value;
                     bool brk = (it == begin);
@@ -1002,13 +1133,18 @@ bool Object::setArrayLength(uint newLen) {
                 }
             }
         } else {
-            PropertyDescriptor *it = arrayData + arrayDataLen;
-            const PropertyDescriptor *begin = arrayData + newLen;
+            Property *it = arrayData + arrayDataLen;
+            const Property *begin = arrayData + newLen;
             while (--it >= begin) {
-                if (it->attrs.type() != PropertyAttributes::Generic && !it->attrs.isConfigurable()) {
-                    ok = false;
-                    newLen = it - arrayData + 1;
-                    break;
+                if (arrayAttributes) {
+                    if (!arrayAttributes[it - arrayData].isEmpty() && !arrayAttributes[it - arrayData].isConfigurable()) {
+                        ok = false;
+                        newLen = it - arrayData + 1;
+                        break;
+                    } else {
+                        arrayAttributes[it - arrayData].clear();
+                    }
+                    it->value = Value::deletedValue();
                 }
             }
             arrayDataLen = newLen;
@@ -1024,15 +1160,15 @@ bool Object::setArrayLength(uint newLen) {
 void Object::markArrayObjects() const
 {
     for (uint i = 0; i < arrayDataLen; ++i) {
-        const PropertyDescriptor &pd = arrayData[i];
-        if (pd.attrs.isData()) {
+        const Property &pd = arrayData[i];
+        if (!arrayAttributes || arrayAttributes[i].isData()) {
             if (Managed *m = pd.value.asManaged())
                 m->mark();
-         } else if (pd.attrs.isAccessor()) {
-            if (pd.get)
-                pd.get->mark();
-            if (pd.set)
-                pd.set->mark();
+         } else if (arrayAttributes[i].isAccessor()) {
+            if (pd.getter())
+                pd.getter()->mark();
+            if (pd.setter())
+                pd.setter()->mark();
         }
     }
 }
@@ -1042,10 +1178,8 @@ void ArrayObject::init(ExecutionContext *context)
     type = Type_ArrayObject;
     internalClass = context->engine->arrayClass;
 
-    memberData = new PropertyDescriptor[4];
-    PropertyDescriptor *pd = memberData + LengthPropertyIndex;
-    pd->attrs = Attr_NotEnumerable|Attr_NotConfigurable;
-    pd->value = Value::fromInt32(0);
+    memberData = new Property[4];
+    memberData[LengthPropertyIndex].value = Value::fromInt32(0);
 }
 
 

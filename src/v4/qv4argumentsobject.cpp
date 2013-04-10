@@ -63,22 +63,19 @@ ArgumentsObject::ArgumentsObject(CallContext *context, int formalParameterCount,
         for (uint i = 0; i < context->argumentCount; ++i)
             Object::put(context, QString::number(i), context->arguments[i]);
         FunctionObject *thrower = context->engine->newBuiltinFunction(context, 0, throwTypeError);
-        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
-        pd.attrs = Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable;
-        __defineOwnProperty__(context, QStringLiteral("callee"), &pd);
-        __defineOwnProperty__(context, QStringLiteral("caller"), &pd);
+        Property pd = Property::fromAccessor(thrower, thrower);
+        __defineOwnProperty__(context, QStringLiteral("callee"), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        __defineOwnProperty__(context, QStringLiteral("caller"), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     } else {
         uint numAccessors = qMin(formalParameterCount, actualParameterCount);
         context->engine->requireArgumentsAccessors(numAccessors);
         for (uint i = 0; i < (uint)numAccessors; ++i) {
             mappedArguments.append(context->argument(i));
-            __defineOwnProperty__(context, i, &context->engine->argumentsAccessors.at(i));
+            __defineOwnProperty__(context, i, context->engine->argumentsAccessors.at(i), Attr_Accessor);
         }
-        PropertyDescriptor pd;
-        pd.attrs = Attr_Data;
         for (uint i = numAccessors; i < qMin((uint)actualParameterCount, context->argumentCount); ++i) {
-            pd.value = context->argument(i);
-            __defineOwnProperty__(context, i, &pd);
+            Property pd = Property::fromValue(context->argument(i));
+            __defineOwnProperty__(context, i, pd, Attr_Data);
         }
         defineDefaultProperty(context, QStringLiteral("callee"), Value::fromObject(context->function));
         isNonStrictArgumentsObject = true;
@@ -90,34 +87,39 @@ void ArgumentsObject::destroy(Managed *that)
     static_cast<ArgumentsObject *>(that)->~ArgumentsObject();
 }
 
-bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc)
+bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs)
 {
-    PropertyDescriptor *pd = arrayAt(index);
-    PropertyDescriptor map;
+    uint pidx = propertyIndexFromArrayIndex(index);
+    Property *pd = arrayData + pidx;
+    Property map;
+    PropertyAttributes mapAttrs;
     bool isMapped = false;
     if (pd && index < (uint)mappedArguments.size())
-        isMapped = pd->attrs.isAccessor() && pd->get == context->engine->argumentsAccessors.at(index).get;
+        isMapped = arrayAttributes && arrayAttributes[pidx].isAccessor() && pd->getter() == context->engine->argumentsAccessors.at(index).getter();
 
     if (isMapped) {
         map = *pd;
-        pd->attrs = Attr_Data;
+        mapAttrs = arrayAttributes[pidx];
+        arrayAttributes[pidx] = Attr_Data;
         pd->value = mappedArguments.at(index);
     }
 
     isNonStrictArgumentsObject = false;
     bool strict = ctx->strictMode;
     ctx->strictMode = false;
-    bool result = Object::__defineOwnProperty__(ctx, index, desc);
+    bool result = Object::__defineOwnProperty__(ctx, index, desc, attrs);
     ctx->strictMode = strict;
     isNonStrictArgumentsObject = true;
 
-    if (isMapped && desc->attrs.isData()) {
-        if (desc->attrs.type() != PropertyAttributes::Generic) {
-            Value arg = desc->value;
-            map.set->call(ctx, Value::fromObject(this), &arg, 1);
+    if (isMapped && attrs.isData()) {
+        if (!attrs.isGeneric()) {
+            Value arg = desc.value;
+            map.setter()->call(ctx, Value::fromObject(this), &arg, 1);
         }
-        if (desc->attrs.isWritable())
+        if (attrs.isWritable()) {
             *pd = map;
+            arrayAttributes[pidx] = mapAttrs;
+        }
     }
 
     if (ctx->strictMode && !result)

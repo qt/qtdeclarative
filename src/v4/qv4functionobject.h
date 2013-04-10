@@ -109,15 +109,17 @@ struct Lookup {
     uint index;
     String *name;
 
-    PropertyDescriptor *lookup(Object *obj) {
+    Property *lookup(Object *obj, PropertyAttributes *attrs) {
         int i = 0;
         while (i < level && obj && obj->internalClass == classList[i]) {
             obj = obj->prototype;
             ++i;
         }
 
-        if (index != UINT_MAX && obj->internalClass == classList[i])
+        if (index != UINT_MAX && obj->internalClass == classList[i]) {
+            *attrs = obj->internalClass->propertyData.at(index);
             return obj->memberData + index;
+        }
 
         while (i < Size && obj) {
             classList[i] = obj->internalClass;
@@ -125,6 +127,7 @@ struct Lookup {
             index = obj->internalClass->find(name);
             if (index != UINT_MAX) {
                 level = i;
+                *attrs = obj->internalClass->propertyData.at(index);
                 return obj->memberData + index;
             }
 
@@ -135,22 +138,27 @@ struct Lookup {
 
         while (obj) {
             index = obj->internalClass->find(name);
-            if (index != UINT_MAX)
+            if (index != UINT_MAX) {
+                *attrs = obj->internalClass->propertyData.at(index);
                 return obj->memberData + index;
+            }
 
             obj = obj->prototype;
         }
         return 0;
     }
 
-    PropertyDescriptor *setterLookup(Object *o) {
-        if (o->internalClass == classList[0])
+    Property *setterLookup(Object *o, bool *writable) {
+        if (o->internalClass == classList[0]) {
+            *writable = o->internalClass->propertyData[index].isWritable();
             return o->memberData + index;
+        }
 
         uint idx = o->internalClass->find(name);
         if (idx != UINT_MAX) {
             classList[0] = o->internalClass;
             index = idx;
+            *writable = o->internalClass->propertyData[index].isWritable();
             return o->memberData + index;
         }
         return 0;

@@ -62,13 +62,21 @@ struct InternalClass {
     QVector<PropertyAttributes> propertyData;
 
     QHash<int, InternalClass *> transitions; // id to next class, positive means add, negative delete
+
+    InternalClass *m_sealed;
+    InternalClass *m_frozen;
+
     uint size;
 
-    InternalClass(ExecutionEngine *engine) : engine(engine), size(0) {}
+    InternalClass(ExecutionEngine *engine) : engine(engine), m_sealed(0), m_frozen(0), size(0) {}
 
     InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
+    InternalClass *changeMember(String *string, PropertyAttributes data, uint *index = 0);
     void removeMember(Object *object, uint id);
     uint find(String *s);
+
+    InternalClass *sealed();
+    InternalClass *frozen();
 
 private:
     InternalClass(const InternalClass &other);

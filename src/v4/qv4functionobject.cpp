@@ -341,16 +341,14 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 
     Object *proto = scope->engine->newObject();
     proto->defineDefaultProperty(scope->engine->id_constructor, Value::fromObject(this));
-    PropertyDescriptor *pd = insertMember(scope->engine->id_prototype, Attr_NotEnumerable|Attr_NotConfigurable);
-    pd->attrs = Attr_Data|Attr_NotEnumerable|Attr_NotConfigurable;
+    Property *pd = insertMember(scope->engine->id_prototype, Attr_NotEnumerable|Attr_NotConfigurable);
     pd->value = Value::fromObject(proto);
 
     if (scope->strictMode) {
         FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
-        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
-        pd.attrs = Attr_Accessor|Attr_NotEnumerable|Attr_NotConfigurable;
-        __defineOwnProperty__(scope, QStringLiteral("caller"), &pd);
-        __defineOwnProperty__(scope, QStringLiteral("arguments"), &pd);
+        Property pd = Property::fromAccessor(thrower, thrower);
+        __defineOwnProperty__(scope, QStringLiteral("caller"), pd, Attr_Accessor|Attr_NotEnumerable|Attr_NotConfigurable);
+        __defineOwnProperty__(scope, QStringLiteral("arguments"), pd, Attr_Accessor|Attr_NotEnumerable|Attr_NotConfigurable);
     }
 }
 
@@ -475,8 +473,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(len));
 
     FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
-    PropertyDescriptor pd = PropertyDescriptor::fromAccessor(thrower, thrower);
-    pd.attrs = Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable;
+    Property pd = Property::fromAccessor(thrower, thrower);
     *insertMember(scope->engine->id_arguments, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
     *insertMember(scope->engine->id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
 }

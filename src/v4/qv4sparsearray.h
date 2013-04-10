@@ -67,7 +67,7 @@ public:
     inline ArrayElementLessThan(ExecutionContext *context, Object *thisObject, const Value &comparefn)
         : m_context(context), thisObject(thisObject), m_comparefn(comparefn) {}
 
-    bool operator()(const PropertyDescriptor &v1, const PropertyDescriptor &v2) const;
+    bool operator()(const Property &v1, const Property &v2) const;
 
 private:
     ExecutionContext *m_context;

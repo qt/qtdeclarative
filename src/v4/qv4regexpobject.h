@@ -66,7 +66,7 @@ namespace VM {
 
 struct RegExpObject: Object {
     RegExp* value;
-    PropertyDescriptor *lastIndexProperty(ExecutionContext *ctx);
+    Property *lastIndexProperty(ExecutionContext *ctx);
     bool global;
     RegExpObject(ExecutionEngine *engine, RegExp* value, bool global);
     ~RegExpObject() {}

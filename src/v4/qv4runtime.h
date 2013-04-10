@@ -77,7 +77,6 @@ enum TypeHint {
 struct Function;
 struct Object;
 struct String;
-struct PropertyDescriptor;
 struct ExecutionContext;
 struct FunctionObject;
 struct BooleanObject;

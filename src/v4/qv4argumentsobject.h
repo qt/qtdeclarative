@@ -82,7 +82,7 @@ struct ArgumentsObject: Object {
     ArgumentsObject(CallContext *context, int formalParameterCount, int actualParameterCount);
     ~ArgumentsObject() {}
 
-    bool defineOwnProperty(ExecutionContext *ctx, uint index, const PropertyDescriptor *desc);
+    bool defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs);
 
     static void markObjects(Managed *that);
 protected:

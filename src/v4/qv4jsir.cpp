@@ -278,6 +278,9 @@ void Const::dump(QTextStream &out)
     case QQmlJS::V4IR::BoolType:
         out << (value ? "true" : "false");
         break;
+    case QQmlJS::V4IR::MissingType:
+        out << "missing";
+        break;
     default:
         out << QString::number(value, 'g', 16);
         break;

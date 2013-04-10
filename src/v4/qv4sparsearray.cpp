@@ -53,14 +53,10 @@
 namespace QQmlJS {
 namespace VM {
 
-bool ArrayElementLessThan::operator()(const PropertyDescriptor &p1, const PropertyDescriptor &p2) const
+bool ArrayElementLessThan::operator()(const Property &p1, const Property &p2) const
 {
-    if (p1.attrs.type() == PropertyAttributes::Generic)
-        return false;
-    if (p2.attrs.type() == PropertyAttributes::Generic)
-        return true;
-    Value v1 = thisObject->getValue(m_context, &p1);
-    Value v2 = thisObject->getValue(m_context, &p2);
+    Value v1 = p1.value;
+    Value v2 = p2.value;
 
     if (v1.isUndefined())
         return false;

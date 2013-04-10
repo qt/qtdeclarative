@@ -47,19 +47,11 @@
 
 namespace QQmlJS {
 
-inline VM::Value nonExistantValue()
-{
-    VM::Value v;
-    v.tag = VM::Value::Undefined_Type;
-    v.uint_32 = UINT_MAX;
-    return v;
-}
-
 inline VM::Value convertToValue(V4IR::Const *c)
 {
     switch (c->type) {
     case V4IR::MissingType:
-        return nonExistantValue();
+        return VM::Value::deletedValue();
     case V4IR::NullType:
         return VM::Value::nullValue();
     case V4IR::UndefinedType:

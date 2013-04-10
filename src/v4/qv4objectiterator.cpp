@@ -52,20 +52,18 @@ ObjectIterator::ObjectIterator(ExecutionContext *context, Object *o, uint flags)
     , current(o)
     , arrayNode(0)
     , arrayIndex(0)
-    , currentClass(0)
     , memberIndex(0)
     , flags(flags)
 {
     if (current) {
-        currentClass = current->internalClass;
         if (current->asStringObject())
             this->flags |= CurrentIsString;
     }
 }
 
-PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
+Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *attrs)
 {
-    PropertyDescriptor *p = 0;
+    Property *p = 0;
     *name = 0;
     *index = UINT_MAX;
     while (1) {
@@ -78,6 +76,8 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
             while (arrayIndex < slen) {
                 *index = arrayIndex;
                 ++arrayIndex;
+                if (attrs)
+                    *attrs = s->arrayAttributes ? s->arrayAttributes[arrayIndex] : PropertyAttributes(Attr_NotWritable|Attr_NotConfigurable);
                 return s->__getOwnProperty__(context, *index);
             }
             flags &= ~CurrentIsString;
@@ -94,11 +94,15 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
         if (arrayNode) {
             while (arrayNode != current->sparseArrayEnd()) {
                 int k = arrayNode->key();
-                p = current->arrayAt(k);
+                uint pidx = arrayNode->value;
+                p = current->arrayData + pidx;
                 arrayNode = arrayNode->nextNode();
-                if (p && (!(flags & EnumberableOnly) || p->attrs.isEnumerable())) {
+                PropertyAttributes a = current->arrayAttributes ? current->arrayAttributes[pidx] : PropertyAttributes(Attr_Data);
+                if (!(flags & EnumberableOnly) || a.isEnumerable()) {
                     arrayIndex = k + 1;
                     *index = k;
+                    if (attrs)
+                        *attrs = a;
                     return p;
                 }
             }
@@ -107,15 +111,20 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
         }
         // dense arrays
         while (arrayIndex < current->arrayDataLen) {
-            p = current->arrayAt(arrayIndex);
+            uint pidx = current->propertyIndexFromArrayIndex(arrayIndex);
+            p = current->arrayData + pidx;
+            PropertyAttributes a = current->arrayAttributes ? current->arrayAttributes[pidx] : PropertyAttributes(Attr_Data);
             ++arrayIndex;
-            if (p && p->attrs.type() != PropertyAttributes::Generic && (!(flags & EnumberableOnly) || p->attrs.isEnumerable())) {
+            if ((!current->arrayAttributes || !current->arrayAttributes[pidx].isGeneric())
+                 && (!(flags & EnumberableOnly) || a.isEnumerable())) {
                 *index = arrayIndex - 1;
+                if (attrs)
+                    *attrs = a;
                 return p;
             }
         }
 
-        if (memberIndex == currentClass->size) {
+        if (memberIndex == current->internalClass->size) {
             if (flags & WithProtoChain)
                 current = current->prototype;
             else
@@ -128,18 +137,19 @@ PropertyDescriptor *ObjectIterator::next(String **name, uint *index)
 
             arrayIndex = 0;
             memberIndex = 0;
-            if (current)
-                currentClass = current->internalClass;
             continue;
         }
-        String *n = currentClass->nameMap.at(memberIndex);
+        String *n = current->internalClass->nameMap.at(memberIndex);
         assert(n);
         // ### check that it's not a repeated attribute
 
         p = current->memberData + memberIndex;
+        PropertyAttributes a = current->internalClass->propertyData[memberIndex];
         ++memberIndex;
-        if (!(flags & EnumberableOnly) || p->attrs.isEnumerable()) {
+        if (!(flags & EnumberableOnly) || a.isEnumerable()) {
             *name = n;
+            if (attrs)
+                *attrs = a;
             return p;
         }
     }

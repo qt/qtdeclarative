@@ -923,9 +923,9 @@ bool Object::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSet
     PropertyAttributes attrs = Attr_Accessor;
     attrs.setConfigurable(!(attribute & DontDelete));
     attrs.setEnumerable(!(attribute & DontEnum));
-    VM::PropertyDescriptor *pd = o->insertMember(name->asVMString(), attrs);
-    *pd = VM::PropertyDescriptor::fromAccessor(wrappedGetter, wrappedSetter);
-    pd->attrs = attrs;
+    VM::Property *pd = o->insertMember(name->asVMString(), attrs);
+    pd->setGetter(wrappedGetter);
+    pd->setSetter(wrappedSetter);
     return true;
 }
 
@@ -1428,10 +1428,9 @@ public:
             PropertyAttributes attrs = Attr_Accessor;
             attrs.setConfigurable(!(acc.attribute & DontDelete));
             attrs.setEnumerable(!(acc.attribute & DontEnum));
-            VM::PropertyDescriptor *pd = this->insertMember(acc.name->asVMString(), attrs);
-            *pd = VM::PropertyDescriptor::fromAccessor(acc.getter->vmValue().asFunctionObject(),
-                                                       acc.setter->vmValue().asFunctionObject());
-            pd->attrs = attrs;
+            VM::Property *pd = this->insertMember(acc.name->asVMString(), attrs);
+            *pd = VM::Property::fromAccessor(acc.getter->vmValue().asFunctionObject(),
+                                             acc.setter->vmValue().asFunctionObject());
         }
 
         initProperties(m_template.get());
@@ -1444,9 +1443,8 @@ public:
             attrs.setConfigurable(!(p.attributes & DontDelete));
             attrs.setEnumerable(!(p.attributes & DontEnum));
             attrs.setWritable(!(p.attributes & ReadOnly));
-            VM::PropertyDescriptor *pd = this->insertMember(p.name->asVMString(), attrs);
-            *pd = VM::PropertyDescriptor::fromValue(p.value->vmValue());
-            pd->attrs = attrs;
+            VM::Property *pd = this->insertMember(p.name->asVMString(), attrs);
+            *pd = VM::Property::fromValue(p.value->vmValue());
         }
     }
 
@@ -1523,9 +1521,10 @@ protected:
             if (!result.IsEmpty())
                 return;
         }
-        PropertyDescriptor *pd  = that->__getOwnProperty__(ctx, name);
+        PropertyAttributes attrs;
+        Property *pd  = that->__getOwnProperty__(ctx, name, &attrs);
         if (pd)
-            that->putValue(ctx, pd, value);
+            that->putValue(ctx, pd, attrs, value);
         else if (that->m_template->m_fallbackPropertySetter)
             that->m_template->m_fallbackPropertySetter(String::New(name), v8Value, that->fallbackAccessorInfo());
         else

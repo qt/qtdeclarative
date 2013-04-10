@@ -98,13 +98,10 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 
     if (activation->__hasProperty__(this, name))
         return;
-    PropertyDescriptor desc;
-    desc.value = Value::undefinedValue();
-    desc.attrs.setType(PropertyAttributes::Data);
-    desc.attrs.setConfigurable(deletable);
-    desc.attrs.setWritable(true);
-    desc.attrs.setEnumerable(true);
-    activation->__defineOwnProperty__(this, name, &desc);
+    Property desc = Property::fromValue(Value::undefinedValue());
+    PropertyAttributes attrs(Attr_Data);
+    attrs.setConfigurable(deletable);
+    activation->__defineOwnProperty__(this, name, desc, attrs);
 }
 
 String * const *ExecutionContext::formals() const
@@ -205,10 +202,8 @@ void CallContext::initCallContext(ExecutionEngine *engine)
         args->prototype = engine->objectPrototype;
         Value arguments = Value::fromObject(args);
         activation = engine->newObject();
-        PropertyDescriptor desc;
-        desc.value = Value::fromObject(args);
-        desc.attrs = PropertyAttributes(Attr_NotConfigurable);
-        activation->__defineOwnProperty__(this, engine->id_arguments, &desc);
+        Property desc = Property::fromValue(Value::fromObject(args));
+        activation->__defineOwnProperty__(this, engine->id_arguments, desc, Attr_NotConfigurable);
     }
 }
 

@@ -109,7 +109,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     id_eval = newIdentifier(QStringLiteral("eval"));
 
     emptyClass = new InternalClass(this);
-    arrayClass = emptyClass->addMember(id_length, Attr_ReadOnly);
+    arrayClass = emptyClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
     initRootContext();
 
     objectPrototype = new (memoryManager) ObjectPrototype(this);
@@ -482,9 +482,7 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
         get->prototype = functionPrototype;
         FunctionObject *set = new (memoryManager) ArgumentsSetterFunction(rootContext, i);
         set->prototype = functionPrototype;
-        PropertyDescriptor pd = PropertyDescriptor::fromAccessor(get, set);
-        pd.attrs.setConfigurable(true);
-        pd.attrs.setEnumerable(true);
+        Property pd = Property::fromAccessor(get, set);
         argumentsAccessors[i] = pd;
     }
 }
@@ -499,9 +497,9 @@ void ExecutionEngine::markObjects()
         globalCode->mark();
 
     for (int i = 0; i < argumentsAccessors.size(); ++i) {
-        const PropertyDescriptor &pd = argumentsAccessors.at(i);
-        pd.get->mark();
-        pd.set->mark();
+        const Property &pd = argumentsAccessors.at(i);
+        pd.getter()->mark();
+        pd.setter()->mark();
     }
 
     ExecutionContext *c = current;

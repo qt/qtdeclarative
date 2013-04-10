@@ -101,18 +101,22 @@ struct PropertyAttributes
 
     PropertyAttributes() : m_all(0) {}
     PropertyAttributes(PropertyFlag f) : m_all(0) {
-        setType(f & Attr_Accessor ? Accessor : Data);
-        if (!(f & Attr_Accessor))
-            setWritable(!(f & Attr_NotWritable));
-        setEnumerable(!(f & Attr_NotEnumerable));
-        setConfigurable(!(f & Attr_NotConfigurable));
+        if (f != Attr_Invalid) {
+            setType(f & Attr_Accessor ? Accessor : Data);
+            if (!(f & Attr_Accessor))
+                setWritable(!(f & Attr_NotWritable));
+            setEnumerable(!(f & Attr_NotEnumerable));
+            setConfigurable(!(f & Attr_NotConfigurable));
+        }
     }
     PropertyAttributes(PropertyFlags f) : m_all(0) {
-        setType(f & Attr_Accessor ? Accessor : Data);
-        if (!(f & Attr_Accessor))
-            setWritable(!(f & Attr_NotWritable));
-        setEnumerable(!(f & Attr_NotEnumerable));
-        setConfigurable(!(f & Attr_NotConfigurable));
+        if (f != Attr_Invalid) {
+            setType(f & Attr_Accessor ? Accessor : Data);
+            if (!(f & Attr_Accessor))
+                setWritable(!(f & Attr_NotWritable));
+            setEnumerable(!(f & Attr_NotEnumerable));
+            setConfigurable(!(f & Attr_NotConfigurable));
+        }
     }
     PropertyAttributes(const PropertyAttributes &other) : m_all(other.m_all) {}
     PropertyAttributes & operator=(const PropertyAttributes &other) { m_all = other.m_all; return *this; }
@@ -133,12 +137,9 @@ struct PropertyAttributes
     void setConfigurable(bool b) { m_configurable = b; configurable_set = true; }
     void setEnumerable(bool b) { m_enumerable = b; enumerable_set = true; }
 
-    void resolveType() { type_set = true; }
-    void resolveWritable() { writable_set = true; }
-    void resolveConfigurable() { configurable_set = true; }
-    void resolveEnumerable() { enumerable_set = true; }
+    void resolve() { m_mask = 0xf; if (m_type == Accessor) { m_writable = false; writable_set = false; } }
 
-    bool isWritable() const { return m_writable; }
+    bool isWritable() const { return m_type != Data || m_writable; }
     bool isEnumerable() const { return m_enumerable; }
     bool isConfigurable() const { return m_configurable; }
 
@@ -151,6 +152,13 @@ struct PropertyAttributes
     bool isEmpty() const { return !m_all; }
 
     uint flags() const { return m_flags; }
+
+    bool operator==(PropertyAttributes other) {
+        return m_all == other.m_all;
+    }
+    bool operator!=(PropertyAttributes other) {
+        return m_all != other.m_all;
+    }
 };
 
 }

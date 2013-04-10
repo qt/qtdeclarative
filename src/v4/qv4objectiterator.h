@@ -43,6 +43,7 @@
 
 #include "qv4value.h"
 #include <qv4internalclass.h>
+#include <qv4propertydescriptor.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -51,7 +52,6 @@ namespace VM {
 
 struct SparseArrayNode;
 struct Object;
-struct PropertyDescriptor;
 
 struct ObjectIterator
 {
@@ -67,12 +67,11 @@ struct ObjectIterator
     Object *current;
     SparseArrayNode *arrayNode;
     uint arrayIndex;
-    InternalClass *currentClass;
     uint memberIndex;
     uint flags;
 
     ObjectIterator(ExecutionContext *context, Object *o, uint flags);
-    PropertyDescriptor *next(String **name, uint *index);
+    Property *next(String **name, uint *index, PropertyAttributes *attributes = 0);
     Value nextPropertyName();
     Value nextPropertyNameAsString();
 };

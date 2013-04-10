@@ -54,14 +54,45 @@ InternalClass::InternalClass(const QQmlJS::VM::InternalClass &other)
     , nameMap(other.nameMap)
     , propertyData(other.propertyData)
     , transitions()
+    , m_sealed(0)
+    , m_frozen(0)
     , size(other.size)
 {
 }
 
+// ### Should we build this up from the empty class to avoid duplication?
+InternalClass *InternalClass::changeMember(String *string, PropertyAttributes data, uint *index)
+{
+//    qDebug() << "InternalClass::changeMember()" << string->toQString() << hex << (uint)data.m_all;
+    data.resolve();
+    uint idx = find(string);
+    if (index)
+        *index = idx;
+
+    assert(idx != UINT_MAX);
+
+    if (data == propertyData[idx])
+        return this;
+
+    uint tid = string->identifier | (data.flags() << 27);
+
+    QHash<int, InternalClass *>::const_iterator tit = transitions.constFind(tid);
+    if (tit != transitions.constEnd())
+        return tit.value();
+
+    // create a new class and add it to the tree
+    InternalClass *newClass = new InternalClass(*this);
+    newClass->propertyData[idx] = data;
+    return newClass;
+
+}
+
 InternalClass *InternalClass::addMember(String *string, PropertyAttributes data, uint *index)
 {
+//    qDebug() << "InternalClass::addMember()" << string->toQString() << size << hex << (uint)data.m_all << data.type();
+    data.resolve();
     engine->identifierCache->toIdentifier(string);
-    uint id = string->identifier | (data.flags() << 24);
+    uint id = string->identifier | (data.flags() << 27);
 
     assert(propertyTable.constFind(id) == propertyTable.constEnd());
 
@@ -69,18 +100,17 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
 
     if (index)
         *index = size;
-    if (tit != transitions.constEnd()) {
+    if (tit != transitions.constEnd())
         return tit.value();
-    } else {
-        // create a new class and add it to the tree
-        InternalClass *newClass = new InternalClass(*this);
-        newClass->propertyTable.insert(string->identifier, size);
-        newClass->nameMap.append(string);
-        newClass->propertyData.append(data);
-        ++newClass->size;
-        transitions.insert(id, newClass);
-        return newClass;
-    }
+
+    // create a new class and add it to the tree
+    InternalClass *newClass = new InternalClass(*this);
+    newClass->propertyTable.insert(string->identifier, size);
+    newClass->nameMap.append(string);
+    newClass->propertyData.append(data);
+    ++newClass->size;
+    transitions.insert(id, newClass);
+    return newClass;
 }
 
 void InternalClass::removeMember(Object *object, uint id)
@@ -118,6 +148,39 @@ uint InternalClass::find(String *string)
         return it.value();
 
     return UINT_MAX;
+}
+
+InternalClass *InternalClass::sealed()
+{
+    if (m_sealed)
+        return m_sealed;
+
+    m_sealed = engine->emptyClass;
+    for (int i = 0; i < nameMap.size(); ++i) {
+        PropertyAttributes attrs = propertyData.at(i);
+        attrs.setConfigurable(false);
+        m_sealed = m_sealed->addMember(nameMap.at(i), attrs);
+    }
+
+    m_sealed->m_sealed = m_sealed;
+    return m_sealed;
+}
+
+InternalClass *InternalClass::frozen()
+{
+    if (m_frozen)
+        return m_frozen;
+
+    m_frozen = engine->emptyClass;
+    for (int i = 0; i < nameMap.size(); ++i) {
+        PropertyAttributes attrs = propertyData.at(i);
+        attrs.setWritable(false);
+        attrs.setConfigurable(false);
+        m_frozen = m_frozen->addMember(nameMap.at(i), attrs);
+    }
+
+    m_frozen->m_frozen = m_frozen;
+    return m_frozen;
 }
 
 

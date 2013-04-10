@@ -83,14 +83,13 @@ StringObject::StringObject(ExecutionContext *ctx, const Value &value)
     vtbl = &static_vtbl;
     type = Type_StringObject;
 
-    tmpProperty.attrs = Attr_NotWritable|Attr_NotConfigurable;
     tmpProperty.value = Value::undefinedValue();
 
     assert(value.isString());
     defineReadonlyProperty(ctx->engine->id_length, Value::fromUInt32(value.stringValue()->toQString().length()));
 }
 
-PropertyDescriptor *StringObject::getIndex(const ExecutionContext *ctx, uint index) const
+Property *StringObject::getIndex(const ExecutionContext *ctx, uint index) const
 {
     QString str = value.stringValue()->toQString();
     if (index >= (uint)str.length())

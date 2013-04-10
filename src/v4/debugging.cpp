@@ -294,8 +294,9 @@ static void realDumpValue(VM::Value v, VM::ExecutionContext *ctx, std::string pr
     ForEachIteratorObject it(ctx, o);
     for (Value name = it.nextPropertyName(); !name.isNull(); name = it.nextPropertyName()) {
         cout << prefix << "\t\"" << qPrintable(name.stringValue()->toQString()) << "\"" << endl;
-        PropertyDescriptor *d = o->__getOwnProperty__(ctx, name.stringValue());
-        Value pval = o->getValue(ctx, d);
+        PropertyAttributes attrs;
+        Property *d = o->__getOwnProperty__(ctx, name.stringValue(), &attrs);
+        Value pval = o->getValue(ctx, d, attrs);
         cout << prefix << "\tvalue:" << endl;
         realDumpValue(pval, ctx, prefix + "\t");
     }

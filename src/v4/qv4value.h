@@ -97,6 +97,7 @@ struct Q_V4_EXPORT Value
         NotDouble_Mask = 0xfffc0000,
         Type_Mask = 0xffff8000,
         Immediate_Mask = NotDouble_Mask | 0x00008000,
+        Special_Mask = Immediate_Mask | 0x20000,
         Tag_Shift = 32
     };
     enum ValueType {
@@ -105,7 +106,8 @@ struct Q_V4_EXPORT Value
         Boolean_Type = Immediate_Mask | 0x20000,
         Integer_Type = Immediate_Mask | 0x30000,
         Object_Type = NotDouble_Mask | 0x00000,
-        String_Type = NotDouble_Mask | 0x10000
+        String_Type = NotDouble_Mask | 0x10000,
+        Deleted_Type = NotDouble_Mask | 0x30000,
     };
 
     enum ImmediateFlags {
@@ -114,6 +116,7 @@ struct Q_V4_EXPORT Value
 
     enum ValueTypeInternal {
         _Undefined_Type = Undefined_Type,
+        _Deleted_Type = Deleted_Type,
         _Null_Type = Null_Type | ConvertibleToInt,
         _Boolean_Type = Boolean_Type | ConvertibleToInt,
         _Integer_Type = Integer_Type | ConvertibleToInt,
@@ -125,6 +128,9 @@ struct Q_V4_EXPORT Value
     inline unsigned type() const {
         return tag & Type_Mask;
     }
+
+    // used internally in property
+    inline bool isDeleted() const { return tag == _Deleted_Type; }
 
     inline bool isUndefined() const { return tag == _Undefined_Type; }
     inline bool isNull() const { return tag == _Null_Type; }
@@ -185,6 +191,7 @@ struct Q_V4_EXPORT Value
         return val;
     }
 
+    static Value deletedValue();
     static Value undefinedValue();
     static Value nullValue();
     static Value fromBoolean(Bool b);
@@ -293,6 +300,15 @@ inline Value Value::nullValue()
 #endif
     return v;
 }
+
+inline VM::Value Value::deletedValue()
+{
+    VM::Value v;
+    v.tag = VM::Value::_Deleted_Type;
+    v.uint_32 = 0;
+    return v;
+}
+
 
 inline Value Value::fromBoolean(Bool b)
 {
