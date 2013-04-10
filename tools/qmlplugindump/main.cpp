@@ -330,17 +330,13 @@ public:
             qSort(exportStrings);
             qml->writeArrayBinding(QLatin1String("exports"), exportStrings);
 
-            // write meta object revisions unless they're all zero
+            // write meta object revisions
             QStringList metaObjectRevisions;
-            bool shouldWriteMetaObjectRevisions = false;
             foreach (const QString &exportString, exportStrings) {
                 int metaObjectRevision = exports[exportString]->metaObjectRevision();
-                if (metaObjectRevision != 0)
-                    shouldWriteMetaObjectRevisions = true;
                 metaObjectRevisions += QString::number(metaObjectRevision);
             }
-            if (shouldWriteMetaObjectRevisions)
-                qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), metaObjectRevisions);
+            qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), metaObjectRevisions);
 
             if (const QMetaObject *attachedType = (*qmlTypes.begin())->attachedPropertiesType()) {
                 // Can happen when a type is registered that returns itself as attachedPropertiesType()
