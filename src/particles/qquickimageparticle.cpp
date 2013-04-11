@@ -1363,6 +1363,15 @@ void QQuickImageParticle::finishBuildParticleNodes()
         perfLevel = Deformable;
 #endif
 
+#ifdef Q_OS_MAC
+    // Mac OS X 10.8.3 introduced a bug in the AMD drivers, for at least the 2011 macbook pros,
+    // causing point sprites who read gl_PointCoord in the frag shader to come out as
+    // green-red blobs.
+    if (perfLevel < Deformable && strstr((char *) glGetString(GL_VENDOR), "ATI")) {
+        perfLevel = Deformable;
+    }
+#endif
+
     if (perfLevel >= Colored  && !m_color.isValid())
         m_color = QColor(Qt::white);//Hidden default, but different from unset
 
