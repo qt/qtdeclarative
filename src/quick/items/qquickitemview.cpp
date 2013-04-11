@@ -249,7 +249,6 @@ QQuickItemView::~QQuickItemView()
 QQuickItem *QQuickItemView::currentItem() const
 {
     Q_D(const QQuickItemView);
-    const_cast<QQuickItemViewPrivate*>(d)->applyPendingChanges();
     return d->currentItem ? d->currentItem->item : 0;
 }
 
@@ -379,14 +378,12 @@ int QQuickItemView::count() const
     Q_D(const QQuickItemView);
     if (!d->model)
         return 0;
-    const_cast<QQuickItemViewPrivate*>(d)->applyPendingChanges();
     return d->model->count();
 }
 
 int QQuickItemView::currentIndex() const
 {
     Q_D(const QQuickItemView);
-    const_cast<QQuickItemViewPrivate*>(d)->applyPendingChanges();
     return d->currentIndex;
 }
 
@@ -496,7 +493,6 @@ QQmlComponent *QQuickItemView::header() const
 QQuickItem *QQuickItemView::headerItem() const
 {
     Q_D(const QQuickItemView);
-    const_cast<QQuickItemViewPrivate*>(d)->applyPendingChanges();
     return d->header ? d->header->item : 0;
 }
 
@@ -532,7 +528,6 @@ QQmlComponent *QQuickItemView::footer() const
 QQuickItem *QQuickItemView::footerItem() const
 {
     Q_D(const QQuickItemView);
-    const_cast<QQuickItemViewPrivate*>(d)->applyPendingChanges();
     return d->footer ? d->footer->item : 0;
 }
 
@@ -559,7 +554,6 @@ void QQuickItemView::setFooter(QQmlComponent *footerComponent)
 QQmlComponent *QQuickItemView::highlight() const
 {
     Q_D(const QQuickItemView);
-    const_cast<QQuickItemViewPrivate*>(d)->applyPendingChanges();
     return d->highlightComponent;
 }
 
@@ -579,7 +573,6 @@ void QQuickItemView::setHighlight(QQmlComponent *highlightComponent)
 QQuickItem *QQuickItemView::highlightItem() const
 {
     Q_D(const QQuickItemView);
-    const_cast<QQuickItemViewPrivate*>(d)->applyPendingChanges();
     return d->highlight ? d->highlight->item : 0;
 }
 
@@ -963,6 +956,12 @@ QQuickItem *QQuickItemView::itemAt(qreal x, qreal y) const
     }
 
     return 0;
+}
+
+void QQuickItemView::forceLayout()
+{
+    Q_D(QQuickItemView);
+    d->applyPendingChanges();
 }
 
 void QQuickItemViewPrivate::applyPendingChanges()
