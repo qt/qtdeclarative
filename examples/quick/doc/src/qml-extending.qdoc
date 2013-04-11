@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\example qml/referenceexamples/adding
+\example referenceexamples/adding
 \title Extending QML - Adding Types Example
 \brief Exporting C++ Classes
 \ingroup qmlextendingexamples
@@ -63,7 +63,7 @@ loads and runs the QML snippet shown at the beginning of this page.
 */
 
 /*!
-\example qml/referenceexamples/properties
+\example referenceexamples/properties
 \title Extending QML - Object and List Property Types Example
 \brief Exporting C++ Properties
 \ingroup qmlextendingexamples
@@ -113,7 +113,7 @@ loads and runs the QML snippet shown at the beginning of this page.
 */
 
 /*!
-\example qml/referenceexamples/coercion
+\example referenceexamples/coercion
 \title Extending QML - Inheritance and Coercion Example
 \brief C++ Inheritance and Coercion
 \ingroup qmlextendingexamples
@@ -178,7 +178,7 @@ loads and runs the QML snippet shown at the beginning of this page.
 */
 
 /*!
-\example qml/referenceexamples/default
+\example referenceexamples/default
 \title Extending QML - Default Property Example
 \brief Default Property
 \ingroup qmlextendingexamples
@@ -216,7 +216,7 @@ loads and runs the QML snippet shown at the beginning of this page.
 */
 
 /*!
-\example qml/referenceexamples/grouped
+\example referenceexamples/grouped
 \title Extending QML - Grouped Properties Example
 \brief Grouped Properties
 \ingroup qmlextendingexamples
@@ -232,7 +232,7 @@ This example builds on:
 */
 
 /*!
-\example qml/referenceexamples/attached
+\example referenceexamples/attached
 \title Extending QML - Attached Properties Example
 \brief Attached Properties
 \ingroup qmlextendingexamples
@@ -249,7 +249,7 @@ This example builds on:
 */
 
 /*!
-\example qml/referenceexamples/signal
+\example referenceexamples/signal
 \title Extending QML - Signal Support Example
 \brief Signal Support
 \ingroup qmlextendingexamples
@@ -267,7 +267,7 @@ This example builds on:
 */
 
 /*!
-\example qml/referenceexamples/methods
+\example referenceexamples/methods
 \title Extending QML - Methods Example
 \brief Methods Support
 \ingroup qmlextendingexamples
@@ -283,7 +283,7 @@ This example builds on:
 */
 
 /*!
-\example qml/referenceexamples/valuesource
+\example referenceexamples/valuesource
 \title Extending QML - Property Value Source Example
 \brief Property Value Source
 \ingroup qmlextendingexamples
@@ -302,7 +302,7 @@ This example builds on:
 */
 
 /*!
-\example qml/referenceexamples/binding
+\example referenceexamples/binding
 \title Extending QML - Binding Example
 \brief Binding
 \ingroup qmlextendingexamples

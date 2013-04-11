@@ -27,7 +27,7 @@
 
 /*!
     \title QtQuick.Particles Examples - Affectors
-    \example quick/particles/system
+    \example particles/system
     \brief This is a collection of examples using Affectors in the QML particle system.
     \image qml-system-example.png
 
@@ -40,7 +40,7 @@
 
     Start and Stop simply sets the running and paused states of a ParticleSystem. While the system does not perform any simulation when stopped or paused, a restart restarts the simulation from the beginning, while unpausing resumes the simulation from where it was.
 
-    Timed group changes is an example that highlights the ParticleGroup element. While normally referring to groups with a string name is sufficent, additional effects can be
+    Timed group changes is an example that highlights the ParticleGroup element. While normally referring to groups with a string name is sufficient, additional effects can be
     done by setting properties on groups.
     The first group has a variable duration on it, but always transitions to the second group.
     \snippet quick/particles/system/content/timedgroupchanges.qml 0
@@ -56,4 +56,3 @@
     Multiple Painters shows how to control paint ordering of individual particles. While the paint ordering of particles within one ImagePainter is not strictly defined, ImageParticle elements follow the normal Z-ordering rules for QtQuick items. This example allow you to paint the inside of the particles above the black borders using a pair of ImageParticles each painting different parts of the same logical particle.
 
 */
-

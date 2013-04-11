@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
     \title QtQuick Examples - Local Storage
-    \example quick/localstorage
+    \example localstorage
     \brief A collection of QML local storage examples.
     \image qml-localstorage-example.png
 

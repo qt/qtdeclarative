@@ -5,6 +5,7 @@ description             = Qt Quick Reference Documentation
 url                     = http://qt-project.org/doc/qt-$QT_VER/qtquick-index.html
 version                 = $QT_VERSION
 
+examplesinstallpath     = quick
 
 qhp.projects            = QtQuick
 
@@ -39,7 +40,7 @@ headerdirs  += ..
 
 sourcedirs  += ..
 
-exampledirs +=  ../../../examples/ \
+exampledirs +=  ../../../examples/quick \
                 snippets
 
 

@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \example quick/scenegraph/simplematerial
+    \example scenegraph/simplematerial
     \title Simple Material Example
     \ingroup qtquickexamples
     \brief Shows how to define a scene graph material to fill a shape.

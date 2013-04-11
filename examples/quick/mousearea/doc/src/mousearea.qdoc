@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
     \title QtQuick Examples - MouseArea
-    \example quick/mousearea
+    \example mousearea
     \brief This is an example of the MouseArea element in QML
     \image qml-mousearea-example.png
     \ingroup qtquickexamples

@@ -27,7 +27,7 @@
 
 /*!
     \title QtQuick Examples - Animation
-    \example quick/animation
+    \example animation
     \brief This is a collection of QML Animation examples.
     \image qml-animations-example.png
     \ingroup qtquickexamples

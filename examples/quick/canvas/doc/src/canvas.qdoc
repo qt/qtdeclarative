@@ -27,7 +27,7 @@
 
 /*!
     \title QtQuick Examples - Canvas
-    \example quick/canvas
+    \example canvas
     \brief This is a collection of QML Canvas examples.
     \image qml-canvas-example.png
     \ingroup qtquickexamples
