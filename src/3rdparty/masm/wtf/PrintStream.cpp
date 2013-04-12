@@ -27,6 +27,8 @@
 #include "PrintStream.h"
 
 #include <stdio.h>
+#include <wtf/text/CString.h>
+#include <wtf/text/WTFString.h>
 
 namespace WTF {
 
@@ -48,6 +50,16 @@ void PrintStream::flush()
 void printInternal(PrintStream& out, const char* string)
 {
     out.printf("%s", string);
+}
+
+void printInternal(PrintStream& out, const CString& string)
+{
+    out.print(string.data());
+}
+
+void printInternal(PrintStream& out, const String& string)
+{
+    out.print(string.utf8());
 }
 
 void printInternal(PrintStream& out, bool value)

@@ -402,13 +402,6 @@ namespace JSC {
             emitInstruction(toARMWord(cc) | MOV | SetConditionalCodes, rd, ARMRegisters::r0, op2);
         }
 
-        static void revertJump(void* instructionStart, RegisterID rd, ARMWord imm)
-        {
-            ARMWord* insn = reinterpret_cast<ARMWord*>(instructionStart);
-            ARMWord* address = getLdrImmAddress(insn);
-            *address = imm;
-        }
-
         void bic(int rd, int rn, ARMWord op2, Condition cc = AL)
         {
             emitInstruction(toARMWord(cc) | BIC, rd, rn, op2);
@@ -904,7 +897,7 @@ namespace JSC {
 
         static void replaceWithJump(void* instructionStart, void* to)
         {
-            ARMWord* instruction = reinterpret_cast<ARMWord*>(instructionStart) - 1;
+            ARMWord* instruction = reinterpret_cast<ARMWord*>(instructionStart);
             intptr_t difference = reinterpret_cast<intptr_t>(to) - (reinterpret_cast<intptr_t>(instruction) + DefaultPrefetchOffset * sizeof(ARMWord));
 
             if (!(difference & 1)) {
@@ -950,6 +943,17 @@ namespace JSC {
                  *instruction = (*instruction & ~LdrOrAddInstructionMask) | AddImmediateInstruction;
                  cacheFlush(instruction, sizeof(ARMWord));
             }
+        }
+
+        static void revertBranchPtrWithPatch(void* instructionStart, RegisterID rn, ARMWord imm)
+        {
+            ARMWord* instruction = reinterpret_cast<ARMWord*>(instructionStart);
+
+            ASSERT((instruction[2] & LdrPcImmediateInstructionMask) == LdrPcImmediateInstruction);
+            instruction[0] = toARMWord(AL) | ((instruction[2] & 0x0fff0fff) + sizeof(ARMWord)) | RD(ARMRegisters::S1);
+            *getLdrImmAddress(instruction) = imm;
+            instruction[1] = toARMWord(AL) | CMP | SetConditionalCodes | RN(rn) | RM(ARMRegisters::S1);
+            cacheFlush(instruction, 2 * sizeof(ARMWord));
         }
 
         // Address operations
@@ -1018,29 +1022,46 @@ namespace JSC {
             return AL | B | (offset & BranchOffsetMask);
         }
 
+#if OS(LINUX) && COMPILER(GCC)
+        static inline void linuxPageFlush(uintptr_t begin, uintptr_t end)
+        {
+            asm volatile(
+                "push    {r7}\n"
+                "mov     r0, %0\n"
+                "mov     r1, %1\n"
+                "mov     r7, #0xf0000\n"
+                "add     r7, r7, #0x2\n"
+                "mov     r2, #0x0\n"
+                "svc     0x0\n"
+                "pop     {r7}\n"
+                :
+                : "r" (begin), "r" (end)
+                : "r0", "r1", "r2");
+        }
+#endif
+
 #if OS(LINUX) && COMPILER(RVCT)
         static __asm void cacheFlush(void* code, size_t);
 #else
         static void cacheFlush(void* code, size_t size)
         {
 #if OS(LINUX) && COMPILER(GCC)
-            uintptr_t currentPage = reinterpret_cast<uintptr_t>(code) & ~(pageSize() - 1);
-            uintptr_t lastPage = (reinterpret_cast<uintptr_t>(code) + size) & ~(pageSize() - 1);
-            do {
-                asm volatile(
-                    "push    {r7}\n"
-                    "mov     r0, %0\n"
-                    "mov     r1, %1\n"
-                    "mov     r7, #0xf0000\n"
-                    "add     r7, r7, #0x2\n"
-                    "mov     r2, #0x0\n"
-                    "svc     0x0\n"
-                    "pop     {r7}\n"
-                    :
-                    : "r" (currentPage), "r" (currentPage + pageSize())
-                    : "r0", "r1", "r2");
-                currentPage += pageSize();
-            } while (lastPage >= currentPage);
+            size_t page = pageSize();
+            uintptr_t current = reinterpret_cast<uintptr_t>(code);
+            uintptr_t end = current + size;
+            uintptr_t firstPageEnd = (current & ~(page - 1)) + page;
+
+            if (end <= firstPageEnd) {
+                linuxPageFlush(current, end);
+                return;
+            }
+
+            linuxPageFlush(current, firstPageEnd);
+
+            for (current = firstPageEnd; current + page < end; current += page)
+                linuxPageFlush(current, current + page);
+
+            linuxPageFlush(current, end);
 #elif OS(WINCE)
             CacheRangeFlush(code, size, CACHE_SYNC_ALL);
 #elif OS(QNX) && ENABLE(ASSEMBLER_WX_EXCLUSIVE)

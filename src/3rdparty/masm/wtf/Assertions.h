@@ -213,7 +213,7 @@ WTF_EXPORT_PRIVATE void WTFInstallReportBacktraceOnCrashHook();
   Expressions inside them are evaluated in debug builds only.
 */
 
-#if OS(WINCE) && !PLATFORM(TORCHMOBILE)
+#if OS(WINCE)
 /* FIXME: We include this here only to avoid a conflict with the ASSERT macro. */
 #include <windows.h>
 #undef min
@@ -263,6 +263,28 @@ inline void assertUnused(T& x) { (void)x; }
 #define ASSERT_UNUSED(variable, assertion) ASSERT(assertion)
 
 #define NO_RETURN_DUE_TO_ASSERT NO_RETURN_DUE_TO_CRASH
+
+#endif
+
+/* ASSERT_WITH_SECURITY_IMPLICATION
+   
+   Failure of this assertion indicates a possible security vulnerability.
+   Class of vulnerabilities that it tests include bad casts, out of bounds
+   accesses, use-after-frees, etc. Please file a bug using the security
+   template - https://bugs.webkit.org/enter_bug.cgi?product=Security.
+
+*/
+#ifdef ADDRESS_SANITIZER
+
+#define ASSERT_WITH_SECURITY_IMPLICATION(assertion) \
+    (!(assertion) ? \
+        (WTFReportAssertionFailure(__FILE__, __LINE__, WTF_PRETTY_FUNCTION, #assertion), \
+         CRASH()) : \
+        (void)0)
+
+#else
+
+#define ASSERT_WITH_SECURITY_IMPLICATION(assertion) ASSERT(assertion)
 
 #endif
 
@@ -323,7 +345,10 @@ while (0)
 /* COMPILE_ASSERT */
 #ifndef COMPILE_ASSERT
 #if COMPILER_SUPPORTS(C_STATIC_ASSERT)
+/* Unlike static_assert below, this also works in plain C code. */
 #define COMPILE_ASSERT(exp, name) _Static_assert((exp), #name)
+#elif COMPILER_SUPPORTS(CXX_STATIC_ASSERT)
+#define COMPILE_ASSERT(exp, name) static_assert((exp), #name)
 #else
 #define COMPILE_ASSERT(exp, name) typedef int dummy##name [(exp) ? 1 : -1]
 #endif
@@ -388,6 +413,16 @@ static inline void UNREACHABLE_FOR_PLATFORM()
 #pragma clang diagnostic pop
 #else
 #define UNREACHABLE_FOR_PLATFORM() ASSERT_NOT_REACHED()
+#endif
+
+#if ASSERT_DISABLED
+#define RELEASE_ASSERT(assertion) (UNLIKELY(!(assertion)) ? (CRASH()) : (void)0)
+#define RELEASE_ASSERT_WITH_MESSAGE(assertion, ...) RELEASE_ASSERT(assertion)
+#define RELEASE_ASSERT_NOT_REACHED() CRASH()
+#else
+#define RELEASE_ASSERT(assertion) ASSERT(assertion)
+#define RELEASE_ASSERT_WITH_MESSAGE(assertion, ...) ASSERT_WITH_MESSAGE(assertion, __VA_ARGS__)
+#define RELEASE_ASSERT_NOT_REACHED() ASSERT_NOT_REACHED()
 #endif
 
 #endif /* WTF_Assertions_h */

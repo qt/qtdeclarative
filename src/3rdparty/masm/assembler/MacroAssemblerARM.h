@@ -152,6 +152,12 @@ public:
             m_assembler.bitAnds(dest, src, w);
     }
 
+    void and32(Address src, RegisterID dest)
+    {
+        load32(src, ARMRegisters::S1);
+        and32(ARMRegisters::S1, dest);
+    }
+
     void lshift32(RegisterID shiftAmount, RegisterID dest)
     {
         lshift32(dest, shiftAmount, dest);
@@ -342,7 +348,7 @@ public:
 #else
         UNUSED_PARAM(src);
         UNUSED_PARAM(dest);
-        ASSERT_NOT_REACHED();
+        RELEASE_ASSERT_NOT_REACHED();
 #endif
     }
 
@@ -445,10 +451,10 @@ public:
         m_assembler.baseIndexTransfer32(ARMAssembler::StoreUint8, src, address.base, address.index, static_cast<int>(address.scale), address.offset);
     }
 
-    void store8(TrustedImm32 imm, void* address)
+    void store8(TrustedImm32 imm, const void* address)
     {
         move(TrustedImm32(reinterpret_cast<ARMWord>(address)), ARMRegisters::S0);
-        m_assembler.moveImm(imm.m_value, ARMRegisters::S1);
+        move(imm, ARMRegisters::S1);
         m_assembler.dtrUp(ARMAssembler::StoreUint8, ARMRegisters::S1, ARMRegisters::S0, 0);
     }
 
@@ -479,13 +485,13 @@ public:
         m_assembler.baseIndexTransfer32(ARMAssembler::StoreUint32, ARMRegisters::S1, address.base, address.index, static_cast<int>(address.scale), address.offset);
     }
 
-    void store32(RegisterID src, void* address)
+    void store32(RegisterID src, const void* address)
     {
         m_assembler.ldrUniqueImmediate(ARMRegisters::S0, reinterpret_cast<ARMWord>(address));
         m_assembler.dtrUp(ARMAssembler::StoreUint32, src, ARMRegisters::S0, 0);
     }
 
-    void store32(TrustedImm32 imm, void* address)
+    void store32(TrustedImm32 imm, const void* address)
     {
         m_assembler.ldrUniqueImmediate(ARMRegisters::S0, reinterpret_cast<ARMWord>(address));
         m_assembler.moveImm(imm.m_value, ARMRegisters::S1);
@@ -532,9 +538,9 @@ public:
 
     void swap(RegisterID reg1, RegisterID reg2)
     {
-        m_assembler.mov(ARMRegisters::S0, reg1);
-        m_assembler.mov(reg1, reg2);
-        m_assembler.mov(reg2, ARMRegisters::S0);
+        move(reg1, ARMRegisters::S0);
+        move(reg2, reg1);
+        move(ARMRegisters::S0, reg2);
     }
 
     void signExtend32ToPtr(RegisterID src, RegisterID dest)
@@ -673,9 +679,8 @@ public:
         m_assembler.vmov(dest1, dest2, src);
     }
 
-    void moveIntsToDouble(RegisterID src1, RegisterID src2, FPRegisterID dest, FPRegisterID scratch)
+    void moveIntsToDouble(RegisterID src1, RegisterID src2, FPRegisterID dest, FPRegisterID)
     {
-        UNUSED_PARAM(scratch);
         m_assembler.vmov(dest, src1, src2);
     }
 
@@ -886,11 +891,9 @@ public:
 
     void add32(TrustedImm32 imm, AbsoluteAddress address)
     {
-        m_assembler.ldrUniqueImmediate(ARMRegisters::S1, reinterpret_cast<ARMWord>(address.m_ptr));
-        m_assembler.dtrUp(ARMAssembler::LoadUint32, ARMRegisters::S1, ARMRegisters::S1, 0);
+        load32(address.m_ptr, ARMRegisters::S1);
         add32(imm, ARMRegisters::S1);
-        m_assembler.ldrUniqueImmediate(ARMRegisters::S0, reinterpret_cast<ARMWord>(address.m_ptr));
-        m_assembler.dtrUp(ARMAssembler::StoreUint32, ARMRegisters::S1, ARMRegisters::S0, 0);
+        store32(ARMRegisters::S1, address.m_ptr);
     }
 
     void add64(TrustedImm32 imm, AbsoluteAddress address)
@@ -920,11 +923,9 @@ public:
 
     void sub32(TrustedImm32 imm, AbsoluteAddress address)
     {
-        m_assembler.ldrUniqueImmediate(ARMRegisters::S1, reinterpret_cast<ARMWord>(address.m_ptr));
-        m_assembler.dtrUp(ARMAssembler::LoadUint32, ARMRegisters::S1, ARMRegisters::S1, 0);
+        load32(address.m_ptr, ARMRegisters::S1);
         sub32(imm, ARMRegisters::S1);
-        m_assembler.ldrUniqueImmediate(ARMRegisters::S0, reinterpret_cast<ARMWord>(address.m_ptr));
-        m_assembler.dtrUp(ARMAssembler::StoreUint32, ARMRegisters::S1, ARMRegisters::S0, 0);
+        store32(ARMRegisters::S1, address.m_ptr);
     }
 
     void load32(const void* address, RegisterID dest)
@@ -980,6 +981,7 @@ public:
 
     Jump branchPtrWithPatch(RelationalCondition cond, RegisterID left, DataLabelPtr& dataLabel, TrustedImmPtr initialRightValue = TrustedImmPtr(0))
     {
+        ensureSpace(3 * sizeof(ARMWord), 2 * sizeof(ARMWord));
         dataLabel = moveWithPatch(initialRightValue, ARMRegisters::S1);
         Jump jump = branch32(cond, left, ARMRegisters::S1, true);
         return jump;
@@ -988,6 +990,7 @@ public:
     Jump branchPtrWithPatch(RelationalCondition cond, Address left, DataLabelPtr& dataLabel, TrustedImmPtr initialRightValue = TrustedImmPtr(0))
     {
         load32(left, ARMRegisters::S1);
+        ensureSpace(3 * sizeof(ARMWord), 2 * sizeof(ARMWord));
         dataLabel = moveWithPatch(initialRightValue, ARMRegisters::S0);
         Jump jump = branch32(cond, ARMRegisters::S0, ARMRegisters::S1, true);
         return jump;
@@ -1104,7 +1107,7 @@ public:
 
     void divDouble(Address src, FPRegisterID dest)
     {
-        ASSERT_NOT_REACHED(); // Untested
+        RELEASE_ASSERT_NOT_REACHED(); // Untested
         loadDouble(src, ARMRegisters::SD0);
         divDouble(ARMRegisters::SD0, dest);
     }
@@ -1240,7 +1243,7 @@ public:
     // If the result is not representable as a 32 bit value, branch.
     // May also branch for some values that are representable in 32 bits
     // (specifically, in this case, 0).
-    void branchConvertDoubleToInt32(FPRegisterID src, RegisterID dest, JumpList& failureCases, FPRegisterID fpTemp)
+    void branchConvertDoubleToInt32(FPRegisterID src, RegisterID dest, JumpList& failureCases, FPRegisterID)
     {
         m_assembler.vcvt_s32_f64(ARMRegisters::SD0 << 1, src);
         m_assembler.vmov_arm32(dest, ARMRegisters::SD0 << 1);
@@ -1310,10 +1313,10 @@ public:
 
     static void revertJumpReplacementToBranchPtrWithPatch(CodeLocationLabel instructionStart, RegisterID reg, void* initialValue)
     {
-        ARMAssembler::revertJump(instructionStart.dataLocation(), reg, reinterpret_cast<uintptr_t>(initialValue) & 0xffff);
+        ARMAssembler::revertBranchPtrWithPatch(instructionStart.dataLocation(), reg, reinterpret_cast<uintptr_t>(initialValue) & 0xffff);
     }
 
-    static void revertJumpReplacementToPatchableBranchPtrWithPatch(CodeLocationLabel instructionStart, Address, void* initialValue)
+    static void revertJumpReplacementToPatchableBranchPtrWithPatch(CodeLocationLabel, Address, void*)
     {
         UNREACHABLE_FOR_PLATFORM();
     }

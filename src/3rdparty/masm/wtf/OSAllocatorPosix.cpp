@@ -26,15 +26,13 @@
 #include "config.h"
 #include "OSAllocator.h"
 
+#if OS(UNIX)
+
 #include "PageAllocation.h"
 #include <errno.h>
 #include <sys/mman.h>
 #include <wtf/Assertions.h>
 #include <wtf/UnusedParam.h>
-
-#if (OS(DARWIN) && CPU(X86_64))
-#include <stdlib.h>
-#endif
 
 namespace WTF {
 
@@ -46,6 +44,11 @@ void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, 
     if (result == MAP_FAILED)
         CRASH();
 #elif OS(LINUX)
+    UNUSED_PARAM(usage);
+    UNUSED_PARAM(writable);
+    UNUSED_PARAM(executable);
+    UNUSED_PARAM(includesGuardPages);
+
     void* result = mmap(0, bytes, PROT_NONE, MAP_NORESERVE | MAP_PRIVATE | MAP_ANON, -1, 0);
     if (result == MAP_FAILED)
         CRASH();
@@ -186,3 +189,5 @@ void OSAllocator::releaseDecommitted(void* address, size_t bytes)
 }
 
 } // namespace WTF
+
+#endif // OS(UNIX)

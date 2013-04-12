@@ -48,6 +48,11 @@
 // namespace. For now, we include math.h since the QNX cmath header only imports its functions
 // into the standard namespace.
 #include <math.h>
+// These macros from math.h conflict with the real functions in the std namespace.
+#undef signbit
+#undef isnan
+#undef isinf
+#undef isfinite
 #endif
 
 #ifndef M_PI
@@ -85,19 +90,25 @@ inline double wtf_ceil(double x) { return copysign(ceil(x), x); }
 
 #if OS(SOLARIS)
 
+namespace std {
+
 #ifndef isfinite
 inline bool isfinite(double x) { return finite(x) && !isnand(x); }
-#endif
-#ifndef isinf
-inline bool isinf(double x) { return !finite(x) && !isnand(x); }
 #endif
 #ifndef signbit
 inline bool signbit(double x) { return copysign(1.0, x) < 0; }
 #endif
+#ifndef isinf
+inline bool isinf(double x) { return !finite(x) && !isnand(x); }
+#endif
+
+} // namespace std
 
 #endif
 
 #if OS(OPENBSD)
+
+namespace std {
 
 #ifndef isfinite
 inline bool isfinite(double x) { return finite(x); }
@@ -106,9 +117,11 @@ inline bool isfinite(double x) { return finite(x); }
 inline bool signbit(double x) { struct ieee_double *p = (struct ieee_double *)&x; return p->dbl_sign; }
 #endif
 
+} // namespace std
+
 #endif
 
-#if COMPILER(MSVC) || (COMPILER(RVCT) && !(RVCT_VERSION_AT_LEAST(3, 0, 0, 0)))
+#if COMPILER(MSVC)
 
 // We must not do 'num + 0.5' or 'num - 0.5' because they can cause precision loss.
 static double round(double num)
@@ -138,17 +151,17 @@ inline double trunc(double num) { return num > 0 ? floor(num) : ceil(num); }
 inline long long abs(long num) { return labs(num); }
 #endif
 
-#if OS(ANDROID) || COMPILER(MSVC)
-// ANDROID and MSVC's math.h does not currently supply log2 or log2f.
+#if COMPILER(MSVC)
+// MSVC's math.h does not currently supply log2 or log2f.
 inline double log2(double num)
 {
-    // This constant is roughly M_LN2, which is not provided by default on Windows and Android.
+    // This constant is roughly M_LN2, which is not provided by default on Windows.
     return log(num) / 0.693147180559945309417232121458176568;
 }
 
 inline float log2f(float num)
 {
-    // This constant is roughly M_LN2, which is not provided by default on Windows and Android.
+    // This constant is roughly M_LN2, which is not provided by default on Windows.
     return logf(num) / 0.693147180559945309417232121458176568f;
 }
 #endif
@@ -159,15 +172,19 @@ inline float log2f(float num)
 inline long long abs(long long num) { return _abs64(num); }
 #endif
 
+namespace std {
+
 inline bool isinf(double num) { return !_finite(num) && !_isnan(num); }
 inline bool isnan(double num) { return !!_isnan(num); }
+inline bool isfinite(double x) { return _finite(x); }
 inline bool signbit(double num) { return _copysign(1.0, num) < 0; }
+
+} // namespace std
 
 inline double nextafter(double x, double y) { return _nextafter(x, y); }
 inline float nextafterf(float x, float y) { return x > y ? x - FLT_EPSILON : x + FLT_EPSILON; }
 
 inline double copysign(double x, double y) { return _copysign(x, y); }
-inline int isfinite(double x) { return _finite(x); }
 
 // Work around a bug in Win, where atan2(+-infinity, +-infinity) yields NaN instead of specific values.
 inline double wtf_atan2(double x, double y)
@@ -193,7 +210,7 @@ inline double wtf_atan2(double x, double y)
 }
 
 // Work around a bug in the Microsoft CRT, where fmod(x, +-infinity) yields NaN instead of x.
-inline double wtf_fmod(double x, double y) { return (!isinf(x) && isinf(y)) ? x : fmod(x, y); }
+inline double wtf_fmod(double x, double y) { return (!std::isinf(x) && std::isinf(y)) ? x : fmod(x, y); }
 
 // Work around a bug in the Microsoft CRT, where pow(NaN, 0) yields NaN instead of 1.
 inline double wtf_pow(double x, double y) { return y == 0 ? 1 : pow(x, y); }
@@ -212,7 +229,7 @@ inline long int lrint(double flt)
         fistp intgr
     };
 #else
-    ASSERT(isfinite(flt));
+    ASSERT(std::isfinite(flt));
     double rounded = round(flt);
     intgr = static_cast<int64_t>(rounded);
     // If the fractional part is exactly 0.5, we need to check whether
@@ -329,31 +346,6 @@ template<typename T> inline T timesThreePlusOneDividedByTwo(T value)
     return value + (value >> 1) + (value & 1);
 }
 
-#if !COMPILER(MSVC) && !COMPILER(RVCT) && !OS(SOLARIS)
-using std::isfinite;
-#if !COMPILER_QUIRK(GCC11_GLOBAL_ISINF_ISNAN)
-using std::isinf;
-using std::isnan;
-#endif
-using std::signbit;
-#endif
-
-#if COMPILER_QUIRK(GCC11_GLOBAL_ISINF_ISNAN)
-// A workaround to avoid conflicting declarations of isinf and isnan when compiling with GCC in C++11 mode.
-namespace std {
-    inline bool wtf_isinf(float f) { return std::isinf(f); }
-    inline bool wtf_isinf(double d) { return std::isinf(d); }
-    inline bool wtf_isnan(float f) { return std::isnan(f); }
-    inline bool wtf_isnan(double d) { return std::isnan(d); }
-};
-
-using std::wtf_isinf;
-using std::wtf_isnan;
-
-#define isinf(x) wtf_isinf(x)
-#define isnan(x) wtf_isnan(x)
-#endif
-
 #ifndef UINT64_C
 #if COMPILER(MSVC)
 #define UINT64_C(c) c ## ui64
@@ -367,7 +359,7 @@ inline double wtf_pow(double x, double y)
 {
     // MinGW-w64 has a custom implementation for pow.
     // This handles certain special cases that are different.
-    if ((x == 0.0 || isinf(x)) && isfinite(y)) {
+    if ((x == 0.0 || std::isinf(x)) && std::isfinite(y)) {
         double f;
         if (modf(y, &f) != 0.0)
             return ((x == 0.0) ^ (y > 0.0)) ? std::numeric_limits<double>::infinity() : 0.0;
@@ -390,9 +382,9 @@ inline double wtf_pow(double x, double y)
 //     (sign ? -1 : 1) * pow(2, exponent) * (mantissa / (1 << 52))
 inline void decomposeDouble(double number, bool& sign, int32_t& exponent, uint64_t& mantissa)
 {
-    ASSERT(isfinite(number));
+    ASSERT(std::isfinite(number));
 
-    sign = signbit(number);
+    sign = std::signbit(number);
 
     uint64_t bits = WTF::bitwise_cast<uint64_t>(number);
     exponent = (static_cast<int32_t>(bits >> 52) & 0x7ff) - 0x3ff;
@@ -409,7 +401,7 @@ inline void decomposeDouble(double number, bool& sign, int32_t& exponent, uint64
 // Calculate d % 2^{64}.
 inline void doubleToInteger(double d, unsigned long long& value)
 {
-    if (isnan(d) || isinf(d))
+    if (std::isnan(d) || std::isinf(d))
         value = 0;
     else {
         // -2^{64} < fmodValue < 2^{64}.
@@ -442,6 +434,24 @@ inline uint32_t roundUpToPowerOfTwo(uint32_t v)
     v |= v >> 16;
     v++;
     return v;
+}
+
+inline unsigned fastLog2(unsigned i)
+{
+    unsigned log2 = 0;
+    if (i & (i - 1))
+        log2 += 1;
+    if (i >> 16)
+        log2 += 16, i >>= 16;
+    if (i >> 8)
+        log2 += 8, i >>= 8;
+    if (i >> 4)
+        log2 += 4, i >>= 4;
+    if (i >> 2)
+        log2 += 2, i >>= 2;
+    if (i >> 1)
+        log2 += 1;
+    return log2;
 }
 
 } // namespace WTF
