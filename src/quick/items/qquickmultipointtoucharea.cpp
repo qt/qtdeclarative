@@ -47,6 +47,7 @@
 #include <QMouseEvent>
 #include <math.h>
 #include <QDebug>
+#include <qpa/qplatformnativeinterface.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -322,6 +323,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 
 QQuickMultiPointTouchArea::QQuickMultiPointTouchArea(QQuickItem *parent)
     : QQuickItem(parent),
+      _currentWindow(0),
       _minimumTouchPoints(0),
       _maximumTouchPoints(INT_MAX),
       _stealMouse(false)
@@ -331,6 +333,9 @@ QQuickMultiPointTouchArea::QQuickMultiPointTouchArea(QQuickItem *parent)
     if (qmlVisualTouchDebugging()) {
         setFlag(QQuickItem::ItemHasContents);
     }
+#ifdef Q_OS_MAC
+    connect(this, &QQuickItem::windowChanged, this, &QQuickMultiPointTouchArea::setTouchEventsEnabledForWindow);
+#endif
 }
 
 QQuickMultiPointTouchArea::~QQuickMultiPointTouchArea()
@@ -540,6 +545,27 @@ void QQuickMultiPointTouchArea::addTouchPoint(const QTouchEvent::TouchPoint *p)
     dtp->setPressed(true);
     _touchPoints.insert(p->id(),dtp);
     _pressedTouchPoints.append(dtp);
+}
+
+void QQuickMultiPointTouchArea::setTouchEventsEnabledForWindow(QWindow *window)
+{
+#ifdef Q_OS_MAC
+    // Resolve function for enabling touch events from the (cocoa) platform plugin.
+    typedef void (*RegisterTouchWindowFunction)(QWindow *, bool);
+    RegisterTouchWindowFunction registerTouchWindow = reinterpret_cast<RegisterTouchWindowFunction>(
+        QGuiApplication::platformNativeInterface()->nativeResourceFunctionForIntegration("registertouchwindow"));
+    if (!registerTouchWindow)
+        return; // Not necessarily an error, Qt migh be using a different platform plugin.
+
+    // Disable touch on the old window, enable on the new window.
+    if (_currentWindow)
+        registerTouchWindow(_currentWindow, false);
+    if (window)
+        registerTouchWindow(window, true);
+    // Save the current window, setTouchEventsEnabledForWindow will be called
+    // with a null window on disable.
+    _currentWindow = window;
+#endif
 }
 
 void QQuickMultiPointTouchArea::addTouchPrototype(QQuickTouchPoint *prototype)

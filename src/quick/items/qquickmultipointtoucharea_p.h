@@ -251,6 +251,9 @@ protected:
     void grabGesture();
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
+protected slots:
+    void setTouchEventsEnabledForWindow(QWindow *window);
+
 private:
     void ungrab();
     QMap<int,QQuickTouchPoint*> _touchPrototypes;  //TouchPoints defined in QML
@@ -258,6 +261,7 @@ private:
     QList<QObject*> _releasedTouchPoints;
     QList<QObject*> _pressedTouchPoints;
     QList<QObject*> _movedTouchPoints;
+    QWindow *_currentWindow;
     int _minimumTouchPoints;
     int _maximumTouchPoints;
     bool _stealMouse;
