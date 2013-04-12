@@ -485,6 +485,7 @@ public:
     void itemToParentTransform(QTransform &) const;
 
     static bool focusNextPrev(QQuickItem *item, bool forward);
+    static QQuickItem *nextPrevItemInTabFocusChain(QQuickItem *item, bool forward);
 
     qreal x;
     qreal y;

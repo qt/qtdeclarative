@@ -70,6 +70,8 @@ private slots:
     void activeFocusOnTab4();
     void activeFocusOnTab5();
 
+    void nextItemInFocusChain();
+
     void keys();
     void keysProcessingOrder();
     void keysim();
@@ -660,6 +662,79 @@ void tst_QQuickItem::activeFocusOnTab5()
     item = findItem<QQuickItem>(window->rootObject(), "button21");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
+
+    delete window;
+}
+
+void tst_QQuickItem::nextItemInFocusChain()
+{
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(800,600));
+
+    window->setSource(testFileUrl("activeFocusOnTab.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+
+    QQuickItem *button11 = findItem<QQuickItem>(window->rootObject(), "button11");
+    QVERIFY(button11);
+    QQuickItem *button12 = findItem<QQuickItem>(window->rootObject(), "button12");
+    QVERIFY(button12);
+
+    QQuickItem *sub2 = findItem<QQuickItem>(window->rootObject(), "sub2");
+    QVERIFY(sub2);
+    QQuickItem *button21 = findItem<QQuickItem>(window->rootObject(), "button21");
+    QVERIFY(button21);
+    QQuickItem *button22 = findItem<QQuickItem>(window->rootObject(), "button22");
+    QVERIFY(button22);
+
+    QQuickItem *edit = findItem<QQuickItem>(window->rootObject(), "edit");
+    QVERIFY(edit);
+
+    QQuickItem *next, *prev;
+
+    next = button11->nextItemInFocusChain(true);
+    QVERIFY(next);
+    QCOMPARE(next, button12);
+    prev = button11->nextItemInFocusChain(false);
+    QVERIFY(prev);
+    QCOMPARE(prev, edit);
+
+    next = button12->nextItemInFocusChain();
+    QVERIFY(next);
+    QCOMPARE(next, sub2);
+    prev = button12->nextItemInFocusChain(false);
+    QVERIFY(prev);
+    QCOMPARE(prev, button11);
+
+    next = sub2->nextItemInFocusChain(true);
+    QVERIFY(next);
+    QCOMPARE(next, button21);
+    prev = sub2->nextItemInFocusChain(false);
+    QVERIFY(prev);
+    QCOMPARE(prev, button12);
+
+    next = button21->nextItemInFocusChain();
+    QVERIFY(next);
+    QCOMPARE(next, button22);
+    prev = button21->nextItemInFocusChain(false);
+    QVERIFY(prev);
+    QCOMPARE(prev, sub2);
+
+    next = button22->nextItemInFocusChain(true);
+    QVERIFY(next);
+    QCOMPARE(next, edit);
+    prev = button22->nextItemInFocusChain(false);
+    QVERIFY(prev);
+    QCOMPARE(prev, button21);
+
+    next = edit->nextItemInFocusChain();
+    QVERIFY(next);
+    QCOMPARE(next, button11);
+    prev = edit->nextItemInFocusChain(false);
+    QVERIFY(prev);
+    QCOMPARE(prev, button22);
 
     delete window;
 }

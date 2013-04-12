@@ -2044,6 +2044,18 @@ QQuickItem::~QQuickItem()
 */
 bool QQuickItemPrivate::focusNextPrev(QQuickItem *item, bool forward)
 {
+    QQuickItem *next = QQuickItemPrivate::nextPrevItemInTabFocusChain(item, forward);
+
+    if (next == item)
+        return false;
+
+    next->forceActiveFocus(forward ? Qt::TabFocusReason : Qt::BacktabFocusReason);
+
+    return true;
+}
+
+QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, bool forward)
+{
     Q_ASSERT(item);
     Q_ASSERT(item->activeFocusOnTab());
 
@@ -2111,12 +2123,7 @@ bool QQuickItemPrivate::focusNextPrev(QQuickItem *item, bool forward)
         from = last;
     } while (skip || !current->activeFocusOnTab() || !current->isEnabled() || !current->isVisible());
 
-    if (current == item)
-        return false;
-
-    current->forceActiveFocus(forward ? Qt::TabFocusReason : Qt::BacktabFocusReason);
-
-    return true;
+    return current;
 }
 
 /*!
@@ -3925,6 +3932,28 @@ void QQuickItem::forceActiveFocus(Qt::FocusReason reason)
         }
         parent = parent->parentItem();
     }
+}
+
+/*!
+    \qmlmethod QtQuick2::Item::nextItemInFocusChain(bool forward)
+
+    \since QtQuick 2.1
+
+    Returns the item in the focus chain which is next to this item.
+    If \a forward is \c true, or not supplied, it is the next item in
+    the forwards direction. If \a forward is \c false, it is the next
+    item in the backwards direction.
+*/
+/*!
+    Returns the item in the focus chain which is next to this item.
+    If \a forward is \c true, or not supplied, it is the next item in
+    the forwards direction. If \a forward is \c false, it is the next
+    item in the backwards direction.
+*/
+
+QQuickItem *QQuickItem::nextItemInFocusChain(bool forward)
+{
+    return QQuickItemPrivate::nextPrevItemInTabFocusChain(this, forward);
 }
 
 /*!
