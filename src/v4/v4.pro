@@ -27,6 +27,7 @@ SOURCES += \
     llvm_runtime.cpp \
     qv4isel_p.cpp \
     debugging.cpp \
+    qv4lookup.cpp \
     qv4mm.cpp \
     qv4managed.cpp \
     qv4internalclass.cpp \
@@ -66,6 +67,7 @@ HEADERS += \
     qv4isel_p.h \
     qv4isel_util_p.h \
     debugging.h \
+    qv4lookup.h \
     qv4identifier.h \
     qv4mm.h \
     qv4managed.h \

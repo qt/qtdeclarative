@@ -47,6 +47,7 @@
 #include "qv4objectproto.h"
 #include "qv4globalobject.h"
 #include "qv4stringobject.h"
+#include "qv4lookup.h"
 #include "private/qlocale_tools_p.h"
 
 #include <QtCore/qmath.h>
@@ -724,23 +725,7 @@ void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Val
 {
     Value res;
     Lookup *l = ctx->lookups + lookupIndex;
-    if (Object *o = object.asObject()) {
-        PropertyAttributes attrs;
-        Property *p = l->lookup(o, &attrs);
-        if (p)
-            res = attrs.isData() ? p->value : o->getValue(ctx, p, attrs);
-        else
-            res = Value::undefinedValue();
-    } else {
-        if (Managed *m = object.asManaged()) {
-            res = m->get(ctx, l->name);
-        } else {
-            o = __qmljs_convert_to_object(ctx, object);
-            res = o->get(ctx, l->name);
-        }
-    }
-    if (result)
-        *result = res;
+    l->lookupName(l, ctx, result, object);
 }
 
 void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value &object, int lookupIndex, const Value &value)
