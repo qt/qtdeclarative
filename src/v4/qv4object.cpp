@@ -510,30 +510,20 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
         if (!extensible)
             goto reject;
     } else {
-        PropertyAttributes attrs;
-        if (Property *p = prototype->__getPropertyDescriptor__(ctx, name, &attrs)) {
+        // clause 4
+        if ((pd = prototype->__getPropertyDescriptor__(ctx, name, &attrs))) {
             if (attrs.isAccessor()) {
-                if (p->setter())
-                    goto cont;
+                if (!pd->setter())
+                    goto reject;
+            } else if (!extensible || !attrs.isWritable()) {
                 goto reject;
             }
-            if (!extensible)
-                goto reject;
-            if (!attrs.isWritable())
-                goto reject;
-        } else {
-            if (!extensible)
-                goto reject;
+        } else if (!extensible) {
+            goto reject;
         }
     }
 
     cont:
-
-
-    // clause 4
-    // ### should be able to remove these two lines (see call 15 lines above)
-    if (!pd && prototype)
-        pd = prototype->__getPropertyDescriptor__(ctx, name, &attrs);
 
     // Clause 5
     if (pd && attrs.isAccessor()) {
@@ -593,29 +583,20 @@ void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &
         if (!extensible)
             goto reject;
     } else {
-        PropertyAttributes attrs;
-        if (Property *p = prototype->__getPropertyDescriptor__(ctx, index, &attrs)) {
+        // clause 4
+        if ((pd = prototype->__getPropertyDescriptor__(ctx, index, &attrs))) {
             if (attrs.isAccessor()) {
-                if (p->setter())
-                    goto cont;
+                if (!pd->setter())
+                    goto reject;
+            } else if (!extensible || !attrs.isWritable()) {
                 goto reject;
             }
-            if (!extensible)
-                goto reject;
-            if (!attrs.isWritable())
-                goto reject;
-        } else {
-            if (!extensible)
-                goto reject;
+        } else if (!extensible) {
+            goto reject;
         }
     }
 
     cont:
-
-    // clause 4
-    // ### remove and replace with 15 lines above...
-    if (!pd && prototype)
-        pd = prototype->__getPropertyDescriptor__(ctx, index, &attrs);
 
     // Clause 5
     if (pd && attrs.isAccessor()) {
