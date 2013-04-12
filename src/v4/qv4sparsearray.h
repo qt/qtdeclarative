@@ -45,7 +45,7 @@
 #include "qv4global.h"
 #include <QtCore/qmap.h>
 #include <qv4value.h>
-#include <qv4propertydescriptor.h>
+#include <qv4property.h>
 #include <assert.h>
 
 #ifdef Q_MAP_DEBUG

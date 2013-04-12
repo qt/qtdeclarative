@@ -86,7 +86,7 @@ HEADERS += \
     qv4regexpobject.h \
     qv4stringobject.h \
     qv4string.h \
-    qv4propertydescriptor.h \
+    qv4property.h \
     qv4objectiterator.h \
     qv4regexp.h \
     qv4unwindhelper.h \

@@ -46,7 +46,7 @@
 #include "qv4object.h"
 #include "qv4util.h"
 #include "qv4context.h"
-#include "qv4propertydescriptor.h"
+#include "qv4property.h"
 #include <setjmp.h>
 
 #include <wtf/BumpPointerAllocator.h>

@@ -43,7 +43,7 @@
 
 #include "qv4value.h"
 #include <qv4internalclass.h>
-#include <qv4propertydescriptor.h>
+#include <qv4property.h>
 
 QT_BEGIN_NAMESPACE
 

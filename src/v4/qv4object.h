@@ -50,7 +50,7 @@
 #include "qv4codegen_p.h"
 #include "qv4isel_p.h"
 #include "qv4managed.h"
-#include "qv4propertydescriptor.h"
+#include "qv4property.h"
 #include "qv4internalclass.h"
 #include "qv4objectiterator.h"
 
