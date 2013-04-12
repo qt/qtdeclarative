@@ -748,10 +748,10 @@ void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value &object, int
     Object *o = object.toObject(ctx);
     Lookup *l = ctx->lookups + lookupIndex;
 
-    bool writable;
-    Property *p = l->setterLookup(o, &writable);
+    PropertyAttributes attrs;
+    Property *p = l->setterLookup(o, &attrs);
     if (p && (l->index != ArrayObject::LengthPropertyIndex || !o->isArrayObject())) {
-        o->putValue(ctx, p, o->internalClass->propertyData[l->index], value);
+        o->putValue(ctx, p, attrs, value);
         return;
     }
 

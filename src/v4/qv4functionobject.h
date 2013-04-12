@@ -148,9 +148,9 @@ struct Lookup {
         return 0;
     }
 
-    Property *setterLookup(Object *o, bool *writable) {
+    Property *setterLookup(Object *o, PropertyAttributes *attrs) {
         if (o->internalClass == classList[0]) {
-            *writable = o->internalClass->propertyData[index].isWritable();
+            *attrs = o->internalClass->propertyData[index];
             return o->memberData + index;
         }
 
@@ -158,7 +158,7 @@ struct Lookup {
         if (idx != UINT_MAX) {
             classList[0] = o->internalClass;
             index = idx;
-            *writable = o->internalClass->propertyData[index].isWritable();
+            *attrs = o->internalClass->propertyData[index];
             return o->memberData + index;
         }
         return 0;
