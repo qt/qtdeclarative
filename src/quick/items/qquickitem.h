@@ -355,6 +355,7 @@ Q_SIGNALS:
     void smoothChanged(bool);
     void antialiasingChanged(bool);
     void clipChanged(bool);
+    Q_REVISION(1) void windowChanged(QQuickWindow* window);
 
     // XXX todo
     void childrenChanged();

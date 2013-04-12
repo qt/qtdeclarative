@@ -110,13 +110,11 @@ void tst_qqmlapplicationengine::application()
    */
     QDir::setCurrent(buildDir);
     QProcess *testProcess = new QProcess(this);
-    QTest::ignoreMessage(QtWarningMsg, "Don't know how to handle 'QProcess::ExitStatus', use qRegisterMetaType to register it.");
-    QSignalSpy processFinished(testProcess, SIGNAL(finished(int,QProcess::ExitStatus)));
     QStringList args;
     args << QLatin1String("testData");
     testProcess->start(QLatin1String("testapp/testapp"), args);
-    QTRY_VERIFY(processFinished.count());//Application should immediately exit
-    QCOMPARE(processFinished[0][0].toInt(), 0);
+    QVERIFY(testProcess->waitForFinished(5000));
+    QCOMPARE(testProcess->exitCode(), 0);
     QByteArray test_stdout = testProcess->readAllStandardOutput();
     QByteArray test_stderr = testProcess->readAllStandardError();
     QByteArray test_stderr_target("Start: testData\nEnd\n");

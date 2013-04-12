@@ -682,6 +682,9 @@ Item {
                 qtest_runFunction(prop, null, isBenchmark)
             }
             qtest_results.finishTestFunction()
+            // wait(0) will call processEvents() so objects marked for deletion
+            // in the test function will be deleted.
+            wait(0)
             qtest_results.skipped = false
         }
 

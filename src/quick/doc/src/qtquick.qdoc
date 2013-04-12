@@ -44,10 +44,13 @@ interfaces with the QML language, and the \c QtQuick C++ module, which supplies
 \l{Qt Quick C++ Classes}{a set of C++ APIs} for integrating with user interfaces and
 applications built with QML and the \c QtQuick QML module.
 
+\note From Qt 5.1, a set of Qt Quick based UI controls is available to
+create classic desktop-style user interfaces. Please see \l{Qt Quick Controls}
+for more information.
+
 For those new to QML and Qt Quick, please see
 \l{QML Application Developer Resources}
 for an introduction to writing QML applications.
-
 
 \section1 Important Concepts in Qt Quick
 

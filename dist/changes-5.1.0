@@ -32,6 +32,9 @@ Third party components
 *                   Important Behavior Changes                             *
 ****************************************************************************
 
+ - A Window declared nested inside another Item or Window automatically
+   becomes transient for (centered upon) its parent's window, if x and y
+   were not explicitly specified
 
 ****************************************************************************
 *                          Library                                         *

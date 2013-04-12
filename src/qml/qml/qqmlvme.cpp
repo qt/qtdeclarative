@@ -91,6 +91,8 @@ using namespace QQmlVMETypes;
         goto exceptionExit; \
     }
 
+bool QQmlVME::s_enableComponentComplete = true;
+
 void QQmlVME::init(QQmlContextData *ctxt, QQmlCompiledData *comp, int start,
                            QQmlContextData *creation)
 {
@@ -1326,7 +1328,7 @@ QQmlContextData *QQmlVME::complete(const Interrupt &interrupt)
     bindValues.deallocate();
     }
 
-    if (!QQmlEnginePrivate::designerMode()) { // the qml designer does the component complete later
+    if (componentCompleteEnabled()) { // the qml designer does the component complete later
         QQmlTrace trace("VME Component Complete");
         while (!parserStatus.isEmpty()) {
             QQmlParserStatus *status = parserStatus.pop();
@@ -1388,6 +1390,21 @@ QQmlContextData *QQmlVME::complete(const Interrupt &interrupt)
     if (rv) rv->activeVMEData = data;
 
     return rv;
+}
+
+void QQmlVME::enableComponentComplete()
+{
+    s_enableComponentComplete = true;
+}
+
+void QQmlVME::disableComponentComplete()
+{
+    s_enableComponentComplete = false;
+}
+
+bool QQmlVME::componentCompleteEnabled()
+{
+    return s_enableComponentComplete;
 }
 
 void QQmlVME::blank(QFiniteStack<QQmlAbstractBinding *> &bs)
