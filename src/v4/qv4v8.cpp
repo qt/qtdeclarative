@@ -864,7 +864,7 @@ bool Object::Has(Handle<String> key)
 {
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
-    return o->__hasProperty__(currentEngine()->current, ValuePtr(&key)->asString());
+    return o->__hasProperty__(ValuePtr(&key)->asString());
 }
 
 bool Object::Delete(Handle<String> key)
@@ -887,7 +887,7 @@ bool Object::Has(uint32_t index)
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     if (!o)
         return false;
-    return o->__hasProperty__(currentEngine()->current, index);
+    return o->__hasProperty__(index);
 }
 
 bool Object::Delete(uint32_t index)
@@ -1012,7 +1012,7 @@ bool Object::HasOwnProperty(Handle<String> key)
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
     QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
-    return o->__getOwnProperty__(ctx, ValuePtr(&key)->toString(ctx));
+    return o->__getOwnProperty__(ValuePtr(&key)->toString(ctx));
 }
 
 int Object::GetIdentityHash()
@@ -1522,7 +1522,7 @@ protected:
                 return;
         }
         PropertyAttributes attrs;
-        Property *pd  = that->__getOwnProperty__(ctx, name, &attrs);
+        Property *pd  = that->__getOwnProperty__(name, &attrs);
         if (pd)
             that->putValue(ctx, pd, attrs, value);
         else if (that->m_template->m_fallbackPropertySetter)

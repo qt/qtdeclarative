@@ -146,7 +146,7 @@ Value ObjectPrototype::method_getOwnPropertyDescriptor(SimpleCallContext *ctx)
 
     String *name = ctx->argument(1).toString(ctx);
     PropertyAttributes attrs;
-    Property *desc = O.objectValue()->__getOwnProperty__(ctx, name, &attrs);
+    Property *desc = O.objectValue()->__getOwnProperty__(name, &attrs);
     return fromPropertyDescriptor(ctx, desc, attrs);
 }
 
@@ -408,7 +408,7 @@ Value ObjectPrototype::method_hasOwnProperty(SimpleCallContext *ctx)
 {
     String *P = ctx->argument(0).toString(ctx);
     Object *O = ctx->thisObject.toObject(ctx);
-    bool r = O->__getOwnProperty__(ctx, P) != 0;
+    bool r = O->__getOwnProperty__(P) != 0;
     return Value::fromBoolean(r);
 }
 
@@ -434,7 +434,7 @@ Value ObjectPrototype::method_propertyIsEnumerable(SimpleCallContext *ctx)
 
     Object *o = ctx->thisObject.toObject(ctx);
     PropertyAttributes attrs;
-    o->__getOwnProperty__(ctx, p, &attrs);
+    o->__getOwnProperty__(p, &attrs);
     return Value::fromBoolean(attrs.isEnumerable());
 }
 
@@ -483,13 +483,13 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     desc->setGetter(0);
     desc->setSetter(0);
 
-    if (o->__hasProperty__(ctx, ctx->engine->id_enumerable))
+    if (o->__hasProperty__(ctx->engine->id_enumerable))
         attrs->setEnumerable(o->get(ctx, ctx->engine->id_enumerable).toBoolean());
 
-    if (o->__hasProperty__(ctx, ctx->engine->id_configurable))
+    if (o->__hasProperty__(ctx->engine->id_configurable))
         attrs->setConfigurable(o->get(ctx, ctx->engine->id_configurable).toBoolean());
 
-    if (o->__hasProperty__(ctx, ctx->engine->id_get)) {
+    if (o->__hasProperty__(ctx->engine->id_get)) {
         Value get = o->get(ctx, ctx->engine->id_get);
         FunctionObject *f = get.asFunctionObject();
         if (f) {
@@ -502,7 +502,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
         attrs->setType(PropertyAttributes::Accessor);
     }
 
-    if (o->__hasProperty__(ctx, ctx->engine->id_set)) {
+    if (o->__hasProperty__(ctx->engine->id_set)) {
         Value set = o->get(ctx, ctx->engine->id_set);
         FunctionObject *f = set.asFunctionObject();
         if (f) {
@@ -515,7 +515,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
         attrs->setType(PropertyAttributes::Accessor);
     }
 
-    if (o->__hasProperty__(ctx, ctx->engine->id_writable)) {
+    if (o->__hasProperty__(ctx->engine->id_writable)) {
         if (attrs->isAccessor())
             ctx->throwTypeError();
         attrs->setWritable(o->get(ctx, ctx->engine->id_writable).toBoolean());
@@ -523,7 +523,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
         desc->value = Value::undefinedValue();
     }
 
-    if (o->__hasProperty__(ctx, ctx->engine->id_value)) {
+    if (o->__hasProperty__(ctx->engine->id_value)) {
         if (attrs->isAccessor())
             ctx->throwTypeError();
         desc->value = o->get(ctx, ctx->engine->id_value);

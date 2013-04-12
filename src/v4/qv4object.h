@@ -128,17 +128,17 @@ struct Q_V4_EXPORT Object: Managed {
     Object(ExecutionContext *context);
     ~Object();
 
-    Property *__getOwnProperty__(ExecutionContext *ctx, String *name, PropertyAttributes *attrs = 0);
-    Property *__getOwnProperty__(ExecutionContext *ctx, uint index, PropertyAttributes *attrs = 0);
+    Property *__getOwnProperty__(String *name, PropertyAttributes *attrs = 0);
+    Property *__getOwnProperty__(uint index, PropertyAttributes *attrs = 0);
 
-    Property *__getPropertyDescriptor__(const ExecutionContext *ctx, String *name, PropertyAttributes *attrs = 0) const;
-    Property *__getPropertyDescriptor__(const ExecutionContext *ctx, uint index, PropertyAttributes *attrs = 0) const;
+    Property *__getPropertyDescriptor__(String *name, PropertyAttributes *attrs = 0) const;
+    Property *__getPropertyDescriptor__(uint index, PropertyAttributes *attrs = 0) const;
 
-    bool __hasProperty__(const ExecutionContext *ctx, String *name) const {
-        return __getPropertyDescriptor__(ctx, name);
+    bool __hasProperty__(String *name) const {
+        return __getPropertyDescriptor__(name);
     }
-    bool __hasProperty__(const ExecutionContext *ctx, uint index) const {
-        return __getPropertyDescriptor__(ctx, index);
+    bool __hasProperty__(uint index) const {
+        return __getPropertyDescriptor__(index);
     }
 
     bool __defineOwnProperty__(ExecutionContext *ctx, Property *current, String *member, const Property &p, PropertyAttributes attrs);

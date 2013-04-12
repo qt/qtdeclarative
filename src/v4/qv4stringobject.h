@@ -55,7 +55,7 @@ struct StringObject: Object {
     mutable Property tmpProperty;
     StringObject(ExecutionContext *ctx, const Value &value);
 
-    Property *getIndex(const ExecutionContext *ctx, uint index) const;
+    Property *getIndex(uint index) const;
 
 protected:
     static const ManagedVTable static_vtbl;

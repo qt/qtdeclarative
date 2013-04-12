@@ -246,7 +246,7 @@ void __qmljs_in(ExecutionContext *ctx, Value *result, const Value &left, const V
     if (!right.isObject())
         ctx->throwTypeError();
     String *s = left.toString(ctx);
-    bool r = right.objectValue()->__hasProperty__(ctx, s);
+    bool r = right.objectValue()->__hasProperty__(s);
     *result = Value::fromBoolean(r);
 }
 

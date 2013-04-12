@@ -89,12 +89,12 @@ StringObject::StringObject(ExecutionContext *ctx, const Value &value)
     defineReadonlyProperty(ctx->engine->id_length, Value::fromUInt32(value.stringValue()->toQString().length()));
 }
 
-Property *StringObject::getIndex(const ExecutionContext *ctx, uint index) const
+Property *StringObject::getIndex(uint index) const
 {
     QString str = value.stringValue()->toQString();
     if (index >= (uint)str.length())
         return 0;
-    String *result = ctx->engine->newString(str.mid(index, 1));
+    String *result = internalClass->engine->newString(str.mid(index, 1));
     tmpProperty.value = Value::fromString(result);
     return &tmpProperty;
 }

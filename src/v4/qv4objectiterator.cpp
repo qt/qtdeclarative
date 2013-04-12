@@ -78,7 +78,7 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
                 ++arrayIndex;
                 if (attrs)
                     *attrs = s->arrayAttributes ? s->arrayAttributes[arrayIndex] : PropertyAttributes(Attr_NotWritable|Attr_NotConfigurable);
-                return s->__getOwnProperty__(context, *index);
+                return s->__getOwnProperty__(*index);
             }
             flags &= ~CurrentIsString;
             arrayNode = current->sparseArrayBegin();

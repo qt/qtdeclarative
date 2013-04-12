@@ -96,7 +96,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
         ctx = ctx->outer;
     }
 
-    if (activation->__hasProperty__(this, name))
+    if (activation->__hasProperty__(name))
         return;
     Property desc = Property::fromValue(Value::undefinedValue());
     PropertyAttributes attrs(Attr_Data);
@@ -215,7 +215,7 @@ bool ExecutionContext::deleteProperty(String *name)
         if (ctx->type == Type_WithContext) {
             hasWith = true;
             WithContext *w = static_cast<WithContext *>(ctx);
-            if (w->withObject->__hasProperty__(this, name))
+            if (w->withObject->__hasProperty__(name))
                 return w->withObject->deleteProperty(this, name);
         } else if (ctx->type == Type_CatchContext) {
             CatchContext *c = static_cast<CatchContext *>(ctx);
@@ -232,11 +232,11 @@ bool ExecutionContext::deleteProperty(String *name)
                     if (f->formalParameterList[i]->isEqualTo(name))
                         return false;
             }
-            if (c->activation && c->activation->__hasProperty__(this, name))
+            if (c->activation && c->activation->__hasProperty__(name))
                 return c->activation->deleteProperty(this, name);
         } else if (ctx->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
-            if (g->global->__hasProperty__(this, name))
+            if (g->global->__hasProperty__(name))
                 return g->global->deleteProperty(this, name);
         }
     }
@@ -292,7 +292,7 @@ void ExecutionContext::setProperty(String *name, const Value& value)
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
         if (ctx->type == Type_WithContext) {
             Object *w = static_cast<WithContext *>(ctx)->withObject;
-            if (w->__hasProperty__(ctx, name)) {
+            if (w->__hasProperty__(name)) {
                 w->put(ctx, name, value);
                 return;
             }
@@ -318,7 +318,7 @@ void ExecutionContext::setProperty(String *name, const Value& value)
                 activation = static_cast<GlobalContext *>(ctx)->global;
             }
 
-            if (activation && (ctx->type == Type_QmlContext || activation->__hasProperty__(this, name))) {
+            if (activation && (ctx->type == Type_QmlContext || activation->__hasProperty__(name))) {
                 activation->put(this, name, value);
                 return;
             }

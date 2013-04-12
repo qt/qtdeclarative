@@ -236,11 +236,11 @@ Property *Object::insertMember(String *s, PropertyAttributes attributes)
 }
 
 // Section 8.12.1
-Property *Object::__getOwnProperty__(ExecutionContext *ctx, String *name, PropertyAttributes *attrs)
+Property *Object::__getOwnProperty__(String *name, PropertyAttributes *attrs)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return __getOwnProperty__(ctx, idx, attrs);
+        return __getOwnProperty__(idx, attrs);
 
     uint member = internalClass->find(name);
     if (member < UINT_MAX) {
@@ -254,7 +254,7 @@ Property *Object::__getOwnProperty__(ExecutionContext *ctx, String *name, Proper
     return 0;
 }
 
-Property *Object::__getOwnProperty__(ExecutionContext *ctx, uint index, PropertyAttributes *attrs)
+Property *Object::__getOwnProperty__(uint index, PropertyAttributes *attrs)
 {
     uint pidx = propertyIndexFromArrayIndex(index);
     if (pidx < UINT_MAX) {
@@ -272,7 +272,7 @@ Property *Object::__getOwnProperty__(ExecutionContext *ctx, uint index, Property
     if (isStringObject()) {
         if (attrs)
             *attrs = Attr_NotConfigurable|Attr_NotWritable;
-        return static_cast<StringObject *>(this)->getIndex(ctx, index);
+        return static_cast<StringObject *>(this)->getIndex(index);
     }
 
     if (attrs)
@@ -281,11 +281,11 @@ Property *Object::__getOwnProperty__(ExecutionContext *ctx, uint index, Property
 }
 
 // Section 8.12.2
-Property *Object::__getPropertyDescriptor__(const ExecutionContext *ctx, String *name, PropertyAttributes *attrs) const
+Property *Object::__getPropertyDescriptor__(String *name, PropertyAttributes *attrs) const
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return __getPropertyDescriptor__(ctx, idx);
+        return __getPropertyDescriptor__(idx);
 
 
     const Object *o = this;
@@ -304,7 +304,7 @@ Property *Object::__getPropertyDescriptor__(const ExecutionContext *ctx, String 
     return 0;
 }
 
-Property *Object::__getPropertyDescriptor__(const ExecutionContext *ctx, uint index, PropertyAttributes *attrs) const
+Property *Object::__getPropertyDescriptor__(uint index, PropertyAttributes *attrs) const
 {
     const Object *o = this;
     while (o) {
@@ -318,7 +318,7 @@ Property *Object::__getPropertyDescriptor__(const ExecutionContext *ctx, uint in
             }
         }
         if (o->isStringObject()) {
-            Property *p = static_cast<const StringObject *>(o)->getIndex(ctx, index);
+            Property *p = static_cast<const StringObject *>(o)->getIndex(index);
             if (p) {
                 if (attrs)
                     *attrs = (Attr_NotWritable|Attr_NotConfigurable);
@@ -380,7 +380,7 @@ PropertyAttributes Object::queryIndexed(Managed *m, ExecutionContext *ctx, uint 
             return Attr_Data;
         }
         if (o->isStringObject()) {
-            Property *p = static_cast<const StringObject *>(o)->getIndex(ctx, index);
+            Property *p = static_cast<const StringObject *>(o)->getIndex(index);
             if (p)
                 return Attr_Data;
         }
@@ -448,7 +448,7 @@ Value Object::internalGetIndexed(ExecutionContext *ctx, uint index, bool *hasPro
             }
         }
         if (o->isStringObject()) {
-            pd = static_cast<StringObject *>(o)->getIndex(ctx, index);
+            pd = static_cast<StringObject *>(o)->getIndex(index);
             if (pd) {
                 attrs = (Attr_NotWritable|Attr_NotConfigurable);
                 break;
@@ -511,7 +511,7 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
             goto reject;
     } else {
         // clause 4
-        if ((pd = prototype->__getPropertyDescriptor__(ctx, name, &attrs))) {
+        if ((pd = prototype->__getPropertyDescriptor__(name, &attrs))) {
             if (attrs.isAccessor()) {
                 if (!pd->setter())
                     goto reject;
@@ -562,7 +562,7 @@ void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &
     }
 
     if (!pd && isStringObject()) {
-        pd = static_cast<StringObject *>(this)->getIndex(ctx, index);
+        pd = static_cast<StringObject *>(this)->getIndex(index);
         if (pd)
             // not writable
             goto reject;
@@ -584,7 +584,7 @@ void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &
             goto reject;
     } else {
         // clause 4
-        if ((pd = prototype->__getPropertyDescriptor__(ctx, index, &attrs))) {
+        if ((pd = prototype->__getPropertyDescriptor__(index, &attrs))) {
             if (attrs.isAccessor()) {
                 if (!pd->setter())
                     goto reject;
@@ -742,7 +742,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
         if (pidx < UINT_MAX && (!arrayAttributes || !arrayAttributes[pidx].isGeneric()))
             current = arrayData + pidx;
         if (!current && isStringObject())
-            current = static_cast<StringObject *>(this)->getIndex(ctx, index);
+            current = static_cast<StringObject *>(this)->getIndex(index);
     }
 
     if (!current) {
