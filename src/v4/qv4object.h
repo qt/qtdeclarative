@@ -155,17 +155,6 @@ struct Q_V4_EXPORT Object: Managed {
     Value getValue(ExecutionContext *ctx, const Property *p, PropertyAttributes attrs) const {
         return getValue(Value::fromObject(const_cast<Object *>(this)), ctx, p, attrs);
     }
-    Value getValueChecked(ExecutionContext *ctx, const Property *p, PropertyAttributes attrs) const {
-        if (!p || attrs.isGeneric())
-            return Value::undefinedValue();
-        return getValue(Value::fromObject(const_cast<Object *>(this)), ctx, p, attrs);
-    }
-    Value getValueChecked(ExecutionContext *ctx, const Property *p, PropertyAttributes attrs, bool *exists) const {
-        *exists = p && !attrs.isGeneric();
-        if (!*exists)
-            return Value::undefinedValue();
-        return getValue(Value::fromObject(const_cast<Object *>(this)), ctx, p, attrs);
-    }
 
     void putValue(ExecutionContext *ctx, Property *pd, PropertyAttributes attrs, const Value &value);
 

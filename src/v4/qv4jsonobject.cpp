@@ -785,7 +785,7 @@ QString Stringify::JO(Object *o)
             Property *pd = it.next(&name, &index, &attrs);
             if (!pd)
                 break;
-            Value v = o->getValueChecked(ctx, pd, attrs);
+            Value v = o->getValue(ctx, pd, attrs);
             QString key;
             if (name)
                 key = name->toQString();
