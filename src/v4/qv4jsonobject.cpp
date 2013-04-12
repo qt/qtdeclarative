@@ -736,7 +736,7 @@ QString Stringify::Str(const QString &key, Value value)
 
     if (value.isNumber()) {
         double d = value.toNumber(ctx);
-        return isfinite(d) ? value.toString(ctx)->toQString() : QStringLiteral("null");
+        return std::isfinite(d) ? value.toString(ctx)->toQString() : QStringLiteral("null");
     }
 
     if (Object *o = value.asObject()) {

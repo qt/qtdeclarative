@@ -54,6 +54,10 @@ struct OwnPtr : public QScopedPointer<T>
         : QScopedPointer<T>(ptr.leakRef())
     {}
 
+    OwnPtr(const OwnPtr<T>& other)
+        : QScopedPointer<T>(const_cast<OwnPtr<T> &>(other).take())
+    {}
+
     OwnPtr& operator=(const OwnPtr<T>& other)
     {
         this->reset(const_cast<OwnPtr<T> &>(other).take());

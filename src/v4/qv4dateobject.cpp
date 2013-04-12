@@ -1268,7 +1268,7 @@ Value DatePrototype::method_toISOString(SimpleCallContext *ctx)
         ctx->throwTypeError();
 
     double t = self->value.asDouble();
-    if (!isfinite(t))
+    if (!std::isfinite(t))
         ctx->throwRangeError(ctx->thisObject);
 
     QString result;
@@ -1304,7 +1304,7 @@ Value DatePrototype::method_toJSON(SimpleCallContext *ctx)
     Value O = __qmljs_to_object(ctx, ctx->thisObject);
     Value tv = __qmljs_to_primitive(O, ctx, NUMBER_HINT);
 
-    if (tv.isNumber() && !isfinite(tv.toNumber(ctx)))
+    if (tv.isNumber() && !std::isfinite(tv.toNumber(ctx)))
         return Value::nullValue();
 
     FunctionObject *toIso = O.objectValue()->get(ctx, ctx->engine->newString(QStringLiteral("toISOString"))).asFunctionObject();

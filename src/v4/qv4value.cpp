@@ -60,11 +60,11 @@ int Value::toUInt16(ExecutionContext *ctx) const
     if ((number >= 0 && number < D16))
         return static_cast<ushort>(number);
 
-    if (!isfinite(number))
+    if (!std::isfinite(number))
         return +0;
 
     double d = ::floor(::fabs(number));
-    if (signbit(number))
+    if (std::signbit(number))
         d = -d;
 
     number = ::fmod(d , D16);
@@ -114,11 +114,11 @@ int Value::toInt32(double number)
         return static_cast<int>(number);
 
 
-    if (!isfinite(number))
+    if (!std::isfinite(number))
         return 0;
 
     double d = ::floor(::fabs(number));
-    if (signbit(number))
+    if (std::signbit(number))
         d = -d;
 
     number = ::fmod(d , D32);
@@ -137,11 +137,11 @@ unsigned int Value::toUInt32(double number)
     if ((number >= 0 && number < D32))
         return static_cast<uint>(number);
 
-    if (!isfinite(number))
+    if (!std::isfinite(number))
         return +0;
 
     double d = ::floor(::fabs(number));
-    if (signbit(number))
+    if (std::signbit(number))
         d = -d;
 
     number = ::fmod(d , D32);
@@ -159,7 +159,7 @@ double Value::toInteger(double number)
     else if (! number || isinf(number))
         return number;
     const double v = floor(fabs(number));
-    return signbit(number) ? -v : v;
+    return std::signbit(number) ? -v : v;
 }
 
 Value Value::property(ExecutionContext *ctx, String *name) const

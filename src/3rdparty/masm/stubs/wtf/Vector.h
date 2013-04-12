@@ -46,9 +46,13 @@
 #include <wtf/NotFound.h>
 #include <qalgorithms.h>
 
+enum WTF_UnusedOverflowMode {
+    UnsafeVectorOverflow
+};
+
 namespace WTF {
 
-template <typename T, int capacity = 1>
+template <typename T, int capacity = 1, int overflowMode = UnsafeVectorOverflow>
 class Vector : public std::vector<T> {
 public:
     Vector() {}
@@ -64,6 +68,8 @@ public:
 
     using std::vector<T>::insert;
 
+    inline void reserveInitialCapacity(size_t size) { this->reserve(size); }
+
     inline void insert(size_t position, T value)
     { this->insert(this->begin() + position, value); }
 
@@ -72,6 +78,9 @@ public:
 
     inline void shrink(size_t size)
     { this->erase(this->begin() + size, this->end()); }
+
+    inline void shrinkToFit()
+    { this->shrink_to_fit(); }
 
     inline void remove(size_t position)
     { this->erase(this->begin() + position); }
