@@ -65,7 +65,7 @@ namespace JSC {
     public:
         AssemblerBuffer()
             : m_storage(inlineCapacity)
-            , m_buffer(m_storage.begin())
+            , m_buffer(&(*m_storage.begin()))
             , m_capacity(inlineCapacity)
             , m_index(0)
         {
@@ -164,7 +164,7 @@ namespace JSC {
             m_capacity += m_capacity / 2 + extraCapacity;
 
             m_storage.grow(m_capacity);
-            m_buffer = m_storage.begin();
+            m_buffer = &(*m_storage.begin());
         }
 
     private:

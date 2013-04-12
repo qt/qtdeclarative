@@ -52,16 +52,6 @@ void printInternal(PrintStream& out, const char* string)
     out.printf("%s", string);
 }
 
-void printInternal(PrintStream& out, const CString& string)
-{
-    out.print(string.data());
-}
-
-void printInternal(PrintStream& out, const String& string)
-{
-    out.print(string.utf8());
-}
-
 void printInternal(PrintStream& out, bool value)
 {
     if (value)
