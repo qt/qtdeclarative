@@ -33,8 +33,8 @@
 
 When a key is pressed or released, a key event is generated and delivered to the
 focused Qt Quick \l Item. To facilitate the construction of reusable components
-and to address some of the cases unique to fluid user interfaces, the Qt Quick items add aged
-\e scope based extension to Qt's traditional keyboard focus model.
+and to address some of the cases unique to fluid user interfaces, the Qt Quick items add a
+scope based extension to Qt's traditional keyboard focus model.
 
 \tableofcontents
 
@@ -43,17 +43,16 @@ and to address some of the cases unique to fluid user interfaces, the Qt Quick i
 When the user presses or releases a key, the following occurs:
 \list 1
 \li Qt receives the key action and generates a key event.
-\li If the Qt widget containing the \l QQuickView has focus, the key event
-is delivered to it. Otherwise, regular Qt key handling continues.
-\li The key event is delivered by the scene to the QML \l Item with
-\e {active focus}. If no Item has active focus, the key event is
-\l {QEvent::ignore()}{ignored} and regular Qt key handling continues.
-\li If the QML Item with active focus accepts the key event, propagation
-stops. Otherwise the event is "bubbled up", by recursively passing it to each
-Item's parent until either the event is accepted, or the root Item is reached.
+\li If a \l QQuickWindow is the active window, the key event
+is delivered to it.
+\li The key event is delivered by the scene to the \l Item with
+\e {active focus}. If no item has active focus, the key event is ignored.
+\li If the \l QQuickItem with active focus accepts the key event, propagation
+stops. Otherwise the event is send to the Item's parent until
+the event is accepted, or the root item is reached.
 
 If the \c {Rectangle} type in the following example has active focus and the \c A key is pressed,
-it will bubble up to its parent. However, pressing the \c B key will bubble up to the root
+the event will not be propagated further. Pressing the \c B key the event will propagate to the root
 item and thus subsequently be ignored.
 
 \snippet qml/focus/rectangle.qml simple key event
