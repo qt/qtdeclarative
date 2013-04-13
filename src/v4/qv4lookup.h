@@ -55,12 +55,16 @@ namespace VM {
 
 struct Lookup {
     enum { Size = 4 };
+    void (*lookupProperty)(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
     InternalClass *classList[Size];
     int level;
     uint index;
     String *name;
 
-    static void lookupName(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void lookupPropertyGeneric(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void lookupProperty0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void lookupProperty1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void lookupProperty2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
 
     Property *lookup(Object *obj, PropertyAttributes *attrs) {
         int i = 0;

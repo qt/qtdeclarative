@@ -725,7 +725,7 @@ void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Val
 {
     Value res;
     Lookup *l = ctx->lookups + lookupIndex;
-    l->lookupName(l, ctx, result, object);
+    l->lookupProperty(l, ctx, result, object);
 }
 
 void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value &object, int lookupIndex, const Value &value)

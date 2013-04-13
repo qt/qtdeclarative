@@ -1187,6 +1187,7 @@ uint InstructionSelection::addLookup(VM::String *name)
 {
     uint index = (uint)_lookups.size();
     VM::Lookup l;
+    l.lookupProperty = Lookup::lookupPropertyGeneric;
     for (int i = 0; i < Lookup::Size; ++i)
         l.classList[i] = 0;
     l.level = -1;

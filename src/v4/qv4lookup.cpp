@@ -45,26 +45,88 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace VM {
 
-void QQmlJS::VM::Lookup::lookupName(QQmlJS::VM::Lookup *l, ExecutionContext *ctx, QQmlJS::VM::Value *result, const QQmlJS::VM::Value &object)
+void Lookup::lookupPropertyGeneric(QQmlJS::VM::Lookup *l, ExecutionContext *ctx, QQmlJS::VM::Value *result, const QQmlJS::VM::Value &object)
 {
-    Value res;
     if (Object *o = object.asObject()) {
         PropertyAttributes attrs;
         Property *p = l->lookup(o, &attrs);
-        if (p)
-            res = attrs.isData() ? p->value : o->getValue(ctx, p, attrs);
-        else
-            res = Value::undefinedValue();
+        if (p) {
+            if (attrs.isData()) {
+                if (l->level == 0)
+                    l->lookupProperty = lookupProperty0;
+                else if (l->level == 1)
+                    l->lookupProperty = lookupProperty1;
+                else if (l->level == 2)
+                    l->lookupProperty = lookupProperty2;
+                if (result)
+                    *result = p->value;
+                return;
+            } else {
+                Value res = o->getValue(ctx, p, attrs);
+                if (result)
+                    *result = res;
+                return;
+            }
+        } else if (result) {
+            *result = Value::undefinedValue();
+        }
     } else {
+        Value res;
         if (Managed *m = object.asManaged()) {
             res = m->get(ctx, l->name);
         } else {
             o = __qmljs_convert_to_object(ctx, object);
             res = o->get(ctx, l->name);
         }
+        if (result)
+            *result = res;
     }
-    if (result)
-        *result = res;
+}
+
+void Lookup::lookupProperty0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+{
+    if (Object *o = object.asObject()) {
+        if (l->classList[0] == o->internalClass) {
+            if (result)
+                *result = o->memberData[l->index].value;
+            return;
+        }
+    }
+    l->lookupProperty = lookupPropertyGeneric;
+    lookupPropertyGeneric(l, ctx, result, object);
+}
+
+void Lookup::lookupProperty1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+{
+    if (Object *o = object.asObject()) {
+        if (l->classList[0] == o->internalClass &&
+            l->classList[1] == o->prototype->internalClass) {
+            if (result)
+                *result = o->prototype->memberData[l->index].value;
+            return;
+        }
+    }
+    l->lookupProperty = lookupPropertyGeneric;
+    lookupPropertyGeneric(l, ctx, result, object);
+}
+
+void Lookup::lookupProperty2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+{
+    if (Object *o = object.asObject()) {
+        if (l->classList[0] == o->internalClass) {
+            o = o->prototype;
+            if (l->classList[1] == o->internalClass) {
+                o = o->prototype;
+                if (l->classList[2] == o->internalClass) {
+                    if (result)
+                        *result = o->prototype->memberData[l->index].value;
+                    return;
+                }
+            }
+        }
+    }
+    l->lookupProperty = lookupPropertyGeneric;
+    lookupPropertyGeneric(l, ctx, result, object);
 }
 
 }
