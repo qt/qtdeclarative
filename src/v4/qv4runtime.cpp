@@ -929,6 +929,24 @@ void __qmljs_call_value(ExecutionContext *context, Value *result, const Value *t
         *result = res;
 }
 
+
+void __qmljs_construct_global_lookup(ExecutionContext *context, Value *result, uint index, Value *args, int argc)
+{
+    Lookup *l = context->lookups + index;
+    Value func;
+    l->lookupGlobal(l, context, &func);
+
+    if (Object *f = func.asObject()) {
+        Value res = f->construct(context, args, argc);
+        if (result)
+            *result = res;
+        return;
+    }
+
+    context->throwTypeError();
+}
+
+
 void __qmljs_construct_activation_property(ExecutionContext *context, Value *result, String *name, Value *args, int argc)
 {
     Value func = context->getProperty(name);

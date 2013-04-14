@@ -1078,6 +1078,19 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::E
 {
     assert(func != 0);
 
+    if (useFastLookups && func->global) {
+        int argc = prepareVariableArguments(args);
+        VM::String *s = identifier(*func->id);
+
+        uint index = addGlobalLookup(s);
+        generateFunctionCall(Assembler::Void, __qmljs_construct_global_lookup,
+                             Assembler::ContextRegister, Assembler::PointerToValue(result),
+                             Assembler::TrustedImm32(index),
+                             baseAddressForCallArguments(),
+                             Assembler::TrustedImm32(argc));
+        return;
+    }
+
     callRuntimeMethod(result, __qmljs_construct_activation_property, func, args);
 }
 

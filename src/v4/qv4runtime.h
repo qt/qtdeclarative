@@ -168,6 +168,7 @@ void __qmljs_get_activation_property(ExecutionContext *ctx, Value *result, Strin
 
 void __qmljs_get_global_lookup(ExecutionContext *ctx, Value *result, int lookupIndex);
 void __qmljs_call_global_lookup(ExecutionContext *context, Value *result, uint index, Value *args, int argc);
+void __qmljs_construct_global_lookup(ExecutionContext *context, Value *result, uint index, Value *args, int argc);
 void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Value &object, int lookupIndex);
 void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value &object, int lookupIndex, const Value &value);
 
