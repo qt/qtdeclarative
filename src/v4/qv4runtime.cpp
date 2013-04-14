@@ -434,11 +434,6 @@ void __qmljs_inplace_ushr_member(ExecutionContext *ctx, const Value &base, Strin
     o->inplaceBinOp(ctx, __qmljs_ushr, name, rhs);
 }
 
-String *__qmljs_identifier_from_utf8(ExecutionContext *ctx, const char *s)
-{
-    return ctx->engine->newString(QString::fromUtf8(s));
-}
-
 double __qmljs_string_to_number(const String *string)
 {
     QString s = string->toQString();
