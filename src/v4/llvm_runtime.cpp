@@ -492,7 +492,7 @@ void __qmljs_llvm_foreach_next_property_name(Value *result, Value *it)
 
 void __qmljs_llvm_get_this_object(ExecutionContext *ctx, Value *result)
 {
-    __qmljs_get_thisObject(ctx, result);
+    *result = ctx->thisObject;
 }
 
 void __qmljs_llvm_delete_subscript(ExecutionContext *ctx, Value *result, Value *base, Value *index)

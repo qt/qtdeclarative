@@ -824,7 +824,8 @@ void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4
 
 void InstructionSelection::loadThisObject(V4IR::Temp *temp)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_get_thisObject, Assembler::ContextRegister, Assembler::PointerToValue(temp));
+    _as->loadPtr(Pointer(Assembler::ContextRegister, offsetof(ExecutionContext, thisObject)), Assembler::ReturnValueRegister);
+    _as->storeArgument(Assembler::ReturnValueRegister, temp);
 }
 
 void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)

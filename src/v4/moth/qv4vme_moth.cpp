@@ -479,7 +479,7 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(LoadThis)
-        __qmljs_get_thisObject(context, VALUEPTR(instr.result));
+        VALUE(instr.result) = context->thisObject;
     MOTH_END_INSTR(LoadThis)
 
     MOTH_BEGIN_INSTR(InplaceElementOp)

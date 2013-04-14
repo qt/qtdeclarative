@@ -179,9 +179,6 @@ void __qmljs_set_element(ExecutionContext *ctx, const Value &object, const Value
 void __qmljs_foreach_iterator_object(ExecutionContext *ctx, Value *result, const Value &in);
 void __qmljs_foreach_next_property_name(Value *result, const Value &foreach_iterator);
 
-// context
-void __qmljs_get_thisObject(ExecutionContext *ctx, Value *result);
-
 // type conversion and testing
 Value __qmljs_to_primitive(const Value &value, int typeHint);
 Bool __qmljs_to_boolean(const Value &value);
