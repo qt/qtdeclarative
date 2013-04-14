@@ -182,11 +182,7 @@ Function *__qmljs_register_function(ExecutionContext *ctx, String *name,
 void __qmljs_delete_subscript(ExecutionContext *ctx, Value *result, const Value &base, const Value &index)
 {
     if (Object *o = base.asObject()) {
-        uint n = UINT_MAX;
-        if (index.isInteger())
-            n = index.integerValue();
-        else if (index.isDouble())
-            n = index.doubleValue();
+        uint n = index.asArrayIndex();
         if (n < UINT_MAX) {
             Value res = Value::fromBoolean(o->deleteIndexedProperty(ctx, n));
             if (result)
