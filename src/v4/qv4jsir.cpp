@@ -328,10 +328,20 @@ void RegExp::dump(QTextStream &out)
     out << '/' << *value << '/' << f;
 }
 
+void Name::initGlobal(const QString *id, quint32 line, quint32 column)
+{
+    this->id = id;
+    this->builtin = builtin_invalid;
+    this->global = true;
+    this->line = line;
+    this->column = column;
+}
+
 void Name::init(const QString *id, quint32 line, quint32 column)
 {
     this->id = id;
     this->builtin = builtin_invalid;
+    this->global = false;
     this->line = line;
     this->column = column;
 }
@@ -340,6 +350,7 @@ void Name::init(Builtin builtin, quint32 line, quint32 column)
 {
     this->id = 0;
     this->builtin = builtin;
+    this->global = false;
     this->line = line;
     this->column = column;
 }
@@ -643,6 +654,14 @@ Name *BasicBlock::NAME(const QString &id, quint32 line, quint32 column)
     e->init(function->newString(id), line, column);
     return e;
 }
+
+Name *BasicBlock::GLOBALNAME(const QString &id, quint32 line, quint32 column)
+{
+    Name *e = function->New<Name>();
+    e->initGlobal(function->newString(id), line, column);
+    return e;
+}
+
 
 Name *BasicBlock::NAME(Name::Builtin builtin, quint32 line, quint32 column)
 {

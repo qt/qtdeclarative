@@ -599,7 +599,23 @@ void InstructionSelection::run(VM::Function *vmFunction, V4IR::Function *functio
 
 void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
 {
-    callRuntimeMethod(result, __qmljs_call_activation_property, func, args);
+    int argc = prepareVariableArguments(args);
+    VM::String *s = identifier(*func->id);
+
+    if (useFastLookups && func->global) {
+        uint index = addGlobalLookup(s);
+        generateFunctionCall(Assembler::Void, __qmljs_call_global_lookup,
+                             Assembler::ContextRegister, Assembler::PointerToValue(result),
+                             Assembler::TrustedImm32(index),
+                             baseAddressForCallArguments(),
+                             Assembler::TrustedImm32(argc));
+    } else {
+        generateFunctionCall(Assembler::Void, __qmljs_call_activation_property,
+                             Assembler::ContextRegister, Assembler::PointerToValue(result),
+                             s,
+                             baseAddressForCallArguments(),
+                             Assembler::TrustedImm32(argc));
+    }
 }
 
 void InstructionSelection::callBuiltinTypeofMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
@@ -830,9 +846,15 @@ void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *ta
     _as->storeValue(v, targetTemp);
 }
 
-void InstructionSelection::getActivationProperty(const QString &name, V4IR::Temp *temp)
+void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::Temp *temp)
 {
-    String *propertyName = identifier(name);
+    String *propertyName = identifier(*name->id);
+    if (useFastLookups && name->global) {
+        uint index = addGlobalLookup(propertyName);
+        generateFunctionCall(Assembler::Void, __qmljs_get_global_lookup, Assembler::ContextRegister, Assembler::PointerToValue(temp),
+                             Assembler::TrustedImm32(index));
+        return;
+    }
     generateFunctionCall(Assembler::Void, __qmljs_get_activation_property, Assembler::ContextRegister, Assembler::PointerToValue(temp), propertyName);
 }
 
@@ -1188,6 +1210,20 @@ uint InstructionSelection::addLookup(VM::String *name)
     uint index = (uint)_lookups.size();
     VM::Lookup l;
     l.lookupProperty = Lookup::lookupPropertyGeneric;
+    for (int i = 0; i < Lookup::Size; ++i)
+        l.classList[i] = 0;
+    l.level = -1;
+    l.index = UINT_MAX;
+    l.name = name;
+    _lookups.append(l);
+    return index;
+}
+
+uint InstructionSelection::addGlobalLookup(VM::String *name)
+{
+    uint index = (uint)_lookups.size();
+    VM::Lookup l;
+    l.lookupGlobal = Lookup::lookupGlobalGeneric;
     for (int i = 0; i < Lookup::Size; ++i)
         l.classList[i] = 0;
     l.level = -1;

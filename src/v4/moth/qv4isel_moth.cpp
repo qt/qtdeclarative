@@ -245,10 +245,10 @@ void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *ta
     addInstruction(load);
 }
 
-void InstructionSelection::getActivationProperty(const QString &name, V4IR::Temp *temp)
+void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::Temp *temp)
 {
     Instruction::LoadName load;
-    load.name = identifier(name);
+    load.name = identifier(*name->id);
     load.result = getResultParam(temp);
     addInstruction(load);
 }

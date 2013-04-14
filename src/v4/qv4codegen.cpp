@@ -1959,7 +1959,7 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
     V4IR::Function *f = _function;
 
     while (f && e->parent) {
-        if ((f->usesArgumentsObject && name == "arguments") || (!f->isStrict && f->hasDirectEval) || f->insideWithOrCatch)
+        if ((f->usesArgumentsObject && name == "arguments") || (!f->isStrict && f->hasDirectEval) || f->insideWithOrCatch || (f->isNamedExpression && f->name == name))
             break;
         int index = e->findMember(name);
         assert (index < e->members.size());
@@ -1973,6 +1973,9 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
         e = e->parent;
         f = f->outer;
     }
+
+    if (!e->parent && (!f || !f->insideWithOrCatch) && _mode != EvalCode && (!f || f->name != name))
+        return _block->GLOBALNAME(name, line, col);
 
     // global context or with. Lookup by name
     return _block->NAME(name, line, col);

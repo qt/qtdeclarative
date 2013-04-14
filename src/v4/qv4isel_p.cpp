@@ -86,7 +86,7 @@ void InstructionSelection::visitMove(V4IR::Move *s)
                 if (*n->id == QStringLiteral("this")) // TODO: `this' should be a builtin.
                     loadThisObject(t);
                 else
-                    getActivationProperty(*n->id, t);
+                    getActivationProperty(n, t);
                 return;
             } else if (V4IR::Const *c = s->source->asConst()) {
                 loadConst(c, t);

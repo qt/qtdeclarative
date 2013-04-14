@@ -721,9 +721,14 @@ void __qmljs_get_activation_property(ExecutionContext *ctx, Value *result, Strin
     *result = ctx->getProperty(name);
 }
 
+void __qmljs_get_global_lookup(ExecutionContext *ctx, Value *result, int lookupIndex)
+{
+    Lookup *l = ctx->lookups + lookupIndex;
+    l->lookupGlobal(l, ctx, result);
+}
+
 void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Value &object, int lookupIndex)
 {
-    Value res;
     Lookup *l = ctx->lookups + lookupIndex;
     l->lookupProperty(l, ctx, result, object);
 }
@@ -819,6 +824,31 @@ Bool __qmljs_strict_equal(const Value &x, const Value &y, ExecutionContext *ctx)
         return ctx->engine->externalResourceComparison(x, y);
     return false;
 }
+
+
+void __qmljs_call_global_lookup(ExecutionContext *context, Value *result, uint index, Value *args, int argc)
+{
+    Lookup *l = context->lookups + index;
+    Value v;
+    l->lookupGlobal(l, context, &v);
+    FunctionObject *o = v.asFunctionObject();
+    if (!o)
+        context->throwTypeError();
+
+    Value thisObject = Value::undefinedValue();
+
+    if (o == context->engine->evalFunction && l->name->isEqualTo(context->engine->id_eval)) {
+        Value res = static_cast<EvalFunction *>(o)->evalCall(context, thisObject, args, argc, true);
+        if (result)
+            *result = res;
+        return;
+    }
+
+    Value res = o->call(context, thisObject, args, argc);
+    if (result)
+        *result = res;
+}
+
 
 void __qmljs_call_activation_property(ExecutionContext *context, Value *result, String *name, Value *args, int argc)
 {

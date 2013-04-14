@@ -304,9 +304,11 @@ struct Name: Expr {
 
     const QString *id;
     Builtin builtin;
+    bool global;
     quint32 line;
     quint32 column;
 
+    void initGlobal(const QString *id, quint32 line, quint32 column);
     void init(const QString *id, quint32 line, quint32 column);
     void init(Builtin builtin, quint32 line, quint32 column);
 
@@ -740,6 +742,8 @@ struct BasicBlock {
 
     Name *NAME(const QString &id, quint32 line, quint32 column);
     Name *NAME(Name::Builtin builtin, quint32 line, quint32 column);
+
+    Name *GLOBALNAME(const QString &id, quint32 line, quint32 column);
 
     Closure *CLOSURE(Function *function);
 

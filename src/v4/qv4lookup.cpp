@@ -129,6 +129,71 @@ void Lookup::lookupProperty2(Lookup *l, ExecutionContext *ctx, Value *result, co
     lookupPropertyGeneric(l, ctx, result, object);
 }
 
+void Lookup::lookupGlobalGeneric(Lookup *l, ExecutionContext *ctx, Value *result)
+{
+    Object *o = ctx->engine->globalObject;
+    PropertyAttributes attrs;
+    Property *p = l->lookup(o, &attrs);
+    if (p) {
+        if (attrs.isData()) {
+            if (l->level == 0)
+                l->lookupGlobal = lookupGlobal0;
+            else if (l->level == 1)
+                l->lookupGlobal = lookupGlobal1;
+            else if (l->level == 2)
+                l->lookupGlobal = lookupGlobal2;
+            *result = p->value;
+            return;
+        } else {
+            Value res = o->getValue(ctx, p, attrs);
+            if (result)
+                *result = res;
+            return;
+        }
+    }
+    ctx->throwReferenceError(Value::fromString(l->name));
+}
+
+void Lookup::lookupGlobal0(Lookup *l, ExecutionContext *ctx, Value *result)
+{
+    Object *o = ctx->engine->globalObject;
+    if (l->classList[0] == o->internalClass) {
+        *result = o->memberData[l->index].value;
+        return;
+    }
+    l->lookupGlobal = lookupGlobalGeneric;
+    lookupGlobalGeneric(l, ctx, result);
+}
+
+void Lookup::lookupGlobal1(Lookup *l, ExecutionContext *ctx, Value *result)
+{
+    Object *o = ctx->engine->globalObject;
+    if (l->classList[0] == o->internalClass &&
+        l->classList[1] == o->prototype->internalClass) {
+        *result = o->prototype->memberData[l->index].value;
+        return;
+    }
+    l->lookupGlobal = lookupGlobalGeneric;
+    lookupGlobalGeneric(l, ctx, result);
+}
+
+void Lookup::lookupGlobal2(Lookup *l, ExecutionContext *ctx, Value *result)
+{
+    Object *o = ctx->engine->globalObject;
+    if (l->classList[0] == o->internalClass) {
+        o = o->prototype;
+        if (l->classList[1] == o->internalClass) {
+            o = o->prototype;
+            if (l->classList[2] == o->internalClass) {
+                *result = o->prototype->memberData[l->index].value;
+                return;
+            }
+        }
+    }
+    l->lookupGlobal = lookupGlobalGeneric;
+    lookupGlobalGeneric(l, ctx, result);
+}
+
 }
 }
 

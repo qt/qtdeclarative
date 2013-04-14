@@ -805,7 +805,7 @@ protected:
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp);
     virtual void loadString(const QString &str, V4IR::Temp *targetTemp);
     virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp);
-    virtual void getActivationProperty(const QString &name, V4IR::Temp *temp);
+    virtual void getActivationProperty(const V4IR::Name *name, V4IR::Temp *temp);
     virtual void setActivationProperty(V4IR::Temp *source, const QString &targetName);
     virtual void initClosure(V4IR::Closure *closure, V4IR::Temp *target);
     virtual void getProperty(V4IR::Temp *base, const QString &name, V4IR::Temp *target);
@@ -870,6 +870,7 @@ private:
     callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
 
     uint addLookup(VM::String *name);
+    uint addGlobalLookup(VM::String *name);
 
     V4IR::BasicBlock *_block;
     V4IR::Function* _function;
