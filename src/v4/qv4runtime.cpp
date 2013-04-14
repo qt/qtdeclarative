@@ -749,11 +749,6 @@ void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value &object, int
 }
 
 
-void __qmljs_get_thisObject(ExecutionContext *ctx, Value *result)
-{
-    *result = ctx->thisObject;
-}
-
 uint __qmljs_equal(const Value &x, const Value &y)
 {
     if (x.type() == y.type()) {
@@ -1294,7 +1289,7 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &ob
     pd->setSetter(setter ? setter->asFunctionObject() : 0);
 }
 
-void __qmljs_increment(ExecutionContext *, Value *result, const Value &value)
+void __qmljs_increment(Value *result, const Value &value)
 {
     TRACE1(value);
 
@@ -1306,7 +1301,7 @@ void __qmljs_increment(ExecutionContext *, Value *result, const Value &value)
     }
 }
 
-void __qmljs_decrement(ExecutionContext *, Value *result, const Value &value)
+void __qmljs_decrement(Value *result, const Value &value)
 {
     TRACE1(value);
 

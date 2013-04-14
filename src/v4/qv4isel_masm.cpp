@@ -939,7 +939,7 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
     } // switch
 
     if (op)
-        _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::ContextRegister, Assembler::PointerToValue(targetTemp),
+        _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::PointerToValue(targetTemp),
                                      Assembler::Reference(sourceTemp));
 }
 
