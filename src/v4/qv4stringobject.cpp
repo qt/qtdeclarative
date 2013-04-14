@@ -208,7 +208,7 @@ Value StringPrototype::method_charAt(SimpleCallContext *context)
 
     int pos = 0;
     if (context->argumentCount > 0)
-        pos = (int) context->arguments[0].toInteger(context);
+        pos = (int) context->arguments[0].toInteger();
 
     QString result;
     if (pos >= 0 && pos < str.length())
@@ -223,7 +223,7 @@ Value StringPrototype::method_charCodeAt(SimpleCallContext *context)
 
     int pos = 0;
     if (context->argumentCount > 0)
-        pos = (int) context->arguments[0].toInteger(context);
+        pos = (int) context->arguments[0].toInteger();
 
 
     if (pos >= 0 && pos < str.length())
@@ -255,7 +255,7 @@ Value StringPrototype::method_indexOf(SimpleCallContext *context)
 
     int pos = 0;
     if (context->argumentCount > 1)
-        pos = (int) context->arguments[1].toInteger(context);
+        pos = (int) context->arguments[1].toInteger();
 
     int index = -1;
     if (! value.isEmpty())
@@ -275,7 +275,7 @@ Value StringPrototype::method_lastIndexOf(SimpleCallContext *context)
     }
 
     Value posArg = context->argumentCount > 1 ? context->arguments[1] : Value::undefinedValue();
-    double position = __qmljs_to_number(posArg, context);
+    double position = __qmljs_to_number(posArg);
     if (isnan(position))
         position = +qInf();
     else
@@ -333,7 +333,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
         if (result.isNull())
             break;
         assert(result.isObject());
-        double thisIndex = rx->get(context, lastIndex, 0).toInteger(context);
+        double thisIndex = rx->get(context, lastIndex, 0).toInteger();
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
             rx->put(context, lastIndex, Value::fromDouble(previousLastIndex));
@@ -510,9 +510,9 @@ Value StringPrototype::method_slice(SimpleCallContext *ctx)
     const QString text = getThisString(ctx);
     const double length = text.length();
 
-    double start = ctx->argument(0).toInteger(ctx);
+    double start = ctx->argument(0).toInteger();
     double end = ctx->argument(1).isUndefined()
-            ? length : ctx->argument(1).toInteger(ctx);
+            ? length : ctx->argument(1).toInteger();
 
     if (start < 0)
         start = qMax(length + start, 0.);
@@ -550,10 +550,10 @@ Value StringPrototype::method_split(SimpleCallContext *ctx)
             array->push_back(Value::fromString(ctx, text));
             return result;
         }
-        return Value::fromString(ctx, text.left(limitValue.toInteger(ctx)));
+        return Value::fromString(ctx, text.left(limitValue.toInteger()));
     }
 
-    uint limit = limitValue.isUndefined() ? UINT_MAX : limitValue.toUInt32(ctx);
+    uint limit = limitValue.isUndefined() ? UINT_MAX : limitValue.toUInt32();
 
     if (limit == 0)
         return result;
@@ -617,11 +617,11 @@ Value StringPrototype::method_substr(SimpleCallContext *context)
 
     double start = 0;
     if (context->argumentCount > 0)
-        start = context->arguments[0].toInteger(context);
+        start = context->arguments[0].toInteger();
 
     double length = +qInf();
     if (context->argumentCount > 1)
-        length = context->arguments[1].toInteger(context);
+        length = context->arguments[1].toInteger();
 
     double count = value.length();
     if (start < 0)
@@ -643,11 +643,11 @@ Value StringPrototype::method_substring(SimpleCallContext *context)
     double end = length;
 
     if (context->argumentCount > 0)
-        start = context->arguments[0].toInteger(context);
+        start = context->arguments[0].toInteger();
 
     Value endValue = context->argumentCount > 1 ? context->arguments[1] : Value::undefinedValue();
     if (!endValue.isUndefined())
-        end = endValue.toInteger(context);
+        end = endValue.toInteger();
 
     if (isnan(start) || start < 0)
         start = 0;
@@ -699,7 +699,7 @@ Value StringPrototype::method_fromCharCode(SimpleCallContext *context)
     QString str(context->argumentCount, Qt::Uninitialized);
     QChar *ch = str.data();
     for (int i = 0; i < context->argumentCount; ++i) {
-        *ch = QChar(context->arguments[i].toUInt16(context));
+        *ch = QChar(context->arguments[i].toUInt16());
         ++ch;
     }
     return Value::fromString(context, str);

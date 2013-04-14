@@ -256,7 +256,7 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
     QVector<Value> args;
 
     if (Object *arr = arg.asObject()) {
-        quint32 len = arr->get(ctx, ctx->engine->id_length).toUInt32(ctx);
+        quint32 len = arr->get(ctx, ctx->engine->id_length).toUInt32();
         for (quint32 i = 0; i < len; ++i) {
             Value a = arr->getIndexed(ctx, i);
             args.append(a);
@@ -466,7 +466,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     , boundArgs(boundArgs)
 {
     vtbl = &static_vtbl;
-    int len = target->get(scope, scope->engine->id_length).toUInt32(scope);
+    int len = target->get(scope, scope->engine->id_length).toUInt32();
     len -= boundArgs.size();
     if (len < 0)
         len = 0;

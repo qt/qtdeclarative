@@ -735,7 +735,7 @@ QString Stringify::Str(const QString &key, Value value)
         return quote(value.stringValue()->toQString());
 
     if (value.isNumber()) {
-        double d = value.toNumber(ctx);
+        double d = value.toNumber();
         return std::isfinite(d) ? value.toString(ctx)->toQString() : QStringLiteral("null");
     }
 
@@ -918,7 +918,7 @@ Value JsonObject::method_stringify(SimpleCallContext *ctx)
         s = so->value;
 
     if (s.isNumber()) {
-        stringify.gap = QString(qMin(10, (int)s.toInteger(ctx)), ' ');
+        stringify.gap = QString(qMin(10, (int)s.toInteger()), ' ');
     } else if (s.isString()) {
         stringify.gap = s.stringValue()->toQString().left(10);
     }

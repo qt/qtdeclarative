@@ -496,7 +496,7 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
             goto reject;
         else if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
             bool ok;
-            uint l = value.asArrayLength(ctx, &ok);
+            uint l = value.asArrayLength(&ok);
             if (!ok)
                 ctx->throwRangeError(value);
             ok = setArrayLength(l);
@@ -688,7 +688,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
         bool succeeded = true;
         if (attrs.type() == PropertyAttributes::Data) {
             bool ok;
-            uint l = p.value.asArrayLength(ctx, &ok);
+            uint l = p.value.asArrayLength(&ok);
             if (!ok)
                 ctx->throwRangeError(p.value);
             succeeded = setArrayLength(l);
@@ -876,13 +876,13 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
         for (uint i = fromIndex; i < endIndex; ++i) {
             bool exists;
             Value value = o->getIndexed(ctx, i, &exists);
-            if (exists && __qmljs_strict_equal(value, v, ctx))
+            if (exists && __qmljs_strict_equal(value, v))
                 return Value::fromDouble(i);
         }
     } else if (sparseArray) {
         for (SparseArrayNode *n = sparseArray->lowerBound(fromIndex); n != sparseArray->end() && n->key() < endIndex; n = n->nextNode()) {
             Value value = o->getValue(ctx, arrayData + n->value, arrayAttributes ? arrayAttributes[n->value] : Attr_Data);
-            if (__qmljs_strict_equal(value, v, ctx))
+            if (__qmljs_strict_equal(value, v))
                 return Value::fromDouble(n->key());
         }
     } else {
@@ -894,7 +894,7 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
         while (pd < end) {
             if (!arrayAttributes || !arrayAttributes[pd - arrayData].isGeneric()) {
                 Value value = o->getValue(ctx, pd, arrayAttributes ? arrayAttributes[pd - arrayData] : Attr_Data);
-                if (__qmljs_strict_equal(value, v, ctx))
+                if (__qmljs_strict_equal(value, v))
                     return Value::fromDouble(pd - arrayData);
             }
             ++pd;

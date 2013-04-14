@@ -186,7 +186,7 @@ Value RegExpPrototype::method_exec(SimpleCallContext *ctx)
     arg = __qmljs_to_string(arg, ctx);
     QString s = arg.stringValue()->toQString();
 
-    int offset = r->global ? r->lastIndexProperty(ctx)->value.toInt32(ctx) : 0;
+    int offset = r->global ? r->lastIndexProperty(ctx)->value.toInt32() : 0;
     if (offset < 0 || offset > s.length()) {
         r->lastIndexProperty(ctx)->value = Value::fromInt32(0);
         return Value::nullValue();

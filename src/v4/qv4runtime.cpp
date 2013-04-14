@@ -216,8 +216,8 @@ void __qmljs_delete_name(ExecutionContext *ctx, Value *result, String *name)
 
 void __qmljs_add_helper(ExecutionContext *ctx, Value *result, const Value &left, const Value &right)
 {
-    Value pleft = __qmljs_to_primitive(left, ctx, PREFERREDTYPE_HINT);
-    Value pright = __qmljs_to_primitive(right, ctx, PREFERREDTYPE_HINT);
+    Value pleft = __qmljs_to_primitive(left, PREFERREDTYPE_HINT);
+    Value pright = __qmljs_to_primitive(right, PREFERREDTYPE_HINT);
     if (pleft.isString() || pright.isString()) {
         if (!pleft.isString())
             pleft = __qmljs_to_string(pleft, ctx);
@@ -227,8 +227,8 @@ void __qmljs_add_helper(ExecutionContext *ctx, Value *result, const Value &left,
         *result = Value::fromString(string);
         return;
     }
-    double x = __qmljs_to_number(pleft, ctx);
-    double y = __qmljs_to_number(pright, ctx);
+    double x = __qmljs_to_number(pleft);
+    double y = __qmljs_to_number(pright);
     *result = Value::fromDouble(x + y);
 }
 
@@ -471,7 +471,7 @@ Value __qmljs_string_from_number(ExecutionContext *ctx, double number)
     return Value::fromString(string);
 }
 
-Bool __qmljs_string_compare(ExecutionContext *, String *left, String *right)
+Bool __qmljs_string_compare(String *left, String *right)
 {
     return left->toQString() < right->toQString();
 }
@@ -494,34 +494,34 @@ String *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *seco
     return ctx->engine->newString(newStr);
 }
 
-Value __qmljs_object_default_value(ExecutionContext *ctx, Value object, int typeHint)
+Value __qmljs_object_default_value(Object *object, int typeHint)
 {
     if (typeHint == PREFERREDTYPE_HINT) {
-        if (object.asDateObject())
+        if (object->asDateObject())
             typeHint = STRING_HINT;
         else
             typeHint = NUMBER_HINT;
     }
 
-    String *meth1 = ctx->engine->newString("toString");
-    String *meth2 = ctx->engine->newString("valueOf");
+    ExecutionEngine *engine = object->internalClass->engine;
+    String *meth1 = engine->newString("toString");
+    String *meth2 = engine->newString("valueOf");
 
     if (typeHint == NUMBER_HINT)
         qSwap(meth1, meth2);
 
-    assert(object.isObject());
-    Object *oo = object.objectValue();
+    ExecutionContext *ctx = engine->current;
 
-    Value conv = oo->get(ctx, meth1);
+    Value conv = object->get(ctx, meth1);
     if (FunctionObject *o = conv.asFunctionObject()) {
-        Value r = o->call(ctx, object, 0, 0);
+        Value r = o->call(ctx, Value::fromObject(object), 0, 0);
         if (r.isPrimitive())
             return r;
     }
 
-    conv = oo->get(ctx, meth2);
+    conv = object->get(ctx, meth2);
     if (FunctionObject *o = conv.asFunctionObject()) {
-        Value r = o->call(ctx, object, 0, 0);
+        Value r = o->call(ctx, Value::fromObject(object), 0, 0);
         if (r.isPrimitive())
             return r;
     }
@@ -571,7 +571,7 @@ String *__qmljs_convert_to_string(ExecutionContext *ctx, const Value &value)
     case Value::String_Type:
         return value.stringValue();
     case Value::Object_Type: {
-        Value prim = __qmljs_to_primitive(value, ctx, STRING_HINT);
+        Value prim = __qmljs_to_primitive(value, STRING_HINT);
         if (prim.isPrimitive())
             return __qmljs_convert_to_string(ctx, prim);
         else
@@ -754,7 +754,7 @@ void __qmljs_get_thisObject(ExecutionContext *ctx, Value *result)
     *result = ctx->thisObject;
 }
 
-uint __qmljs_equal(const Value &x, const Value &y, ExecutionContext *ctx)
+uint __qmljs_equal(const Value &x, const Value &y)
 {
     if (x.type() == y.type()) {
         switch (x.type()) {
@@ -771,7 +771,8 @@ uint __qmljs_equal(const Value &x, const Value &y, ExecutionContext *ctx)
             return x.stringValue()->isEqualTo(y.stringValue());
         case Value::Object_Type:
             if (x.objectValue()->externalComparison || y.objectValue()->externalComparison)
-                return x.objectValue()->externalComparison && y.objectValue()->externalComparison && ctx->engine->externalResourceComparison(x, y);
+                return x.objectValue()->externalComparison && y.objectValue()->externalComparison
+                        && x.objectValue()->internalClass->engine->externalResourceComparison(x, y);
             return x.objectValue() == y.objectValue();
         default: // double
             return x.doubleValue() == y.doubleValue();
@@ -785,30 +786,30 @@ uint __qmljs_equal(const Value &x, const Value &y, ExecutionContext *ctx)
         } else if (x.isUndefined() && y.isNull()) {
             return true;
         } else if (x.isNumber() && y.isString()) {
-            Value ny = Value::fromDouble(__qmljs_to_number(y, ctx));
-            return __qmljs_equal(x, ny, ctx);
+            Value ny = Value::fromDouble(__qmljs_to_number(y));
+            return __qmljs_equal(x, ny);
         } else if (x.isString() && y.isNumber()) {
-            Value nx = Value::fromDouble(__qmljs_to_number(x, ctx));
-            return __qmljs_equal(nx, y, ctx);
+            Value nx = Value::fromDouble(__qmljs_to_number(x));
+            return __qmljs_equal(nx, y);
         } else if (x.isBoolean()) {
             Value nx = Value::fromDouble((double) x.booleanValue());
-            return __qmljs_equal(nx, y, ctx);
+            return __qmljs_equal(nx, y);
         } else if (y.isBoolean()) {
             Value ny = Value::fromDouble((double) y.booleanValue());
-            return __qmljs_equal(x, ny, ctx);
+            return __qmljs_equal(x, ny);
         } else if ((x.isNumber() || x.isString()) && y.isObject()) {
-            Value py = __qmljs_to_primitive(y, ctx, PREFERREDTYPE_HINT);
-            return __qmljs_equal(x, py, ctx);
+            Value py = __qmljs_to_primitive(y, PREFERREDTYPE_HINT);
+            return __qmljs_equal(x, py);
         } else if (x.isObject() && (y.isNumber() || y.isString())) {
-            Value px = __qmljs_to_primitive(x, ctx, PREFERREDTYPE_HINT);
-            return __qmljs_equal(px, y, ctx);
+            Value px = __qmljs_to_primitive(x, PREFERREDTYPE_HINT);
+            return __qmljs_equal(px, y);
         }
     }
 
     return false;
 }
 
-Bool __qmljs_strict_equal(const Value &x, const Value &y, ExecutionContext *ctx)
+Bool __qmljs_strict_equal(const Value &x, const Value &y)
 {
     TRACE2(x, y);
 
@@ -821,7 +822,7 @@ Bool __qmljs_strict_equal(const Value &x, const Value &y, ExecutionContext *ctx)
     if (x.isString())
         return __qmljs_string_equal(x.stringValue(), y.stringValue());
     if (x.isObject() && x.objectValue()->externalComparison && y.objectValue()->externalComparison)
-        return ctx->engine->externalResourceComparison(x, y);
+        return x.objectValue()->internalClass->engine->externalResourceComparison(x, y);
     return false;
 }
 
@@ -1070,7 +1071,7 @@ void __qmljs_builtin_post_increment(ExecutionContext *ctx, Value *result, Value 
         return;
     }
 
-    double d = __qmljs_to_number(*val, ctx);
+    double d = __qmljs_to_number(*val);
     *val = Value::fromDouble(d + 1);
     if (result)
         *result = Value::fromDouble(d);
@@ -1085,7 +1086,7 @@ void __qmljs_builtin_post_increment_name(ExecutionContext *context, Value *resul
             *result = v;
         v.int_32 += 1;
     } else {
-        double d = __qmljs_to_number(v, context);
+        double d = __qmljs_to_number(v);
         if (result)
             *result = Value::fromDouble(d);
         v = Value::fromDouble(d + 1);
@@ -1105,7 +1106,7 @@ void __qmljs_builtin_post_increment_member(ExecutionContext *context, Value *res
             *result = v;
         v.int_32 += 1;
     } else {
-        double d = __qmljs_to_number(v, context);
+        double d = __qmljs_to_number(v);
         if (result)
             *result = Value::fromDouble(d);
         v = Value::fromDouble(d + 1);
@@ -1132,7 +1133,7 @@ void __qmljs_builtin_post_increment_element(ExecutionContext *context, Value *re
             *result = v;
         v.int_32 += 1;
     } else {
-        double d = __qmljs_to_number(v, context);
+        double d = __qmljs_to_number(v);
         if (result)
             *result = Value::fromDouble(d);
         v = Value::fromDouble(d + 1);
@@ -1150,7 +1151,7 @@ void __qmljs_builtin_post_decrement(ExecutionContext *ctx, Value *result, Value 
         return;
     }
 
-    double d = __qmljs_to_number(*val, ctx);
+    double d = __qmljs_to_number(*val);
     *val = Value::fromDouble(d - 1);
     if (result)
         *result = Value::fromDouble(d);
@@ -1165,7 +1166,7 @@ void __qmljs_builtin_post_decrement_name(ExecutionContext *context, Value *resul
             *result = v;
         v.int_32 -= 1;
     } else {
-        double d = __qmljs_to_number(v, context);
+        double d = __qmljs_to_number(v);
         if (result)
             *result = Value::fromDouble(d);
         v = Value::fromDouble(d - 1);
@@ -1185,7 +1186,7 @@ void __qmljs_builtin_post_decrement_member(ExecutionContext *context, Value *res
             *result = v;
         v.int_32 -= 1;
     } else {
-        double d = __qmljs_to_number(v, context);
+        double d = __qmljs_to_number(v);
         if (result)
             *result = Value::fromDouble(d);
         v = Value::fromDouble(d - 1);
@@ -1212,7 +1213,7 @@ void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *re
             *result = v;
         v.int_32 -= 1;
     } else {
-        double d = __qmljs_to_number(v, context);
+        double d = __qmljs_to_number(v);
         if (result)
             *result = Value::fromDouble(d);
         v = Value::fromDouble(d - 1);
@@ -1293,26 +1294,26 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &ob
     pd->setSetter(setter ? setter->asFunctionObject() : 0);
 }
 
-void __qmljs_increment(ExecutionContext *ctx, Value *result, const Value &value)
+void __qmljs_increment(ExecutionContext *, Value *result, const Value &value)
 {
     TRACE1(value);
 
     if (value.isInteger())
         *result = Value::fromInt32(value.integerValue() + 1);
     else {
-        double d = __qmljs_to_number(value, ctx);
+        double d = __qmljs_to_number(value);
         *result = Value::fromDouble(d + 1);
     }
 }
 
-void __qmljs_decrement(ExecutionContext *ctx, Value *result, const Value &value)
+void __qmljs_decrement(ExecutionContext *, Value *result, const Value &value)
 {
     TRACE1(value);
 
     if (value.isInteger())
         *result = Value::fromInt32(value.integerValue() - 1);
     else {
-        double d = __qmljs_to_number(value, ctx);
+        double d = __qmljs_to_number(value);
         *result = Value::fromDouble(d - 1);
     }
 }

@@ -58,7 +58,7 @@ Value ArrayCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int ar
     uint len;
     if (argc == 1 && argv[0].isNumber()) {
         bool ok;
-        len = argv[0].asArrayLength(ctx, &ok);
+        len = argv[0].asArrayLength(&ok);
 
         if (!ok)
             ctx->throwRangeError(argv[0]);
@@ -115,7 +115,7 @@ uint ArrayPrototype::getLength(ExecutionContext *ctx, Object *o)
 {
     if (o->isArrayObject())
         return o->arrayLength();
-    return o->get(ctx, ctx->engine->id_length).toUInt32(ctx);
+    return o->get(ctx, ctx->engine->id_length).toUInt32();
 }
 
 Value ArrayPrototype::method_isArray(SimpleCallContext *ctx)
@@ -171,7 +171,7 @@ Value ArrayPrototype::method_join(SimpleCallContext *ctx)
 
     Value self = ctx->thisObject;
     const Value length = self.property(ctx, ctx->engine->id_length);
-    const quint32 r2 = Value::toUInt32(length.isUndefined() ? 0 : length.toNumber(ctx));
+    const quint32 r2 = Value::toUInt32(length.isUndefined() ? 0 : length.toNumber());
 
     static QSet<Object *> visitedArrayElements;
 
@@ -382,8 +382,8 @@ Value ArrayPrototype::method_slice(SimpleCallContext *ctx)
     Object *o = ctx->thisObject.toObject(ctx);
 
     ArrayObject *result = ctx->engine->newArrayObject(ctx);
-    uint len = o->get(ctx, ctx->engine->id_length).toUInt32(ctx);
-    double s = ctx->argument(0).toInteger(ctx);
+    uint len = o->get(ctx, ctx->engine->id_length).toUInt32();
+    double s = ctx->argument(0).toInteger();
     uint start;
     if (s < 0)
         start = (uint)qMax(len + s, 0.);
@@ -393,7 +393,7 @@ Value ArrayPrototype::method_slice(SimpleCallContext *ctx)
         start = (uint) s;
     uint end = len;
     if (!ctx->argument(1).isUndefined()) {
-        double e = ctx->argument(1).toInteger(ctx);
+        double e = ctx->argument(1).toInteger();
         if (e < 0)
             end = (uint)qMax(len + e, 0.);
         else if (e > len)
@@ -432,14 +432,14 @@ Value ArrayPrototype::method_splice(SimpleCallContext *ctx)
 
     ArrayObject *newArray = ctx->engine->newArrayObject(ctx);
 
-    double rs = ctx->argument(0).toInteger(ctx);
+    double rs = ctx->argument(0).toInteger();
     uint start;
     if (rs < 0)
         start = (uint) qMax(0., len + rs);
     else
         start = (uint) qMin(rs, (double)len);
 
-    uint deleteCount = (uint)qMin(qMax(ctx->argument(1).toInteger(ctx), 0.), (double)(len - start));
+    uint deleteCount = (uint)qMin(qMax(ctx->argument(1).toInteger(), 0.), (double)(len - start));
 
     newArray->arrayReserve(deleteCount);
     Property *pd = newArray->arrayData;
@@ -557,7 +557,7 @@ Value ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
         searchValue = Value::undefinedValue();
 
     if (ctx->argumentCount >= 2) {
-        double f = ctx->argument(1).toInteger(ctx);
+        double f = ctx->argument(1).toInteger();
         if (f >= len)
             return Value::fromInt32(-1);
         if (f < 0)
@@ -569,7 +569,7 @@ Value ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
         for (uint k = fromIndex; k < len; ++k) {
             bool exists;
             Value v = instance->getIndexed(ctx, k, &exists);
-            if (exists && __qmljs_strict_equal(v, searchValue, ctx))
+            if (exists && __qmljs_strict_equal(v, searchValue))
                 return Value::fromDouble(k);
         }
         return Value::fromInt32(-1);
@@ -594,7 +594,7 @@ Value ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
         searchValue = Value::undefinedValue();
 
     if (ctx->argumentCount >= 2) {
-        double f = ctx->argument(1).toInteger(ctx);
+        double f = ctx->argument(1).toInteger();
         if (f > 0)
             f = qMin(f, (double)(len - 1));
         else if (f < 0) {
@@ -609,7 +609,7 @@ Value ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
         --k;
         bool exists;
         Value v = instance->getIndexed(ctx, k, &exists);
-        if (exists && __qmljs_strict_equal(v, searchValue, ctx))
+        if (exists && __qmljs_strict_equal(v, searchValue))
             return Value::fromDouble(k);
     }
     return Value::fromInt32(-1);

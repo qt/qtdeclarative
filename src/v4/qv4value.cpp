@@ -49,12 +49,12 @@ namespace QQmlJS {
 namespace VM {
 
 
-int Value::toUInt16(ExecutionContext *ctx) const
+int Value::toUInt16() const
 {
     if (isConvertibleToInt())
         return (ushort)(uint)integerValue();
 
-    double number = __qmljs_to_number(*this, ctx);
+    double number = __qmljs_to_number(*this);
 
     double D16 = 65536.0;
     if ((number >= 0 && number < D16))
@@ -75,17 +75,17 @@ int Value::toUInt16(ExecutionContext *ctx) const
     return (unsigned short)number;
 }
 
-double Value::toInteger(ExecutionContext *ctx) const
+double Value::toInteger() const
 {
     if (isConvertibleToInt())
         return int_32;
 
-    return Value::toInteger(__qmljs_to_number(*this, ctx));
+    return Value::toInteger(__qmljs_to_number(*this));
 }
 
-double Value::toNumber(ExecutionContext *ctx) const
+double Value::toNumber() const
 {
-    return __qmljs_to_number(*this, ctx);
+    return __qmljs_to_number(*this);
 }
 
 bool Value::sameValue(Value other) const {

@@ -58,13 +58,13 @@ NumberCtor::NumberCtor(ExecutionContext *scope)
 
 Value NumberCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
-    double d = argc ? args[0].toNumber(ctx) : 0.;
+    double d = argc ? args[0].toNumber() : 0.;
     return Value::fromObject(ctx->engine->newNumberObject(Value::fromDouble(d)));
 }
 
 Value NumberCtor::call(Managed *m, ExecutionContext *parentCtx, const Value &thisObject, Value *argv, int argc)
 {
-    double d = argc ? argv[0].toNumber(parentCtx) : 0.;
+    double d = argc ? argv[0].toNumber() : 0.;
     return Value::fromDouble(d);
 }
 
@@ -110,7 +110,7 @@ Value NumberPrototype::method_toString(SimpleCallContext *ctx)
 
     Value arg = ctx->argument(0);
     if (!arg.isUndefined()) {
-        int radix = arg.toInt32(ctx);
+        int radix = arg.toInt32();
         if (radix < 2 || radix > 36) {
             ctx->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
                             .arg(radix));
@@ -186,7 +186,7 @@ Value NumberPrototype::method_toFixed(SimpleCallContext *ctx)
     double fdigits = 0;
 
     if (ctx->argumentCount > 0)
-        fdigits = ctx->argument(0).toInteger(ctx);
+        fdigits = ctx->argument(0).toInteger();
 
     if (isnan(fdigits))
         fdigits = 0;
@@ -216,7 +216,7 @@ Value NumberPrototype::method_toExponential(SimpleCallContext *ctx)
     double fdigits = 0;
 
     if (ctx->argumentCount > 0)
-        fdigits = ctx->argument(0).toInteger(ctx);
+        fdigits = ctx->argument(0).toInteger();
 
     QString z = QString::number(thisObject->value.asDouble(), 'e', int (fdigits));
     return Value::fromString(ctx, z);
@@ -231,7 +231,7 @@ Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
     double fdigits = 0;
 
     if (ctx->argumentCount > 0)
-        fdigits = ctx->argument(0).toInteger(ctx);
+        fdigits = ctx->argument(0).toInteger();
 
     return Value::fromString(ctx, QString::number(thisObject->value.asDouble(), 'g', int (fdigits)));
 }

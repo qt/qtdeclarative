@@ -61,7 +61,7 @@ struct ExecutionEngine;
 struct Value;
 
 extern "C" {
-double __qmljs_to_number(const Value &value, ExecutionContext *ctx);
+double __qmljs_to_number(const Value &value);
 Q_V4_EXPORT String *__qmljs_convert_to_string(ExecutionContext *ctx, const Value &value);
 Object *__qmljs_convert_to_object(ExecutionContext *ctx, const Value &value);
 }
@@ -209,13 +209,13 @@ struct Q_V4_EXPORT Value
     static int toInt32(double value);
     static unsigned int toUInt32(double value);
 
-    int toUInt16(ExecutionContext *ctx) const;
-    int toInt32(ExecutionContext *ctx) const;
-    unsigned int toUInt32(ExecutionContext *ctx) const;
+    int toUInt16() const;
+    int toInt32() const;
+    unsigned int toUInt32() const;
 
     Bool toBoolean() const;
-    double toInteger(ExecutionContext *ctx) const;
-    double toNumber(ExecutionContext *ctx) const;
+    double toInteger() const;
+    double toNumber() const;
     String *toString(ExecutionContext *ctx) const;
     Object *toObject(ExecutionContext *ctx) const;
 
@@ -263,7 +263,7 @@ struct Q_V4_EXPORT Value
     ArrayObject *asArrayObject() const;
     ErrorObject *asErrorObject() const;
     uint asArrayIndex() const;
-    uint asArrayLength(ExecutionContext *ctx, bool *ok) const;
+    uint asArrayLength(bool *ok) const;
 
     Value property(ExecutionContext *ctx, String *name) const;
 
@@ -405,7 +405,7 @@ inline Object *Value::toObject(ExecutionContext *ctx) const
     return __qmljs_convert_to_object(ctx, *this);
 }
 
-inline int Value::toInt32(ExecutionContext *ctx) const
+inline int Value::toInt32() const
 {
     if (isConvertibleToInt())
         return int_32;
@@ -413,7 +413,7 @@ inline int Value::toInt32(ExecutionContext *ctx) const
     if (isDouble())
         d = dbl;
     else
-        d = __qmljs_to_number(*this, ctx);
+        d = __qmljs_to_number(*this);
 
     const double D32 = 4294967296.0;
     const double D31 = D32 / 2.0;
@@ -421,17 +421,18 @@ inline int Value::toInt32(ExecutionContext *ctx) const
     if ((d >= -D31 && d < D31))
         return static_cast<int>(d);
 
-    return Value::toInt32(__qmljs_to_number(*this, ctx));
+    return Value::toInt32(__qmljs_to_number(*this));
 }
 
-inline unsigned int Value::toUInt32(ExecutionContext *ctx) const {
+inline unsigned int Value::toUInt32() const
+{
     if (isConvertibleToInt())
         return (unsigned) int_32;
     double d;
     if (isDouble())
         d = dbl;
     else
-        d = __qmljs_to_number(*this, ctx);
+        d = __qmljs_to_number(*this);
 
     const double D32 = 4294967296.0;
     if (dbl >= 0 && dbl < D32)
@@ -451,7 +452,7 @@ inline uint Value::asArrayIndex() const
     return idx;
 }
 
-inline uint Value::asArrayLength(ExecutionContext *ctx, bool *ok) const
+inline uint Value::asArrayLength(bool *ok) const
 {
     *ok = true;
     if (isConvertibleToInt() && int_32 >= 0)
@@ -467,8 +468,8 @@ inline uint Value::asArrayLength(ExecutionContext *ctx, bool *ok) const
     if (isString())
         return stringValue()->toUInt(ok);
 
-    uint idx = toUInt32(ctx);
-    double d = toNumber(ctx);
+    uint idx = toUInt32();
+    double d = toNumber();
     if (d != idx) {
         *ok = false;
         return UINT_MAX;

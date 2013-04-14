@@ -487,7 +487,7 @@ Local<Boolean> Value::ToBoolean() const
 
 Local<Number> Value::ToNumber() const
 {
-    return Local<Number>::New(Value::fromVmValue(VM::Value::fromDouble(ConstValuePtr(this)->toNumber(currentEngine()->current))));
+    return Local<Number>::New(Value::fromVmValue(VM::Value::fromDouble(ConstValuePtr(this)->toNumber())));
 }
 
 Local<String> Value::ToString() const
@@ -502,17 +502,17 @@ Local<Object> Value::ToObject() const
 
 Local<Integer> Value::ToInteger() const
 {
-    return Local<Integer>::New(Value::fromVmValue(QQmlJS::VM::Value::fromDouble(ConstValuePtr(this)->toInteger(currentEngine()->current))));
+    return Local<Integer>::New(Value::fromVmValue(QQmlJS::VM::Value::fromDouble(ConstValuePtr(this)->toInteger())));
 }
 
 Local<Uint32> Value::ToUint32() const
 {
-    return Local<Uint32>::New(Value::fromVmValue(QQmlJS::VM::Value::fromUInt32(ConstValuePtr(this)->toUInt32(currentEngine()->current))));
+    return Local<Uint32>::New(Value::fromVmValue(QQmlJS::VM::Value::fromUInt32(ConstValuePtr(this)->toUInt32())));
 }
 
 Local<Int32> Value::ToInt32() const
 {
-    return Local<Int32>::New(Value::fromVmValue(QQmlJS::VM::Value::fromInt32(ConstValuePtr(this)->toInt32(currentEngine()->current))));
+    return Local<Int32>::New(Value::fromVmValue(QQmlJS::VM::Value::fromInt32(ConstValuePtr(this)->toInt32())));
 }
 
 Local<Uint32> Value::ToArrayIndex() const
@@ -532,27 +532,27 @@ double Value::NumberValue() const
 
 int64_t Value::IntegerValue() const
 {
-    return (int64_t)ConstValuePtr(this)->toInteger(currentEngine()->current);
+    return (int64_t)ConstValuePtr(this)->toInteger();
 }
 
 uint32_t Value::Uint32Value() const
 {
-    return ConstValuePtr(this)->toUInt32(currentEngine()->current);
+    return ConstValuePtr(this)->toUInt32();
 }
 
 int32_t Value::Int32Value() const
 {
-    return ConstValuePtr(this)->toInt32(currentEngine()->current);
+    return ConstValuePtr(this)->toInt32();
 }
 
 bool Value::Equals(Handle<Value> that) const
 {
-    return __qmljs_equal(*ConstValuePtr(this), *ConstValuePtr(&that), currentEngine()->current);
+    return __qmljs_equal(*ConstValuePtr(this), *ConstValuePtr(&that));
 }
 
 bool Value::StrictEquals(Handle<Value> that) const
 {
-    return __qmljs_strict_equal(*ConstValuePtr(this), *ConstValuePtr(&that), currentEngine()->current);
+    return __qmljs_strict_equal(*ConstValuePtr(this), *ConstValuePtr(&that));
 }
 
 VM::Value Value::vmValue() const
@@ -776,7 +776,7 @@ uint32_t Uint32::Value() const
 {
     const VM::Value *v = ConstValuePtr(this);
     assert(v->isNumber());
-    return v->toUInt32(currentEngine()->current);
+    return v->toUInt32();
 }
 
 

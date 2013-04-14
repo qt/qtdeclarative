@@ -530,7 +530,7 @@ Value GlobalFunctions::method_parseInt(SimpleCallContext *context)
 {
     Value string = context->argument(0);
     Value radix = context->argument(1);
-    int R = radix.isUndefined() ? 0 : radix.toInt32(context);
+    int R = radix.isUndefined() ? 0 : radix.toInt32();
 
     // [15.1.2.2] step by step:
     String *inputString = string.toString(context); // 1
@@ -637,7 +637,7 @@ Value GlobalFunctions::method_isNaN(SimpleCallContext *context)
     if (v.integerCompatible())
         return Value::fromBoolean(false);
 
-    double d = v.toNumber(context);
+    double d = v.toNumber();
     return Value::fromBoolean(isnan(d));
 }
 
@@ -648,7 +648,7 @@ Value GlobalFunctions::method_isFinite(SimpleCallContext *context)
     if (v.integerCompatible())
         return Value::fromBoolean(true);
 
-    double d = v.toNumber(context);
+    double d = v.toNumber();
     return Value::fromBoolean(std::isfinite(d));
 }
 
