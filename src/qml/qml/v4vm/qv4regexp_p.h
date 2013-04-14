@@ -52,6 +52,7 @@
 
 #include <yarr/Yarr.h>
 #include <yarr/YarrInterpreter.h>
+#include <yarr/YarrJIT.h>
 
 #include "qv4managed_p.h"
 #include "qv4engine_p.h"
@@ -101,7 +102,7 @@ public:
 
     bool isValid() const { return m_byteCode.get(); }
 
-    uint match(const QString& string, int start, uint *matchOffsets) const;
+    uint match(const QString& string, int start, uint *matchOffsets);
 
     bool ignoreCase() const { return m_ignoreCase; }
     bool multiLine() const { return m_multiLine; }
@@ -128,6 +129,9 @@ private:
 
     const QString m_pattern;
     OwnPtr<JSC::Yarr::BytecodePattern> m_byteCode;
+#if ENABLE(YARR_JIT)
+    JSC::Yarr::YarrCodeBlock m_jitCode;
+#endif
     RegExpCache *m_cache;
     int m_subPatternCount;
     const bool m_ignoreCase;

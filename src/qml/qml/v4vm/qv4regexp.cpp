@@ -56,12 +56,19 @@ RegExpCache::~RegExpCache()
 
 DEFINE_MANAGED_VTABLE(RegExp);
 
-uint RegExp::match(const QString &string, int start, uint *matchOffsets) const
+uint RegExp::match(const QString &string, int start, uint *matchOffsets)
 {
     if (!isValid())
         return JSC::Yarr::offsetNoMatch;
 
-    return JSC::Yarr::interpret(m_byteCode.get(), WTF::String(string).characters16(), string.length(), start, matchOffsets);
+    WTF::String s(string);
+
+#if ENABLE(YARR_JIT)
+    if (!m_jitCode.isFallBack() && m_jitCode.has16BitCode())
+        return m_jitCode.execute(s.characters16(), start, s.length(), (int*)matchOffsets).start;
+#endif
+
+    return JSC::Yarr::interpret(m_byteCode.get(), s.characters16(), string.length(), start, matchOffsets);
 }
 
 RegExp* RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline)
@@ -103,6 +110,12 @@ RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase,
         return;
     m_subPatternCount = yarrPattern.m_numSubpatterns;
     m_byteCode = JSC::Yarr::byteCompile(yarrPattern, &engine->bumperPointerAllocator);
+#if ENABLE(YARR_JIT)
+    if (!yarrPattern.m_containsBackreferences) {
+        JSC::JSGlobalData dummy(engine->executableAllocator);
+        JSC::Yarr::jitCompile(yarrPattern, JSC::Yarr::Char16, &dummy, m_jitCode);
+    }
+#endif
 }
 
 RegExp::~RegExp()

@@ -30,6 +30,8 @@ HEADERS += $$PWD/wtf/PageReservation.h
 SOURCES += $$PWD/stubs/WTFStubs.cpp
 HEADERS += $$PWD/stubs/WTFStubs.h
 
+SOURCES += $$PWD/stubs/Options.cpp
+
 SOURCES += $$PWD/disassembler/Disassembler.cpp
 SOURCES += $$PWD/disassembler/UDis86Disassembler.cpp
 contains(DEFINES, WTF_USE_UDIS86=1) {
@@ -53,12 +55,7 @@ contains(DEFINES, WTF_USE_UDIS86=1) {
     QMAKE_EXTRA_TARGETS += udis86_tab_cfile
 }
 
-SOURCES += \
-    $$PWD/yarr/YarrCanonicalizeUCS2.cpp \
-    $$PWD/yarr/YarrInterpreter.cpp \
-    $$PWD/yarr/YarrPattern.cpp \
-    $$PWD/yarr/YarrSyntaxChecker.cpp
-
+SOURCES += $$PWD/yarr/*.cpp
 HEADERS += $$PWD/yarr/*.h
 
 retgen.output = RegExpJitTables.h

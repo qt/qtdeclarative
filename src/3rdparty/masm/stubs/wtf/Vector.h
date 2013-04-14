@@ -55,15 +55,34 @@ namespace WTF {
 template <typename T, int capacity = 1, int overflowMode = UnsafeVectorOverflow>
 class Vector : public std::vector<T> {
 public:
+    typedef T* iterator;
+    typedef const T* const_iterator;
+
     Vector() {}
     Vector(int initialSize) : std::vector<T>(initialSize) {}
 
     inline void append(const T& value)
     { this->push_back(value); }
 
+    template <typename OtherType>
+    inline void append(const OtherType& other)
+    { this->push_back(T(other)); }
+
     inline void append(const Vector<T>& vector)
     {
-        this->insert(this->end(), vector.begin(), vector.end());
+        this->insert(this->std::vector<T>::end(), vector.std::vector<T>::begin(), vector.std::vector<T>::end());
+    }
+
+    inline void append(const T* ptr, size_t count)
+    {
+        for (size_t i = 0; i < count; ++i)
+            this->push_back(T(ptr[i]));
+    }
+
+    inline void append(typename std::vector<T>::const_iterator it, size_t count)
+    {
+        for (size_t i = 0; i < count; ++i, ++it)
+            this->push_back(*it);
     }
 
     using std::vector<T>::insert;
@@ -71,23 +90,33 @@ public:
     inline void reserveInitialCapacity(size_t size) { this->reserve(size); }
 
     inline void insert(size_t position, T value)
-    { this->insert(this->begin() + position, value); }
+    { this->insert(this->std::vector<T>::begin() + position, value); }
 
     inline void grow(size_t size)
     { this->resize(size); }
 
     inline void shrink(size_t size)
-    { this->erase(this->begin() + size, this->end()); }
+    { this->erase(this->std::vector<T>::begin() + size, this->std::vector<T>::end()); }
 
     inline void shrinkToFit()
     { this->shrink_to_fit(); }
 
     inline void remove(size_t position)
-    { this->erase(this->begin() + position); }
+    { this->erase(this->std::vector<T>::begin() + position); }
 
     inline bool isEmpty() const { return this->empty(); }
 
-    inline T &last() { return *(this->begin() + this->size() - 1); }
+    inline T &last() { return *(this->std::vector<T>::begin() + this->size() - 1); }
+
+    inline iterator begin()
+    { return &(*this->std::vector<T>::begin()); }
+    inline const_iterator begin() const
+    { return &(*this->std::vector<T>::begin()); }
+    inline iterator end()
+    { return &(*this->std::vector<T>::end()); }
+    inline const_iterator end() const
+    { return &(*this->std::vector<T>::end()); }
+
 };
 
 template <typename T, int capacity>

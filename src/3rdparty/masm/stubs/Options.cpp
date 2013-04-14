@@ -38,16 +38,18 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef OPTIONS_H
-#define OPTIONS_H
+
+#include "config.h"
+#include "Options.h"
+
+#include <QByteArray>
 
 namespace JSC {
 
-struct Options {
-    static bool showDisassembly();
-    static bool showDFGDisassembly() { return true; }
-};
-
+bool Options::showDisassembly()
+{
+    static bool showCode = !qgetenv("SHOW_CODE").isNull();
+    return showCode;
 }
 
-#endif // MASM_STUBS/OPTIONS_H
+}
