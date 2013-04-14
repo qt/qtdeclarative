@@ -54,7 +54,7 @@ namespace QQmlJS {
 namespace VM {
 
 struct Lookup {
-    enum { Size = 4 };
+    enum { Size = 3 };
     union {
         void (*lookupProperty)(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
         void (*lookupGlobal)(Lookup *l, ExecutionContext *ctx, Value *result);
@@ -68,11 +68,17 @@ struct Lookup {
     static void lookupProperty0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
     static void lookupProperty1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
     static void lookupProperty2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void lookupPropertyAccessor0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void lookupPropertyAccessor1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void lookupPropertyAccessor2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
 
     static void lookupGlobalGeneric(Lookup *l, ExecutionContext *ctx, Value *result);
     static void lookupGlobal0(Lookup *l, ExecutionContext *ctx, Value *result);
     static void lookupGlobal1(Lookup *l, ExecutionContext *ctx, Value *result);
     static void lookupGlobal2(Lookup *l, ExecutionContext *ctx, Value *result);
+    static void lookupGlobalAccessor0(Lookup *l, ExecutionContext *ctx, Value *result);
+    static void lookupGlobalAccessor1(Lookup *l, ExecutionContext *ctx, Value *result);
+    static void lookupGlobalAccessor2(Lookup *l, ExecutionContext *ctx, Value *result);
 
     Property *lookup(Object *obj, PropertyAttributes *attrs) {
         int i = 0;

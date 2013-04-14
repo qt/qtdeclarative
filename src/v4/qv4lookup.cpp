@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 #include "qv4lookup.h"
+#include "qv4functionobject.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -62,6 +63,14 @@ void Lookup::lookupPropertyGeneric(QQmlJS::VM::Lookup *l, ExecutionContext *ctx,
                     *result = p->value;
                 return;
             } else {
+                if (l->level == 0)
+                    l->lookupProperty = lookupPropertyAccessor0;
+                else if (l->level == 1)
+                    l->lookupProperty = lookupPropertyAccessor1;
+                else if (l->level == 2)
+                    l->lookupProperty = lookupPropertyAccessor2;
+                if (result)
+                    *result = p->value;
                 Value res = o->getValue(ctx, p, attrs);
                 if (result)
                     *result = res;
@@ -119,7 +128,7 @@ void Lookup::lookupProperty2(Lookup *l, ExecutionContext *ctx, Value *result, co
                 o = o->prototype;
                 if (l->classList[2] == o->internalClass) {
                     if (result)
-                        *result = o->prototype->memberData[l->index].value;
+                        *result = o->memberData[l->index].value;
                     return;
                 }
             }
@@ -128,6 +137,71 @@ void Lookup::lookupProperty2(Lookup *l, ExecutionContext *ctx, Value *result, co
     l->lookupProperty = lookupPropertyGeneric;
     lookupPropertyGeneric(l, ctx, result, object);
 }
+
+void Lookup::lookupPropertyAccessor0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+{
+    if (Object *o = object.asObject()) {
+        if (l->classList[0] == o->internalClass) {
+            Value res;
+            FunctionObject *getter = o->memberData[l->index].getter();
+            if (!getter)
+                res = Value::undefinedValue();
+            else
+                res = getter->call(ctx, object, 0, 0);
+            if (result)
+                *result = res;
+            return;
+        }
+    }
+    l->lookupProperty = lookupPropertyGeneric;
+    lookupPropertyGeneric(l, ctx, result, object);
+}
+
+void Lookup::lookupPropertyAccessor1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+{
+    if (Object *o = object.asObject()) {
+        if (l->classList[0] == o->internalClass &&
+            l->classList[1] == o->prototype->internalClass) {
+            Value res;
+            FunctionObject *getter = o->prototype->memberData[l->index].getter();
+            if (!getter)
+                res = Value::undefinedValue();
+            else
+                res = getter->call(ctx, object, 0, 0);
+            if (result)
+                *result = res;
+            return;
+        }
+    }
+    l->lookupProperty = lookupPropertyGeneric;
+    lookupPropertyGeneric(l, ctx, result, object);
+}
+
+void Lookup::lookupPropertyAccessor2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+{
+    if (Object *o = object.asObject()) {
+        if (l->classList[0] == o->internalClass) {
+            o = o->prototype;
+            if (l->classList[1] == o->internalClass) {
+                o = o->prototype;
+                if (l->classList[2] == o->internalClass) {
+                    Value res;
+                    FunctionObject *getter = o->memberData[l->index].getter();
+                    if (!getter)
+                        res = Value::undefinedValue();
+                    else
+                        res = getter->call(ctx, object, 0, 0);
+                    if (result)
+                        *result = res;
+                    return;
+                }
+            }
+        }
+    }
+    l->lookupProperty = lookupPropertyGeneric;
+    lookupPropertyGeneric(l, ctx, result, object);
+}
+
 
 void Lookup::lookupGlobalGeneric(Lookup *l, ExecutionContext *ctx, Value *result)
 {
@@ -145,6 +219,12 @@ void Lookup::lookupGlobalGeneric(Lookup *l, ExecutionContext *ctx, Value *result
             *result = p->value;
             return;
         } else {
+            if (l->level == 0)
+                l->lookupGlobal = lookupGlobalAccessor0;
+            else if (l->level == 1)
+                l->lookupGlobal = lookupGlobalAccessor1;
+            else if (l->level == 2)
+                l->lookupGlobal = lookupGlobalAccessor2;
             Value res = o->getValue(ctx, p, attrs);
             if (result)
                 *result = res;
@@ -186,6 +266,58 @@ void Lookup::lookupGlobal2(Lookup *l, ExecutionContext *ctx, Value *result)
             o = o->prototype;
             if (l->classList[2] == o->internalClass) {
                 *result = o->prototype->memberData[l->index].value;
+                return;
+            }
+        }
+    }
+    l->lookupGlobal = lookupGlobalGeneric;
+    lookupGlobalGeneric(l, ctx, result);
+}
+
+void Lookup::lookupGlobalAccessor0(Lookup *l, ExecutionContext *ctx, Value *result)
+{
+    Object *o = ctx->engine->globalObject;
+    if (l->classList[0] == o->internalClass) {
+        FunctionObject *getter = o->memberData[l->index].getter();
+        if (!getter)
+            *result = Value::undefinedValue();
+        else
+            *result = getter->call(ctx, Value::undefinedValue(), 0, 0);
+        return;
+    }
+    l->lookupGlobal = lookupGlobalGeneric;
+    lookupGlobalGeneric(l, ctx, result);
+}
+
+void Lookup::lookupGlobalAccessor1(Lookup *l, ExecutionContext *ctx, Value *result)
+{
+    Object *o = ctx->engine->globalObject;
+    if (l->classList[0] == o->internalClass &&
+        l->classList[1] == o->prototype->internalClass) {
+        FunctionObject *getter = o->prototype->memberData[l->index].getter();
+        if (!getter)
+            *result = Value::undefinedValue();
+        else
+            *result = getter->call(ctx, Value::undefinedValue(), 0, 0);
+        return;
+    }
+    l->lookupGlobal = lookupGlobalGeneric;
+    lookupGlobalGeneric(l, ctx, result);
+}
+
+void Lookup::lookupGlobalAccessor2(Lookup *l, ExecutionContext *ctx, Value *result)
+{
+    Object *o = ctx->engine->globalObject;
+    if (l->classList[0] == o->internalClass) {
+        o = o->prototype;
+        if (l->classList[1] == o->internalClass) {
+            o = o->prototype;
+            if (l->classList[2] == o->internalClass) {
+                FunctionObject *getter = o->memberData[l->index].getter();
+                if (!getter)
+                    *result = Value::undefinedValue();
+                else
+                    *result = getter->call(ctx, Value::undefinedValue(), 0, 0);
                 return;
             }
         }
