@@ -202,6 +202,10 @@ struct HandleOperations
         handle->int_32 = 0;
 #endif
     }
+    static void init(Handle<T> *handle, T *other)
+    {
+        handle->val = *reinterpret_cast<quint64 *>(other);
+    }
 
     static void ref(Handle<T> *)
     {
@@ -244,6 +248,10 @@ struct HandleOperations
         static void init(Handle<Type> *handle) \
         { \
             handle->object = 0; \
+        } \
+        static void init(Handle<Type> *handle, Type *obj) \
+        { \
+            handle->object = obj; \
         } \
     \
         static void ref(Handle<Type> *handle) \
@@ -288,7 +296,7 @@ struct Handle {
 
     explicit Handle(T *obj)
     {
-        object = obj;
+        HandleOperations<T>::init(this, obj);
         HandleOperations<T>::ref(this);
     }
 
