@@ -426,7 +426,7 @@ static void printDisassembledOutputWithCalls(const char* output, const QHash<voi
 void Assembler::link(VM::Function *vmFunc)
 {
     Label endOfCode = label();
-#ifdef Q_PROCESSOR_ARM
+#if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
     // Let the ARM exception table follow right after that
     for (int i = 0, nops = UnwindHelper::unwindInfoSize() / 2; i < nops; ++i)
         nop();
@@ -469,7 +469,7 @@ void Assembler::link(VM::Function *vmFunc)
         }
     }
 
-#ifdef Q_PROCESSOR_ARM
+#if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
     UnwindHelper::writeARMUnwindInfo(linkBuffer.debugAddress(), linkBuffer.offsetOf(endOfCode));
 #endif
 
