@@ -185,7 +185,7 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
 // The non-temp case might need some tweaking for QML: there it would probably be a value instead of a local.
 # define VALUEPTR(param) \
     param.isTemp() ? stack + param.index \
-                   : (param.isLocal() ? context->locals + param.index \
+                   : (param.isLocal() ? static_cast<VM::CallContext *>(context)->locals + param.index \
                                       : getValueRef(context, stack, param))
 #else
 # define VALUE(param) *getValueRef(context, stack, param, stackSize)
