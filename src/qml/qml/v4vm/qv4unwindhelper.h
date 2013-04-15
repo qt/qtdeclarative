@@ -1,0 +1,27 @@
+#ifndef QV4UNWINDHELPER_H
+#define QV4UNWINDHELPER_H
+
+#include <QtCore/QVector>
+
+namespace QQmlJS {
+namespace VM {
+
+struct Function;
+
+class UnwindHelper
+{
+public:
+    static void registerFunction(Function *function);
+    static void registerFunctions(QVector<Function *> functions);
+    static void deregisterFunction(Function *function);
+    static void deregisterFunctions(QVector<Function *> functions);
+#ifdef Q_PROCESSOR_ARM
+    static int unwindInfoSize();
+    static void writeARMUnwindInfo(void *codeAddr, int codeSize);
+#endif
+};
+
+} // VM namespace
+} // QQmlJS namespace
+
+#endif // QV4UNWINDHELPER_H

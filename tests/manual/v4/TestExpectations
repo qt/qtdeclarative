@@ -1,0 +1,21 @@
+# wrong tests
+# uses octal number
+15.2.3.6-2-17-1 failing
+
+
+10.4.3-1-104 failing
+10.4.3-1-106 failing
+10.4.3-1-63-s failing
+10.4.3-1-82-s failing
+11.2.3-3_3 failing
+S11.8.6_A5_T2 failing
+S13_A15_T4 failing
+S13.2.3_A1 failing
+S15.4.4.3_A1_T1 failing
+S15.4.4.3_A3_T1 failing
+15.4.4.4-5-c-i-1 failing
+S15.4.4.4_A2_T1 failing
+S15.4.4.4_A2_T2 failing
+S15.4.4.4_A3_T1 failing
+S15.5.4.11_A5_T1 failing
+S15.2.4.4_A14 failing
