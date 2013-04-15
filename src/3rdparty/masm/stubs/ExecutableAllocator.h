@@ -94,8 +94,18 @@ struct ExecutableAllocator {
         return adoptRef(new ExecutableMemoryHandle(realAllocator, size));
     }
 
-    static void makeWritable(void*, int)
+    static void makeWritable(void* addr, int size)
     {
+#if ENABLE(ASSEMBLER_WX_EXCLUSIVE)
+        size_t pageSize = WTF::pageSize();
+        size_t iaddr = reinterpret_cast<size_t>(addr);
+        size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
+
+        int mode = PROT_READ | PROT_WRITE;
+        mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode);
+#else
+        // We assume we already have RWX
+#endif
     }
 
     static void makeExecutable(void* addr, int size)
@@ -107,7 +117,10 @@ struct ExecutableAllocator {
         DWORD oldProtect;
         VirtualProtect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), PAGE_EXECUTE_READWRITE, &oldProtect);
 #else
-        int mode = PROT_READ | PROT_WRITE | PROT_EXEC;
+        int mode = PROT_READ | PROT_EXEC;
+#if !ENABLE(ASSEMBLER_WX_EXCLUSIVE)
+        mode |= PROT_WRITE;
+#endif
         mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode);
 #endif
     }

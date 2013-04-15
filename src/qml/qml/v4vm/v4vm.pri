@@ -154,6 +154,8 @@ valgrind {
     DEFINES += V4_USE_VALGRIND
 }
 
+ios: DEFINES += ENABLE_ASSEMBLER_WX_EXCLUSIVE=1
+
 include(moth/moth.pri)
 include(../../../3rdparty/masm/masm.pri)
 include(../../../3rdparty/double-conversion/double-conversion.pri)
