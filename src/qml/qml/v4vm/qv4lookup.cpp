@@ -38,8 +38,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "qv4lookup.h"
-#include "qv4functionobject.h"
+#include "qv4lookup_p.h"
+#include "qv4functionobject_p.h"
 
 QT_BEGIN_NAMESPACE
 

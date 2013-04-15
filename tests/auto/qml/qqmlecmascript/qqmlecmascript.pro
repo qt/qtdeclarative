@@ -16,7 +16,7 @@ include (../../shared/util.pri)
 
 TESTDATA = data/*
 
-QT += core-private gui-private v8-private qml-private network testlib
+QT += core-private gui-private  qml-private network testlib
 qtHaveModule(widgets): QT += widgets
 
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

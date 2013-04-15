@@ -2,7 +2,7 @@
 #define QV4INSTR_MOTH_P_H
 
 #include <QtCore/qglobal.h>
-#include "qv4object.h"
+#include <private/qv4object_p.h>
 
 #define FOR_EACH_MOTH_INSTR(F) \
     F(Ret, ret) \

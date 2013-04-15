@@ -1,7 +1,7 @@
 #include "qv4vme_moth_p.h"
 #include "qv4instr_moth_p.h"
-#include "qv4value.h"
-#include "debugging.h"
+#include <private/qv4value_p.h>
+#include <private/qv4debugging_p.h>
 
 #include <iostream>
 

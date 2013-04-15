@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include "qv4runtime.h"
-#include "qv4context.h"
-#include "qv4engine.h"
+#include "qv4runtime_p.h"
+#include "qv4context_p.h"
+#include "qv4engine_p.h"
 #include <stdio.h>
 #include <setjmp.h>
 

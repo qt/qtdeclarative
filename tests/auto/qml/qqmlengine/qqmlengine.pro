@@ -6,5 +6,5 @@ include (../../shared/util.pri)
 
 SOURCES += tst_qqmlengine.cpp 
 
-QT += core-private gui-private qml-private v8-private network testlib
+QT += core-private gui-private qml-private  network testlib
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

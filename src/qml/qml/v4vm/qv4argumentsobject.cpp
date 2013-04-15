@@ -38,7 +38,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qv4argumentsobject.h>
+#include <qv4argumentsobject_p.h>
 
 namespace QQmlJS {
 namespace VM {

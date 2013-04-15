@@ -55,7 +55,7 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
-#include "qv4v8.h"
+#include "qv4v8_p.h"
 QT_BEGIN_NAMESPACE
 
 inline uint32_t calculateHash(const quint8* chars, int length)

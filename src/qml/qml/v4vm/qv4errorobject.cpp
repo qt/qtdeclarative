@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 
-#include "qv4errorobject.h"
-#include "qv4mm.h"
+#include "qv4errorobject_p.h"
+#include "qv4mm_p.h"
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>

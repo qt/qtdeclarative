@@ -39,10 +39,10 @@
 **
 ****************************************************************************/
 
-#include <qv4internalclass.h>
-#include <qv4string.h>
-#include <qv4engine.h>
-#include <qv4identifier.h>
+#include <qv4internalclass_p.h>
+#include <qv4string_p.h>
+#include <qv4engine_p.h>
+#include <qv4identifier_p.h>
 
 namespace QQmlJS {
 namespace VM {

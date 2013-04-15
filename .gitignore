@@ -266,3 +266,11 @@ tests/auto/*/*/*.moc
 
 # Generated static plugin import sources
 *_plugin_import.cpp
+
+# Compiled python code
+*.pyc
+
+src/qml/RegExpJitTables.h
+src/qml/udis86_itab.c
+src/qml/udis86_itab.h
+

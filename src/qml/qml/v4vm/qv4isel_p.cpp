@@ -1,9 +1,9 @@
-#include "debugging.h"
-#include "qv4engine.h"
+#include "qv4debugging_p.h"
+#include "qv4engine_p.h"
 #include "qv4jsir_p.h"
 #include "qv4isel_p.h"
 #include "qv4isel_util_p.h"
-#include "qv4functionobject.h"
+#include "qv4functionobject_p.h"
 
 #include <QString>
 

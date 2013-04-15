@@ -18,6 +18,6 @@ HEADERS += \
     ../dialogs/qquickabstractcolordialog_p.h \
     ../dialogs/qquickabstractdialog_p.h
 
-QT += quick-private gui-private core-private qml-private v8-private widgets
+QT += quick-private gui-private core-private qml-private  widgets
 
 load(qml_plugin)

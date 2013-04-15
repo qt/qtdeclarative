@@ -43,21 +43,21 @@
 #  include "private/qv4_llvm_p.h"
 #endif // QMLJS_WITH_LLVM
 
-#include "private/debugging.h"
-#include "private/qv4object.h"
-#include "private/qv4runtime.h"
-#include "private/qv4functionobject.h"
-#include "private/qv4errorobject.h"
-#include "private/qv4globalobject.h"
+#include "private/qv4debugging_p.h"
+#include "private/qv4object_p.h"
+#include "private/qv4runtime_p.h"
+#include "private/qv4functionobject_p.h"
+#include "private/qv4errorobject_p.h"
+#include "private/qv4globalobject_p.h"
 #include "private/qv4codegen_p.h"
 #include "private/qv4isel_masm_p.h"
 #include "private/qv4isel_moth_p.h"
 #include "private/qv4vme_moth_p.h"
 #include "private/qv4syntaxchecker_p.h"
-#include "private/qv4objectproto.h"
+#include "private/qv4objectproto_p.h"
 #include "private/qv4isel_p.h"
-#include "private/qv4mm.h"
-#include "private/qv4context.h"
+#include "private/qv4mm_p.h"
+#include "private/qv4context_p.h"
 
 #include <QtCore>
 #include <private/qqmljsengine_p.h>

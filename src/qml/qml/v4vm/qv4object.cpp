@@ -39,13 +39,13 @@
 **
 ****************************************************************************/
 
-#include "qv4object.h"
+#include "qv4object_p.h"
 #include "qv4jsir_p.h"
 #include "qv4isel_p.h"
-#include "qv4objectproto.h"
-#include "qv4stringobject.h"
-#include "qv4argumentsobject.h"
-#include "qv4mm.h"
+#include "qv4objectproto_p.h"
+#include "qv4stringobject_p.h"
+#include "qv4argumentsobject_p.h"
+#include "qv4mm_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>

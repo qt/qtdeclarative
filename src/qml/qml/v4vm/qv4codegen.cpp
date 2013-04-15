@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 #include "qv4codegen_p.h"
-#include "qv4util.h"
-#include "debugging.h"
+#include "qv4util_p.h"
+#include "qv4debugging_p.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
@@ -50,8 +50,8 @@
 #include <QtCore/QBitArray>
 #include <QtCore/QStack>
 #include <private/qqmljsast_p.h>
-#include <qv4runtime.h>
-#include <qv4context.h>
+#include <qv4runtime_p.h>
+#include <qv4context_p.h>
 #include <cmath>
 #include <iostream>
 #include <cassert>

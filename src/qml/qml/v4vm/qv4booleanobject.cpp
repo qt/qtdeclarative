@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qv4booleanobject.h"
+#include "qv4booleanobject_p.h"
 
 using namespace QQmlJS::VM;
 

@@ -41,7 +41,7 @@
 #ifndef QV4CODEGEN_P_H
 #define QV4CODEGEN_P_H
 
-#include "qv4global.h"
+#include "qv4global_p.h"
 #include "qv4jsir_p.h"
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>

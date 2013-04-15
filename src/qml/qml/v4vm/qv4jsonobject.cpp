@@ -38,12 +38,12 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qv4jsonobject.h>
-#include <qv4objectproto.h>
-#include <qv4numberobject.h>
-#include <qv4stringobject.h>
-#include <qv4booleanobject.h>
-#include <qv4objectiterator.h>
+#include <qv4jsonobject_p.h>
+#include <qv4objectproto_p.h>
+#include <qv4numberobject_p.h>
+#include <qv4stringobject_p.h>
+#include <qv4booleanobject_p.h>
+#include <qv4objectiterator_p.h>
 #include <qjsondocument.h>
 #include <qstack.h>
 #include <qstringlist.h>

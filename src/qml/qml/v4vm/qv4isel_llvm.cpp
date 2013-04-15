@@ -79,8 +79,8 @@
 #include "qv4isel_llvm_p.h"
 #include "qv4_llvm_p.h"
 #include "qv4jsir_p.h"
-#include "qv4string.h"
-#include "qv4global.h"
+#include "qv4string_p.h"
+#include "qv4global_p.h"
 
 namespace QQmlJS {
 

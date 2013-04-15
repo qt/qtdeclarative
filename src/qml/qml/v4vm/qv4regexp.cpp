@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include "qv4regexp.h"
+#include "qv4regexp_p.h"
 
-#include "qv4engine.h"
+#include "qv4engine_p.h"
 
 namespace QQmlJS {
 namespace VM {

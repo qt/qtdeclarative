@@ -45,7 +45,7 @@
 #include <RefCounted.h>
 #include <wtf/PageBlock.h>
 
-#include <qv4executableallocator.h>
+#include <private/qv4executableallocator_p.h>
 
 #if OS(WINDOWS)
 #include <windows.h>

@@ -39,10 +39,10 @@
 **
 ****************************************************************************/
 
-#include "qv4sparsearray.h"
-#include "qv4runtime.h"
-#include "qv4object.h"
-#include "qv4functionobject.h"
+#include "qv4sparsearray_p.h"
+#include "qv4runtime_p.h"
+#include "qv4object_p.h"
+#include "qv4functionobject_p.h"
 #include <stdlib.h>
 
 #ifdef QT_QMAP_DEBUG

@@ -38,10 +38,10 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qv4engine.h>
-#include <qv4object.h>
-#include <qv4objectproto.h>
-#include "qv4mm.h"
+#include <qv4engine_p.h>
+#include <qv4object_p.h>
+#include <qv4objectproto_p.h>
+#include "qv4mm_p.h"
 
 #include <wtf/MathExtras.h>
 

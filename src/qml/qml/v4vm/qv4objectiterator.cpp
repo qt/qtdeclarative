@@ -38,10 +38,10 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "qv4objectiterator.h"
-#include "qv4object.h"
-#include "qv4stringobject.h"
-#include "qv4identifier.h"
+#include "qv4objectiterator_p.h"
+#include "qv4object_p.h"
+#include "qv4stringobject_p.h"
+#include "qv4identifier_p.h"
 
 namespace QQmlJS {
 namespace VM {

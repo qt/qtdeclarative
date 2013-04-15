@@ -39,22 +39,22 @@
 **
 ****************************************************************************/
 
-#include "qv4v8.h"
+#include "qv4v8_p.h"
 
-#include "qv4engine.h"
-#include "qv4runtime.h"
-#include "qv4mm.h"
-#include "qv4managed.h"
-#include "qv4functionobject.h"
-#include "qv4value.h"
+#include "qv4engine_p.h"
+#include "qv4runtime_p.h"
+#include "qv4mm_p.h"
+#include "qv4managed_p.h"
+#include "qv4functionobject_p.h"
+#include "qv4value_p.h"
 #include "qv4isel_masm_p.h"
-#include "qv4globalobject.h"
-#include "qv4regexpobject.h"
-#include "qv4dateobject.h"
-#include "qv4numberobject.h"
-#include "qv4booleanobject.h"
-#include "qv4stringobject.h"
-#include "qv4objectproto.h"
+#include "qv4globalobject_p.h"
+#include "qv4regexpobject_p.h"
+#include "qv4dateobject_p.h"
+#include "qv4numberobject_p.h"
+#include "qv4booleanobject_p.h"
+#include "qv4stringobject_p.h"
+#include "qv4objectproto_p.h"
 #include <QThreadStorage>
 
 using namespace QQmlJS;

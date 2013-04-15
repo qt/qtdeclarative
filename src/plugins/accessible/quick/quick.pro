@@ -6,7 +6,7 @@ load(qt_plugin)
 
 include ($$PWD/../shared/qaccessiblebase.pri)
 
-QT += core-private gui-private v8-private qml-private quick-private
+QT += core-private gui-private  qml-private quick-private
 
 #DEFINES+=Q_ACCESSIBLE_QUICK_ITEM_ENABLE_DEBUG_DESCRIPTION
 

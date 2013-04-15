@@ -39,11 +39,11 @@
 **
 ****************************************************************************/
 
-#include "qv4string.h"
-#include "qv4identifier.h"
-#include "qv4runtime.h"
-#include "qv4objectproto.h"
-#include "qv4stringobject.h"
+#include "qv4string_p.h"
+#include "qv4identifier_p.h"
+#include "qv4runtime_p.h"
+#include "qv4objectproto_p.h"
+#include "qv4stringobject_p.h"
 #include <QtCore/QHash>
 
 namespace QQmlJS {

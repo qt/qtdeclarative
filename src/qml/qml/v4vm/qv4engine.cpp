@@ -38,29 +38,29 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qv4engine.h>
-#include <qv4value.h>
-#include <qv4object.h>
-#include <qv4objectproto.h>
-#include <qv4arrayobject.h>
-#include <qv4booleanobject.h>
-#include <qv4globalobject.h>
-#include <qv4errorobject.h>
-#include <qv4functionobject.h>
-#include <qv4mathobject.h>
-#include <qv4numberobject.h>
-#include <qv4regexpobject.h>
-#include <qv4runtime.h>
-#include "qv4mm.h"
-#include <qv4argumentsobject.h>
-#include <qv4dateobject.h>
-#include <qv4jsonobject.h>
-#include <qv4stringobject.h>
-#include <qv4identifier.h>
-#include <qv4unwindhelper.h>
+#include <qv4engine_p.h>
+#include <qv4value_p.h>
+#include <qv4object_p.h>
+#include <qv4objectproto_p.h>
+#include <qv4arrayobject_p.h>
+#include <qv4booleanobject_p.h>
+#include <qv4globalobject_p.h>
+#include <qv4errorobject_p.h>
+#include <qv4functionobject_p.h>
+#include <qv4mathobject_p.h>
+#include <qv4numberobject_p.h>
+#include <qv4regexpobject_p.h>
+#include <qv4runtime_p.h>
+#include "qv4mm_p.h"
+#include <qv4argumentsobject_p.h>
+#include <qv4dateobject_p.h>
+#include <qv4jsonobject_p.h>
+#include <qv4stringobject_p.h>
+#include <qv4identifier_p.h>
+#include <qv4unwindhelper_p.h>
 #include "qv4isel_masm_p.h"
-#include "debugging.h"
-#include "qv4executableallocator.h"
+#include "qv4debugging_p.h"
+#include "qv4executableallocator_p.h"
 
 namespace QQmlJS {
 namespace VM {

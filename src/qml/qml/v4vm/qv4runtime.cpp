@@ -39,15 +39,15 @@
 **
 ****************************************************************************/
 
-#include "qv4global.h"
-#include "debugging.h"
-#include "qv4runtime.h"
-#include "qv4object.h"
+#include "qv4global_p.h"
+#include "qv4debugging_p.h"
+#include "qv4runtime_p.h"
+#include "qv4object_p.h"
 #include "qv4jsir_p.h"
-#include "qv4objectproto.h"
-#include "qv4globalobject.h"
-#include "qv4stringobject.h"
-#include "qv4lookup.h"
+#include "qv4objectproto_p.h"
+#include "qv4globalobject_p.h"
+#include "qv4stringobject_p.h"
+#include "qv4lookup_p.h"
 #include "private/qlocale_tools_p.h"
 
 #include <QtCore/qmath.h>

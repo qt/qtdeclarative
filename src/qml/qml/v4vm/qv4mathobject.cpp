@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#include "qv4mathobject.h"
-#include "qv4objectproto.h"
+#include "qv4mathobject_p.h"
+#include "qv4objectproto_p.h"
 
 #include <cmath>
 #include <qmath.h>

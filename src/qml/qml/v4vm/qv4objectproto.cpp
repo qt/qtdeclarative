@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 
-#include "qv4objectproto.h"
-#include "qv4mm.h"
+#include "qv4objectproto_p.h"
+#include "qv4mm_p.h"
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>

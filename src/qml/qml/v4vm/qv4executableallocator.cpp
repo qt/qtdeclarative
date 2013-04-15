@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qv4executableallocator.h"
+#include "qv4executableallocator_p.h"
 
 #include <assert.h>
 #include <wtf/StdLibExtras.h>

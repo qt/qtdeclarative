@@ -42,7 +42,7 @@
 #ifndef QV4_LLVM_P_H
 #define QV4_LLVM_P_H
 
-#include "qv4global.h"
+#include "qv4global_p.h"
 #include "qv4jsir_p.h"
 
 #include <QtCore/QString>

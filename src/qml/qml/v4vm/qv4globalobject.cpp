@@ -39,10 +39,10 @@
 **
 ****************************************************************************/
 
-#include "qv4globalobject.h"
-#include "qv4mm.h"
-#include "qv4value.h"
-#include "qv4context.h"
+#include "qv4globalobject_p.h"
+#include "qv4mm_p.h"
+#include "qv4value_p.h"
+#include "qv4context_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>

@@ -1,8 +1,10 @@
 TEMPLATE = app
-QT = v4-private core-private qmldevtools-private
+QT = qml-private core-private
 SOURCES = main.cpp
 
-include(../../src/v4/v4.pri)
+include($$PWD/../../src/3rdparty/masm/masm-defs.pri)
+
+CONFIG += exceptions
 
 llvm-libs {
     DEFINES += QMLJS_WITH_LLVM

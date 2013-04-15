@@ -8,5 +8,5 @@ include (../../shared/util.pri)
 
 TESTDATA = data/*
 
-QT += core-private gui-private v8-private qml-private quick-private sql testlib
+QT += core-private gui-private  qml-private quick-private sql testlib
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

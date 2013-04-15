@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#include "qv4arrayobject.h"
-#include "qv4sparsearray.h"
+#include "qv4arrayobject_p.h"
+#include "qv4sparsearray_p.h"
 
 using namespace QQmlJS::VM;
 

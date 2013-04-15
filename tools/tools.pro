@@ -4,5 +4,6 @@ qtHaveModule(qmltest): SUBDIRS += qmltestrunner
 SUBDIRS += \
     qmlmin \
     qmlprofiler \
-    qmlbundle
+    qmlbundle \
+    v4
 qtHaveModule(quick):qtHaveModule(widgets): SUBDIRS += qmleasing

@@ -40,12 +40,12 @@
 ****************************************************************************/
 
 #include "qv4isel_masm_p.h"
-#include "qv4runtime.h"
-#include "qv4object.h"
-#include "qv4functionobject.h"
-#include "qv4regexpobject.h"
-#include "qv4unwindhelper.h"
-#include "qv4lookup.h"
+#include "qv4runtime_p.h"
+#include "qv4object_p.h"
+#include "qv4functionobject_p.h"
+#include "qv4regexpobject_p.h"
+#include "qv4unwindhelper_p.h"
+#include "qv4lookup_p.h"
 
 #include <assembler/LinkBuffer.h>
 #include <WTFStubs.h>

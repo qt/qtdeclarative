@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include "qv4managed.h"
-#include "qv4mm.h"
-#include "qv4errorobject.h"
+#include "qv4managed_p.h"
+#include "qv4mm_p.h"
+#include "qv4errorobject_p.h"
 
 using namespace QQmlJS::VM;
 
