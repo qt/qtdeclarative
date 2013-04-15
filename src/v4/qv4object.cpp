@@ -69,7 +69,7 @@ DEFINE_MANAGED_VTABLE(Object);
 Object::Object(ExecutionEngine *engine)
     : prototype(0)
     , internalClass(engine->emptyClass)
-    , memberDataAlloc(0), memberData(0)
+    , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
     , externalResource(0)
 {
@@ -80,7 +80,7 @@ Object::Object(ExecutionEngine *engine)
 Object::Object(ExecutionContext *context)
     : prototype(0)
     , internalClass(context->engine->emptyClass)
-    , memberDataAlloc(0), memberData(0)
+    , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
     , externalResource(0)
 {
@@ -91,7 +91,8 @@ Object::Object(ExecutionContext *context)
 Object::~Object()
 {
     delete externalResource;
-    delete [] memberData;
+    if (memberData != inlineProperties)
+        delete [] memberData;
     delete [] (arrayData - (sparseArray ? 0 : arrayOffset));
     if (arrayAttributes)
         delete [] (arrayAttributes - (sparseArray ? 0 : arrayOffset));
@@ -229,7 +230,8 @@ Property *Object::insertMember(String *s, PropertyAttributes attributes)
         memberDataAlloc = qMax((uint)8, 2*memberDataAlloc);
         Property *newMemberData = new Property[memberDataAlloc];
         memcpy(newMemberData, memberData, sizeof(Property)*idx);
-        delete [] memberData;
+        if (memberData != inlineProperties)
+            delete [] memberData;
         memberData = newMemberData;
     }
     return memberData + idx;

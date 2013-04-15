@@ -124,6 +124,11 @@ struct Q_V4_EXPORT Object: Managed {
     SparseArray *sparseArray;
     ExternalResource *externalResource;
 
+    enum {
+        InlinePropertySize = 4
+    };
+    Property inlineProperties[InlinePropertySize];
+
     Object(ExecutionEngine *engine);
     Object(ExecutionContext *context);
     ~Object();
