@@ -120,7 +120,7 @@ private:
 
 protected:
     Managed()
-        : vtbl(&static_vtbl), _data(0)
+        : _data(0), vtbl(&static_vtbl)
     { inUse = 1; extensible = 1; }
 
 public:
@@ -210,12 +210,6 @@ public:
         return type;
     }
 
-protected:
-
-    static const ManagedVTable static_vtbl;
-
-    const ManagedVTable *vtbl;
-
     union {
         uint _data;
         struct {
@@ -233,6 +227,12 @@ protected:
             uint unused : 15;
         };
     };
+
+protected:
+
+    static const ManagedVTable static_vtbl;
+
+    const ManagedVTable *vtbl;
 
 private:
     friend class MemoryManager;
