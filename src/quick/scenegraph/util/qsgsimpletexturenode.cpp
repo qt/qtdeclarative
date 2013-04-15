@@ -41,18 +41,44 @@
 
 
 #include "qsgsimpletexturenode.h"
+#include <private/qsgnode_p.h>
 
 QT_BEGIN_NAMESPACE
 
+class QSGSimpleTextureNodePrivate : public QSGGeometryNodePrivate
+{
+public:
+    QSGSimpleTextureNodePrivate()
+        : QSGGeometryNodePrivate()
+        , m_texCoordMode(QSGSimpleTextureNode::NoTransform)
+    {}
+
+    QSGSimpleTextureNode::TextureCoordinatesTransformMode m_texCoordMode;
+};
+
 static void qsgsimpletexturenode_update(QSGGeometry *g,
                                         QSGTexture *texture,
-                                        const QRectF &rect)
+                                        const QRectF &rect,
+                                        QSGSimpleTextureNode::TextureCoordinatesTransformMode texCoordMode)
 {
     if (!texture)
         return;
 
     QSize ts = texture->textureSize();
     QRectF sourceRect(0, 0, ts.width(), ts.height());
+
+    // Maybe transform the texture coordinates
+    if (texCoordMode.testFlag(QSGSimpleTextureNode::MirrorHorizontally)) {
+        float tmp = sourceRect.left();
+        sourceRect.setLeft(sourceRect.right());
+        sourceRect.setRight(tmp);
+    }
+    if (texCoordMode.testFlag(QSGSimpleTextureNode::MirrorVertically)) {
+        float tmp = sourceRect.top();
+        sourceRect.setTop(sourceRect.bottom());
+        sourceRect.setBottom(tmp);
+    }
+
     QSGGeometry::updateTexturedRectGeometry(g, rect, texture->convertToNormalizedSourceRect(sourceRect));
 }
 
@@ -71,7 +97,8 @@ static void qsgsimpletexturenode_update(QSGGeometry *g,
     Constructs a new simple texture node
  */
 QSGSimpleTextureNode::QSGSimpleTextureNode()
-    : m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
+    : QSGGeometryNode(*new QSGSimpleTextureNodePrivate)
+    , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
 {
     setGeometry(&m_geometry);
     setMaterial(&m_material);
@@ -112,7 +139,8 @@ void QSGSimpleTextureNode::setRect(const QRectF &r)
     if (m_rect == r)
         return;
     m_rect = r;
-    qsgsimpletexturenode_update(&m_geometry, texture(), m_rect);
+    Q_D(QSGSimpleTextureNode);
+    qsgsimpletexturenode_update(&m_geometry, texture(), m_rect, d->m_texCoordMode);
     markDirty(DirtyGeometry);
 }
 
@@ -144,7 +172,8 @@ void QSGSimpleTextureNode::setTexture(QSGTexture *texture)
         return;
     m_material.setTexture(texture);
     m_opaque_material.setTexture(texture);
-    qsgsimpletexturenode_update(&m_geometry, texture, m_rect);
+    Q_D(QSGSimpleTextureNode);
+    qsgsimpletexturenode_update(&m_geometry, texture, m_rect, d->m_texCoordMode);
     markDirty(DirtyMaterial);
 }
 
@@ -156,6 +185,50 @@ void QSGSimpleTextureNode::setTexture(QSGTexture *texture)
 QSGTexture *QSGSimpleTextureNode::texture() const
 {
     return m_material.texture();
+}
+
+/*!
+    \enum QSGSimpleTextureNode::TextureCoordinatesTransformFlag
+
+    The TextureCoordinatesTransformFlag enum is used to specify the
+    mode used to generate texture coordinates for a textured quad.
+
+    \value NoTransform          Texture coordinates are oriented with window coordinates
+                                i.e. with origin at top-left.
+
+    \value MirrorHorizontally   Texture coordinates are inverted in the horizontal axis with
+                                respect to window coordinates
+
+    \value MirrorVertically     Texture coordinates are inverted in the vertical axis with
+                                respect to window coordinates
+ */
+
+/*!
+    Sets the method used to generate texture coordinates to \a mode. This can be used to obtain
+    correct orientation of the texture. This is commonly needed when using a third party OpenGL
+    library to render to texture as OpenGL has an inverted y-axis relative to Qt Quick.
+
+    \sa textureCoordinatesTransform()
+ */
+void QSGSimpleTextureNode::setTextureCoordinatesTransform(QSGSimpleTextureNode::TextureCoordinatesTransformMode mode)
+{
+    Q_D(QSGSimpleTextureNode);
+    if (d->m_texCoordMode == mode)
+        return;
+    d->m_texCoordMode = mode;
+    qsgsimpletexturenode_update(&m_geometry, texture(), m_rect, d->m_texCoordMode);
+    markDirty(DirtyMaterial);
+}
+
+/*!
+    Returns the mode used to generate texture coordinates for this node.
+
+    \sa setTextureCoordinatesTransform()
+ */
+QSGSimpleTextureNode::TextureCoordinatesTransformMode QSGSimpleTextureNode::textureCoordinatesTransform() const
+{
+    Q_D(const QSGSimpleTextureNode);
+    return d->m_texCoordMode;
 }
 
 QT_END_NAMESPACE
