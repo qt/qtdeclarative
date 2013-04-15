@@ -74,7 +74,7 @@ struct MemoryManager::Data
     ExecutionEngine *engine;
     quintptr *stackTop;
 
-    enum { MaxItemSize = 256 };
+    enum { MaxItemSize = 512 };
     Managed *smallItems[MaxItemSize/16];
     uint nChunks[MaxItemSize/16];
     uint availableItems[MaxItemSize/16];
