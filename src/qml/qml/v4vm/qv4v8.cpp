@@ -2002,14 +2002,12 @@ bool V8::Dispose()
 
 bool V8::IdleNotification(int hint)
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return true;
 }
 
 void V8::LowMemoryNotification()
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    currentEngine()->memoryManager->runGC();
 }
 
 
