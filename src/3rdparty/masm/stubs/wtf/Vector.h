@@ -99,7 +99,7 @@ public:
     { this->erase(this->std::vector<T>::begin() + size, this->std::vector<T>::end()); }
 
     inline void shrinkToFit()
-    { this->shrink_to_fit(); }
+    { this->shrink(this->size()); }
 
     inline void remove(size_t position)
     { this->erase(this->std::vector<T>::begin() + position); }
