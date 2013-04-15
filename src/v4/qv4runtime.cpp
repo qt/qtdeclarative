@@ -462,16 +462,6 @@ Value __qmljs_string_from_number(ExecutionContext *ctx, double number)
     return Value::fromString(string);
 }
 
-Bool __qmljs_string_compare(String *left, String *right)
-{
-    return left->toQString() < right->toQString();
-}
-
-Bool __qmljs_string_equal(String *left, String *right)
-{
-    return left->isEqualTo(right);
-}
-
 String *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *second)
 {
     const QString &a = first->toQString();
@@ -806,7 +796,7 @@ Bool __qmljs_strict_equal(const Value &x, const Value &y)
     if (x.type() != y.type())
         return false;
     if (x.isString())
-        return __qmljs_string_equal(x.stringValue(), y.stringValue());
+        return x.stringValue()->isEqualTo(y.stringValue());
     if (x.isObject() && x.objectValue()->externalComparison && y.objectValue()->externalComparison)
         return x.objectValue()->internalClass->engine->externalResourceComparison(x, y);
     return false;

@@ -155,8 +155,6 @@ VM::Function *__qmljs_register_function(ExecutionContext *ctx, String *name,
 // strings
 double __qmljs_string_to_number(const String *string);
 Value __qmljs_string_from_number(ExecutionContext *ctx, double number);
-Bool __qmljs_string_compare(String *left, String *right);
-Bool __qmljs_string_equal(String *left, String *right);
 String *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *second);
 
 // objects
@@ -280,7 +278,7 @@ Bool __qmljs_cmp_lt(ExecutionContext *, const Value &left, const Value &right);
 Bool __qmljs_cmp_ge(ExecutionContext *, const Value &left, const Value &right);
 Bool __qmljs_cmp_le(ExecutionContext *, const Value &left, const Value &right);
 Bool __qmljs_cmp_eq(ExecutionContext *, const Value &left, const Value &right);
-Bool __qmljs_cmp_ne(ExecutionContext *ctx, const Value &left, const Value &right);
+Bool __qmljs_cmp_ne(ExecutionContext *, const Value &left, const Value &right);
 Bool __qmljs_cmp_se(ExecutionContext *, const Value &left, const Value &right);
 Bool __qmljs_cmp_sne(ExecutionContext *, const Value &left, const Value &right);
 Bool __qmljs_cmp_instanceof(ExecutionContext *ctx, const Value &left, const Value &right);
@@ -615,7 +613,7 @@ inline Bool __qmljs_cmp_gt(ExecutionContext *, const Value &left, const Value &r
     if (Value::bothDouble(l, r)) {
         return l.doubleValue() > r.doubleValue();
     } else if (l.isString() && r.isString()) {
-        return __qmljs_string_compare(r.stringValue(), l.stringValue());
+        return r.stringValue()->compare(l.stringValue());
     } else {
         double dl = __qmljs_to_number(l);
         double dr = __qmljs_to_number(r);
@@ -635,7 +633,7 @@ inline Bool __qmljs_cmp_lt(ExecutionContext *, const Value &left, const Value &r
     if (Value::bothDouble(l, r)) {
         return l.doubleValue() < r.doubleValue();
     } else if (l.isString() && r.isString()) {
-        return __qmljs_string_compare(l.stringValue(), r.stringValue());
+        return l.stringValue()->compare(r.stringValue());
     } else {
         double dl = __qmljs_to_number(l);
         double dr = __qmljs_to_number(r);
@@ -655,7 +653,7 @@ inline Bool __qmljs_cmp_ge(ExecutionContext *, const Value &left, const Value &r
     if (Value::bothDouble(l, r)) {
         return l.doubleValue() >= r.doubleValue();
     } else if (l.isString() && r.isString()) {
-        return !__qmljs_string_compare(l.stringValue(), r.stringValue());
+        return !l.stringValue()->compare(r.stringValue());
     } else {
         double dl = __qmljs_to_number(l);
         double dr = __qmljs_to_number(r);
@@ -675,7 +673,7 @@ inline Bool __qmljs_cmp_le(ExecutionContext *, const Value &left, const Value &r
     if (Value::bothDouble(l, r)) {
         return l.doubleValue() <= r.doubleValue();
     } else if (l.isString() && r.isString()) {
-        return !__qmljs_string_compare(r.stringValue(), l.stringValue());
+        return !r.stringValue()->compare(l.stringValue());
     } else {
         double dl = __qmljs_to_number(l);
         double dr = __qmljs_to_number(r);
@@ -693,16 +691,16 @@ inline Bool __qmljs_cmp_eq(ExecutionContext *, const Value &left, const Value &r
     if (left.val == right.val)
         return true;
     if (left.isString() && right.isString())
-        return __qmljs_string_equal(left.stringValue(), right.stringValue());
+        return left.stringValue()->isEqualTo(right.stringValue());
 
     return __qmljs_equal(left, right);
 }
 
-inline Bool __qmljs_cmp_ne(ExecutionContext *ctx, const Value &left, const Value &right)
+inline Bool __qmljs_cmp_ne(ExecutionContext *, const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    return !__qmljs_cmp_eq(ctx, left, right);
+    return !__qmljs_cmp_eq(0, left, right);
 }
 
 inline Bool __qmljs_cmp_se(ExecutionContext *, const Value &left, const Value &right)

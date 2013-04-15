@@ -76,6 +76,9 @@ struct String : public Managed {
 
         return toQString() == other->toQString();
     }
+    inline bool compare(const String *other) {
+        return toQString() < other->toQString();
+    }
 
     inline const QString &toQString() const {
         return _text;
