@@ -364,7 +364,7 @@ Value ScriptFunction::construct(Managed *that, ExecutionContext *context, Value 
     quintptr stackSpace[stackContextSize/sizeof(quintptr)];
     ExecutionContext *ctx = context->engine->newCallContext(stackSpace, f, Value::fromObject(obj), args, argc);
 
-    Value result = Value::undefinedValue();
+    Value result;
     try {
         result = f->function->code(ctx, f->function->codeData);
     } catch (Exception &ex) {
@@ -393,7 +393,7 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
         }
     }
 
-    Value result = Value::undefinedValue();
+    Value result;
     try {
         result = f->function->code(ctx, f->function->codeData);
     } catch (Exception &ex) {
