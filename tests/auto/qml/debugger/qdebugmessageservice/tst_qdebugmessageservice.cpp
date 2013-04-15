@@ -48,7 +48,7 @@
 #include <QtCore/QString>
 #include <QtTest/QtTest>
 
-const char *NORMALMODE = "-qmljsdebugger=port:3777,block";
+const char *NORMALMODE = "-qmljsdebugger=port:3777,3787,block";
 const char *QMLFILE = "test.qml";
 
 class QQmlDebugMsgClient;
@@ -186,7 +186,8 @@ void tst_QDebugMessageService::init()
     QVERIFY2(m_process->waitForSessionStart(),
              "Could not launch application, or did not get 'Waiting for connection'.");
 
-    m_connection->connectToHost("127.0.0.1", 3777);
+    const int port = m_process->debugPort();
+    m_connection->connectToHost("127.0.0.1", port);
     QVERIFY(m_connection->waitForConnected());
 
     if (m_client->state() != QQmlDebugClient::Enabled)
