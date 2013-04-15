@@ -34,6 +34,10 @@
 #include <wtf/Vector.h>
 #include <stdint.h>
 
+#if OS(IOS)
+#include <libkern/OSCacheControl.h>
+#endif
+
 namespace JSC {
 
 namespace ARMRegisters {

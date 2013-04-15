@@ -448,7 +448,7 @@
 #define WTF_PLATFORM_MAC 1
 #elif OS(WINDOWS)
 #define WTF_PLATFORM_WIN 1
-#endif
+#else
 
 /* PLATFORM(IOS) */
 /* FIXME: this is sometimes used as an OS switch and sometimes for higher-level things */
@@ -460,6 +460,7 @@
 #if defined(TARGET_IPHONE_SIMULATOR) && TARGET_IPHONE_SIMULATOR
 #define WTF_PLATFORM_IOS 1
 #define WTF_PLATFORM_IOS_SIMULATOR 1
+#endif
 #endif
 
 /* Graphics engines */
