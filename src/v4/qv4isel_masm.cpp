@@ -824,8 +824,12 @@ void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4
 
 void InstructionSelection::loadThisObject(V4IR::Temp *temp)
 {
+#if defined(VALUE_FITS_IN_REGISTER)
     _as->loadPtr(Pointer(Assembler::ContextRegister, offsetof(ExecutionContext, thisObject)), Assembler::ReturnValueRegister);
     _as->storeArgument(Assembler::ReturnValueRegister, temp);
+#else
+    _as->copyValue(temp, Pointer(Assembler::ContextRegister, offsetof(ExecutionContext, thisObject)));
+#endif
 }
 
 void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
