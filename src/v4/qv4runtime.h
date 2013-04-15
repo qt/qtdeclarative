@@ -122,12 +122,12 @@ void __qmljs_builtin_typeof_name(ExecutionContext *context, Value* result, Strin
 void __qmljs_builtin_typeof_member(ExecutionContext* context, Value* result, const Value &base, String *name);
 void __qmljs_builtin_typeof_element(ExecutionContext* context, Value *result, const Value &base, const Value &index);
 
-void __qmljs_builtin_post_increment(ExecutionContext *ctx, Value *result, Value *val);
+void __qmljs_builtin_post_increment(Value *result, Value *val);
 void __qmljs_builtin_post_increment_name(ExecutionContext *context, Value *result, String *name);
 void __qmljs_builtin_post_increment_member(ExecutionContext *context, Value *result, const Value &base, String *name);
 void __qmljs_builtin_post_increment_element(ExecutionContext *context, Value *result, const Value &base, const Value *index);
 
-void __qmljs_builtin_post_decrement(ExecutionContext *ctx, Value *result, Value *val);
+void __qmljs_builtin_post_decrement(Value *result, Value *val);
 void __qmljs_builtin_post_decrement_name(ExecutionContext *context, Value *result, String *name);
 void __qmljs_builtin_post_decrement_member(ExecutionContext *context, Value *result, const Value &base, String *name);
 void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *result, const Value &base, const Value &index);

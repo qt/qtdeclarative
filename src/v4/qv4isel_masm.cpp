@@ -684,7 +684,7 @@ void InstructionSelection::callBuiltinPostIncrementName(const QString &name, V4I
 
 void InstructionSelection::callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment, Assembler::ContextRegister,
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment,
                          Assembler::PointerToValue(result), Assembler::PointerToValue(value));
 }
 
@@ -709,7 +709,7 @@ void InstructionSelection::callBuiltinPostDecrementName(const QString &name, V4I
 
 void InstructionSelection::callBuiltinPostDecrementValue(V4IR::Temp *value, V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement, Assembler::ContextRegister,
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement,
                          Assembler::PointerToValue(result), Assembler::PointerToValue(value));
 }
 

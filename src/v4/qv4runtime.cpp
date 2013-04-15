@@ -1066,7 +1066,7 @@ void __qmljs_builtin_typeof_element(ExecutionContext *context, Value *result, co
         *result = res;
 }
 
-void __qmljs_builtin_post_increment(ExecutionContext *ctx, Value *result, Value *val)
+void __qmljs_builtin_post_increment(Value *result, Value *val)
 {
     if (val->isInteger() && val->integerValue() < INT_MAX) {
         if (result)
@@ -1146,7 +1146,7 @@ void __qmljs_builtin_post_increment_element(ExecutionContext *context, Value *re
     o->putIndexed(context, idx, v);
 }
 
-void __qmljs_builtin_post_decrement(ExecutionContext *ctx, Value *result, Value *val)
+void __qmljs_builtin_post_decrement(Value *result, Value *val)
 {
     if (val->isInteger() && val->integerValue() > INT_MIN) {
         if (result)

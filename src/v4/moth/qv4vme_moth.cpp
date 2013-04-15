@@ -397,7 +397,7 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallBuiltinTypeofName)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncValue)
-        __qmljs_builtin_post_increment(context, VALUEPTR(instr.result), VALUEPTR(instr.value));
+        __qmljs_builtin_post_increment(VALUEPTR(instr.result), VALUEPTR(instr.value));
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecMember)
@@ -413,7 +413,7 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallBuiltinTypeofName)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecValue)
-        __qmljs_builtin_post_decrement(context, VALUEPTR(instr.result), VALUEPTR(instr.value));
+        __qmljs_builtin_post_decrement(VALUEPTR(instr.result), VALUEPTR(instr.value));
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeclareVar)
