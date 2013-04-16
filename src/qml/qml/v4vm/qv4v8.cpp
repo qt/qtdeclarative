@@ -281,6 +281,7 @@ Local<Value> Script::Run(Handle<Object> qml)
     } catch (VM::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
+        return Local<Value>();
     }
     return Local<Value>::New(Value::fromVmValue(result));
 }
@@ -842,6 +843,7 @@ Local<Value> Object::Get(Handle<Value> key)
     } catch (VM::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
+        return Local<Value>();
     }
     return Local<Value>::New(Value::fromVmValue(prop));
 }
@@ -857,6 +859,7 @@ Local<Value> Object::Get(uint32_t key)
     } catch (VM::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
+        return Local<Value>();
     }
     return Local<Value>::New(Value::fromVmValue(prop));
 }
@@ -1049,10 +1052,17 @@ Local<Value> Object::CallAsFunction(Handle<Object> recv, int argc, Handle<Value>
     VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     if (!f)
         return Local<Value>();
-    VM::Value retval = f->call(currentEngine()->current, recv->vmValue(),
-                               reinterpret_cast<QQmlJS::VM::Value*>(argv),
-                               argc);
-    return Local<Value>::New(Value::fromVmValue(retval));
+    ExecutionContext *context = currentEngine()->current;
+    try {
+        VM::Value retval = f->call(context, recv->vmValue(),
+                                   reinterpret_cast<QQmlJS::VM::Value*>(argv),
+                                   argc);
+        return Local<Value>::New(Value::fromVmValue(retval));
+    } catch (VM::Exception &e) {
+        Isolate::GetCurrent()->setException(e.value());
+        e.accept(context);
+    }
+    return Local<Object>();
 }
 
 Local<Value> Object::CallAsConstructor(int argc, Handle<Value> argv[])
@@ -1060,10 +1070,17 @@ Local<Value> Object::CallAsConstructor(int argc, Handle<Value> argv[])
     VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     if (!f)
         return Local<Value>();
-    VM::Value retval = f->construct(currentEngine()->current,
-                                    reinterpret_cast<QQmlJS::VM::Value*>(argv),
-                                    argc);
-    return Local<Value>::New(Value::fromVmValue(retval));
+    ExecutionContext *context = currentEngine()->current;
+    try {
+        VM::Value retval = f->construct(context,
+                                        reinterpret_cast<QQmlJS::VM::Value*>(argv),
+                                        argc);
+        return Local<Value>::New(Value::fromVmValue(retval));
+    } catch (VM::Exception &e) {
+        Isolate::GetCurrent()->setException(e.value());
+        e.accept(context);
+    }
+    return Local<Object>();
 }
 
 Local<Object> Object::New()
@@ -1114,6 +1131,7 @@ Local<Object> Function::NewInstance() const
     } catch (VM::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
+        return Local<Object>();
     }
     return Local<Object>::New(Value::fromVmValue(result));
 }
@@ -1129,6 +1147,7 @@ Local<Object> Function::NewInstance(int argc, Handle<Value> argv[]) const
     } catch (VM::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
+        return Local<Object>();
     }
     return Local<Object>::New(Value::fromVmValue(result));
 }
@@ -1146,6 +1165,7 @@ Local<Value> Function::Call(Handle<Object> thisObj, int argc, Handle<Value> argv
     } catch (VM::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
+        return Local<Value>();
     }
     return Local<Value>::New(Value::fromVmValue(result));
 }
