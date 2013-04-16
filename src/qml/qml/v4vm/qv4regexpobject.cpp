@@ -233,7 +233,8 @@ Value RegExpPrototype::method_toString(SimpleCallContext *ctx)
 
     QString result = QChar('/') + r->value->pattern();
     result += QChar('/');
-    // ### 'g' option missing
+    if (r->global)
+        result += QChar('g');
     if (r->value->ignoreCase())
         result += QChar('i');
     if (r->value->multiLine())
