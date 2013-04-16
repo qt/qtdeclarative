@@ -130,6 +130,7 @@ bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::C
 MemoryManager::MemoryManager()
     : m_d(new Data(true))
     , m_contextList(0)
+    , m_persistentValues(0)
 {
     setEnableGC(true);
 #ifdef V4_USE_VALGRIND
@@ -239,6 +240,22 @@ void MemoryManager::mark()
 
     for (QHash<Managed *, uint>::const_iterator it = m_d->protectedObject.begin(); it != m_d->protectedObject.constEnd(); ++it)
         it.key()->mark();
+
+    PersistentValuePrivate *persistent = m_persistentValues;
+    PersistentValuePrivate **last = &m_persistentValues;
+    while (persistent) {
+        if (!persistent->refcount) {
+            *last = persistent->next;
+            PersistentValuePrivate *n = persistent->next;
+            delete persistent;
+            persistent = n;
+            continue;
+        }
+        if (Managed *m = persistent->value.asManaged())
+            m->mark();
+        last = &persistent->next;
+        persistent = persistent->next;
+    }
 
     // push all caller saved registers to the stack, so we can find the objects living in these registers
 #if COMPILER(MSVC)
@@ -380,6 +397,16 @@ void MemoryManager::setEnableGC(bool enableGC)
 
 MemoryManager::~MemoryManager()
 {
+    PersistentValuePrivate *persistent = m_persistentValues;
+    while (persistent) {
+        if (Managed *m = persistent->value.asManaged())
+            persistent->value = Value::undefinedValue();
+        persistent->engine = 0;
+        PersistentValuePrivate *n = persistent->next;
+        persistent->next = 0;
+        persistent = n;
+    }
+
     sweep();
 }
 

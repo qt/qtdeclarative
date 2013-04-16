@@ -136,6 +136,8 @@ private:
 protected:
     QScopedPointer<Data> m_d;
     ExecutionContext *m_contextList;
+public:
+    PersistentValuePrivate *m_persistentValues;
 };
 
 inline ExecutionContext *MemoryManager::allocContext(uint size)

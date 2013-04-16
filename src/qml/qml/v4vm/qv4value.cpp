@@ -167,45 +167,50 @@ Value Value::property(ExecutionContext *ctx, String *name) const
     return isObject() ? objectValue()->get(ctx, name) : undefinedValue();
 }
 
-PersistentValue::PersistentValue()
-    : m_memoryManager(0)
-    , m_value(Value::undefinedValue())
-{
-}
 
-PersistentValue::PersistentValue(MemoryManager *mm, const Value &val)
-    : m_memoryManager(mm)
-    , m_value(val)
+PersistentValue::PersistentValue(ExecutionEngine *e, const Value &val)
+    : d(PersistentValuePrivate::create(e, val))
 {
-    assert(mm);
-    if (Managed *m = asManaged())
-        m_memoryManager->protect(m);
 }
 
 PersistentValue::PersistentValue(const PersistentValue &other)
-    : m_memoryManager(other.m_memoryManager)
-    , m_value(other.m_value)
+    : d(other.d)
 {
-    if (Managed *m = asManaged())
-        m_memoryManager->protect(m);
+    d->ref();
 }
 
 PersistentValue &PersistentValue::operator=(const PersistentValue &other)
 {
-    if (this == &other)
+    if (d == other.d)
         return *this;
-    if (Managed *m = asManaged())
-        m_memoryManager->unprotect(m);
-    m_memoryManager = other.m_memoryManager;
-    m_value = other.m_value;
-    if (Managed *m = asManaged())
-        m_memoryManager->protect(m);
+
+    // the memory manager cleans up those with a refcount of 0
+    d->deref();
+    d = other.d;
+    d->ref();
 }
 
 PersistentValue::~PersistentValue()
 {
-    if (Managed *m = asManaged())
-        m_memoryManager->unprotect(m);
+    d->deref();
+}
+
+PersistentValuePrivate *PersistentValuePrivate::create(ExecutionEngine *e, const Value &v)
+{
+    PersistentValuePrivate *d = new PersistentValuePrivate;
+    d->engine = e;
+    d->next = e->memoryManager->m_persistentValues;
+    e->memoryManager->m_persistentValues = d;
+    d->value = v;
+    d->refcount = 1;
+}
+
+void PersistentValuePrivate::deref()
+{
+    // if engine is not 0, they are registered with the memory manager
+    // and will get cleaned up in the next gc run
+    if (!--refcount && !engine)
+        delete this;
 }
 
 
