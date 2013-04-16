@@ -6,6 +6,7 @@ HEADERS += \
     $$PWD/coreapi/qsggeometry.h \
     $$PWD/coreapi/qsgmaterial.h \
     $$PWD/coreapi/qsgnode.h \
+    $$PWD/coreapi/qsgnode_p.h \
     $$PWD/coreapi/qsgnodeupdater_p.h \
     $$PWD/coreapi/qsgrenderer_p.h \
     $$PWD/coreapi/qsgrendernode_p.h \

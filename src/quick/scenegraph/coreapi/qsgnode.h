@@ -58,6 +58,9 @@ class QSGRootNode;
 class QSGGeometryNode;
 class QSGTransformNode;
 class QSGClipNode;
+class QSGNodePrivate;
+class QSGBasicGeometryNodePrivate;
+class QSGGeometryNodePrivate;
 
 class Q_QUICK_EXPORT QSGNode
 {
@@ -149,6 +152,7 @@ public:
 
 protected:
     QSGNode(NodeType type);
+    QSGNode(QSGNodePrivate &dd, NodeType type);
 
 private:
     friend class QSGRootNode;
@@ -167,7 +171,8 @@ private:
     Flags m_nodeFlags;
     DirtyState m_dirtyState;
 
-    void *m_reserved;
+protected:
+    QScopedPointer<QSGNodePrivate> d_ptr;
 };
 
 class Q_QUICK_EXPORT QSGBasicGeometryNode : public QSGNode
@@ -184,6 +189,7 @@ public:
 
 protected:
     QSGBasicGeometryNode(NodeType type);
+    QSGBasicGeometryNode(QSGBasicGeometryNodePrivate &dd, NodeType type);
 
 private:
     friend class QSGNodeUpdater;
@@ -217,6 +223,9 @@ public:
 
     void setInheritedOpacity(qreal opacity);
     qreal inheritedOpacity() const { return m_opacity; }
+
+protected:
+    QSGGeometryNode(QSGGeometryNodePrivate &dd);
 
 private:
     friend class QSGNodeUpdater;
