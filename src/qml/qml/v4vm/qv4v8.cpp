@@ -254,6 +254,7 @@ Local<Value> Script::Run()
     } catch (VM::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
+        return Local<Value>();
     }
 
     return Local<Value>::New(Value::fromVmValue(result));
@@ -1087,6 +1088,8 @@ uint32_t Array::Length() const
 
 Local<Array> Array::New(int length)
 {
+    if (length < 0)
+        length = 0;
     VM::ArrayObject *a = currentEngine()->newArrayObject(currentEngine()->current);
     if (length < 0x1000)
         a->arrayReserve(length);
