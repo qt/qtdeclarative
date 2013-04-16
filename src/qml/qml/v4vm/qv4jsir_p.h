@@ -627,7 +627,7 @@ struct Try: Stmt {
     virtual void dump(QTextStream &out, Mode mode);
 };
 
-struct Q_V4_EXPORT Module {
+struct Q_QML_EXPORT Module {
     MemoryPool pool;
     QVector<Function *> functions;
     Function *rootFunction;

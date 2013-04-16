@@ -111,7 +111,7 @@ const ManagedVTable classname::static_vtbl =    \
 }
 
 
-struct Q_V4_EXPORT Managed
+struct Q_QML_EXPORT Managed
 {
 private:
     void *operator new(size_t);

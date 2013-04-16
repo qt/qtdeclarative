@@ -10,7 +10,7 @@
 namespace QQmlJS {
 namespace Moth {
 
-class Q_V4_EXPORT InstructionSelection:
+class Q_QML_EXPORT InstructionSelection:
         public V4IR::InstructionSelection,
         public EvalInstructionSelection
 {
@@ -147,7 +147,7 @@ private:
     uchar *_codeEnd;
 };
 
-class Q_V4_EXPORT ISelFactory: public EvalISelFactory
+class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}

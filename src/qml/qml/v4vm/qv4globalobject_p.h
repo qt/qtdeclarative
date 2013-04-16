@@ -49,7 +49,7 @@ QT_END_NAMESPACE
 namespace QQmlJS {
 namespace VM {
 
-struct Q_V4_EXPORT EvalFunction : FunctionObject
+struct Q_QML_EXPORT EvalFunction : FunctionObject
 {
     EvalFunction(ExecutionContext *scope);
     EvalFunction(ExecutionContext *scope, Object *qmlActivation);

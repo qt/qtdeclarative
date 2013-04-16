@@ -207,7 +207,7 @@ Value MathObject::method_max(SimpleCallContext *context)
     double mx = -qInf();
     for (unsigned i = 0; i < context->argumentCount; ++i) {
         double x = context->arguments[i].toNumber();
-        if (x > mx || isnan(x))
+        if (x > mx || std::isnan(x))
             mx = x;
     }
     return Value::fromDouble(mx);
@@ -219,7 +219,7 @@ Value MathObject::method_min(SimpleCallContext *context)
     for (unsigned i = 0; i < context->argumentCount; ++i) {
         double x = context->arguments[i].toNumber();
         if ((x == 0 && mx == x && copySign(1.0, x) == -1.0)
-                || (x < mx) || isnan(x)) {
+                || (x < mx) || std::isnan(x)) {
             mx = x;
         }
     }
@@ -231,12 +231,12 @@ Value MathObject::method_pow(SimpleCallContext *context)
     double x = context->argumentCount > 0 ? context->arguments[0].toNumber() : qSNaN();
     double y = context->argumentCount > 1 ? context->arguments[1].toNumber() : qSNaN();
 
-    if (isnan(y))
+    if (std::isnan(y))
         return Value::fromDouble(qSNaN());
 
     if (y == 0) {
         return Value::fromDouble(1);
-    } else if (((x == 1) || (x == -1)) && isinf(y)) {
+    } else if (((x == 1) || (x == -1)) && std::isinf(y)) {
         return Value::fromDouble(qSNaN());
     } else if (((x == 0) && copySign(1.0, x) == 1.0) && (y < 0)) {
         return Value::fromDouble(qInf());

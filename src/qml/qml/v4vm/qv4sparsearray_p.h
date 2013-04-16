@@ -150,7 +150,7 @@ inline SparseArrayNode *SparseArrayNode::upperBound(uint akey)
 
 
 
-struct Q_V4_EXPORT SparseArray
+struct Q_QML_EXPORT SparseArray
 {
     SparseArray();
     ~SparseArray() {

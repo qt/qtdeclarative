@@ -276,7 +276,7 @@ Value StringPrototype::method_lastIndexOf(SimpleCallContext *context)
 
     Value posArg = context->argumentCount > 1 ? context->arguments[1] : Value::undefinedValue();
     double position = __qmljs_to_number(posArg);
-    if (isnan(position))
+    if (std::isnan(position))
         position = +qInf();
     else
         position = trunc(position);
@@ -649,10 +649,10 @@ Value StringPrototype::method_substring(SimpleCallContext *context)
     if (!endValue.isUndefined())
         end = endValue.toInteger();
 
-    if (isnan(start) || start < 0)
+    if (std::isnan(start) || start < 0)
         start = 0;
 
-    if (isnan(end) || end < 0)
+    if (std::isnan(end) || end < 0)
         end = 0;
 
     if (start > length)

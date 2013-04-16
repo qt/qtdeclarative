@@ -101,7 +101,7 @@ struct TypeErrorPrototype;
 struct URIErrorPrototype;
 
 
-struct Q_V4_EXPORT Object: Managed {
+struct Q_QML_EXPORT Object: Managed {
 
     class ExternalResource {
     public:

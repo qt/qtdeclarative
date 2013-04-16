@@ -154,9 +154,9 @@ unsigned int Value::toUInt32(double number)
 
 double Value::toInteger(double number)
 {
-    if (isnan(number))
+    if (std::isnan(number))
         return +0;
-    else if (! number || isinf(number))
+    else if (! number || std::isinf(number))
         return number;
     const double v = floor(fabs(number));
     return std::signbit(number) ? -v : v;

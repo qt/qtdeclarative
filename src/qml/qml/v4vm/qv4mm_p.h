@@ -58,7 +58,7 @@ struct ExecutionEngine;
 struct ExecutionContext;
 struct Managed;
 
-class Q_V4_EXPORT MemoryManager
+class Q_QML_EXPORT MemoryManager
 {
     MemoryManager(const MemoryManager &);
     MemoryManager &operator=(const MemoryManager&);

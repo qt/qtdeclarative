@@ -55,7 +55,7 @@ struct ExecutionEngine;
 struct DeclarativeEnvironment;
 struct Lookup;
 
-struct Q_V4_EXPORT DiagnosticMessage
+struct Q_QML_EXPORT DiagnosticMessage
 {
     enum { Error, Warning };
 

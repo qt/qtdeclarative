@@ -58,7 +58,7 @@ enum LLVMOutputType {
     LLVMOutputObject = 3 // .o
 };
 
-Q_V4_EXPORT int compileWithLLVM(IR::Module *module, const QString &fileName, LLVMOutputType outputType, int (*)(void *));
+Q_QML_EXPORT int compileWithLLVM(IR::Module *module, const QString &fileName, LLVMOutputType outputType, int (*)(void *));
 
 } // QQmlJS
 

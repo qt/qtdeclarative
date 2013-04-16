@@ -47,6 +47,7 @@
 #include "qv4isel_util_p.h"
 #include "qv4object_p.h"
 #include "qv4runtime_p.h"
+#include "qv4lookup_p.h"
 
 #include <QtCore/QHash>
 #include <config.h>
@@ -760,7 +761,7 @@ private:
     VM::ExecutionEngine *_engine;
 };
 
-class Q_V4_EXPORT InstructionSelection:
+class Q_QML_EXPORT InstructionSelection:
         protected V4IR::InstructionSelection,
         public EvalInstructionSelection
 {
@@ -880,7 +881,7 @@ private:
     QSet<V4IR::BasicBlock*> _reentryBlocks;
 };
 
-class Q_V4_EXPORT ISelFactory: public EvalISelFactory
+class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}

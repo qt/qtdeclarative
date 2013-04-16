@@ -638,7 +638,7 @@ Value GlobalFunctions::method_isNaN(SimpleCallContext *context)
         return Value::fromBoolean(false);
 
     double d = v.toNumber();
-    return Value::fromBoolean(isnan(d));
+    return Value::fromBoolean(std::isnan(d));
 }
 
 /// isFinite [15.1.2.5]

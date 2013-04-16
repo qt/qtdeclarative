@@ -58,7 +58,7 @@
 #include <typeinfo>
 #include <stdlib.h>
 
-#include "../3rdparty/double-conversion/double-conversion.h"
+#include "../../../3rdparty/double-conversion/double-conversion.h"
 
 #if USE(LIBUNWIND_DEBUG)
 #include <libunwind.h>
@@ -70,7 +70,7 @@ namespace VM {
 
 QString numberToString(double num, int radix = 10)
 {
-    if (isnan(num)) {
+    if (std::isnan(num)) {
         return QStringLiteral("NaN");
     } else if (qIsInf(num)) {
         return QLatin1String(num < 0 ? "-Infinity" : "Infinity");

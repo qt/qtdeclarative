@@ -161,7 +161,7 @@ struct bases
     void *func;
 };
 
-Q_V4_EXPORT void *_Unwind_Find_FDE(void *pc, struct bases *bases)
+Q_QML_EXPORT void *_Unwind_Find_FDE(void *pc, struct bases *bases)
 {
     typedef void *(*Old_Unwind_Find_FDE)(void *pc, struct bases *bases);
     static Old_Unwind_Find_FDE oldFunction = 0;

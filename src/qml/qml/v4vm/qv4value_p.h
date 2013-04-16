@@ -62,14 +62,14 @@ struct Value;
 
 extern "C" {
 double __qmljs_to_number(const Value &value);
-Q_V4_EXPORT String *__qmljs_convert_to_string(ExecutionContext *ctx, const Value &value);
+Q_QML_EXPORT String *__qmljs_convert_to_string(ExecutionContext *ctx, const Value &value);
 Object *__qmljs_convert_to_object(ExecutionContext *ctx, const Value &value);
 }
 
 typedef uint Bool;
 
 
-struct Q_V4_EXPORT Value
+struct Q_QML_EXPORT Value
 {
     union {
         quint64 val;
@@ -385,7 +385,7 @@ inline Bool Value::toBoolean() const
     case Value::Object_Type:
         return true;
     default: // double
-        if (! doubleValue() || isnan(doubleValue()))
+        if (! doubleValue() || std::isnan(doubleValue()))
             return false;
         return true;
     }

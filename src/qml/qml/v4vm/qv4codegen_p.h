@@ -69,7 +69,7 @@ public:
     virtual void syntaxError(VM::DiagnosticMessage *message) = 0;
 };
 
-class Q_V4_EXPORT Codegen: protected AST::Visitor
+class Q_QML_EXPORT Codegen: protected AST::Visitor
 {
 public:
     Codegen(VM::ExecutionContext *ctx, bool strict);

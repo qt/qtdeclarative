@@ -55,7 +55,7 @@ struct ExecutionEngine;
 struct Function;
 } // namespace VM
 
-class Q_V4_EXPORT EvalInstructionSelection
+class Q_QML_EXPORT EvalInstructionSelection
 {
 public:
     EvalInstructionSelection(VM::ExecutionEngine *engine, V4IR::Module *module);
@@ -77,7 +77,7 @@ protected:
     bool useFastLookups;
 };
 
-class Q_V4_EXPORT EvalISelFactory
+class Q_QML_EXPORT EvalISelFactory
 {
 public:
     virtual ~EvalISelFactory() = 0;
@@ -85,7 +85,7 @@ public:
 };
 
 namespace V4IR {
-class Q_V4_EXPORT InstructionSelection: protected V4IR::StmtVisitor
+class Q_QML_EXPORT InstructionSelection: protected V4IR::StmtVisitor
 {
 public:
     virtual ~InstructionSelection() = 0;

@@ -147,7 +147,7 @@ struct Function {
     void mark();
 };
 
-struct Q_V4_EXPORT FunctionObject: Object {
+struct Q_QML_EXPORT FunctionObject: Object {
     ExecutionContext *scope;
     String *name;
     String * const *formalParameterList;

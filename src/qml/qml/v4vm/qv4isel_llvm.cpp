@@ -84,7 +84,7 @@
 
 namespace QQmlJS {
 
-Q_V4_EXPORT int compileWithLLVM(IR::Module *module, const QString &fileName, LLVMOutputType outputType, int (*exec)(void *))
+Q_QML_EXPORT int compileWithLLVM(IR::Module *module, const QString &fileName, LLVMOutputType outputType, int (*exec)(void *))
 {
     Q_ASSERT(module);
     Q_ASSERT(exec || outputType != LLVMOutputJit);

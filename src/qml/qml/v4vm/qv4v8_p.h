@@ -95,7 +95,7 @@ class MemoryManager;
 
 #include <stdint.h>
 
-#define V8EXPORT Q_V4_EXPORT
+#define V8EXPORT Q_QML_EXPORT
 
 /**
  * The v8 JavaScript engine.

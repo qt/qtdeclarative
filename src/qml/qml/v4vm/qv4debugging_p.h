@@ -109,7 +109,7 @@ struct CallInfo
     {}
 };
 
-class Q_V4_EXPORT Debugger
+class Q_QML_EXPORT Debugger
 {
 public:
     Debugger(VM::ExecutionEngine *_engine);
