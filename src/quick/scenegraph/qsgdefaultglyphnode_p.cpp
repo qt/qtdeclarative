@@ -95,7 +95,8 @@ const char *QSGTextMaskMaterialData::fragmentShader() const {
         "uniform sampler2D texture;                     \n"
         "uniform lowp vec4 color;                       \n"
         "void main() {                                  \n"
-        "    gl_FragColor = vec4(texture2D(texture, sampleCoord).rgb * color.a, 1.0); \n"
+        "    lowp vec4 glyph = texture2D(texture, sampleCoord); \n"
+        "    gl_FragColor = vec4(glyph.rgb * color.a, glyph.a); \n"
         "}";
 }
 
@@ -162,7 +163,7 @@ void QSGTextMaskMaterialData::updateState(const RenderState &state, QSGMaterial 
             state.context()->functions()->glBlendColor(c.redF(),
                                                        c.greenF(),
                                                        c.blueF(),
-                                                       1.0f);
+                                                       c.alphaF());
         }
     }
 
