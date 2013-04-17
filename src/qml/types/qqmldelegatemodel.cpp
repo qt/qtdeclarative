@@ -128,7 +128,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
     The VisualDataModel type encapsulates a model and the delegate that will
     be instantiated for items in a model.
 
-    This type is provided by QtQuick 2 for compatibility reasons. The same implementation
+    This type is provided by \c {QtQuick 2} for compatibility reasons. The same implementation
     is now primarily available as DelegateModel in the QtQml.Models module.
 
     \sa {QtQml.Models2::DelegateModel}
@@ -142,7 +142,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
     The DelegateModel type encapsulates a model and the delegate that will
     be instantiated for items in the model.
 
-    This element is also available as DelegateModel in the QtQuick module. For full details,
+    This element is also available as DelegateModel in the \c QtQuick module. For full details,
     see the \l DelegateModel documentation.
 
     The DelegateModel type encapsulates a model and the delegate that will
@@ -2183,7 +2183,7 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
     The DelegateModelGroup type provides a means to address the model data of a DelegateModel's
     delegate items, as well as sort and filter these delegate items.
 
-    This element is also available as DelegateModelGroup in the QtQuick module. For full details,
+    This element is also available as DelegateModelGroup in the \c QtQuick module. For full details,
     see the \l DelegateModelGroup documentation.
 
     \sa {QtQuick::DelegateModelGroup}

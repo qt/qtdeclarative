@@ -43,7 +43,7 @@ with QML and JavaScript within \l{qtqml-documents-topic.html}{QML documents}, an
 C++
 \li Use and invoke some C++ functionality from QML (for example, to invoke your application logic,
 use a data model implemented in C++, or call some functions in a third-party C++ library)
-\li Access functionality in the \l {Qt QML} or QtQuick C++ API (for example, to dynamically generate
+\li Access functionality in the \l {Qt QML} or \l {Qt Quick} C++ API (for example, to dynamically generate
 images using QQuickImageProvider)
 \li Implement your own \l{qtqml-typesystem-objecttypes.html}{QML object types} from C++
 \unicode{0x2014} whether for use within your own specific application, or for distribution to others

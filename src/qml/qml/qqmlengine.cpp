@@ -314,7 +314,7 @@ when the property has one of the following types:
 \li \c size - use \l{Qt::size()}{Qt.size()}
 \endlist
 
-If the QtQuick module has been imported, the following helper functions for
+If the \c QtQuick module has been imported, the following helper functions for
 creating objects of specific data types are also available for clients to use:
 \list
 \li \c color - use \l{Qt::rgba()}{Qt.rgba()}, \l{Qt::hsla()}{Qt.hsla()}, \l{Qt::darker()}{Qt.darker()}, \l{Qt::lighter()}{Qt.lighter()} or \l{Qt::tint()}{Qt.tint()}

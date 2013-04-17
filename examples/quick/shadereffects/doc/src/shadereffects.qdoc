@@ -32,7 +32,7 @@
     \ingroup qtquickexamples
 
     This example demonstrates a couple of visual effects that you can perform
-    with shaders in QtQuick 2.0
+    with shaders in \l {Qt Quick}.
 
     ShaderEffects typically operate on other types, using a ShaderEffectSource
     \snippet quick/shadereffects/shadereffects.qml source

@@ -815,8 +815,8 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     \ingroup qtquick-visual
     \brief Creates a new top-level window
 
-    The Window object creates a new top-level window for a QtQuick scene. It automatically sets up the
-    window for use with QtQuick 2.x graphical types.
+    The Window object creates a new top-level window for a Qt Quick scene. It automatically sets up the
+    window for use with \c {QtQuick 2.x} graphical types.
 
     To use this type, you will need to import the module with the following line:
     \code

@@ -1570,7 +1570,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
 /*!
     \class QQuickItem
-    \brief The QQuickItem class provides the most basic of all visual items in QtQuick.
+    \brief The QQuickItem class provides the most basic of all visual items in \l {Qt Quick}.
     \inmodule QtQuick
 
     All visual items in Qt Quick inherit from QQuickItem. Although a QQuickItem

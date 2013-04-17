@@ -67,7 +67,7 @@ The basic types supported natively in the QML language are listed below:
 \section2 Basic Types Provided By QML Modules
 
 QML modules may extend the QML language with more basic types.
-For example, the basic types provided by the QtQuick module are listed below:
+For example, the basic types provided by the \c QtQuick module are listed below:
 \annotatedlist qtquickbasictypes
 
 Currently only QML modules which are provided by Qt may provide their

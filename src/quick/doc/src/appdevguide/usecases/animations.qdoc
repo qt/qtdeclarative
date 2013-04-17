@@ -29,7 +29,7 @@
 \title Usecase - Animations In QML
 \brief Example of how to include animations in QML applications
 
-QtQuick provides the ability to animate properties. Animating properties allows property values to move through
+\l {Qt Quick} provides the ability to animate properties. Animating properties allows property values to move through
 intermediate values instead of immediately changing to the target value. To animate the position of an item, you can
 animate the properties that controle the item's position, x and y for example, so that the item's position
 changes each frame on the way to the target position.

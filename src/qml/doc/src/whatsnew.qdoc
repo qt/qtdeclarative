@@ -34,8 +34,8 @@
 The \l{Qt QML} module is new in Qt 5.0. It provides the QML engine and
 implements the QML language supporting infrastructure.
 
-(Prior to Qt 5, this functionality was provided by the QtDeclarative module, which
-has now been replaced by the new \l {Qt QML} and QtQuick C++ modules. See the
+(Prior to Qt 5, this functionality was provided by the \c QtDeclarative module, which
+has now been replaced by the new \l {Qt QML} and \l {Qt Quick} C++ modules. See the
 \l {Porting QML Applications to Qt 5} for more information.)
 
 \section2 QML Engine
@@ -72,11 +72,11 @@ has now been replaced by the new \l {Qt QML} and QtQuick C++ modules. See the
     \list
     \li QML now supports defining properties of value type basic types within QML documents.  Supported types include
         QSizeF, QPointF and QRectF as \c size, \c point and \c rect respectively.
-    \li QColor is now a value type provided by the QtQuick module.  The red, green, blue and alpha channels
+    \li QColor is now a value type provided by the \c QtQuick module.  The red, green, blue and alpha channels
         of a \l color property can be accessed via \c r, \c g, \c b and \c a properties.
     \li Factory functions for various value types have been added to the \c Qt object exposed to QML.
-        Some of those functions require the QtQuick module to be imported in order to return valid values.
-        See the QtQuick 2.0 release notes for more information about these functions.
+        Some of those functions require the \c QtQuick module to be imported in order to return valid values.
+        See the \l {Qt Quick Release Notes} for more information about these functions.
     \endlist
 \li Support for sequence types QList<int>, QList<qreal>, QList<bool>, QList<QUrl>,
     QList<QString> and QStringList has been improved. QObjects can define Q_PROPERTYs of

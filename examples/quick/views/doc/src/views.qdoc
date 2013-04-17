@@ -32,7 +32,7 @@
     \image qml-modelviews-example.png
     \ingroup qtquickexamples
 
-    This is a collection of small QML examples relating to model and view functionality. They demonstrate how to show data from a model using the QtQuick view types.
+    This is a collection of small QML examples relating to model and view functionality. They demonstrate how to show data from a model using the \l {Qt Quick} view types.
 
     \section2 GridView and PathView demonstrate usage of these types to display views.
     \snippet quick/views/gridview/gridview-example.qml 0

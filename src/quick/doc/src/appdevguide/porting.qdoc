@@ -49,7 +49,7 @@ There are very few changes in the QML language which affect the porting of exist
 
 \section1 QtQuick Module
 
-The QtQuick module has been updated to version 2.0. All QML applications should update their import
+The \c QtQuick module has been updated to version 2.0. All QML applications should update their import
 statements to use the new version:
 
 \qml
@@ -77,12 +77,12 @@ into a \c QtQuick.LocalStorage singleton type. Any code that requires the local 
 \e {QtQuick.LocalStorage} instead. See the \l {QtQuick.LocalStorage 2}{QtQuick.LocalStorage} documentation
 for examples.
 \li The \c LayoutItem type has been removed from the \c QtQuick module as it was specific to the
-Graphics View framework backend used in QtQuick 1.
+Graphics View framework backend used in \c {QtQuick 1}.
 \endlist
 
 \section2 Behavioral Changes
 
-QtQuick 2.0 includes a number of behavioral changes and you should thoroughly test your applications after
+\c {QtQuick 2.0} includes a number of behavioral changes and you should thoroughly test your applications after
 porting. These changes will not necessarily lead to run-time errors, but may break certain assumptions in your code.
 Below are the prominent changes to be aware of when porting your applications.
 
@@ -96,7 +96,7 @@ Item opacity and visibility:
     \tt {(visible && opacity > 0.0)}.
 \li Previously, if an item was in a positioner (i.e. a \l Row, \l Column, \l Grid and \l Flow)
     and the item's \c opacity changed to 0, or its \c visible value became \c false, the positioner
-    would remove the item from its layout and collapse the space for that item. In QtQuick 2.0, this
+    would remove the item from its layout and collapse the space for that item. In \c {QtQuick 2.0}, this
     now only happens when an item's \c visible is \c false; the item opacity no longer affects whether
     the item is laid out. (This is consistent with the existing behavior of ListView and GridView).
 \endlist
@@ -127,9 +127,9 @@ Other:
 
 \list
 \li The \c Qt.labs.particles module has been removed. It is replaced by the fully-fledged \l
-QtQuick.particles module which is an enormous improvement on its predecessor.
+QtQuick.Particles module which is an enormous improvement on its predecessor.
 \li The \c Qt.labs.shaders module has been removed as the \c ShaderEffectItem and \l
-ShaderEffectSource types from this module have been moved into the \l QtQuick module. Note the \c
+ShaderEffectSource types from this module have been moved into the \c QtQuick module. Note the \c
 ShaderEffectItem type has been renamed to \l ShaderEffect.
 \endlist
 
@@ -139,11 +139,11 @@ ShaderEffectItem type has been renamed to \l ShaderEffect.
 In Qt 5, all QML applications are rendered with an OpenGL scenegraph architecture rather than the
 Graphics View framework used in Qt 4. Due to the scale of this architectural change, the C++ API has
 been extensively restructured and the \c QtDeclarative module has been deprecated in favour of two
-new modules: \l {Qt QML}, which implements the QML engine and language infrastructure, and \l QtQuick,
+new modules: \l {Qt QML}, which implements the QML engine and language infrastructure, and \l {Qt Quick},
 which implements the visual canvas and scenegraph backend.
 
 All classes that were previously in the \c QtDeclarative module have been moved into the \l {Qt QML}
-and \l QtQuick modules, and their class names have been changed to reflect their new module
+and \l {Qt Quick} modules, and their class names have been changed to reflect their new module
 locations. The class name changes are as follows:
 
 \table
@@ -176,8 +176,8 @@ locations. The class name changes are as follows:
         \endlist
 \endtable
 
-To use the new \c QQml* and \c QtQuick* classes in Qt 5, link against the approprate module from
-your qmake \c .pro file. For example the following will link against both the \l {Qt QML} and QtQuick
+To use the new \c QQml* and \c QQuick* classes in Qt 5, link against the approprate module from
+your qmake \c .pro file. For example the following will link against both the \l {Qt QML} and \l {Qt Quick}
 modules:
 
 \code
@@ -191,7 +191,7 @@ Required header files can then be included:
 #include <QtQuick/QQuickView>
 \endcode
 
-(The \c QtDeclarative module is still available to developers as the \l QtQuick1 module, as
+(The \c QtDeclarative module is still available to developers as the \c {Qt Quick 1} module, as
 discussed in \l{Using the QtDeclarative module in Qt 5}{below}. However, it should not be used for
 new applications.)
 
@@ -234,12 +234,12 @@ an overview of creating QML plugins in Qt 5.
 
 \section2 QtDeclarative module in Qt 5
 
-For the purposes of porting older applications, the \c QtDeclarative module is still available in Qt
-5 but has been renamed to \c QtQuick1. Applications that required QtQuick 1 specific API (e.g.
+For the purposes of porting older applications, the \c {QtDeclarative} module is still available in Qt
+5 but has been renamed to \c {Qt Quick 1}. Applications that required Qt Quick 1 specific API (e.g.
 QDeclarativeView or QDeclarativeItem and the Graphics View integration) can use this module. Note
-that new applications should use the new \l {Qt QML} and \l QtQuick modules instead.
+that new applications should use the new \l {Qt QML} and \l {Qt Quick} modules instead.
 
-To use the \c QtQuick1 module, add “quick1” module to your qmake \c .pro file:
+To use the \c {Qt Quick 1} module, add "quick1" to your qmake \c .pro file:
 
 \code
 QT += quick1

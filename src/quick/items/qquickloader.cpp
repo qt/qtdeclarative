@@ -266,7 +266,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     \c event.accepted to \c true so that the event is not propagated to the
     parent \l Rectangle.
 
-    Since QtQuick 2.0 Loader can also load non-visual components.
+    Since \c {QtQuick 2.0}, Loader can also load non-visual components.
 
     \section2 Using a Loader within a view delegate
 
@@ -378,7 +378,7 @@ void QQuickLoader::setActive(bool newVal)
     \qmlproperty url QtQuick2::Loader::source
     This property holds the URL of the QML component to instantiate.
 
-    Since QtQuick 2.0 Loader is able to load any type of object; it
+    Since \c {QtQuick 2.0}, Loader is able to load any type of object; it
     is not restricted to Item types.
 
     To unload the currently loaded object, set this property to an empty string,
@@ -453,7 +453,7 @@ void QQuickLoader::loadFromSource()
     To unload the currently loaded object, set this property to an empty string
     or \c undefined.
 
-    Since QtQuick 2.0 Loader is able to load any type of object; it
+    Since \c {QtQuick 2.0}, Loader is able to load any type of object; it
     is not restricted to Item types.
 
     \sa source, progress
@@ -909,7 +909,7 @@ void QQuickLoaderPrivate::_q_updateSize(bool loaderGeometryChanged)
     \qmlproperty object QtQuick2::Loader::item
     This property holds the top-level object that is currently loaded.
 
-    Since QtQuick 2.0 Loader can load any object type.
+    Since \c {QtQuick 2.0}, Loader can load any object type.
 */
 QObject *QQuickLoader::item() const
 {

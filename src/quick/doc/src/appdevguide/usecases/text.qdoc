@@ -28,7 +28,7 @@
 \page qtquick-usecase-text.html
 \title Use Case - Displaying Text In QML
 \brief Example of how to display text in QML
-To display text the Text type is provided by the QtQuick module. For related uses, the \l{TextInput} and
+To display text the Text type is provided by the \l {Qt Quick} module. For related uses, the \l{TextInput} and
 \l{TextEdit} types provide editable text controls. For full HTML markup, see the \c{QtWebkit} module.
 
 \section1 Displaying and Formatting Text

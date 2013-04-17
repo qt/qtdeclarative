@@ -291,7 +291,7 @@ qmlRegisterRevision<BaseType,1>("MyTypes", 1, 1);
 \endcode
 
 This is useful when deriving from base classes provided by other authors,
-e.g. when extending classes from the QtQuick library.
+e.g. when extending classes from the Qt Quick module.
 
 
 \section1 Defining QML-Specific Types and Attributes
@@ -677,11 +677,11 @@ to be declared for an item without explicitly assigning them to the
 
 \section2 Defining Visual Items with the QtQuick Module
 
-When building user interfaces with the QtQuick module, all QML objects that are
+When building user interfaces with the \l {Qt Quick} module, all QML objects that are
 to be visually rendered must derive from the \l Item type, as it is the base
-type for all visual objects in the QtQuick module. This \l Item type is
+type for all visual objects in \l {Qt Quick}. This \l Item type is
 implemented by the QQuickItem C++ class, which is provided as part of the
-QtQuick C++ module. Therefore, this class should be subclassed when it is
+\l {Qt Quick} C++ module. Therefore, this class should be subclassed when it is
 necessary to implement a visual type in C++ that can be integrated into a
 QML-based user interface.
 

@@ -143,8 +143,8 @@ conversion.
 
 If you must expose a QVariantMap to QML, use a "var" property rather than a "variant"
 property.  In general, "property var" should be considered to be superior to
-"property variant" for every use-case in QtQuick 2.0 (note that "property variant"
-is marked as obsolete in the QtQuick 2.0 documentation), as it allows a true JavaScript
+"property variant" for every use-case in Qt Quick 2 (note that "property variant"
+is marked as obsolete in the Qt Quick 2 documentation), as it allows a true JavaScript
 reference to be stored (which can reduce the number of conversions required in certain
 expressions).
 
@@ -525,7 +525,7 @@ will have a negative impact on performance.
 \section2 Other JavaScript Objects
 
 Different JavaScript engines provide different optimizations.  The JavaScript engine
-which QtQuick 2 uses is optimized for object instantiation and property lookup, but
+which \l {Qt Quick}{Qt Quick 2} uses is optimized for object instantiation and property lookup, but
 the optimizations which it provides relies on certain criteria.  If your application
 does not meet the criteria, the JavaScript engine falls back to a "slow-path" mode
 with much worse performance.  As such, always try to ensure you meet the following
@@ -698,7 +698,7 @@ an application already uses one.
 
 \section3 Don't Use Dynamic Roles
 
-The ListModel element in QtQuick 2.0 is much more performant than in QtQuick 1.0.  The
+The ListModel element in \c {QtQuick 2.0} is much more performant than in \c {QtQuick 1.0}.  The
 performance improvements mainly come from assumptions about the type of roles within each
 element in a given model - if the type doesn't change, the caching performance improves
 dramatically.  If the type can change dynamically from element to element, this optimization
@@ -739,7 +739,7 @@ cause reduced frame rate when scrolling.
 
 \section1 Visual Effects
 
-QtQuick 2 includes several features which allow developers and designers to create
+\l {Qt Quick}{Qt Quick 2} includes several features which allow developers and designers to create
 exceptionally appealing user interfaces.  Fluidity and dynamic transitions as well
 as visual effects can be used to great effect in an application, but some care must
 be taken when using some of the features in QML as they can have performance implications.
@@ -759,7 +759,7 @@ thread (and therefore can cause frames to be skipped if they take too long to co
 
 \section2 Particles
 
-The QtQuick 2.0 Particles module allows beautiful particle effects to be integrated
+The \l {QtQuick.Particles 2}{Qt Quick 2.0 Particles} module allows beautiful particle effects to be integrated
 seamlessly into user interfaces.  However every platform has different graphics hardware
 capabilities, and the Particles module is unable to limit parameters to what your hardware
 can gracefully support.  The more particles you attempt to render (and the larger they are),
@@ -834,7 +834,7 @@ See the upcoming section on Rendering for more information on active but invisib
 
 \section1 Rendering
 
-The scene graph used for rendering in QtQuick 2.0 allows highly dynamic, animated user
+The scene graph used for rendering in \c {QtQuick 2.0} allows highly dynamic, animated user
 interfaces to be rendered fluidly at 60 FPS.  There are some things which can
 dramatically decrease rendering performance, however, and developers should be careful
 to avoid these pitfalls wherever possible.
@@ -867,7 +867,7 @@ any animations or bindings evaluation since they are still active).
 
 The scene graph renderer is able to batch up certain operations to minimise the number of
 OpenGL state changes required.  However, this optimization is only possible for the
-built-in layout elements provided by QtQuick 2.0, and cannot be applied to manual layouts.
+built-in layout elements provided by \c {QtQuick 2.0}, and cannot be applied to manual layouts.
 
 Therefore, application developers should use the Row, Column, Grid, GridView and ListView
 elements instead of manual layouts wherever possible.
