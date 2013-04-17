@@ -70,7 +70,7 @@ public:
 
     inline void append(const Vector<T>& vector)
     {
-        this->insert(this->std::vector<T>::end(), vector.std::vector<T>::begin(), vector.std::vector<T>::end());
+        this->insert(this->std::vector<T>::end(), vector.std::template vector<T>::begin(), vector.std::template vector<T>::end());
     }
 
     inline void append(const T* ptr, size_t count)
