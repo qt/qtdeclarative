@@ -80,6 +80,12 @@ struct Q_AUTOTEST_EXPORT QQmlProfilerData
     int animationcount; //used by animation events, also as "cache/reference count" for pixmaps
     int bindingType;
 
+    qint64 subtime_1;
+    qint64 subtime_2;
+    qint64 subtime_3;
+    qint64 subtime_4;
+    qint64 subtime_5;
+
     QByteArray toByteArray() const;
 };
 
@@ -100,6 +106,7 @@ public:
         RangeEnd,
         Complete, // end of transmission
         PixmapCacheEvent,
+        SceneGraphFrame,
 
         MaximumMessage
     };
@@ -144,14 +151,32 @@ public:
         MaximumPixmapEventType
     };
 
+    enum SceneGraphFrameType {
+        SceneGraphRendererFrame,
+        SceneGraphAdaptationLayerFrame,
+        SceneGraphContextFrame,
+        SceneGraphRenderLoopFrame,
+        SceneGraphTexturePrepare,
+        SceneGraphTextureDeletion,
+        SceneGraphPolishAndSync,
+        SceneGraphWindowsRenderShow,
+        SceneGraphWindowsAnimations,
+        SceneGraphWindowsPolishFrame,
+
+        MaximumSceneGraphFrameType
+    };
+
     static void initialize();
 
     static bool startProfiling();
     static bool stopProfiling();
     static void sendStartedProfilingMessage();
+    static bool profilingEnabled();
+
     static void addEvent(EventType);
     static void animationFrame(qint64);
 
+    static void sceneGraphFrame(SceneGraphFrameType frameType, qint64 value1, qint64 value2 = -1, qint64 value3 = -1, qint64 value4 = -1, qint64 value5 = -1);
     static void sendProfilingData();
 
     QQmlProfilerService();
@@ -180,14 +205,17 @@ private:
     void pixmapEventImpl(PixmapEventType eventType, const QUrl &url, int width, int height);
     void pixmapEventImpl(PixmapEventType eventType, const QUrl &url, int count);
 
-    bool profilingEnabled();
+    void sceneGraphFrameImpl(SceneGraphFrameType frameType, qint64 value1, qint64 value2, qint64 value3, qint64 value4, qint64 value5);
+
+
     void setProfilingEnabled(bool enable);
     void sendMessages();
     void processMessage(const QQmlProfilerData &);
 
+public:
+    static bool enabled;
 private:
     QElapsedTimer m_timer;
-    bool m_enabled;
     QVector<QQmlProfilerData> m_data;
     QMutex m_dataMutex;
     QMutex m_initializeMutex;

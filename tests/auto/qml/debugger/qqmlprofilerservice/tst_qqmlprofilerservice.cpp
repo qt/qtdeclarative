@@ -78,6 +78,7 @@ public:
         RangeEnd,
         Complete, // end of transmission
         PixmapCacheEvent,
+        SceneGraphFrame,
 
         MaximumMessage
     };
@@ -114,6 +115,21 @@ public:
         MaximumPixmapEventType
     };
 
+    enum SceneGraphFrameType {
+        SceneGraphRendererFrame,
+        SceneGraphAdaptationLayerFrame,
+        SceneGraphContextFrame,
+        SceneGraphRenderLoopFrame,
+        SceneGraphTexturePrepare,
+        SceneGraphTextureDeletion,
+        SceneGraphPolishAndSync,
+        SceneGraphWindowsRenderShow,
+        SceneGraphWindowsAnimations,
+        SceneGraphWindowsPolishFrame,
+
+        MaximumSceneGraphFrameType
+    };
+
     QQmlProfilerClient(QQmlDebugConnection *connection)
         : QQmlDebugClient(QLatin1String("CanvasFrameRate"), connection)
     {
@@ -147,6 +163,7 @@ public:
     {
     }
 
+
 private:
     QQmlDebugProcess *m_process;
     QQmlDebugConnection *m_connection;
@@ -161,6 +178,7 @@ private slots:
     void blockingConnectWithTraceDisabled();
     void nonBlockingConnect();
     void pixmapCacheData();
+    void scenegraphData();
     void profileOnExit();
 };
 
@@ -240,6 +258,34 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
             stream >> data.animationcount;
         if (data.detailType == QQmlProfilerClient::PixmapCacheCountChanged)
             stream >> data.animationcount;
+        break;
+    }
+    case QQmlProfilerClient::SceneGraphFrame: {
+        stream >> data.detailType;
+        qint64 subtime_1, subtime_2, subtime_3, subtime_4, subtime_5;
+        int glyphCount;
+        switch (data.detailType) {
+        // RendererFrame: preprocessTime, updateTime, bindingTime, renderTime
+        case QQmlProfilerClient::SceneGraphRendererFrame: stream >> subtime_1 >> subtime_2 >> subtime_3 >> subtime_4; break;
+            // AdaptationLayerFrame: glyphCount, glyphRenderTime, glyphStoreTime
+        case QQmlProfilerClient::SceneGraphAdaptationLayerFrame: stream >> glyphCount >> subtime_2 >> subtime_3; break;
+            // ContextFrame: compiling material time
+        case QQmlProfilerClient::SceneGraphContextFrame: stream >> subtime_1; break;
+            // RenderLoop: syncTime, renderTime, swapTime
+        case QQmlProfilerClient::SceneGraphRenderLoopFrame: stream >> subtime_1 >> subtime_2 >> subtime_3; break;
+            // TexturePrepare: bind, convert, swizzle, upload, mipmap
+        case QQmlProfilerClient::SceneGraphTexturePrepare: stream >> subtime_1 >> subtime_2 >> subtime_3 >> subtime_4 >> subtime_5; break;
+            // TextureDeletion: deletionTime
+        case QQmlProfilerClient::SceneGraphTextureDeletion: stream >> subtime_1; break;
+            // PolishAndSync: polishTime, waitTime, syncTime, animationsTime,
+        case QQmlProfilerClient::SceneGraphPolishAndSync: stream >> subtime_1 >> subtime_2 >> subtime_3 >> subtime_4; break;
+            // WindowsRenderLoop: GL time, make current time, SceneGraph time
+        case QQmlProfilerClient::SceneGraphWindowsRenderShow: stream >> subtime_1 >> subtime_2 >> subtime_3; break;
+            // WindowsAnimations: update time
+        case QQmlProfilerClient::SceneGraphWindowsAnimations: stream >> subtime_1; break;
+            // WindowsRenderWindow: polish time, sync time, render time, swap time
+        case QQmlProfilerClient::SceneGraphWindowsPolishFrame: stream >> subtime_1; break;
+        }
         break;
     }
     default:
@@ -386,6 +432,39 @@ void tst_QQmlProfilerService::pixmapCacheData()
     QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerClient::Event);
     QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
 
+}
+
+void tst_QQmlProfilerService::scenegraphData()
+{
+    connect(true, "scenegraphTest.qml");
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    m_client->setTraceState(true);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
+    QVERIFY(m_process->output().indexOf(QLatin1String("tick")) != -1);
+    m_client->setTraceState(false);
+
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
+    QVERIFY(m_client->traceMessages.count());
+
+    // check that at least one frame was rendered
+    // there should be a SGPolishAndSync + SGRendererFrame + SGRenderLoopFrame sequence
+    // since the rendering happens in a different thread, there could be other unrelated events interleaved
+    int loopcheck = 0;
+    foreach (const QQmlProfilerData &msg, m_client->traceMessages) {
+        if (msg.messageType == QQmlProfilerClient::SceneGraphFrame) {
+            if (loopcheck == 0 && msg.detailType == QQmlProfilerClient::SceneGraphContextFrame)
+                loopcheck = 1;
+            else
+            if (loopcheck == 1 && msg.detailType == QQmlProfilerClient::SceneGraphRendererFrame)
+                loopcheck = 2;
+            else
+            if (loopcheck == 2 && msg.detailType == QQmlProfilerClient::SceneGraphRenderLoopFrame)
+               loopcheck = 3;
+        }
+    }
+
+    QCOMPARE(loopcheck, 3);
 }
 
 void tst_QQmlProfilerService::profileOnExit()

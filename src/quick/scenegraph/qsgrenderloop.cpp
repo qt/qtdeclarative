@@ -56,6 +56,7 @@
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
+#include <private/qqmlprofilerservice_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -273,20 +274,21 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     cd->polishItems();
 
-    int renderTime = 0, syncTime = 0;
-    QTime renderTimer;
-    if (qsg_render_timing())
+    qint64 renderTime = 0, syncTime = 0;
+    QElapsedTimer renderTimer;
+    bool profileFrames = qsg_render_timing()  || QQmlProfilerService::enabled;
+    if (profileFrames)
         renderTimer.start();
 
     cd->syncSceneGraph();
 
-    if (qsg_render_timing())
-        syncTime = renderTimer.elapsed();
+    if (profileFrames)
+        syncTime = renderTimer.nsecsElapsed();
 
     cd->renderSceneGraph(window->size());
 
-    if (qsg_render_timing())
-        renderTime = renderTimer.elapsed() - syncTime;
+    if (profileFrames)
+        renderTime = renderTimer.nsecsElapsed() - syncTime;
 
     if (data.grabOnly) {
         grabContent = qt_gl_read_framebuffer(window->size(), false, false);
@@ -298,15 +300,27 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         cd->fireFrameSwapped();
     }
 
+    qint64 swapTime = 0;
+    if (profileFrames) {
+        swapTime = renderTimer.nsecsElapsed() - renderTime - syncTime;
+    }
+
     if (qsg_render_timing()) {
         static QTime lastFrameTime = QTime::currentTime();
-        const int swapTime = renderTimer.elapsed() - renderTime - syncTime;
-        qDebug() << "- Breakdown of frame time; sync:" << syncTime
-                 << "ms render:" << renderTime << "ms swap:" << swapTime
-                 << "ms total:" << swapTime + renderTime + syncTime
+        qDebug() << "- Breakdown of frame time; sync:" << syncTime/1000000
+                 << "ms render:" << renderTime/1000000 << "ms swap:" << swapTime/1000000
+                 << "ms total:" << (swapTime + renderTime + syncTime)/1000000
                  << "ms time since last frame:" << (lastFrameTime.msecsTo(QTime::currentTime()))
                  << "ms";
         lastFrameTime = QTime::currentTime();
+    }
+
+    if (QQmlProfilerService::enabled) {
+        QQmlProfilerService::sceneGraphFrame(
+                    QQmlProfilerService::SceneGraphRenderLoopFrame,
+                    syncTime,
+                    renderTime,
+                    swapTime);
     }
 
     // Might have been set during syncSceneGraph()

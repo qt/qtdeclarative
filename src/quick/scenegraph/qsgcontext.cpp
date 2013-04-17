@@ -67,6 +67,8 @@
 #include <private/qobject_p.h>
 #include <qmutex.h>
 
+#include <private/qqmlprofilerservice_p.h>
+
 DEFINE_BOOL_CONFIG_OPTION(qmlFlashMode, QML_FLASH_MODE)
 DEFINE_BOOL_CONFIG_OPTION(qmlTranslucentMode, QML_TRANSLUCENT_MODE)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
@@ -482,7 +484,7 @@ QSGMaterialShader *QSGContext::prepareMaterial(QSGMaterial *material)
         return shader;
 
 #ifndef QSG_NO_RENDER_TIMING
-    if (qsg_render_timing)
+    if (qsg_render_timing  || QQmlProfilerService::enabled)
         qsg_renderer_timer.start();
 #endif
 
@@ -494,6 +496,12 @@ QSGMaterialShader *QSGContext::prepareMaterial(QSGMaterial *material)
 #ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
         printf("   - compiling material: %dms\n", (int) qsg_renderer_timer.elapsed());
+
+    if (QQmlProfilerService::enabled) {
+        QQmlProfilerService::sceneGraphFrame(
+                    QQmlProfilerService::SceneGraphContextFrame,
+                    qsg_renderer_timer.nsecsElapsed());
+    }
 #endif
 
     return shader;
