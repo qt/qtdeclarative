@@ -149,8 +149,6 @@ private:
 /*!
     Returns an accessibility interface for this window, or 0 if such an
     interface cannot be created.
-
-    \warning The caller is responsible for deleting the returned interface.
 */
 QAccessibleInterface *QQuickWindow::accessibleRoot() const
 {
