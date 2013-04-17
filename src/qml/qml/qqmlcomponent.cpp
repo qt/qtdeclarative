@@ -295,7 +295,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     }
     \endqml
 
-    \sa QtQml
+    \sa {Qt QML}
 */
 
 /*!

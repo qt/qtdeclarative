@@ -151,7 +151,7 @@ QQuickStateOperation::QQuickStateOperation(QObjectPrivate &dd, QObject *parent)
     not allowed.
 
     \sa {declarative/animation/states}{states example}, {Qt Quick States}{Qt Quick States},
-    {Animation and Transitions in Qt Quick}{Transitions}, QtQml
+    {Animation and Transitions in Qt Quick}{Transitions}, {Qt QML}
 */
 QQuickState::QQuickState(QObject *parent)
 : QObject(*(new QQuickStatePrivate), parent)

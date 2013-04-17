@@ -129,7 +129,7 @@ QT_BEGIN_NAMESPACE
 
     See the PropertyAction documentation for more details.
 
-    \sa {declarative/animation/states}{states example}, {Qt Quick States}{Qt Quick States}, QtQml
+    \sa {declarative/animation/states}{states example}, {Qt Quick States}{Qt Quick States}, {Qt QML}
 */
 
 /*!

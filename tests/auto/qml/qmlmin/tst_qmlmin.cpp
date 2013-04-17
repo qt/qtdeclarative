@@ -168,7 +168,7 @@ bool tst_qmlmin::isInvalidFile(const QFileInfo &fileName) const
 }
 
 /*
-This test runs all the examples in the QtQml UI source tree and ensures
+This test runs all the examples in the Qt QML UI source tree and ensures
 that they start and exit cleanly.
 
 Examples are any .qml files under the examples/ directory that start
