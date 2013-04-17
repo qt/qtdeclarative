@@ -217,7 +217,7 @@ void QQuickRepeater::setModel(const QVariant &model)
             d->model = new QQmlDelegateModel(qmlContext(this));
             d->ownModel = true;
             if (isComponentComplete())
-                static_cast<QQmlDelegateModel *>(d->model)->componentComplete();
+                static_cast<QQmlDelegateModel *>(d->model.data())->componentComplete();
         }
         if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model))
             dataModel->setModel(model);
@@ -329,7 +329,7 @@ void QQuickRepeater::componentComplete()
 {
     Q_D(QQuickRepeater);
     if (d->model && d->ownModel)
-        static_cast<QQmlDelegateModel *>(d->model)->componentComplete();
+        static_cast<QQmlDelegateModel *>(d->model.data())->componentComplete();
     QQuickItem::componentComplete();
     regenerate();
     if (d->model && d->model->count())

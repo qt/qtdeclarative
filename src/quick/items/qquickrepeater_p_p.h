@@ -73,7 +73,7 @@ public:
 private:
     void createItems();
 
-    QQmlInstanceModel *model;
+    QPointer<QQmlInstanceModel> model;
     QVariant dataSource;
     QQmlGuard<QObject> dataSourceAsObject;
     bool ownModel : 1;
