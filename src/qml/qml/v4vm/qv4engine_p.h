@@ -53,6 +53,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QJSEngine;
+
 namespace QQmlJS {
 
 namespace Debugging {
@@ -122,6 +124,8 @@ struct Q_QML_EXPORT ExecutionEngine
     Object *globalObject;
 
     VM::Function *globalCode;
+
+    QJSEngine *publicEngine;
 
     Value objectCtor;
     Value stringCtor;

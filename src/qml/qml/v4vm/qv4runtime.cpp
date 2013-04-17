@@ -434,10 +434,9 @@ void __qmljs_inplace_ushr_member(ExecutionContext *ctx, const Value &base, Strin
     o->inplaceBinOp(ctx, __qmljs_ushr, name, rhs);
 }
 
-double __qmljs_string_to_number(const String *string)
+double __qmljs_string_to_number(const QString &string)
 {
-    QString s = string->toQString();
-    s = s.trimmed();
+    QString s = string.trimmed();
     if (s.startsWith(QLatin1String("0x")) || s.startsWith(QLatin1String("0X")))
         return s.toLong(0, 16);
     bool ok;

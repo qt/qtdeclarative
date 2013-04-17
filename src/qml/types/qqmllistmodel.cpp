@@ -55,6 +55,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qstack.h>
 #include <QXmlStreamReader>
+#include <QtCore/qdatetime.h>
 
 QT_BEGIN_NAMESPACE
 

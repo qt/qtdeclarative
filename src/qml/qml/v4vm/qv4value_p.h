@@ -48,7 +48,7 @@
 #include <QtCore/QDebug>
 #include "qv4managed_p.h"
 
-#include <wtf/MathExtras.h>
+//#include <wtf/MathExtras.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -546,12 +546,19 @@ inline Value Managed::call(ExecutionContext *context, const Value &thisObject, V
 
 struct PersistentValuePrivate
 {
+    PersistentValuePrivate()
+        : value(Value::undefinedValue())
+        , refcount(1)
+        , engine(0)
+        , next(0)
+    {}
+    PersistentValuePrivate(ExecutionEngine *e, const Value &v);
+    PersistentValuePrivate(const Value &v);
     Value value;
     int refcount;
     ExecutionEngine *engine;
     PersistentValuePrivate *next;
 
-    static PersistentValuePrivate *create(ExecutionEngine *e, const Value &v);
     void ref() { ++refcount; }
     void deref();
 };

@@ -183,7 +183,7 @@ uint String::toUInt(bool *ok) const
         return stringHash;
 
     // ### this conversion shouldn't be required
-    double d = __qmljs_string_to_number(this);
+    double d = __qmljs_string_to_number(toQString());
     uint l = (uint)d;
     if (d == l)
         return l;

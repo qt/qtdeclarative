@@ -50,6 +50,7 @@
 #include <qqmlinfo.h>
 #include <private/qqmlengine_p.h>
 #include <QtCore/QBuffer>
+#include <QtCore/qdatetime.h>
 
 QT_BEGIN_NAMESPACE
 

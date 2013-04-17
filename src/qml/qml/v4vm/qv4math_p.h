@@ -46,7 +46,7 @@
 #endif // QMLJS_LLVM_RUNTIME
 #include <cmath>
 
-#if !defined(QMLJS_LLVM_RUNTIME) && COMPILER(GCC) && (CPU(X86_64) || CPU(X86))
+#if !defined(QMLJS_LLVM_RUNTIME) && defined(Q_CC_GCC) && defined(Q_PROCESSOR_X86)
 #define QMLJS_INLINE_MATH
 #define QMLJS_READONLY __attribute((const))
 #endif

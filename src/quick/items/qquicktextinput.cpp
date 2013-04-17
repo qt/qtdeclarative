@@ -56,6 +56,7 @@
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/qinputmethod.h>
+#include <QtCore/qmath.h>
 
 #ifndef QT_NO_ACCESSIBILITY
 #include "qaccessible.h"

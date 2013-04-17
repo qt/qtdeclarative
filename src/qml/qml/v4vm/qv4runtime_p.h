@@ -153,7 +153,7 @@ VM::Function *__qmljs_register_function(ExecutionContext *ctx, String *name,
 
 
 // strings
-double __qmljs_string_to_number(const String *string);
+double __qmljs_string_to_number(const QString &s);
 Value __qmljs_string_from_number(ExecutionContext *ctx, double number);
 String *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *second);
 
@@ -305,7 +305,7 @@ inline double __qmljs_to_number(const Value &value)
     case Value::Integer_Type:
         return value.int_32;
     case Value::String_Type:
-        return __qmljs_string_to_number(value.stringValue());
+        return __qmljs_string_to_number(value.stringValue()->toQString());
     case Value::Object_Type: {
         Value prim = __qmljs_to_primitive(value, NUMBER_HINT);
         return __qmljs_to_number(prim);

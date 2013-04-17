@@ -2289,6 +2289,8 @@ class V8EXPORT Isolate {
   Context *GetCurrentContext() { return m_contextStack.top(); }
   void setException(const QQmlJS::VM::Value &ex);
 
+  static QQmlJS::VM::ExecutionEngine *GetEngine();
+
   private:
       friend class Context;
       friend class TryCatch;

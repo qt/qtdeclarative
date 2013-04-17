@@ -65,10 +65,8 @@
 #include <private/qv8_p.h>
 #include <qjsengine.h>
 #include <qjsvalue.h>
-#include "qjsvalue_p.h"
 #include "qjsvalueiterator_p.h"
-#include "qscriptoriginalglobalobject_p.h"
-#include "qscripttools_p.h"
+#include "private/qintrusivelist_p.h"
 
 #include <private/qqmlpropertycache_p.h>
 
@@ -95,6 +93,11 @@ inline uint qHash(const v8::Handle<v8::Object> &object, uint seed = 0)
 
 QT_BEGIN_NAMESPACE
 
+namespace QQmlJS {
+namespace VM {
+    class ExecutionEngine;
+}
+}
 
 // Uncomment the following line to enable global handle debugging.  When enabled, all the persistent
 // handles allocated using qPersistentNew() (or registered with qPersistentRegsiter()) and disposed
@@ -247,10 +250,13 @@ public:
 
 class Q_QML_PRIVATE_EXPORT QV8Engine
 {
+    friend class QJSEngine;
     typedef QSet<v8::Handle<v8::Object> > V8ObjectSet;
 public:
     static QV8Engine* get(QJSEngine* q) { Q_ASSERT(q); return q->handle(); }
     static QJSEngine* get(QV8Engine* d) { Q_ASSERT(d); return d->q; }
+    static QQmlJS::VM::ExecutionEngine *getV4(QJSEngine *q) { return q->handle()->m_v4Engine; }
+    static QQmlJS::VM::ExecutionEngine *getV4(QV8Engine *d) { return d->m_v4Engine; }
 
     enum ContextOwnership {
         AdoptCurrentContext,
@@ -272,13 +278,13 @@ public:
     v8::Local<v8::Object> global() { return m_context->Global(); }
     v8::Handle<v8::Context> context() const { return m_context; }
 
-    inline void registerValue(QJSValuePrivate *data);
-    inline void unregisterValue(QJSValuePrivate *data);
-    inline void invalidateAllValues();
+//    inline void registerValue(QJSValuePrivate *data);
+//    inline void unregisterValue(QJSValuePrivate *data);
+//    inline void invalidateAllValues();
 
-    inline void registerValueIterator(QJSValueIteratorPrivate *data);
-    inline void unregisterValueIterator(QJSValueIteratorPrivate *data);
-    inline void invalidateAllIterators();
+//    inline void registerValueIterator(QJSValueIteratorPrivate *data);
+//    inline void unregisterValueIterator(QJSValueIteratorPrivate *data);
+//    inline void invalidateAllIterators();
 
     QV8ContextWrapper *contextWrapper() { return &m_contextWrapper; }
     QV8QObjectWrapper *qobjectWrapper() { return &m_qobjectWrapper; }
@@ -296,7 +302,6 @@ public:
     QQmlContextData *callingContext();
 
     v8::Local<v8::Array> getOwnPropertyNames(v8::Handle<v8::Object>);
-    inline QJSValuePrivate::PropertyFlags getPropertyFlags(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property);
     void freezeObject(v8::Handle<v8::Value>);
 
     inline QString toString(v8::Handle<v8::Value> string);
@@ -370,17 +375,17 @@ public:
     inline Deletable *extensionData(int) const;
     void setExtensionData(int, Deletable *);
 
-    inline v8::Handle<v8::Value> makeJSValue(bool value);
-    inline v8::Local<v8::Value> makeJSValue(int value);
-    inline v8::Local<v8::Value> makeJSValue(uint value);
-    inline v8::Local<v8::Value> makeJSValue(double value);
-    inline v8::Handle<v8::Value> makeJSValue(QJSValue::SpecialValue value);
-    inline v8::Local<v8::Value> makeJSValue(const QString &value);
+    v8::Handle<v8::Value> makeJSValue(bool value);
+    v8::Local<v8::Value> makeJSValue(int value);
+    v8::Local<v8::Value> makeJSValue(uint value);
+    v8::Local<v8::Value> makeJSValue(double value);
+    v8::Handle<v8::Value> makeJSValue(QJSValue::SpecialValue value);
+    v8::Local<v8::Value> makeJSValue(const QString &value);
 
-    inline QScriptPassPointer<QJSValuePrivate> evaluate(const QString &program, const QString &fileName = QString(), quint16 lineNumber = 1);
-    QScriptPassPointer<QJSValuePrivate> evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCatch);
+    QJSValue evaluate(const QString &program, const QString &fileName = QString(), quint16 lineNumber = 1);
+    QJSValue evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCatch);
 
-    QScriptPassPointer<QJSValuePrivate> newArray(uint length);
+    QJSValue newArray(uint length);
     v8::Local<v8::Object> newVariant(const QVariant &variant);
 
     v8::Local<v8::Array> variantListToJS(const QVariantList &lst);
@@ -450,9 +455,11 @@ public:
 protected:
     QJSEngine* q;
     QQmlEngine *m_engine;
+
+    QQmlJS::VM::ExecutionEngine *m_v4Engine;
+
     bool m_ownsV8Context;
     v8::Persistent<v8::Context> m_context;
-    QScriptOriginalGlobalObject m_originalGlobalObject;
 
     v8::Persistent<v8::String> m_bindingFlagKey;
 
@@ -497,10 +504,10 @@ private:
 
     static v8::Persistent<v8::Object> *findOwnerAndStrength(QObject *object, bool *shouldBeStrong);
 
-    typedef QScriptIntrusiveList<QJSValuePrivate, &QJSValuePrivate::m_node> ValueList;
-    ValueList m_values;
-    typedef QScriptIntrusiveList<QJSValueIteratorPrivate, &QJSValueIteratorPrivate::m_node> ValueIteratorList;
-    ValueIteratorList m_valueIterators;
+//    typedef QIntrusiveList<QJSValuePrivate, &QJSValuePrivate::m_node> ValueList;
+//    ValueList m_values;
+//    typedef QIntrusiveList<QJSValueIteratorPrivate, &QJSValueIteratorPrivate::m_node> ValueIteratorList;
+//    ValueIteratorList m_valueIterators;
 
     Q_DISABLE_COPY(QV8Engine)
 };

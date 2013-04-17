@@ -41,7 +41,7 @@
 
 #include "qv8stringwrapper_p.h"
 #include "qjsconverter_p.h"
-#include "qjsconverter_impl_p.h"
+#include "qjsconverter_p.h"
 
 QT_BEGIN_NAMESPACE
 

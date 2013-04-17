@@ -55,14 +55,17 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmlplatform_p.h>
+#include <private/qjsconverter_p.h>
 
-#include "qscript_impl_p.h"
 #include "qv8domerrors_p.h"
 #include "qv8sqlerrors_p.h"
 
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonvalue.h>
+#include <QtCore/qdatetime.h>
+
+#include <private/qv8engine_impl_p.h>
 
 Q_DECLARE_METATYPE(QList<int>)
 
@@ -144,8 +147,10 @@ QV8Engine::QV8Engine(QJSEngine* qq, ContextOwnership ownership)
     v8::HandleScope handle_scope;
     m_context = (ownership == CreateNewContext) ? v8::Context::New() : v8::Persistent<v8::Context>::New(v8::Context::GetCurrent());
     qPersistentRegister(m_context);
-    m_originalGlobalObject.init(m_context);
     v8::Context::Scope context_scope(m_context);
+
+    m_v4Engine = v8::Isolate::GetEngine();
+    m_v4Engine->publicEngine = q;
 
     v8::V8::SetUserObjectComparisonCallbackFunction(ObjectComparisonCallback);
     QV8GCCallback::registerGcPrologueCallback();
@@ -184,8 +189,6 @@ QV8Engine::~QV8Engine()
     qPersistentDispose(m_freezeObject);
     qPersistentDispose(m_getOwnPropertyNames);
 
-    invalidateAllValues();
-
     qPersistentDispose(m_strongReferencer);
 
     m_jsonWrapper.destroy();
@@ -199,8 +202,6 @@ QV8Engine::~QV8Engine()
     m_stringWrapper.destroy();
 
     qPersistentDispose(m_bindingFlagKey);
-
-    m_originalGlobalObject.destroy();
 
     if (m_ownsV8Context)
         qPersistentDispose(m_context);
@@ -411,8 +412,10 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
         } else if (type == qMetaTypeId<QJSValue>()) {
             const QJSValue *value = reinterpret_cast<const QJSValue *>(ptr);
             QJSValuePrivate *valuep = QJSValuePrivate::get(*value);
-            if (valuep->assignEngine(this))
-                return v8::Local<v8::Value>::New(*valuep);
+            valuep->engine = m_v4Engine;
+                return v8::Local<v8::Value>::New(v8::Value::fromVmValue(valuep->getValue(valuep->engine)));
+//            if (valuep->assignEngine(this))
+//                return v8::Local<v8::Value>::New(*valuep);
         } else if (type == qMetaTypeId<QList<QObject *> >()) {
             // XXX Can this be made more by using Array as a prototype and implementing
             // directly against QList<QObject*>?
@@ -1073,7 +1076,7 @@ v8::Handle<v8::Value> QV8Engine::metaTypeToJS(int type, const void *data)
         break;
     default:
         if (type == qMetaTypeId<QJSValue>()) {
-            return QJSValuePrivate::get(*reinterpret_cast<const QJSValue*>(data))->asV8Value(this);
+            return v8::Value::fromVmValue(QJSValuePrivate::get(*reinterpret_cast<const QJSValue*>(data))->value);
         } else {
             QByteArray typeName = QMetaType::typeName(type);
             if (typeName.endsWith('*') && !*reinterpret_cast<void* const *>(data)) {
@@ -1251,7 +1254,7 @@ bool QV8Engine::metaTypeFromJS(v8::Handle<v8::Value> value, int type, void *data
         *reinterpret_cast<void* *>(data) = 0;
         return true;
     } else if (type == qMetaTypeId<QJSValue>()) {
-        *reinterpret_cast<QJSValue*>(data) = QJSValuePrivate::get(new QJSValuePrivate(this, value));
+        *reinterpret_cast<QJSValue*>(data) = QJSValuePrivate::get(new QJSValuePrivate(m_v4Engine, value.get()->vmValue()));
         return true;
     }
 
@@ -1385,7 +1388,7 @@ v8::Local<v8::Object> QV8Engine::newVariant(const QVariant &value)
     return variantWrapper()->newVariant(value);
 }
 
-QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCatch)
+QJSValue QV8Engine::evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCatch)
 {
     v8::HandleScope handleScope;
 
@@ -1393,9 +1396,9 @@ QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(v8::Handle<v8::Script> s
         v8::Handle<v8::Value> exception = tryCatch.Exception();
         if (exception.IsEmpty()) {
             // This is possible on syntax errors like { a:12, b:21 } <- missing "(", ")" around expression.
-            return new QJSValuePrivate(this);
+            return QJSValue();
         }
-        return new QJSValuePrivate(this, exception);
+        return new QJSValuePrivate(m_v4Engine, exception.get()->vmValue());
     }
     v8::Handle<v8::Value> result;
     result = script->Run();
@@ -1405,21 +1408,21 @@ QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(v8::Handle<v8::Script> s
         //Q_ASSERT(!exception.IsEmpty());
         if (exception.IsEmpty())
             exception = v8::Exception::Error(v8::String::New("missing exception value"));
-        return new QJSValuePrivate(this, exception);
+        return new QJSValuePrivate(m_v4Engine, exception.get()->vmValue());
     }
-    return new QJSValuePrivate(this, result);
+    return new QJSValuePrivate(m_v4Engine, result.get()->vmValue());
 }
 
 QJSValue QV8Engine::scriptValueFromInternal(v8::Handle<v8::Value> value) const
 {
     if (value.IsEmpty())
-        return QJSValuePrivate::get(new QJSValuePrivate(const_cast<QV8Engine*>(this)));
-    return QJSValuePrivate::get(new QJSValuePrivate(const_cast<QV8Engine*>(this), value));
+        return QJSValue();
+    return new QJSValuePrivate(m_v4Engine, value.get()->vmValue());
 }
 
-QScriptPassPointer<QJSValuePrivate> QV8Engine::newArray(uint length)
+QJSValue QV8Engine::newArray(uint length)
 {
-    return new QJSValuePrivate(this, v8::Array::New(length));
+    return new QJSValuePrivate(m_v4Engine, v8::Array::New(length).get()->vmValue());
 }
 
 void QV8Engine::startTimer(const QString &timerName)

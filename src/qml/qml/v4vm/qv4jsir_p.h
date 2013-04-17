@@ -38,8 +38,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4IR_P_H
-#define QV4IR_P_H
+#ifndef QV4JSIR_P_H
+#define QV4JSIR_P_H
 
 //
 //  W A R N I N G

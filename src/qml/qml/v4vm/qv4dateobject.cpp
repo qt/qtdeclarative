@@ -768,6 +768,16 @@ void DatePrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("toJSON"), method_toJSON, 1);
 }
 
+double DatePrototype::toJSDate(const QDateTime &dateTime)
+{
+    return FromDateTime(dateTime);
+}
+
+QDateTime DatePrototype::toQDateTime(double d)
+{
+    return ToDateTime(d, Qt::LocalTime);
+}
+
 double DatePrototype::getThisDate(ExecutionContext *ctx)
 {
     if (DateObject *thisObject = ctx->thisObject.asDateObject())

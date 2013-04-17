@@ -47,7 +47,7 @@
 #include <private/qqmlstringconverters_p.h>
 #include <private/qqmllocale_p.h>
 #include <private/qv8engine_p.h>
-#include <private/qjsconverter_impl_p.h>
+#include <private/qjsconverter_p.h>
 
 #include <private/qv8profilerservice_p.h>
 #include <private/qqmlprofilerservice_p.h>

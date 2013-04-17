@@ -147,23 +147,6 @@ QString QJSConverter::toString(double value)
     return QString::fromLatin1(buf.constData());
 }
 
-// return a mask of v8::PropertyAttribute that may also contains QScriptValue::PropertyGetter or QScriptValue::PropertySetter
-uint QJSConverter::toPropertyAttributes(const QFlags<QJSValuePrivate::PropertyFlag>& flags)
-{
-    uint attr = 0;
-    if (flags.testFlag(QJSValuePrivate::ReadOnly))
-        attr |= v8::ReadOnly;
-    if (flags.testFlag(QJSValuePrivate::Undeletable))
-        attr |= v8::DontDelete;
-    if (flags.testFlag(QJSValuePrivate::SkipInEnumeration))
-        attr |= v8::DontEnum;
-    //        if (flags.testFlag(QScriptValue::PropertyGetter))
-    //            attr |= QScriptValue::PropertyGetter;
-    //        if (flags.testFlag(QScriptValue::PropertySetter))
-    //            attr |= QScriptValue::PropertySetter;
-    return attr;
-}
-
 // Converts a JS RegExp to a QRegExp.
 // The conversion is not 100% exact since ECMA regexp and QRegExp
 // have different semantics/flags, but we try to do our best.

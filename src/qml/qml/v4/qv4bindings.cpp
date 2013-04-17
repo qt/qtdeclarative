@@ -50,10 +50,7 @@
 
 #include <private/qv8_p.h>
 #include <private/qjsconverter_p.h>
-#include <private/qjsconverter_impl_p.h>
-#include <private/qjsvalue_impl_p.h>
-#include <private/qjsvalueiterator_impl_p.h>
-#include <private/qv8engine_impl_p.h>
+#include <private/qv8engine_p.h>
 
 #include <private/qqmlaccessors_p.h>
 #include <private/qqmlprofilerservice_p.h>
@@ -1286,7 +1283,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
             } else {
                 QV8Engine *v8engine = QQmlEnginePrivate::get(context->engine)->v8engine();
                 new (output.gethandleptr()) v8::Handle<v8::Value>(
-                        QJSValuePrivate::get(tmp)->asV8Value(v8engine));
+                        v8::Value::fromVmValue(QJSValuePrivate::get(tmp)->value));
                 V8HANDLE_REGISTER(instr->unaryop.output);
             }
         }

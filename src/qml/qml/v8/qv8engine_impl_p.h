@@ -57,102 +57,92 @@
 #include "qjsvalue_p.h"
 #include "qjsconverter_p.h"
 #include "qjsvalueiterator_p.h"
+#include "qv4errorobject_p.h"
 
 QT_BEGIN_NAMESPACE
 
-inline v8::Handle<v8::Value> QV8Engine::makeJSValue(bool value)
+v8::Handle<v8::Value> QV8Engine::makeJSValue(bool value)
 {
     return value ? v8::True() : v8::False();
 }
 
-inline v8::Local<v8::Value> QV8Engine::makeJSValue(int value)
+v8::Local<v8::Value> QV8Engine::makeJSValue(int value)
 {
     return v8::Integer::New(value);
 }
 
-inline v8::Local<v8::Value> QV8Engine::makeJSValue(uint value)
+v8::Local<v8::Value> QV8Engine::makeJSValue(uint value)
 {
     return v8::Integer::NewFromUnsigned(value);
 }
 
-inline v8::Local<v8::Value> QV8Engine::makeJSValue(double value)
+v8::Local<v8::Value> QV8Engine::makeJSValue(double value)
 {
     return v8::Number::New(value);
 }
 
-inline v8::Handle<v8::Value> QV8Engine::makeJSValue(QJSValue::SpecialValue value) {
+v8::Handle<v8::Value> QV8Engine::makeJSValue(QJSValue::SpecialValue value) {
     if (value == QJSValue::NullValue)
         return v8::Null();
     return v8::Undefined();
 }
 
-inline v8::Local<v8::Value> QV8Engine::makeJSValue(const QString &value)
+v8::Local<v8::Value> QV8Engine::makeJSValue(const QString &value)
 {
     return QJSConverter::toString(value);
 }
 
-class QtScriptBagCleaner
-{
-public:
-    template<class T>
-    void operator () (T* value) const
-    {
-        value->reinitialize();
-    }
-    void operator () (QJSValueIteratorPrivate *iterator) const
-    {
-        iterator->invalidate();
-    }
-};
+//class QtScriptBagCleaner
+//{
+//public:
+//    template<class T>
+//    void operator () (T* value) const
+//    {
+//        value->reinitialize();
+//    }
+//    void operator () (QJSValueIteratorPrivate *iterator) const
+//    {
+//        iterator->invalidate();
+//    }
+//};
 
-inline void QV8Engine::registerValue(QJSValuePrivate *data)
-{
-    m_values.insert(data);
-}
+//void QV8Engine::registerValue(QJSValuePrivate *data)
+//{
+//    m_values.insert(data);
+//}
 
-inline void QV8Engine::unregisterValue(QJSValuePrivate *data)
-{
-    m_values.remove(data);
-}
+//void QV8Engine::unregisterValue(QJSValuePrivate *data)
+//{
+//    m_values.remove(data);
+//}
 
-inline void QV8Engine::invalidateAllValues()
-{
-    ValueList::iterator it;
-    for (it = m_values.begin(); it != m_values.end(); it = it.erase())
-        (*it)->invalidate();
-    Q_ASSERT(m_values.isEmpty());
-}
+//void QV8Engine::invalidateAllValues()
+//{
+//    ValueList::iterator it;
+//    for (it = m_values.begin(); it != m_values.end(); it = it.erase())
+//        (*it)->invalidate();
+//    Q_ASSERT(m_values.isEmpty());
+//}
 
-inline void QV8Engine::registerValueIterator(QJSValueIteratorPrivate *data)
-{
-    m_valueIterators.insert(data);
-}
+//void QV8Engine::registerValueIterator(QJSValueIteratorPrivate *data)
+//{
+//    m_valueIterators.insert(data);
+//}
 
-inline void QV8Engine::unregisterValueIterator(QJSValueIteratorPrivate *data)
-{
-    m_valueIterators.remove(data);
-}
+//void QV8Engine::unregisterValueIterator(QJSValueIteratorPrivate *data)
+//{
+//    m_valueIterators.remove(data);
+//}
 
-inline void QV8Engine::invalidateAllIterators()
-{
-    ValueIteratorList::iterator it;
-    for (it = m_valueIterators.begin(); it != m_valueIterators.end(); it = it.erase())
-        (*it)->invalidate();
-    Q_ASSERT(m_valueIterators.isEmpty());
-}
+//void QV8Engine::invalidateAllIterators()
+//{
+//    ValueIteratorList::iterator it;
+//    for (it = m_valueIterators.begin(); it != m_valueIterators.end(); it = it.erase())
+//        (*it)->invalidate();
+//    Q_ASSERT(m_valueIterators.isEmpty());
+//}
 
-/*!
-  \internal
-  \note property can be index (v8::Integer) or a property (v8::String) name, according to ECMA script
-  property would be converted to a string.
-*/
-inline QJSValuePrivate::PropertyFlags QV8Engine::getPropertyFlags(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property)
-{
-    QJSValuePrivate::PropertyFlags flags = m_originalGlobalObject.getPropertyFlags(object, property);
-    return flags;
-}
-
-QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(const QString& program, const QString& fileName, quint16 lineNumber)
+QJSValue QV8Engine::evaluate(const QString& program, const QString& fileName, quint16 lineNumber)
 {
     v8::TryCatch tryCatch;
     v8::ScriptOrigin scriptOrigin(QJSConverter::toString(fileName), v8::Integer::New(lineNumber - 1));
@@ -161,8 +151,8 @@ QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(const QString& program, 
     if (script.IsEmpty()) {
         // TODO: Why don't we get the exception, as with Script::Compile()?
         // Q_ASSERT(tryCatch.HasCaught());
-        v8::Handle<v8::Value> error = v8::Exception::SyntaxError(v8::String::New(""));
-        return new QJSValuePrivate(this, error);
+        QQmlJS::VM::Object *error = m_v4Engine->newSyntaxErrorObject(m_v4Engine->current, 0);
+        return new QJSValuePrivate(m_v4Engine, QQmlJS::VM::Value::fromObject(error));
     }
     return evaluate(script, tryCatch);
 }

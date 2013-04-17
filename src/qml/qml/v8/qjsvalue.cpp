@@ -39,14 +39,18 @@
 **
 ****************************************************************************/
 
-#include "qscriptisolate_p.h"
+#include <QtCore/qstring.h>
+#include <QtCore/qvarlengtharray.h>
+#include <QtCore/qdatetime.h>
 #include "qjsengine.h"
-#include "qv8engine_p.h"
 #include "qjsvalue.h"
 #include "qjsvalue_p.h"
-#include "qscript_impl_p.h"
-#include "qscriptshareddata_p.h"
-#include <QtCore/qstring.h>
+#include "qv4value_p.h"
+#include "qv4object_p.h"
+#include "qv4functionobject_p.h"
+#include "qv4dateobject_p.h"
+#include "qv4runtime_p.h"
+#include "qv4v8_p.h"
 
 /*!
   \since 5.0
@@ -114,11 +118,18 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace QQmlJS::VM;
+
 /*!
   Constructs a new QJSValue with a boolean \a value.
 */
 QJSValue::QJSValue(bool value)
-    : d_ptr(new QJSValuePrivate(value))
+    : d(new QJSValuePrivate(Value::fromBoolean(value)))
+{
+}
+
+QJSValue::QJSValue(QJSValuePrivate *dd)
+    : d(dd)
 {
 }
 
@@ -126,7 +137,7 @@ QJSValue::QJSValue(bool value)
   Constructs a new QJSValue with a number \a value.
 */
 QJSValue::QJSValue(int value)
-    : d_ptr(new QJSValuePrivate(value))
+    : d(new QJSValuePrivate(Value::fromInt32(value)))
 {
 }
 
@@ -134,7 +145,7 @@ QJSValue::QJSValue(int value)
   Constructs a new QJSValue with a number \a value.
 */
 QJSValue::QJSValue(uint value)
-    : d_ptr(new QJSValuePrivate(value))
+    : d(new QJSValuePrivate(Value::fromUInt32(value)))
 {
 }
 
@@ -142,7 +153,7 @@ QJSValue::QJSValue(uint value)
   Constructs a new QJSValue with a number \a value.
 */
 QJSValue::QJSValue(double value)
-    : d_ptr(new QJSValuePrivate(value))
+    : d(new QJSValuePrivate(Value::fromDouble(value)))
 {
 }
 
@@ -150,7 +161,7 @@ QJSValue::QJSValue(double value)
   Constructs a new QJSValue with a string \a value.
 */
 QJSValue::QJSValue(const QString& value)
-    : d_ptr(new QJSValuePrivate(value))
+    : d(new QJSValuePrivate(value))
 {
 }
 
@@ -158,7 +169,7 @@ QJSValue::QJSValue(const QString& value)
   Constructs a new QJSValue with a special \a value.
 */
 QJSValue::QJSValue(SpecialValue value)
-    : d_ptr(new QJSValuePrivate(value))
+    : d(new QJSValuePrivate(value == UndefinedValue ? Value::undefinedValue() : Value::nullValue()))
 {
 }
 
@@ -166,7 +177,7 @@ QJSValue::QJSValue(SpecialValue value)
   Constructs a new QJSValue with a string \a value.
 */
 QJSValue::QJSValue(const QLatin1String &value)
-    : d_ptr(new QJSValuePrivate(value))
+    : d(new QJSValuePrivate(value))
 {
 }
 
@@ -175,28 +186,10 @@ QJSValue::QJSValue(const QLatin1String &value)
 */
 #ifndef QT_NO_CAST_FROM_ASCII
 QJSValue::QJSValue(const char *value)
-    : d_ptr(new QJSValuePrivate(QString::fromLatin1(value)))
+    : d(new QJSValuePrivate(QString::fromLatin1(value)))
 {
 }
 #endif
-
-/*!
-    Constructs a new QJSValue from private
-    \internal
-*/
-QJSValue::QJSValue(QJSValuePrivate* d)
-    : d_ptr(d)
-{
-}
-
-/*!
-    Constructs a new QJSValue from private
-    \internal
-*/
-QJSValue::QJSValue(QScriptPassPointer<QJSValuePrivate> d)
-    : d_ptr(d.give())
-{
-}
 
 /*!
   Constructs a new QJSValue that is a copy of \a other.
@@ -206,8 +199,9 @@ QJSValue::QJSValue(QScriptPassPointer<QJSValuePrivate> d)
   the new script value (i.e., the object itself is not copied).
 */
 QJSValue::QJSValue(const QJSValue& other)
-    : d_ptr(other.d_ptr)
+    : d(other.d)
 {
+    d->ref();
 }
 
 /*!
@@ -215,6 +209,7 @@ QJSValue::QJSValue(const QJSValue& other)
 */
 QJSValue::~QJSValue()
 {
+    d->deref();
 }
 
 /*!
@@ -225,9 +220,7 @@ QJSValue::~QJSValue()
 */
 bool QJSValue::isBool() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isBool();
+    return d->value.isBoolean();
 }
 
 /*!
@@ -238,9 +231,7 @@ bool QJSValue::isBool() const
 */
 bool QJSValue::isNumber() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isNumber();
+    return d->value.isNumber();
 }
 
 /*!
@@ -249,9 +240,7 @@ bool QJSValue::isNumber() const
 */
 bool QJSValue::isNull() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isNull();
+    return d->value.isNull();
 }
 
 /*!
@@ -262,9 +251,7 @@ bool QJSValue::isNull() const
 */
 bool QJSValue::isString() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isString();
+    return d->value.isString();
 }
 
 /*!
@@ -273,9 +260,7 @@ bool QJSValue::isString() const
 */
 bool QJSValue::isUndefined() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isUndefined();
+    return d->value.isUndefined();
 }
 
 /*!
@@ -284,9 +269,8 @@ bool QJSValue::isUndefined() const
 */
 bool QJSValue::isError() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isError();
+    Object *o = d->value.asObject();
+    return o && o->asErrorObject();
 }
 
 /*!
@@ -297,10 +281,8 @@ bool QJSValue::isError() const
 */
 bool QJSValue::isArray() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isArray();
- }
+    return d->value.asArrayObject();
+}
 
 /*!
   Returns true if this QJSValue is of the Object type; otherwise
@@ -313,9 +295,7 @@ bool QJSValue::isArray() const
 */
 bool QJSValue::isObject() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isObject();
+    return d->value.asObject();
 }
 
 /*!
@@ -326,9 +306,7 @@ bool QJSValue::isObject() const
 */
 bool QJSValue::isCallable() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isCallable();
+    return d->value.asFunctionObject();
 }
 
 /*!
@@ -339,9 +317,8 @@ bool QJSValue::isCallable() const
 */
 bool QJSValue::isVariant() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isVariant();
+    // ###
+    return false;
 }
 
 /*!
@@ -358,9 +335,10 @@ bool QJSValue::isVariant() const
 */
 QString QJSValue::toString() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toString();
+    if (!d->engine)
+        // ###
+        return QString();
+    return d->value.toString(d->engine->current)->toQString();
 }
 
 /*!
@@ -377,9 +355,7 @@ QString QJSValue::toString() const
 */
 double QJSValue::toNumber() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toNumber();
+    return d->value.toNumber();
 }
 
 /*!
@@ -396,9 +372,7 @@ double QJSValue::toNumber() const
 */
 bool QJSValue::toBool() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toBool();
+    return d->value.toBoolean();
 }
 
 /*!
@@ -415,9 +389,7 @@ bool QJSValue::toBool() const
 */
 qint32 QJSValue::toInt() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toInt32();
+    return d->value.toInt32();
 }
 
 /*!
@@ -434,9 +406,7 @@ qint32 QJSValue::toInt() const
 */
 quint32 QJSValue::toUInt() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toUInt32();
+    return d->value.toUInt32();
 }
 
 /*!
@@ -463,9 +433,8 @@ quint32 QJSValue::toUInt() const
 */
 QVariant QJSValue::toVariant() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toVariant();
+    // ###
+    return QVariant();
 }
 
 /*!
@@ -485,9 +454,25 @@ QVariant QJSValue::toVariant() const
 */
 QJSValue QJSValue::call(const QJSValueList &args)
 {
-    Q_D(QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->call(/*thisObject=*/0, args);
+    FunctionObject *f = d->value.asFunctionObject();
+    if (!f)
+        return QJSValue();
+
+    ExecutionEngine *engine = d->engine;
+    assert(engine);
+
+    QVarLengthArray<Value> arguments(args.length());
+    for (int i = 0; i < args.size(); ++i)
+        arguments[i] = args.at(i).d->getValue(engine);
+
+    Value result;
+    try {
+        result = f->call(d->engine->current, Value::fromObject(d->engine->globalObject), arguments.data(), arguments.size());
+    } catch (Exception &e) {
+        result = e.value();
+    }
+
+    return new QJSValuePrivate(engine, result);
 }
 
 /*!
@@ -512,9 +497,25 @@ QJSValue QJSValue::call(const QJSValueList &args)
 */
 QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList &args)
 {
-    Q_D(QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->call(QJSValuePrivate::get(instance), args);
+    FunctionObject *f = d->value.asFunctionObject();
+    if (!f)
+        return QJSValue();
+
+    ExecutionEngine *engine = d->engine;
+    assert(engine);
+
+    QVarLengthArray<Value> arguments(args.length());
+    for (int i = 0; i < args.size(); ++i)
+        arguments[i] = args.at(i).d->getValue(engine);
+
+    Value result;
+    try {
+        result = f->call(d->engine->current, instance.d->getValue(engine), arguments.data(), arguments.size());
+    } catch (Exception &e) {
+        result = e.value();
+    }
+
+    return new QJSValuePrivate(engine, result);
 }
 
 /*!
@@ -537,9 +538,25 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
 */
 QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
 {
-    Q_D(QJSValue);
-    QScriptIsolate api(d->engine());
-    return QJSValuePrivate::get(d->callAsConstructor(args));
+    FunctionObject *f = d->value.asFunctionObject();
+    if (!f)
+        return QJSValue();
+
+    ExecutionEngine *engine = d->engine;
+    assert(engine);
+
+    QVarLengthArray<Value> arguments(args.length());
+    for (int i = 0; i < args.size(); ++i)
+        arguments[i] = args.at(i).d->getValue(engine);
+
+    Value result;
+    try {
+        result = f->construct(d->engine->current, arguments.data(), arguments.size());
+    } catch (Exception &e) {
+        result = e.value();
+    }
+
+    return new QJSValuePrivate(engine, result);
 }
 
 #ifdef QT_DEPRECATED
@@ -553,12 +570,8 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
 */
 QJSEngine* QJSValue::engine() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    QV8Engine* engine = d->engine();
-    if (engine)
-        return QV8Engine::get(engine);
-    return 0;
+    if (d->engine)
+        return d->engine->publicEngine;
 }
 
 #endif // QT_DEPRECATED
@@ -572,9 +585,10 @@ QJSEngine* QJSValue::engine() const
 */
 QJSValue QJSValue::prototype() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return QJSValuePrivate::get(d->prototype());
+    Object *o = d->value.asObject();
+    if (!o)
+        return QJSValue();
+    return new QJSValuePrivate(d->engine, Value::fromObject(o->prototype));
 }
 
 /*!
@@ -590,9 +604,13 @@ QJSValue QJSValue::prototype() const
 */
 void QJSValue::setPrototype(const QJSValue& prototype)
 {
-    Q_D(QJSValue);
-    QScriptIsolate api(d->engine());
-    d->setPrototype(QJSValuePrivate::get(prototype));
+    Object *o = d->value.asObject();
+    if (!o)
+        return;
+    Object *p = prototype.d->value.asObject();
+    if (!p)
+        return;
+    o->prototype = p;
 }
 
 /*!
@@ -604,8 +622,11 @@ void QJSValue::setPrototype(const QJSValue& prototype)
 */
 QJSValue& QJSValue::operator=(const QJSValue& other)
 {
-    d_ptr = other.d_ptr;
-    return *this;
+    if (d == other.d)
+        return *this;
+    d->deref();
+    d = other.d;
+    d->ref();
 }
 
 /*!
@@ -634,10 +655,7 @@ QJSValue& QJSValue::operator=(const QJSValue& other)
 */
 bool QJSValue::equals(const QJSValue& other) const
 {
-    Q_D(const QJSValue);
-    QJSValuePrivate* otherValue = QJSValuePrivate::get(other);
-    QScriptIsolate api(d->engine() ? d->engine() : otherValue->engine());
-    return d_ptr->equals(otherValue);
+    return __qmljs_equal(d->value, other.d->value);
 }
 
 /*!
@@ -664,10 +682,7 @@ bool QJSValue::equals(const QJSValue& other) const
 */
 bool QJSValue::strictlyEquals(const QJSValue& other) const
 {
-    Q_D(const QJSValue);
-    QJSValuePrivate* o = QJSValuePrivate::get(other);
-    QScriptIsolate api(d->engine() ? d->engine() : o->engine());
-    return d_ptr->strictlyEquals(o);
+    return __qmljs_strict_equal(d->value, other.d->value);
 }
 
 /*!
@@ -685,9 +700,13 @@ bool QJSValue::strictlyEquals(const QJSValue& other) const
 */
 QJSValue QJSValue::property(const QString& name) const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return QJSValuePrivate::get(d->property(name));
+    Object *o = d->value.asObject();
+    if (!o)
+        return QJSValue();
+
+    String *s = d->engine->newIdentifier(name);
+    QQmlJS::VM::Value v = o->get(d->engine->current, s);
+    return new QJSValuePrivate(d->engine, v);
 }
 
 /*!
@@ -704,9 +723,12 @@ QJSValue QJSValue::property(const QString& name) const
 */
 QJSValue QJSValue::property(quint32 arrayIndex) const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return QJSValuePrivate::get(d->property(arrayIndex));
+    Object *o = d->value.asObject();
+    if (!o)
+        return QJSValue();
+
+    QQmlJS::VM::Value v = o->getIndexed(d->engine->current, arrayIndex);
+    return new QJSValuePrivate(d->engine, v);
 }
 
 /*!
@@ -722,9 +744,12 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
 */
 void QJSValue::setProperty(const QString& name, const QJSValue& value)
 {
-    Q_D(QJSValue);
-    QScriptIsolate api(d->engine());
-    d->setProperty(name, QJSValuePrivate::get(value));
+    Object *o = d->value.asObject();
+    if (!o)
+        return;
+
+    String *s = d->engine->newIdentifier(name);
+    o->put(d->engine->current, s, value.d->value);
 }
 
 /*!
@@ -741,9 +766,11 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
 */
 void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
 {
-    Q_D(QJSValue);
-    QScriptIsolate api(d->engine());
-    d->setProperty(arrayIndex, QJSValuePrivate::get(value));
+    Object *o = d->value.asObject();
+    if (!o)
+        return;
+
+    o->putIndexed(d->engine->current, arrayIndex, value.d->value);
 }
 
 /*!
@@ -768,9 +795,12 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
 */
 bool QJSValue::deleteProperty(const QString &name)
 {
-    Q_D(QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->deleteProperty(name);
+    Object *o = d->value.asObject();
+    if (!o)
+        return false;
+
+    String *s = d->engine->newIdentifier(name);
+    return o->deleteProperty(d->engine->current, s);
 }
 
 /*!
@@ -781,9 +811,12 @@ bool QJSValue::deleteProperty(const QString &name)
 */
 bool QJSValue::hasProperty(const QString &name) const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->hasProperty(name);
+    Object *o = d->value.asObject();
+    if (!o)
+        return false;
+
+    String *s = d->engine->newIdentifier(name);
+    return o->__hasProperty__(s);
 }
 
 /*!
@@ -794,9 +827,12 @@ bool QJSValue::hasProperty(const QString &name) const
 */
 bool QJSValue::hasOwnProperty(const QString &name) const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->hasOwnProperty(name);
+    Object *o = d->value.asObject();
+    if (!o)
+        return false;
+
+    String *s = d->engine->newIdentifier(name);
+    return o->__getOwnProperty__(s);
 }
 
 /*!
@@ -811,9 +847,7 @@ bool QJSValue::hasOwnProperty(const QString &name) const
  */
 QObject *QJSValue::toQObject() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toQObject();
+    // ###
 }
 
 /*!
@@ -825,9 +859,10 @@ QObject *QJSValue::toQObject() const
 */
 QDateTime QJSValue::toDateTime() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toDataTime();
+    QQmlJS::VM::DateObject *date = d->value.asDateObject();
+    if (!date)
+        return QDateTime();
+    return QQmlJS::VM::DatePrototype::toQDateTime(date->value.toNumber());
 }
 
 /*!
@@ -838,9 +873,7 @@ QDateTime QJSValue::toDateTime() const
 */
 bool QJSValue::isDate() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isDate();
+    return d->value.asDateObject();
 }
 
 /*!
@@ -849,9 +882,7 @@ bool QJSValue::isDate() const
 */
 bool QJSValue::isRegExp() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isRegExp();
+    return d->value.asRegExpObject();
 }
 
 /*!
@@ -865,9 +896,7 @@ bool QJSValue::isRegExp() const
 */
 bool QJSValue::isQObject() const
 {
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isQObject();
+    // ###
 }
 
 /*!
@@ -893,7 +922,7 @@ bool QJSValue::isQObject() const
 Q_QML_EXPORT v8::Local<v8::Value> qt_QJSValueV8Value(const QJSValue &value)
 {
     QJSValuePrivate *d = QJSValuePrivate::get(value);
-    return v8::Local<v8::Value>::New(d->handle());
+    return v8::Local<v8::Value>::New(v8::Value::fromVmValue(d->value));
 }
 
 QT_END_NAMESPACE

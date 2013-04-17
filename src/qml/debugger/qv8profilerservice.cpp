@@ -41,7 +41,7 @@
 
 #include "qv8profilerservice_p.h"
 #include "qqmldebugservice_p_p.h"
-#include "private/qjsconverter_impl_p.h"
+#include "private/qjsconverter_p.h"
 #include <private/qv8profiler_p.h>
 
 #include <QtCore/QHash>

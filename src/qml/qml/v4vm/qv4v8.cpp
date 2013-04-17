@@ -1963,6 +1963,11 @@ void Isolate::setException(const VM::Value &ex)
     }
 }
 
+ExecutionEngine *Isolate::GetEngine()
+{
+    return Isolate::GetCurrent()->GetCurrentContext()->GetEngine();
+}
+
 Isolate *Isolate::GetCurrent()
 {
     if (!currentIsolate.hasLocalData())

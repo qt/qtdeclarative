@@ -169,7 +169,7 @@ Value Value::property(ExecutionContext *ctx, String *name) const
 
 
 PersistentValue::PersistentValue(ExecutionEngine *e, const Value &val)
-    : d(PersistentValuePrivate::create(e, val))
+    : d(new PersistentValuePrivate(e, val))
 {
 }
 
@@ -195,14 +195,23 @@ PersistentValue::~PersistentValue()
     d->deref();
 }
 
-PersistentValuePrivate *PersistentValuePrivate::create(ExecutionEngine *e, const Value &v)
+PersistentValuePrivate::PersistentValuePrivate(const Value &v)
+    : value(v)
+    , refcount(1)
+    , engine(0)
+    , next(0)
 {
-    PersistentValuePrivate *d = new PersistentValuePrivate;
-    d->engine = e;
-    d->next = e->memoryManager->m_persistentValues;
-    e->memoryManager->m_persistentValues = d;
-    d->value = v;
-    d->refcount = 1;
+    assert(!v.asManaged());
+}
+
+
+PersistentValuePrivate::PersistentValuePrivate(ExecutionEngine *e, const Value &v)
+    : value(v)
+    , refcount(1)
+    , engine(e)
+    , next(engine->memoryManager->m_persistentValues)
+{
+    engine->memoryManager->m_persistentValues = this;
 }
 
 void PersistentValuePrivate::deref()

@@ -45,8 +45,7 @@
 #include <QtQml/qtqmlglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
-#include <QtCore/qsharedpointer.h>
-#include <QtCore/qshareddata.h>
+#include <QtCore/qmetatype.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,10 +58,7 @@ struct QMetaObject;
 class QDateTime;
 
 typedef QList<QJSValue> QJSValueList;
-
 class QJSValuePrivate;
-struct QScriptValuePrivatePointerDeleter;
-template <class T> class QScriptPassPointer;
 
 class Q_QML_EXPORT QJSValue
 {
@@ -137,18 +133,13 @@ public:
     QT_DEPRECATED QJSEngine *engine() const;
 #endif
 
+    QJSValue(QJSValuePrivate *dd);
 private:
+    friend class QJSValuePrivate;
     // force compile error, prevent QJSValue(bool) to be called
-
     QJSValue(void *) Q_DECL_EQ_DELETE;
 
-    QJSValue(QJSValuePrivate*);
-    QJSValue(QScriptPassPointer<QJSValuePrivate>);
-
-private:
-    QExplicitlySharedDataPointer<QJSValuePrivate> d_ptr;
-
-    Q_DECLARE_PRIVATE(QJSValue)
+    QJSValuePrivate *d;
 };
 
 QT_END_NAMESPACE

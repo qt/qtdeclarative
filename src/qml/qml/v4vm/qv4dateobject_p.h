@@ -47,6 +47,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QDateTime;
+
 namespace QQmlJS {
 namespace VM {
 
@@ -70,6 +72,9 @@ struct DatePrototype: DateObject
 {
     DatePrototype(ExecutionEngine *engine): DateObject(engine, Value::fromDouble(qSNaN())) {}
     void init(ExecutionContext *ctx, const Value &ctor);
+
+    static double toJSDate(const QDateTime &dateTime);
+    static QDateTime toQDateTime(double d);
 
     static double getThisDate(ExecutionContext *ctx);
 

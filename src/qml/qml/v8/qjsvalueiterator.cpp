@@ -42,11 +42,6 @@
 #include "qjsvalueiterator.h"
 #include "qjsvalueiterator_p.h"
 
-#include "qscriptisolate_p.h"
-#include "qjsvalue_p.h"
-#include "qv8engine_p.h"
-#include "qscript_impl_p.h"
-
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -84,14 +79,18 @@ QT_BEGIN_NAMESPACE
     first property).
 */
 QJSValueIterator::QJSValueIterator(const QJSValue& object)
-    : d_ptr(new QJSValueIteratorPrivate(QJSValuePrivate::get(object)))
-{}
+    : d_ptr(0)
+{
+    // ###
+}
 
 /*!
     Destroys the iterator.
 */
 QJSValueIterator::~QJSValueIterator()
-{}
+{
+    // ###
+}
 
 /*!
     Returns true if there is at least one item ahead of the iterator
@@ -102,9 +101,7 @@ QJSValueIterator::~QJSValueIterator()
 */
 bool QJSValueIterator::hasNext() const
 {
-    Q_D(const QJSValueIterator);
-    QScriptIsolate api(d->engine());
-    return d->hasNext();
+    // ###
 }
 
 /*!
@@ -120,9 +117,7 @@ bool QJSValueIterator::hasNext() const
 */
 bool QJSValueIterator::next()
 {
-    Q_D(QJSValueIterator);
-    QScriptIsolate api(d->engine());
-    return d->next();
+    // ###
 }
 
 /*!
@@ -133,9 +128,7 @@ bool QJSValueIterator::next()
 */
 QString QJSValueIterator::name() const
 {
-    Q_D(const QJSValueIterator);
-    QScriptIsolate api(d->engine());
-    return d_ptr->name();
+    // ###
 }
 
 
@@ -147,9 +140,7 @@ QString QJSValueIterator::name() const
 */
 QJSValue QJSValueIterator::value() const
 {
-    Q_D(const QJSValueIterator);
-    QScriptIsolate api(d->engine());
-    return QJSValuePrivate::get(d->value());
+    // ###
 }
 
 
@@ -160,10 +151,7 @@ QJSValue QJSValueIterator::value() const
 */
 QJSValueIterator& QJSValueIterator::operator=(QJSValue& object)
 {
-    Q_D(QJSValueIterator);
-    QScriptIsolate api(d->engine());
-    d_ptr.reset(new QJSValueIteratorPrivate(QJSValuePrivate::get(object)));
-    return *this;
+    // ###
 }
 
 QT_END_NAMESPACE
