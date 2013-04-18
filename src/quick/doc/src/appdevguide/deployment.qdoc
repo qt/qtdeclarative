@@ -189,7 +189,7 @@ project
 The \c main.qml and \c background.png files will be packaged as resource files. This is
 done in the \c example.qrc resource collection file:
 
-\quotefile ../src/qml/doc/snippets/qml/qtbinding/resources/example.qrc
+\snippet ../src/qml/doc/snippets/qml/qtbinding/resources/example.qdoc 0
 
 Since \c background.png is a resource file, \c main.qml can refer to it using the relative
 path specified in \c example.qrc:
