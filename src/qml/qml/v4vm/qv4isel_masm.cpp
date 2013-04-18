@@ -536,7 +536,7 @@ void InstructionSelection::run(VM::Function *vmFunction, V4IR::Function *functio
     _as->enterStandardStackFrame(locals);
 
     int contextPointer = 0;
-#ifndef VALUE_FITS_IN_REGISTER
+#if !defined(RETURN_VALUE_IN_REGISTER)
     // When the return VM value doesn't fit into a register, then
     // the caller provides a pointer for storage as first argument.
     // That shifts the index the context pointer argument by one.
@@ -1182,8 +1182,15 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
 void InstructionSelection::visitRet(V4IR::Ret *s)
 {
     if (V4IR::Temp *t = s->expr->asTemp()) {
-#if defined(ARGUMENTS_IN_REGISTERS) && defined(VALUE_FITS_IN_REGISTER)
+#if defined(RETURN_VALUE_IN_REGISTER)
+#if CPU(X86)
+       Address addr = _as->loadTempAddress(Assembler::ScratchRegister, t);
+       _as->load32(addr, JSC::X86Registers::eax);
+       addr.offset += 4;
+       _as->load32(addr, JSC::X86Registers::edx);
+#else
         _as->copyValue(Assembler::ReturnValueRegister, t);
+#endif
 #else
         _as->loadPtr(addressForArgument(0), Assembler::ReturnValueRegister);
         _as->copyValue(Address(Assembler::ReturnValueRegister, 0), t);
