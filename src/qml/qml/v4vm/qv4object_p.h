@@ -356,7 +356,7 @@ private:
 struct ForEachIteratorObject: Object {
     ObjectIterator it;
     ForEachIteratorObject(ExecutionContext *ctx, Object *o)
-        : Object(ctx->engine), it(ctx, o, ObjectIterator::EnumberableOnly|ObjectIterator::WithProtoChain) {
+        : Object(ctx->engine), it(o, ObjectIterator::EnumberableOnly|ObjectIterator::WithProtoChain) {
         vtbl = &static_vtbl;
         type = Type_ForeachIteratorObject;
     }

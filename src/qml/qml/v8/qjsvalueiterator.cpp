@@ -41,8 +41,23 @@
 
 #include "qjsvalueiterator.h"
 #include "qjsvalueiterator_p.h"
+#include "qjsvalue_p.h"
+#include "private/qv4string_p.h"
 
 QT_BEGIN_NAMESPACE
+
+QJSValueIteratorPrivate::QJSValueIteratorPrivate(const QJSValue &v)
+    : value(v)
+    , iterator(QJSValuePrivate::get(v)->value.asObject(), QQmlJS::VM::ObjectIterator::EnumberableOnly)
+    , currentValue(0)
+    , currentName(0)
+    , currentIndex(UINT_MAX)
+    , nextValue(0)
+    , nextName(0)
+    , nextIndex(UINT_MAX)
+{
+}
+
 
 /*!
     \class QJSValueIterator
@@ -79,9 +94,9 @@ QT_BEGIN_NAMESPACE
     first property).
 */
 QJSValueIterator::QJSValueIterator(const QJSValue& object)
-    : d_ptr(0)
+    : d_ptr(new QJSValueIteratorPrivate(object))
 {
-    // ###
+    d_ptr->nextValue = d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
 }
 
 /*!
@@ -89,7 +104,6 @@ QJSValueIterator::QJSValueIterator(const QJSValue& object)
 */
 QJSValueIterator::~QJSValueIterator()
 {
-    // ###
 }
 
 /*!
@@ -101,7 +115,7 @@ QJSValueIterator::~QJSValueIterator()
 */
 bool QJSValueIterator::hasNext() const
 {
-    // ###
+    return d_ptr->nextValue != 0;
 }
 
 /*!
@@ -117,7 +131,12 @@ bool QJSValueIterator::hasNext() const
 */
 bool QJSValueIterator::next()
 {
-    // ###
+    d_ptr->currentValue = d_ptr->nextValue;
+    d_ptr->currentName = d_ptr->nextName;
+    d_ptr->currentIndex = d_ptr->nextIndex;
+    d_ptr->currentAttributes = d_ptr->nextAttributes;
+
+    d_ptr->nextValue = d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
 }
 
 /*!
@@ -128,7 +147,11 @@ bool QJSValueIterator::next()
 */
 QString QJSValueIterator::name() const
 {
-    // ###
+    if (d_ptr->currentName)
+        return d_ptr->currentName->toQString();
+    if (d_ptr->currentIndex < UINT_MAX)
+        return QString::number(d_ptr->currentIndex);
+    return QString();
 }
 
 
@@ -140,7 +163,16 @@ QString QJSValueIterator::name() const
 */
 QJSValue QJSValueIterator::value() const
 {
-    // ###
+    if (!d_ptr->currentValue)
+        return QJSValue();
+
+    QQmlJS::VM::Object *o = d_ptr->iterator.object;
+    try {
+        QQmlJS::VM::Value v = o->getValue(o->internalClass->engine->current, d_ptr->currentValue, d_ptr->currentAttributes);
+        return new QJSValuePrivate(o->internalClass->engine, v);
+    } catch (QQmlJS::VM::Exception &e) {
+        return QJSValue();
+    }
 }
 
 
@@ -151,7 +183,8 @@ QJSValue QJSValueIterator::value() const
 */
 QJSValueIterator& QJSValueIterator::operator=(QJSValue& object)
 {
-    // ###
+    d_ptr->iterator = QQmlJS::VM::ObjectIterator(QJSValuePrivate::get(object)->value.asObject(), QQmlJS::VM::ObjectIterator::EnumberableOnly);
+    d_ptr->nextValue = d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
 }
 
 QT_END_NAMESPACE

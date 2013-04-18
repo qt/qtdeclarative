@@ -46,9 +46,8 @@
 namespace QQmlJS {
 namespace VM {
 
-ObjectIterator::ObjectIterator(ExecutionContext *context, Object *o, uint flags)
-    : context(context)
-    , object(o)
+ObjectIterator::ObjectIterator(Object *o, uint flags)
+    : object(o)
     , current(o)
     , arrayNode(0)
     , arrayIndex(0)
@@ -176,7 +175,7 @@ Value ObjectIterator::nextPropertyNameAsString()
     if (name)
         return Value::fromString(name);
     if (index < UINT_MAX)
-        return __qmljs_to_string(Value::fromDouble(index), context);
+        return __qmljs_to_string(Value::fromDouble(index), object->internalClass->engine->current);
     return Value::nullValue();
 }
 

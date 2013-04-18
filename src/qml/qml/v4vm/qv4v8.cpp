@@ -939,7 +939,7 @@ Local<Array> Object::GetPropertyNames()
     assert(o);
 
     VM::ArrayObject *array = currentEngine()->newArrayObject(currentEngine()->current)->asArrayObject();
-    ObjectIterator it(currentEngine()->current, o, ObjectIterator::WithProtoChain|ObjectIterator::EnumberableOnly);
+    ObjectIterator it(o, ObjectIterator::WithProtoChain|ObjectIterator::EnumberableOnly);
     while (1) {
         VM::Value v = it.nextPropertyNameAsString();
         if (v.isNull())
@@ -955,7 +955,7 @@ Local<Array> Object::GetOwnPropertyNames()
     assert(o);
     VM::Value arg = VM::Value::fromObject(o);
     ArrayObject *array = currentEngine()->newArrayObject(currentEngine()->current)->asArrayObject();
-    ObjectIterator it(currentEngine()->current, o, ObjectIterator::EnumberableOnly);
+    ObjectIterator it(o, ObjectIterator::EnumberableOnly);
     while (1) {
         VM::Value v = it.nextPropertyNameAsString();
         if (v.isNull())

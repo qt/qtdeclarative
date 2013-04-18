@@ -157,7 +157,7 @@ Value ObjectPrototype::method_getOwnPropertyNames(SimpleCallContext *context)
         context->throwTypeError();
 
     ArrayObject *array = context->engine->newArrayObject(context)->asArrayObject();
-    ObjectIterator it(context, O, ObjectIterator::NoFlags);
+    ObjectIterator it(O, ObjectIterator::NoFlags);
     while (1) {
         Value v = it.nextPropertyNameAsString();
         if (v.isNull())
@@ -212,7 +212,7 @@ Value ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
 
     Object *o = ctx->argument(1).toObject(ctx);
 
-    ObjectIterator it(ctx, o, ObjectIterator::EnumberableOnly);
+    ObjectIterator it(o, ObjectIterator::EnumberableOnly);
     while (1) {
         uint index;
         String *name;
@@ -356,7 +356,7 @@ Value ObjectPrototype::method_keys(SimpleCallContext *ctx)
 
     ArrayObject *a = ctx->engine->newArrayObject(ctx);
 
-    ObjectIterator it(ctx, o, ObjectIterator::EnumberableOnly);
+    ObjectIterator it(o, ObjectIterator::EnumberableOnly);
     while (1) {
         uint index;
         String *name;

@@ -43,6 +43,7 @@
 #define QJSVALUEITERATOR_P_H
 
 #include "qjsvalue.h"
+#include "private/qv4objectiterator_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -51,6 +52,18 @@ class QV8Engine;
 class QJSValueIteratorPrivate
 {
 public:
+    QJSValueIteratorPrivate(const QJSValue &v);
+
+    QJSValue value;
+    QQmlJS::VM::ObjectIterator iterator;
+    QQmlJS::VM::Property *currentValue;
+    QQmlJS::VM::PropertyAttributes currentAttributes;
+    QQmlJS::VM::String *currentName;
+    uint currentIndex;
+    QQmlJS::VM::Property *nextValue;
+    QQmlJS::VM::PropertyAttributes nextAttributes;
+    QQmlJS::VM::String *nextName;
+    uint nextIndex;
 };
 
 

@@ -41,9 +41,7 @@
 #ifndef QV4OBJECTITERATOR_H
 #define QV4OBJECTITERATOR_H
 
-#include "qv4value_p.h"
-#include "qv4internalclass_p.h"
-#include "qv4property_p.h"
+#include "qv4global_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -52,6 +50,11 @@ namespace VM {
 
 struct SparseArrayNode;
 struct Object;
+struct PropertyAttributes;
+struct ExecutionContext;
+struct Property;
+struct Value;
+struct String;
 
 struct ObjectIterator
 {
@@ -62,7 +65,6 @@ struct ObjectIterator
         CurrentIsString = 0x4
     };
 
-    ExecutionContext *context;
     Object *object;
     Object *current;
     SparseArrayNode *arrayNode;
@@ -70,7 +72,7 @@ struct ObjectIterator
     uint memberIndex;
     uint flags;
 
-    ObjectIterator(ExecutionContext *context, Object *o, uint flags);
+    ObjectIterator(Object *o, uint flags);
     Property *next(String **name, uint *index, PropertyAttributes *attributes = 0);
     Value nextPropertyName();
     Value nextPropertyNameAsString();
