@@ -3082,6 +3082,22 @@ QColor QQuickWindow::color() const
     no item with active focus.
  */
 
+/*!
+    \qmlproperty QtQuick.Window2::Window::active
+    \since Qt 5.1
+
+    The active status of the window.
+
+    \sa requestActivate()
+ */
+
+/*!
+    \qmlmethod QtQuick2::Window::requestActivate()
+    \since QtQuick 2.1
+
+    Requests the window to be activated, i.e. receive keyboard focus.
+ */
+
 #include "moc_qquickwindow.cpp"
 
 QT_END_NAMESPACE

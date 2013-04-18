@@ -11,6 +11,7 @@ QT += core-private gui-private qml-private quick-private v8-private testlib
 TESTDATA = data/*
 
 OTHER_FILES += \
+    data/active.qml \
     data/AnimationsWhileHidden.qml \
     data/Headless.qml \
     data/showHideAnimate.qml
