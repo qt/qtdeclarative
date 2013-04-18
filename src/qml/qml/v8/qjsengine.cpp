@@ -46,6 +46,10 @@
 #include "qscriptisolate_p.h"
 #include "qv8engine_p.h"
 
+#include "private/qv4engine_p.h"
+#include "private/qv4mm_p.h"
+#include "private/qv4globalobject_p.h"
+
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qstringlist.h>
@@ -220,9 +224,7 @@ QJSEngine::~QJSEngine()
 */
 void QJSEngine::collectGarbage()
 {
-    Q_D(QJSEngine);
-    QScriptIsolate api(d);
-    d->collectGarbage();
+    d->m_v4Engine->memoryManager->runGC();
 }
 
 /*!
@@ -255,10 +257,18 @@ void QJSEngine::collectGarbage()
 */
 QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber)
 {
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return d->evaluate(program, fileName, qmlSourceCoordinate(lineNumber));
+    try {
+        QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(d->m_v4Engine->current, fileName, program, QQmlJS::Codegen::EvalCode,
+                                                                        d->m_v4Engine->current->strictMode, true);
+        if (!f)
+            return new QJSValuePrivate(d->m_v4Engine, d->m_v4Engine->newSyntaxErrorObject(d->m_v4Engine->current, 0));
+
+        QQmlJS::VM::Value result = d->m_v4Engine->run(f);
+        return new QJSValuePrivate(d->m_v4Engine, result);
+    } catch (QQmlJS::VM::Exception& ex) {
+        ex.accept(d->m_v4Engine->current);
+        return new QJSValuePrivate(d->m_v4Engine, ex.value());
+    }
 }
 
 /*!
@@ -271,11 +281,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
 */
 QJSValue QJSEngine::newObject()
 {
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    QQmlJS::VM::ExecutionEngine *engine = d->m_v4Engine;
-    return new QJSValuePrivate(engine, QQmlJS::VM::Value::fromObject(engine->newObject()));
+    return new QJSValuePrivate(d->m_v4Engine, d->m_v4Engine->newObject());
 }
 
 /*!
@@ -285,10 +291,9 @@ QJSValue QJSEngine::newObject()
 */
 QJSValue QJSEngine::newArray(uint length)
 {
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return QJSValuePrivate::get(d->newArray(length));
+    QQmlJS::VM::ArrayObject *array = d->m_v4Engine->newArrayObject(d->m_v4Engine->current);
+    array->setArrayLength(length);
+    return new QJSValuePrivate(d->m_v4Engine, array);
 }
 
 /*!
@@ -313,6 +318,7 @@ QJSValue QJSEngine::newArray(uint length)
 */
 QJSValue QJSEngine::newQObject(QObject *object)
 {
+    // ###
     Q_D(QJSEngine);
     QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
     v8::HandleScope handleScope;
@@ -331,10 +337,7 @@ QJSValue QJSEngine::newQObject(QObject *object)
 */
 QJSValue QJSEngine::globalObject() const
 {
-    Q_D(const QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return d->scriptValueFromInternal(d->global());
+    return new QJSValuePrivate(d->m_v4Engine, d->m_v4Engine->globalObject);
 }
 
 /*!
@@ -383,7 +386,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
                 *reinterpret_cast<double*>(ptr) = vp->value.toNumber();
                 return true;
             case QMetaType::QString:
-                *reinterpret_cast<QString*>(ptr) = vp->value.toString(engine->m_v4Engine->current)->toQString();
+                *reinterpret_cast<QString*>(ptr) = value.toString();
                 return true;
             case QMetaType::Float:
                 *reinterpret_cast<float*>(ptr) = vp->value.toNumber();

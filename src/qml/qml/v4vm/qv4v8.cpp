@@ -969,7 +969,8 @@ Local<Value> Object::GetPrototype()
 {
     Local<Value> result;
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
-    assert(o);
+    if (!o)
+        return Local<Value>();
     return Local<Value>::New(Value::fromVmValue(QQmlJS::VM::Value::fromObject(o->prototype)));
 }
 
@@ -979,7 +980,9 @@ bool Object::SetPrototype(Handle<Value> prototype)
     if (!p)
         return false;
     QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
-    assert(o);
+    if (!o)
+        return false;
+
     o->prototype = p;
     return true;
 }

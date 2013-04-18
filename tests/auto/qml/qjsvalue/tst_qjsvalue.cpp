@@ -378,7 +378,7 @@ void tst_QJSValue::toString()
             "})()");
         QVERIFY(!objectObject.isError());
         QVERIFY(objectObject.isObject());
-        QCOMPARE(objectObject.toString(), QString::fromLatin1("TypeError: Function.prototype.toString is not generic"));
+        QCOMPARE(objectObject.toString(), QString::fromLatin1("TypeError: Type error"));
     }
 
     QJSValue inv = QJSValue();

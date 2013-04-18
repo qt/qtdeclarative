@@ -71,6 +71,14 @@ public:
         : PersistentValuePrivate(e, v)
         , string(QString())
     {}
+    QJSValuePrivate(QQmlJS::VM::ExecutionEngine *e, QQmlJS::VM::Object *o)
+        : PersistentValuePrivate(e, QQmlJS::VM::Value::fromObject(o))
+        , string(QString())
+    {}
+    QJSValuePrivate(QQmlJS::VM::ExecutionEngine *e, QQmlJS::VM::String *s)
+        : PersistentValuePrivate(e, QQmlJS::VM::Value::fromString(s))
+        , string(QString())
+    {}
     QJSValuePrivate(const QQmlJS::VM::Value &v)
         : PersistentValuePrivate(v)
         , string(QString())

@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 
 QJSValueIteratorPrivate::QJSValueIteratorPrivate(const QJSValue &v)
     : value(v)
-    , iterator(QJSValuePrivate::get(v)->value.asObject(), QQmlJS::VM::ObjectIterator::EnumberableOnly)
+    , iterator(QJSValuePrivate::get(v)->value.asObject(), QQmlJS::VM::ObjectIterator::NoFlags)
     , currentValue(0)
     , currentName(0)
     , currentIndex(UINT_MAX)
@@ -115,6 +115,8 @@ QJSValueIterator::~QJSValueIterator()
 */
 bool QJSValueIterator::hasNext() const
 {
+    if (!QJSValuePrivate::get(d_ptr->value)->value.isObject())
+        return false;
     return d_ptr->nextValue != 0;
 }
 
@@ -131,12 +133,15 @@ bool QJSValueIterator::hasNext() const
 */
 bool QJSValueIterator::next()
 {
+    if (!QJSValuePrivate::get(d_ptr->value)->value.isObject())
+        return false;
     d_ptr->currentValue = d_ptr->nextValue;
     d_ptr->currentName = d_ptr->nextName;
     d_ptr->currentIndex = d_ptr->nextIndex;
     d_ptr->currentAttributes = d_ptr->nextAttributes;
 
     d_ptr->nextValue = d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
+    return d_ptr->nextValue != 0;
 }
 
 /*!
@@ -147,6 +152,8 @@ bool QJSValueIterator::next()
 */
 QString QJSValueIterator::name() const
 {
+    if (!QJSValuePrivate::get(d_ptr->value)->value.isObject())
+        return false;
     if (d_ptr->currentName)
         return d_ptr->currentName->toQString();
     if (d_ptr->currentIndex < UINT_MAX)
@@ -163,6 +170,8 @@ QString QJSValueIterator::name() const
 */
 QJSValue QJSValueIterator::value() const
 {
+    if (!QJSValuePrivate::get(d_ptr->value)->value.isObject())
+        return QJSValue();
     if (!d_ptr->currentValue)
         return QJSValue();
 
@@ -183,7 +192,7 @@ QJSValue QJSValueIterator::value() const
 */
 QJSValueIterator& QJSValueIterator::operator=(QJSValue& object)
 {
-    d_ptr->iterator = QQmlJS::VM::ObjectIterator(QJSValuePrivate::get(object)->value.asObject(), QQmlJS::VM::ObjectIterator::EnumberableOnly);
+    d_ptr->iterator = QQmlJS::VM::ObjectIterator(QJSValuePrivate::get(object)->value.asObject(), QQmlJS::VM::ObjectIterator::NoFlags);
     d_ptr->nextValue = d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
 }
 

@@ -68,7 +68,7 @@
 namespace QQmlJS {
 namespace VM {
 
-QString numberToString(double num, int radix = 10)
+QString __qmljs_numberToString(double num, int radix)
 {
     if (std::isnan(num)) {
         return QStringLiteral("NaN");
@@ -457,7 +457,7 @@ double __qmljs_string_to_number(const QString &string)
 
 Value __qmljs_string_from_number(ExecutionContext *ctx, double number)
 {
-    String *string = ctx->engine->newString(numberToString(number, 10));
+    String *string = ctx->engine->newString(__qmljs_numberToString(number, 10));
     return Value::fromString(string);
 }
 

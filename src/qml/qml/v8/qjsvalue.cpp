@@ -335,10 +335,28 @@ bool QJSValue::isVariant() const
 */
 QString QJSValue::toString() const
 {
-    if (!d->engine)
-        // ###
-        return QString();
-    return d->value.toString(d->engine->current)->toQString();
+    // have to check these here as converting those to a VM::String requires a context
+    // (which we don't always have for those types)
+    if (d->value.isUndefined())
+        return QStringLiteral("undefined");
+    else if (d->value.isNull())
+        return QStringLiteral("null");
+    else if (d->value.isBoolean()) {
+        if (d->value.booleanValue())
+            return QStringLiteral("true");
+        else
+            return QStringLiteral("false");
+    }
+    else if (d->value.isNumber())
+        return __qmljs_numberToString(d->value.asDouble());
+
+    QQmlJS::VM::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    try {
+        return d->value.toString(ctx)->toQString();
+    } catch (Exception &e) {
+        e.accept(ctx);
+        return e.value().toString(ctx)->toQString();
+    }
 }
 
 /*!
@@ -355,7 +373,13 @@ QString QJSValue::toString() const
 */
 double QJSValue::toNumber() const
 {
-    return d->value.toNumber();
+    QQmlJS::VM::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    try {
+        return d->value.toNumber();
+    } catch (Exception &e) {
+        e.accept(ctx);
+        return 0;
+    }
 }
 
 /*!
@@ -372,7 +396,13 @@ double QJSValue::toNumber() const
 */
 bool QJSValue::toBool() const
 {
-    return d->value.toBoolean();
+    QQmlJS::VM::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    try {
+        return d->value.toBoolean();
+    } catch (Exception &e) {
+        e.accept(ctx);
+        return false;
+    }
 }
 
 /*!
@@ -389,7 +419,13 @@ bool QJSValue::toBool() const
 */
 qint32 QJSValue::toInt() const
 {
-    return d->value.toInt32();
+    QQmlJS::VM::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    try {
+        return d->value.toInt32();
+    } catch (Exception &e) {
+        e.accept(ctx);
+        return 0;
+    }
 }
 
 /*!
@@ -406,7 +442,13 @@ qint32 QJSValue::toInt() const
 */
 quint32 QJSValue::toUInt() const
 {
-    return d->value.toUInt32();
+    QQmlJS::VM::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    try {
+        return d->value.toUInt32();
+    } catch (Exception &e) {
+        e.accept(ctx);
+        return 0;
+    }
 }
 
 /*!
@@ -466,9 +508,11 @@ QJSValue QJSValue::call(const QJSValueList &args)
         arguments[i] = args.at(i).d->getValue(engine);
 
     Value result;
+    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
     try {
-        result = f->call(d->engine->current, Value::fromObject(d->engine->globalObject), arguments.data(), arguments.size());
+        result = f->call(ctx, Value::fromObject(d->engine->globalObject), arguments.data(), arguments.size());
     } catch (Exception &e) {
+        e.accept(ctx);
         result = e.value();
     }
 
@@ -509,9 +553,11 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
         arguments[i] = args.at(i).d->getValue(engine);
 
     Value result;
+    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
     try {
-        result = f->call(d->engine->current, instance.d->getValue(engine), arguments.data(), arguments.size());
+        result = f->call(ctx, instance.d->getValue(engine), arguments.data(), arguments.size());
     } catch (Exception &e) {
+        e.accept(ctx);
         result = e.value();
     }
 
@@ -550,9 +596,11 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
         arguments[i] = args.at(i).d->getValue(engine);
 
     Value result;
+    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
     try {
-        result = f->construct(d->engine->current, arguments.data(), arguments.size());
+        result = f->construct(ctx, arguments.data(), arguments.size());
     } catch (Exception &e) {
+        e.accept(ctx);
         result = e.value();
     }
 
@@ -704,9 +752,20 @@ QJSValue QJSValue::property(const QString& name) const
     if (!o)
         return QJSValue();
 
-    String *s = d->engine->newIdentifier(name);
-    QQmlJS::VM::Value v = o->get(d->engine->current, s);
-    return new QJSValuePrivate(d->engine, v);
+    String *s = d->engine->newString(name);
+    uint idx = s->asArrayIndex();
+    if (idx < UINT_MAX)
+        return property(idx);
+
+    s->makeIdentifier(d->engine->current);
+    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
+    try {
+        QQmlJS::VM::Value v = o->get(ctx, s);
+        return new QJSValuePrivate(d->engine, v);
+    } catch (QQmlJS::VM::Exception &e) {
+        e.accept(ctx);
+        return QJSValue();
+    }
 }
 
 /*!
@@ -727,8 +786,14 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
     if (!o)
         return QJSValue();
 
-    QQmlJS::VM::Value v = o->getIndexed(d->engine->current, arrayIndex);
-    return new QJSValuePrivate(d->engine, v);
+    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
+    try {
+        QQmlJS::VM::Value v = o->getIndexed(ctx, arrayIndex);
+        return new QJSValuePrivate(d->engine, v);
+    } catch (QQmlJS::VM::Exception &e) {
+        e.accept(ctx);
+        return QJSValue();
+    }
 }
 
 /*!
@@ -748,8 +813,20 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
     if (!o)
         return;
 
-    String *s = d->engine->newIdentifier(name);
-    o->put(d->engine->current, s, value.d->value);
+    String *s = d->engine->newString(name);
+    uint idx = s->asArrayIndex();
+    if (idx < UINT_MAX) {
+        setProperty(idx, value);
+        return;
+    }
+
+    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
+    s->makeIdentifier(ctx);
+    try {
+        o->put(ctx, s, value.d->value);
+    } catch (QQmlJS::VM::Exception &e) {
+        e.accept(ctx);
+    }
 }
 
 /*!
@@ -770,7 +847,12 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
     if (!o)
         return;
 
-    o->putIndexed(d->engine->current, arrayIndex, value.d->value);
+    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
+    try {
+        o->putIndexed(ctx, arrayIndex, value.d->value);
+    } catch (QQmlJS::VM::Exception &e) {
+        e.accept(ctx);
+    }
 }
 
 /*!
