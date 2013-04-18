@@ -817,10 +817,12 @@ void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incuba
     releaseIncubator(incubationTask);
 
     if (status == QQmlIncubator::Ready) {
+        cacheItem->referenceObject();
         if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(cacheItem->object))
             emitCreatedPackage(incubationTask, package);
         else
             emitCreatedItem(incubationTask, cacheItem->object);
+        cacheItem->releaseObject();
     } else if (status == QQmlIncubator::Error) {
         qmlInfo(q, m_delegate->errors()) << "Error creating delegate";
     }
@@ -835,6 +837,7 @@ void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incuba
         cacheItem->scriptRef -= 1;
         cacheItem->contextData->destroy();
         cacheItem->contextData = 0;
+
         if (!cacheItem->isReferenced()) {
             removeCacheItem(cacheItem);
             delete cacheItem;
