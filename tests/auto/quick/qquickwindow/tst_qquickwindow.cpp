@@ -304,6 +304,7 @@ private slots:
     void qmlCreation();
     void clearColor();
 
+    void grab_data();
     void grab();
     void multipleWindows();
 
@@ -929,15 +930,28 @@ void tst_qquickwindow::clearColor()
     QCOMPARE(window->color(), QColor(Qt::blue));
 }
 
+void tst_qquickwindow::grab_data()
+{
+    QTest::addColumn<bool>("visible");
+    QTest::newRow("visible") << true;
+    QTest::newRow("invisible") << false;
+}
+
 void tst_qquickwindow::grab()
 {
+    QFETCH(bool, visible);
+
     QQuickWindow window;
     window.setColor(Qt::red);
 
     window.resize(250, 250);
-    window.show();
 
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    if (visible) {
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+    } else {
+        window.create();
+    }
 
     QImage content = window.grabWindow();
     QCOMPARE(content.width(), window.width());
