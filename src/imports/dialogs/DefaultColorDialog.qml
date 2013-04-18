@@ -39,6 +39,7 @@
 *****************************************************************************/
 
 import QtQuick 2.1
+import QtQuick.Window 2.1
 import QtQuick.Dialogs 1.0
 import "qml"
 
@@ -47,14 +48,17 @@ AbstractColorDialog {
 
     Rectangle {
         id: content
-        width: 320
-        height: (usePaletteMap ? width : 0) + bottomMinHeight
+        property int maxSize: 0.9 * Math.min(Screen.desktopAvailableWidth, Screen.desktopAvailableHeight)
+        implicitHeight: Math.max(maxSize, Screen.logicalPixelDensity * (usePaletteMap ? 10 : 5))
+        implicitWidth: usePaletteMap ? implicitHeight - bottomMinHeight : implicitHeight * 1.5
         color: palette.window
         property real bottomMinHeight: sliders.height + buttonRow.height + outerSpacing * 3
         property real spacing: 8
         property real outerSpacing: 12
         property bool usePaletteMap: true
-        property bool inited: false
+
+        // set the preferred width based on height, to avoid "letterboxing" the paletteMap
+        onHeightChanged: implicitHeight = Math.max((usePaletteMap ? 480 : bottomMinHeight), height)
 
         SystemPalette { id: palette }
 

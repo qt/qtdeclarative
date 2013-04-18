@@ -40,6 +40,7 @@
 
 import QtQuick 2.1
 import QtQuick.Dialogs 1.0
+import QtQuick.Window 2.1
 import Qt.labs.folderlistmodel 2.0
 import "qml"
 
@@ -54,7 +55,7 @@ AbstractFileDialog {
     }
 
     property bool showFocusHighlight: false
-    property real textX: 28
+    property real textX: titleBar.height
     property SystemPalette palette
     property var selectedIndices: []
     property int lastClickedIdx: -1
@@ -117,11 +118,12 @@ AbstractFileDialog {
     }
 
     Rectangle {
-        width: 480  // TODO: QTBUG-29817 geometry from AbstractFileDialog
-        height: 320
+        property int maxSize: Math.min(Screen.desktopAvailableWidth, Screen.desktopAvailableHeight)
+        // TODO: QTBUG-29817 geometry from AbstractFileDialog
+        implicitWidth: Math.min(maxSize, Screen.logicalPixelDensity * 100)
+        implicitHeight: Math.min(maxSize, Screen.logicalPixelDensity * 80)
         id: window
         color: palette.window
-        anchors.centerIn: Qt.application.supportsMultipleWindows ? null : parent
 
         SystemPalette { id: palette }
 

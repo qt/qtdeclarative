@@ -39,48 +39,30 @@
 *****************************************************************************/
 
 import QtQuick 2.1
-import QtQuick.Window 2.1
 
-Item {
-    id: container
-
-    property alias text: buttonLabel.text
-    property alias label: buttonLabel
-    signal clicked
-    property alias containsMouse: mouseArea.containsMouse
-    property alias pressed: mouseArea.pressed
-    implicitHeight: buttonLabel.implicitHeight * 1.2
-    implicitWidth: Math.max(Screen.logicalPixelDensity * 10, buttonLabel.implicitWidth * 1.2)
-    height: implicitHeight
-    width: implicitWidth
-
-    SystemPalette { id: palette }
-
-    Rectangle {
-        id: frame
-        anchors.fill: parent
-        color: palette.button
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: mouseArea.pressed ? Qt.darker(palette.button, 1.3) : palette.button }
-            GradientStop { position: 1.0; color: Qt.darker(palette.button, 1.3) }
-        }
-        antialiasing: true
-        radius: height / 4
-        border.color: Qt.darker(palette.button, 1.5)
-        border.width: 1
-    }
-
+Rectangle {
+    color: "#80000000"
+    anchors.fill: parent
+    z: 1000000
+    property alias content: borderImage.content
+    property bool dismissOnOuterClick: true
+    signal dismissed
     MouseArea {
-        id: mouseArea
         anchors.fill: parent
-        onClicked: container.clicked()
-        hoverEnabled: true
-    }
+        enabled: dismissOnOuterClick
+        onClicked: dismissed()
+        BorderImage {
+            id: borderImage
+            property Item content
 
-    Text {
-        id: buttonLabel
-        text: container.text
-        color: palette.buttonText
-        anchors.centerIn: parent
+            width: content ? content.width + 15 : 0
+            height: content ? content.height + 15 : 0
+            onWidthChanged: content.x = 5
+            onHeightChanged: content.y = 5
+            border { left: 10; top: 10; right: 10; bottom: 10 }
+            source: "../images/window_border.png"
+            anchors.centerIn: parent
+            onContentChanged: if (content) content.parent = borderImage
+        }
     }
 }

@@ -48,6 +48,7 @@
 #include "qquickabstractcolordialog_p.h"
 #include "qquickplatformcolordialog_p.h"
 #include <private/qguiapplication_p.h>
+#include <qpa/qplatformintegration.h>
 
 //#define PURE_QML_ONLY
 
@@ -78,9 +79,18 @@ class QtQuick2DialogsPlugin : public QQmlExtensionPlugin
 public:
     QtQuick2DialogsPlugin() : QQmlExtensionPlugin() { }
 
+    virtual void initializeEngine(QQmlEngine *engine, const char *uri) {
+        //qDebug() << Q_FUNC_INFO << uri << m_decorationComponentUrl;
+        QQuickAbstractDialog::m_decorationComponent =
+            new QQmlComponent(engine, m_decorationComponentUrl, QQmlComponent::Asynchronous);
+    }
+
     virtual void registerTypes(const char *uri) {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Dialogs"));
+        bool hasTopLevelWindows = QGuiApplicationPrivate::platformIntegration()->
+            hasCapability(QPlatformIntegration::MultipleWindows);
         QDir qmlDir(baseUrl().toLocalFile());
+        m_decorationComponentUrl = QUrl::fromLocalFile(qmlDir.filePath(QString("qml/DefaultWindowDecoration.qml")));
         QDir widgetsDir(baseUrl().toLocalFile());
         // TODO: find the directory by searching rather than assuming a relative path
         widgetsDir.cd("../PrivateWidgets");
@@ -96,8 +106,7 @@ public:
             qmlRegisterType<QQuickPlatformFileDialog>(uri, DIALOGS_MAJOR_MINOR, "FileDialog");
         else
 #endif
-            registerWidgetOrQmlImplementation<QQuickFileDialog>(widgetsDir, "WidgetFileDialog.qml",
-                qmlDir, "DefaultFileDialog.qml", "FileDialog", uri);
+            registerWidgetOrQmlImplementation<QQuickFileDialog>(widgetsDir, qmlDir, "FileDialog", uri, hasTopLevelWindows);
 
         // ColorDialog
 #ifndef PURE_QML_ONLY
@@ -105,35 +114,37 @@ public:
             qmlRegisterType<QQuickPlatformColorDialog>(uri, DIALOGS_MAJOR_MINOR, "ColorDialog");
         else
 #endif
-            registerWidgetOrQmlImplementation<QQuickColorDialog>(widgetsDir, "WidgetColorDialog.qml",
-                qmlDir, "DefaultColorDialog.qml", "ColorDialog", uri);
+            registerWidgetOrQmlImplementation<QQuickColorDialog>(widgetsDir, qmlDir, "ColorDialog", uri, hasTopLevelWindows);
     }
 
 protected:
     template <class WrapperType>
-    void registerWidgetOrQmlImplementation(QDir widgetsDir, QString widgetQmlFile,
-            QDir qmlDir, QString qmlFile, const char *qmlName, const char *uri) {
+    void registerWidgetOrQmlImplementation(QDir widgetsDir, QDir qmlDir,
+            const char *qmlName, const char *uri, bool hasTopLevelWindows) {
+        //qDebug() << Q_FUNC_INFO << qmlDir << qmlName << uri;
         bool needQml = true;
+
 #ifndef PURE_QML_ONLY
         // If there is a qmldir and we have a QApplication instance (as opposed to a
         // widget-free QGuiApplication), assume that the widget-based dialog will work.
-        if (widgetsDir.exists("qmldir") && !widgetQmlFile.isEmpty() &&
+        if (hasTopLevelWindows && widgetsDir.exists("qmldir") &&
                 !qstrcmp(QCoreApplication::instance()->metaObject()->className(), "QApplication")) {
-            QString dialogQmlPath = qmlDir.filePath(widgetQmlFile);
+            QString dialogQmlPath = qmlDir.filePath(QString("Widget%1.qml").arg(qmlName));
             if (qmlRegisterType(QUrl::fromLocalFile(dialogQmlPath), uri, DIALOGS_MAJOR_MINOR, qmlName) >= 0)
                 needQml = false;
-            // qDebug() << "registering" << qmlName << " as " << dialogQmlPath << "success?" << needQml;
+            // qDebug() << "registering" << qmlName << " as " << dialogQmlPath << "success?" << !needQml;
         }
 #endif
         if (needQml) {
-            QString dialogQmlPath = qmlDir.filePath(qmlFile);
             QByteArray abstractTypeName = QByteArray("Abstract") + qmlName;
             qmlRegisterType<WrapperType>(uri, DIALOGS_MAJOR_MINOR, abstractTypeName); // implementation wrapper
+            QString dialogQmlPath = qmlDir.filePath(QString("Default%1.qml").arg(qmlName));
             // qDebug() << "registering" << qmlName << " as " << dialogQmlPath << "success?" <<
             qmlRegisterType(QUrl::fromLocalFile(dialogQmlPath), uri, DIALOGS_MAJOR_MINOR, qmlName);
         }
     }
 
+    QUrl m_decorationComponentUrl;
 };
 
 QT_END_NAMESPACE
