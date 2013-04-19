@@ -82,7 +82,9 @@ class QQmlEngine;
 class QQmlExpression;
 class QQmlExpressionPrivate;
 class QQmlAbstractExpression;
+#ifdef QT_USE_OLD_V4
 class QV4Bindings;
+#endif
 class QQmlContextData;
 
 class QQmlContextPrivate : public QObjectPrivate
@@ -212,7 +214,9 @@ public:
     QQmlComponentAttached *componentAttached;
 
     // Optimized binding objects.  Needed for deferred properties.
+#ifdef QT_USE_OLD_V4
     QV4Bindings *v4bindings;
+#endif
     QV8Bindings *v8bindings;
 
     // Return the outermost id for obj, if any.

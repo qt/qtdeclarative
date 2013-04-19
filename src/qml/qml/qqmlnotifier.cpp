@@ -51,14 +51,18 @@ typedef void (*Callback)(QQmlNotifierEndpoint *, void **);
 void QQmlBoundSignal_callback(QQmlNotifierEndpoint *, void **);
 void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
 void QQmlVMEMetaObjectEndpoint_callback(QQmlNotifierEndpoint *, void **);
+#ifdef QT_USE_OLD_V4
 void QV4BindingsSubscription_callback(QQmlNotifierEndpoint *, void **);
+#endif
 
 static Callback QQmlNotifier_callbacks[] = {
     0,
     QQmlBoundSignal_callback,
     QQmlJavaScriptExpressionGuard_callback,
-    QQmlVMEMetaObjectEndpoint_callback,
-    QV4BindingsSubscription_callback
+    QQmlVMEMetaObjectEndpoint_callback
+#ifdef QT_USE_OLD_V4
+    , QV4BindingsSubscription_callback
+#endif
 };
 
 void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint, void **a)

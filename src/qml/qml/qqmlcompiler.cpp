@@ -60,7 +60,9 @@
 #include "qqmlscriptstring.h"
 #include "qqmlglobal_p.h"
 #include "qqmlbinding_p.h"
+#ifdef QT_USE_OLD_V4
 #include <private/qv4compiler_p.h>
+#endif
 
 #include <QDebug>
 #include <QPointF>
@@ -3545,6 +3547,7 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
         output->addInstruction(store);
     } else
 #endif
+#ifdef QT_USE_OLD_V4
     if (ref.dataType == BindingReference::V4) {
         const JSBindingReference &js = static_cast<const JSBindingReference &>(ref);
 
@@ -3573,7 +3576,9 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
             js.dataType = BindingReference::V8;
             genBindingAssignment(binding, prop, obj, valueTypeProperty);
         }
-    } else if (ref.dataType == BindingReference::V8) {
+    } else
+#endif
+    if (ref.dataType == BindingReference::V8) {
         const JSBindingReference &js = static_cast<const JSBindingReference &>(ref);
 
         Instruction::StoreV8Binding store;
@@ -3664,12 +3669,14 @@ bool QQmlCompiler::completeComponentBuild()
          aliasObject = compileState->aliasingObjects.next(aliasObject)) 
         COMPILE_CHECK(buildDynamicMetaAliases(aliasObject));
 
+#ifdef QT_USE_OLD_V4
     QV4Compiler::Expression expr(unit->imports());
     expr.component = compileState->root;
     expr.ids = &compileState->ids;
     expr.importCache = output->importCache;
 
     QV4Compiler bindingCompiler;
+#endif
 
     QList<JSBindingReference*> sharedBindings;
 
@@ -3678,6 +3685,7 @@ bool QQmlCompiler::completeComponentBuild()
         JSBindingReference &binding = *b;
 
         // First try v4
+#ifdef QT_USE_OLD_V4
         expr.context = binding.bindingContext.object;
         expr.property = binding.property;
         expr.expression = binding.expression;
@@ -3696,6 +3704,9 @@ bool QQmlCompiler::completeComponentBuild()
 
             // Drop through. We need to create a V8 binding in case the V4 binding is invalidated
         }
+#else
+        bool needsFallback = false;
+#endif
 
         // Pre-rewrite the expression
         QString expression = binding.expression.asScript();
@@ -3764,8 +3775,10 @@ bool QQmlCompiler::completeComponentBuild()
         compileState->v8BindingProgramLine = startLineNumber;
     }
 
-    if (bindingCompiler.isValid()) 
+#ifdef QT_USE_OLD_V4
+    if (bindingCompiler.isValid())
         compileState->compiledBindingData = bindingCompiler.program();
+#endif
 
     // Check pop()'s matched push()'s
     Q_ASSERT(compileState->objectDepth.depth() == 0);

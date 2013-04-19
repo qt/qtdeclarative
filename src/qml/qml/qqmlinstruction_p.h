@@ -58,6 +58,12 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifdef QT_USE_OLD_V4
+#define FV4(x, y) F(x,y)
+#else
+#define FV4(x, y)
+#endif
+
 #define FOR_EACH_QML_INSTR(F) \
     F(Init, init) \
     F(DeferInit, deferInit) \
@@ -119,7 +125,7 @@ QT_BEGIN_NAMESPACE
     F(InitV8Bindings, initV8Bindings) \
     F(StoreBinding, assignBinding) \
     F(StoreV8Binding, assignBinding) \
-    F(StoreV4Binding, assignV4Binding) \
+    FV4(StoreV4Binding, assignV4Binding) \
     F(StoreValueSource, assignValueSource) \
     F(StoreValueInterceptor, assignValueInterceptor) \
     F(StoreObjectQList, common) \

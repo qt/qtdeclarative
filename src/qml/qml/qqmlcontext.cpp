@@ -48,7 +48,9 @@
 #include "qqmlengine_p.h"
 #include "qqmlengine.h"
 #include "qqmlinfo.h"
+#ifdef QT_USE_OLD_V4
 #include <private/qv4bindings_p.h>
+#endif
 #include <private/qv8bindings_p.h>
 
 #include <qjsengine.h>
@@ -518,7 +520,11 @@ QQmlContextData::QQmlContextData()
   publicContext(0), activeVMEData(0),
   propertyNames(0), contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0),
   expressions(0), contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0),
-  componentAttached(0), v4bindings(0), v8bindings(0)
+  componentAttached(0),
+#ifdef QT_USE_OLD_V4
+  v4bindings(0),
+#endif
+  v8bindings(0)
 {
 }
 
@@ -528,7 +534,11 @@ QQmlContextData::QQmlContextData(QQmlContext *ctxt)
   publicContext(ctxt), activeVMEData(0),
   propertyNames(0), contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0),
   expressions(0), contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0),
-  componentAttached(0), v4bindings(0), v8bindings(0)
+  componentAttached(0),
+#ifdef QT_USE_OLD_V4
+  v4bindings(0),
+#endif
+  v8bindings(0)
 {
 }
 
@@ -636,8 +646,10 @@ void QQmlContextData::destroy()
     if (imports)
         imports->release();
 
+#ifdef QT_USE_OLD_V4
     if (v4bindings)
         v4bindings->release();
+#endif
 
     if (v8bindings)
         v8bindings->release();

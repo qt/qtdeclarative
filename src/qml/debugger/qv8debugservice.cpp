@@ -191,7 +191,9 @@ void QV8DebugService::init()
 //    ### FIXME: v4
 //    v8::Debug::SetMessageHandler2(DebugMessageHandler);
 //    v8::Debug::SetDebugMessageDispatchHandler(DebugMessageDispatchHandler);
+#ifdef QT_USE_OLD_V4
     QV4Compiler::enableV4(false);
+#endif
 }
 
 // executed in the gui thread
