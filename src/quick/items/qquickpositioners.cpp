@@ -700,7 +700,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     cases, these lists will be empty.  See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \note In Qt Quick 1, this transition was applied to all items that were part of the
+    \note In \l {Qt Quick 1}, this transition was applied to all items that were part of the
     positioner at the time of its creation. From \l {Qt Quick}{Qt Quick 2} onwards, positioners apply the
     \l populate transition to these items instead.
 
@@ -854,7 +854,7 @@ void QQuickColumn::reportConflictingAnchors()
     cases, these lists will be empty.  See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \note In Qt Quick 1, this transition was applied to all items that were part of the
+    \note In \l {Qt Quick 1}, this transition was applied to all items that were part of the
     positioner at the time of its creation. From \l {Qt Quick}{QtQuick 2} onwards, positioners apply the
     \l populate transition to these items instead.
 
@@ -1087,7 +1087,7 @@ void QQuickRow::reportConflictingAnchors()
     cases, these lists will be empty.  See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \note In Qt Quick 1, this transition was applied to all items that were part of the
+    \note In \l {Qt Quick 1}, this transition was applied to all items that were part of the
     positioner at the time of its creation. From \l {Qt Quick}{QtQuick 2} onwards, positioners apply the
     \l populate transition to these items instead.
 
@@ -1628,7 +1628,7 @@ void QQuickGrid::reportConflictingAnchors()
     cases, these lists will be empty.  See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \note In Qt Quick 1, this transition was applied to all items that were part of the
+    \note In \l {Qt Quick 1}, this transition was applied to all items that were part of the
     positioner at the time of its creation. From \l {Qt Quick}{QtQuick 2} onwards, positioners apply the
     \l populate transition to these items instead.
 

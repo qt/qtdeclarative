@@ -1634,9 +1634,9 @@ v8::Handle<v8::Value> locale(const v8::Arguments &args)
 
     \snippet qml/qtBinding.4.qml 0
 
-    Note: in \c {QtQuick 1.x}, all function assignment was treated as
+    \note In \l {Qt Quick 1}, all function assignment was treated as
     binding assignment, so the Qt.binding() function is new in
-    \c {QtQuick 2.0}.
+    \l {Qt Quick}{Qt Quick 2}.
 
     \since QtQuick 2.0
 */

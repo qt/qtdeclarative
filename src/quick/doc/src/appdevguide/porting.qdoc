@@ -77,7 +77,7 @@ into a \c QtQuick.LocalStorage singleton type. Any code that requires the local 
 \e {QtQuick.LocalStorage} instead. See the \l {QtQuick.LocalStorage 2}{QtQuick.LocalStorage} documentation
 for examples.
 \li The \c LayoutItem type has been removed from the \c QtQuick module as it was specific to the
-Graphics View framework backend used in \c {QtQuick 1}.
+Graphics View framework backend used in \l {Qt Quick 1}.
 \endlist
 
 \section2 Behavioral Changes
@@ -138,7 +138,7 @@ ShaderEffectItem type has been renamed to \l ShaderEffect.
 
 In Qt 5, all QML applications are rendered with an OpenGL scenegraph architecture rather than the
 Graphics View framework used in Qt 4. Due to the scale of this architectural change, the C++ API has
-been extensively restructured and the \c QtDeclarative module has been deprecated in favour of two
+been extensively restructured and the \c QtDeclarative module has been deprecated in favor of two
 new modules: \l {Qt QML}, which implements the QML engine and language infrastructure, and \l {Qt Quick},
 which implements the visual canvas and scenegraph backend.
 
@@ -192,7 +192,7 @@ Required header files can then be included:
 \endcode
 
 (The \c QtDeclarative module is still available to developers as the \c {Qt Quick 1} module, as
-discussed in \l{Using the QtDeclarative module in Qt 5}{below}. However, it should not be used for
+discussed \l {Qt Quick 1}{below}. However, it should not be used for
 new applications.)
 
 
@@ -231,6 +231,8 @@ within the plugin class declaration.
 See the updated \l {qtqml-modules-cppplugins.html}{Creating C++ Plugins For QML} documentation for
 an overview of creating QML plugins in Qt 5.
 
+
+\keyword Qt Quick 1
 
 \section2 QtDeclarative module in Qt 5
 

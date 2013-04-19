@@ -800,7 +800,7 @@ QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
   In this case, the Text item will be created in the engine's
   \l {QQmlEngine::rootContext()}{root context}.
 
-  Note that the Qt Quick 1 version is called QDeclarativeEngine.
+  Note that the \l {Qt Quick 1} version is called QDeclarativeEngine.
 
   \sa QQmlComponent, QQmlContext
 */

@@ -84,7 +84,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    The Qt Quick 1 version of this class is named QDeclarativeParserStatus.
+    The \l {Qt Quick 1} version of this class is named QDeclarativeParserStatus.
 */
 
 /*! \internal */
