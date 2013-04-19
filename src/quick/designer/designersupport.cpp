@@ -437,6 +437,16 @@ void DesignerSupport::activateDesignerMode()
     QQmlEnginePrivate::activateDesignerMode();
 }
 
+void DesignerSupport::disableComponentComplete()
+{
+    QQmlVME::disableComponentComplete();
+}
+
+void DesignerSupport::enableComponentComplete()
+{
+    QQmlVME::enableComponentComplete();
+}
+
 void DesignerSupport::createOpenGLContext(QQuickWindow *window)
 {
     DesignerWindowManager::createOpenGLContext(window);

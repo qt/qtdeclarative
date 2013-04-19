@@ -162,6 +162,7 @@ protected:
 private Q_SLOTS:
     void maybeUpdate();
     void cleanupSceneGraph();
+    void setTransientParent_helper(QQuickWindow *window);
 
 private:
     friend class QQuickItem;

@@ -414,7 +414,10 @@ void QQuickWindowPrivate::init(QQuickWindow *c)
 QQmlListProperty<QObject> QQuickWindowPrivate::data()
 {
     initContentItem();
-    return QQuickItemPrivate::get(contentItem)->data();
+    return QQmlListProperty<QObject>(q_func(), 0, QQuickWindowPrivate::data_append,
+                                             QQuickWindowPrivate::data_count,
+                                             QQuickWindowPrivate::data_at,
+                                             QQuickWindowPrivate::data_clear);
 }
 
 void QQuickWindowPrivate::initContentItem()
@@ -846,7 +849,21 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     import QtQuick.Window 2.1
     \endcode
 
-    Restricting this import will allow you to have a QML environment without access to window system features.
+    Omitting this import will allow you to have a QML environment without
+    access to window system features.
+
+    A Window can be declared inside an Item or inside another Window; in that
+    case the inner Window will automatically become "transient for" the outer
+    Window: that is, most platforms will show it centered upon the outer window
+    by default, and there may be other platform-dependent behaviors, depending
+    also on the \l flags. If the nested window is intended to be a dialog in
+    your application, you should also set \l flags to Qt.Dialog, because some
+    window managers will not provide the centering behavior without that flag.
+    You can also declare multiple windows inside a top-level \l QtObject, in which
+    case the windows will have no transient relationship.
+
+    Alternatively you can set or bind \l x and \l y to position the Window
+    explicitly on the screen.
 */
 /*!
     \class QQuickWindow
@@ -1094,7 +1111,10 @@ QQuickItem *QQuickWindow::contentItem() const
 }
 
 /*!
-  Returns the item which currently has active focus.
+    \property QQuickWindow::activeFocusItem
+
+    \brief The item which currently has active focus or \c null if there is
+    no item with active focus.
 */
 QQuickItem *QQuickWindow::activeFocusItem() const
 {
@@ -2037,6 +2057,64 @@ bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent 
     return overThreshold;
 }
 
+/*!
+    \qmlproperty list<Object> QtQuick.Window2::Window::data
+    \default
+
+    The data property allows you to freely mix visual children, resources
+    and other Windows in a Window.
+
+    If you assign another Window to the data list, the nested window will
+    become "transient for" the outer Window.
+
+    If you assign an \l Item to the data list, it becomes a child of the
+    Window's \l contentItem, so that it appears inside the window. The item's
+    parent will be the window's contentItem, which is the root of the Item
+    ownership tree within that Window.
+
+    If you assign any other object type, it is added as a resource.
+
+    It should not generally be necessary to refer to the \c data property,
+    as it is the default property for Window and thus all child items are
+    automatically assigned to this property.
+
+    \sa QWindow::transientParent()
+ */
+
+void QQuickWindowPrivate::data_append(QQmlListProperty<QObject> *property, QObject *o)
+{
+    if (!o)
+        return;
+    QQuickWindow *that = static_cast<QQuickWindow *>(property->object);
+    if (QQuickWindow *window = qmlobject_cast<QQuickWindow *>(o))
+        window->setTransientParent(that);
+    QQmlListProperty<QObject> itemProperty = QQuickItemPrivate::get(that->contentItem())->data();
+    itemProperty.append(&itemProperty, o);
+}
+
+int QQuickWindowPrivate::data_count(QQmlListProperty<QObject> *property)
+{
+    QQuickWindow *win = static_cast<QQuickWindow*>(property->object);
+    if (!win || !win->contentItem() || !QQuickItemPrivate::get(win->contentItem())->data().count)
+        return 0;
+    QQmlListProperty<QObject> itemProperty = QQuickItemPrivate::get(win->contentItem())->data();
+    return itemProperty.count(&itemProperty);
+}
+
+QObject *QQuickWindowPrivate::data_at(QQmlListProperty<QObject> *property, int i)
+{
+    QQuickWindow *win = static_cast<QQuickWindow*>(property->object);
+    QQmlListProperty<QObject> itemProperty = QQuickItemPrivate::get(win->contentItem())->data();
+    return itemProperty.at(&itemProperty, i);
+}
+
+void QQuickWindowPrivate::data_clear(QQmlListProperty<QObject> *property)
+{
+    QQuickWindow *win = static_cast<QQuickWindow*>(property->object);
+    QQmlListProperty<QObject> itemProperty = QQuickItemPrivate::get(win->contentItem())->data();
+    itemProperty.clear(&itemProperty);
+}
+
 bool QQuickWindowPrivate::isRenderable() const
 {
     const QQuickWindow *q = q_func();
@@ -2454,6 +2532,13 @@ void QQuickWindow::cleanupSceneGraph()
     delete d->renderer;
 
     d->renderer = 0;
+}
+
+void QQuickWindow::setTransientParent_helper(QQuickWindow *window)
+{
+    setTransientParent(window);
+    disconnect(sender(), SIGNAL(windowChanged(QQuickWindow*)),
+               this, SLOT(setTransientParent_helper(QQuickWindow*)));
 }
 
 /*!

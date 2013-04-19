@@ -224,6 +224,12 @@ public:
 
     static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event);
 
+    // data property
+    static void data_append(QQmlListProperty<QObject> *, QObject *);
+    static int data_count(QQmlListProperty<QObject> *);
+    static QObject *data_at(QQmlListProperty<QObject> *, int);
+    static void data_clear(QQmlListProperty<QObject> *);
+
 private:
     static void cleanupNodesOnShutdown(QQuickItem *);
 };
