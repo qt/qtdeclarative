@@ -95,7 +95,8 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 namespace VM {
-    class ExecutionEngine;
+    struct ExecutionEngine;
+    struct Value;
 }
 }
 
@@ -408,7 +409,7 @@ public:
     QJsonArray jsonArrayFromJS(v8::Handle<v8::Value> value);
 
     v8::Handle<v8::Value> metaTypeToJS(int type, const void *data);
-    bool metaTypeFromJS(v8::Handle<v8::Value> value, int type, void *data);
+    bool metaTypeFromJS(const QQmlJS::VM::Value &value, int type, void *data);
 
     bool convertToNativeQObject(v8::Handle<v8::Value> value,
                                 const QByteArray &targetType,

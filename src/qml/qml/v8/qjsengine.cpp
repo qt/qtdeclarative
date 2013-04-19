@@ -362,9 +362,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     QQmlJS::VM::ExecutionEngine *e = vp->engine;
     QV8Engine *engine = e ? QV8Engine::get(e->publicEngine) : 0;
     if (engine) {
-        QScriptIsolate api(engine, QScriptIsolate::NotNullEngine);
-        v8::HandleScope handleScope;
-        return engine->metaTypeFromJS(v8::Value::fromVmValue(vp->getValue(engine->m_v4Engine)), type, ptr);
+        return engine->metaTypeFromJS(vp->getValue(engine->m_v4Engine), type, ptr);
     } else {
         switch (type) {
             case QMetaType::Bool:
