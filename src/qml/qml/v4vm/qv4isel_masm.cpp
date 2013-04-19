@@ -894,7 +894,7 @@ void InstructionSelection::setProperty(V4IR::Temp *source, V4IR::Temp *targetBas
 {
     if (useFastLookups) {
         QV4::String *s = identifier(targetName);
-        uint index = addLookup(s);
+        uint index = addSetterLookup(s);
         generateFunctionCall(Assembler::Void, __qmljs_set_property_lookup,
                 Assembler::ContextRegister, Assembler::Reference(targetBase),
                 Assembler::TrustedImm32(index), Assembler::Reference(source));
@@ -1234,7 +1234,21 @@ uint InstructionSelection::addLookup(QV4::String *name)
 {
     uint index = (uint)_lookups.size();
     QV4::Lookup l;
-    l.lookupProperty = Lookup::lookupPropertyGeneric;
+    l.getter = Lookup::getterGeneric;
+    for (int i = 0; i < Lookup::Size; ++i)
+        l.classList[i] = 0;
+    l.level = -1;
+    l.index = UINT_MAX;
+    l.name = name;
+    _lookups.append(l);
+    return index;
+}
+
+uint InstructionSelection::addSetterLookup(QV4::String *name)
+{
+    uint index = (uint)_lookups.size();
+    QV4::Lookup l;
+    l.setter = Lookup::setterGeneric;
     for (int i = 0; i < Lookup::Size; ++i)
         l.classList[i] = 0;
     l.level = -1;
@@ -1248,7 +1262,7 @@ uint InstructionSelection::addGlobalLookup(QV4::String *name)
 {
     uint index = (uint)_lookups.size();
     QV4::Lookup l;
-    l.lookupGlobal = Lookup::lookupGlobalGeneric;
+    l.globalGetter = Lookup::globalGetterGeneric;
     for (int i = 0; i < Lookup::Size; ++i)
         l.classList[i] = 0;
     l.level = -1;

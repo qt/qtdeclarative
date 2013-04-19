@@ -69,7 +69,7 @@
 
 namespace builtins {
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 struct Print: FunctionObject
 {
@@ -116,16 +116,16 @@ DEFINE_MANAGED_VTABLE(GC);
 
 } // builtins
 
-static void showException(QQmlJS::VM::ExecutionContext *ctx, const QQmlJS::VM::Value &exception)
+static void showException(QV4::ExecutionContext *ctx, const QV4::Value &exception)
 {
-    QQmlJS::VM::ErrorObject *e = exception.asErrorObject();
+    QV4::ErrorObject *e = exception.asErrorObject();
     if (!e) {
         std::cerr << "Uncaught exception: " << qPrintable(exception.toString(ctx)->toQString()) << std::endl;
         return;
     }
 
-    if (QQmlJS::VM::SyntaxErrorObject *err = e->asSyntaxError()) {
-        QQmlJS::VM::DiagnosticMessage *msg = err->message();
+    if (QV4::SyntaxErrorObject *err = e->asSyntaxError()) {
+        QV4::DiagnosticMessage *msg = err->message();
         if (!msg) {
             std::cerr << "Uncaught exception: Syntax error" << std::endl;
             return;
@@ -153,9 +153,9 @@ int executeLLVMCode(void *codePtr)
     VM::ExecutionContext *ctx = vm.rootContext;
 
 #if THIS_NEEDS_TO_BE_FIXED
-    QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
+    QV4::Object *globalObject = vm.globalObject.objectValue();
     globalObject->__put__(ctx, vm.newIdentifier(QStringLiteral("print")),
-                          QQmlJS::VM::Value::fromObject(new (ctx->engine->memoryManager) builtins::Print(ctx)));
+                          QV4::Value::fromObject(new (ctx->engine->memoryManager) builtins::Print(ctx)));
 
     void * buf = __qmljs_create_exception_handler(ctx);
     if (setjmp(*(jmp_buf *)buf)) {
@@ -198,12 +198,12 @@ int compile(const QString &fileName, const QString &source, QQmlJS::LLVMOutputTy
 
     class MyErrorHandler: public ErrorHandler {
     public:
-        virtual void syntaxError(QQmlJS::VM::DiagnosticMessage *message) {
+        virtual void syntaxError(QV4::DiagnosticMessage *message) {
             for (; message; message = message->next) {
                 std::cerr << qPrintable(message->fileName) << ':'
                           << message->startLine << ':'
                           << message->startColumn << ": "
-                          << (message->type == QQmlJS::VM::DiagnosticMessage::Error ? "error" : "warning") << ": "
+                          << (message->type == QV4::DiagnosticMessage::Error ? "error" : "warning") << ": "
                           << qPrintable(message->message) << std::endl;
             }
         }
@@ -349,24 +349,24 @@ int main(int argc, char *argv[])
             iSelFactory = new QQmlJS::MASM::ISelFactory;
         }
 
-        QQmlJS::VM::ExecutionEngine vm(iSelFactory);
+        QV4::ExecutionEngine vm(iSelFactory);
 
         QScopedPointer<QQmlJS::Debugging::Debugger> debugger;
         if (enableDebugging)
             debugger.reset(new QQmlJS::Debugging::Debugger(&vm));
         vm.debugger = debugger.data();
 
-        QQmlJS::VM::ExecutionContext *ctx = vm.rootContext;
+        QV4::ExecutionContext *ctx = vm.rootContext;
 
-        QQmlJS::VM::Object *globalObject = vm.globalObject;
-        QQmlJS::VM::Object *print = new (ctx->engine->memoryManager) builtins::Print(ctx);
+        QV4::Object *globalObject = vm.globalObject;
+        QV4::Object *print = new (ctx->engine->memoryManager) builtins::Print(ctx);
         print->prototype = ctx->engine->objectPrototype;
         globalObject->put(ctx, vm.newIdentifier(QStringLiteral("print")),
-                                  QQmlJS::VM::Value::fromObject(print));
-        QQmlJS::VM::Object *gc = new (ctx->engine->memoryManager) builtins::GC(ctx);
+                                  QV4::Value::fromObject(print));
+        QV4::Object *gc = new (ctx->engine->memoryManager) builtins::GC(ctx);
         gc->prototype = ctx->engine->objectPrototype;
         globalObject->put(ctx, vm.newIdentifier(QStringLiteral("gc")),
-                                  QQmlJS::VM::Value::fromObject(gc));
+                                  QV4::Value::fromObject(gc));
 
         foreach (const QString &fn, args) {
             QFile file(fn);
@@ -375,16 +375,16 @@ int main(int argc, char *argv[])
                 file.close();
 
                 try {
-                    QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode,
+                    QV4::Function *f = QV4::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode,
                                                                                     /*strictMode =*/ false, /*inheritContext =*/ false);
                     if (!f)
                         continue;
-                    QQmlJS::VM::Value result = vm.run(f);
+                    QV4::Value result = vm.run(f);
                     if (!result.isUndefined()) {
                         if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
                             std::cout << "exit value: " << qPrintable(result.toString(ctx)->toQString()) << std::endl;
                     }
-                } catch (QQmlJS::VM::Exception& ex) {
+                } catch (QV4::Exception& ex) {
                     ex.accept(ctx);
                     showException(ctx, ex.value());
                     return EXIT_FAILURE;

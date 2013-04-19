@@ -704,13 +704,13 @@ void __qmljs_get_activation_property(ExecutionContext *ctx, Value *result, Strin
 void __qmljs_get_global_lookup(ExecutionContext *ctx, Value *result, int lookupIndex)
 {
     Lookup *l = ctx->lookups + lookupIndex;
-    l->lookupGlobal(l, ctx, result);
+    l->globalGetter(l, ctx, result);
 }
 
 void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Value &object, int lookupIndex)
 {
     Lookup *l = ctx->lookups + lookupIndex;
-    l->lookupProperty(l, ctx, result, object);
+    l->getter(l, ctx, result, object);
 }
 
 void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value &object, int lookupIndex, const Value &value)
@@ -718,14 +718,7 @@ void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value &object, int
     Object *o = object.toObject(ctx);
     Lookup *l = ctx->lookups + lookupIndex;
 
-    PropertyAttributes attrs;
-    Property *p = l->setterLookup(o, &attrs);
-    if (p && (l->index != ArrayObject::LengthPropertyIndex || !o->isArrayObject())) {
-        o->putValue(ctx, p, attrs, value);
-        return;
-    }
-
-    o->put(ctx, l->name, value);
+    l->setter(l, ctx, object, value);
 }
 
 
@@ -806,7 +799,7 @@ void __qmljs_call_global_lookup(ExecutionContext *context, Value *result, uint i
 {
     Lookup *l = context->lookups + index;
     Value v;
-    l->lookupGlobal(l, context, &v);
+    l->globalGetter(l, context, &v);
     FunctionObject *o = v.asFunctionObject();
     if (!o)
         context->throwTypeError();
@@ -923,7 +916,7 @@ void __qmljs_construct_global_lookup(ExecutionContext *context, Value *result, u
 {
     Lookup *l = context->lookups + index;
     Value func;
-    l->lookupGlobal(l, context, &func);
+    l->globalGetter(l, context, &func);
 
     if (Object *f = func.asObject()) {
         Value res = f->construct(context, args, argc);

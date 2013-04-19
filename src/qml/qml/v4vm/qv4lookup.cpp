@@ -45,7 +45,48 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-void Lookup::lookupPropertyGeneric(QV4::Lookup *l, ExecutionContext *ctx, QV4::Value *result, const QV4::Value &object)
+Property *Lookup::lookup(Object *obj, PropertyAttributes *attrs)
+{
+    int i = 0;
+    while (i < level && obj && obj->internalClass == classList[i]) {
+        obj = obj->prototype;
+        ++i;
+    }
+
+    if (index != UINT_MAX && obj->internalClass == classList[i]) {
+        *attrs = obj->internalClass->propertyData.at(index);
+        return obj->memberData + index;
+    }
+
+    while (i < Size && obj) {
+        classList[i] = obj->internalClass;
+
+        index = obj->internalClass->find(name);
+        if (index != UINT_MAX) {
+            level = i;
+            *attrs = obj->internalClass->propertyData.at(index);
+            return obj->memberData + index;
+        }
+
+        obj = obj->prototype;
+        ++i;
+    }
+    level = i;
+
+    while (obj) {
+        index = obj->internalClass->find(name);
+        if (index != UINT_MAX) {
+            *attrs = obj->internalClass->propertyData.at(index);
+            return obj->memberData + index;
+        }
+
+        obj = obj->prototype;
+    }
+    return 0;
+}
+
+
+void Lookup::getterGeneric(QV4::Lookup *l, ExecutionContext *ctx, QV4::Value *result, const QV4::Value &object)
 {
     if (Object *o = object.asObject()) {
         PropertyAttributes attrs;
@@ -53,21 +94,21 @@ void Lookup::lookupPropertyGeneric(QV4::Lookup *l, ExecutionContext *ctx, QV4::V
         if (p) {
             if (attrs.isData()) {
                 if (l->level == 0)
-                    l->lookupProperty = lookupProperty0;
+                    l->getter = getter0;
                 else if (l->level == 1)
-                    l->lookupProperty = lookupProperty1;
+                    l->getter = getter1;
                 else if (l->level == 2)
-                    l->lookupProperty = lookupProperty2;
+                    l->getter = getter2;
                 if (result)
                     *result = p->value;
                 return;
             } else {
                 if (l->level == 0)
-                    l->lookupProperty = lookupPropertyAccessor0;
+                    l->getter = getterAccessor0;
                 else if (l->level == 1)
-                    l->lookupProperty = lookupPropertyAccessor1;
+                    l->getter = getterAccessor1;
                 else if (l->level == 2)
-                    l->lookupProperty = lookupPropertyAccessor2;
+                    l->getter = getterAccessor2;
                 if (result)
                     *result = p->value;
                 Value res = o->getValue(ctx, p, attrs);
@@ -91,7 +132,7 @@ void Lookup::lookupPropertyGeneric(QV4::Lookup *l, ExecutionContext *ctx, QV4::V
     }
 }
 
-void Lookup::lookupProperty0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+void Lookup::getter0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass) {
@@ -100,11 +141,11 @@ void Lookup::lookupProperty0(Lookup *l, ExecutionContext *ctx, Value *result, co
             return;
         }
     }
-    l->lookupProperty = lookupPropertyGeneric;
-    lookupPropertyGeneric(l, ctx, result, object);
+    l->getter = getterGeneric;
+    getterGeneric(l, ctx, result, object);
 }
 
-void Lookup::lookupProperty1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+void Lookup::getter1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass &&
@@ -114,11 +155,11 @@ void Lookup::lookupProperty1(Lookup *l, ExecutionContext *ctx, Value *result, co
             return;
         }
     }
-    l->lookupProperty = lookupPropertyGeneric;
-    lookupPropertyGeneric(l, ctx, result, object);
+    l->getter = getterGeneric;
+    getterGeneric(l, ctx, result, object);
 }
 
-void Lookup::lookupProperty2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+void Lookup::getter2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass) {
@@ -133,11 +174,11 @@ void Lookup::lookupProperty2(Lookup *l, ExecutionContext *ctx, Value *result, co
             }
         }
     }
-    l->lookupProperty = lookupPropertyGeneric;
-    lookupPropertyGeneric(l, ctx, result, object);
+    l->getter = getterGeneric;
+    getterGeneric(l, ctx, result, object);
 }
 
-void Lookup::lookupPropertyAccessor0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+void Lookup::getterAccessor0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass) {
@@ -152,11 +193,11 @@ void Lookup::lookupPropertyAccessor0(Lookup *l, ExecutionContext *ctx, Value *re
             return;
         }
     }
-    l->lookupProperty = lookupPropertyGeneric;
-    lookupPropertyGeneric(l, ctx, result, object);
+    l->getter = getterGeneric;
+    getterGeneric(l, ctx, result, object);
 }
 
-void Lookup::lookupPropertyAccessor1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+void Lookup::getterAccessor1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass &&
@@ -172,11 +213,11 @@ void Lookup::lookupPropertyAccessor1(Lookup *l, ExecutionContext *ctx, Value *re
             return;
         }
     }
-    l->lookupProperty = lookupPropertyGeneric;
-    lookupPropertyGeneric(l, ctx, result, object);
+    l->getter = getterGeneric;
+    getterGeneric(l, ctx, result, object);
 }
 
-void Lookup::lookupPropertyAccessor2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+void Lookup::getterAccessor2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass) {
@@ -197,12 +238,12 @@ void Lookup::lookupPropertyAccessor2(Lookup *l, ExecutionContext *ctx, Value *re
             }
         }
     }
-    l->lookupProperty = lookupPropertyGeneric;
-    lookupPropertyGeneric(l, ctx, result, object);
+    l->getter = getterGeneric;
+    getterGeneric(l, ctx, result, object);
 }
 
 
-void Lookup::lookupGlobalGeneric(Lookup *l, ExecutionContext *ctx, Value *result)
+void Lookup::globalGetterGeneric(Lookup *l, ExecutionContext *ctx, Value *result)
 {
     Object *o = ctx->engine->globalObject;
     PropertyAttributes attrs;
@@ -210,20 +251,20 @@ void Lookup::lookupGlobalGeneric(Lookup *l, ExecutionContext *ctx, Value *result
     if (p) {
         if (attrs.isData()) {
             if (l->level == 0)
-                l->lookupGlobal = lookupGlobal0;
+                l->globalGetter = globalGetter0;
             else if (l->level == 1)
-                l->lookupGlobal = lookupGlobal1;
+                l->globalGetter = globalGetter1;
             else if (l->level == 2)
-                l->lookupGlobal = lookupGlobal2;
+                l->globalGetter = globalGetter2;
             *result = p->value;
             return;
         } else {
             if (l->level == 0)
-                l->lookupGlobal = lookupGlobalAccessor0;
+                l->globalGetter = globalGetterAccessor0;
             else if (l->level == 1)
-                l->lookupGlobal = lookupGlobalAccessor1;
+                l->globalGetter = globalGetterAccessor1;
             else if (l->level == 2)
-                l->lookupGlobal = lookupGlobalAccessor2;
+                l->globalGetter = globalGetterAccessor2;
             Value res = o->getValue(ctx, p, attrs);
             if (result)
                 *result = res;
@@ -233,18 +274,18 @@ void Lookup::lookupGlobalGeneric(Lookup *l, ExecutionContext *ctx, Value *result
     ctx->throwReferenceError(Value::fromString(l->name));
 }
 
-void Lookup::lookupGlobal0(Lookup *l, ExecutionContext *ctx, Value *result)
+void Lookup::globalGetter0(Lookup *l, ExecutionContext *ctx, Value *result)
 {
     Object *o = ctx->engine->globalObject;
     if (l->classList[0] == o->internalClass) {
         *result = o->memberData[l->index].value;
         return;
     }
-    l->lookupGlobal = lookupGlobalGeneric;
-    lookupGlobalGeneric(l, ctx, result);
+    l->globalGetter = globalGetterGeneric;
+    globalGetterGeneric(l, ctx, result);
 }
 
-void Lookup::lookupGlobal1(Lookup *l, ExecutionContext *ctx, Value *result)
+void Lookup::globalGetter1(Lookup *l, ExecutionContext *ctx, Value *result)
 {
     Object *o = ctx->engine->globalObject;
     if (l->classList[0] == o->internalClass &&
@@ -252,11 +293,11 @@ void Lookup::lookupGlobal1(Lookup *l, ExecutionContext *ctx, Value *result)
         *result = o->prototype->memberData[l->index].value;
         return;
     }
-    l->lookupGlobal = lookupGlobalGeneric;
-    lookupGlobalGeneric(l, ctx, result);
+    l->globalGetter = globalGetterGeneric;
+    globalGetterGeneric(l, ctx, result);
 }
 
-void Lookup::lookupGlobal2(Lookup *l, ExecutionContext *ctx, Value *result)
+void Lookup::globalGetter2(Lookup *l, ExecutionContext *ctx, Value *result)
 {
     Object *o = ctx->engine->globalObject;
     if (l->classList[0] == o->internalClass) {
@@ -269,11 +310,11 @@ void Lookup::lookupGlobal2(Lookup *l, ExecutionContext *ctx, Value *result)
             }
         }
     }
-    l->lookupGlobal = lookupGlobalGeneric;
-    lookupGlobalGeneric(l, ctx, result);
+    l->globalGetter = globalGetterGeneric;
+    globalGetterGeneric(l, ctx, result);
 }
 
-void Lookup::lookupGlobalAccessor0(Lookup *l, ExecutionContext *ctx, Value *result)
+void Lookup::globalGetterAccessor0(Lookup *l, ExecutionContext *ctx, Value *result)
 {
     Object *o = ctx->engine->globalObject;
     if (l->classList[0] == o->internalClass) {
@@ -284,11 +325,11 @@ void Lookup::lookupGlobalAccessor0(Lookup *l, ExecutionContext *ctx, Value *resu
             *result = getter->call(ctx, Value::undefinedValue(), 0, 0);
         return;
     }
-    l->lookupGlobal = lookupGlobalGeneric;
-    lookupGlobalGeneric(l, ctx, result);
+    l->globalGetter = globalGetterGeneric;
+    globalGetterGeneric(l, ctx, result);
 }
 
-void Lookup::lookupGlobalAccessor1(Lookup *l, ExecutionContext *ctx, Value *result)
+void Lookup::globalGetterAccessor1(Lookup *l, ExecutionContext *ctx, Value *result)
 {
     Object *o = ctx->engine->globalObject;
     if (l->classList[0] == o->internalClass &&
@@ -300,11 +341,11 @@ void Lookup::lookupGlobalAccessor1(Lookup *l, ExecutionContext *ctx, Value *resu
             *result = getter->call(ctx, Value::undefinedValue(), 0, 0);
         return;
     }
-    l->lookupGlobal = lookupGlobalGeneric;
-    lookupGlobalGeneric(l, ctx, result);
+    l->globalGetter = globalGetterGeneric;
+    globalGetterGeneric(l, ctx, result);
 }
 
-void Lookup::lookupGlobalAccessor2(Lookup *l, ExecutionContext *ctx, Value *result)
+void Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *result)
 {
     Object *o = ctx->engine->globalObject;
     if (l->classList[0] == o->internalClass) {
@@ -321,8 +362,35 @@ void Lookup::lookupGlobalAccessor2(Lookup *l, ExecutionContext *ctx, Value *resu
             }
         }
     }
-    l->lookupGlobal = lookupGlobalGeneric;
-    lookupGlobalGeneric(l, ctx, result);
+    l->globalGetter = globalGetterGeneric;
+    globalGetterGeneric(l, ctx, result);
+}
+
+void Lookup::setterGeneric(Lookup *l, ExecutionContext *ctx, const Value &object, const Value &value)
+{
+    Object *o = object.toObject(ctx);
+
+    if (o->internalClass == l->classList[0]) {
+        o->memberData[l->index].value = value;
+        return;
+    }
+
+    uint idx = o->internalClass->find(l->name);
+    if (!o->isArrayObject() || idx != ArrayObject::LengthPropertyIndex) {
+        if (idx != UINT_MAX && o->internalClass->propertyData[idx].isData() && o->internalClass->propertyData[idx].isWritable()) {
+            l->classList[0] = o->internalClass;
+            l->index = idx;
+            o->memberData[idx].value = value;
+            return;
+        }
+
+        if (idx != UINT_MAX) {
+            o->putValue(ctx, o->memberData + idx, o->internalClass->propertyData[idx], value);
+            return;
+        }
+    }
+
+    o->put(ctx, l->name, value);
 }
 
 QT_END_NAMESPACE

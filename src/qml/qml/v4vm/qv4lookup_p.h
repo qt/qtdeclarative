@@ -55,84 +55,35 @@ namespace QV4 {
 struct Lookup {
     enum { Size = 3 };
     union {
-        void (*lookupProperty)(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
-        void (*lookupGlobal)(Lookup *l, ExecutionContext *ctx, Value *result);
+        void (*getter)(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+        void (*globalGetter)(Lookup *l, ExecutionContext *ctx, Value *result);
+        void (*setter)(Lookup *l, ExecutionContext *ctx, const Value &object, const Value &v);
     };
     InternalClass *classList[Size];
     int level;
     uint index;
     String *name;
 
-    static void lookupPropertyGeneric(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
-    static void lookupProperty0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
-    static void lookupProperty1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
-    static void lookupProperty2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
-    static void lookupPropertyAccessor0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
-    static void lookupPropertyAccessor1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
-    static void lookupPropertyAccessor2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void getterGeneric(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void getter0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void getter1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void getter2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void getterAccessor0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void getterAccessor1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void getterAccessor2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
 
-    static void lookupGlobalGeneric(Lookup *l, ExecutionContext *ctx, Value *result);
-    static void lookupGlobal0(Lookup *l, ExecutionContext *ctx, Value *result);
-    static void lookupGlobal1(Lookup *l, ExecutionContext *ctx, Value *result);
-    static void lookupGlobal2(Lookup *l, ExecutionContext *ctx, Value *result);
-    static void lookupGlobalAccessor0(Lookup *l, ExecutionContext *ctx, Value *result);
-    static void lookupGlobalAccessor1(Lookup *l, ExecutionContext *ctx, Value *result);
-    static void lookupGlobalAccessor2(Lookup *l, ExecutionContext *ctx, Value *result);
+    static void globalGetterGeneric(Lookup *l, ExecutionContext *ctx, Value *result);
+    static void globalGetter0(Lookup *l, ExecutionContext *ctx, Value *result);
+    static void globalGetter1(Lookup *l, ExecutionContext *ctx, Value *result);
+    static void globalGetter2(Lookup *l, ExecutionContext *ctx, Value *result);
+    static void globalGetterAccessor0(Lookup *l, ExecutionContext *ctx, Value *result);
+    static void globalGetterAccessor1(Lookup *l, ExecutionContext *ctx, Value *result);
+    static void globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *result);
 
-    Property *lookup(Object *obj, PropertyAttributes *attrs) {
-        int i = 0;
-        while (i < level && obj && obj->internalClass == classList[i]) {
-            obj = obj->prototype;
-            ++i;
-        }
+    static void setterGeneric(Lookup *l, ExecutionContext *ctx, const Value &object, const Value &value);
 
-        if (index != UINT_MAX && obj->internalClass == classList[i]) {
-            *attrs = obj->internalClass->propertyData.at(index);
-            return obj->memberData + index;
-        }
+    Property *lookup(Object *obj, PropertyAttributes *attrs);
 
-        while (i < Size && obj) {
-            classList[i] = obj->internalClass;
-
-            index = obj->internalClass->find(name);
-            if (index != UINT_MAX) {
-                level = i;
-                *attrs = obj->internalClass->propertyData.at(index);
-                return obj->memberData + index;
-            }
-
-            obj = obj->prototype;
-            ++i;
-        }
-        level = i;
-
-        while (obj) {
-            index = obj->internalClass->find(name);
-            if (index != UINT_MAX) {
-                *attrs = obj->internalClass->propertyData.at(index);
-                return obj->memberData + index;
-            }
-
-            obj = obj->prototype;
-        }
-        return 0;
-    }
-
-    Property *setterLookup(Object *o, PropertyAttributes *attrs) {
-        if (o->internalClass == classList[0]) {
-            *attrs = o->internalClass->propertyData[index];
-            return o->memberData + index;
-        }
-
-        uint idx = o->internalClass->find(name);
-        if (idx != UINT_MAX) {
-            classList[0] = o->internalClass;
-            index = idx;
-            *attrs = o->internalClass->propertyData[index];
-            return o->memberData + index;
-        }
-        return 0;
-    }
 };
 
 }

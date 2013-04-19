@@ -881,6 +881,7 @@ private:
     callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
 
     uint addLookup(QV4::String *name);
+    uint addSetterLookup(QV4::String *name);
     uint addGlobalLookup(QV4::String *name);
 
     V4IR::BasicBlock *_block;
