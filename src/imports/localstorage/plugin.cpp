@@ -54,7 +54,7 @@
 #include <QtCore/qcryptographichash.h>
 #include <QtCore/qsettings.h>
 #include <QtCore/qdir.h>
-#include <private/qv8sqlerrors_p.h>
+#include <private/qv4sqlerrors_p.h>
 
 
 #define V8THROW_SQL(error, desc) \

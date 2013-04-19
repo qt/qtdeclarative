@@ -58,7 +58,7 @@
 #include <private/qjsconverter_p.h>
 
 #include "qv4domerrors_p.h"
-#include "qv8sqlerrors_p.h"
+#include "qv4sqlerrors_p.h"
 
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsonobject.h>
@@ -684,7 +684,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt_add_domexceptions(m_v4Engine);
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);
 
-    qt_add_sqlexceptions(this);
+    qt_add_sqlexceptions(m_v4Engine);
 
     {
     v8::Handle<v8::Value> args[] = { global };

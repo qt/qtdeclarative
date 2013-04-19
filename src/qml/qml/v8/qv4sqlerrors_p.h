@@ -39,26 +39,39 @@
 **
 ****************************************************************************/
 
-#include "qv8sqlerrors_p.h"
-#include "qv8engine_p.h"
+#ifndef QV8SQLERRORS_P_H
+#define QV8SQLERRORS_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
+#define SQLEXCEPTION_UNKNOWN_ERR 1
+#define SQLEXCEPTION_DATABASE_ERR 2
+#define SQLEXCEPTION_VERSION_ERR 3
+#define SQLEXCEPTION_TOO_LARGE_ERR 4
+#define SQLEXCEPTION_QUOTA_ERR 5
+#define SQLEXCEPTION_SYNTAX_ERR 6
+#define SQLEXCEPTION_CONSTRAINT_ERR 7
+#define SQLEXCEPTION_TIMEOUT_ERR 8
 
-void qt_add_sqlexceptions(QV8Engine *engine)
-{
-    // SQL Exception
-    v8::PropertyAttribute attributes = (v8::PropertyAttribute)(v8::ReadOnly | v8::DontEnum | v8::DontDelete);
-
-    v8::Local<v8::Object> sqlexception = v8::Object::New();
-    sqlexception->Set(v8::String::New("UNKNOWN_ERR"), v8::Integer::New(SQLEXCEPTION_UNKNOWN_ERR), attributes);
-    sqlexception->Set(v8::String::New("DATABASE_ERR"), v8::Integer::New(SQLEXCEPTION_DATABASE_ERR), attributes);
-    sqlexception->Set(v8::String::New("VERSION_ERR"), v8::Integer::New(SQLEXCEPTION_VERSION_ERR), attributes);
-    sqlexception->Set(v8::String::New("TOO_LARGE_ERR"), v8::Integer::New(SQLEXCEPTION_TOO_LARGE_ERR), attributes);
-    sqlexception->Set(v8::String::New("QUOTA_ERR"), v8::Integer::New(SQLEXCEPTION_QUOTA_ERR), attributes);
-    sqlexception->Set(v8::String::New("SYNTAX_ERR"), v8::Integer::New(SQLEXCEPTION_SYNTAX_ERR), attributes);
-    sqlexception->Set(v8::String::New("CONSTRAINT_ERR"), v8::Integer::New(SQLEXCEPTION_CONSTRAINT_ERR), attributes);
-    sqlexception->Set(v8::String::New("TIMEOUT_ERR"), v8::Integer::New(SQLEXCEPTION_TIMEOUT_ERR), attributes);
-    engine->global()->Set(v8::String::New("SQLException"), sqlexception);
+namespace QQmlJS {
+namespace VM {
+class ExecutionEngine;
 }
+}
+void qt_add_sqlexceptions(QQmlJS::VM::ExecutionEngine *engine);
 
 QT_END_NAMESPACE
+
+#endif // QV8SQLERRORS_P_H

@@ -39,35 +39,25 @@
 **
 ****************************************************************************/
 
-#ifndef QV8SQLERRORS_P_H
-#define QV8SQLERRORS_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtCore/qglobal.h>
+#include "qv4sqlerrors_p.h"
+#include "private/qv4engine_p.h"
 
 QT_BEGIN_NAMESPACE
-#define SQLEXCEPTION_UNKNOWN_ERR 1
-#define SQLEXCEPTION_DATABASE_ERR 2
-#define SQLEXCEPTION_VERSION_ERR 3
-#define SQLEXCEPTION_TOO_LARGE_ERR 4
-#define SQLEXCEPTION_QUOTA_ERR 5
-#define SQLEXCEPTION_SYNTAX_ERR 6
-#define SQLEXCEPTION_CONSTRAINT_ERR 7
-#define SQLEXCEPTION_TIMEOUT_ERR 8
 
-class QV8Engine;
-void qt_add_sqlexceptions(QV8Engine *engine);
+using namespace QQmlJS::VM;
+
+void qt_add_sqlexceptions(QQmlJS::VM::ExecutionEngine *engine)
+{
+    Object *sqlexception = engine->newObject();
+    sqlexception->defineReadonlyProperty(engine, QStringLiteral("UNKNOWN_ERR"), Value::fromInt32(SQLEXCEPTION_UNKNOWN_ERR));
+    sqlexception->defineReadonlyProperty(engine, QStringLiteral("DATABASE_ERR"), Value::fromInt32(SQLEXCEPTION_DATABASE_ERR));
+    sqlexception->defineReadonlyProperty(engine, QStringLiteral("VERSION_ERR"), Value::fromInt32(SQLEXCEPTION_VERSION_ERR));
+    sqlexception->defineReadonlyProperty(engine, QStringLiteral("TOO_LARGE_ERR"), Value::fromInt32(SQLEXCEPTION_TOO_LARGE_ERR));
+    sqlexception->defineReadonlyProperty(engine, QStringLiteral("QUOTA_ERR"), Value::fromInt32(SQLEXCEPTION_QUOTA_ERR));
+    sqlexception->defineReadonlyProperty(engine, QStringLiteral("SYNTAX_ERR"), Value::fromInt32(SQLEXCEPTION_SYNTAX_ERR));
+    sqlexception->defineReadonlyProperty(engine, QStringLiteral("CONSTRAINT_ERR"), Value::fromInt32(SQLEXCEPTION_CONSTRAINT_ERR));
+    sqlexception->defineReadonlyProperty(engine, QStringLiteral("TIMEOUT_ERR"), Value::fromInt32(SQLEXCEPTION_TIMEOUT_ERR));
+    engine->globalObject->defineDefaultProperty(engine->current, QStringLiteral("SQLException"), Value::fromObject(sqlexception));
+}
 
 QT_END_NAMESPACE
-
-#endif // QV8SQLERRORS_P_H

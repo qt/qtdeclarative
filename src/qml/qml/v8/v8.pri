@@ -21,7 +21,7 @@ HEADERS += \
     $$PWD/qv8bindings_p.h \
     $$PWD/qv8engine_impl_p.h \
     $$PWD/qv4domerrors_p.h \
-    $$PWD/qv8sqlerrors_p.h \
+    $$PWD/qv4sqlerrors_p.h \
     $$PWD/qqmlbuiltinfunctions_p.h \
     $$PWD/qv8objectresource_p.h
 
@@ -40,5 +40,5 @@ SOURCES += \
     $$PWD/qv8worker.cpp \
     $$PWD/qv8bindings.cpp \
     $$PWD/qv4domerrors.cpp \
-    $$PWD/qv8sqlerrors.cpp \
+    $$PWD/qv4sqlerrors.cpp \
     $$PWD/qqmlbuiltinfunctions.cpp
