@@ -73,7 +73,6 @@
 #include "qv8objectresource_p.h"
 #include "qv8contextwrapper_p.h"
 #include "qv8qobjectwrapper_p.h"
-#include "qv8stringwrapper_p.h"
 #include "qv8typewrapper_p.h"
 #include "qv8listwrapper_p.h"
 #include "qv8variantwrapper_p.h"
@@ -305,8 +304,8 @@ public:
     v8::Local<v8::Array> getOwnPropertyNames(v8::Handle<v8::Object>);
     void freezeObject(v8::Handle<v8::Value>);
 
-    inline QString toString(v8::Handle<v8::Value> string);
-    inline QString toString(v8::Handle<v8::String> string);
+    QString toString(v8::Handle<v8::Value> string);
+    QString toString(v8::Handle<v8::String> string);
     static QString toStringStatic(v8::Handle<v8::Value>);
     static QString toStringStatic(v8::Handle<v8::String>);
     static inline bool startsWithUpper(v8::Handle<v8::String>);
@@ -333,7 +332,7 @@ public:
     inline QObject *toQObject(v8::Handle<v8::Value>);
 
     // Return a JS string for the given QString \a string
-    inline v8::Local<v8::String> toString(const QString &string);
+    v8::Local<v8::String> toString(const QString &string);
 
     // Create a new value type object
     inline v8::Handle<v8::Value> newValueType(QObject *, int coreIndex, QQmlValueType *);
@@ -464,7 +463,6 @@ protected:
 
     v8::Persistent<v8::String> m_bindingFlagKey;
 
-    QV8StringWrapper m_stringWrapper;
     QV8ContextWrapper m_contextWrapper;
     QV8QObjectWrapper m_qobjectWrapper;
     QV8TypeWrapper m_typeWrapper;
@@ -549,16 +547,6 @@ void qPersistentDispose(v8::Persistent<T> &that)
     that.Clear();
 }
 
-QString QV8Engine::toString(v8::Handle<v8::Value> string)
-{
-    return m_stringWrapper.toString(string->ToString());
-}
-
-QString QV8Engine::toString(v8::Handle<v8::String> string)
-{
-    return m_stringWrapper.toString(string);
-}
-
 bool QV8Engine::isVariant(v8::Handle<v8::Value> value)
 {
     return m_variantWrapper.isVariant(value);
@@ -596,11 +584,6 @@ v8::Handle<v8::Value> QV8Engine::newQObject(QObject *object, const ObjectOwnersh
         ddata->explicitIndestructibleSet = true;
     }
     return result;
-}
-
-v8::Local<v8::String> QV8Engine::toString(const QString &string)
-{
-    return m_stringWrapper.toString(string);
 }
 
 v8::Handle<v8::Value> QV8Engine::newValueType(QObject *object, int property, QQmlValueType *type)

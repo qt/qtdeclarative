@@ -4,7 +4,6 @@ HEADERS += \
     $$PWD/qv8_p.h \
     $$PWD/qv8debug_p.h \
     $$PWD/qv8profiler_p.h \
-    $$PWD/qv8stringwrapper_p.h \
     $$PWD/qv8engine_p.h \
     $$PWD/qv8sequencewrapper_p.h \
     $$PWD/qv8sequencewrapper_p_p.h \
@@ -26,7 +25,6 @@ HEADERS += \
     $$PWD/qv8objectresource_p.h
 
 SOURCES += \
-    $$PWD/qv8stringwrapper.cpp \
     $$PWD/qv8engine.cpp \
     $$PWD/qv8sequencewrapper.cpp \
     $$PWD/qv8contextwrapper.cpp \

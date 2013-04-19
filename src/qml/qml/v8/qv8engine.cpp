@@ -161,7 +161,6 @@ QV8Engine::QV8Engine(QJSEngine* qq, ContextOwnership ownership)
 
     m_bindingFlagKey = qPersistentNew(v8::String::New("qml::binding"));
 
-    m_stringWrapper.init();
     m_contextWrapper.init(this);
     m_qobjectWrapper.init(this);
     m_typeWrapper.init(this);
@@ -202,7 +201,6 @@ QV8Engine::~QV8Engine()
     m_typeWrapper.destroy();
     m_qobjectWrapper.destroy();
     m_contextWrapper.destroy();
-    m_stringWrapper.destroy();
 
     qPersistentDispose(m_bindingFlagKey);
 
@@ -355,7 +353,7 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::Double:
                 return v8::Number::New(*reinterpret_cast<const double*>(ptr));
             case QMetaType::QString:
-                return m_stringWrapper.toString(*reinterpret_cast<const QString*>(ptr));
+                return v8::Value::fromVmValue(QQmlJS::VM::Value::fromString(m_v4Engine->current, *reinterpret_cast<const QString*>(ptr)));
             case QMetaType::Float:
                 return v8::Number::New(*reinterpret_cast<const float*>(ptr));
             case QMetaType::Short:
@@ -455,8 +453,8 @@ v8::Local<v8::Script> QV8Engine::qmlModeCompile(const QString &source,
                                                 const QString &fileName,
                                                 quint16 lineNumber)
 {
-    v8::Local<v8::String> v8source = m_stringWrapper.toString(source);
-    v8::Local<v8::String> v8fileName = m_stringWrapper.toString(fileName);
+    v8::Local<v8::String> v8source = QJSConverter::toString(source);
+    v8::Local<v8::String> v8fileName = QJSConverter::toString(fileName);
 
     v8::ScriptOrigin origin(v8fileName, v8::Integer::New(lineNumber - 1));
 
@@ -476,7 +474,7 @@ v8::Local<v8::Script> QV8Engine::qmlModeCompile(const char *source, int sourceLe
         sourceLength = int(strlen(source));
 
     v8::Local<v8::String> v8source = v8::String::New(source, sourceLength);
-    v8::Local<v8::String> v8fileName = m_stringWrapper.toString(fileName);
+    v8::Local<v8::String> v8fileName = QJSConverter::toString(fileName);
 
     v8::ScriptOrigin origin(v8fileName, v8::Integer::New(lineNumber - 1));
 
@@ -534,7 +532,7 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
     if (value->IsNumber())
         return value->ToNumber()->Value();
     if (value->IsString())
-        return m_stringWrapper.toString(value->ToString());
+        return value.get()->vmValue().toString(m_v4Engine->current)->toQString();
     if (value->IsDate())
         return qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(value)->NumberValue());
     // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!
@@ -1558,6 +1556,21 @@ QV8Engine::ThreadData::~ThreadData()
         isolate->Dispose();
         isolate = 0;
     }
+}
+
+QString QV8Engine::toString(v8::Handle<v8::Value> string)
+{
+    return string.get()->vmValue().toString(m_v4Engine->current)->toQString();
+}
+
+QString QV8Engine::toString(v8::Handle<v8::String> string)
+{
+    return string.get()->vmValue().toString(m_v4Engine->current)->toQString();
+}
+
+v8::Local<v8::String> QV8Engine::toString(const QString &string)
+{
+    return QJSConverter::toString(string);
 }
 
 QT_END_NAMESPACE
