@@ -106,7 +106,7 @@ struct Q_QML_EXPORT Value
         Integer_Type = Immediate_Mask | 0x30000,
         Object_Type = NotDouble_Mask | 0x00000,
         String_Type = NotDouble_Mask | 0x10000,
-        Deleted_Type = NotDouble_Mask | 0x30000,
+        Deleted_Type = NotDouble_Mask | 0x30000
     };
 
     enum ImmediateFlags {

@@ -195,9 +195,9 @@ struct HandleOperations
     static void init(Handle<T> *handle)
     {
 #if QT_POINTER_SIZE == 8
-        handle->val = quint64(Handle<T>::_Null_Type) << Handle<T>::Tag_Shift;
+        handle->val = quint64(Handle<T>::_Deleted_Type) << Handle<T>::Tag_Shift;
 #else
-        handle->tag = Handle<T>::_Null_Type;
+        handle->tag = Handle<T>::_Deleted_Type;
         handle->int_32 = 0;
 #endif
     }
@@ -231,7 +231,7 @@ struct HandleOperations
 
     static bool isEmpty(const Handle<T> *handle)
     {
-        return handle->tag == Handle<T>::_Null_Type;
+        return handle->tag == Handle<T>::_Deleted_Type;
     }
 
     static T *get(const Handle<T> *handle)
@@ -361,7 +361,8 @@ struct Handle {
         Boolean_Type = Immediate_Mask | 0x20000,
         Integer_Type = Immediate_Mask | 0x30000,
         Object_Type = NotDouble_Mask | 0x00000,
-        String_Type = NotDouble_Mask | 0x10000
+        String_Type = NotDouble_Mask | 0x10000,
+        Deleted_Type = NotDouble_Mask | 0x30000
     };
 
     enum ImmediateFlags {
@@ -370,12 +371,12 @@ struct Handle {
 
     enum ValueTypeInternal {
         _Undefined_Type = Undefined_Type,
+        _Deleted_Type = Deleted_Type,
         _Null_Type = Null_Type | ConvertibleToInt,
         _Boolean_Type = Boolean_Type | ConvertibleToInt,
         _Integer_Type = Integer_Type | ConvertibleToInt,
         _Object_Type = Object_Type,
         _String_Type = String_Type
-
     };
 
     union {
