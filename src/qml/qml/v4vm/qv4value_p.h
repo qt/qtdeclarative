@@ -52,8 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct String;
 struct ExecutionContext;
@@ -301,10 +300,10 @@ inline Value Value::nullValue()
     return v;
 }
 
-inline VM::Value Value::deletedValue()
+inline Value Value::deletedValue()
 {
-    VM::Value v;
-    v.tag = VM::Value::_Deleted_Type;
+    Value v;
+    v.tag = Value::_Deleted_Type;
     v.uint_32 = 0;
     return v;
 }
@@ -580,8 +579,7 @@ private:
     PersistentValuePrivate *d;
 };
 
-} // namespace VM
-} // namespace QQmlJS
+} // namespace QV4
 
 QT_END_NAMESPACE
 

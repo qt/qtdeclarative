@@ -46,15 +46,14 @@
 
 QT_END_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct Q_QML_EXPORT EvalFunction : FunctionObject
 {
     EvalFunction(ExecutionContext *scope);
     EvalFunction(ExecutionContext *scope, Object *qmlActivation);
 
-    static QQmlJS::VM::Function *parseSource(QQmlJS::VM::ExecutionContext *ctx,
+    static QV4::Function *parseSource(QV4::ExecutionContext *ctx,
                                              const QString &fileName,
                                              const QString &source,
                                              QQmlJS::Codegen::Mode mode, bool strictMode,
@@ -85,8 +84,7 @@ struct GlobalFunctions
     static Value method_unescape(SimpleCallContext *context);
 };
 
-} // namespace VM
-} // namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

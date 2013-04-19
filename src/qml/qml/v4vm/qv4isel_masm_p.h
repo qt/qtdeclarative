@@ -60,7 +60,7 @@ namespace MASM {
 class Assembler : public JSC::MacroAssembler
 {
 public:
-    Assembler(V4IR::Function* function, VM::Function *vmFunction, VM::ExecutionEngine *engine);
+    Assembler(V4IR::Function* function, QV4::Function *vmFunction, QV4::ExecutionEngine *engine);
 #if CPU(X86)
 
 #undef VALUE_FITS_IN_REGISTER
@@ -280,7 +280,7 @@ public:
     void loadArgument(V4IR::Temp* temp, RegisterID dest)
     {
         if (!temp) {
-            VM::Value undefined = VM::Value::undefinedValue();
+            QV4::Value undefined = QV4::Value::undefinedValue();
             move(TrustedImm64(undefined.val), dest);
         } else {
             Pointer addr = loadTempAddress(dest, temp);
@@ -290,14 +290,14 @@ public:
 
     void loadArgument(V4IR::Const* c, RegisterID dest)
     {
-        VM::Value v = convertToValue(c);
+        QV4::Value v = convertToValue(c);
         move(TrustedImm64(v.val), dest);
     }
 
     void loadArgument(V4IR::Expr* expr, RegisterID dest)
     {
         if (!expr) {
-            VM::Value undefined = VM::Value::undefinedValue();
+            QV4::Value undefined = QV4::Value::undefinedValue();
             move(TrustedImm64(undefined.val), dest);
         } else if (expr->asTemp()){
             loadArgument(expr->asTemp(), dest);
@@ -314,7 +314,7 @@ public:
     }
 #endif
 
-    void loadArgument(VM::String* string, RegisterID dest)
+    void loadArgument(QV4::String* string, RegisterID dest)
     {
         loadArgument(TrustedImmPtr(string), dest);
     }
@@ -365,7 +365,7 @@ public:
         push(ScratchRegister);
     }
 
-    void push(VM::Value value)
+    void push(QV4::Value value)
     {
 #ifdef VALUE_FITS_IN_REGISTER
         move(TrustedImm64(value.val), ScratchRegister);
@@ -413,21 +413,21 @@ public:
             addr.offset -= 4;
             push(addr);
         } else {
-            VM::Value undefined = VM::Value::undefinedValue();
+            QV4::Value undefined = QV4::Value::undefinedValue();
             push(undefined);
         }
     }
 
     void push(V4IR::Const* c)
     {
-        VM::Value v = convertToValue(c);
+        QV4::Value v = convertToValue(c);
         push(v);
     }
 
     void push(V4IR::Expr* e)
     {
         if (!e) {
-            VM::Value undefined = VM::Value::undefinedValue();
+            QV4::Value undefined = QV4::Value::undefinedValue();
             push(undefined);
         } else if (V4IR::Const *c = e->asConst())
             push(c);
@@ -444,7 +444,7 @@ public:
         push(ScratchRegister);
     }
 
-    void push(VM::String* name)
+    void push(QV4::String* name)
     {
         push(TrustedImmPtr(name));
     }
@@ -468,7 +468,7 @@ public:
     template <typename Result>
     void copyValue(Result result, V4IR::Expr* source);
 
-    void storeValue(VM::Value value, Address destination)
+    void storeValue(QV4::Value value, Address destination)
     {
 #ifdef VALUE_FITS_IN_REGISTER
         store64(TrustedImm64(value.val), destination);
@@ -479,7 +479,7 @@ public:
 #endif
     }
 
-    void storeValue(VM::Value value, V4IR::Temp* temp);
+    void storeValue(QV4::Value value, V4IR::Temp* temp);
 
     void enterStandardStackFrame(int locals);
     void leaveStandardStackFrame(int locals);
@@ -494,8 +494,8 @@ public:
     { return 8; } // Size of value
     static inline int sizeOfArgument(const Pointer&)
     { return sizeof(void*); }
-    static inline int sizeOfArgument(VM::String*)
-    { return sizeof(VM::String*); }
+    static inline int sizeOfArgument(QV4::String*)
+    { return sizeof(QV4::String*); }
     static inline int sizeOfArgument(const PointerToValue &)
     { return sizeof(void *); }
     static inline int sizeOfArgument(const Reference &)
@@ -601,7 +601,7 @@ public:
 
     struct BinaryOperationInfo {
         const char *name;
-        VM::BinOp fallbackImplementation;
+        QV4::BinOp fallbackImplementation;
         MemRegBinOp inlineMemRegOp;
         ImmRegBinOp inlineImmRegOp;
     };
@@ -751,11 +751,11 @@ public:
         return Jump();
     }
 
-    void link(VM::Function *vmFunc);
+    void link(QV4::Function *vmFunc);
 
 private:
     V4IR::Function *_function;
-    VM::Function *_vmFunction;
+    QV4::Function *_vmFunction;
     QHash<V4IR::BasicBlock *, Label> _addrs;
     QHash<V4IR::BasicBlock *, QVector<Jump> > _patches;
     QList<CallToLink> _callsToLink;
@@ -768,7 +768,7 @@ private:
 
     QHash<V4IR::BasicBlock *, QVector<DataLabelPtr> > _labelPatches;
 
-    VM::ExecutionEngine *_engine;
+    QV4::ExecutionEngine *_engine;
 };
 
 class Q_QML_EXPORT InstructionSelection:
@@ -776,10 +776,10 @@ class Q_QML_EXPORT InstructionSelection:
         public EvalInstructionSelection
 {
 public:
-    InstructionSelection(VM::ExecutionEngine *engine, V4IR::Module *module);
+    InstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module);
     ~InstructionSelection();
 
-    virtual void run(VM::Function *vmFunction, V4IR::Function *function);
+    virtual void run(QV4::Function *vmFunction, V4IR::Function *function);
 
 protected:
     virtual void callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
@@ -846,7 +846,7 @@ protected:
     Pointer argumentAddressForCall(int argument)
     {
         const int index = _function->maxNumberOfArguments - argument;
-        return Pointer(Assembler::LocalsRegister, sizeof(VM::Value) * (-index)
+        return Pointer(Assembler::LocalsRegister, sizeof(QV4::Value) * (-index)
                                                       - sizeof(void*) // size of ebp
                                                   - sizeof(void*) * Assembler::calleeSavedRegisterCount
                        );
@@ -856,7 +856,7 @@ protected:
         return argumentAddressForCall(0);
     }
 
-    VM::String *identifier(const QString &s);
+    QV4::String *identifier(const QString &s);
     virtual void constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
@@ -875,18 +875,18 @@ private:
 
     int prepareVariableArguments(V4IR::ExprList* args);
 
-    typedef void (*ActivationMethod)(VM::ExecutionContext *, VM::Value *result, VM::String *name, VM::Value *args, int argc);
+    typedef void (*ActivationMethod)(QV4::ExecutionContext *, QV4::Value *result, QV4::String *name, QV4::Value *args, int argc);
     void callRuntimeMethodImp(V4IR::Temp *result, const char* name, ActivationMethod method, V4IR::Expr *base, V4IR::ExprList *args);
 #define callRuntimeMethod(result, function, ...) \
     callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
 
-    uint addLookup(VM::String *name);
-    uint addGlobalLookup(VM::String *name);
+    uint addLookup(QV4::String *name);
+    uint addGlobalLookup(QV4::String *name);
 
     V4IR::BasicBlock *_block;
     V4IR::Function* _function;
-    VM::Function* _vmFunction;
-    QVector<VM::Lookup> _lookups;
+    QV4::Function* _vmFunction;
+    QVector<QV4::Lookup> _lookups;
     Assembler* _as;
     QSet<V4IR::BasicBlock*> _reentryBlocks;
 };
@@ -895,7 +895,7 @@ class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine, V4IR::Module *module)
+    virtual EvalInstructionSelection *create(QV4::ExecutionEngine *engine, V4IR::Module *module)
     { return new InstructionSelection(engine, module); }
 };
 

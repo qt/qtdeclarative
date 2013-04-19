@@ -48,31 +48,31 @@
 #include <qglobal.h>
 #include <QHash>
 
-namespace QQmlJS {
-
-namespace VM {
+namespace QV4 {
 struct ExecutionEngine;
 struct Function;
-} // namespace VM
+}
+
+namespace QQmlJS {
 
 class Q_QML_EXPORT EvalInstructionSelection
 {
 public:
-    EvalInstructionSelection(VM::ExecutionEngine *engine, V4IR::Module *module);
+    EvalInstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module);
     virtual ~EvalInstructionSelection() = 0;
 
-    VM::Function *vmFunction(V4IR::Function *f);
+    QV4::Function *vmFunction(V4IR::Function *f);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
 
 protected:
-    VM::Function *createFunctionMapping(VM::Function *outer, V4IR::Function *irFunction);
-    VM::ExecutionEngine *engine() const { return _engine; }
-    virtual void run(VM::Function *vmFunction, V4IR::Function *function) = 0;
+    QV4::Function *createFunctionMapping(QV4::Function *outer, V4IR::Function *irFunction);
+    QV4::ExecutionEngine *engine() const { return _engine; }
+    virtual void run(QV4::Function *vmFunction, V4IR::Function *function) = 0;
 
 private:
-    VM::ExecutionEngine *_engine;
-    QHash<V4IR::Function *, VM::Function *> _irToVM;
+    QV4::ExecutionEngine *_engine;
+    QHash<V4IR::Function *, QV4::Function *> _irToVM;
 protected:
     bool useFastLookups;
 };
@@ -81,7 +81,7 @@ class Q_QML_EXPORT EvalISelFactory
 {
 public:
     virtual ~EvalISelFactory() = 0;
-    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine, V4IR::Module *module) = 0;
+    virtual EvalInstructionSelection *create(QV4::ExecutionEngine *engine, V4IR::Module *module) = 0;
 };
 
 namespace V4IR {

@@ -71,7 +71,7 @@
 #  include <windows.h>
 #endif
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 ErrorObject::ErrorObject(ExecutionContext *context, const Value &message, ErrorType t)
     : Object(context->engine)

@@ -49,8 +49,7 @@ QT_BEGIN_NAMESPACE
 
 class QDateTime;
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct DateObject: Object {
     Value value;
@@ -129,8 +128,7 @@ struct DatePrototype: DateObject
     static Value method_toJSON(SimpleCallContext *ctx);
 };
 
-} // end of namespace VM
-} // end of namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

@@ -16,7 +16,7 @@ QTextStream qout(stderr, QIODevice::WriteOnly);
 using namespace QQmlJS;
 using namespace QQmlJS::V4IR;
 
-EvalInstructionSelection::EvalInstructionSelection(VM::ExecutionEngine *engine, Module *module)
+EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutionEngine *engine, Module *module)
     : _engine(engine)
     , useFastLookups(true)
 {
@@ -35,9 +35,9 @@ EvalInstructionSelection::~EvalInstructionSelection()
 EvalISelFactory::~EvalISelFactory()
 {}
 
-VM::Function *EvalInstructionSelection::createFunctionMapping(VM::Function *outer, Function *irFunction)
+QV4::Function *EvalInstructionSelection::createFunctionMapping(QV4::Function *outer, Function *irFunction)
 {
-    VM::Function *vmFunction = _engine->newFunction(irFunction->name ? *irFunction->name : QString());
+    QV4::Function *vmFunction = _engine->newFunction(irFunction->name ? *irFunction->name : QString());
     _irToVM.insert(irFunction, vmFunction);
 
     vmFunction->hasDirectEval = irFunction->hasDirectEval;
@@ -66,8 +66,8 @@ VM::Function *EvalInstructionSelection::createFunctionMapping(VM::Function *oute
     return vmFunction;
 }
 
-VM::Function *EvalInstructionSelection::vmFunction(Function *f) {
-    VM::Function *function = _irToVM[f];
+QV4::Function *EvalInstructionSelection::vmFunction(Function *f) {
+    QV4::Function *function = _irToVM[f];
     if (!function->code)
         run(function, f);
     return function;

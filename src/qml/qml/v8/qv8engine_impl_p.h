@@ -151,8 +151,8 @@ QJSValue QV8Engine::evaluate(const QString& program, const QString& fileName, qu
     if (script.IsEmpty()) {
         // TODO: Why don't we get the exception, as with Script::Compile()?
         // Q_ASSERT(tryCatch.HasCaught());
-        QQmlJS::VM::Object *error = m_v4Engine->newSyntaxErrorObject(m_v4Engine->current, 0);
-        return new QJSValuePrivate(m_v4Engine, QQmlJS::VM::Value::fromObject(error));
+        QV4::Object *error = m_v4Engine->newSyntaxErrorObject(m_v4Engine->current, 0);
+        return new QJSValuePrivate(m_v4Engine, QV4::Value::fromObject(error));
     }
     return evaluate(script, tryCatch);
 }

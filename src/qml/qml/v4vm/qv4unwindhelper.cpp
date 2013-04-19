@@ -28,7 +28,7 @@
 #endif // USE_ARM_HELPER
 
 #ifdef USE_NULL_HELPER
-using namespace QQmlJS::VM;
+using namespace QV4;
 void UnwindHelper::registerFunction(Function *function) {Q_UNUSED(function);}
 void UnwindHelper::registerFunctions(QVector<Function *> functions) {Q_UNUSED(functions);}
 void UnwindHelper::deregisterFunction(Function *function) {Q_UNUSED(function);}

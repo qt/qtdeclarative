@@ -619,7 +619,7 @@ private:
 
 class Codegen::ScanFunctions: Visitor
 {
-    typedef TemporaryAssignment<bool> TemporaryBoolAssignment;
+    typedef QV4::TemporaryAssignment<bool> TemporaryBoolAssignment;
 public:
     ScanFunctions(Codegen *cg, const QString &sourceCode)
         : _cg(cg)
@@ -985,7 +985,7 @@ private: // fields:
     bool _allowFuncDecls;
 };
 
-Codegen::Codegen(VM::ExecutionContext *context, bool strict)
+Codegen::Codegen(QV4::ExecutionContext *context, bool strict)
     : _module(0)
     , _function(0)
     , _block(0)
@@ -1177,7 +1177,7 @@ V4IR::Expr *Codegen::unop(V4IR::AluOp op, V4IR::Expr *expr)
             case V4IR::OpUPlus:
                 return expr;
             case V4IR::OpCompl:
-                return _block->CONST(V4IR::NumberType, ~VM::Value::toInt32(c->value));
+                return _block->CONST(V4IR::NumberType, ~QV4::Value::toInt32(c->value));
             case V4IR::OpIncrement:
                 return _block->CONST(V4IR::NumberType, c->value + 1);
             case V4IR::OpDecrement:
@@ -1216,13 +1216,13 @@ V4IR::Expr *Codegen::binop(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right)
                 case V4IR::OpGt: return _block->CONST(V4IR::BoolType, c1->value > c2->value);
                 case V4IR::OpLe: return _block->CONST(V4IR::BoolType, c1->value <= c2->value);
                 case V4IR::OpLt: return _block->CONST(V4IR::BoolType, c1->value < c2->value);
-                case V4IR::OpLShift: return _block->CONST(V4IR::NumberType, VM::Value::toInt32(c1->value) << (VM::Value::toUInt32(c2->value) & 0x1f));
+                case V4IR::OpLShift: return _block->CONST(V4IR::NumberType, QV4::Value::toInt32(c1->value) << (QV4::Value::toUInt32(c2->value) & 0x1f));
                 case V4IR::OpMod: return _block->CONST(V4IR::NumberType, ::fmod(c1->value, c2->value));
                 case V4IR::OpMul: return _block->CONST(V4IR::NumberType, c1->value * c2->value);
                 case V4IR::OpOr: return _block->CONST(V4IR::NumberType, c1->value ? c1->value : c2->value);
-                case V4IR::OpRShift: return _block->CONST(V4IR::NumberType, VM::Value::toInt32(c1->value) >> (VM::Value::toUInt32(c2->value) & 0x1f));
+                case V4IR::OpRShift: return _block->CONST(V4IR::NumberType, QV4::Value::toInt32(c1->value) >> (QV4::Value::toUInt32(c2->value) & 0x1f));
                 case V4IR::OpSub: return _block->CONST(V4IR::NumberType, c1->value - c2->value);
-                case V4IR::OpURShift: return _block->CONST(V4IR::NumberType,VM::Value::toUInt32(c1->value) >> (VM::Value::toUInt32(c2->value) & 0x1f));
+                case V4IR::OpURShift: return _block->CONST(V4IR::NumberType,QV4::Value::toUInt32(c1->value) >> (QV4::Value::toUInt32(c2->value) & 0x1f));
 
                 case V4IR::OpInstanceof:
                 case V4IR::OpIn:
@@ -3231,7 +3231,7 @@ void Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr *expr, co
 
 void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 {
-    VM::DiagnosticMessage *msg = new VM::DiagnosticMessage;
+    QV4::DiagnosticMessage *msg = new QV4::DiagnosticMessage;
     msg->fileName = _fileName;
     msg->offset = loc.begin();
     msg->startLine = loc.startLine;
@@ -3248,7 +3248,7 @@ void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 void Codegen::throwReferenceError(const SourceLocation &loc, const QString &detail)
 {
     if (_context)
-        _context->throwReferenceError(VM::Value::fromString(_context, detail));
+        _context->throwReferenceError(QV4::Value::fromString(_context, detail));
     else if (_errorHandler)
         throwSyntaxError(loc, detail);
     else

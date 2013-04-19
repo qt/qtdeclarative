@@ -41,7 +41,7 @@
 
 #include "qv4booleanobject_p.h"
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(BooleanCtor);
 

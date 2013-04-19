@@ -46,8 +46,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct Value;
 struct Object;
@@ -118,7 +117,7 @@ struct ExecutionContext
     Value getProperty(String *name);
     Value getPropertyNoThrow(String *name);
     Value getPropertyAndBase(String *name, Object **base);
-    void inplaceBitOp(String *name, const QQmlJS::VM::Value &value, BinOp op);
+    void inplaceBitOp(String *name, const QV4::Value &value, BinOp op);
     bool deleteProperty(String *name);
 
     inline Value argument(unsigned int index = 0);
@@ -137,7 +136,7 @@ struct SimpleCallContext : public ExecutionContext
 
 struct CallContext : public SimpleCallContext
 {
-    void initCallContext(QQmlJS::VM::ExecutionEngine *engine);
+    void initCallContext(QV4::ExecutionEngine *engine);
     bool needsOwnArguments() const;
 
     Value *locals;
@@ -153,7 +152,7 @@ struct GlobalContext : public ExecutionContext
 
 struct CatchContext : public ExecutionContext
 {
-    void init(ExecutionContext *p, String *exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
+    void init(ExecutionContext *p, String *exceptionVarName, const QV4::Value &exceptionValue);
 
     String *exceptionVarName;
     Value exceptionValue;
@@ -186,8 +185,7 @@ inline CallContext *ExecutionContext::asCallContext()
     sizeof(CallContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount))
 #define stackContextSize (sizeof(CallContext) + 32*sizeof(Value))
 
-} // namespace VM
-} // namespace QQmlJS
+} // namespace QV4
 
 QT_END_NAMESPACE
 

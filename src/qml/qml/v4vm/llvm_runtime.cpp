@@ -45,7 +45,7 @@
 #include <stdio.h>
 #include <setjmp.h>
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 extern "C" {
 

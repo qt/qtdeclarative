@@ -45,8 +45,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct SparseArrayNode;
 struct Object;
@@ -78,8 +77,7 @@ struct ObjectIterator
     Value nextPropertyNameAsString();
 };
 
-} // namespace VM
-} // namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

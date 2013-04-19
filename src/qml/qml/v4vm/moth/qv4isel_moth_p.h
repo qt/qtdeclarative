@@ -15,10 +15,10 @@ class Q_QML_EXPORT InstructionSelection:
         public EvalInstructionSelection
 {
 public:
-    InstructionSelection(VM::ExecutionEngine *engine, V4IR::Module *module);
+    InstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module);
     ~InstructionSelection();
 
-    virtual void run(VM::Function *vmFunction, V4IR::Function *function);
+    virtual void run(QV4::Function *vmFunction, V4IR::Function *function);
 
 protected:
     virtual void visitJump(V4IR::Jump *);
@@ -133,10 +133,10 @@ private:
     void patchJumpAddresses();
     uchar *squeezeCode() const;
 
-    VM::String *identifier(const QString &s);
+    QV4::String *identifier(const QString &s);
 
     V4IR::Function *_function;
-    VM::Function *_vmFunction;
+    QV4::Function *_vmFunction;
     V4IR::BasicBlock *_block;
 
     QHash<V4IR::BasicBlock *, QVector<ptrdiff_t> > _patches;
@@ -151,7 +151,7 @@ class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(VM::ExecutionEngine *engine, V4IR::Module *module)
+    virtual EvalInstructionSelection *create(QV4::ExecutionEngine *engine, V4IR::Module *module)
     { return new InstructionSelection(engine, module); }
 };
 

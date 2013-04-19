@@ -48,8 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 
 enum PropertyFlag {
@@ -153,7 +152,6 @@ struct PropertyAttributes
     }
 };
 
-}
 }
 
 QT_END_NAMESPACE

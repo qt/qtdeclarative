@@ -59,7 +59,7 @@
 
 using namespace QQmlJS;
 using namespace QQmlJS::MASM;
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 /* Platform/Calling convention/Architecture specific section */
 
@@ -105,7 +105,7 @@ const int Assembler::calleeSavedRegisterCount = sizeof(calleeSavedRegisters) / s
 
 const Assembler::VoidType Assembler::Void;
 
-Assembler::Assembler(V4IR::Function* function, VM::Function *vmFunction, VM::ExecutionEngine *engine)
+Assembler::Assembler(V4IR::Function* function, QV4::Function *vmFunction, QV4::ExecutionEngine *engine)
     : _function(function), _vmFunction(vmFunction), _engine(engine)
 {
 }
@@ -143,7 +143,7 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
 {
     int32_t offset = 0;
     int scope = t->scope;
-    VM::Function *f = _vmFunction;
+    QV4::Function *f = _vmFunction;
     RegisterID context = ContextRegister;
     if (scope) {
         loadPtr(Address(ContextRegister, offsetof(ExecutionContext, outer)), ScratchRegister);
@@ -200,7 +200,7 @@ void Assembler::copyValue(Result result, V4IR::Expr* source)
         loadDouble(temp, FPGpr0);
         storeDouble(FPGpr0, result);
     } else if (V4IR::Const *c = source->asConst()) {
-        VM::Value v = convertToValue(c);
+        QV4::Value v = convertToValue(c);
         storeValue(v, result);
     } else {
         assert(! "not implemented");
@@ -209,7 +209,7 @@ void Assembler::copyValue(Result result, V4IR::Expr* source)
 }
 
 
-void Assembler::storeValue(VM::Value value, V4IR::Temp* destination)
+void Assembler::storeValue(QV4::Value value, V4IR::Temp* destination)
 {
     Address addr = loadTempAddress(ScratchRegister, destination);
     storeValue(value, addr);
@@ -225,7 +225,7 @@ void Assembler::enterStandardStackFrame(int locals)
     move(StackPointerRegister, StackFrameRegister);
 
     // space for the locals and callee saved registers
-    int32_t frameSize = locals * sizeof(QQmlJS::VM::Value) + sizeof(void*) * calleeSavedRegisterCount;
+    int32_t frameSize = locals * sizeof(QV4::Value) + sizeof(void*) * calleeSavedRegisterCount;
 
 #if CPU(X86) || CPU(X86_64)
     frameSize = (frameSize + 15) & ~15; // align on 16 byte boundaries for MMX
@@ -245,7 +245,7 @@ void Assembler::leaveStandardStackFrame(int locals)
         loadPtr(Address(StackFrameRegister, -(i + 1) * sizeof(void*)), calleeSavedRegisters[i]);
 
     // space for the locals and the callee saved registers
-    int32_t frameSize = locals * sizeof(QQmlJS::VM::Value) + sizeof(void*) * calleeSavedRegisterCount;
+    int32_t frameSize = locals * sizeof(QV4::Value) + sizeof(void*) * calleeSavedRegisterCount;
 #if CPU(X86) || CPU(X86_64)
     frameSize = (frameSize + 15) & ~15; // align on 16 byte boundaries for MMX
 #endif
@@ -345,20 +345,20 @@ void Assembler::generateBinOp(V4IR::AluOp operation, V4IR::Temp* target, V4IR::T
         Jump leftTypeCheck;
         if (left->asTemp()) {
             Address typeAddress = loadTempAddress(ScratchRegister, left->asTemp());
-            typeAddress.offset += offsetof(VM::Value, tag);
-            leftTypeCheck = branch32(NotEqual, typeAddress, TrustedImm32(VM::Value::_Integer_Type));
+            typeAddress.offset += offsetof(QV4::Value, tag);
+            leftTypeCheck = branch32(NotEqual, typeAddress, TrustedImm32(QV4::Value::_Integer_Type));
         }
 
         Jump rightTypeCheck;
         if (right->asTemp()) {
             Address typeAddress = loadTempAddress(ScratchRegister, right->asTemp());
-            typeAddress.offset += offsetof(VM::Value, tag);
-            rightTypeCheck = branch32(NotEqual, typeAddress, TrustedImm32(VM::Value::_Integer_Type));
+            typeAddress.offset += offsetof(QV4::Value, tag);
+            rightTypeCheck = branch32(NotEqual, typeAddress, TrustedImm32(QV4::Value::_Integer_Type));
         }
 
         if (left->asTemp()) {
             Address leftValue = loadTempAddress(ScratchRegister, left->asTemp());
-            leftValue.offset += offsetof(VM::Value, int_32);
+            leftValue.offset += offsetof(QV4::Value, int_32);
             load32(leftValue, IntegerOpRegister);
         } else { // left->asConst()
             move(TrustedImm32(leftConst.integerValue()), IntegerOpRegister);
@@ -368,7 +368,7 @@ void Assembler::generateBinOp(V4IR::AluOp operation, V4IR::Temp* target, V4IR::T
 
         if (right->asTemp()) {
             Address rightValue = loadTempAddress(ScratchRegister, right->asTemp());
-            rightValue.offset += offsetof(VM::Value, int_32);
+            rightValue.offset += offsetof(QV4::Value, int_32);
 
             overflowCheck = (this->*info.inlineMemRegOp)(rightValue, IntegerOpRegister);
         } else { // right->asConst()
@@ -377,12 +377,12 @@ void Assembler::generateBinOp(V4IR::AluOp operation, V4IR::Temp* target, V4IR::T
 
         Address resultAddr = loadTempAddress(ScratchRegister, target);
         Address resultValueAddr = resultAddr;
-        resultValueAddr.offset += offsetof(VM::Value, int_32);
+        resultValueAddr.offset += offsetof(QV4::Value, int_32);
         store32(IntegerOpRegister, resultValueAddr);
 
         Address resultTypeAddr = resultAddr;
-        resultTypeAddr.offset += offsetof(VM::Value, tag);
-        store32(TrustedImm32(VM::Value::_Integer_Type), resultTypeAddr);
+        resultTypeAddr.offset += offsetof(QV4::Value, tag);
+        store32(TrustedImm32(QV4::Value::_Integer_Type), resultTypeAddr);
 
         binOpFinished = jump();
 
@@ -423,7 +423,7 @@ static void printDisassembledOutputWithCalls(const char* output, const QHash<voi
 }
 #endif
 
-void Assembler::link(VM::Function *vmFunc)
+void Assembler::link(QV4::Function *vmFunc)
 {
     Label endOfCode = label();
 #if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
@@ -503,10 +503,10 @@ void Assembler::link(VM::Function *vmFunc)
         vmFunc->codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
     }
 
-    vmFunc->code = (Value (*)(VM::ExecutionContext *, const uchar *)) vmFunc->codeRef.code().executableAddress();
+    vmFunc->code = (Value (*)(QV4::ExecutionContext *, const uchar *)) vmFunc->codeRef.code().executableAddress();
 }
 
-InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, V4IR::Module *module)
+InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module)
     : EvalInstructionSelection(engine, module)
     , _block(0)
     , _function(0)
@@ -520,7 +520,7 @@ InstructionSelection::~InstructionSelection()
     delete _as;
 }
 
-void InstructionSelection::run(VM::Function *vmFunction, V4IR::Function *function)
+void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *function)
 {
     QVector<Lookup> lookups;
     QSet<V4IR::BasicBlock*> reentryBlocks;
@@ -600,7 +600,7 @@ void InstructionSelection::run(VM::Function *vmFunction, V4IR::Function *functio
 void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
 {
     int argc = prepareVariableArguments(args);
-    VM::String *s = identifier(*func->id);
+    QV4::String *s = identifier(*func->id);
 
     if (useFastLookups && func->global) {
         uint index = addGlobalLookup(s);
@@ -720,7 +720,7 @@ void InstructionSelection::callBuiltinThrow(V4IR::Temp *arg)
 
 typedef void *(*MiddleOfFunctionEntryPoint(ExecutionContext *, void *localsPtr));
 static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunctionEntryPoint tryBody, MiddleOfFunctionEntryPoint catchBody,
-                        VM::String *exceptionVarName, Value *exceptionVar)
+                        QV4::String *exceptionVarName, Value *exceptionVar)
 {
     *exceptionVar = Value::undefinedValue();
     void *addressToContinueAt = 0;
@@ -872,7 +872,7 @@ void InstructionSelection::setActivationProperty(V4IR::Temp *source, const QStri
 
 void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *target)
 {
-    VM::Function *vmFunc = vmFunction(closure->value);
+    QV4::Function *vmFunc = vmFunction(closure->value);
     assert(vmFunc);
     generateFunctionCall(Assembler::Void, __qmljs_init_closure, Assembler::ContextRegister, Assembler::PointerToValue(target), Assembler::TrustedImmPtr(vmFunc));
 }
@@ -880,7 +880,7 @@ void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *targe
 void InstructionSelection::getProperty(V4IR::Temp *base, const QString &name, V4IR::Temp *target)
 {
     if (useFastLookups) {
-        VM::String *s = identifier(name);
+        QV4::String *s = identifier(name);
         uint index = addLookup(s);
         generateFunctionCall(Assembler::Void, __qmljs_get_property_lookup, Assembler::ContextRegister, Assembler::PointerToValue(target),
                              Assembler::Reference(base), Assembler::TrustedImm32(index));
@@ -893,7 +893,7 @@ void InstructionSelection::getProperty(V4IR::Temp *base, const QString &name, V4
 void InstructionSelection::setProperty(V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName)
 {
     if (useFastLookups) {
-        VM::String *s = identifier(targetName);
+        QV4::String *s = identifier(targetName);
         uint index = addLookup(s);
         generateFunctionCall(Assembler::Void, __qmljs_set_property_lookup,
                 Assembler::ContextRegister, Assembler::Reference(targetBase),
@@ -929,7 +929,7 @@ void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetT
 
 void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
-    VM::UnaryOpName op = 0;
+    QV4::UnaryOpName op = 0;
     const char *opName = 0;
     switch (oper) {
     case V4IR::OpIfTrue: assert(!"unreachable"); break;
@@ -954,7 +954,7 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Temp *leftSource, V4IR:
 
 void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName)
 {
-    VM::InplaceBinOpName op = 0;
+    QV4::InplaceBinOpName op = 0;
     const char *opName = 0;
     switch (oper) {
     case V4IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_name); break;
@@ -980,7 +980,7 @@ void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSour
 
 void InstructionSelection::inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBaseTemp, V4IR::Temp *targetIndexTemp)
 {
-    VM::InplaceBinOpElement op = 0;
+    QV4::InplaceBinOpElement op = 0;
     const char *opName = 0;
     switch (oper) {
     case V4IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_element); break;
@@ -1008,7 +1008,7 @@ void InstructionSelection::inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source
 
 void InstructionSelection::inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName)
 {
-    VM::InplaceBinOpMember op = 0;
+    QV4::InplaceBinOpMember op = 0;
     const char *opName = 0;
     switch (oper) {
     case V4IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_member); break;
@@ -1041,7 +1041,7 @@ void InstructionSelection::callProperty(V4IR::Temp *base, const QString &name,
     assert(base != 0);
 
     int argc = prepareVariableArguments(args);
-    VM::String *s = identifier(name);
+    QV4::String *s = identifier(name);
 
     if (useFastLookups) {
         uint index = addLookup(s);
@@ -1084,7 +1084,7 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::E
 
     if (useFastLookups && func->global) {
         int argc = prepareVariableArguments(args);
-        VM::String *s = identifier(*func->id);
+        QV4::String *s = identifier(*func->id);
 
         uint index = addGlobalLookup(s);
         generateFunctionCall(Assembler::Void, __qmljs_construct_global_lookup,
@@ -1124,11 +1124,11 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
     if (V4IR::Temp *t = s->cond->asTemp()) {
         Address temp = _as->loadTempAddress(Assembler::ScratchRegister, t);
         Address tag = temp;
-        tag.offset += offsetof(VM::Value, tag);
-        Assembler::Jump booleanConversion = _as->branch32(Assembler::NotEqual, tag, Assembler::TrustedImm32(VM::Value::Boolean_Type));
+        tag.offset += offsetof(QV4::Value, tag);
+        Assembler::Jump booleanConversion = _as->branch32(Assembler::NotEqual, tag, Assembler::TrustedImm32(QV4::Value::Boolean_Type));
 
         Address data = temp;
-        data.offset += offsetof(VM::Value, int_32);
+        data.offset += offsetof(QV4::Value, int_32);
         _as->load32(data, Assembler::ReturnValueRegister);
         Assembler::Jump testBoolean = _as->jump();
 
@@ -1145,7 +1145,7 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
         return;
     } else if (V4IR::Binop *b = s->cond->asBinop()) {
         if (b->left->asTemp() && b->right->asTemp()) {
-            VM::CmpOp op = 0;
+            QV4::CmpOp op = 0;
             const char *opName = 0;
             switch (b->op) {
             default: Q_UNREACHABLE(); assert(!"todo"); break;
@@ -1230,10 +1230,10 @@ void InstructionSelection::callRuntimeMethodImp(V4IR::Temp *result, const char* 
 }
 
 
-uint InstructionSelection::addLookup(VM::String *name)
+uint InstructionSelection::addLookup(QV4::String *name)
 {
     uint index = (uint)_lookups.size();
-    VM::Lookup l;
+    QV4::Lookup l;
     l.lookupProperty = Lookup::lookupPropertyGeneric;
     for (int i = 0; i < Lookup::Size; ++i)
         l.classList[i] = 0;
@@ -1244,10 +1244,10 @@ uint InstructionSelection::addLookup(VM::String *name)
     return index;
 }
 
-uint InstructionSelection::addGlobalLookup(VM::String *name)
+uint InstructionSelection::addGlobalLookup(QV4::String *name)
 {
     uint index = (uint)_lookups.size();
-    VM::Lookup l;
+    QV4::Lookup l;
     l.lookupGlobal = Lookup::lookupGlobalGeneric;
     for (int i = 0; i < Lookup::Size; ++i)
         l.classList[i] = 0;

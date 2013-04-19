@@ -43,8 +43,7 @@
 #include "qv4stringobject_p.h"
 #include "qv4identifier_p.h"
 
-namespace QQmlJS {
-namespace VM {
+using namespace QV4;
 
 ObjectIterator::ObjectIterator(Object *o, uint flags)
     : object(o)
@@ -178,7 +177,3 @@ Value ObjectIterator::nextPropertyNameAsString()
         return __qmljs_to_string(Value::fromDouble(index), object->internalClass->engine->current);
     return Value::nullValue();
 }
-
-}
-}
-

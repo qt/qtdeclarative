@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 
 QJSValueIteratorPrivate::QJSValueIteratorPrivate(const QJSValue &v)
     : value(v)
-    , iterator(QJSValuePrivate::get(v)->value.asObject(), QQmlJS::VM::ObjectIterator::NoFlags)
+    , iterator(QJSValuePrivate::get(v)->value.asObject(), QV4::ObjectIterator::NoFlags)
     , currentValue(0)
     , currentName(0)
     , currentIndex(UINT_MAX)
@@ -175,11 +175,11 @@ QJSValue QJSValueIterator::value() const
     if (!d_ptr->currentValue)
         return QJSValue();
 
-    QQmlJS::VM::Object *o = d_ptr->iterator.object;
+    QV4::Object *o = d_ptr->iterator.object;
     try {
-        QQmlJS::VM::Value v = o->getValue(o->internalClass->engine->current, d_ptr->currentValue, d_ptr->currentAttributes);
+        QV4::Value v = o->getValue(o->internalClass->engine->current, d_ptr->currentValue, d_ptr->currentAttributes);
         return new QJSValuePrivate(o->internalClass->engine, v);
-    } catch (QQmlJS::VM::Exception &e) {
+    } catch (QV4::Exception &e) {
         return QJSValue();
     }
 }
@@ -192,7 +192,7 @@ QJSValue QJSValueIterator::value() const
 */
 QJSValueIterator& QJSValueIterator::operator=(QJSValue& object)
 {
-    d_ptr->iterator = QQmlJS::VM::ObjectIterator(QJSValuePrivate::get(object)->value.asObject(), QQmlJS::VM::ObjectIterator::NoFlags);
+    d_ptr->iterator = QV4::ObjectIterator(QJSValuePrivate::get(object)->value.asObject(), QV4::ObjectIterator::NoFlags);
     d_ptr->nextValue = d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
 }
 

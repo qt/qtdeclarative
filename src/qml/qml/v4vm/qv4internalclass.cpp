@@ -44,11 +44,9 @@
 #include <qv4engine_p.h>
 #include <qv4identifier_p.h>
 
-namespace QQmlJS {
-namespace VM {
+using namespace QV4;
 
-
-InternalClass::InternalClass(const QQmlJS::VM::InternalClass &other)
+InternalClass::InternalClass(const QV4::InternalClass &other)
     : engine(other.engine)
     , propertyTable(other.propertyTable)
     , nameMap(other.nameMap)
@@ -181,8 +179,4 @@ InternalClass *InternalClass::frozen()
 
     m_frozen->m_frozen = m_frozen;
     return m_frozen;
-}
-
-
-}
 }

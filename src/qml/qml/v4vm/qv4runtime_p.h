@@ -65,8 +65,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 enum TypeHint {
     PREFERREDTYPE_HINT,
@@ -135,16 +134,16 @@ void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *re
 void Q_NORETURN __qmljs_builtin_throw(ExecutionContext *context, const Value &val);
 void Q_NORETURN __qmljs_builtin_rethrow(ExecutionContext *context);
 ExecutionContext *__qmljs_builtin_push_with_scope(const Value &o, ExecutionContext *ctx);
-ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, const QQmlJS::VM::Value &exceptionValue, ExecutionContext *ctx);
+ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, const QV4::Value &exceptionValue, ExecutionContext *ctx);
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx);
 void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name);
 void __qmljs_builtin_define_property(ExecutionContext *ctx, const Value &object, String *name, Value *val);
-void __qmljs_builtin_define_array(ExecutionContext *ctx, Value *array, QQmlJS::VM::Value *values, uint length);
+void __qmljs_builtin_define_array(ExecutionContext *ctx, Value *array, QV4::Value *values, uint length);
 void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &object, String *name, const Value *getter, const Value *setter);
 
 // constructors
-void __qmljs_init_closure(ExecutionContext *ctx, Value *result, VM::Function *clos);
-VM::Function *__qmljs_register_function(ExecutionContext *ctx, String *name,
+void __qmljs_init_closure(ExecutionContext *ctx, Value *result, Function *clos);
+Function *__qmljs_register_function(ExecutionContext *ctx, String *name,
                                         bool hasDirectEval,
                                         bool usesArgumentsObject, bool isStrict,
                                         bool hasNestedFunctions,
@@ -738,8 +737,7 @@ inline uint __qmljs_cmp_in(ExecutionContext *ctx, const Value &left, const Value
 
 } // extern "C"
 
-} // namespace VM
-} // namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

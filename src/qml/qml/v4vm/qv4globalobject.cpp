@@ -59,7 +59,7 @@
 
 #include <wtf/MathExtras.h>
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 static inline char toHex(char c)
 {
@@ -379,7 +379,7 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
     const QString code = args[0].stringValue()->toQString();
     bool inheritContext = !ctx->strictMode;
 
-    QQmlJS::VM::Function *f = parseSource(ctx, QStringLiteral("eval code"),
+    QV4::Function *f = parseSource(ctx, QStringLiteral("eval code"),
                                           code, QQmlJS::Codegen::EvalCode,
                                           (directCall && parentContext->strictMode), inheritContext);
 
@@ -437,7 +437,7 @@ Value EvalFunction::call(Managed *that, ExecutionContext *context, const Value &
 //    return Value::undefinedValue();
 //}
 
-QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ctx,
+QV4::Function *EvalFunction::parseSource(QV4::ExecutionContext *ctx,
                                                 const QString &fileName, const QString &source,
                                                 QQmlJS::Codegen::Mode mode,
                                                 bool strictMode, bool inheritContext)
@@ -446,9 +446,9 @@ QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
 
     MemoryManager::GCBlocker gcBlocker(ctx->engine->memoryManager);
 
-    VM::ExecutionEngine *vm = ctx->engine;
+    ExecutionEngine *vm = ctx->engine;
     V4IR::Module module;
-    VM::Function *globalCode = 0;
+    Function *globalCode = 0;
 
     {
         QQmlJS::Engine ee, *engine = &ee;
@@ -458,16 +458,16 @@ QQmlJS::VM::Function *EvalFunction::parseSource(QQmlJS::VM::ExecutionContext *ct
 
         const bool parsed = parser.parseProgram();
 
-        VM::DiagnosticMessage *error = 0, **errIt = &error;
+        DiagnosticMessage *error = 0, **errIt = &error;
         foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
             if (m.isError()) {
-                *errIt = new VM::DiagnosticMessage;
+                *errIt = new DiagnosticMessage;
                 (*errIt)->fileName = fileName;
                 (*errIt)->offset = m.loc.offset;
                 (*errIt)->length = m.loc.length;
                 (*errIt)->startLine = m.loc.startLine;
                 (*errIt)->startColumn = m.loc.startColumn;
-                (*errIt)->type = VM::DiagnosticMessage::Error;
+                (*errIt)->type = DiagnosticMessage::Error;
                 (*errIt)->message = m.message;
                 errIt = &(*errIt)->next;
             } else {

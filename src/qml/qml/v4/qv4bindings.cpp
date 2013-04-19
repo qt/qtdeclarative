@@ -1283,7 +1283,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
             } else {
                 QV8Engine *v8engine = QQmlEnginePrivate::get(context->engine)->v8engine();
                 new (output.gethandleptr()) v8::Handle<v8::Value>(
-                        v8::Value::fromVmValue(QJSValuePrivate::get(tmp)->value));
+                        v8::Value::fromV4Value(QJSValuePrivate::get(tmp)->value));
                 V8HANDLE_REGISTER(instr->unaryop.output);
             }
         }

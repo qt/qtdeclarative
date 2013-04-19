@@ -50,8 +50,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct Lookup {
     enum { Size = 3 };
@@ -136,7 +135,6 @@ struct Lookup {
     }
 };
 
-}
 }
 
 QT_END_NAMESPACE

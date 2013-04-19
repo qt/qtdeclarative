@@ -45,7 +45,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
+namespace QV4 {
 
 template <typename T>
 struct TemporaryAssignment
@@ -67,7 +67,7 @@ private:
     TemporaryAssignment operator=(const TemporaryAssignment<T>&);
 };
 
-} // namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

@@ -45,9 +45,7 @@
 
 #include <wtf/MathExtras.h>
 
-namespace QQmlJS {
-namespace VM {
-
+using namespace QV4;
 
 int Value::toUInt16() const
 {
@@ -221,8 +219,3 @@ void PersistentValuePrivate::deref()
     if (!--refcount && !engine)
         delete this;
 }
-
-
-
-} // namespace VM
-} // namespace QQmlJS

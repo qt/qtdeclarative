@@ -47,8 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct StringObject: Object {
     Value value;
@@ -100,8 +99,7 @@ struct StringPrototype: StringObject
     static Value method_trim(SimpleCallContext *ctx);
 };
 
-} // end of namespace VM
-} // end of namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

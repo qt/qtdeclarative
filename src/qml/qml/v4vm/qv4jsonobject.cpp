@@ -50,8 +50,7 @@
 
 #include <wtf/MathExtras.h>
 
-namespace QQmlJS {
-namespace VM {
+using namespace QV4;
 
 //#define PARSER_DEBUG
 #ifdef PARSER_DEBUG
@@ -66,10 +65,10 @@ static int indent = 0;
 #endif
 
 
-class Parser
+class JsonParser
 {
 public:
-    Parser(ExecutionContext *context, const QChar *json, int length);
+    JsonParser(ExecutionContext *context, const QChar *json, int length);
 
     Value parse(QJsonParseError *error);
 
@@ -96,7 +95,7 @@ private:
 static const int nestingLimit = 1024;
 
 
-Parser::Parser(ExecutionContext *context, const QChar *json, int length)
+JsonParser::JsonParser(ExecutionContext *context, const QChar *json, int length)
     : context(context), head(json), json(json), nestingLevel(0), lastError(QJsonParseError::NoError)
 {
     end = json + length;
@@ -144,7 +143,7 @@ enum {
     Quote = 0x22
 };
 
-bool Parser::eatSpace()
+bool JsonParser::eatSpace()
 {
     while (json < end) {
         if (*json > Space)
@@ -159,7 +158,7 @@ bool Parser::eatSpace()
     return (json < end);
 }
 
-QChar Parser::nextToken()
+QChar JsonParser::nextToken()
 {
     if (!eatSpace())
         return 0;
@@ -184,7 +183,7 @@ QChar Parser::nextToken()
 /*
     JSON-text = object / array
 */
-Value Parser::parse(QJsonParseError *error)
+Value JsonParser::parse(QJsonParseError *error)
 {
 #ifdef PARSER_DEBUG
     indent = 0;
@@ -224,7 +223,7 @@ Value Parser::parse(QJsonParseError *error)
     end-object
 */
 
-Value Parser::parseObject()
+Value JsonParser::parseObject()
 {
     if (++nestingLevel > nestingLimit) {
         lastError = QJsonParseError::DeepNesting;
@@ -265,7 +264,7 @@ Value Parser::parseObject()
 /*
     member = string name-separator value
 */
-bool Parser::parseMember(Object *o)
+bool JsonParser::parseMember(Object *o)
 {
     BEGIN << "parseMember";
 
@@ -291,7 +290,7 @@ bool Parser::parseMember(Object *o)
 /*
     array = begin-array [ value *( value-separator value ) ] end-array
 */
-Value Parser::parseArray()
+Value JsonParser::parseArray()
 {
     BEGIN << "parseArray";
     ArrayObject *array = context->engine->newArrayObject(context);
@@ -340,7 +339,7 @@ value = false / null / true / object / array / number / string
 
 */
 
-bool Parser::parseValue(Value *val)
+bool JsonParser::parseValue(Value *val)
 {
     BEGIN << "parse Value" << *json;
 
@@ -448,7 +447,7 @@ bool Parser::parseValue(Value *val)
 
 */
 
-bool Parser::parseNumber(Value *val)
+bool JsonParser::parseNumber(Value *val)
 {
     BEGIN << "parseNumber" << *json;
 
@@ -595,7 +594,7 @@ static inline bool scanEscapeSequence(const QChar *&json, const QChar *end, uint
 }
 
 
-bool Parser::parseString(QString *string)
+bool JsonParser::parseString(QString *string)
 {
     BEGIN << "parse string stringPos=" << json;
 
@@ -878,7 +877,7 @@ Value JsonObject::method_parse(SimpleCallContext *ctx)
     QString jtext = ctx->argument(0).toString(ctx)->toQString();
 
     DEBUG << "parsing source = " << jtext;
-    Parser parser(ctx, jtext.constData(), jtext.length());
+    JsonParser parser(ctx, jtext.constData(), jtext.length());
     QJsonParseError error;
     Value result = parser.parse(&error);
     if (error.error != QJsonParseError::NoError) {
@@ -928,9 +927,4 @@ Value JsonObject::method_stringify(SimpleCallContext *ctx)
     if (result.isEmpty())
         return Value::undefinedValue();
     return Value::fromString(ctx, result);
-}
-
-
-
-}
 }

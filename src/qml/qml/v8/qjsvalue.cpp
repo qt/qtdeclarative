@@ -118,7 +118,7 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 /*!
   Constructs a new QJSValue with a boolean \a value.
@@ -335,7 +335,7 @@ bool QJSValue::isVariant() const
 */
 QString QJSValue::toString() const
 {
-    // have to check these here as converting those to a VM::String requires a context
+    // have to check these here as converting those to a QV4::String requires a context
     // (which we don't always have for those types)
     if (d->value.isUndefined())
         return QStringLiteral("undefined");
@@ -350,7 +350,7 @@ QString QJSValue::toString() const
     else if (d->value.isNumber())
         return __qmljs_numberToString(d->value.asDouble());
 
-    QQmlJS::VM::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
     try {
         return d->value.toString(ctx)->toQString();
     } catch (Exception &e) {
@@ -373,7 +373,7 @@ QString QJSValue::toString() const
 */
 double QJSValue::toNumber() const
 {
-    QQmlJS::VM::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
     try {
         return d->value.toNumber();
     } catch (Exception &e) {
@@ -396,7 +396,7 @@ double QJSValue::toNumber() const
 */
 bool QJSValue::toBool() const
 {
-    QQmlJS::VM::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
     try {
         return d->value.toBoolean();
     } catch (Exception &e) {
@@ -419,7 +419,7 @@ bool QJSValue::toBool() const
 */
 qint32 QJSValue::toInt() const
 {
-    QQmlJS::VM::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
     try {
         return d->value.toInt32();
     } catch (Exception &e) {
@@ -442,7 +442,7 @@ qint32 QJSValue::toInt() const
 */
 quint32 QJSValue::toUInt() const
 {
-    QQmlJS::VM::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
     try {
         return d->value.toUInt32();
     } catch (Exception &e) {
@@ -508,7 +508,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
         arguments[i] = args.at(i).d->getValue(engine);
 
     Value result;
-    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
+    QV4::ExecutionContext *ctx = d->engine->current;
     try {
         result = f->call(ctx, Value::fromObject(d->engine->globalObject), arguments.data(), arguments.size());
     } catch (Exception &e) {
@@ -553,7 +553,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
         arguments[i] = args.at(i).d->getValue(engine);
 
     Value result;
-    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
+    QV4::ExecutionContext *ctx = d->engine->current;
     try {
         result = f->call(ctx, instance.d->getValue(engine), arguments.data(), arguments.size());
     } catch (Exception &e) {
@@ -596,7 +596,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
         arguments[i] = args.at(i).d->getValue(engine);
 
     Value result;
-    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
+    QV4::ExecutionContext *ctx = d->engine->current;
     try {
         result = f->construct(ctx, arguments.data(), arguments.size());
     } catch (Exception &e) {
@@ -758,11 +758,11 @@ QJSValue QJSValue::property(const QString& name) const
         return property(idx);
 
     s->makeIdentifier(d->engine->current);
-    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
+    QV4::ExecutionContext *ctx = d->engine->current;
     try {
-        QQmlJS::VM::Value v = o->get(ctx, s);
+        QV4::Value v = o->get(ctx, s);
         return new QJSValuePrivate(d->engine, v);
-    } catch (QQmlJS::VM::Exception &e) {
+    } catch (QV4::Exception &e) {
         e.accept(ctx);
         return QJSValue();
     }
@@ -786,11 +786,11 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
     if (!o)
         return QJSValue();
 
-    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
+    QV4::ExecutionContext *ctx = d->engine->current;
     try {
-        QQmlJS::VM::Value v = o->getIndexed(ctx, arrayIndex);
+        QV4::Value v = o->getIndexed(ctx, arrayIndex);
         return new QJSValuePrivate(d->engine, v);
-    } catch (QQmlJS::VM::Exception &e) {
+    } catch (QV4::Exception &e) {
         e.accept(ctx);
         return QJSValue();
     }
@@ -820,11 +820,11 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
         return;
     }
 
-    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
+    QV4::ExecutionContext *ctx = d->engine->current;
     s->makeIdentifier(ctx);
     try {
         o->put(ctx, s, value.d->value);
-    } catch (QQmlJS::VM::Exception &e) {
+    } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
 }
@@ -847,10 +847,10 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
     if (!o)
         return;
 
-    QQmlJS::VM::ExecutionContext *ctx = d->engine->current;
+    QV4::ExecutionContext *ctx = d->engine->current;
     try {
         o->putIndexed(ctx, arrayIndex, value.d->value);
-    } catch (QQmlJS::VM::Exception &e) {
+    } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
 }
@@ -941,10 +941,10 @@ QObject *QJSValue::toQObject() const
 */
 QDateTime QJSValue::toDateTime() const
 {
-    QQmlJS::VM::DateObject *date = d->value.asDateObject();
+    QV4::DateObject *date = d->value.asDateObject();
     if (!date)
         return QDateTime();
-    return QQmlJS::VM::DatePrototype::toQDateTime(date->value.toNumber());
+    return QV4::DatePrototype::toQDateTime(date->value.toNumber());
 }
 
 /*!
@@ -1004,7 +1004,7 @@ bool QJSValue::isQObject() const
 Q_QML_EXPORT v8::Local<v8::Value> qt_QJSValueV8Value(const QJSValue &value)
 {
     QJSValuePrivate *d = QJSValuePrivate::get(value);
-    return v8::Local<v8::Value>::New(v8::Value::fromVmValue(d->value));
+    return v8::Local<v8::Value>::New(v8::Value::fromV4Value(d->value));
 }
 
 QT_END_NAMESPACE

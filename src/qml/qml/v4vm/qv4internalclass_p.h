@@ -47,8 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct String;
 struct ExecutionEngine;
@@ -83,8 +82,7 @@ private:
 };
 
 
-} // namespace VM
-} // namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

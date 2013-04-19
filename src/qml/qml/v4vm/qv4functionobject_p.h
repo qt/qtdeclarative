@@ -65,8 +65,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct Value;
 struct Function;
@@ -106,7 +105,7 @@ struct Lookup;
 struct Function {
     String *name;
 
-    VM::Value (*code)(VM::ExecutionContext *, const uchar *);
+    Value (*code)(ExecutionContext *, const uchar *);
     const uchar *codeData;
     JSC::MacroAssemblerCodeRef codeRef;
     quint32 codeSize;
@@ -154,7 +153,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     String * const *varList;
     unsigned int formalParameterCount;
     unsigned int varCount;
-    VM::Function *function;
+    Function *function;
 
     FunctionObject(ExecutionContext *scope);
 
@@ -208,7 +207,7 @@ protected:
 };
 
 struct ScriptFunction: FunctionObject {
-    ScriptFunction(ExecutionContext *scope, VM::Function *function);
+    ScriptFunction(ExecutionContext *scope, Function *function);
 
     static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
@@ -235,8 +234,7 @@ struct BoundFunction: FunctionObject {
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
 };
 
-} // namespace VM
-} // namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

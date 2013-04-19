@@ -55,14 +55,14 @@ public:
     QJSValueIteratorPrivate(const QJSValue &v);
 
     QJSValue value;
-    QQmlJS::VM::ObjectIterator iterator;
-    QQmlJS::VM::Property *currentValue;
-    QQmlJS::VM::PropertyAttributes currentAttributes;
-    QQmlJS::VM::String *currentName;
+    QV4::ObjectIterator iterator;
+    QV4::Property *currentValue;
+    QV4::PropertyAttributes currentAttributes;
+    QV4::String *currentName;
     uint currentIndex;
-    QQmlJS::VM::Property *nextValue;
-    QQmlJS::VM::PropertyAttributes nextAttributes;
-    QQmlJS::VM::String *nextName;
+    QV4::Property *nextValue;
+    QV4::PropertyAttributes nextAttributes;
+    QV4::String *nextName;
     uint nextIndex;
 };
 

@@ -60,7 +60,7 @@
 #include <valgrind/memcheck.h>
 #endif
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 using namespace WTF;
 
 static const std::size_t CHUNK_SIZE = 1024*32;
@@ -118,14 +118,14 @@ struct MemoryManager::Data
         ::memset((void *)(obj + 1), c, size - sizeof(Managed));
 
 
-namespace QQmlJS { namespace VM {
+namespace QV4 {
 
 bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::Chunk &b)
 {
     return a.memory.base() < b.memory.base();
 }
 
-} } // namespace QQmlJS::VM
+} // namespace QV4
 
 MemoryManager::MemoryManager()
     : m_d(new Data(true))

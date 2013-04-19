@@ -54,8 +54,7 @@ struct PageAllocation;
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 class Q_AUTOTEST_EXPORT ExecutableAllocator
 {
@@ -113,8 +112,7 @@ private:
     QMap<quintptr, ChunkOfPages*> chunks;
 };
 
-} // namespace VM
-} // namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

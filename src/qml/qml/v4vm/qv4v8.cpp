@@ -58,21 +58,21 @@
 #include <QThreadStorage>
 
 using namespace QQmlJS;
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 namespace v8 {
 
 #define currentEngine() Isolate::GetCurrent()->GetCurrentContext()->GetEngine()
 
-#define Q_D(obj) QQmlJS::VM::Value *d = reinterpret_cast<QQmlJS::VM::Value*>(obj)
+#define Q_D(obj) QV4::Value *d = reinterpret_cast<QV4::Value*>(obj)
 
-#define ValuePtr(obj) reinterpret_cast<QQmlJS::VM::Value*>(obj)
-#define ConstValuePtr(obj) reinterpret_cast<const QQmlJS::VM::Value*>(obj)
+#define ValuePtr(obj) reinterpret_cast<QV4::Value*>(obj)
+#define ConstValuePtr(obj) reinterpret_cast<const QV4::Value*>(obj)
 
 void *gcProtect(void *handle)
 {
     Q_D(handle);
-    if (VM::Managed *m = d->asManaged()) {
+    if (QV4::Managed *m = d->asManaged()) {
         currentEngine()->memoryManager->protect(m);
         return currentEngine()->memoryManager;
     }
@@ -81,17 +81,17 @@ void *gcProtect(void *handle)
 void gcProtect(void *memoryManager, void *handle)
 {
     Q_D(handle);
-    if (VM::Managed *m = d->asManaged())
+    if (QV4::Managed *m = d->asManaged())
         if (memoryManager)
-            static_cast<VM::MemoryManager *>(memoryManager)->protect(m);
+            static_cast<QV4::MemoryManager *>(memoryManager)->protect(m);
 }
 
 void gcUnprotect(void *memoryManager, void *handle)
 {
     Q_D(handle);
-    if (VM::Managed *m = d->asManaged())
+    if (QV4::Managed *m = d->asManaged())
         if (memoryManager)
-            static_cast<VM::MemoryManager *>(memoryManager)->unprotect(m);
+            static_cast<QV4::MemoryManager *>(memoryManager)->unprotect(m);
 }
 
 struct V8AccessorGetter: FunctionObject {
@@ -110,14 +110,14 @@ struct V8AccessorGetter: FunctionObject {
 
     using Object::construct;
 
-    static VM::Value call(Managed *that, ExecutionContext *context, const VM::Value &thisObject, VM::Value *args, int argc)
+    static QV4::Value call(Managed *that, ExecutionContext *context, const QV4::Value &thisObject, QV4::Value *args, int argc)
     {
         V8AccessorGetter *getter = static_cast<V8AccessorGetter*>(that);
         AccessorInfo info(thisObject, getter->data);
-        VM::Value result = VM::Value::undefinedValue();
+        QV4::Value result = QV4::Value::undefinedValue();
         try {
-            result = getter->getter(Local<String>::New(getter->name), info)->vmValue();
-        } catch (VM::Exception &e) {
+            result = getter->getter(Local<String>::New(getter->name), info)->v4Value();
+        } catch (QV4::Exception &e) {
             Isolate::GetCurrent()->setException(e.value());
             e.accept(context);
         }
@@ -146,19 +146,19 @@ struct V8AccessorSetter: FunctionObject {
 
     using Object::construct;
 
-    static VM::Value call(Managed *that, ExecutionContext *context, const VM::Value &thisObject, VM::Value *args, int argc)
+    static QV4::Value call(Managed *that, ExecutionContext *context, const QV4::Value &thisObject, QV4::Value *args, int argc)
     {
         if (!argc)
-            return VM::Value::undefinedValue();
+            return QV4::Value::undefinedValue();
         V8AccessorSetter *setter = static_cast<V8AccessorSetter*>(that);
         AccessorInfo info(thisObject, setter->data);
         try {
-            setter->setter(Local<String>::New(setter->name), Local<Value>::New(Value::fromVmValue(args[0])), info);
-        } catch (VM::Exception &e) {
+            setter->setter(Local<String>::New(setter->name), Local<Value>::New(Value::fromV4Value(args[0])), info);
+        } catch (QV4::Exception &e) {
             Isolate::GetCurrent()->setException(e.value());
             e.accept(context);
         }
-        return VM::Value::undefinedValue();
+        return QV4::Value::undefinedValue();
     }
 
 protected:
@@ -176,7 +176,7 @@ ScriptOrigin::ScriptOrigin(Handle<Value> resource_name, Handle<Integer> resource
 
 Handle<Value> ScriptOrigin::ResourceName() const
 {
-    return Value::fromVmValue(VM::Value::fromString(currentEngine()->current, m_fileName));
+    return Value::fromV4Value(QV4::Value::fromString(currentEngine()->current, m_fileName));
 }
 
 Handle<Integer> ScriptOrigin::ResourceLineOffset() const
@@ -240,24 +240,24 @@ Local<Value> Script::Run()
     if (context.IsEmpty())
         context = Context::GetCurrent();
     ASSERT(context.get());
-    VM::ExecutionEngine *engine = context->GetEngine();
-    VM::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionEngine *engine = context->GetEngine();
+    QV4::ExecutionContext *ctx = engine->current;
 
-    VM::Value result = VM::Value::undefinedValue();
+    QV4::Value result = QV4::Value::undefinedValue();
     try {
-        QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(engine->rootContext, m_origin.m_fileName, m_script, QQmlJS::Codegen::EvalCode,
+        QV4::Function *f = QV4::EvalFunction::parseSource(engine->rootContext, m_origin.m_fileName, m_script, QQmlJS::Codegen::EvalCode,
                                                                         /*strictMode =*/ false, /*inheritContext =*/ false);
         if (!f)
-            __qmljs_throw(engine->current, VM::Value::fromObject(engine->newSyntaxErrorObject(engine->current, 0)));
+            __qmljs_throw(engine->current, QV4::Value::fromObject(engine->newSyntaxErrorObject(engine->current, 0)));
 
         result = context->GetEngine()->run(f);
-    } catch (VM::Exception &e) {
+    } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
         return Local<Value>();
     }
 
-    return Local<Value>::New(Value::fromVmValue(result));
+    return Local<Value>::New(Value::fromV4Value(result));
 }
 
 Local<Value> Script::Run(Handle<Object> qml)
@@ -266,24 +266,24 @@ Local<Value> Script::Run(Handle<Object> qml)
     if (context.IsEmpty())
         context = Context::GetCurrent();
     ASSERT(context.get());
-    VM::ExecutionEngine *engine = context->GetEngine();
-    VM::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionEngine *engine = context->GetEngine();
+    QV4::ExecutionContext *ctx = engine->current;
 
-    VM::Value result = VM::Value::undefinedValue();
+    QV4::Value result = QV4::Value::undefinedValue();
 
     try {
 
-        VM::EvalFunction *eval = new (engine->memoryManager) VM::EvalFunction(engine->rootContext, qml->vmValue().asObject());
+        QV4::EvalFunction *eval = new (engine->memoryManager) QV4::EvalFunction(engine->rootContext, qml->v4Value().asObject());
 
-        VM::Value arg = VM::Value::fromString(engine->current, m_script);
+        QV4::Value arg = QV4::Value::fromString(engine->current, m_script);
 
-        result = eval->evalCall(engine->current, VM::Value::undefinedValue(), &arg, 1, /*directCall*/ false);
-    } catch (VM::Exception &e) {
+        result = eval->evalCall(engine->current, QV4::Value::undefinedValue(), &arg, 1, /*directCall*/ false);
+    } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
         return Local<Value>();
     }
-    return Local<Value>::New(Value::fromVmValue(result));
+    return Local<Value>::New(Value::fromV4Value(result));
 }
 
 Local<Value> Script::Id()
@@ -300,12 +300,12 @@ void Script::SetData(Handle<String> data)
 
 Local<String> Message::Get() const
 {
-    return Local<String>::New(Value::fromVmValue(VM::Value::fromString(currentEngine()->current, m_message)));
+    return Local<String>::New(Value::fromV4Value(QV4::Value::fromString(currentEngine()->current, m_message)));
 }
 
 Handle<Value> Message::GetScriptResourceName() const
 {
-    return Value::fromVmValue(VM::Value::fromString(currentEngine()->current, m_resourceName));
+    return Value::fromV4Value(QV4::Value::fromString(currentEngine()->current, m_resourceName));
 }
 
 int Message::GetLineNumber() const
@@ -335,12 +335,12 @@ Local<Array> StackTrace::AsArray()
 Local<StackTrace> StackTrace::CurrentStackTrace(int frame_limit, StackTrace::StackTraceOptions options)
 {
     StackTrace *trace = new StackTrace;
-    VM::ExecutionEngine *engine = currentEngine();
-    VM::ExecutionContext *current = engine->current;
+    QV4::ExecutionEngine *engine = currentEngine();
+    QV4::ExecutionContext *current = engine->current;
     while (current && frame_limit) {
         if (CallContext *c = current->asCallContext()) {
-            StackFrame *frame = new StackFrame(Value::fromVmValue(VM::Value::fromString(engine->id_null)),
-                                               Value::fromVmValue(VM::Value::fromString(c->function->name)),
+            StackFrame *frame = new StackFrame(Value::fromV4Value(QV4::Value::fromString(engine->id_null)),
+                                               Value::fromV4Value(QV4::Value::fromString(c->function->name)),
                                                0, 0);
             trace->frames.append(frame);
             --frame_limit;
@@ -484,42 +484,42 @@ bool Value::IsError() const
 
 Local<Boolean> Value::ToBoolean() const
 {
-    return Local<Boolean>::New(Value::fromVmValue(VM::Value::fromBoolean(ConstValuePtr(this)->toBoolean())));
+    return Local<Boolean>::New(Value::fromV4Value(QV4::Value::fromBoolean(ConstValuePtr(this)->toBoolean())));
 }
 
 Local<Number> Value::ToNumber() const
 {
-    return Local<Number>::New(Value::fromVmValue(VM::Value::fromDouble(ConstValuePtr(this)->toNumber())));
+    return Local<Number>::New(Value::fromV4Value(QV4::Value::fromDouble(ConstValuePtr(this)->toNumber())));
 }
 
 Local<String> Value::ToString() const
 {
-    return Local<String>::New(Value::fromVmValue(VM::Value::fromString(ConstValuePtr(this)->toString(currentEngine()->current))));
+    return Local<String>::New(Value::fromV4Value(QV4::Value::fromString(ConstValuePtr(this)->toString(currentEngine()->current))));
 }
 
 Local<Object> Value::ToObject() const
 {
-    return Local<Object>::New(Value::fromVmValue(QQmlJS::VM::Value::fromObject(ConstValuePtr(this)->toObject(currentEngine()->current))));
+    return Local<Object>::New(Value::fromV4Value(QV4::Value::fromObject(ConstValuePtr(this)->toObject(currentEngine()->current))));
 }
 
 Local<Integer> Value::ToInteger() const
 {
-    return Local<Integer>::New(Value::fromVmValue(QQmlJS::VM::Value::fromDouble(ConstValuePtr(this)->toInteger())));
+    return Local<Integer>::New(Value::fromV4Value(QV4::Value::fromDouble(ConstValuePtr(this)->toInteger())));
 }
 
 Local<Uint32> Value::ToUint32() const
 {
-    return Local<Uint32>::New(Value::fromVmValue(QQmlJS::VM::Value::fromUInt32(ConstValuePtr(this)->toUInt32())));
+    return Local<Uint32>::New(Value::fromV4Value(QV4::Value::fromUInt32(ConstValuePtr(this)->toUInt32())));
 }
 
 Local<Int32> Value::ToInt32() const
 {
-    return Local<Int32>::New(Value::fromVmValue(QQmlJS::VM::Value::fromInt32(ConstValuePtr(this)->toInt32())));
+    return Local<Int32>::New(Value::fromV4Value(QV4::Value::fromInt32(ConstValuePtr(this)->toInt32())));
 }
 
 Local<Uint32> Value::ToArrayIndex() const
 {
-    return Local<Uint32>::New(Value::fromVmValue(QQmlJS::VM::Value::fromUInt32(ConstValuePtr(this)->asArrayIndex())));
+    return Local<Uint32>::New(Value::fromV4Value(QV4::Value::fromUInt32(ConstValuePtr(this)->asArrayIndex())));
 }
 
 bool Value::BooleanValue() const
@@ -557,15 +557,15 @@ bool Value::StrictEquals(Handle<Value> that) const
     return __qmljs_strict_equal(*ConstValuePtr(this), *ConstValuePtr(&that));
 }
 
-VM::Value Value::vmValue() const
+QV4::Value Value::v4Value() const
 {
     return *ConstValuePtr(this);
 }
 
-Handle<Value> Value::fromVmValue(const VM::Value &vmValue)
+Handle<Value> Value::fromV4Value(const QV4::Value &v4Value)
 {
     Handle<Value> res;
-    res.val = vmValue.val;
+    res.val = v4Value.val;
     return res;
 }
 
@@ -577,24 +577,24 @@ bool Boolean::Value() const
 
 Handle<Boolean> Boolean::New(bool value)
 {
-    return Value::fromVmValue(VM::Value::fromBoolean(value));
+    return Value::fromV4Value(QV4::Value::fromBoolean(value));
 }
 
 
 int String::Length() const
 {
-    return asVMString()->toQString().length();
+    return asV4String()->toQString().length();
 }
 
 uint32_t String::Hash() const
 {
-    return asVMString()->hashValue();
+    return asV4String()->hashValue();
 }
 
 
 String::CompleteHashData String::CompleteHash() const
 {
-    VM::String *s = asVMString();
+    QV4::String *s = asV4String();
     CompleteHashData data;
     data.hash = s->hashValue();
     data.length = s->toQString().length();
@@ -604,14 +604,14 @@ String::CompleteHashData String::CompleteHash() const
 
 uint32_t String::ComputeHash(uint16_t *string, int length)
 {
-    return VM::String::createHashValue(reinterpret_cast<const QChar *>(string), length);
+    return QV4::String::createHashValue(reinterpret_cast<const QChar *>(string), length);
 }
 
 uint32_t String::ComputeHash(char *string, int length)
 {
     // ### unefficient
     QString s = QString::fromLatin1((char *)string, length);
-    return VM::String::createHashValue(s.constData(), s.length());
+    return QV4::String::createHashValue(s.constData(), s.length());
 }
 
 bool String::Equals(uint16_t *str, int length)
@@ -644,7 +644,7 @@ int String::Write(uint16_t *buffer, int start, int length, int options) const
 
 v8::Local<String> String::Empty()
 {
-    return Local<String>::New(v8::Value::fromVmValue(VM::Value::fromString(currentEngine()->current, QString())));
+    return Local<String>::New(v8::Value::fromV4Value(QV4::Value::fromString(currentEngine()->current, QString())));
 }
 
 bool String::IsExternal() const
@@ -667,26 +667,26 @@ String *String::Cast(v8::Value *obj)
 
 Local<String> String::New(const char *data, int length)
 {
-    QQmlJS::VM::Value v = QQmlJS::VM::Value::fromString(currentEngine()->current, QString::fromLatin1(data, length));
-    return Local<String>::New(v8::Value::fromVmValue(v));
+    QV4::Value v = QV4::Value::fromString(currentEngine()->current, QString::fromLatin1(data, length));
+    return Local<String>::New(v8::Value::fromV4Value(v));
 }
 
 Local<String> String::New(const uint16_t *data, int length)
 {
-    QQmlJS::VM::Value v = QQmlJS::VM::Value::fromString(currentEngine()->current, QString((const QChar *)data, length));
-    return Local<String>::New(v8::Value::fromVmValue(v));
+    QV4::Value v = QV4::Value::fromString(currentEngine()->current, QString((const QChar *)data, length));
+    return Local<String>::New(v8::Value::fromV4Value(v));
 }
 
 Local<String> String::NewSymbol(const char *data, int length)
 {
     QString str = QString::fromLatin1(data, length);
-    VM::String *vmString = currentEngine()->newIdentifier(str);
+    QV4::String *vmString = currentEngine()->newIdentifier(str);
     return New(vmString);
 }
 
-Local<String> String::New(VM::String *s)
+Local<String> String::New(QV4::String *s)
 {
-    return Local<String>::New(v8::Value::fromVmValue(VM::Value::fromString(s)));
+    return Local<String>::New(v8::Value::fromV4Value(QV4::Value::fromString(s)));
 }
 
 Local<String> String::NewExternal(String::ExternalStringResource *resource)
@@ -697,12 +697,12 @@ Local<String> String::NewExternal(String::ExternalStringResource *resource)
 
 QString String::asQString() const
 {
-    return asVMString()->toQString();
+    return asV4String()->toQString();
 }
 
-VM::String *String::asVMString() const
+QV4::String *String::asV4String() const
 {
-    const VM::Value *v = ConstValuePtr(this);
+    const QV4::Value *v = ConstValuePtr(this);
     ASSERT(v->isString());
     return v->stringValue();
 }
@@ -720,14 +720,14 @@ String::Value::Value(Handle<v8::Value> obj)
 
 double Number::Value() const
 {
-    const VM::Value *v = ConstValuePtr(this);
+    const QV4::Value *v = ConstValuePtr(this);
     assert(v->isNumber());
     return v->asDouble();
 }
 
 Local<Number> Number::New(double value)
 {
-    return Local<Number>::New(Value::fromVmValue(VM::Value::fromDouble(value)));
+    return Local<Number>::New(Value::fromV4Value(QV4::Value::fromDouble(value)));
 }
 
 Number *Number::Cast(v8::Value *obj)
@@ -737,12 +737,12 @@ Number *Number::Cast(v8::Value *obj)
 
 Local<Integer> Integer::New(int32_t value)
 {
-    return Local<Integer>::New(Value::fromVmValue(VM::Value::fromInt32(value)));
+    return Local<Integer>::New(Value::fromV4Value(QV4::Value::fromInt32(value)));
 }
 
 Local<Integer> Integer::NewFromUnsigned(uint32_t value)
 {
-    return Local<Integer>::New(Value::fromVmValue(VM::Value::fromUInt32(value)));
+    return Local<Integer>::New(Value::fromV4Value(QV4::Value::fromUInt32(value)));
 }
 
 Local<Integer> Integer::New(int32_t value, Isolate *)
@@ -757,7 +757,7 @@ Local<Integer> Integer::NewFromUnsigned(uint32_t value, Isolate *)
 
 int64_t Integer::Value() const
 {
-    const VM::Value *v = ConstValuePtr(this);
+    const QV4::Value *v = ConstValuePtr(this);
     assert(v->isNumber());
     return (int64_t)v->asDouble();
 }
@@ -769,20 +769,20 @@ Integer *Integer::Cast(v8::Value *obj)
 
 int32_t Int32::Value() const
 {
-    const VM::Value *v = ConstValuePtr(this);
+    const QV4::Value *v = ConstValuePtr(this);
     assert(v->isInteger());
     return v->int_32;
 }
 
 uint32_t Uint32::Value() const
 {
-    const VM::Value *v = ConstValuePtr(this);
+    const QV4::Value *v = ConstValuePtr(this);
     assert(v->isNumber());
     return v->toUInt32();
 }
 
 
-struct ExternalResourceWrapper : public QQmlJS::VM::Object::ExternalResource
+struct ExternalResourceWrapper : public QV4::Object::ExternalResource
 {
     ExternalResourceWrapper(v8::Object::ExternalResource *wrapped)
     {
@@ -800,14 +800,14 @@ struct ExternalResourceWrapper : public QQmlJS::VM::Object::ExternalResource
 
 bool Object::Set(Handle<Value> key, Handle<Value> value, PropertyAttribute attribs)
 {
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
-    QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
+    QV4::ExecutionContext *ctx = currentEngine()->current;
     bool result = true;
     try {
         o->put(ctx, ValuePtr(&key)->toString(ctx), *ValuePtr(&value));
         // ### attribs
-    } catch (VM::Exception &e) {
+    } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
         result = false;
@@ -817,14 +817,14 @@ bool Object::Set(Handle<Value> key, Handle<Value> value, PropertyAttribute attri
 
 bool Object::Set(uint32_t index, Handle<Value> value)
 {
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
-    QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
+    QV4::ExecutionContext *ctx = currentEngine()->current;
     bool result = true;
     try {
         o->putIndexed(ctx, index, *ValuePtr(&value));
         // ### attribs
-    } catch (VM::Exception &e) {
+    } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
         result = false;
@@ -834,52 +834,52 @@ bool Object::Set(uint32_t index, Handle<Value> value)
 
 Local<Value> Object::Get(Handle<Value> key)
 {
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
-    QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
-    QQmlJS::VM::Value prop = VM::Value::undefinedValue();
+    QV4::ExecutionContext *ctx = currentEngine()->current;
+    QV4::Value prop = QV4::Value::undefinedValue();
     try {
         prop = o->get(ctx, ValuePtr(&key)->toString(ctx));
-    } catch (VM::Exception &e) {
+    } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
         return Local<Value>();
     }
-    return Local<Value>::New(Value::fromVmValue(prop));
+    return Local<Value>::New(Value::fromV4Value(prop));
 }
 
 Local<Value> Object::Get(uint32_t key)
 {
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
-    QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
-    QQmlJS::VM::Value prop = VM::Value::undefinedValue();
+    QV4::ExecutionContext *ctx = currentEngine()->current;
+    QV4::Value prop = QV4::Value::undefinedValue();
     try {
         prop = o->getIndexed(ctx, key);
-    } catch (VM::Exception &e) {
+    } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
         return Local<Value>();
     }
-    return Local<Value>::New(Value::fromVmValue(prop));
+    return Local<Value>::New(Value::fromV4Value(prop));
 }
 
 bool Object::Has(Handle<String> key)
 {
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
     return o->__hasProperty__(ValuePtr(&key)->asString());
 }
 
 bool Object::Delete(Handle<String> key)
 {
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
     bool result = false;
     ExecutionContext *ctx = currentEngine()->current;
     try {
         result = o->deleteProperty(ctx, ValuePtr(&key)->asString());
-    } catch (VM::Exception &e) {
+    } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
     }
@@ -888,7 +888,7 @@ bool Object::Delete(Handle<String> key)
 
 bool Object::Has(uint32_t index)
 {
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     if (!o)
         return false;
     return o->__hasProperty__(index);
@@ -896,13 +896,13 @@ bool Object::Has(uint32_t index)
 
 bool Object::Delete(uint32_t index)
 {
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
     ExecutionContext *ctx = currentEngine()->current;
     bool result = false;
     try {
         result = o->deleteIndexedProperty(ctx, index);
-    } catch (VM::Exception &e) {
+    } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
     }
@@ -911,23 +911,23 @@ bool Object::Delete(uint32_t index)
 
 bool Object::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSetter setter, Handle<Value> data, AccessControl settings, PropertyAttribute attribute)
 {
-    VM::ExecutionEngine *engine = currentEngine();
+    QV4::ExecutionEngine *engine = currentEngine();
 
-    VM::FunctionObject *wrappedGetter = 0;
+    QV4::FunctionObject *wrappedGetter = 0;
     if (getter) {
         wrappedGetter = new (engine->memoryManager) V8AccessorGetter(engine->rootContext, name, getter, data);
     }
-    VM::FunctionObject *wrappedSetter = 0;
+    QV4::FunctionObject *wrappedSetter = 0;
     if (setter) {
         wrappedSetter = new (engine->memoryManager) V8AccessorSetter(engine->rootContext, name, setter, data);
     }
 
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
     PropertyAttributes attrs = Attr_Accessor;
     attrs.setConfigurable(!(attribute & DontDelete));
     attrs.setEnumerable(!(attribute & DontEnum));
-    VM::Property *pd = o->insertMember(name->asVMString(), attrs);
+    QV4::Property *pd = o->insertMember(name->asV4String(), attrs);
     pd->setGetter(wrappedGetter);
     pd->setSetter(wrappedSetter);
     return true;
@@ -935,51 +935,51 @@ bool Object::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSet
 
 Local<Array> Object::GetPropertyNames()
 {
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
 
-    VM::ArrayObject *array = currentEngine()->newArrayObject(currentEngine()->current)->asArrayObject();
+    QV4::ArrayObject *array = currentEngine()->newArrayObject(currentEngine()->current)->asArrayObject();
     ObjectIterator it(o, ObjectIterator::WithProtoChain|ObjectIterator::EnumberableOnly);
     while (1) {
-        VM::Value v = it.nextPropertyNameAsString();
+        QV4::Value v = it.nextPropertyNameAsString();
         if (v.isNull())
             break;
         array->push_back(v);
     }
-    return Local<Array>::New(Value::fromVmValue(VM::Value::fromObject(array)));
+    return Local<Array>::New(Value::fromV4Value(QV4::Value::fromObject(array)));
 }
 
 Local<Array> Object::GetOwnPropertyNames()
 {
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
-    VM::Value arg = VM::Value::fromObject(o);
+    QV4::Value arg = QV4::Value::fromObject(o);
     ArrayObject *array = currentEngine()->newArrayObject(currentEngine()->current)->asArrayObject();
     ObjectIterator it(o, ObjectIterator::EnumberableOnly);
     while (1) {
-        VM::Value v = it.nextPropertyNameAsString();
+        QV4::Value v = it.nextPropertyNameAsString();
         if (v.isNull())
             break;
         array->push_back(v);
     }
-    return Local<Array>::New(Value::fromVmValue(VM::Value::fromObject(array)));
+    return Local<Array>::New(Value::fromV4Value(QV4::Value::fromObject(array)));
 }
 
 Local<Value> Object::GetPrototype()
 {
     Local<Value> result;
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     if (!o)
         return Local<Value>();
-    return Local<Value>::New(Value::fromVmValue(QQmlJS::VM::Value::fromObject(o->prototype)));
+    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o->prototype)));
 }
 
 bool Object::SetPrototype(Handle<Value> prototype)
 {
-    QQmlJS::VM::Object *p = ConstValuePtr(&prototype)->asObject();
+    QV4::Object *p = ConstValuePtr(&prototype)->asObject();
     if (!p)
         return false;
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     if (!o)
         return false;
 
@@ -1000,7 +1000,7 @@ void Object::SetInternalField(int index, Handle<Value> value)
 
 void Object::SetExternalResource(Object::ExternalResource *resource)
 {
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     if (!o)
         return;
     o->externalResource = new ExternalResourceWrapper(resource);
@@ -1008,7 +1008,7 @@ void Object::SetExternalResource(Object::ExternalResource *resource)
 
 Object::ExternalResource *Object::GetExternalResource()
 {
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     if (!o || !o->externalResource)
         return 0;
     return static_cast<ExternalResourceWrapper*>(o->externalResource)->wrapped;
@@ -1016,9 +1016,9 @@ Object::ExternalResource *Object::GetExternalResource()
 
 bool Object::HasOwnProperty(Handle<String> key)
 {
-    QQmlJS::VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
-    QQmlJS::VM::ExecutionContext *ctx = currentEngine()->current;
+    QV4::ExecutionContext *ctx = currentEngine()->current;
     return o->__getOwnProperty__(ValuePtr(&key)->toString(ctx));
 }
 
@@ -1052,16 +1052,16 @@ bool Object::IsCallable()
 
 Local<Value> Object::CallAsFunction(Handle<Object> recv, int argc, Handle<Value> argv[])
 {
-    VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
+    QV4::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     if (!f)
         return Local<Value>();
     ExecutionContext *context = currentEngine()->current;
     try {
-        VM::Value retval = f->call(context, recv->vmValue(),
-                                   reinterpret_cast<QQmlJS::VM::Value*>(argv),
+        QV4::Value retval = f->call(context, recv->v4Value(),
+                                   reinterpret_cast<QV4::Value*>(argv),
                                    argc);
-        return Local<Value>::New(Value::fromVmValue(retval));
-    } catch (VM::Exception &e) {
+        return Local<Value>::New(Value::fromV4Value(retval));
+    } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
     }
@@ -1070,16 +1070,16 @@ Local<Value> Object::CallAsFunction(Handle<Object> recv, int argc, Handle<Value>
 
 Local<Value> Object::CallAsConstructor(int argc, Handle<Value> argv[])
 {
-    VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
+    QV4::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     if (!f)
         return Local<Value>();
     ExecutionContext *context = currentEngine()->current;
     try {
-        VM::Value retval = f->construct(context,
-                                        reinterpret_cast<QQmlJS::VM::Value*>(argv),
+        QV4::Value retval = f->construct(context,
+                                        reinterpret_cast<QV4::Value*>(argv),
                                         argc);
-        return Local<Value>::New(Value::fromVmValue(retval));
-    } catch (VM::Exception &e) {
+        return Local<Value>::New(Value::fromV4Value(retval));
+    } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
     }
@@ -1088,8 +1088,8 @@ Local<Value> Object::CallAsConstructor(int argc, Handle<Value> argv[])
 
 Local<Object> Object::New()
 {
-    VM::Object *o = currentEngine()->newObject();
-    return Local<Object>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+    QV4::Object *o = currentEngine()->newObject();
+    return Local<Object>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
 Object *Object::Cast(Value *obj)
@@ -1100,7 +1100,7 @@ Object *Object::Cast(Value *obj)
 
 uint32_t Array::Length() const
 {
-    VM::ArrayObject *a = ConstValuePtr(this)->asArrayObject();
+    QV4::ArrayObject *a = ConstValuePtr(this)->asArrayObject();
     if (!a)
         return 0;
     return a->arrayLength();
@@ -1110,11 +1110,11 @@ Local<Array> Array::New(int length)
 {
     if (length < 0)
         length = 0;
-    VM::ArrayObject *a = currentEngine()->newArrayObject(currentEngine()->current);
+    QV4::ArrayObject *a = currentEngine()->newArrayObject(currentEngine()->current);
     if (length < 0x1000)
         a->arrayReserve(length);
 
-    return Local<Array>::New(Value::fromVmValue(VM::Value::fromObject(a)));
+    return Local<Array>::New(Value::fromV4Value(QV4::Value::fromObject(a)));
 }
 
 Array *Array::Cast(Value *obj)
@@ -1125,60 +1125,60 @@ Array *Array::Cast(Value *obj)
 
 Local<Object> Function::NewInstance() const
 {
-    VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
+    QV4::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     assert(f);
-    VM::ExecutionContext *context = currentEngine()->current;
-    QQmlJS::VM::Value result = VM::Value::undefinedValue();
+    QV4::ExecutionContext *context = currentEngine()->current;
+    QV4::Value result = QV4::Value::undefinedValue();
     try {
         result = f->construct(context, 0, 0);
-    } catch (VM::Exception &e) {
+    } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
         return Local<Object>();
     }
-    return Local<Object>::New(Value::fromVmValue(result));
+    return Local<Object>::New(Value::fromV4Value(result));
 }
 
 Local<Object> Function::NewInstance(int argc, Handle<Value> argv[]) const
 {
-    VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
+    QV4::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     assert(f);
-    VM::ExecutionContext *context = currentEngine()->current;
-    QQmlJS::VM::Value result = VM::Value::undefinedValue();
+    QV4::ExecutionContext *context = currentEngine()->current;
+    QV4::Value result = QV4::Value::undefinedValue();
     try {
-        result = f->construct(context, reinterpret_cast<QQmlJS::VM::Value*>(argv), argc);
-    } catch (VM::Exception &e) {
+        result = f->construct(context, reinterpret_cast<QV4::Value*>(argv), argc);
+    } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
         return Local<Object>();
     }
-    return Local<Object>::New(Value::fromVmValue(result));
+    return Local<Object>::New(Value::fromV4Value(result));
 }
 
 Local<Value> Function::Call(Handle<Object> thisObj, int argc, Handle<Value> argv[])
 {
-    QQmlJS::VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
+    QV4::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     if (!f)
         return Local<Value>();
-    VM::ExecutionContext *context = currentEngine()->current;
-    QQmlJS::VM::Value result = VM::Value::undefinedValue();
+    QV4::ExecutionContext *context = currentEngine()->current;
+    QV4::Value result = QV4::Value::undefinedValue();
     try {
         result = f->call(context, *ConstValuePtr(&thisObj),
-                         reinterpret_cast<QQmlJS::VM::Value*>(argv), argc);
-    } catch (VM::Exception &e) {
+                         reinterpret_cast<QV4::Value*>(argv), argc);
+    } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
         return Local<Value>();
     }
-    return Local<Value>::New(Value::fromVmValue(result));
+    return Local<Value>::New(Value::fromV4Value(result));
 }
 
 Handle<Value> Function::GetName() const
 {
-    QQmlJS::VM::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
+    QV4::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     if (!f)
         return Handle<Value>();
-    return Value::fromVmValue(VM::Value::fromString(f->name));
+    return Value::fromV4Value(QV4::Value::fromString(f->name));
 }
 
 ScriptOrigin Function::GetScriptOrigin() const
@@ -1195,8 +1195,8 @@ Function *Function::Cast(Value *obj)
 
 Local<Value> Date::New(double time)
 {
-    VM::Object *o = currentEngine()->newDateObject(VM::Value::fromDouble(time));
-    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+    QV4::Object *o = currentEngine()->newDateObject(QV4::Value::fromDouble(time));
+    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
 double Date::NumberValue() const
@@ -1219,13 +1219,13 @@ void Date::DateTimeConfigurationChangeNotification()
 
 Local<Value> NumberObject::New(double value)
 {
-    VM::Object *o = currentEngine()->newNumberObject(VM::Value::fromDouble(value));
-    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+    QV4::Object *o = currentEngine()->newNumberObject(QV4::Value::fromDouble(value));
+    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
 double NumberObject::NumberValue() const
 {
-    VM::NumberObject *n = ConstValuePtr(this)->asNumberObject();
+    QV4::NumberObject *n = ConstValuePtr(this)->asNumberObject();
     assert(n);
     return n->value.doubleValue();
 }
@@ -1237,13 +1237,13 @@ NumberObject *NumberObject::Cast(Value *obj)
 
 Local<Value> BooleanObject::New(bool value)
 {
-    VM::Object *o = currentEngine()->newBooleanObject(VM::Value::fromBoolean(value));
-    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+    QV4::Object *o = currentEngine()->newBooleanObject(QV4::Value::fromBoolean(value));
+    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
 bool BooleanObject::BooleanValue() const
 {
-    VM::BooleanObject *b = ConstValuePtr(this)->asBooleanObject();
+    QV4::BooleanObject *b = ConstValuePtr(this)->asBooleanObject();
     assert(b);
     return b->value.booleanValue();
 }
@@ -1255,15 +1255,15 @@ BooleanObject *BooleanObject::Cast(Value *obj)
 
 Local<Value> StringObject::New(Handle<String> value)
 {
-    VM::Object *o = currentEngine()->newStringObject(currentEngine()->current, VM::Value::fromString(value->vmValue().asString()));
-    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+    QV4::Object *o = currentEngine()->newStringObject(currentEngine()->current, QV4::Value::fromString(value->v4Value().asString()));
+    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
 Local<String> StringObject::StringValue() const
 {
-    VM::StringObject *s = ConstValuePtr(this)->asStringObject();
+    QV4::StringObject *s = ConstValuePtr(this)->asStringObject();
     assert(s);
-    return Local<String>::New(Value::fromVmValue(s->value));
+    return Local<String>::New(Value::fromV4Value(s->value));
 }
 
 StringObject *StringObject::Cast(Value *obj)
@@ -1280,15 +1280,15 @@ Local<RegExp> RegExp::New(Handle<String> pattern, RegExp::Flags flags)
         f |= V4IR::RegExp::RegExp_IgnoreCase;
     if (flags & kMultiline)
         f |= V4IR::RegExp::RegExp_Multiline;
-    VM::Object *o = currentEngine()->newRegExpObject(pattern->asQString(), f);
-    return Local<RegExp>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+    QV4::Object *o = currentEngine()->newRegExpObject(pattern->asQString(), f);
+    return Local<RegExp>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
 Local<String> RegExp::GetSource() const
 {
     RegExpObject *re = ConstValuePtr(this)->asRegExpObject();
     assert(re);
-    return Local<String>::New(Value::fromVmValue(VM::Value::fromString(currentEngine()->current, re->value->pattern())));
+    return Local<String>::New(Value::fromV4Value(QV4::Value::fromString(currentEngine()->current, re->value->pattern())));
 }
 
 RegExp::Flags RegExp::GetFlags() const
@@ -1312,7 +1312,7 @@ RegExp *RegExp::Cast(Value *obj)
     return static_cast<RegExp *>(obj);
 }
 
-struct VoidStarWrapper : public VM::Object::ExternalResource
+struct VoidStarWrapper : public QV4::Object::ExternalResource
 {
     void *data;
 };
@@ -1329,11 +1329,11 @@ void *External::Unwrap(Handle<v8::Value> obj)
 
 Local<External> External::New(void *value)
 {
-    VM::Object *o = currentEngine()->newObject();
+    QV4::Object *o = currentEngine()->newObject();
     VoidStarWrapper *wrapper = new VoidStarWrapper;
     wrapper->data = value;
     o->externalResource = wrapper;
-    return Local<v8::External>::New(v8::Value::fromVmValue(VM::Value::fromObject(o)));
+    return Local<v8::External>::New(v8::Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
 External *External::Cast(v8::Value *obj)
@@ -1343,7 +1343,7 @@ External *External::Cast(v8::Value *obj)
 
 void *External::Value() const
 {
-    VM::Object *o = ConstValuePtr(this)->asObject();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
     if (!o || !o->externalResource)
         return 0;
     return static_cast<VoidStarWrapper*>(o->externalResource)->data;
@@ -1365,11 +1365,11 @@ void Template::Set(const char *name, Handle<Value> value)
 }
 
 
-Arguments::Arguments(const VM::Value *args, int argc, const VM::Value &thisObject, bool isConstructor, const Persistent<Value> &data)
+Arguments::Arguments(const QV4::Value *args, int argc, const QV4::Value &thisObject, bool isConstructor, const Persistent<Value> &data)
 {
     for (int i = 0; i < argc; ++i)
-        m_args << Persistent<Value>::New(Value::fromVmValue(args[i]));
-    m_thisObject = Persistent<Object>::New(Value::fromVmValue(thisObject));
+        m_args << Persistent<Value>::New(Value::fromV4Value(args[i]));
+    m_thisObject = Persistent<Object>::New(Value::fromV4Value(thisObject));
     m_isConstructor = isConstructor;
     m_data = Persistent<Value>::New(data);
 }
@@ -1411,9 +1411,9 @@ Isolate *Arguments::GetIsolate() const
 }
 
 
-AccessorInfo::AccessorInfo(const VM::Value &thisObject, const Persistent<Value> &data)
+AccessorInfo::AccessorInfo(const QV4::Value &thisObject, const Persistent<Value> &data)
 {
-    m_this = Persistent<Object>::New(Value::fromVmValue(thisObject));
+    m_this = Persistent<Object>::New(Value::fromV4Value(thisObject));
     m_data = data;
 }
 
@@ -1442,7 +1442,7 @@ template <typename BaseClass>
 class V4V8Object : public BaseClass
 {
 public:
-    V4V8Object(VM::ExecutionEngine *engine, ObjectTemplate *tmpl)
+    V4V8Object(QV4::ExecutionEngine *engine, ObjectTemplate *tmpl)
         : BaseClass(engine->rootContext)
     {
         this->vtbl = &static_vtbl;
@@ -1454,9 +1454,9 @@ public:
             PropertyAttributes attrs = Attr_Accessor;
             attrs.setConfigurable(!(acc.attribute & DontDelete));
             attrs.setEnumerable(!(acc.attribute & DontEnum));
-            VM::Property *pd = this->insertMember(acc.name->asVMString(), attrs);
-            *pd = VM::Property::fromAccessor(acc.getter->vmValue().asFunctionObject(),
-                                             acc.setter->vmValue().asFunctionObject());
+            QV4::Property *pd = this->insertMember(acc.name->asV4String(), attrs);
+            *pd = QV4::Property::fromAccessor(acc.getter->v4Value().asFunctionObject(),
+                                             acc.setter->v4Value().asFunctionObject());
         }
 
         initProperties(m_template.get());
@@ -1469,8 +1469,8 @@ public:
             attrs.setConfigurable(!(p.attributes & DontDelete));
             attrs.setEnumerable(!(p.attributes & DontEnum));
             attrs.setWritable(!(p.attributes & ReadOnly));
-            VM::Property *pd = this->insertMember(p.name->asVMString(), attrs);
-            *pd = VM::Property::fromValue(p.value->vmValue());
+            QV4::Property *pd = this->insertMember(p.name->asV4String(), attrs);
+            *pd = QV4::Property::fromValue(p.value->v4Value());
         }
     }
 
@@ -1480,22 +1480,22 @@ protected:
     AccessorInfo namedAccessorInfo()
     {
         // ### thisObject?
-        return AccessorInfo(VM::Value::fromObject(this), m_template->m_namedPropertyData);
+        return AccessorInfo(QV4::Value::fromObject(this), m_template->m_namedPropertyData);
     }
     AccessorInfo fallbackAccessorInfo()
     {
         // ### thisObject?
-        return AccessorInfo(VM::Value::fromObject(this), m_template->m_fallbackPropertyData);
+        return AccessorInfo(QV4::Value::fromObject(this), m_template->m_fallbackPropertyData);
     }
     AccessorInfo indexedAccessorInfo()
     {
         // ### thisObject?
-        return AccessorInfo(VM::Value::fromObject(this), m_template->m_namedPropertyData);
+        return AccessorInfo(QV4::Value::fromObject(this), m_template->m_namedPropertyData);
     }
 
     static const ManagedVTable static_vtbl;
 
-    static VM::Value get(VM::Managed *m, ExecutionContext *ctx, VM::String *name, bool *hasProperty)
+    static QV4::Value get(QV4::Managed *m, ExecutionContext *ctx, QV4::String *name, bool *hasProperty)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_namedPropertyGetter) {
@@ -1503,19 +1503,19 @@ protected:
             if (!result.IsEmpty()) {
                 if (hasProperty)
                     *hasProperty = true;
-                return result->vmValue();
+                return result->v4Value();
             }
         }
 
         bool hasProp = false;
-        VM::Value result = BaseClass::get(m, ctx, name, &hasProp);
+        QV4::Value result = BaseClass::get(m, ctx, name, &hasProp);
 
         if (!hasProp && that->m_template->m_fallbackPropertyGetter) {
             Handle<Value> fallbackResult = that->m_template->m_fallbackPropertyGetter(String::New(name), that->fallbackAccessorInfo());
             if (!fallbackResult.IsEmpty()) {
                 if (hasProperty)
                     *hasProperty = true;
-                return fallbackResult->vmValue();
+                return fallbackResult->v4Value();
             }
         }
 
@@ -1524,7 +1524,7 @@ protected:
         return result;
     }
 
-    static VM::Value getIndexed(VM::Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+    static QV4::Value getIndexed(QV4::Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_indexedPropertyGetter) {
@@ -1532,15 +1532,15 @@ protected:
             if (!result.IsEmpty()) {
                 if (hasProperty)
                     *hasProperty = true;
-                return result->vmValue();
+                return result->v4Value();
             }
         }
         return BaseClass::getIndexed(m, ctx, index, hasProperty);
     }
 
-    static void put(VM::Managed *m, ExecutionContext *ctx, VM::String *name, const VM::Value &value)
+    static void put(QV4::Managed *m, ExecutionContext *ctx, QV4::String *name, const QV4::Value &value)
     {
-        Local<Value> v8Value = Local<Value>::New(Value::fromVmValue(value));
+        Local<Value> v8Value = Local<Value>::New(Value::fromV4Value(value));
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_namedPropertySetter) {
             Handle<Value> result = that->m_template->m_namedPropertySetter(String::New(name), v8Value, that->namedAccessorInfo());
@@ -1557,11 +1557,11 @@ protected:
             BaseClass::put(m, ctx, name, value);
     }
 
-    static void putIndexed(VM::Managed *m, ExecutionContext *ctx, uint index, const VM::Value &value)
+    static void putIndexed(QV4::Managed *m, ExecutionContext *ctx, uint index, const QV4::Value &value)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_indexedPropertySetter) {
-            Handle<Value> result = that->m_template->m_indexedPropertySetter(index, Local<Value>::New(Value::fromVmValue(value)), that->indexedAccessorInfo());
+            Handle<Value> result = that->m_template->m_indexedPropertySetter(index, Local<Value>::New(Value::fromV4Value(value)), that->indexedAccessorInfo());
             if (!result.IsEmpty())
                 return;
         }
@@ -1578,7 +1578,7 @@ protected:
         return flags;
     }
 
-    static PropertyAttributes query(VM::Managed *m, ExecutionContext *ctx, VM::String *name)
+    static PropertyAttributes query(QV4::Managed *m, ExecutionContext *ctx, QV4::String *name)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_namedPropertyQuery) {
@@ -1596,7 +1596,7 @@ protected:
         return flags;
     }
 
-    static PropertyAttributes queryIndexed(VM::Managed *m, ExecutionContext *ctx, uint index)
+    static PropertyAttributes queryIndexed(QV4::Managed *m, ExecutionContext *ctx, uint index)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_indexedPropertyQuery) {
@@ -1608,7 +1608,7 @@ protected:
         return BaseClass::queryIndexed(m, ctx, index);
     }
 
-    static bool deleteProperty(VM::Managed *m, ExecutionContext *ctx, VM::String *name)
+    static bool deleteProperty(QV4::Managed *m, ExecutionContext *ctx, QV4::String *name)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_namedPropertyDeleter) {
@@ -1628,7 +1628,7 @@ protected:
         return result;
     }
 
-    static bool deleteIndexedProperty(VM::Managed *m, ExecutionContext *ctx, uint index)
+    static bool deleteIndexedProperty(QV4::Managed *m, ExecutionContext *ctx, uint index)
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_indexedPropertyDeleter) {
@@ -1641,16 +1641,16 @@ protected:
 };
 
 template<>
-DEFINE_MANAGED_VTABLE(V4V8Object<VM::Object>);
+DEFINE_MANAGED_VTABLE(V4V8Object<QV4::Object>);
 template<>
-DEFINE_MANAGED_VTABLE(V4V8Object<VM::FunctionObject>);
+DEFINE_MANAGED_VTABLE(V4V8Object<QV4::FunctionObject>);
 template<>
-DEFINE_MANAGED_VTABLE(V4V8Object<VM::FunctionPrototype>);
+DEFINE_MANAGED_VTABLE(V4V8Object<QV4::FunctionPrototype>);
 
-struct V4V8Function : public V4V8Object<VM::FunctionObject>
+struct V4V8Function : public V4V8Object<QV4::FunctionObject>
 {
-    V4V8Function(VM::ExecutionEngine *engine, FunctionTemplate *functionTemplate)
-        : V4V8Object<VM::FunctionObject>(engine, 0)
+    V4V8Function(QV4::ExecutionEngine *engine, FunctionTemplate *functionTemplate)
+        : V4V8Object<QV4::FunctionObject>(engine, 0)
     {
         vtbl = &static_vtbl;
         m_functionTemplate = Persistent<FunctionTemplate>(functionTemplate);
@@ -1660,32 +1660,32 @@ struct V4V8Function : public V4V8Object<VM::FunctionObject>
 protected:
     static const ManagedVTable static_vtbl;
 
-    static VM::Value call(VM::Managed *m, ExecutionContext *context, const VM::Value &thisObject, VM::Value *args, int argc)
+    static QV4::Value call(QV4::Managed *m, ExecutionContext *context, const QV4::Value &thisObject, QV4::Value *args, int argc)
     {
         V4V8Function *that = static_cast<V4V8Function*>(m);
         Arguments arguments(args, argc, thisObject, false, that->m_functionTemplate->m_data);
-        VM::Value result = VM::Value::undefinedValue();
+        QV4::Value result = QV4::Value::undefinedValue();
         if (that->m_functionTemplate->m_callback)
-            result = that->m_functionTemplate->m_callback(arguments)->vmValue();
+            result = that->m_functionTemplate->m_callback(arguments)->v4Value();
         return result;
     }
 
-    static VM::Value construct(VM::Managed *m, ExecutionContext *context, VM::Value *args, int argc)
+    static QV4::Value construct(QV4::Managed *m, ExecutionContext *context, QV4::Value *args, int argc)
     {
         V4V8Function *that = static_cast<V4V8Function*>(m);
-        Arguments arguments(args, argc, VM::Value::undefinedValue(), true, that->m_functionTemplate->m_data);
+        Arguments arguments(args, argc, QV4::Value::undefinedValue(), true, that->m_functionTemplate->m_data);
 
-        VM::Object *obj = that->m_functionTemplate->m_instanceTemplate->NewInstance()->vmValue().asObject();
-        VM::Value proto = that->Managed::get(context, context->engine->id_prototype);
+        QV4::Object *obj = that->m_functionTemplate->m_instanceTemplate->NewInstance()->v4Value().asObject();
+        QV4::Value proto = that->Managed::get(context, context->engine->id_prototype);
         if (proto.isObject())
             obj->prototype = proto.objectValue();
 
-        VM::Value result = VM::Value::undefinedValue();
+        QV4::Value result = QV4::Value::undefinedValue();
         if (that->m_functionTemplate->m_callback)
-            result = that->m_functionTemplate->m_callback(arguments)->vmValue();
+            result = that->m_functionTemplate->m_callback(arguments)->v4Value();
         if (result.isObject())
             return result;
-        return VM::Value::fromObject(obj);
+        return QV4::Value::fromObject(obj);
 
     }
 
@@ -1710,11 +1710,11 @@ Local<FunctionTemplate> FunctionTemplate::New(InvocationCallback callback, Handl
 
 Local<Function> FunctionTemplate::GetFunction()
 {
-    VM::ExecutionEngine *engine = currentEngine();
-    VM::Object *o = new (engine->memoryManager) V4V8Function(engine, this);
-    VM::Object *proto = new (engine->memoryManager) V4V8Object<VM::FunctionPrototype>(engine, m_prototypeTemplate.get());
-    o->put(engine->current, engine->id_prototype, VM::Value::fromObject(proto));
-    return Local<Function>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+    QV4::ExecutionEngine *engine = currentEngine();
+    QV4::Object *o = new (engine->memoryManager) V4V8Function(engine, this);
+    QV4::Object *proto = new (engine->memoryManager) V4V8Object<QV4::FunctionPrototype>(engine, m_prototypeTemplate.get());
+    o->put(engine->current, engine->id_prototype, QV4::Value::fromObject(proto));
+    return Local<Function>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
 Local<ObjectTemplate> FunctionTemplate::InstanceTemplate()
@@ -1740,26 +1740,26 @@ Local<ObjectTemplate> ObjectTemplate::New()
 
 Local<Object> ObjectTemplate::NewInstance()
 {
-    VM::ExecutionEngine *engine = currentEngine();
-    VM::Object *o = new (engine->memoryManager) V4V8Object<VM::Object>(engine, this);
+    QV4::ExecutionEngine *engine = currentEngine();
+    QV4::Object *o = new (engine->memoryManager) V4V8Object<QV4::Object>(engine, this);
     o->prototype = engine->objectPrototype;
     o->externalComparison = m_useUserComparison;
 
-    return Local<Object>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+    return Local<Object>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
 void ObjectTemplate::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSetter setter, Handle<Value> data, AccessControl settings, PropertyAttribute attribute)
 {
-    VM::ExecutionEngine *engine = currentEngine();
+    QV4::ExecutionEngine *engine = currentEngine();
 
     Accessor a;
     if (getter) {
-        VM::FunctionObject *wrappedGetter = new (engine->memoryManager) V8AccessorGetter(engine->rootContext, name, getter, data);
-        a.getter = Persistent<Value>::New(Value::fromVmValue(VM::Value::fromObject(wrappedGetter)));
+        QV4::FunctionObject *wrappedGetter = new (engine->memoryManager) V8AccessorGetter(engine->rootContext, name, getter, data);
+        a.getter = Persistent<Value>::New(Value::fromV4Value(QV4::Value::fromObject(wrappedGetter)));
     }
     if (setter) {
-        VM::FunctionObject *wrappedSetter = new (engine->memoryManager) V8AccessorSetter(engine->rootContext, name, setter, data);
-        a.setter = Persistent<Value>::New(Value::fromVmValue(VM::Value::fromObject(wrappedSetter)));
+        QV4::FunctionObject *wrappedSetter = new (engine->memoryManager) V8AccessorSetter(engine->rootContext, name, setter, data);
+        a.setter = Persistent<Value>::New(Value::fromV4Value(QV4::Value::fromObject(wrappedSetter)));
     }
     a.attribute = attribute;
     a.name = Persistent<String>::New(name);
@@ -1850,35 +1850,35 @@ ObjectTemplate::ObjectTemplate()
 Handle<Primitive> Undefined()
 {
     Handle<Primitive> val;
-    val.val = VM::Value::undefinedValue().val;
+    val.val = QV4::Value::undefinedValue().val;
     return val;
 }
 
 Handle<Primitive> Null()
 {
     Handle<Primitive> val;
-    val.val = VM::Value::nullValue().val;
+    val.val = QV4::Value::nullValue().val;
     return val;
 }
 
 Handle<Boolean> True()
 {
     Handle<Primitive> val;
-    val.val = VM::Value::fromBoolean(true).val;
+    val.val = QV4::Value::fromBoolean(true).val;
     return val;
 }
 
 Handle<Boolean> False()
 {
     Handle<Primitive> val;
-    val.val = VM::Value::fromBoolean(false).val;
+    val.val = QV4::Value::fromBoolean(false).val;
     return val;
 }
 
 
 Handle<Value> ThrowException(Handle<Value> exception)
 {
-    __qmljs_throw(currentEngine()->current, exception->vmValue());
+    __qmljs_throw(currentEngine()->current, exception->v4Value());
     return Handle<Value>();
 }
 
@@ -1886,29 +1886,29 @@ Handle<Value> ThrowException(Handle<Value> exception)
 Local<Value> Exception::ReferenceError(Handle<String> message)
 {
     Q_UNUSED(message);
-    VM::Object *o = currentEngine()->newReferenceErrorObject(currentEngine()->current, message->ToString()->asQString());
-    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+    QV4::Object *o = currentEngine()->newReferenceErrorObject(currentEngine()->current, message->ToString()->asQString());
+    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
 Local<Value> Exception::SyntaxError(Handle<String> message)
 {
     Q_UNUSED(message);
-    VM::Object *o = currentEngine()->newSyntaxErrorObject(currentEngine()->current, 0);
-    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+    QV4::Object *o = currentEngine()->newSyntaxErrorObject(currentEngine()->current, 0);
+    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
 Local<Value> Exception::TypeError(Handle<String> message)
 {
     Q_UNUSED(message);
-    VM::Object *o = currentEngine()->newTypeErrorObject(currentEngine()->current, message->ToString()->asQString());
-    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+    QV4::Object *o = currentEngine()->newTypeErrorObject(currentEngine()->current, message->ToString()->asQString());
+    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
 Local<Value> Exception::Error(Handle<String> message)
 {
     Q_UNUSED(message);
-    VM::Object *o = currentEngine()->newErrorObject(VM::Value::fromString(currentEngine()->current, message->ToString()->asQString()));
-    return Local<Value>::New(Value::fromVmValue(VM::Value::fromObject(o)));
+    QV4::Object *o = currentEngine()->newErrorObject(QV4::Value::fromString(currentEngine()->current, message->ToString()->asQString()));
+    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
 
@@ -1958,11 +1958,11 @@ void *Isolate::GetData()
     Q_UNREACHABLE();
 }
 
-void Isolate::setException(const VM::Value &ex)
+void Isolate::setException(const QV4::Value &ex)
 {
     if (tryCatch) {
         tryCatch->hasCaughtException = true;
-        tryCatch->exception = Local<Value>::New(Value::fromVmValue(ex));
+        tryCatch->exception = Local<Value>::New(Value::fromV4Value(ex));
     }
 }
 
@@ -1986,12 +1986,12 @@ void V8::SetFlagsFromString(const char *, int)
 
 static UserObjectComparisonCallback userObjectComparisonCallback = 0;
 
-static bool v8ExternalResourceComparison(const VM::Value &a, const VM::Value &b)
+static bool v8ExternalResourceComparison(const QV4::Value &a, const QV4::Value &b)
 {
     if (!userObjectComparisonCallback)
         return false;
-    Local<Object> la = Local<Object>::New(Value::fromVmValue(a));
-    Local<Object> lb = Local<Object>::New(Value::fromVmValue(b));
+    Local<Object> la = Local<Object>::New(Value::fromV4Value(a));
+    Local<Object> lb = Local<Object>::New(Value::fromV4Value(b));
     return userObjectComparisonCallback(la, lb);
 }
 
@@ -2090,10 +2090,10 @@ struct Context::Private
 {
     Private()
     {
-        engine.reset(new QQmlJS::VM::ExecutionEngine);
+        engine.reset(new QV4::ExecutionEngine);
     }
 
-    QScopedPointer<QQmlJS::VM::ExecutionEngine> engine;
+    QScopedPointer<QV4::ExecutionEngine> engine;
 };
 
 Context::Context()
@@ -2115,7 +2115,7 @@ Persistent<Context> Context::New(ExtensionConfiguration *extensions, Handle<Obje
 
 Local<Object> Context::Global()
 {
-    return Local<Object>::New(Value::fromVmValue(VM::Value::fromObject(d->engine->globalObject)));
+    return Local<Object>::New(Value::fromV4Value(QV4::Value::fromObject(d->engine->globalObject)));
 }
 
 Local<Context> Context::GetCurrent()
@@ -2131,8 +2131,8 @@ Local<Context> Context::GetCalling()
 
 Local<Object> Context::GetCallingQmlGlobal()
 {
-    VM::ExecutionEngine *engine = GetCurrent()->GetEngine();
-    VM::ExecutionContext *ctx = engine->current;
+    QV4::ExecutionEngine *engine = GetCurrent()->GetEngine();
+    QV4::ExecutionContext *ctx = engine->current;
     while (ctx && ctx->outer != engine->rootContext)
         ctx = ctx->outer;
 
@@ -2140,7 +2140,7 @@ Local<Object> Context::GetCallingQmlGlobal()
     if (!ctx->type == ExecutionContext::Type_QmlContext)
         return Local<Object>();
 
-    return Local<Object>::New(Value::fromVmValue(VM::Value::fromObject(static_cast<CallContext *>(ctx)->activation)));
+    return Local<Object>::New(Value::fromV4Value(QV4::Value::fromObject(static_cast<CallContext *>(ctx)->activation)));
 }
 
 Local<Value> Context::GetCallingScriptData()
@@ -2161,7 +2161,7 @@ void Context::Exit()
 }
 
 
-QQmlJS::VM::ExecutionEngine *Context::GetEngine()
+QV4::ExecutionEngine *Context::GetEngine()
 {
     return d->engine.data();
 }

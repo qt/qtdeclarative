@@ -62,12 +62,11 @@
 #include "qv4debugging_p.h"
 #include "qv4executableallocator_p.h"
 
-namespace QQmlJS {
-namespace VM {
+using namespace QV4;
 
-ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
-    : memoryManager(new QQmlJS::VM::MemoryManager)
-    , executableAllocator(new QQmlJS::VM::ExecutableAllocator)
+ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
+    : memoryManager(new QV4::MemoryManager)
+    , executableAllocator(new QV4::ExecutableAllocator)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , debugger(0)
     , globalObject(0)
@@ -78,7 +77,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
     if (!factory)
-        factory = new MASM::ISelFactory;
+        factory = new QQmlJS::MASM::ISelFactory;
     iselFactory.reset(factory);
 
     memoryManager->setExecutionEngine(this);
@@ -328,7 +327,7 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
 
 Function *ExecutionEngine::newFunction(const QString &name)
 {
-    VM::Function *f = new VM::Function(newIdentifier(name));
+    Function *f = new Function(newIdentifier(name));
     functions.append(f);
     return f;
 }
@@ -339,7 +338,7 @@ FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, Str
     return f;
 }
 
-FunctionObject *ExecutionEngine::newScriptFunction(ExecutionContext *scope, VM::Function *function)
+FunctionObject *ExecutionEngine::newScriptFunction(ExecutionContext *scope, Function *function)
 {
     assert(function);
 
@@ -417,12 +416,12 @@ Object *ExecutionEngine::newDateObject(const Value &value)
 
 RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
 {
-    bool global = (flags & V4IR::RegExp::RegExp_Global);
+    bool global = (flags & QQmlJS::V4IR::RegExp::RegExp_Global);
     bool ignoreCase = false;
     bool multiline = false;
-    if (flags & V4IR::RegExp::RegExp_IgnoreCase)
+    if (flags & QQmlJS::V4IR::RegExp::RegExp_IgnoreCase)
         ignoreCase = true;
-    if (flags & V4IR::RegExp::RegExp_Multiline)
+    if (flags & QQmlJS::V4IR::RegExp::RegExp_Multiline)
         multiline = true;
 
     return newRegExpObject(RegExp::create(this, pattern, ignoreCase, multiline), global);
@@ -543,11 +542,8 @@ Value ExecutionEngine::run(Function *function, ExecutionContext *ctx)
 
     if (debugger)
         debugger->aboutToCall(0, ctx);
-    QQmlJS::VM::Value result = function->code(ctx, function->codeData);
+    QV4::Value result = function->code(ctx, function->codeData);
     if (debugger)
         debugger->justLeft(ctx);
     return result;
 }
-
-} // namespace VM
-} // namespace QQmlJS

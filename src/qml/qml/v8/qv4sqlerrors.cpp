@@ -44,9 +44,9 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
-void qt_add_sqlexceptions(QQmlJS::VM::ExecutionEngine *engine)
+void qt_add_sqlexceptions(QV4::ExecutionEngine *engine)
 {
     Object *sqlexception = engine->newObject();
     sqlexception->defineReadonlyProperty(engine, QStringLiteral("UNKNOWN_ERR"), Value::fromInt32(SQLEXCEPTION_UNKNOWN_ERR));

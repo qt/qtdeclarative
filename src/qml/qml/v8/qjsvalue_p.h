@@ -64,22 +64,22 @@ QT_BEGIN_NAMESPACE
   \internal
   \class QJSValuePrivate
 */
-class QJSValuePrivate : public QQmlJS::VM::PersistentValuePrivate
+class QJSValuePrivate : public QV4::PersistentValuePrivate
 {
 public:
-    QJSValuePrivate(QQmlJS::VM::ExecutionEngine *e, const QQmlJS::VM::Value &v)
+    QJSValuePrivate(QV4::ExecutionEngine *e, const QV4::Value &v)
         : PersistentValuePrivate(e, v)
         , string(QString())
     {}
-    QJSValuePrivate(QQmlJS::VM::ExecutionEngine *e, QQmlJS::VM::Object *o)
-        : PersistentValuePrivate(e, QQmlJS::VM::Value::fromObject(o))
+    QJSValuePrivate(QV4::ExecutionEngine *e, QV4::Object *o)
+        : PersistentValuePrivate(e, QV4::Value::fromObject(o))
         , string(QString())
     {}
-    QJSValuePrivate(QQmlJS::VM::ExecutionEngine *e, QQmlJS::VM::String *s)
-        : PersistentValuePrivate(e, QQmlJS::VM::Value::fromString(s))
+    QJSValuePrivate(QV4::ExecutionEngine *e, QV4::String *s)
+        : PersistentValuePrivate(e, QV4::Value::fromString(s))
         , string(QString())
     {}
-    QJSValuePrivate(const QQmlJS::VM::Value &v)
+    QJSValuePrivate(const QV4::Value &v)
         : PersistentValuePrivate(v)
         , string(QString())
     {}
@@ -87,20 +87,20 @@ public:
         : PersistentValuePrivate()
         , string(s)
     {
-        value = QQmlJS::VM::Value::fromString(&string);
+        value = QV4::Value::fromString(&string);
     }
 
-    QQmlJS::VM::Value getValue(QQmlJS::VM::ExecutionEngine *e) {
+    QV4::Value getValue(QV4::ExecutionEngine *e) {
         if (value.asString() == &string) {
             engine = e;
-            value = QQmlJS::VM::Value::fromString(e->newString(string.toQString()));
+            value = QV4::Value::fromString(e->newString(string.toQString()));
         }
         return value;
     }
 
     static QJSValuePrivate *get(const QJSValue &v) { return v.d; }
 
-    QQmlJS::VM::String string;
+    QV4::String string;
 };
 
 QT_END_NAMESPACE

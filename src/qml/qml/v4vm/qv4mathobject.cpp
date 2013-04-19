@@ -46,7 +46,7 @@
 #include <qmath.h>
 #include <qnumeric.h>
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 static const double qt_PI = 2.0 * ::asin(1.0);
 

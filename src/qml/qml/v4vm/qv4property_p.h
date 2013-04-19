@@ -47,8 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct FunctionObject;
 
@@ -144,8 +143,7 @@ inline void Property::merge(PropertyAttributes &attrs, const Property &other, Pr
     }
 }
 
-} // namespace VM
-} // namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

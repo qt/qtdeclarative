@@ -59,8 +59,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct ExecutionEngine;
 
@@ -145,8 +144,7 @@ inline RegExpCacheKey::RegExpCacheKey(const RegExp *re)
 {}
 
 
-} // end of namespace VM
-} // end of namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

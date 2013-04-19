@@ -68,6 +68,11 @@ QT_BEGIN_NAMESPACE
 class QTextStream;
 class QQmlType;
 
+namespace QV4 {
+struct ExecutionContext;
+struct Value;
+}
+
 namespace QQmlJS {
 
 inline bool isNegative(double d)
@@ -78,11 +83,6 @@ inline bool isNegative(double d)
     else
         return (dch[7] & 0x80);
 
-}
-
-namespace VM {
-struct ExecutionContext;
-struct Value;
 }
 
 namespace V4IR {

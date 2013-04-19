@@ -58,12 +58,12 @@ QT_BEGIN_NAMESPACE
 class QJSEngine;
 
 namespace QQmlJS {
-
 namespace Debugging {
 class Debugger;
 } // namespace Debugging
+}
 
-namespace VM {
+namespace QV4 {
 
 struct Value;
 struct Function;
@@ -106,13 +106,13 @@ struct InternalClass;
 class RegExp;
 class RegExpCache;
 
-typedef bool (*ExternalResourceComparison)(const VM::Value &a, const VM::Value &b);
+typedef bool (*ExternalResourceComparison)(const Value &a, const Value &b);
 
 struct Q_QML_EXPORT ExecutionEngine
 {
     MemoryManager *memoryManager;
     ExecutableAllocator *executableAllocator;
-    QScopedPointer<EvalISelFactory> iselFactory;
+    QScopedPointer<QQmlJS::EvalISelFactory> iselFactory;
 
     ExecutionContext *current;
     GlobalContext *rootContext;
@@ -121,11 +121,11 @@ struct Q_QML_EXPORT ExecutionEngine
 
     Identifiers *identifierCache;
 
-    Debugging::Debugger *debugger;
+    QQmlJS::Debugging::Debugger *debugger;
 
     Object *globalObject;
 
-    VM::Function *globalCode;
+    Function *globalCode;
 
     QJSEngine *publicEngine;
 
@@ -198,21 +198,21 @@ struct Q_QML_EXPORT ExecutionEngine
 
     RegExpCache *regExpCache;
 
-    ExecutionEngine(EvalISelFactory *iselFactory = 0);
+    ExecutionEngine(QQmlJS::EvalISelFactory *iselFactory = 0);
     ~ExecutionEngine();
 
     WithContext *newWithContext(Object *with);
-    CatchContext *newCatchContext(String* exceptionVarName, const QQmlJS::VM::Value &exceptionValue);
-    CallContext *newCallContext(FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
-    CallContext *newCallContext(void *stackSpace, FunctionObject *f, const QQmlJS::VM::Value &thisObject, QQmlJS::VM::Value *args, int argc);
+    CatchContext *newCatchContext(String* exceptionVarName, const QV4::Value &exceptionValue);
+    CallContext *newCallContext(FunctionObject *f, const QV4::Value &thisObject, QV4::Value *args, int argc);
+    CallContext *newCallContext(void *stackSpace, FunctionObject *f, const QV4::Value &thisObject, QV4::Value *args, int argc);
     ExecutionContext *pushGlobalContext();
     void pushContext(SimpleCallContext *context);
     ExecutionContext *popContext();
 
-    VM::Function *newFunction(const QString &name);
+    Function *newFunction(const QString &name);
 
     FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *));
-    FunctionObject *newScriptFunction(ExecutionContext *scope, VM::Function *function);
+    FunctionObject *newScriptFunction(ExecutionContext *scope, Function *function);
     BoundFunction *newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
 
     Object *newObject();
@@ -245,7 +245,7 @@ struct Q_QML_EXPORT ExecutionEngine
 
     void markObjects();
 
-    Value run(VM::Function *function, ExecutionContext *ctx = 0);
+    Value run(Function *function, ExecutionContext *ctx = 0);
 
     void initRootContext();
 };
@@ -269,8 +269,7 @@ inline ExecutionContext *ExecutionEngine::popContext()
 }
 
 
-} // namespace VM
-} // namespace QQmlJS
+} // namespace QV4
 
 QT_END_NAMESPACE
 

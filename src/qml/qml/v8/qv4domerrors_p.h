@@ -83,13 +83,12 @@ QT_BEGIN_NAMESPACE
     return v8::Handle<v8::Value>(); \
 }
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 class ExecutionEngine;
 }
-}
 
-void qt_add_domexceptions(QQmlJS::VM::ExecutionEngine *e);
+
+void qt_add_domexceptions(QV4::ExecutionEngine *e);
 
 QT_END_NAMESPACE
 

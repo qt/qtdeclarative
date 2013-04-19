@@ -285,9 +285,9 @@ void InstructionSelection::buildLLVMModule(IR::Module *module, llvm::Module *llv
         assert(!"cannot link the QML/JS LLVM runtime");
     }
 
-    _valueTy = _llvmModule->getTypeByName("struct.QQmlJS::VM::Value");
-    _contextPtrTy = _llvmModule->getTypeByName("struct.QQmlJS::VM::ExecutionContext")->getPointerTo();
-    _stringPtrTy = _llvmModule->getTypeByName("struct.QQmlJS::VM::String")->getPointerTo();
+    _valueTy = _llvmModule->getTypeByName("struct.QV4::Value");
+    _contextPtrTy = _llvmModule->getTypeByName("struct.QV4::ExecutionContext")->getPointerTo();
+    _stringPtrTy = _llvmModule->getTypeByName("struct.QV4::String")->getPointerTo();
 
     {
         llvm::Type *args[] = { _contextPtrTy };

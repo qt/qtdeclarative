@@ -40,9 +40,7 @@
 ****************************************************************************/
 #include <qv4argumentsobject_p.h>
 
-namespace QQmlJS {
-namespace VM {
-
+using namespace QV4;
 
 static Value throwTypeError(SimpleCallContext *ctx)
 {
@@ -170,7 +168,4 @@ void ArgumentsObject::markObjects(Managed *that)
             m->mark();
     }
     Object::markObjects(that);
-}
-
-}
 }

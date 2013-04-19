@@ -16,8 +16,7 @@
 #endif
 #include <execinfo.h>
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 static void *removeThumbBit(void *addr)
 {
@@ -149,7 +148,6 @@ void UnwindHelper::writeARMUnwindInfo(void *codeAddr, int codeSize)
 }
 
 }
-}
 
 extern "C" Q_DECL_EXPORT void *__gnu_Unwind_Find_exidx(void *pc, int *entryCount)
 {
@@ -160,11 +158,11 @@ extern "C" Q_DECL_EXPORT void *__gnu_Unwind_Find_exidx(void *pc, int *entryCount
         oldFunction = (Old_Unwind_Find_exidx)dlsym(RTLD_NEXT, "__gnu_Unwind_Find_exidx");
 
     {
-        QMutexLocker locker(&QQmlJS::VM::functionProtector);
-        QQmlJS::VM::Function *function = QQmlJS::VM::lookupFunction(pc);
+        QMutexLocker locker(&QV4::functionProtector);
+        QV4::Function *function = QV4::lookupFunction(pc);
         if (function) {
             *entryCount = 1;
-            void * codeStart = QQmlJS::VM::removeThumbBit(function->codeRef.code().executableAddress());
+            void * codeStart = QV4::removeThumbBit(function->codeRef.code().executableAddress());
             // At the end of the function we store our synthetic exception table entry.
             return (char *)codeStart + function->codeSize;
         }

@@ -56,8 +56,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct SparseArray;
 
@@ -361,7 +360,6 @@ inline SparseArrayNode *SparseArray::upperBound(uint akey)
     return ub;
 }
 
-}
 }
 
 QT_END_NAMESPACE

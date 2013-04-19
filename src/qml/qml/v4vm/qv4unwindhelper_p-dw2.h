@@ -11,8 +11,7 @@
 #define __USE_GNU
 #include <dlfcn.h>
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 namespace {
 #if CPU(X86_64)
@@ -148,8 +147,7 @@ void UnwindHelper::deregisterFunctions(QVector<Function *> functions)
         deregisterFunctionUnlocked(f);
 }
 
-} // VM namespace
-} // QQmlJS namespace
+}
 
 #if defined(Q_OS_LINUX)
 extern "C" {
@@ -169,14 +167,14 @@ Q_QML_EXPORT void *_Unwind_Find_FDE(void *pc, struct bases *bases)
         oldFunction = (Old_Unwind_Find_FDE)dlsym(RTLD_NEXT, "_Unwind_Find_FDE");
 
     {
-        QMutexLocker locker(&QQmlJS::VM::functionProtector);
-        QQmlJS::VM::Function *function = QQmlJS::VM::lookupFunction(pc);
+        QMutexLocker locker(&QV4::functionProtector);
+        QV4::Function *function = QV4::lookupFunction(pc);
         if (function) {
             bases->tbase = 0;
             bases->dbase = 0;
             bases->func = reinterpret_cast<void*>(function->code);
-            QQmlJS::VM::ensureUnwindInfo(function);
-            return function->unwindInfo.data() + QQmlJS::VM::fde_offset;
+            QV4::ensureUnwindInfo(function);
+            return function->unwindInfo.data() + QV4::fde_offset;
         }
     }
 

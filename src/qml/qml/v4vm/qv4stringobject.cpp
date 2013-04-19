@@ -73,7 +73,7 @@
 #  include <windows.h>
 #endif
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(StringObject);
 

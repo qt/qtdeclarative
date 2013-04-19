@@ -55,8 +55,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 static inline QMLJS_READONLY Value add_int32(int a, int b)
 {
@@ -106,8 +105,7 @@ static inline QMLJS_READONLY Value mul_int32(int a, int b)
     return Value::fromDouble((double)a * (double)b);
 }
 
-} // namespace VM
-} // namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

@@ -74,7 +74,7 @@
 #  endif
 #endif
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 static const double HoursPerDay = 24.0;
 static const double MinutesPerHour = 60.0;

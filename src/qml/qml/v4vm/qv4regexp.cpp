@@ -43,8 +43,7 @@
 
 #include "qv4engine_p.h"
 
-namespace QQmlJS {
-namespace VM {
+using namespace QV4;
 
 RegExpCache::~RegExpCache()
 {
@@ -173,8 +172,3 @@ bool RegExp::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index
 {
     return false;
 }
-
-} // end of namespace VM
-} // end of namespace QQmlJS
-
-

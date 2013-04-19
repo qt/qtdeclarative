@@ -258,14 +258,14 @@ void QJSEngine::collectGarbage()
 QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber)
 {
     try {
-        QQmlJS::VM::Function *f = QQmlJS::VM::EvalFunction::parseSource(d->m_v4Engine->current, fileName, program, QQmlJS::Codegen::EvalCode,
+        QV4::Function *f = QV4::EvalFunction::parseSource(d->m_v4Engine->current, fileName, program, QQmlJS::Codegen::EvalCode,
                                                                         d->m_v4Engine->current->strictMode, true);
         if (!f)
             return new QJSValuePrivate(d->m_v4Engine, d->m_v4Engine->newSyntaxErrorObject(d->m_v4Engine->current, 0));
 
-        QQmlJS::VM::Value result = d->m_v4Engine->run(f);
+        QV4::Value result = d->m_v4Engine->run(f);
         return new QJSValuePrivate(d->m_v4Engine, result);
-    } catch (QQmlJS::VM::Exception& ex) {
+    } catch (QV4::Exception& ex) {
         ex.accept(d->m_v4Engine->current);
         return new QJSValuePrivate(d->m_v4Engine, ex.value());
     }
@@ -291,7 +291,7 @@ QJSValue QJSEngine::newObject()
 */
 QJSValue QJSEngine::newArray(uint length)
 {
-    QQmlJS::VM::ArrayObject *array = d->m_v4Engine->newArrayObject(d->m_v4Engine->current);
+    QV4::ArrayObject *array = d->m_v4Engine->newArrayObject(d->m_v4Engine->current);
     array->setArrayLength(length);
     return new QJSValuePrivate(d->m_v4Engine, array);
 }
@@ -359,7 +359,7 @@ QJSValue QJSEngine::create(int type, const void *ptr)
 bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 {
     QJSValuePrivate *vp = QJSValuePrivate::get(value);
-    QQmlJS::VM::ExecutionEngine *e = vp->engine;
+    QV4::ExecutionEngine *e = vp->engine;
     QV8Engine *engine = e ? QV8Engine::get(e->publicEngine) : 0;
     if (engine) {
         return engine->metaTypeFromJS(vp->getValue(engine->m_v4Engine), type, ptr);

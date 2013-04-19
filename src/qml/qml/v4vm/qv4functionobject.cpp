@@ -61,7 +61,7 @@
 #include <iostream>
 #include "qv4alloca_p.h"
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 
 DEFINE_MANAGED_VTABLE(FunctionObject);
@@ -194,27 +194,27 @@ Value FunctionCtor::construct(Managed *that, ExecutionContext *ctx, Value *args,
     QString function = QLatin1String("function(") + arguments + QLatin1String("){") + body + QLatin1String("}");
 
     QQmlJS::Engine ee, *engine = &ee;
-    Lexer lexer(engine);
+    QQmlJS::Lexer lexer(engine);
     lexer.setCode(function, 1, false);
-    Parser parser(engine);
+    QQmlJS::Parser parser(engine);
 
     const bool parsed = parser.parseExpression();
 
     if (!parsed)
         ctx->throwSyntaxError(0);
 
-    using namespace AST;
-    FunctionExpression *fe = AST::cast<FunctionExpression *>(parser.rootNode());
+    using namespace QQmlJS::AST;
+    FunctionExpression *fe = QQmlJS::AST::cast<FunctionExpression *>(parser.rootNode());
     if (!fe)
         ctx->throwSyntaxError(0);
 
-    V4IR::Module module;
+    QQmlJS::V4IR::Module module;
 
-    Codegen cg(ctx, f->strictMode);
-    V4IR::Function *irf = cg(QString(), function, fe, &module);
+    QQmlJS::Codegen cg(ctx, f->strictMode);
+    QQmlJS::V4IR::Function *irf = cg(QString(), function, fe, &module);
 
-    QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(ctx->engine, &module));
-    VM::Function *vmf = isel->vmFunction(irf);
+    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(ctx->engine->iselFactory->create(ctx->engine, &module));
+    QV4::Function *vmf = isel->vmFunction(irf);
 
     return Value::fromObject(ctx->engine->newScriptFunction(ctx->engine->rootContext, vmf));
 }

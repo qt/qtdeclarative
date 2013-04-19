@@ -46,8 +46,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct SyntaxErrorObject;
 
@@ -227,8 +226,7 @@ inline SyntaxErrorObject *ErrorObject::asSyntaxError()
     return subtype == SyntaxError ? static_cast<SyntaxErrorObject *>(this) : 0;
 }
 
-} // end of namespace VM
-} // end of namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

@@ -62,7 +62,7 @@
 #include <iostream>
 #include "qv4alloca_p.h"
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(Object);
 

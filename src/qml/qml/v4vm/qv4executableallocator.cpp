@@ -45,7 +45,7 @@
 #include <wtf/StdLibExtras.h>
 #include <wtf/PageAllocation.h>
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 void *ExecutableAllocator::Allocation::start() const
 {

@@ -43,7 +43,7 @@
 #include "qv4mm_p.h"
 #include "qv4errorobject_p.h"
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 const ManagedVTable Managed::static_vtbl =
 {

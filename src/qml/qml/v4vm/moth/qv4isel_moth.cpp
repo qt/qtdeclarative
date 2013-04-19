@@ -10,7 +10,7 @@ using namespace QQmlJS::Moth;
 
 namespace {
 
-inline VM::BinOp aluOpFunction(V4IR::AluOp op)
+inline QV4::BinOp aluOpFunction(V4IR::AluOp op)
 {
     switch (op) {
     case V4IR::OpInvalid:
@@ -26,47 +26,47 @@ inline VM::BinOp aluOpFunction(V4IR::AluOp op)
     case V4IR::OpCompl:
         return 0;
     case V4IR::OpBitAnd:
-        return VM::__qmljs_bit_and;
+        return QV4::__qmljs_bit_and;
     case V4IR::OpBitOr:
-        return VM::__qmljs_bit_or;
+        return QV4::__qmljs_bit_or;
     case V4IR::OpBitXor:
-        return VM::__qmljs_bit_xor;
+        return QV4::__qmljs_bit_xor;
     case V4IR::OpAdd:
-        return VM::__qmljs_add;
+        return QV4::__qmljs_add;
     case V4IR::OpSub:
-        return VM::__qmljs_sub;
+        return QV4::__qmljs_sub;
     case V4IR::OpMul:
-        return VM::__qmljs_mul;
+        return QV4::__qmljs_mul;
     case V4IR::OpDiv:
-        return VM::__qmljs_div;
+        return QV4::__qmljs_div;
     case V4IR::OpMod:
-        return VM::__qmljs_mod;
+        return QV4::__qmljs_mod;
     case V4IR::OpLShift:
-        return VM::__qmljs_shl;
+        return QV4::__qmljs_shl;
     case V4IR::OpRShift:
-        return VM::__qmljs_shr;
+        return QV4::__qmljs_shr;
     case V4IR::OpURShift:
-        return VM::__qmljs_ushr;
+        return QV4::__qmljs_ushr;
     case V4IR::OpGt:
-        return VM::__qmljs_gt;
+        return QV4::__qmljs_gt;
     case V4IR::OpLt:
-        return VM::__qmljs_lt;
+        return QV4::__qmljs_lt;
     case V4IR::OpGe:
-        return VM::__qmljs_ge;
+        return QV4::__qmljs_ge;
     case V4IR::OpLe:
-        return VM::__qmljs_le;
+        return QV4::__qmljs_le;
     case V4IR::OpEqual:
-        return VM::__qmljs_eq;
+        return QV4::__qmljs_eq;
     case V4IR::OpNotEqual:
-        return VM::__qmljs_ne;
+        return QV4::__qmljs_ne;
     case V4IR::OpStrictEqual:
-        return VM::__qmljs_se;
+        return QV4::__qmljs_se;
     case V4IR::OpStrictNotEqual:
-        return VM::__qmljs_sne;
+        return QV4::__qmljs_sne;
     case V4IR::OpInstanceof:
-        return VM::__qmljs_instanceof;
+        return QV4::__qmljs_instanceof;
     case V4IR::OpIn:
-        return VM::__qmljs_in;
+        return QV4::__qmljs_in;
     case V4IR::OpAnd:
         return 0;
     case V4IR::OpOr:
@@ -79,7 +79,7 @@ inline VM::BinOp aluOpFunction(V4IR::AluOp op)
 
 } // anonymous namespace
 
-InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, V4IR::Module *module)
+InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module)
     : EvalInstructionSelection(engine, module)
     , _function(0)
     , _vmFunction(0)
@@ -94,7 +94,7 @@ InstructionSelection::~InstructionSelection()
 {
 }
 
-void InstructionSelection::run(VM::Function *vmFunction, V4IR::Function *function)
+void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *function)
 {
     V4IR::BasicBlock *block;
 
@@ -227,14 +227,14 @@ void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targe
 void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp)
 {
     Instruction::LoadValue load;
-    load.value = Instr::Param::createValue(VM::Value::fromString(identifier(str)));
+    load.value = Instr::Param::createValue(QV4::Value::fromString(identifier(str)));
     load.result = getResultParam(targetTemp);
     addInstruction(load);
 }
 
 void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
 {
-    VM::Value v = VM::Value::fromObject(engine()->newRegExpObject(
+    QV4::Value v = QV4::Value::fromObject(engine()->newRegExpObject(
                                             *sourceRegexp->value,
                                             sourceRegexp->flags));
     _vmFunction->generatedValues.append(v);
@@ -263,7 +263,7 @@ void InstructionSelection::setActivationProperty(V4IR::Temp *source, const QStri
 
 void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *target)
 {
-    VM::Function *vmFunc = vmFunction(closure->value);
+    QV4::Function *vmFunc = vmFunction(closure->value);
     assert(vmFunc);
     Instruction::LoadClosure load;
     load.value = vmFunc;
@@ -317,15 +317,15 @@ void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetT
 
 void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
-    VM::UnaryOpName op = 0;
+    QV4::UnaryOpName op = 0;
     switch (oper) {
     case V4IR::OpIfTrue: assert(!"unreachable"); break;
-    case V4IR::OpNot: op = VM::__qmljs_not; break;
-    case V4IR::OpUMinus: op = VM::__qmljs_uminus; break;
-    case V4IR::OpUPlus: op = VM::__qmljs_uplus; break;
-    case V4IR::OpCompl: op = VM::__qmljs_compl; break;
-    case V4IR::OpIncrement: op = VM::__qmljs_increment; break;
-    case V4IR::OpDecrement: op = VM::__qmljs_decrement; break;
+    case V4IR::OpNot: op = QV4::__qmljs_not; break;
+    case V4IR::OpUMinus: op = QV4::__qmljs_uminus; break;
+    case V4IR::OpUPlus: op = QV4::__qmljs_uplus; break;
+    case V4IR::OpCompl: op = QV4::__qmljs_compl; break;
+    case V4IR::OpIncrement: op = QV4::__qmljs_increment; break;
+    case V4IR::OpDecrement: op = QV4::__qmljs_decrement; break;
     default: assert(!"unreachable"); break;
     } // switch
 
@@ -352,19 +352,19 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Temp *leftSource, V4IR:
 
 void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName)
 {
-    VM::InplaceBinOpName op = 0;
+    QV4::InplaceBinOpName op = 0;
     switch (oper) {
-    case V4IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_name; break;
-    case V4IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_name; break;
-    case V4IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_name; break;
-    case V4IR::OpAdd: op = VM::__qmljs_inplace_add_name; break;
-    case V4IR::OpSub: op = VM::__qmljs_inplace_sub_name; break;
-    case V4IR::OpMul: op = VM::__qmljs_inplace_mul_name; break;
-    case V4IR::OpDiv: op = VM::__qmljs_inplace_div_name; break;
-    case V4IR::OpMod: op = VM::__qmljs_inplace_mod_name; break;
-    case V4IR::OpLShift: op = VM::__qmljs_inplace_shl_name; break;
-    case V4IR::OpRShift: op = VM::__qmljs_inplace_shr_name; break;
-    case V4IR::OpURShift: op = VM::__qmljs_inplace_ushr_name; break;
+    case V4IR::OpBitAnd: op = QV4::__qmljs_inplace_bit_and_name; break;
+    case V4IR::OpBitOr: op = QV4::__qmljs_inplace_bit_or_name; break;
+    case V4IR::OpBitXor: op = QV4::__qmljs_inplace_bit_xor_name; break;
+    case V4IR::OpAdd: op = QV4::__qmljs_inplace_add_name; break;
+    case V4IR::OpSub: op = QV4::__qmljs_inplace_sub_name; break;
+    case V4IR::OpMul: op = QV4::__qmljs_inplace_mul_name; break;
+    case V4IR::OpDiv: op = QV4::__qmljs_inplace_div_name; break;
+    case V4IR::OpMod: op = QV4::__qmljs_inplace_mod_name; break;
+    case V4IR::OpLShift: op = QV4::__qmljs_inplace_shl_name; break;
+    case V4IR::OpRShift: op = QV4::__qmljs_inplace_shr_name; break;
+    case V4IR::OpURShift: op = QV4::__qmljs_inplace_ushr_name; break;
     default: break;
     }
 
@@ -379,19 +379,19 @@ void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSour
 
 void InstructionSelection::inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBaseTemp, V4IR::Temp *targetIndexTemp)
 {
-    VM::InplaceBinOpElement op = 0;
+    QV4::InplaceBinOpElement op = 0;
     switch (oper) {
-    case V4IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_element; break;
-    case V4IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_element; break;
-    case V4IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_element; break;
-    case V4IR::OpAdd: op = VM::__qmljs_inplace_add_element; break;
-    case V4IR::OpSub: op = VM::__qmljs_inplace_sub_element; break;
-    case V4IR::OpMul: op = VM::__qmljs_inplace_mul_element; break;
-    case V4IR::OpDiv: op = VM::__qmljs_inplace_div_element; break;
-    case V4IR::OpMod: op = VM::__qmljs_inplace_mod_element; break;
-    case V4IR::OpLShift: op = VM::__qmljs_inplace_shl_element; break;
-    case V4IR::OpRShift: op = VM::__qmljs_inplace_shr_element; break;
-    case V4IR::OpURShift: op = VM::__qmljs_inplace_ushr_element; break;
+    case V4IR::OpBitAnd: op = QV4::__qmljs_inplace_bit_and_element; break;
+    case V4IR::OpBitOr: op = QV4::__qmljs_inplace_bit_or_element; break;
+    case V4IR::OpBitXor: op = QV4::__qmljs_inplace_bit_xor_element; break;
+    case V4IR::OpAdd: op = QV4::__qmljs_inplace_add_element; break;
+    case V4IR::OpSub: op = QV4::__qmljs_inplace_sub_element; break;
+    case V4IR::OpMul: op = QV4::__qmljs_inplace_mul_element; break;
+    case V4IR::OpDiv: op = QV4::__qmljs_inplace_div_element; break;
+    case V4IR::OpMod: op = QV4::__qmljs_inplace_mod_element; break;
+    case V4IR::OpLShift: op = QV4::__qmljs_inplace_shl_element; break;
+    case V4IR::OpRShift: op = QV4::__qmljs_inplace_shr_element; break;
+    case V4IR::OpURShift: op = QV4::__qmljs_inplace_ushr_element; break;
     default: break;
     }
 
@@ -405,19 +405,19 @@ void InstructionSelection::inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source
 
 void InstructionSelection::inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName)
 {
-    VM::InplaceBinOpMember op = 0;
+    QV4::InplaceBinOpMember op = 0;
     switch (oper) {
-    case V4IR::OpBitAnd: op = VM::__qmljs_inplace_bit_and_member; break;
-    case V4IR::OpBitOr: op = VM::__qmljs_inplace_bit_or_member; break;
-    case V4IR::OpBitXor: op = VM::__qmljs_inplace_bit_xor_member; break;
-    case V4IR::OpAdd: op = VM::__qmljs_inplace_add_member; break;
-    case V4IR::OpSub: op = VM::__qmljs_inplace_sub_member; break;
-    case V4IR::OpMul: op = VM::__qmljs_inplace_mul_member; break;
-    case V4IR::OpDiv: op = VM::__qmljs_inplace_div_member; break;
-    case V4IR::OpMod: op = VM::__qmljs_inplace_mod_member; break;
-    case V4IR::OpLShift: op = VM::__qmljs_inplace_shl_member; break;
-    case V4IR::OpRShift: op = VM::__qmljs_inplace_shr_member; break;
-    case V4IR::OpURShift: op = VM::__qmljs_inplace_ushr_member; break;
+    case V4IR::OpBitAnd: op = QV4::__qmljs_inplace_bit_and_member; break;
+    case V4IR::OpBitOr: op = QV4::__qmljs_inplace_bit_or_member; break;
+    case V4IR::OpBitXor: op = QV4::__qmljs_inplace_bit_xor_member; break;
+    case V4IR::OpAdd: op = QV4::__qmljs_inplace_add_member; break;
+    case V4IR::OpSub: op = QV4::__qmljs_inplace_sub_member; break;
+    case V4IR::OpMul: op = QV4::__qmljs_inplace_mul_member; break;
+    case V4IR::OpDiv: op = QV4::__qmljs_inplace_div_member; break;
+    case V4IR::OpMod: op = QV4::__qmljs_inplace_mod_member; break;
+    case V4IR::OpLShift: op = QV4::__qmljs_inplace_shl_member; break;
+    case V4IR::OpRShift: op = QV4::__qmljs_inplace_shr_member; break;
+    case V4IR::OpURShift: op = QV4::__qmljs_inplace_ushr_member; break;
     default: break;
     }
 
@@ -600,7 +600,7 @@ void InstructionSelection::callBuiltinDeleteName(const QString &name, V4IR::Temp
 void InstructionSelection::callBuiltinDeleteValue(V4IR::Temp *result)
 {
     Instruction::LoadValue load;
-    load.value = Instr::Param::createValue(VM::Value::fromBoolean(false));
+    load.value = Instr::Param::createValue(QV4::Value::fromBoolean(false));
     load.result = getResultParam(result);
     addInstruction(load);
 }
@@ -804,9 +804,9 @@ uchar *InstructionSelection::squeezeCode() const
     return squeezed;
 }
 
-VM::String *InstructionSelection::identifier(const QString &s)
+QV4::String *InstructionSelection::identifier(const QString &s)
 {
-    VM::String *str = engine()->newIdentifier(s);
+    QV4::String *str = engine()->newIdentifier(s);
     _vmFunction->identifiers.append(str);
     return str;
 }

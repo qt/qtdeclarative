@@ -353,7 +353,7 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::Double:
                 return v8::Number::New(*reinterpret_cast<const double*>(ptr));
             case QMetaType::QString:
-                return v8::Value::fromVmValue(QQmlJS::VM::Value::fromString(m_v4Engine->current, *reinterpret_cast<const QString*>(ptr)));
+                return v8::Value::fromV4Value(QV4::Value::fromString(m_v4Engine->current, *reinterpret_cast<const QString*>(ptr)));
             case QMetaType::Float:
                 return v8::Number::New(*reinterpret_cast<const float*>(ptr));
             case QMetaType::Short:
@@ -414,7 +414,7 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
             const QJSValue *value = reinterpret_cast<const QJSValue *>(ptr);
             QJSValuePrivate *valuep = QJSValuePrivate::get(*value);
             valuep->engine = m_v4Engine;
-                return v8::Local<v8::Value>::New(v8::Value::fromVmValue(valuep->getValue(valuep->engine)));
+                return v8::Local<v8::Value>::New(v8::Value::fromV4Value(valuep->getValue(valuep->engine)));
 //            if (valuep->assignEngine(this))
 //                return v8::Local<v8::Value>::New(*valuep);
         } else if (type == qMetaTypeId<QList<QObject *> >()) {
@@ -532,7 +532,7 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
     if (value->IsNumber())
         return value->ToNumber()->Value();
     if (value->IsString())
-        return value.get()->vmValue().toString(m_v4Engine->current)->toQString();
+        return value.get()->v4Value().toString(m_v4Engine->current)->toQString();
     if (value->IsDate())
         return qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(value)->NumberValue());
     // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!
@@ -1077,7 +1077,7 @@ v8::Handle<v8::Value> QV8Engine::metaTypeToJS(int type, const void *data)
         break;
     default:
         if (type == qMetaTypeId<QJSValue>()) {
-            return v8::Value::fromVmValue(QJSValuePrivate::get(*reinterpret_cast<const QJSValue*>(data))->value);
+            return v8::Value::fromV4Value(QJSValuePrivate::get(*reinterpret_cast<const QJSValue*>(data))->value);
         } else {
             QByteArray typeName = QMetaType::typeName(type);
             if (typeName.endsWith('*') && !*reinterpret_cast<void* const *>(data)) {
@@ -1094,7 +1094,7 @@ v8::Handle<v8::Value> QV8Engine::metaTypeToJS(int type, const void *data)
 // Converts a JS value to a meta-type.
 // data must point to a place that can store a value of the given type.
 // Returns true if conversion succeeded, false otherwise.
-bool QV8Engine::metaTypeFromJS(const QQmlJS::VM::Value &value, int type, void *data) {
+bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
     // check if it's one of the types we know
     switch (QMetaType::Type(type)) {
     case QMetaType::Bool:
@@ -1145,53 +1145,53 @@ bool QV8Engine::metaTypeFromJS(const QQmlJS::VM::Value &value, int type, void *d
         }
         return true;
     case QMetaType::QDateTime:
-        if (QQmlJS::VM::DateObject *d = value.asDateObject()) {
-            *reinterpret_cast<QDateTime *>(data) = QQmlJS::VM::DatePrototype::toQDateTime(d->value.doubleValue());
+        if (QV4::DateObject *d = value.asDateObject()) {
+            *reinterpret_cast<QDateTime *>(data) = QV4::DatePrototype::toQDateTime(d->value.doubleValue());
             return true;
         } break;
     case QMetaType::QDate:
-        if (QQmlJS::VM::DateObject *d = value.asDateObject()) {
-            *reinterpret_cast<QDate *>(data) = QQmlJS::VM::DatePrototype::toQDateTime(d->value.doubleValue()).date();
+        if (QV4::DateObject *d = value.asDateObject()) {
+            *reinterpret_cast<QDate *>(data) = QV4::DatePrototype::toQDateTime(d->value.doubleValue()).date();
             return true;
         } break;
     case QMetaType::QRegExp:
-        if (QQmlJS::VM::RegExpObject *r = value.asRegExpObject()) {
-            *reinterpret_cast<QRegExp *>(data) = QJSConverter::toRegExp(v8::Handle<v8::RegExp>::Cast(v8::Value::fromVmValue(value)));
+        if (QV4::RegExpObject *r = value.asRegExpObject()) {
+            *reinterpret_cast<QRegExp *>(data) = QJSConverter::toRegExp(v8::Handle<v8::RegExp>::Cast(v8::Value::fromV4Value(value)));
             return true;
         } break;
     case QMetaType::QObjectStar: {
-        v8::Handle<v8::Value> v = v8::Value::fromVmValue(value);
+        v8::Handle<v8::Value> v = v8::Value::fromV4Value(value);
         if (isQObject(v) || value.isNull()) {
             *reinterpret_cast<QObject* *>(data) = qtObjectFromJS(v);
             return true;
         } break;
     }
     case QMetaType::QStringList:
-        if (QQmlJS::VM::ArrayObject *a = value.asArrayObject()) {
-            *reinterpret_cast<QStringList *>(data) = QJSConverter::toStringList(v8::Handle<v8::Array>::Cast(v8::Value::fromVmValue(value)));
+        if (QV4::ArrayObject *a = value.asArrayObject()) {
+            *reinterpret_cast<QStringList *>(data) = QJSConverter::toStringList(v8::Handle<v8::Array>::Cast(v8::Value::fromV4Value(value)));
             return true;
         } break;
     case QMetaType::QVariantList:
-        if (QQmlJS::VM::ArrayObject *a = value.asArrayObject()) {
-            *reinterpret_cast<QVariantList *>(data) = variantListFromJS(v8::Handle<v8::Array>::Cast(v8::Value::fromVmValue(value)));
+        if (QV4::ArrayObject *a = value.asArrayObject()) {
+            *reinterpret_cast<QVariantList *>(data) = variantListFromJS(v8::Handle<v8::Array>::Cast(v8::Value::fromV4Value(value)));
             return true;
         } break;
     case QMetaType::QVariantMap:
-        if (QQmlJS::VM::Object *o = value.asObject()) {
-            *reinterpret_cast<QVariantMap *>(data) = variantMapFromJS(v8::Handle<v8::Object>::Cast(v8::Value::fromVmValue(value)));
+        if (QV4::Object *o = value.asObject()) {
+            *reinterpret_cast<QVariantMap *>(data) = variantMapFromJS(v8::Handle<v8::Object>::Cast(v8::Value::fromV4Value(value)));
             return true;
         } break;
     case QMetaType::QVariant:
-        *reinterpret_cast<QVariant*>(data) = variantFromJS(v8::Value::fromVmValue(value));
+        *reinterpret_cast<QVariant*>(data) = variantFromJS(v8::Value::fromV4Value(value));
         return true;
     case QMetaType::QJsonValue:
-        *reinterpret_cast<QJsonValue *>(data) = jsonValueFromJS(v8::Value::fromVmValue(value));
+        *reinterpret_cast<QJsonValue *>(data) = jsonValueFromJS(v8::Value::fromV4Value(value));
         return true;
     case QMetaType::QJsonObject:
-        *reinterpret_cast<QJsonObject *>(data) = jsonObjectFromJS(v8::Value::fromVmValue(value));
+        *reinterpret_cast<QJsonObject *>(data) = jsonObjectFromJS(v8::Value::fromV4Value(value));
         return true;
     case QMetaType::QJsonArray:
-        *reinterpret_cast<QJsonArray *>(data) = jsonArrayFromJS(v8::Value::fromVmValue(value));
+        *reinterpret_cast<QJsonArray *>(data) = jsonArrayFromJS(v8::Value::fromV4Value(value));
         return true;
     default:
     ;
@@ -1219,18 +1219,18 @@ bool QV8Engine::metaTypeFromJS(const QQmlJS::VM::Value &value, int type, void *d
     // Try to use magic; for compatibility with qscriptvalue_cast.
 
     QByteArray name = QMetaType::typeName(type);
-    if (convertToNativeQObject(v8::Value::fromVmValue(value), name, reinterpret_cast<void* *>(data)))
+    if (convertToNativeQObject(v8::Value::fromV4Value(value), name, reinterpret_cast<void* *>(data)))
         return true;
-    if (isVariant(v8::Value::fromVmValue(value)) && name.endsWith('*')) {
+    if (isVariant(v8::Value::fromV4Value(value)) && name.endsWith('*')) {
         int valueType = QMetaType::type(name.left(name.size()-1));
-        QVariant &var = variantValue(v8::Value::fromVmValue(value));
+        QVariant &var = variantValue(v8::Value::fromV4Value(value));
         if (valueType == var.userType()) {
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
             return true;
         } else {
             // Look in the prototype chain.
-            v8::Handle<v8::Value> proto = v8::Value::fromVmValue(value)->ToObject()->GetPrototype();
+            v8::Handle<v8::Value> proto = v8::Value::fromV4Value(value)->ToObject()->GetPrototype();
             while (proto->IsObject()) {
                 bool canCast = false;
                 if (isVariant(proto)) {
@@ -1401,7 +1401,7 @@ QJSValue QV8Engine::evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCat
             // This is possible on syntax errors like { a:12, b:21 } <- missing "(", ")" around expression.
             return QJSValue();
         }
-        return new QJSValuePrivate(m_v4Engine, exception.get()->vmValue());
+        return new QJSValuePrivate(m_v4Engine, exception.get()->v4Value());
     }
     v8::Handle<v8::Value> result;
     result = script->Run();
@@ -1411,21 +1411,21 @@ QJSValue QV8Engine::evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCat
         //Q_ASSERT(!exception.IsEmpty());
         if (exception.IsEmpty())
             exception = v8::Exception::Error(v8::String::New("missing exception value"));
-        return new QJSValuePrivate(m_v4Engine, exception.get()->vmValue());
+        return new QJSValuePrivate(m_v4Engine, exception.get()->v4Value());
     }
-    return new QJSValuePrivate(m_v4Engine, result.get()->vmValue());
+    return new QJSValuePrivate(m_v4Engine, result.get()->v4Value());
 }
 
 QJSValue QV8Engine::scriptValueFromInternal(v8::Handle<v8::Value> value) const
 {
     if (value.IsEmpty())
         return QJSValue();
-    return new QJSValuePrivate(m_v4Engine, value.get()->vmValue());
+    return new QJSValuePrivate(m_v4Engine, value.get()->v4Value());
 }
 
 QJSValue QV8Engine::newArray(uint length)
 {
-    return new QJSValuePrivate(m_v4Engine, v8::Array::New(length).get()->vmValue());
+    return new QJSValuePrivate(m_v4Engine, v8::Array::New(length).get()->v4Value());
 }
 
 void QV8Engine::startTimer(const QString &timerName)
@@ -1560,12 +1560,12 @@ QV8Engine::ThreadData::~ThreadData()
 
 QString QV8Engine::toString(v8::Handle<v8::Value> string)
 {
-    return string.get()->vmValue().toString(m_v4Engine->current)->toQString();
+    return string.get()->v4Value().toString(m_v4Engine->current)->toQString();
 }
 
 QString QV8Engine::toString(v8::Handle<v8::String> string)
 {
-    return string.get()->vmValue().toString(m_v4Engine->current)->toQString();
+    return string.get()->v4Value().toString(m_v4Engine->current)->toQString();
 }
 
 v8::Local<v8::String> QV8Engine::toString(const QString &string)
@@ -1574,14 +1574,14 @@ v8::Local<v8::String> QV8Engine::toString(const QString &string)
 }
 
 
-QQmlJS::VM::Value QQmlV4Handle::toValue() const
+QV4::Value QQmlV4Handle::toValue() const
 {
-    QQmlJS::VM::Value val;
+    QV4::Value val;
     val.val = d;
     return val;
 }
 
-QQmlV4Handle QQmlV4Handle::fromValue(const QQmlJS::VM::Value &v)
+QQmlV4Handle QQmlV4Handle::fromValue(const QV4::Value &v)
 {
     QQmlV4Handle handle;
     handle.d = v.val;

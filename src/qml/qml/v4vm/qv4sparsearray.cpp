@@ -50,8 +50,7 @@
 # include <qvector.h>
 #endif
 
-namespace QQmlJS {
-namespace VM {
+using namespace QV4;
 
 bool ArrayElementLessThan::operator()(const Property &p1, const Property &p2) const
 {
@@ -457,8 +456,4 @@ SparseArrayNode *SparseArray::insert(uint akey)
     }
 
     return createNode(s, y, left);
-}
-
-
-}
 }

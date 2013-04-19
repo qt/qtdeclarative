@@ -83,15 +83,14 @@
 #include <QStack>
 #include <QSharedData>
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 struct Value;
 struct String;
 struct ExecutionEngine;
 struct Object;
 class MemoryManager;
 }
-}
+
 
 #include <stdint.h>
 
@@ -1026,8 +1025,8 @@ class V8EXPORT Value {
       return res;
   }
 
-  QQmlJS::VM::Value vmValue() const;
-  static Handle<Value> fromVmValue(const QQmlJS::VM::Value &vmValue);
+  QV4::Value v4Value() const;
+  static Handle<Value> fromV4Value(const QV4::Value &v4Value);
 
 };
 
@@ -1227,7 +1226,7 @@ class V8EXPORT String : public Primitive {
   /** Creates a symbol. Returns one if it exists already.*/
   static Local<String> NewSymbol(const char* data, int length = -1);
 
-  static Local<String> New(QQmlJS::VM::String *s);
+  static Local<String> New(QV4::String *s);
 
   /**
    * Creates a new external string using the data defined in the given
@@ -1283,7 +1282,7 @@ class V8EXPORT String : public Primitive {
   };
 
       QString asQString() const;
-      QQmlJS::VM::String *asVMString() const;
+      QV4::String *asV4String() const;
 };
 
 
@@ -1730,7 +1729,7 @@ DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Template)
  */
 class V8EXPORT Arguments {
  public:
-    Arguments(const QQmlJS::VM::Value *args, int argc, const QQmlJS::VM::Value &thisObject, bool isConstructor,
+    Arguments(const QV4::Value *args, int argc, const QV4::Value &thisObject, bool isConstructor,
               const Persistent<Value> &data);
   int Length() const;
   Local<Value> operator[](int i) const;
@@ -1754,7 +1753,7 @@ private:
  */
 class V8EXPORT AccessorInfo {
  public:
-  AccessorInfo(const QQmlJS::VM::Value &thisObject, const Persistent<Value> &data);
+  AccessorInfo(const QV4::Value &thisObject, const Persistent<Value> &data);
   Isolate* GetIsolate() const;
   Local<Value> Data() const;
   Local<Object> This() const;
@@ -2287,9 +2286,9 @@ class V8EXPORT Isolate {
   void* GetData();
 
   Context *GetCurrentContext() { return m_contextStack.top(); }
-  void setException(const QQmlJS::VM::Value &ex);
+  void setException(const QV4::Value &ex);
 
-  static QQmlJS::VM::ExecutionEngine *GetEngine();
+  static QV4::ExecutionEngine *GetEngine();
 
   private:
       friend class Context;
@@ -2556,7 +2555,7 @@ class V8EXPORT Context : public QSharedData {
     Handle<Context> context_;
   };
 
-  QQmlJS::VM::ExecutionEngine *GetEngine();
+  QV4::ExecutionEngine *GetEngine();
 
 private:
   Context* m_lastContext;

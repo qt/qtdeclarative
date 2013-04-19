@@ -47,9 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
-
+namespace QV4 {
 
 struct ArrayCtor: FunctionObject
 {
@@ -95,8 +93,7 @@ struct ArrayPrototype: ArrayObject
 };
 
 
-} // end of namespace VM
-} // end of namespace QQmlJS
+} // namespace QV4
 
 QT_END_NAMESPACE
 

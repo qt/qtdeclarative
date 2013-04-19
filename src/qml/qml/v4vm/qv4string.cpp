@@ -46,8 +46,7 @@
 #include "qv4stringobject_p.h"
 #include <QtCore/QHash>
 
-namespace QQmlJS {
-namespace VM {
+using namespace QV4;
 
 static uint toArrayIndex(const QChar *ch, const QChar *end, bool *ok)
 {
@@ -236,7 +235,4 @@ uint String::createHashValue(const QChar *ch, int length)
     }
 
     return h;
-}
-
-}
 }

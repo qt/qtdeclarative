@@ -48,8 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 class MemoryManager;
 struct String;
@@ -240,7 +239,7 @@ private:
 };
 
 }
-}
+
 
 QT_END_NAMESPACE
 

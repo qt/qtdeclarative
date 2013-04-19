@@ -47,8 +47,7 @@
 #include "qv4mm_p.h"
 #include <qv4argumentsobject_p.h>
 
-namespace QQmlJS {
-namespace VM {
+using namespace QV4;
 
 DiagnosticMessage::DiagnosticMessage()
     : offset(0)
@@ -70,7 +69,7 @@ String *DiagnosticMessage::buildFullMessage(ExecutionContext *ctx) const
     if (!fileName.isEmpty())
         msg = fileName + QLatin1Char(':');
     msg += QString::number(startLine) + QLatin1Char(':') + QString::number(startColumn) + QLatin1String(": ");
-    if (type == QQmlJS::VM::DiagnosticMessage::Error)
+    if (type == QV4::DiagnosticMessage::Error)
         msg += QLatin1String("error");
     else
         msg += QLatin1String("warning");
@@ -263,7 +262,7 @@ void ExecutionContext::mark()
     thisObject.mark();
 
     if (type >= Type_SimpleCallContext) {
-        VM::CallContext *c = static_cast<CallContext *>(this);
+        QV4::CallContext *c = static_cast<CallContext *>(this);
         for (unsigned arg = 0, lastArg = c->argumentCount; arg < lastArg; ++arg)
             c->arguments[arg].mark();
         if (type >= Type_CallContext) {
@@ -358,7 +357,7 @@ Value ExecutionContext::getProperty(String *name)
         }
 
         else if (ctx->type >= Type_CallContext) {
-            VM::CallContext *c = static_cast<CallContext *>(ctx);
+            QV4::CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
@@ -420,7 +419,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
         }
 
         else if (ctx->type >= Type_CallContext) {
-            VM::CallContext *c = static_cast<CallContext *>(ctx);
+            QV4::CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
@@ -483,7 +482,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
         }
 
         else if (ctx->type >= Type_CallContext) {
-            VM::CallContext *c = static_cast<CallContext *>(ctx);
+            QV4::CallContext *c = static_cast<CallContext *>(ctx);
             FunctionObject *f = c->function;
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
@@ -571,6 +570,3 @@ void ExecutionContext::throwURIError(Value msg)
 {
     throwError(Value::fromObject(engine->newURIErrorObject(this, msg)));
 }
-
-} // namespace VM
-} // namespace QQmlJS

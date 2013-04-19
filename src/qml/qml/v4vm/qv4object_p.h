@@ -62,8 +62,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct Value;
 struct Function;
@@ -409,8 +408,7 @@ inline void Object::setArrayLengthUnchecked(uint l)
 }
 
 
-} // namespace VM
-} // namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

@@ -46,7 +46,7 @@
 #include <cassert>
 
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(NumberCtor);
 

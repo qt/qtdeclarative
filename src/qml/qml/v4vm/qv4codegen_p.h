@@ -48,31 +48,31 @@
 #include <QtCore/QStringList>
 #include <assert.h>
 
-namespace QQmlJS {
-
-namespace AST {
-class UiParameterList;
-}
-
-namespace VM {
+namespace QV4 {
 struct DiagnosticMessage;
 struct ExecutionContext;
 }
 
+namespace QQmlJS {
+namespace AST {
+class UiParameterList;
+}
 namespace Debugging {
 class Debugger;
 } // namespace Debugging
 
+
+
 class ErrorHandler
 {
 public:
-    virtual void syntaxError(VM::DiagnosticMessage *message) = 0;
+    virtual void syntaxError(QV4::DiagnosticMessage *message) = 0;
 };
 
 class Q_QML_EXPORT Codegen: protected AST::Visitor
 {
 public:
-    Codegen(VM::ExecutionContext *ctx, bool strict);
+    Codegen(QV4::ExecutionContext *ctx, bool strict);
     Codegen(ErrorHandler *errorHandler, bool strictMode);
 
     enum Mode {
@@ -431,7 +431,7 @@ private:
     ScopeAndFinally *_scopeAndFinally;
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
-    VM::ExecutionContext *_context;
+    QV4::ExecutionContext *_context;
     bool _strictMode;
     Debugging::Debugger *_debugger;
     ErrorHandler *_errorHandler;
@@ -439,6 +439,6 @@ private:
     class ScanFunctions;
 };
 
-} // end of namespace QQmlJS
+}
 
 #endif // QV4CODEGEN_P_H

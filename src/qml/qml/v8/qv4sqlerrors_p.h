@@ -65,12 +65,11 @@ QT_BEGIN_NAMESPACE
 #define SQLEXCEPTION_CONSTRAINT_ERR 7
 #define SQLEXCEPTION_TIMEOUT_ERR 8
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 class ExecutionEngine;
 }
-}
-void qt_add_sqlexceptions(QQmlJS::VM::ExecutionEngine *engine);
+
+void qt_add_sqlexceptions(QV4::ExecutionEngine *engine);
 
 QT_END_NAMESPACE
 

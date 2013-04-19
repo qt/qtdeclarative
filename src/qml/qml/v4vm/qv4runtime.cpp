@@ -65,8 +65,39 @@
 #include <execinfo.h>
 #endif
 
-namespace QQmlJS {
-namespace VM {
+using namespace QV4;
+
+
+Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue)
+    : exception(PersistentValue(throwingContext->engine, exceptionValue))
+{
+    this->throwingContext = throwingContext->engine->current;
+    accepted = false;
+}
+
+Exception::~Exception()
+{
+    assert(accepted);
+}
+
+void Exception::accept(ExecutionContext *catchingContext)
+{
+    assert(!accepted);
+    accepted = true;
+    partiallyUnwindContext(catchingContext);
+}
+
+void Exception::partiallyUnwindContext(ExecutionContext *catchingContext)
+{
+    if (!throwingContext)
+        return;
+    ExecutionContext *context = throwingContext;
+    while (context != catchingContext)
+        context = context->engine->popContext();
+    throwingContext = context;
+}
+
+extern "C" {
 
 QString __qmljs_numberToString(double num, int radix)
 {
@@ -118,38 +149,7 @@ QString __qmljs_numberToString(double num, int radix)
     return str;
 }
 
-Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue)
-    : exception(PersistentValue(throwingContext->engine, exceptionValue))
-{
-    this->throwingContext = throwingContext->engine->current;
-    accepted = false;
-}
-
-Exception::~Exception()
-{
-    assert(accepted);
-}
-
-void Exception::accept(ExecutionContext *catchingContext)
-{
-    assert(!accepted);
-    accepted = true;
-    partiallyUnwindContext(catchingContext);
-}
-
-void Exception::partiallyUnwindContext(ExecutionContext *catchingContext)
-{
-    if (!throwingContext)
-        return;
-    ExecutionContext *context = throwingContext;
-    while (context != catchingContext)
-        context = context->engine->popContext();
-    throwingContext = context;
-}
-
-extern "C" {
-
-void __qmljs_init_closure(ExecutionContext *ctx, Value *result, VM::Function *clos)
+void __qmljs_init_closure(ExecutionContext *ctx, Value *result, Function *clos)
 {
     assert(clos);
     *result = Value::fromObject(ctx->engine->newScriptFunction(ctx, clos));
@@ -1312,7 +1312,3 @@ void __qmljs_decrement(Value *result, const Value &value)
 }
 
 } // extern "C"
-
-
-} // namespace VM
-} // namespace QQmlJS

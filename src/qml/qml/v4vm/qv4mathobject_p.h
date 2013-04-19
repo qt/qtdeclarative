@@ -45,8 +45,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct MathObject: Object
 {
@@ -72,8 +71,7 @@ struct MathObject: Object
     static Value method_tan(SimpleCallContext *context);
 };
 
-} // namespace VM
-} // namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

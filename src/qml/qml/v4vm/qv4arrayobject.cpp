@@ -42,7 +42,7 @@
 #include "qv4arrayobject_p.h"
 #include "qv4sparsearray_p.h"
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(ArrayCtor);
 

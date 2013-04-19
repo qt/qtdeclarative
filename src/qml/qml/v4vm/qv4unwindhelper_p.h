@@ -3,8 +3,7 @@
 
 #include <QtCore/QVector>
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct Function;
 
@@ -21,7 +20,6 @@ public:
 #endif
 };
 
-} // VM namespace
-} // QQmlJS namespace
+}
 
 #endif // QV4UNWINDHELPER_H

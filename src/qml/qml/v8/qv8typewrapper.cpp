@@ -195,12 +195,12 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
                 v8::Handle<v8::Value> rv = v8engine->qobjectWrapper()->getProperty(qobjectSingleton, propertystring, context, QV8QObjectWrapper::IgnoreRevision);
                 return rv;
             } else if (!siinfo->scriptApi(e).isUndefined()) {
-                QQmlJS::VM::ExecutionEngine *engine = v8::Isolate::GetEngine();
+                QV4::ExecutionEngine *engine = v8::Isolate::GetEngine();
                 // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
-                QQmlJS::VM::Object *o = QJSValuePrivate::get(siinfo->scriptApi(e))->getValue(engine).asObject();
+                QV4::Object *o = QJSValuePrivate::get(siinfo->scriptApi(e))->getValue(engine).asObject();
                 if (!o)
                     return v8::Handle<v8::Value>();
-                return v8::Value::fromVmValue(o->get(engine->current, property.get()->vmValue().toString(engine->current)));
+                return v8::Value::fromV4Value(o->get(engine->current, property.get()->v4Value().toString(engine->current)));
             }
 
             // Fall through to return empty handle
@@ -290,14 +290,14 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
             v8engine->qobjectWrapper()->setProperty(qobjectSingleton, propertystring, context, value,
                                                     QV8QObjectWrapper::IgnoreRevision);
         } else if (!siinfo->scriptApi(e).isUndefined()) {
-            QQmlJS::VM::Value setVal = value.get()->vmValue();
-            QQmlJS::VM::Object *apiprivate = QJSValuePrivate::get(siinfo->scriptApi(e))->value.asObject();
+            QV4::Value setVal = value.get()->v4Value();
+            QV4::Object *apiprivate = QJSValuePrivate::get(siinfo->scriptApi(e))->value.asObject();
             if (!apiprivate) {
                 QString error = QLatin1String("Cannot assign to read-only property \"") +
                                 v8engine->toString(property) + QLatin1Char('\"');
                 v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
             } else {
-                apiprivate->put(v8::Isolate::GetEngine()->current, property.get()->vmValue().stringValue(), setVal);
+                apiprivate->put(v8::Isolate::GetEngine()->current, property.get()->v4Value().stringValue(), setVal);
             }
         }
     }

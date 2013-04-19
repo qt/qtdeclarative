@@ -79,30 +79,30 @@ struct FunctionDebugInfo { // TODO: use opaque d-pointers here
 class FunctionState
 {
 public:
-    FunctionState(VM::ExecutionContext *context);
+    FunctionState(QV4::ExecutionContext *context);
     virtual ~FunctionState();
 
-    virtual VM::Value *argument(unsigned idx);
-    virtual VM::Value *local(unsigned idx);
-    virtual VM::Value *temp(unsigned idx) = 0;
+    virtual QV4::Value *argument(unsigned idx);
+    virtual QV4::Value *local(unsigned idx);
+    virtual QV4::Value *temp(unsigned idx) = 0;
 
-    VM::ExecutionContext *context() const
+    QV4::ExecutionContext *context() const
     { return _context; }
 
     Debugger *debugger() const
     { return _context->engine->debugger; }
 
 private:
-    VM::ExecutionContext *_context;
+    QV4::ExecutionContext *_context;
 };
 
 struct CallInfo
 {
-    VM::ExecutionContext *context;
-    VM::FunctionObject *function;
+    QV4::ExecutionContext *context;
+    QV4::FunctionObject *function;
     FunctionState *state;
 
-    CallInfo(VM::ExecutionContext *context = 0, VM::FunctionObject *function = 0, FunctionState *state = 0)
+    CallInfo(QV4::ExecutionContext *context = 0, QV4::FunctionObject *function = 0, FunctionState *state = 0)
         : context(context)
         , function(function)
         , state(state)
@@ -112,24 +112,24 @@ struct CallInfo
 class Q_QML_EXPORT Debugger
 {
 public:
-    Debugger(VM::ExecutionEngine *_engine);
+    Debugger(QV4::ExecutionEngine *_engine);
     ~Debugger();
 
 public: // compile-time interface
     void addFunction(V4IR::Function *function);
     void setSourceLocation(V4IR::Function *function, unsigned line, unsigned column);
-    void mapFunction(VM::Function *vmf, V4IR::Function *irf);
+    void mapFunction(QV4::Function *vmf, V4IR::Function *irf);
 
 public: // run-time querying interface
-    FunctionDebugInfo *debugInfo(VM::FunctionObject *function) const;
-    QString name(VM::FunctionObject *function) const;
+    FunctionDebugInfo *debugInfo(QV4::FunctionObject *function) const;
+    QString name(QV4::FunctionObject *function) const;
 
 public: // execution hooks
-    void aboutToCall(VM::FunctionObject *function, VM::ExecutionContext *context);
-    void justLeft(VM::ExecutionContext *context);
+    void aboutToCall(QV4::FunctionObject *function, QV4::ExecutionContext *context);
+    void justLeft(QV4::ExecutionContext *context);
     void enterFunction(FunctionState *state);
     void leaveFunction(FunctionState *state);
-    void aboutToThrow(const VM::Value &value);
+    void aboutToThrow(const QV4::Value &value);
 
 public: // debugging hooks
     FunctionState *currentState() const;
@@ -139,13 +139,13 @@ public: // debugging hooks
     void printStackTrace() const;
 
 private:
-    int callIndex(VM::ExecutionContext *context);
-    V4IR::Function *irFunction(VM::Function *vmf) const;
+    int callIndex(QV4::ExecutionContext *context);
+    V4IR::Function *irFunction(QV4::Function *vmf) const;
 
 private: // TODO: use opaque d-pointers here
-    VM::ExecutionEngine *_engine;
+    QV4::ExecutionEngine *_engine;
     QHash<V4IR::Function *, FunctionDebugInfo *> _functionInfo;
-    QHash<VM::Function *, V4IR::Function *> _vmToIr;
+    QHash<QV4::Function *, V4IR::Function *> _vmToIr;
     QVector<CallInfo> _callStack;
 };
 

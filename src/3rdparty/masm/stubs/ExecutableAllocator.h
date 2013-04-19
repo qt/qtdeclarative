@@ -59,7 +59,7 @@ namespace JSC {
 class JSGlobalData;
 
 struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
-    ExecutableMemoryHandle(QQmlJS::VM::ExecutableAllocator *allocator, int size)
+    ExecutableMemoryHandle(QV4::ExecutableAllocator *allocator, int size)
         : m_allocator(allocator)
         , m_size(size)
     {
@@ -79,13 +79,13 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
     void* start() { return m_allocation->start(); }
     int sizeInBytes() { return m_size; }
 
-    QQmlJS::VM::ExecutableAllocator *m_allocator;
-    QQmlJS::VM::ExecutableAllocator::Allocation *m_allocation;
+    QV4::ExecutableAllocator *m_allocator;
+    QV4::ExecutableAllocator::Allocation *m_allocation;
     int m_size;
 };
 
 struct ExecutableAllocator {
-    ExecutableAllocator(QQmlJS::VM::ExecutableAllocator *alloc)
+    ExecutableAllocator(QV4::ExecutableAllocator *alloc)
         : realAllocator(alloc)
     {}
 
@@ -125,7 +125,7 @@ struct ExecutableAllocator {
 #endif
     }
 
-    QQmlJS::VM::ExecutableAllocator *realAllocator;
+    QV4::ExecutableAllocator *realAllocator;
 };
 
 }

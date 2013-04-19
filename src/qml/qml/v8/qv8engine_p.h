@@ -92,12 +92,11 @@ inline uint qHash(const v8::Handle<v8::Object> &object, uint seed = 0)
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
     struct ExecutionEngine;
     struct Value;
 }
-}
+
 
 // Uncomment the following line to enable global handle debugging.  When enabled, all the persistent
 // handles allocated using qPersistentNew() (or registered with qPersistentRegsiter()) and disposed
@@ -217,8 +216,8 @@ public:
         return v8::Value::NewFromInternalValue(d);
     }
 
-    QQmlJS::VM::Value toValue() const;
-    static QQmlV4Handle fromValue(const QQmlJS::VM::Value &v);
+    QV4::Value toValue() const;
+    static QQmlV4Handle fromValue(const QV4::Value &v);
 private:
     QQmlV4Handle(v8::Handle<v8::Value> h) : d(h.val) {}
     quint64 d;
@@ -258,8 +257,8 @@ class Q_QML_PRIVATE_EXPORT QV8Engine
 public:
     static QV8Engine* get(QJSEngine* q) { Q_ASSERT(q); return q->handle(); }
     static QJSEngine* get(QV8Engine* d) { Q_ASSERT(d); return d->q; }
-    static QQmlJS::VM::ExecutionEngine *getV4(QJSEngine *q) { return q->handle()->m_v4Engine; }
-    static QQmlJS::VM::ExecutionEngine *getV4(QV8Engine *d) { return d->m_v4Engine; }
+    static QV4::ExecutionEngine *getV4(QJSEngine *q) { return q->handle()->m_v4Engine; }
+    static QV4::ExecutionEngine *getV4(QV8Engine *d) { return d->m_v4Engine; }
 
     enum ContextOwnership {
         AdoptCurrentContext,
@@ -411,7 +410,7 @@ public:
     QJsonArray jsonArrayFromJS(v8::Handle<v8::Value> value);
 
     v8::Handle<v8::Value> metaTypeToJS(int type, const void *data);
-    bool metaTypeFromJS(const QQmlJS::VM::Value &value, int type, void *data);
+    bool metaTypeFromJS(const QV4::Value &value, int type, void *data);
 
     bool convertToNativeQObject(v8::Handle<v8::Value> value,
                                 const QByteArray &targetType,
@@ -459,7 +458,7 @@ protected:
     QJSEngine* q;
     QQmlEngine *m_engine;
 
-    QQmlJS::VM::ExecutionEngine *m_v4Engine;
+    QV4::ExecutionEngine *m_v4Engine;
 
     bool m_ownsV8Context;
     v8::Persistent<v8::Context> m_context;

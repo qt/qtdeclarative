@@ -4,25 +4,25 @@
 #include <private/qv4runtime_p.h>
 #include "qv4instr_moth_p.h"
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
     struct Value;
 }
 
+namespace QQmlJS {
 namespace Moth {
 
 class VME
 {
 public:
-    static VM::Value exec(VM::ExecutionContext *, const uchar *);
+    static QV4::Value exec(QV4::ExecutionContext *, const uchar *);
 
 #ifdef MOTH_THREADED_INTERPRETER
     static void **instructionJumpTable();
 #endif
 
 private:
-    VM::Value run(QQmlJS::VM::ExecutionContext *, const uchar *&code,
-            VM::Value *stack = 0, unsigned stackSize = 0
+    QV4::Value run(QV4::ExecutionContext *, const uchar *&code,
+            QV4::Value *stack = 0, unsigned stackSize = 0
 #ifdef MOTH_THREADED_INTERPRETER
             , void ***storeJumpTable = 0
 #endif

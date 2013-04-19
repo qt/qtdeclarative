@@ -47,8 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+namespace QV4 {
 
 struct BooleanCtor: FunctionObject
 {
@@ -71,8 +70,7 @@ struct BooleanPrototype: BooleanObject
 };
 
 
-} // end of namespace VM
-} // end of namespace QQmlJS
+}
 
 QT_END_NAMESPACE
 

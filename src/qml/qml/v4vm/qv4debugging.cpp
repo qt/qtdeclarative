@@ -49,7 +49,7 @@
 using namespace QQmlJS;
 using namespace QQmlJS::Debugging;
 
-FunctionState::FunctionState(VM::ExecutionContext *context)
+FunctionState::FunctionState(QV4::ExecutionContext *context)
     : _context(context)
 {
     if (debugger())
@@ -62,17 +62,17 @@ FunctionState::~FunctionState()
         debugger()->leaveFunction(this);
 }
 
-VM::Value *FunctionState::argument(unsigned idx)
+QV4::Value *FunctionState::argument(unsigned idx)
 {
-    VM::CallContext *c = _context->asCallContext();
+    QV4::CallContext *c = _context->asCallContext();
     if (!c || idx >= c->argumentCount)
         return 0;
     return c->arguments + idx;
 }
 
-VM::Value *FunctionState::local(unsigned idx)
+QV4::Value *FunctionState::local(unsigned idx)
 {
-    VM::CallContext *c = _context->asCallContext();
+    QV4::CallContext *c = _context->asCallContext();
     if (c && idx < c->variableCount())
         return c->locals + idx;
     return 0;
@@ -90,7 +90,7 @@ void printStackTrace()
 }
 #endif // DO_TRACE_INSTR
 
-Debugger::Debugger(VM::ExecutionEngine *engine)
+Debugger::Debugger(QV4::ExecutionEngine *engine)
     : _engine(engine)
 {
 #ifdef LOW_LEVEL_DEBUGGING_HELPERS
@@ -117,12 +117,12 @@ void Debugger::setSourceLocation(V4IR::Function *function, unsigned line, unsign
     _functionInfo[function]->setSourceLocation(line, column);
 }
 
-void Debugger::mapFunction(VM::Function *vmf, V4IR::Function *irf)
+void Debugger::mapFunction(QV4::Function *vmf, V4IR::Function *irf)
 {
     _vmToIr.insert(vmf, irf);
 }
 
-FunctionDebugInfo *Debugger::debugInfo(VM::FunctionObject *function) const
+FunctionDebugInfo *Debugger::debugInfo(QV4::FunctionObject *function) const
 {
     if (!function)
         return 0;
@@ -133,7 +133,7 @@ FunctionDebugInfo *Debugger::debugInfo(VM::FunctionObject *function) const
         return 0;
 }
 
-QString Debugger::name(VM::FunctionObject *function) const
+QString Debugger::name(QV4::FunctionObject *function) const
 {
     if (FunctionDebugInfo *i = debugInfo(function))
         return i->name;
@@ -141,12 +141,12 @@ QString Debugger::name(VM::FunctionObject *function) const
     return QString();
 }
 
-void Debugger::aboutToCall(VM::FunctionObject *function, VM::ExecutionContext *context)
+void Debugger::aboutToCall(QV4::FunctionObject *function, QV4::ExecutionContext *context)
 {
     _callStack.append(CallInfo(context, function));
 }
 
-void Debugger::justLeft(VM::ExecutionContext *context)
+void Debugger::justLeft(QV4::ExecutionContext *context)
 {
     int idx = callIndex(context);
     if (idx < 0)
@@ -172,7 +172,7 @@ void Debugger::leaveFunction(FunctionState *state)
     _callStack[callIndex(state->context())].state = 0;
 }
 
-void Debugger::aboutToThrow(const VM::Value &value)
+void Debugger::aboutToThrow(const QV4::Value &value)
 {
     qDebug() << "*** We are about to throw...:" << value.toString(currentState()->context())->toQString();
 }
@@ -211,7 +211,7 @@ void Debugger::printStackTrace() const
     }
 }
 
-int Debugger::callIndex(VM::ExecutionContext *context)
+int Debugger::callIndex(QV4::ExecutionContext *context)
 {
     for (int idx = _callStack.size() - 1; idx >= 0; --idx) {
         if (_callStack[idx].context == context)
@@ -221,14 +221,14 @@ int Debugger::callIndex(VM::ExecutionContext *context)
     return -1;
 }
 
-V4IR::Function *Debugger::irFunction(VM::Function *vmf) const
+V4IR::Function *Debugger::irFunction(QV4::Function *vmf) const
 {
     return _vmToIr[vmf];
 }
 
-static void realDumpValue(VM::Value v, VM::ExecutionContext *ctx, std::string prefix)
+static void realDumpValue(QV4::Value v, QV4::ExecutionContext *ctx, std::string prefix)
 {
-    using namespace VM;
+    using namespace QV4;
     using namespace std;
     cout << prefix << "tag: " << hex << v.tag << dec << endl << prefix << "\t-> ";
     switch (v.type()) {
@@ -271,21 +271,21 @@ static void realDumpValue(VM::Value v, VM::ExecutionContext *ctx, std::string pr
     cout << prefix << "\t-> @" << hex << o << endl;
     cout << prefix << "object type: " << o->internalType() << endl << prefix << "\t-> ";
     switch (o->internalType()) {
-    case VM::Managed::Type_Invalid: cout << "Invalid"; break;
-    case VM::Managed::Type_String: cout << "String"; break;
-    case VM::Managed::Type_Object: cout << "Object"; break;
-    case VM::Managed::Type_ArrayObject: cout << "ArrayObject"; break;
-    case VM::Managed::Type_FunctionObject: cout << "FunctionObject"; break;
-    case VM::Managed::Type_BooleanObject: cout << "BooleanObject"; break;
-    case VM::Managed::Type_NumberObject: cout << "NumberObject"; break;
-    case VM::Managed::Type_StringObject: cout << "StringObject"; break;
-    case VM::Managed::Type_DateObject: cout << "DateObject"; break;
-    case VM::Managed::Type_RegExpObject: cout << "RegExpObject"; break;
-    case VM::Managed::Type_ErrorObject: cout << "ErrorObject"; break;
-    case VM::Managed::Type_ArgumentsObject: cout << "ArgumentsObject"; break;
-    case VM::Managed::Type_JSONObject: cout << "JSONObject"; break;
-    case VM::Managed::Type_MathObject: cout << "MathObject"; break;
-    case VM::Managed::Type_ForeachIteratorObject: cout << "ForeachIteratorObject"; break;
+    case QV4::Managed::Type_Invalid: cout << "Invalid"; break;
+    case QV4::Managed::Type_String: cout << "String"; break;
+    case QV4::Managed::Type_Object: cout << "Object"; break;
+    case QV4::Managed::Type_ArrayObject: cout << "ArrayObject"; break;
+    case QV4::Managed::Type_FunctionObject: cout << "FunctionObject"; break;
+    case QV4::Managed::Type_BooleanObject: cout << "BooleanObject"; break;
+    case QV4::Managed::Type_NumberObject: cout << "NumberObject"; break;
+    case QV4::Managed::Type_StringObject: cout << "StringObject"; break;
+    case QV4::Managed::Type_DateObject: cout << "DateObject"; break;
+    case QV4::Managed::Type_RegExpObject: cout << "RegExpObject"; break;
+    case QV4::Managed::Type_ErrorObject: cout << "ErrorObject"; break;
+    case QV4::Managed::Type_ArgumentsObject: cout << "ArgumentsObject"; break;
+    case QV4::Managed::Type_JSONObject: cout << "JSONObject"; break;
+    case QV4::Managed::Type_MathObject: cout << "MathObject"; break;
+    case QV4::Managed::Type_ForeachIteratorObject: cout << "ForeachIteratorObject"; break;
     default: cout << "UNKNOWN" << endl; return;
     }
     cout << endl;
@@ -302,7 +302,7 @@ static void realDumpValue(VM::Value v, VM::ExecutionContext *ctx, std::string pr
     }
 }
 
-void dumpValue(VM::Value v, VM::ExecutionContext *ctx)
+void dumpValue(QV4::Value v, QV4::ExecutionContext *ctx)
 {
     realDumpValue(v, ctx, std::string(""));
 }

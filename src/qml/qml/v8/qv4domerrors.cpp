@@ -44,7 +44,7 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace QQmlJS::VM;
+using namespace QV4;
 
 void qt_add_domexceptions(ExecutionEngine *e)
 {

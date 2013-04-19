@@ -43,10 +43,9 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
-namespace VM {
+using namespace QV4;
 
-void Lookup::lookupPropertyGeneric(QQmlJS::VM::Lookup *l, ExecutionContext *ctx, QQmlJS::VM::Value *result, const QQmlJS::VM::Value &object)
+void Lookup::lookupPropertyGeneric(QV4::Lookup *l, ExecutionContext *ctx, QV4::Value *result, const QV4::Value &object)
 {
     if (Object *o = object.asObject()) {
         PropertyAttributes attrs;
@@ -324,9 +323,6 @@ void Lookup::lookupGlobalAccessor2(Lookup *l, ExecutionContext *ctx, Value *resu
     }
     l->lookupGlobal = lookupGlobalGeneric;
     lookupGlobalGeneric(l, ctx, result);
-}
-
-}
 }
 
 QT_END_NAMESPACE

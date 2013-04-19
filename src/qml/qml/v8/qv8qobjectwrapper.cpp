@@ -433,7 +433,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
     } else if (property.propType == qMetaTypeId<QJSValue>()) {
         QJSValue v;
         ReadFunction(object, property, &v, notifier);
-        return v8::Value::fromVmValue(QJSValuePrivate::get(v)->getValue(QV8Engine::getV4(engine)));
+        return v8::Value::fromV4Value(QJSValuePrivate::get(v)->getValue(QV8Engine::getV4(engine)));
     } else if (property.isQVariant()) {
         QVariant v;
         ReadFunction(object, property, &v, notifier);
@@ -2143,7 +2143,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
     if (type != 0) { cleanup(); type = 0; }
 
     if (callType == qMetaTypeId<QJSValue>()) {
-        qjsValuePtr = new (&allocData) QJSValue(new QJSValuePrivate(QV8Engine::getV4(engine), value.get()->vmValue()));
+        qjsValuePtr = new (&allocData) QJSValue(new QJSValuePrivate(QV8Engine::getV4(engine), value.get()->v4Value()));
         type = qMetaTypeId<QJSValue>();
     } else if (callType == QMetaType::Int) {
         intValue = quint32(value->Int32Value());
@@ -2232,7 +2232,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
 v8::Handle<v8::Value> CallArgument::toValue(QV8Engine *engine)
 {
     if (type == qMetaTypeId<QJSValue>()) {
-        return v8::Value::fromVmValue(QJSValuePrivate::get(*qjsValuePtr)->getValue(QV8Engine::getV4(engine)));
+        return v8::Value::fromV4Value(QJSValuePrivate::get(*qjsValuePtr)->getValue(QV8Engine::getV4(engine)));
     } else if (type == QMetaType::Int) {
         return v8::Integer::New(int(intValue));
     } else if (type == QMetaType::UInt) {

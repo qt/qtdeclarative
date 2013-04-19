@@ -21,20 +21,20 @@ using namespace QQmlJS::Moth;
 class FunctionState: public Debugging::FunctionState
 {
 public:
-    FunctionState(QQmlJS::VM::ExecutionContext *context, const uchar **code)
+    FunctionState(QV4::ExecutionContext *context, const uchar **code)
         : Debugging::FunctionState(context)
         , stack(0)
         , stackSize(0)
         , code(code)
     {}
 
-    virtual VM::Value *temp(unsigned idx) { return stack + idx; }
+    virtual QV4::Value *temp(unsigned idx) { return stack + idx; }
 
-    void setStack(VM::Value *stack, unsigned stackSize)
+    void setStack(QV4::Value *stack, unsigned stackSize)
     { this->stack = stack; this->stackSize = stackSize; }
 
 private:
-    VM::Value *stack;
+    QV4::Value *stack;
     unsigned stackSize;
     const uchar **code;
 };
@@ -110,8 +110,8 @@ static VMStats vmStats;
 #define VMSTATS(what) {}
 #endif // WITH_STATS
 
-static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
-                                     VM::Value* stack,
+static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
+                                     QV4::Value* stack,
                                      const Instr::Param &param
 #if !defined(QT_NO_DEBUG)
                                      , unsigned stackSize
@@ -136,14 +136,14 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
 
     if (param.isValue()) {
         VMSTATS(paramIsValue);
-        return const_cast<VM::Value *>(&param.value);
+        return const_cast<QV4::Value *>(&param.value);
     } else if (param.isArgument()) {
         VMSTATS(paramIsArg);
-        VM::ExecutionContext *c = context;
+        QV4::ExecutionContext *c = context;
         uint scope = param.scope;
         while (scope--)
             c = c->outer;
-        VM::CallContext *cc = static_cast<VM::CallContext *>(c);
+        QV4::CallContext *cc = static_cast<QV4::CallContext *>(c);
         const unsigned arg = param.index;
         Q_ASSERT(arg >= 0);
         Q_ASSERT((unsigned) arg < cc->argumentCount);
@@ -152,7 +152,7 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
     } else if (param.isLocal()) {
         VMSTATS(paramIsLocal);
         const unsigned index = param.index;
-        VM::CallContext *c = static_cast<VM::CallContext *>(context);
+        QV4::CallContext *c = static_cast<QV4::CallContext *>(context);
         Q_ASSERT(index >= 0);
         Q_ASSERT(index < context->variableCount());
         Q_ASSERT(c->locals);
@@ -163,12 +163,12 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
         return stack + param.index;
     } else if (param.isScopedLocal()) {
         VMSTATS(paramIsScopedLocal);
-        VM::ExecutionContext *c = context;
+        QV4::ExecutionContext *c = context;
         uint scope = param.scope;
         while (scope--)
             c = c->outer;
         const unsigned index = param.index;
-        VM::CallContext *cc = static_cast<VM::CallContext *>(c);
+        QV4::CallContext *cc = static_cast<QV4::CallContext *>(c);
         Q_ASSERT(index >= 0);
         Q_ASSERT(index < cc->variableCount());
         Q_ASSERT(cc->locals);
@@ -185,15 +185,15 @@ static inline VM::Value *getValueRef(QQmlJS::VM::ExecutionContext *context,
 // The non-temp case might need some tweaking for QML: there it would probably be a value instead of a local.
 # define VALUEPTR(param) \
     param.isTemp() ? stack + param.index \
-                   : (param.isLocal() ? static_cast<VM::CallContext *>(context)->locals + param.index \
+                   : (param.isLocal() ? static_cast<QV4::CallContext *>(context)->locals + param.index \
                                       : getValueRef(context, stack, param))
 #else
 # define VALUE(param) *getValueRef(context, stack, param, stackSize)
 # define VALUEPTR(param) getValueRef(context, stack, param, stackSize)
 #endif
 
-VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
-        VM::Value *stack, unsigned stackSize
+QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
+        QV4::Value *stack, unsigned stackSize
 #ifdef MOTH_THREADED_INTERPRETER
         , void ***storeJumpTable
 #endif
@@ -211,7 +211,7 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
         };
 #undef MOTH_INSTR_ADDR
         *storeJumpTable = jumpTable;
-        return VM::Value::undefinedValue();
+        return QV4::Value::undefinedValue();
     }
 #endif
 
@@ -268,14 +268,14 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
     MOTH_BEGIN_INSTR(Push)
         TRACE(inline, "stack size: %u", instr.value);
         stackSize = instr.value;
-        stack = static_cast<VM::Value *>(alloca(stackSize * sizeof(VM::Value)));
+        stack = static_cast<QV4::Value *>(alloca(stackSize * sizeof(QV4::Value)));
         state.setStack(stack, stackSize);
     MOTH_END_INSTR(Push)
 
     MOTH_BEGIN_INSTR(CallValue)
 #ifdef DO_TRACE_INSTR
         if (Debugging::Debugger *debugger = context->engine->debugger) {
-            if (VM::FunctionObject *o = (VALUE(instr.dest)).asFunctionObject()) {
+            if (QV4::FunctionObject *o = (VALUE(instr.dest)).asFunctionObject()) {
                 if (Debugging::FunctionDebugInfo *info = debugger->debugInfo(o)) {
                     QString n = debugger->name(o);
                     std::cerr << "*** Call to \"" << (n.isNull() ? "<no name>" : qPrintable(n)) << "\" defined @" << info->startLine << ":" << info->startColumn << std::endl;
@@ -284,26 +284,26 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
         }
 #endif // DO_TRACE_INSTR
         Q_ASSERT(instr.args + instr.argc <= stackSize);
-        VM::Value *args = stack + instr.args;
+        QV4::Value *args = stack + instr.args;
         __qmljs_call_value(context, VALUEPTR(instr.result), /*thisObject*/0, VALUE(instr.dest), args, instr.argc);
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
         TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(instr.name->toQString()), instr.args, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
         Q_ASSERT(instr.args + instr.argc <= stackSize);
-        VM::Value *args = stack + instr.args;
+        QV4::Value *args = stack + instr.args;
         __qmljs_call_property(context, VALUEPTR(instr.result), VALUE(instr.base), instr.name, args, instr.argc);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallElement)
         Q_ASSERT(instr.args + instr.argc <= stackSize);
-        VM::Value *args = stack + instr.args;
+        QV4::Value *args = stack + instr.args;
         __qmljs_call_element(context, VALUEPTR(instr.result), VALUE(instr.base), VALUE(instr.index), args, instr.argc);
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallActivationProperty)
         Q_ASSERT(instr.args + instr.argc <= stackSize);
-        VM::Value *args = stack + instr.args;
+        QV4::Value *args = stack + instr.args;
         __qmljs_call_activation_property(context, VALUEPTR(instr.result), instr.name, args, instr.argc);
     MOTH_END_INSTR(CallActivationProperty)
 
@@ -312,21 +312,21 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallBuiltinThrow)
 
     MOTH_BEGIN_INSTR(EnterTry)
-        VALUE(instr.exceptionVar) = VM::Value::undefinedValue();
+        VALUE(instr.exceptionVar) = QV4::Value::undefinedValue();
         try {
             const uchar *tryCode = ((uchar *)&instr.tryOffset) + instr.tryOffset;
             run(context, tryCode, stack, stackSize);
             code = tryCode;
-        } catch (VM::Exception &ex) {
+        } catch (QV4::Exception &ex) {
             ex.accept(context);
             VALUE(instr.exceptionVar) = ex.value();
             try {
-                VM::ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(instr.exceptionVarName, ex.value(), context);
+                QV4::ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(instr.exceptionVarName, ex.value(), context);
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
                 run(catchContext, catchCode, stack, stackSize);
                 code = catchCode;
                 context = __qmljs_builtin_pop_scope(catchContext);
-            } catch (VM::Exception &ex) {
+            } catch (QV4::Exception &ex) {
                 ex.accept(context);
                 VALUE(instr.exceptionVar) = ex.value();
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
@@ -337,7 +337,7 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(EnterTry)
 
     MOTH_BEGIN_INSTR(CallBuiltinFinishTry)
-        return VM::Value();
+        return QV4::Value();
     MOTH_END_INSTR(CallBuiltinFinishTry)
 
     MOTH_BEGIN_INSTR(CallBuiltinPushScope)
@@ -430,26 +430,26 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineArray)
         Q_ASSERT(instr.args + instr.argc <= stackSize);
-        VM::Value *args = stack + instr.args;
+        QV4::Value *args = stack + instr.args;
         __qmljs_builtin_define_array(context, VALUEPTR(instr.result), args, instr.argc);
     MOTH_END_INSTR(CallBuiltinDefineArray)
 
     MOTH_BEGIN_INSTR(CreateValue)
         Q_ASSERT(instr.args + instr.argc <= stackSize);
-        VM::Value *args = stack + instr.args;
+        QV4::Value *args = stack + instr.args;
         __qmljs_construct_value(context, VALUEPTR(instr.result), VALUE(instr.func), args, instr.argc);
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
         Q_ASSERT(instr.args + instr.argc <= stackSize);
-        VM::Value *args = stack + instr.args;
+        QV4::Value *args = stack + instr.args;
         __qmljs_construct_property(context, VALUEPTR(instr.result), VALUE(instr.base), instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
         TRACE(inline, "property name = %s, args = %d, argc = %d", instr.name->toQString().toUtf8().constData(), instr.args, instr.argc);
         Q_ASSERT(instr.args + instr.argc <= stackSize);
-        VM::Value *args = stack + instr.args;
+        QV4::Value *args = stack + instr.args;
         __qmljs_construct_activation_property(context, VALUEPTR(instr.result), instr.name, args, instr.argc);
     MOTH_END_INSTR(CreateActivationProperty)
 
@@ -473,7 +473,7 @@ VM::Value VME::run(QQmlJS::VM::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(Binop)
 
     MOTH_BEGIN_INSTR(Ret)
-        VM::Value &result = VALUE(instr.result);
+        QV4::Value &result = VALUE(instr.result);
 //        TRACE(Ret, "returning value %s", result.toString(context)->toQString().toUtf8().constData());
         return result;
     MOTH_END_INSTR(Ret)
@@ -525,7 +525,7 @@ void **VME::instructionJumpTable()
 }
 #endif
 
-VM::Value VME::exec(VM::ExecutionContext *ctxt, const uchar *code)
+QV4::Value VME::exec(QV4::ExecutionContext *ctxt, const uchar *code)
 {
     VME vme;
     return vme.run(ctxt, code);
