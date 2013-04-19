@@ -69,6 +69,8 @@
 
 #include <private/qv4value_p.h>
 #include <private/qv4dateobject_p.h>
+#include <private/qv4mm_p.h>
+#include <private/qv4objectproto_p.h>
 
 Q_DECLARE_METATYPE(QList<int>)
 
@@ -170,10 +172,6 @@ QV8Engine::QV8Engine(QJSEngine* qq, ContextOwnership ownership)
     m_sequenceWrapper.init(this);
     m_jsonWrapper.init(m_v4Engine);
 
-    {
-    v8::Handle<v8::Value> v = global()->Get(v8::String::New("Object"))->ToObject()->Get(v8::String::New("getOwnPropertyNames"));
-    m_getOwnPropertyNames = qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(v));
-    }
 }
 
 QV8Engine::~QV8Engine()
@@ -189,7 +187,6 @@ QV8Engine::~QV8Engine()
     m_listModelData = 0;
 
     qPersistentDispose(m_freezeObject);
-    qPersistentDispose(m_getOwnPropertyNames);
 
     qPersistentDispose(m_strongReferencer);
 
@@ -497,14 +494,16 @@ const QStringHash<bool> &QV8Engine::illegalNames() const
 // Requires a handle scope
 v8::Local<v8::Array> QV8Engine::getOwnPropertyNames(v8::Handle<v8::Object> o)
 {
-    // FIXME Newer v8 have API for this function
-    v8::TryCatch tc;
-    v8::Handle<v8::Value> args[] = { o };
-    v8::Local<v8::Value> r = m_getOwnPropertyNames->Call(global(), 1, args);
-    if (tc.HasCaught())
+    QV4::Value ovalue = o.get()->v4Value();
+    if (!ovalue.asObject())
         return v8::Array::New();
-    else
-        return v8::Local<v8::Array>::Cast(r);
+    QV4::SimpleCallContext ctx;
+    ctx.arguments = &ovalue;
+    ctx.argumentCount = 1;
+    ctx.engine = m_v4Engine;
+    ctx.parent = m_v4Engine->current;
+    QV4::Value result = QV4::ObjectPrototype::method_getOwnPropertyNames(&ctx);
+    return v8::Local<v8::Array>::New(v8::Value::fromV4Value(result));
 }
 
 QQmlContextData *QV8Engine::callingContext()
@@ -688,11 +687,8 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt_add_sqlexceptions(m_v4Engine);
 
     {
-    v8::Handle<v8::Value> args[] = { global };
-    v8::Local<v8::Value> names = m_getOwnPropertyNames->Call(global, 1, args);
-    v8::Local<v8::Array> namesArray = v8::Local<v8::Array>::Cast(names);
-    for (quint32 ii = 0; ii < namesArray->Length(); ++ii)
-        m_illegalNames.insert(toString(namesArray->Get(ii)), true);
+        for (uint i = 0; i < m_v4Engine->globalObject->internalClass->size; ++i)
+            m_illegalNames.insert(m_v4Engine->globalObject->internalClass->nameMap.at(i)->toQString(), true);
     }
 
     {
@@ -730,8 +726,7 @@ void QV8Engine::freezeObject(v8::Handle<v8::Value> value)
 
 void QV8Engine::gc()
 {
-    v8::V8::LowMemoryNotification();
-    while (!v8::V8::IdleNotification()) {}
+    m_v4Engine->memoryManager->runGC();
 }
 
 #ifdef QML_GLOBAL_HANDLE_DEBUGGING

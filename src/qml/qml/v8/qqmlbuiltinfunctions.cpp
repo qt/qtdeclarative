@@ -179,7 +179,8 @@ v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args
 v8::Handle<v8::Value> gc(const v8::Arguments &args)
 {
     Q_UNUSED(args);
-    QV8Engine::gc();
+    // ###
+//    QV8Engine::gc();
     return v8::Undefined();
 }
 

@@ -361,7 +361,7 @@ public:
     const QStringHash<bool> &illegalNames() const;
 
     inline void collectGarbage() { gc(); }
-    static void gc();
+    void gc();
 
     v8::Handle<v8::Value> throwException(v8::Handle<v8::Value> value);
 
@@ -474,7 +474,6 @@ protected:
     QV8SequenceWrapper m_sequenceWrapper;
     QV4JsonWrapper m_jsonWrapper;
 
-    v8::Persistent<v8::Function> m_getOwnPropertyNames;
     v8::Persistent<v8::Function> m_freezeObject;
 
     void *m_xmlHttpRequestData;
