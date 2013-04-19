@@ -194,6 +194,7 @@ QJSValueIterator& QJSValueIterator::operator=(QJSValue& object)
 {
     d_ptr->iterator = QV4::ObjectIterator(QJSValuePrivate::get(object)->value.asObject(), QV4::ObjectIterator::NoFlags);
     d_ptr->nextValue = d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
+    return *this;
 }
 
 QT_END_NAMESPACE

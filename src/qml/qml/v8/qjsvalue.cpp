@@ -930,6 +930,7 @@ bool QJSValue::hasOwnProperty(const QString &name) const
 QObject *QJSValue::toQObject() const
 {
     // ###
+    return 0;
 }
 
 /*!
@@ -979,6 +980,7 @@ bool QJSValue::isRegExp() const
 bool QJSValue::isQObject() const
 {
     // ###
+    return false;
 }
 
 /*!
