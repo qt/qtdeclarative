@@ -84,7 +84,7 @@
 
 namespace QQmlJS {
 
-Q_QML_EXPORT int compileWithLLVM(IR::Module *module, const QString &fileName, LLVMOutputType outputType, int (*exec)(void *))
+Q_QML_EXPORT int compileWithLLVM(V4IR::Module *module, const QString &fileName, LLVMOutputType outputType, int (*exec)(void *))
 {
     Q_ASSERT(module);
     Q_ASSERT(exec || outputType != LLVMOutputJit);
@@ -255,7 +255,7 @@ InstructionSelection::InstructionSelection(llvm::LLVMContext &context)
 {
 }
 
-void InstructionSelection::buildLLVMModule(IR::Module *module, llvm::Module *llvmModule, llvm::FunctionPassManager *fpm)
+void InstructionSelection::buildLLVMModule(V4IR::Module *module, llvm::Module *llvmModule, llvm::FunctionPassManager *fpm)
 {
     qSwap(_llvmModule, llvmModule);
     qSwap(_fpm, fpm);
@@ -295,139 +295,139 @@ void InstructionSelection::buildLLVMModule(IR::Module *module, llvm::Module *llv
     }
 
 
-    foreach (IR::Function *function, module->functions)
+    foreach (V4IR::Function *function, module->functions)
         (void) compileLLVMFunction(function);
     qSwap(_fpm, fpm);
     qSwap(_llvmModule, llvmModule);
 }
 
-void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinTypeofMember(IR::Temp *base, const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinTypeofMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinTypeofSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+void InstructionSelection::callBuiltinTypeofSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinTypeofName(const QString &name, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinTypeofValue(IR::Temp *value, IR::Temp *result)
+void InstructionSelection::callBuiltinTypeofValue(V4IR::Temp *value, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinDeleteMember(IR::Temp *base, const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinDeleteSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteName(const QString &name, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinDeleteValue(IR::Temp *result)
+void InstructionSelection::callBuiltinDeleteValue(V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinPostDecrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinPostDecrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinPostDecrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+void InstructionSelection::callBuiltinPostDecrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinPostDecrementName(const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinPostDecrementName(const QString &name, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinPostDecrementValue(IR::Temp *value, IR::Temp *result)
+void InstructionSelection::callBuiltinPostDecrementValue(V4IR::Temp *value, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinPostIncrementMember(IR::Temp *base, const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinPostIncrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinPostIncrementSubscript(IR::Temp *base, IR::Temp *index, IR::Temp *result)
+void InstructionSelection::callBuiltinPostIncrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinPostIncrementName(const QString &name, IR::Temp *result)
+void InstructionSelection::callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinPostIncrementValue(IR::Temp *value, IR::Temp *result)
+void InstructionSelection::callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinThrow(IR::Temp *arg)
+void InstructionSelection::callBuiltinThrow(V4IR::Temp *arg)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinCreateExceptionHandler(IR::Temp *result)
+void InstructionSelection::callBuiltinCreateExceptionHandler(V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
@@ -441,21 +441,21 @@ void InstructionSelection::callBuiltinFinishTry()
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinForeachIteratorObject(IR::Temp *arg, IR::Temp *result)
+void InstructionSelection::callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Temp *arg, IR::Temp *result)
+void InstructionSelection::callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinPushWithScope(IR::Temp *arg)
+void InstructionSelection::callBuiltinPushWithScope(V4IR::Temp *arg)
 {
     // TODO
     assert(!"TODO!");
@@ -477,107 +477,107 @@ void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &
                 _llvmFunction->arg_begin(), isDeletable, varName);
 }
 
-void InstructionSelection::callBuiltinDefineGetterSetter(IR::Temp *object, const QString &name, IR::Temp *getter, IR::Temp *setter)
+void InstructionSelection::callBuiltinDefineGetterSetter(V4IR::Temp *object, const QString &name, V4IR::Temp *getter, V4IR::Temp *setter)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinDefineProperty(IR::Temp *object, const QString &name, IR::Temp *value)
+void InstructionSelection::callBuiltinDefineProperty(V4IR::Temp *object, const QString &name, V4IR::Temp *value)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinDefineArray(IR::Temp *result, IR::ExprList *args)
+void InstructionSelection::callBuiltinDefineArray(V4IR::Temp *result, V4IR::ExprList *args)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callSubscript(IR::Temp *base, IR::Temp *index, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::callSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::ExprList *args, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::constructActivationProperty(IR::Name *func,
-                                                       IR::ExprList *args,
-                                                       IR::Temp *result)
+void InstructionSelection::constructActivationProperty(V4IR::Name *func,
+                                                       V4IR::ExprList *args,
+                                                       V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::constructProperty(IR::Temp *base, const QString &name, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::constructValue(IR::Temp *value, IR::ExprList *args, IR::Temp *result)
+void InstructionSelection::constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::loadThisObject(IR::Temp *temp)
+void InstructionSelection::loadThisObject(V4IR::Temp *temp)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::loadConst(IR::Const *con, IR::Temp *temp)
+void InstructionSelection::loadConst(V4IR::Const *con, V4IR::Temp *temp)
 {
     llvm::Value *target = getLLVMTemp(temp);
     llvm::Value *source = CreateLoad(createValue(con));
     CreateStore(source, target);
 }
 
-void InstructionSelection::loadString(const QString &str, IR::Temp *targetTemp)
+void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Temp *targetTemp)
+void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::getActivationProperty(const QString &name, IR::Temp *temp)
+void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::Temp *temp)
 {
     // TODO
     assert(!"TODO!");
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::setActivationProperty(IR::Temp *source, const QString &targetName)
+void InstructionSelection::setActivationProperty(V4IR::Temp *source, const QString &targetName)
 {
     llvm::Value *name = getIdentifier(targetName);
     llvm::Value *src = toValuePtr(source);
@@ -585,9 +585,9 @@ void InstructionSelection::setActivationProperty(IR::Temp *source, const QString
                 _llvmFunction->arg_begin(), name, src);
 }
 
-void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
+void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *target)
 {
-    IR::Function *f = closure->value;
+    V4IR::Function *f = closure->value;
     QString name;
     if (f->name)
         name = *f->name;
@@ -609,7 +609,7 @@ void InstructionSelection::initClosure(IR::Closure *closure, IR::Temp *target)
     CreateCall(callee, args);
 }
 
-void InstructionSelection::getProperty(IR::Temp *sourceBase, const QString &sourceName, IR::Temp *target)
+void InstructionSelection::getProperty(V4IR::Temp *sourceBase, const QString &sourceName, V4IR::Temp *target)
 {
     llvm::Value *base = getLLVMTempReference(sourceBase);
     llvm::Value *name = getIdentifier(sourceName);
@@ -618,7 +618,7 @@ void InstructionSelection::getProperty(IR::Temp *sourceBase, const QString &sour
                 _llvmFunction->arg_begin(), t, base, name);
 }
 
-void InstructionSelection::setProperty(IR::Temp *source, IR::Temp *targetBase, const QString &targetName)
+void InstructionSelection::setProperty(V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName)
 {
     llvm::Value *base = getLLVMTempReference(targetBase);
     llvm::Value *name = getIdentifier(targetName);
@@ -627,7 +627,7 @@ void InstructionSelection::setProperty(IR::Temp *source, IR::Temp *targetBase, c
                 _llvmFunction->arg_begin(), base, name, src);
 }
 
-void InstructionSelection::getElement(IR::Temp *sourceBase, IR::Temp *sourceIndex, IR::Temp *target)
+void InstructionSelection::getElement(V4IR::Temp *sourceBase, V4IR::Temp *sourceIndex, V4IR::Temp *target)
 {
     // TODO
     assert(!"TODO!");
@@ -640,7 +640,7 @@ void InstructionSelection::getElement(IR::Temp *sourceBase, IR::Temp *sourceInde
                 _llvmFunction->arg_begin(), t, base, index);
 }
 
-void InstructionSelection::setElement(IR::Temp *source, IR::Temp *targetBase, IR::Temp *targetIndex)
+void InstructionSelection::setElement(V4IR::Temp *source, V4IR::Temp *targetBase, V4IR::Temp *targetIndex)
 {
     llvm::Value *base = getLLVMTempReference(targetBase);
     llvm::Value *index = getLLVMTempReference(targetIndex);
@@ -649,23 +649,23 @@ void InstructionSelection::setElement(IR::Temp *source, IR::Temp *targetBase, IR
                 _llvmFunction->arg_begin(), base, index, src);
 }
 
-void InstructionSelection::copyValue(IR::Temp *sourceTemp, IR::Temp *targetTemp)
+void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
     llvm::Value *t = getLLVMTemp(targetTemp);
     llvm::Value *s = getLLVMTemp(sourceTemp);
     CreateStore(s, t);
 }
 
-void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *targetTemp)
+void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
     const char *opName = 0;
     switch (oper) {
-    case IR::OpNot: opName = "__qmljs_not"; break;
-    case IR::OpUMinus: opName = "__qmljs_uminus"; break;
-    case IR::OpUPlus: opName = "__qmljs_uplus"; break;
-    case IR::OpCompl: opName = "__qmljs_compl"; break;
-    case IR::OpIncrement: opName = "__qmljs_increment"; break;
-    case IR::OpDecrement: opName = "__qmljs_decrement"; break;
+    case V4IR::OpNot: opName = "__qmljs_not"; break;
+    case V4IR::OpUMinus: opName = "__qmljs_uminus"; break;
+    case V4IR::OpUPlus: opName = "__qmljs_uplus"; break;
+    case V4IR::OpCompl: opName = "__qmljs_compl"; break;
+    case V4IR::OpIncrement: opName = "__qmljs_increment"; break;
+    case V4IR::OpDecrement: opName = "__qmljs_decrement"; break;
     default: assert(!"unreachable"); break;
     }
 
@@ -677,21 +677,21 @@ void InstructionSelection::unop(IR::AluOp oper, IR::Temp *sourceTemp, IR::Temp *
     }
 }
 
-void InstructionSelection::binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp *rightSource, IR::Temp *target)
+void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Temp *leftSource, V4IR::Temp *rightSource, V4IR::Temp *target)
 {
     const char *opName = 0;
     switch (oper) {
-    case IR::OpBitAnd: opName = "__qmljs_llvm_bit_and"; break;
-    case IR::OpBitOr: opName = "__qmljs_llvm_bit_or"; break;
-    case IR::OpBitXor: opName = "__qmljs_llvm_bit_xor"; break;
-    case IR::OpAdd: opName = "__qmljs_llvm_add"; break;
-    case IR::OpSub: opName = "__qmljs_llvm_sub"; break;
-    case IR::OpMul: opName = "__qmljs_llvm_mul"; break;
-    case IR::OpDiv: opName = "__qmljs_llvm_div"; break;
-    case IR::OpMod: opName = "__qmljs_llvm_mod"; break;
-    case IR::OpLShift: opName = "__qmljs_llvm_shl"; break;
-    case IR::OpRShift: opName = "__qmljs_llvm_shr"; break;
-    case IR::OpURShift: opName = "__qmljs_llvm_ushr"; break;
+    case V4IR::OpBitAnd: opName = "__qmljs_llvm_bit_and"; break;
+    case V4IR::OpBitOr: opName = "__qmljs_llvm_bit_or"; break;
+    case V4IR::OpBitXor: opName = "__qmljs_llvm_bit_xor"; break;
+    case V4IR::OpAdd: opName = "__qmljs_llvm_add"; break;
+    case V4IR::OpSub: opName = "__qmljs_llvm_sub"; break;
+    case V4IR::OpMul: opName = "__qmljs_llvm_mul"; break;
+    case V4IR::OpDiv: opName = "__qmljs_llvm_div"; break;
+    case V4IR::OpMod: opName = "__qmljs_llvm_mod"; break;
+    case V4IR::OpLShift: opName = "__qmljs_llvm_shl"; break;
+    case V4IR::OpRShift: opName = "__qmljs_llvm_shr"; break;
+    case V4IR::OpURShift: opName = "__qmljs_llvm_ushr"; break;
     default:
         Q_UNREACHABLE();
         break;
@@ -707,21 +707,21 @@ void InstructionSelection::binop(IR::AluOp oper, IR::Temp *leftSource, IR::Temp 
     }
 }
 
-void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Temp *rightSource, const QString &targetName)
+void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName)
 {
     const char *opName = 0;
     switch (oper) {
-    case IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_name"; break;
-    case IR::OpBitOr: opName = "__qmljs_llvm_inplace_bit_or_name"; break;
-    case IR::OpBitXor: opName = "__qmljs_llvm_inplace_bit_xor_name"; break;
-    case IR::OpAdd: opName = "__qmljs_llvm_inplace_add_name"; break;
-    case IR::OpSub: opName = "__qmljs_llvm_inplace_sub_name"; break;
-    case IR::OpMul: opName = "__qmljs_llvm_inplace_mul_name"; break;
-    case IR::OpDiv: opName = "__qmljs_llvm_inplace_div_name"; break;
-    case IR::OpMod: opName = "__qmljs_llvm_inplace_mod_name"; break;
-    case IR::OpLShift: opName = "__qmljs_llvm_inplace_shl_name"; break;
-    case IR::OpRShift: opName = "__qmljs_llvm_inplace_shr_name"; break;
-    case IR::OpURShift: opName = "__qmljs_llvm_inplace_ushr_name"; break;
+    case V4IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_name"; break;
+    case V4IR::OpBitOr: opName = "__qmljs_llvm_inplace_bit_or_name"; break;
+    case V4IR::OpBitXor: opName = "__qmljs_llvm_inplace_bit_xor_name"; break;
+    case V4IR::OpAdd: opName = "__qmljs_llvm_inplace_add_name"; break;
+    case V4IR::OpSub: opName = "__qmljs_llvm_inplace_sub_name"; break;
+    case V4IR::OpMul: opName = "__qmljs_llvm_inplace_mul_name"; break;
+    case V4IR::OpDiv: opName = "__qmljs_llvm_inplace_div_name"; break;
+    case V4IR::OpMod: opName = "__qmljs_llvm_inplace_mod_name"; break;
+    case V4IR::OpLShift: opName = "__qmljs_llvm_inplace_shl_name"; break;
+    case V4IR::OpRShift: opName = "__qmljs_llvm_inplace_shr_name"; break;
+    case V4IR::OpURShift: opName = "__qmljs_llvm_inplace_ushr_name"; break;
     default:
         Q_UNREACHABLE();
         break;
@@ -736,21 +736,21 @@ void InstructionSelection::inplaceNameOp(IR::AluOp oper, IR::Temp *rightSource, 
     }
 }
 
-void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Temp *source, IR::Temp *targetBaseTemp, IR::Temp *targetIndexTemp)
+void InstructionSelection::inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBaseTemp, V4IR::Temp *targetIndexTemp)
 {
     const char *opName = 0;
     switch (oper) {
-    case IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_element"; break;
-    case IR::OpBitOr: opName = "__qmljs_llvm_inplace_bit_or_element"; break;
-    case IR::OpBitXor: opName = "__qmljs_llvm_inplace_bit_xor_element"; break;
-    case IR::OpAdd: opName = "__qmljs_llvm_inplace_add_element"; break;
-    case IR::OpSub: opName = "__qmljs_llvm_inplace_sub_element"; break;
-    case IR::OpMul: opName = "__qmljs_llvm_inplace_mul_element"; break;
-    case IR::OpDiv: opName = "__qmljs_llvm_inplace_div_element"; break;
-    case IR::OpMod: opName = "__qmljs_llvm_inplace_mod_element"; break;
-    case IR::OpLShift: opName = "__qmljs_llvm_inplace_shl_element"; break;
-    case IR::OpRShift: opName = "__qmljs_llvm_inplace_shr_element"; break;
-    case IR::OpURShift: opName = "__qmljs_llvm_inplace_ushr_element"; break;
+    case V4IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_element"; break;
+    case V4IR::OpBitOr: opName = "__qmljs_llvm_inplace_bit_or_element"; break;
+    case V4IR::OpBitXor: opName = "__qmljs_llvm_inplace_bit_xor_element"; break;
+    case V4IR::OpAdd: opName = "__qmljs_llvm_inplace_add_element"; break;
+    case V4IR::OpSub: opName = "__qmljs_llvm_inplace_sub_element"; break;
+    case V4IR::OpMul: opName = "__qmljs_llvm_inplace_mul_element"; break;
+    case V4IR::OpDiv: opName = "__qmljs_llvm_inplace_div_element"; break;
+    case V4IR::OpMod: opName = "__qmljs_llvm_inplace_mod_element"; break;
+    case V4IR::OpLShift: opName = "__qmljs_llvm_inplace_shl_element"; break;
+    case V4IR::OpRShift: opName = "__qmljs_llvm_inplace_shr_element"; break;
+    case V4IR::OpURShift: opName = "__qmljs_llvm_inplace_ushr_element"; break;
     default:
         Q_UNREACHABLE();
         break;
@@ -765,21 +765,21 @@ void InstructionSelection::inplaceElementOp(IR::AluOp oper, IR::Temp *source, IR
     }
 }
 
-void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Temp *source, IR::Temp *targetBase, const QString &targetName)
+void InstructionSelection::inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName)
 {
     const char *opName = 0;
     switch (oper) {
-    case IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_member"; break;
-    case IR::OpBitOr: opName = "__qmljs_llvm_inplace_bit_or_member"; break;
-    case IR::OpBitXor: opName = "__qmljs_llvm_inplace_bit_xor_member"; break;
-    case IR::OpAdd: opName = "__qmljs_llvm_inplace_add_member"; break;
-    case IR::OpSub: opName = "__qmljs_llvm_inplace_sub_member"; break;
-    case IR::OpMul: opName = "__qmljs_llvm_inplace_mul_member"; break;
-    case IR::OpDiv: opName = "__qmljs_llvm_inplace_div_member"; break;
-    case IR::OpMod: opName = "__qmljs_llvm_inplace_mod_member"; break;
-    case IR::OpLShift: opName = "__qmljs_llvm_inplace_shl_member"; break;
-    case IR::OpRShift: opName = "__qmljs_llvm_inplace_shr_member"; break;
-    case IR::OpURShift: opName = "__qmljs_llvm_inplace_ushr_member"; break;
+    case V4IR::OpBitAnd: opName = "__qmljs_llvm_inplace_bit_and_member"; break;
+    case V4IR::OpBitOr: opName = "__qmljs_llvm_inplace_bit_or_member"; break;
+    case V4IR::OpBitXor: opName = "__qmljs_llvm_inplace_bit_xor_member"; break;
+    case V4IR::OpAdd: opName = "__qmljs_llvm_inplace_add_member"; break;
+    case V4IR::OpSub: opName = "__qmljs_llvm_inplace_sub_member"; break;
+    case V4IR::OpMul: opName = "__qmljs_llvm_inplace_mul_member"; break;
+    case V4IR::OpDiv: opName = "__qmljs_llvm_inplace_div_member"; break;
+    case V4IR::OpMod: opName = "__qmljs_llvm_inplace_mod_member"; break;
+    case V4IR::OpLShift: opName = "__qmljs_llvm_inplace_shl_member"; break;
+    case V4IR::OpRShift: opName = "__qmljs_llvm_inplace_shr_member"; break;
+    case V4IR::OpURShift: opName = "__qmljs_llvm_inplace_ushr_member"; break;
     default:
         Q_UNREACHABLE();
         break;
@@ -794,7 +794,7 @@ void InstructionSelection::inplaceMemberOp(IR::AluOp oper, IR::Temp *source, IR:
     }
 }
 
-llvm::Function *InstructionSelection::getLLVMFunction(IR::Function *function)
+llvm::Function *InstructionSelection::getLLVMFunction(V4IR::Function *function)
 {
     llvm::Function *&f = _functionMap[function];
     if (! f) {
@@ -811,11 +811,11 @@ llvm::Function *InstructionSelection::getLLVMFunction(IR::Function *function)
     return f;
 }
 
-llvm::Function *InstructionSelection::compileLLVMFunction(IR::Function *function)
+llvm::Function *InstructionSelection::compileLLVMFunction(V4IR::Function *function)
 {
     llvm::Function *llvmFunction = getLLVMFunction(function);
 
-    QHash<IR::BasicBlock *, llvm::BasicBlock *> blockMap;
+    QHash<V4IR::BasicBlock *, llvm::BasicBlock *> blockMap;
     QVector<llvm::Value *> tempMap;
 
     qSwap(_llvmFunction, llvmFunction);
@@ -824,7 +824,7 @@ llvm::Function *InstructionSelection::compileLLVMFunction(IR::Function *function
     qSwap(_blockMap, blockMap);
 
     // create the LLVM blocks
-    foreach (IR::BasicBlock *block, _function->basicBlocks)
+    foreach (V4IR::BasicBlock *block, _function->basicBlocks)
         (void) getLLVMBasicBlock(block);
 
     // entry block
@@ -846,10 +846,10 @@ llvm::Function *InstructionSelection::compileLLVMFunction(IR::Function *function
 //    CreateCall(getRuntimeFunction("__qmljs_llvm_init_this_object"),
 //               _llvmFunction->arg_begin());
 
-    foreach (IR::BasicBlock *block, _function->basicBlocks) {
+    foreach (V4IR::BasicBlock *block, _function->basicBlocks) {
         qSwap(_block, block);
         SetInsertPoint(getLLVMBasicBlock(_block));
-        foreach (IR::Stmt *s, _block->statements)
+        foreach (V4IR::Stmt *s, _block->statements)
             s->accept(this);
         qSwap(_block, block);
     }
@@ -872,7 +872,7 @@ llvm::Function *InstructionSelection::compileLLVMFunction(IR::Function *function
     return llvmFunction;
 }
 
-llvm::BasicBlock *InstructionSelection::getLLVMBasicBlock(IR::BasicBlock *block)
+llvm::BasicBlock *InstructionSelection::getLLVMBasicBlock(V4IR::BasicBlock *block)
 {
     llvm::BasicBlock *&llvmBlock = _blockMap[block];
     if (! llvmBlock)
@@ -881,9 +881,9 @@ llvm::BasicBlock *InstructionSelection::getLLVMBasicBlock(IR::BasicBlock *block)
     return llvmBlock;
 }
 
-llvm::Value *InstructionSelection::getLLVMTempReference(IR::Expr *expr)
+llvm::Value *InstructionSelection::getLLVMTempReference(V4IR::Expr *expr)
 {
-    if (IR::Temp *t = expr->asTemp())
+    if (V4IR::Temp *t = expr->asTemp())
         return getLLVMTemp(t);
 
     assert(!"TODO!");
@@ -892,10 +892,10 @@ llvm::Value *InstructionSelection::getLLVMTempReference(IR::Expr *expr)
     return addr;
 }
 
-llvm::Value *InstructionSelection::getLLVMCondition(IR::Expr *expr)
+llvm::Value *InstructionSelection::getLLVMCondition(V4IR::Expr *expr)
 {
     llvm::Value *value = 0;
-    if (IR::Temp *t = expr->asTemp()) {
+    if (V4IR::Temp *t = expr->asTemp()) {
         value = getLLVMTemp(t);
     } else {
         assert(!"TODO!");
@@ -919,7 +919,7 @@ llvm::Value *InstructionSelection::getLLVMCondition(IR::Expr *expr)
                        value);
 }
 
-llvm::Value *InstructionSelection::getLLVMTemp(IR::Temp *temp)
+llvm::Value *InstructionSelection::getLLVMTemp(V4IR::Temp *temp)
 {
     if (temp->index < 0) {
         const int index = -temp->index -1;
@@ -949,21 +949,21 @@ llvm::Value *InstructionSelection::getIdentifier(const QString &s)
     return id;
 }
 
-void InstructionSelection::visitJump(IR::Jump *s)
+void InstructionSelection::visitJump(V4IR::Jump *s)
 {
     CreateBr(getLLVMBasicBlock(s->target));
 }
 
-void InstructionSelection::visitCJump(IR::CJump *s)
+void InstructionSelection::visitCJump(V4IR::CJump *s)
 {
     CreateCondBr(getLLVMCondition(s->cond),
                  getLLVMBasicBlock(s->iftrue),
                  getLLVMBasicBlock(s->iffalse));
 }
 
-void InstructionSelection::visitRet(IR::Ret *s)
+void InstructionSelection::visitRet(V4IR::Ret *s)
 {
-    IR::Temp *t = s->expr->asTemp();
+    V4IR::Temp *t = s->expr->asTemp();
     assert(t != 0);
     llvm::Value *result = getLLVMTemp(t);
     llvm::Value *ctx = _llvmFunction->arg_begin();
@@ -971,7 +971,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
     CreateRetVoid();
 }
 
-void InstructionSelection::visitTry(IR::Try *)
+void InstructionSelection::visitTry(V4IR::Try *)
 {
     // TODO
     assert(!"TODO!");
@@ -979,7 +979,7 @@ void InstructionSelection::visitTry(IR::Try *)
 }
 
 #if 0
-void InstructionSelection::visitString(IR::String *e)
+void InstructionSelection::visitString(V4IR::String *e)
 {
     llvm::Value *tmp = newLLVMTemp(_valueTy);
     CreateCall3(getRuntimeFunction("__qmljs_llvm_init_string"),
@@ -995,12 +995,12 @@ llvm::AllocaInst *InstructionSelection::newLLVMTemp(llvm::Type *type, llvm::Valu
     return addr;
 }
 
-llvm::Value * InstructionSelection::genArguments(IR::ExprList *exprs, int &argc)
+llvm::Value * InstructionSelection::genArguments(V4IR::ExprList *exprs, int &argc)
 {
     llvm::Value *args = 0;
 
     argc = 0;
-    for (IR::ExprList *it = exprs; it; it = it->next)
+    for (V4IR::ExprList *it = exprs; it; it = it->next)
         ++argc;
 
     if (argc)
@@ -1009,7 +1009,7 @@ llvm::Value * InstructionSelection::genArguments(IR::ExprList *exprs, int &argc)
         args = llvm::Constant::getNullValue(_valueTy->getPointerTo());
 
     int i = 0;
-    for (IR::ExprList *it = exprs; it; it = it->next) {
+    for (V4IR::ExprList *it = exprs; it; it = it->next) {
 //        llvm::Value *arg = getLLVMValue(it->expr);
 //        CreateStore(arg, CreateConstGEP1_32(args, i++));
     }
@@ -1017,12 +1017,12 @@ llvm::Value * InstructionSelection::genArguments(IR::ExprList *exprs, int &argc)
     return args;
 }
 
-void InstructionSelection::genCallMember(IR::Call *e, llvm::Value *result)
+void InstructionSelection::genCallMember(V4IR::Call *e, llvm::Value *result)
 {
     if (! result)
         result = newLLVMTemp(_valueTy);
 
-    IR::Member *m = e->base->asMember();
+    V4IR::Member *m = e->base->asMember();
     llvm::Value *thisObject = getLLVMTemp(m->base->asTemp());
     llvm::Value *name = getIdentifier(*m->name);
 
@@ -1042,12 +1042,12 @@ void InstructionSelection::genCallMember(IR::Call *e, llvm::Value *result)
     _llvmValue = CreateLoad(result);
 }
 
-void InstructionSelection::genConstructMember(IR::New *e, llvm::Value *result)
+void InstructionSelection::genConstructMember(V4IR::New *e, llvm::Value *result)
 {
     if (! result)
         result = newLLVMTemp(_valueTy);
 
-    IR::Member *m = e->base->asMember();
+    V4IR::Member *m = e->base->asMember();
     llvm::Value *thisObject = getLLVMTemp(m->base->asTemp());
     llvm::Value *name = getIdentifier(*m->name);
 
@@ -1067,7 +1067,7 @@ void InstructionSelection::genConstructMember(IR::New *e, llvm::Value *result)
     _llvmValue = CreateLoad(result);
 }
 
-void InstructionSelection::genCallTemp(IR::Call *e, llvm::Value *result)
+void InstructionSelection::genCallTemp(V4IR::Call *e, llvm::Value *result)
 {
     if (! result)
         result = newLLVMTemp(_valueTy);
@@ -1093,7 +1093,7 @@ void InstructionSelection::genCallTemp(IR::Call *e, llvm::Value *result)
     _llvmValue = CreateLoad(result);
 }
 
-void InstructionSelection::genConstructTemp(IR::New *e, llvm::Value *result)
+void InstructionSelection::genConstructTemp(V4IR::New *e, llvm::Value *result)
 {
     if (! result)
         result = newLLVMTemp(_valueTy);
@@ -1116,48 +1116,48 @@ void InstructionSelection::genConstructTemp(IR::New *e, llvm::Value *result)
     _llvmValue = CreateLoad(result);
 }
 
-void InstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
+void InstructionSelection::genCallName(V4IR::Call *e, llvm::Value *result)
 {
-    IR::Name *base = e->base->asName();
+    V4IR::Name *base = e->base->asName();
 
     if (! result)
         result = newLLVMTemp(_valueTy);
 
     if (! base->id) {
         switch (base->builtin) {
-        case IR::Name::builtin_invalid:
+        case V4IR::Name::builtin_invalid:
             break;
 
-        case IR::Name::builtin_typeof:
+        case V4IR::Name::builtin_typeof:
             CreateCall3(getRuntimeFunction("__qmljs_llvm_typeof"),
                         _llvmFunction->arg_begin(), result, getLLVMTempReference(e->args->expr));
             _llvmValue = CreateLoad(result);
             return;
 
-        case IR::Name::builtin_throw:
+        case V4IR::Name::builtin_throw:
             CreateCall2(getRuntimeFunction("__qmljs_llvm_throw"),
                         _llvmFunction->arg_begin(), getLLVMTempReference(e->args->expr));
             _llvmValue = llvm::UndefValue::get(_valueTy);
             return;
 
-        case IR::Name::builtin_finish_try:
+        case V4IR::Name::builtin_finish_try:
             // ### FIXME.
             return;
 
-        case IR::Name::builtin_foreach_iterator_object:
+        case V4IR::Name::builtin_foreach_iterator_object:
             CreateCall3(getRuntimeFunction("__qmljs_llvm_foreach_iterator_object"),
                         _llvmFunction->arg_begin(), result, getLLVMTempReference(e->args->expr));
             _llvmValue = CreateLoad(result);
             return;
 
-        case IR::Name::builtin_foreach_next_property_name:
+        case V4IR::Name::builtin_foreach_next_property_name:
             CreateCall2(getRuntimeFunction("__qmljs_llvm_foreach_next_property_name"),
                         result, getLLVMTempReference(e->args->expr));
             _llvmValue = CreateLoad(result);
             return;
 
-        case IR::Name::builtin_delete: {
-            if (IR::Subscript *subscript = e->args->expr->asSubscript()) {
+        case V4IR::Name::builtin_delete: {
+            if (V4IR::Subscript *subscript = e->args->expr->asSubscript()) {
                 CreateCall4(getRuntimeFunction("__qmljs_llvm_delete_subscript"),
                            _llvmFunction->arg_begin(),
                            result,
@@ -1165,7 +1165,7 @@ void InstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
                            getLLVMTempReference(subscript->index));
                 _llvmValue = CreateLoad(result);
                 return;
-            } else if (IR::Member *member = e->args->expr->asMember()) {
+            } else if (V4IR::Member *member = e->args->expr->asMember()) {
                 CreateCall4(getRuntimeFunction("__qmljs_llvm_delete_member"),
                            _llvmFunction->arg_begin(),
                            result,
@@ -1173,7 +1173,7 @@ void InstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
                            getIdentifier(*member->name));
                 _llvmValue = CreateLoad(result);
                 return;
-            } else if (IR::Name *name = e->args->expr->asName()) {
+            } else if (V4IR::Name *name = e->args->expr->asName()) {
                 CreateCall3(getRuntimeFunction("__qmljs_llvm_delete_property"),
                            _llvmFunction->arg_begin(),
                            result,
@@ -1206,9 +1206,9 @@ void InstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
     }
 }
 
-void InstructionSelection::genConstructName(IR::New *e, llvm::Value *result)
+void InstructionSelection::genConstructName(V4IR::New *e, llvm::Value *result)
 {
-    IR::Name *base = e->base->asName();
+    V4IR::Name *base = e->base->asName();
 
     if (! result)
         result = newLLVMTemp(_valueTy);
@@ -1229,7 +1229,7 @@ void InstructionSelection::genConstructName(IR::New *e, llvm::Value *result)
 }
 
 #if 0
-void InstructionSelection::visitCall(IR::Call *e)
+void InstructionSelection::visitCall(V4IR::Call *e)
 {
     if (e->base->asMember()) {
         genCallMember(e);
@@ -1237,7 +1237,7 @@ void InstructionSelection::visitCall(IR::Call *e)
         genCallTemp(e);
     } else if (e->base->asName()) {
         genCallName(e);
-    } else if (IR::Temp *t = e->base->asTemp()) {
+    } else if (V4IR::Temp *t = e->base->asTemp()) {
         llvm::Value *base = getLLVMTemp(t);
 
         int argc = 0;
@@ -1255,7 +1255,7 @@ void InstructionSelection::visitCall(IR::Call *e)
 #endif
 
 #if 0
-void InstructionSelection::visitNew(IR::New *e)
+void InstructionSelection::visitNew(V4IR::New *e)
 {
     if (e->base->asMember()) {
         genConstructMember(e);
@@ -1263,7 +1263,7 @@ void InstructionSelection::visitNew(IR::New *e)
         genConstructTemp(e);
     } else if (e->base->asName()) {
         genConstructName(e);
-    } else if (IR::Temp *t = e->base->asTemp()) {
+    } else if (V4IR::Temp *t = e->base->asTemp()) {
         llvm::Value *base = getLLVMTemp(t);
 
         int argc = 0;
@@ -1281,7 +1281,7 @@ void InstructionSelection::visitNew(IR::New *e)
 #endif
 
 #if 0
-void InstructionSelection::visitSubscript(IR::Subscript *e)
+void InstructionSelection::visitSubscript(V4IR::Subscript *e)
 {
     llvm::Value *result = newLLVMTemp(_valueTy);
     llvm::Value *base = getLLVMTempReference(e->base);
@@ -1293,7 +1293,7 @@ void InstructionSelection::visitSubscript(IR::Subscript *e)
 #endif
 
 #if 0
-void InstructionSelection::visitMember(IR::Member *e)
+void InstructionSelection::visitMember(V4IR::Member *e)
 {
     llvm::Value *result = newLLVMTemp(_valueTy);
     llvm::Value *base = getLLVMTempReference(e->base);
@@ -1316,25 +1316,25 @@ llvm::Function *InstructionSelection::getRuntimeFunction(llvm::StringRef str)
     return func;
 }
 
-llvm::Value *InstructionSelection::createValue(IR::Const *e)
+llvm::Value *InstructionSelection::createValue(V4IR::Const *e)
 {
     llvm::Value *tmp = newLLVMTemp(_valueTy);
 
     switch (e->type) {
-    case IR::UndefinedType:
+    case V4IR::UndefinedType:
         CreateCall(getRuntimeFunction("__qmljs_llvm_init_undefined"), tmp);
         break;
 
-    case IR::NullType:
+    case V4IR::NullType:
         CreateCall(getRuntimeFunction("__qmljs_llvm_init_null"), tmp);
         break;
 
-    case IR::BoolType:
+    case V4IR::BoolType:
         CreateCall2(getRuntimeFunction("__qmljs_llvm_init_boolean"), tmp,
                     getInt1(e->value ? 1 : 0));
         break;
 
-    case IR::NumberType:
+    case V4IR::NumberType:
         CreateCall2(getRuntimeFunction("__qmljs_llvm_init_number"), tmp,
                     llvm::ConstantFP::get(_numberTy, e->value));
         break;
@@ -1346,11 +1346,11 @@ llvm::Value *InstructionSelection::createValue(IR::Const *e)
     return tmp;
 }
 
-llvm::Value *InstructionSelection::toValuePtr(IR::Expr *e)
+llvm::Value *InstructionSelection::toValuePtr(V4IR::Expr *e)
 {
-    if (IR::Temp *t = e->asTemp()) {
+    if (V4IR::Temp *t = e->asTemp()) {
         return getLLVMTemp(t);
-    } else if (IR::Const *c = e->asConst()) {
+    } else if (V4IR::Const *c = e->asConst()) {
         return createValue(c);
     } else {
         Q_UNREACHABLE();

@@ -41,6 +41,8 @@
 #ifndef QMLJS_VALUE_H
 #define QMLJS_VALUE_H
 
+#include <cmath> // this HAS to come
+
 #include <QtCore/QString>
 #include <QtCore/qnumeric.h>
 #include "qv4global_p.h"
@@ -59,11 +61,15 @@ struct ExecutionContext;
 struct ExecutionEngine;
 struct Value;
 
-extern "C" {
-double __qmljs_to_number(const Value &value);
-Q_QML_EXPORT String *__qmljs_convert_to_string(ExecutionContext *ctx, const Value &value);
-Object *__qmljs_convert_to_object(ExecutionContext *ctx, const Value &value);
 }
+
+extern "C" {
+double __qmljs_to_number(const QV4::Value &value);
+Q_QML_EXPORT QV4::String *__qmljs_convert_to_string(QV4::ExecutionContext *ctx, const QV4::Value &value);
+QV4::Object *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const QV4::Value &value);
+}
+
+namespace QV4 {
 
 typedef uint Bool;
 

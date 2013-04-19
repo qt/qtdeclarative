@@ -929,7 +929,7 @@ void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetT
 
 void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
-    QV4::UnaryOpName op = 0;
+    UnaryOpName op = 0;
     const char *opName = 0;
     switch (oper) {
     case V4IR::OpIfTrue: assert(!"unreachable"); break;
@@ -954,7 +954,7 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Temp *leftSource, V4IR:
 
 void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName)
 {
-    QV4::InplaceBinOpName op = 0;
+    InplaceBinOpName op = 0;
     const char *opName = 0;
     switch (oper) {
     case V4IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_name); break;
@@ -980,7 +980,7 @@ void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSour
 
 void InstructionSelection::inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBaseTemp, V4IR::Temp *targetIndexTemp)
 {
-    QV4::InplaceBinOpElement op = 0;
+    InplaceBinOpElement op = 0;
     const char *opName = 0;
     switch (oper) {
     case V4IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_element); break;
@@ -1008,7 +1008,7 @@ void InstructionSelection::inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source
 
 void InstructionSelection::inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName)
 {
-    QV4::InplaceBinOpMember op = 0;
+    InplaceBinOpMember op = 0;
     const char *opName = 0;
     switch (oper) {
     case V4IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_member); break;
@@ -1145,7 +1145,7 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
         return;
     } else if (V4IR::Binop *b = s->cond->asBinop()) {
         if (b->left->asTemp() && b->right->asTemp()) {
-            QV4::CmpOp op = 0;
+            CmpOp op = 0;
             const char *opName = 0;
             switch (b->op) {
             default: Q_UNREACHABLE(); assert(!"todo"); break;

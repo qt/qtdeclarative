@@ -409,13 +409,13 @@ union Instr
     };
     struct instr_unop {
         MOTH_INSTR_HEADER
-        QV4::UnaryOpName alu;
+        UnaryOpName alu;
         Param source;
         Param result;
     };
     struct instr_binop {
         MOTH_INSTR_HEADER
-        QV4::BinOp alu;
+        BinOp alu;
         Param lhs;
         Param rhs;
         Param result;
@@ -426,21 +426,21 @@ union Instr
     };
     struct instr_inplaceElementOp {
         MOTH_INSTR_HEADER
-        QV4::InplaceBinOpElement alu;
+        InplaceBinOpElement alu;
         Param base;
         Param index;
         Param source;
     };
     struct instr_inplaceMemberOp {
         MOTH_INSTR_HEADER
-        QV4::InplaceBinOpMember alu;
+        InplaceBinOpMember alu;
         QV4::String *member;
         Param base;
         Param source;
     };
     struct instr_inplaceNameOp {
         MOTH_INSTR_HEADER
-        QV4::InplaceBinOpName alu;
+        InplaceBinOpName alu;
         QV4::String *name;
         Param source;
     };

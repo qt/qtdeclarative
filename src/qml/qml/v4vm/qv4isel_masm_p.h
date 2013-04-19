@@ -601,7 +601,7 @@ public:
 
     struct BinaryOperationInfo {
         const char *name;
-        QV4::BinOp fallbackImplementation;
+        BinOp fallbackImplementation;
         MemRegBinOp inlineMemRegOp;
         ImmRegBinOp inlineImmRegOp;
     };

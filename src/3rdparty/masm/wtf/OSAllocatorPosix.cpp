@@ -28,6 +28,8 @@
 
 #if OS(UNIX)
 
+#include <cstdlib>
+
 #include "PageAllocation.h"
 #include <errno.h>
 #include <sys/mman.h>
