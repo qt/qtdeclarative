@@ -59,7 +59,7 @@
 #include <private/qv8engine_p.h>
 
 #include <qqmlengine.h>
-#include <private/qv8domerrors_p.h>
+#include <private/qv4domerrors_p.h>
 #include <QtCore/qnumeric.h>
 #include <private/qquickwindow_p.h>
 

@@ -49,7 +49,7 @@
 #include "qqmlengine_p.h"
 #include "qqmlexpression_p.h"
 #include "qqmlglobal_p.h"
-#include <private/qv8domerrors_p.h>
+#include <private/qv4domerrors_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtQml/qjsvalue.h>

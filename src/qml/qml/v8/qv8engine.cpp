@@ -57,7 +57,7 @@
 #include <private/qqmlplatform_p.h>
 #include <private/qjsconverter_p.h>
 
-#include "qv8domerrors_p.h"
+#include "qv4domerrors_p.h"
 #include "qv8sqlerrors_p.h"
 
 #include <QtCore/qjsonarray.h>
@@ -681,7 +681,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     QQmlDateExtension::registerExtension(this);
     QQmlNumberExtension::registerExtension(this);
 
-    qt_add_domexceptions(this);
+    qt_add_domexceptions(m_v4Engine);
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);
 
     qt_add_sqlexceptions(this);

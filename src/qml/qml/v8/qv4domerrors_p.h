@@ -82,8 +82,14 @@ QT_BEGIN_NAMESPACE
     v8::ThrowException(v); \
     return v8::Handle<v8::Value>(); \
 }
-class QV8Engine;
-void qt_add_domexceptions(QV8Engine *engine);
+
+namespace QQmlJS {
+namespace VM {
+class ExecutionEngine;
+}
+}
+
+void qt_add_domexceptions(QQmlJS::VM::ExecutionEngine *e);
 
 QT_END_NAMESPACE
 
