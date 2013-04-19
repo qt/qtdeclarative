@@ -738,9 +738,8 @@ uint __qmljs_equal(const Value &x, const Value &y)
         case Value::String_Type:
             return x.stringValue()->isEqualTo(y.stringValue());
         case Value::Object_Type:
-            if (x.objectValue()->externalComparison || y.objectValue()->externalComparison)
-                return x.objectValue()->externalComparison && y.objectValue()->externalComparison
-                        && x.objectValue()->internalClass->engine->externalResourceComparison(x, y);
+            if (x.objectValue()->externalComparison && y.objectValue()->externalComparison)
+                return x.objectValue()->internalClass->engine->externalResourceComparison(x, y);
             return x.objectValue() == y.objectValue();
         default: // double
             return x.doubleValue() == y.doubleValue();
