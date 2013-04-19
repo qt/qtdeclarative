@@ -89,47 +89,19 @@ Property *Lookup::lookup(Object *obj, PropertyAttributes *attrs)
 void Lookup::getterGeneric(QV4::Lookup *l, ExecutionContext *ctx, QV4::Value *result, const QV4::Value &object)
 {
     if (Object *o = object.asObject()) {
-        PropertyAttributes attrs;
-        Property *p = l->lookup(o, &attrs);
-        if (p) {
-            if (attrs.isData()) {
-                if (l->level == 0)
-                    l->getter = getter0;
-                else if (l->level == 1)
-                    l->getter = getter1;
-                else if (l->level == 2)
-                    l->getter = getter2;
-                if (result)
-                    *result = p->value;
-                return;
-            } else {
-                if (l->level == 0)
-                    l->getter = getterAccessor0;
-                else if (l->level == 1)
-                    l->getter = getterAccessor1;
-                else if (l->level == 2)
-                    l->getter = getterAccessor2;
-                if (result)
-                    *result = p->value;
-                Value res = o->getValue(ctx, p, attrs);
-                if (result)
-                    *result = res;
-                return;
-            }
-        } else if (result) {
-            *result = Value::undefinedValue();
-        }
-    } else {
-        Value res;
-        if (Managed *m = object.asManaged()) {
-            res = m->get(ctx, l->name);
-        } else {
-            o = __qmljs_convert_to_object(ctx, object);
-            res = o->get(ctx, l->name);
-        }
-        if (result)
-            *result = res;
+        o->getLookup(ctx, l, result);
+        return;
     }
+
+    Value res;
+    if (Managed *m = object.asManaged()) {
+        res = m->get(ctx, l->name);
+    } else {
+        Object *o = __qmljs_convert_to_object(ctx, object);
+        res = o->get(ctx, l->name);
+    }
+    if (result)
+        *result = res;
 }
 
 void Lookup::getter0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
@@ -369,28 +341,21 @@ void Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *resu
 void Lookup::setterGeneric(Lookup *l, ExecutionContext *ctx, const Value &object, const Value &value)
 {
     Object *o = object.toObject(ctx);
+    o->setLookup(ctx, l, value);
+    return;
+}
+
+void Lookup::setter0(Lookup *l, ExecutionContext *ctx, const Value &object, const Value &value)
+{
+    Object *o = object.toObject(ctx);
 
     if (o->internalClass == l->classList[0]) {
         o->memberData[l->index].value = value;
         return;
     }
 
-    uint idx = o->internalClass->find(l->name);
-    if (!o->isArrayObject() || idx != ArrayObject::LengthPropertyIndex) {
-        if (idx != UINT_MAX && o->internalClass->propertyData[idx].isData() && o->internalClass->propertyData[idx].isWritable()) {
-            l->classList[0] = o->internalClass;
-            l->index = idx;
-            o->memberData[idx].value = value;
-            return;
-        }
-
-        if (idx != UINT_MAX) {
-            o->putValue(ctx, o->memberData + idx, o->internalClass->propertyData[idx], value);
-            return;
-        }
-    }
-
-    o->put(ctx, l->name, value);
+    l->setter = setterGeneric;
+    setterGeneric(l, ctx, object, value);
 }
 
 QT_END_NAMESPACE

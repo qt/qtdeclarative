@@ -81,6 +81,7 @@ struct Lookup {
     static void globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *result);
 
     static void setterGeneric(Lookup *l, ExecutionContext *ctx, const Value &object, const Value &value);
+    static void setter0(Lookup *l, ExecutionContext *ctx, const Value &object, const Value &value);
 
     Property *lookup(Object *obj, PropertyAttributes *attrs);
 

@@ -1568,6 +1568,16 @@ protected:
         BaseClass::putIndexed(m, ctx, index, value);
     }
 
+    static void getLookup(QV4::Managed *m, ExecutionContext *ctx, Lookup *l, QV4::Value *result)
+    {
+        *result = get(m, ctx, l->name, 0);
+    }
+
+    static void setLookup(QV4::Managed *m, ExecutionContext *ctx, Lookup *l, const QV4::Value &value)
+    {
+        put(m, ctx, l->name, value);
+    }
+
     static PropertyAttributes propertyAttributesToFlags(const Handle<Value> &attr)
     {
         PropertyAttributes flags;

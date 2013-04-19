@@ -60,6 +60,8 @@ const ManagedVTable Managed::static_vtbl =
     0,
     0,
     0,
+    0,
+    0,
     "Managed",
 };
 
@@ -174,6 +176,16 @@ Value Managed::construct(Managed *, ExecutionContext *context, Value *, int)
 Value Managed::call(Managed *, ExecutionContext *context, const Value &, Value *, int)
 {
     context->throwTypeError();
+}
+
+void Managed::getLookup(Managed *, ExecutionContext *context, Lookup *, Value *)
+{
+    context->throwTypeError();
+}
+
+void Managed::setLookup(Managed *, ExecutionContext *ctx, Lookup *, const Value &)
+{
+    ctx->throwTypeError();
 }
 
 Value Managed::get(ExecutionContext *ctx, String *name, bool *hasProperty)

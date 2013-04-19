@@ -71,6 +71,7 @@ struct ForeachIteratorObject;
 struct Managed;
 struct Value;
 struct RegExp;
+struct Lookup;
 
 struct ManagedVTable
 {
@@ -87,6 +88,8 @@ struct ManagedVTable
     PropertyAttributes (*queryIndexed)(Managed *, ExecutionContext *ctx, uint index);
     bool (*deleteProperty)(Managed *m, ExecutionContext *ctx, String *name);
     bool (*deleteIndexedProperty)(Managed *m, ExecutionContext *ctx, uint index);
+    void (*getLookup)(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result);
+    void (*setLookup)(Managed *m, ExecutionContext *ctx, Lookup *l, const Value &v);
     const char *className;
 };
 
@@ -106,6 +109,8 @@ const ManagedVTable classname::static_vtbl =    \
     queryIndexed,                               \
     deleteProperty,                             \
     deleteIndexedProperty,                      \
+    getLookup,                                  \
+    setLookup,                                  \
     #classname                                  \
 }
 
@@ -199,11 +204,17 @@ public:
     { return vtbl->deleteProperty(this, ctx, name); }
     bool deleteIndexedProperty(ExecutionContext *ctx, uint index)
     { return vtbl->deleteIndexedProperty(this, ctx, index); }
+    void getLookup(ExecutionContext *ctx, Lookup *l, Value *result)
+    { vtbl->getLookup(this, ctx, l, result); }
+    void setLookup(ExecutionContext *ctx, Lookup *l, const Value &v)
+    { vtbl->setLookup(this, ctx, l, v); }
 
     static void destroy(Managed *that) { that->_data = 0; }
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
     static Value construct(Managed *, ExecutionContext *context, Value *, int);
     static Value call(Managed *, ExecutionContext *, const Value &, Value *, int);
+    static void getLookup(Managed *, ExecutionContext *context, Lookup *, Value *);
+    static void setLookup(Managed *, ExecutionContext *ctx, Lookup *l, const Value &v);
 
     uint internalType() const {
         return type;

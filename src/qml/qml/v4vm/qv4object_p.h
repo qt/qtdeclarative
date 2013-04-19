@@ -327,6 +327,8 @@ public:
     using Managed::putIndexed;
     using Managed::deleteProperty;
     using Managed::deleteIndexedProperty;
+    using Managed::getLookup;
+    using Managed::setLookup;
 protected:
     static const ManagedVTable static_vtbl;
     static void destroy(Managed *that);
@@ -339,6 +341,9 @@ protected:
     static PropertyAttributes queryIndexed(Managed *m, ExecutionContext *ctx, uint index);
     static bool deleteProperty(Managed *m, ExecutionContext *ctx, String *name);
     static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index);
+    static void getLookup(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result);
+    static void setLookup(Managed *m, ExecutionContext *ctx, Lookup *l, const Value &v);
+
 
 private:
     Value internalGet(ExecutionContext *ctx, String *name, bool *hasProperty);

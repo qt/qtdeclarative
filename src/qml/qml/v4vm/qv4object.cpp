@@ -46,6 +46,7 @@
 #include "qv4stringobject_p.h"
 #include "qv4argumentsobject_p.h"
 #include "qv4mm_p.h"
+#include "qv4lookup_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -399,6 +400,64 @@ bool Object::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
 bool Object::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
 {
     return static_cast<Object *>(m)->internalDeleteIndexedProperty(ctx, index);
+}
+
+void Object::getLookup(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result)
+{
+    Object *o = static_cast<Object *>(m);
+    PropertyAttributes attrs;
+    Property *p = l->lookup(o, &attrs);
+    if (p) {
+        if (attrs.isData()) {
+            if (l->level == 0)
+                l->getter = Lookup::getter0;
+            else if (l->level == 1)
+                l->getter = Lookup::getter1;
+            else if (l->level == 2)
+                l->getter = Lookup::getter2;
+            if (result)
+                *result = p->value;
+            return;
+        } else {
+            if (l->level == 0)
+                l->getter = Lookup::getterAccessor0;
+            else if (l->level == 1)
+                l->getter = Lookup::getterAccessor1;
+            else if (l->level == 2)
+                l->getter = Lookup::getterAccessor2;
+            if (result)
+                *result = p->value;
+            Value res = o->getValue(ctx, p, attrs);
+            if (result)
+                *result = res;
+            return;
+        }
+    } else if (result) {
+        *result = Value::undefinedValue();
+    }
+}
+
+void Object::setLookup(Managed *m, ExecutionContext *ctx, Lookup *l, const Value &value)
+{
+    Object *o = static_cast<Object *>(m);
+
+    uint idx = o->internalClass->find(l->name);
+    if (!o->isArrayObject() || idx != ArrayObject::LengthPropertyIndex) {
+        if (idx != UINT_MAX && o->internalClass->propertyData[idx].isData() && o->internalClass->propertyData[idx].isWritable()) {
+            l->classList[0] = o->internalClass;
+            l->index = idx;
+            l->setter = Lookup::setter0;
+            o->memberData[idx].value = value;
+            return;
+        }
+
+        if (idx != UINT_MAX) {
+            o->putValue(ctx, o->memberData + idx, o->internalClass->propertyData[idx], value);
+            return;
+        }
+    }
+
+    o->put(ctx, l->name, value);
 }
 
 
