@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 
+#include <math.h>
 #include "qquickv8particledata_p.h"
 #include "qquickparticlesystem_p.h"//for QQuickParticleData
 #include <QDebug>
