@@ -160,6 +160,13 @@ double Value::toInteger(double number)
     return std::signbit(number) ? -v : v;
 }
 
+String *Value::toString(ExecutionContext *ctx) const
+{
+    if (isString())
+        return stringValue();
+    return __qmljs_convert_to_string(ctx, *this);
+}
+
 Value Value::property(ExecutionContext *ctx, String *name) const
 {
     return isObject() ? objectValue()->get(ctx, name) : undefinedValue();

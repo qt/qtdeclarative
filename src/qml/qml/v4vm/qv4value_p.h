@@ -396,13 +396,6 @@ inline Bool Value::toBoolean() const
     }
 }
 
-inline String *Value::toString(ExecutionContext *ctx) const
-{
-    if (isString())
-        return stringValue();
-    return __qmljs_convert_to_string(ctx, *this);
-}
-
 inline Object *Value::toObject(ExecutionContext *ctx) const
 {
     if (isObject())
