@@ -256,7 +256,7 @@ QQuickParticleEmitter::~QQuickParticleEmitter()
 
 bool QQuickParticleEmitter::isEmitConnected()
 {
-    IS_SIGNAL_CONNECTED(this, QQuickParticleEmitter, emitParticles, (QQmlV8Handle));
+    IS_SIGNAL_CONNECTED(this, QQuickParticleEmitter, emitParticles, (QQmlV4Handle));
 }
 
 void QQuickParticleEmitter::componentComplete()
@@ -483,9 +483,9 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
         v8::Context::Scope scope(QQmlEnginePrivate::getV8Engine(qmlEngine(this))->context());
         v8::Handle<v8::Array> array = v8::Array::New(toEmit.size());
         for (int i=0; i<toEmit.size(); i++)
-            array->Set(i, toEmit[i]->v8Value().toHandle());
+            array->Set(i, toEmit[i]->v8Value().toV8Handle());
 
-        emitParticles(QQmlV8Handle::fromHandle(array));//A chance for arbitrary JS changes
+        emitParticles(QQmlV4Handle::fromV8Handle(array));//A chance for arbitrary JS changes
     }
 
     m_last_emission = pt;

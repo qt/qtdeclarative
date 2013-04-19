@@ -103,7 +103,7 @@ QQuickCustomAffector::QQuickCustomAffector(QQuickItem *parent) :
 
 bool QQuickCustomAffector::isAffectConnected()
 {
-    IS_SIGNAL_CONNECTED(this, QQuickCustomAffector, affectParticles, (QQmlV8Handle,qreal));
+    IS_SIGNAL_CONNECTED(this, QQuickCustomAffector, affectParticles, (QQmlV4Handle,qreal));
 }
 
 void QQuickCustomAffector::affectSystem(qreal dt)
@@ -147,11 +147,11 @@ void QQuickCustomAffector::affectSystem(qreal dt)
     v8::Context::Scope scope(QQmlEnginePrivate::getV8Engine(qmlEngine(this))->context());
     v8::Handle<v8::Array> array = v8::Array::New(toAffect.size());
     for (int i=0; i<toAffect.size(); i++)
-        array->Set(i, toAffect[i]->v8Value().toHandle());
+        array->Set(i, toAffect[i]->v8Value().toV8Handle());
 
     if (dt >= simulationCutoff || dt <= simulationDelta) {
         affectProperties(toAffect, dt);
-        emit affectParticles(QQmlV8Handle::fromHandle(array), dt);
+        emit affectParticles(QQmlV4Handle::fromV8Handle(array), dt);
     } else {
         int realTime = m_system->timeInt;
         m_system->timeInt -= dt * 1000.0;
@@ -159,12 +159,12 @@ void QQuickCustomAffector::affectSystem(qreal dt)
             m_system->timeInt += simulationDelta * 1000.0;
             dt -= simulationDelta;
             affectProperties(toAffect, simulationDelta);
-            emit affectParticles(QQmlV8Handle::fromHandle(array), simulationDelta);
+            emit affectParticles(QQmlV4Handle::fromV8Handle(array), simulationDelta);
         }
         m_system->timeInt = realTime;
         if (dt > 0.0) {
             affectProperties(toAffect, dt);
-            emit affectParticles(QQmlV8Handle::fromHandle(array), dt);
+            emit affectParticles(QQmlV4Handle::fromV8Handle(array), dt);
         }
     }
 

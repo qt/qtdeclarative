@@ -84,8 +84,8 @@ public:
     Q_INVOKABLE void remove(QQmlV8Function *args);
     Q_INVOKABLE void append(QQmlV8Function *args);
     Q_INVOKABLE void insert(QQmlV8Function *args);
-    Q_INVOKABLE QQmlV8Handle get(int index) const;
-    Q_INVOKABLE void set(int index, const QQmlV8Handle &);
+    Q_INVOKABLE QQmlV4Handle get(int index) const;
+    Q_INVOKABLE void set(int index, const QQmlV4Handle &);
     Q_INVOKABLE void setProperty(int index, const QString& property, const QVariant& value);
     Q_INVOKABLE void move(int from, int to, int count);
     Q_INVOKABLE void sync();

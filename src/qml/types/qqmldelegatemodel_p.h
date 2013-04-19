@@ -165,7 +165,7 @@ public:
     bool defaultInclude() const;
     void setDefaultInclude(bool include);
 
-    Q_INVOKABLE QQmlV8Handle get(int index);
+    Q_INVOKABLE QQmlV4Handle get(int index);
 
 public Q_SLOTS:
     void insert(QQmlV8Function *);
@@ -181,7 +181,7 @@ Q_SIGNALS:
     void countChanged();
     void nameChanged();
     void defaultIncludeChanged();
-    void changed(const QQmlV8Handle &removed, const QQmlV8Handle &inserted);
+    void changed(const QQmlV4Handle &removed, const QQmlV4Handle &inserted);
 private:
     Q_DECLARE_PRIVATE(QQmlDelegateModelGroup)
 };

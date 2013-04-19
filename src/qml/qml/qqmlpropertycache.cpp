@@ -117,8 +117,8 @@ static QQmlPropertyData::Flags flagsForPropertyType(int propType, QQmlEngine *en
         flags |= QQmlPropertyData::IsQmlBinding;
     } else if (propType == qMetaTypeId<QJSValue>()) {
         flags |= QQmlPropertyData::IsQJSValue;
-    } else if (propType == qMetaTypeId<QQmlV8Handle>()) {
-        flags |= QQmlPropertyData::IsV8Handle;
+    } else if (propType == qMetaTypeId<QQmlV4Handle>()) {
+        flags |= QQmlPropertyData::IsV4Handle;
     } else {
         QQmlMetaType::TypeCategory cat =
             engine ? QQmlEnginePrivate::get(engine)->typeCategory(propType)

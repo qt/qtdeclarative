@@ -722,7 +722,7 @@ bool QQuickWorkerScript::event(QEvent *event)
             v8::HandleScope handle_scope;
             v8::Context::Scope scope(v8engine->context());
             v8::Handle<v8::Value> value = QV8Worker::deserialize(workerEvent->data(), v8engine);
-            emit message(QQmlV8Handle::fromHandle(value));
+            emit message(QQmlV4Handle::fromV8Handle(value));
         }
         return true;
     } else if (event->type() == (QEvent::Type)WorkerErrorEvent::WorkerError) {

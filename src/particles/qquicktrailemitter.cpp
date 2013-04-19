@@ -129,7 +129,7 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
 
 bool QQuickTrailEmitter::isEmitFollowConnected()
 {
-    IS_SIGNAL_CONNECTED(this, QQuickTrailEmitter, emitFollowParticles, (QQmlV8Handle,QQmlV8Handle));
+    IS_SIGNAL_CONNECTED(this, QQuickTrailEmitter, emitFollowParticles, (QQmlV4Handle,QQmlV4Handle));
 }
 
 void QQuickTrailEmitter::recalcParticlesPerSecond(){
@@ -273,12 +273,12 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
             v8::Context::Scope scope(QQmlEnginePrivate::getV8Engine(qmlEngine(this))->context());
             v8::Handle<v8::Array> array = v8::Array::New(toEmit.size());
             for (int i=0; i<toEmit.size(); i++)
-                array->Set(i, toEmit[i]->v8Value().toHandle());
+                array->Set(i, toEmit[i]->v8Value().toV8Handle());
 
             if (isEmitFollowConnected())
-                emitFollowParticles(QQmlV8Handle::fromHandle(array), d->v8Value());//A chance for many arbitrary JS changes
+                emitFollowParticles(QQmlV4Handle::fromV8Handle(array), d->v8Value());//A chance for many arbitrary JS changes
             else if (isEmitConnected())
-                emitParticles(QQmlV8Handle::fromHandle(array));//A chance for arbitrary JS changes
+                emitParticles(QQmlV4Handle::fromV8Handle(array));//A chance for arbitrary JS changes
         }
         m_lastEmission[d->index] = pt;
     }

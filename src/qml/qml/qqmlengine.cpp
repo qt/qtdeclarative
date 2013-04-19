@@ -740,7 +740,7 @@ void QQmlEnginePrivate::init()
     qRegisterMetaType<QQmlComponent::Status>();
     qRegisterMetaType<QList<QObject*> >();
     qRegisterMetaType<QList<int> >();
-    qRegisterMetaType<QQmlV8Handle>();
+    qRegisterMetaType<QQmlV4Handle>();
 
     v8engine()->setEngine(q);
 

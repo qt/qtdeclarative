@@ -82,7 +82,7 @@ Q_SIGNALS:
 
 public Q_SLOTS:
 
-    QQmlV8Handle typeName(const QVariant& v) const
+    QQmlV4Handle typeName(const QVariant& v) const
     {
         QString name(v.typeName());
         if (v.canConvert<QObject*>()) {
@@ -97,22 +97,22 @@ public Q_SLOTS:
             }
         }
 
-        return QQmlV8Handle::fromHandle(v8::String::New(name.toUtf8()));
+        return QQmlV4Handle::fromV8Handle(v8::String::New(name.toUtf8()));
     }
 
     bool compare(const QVariant& act, const QVariant& exp) const {
         return act == exp;
     }
 
-    QQmlV8Handle callerFile(int frameIndex = 0) const
+    QQmlV4Handle callerFile(int frameIndex = 0) const
     {
         v8::Local<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
         int count = stacks->GetFrameCount();
         if (count >= frameIndex + 1) {
             v8::Local<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 1);
-            return QQmlV8Handle::fromHandle(frame->GetScriptNameOrSourceURL());
+            return QQmlV4Handle::fromV8Handle(frame->GetScriptNameOrSourceURL());
         }
-        return QQmlV8Handle();
+        return QQmlV4Handle();
     }
     int callerLine(int frameIndex = 0) const
     {

@@ -908,13 +908,13 @@ void QQuickXmlListModel::setNamespaceDeclarations(const QString &declarations)
     var title = model.get(0).title;
     \endjs
 */
-QQmlV8Handle QQuickXmlListModel::get(int index) const
+QQmlV4Handle QQuickXmlListModel::get(int index) const
 {
     // Must be called with a context and handle scope
     Q_D(const QQuickXmlListModel);
 
     if (index < 0 || index >= count())
-        return QQmlV8Handle::fromHandle(v8::Undefined());
+        return QQmlV4Handle::fromV8Handle(v8::Undefined());
 
     QQmlEngine *engine = qmlContext(this)->engine();
     QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
@@ -923,7 +923,7 @@ QQmlV8Handle QQuickXmlListModel::get(int index) const
         rv->Set(v8engine->toString(d->roleObjects[ii]->name()),
                 v8engine->fromVariant(d->data.value(ii).value(index)));
 
-    return QQmlV8Handle::fromHandle(rv);
+    return QQmlV4Handle::fromV8Handle(rv);
 }
 
 /*!

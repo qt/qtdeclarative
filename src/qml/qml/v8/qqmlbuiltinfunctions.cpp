@@ -632,7 +632,7 @@ v8::Handle<v8::Value> font(const v8::Arguments &args)
 
     v8::Handle<v8::Object> obj = args[0]->ToObject();
     bool ok = false;
-    QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QFont, QQmlV8Handle::fromHandle(obj), V8ENGINE(), &ok);
+    QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QFont, QQmlV4Handle::fromV8Handle(obj), V8ENGINE(), &ok);
     if (!ok)
         V8THROW_ERROR("Qt.font(): Invalid argument: no valid font subproperties specified");
     return V8ENGINE()->fromVariant(v);
@@ -650,7 +650,7 @@ v8::Handle<v8::Value> matrix4x4(const v8::Arguments &args)
     if (args.Length() == 1 && args[0]->IsObject()) {
         v8::Handle<v8::Object> obj = args[0]->ToObject();
         bool ok = false;
-        QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QMatrix4x4, QQmlV8Handle::fromHandle(obj), V8ENGINE(), &ok);
+        QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QMatrix4x4, QQmlV4Handle::fromV8Handle(obj), V8ENGINE(), &ok);
         if (!ok)
             V8THROW_ERROR("Qt.matrix4x4(): Invalid argument: not a valid matrix4x4 values array");
         return V8ENGINE()->fromVariant(v);

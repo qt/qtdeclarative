@@ -147,12 +147,12 @@ void QQmlListModelWorkerAgent::insert(QQmlV8Function *args)
     m_copy->insert(args);
 }
 
-QQmlV8Handle QQmlListModelWorkerAgent::get(int index) const
+QQmlV4Handle QQmlListModelWorkerAgent::get(int index) const
 {
     return m_copy->get(index);
 }
 
-void QQmlListModelWorkerAgent::set(int index, const QQmlV8Handle &value)
+void QQmlListModelWorkerAgent::set(int index, const QQmlV4Handle &value)
 {
     m_copy->set(index, value);
 }

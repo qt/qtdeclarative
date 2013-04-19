@@ -2119,7 +2119,7 @@ void QQmlListModel::append(QQmlV8Function *args)
 
     \sa append()
 */
-QQmlV8Handle QQmlListModel::get(int index) const
+QQmlV4Handle QQmlListModel::get(int index) const
 {
     v8::Handle<v8::Value> result = v8::Undefined();
 
@@ -2135,7 +2135,7 @@ QQmlV8Handle QQmlListModel::get(int index) const
         }
     }
 
-    return QQmlV8Handle::fromHandle(result);
+    return QQmlV4Handle::fromV8Handle(result);
 }
 
 /*!
@@ -2154,9 +2154,9 @@ QQmlV8Handle QQmlListModel::get(int index) const
 
     \sa append()
 */
-void QQmlListModel::set(int index, const QQmlV8Handle &handle)
+void QQmlListModel::set(int index, const QQmlV4Handle &handle)
 {
-    v8::Handle<v8::Value> valuemap = handle.toHandle();
+    v8::Handle<v8::Value> valuemap = handle.toV8Handle();
 
     if (!valuemap->IsObject() || valuemap->IsArray()) {
         qmlInfo(this) << tr("set: value is not an object");

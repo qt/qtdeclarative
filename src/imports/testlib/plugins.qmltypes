@@ -235,7 +235,7 @@ Module {
         Property { name: "dragThreshold"; type: "int"; isReadonly: true }
         Method {
             name: "typeName"
-            type: "QQmlV8Handle"
+            type: "QQmlV4Handle"
             Parameter { name: "v"; type: "QVariant" }
         }
         Method {
@@ -246,10 +246,10 @@ Module {
         }
         Method {
             name: "callerFile"
-            type: "QQmlV8Handle"
+            type: "QQmlV4Handle"
             Parameter { name: "frameIndex"; type: "int" }
         }
-        Method { name: "callerFile"; type: "QQmlV8Handle" }
+        Method { name: "callerFile"; type: "QQmlV4Handle" }
         Method {
             name: "callerLine"
             type: "int"

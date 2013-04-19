@@ -91,7 +91,7 @@ public:
     }
 
 signals:
-    void emitFollowParticles(QQmlV8Handle particles, QQmlV8Handle followed);
+    void emitFollowParticles(QQmlV4Handle particles, QQmlV4Handle followed);
 
     void particlesPerParticlePerSecondChanged(int arg);
 

@@ -362,13 +362,13 @@ void QQuickCanvasItem::setContextType(const QString &contextType)
     this property will contain the current drawing context, otherwise null.
 */
 
-QQmlV8Handle QQuickCanvasItem::context() const
+QQmlV4Handle QQuickCanvasItem::context() const
 {
     Q_D(const QQuickCanvasItem);
     if (d->contextInitialized)
-        return QQmlV8Handle::fromHandle(d->context->v8value());
+        return QQmlV4Handle::fromV8Handle(d->context->v8value());
 
-    return QQmlV8Handle::fromHandle(v8::Null());
+    return QQmlV4Handle::fromV8Handle(v8::Null());
 }
 
 /*!

@@ -181,7 +181,7 @@ QVariant QQmlValueTypeProvider::createVariantFromString(int type, const QString 
     return QVariant();
 }
 
-QVariant QQmlValueTypeProvider::createVariantFromJsObject(int type, QQmlV8Handle obj, QV8Engine *e, bool *ok)
+QVariant QQmlValueTypeProvider::createVariantFromJsObject(int type, QQmlV4Handle obj, QV8Engine *e, bool *ok)
 {
     QVariant v;
 
@@ -262,7 +262,7 @@ bool QQmlValueTypeProvider::createFromString(int, const QString &, void *, size_
 bool QQmlValueTypeProvider::createStringFrom(int, const void *, QString *) { return false; }
 bool QQmlValueTypeProvider::variantFromString(const QString &, QVariant *) { return false; }
 bool QQmlValueTypeProvider::variantFromString(int, const QString &, QVariant *) { return false; }
-bool QQmlValueTypeProvider::variantFromJsObject(int, QQmlV8Handle, QV8Engine *, QVariant *) { return false; }
+bool QQmlValueTypeProvider::variantFromJsObject(int, QQmlV4Handle, QV8Engine *, QVariant *) { return false; }
 bool QQmlValueTypeProvider::equal(int, const void *, const void *, size_t) { return false; }
 bool QQmlValueTypeProvider::store(int, const void *, void *, size_t) { return false; }
 bool QQmlValueTypeProvider::read(int, const void *, size_t, int, void *) { return false; }

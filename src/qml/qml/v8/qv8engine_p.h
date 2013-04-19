@@ -203,21 +203,24 @@ private:
     QV8Engine *_e;
 };
 
-class QQmlV8Handle
+class QQmlV4Handle
 {
 public:
-    QQmlV8Handle() : d(0) {}
-    QQmlV8Handle(const QQmlV8Handle &other) : d(other.d) {}
-    QQmlV8Handle &operator=(const QQmlV8Handle &other) { d = other.d; return *this; }
+    QQmlV4Handle() : d(0) {}
+    QQmlV4Handle(const QQmlV4Handle &other) : d(other.d) {}
+    QQmlV4Handle &operator=(const QQmlV4Handle &other) { d = other.d; return *this; }
 
-    static QQmlV8Handle fromHandle(v8::Handle<v8::Value> h) {
-        return QQmlV8Handle(h);
+    static QQmlV4Handle fromV8Handle(v8::Handle<v8::Value> h) {
+        return QQmlV4Handle(h);
     }
-    v8::Handle<v8::Value> toHandle() const {
+    v8::Handle<v8::Value> toV8Handle() const {
         return v8::Value::NewFromInternalValue(d);
     }
+
+    QQmlJS::VM::Value toValue() const;
+    static QQmlV4Handle fromValue(const QQmlJS::VM::Value &v);
 private:
-    QQmlV8Handle(v8::Handle<v8::Value> h) : d(h.val) {}
+    QQmlV4Handle(v8::Handle<v8::Value> h) : d(h.val) {}
     quint64 d;
 };
 
@@ -637,6 +640,6 @@ QV8Engine::Deletable *QV8Engine::extensionData(int index) const
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QQmlV8Handle)
+Q_DECLARE_METATYPE(QQmlV4Handle)
 
 #endif // QQMLV8ENGINE_P_H

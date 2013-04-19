@@ -777,7 +777,7 @@ Module {
         }
         Property { name: "available"; type: "bool"; isReadonly: true }
         Property { name: "contextType"; type: "string" }
-        Property { name: "context"; type: "QQmlV8Handle"; isReadonly: true }
+        Property { name: "context"; type: "QQmlV4Handle"; isReadonly: true }
         Property { name: "canvasSize"; type: "QSizeF" }
         Property { name: "tileSize"; type: "QSize" }
         Property { name: "canvasWindow"; type: "QRectF" }
@@ -1818,13 +1818,13 @@ Module {
         }
         Method {
             name: "get"
-            type: "QQmlV8Handle"
+            type: "QQmlV4Handle"
             Parameter { name: "index"; type: "int" }
         }
         Method {
             name: "set"
             Parameter { name: "index"; type: "int" }
-            Parameter { type: "QQmlV8Handle" }
+            Parameter { type: "QQmlV4Handle" }
         }
         Method {
             name: "setProperty"
@@ -3568,8 +3568,8 @@ Module {
         Signal { name: "defaultIncludeChanged" }
         Signal {
             name: "changed"
-            Parameter { name: "removed"; type: "QQmlV8Handle" }
-            Parameter { name: "inserted"; type: "QQmlV8Handle" }
+            Parameter { name: "removed"; type: "QQmlV4Handle" }
+            Parameter { name: "inserted"; type: "QQmlV4Handle" }
         }
         Method {
             name: "insert"
@@ -3605,7 +3605,7 @@ Module {
         }
         Method {
             name: "get"
-            type: "QQmlV8Handle"
+            type: "QQmlV4Handle"
             Parameter { name: "index"; type: "int" }
         }
     }
@@ -3690,7 +3690,7 @@ Module {
         Property { name: "source"; type: "QUrl" }
         Signal {
             name: "message"
-            Parameter { name: "messageObject"; type: "QQmlV8Handle" }
+            Parameter { name: "messageObject"; type: "QQmlV4Handle" }
         }
         Method {
             name: "sendMessage"

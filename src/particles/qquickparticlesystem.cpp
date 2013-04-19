@@ -527,7 +527,7 @@ void QQuickParticleData::clone(const QQuickParticleData& other)
     animationOwner = other.animationOwner;
 }
 
-QQmlV8Handle QQuickParticleData::v8Value()
+QQmlV4Handle QQuickParticleData::v8Value()
 {
     if (!v8Datum)
         v8Datum = new QQuickV8ParticleData(QQmlEnginePrivate::getV8Engine(qmlEngine(system)), this);

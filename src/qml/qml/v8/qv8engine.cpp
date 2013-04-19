@@ -1573,5 +1573,20 @@ v8::Local<v8::String> QV8Engine::toString(const QString &string)
     return QJSConverter::toString(string);
 }
 
+
+QQmlJS::VM::Value QQmlV4Handle::toValue() const
+{
+    QQmlJS::VM::Value val;
+    val.val = d;
+    return val;
+}
+
+QQmlV4Handle QQmlV4Handle::fromValue(const QQmlJS::VM::Value &v)
+{
+    QQmlV4Handle handle;
+    handle.d = v.val;
+    return handle;
+}
+
 QT_END_NAMESPACE
 

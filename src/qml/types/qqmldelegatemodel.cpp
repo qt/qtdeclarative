@@ -2095,7 +2095,7 @@ void QQmlDelegateModelGroupPrivate::setModel(QQmlDelegateModel *m, Compositor::G
 bool QQmlDelegateModelGroupPrivate::isChangedConnected()
 {
     Q_Q(QQmlDelegateModelGroup);
-    IS_SIGNAL_CONNECTED(q, QQmlDelegateModelGroup, changed, (const QQmlV8Handle &,const QQmlV8Handle &));
+    IS_SIGNAL_CONNECTED(q, QQmlDelegateModelGroup, changed, (const QQmlV4Handle &,const QQmlV4Handle &));
 }
 
 void QQmlDelegateModelGroupPrivate::emitChanges(QV8Engine *engine)
@@ -2106,7 +2106,7 @@ void QQmlDelegateModelGroupPrivate::emitChanges(QV8Engine *engine)
         v8::Context::Scope contextScope(engine->context());
         v8::Local<v8::Object> removed  = engineData(engine)->array(engine, changeSet.removes());
         v8::Local<v8::Object> inserted = engineData(engine)->array(engine, changeSet.inserts());
-        emit q->changed(QQmlV8Handle::fromHandle(removed), QQmlV8Handle::fromHandle(inserted));
+        emit q->changed(QQmlV4Handle::fromV8Handle(removed), QQmlV4Handle::fromV8Handle(inserted));
     }
     if (changeSet.difference() != 0)
         emit q->countChanged();
@@ -2296,18 +2296,18 @@ void QQmlDelegateModelGroup::setDefaultInclude(bool include)
     \endlist
 */
 
-QQmlV8Handle QQmlDelegateModelGroup::get(int index)
+QQmlV4Handle QQmlDelegateModelGroup::get(int index)
 {
     Q_D(QQmlDelegateModelGroup);
     if (!d->model)
-        return QQmlV8Handle::fromHandle(v8::Undefined());;
+        return QQmlV4Handle::fromV8Handle(v8::Undefined());;
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
     if (!model->m_context->isValid()) {
-        return QQmlV8Handle::fromHandle(v8::Undefined());
+        return QQmlV4Handle::fromV8Handle(v8::Undefined());
     } else if (index < 0 || index >= model->m_compositor.count(d->group)) {
         qmlInfo(this) << tr("get: index out of range");
-        return QQmlV8Handle::fromHandle(v8::Undefined());
+        return QQmlV4Handle::fromV8Handle(v8::Undefined());
     }
 
     Compositor::iterator it = model->m_compositor.find(d->group, index);
@@ -2319,7 +2319,7 @@ QQmlV8Handle QQmlDelegateModelGroup::get(int index)
         cacheItem = model->m_adaptorModel.createItem(
                 model->m_cacheMetaType, model->m_context->engine(), it.modelIndex());
         if (!cacheItem)
-            return QQmlV8Handle::fromHandle(v8::Undefined());
+            return QQmlV4Handle::fromV8Handle(v8::Undefined());
         cacheItem->groups = it->flags;
 
         model->m_cache.insert(it.cacheIndex, cacheItem);
@@ -2332,7 +2332,7 @@ QQmlV8Handle QQmlDelegateModelGroup::get(int index)
     handle->SetExternalResource(cacheItem);
     ++cacheItem->scriptRef;
 
-    return QQmlV8Handle::fromHandle(handle);
+    return QQmlV4Handle::fromV8Handle(handle);
 }
 
 bool QQmlDelegateModelGroupPrivate::parseIndex(

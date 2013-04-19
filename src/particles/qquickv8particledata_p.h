@@ -51,7 +51,7 @@ class QQuickV8ParticleData {
 public:
     QQuickV8ParticleData(QV8Engine*,QQuickParticleData*);
     ~QQuickV8ParticleData();
-    QQmlV8Handle v8Value();
+    QQmlV4Handle v8Value();
 private:
     v8::Persistent<v8::Object> m_v8Value;
 };

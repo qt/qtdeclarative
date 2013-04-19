@@ -158,7 +158,7 @@ Module {
         Property { name: "acceleration"; type: "QQuickDirection"; isPointer: true }
         Signal {
             name: "affectParticles"
-            Parameter { name: "particles"; type: "QQmlV8Handle" }
+            Parameter { name: "particles"; type: "QQmlV4Handle" }
             Parameter { name: "dt"; type: "double" }
         }
         Signal {
@@ -647,7 +647,7 @@ Module {
         Property { name: "velocityFromMovement"; type: "double" }
         Signal {
             name: "emitParticles"
-            Parameter { name: "particles"; type: "QQmlV8Handle" }
+            Parameter { name: "particles"; type: "QQmlV4Handle" }
         }
         Signal {
             name: "particlesPerSecondChanged"
@@ -1052,8 +1052,8 @@ Module {
         Property { name: "emitWidth"; type: "double" }
         Signal {
             name: "emitFollowParticles"
-            Parameter { name: "particles"; type: "QQmlV8Handle" }
-            Parameter { name: "followed"; type: "QQmlV8Handle" }
+            Parameter { name: "particles"; type: "QQmlV4Handle" }
+            Parameter { name: "followed"; type: "QQmlV4Handle" }
         }
         Signal {
             name: "particlesPerParticlePerSecondChanged"

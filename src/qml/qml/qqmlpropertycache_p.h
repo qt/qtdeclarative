@@ -101,7 +101,7 @@ public:
         IsQList            = 0x00000800, // Property type is a QML list
         IsQmlBinding       = 0x00001000, // Property type is a QQmlBinding*
         IsQJSValue         = 0x00002000, // Property type is a QScriptValue
-        IsV8Handle         = 0x00004000, // Property type is a QQmlV8Handle
+        IsV4Handle         = 0x00004000, // Property type is a QQmlV4Handle
         IsVarProperty      = 0x00008000, // Property type is a "var" property of VMEMO
         IsValueTypeVirtual = 0x00010000, // Property is a value type "virtual" property
         IsQVariant         = 0x00020000, // Property is a QVariant
@@ -121,7 +121,7 @@ public:
 
         // Flags that are set based on the propType field
         PropTypeFlagMask = IsQObjectDerived | IsEnumType | IsQList | IsQmlBinding | IsQJSValue |
-                           IsV8Handle | IsQVariant,
+                           IsV4Handle | IsQVariant,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -144,7 +144,7 @@ public:
     bool isQList() const { return flags & IsQList; }
     bool isQmlBinding() const { return flags & IsQmlBinding; }
     bool isQJSValue() const { return flags & IsQJSValue; }
-    bool isV8Handle() const { return flags & IsV8Handle; }
+    bool isV4Handle() const { return flags & IsV4Handle; }
     bool isVarProperty() const { return flags & IsVarProperty; }
     bool isValueTypeVirtual() const { return flags & IsValueTypeVirtual; }
     bool isQVariant() const { return flags & IsQVariant; }
