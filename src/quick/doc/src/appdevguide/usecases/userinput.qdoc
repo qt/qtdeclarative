@@ -34,11 +34,11 @@
 The \l {Qt Quick} module provides support for the most common types of user input,
 including mouse and touch events, text input and key-press events.  Other
 modules provide support for other types of user input (for example, the
-\l QtSensors module provides support for shake-gestures in QML applications).
+\l {Qt Sensors} module provides support for shake-gestures in QML applications).
 
 This article covers how to handle basic user input; for further information
-about motion-gesture support, please see the \l QtSensors documentation. For
-information about audio-visual input, please see the \l QtMultimedia documentation.
+about motion-gesture support, please see the \l {Qt Sensors} documentation. For
+information about audio-visual input, please see the \l {Qt Multimedia} documentation.
 
 \section2 Mouse and Touch Events
 

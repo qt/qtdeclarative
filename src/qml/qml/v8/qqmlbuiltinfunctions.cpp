@@ -1130,7 +1130,7 @@ Example (where \c parentItem is the id of an existing QML item):
 
 \snippet qml/createQmlObject.qml 0
 
-In the case of an error, a QtScript Error object is thrown. This object has an additional property,
+In the case of an error, a \l {Qt Script} Error object is thrown. This object has an additional property,
 \c qmlErrors, which is an array of the errors encountered.
 Each object in this array has the members \c lineNumber, \c columnNumber, \c fileName and \c message.
 For example, if the above snippet had misspelled color as 'colro' then the array would contain an object like the following:

@@ -49,8 +49,8 @@ through other modules. If you require the functionality of those modules, you sh
 their QML documentation. Qt Essentials modules exposing QML types include:
 
 \list
-\li \l QtMultimedia for playing and managing multimedia content and cameras.
-\li \l QtWebkit for rendering web content.
+\li \l {Qt Multimedia} for playing and managing multimedia content and cameras.
+\li \l {Qt WebKit} for rendering web content.
 \endlist
 
 \section1 Quick Start

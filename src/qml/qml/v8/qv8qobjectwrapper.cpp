@@ -1612,7 +1612,8 @@ static v8::Handle<v8::Value> CallMethod(QObject *object, int index, int returnTy
     Returns the match score for converting \a actual to be of type \a conversionType.  A 
     zero score means "perfect match" whereas a higher score is worse.
 
-    The conversion table is copied out of the QtScript callQtMethod() function.
+    The conversion table is copied out of the \l QScript::callQtMethod()
+    function.
 */
 static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
 {

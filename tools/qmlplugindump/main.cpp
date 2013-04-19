@@ -562,7 +562,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef QT_SIMULATOR
-    // Running this application would bring up the Qt Simulator (since it links QtGui), avoid that!
+    // Running this application would bring up the Qt Simulator (since it links Qt GUI), avoid that!
     QtSimulatorPrivate::SimulatorConnection::createStubInstance();
 #endif
 

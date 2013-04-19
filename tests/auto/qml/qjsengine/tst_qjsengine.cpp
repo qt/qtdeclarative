@@ -246,7 +246,7 @@ void tst_QJSEngine::newArray_HooliganTask233836()
     }
     {
         QJSValue ret = eng.newArray(0xFFFFFFFF);
-        QEXPECT_FAIL("", "The maximum length of arrays is defined by v8 currently and differs from QtScript", Abort);
+        QEXPECT_FAIL("", "The maximum length of arrays is defined by v8 currently and differs from Qt Script", Abort);
         QCOMPARE(ret.property("length").toUInt(), uint(0xFFFFFFFF));
         ret.setProperty(0xFFFFFFFF, 123);
         QCOMPARE(ret.property("length").toUInt(), uint(0xFFFFFFFF));

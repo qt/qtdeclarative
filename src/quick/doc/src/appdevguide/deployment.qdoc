@@ -130,7 +130,7 @@ loaded as a QQmlComponent instance rather than placed into a view:
 
 QGuiApplication can be replaced by a QCoreApplication in the code above in case you are not
 using any graphical items from Qt Quick. This allows using QML as a language without any
-dependencies to the Qt Gui module.
+dependencies to the \l {Qt GUI} module.
 
 See \l{qtqml-cppintegration-data.html}{qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Types to QML}
 for more information about using QQmlEngine, QQmlContext and QQmlComponent, as well

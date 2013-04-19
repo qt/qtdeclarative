@@ -54,7 +54,7 @@ borders. \l AnimatedImage plays animated .gif and .mng images. \l AnimatedSprite
 and \l SpriteSequence play animations comprised of multiple frames stored adjacently
 in a non animated image format.
 
-For displaying video files and camera data, see the \l QtMultimedia module.
+For displaying video files and camera data, see the \l {Qt Multimedia} module.
 
 \section1 Shared Visual Properties
 
