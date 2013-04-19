@@ -68,6 +68,7 @@ namespace VM {
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : memoryManager(new QQmlJS::VM::MemoryManager)
     , executableAllocator(new QQmlJS::VM::ExecutableAllocator)
+    , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , debugger(0)
     , globalObject(0)
     , globalCode(0)
@@ -237,6 +238,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
 ExecutionEngine::~ExecutionEngine()
 {
+    delete bumperPointerAllocator;
     delete regExpCache;
     UnwindHelper::deregisterFunctions(functions);
     qDeleteAll(functions);

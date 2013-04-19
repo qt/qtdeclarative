@@ -49,7 +49,9 @@
 #include "qv4property_p.h"
 #include <setjmp.h>
 
-#include <wtf/BumpPointerAllocator.h>
+namespace WTF {
+class BumpPointerAllocator;
+}
 
 QT_BEGIN_NAMESPACE
 
@@ -115,7 +117,7 @@ struct Q_QML_EXPORT ExecutionEngine
     ExecutionContext *current;
     GlobalContext *rootContext;
 
-    WTF::BumpPointerAllocator bumperPointerAllocator; // Used by Yarr Regex engine.
+    WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
     Identifiers *identifierCache;
 

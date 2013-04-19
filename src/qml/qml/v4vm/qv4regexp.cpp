@@ -109,7 +109,7 @@ RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase,
     if (error)
         return;
     m_subPatternCount = yarrPattern.m_numSubpatterns;
-    m_byteCode = JSC::Yarr::byteCompile(yarrPattern, &engine->bumperPointerAllocator);
+    m_byteCode = JSC::Yarr::byteCompile(yarrPattern, engine->bumperPointerAllocator);
 #if ENABLE(YARR_JIT)
     if (!yarrPattern.m_containsBackreferences) {
         JSC::JSGlobalData dummy(engine->executableAllocator);

@@ -53,7 +53,7 @@
 #include <cmath>
 #include <cassert>
 
-#include <wtf/MathExtras.h>
+//#include <wtf/MathExtras.h>
 
 #ifdef DO_TRACE_INSTR
 #  define TRACE1(x) fprintf(stderr, "    %s\n", __FUNCTION__);
