@@ -14,7 +14,7 @@ HEADERS += \
     $$PWD/qv8variantwrapper_p.h \
     $$PWD/qv8variantresource_p.h \
     $$PWD/qv8valuetypewrapper_p.h \
-    $$PWD/qv8jsonwrapper_p.h \
+    $$PWD/qv4jsonwrapper_p.h \
     $$PWD/qv8include_p.h \
     $$PWD/qv8worker_p.h \
     $$PWD/qv8bindings_p.h \
@@ -33,7 +33,7 @@ SOURCES += \
     $$PWD/qv8listwrapper.cpp \
     $$PWD/qv8variantwrapper.cpp \
     $$PWD/qv8valuetypewrapper.cpp \
-    $$PWD/qv8jsonwrapper.cpp \
+    $$PWD/qv4jsonwrapper.cpp \
     $$PWD/qv8include.cpp \
     $$PWD/qv8worker.cpp \
     $$PWD/qv8bindings.cpp \

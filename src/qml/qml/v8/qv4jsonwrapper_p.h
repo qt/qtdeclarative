@@ -55,7 +55,6 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qset.h>
-#include <private/qv8_p.h>
 
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsonobject.h>
@@ -63,35 +62,41 @@
 
 QT_BEGIN_NAMESPACE
 
-class QV8Engine;
-class QV8JsonWrapper
-{
-    typedef QSet<v8::Handle<v8::Object> > V8ObjectSet;
-public:
-    QV8JsonWrapper();
-    ~QV8JsonWrapper();
+namespace QV4 {
+struct Value;
+struct Object;
+struct ArrayObject;
+struct ExecutionEngine;
+}
 
-    void init(QV8Engine *);
+class QV4JsonWrapper
+{
+    typedef QSet<QV4::Object *> V4ObjectSet;
+public:
+    QV4JsonWrapper();
+    ~QV4JsonWrapper();
+
+    void init(QV4::ExecutionEngine *);
     void destroy();
 
-    v8::Handle<v8::Value> fromJsonValue(const QJsonValue &value);
-    inline QJsonValue toJsonValue(v8::Handle<v8::Value> value)
-    { V8ObjectSet visitedObjects; return toJsonValue(value, visitedObjects); }
+    QV4::Value fromJsonValue(const QJsonValue &value);
+    inline QJsonValue toJsonValue(const QV4::Value &value)
+    { V4ObjectSet visitedObjects; return toJsonValue(value, visitedObjects); }
 
-    v8::Local<v8::Object> fromJsonObject(const QJsonObject &object);
-    inline QJsonObject toJsonObject(v8::Handle<v8::Value> value)
-    { V8ObjectSet visitedObjects; return toJsonObject(value, visitedObjects); }
+    QV4::Value fromJsonObject(const QJsonObject &object);
+    inline QJsonObject toJsonObject(QV4::Object *o)
+    { V4ObjectSet visitedObjects; return toJsonObject(o, visitedObjects); }
 
-    v8::Local<v8::Array> fromJsonArray(const QJsonArray &array);
-    inline QJsonArray toJsonArray(v8::Handle<v8::Value> value)
-    { V8ObjectSet visitedObjects; return toJsonArray(value, visitedObjects); }
+    QV4::Value fromJsonArray(const QJsonArray &array);
+    inline QJsonArray toJsonArray(QV4::ArrayObject *a)
+    { V4ObjectSet visitedObjects; return toJsonArray(a, visitedObjects); }
 
 private:
-    QJsonValue toJsonValue(v8::Handle<v8::Value> value, V8ObjectSet &visitedObjects);
-    QJsonObject toJsonObject(v8::Handle<v8::Value> value, V8ObjectSet &visitedObjects);
-    QJsonArray toJsonArray(v8::Handle<v8::Value> value, V8ObjectSet &visitedObjects);
+    QJsonValue toJsonValue(const QV4::Value &value, V4ObjectSet &visitedObjects);
+    QJsonObject toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects);
+    QJsonArray toJsonArray(QV4::ArrayObject *a, V4ObjectSet &visitedObjects);
 
-    QV8Engine *m_engine;
+    QV4::ExecutionEngine *m_engine;
 };
 
 QT_END_NAMESPACE

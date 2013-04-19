@@ -168,7 +168,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, ContextOwnership ownership)
     m_variantWrapper.init(this);
     m_valueTypeWrapper.init(this);
     m_sequenceWrapper.init(this);
-    m_jsonWrapper.init(this);
+    m_jsonWrapper.init(m_v4Engine);
 
     {
     v8::Handle<v8::Value> v = global()->Get(v8::String::New("Object"))->ToObject()->Get(v8::String::New("getOwnPropertyNames"));
@@ -1314,32 +1314,32 @@ QVariant QV8Engine::variantFromJS(v8::Handle<v8::Value> value,
 
 v8::Handle<v8::Value> QV8Engine::jsonValueToJS(const QJsonValue &value)
 {
-    return m_jsonWrapper.fromJsonValue(value);
+    return v8::Value::fromV4Value(m_jsonWrapper.fromJsonValue(value));
 }
 
 QJsonValue QV8Engine::jsonValueFromJS(v8::Handle<v8::Value> value)
 {
-    return m_jsonWrapper.toJsonValue(value);
+    return m_jsonWrapper.toJsonValue(value.get()->v4Value());
 }
 
 v8::Local<v8::Object> QV8Engine::jsonObjectToJS(const QJsonObject &object)
 {
-    return m_jsonWrapper.fromJsonObject(object);
+    return v8::Local<v8::Object>::New(v8::Value::fromV4Value(m_jsonWrapper.fromJsonObject(object)));
 }
 
 QJsonObject QV8Engine::jsonObjectFromJS(v8::Handle<v8::Value> value)
 {
-    return m_jsonWrapper.toJsonObject(value);
+    return m_jsonWrapper.toJsonObject(value.get()->v4Value().asObject());
 }
 
 v8::Local<v8::Array> QV8Engine::jsonArrayToJS(const QJsonArray &array)
 {
-    return m_jsonWrapper.fromJsonArray(array);
+    return v8::Local<v8::Array>::New(v8::Value::fromV4Value(m_jsonWrapper.fromJsonArray(array)));
 }
 
 QJsonArray QV8Engine::jsonArrayFromJS(v8::Handle<v8::Value> value)
 {
-    return m_jsonWrapper.toJsonArray(value);
+    return m_jsonWrapper.toJsonArray(value.get()->v4Value().asArrayObject());
 }
 
 bool QV8Engine::convertToNativeQObject(v8::Handle<v8::Value> value,

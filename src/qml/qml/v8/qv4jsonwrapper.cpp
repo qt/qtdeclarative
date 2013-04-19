@@ -39,141 +39,146 @@
 **
 ****************************************************************************/
 
-#include "qv8jsonwrapper_p.h"
-#include "qv8engine_p.h"
+#include "qv4jsonwrapper_p.h"
+#include "private/qv4engine_p.h"
+#include "private/qv4object_p.h"
+#include "private/qv4objectiterator_p.h"
 #include "qjsconverter_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QV8JsonWrapper::QV8JsonWrapper()
+using namespace QV4;
+
+QV4JsonWrapper::QV4JsonWrapper()
 : m_engine(0)
 {
 }
 
-QV8JsonWrapper::~QV8JsonWrapper()
+QV4JsonWrapper::~QV4JsonWrapper()
 {
 }
 
-void QV8JsonWrapper::init(QV8Engine *engine)
+void QV4JsonWrapper::init(QV4::ExecutionEngine *engine)
 {
     m_engine = engine;
 }
 
-void QV8JsonWrapper::destroy()
+void QV4JsonWrapper::destroy()
 {
 }
 
-v8::Handle<v8::Value> QV8JsonWrapper::fromJsonValue(const QJsonValue &value)
+QV4::Value QV4JsonWrapper::fromJsonValue(const QJsonValue &value)
 {
     if (value.isString())
-        return QJSConverter::toString(value.toString());
+        return Value::fromString(m_engine->current, value.toString());
     else if (value.isDouble())
-        return v8::Number::New(value.toDouble());
+        return Value::fromDouble(value.toDouble());
     else if (value.isBool())
-        return value.toBool() ? v8::True() : v8::False();
+        return Value::fromBoolean(value.toBool());
     else if (value.isArray())
         return fromJsonArray(value.toArray());
     else if (value.isObject())
         return fromJsonObject(value.toObject());
     else if (value.isNull())
-        return v8::Null();
+        return Value::nullValue();
     else
-        return v8::Undefined();
+        return Value::undefinedValue();
 }
 
-QJsonValue QV8JsonWrapper::toJsonValue(v8::Handle<v8::Value> value,
-                                       V8ObjectSet &visitedObjects)
+QJsonValue QV4JsonWrapper::toJsonValue(const QV4::Value &value,
+                                       V4ObjectSet &visitedObjects)
 {
-    if (value->IsString())
-        return QJsonValue(QJSConverter::toString(value.As<v8::String>()));
-    else if (value->IsNumber())
-        return QJsonValue(value->NumberValue());
-    else if (value->IsBoolean())
-        return QJsonValue(value->BooleanValue());
-    else if (value->IsArray())
-        return toJsonArray(value.As<v8::Array>(), visitedObjects);
-    else if (value->IsObject())
-        return toJsonObject(value.As<v8::Object>(), visitedObjects);
-    else if (value->IsNull())
+    if (String *s = value.asString())
+        return QJsonValue(s->toQString());
+    else if (value.isNumber())
+        return QJsonValue(value.toNumber());
+    else if (value.isBoolean())
+        return QJsonValue((bool)value.booleanValue());
+    else if (ArrayObject *a = value.asArrayObject())
+        return toJsonArray(a, visitedObjects);
+    else if (Object *o = value.asObject())
+        return toJsonObject(o, visitedObjects);
+    else if (value.isNull())
         return QJsonValue(QJsonValue::Null);
     else
         return QJsonValue(QJsonValue::Undefined);
 }
 
-v8::Local<v8::Object> QV8JsonWrapper::fromJsonObject(const QJsonObject &object)
+QV4::Value QV4JsonWrapper::fromJsonObject(const QJsonObject &object)
 {
-    v8::Local<v8::Object> v8object = v8::Object::New();
+    Object *o = m_engine->newObject();
     for (QJsonObject::const_iterator it = object.begin(); it != object.end(); ++it)
-        v8object->Set(QJSConverter::toString(it.key()), fromJsonValue(it.value()));
-    return v8object;
+        o->put(m_engine->current, m_engine->newString(it.key()), fromJsonValue(it.value()));
+    return Value::fromObject(o);
 }
 
-QJsonObject QV8JsonWrapper::toJsonObject(v8::Handle<v8::Value> value,
-                                         V8ObjectSet &visitedObjects)
+QJsonObject QV4JsonWrapper::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects)
 {
     QJsonObject result;
-    if (!value->IsObject() || value->IsArray() || value->IsFunction())
+    if (!o || o->asFunctionObject())
         return result;
 
-    v8::Handle<v8::Object> v8object(value.As<v8::Object>());
-    if (visitedObjects.contains(v8object)) {
+    if (visitedObjects.contains(o)) {
         // Avoid recursion.
         // For compatibility with QVariant{List,Map} conversion, we return an
         // empty object (and no error is thrown).
         return result;
     }
 
-    visitedObjects.insert(v8object);
+    visitedObjects.insert(o);
 
-    v8::Local<v8::Array> propertyNames = m_engine->getOwnPropertyNames(v8object);
-    uint32_t length = propertyNames->Length();
-    for (uint32_t i = 0; i < length; ++i) {
-        v8::Local<v8::Value> name = propertyNames->Get(i);
-        v8::Local<v8::Value> propertyValue = v8object->Get(name);
-        if (!propertyValue->IsFunction())
-            result.insert(QJSConverter::toString(name->ToString()),
-                          toJsonValue(propertyValue, visitedObjects));
+    ObjectIterator it(o, ObjectIterator::EnumberableOnly);
+    while (1) {
+        PropertyAttributes attributes;
+        String *name;
+        uint idx;
+        Property *p = it.next(&name, &idx, &attributes);
+        if (!p)
+            break;
+
+        Value v = o->getValue(m_engine->current, p, attributes);
+        QString key = name ? name->toQString() : QString::number(idx);
+        result.insert(key, toJsonValue(v, visitedObjects));
     }
 
-    visitedObjects.remove(v8object);
+    visitedObjects.remove(o);
 
     return result;
 }
 
-v8::Local<v8::Array> QV8JsonWrapper::fromJsonArray(const QJsonArray &array)
+QV4::Value QV4JsonWrapper::fromJsonArray(const QJsonArray &array)
 {
     int size = array.size();
-    v8::Local<v8::Array> v8array = v8::Array::New(size);
+    ArrayObject *a = m_engine->newArrayObject(m_engine->current);
+    a->arrayReserve(size);
     for (int i = 0; i < size; i++)
-        v8array->Set(i, fromJsonValue(array.at(i)));
-    return v8array;
+        a->arrayData[i].value = fromJsonValue(array.at(i));
+    a->setArrayLengthUnchecked(size);
+    return Value::fromObject(a);
 }
 
-QJsonArray QV8JsonWrapper::toJsonArray(v8::Handle<v8::Value> value,
-                                       V8ObjectSet &visitedObjects)
+QJsonArray QV4JsonWrapper::toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects)
 {
     QJsonArray result;
-    if (!value->IsArray())
+    if (!a)
         return result;
 
-    v8::Handle<v8::Array> v8array(value.As<v8::Array>());
-    if (visitedObjects.contains(v8array)) {
+    if (visitedObjects.contains(a)) {
         // Avoid recursion.
         // For compatibility with QVariant{List,Map} conversion, we return an
         // empty array (and no error is thrown).
         return result;
     }
 
-    visitedObjects.insert(v8array);
+    visitedObjects.insert(a);
 
-    uint32_t length = v8array->Length();
-    for (uint32_t i = 0; i < length; ++i) {
-        v8::Local<v8::Value> element = v8array->Get(i);
-        if (!element->IsFunction())
-            result.append(toJsonValue(element, visitedObjects));
+    quint32 length = a->arrayLength();
+    for (quint32 i = 0; i < length; ++i) {
+        Value v = a->getIndexed(m_engine->current, i);
+        result.append(toJsonValue(v, visitedObjects));
     }
 
-    visitedObjects.remove(v8array);
+    visitedObjects.remove(a);
 
     return result;
 }

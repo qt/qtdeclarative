@@ -78,7 +78,7 @@
 #include "qv8variantwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
 #include "qv8sequencewrapper_p.h"
-#include "qv8jsonwrapper_p.h"
+#include "qv4jsonwrapper_p.h"
 
 namespace v8 {
 
@@ -472,7 +472,7 @@ protected:
     QV8VariantWrapper m_variantWrapper;
     QV8ValueTypeWrapper m_valueTypeWrapper;
     QV8SequenceWrapper m_sequenceWrapper;
-    QV8JsonWrapper m_jsonWrapper;
+    QV4JsonWrapper m_jsonWrapper;
 
     v8::Persistent<v8::Function> m_getOwnPropertyNames;
     v8::Persistent<v8::Function> m_freezeObject;
