@@ -65,8 +65,6 @@
 #include <QtCore/qjsonvalue.h>
 #include <QtCore/qdatetime.h>
 
-#include <private/qv8engine_impl_p.h>
-
 #include <private/qv4value_p.h>
 #include <private/qv4dateobject_p.h>
 #include <private/qv4objectiterator_p.h>
@@ -1606,6 +1604,22 @@ QQmlV4Handle QQmlV4Handle::fromValue(const QV4::Value &v)
     handle.d = v.val;
     return handle;
 }
+
+QJSValue QV8Engine::evaluate(const QString& program, const QString& fileName, quint16 lineNumber)
+{
+    v8::TryCatch tryCatch;
+    v8::ScriptOrigin scriptOrigin(QJSConverter::toString(fileName), v8::Integer::New(lineNumber - 1));
+    v8::Handle<v8::Script> script;
+    script = v8::Script::Compile(QJSConverter::toString(program), &scriptOrigin);
+    if (script.IsEmpty()) {
+        // TODO: Why don't we get the exception, as with Script::Compile()?
+        // Q_ASSERT(tryCatch.HasCaught());
+        QV4::Object *error = m_v4Engine->newSyntaxErrorObject(m_v4Engine->current, 0);
+        return new QJSValuePrivate(m_v4Engine, QV4::Value::fromObject(error));
+    }
+    return evaluate(script, tryCatch);
+}
+
 
 QT_END_NAMESPACE
 

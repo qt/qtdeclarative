@@ -18,7 +18,6 @@ HEADERS += \
     $$PWD/qv8include_p.h \
     $$PWD/qv8worker_p.h \
     $$PWD/qv8bindings_p.h \
-    $$PWD/qv8engine_impl_p.h \
     $$PWD/qv4domerrors_p.h \
     $$PWD/qv4sqlerrors_p.h \
     $$PWD/qqmlbuiltinfunctions_p.h \

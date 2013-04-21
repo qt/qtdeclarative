@@ -381,13 +381,6 @@ public:
     inline Deletable *extensionData(int) const;
     void setExtensionData(int, Deletable *);
 
-    v8::Handle<v8::Value> makeJSValue(bool value);
-    v8::Local<v8::Value> makeJSValue(int value);
-    v8::Local<v8::Value> makeJSValue(uint value);
-    v8::Local<v8::Value> makeJSValue(double value);
-    v8::Handle<v8::Value> makeJSValue(QJSValue::SpecialValue value);
-    v8::Local<v8::Value> makeJSValue(const QString &value);
-
     QJSValue evaluate(const QString &program, const QString &fileName = QString(), quint16 lineNumber = 1);
     QJSValue evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCatch);
 
