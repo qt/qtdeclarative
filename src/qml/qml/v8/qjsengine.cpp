@@ -349,7 +349,7 @@ QJSValue QJSEngine::create(int type, const void *ptr)
     Q_D(QJSEngine);
     QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
     v8::HandleScope handleScope;
-    return d->scriptValueFromInternal(d->metaTypeToJS(type, ptr));
+    return new QJSValuePrivate(QV8Engine::getV4(d), d->metaTypeToJS(type, ptr));
 }
 
 /*!

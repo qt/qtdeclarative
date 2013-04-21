@@ -49,6 +49,9 @@
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlscript_p.h>
 #include <private/qqmlengine_p.h>
+
+#include <private/qv4object_p.h>
+
 #include <qqmlcontext.h>
 #include <qqmlinfo.h>
 
@@ -883,7 +886,7 @@ int ListElement::setVariantMapProperty(const ListLayout::Role &role, v8::Handle<
             QVariantMap *map = reinterpret_cast<QVariantMap *>(mem);
             map->~QMap();
         }
-        new (mem) QVariantMap(eng->variantMapFromJS(o));
+        new (mem) QVariantMap(eng->variantMapFromJS(o->v4Value().asObject()));
         roleIndex = role.index;
     }
 
@@ -964,7 +967,7 @@ void ListElement::setVariantMapFast(const ListLayout::Role &role, v8::Handle<v8:
 {
     char *mem = getPropertyMemory(role);
     QVariantMap *map = new (mem) QVariantMap;
-    *map = eng->variantMapFromJS(o);
+    *map = eng->variantMapFromJS(o->v4Value().asObject());
 }
 
 void ListElement::setDateTimePropertyFast(const ListLayout::Role &role, const QDateTime &dt)
@@ -1957,7 +1960,7 @@ void QQmlListModel::insert(QQmlV8Function *args)
                 v8::Handle<v8::Object> argObject = objectArray->Get(i)->ToObject();
 
                 if (m_dynamicRoles) {
-                    m_modelObjects.insert(index+i, DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
+                    m_modelObjects.insert(index+i, DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject->v4Value().asObject()), this));
                 } else {
                     m_listModel->insert(index+i, argObject, args->engine());
                 }
@@ -1967,7 +1970,7 @@ void QQmlListModel::insert(QQmlV8Function *args)
             v8::Handle<v8::Object> argObject = arg1->ToObject();
 
             if (m_dynamicRoles) {
-                m_modelObjects.insert(index, DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
+                m_modelObjects.insert(index, DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject->v4Value().asObject()), this));
             } else {
                 m_listModel->insert(index, argObject, args->engine());
             }
@@ -2060,7 +2063,7 @@ void QQmlListModel::append(QQmlV8Function *args)
                 v8::Handle<v8::Object> argObject = objectArray->Get(i)->ToObject();
 
                 if (m_dynamicRoles) {
-                    m_modelObjects.append(DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
+                    m_modelObjects.append(DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject->v4Value().asObject()), this));
                 } else {
                     m_listModel->append(argObject, args->engine());
                 }
@@ -2074,7 +2077,7 @@ void QQmlListModel::append(QQmlV8Function *args)
 
             if (m_dynamicRoles) {
                 index = m_modelObjects.count();
-                m_modelObjects.append(DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
+                m_modelObjects.append(DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject->v4Value().asObject()), this));
             } else {
                 index = m_listModel->append(argObject, args->engine());
             }
@@ -2172,7 +2175,7 @@ void QQmlListModel::set(int index, const QQmlV4Handle &handle)
     if (index == count()) {
 
         if (m_dynamicRoles) {
-            m_modelObjects.append(DynamicRoleModelNode::create(engine()->variantMapFromJS(object), this));
+            m_modelObjects.append(DynamicRoleModelNode::create(engine()->variantMapFromJS(object->v4Value().asObject()), this));
         } else {
             m_listModel->insert(index, object, engine());
         }
@@ -2183,7 +2186,7 @@ void QQmlListModel::set(int index, const QQmlV4Handle &handle)
         QVector<int> roles;
 
         if (m_dynamicRoles) {
-            m_modelObjects[index]->updateValues(engine()->variantMapFromJS(object), roles);
+            m_modelObjects[index]->updateValues(engine()->variantMapFromJS(object->v4Value().asObject()), roles);
         } else {
             m_listModel->set(index, object, &roles, engine());
         }

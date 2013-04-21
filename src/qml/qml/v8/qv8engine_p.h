@@ -80,6 +80,10 @@
 #include "qv8sequencewrapper_p.h"
 #include "qv4jsonwrapper_p.h"
 
+namespace QV4 {
+struct ArrayObject;
+}
+
 namespace v8 {
 
 // Needed for V8ObjectSet
@@ -253,7 +257,7 @@ public:
 class Q_QML_PRIVATE_EXPORT QV8Engine
 {
     friend class QJSEngine;
-    typedef QSet<v8::Handle<v8::Object> > V8ObjectSet;
+    typedef QSet<QV4::Object *> V8ObjectSet;
 public:
     static QV8Engine* get(QJSEngine* q) { Q_ASSERT(q); return q->handle(); }
     static QJSEngine* get(QV8Engine* d) { Q_ASSERT(d); return d->q; }
@@ -390,16 +394,16 @@ public:
     QJSValue newArray(uint length);
     v8::Local<v8::Object> newVariant(const QVariant &variant);
 
-    v8::Local<v8::Array> variantListToJS(const QVariantList &lst);
-    inline QVariantList variantListFromJS(v8::Handle<v8::Array> jsArray)
-    { V8ObjectSet visitedObjects; return variantListFromJS(jsArray, visitedObjects); }
+    QV4::Value variantListToJS(const QVariantList &lst);
+    inline QVariantList variantListFromJS(QV4::ArrayObject *array)
+    { V8ObjectSet visitedObjects; return variantListFromJS(array, visitedObjects); }
 
-    v8::Local<v8::Object> variantMapToJS(const QVariantMap &vmap);
-    inline QVariantMap variantMapFromJS(v8::Handle<v8::Object> jsObject)
-    { V8ObjectSet visitedObjects; return variantMapFromJS(jsObject, visitedObjects); }
+    QV4::Value variantMapToJS(const QVariantMap &vmap);
+    inline QVariantMap variantMapFromJS(QV4::Object *object)
+    { V8ObjectSet visitedObjects; return variantMapFromJS(object, visitedObjects); }
 
-    v8::Handle<v8::Value> variantToJS(const QVariant &value);
-    inline QVariant variantFromJS(v8::Handle<v8::Value> value)
+    QV4::Value variantToJS(const QVariant &value);
+    inline QVariant variantFromJS(const QV4::Value &value)
     { V8ObjectSet visitedObjects; return variantFromJS(value, visitedObjects); }
 
     v8::Handle<v8::Value> jsonValueToJS(const QJsonValue &value);
@@ -409,7 +413,7 @@ public:
     v8::Local<v8::Array> jsonArrayToJS(const QJsonArray &array);
     QJsonArray jsonArrayFromJS(v8::Handle<v8::Value> value);
 
-    v8::Handle<v8::Value> metaTypeToJS(int type, const void *data);
+    QV4::Value metaTypeToJS(int type, const void *data);
     bool metaTypeFromJS(const QV4::Value &value, int type, void *data);
 
     bool convertToNativeQObject(v8::Handle<v8::Value> value,
@@ -498,9 +502,9 @@ protected:
     double qtDateTimeToJsDate(const QDateTime &dt);
 
 private:
-    QVariantList variantListFromJS(v8::Handle<v8::Array> jsArray, V8ObjectSet &visitedObjects);
-    QVariantMap variantMapFromJS(v8::Handle<v8::Object> jsObject, V8ObjectSet &visitedObjects);
-    QVariant variantFromJS(v8::Handle<v8::Value> value, V8ObjectSet &visitedObjects);
+    QVariantList variantListFromJS(QV4::ArrayObject *array, V8ObjectSet &visitedObjects);
+    QVariantMap variantMapFromJS(QV4::Object *object, V8ObjectSet &visitedObjects);
+    QVariant variantFromJS(const QV4::Value &value, V8ObjectSet &visitedObjects);
 
     static v8::Persistent<v8::Object> *findOwnerAndStrength(QObject *object, bool *shouldBeStrong);
 
