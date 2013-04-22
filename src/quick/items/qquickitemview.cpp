@@ -2205,7 +2205,7 @@ FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, bool asynchronous)
             if (!delegateValidated) {
                 delegateValidated = true;
                 QObject* delegate = q->delegate();
-                qmlInfo(delegate ? delegate : q) << q->tr("Delegate must be of Item type");
+                qmlInfo(delegate ? delegate : q) << QQuickItemView::tr("Delegate must be of Item type");
             }
         }
         inRequest = false;
