@@ -3,7 +3,7 @@ import QtQuick.tooling 1.1
 // This file describes the plugin-supplied types contained in the library.
 // It is used for QML tooling purposes only.
 //
-// This file was auto-generated with the command 'qmlplugindump QtQuick.Window 2.0'.
+// This file was auto-generated with the command '../../../bin/qmlplugindump.app/Contents/MacOS/qmlplugindump QtQuick.Window 2.1 -notrelocatable'.
 
 Module {
     Component {
@@ -22,7 +22,7 @@ Module {
     Component {
         name: "QQuickScreen"
         prototype: "QObject"
-        exports: ["Screen 2.0"]
+        exports: ["QtQuick.Window/Screen 2.0"]
         attachedType: "QQuickScreenAttached"
     }
     Component {
@@ -43,10 +43,18 @@ Module {
         name: "QQuickWindow"
         defaultProperty: "data"
         prototype: "QWindow"
-        exports: ["Window 2.0"]
+        exports: ["QtQuick.Window/Window 2.0", "QtQuick.Window/Window 2.1"]
+        exportMetaObjectRevisions: [0, 1]
         Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "color"; type: "QColor" }
         Property { name: "contentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+        Property {
+            name: "activeFocusItem"
+            revision: 1
+            type: "QQuickItem"
+            isReadonly: true
+            isPointer: true
+        }
         Signal { name: "frameSwapped" }
         Signal { name: "sceneGraphInitialized" }
         Signal { name: "sceneGraphInvalidated" }
@@ -57,12 +65,24 @@ Module {
             name: "colorChanged"
             Parameter { type: "QColor" }
         }
+        Signal { name: "activeFocusItemChanged"; revision: 1 }
         Method { name: "update" }
         Method { name: "releaseResources" }
     }
     Component {
         name: "QWindow"
         prototype: "QObject"
+        Enum {
+            name: "Visibility"
+            values: {
+                "Hidden": 0,
+                "AutomaticVisibility": 1,
+                "Windowed": 2,
+                "Minimized": 3,
+                "Maximized": 4,
+                "FullScreen": 5
+            }
+        }
         Property { name: "title"; type: "string" }
         Property { name: "modality"; type: "Qt::WindowModality" }
         Property { name: "flags"; type: "Qt::WindowFlags" }
@@ -70,20 +90,14 @@ Module {
         Property { name: "y"; type: "int" }
         Property { name: "width"; type: "int" }
         Property { name: "height"; type: "int" }
-        Property { name: "minimumWidth"; type: "int" }
-        Property { name: "minimumHeight"; type: "int" }
-        Property { name: "maximumWidth"; type: "int" }
-        Property { name: "maximumHeight"; type: "int" }
+        Property { name: "minimumWidth"; revision: 1; type: "int" }
+        Property { name: "minimumHeight"; revision: 1; type: "int" }
+        Property { name: "maximumWidth"; revision: 1; type: "int" }
+        Property { name: "maximumHeight"; revision: 1; type: "int" }
         Property { name: "visible"; type: "bool" }
-        Property { name: "contentOrientation"; type: "Qt::ScreenOrientation" }
-        Property { name: "windowTitle"; type: "string" }
-        Property { name: "windowFilePath"; type: "string" }
-        Property { name: "windowIcon"; type: "QIcon" }
-        Property { name: "windowModality"; type: "Qt::WindowModality" }
-        Signal {
-            name: "windowModalityChanged"
-            Parameter { name: "windowModality"; type: "Qt::WindowModality" }
-        }
+        Property { name: "visibility"; revision: 1; type: "Visibility" }
+        Property { name: "contentOrientation"; revision: 1; type: "Qt::ScreenOrientation" }
+        Property { name: "opacity"; revision: 1; type: "double" }
         Signal {
             name: "screenChanged"
             Parameter { name: "screen"; type: "QScreen"; isPointer: true }
@@ -114,18 +128,22 @@ Module {
         }
         Signal {
             name: "minimumWidthChanged"
+            revision: 1
             Parameter { name: "arg"; type: "int" }
         }
         Signal {
             name: "minimumHeightChanged"
+            revision: 1
             Parameter { name: "arg"; type: "int" }
         }
         Signal {
             name: "maximumWidthChanged"
+            revision: 1
             Parameter { name: "arg"; type: "int" }
         }
         Signal {
             name: "maximumHeightChanged"
+            revision: 1
             Parameter { name: "arg"; type: "int" }
         }
         Signal {
@@ -133,12 +151,23 @@ Module {
             Parameter { name: "arg"; type: "bool" }
         }
         Signal {
+            name: "visibilityChanged"
+            revision: 1
+            Parameter { name: "visibility"; type: "QWindow::Visibility" }
+        }
+        Signal {
             name: "contentOrientationChanged"
+            revision: 1
             Parameter { name: "orientation"; type: "Qt::ScreenOrientation" }
         }
         Signal {
             name: "focusObjectChanged"
             Parameter { name: "object"; type: "QObject"; isPointer: true }
+        }
+        Signal {
+            name: "opacityChanged"
+            revision: 1
+            Parameter { name: "opacity"; type: "double" }
         }
         Method {
             name: "setVisible"
@@ -175,18 +204,22 @@ Module {
         }
         Method {
             name: "setMinimumWidth"
+            revision: 1
             Parameter { name: "w"; type: "int" }
         }
         Method {
             name: "setMinimumHeight"
+            revision: 1
             Parameter { name: "h"; type: "int" }
         }
         Method {
             name: "setMaximumWidth"
+            revision: 1
             Parameter { name: "w"; type: "int" }
         }
         Method {
             name: "setMaximumHeight"
+            revision: 1
             Parameter { name: "h"; type: "int" }
         }
     }

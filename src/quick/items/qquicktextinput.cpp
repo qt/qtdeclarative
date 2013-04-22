@@ -777,7 +777,10 @@ QRectF QQuickTextInput::cursorRectangle() const
     QTextLine l = d->m_textLayout.lineForTextPosition(c);
     if (!l.isValid())
         return QRectF();
-    return QRectF(l.cursorToX(c) - d->hscroll, l.y() - d->vscroll, 1, l.height());
+    qreal x = l.cursorToX(c) - d->hscroll;
+    qreal y = l.y() - d->vscroll;
+    qreal height = l.ascent() + l.descent();
+    return QRectF(x, y, 1, height);
 }
 
 /*!
@@ -1371,9 +1374,12 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
         pos += d->preeditAreaText().length();
 #endif
     QTextLine l = d->m_textLayout.lineForTextPosition(pos);
-    return l.isValid()
-            ? QRectF(l.cursorToX(pos) - d->hscroll, l.y() - d->vscroll, 1, l.height())
-            : QRectF();
+    if (!l.isValid())
+        return QRectF();
+    qreal x = l.cursorToX(pos) - d->hscroll;
+    qreal y = l.y() - d->vscroll;
+    qreal height = l.ascent() + l.descent();
+    return QRectF(x, y, 1, height);
 }
 
 /*!

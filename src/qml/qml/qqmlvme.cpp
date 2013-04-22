@@ -1376,7 +1376,8 @@ QQmlContextData *QQmlVME::complete(const Interrupt &interrupt)
         Q_ASSERT(d);
         Q_ASSERT(d->context);
         a->add(&d->context->componentAttached);
-        emit a->completed();
+        if (componentCompleteEnabled())
+            emit a->completed();
 
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return 0;

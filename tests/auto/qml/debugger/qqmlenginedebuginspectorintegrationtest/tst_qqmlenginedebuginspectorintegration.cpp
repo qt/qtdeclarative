@@ -52,8 +52,8 @@
 #include "qqmlinspectorclient.h"
 #include "qqmlenginedebugclient.h"
 
-#define PORT 3776
-#define STR_PORT "3776"
+#define STR_PORT_FROM "3776"
+#define STR_PORT_TO "3786"
 
 class tst_QQmlEngineDebugInspectorIntegration : public QQmlDataTest
 {
@@ -105,7 +105,7 @@ QmlDebugObjectReference tst_QQmlEngineDebugInspectorIntegration::findRootObject(
 
 void tst_QQmlEngineDebugInspectorIntegration::init()
 {
-    const QString argument = "-qmljsdebugger=port:" STR_PORT ",block";
+    const QString argument = "-qmljsdebugger=port:" STR_PORT_FROM "," STR_PORT_TO ",block";
 
     m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath)
                                      + "/qmlscene", this);
@@ -117,7 +117,8 @@ void tst_QQmlEngineDebugInspectorIntegration::init()
     m_inspectorClient = new QQmlInspectorClient(m_connection);
     m_engineDebugClient = new QQmlEngineDebugClient(m_connection);
 
-    m_connection->connectToHost(QLatin1String("127.0.0.1"), PORT);
+    const int port = m_process->debugPort();
+    m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
     bool ok = m_connection->waitForConnected();
     QVERIFY(ok);
 }

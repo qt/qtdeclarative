@@ -176,7 +176,7 @@ void QQuickTextNode::setCursor(const QRectF &rect, const QColor &color)
     appendChildNode(m_cursorNode);
 }
 
-void QQuickTextNode::initEngine(const QColor& textColor, const QColor& selectedTextColor, const QColor& selectionColor, const QColor& anchorColor)
+void QQuickTextNode::initEngine(const QColor& textColor, const QColor& selectedTextColor, const QColor& selectionColor, const QColor& anchorColor, const QPointF &position)
 {
     m_engine.reset(new QQuickTextNodeEngine);
     m_engine->m_hasContents = false;
@@ -184,6 +184,7 @@ void QQuickTextNode::initEngine(const QColor& textColor, const QColor& selectedT
     m_engine->setSelectedTextColor(selectedTextColor);
     m_engine->setSelectionColor(selectionColor);
     m_engine->setAnchorColor(anchorColor);
+    m_engine->setPosition(position);
 }
 
 void QQuickTextNode::addImage(const QRectF &rect, const QImage &image)
@@ -249,8 +250,7 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
                                 int selectionStart, int selectionEnd,
                                 int lineStart, int lineCount)
 {
-    Q_UNUSED(position);
-    initEngine(color, selectedTextColor, selectionColor, anchorColor);
+    initEngine(color, selectedTextColor, selectionColor, anchorColor, position);
 
 #ifndef QT_NO_IM
     int preeditLength = textLayout->preeditAreaText().length();

@@ -120,7 +120,7 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
 /*!
   \qmltype QtObject
     \instantiates QObject
-  \inqmlmodule QtQuick 2
+  \inqmlmodule QtQml 2
   \ingroup qml-utility-elements
   \brief A basic QML type
 

@@ -215,49 +215,25 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
 
 void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 {
-    bool renderWithoutShowing = QQuickWindowPrivate::get(window)->renderWithoutShowing;
-    if ((!window->isExposed() && !renderWithoutShowing) || !m_windows.contains(window))
+    if (!QQuickWindowPrivate::get(window)->isRenderable() || !m_windows.contains(window))
         return;
 
     WindowData &data = const_cast<WindowData &>(m_windows[window]);
-
-    QQuickWindow *masterWindow = 0;
-    if (!window->isVisible() && !renderWithoutShowing) {
-        // Find a "proper surface" to bind...
-        for (QHash<QQuickWindow *, WindowData>::const_iterator it = m_windows.constBegin();
-             it != m_windows.constEnd() && !masterWindow; ++it) {
-            if (it.key()->isVisible())
-                masterWindow = it.key();
-        }
-    } else {
-        masterWindow = window;
-    }
-
-    if (!masterWindow)
-        return;
-
-    if (!QQuickWindowPrivate::get(masterWindow)->isRenderable()) {
-        qWarning().nospace()
-            << "Unable to find a renderable master window "
-            << masterWindow << "when trying to render"
-            << window << " (" << window->geometry() << ").";
-        return;
-    }
 
     bool current = false;
 
     if (!gl) {
         gl = new QOpenGLContext();
-        gl->setFormat(masterWindow->requestedFormat());
+        gl->setFormat(window->requestedFormat());
         if (!gl->create()) {
             delete gl;
             gl = 0;
         }
-        current = gl->makeCurrent(masterWindow);
+        current = gl->makeCurrent(window);
         if (current)
             sg->initialize(gl);
     } else {
-        current = gl->makeCurrent(masterWindow);
+        current = gl->makeCurrent(window);
     }
 
     bool alsoSwap = data.updatePending;

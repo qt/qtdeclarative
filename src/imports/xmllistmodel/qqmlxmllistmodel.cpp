@@ -90,7 +90,7 @@ typedef QPair<int, int> QQuickXmlListRange;
     \brief For specifying a role to an XmlListModel
     \ingroup qtquick-models
 
-    \sa {QtQml}
+    \sa {Qt QML}
 */
 
 /*!

@@ -149,8 +149,6 @@ private:
 /*!
     Returns an accessibility interface for this window, or 0 if such an
     interface cannot be created.
-
-    \warning The caller is responsible for deleting the returned interface.
 */
 QAccessibleInterface *QQuickWindow::accessibleRoot() const
 {
@@ -258,29 +256,6 @@ void QQuickWindowPrivate::polishItems()
     updateFocusItemTransform();
 }
 
-/**
- * This parameter enables that this window can be rendered without
- * being shown on screen. This feature is very limited in what it supports.
- *
- * For this feature to be useful one needs to hook into beforeRender()
- * and set the render target.
- *
- */
-void QQuickWindowPrivate::setRenderWithoutShowing(bool render)
-{
-    if (render == renderWithoutShowing)
-        return;
-
-    Q_Q(QQuickWindow);
-    renderWithoutShowing = render;
-
-    if (render)
-        windowManager->show(q);
-    else
-        windowManager->hide(q);
-}
-
-
 /*!
  * Schedules the window to render another frame.
  *
@@ -361,7 +336,6 @@ QQuickWindowPrivate::QQuickWindowPrivate()
 #endif
     , touchMouseId(-1)
     , touchMousePressTimestamp(0)
-    , renderWithoutShowing(false)
     , dirtyItemList(0)
     , context(0)
     , renderer(0)
@@ -2117,14 +2091,8 @@ void QQuickWindowPrivate::data_clear(QQmlListProperty<QObject> *property)
 
 bool QQuickWindowPrivate::isRenderable() const
 {
-    const QQuickWindow *q = q_func();
-    QRect geom = q->geometry();
-    if (geom.width() <= 0 || geom.height() <= 0)
-        return false;
-    // Change to be applied after the visibility property is integrated in qtbase:
-//    return visibility != QWindow::Hidden || (renderWithoutShowing && platformWindow);
-    // Temporary version which is implementation-agnostic but slightly less efficient:
-    return q->isVisible() || (renderWithoutShowing && platformWindow);
+    Q_Q(const QQuickWindow);
+    return q->isExposed() && q->isVisible() && q->geometry().isValid();
 }
 
 /*!

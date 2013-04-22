@@ -1436,7 +1436,7 @@ QQmlListModelParser::ListInstruction *QQmlListModelParser::ListModelData::instru
 /*!
     \qmltype ListModel
     \instantiates QQmlListModel
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQml 2
     \brief Defines a free-form list data source
     \ingroup qtquick-models
 
@@ -1523,7 +1523,7 @@ QQmlListModelParser::ListInstruction *QQmlListModelParser::ListModelData::instru
     handler. You must call sync() or else the changes made to the list from the external
     thread will not be reflected in the list model in the main thread.
 
-    \sa {qml-data-models}{Data Models}, {declarative/threading/threadedlistmodel}{Threaded ListModel example}, QtQml
+    \sa {qml-data-models}{Data Models}, {declarative/threading/threadedlistmodel}{Threaded ListModel example}, {Qt QML}
 */
 
 QQmlListModel::QQmlListModel(QObject *parent)
@@ -2545,7 +2545,7 @@ bool QQmlListModelParser::definesEmptyList(const QString &s)
 /*!
     \qmltype ListElement
     \instantiates QQmlListElement
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQml 2
     \brief Defines a data item in a ListModel
     \ingroup qtquick-models
 

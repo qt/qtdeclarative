@@ -2252,7 +2252,8 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
         }
     }
 
-    d->resolveLayoutMirror();
+    if (d->parentItem)
+        d->resolveLayoutMirror();
 
     d->itemChange(ItemParentHasChanged, d->parentItem);
 

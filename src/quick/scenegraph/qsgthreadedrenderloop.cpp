@@ -328,9 +328,9 @@ public:
 
     QEventLoop eventLoop;
 
-    uint pendingUpdate : 2;
-    uint sleeping : 1;
-    uint syncResultedInChanges : 1;
+    uint pendingUpdate;
+    uint sleeping;
+    uint syncResultedInChanges;
 
     volatile bool guiIsLocked;
     volatile bool shouldExit;

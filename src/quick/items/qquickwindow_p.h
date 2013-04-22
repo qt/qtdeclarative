@@ -178,9 +178,6 @@ public:
 
     bool isRenderable() const;
 
-    bool renderWithoutShowing;
-    void setRenderWithoutShowing(bool enabled);
-
     QQuickItem::UpdatePaintNodeData updatePaintNodeData;
 
     QQuickItem *dirtyItemList;

@@ -3457,7 +3457,7 @@ QImage QQuickContext2D::toImage(const QRectF& bounds)
     if (m_texture->thread() == QThread::currentThread())
         m_texture->grabImage(bounds);
     else if (m_renderStrategy == QQuickCanvasItem::Cooperative) {
-        qWarning() << "Pixel read back is not support in Cooperative mode, please try Theaded or Immediate mode";
+        qWarning() << "Pixel readback is not supported in Cooperative mode, please try Threaded or Immediate mode";
         return QImage();
     } else {
         QMetaObject::invokeMethod(m_texture,

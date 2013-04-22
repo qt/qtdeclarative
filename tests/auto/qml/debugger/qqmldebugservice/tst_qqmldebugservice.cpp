@@ -104,7 +104,7 @@ void tst_QQmlDebugService::checkPortRange()
     QQmlDebugConnection *connection1 = new QQmlDebugConnection();
     QQmlDebugProcess *process1 = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
 
-    process1->start(QStringList() << QLatin1String("-qmljsdebugger=port:3772, 3774 ") << testFile("test.qml"));
+    process1->start(QStringList() << QLatin1String("-qmljsdebugger=port:3782,3792") << testFile("test.qml"));
 
     if (!process1->waitForSessionStart())
         QFAIL("could not launch application, or did not get 'Waiting for connection'.");
@@ -118,7 +118,7 @@ void tst_QQmlDebugService::checkPortRange()
     QQmlDebugConnection *connection2 = new QQmlDebugConnection();
     QQmlDebugProcess *process2 = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
 
-    process2->start(QStringList() << QLatin1String("-qmljsdebugger=port:3772,3774") << testFile("test.qml"));
+    process2->start(QStringList() << QLatin1String("-qmljsdebugger=port:3782,3792") << testFile("test.qml"));
 
     if (!process2->waitForSessionStart())
         QFAIL("could not launch application, or did not get 'Waiting for connection'.");

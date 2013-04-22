@@ -27,7 +27,6 @@
 
 /*!
 \page qml-dynamicview-tutorial.html tutorial
-\inqmlmodule QtQuick 2
 \title QML Dynamic View Ordering Tutorial
 \brief A tutorial describing how to re-arrange items in a QML ListView
 \nextpage QML Dynamic View Ordering Tutorial 1 - A Simple ListView and Delegate
@@ -51,7 +50,6 @@ directory.
 
 /*!
 \page qml-dynamicview-tutorial1.html
-\inqmlmodule QtQuick 2
 \title QML Dynamic View Ordering Tutorial 1 - A Simple ListView and Delegate
 \contentspage QML Dynamic View Ordering Tutorial
 \previouspage QML Dynamic View Ordering Tutorial
@@ -88,7 +86,6 @@ The second part of the application is the ListView itself to which we bind the m
 
 /*!
 \page qml-dynamicview-tutorial2.html
-\inqmlmodule QtQuick 2
 \title QML Dynamic View Ordering Tutorial 2 - Dragging View Items
 \contentspage QML Dynamic View Ordering Tutorial
 \previouspage QML Dynamic View Ordering Tutorial 1 - A Simple ListView and Delegate
@@ -133,7 +130,6 @@ so that is above other items in the stacking order and isn't obscured as it is d
 
 /*!
 \page qml-dynamicview-tutorial3.html
-\inqmlmodule QtQuick 2
 \title QML Dynamic View Ordering Tutorial 3 - Moving Dragged Items
 \contentspage QML Dynamic View Ordering Tutorial
 \previouspage QML Dynamic View Ordering Tutorial 2 - Dragging View Items
@@ -187,7 +183,6 @@ property of the view and bind the \l {QtQuick2::VisualDataModel::model}{model} a
 
 /*!
 \page qml-dynamicview-tutorial4.html
-\inqmlmodule QtQuick 2
 \title QML Dynamic View Ordering Tutorial 4 - Sorting Items
 \contentspage QML Dynamic View Ordering Tutorial
 \previouspage QML Dynamic View Ordering Tutorial 3 - Moving Dragged Items

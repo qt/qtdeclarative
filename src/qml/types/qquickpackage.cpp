@@ -73,7 +73,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet quick/views/package/view.qml 0
 
-    \sa {quick/views/package}{Package example}, {quick/demos/photoviewer}{Photo Viewer example}, QtQml
+    \sa {quick/views/package}{Package example}, {quick/demos/photoviewer}{Photo
+    Viewer example}, {Qt QML}
 */
 
 /*!

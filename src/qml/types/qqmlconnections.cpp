@@ -126,7 +126,7 @@ public:
     }
     \endqml
 
-    \sa QtQml
+    \sa {Qt QML}
 */
 QQmlConnections::QQmlConnections(QObject *parent) :
     QObject(*(new QQmlConnectionsPrivate), parent)

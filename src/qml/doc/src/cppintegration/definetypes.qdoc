@@ -40,7 +40,7 @@ as an instantiable \l{qtqml-typesystem-objecttypes.html}{QML object type} from
 QML, or enabling a singleton instance of the class to be imported and used
 from QML.
 
-Additionally, the QtQml module provides mechanisms for implementing QML-specific
+Additionally, the \l {Qt QML} module provides mechanisms for implementing QML-specific
 features such as \e{attached properties} and \e{default properties} in C++.
 
 (Note that a number of the important concepts covered in this document are
@@ -133,7 +133,7 @@ not be instantiable
 should not be instantiable from QML
 \endlist
 
-The QtQml module provides several methods for registering non-instantiable
+The \l {Qt QML} module provides several methods for registering non-instantiable
 types:
 
 \list
@@ -699,7 +699,7 @@ its properties have been set. For example, this may be the case if the
 initialization is costly, or if the initialization should not be performed until
 all property values have been initialized.
 
-The QtQml module provides the QQmlParserStatus to be subclass for these
+The \l {Qt QML} module provides the QQmlParserStatus to be subclass for these
 purposes. It defines a number of virtual methods that are invoked invoked at
 various stages during component instantiation. To receive these notifications, a
 C++ class should inherit QQmlParserStatus and also notify the Qt meta system

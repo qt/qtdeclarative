@@ -71,8 +71,6 @@ public:
 
     static QQmlDebugServer *instance();
 
-    void setConnection(QQmlDebugServerConnection *connection);
-
     bool hasDebuggingClient() const;
     bool blockingMode() const;
 

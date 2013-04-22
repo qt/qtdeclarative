@@ -298,6 +298,7 @@ QQmlDebugServer *QQmlDebugServer::instance()
             for (; argsIt != argsItEnd; ++argsIt) {
                 const QString strArgument = *argsIt;
                 if (strArgument.startsWith(QLatin1String("port:"))) {
+                    pluginName = QLatin1String("qmldbg_tcp");
                     portFrom = strArgument.mid(5).toInt(&ok);
                     portTo = portFrom;
                     QStringList::const_iterator argsNext = argsIt + 1;
@@ -308,7 +309,6 @@ QQmlDebugServer *QQmlDebugServer::instance()
                         portTo = nextArgument.toInt(&ok);
                         ++argsIt;
                     }
-                    pluginName = QLatin1String("qmldbg_tcp");
                 } else if (strArgument.startsWith(QLatin1String("host:"))) {
                     hostAddress = strArgument.mid(5);
                 } else if (strArgument == QLatin1String("block")) {

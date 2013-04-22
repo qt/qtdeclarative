@@ -169,7 +169,7 @@ public:
 /*!
     \qmltype VisualItemModel
     \instantiates QQmlObjectModel
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQml 2
     \brief Defines a set of objects to be used as a model
 
     The VisualItemModel type encapsulates contains the objects to be used
@@ -266,4 +266,3 @@ QQmlObjectModelAttached *QQmlObjectModel::qmlAttachedProperties(QObject *obj)
 }
 
 QT_END_NAMESPACE
-

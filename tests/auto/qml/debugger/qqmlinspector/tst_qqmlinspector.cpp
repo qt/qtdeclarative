@@ -50,8 +50,8 @@
 #include "../../../shared/util.h"
 #include "qqmlinspectorclient.h"
 
-#define PORT 3772
-#define STR_PORT "3772"
+#define STR_PORT_FROM "3772"
+#define STR_PORT_TO "3782"
 
 
 
@@ -87,7 +87,7 @@ private slots:
 
 void tst_QQmlInspector::startQmlsceneProcess(const char * /* qmlFile */)
 {
-    const QString argument = "-qmljsdebugger=port:" STR_PORT ",block";
+    const QString argument = "-qmljsdebugger=port:" STR_PORT_FROM "," STR_PORT_TO ",block";
 
     m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
     m_process->start(QStringList() << argument << testFile("qtquick2.qml"));
@@ -97,7 +97,8 @@ void tst_QQmlInspector::startQmlsceneProcess(const char * /* qmlFile */)
     QQmlDebugConnection *m_connection = new QQmlDebugConnection();
     m_client = new QQmlInspectorClient(m_connection);
 
-    m_connection->connectToHost(QLatin1String("127.0.0.1"), PORT);
+    const int port = m_process->debugPort();
+    m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
 }
 
 void tst_QQmlInspector::init()

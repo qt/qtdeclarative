@@ -193,7 +193,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     \qmltype Component
     \instantiates QQmlComponent
     \ingroup qml-utility-elements
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQml 2
     \brief Encapsulates a QML component definition
 
     Components are reusable, encapsulated QML types with well-defined interfaces.
@@ -209,7 +209,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 
     \snippet qml/component.qml 0
 
-    Notice that while a \l Rectangle by itself would be automatically 
+    Notice that while a \l Rectangle by itself would be automatically
     rendered and displayed, this is not the case for the above rectangle
     because it is defined inside a \c Component. The component encapsulates the
     QML types within, as if they were defined in a separate QML
@@ -295,12 +295,12 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     }
     \endqml
 
-    \sa QtQml
+    \sa {Qt QML}
 */
 
 /*!
     \enum QQmlComponent::Status
-    
+
     Specifies the loading status of the QQmlComponent.
 
     \value Null This QQmlComponent has no data.  Call loadUrl() or setData() to add QML content.
@@ -365,8 +365,8 @@ void QQmlComponentPrivate::clear()
         typeData->release();
         typeData = 0;
     }
-        
-    if (cc) { 
+
+    if (cc) {
         cc->release();
         cc = 0;
     }
@@ -541,12 +541,12 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, CompilationMod
 }
 
 /*!
-    Create a QQmlComponent from the given \a fileName and give it the specified 
+    Create a QQmlComponent from the given \a fileName and give it the specified
     \a parent and \a engine.
 
     \sa loadUrl()
 */
-QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName, 
+QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
                              QObject *parent)
 : QObject(*(new QQmlComponentPrivate), parent)
 {
@@ -600,7 +600,7 @@ void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
     d->url = url;
 
     QQmlTypeData *typeData = QQmlEnginePrivate::get(d->engine)->typeLoader.getType(data, url);
-    
+
     if (typeData->isCompleteOrError()) {
         d->fromTypeData(typeData);
     } else {
@@ -763,7 +763,7 @@ QQmlComponent::QQmlComponent(QQmlComponentPrivate &dd, QObject *parent)
 /*!
     Create an object instance from this component.  Returns 0 if creation
     failed.  \a context specifies the context within which to create the object
-    instance.  
+    instance.
 
     If \a context is 0 (the default), it will create the instance in the
     engine' s \l {QQmlEngine::rootContext()}{root context}.
@@ -784,21 +784,21 @@ QObject *QQmlComponent::create(QQmlContext *context)
 
 /*!
     This method provides advanced control over component instance creation.
-    In general, programmers should use QQmlComponent::create() to create a 
+    In general, programmers should use QQmlComponent::create() to create a
     component.
 
     Create an object instance from this component.  Returns 0 if creation
     failed.  \a publicContext specifies the context within which to create the object
-    instance.  
+    instance.
 
     When QQmlComponent constructs an instance, it occurs in three steps:
     \list 1
     \li The object hierarchy is created, and constant values are assigned.
     \li Property bindings are evaluated for the first time.
     \li If applicable, QQmlParserStatus::componentComplete() is called on objects.
-    \endlist 
+    \endlist
     QQmlComponent::beginCreate() differs from QQmlComponent::create() in that it
-    only performs step 1.  QQmlComponent::completeCreate() must be called to 
+    only performs step 1.  QQmlComponent::completeCreate() must be called to
     complete steps 2 and 3.
 
     This breaking point is sometimes useful when using attached properties to
@@ -933,7 +933,7 @@ void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionS
 
 /*!
     This method provides advanced control over component instance creation.
-    In general, programmers should use QQmlComponent::create() to create a 
+    In general, programmers should use QQmlComponent::create() to create a
     component.
 
     This function completes the component creation begun with QQmlComponent::beginCreate()
@@ -1027,7 +1027,7 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
 {
     Q_D(QQmlComponent);
 
-    if (!context) 
+    if (!context)
         context = d->engine->rootContext();
 
     QQmlContextData *contextData = QQmlContextData::get(context);
@@ -1068,17 +1068,17 @@ V8_RESOURCE_TYPE(IncubatorType)
 public:
     QV8IncubatorResource(QV8Engine *engine, IncubationMode = Asynchronous);
 
-    static v8::Handle<v8::Value> StatusChangedGetter(v8::Local<v8::String>, 
+    static v8::Handle<v8::Value> StatusChangedGetter(v8::Local<v8::String>,
                                                      const v8::AccessorInfo& info);
-    static v8::Handle<v8::Value> StatusGetter(v8::Local<v8::String>, 
+    static v8::Handle<v8::Value> StatusGetter(v8::Local<v8::String>,
                                               const v8::AccessorInfo& info);
-    static v8::Handle<v8::Value> ObjectGetter(v8::Local<v8::String>, 
+    static v8::Handle<v8::Value> ObjectGetter(v8::Local<v8::String>,
                                               const v8::AccessorInfo& info);
-    static v8::Handle<v8::Value> ForceCompletionGetter(v8::Local<v8::String>, 
+    static v8::Handle<v8::Value> ForceCompletionGetter(v8::Local<v8::String>,
                                                        const v8::AccessorInfo& info);
     static v8::Handle<v8::Value> ForceCompletion(const v8::Arguments &args);
 
-    static void StatusChangedSetter(v8::Local<v8::String>, v8::Local<v8::Value> value, 
+    static void StatusChangedSetter(v8::Local<v8::String>, v8::Local<v8::Value> value,
                                     const v8::AccessorInfo& info);
 
     void dispose();
@@ -1109,7 +1109,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
                 needParent = true;
             }
         }
-        if (needParent) 
+        if (needParent)
             qWarning("QQmlComponent: Created graphical object was not "
                      "placed in the graphics scene.");
     }
@@ -1127,8 +1127,8 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
     which were not created in QML.
 
     If you wish to create an object without setting a parent, specify \c null for
-    the \a parent value. Note that if the returned object is to be displayed, you 
-    must provide a valid \a parent value or set the returned object's \l{Item::parent}{parent} 
+    the \a parent value. Note that if the returned object is to be displayed, you
+    must provide a valid \a parent value or set the returned object's \l{Item::parent}{parent}
     property, or else the object will not be visible.
 
     If a \a parent is not provided to createObject(), a reference to the returned object must be held so that
@@ -1168,7 +1168,7 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     QObject *parent = 0;
     v8::Local<v8::Object> valuemap;
 
-    if (args->Length() >= 1) 
+    if (args->Length() >= 1)
         parent = args->engine()->toQObject((*args)[0]);
 
     if (args->Length() >= 2) {
@@ -1222,17 +1222,17 @@ void QQmlComponent::createObject(QQmlV8Function *args)
 /*!
     \qmlmethod object Component::incubateObject(Item parent, object properties, enumeration mode)
 
-    Creates an incubator for instance of this component.  Incubators allow new component 
+    Creates an incubator for instance of this component.  Incubators allow new component
     instances to be instantiated asynchronously and not cause freezes in the UI.
 
-    The \a parent argument specifies the parent the created instance will have.  Omitting the 
+    The \a parent argument specifies the parent the created instance will have.  Omitting the
     parameter or passing null will create anobject with no parent.  In this case, a reference
     to the created object must be maintained by the application of the object will eventually
     be garbage collected.
 
     The \a properties argument is specified as a map of property-value items which will be
-    set on the created object during its construction.  \a mode may be Qt.Synchronous or 
-    Qt.Asynchronous and controls whether the instance is created synchronously or asynchronously. 
+    set on the created object during its construction.  \a mode may be Qt.Synchronous or
+    Qt.Asynchronous and controls whether the instance is created synchronously or asynchronously.
     The default is asynchronously.  In some circumstances, even if Qt.Synchronous is specified,
     the incubator may create the object asynchronously.  This happens if the component calling
     incubateObject() is itself being created asynchronously.
@@ -1289,7 +1289,7 @@ void QQmlComponent::incubateObject(QQmlV8Function *args)
     v8::Local<v8::Object> valuemap;
     QQmlIncubator::IncubationMode mode = QQmlIncubator::Asynchronous;
 
-    if (args->Length() >= 1) 
+    if (args->Length() >= 1)
         parent = args->engine()->toQObject((*args)[0]);
 
     if (args->Length() >= 2) {
@@ -1313,7 +1313,7 @@ void QQmlComponent::incubateObject(QQmlV8Function *args)
     }
 
     QQmlComponentExtension *e = componentExtension(args->engine());
-    
+
     QV8IncubatorResource *r = new QV8IncubatorResource(args->engine(), mode);
     v8::Local<v8::Object> o = e->incubationConstructor->NewInstance();
     o->SetExternalResource(r);
@@ -1368,15 +1368,15 @@ QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->SetInternalFieldCount(1);
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("onStatusChanged"), 
-                                        QV8IncubatorResource::StatusChangedGetter, 
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("onStatusChanged"),
+                                        QV8IncubatorResource::StatusChangedGetter,
                                         QV8IncubatorResource::StatusChangedSetter);
     ft->InstanceTemplate()->SetAccessor(v8::String::New("status"),
                                         QV8IncubatorResource::StatusGetter);
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("object"), 
-                                        QV8IncubatorResource::ObjectGetter); 
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("forceCompletion"), 
-                                        QV8IncubatorResource::ForceCompletionGetter); 
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("object"),
+                                        QV8IncubatorResource::ObjectGetter);
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("forceCompletion"),
+                                        QV8IncubatorResource::ForceCompletionGetter);
     incubationConstructor = qPersistentNew(ft->GetFunction());
     }
 
@@ -1401,21 +1401,21 @@ QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
     }
 }
 
-v8::Handle<v8::Value> QV8IncubatorResource::ObjectGetter(v8::Local<v8::String>, 
+v8::Handle<v8::Value> QV8IncubatorResource::ObjectGetter(v8::Local<v8::String>,
                                                           const v8::AccessorInfo& info)
 {
     QV8IncubatorResource *r = v8_resource_check<QV8IncubatorResource>(info.This());
     return r->engine->newQObject(r->object());
 }
 
-v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletionGetter(v8::Local<v8::String>, 
+v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletionGetter(v8::Local<v8::String>,
                                                                   const v8::AccessorInfo& info)
 {
     QV8IncubatorResource *r = v8_resource_check<QV8IncubatorResource>(info.This());
     return componentExtension(r->engine)->forceCompletion;
 }
 
-v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletion(const v8::Arguments &args) 
+v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletion(const v8::Arguments &args)
 {
     QV8IncubatorResource *r = v8_resource_cast<QV8IncubatorResource>(args.This());
     if (!r)
@@ -1426,20 +1426,20 @@ v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletion(const v8::Arguments 
     return v8::Undefined();
 }
 
-v8::Handle<v8::Value> QV8IncubatorResource::StatusGetter(v8::Local<v8::String>, 
+v8::Handle<v8::Value> QV8IncubatorResource::StatusGetter(v8::Local<v8::String>,
                                                          const v8::AccessorInfo& info)
 {
     QV8IncubatorResource *r = v8_resource_check<QV8IncubatorResource>(info.This());
     return v8::Integer::NewFromUnsigned(r->status());
 }
 
-v8::Handle<v8::Value> QV8IncubatorResource::StatusChangedGetter(v8::Local<v8::String>, 
+v8::Handle<v8::Value> QV8IncubatorResource::StatusChangedGetter(v8::Local<v8::String>,
                                                                  const v8::AccessorInfo& info)
 {
     return info.This()->GetInternalField(0);
 }
 
-void QV8IncubatorResource::StatusChangedSetter(v8::Local<v8::String>, v8::Local<v8::Value> value, 
+void QV8IncubatorResource::StatusChangedSetter(v8::Local<v8::String>, v8::Local<v8::Value> value,
                                                 const v8::AccessorInfo& info)
 {
     info.This()->SetInternalField(0, value);
@@ -1475,7 +1475,7 @@ void QV8IncubatorResource::setInitialState(QObject *o)
         qPersistentDispose(qmlGlobal);
     }
 }
-    
+
 void QV8IncubatorResource::dispose()
 {
     qPersistentDispose(valuemap);
@@ -1513,7 +1513,7 @@ void QV8IncubatorResource::statusChanged(Status s)
         }
     }
 
-    if (s == Ready || s == Error) 
+    if (s == Ready || s == Error)
         dispose();
 }
 

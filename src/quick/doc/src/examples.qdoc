@@ -33,7 +33,6 @@
 \ingroup all-examples
 \ingroup qtquick
 \target qtquick-samples
-\inqmlmodule QtQuick 2
 
 These are code samples that show how to use various aspects of Qt Quick. Larger
 compound interfaces are grouped as applications as they demonstrate more Qt
