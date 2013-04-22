@@ -235,6 +235,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickListView, 1>(uri, 2, 1, "ListView");
     qmlRegisterType<QQuickGridView, 1>(uri, 2, 1, "GridView");
     qmlRegisterType<QQuickTextEdit, 1>(uri, 2, 1, "TextEdit");
+
+    qmlRegisterType<QQuickTextEdit, 2>(uri, 2, 2, "TextEdit");
 }
 
 void QQuickItemsModule::defineModule()

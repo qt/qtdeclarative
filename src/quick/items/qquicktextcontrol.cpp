@@ -720,6 +720,12 @@ void QQuickTextControl::processEvent(QEvent *e, const QMatrix &matrix)
             QMouseEvent *ev = static_cast<QMouseEvent *>(e);
             d->mouseDoubleClickEvent(ev, matrix.map(ev->localPos()));
             break; }
+        case QEvent::HoverEnter:
+        case QEvent::HoverMove:
+        case QEvent::HoverLeave: {
+            QHoverEvent *ev = static_cast<QHoverEvent *>(e);
+            d->hoverEvent(ev, matrix.map(ev->posF()));
+            break; }
 #ifndef QT_NO_IM
         case QEvent::InputMethod:
             d->inputMethodEvent(static_cast<QInputMethodEvent *>(e));
@@ -1403,6 +1409,20 @@ void QQuickTextControlPrivate::focusEvent(QFocusEvent *e)
     }
 }
 
+void QQuickTextControlPrivate::hoverEvent(QHoverEvent *e, const QPointF &pos)
+{
+    Q_Q(QQuickTextControl);
+
+    QString link;
+    if (e->type() != QEvent::HoverLeave)
+        link = q->anchorAt(pos);
+
+    if (hoveredLink != link) {
+        hoveredLink = link;
+        emit q->linkHovered(link);
+    }
+}
+
 bool QQuickTextControl::hasImState() const
 {
     Q_D(const QQuickTextControl);
@@ -1436,6 +1456,12 @@ QRectF QQuickTextControl::cursorRect() const
 {
     Q_D(const QQuickTextControl);
     return cursorRect(d->cursor);
+}
+
+QString QQuickTextControl::hoveredLink() const
+{
+    Q_D(const QQuickTextControl);
+    return d->hoveredLink;
 }
 
 QString QQuickTextControl::anchorAt(const QPointF &pos) const

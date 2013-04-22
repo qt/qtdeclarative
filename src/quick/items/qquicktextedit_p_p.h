@@ -124,6 +124,7 @@ public:
     void mirrorChange();
     qreal getImplicitWidth() const;
     Qt::LayoutDirection textDirection(const QString &text) const;
+    bool isLinkHoveredConnected();
 
     void setNativeCursorEnabled(bool enabled) { control->setCursorWidth(enabled ? 1 : 0); }
     void handleFocusEvent(QFocusEvent *event);

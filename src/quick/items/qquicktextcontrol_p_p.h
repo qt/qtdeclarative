@@ -118,6 +118,7 @@ public:
 #ifndef QT_NO_IM
     void inputMethodEvent(QInputMethodEvent *);
 #endif
+    void hoverEvent(QHoverEvent *e, const QPointF &pos);
 
     void activateLinkUnderCursor(QString href = QString());
 
@@ -138,6 +139,7 @@ public:
     QTextCursor selectedBlockOnTripleClick;
     QString anchorOnMousePress;
     QString linkToCopy;
+    QString hoveredLink;
 
     QBasicTimer cursorBlinkTimer;
     QBasicTimer tripleClickTimer;

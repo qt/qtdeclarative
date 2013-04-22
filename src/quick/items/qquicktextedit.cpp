@@ -1953,6 +1953,8 @@ void QQuickTextEditPrivate::init()
 #endif
     q->setFlag(QQuickItem::ItemHasContents);
 
+    q->setAcceptHoverEvents(true);
+
     document = new QQuickTextDocumentWithImageResources(q);
 
     control = new QQuickTextControl(document, q);
@@ -1967,6 +1969,7 @@ void QQuickTextEditPrivate::init()
     qmlobject_connect(control, QQuickTextControl, SIGNAL(cursorPositionChanged()), q, QQuickTextEdit, SIGNAL(cursorPositionChanged()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(cursorRectangleChanged()), q, QQuickTextEdit, SLOT(moveCursorDelegate()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(linkActivated(QString)), q, QQuickTextEdit, SIGNAL(linkActivated(QString)));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(linkHovered(QString)), q, QQuickTextEdit, SIGNAL(linkHovered(QString)));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(textChanged()), q, QQuickTextEdit, SLOT(q_textChanged()));
 #ifndef QT_NO_CLIPBOARD
     qmlobject_connect(QGuiApplication::clipboard(), QClipboard, SIGNAL(dataChanged()), q, QQuickTextEdit, SLOT(q_canPasteChanged()));
@@ -2466,6 +2469,68 @@ QQuickTextDocument *QQuickTextEdit::textDocument()
     if (!d->quickDocument)
         d->quickDocument = new QQuickTextDocument(this);
     return d->quickDocument;
+}
+
+bool QQuickTextEditPrivate::isLinkHoveredConnected()
+{
+    Q_Q(QQuickTextEdit);
+    IS_SIGNAL_CONNECTED(q, QQuickTextEdit, linkHovered, (const QString &));
+}
+
+/*!
+    \qmlsignal QtQuick2::TextEdit::onLinkHovered(string link)
+    \since QtQuick 2.2
+
+    This handler is called when the user hovers a link embedded in the text.
+    The link must be in rich text or HTML format and the
+    \a link string provides access to the particular link.
+
+    \sa hoveredLink
+*/
+
+/*!
+    \qmlproperty string QtQuick2::TextEdit::hoveredLink
+    \since QtQuick 2.2
+
+    This property contains the link string when user hovers a link
+    embedded in the text. The link must be in rich text or HTML format
+    and the link string provides access to the particular link.
+
+    \sa onLinkHovered
+*/
+
+QString QQuickTextEdit::hoveredLink() const
+{
+    Q_D(const QQuickTextEdit);
+    if (const_cast<QQuickTextEditPrivate *>(d)->isLinkHoveredConnected()) {
+        return d->control->hoveredLink();
+#ifndef QT_NO_CURSOR
+    } else {
+        QPointF pos = QCursor::pos(window()->screen()) - window()->position() - mapToScene(position());
+        return d->control->anchorAt(pos);
+#endif // QT_NO_CURSOR
+    }
+}
+
+void QQuickTextEdit::hoverEnterEvent(QHoverEvent *event)
+{
+    Q_D(QQuickTextEdit);
+    if (d->isLinkHoveredConnected())
+        d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
+}
+
+void QQuickTextEdit::hoverMoveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickTextEdit);
+    if (d->isLinkHoveredConnected())
+        d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
+}
+
+void QQuickTextEdit::hoverLeaveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickTextEdit);
+    if (d->isLinkHoveredConnected())
+        d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
 }
 
 QT_END_NAMESPACE
