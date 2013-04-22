@@ -29,9 +29,9 @@
 \title Qt Quick Release Notes
 \page qtquick-releasenotes.html
 
-\section1 Qt 5.0 - Qt Quick C++ Module
+\section1 Qt Quick in Qt 5
 
-The \l {Qt Quick} C++ module is new in Qt 5. It provides the visual canvas and scenegraph back-end
+The \l {Qt Quick} module is new in Qt 5. It provides the visual canvas and scenegraph back-end
 as well as the \c QtQuick QML module for QML application development.
 
 As of Qt 5, the \l {Qt Quick} module is based on an OpenGL scenegraph. Many of the classes in

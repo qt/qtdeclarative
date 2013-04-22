@@ -35,8 +35,8 @@ The \l{Qt QML} module is new in Qt 5.0. It provides the QML engine and
 implements the QML language supporting infrastructure.
 
 (Prior to Qt 5, this functionality was provided by the \l {Qt Quick 1}{QtDeclarative} module, which
-has now been replaced by the new \l {Qt QML} and \l {Qt Quick} C++ modules. See the
-\l {Porting QML Applications to Qt 5} for more information.)
+has now been replaced by the new \l {Qt QML} and \l {Qt Quick} modules. See the
+\l {Porting QML Applications to Qt 5} page for more information.)
 
 \section2 QML Engine
 

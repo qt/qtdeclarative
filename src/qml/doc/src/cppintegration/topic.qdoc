@@ -29,7 +29,7 @@
 \title Integrating QML and C++
 \brief Description of how to integrate QML and C++ code
 
-QML is designed to be easily extensible through C++ code. The classes in the \l {Qt QML} C++ module
+QML is designed to be easily extensible through C++ code. The classes in the \l {Qt QML} module
 enables QML objects to be loaded and manipulated from C++, and the nature of QML engine's
 integration with Qt's \l{Meta Object System}{meta object system} enables C++ functionality to be
 invoked directly from QML. This allows the development of hybrid applications which are implemented

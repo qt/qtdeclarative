@@ -680,8 +680,8 @@ to be declared for an item without explicitly assigning them to the
 When building user interfaces with the \l {Qt Quick} module, all QML objects that are
 to be visually rendered must derive from the \l Item type, as it is the base
 type for all visual objects in \l {Qt Quick}. This \l Item type is
-implemented by the QQuickItem C++ class, which is provided as part of the
-\l {Qt Quick} C++ module. Therefore, this class should be subclassed when it is
+implemented by the QQuickItem C++ class, which is provided by the
+\l {Qt Quick} module. Therefore, this class should be subclassed when it is
 necessary to implement a visual type in C++ that can be integrated into a
 QML-based user interface.
 
