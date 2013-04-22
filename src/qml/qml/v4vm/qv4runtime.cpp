@@ -706,27 +706,6 @@ void __qmljs_get_activation_property(ExecutionContext *ctx, Value *result, Strin
     *result = ctx->getProperty(name);
 }
 
-void __qmljs_get_global_lookup(ExecutionContext *ctx, Value *result, int lookupIndex)
-{
-    Lookup *l = ctx->lookups + lookupIndex;
-    l->globalGetter(l, ctx, result);
-}
-
-void __qmljs_get_property_lookup(ExecutionContext *ctx, Value *result, const Value &object, int lookupIndex)
-{
-    Lookup *l = ctx->lookups + lookupIndex;
-    l->getter(l, ctx, result, object);
-}
-
-void __qmljs_set_property_lookup(ExecutionContext *ctx, const Value &object, int lookupIndex, const Value &value)
-{
-    Object *o = object.toObject(ctx);
-    Lookup *l = ctx->lookups + lookupIndex;
-
-    l->setter(l, ctx, object, value);
-}
-
-
 uint __qmljs_equal(const Value &x, const Value &y)
 {
     if (x.type() == y.type()) {

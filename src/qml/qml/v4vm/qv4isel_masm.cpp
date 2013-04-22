@@ -856,8 +856,7 @@ void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::T
     String *propertyName = identifier(*name->id);
     if (useFastLookups && name->global) {
         uint index = addGlobalLookup(propertyName);
-        generateFunctionCall(Assembler::Void, __qmljs_get_global_lookup, Assembler::ContextRegister, Assembler::PointerToValue(temp),
-                             Assembler::TrustedImm32(index));
+        generateLookupCall(index, offsetof(QV4::Lookup, globalGetter), Assembler::PointerToValue(temp));
         return;
     }
     generateFunctionCall(Assembler::Void, __qmljs_get_activation_property, Assembler::ContextRegister, Assembler::PointerToValue(temp), propertyName);
@@ -882,8 +881,8 @@ void InstructionSelection::getProperty(V4IR::Temp *base, const QString &name, V4
     if (useFastLookups) {
         QV4::String *s = identifier(name);
         uint index = addLookup(s);
-        generateFunctionCall(Assembler::Void, __qmljs_get_property_lookup, Assembler::ContextRegister, Assembler::PointerToValue(target),
-                             Assembler::Reference(base), Assembler::TrustedImm32(index));
+        generateLookupCall(index, offsetof(QV4::Lookup, getter), Assembler::PointerToValue(target),
+                           Assembler::Reference(base));
     } else {
         generateFunctionCall(Assembler::Void, __qmljs_get_property, Assembler::ContextRegister, Assembler::PointerToValue(target),
                              Assembler::Reference(base), identifier(name));
@@ -895,9 +894,7 @@ void InstructionSelection::setProperty(V4IR::Temp *source, V4IR::Temp *targetBas
     if (useFastLookups) {
         QV4::String *s = identifier(targetName);
         uint index = addSetterLookup(s);
-        generateFunctionCall(Assembler::Void, __qmljs_set_property_lookup,
-                Assembler::ContextRegister, Assembler::Reference(targetBase),
-                Assembler::TrustedImm32(index), Assembler::Reference(source));
+        generateLookupCall(index, offsetof(QV4::Lookup, setter), Assembler::Reference(targetBase), Assembler::Reference(source));
     } else {
         generateFunctionCall(Assembler::Void, __qmljs_set_property, Assembler::ContextRegister,
                 Assembler::Reference(targetBase),

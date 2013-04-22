@@ -229,6 +229,10 @@ public:
         _callsToLink.append(ctl);
     }
 
+    void callAbsolute(const char* /*functionName*/, Address addr) {
+        call(addr);
+    }
+
     void registerBlock(V4IR::BasicBlock*);
     void jumpToBlock(V4IR::BasicBlock* current, V4IR::BasicBlock *target);
     void addPatch(V4IR::BasicBlock* targetBlock, Jump targetJump);
@@ -526,8 +530,8 @@ public:
         return 0;
     }
 
-    template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
+    template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
+    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
     {
         int totalNumberOfArgs = 6;
 
@@ -566,32 +570,32 @@ public:
             add32(TrustedImm32(stackSizeToCorrect), StackPointerRegister);
     }
 
-    template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+    template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
+    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
         generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, arg4, arg5, VoidType());
     }
 
-    template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+    template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
+    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
         generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, arg4, VoidType());
     }
 
-    template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3>
+    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
         generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, VoidType(), VoidType());
     }
 
-    template <typename ArgRet, typename Arg1, typename Arg2>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2)
+    template <typename ArgRet, typename Callable, typename Arg1, typename Arg2>
+    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2)
     {
         generateFunctionCallImp(r, functionName, function, arg1, arg2, VoidType(), VoidType(), VoidType());
     }
 
-    template <typename ArgRet, typename Arg1>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1)
+    template <typename ArgRet, typename Callable, typename Arg1>
+    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1)
     {
         generateFunctionCallImp(r, functionName, function, arg1, VoidType(), VoidType(), VoidType(), VoidType());
     }
@@ -883,6 +887,26 @@ private:
     uint addLookup(QV4::String *name);
     uint addSetterLookup(QV4::String *name);
     uint addGlobalLookup(QV4::String *name);
+
+    template <typename Arg1, typename Arg2>
+    void generateLookupCall(uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
+    {
+        _as->loadPtr(Assembler::Address(Assembler::ContextRegister, offsetof(QV4::ExecutionContext, lookups)),
+                     Assembler::ReturnValueRegister);
+
+        Assembler::Pointer lookupAddr(Assembler::ReturnValueRegister, index * sizeof(QV4::Lookup));
+
+        Assembler::Address getterSetter = lookupAddr;
+        getterSetter.offset += getterSetterOffset;
+
+         _as->generateFunctionCallImp(Assembler::Void, "lookup getter/setter", getterSetter, lookupAddr, Assembler::ContextRegister, arg1, arg2);
+    }
+
+    template <typename Arg1>
+    void generateLookupCall(uint index, uint getterSetterOffset, Arg1 arg1)
+    {
+        generateLookupCall(index, getterSetterOffset, arg1, Assembler::VoidType());
+    }
 
     V4IR::BasicBlock *_block;
     V4IR::Function* _function;

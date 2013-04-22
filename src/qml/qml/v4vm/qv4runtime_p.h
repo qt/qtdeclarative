@@ -166,11 +166,8 @@ void __qmljs_set_property(QV4::ExecutionContext *ctx, const QV4::Value &object, 
 void __qmljs_get_property(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &object, QV4::String *name);
 void __qmljs_get_activation_property(QV4::ExecutionContext *ctx, QV4::Value *result, QV4::String *name);
 
-void __qmljs_get_global_lookup(QV4::ExecutionContext *ctx, QV4::Value *result, int lookupIndex);
 void __qmljs_call_global_lookup(QV4::ExecutionContext *context, QV4::Value *result, uint index, QV4::Value *args, int argc);
 void __qmljs_construct_global_lookup(QV4::ExecutionContext *context, QV4::Value *result, uint index, QV4::Value *args, int argc);
-void __qmljs_get_property_lookup(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &object, int lookupIndex);
-void __qmljs_set_property_lookup(QV4::ExecutionContext *ctx, const QV4::Value &object, int lookupIndex, const QV4::Value &value);
 
 
 void __qmljs_get_element(QV4::ExecutionContext *ctx, QV4::Value *retval, const QV4::Value &object, const QV4::Value &index);
