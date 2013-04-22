@@ -224,9 +224,10 @@ void removeDeadAssignments(V4IR::Function *function)
         QVector<V4IR::Stmt *> &statements = bb->statements;
         for (int i = 0; i < statements.size(); ) {
 //            qout<<"removeDeadAssignments: considering ";statements.at(i)->dump(qout);qout<<"\n";qout.flush();
-            if (isDeadAssignment(statements.at(i), localCount))
+            if (isDeadAssignment(statements.at(i), localCount)) {
+                statements.at(i)->destroyData();
                 statements.remove(i);
-            else
+            } else
                 ++i;
         }
     }
@@ -2347,6 +2348,9 @@ void Codegen::linearize(V4IR::Function *function)
             blocksToDelete.append(b);
         }
     }
+    foreach (V4IR::BasicBlock *b, blocksToDelete)
+        foreach (V4IR::Stmt *s, b->statements)
+            s->destroyData();
     qDeleteAll(blocksToDelete);
     function->basicBlocks = trace;
 

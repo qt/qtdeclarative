@@ -237,6 +237,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
 ExecutionEngine::~ExecutionEngine()
 {
+    delete identifierCache;
     delete bumperPointerAllocator;
     delete regExpCache;
     UnwindHelper::deregisterFunctions(functions);
