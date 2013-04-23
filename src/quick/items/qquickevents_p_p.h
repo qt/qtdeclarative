@@ -93,7 +93,7 @@ private:
     QKeyEvent event;
 };
 
-// used in QtLocation
+// used in Qt Location
 class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
 {
     Q_OBJECT

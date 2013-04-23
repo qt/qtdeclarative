@@ -1917,7 +1917,7 @@ void tst_QJSEngine::jsFunctionDeclarationAsStatement()
     // at the beginning of chapter 12 in ECMA-262 5th edition, where it's
     // recommended that implementations either disallow this usage or issue
     // a warning.
-    // Since we had a bug report long ago about QtScript not supporting this
+    // Since we had a bug report long ago about Qt Script not supporting this
     // "feature" (and thus deviating from other implementations), we still
     // check this behavior.
 
@@ -2625,7 +2625,7 @@ void tst_QJSEngine::qRegExpInport()
 }
 
 // QScriptValue::toDateTime() returns a local time, whereas JS dates
-// are always stored as UTC. QtScript must respect the current time
+// are always stored as UTC. Qt Script must respect the current time
 // zone, and correctly adjust for daylight saving time that may be in
 // effect at a given date (QTBUG-9770).
 void tst_QJSEngine::dateRoundtripJSQtJS()
