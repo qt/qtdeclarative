@@ -26,6 +26,59 @@
 ****************************************************************************/
 
 /*!
+\qmlmodule QtQml 2
+\title Qt QML QML Types
+\ingroup qmlmodules
+\brief List of QML types provided by the Qt QML module
+
+The \l{Qt QML} module provides the definition and implementation of various
+convenience types which can be used with the QML language, including some
+elementary QML types which can provide the basis for further extensions to the
+QML language. The \l QtObject and \l Component object types are non-visual and
+provide building-blocks for extensions to QML.
+
+\section1 Importing QtQml
+
+The types provided by the \c QtQml module are only available in a QML document
+if that document imports the \c QtQml namespace (or if the document imports the
+\c QtQuick namespace, as noted below).
+
+The current version of the \c QtQml module is version 2.0, and thus it may be
+imported via the following statement:
+
+\qml
+import QtQml 2.0
+\endqml
+
+Most clients will never need to use the \c QtQml import, as all of the types
+are also provided by the \c QtQuick namespace which may be imported as
+follows:
+
+\qml
+import QtQuick 2.0
+\endqml
+
+See the \l{Qt Quick} module documentation for more information about the
+\c QtQuick namespace and what it provides to QML application developers.
+
+The documentation for the types below applies equally to the types of the same
+name provided by the \l{Qt Quick} module, as they are in fact identical.
+
+\section1 Basic Types
+
+The following \l{qtqml-typesystem-basictypes.html}{QML basic types} are
+provided:
+
+\annotatedlist qtqmlbasictypes
+
+\section1 Object Types
+
+The following \l{qtqml-typesystem-objecttypes.html}{QML object types} are
+provided:
+
+*/
+
+/*!
 \qmlbasictype date
 \ingroup qtqmlbasictypes
 \ingroup qtquickbasictypes
