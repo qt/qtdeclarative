@@ -1470,7 +1470,7 @@ void QQuickTextInput::keyPressEvent(QKeyEvent* ev)
         int cursorPosition = d->m_cursor;
         if (cursorPosition == 0)
             ignore = ev->key() == (d->layoutDirection() == Qt::LeftToRight ? Qt::Key_Left : Qt::Key_Right);
-        if (!ignore && cursorPosition == text().length())
+        if (!ignore && cursorPosition == d->m_text.length())
             ignore = ev->key() == (d->layoutDirection() == Qt::LeftToRight ? Qt::Key_Right : Qt::Key_Left);
     }
     if (ignore) {

@@ -6123,6 +6123,12 @@ void tst_qquicktextinput::keypress_inputMask_data()
         keys << Qt::Key_Home << "12ab";
         QTest::newRow("uppercase") << QString("9999 >AA;_") << keys << QString("12 AB") << QString("12__ AB");
     }
+    {
+        KeyList keys;
+        // inserting '12ab'
+        keys << Qt::Key_Right << Qt::Key_Right << "1";
+        QTest::newRow("Move in mask") << QString("#0:00;*") << keys << QString(":1") << QString("**:1*");
+    }
 }
 
 void tst_qquicktextinput::keypress_inputMask()
