@@ -132,8 +132,10 @@ void QQuickMaskExtruder::ensureInitialized(const QRectF &r)
     m_img = m_pix.image().createAlphaMask();
     m_img = m_img.convertToFormat(QImage::Format_Mono);//Else LSB, but I think that's easier
     m_img = m_img.scaled(r.size().toSize());//TODO: Do they need aspect ratio stuff? Or tiling?
-    for (int i=0; i<r.width(); i++){
-        for (int j=0; j<r.height(); j++){
+    int w = m_img.width();
+    int h = m_img.height();
+    for (int i=0; i<w; i++){
+        for (int j=0; j<h; j++){
             if (m_img.pixelIndex(i,j))//Direct bit manipulation is presumably more efficient
                 m_mask << QPointF(i,j);
         }
