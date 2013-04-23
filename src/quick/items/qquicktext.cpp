@@ -107,6 +107,7 @@ void QQuickTextPrivate::init()
     Q_Q(QQuickText);
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFlag(QQuickItem::ItemHasContents);
+    q->setAcceptHoverEvents(true);
 }
 
 QQuickTextDocumentWithImageResources::QQuickTextDocumentWithImageResources(QQuickItem *parent)
@@ -2579,6 +2580,85 @@ void QQuickText::mouseReleaseEvent(QMouseEvent *event)
 
     if (!event->isAccepted())
         QQuickItem::mouseReleaseEvent(event);
+}
+
+bool QQuickTextPrivate::isLinkHoveredConnected()
+{
+    Q_Q(QQuickText);
+    IS_SIGNAL_CONNECTED(q, QQuickText, linkHovered, (const QString &));
+}
+
+/*!
+    \qmlsignal QtQuick2::Text::onLinkHovered(string link)
+    \since QtQuick 2.2
+
+    This handler is called when the user hovers a link embedded in the
+    text. The link must be in rich text or HTML format and the \a link
+    string provides access to the particular link.
+
+    \sa hoveredLink
+*/
+
+/*!
+    \qmlproperty string QtQuick2::Text::hoveredLink
+    \since QtQuick 2.2
+
+    This property contains the link string when user hovers a link
+    embedded in the text. The link must be in rich text or HTML format
+    and the \a hoveredLink string provides access to the particular link.
+
+    \sa onLinkHovered
+*/
+
+QString QQuickText::hoveredLink() const
+{
+    Q_D(const QQuickText);
+    if (const_cast<QQuickTextPrivate *>(d)->isLinkHoveredConnected()) {
+        if (d->extra.isAllocated())
+            return d->extra->hoveredLink;
+    } else {
+#ifndef QT_NO_CURSOR
+        if (QQuickWindow *wnd = window()) {
+            QPointF pos = QCursor::pos(wnd->screen()) - wnd->position() - mapToScene(QPointF(0, 0));
+            return d->anchorAt(pos);
+        }
+#endif // QT_NO_CURSOR
+    }
+    return QString();
+}
+
+void QQuickTextPrivate::processHoverEvent(QHoverEvent *event)
+{
+    Q_Q(QQuickText);
+    QString link;
+    if (event->type() != QEvent::HoverLeave)
+        link = anchorAt(event->posF());
+
+    if ((!extra.isAllocated() && !link.isEmpty()) || (extra.isAllocated() && extra->hoveredLink != link)) {
+        extra.value().hoveredLink = link;
+        emit q->linkHovered(extra->hoveredLink);
+    }
+}
+
+void QQuickText::hoverEnterEvent(QHoverEvent *event)
+{
+    Q_D(QQuickText);
+    if (d->isLinkHoveredConnected())
+        d->processHoverEvent(event);
+}
+
+void QQuickText::hoverMoveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickText);
+    if (d->isLinkHoveredConnected())
+        d->processHoverEvent(event);
+}
+
+void QQuickText::hoverLeaveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickText);
+    if (d->isLinkHoveredConnected())
+        d->processHoverEvent(event);
 }
 
 QT_END_NAMESPACE
