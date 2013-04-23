@@ -149,7 +149,7 @@ locations. The class name changes are as follows:
 \table
 \header
     \li Qt QML
-    \li QtQuick
+    \li Qt Quick
 \row
     \li
         \list
@@ -245,7 +245,7 @@ To use the \c {Qt Quick 1} module, add "quick1" to your qmake \c .pro file:
 QT += quick1
 \endcode
 
-Required header files can be included from the QtQuick 1 module:
+Required header files can be included from the Qt Quick 1 module:
 
 \code
 #include <QtQuick1/QDeclarativeView>

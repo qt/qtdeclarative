@@ -29,9 +29,9 @@
 \title Qt Quick Release Notes
 \page qtquick-releasenotes.html
 
-\section1 Qt 5.0 - QtQuick C++ Module
+\section1 Qt 5.0 - Qt Quick C++ Module
 
-The QtQuick C++ module is new in Qt 5. It provides the visual canvas and scenegraph back-end
+The Qt Quick C++ module is new in Qt 5. It provides the visual canvas and scenegraph back-end
 as well as the QtQuick QML module for QML application development.
 
 As of Qt 5, the \l {Qt Quick} module is based on an OpenGL scenegraph. Many of the classes in
@@ -344,11 +344,11 @@ the window loses focus.
 \section2 Property types
 
 Support for various math and geometry-related value types, including QVector2D, QVector3D, QVector4D,
-QMatrix4x4 and QQuaternion, as well as QColor and QFont, are now provided by QtQuick.  Properties of
+QMatrix4x4 and QQuaternion, as well as QColor and QFont, are now provided by Qt Quick.  Properties of
 these types can be declared in QML documents via the property syntax where the type name is \c vector2d,
 \c vector3d, \c vector4d, \c matrix4x4, \c quaternion, \c color and \c font respectively.
 
-QtQuick also provides implementation for the various value type factory or utility functions of the
+Qt Quick also provides implementation for the various value type factory or utility functions of the
 \c Qt object which return or operate on values of the above types.  The functions are:
 \table
   \header

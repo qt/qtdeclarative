@@ -109,7 +109,7 @@ the \c finishCreation() function and call \l {Component::createObject()}
 
 Notice in both instances, \l {Component::createObject()}{createObject()} is
 called with \c appWindow passed as the parent argument, since the dynamically
-created object is a visual (QtQuick) object.  The created object will become a
+created object is a visual (Qt Quick) object.  The created object will become a
 child of the \c appWindow object in \c main.qml, and appear in the scene.
 
 When using files with relative paths, the path should

@@ -317,7 +317,7 @@ class QQmlApplicationPrivate;
 
 class Q_QML_PRIVATE_EXPORT QQmlApplication : public QObject
 {
-    //Application level logic, subclassed by QtQuick if available via QQmlGuiProvider
+    //Application level logic, subclassed by Qt Quick if available via QQmlGuiProvider
     Q_OBJECT
     Q_PROPERTY(QStringList arguments READ args CONSTANT)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)

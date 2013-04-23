@@ -259,7 +259,7 @@ Data Storage
 \li \l {ShaderEffect} - Allows GLSL shaders to be used as graphical effects
 \li \l {ShaderEffectSource} - Usable as a texture in ShaderEffect
 \li \l {GridMesh} - Generates a grid mesh of vertices for use by ShaderEffect
-\li The \l{QtQuick.Particles 2} module provides a set of Particle System types for QtQuick 2
+\li The \l{QtQuick.Particles 2} module provides a set of Particle System types for Qt Quick 2
 \endlist
 
 \section2 Convenience Types

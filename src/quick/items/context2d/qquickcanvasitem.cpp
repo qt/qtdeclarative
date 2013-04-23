@@ -760,7 +760,7 @@ void QQuickCanvasItem::getContext(QQmlV8Function *args)
 /*!
     \qmlmethod long QtQuick2::Canvas::requestAnimationFrame(callback)
 
-    This function schedules callback to be invoked before composing the QtQuick
+    This function schedules callback to be invoked before composing the Qt Quick
     scene.
 */
 

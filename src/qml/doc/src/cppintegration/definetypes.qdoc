@@ -675,7 +675,7 @@ to be declared for an item without explicitly assigning them to the
 \l{Item::}{children} property.)
 
 
-\section2 Defining Visual Items with the QtQuick Module
+\section2 Defining Visual Items with the Qt Quick Module
 
 When building user interfaces with the \l {Qt Quick} module, all QML objects that are
 to be visually rendered must derive from the \l Item type, as it is the base
@@ -687,7 +687,7 @@ QML-based user interface.
 
 See the QQuickItem documentation for more information. Additionally, the
 \l{Writing QML Extensions with C++} tutorial demonstrates how a QQuickItem-based
-visual item can be implemented in C++ and integrated into a QtQuick-based user
+visual item can be implemented in C++ and integrated into a Qt Quick-based user
 interface.
 
 

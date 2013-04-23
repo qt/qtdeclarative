@@ -186,7 +186,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     }
     \endcode
 
-    Note that the QtQuick 1 version is named QDeclarativeComponent.
+    Note that the Qt Quick 1 version is named QDeclarativeComponent.
 */
 
 /*!

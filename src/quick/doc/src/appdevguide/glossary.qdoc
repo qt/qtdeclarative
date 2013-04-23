@@ -28,7 +28,7 @@
 /*!
 \page qtquick-glossary.html
 \title Qt Quick Glossary Of Terms
-\brief Glossary of terms used in the documentation for QML and QtQuick
+\brief Glossary of terms used in the documentation for QML and Qt Quick
 
 \section1 Common Terms
 
@@ -56,7 +56,7 @@
 
             The QML language provides a number of built in
             (\l{qtqml-typesystem-basictypes.html}{basic types}), and the
-            QtQuick module provides various \l{qtquick-qmltypereference.html}
+            Qt Quick module provides various \l{qtquick-qmltypereference.html}
             {Qt Quick types} for building QML applications. Types can also be
             provided by third-party developers through
             (\l{qtqml-modules-topic.html}{modules}) or by the application
