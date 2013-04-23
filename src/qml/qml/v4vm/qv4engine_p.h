@@ -216,6 +216,7 @@ struct Q_QML_EXPORT ExecutionEngine
     BoundFunction *newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
 
     Object *newObject();
+    Object *newObject(InternalClass *internalClass);
 
     String *newString(const QString &s);
     String *newIdentifier(const QString &text);

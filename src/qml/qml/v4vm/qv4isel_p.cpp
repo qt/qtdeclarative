@@ -387,6 +387,10 @@ void InstructionSelection::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
         callBuiltinDefineArray(result, call->args);
         return;
 
+    case V4IR::Name::builtin_define_object_literal:
+        callBuiltinDefineObjectLiteral(result, call->args);
+        return;
+
     default:
         break;
     }

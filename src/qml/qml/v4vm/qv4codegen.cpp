@@ -821,6 +821,14 @@ protected:
 
     virtual bool visit(ObjectLiteral *ast)
     {
+        int argc = 0;
+        for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
+            ++argc;
+            if (AST::cast<AST::PropertyGetterSetter *>(it->assignment))
+                ++argc;
+        }
+        _env->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, argc);
+
         TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
         Node::accept(ast->properties, this);
         return false;
@@ -2070,8 +2078,6 @@ bool Codegen::visit(ObjectLiteral *ast)
 {
     QMap<QString, ObjectPropertyValue> valueMap;
 
-    const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), _block->NEW(_block->NAME(QStringLiteral("Object"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
     for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
         if (PropertyNameAndValue *nv = AST::cast<AST::PropertyNameAndValue *>(it->assignment)) {
             QString name = propertyName(nv->name);
@@ -2101,6 +2107,65 @@ bool Codegen::visit(ObjectLiteral *ast)
             Q_UNREACHABLE();
         }
     }
+
+    V4IR::ExprList *args = 0;
+
+    if (!valueMap.isEmpty()) {
+        V4IR::ExprList *current;
+        for (QMap<QString, ObjectPropertyValue>::iterator it = valueMap.begin(); it != valueMap.end(); ) {
+            if (QV4::String(it.key()).asArrayIndex() != UINT_MAX) {
+                ++it;
+                continue;
+            }
+
+            if (!args) {
+                args = _function->New<V4IR::ExprList>();
+                current = args;
+            } else {
+                current->next = _function->New<V4IR::ExprList>();
+                current = current->next;
+            }
+
+            current->expr = _block->NAME(it.key(), 0, 0);
+
+            if (it->value) {
+                current->next = _function->New<V4IR::ExprList>();
+                current = current->next;
+                current->expr = _block->CONST(V4IR::BoolType, true);
+
+                unsigned value = _block->newTemp();
+                move(_block->TEMP(value), it->value);
+
+                current->next = _function->New<V4IR::ExprList>();
+                current = current->next;
+                current->expr = _block->TEMP(value);
+            } else {
+                current->next = _function->New<V4IR::ExprList>();
+                current = current->next;
+                current->expr = _block->CONST(V4IR::BoolType, false);
+
+                unsigned getter = _block->newTemp();
+                unsigned setter = _block->newTemp();
+                move(_block->TEMP(getter), it->getter ? _block->CLOSURE(it->getter) : _block->CONST(V4IR::UndefinedType, 0));
+                move(_block->TEMP(setter), it->setter ? _block->CLOSURE(it->setter) : _block->CONST(V4IR::UndefinedType, 0));
+
+                current->next = _function->New<V4IR::ExprList>();
+                current = current->next;
+                current->expr = _block->TEMP(getter);
+                current->next = _function->New<V4IR::ExprList>();
+                current = current->next;
+                current->expr = _block->TEMP(setter);
+            }
+
+            it = valueMap.erase(it);
+        }
+    }
+
+    const unsigned t = _block->newTemp();
+    move(_block->TEMP(t), _block->CALL(_block->NAME(V4IR::Name::builtin_define_object_literal,
+         ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), args));
+
+    // What's left are array entries
     if (!valueMap.isEmpty()) {
         unsigned value = 0;
         unsigned getter = 0;

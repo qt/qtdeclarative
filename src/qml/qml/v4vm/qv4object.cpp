@@ -89,6 +89,22 @@ Object::Object(ExecutionContext *context)
     type = Type_Object;
 }
 
+Object::Object(ExecutionEngine *engine, InternalClass *internalClass)
+    : prototype(0)
+    , internalClass(internalClass)
+    , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
+    , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
+    , externalResource(0)
+{
+    vtbl = &static_vtbl;
+    type = Type_Object;
+
+    if (internalClass->size >= memberDataAlloc) {
+        memberDataAlloc = internalClass->size;
+        memberData = new Property[memberDataAlloc];
+    }
+}
+
 Object::~Object()
 {
     delete externalResource;

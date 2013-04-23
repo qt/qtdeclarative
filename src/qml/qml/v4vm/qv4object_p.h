@@ -130,6 +130,7 @@ struct Q_QML_EXPORT Object: Managed {
 
     Object(ExecutionEngine *engine);
     Object(ExecutionContext *context);
+    Object(ExecutionEngine *engine, InternalClass *internalClass);
     ~Object();
 
     Property *__getOwnProperty__(String *name, PropertyAttributes *attrs = 0);

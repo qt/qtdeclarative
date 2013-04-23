@@ -813,6 +813,37 @@ void InstructionSelection::callBuiltinDefineArray(V4IR::Temp *result, V4IR::Expr
                          baseAddressForCallArguments(), Assembler::TrustedImm32(length));
 }
 
+void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4IR::ExprList *args)
+{
+    int argc = 0;
+
+    InternalClass *klass = engine()->emptyClass;
+    V4IR::ExprList *it = args;
+    while (it) {
+        V4IR::Name *name = it->expr->asName();
+        it = it->next;
+
+        bool isData = it->expr->asConst()->value;
+        it = it->next;
+        klass = klass->addMember(identifier(*name->id), isData ? QV4::Attr_Data : QV4::Attr_Accessor);
+
+        _as->copyValue(argumentAddressForCall(argc++), it->expr);
+
+        if (!isData) {
+            it = it->next;
+            _as->copyValue(argumentAddressForCall(argc++), it->expr);
+        }
+
+        it = it->next;
+    }
+
+    _as->move(Assembler::TrustedImmPtr(klass), Assembler::ReturnValueRegister);
+
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_object_literal, Assembler::ContextRegister,
+                         Assembler::PointerToValue(result), baseAddressForCallArguments(),
+                         Assembler::ReturnValueRegister);
+}
+
 void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
 {
     int argc = prepareVariableArguments(args);

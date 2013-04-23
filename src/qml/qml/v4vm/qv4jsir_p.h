@@ -299,7 +299,8 @@ struct Name: Expr {
         builtin_declare_vars,
         builtin_define_property,
         builtin_define_array,
-        builtin_define_getter_setter
+        builtin_define_getter_setter,
+        builtin_define_object_literal
     };
 
     const QString *id;

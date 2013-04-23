@@ -46,6 +46,7 @@
     F(CallBuiltinDefineGetterSetter, callBuiltinDefineGetterSetter) \
     F(CallBuiltinDefineProperty, callBuiltinDefineProperty) \
     F(CallBuiltinDefineArray, callBuiltinDefineArray) \
+    F(CallBuiltinDefineObjectLiteral, callBuiltinDefineObjectLiteral) \
     F(CreateValue, createValue) \
     F(CreateProperty, createProperty) \
     F(CreateActivationProperty, createActivationProperty) \
@@ -376,6 +377,12 @@ union Instr
         quint32 args;
         Param result;
     };
+    struct instr_callBuiltinDefineObjectLiteral {
+        MOTH_INSTR_HEADER
+        QV4::InternalClass *internalClass;
+        quint32 args;
+        Param result;
+    };
     struct instr_createValue {
         MOTH_INSTR_HEADER
         quint32 argc;
@@ -487,6 +494,7 @@ union Instr
     instr_callBuiltinDefineGetterSetter callBuiltinDefineGetterSetter;
     instr_callBuiltinDefineProperty callBuiltinDefineProperty;
     instr_callBuiltinDefineArray callBuiltinDefineArray;
+    instr_callBuiltinDefineObjectLiteral callBuiltinDefineObjectLiteral;
     instr_createValue createValue;
     instr_createProperty createProperty;
     instr_createActivationProperty createActivationProperty;

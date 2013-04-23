@@ -388,6 +388,8 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_define_array";
     case V4IR::Name::builtin_define_getter_setter:
         return "builtin_define_getter_setter";
+    case V4IR::Name::builtin_define_object_literal:
+        return "builtin_define_object_literal";
     }
     return "builtin_(###FIXME)";
 };

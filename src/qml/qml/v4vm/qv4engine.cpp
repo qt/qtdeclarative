@@ -363,6 +363,13 @@ Object *ExecutionEngine::newObject()
     return object;
 }
 
+Object *ExecutionEngine::newObject(InternalClass *internalClass)
+{
+    Object *object = new (memoryManager) Object(this, internalClass);
+    object->prototype = objectPrototype;
+    return object;
+}
+
 String *ExecutionEngine::newString(const QString &s)
 {
     return new (memoryManager) String(s);

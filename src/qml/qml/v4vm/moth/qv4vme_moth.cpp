@@ -434,6 +434,11 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         __qmljs_builtin_define_array(context, VALUEPTR(instr.result), args, instr.argc);
     MOTH_END_INSTR(CallBuiltinDefineArray)
 
+    MOTH_BEGIN_INSTR(CallBuiltinDefineObjectLiteral)
+        QV4::Value *args = stack + instr.args;
+        __qmljs_builtin_define_object_literal(context, VALUEPTR(instr.result), args, instr.internalClass);
+    MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
+
     MOTH_BEGIN_INSTR(CreateValue)
         Q_ASSERT(instr.args + instr.argc <= stackSize);
         QV4::Value *args = stack + instr.args;
