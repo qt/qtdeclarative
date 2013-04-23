@@ -2143,7 +2143,7 @@ Local<Object> Context::GetCallingQmlGlobal()
 {
     QV4::ExecutionEngine *engine = GetCurrent()->GetEngine();
     QV4::ExecutionContext *ctx = engine->current;
-    while (ctx && ctx->outer != engine->rootContext)
+    while (ctx && ctx->outer->type != ExecutionContext::Type_GlobalContext)
         ctx = ctx->outer;
 
     assert(ctx);
