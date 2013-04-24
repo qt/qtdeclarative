@@ -54,6 +54,7 @@ struct ExecutionContext;
 struct Property;
 struct Value;
 struct String;
+struct InternalClass;
 
 struct ObjectIterator
 {
@@ -65,6 +66,7 @@ struct ObjectIterator
     };
 
     Object *object;
+    InternalClass *internalClass;
     Object *current;
     SparseArrayNode *arrayNode;
     uint arrayIndex;

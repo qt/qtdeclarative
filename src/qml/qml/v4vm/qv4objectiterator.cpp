@@ -47,6 +47,7 @@ using namespace QV4;
 
 ObjectIterator::ObjectIterator(Object *o, uint flags)
     : object(o)
+    , internalClass(o ? o->internalClass : 0)
     , current(o)
     , arrayNode(0)
     , arrayIndex(0)
@@ -122,7 +123,7 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
             }
         }
 
-        if (memberIndex == current->internalClass->size) {
+        if (memberIndex == internalClass->size) {
             if (flags & WithProtoChain)
                 current = current->prototype;
             else
@@ -132,17 +133,18 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
             else
                 flags &= ~CurrentIsString;
 
+            internalClass = current ? current->internalClass : 0;
 
             arrayIndex = 0;
             memberIndex = 0;
             continue;
         }
-        String *n = current->internalClass->nameMap.at(memberIndex);
+        String *n = internalClass->nameMap.at(memberIndex);
         assert(n);
         // ### check that it's not a repeated attribute
 
         p = current->memberData + memberIndex;
-        PropertyAttributes a = current->internalClass->propertyData[memberIndex];
+        PropertyAttributes a = internalClass->propertyData[memberIndex];
         ++memberIndex;
         if (!(flags & EnumberableOnly) || a.isEnumerable()) {
             *name = n;
