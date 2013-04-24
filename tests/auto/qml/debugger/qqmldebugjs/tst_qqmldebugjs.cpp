@@ -53,6 +53,11 @@
 #include "qqmldebugclient.h"
 #include "../../../shared/util.h"
 
+#if defined (Q_OS_WINCE)
+#undef IN
+#undef OUT
+#endif
+
 const char *V8REQUEST = "v8request";
 const char *V8MESSAGE = "v8message";
 const char *SEQ = "seq";
