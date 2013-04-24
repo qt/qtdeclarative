@@ -393,6 +393,9 @@ Q_SIGNALS:
 protected:
     virtual void componentComplete();
     virtual void classBegin();
+    void disconnectPathElements();
+    void connectPathElements();
+    void gatherAttributes();
 
 private Q_SLOTS:
     void processPath();

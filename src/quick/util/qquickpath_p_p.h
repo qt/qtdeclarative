@@ -67,6 +67,9 @@ class QQuickPathPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickPath)
 
 public:
+    static QQuickPathPrivate* get(QQuickPath *path) { return path->d_func(); }
+    static const QQuickPathPrivate* get(const QQuickPath *path) { return path->d_func(); }
+
     QQuickPathPrivate() : pathLength(0), closed(false), componentComplete(true) { }
 
     QPainterPath _path;

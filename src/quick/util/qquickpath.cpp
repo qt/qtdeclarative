@@ -373,27 +373,49 @@ void QQuickPath::classBegin()
     d->componentComplete = false;
 }
 
-void QQuickPath::componentComplete()
+void QQuickPath::disconnectPathElements()
 {
     Q_D(QQuickPath);
-    QSet<QString> attrs;
-    d->componentComplete = true;
 
-    // First gather up all the attributes
-    foreach (QQuickPathElement *pathElement, d->_pathElements) {
-        if (QQuickCurve *curve =
-            qobject_cast<QQuickCurve *>(pathElement))
-            d->_pathCurves.append(curve);
-        else if (QQuickPathAttribute *attribute =
-                 qobject_cast<QQuickPathAttribute *>(pathElement))
-            attrs.insert(attribute->name());
-    }
-    d->_attributes = attrs.toList();
+    foreach (QQuickPathElement *pathElement, d->_pathElements)
+        disconnect(pathElement, SIGNAL(changed()), this, SLOT(processPath()));
+}
 
-    processPath();
+void QQuickPath::connectPathElements()
+{
+    Q_D(QQuickPath);
 
     foreach (QQuickPathElement *pathElement, d->_pathElements)
         connect(pathElement, SIGNAL(changed()), this, SLOT(processPath()));
+}
+
+void QQuickPath::gatherAttributes()
+{
+    Q_D(QQuickPath);
+
+    QSet<QString> attributes;
+
+    // First gather up all the attributes
+    foreach (QQuickPathElement *pathElement, d->_pathElements) {
+        if (QQuickCurve *curve = qobject_cast<QQuickCurve *>(pathElement))
+            d->_pathCurves.append(curve);
+        else if (QQuickPathAttribute *attribute = qobject_cast<QQuickPathAttribute *>(pathElement))
+            attributes.insert(attribute->name());
+    }
+
+    d->_attributes = attributes.toList();
+}
+
+void QQuickPath::componentComplete()
+{
+    Q_D(QQuickPath);
+    d->componentComplete = true;
+
+    gatherAttributes();
+
+    processPath();
+
+    connectPathElements();
 }
 
 QPainterPath QQuickPath::path() const
