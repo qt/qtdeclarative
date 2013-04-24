@@ -206,7 +206,7 @@ private:
     QV8Engine *_e;
 };
 
-class QQmlV4Handle
+class Q_QML_PRIVATE_EXPORT QQmlV4Handle
 {
 public:
     QQmlV4Handle() : d(0) {}
