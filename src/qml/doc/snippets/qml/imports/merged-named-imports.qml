@@ -41,7 +41,14 @@
 //! [imports]
 import QtQuick 2.0 as Project
 import QtMultimedia 5.0 as Project
+
+Project.Rectangle {
+    width: 100; height: 50
+
+    Project.Audio {
+        source: "music.wav"
+        autoPlay: true
+    }
+}
 //! [imports]
 
-Item {
-}
