@@ -347,8 +347,11 @@ QString QJSValue::toString() const
         else
             return QStringLiteral("false");
     }
-    else if (d->value.isNumber())
-        return __qmljs_numberToString(d->value.asDouble());
+    else if (d->value.isNumber()) {
+        QString result;
+        __qmljs_numberToString(&result, d->value.asDouble());
+        return result;
+    }
 
     QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
     try {

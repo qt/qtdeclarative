@@ -186,7 +186,7 @@ QV4::Bool __qmljs_to_boolean(const QV4::Value &value);
 double __qmljs_to_number(const QV4::Value &value);
 QV4::Value __qmljs_to_string(const QV4::Value &value, QV4::ExecutionContext *ctx);
 Q_QML_EXPORT QV4::String *__qmljs_convert_to_string(QV4::ExecutionContext *ctx, const QV4::Value &value);
-QString __qmljs_numberToString(double num, int radix = 10);
+void __qmljs_numberToString(QString *result, double num, int radix = 10);
 QV4::Value __qmljs_to_object(QV4::ExecutionContext *ctx, const QV4::Value &value);
 QV4::Object *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const QV4::Value &value);
 

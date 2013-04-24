@@ -99,22 +99,27 @@ void Exception::partiallyUnwindContext(ExecutionContext *catchingContext)
 
 extern "C" {
 
-QString __qmljs_numberToString(double num, int radix)
+void __qmljs_numberToString(QString *result, double num, int radix)
 {
+    Q_ASSERT(result);
+
     if (std::isnan(num)) {
-        return QStringLiteral("NaN");
+        *result = QStringLiteral("NaN");
+        return;
     } else if (qIsInf(num)) {
-        return QLatin1String(num < 0 ? "-Infinity" : "Infinity");
+        *result = QLatin1String(num < 0 ? "-Infinity" : "Infinity");
+        return;
     }
 
     if (radix == 10) {
         char str[100];
         double_conversion::StringBuilder builder(str, sizeof(str));
         double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToShortest(num, &builder);
-        return QString::fromLatin1(builder.Finalize());
+        *result = QString::fromLatin1(builder.Finalize());
+        return;
     }
 
-    QString str;
+    result->clear();
     bool negative = false;
 
     if (num < 0) {
@@ -128,25 +133,23 @@ QString __qmljs_numberToString(double num, int radix)
     do {
         char c = (char)::fmod(num, radix);
         c = (c < 10) ? (c + '0') : (c - 10 + 'a');
-        str.prepend(QLatin1Char(c));
+        result->prepend(QLatin1Char(c));
         num = ::floor(num / radix);
     } while (num != 0);
 
     if (frac != 0) {
-        str.append(QLatin1Char('.'));
+        result->append(QLatin1Char('.'));
         do {
             frac = frac * radix;
             char c = (char)::floor(frac);
             c = (c < 10) ? (c + '0') : (c - 10 + 'a');
-            str.append(QLatin1Char(c));
+            result->append(QLatin1Char(c));
             frac = frac - ::floor(frac);
         } while (frac != 0);
     }
 
     if (negative)
-        str.prepend(QLatin1Char('-'));
-
-    return str;
+        result->prepend(QLatin1Char('-'));
 }
 
 void __qmljs_init_closure(ExecutionContext *ctx, Value *result, Function *clos)
@@ -457,7 +460,9 @@ double __qmljs_string_to_number(const QString &string)
 
 Value __qmljs_string_from_number(ExecutionContext *ctx, double number)
 {
-    String *string = ctx->engine->newString(__qmljs_numberToString(number, 10));
+    QString qstr;
+    __qmljs_numberToString(&qstr, number, 10);
+    String *string = ctx->engine->newString(qstr);
     return Value::fromString(string);
 }
 
