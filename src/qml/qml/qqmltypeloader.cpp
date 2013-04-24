@@ -1527,7 +1527,8 @@ bool QQmlTypeLoader::Blob::qmldirDataAvailable(QQmlQmldirData *data, QList<QQmlE
                 return false;
             }
 
-            *it = priority;
+            if (it != m_unresolvedImports.end())
+                *it = priority;
             return true;
         }
     }
