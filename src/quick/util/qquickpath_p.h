@@ -397,6 +397,12 @@ protected:
     void connectPathElements();
     void gatherAttributes();
 
+    // pathElements property
+    static QQuickPathElement *pathElements_at(QQmlListProperty<QQuickPathElement> *, int);
+    static void pathElements_append(QQmlListProperty<QQuickPathElement> *, QQuickPathElement *);
+    static int pathElements_count(QQmlListProperty<QQuickPathElement> *);
+    static void pathElements_clear(QQmlListProperty<QQuickPathElement> *);
+
 private Q_SLOTS:
     void processPath();
 

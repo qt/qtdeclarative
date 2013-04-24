@@ -188,8 +188,47 @@ bool QQuickPath::hasEnd() const
 
 QQmlListProperty<QQuickPathElement> QQuickPath::pathElements()
 {
-    Q_D(QQuickPath);
-    return QQmlListProperty<QQuickPathElement>(this, d->_pathElements);
+    return QQmlListProperty<QQuickPathElement>(this,
+                                               0,
+                                               pathElements_append,
+                                               pathElements_count,
+                                               pathElements_at,
+                                               pathElements_clear);
+}
+
+static QQuickPathPrivate *privatePath(QObject *object)
+{
+    QQuickPath *path = static_cast<QQuickPath*>(object);
+
+    return QQuickPathPrivate::get(path);
+}
+
+QQuickPathElement *QQuickPath::pathElements_at(QQmlListProperty<QQuickPathElement> *property, int index)
+{
+    QQuickPathPrivate *d = privatePath(property->object);
+
+    return d->_pathElements.at(index);
+}
+
+void QQuickPath::pathElements_append(QQmlListProperty<QQuickPathElement> *property, QQuickPathElement *pathElement)
+{
+    QQuickPathPrivate *d = privatePath(property->object);
+
+    d->_pathElements.append(pathElement);
+}
+
+int QQuickPath::pathElements_count(QQmlListProperty<QQuickPathElement> *property)
+{
+    QQuickPathPrivate *d = privatePath(property->object);
+
+    return d->_pathElements.count();
+}
+
+void QQuickPath::pathElements_clear(QQmlListProperty<QQuickPathElement> *property)
+{
+    QQuickPathPrivate *d = privatePath(property->object);
+
+    d->_pathElements.clear();
 }
 
 void QQuickPath::interpolate(int idx, const QString &name, qreal value)
