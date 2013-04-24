@@ -213,8 +213,24 @@ QQuickPathElement *QQuickPath::pathElements_at(QQmlListProperty<QQuickPathElemen
 void QQuickPath::pathElements_append(QQmlListProperty<QQuickPathElement> *property, QQuickPathElement *pathElement)
 {
     QQuickPathPrivate *d = privatePath(property->object);
+    QQuickPath *path = static_cast<QQuickPath*>(property->object);
 
     d->_pathElements.append(pathElement);
+
+    if (d->componentComplete) {
+        QQuickCurve *curve = qobject_cast<QQuickCurve *>(pathElement);
+        if (curve)
+            d->_pathCurves.append(curve);
+        else {
+            QQuickPathAttribute *attribute = qobject_cast<QQuickPathAttribute *>(pathElement);
+            if (attribute && !d->_attributes.contains(attribute->name()))
+                d->_attributes.append(attribute->name());
+        }
+
+        path->processPath();
+
+        connect(pathElement, SIGNAL(changed()), path, SLOT(processPath()));
+    }
 }
 
 int QQuickPath::pathElements_count(QQmlListProperty<QQuickPathElement> *property)
@@ -227,8 +243,12 @@ int QQuickPath::pathElements_count(QQmlListProperty<QQuickPathElement> *property
 void QQuickPath::pathElements_clear(QQmlListProperty<QQuickPathElement> *property)
 {
     QQuickPathPrivate *d = privatePath(property->object);
+    QQuickPath *path = static_cast<QQuickPath*>(property->object);
 
+    path->disconnectPathElements();
     d->_pathElements.clear();
+    d->_pathCurves.clear();
+    d->_pointCache.clear();
 }
 
 void QQuickPath::interpolate(int idx, const QString &name, qreal value)
