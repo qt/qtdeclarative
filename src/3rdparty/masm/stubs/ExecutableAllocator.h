@@ -105,6 +105,8 @@ struct ExecutableAllocator {
         mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode);
 #else
         // We assume we already have RWX
+        (void)addr; // suppress unused parameter warning
+        (void)size; // suppress unused parameter warning
 #endif
     }
 
