@@ -45,7 +45,7 @@ Rectangle {
 //![0]
     Text {
             textFormat: Text.RichText
-            text: "The main website is at <a href=\"http://qt.nokia.com\">Nokia Qt DF</a>."
+            text: "See the <a href=\"http://qt-project.org\">Qt Project website</a>."
             onLinkActivated: console.log(link + " link activated")
     }
 //![0]

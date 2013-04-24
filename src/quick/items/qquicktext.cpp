@@ -1334,10 +1334,10 @@ QQuickText::~QQuickText()
     \snippet qml/text/onLinkActivated.qml 0
 
     The example code will display the text
-    "The main website is at \l{http://qt.nokia.com}{Nokia Qt DF}."
+    "See the \l{http://qt-project.org}{Qt Project website}."
 
     Clicking on the highlighted link will output
-    \tt{http://qt.nokia.com link activated} to the console.
+    \tt{http://qt-project.org link activated} to the console.
 */
 
 /*!

@@ -39,8 +39,8 @@
 ****************************************************************************/
 
 //! [imports]
-import QtQuick 2.0 as Nokia
-import Ovi 1.0 as Nokia
+import QtQuick 2.0 as Project
+import QtMultimedia 5.0 as Project
 //! [imports]
 
 Item {

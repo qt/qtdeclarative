@@ -241,7 +241,7 @@ property is only invoked when the property is reassigned to a different object v
     \brief a resource locator.
 
     The \c url type refers to a resource locator (like a file name, for example). It can be either
-    absolute, e.g. "http://qt.nokia.com", or relative, e.g.  "pics/logo.png". A relative URL is
+    absolute, e.g. "http://qt-project.org", or relative, e.g.  "pics/logo.png". A relative URL is
     resolved relative to the URL of the containing component.
 
     For example, the following assigns a valid URL to the \l {Image::source}
