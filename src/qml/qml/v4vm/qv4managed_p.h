@@ -70,7 +70,7 @@ struct JSONObject;
 struct ForeachIteratorObject;
 struct Managed;
 struct Value;
-struct RegExp;
+class RegExp;
 struct Lookup;
 
 struct ManagedVTable

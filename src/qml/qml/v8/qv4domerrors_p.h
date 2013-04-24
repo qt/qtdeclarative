@@ -84,7 +84,7 @@ QT_BEGIN_NAMESPACE
 }
 
 namespace QV4 {
-class ExecutionEngine;
+struct ExecutionEngine;
 }
 
 

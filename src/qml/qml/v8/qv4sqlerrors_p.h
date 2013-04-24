@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
 #define SQLEXCEPTION_TIMEOUT_ERR 8
 
 namespace QV4 {
-class ExecutionEngine;
+struct ExecutionEngine;
 }
 
 void qt_add_sqlexceptions(QV4::ExecutionEngine *engine);

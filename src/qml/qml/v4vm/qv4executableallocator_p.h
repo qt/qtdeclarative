@@ -49,7 +49,7 @@
 #include <QVector>
 
 namespace WTF {
-struct PageAllocation;
+class PageAllocation;
 };
 
 QT_BEGIN_NAMESPACE
