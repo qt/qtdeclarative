@@ -93,8 +93,8 @@
 
     For our paint function to be called, we need to connect to the
     window's signals. When Squircle object is populated into the
-    scene, the itemChange function is called with the change type \c
-    ItemSceneChange. We connect \l QQuickWindow::beforeRendering() to
+    scene, the windowChanged signal is emitted. In our handler,
+    we connect \l QQuickWindow::beforeRendering() to
     \c paint() to do the rendering, and \l
     QQuickWindow::beforeSynchronizing() to \c sync() to copy the state
     of the \c t property for the upcoming frame.
@@ -157,7 +157,7 @@
 
     We import the Squircle QML type with the name we registered in the
     \c main() function. We then instantiate it and create a running
-    NumberAnimation on the its \c t property.
+    NumberAnimation on its \c t property.
 
     \snippet scenegraph/openglunderqml/main.qml 2
 

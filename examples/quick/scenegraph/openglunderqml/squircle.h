@@ -61,13 +61,13 @@ public:
 signals:
     void tChanged();
 
-protected:
-    void itemChange(ItemChange change, const ItemChangeData &);
-
 public slots:
     void paint();
     void cleanup();
     void sync();
+
+private slots:
+    void handleWindowChanged(QQuickWindow *win);
 
 private:
     QOpenGLShaderProgram *m_program;

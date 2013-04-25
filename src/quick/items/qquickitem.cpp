@@ -2346,13 +2346,16 @@ void QQuickItem::stackAfter(const QQuickItem *sibling)
         QQuickItemPrivate::get(parentPrivate->childItems.at(ii))->siblingOrderChanged();
 }
 
+/*! \fn void QQuickItem::windowChanged(QQuickWindow *window)
+    This signal is emitted when the item's \a window changes.
+*/
+
 /*!
   Returns the window in which this item is rendered.
 
-  The item does not have a window until it has been assigned into a scene. To
-  get notification about this, reimplement the itemChange() function and
-  listen for the ItemSceneChange change. The itemChange() function is called
-  both when the item is entered into a scene and when it is removed from a scene.
+  The item does not have a window until it has been assigned into a scene. The
+  \l windowChanged signal provides a notification both when the item is entered
+  into a scene and when it is removed from a scene.
   */
 QQuickWindow *QQuickItem::window() const
 {
@@ -4457,6 +4460,13 @@ void QQuickItemPrivate::deliverDragEvent(QEvent *e)
 
     \a value contains extra information relating to the change, when
     applicable.
+
+    If you re-implement this method in a subclass, be sure to call
+    \code
+    QQuickItem::itemChange(change, value);
+    \endcode
+    typically at the end of your implementation, to ensure the
+    \l windowChanged signal will be emitted.
   */
 void QQuickItem::itemChange(ItemChange change, const ItemChangeData &value)
 {
