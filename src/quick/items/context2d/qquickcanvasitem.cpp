@@ -701,6 +701,7 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
         d->context->flush();
 
     node->setTexture(d->context->texture());
+    node->markDirty(QSGNode::DirtyMaterial);
     node->setRect(QRectF(QPoint(0, 0), d->canvasWindow.size()));
     return node;
 }
