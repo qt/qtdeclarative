@@ -94,6 +94,8 @@ public:
         return JSC::X86Registers::eax;
     }
 
+    // Return address is pushed onto stack by the CPU.
+    static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize;
     inline void platformEnterStandardStackFrame() {}
     inline void platformLeaveStandardStackFrame() {}
 #elif CPU(X86_64)
@@ -128,6 +130,9 @@ public:
         assert(index >= 0 && index < RegisterArgumentCount);
         return regs[index];
     };
+
+    // Return address is pushed onto stack by the CPU.
+    static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize;
     inline void platformEnterStandardStackFrame() {}
     inline void platformLeaveStandardStackFrame() {}
 #elif CPU(ARM)
@@ -159,6 +164,9 @@ public:
         assert(index >= 0 && index < RegisterArgumentCount);
         return static_cast<RegisterID>(JSC::ARMRegisters::r0 + index);
     };
+
+    // Registers saved in platformEnterStandardStackFrame below.
+    static const int StackSpaceAllocatedUponFunctionEntry = 5 * RegisterSize;
     inline void platformEnterStandardStackFrame()
     {
         // Move the register arguments onto the stack as if they were
@@ -179,9 +187,18 @@ public:
         pop(JSC::ARMRegisters::r3);
     }
 #else
-#error Argh.
+#error The JIT needs to be ported to this platform.
 #endif
     static const int calleeSavedRegisterCount;
+
+#if CPU(X86) || CPU(X86_64)
+    static const int StackAlignment = 16;
+#elif CPU(ARM)
+    // Per AAPCS
+    static const int StackAlignment = 8;
+#else
+#error Stack alignment unknown for this platform.
+#endif
 
     // Explicit type to allow distinguishing between
     // pushing an address itself or the value it points
@@ -241,39 +258,39 @@ public:
 
     Pointer loadTempAddress(RegisterID reg, V4IR::Temp *t);
 
-    void loadArgument(RegisterID source, RegisterID dest)
+    void loadArgumentInRegister(RegisterID source, RegisterID dest)
     {
         move(source, dest);
     }
 
-    void loadArgument(TrustedImmPtr ptr, RegisterID dest)
+    void loadArgumentInRegister(TrustedImmPtr ptr, RegisterID dest)
     {
         move(TrustedImmPtr(ptr), dest);
     }
 
-    void loadArgument(const Pointer& ptr, RegisterID dest)
+    void loadArgumentInRegister(const Pointer& ptr, RegisterID dest)
     {
         addPtr(TrustedImm32(ptr.offset), ptr.base, dest);
     }
 
-    void loadArgument(PointerToValue temp, RegisterID dest)
+    void loadArgumentInRegister(PointerToValue temp, RegisterID dest)
     {
         if (!temp.value) {
-            loadArgument(TrustedImmPtr(0), dest);
+            loadArgumentInRegister(TrustedImmPtr(0), dest);
         } else {
             Pointer addr = loadTempAddress(dest, temp.value);
-            loadArgument(addr, dest);
+            loadArgumentInRegister(addr, dest);
         }
     }
 
-    void loadArgument(Reference temp, RegisterID dest)
+    void loadArgumentInRegister(Reference temp, RegisterID dest)
     {
         assert(temp.value);
         Pointer addr = loadTempAddress(dest, temp.value);
-        loadArgument(addr, dest);
+        loadArgumentInRegister(addr, dest);
     }
 
-    void loadArgument(ReentryBlock block, RegisterID dest)
+    void loadArgumentInRegister(ReentryBlock block, RegisterID dest)
     {
         assert(block.block);
         DataLabelPtr patch = moveWithPatch(TrustedImmPtr(0), dest);
@@ -281,7 +298,7 @@ public:
     }
 
 #ifdef VALUE_FITS_IN_REGISTER
-    void loadArgument(V4IR::Temp* temp, RegisterID dest)
+    void loadArgumentInRegister(V4IR::Temp* temp, RegisterID dest)
     {
         if (!temp) {
             QV4::Value undefined = QV4::Value::undefinedValue();
@@ -292,118 +309,112 @@ public:
         }
     }
 
-    void loadArgument(V4IR::Const* c, RegisterID dest)
+    void loadArgumentInRegister(V4IR::Const* c, RegisterID dest)
     {
         QV4::Value v = convertToValue(c);
         move(TrustedImm64(v.val), dest);
     }
 
-    void loadArgument(V4IR::Expr* expr, RegisterID dest)
+    void loadArgumentInRegister(V4IR::Expr* expr, RegisterID dest)
     {
         if (!expr) {
             QV4::Value undefined = QV4::Value::undefinedValue();
             move(TrustedImm64(undefined.val), dest);
         } else if (expr->asTemp()){
-            loadArgument(expr->asTemp(), dest);
+            loadArgumentInRegister(expr->asTemp(), dest);
         } else if (expr->asConst()) {
-            loadArgument(expr->asConst(), dest);
+            loadArgumentInRegister(expr->asConst(), dest);
         } else {
             assert(!"unimplemented expression type in loadArgument");
         }
     }
 #else
-    void loadArgument(V4IR::Expr*, RegisterID)
+    void loadArgumentInRegister(V4IR::Expr*, RegisterID)
     {
         assert(!"unimplemented: expression in loadArgument");
     }
 #endif
 
-    void loadArgument(QV4::String* string, RegisterID dest)
+    void loadArgumentInRegister(QV4::String* string, RegisterID dest)
     {
-        loadArgument(TrustedImmPtr(string), dest);
+        loadArgumentInRegister(TrustedImmPtr(string), dest);
     }
 
-    void loadArgument(TrustedImm32 imm32, RegisterID dest)
+    void loadArgumentInRegister(TrustedImm32 imm32, RegisterID dest)
     {
         xorPtr(dest, dest);
         if (imm32.m_value)
             move(imm32, dest);
     }
 
-    void storeArgument(RegisterID src, V4IR::Temp *temp)
+    void storeReturnValue(RegisterID dest)
     {
-        if (temp) {
-            Pointer addr = loadTempAddress(ScratchRegister, temp);
-#ifdef VALUE_FITS_IN_REGISTER
-            store64(src, addr);
-#else
-            // If the value doesn't fit into a register, then the
-            // register contains the address to where the argument
-            // (return value) is stored. Copy it from there.
-            copyValue(addr, Pointer(src, 0));
-#endif
-        }
+        move(ReturnValueRegister, dest);
     }
 
-#ifdef VALUE_FITS_IN_REGISTER
-    void storeArgument(RegisterID src, const Pointer &dest)
-    {
-        store64(src, dest);
-    }
-#endif
-
-    void storeArgument(RegisterID src, RegisterID dest)
-    {
-        move(src, dest);
-    }
-
-    void storeArgument(RegisterID, VoidType)
+    void storeReturnValue(VoidType)
     {
     }
 
-    using JSC::MacroAssembler::push;
+    template <int StackSlot>
+    void loadArgumentOnStack(RegisterID reg)
+    {
+        poke(reg, StackSlot);
+    }
 
-    void push(const Pointer& ptr)
+    template <int StackSlot>
+    void loadArgumentOnStack(TrustedImm32 value)
+    {
+        poke(value, StackSlot);
+    }
+
+    template <int StackSlot>
+    void loadArgumentOnStack(const Pointer& ptr)
     {
         addPtr(TrustedImm32(ptr.offset), ptr.base, ScratchRegister);
-        push(ScratchRegister);
+        poke(ScratchRegister, StackSlot);
     }
 
-    void push(PointerToValue temp)
+    template <int StackSlot>
+    void loadArgumentOnStack(PointerToValue temp)
     {
         if (temp.value) {
             Pointer ptr = loadTempAddress(ScratchRegister, temp.value);
-            push(ptr);
+            loadArgumentOnStack<StackSlot>(ptr);
         } else {
-            push(TrustedImmPtr(0));
+            poke(TrustedImmPtr(0), StackSlot);
         }
     }
 
-    void push(Reference temp)
+    template <int StackSlot>
+    void loadArgumentOnStack(Reference temp)
     {
         assert (temp.value);
 
         Pointer ptr = loadTempAddress(ScratchRegister, temp.value);
-        push(ptr);
+        loadArgumentOnStack<StackSlot>(ptr);
     }
 
-    void push(ReentryBlock block)
+    template <int StackSlot>
+    void loadArgumentOnStack(ReentryBlock block)
     {
         assert(block.block);
         DataLabelPtr patch = moveWithPatch(TrustedImmPtr(0), ScratchRegister);
-        push(ScratchRegister);
+        poke(ScratchRegister, StackSlot);
         addPatch(patch, block.block);
     }
 
-    void push(TrustedImmPtr ptr)
+    template <int StackSlot>
+    void loadArgumentOnStack(TrustedImmPtr ptr)
     {
         move(TrustedImmPtr(ptr), ScratchRegister);
-        push(ScratchRegister);
+        poke(ScratchRegister, StackSlot);
     }
 
-    void push(QV4::String* name)
+    template <int StackSlot>
+    void loadArgumentOnStack(QV4::String* name)
     {
-        push(TrustedImmPtr(name));
+        poke(TrustedImmPtr(name), StackSlot);
     }
 
     using JSC::MacroAssembler::loadDouble;
@@ -438,89 +449,78 @@ public:
 
     void storeValue(QV4::Value value, V4IR::Temp* temp);
 
+    static int calculateStackFrameSize(int locals);
     void enterStandardStackFrame(int locals);
     void leaveStandardStackFrame(int locals);
 
-    static inline int sizeOfArgument(VoidType)
-    { return 0; }
-    static inline int sizeOfArgument(RegisterID)
-    { return RegisterSize; }
-    static inline int sizeOfArgument(V4IR::Temp*)
-    { return 8; } // Size of value
-    static inline int sizeOfArgument(V4IR::Expr*)
-    { return 8; } // Size of value
-    static inline int sizeOfArgument(const Pointer&)
-    { return sizeof(void*); }
-    static inline int sizeOfArgument(QV4::String*)
-    { return sizeof(QV4::String*); }
-    static inline int sizeOfArgument(const PointerToValue &)
-    { return sizeof(void *); }
-    static inline int sizeOfArgument(const Reference &)
-    { return sizeof(void *); }
-    static inline int sizeOfArgument(const ReentryBlock &)
-    { return sizeof(void *); }
-    static inline int sizeOfArgument(TrustedImmPtr)
-    { return sizeof(void*); }
-    static inline int sizeOfArgument(TrustedImm32)
-    { return 4; }
-
     template <int argumentNumber, typename T>
-    int loadArgumentOnStackOrRegister(const T &value)
+    void loadArgumentOnStackOrRegister(const T &value)
     {
-        if (argumentNumber < RegisterArgumentCount) {
-            loadArgument(value, registerForArgument(argumentNumber));
-            return 0;
-        } else {
-            push(value);
-            return sizeOfArgument(value);
-        }
+        if (argumentNumber < RegisterArgumentCount)
+            loadArgumentInRegister(value, registerForArgument(argumentNumber));
+        else
+            loadArgumentOnStack<argumentNumber - RegisterArgumentCount>(value);
     }
 
     template <int argumentNumber>
-    int loadArgumentOnStackOrRegister(const VoidType &value)
+    void loadArgumentOnStackOrRegister(const VoidType &value)
     {
         Q_UNUSED(value);
-        return 0;
     }
+
+    template <bool selectFirst, int First, int Second>
+    struct Select
+    {
+        enum { Chosen = First };
+    };
+
+    template <int First, int Second>
+    struct Select<false, First, Second>
+    {
+        enum { Chosen = Second };
+    };
+
+    template <int ArgumentIndex, typename Parameter>
+    struct SizeOnStack
+    {
+        enum { Size = Select<ArgumentIndex >= RegisterArgumentCount, QT_POINTER_SIZE, 0>::Chosen };
+    };
+
+    template <int ArgumentIndex>
+    struct SizeOnStack<ArgumentIndex, VoidType>
+    {
+        enum { Size = 0 };
+    };
+
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
     void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
     {
-        int totalNumberOfArgs = 6;
+        int stackSpaceNeeded =   SizeOnStack<0, Arg1>::Size
+                               + SizeOnStack<1, Arg2>::Size
+                               + SizeOnStack<2, Arg3>::Size
+                               + SizeOnStack<3, Arg4>::Size
+                               + SizeOnStack<4, Arg5>::Size
+                               + SizeOnStack<5, Arg6>::Size;
 
-        // If necessary reserve space for the return value on the stack and
-        // pass the pointer to it as the first hidden parameter.
-        bool returnValueOnStack = false;
-        int sizeOfReturnValueOnStack = sizeOfArgument(r);
-        if (sizeOfReturnValueOnStack > RegisterSize) {
-            sub32(TrustedImm32(sizeOfReturnValueOnStack), StackPointerRegister);
-            ++totalNumberOfArgs;
-            returnValueOnStack = true;
+        if (stackSpaceNeeded) {
+            stackSpaceNeeded = WTF::roundUpToMultipleOf(StackAlignment, stackSpaceNeeded);
+            sub32(TrustedImm32(stackSpaceNeeded), StackPointerRegister);
         }
 
-        int stackSpaceUsedForArgs = 0;
-        stackSpaceUsedForArgs += loadArgumentOnStackOrRegister<5>(arg6);
-        stackSpaceUsedForArgs += loadArgumentOnStackOrRegister<4>(arg5);
-        stackSpaceUsedForArgs += loadArgumentOnStackOrRegister<3>(arg4);
-        stackSpaceUsedForArgs += loadArgumentOnStackOrRegister<2>(arg3);
-        stackSpaceUsedForArgs += loadArgumentOnStackOrRegister<1>(arg2);
-        stackSpaceUsedForArgs += loadArgumentOnStackOrRegister<0>(arg1);
-
-        if (returnValueOnStack) {
-            // Load address of return value
-            push(Pointer(StackPointerRegister, stackSpaceUsedForArgs));
-        }
+        loadArgumentOnStackOrRegister<5>(arg6);
+        loadArgumentOnStackOrRegister<4>(arg5);
+        loadArgumentOnStackOrRegister<3>(arg4);
+        loadArgumentOnStackOrRegister<2>(arg3);
+        loadArgumentOnStackOrRegister<1>(arg2);
+        loadArgumentOnStackOrRegister<0>(arg1);
 
         callAbsolute(functionName, function);
 
-        int stackSizeToCorrect = stackSpaceUsedForArgs;
-        if (returnValueOnStack)
-            stackSizeToCorrect += sizeOfReturnValueOnStack;
+        storeReturnValue(r);
 
-        storeArgument(ReturnValueRegister, r);
-
-        if (stackSizeToCorrect)
-            add32(TrustedImm32(stackSizeToCorrect), StackPointerRegister);
+        if (stackSpaceNeeded)
+            add32(TrustedImm32(stackSpaceNeeded), StackPointerRegister);
     }
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>

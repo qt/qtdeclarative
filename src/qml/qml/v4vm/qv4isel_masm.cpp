@@ -180,7 +180,7 @@ void Assembler::copyValue(Result result, Source source)
     // Use ReturnValueRegister as "scratch" register because loadArgument
     // and storeArgument are functions that may need a scratch register themselves.
     loadArgument(source, ReturnValueRegister);
-    storeArgument(ReturnValueRegister, result);
+    storeReturnValue(result);
 #else
     loadDouble(source, FPGpr0);
     storeDouble(FPGpr0, result);
@@ -194,7 +194,7 @@ void Assembler::copyValue(Result result, V4IR::Expr* source)
     // Use ReturnValueRegister as "scratch" register because loadArgument
     // and storeArgument are functions that may need a scratch register themselves.
     loadArgument(source, ReturnValueRegister);
-    storeArgument(ReturnValueRegister, result);
+    storeReturnValue(result);
 #else
     if (V4IR::Temp *temp = source->asTemp()) {
         loadDouble(temp, FPGpr0);
@@ -215,6 +215,20 @@ void Assembler::storeValue(QV4::Value value, V4IR::Temp* destination)
     storeValue(value, addr);
 }
 
+int Assembler::calculateStackFrameSize(int locals)
+{
+    const int stackSpaceAllocatedOtherwise = StackSpaceAllocatedUponFunctionEntry
+                                             + RegisterSize; // saved StackFrameRegister
+
+    // space for the locals and the callee saved registers
+    int frameSize = locals * sizeof(QV4::Value) + sizeof(void*) * calleeSavedRegisterCount;
+
+    frameSize = WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise);
+    frameSize -= stackSpaceAllocatedOtherwise;
+
+    return frameSize;
+}
+
 void Assembler::enterStandardStackFrame(int locals)
 {
     platformEnterStandardStackFrame();
@@ -224,12 +238,8 @@ void Assembler::enterStandardStackFrame(int locals)
     push(StackFrameRegister);
     move(StackPointerRegister, StackFrameRegister);
 
-    // space for the locals and callee saved registers
-    int32_t frameSize = locals * sizeof(QV4::Value) + sizeof(void*) * calleeSavedRegisterCount;
+    int frameSize = calculateStackFrameSize(locals);
 
-#if CPU(X86) || CPU(X86_64)
-    frameSize = (frameSize + 15) & ~15; // align on 16 byte boundaries for MMX
-#endif
     subPtr(TrustedImm32(frameSize), StackPointerRegister);
 
     for (int i = 0; i < calleeSavedRegisterCount; ++i)
@@ -244,11 +254,7 @@ void Assembler::leaveStandardStackFrame(int locals)
     for (int i = calleeSavedRegisterCount - 1; i >= 0; --i)
         loadPtr(Address(StackFrameRegister, -(i + 1) * sizeof(void*)), calleeSavedRegisters[i]);
 
-    // space for the locals and the callee saved registers
-    int32_t frameSize = locals * sizeof(QV4::Value) + sizeof(void*) * calleeSavedRegisterCount;
-#if CPU(X86) || CPU(X86_64)
-    frameSize = (frameSize + 15) & ~15; // align on 16 byte boundaries for MMX
-#endif
+    int frameSize = calculateStackFrameSize(locals);
     // Work around bug in ARMv7Assembler.h where add32(imm, sp, sp) doesn't
     // work well for large immediates.
 #if CPU(ARM_THUMB2)
@@ -856,8 +862,8 @@ void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4
 void InstructionSelection::loadThisObject(V4IR::Temp *temp)
 {
 #if defined(VALUE_FITS_IN_REGISTER)
-    _as->loadPtr(Pointer(Assembler::ContextRegister, offsetof(ExecutionContext, thisObject)), Assembler::ReturnValueRegister);
-    _as->storeArgument(Assembler::ReturnValueRegister, temp);
+    _as->load64(Pointer(Assembler::ContextRegister, offsetof(ExecutionContext, thisObject)), Assembler::ReturnValueRegister);
+    _as->store64(Assembler::ReturnValueRegister, temp);
 #else
     _as->copyValue(temp, Pointer(Assembler::ContextRegister, offsetof(ExecutionContext, thisObject)));
 #endif
