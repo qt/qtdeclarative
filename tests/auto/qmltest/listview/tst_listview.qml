@@ -67,11 +67,38 @@ Item {
         delegate: Text { text: model.name }
     }
 
+    ListView {
+        id: asyncLoaderCurrentIndexListView
+        width: 360
+        height: 360
+        model: asyncLoaderCurrentIndexListModel
+
+        currentIndex: 0
+
+        delegate: Loader {
+            width: asyncLoaderCurrentIndexListView.width
+            height: asyncLoaderCurrentIndexListView.height
+
+            source: component
+            asynchronous: true
+        }
+    }
+
     ListModel { id: emptymodel }
     ListModel { id: manyitems }
     ListModel { id: firstmodel; ListElement { name: "FirstModelElement0" } }
     ListModel { id: secondmodel; ListElement { name: "SecondModelElement0" } ListElement { name: "SecondModelElement1" } }
     ListModel { id: altermodel; ListElement { name: "AlterModelElement0" } ListElement { name: "AlterModelElement1" } }
+    ListModel {
+        id: asyncLoaderCurrentIndexListModel
+        ListElement { component: "data/asyncloadercurrentindex.qml" }
+        ListElement { component: "data/asyncloadercurrentindex.qml" }
+        ListElement { component: "data/asyncloadercurrentindex.qml" }
+        ListElement { component: "data/asyncloadercurrentindex.qml" }
+        ListElement { component: "data/asyncloadercurrentindex.qml" }
+        ListElement { component: "data/asyncloadercurrentindex.qml" }
+    }
+
 
     TestCase {
         name: "ListView"
@@ -171,6 +198,18 @@ Item {
             modelalter.forceLayout()
             tryCompare(modelalter.count, 0)
             compare(modelalter.currentItem, null)
+        }
+
+        function test_asyncLoaderCurrentIndexChange() {
+            for (var i = 0; i < 500; i++) {
+                asyncLoaderCurrentIndexListView.currentIndex = 0;
+                asyncLoaderCurrentIndexListView.currentIndex = 1;
+                asyncLoaderCurrentIndexListView.currentIndex = 2;
+                asyncLoaderCurrentIndexListView.currentIndex = 3;
+                asyncLoaderCurrentIndexListView.currentIndex = 4;
+                asyncLoaderCurrentIndexListView.currentIndex = 5;
+            }
+            wait(1000)
         }
     }
 }
