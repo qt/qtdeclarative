@@ -40,10 +40,10 @@ interested in the summary of all new features in Qt 5 for QML application develo
 
 \section1 QML Language changes
 
-There are very few changes in the QML language which affect the porting of existing Qt 4.8 QML code to Qt 5. These are:
+There are very few changes in the QML language that affect the porting of existing Qt 4.8 QML code to Qt 5. These are:
 
 \list
-\li Individual file imports no longer work (e.g. import "MyType.qml"). Import the containing directory instead.
+\li Individual file imports no longer work (for example, import "MyType.qml"). Import the containing directory instead.
 \li Relative file paths in JavaScript files are now resolved relative to the location of the JavaScript file instead of the QML file that imported it.
 \endlist
 

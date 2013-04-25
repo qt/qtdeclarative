@@ -81,8 +81,8 @@ function f() {
 
 \section2 Trace
 
-\c console.trace prints the stack trace of JavaScript execution at the point where
-it was called. The stack trace info contains function name, file name, line number
+\c console.trace prints the stack trace of the JavaScript execution at the point where
+it was called. The stack trace info contains the function name, file name, line number
 and column number. The stack trace is limited to last 10 stack frames.
 
 \section2 Count

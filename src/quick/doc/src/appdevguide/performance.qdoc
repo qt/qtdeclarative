@@ -33,15 +33,19 @@
 \section1 Timing Considerations
 
 As an application developer, you must strive to allow the rendering engine
-to achieve a consistent 60 frames-per-second refresh rate.  60 FPS means
+to achieve a consistent 60 frames-per-second refresh rate. 60 FPS means
 that there is approximately 16 milliseconds between each frame in which
 processing can be done, which includes the processing required to upload
 the draw primitives to the graphics hardware.
 
-In practice, this means that the application developer should use asynchronous,
-event driven programming wherever possible, should use worker threads to do
-significant processing, should never manually spin the event loop, and should
-never spend more than a couple of milliseconds per frame within blocking functions.
+In practice, this means that the application developer should:
+\list
+   \li use asynchronous,event driven programming wherever possible
+   \li use worker threads to do significant processing
+   \li never manually spin the event loop
+   \li never spend more than a couple of milliseconds per frame within blocking functions.
+\endlist
+
 Failure to do so will result in skipped frames, which has a drastic effect on the
 user experience.
 
@@ -55,15 +59,15 @@ your event loop.
 
 \section1 Profiling
 
-The most important tip is: use the QML profiler included with Qt Creator.  Knowing
+The most important tip is: use the QML profiler included with Qt Creator. Knowing
 where time is spent in an application will allow you to focus on problem areas which
-actually exist, rather than problem areas which potentially exist.  See the Qt Creator
+actually exist, rather than problem areas which potentially exist. See the Qt Creator
 manual for more information on how to use the QML profiling tool.
 
 Determining which bindings are being run the most often, or which functions your
 application is spending the most time in, will allow you to decide whether you need
 to optimize the problem areas, or redesign some implementation details of your
-application so that the performance is improved.  Attempting to optimize code without
+application so that the performance is improved. Attempting to optimize code without
 profiling is likely to result in very minor rather than significant performance
 improvements.
 
@@ -71,10 +75,10 @@ improvements.
 
 Most QML applications will have a large amount of JavaScript code in them, in the
 form of dynamic functions, signal handlers, and property binding expressions.
-This is not generally a problem (in fact, due to some optimizations in the QML engine
-(bindings compiler, etc) it can for some use-cases be faster than calling a C++ function)
-however care must be taken to ensure that unnecessary processing isn't triggered
-accidentally.
+This is generally not a problem. Thanks to some optimizations in the QML engine,
+such as to the bindings compiler, it can for some use-cases be faster than calling a C++
+function. However, care must be taken to ensure that unnecessary processing isn't
+triggered accidentally.
 
 \section2 Bindings
 
@@ -82,8 +86,8 @@ There are two types of bindings in QML: optimized and non-optimized bindings.
 It is a good idea to keep binding expressions as simple as possible, since the
 QML engine makes use of an optimized binding expression evaluator which can
 evaluate simple binding expressions without needing to switch into a full
-JavaScript execution environment.  These optimized bindings are evaluated far
-more efficiently than more complex (non-optimized) bindings.  The basic
+JavaScript execution environment. These optimized bindings are evaluated far
+more efficiently than more complex (non-optimized) bindings. The basic
 requirement for optimization of bindings is that the type information of every
 symbol accessed must be known at compile time.
 
@@ -101,7 +105,7 @@ The QML_COMPILER_STATS environment variable may be set when running a QML applic
 to print statistics about how many bindings were able to be optimized.
 
 Bindings are quickest when they know the type of objects and properties they are working
-with.  This means that non-final property lookup in a binding expression can be slower
+with. This means that non-final property lookup in a binding expression can be slower
 in some cases, where it is possible that the type of the property being looked up has
 been changed (for example, by a derived type).
 
@@ -120,17 +124,17 @@ will not be optimized.
 
 Note that if a binding cannot be optimized by the QML engine's optimized binding
 expression evaluator, and thus must be evaluated by the full JavaScript environment,
-some of the tips listed above will no longer apply.  For example, it can sometimes be
+some of the tips listed above will no longer apply. For example, it can sometimes be
 beneficial to cache the result of property resolution in an intermediate JavaScript
-variable, in a very complex binding.  Upcoming sections have more information on these
+variable in a very complex binding. Upcoming sections have more information on these
 sorts of optimizations.
 
 \section2 Type-Conversion
 
 One major cost of using JavaScript is that in most cases when a property from a QML
 type is accessed, a JavaScript object with an external resource containing the
-underlying C++ data (or a reference to it) is created.  In most cases, this is fairly
-inexpensive, but in others it can be quite expensive.  One example of where it is
+underlying C++ data (or a reference to it) is created. In most cases, this is fairly
+inexpensive, but in others it can be quite expensive. One example of where it is
 expensive is assigning a C++ QVariantMap Q_PROPERTY to a QML "variant" property.
 Lists can also be expensive, although sequences of specific types (QList of int,
 qreal, bool, QString, and QUrl) should be inexpensive; other list types involve an
@@ -138,19 +142,19 @@ expensive conversion cost (creating a new JavaScript Array, and adding new types
 one by one, with per-type conversion from C++ type instance to JavaScript value).
 
 Converting between some basic property types (such as "string" and "url" properties)
-can also be expensive.  Using the closest matching property type will avoid unnecessary
+can also be expensive. Using the closest matching property type will avoid unnecessary
 conversion.
 
 If you must expose a QVariantMap to QML, use a "var" property rather than a "variant"
-property.  In general, "property var" should be considered to be superior to
-"property variant" for every use-case in Qt Quick 2 (note that "property variant"
-is marked as obsolete in the Qt Quick 2 documentation), as it allows a true JavaScript
+property. In general, "property var" should be considered to be superior to
+"property variant" for every use-case in QtQuick 2.0 (note that "property variant"
+is marked as obsolete in the QtQuick 2.0 documentation), as it allows a true JavaScript
 reference to be stored (which can reduce the number of conversions required in certain
 expressions).
 
 \section2 Resolving Properties
 
-Property resolution takes time.  While in some cases the result of a lookup can be
+Property resolution takes time. While in some cases the result of a lookup can be
 cached and reused, it is always best to avoid doing unnecessary work altogether, if
 possible.
 
@@ -264,7 +268,7 @@ Item {
 \section2 Property Bindings
 
 A property binding expression will be re-evaluated if any of the properties
-it references are changed.  As such, binding expressions should be kept as
+it references are changed. As such, binding expressions should be kept as
 simple as possible.
 
 If you have a loop where you do some processing, but only the final result
@@ -339,9 +343,9 @@ Item {
 
 \section2 Sequence tips
 
-As mentioned earlier, some sequence types are fast (eg, QList<int>, QList<qreal>,
+As mentioned earlier, some sequence types are fast (for example, QList<int>, QList<qreal>,
 QList<bool>, QList<QString>, QStringList and QList<QUrl>) while others will be
-much slower.  Aside from using these types wherever possible instead of slower types,
+much slower. Aside from using these types wherever possible instead of slower types,
 there are some other performance-related semantics you need to be aware of to achieve
 the best performance.
 
@@ -351,7 +355,7 @@ and another for where the sequence is returned from a Q_INVOKABLE function of a
 QObject (we'll call this a copy sequence).
 
 A reference sequence is read and written via QMetaObject::property() and thus is read
-and written as a QVariant.  This means that changing the value of any element in the
+and written as a QVariant. This means that changing the value of any element in the
 sequence from JavaScript will result in three steps occurring: the complete sequence
 will be read from the QObject (as a QVariant, but then cast to a sequence of the correct
 type); the element at the specified index will be changed in that sequence; and the
@@ -362,7 +366,7 @@ object's resource data, so no read/modify/write cycle occurs (instead, the resou
 data is modified directly).
 
 Therefore, writes to elements of a reference sequence will be much slower than writes
-to elements of a copy sequence.  In fact, writing to a single element of an N-element
+to elements of a copy sequence. In fact, writing to a single element of an N-element
 reference sequence is equivalent in cost to assigning a N-element copy sequence to that
 reference sequence, so you're usually better off modifying a temporary copy sequence
 and then assigning the result to a reference sequence, during computation.
@@ -419,7 +423,7 @@ SequenceTypeExample {
 \endqml
 
 The QObject property read and write in the inner loop caused by the
-\c{"qrealListProperty[j] = j"} expression makes this code very suboptimal.  Instead,
+\c{"qrealListProperty[j] = j"} expression makes this code very suboptimal. Instead,
 something functionally equivalent but much faster would be:
 
 \qml
@@ -482,7 +486,7 @@ SequenceTypeExample {
 
 Note that even though only the element at index 2 is modified in the loop, the three
 bindings will all be re-evaluated since the granularity of the change signal is that
-the entire property has changed.  As such, adding an intermediate binding can
+the entire property has changed. As such, adding an intermediate binding can
 sometimes be beneficial:
 
 \qml
@@ -515,8 +519,8 @@ resulting in a significant performance increase.
 \section2 Value-Type tips
 
 Value-type properties (font, color, vector3d, etc) have similar QObject property
-and change notification semantics to sequence type properties.  As such, the tips
-given above for sequences are also applicable for value-type properties.  While
+and change notification semantics to sequence type properties. As such, the tips
+given above for sequences are also applicable for value-type properties. While
 they are usually less of a problem with value-types (since the number of
 sub-properties of a value-type is usually far less than the number of elements
 in a sequence), any increase in the number of bindings being re-evaluated needlessly
@@ -524,12 +528,12 @@ will have a negative impact on performance.
 
 \section2 Other JavaScript Objects
 
-Different JavaScript engines provide different optimizations.  The JavaScript engine
-which \l {Qt Quick}{Qt Quick 2} uses is optimized for object instantiation and property lookup, but
-the optimizations which it provides relies on certain criteria.  If your application
-does not meet the criteria, the JavaScript engine falls back to a "slow-path" mode
-with much worse performance.  As such, always try to ensure you meet the following
-criteria:
+Different JavaScript engines provide different optimizations. The JavaScript engine
+which \l {Qt Quick}{Qt Quick 2} uses is optimized for object instantiation and property
+lookup, but the optimizations which it provides relies on certain criteria. If your
+application does not meet the criteria, the JavaScript engine falls back to a
+"slow-path" mode with much worse performance. As such, always try to ensure you
+meet the following criteria:
 
 \list
 \li Avoid using eval() if at all possible
@@ -540,27 +544,27 @@ criteria:
 
 \section2 Text Elements
 
-Calculating text layouts can be a slow operation.  Consider using the \c PlainText
+Calculating text layouts can be a slow operation. Consider using the \c PlainText
 format instead of \c StyledText wherever possible, as this reduces the amount of work
-required of the layout engine.  If you cannot use \c PlainText (as you need to embed
+required of the layout engine. If you cannot use \c PlainText (as you need to embed
 images, or use tags to specify ranges of characters to have certain formatting (bold,
 italic, etc) as opposed to the entire text) then you should use \c StyledText.
 
 You should only use \c AutoText if the text might be (but probably isn't)
-\c StyledText as this mode will incur a parsing cost.  The \c RichText mode should
+\c StyledText as this mode will incur a parsing cost. The \c RichText mode should
 not be used, as \c StyledText provides almost all of its features at a fraction of
 its cost.
 
 \section2 Images
 
-Images are a vital part of any user interface.  Unfortunately, they are also a big
+Images are a vital part of any user interface. Unfortunately, they are also a big
 source of problems due to the time it takes to load them, the amount of memory they
 consume, and the way in which they are used.
 
 \section3 Asynchronous Loading
 
 Images are often quite large, and so it is wise to ensure that loading an image doesn't
-block the UI thread.  Set the "asynchronous" property of the QML Image element to
+block the UI thread. Set the "asynchronous" property of the QML Image element to
 \c true to enable asynchronous loading of images from the local file system (remote
 images are always loaded asynchronously) where this would not result in a negative impact
 upon the aesthetics of the user interface.
@@ -579,13 +583,13 @@ Beware that changing the sourceSize will cause the image to be reloaded.
 \section3 Avoid Run-time Composition
 
 Also remember that you can avoid doing composition work at run-time by providing the
-pre-composed image resource with your application (e.g., providing elements with shadow
+pre-composed image resource with your application (for example, providing elements with shadow
 effects).
 
 \section2 Position Elements With Anchors
 
 It is more efficient to use anchors rather than bindings to position items
-relative to each other.  Consider this use of bindings to position rect2
+relative to each other. Consider this use of bindings to position rect2
 relative to rect1:
 
 \code
@@ -626,9 +630,9 @@ and height properties of visual objects, rather than using anchors) is
 relatively slow, although it allows maximum flexibility.
 
 If the layout is not dynamic, the most performant way to specify the layout is
-via static initialization of the x, y, width and height properties.  Item
+via static initialization of the x, y, width and height properties. Item
 coordinates are always relative to their parent, so if you wanted to be a fixed
-offset from your parent's 0,0 coordinate you should not use anchors.  In the
+offset from your parent's 0,0 coordinate you should not use anchors. In the
 following example the child Rectangle objects are in the same place, but the
 anchors code shown is not as resource efficient as the code which
 uses fixed positioning via static initialization:
@@ -654,14 +658,14 @@ Rectangle {
 
 \section1 Models and Views
 
-Most applications will have at least one model feeding data to a view.  There are
+Most applications will have at least one model feeding data to a view. There are
 some semantics which application developers need to be aware of, in order to achieve
 maximal performance.
 
 \section2 Custom C++ Models
 
 It is often desirable to write your own custom model in C++ for use with a view in
-QML.  While the optimal implementation of any such model will depend heavily on the
+QML. While the optimal implementation of any such model will depend heavily on the
 use-case it must fulfil, some general guidelines are as follows:
 
 \list
@@ -673,7 +677,7 @@ use-case it must fulfil, some general guidelines are as follows:
 
 It is important to note that using a low-priority worker thread is recommended to
 minimise the risk of starving the GUI thread (which could result in worse perceived
-performance).  Also, remember that synchronization and locking mechanisms can be a
+performance). Also, remember that synchronization and locking mechanisms can be a
 significant cause of slow performance, and so care should be taken to avoid
 unnecessary locking.
 
@@ -685,35 +689,35 @@ it is used correctly.
 
 \section3 Populate Within A Worker Thread
 
-ListModel elements can be populated in a (low priority) worker thread in JavaScript.  The
+ListModel elements can be populated in a (low priority) worker thread in JavaScript. The
 developer must explicitly call "sync()" on the ListModel from within the WorkerScript to
-have the changes synchronized to the main thread.  See the WorkerScript documentation
+have the changes synchronized to the main thread. See the WorkerScript documentation
 for more information.
 
 Please note that using a WorkerScript element will result in a separate JavaScript engine
-being created (as the JavaScript engine is per-thread).  This will result in increased
-memory usage.  Multiple WorkerScript elements will all use the same worker thread, however,
+being created (as the JavaScript engine is per-thread). This will result in increased
+memory usage. Multiple WorkerScript elements will all use the same worker thread, however,
 so the memory impact of using a second or third WorkerScript element is negligible once
 an application already uses one.
 
 \section3 Don't Use Dynamic Roles
 
-The ListModel element in \c {QtQuick 2.0} is much more performant than in \c {QtQuick 1.0}.  The
+The ListModel element in \c {QtQuick 2.0} is much more performant than in \c {QtQuick 1.0}. The
 performance improvements mainly come from assumptions about the type of roles within each
 element in a given model - if the type doesn't change, the caching performance improves
-dramatically.  If the type can change dynamically from element to element, this optimization
+dramatically. If the type can change dynamically from element to element, this optimization
 becomes impossible, and the performance of the model will be an order of magnitude worse.
 
 Therefore, dynamic typing is disabled by default; the developer must specifically set
 the boolean "dynamicRoles" property of the model to enable dynamic typing (and suffer
-the attendant performance degradation).  We recommend that you do not use dynamic typing
+the attendant performance degradation). We recommend that you do not use dynamic typing
 if it is possible to redesign your application to avoid it.
 
 \section2 Views
 
-View delegates should be kept as simple as possible.  Have just enough QML in the delegate
-to display the necessary information.  Any additional functionality which is not immediately
-required (e.g., if it displays more information when clicked) should not be created until
+View delegates should be kept as simple as possible. Have just enough QML in the delegate
+to display the necessary information. Any additional functionality which is not immediately
+required (for example, if it displays more information when clicked) should not be created until
 needed (see the upcoming section on lazy initialization).
 
 The following list is a good summary of things to keep in mind when designing a delegate:
@@ -727,31 +731,31 @@ The following list is a good summary of things to keep in mind when designing a 
 \endlist
 
 You may set the \c cacheBuffer property of a view to allow asynchronous creation and
-buffering of delegates outside of the visible area.  Utilizing a \c cacheBuffer is
+buffering of delegates outside of the visible area. Utilizing a \c cacheBuffer is
 recommended for view delegates that are non-trivial and unlikely to be created within a
 single frame.
 
 Be mindful that a \c cacheBuffer keeps additional delegates in-memory and therefore the
 value derived from utilizing the \c cacheBuffer must be balanced against additional memory
-usage.  Developers should use benchmarking to find the best value for their use-case, since
+usage. Developers should use benchmarking to find the best value for their use-case, since
 the increased memory pressure caused by utilizing a \c cacheBuffer can, in some rare cases,
 cause reduced frame rate when scrolling.
 
 \section1 Visual Effects
 
 \l {Qt Quick}{Qt Quick 2} includes several features which allow developers and designers to create
-exceptionally appealing user interfaces.  Fluidity and dynamic transitions as well
+exceptionally appealing user interfaces. Fluidity and dynamic transitions as well
 as visual effects can be used to great effect in an application, but some care must
 be taken when using some of the features in QML as they can have performance implications.
 
 \section2 Animations
 
 In general, animating a property will cause any bindings which reference that property
-to be re-evaluated.  Usually, this is what is desired but in other cases it may be better
+to be re-evaluated. Usually, this is what is desired but in other cases it may be better
 to disable the binding prior to performing the animation, and then reassign the binding
 once the animation has completed.
 
-Avoid running JavaScript during animation.  For example, running a complex JavaScript
+Avoid running JavaScript during animation. For example, running a complex JavaScript
 expression for each frame of an x property animation should be avoided.
 
 Developers should be especially careful using script animations, as these are run in the main
@@ -760,28 +764,28 @@ thread (and therefore can cause frames to be skipped if they take too long to co
 \section2 Particles
 
 The \l {QtQuick.Particles 2}{Qt Quick 2.0 Particles} module allows beautiful particle effects to be integrated
-seamlessly into user interfaces.  However every platform has different graphics hardware
+seamlessly into user interfaces. However every platform has different graphics hardware
 capabilities, and the Particles module is unable to limit parameters to what your hardware
-can gracefully support.  The more particles you attempt to render (and the larger they are),
-the faster your graphics hardware will need to be in order to render at 60 FPS.  Affecting
-more particles requires a faster CPU.  It is therefore important to test all
+can gracefully support. The more particles you attempt to render (and the larger they are),
+the faster your graphics hardware will need to be in order to render at 60 FPS. Affecting
+more particles requires a faster CPU. It is therefore important to test all
 particle effects on your target platform carefully, to calibrate the number and size of
 particles you can render at 60 FPS.
 
 It should be noted that a particle system can be disabled when not in use
-(e.g., on a non-visible element) to avoid doing unnecessary simulation.
+(for example, on a non-visible element) to avoid doing unnecessary simulation.
 
 See the \l{Particle System Performance Guide} for more in-depth information.
 
 \section2 Shaders
 
 Shaders written in GLSL allow for complex transformations and visual effects to be written,
-however they should be used with care.  Using a ShaderEffectSource causes a scene to
-prerendered into an FBO before it can be drawn.  This extra overhead is quite expensive.
+however they should be used with care. Using a ShaderEffectSource causes a scene to
+prerendered into an FBO before it can be drawn. This extra overhead is quite expensive.
 
 A ShaderEffect element can imply a ShaderEffectSource (and the indirect rendering costs
 associated with that) and also involves uploading a vertex and fragment shader program
-(which is then compiled into a GLSL shader).  Each fragment shader runs once for every
+(which is then compiled into a GLSL shader). Each fragment shader runs once for every
 pixel of the scene, and so these should be kept as simple as possible.
 
 \section1 Controlling Element Lifetime
@@ -793,9 +797,9 @@ usage, and reduce the number of active-but-invisible elements in your applicatio
 \section2 Lazy Initialization
 
 The QML engine does some tricky things to try to ensure that loading and initialization of
-components doesn't cause frames to be skipped, however there is no better way to reduce
+components doesn't cause frames to be skipped. However, there is no better way to reduce
 startup time than to avoid doing work you don't need to do, and delaying the work until
-it is necessary.  This may be achieved by using either \l Loader or creating components
+it is necessary. This may be achieved by using either \l Loader or creating components
 \l {qtqml-javascript-dynamicobjects.html}{dynamically}.
 
 \section3 Using Loader
@@ -813,21 +817,21 @@ The Loader is an element which allows dynamic loading and unloading of component
 \section3 Using Dynamic Creation
 
 Developers can use the Qt.createComponent() function to create a component dynamically at
-runtime from within JavaScript, and then call createObject() to instantiate it.  Depending
+runtime from within JavaScript, and then call createObject() to instantiate it. Depending
 on the ownership semantics specified in the call, the developer may have to delete the
-created object manually.  See \l{qtqml-javascript-dynamicobjects.html}
+created object manually. See \l{qtqml-javascript-dynamicobjects.html}
 {Dynamic Object Management in QML} for more information.
 
 \section2 Destroy Unused Elements
 
-Elements which are invisible because they are a child of a non-visible element (e.g., the
+Elements which are invisible because they are a child of a non-visible element (for example, the
 second tab in a tab-widget, while the first tab is shown) should be initialized lazily in
 most cases, and deleted when no longer in use, to avoid the ongoing cost of leaving them
-active (e.g., rendering, animations, property binding evaluation, etc).
+active (for example, rendering, animations, property binding evaluation, etc).
 
 An item loaded with a Loader element may be released by resetting the "source" or
 "sourceComponent" property of the Loader, while other items may be explicitly
-released by calling destroy() on them.  In some cases, it may be necessary to
+released by calling destroy() on them. In some cases, it may be necessary to
 leave the item active, in which case it should be made invisible at the very least.
 
 See the upcoming section on Rendering for more information on active but invisible elements.
@@ -835,7 +839,7 @@ See the upcoming section on Rendering for more information on active but invisib
 \section1 Rendering
 
 The scene graph used for rendering in \c {QtQuick 2.0} allows highly dynamic, animated user
-interfaces to be rendered fluidly at 60 FPS.  There are some things which can
+interfaces to be rendered fluidly at 60 FPS. There are some things which can
 dramatically decrease rendering performance, however, and developers should be careful
 to avoid these pitfalls wherever possible.
 
@@ -843,9 +847,9 @@ to avoid these pitfalls wherever possible.
 
 Clipping is disabled by default, and should only be enabled when required.
 
-Clipping is a visual effect, NOT an optimization.  It increases (rather than reduces)
-complexity for the renderer.  If clipping is enabled, an item will clip its own painting,
-as well as the painting of its children, to its bounding rectangle.  This stops the renderer
+Clipping is a visual effect, NOT an optimization. It increases (rather than reduces)
+complexity for the renderer. If clipping is enabled, an item will clip its own painting,
+as well as the painting of its children, to its bounding rectangle. This stops the renderer
 from being able to reorder the drawing order of elements freely, resulting in a sub-optimal
 best-case scene graph traversal.
 
@@ -854,10 +858,10 @@ Clipping inside a delegate is especially bad and should be avoided at all costs.
 \section2 Over-drawing and Invisible Elements
 
 If you have elements which are totally covered by other (opaque) elements, it is best to
-set their "visible" property to \c false or they will be needlessly drawn.
+set their "visible" property to \c false or they will be drawn needlessly.
 
-Similarly, elements which are invisible (e.g., the second tab in a tab widget, while the
-first tab is shown) but need to be initialized at startup time (e.g., if the cost of
+Similarly, elements which are invisible (for example, the second tab in a tab widget, while the
+first tab is shown) but need to be initialized at startup time (for example, if the cost of
 instantiating the second tab takes too long to be able to do it only when the tab is
 activated), should have their "visible" property set to \c false, in order to avoid the
 cost of drawing them (although as previously explained, they will still incur the cost of
@@ -866,50 +870,50 @@ any animations or bindings evaluation since they are still active).
 \section2 Manual Layouts
 
 The scene graph renderer is able to batch up certain operations to minimise the number of
-OpenGL state changes required.  However, this optimization is only possible for the
+OpenGL state changes required. However, this optimization is only possible for the
 built-in layout elements provided by \c {QtQuick 2.0}, and cannot be applied to manual layouts.
 
-Therefore, application developers should use the Row, Column, Grid, GridView and ListView
+Therefore, application developers should use the Row, Column, Grid, GridView, and ListView
 elements instead of manual layouts wherever possible.
 
 \section1 Memory Allocation And Collection
 
 The amount of memory which will be allocated by an application and the way in which that
-memory will be allocated are very important considerations.  Aside from the obvious
+memory will be allocated are very important considerations. Aside from the obvious
 concerns about out-of-memory conditions on memory-constrained devices, allocating memory
 on the heap is a fairly computationally expensive operation, and certain allocation
-strategies can result in increased fragmentation of data across pages.  JavaScript uses
+strategies can result in increased fragmentation of data across pages. JavaScript uses
 a managed memory heap which is automatically garbage collected, and this provides some
 advantages but also has some important implications.
 
 An application written in QML uses memory from both the C++ heap and an automatically
-managed JavaScript heap.  The application developer needs to be aware of the subtleties
+managed JavaScript heap. The application developer needs to be aware of the subtleties
 of each in order to maximise performance.
 
 \section2 Tips For QML Application Developers
 
 The tips and suggestions contained in this section are guidelines only, and may not be
-applicable in all circumstances.  Be sure to benchmark and analyse your application
+applicable in all circumstances. Be sure to benchmark and analyze your application
 carefully using empirical metrics, in order to make the best decisions possible.
 
 \section3 Instantiate and initialize components lazily
 
 If your application consists of multiple views (for example, multiple tabs) but only
 one is required at any one time, you can use lazy instantiation to minimize the
-amount of memory you need to have allocated at any given time.  See the prior section
+amount of memory you need to have allocated at any given time. See the prior section
 on \l{Lazy Initialization} for more information.
 
 \section3 Destroy unused objects
 
 If you lazily instantiate components, or dynamically create objects during a JavaScript
 expression, it is often better to manually \c{destroy()} them rather than waiting for
-automatic garbage collection to do so.  See the prior section on
+automatic garbage collection to do so. See the prior section on
 \l{Controlling Element Lifetime} for more information.
 
 \section3 Don't manually invoke the garbage collector
 
 In most cases, it is not wise to manually invoke the garbage collector, as it will block
-the GUI thread for a substantial period of time.  This can result in skipped frames and
+the GUI thread for a substantial period of time. This can result in skipped frames and
 jerky animations, which should be avoided at all costs.
 
 There are some cases where manually invoking the garbage collector is acceptable (and
@@ -926,34 +930,34 @@ evaluated by QML's optimized binding expression evaluator.
 \section3 Avoid defining multiple identical implicit types
 
 If a QML element has a custom property defined in QML, it becomes its own implicit type.
-This is explained in greater detail in an upcoming section.  If multiple identical
-implicit types are defined inline in a component, some memory will be wasted.  In that
+This is explained in greater detail in an upcoming section. If multiple identical
+implicit types are defined inline in a component, some memory will be wasted. In that
 situation it is usually better to explicitly define a new component which can then be
 reused.
 
 Defining a custom property can often be a beneficial performance optimization (for
 example, to reduce the number of bindings which are required or re-evaluated), or it
-can improve the modularity and maintainability of a component.  In those cases, using
-custom properties is encouraged; however, the new type should, if it is used more than
+can improve the modularity and maintainability of a component. In those cases, using
+custom properties is encouraged. However, the new type should, if it is used more than
 once, be split into its own component (.qml file) in order to conserve memory.
 
 \section3 Re-use existing components
 
 If you are considering defining a new component, it's worth double checking that such a
-component doesn't already exist in the component set for your platform.  Otherwise, you
+component doesn't already exist in the component set for your platform. Otherwise, you
 will be forcing the QML engine to generate and store type-data for a type which is
 essentially a duplicate of another pre-existing and potentially already loaded component.
 
 \section3 Use singleton types instead of pragma library scripts
 
 If you are using a pragma library script to store application-wide instance data,
-consider using a QObject singleton type instead.  This should result in better performance,
+consider using a QObject singleton type instead. This should result in better performance,
 and will result in less JavaScript heap memory being used.
 
 \section2 Memory Allocation in a QML Application
 
-The memory usage of a QML application may be split into two parts: its C++ heap usage,
-and its JavaScript heap usage.  Some of the memory allocated in each will be unavoidable,
+The memory usage of a QML application may be split into two parts: its C++ heap usage
+and its JavaScript heap usage. Some of the memory allocated in each will be unavoidable,
 as it is allocated by the QML engine or the JavaScript engine, while the rest is
 dependent upon decisions made by the application developer.
 
@@ -983,16 +987,16 @@ The JavaScript heap will contain:
 \endlist
 
 Furthermore, there will be one JavaScript heap allocated for use in the main thread, and
-optionally one other JavaScript heap allocated for use in the WorkerScript thread.  If an
-application does not use a WorkerScript element, that overhead will not be incurred.  The
+optionally one other JavaScript heap allocated for use in the WorkerScript thread. If an
+application does not use a WorkerScript element, that overhead will not be incurred. The
 JavaScript heap can be several megabytes in size, and so applications written for
 memory-constrained devices may be best served to avoid using the WorkerScript element
 despite its usefulness in populating list models asynchronously.
 
 Note that both the QML engine and the JavaScript engine will automatically generate their
-own caches of type-data about observed types.  Every component loaded by an application
+own caches of type-data about observed types. Every component loaded by an application
 is a distinct (explicit) type, and every element (component instance) which defines its
-own custom properties in QML is an implicit type.  Any element (instance of a component)
+own custom properties in QML is an implicit type. Any element (instance of a component)
 which does not define any custom properties is considered by the JavaScript and QML engines
 to be of the type explicitly defined by the component, rather than its own implicit type.
 
@@ -1032,10 +1036,10 @@ Item {
 \endqml
 
 In the previous example, the rectangles \c r0 and \c r1 do not have any custom properties,
-and thus the JavaScript and QML engines consider them both to be of the same type.  That
+and thus the JavaScript and QML engines consider them both to be of the same type. That
 is, \c r0 and \c r1 are both considered to be of the explicitly defined \c Rectangle type.
 The rectangles \c r2, \c r3 and \c r4 each have custom properties and are each considered
-to be different (implicit) types.  Note that \c r3 and \c r4 are each considered to be of
+to be different (implicit) types. Note that \c r3 and \c r4 are each considered to be of
 different types, even though they have identical property information, simply because the
 custom property was not declared in the component which they are instances of.
 
@@ -1048,26 +1052,26 @@ instances of the \c RectangleWithString type, rather than defining their own imp
 
 Whenever making decisions regarding memory allocation or performance trade-offs, it is
 important to keep in mind the impact of CPU-cache performance, operating system paging,
-and JavaScript engine garbage collection.  Potential solutions should be benchmarked
+and JavaScript engine garbage collection. Potential solutions should be benchmarked
 carefully in order to ensure that the best one is selected.
 
 No set of general guidelines can replace a solid understanding of the underlying
 principles of computer science combined with a practical knowledge of the implementation
-details of the platform for which the application developer is developing.  Furthermore,
+details of the platform for which the application developer is developing. Furthermore,
 no amount of theoretical calculation can replace a good set of benchmarks and analysis
 tools when making trade-off decisions.
 
 \section3 Fragmentation
 
-Fragmentation is a C++ development issue.  If the application developer is not defining
+Fragmentation is a C++ development issue. If the application developer is not defining
 any C++ types or plugins, they may safely ignore this section.
 
 Over time, an application will allocate large portions of memory, write data to that
 memory, and subsequently free some portions of that memory once it has finished using
-some of the data.  This can result in "free" memory being located in non-contiguous
+some of the data. This can result in "free" memory being located in non-contiguous
 chunks, which cannot be returned to the operating system for other applications to use.
 It also has an impact on the caching and access characteristics of the application, as
-the "living" data may be spread across many different pages of physical memory.  This
+the "living" data may be spread across many different pages of physical memory. This
 in turn could force the operating system to swap which can cause filesystem I/O - which
 is, comparatively speaking, an extremely slow operation.
 
@@ -1078,18 +1082,18 @@ or by utilizing a memory-managed runtime with garbage collection (such as JavaSc
 
 \section3 Garbage Collection
 
-JavaScript provides garbage collection.  Memory which is allocated on the JavaScript
-heap (as opposed to the C++ heap) is owned by the JavaScript engine.  The engine will
+JavaScript provides garbage collection. Memory which is allocated on the JavaScript
+heap (as opposed to the C++ heap) is owned by the JavaScript engine. The engine will
 periodically collect all unreferenced data on the JavaScript heap, and if fragmentation
 becomes an issue, it will compact its heap by moving all "living" data into a contiguous
 region of memory (allowing the freed memory to be returned to the operating system).
 
 \section4 Implications of Garbage Collection
 
-Garbage collection has advantages and disadvantages.  It ensures that fragmentation is
+Garbage collection has advantages and disadvantages. It ensures that fragmentation is
 less of an issue, and it means that manually managing object lifetime is less important.
 However, it also means that a potentially long-lasting operation may be initiated by the
-JavaScript engine at a time which is out of the application developer's control.  Unless
+JavaScript engine at a time which is out of the application developer's control. Unless
 JavaScript heap usage is considered carefully by the application developer, the frequency
 and duration of garbage collection may have a negative impact upon the application
 experience.
@@ -1097,17 +1101,17 @@ experience.
 \section4 Manually Invoking the Garbage Collector
 
 An application written in QML will (most likely) require garbage collection to be
-performed at some stage.  While garbage collection will be automatically triggered by
+performed at some stage. While garbage collection will be automatically triggered by
 the JavaScript engine when the amount of available free memory is low, it is occasionally
 better if the application developer makes decisions about when to invoke the garbage
 collector manually (although usually this is not the case).
 
 The application developer is likely to have the best understanding of when an application
-is going to be idle for substantial periods of time.  If a QML application uses a lot
+is going to be idle for substantial periods of time. If a QML application uses a lot
 of JavaScript heap memory, causing regular and disruptive garbage collection cycles
 during particularly performance-sensitive tasks (for example, list scrolling, animations,
 and so forth), the application developer may be well served to manually invoke the
-garbage collector during periods of zero activity.  Idle periods are ideal for performing
+garbage collector during periods of zero activity. Idle periods are ideal for performing
 garbage collection since the user will not notice any degradation of user experience
 (skipped frames, jerky animations, and so on) which would result from invoking the garbage
 collector while activity is occurring.
@@ -1120,14 +1124,14 @@ so should be avoided if at all possible.
 \section3 Memory vs Performance Trade-offs
 
 In some situations, it is possible to trade-off increased memory usage for decreased
-processing time.  For example, caching the result of a symbol lookup used in a tight loop
+processing time. For example, caching the result of a symbol lookup used in a tight loop
 to a temporary variable in a JavaScript expression will result in a significant performance
 improvement when evaluating that expression, but it involves allocating a temporary variable.
 In some cases, these trade-offs are sensible (such as the case above, which is almost always
 sensible), but in other cases it may be better to allow processing to take slightly longer
 in order to avoid increasing the memory pressure on the system.
 
-In some cases, the impact of increased memory pressure can be extreme.  In some situations,
+In some cases, the impact of increased memory pressure can be extreme. In some situations,
 trading off memory usage for an assumed performance gain can result in increased page-thrash
 or cache-thrash, causing a huge reduction in performance. It is always necessary to benchmark
 the impact of trade-offs carefully in order to determine which solution is best in a given

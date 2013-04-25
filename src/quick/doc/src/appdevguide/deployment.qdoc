@@ -28,7 +28,7 @@
 /*!
 \page qtquick-deployment.html
 \title Deploying QML Applications
-\brief process of deploying QML applications
+\brief Deploying QML applications
 
 
 
@@ -60,7 +60,8 @@ QQmlEngine by either:
 \section2 Deploying with QQuickView
 
 QQuickView is a QWindow-based class that is able to load QML files.
-For example, if there is a QML file, \c application.qml, like this:
+For example, if there is a QML file, \c application.qml, it will
+look like this:
 
 \qml
     import QtQuick 2.0
@@ -201,7 +202,7 @@ file, \c main.qml, as a resource file using the \c qrc scheme:
 
 \snippet ../src/qml/doc/snippets/qml/qtbinding/resources/main.cpp 0
 
-Finally \c project.pro uses the RESOURCES variable to indicate that \c example.qrc should
+Finally, \c project.pro uses the RESOURCES variable to indicate that \c example.qrc should
 be used to build the application resources:
 
 \quotefile ../src/qml/doc/snippets/qml/qtbinding/resources/resources.pro
