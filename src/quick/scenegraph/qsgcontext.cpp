@@ -354,7 +354,11 @@ QSGDistanceFieldGlyphCache *QSGContext::distanceFieldGlyphCache(const QRawFont &
 */
 QSGGlyphNode *QSGContext::createNativeGlyphNode()
 {
+#if defined(QT_OPENGL_ES) && !defined(QT_OPENGL_ES_2_ANGLE)
+    return createGlyphNode();
+#else
     return new QSGDefaultGlyphNode;
+#endif
 }
 
 /*!
