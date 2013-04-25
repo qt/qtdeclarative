@@ -369,19 +369,6 @@ public:
         push(ScratchRegister);
     }
 
-    void push(QV4::Value value)
-    {
-#ifdef VALUE_FITS_IN_REGISTER
-        move(TrustedImm64(value.val), ScratchRegister);
-        push(ScratchRegister);
-#else
-        move(TrustedImm32(value.tag), ScratchRegister);
-        push(ScratchRegister);
-        move(TrustedImm32(value.int_32), ScratchRegister);
-        push(ScratchRegister);
-#endif
-    }
-
     void push(PointerToValue temp)
     {
         if (temp.value) {
@@ -406,40 +393,6 @@ public:
         DataLabelPtr patch = moveWithPatch(TrustedImmPtr(0), ScratchRegister);
         push(ScratchRegister);
         addPatch(patch, block.block);
-    }
-
-    void push(V4IR::Temp* temp)
-    {
-        if (temp) {
-            Address addr = loadTempAddress(ScratchRegister, temp);
-            addr.offset += 4;
-            push(addr);
-            addr.offset -= 4;
-            push(addr);
-        } else {
-            QV4::Value undefined = QV4::Value::undefinedValue();
-            push(undefined);
-        }
-    }
-
-    void push(V4IR::Const* c)
-    {
-        QV4::Value v = convertToValue(c);
-        push(v);
-    }
-
-    void push(V4IR::Expr* e)
-    {
-        if (!e) {
-            QV4::Value undefined = QV4::Value::undefinedValue();
-            push(undefined);
-        } else if (V4IR::Const *c = e->asConst())
-            push(c);
-        else if (V4IR::Temp *t = e->asTemp()) {
-            push(t);
-        } else {
-            assert(!"Trying to push an expression that is not a Temp or Const");
-        }
     }
 
     void push(TrustedImmPtr ptr)
