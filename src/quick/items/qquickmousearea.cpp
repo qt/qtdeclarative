@@ -773,11 +773,7 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
 
     // ### we should skip this if these signals aren't used
     // ### can GV handle this for us?
-    const bool isInside = contains(d->lastPos);
-    if (d->hovered && !isInside)
-        setHovered(false);
-    else if (!d->hovered && isInside)
-        setHovered(true);
+    setHovered(contains(d->lastPos));
 
 #ifndef QT_NO_DRAGANDDROP
     if (d->drag && d->drag->target()) {
