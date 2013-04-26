@@ -78,6 +78,7 @@ private slots:
     void hoverPosition();
     void hoverPropagation();
     void hoverVisible();
+    void hoverAfterPress();
     void disableAfterPress();
     void onWheel();
     void transformedMouseArea_data();
@@ -1004,6 +1005,33 @@ void tst_QQuickMouseArea::hoverVisible()
 
     QCOMPARE(QPointF(mouseTracker->mouseX(), mouseTracker->mouseY()), QPointF(11,33));
 
+    delete window;
+}
+
+void tst_QQuickMouseArea::hoverAfterPress()
+{
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("hoverAfterPress.qml"));
+
+    QQuickItem *root = window->rootObject();
+    QVERIFY(root != 0);
+
+    QQuickMouseArea *mouseArea = window->rootObject()->findChild<QQuickMouseArea*>("mouseArea");
+    QVERIFY(mouseArea != 0);
+    QTest::mouseMove(window, QPoint(22,33));
+    QCOMPARE(mouseArea->hovered(), false);
+    QTest::mouseMove(window, QPoint(200,200));
+    QCOMPARE(mouseArea->hovered(), true);
+    QTest::mouseMove(window, QPoint(22,33));
+    QCOMPARE(mouseArea->hovered(), false);
+    QTest::mouseMove(window, QPoint(200,200));
+    QCOMPARE(mouseArea->hovered(), true);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(200,200));
+    QCOMPARE(mouseArea->hovered(), true);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(200,200));
+    QCOMPARE(mouseArea->hovered(), true);
+    QTest::mouseMove(window, QPoint(22,33));
+    QCOMPARE(mouseArea->hovered(), false);
     delete window;
 }
 

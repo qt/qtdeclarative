@@ -954,7 +954,8 @@ void QQuickMouseArea::ungrabMouse()
         emit canceled();
         emit pressedChanged();
         emit pressedButtonsChanged();
-        if (d->hovered) {
+
+        if (d->hovered && !isUnderMouse()) {
             d->hovered = false;
             emit hoveredChanged();
         }
