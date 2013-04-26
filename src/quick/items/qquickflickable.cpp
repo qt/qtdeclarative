@@ -422,12 +422,16 @@ void QQuickFlickablePrivate::fixupX_callback(void *data)
 void QQuickFlickablePrivate::fixupX()
 {
     Q_Q(QQuickFlickable);
+    if (!q->isComponentComplete())
+        return; //Do not fixup from initialization values
     fixup(hData, q->minXExtent(), q->maxXExtent());
 }
 
 void QQuickFlickablePrivate::fixupY()
 {
     Q_Q(QQuickFlickable);
+    if (!q->isComponentComplete())
+        return; //Do not fixup from initialization values
     fixup(vData, q->minYExtent(), q->maxYExtent());
 }
 
