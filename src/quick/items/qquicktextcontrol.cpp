@@ -698,6 +698,9 @@ void QQuickTextControl::processEvent(QEvent *e, const QMatrix &matrix)
         case QEvent::KeyPress:
             d->keyPressEvent(static_cast<QKeyEvent *>(e));
             break;
+        case QEvent::KeyRelease:
+            d->keyReleaseEvent(static_cast<QKeyEvent *>(e));
+            break;
         case QEvent::MouseButtonPress: {
             QMouseEvent *ev = static_cast<QMouseEvent *>(e);
             d->mousePressEvent(ev, matrix.map(ev->localPos()));
@@ -809,9 +812,25 @@ void QQuickTextControl::setHtml(const QString &text)
     d->setContent(Qt::RichText, text);
 }
 
+
+void QQuickTextControlPrivate::keyReleaseEvent(QKeyEvent *e)
+{
+    if (e->key() == Qt::Key_Back) {
+         e->ignore();
+         return;
+    }
+    return;
+}
+
 void QQuickTextControlPrivate::keyPressEvent(QKeyEvent *e)
 {
     Q_Q(QQuickTextControl);
+
+    if (e->key() == Qt::Key_Back) {
+         e->ignore();
+         return;
+    }
+
 #ifndef QT_NO_SHORTCUT
     if (e == QKeySequence::SelectAll) {
             e->accept();
