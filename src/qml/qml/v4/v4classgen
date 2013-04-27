@@ -1,0 +1,225 @@
+#!/usr/bin/python
+
+import re, sys, os
+import argparse
+
+class ParsedMethod():
+    def __init__(self, name, methodPrefix):
+        self.name = name
+        self.methodPrefix = methodPrefix
+        self.options = {}
+
+    def generateBinding(self, out, objectPrefix = ""):
+        length = 0
+        if "argc" in self.options:
+            length = self.options["argc"]
+        out.write("    %sdefineDefaultProperty(engine, QStringLiteral(\"%s\"), %s_%s, %s);\n" % (objectPrefix, self.name, self.methodPrefix, self.name, length))
+        if "alias" in self.options:
+            out.write("    %sdefineDefaultProperty(engine, QStringLiteral(\"%s\"), %s_%s, %s);\n" % (objectPrefix, self.options["alias"], self.methodPrefix, self.name, length))
+
+class ParsedClass():
+    def __init__(self, name):
+        self.name = name
+        self.options = {}
+        self.methods = []
+        self.ctor_methods = []
+
+    def needsConstructor(self):
+        return len(self.ctor_methods) > 0
+
+def parseOptions(options):
+    options = options.split(" ")
+    result = {}
+    for opt in [options[i : i + 2] for i in range(0, len(options), 2)]:
+        result[opt[0]] = opt[1]
+    return result
+
+def parseMethod(line, match, methodPrefix):
+    annotatePattern = re.compile(r".*QV4_ANNOTATE\((?P<Options>.+)\).*")
+    argcPattern = re.compile(r".*QV4_ARGC\((?P<count>\d+)\).*")
+
+    method = ParsedMethod(match.group("MethodName"), methodPrefix)
+
+    annotateMatch = annotatePattern.match(line)
+    if annotateMatch:
+        method.options = parseOptions(annotateMatch.group("Options"))
+
+    argcMatch = argcPattern.match(line)
+    if argcMatch:
+        method.options["argc"] = argcMatch.group("count")
+
+    return method
+
+def parse(lines):
+    classes = []
+    currentClass = None
+    classPattern = re.compile(r".*QV4_JS_CLASS\((?P<ClassName>\w+)\).*")
+    annotatePattern = re.compile(r".*QV4_ANNOTATE\((?P<Options>.+)\).*")
+    methodPattern = re.compile(r".*\smethod_(?P<MethodName>\w+)\(.*\).*;")
+    ctorMethodPattern = re.compile(r".*\sctor_method_(?P<MethodName>\w+)\(.*\).*;")
+
+    for line in lines:
+        line = line.strip()
+        classMatch = classPattern.match(line)
+        if classMatch:
+            name = classMatch.group("ClassName")
+            if currentClass != None:
+                classes.append(currentClass)
+            currentClass = ParsedClass(name)
+            continue
+
+        if currentClass == None:
+            continue
+
+        methodMatch = methodPattern.match(line)
+        if methodMatch:
+            method = parseMethod(line, methodMatch, "method")
+            currentClass.methods.append(method)
+            continue
+
+        ctorMethodMatch = ctorMethodPattern.match(line)
+        if ctorMethodMatch:
+            method = parseMethod(line, ctorMethodMatch, "ctor_method")
+            currentClass.ctor_methods.append(method)
+            continue
+
+        annotateMatch = annotatePattern.match(line)
+        if annotateMatch:
+            currentClass.options = parseOptions(annotateMatch.group("Options"))
+            continue
+
+    if currentClass != None:
+        classes.append(currentClass)
+    return classes
+
+def generateBinding(out, parsedClass, vtableEntries):
+    if parsedClass.needsConstructor():
+        ctorClass = parsedClass.name.replace("Prototype", "Ctor")
+
+        out.write("class %s: public QV4::FunctionObject {\n" % ctorClass);
+        out.write("public:\n");
+        out.write("    %s(QV4::ExecutionContext *scope)\n" % ctorClass);
+        out.write("        : QV4::FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral(\"%s\")))\n" % ctorClass.replace("Ctor", ""));
+        out.write("    { vtbl = &static_vtbl; }\n");
+        out.write("\n");
+        out.write("protected:\n");
+        out.write("    static const QV4::ManagedVTable static_vtbl;\n");
+        out.write("};\n\n");
+        out.write("const QV4::ManagedVTable %s::static_vtbl = {\n" % ctorClass);
+
+        ctorOverrides = set()
+        for method in parsedClass.ctor_methods:
+            ctorOverrides.add(method.name)
+
+        for method in vtableEntries:
+            entry = "FunctionObject::" + method
+            if method in ctorOverrides:
+                entry = parsedClass.name + "::ctor_method_" + method
+            out.write("    " + entry + ",\n")
+        out.write("    \"%s\"\n" % parsedClass.name.replace("Prototype", "Ctor"));
+        out.write("};\n\n")
+
+        out.write("QV4::Object *%s::newConstructor(QV4::ExecutionContext *scope)\n" % parsedClass.name)
+        out.write("{\n")
+        out.write("    return new (scope->engine->memoryManager) %s(scope);\n" % ctorClass)
+        out.write("}\n\n")
+
+    ctorSignature = ""
+    if parsedClass.needsConstructor():
+        ctorSignature = ", const Value &ctor"
+
+    out.write("void %s::initClass(QV4::ExecutionEngine *engine%s)\n" % (parsedClass.name, ctorSignature))
+    out.write("{\n")
+
+    if parsedClass.needsConstructor():
+        ctor = "ctor.objectValue()->"
+        ctorLength = 0
+        if "argc" in parsedClass.options:
+            ctorLength = parsedClass.options["argc"]
+
+        out.write("    %sdefineReadonlyProperty(engine->id_prototype, QV4::Value::fromObject(this));\n" % ctor)
+        out.write("    %sdefineReadonlyProperty(engine->id_length, QV4::Value::fromInt32(%s));\n" % (ctor, ctorLength))
+        out.write("\n")
+
+        for method in parsedClass.ctor_methods:
+            if method.name == "construct" or method.name == "call":
+                continue
+            method.generateBinding(out, ctor);
+
+        out.write("\n")
+        out.write("    defineDefaultProperty(engine, QStringLiteral(\"constructor\"), ctor);\n");
+
+        out.write("\n")
+
+    for method in parsedClass.methods:
+        method.generateBinding(out)
+
+    out.write("}\n")
+
+def extractManagedVTableLayout(basePath):
+    def VTableDefintionIterator(lines):
+        i = 0
+        while i < len(lines):
+            if lines[i].strip().startswith("#define DEFINE_MANAGED_VTABLE(classname)"):
+                break;
+            i = i + 1
+        if i >= len(lines):
+            return
+        i = i + 1
+        if not lines[i].strip().startswith("const ManagedVTable classname::static_vtbl ="):
+            print("Expected static_vtbl definition at line %s" % i)
+            return
+        i = i + 1
+        if not lines[i].strip().startswith("{"):
+            print("Expected static_vtbl definition at line %s" % i)
+            return
+        i = i + 1
+        while i < len(lines):
+            line = lines[i].strip()
+            if "#classname" in line:
+                break
+            yield line.split(",")[0]
+            i = i + 1
+        return
+
+    qv4managedHeader = basePath + "/qv4managed_p.h"
+    fields = []
+    try:
+        header = open(qv4managedHeader, "r")
+        it = VTableDefintionIterator(header.read().splitlines())
+        for entry in it:
+            fields.append(entry)
+        header.close()
+    except IOError:
+        print("Could not open qv4managed_p.h at %s" % qv4managedHeader)
+        sys.exit(1)
+    return fields
+
+parser = argparse.ArgumentParser(description="Generate V4 JS class bindings")
+parser.add_argument("input")
+parser.add_argument("--output")
+options = parser.parse_args()
+
+vtableEntries = extractManagedVTableLayout(os.path.dirname(os.path.abspath(options.input)))
+if len(vtableEntries) ==  0:
+    print("Could not parse vtable layout from qv4managed_p.h")
+    sys.exit(1)
+
+f = open(options.input)
+
+out = sys.stdout
+if options.output != None:
+    out = open(options.output, 'w')
+
+lines = f.read().splitlines()
+classes = parse(lines)
+f.close()
+
+out.write("/* Generated file, do not edit */\n")
+out.write("#include \"%s\"\n" % options.input)
+
+for parsedClass in classes:
+    out.write("\n")
+    generateBinding(out, parsedClass, vtableEntries)
+
+out.close()

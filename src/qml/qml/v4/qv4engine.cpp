@@ -151,7 +151,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     booleanCtor = Value::fromObject(new (memoryManager) BooleanCtor(rootContext));
     arrayCtor = Value::fromObject(new (memoryManager) ArrayCtor(rootContext));
     functionCtor = Value::fromObject(new (memoryManager) FunctionCtor(rootContext));
-    dateCtor = Value::fromObject(new (memoryManager) DateCtor(rootContext));
+    dateCtor = Value::fromObject(DatePrototype::newConstructor(rootContext));
     regExpCtor = Value::fromObject(new (memoryManager) RegExpCtor(rootContext));
     errorCtor = Value::fromObject(new (memoryManager) ErrorCtor(rootContext));
     evalErrorCtor = Value::fromObject(new (memoryManager) EvalErrorCtor(rootContext));
