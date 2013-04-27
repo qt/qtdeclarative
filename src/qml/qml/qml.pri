@@ -130,9 +130,5 @@ HEADERS += \
 include(parser/parser.pri)
 include(rewriter/rewriter.pri)
 include(ftw/ftw.pri)
-use_old_v4 {
-    include(v4/v4.pri)
-    DEFINES += QT_USE_OLD_V4
-}
 include(v8/v8.pri)
-include(v4vm/v4vm.pri)
+include(v4/v4.pri)
