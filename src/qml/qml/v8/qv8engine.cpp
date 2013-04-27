@@ -70,6 +70,7 @@
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4mm_p.h>
 #include <private/qv4objectproto_p.h>
+#include <private/qv4globalobject_p.h>
 
 Q_DECLARE_METATYPE(QList<int>)
 
@@ -1618,6 +1619,22 @@ QJSValue QV8Engine::evaluate(const QString& program, const QString& fileName, qu
         return new QJSValuePrivate(m_v4Engine, QV4::Value::fromObject(error));
     }
     return evaluate(script, tryCatch);
+}
+
+QV4::Value QV8Engine::evaluateScript(const QString &script, QV4::Object *scopeObject)
+{
+    QV4::ExecutionContext *ctx = m_v4Engine->current;
+
+    QV4::Value result = QV4::Value::undefinedValue();
+
+    try {
+        QV4::EvalFunction *eval = new (m_v4Engine->memoryManager) QV4::EvalFunction(m_v4Engine->rootContext, scopeObject);
+        QV4::Value arg = QV4::Value::fromString(m_v4Engine->current, script);
+        result = eval->evalCall(m_v4Engine->current, QV4::Value::undefinedValue(), &arg, 1, /*directCall*/ false);
+    } catch (QV4::Exception &e) {
+        e.accept(ctx);
+    }
+    return result;
 }
 
 

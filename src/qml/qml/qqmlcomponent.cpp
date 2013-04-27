@@ -61,12 +61,31 @@
 #include <private/qv8engine_p.h>
 #include <private/qv8include_p.h>
 
+#include <private/qv4functionobject_p.h>
+
 #include <QStack>
 #include <QStringList>
 #include <QThreadStorage>
 #include <QtCore/qdebug.h>
 #include <qqmlinfo.h>
 #include "qqmlmemoryprofiler_p.h"
+
+#define INITIALPROPERTIES_SOURCE \
+        "(function(object, values) {"\
+            "try {"\
+                "for (var property in values) {" \
+                    "try {"\
+                        "var properties = property.split(\".\");"\
+                        "var o = object;"\
+                        "for (var ii = 0; ii < properties.length - 1; ++ii) {"\
+                            "o = o[properties[ii]];"\
+                        "}"\
+                        "o[properties[properties.length - 1]] = values[property];"\
+                    "} catch(e) {}"\
+                "}"\
+            "} catch(e) {}"\
+        "})"
+
 
 namespace {
     QThreadStorage<int> creationDepth;
@@ -81,7 +100,6 @@ public:
     virtual ~QQmlComponentExtension();
 
     v8::Persistent<v8::Function> incubationConstructor;
-    v8::Persistent<v8::Script> initialProperties;
     v8::Persistent<v8::Function> forceCompletion;
 };
 V8_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
@@ -1182,6 +1200,7 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     }
 
     QV8Engine *v8engine = args->engine();
+    QV4::ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
 
     QQmlContext *ctxt = creationContext();
     if (!ctxt) ctxt = d->engine->rootContext();
@@ -1201,10 +1220,9 @@ void QQmlComponent::createObject(QQmlV8Function *args)
 
     if (!valuemap.IsEmpty()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
-        // Try catch isn't needed as the function itself is loaded with try/catch
-        v8::Handle<v8::Value> function = e->initialProperties->Run(args->qmlGlobal());
-        v8::Handle<v8::Value> args[] = { object, valuemap };
-        v8::Handle<v8::Function>::Cast(function)->Call(v8engine->global(), 2, args);
+        QV4::Value f = v8engine->evaluateScript(QString::fromLatin1(INITIALPROPERTIES_SOURCE), args->qmlGlobal()->v4Value().asObject());
+        QV4::Value args[] = { object->v4Value(), valuemap->v4Value() };
+        f.asFunctionObject()->call(v4engine->current, QV4::Value::fromObject(v4engine->globalObject), args, 2);
     }
 
     d->completeCreate();
@@ -1340,6 +1358,7 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(v8::Handle<v8::
 {
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     QV8Engine *v8engine = ep->v8engine();
+    QV4::ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
 
     v8::HandleScope handle_scope;
     v8::Context::Scope scope(v8engine->context());
@@ -1349,10 +1368,9 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(v8::Handle<v8::
 
     if (!valuemap.IsEmpty()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
-        // Try catch isn't needed as the function itself is loaded with try/catch
-        v8::Handle<v8::Value> function = e->initialProperties->Run(qmlGlobal);
-        v8::Handle<v8::Value> args[] = { object, valuemap };
-        v8::Handle<v8::Function>::Cast(function)->Call(v8engine->global(), 2, args);
+        QV4::Value f = v8engine->evaluateScript(QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal->v4Value().asObject());
+        QV4::Value args[] = { object->v4Value(), valuemap->v4Value() };
+        f.asFunctionObject()->call(v4engine->current, QV4::Value::fromObject(v4engine->globalObject), args, 2);
     }
 }
 
@@ -1378,26 +1396,6 @@ QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
     ft->InstanceTemplate()->SetAccessor(v8::String::New("forceCompletion"), 
                                         QV8IncubatorResource::ForceCompletionGetter); 
     incubationConstructor = qPersistentNew(ft->GetFunction());
-    }
-
-    {
-#define INITIALPROPERTIES_SOURCE \
-        "(function(object, values) {"\
-            "try {"\
-                "for(var property in values) {" \
-                    "try {"\
-                        "var properties = property.split(\".\");"\
-                        "var o = object;"\
-                        "for (var ii = 0; ii < properties.length - 1; ++ii) {"\
-                            "o = o[properties[ii]];"\
-                        "}"\
-                        "o[properties[properties.length - 1]] = values[property];"\
-                    "} catch(e) {}"\
-                "}"\
-            "} catch(e) {}"\
-        "})"
-    initialProperties = qPersistentNew(engine->qmlModeCompile(QLatin1String(INITIALPROPERTIES_SOURCE)));
-#undef INITIALPROPERTIES_SOURCE
     }
 }
 
@@ -1448,7 +1446,6 @@ void QV8IncubatorResource::StatusChangedSetter(v8::Local<v8::String>, v8::Local<
 QQmlComponentExtension::~QQmlComponentExtension()
 {
     qPersistentDispose(incubationConstructor);
-    qPersistentDispose(initialProperties);
     qPersistentDispose(forceCompletion);
 }
 
@@ -1464,15 +1461,11 @@ void QV8IncubatorResource::setInitialState(QObject *o)
     if (!valuemap.IsEmpty()) {
         QQmlComponentExtension *e = componentExtension(engine);
 
-        v8::HandleScope handle_scope;
-        v8::Context::Scope scope(engine->context());
+        QV4::ExecutionEngine *v4engine = QV8Engine::getV4(engine);
 
-        v8::Handle<v8::Value> function = e->initialProperties->Run(qmlGlobal);
-        v8::Handle<v8::Value> args[] = { engine->newQObject(o), valuemap };
-        v8::Handle<v8::Function>::Cast(function)->Call(engine->global(), 2, args);
-
-        qPersistentDispose(valuemap);
-        qPersistentDispose(qmlGlobal);
+        QV4::Value f = engine->evaluateScript(QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal->v4Value().asObject());
+        QV4::Value args[] = { engine->newQObject(o)->v4Value(), valuemap->v4Value() };
+        f.asFunctionObject()->call(v4engine->current, QV4::Value::fromObject(v4engine->globalObject), args, 2);
     }
 }
     
@@ -1516,5 +1509,7 @@ void QV8IncubatorResource::statusChanged(Status s)
     if (s == Ready || s == Error) 
         dispose();
 }
+
+#undef INITIALPROPERTIES_SOURCE
 
 QT_END_NAMESPACE

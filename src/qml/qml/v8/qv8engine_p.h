@@ -101,6 +101,7 @@ namespace QV4 {
     struct Value;
 }
 
+#define V4FUNCTION(function, engine) new QV4::BuiltinFunctionOld(engine->rootContext, engine->id_undefined, function)
 
 // Uncomment the following line to enable global handle debugging.  When enabled, all the persistent
 // handles allocated using qPersistentNew() (or registered with qPersistentRegsiter()) and disposed
@@ -383,6 +384,7 @@ public:
 
     QJSValue evaluate(const QString &program, const QString &fileName = QString(), quint16 lineNumber = 1);
     QJSValue evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCatch);
+    QV4::Value evaluateScript(const QString &script, QV4::Object *scopeObject = 0);
 
     QJSValue newArray(uint length);
     v8::Local<v8::Object> newVariant(const QVariant &variant);
