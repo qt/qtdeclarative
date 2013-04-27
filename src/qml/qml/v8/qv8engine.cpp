@@ -479,18 +479,18 @@ const QStringHash<bool> &QV8Engine::illegalNames() const
 }
 
 // Requires a handle scope
-v8::Local<v8::Array> QV8Engine::getOwnPropertyNames(v8::Handle<v8::Object> o)
+QV4::Value QV8Engine::getOwnPropertyNames(const QV4::Value &o)
 {
-    QV4::Value ovalue = o.get()->v4Value();
-    if (!ovalue.asObject())
-        return v8::Array::New();
+    if (!o.asObject())
+        return QV4::Value::fromObject(m_v4Engine->newArrayObject(m_v4Engine->current));
     QV4::SimpleCallContext ctx;
-    ctx.arguments = &ovalue;
+    QV4::Value args = o;
+    ctx.arguments = &args;
     ctx.argumentCount = 1;
     ctx.engine = m_v4Engine;
     ctx.parent = m_v4Engine->current;
     QV4::Value result = QV4::ObjectPrototype::method_getOwnPropertyNames(&ctx);
-    return v8::Local<v8::Array>::New(v8::Value::fromV4Value(result));
+    return result;
 }
 
 QQmlContextData *QV8Engine::callingContext()

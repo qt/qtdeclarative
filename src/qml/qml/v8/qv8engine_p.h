@@ -308,7 +308,7 @@ public:
 
     QQmlContextData *callingContext();
 
-    v8::Local<v8::Array> getOwnPropertyNames(v8::Handle<v8::Object>);
+    QV4::Value getOwnPropertyNames(const QV4::Value &o);
     void freezeObject(v8::Handle<v8::Value>);
 
     QString toString(v8::Handle<v8::Value> string);

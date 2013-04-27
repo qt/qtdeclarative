@@ -44,6 +44,8 @@
 #include <private/qqmllistmodel_p.h>
 #include <private/qqmllistmodelworkeragent_p.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 // We allow the following JavaScript types to be passed between the main and 
@@ -219,7 +221,7 @@ void QV8Worker::serialize(QByteArray &data, v8::Handle<v8::Value> v, QV8Engine *
         source->Write((uint16_t*)buffer);
     } else if (v->IsObject() && !v->ToObject()->GetExternalResource()) {
         v8::Handle<v8::Object> object = v->ToObject();
-        v8::Local<v8::Array> properties = engine->getOwnPropertyNames(object);
+        v8::Local<v8::Array> properties = v8::Local<v8::Array>::New(v8::Value::fromV4Value(engine->getOwnPropertyNames(object->v4Value())));
         quint32 length = properties->Length();
         if (length > 0xFFFFFF) {
             push(data, valueheader(WorkerUndefined));
