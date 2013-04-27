@@ -221,6 +221,7 @@ struct Q_QML_EXPORT Value
     Bool toBoolean() const;
     double toInteger() const;
     double toNumber() const;
+    QString toQString() const;
     String *toString(ExecutionContext *ctx) const;
     Object *toObject(ExecutionContext *ctx) const;
 

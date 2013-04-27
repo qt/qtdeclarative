@@ -335,31 +335,7 @@ bool QJSValue::isVariant() const
 */
 QString QJSValue::toString() const
 {
-    // have to check these here as converting those to a QV4::String requires a context
-    // (which we don't always have for those types)
-    if (d->value.isUndefined())
-        return QStringLiteral("undefined");
-    else if (d->value.isNull())
-        return QStringLiteral("null");
-    else if (d->value.isBoolean()) {
-        if (d->value.booleanValue())
-            return QStringLiteral("true");
-        else
-            return QStringLiteral("false");
-    }
-    else if (d->value.isNumber()) {
-        QString result;
-        __qmljs_numberToString(&result, d->value.asDouble());
-        return result;
-    }
-
-    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
-    try {
-        return d->value.toString(ctx)->toQString();
-    } catch (Exception &e) {
-        e.accept(ctx);
-        return e.value().toString(ctx)->toQString();
-    }
+    return d->value.toQString();
 }
 
 /*!

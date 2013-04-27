@@ -313,8 +313,6 @@ public:
 
     QString toString(v8::Handle<v8::Value> string);
     QString toString(v8::Handle<v8::String> string);
-    static QString toStringStatic(v8::Handle<v8::Value>);
-    static QString toStringStatic(v8::Handle<v8::String>);
     static inline bool startsWithUpper(v8::Handle<v8::String>);
 
     QVariant toVariant(v8::Handle<v8::Value>, int typeHint);

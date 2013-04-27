@@ -51,6 +51,8 @@
 #include <private/qmetaobjectbuilder_p.h>
 #include <private/qqmlrewrite_p.h>
 
+#include <private/qv4value_p.h>
+
 #include <QtCore/qdebug.h>
 
 #include <ctype.h> // for toupper
@@ -1367,7 +1369,7 @@ inline const QString &qQmlPropertyCacheToString(const QString &string)
 
 inline QString qQmlPropertyCacheToString(const QHashedV8String &string)
 {
-    return QV8Engine::toStringStatic(string.string());
+    return string.string()->v4Value().toQString();
 }
 
 template<typename T>

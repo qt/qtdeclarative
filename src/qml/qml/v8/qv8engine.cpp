@@ -205,19 +205,6 @@ QV8Engine::~QV8Engine()
         qPersistentDispose(m_context);
 }
 
-QString QV8Engine::toStringStatic(v8::Handle<v8::Value> jsstr)
-{
-    return toStringStatic(jsstr->ToString());
-}
-
-QString QV8Engine::toStringStatic(v8::Handle<v8::String> jsstr)
-{
-    QString qstr;
-    qstr.resize(jsstr->Length());
-    jsstr->Write((uint16_t*)qstr.data());
-    return qstr;
-}
-
 QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
 {
     if (value.IsEmpty())

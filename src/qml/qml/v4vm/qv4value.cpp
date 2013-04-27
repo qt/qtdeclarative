@@ -86,6 +86,44 @@ double Value::toNumber() const
     return __qmljs_to_number(*this);
 }
 
+QString Value::toQString() const
+{
+    switch (type()) {
+    case Value::Undefined_Type:
+        return QStringLiteral("undefined");
+    case Value::Null_Type:
+        return QStringLiteral("null");
+    case Value::Boolean_Type:
+        if (booleanValue())
+            return QStringLiteral("true");
+        else
+            return QStringLiteral("false");
+    case Value::String_Type:
+        return stringValue()->toQString();
+    case Value::Object_Type: {
+        ExecutionContext *ctx = objectValue()->internalClass->engine->current;
+        try {
+            Value prim = __qmljs_to_primitive(*this, STRING_HINT);
+            if (prim.isPrimitive())
+                return prim.toQString();
+        } catch (Exception &e) {
+            e.accept(ctx);
+        }
+        return QString();
+    }
+    case Value::Integer_Type: {
+        QString str;
+        __qmljs_numberToString(&str, (double)int_32, 10);
+        return str;
+    }
+    default: { // double
+        QString str;
+        __qmljs_numberToString(&str, doubleValue(), 10);
+        return str;
+    }
+    } // switch
+}
+
 bool Value::sameValue(Value other) const {
     if (val == other.val)
         return true;

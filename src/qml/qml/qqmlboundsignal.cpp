@@ -55,6 +55,8 @@
 #include <private/qv8debugservice_p.h>
 #include "qqmlinfo.h"
 
+#include <private/qv4value_p.h>
+
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qdebug.h>
 
@@ -140,7 +142,7 @@ QString QQmlBoundSignalExpression::expression() const
         Q_ASSERT (context() && engine());
         v8::HandleScope handle_scope;
         v8::Context::Scope context_scope(QQmlEnginePrivate::get(engine())->v8engine()->context());
-        return QV8Engine::toStringStatic(m_v8function->ToString());
+        return m_v8function->v4Value().toQString();
     } else if (!m_expressionUtf8.isEmpty()) {
         return QString::fromUtf8(m_expressionUtf8);
     } else {

@@ -42,6 +42,7 @@
 #include "qqmljavascriptexpression_p.h"
 
 #include <private/qqmlexpression_p.h>
+#include <private/qv4value_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -315,12 +316,12 @@ void QQmlJavaScriptExpression::exceptionToError(v8::Handle<v8::Message> message,
     if (file.IsEmpty() || file->Length() == 0)
         error.setUrl(QUrl());
     else
-        error.setUrl(QUrl(QV8Engine::toStringStatic(file)));
+        error.setUrl(QUrl(file->v4Value().toQString()));
 
     error.setLine(lineNumber);
     error.setColumn(-1);
 
-    QString qDescription = QV8Engine::toStringStatic(description);
+    QString qDescription = description->v4Value().toQString();
     if (qDescription.startsWith(QLatin1String("Uncaught ")))
         qDescription = qDescription.mid(9 /* strlen("Uncaught ") */);
 
