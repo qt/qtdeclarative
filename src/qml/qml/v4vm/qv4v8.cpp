@@ -94,6 +94,11 @@ void gcUnprotect(void *memoryManager, void *handle)
             static_cast<QV4::MemoryManager *>(memoryManager)->unprotect(m);
 }
 
+quint64 qv8_get_value(const QV4::Value &v)
+{
+    return v.val;
+}
+
 struct V8AccessorGetter: FunctionObject {
     AccessorGetter getter;
     Persistent<Value> data;

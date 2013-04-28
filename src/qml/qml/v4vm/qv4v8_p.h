@@ -160,6 +160,8 @@ typedef void (*WeakReferenceCallback)(Persistent<Value> object,
     *(static_cast<T* volatile*>(0)) = static_cast<S*>(0);      \
   }
 
+Q_QML_EXPORT quint64 qv8_get_value(const QV4::Value &v);
+
 /**
  * An object reference managed by the v8 garbage collector.
  *
@@ -204,6 +206,11 @@ struct HandleOperations
     static void init(Handle<T> *handle, T *other)
     {
         handle->val = *reinterpret_cast<quint64 *>(other);
+    }
+
+    static void init(Handle<T> *handle, const QV4::Value &v)
+    {
+        handle->val = qv8_get_value(v);
     }
 
     static void ref(Handle<T> *)
@@ -297,6 +304,10 @@ struct Handle {
     {
         HandleOperations<T>::init(this, obj);
         HandleOperations<T>::ref(this);
+    }
+
+    Handle(const QV4::Value &v) {
+        HandleOperations<T>::init(this, v);
     }
 
     Handle(const Handle<T> &other)
