@@ -482,7 +482,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 bool operator()(SequenceElementType e0, SequenceElementType e1) \
                 { \
                     v8::Handle<v8::Value> argv[2] = { eng->fromVariant(e0), eng->fromVariant(e1) }; \
-                    v8::Handle<v8::Value> compareValue = jsFn->Call(eng->global(), 2, argv); \
+                    v8::Handle<v8::Value> compareValue = jsFn->Call(v8::Value::fromV4Value(eng->global()), 2, argv); \
                     return compareValue->NumberValue() < 0; \
                 } \
             private: \

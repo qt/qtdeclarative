@@ -343,7 +343,7 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     v8::Local<v8::Function> fn = v8::Local<v8::Function>::Cast(script->Run());
     v8::Handle<v8::Value> invokeFn = v8::FunctionTemplate::New(Invoke)->GetFunction();
     v8::Handle<v8::Value> args[] = { invokeFn };
-    v8::Local<v8::Function> createFn = v8::Local<v8::Function>::Cast(fn->Call(engine->global(), 1, args));
+    v8::Local<v8::Function> createFn = v8::Local<v8::Function>::Cast(fn->Call(v8::Value::fromV4Value(engine->global()), 1, args));
     m_methodConstructor = qPersistentNew<v8::Function>(createFn);
     }
 
@@ -359,7 +359,8 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     }
 
     {
-    v8::Local<v8::Object> prototype = engine->global()->Get(v8::String::New("Function"))->ToObject()->Get(v8::String::New("prototype"))->ToObject();
+    v8::Local<v8::Object> prototype = v8::Local<v8::Object>::New(v8::Value::fromV4Value(engine->global()))
+            ->Get(v8::String::New("Function"))->ToObject()->Get(v8::String::New("prototype"))->ToObject();
     prototype->Set(v8::String::New("connect"), connect, v8::DontEnum);
     prototype->Set(v8::String::New("disconnect"), disconnect, v8::DontEnum);
     }
@@ -440,7 +441,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
 
         if (QQmlValueTypeFactory::isValueType(v.userType())) {
             if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(v.userType()))
-                return engine->newValueType(object, property.coreIndex, valueType); // VariantReference value-type.
+                return v8::Value::fromV4Value(engine->newValueType(object, property.coreIndex, valueType)); // VariantReference value-type.
         }
 
         return engine->fromVariant(v);
@@ -448,14 +449,14 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
         Q_ASSERT(notifier == 0);
 
         if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property.propType))
-            return engine->newValueType(object, property.coreIndex, valueType);
+            return v8::Value::fromV4Value(engine->newValueType(object, property.coreIndex, valueType));
     } else {
         Q_ASSERT(notifier == 0);
 
         // see if it's a sequence type
         bool succeeded = false;
-        v8::Handle<v8::Value> retn = engine->newSequence(property.propType, object, property.coreIndex,
-                                                         &succeeded);
+        v8::Handle<v8::Value> retn = v8::Value::fromV4Value(engine->newSequence(property.propType, object, property.coreIndex,
+                                                         &succeeded));
         if (succeeded)
             return retn;
     }
@@ -489,7 +490,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
                v8::Integer::New(index)
            };
            Q_ASSERT(argv[0]->IsObject());
-           return engine->qobjectWrapper()->m_methodConstructor->Call(engine->global(), 2, argv);
+           return engine->qobjectWrapper()->m_methodConstructor->Call(v8::Value::fromV4Value(engine->global()), 2, argv);
        }
        static v8::Handle<v8::Value> createWithGlobal(QV8Engine *engine, QObject *object, 
                                                      v8::Handle<v8::Value> *objectHandle, 
@@ -500,7 +501,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
                v8::Context::GetCallingQmlGlobal()
            };
            Q_ASSERT(argv[0]->IsObject());
-           return engine->qobjectWrapper()->m_methodConstructor->Call(engine->global(), 3, argv);
+           return engine->qobjectWrapper()->m_methodConstructor->Call(v8::Value::fromV4Value(engine->global()), 3, argv);
        }
     };
 
@@ -596,7 +597,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
 {
     QQmlBinding *newBinding = 0;
     if (value->IsFunction()) {
-        if (value->ToObject()->GetHiddenValue(engine->bindingFlagKey()).IsEmpty()) {
+        if (value->ToObject()->GetHiddenValue(v8::Value::fromV4Value(engine->bindingFlagKey())).IsEmpty()) {
             if (!property->isVarProperty() && property->propType != qMetaTypeId<QJSValue>()) {
                 // assigning a JS function to a non var or QJSValue property or is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to ");
@@ -657,7 +658,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     } else if (value->IsUndefined() && property->propType == QMetaType::QJsonValue) {
         PROPERTY_STORE(QJsonValue, QJsonValue(QJsonValue::Undefined));
     } else if (!newBinding && property->propType == qMetaTypeId<QJSValue>()) {
-        PROPERTY_STORE(QJSValue, engine->scriptValueFromInternal(value));
+        PROPERTY_STORE(QJSValue, engine->scriptValueFromInternal(value->v4Value()));
     } else if (value->IsUndefined()) {
         QString error = QLatin1String("Cannot assign [undefined] to ");
         if (!QMetaType::typeName(property->propType))
@@ -763,7 +764,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Getter(v8::Local<v8::String> property,
     if (!result.IsEmpty())
         return result;
 
-    if (QV8Engine::startsWithUpper(property)) {
+    if (QV8Engine::startsWithUpper(property->v4Value().asString())) {
         // Check for attached properties
         if (context && context->imports) {
             QQmlTypeNameCache::Result r = context->imports->query(propertystring);
@@ -1203,7 +1204,7 @@ QPair<QObject *, int> QV8QObjectWrapper::ExtractQtMethod(QV8Engine *engine, v8::
 
         // This is one of our special QObject method wrappers
         v8::Handle<v8::Value> args[] = { engine->qobjectWrapper()->m_hiddenObject };
-        v8::Local<v8::Value> data = function->Call(engine->global(), 1, args);
+        v8::Local<v8::Value> data = function->Call(v8::Value::fromV4Value(engine->global()), 1, args);
 
         if (data->IsArray()) {
             v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(data);
@@ -1330,7 +1331,7 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
 
             v8::TryCatch try_catch;
             if (connection.thisObject.IsEmpty()) {
-                connection.function->Call(engine->global(), argCount, args.data());
+                connection.function->Call(v8::Value::fromV4Value(engine->global()), argCount, args.data());
             } else {
                 connection.function->Call(connection.thisObject, argCount, args.data());
             }
@@ -2187,13 +2188,13 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
         handlePtr = new (&allocData) QQmlV4Handle(QQmlV4Handle::fromV8Handle(value));
         type = callType;
     } else if (callType == QMetaType::QJsonArray) {
-        jsonArrayPtr = new (&allocData) QJsonArray(engine->jsonArrayFromJS(value));
+        jsonArrayPtr = new (&allocData) QJsonArray(engine->jsonArrayFromJS(value->v4Value()));
         type = callType;
     } else if (callType == QMetaType::QJsonObject) {
-        jsonObjectPtr = new (&allocData) QJsonObject(engine->jsonObjectFromJS(value));
+        jsonObjectPtr = new (&allocData) QJsonObject(engine->jsonObjectFromJS(value->v4Value()));
         type = callType;
     } else if (callType == QMetaType::QJsonValue) {
-        jsonValuePtr = new (&allocData) QJsonValue(engine->jsonValueFromJS(value));
+        jsonValuePtr = new (&allocData) QJsonValue(engine->jsonValueFromJS(value->v4Value()));
         type = callType;
     } else if (callType == QMetaType::Void) {
         *qvariantPtr = QVariant();
@@ -2261,11 +2262,11 @@ v8::Handle<v8::Value> CallArgument::toValue(QV8Engine *engine)
     } else if (type == qMetaTypeId<QQmlV4Handle>()) {
         return handlePtr->toV8Handle();
     } else if (type == QMetaType::QJsonArray) {
-        return engine->jsonArrayToJS(*jsonArrayPtr);
+        return v8::Value::fromV4Value(engine->jsonArrayToJS(*jsonArrayPtr));
     } else if (type == QMetaType::QJsonObject) {
-        return engine->jsonObjectToJS(*jsonObjectPtr);
+        return v8::Value::fromV4Value(engine->jsonObjectToJS(*jsonObjectPtr));
     } else if (type == QMetaType::QJsonValue) {
-        return engine->jsonValueToJS(*jsonValuePtr);
+        return v8::Value::fromV4Value(engine->jsonValueToJS(*jsonValuePtr));
     } else if (type == -1 || type == qMetaTypeId<QVariant>()) {
         QVariant value = *qvariantPtr;
         v8::Handle<v8::Value> rv = engine->fromVariant(value);

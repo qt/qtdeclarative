@@ -172,7 +172,7 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     v8::Local<v8::Value> result;
     {
         v8::TryCatch try_catch;
-        v8::Handle<v8::Object> This = ep->v8engine()->global();
+        v8::Handle<v8::Object> This = v8::Value::fromV4Value(ep->v8engine()->global());
         if (scopeObject() && requiresThisObject()) {
             v8::Handle<v8::Value> value = ep->v8engine()->newQObject(scopeObject());
             if (value->IsObject()) This = v8::Handle<v8::Object>::Cast(value);

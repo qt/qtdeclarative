@@ -944,7 +944,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 v8::TryCatch try_catch;
 
-                v8::Local<v8::Value> result = function->Call(ep->v8engine()->global(), data->parameterCount, args);
+                v8::Local<v8::Value> result = function->Call(v8::Value::fromV4Value(ep->v8engine()->global()), data->parameterCount, args);
 
                 QVariant rv;
                 if (try_catch.HasCaught()) {

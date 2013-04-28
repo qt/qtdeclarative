@@ -1644,7 +1644,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
             v8::HandleScope handle_scope;
             v8::Context::Scope scope(v8engine->context());
             new (output.getjsvalueptr()) QJSValue(v8engine->scriptValueFromInternal(
-                    v8engine->valueTypeWrapper()->newValueType(tmp, vt)));
+                    v8engine->valueTypeWrapper()->newValueType(tmp, vt)->v4Value()));
             JSVALUE_REGISTER(instr->unaryop.output);
         }
     }
@@ -1775,7 +1775,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                 MARK_CLEAN_REGISTER(instr->unaryop.output);
             }
             QV8Engine *v8engine = QQmlEnginePrivate::get(context->engine)->v8engine();
-            new (output.getjsvalueptr()) QJSValue(v8engine->scriptValueFromInternal(tmp));
+            new (output.getjsvalueptr()) QJSValue(v8engine->scriptValueFromInternal(tmp->v4Value()));
             JSVALUE_REGISTER(instr->unaryop.output);
         }
     }

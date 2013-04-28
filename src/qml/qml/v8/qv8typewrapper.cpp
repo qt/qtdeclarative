@@ -174,7 +174,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
             QObject *qobjectSingleton = siinfo->qobjectApi(e);
             if (qobjectSingleton) {
                 // check for enum value
-                if (QV8Engine::startsWithUpper(property)) {
+                if (QV8Engine::startsWithUpper(property->v4Value().asString())) {
                     if (resource->mode == IncludeEnums) {
                         QString name = property->v4Value().toQString();
 
@@ -207,7 +207,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
 
         } else {
 
-            if (QV8Engine::startsWithUpper(property)) {
+            if (QV8Engine::startsWithUpper(property->v4Value().asString())) {
                 bool ok = false;
                 int value = type->enumValue(propertystring, &ok);
                 if (ok)

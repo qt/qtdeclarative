@@ -1650,7 +1650,7 @@ v8::Handle<v8::Value> binding(const v8::Arguments &args)
         V8THROW_TYPE("binding(): argument (binding expression) must be a function");
 
     v8::Handle<v8::Object> rv = args[0]->ToObject()->Clone();
-    rv->SetHiddenValue(V8ENGINE()->bindingFlagKey(), v8::Boolean::New(true));
+    rv->SetHiddenValue(v8::Value::fromV4Value(V8ENGINE()->bindingFlagKey()), v8::Boolean::New(true));
     return rv;
 }
 

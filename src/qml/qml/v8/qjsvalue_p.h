@@ -70,7 +70,10 @@ public:
     QJSValuePrivate(QV4::ExecutionEngine *e, const QV4::Value &v)
         : PersistentValuePrivate(e, v)
         , string(QString())
-    {}
+    {
+        if (value.isDeleted())
+            value = QV4::Value::undefinedValue();
+    }
     QJSValuePrivate(QV4::ExecutionEngine *e, QV4::Object *o)
         : PersistentValuePrivate(e, QV4::Value::fromObject(o))
         , string(QString())

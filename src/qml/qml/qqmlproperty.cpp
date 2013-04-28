@@ -1551,7 +1551,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         return false;
     } else if (isVarProperty) {
         if (!result.IsEmpty() && result->IsFunction()
-                && !result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty()) {
+                && !result->ToObject()->GetHiddenValue(v8::Value::fromV4Value(v8engine->bindingFlagKey())).IsEmpty()) {
             // we explicitly disallow this case to avoid confusion.  Users can still store one
             // in an array in a var property if they need to, but the common case is user error.
             expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
@@ -1568,11 +1568,11 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         writeValueProperty(object, core, QVariant(), context, flags);
     } else if (type == qMetaTypeId<QJSValue>()) {
         if (!result.IsEmpty() && result->IsFunction()
-                && !result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty()) {
+                && !result->ToObject()->GetHiddenValue(v8::Value::fromV4Value(v8engine->bindingFlagKey())).IsEmpty()) {
             expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
             return false;
         }
-        writeValueProperty(object, core, QVariant::fromValue(v8engine->scriptValueFromInternal(result)), context, flags);
+        writeValueProperty(object, core, QVariant::fromValue(v8engine->scriptValueFromInternal(result->v4Value())), context, flags);
     } else if (isUndefined) {
         QString errorStr = QLatin1String("Unable to assign [undefined] to ");
         if (!QMetaType::typeName(type))
@@ -1582,7 +1582,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         expression->delayedError()->setErrorDescription(errorStr);
         return false;
     } else if (result->IsFunction()) {
-        if (!result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty())
+        if (!result->ToObject()->GetHiddenValue(v8::Value::fromV4Value(v8engine->bindingFlagKey())).IsEmpty())
             expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
         else
             expression->delayedError()->setErrorDescription(QLatin1String("Unable to assign a function to a property of any type other than var."));

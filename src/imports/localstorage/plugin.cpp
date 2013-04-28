@@ -333,7 +333,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_changeVersion(const v8::Arguments& a
 
         v8::TryCatch tc;
         v8::Handle<v8::Value> callbackArgs[] = { instance };
-        v8::Handle<v8::Function>::Cast(callback)->Call(engine->global(), 1, callbackArgs);
+        v8::Handle<v8::Function>::Cast(callback)->Call(v8::Value::fromV4Value(engine->global()), 1, callbackArgs);
 
         if (tc.HasCaught()) {
             db.rollback();
@@ -385,7 +385,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_transaction_shared(const v8::Argumen
     db.transaction();
     v8::TryCatch tc;
     v8::Handle<v8::Value> callbackArgs[] = { instance };
-    callback->Call(engine->global(), 1, callbackArgs);
+    callback->Call(v8::Value::fromV4Value(engine->global()), 1, callbackArgs);
 
     q->inTransaction = false;
 
@@ -668,7 +668,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV8Function *args)
         v8::TryCatch tc;
         v8::Handle<v8::Function> callback = v8::Handle<v8::Function>::Cast(dbcreationCallback);
         v8::Handle<v8::Value> args[] = { instance };
-        callback->Call(engine->global(), 1, args);
+        callback->Call(v8::Value::fromV4Value(engine->global()), 1, args);
         if (tc.HasCaught()) {
             tc.ReThrow();
             return;

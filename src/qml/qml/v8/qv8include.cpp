@@ -96,7 +96,7 @@ void QV8Include::callback(QV8Engine *engine, v8::Handle<v8::Function> callback, 
     if (!callback.IsEmpty()) {
         v8::Handle<v8::Value> args[] = { status };
         v8::TryCatch tc;
-        callback->Call(engine->global(), 1, args);
+        callback->Call(v8::Value::fromV4Value(engine->global()), 1, args);
     }
 }
 

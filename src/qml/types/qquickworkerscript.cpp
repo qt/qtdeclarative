@@ -237,7 +237,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     v8::Handle<v8::Value> args[] = { 
         V8FUNCTION(QQuickWorkerScriptEnginePrivate::sendMessage, this)
     };
-    v8::Local<v8::Value> createsendvalue = createsendconstructor->Call(global(), 1, args);
+    v8::Local<v8::Value> createsendvalue = createsendconstructor->Call(v8::Value::fromV4Value(global()), 1, args);
     
     createsend = qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(createsendvalue));
     }
@@ -247,7 +247,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
 v8::Local<v8::Function> QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
 {
     v8::Handle<v8::Value> args[] = { v8::Integer::New(id) };
-    return v8::Local<v8::Function>::Cast(createsend->Call(global(), 1, args));
+    return v8::Local<v8::Function>::Cast(createsend->Call(v8::Value::fromV4Value(global()), 1, args));
 }
 
 // Requires handle and context scope
@@ -255,7 +255,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::callOnMessage(v8::Handle<v8:
                                                                         v8::Handle<v8::Value> arg)
 {
     v8::Handle<v8::Value> args[] = { object, arg };
-    onmessage->Call(global(), 2, args);
+    onmessage->Call(v8::Value::fromV4Value(global()), 2, args);
 }
 
 QNetworkAccessManager *QQuickWorkerScriptEnginePrivate::WorkerEngine::networkAccessManager() 

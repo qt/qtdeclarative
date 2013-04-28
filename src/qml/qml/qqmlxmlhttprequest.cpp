@@ -1821,7 +1821,7 @@ void *qt_add_qmlxmlhttprequest(QV8Engine *engine)
     xmlhttprequest->Set(v8::String::New("HEADERS_RECEIVED"), v8::Integer::New(2), attributes);
     xmlhttprequest->Set(v8::String::New("LOADING"), v8::Integer::New(3), attributes);
     xmlhttprequest->Set(v8::String::New("DONE"), v8::Integer::New(4), attributes);
-    engine->global()->Set(v8::String::New("XMLHttpRequest"), xmlhttprequest->GetFunction());
+    v8::Local<v8::Object>::New(v8::Value::fromV4Value(engine->global()))->Set(v8::String::New("XMLHttpRequest"), xmlhttprequest->GetFunction());
 
     QQmlXMLHttpRequestData *data = new QQmlXMLHttpRequestData;
     return data;

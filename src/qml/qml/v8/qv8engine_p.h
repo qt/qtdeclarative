@@ -283,16 +283,8 @@ public:
     void initQmlGlobalObject();
     void setEngine(QQmlEngine *engine);
     QQmlEngine *engine() { return m_engine; }
-    v8::Local<v8::Object> global() { return m_context->Global(); }
+    QV4::Value global();
     v8::Handle<v8::Context> context() const { return m_context; }
-
-//    inline void registerValue(QJSValuePrivate *data);
-//    inline void unregisterValue(QJSValuePrivate *data);
-//    inline void invalidateAllValues();
-
-//    inline void registerValueIterator(QJSValueIteratorPrivate *data);
-//    inline void unregisterValueIterator(QJSValueIteratorPrivate *data);
-//    inline void invalidateAllIterators();
 
     QV8ContextWrapper *contextWrapper() { return &m_contextWrapper; }
     QV8QObjectWrapper *qobjectWrapper() { return &m_qobjectWrapper; }
@@ -312,7 +304,7 @@ public:
     QV4::Value getOwnPropertyNames(const QV4::Value &o);
     void freezeObject(const QV4::Value &value);
 
-    static inline bool startsWithUpper(v8::Handle<v8::String>);
+    static inline bool startsWithUpper(QV4::String *);
 
     QVariant toVariant(v8::Handle<v8::Value>, int typeHint);
     v8::Handle<v8::Value> fromVariant(const QVariant &);
@@ -339,20 +331,16 @@ public:
     v8::Local<v8::String> toString(const QString &string);
 
     // Create a new value type object
-    inline v8::Handle<v8::Value> newValueType(QObject *, int coreIndex, QQmlValueType *);
-    inline v8::Handle<v8::Value> newValueType(const QVariant &, QQmlValueType *);
-    inline bool isValueType(v8::Handle<v8::Value>) const;
-    inline QVariant toValueType(v8::Handle<v8::Value> obj);
+    inline QV4::Value newValueType(QObject *, int coreIndex, QQmlValueType *);
+    inline QV4::Value newValueType(const QVariant &, QQmlValueType *);
+    inline bool isValueType(const QV4::Value &value) const;
+    inline QVariant toValueType(const QV4::Value &obj);
 
     // Create a new sequence type object
-    inline v8::Handle<v8::Value> newSequence(int sequenceType, QObject *, int coreIndex, bool *succeeded);
-
-    // Create a new QVariant object.  This doesn't examine the type of the variant, but always returns
-    // a QVariant wrapper
-    inline v8::Handle<v8::Value> newQVariant(const QVariant &);
+    inline QV4::Value newSequence(int sequenceType, QObject *, int coreIndex, bool *succeeded);
 
     // Return the JS string key for the "function is a binding" flag
-    inline v8::Handle<v8::String> bindingFlagKey() const;
+    inline QV4::Value bindingFlagKey() const;
 
     // Return the network access manager for this engine.  By default this returns the network
     // access manager of the QQmlEngine.  It is overridden in the case of a threaded v8
@@ -364,8 +352,6 @@ public:
 
     inline void collectGarbage() { gc(); }
     void gc();
-
-    v8::Handle<v8::Value> throwException(v8::Handle<v8::Value> value);
 
 #ifdef QML_GLOBAL_HANDLE_DEBUGGING
     // Used for handle debugging
@@ -379,12 +365,9 @@ public:
     inline Deletable *extensionData(int) const;
     void setExtensionData(int, Deletable *);
 
-    QJSValue evaluate(const QString &program, const QString &fileName = QString(), quint16 lineNumber = 1);
-    QJSValue evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCatch);
     QV4::Value evaluateScript(const QString &script, QV4::Object *scopeObject = 0);
 
     QJSValue newArray(uint length);
-    v8::Local<v8::Object> newVariant(const QVariant &variant);
 
     QV4::Value variantListToJS(const QVariantList &lst);
     inline QVariantList variantListFromJS(QV4::ArrayObject *array)
@@ -398,23 +381,21 @@ public:
     inline QVariant variantFromJS(const QV4::Value &value)
     { V8ObjectSet visitedObjects; return variantFromJS(value, visitedObjects); }
 
-    v8::Handle<v8::Value> jsonValueToJS(const QJsonValue &value);
-    QJsonValue jsonValueFromJS(v8::Handle<v8::Value> value);
-    v8::Local<v8::Object> jsonObjectToJS(const QJsonObject &object);
-    QJsonObject jsonObjectFromJS(v8::Handle<v8::Value> value);
-    v8::Local<v8::Array> jsonArrayToJS(const QJsonArray &array);
-    QJsonArray jsonArrayFromJS(v8::Handle<v8::Value> value);
+    QV4::Value jsonValueToJS(const QJsonValue &value);
+    QJsonValue jsonValueFromJS(const QV4::Value &value);
+    QV4::Value jsonObjectToJS(const QJsonObject &object);
+    QJsonObject jsonObjectFromJS(const QV4::Value &value);
+    QV4::Value jsonArrayToJS(const QJsonArray &array);
+    QJsonArray jsonArrayFromJS(const QV4::Value &value);
 
     QV4::Value metaTypeToJS(int type, const void *data);
     bool metaTypeFromJS(const QV4::Value &value, int type, void *data);
 
-    bool convertToNativeQObject(v8::Handle<v8::Value> value,
+    bool convertToNativeQObject(const QV4::Value &value,
                                 const QByteArray &targetType,
                                 void **result);
 
-    QVariant &variantValue(v8::Handle<v8::Value> value);
-
-    QJSValue scriptValueFromInternal(v8::Handle<v8::Value>) const;
+    QJSValue scriptValueFromInternal(const QV4::Value &) const;
 
     // used for console.time(), console.timeEnd()
     void startTimer(const QString &timerName);
@@ -423,7 +404,7 @@ public:
     // used for console.count()
     int consoleCountHelper(const QString &file, quint16 line, quint16 column);
 
-    QObject *qtObjectFromJS(v8::Handle<v8::Value> value);
+    QObject *qtObjectFromJS(const QV4::Value &value);
 
     static QDateTime qtDateTimeFromJsDate(double jsDate);
 
@@ -459,7 +440,7 @@ protected:
     bool m_ownsV8Context;
     v8::Persistent<v8::Context> m_context;
 
-    v8::Persistent<v8::String> m_bindingFlagKey;
+    QV4::PersistentValue m_bindingFlagKey;
 
     QV8ContextWrapper m_contextWrapper;
     QV8QObjectWrapper m_qobjectWrapper;
@@ -583,43 +564,41 @@ v8::Handle<v8::Value> QV8Engine::newQObject(QObject *object, const ObjectOwnersh
     return result;
 }
 
-v8::Handle<v8::Value> QV8Engine::newValueType(QObject *object, int property, QQmlValueType *type)
+QV4::Value QV8Engine::newValueType(QObject *object, int property, QQmlValueType *type)
 {
-    return m_valueTypeWrapper.newValueType(object, property, type);
+    return m_valueTypeWrapper.newValueType(object, property, type)->v4Value();
 }
 
-v8::Handle<v8::Value> QV8Engine::newValueType(const QVariant &value, QQmlValueType *type)
+QV4::Value QV8Engine::newValueType(const QVariant &value, QQmlValueType *type)
 {
-    return m_valueTypeWrapper.newValueType(value, type);
+    return m_valueTypeWrapper.newValueType(value, type)->v4Value();
 }
 
-bool QV8Engine::isValueType(v8::Handle<v8::Value> obj) const
+bool QV8Engine::isValueType(const QV4::Value &value) const
 {
-    return obj->IsObject()?m_valueTypeWrapper.isValueType(v8::Handle<v8::Object>::Cast(obj)):false;
+    return value.isObject() ? m_valueTypeWrapper.isValueType(v8::Handle<v8::Object>::Cast(v8::Value::fromV4Value(value))) : false;
 }
 
-QVariant QV8Engine::toValueType(v8::Handle<v8::Value> obj)
+QVariant QV8Engine::toValueType(const QV4::Value &obj)
 {
-    return obj->IsObject()?m_valueTypeWrapper.toVariant(v8::Handle<v8::Object>::Cast(obj)):QVariant();
+    return obj.isObject() ? m_valueTypeWrapper.toVariant(v8::Handle<v8::Object>::Cast(v8::Value::fromV4Value(obj))) : QVariant();
 }
 
-v8::Handle<v8::Value> QV8Engine::newSequence(int sequenceType, QObject *object, int property, bool *succeeded)
+QV4::Value QV8Engine::newSequence(int sequenceType, QObject *object, int property, bool *succeeded)
 {
-    return m_sequenceWrapper.newSequence(sequenceType, object, property, succeeded);
+    return m_sequenceWrapper.newSequence(sequenceType, object, property, succeeded)->v4Value();
 }
 
-v8::Handle<v8::String> QV8Engine::bindingFlagKey() const
+QV4::Value QV8Engine::bindingFlagKey() const
 {
     return m_bindingFlagKey;
 }
 
 // XXX Can this be made more optimal?  It is called prior to resolving each and every 
 // unqualified name in QV8ContextWrapper.
-bool QV8Engine::startsWithUpper(v8::Handle<v8::String> string)
+bool QV8Engine::startsWithUpper(QV4::String *string)
 {
-    v8::String::Value value(string);
-    Q_ASSERT(*value != NULL);
-    uint16_t c = **value;
+    uint16_t c = string->toQString().at(0).unicode();
     return (c >= 'A' && c <= 'Z') ||
            (c > 127 && QChar::category(c) == QChar::Letter_Uppercase);
 }

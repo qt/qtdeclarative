@@ -270,7 +270,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
 
     QHashedV8String propertystring(property);
 
-    if (context->imports && QV8Engine::startsWithUpper(property)) {
+    if (context->imports && QV8Engine::startsWithUpper(property->v4Value().asString())) {
         // Search for attached properties, enums and imported scripts
         QQmlTypeNameCache::Result r = context->imports->query(propertystring);
         

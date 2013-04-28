@@ -322,7 +322,7 @@ QJSValue QJSEngine::newQObject(QObject *object)
     Q_D(QJSEngine);
     QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
     v8::HandleScope handleScope;
-    return d->scriptValueFromInternal(d->newQObject(object, QV8Engine::JavaScriptOwnership));
+    return d->scriptValueFromInternal(d->newQObject(object, QV8Engine::JavaScriptOwnership)->v4Value());
 }
 
 /*!
