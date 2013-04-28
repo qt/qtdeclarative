@@ -241,10 +241,10 @@ void QV8Worker::serialize(QByteArray &data, v8::Handle<v8::Value> v, QV8Engine *
                 serialize(data, val, engine);
             }
         }
-    } else if (engine->isQObject(v)) {
+    } else if (engine->isQObject(v->v4Value())) {
         // XXX TODO: Generalize passing objects between the main thread and worker scripts so 
         // that others can trivially plug in their elements.
-        QQmlListModel *lm = qobject_cast<QQmlListModel *>(engine->toQObject(v));
+        QQmlListModel *lm = qobject_cast<QQmlListModel *>(engine->toQObject(v->v4Value()));
         if (lm && lm->agent()) {
             QQmlListModelWorkerAgent *agent = lm->agent();
             agent->addref();

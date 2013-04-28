@@ -322,10 +322,10 @@ public:
     inline v8::Local<v8::Object> qmlScope(QQmlContextData *ctxt, QObject *scope);
 
     // Return a JS wrapper for the given QObject \a object
-    inline v8::Handle<v8::Value> newQObject(QObject *object);
-    inline v8::Handle<v8::Value> newQObject(QObject *object, const ObjectOwnership ownership);
-    inline bool isQObject(v8::Handle<v8::Value>);
-    inline QObject *toQObject(v8::Handle<v8::Value>);
+    inline QV4::Value newQObject(QObject *object);
+    inline QV4::Value newQObject(QObject *object, const ObjectOwnership ownership);
+    inline bool isQObject(const QV4::Value &value);
+    inline QObject *toQObject(const QV4::Value &value);
 
     // Return a JS string for the given QString \a string
     v8::Local<v8::String> toString(const QString &string);
@@ -535,27 +535,27 @@ v8::Local<v8::Object> QV8Engine::qmlScope(QQmlContextData *ctxt, QObject *scope)
     return m_contextWrapper.qmlScope(ctxt, scope);
 }
 
-bool QV8Engine::isQObject(v8::Handle<v8::Value> obj)
+bool QV8Engine::isQObject(const QV4::Value &value)
 {
-    return obj->IsObject()?m_qobjectWrapper.isQObject(v8::Handle<v8::Object>::Cast(obj)):false;
+    return value.isObject() ? m_qobjectWrapper.isQObject(value) : false;
 }
 
-QObject *QV8Engine::toQObject(v8::Handle<v8::Value> obj)
+QObject *QV8Engine::toQObject(const QV4::Value &value)
 {
-    return obj->IsObject()?m_qobjectWrapper.toQObject(v8::Handle<v8::Object>::Cast(obj)):0;
+    return value.isObject() ? m_qobjectWrapper.toQObject(value) : 0;
 }
 
-v8::Handle<v8::Value> QV8Engine::newQObject(QObject *object)
+QV4::Value QV8Engine::newQObject(QObject *object)
 {
-    return m_qobjectWrapper.newQObject(object);
+    return m_qobjectWrapper.newQObject(object)->v4Value();
 }
 
-v8::Handle<v8::Value> QV8Engine::newQObject(QObject *object, const ObjectOwnership ownership)
+QV4::Value QV8Engine::newQObject(QObject *object, const ObjectOwnership ownership)
 {
     if (!object)
-        return v8::Null();
+        return QV4::Value::nullValue();
 
-    v8::Handle<v8::Value> result = newQObject(object);
+    QV4::Value result = newQObject(object);
     QQmlData *ddata = QQmlData::get(object, true);
     if (ownership == JavaScriptOwnership && ddata) {
         ddata->indestructible = false;

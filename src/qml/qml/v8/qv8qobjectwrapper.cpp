@@ -1208,7 +1208,7 @@ QPair<QObject *, int> QV8QObjectWrapper::ExtractQtMethod(QV8Engine *engine, v8::
 
         if (data->IsArray()) {
             v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(data);
-            return qMakePair(engine->toQObject(array->Get(0)), array->Get(1)->Int32Value());
+            return qMakePair(engine->toQObject(array->Get(0)->v4Value()), array->Get(1)->Int32Value());
         } 
 
         // In theory this can't fall through, but I suppose V8 might run out of memory or something
@@ -2168,7 +2168,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
             qstringPtr = new (&allocData) QString(value->v4Value().toQString());
         type = callType;
     } else if (callType == QMetaType::QObjectStar) {
-        qobjectPtr = engine->toQObject(value);
+        qobjectPtr = engine->toQObject(value->v4Value());
         type = callType;
     } else if (callType == qMetaTypeId<QVariant>()) {
         qvariantPtr = new (&allocData) QVariant(engine->toVariant(value, -1));
@@ -2179,9 +2179,9 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
             v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast(value);
             uint32_t length = array->Length();
             for (uint32_t ii = 0; ii < length; ++ii) 
-                qlistPtr->append(engine->toQObject(array->Get(ii)));
+                qlistPtr->append(engine->toQObject(array->Get(ii)->v4Value()));
         } else {
-            qlistPtr->append(engine->toQObject(value));
+            qlistPtr->append(engine->toQObject(value->v4Value()));
         }
         type = callType;
     } else if (callType == qMetaTypeId<QQmlV4Handle>()) {
@@ -2270,7 +2270,7 @@ v8::Handle<v8::Value> CallArgument::toValue(QV8Engine *engine)
     } else if (type == -1 || type == qMetaTypeId<QVariant>()) {
         QVariant value = *qvariantPtr;
         v8::Handle<v8::Value> rv = engine->fromVariant(value);
-        if (QObject *object = engine->toQObject(rv)) 
+        if (QObject *object = engine->toQObject(rv->v4Value()))
             QQmlData::get(object, true)->setImplicitDestructible();
         return rv;
     } else {

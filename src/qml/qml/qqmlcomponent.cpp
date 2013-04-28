@@ -1187,7 +1187,7 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     v8::Local<v8::Object> valuemap;
 
     if (args->Length() >= 1) 
-        parent = args->engine()->toQObject((*args)[0]);
+        parent = args->engine()->toQObject((*args)[0]->v4Value());
 
     if (args->Length() >= 2) {
         v8::Local<v8::Value> v = (*args)[1];
@@ -1308,7 +1308,7 @@ void QQmlComponent::incubateObject(QQmlV8Function *args)
     QQmlIncubator::IncubationMode mode = QQmlIncubator::Asynchronous;
 
     if (args->Length() >= 1) 
-        parent = args->engine()->toQObject((*args)[0]);
+        parent = args->engine()->toQObject((*args)[0]->v4Value());
 
     if (args->Length() >= 2) {
         v8::Local<v8::Value> v = (*args)[1];
@@ -1464,7 +1464,7 @@ void QV8IncubatorResource::setInitialState(QObject *o)
         QV4::ExecutionEngine *v4engine = QV8Engine::getV4(engine);
 
         QV4::Value f = engine->evaluateScript(QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal->v4Value().asObject());
-        QV4::Value args[] = { engine->newQObject(o)->v4Value(), valuemap->v4Value() };
+        QV4::Value args[] = { engine->newQObject(o), valuemap->v4Value() };
         f.asFunctionObject()->call(v4engine->current, QV4::Value::fromObject(v4engine->globalObject), args, 2);
     }
 }

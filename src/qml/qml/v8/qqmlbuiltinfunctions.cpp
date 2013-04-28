@@ -395,7 +395,7 @@ v8::Handle<v8::Value> isQtObject(const v8::Arguments &args)
     if (args.Length() == 0)
         return v8::Boolean::New(false);
 
-    return v8::Boolean::New(0 != V8ENGINE()->toQObject(args[0]));
+    return v8::Boolean::New(0 != V8ENGINE()->toQObject(args[0]->v4Value()));
 }
 
 /*!
@@ -1195,7 +1195,7 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
     if (url.isValid() && url.isRelative())
         url = context->resolvedUrl(url);
 
-    QObject *parentArg = v8engine->toQObject(args[1]);
+    QObject *parentArg = v8engine->toQObject(args[1]->v4Value());
     if (!parentArg)
         V8THROW_ERROR("Qt.createQmlObject(): Missing parent object");
 
@@ -1309,7 +1309,7 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
 
         if (consumedCount < args.Length()) {
             if (lastArg->IsObject()) {
-                parentArg = v8engine->toQObject(lastArg);
+                parentArg = v8engine->toQObject(lastArg->v4Value());
                 if (!parentArg)
                     V8THROW_ERROR(invalidParent);
             } else if (lastArg->IsNull()) {

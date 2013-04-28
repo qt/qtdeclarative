@@ -3759,7 +3759,7 @@ void QQuickItem::mapFromItem(QQmlV8Function *args) const
 
         QQuickItem *itemObj = 0;
         if (!item->IsNull())
-            itemObj = qobject_cast<QQuickItem*>(engine->toQObject(item));
+            itemObj = qobject_cast<QQuickItem*>(engine->toQObject(item->v4Value()));
 
         if (!itemObj && !item->IsNull()) {
             qmlInfo(this) << "mapFromItem() given argument \"" << item->v4Value().toQString()
@@ -3831,7 +3831,7 @@ void QQuickItem::mapToItem(QQmlV8Function *args) const
 
         QQuickItem *itemObj = 0;
         if (!item->IsNull())
-            itemObj = qobject_cast<QQuickItem*>(engine->toQObject(item));
+            itemObj = qobject_cast<QQuickItem*>(engine->toQObject(item->v4Value()));
 
         if (!itemObj && !item->IsNull()) {
             qmlInfo(this) << "mapToItem() given argument \"" << item->v4Value().toQString()

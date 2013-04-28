@@ -1516,7 +1516,7 @@ static void ctx2d_path_set(v8::Local<v8::String>, v8::Local<v8::Value> value, co
 
     r->context->beginPath();
     if (value->IsObject()) {
-        QQuickPath* path = qobject_cast<QQuickPath*>(engine->toQObject(value));
+        QQuickPath* path = qobject_cast<QQuickPath*>(engine->toQObject(value->v4Value()));
         if (path)
             r->context->m_path = path->path();
     } else {
@@ -2308,8 +2308,8 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
 
         pixmap = r->context->createPixmap(url);
     } else if (args[0]->IsObject()) {
-        QQuickImage *imageItem = qobject_cast<QQuickImage*>(engine->toQObject(args[0]->ToObject()));
-        QQuickCanvasItem *canvas = qobject_cast<QQuickCanvasItem*>(engine->toQObject(args[0]->ToObject()));
+        QQuickImage *imageItem = qobject_cast<QQuickImage*>(engine->toQObject(args[0]->v4Value()));
+        QQuickCanvasItem *canvas = qobject_cast<QQuickCanvasItem*>(engine->toQObject(args[0]->v4Value()));
 
         QV8Context2DPixelArrayResource *pix = v8_resource_cast<QV8Context2DPixelArrayResource>(args[0]->ToObject()->GetInternalField(0)->ToObject());
         if (pix && !pix->image.isNull()) {

@@ -261,7 +261,7 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
             for (uint32_t ii = 0; ii < length; ++ii) {
                 v8::Local<v8::Value> arrayItem = array->Get(ii);
                 if (arrayItem->IsObject()) {
-                    list << toQObject(arrayItem->ToObject());
+                    list << toQObject(arrayItem->ToObject()->v4Value());
                 } else {
                     list << 0;
                 }
@@ -1060,7 +1060,7 @@ QV4::Value QV8Engine::metaTypeToJS(int type, const void *data)
         result = QJSConverter::toRegExp(*reinterpret_cast<const QRegExp *>(data))->v4Value();
         break;
     case QMetaType::QObjectStar:
-        result = newQObject(*reinterpret_cast<QObject* const *>(data))->v4Value();
+        result = newQObject(*reinterpret_cast<QObject* const *>(data));
         break;
     case QMetaType::QVariant:
         result = variantToJS(*reinterpret_cast<const QVariant*>(data));
@@ -1159,9 +1159,8 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
             return true;
         } break;
     case QMetaType::QObjectStar: {
-        v8::Handle<v8::Value> v = v8::Value::fromV4Value(value);
-        if (isQObject(v) || value.isNull()) {
-            *reinterpret_cast<QObject* *>(data) = qtObjectFromJS(v->v4Value());
+        if (isQObject(value) || value.isNull()) {
+            *reinterpret_cast<QObject* *>(data) = qtObjectFromJS(value);
             return true;
         } break;
     }
@@ -1236,7 +1235,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
                     canCast = (type == variantWrapper()->variantValue(proto).userType())
                               || (valueType && (valueType == variantWrapper()->variantValue(proto).userType()));
                 }
-                else if (isQObject(proto)) {
+                else if (isQObject(proto->v4Value())) {
                     QByteArray className = name.left(name.size()-1);
                     if (QObject *qobject = qtObjectFromJS(proto->v4Value()))
                         canCast = qobject->qt_metacast(className) != 0;
@@ -1304,7 +1303,7 @@ QVariant QV8Engine::variantFromJS(const QV4::Value &value,
         return QJSConverter::toRegExp(v8::Handle<v8::RegExp>::Cast(v8::Value::fromV4Value(value)));
     if (isVariant(v8::Value::fromV4Value(value)))
         return variantWrapper()->variantValue(v8::Value::fromV4Value(value));
-    if (isQObject(v8::Value::fromV4Value(value)))
+    if (isQObject(value))
         return qVariantFromValue(qtObjectFromJS(value));
     if (isValueType(value))
         return toValueType(value);
