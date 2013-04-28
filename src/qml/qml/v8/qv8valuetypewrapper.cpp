@@ -356,7 +356,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
     QV8ValueTypeResource *r =  v8_resource_cast<QV8ValueTypeResource>(info.This());
     if (!r) return value;
 
-    QByteArray propName = r->engine->toString(property).toUtf8();
+    QByteArray propName = property->v4Value().toQString().toUtf8();
     if (r->objectType == QV8ValueTypeResource::Reference) {
         QV8ValueTypeReferenceResource *reference = static_cast<QV8ValueTypeReferenceResource *>(r);
         QMetaProperty writebackProperty = reference->object->metaObject()->property(reference->property);
@@ -399,7 +399,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
             v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
             int lineNumber = frame->GetLineNumber();
             int columnNumber = frame->GetColumn();
-            QString url = r->engine->toString(frame->GetScriptName());
+            QString url = frame->GetScriptName()->v4Value().toQString();
 
             newBinding = new QQmlBinding(&function, reference->object, context,
                                          url, qmlSourceCoordinate(lineNumber), qmlSourceCoordinate(columnNumber));

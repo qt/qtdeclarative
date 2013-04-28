@@ -132,13 +132,13 @@ v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args
             } else {
                 toString = tryCatch.Exception()->ToString();
                 str = QStringLiteral("toString() threw exception: %1")
-                        .arg(engine->toString(toString));
+                        .arg(toString->v4Value().toQString());
             }
             result.append(str);
             continue;
         }
 
-        QString tmp = engine->toString(toString);
+        QString tmp = toString->v4Value().toQString();
         if (value->IsArray())
             result.append(QStringLiteral("[%1]").arg(tmp));
         else
@@ -260,7 +260,7 @@ v8::Handle<v8::Value> consoleTime(const v8::Arguments &args)
 {
     if (args.Length() != 1)
         V8THROW_ERROR("console.time(): Invalid arguments");
-    QString name = V8ENGINE()->toString(args[0]);
+    QString name = args[0]->v4Value().toQString();
     V8ENGINE()->startTimer(name);
     return v8::Undefined();
 }
@@ -269,7 +269,7 @@ v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args)
 {
     if (args.Length() != 1)
         V8THROW_ERROR("console.time(): Invalid arguments");
-    QString name = V8ENGINE()->toString(args[0]);
+    QString name = args[0]->v4Value().toQString();
     bool wasRunning;
     qint64 elapsed = V8ENGINE()->stopTimer(name, &wasRunning);
     if (wasRunning) {
@@ -283,7 +283,7 @@ v8::Handle<v8::Value> consoleCount(const v8::Arguments &args)
     // first argument: name to print. Ignore any additional arguments
     QString name;
     if (args.Length() > 0)
-        name = V8ENGINE()->toString(args[0]);
+        name = args[0]->v4Value().toQString();
 
     v8::Handle<v8::StackTrace> stackTrace =
         v8::StackTrace::CurrentStackTrace(1, v8::StackTrace::kOverview);
@@ -291,8 +291,8 @@ v8::Handle<v8::Value> consoleCount(const v8::Arguments &args)
     if (stackTrace->GetFrameCount()) {
         v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(0);
 
-        QString scriptName = V8ENGINE()->toString(frame->GetScriptName());
-        QString functionName = V8ENGINE()->toString(frame->GetFunctionName());
+        QString scriptName = frame->GetScriptName()->v4Value().toQString();
+        QString functionName = frame->GetFunctionName()->v4Value().toQString();
         int line = frame->GetLineNumber();
         int column = frame->GetColumn();
 
@@ -340,7 +340,7 @@ v8::Handle<v8::Value> consoleAssert(const v8::Arguments &args)
                 message.append(QLatin1Char(' '));
 
             v8::Local<v8::Value> value = args[i];
-            message.append(V8ENGINE()->toString(value->ToString()));
+            message.append(value->v4Value().toQString());
         }
 
         QString stack = jsStack();
@@ -369,7 +369,7 @@ v8::Handle<v8::Value> consoleException(const v8::Arguments &args)
 
 v8::Handle<v8::Value> stringArg(const v8::Arguments &args)
 {
-    QString value = V8ENGINE()->toString(args.This()->ToString());
+    QString value = args.This()->v4Value().toQString();
     if (args.Length() != 1)
         V8THROW_ERROR("String.arg(): Invalid arguments");
 
@@ -383,7 +383,7 @@ v8::Handle<v8::Value> stringArg(const v8::Arguments &args)
     else if (arg->IsBoolean())
         return V8ENGINE()->toString(value.arg(arg->BooleanValue()));
 
-    return V8ENGINE()->toString(value.arg(V8ENGINE()->toString(arg)));
+    return V8ENGINE()->toString(value.arg(arg->v4Value().toQString()));
 }
 
 /*!
@@ -1073,7 +1073,7 @@ v8::Handle<v8::Value> md5(const v8::Arguments &args)
     if (args.Length() != 1)
         V8THROW_ERROR("Qt.md5(): Invalid arguments");
 
-    QByteArray data = V8ENGINE()->toString(args[0]->ToString()).toUtf8();
+    QByteArray data = args[0]->v4Value().toQString().toUtf8();
     QByteArray result = QCryptographicHash::hash(data, QCryptographicHash::Md5);
     return V8ENGINE()->toString(QLatin1String(result.toHex()));
 }
@@ -1087,7 +1087,7 @@ v8::Handle<v8::Value> btoa(const v8::Arguments &args)
     if (args.Length() != 1)
         V8THROW_ERROR("Qt.btoa(): Invalid arguments");
 
-    QByteArray data = V8ENGINE()->toString(args[0]->ToString()).toUtf8();
+    QByteArray data = args[0]->v4Value().toQString().toUtf8();
 
     return V8ENGINE()->toString(QLatin1String(data.toBase64()));
 }
@@ -1101,7 +1101,7 @@ v8::Handle<v8::Value> atob(const v8::Arguments &args)
     if (args.Length() != 1)
         V8THROW_ERROR("Qt.atob(): Invalid arguments");
 
-    QByteArray data = V8ENGINE()->toString(args[0]->ToString()).toUtf8();
+    QByteArray data = args[0]->v4Value().toQString().toUtf8();
 
     return V8ENGINE()->toString(QLatin1String(QByteArray::fromBase64(data)));
 }
@@ -1182,13 +1182,13 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
         effectiveContext = context->asQQmlContext();
     Q_ASSERT(context && effectiveContext);
 
-    QString qml = v8engine->toString(args[0]->ToString());
+    QString qml = args[0]->v4Value().toQString();
     if (qml.isEmpty())
         return v8::Null();
 
     QUrl url;
     if (args.Length() > 2)
-        url = QUrl(v8engine->toString(args[2]->ToString()));
+        url = QUrl(args[2]->v4Value().toQString());
     else
         url = QUrl(QLatin1String("inline"));
 
@@ -1283,7 +1283,7 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
         effectiveContext = 0;
     Q_ASSERT(context);
 
-    QString arg = v8engine->toString(args[0]->ToString());
+    QString arg = args[0]->v4Value().toQString();
     if (arg.isEmpty())
         return v8::Null();
 
@@ -1359,10 +1359,10 @@ v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args)
         V8THROW_ERROR("qsTranslate(): third argument (disambiguation) must be a string");
 
     QV8Engine *v8engine = V8ENGINE();
-    QString context = v8engine->toString(args[0]);
-    QString text = v8engine->toString(args[1]);
+    QString context = args[0]->v4Value().toQString();
+    QString text = args[1]->v4Value().toQString();
     QString comment;
-    if (args.Length() > 2) comment = v8engine->toString(args[2]);
+    if (args.Length() > 2) comment = args[2]->v4Value().toQString();
 
     int i = 3;
     if (args.Length() > i && args[i]->IsString()) {
@@ -1446,10 +1446,10 @@ v8::Handle<v8::Value> qsTr(const v8::Arguments &args)
     int lastSlash = path.lastIndexOf(QLatin1Char('/'));
     QString context = (lastSlash > -1) ? path.mid(lastSlash + 1, path.length()-lastSlash-5) : QString();
 
-    QString text = v8engine->toString(args[0]);
+    QString text = args[0]->v4Value().toQString();
     QString comment;
     if (args.Length() > 1)
-        comment = v8engine->toString(args[1]);
+        comment = args[1]->v4Value().toQString();
     int n = -1;
     if (args.Length() > 2)
         n = args[2]->Int32Value();
@@ -1533,7 +1533,7 @@ v8::Handle<v8::Value> qsTrId(const v8::Arguments &args)
         n = args[1]->Int32Value();
 
     QV8Engine *v8engine = V8ENGINE();
-    return v8engine->toString(qtTrId(v8engine->toString(args[0]).toUtf8().constData(), n));
+    return v8engine->toString(qtTrId(args[0]->v4Value().toQString().toUtf8().constData(), n));
 }
 
 /*!
@@ -1590,7 +1590,7 @@ v8::Handle<v8::Value> locale(const v8::Arguments &args)
 
     QV8Engine *v8engine = V8ENGINE();
     if (args.Length() == 1)
-        code = v8engine->toString(args[0]);
+        code = args[0]->v4Value().toQString();
 
     return QQmlLocale::locale(v8engine, code);
 }

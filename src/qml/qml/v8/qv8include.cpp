@@ -180,7 +180,7 @@ v8::Handle<v8::Value> QV8Include::include(const v8::Arguments &args)
     if (!context || !context->isJSContext) 
         V8THROW_ERROR("Qt.include(): Can only be called from JavaScript files");
 
-    QUrl url(context->resolvedUrl(QUrl(engine->toString(args[0]->ToString()))));
+    QUrl url(context->resolvedUrl(QUrl(args[0]->v4Value().toQString())));
     
     v8::Local<v8::Function> callbackFunction;
     if (args.Length() >= 2 && args[1]->IsFunction())

@@ -117,7 +117,7 @@ static void generateWarning(QV8Engine *engine, const QString& description)
     QQmlError retn;
     retn.setDescription(description);
     retn.setLine(currFrame->GetLineNumber());
-    retn.setUrl(QUrl(engine->toString(currFrame->GetScriptName())));
+    retn.setUrl(QUrl(currFrame->GetScriptName()->v4Value().toQString()));
     QQmlEnginePrivate::warning(engine->engine(), retn);
 }
 
@@ -171,7 +171,7 @@ static QString convertBoolToString(QV8Engine *, bool v)
 
 static QString convertV8ValueToString(QV8Engine *e, v8::Handle<v8::Value> v)
 {
-    return e->toString(v->ToString());
+    return v->v4Value().toQString();
 }
 
 static v8::Handle<v8::Value> convertStringToV8Value(QV8Engine *e, const QString &v)
@@ -186,7 +186,7 @@ static QString convertStringToString(QV8Engine *, const QString &v)
 
 static QString convertV8ValueToQString(QV8Engine *e, v8::Handle<v8::Value> v)
 {
-    return e->toString(v->ToString());
+    return v->v4Value().toQString();
 }
 
 static v8::Handle<v8::Value> convertQStringToV8Value(QV8Engine *e, const QString &v)
@@ -201,7 +201,7 @@ static QString convertQStringToString(QV8Engine *, const QString &v)
 
 static QUrl convertV8ValueToUrl(QV8Engine *e, v8::Handle<v8::Value> v)
 {
-    return QUrl(e->toString(v->ToString()));
+    return QUrl(v->v4Value().toQString());
 }
 
 static v8::Handle<v8::Value> convertUrlToV8Value(QV8Engine *e, const QUrl &v)

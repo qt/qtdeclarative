@@ -301,10 +301,10 @@ v8::Handle<v8::Value> QQmlDateExtension::fromLocaleString(const v8::Arguments& a
 
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QDateTime dt;
-    QString dateString = r->engine->toString(args[1]->ToString());
+    QString dateString = args[1]->v4Value().toQString();
     if (args.Length() == 3) {
         if (args[2]->IsString()) {
-            QString format = r->engine->toString(args[2]->ToString());
+            QString format = args[2]->v4Value().toQString();
             dt = r->locale.toDateTime(dateString, format);
         } else if (args[2]->IsNumber()) {
             quint32 intFormat = args[2]->ToNumber()->Value();
@@ -338,10 +338,10 @@ v8::Handle<v8::Value> QQmlDateExtension::fromLocaleTimeString(const v8::Argument
 
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QTime tm;
-    QString dateString = r->engine->toString(args[1]->ToString());
+    QString dateString = args[1]->v4Value().toQString();
     if (args.Length() == 3) {
         if (args[2]->IsString()) {
-            QString format = r->engine->toString(args[2]->ToString());
+            QString format = args[2]->v4Value().toQString();
             tm = r->locale.toTime(dateString, format);
         } else if (args[2]->IsNumber()) {
             quint32 intFormat = args[2]->ToNumber()->Value();
@@ -376,10 +376,10 @@ v8::Handle<v8::Value> QQmlDateExtension::fromLocaleDateString(const v8::Argument
 
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QDate dt;
-    QString dateString = r->engine->toString(args[1]->ToString());
+    QString dateString = args[1]->v4Value().toQString();
     if (args.Length() == 3) {
         if (args[2]->IsString()) {
-            QString format = r->engine->toString(args[2]->ToString());
+            QString format = args[2]->v4Value().toQString();
             dt = r->locale.toDate(dateString, format);
         } else if (args[2]->IsNumber()) {
             quint32 intFormat = args[2]->ToNumber()->Value();
@@ -502,7 +502,7 @@ v8::Handle<v8::Value> QQmlNumberExtension::toLocaleCurrencyString(const v8::Argu
     if (args.Length() > 1) {
         if (!args[1]->IsString())
             V8THROW_ERROR("Locale: Number.toLocaleString(): Invalid arguments");
-        symbol = r->engine->toString(args[1]->ToString());
+        symbol = args[1]->v4Value().toQString();
     }
 
     return r->engine->toString(r->locale.toCurrencyString(number, symbol));

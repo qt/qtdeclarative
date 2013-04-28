@@ -312,8 +312,6 @@ public:
     QV4::Value getOwnPropertyNames(const QV4::Value &o);
     void freezeObject(const QV4::Value &value);
 
-    QString toString(v8::Handle<v8::Value> string);
-    QString toString(v8::Handle<v8::String> string);
     static inline bool startsWithUpper(v8::Handle<v8::String>);
 
     QVariant toVariant(v8::Handle<v8::Value>, int typeHint);

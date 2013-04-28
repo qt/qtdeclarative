@@ -618,7 +618,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
             v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
             int lineNumber = frame->GetLineNumber();
             int columnNumber = frame->GetColumn();
-            QString url = engine->toString(frame->GetScriptName());
+            QString url = frame->GetScriptName()->v4Value().toQString();
 
             newBinding = new QQmlBinding(&function, object, context, url, qmlSourceCoordinate(lineNumber), qmlSourceCoordinate(columnNumber));
             newBinding->setTarget(object, *property, context);
@@ -676,7 +676,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     } else if (property->propType == QMetaType::Double && value->IsNumber()) {
         PROPERTY_STORE(double, double(value->ToNumber()->Value()));
     } else if (property->propType == QMetaType::QString && value->IsString()) {
-        PROPERTY_STORE(QString, engine->toString(value->ToString()));
+        PROPERTY_STORE(QString, value->v4Value().toQString());
     } else if (property->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
@@ -732,7 +732,7 @@ bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QH
 
     if (!result->isWritable() && !result->isQList()) {
         QString error = QLatin1String("Cannot assign to read-only property \"") +
-                        engine->toString(property.string()) + QLatin1Char('\"');
+                        property.string()->v4Value().toQString() + QLatin1Char('\"');
         v8::ThrowException(v8::Exception::Error(engine->toString(error)));
         return true;
     }
@@ -804,7 +804,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Setter(v8::Local<v8::String> property,
 
     if (!result) {
         QString error = QLatin1String("Cannot assign to non-existent property \"") +
-                        v8engine->toString(property) + QLatin1Char('\"');
+                        property->v4Value().toQString() + QLatin1Char('\"');
         v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
         return value;
     }
@@ -920,7 +920,7 @@ static void FastValueSetterReadOnly(v8::Local<v8::String> property, v8::Local<v8
     QV8Engine *v8engine = resource->engine;
 
     QString error = QLatin1String("Cannot assign to read-only property \"") +
-                    v8engine->toString(property) + QLatin1Char('\"');
+                    property->v4Value().toQString() + QLatin1Char('\"');
     v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
 }
 
@@ -1337,7 +1337,7 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
 
             if (try_catch.HasCaught()) {
                 QQmlError error;
-                error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(engine->toString(connection.function->GetName())));
+                error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(connection.function->GetName()->v4Value().toQString()));
                 v8::Local<v8::Message> message = try_catch.Message();
                 if (!message.IsEmpty())
                     QQmlExpressionPrivate::exceptionToError(message, error);
@@ -2164,7 +2164,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
         if (value->IsNull() || value->IsUndefined())
             qstringPtr = new (&allocData) QString();
         else
-            qstringPtr = new (&allocData) QString(engine->toString(value->ToString()));
+            qstringPtr = new (&allocData) QString(value->v4Value().toQString());
         type = callType;
     } else if (callType == QMetaType::QObjectStar) {
         qobjectPtr = engine->toQObject(value);

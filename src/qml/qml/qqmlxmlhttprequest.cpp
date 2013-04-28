@@ -839,7 +839,7 @@ v8::Handle<v8::Value> NamedNodeMap::named(v8::Local<v8::String> property, const 
     if (!r || !r->list) return v8::Undefined();
     QV8Engine *engine = V8ENGINE();
 
-    QString str = engine->toString(property);
+    QString str = property->v4Value().toQString();
     for (int ii = 0; ii < r->list->count(); ++ii) {
         if (r->list->at(ii)->name == str) {
             return Node::create(engine, r->list->at(ii));
@@ -1534,7 +1534,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_open(const v8::Arguments &args)
     QV8Engine *engine = r->engine;
 
     // Argument 0 - Method
-    QString method = engine->toString(args[0]).toUpper();
+    QString method = args[0]->v4Value().toQString().toUpper();
     if (method != QLatin1String("GET") && 
         method != QLatin1String("PUT") &&
         method != QLatin1String("HEAD") &&
@@ -1543,7 +1543,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_open(const v8::Arguments &args)
         V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Unsupported HTTP method type");
 
     // Argument 1 - URL
-    QUrl url = QUrl(engine->toString(args[1]));
+    QUrl url = QUrl(args[1]->v4Value().toQString());
 
     if (url.isRelative()) 
         url = engine->callingContext()->resolvedUrl(url);
@@ -1555,9 +1555,9 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_open(const v8::Arguments &args)
     // Argument 3/4 - user/pass (optional)
     QString username, password;
     if (args.Length() > 3)
-        username = engine->toString(args[3]);
+        username = args[3]->v4Value().toQString();
     if (args.Length() > 4)
-        password = engine->toString(args[4]);
+        password = args[4]->v4Value().toQString();
 
     // Clear the fragment (if any)
     url.setFragment(QString());
@@ -1583,8 +1583,8 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_setRequestHeader(const v8::Argume
 
     QV8Engine *engine = r->engine;
 
-    QString name = engine->toString(args[0]);
-    QString value = engine->toString(args[1]);
+    QString name = args[0]->v4Value().toQString();
+    QString value = args[1]->v4Value().toQString();
 
     // ### Check that name and value are well formed
 
@@ -1630,7 +1630,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_send(const v8::Arguments &args)
 
     QByteArray data;
     if (args.Length() > 0)
-        data = engine->toString(args[0]).toUtf8();
+        data = args[0]->v4Value().toQString().toUtf8();
 
     return r->send(constructMeObject(args.This(), engine), data);
 }
@@ -1660,7 +1660,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_getResponseHeader(const v8::Argum
         r->readyState() != QQmlXMLHttpRequest::HeadersReceived)
         V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
-    return engine->toString(r->header(engine->toString(args[0])));
+    return engine->toString(r->header(args[0]->v4Value().toQString()));
 }
 
 static v8::Handle<v8::Value> qmlxmlhttprequest_getAllResponseHeaders(const v8::Arguments &args)

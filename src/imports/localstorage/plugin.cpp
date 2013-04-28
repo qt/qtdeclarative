@@ -243,7 +243,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_executeSql(const v8::Arguments& args
 
     QSqlDatabase db = r->database;
 
-    QString sql = engine->toString(args[0]);
+    QString sql = args[0]->v4Value().toQString();
 
     if (r->readonly && !sql.startsWith(QLatin1String("SELECT"),Qt::CaseInsensitive)) {
         V8THROW_SQL(SQLEXCEPTION_SYNTAX_ERR, QQmlEngine::tr("Read-only Transaction"));
@@ -267,7 +267,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_executeSql(const v8::Arguments& args
                 v8::Local<v8::Array> names = object->GetPropertyNames();
                 uint32_t size = names->Length();
                 for (uint32_t ii = 0; ii < size; ++ii)
-                    query.bindValue(engine->toString(names->Get(ii)),
+                    query.bindValue(names->Get(ii)->v4Value().toQString(),
                                     engine->toVariant(object->Get(names->Get(ii)), -1));
             } else {
                 query.bindValue(0, engine->toVariant(values, -1));
@@ -311,8 +311,8 @@ static v8::Handle<v8::Value> qmlsqldatabase_changeVersion(const v8::Arguments& a
     QV8Engine *engine = r->engine;
 
     QSqlDatabase db = r->database;
-    QString from_version = engine->toString(args[0]);
-    QString to_version = engine->toString(args[1]);
+    QString from_version = args[0]->v4Value().toQString();
+    QString to_version = args[1]->v4Value().toQString();
     v8::Handle<v8::Value> callback = args[2];
 
     if (from_version != r->version)
@@ -611,9 +611,9 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV8Function *args)
 
     QSqlDatabase database;
 
-    QString dbname = engine->toString((*args)[0]);
-    QString dbversion = engine->toString((*args)[1]);
-    QString dbdescription = engine->toString((*args)[2]);
+    QString dbname = (*args)[0]->v4Value().toQString();
+    QString dbversion = (*args)[1]->v4Value().toQString();
+    QString dbdescription = (*args)[2]->v4Value().toQString();
     int dbestimatedsize = (*args)[3]->Int32Value();
     v8::Handle<v8::Value> dbcreationCallback = (*args)[4];
 

@@ -506,7 +506,7 @@ void QuickTestResult::stringify(QQmlV8Function *args)
         }
     } else {
         v8::Local<v8::String> jsstr = value->ToString();
-        QString tmp = engine->toString(jsstr);
+        QString tmp = jsstr->v4Value().toQString();
         if (value->IsArray())
             result.append(QString::fromLatin1("[%1]").arg(tmp));
         else

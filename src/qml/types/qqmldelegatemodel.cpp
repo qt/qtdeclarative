@@ -1528,7 +1528,7 @@ bool QQmlDelegateModelPrivate::insert(
     for (uint i = 0; i < propertyNames->Length(); ++i) {
         v8::Local<v8::String> propertyName = propertyNames->Get(i)->ToString();
         cacheItem->setValue(
-                m_cacheMetaType->v8Engine->toString(propertyName),
+                propertyName->v4Value().toQString(),
                 m_cacheMetaType->v8Engine->toVariant(object->Get(propertyName), QVariant::Invalid));
     }
 
@@ -1635,14 +1635,14 @@ int QQmlDelegateModelItemMetaType::parseGroups(const v8::Local<v8::Value> &group
 {
     int groupFlags = 0;
     if (groups->IsString()) {
-        const QString groupName = v8Engine->toString(groups);
+        const QString groupName = groups->v4Value().toQString();
         int index = groupNames.indexOf(groupName);
         if (index != -1)
             groupFlags |= 2 << index;
     } else if (groups->IsArray()) {
         v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(groups);
         for (uint i = 0; i < array->Length(); ++i) {
-            const QString groupName = v8Engine->toString(array->Get(i));
+            const QString groupName = array->Get(i)->v4Value().toQString();
             int index = groupNames.indexOf(groupName);
             if (index != -1)
                 groupFlags |= 2 << index;

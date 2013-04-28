@@ -176,7 +176,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
                 // check for enum value
                 if (QV8Engine::startsWithUpper(property)) {
                     if (resource->mode == IncludeEnums) {
-                        QString name = v8engine->toString(property);
+                        QString name = property->v4Value().toQString();
 
                         // ### Optimize
                         QByteArray enumName = name.toUtf8();
@@ -294,7 +294,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
             QV4::Object *apiprivate = QJSValuePrivate::get(siinfo->scriptApi(e))->value.asObject();
             if (!apiprivate) {
                 QString error = QLatin1String("Cannot assign to read-only property \"") +
-                                v8engine->toString(property) + QLatin1Char('\"');
+                                property->v4Value().toQString() + QLatin1Char('\"');
                 v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
             } else {
                 apiprivate->put(v8::Isolate::GetEngine()->current, property.get()->v4Value().stringValue(), setVal);

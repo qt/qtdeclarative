@@ -362,7 +362,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::NullSetter(v8::Local<v8::String> proper
     if (!resource->readOnly) {
         return v8::Handle<v8::Value>();
     } else {
-        QString error = QLatin1String("Invalid write to global property \"") + engine->toString(property) + 
+        QString error = QLatin1String("Invalid write to global property \"") + property->v4Value().toQString() +
                         QLatin1Char('"');
         v8::ThrowException(v8::Exception::Error(engine->toString(error)));
         return v8::Handle<v8::Value>();
@@ -420,7 +420,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Local<v8::String> property,
     if (!resource->readOnly) {
         return v8::Handle<v8::Value>();
     } else {
-        QString error = QLatin1String("Invalid write to global property \"") + engine->toString(property) + 
+        QString error = QLatin1String("Invalid write to global property \"") + property->v4Value().toQString() +
                         QLatin1Char('"');
         v8::ThrowException(v8::Exception::Error(engine->toString(error)));
         return v8::Undefined();

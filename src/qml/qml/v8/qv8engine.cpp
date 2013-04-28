@@ -1560,16 +1560,6 @@ QV8Engine::ThreadData::~ThreadData()
     }
 }
 
-QString QV8Engine::toString(v8::Handle<v8::Value> string)
-{
-    return string.get()->v4Value().toString(m_v4Engine->current)->toQString();
-}
-
-QString QV8Engine::toString(v8::Handle<v8::String> string)
-{
-    return string.get()->v4Value().toString(m_v4Engine->current)->toQString();
-}
-
 v8::Local<v8::String> QV8Engine::toString(const QString &string)
 {
     return QJSConverter::toString(string);

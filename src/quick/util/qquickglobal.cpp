@@ -337,7 +337,7 @@ public:
             if (ok) *ok = true;
         }
         if (!vfam.IsEmpty() && !vfam->IsNull() && !vfam->IsUndefined() && vfam->IsString()) {
-            retn.setFamily(e->toString(vfam->ToString()));
+            retn.setFamily(vfam->v4Value().toQString());
             if (ok) *ok = true;
         }
         if (!vital.IsEmpty() && !vital->IsNull() && !vital->IsUndefined() && vital->IsBoolean()) {

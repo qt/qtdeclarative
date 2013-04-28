@@ -1521,7 +1521,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
             break;
         case QMetaType::QString:
             if (result->IsString())
-                QUICK_STORE(QString, v8engine->toString(result))
+                QUICK_STORE(QString, result->v4Value().toQString())
             break;
         default:
             break;

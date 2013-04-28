@@ -783,10 +783,7 @@ static void ctx2d_globalCompositeOperation_set(v8::Local<v8::String>, v8::Local<
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
 
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
-
-
-    QString mode = engine->toString(value);
+    QString mode = value->v4Value().toQString();
     QPainter::CompositionMode cm = qt_composite_mode_from_string(mode);
     if (cm == QPainter::CompositionMode_SourceOver && mode != QStringLiteral("source-over"))
         return;
@@ -899,12 +896,10 @@ static void ctx2d_fillRule_set(v8::Local<v8::String>, v8::Local<v8::Value> value
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
 
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
-
-    if ((value->IsString() && engine->toString(value) == QStringLiteral("WindingFill"))
+    if ((value->IsString() && value->v4Value().toQString() == QStringLiteral("WindingFill"))
       ||(value->IsNumber() && value->NumberValue() == Qt::WindingFill)) {
         r->context->state.fillRule = Qt::WindingFill;
-    } else if ((value->IsString() && engine->toString(value) == QStringLiteral("OddEvenFill"))
+    } else if ((value->IsString() && value->v4Value().toQString() == QStringLiteral("OddEvenFill"))
                ||(value->IsNumber() && value->NumberValue() == Qt::OddEvenFill)) {
         r->context->state.fillRule = Qt::OddEvenFill;
     } else {
@@ -1203,13 +1198,13 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
                     patternTexture = pixelData->image;
                 }
             } else {
-                patternTexture = r->context->createPixmap(QUrl(engine->toString(args[0]->ToString())))->image();
+                patternTexture = r->context->createPixmap(QUrl(args[0]->v4Value().toQString()))->image();
             }
 
             if (!patternTexture.isNull()) {
                 styleResouce->brush.setTextureImage(patternTexture);
 
-                QString repetition = engine->toString(args[1]);
+                QString repetition = args[1]->v4Value().toQString();
                 if (repetition == QStringLiteral("repeat") || repetition.isEmpty()) {
                     styleResouce->patternRepeatX = true;
                     styleResouce->patternRepeatY = true;
@@ -1272,9 +1267,7 @@ static void ctx2d_lineCap_set(v8::Local<v8::String>, v8::Local<v8::Value> value,
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
 
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
-
-    QString lineCap = engine->toString(value);
+    QString lineCap = value->v4Value().toQString();
     Qt::PenCapStyle cap;
     if (lineCap == QLatin1String("round"))
         cap = Qt::RoundCap;
@@ -1330,9 +1323,7 @@ static void ctx2d_lineJoin_set(v8::Local<v8::String>, v8::Local<v8::Value> value
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
 
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
-
-    QString lineJoin = engine->toString(value);
+    QString lineJoin = value->v4Value().toQString();
     Qt::PenJoinStyle join;
     if (lineJoin == QLatin1String("round"))
         join = Qt::RoundJoin;
@@ -1529,7 +1520,7 @@ static void ctx2d_path_set(v8::Local<v8::String>, v8::Local<v8::Value> value, co
         if (path)
             r->context->m_path = path->path();
     } else {
-        QString path = engine->toString(value->ToString());
+        QString path = value->v4Value().toQString();
         QQuickSvgParser::parsePathDataFast(path, r->context->m_path);
     }
     r->context->m_v8path = value;
@@ -1932,14 +1923,13 @@ static v8::Handle<v8::Value> ctx2d_text(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-    QV8Engine *engine = V8ENGINE();
     if (args.Length() == 3) {
         qreal x = args[1]->NumberValue();
         qreal y = args[2]->NumberValue();
 
         if (!qIsFinite(x) || !qIsFinite(y))
             return args.This();
-        r->context->text(engine->toString(args[0]), x, y);
+        r->context->text(args[0]->v4Value().toQString(), x, y);
     }
     return args.This();
 }
@@ -2023,8 +2013,7 @@ static void ctx2d_font_set(v8::Local<v8::String>, v8::Local<v8::Value> value, co
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
 
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
-    QString fs = engine->toString(value);
+    QString fs = value->v4Value().toQString();
     QFont font = qt_font_from_string(fs);
     if (font != r->context->state.font) {
         r->context->state.font = font;
@@ -2071,9 +2060,8 @@ static void ctx2d_textAlign_set(v8::Local<v8::String>, v8::Local<v8::Value> valu
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
 
-    QString textAlign = engine->toString(value);
+    QString textAlign = value->v4Value().toQString();
 
     QQuickContext2D::TextAlignType ta;
     if (textAlign == QLatin1String("start"))
@@ -2136,8 +2124,7 @@ static void ctx2d_textBaseline_set(v8::Local<v8::String>, v8::Local<v8::Value> v
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
-    QString textBaseline = engine->toString(value);
+    QString textBaseline = value->v4Value().toQString();
 
     QQuickContext2D::TextBaseLineType tb;
     if (textBaseline == QLatin1String("alphabetic"))
@@ -2171,13 +2158,12 @@ static v8::Handle<v8::Value> ctx2d_fillText(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-    QV8Engine *engine = V8ENGINE();
     if (args.Length() == 3) {
         qreal x = args[1]->NumberValue();
         qreal y = args[2]->NumberValue();
         if (!qIsFinite(x) || !qIsFinite(y))
             return args.This();
-        QPainterPath textPath = r->context->createTextGlyphs(x, y, engine->toString(args[0]));
+        QPainterPath textPath = r->context->createTextGlyphs(x, y, args[0]->v4Value().toQString());
         r->context->buffer()->fill(textPath);
     }
     return args.This();
@@ -2195,9 +2181,8 @@ static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-    QV8Engine *engine = V8ENGINE();
     if (args.Length() == 3)
-        r->context->drawText(engine->toString(args[0]), args[1]->NumberValue(), args[2]->NumberValue(), false);
+        r->context->drawText(args[0]->v4Value().toQString(), args[1]->NumberValue(), args[2]->NumberValue(), false);
     return args.This();
 }
 
@@ -2230,11 +2215,9 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-    QV8Engine *engine = V8ENGINE();
-
     if (args.Length() == 1) {
         QFontMetrics fm(r->context->state.font);
-        uint width = fm.width(engine->toString(args[0]));
+        uint width = fm.width(args[0]->v4Value().toQString());
         v8::Local<v8::Object> tm = v8::Object::New();
         tm->Set(v8::String::New("width"), v8::Number::New(width));
         return tm;
@@ -2319,7 +2302,7 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
     QQmlRefPointer<QQuickCanvasPixmap> pixmap;
 
     if (args[0]->IsString()) {
-        QUrl url(engine->toString(args[0]->ToString()));
+        QUrl url(args[0]->v4Value().toQString());
         if (!url.isValid())
             V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
 
@@ -2569,7 +2552,7 @@ static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
                 return qt_create_image_data(w, h, engine, QImage());
             }
         } else if (args[0]->IsString()) {
-            QImage image = r->context->createPixmap(QUrl(engine->toString(args[0]->ToString())))->image();
+            QImage image = r->context->createPixmap(QUrl(args[0]->v4Value().toQString()))->image();
             return qt_create_image_data(image.width(), image.height(), engine, image);
         }
     } else if (args.Length() == 2) {

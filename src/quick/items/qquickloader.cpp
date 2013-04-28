@@ -928,8 +928,7 @@ void QQuickLoader::geometryChanged(const QRectF &newGeometry, const QRectF &oldG
 
 QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV8Function *args)
 {
-    QV8Engine *v8engine = args->engine();
-    QString arg = v8engine->toString((*args)[0]->ToString());
+    QString arg = (*args)[0]->v4Value().toQString();
     if (arg.isEmpty())
         return QUrl();
 
