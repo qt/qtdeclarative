@@ -565,6 +565,7 @@ struct PersistentValuePrivate
 class PersistentValue
 {
 public:
+    PersistentValue();
     PersistentValue(ExecutionEngine *e, const Value &val);
     PersistentValue(const PersistentValue &other);
     PersistentValue &operator=(const PersistentValue &other);

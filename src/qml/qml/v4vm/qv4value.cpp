@@ -211,6 +211,11 @@ Value Value::property(ExecutionContext *ctx, String *name) const
 }
 
 
+PersistentValue::PersistentValue()
+    : d(new PersistentValuePrivate)
+{
+}
+
 PersistentValue::PersistentValue(ExecutionEngine *e, const Value &val)
     : d(new PersistentValuePrivate(e, val))
 {

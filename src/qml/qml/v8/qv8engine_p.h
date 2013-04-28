@@ -79,6 +79,7 @@
 #include "qv8valuetypewrapper_p.h"
 #include "qv8sequencewrapper_p.h"
 #include "qv4jsonwrapper_p.h"
+#include <private/qv4value_p.h>
 
 namespace QV4 {
 struct ArrayObject;
@@ -309,7 +310,7 @@ public:
     QQmlContextData *callingContext();
 
     QV4::Value getOwnPropertyNames(const QV4::Value &o);
-    void freezeObject(v8::Handle<v8::Value>);
+    void freezeObject(const QV4::Value &value);
 
     QString toString(v8::Handle<v8::Value> string);
     QString toString(v8::Handle<v8::String> string);
@@ -471,7 +472,7 @@ protected:
     QV8SequenceWrapper m_sequenceWrapper;
     QV4JsonWrapper m_jsonWrapper;
 
-    v8::Persistent<v8::Function> m_freezeObject;
+    QV4::PersistentValue m_freezeObject;
 
     void *m_xmlHttpRequestData;
 

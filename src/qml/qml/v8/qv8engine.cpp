@@ -186,8 +186,6 @@ QV8Engine::~QV8Engine()
     delete m_listModelData;
     m_listModelData = 0;
 
-    qPersistentDispose(m_freezeObject);
-
     qPersistentDispose(m_strongReferencer);
 
     m_jsonWrapper.destroy();
@@ -697,18 +695,17 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
                       "    }"\
                       "})"
 
-    v8::Local<v8::Script> freeze = v8::Script::New(v8::String::New(FREEZE_SOURCE));
-    v8::Local<v8::Value> result = freeze->Run();
-    Q_ASSERT(result->IsFunction());
-    m_freezeObject = qPersistentNew(v8::Local<v8::Function>::Cast(result));
+        QV4::Value result = evaluateScript(QStringLiteral(FREEZE_SOURCE), 0);
+        Q_ASSERT(result.asFunctionObject());
+        m_freezeObject = QV4::PersistentValue(m_v4Engine, result);
 #undef FREEZE_SOURCE
     }
 }
 
-void QV8Engine::freezeObject(v8::Handle<v8::Value> value)
+void QV8Engine::freezeObject(const QV4::Value &value)
 {
-    v8::Handle<v8::Value> args[] = { value };
-    m_freezeObject->Call(global(), 1, args);
+    QV4::Value args = value;
+    m_freezeObject->asFunctionObject()->call(m_v4Engine->rootContext, QV4::Value::fromObject(m_v4Engine->globalObject), &args, 1);
 }
 
 void QV8Engine::gc()
@@ -891,7 +888,7 @@ void QV8Engine::initQmlGlobalObject()
     v8::HandleScope handels;
     v8::Context::Scope contextScope(m_context);
     initializeGlobal(m_context->Global());
-    freezeObject(m_context->Global());
+    freezeObject(QV4::Value::fromObject(m_v4Engine->globalObject));
 }
 
 void QV8Engine::setEngine(QQmlEngine *engine)
