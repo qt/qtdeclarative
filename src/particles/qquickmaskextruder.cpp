@@ -118,7 +118,7 @@ bool QQuickMaskExtruder::contains(const QRectF &bounds, const QPointF &point)
     QPointF pt = point - bounds.topLeft();
     QPoint p(pt.x() * m_img.width() / bounds.width(),
              pt.y() * m_img.height() / bounds.height());
-    return m_img.rect().contains(p) && (bool)m_img.pixelIndex(p);
+    return m_img.rect().contains(p) && (m_img.pixel(p) & 0xff000000);
 }
 
 void QQuickMaskExtruder::ensureInitialized(const QRectF &rf)
