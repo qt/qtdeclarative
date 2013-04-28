@@ -30,7 +30,7 @@
     \example demos/calqlatr
     \brief This is an example calculator written in QML.
     \image qml-calqlatr-demo-small.png
-    \ingroup qmldemos
+    \ingroup qtquickexamples
 
     This demo implements a simple calculator app, designed for portrait devices.
 
