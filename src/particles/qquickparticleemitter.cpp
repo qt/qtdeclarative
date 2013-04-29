@@ -357,7 +357,7 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
             m_last_timestamp = timeStamp/1000.;
         m_last_emission = m_last_timestamp;
         m_reset_last = false;
-        m_emitCap = particleCount();
+        m_emitCap = -1;
     }
 
     if (m_pulseLeft){
@@ -424,6 +424,8 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
 
             if (datum->lifeSpan >= m_system->maxLife){
                 datum->lifeSpan = m_system->maxLife;
+                if (m_emitCap == -1)
+                    m_emitCap = particleCount();
                 m_emitCap--;//emitCap keeps us from reemitting 'infinite' particles after their life. Unless you reset the emitter.
             }
 
