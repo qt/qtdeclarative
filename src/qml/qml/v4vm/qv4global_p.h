@@ -46,6 +46,19 @@
 
 #include <qtqmlglobal.h>
 
+#if defined(Q_CC_MSVC)
+namespace std {
+
+inline bool isinf(double d) { return !_finite(d) && !_isnan(d); }
+inline bool isnan(double d) { return !!_isnan(d); }
+inline bool isfinite(double d) { return _finite(d); }
+inline bool signbit(double d) { return _copysign(1.0, d) < 0; }
+
+} // namespace std
+
+inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
+#endif
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {

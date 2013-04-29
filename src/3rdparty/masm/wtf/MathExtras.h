@@ -142,7 +142,6 @@ inline long long llround(double num) { return static_cast<long long>(round(num))
 inline long long llroundf(float num) { return static_cast<long long>(roundf(num)); }
 inline long lround(double num) { return static_cast<long>(round(num)); }
 inline long lroundf(float num) { return static_cast<long>(roundf(num)); }
-inline double trunc(double num) { return num > 0 ? floor(num) : ceil(num); }
 
 #endif
 
@@ -171,15 +170,6 @@ inline float log2f(float num)
 #if COMPILER(MSVC9_OR_LOWER)
 inline long long abs(long long num) { return _abs64(num); }
 #endif
-
-namespace std {
-
-inline bool isinf(double num) { return !_finite(num) && !_isnan(num); }
-inline bool isnan(double num) { return !!_isnan(num); }
-inline bool isfinite(double x) { return _finite(x); }
-inline bool signbit(double num) { return _copysign(1.0, num) < 0; }
-
-} // namespace std
 
 inline double nextafter(double x, double y) { return _nextafter(x, y); }
 inline float nextafterf(float x, float y) { return x > y ? x - FLT_EPSILON : x + FLT_EPSILON; }
