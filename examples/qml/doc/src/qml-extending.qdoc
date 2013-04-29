@@ -34,7 +34,7 @@
 The Adding Types Example shows how to add a new object type, \c Person, to QML.
 The \c Person type can be used from QML like this:
 
-\snippet qml/referenceexamples/adding/example.qml 0
+\snippet referenceexamples/adding/example.qml 0
 
 \section1 Declare the Person class
 
@@ -43,11 +43,11 @@ with the two properties we want accessible on the QML type - name and shoeSize.
 Although in this example we use the same name for the C++ class as the QML
 type, the C++ class can be named differently, or appear in a namespace.
 
-\snippet qml/referenceexamples/adding/person.h 0
+\snippet referenceexamples/adding/person.h 0
 
 \section1 Define the Person class
 
-\snippet qml/referenceexamples/adding/person.cpp 0
+\snippet referenceexamples/adding/person.cpp 0
 
 The Person class implementation is quite basic.  The property accessors simply
 return members of the object instance.
@@ -78,16 +78,16 @@ properties in QML.  This example adds a BirthdayParty type that specifies
 a birthday party, consisting of a celebrant and a list of guests.  People are
 specified using the People QML type built in the previous example.
 
-\snippet qml/referenceexamples/properties/example.qml 0
+\snippet referenceexamples/properties/example.qml 0
 
 \section1 Declare the BirthdayParty
 
 The BirthdayParty class is declared like this:
 
-\snippet qml/referenceexamples/properties/birthdayparty.h 0
-\snippet qml/referenceexamples/properties/birthdayparty.h 1
-\snippet qml/referenceexamples/properties/birthdayparty.h 2
-\snippet qml/referenceexamples/properties/birthdayparty.h 3
+\snippet referenceexamples/properties/birthdayparty.h 0
+\snippet referenceexamples/properties/birthdayparty.h 1
+\snippet referenceexamples/properties/birthdayparty.h 2
+\snippet referenceexamples/properties/birthdayparty.h 3
 
 The class contains a member to store the celebrant object, and also a
 QList<Person *> member.
@@ -104,7 +104,7 @@ scenarios.
 
 The implementation of BirthdayParty property accessors is straight forward.
 
-\snippet qml/referenceexamples/properties/birthdayparty.cpp 0
+\snippet referenceexamples/properties/birthdayparty.cpp 0
 
 \section1 Running the example
 
@@ -128,11 +128,11 @@ The Inheritance and Coercion Example shows how to use base classes to assign
 types of more than one type to a property.  It specializes the Person type
 developed in the previous examples into two types - a \c Boy and a \c Girl.
 
-\snippet qml/referenceexamples/coercion/example.qml 0
+\snippet referenceexamples/coercion/example.qml 0
 
 \section1 Declare Boy and Girl
 
-\snippet qml/referenceexamples/coercion/person.h 0
+\snippet referenceexamples/coercion/person.h 0
 
 The Person class remains unaltered in this example and the Boy and Girl C++
 classes are trivial extensions of it.  As an example, the inheritance used here
@@ -147,7 +147,7 @@ previous example.  However, as we have repurposed the People class as a common
 base for Boy and Girl, we want to prevent it from being instantiated from QML
 directly - an explicit Boy or Girl should be instantiated instead.
 
-\snippet qml/referenceexamples/coercion/main.cpp 0
+\snippet referenceexamples/coercion/main.cpp 0
 
 While we want to disallow instantiating Person from within QML, it still needs
 to be registered with the QML engine, so that it can be used as a property type
@@ -157,7 +157,7 @@ and other types can be coerced to it.
 
 The implementation of Boy and Girl are trivial.
 
-\snippet qml/referenceexamples/coercion/person.cpp 1
+\snippet referenceexamples/coercion/person.cpp 1
 
 All that is necessary is to implement the constructor, and to register the types
 and their QML name with the QML engine.
@@ -167,7 +167,7 @@ and their QML name with the QML engine.
 The BirthdayParty type has not changed since the previous example.  The
 celebrant and guests property still use the People type.
 
-\snippet qml/referenceexamples/coercion/birthdayparty.h 0
+\snippet referenceexamples/coercion/birthdayparty.h 0
 
 However, as all three types, Person, Boy and Girl, have been registered with the
 QML system, on assignment QML automatically (and type-safely) converts the Boy
@@ -194,14 +194,14 @@ The Default Property Example is a minor modification of the
 \l {Extending QML - Inheritance and Coercion Example} that simplifies the
 specification of a BirthdayParty through the use of a default property.
 
-\snippet qml/referenceexamples/default/example.qml 0
+\snippet referenceexamples/default/example.qml 0
 
 \section1 Declaring the BirthdayParty class
 
 The only difference between this example and the last, is the addition of the
 \c DefaultProperty class info annotation.
 
-\snippet qml/referenceexamples/default/birthdayparty.h 0
+\snippet referenceexamples/default/birthdayparty.h 0
 
 The default property specifies the property to assign to whenever an explicit
 property is not specified, in the case of the BirthdayParty type the guest
