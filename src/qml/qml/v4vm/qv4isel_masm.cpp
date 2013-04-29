@@ -576,7 +576,7 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     }
 
     _as->leaveStandardStackFrame(locals);
-#ifndef ARGUMENTS_IN_REGISTERS
+#if !defined(RETURN_VALUE_IN_REGISTER)
     // Emulate ret(n) instruction
     // Pop off return address into scratch register ...
     _as->pop(Assembler::ScratchRegister);
