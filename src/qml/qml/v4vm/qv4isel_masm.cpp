@@ -179,7 +179,7 @@ void Assembler::copyValue(Result result, Source source)
 #ifdef VALUE_FITS_IN_REGISTER
     // Use ReturnValueRegister as "scratch" register because loadArgument
     // and storeArgument are functions that may need a scratch register themselves.
-    loadArgument(source, ReturnValueRegister);
+    loadArgumentInRegister(source, ReturnValueRegister);
     storeReturnValue(result);
 #else
     loadDouble(source, FPGpr0);
@@ -193,7 +193,7 @@ void Assembler::copyValue(Result result, V4IR::Expr* source)
 #ifdef VALUE_FITS_IN_REGISTER
     // Use ReturnValueRegister as "scratch" register because loadArgument
     // and storeArgument are functions that may need a scratch register themselves.
-    loadArgument(source, ReturnValueRegister);
+    loadArgumentInRegister(source, ReturnValueRegister);
     storeReturnValue(result);
 #else
     if (V4IR::Temp *temp = source->asTemp()) {
@@ -863,7 +863,7 @@ void InstructionSelection::loadThisObject(V4IR::Temp *temp)
 {
 #if defined(VALUE_FITS_IN_REGISTER)
     _as->load64(Pointer(Assembler::ContextRegister, offsetof(ExecutionContext, thisObject)), Assembler::ReturnValueRegister);
-    _as->store64(Assembler::ReturnValueRegister, temp);
+    _as->storeReturnValue(temp);
 #else
     _as->copyValue(temp, Pointer(Assembler::ContextRegister, offsetof(ExecutionContext, thisObject)));
 #endif

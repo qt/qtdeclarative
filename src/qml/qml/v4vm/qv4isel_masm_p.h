@@ -352,6 +352,21 @@ public:
         move(ReturnValueRegister, dest);
     }
 
+#ifdef VALUE_FITS_IN_REGISTER
+    void storeReturnValue(const Pointer &dest)
+    {
+        store64(ReturnValueRegister, dest);
+    }
+
+    void storeReturnValue(V4IR::Temp *temp)
+    {
+        if (!temp)
+            return;
+        Pointer addr = loadTempAddress(ScratchRegister, temp);
+        storeReturnValue(addr);
+    }
+#endif
+
     void storeReturnValue(VoidType)
     {
     }
