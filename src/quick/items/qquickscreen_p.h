@@ -58,16 +58,24 @@ class Q_AUTOTEST_EXPORT QQuickScreenAttached : public QObject
 {
     Q_OBJECT
 
+    Q_PROPERTY(QString name READ name CONSTANT REVISION 1);
     Q_PROPERTY(int width READ width NOTIFY widthChanged)
     Q_PROPERTY(int height READ height NOTIFY heightChanged)
+    Q_PROPERTY(int desktopAvailableWidth READ desktopAvailableWidth NOTIFY desktopGeometryChanged REVISION 1)
+    Q_PROPERTY(int desktopAvailableHeight READ desktopAvailableHeight NOTIFY desktopGeometryChanged REVISION 1)
+    Q_PROPERTY(qreal logicalPixelDensity READ logicalPixelDensity NOTIFY logicalPixelDensityChanged REVISION 1)
     Q_PROPERTY(Qt::ScreenOrientation primaryOrientation READ primaryOrientation NOTIFY primaryOrientationChanged)
     Q_PROPERTY(Qt::ScreenOrientation orientation READ orientation NOTIFY orientationChanged)
 
 public:
     QQuickScreenAttached(QObject* attachee);
 
+    QString name() const;
     int width() const;
     int height() const;
+    int desktopAvailableWidth() const;
+    int desktopAvailableHeight() const;
+    qreal logicalPixelDensity() const;
     Qt::ScreenOrientation primaryOrientation() const;
     Qt::ScreenOrientation orientation() const;
 
@@ -79,6 +87,8 @@ public:
 Q_SIGNALS:
     void widthChanged();
     void heightChanged();
+    Q_REVISION(1) void desktopGeometryChanged();
+    Q_REVISION(1) void logicalPixelDensityChanged();
     void primaryOrientationChanged();
     void orientationChanged();
 

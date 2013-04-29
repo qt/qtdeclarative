@@ -38,11 +38,9 @@ provides a visual canvas and includes types for creating and animating
 visual components, receiving user input, creating data models and views
 and delayed object instantiation.
 
-The Qt Quick module provides both the \c QtQuick QML module, which supplies
-\l{Qt Quick QML Types}{a set of QML types} for creating user
-interfaces with the QML language, and the \c QtQuick C++ module, which supplies
-\l{Qt Quick C++ Classes}{a set of C++ APIs} for integrating with user interfaces and
-applications built with QML and the \c QtQuick QML module.
+The Qt Quick module provides both a \l{Qt Quick QML Types}{QML API} which supplies
+QML types for creating user interfaces with the QML language, and a
+\l{Qt Quick C++ Classes}{C++ API} for extending QML applications with C++ code.
 
 \note From Qt 5.1, a set of Qt Quick based UI controls is available to
 create classic desktop-style user interfaces. Please see \l{Qt Quick Controls}

@@ -41,6 +41,7 @@
 
 #include "qsgrenderloop_p.h"
 #include "qsgthreadedrenderloop_p.h"
+#include "qsgwindowsrenderloop_p.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QTime>
@@ -130,15 +131,6 @@ QSGRenderLoop *QSGRenderLoop::instance()
         s_instance = QSGContext::createWindowManager();
 
         bool bufferQueuing = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::BufferQueueingOpenGL);
-#ifdef Q_OS_WIN
-        bool fancy = false; // QTBUG-28037
-#else
-        bool fancy = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL);
-#endif
-        if (qmlNoThreadedRenderer())
-            fancy = false;
-        else if (qmlForceThreadedRenderer())
-            fancy = true;
 
         // Enable fixed animation steps...
         QByteArray fixed = qgetenv("QML_FIXED_ANIMATION_STEP");
@@ -151,9 +143,45 @@ QSGRenderLoop *QSGRenderLoop::instance()
             QUnifiedTimer::instance(true)->setConsistentTiming(true);
 
         if (!s_instance) {
-            s_instance = fancy
-                    ? (QSGRenderLoop*) new QSGThreadedRenderLoop
-                    : (QSGRenderLoop*) new QSGGuiThreadRenderLoop;
+
+            enum RenderLoopType {
+                BasicRenderLoop,
+                ThreadedRenderLoop,
+                WindowsRenderLoop
+            };
+
+            RenderLoopType loopType = BasicRenderLoop;
+
+#ifdef Q_OS_WIN
+            loopType = WindowsRenderLoop;
+#else
+            if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
+                loopType = ThreadedRenderLoop;
+#endif
+            if (qmlNoThreadedRenderer())
+                loopType = BasicRenderLoop;
+            else if (qmlForceThreadedRenderer())
+                loopType = ThreadedRenderLoop;
+
+            const QByteArray loopName = qgetenv("QSG_RENDER_LOOP");
+            if (loopName == QByteArrayLiteral("windows"))
+                loopType = WindowsRenderLoop;
+            else if (loopName == QByteArrayLiteral("basic"))
+                loopType = BasicRenderLoop;
+            else if (loopName == QByteArrayLiteral("threaded"))
+                loopType = ThreadedRenderLoop;
+
+            switch (loopType) {
+            case ThreadedRenderLoop:
+                s_instance = new QSGThreadedRenderLoop();
+                break;
+            case WindowsRenderLoop:
+                s_instance = new QSGWindowsRenderLoop();
+                break;
+            default:
+                s_instance = new QSGGuiThreadRenderLoop();
+                break;
+            }
         }
     }
     return s_instance;

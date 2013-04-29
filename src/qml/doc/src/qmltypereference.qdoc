@@ -24,20 +24,18 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 /*!
 \qmlmodule QtQml 2
 \title Qt QML QML Types
 \ingroup qmlmodules
 \brief List of QML types provided by the Qt QML module
 
-The \c QtQml module provides the definition and implementation of various
+The \l{Qt QML} module provides the definition and implementation of various
 convenience types which can be used with the QML language, including some
 elementary QML types which can provide the basis for further extensions to the
-QML language.
-
-The \c QtQml module provides the \c QtObject and \c Component object types
-which may be used in QML documents.  These types are non-visual and provide
-building-blocks for extensions to QML.
+QML language. The \l QtObject and \l Component object types are non-visual and
+provide building-blocks for extensions to QML.
 
 \section1 Importing QtQml
 
@@ -53,8 +51,8 @@ import QtQml 2.0
 \endqml
 
 Most clients will never need to use the \c QtQml import, as all of the types
-and functionality provided by the \c QtQml namespace are also provided by the
-\c QtQuick namespace which may be imported as follows:
+are also provided by the \c QtQuick namespace which may be imported as
+follows:
 
 \qml
 import QtQuick 2.0
@@ -78,82 +76,6 @@ provided:
 The following \l{qtqml-typesystem-objecttypes.html}{QML object types} are
 provided:
 
-\section2 QtObject
-
-The \c QtObject type provides a basic instantiable object which can be used in
-QML applications.  It is non-visual, but may have properties, methods, signals
-and signal handlers.
-
-For example, the following QtObject has several properties, one of which has
-been assigned a \l{Property Binding}
-{binding}, and a \l{Signal and Handler Event System}{signal handler} for
-the default change signal which exists for one of its properties:
-
-\code
-    import QtQuick 2.0
-
-    QtObject {
-        property int a: 15
-        property int b: a + 22
-        property int changeCount: 0
-
-        onAChanged: {
-            changeCount += 1;
-        }
-    }
-\endcode
-
-\section2 Component
-
-The \c Component type provides a basic re-usable component which allows
-instances of another type to be instantiated on-demand.  It may be given an
-\c id and it has a default property which is the object type to instantiate,
-but no other properties may be added to it.
-
-For example, the following QtObject has two different \l Component
-properties, and it uses those components to dynamically construct objects at
-run-time:
-
-\code
-    import QtQuick 2.0
-
-    QtObject {
-        id: root
-        property bool which: true
-
-        property Component a: Component {
-            id: firstComponent
-            QtObject {
-                property int answer: 42
-                function activate() {
-                    console.log("The answer is: " + answer);
-                }
-            }
-        }
-
-        property Component b: Component {
-            id: secondComponent
-            QtObject {
-                property string message: "Hello, World!"
-                function activate() {
-                    console.log(message);
-                }
-            }
-        }
-
-        function activateDynamicObject() {
-            var o = {};
-            if (which) {
-                which = false;
-                o = a.createObject(null); // no parent
-            } else {
-                which = true;
-                o = b.createObject(null); // no parent
-            }
-            o.activate();
-        }
-    }
-\endcode
 */
 
 /*!
@@ -322,5 +244,3 @@ is automatically converted into a QRectF value.
 
 \sa{QML Basic Types}
 */
-
-

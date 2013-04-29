@@ -29,7 +29,7 @@
 \title Defining Object Types through QML Documents
 \brief Description of how a QML document is a reusable type definition
 
-One of the core features of QML is that it enables QML object types to be easily defined in a lightweight manner through QML documents to suit the needs of individual QML applications. The standard QtQuick module provides various types like \l Rectangle, \l Text and \l Image for building a QML application; beyond these, you can easily define your own QML types to be reused within your application. This ability to create your own types forms the building blocks of any QML application.
+One of the core features of QML is that it enables QML object types to be easily defined in a lightweight manner through QML documents to suit the needs of individual QML applications. The standard \l {Qt Quick} module provides various types like \l Rectangle, \l Text and \l Image for building a QML application; beyond these, you can easily define your own QML types to be reused within your application. This ability to create your own types forms the building blocks of any QML application.
 
 
 \section1 Defining an Object Type with a QML File

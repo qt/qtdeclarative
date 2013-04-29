@@ -40,16 +40,20 @@
 ****************************************************************************/
 
 #include "qaccessiblequickitem.h"
+
+#include <QtGui/qtextdocument.h>
+
 #include "QtQuick/private/qquickitem_p.h"
 #include "QtQuick/private/qquicktext_p.h"
 #include "QtQuick/private/qquickaccessibleattached_p.h"
+#include "QtQuick/qquicktextdocument.h"
 
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_ACCESSIBILITY
 
 QAccessibleQuickItem::QAccessibleQuickItem(QQuickItem *item)
-    : QQmlAccessible(item)
+    : QQmlAccessible(item), m_doc(textDocument())
 {
 }
 
@@ -85,7 +89,6 @@ bool QAccessibleQuickItem::clipsChildren() const
 {
     return static_cast<QQuickItem *>(item())->clip();
 }
-
 
 QAccessibleInterface *QAccessibleQuickItem::parent() const
 {
@@ -231,10 +234,11 @@ QString QAccessibleQuickItem::text(QAccessible::Text textType) const
     // the following block handles item-specific behavior
     if (role() == QAccessible::EditableText) {
         if (textType == QAccessible::Value) {
+            if (QTextDocument *doc = textDocument()) {
+                return doc->toPlainText();
+            }
             QVariant text = object()->property("text");
             return text.toString();
-        } else if (textType == QAccessible::Name) {
-            return object()->objectName();
         }
     }
 
@@ -309,6 +313,143 @@ QRect itemScreenRect(QQuickItem *item)
     QPoint screenPos = item->window()->mapToGlobal(scenePoint.toPoint());
     return QRect(screenPos, itemSize);
 }
+
+QTextDocument *QAccessibleQuickItem::textDocument() const
+{
+    QVariant docVariant = item()->property("textDocument");
+    if (docVariant.canConvert<QQuickTextDocument*>()) {
+        QQuickTextDocument *qqdoc = docVariant.value<QQuickTextDocument*>();
+        return qqdoc->textDocument();
+    }
+    return 0;
+}
+
+int QAccessibleQuickItem::characterCount() const
+{
+    if (m_doc) {
+        QTextCursor cursor = QTextCursor(m_doc);
+        cursor.movePosition(QTextCursor::End);
+        return cursor.position();
+    }
+    return text(QAccessible::Value).size();
+}
+
+int QAccessibleQuickItem::cursorPosition() const
+{
+    QVariant pos = item()->property("cursorPosition");
+    return pos.toInt();
+}
+
+void QAccessibleQuickItem::setCursorPosition(int position)
+{
+    item()->setProperty("cursorPosition", position);
+}
+
+QString QAccessibleQuickItem::text(int startOffset, int endOffset) const
+{
+    if (m_doc) {
+        QTextCursor cursor = QTextCursor(m_doc);
+        cursor.setPosition(startOffset);
+        cursor.setPosition(endOffset, QTextCursor::KeepAnchor);
+        return cursor.selectedText();
+    }
+    return text(QAccessible::Value).mid(startOffset, endOffset - startOffset);
+}
+
+QString QAccessibleQuickItem::textBeforeOffset(int offset, QAccessible::TextBoundaryType boundaryType,
+                                 int *startOffset, int *endOffset) const
+{
+    Q_ASSERT(startOffset);
+    Q_ASSERT(endOffset);
+
+    if (m_doc) {
+        QTextCursor cursor = QTextCursor(m_doc);
+        cursor.setPosition(offset);
+        QPair<int, int> boundaries = QAccessible::qAccessibleTextBoundaryHelper(cursor, boundaryType);
+        cursor.setPosition(boundaries.first - 1);
+        boundaries = QAccessible::qAccessibleTextBoundaryHelper(cursor, boundaryType);
+
+        *startOffset = boundaries.first;
+        *endOffset = boundaries.second;
+
+        return text(boundaries.first, boundaries.second);
+    } else {
+        return QAccessibleTextInterface::textBeforeOffset(offset, boundaryType, startOffset, endOffset);
+    }
+}
+
+QString QAccessibleQuickItem::textAfterOffset(int offset, QAccessible::TextBoundaryType boundaryType,
+                                int *startOffset, int *endOffset) const
+{
+    Q_ASSERT(startOffset);
+    Q_ASSERT(endOffset);
+
+    if (m_doc) {
+        QTextCursor cursor = QTextCursor(m_doc);
+        cursor.setPosition(offset);
+        QPair<int, int> boundaries = QAccessible::qAccessibleTextBoundaryHelper(cursor, boundaryType);
+        cursor.setPosition(boundaries.second);
+        boundaries = QAccessible::qAccessibleTextBoundaryHelper(cursor, boundaryType);
+
+        *startOffset = boundaries.first;
+        *endOffset = boundaries.second;
+
+        return text(boundaries.first, boundaries.second);
+    } else {
+        return QAccessibleTextInterface::textAfterOffset(offset, boundaryType, startOffset, endOffset);
+    }
+}
+
+QString QAccessibleQuickItem::textAtOffset(int offset, QAccessible::TextBoundaryType boundaryType,
+                             int *startOffset, int *endOffset) const
+{
+    Q_ASSERT(startOffset);
+    Q_ASSERT(endOffset);
+
+    if (m_doc) {
+        QTextCursor cursor = QTextCursor(m_doc);
+        cursor.setPosition(offset);
+        QPair<int, int> boundaries = QAccessible::qAccessibleTextBoundaryHelper(cursor, boundaryType);
+
+        *startOffset = boundaries.first;
+        *endOffset = boundaries.second;
+        return text(boundaries.first, boundaries.second);
+    } else {
+        return QAccessibleTextInterface::textAtOffset(offset, boundaryType, startOffset, endOffset);
+    }
+}
+
+void QAccessibleQuickItem::selection(int selectionIndex, int *startOffset, int *endOffset) const
+{
+    if (selectionIndex == 0) {
+        *startOffset = item()->property("selectionStart").toInt();
+        *endOffset = item()->property("selectionEnd").toInt();
+    } else {
+        *startOffset = 0;
+        *endOffset = 0;
+    }
+}
+
+int QAccessibleQuickItem::selectionCount() const
+{
+    if (item()->property("selectionStart").toInt() != item()->property("selectionEnd").toInt())
+        return 1;
+    return 0;
+}
+
+void QAccessibleQuickItem::addSelection(int /* startOffset */, int /* endOffset */)
+{
+
+}
+void QAccessibleQuickItem::removeSelection(int /* selectionIndex */)
+{
+
+}
+void QAccessibleQuickItem::setSelection(int /* selectionIndex */, int /* startOffset */, int /* endOffset */)
+{
+
+}
+
 
 #endif // QT_NO_ACCESSIBILITY
 

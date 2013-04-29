@@ -28,7 +28,7 @@
 /*!
 \page qtquick-modelviewsdata-cppmodels.html
 \title Using C++ Models with Qt Quick Views
-\brief using QtQuick views with models defined in C++
+\brief using Qt Quick views with models defined in C++
 
 
 \section1 Data Provided In A Custom C++ Model

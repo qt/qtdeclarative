@@ -72,6 +72,8 @@
 
 QT_BEGIN_NAMESPACE
 
+extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
+
 void QQuickWindowPrivate::updateFocusItemTransform()
 {
     Q_Q(QQuickWindow);
@@ -815,8 +817,8 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     \ingroup qtquick-visual
     \brief Creates a new top-level window
 
-    The Window object creates a new top-level window for a QtQuick scene. It automatically sets up the
-    window for use with QtQuick 2.x graphical types.
+    The Window object creates a new top-level window for a Qt Quick scene. It automatically sets up the
+    window for use with \c {QtQuick 2.x} graphical types.
 
     To use this type, you will need to import the module with the following line:
     \code
@@ -2653,7 +2655,10 @@ QOpenGLFramebufferObject *QQuickWindow::renderTarget() const
 /*!
     Grabs the contents of the window and returns it as an image.
 
-    This function might not work if the window is not visible.
+    It is possible to call the grabWindow() function when the window is not
+    visible. This requires that the window is \l{QWindow::create} {created}
+    and has a valid size and that no other QQuickWindow instances are rendering
+    in the same process.
 
     \warning Calling this function will cause performance problems.
 
@@ -2662,6 +2667,36 @@ QOpenGLFramebufferObject *QQuickWindow::renderTarget() const
 QImage QQuickWindow::grabWindow()
 {
     Q_D(QQuickWindow);
+    if (!isVisible()) {
+
+        if (d->context->isReady()) {
+            qWarning("QQuickWindow::grabWindow: scene graph already in use");
+            return QImage();
+        }
+
+        if (!handle() || !size().isValid()) {
+            qWarning("QQuickWindow::grabWindow: window must be created and have a valid size");
+            return QImage();
+        }
+
+        QOpenGLContext context;
+        context.setFormat(requestedFormat());
+        context.create();
+        context.makeCurrent(this);
+        d->context->initialize(&context);
+
+        d->polishItems();
+        d->syncSceneGraph();
+        d->renderSceneGraph(size());
+
+        QImage image = qt_gl_read_framebuffer(size(), false, false);
+        d->cleanupNodesOnShutdown();
+        d->context->invalidate();
+        context.doneCurrent();
+
+        return image;
+    }
+
     return d->windowManager->grab(this);
 }
 

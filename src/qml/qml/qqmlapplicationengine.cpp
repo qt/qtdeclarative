@@ -158,7 +158,7 @@ void QQmlApplicationEnginePrivate::_q_finishLoad(QObject *o)
   }
   \endcode
 
-  You can also use QCoreApplication with QQmlApplicationEngine, if you are not using any QML modules which require a QGuiApplication (such as QtQuick).
+  You can also use QCoreApplication with QQmlApplicationEngine, if you are not using any QML modules which require a QGuiApplication (such as \c QtQuick).
 
   List of configuration changes from a default QQmlEngine:
 

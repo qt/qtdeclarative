@@ -29,7 +29,7 @@
 \title Integrating QML and C++
 \brief Description of how to integrate QML and C++ code
 
-QML is designed to be easily extensible through C++ code. The classes in the \l {Qt QML} C++ module
+QML is designed to be easily extensible through C++ code. The classes in the \l {Qt QML} module
 enables QML objects to be loaded and manipulated from C++, and the nature of QML engine's
 integration with Qt's \l{Meta Object System}{meta object system} enables C++ functionality to be
 invoked directly from QML. This allows the development of hybrid applications which are implemented
@@ -43,7 +43,7 @@ with QML and JavaScript within \l{qtqml-documents-topic.html}{QML documents}, an
 C++
 \li Use and invoke some C++ functionality from QML (for example, to invoke your application logic,
 use a data model implemented in C++, or call some functions in a third-party C++ library)
-\li Access functionality in the \l {Qt QML} or QtQuick C++ API (for example, to dynamically generate
+\li Access functionality in the \l {Qt QML} or \l {Qt Quick} C++ API (for example, to dynamically generate
 images using QQuickImageProvider)
 \li Implement your own \l{qtqml-typesystem-objecttypes.html}{QML object types} from C++
 \unicode{0x2014} whether for use within your own specific application, or for distribution to others

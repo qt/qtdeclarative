@@ -202,6 +202,7 @@ public:
     Q_INVOKABLE QQuickItem *itemAt(qreal x, qreal y) const;
     Q_INVOKABLE void positionViewAtBeginning();
     Q_INVOKABLE void positionViewAtEnd();
+    Q_REVISION(1) Q_INVOKABLE void forceLayout();
 
     virtual void setContentX(qreal pos);
     virtual void setContentY(qreal pos);

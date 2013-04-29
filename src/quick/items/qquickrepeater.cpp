@@ -395,7 +395,7 @@ void QQuickRepeaterPrivate::createItems()
                     if (!delegateValidated) {
                         delegateValidated = true;
                         QObject* delegate = q->delegate();
-                        qmlInfo(delegate ? delegate : q) << q->tr("Delegate must be of Item type");
+                        qmlInfo(delegate ? delegate : q) << QQuickRepeater::tr("Delegate must be of Item type");
                     }
                 }
                 createFrom = ii;

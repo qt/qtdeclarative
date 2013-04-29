@@ -324,6 +324,7 @@ public:
     Q_INVOKABLE void mapToItem(QQmlV8Function*) const;
     Q_INVOKABLE void forceActiveFocus();
     Q_INVOKABLE void forceActiveFocus(Qt::FocusReason reason);
+    Q_INVOKABLE QQuickItem *nextItemInFocusChain(bool forward = true);
     Q_INVOKABLE QQuickItem *childAt(qreal x, qreal y) const;
 
 #ifndef QT_NO_IM

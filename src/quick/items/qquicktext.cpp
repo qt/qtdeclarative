@@ -313,7 +313,8 @@ qreal QQuickTextPrivate::getImplicitHeight() const
     combination with the NativeRendering render type will lend poor and sometimes pixelated
     results.
 
-    On HighDpi "retina" displays this property is ignored and QtRendering is always used.
+    On HighDpi "retina" displays and mobile and embedded platforms, this property is ignored
+    and QtRendering is always used.
 */
 QQuickText::RenderType QQuickText::renderType() const
 {
@@ -1334,10 +1335,10 @@ QQuickText::~QQuickText()
     \snippet qml/text/onLinkActivated.qml 0
 
     The example code will display the text
-    "The main website is at \l{http://qt.nokia.com}{Nokia Qt DF}."
+    "See the \l{http://qt-project.org}{Qt Project website}."
 
     Clicking on the highlighted link will output
-    \tt{http://qt.nokia.com link activated} to the console.
+    \tt{http://qt-project.org link activated} to the console.
 */
 
 /*!

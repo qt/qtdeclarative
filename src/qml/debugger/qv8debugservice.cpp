@@ -107,7 +107,8 @@ class QV8DebugServicePrivate : public QQmlDebugServicePrivate
 {
 public:
     QV8DebugServicePrivate()
-        : engine(0)
+        : engine(0),
+          debugIsolate(0)
     {
     }
 
@@ -119,6 +120,7 @@ public:
     QWaitCondition initializeCondition;
     QStringList breakOnSignals;
     const QV8Engine *engine;
+    v8::Isolate *debugIsolate;
 };
 
 QV8DebugService::QV8DebugService(QObject *parent)
@@ -186,6 +188,9 @@ void QV8DebugService::signalEmitted(const QString &signal)
 // executed in the gui thread
 void QV8DebugService::init()
 {
+    Q_D(QV8DebugService);
+    if (!d->debugIsolate)
+        d->debugIsolate = v8::Isolate::GetCurrent();
     v8::Debug::SetMessageHandler2(DebugMessageHandler);
     v8::Debug::SetDebugMessageDispatchHandler(DebugMessageDispatchHandler);
     QV4Compiler::enableV4(false);
@@ -267,7 +272,8 @@ void QV8DebugService::messageReceived(const QByteArray &message)
 
 void QV8DebugService::sendDebugMessage(const QString &message)
 {
-    v8::Debug::SendCommand(message.utf16(), message.size());
+    Q_D(QV8DebugService);
+    v8::Debug::SendCommand(message.utf16(), message.size(), 0, d->debugIsolate);
 }
 
 void QV8DebugService::processDebugMessages()

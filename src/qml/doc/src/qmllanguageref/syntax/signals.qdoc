@@ -115,7 +115,7 @@ Even though the \l MouseArea documentation does not document a signal handler na
 
 \section2 Using the Connections Type
 
-In some cases it may be desirable to access a signal outside of the object that emits it. For these purposes, the QtQuick module provides the \l Connections type for connecting to signals of arbitrary objects. A \l Connections object can receive any signal from its specified \l {Connections::target}{target}.
+In some cases it may be desirable to access a signal outside of the object that emits it. For these purposes, the \c QtQuick module provides the \l Connections type for connecting to signals of arbitrary objects. A \l Connections object can receive any signal from its specified \l {Connections::target}{target}.
 
 For example, the \c onClicked handler in the earlier example could have been received by the root \l Rectangle instead, by placing the \c onClicked handler in a \l Connections object that has its \l {Connections::target}{target} set to the \l MouseArea:
 

@@ -89,9 +89,9 @@ Rectangle {
 }
 \endqml
 
-This declares an object of type \l Rectangle, followed by a set of curly braces that encompasses the attributes defined for that object. The \l Rectangle type is a type made available by the \l QtQuick module, and the attributes defined in this case are the values of the rectangle's \c width, \c height and \c color properties. (These are properties made available by the \l Rectangle type, as described in the \l Rectangle documentation.)
+This declares an object of type \l Rectangle, followed by a set of curly braces that encompasses the attributes defined for that object. The \l Rectangle type is a type made available by the \c QtQuick module, and the attributes defined in this case are the values of the rectangle's \c width, \c height and \c color properties. (These are properties made available by the \l Rectangle type, as described in the \l Rectangle documentation.)
 
-The above object can be loaded by the engine if it is part of a \l{qtqml-documents-topic.html}{QML document}. That is, if the source code is complemented with \e import statement that imports the QtQuick module (to make the \l Rectangle type available), as below:
+The above object can be loaded by the engine if it is part of a \l{qtqml-documents-topic.html}{QML document}. That is, if the source code is complemented with \e import statement that imports the \c QtQuick module (to make the \l Rectangle type available), as below:
 
 \qml
 import QtQuick 2.0
@@ -103,7 +103,7 @@ Rectangle {
 }
 \endqml
 
-When placed into a \c .qml file and loaded by the QML engine, the above code creates a \l Rectangle object using the \l Rectangle type supplied by the QtQuick module:
+When placed into a \c .qml file and loaded by the QML engine, the above code creates a \l Rectangle object using the \l Rectangle type supplied by the \c QtQuick module:
 
 \image qtqml-syntax-basics-object-declaration.png
 
@@ -140,7 +140,7 @@ Rectangle {
 When this code is loaded by the engine, it creates an object tree with a \l Rectangle object at the root; this object has a \l Gradient child object, which in turn has two \l GradientStop children.
 
 Note, however, that this is a parent-child relationship in the context of the QML object tree, not
-in the context of the visual scene. The concept of a parent-child relationship in a visual scene is provided by the \l Item type from the \l QtQuick module, which is the base type for most QML types, as most QML objects are intended to be visually rendered. For example, \l Rectangle and \l Text are both \l {Item}-based types, and below, a \l Text object has been declared as a visual child of a \l Rectangle object:
+in the context of the visual scene. The concept of a parent-child relationship in a visual scene is provided by the \l Item type from the \c QtQuick module, which is the base type for most QML types, as most QML objects are intended to be visually rendered. For example, \l Rectangle and \l Text are both \l {Item}-based types, and below, a \l Text object has been declared as a visual child of a \l Rectangle object:
 
 \qml
 import QtQuick 2.0

@@ -176,7 +176,7 @@ public:
     as a model.
 
     This element is now primarily available as ObjectModel in the QtQml.Models module.
-    VisualItemModel continues to be provided, with the same implementation, in QtQuick for
+    VisualItemModel continues to be provided, with the same implementation, in \c QtQuick for
     compatibility reasons.
 
     For full details about the type, see the \l ObjectModel documentation.

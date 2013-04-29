@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \brief Provides QML types for certain QWidgets
     \internal
 
-    This QML module contains types which should not be depended upon in QtQuick
+    This QML module contains types which should not be depended upon in Qt Quick
     applications, but are available if the Widgets module is linked. It is
     recommended to load components from this module conditionally, if at all,
     and to provide fallback implementations in case they fail to load.

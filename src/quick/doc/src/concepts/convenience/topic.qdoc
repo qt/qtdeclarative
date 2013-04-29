@@ -66,7 +66,7 @@ required (or when it becomes available).
 \section1 Dynamic Signal Connections
 
 QML supports dynamic signal connections through a signal's \c{connect()}
-method. The QtQuick module provides the convenience \l Connections type which
+method. The \l {Qt Quick} module provides the convenience \l Connections type which
 allows setting up a signal connection involving an object which isn't part of
 the static object hierarchy.  It also allows the connection to be dynamically
 retargeted at runtime, which allows an application to process different signal

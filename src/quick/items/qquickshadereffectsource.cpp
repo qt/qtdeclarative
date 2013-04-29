@@ -468,7 +468,7 @@ QImage QQuickShaderEffectTexture::toImage() const
     \since QtQuick 2.0
     \inherits Item
     \ingroup qtquick-effects
-    \brief Renders a QtQuick item into a texture and displays it
+    \brief Renders a \l {Qt Quick} item into a texture and displays it
 
     The ShaderEffectSource type renders \l sourceItem into a texture and
     displays it in the scene. \l sourceItem is drawn into the texture as though
@@ -478,7 +478,7 @@ QImage QQuickShaderEffectTexture::toImage() const
     ShaderEffectSource can be used as:
     \list
     \li a texture source in a \l ShaderEffect.
-       This allows you to apply custom shader effects to any QtQuick item.
+       This allows you to apply custom shader effects to any \l {Qt Quick} item.
     \li a cache for a complex item.
        The complex item can be rendered once into the texture, which can
        then be animated freely without the need to render the complex item

@@ -123,7 +123,7 @@ private:
 
 class QQuickMouseAreaPrivate;
 class QQuickWheelEvent;
-// used in QtLocation
+// used in Qt Location
 class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
 {
     Q_OBJECT

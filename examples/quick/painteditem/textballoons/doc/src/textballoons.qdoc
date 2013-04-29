@@ -43,12 +43,12 @@
     The example consists of an item class, a plugin class and a QML file
     to use this plugin. The \c TextBalloon class represents the individual
     text balloons extending QQuickPaintedItem, the \c TextBalloonPlugin class
-    represents the skeleton code for a QtQuick plugin and the
+    represents the skeleton code for a \l {Qt Quick} plugin and the
     \c textballoons.qml file is used to load the plugin and display the text
     balloons.
 
     We will focus on the \c TextBalloon class first and continue with the
-    \c textballoons.qml file. For an example on how to implement a QtQuick
+    \c textballoons.qml file. For an example on how to implement a \l {Qt Quick}
     plugin please look at \l{declarative/tutorials/extending/chapter6-plugins}
     {Writing an Extension Plugin}
 

@@ -31,7 +31,7 @@
 
 \section1 The Rectangle Type
 
-For the most basic of visuals, QtQuick provides a \l Rectangle type to draw rectangles. These rectangles can be colored with a
+For the most basic of visuals, \l {Qt Quick} provides a \l Rectangle type to draw rectangles. These rectangles can be colored with a
 color or a vertical gradient. The \l Rectangle type can also draw borders on the rectangle.
 
 For drawing custom shapes beyond rectangles, see the \l Canvas type or display
@@ -42,7 +42,7 @@ a pre-rendered image using the \l Image type.
 
 \section1 The Image Type
 
-QtQuick provides an \l Image type which may be used to display images.  The
+\l {Qt Quick} provides an \l Image type which may be used to display images.  The
 \l Image type has a \l source property whose value can be a remote or local
 URL, or the URL of an image file embedded in a compiled resource file.
 
@@ -54,11 +54,11 @@ borders. \l AnimatedImage plays animated .gif and .mng images. \l AnimatedSprite
 and \l SpriteSequence play animations comprised of multiple frames stored adjacently
 in a non animated image format.
 
-For displaying video files and camera data, see the \l QtMultimedia module.
+For displaying video files and camera data, see the \l {Qt Multimedia} module.
 
 \section1 Shared Visual Properties
 
-All visual items provided by the QtQuick are based on the Item type, which provides a common set of attributes for
+All visual items provided by \l {Qt Quick} are based on the Item type, which provides a common set of attributes for
 visual items, including opacity and transform attributes.
 
 \section2 Opacity and Visibility

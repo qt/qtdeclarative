@@ -282,7 +282,7 @@ QImage qt_image_convolute_filter(const QImage& src, const QVector<qreal>& weight
              for (int cx=0; cx<sides; cx++) {
                int scy = sy + cy - half;
                int scx = sx + cx - half;
-               if (scy >= 0 && scy < w && scx >= 0 && scx < h) {
+               if (scy >= 0 && scy < h && scx >= 0 && scx < w) {
                   const QRgb *sr = (const QRgb*)(src.constScanLine(scy));
                   const unsigned char* sRgb = ((const unsigned char*)&sr[scx]);
                   qreal wt = radius ? weights[0] : weights[cy*sides+cx];

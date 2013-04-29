@@ -30,7 +30,7 @@
 \title Writing QML Extensions with C++
 \brief tutorial about extending QML with Qt C++
 
-The \l Qt QML} C++ module provides a set of APIs for extending QML through
+The \l {Qt QML} module provides a set of APIs for extending QML through
 C++ extensions. You can write extensions to add your own QML types, extend existing
 Qt types, or call C/C++ functions that are not accessible from ordinary QML code.
 

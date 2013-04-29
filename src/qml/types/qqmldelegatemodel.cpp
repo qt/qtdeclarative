@@ -128,7 +128,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
     The VisualDataModel type encapsulates a model and the delegate that will
     be instantiated for items in a model.
 
-    This type is provided by QtQuick 2 for compatibility reasons. The same implementation
+    This type is provided by \c {QtQuick 2} for compatibility reasons. The same implementation
     is now primarily available as DelegateModel in the QtQml.Models module.
 
     \sa {QtQml.Models2::DelegateModel}
@@ -142,7 +142,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
     The DelegateModel type encapsulates a model and the delegate that will
     be instantiated for items in the model.
 
-    This element is also available as DelegateModel in the QtQuick module. For full details,
+    This element is also available as DelegateModel in the \c QtQuick module. For full details,
     see the \l DelegateModel documentation.
 
     The DelegateModel type encapsulates a model and the delegate that will
@@ -1158,8 +1158,8 @@ void QQmlDelegateModelPrivate::itemsInserted(
             cacheIndex = insert.cacheIndex + insert.count;
         }
     }
-    for (; cacheIndex < m_cache.count(); ++cacheIndex)
-        incrementIndexes(m_cache.at(cacheIndex), m_groupCount, inserted);
+    for (const QList<QQmlDelegateModelItem *> cache = m_cache; cacheIndex < cache.count(); ++cacheIndex)
+        incrementIndexes(cache.at(cacheIndex), m_groupCount, inserted);
 }
 
 void QQmlDelegateModelPrivate::itemsInserted(const QVector<Compositor::Insert> &inserts)
@@ -1183,8 +1183,9 @@ void QQmlDelegateModel::_q_itemsInserted(int index, int count)
 
     d->m_count += count;
 
-    for (int i = 0, c = d->m_cache.count();  i < c; ++i) {
-        QQmlDelegateModelItem *item = d->m_cache.at(i);
+    const QList<QQmlDelegateModelItem *> cache = d->m_cache;
+    for (int i = 0, c = cache.count();  i < c; ++i) {
+        QQmlDelegateModelItem *item = cache.at(i);
         if (item->modelIndex() >= index)
             item->setModelIndex(item->modelIndex() + count);
     }
@@ -1275,8 +1276,8 @@ void QQmlDelegateModelPrivate::itemsRemoved(
         }
     }
 
-    for (; cacheIndex < m_cache.count(); ++cacheIndex)
-        incrementIndexes(m_cache.at(cacheIndex), m_groupCount, removed);
+    for (const QList<QQmlDelegateModelItem *> cache = m_cache; cacheIndex < cache.count(); ++cacheIndex)
+        incrementIndexes(cache.at(cacheIndex), m_groupCount, removed);
 }
 
 void QQmlDelegateModelPrivate::itemsRemoved(const QVector<Compositor::Remove> &removes)
@@ -1298,9 +1299,9 @@ void QQmlDelegateModel::_q_itemsRemoved(int index, int count)
         return;
 
     d->m_count -= count;
-
-    for (int i = 0, c = d->m_cache.count();  i < c; ++i) {
-        QQmlDelegateModelItem *item = d->m_cache.at(i);
+    const QList<QQmlDelegateModelItem *> cache = d->m_cache;
+    for (int i = 0, c = cache.count();  i < c; ++i) {
+        QQmlDelegateModelItem *item = cache.at(i);
         if (item->modelIndex() >= index + count)
             item->setModelIndex(item->modelIndex() - count);
         else  if (item->modelIndex() >= index)
@@ -1346,8 +1347,9 @@ void QQmlDelegateModel::_q_itemsMoved(int from, int to, int count)
     const int maximum = qMax(from, to) + count;
     const int difference = from > to ? count : -count;
 
-    for (int i = 0, c = d->m_cache.count();  i < c; ++i) {
-        QQmlDelegateModelItem *item = d->m_cache.at(i);
+    const QList<QQmlDelegateModelItem *> cache = d->m_cache;
+    for (int i = 0, c = cache.count();  i < c; ++i) {
+        QQmlDelegateModelItem *item = cache.at(i);
         if (item->modelIndex() >= from && item->modelIndex() < from + count)
             item->setModelIndex(item->modelIndex() - from + to);
         else if (item->modelIndex() >= minimum && item->modelIndex() < maximum)
@@ -1421,8 +1423,9 @@ void QQmlDelegateModel::_q_modelReset()
     if (d->m_complete) {
         d->m_count = d->m_adaptorModel.count();
 
-        for (int i = 0, c = d->m_cache.count();  i < c; ++i) {
-            QQmlDelegateModelItem *item = d->m_cache.at(i);
+        const QList<QQmlDelegateModelItem *> cache = d->m_cache;
+        for (int i = 0, c = cache.count();  i < c; ++i) {
+            QQmlDelegateModelItem *item = cache.at(i);
             if (item->modelIndex() != -1)
                 item->setModelIndex(-1);
         }
@@ -2183,7 +2186,7 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
     The DelegateModelGroup type provides a means to address the model data of a DelegateModel's
     delegate items, as well as sort and filter these delegate items.
 
-    This element is also available as DelegateModelGroup in the QtQuick module. For full details,
+    This element is also available as DelegateModelGroup in the \c QtQuick module. For full details,
     see the \l DelegateModelGroup documentation.
 
     \sa {QtQuick::DelegateModelGroup}
