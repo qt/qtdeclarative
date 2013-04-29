@@ -281,6 +281,8 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
             emit widthChanged();
             emit heightChanged();
         }
+        if (!oldScreen || screen->name() != oldScreen->name())
+            emit nameChanged();
         if (!oldScreen || screen->orientation() != oldScreen->orientation())
             emit orientationChanged();
         if (!oldScreen || screen->primaryOrientation() != oldScreen->primaryOrientation())
