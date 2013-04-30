@@ -2259,8 +2259,10 @@ void QQuickItemView::destroyingItem(QObject *object)
 {
     Q_D(QQuickItemView);
     QQuickItem* item = qmlobject_cast<QQuickItem*>(object);
-    item->setParentItem(0);
-    d->unrequestedItems.remove(item);
+    if (item) {
+        item->setParentItem(0);
+        d->unrequestedItems.remove(item);
+    }
 }
 
 bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)

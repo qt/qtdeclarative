@@ -84,6 +84,23 @@ Item {
         }
     }
 
+    ListView {
+        id: asyncListViewLoaderView
+        width: 360
+        height: 360
+        model: asyncListViewLoaderModel
+
+        currentIndex: 0
+
+        delegate: Loader {
+            width: asyncListViewLoaderView.width
+            height: asyncListViewLoaderView.height
+
+            source: component
+            asynchronous: true
+        }
+    }
+
     ListModel { id: emptymodel }
     ListModel { id: manyitems }
     ListModel { id: firstmodel; ListElement { name: "FirstModelElement0" } }
@@ -98,10 +115,18 @@ Item {
         ListElement { component: "data/asyncloadercurrentindex.qml" }
         ListElement { component: "data/asyncloadercurrentindex.qml" }
     }
-
+    ListModel {
+        id: asyncListViewLoaderModel
+        ListElement { component: "data/asynclistviewloader.qml" }
+        ListElement { component: "data/asynclistviewloader.qml" }
+        ListElement { component: "data/asynclistviewloader.qml" }
+        ListElement { component: "data/asynclistviewloader.qml" }
+        ListElement { component: "data/asynclistviewloader.qml" }
+    }
 
     TestCase {
         name: "ListView"
+        when: windowShown
 
         function test_empty() {
             compare(emptylist.count, 0)
@@ -210,6 +235,17 @@ Item {
                 asyncLoaderCurrentIndexListView.currentIndex = 5;
             }
             wait(1000)
+        }
+
+        function test_asyncListViewLoader() {
+            for (var i = 0; i < 50; i++) {
+                wait(10);
+                asyncListViewLoaderView.currentIndex = 0;
+                asyncListViewLoaderView.currentIndex = 1;
+                asyncListViewLoaderView.currentIndex = 2;
+                asyncListViewLoaderView.currentIndex = 3;
+                asyncListViewLoaderView.currentIndex = 4;
+            }
         }
     }
 }
