@@ -121,6 +121,10 @@ void EtcTexture::bind()
                 "paddedWidth: " << m_paddedSize.width() << "paddedHeight: " << m_paddedSize.height();
 #endif
 
+#ifndef QT_NO_DEBUG
+    while (glGetError() != GL_NO_ERROR) { }
+#endif
+
     QOpenGLContext *ctx = QOpenGLContext::currentContext();
     Q_ASSERT(ctx != 0);
     ctx->functions()->glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_ETC1_RGB8_OES,
@@ -128,6 +132,7 @@ void EtcTexture::bind()
                                              (m_paddedSize.width() * m_paddedSize.height()) >> 1,
                                              m_data.data() + 16);
 
+#ifndef QT_NO_DEBUG
     // Gracefully fail in case of an error...
     GLuint error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -137,6 +142,7 @@ void EtcTexture::bind()
         m_texture_id = 0;
         return;
     }
+#endif
 
     m_uploaded = true;
     updateBindOptions(true);
