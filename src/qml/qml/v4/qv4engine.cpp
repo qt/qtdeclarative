@@ -415,9 +415,9 @@ ArrayObject *ExecutionEngine::newArrayObject(ExecutionContext *ctx)
     return object;
 }
 
-Object *ExecutionEngine::newDateObject(const Value &value)
+DateObject *ExecutionEngine::newDateObject(const Value &value)
 {
-    Object *object = new (memoryManager) DateObject(this, value);
+    DateObject *object = new (memoryManager) DateObject(this, value);
     object->prototype = datePrototype;
     return object;
 }

@@ -99,8 +99,8 @@ static QString jsStack() {
         int columnNumber = frame->GetColumn();
 
         QString stackFrame =
-                QString::fromLatin1("%1 (%2:%3:%4)").arg(QJSConverter::toString(function),
-                                                         QJSConverter::toString(script),
+                QString::fromLatin1("%1 (%2:%3:%4)").arg(function->v4Value().asString()->toQString(),
+                                                         script->v4Value().asString()->toQString(),
                                                          QString::number(lineNumber),
                                                          QString::number(columnNumber));
         stackFrames.append(stackFrame);

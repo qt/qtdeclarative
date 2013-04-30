@@ -71,6 +71,7 @@
 #include <private/qv4mm_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4globalobject_p.h>
+#include <private/qv4regexpobject_p.h>
 
 Q_DECLARE_METATYPE(QList<int>)
 
@@ -361,7 +362,7 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             return QV4::Value::fromObject(m_v4Engine->newDateObject(QV4::Value::fromDouble(
                                             qtDateTimeToJsDate(QDateTime(QDate(1970,1,1), *reinterpret_cast<const QTime *>(ptr))))));
             case QMetaType::QRegExp:
-                return QJSConverter::toRegExp(*reinterpret_cast<const QRegExp *>(ptr))->v4Value();
+                return QV4::Value::fromObject(QJSConverter::toRegExp(*reinterpret_cast<const QRegExp *>(ptr)));
             case QMetaType::QObjectStar:
                 return newQObject(*reinterpret_cast<QObject* const *>(ptr));
             case QMetaType::QStringList:
@@ -439,8 +440,8 @@ v8::Local<v8::Script> QV8Engine::qmlModeCompile(const QString &source,
                                                 const QString &fileName,
                                                 quint16 lineNumber)
 {
-    v8::Local<v8::String> v8source = QJSConverter::toString(source);
-    v8::Local<v8::String> v8fileName = QJSConverter::toString(fileName);
+    v8::Handle<v8::String> v8source = QV4::Value::fromString(m_v4Engine->newString(source));
+    v8::Handle<v8::String> v8fileName = QV4::Value::fromString(m_v4Engine->newString(fileName));
 
     v8::ScriptOrigin origin(v8fileName, v8::Integer::New(lineNumber - 1));
 
@@ -459,8 +460,8 @@ v8::Local<v8::Script> QV8Engine::qmlModeCompile(const char *source, int sourceLe
     if (sourceLength == -1)
         sourceLength = int(strlen(source));
 
-    v8::Local<v8::String> v8source = v8::String::New(source, sourceLength);
-    v8::Local<v8::String> v8fileName = QJSConverter::toString(fileName);
+    v8::Handle<v8::String> v8source = QV4::Value::fromString(m_v4Engine->newString(QString::fromUtf8(source, sourceLength)));
+    v8::Handle<v8::String> v8fileName = QV4::Value::fromString(m_v4Engine->newString(fileName));
 
     v8::ScriptOrigin origin(v8fileName, v8::Integer::New(lineNumber - 1));
 
@@ -529,7 +530,7 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
 
     if (value->IsRegExp()) {
         v8::Context::Scope scope(context());
-        return QJSConverter::toRegExp(v8::Handle<v8::RegExp>::Cast(value));
+        return QJSConverter::toRegExp(value->v4Value().asRegExpObject());
     }
     if (value->IsArray()) {
         v8::Context::Scope scope(context());
@@ -1048,7 +1049,7 @@ QV4::Value QV8Engine::metaTypeToJS(int type, const void *data)
     case QMetaType::QChar:
         return QV4::Value::fromUInt32((*reinterpret_cast<const QChar*>(data)).unicode());
     case QMetaType::QStringList:
-        result = QJSConverter::toStringList(*reinterpret_cast<const QStringList *>(data))->v4Value();
+        result = QJSConverter::toStringList(*reinterpret_cast<const QStringList *>(data));
         break;
     case QMetaType::QVariantList:
         result = variantListToJS(*reinterpret_cast<const QVariantList *>(data));
@@ -1057,13 +1058,13 @@ QV4::Value QV8Engine::metaTypeToJS(int type, const void *data)
         result = variantMapToJS(*reinterpret_cast<const QVariantMap *>(data));
         break;
     case QMetaType::QDateTime:
-        result = QJSConverter::toDateTime(*reinterpret_cast<const QDateTime *>(data))->v4Value();
+        result = QV4::Value::fromObject(QJSConverter::toDateTime(*reinterpret_cast<const QDateTime *>(data)));
         break;
     case QMetaType::QDate:
-        result = QJSConverter::toDateTime(QDateTime(*reinterpret_cast<const QDate *>(data)))->v4Value();
+        result = QV4::Value::fromObject(QJSConverter::toDateTime(QDateTime(*reinterpret_cast<const QDate *>(data))));
         break;
     case QMetaType::QRegExp:
-        result = QJSConverter::toRegExp(*reinterpret_cast<const QRegExp *>(data))->v4Value();
+        result = QV4::Value::fromObject(QJSConverter::toRegExp(*reinterpret_cast<const QRegExp *>(data)));
         break;
     case QMetaType::QObjectStar:
         result = newQObject(*reinterpret_cast<QObject* const *>(data));
@@ -1161,7 +1162,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
         } break;
     case QMetaType::QRegExp:
         if (QV4::RegExpObject *r = value.asRegExpObject()) {
-            *reinterpret_cast<QRegExp *>(data) = QJSConverter::toRegExp(v8::Handle<v8::RegExp>::Cast(v8::Value::fromV4Value(value)));
+            *reinterpret_cast<QRegExp *>(data) = QJSConverter::toRegExp(r);
             return true;
         } break;
     case QMetaType::QObjectStar: {
@@ -1172,7 +1173,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
     }
     case QMetaType::QStringList:
         if (QV4::ArrayObject *a = value.asArrayObject()) {
-            *reinterpret_cast<QStringList *>(data) = QJSConverter::toStringList(v8::Handle<v8::Array>::Cast(v8::Value::fromV4Value(value)));
+            *reinterpret_cast<QStringList *>(data) = QJSConverter::toStringList(value);
             return true;
         } break;
     case QMetaType::QVariantList:
@@ -1304,9 +1305,9 @@ QVariant QV8Engine::variantFromJS(const QV4::Value &value,
     if (QV4::ArrayObject *a = value.asArrayObject())
         return variantListFromJS(a, visitedObjects);
     if (QV4::DateObject *d = value.asDateObject())
-        return QJSConverter::toDateTime(v8::Handle<v8::Date>::Cast(v8::Value::fromV4Value(value)));
-    if (value.asRegExpObject())
-        return QJSConverter::toRegExp(v8::Handle<v8::RegExp>::Cast(v8::Value::fromV4Value(value)));
+        return QJSConverter::toDateTime(d);
+    if (QV4::RegExpObject *re = value.asRegExpObject())
+        return QJSConverter::toRegExp(re);
     if (isVariant(v8::Value::fromV4Value(value)))
         return variantWrapper()->variantValue(v8::Value::fromV4Value(value));
     if (isQObject(value))
@@ -1521,9 +1522,9 @@ QV8Engine::ThreadData::~ThreadData()
     }
 }
 
-v8::Local<v8::String> QV8Engine::toString(const QString &string)
+QV4::Value QV8Engine::toString(const QString &string)
 {
-    return QJSConverter::toString(string);
+    return QV4::Value::fromString(m_v4Engine->newString(string));
 }
 
 

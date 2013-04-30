@@ -55,6 +55,12 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QV4 {
+struct RegExpObject;
+struct DateObject;
+struct Value;
+}
+
 /*
   \internal
   \class QJSConverter
@@ -65,43 +71,33 @@ QT_BEGIN_NAMESPACE
 */
 class QJSConverter {
 public:
-    static quint32 toArrayIndex(const QString& string);
-
-    static QString toString(v8::Handle<v8::String> jsString);
-    static v8::Local<v8::String> toString(const QString& string);
-    static QString toString(double value);
-
-    enum {
-        PropertyAttributeMask = v8::ReadOnly | v8::DontDelete | v8::DontEnum,
-    };
-
     // Converts a JS RegExp to a QRegExp.
     // The conversion is not 100% exact since ECMA regexp and QRegExp
     // have different semantics/flags, but we try to do our best.
-    static QRegExp toRegExp(v8::Handle<v8::RegExp> jsRegExp);
+    static QRegExp toRegExp(const QV4::RegExpObject *jsRegExp);
 
     // Converts a QRegExp to a JS RegExp.
     // The conversion is not 100% exact since ECMA regexp and QRegExp
     // have different semantics/flags, but we try to do our best.
-    static v8::Local<v8::RegExp> toRegExp(const QRegExp &re);
+    static QV4::RegExpObject *toRegExp(const QRegExp &re);
 
     // Converts a QStringList to JS.
     // The result is a new Array object with length equal to the length
     // of the QStringList, and the elements being the QStringList's
     // elements converted to JS Strings.
-    static v8::Local<v8::Array> toStringList(const QStringList &lst);
+    static QV4::Value toStringList(const QStringList &list);
 
     // Converts a JS Array object to a QStringList.
     // The result is a QStringList with length equal to the length
     // of the JS Array, and elements being the JS Array's elements
     // converted to QStrings.
-    static QStringList toStringList(v8::Handle<v8::Array> jsArray);
+    static QStringList toStringList(const QV4::Value &jsArray);
 
     // Converts a JS Date to a QDateTime.
-    static QDateTime toDateTime(v8::Handle<v8::Date> jsDate);
+    static QDateTime toDateTime(QV4::DateObject *jsDate);
 
     // Converts a QDateTime to a JS Date.
-    static v8::Local<v8::Value> toDateTime(const QDateTime &dt);
+    static QV4::DateObject *toDateTime(const QDateTime &dt);
 };
 
 QT_END_NAMESPACE

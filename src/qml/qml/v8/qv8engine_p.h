@@ -328,7 +328,7 @@ public:
     inline QObject *toQObject(const QV4::Value &value);
 
     // Return a JS string for the given QString \a string
-    v8::Local<v8::String> toString(const QString &string);
+    QV4::Value toString(const QString &string);
 
     // Create a new value type object
     inline QV4::Value newValueType(QObject *, int coreIndex, QQmlValueType *);

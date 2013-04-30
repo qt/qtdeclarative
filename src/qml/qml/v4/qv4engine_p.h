@@ -228,7 +228,7 @@ struct Q_QML_EXPORT ExecutionEngine
 
     ArrayObject *newArrayObject(ExecutionContext *ctx);
 
-    Object *newDateObject(const Value &value);
+    DateObject *newDateObject(const Value &value);
 
     RegExpObject *newRegExpObject(const QString &pattern, int flags);
     RegExpObject *newRegExpObject(RegExp* re, bool global);
