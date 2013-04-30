@@ -75,7 +75,7 @@ namespace {
             shadowPainter.end();
 
             if (blur > 0)
-                qt_image_boxblur(shadowImage, blur/2, true);
+                qt_image_boxblur(shadowImage, qMax(1, qRound(blur / 2)), true);
 
             // blacken the image with shadow color...
             shadowPainter.begin(&shadowImage);

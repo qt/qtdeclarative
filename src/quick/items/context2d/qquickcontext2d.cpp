@@ -264,50 +264,86 @@ public:
 
 QImage qt_image_convolute_filter(const QImage& src, const QVector<qreal>& weights, int radius = 0)
 {
-    int sides = radius ? radius : qRound(qSqrt(weights.size()));
-    int half = qFloor(sides/2);
+    // weights 3x3 => delta 1
+    int delta = radius ? radius : qFloor(qSqrt(weights.size()) / qreal(2));
+    int filterDim = 2 * delta + 1;
 
     QImage dst = QImage(src.size(), src.format());
+
     int w = src.width();
     int h = src.height();
-    for (int y = 0; y < dst.height(); ++y) {
-      QRgb *dr = (QRgb*)dst.scanLine(y);
-      for (int x = 0; x < dst.width(); ++x) {
-          unsigned char* dRgb = ((unsigned char*)&dr[x]);
-          unsigned char red=0, green=0, blue=0, alpha=0;
-          int sy = y;
-          int sx = x;
 
-          for (int cy=0; cy<sides; cy++) {
-             for (int cx=0; cx<sides; cx++) {
-               int scy = sy + cy - half;
-               int scx = sx + cx - half;
-               if (scy >= 0 && scy < h && scx >= 0 && scx < w) {
-                  const QRgb *sr = (const QRgb*)(src.constScanLine(scy));
-                  const unsigned char* sRgb = ((const unsigned char*)&sr[scx]);
-                  qreal wt = radius ? weights[0] : weights[cy*sides+cx];
-                  red += sRgb[0] * wt;
-                  green += sRgb[1] * wt;
-                  blue += sRgb[2] * wt;
-                  alpha += sRgb[3] * wt;
-               }
-             }
-          }
-          dRgb[0] = red;
-          dRgb[1] = green;
-          dRgb[2] = blue;
-          dRgb[3] = alpha;
-      }
+    const QRgb *sr = (const QRgb *)(src.constBits());
+    int srcStride = src.bytesPerLine() / 4;
+
+    QRgb *dr = (QRgb*)dst.bits();
+    int dstStride = dst.bytesPerLine() / 4;
+
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            int red = 0;
+            int green = 0;
+            int blue = 0;
+            int alpha = 0;
+
+            qreal redF = 0;
+            qreal greenF = 0;
+            qreal blueF = 0;
+            qreal alphaF = 0;
+
+            int sy = y;
+            int sx = x;
+
+            for (int cy = 0; cy < filterDim; ++cy) {
+                int scy = sy + cy - delta;
+
+                if (scy < 0 || scy >= h)
+                    continue;
+
+                const QRgb *sry = sr + scy * srcStride;
+
+                for (int cx = 0; cx < filterDim; ++cx) {
+                    int scx = sx + cx - delta;
+
+                    if (scx < 0 || scx >= w)
+                        continue;
+
+                    const QRgb col = sry[scx];
+
+                    if (radius) {
+                        red += qRed(col);
+                        green += qGreen(col);
+                        blue += qBlue(col);
+                        alpha += qAlpha(col);
+                    } else {
+                        qreal wt = weights[cy * filterDim + cx];
+
+                        redF += qRed(col) * wt;
+                        greenF += qGreen(col) * wt;
+                        blueF += qBlue(col) * wt;
+                        alphaF += qAlpha(col) * wt;
+                    }
+                }
+            }
+
+            if (radius)
+                dr[x] = qRgba(qRound(red * weights[0]), qRound(green * weights[0]), qRound(blue * weights[0]), qRound(alpha * weights[0]));
+            else
+                dr[x] = qRgba(qRound(redF), qRound(greenF), qRound(blueF), qRound(alphaF));
+        }
+
+        dr += dstStride;
     }
+
     return dst;
 }
 
 void qt_image_boxblur(QImage& image, int radius, bool quality)
 {
     int passes = quality? 3: 1;
-    for (int i=0; i < passes; i++) {
-        image = qt_image_convolute_filter(image, QVector<qreal>() << 1.0/(radius * radius * 1.0), radius);
-    }
+    int filterSize = 2 * radius + 1;
+    for (int i = 0; i < passes; ++i)
+        image = qt_image_convolute_filter(image, QVector<qreal>() << 1.0 / (filterSize * filterSize), radius);
 }
 
 static QPainter::CompositionMode qt_composite_mode_from_string(const QString &compositeOperator)
