@@ -408,10 +408,11 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             // XXX Can this be made more by using Array as a prototype and implementing
             // directly against QList<QObject*>?
             const QList<QObject *> &list = *(QList<QObject *>*)ptr;
-            v8::Local<v8::Array> array = v8::Array::New(list.count());
+            QV4::ArrayObject *a = m_v4Engine->newArrayObject();
+            a->setArrayLength(list.count());
             for (int ii = 0; ii < list.count(); ++ii)
-                array->Set(ii, newQObject(list.at(ii)));
-            return array->v4Value();
+                a->arrayData[ii].value = newQObject(list.at(ii));
+            return QV4::Value::fromObject(a);
         }
 
         bool objOk;
@@ -510,43 +511,36 @@ QQmlContextData *QV8Engine::callingContext()
 // Date -> QVariant(QDateTime)
 // RegExp -> QVariant(QRegExp)
 // [Any other object] -> QVariantMap(...)
-QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
+QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
 {
-    if (value->IsNull() || value->IsUndefined())
+    if (value.isNull() || value.isUndefined())
         return QVariant();
-    if (value->IsBoolean())
-        return value->ToBoolean()->Value();
-    if (value->IsInt32())
-        return value->ToInt32()->Value();
-    if (value->IsNumber())
-        return value->ToNumber()->Value();
-    if (value->IsString())
-        return value.get()->v4Value().toString(m_v4Engine->current)->toQString();
-    if (value->IsDate())
-        return qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(value)->NumberValue());
+    if (value.isBoolean())
+        return value.booleanValue();
+    if (value.isInteger())
+        return value.integerValue();
+    if (value.isNumber())
+        return value.asDouble();
+    if (value.isString())
+        return value.stringValue()->toQString();
+    if (QV4::DateObject *d = value.asDateObject())
+        return qtDateTimeFromJsDate(d->value.doubleValue());
     // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!
 
-    Q_ASSERT(value->IsObject());
+    Q_ASSERT(value.isObject());
 
-    if (value->IsRegExp()) {
-        v8::Context::Scope scope(context());
-        return QJSConverter::toRegExp(value->v4Value().asRegExpObject());
-    }
-    if (value->IsArray()) {
-        v8::Context::Scope scope(context());
+    if (QV4::RegExpObject *re = value.asRegExpObject())
+        return QJSConverter::toRegExp(re);
+    if (QV4::ArrayObject *a = value.asArrayObject()) {
         QVariantList rv;
 
-        v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast(value);
-        int length = array->Length();
+        int length = a->arrayLength();
         for (int ii = 0; ii < length; ++ii)
-            rv << toVariant(array->Get(ii)->v4Value(), -1);
+            rv << toVariant(a->getIndexed(m_v4Engine->current, ii), -1);
         return rv;
     }
-    if (!value->IsFunction()) {
-        v8::Context::Scope scope(context());
-        v8::Handle<v8::Object> object = value->ToObject();
-        return variantMapFromJS(object->v4Value().asObject());
-    }
+    if (!value.asFunctionObject())
+        return variantMapFromJS(value.asObject());
 
     return QVariant();
 }
@@ -1226,7 +1220,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
     QByteArray name = QMetaType::typeName(type);
     if (convertToNativeQObject(value, name, reinterpret_cast<void* *>(data)))
         return true;
-    if (isVariant(v8::Value::fromV4Value(value)) && name.endsWith('*')) {
+    if (isVariant(value) && name.endsWith('*')) {
         int valueType = QMetaType::type(name.left(name.size()-1));
         QVariant &var = variantWrapper()->variantValue(v8::Value::fromV4Value(value));
         if (valueType == var.userType()) {
@@ -1238,7 +1232,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
             v8::Handle<v8::Value> proto = v8::Value::fromV4Value(value)->ToObject()->GetPrototype();
             while (proto->IsObject()) {
                 bool canCast = false;
-                if (isVariant(proto)) {
+                if (isVariant(proto->v4Value())) {
                     canCast = (type == variantWrapper()->variantValue(proto).userType())
                               || (valueType && (valueType == variantWrapper()->variantValue(proto).userType()));
                 }
@@ -1308,7 +1302,7 @@ QVariant QV8Engine::variantFromJS(const QV4::Value &value,
         return QJSConverter::toDateTime(d);
     if (QV4::RegExpObject *re = value.asRegExpObject())
         return QJSConverter::toRegExp(re);
-    if (isVariant(v8::Value::fromV4Value(value)))
+    if (isVariant(value))
         return variantWrapper()->variantValue(v8::Value::fromV4Value(value));
     if (isQObject(value))
         return qVariantFromValue(qtObjectFromJS(value));

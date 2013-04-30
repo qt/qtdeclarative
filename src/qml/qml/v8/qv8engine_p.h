@@ -308,7 +308,7 @@ public:
 
     QVariant toVariant(const QV4::Value &value, int typeHint);
     QV4::Value fromVariant(const QVariant &);
-    inline bool isVariant(v8::Handle<v8::Value>);
+    inline bool isVariant(const QV4::Value &);
 
     // Compile \a source (from \a fileName at \a lineNumber) in QML mode
     v8::Local<v8::Script> qmlModeCompile(const QString &source, 
@@ -468,7 +468,7 @@ protected:
     QObject *m_platform;
     QObject *m_application;
 
-    QVariant toBasicVariant(v8::Handle<v8::Value>);
+    QVariant toBasicVariant(const QV4::Value &);
 
     void initializeGlobal(v8::Handle<v8::Object>);
 
@@ -525,7 +525,7 @@ void qPersistentDispose(v8::Persistent<T> &that)
     that.Clear();
 }
 
-bool QV8Engine::isVariant(v8::Handle<v8::Value> value)
+bool QV8Engine::isVariant(const QV4::Value &value)
 {
     return m_variantWrapper.isVariant(value);
 }
