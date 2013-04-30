@@ -379,7 +379,7 @@ QVariant QQmlExpressionPrivate::value(bool *isUndefined)
         v8::HandleScope handle_scope;
         v8::Context::Scope context_scope(ep->v8engine()->context());
         v8::Local<v8::Value> result = v8value(isUndefined);
-        rv = ep->v8engine()->toVariant(result, -1);
+        rv = ep->v8engine()->toVariant(result->v4Value(), -1);
     }
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.

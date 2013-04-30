@@ -185,7 +185,7 @@ v8::Handle<v8::Value> QQmlDateExtension::toLocaleString(const v8::Arguments& arg
     QString formattedDt;
     if (args.Length() == 2) {
         if (args[1]->IsString()) {
-            QString format = r->engine->toVariant(args[1], -1).toString();
+            QString format = r->engine->toVariant(args[1]->v4Value(), -1).toString();
             formattedDt = r->locale.toString(dt, format);
         } else if (args[1]->IsNumber()) {
             quint32 intFormat = args[1]->ToNumber()->Value();
@@ -227,7 +227,7 @@ v8::Handle<v8::Value> QQmlDateExtension::toLocaleTimeString(const v8::Arguments&
     QString formattedTime;
     if (args.Length() == 2) {
         if (args[1]->IsString()) {
-            QString format = r->engine->toVariant(args[1], -1).toString();
+            QString format = r->engine->toVariant(args[1]->v4Value(), -1).toString();
             formattedTime = r->locale.toString(time, format);
         } else if (args[1]->IsNumber()) {
             quint32 intFormat = args[1]->ToNumber()->Value();
@@ -269,7 +269,7 @@ v8::Handle<v8::Value> QQmlDateExtension::toLocaleDateString(const v8::Arguments&
     QString formattedDate;
     if (args.Length() == 2) {
         if (args[1]->IsString()) {
-            QString format = r->engine->toVariant(args[1], -1).toString();
+            QString format = r->engine->toVariant(args[1]->v4Value(), -1).toString();
             formattedDate = r->locale.toString(date, format);
         } else if (args[1]->IsNumber()) {
             quint32 intFormat = args[1]->ToNumber()->Value();

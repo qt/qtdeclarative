@@ -306,8 +306,8 @@ public:
 
     static inline bool startsWithUpper(QV4::String *);
 
-    QVariant toVariant(v8::Handle<v8::Value>, int typeHint);
-    v8::Handle<v8::Value> fromVariant(const QVariant &);
+    QVariant toVariant(const QV4::Value &value, int typeHint);
+    QV4::Value fromVariant(const QVariant &);
     inline bool isVariant(v8::Handle<v8::Value>);
 
     // Compile \a source (from \a fileName at \a lineNumber) in QML mode

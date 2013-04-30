@@ -261,16 +261,16 @@ static v8::Handle<v8::Value> qmlsqldatabase_executeSql(const v8::Arguments& args
                 v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(values);
                 uint32_t size = array->Length();
                 for (uint32_t ii = 0; ii < size; ++ii)
-                    query.bindValue(ii, engine->toVariant(array->Get(ii), -1));
+                    query.bindValue(ii, engine->toVariant(array->Get(ii)->v4Value(), -1));
             } else if (values->IsObject() && !values->ToObject()->GetExternalResource()) {
                 v8::Local<v8::Object> object = values->ToObject();
                 v8::Local<v8::Array> names = object->GetPropertyNames();
                 uint32_t size = names->Length();
                 for (uint32_t ii = 0; ii < size; ++ii)
                     query.bindValue(names->Get(ii)->v4Value().toQString(),
-                                    engine->toVariant(object->Get(names->Get(ii)), -1));
+                                    engine->toVariant(object->Get(names->Get(ii))->v4Value(), -1));
             } else {
-                query.bindValue(0, engine->toVariant(values, -1));
+                query.bindValue(0, engine->toVariant(values->v4Value(), -1));
             }
         }
         if (query.exec()) {

@@ -471,7 +471,7 @@ v8::Handle<v8::Value> colorEqual(const v8::Arguments &args)
 
     bool ok = false;
 
-    QVariant lhs = V8ENGINE()->toVariant(args[0], -1);
+    QVariant lhs = V8ENGINE()->toVariant(args[0]->v4Value(), -1);
     if (lhs.userType() == QVariant::String) {
         lhs = QQmlStringConverters::colorFromString(lhs.toString(), &ok);
         if (!ok) {
@@ -481,7 +481,7 @@ v8::Handle<v8::Value> colorEqual(const v8::Arguments &args)
         V8THROW_ERROR("Qt.colorEqual(): Invalid arguments");
     }
 
-    QVariant rhs = V8ENGINE()->toVariant(args[1], -1);
+    QVariant rhs = V8ENGINE()->toVariant(args[1]->v4Value(), -1);
     if (rhs.userType() == QVariant::String) {
         rhs = QQmlStringConverters::colorFromString(rhs.toString(), &ok);
         if (!ok) {
@@ -701,7 +701,7 @@ v8::Handle<v8::Value> lighter(const v8::Arguments &args)
     if (args.Length() != 1 && args.Length() != 2)
         V8THROW_ERROR("Qt.lighter(): Invalid arguments");
 
-    QVariant v = V8ENGINE()->toVariant(args[0], -1);
+    QVariant v = V8ENGINE()->toVariant(args[0]->v4Value(), -1);
     if (v.userType() == QVariant::String) {
         bool ok = false;
         v = QQmlStringConverters::colorFromString(v.toString(), &ok);
@@ -739,7 +739,7 @@ v8::Handle<v8::Value> darker(const v8::Arguments &args)
     if (args.Length() != 1 && args.Length() != 2)
         V8THROW_ERROR("Qt.darker(): Invalid arguments");
 
-    QVariant v = V8ENGINE()->toVariant(args[0], -1);
+    QVariant v = V8ENGINE()->toVariant(args[0]->v4Value(), -1);
     if (v.userType() == QVariant::String) {
         bool ok = false;
         v = QQmlStringConverters::colorFromString(v.toString(), &ok);
@@ -787,7 +787,7 @@ v8::Handle<v8::Value> tint(const v8::Arguments &args)
         V8THROW_ERROR("Qt.tint(): Invalid arguments");
 
     // base color
-    QVariant v1 = V8ENGINE()->toVariant(args[0], -1);
+    QVariant v1 = V8ENGINE()->toVariant(args[0]->v4Value(), -1);
     if (v1.userType() == QVariant::String) {
         bool ok = false;
         v1 = QQmlStringConverters::colorFromString(v1.toString(), &ok);
@@ -799,7 +799,7 @@ v8::Handle<v8::Value> tint(const v8::Arguments &args)
     }
 
     // tint color
-    QVariant v2 = V8ENGINE()->toVariant(args[1], -1);
+    QVariant v2 = V8ENGINE()->toVariant(args[1]->v4Value(), -1);
     if (v2.userType() == QVariant::String) {
         bool ok = false;
         v2 = QQmlStringConverters::colorFromString(v2.toString(), &ok);
@@ -835,11 +835,11 @@ v8::Handle<v8::Value> formatDate(const v8::Arguments &args)
         V8THROW_ERROR("Qt.formatDate(): Invalid arguments");
 
     Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
-    QDate date = V8ENGINE()->toVariant(args[0], -1).toDateTime().date();
+    QDate date = V8ENGINE()->toVariant(args[0]->v4Value(), -1).toDateTime().date();
     QString formattedDate;
     if (args.Length() == 2) {
         if (args[1]->IsString()) {
-            QString format = V8ENGINE()->toVariant(args[1], -1).toString();
+            QString format = V8ENGINE()->toVariant(args[1]->v4Value(), -1).toString();
             formattedDate = date.toString(format);
         } else if (args[1]->IsNumber()) {
             quint32 intFormat = args[1]->ToNumber()->Value();
@@ -875,7 +875,7 @@ v8::Handle<v8::Value> formatTime(const v8::Arguments &args)
     if (args.Length() < 1 || args.Length() > 2)
         V8THROW_ERROR("Qt.formatTime(): Invalid arguments");
 
-    QVariant argVariant = V8ENGINE()->toVariant(args[0], -1);
+    QVariant argVariant = V8ENGINE()->toVariant(args[0]->v4Value(), -1);
     QTime time;
     if (args[0]->IsDate() || (argVariant.type() == QVariant::String))
         time = argVariant.toDateTime().time();
@@ -886,7 +886,7 @@ v8::Handle<v8::Value> formatTime(const v8::Arguments &args)
     QString formattedTime;
     if (args.Length() == 2) {
         if (args[1]->IsString()) {
-            QString format = V8ENGINE()->toVariant(args[1], -1).toString();
+            QString format = V8ENGINE()->toVariant(args[1]->v4Value(), -1).toString();
             formattedTime = time.toString(format);
         } else if (args[1]->IsNumber()) {
             quint32 intFormat = args[1]->ToNumber()->Value();
@@ -998,11 +998,11 @@ v8::Handle<v8::Value> formatDateTime(const v8::Arguments &args)
         V8THROW_ERROR("Qt.formatDateTime(): Invalid arguments");
 
     Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
-    QDateTime dt = V8ENGINE()->toVariant(args[0], -1).toDateTime();
+    QDateTime dt = V8ENGINE()->toVariant(args[0]->v4Value(), -1).toDateTime();
     QString formattedDt;
     if (args.Length() == 2) {
         if (args[1]->IsString()) {
-            QString format = V8ENGINE()->toVariant(args[1], -1).toString();
+            QString format = V8ENGINE()->toVariant(args[1]->v4Value(), -1).toString();
             formattedDt = dt.toString(format);
         } else if (args[1]->IsNumber()) {
             quint32 intFormat = args[1]->ToNumber()->Value();
@@ -1027,7 +1027,7 @@ v8::Handle<v8::Value> openUrlExternally(const v8::Arguments &args)
     if (args.Length() != 1)
         return V8ENGINE()->fromVariant(false);
 
-    QUrl url(V8ENGINE()->toVariant(resolvedUrl(args), -1).toUrl());
+    QUrl url(V8ENGINE()->toVariant(resolvedUrl(args)->v4Value(), -1).toUrl());
     return V8ENGINE()->fromVariant(QQml_guiProvider()->openUrlExternally(url));
 }
 
@@ -1037,7 +1037,7 @@ v8::Handle<v8::Value> openUrlExternally(const v8::Arguments &args)
 */
 v8::Handle<v8::Value> resolvedUrl(const v8::Arguments &args)
 {
-    QUrl url = V8ENGINE()->toVariant(args[0], -1).toUrl();
+    QUrl url = V8ENGINE()->toVariant(args[0]->v4Value(), -1).toUrl();
     QQmlEngine *e = V8ENGINE()->engine();
     QQmlEnginePrivate *p = 0;
     if (e) p = QQmlEnginePrivate::get(e);

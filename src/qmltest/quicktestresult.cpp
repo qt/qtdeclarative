@@ -488,7 +488,7 @@ void QuickTestResult::stringify(QQmlV8Function *args)
     && !value->IsArray()
     && !value->IsDate()
     && !value->IsRegExp()) {
-        QVariant v = engine->toVariant(value, QMetaType::UnknownType);
+        QVariant v = engine->toVariant(value->v4Value(), QMetaType::UnknownType);
         if (v.isValid()) {
             switch (v.type()) {
             case QVariant::Vector3D:

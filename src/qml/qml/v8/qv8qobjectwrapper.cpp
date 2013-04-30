@@ -685,9 +685,9 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     } else {
         QVariant v;
         if (property->isQList()) 
-            v = engine->toVariant(value, qMetaTypeId<QList<QObject *> >());
+            v = engine->toVariant(value->v4Value(), qMetaTypeId<QList<QObject *> >());
         else
-            v = engine->toVariant(value, property->propType);
+            v = engine->toVariant(value->v4Value(), property->propType);
 
         QQmlContextData *context = engine->callingContext();
         if (!QQmlPropertyPrivate::write(object, *property, v, context)) {
@@ -1722,12 +1722,12 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         } else if (r && r->resourceType() == QV8ObjectResource::VariantType) {
             if (conversionType == qMetaTypeId<QVariant>())
                 return 0;
-            else if (r->engine->toVariant(actual, -1).userType() == conversionType)
+            else if (r->engine->toVariant(actual->v4Value(), -1).userType() == conversionType)
                 return 0;
             else
                 return 10;
         } else if (r && r->resourceType() == QV8ObjectResource::ValueTypeType) {
-            if (r->engine->toVariant(actual, -1).userType() == conversionType)
+            if (r->engine->toVariant(actual->v4Value(), -1).userType() == conversionType)
                 return 0;
             return 10;
         } else if (conversionType == QMetaType::QJsonObject) {
@@ -2171,7 +2171,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
         qobjectPtr = engine->toQObject(value->v4Value());
         type = callType;
     } else if (callType == qMetaTypeId<QVariant>()) {
-        qvariantPtr = new (&allocData) QVariant(engine->toVariant(value, -1));
+        qvariantPtr = new (&allocData) QVariant(engine->toVariant(value->v4Value(), -1));
         type = callType;
     } else if (callType == qMetaTypeId<QList<QObject*> >()) {
         qlistPtr = new (&allocData) QList<QObject *>();
@@ -2203,7 +2203,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
         type = -1;
 
         QQmlEnginePrivate *ep = engine->engine() ? QQmlEnginePrivate::get(engine->engine()) : 0;
-        QVariant v = engine->toVariant(value, -1); // why -1 instead of callType?
+        QVariant v = engine->toVariant(value->v4Value(), -1); // why -1 instead of callType?
 
         if (v.userType() == callType) {
             *qvariantPtr = v;
@@ -2212,7 +2212,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
             qvariantPtr->convert(callType);
         } else if (engine->sequenceWrapper()->isSequenceType(callType) && v.userType() == qMetaTypeId<QVariantList>()) {
             // convert the JS array to a sequence of the correct type.
-            QVariant seqV = engine->toVariant(value, callType);
+            QVariant seqV = engine->toVariant(value->v4Value(), callType);
             *qvariantPtr = seqV;
         } else {
             QQmlMetaObject mo = ep ? ep->rawMetaObjectForType(callType) : QQmlMetaObject();

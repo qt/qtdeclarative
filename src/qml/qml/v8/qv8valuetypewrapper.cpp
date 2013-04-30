@@ -414,7 +414,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
             oldBinding->destroy();
 
         if (!value->IsFunction()) {
-            QVariant v = r->engine->toVariant(value, -1);
+            QVariant v = r->engine->toVariant(value->v4Value(), -1);
 
             if (p.isEnumType() && (QMetaType::Type)v.type() == QMetaType::Double)
                 v = v.toInt();
@@ -438,7 +438,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
         if (index == -1)
             return value;
 
-        QVariant v = r->engine->toVariant(value, -1);
+        QVariant v = r->engine->toVariant(value->v4Value(), -1);
 
         r->type->setValue(copy->value);
         QMetaProperty p = r->type->metaObject()->property(index);

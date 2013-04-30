@@ -846,7 +846,7 @@ static void ctx2d_fillStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> valu
     QV8Engine *engine = V8ENGINE_ACCESSOR();
 
    if (value->IsObject()) {
-       QColor color = engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
+       QColor color = engine->toVariant(value->v4Value(), qMetaTypeId<QColor>()).value<QColor>();
        if (color.isValid()) {
            r->context->state.fillStyle = color;
            r->context->buffer()->setFillStyle(color);
@@ -949,7 +949,7 @@ static void ctx2d_strokeStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> va
     QV8Engine *engine = V8ENGINE_ACCESSOR();
 
     if (value->IsObject()) {
-        QColor color = engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
+        QColor color = engine->toVariant(value->v4Value(), qMetaTypeId<QColor>()).value<QColor>();
         if (color.isValid()) {
             r->context->state.fillStyle = color;
             r->context->buffer()->setStrokeStyle(color);
@@ -1181,7 +1181,7 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
         QQuickContext2DEngineData *ed = engineData(engine);
         QV8Context2DStyleResource *styleResouce = new QV8Context2DStyleResource(engine);
 
-        QColor color = engine->toVariant(args[0], qMetaTypeId<QColor>()).value<QColor>();
+        QColor color = engine->toVariant(args[0]->v4Value(), qMetaTypeId<QColor>()).value<QColor>();
         if (color.isValid()) {
             int patternMode = args[1]->IntegerValue();
             Qt::BrushStyle style = Qt::SolidPattern;
@@ -2716,7 +2716,7 @@ static v8::Handle<v8::Value> ctx2d_gradient_addColorStop(const v8::Arguments &ar
         QColor color;
 
         if (args[1]->IsObject()) {
-            color = engine->toVariant(args[1], qMetaTypeId<QColor>()).value<QColor>();
+            color = engine->toVariant(args[1]->v4Value(), qMetaTypeId<QColor>()).value<QColor>();
         } else {
             color = qt_color_from_string(args[1]);
         }

@@ -954,7 +954,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();
                 } else {
-                    if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
+                    if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result->v4Value(), 0);
                 }
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
@@ -1011,7 +1011,7 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
 {
     if (id >= firstVarPropertyIndex) {
         if (ensureVarPropertiesAllocated())
-            return QQmlEnginePrivate::get(ctxt->engine)->v8engine()->toVariant(varProperties->Get(id - firstVarPropertyIndex), -1);
+            return QQmlEnginePrivate::get(ctxt->engine)->v8engine()->toVariant(varProperties->Get(id - firstVarPropertyIndex)->v4Value(), -1);
         return QVariant();
     } else {
         if (data[id].dataType() == QMetaType::QObjectStar) {

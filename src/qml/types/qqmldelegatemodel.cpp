@@ -1529,7 +1529,7 @@ bool QQmlDelegateModelPrivate::insert(
         v8::Local<v8::String> propertyName = propertyNames->Get(i)->ToString();
         cacheItem->setValue(
                 propertyName->v4Value().toQString(),
-                m_cacheMetaType->v8Engine->toVariant(object->Get(propertyName), QVariant::Invalid));
+                m_cacheMetaType->v8Engine->toVariant(object->Get(propertyName)->v4Value(), QVariant::Invalid));
     }
 
     cacheItem->groups = groups | Compositor::UnresolvedFlag | Compositor::CacheFlag;

@@ -361,10 +361,10 @@ void QQmlDMCachedModelData::set_property(
         QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(data);
         if (!modelData->cachedData.isEmpty()) {
             if (modelData->cachedData.count() > 1) {
-                modelData->cachedData[propertyId] = data->engine->toVariant(value, QVariant::Invalid);
+                modelData->cachedData[propertyId] = data->engine->toVariant(value->v4Value(), QVariant::Invalid);
                 QMetaObject::activate(data, data->metaObject(), propertyId, 0);
             } else if (modelData->cachedData.count() == 1) {
-                modelData->cachedData[0] = data->engine->toVariant(value, QVariant::Invalid);
+                modelData->cachedData[0] = data->engine->toVariant(value->v4Value(), QVariant::Invalid);
                 QMetaObject::activate(data, data->metaObject(), 0, 0);
                 QMetaObject::activate(data, data->metaObject(), 1, 0);
             }
@@ -596,7 +596,7 @@ public:
         V8ASSERT_TYPE_SETTER(data, "Not a valid VisualData object");
 
         static_cast<QQmlDMListAccessorData *>(data)->setModelData(
-                data->engine->toVariant(value, QVariant::Invalid));
+                data->engine->toVariant(value->v4Value(), QVariant::Invalid));
     }
 
     v8::Handle<v8::Value> get()
