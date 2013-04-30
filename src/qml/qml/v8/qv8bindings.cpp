@@ -191,6 +191,7 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
                 delayedError()->setErrorLocation(parent->url(), instruction->line, 0);
 
             if (hasError()) {
+                delayedError()->setErrorObject(object());
                 if (!delayedError()->addError(ep)) ep->warning(this->error(context->engine));
             } else {
                 clearError();

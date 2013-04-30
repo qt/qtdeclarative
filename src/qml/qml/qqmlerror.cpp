@@ -84,10 +84,11 @@ public:
     QString description;
     quint16 line;
     quint16 column;
+    QObject *object;
 };
 
 QQmlErrorPrivate::QQmlErrorPrivate()
-: line(0), column(0)
+: line(0), column(0), object()
 {
 }
 
@@ -122,6 +123,7 @@ QQmlError &QQmlError::operator=(const QQmlError &other)
         d->description = other.d->description;
         d->line = other.d->line;
         d->column = other.d->column;
+        d->object = other.d->object;
     }
     return *this;
 }
@@ -212,6 +214,27 @@ void QQmlError::setColumn(int column)
 {
     if (!d) d = new QQmlErrorPrivate;
     d->column = qmlSourceCoordinate(column);
+}
+
+/*!
+    Returns the nearest object where this error occurred.
+    Exceptions in bound property expressions set this to the object
+    to which the property belongs. It will be 0 for all
+    other exceptions.
+ */
+QObject *QQmlError::object() const
+{
+    if (d) return d->object;
+    else return 0;
+}
+
+/*!
+    Sets the nearest \a object where this error occurred.
+ */
+void QQmlError::setObject(QObject *object)
+{
+    if (!d) d = new QQmlErrorPrivate;
+    d->object = object;
 }
 
 /*!

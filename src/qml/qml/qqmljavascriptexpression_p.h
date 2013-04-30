@@ -84,6 +84,7 @@ public:
     void setMessage(v8::Handle<v8::Message> message);
     void setErrorLocation(const QUrl &url, quint16 line, quint16 column);
     void setErrorDescription(const QString &description);
+    void setErrorObject(QObject *object);
 
 private:
     void convertMessageToError(QQmlEngine *engine) const;

@@ -79,6 +79,11 @@ void QQmlDelayedError::setErrorDescription(const QString &description)
     m_error.setDescription(description);
 }
 
+void QQmlDelayedError::setErrorObject(QObject *object)
+{
+    m_error.setObject(object);
+}
+
 /*
     Converting from a message to an error is relatively expensive.
 
@@ -348,6 +353,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
         error.setDescription(QLatin1String("Exception occurred during function compilation"));
         error.setLine(line);
         error.setUrl(QUrl::fromLocalFile(filename));
+        error.setObject(scope);
         v8::Local<v8::Message> message = tc.Message();
         if (!message.IsEmpty())
             QQmlExpressionPrivate::exceptionToError(message, error);
@@ -360,6 +366,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
         error.setDescription(QLatin1String("Exception occurred during function evaluation"));
         error.setLine(line);
         error.setUrl(QUrl::fromLocalFile(filename));
+        error.setObject(scope);
         v8::Local<v8::Message> message = tc.Message();
         if (!message.IsEmpty())
             QQmlExpressionPrivate::exceptionToError(message, error);
@@ -390,6 +397,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
         error.setDescription(QLatin1String("Exception occurred during function compilation"));
         error.setLine(line);
         error.setUrl(QUrl::fromLocalFile(filename));
+        error.setObject(scope);
         v8::Local<v8::Message> message = tc.Message();
         if (!message.IsEmpty())
             QQmlExpressionPrivate::exceptionToError(message, error);
@@ -402,6 +410,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
         error.setDescription(QLatin1String("Exception occurred during function evaluation"));
         error.setLine(line);
         error.setUrl(QUrl::fromLocalFile(filename));
+        error.setObject(scope);
         v8::Local<v8::Message> message = tc.Message();
         if (!message.IsEmpty())
             QQmlExpressionPrivate::exceptionToError(message, error);
