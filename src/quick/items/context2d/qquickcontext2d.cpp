@@ -3283,7 +3283,6 @@ QPainterPath QQuickContext2D::createTextGlyphs(qreal x, qreal y, const QString& 
     QPainterPath textPath;
 
     textPath.addText(x - xoffset, y - yoffset+metrics.ascent(), state.font, text);
-    textPath = state.matrix.map(textPath);
     return textPath;
 }
 
