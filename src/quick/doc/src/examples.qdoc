@@ -38,10 +38,13 @@ These are code samples that show how to use various aspects of Qt Quick. Larger
 compound interfaces are grouped as applications as they demonstrate more Qt
 Quick features.
 
+Here is a list of fully-functional demo applications.
 To run the sample applications, open them in Qt Creator or use the included
 \l {Prototyping with qmlscene}{qmlscene} tool.
 
-Some of these code samples have a corresponding \l{qtquick-tutorials}{tutorial}.
+\annotatedlist{qtquickdemos}
+
+Some of these code samples below  have a corresponding \l{qtquick-tutorials}{tutorial}.
 The Qt Quick features are covered in the \l {qtquick-overviews}{main page}.
 This set of code samples are part of the collection of \l{Qt Examples}.
 
