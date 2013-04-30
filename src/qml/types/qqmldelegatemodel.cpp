@@ -230,6 +230,8 @@ QQmlDelegateModel::~QQmlDelegateModel()
         cacheItem->objectRef = 0;
         if (!cacheItem->isReferenced())
             delete cacheItem;
+        else if (cacheItem->incubationTask)
+            cacheItem->incubationTask->vdm = 0;
     }
 }
 
@@ -780,7 +782,21 @@ void QQmlDelegateModelPrivate::emitDestroyingPackage(QQuickPackage *package)
 
 void QQDMIncubationTask::statusChanged(Status status)
 {
-    vdm->incubatorStatusChanged(this, status);
+    if (vdm) {
+        vdm->incubatorStatusChanged(this, status);
+    } else if (status == QQmlIncubator::Ready || status == QQmlIncubator::Error) {
+        Q_ASSERT(incubating);
+        // The model was deleted from under our feet, cleanup ourselves
+        if (incubating->object) {
+            delete incubating->object;
+
+            incubating->object = 0;
+            incubating->contextData->destroy();
+            incubating->contextData = 0;
+        }
+        incubating->scriptRef = 0;
+        incubating->deleteLater();
+    }
 }
 
 void QQmlDelegateModelPrivate::releaseIncubator(QQDMIncubationTask *incubationTask)
@@ -1766,8 +1782,12 @@ QQmlDelegateModelItem::~QQmlDelegateModelItem()
     Q_ASSERT(objectRef == 0);
     Q_ASSERT(!object);
 
-    if (incubationTask && metaType->model)
-        QQmlDelegateModelPrivate::get(metaType->model)->releaseIncubator(incubationTask);
+    if (incubationTask) {
+        if (metaType->model)
+            QQmlDelegateModelPrivate::get(metaType->model)->releaseIncubator(incubationTask);
+        else
+            delete incubationTask;
+    }
 
     metaType->release();
 
