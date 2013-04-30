@@ -293,7 +293,7 @@ bool JsonParser::parseMember(Object *o)
 Value JsonParser::parseArray()
 {
     BEGIN << "parseArray";
-    ArrayObject *array = context->engine->newArrayObject(context);
+    ArrayObject *array = context->engine->newArrayObject();
 
     if (++nestingLevel > nestingLimit) {
         lastError = QJsonParseError::DeepNesting;

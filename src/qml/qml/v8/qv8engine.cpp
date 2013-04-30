@@ -284,7 +284,7 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
 static QV4::Value arrayFromStringList(QV8Engine *engine, const QStringList &list)
 {
     QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
-    QV4::ArrayObject *a = e->newArrayObject(e->current);
+    QV4::ArrayObject *a = e->newArrayObject();
     int len = list.count();
     a->arrayReserve(len);
     for (int ii = 0; ii < len; ++ii)
@@ -296,7 +296,7 @@ static QV4::Value arrayFromStringList(QV8Engine *engine, const QStringList &list
 static QV4::Value arrayFromVariantList(QV8Engine *engine, const QVariantList &list)
 {
     QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
-    QV4::ArrayObject *a = e->newArrayObject(e->current);
+    QV4::ArrayObject *a = e->newArrayObject();
     int len = list.count();
     a->arrayReserve(len);
     for (int ii = 0; ii < len; ++ii)
@@ -485,7 +485,7 @@ const QStringHash<bool> &QV8Engine::illegalNames() const
 QV4::Value QV8Engine::getOwnPropertyNames(const QV4::Value &o)
 {
     if (!o.asObject())
-        return QV4::Value::fromObject(m_v4Engine->newArrayObject(m_v4Engine->current));
+        return QV4::Value::fromObject(m_v4Engine->newArrayObject());
     QV4::SimpleCallContext ctx;
     QV4::Value args = o;
     ctx.arguments = &args;
@@ -913,7 +913,7 @@ QV4::Value QV8Engine::global()
 // elements converted to JS, recursively.
 QV4::Value QV8Engine::variantListToJS(const QVariantList &lst)
 {
-    QV4::ArrayObject *a = m_v4Engine->newArrayObject(m_v4Engine->current);
+    QV4::ArrayObject *a = m_v4Engine->newArrayObject();
     a->arrayReserve(lst.size());
     for (int i = 0; i < lst.size(); i++)
         a->arrayData[i].value = variantToJS(lst.at(i));

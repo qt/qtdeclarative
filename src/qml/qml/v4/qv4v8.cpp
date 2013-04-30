@@ -943,7 +943,7 @@ Local<Array> Object::GetPropertyNames()
     QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
 
-    QV4::ArrayObject *array = currentEngine()->newArrayObject(currentEngine()->current)->asArrayObject();
+    QV4::ArrayObject *array = currentEngine()->newArrayObject();
     ObjectIterator it(o, ObjectIterator::WithProtoChain|ObjectIterator::EnumberableOnly);
     while (1) {
         QV4::Value v = it.nextPropertyNameAsString();
@@ -959,7 +959,7 @@ Local<Array> Object::GetOwnPropertyNames()
     QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
     QV4::Value arg = QV4::Value::fromObject(o);
-    ArrayObject *array = currentEngine()->newArrayObject(currentEngine()->current)->asArrayObject();
+    ArrayObject *array = currentEngine()->newArrayObject();
     ObjectIterator it(o, ObjectIterator::EnumberableOnly);
     while (1) {
         QV4::Value v = it.nextPropertyNameAsString();
@@ -1115,7 +1115,7 @@ Local<Array> Array::New(int length)
 {
     if (length < 0)
         length = 0;
-    QV4::ArrayObject *a = currentEngine()->newArrayObject(currentEngine()->current);
+    QV4::ArrayObject *a = currentEngine()->newArrayObject();
     if (length < 0x1000)
         a->arrayReserve(length);
 

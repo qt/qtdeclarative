@@ -324,7 +324,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
 
     String *lastIndex = context->engine->newString(QStringLiteral("lastIndex"));
     rx->put(context, lastIndex, Value::fromInt32(0));
-    ArrayObject *a = context->engine->newArrayObject(context);
+    ArrayObject *a = context->engine->newArrayObject();
 
     double previousLastIndex = 0;
     uint n = 0;
@@ -542,7 +542,7 @@ Value StringPrototype::method_split(SimpleCallContext *ctx)
     Value separatorValue = ctx->argumentCount > 0 ? ctx->argument(0) : Value::undefinedValue();
     Value limitValue = ctx->argumentCount > 1 ? ctx->argument(1) : Value::undefinedValue();
 
-    ArrayObject* array = ctx->engine->newArrayObject(ctx);
+    ArrayObject* array = ctx->engine->newArrayObject();
     Value result = Value::fromObject(array);
 
     if (separatorValue.isUndefined()) {

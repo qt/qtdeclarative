@@ -149,7 +149,7 @@ QJsonObject QV4JsonWrapper::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObj
 QV4::Value QV4JsonWrapper::fromJsonArray(const QJsonArray &array)
 {
     int size = array.size();
-    ArrayObject *a = m_engine->newArrayObject(m_engine->current);
+    ArrayObject *a = m_engine->newArrayObject();
     a->arrayReserve(size);
     for (int i = 0; i < size; i++)
         a->arrayData[i].value = fromJsonValue(array.at(i));

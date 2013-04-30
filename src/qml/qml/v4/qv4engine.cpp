@@ -408,9 +408,9 @@ Object *ExecutionEngine::newFunctionObject(ExecutionContext *ctx)
     return object;
 }
 
-ArrayObject *ExecutionEngine::newArrayObject(ExecutionContext *ctx)
+ArrayObject *ExecutionEngine::newArrayObject()
 {
-    ArrayObject *object = new (memoryManager) ArrayObject(ctx);
+    ArrayObject *object = new (memoryManager) ArrayObject(this);
     object->prototype = arrayPrototype;
     return object;
 }

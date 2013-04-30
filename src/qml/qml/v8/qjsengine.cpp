@@ -291,8 +291,10 @@ QJSValue QJSEngine::newObject()
 */
 QJSValue QJSEngine::newArray(uint length)
 {
-    QV4::ArrayObject *array = d->m_v4Engine->newArrayObject(d->m_v4Engine->current);
+    QV4::ArrayObject *array = d->m_v4Engine->newArrayObject();
     array->setArrayLength(length);
+    for (uint i = 0; i < length; ++i)
+        array->arrayData[i].value = QV4::Value::undefinedValue();
     return new QJSValuePrivate(d->m_v4Engine, array);
 }
 

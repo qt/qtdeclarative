@@ -226,7 +226,7 @@ struct Q_QML_EXPORT ExecutionEngine
     Object *newBooleanObject(const Value &value);
     Object *newFunctionObject(ExecutionContext *ctx);
 
-    ArrayObject *newArrayObject(ExecutionContext *ctx);
+    ArrayObject *newArrayObject();
 
     DateObject *newDateObject(const Value &value);
 

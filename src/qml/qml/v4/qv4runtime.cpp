@@ -1229,7 +1229,7 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const Value &object,
 
 void __qmljs_builtin_define_array(ExecutionContext *ctx, Value *array, Value *values, uint length)
 {
-    ArrayObject *a = ctx->engine->newArrayObject(ctx);
+    ArrayObject *a = ctx->engine->newArrayObject();
 
     // ### FIXME: We need to allocate the array data to avoid crashes other places
     // This should rather be done when required

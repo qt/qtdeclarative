@@ -200,7 +200,7 @@ Value RegExpPrototype::method_exec(SimpleCallContext *ctx)
     }
 
     // fill in result data
-    ArrayObject *array = ctx->engine->newArrayObject(ctx)->asArrayObject();
+    ArrayObject *array = ctx->engine->newArrayObject();
     for (int i = 0; i < r->value->captureCount(); ++i) {
         int start = matchOffsets[i * 2];
         int end = matchOffsets[i * 2 + 1];

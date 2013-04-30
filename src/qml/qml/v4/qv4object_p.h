@@ -388,8 +388,8 @@ struct ArrayObject: Object {
         LengthPropertyIndex = 0
     };
 
-    ArrayObject(ExecutionContext *ctx) : Object(ctx->engine) { init(ctx); }
-    void init(ExecutionContext *context);
+    ArrayObject(ExecutionEngine *engine) : Object(engine) { init(engine); }
+    void init(ExecutionEngine *engine);
 };
 
 inline uint Object::arrayLength() const

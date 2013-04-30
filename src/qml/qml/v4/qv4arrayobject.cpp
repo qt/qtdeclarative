@@ -54,7 +54,7 @@ ArrayCtor::ArrayCtor(ExecutionContext *scope)
 
 Value ArrayCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int argc)
 {
-    ArrayObject *a = ctx->engine->newArrayObject(ctx);
+    ArrayObject *a = ctx->engine->newArrayObject();
     uint len;
     if (argc == 1 && argv[0].isNumber()) {
         bool ok;
@@ -80,6 +80,11 @@ Value ArrayCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int ar
 Value ArrayCtor::call(Managed *that, ExecutionContext *ctx, const Value &thisObject, Value *argv, int argc)
 {
     return construct(that, ctx, argv, argc);
+}
+
+ArrayPrototype::ArrayPrototype(ExecutionContext *context)
+    : ArrayObject(context->engine)
+{
 }
 
 void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -137,7 +142,7 @@ Value ArrayPrototype::method_toLocaleString(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_concat(SimpleCallContext *ctx)
 {
-    ArrayObject *result = ctx->engine->newArrayObject(ctx);
+    ArrayObject *result = ctx->engine->newArrayObject();
 
     if (ArrayObject *instance = ctx->thisObject.asArrayObject()) {
         result->copyArrayData(instance);
@@ -381,7 +386,7 @@ Value ArrayPrototype::method_slice(SimpleCallContext *ctx)
 {
     Object *o = ctx->thisObject.toObject(ctx);
 
-    ArrayObject *result = ctx->engine->newArrayObject(ctx);
+    ArrayObject *result = ctx->engine->newArrayObject();
     uint len = o->get(ctx, ctx->engine->id_length).toUInt32();
     double s = ctx->argument(0).toInteger();
     uint start;
@@ -430,7 +435,7 @@ Value ArrayPrototype::method_splice(SimpleCallContext *ctx)
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
 
-    ArrayObject *newArray = ctx->engine->newArrayObject(ctx);
+    ArrayObject *newArray = ctx->engine->newArrayObject();
 
     double rs = ctx->argument(0).toInteger();
     uint start;
@@ -712,7 +717,7 @@ Value ArrayPrototype::method_map(SimpleCallContext *ctx)
 
     Value thisArg = ctx->argument(1);
 
-    ArrayObject *a = ctx->engine->newArrayObject(ctx);
+    ArrayObject *a = ctx->engine->newArrayObject();
     a->arrayReserve(len);
     a->setArrayLengthUnchecked(len);
 
@@ -744,7 +749,7 @@ Value ArrayPrototype::method_filter(SimpleCallContext *ctx)
 
     Value thisArg = ctx->argument(1);
 
-    ArrayObject *a = ctx->engine->newArrayObject(ctx);
+    ArrayObject *a = ctx->engine->newArrayObject();
     a->arrayReserve(len);
 
     uint to = 0;

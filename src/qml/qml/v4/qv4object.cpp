@@ -1231,10 +1231,10 @@ void Object::markArrayObjects() const
     }
 }
 
-void ArrayObject::init(ExecutionContext *context)
+void ArrayObject::init(ExecutionEngine *engine)
 {
     type = Type_ArrayObject;
-    internalClass = context->engine->arrayClass;
+    internalClass = engine->arrayClass;
 
     memberData = new Property[4];
     memberData[LengthPropertyIndex].value = Value::fromInt32(0);

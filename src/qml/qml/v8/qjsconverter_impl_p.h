@@ -126,7 +126,7 @@ QV4::RegExpObject *QJSConverter::toRegExp(const QRegExp &re)
 QV4::Value QJSConverter::toStringList(const QStringList &list)
 {
     QV4::ExecutionEngine *e = v8::Isolate::GetCurrent()->GetEngine();
-    QV4::ArrayObject *a = e->newArrayObject(e->current);
+    QV4::ArrayObject *a = e->newArrayObject();
     int len = list.count();
     a->arrayReserve(len);
     for (int ii = 0; ii < len; ++ii)
