@@ -2506,8 +2506,7 @@ void QQuickItemPrivate::derefWindow()
     if (c->cursorItem == q)
         c->cursorItem = 0;
 #endif
-    if ( hoverEnabled )
-        c->hoverItems.removeAll(q);
+    c->hoverItems.removeAll(q);
     if (itemNodeInstance)
         c->cleanup(itemNodeInstance);
     if (!parentItem)
