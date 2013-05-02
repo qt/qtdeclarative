@@ -56,10 +56,13 @@
 
 #include <QtCore/qmath.h>
 #include <QtCore/QDebug>
+#include <QtCore/qregexp.h>
 #include <cassert>
 #include <typeinfo>
 #include <iostream>
 #include "qv4alloca_p.h"
+
+Q_CORE_EXPORT QString qt_regexp_toCanonical(const QString &, QRegExp::PatternSyntax);
 
 using namespace QV4;
 
@@ -84,6 +87,54 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, RegExp* value, bool global)
     defineReadonlyProperty(engine->newIdentifier(QStringLiteral("multiline")), Value::fromBoolean(this->value->multiLine()));
 }
 
+// Converts a QRegExp to a JS RegExp.
+// The conversion is not 100% exact since ECMA regexp and QRegExp
+// have different semantics/flags, but we try to do our best.
+RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
+    : Object(engine)
+    , value(0)
+    , global(false)
+{
+    // Convert the pattern to a ECMAScript pattern.
+    QString pattern = qt_regexp_toCanonical(re.pattern(), re.patternSyntax());
+    if (re.isMinimal()) {
+        QString ecmaPattern;
+        int len = pattern.length();
+        ecmaPattern.reserve(len);
+        int i = 0;
+        const QChar *wc = pattern.unicode();
+        bool inBracket = false;
+        while (i < len) {
+            QChar c = wc[i++];
+            ecmaPattern += c;
+            switch (c.unicode()) {
+            case '?':
+            case '+':
+            case '*':
+            case '}':
+                if (!inBracket)
+                    ecmaPattern += QLatin1Char('?');
+                break;
+            case '\\':
+                if (i < len)
+                    ecmaPattern += wc[i++];
+                break;
+            case '[':
+                inBracket = true;
+                break;
+            case ']':
+                inBracket = false;
+                break;
+            default:
+                break;
+            }
+        }
+        pattern = ecmaPattern;
+    }
+
+    value = RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false);
+}
+
 void RegExpObject::destroy(Managed *that)
 {
     static_cast<RegExpObject *>(that)->~RegExpObject();
@@ -102,6 +153,16 @@ Property *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
     assert(0 == internalClass->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex"))));
     return &memberData[0];
 }
+
+// Converts a JS RegExp to a QRegExp.
+// The conversion is not 100% exact since ECMA regexp and QRegExp
+// have different semantics/flags, but we try to do our best.
+QRegExp RegExpObject::toQRegExp() const
+{
+    Qt::CaseSensitivity caseSensitivity = value->ignoreCase() ? Qt::CaseInsensitive : Qt::CaseSensitive;
+    return QRegExp(value->pattern(), caseSensitivity, QRegExp::RegExp2);
+}
+
 
 DEFINE_MANAGED_VTABLE(RegExpCtor);
 

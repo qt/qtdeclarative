@@ -401,13 +401,6 @@ Object *ExecutionEngine::newBooleanObject(const Value &value)
     return object;
 }
 
-Object *ExecutionEngine::newFunctionObject(ExecutionContext *scope)
-{
-    Object *object = new (memoryManager) FunctionObject(scope);
-    object->prototype = functionPrototype;
-    return object;
-}
-
 ArrayObject *ExecutionEngine::newArrayObject()
 {
     ArrayObject *object = new (memoryManager) ArrayObject(this);
@@ -415,9 +408,23 @@ ArrayObject *ExecutionEngine::newArrayObject()
     return object;
 }
 
+ArrayObject *ExecutionEngine::newArrayObject(const QStringList &list)
+{
+    ArrayObject *object = new (memoryManager) ArrayObject(this, list);
+    object->prototype = arrayPrototype;
+    return object;
+}
+
 DateObject *ExecutionEngine::newDateObject(const Value &value)
 {
     DateObject *object = new (memoryManager) DateObject(this, value);
+    object->prototype = datePrototype;
+    return object;
+}
+
+DateObject *ExecutionEngine::newDateObject(const QDateTime &dt)
+{
+    DateObject *object = new (memoryManager) DateObject(this, dt);
     object->prototype = datePrototype;
     return object;
 }
@@ -438,6 +445,13 @@ RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags
 RegExpObject *ExecutionEngine::newRegExpObject(RegExp* re, bool global)
 {
     RegExpObject *object = new (memoryManager) RegExpObject(this, re, global);
+    object->prototype = regExpPrototype;
+    return object;
+}
+
+RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
+{
+    RegExpObject *object = new (memoryManager) RegExpObject(this, re);
     object->prototype = regExpPrototype;
     return object;
 }

@@ -55,7 +55,7 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmlplatform_p.h>
-#include <private/qjsconverter_p.h>
+#include <private/qjsvalue_p.h>
 
 #include "qv4domerrors_p.h"
 #include "qv4sqlerrors_p.h"
@@ -353,13 +353,13 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::QChar:
                 return QV4::Value::fromInt32((*reinterpret_cast<const QChar*>(ptr)).unicode());
             case QMetaType::QDateTime:
-                return QV4::Value::fromObject(QJSConverter::toDateTime(*reinterpret_cast<const QDateTime *>(ptr)));
+                return QV4::Value::fromObject(m_v4Engine->newDateObject(*reinterpret_cast<const QDateTime *>(ptr)));
             case QMetaType::QDate:
-                return QV4::Value::fromObject(QJSConverter::toDateTime(QDateTime(*reinterpret_cast<const QDate *>(ptr))));
+                return QV4::Value::fromObject(m_v4Engine->newDateObject(QDateTime(*reinterpret_cast<const QDate *>(ptr))));
             case QMetaType::QTime:
-            return QV4::Value::fromObject(QJSConverter::toDateTime(QDateTime(QDate(1970,1,1), *reinterpret_cast<const QTime *>(ptr))));
+            return QV4::Value::fromObject(m_v4Engine->newDateObject(QDateTime(QDate(1970,1,1), *reinterpret_cast<const QTime *>(ptr))));
             case QMetaType::QRegExp:
-                return QV4::Value::fromObject(QJSConverter::toRegExp(*reinterpret_cast<const QRegExp *>(ptr)));
+                return QV4::Value::fromObject(m_v4Engine->newRegExpObject(*reinterpret_cast<const QRegExp *>(ptr)));
             case QMetaType::QObjectStar:
                 return newQObject(*reinterpret_cast<QObject* const *>(ptr));
             case QMetaType::QStringList:
@@ -527,7 +527,7 @@ QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
     Q_ASSERT(value.isObject());
 
     if (QV4::RegExpObject *re = value.asRegExpObject())
-        return QJSConverter::toRegExp(re);
+        return re->toQRegExp();
     if (QV4::ArrayObject *a = value.asArrayObject()) {
         QVariantList rv;
 
@@ -1031,7 +1031,7 @@ QV4::Value QV8Engine::metaTypeToJS(int type, const void *data)
     case QMetaType::QChar:
         return QV4::Value::fromUInt32((*reinterpret_cast<const QChar*>(data)).unicode());
     case QMetaType::QStringList:
-        result = QJSConverter::toStringList(*reinterpret_cast<const QStringList *>(data));
+        result = QV4::Value::fromObject(m_v4Engine->newArrayObject(*reinterpret_cast<const QStringList *>(data)));
         break;
     case QMetaType::QVariantList:
         result = variantListToJS(*reinterpret_cast<const QVariantList *>(data));
@@ -1040,13 +1040,13 @@ QV4::Value QV8Engine::metaTypeToJS(int type, const void *data)
         result = variantMapToJS(*reinterpret_cast<const QVariantMap *>(data));
         break;
     case QMetaType::QDateTime:
-        result = QV4::Value::fromObject(QJSConverter::toDateTime(*reinterpret_cast<const QDateTime *>(data)));
+        result = QV4::Value::fromObject(m_v4Engine->newDateObject(*reinterpret_cast<const QDateTime *>(data)));
         break;
     case QMetaType::QDate:
-        result = QV4::Value::fromObject(QJSConverter::toDateTime(QDateTime(*reinterpret_cast<const QDate *>(data))));
+        result = QV4::Value::fromObject(m_v4Engine->newDateObject(QDateTime(*reinterpret_cast<const QDate *>(data))));
         break;
     case QMetaType::QRegExp:
-        result = QV4::Value::fromObject(QJSConverter::toRegExp(*reinterpret_cast<const QRegExp *>(data)));
+        result = QV4::Value::fromObject(m_v4Engine->newRegExpObject(*reinterpret_cast<const QRegExp *>(data)));
         break;
     case QMetaType::QObjectStar:
         result = newQObject(*reinterpret_cast<QObject* const *>(data));
@@ -1134,17 +1134,17 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
         return true;
     case QMetaType::QDateTime:
         if (QV4::DateObject *d = value.asDateObject()) {
-            *reinterpret_cast<QDateTime *>(data) = QV4::DatePrototype::toQDateTime(d->value.doubleValue());
+            *reinterpret_cast<QDateTime *>(data) = d->toQDateTime();
             return true;
         } break;
     case QMetaType::QDate:
         if (QV4::DateObject *d = value.asDateObject()) {
-            *reinterpret_cast<QDate *>(data) = QV4::DatePrototype::toQDateTime(d->value.doubleValue()).date();
+            *reinterpret_cast<QDate *>(data) = d->toQDateTime().date();
             return true;
         } break;
     case QMetaType::QRegExp:
         if (QV4::RegExpObject *r = value.asRegExpObject()) {
-            *reinterpret_cast<QRegExp *>(data) = QJSConverter::toRegExp(r);
+            *reinterpret_cast<QRegExp *>(data) = r->toQRegExp();
             return true;
         } break;
     case QMetaType::QObjectStar: {
@@ -1155,7 +1155,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
     }
     case QMetaType::QStringList:
         if (QV4::ArrayObject *a = value.asArrayObject()) {
-            *reinterpret_cast<QStringList *>(data) = QJSConverter::toStringList(value);
+            *reinterpret_cast<QStringList *>(data) = a->toQStringList();
             return true;
         } break;
     case QMetaType::QVariantList:
@@ -1287,9 +1287,9 @@ QVariant QV8Engine::variantFromJS(const QV4::Value &value,
     if (QV4::ArrayObject *a = value.asArrayObject())
         return variantListFromJS(a, visitedObjects);
     if (QV4::DateObject *d = value.asDateObject())
-        return QJSConverter::toDateTime(d);
+        return d->toQDateTime();
     if (QV4::RegExpObject *re = value.asRegExpObject())
-        return QJSConverter::toRegExp(re);
+        return re->toQRegExp();
     if (isVariant(value))
         return variantWrapper()->variantValue(v8::Value::fromV4Value(value));
     if (isQObject(value))

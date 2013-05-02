@@ -1245,6 +1245,20 @@ void Object::markArrayObjects() const
     }
 }
 
+ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
+    : Object(engine)
+{
+    // Converts a QStringList to JS.
+    // The result is a new Array object with length equal to the length
+    // of the QStringList, and the elements being the QStringList's
+    // elements converted to JS Strings.
+    int len = list.count();
+    arrayReserve(len);
+    for (int ii = 0; ii < len; ++ii)
+        arrayData[ii].value = Value::fromString(engine->newString(list.at(ii)));
+    setArrayLengthUnchecked(len);
+}
+
 void ArrayObject::init(ExecutionEngine *engine)
 {
     type = Type_ArrayObject;
@@ -1252,6 +1266,18 @@ void ArrayObject::init(ExecutionEngine *engine)
 
     memberData = new Property[4];
     memberData[LengthPropertyIndex].value = Value::fromInt32(0);
+}
+
+QStringList ArrayObject::toQStringList() const
+{
+    QStringList result;
+
+    QV4::ExecutionEngine *engine = internalClass->engine;
+
+    uint32_t length = arrayLength();
+    for (uint32_t i = 0; i < length; ++i)
+        result.append(const_cast<ArrayObject *>(this)->getIndexed(engine->current, i).toString(engine->current)->toQString());
+    return result;
 }
 
 

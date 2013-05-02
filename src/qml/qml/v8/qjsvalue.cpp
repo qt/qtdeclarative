@@ -924,7 +924,7 @@ QDateTime QJSValue::toDateTime() const
     QV4::DateObject *date = d->value.asDateObject();
     if (!date)
         return QDateTime();
-    return QV4::DatePrototype::toQDateTime(date->value.toNumber());
+    return date->toQDateTime();
 }
 
 /*!

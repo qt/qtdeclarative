@@ -657,6 +657,17 @@ static double getLocalTZA()
 #endif
 }
 
+DateObject::DateObject(ExecutionEngine *engine, const QDateTime &date)
+    : Object(engine)
+{
+    value = Value::fromDouble(FromDateTime(date));
+}
+
+QDateTime DateObject::toQDateTime() const
+{
+    return ToDateTime(value.asDouble(), Qt::LocalTime);
+}
+
 DEFINE_MANAGED_VTABLE(DateCtor);
 
 DateCtor::DateCtor(ExecutionContext *scope)
@@ -766,16 +777,6 @@ void DatePrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("toGMTString"), method_toUTCString, 0);
     defineDefaultProperty(ctx, QStringLiteral("toISOString"), method_toISOString, 0);
     defineDefaultProperty(ctx, QStringLiteral("toJSON"), method_toJSON, 1);
-}
-
-double DatePrototype::toJSDate(const QDateTime &dateTime)
-{
-    return FromDateTime(dateTime);
-}
-
-QDateTime DatePrototype::toQDateTime(double d)
-{
-    return ToDateTime(d, Qt::LocalTime);
 }
 
 double DatePrototype::getThisDate(ExecutionContext *ctx)

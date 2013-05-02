@@ -224,14 +224,16 @@ struct Q_QML_EXPORT ExecutionEngine
     Object *newStringObject(const Value &value);
     Object *newNumberObject(const Value &value);
     Object *newBooleanObject(const Value &value);
-    Object *newFunctionObject(ExecutionContext *scope);
 
     ArrayObject *newArrayObject();
+    ArrayObject *newArrayObject(const QStringList &list);
 
     DateObject *newDateObject(const Value &value);
+    DateObject *newDateObject(const QDateTime &dt);
 
     RegExpObject *newRegExpObject(const QString &pattern, int flags);
     RegExpObject *newRegExpObject(RegExp* re, bool global);
+    RegExpObject *newRegExpObject(const QRegExp &re);
 
     Object *newErrorObject(const Value &value);
     Object *newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message);

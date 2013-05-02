@@ -43,7 +43,6 @@
 #include "private/qv4engine_p.h"
 #include "private/qv4object_p.h"
 #include "private/qv4objectiterator_p.h"
-#include "qjsconverter_p.h"
 
 QT_BEGIN_NAMESPACE
 

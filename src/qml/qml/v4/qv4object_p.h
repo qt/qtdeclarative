@@ -391,7 +391,10 @@ struct ArrayObject: Object {
     };
 
     ArrayObject(ExecutionEngine *engine) : Object(engine) { init(engine); }
+    ArrayObject(ExecutionEngine *engine, const QStringList &list);
     void init(ExecutionEngine *engine);
+
+    QStringList toQStringList() const;
 };
 
 inline uint Object::arrayLength() const

@@ -289,11 +289,12 @@ v8::Handle<v8::Value> QQmlDateExtension::toLocaleDateString(const v8::Arguments&
 
 v8::Handle<v8::Value> QQmlDateExtension::fromLocaleString(const v8::Arguments& args)
 {
+    QV4::ExecutionEngine *engine = args.GetIsolate()->GetEngine();
     if (args.Length() == 1 && args[0]->IsString()) {
         QLocale locale;
-        QString dateString = args[0]->v4Value().toString(args.GetIsolate()->GetEngine()->current)->toQString();
+        QString dateString = args[0]->v4Value().toString(engine->current)->toQString();
         QDateTime dt = locale.toDateTime(dateString);
-        return QV4::Value::fromObject(QJSConverter::toDateTime(dt));
+        return QV4::Value::fromObject(engine->newDateObject(dt));
     }
 
     if (args.Length() < 1 || args.Length() > 3 || !isLocaleObject(args[0]))
@@ -319,18 +320,20 @@ v8::Handle<v8::Value> QQmlDateExtension::fromLocaleString(const v8::Arguments& a
         dt = r->locale.toDateTime(dateString, enumFormat);
     }
 
-    return QV4::Value::fromObject(QJSConverter::toDateTime(dt));
+    return QV4::Value::fromObject(engine->newDateObject(dt));
 }
 
 v8::Handle<v8::Value> QQmlDateExtension::fromLocaleTimeString(const v8::Arguments& args)
 {
+    QV4::ExecutionEngine *engine = args.GetIsolate()->GetEngine();
+
     if (args.Length() == 1 && args[0]->IsString()) {
         QLocale locale;
-        QString timeString = args[0]->v4Value().toString(args.GetIsolate()->GetEngine()->current)->toQString();
+        QString timeString = args[0]->v4Value().toString(engine->current)->toQString();
         QTime time = locale.toTime(timeString);
         QDateTime dt = QDateTime::currentDateTime();
         dt.setTime(time);
-        return QV4::Value::fromObject(QJSConverter::toDateTime(dt));
+        return QV4::Value::fromObject(engine->newDateObject(dt));
     }
 
     if (args.Length() < 1 || args.Length() > 3 || !isLocaleObject(args[0]))
@@ -359,16 +362,18 @@ v8::Handle<v8::Value> QQmlDateExtension::fromLocaleTimeString(const v8::Argument
     QDateTime dt = QDateTime::currentDateTime();
     dt.setTime(tm);
 
-    return QV4::Value::fromObject(QJSConverter::toDateTime(dt));
+    return QV4::Value::fromObject(engine->newDateObject(dt));
 }
 
 v8::Handle<v8::Value> QQmlDateExtension::fromLocaleDateString(const v8::Arguments& args)
 {
+    QV4::ExecutionEngine *engine = args.GetIsolate()->GetEngine();
+
     if (args.Length() == 1 && args[0]->IsString()) {
         QLocale locale;
-        QString dateString = args[0]->v4Value().toString(args.GetIsolate()->GetEngine()->current)->toQString();
+        QString dateString = args[0]->v4Value().toString(engine->current)->toQString();
         QDate date = locale.toDate(dateString);
-        return QV4::Value::fromObject(QJSConverter::toDateTime(QDateTime(date)));
+        return QV4::Value::fromObject(engine->newDateObject(QDateTime(date)));
     }
 
     if (args.Length() < 1 || args.Length() > 3 || !isLocaleObject(args[0]))
@@ -394,7 +399,7 @@ v8::Handle<v8::Value> QQmlDateExtension::fromLocaleDateString(const v8::Argument
         dt = r->locale.toDate(dateString, enumFormat);
     }
 
-    return QV4::Value::fromObject(QJSConverter::toDateTime(QDateTime(dt)));
+    return QV4::Value::fromObject(engine->newDateObject(QDateTime(dt)));
 }
 
 v8::Handle<v8::Value> QQmlDateExtension::timeZoneUpdated(const v8::Arguments& args)

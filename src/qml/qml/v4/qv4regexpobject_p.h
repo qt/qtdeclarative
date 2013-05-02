@@ -69,7 +69,10 @@ struct RegExpObject: Object {
     Property *lastIndexProperty(ExecutionContext *ctx);
     bool global;
     RegExpObject(ExecutionEngine *engine, RegExp* value, bool global);
+    RegExpObject(ExecutionEngine *engine, const QRegExp &re);
     ~RegExpObject() {}
+
+    QRegExp toQRegExp() const;
 
 protected:
     static const ManagedVTable static_vtbl;

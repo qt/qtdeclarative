@@ -54,6 +54,9 @@ namespace QV4 {
 struct DateObject: Object {
     Value value;
     DateObject(ExecutionEngine *engine, const Value &value): Object(engine), value(value) { type = Type_DateObject; }
+    DateObject(ExecutionEngine *engine, const QDateTime &value);
+
+    QDateTime toQDateTime() const;
 };
 
 struct DateCtor: FunctionObject
@@ -71,9 +74,6 @@ struct DatePrototype: DateObject
 {
     DatePrototype(ExecutionEngine *engine): DateObject(engine, Value::fromDouble(qSNaN())) {}
     void init(ExecutionContext *ctx, const Value &ctor);
-
-    static double toJSDate(const QDateTime &dateTime);
-    static QDateTime toQDateTime(double d);
 
     static double getThisDate(ExecutionContext *ctx);
 
