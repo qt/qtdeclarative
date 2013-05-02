@@ -71,6 +71,7 @@
 
 QString pluginImportPath;
 bool verbose = false;
+bool creatable = true;
 
 QString currentProperty;
 QString inObjectInstantiation;
@@ -225,46 +226,48 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine, const 
         qmlTypesByCppName[baseCpp] = baseExports;
     }
 
-    // find even more QMetaObjects by instantiating QML types and running
-    // over the instances
-    foreach (QQmlType *ty, QQmlMetaType::qmlTypes()) {
-        if (skip.contains(ty))
-            continue;
-        if (ty->isExtendedType())
-            continue;
-        if (!ty->isCreatable())
-            continue;
-        if (ty->typeName() == "QQmlComponent")
-            continue;
+    if (creatable) {
+        // find even more QMetaObjects by instantiating QML types and running
+        // over the instances
+        foreach (QQmlType *ty, QQmlMetaType::qmlTypes()) {
+            if (skip.contains(ty))
+                continue;
+            if (ty->isExtendedType())
+                continue;
+            if (!ty->isCreatable())
+                continue;
+            if (ty->typeName() == "QQmlComponent")
+                continue;
 
-        QString tyName = ty->qmlTypeName();
-        tyName = tyName.mid(tyName.lastIndexOf(QLatin1Char('/')) + 1);
-        if (tyName.isEmpty())
-            continue;
+            QString tyName = ty->qmlTypeName();
+            tyName = tyName.mid(tyName.lastIndexOf(QLatin1Char('/')) + 1);
+            if (tyName.isEmpty())
+                continue;
 
-        inObjectInstantiation = tyName;
-        QObject *object = 0;
+            inObjectInstantiation = tyName;
+            QObject *object = 0;
 
-        if (ty->isSingleton()) {
-            QQmlType::SingletonInstanceInfo *siinfo = ty->singletonInstanceInfo();
-            if (siinfo->qobjectCallback) {
-                siinfo->init(engine);
-                collectReachableMetaObjects(object, &metas);
-                object = siinfo->qobjectApi(engine);
+            if (ty->isSingleton()) {
+                QQmlType::SingletonInstanceInfo *siinfo = ty->singletonInstanceInfo();
+                if (siinfo->qobjectCallback) {
+                    siinfo->init(engine);
+                    collectReachableMetaObjects(object, &metas);
+                    object = siinfo->qobjectApi(engine);
+                } else {
+                    inObjectInstantiation.clear();
+                    continue; // we don't handle QJSValue singleton types.
+                }
             } else {
-                inObjectInstantiation.clear();
-                continue; // we don't handle QJSValue singleton types.
+                object = ty->create();
             }
-        } else {
-            object = ty->create();
+
+            inObjectInstantiation.clear();
+
+            if (object)
+                collectReachableMetaObjects(object, &metas);
+            else
+                qWarning() << "Could not create" << tyName;
         }
-
-        inObjectInstantiation.clear();
-
-        if (object)
-            collectReachableMetaObjects(object, &metas);
-        else
-            qWarning() << "Could not create" << tyName;
     }
 
     return metas;
@@ -540,8 +543,8 @@ void sigSegvHandler(int) {
 void printUsage(const QString &appName)
 {
     qWarning() << qPrintable(QString(
-                                 "Usage: %1 [-v] [-[non]relocatable] module.uri version [module/import/path]\n"
-                                 "       %1 [-v] -path path/to/qmldir/directory [version]\n"
+                                 "Usage: %1 [-v] [-noinstantiate] [-[non]relocatable] module.uri version [module/import/path]\n"
+                                 "       %1 [-v] [-noinstantiate] -path path/to/qmldir/directory [version]\n"
                                  "       %1 [-v] -builtins\n"
                                  "Example: %1 Qt.labs.folderlistmodel 2.0 /home/user/dev/qt-install/imports").arg(
                                  appName));
@@ -598,6 +601,9 @@ int main(int argc, char *argv[])
             } else if (arg == QLatin1String("--relocatable")
                         || arg == QLatin1String("-relocatable")) {
                 relocatable = true;
+            } else if (arg == QLatin1String("--noinstantiate")
+                       || arg == QLatin1String("-noinstantiate")) {
+                creatable = false;
             } else if (arg == QLatin1String("--path")
                        || arg == QLatin1String("-path")) {
                 action = Path;
