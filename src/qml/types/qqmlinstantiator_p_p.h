@@ -75,11 +75,11 @@ public:
     void _q_createdItem(int, QObject *);
     void _q_modelUpdated(const QQmlChangeSet &, bool);
 
-    bool componentComplete;
-    bool effectiveReset;
-    bool active;
-    bool async;
-    bool ownModel;
+    bool componentComplete:1;
+    bool effectiveReset:1;
+    bool active:1;
+    bool async:1;
+    bool ownModel:1;
     QVariant model;
     QQmlInstanceModel *instanceModel;
     QQmlComponent *delegate;
