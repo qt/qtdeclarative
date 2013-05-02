@@ -472,19 +472,12 @@ protected:
 
     void initializeGlobal(v8::Handle<v8::Object>);
 
-    double qtDateTimeToJsDate(const QDateTime &dt);
-
 private:
     QVariantList variantListFromJS(QV4::ArrayObject *array, V8ObjectSet &visitedObjects);
     QVariantMap variantMapFromJS(QV4::Object *object, V8ObjectSet &visitedObjects);
     QVariant variantFromJS(const QV4::Value &value, V8ObjectSet &visitedObjects);
 
     static v8::Persistent<v8::Object> *findOwnerAndStrength(QObject *object, bool *shouldBeStrong);
-
-//    typedef QIntrusiveList<QJSValuePrivate, &QJSValuePrivate::m_node> ValueList;
-//    ValueList m_values;
-//    typedef QIntrusiveList<QJSValueIteratorPrivate, &QJSValueIteratorPrivate::m_node> ValueIteratorList;
-//    ValueIteratorList m_valueIterators;
 
     Q_DISABLE_COPY(QV8Engine)
 };

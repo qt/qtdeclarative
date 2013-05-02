@@ -353,14 +353,11 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::QChar:
                 return QV4::Value::fromInt32((*reinterpret_cast<const QChar*>(ptr)).unicode());
             case QMetaType::QDateTime:
-                return QV4::Value::fromObject(m_v4Engine->newDateObject(QV4::Value::fromDouble(
-                                            qtDateTimeToJsDate(*reinterpret_cast<const QDateTime *>(ptr)))));
+                return QV4::Value::fromObject(QJSConverter::toDateTime(*reinterpret_cast<const QDateTime *>(ptr)));
             case QMetaType::QDate:
-                return QV4::Value::fromObject(m_v4Engine->newDateObject(QV4::Value::fromDouble(
-                                            qtDateTimeToJsDate(QDateTime(*reinterpret_cast<const QDate *>(ptr))))));
+                return QV4::Value::fromObject(QJSConverter::toDateTime(QDateTime(*reinterpret_cast<const QDate *>(ptr))));
             case QMetaType::QTime:
-            return QV4::Value::fromObject(m_v4Engine->newDateObject(QV4::Value::fromDouble(
-                                            qtDateTimeToJsDate(QDateTime(QDate(1970,1,1), *reinterpret_cast<const QTime *>(ptr))))));
+            return QV4::Value::fromObject(QJSConverter::toDateTime(QDateTime(QDate(1970,1,1), *reinterpret_cast<const QTime *>(ptr))));
             case QMetaType::QRegExp:
                 return QV4::Value::fromObject(QJSConverter::toRegExp(*reinterpret_cast<const QRegExp *>(ptr)));
             case QMetaType::QObjectStar:
@@ -777,15 +774,6 @@ void QV8Engine::setExtensionData(int index, Deletable *data)
         delete m_extensionData.at(index);
 
     m_extensionData[index] = data;
-}
-
-double QV8Engine::qtDateTimeToJsDate(const QDateTime &dt)
-{
-    if (!dt.isValid()) {
-        return qSNaN();
-    }
-
-    return dt.toMSecsSinceEpoch();
 }
 
 QDateTime QV8Engine::qtDateTimeFromJsDate(double jsDate)
