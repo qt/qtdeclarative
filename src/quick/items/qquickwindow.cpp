@@ -411,7 +411,7 @@ static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QTouchEvent::Touc
 {
     // The touch point local position and velocity are not yet transformed.
     QMouseEvent *me = new QMouseEvent(type, transformNeeded ? item->mapFromScene(p.scenePos()) : p.pos(), p.scenePos(), p.screenPos(),
-                                      Qt::LeftButton, Qt::LeftButton, event->modifiers());
+                                      Qt::LeftButton, (type == QEvent::MouseButtonRelease ? Qt::NoButton : Qt::LeftButton), event->modifiers());
     me->setAccepted(true);
     me->setTimestamp(event->timestamp());
     QVector2D transformedVelocity = p.velocity();
