@@ -6,6 +6,6 @@ IMPORT_VERSION = 2.1
 SOURCES += \
     plugin.cpp
 
-QT += qml-private
+QT = qml-private
 
 load(qml_plugin)
