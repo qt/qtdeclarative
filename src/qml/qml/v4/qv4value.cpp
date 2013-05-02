@@ -141,6 +141,12 @@ Value Value::fromString(ExecutionContext *ctx, const QString &s)
     return fromString(ctx->engine->newString(s));
 }
 
+Value Value::fromString(ExecutionEngine *engine, const QString &s)
+{
+    return fromString(engine->newString(s));
+}
+
+
 int Value::toInt32(double number)
 {
     const double D32 = 4294967296.0;

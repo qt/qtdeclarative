@@ -197,12 +197,26 @@ void Object::defineDefaultProperty(ExecutionContext *context, const QString &nam
     defineDefaultProperty(context->engine->newIdentifier(name), value);
 }
 
+void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name, Value value)
+{
+    defineDefaultProperty(engine->newIdentifier(name), value);
+}
+
 void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(SimpleCallContext *), int argumentCount)
 {
     Q_UNUSED(argumentCount);
     String *s = context->engine->newIdentifier(name);
     FunctionObject* function = context->engine->newBuiltinFunction(context, s, code);
     function->defineReadonlyProperty(context->engine->id_length, Value::fromInt32(argumentCount));
+    defineDefaultProperty(s, Value::fromObject(function));
+}
+
+void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name, Value (*code)(SimpleCallContext *), int argumentCount)
+{
+    Q_UNUSED(argumentCount);
+    String *s = engine->newIdentifier(name);
+    FunctionObject* function = engine->newBuiltinFunction(engine->rootContext, s, code);
+    function->defineReadonlyProperty(engine->id_length, Value::fromInt32(argumentCount));
     defineDefaultProperty(s, Value::fromObject(function));
 }
 

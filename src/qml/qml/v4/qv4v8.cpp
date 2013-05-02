@@ -1260,7 +1260,7 @@ BooleanObject *BooleanObject::Cast(Value *obj)
 
 Local<Value> StringObject::New(Handle<String> value)
 {
-    QV4::Object *o = currentEngine()->newStringObject(currentEngine()->current, QV4::Value::fromString(value->v4Value().asString()));
+    QV4::Object *o = currentEngine()->newStringObject(QV4::Value::fromString(value->v4Value().asString()));
     return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
@@ -1901,7 +1901,7 @@ Handle<Value> ThrowException(Handle<Value> exception)
 Local<Value> Exception::ReferenceError(Handle<String> message)
 {
     Q_UNUSED(message);
-    QV4::Object *o = currentEngine()->newReferenceErrorObject(currentEngine()->current, message->ToString()->asQString());
+    QV4::Object *o = currentEngine()->newReferenceErrorObject(message->ToString()->asQString());
     return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 
@@ -1915,7 +1915,7 @@ Local<Value> Exception::SyntaxError(Handle<String> message)
 Local<Value> Exception::TypeError(Handle<String> message)
 {
     Q_UNUSED(message);
-    QV4::Object *o = currentEngine()->newTypeErrorObject(currentEngine()->current, message->ToString()->asQString());
+    QV4::Object *o = currentEngine()->newTypeErrorObject(message->ToString()->asQString());
     return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
 }
 

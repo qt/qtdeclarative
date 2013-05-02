@@ -52,7 +52,7 @@ namespace QV4 {
 struct StringObject: Object {
     Value value;
     mutable Property tmpProperty;
-    StringObject(ExecutionContext *ctx, const Value &value);
+    StringObject(ExecutionEngine *engine, const Value &value);
 
     Property *getIndex(uint index) const;
 
@@ -74,8 +74,8 @@ protected:
 
 struct StringPrototype: StringObject
 {
-    StringPrototype(ExecutionContext *ctx): StringObject(ctx, Value::fromString(ctx, QString())) {}
-    void init(ExecutionContext *ctx, const Value &ctor);
+    StringPrototype(ExecutionEngine *engine): StringObject(engine, Value::fromString(engine, QString())) {}
+    void init(ExecutionEngine *engine, const Value &ctor);
 
     static Value method_toString(SimpleCallContext *context);
     static Value method_charAt(SimpleCallContext *context);

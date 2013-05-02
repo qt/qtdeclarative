@@ -61,26 +61,28 @@ struct ErrorObject: Object {
         URIError
     };
 
-    ErrorObject(ExecutionContext *context, const Value &message, ErrorType t = Error);
+    ErrorObject(ExecutionEngine *engine, const Value &message, ErrorType t = Error);
 
     SyntaxErrorObject *asSyntaxError();
 };
 
 struct EvalErrorObject: ErrorObject {
-    EvalErrorObject(ExecutionContext *ctx, const Value &message);
+    EvalErrorObject(ExecutionEngine *engine, const Value &message);
 };
 
 struct RangeErrorObject: ErrorObject {
-    RangeErrorObject(ExecutionContext *ctx, const Value &message);
-    RangeErrorObject(ExecutionContext *ctx, const QString &msg);
+    RangeErrorObject(ExecutionEngine *engine, const Value &message);
+    RangeErrorObject(ExecutionEngine *engine, const QString &msg);
 };
 
 struct ReferenceErrorObject: ErrorObject {
-    ReferenceErrorObject(ExecutionContext *ctx, const Value &message);
-    ReferenceErrorObject(ExecutionContext *ctx, const QString &msg);
+    ReferenceErrorObject(ExecutionEngine *engine, const Value &message);
+    ReferenceErrorObject(ExecutionEngine *engine, const QString &msg);
 };
 
 struct SyntaxErrorObject: ErrorObject {
+    SyntaxErrorObject(ExecutionEngine *engine, const Value &msg);
+    SyntaxErrorObject(ExecutionEngine *engine, const QString &msg);
     SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *msg);
     ~SyntaxErrorObject() { delete msg; }
     static void destroy(Managed *that) { static_cast<SyntaxErrorObject *>(that)->~SyntaxErrorObject(); }
@@ -94,12 +96,12 @@ protected:
 };
 
 struct TypeErrorObject: ErrorObject {
-    TypeErrorObject(ExecutionContext *ctx, const Value &message);
-    TypeErrorObject(ExecutionContext *ctx, const QString &msg);
+    TypeErrorObject(ExecutionEngine *engine, const Value &message);
+    TypeErrorObject(ExecutionEngine *engine, const QString &msg);
 };
 
 struct URIErrorObject: ErrorObject {
-    URIErrorObject(ExecutionContext *ctx, const Value &message);
+    URIErrorObject(ExecutionEngine *engine, const Value &message);
 };
 
 struct ErrorCtor: FunctionObject
@@ -177,47 +179,47 @@ protected:
 struct ErrorPrototype: ErrorObject
 {
     // ### shouldn't be undefined
-    ErrorPrototype(ExecutionContext *context): ErrorObject(context, Value::undefinedValue()) {}
-    void init(ExecutionContext *ctx, const Value &ctor) { init(ctx, ctor, this); }
+    ErrorPrototype(ExecutionEngine *engine): ErrorObject(engine, Value::undefinedValue()) {}
+    void init(ExecutionEngine *engine, const Value &ctor) { init(engine, ctor, this); }
 
-    static void init(ExecutionContext *ctx, const Value &ctor, Object *obj);
+    static void init(ExecutionEngine *engine, const Value &ctor, Object *obj);
     static Value method_toString(SimpleCallContext *ctx);
 };
 
 struct EvalErrorPrototype: EvalErrorObject
 {
-    EvalErrorPrototype(ExecutionContext *ctx): EvalErrorObject(ctx, Value::undefinedValue()) { vtbl = &static_vtbl; }
-    void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
+    EvalErrorPrototype(ExecutionEngine *engine): EvalErrorObject(engine, Value::undefinedValue()) { vtbl = &static_vtbl; }
+    void init(ExecutionEngine *engine, const Value &ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct RangeErrorPrototype: RangeErrorObject
 {
-    RangeErrorPrototype(ExecutionContext *ctx): RangeErrorObject(ctx, Value::undefinedValue()) { vtbl = &static_vtbl; }
-    void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
+    RangeErrorPrototype(ExecutionEngine *engine): RangeErrorObject(engine, Value::undefinedValue()) { vtbl = &static_vtbl; }
+    void init(ExecutionEngine *engine, const Value &ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct ReferenceErrorPrototype: ReferenceErrorObject
 {
-    ReferenceErrorPrototype(ExecutionContext *ctx): ReferenceErrorObject(ctx, Value::undefinedValue()) { vtbl = &static_vtbl; }
-    void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
+    ReferenceErrorPrototype(ExecutionEngine *engine): ReferenceErrorObject(engine, Value::undefinedValue()) { vtbl = &static_vtbl; }
+    void init(ExecutionEngine *engine, const Value &ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct SyntaxErrorPrototype: SyntaxErrorObject
 {
-    SyntaxErrorPrototype(ExecutionContext *ctx): SyntaxErrorObject(ctx, 0) { vtbl = &static_vtbl; }
-    void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
+    SyntaxErrorPrototype(ExecutionEngine *engine): SyntaxErrorObject(engine, 0) { vtbl = &static_vtbl; }
+    void init(ExecutionEngine *engine, const Value &ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct TypeErrorPrototype: TypeErrorObject
 {
-    TypeErrorPrototype(ExecutionContext *ctx): TypeErrorObject(ctx, Value::undefinedValue()) { vtbl = &static_vtbl; }
-    void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
+    TypeErrorPrototype(ExecutionEngine *engine): TypeErrorObject(engine, Value::undefinedValue()) { vtbl = &static_vtbl; }
+    void init(ExecutionEngine *engine, const Value &ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct URIErrorPrototype: URIErrorObject
 {
-    URIErrorPrototype(ExecutionContext *ctx): URIErrorObject(ctx, Value::undefinedValue()) { vtbl = &static_vtbl; }
-    void init(ExecutionContext *ctx, const Value &ctor) { ErrorPrototype::init(ctx, ctor, this); }
+    URIErrorPrototype(ExecutionEngine *engine): URIErrorObject(engine, Value::undefinedValue()) { vtbl = &static_vtbl; }
+    void init(ExecutionEngine *engine, const Value &ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 

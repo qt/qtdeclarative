@@ -543,7 +543,7 @@ void ExecutionContext::throwSyntaxError(DiagnosticMessage *message)
 
 void ExecutionContext::throwTypeError()
 {
-    throwError(Value::fromObject(engine->newTypeErrorObject(this, QStringLiteral("Type error"))));
+    throwError(Value::fromObject(engine->newTypeErrorObject(QStringLiteral("Type error"))));
 }
 
 void ExecutionContext::throwUnimplemented(const QString &message)
@@ -556,17 +556,17 @@ void ExecutionContext::throwReferenceError(Value value)
 {
     String *s = value.toString(this);
     QString msg = s->toQString() + QStringLiteral(" is not defined");
-    throwError(Value::fromObject(engine->newReferenceErrorObject(this, msg)));
+    throwError(Value::fromObject(engine->newReferenceErrorObject(msg)));
 }
 
 void ExecutionContext::throwRangeError(Value value)
 {
     String *s = value.toString(this);
     QString msg = s->toQString() + QStringLiteral(" out of range");
-    throwError(Value::fromObject(engine->newRangeErrorObject(this, msg)));
+    throwError(Value::fromObject(engine->newRangeErrorObject(msg)));
 }
 
 void ExecutionContext::throwURIError(Value msg)
 {
-    throwError(Value::fromObject(engine->newURIErrorObject(this, msg)));
+    throwError(Value::fromObject(engine->newURIErrorObject(msg)));
 }

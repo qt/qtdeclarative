@@ -208,6 +208,7 @@ struct Q_QML_EXPORT Value
 
 #ifndef QMLJS_LLVM_RUNTIME
     static Value fromString(ExecutionContext *ctx, const QString &fromString);
+    static Value fromString(ExecutionEngine *engine, const QString &s);
 #endif
 
     static double toInteger(double fromNumber);

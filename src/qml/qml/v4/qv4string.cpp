@@ -142,14 +142,14 @@ Value String::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *ha
 void String::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
 {
     String *that = static_cast<String *>(m);
-    Object *o = ctx->engine->newStringObject(ctx, Value::fromString(that));
+    Object *o = ctx->engine->newStringObject(Value::fromString(that));
     o->put(ctx, name, value);
 }
 
 void String::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value)
 {
     String *that = static_cast<String *>(m);
-    Object *o = ctx->engine->newStringObject(ctx, Value::fromString(that));
+    Object *o = ctx->engine->newStringObject(Value::fromString(that));
     o->putIndexed(ctx, index, value);
 }
 

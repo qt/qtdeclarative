@@ -73,21 +73,35 @@
 
 using namespace QV4;
 
-ErrorObject::ErrorObject(ExecutionContext *context, const Value &message, ErrorType t)
-    : Object(context->engine)
+ErrorObject::ErrorObject(ExecutionEngine *engine, const Value &message, ErrorType t)
+    : Object(engine)
 {
     type = Type_ErrorObject;
     subtype = t;
 
     if (!message.isUndefined())
-        defineDefaultProperty(context->engine->newString(QStringLiteral("message")), message);
-    defineDefaultProperty(context, QLatin1String("name"), Value::fromString(context, className()));
+        defineDefaultProperty(engine->newString(QStringLiteral("message")), message);
+    defineDefaultProperty(engine, QStringLiteral("name"), Value::fromString(engine, className()));
 }
 
 DEFINE_MANAGED_VTABLE(SyntaxErrorObject);
 
+SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const Value &msg)
+    : ErrorObject(engine, msg, SyntaxError)
+{
+    vtbl = &static_vtbl;
+    prototype = engine->syntaxErrorPrototype;
+}
+
+SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const QString &msg)
+    : ErrorObject(engine, Value::fromString(engine, msg), SyntaxError)
+{
+    vtbl = &static_vtbl;
+    prototype = engine->syntaxErrorPrototype;
+}
+
 SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message)
-    : ErrorObject(ctx, message ? Value::fromString(message->buildFullMessage(ctx)) : ctx->argument(0), SyntaxError)
+    : ErrorObject(ctx->engine, message ? Value::fromString(message->buildFullMessage(ctx)) : ctx->argument(0), SyntaxError)
     , msg(message)
 {
     vtbl = &static_vtbl;
@@ -96,52 +110,52 @@ SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *m
 
 
 
-EvalErrorObject::EvalErrorObject(ExecutionContext *ctx, const Value &message)
-    : ErrorObject(ctx, message, EvalError)
+EvalErrorObject::EvalErrorObject(ExecutionEngine *engine, const Value &message)
+    : ErrorObject(engine, message, EvalError)
 {
-    prototype = ctx->engine->evalErrorPrototype;
+    prototype = engine->evalErrorPrototype;
 }
 
-RangeErrorObject::RangeErrorObject(ExecutionContext *ctx, const Value &message)
-    : ErrorObject(ctx, message, RangeError)
+RangeErrorObject::RangeErrorObject(ExecutionEngine *engine, const Value &message)
+    : ErrorObject(engine, message, RangeError)
 {
-    prototype = ctx->engine->rangeErrorPrototype;
+    prototype = engine->rangeErrorPrototype;
 }
 
-RangeErrorObject::RangeErrorObject(ExecutionContext *ctx, const QString &message)
-    : ErrorObject(ctx, Value::fromString(ctx,message), RangeError)
+RangeErrorObject::RangeErrorObject(ExecutionEngine *engine, const QString &message)
+    : ErrorObject(engine, Value::fromString(engine, message), RangeError)
 {
-    prototype = ctx->engine->rangeErrorPrototype;
+    prototype = engine->rangeErrorPrototype;
 }
 
-ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx, const Value &message)
-    : ErrorObject(ctx, message, ReferenceError)
+ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const Value &message)
+    : ErrorObject(engine, message, ReferenceError)
 {
-    prototype = ctx->engine->referenceErrorPrototype;
+    prototype = engine->referenceErrorPrototype;
 }
 
-ReferenceErrorObject::ReferenceErrorObject(ExecutionContext *ctx, const QString &message)
-    : ErrorObject(ctx, Value::fromString(ctx,message), ReferenceError)
+ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const QString &message)
+    : ErrorObject(engine, Value::fromString(engine, message), ReferenceError)
 {
-    prototype = ctx->engine->referenceErrorPrototype;
+    prototype = engine->referenceErrorPrototype;
 }
 
-TypeErrorObject::TypeErrorObject(ExecutionContext *ctx, const Value &message)
-    : ErrorObject(ctx, message, TypeError)
+TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const Value &message)
+    : ErrorObject(engine, message, TypeError)
 {
-    prototype = ctx->engine->typeErrorPrototype;
+    prototype = engine->typeErrorPrototype;
 }
 
-TypeErrorObject::TypeErrorObject(ExecutionContext *ctx, const QString &message)
-    : ErrorObject(ctx, Value::fromString(ctx,message), TypeError)
+TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const QString &message)
+    : ErrorObject(engine, Value::fromString(engine, message), TypeError)
 {
-    prototype = ctx->engine->typeErrorPrototype;
+    prototype = engine->typeErrorPrototype;
 }
 
-URIErrorObject::URIErrorObject(ExecutionContext *ctx, const Value &message)
-    : ErrorObject(ctx, message, URIError)
+URIErrorObject::URIErrorObject(ExecutionEngine *engine, const Value &message)
+    : ErrorObject(engine, message, URIError)
 {
-    prototype = ctx->engine->uRIErrorPrototype;
+    prototype = engine->uRIErrorPrototype;
 }
 
 DEFINE_MANAGED_VTABLE(ErrorCtor);
@@ -170,41 +184,41 @@ Value ErrorCtor::call(Managed *that, ExecutionContext *ctx, const Value &, Value
 
 Value EvalErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
-    return Value::fromObject(new (ctx->engine->memoryManager) EvalErrorObject(ctx, argc ? args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (ctx->engine->memoryManager) EvalErrorObject(ctx->engine, argc ? args[0] : Value::undefinedValue()));
 }
 
 Value RangeErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
-    return Value::fromObject(new (ctx->engine->memoryManager) RangeErrorObject(ctx, argc ? args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (ctx->engine->memoryManager) RangeErrorObject(ctx->engine, argc ? args[0] : Value::undefinedValue()));
 }
 
 Value ReferenceErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
-    return Value::fromObject(new (ctx->engine->memoryManager) ReferenceErrorObject(ctx, argc ? args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (ctx->engine->memoryManager) ReferenceErrorObject(ctx->engine, argc ? args[0] : Value::undefinedValue()));
 }
 
-Value SyntaxErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *, int)
+Value SyntaxErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
-    return Value::fromObject(new (ctx->engine->memoryManager) SyntaxErrorObject(ctx, 0));
+    return Value::fromObject(new (ctx->engine->memoryManager) SyntaxErrorObject(ctx->engine, argc ? args[0] : Value::undefinedValue()));
 }
 
 Value TypeErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
-    return Value::fromObject(new (ctx->engine->memoryManager) TypeErrorObject(ctx, argc ? args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (ctx->engine->memoryManager) TypeErrorObject(ctx->engine, argc ? args[0] : Value::undefinedValue()));
 }
 
 Value URIErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
-    return Value::fromObject(new (ctx->engine->memoryManager) URIErrorObject(ctx, argc ? args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (ctx->engine->memoryManager) URIErrorObject(ctx->engine, argc ? args[0] : Value::undefinedValue()));
 }
 
-void ErrorPrototype::init(ExecutionContext *ctx, const Value &ctor, Object *obj)
+void ErrorPrototype::init(ExecutionEngine *engine, const Value &ctor, Object *obj)
 {
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(obj));
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(1));
-    obj->defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
-    obj->defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
-    obj->defineDefaultProperty(ctx, QStringLiteral("message"), Value::fromString(ctx, QString()));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(obj));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
+    obj->defineDefaultProperty(engine, QStringLiteral("constructor"), ctor);
+    obj->defineDefaultProperty(engine, QStringLiteral("toString"), method_toString, 0);
+    obj->defineDefaultProperty(engine, QStringLiteral("message"), Value::fromString(engine, QString()));
 }
 
 Value ErrorPrototype::method_toString(SimpleCallContext *ctx)

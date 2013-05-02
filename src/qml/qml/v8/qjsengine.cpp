@@ -261,7 +261,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
         QV4::Function *f = QV4::EvalFunction::parseSource(d->m_v4Engine->current, fileName, program, QQmlJS::Codegen::EvalCode,
                                                                         d->m_v4Engine->current->strictMode, true);
         if (!f)
-            return new QJSValuePrivate(d->m_v4Engine, d->m_v4Engine->newSyntaxErrorObject(d->m_v4Engine->current, 0));
+            return new QJSValuePrivate(d->m_v4Engine, d->m_v4Engine->newSyntaxErrorObject(QString()));
 
         QV4::Value result = d->m_v4Engine->run(f);
         return new QJSValuePrivate(d->m_v4Engine, result);

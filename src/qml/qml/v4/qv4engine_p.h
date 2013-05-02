@@ -221,10 +221,10 @@ struct Q_QML_EXPORT ExecutionEngine
     String *newString(const QString &s);
     String *newIdentifier(const QString &text);
 
-    Object *newStringObject(ExecutionContext *ctx, const Value &value);
+    Object *newStringObject(const Value &value);
     Object *newNumberObject(const Value &value);
     Object *newBooleanObject(const Value &value);
-    Object *newFunctionObject(ExecutionContext *ctx);
+    Object *newFunctionObject(ExecutionContext *scope);
 
     ArrayObject *newArrayObject();
 
@@ -235,10 +235,11 @@ struct Q_QML_EXPORT ExecutionEngine
 
     Object *newErrorObject(const Value &value);
     Object *newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message);
-    Object *newReferenceErrorObject(ExecutionContext *ctx, const QString &message);
-    Object *newTypeErrorObject(ExecutionContext *ctx, const QString &message);
-    Object *newRangeErrorObject(ExecutionContext *ctx, const QString &message);
-    Object *newURIErrorObject(ExecutionContext *ctx, Value message);
+    Object *newSyntaxErrorObject(const QString &message);
+    Object *newReferenceErrorObject(const QString &message);
+    Object *newTypeErrorObject(const QString &message);
+    Object *newRangeErrorObject(const QString &message);
+    Object *newURIErrorObject(Value message);
 
     Object *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
 

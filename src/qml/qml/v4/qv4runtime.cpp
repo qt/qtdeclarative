@@ -531,7 +531,7 @@ Object *__qmljs_convert_to_object(ExecutionContext *ctx, const Value &value)
     case Value::Boolean_Type:
         return ctx->engine->newBooleanObject(value);
     case Value::String_Type:
-        return ctx->engine->newStringObject(ctx, value);
+        return ctx->engine->newStringObject(value);
         break;
     case Value::Object_Type:
         Q_UNREACHABLE();

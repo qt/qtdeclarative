@@ -113,20 +113,20 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     initRootContext();
 
     objectPrototype = new (memoryManager) ObjectPrototype(this);
-    stringPrototype = new (memoryManager) StringPrototype(rootContext);
+    stringPrototype = new (memoryManager) StringPrototype(this);
     numberPrototype = new (memoryManager) NumberPrototype(this);
     booleanPrototype = new (memoryManager) BooleanPrototype(this);
     arrayPrototype = new (memoryManager) ArrayPrototype(rootContext);
     datePrototype = new (memoryManager) DatePrototype(this);
     functionPrototype = new (memoryManager) FunctionPrototype(rootContext);
     regExpPrototype = new (memoryManager) RegExpPrototype(this);
-    errorPrototype = new (memoryManager) ErrorPrototype(rootContext);
-    evalErrorPrototype = new (memoryManager) EvalErrorPrototype(rootContext);
-    rangeErrorPrototype = new (memoryManager) RangeErrorPrototype(rootContext);
-    referenceErrorPrototype = new (memoryManager) ReferenceErrorPrototype(rootContext);
-    syntaxErrorPrototype = new (memoryManager) SyntaxErrorPrototype(rootContext);
-    typeErrorPrototype = new (memoryManager) TypeErrorPrototype(rootContext);
-    uRIErrorPrototype = new (memoryManager) URIErrorPrototype(rootContext);
+    errorPrototype = new (memoryManager) ErrorPrototype(this);
+    evalErrorPrototype = new (memoryManager) EvalErrorPrototype(this);
+    rangeErrorPrototype = new (memoryManager) RangeErrorPrototype(this);
+    referenceErrorPrototype = new (memoryManager) ReferenceErrorPrototype(this);
+    syntaxErrorPrototype = new (memoryManager) SyntaxErrorPrototype(this);
+    typeErrorPrototype = new (memoryManager) TypeErrorPrototype(this);
+    uRIErrorPrototype = new (memoryManager) URIErrorPrototype(this);
 
     stringPrototype->prototype = objectPrototype;
     numberPrototype->prototype = objectPrototype;
@@ -176,20 +176,20 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     uRIErrorCtor.objectValue()->prototype = functionPrototype;
 
     objectPrototype->init(rootContext, objectCtor);
-    stringPrototype->init(rootContext, stringCtor);
+    stringPrototype->init(this, stringCtor);
     numberPrototype->init(rootContext, numberCtor);
     booleanPrototype->init(rootContext, booleanCtor);
     arrayPrototype->init(rootContext, arrayCtor);
     datePrototype->init(rootContext, dateCtor);
     functionPrototype->init(rootContext, functionCtor);
     regExpPrototype->init(rootContext, regExpCtor);
-    errorPrototype->init(rootContext, errorCtor);
-    evalErrorPrototype->init(rootContext, evalErrorCtor);
-    rangeErrorPrototype->init(rootContext, rangeErrorCtor);
-    referenceErrorPrototype->init(rootContext, referenceErrorCtor);
-    syntaxErrorPrototype->init(rootContext, syntaxErrorCtor);
-    typeErrorPrototype->init(rootContext, typeErrorCtor);
-    uRIErrorPrototype->init(rootContext, uRIErrorCtor);
+    errorPrototype->init(this, errorCtor);
+    evalErrorPrototype->init(this, evalErrorCtor);
+    rangeErrorPrototype->init(this, rangeErrorCtor);
+    referenceErrorPrototype->init(this, referenceErrorCtor);
+    syntaxErrorPrototype->init(this, syntaxErrorCtor);
+    typeErrorPrototype->init(this, typeErrorCtor);
+    uRIErrorPrototype->init(this, uRIErrorCtor);
 
     //
     // set up the global object
@@ -380,9 +380,9 @@ String *ExecutionEngine::newIdentifier(const QString &text)
     return identifierCache->insert(text);
 }
 
-Object *ExecutionEngine::newStringObject(ExecutionContext *ctx, const Value &value)
+Object *ExecutionEngine::newStringObject(const Value &value)
 {
-    StringObject *object = new (memoryManager) StringObject(ctx, value);
+    StringObject *object = new (memoryManager) StringObject(this, value);
     object->prototype = stringPrototype;
     return object;
 }
@@ -401,9 +401,9 @@ Object *ExecutionEngine::newBooleanObject(const Value &value)
     return object;
 }
 
-Object *ExecutionEngine::newFunctionObject(ExecutionContext *ctx)
+Object *ExecutionEngine::newFunctionObject(ExecutionContext *scope)
 {
-    Object *object = new (memoryManager) FunctionObject(ctx);
+    Object *object = new (memoryManager) FunctionObject(scope);
     object->prototype = functionPrototype;
     return object;
 }
@@ -444,7 +444,7 @@ RegExpObject *ExecutionEngine::newRegExpObject(RegExp* re, bool global)
 
 Object *ExecutionEngine::newErrorObject(const Value &value)
 {
-    ErrorObject *object = new (memoryManager) ErrorObject(rootContext, value);
+    ErrorObject *object = new (memoryManager) ErrorObject(this, value);
     object->prototype = errorPrototype;
     return object;
 }
@@ -454,24 +454,30 @@ Object *ExecutionEngine::newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticM
     return new (memoryManager) SyntaxErrorObject(ctx, message);
 }
 
-Object *ExecutionEngine::newReferenceErrorObject(ExecutionContext *ctx, const QString &message)
+Object *ExecutionEngine::newSyntaxErrorObject(const QString &message)
 {
-    return new (memoryManager) ReferenceErrorObject(ctx, message);
+    return new (memoryManager) SyntaxErrorObject(this, message);
 }
 
-Object *ExecutionEngine::newTypeErrorObject(ExecutionContext *ctx, const QString &message)
+
+Object *ExecutionEngine::newReferenceErrorObject(const QString &message)
 {
-    return new (memoryManager) TypeErrorObject(ctx, message);
+    return new (memoryManager) ReferenceErrorObject(this, message);
 }
 
-Object *ExecutionEngine::newRangeErrorObject(ExecutionContext *ctx, const QString &message)
+Object *ExecutionEngine::newTypeErrorObject(const QString &message)
 {
-    return new (memoryManager) RangeErrorObject(ctx, message);
+    return new (memoryManager) TypeErrorObject(this, message);
 }
 
-Object *ExecutionEngine::newURIErrorObject(ExecutionContext *ctx, Value message)
+Object *ExecutionEngine::newRangeErrorObject(const QString &message)
 {
-    return new (memoryManager) URIErrorObject(ctx, message);
+    return new (memoryManager) RangeErrorObject(this, message);
+}
+
+Object *ExecutionEngine::newURIErrorObject(Value message)
+{
+    return new (memoryManager) URIErrorObject(this, message);
 }
 
 Object *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object *o)
