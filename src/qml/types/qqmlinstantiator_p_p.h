@@ -76,6 +76,7 @@ public:
     void _q_modelUpdated(const QQmlChangeSet &, bool);
 
     bool componentComplete;
+    bool effectiveReset;
     bool active;
     bool async;
     bool ownModel;
