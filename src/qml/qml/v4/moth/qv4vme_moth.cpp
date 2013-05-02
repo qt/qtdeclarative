@@ -485,6 +485,24 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         instr.alu(context, VALUEPTR(instr.result), VALUE(instr.lhs), VALUE(instr.rhs));
     MOTH_END_INSTR(Binop)
 
+    MOTH_BEGIN_INSTR(AddNumberParams)
+        double lhs = VALUEPTR(instr.lhs)->asDouble();
+        double rhs = VALUEPTR(instr.rhs)->asDouble();
+        VALUEPTR(instr.result)->setDouble(lhs + rhs);
+    MOTH_END_INSTR(AddNumberParams)
+
+    MOTH_BEGIN_INSTR(MulNumberParams)
+        double lhs = VALUEPTR(instr.lhs)->asDouble();
+        double rhs = VALUEPTR(instr.rhs)->asDouble();
+        VALUEPTR(instr.result)->setDouble(lhs * rhs);
+    MOTH_END_INSTR(MulNumberParams)
+
+    MOTH_BEGIN_INSTR(SubNumberParams)
+        double lhs = VALUEPTR(instr.lhs)->asDouble();
+        double rhs = VALUEPTR(instr.rhs)->asDouble();
+        VALUEPTR(instr.result)->setDouble(lhs - rhs);
+    MOTH_END_INSTR(SubNumberParams)
+
     MOTH_BEGIN_INSTR(Ret)
         QV4::Value &result = VALUE(instr.result);
 //        TRACE(Ret, "returning value %s", result.toString(context)->toQString().toUtf8().constData());

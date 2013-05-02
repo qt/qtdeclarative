@@ -12,6 +12,7 @@ INCLUDEPATH += $$OUT_PWD
 
 SOURCES += \
     $$PWD/qv4codegen.cpp \
+    $$PWD/qv4ssa.cpp \
     $$PWD/qv4jsir.cpp \
     $$PWD/qv4engine.cpp \
     $$PWD/qv4context.cpp \
@@ -57,6 +58,7 @@ SOURCES += \
 HEADERS += \
     $$PWD/qv4global_p.h \
     $$PWD/qv4codegen_p.h \
+    $$PWD/qv4ssa_p.h \
     $$PWD/qv4jsir_p.h \
     $$PWD/qv4engine_p.h \
     $$PWD/qv4context_p.h \

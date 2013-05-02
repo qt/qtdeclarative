@@ -280,7 +280,6 @@ protected:
     void move(V4IR::Expr *target, V4IR::Expr *source, V4IR::AluOp op = V4IR::OpInvalid);
     void cjump(V4IR::Expr *cond, V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
 
-    void linearize(V4IR::Function *function);
     V4IR::Function *defineFunction(const QString &name, AST::Node *ast,
                                  AST::FormalParameterList *formals,
                                  AST::SourceElements *body,

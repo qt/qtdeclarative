@@ -250,7 +250,7 @@ public:
         call(addr);
     }
 
-    void registerBlock(V4IR::BasicBlock*);
+    void registerBlock(V4IR::BasicBlock*, V4IR::BasicBlock *nextBlock);
     void jumpToBlock(V4IR::BasicBlock* current, V4IR::BasicBlock *target);
     void addPatch(V4IR::BasicBlock* targetBlock, Jump targetJump);
     void addPatch(DataLabelPtr patch, Label target);
@@ -741,6 +741,7 @@ private:
     QList<DataLabelPatch> _dataLabelPatches;
 
     QHash<V4IR::BasicBlock *, QVector<DataLabelPtr> > _labelPatches;
+    V4IR::BasicBlock *_nextBlock;
 
     QV4::ExecutionEngine *_engine;
 
@@ -807,7 +808,7 @@ protected:
     virtual void setElement(V4IR::Temp *source, V4IR::Temp *targetBase, V4IR::Temp *targetIndex);
     virtual void copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
     virtual void unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
-    virtual void binop(V4IR::AluOp oper, V4IR::Temp *leftSource, V4IR::Temp *rightSource, V4IR::Temp *target);
+    virtual void binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target);
     virtual void inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName);
     virtual void inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBaseTemp, V4IR::Temp *targetIndexTemp);
     virtual void inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName);
@@ -892,6 +893,7 @@ private:
     QVector<QV4::Lookup> _lookups;
     Assembler* _as;
     QSet<V4IR::BasicBlock*> _reentryBlocks;
+    int _locals;
 };
 
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory

@@ -39,45 +39,15 @@
 **
 ****************************************************************************/
 
-#ifndef QV4ISEL_UTIL_P_H
-#define QV4ISEL_UTIL_P_H
+#ifndef QV4SSA_P_H
+#define QV4SSA_P_H
 
-#include "qv4runtime_p.h"
 #include "qv4jsir_p.h"
 
 namespace QQmlJS {
 
-inline QV4::Value convertToValue(V4IR::Const *c)
-{
-    switch (c->type) {
-    case V4IR::MissingType:
-        return QV4::Value::emptyValue();
-    case V4IR::NullType:
-        return QV4::Value::nullValue();
-    case V4IR::UndefinedType:
-        return QV4::Value::undefinedValue();
-    case V4IR::BoolType:
-        return QV4::Value::fromBoolean(c->value != 0);
-    case V4IR::SInt32Type:
-        return QV4::Value::fromInt32(int(c->value));
-    case V4IR::UInt32Type:
-        return QV4::Value::fromUInt32(unsigned(c->value));
-    case V4IR::DoubleType:
-        return QV4::Value::fromDouble(c->value);
-    case V4IR::NumberType: {
-        int ival = (int)c->value;
-        // +0 != -0, so we need to convert to double when negating 0
-        if (ival == c->value && !(c->value == 0 && isNegative(c->value))) {
-            return QV4::Value::fromInt32(ival);
-        } else {
-            return QV4::Value::fromDouble(c->value);
-        }
-    }
-    default:
-        Q_UNREACHABLE();
-    }
+void linearize(V4IR::Function *function);
+
 }
 
-} // namespace QQmlJS
-
-#endif // QV4ISEL_UTIL_P_H
+#endif // QV4SSA_P_H

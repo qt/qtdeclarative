@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qv4codegen_p.h"
+#include "qv4ssa_p.h"
 #include "qv4util_p.h"
 #include "qv4debugging_p.h"
 
@@ -48,6 +49,7 @@
 #include <QtCore/QSet>
 #include <QtCore/QBuffer>
 #include <QtCore/QBitArray>
+#include <QtCore/QLinkedList>
 #include <QtCore/QStack>
 #include <private/qqmljsast_p.h>
 #include <qv4runtime_p.h>
@@ -60,584 +62,11 @@
 #undef CONST
 #endif
 
+#define QV4_NO_LIVENESS
+#undef SHOW_SSA
+
 using namespace QQmlJS;
 using namespace AST;
-
-namespace {
-QTextStream qout(stdout, QIODevice::WriteOnly);
-
-void dfs(V4IR::BasicBlock *block,
-         QSet<V4IR::BasicBlock *> *V,
-         QVector<V4IR::BasicBlock *> *blocks)
-{
-    if (! V->contains(block)) {
-        V->insert(block);
-
-        foreach (V4IR::BasicBlock *succ, block->out)
-            dfs(succ, V, blocks);
-
-        blocks->append(block);
-    }
-}
-
-struct ComputeUseDef: V4IR::StmtVisitor, V4IR::ExprVisitor
-{
-    V4IR::Function *_function;
-    V4IR::Stmt *_stmt;
-
-    ComputeUseDef(V4IR::Function *function)
-        : _function(function)
-        , _stmt(0) {}
-
-    void operator()(V4IR::Stmt *s) {
-        assert(! s->d);
-        s->d = new V4IR::Stmt::Data;
-        qSwap(_stmt, s);
-        _stmt->accept(this);
-        qSwap(_stmt, s);
-    }
-
-    virtual void visitConst(V4IR::Const *) {}
-    virtual void visitString(V4IR::String *) {}
-    virtual void visitRegExp(V4IR::RegExp *) {}
-    virtual void visitName(V4IR::Name *) {}
-    virtual void visitClosure(V4IR::Closure *) {}
-    virtual void visitUnop(V4IR::Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(V4IR::Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitSubscript(V4IR::Subscript *e) { e->base->accept(this); e->index->accept(this); }
-    virtual void visitMember(V4IR::Member *e) { e->base->accept(this); }
-    virtual void visitExp(V4IR::Exp *s) { s->expr->accept(this); }
-    virtual void visitEnter(V4IR::Enter *) {}
-    virtual void visitLeave(V4IR::Leave *) {}
-    virtual void visitJump(V4IR::Jump *) {}
-    virtual void visitCJump(V4IR::CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(V4IR::Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(V4IR::Try *t) {
-        if (! _stmt->d->defs.contains(t->exceptionVar->index))
-            _stmt->d->defs.append(t->exceptionVar->index);
-    }
-
-    virtual void visitTemp(V4IR::Temp *e) {
-        if (e->index < 0 || e->scope != 0)
-            return;
-
-        if (! _stmt->d->uses.contains(e->index))
-            _stmt->d->uses.append(e->index);
-    }
-
-    virtual void visitCall(V4IR::Call *e) {
-        e->base->accept(this);
-        for (V4IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitNew(V4IR::New *e) {
-        e->base->accept(this);
-        for (V4IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitMove(V4IR::Move *s) {
-        if (V4IR::Temp *t = s->target->asTemp()) {
-            if (t->index >= 0 && t->scope == 0) // only collect unscoped locals and temps
-                if (! _stmt->d->defs.contains(t->index))
-                    _stmt->d->defs.append(t->index);
-        } else {
-            // source was not a temp, but maybe a sub-expression has a temp
-            // (e.g. base expressions for subscripts/member-access),
-            // so visit it.
-            s->target->accept(this);
-        }
-        // whatever the target expr was, always visit the source expr to collect
-        // temps there.
-        s->source->accept(this);
-    }
-};
-
-void liveness(V4IR::Function *function)
-{
-    QSet<V4IR::BasicBlock *> V;
-    QVector<V4IR::BasicBlock *> blocks;
-
-    ComputeUseDef computeUseDef(function);
-    foreach (V4IR::BasicBlock *block, function->basicBlocks) {
-        foreach (V4IR::Stmt *s, block->statements)
-            computeUseDef(s);
-    }
-
-    dfs(function->basicBlocks.at(0), &V, &blocks);
-
-    bool changed;
-    do {
-        changed = false;
-
-        foreach (V4IR::BasicBlock *block, blocks) {
-            const QBitArray previousLiveIn = block->liveIn;
-            const QBitArray previousLiveOut = block->liveOut;
-            QBitArray live(function->tempCount);
-            foreach (V4IR::BasicBlock *succ, block->out)
-                live |= succ->liveIn;
-            block->liveOut = live;
-            for (int i = block->statements.size() - 1; i != -1; --i) {
-                V4IR::Stmt *s = block->statements.at(i);
-                s->d->liveOut = live;
-                foreach (unsigned d, s->d->defs)
-                    live.clearBit(d);
-                foreach (unsigned u, s->d->uses)
-                    live.setBit(u);
-                s->d->liveIn = live;
-            }
-            block->liveIn = live;
-            if (! changed) {
-                if (previousLiveIn != block->liveIn || previousLiveOut != block->liveOut)
-                    changed = true;
-            }
-        }
-    } while (changed);
-}
-
-static inline bool isDeadAssignment(V4IR::Stmt *stmt, int localCount)
-{
-    V4IR::Move *move = stmt->asMove();
-    if (!move || move->op != V4IR::OpInvalid)
-        return false;
-    V4IR::Temp *target = move->target->asTemp();
-    if (!target)
-        return false;
-    if (target->scope || target->index < localCount)
-        return false;
-
-    if (V4IR::Name *n = move->source->asName()) {
-        if (*n->id != QStringLiteral("this"))
-            return false;
-    } else if (!move->source->asConst() && !move->source->asTemp()) {
-        return false;
-    }
-
-    return !stmt->d->liveOut.at(target->index);
-}
-
-void removeDeadAssignments(V4IR::Function *function)
-{
-    const int localCount = function->locals.size();
-    foreach (V4IR::BasicBlock *bb, function->basicBlocks) {
-        QVector<V4IR::Stmt *> &statements = bb->statements;
-        for (int i = 0; i < statements.size(); ) {
-            //qout<<"removeDeadAssignments: considering ";statements.at(i)->dump(qout);qout<<"\n";qout.flush();
-            if (isDeadAssignment(statements.at(i), localCount)) {
-                statements.at(i)->destroyData();
-                statements.remove(i);
-            } else
-                ++i;
-        }
-    }
-}
-
-void removeUnreachableBlocks(V4IR::Function *function)
-{
-    // TODO: change this to use a worklist.
-    // FIXME: actually, use SSA and then re-implement it.
-
-    for (int i = 1, ei = function->basicBlocks.size(); i != ei; ++i) {
-        V4IR::BasicBlock *bb = function->basicBlocks[i];
-        if (bb->in.isEmpty()) {
-            function->basicBlocks.remove(i);
-            foreach (V4IR::BasicBlock *outBB, bb->out) {
-                int idx = outBB->in.indexOf(bb);
-                if (idx != -1)
-                    outBB->in.remove(idx);
-            }
-            removeUnreachableBlocks(function);
-            return;
-        }
-    }
-}
-
-class ConstantPropagation: public V4IR::StmtVisitor, public V4IR::ExprVisitor
-{
-    struct Value {
-        enum Type {
-            InvalidType = 0,
-            UndefinedType,
-            NullType,
-            BoolType,
-            NumberType,
-            ThisType,
-            StringType
-        } type;
-
-        union {
-            double numberValue;
-            V4IR::String *stringValue;
-        };
-
-        Value()
-            : type(InvalidType), stringValue(0)
-        {}
-
-        explicit Value(V4IR::String *str)
-            : type(StringType), stringValue(str)
-        {}
-
-        explicit Value(Type t)
-            : type(t), stringValue(0)
-        {}
-
-        Value(Type t, double val)
-            : type(t), numberValue(val)
-        {}
-
-        bool isValid() const
-        { return type != InvalidType; }
-
-        bool operator<(const Value &other) const
-        {
-            if (type < other.type)
-                return true;
-            if (type == Value::NumberType && other.type == Value::NumberType) {
-                if (numberValue == 0 && other.numberValue == 0)
-                    return isNegative(numberValue) && !isNegative(other.numberValue);
-                else
-                    return numberValue < other.numberValue;
-            }
-            if (type == Value::BoolType && other.type == Value::BoolType)
-                return numberValue < other.numberValue;
-            if (type == Value::StringType && other.type == Value::StringType)
-                return *stringValue->value < *other.stringValue->value;
-            return false;
-        }
-
-        bool operator==(const Value &other) const
-        {
-            if (type != other.type)
-                return false;
-            if (type == Value::NumberType && other.type == Value::NumberType) {
-                if (numberValue == 0 && other.numberValue == 0)
-                    return isNegative(numberValue) == isNegative(other.numberValue);
-                else
-                    return numberValue == other.numberValue;
-            }
-            if (type == Value::BoolType && other.type == Value::BoolType)
-                return numberValue == other.numberValue;
-            if (type == Value::StringType && other.type == Value::StringType)
-                return *stringValue->value == *other.stringValue->value;
-            return false;
-        }
-    };
-
-public:
-    void run(V4IR::Function *function)
-    {
-        if (function->hasTry)
-            return;
-        localCount = function->locals.size();
-        if (function->hasWith) {
-            thisTemp = -1;
-        } else {
-            V4IR::BasicBlock *entryBlock = function->basicBlocks.at(0);
-            thisTemp = entryBlock->newTemp();
-            V4IR::Move *fetchThis = function->New<V4IR::Move>();
-            fetchThis->init(entryBlock->TEMP(thisTemp),
-                            entryBlock->NAME(QStringLiteral("this"), 0, 0),
-                            V4IR::OpInvalid);
-            entryBlock->statements.prepend(fetchThis);
-        }
-
-        foreach (V4IR::BasicBlock *block, function->basicBlocks) {
-//            qDebug()<<"--- Starting with BB"<<block->index;
-            reset();
-            QVector<V4IR::Stmt *> &statements = block->statements;
-            foreach (V4IR::Stmt *stmt, statements) {
-//                qout<<"*** ";stmt->dump(qout);qout<<"\n";qout.flush();
-                stmt->accept(this);
-            }
-        }
-    }
-
-protected:
-    virtual void visitConst(V4IR::Const *) {}
-    virtual void visitString(V4IR::String *) {}
-    virtual void visitRegExp(V4IR::RegExp *) {}
-    virtual void visitName(V4IR::Name *) {}
-    virtual void visitClosure(V4IR::Closure *) {}
-    virtual void visitUnop(V4IR::Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(V4IR::Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitSubscript(V4IR::Subscript *e) { e->base->accept(this); e->index->accept(this); }
-    virtual void visitMember(V4IR::Member *e) { e->base->accept(this); }
-    virtual void visitExp(V4IR::Exp *s) { s->expr->accept(this); }
-    virtual void visitEnter(V4IR::Enter *) {}
-    virtual void visitLeave(V4IR::Leave *) {}
-    virtual void visitJump(V4IR::Jump *) {}
-    virtual void visitCJump(V4IR::CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(V4IR::Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(V4IR::Try *) {}
-
-    virtual void visitCall(V4IR::Call *e) {
-        e->base->accept(this);
-        for (V4IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitNew(V4IR::New *e) {
-        e->base->accept(this);
-        for (V4IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitTemp(V4IR::Temp *e) {
-        if (e->scope)
-            return;
-
-        const int replacement = tempReplacement.value(e->index, -1);
-        if (replacement != -1) {
-//            qDebug() << "+++ Replacing" << e->index << "with" << replacement;
-            e->index = replacement;
-        }
-    }
-
-    virtual void visitMove(V4IR::Move *s) {
-        V4IR::Temp *targetTemp = s->target->asTemp();
-        if (targetTemp && targetTemp->index >= localCount && !targetTemp->scope) {
-            if (s->op == V4IR::OpInvalid) {
-                if (V4IR::Name *n = s->source->asName()) {
-                    if (thisTemp != -1) {
-                        if (*n->id == QStringLiteral("this")) {
-                            check(targetTemp->index, Value(Value::ThisType));
-                            return;
-                        }
-                    }
-                } else if (V4IR::Const *c = s->source->asConst()) {
-                    Value value;
-                    switch (c->type) {
-                    case V4IR::UndefinedType: value.type = Value::UndefinedType; break;
-                    case V4IR::NullType: value.type = Value::NullType; break;
-                    case V4IR::BoolType: value.type = Value::BoolType; value.numberValue = c->value == 0 ? 0 : 1; break;
-                    case V4IR::NumberType: value.type = Value::NumberType; value.numberValue = c->value; break;
-                    default: Q_ASSERT("unknown const type"); return;
-                    }
-                    check(targetTemp->index, value);
-                    return;
-                } else if (V4IR::String *str = s->source->asString()) {
-                    check(targetTemp->index, Value(str));
-                    return;
-                }
-            }
-            invalidate(targetTemp->index, Value());
-        } else {
-            s->target->accept(this);
-        }
-
-        s->source->accept(this);
-    }
-
-    void invalidate(int &targetTempIndex, const Value &value)
-    {
-        QMap<int, Value>::iterator it = valueForTemp.find(targetTempIndex);
-        if (it != valueForTemp.end()) {
-            if (it.value() == value)
-                return;
-            tempForValue.remove(it.value());
-            valueForTemp.erase(it);
-        }
-
-        QMap<int, int>::iterator it2 = tempReplacement.find(targetTempIndex);
-        if (it2 != tempReplacement.end()) {
-            tempReplacement.erase(it2);
-        }
-    }
-
-    void check(int &targetTempIndex, const Value &value)
-    {
-        Q_ASSERT(value.isValid());
-
-        invalidate(targetTempIndex, value);
-
-        int replacementTemp = tempForValue.value(value, -1);
-        if (replacementTemp == -1) {
-//            qDebug() << "+++ inserting temp" << targetTempIndex;
-            tempForValue.insert(value, targetTempIndex);
-            valueForTemp.insert(targetTempIndex, value);
-        } else {
-//            qDebug() << "+++ temp" << targetTempIndex << "can be replaced with" << replacementTemp;
-            tempReplacement.insert(targetTempIndex, replacementTemp);
-        }
-    }
-
-    void reset()
-    {
-        tempForValue.clear();
-        tempReplacement.clear();
-        if (thisTemp != -1)
-            tempForValue.insert(Value(Value::ThisType), thisTemp);
-    }
-
-private:
-    QMap<Value, int> tempForValue;
-    QMap<int, Value> valueForTemp;
-    QMap<int, int> tempReplacement;
-
-    int localCount;
-    int thisTemp;
-};
-
-//#define DEBUG_TEMP_COMPRESSION
-#ifdef DEBUG_TEMP_COMPRESSION
-#  define DBTC(x) x
-#else // !DEBUG_TEMP_COMPRESSION
-#  define DBTC(x)
-#endif // DEBUG_TEMP_COMPRESSION
-class CompressTemps: public V4IR::StmtVisitor, V4IR::ExprVisitor
-{
-public:
-    void run(V4IR::Function *function)
-    {
-        _nextFree = 0;
-        _active.reserve(function->tempCount);
-        _localCount = function->locals.size();
-
-        DBTC(qDebug() << "starting on function" << (*function->name) << "with" << (function->tempCount - _localCount) << "temps.";)
-
-        QVector<int> pinned;
-        foreach (V4IR::BasicBlock *block, function->basicBlocks) {
-            if (V4IR::Stmt *last = block->terminator()) {
-                const QBitArray &liveOut = last->d->liveOut;
-                for (int i = _localCount, ei = liveOut.size(); i < ei; ++i) {
-                    if (liveOut.at(i) && !pinned.contains(i)) {
-                        pinned.append(i);
-                        DBTC(qDebug() << "Pinning:";)
-                        add(i - _localCount, _nextFree);
-                    }
-                }
-            }
-        }
-        _pinnedCount = _nextFree;
-
-        int maxUsed = _nextFree;
-
-        foreach (V4IR::BasicBlock *block, function->basicBlocks) {
-            DBTC(qDebug("L%d:", block->index));
-
-            for (int i = 0, ei = block->statements.size(); i < ei; ++i ) {
-                _currentStatement = block->statements[i];
-                if (i == 0)
-                    expireOld();
-
-                DBTC(_currentStatement->dump(qout);qout<<endl<<flush;)
-
-                if (_currentStatement->d)
-                    _currentStatement->accept(this);
-            }
-            maxUsed = std::max(maxUsed, _nextFree);
-        }
-        DBTC(qDebug() << "function" << (*function->name) << "uses" << maxUsed << "temps.";)
-        function->tempCount = maxUsed + _localCount;
-    }
-
-protected:
-    virtual void visitConst(V4IR::Const *) {}
-    virtual void visitString(V4IR::String *) {}
-    virtual void visitRegExp(V4IR::RegExp *) {}
-    virtual void visitName(V4IR::Name *) {}
-    virtual void visitClosure(V4IR::Closure *) {}
-    virtual void visitUnop(V4IR::Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(V4IR::Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitSubscript(V4IR::Subscript *e) { e->base->accept(this); e->index->accept(this); }
-    virtual void visitMember(V4IR::Member *e) { e->base->accept(this); }
-    virtual void visitExp(V4IR::Exp *s) { s->expr->accept(this); }
-    virtual void visitEnter(V4IR::Enter *) {}
-    virtual void visitLeave(V4IR::Leave *) {}
-    virtual void visitJump(V4IR::Jump *) {}
-    virtual void visitCJump(V4IR::CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(V4IR::Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(V4IR::Try *t) { visitTemp(t->exceptionVar); }
-
-    virtual void visitTemp(V4IR::Temp *e) {
-        if (e->scope) // scoped local
-            return;
-        if (e->index < _localCount) // local or argument
-            return;
-
-        e->index = remap(e->index - _localCount) + _localCount;
-    }
-
-    virtual void visitCall(V4IR::Call *e) {
-        e->base->accept(this);
-        for (V4IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitNew(V4IR::New *e) {
-        e->base->accept(this);
-        for (V4IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitMove(V4IR::Move *s) {
-        s->target->accept(this);
-        s->source->accept(this);
-    }
-
-private:
-    int remap(int tempIndex) {
-        for (ActiveTemps::const_iterator i = _active.begin(), ei = _active.end(); i < ei; ++i) {
-            if (i->first == tempIndex) {
-                DBTC(qDebug() << "    lookup" << (tempIndex + _localCount) << "->" << (i->second + _localCount);)
-                return i->second;
-            }
-        }
-
-        int firstFree = expireOld();
-        add(tempIndex, firstFree);
-        return firstFree;
-    }
-
-    void add(int tempIndex, int firstFree) {
-        if (_nextFree <= firstFree)
-            _nextFree = firstFree + 1;
-        _active.prepend(qMakePair(tempIndex, firstFree));
-        DBTC(qDebug() << "    add" << (tempIndex + _localCount) << "->" << (firstFree+ _localCount);)
-    }
-
-    int expireOld() {
-        Q_ASSERT(_currentStatement->d);
-
-        const QBitArray &liveIn = _currentStatement->d->liveIn;
-        QBitArray inUse(_nextFree);
-        int i = 0;
-        while (i < _active.size()) {
-            const QPair<int, int> &p = _active[i];
-
-            if (p.second < _pinnedCount) {
-                inUse.setBit(p.second);
-                ++i;
-                continue;
-            }
-
-            if (liveIn[p.first + _localCount]) {
-                inUse[p.second] = true;
-                ++i;
-            } else {
-                DBTC(qDebug() << "    remove" << (p.first + _localCount) << "->" << (p.second + _localCount);)
-                _active.remove(i);
-            }
-        }
-        for (int i = 0, ei = inUse.size(); i < ei; ++i)
-            if (!inUse[i])
-                return i;
-        return _nextFree;
-    }
-
-private:
-    typedef QVector<QPair<int, int> > ActiveTemps;
-    ActiveTemps _active;
-    V4IR::Stmt *_currentStatement;
-    int _localCount;
-    int _nextFree;
-    int _pinnedCount;
-};
-#undef DBTC
-
-} // end of anonymous namespace
 
 class Codegen::ScanFunctions: Visitor
 {
@@ -1199,6 +628,9 @@ V4IR::Expr *Codegen::reference(V4IR::Expr *expr)
 
 V4IR::Expr *Codegen::unop(V4IR::AluOp op, V4IR::Expr *expr)
 {
+    Q_ASSERT(op != V4IR::OpIncrement);
+    Q_ASSERT(op != V4IR::OpDecrement);
+
     if (V4IR::Const *c = expr->asConst()) {
         if (c->type == V4IR::NumberType) {
             switch (op) {
@@ -1307,6 +739,12 @@ V4IR::Expr *Codegen::call(V4IR::Expr *base, V4IR::ExprList *args)
 void Codegen::move(V4IR::Expr *target, V4IR::Expr *source, V4IR::AluOp op)
 {
     assert(target->isLValue());
+
+    // TODO: verify the rest of the function for when op == OpInvalid
+    if (op != V4IR::OpInvalid) {
+        move(target, binop(op, target, source), V4IR::OpInvalid);
+        return;
+    }
 
     if (!source->asTemp() && !source->asConst() && (op != V4IR::OpInvalid || ! target->asTemp())) {
         unsigned t = _block->newTemp();
@@ -2242,7 +1680,7 @@ bool Codegen::visit(PostDecrementExpression *ast)
     throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken);
 
     if (_expr.accept(nx)) {
-        move(*expr, unop(V4IR::OpDecrement, *expr));
+        move(*expr, binop(V4IR::OpSub, *expr, _block->CONST(V4IR::NumberType, 1)));
     } else {
         V4IR::ExprList *args = _function->New<V4IR::ExprList>();
         args->init(*expr);
@@ -2259,7 +1697,7 @@ bool Codegen::visit(PostIncrementExpression *ast)
     throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken);
 
     if (_expr.accept(nx)) {
-        move(*expr, unop(V4IR::OpIncrement, *expr));
+        move(*expr, binop(V4IR::OpAdd, unop(V4IR::OpUPlus, *expr), _block->CONST(V4IR::NumberType, 1)));
     } else {
         V4IR::ExprList *args = _function->New<V4IR::ExprList>();
         args->init(*expr);
@@ -2272,7 +1710,7 @@ bool Codegen::visit(PreDecrementExpression *ast)
 {
     Result expr = expression(ast->expression);
     throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken);
-    move(*expr, unop(V4IR::OpDecrement, *expr));
+    move(*expr, binop(V4IR::OpSub, *expr, _block->CONST(V4IR::NumberType, 1)));
     if (_expr.accept(nx)) {
         // nothing to do
     } else {
@@ -2285,7 +1723,7 @@ bool Codegen::visit(PreIncrementExpression *ast)
 {
     Result expr = expression(ast->expression);
     throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken);
-    move(*expr, unop(V4IR::OpIncrement, *expr));
+    move(*expr, binop(V4IR::OpAdd, unop(V4IR::OpUPlus, *expr), _block->CONST(V4IR::NumberType, 1)));
     if (_expr.accept(nx)) {
         // nothing to do
     } else {
@@ -2369,212 +1807,6 @@ bool Codegen::visit(FunctionDeclaration * /*ast*/)
 {
     _expr.accept(nx);
     return false;
-}
-
-void Codegen::linearize(V4IR::Function *function)
-{
-    V4IR::BasicBlock *exitBlock = function->basicBlocks.last();
-    assert(exitBlock->isTerminated());
-    assert(exitBlock->terminator()->asRet());
-
-    QSet<V4IR::BasicBlock *> V;
-    V.insert(exitBlock);
-
-    QVector<V4IR::BasicBlock *> trace;
-
-    for (int i = 0; i < function->basicBlocks.size(); ++i) {
-        V4IR::BasicBlock *block = function->basicBlocks.at(i);
-        if (!block->isTerminated() && (i + 1) < function->basicBlocks.size()) {
-            V4IR::BasicBlock *next = function->basicBlocks.at(i + 1);
-            block->JUMP(next);
-        }
-    }
-
-    struct I { static void trace(V4IR::BasicBlock *block, QSet<V4IR::BasicBlock *> *V,
-                                 QVector<V4IR::BasicBlock *> *output) {
-            if (block == 0 || V->contains(block))
-                return;
-
-            V->insert(block);
-            block->index = output->size();
-            output->append(block);
-
-            if (V4IR::Stmt *term = block->terminator()) {
-                if (V4IR::Jump *j = term->asJump()) {
-                    trace(j->target, V, output);
-                } else if (V4IR::CJump *cj = term->asCJump()) {
-                    if (! V->contains(cj->iffalse))
-                        trace(cj->iffalse, V, output);
-                    else
-                        trace(cj->iftrue, V, output);
-                } else if (V4IR::Try *t = term->asTry()) {
-                    trace(t->tryBlock, V, output);
-                    trace(t->catchBlock, V, output);
-                }
-            }
-
-            // We could do this for each type above, but it is safer to have a
-            // "catchall" here
-            for (int ii = 0; ii < block->out.count(); ++ii)
-                trace(block->out.at(ii), V, output);
-        }
-    };
-
-    I::trace(function->basicBlocks.first(), &V, &trace);
-
-    V.insert(exitBlock);
-    exitBlock->index = trace.size();
-    trace.append(exitBlock);
-
-    QVarLengthArray<V4IR::BasicBlock*> blocksToDelete;
-    foreach (V4IR::BasicBlock *b, function->basicBlocks) {
-        if (!V.contains(b)) {
-            foreach (V4IR::BasicBlock *out, b->out) {
-                int idx = out->in.indexOf(b);
-                if (idx >= 0)
-                    out->in.remove(idx);
-            }
-            blocksToDelete.append(b);
-        }
-    }
-    foreach (V4IR::BasicBlock *b, blocksToDelete)
-        foreach (V4IR::Stmt *s, b->statements)
-            s->destroyData();
-    qDeleteAll(blocksToDelete);
-    function->basicBlocks = trace;
-
-    function->removeSharedExpressions();
-
-    if (qgetenv("NO_OPT").isEmpty())
-        ConstantPropagation().run(function);
-
-#ifndef QV4_NO_LIVENESS
-    liveness(function);
-#endif
-
-    if (qgetenv("NO_OPT").isEmpty()) {
-        removeDeadAssignments(function);
-        removeUnreachableBlocks(function);
-    }
-
-    static bool showCode = !qgetenv("SHOW_CODE").isNull();
-    if (showCode) {
-        QVector<V4IR::Stmt *> code;
-        QHash<V4IR::Stmt *, V4IR::BasicBlock *> leader;
-
-        foreach (V4IR::BasicBlock *block, function->basicBlocks) {
-            leader.insert(block->statements.first(), block);
-            foreach (V4IR::Stmt *s, block->statements) {
-                code.append(s);
-            }
-        }
-
-        QString name;
-        if (function->name && !function->name->isEmpty())
-            name = *function->name;
-        else
-            name.sprintf("%p", function);
-
-        qout << "function " << name << "(";
-        for (int i = 0; i < function->formals.size(); ++i) {
-            if (i != 0)
-                qout << ", ";
-            qout << *function->formals.at(i);
-        }
-        qout << ")" << endl
-             << "{" << endl;
-
-        foreach (const QString *local, function->locals) {
-            qout << "    var " << *local << ';' << endl;
-        }
-
-        for (int i = 0; i < code.size(); ++i) {
-            V4IR::Stmt *s = code.at(i);
-
-            if (V4IR::BasicBlock *bb = leader.value(s)) {
-                qout << endl;
-                QByteArray str;
-                str.append('L');
-                str.append(QByteArray::number(bb->index));
-                str.append(':');
-                for (int i = 66 - str.length(); i; --i)
-                    str.append(' ');
-                qout << str;
-                qout << "// predecessor blocks:";
-                foreach (V4IR::BasicBlock *in, bb->in)
-                    qout << " L" << in->index;
-                qout << endl;
-            }
-            V4IR::Stmt *n = (i + 1) < code.size() ? code.at(i + 1) : 0;
-            if (n && s->asJump() && s->asJump()->target == leader.value(n)) {
-                continue;
-            }
-
-            QByteArray str;
-            QBuffer buf(&str);
-            buf.open(QIODevice::WriteOnly);
-            QTextStream out(&buf);
-            s->dump(out, V4IR::Stmt::MIR);
-            out.flush();
-
-            if (s->location.isValid())
-                qout << "    // line: " << s->location.startLine << " column: " << s->location.startColumn << endl;
-
-#ifndef QV4_NO_LIVENESS
-            for (int i = 60 - str.size(); i >= 0; --i)
-                str.append(' ');
-
-            qout << "    " << str;
-
-            //        if (! s->uses.isEmpty()) {
-            //            qout << " // uses:";
-            //            foreach (unsigned use, s->uses) {
-            //                qout << " %" << use;
-            //            }
-            //        }
-
-            //        if (! s->defs.isEmpty()) {
-            //            qout << " // defs:";
-            //            foreach (unsigned def, s->defs) {
-            //                qout << " %" << def;
-            //            }
-            //        }
-
-#  if 0
-            if (! s->d->liveIn.isEmpty()) {
-                qout << " // lives in:";
-                for (int i = 0; i < s->d->liveIn.size(); ++i) {
-                    if (s->d->liveIn.testBit(i))
-                        qout << " %" << i;
-                }
-            }
-#  else
-            if (! s->d->liveOut.isEmpty()) {
-                qout << " // lives out:";
-                for (int i = 0; i < s->d->liveOut.size(); ++i) {
-                    if (s->d->liveOut.testBit(i))
-                        qout << " %" << i;
-                }
-            }
-#  endif
-#else
-            qout << "    " << str;
-#endif
-
-            qout << endl;
-
-            if (n && s->asCJump() && s->asCJump()->iffalse != leader.value(n)) {
-                qout << "    goto L" << s->asCJump()->iffalse << ";" << endl;
-            }
-        }
-
-        qout << "}" << endl
-             << endl;
-    }
-
-    //### NOTE: after this pass, the liveness information is not correct anymore!
-    if (qgetenv("NO_OPT").isEmpty())
-        CompressTemps().run(function);
 }
 
 V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,

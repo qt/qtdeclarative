@@ -130,19 +130,20 @@ void InstructionSelection::visitMove(V4IR::Move *s)
                     return;
                 }
             } else if (V4IR::Binop *b = s->source->asBinop()) {
-                if (b->left->asTemp() && b->right->asTemp()) {
-                    binop(b->op, b->left->asTemp(), b->right->asTemp(), t);
-                    return;
-                }
+                binop(b->op, b->left, b->right, t);
+                return;
             } else if (V4IR::Call *c = s->source->asCall()) {
                 if (c->base->asName()) {
                     callBuiltin(c, t);
                     return;
                 } else if (Member *member = c->base->asMember()) {
-                    callProperty(member->base, *member->name, c->args, t);
+                    Q_ASSERT(member->base->asTemp());
+                    callProperty(member->base->asTemp(), *member->name, c->args, t);
                     return;
                 } else if (Subscript *s = c->base->asSubscript()) {
-                    callSubscript(s->base, s->index, c->args, t);
+                    Q_ASSERT(s->base->asTemp());
+                    Q_ASSERT(s->index->asTemp());
+                    callSubscript(s->base->asTemp(), s->index->asTemp(), c->args, t);
                     return;
                 } else if (V4IR::Temp *value = c->base->asTemp()) {
                     callValue(value, c->args, t);
@@ -218,9 +219,12 @@ void InstructionSelection::visitExp(V4IR::Exp *s)
         } else if (Temp *value = c->base->asTemp()) {
             callValue(value, c->args, 0);
         } else if (Member *member = c->base->asMember()) {
-            callProperty(member->base, *member->name, c->args, 0);
+            Q_ASSERT(member->base->asTemp());
+            callProperty(member->base->asTemp(), *member->name, c->args, 0);
         } else if (Subscript *s = c->base->asSubscript()) {
-            callSubscript(s->base, s->index, c->args, 0);
+            Q_ASSERT(s->base->asTemp());
+            Q_ASSERT(s->index->asTemp());
+            callSubscript(s->base->asTemp(), s->index->asTemp(), c->args, 0);
         } else {
             Q_UNIMPLEMENTED();
         }

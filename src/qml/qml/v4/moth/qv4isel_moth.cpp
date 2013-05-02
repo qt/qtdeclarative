@@ -6,6 +6,8 @@
 #include <private/qv4debugging_p.h>
 #include <private/qv4function_p.h>
 
+#undef USE_TYPE_INFO
+
 using namespace QQmlJS;
 using namespace QQmlJS::Moth;
 
@@ -348,8 +350,41 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
     }
 }
 
-void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Temp *leftSource, V4IR::Temp *rightSource, V4IR::Temp *target)
+void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
 {
+#ifdef USE_TYPE_INFO
+    if (leftSource->type & V4IR::NumberType && rightSource->type & V4IR::NumberType) {
+        // TODO: add Temp+Const variation on the topic.
+        switch (oper) {
+        case V4IR::OpAdd: {
+            Instruction::AddNumberParams instr;
+            instr.lhs = getParam(leftSource);
+            instr.rhs = getParam(rightSource);
+            instr.result = getResultParam(target);
+            addInstruction(instr);
+        } return;
+        case V4IR::OpMul: {
+            Instruction::MulNumberParams instr;
+            instr.lhs = getParam(leftSource);
+            instr.rhs = getParam(rightSource);
+            instr.result = getResultParam(target);
+            addInstruction(instr);
+        } return;
+        case V4IR::OpSub: {
+            Instruction::SubNumberParams instr;
+            instr.lhs = getParam(leftSource);
+            instr.rhs = getParam(rightSource);
+            instr.result = getResultParam(target);
+            addInstruction(instr);
+        } return;
+        default:
+            break;
+        }
+    }
+#else // !USE_TYPE_INFO
+    Q_ASSERT(leftSource->asTemp() && rightSource->asTemp());
+#endif // USE_TYPE_INFO
+
     Instruction::Binop binop;
     binop.alu = aluOpFunction(oper);
     binop.lhs = getParam(leftSource);

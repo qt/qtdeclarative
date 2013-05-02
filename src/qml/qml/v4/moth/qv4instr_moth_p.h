@@ -54,6 +54,9 @@
     F(CJump, cjump) \
     F(Unop, unop) \
     F(Binop, binop) \
+    F(AddNumberParams, addNumberParams) \
+    F(MulNumberParams, mulNumberParams) \
+    F(SubNumberParams, subNumberParams) \
     F(LoadThis, loadThis) \
     F(InplaceElementOp, inplaceElementOp) \
     F(InplaceMemberOp, inplaceMemberOp) \
@@ -427,6 +430,24 @@ union Instr
         Param rhs;
         Param result;
     };
+    struct instr_addNumberParams {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_mulNumberParams {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_subNumberParams {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
     struct instr_loadThis {
         MOTH_INSTR_HEADER
         Param result;
@@ -502,6 +523,9 @@ union Instr
     instr_cjump cjump;
     instr_unop unop;
     instr_binop binop;
+    instr_addNumberParams addNumberParams;
+    instr_mulNumberParams mulNumberParams;
+    instr_subNumberParams subNumberParams;
     instr_loadThis loadThis;
     instr_inplaceElementOp inplaceElementOp;
     instr_inplaceMemberOp inplaceMemberOp;

@@ -107,18 +107,19 @@ const int Assembler::calleeSavedRegisterCount = sizeof(calleeSavedRegisters) / s
 const Assembler::VoidType Assembler::Void;
 
 Assembler::Assembler(V4IR::Function* function, QV4::Function *vmFunction, QV4::ExecutionEngine *engine)
-    : _function(function), _vmFunction(vmFunction), _engine(engine)
+    : _function(function), _vmFunction(vmFunction), _engine(engine), _nextBlock(0)
 {
 }
 
-void Assembler::registerBlock(V4IR::BasicBlock* block)
+void Assembler::registerBlock(V4IR::BasicBlock* block, V4IR::BasicBlock *nextBlock)
 {
     _addrs[block] = label();
+    _nextBlock = nextBlock;
 }
 
 void Assembler::jumpToBlock(V4IR::BasicBlock* current, V4IR::BasicBlock *target)
 {
-    if (current->index + 1 != target->index)
+    if (target != _nextBlock)
         _patches[target].append(jump());
 }
 
@@ -575,7 +576,8 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
 
     int locals = (_function->tempCount - _function->locals.size() + _function->maxNumberOfArguments) + 1;
     locals = (locals + 1) & ~1;
-    _as->enterStandardStackFrame(locals);
+    qSwap(_locals, locals);
+    _as->enterStandardStackFrame(_locals);
 
     int contextPointer = 0;
 #if !defined(RETURN_VALUE_IN_REGISTER)
@@ -591,9 +593,10 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     _as->loadPtr(addressForArgument(contextPointer), Assembler::ContextRegister);
 #endif
 
-    foreach (V4IR::BasicBlock *block, _function->basicBlocks) {
-        _block = block;
-        _as->registerBlock(_block);
+    for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
+        V4IR::BasicBlock *nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
+        _block = _function->basicBlocks[i];
+        _as->registerBlock(_block, nextBlock);
 
         if (_reentryBlocks.contains(_block)) {
             _as->enterStandardStackFrame(/*locals*/0);
@@ -606,23 +609,12 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
 #endif
         }
 
-        foreach (V4IR::Stmt *s, block->statements) {
+        foreach (V4IR::Stmt *s, _block->statements) {
             if (s->location.isValid())
                 _as->recordLineNumber(s->location.startLine);
             s->accept(this);
         }
     }
-
-    _as->leaveStandardStackFrame(locals);
-#if !defined(RETURN_VALUE_IN_REGISTER)
-    // Emulate ret(n) instruction
-    // Pop off return address into scratch register ...
-    _as->pop(Assembler::ScratchRegister);
-    // ... and overwrite the invisible argument with
-    // the return address.
-    _as->poke(Assembler::ScratchRegister);
-#endif
-    _as->ret();
 
     _as->link(_vmFunction);
 
@@ -637,6 +629,7 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     qSwap(_function, function);
     qSwap(_lookups, lookups);
     qSwap(_reentryBlocks, reentryBlocks);
+    qSwap(_locals, locals);
     delete _as;
     _as = oldAssembler;
 }
@@ -1019,9 +1012,10 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
                                      Assembler::Reference(sourceTemp));
 }
 
-void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Temp *leftSource, V4IR::Temp *rightSource, V4IR::Temp *target)
+void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
 {
-    _as->generateBinOp(oper, target, leftSource, rightSource);
+    Q_ASSERT(leftSource->asTemp() && rightSource->asTemp());
+    _as->generateBinOp(oper, target, leftSource->asTemp(), rightSource->asTemp());
 }
 
 void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName)
@@ -1267,10 +1261,24 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
         _as->loadPtr(addressForArgument(0), Assembler::ReturnValueRegister);
         _as->copyValue(Address(Assembler::ReturnValueRegister, 0), t);
 #endif
-        return;
+    } else if (V4IR::Const *c = s->expr->asConst()) {
+        _as->copyValue(Assembler::ReturnValueRegister, c);
+    } else {
+        Q_UNIMPLEMENTED();
+        Q_UNREACHABLE();
+        Q_UNUSED(s);
     }
-    Q_UNIMPLEMENTED();
-    Q_UNUSED(s);
+
+    _as->leaveStandardStackFrame(_locals);
+#if !defined(RETURN_VALUE_IN_REGISTER)
+    // Emulate ret(n) instruction
+    // Pop off return address into scratch register ...
+    _as->pop(Assembler::ScratchRegister);
+    // ... and overwrite the invisible argument with
+    // the return address.
+    _as->poke(Assembler::ScratchRegister);
+#endif
+    _as->ret();
 }
 
 int InstructionSelection::prepareVariableArguments(V4IR::ExprList* args)

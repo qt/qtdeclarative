@@ -91,6 +91,8 @@ class Q_QML_EXPORT InstructionSelection: protected V4IR::StmtVisitor
 public:
     virtual ~InstructionSelection() = 0;
 
+    virtual void visitPhi(V4IR::Phi *) { Q_UNIMPLEMENTED(); abort(); }
+
 public: // visitor methods for StmtVisitor:
     virtual void visitMove(V4IR::Move *s);
     virtual void visitEnter(V4IR::Enter *);
@@ -145,7 +147,7 @@ public: // to implement by subclasses:
     virtual void setElement(V4IR::Temp *source, V4IR::Temp *targetBase, V4IR::Temp *targetIndex) = 0;
     virtual void copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp) = 0;
     virtual void unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp) = 0;
-    virtual void binop(V4IR::AluOp oper, V4IR::Temp *leftSource, V4IR::Temp *rightSource, V4IR::Temp *target) = 0;
+    virtual void binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target) = 0;
     virtual void inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName) = 0;
     virtual void inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBaseTemp, V4IR::Temp *targetIndexTemp) = 0;
     virtual void inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName) = 0;

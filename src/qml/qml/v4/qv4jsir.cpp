@@ -53,14 +53,21 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace V4IR {
 
-const char *typeName(Type t)
+QString typeName(Type t)
 {
     switch (t) {
-    case UndefinedType: return "undefined";
-    case NullType: return "null";
-    case BoolType: return "bool";
-    case NumberType: return "number";
-    default: return "invalid";
+    case UnknownType: return QStringLiteral("");
+    case MissingType: return QStringLiteral("missing");
+    case UndefinedType: return QStringLiteral("undefined");
+    case NullType: return QStringLiteral("null");
+    case BoolType: return QStringLiteral("bool");
+    case UInt32Type: return QStringLiteral("uint32");
+    case SInt32Type: return QStringLiteral("int32");
+    case DoubleType: return QStringLiteral("double");
+    case NumberType: return QStringLiteral("number");
+    case StringType: return QStringLiteral("string");
+    case ObjectType: return QStringLiteral("object");
+    default: return QStringLiteral("multiple");
     }
 }
 
@@ -221,6 +228,8 @@ struct RemoveSharedExpressions: V4IR::StmtVisitor, V4IR::ExprVisitor
         // nothing to do for Try statements
     }
 
+    virtual void visitPhi(V4IR::Phi *) { Q_UNIMPLEMENTED(); abort(); }
+
     // expressions
     virtual void visitConst(Const *) {}
     virtual void visitString(String *) {}
@@ -266,8 +275,25 @@ struct RemoveSharedExpressions: V4IR::StmtVisitor, V4IR::ExprVisitor
     }
 };
 
+static QString dumpStart(Expr *e) {
+    if (e->type == UnknownType)
+//        return QStringLiteral("**UNKNOWN**");
+        return QString();
+    else
+        return typeName(e->type) + QStringLiteral("{");
+}
+
+static const char *dumpEnd(Expr *e) {
+    if (e->type == UnknownType)
+        return "";
+    else
+        return "}";
+}
+
 void Const::dump(QTextStream &out)
 {
+    if (type != UndefinedType && type != NullType)
+        out << dumpStart(this);
     switch (type) {
     case QQmlJS::V4IR::UndefinedType:
         out << "undefined";
@@ -285,6 +311,8 @@ void Const::dump(QTextStream &out)
         out << QString::number(value, 'g', 16);
         break;
     }
+    if (type != UndefinedType && type != NullType)
+        out << dumpEnd(this);
 }
 
 void String::dump(QTextStream &out)
@@ -405,6 +433,7 @@ void Name::dump(QTextStream &out)
 
 void Temp::dump(QTextStream &out)
 {
+    out << dumpStart(this);
     if (index < 0) {
         out << '#' << -(index + 1); // negative and 1-based.
     } else {
@@ -412,6 +441,7 @@ void Temp::dump(QTextStream &out)
     }
     if (scope)
         out << "@" << scope;
+    out << dumpEnd(this);
 }
 
 void Closure::dump(QTextStream &out)
@@ -424,15 +454,18 @@ void Closure::dump(QTextStream &out)
 
 void Unop::dump(QTextStream &out)
 {
-    out << opname(op);
+    out << dumpStart(this) << opname(op);
     expr->dump(out);
+    out << dumpEnd(this);
 }
 
 void Binop::dump(QTextStream &out)
 {
+    out << dumpStart(this);
     left->dump(out);
     out << ' ' << opname(op) << ' ';
     right->dump(out);
+    out << dumpEnd(this);
 }
 
 void Call::dump(QTextStream &out)
@@ -543,6 +576,19 @@ void Try::dump(QTextStream &out, Stmt::Mode mode)
     out << " with the name " << exceptionVarName << " and go to L" << catchBlock->index << ';';
 }
 
+void Phi::dump(QTextStream &out, Stmt::Mode mode)
+{
+    targetTemp->dump(out);
+    out << " = phi(";
+    for (int i = 0, ei = incoming.size(); i < ei; ++i) {
+        if (i > 0)
+            out << ", ";
+        if (incoming[i])
+            incoming[i]->dump(out);
+    }
+    out << ");";
+}
+
 Function *Module::newFunction(const QString &name, Function *outer)
 {
     Function *f = new Function(this, outer, name);
@@ -632,6 +678,14 @@ Temp *BasicBlock::TEMP(int index, uint scope)
 Expr *BasicBlock::CONST(Type type, double value)
 { 
     Const *e = function->New<Const>();
+    if (type == NumberType) {
+        int ival = (int)value;
+        // +0 != -0, so we need to convert to double when negating 0
+        if (ival == value && !(value == 0 && isNegative(value)))
+            type = SInt32Type;
+        else
+            type = DoubleType;
+    }
     e->init(type, value);
     return e;
 }
@@ -679,7 +733,7 @@ Closure *BasicBlock::CLOSURE(Function *function)
     return clos;
 }
 
-Expr *BasicBlock::UNOP(AluOp op, Temp *expr)
+Expr *BasicBlock::UNOP(AluOp op, Expr *expr)
 { 
     Unop *e = function->New<Unop>();
     e->init(op, expr);
@@ -711,14 +765,14 @@ Expr *BasicBlock::NEW(Expr *base, ExprList *args)
     return e;
 }
 
-Expr *BasicBlock::SUBSCRIPT(Temp *base, Temp *index)
+Expr *BasicBlock::SUBSCRIPT(Expr *base, Expr *index)
 {
     Subscript *e = function->New<Subscript>();
     e->init(base, index);
     return e;
 }
 
-Expr *BasicBlock::MEMBER(Temp *base, const QString *name)
+Expr *BasicBlock::MEMBER(Expr *base, const QString *name)
 {
     Member*e = function->New<Member>();
     e->init(base, name);

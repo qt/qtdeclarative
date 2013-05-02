@@ -119,6 +119,7 @@ struct Jump;
 struct CJump;
 struct Ret;
 struct Try;
+struct Phi;
 
 enum AluOp {
     OpInvalid = 0,
@@ -166,12 +167,22 @@ AluOp binaryOperator(int op);
 const char *opname(V4IR::AluOp op);
 
 enum Type {
-    MissingType, // Used to indicate holes in array initialization (e.g. [,,])
-    UndefinedType,
-    NullType,
-    BoolType,
-    NumberType
+    UnknownType   = 0,
+
+    MissingType   = 1 << 0,
+    UndefinedType = 1 << 1,
+    NullType      = 1 << 2,
+    BoolType      = 1 << 3,
+
+    SInt32Type    = 1 << 4,
+    UInt32Type    = 1 << 5,
+    DoubleType    = 1 << 6,
+    NumberType    = SInt32Type | UInt32Type | DoubleType,
+
+    StringType    = 1 << 7,
+    ObjectType    = 1 << 8
 };
+QString typeName(Type t);
 
 struct ExprVisitor {
     virtual ~ExprVisitor() {}
@@ -199,9 +210,13 @@ struct StmtVisitor {
     virtual void visitCJump(CJump *) = 0;
     virtual void visitRet(Ret *) = 0;
     virtual void visitTry(Try *) = 0;
+    virtual void visitPhi(Phi *) = 0;
 };
 
 struct Expr {
+    Type type;
+
+    Expr(): type(UnknownType) {}
     virtual ~Expr() {}
     virtual void accept(ExprVisitor *) = 0;
     virtual bool isLValue() { return false; }
@@ -232,7 +247,6 @@ struct ExprList {
 };
 
 struct Const: Expr {
-    Type type;
     double value;
 
     void init(Type type, double value)
@@ -355,9 +369,9 @@ struct Closure: Expr {
 
 struct Unop: Expr {
     AluOp op;
-    Temp *expr;
+    Expr *expr;
 
-    void init(AluOp op, Temp *expr)
+    void init(AluOp op, Expr *expr)
     {
         this->op = op;
         this->expr = expr;
@@ -432,10 +446,10 @@ struct New: Expr {
 };
 
 struct Subscript: Expr {
-    Temp *base;
-    Temp *index;
+    Expr *base;
+    Expr *index;
 
-    void init(Temp *base, Temp *index)
+    void init(Expr *base, Expr *index)
     {
         this->base = base;
         this->index = index;
@@ -449,10 +463,10 @@ struct Subscript: Expr {
 };
 
 struct Member: Expr {
-    Temp *base;
+    Expr *base;
     const QString *name;
 
-    void init(Temp *base, const QString *name)
+    void init(Expr *base, const QString *name)
     {
         this->base = base;
         this->name = name;
@@ -494,6 +508,7 @@ struct Stmt {
     virtual CJump *asCJump() { return 0; }
     virtual Ret *asRet() { return 0; }
     virtual Try *asTry() { return 0; }
+    virtual Phi *asPhi() { return 0; }
     virtual void dump(QTextStream &out, Mode mode = HIR) = 0;
 
     void destroyData() {
@@ -594,9 +609,9 @@ struct CJump: Stmt {
 };
 
 struct Ret: Stmt {
-    Temp *expr;
+    Expr *expr;
 
-    void init(Temp *expr)
+    void init(Expr *expr)
     {
         this->expr = expr;
     }
@@ -627,6 +642,16 @@ struct Try: Stmt {
 
     virtual void accept(StmtVisitor *v) { v->visitTry(this); }
     virtual Try *asTry() { return this; }
+
+    virtual void dump(QTextStream &out, Mode mode);
+};
+
+struct Phi: Stmt {
+    Temp *targetTemp;
+    QVector<Expr *> incoming;
+
+    virtual void accept(StmtVisitor *v) { v->visitPhi(this); }
+    virtual Phi *asPhi() { return this; }
 
     virtual void dump(QTextStream &out, Mode mode);
 };
@@ -705,6 +730,9 @@ struct Function {
     void removeSharedExpressions();
 
     int indexOfArgument(const QStringRef &string) const;
+
+    bool variablesCanEscape() const
+    { return hasDirectEval || !nestedFunctions.isEmpty(); }
 };
 
 struct BasicBlock {
@@ -754,12 +782,12 @@ struct BasicBlock {
 
     Closure *CLOSURE(Function *function);
 
-    Expr *UNOP(AluOp op, Temp *expr);
+    Expr *UNOP(AluOp op, Expr *expr);
     Expr *BINOP(AluOp op, Expr *left, Expr *right);
     Expr *CALL(Expr *base, ExprList *args = 0);
     Expr *NEW(Expr *base, ExprList *args = 0);
-    Expr *SUBSCRIPT(Temp *base, Temp *index);
-    Expr *MEMBER(Temp *base, const QString *name);
+    Expr *SUBSCRIPT(Expr *base, Expr *index);
+    Expr *MEMBER(Expr *base, const QString *name);
 
     Stmt *EXP(Expr *expr);
     Stmt *ENTER(Expr *expr);
