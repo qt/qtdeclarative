@@ -731,7 +731,6 @@ private:
   QString m_script;
   ScriptOrigin m_origin;
   CompileFlags m_flags;
-  Handle<Context> m_context;
 };
 
 DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Script)
@@ -2210,8 +2209,8 @@ class V8EXPORT Isolate {
   private:
       friend class Context;
       friend class TryCatch;
-      Context *m_context;
       TryCatch *tryCatch;
+      QV4::ExecutionEngine *m_engine;
 };
 
 
@@ -2370,22 +2369,8 @@ class V8EXPORT ExtensionConfiguration;
  * A sandboxed execution context with its own set of built-in objects
  * and functions.
  */
-class V8EXPORT Context : public QSharedData {
- public:
-    Context();
-    ~Context();
-
-    static Local<Context> Adopt(Context *p)
-    {
-        Local<Context> l;
-        l.object = p;
-        l.object->ref.ref();
-        return l;
-    }
-
-  /** Returns the context that is on the top of the stack. */
-  static Local<Context> GetCurrent();
-
+class V8EXPORT Context {
+public:
   /**
    * Returns the context of the calling JavaScript code.  That is the
    * context of the top-most JavaScript frame.  If there are no
@@ -2394,27 +2379,12 @@ class V8EXPORT Context : public QSharedData {
   static Local<Object> GetCallingQmlGlobal();
   static Local<Value> GetCallingScriptData();
 
-  /**
-   * Associate an additional data object with the context. This is mainly used
-   * with the debugger to provide additional information on the context through
-   * the debugger API.
-   */
-  void SetData(Handle<Value> data);
-  Local<Value> GetData();
-
-  QV4::ExecutionEngine *GetEngine();
-
 private:
-  Context* m_lastContext;
-  struct Private;
-  Private *d;
-  friend class Value;
-  friend class Script;
-  friend class Object;
-  friend class Function;
+  Context() {}
+  ~Context() {}
 };
 
-DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Context)
+//DEFINE_HANDLE_OPERATIONS(Context)
 
 template<typename T>
 void Persistent<T>::MakeWeak(void* parameters, WeakReferenceCallback callback)

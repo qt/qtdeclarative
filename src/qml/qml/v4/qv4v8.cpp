@@ -206,7 +206,6 @@ Local<Script> Script::New(Handle<String> source,
     if (origin)
         s->m_origin = *origin;
     s->m_flags = flags;
-    s->m_context = Handle<Context>();
     return Local<Script>::New(Handle<Script>(s));
 }
 
@@ -226,7 +225,6 @@ Local<Script> Script::Compile(Handle<String> source, ScriptOrigin *origin, Scrip
     if (origin)
         s->m_origin = *origin;
     s->m_flags = flags;
-    s->m_context = Context::GetCurrent();
     return Local<Script>::New(Handle<Script>(s));
 }
 
@@ -241,11 +239,7 @@ Local<Script> Script::Compile(Handle<String> source,
 
 Local<Value> Script::Run()
 {
-    Handle<Context> context = m_context;
-    if (context.IsEmpty())
-        context = Context::GetCurrent();
-    ASSERT(context.get());
-    QV4::ExecutionEngine *engine = context->GetEngine();
+    QV4::ExecutionEngine *engine = Isolate::GetCurrent()->GetEngine();
     QV4::ExecutionContext *ctx = engine->current;
 
     QV4::Value result = QV4::Value::undefinedValue();
@@ -255,7 +249,7 @@ Local<Value> Script::Run()
         if (!f)
             __qmljs_throw(engine->current, QV4::Value::fromObject(engine->newSyntaxErrorObject(engine->current, 0)));
 
-        result = context->GetEngine()->run(f);
+        result = engine->run(f);
     } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
@@ -267,11 +261,7 @@ Local<Value> Script::Run()
 
 Local<Value> Script::Run(Handle<Object> qml)
 {
-    Handle<Context> context = m_context;
-    if (context.IsEmpty())
-        context = Context::GetCurrent();
-    ASSERT(context.get());
-    QV4::ExecutionEngine *engine = context->GetEngine();
+    QV4::ExecutionEngine *engine = Isolate::GetCurrent()->GetEngine();
     QV4::ExecutionContext *ctx = engine->current;
 
     QV4::Value result = QV4::Value::undefinedValue();
@@ -1948,14 +1938,14 @@ void Isolate::setException(const QV4::Value &ex)
 
 ExecutionEngine *Isolate::GetEngine()
 {
-    return Isolate::GetCurrent()->m_context->GetEngine();
+    return Isolate::GetCurrent()->m_engine;
 }
 
 Isolate *Isolate::GetCurrent()
 {
     if (!currentIsolate.hasLocalData()) {
         Isolate *i = new Isolate;
-        i->m_context = new Context;
+        i->m_engine = new QV4::ExecutionEngine;
         currentIsolate.setLocalData(i);
     }
     return currentIsolate.localData();
@@ -2068,36 +2058,9 @@ void TryCatch::Reset()
 }
 
 
-
-struct Context::Private
-{
-    Private()
-    {
-        engine.reset(new QV4::ExecutionEngine);
-    }
-
-    QScopedPointer<QV4::ExecutionEngine> engine;
-};
-
-Context::Context()
-    : m_lastContext(0)
-    , d(new Private)
-{
-}
-
-Context::~Context()
-{
-    delete d;
-}
-
-Local<Context> Context::GetCurrent()
-{
-    return Context::Adopt(Isolate::GetCurrent()->m_context);
-}
-
 Local<Object> Context::GetCallingQmlGlobal()
 {
-    QV4::ExecutionEngine *engine = GetCurrent()->GetEngine();
+    QV4::ExecutionEngine *engine = Isolate::GetCurrent()->GetEngine();
     QV4::ExecutionContext *ctx = engine->current;
     while (ctx && ctx->outer->type != ExecutionContext::Type_GlobalContext)
         ctx = ctx->outer;
@@ -2114,11 +2077,5 @@ Local<Value> Context::GetCallingScriptData()
     Q_UNIMPLEMENTED();
     Q_UNREACHABLE();
 }
-
-QV4::ExecutionEngine *Context::GetEngine()
-{
-    return d->engine.data();
-}
-
 
 }

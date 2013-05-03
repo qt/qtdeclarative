@@ -280,7 +280,6 @@ public:
     void setEngine(QQmlEngine *engine);
     QQmlEngine *engine() { return m_engine; }
     QV4::Value global();
-    v8::Handle<v8::Context> context() const { return m_context; }
 
     QV8ContextWrapper *contextWrapper() { return &m_contextWrapper; }
     QV8QObjectWrapper *qobjectWrapper() { return &m_qobjectWrapper; }
@@ -432,8 +431,6 @@ protected:
     QQmlEngine *m_engine;
 
     QV4::ExecutionEngine *m_v4Engine;
-
-    v8::Persistent<v8::Context> m_context;
 
     QV4::PersistentValue m_bindingFlagKey;
 

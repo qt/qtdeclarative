@@ -419,35 +419,6 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     \sa toScriptValue()
 */
 
-/*!
-    \internal
-
-    Returns this engine's internal V8 context.
-
-    The context enables direct use of the V8 API.
-    The caller is responsible for ensuring that a handle scope is in place,
-    and for entering/exiting the context.
-    Example:
-
-    \code
-    QJSEngine eng;
-    ...
-    v8::HandleScope handleScope;
-    v8::Local<v8::Context> context = qt_QJSEngineV8Context(&eng);
-    v8::Context::Scope contextScope(context);
-
-    // Do stuff (e.g., call v8::Script::Compile()) ...
-    \endcode
-
-    \sa qt_QJSValueV8Value()
-*/
-Q_QML_EXPORT v8::Local<v8::Context> qt_QJSEngineV8Context(QJSEngine *engine)
-{
-    Q_ASSERT(engine != 0);
-    QV8Engine *d = engine->handle();
-    return v8::Local<v8::Context>::New(d->context());
-}
-
 QT_END_NAMESPACE
 
 #include "moc_qjsengine.cpp"

@@ -962,30 +962,4 @@ bool QJSValue::isQObject() const
     return false;
 }
 
-/*!
-    \internal
-
-    Returns this value's internal V8 value, or an empty handle if
-    the QJSValue isn't bound to a QJSEngine.
-
-    The V8 value enables direct use of the V8 API.
-    The caller is responsible for ensuring that a handle scope is in place.
-    Example:
-
-    \code
-    QJSValue value = ...;
-    v8::HandleScope handleScope;
-    v8::Local<v8::Value> v8value = qt_QJSValueV8Value(value);
-
-    // Do something with the V8 value (e.g., call v8::Value::IsInt32()) ...
-    \endcode
-
-    \sa qt_QJSEngineV8Context()
-*/
-Q_QML_EXPORT v8::Local<v8::Value> qt_QJSValueV8Value(const QJSValue &value)
-{
-    QJSValuePrivate *d = QJSValuePrivate::get(value);
-    return v8::Local<v8::Value>::New(v8::Value::fromV4Value(d->value));
-}
-
 QT_END_NAMESPACE

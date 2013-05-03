@@ -149,9 +149,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
 
     ensurePerThreadIsolate();
 
-    m_context = v8::Persistent<v8::Context>::New(v8::Context::GetCurrent());
-    qPersistentRegister(m_context);
-
     m_v4Engine = v8::Isolate::GetEngine();
     m_v4Engine->publicEngine = q;
 
@@ -194,8 +191,6 @@ QV8Engine::~QV8Engine()
     m_typeWrapper.destroy();
     m_qobjectWrapper.destroy();
     m_contextWrapper.destroy();
-
-    qPersistentDispose(m_context);
 }
 
 QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
