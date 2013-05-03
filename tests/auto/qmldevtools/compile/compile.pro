@@ -1,9 +1,12 @@
 option(host_build)
 TARGET = tst_compile
-force_bootstrap: \
+force_bootstrap {
     QT = bootstrap-private
-else: \
+    !build_pass: CONFIG += release
+} else {
     QT = core
+    !build_pass:contains(QT_CONFIG, build_all): CONFIG += release
+}
 QT += qmldevtools-private
 macx:CONFIG -= app_bundle
 
