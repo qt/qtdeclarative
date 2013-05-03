@@ -95,6 +95,9 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
     , value(0)
     , global(false)
 {
+    vtbl = &static_vtbl;
+    type = Type_RegExpObject;
+
     // Convert the pattern to a ECMAScript pattern.
     QString pattern = qt_regexp_toCanonical(re.pattern(), re.patternSyntax());
     if (re.isMinimal()) {
@@ -184,10 +187,12 @@ Value RegExpCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int a
         return Value::fromObject(o);
     }
 
-    if (r.isUndefined())
-        r = Value::fromString(ctx, QString());
-    else if (!r.isString())
-        r = __qmljs_to_string(r, ctx);
+    QString pattern;
+    if (!r.isUndefined())
+        pattern = r.toString(ctx)->toQString();
+    // See sec 15.10.4.1
+    if (pattern.isEmpty())
+        pattern = QStringLiteral("(?:)");
 
     bool global = false;
     bool ignoreCase = false;
@@ -208,7 +213,7 @@ Value RegExpCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int a
         }
     }
 
-    RegExp* re = RegExp::create(ctx->engine, r.stringValue()->toQString(), ignoreCase, multiLine);
+    RegExp* re = RegExp::create(ctx->engine, pattern, ignoreCase, multiLine);
     if (!re->isValid())
         ctx->throwSyntaxError(0);
 
