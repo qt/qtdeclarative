@@ -129,10 +129,9 @@ static bool ObjectComparisonCallback(v8::Local<v8::Object> lhs, v8::Local<v8::Ob
 }
 
 
-QV8Engine::QV8Engine(QJSEngine* qq, ContextOwnership ownership)
+QV8Engine::QV8Engine(QJSEngine* qq)
     : q(qq)
     , m_engine(0)
-    , m_ownsV8Context(ownership == CreateNewContext)
     , m_xmlHttpRequestData(0)
     , m_listModelData(0)
     , m_platform(0)
@@ -151,9 +150,8 @@ QV8Engine::QV8Engine(QJSEngine* qq, ContextOwnership ownership)
     ensurePerThreadIsolate();
 
     v8::HandleScope handle_scope;
-    m_context = (ownership == CreateNewContext) ? v8::Context::New() : v8::Persistent<v8::Context>::New(v8::Context::GetCurrent());
+    m_context = v8::Persistent<v8::Context>::New(v8::Context::GetCurrent());
     qPersistentRegister(m_context);
-    v8::Context::Scope context_scope(m_context);
 
     m_v4Engine = v8::Isolate::GetEngine();
     m_v4Engine->publicEngine = q;
@@ -198,8 +196,7 @@ QV8Engine::~QV8Engine()
     m_qobjectWrapper.destroy();
     m_contextWrapper.destroy();
 
-    if (m_ownsV8Context)
-        qPersistentDispose(m_context);
+    qPersistentDispose(m_context);
 }
 
 QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
@@ -873,8 +870,7 @@ void QV8Engine::ensurePerThreadIsolate()
 void QV8Engine::initQmlGlobalObject()
 {
     v8::HandleScope handels;
-    v8::Context::Scope contextScope(m_context);
-    initializeGlobal(m_context->Global());
+    initializeGlobal(QV4::Value::fromObject(m_v4Engine->globalObject));
     freezeObject(QV4::Value::fromObject(m_v4Engine->globalObject));
 }
 

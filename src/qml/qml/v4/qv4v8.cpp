@@ -62,7 +62,7 @@ using namespace QV4;
 
 namespace v8 {
 
-#define currentEngine() Isolate::GetCurrent()->GetCurrentContext()->GetEngine()
+#define currentEngine() Isolate::GetCurrent()->GetEngine()
 
 #define Q_D(obj) QV4::Value *d = reinterpret_cast<QV4::Value*>(obj)
 
@@ -1948,13 +1948,16 @@ void Isolate::setException(const QV4::Value &ex)
 
 ExecutionEngine *Isolate::GetEngine()
 {
-    return Isolate::GetCurrent()->GetCurrentContext()->GetEngine();
+    return Isolate::GetCurrent()->m_context->GetEngine();
 }
 
 Isolate *Isolate::GetCurrent()
 {
-    if (!currentIsolate.hasLocalData())
-        currentIsolate.setLocalData(new Isolate);
+    if (!currentIsolate.hasLocalData()) {
+        Isolate *i = new Isolate;
+        i->m_context = new Context;
+        currentIsolate.setLocalData(i);
+    }
     return currentIsolate.localData();
 }
 
@@ -2087,26 +2090,9 @@ Context::~Context()
     delete d;
 }
 
-Persistent<Context> Context::New(ExtensionConfiguration *extensions, Handle<ObjectTemplate> global_template, Handle<Value> global_object)
-{
-    Context *result = new Context;
-    return Persistent<Context>::New(Handle<Context>(result));
-}
-
-Local<Object> Context::Global()
-{
-    return Local<Object>::New(Value::fromV4Value(QV4::Value::fromObject(d->engine->globalObject)));
-}
-
 Local<Context> Context::GetCurrent()
 {
-    return Context::Adopt(Isolate::GetCurrent()->m_contextStack.top());
-}
-
-Local<Context> Context::GetCalling()
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    return Context::Adopt(Isolate::GetCurrent()->m_context);
 }
 
 Local<Object> Context::GetCallingQmlGlobal()
@@ -2128,18 +2114,6 @@ Local<Value> Context::GetCallingScriptData()
     Q_UNIMPLEMENTED();
     Q_UNREACHABLE();
 }
-
-void Context::Enter()
-{
-    Isolate* iso = Isolate::GetCurrent();
-    iso->m_contextStack.push(this);
-}
-
-void Context::Exit()
-{
-    Isolate::GetCurrent()->m_contextStack.pop();
-}
-
 
 QV4::ExecutionEngine *Context::GetEngine()
 {

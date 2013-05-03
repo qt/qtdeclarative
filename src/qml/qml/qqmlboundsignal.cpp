@@ -141,7 +141,6 @@ QString QQmlBoundSignalExpression::expression() const
     if (m_expressionFunctionValid) {
         Q_ASSERT (context() && engine());
         v8::HandleScope handle_scope;
-        v8::Context::Scope context_scope(QQmlEnginePrivate::get(engine())->v8engine()->context());
         return m_v8function->v4Value().toQString();
     } else if (!m_expressionUtf8.isEmpty()) {
         return QString::fromUtf8(m_expressionUtf8);
@@ -164,7 +163,6 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
     {
         v8::HandleScope handle_scope;
-        v8::Context::Scope context_scope(ep->v8engine()->context());
         if (!m_expressionFunctionValid) {
 
             //TODO: look at using the property cache here (as in the compiler)

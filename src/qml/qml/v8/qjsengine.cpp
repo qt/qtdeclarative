@@ -43,7 +43,6 @@
 #include "qjsengine_p.h"
 #include "qjsvalue.h"
 #include "qjsvalue_p.h"
-#include "qscriptisolate_p.h"
 #include "qv8engine_p.h"
 
 #include "private/qv4engine_p.h"
@@ -320,7 +319,6 @@ QJSValue QJSEngine::newQObject(QObject *object)
 {
     // ###
     Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
     v8::HandleScope handleScope;
     return d->scriptValueFromInternal(d->newQObject(object, QV8Engine::JavaScriptOwnership));
 }
@@ -347,7 +345,6 @@ QJSValue QJSEngine::globalObject() const
 QJSValue QJSEngine::create(int type, const void *ptr)
 {
     Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
     v8::HandleScope handleScope;
     return new QJSValuePrivate(QV8Engine::getV4(d), d->metaTypeToJS(type, ptr));
 }

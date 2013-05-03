@@ -270,7 +270,6 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
 
         if (isEmitConnected() || isEmitFollowConnected()) {
             v8::HandleScope handle_scope;
-            v8::Context::Scope scope(QQmlEnginePrivate::getV8Engine(qmlEngine(this))->context());
             v8::Handle<v8::Array> array = v8::Array::New(toEmit.size());
             for (int i=0; i<toEmit.size(); i++)
                 array->Set(i, toEmit[i]->v8Value().toV8Handle());

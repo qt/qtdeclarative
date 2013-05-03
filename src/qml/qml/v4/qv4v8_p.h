@@ -2231,7 +2231,6 @@ class V8EXPORT Isolate {
    */
   static Isolate* GetCurrent();
 
-  Context *GetCurrentContext() { return m_contextStack.top(); }
   void setException(const QV4::Value &ex);
 
   static QV4::ExecutionEngine *GetEngine();
@@ -2239,7 +2238,7 @@ class V8EXPORT Isolate {
   private:
       friend class Context;
       friend class TryCatch;
-      QStack<Context*> m_contextStack;
+      Context *m_context;
       TryCatch *tryCatch;
 };
 
@@ -2411,46 +2410,6 @@ class V8EXPORT Context : public QSharedData {
         l.object->ref.ref();
         return l;
     }
-  /**
-   * Returns the global proxy object or global object itself for
-   * detached contexts.
-   *
-   * Global proxy object is a thin wrapper whose prototype points to
-   * actual context's global object with the properties like Object, etc.
-   * This is done that way for security reasons (for more details see
-   * https://wiki.mozilla.org/Gecko:SplitWindow).
-   *
-   * Please note that changes to global proxy object prototype most probably
-   * would break VM---v8 expects only global object as a prototype of
-   * global proxy object.
-   *
-   * If DetachGlobal() has been invoked, Global() would return actual global
-   * object until global is reattached with ReattachGlobal().
-   */
-  Local<Object> Global();
-
-  /** Creates a new context.
-   *
-   * Returns a persistent handle to the newly allocated context. This
-   * persistent handle has to be disposed when the context is no
-   * longer used so the context can be garbage collected.
-   *
-   * \param extensions An optional extension configuration containing
-   * the extensions to be installed in the newly created context.
-   *
-   * \param global_template An optional object template from which the
-   * global object for the newly created context will be created.
-   *
-   * \param global_object An optional global object to be reused for
-   * the newly created context. This global object must have been
-   * created by a previous call to Context::New with the same global
-   * template. The state of the global object will be completely reset
-   * and only object identify will remain.
-   */
-  static Persistent<Context> New(
-      ExtensionConfiguration* extensions = NULL,
-      Handle<ObjectTemplate> global_template = Handle<ObjectTemplate>(),
-      Handle<Value> global_object = Handle<Value>());
 
   /** Returns the context that is on the top of the stack. */
   static Local<Context> GetCurrent();
@@ -2460,23 +2419,8 @@ class V8EXPORT Context : public QSharedData {
    * context of the top-most JavaScript frame.  If there are no
    * JavaScript frames an empty handle is returned.
    */
-  static Local<Context> GetCalling();
   static Local<Object> GetCallingQmlGlobal();
   static Local<Value> GetCallingScriptData();
-
-  /**
-   * Enter this context.  After entering a context, all code compiled
-   * and run is compiled and run in this context.  If another context
-   * is already entered, this old context is saved so it can be
-   * restored when the new context is exited.
-   */
-  void Enter();
-
-  /**
-   * Exit this context.  Exiting the current context restores the
-   * context that was in place when entering the current context.
-   */
-  void Exit();
 
   /**
    * Associate an additional data object with the context. This is mainly used
@@ -2485,20 +2429,6 @@ class V8EXPORT Context : public QSharedData {
    */
   void SetData(Handle<Value> data);
   Local<Value> GetData();
-
-  /**
-   * Stack-allocated class which sets the execution context for all
-   * operations executed within a local scope.
-   */
-  class Scope {
-   public:
-    explicit Scope(Handle<Context> context) : context_(context) {
-      context_->Enter();
-    }
-    ~Scope() { context_->Exit(); }
-   private:
-    Handle<Context> context_;
-  };
 
   QV4::ExecutionEngine *GetEngine();
 

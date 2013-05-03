@@ -92,7 +92,6 @@ void QQmlDelayedError::convertMessageToError(QQmlEngine *engine) const
 {
     if (!m_message.IsEmpty() && engine) {
         v8::HandleScope handle_scope;
-        v8::Context::Scope context_scope(QQmlEnginePrivate::getV8Engine(engine)->context());
         QQmlExpressionPrivate::exceptionToError(m_message, m_error);
         qPersistentDispose(m_message);
     }
@@ -185,7 +184,6 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
 
         if (watcher.wasDeleted()) {
         } else if (try_catch.HasCaught()) {
-            v8::Context::Scope scope(ep->v8engine()->context());
             v8::Local<v8::Message> message = try_catch.Message();
             if (!message.IsEmpty()) {
                 delayedError()->setMessage(message);
@@ -339,7 +337,6 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
 
     v8::HandleScope handle_scope;
-    v8::Context::Scope ctxtscope(ep->v8engine()->context());
 
     v8::TryCatch tc;
     v8::Local<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);
@@ -381,7 +378,6 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
 
     v8::HandleScope handle_scope;
-    v8::Context::Scope ctxtscope(ep->v8engine()->context());
 
     v8::TryCatch tc;
     v8::Local<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);

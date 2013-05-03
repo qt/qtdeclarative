@@ -140,7 +140,6 @@ void QV8Include::finished()
         importContext->isPragmaLibraryContext = m_context->isPragmaLibraryContext;
         importContext->setParent(m_context, true);
 
-        v8::Context::Scope ctxtscope(m_engine->context());
         v8::TryCatch try_catch;
 
         v8::Local<v8::Script> script = m_engine->qmlModeCompile(code, m_url.toString());

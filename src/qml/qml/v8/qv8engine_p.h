@@ -266,11 +266,7 @@ public:
     static QV4::ExecutionEngine *getV4(QJSEngine *q) { return q->handle()->m_v4Engine; }
     static QV4::ExecutionEngine *getV4(QV8Engine *d) { return d->m_v4Engine; }
 
-    enum ContextOwnership {
-        AdoptCurrentContext,
-        CreateNewContext
-    };
-    QV8Engine(QJSEngine* qq, ContextOwnership ownership = CreateNewContext);
+    QV8Engine(QJSEngine* qq);
     virtual ~QV8Engine();
 
     // This enum should be in sync with QQmlEngine::ObjectOwnership
@@ -437,7 +433,6 @@ protected:
 
     QV4::ExecutionEngine *m_v4Engine;
 
-    bool m_ownsV8Context;
     v8::Persistent<v8::Context> m_context;
 
     QV4::PersistentValue m_bindingFlagKey;

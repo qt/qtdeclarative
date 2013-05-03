@@ -144,7 +144,6 @@ void QQuickCustomAffector::affectSystem(qreal dt)
         dt = 1.0;
 
     v8::HandleScope handle_scope;
-    v8::Context::Scope scope(QQmlEnginePrivate::getV8Engine(qmlEngine(this))->context());
     v8::Handle<v8::Array> array = v8::Array::New(toAffect.size());
     for (int i=0; i<toAffect.size(); i++)
         array->Set(i, toAffect[i]->v8Value().toV8Handle());

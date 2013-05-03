@@ -9,5 +9,4 @@ HEADERS += \
     $$PWD/qjsvalue.h \
     $$PWD/qjsvalue_p.h \
     $$PWD/qjsvalueiterator.h \
-    $$PWD/qscriptisolate_p.h \
     $$PWD/qjsvalueiterator_p.h

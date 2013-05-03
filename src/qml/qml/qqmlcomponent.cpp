@@ -1361,7 +1361,6 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(v8::Handle<v8::
     QV4::ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
 
     v8::HandleScope handle_scope;
-    v8::Context::Scope scope(v8engine->context());
     v8::Handle<v8::Value> ov = v8engine->newQObject(toCreate);
     Q_ASSERT(ov->IsObject());
     v8::Handle<v8::Object> object = v8::Handle<v8::Object>::Cast(ov);
@@ -1378,7 +1377,6 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(v8::Handle<v8::
 QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
 {
     v8::HandleScope handle_scope;
-    v8::Context::Scope scope(engine->context());
 
     forceCompletion = qPersistentNew(V8FUNCTION(QV8IncubatorResource::ForceCompletion, engine));
 
@@ -1492,7 +1490,6 @@ void QV8IncubatorResource::statusChanged(Status s)
         if (!callback.IsEmpty() && !callback->IsUndefined()) {
 
             if (callback->IsFunction()) {
-                v8::Context::Scope context_scope(engine->context());
                 v8::Local<v8::Function> f = v8::Local<v8::Function>::Cast(callback);
                 v8::Handle<v8::Value> args[] = { v8::Integer::NewFromUnsigned(s) };
                 v8::TryCatch tc;

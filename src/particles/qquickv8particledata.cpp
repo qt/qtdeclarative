@@ -427,7 +427,6 @@ FAKE_FLOAT_GETTER_AND_SETTER(curAY, curAY, setInstantaneousAY)
 QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
 {
     v8::HandleScope handle_scope;
-    v8::Context::Scope scope(engine->context());
 
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
@@ -485,7 +484,6 @@ QQuickV8ParticleData::QQuickV8ParticleData(QV8Engine* engine, QQuickParticleData
     if (!engine || !datum)
         return;
     v8::HandleScope handle_scope;
-    v8::Context::Scope scope(engine->context());
 
     QV8ParticleDataDeletable *d = particleV8Data(engine);
     m_v8Value = qPersistentNew(d->constructor->NewInstance());

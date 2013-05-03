@@ -3458,7 +3458,6 @@ QImage QQuickContext2D::toImage(const QRectF& bounds)
 QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
 {
     v8::HandleScope handle_scope;
-    v8::Context::Scope scope(engine->context());
 
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
@@ -3662,7 +3661,6 @@ void QQuickContext2D::reset()
 void QQuickContext2D::setV8Engine(QV8Engine *engine)
 {
     v8::HandleScope handle_scope;
-    v8::Context::Scope scope(engine->context());
 
     if (m_v8engine != engine) {
         m_v8engine = engine;

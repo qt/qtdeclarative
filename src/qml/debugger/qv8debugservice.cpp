@@ -278,7 +278,6 @@ void QV8DebugService::processDebugMessages()
 {
     Q_D(QV8DebugService);
     v8::HandleScope handleScope;
-    v8::Context::Scope contextScope(d->engine->context());
 //  ### FIXME: v4  v8::Debug::ProcessDebugMessages();
 }
 

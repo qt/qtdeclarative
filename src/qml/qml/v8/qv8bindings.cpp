@@ -171,7 +171,6 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
         ep->referenceScarceResources();
 
         v8::HandleScope handle_scope;
-        v8::Context::Scope scope(ep->v8engine()->context());
         v8::Local<v8::Value> result =
             evaluate(context,
                      v8::Handle<v8::Function>::Cast(parent->functions()->Get(instruction->value)),
@@ -244,7 +243,6 @@ QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
 
     if (program->bindings.IsEmpty()) {
         v8::HandleScope handle_scope;
-        v8::Context::Scope scope(engine->context());
 
         v8::Local<v8::Script> script;
         bool compileFailed = false;

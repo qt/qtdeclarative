@@ -415,7 +415,6 @@ public:
         if (type->constructor.IsEmpty()) {
             QQmlAdaptorModelEngineData * const data = engineData(engine);
             v8::HandleScope handleScope;
-            v8::Context::Scope contextScope(engine->context());
             type->initializeConstructor(data);
             type->constructor->SetAccessor(data->hasModelChildren(), get_hasModelChildren);
         }

@@ -1465,7 +1465,6 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
 void QQmlXMLHttpRequest::dispatchCallback(v8::Handle<v8::Object> me)
 {
     v8::HandleScope hs;
-    v8::Context::Scope scope(engine->context());
 
     if (me.IsEmpty() || me->IsNull()) {
         v8::ThrowException(v8::Exception::Error(v8::String::New("Unable to dispatch QQmlXmlHttpRequest callback: invalid object")));
@@ -1505,8 +1504,6 @@ void QQmlXMLHttpRequest::dispatchCallback(v8::Handle<v8::Object> me)
 // Must have a handle scope
 void QQmlXMLHttpRequest::printError(v8::Handle<v8::Message> message)
 {
-    v8::Context::Scope scope(engine->context());
-
     QQmlError error;
     QQmlExpressionPrivate::exceptionToError(message, error);
     QQmlEnginePrivate::warning(QQmlEnginePrivate::get(engine->engine()), error);
