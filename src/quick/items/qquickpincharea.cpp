@@ -45,6 +45,7 @@
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
+#include <qpa/qplatformnativeinterface.h>
 
 #include <float.h>
 #include <math.h>
@@ -246,11 +247,15 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 
 QQuickPinchArea::QQuickPinchArea(QQuickItem *parent)
   : QQuickItem(*(new QQuickPinchAreaPrivate), parent)
+  , _currentWindow(0)
 {
     Q_D(QQuickPinchArea);
     d->init();
     setAcceptedMouseButtons(Qt::LeftButton);
     setFiltersChildMouseEvents(true);
+#ifdef Q_OS_MAC
+    connect(this, &QQuickItem::windowChanged, this, &QQuickPinchArea::setTouchEventsEnabledForWindow);
+#endif
 }
 
 QQuickPinchArea::~QQuickPinchArea()
@@ -537,6 +542,27 @@ QQuickPinch *QQuickPinchArea::pinch()
     if (!d->pinch)
         d->pinch = new QQuickPinch;
     return d->pinch;
+}
+
+void QQuickPinchArea::setTouchEventsEnabledForWindow(QWindow *window)
+{
+#ifdef Q_OS_MAC
+    // Resolve function for enabling touch events from the (cocoa) platform plugin.
+    typedef void (*RegisterTouchWindowFunction)(QWindow *, bool);
+    RegisterTouchWindowFunction registerTouchWindow = reinterpret_cast<RegisterTouchWindowFunction>(
+        QGuiApplication::platformNativeInterface()->nativeResourceFunctionForIntegration("registertouchwindow"));
+    if (!registerTouchWindow)
+        return; // Not necessarily an error, Qt migh be using a different platform plugin.
+
+    // Disable touch on the old window, enable on the new window.
+    if (_currentWindow)
+        registerTouchWindow(_currentWindow, false);
+    if (window)
+        registerTouchWindow(window, true);
+    // Save the current window, setTouchEventsEnabledForWindow will be called
+    // with a null window on disable.
+    _currentWindow = window;
+#endif
 }
 
 
