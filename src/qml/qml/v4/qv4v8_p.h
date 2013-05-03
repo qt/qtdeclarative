@@ -2276,7 +2276,6 @@ public:
    * context of the top-most JavaScript frame.  If there are no
    * JavaScript frames an empty handle is returned.
    */
-  static Local<Object> GetCallingQmlGlobal();
   static Local<Value> GetCallingScriptData();
 
 private:

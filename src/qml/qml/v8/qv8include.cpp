@@ -48,6 +48,7 @@
 #include <QtQml/qqmlfile.h>
 
 #include <private/qqmlengine_p.h>
+#include <private/qv4engine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -190,7 +191,7 @@ v8::Handle<v8::Value> QV8Include::include(const v8::Arguments &args)
     if (localFile.isEmpty()) {
 
         QV8Include *i = new QV8Include(url, engine, context, 
-                                       v8::Context::GetCallingQmlGlobal(), 
+                                       QV4::Value::fromObject(args.GetIsolate()->GetEngine()->qmlContextObject()),
                                        callbackFunction);
         result = v8::Local<v8::Object>::New(i->result());
 
@@ -214,7 +215,7 @@ v8::Handle<v8::Value> QV8Include::include(const v8::Arguments &args)
             v8::Local<v8::Script> script = engine->qmlModeCompile(code, url.toString());
 
             if (!try_catch.HasCaught()) {
-                v8::Local<v8::Object> qmlglobal = v8::Context::GetCallingQmlGlobal();
+                v8::Handle<v8::Object> qmlglobal = QV4::Value::fromObject(args.GetIsolate()->GetEngine()->qmlContextObject());
                 engine->contextWrapper()->addSubContext(qmlglobal, script, importContext);
                 script->Run(qmlglobal);
             }

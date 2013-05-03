@@ -499,6 +499,22 @@ Object *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object 
     return new (memoryManager) ForEachIteratorObject(ctx, o);
 }
 
+Object *ExecutionEngine::qmlContextObject() const
+{
+    ExecutionContext *ctx = current;
+    if (!ctx->outer)
+        return 0;
+
+    while (ctx->outer && ctx->outer->type != ExecutionContext::Type_GlobalContext)
+        ctx = ctx->outer;
+
+    assert(ctx);
+    if (ctx->type != ExecutionContext::Type_QmlContext)
+        return 0;
+
+    return static_cast<CallContext *>(ctx)->activation;
+}
+
 void ExecutionEngine::requireArgumentsAccessors(int n)
 {
     if (n <= argumentsAccessors.size())

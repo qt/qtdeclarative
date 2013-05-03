@@ -45,6 +45,9 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlcontext_p.h>
 
+#include <private/qv4engine_p.h>
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 static QString internal(QLatin1String("You've stumbled onto an internal implementation detail "
@@ -210,11 +213,12 @@ void QV8ContextWrapper::addSubContext(v8::Handle<v8::Object> qmlglobal, v8::Hand
 
 QQmlContextData *QV8ContextWrapper::callingContext()
 {
-    v8::Local<v8::Object> qmlglobal = v8::Context::GetCallingQmlGlobal();
-    if (qmlglobal.IsEmpty()) return 0;
+    QV4::Object *qmlglobal = QV8Engine::getV4(m_engine)->qmlContextObject();
+    if (!qmlglobal)
+        return 0;
 
-    QV8ContextResource *r = v8_resource_cast<QV8ContextResource>(qmlglobal);
-    return r?r->getContext():0;
+    QV8ContextResource *r = v8_resource_cast<QV8ContextResource>(v8::Handle<v8::Object>(QV4::Value::fromObject(qmlglobal)));
+    return r ? r->getContext() : 0;
 }
 
 QQmlContextData *QV8ContextWrapper::context(v8::Handle<v8::Value> value)
@@ -253,7 +257,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
     if (!context)
         return v8::Undefined();
 
-    if (v8::Context::GetCallingQmlGlobal() != info.This())
+    if (info.GetIsolate()->GetEngine()->qmlContextObject() != info.This()->v4Value().asObject())
         return v8::Handle<v8::Value>();
 
     // Search type (attached property/enum/imported scripts) names
@@ -383,7 +387,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Local<v8::String> property,
     if (!context)
         return v8::Undefined();
 
-    if (v8::Context::GetCallingQmlGlobal() != info.This())
+    if (info.GetIsolate()->GetEngine()->qmlContextObject() != info.This()->v4Value().asObject())
         return v8::Handle<v8::Value>();
 
     // See QV8ContextWrapper::Getter for resolution order

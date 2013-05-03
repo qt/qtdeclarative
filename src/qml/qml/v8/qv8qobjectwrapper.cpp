@@ -498,7 +498,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
            v8::Handle<v8::Value> argv[] = { 
                objectHandle?*objectHandle:engine->newQObject(object),
                v8::Integer::New(index),
-               v8::Context::GetCallingQmlGlobal()
+               QV4::Value::fromObject(QV8Engine::getV4(engine)->qmlContextObject())
            };
            Q_ASSERT(argv[0]->IsObject());
            return engine->qobjectWrapper()->m_methodConstructor->Call(v8::Value::fromV4Value(engine->global()), 3, argv);

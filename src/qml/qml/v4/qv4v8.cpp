@@ -2001,20 +2001,6 @@ void TryCatch::Reset()
 }
 
 
-Local<Object> Context::GetCallingQmlGlobal()
-{
-    QV4::ExecutionEngine *engine = Isolate::GetCurrent()->GetEngine();
-    QV4::ExecutionContext *ctx = engine->current;
-    while (ctx && ctx->outer->type != ExecutionContext::Type_GlobalContext)
-        ctx = ctx->outer;
-
-    assert(ctx);
-    if (!ctx->type == ExecutionContext::Type_QmlContext)
-        return Local<Object>();
-
-    return Local<Object>::New(Value::fromV4Value(QV4::Value::fromObject(static_cast<CallContext *>(ctx)->activation)));
-}
-
 Local<Value> Context::GetCallingScriptData()
 {
     Q_UNIMPLEMENTED();

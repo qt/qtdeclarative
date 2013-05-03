@@ -245,6 +245,8 @@ struct Q_QML_EXPORT ExecutionEngine
 
     Object *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
 
+    Object *qmlContextObject() const;
+
     void requireArgumentsAccessors(int n);
 
     void markObjects();
