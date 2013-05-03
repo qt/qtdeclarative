@@ -66,8 +66,6 @@
 #include <qwaitcondition.h>
 #include <private/qqmlglobal_p.h>
 
-#include <private/qjsconverter_impl_p.h>
-
 #undef Q_D
 #undef Q_Q
 #define Q_D(blah)

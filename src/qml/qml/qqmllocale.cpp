@@ -42,7 +42,6 @@
 #include "qqmllocale_p.h"
 #include "qqmlengine_p.h"
 #include <private/qqmlcontext_p.h>
-#include <private/qjsconverter_p.h>
 #include <QtCore/qnumeric.h>
 #include <QtCore/qdatetime.h>
 
