@@ -1930,47 +1930,12 @@ Local<Value> Exception::Error(Handle<String> message)
 static QThreadStorage<Isolate*> currentIsolate;
 
 Isolate::Isolate()
-    : m_lastIsolate(0)
-    , tryCatch(0)
+    : tryCatch(0)
 {
 }
 
 Isolate::~Isolate()
 {
-}
-
-Isolate *Isolate::New()
-{
-    assert(!"Isolate::New()");
-    Q_UNREACHABLE();
-}
-
-void Isolate::Enter()
-{
-    m_lastIsolate = currentIsolate.localData();
-    currentIsolate.localData() = this;
-}
-
-void Isolate::Exit()
-{
-    currentIsolate.localData() = m_lastIsolate;
-    m_lastIsolate = 0;
-}
-
-void Isolate::Dispose()
-{
-    Q_UNIMPLEMENTED();
-}
-
-void Isolate::SetData(void *data)
-{
-    Q_UNIMPLEMENTED();
-}
-
-void *Isolate::GetData()
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
 }
 
 void Isolate::setException(const QV4::Value &ex)

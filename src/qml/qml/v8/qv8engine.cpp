@@ -1487,21 +1487,11 @@ void QV8GCCallback::addGcCallbackNode(QV8GCCallback::Node *node)
 QV8Engine::ThreadData::ThreadData()
     : gcPrologueCallbackRegistered(false)
 {
-    if (!v8::Isolate::GetCurrent()) {
-        isolate = v8::Isolate::New();
-        isolate->Enter();
-    } else {
-        isolate = 0;
-    }
+    isolate = 0;
 }
 
 QV8Engine::ThreadData::~ThreadData()
 {
-    if (isolate) {
-        isolate->Exit();
-        isolate->Dispose();
-        isolate = 0;
-    }
 }
 
 QV4::Value QV8Engine::toString(const QString &string)
