@@ -107,6 +107,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     id_get = newIdentifier(QStringLiteral("get"));
     id_set = newIdentifier(QStringLiteral("set"));
     id_eval = newIdentifier(QStringLiteral("eval"));
+    id_uintMax = newIdentifier(QStringLiteral("4294967295"));
 
     emptyClass = new InternalClass(this);
     arrayClass = emptyClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
@@ -570,6 +571,7 @@ void ExecutionEngine::markObjects()
     id_get->mark();
     id_set->mark();
     id_eval->mark();
+    id_uintMax->mark();
 }
 
 Value ExecutionEngine::run(Function *function, ExecutionContext *ctx)
