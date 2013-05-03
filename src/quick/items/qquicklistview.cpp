@@ -3108,6 +3108,21 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
     \b Note: methods should only be called after the Component has completed.
 */
 
+/*!
+    \qmlmethod QtQuick2::ListView::forceLayout()
+
+    Responding to changes in the model is usually batched to happen only once
+    per frame. This means that inside script blocks it is possible for the
+    underlying model to have changed, but the ListView has not caught up yet.
+
+    This method forces the ListView to immediately respond to any outstanding
+    changes in the model.
+
+    \since 5.1
+
+    \b Note: methods should only be called after the Component has completed.
+*/
+
 QQuickListViewAttached *QQuickListView::qmlAttachedProperties(QObject *obj)
 {
     return new QQuickListViewAttached(obj);

@@ -130,7 +130,7 @@ code using the \l{Qt QML} module.
         \li \l{external: Qt Mobility QML Plugins}{QML Plugins}
         \li \l{external: Qt Quick Components for Symbian}{Symbian Components}
         \li MeeGo Components
-        \li \l{QtWebKit QML Module}
+        \li \l{Qt WebKit QML Types}
         \endlist
     \enddiv
     \div {class="threecolumn_piece"}

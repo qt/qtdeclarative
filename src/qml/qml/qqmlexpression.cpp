@@ -162,7 +162,7 @@ QQmlExpressionPrivate::create(QQmlContextData *ctxt, QObject *object,
     int result = expr->evaluate().toInt();  // result = 400
     \endcode
 
-    Note that the QtQuick 1 version is called QDeclarativeExpression.
+    Note that the \l {Qt Quick 1} version is called QDeclarativeExpression.
 */
 
 /*!

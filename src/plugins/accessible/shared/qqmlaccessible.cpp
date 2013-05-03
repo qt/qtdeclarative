@@ -154,7 +154,7 @@ void QQmlAccessible::doAction(const QString &actionName)
         return;
     }
 
-    // Role-specific default action handling follows. Items are excepted to provide
+    // Role-specific default action handling follows. Items are expected to provide
     // properties according to role conventions. These will then be read and/or updated
     // by the accessibility system.
     //   Checkable roles   : checked

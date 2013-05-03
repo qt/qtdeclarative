@@ -812,7 +812,7 @@ V8_DEFINE_EXTENSION(QV8LocaleDataDeletable, localeV8Data);
     }
     \endcode
 
-    QtQuick Locale's data is based on Common Locale Data Repository v1.8.1.
+    Qt Quick Locale's data is based on Common Locale Data Repository v1.8.1.
 
 
     \target FormatType

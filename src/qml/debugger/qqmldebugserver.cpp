@@ -102,9 +102,8 @@ public:
     bool gotHello;
     bool blockingMode;
 
-    QMutex messageArrivedMutex;
-    QWaitCondition messageArrivedCondition;
-    QStringList waitingForMessageNames;
+    QMutex helloMutex;
+    QWaitCondition helloCondition;
     QQmlDebugServerThread *thread;
     QPluginLoader loader;
     QAtomicInt changeServiceStateCalls;
@@ -331,11 +330,11 @@ QQmlDebugServer *QQmlDebugServer::instance()
                 QQmlDebugServerPrivate *d = qQmlDebugServer->d_func();
                 d->blockingMode = block;
 
-                QMutexLocker locker(&d->messageArrivedMutex);
+                QMutexLocker locker(&d->helloMutex);
                 thread->start();
 
                 if (d->blockingMode)
-                    d->messageArrivedCondition.wait(&d->messageArrivedMutex);
+                    d->helloCondition.wait(&d->helloMutex);
 
             } else {
                 qWarning() << QString(QLatin1String(
@@ -447,7 +446,8 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                 d->_q_changeServiceState(iter.value()->name(), newState);
             }
 
-            d->messageArrivedCondition.wakeAll();
+            QMutexLocker helloLock(&d->helloMutex);
+            d->helloCondition.wakeAll();
 
         } else if (op == 1) {
 
@@ -487,9 +487,6 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                 qWarning() << "QML Debugger: Message received for missing plugin" << name << '.';
             } else {
                 (*iter)->messageReceived(message);
-
-                if (d->waitingForMessageNames.removeOne(name))
-                    d->messageArrivedCondition.wakeAll();
             }
         } else {
             qWarning("QML Debugger: Invalid hello message.");

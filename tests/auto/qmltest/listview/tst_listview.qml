@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.1
 import QtTest 1.0
 
 Item {
@@ -168,6 +168,7 @@ Item {
             modelalter.currentIndex = 1;
             compare(modelalter.currentItem.text, "AlterModelElement1")
             altermodel.clear()
+            modelalter.forceLayout()
             tryCompare(modelalter.count, 0)
             compare(modelalter.currentItem, null)
         }

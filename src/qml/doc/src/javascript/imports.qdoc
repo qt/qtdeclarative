@@ -71,13 +71,13 @@ parameters and return values when calling such functions from QML.
 
 \section1 Imports Within JavaScript Resources
 
-In QtQuick 2.0, support has been added to allow JavaScript resources to import
+In \c {QtQuick 2.0}, support has been added to allow JavaScript resources to import
 other JavaScript resources and also QML type namespaces using a variation of
 the standard QML import syntax (where all of the previously described rules and
 qualifications apply).
 
 Due to the ability of a JavaScript resource to import another script or QML
-module in this fashion in QtQuick 2.0, some extra semantics are defined:
+module in this fashion in \c {QtQuick 2.0}, some extra semantics are defined:
 \list
 \li a script with imports will not inherit imports from the QML document which imported it (so accessing Component.errorString will fail, for example)
 \li a script without imports will inherit imports from the QML document which imported it (so accessing Component.errorString will succeed, for example)

@@ -52,7 +52,6 @@ SOURCES += \
     $$PWD/util/qsgpainternode.cpp \
     $$PWD/util/qsgdistancefieldutil.cpp
 
-
 # QML / Adaptations API
 HEADERS += \
     $$PWD/qsgadaptationlayer_p.h \
@@ -68,8 +67,8 @@ HEADERS += \
     $$PWD/qsgflashnode_p.h \
     $$PWD/qsgshareddistancefieldglyphcache_p.h \
     $$PWD/qsgrenderloop_p.h \
-    $$PWD/qsgthreadedrenderloop_p.h
-
+    $$PWD/qsgthreadedrenderloop_p.h \
+    $$PWD/qsgwindowsrenderloop_p.h
 
 SOURCES += \
     $$PWD/qsgadaptationlayer.cpp \
@@ -85,12 +84,5 @@ SOURCES += \
     $$PWD/qsgflashnode.cpp \
     $$PWD/qsgshareddistancefieldglyphcache.cpp \
     $$PWD/qsgrenderloop.cpp \
-    $$PWD/qsgthreadedrenderloop.cpp
-
-
-
-
-
-
-
-
+    $$PWD/qsgthreadedrenderloop.cpp \
+    $$PWD/qsgwindowsrenderloop.cpp

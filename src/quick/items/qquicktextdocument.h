@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 
     The class has to be used from C++ directly, using the property of the \l TextEdit.
 
-    Warning: The QTextDocument provided is used internally by QtQuick elements to provide text manipulation primitives.
+    Warning: The QTextDocument provided is used internally by \l {Qt Quick} elements to provide text manipulation primitives.
     You are not allowed to perform any modification of the internal state of the QTextDocument. If you do, the element
     in question may stop functioning or crash.
 */

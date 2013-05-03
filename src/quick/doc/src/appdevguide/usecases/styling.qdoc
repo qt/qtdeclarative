@@ -29,8 +29,8 @@
 \title Use Case - Style And Theme Support
 \brief Example of how to style user interface components in QML
 
-The types provided in the QtQuick module are not complete user interface components on their own. A common use case is to
-develop a set of custom styled user interface components out of the types in the QtQuick module. This is easily
+The types provided in the \l {Qt Quick} module are not complete user interface components on their own. A common use case is to
+develop a set of custom styled user interface components out of the types in the \l {Qt Quick} module. This is easily
 accomplished by creating your own reusable components.
 
 With the reusable components approach, you define your own type with the appearance you want to have in your

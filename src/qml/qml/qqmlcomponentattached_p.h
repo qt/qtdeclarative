@@ -43,12 +43,13 @@
 #define QQMLCOMPONENTATTACHED_P_H
 
 #include <QtQml/qqml.h>
+#include <private/qtqmlglobal_p.h>
 #include <QtCore/QObject>
 
 QT_BEGIN_NAMESPACE
 
 
-class Q_AUTOTEST_EXPORT QQmlComponentAttached : public QObject
+class Q_QML_PRIVATE_EXPORT QQmlComponentAttached : public QObject
 {
     Q_OBJECT
 public:

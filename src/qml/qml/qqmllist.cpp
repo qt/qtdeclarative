@@ -112,7 +112,7 @@ Attempting to add objects of the incorrect type to a list property will fail.
 Like with normal lists, when accessing a list element by index, it is the callers responsibility to ensure 
 that it does not request an out of range element using the count() method before calling at().
 
-The QtQuick 1 version of this class is named QDeclarativeListReference.
+The \l {Qt Quick 1} version of this class is named QDeclarativeListReference.
 */
 
 /*!
@@ -369,7 +369,7 @@ Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit);
 QML list properties are typesafe - in this case \c {Fruit} is a QObject type that 
 \c {Apple}, \c {Orange} and \c {Banana} all derive from.
 
-The QtQuick 1 version of this class is named QDeclarativeListProperty.
+The \l {Qt Quick 1} version of this class is named QDeclarativeListProperty.
 
 \note QQmlListProperty can only be used for lists of QObject-derived object pointers.
 */

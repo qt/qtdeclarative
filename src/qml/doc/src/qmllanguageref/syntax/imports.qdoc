@@ -144,7 +144,7 @@ the types should be imported into a particular document-local namespace. If a
 namespace is specified, then any references to the types made available by the
 import must be prefixed by the local namespace qualifier.
 
-Below, the QtQuick module is imported into the namespace "CoreItems". Now, any
+Below, the \c QtQuick module is imported into the namespace "CoreItems". Now, any
 references to types from the \c QtQuick module must be prefixed with the
 \c CoreItems name:
 
@@ -178,7 +178,7 @@ CoreItems.Rectangle {
     width: 100; height: 100
 
     MyModule.Text { text: "Hello from my custom text item!" }
-    CoreItems.Text { text: "Hello from QtQuick!" }
+    CoreItems.Text { text: "Hello from Qt Quick!" }
 }
 \endqml
 

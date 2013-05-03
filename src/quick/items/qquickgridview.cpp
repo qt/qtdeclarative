@@ -2564,6 +2564,22 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     \b Note: methods should only be called after the Component has completed.
 */
 
+
+/*!
+    \qmlmethod QtQuick2::GridView::forceLayout()
+
+    Responding to changes in the model is usually batched to happen only once
+    per frame. This means that inside script blocks it is possible for the
+    underlying model to have changed, but the GridView has not caught up yet.
+
+    This method forces the GridView to immediately respond to any outstanding
+    changes in the model.
+
+    \since 5.1
+
+    \b Note: methods should only be called after the Component has completed.
+*/
+
 QQuickGridViewAttached *QQuickGridView::qmlAttachedProperties(QObject *obj)
 {
     return new QQuickGridViewAttached(obj);

@@ -80,7 +80,7 @@ QT_BEGIN_NAMESPACE
     For more information about signals and threads, see
     \l {Threads and QObjects} and \l {Signals and Slots Across Threads}.
 
-    The QtQuick 1 version of this class is named QDeclarativeNetworkAccessManagerFactory.
+    The \l {Qt Quick 1} version of this class is named QDeclarativeNetworkAccessManagerFactory.
 
     \sa {qml/networkaccessmanagerfactory}{NetworkAccessManagerFactory example}
 */

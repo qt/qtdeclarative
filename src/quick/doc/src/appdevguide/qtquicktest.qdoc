@@ -54,7 +54,7 @@
     \endcode
 
     Functions whose names start with \c{test_} are treated as test cases
-    to be executed.  See the documentation for the \l TestCase and
+    to be executed. See the documentation for the \l TestCase and
     \l SignalSpy types for more information on writing test cases.
 
     \section1 Running tests
@@ -67,8 +67,8 @@
     QUICK_TEST_MAIN(example)
     \endcode
 
-    Where "example" is an identifier to use to uniquely identify
-    this set of tests.  You should add \c{CONFIG += qmltestcase}.
+    Where "example" is the identifier to use to uniquely identify
+    this set of tests. You should add \c{CONFIG += qmltestcase}.
     for example:
 
     \code
@@ -79,15 +79,15 @@
     \endcode
 
     The test harness scans the specified source directory recursively
-    for "tst_*.qml" files.  If \c{QUICK_TEST_SOURCE_DIR} is not defined,
+    for "tst_*.qml" files. If \c{QUICK_TEST_SOURCE_DIR} is not defined,
     then the current directory will be scanned when the harness is run.
     Other *.qml files may appear for auxillary QML components that are
     used by the test.
 
     The \c{-input} command-line option can be set at runtime to run
-    test cases from a different directory.  This may be needed to run
+    test cases from a different directory. This may be needed to run
     tests on a target device where the compiled-in directory name refers
-    to a host.  For example:
+    to a host. For example:
 
     \code
     tst_example -input /mnt/SDCard/qmltests

@@ -110,7 +110,7 @@ public:
         , updateType(UpdatePaintNode)
         , mouseSelectionMode(QQuickTextInput::SelectCharacters)
         , m_layoutDirection(Qt::LayoutDirectionAuto)
-        , m_passwordCharacter(QLatin1Char('*'))
+        , m_passwordCharacter(qApp->styleHints()->passwordMaskCharacter())
         , focusOnPress(true)
         , cursorVisible(false)
         , cursorPending(false)

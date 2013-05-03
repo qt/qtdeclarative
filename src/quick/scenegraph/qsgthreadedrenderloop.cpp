@@ -515,7 +515,6 @@ void QSGRenderThread::sync()
     mutex.lock();
 
     Q_ASSERT_X(guiIsLocked, "QSGRenderThread::sync()", "sync triggered on bad terms as gui is not already locked...");
-    pendingUpdate = 0;
 
     for (int i=0; i<m_windows.size(); ++i) {
         Window &w = const_cast<Window &>(m_windows.at(i));
@@ -557,8 +556,10 @@ void QSGRenderThread::syncAndRender()
     syncResultedInChanges = false;
 
     bool repaintRequested = pendingUpdate & RepaintRequest;
+    bool syncRequested = pendingUpdate & SyncRequest;
+    pendingUpdate = 0;
 
-    if (pendingUpdate & SyncRequest) {
+    if (syncRequested) {
         RLDEBUG("    Render:  - update pending, doing sync");
         sync();
     }

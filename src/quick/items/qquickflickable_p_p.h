@@ -101,7 +101,7 @@ public:
         AxisData(QQuickFlickablePrivate *fp, void (QQuickFlickablePrivate::*func)(qreal))
             : move(fp, func)
             , transitionToBounds(0)
-            , viewSize(-1), startMargin(0), endMargin(0)
+            , viewSize(-1), lastPos(0), startMargin(0), endMargin(0)
             , origin(0)
             , transitionTo(0)
             , continuousFlickVelocity(0), velocityTime(), vTime(0)

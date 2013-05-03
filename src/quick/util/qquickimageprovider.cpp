@@ -242,7 +242,7 @@ QImage QQuickTextureFactory::image() const
     \c cache property to \c false for the relevant \l Image, \l BorderImage or
     \l AnimatedImage object.
 
-    The QtQuick 1 version of this class is named QDeclarativeImageProvider.
+    The \l {Qt Quick 1} version of this class is named QDeclarativeImageProvider.
 
     \sa QQmlEngine::addImageProvider()
 */

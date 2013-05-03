@@ -29,7 +29,7 @@
 \title Important C++ Classes Provided By The Qt QML Module
 \brief Overview of the C++ classes provided by the Qt QML module
 
-The Qt QML module provides C++ classes which implement the QML framework.
+The \l{Qt QML} module provides C++ classes which implement the QML framework.
 Clients can use these classes to interact with the QML run-time (for example,
 by injecting data or invoking methods on objects), and to instantiate a
 hierarchy of objects from a QML document.  The Qt QML module provides more
@@ -112,5 +112,21 @@ engine.
 
 See the \l{QQmlExpression} class documentation for in depth information about
 how to use QQmlExpression in an application.
+
+\section1 Usage of the Classes within QML Applications
+
+These pages describe how to create QML applications which interact with the
+C++ classes:
+
+\list
+\li \l{qtqml-cppintegration-topic.html}{Integrating QML and C++}
+    \list
+    \li \l{qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Classes to QML}
+    \li \l{qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}
+    \li \l{qtqml-cppintegration-contextproperties.html}{Embedding C++ Objects into QML with Context Properties}
+    \li \l{qtqml-cppintegration-interactqmlfromcpp.html}{Interacting with QML Objects from C++}
+    \li \l{qtqml-cppintegration-data.html}{Data Type Conversion Between QML and C++}
+    \endlist
+\endlist
 
 */

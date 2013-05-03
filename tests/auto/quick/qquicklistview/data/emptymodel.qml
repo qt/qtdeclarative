@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.1
 Rectangle {
     ListModel {
         id: model
@@ -12,11 +12,13 @@ Rectangle {
     }
     function remove() {
         model.remove(0)
+        list.forceLayout()
         isCurrentItemNull = list.currentItem === null //check no seg fault
     }
 
     function add() {
         model.append({name: "hello"})
+        list.forceLayout()
         isCurrentItemNull = list.currentItem === null
     }
     property bool isCurrentItemNull

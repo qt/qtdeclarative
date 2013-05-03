@@ -106,7 +106,7 @@
     }
     \endqml
 
-    If within the document's directory, there is a \c{dummydata} directory
+    If, within the document's directory, there is a \c{dummydata} directory
     which contains a \c lottoNumbers.qml file like this:
 
     \qml

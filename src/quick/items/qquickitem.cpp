@@ -1570,7 +1570,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
 /*!
     \class QQuickItem
-    \brief The QQuickItem class provides the most basic of all visual items in QtQuick.
+    \brief The QQuickItem class provides the most basic of all visual items in \l {Qt Quick}.
     \inmodule QtQuick
 
     All visual items in Qt Quick inherit from QQuickItem. Although a QQuickItem
@@ -2044,6 +2044,18 @@ QQuickItem::~QQuickItem()
 */
 bool QQuickItemPrivate::focusNextPrev(QQuickItem *item, bool forward)
 {
+    QQuickItem *next = QQuickItemPrivate::nextPrevItemInTabFocusChain(item, forward);
+
+    if (next == item)
+        return false;
+
+    next->forceActiveFocus(forward ? Qt::TabFocusReason : Qt::BacktabFocusReason);
+
+    return true;
+}
+
+QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, bool forward)
+{
     Q_ASSERT(item);
     Q_ASSERT(item->activeFocusOnTab());
 
@@ -2111,12 +2123,7 @@ bool QQuickItemPrivate::focusNextPrev(QQuickItem *item, bool forward)
         from = last;
     } while (skip || !current->activeFocusOnTab() || !current->isEnabled() || !current->isVisible());
 
-    if (current == item)
-        return false;
-
-    current->forceActiveFocus(forward ? Qt::TabFocusReason : Qt::BacktabFocusReason);
-
-    return true;
+    return current;
 }
 
 /*!
@@ -2339,13 +2346,16 @@ void QQuickItem::stackAfter(const QQuickItem *sibling)
         QQuickItemPrivate::get(parentPrivate->childItems.at(ii))->siblingOrderChanged();
 }
 
+/*! \fn void QQuickItem::windowChanged(QQuickWindow *window)
+    This signal is emitted when the item's \a window changes.
+*/
+
 /*!
   Returns the window in which this item is rendered.
 
-  The item does not have a window until it has been assigned into a scene. To
-  get notification about this, reimplement the itemChange() function and
-  listen for the ItemSceneChange change. The itemChange() function is called
-  both when the item is entered into a scene and when it is removed from a scene.
+  The item does not have a window until it has been assigned into a scene. The
+  \l windowChanged signal provides a notification both when the item is entered
+  into a scene and when it is removed from a scene.
   */
 QQuickWindow *QQuickItem::window() const
 {
@@ -3928,6 +3938,28 @@ void QQuickItem::forceActiveFocus(Qt::FocusReason reason)
 }
 
 /*!
+    \qmlmethod QtQuick2::Item::nextItemInFocusChain(bool forward)
+
+    \since QtQuick 2.1
+
+    Returns the item in the focus chain which is next to this item.
+    If \a forward is \c true, or not supplied, it is the next item in
+    the forwards direction. If \a forward is \c false, it is the next
+    item in the backwards direction.
+*/
+/*!
+    Returns the item in the focus chain which is next to this item.
+    If \a forward is \c true, or not supplied, it is the next item in
+    the forwards direction. If \a forward is \c false, it is the next
+    item in the backwards direction.
+*/
+
+QQuickItem *QQuickItem::nextItemInFocusChain(bool forward)
+{
+    return QQuickItemPrivate::nextPrevItemInTabFocusChain(this, forward);
+}
+
+/*!
     \qmlmethod QtQuick2::Item::childAt(real x, real y)
 
     Returns the first visible child item found at point (\a x, \a y) within
@@ -4428,6 +4460,13 @@ void QQuickItemPrivate::deliverDragEvent(QEvent *e)
 
     \a value contains extra information relating to the change, when
     applicable.
+
+    If you re-implement this method in a subclass, be sure to call
+    \code
+    QQuickItem::itemChange(change, value);
+    \endcode
+    typically at the end of your implementation, to ensure the
+    \l windowChanged signal will be emitted.
   */
 void QQuickItem::itemChange(ItemChange change, const ItemChangeData &value)
 {

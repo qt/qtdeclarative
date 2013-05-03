@@ -51,6 +51,8 @@
 #include <QtQuick/private/qquickstategroup_p.h>
 #include <QtGui/QImage>
 #include <private/qqmlvme_p.h>
+#include <private/qqmlcomponentattached_p.h>
+#include <private/qqmldata_p.h>
 
 #include "designerwindowmanager_p.h"
 
@@ -372,6 +374,17 @@ void DesignerSupport::resetAnchor(QQuickItem *item, const QString &name)
         anchors(item)->resetVerticalCenter();
     } else if (name == QLatin1String("anchors.baseline")) {
         anchors(item)->resetBaseline();
+    }
+}
+
+void DesignerSupport::emitComponentCompleteSignalForAttachedProperty(QQuickItem *item)
+{
+    QQmlData *data = QQmlData::get(item);
+    if (data && data->context) {
+        QQmlComponentAttached *componentAttached = data->context->componentAttached;
+        if (componentAttached) {
+            emit componentAttached->completed();
+        }
     }
 }
 

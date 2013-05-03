@@ -66,7 +66,7 @@ can take one or two arguments:
 \li The first is the parent for the new object.  The parent can be a graphical
     object (i.e. of the \l Item type) or non-graphical object (i.e. of the
     \l QtObject or C++ QObject type). Only graphical objects with graphical
-    parent objects will be rendered to the QtQuick visual canvas.  If you wish
+    parent objects will be rendered to the \l {Qt Quick} visual canvas.  If you wish
     to set the parent later you can safely pass \c null to this function.
 \li The second is optional and is a map of property-value pairs that define
     initial any property values for the object.  Property values specified by
@@ -109,7 +109,7 @@ the \c finishCreation() function and call \l {Component::createObject()}
 
 Notice in both instances, \l {Component::createObject()}{createObject()} is
 called with \c appWindow passed as the parent argument, since the dynamically
-created object is a visual (QtQuick) object.  The created object will become a
+created object is a visual (Qt Quick) object.  The created object will become a
 child of the \c appWindow object in \c main.qml, and appear in the scene.
 
 When using files with relative paths, the path should

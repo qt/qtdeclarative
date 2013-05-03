@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
                ^
     \endcode
 
-    Note that the QtQuick 1 version is named QDeclarativeError
+    Note that the \l {Qt Quick 1} version is named QDeclarativeError
 
     \sa QQuickView::errors(), QQmlComponent::errors()
 */
