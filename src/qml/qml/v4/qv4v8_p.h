@@ -586,34 +586,6 @@ public:
 };
 
 
- /**
- * A stack-allocated class that governs a number of local handles.
- * After a handle scope has been created, all local handles will be
- * allocated within that handle scope until either the handle scope is
- * deleted or another handle scope is created.  If there is already a
- * handle scope and a new one is created, all allocations will take
- * place in the new handle scope until it is deleted.  After that,
- * new handles will again be allocated in the original handle scope.
- *
- * After the handle scope of a local handle has been deleted the
- * garbage collector will no longer track the object stored in the
- * handle and may deallocate it.  The behavior of accessing a handle
- * for which the handle scope has been deleted is undefined.
- */
-class V8EXPORT HandleScope {
- public:
-  HandleScope() {}
-
-  ~HandleScope() {}
-
-  /**
-   * Closes the handle scope and returns the value as a handle in the
-   * previous scope, which is the new current scope after the call.
-   */
-  template <class T> Local<T> Close(Handle<T> value) { return Local<T>::New(value); }
-};
-
-
 // --- Special objects ---
 
 

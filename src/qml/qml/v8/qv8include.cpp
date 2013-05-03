@@ -125,8 +125,6 @@ void QV8Include::finished()
         }
     }
 
-    v8::HandleScope handle_scope;
-
     if (m_reply->error() == QNetworkReply::NoError) {
         QByteArray data = m_reply->readAll();
 

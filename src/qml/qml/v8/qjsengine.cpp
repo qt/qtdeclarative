@@ -319,7 +319,6 @@ QJSValue QJSEngine::newQObject(QObject *object)
 {
     // ###
     Q_D(QJSEngine);
-    v8::HandleScope handleScope;
     return d->scriptValueFromInternal(d->newQObject(object, QV8Engine::JavaScriptOwnership));
 }
 
@@ -345,7 +344,6 @@ QJSValue QJSEngine::globalObject() const
 QJSValue QJSEngine::create(int type, const void *ptr)
 {
     Q_D(QJSEngine);
-    v8::HandleScope handleScope;
     return new QJSValuePrivate(QV8Engine::getV4(d), d->metaTypeToJS(type, ptr));
 }
 

@@ -1591,8 +1591,6 @@ void QQmlDelegateModelItemMetaType::initializeMetaObject()
 
 void QQmlDelegateModelItemMetaType::initializeConstructor()
 {
-    v8::HandleScope handleScope;
-
     QQmlDelegateModelEngineData *data = engineData(v8Engine);
 
     constructor = qPersistentNew(v8::ObjectTemplate::New());
@@ -2101,7 +2099,6 @@ void QQmlDelegateModelGroupPrivate::emitChanges(QV8Engine *engine)
 {
     Q_Q(QQmlDelegateModelGroup);
     if (isChangedConnected() && !changeSet.isEmpty()) {
-        v8::HandleScope handleScope;
         v8::Local<v8::Object> removed  = engineData(engine)->array(engine, changeSet.removes());
         v8::Local<v8::Object> inserted = engineData(engine)->array(engine, changeSet.inserts());
         emit q->changed(QQmlV4Handle::fromV8Handle(removed), QQmlV4Handle::fromV8Handle(inserted));

@@ -376,7 +376,6 @@ QVariant QQmlExpressionPrivate::value(bool *isUndefined)
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
     {
-        v8::HandleScope handle_scope;
         v8::Local<v8::Value> result = v8value(isUndefined);
         rv = ep->v8engine()->toVariant(result->v4Value(), -1);
     }

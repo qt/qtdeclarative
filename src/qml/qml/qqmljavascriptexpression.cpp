@@ -91,7 +91,6 @@ void QQmlDelayedError::setErrorDescription(const QString &description)
 void QQmlDelayedError::convertMessageToError(QQmlEngine *engine) const
 {
     if (!m_message.IsEmpty() && engine) {
-        v8::HandleScope handle_scope;
         QQmlExpressionPrivate::exceptionToError(m_message, m_error);
         qPersistentDispose(m_message);
     }
@@ -336,8 +335,6 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
     QQmlEngine *engine = ctxt->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
 
-    v8::HandleScope handle_scope;
-
     v8::TryCatch tc;
     v8::Local<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);
     v8::Local<v8::Script> script = ep->v8engine()->qmlModeCompile(code, codeLength, filename, line);
@@ -376,8 +373,6 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
 {
     QQmlEngine *engine = ctxt->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-
-    v8::HandleScope handle_scope;
 
     v8::TryCatch tc;
     v8::Local<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);

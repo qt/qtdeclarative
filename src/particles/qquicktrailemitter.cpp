@@ -269,7 +269,6 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
             m_system->emitParticle(d);
 
         if (isEmitConnected() || isEmitFollowConnected()) {
-            v8::HandleScope handle_scope;
             v8::Handle<v8::Array> array = v8::Array::New(toEmit.size());
             for (int i=0; i<toEmit.size(); i++)
                 array->Set(i, toEmit[i]->v8Value().toV8Handle());

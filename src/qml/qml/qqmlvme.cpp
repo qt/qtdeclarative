@@ -339,9 +339,6 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
     QQmlEngine *engine = states.at(0).context->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
 
-    // Need a v8 handle scope and execution context for StoreVar instructions.
-    v8::HandleScope handleScope;
-
     int status = -1; // needed for dbus
     QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::BypassInterceptor |
                                                     QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
@@ -1241,8 +1238,6 @@ v8::Persistent<v8::Object> QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptD
     for (int ii = 0; ii < script->scripts.count(); ++ii) {
         ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());
     }
-
-    v8::HandleScope handle_scope;
 
     v8::TryCatch try_catch;
     if (!script->isInitialized())

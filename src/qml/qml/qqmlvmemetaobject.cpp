@@ -705,7 +705,6 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                     QQmlEnginePrivate *ep = (ctxt == 0 || ctxt->engine == 0) ? 0 : QQmlEnginePrivate::get(ctxt->engine);
                     QV8Engine *v8e = (ep == 0) ? 0 : ep->v8engine();
                     if (v8e) {
-                        v8::HandleScope handleScope;
                         if (c == QMetaObject::ReadProperty) {
                             *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
                         } else if (c == QMetaObject::WriteProperty) {
@@ -931,7 +930,6 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 QQmlVMEMetaData::MethodData *data = metaData->methodData() + id;
 
-                v8::HandleScope handle_scope;
                 v8::Handle<v8::Value> *args = 0;
 
                 if (data->parameterCount) {
@@ -1232,7 +1230,6 @@ bool QQmlVMEMetaObject::ensureVarPropertiesAllocated()
 // see also: QV8GCCallback::garbageCollectorPrologueCallback()
 void QQmlVMEMetaObject::allocateVarPropertiesArray()
 {
-    v8::HandleScope handleScope;
     varProperties = qPersistentNew(v8::Array::New(metaData->varPropertyCount));
     varProperties.MakeWeak(static_cast<void*>(this), VarPropertiesWeakReferenceCallback);
     varPropertiesInitialized = true;

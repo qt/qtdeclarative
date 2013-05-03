@@ -1309,8 +1309,6 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
         QVarLengthArray<int, 9> dummy;
         int *argsTypes = QQmlPropertyCache::methodParameterTypes(data(), index, dummy, 0);
 
-        v8::HandleScope handle_scope;
-
         int argCount = argsTypes?argsTypes[0]:0;
         QVarLengthArray<v8::Handle<v8::Value>, 9> args(argCount);
 

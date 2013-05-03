@@ -223,8 +223,6 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
         "}); "\
     "})"
 
-    v8::HandleScope handle_scope;
-
     {
     v8::Local<v8::Script> onmessagescript = v8::Script::New(v8::String::New(CALL_ONMESSAGE_SCRIPT));
     onmessage = qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(onmessagescript->Run()));
@@ -342,8 +340,6 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     if (!script)
         return;
 
-    v8::HandleScope handle_scope;
-
     v8::Handle<v8::Value> value = QV8Worker::deserialize(data, workerEngine);
 
     v8::TryCatch tc;
@@ -368,8 +364,6 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         QByteArray data = f.readAll();
         QString sourceCode = QString::fromUtf8(data);
         QQmlScript::Parser::extractPragmas(sourceCode);
-
-        v8::HandleScope handle_scope;
 
         WorkerScript *script = workers.value(id);
         if (!script)
@@ -716,7 +710,6 @@ bool QQuickWorkerScript::event(QEvent *event)
         if (engine) {
             WorkerDataEvent *workerEvent = static_cast<WorkerDataEvent *>(event);
             QV8Engine *v8engine = QQmlEnginePrivate::get(engine)->v8engine();
-            v8::HandleScope handle_scope;
             v8::Handle<v8::Value> value = QV8Worker::deserialize(workerEvent->data(), v8engine);
             emit message(QQmlV4Handle::fromV8Handle(value));
         }

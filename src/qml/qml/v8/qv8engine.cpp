@@ -149,7 +149,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
 
     ensurePerThreadIsolate();
 
-    v8::HandleScope handle_scope;
     m_context = v8::Persistent<v8::Context>::New(v8::Context::GetCurrent());
     qPersistentRegister(m_context);
 
@@ -869,7 +868,6 @@ void QV8Engine::ensurePerThreadIsolate()
 
 void QV8Engine::initQmlGlobalObject()
 {
-    v8::HandleScope handels;
     initializeGlobal(QV4::Value::fromObject(m_v4Engine->globalObject));
     freezeObject(QV4::Value::fromObject(m_v4Engine->globalObject));
 }

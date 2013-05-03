@@ -170,7 +170,6 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
         DeleteWatcher watcher(this);
         ep->referenceScarceResources();
 
-        v8::HandleScope handle_scope;
         v8::Local<v8::Value> result =
             evaluate(context,
                      v8::Handle<v8::Function>::Cast(parent->functions()->Get(instruction->value)),
@@ -242,8 +241,6 @@ QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
     QV8Engine *engine = QQmlEnginePrivate::getV8Engine(context->engine);
 
     if (program->bindings.IsEmpty()) {
-        v8::HandleScope handle_scope;
-
         v8::Local<v8::Script> script;
         bool compileFailed = false;
         {

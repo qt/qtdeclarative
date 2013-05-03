@@ -726,8 +726,6 @@ public:
 
 QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
 {
-    v8::HandleScope handle_scope;
-
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
 

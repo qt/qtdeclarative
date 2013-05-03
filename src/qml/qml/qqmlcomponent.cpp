@@ -1360,7 +1360,6 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(v8::Handle<v8::
     QV8Engine *v8engine = ep->v8engine();
     QV4::ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
 
-    v8::HandleScope handle_scope;
     v8::Handle<v8::Value> ov = v8engine->newQObject(toCreate);
     Q_ASSERT(ov->IsObject());
     v8::Handle<v8::Object> object = v8::Handle<v8::Object>::Cast(ov);
@@ -1376,8 +1375,6 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(v8::Handle<v8::
 
 QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
 {
-    v8::HandleScope handle_scope;
-
     forceCompletion = qPersistentNew(V8FUNCTION(QV8IncubatorResource::ForceCompletion, engine));
 
     {
@@ -1484,7 +1481,6 @@ void QV8IncubatorResource::statusChanged(Status s)
     }
 
     if (!me.IsEmpty()) { // Will be false in synchronous mode
-        v8::HandleScope scope;
         v8::Local<v8::Value> callback = me->GetInternalField(0);
 
         if (!callback.IsEmpty() && !callback->IsUndefined()) {

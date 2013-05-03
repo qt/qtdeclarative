@@ -1260,8 +1260,6 @@ void ModelNodeMetaObject::propertyWritten(int index)
     QString propName = QString::fromUtf8(name(index));
     QVariant value = operator[](index);
 
-    v8::HandleScope handle_scope;
-
     v8::Handle<v8::Value> v = eng->fromVariant(value);
 
     int roleIndex = m_obj->m_model->m_listModel->setExistingProperty(m_obj->m_elementIndex, propName, v, eng);

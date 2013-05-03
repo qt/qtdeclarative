@@ -110,8 +110,6 @@ static QString jsStack() {
 v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args,
                               bool printStack = false)
 {
-    v8::HandleScope handleScope;
-
     QString result;
     QV8Engine *engine = V8ENGINE();
     for (int i = 0; i < args.Length(); ++i) {

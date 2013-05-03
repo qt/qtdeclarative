@@ -279,7 +279,6 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
             bool isUndefined = false;
 
-            v8::HandleScope handle_scope;
             v8::Local<v8::Value> result =
                 QQmlJavaScriptExpression::evaluate(context(), v8function, &isUndefined);
 
@@ -321,7 +320,6 @@ QVariant QQmlBinding::evaluate()
 
     bool isUndefined = false;
 
-    v8::HandleScope handle_scope;
     v8::Local<v8::Value> result =
         QQmlJavaScriptExpression::evaluate(context(), v8function, &isUndefined);
 

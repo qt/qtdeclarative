@@ -1251,8 +1251,6 @@ void QQmlXMLHttpRequest::setMe(v8::Handle<v8::Object> me)
 
 void QQmlXMLHttpRequest::readyRead()
 {
-    v8::HandleScope handle_scope;
-
     m_status = 
         m_network->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     m_statusText =
@@ -1290,8 +1288,6 @@ static const char *errorToString(QNetworkReply::NetworkError error)
 
 void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
 {
-    v8::HandleScope handle_scope;
-
     m_status =
         m_network->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     m_statusText =
@@ -1331,8 +1327,6 @@ void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
 #define XMLHTTPREQUEST_MAXIMUM_REDIRECT_RECURSION 15
 void QQmlXMLHttpRequest::finished()
 {
-    v8::HandleScope handle_scope;
-
     m_redirectCount++;
     if (m_redirectCount < XMLHTTPREQUEST_MAXIMUM_REDIRECT_RECURSION) {
         QVariant redirect = m_network->attribute(QNetworkRequest::RedirectionTargetAttribute);
@@ -1464,8 +1458,6 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
 // Requires a TryCatch scope
 void QQmlXMLHttpRequest::dispatchCallback(v8::Handle<v8::Object> me)
 {
-    v8::HandleScope hs;
-
     if (me.IsEmpty() || me->IsNull()) {
         v8::ThrowException(v8::Exception::Error(v8::String::New("Unable to dispatch QQmlXmlHttpRequest callback: invalid object")));
         return;

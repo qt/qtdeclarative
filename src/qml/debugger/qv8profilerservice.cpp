@@ -201,7 +201,6 @@ void QV8ProfilerService::startProfiling(const QString &title)
     if (d->m_ongoing.contains(title))
         return;
 
-    v8::HandleScope handle_scope;
     v8::Handle<v8::String> v8title = v8::String::New(reinterpret_cast<const uint16_t*>(title.data()), title.size());
     // ### FIXME: v4
 //    v8::CpuProfiler::StartProfiling(v8title);

@@ -277,7 +277,6 @@ void QV8DebugService::sendDebugMessage(const QString &message)
 void QV8DebugService::processDebugMessages()
 {
     Q_D(QV8DebugService);
-    v8::HandleScope handleScope;
 //  ### FIXME: v4  v8::Debug::ProcessDebugMessages();
 }
 
