@@ -69,11 +69,6 @@ static void collectGarbage_helper(QJSEngine &eng)
     eng.collectGarbage();
 }
 
-QT_BEGIN_NAMESPACE
-extern Q_QML_EXPORT v8::Local<v8::Context> qt_QJSEngineV8Context(QJSEngine *);
-extern Q_QML_EXPORT v8::Local<v8::Value> qt_QJSValueV8Value(const QJSValue &);
-QT_END_NAMESPACE
-
 class tst_QJSEngine : public QObject
 {
     Q_OBJECT
@@ -154,10 +149,6 @@ private slots:
     void dateConversionQtJS();
     void functionPrototypeExtensions();
     void threadedEngine();
-
-    void v8Context_simple();
-    void v8Context_exception();
-    void v8Context_mixAPIs();
 };
 
 tst_QJSEngine::tst_QJSEngine()
@@ -2727,99 +2718,6 @@ void tst_QJSEngine::threadedEngine()
     thread2.wait();
     QCOMPARE(thread1.result, 2);
     QCOMPARE(thread2.result, 2);
-}
-
-void tst_QJSEngine::v8Context_simple()
-{
-    QJSEngine eng;
-
-    v8::HandleScope handleScope;
-    v8::Local<v8::Context> context = QT_PREPEND_NAMESPACE(qt_QJSEngineV8Context(&eng));
-    v8::Context::Scope contextScope(context);
-
-    v8::Local<v8::Script> script = v8::Script::Compile(
-                v8::String::New("({ foo: 123, bar: 'ciao', baz: true })"));
-
-    v8::TryCatch tc;
-    v8::Local<v8::Value> result = script->Run();
-
-    QVERIFY(!tc.HasCaught());
-    QVERIFY(result->IsObject());
-
-    v8::Local<v8::Object> object = result.As<v8::Object>();
-    QVERIFY(object->Get(v8::String::New("foo"))->Equals(v8::Number::New(123)));
-    QVERIFY(object->Get(v8::String::New("bar"))->Equals(v8::String::New("ciao")));
-    QVERIFY(object->Get(v8::String::New("baz"))->IsTrue());
-}
-
-void tst_QJSEngine::v8Context_exception()
-{
-    QJSEngine eng;
-
-    v8::HandleScope handleScope;
-    v8::Local<v8::Context> context = qt_QJSEngineV8Context(&eng);
-    v8::Context::Scope contextScope(context);
-
-    int startLineNumber = 42;
-    v8::ScriptOrigin origin(v8::String::New("test.js"), v8::Integer::New(startLineNumber));
-    v8::Local<v8::Script> script = v8::Script::Compile(
-                v8::String::New(
-                    "function foo(i) {\n"
-                    "  if (i > 5)\n"
-                    "    throw Error('Catch me if you can');\n"
-                    "  foo(i + 1);\n"
-                    "}\n"
-                    "foo(0);"),
-                &origin);
-
-// QJS does this for us:
-//    v8::V8::SetCaptureStackTraceForUncaughtExceptions(true);
-
-    v8::TryCatch tc;
-    v8::Local<v8::Value> result = script->Run();
-
-    QVERIFY(tc.HasCaught());
-    QVERIFY(result.IsEmpty());
-
-    v8::Local<v8::Message> message = tc.Message();
-    QVERIFY(!message.IsEmpty());
-    QCOMPARE(*v8::String::AsciiValue(message->Get()), "Uncaught Error: Catch me if you can");
-    QCOMPARE(*v8::String::AsciiValue(message->GetScriptResourceName()), "test.js");
-    QCOMPARE(message->GetLineNumber(), startLineNumber + 3);
-}
-
-void tst_QJSEngine::v8Context_mixAPIs()
-{
-    QJSEngine eng;
-
-    v8::HandleScope handleScope;
-    v8::Local<v8::Context> context = qt_QJSEngineV8Context(&eng);
-    v8::Context::Scope contextScope(context);
-
-    QJSValue globalQJS = eng.globalObject();
-    v8::Local<v8::Value> globalV8Value = qt_QJSValueV8Value(globalQJS);
-    QVERIFY(!globalV8Value.IsEmpty());
-    QVERIFY(globalV8Value->IsObject());
-    v8::Local<v8::Object> globalV8 = globalV8Value.As<v8::Object>();
-
-    QVERIFY(globalQJS.property("foo").isUndefined());
-    QVERIFY(globalV8->Get(v8::String::New("foo"))->IsUndefined());
-
-    globalQJS.setProperty("foo", 123);
-    QVERIFY(globalV8->Get(v8::String::New("foo"))->Equals(v8::Number::New(123)));
-
-    globalV8->Set(v8::String::New("bar"), v8::String::New("ciao"));
-    QVERIFY(globalQJS.property("bar").equals("ciao"));
-
-    QJSValue arrayQJS = eng.newArray(10);
-    v8::Local<v8::Value> arrayV8Value = qt_QJSValueV8Value(arrayQJS);
-    QVERIFY(!arrayV8Value.IsEmpty());
-    QVERIFY(arrayV8Value->IsArray());
-    v8::Local<v8::Array> arrayV8 = arrayV8Value.As<v8::Array>();
-
-    QCOMPARE(int(arrayV8->Length()), 10);
-    arrayV8->Set(5, v8::Null());
-    QVERIFY(arrayQJS.property(5).isNull());
 }
 
 QTEST_MAIN(tst_QJSEngine)
