@@ -141,12 +141,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
     qMetaTypeId<QJSValue>();
     qMetaTypeId<QList<int> >();
 
-    QByteArray v8args = qgetenv("V8ARGS");
-    // change default v8 behaviour to not relocate breakpoints across lines
-    if (!v8args.contains("breakpoint_relocation"))
-        v8args.append(" --nobreakpoint_relocation");
-    v8::V8::SetFlagsFromString(v8args.constData(), v8args.length());
-
     ensurePerThreadIsolate();
 
     m_v4Engine = v8::Isolate::GetEngine();
@@ -171,7 +165,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
 
 QV8Engine::~QV8Engine()
 {
-    Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8Engine::~QV8Engine()", "called after v8::Isolate has exited");
     for (int ii = 0; ii < m_extensionData.count(); ++ii)
         delete m_extensionData[ii];
     m_extensionData.clear();
@@ -1476,7 +1469,6 @@ void QV8GCCallback::addGcCallbackNode(QV8GCCallback::Node *node)
 QV8Engine::ThreadData::ThreadData()
     : gcPrologueCallbackRegistered(false)
 {
-    isolate = 0;
 }
 
 QV8Engine::ThreadData::~ThreadData()

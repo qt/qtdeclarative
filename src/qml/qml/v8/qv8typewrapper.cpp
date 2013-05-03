@@ -195,7 +195,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
                 v8::Handle<v8::Value> rv = v8engine->qobjectWrapper()->getProperty(qobjectSingleton, propertystring, context, QV8QObjectWrapper::IgnoreRevision);
                 return rv;
             } else if (!siinfo->scriptApi(e).isUndefined()) {
-                QV4::ExecutionEngine *engine = v8::Isolate::GetEngine();
+                QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine);
                 // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
                 QV4::Object *o = QJSValuePrivate::get(siinfo->scriptApi(e))->getValue(engine).asObject();
                 if (!o)
@@ -297,7 +297,8 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
                                 property->v4Value().toQString() + QLatin1Char('\"');
                 v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
             } else {
-                apiprivate->put(v8::Isolate::GetEngine()->current, property.get()->v4Value().stringValue(), setVal);
+                QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine);
+                apiprivate->put(engine->current, property.get()->v4Value().stringValue(), setVal);
             }
         }
     }

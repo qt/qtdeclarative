@@ -415,7 +415,6 @@ public:
     struct ThreadData {
         ThreadData();
         ~ThreadData();
-        v8::Isolate* isolate;
         bool gcPrologueCallbackRegistered;
         QIntrusiveList<QV8GCCallback::Node, &QV8GCCallback::Node::node> gcCallbackNodes;
     };

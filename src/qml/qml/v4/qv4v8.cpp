@@ -619,33 +619,13 @@ bool String::Equals(char *str, int length)
     return asQString() == QString::fromLatin1(str, length);
 }
 
-uint16_t String::GetCharacter(int index)
+int String::Write(uint16_t *buffer) const
 {
-    return asQString().at(index).unicode();
-}
-
-int String::Write(uint16_t *buffer, int start, int length, int options) const
-{
-    if (length < 0)
-        length = asQString().length();
+    uint length = asQString().length();
     if (length == 0)
         return 0;
-    if (asQString().length() < length)
-        length = asQString().length();
-    // ### do we use options?
-    memcpy(buffer + start, asQString().constData(), length*sizeof(QChar));
+    memcpy(buffer, asQString().constData(), length*sizeof(QChar));
     return length;
-}
-
-v8::Local<String> String::Empty()
-{
-    return Local<String>::New(v8::Value::fromV4Value(QV4::Value::fromString(currentEngine()->current, QString())));
-}
-
-bool String::IsExternal() const
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
 }
 
 String::ExternalStringResource *String::GetExternalStringResource() const
@@ -738,16 +718,6 @@ Local<Integer> Integer::New(int32_t value)
 Local<Integer> Integer::NewFromUnsigned(uint32_t value)
 {
     return Local<Integer>::New(Value::fromV4Value(QV4::Value::fromUInt32(value)));
-}
-
-Local<Integer> Integer::New(int32_t value, Isolate *)
-{
-    return New(value);
-}
-
-Local<Integer> Integer::NewFromUnsigned(uint32_t value, Isolate *)
-{
-    return NewFromUnsigned(value);
 }
 
 int64_t Integer::Value() const
@@ -1952,11 +1922,6 @@ Isolate *Isolate::GetCurrent()
 }
 
 
-void V8::SetFlagsFromString(const char *, int)
-{
-    // we can safely ignore these
-}
-
 static UserObjectComparisonCallback userObjectComparisonCallback = 0;
 
 static bool v8ExternalResourceComparison(const QV4::Value &a, const QV4::Value &b)
@@ -1990,28 +1955,6 @@ void V8::AddImplicitReferences(Persistent<Object> parent, Persistent<Value> *chi
     // not required currently as we don't have weak Persistent references.
     // not having them will lead to some leaks in QQmlVMEMetaObejct, but shouldn't matter otherwise
     assert(!"AddImplicitReferences();");
-}
-
-bool V8::Initialize()
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
-}
-
-bool V8::Dispose()
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
-}
-
-bool V8::IdleNotification(int hint)
-{
-    return true;
-}
-
-void V8::LowMemoryNotification()
-{
-    currentEngine()->memoryManager->runGC();
 }
 
 

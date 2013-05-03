@@ -570,10 +570,6 @@ template <class T> class Persistent : public Handle<T> {
        HandleOperations<T>::init(this);
   }
 
-  void Dispose(Isolate*) {
-      Dispose();
-  }
-
   /**
    * Make the reference to this object weak.  When only weak handles
    * refer to the object, the garbage collector will perform a
@@ -1093,50 +1089,8 @@ class V8EXPORT String : public Primitive {
    * enough to hold the entire string and NULL terminator. Copies
    * the contents of the string and the NULL terminator into the
    * buffer.
-   *
-   * WriteUtf8 will not write partial UTF-8 sequences, preferring to stop
-   * before the end of the buffer.
-   *
-   * Copies up to length characters into the output buffer.
-   * Only null-terminates if there is enough space in the buffer.
-   *
-   * \param buffer The buffer into which the string will be copied.
-   * \param start The starting position within the string at which
-   * copying begins.
-   * \param length The number of characters to copy from the string.  For
-   *    WriteUtf8 the number of bytes in the buffer.
-   * \param nchars_ref The number of characters written, can be NULL.
-   * \param options Various options that might affect performance of this or
-   *    subsequent operations.
-   * \return The number of characters copied to the buffer excluding the null
-   *    terminator.  For WriteUtf8: The number of bytes copied to the buffer
-   *    including the null terminator (if written).
    */
-  enum WriteOptions {
-    NO_OPTIONS = 0,
-    HINT_MANY_WRITES_EXPECTED = 1,
-    NO_NULL_TERMINATION = 2,
-    PRESERVE_ASCII_NULL = 4
-  };
-
-  uint16_t GetCharacter(int index);
-
-  // 16-bit character codes.
-  int Write(uint16_t* buffer,
-            int start = 0,
-            int length = -1,
-            int options = NO_OPTIONS) const;
-
-  /**
-   * A zero length string.
-   */
-  static v8::Local<v8::String> Empty();
-  static v8::Local<v8::String> Empty(Isolate* isolate);
-
-  /**
-   * Returns true if the string is external
-   */
-  bool IsExternal() const;
+  int Write(uint16_t* buffer) const;
 
   class V8EXPORT ExternalStringResourceBase {  // NOLINT
    public:
@@ -1287,8 +1241,6 @@ class V8EXPORT Integer : public Number {
  public:
   static Local<Integer> New(int32_t value);
   static Local<Integer> NewFromUnsigned(uint32_t value);
-  static Local<Integer> New(int32_t value, Isolate*);
-  static Local<Integer> NewFromUnsigned(uint32_t value, Isolate*);
   int64_t Value() const;
   static Integer* Cast(v8::Value* obj);
 };
@@ -2122,13 +2074,6 @@ Handle<Primitive> V8EXPORT Null();
 Handle<Boolean> V8EXPORT True();
 Handle<Boolean> V8EXPORT False();
 
-inline Handle<Primitive> Undefined(Isolate*) { return Undefined(); }
-inline Handle<Primitive> Null(Isolate*) { return Null(); }
-inline Handle<Boolean> True(Isolate*) { return True(); }
-inline Handle<Boolean> False(Isolate*) { return False(); }
-
-
-
 // --- Exceptions ---
 
 
@@ -2220,11 +2165,6 @@ class V8EXPORT Isolate {
 class V8EXPORT V8 {
  public:
 
-  /**
-   * Sets V8 flags from a string.
-   */
-  static void SetFlagsFromString(const char* str, int length);
-
   /** Callback for user object comparisons */
   static void SetUserObjectComparisonCallbackFunction(UserObjectComparisonCallback);
 
@@ -2258,43 +2198,6 @@ class V8EXPORT V8 {
                                     Persistent<Value>* children,
                                     size_t length);
 
-  /**
-   * Initializes from snapshot if possible. Otherwise, attempts to
-   * initialize from scratch.  This function is called implicitly if
-   * you use the API without calling it first.
-   */
-  static bool Initialize();
-
-  /**
-   * Releases any resources used by v8 and stops any utility threads
-   * that may be running.  Note that disposing v8 is permanent, it
-   * cannot be reinitialized.
-   *
-   * It should generally not be necessary to dispose v8 before exiting
-   * a process, this should happen automatically.  It is only necessary
-   * to use if the process needs the resources taken up by v8.
-   */
-  static bool Dispose();
-
-  /**
-   * Optional notification that the embedder is idle.
-   * V8 uses the notification to reduce memory footprint.
-   * This call can be used repeatedly if the embedder remains idle.
-   * Returns true if the embedder should stop calling IdleNotification
-   * until real work has been done.  This indicates that V8 has done
-   * as much cleanup as it will be able to do.
-   *
-   * The hint argument specifies the amount of work to be done in the function
-   * on scale from 1 to 1000. There is no guarantee that the actual work will
-   * match the hint.
-   */
-  static bool IdleNotification(int hint = 1000);
-
-  /**
-   * Optional notification that the system is running low on memory.
-   * V8 uses these notifications to attempt to free memory.
-   */
-  static void LowMemoryNotification();
 };
 
 /**
@@ -2362,9 +2265,6 @@ private:
 };
 
 
-// --- Context ---
-class V8EXPORT ExtensionConfiguration;
-
 /**
  * A sandboxed execution context with its own set of built-in objects
  * and functions.
@@ -2383,8 +2283,6 @@ private:
   Context() {}
   ~Context() {}
 };
-
-//DEFINE_HANDLE_OPERATIONS(Context)
 
 template<typename T>
 void Persistent<T>::MakeWeak(void* parameters, WeakReferenceCallback callback)
