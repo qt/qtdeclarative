@@ -81,7 +81,16 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, RegExp* value, bool global)
     lastIndexProperty->value = Value::fromInt32(0);
     if (!this->value)
         return;
-    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("source")), Value::fromString(engine->newString(this->value->pattern())));
+
+    QString p = this->value->pattern();
+    if (p.isEmpty()) {
+        p = QStringLiteral("(?:)");
+    } else {
+        // escape certain parts, see ch. 15.10.4
+        p.replace('/', QLatin1String("\\/"));
+    }
+
+    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("source")), Value::fromString(engine->newString(p)));
     defineReadonlyProperty(engine->newIdentifier(QStringLiteral("global")), Value::fromBoolean(global));
     defineReadonlyProperty(engine->newIdentifier(QStringLiteral("ignoreCase")), Value::fromBoolean(this->value->ignoreCase()));
     defineReadonlyProperty(engine->newIdentifier(QStringLiteral("multiline")), Value::fromBoolean(this->value->multiLine()));
@@ -190,9 +199,6 @@ Value RegExpCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int a
     QString pattern;
     if (!r.isUndefined())
         pattern = r.toString(ctx)->toQString();
-    // See sec 15.10.4.1
-    if (pattern.isEmpty())
-        pattern = QStringLiteral("(?:)");
 
     bool global = false;
     bool ignoreCase = false;
@@ -297,7 +303,7 @@ Value RegExpPrototype::method_toString(SimpleCallContext *ctx)
     if (!r)
         ctx->throwTypeError();
 
-    QString result = QChar('/') + r->value->pattern();
+    QString result = QChar('/') + r->get(ctx, ctx->engine->newIdentifier(QStringLiteral("source"))).stringValue()->toQString();
     result += QChar('/');
     if (r->global)
         result += QChar('g');
