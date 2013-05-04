@@ -659,7 +659,6 @@ void tst_QJSEngine::globalObjectWithCustomPrototype()
     global.setPrototype(proto);
     {
         QJSValue ret = engine.evaluate("protoProperty");
-        QEXPECT_FAIL("", "Replacing the prototype of the global object is currently unsupported (see also v8 issue 1078)", Abort);
         QVERIFY(ret.isNumber());
         QVERIFY(ret.strictlyEquals(global.property("protoProperty")));
     }
@@ -667,11 +666,6 @@ void tst_QJSEngine::globalObjectWithCustomPrototype()
         QJSValue ret = engine.evaluate("this.protoProperty");
         QVERIFY(ret.isNumber());
         QVERIFY(ret.strictlyEquals(global.property("protoProperty")));
-    }
-    {
-        QJSValue ret = engine.evaluate("hasOwnProperty('protoProperty')");
-        QVERIFY(ret.isBool());
-        QVERIFY(!ret.toBool());
     }
     {
         QJSValue ret = engine.evaluate("this.hasOwnProperty('protoProperty')");
