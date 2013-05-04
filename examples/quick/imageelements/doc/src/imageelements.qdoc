@@ -25,7 +25,7 @@
 **
 ****************************************************************************/
 /*!
-    \title QML Examples - Image Elements
+    \title Qt Quick Examples - Image Elements
     \example imageelements
     \brief This is a collection of QML examples relating to image types.
     \image qml-imageelements-example.png

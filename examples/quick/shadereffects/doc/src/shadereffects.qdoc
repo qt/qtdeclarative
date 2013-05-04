@@ -25,7 +25,7 @@
 **
 ****************************************************************************/
 /*!
-    \title QML Examples - Shader Effects
+    \title Qt Quick Examples - Shader Effects
     \example shadereffects
     \image qml-shadereffects-example.png
     \brief This is a shader effects example

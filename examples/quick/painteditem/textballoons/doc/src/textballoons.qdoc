@@ -27,7 +27,7 @@
 
 
 /*!
-    \title Scenegraph Painted Item Example
+    \title Scene Graph - Painted Item
     \brief Shows how to implement QPainter-based custom scenegraph items.
     \example customitems/painteditem
     \ingroup qtquickexamples
@@ -72,7 +72,7 @@
     \snippet quick/customitems/painteditem/textballoon.cpp 0
 
     Then we implement the \c paint() function which is automatically called by
-    the Scenegraph framework to paint the contents of the item. The function
+    the Scene Graph framework to paint the contents of the item. The function
     paints the item in local coordinates.
 
     \snippet quick/customitems/painteditem/textballoon.cpp 1
