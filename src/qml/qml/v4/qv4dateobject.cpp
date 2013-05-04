@@ -344,26 +344,6 @@ static inline double TimeClip(double t)
     return Value::toInteger(t);
 }
 
-static inline double FromDateTime(const QDateTime &dt)
-{
-    if (!dt.isValid())
-        return qSNaN();
-    QDate date = dt.date();
-    QTime taim = dt.time();
-    int year = date.year();
-    int month = date.month() - 1;
-    int day = date.day();
-    int hours = taim.hour();
-    int mins = taim.minute();
-    int secs = taim.second();
-    int ms = taim.msec();
-    double t = MakeDate(MakeDay(year, month, day),
-                        MakeTime(hours, mins, secs, ms));
-    if (dt.timeSpec() == Qt::LocalTime)
-        t = UTC(t);
-    return TimeClip(t);
-}
-
 static inline double ParseString(const QString &s)
 {
     // first try the format defined in 15.9.1.15, only if that fails fall back to
@@ -562,7 +542,9 @@ static inline double ParseString(const QString &s)
                 break;
         }
     }
-    return FromDateTime(dt);
+    if (!dt.isValid())
+        return qSNaN();
+    return dt.toMSecsSinceEpoch();
 }
 
 /*!
@@ -661,7 +643,7 @@ DateObject::DateObject(ExecutionEngine *engine, const QDateTime &date)
     : Object(engine)
 {
     type = Type_DateObject;
-    value = Value::fromDouble(FromDateTime(date));
+    value = Value::fromDouble(date.toMSecsSinceEpoch());
 }
 
 QDateTime DateObject::toQDateTime() const
