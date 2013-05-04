@@ -107,6 +107,7 @@ struct URIErrorObject: ErrorObject {
 struct ErrorCtor: FunctionObject
 {
     ErrorCtor(ExecutionContext *scope);
+    ErrorCtor(ExecutionContext *scope, String *name);
 
     static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
@@ -117,7 +118,7 @@ protected:
 
 struct EvalErrorCtor: ErrorCtor
 {
-    EvalErrorCtor(ExecutionContext *scope): ErrorCtor(scope) { vtbl = &static_vtbl; }
+    EvalErrorCtor(ExecutionContext *scope);
 
     static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
 
@@ -127,7 +128,7 @@ protected:
 
 struct RangeErrorCtor: ErrorCtor
 {
-    RangeErrorCtor(ExecutionContext *scope): ErrorCtor(scope) { vtbl = &static_vtbl; }
+    RangeErrorCtor(ExecutionContext *scope);
 
     static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
 
@@ -137,7 +138,7 @@ protected:
 
 struct ReferenceErrorCtor: ErrorCtor
 {
-    ReferenceErrorCtor(ExecutionContext *scope): ErrorCtor(scope) { vtbl = &static_vtbl; }
+    ReferenceErrorCtor(ExecutionContext *scope);
 
     static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
 
@@ -147,7 +148,7 @@ protected:
 
 struct SyntaxErrorCtor: ErrorCtor
 {
-    SyntaxErrorCtor(ExecutionContext *scope): ErrorCtor(scope) { vtbl = &static_vtbl; }
+    SyntaxErrorCtor(ExecutionContext *scope);
 
     static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
 
@@ -157,7 +158,7 @@ protected:
 
 struct TypeErrorCtor: ErrorCtor
 {
-    TypeErrorCtor(ExecutionContext *scope): ErrorCtor(scope) { vtbl = &static_vtbl; }
+    TypeErrorCtor(ExecutionContext *scope);
 
     static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
 
@@ -167,7 +168,7 @@ protected:
 
 struct URIErrorCtor: ErrorCtor
 {
-    URIErrorCtor(ExecutionContext *scope): ErrorCtor(scope) { vtbl = &static_vtbl; }
+    URIErrorCtor(ExecutionContext *scope);
 
     static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
 

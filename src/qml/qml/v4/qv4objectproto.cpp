@@ -74,7 +74,7 @@ using namespace QV4;
 DEFINE_MANAGED_VTABLE(ObjectCtor);
 
 ObjectCtor::ObjectCtor(ExecutionContext *scope)
-    : FunctionObject(scope)
+    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("Object")))
 {
     vtbl = &static_vtbl;
 }

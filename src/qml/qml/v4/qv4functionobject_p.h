@@ -155,7 +155,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     unsigned int varCount;
     Function *function;
 
-    FunctionObject(ExecutionContext *scope);
+    FunctionObject(ExecutionContext *scope, String *name = 0);
 
     static Value construct(Managed *that, ExecutionContext *context, Value *args, int argc);
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
@@ -185,7 +185,7 @@ protected:
 
 struct FunctionPrototype: FunctionObject
 {
-    FunctionPrototype(ExecutionContext *ctx): FunctionObject(ctx) {}
+    FunctionPrototype(ExecutionContext *ctx);
     void init(ExecutionContext *ctx, const Value &ctor);
 
     static Value method_toString(SimpleCallContext *ctx);

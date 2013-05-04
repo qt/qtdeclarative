@@ -167,7 +167,13 @@ DEFINE_MANAGED_VTABLE(TypeErrorCtor);
 DEFINE_MANAGED_VTABLE(URIErrorCtor);
 
 ErrorCtor::ErrorCtor(ExecutionContext *scope)
-    : FunctionObject(scope)
+    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("Error")))
+{
+    vtbl = &static_vtbl;
+}
+
+ErrorCtor::ErrorCtor(ExecutionContext *scope, String *name)
+    : FunctionObject(scope, name)
 {
     vtbl = &static_vtbl;
 }
@@ -182,9 +188,21 @@ Value ErrorCtor::call(Managed *that, ExecutionContext *ctx, const Value &, Value
     return that->construct(ctx, args, argc);
 }
 
+EvalErrorCtor::EvalErrorCtor(ExecutionContext *scope)
+    : ErrorCtor(scope, scope->engine->newIdentifier("EvalError"))
+{
+    vtbl = &static_vtbl;
+}
+
 Value EvalErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
     return Value::fromObject(new (ctx->engine->memoryManager) EvalErrorObject(ctx->engine, argc ? args[0] : Value::undefinedValue()));
+}
+
+RangeErrorCtor::RangeErrorCtor(ExecutionContext *scope)
+    : ErrorCtor(scope, scope->engine->newIdentifier("RangeError"))
+{
+    vtbl = &static_vtbl;
 }
 
 Value RangeErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
@@ -192,9 +210,21 @@ Value RangeErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, i
     return Value::fromObject(new (ctx->engine->memoryManager) RangeErrorObject(ctx->engine, argc ? args[0] : Value::undefinedValue()));
 }
 
+ReferenceErrorCtor::ReferenceErrorCtor(ExecutionContext *scope)
+    : ErrorCtor(scope, scope->engine->newIdentifier("ReferenceError"))
+{
+    vtbl = &static_vtbl;
+}
+
 Value ReferenceErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
     return Value::fromObject(new (ctx->engine->memoryManager) ReferenceErrorObject(ctx->engine, argc ? args[0] : Value::undefinedValue()));
+}
+
+SyntaxErrorCtor::SyntaxErrorCtor(ExecutionContext *scope)
+    : ErrorCtor(scope, scope->engine->newIdentifier("SyntaxError"))
+{
+    vtbl = &static_vtbl;
 }
 
 Value SyntaxErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
@@ -202,9 +232,21 @@ Value SyntaxErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, 
     return Value::fromObject(new (ctx->engine->memoryManager) SyntaxErrorObject(ctx->engine, argc ? args[0] : Value::undefinedValue()));
 }
 
+TypeErrorCtor::TypeErrorCtor(ExecutionContext *scope)
+    : ErrorCtor(scope, scope->engine->newIdentifier("TypeError"))
+{
+    vtbl = &static_vtbl;
+}
+
 Value TypeErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
     return Value::fromObject(new (ctx->engine->memoryManager) TypeErrorObject(ctx->engine, argc ? args[0] : Value::undefinedValue()));
+}
+
+URIErrorCtor::URIErrorCtor(ExecutionContext *scope)
+    : ErrorCtor(scope, scope->engine->newIdentifier("URIError"))
+{
+    vtbl = &static_vtbl;
 }
 
 Value URIErrorCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)

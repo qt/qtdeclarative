@@ -170,7 +170,7 @@ QRegExp RegExpObject::toQRegExp() const
 DEFINE_MANAGED_VTABLE(RegExpCtor);
 
 RegExpCtor::RegExpCtor(ExecutionContext *scope)
-    : FunctionObject(scope)
+    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("RegExp")))
 {
     vtbl = &static_vtbl;
 }

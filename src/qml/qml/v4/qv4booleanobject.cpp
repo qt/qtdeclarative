@@ -46,7 +46,7 @@ using namespace QV4;
 DEFINE_MANAGED_VTABLE(BooleanCtor);
 
 BooleanCtor::BooleanCtor(ExecutionContext *scope)
-    : FunctionObject(scope)
+    : FunctionObject(scope, scope->engine->newIdentifier("Boolean"))
 {
     vtbl = &static_vtbl;
 }

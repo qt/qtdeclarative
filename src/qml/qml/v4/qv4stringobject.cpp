@@ -109,7 +109,7 @@ void StringObject::markObjects(Managed *that)
 DEFINE_MANAGED_VTABLE(StringCtor);
 
 StringCtor::StringCtor(ExecutionContext *scope)
-    : FunctionObject(scope)
+    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("String")))
 {
     vtbl = &static_vtbl;
 }

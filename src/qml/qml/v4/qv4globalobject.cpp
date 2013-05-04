@@ -342,19 +342,17 @@ static QString decode(const QString &input, DecodeMode decodeMode, bool *ok)
 DEFINE_MANAGED_VTABLE(EvalFunction);
 
 EvalFunction::EvalFunction(ExecutionContext *scope)
-    : FunctionObject(scope)
+    : FunctionObject(scope, scope->engine->id_eval)
     , qmlActivation(0)
 {
     vtbl = &static_vtbl;
-    name = scope->engine->id_eval;
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
 }
 
 EvalFunction::EvalFunction(ExecutionContext *scope, Object *qmlActivation)
-    : FunctionObject(scope)
+    : FunctionObject(scope, scope->engine->id_eval)
 {
     vtbl = &static_vtbl;
-    name = scope->engine->id_eval;
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
     this->qmlActivation = qmlActivation;
 }

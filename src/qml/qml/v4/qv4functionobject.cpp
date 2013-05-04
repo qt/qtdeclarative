@@ -86,10 +86,10 @@ void Function::mark()
         identifiers.at(i)->mark();
 }
 
-FunctionObject::FunctionObject(ExecutionContext *scope)
+FunctionObject::FunctionObject(ExecutionContext *scope, String *name)
     : Object(scope->engine)
     , scope(scope)
-    , name(0)
+    , name(name)
     , formalParameterList(0)
     , varList(0)
     , formalParameterCount(0)
@@ -106,6 +106,9 @@ FunctionObject::FunctionObject(ExecutionContext *scope)
 #ifndef QT_NO_DEBUG
      assert(scope->next != (ExecutionContext *)0x1);
 #endif
+
+     if (name)
+         defineReadonlyProperty(scope->engine->id_name, Value::fromString(name));
 }
 
 bool FunctionObject::hasInstance(Managed *that, ExecutionContext *ctx, const Value &value)
@@ -169,7 +172,7 @@ void FunctionObject::markObjects(Managed *that)
 DEFINE_MANAGED_VTABLE(FunctionCtor);
 
 FunctionCtor::FunctionCtor(ExecutionContext *scope)
-    : FunctionObject(scope)
+    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("Function")))
 {
     vtbl = &static_vtbl;
 }
@@ -223,6 +226,11 @@ Value FunctionCtor::construct(Managed *that, ExecutionContext *ctx, Value *args,
 Value FunctionCtor::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
 {
     return construct(that, context, args, argc);
+}
+
+FunctionPrototype::FunctionPrototype(ExecutionContext *ctx)
+    : FunctionObject(ctx, ctx->engine->newIdentifier("Function"))
+{
 }
 
 void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -315,7 +323,7 @@ static Value throwTypeError(SimpleCallContext *ctx)
 DEFINE_MANAGED_VTABLE(ScriptFunction);
 
 ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
-    : FunctionObject(scope)
+    : FunctionObject(scope, function->name)
 {
     vtbl = &static_vtbl;
     this->function = function;
@@ -328,7 +336,6 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 
     MemoryManager::GCBlocker gcBlocker(scope->engine->memoryManager);
 
-    name = function->name;
     needsActivation = function->needsActivation();
     usesArgumentsObject = function->usesArgumentsObject;
     strictMode = function->isStrict;
@@ -409,11 +416,10 @@ Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value
 DEFINE_MANAGED_VTABLE(BuiltinFunctionOld);
 
 BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *))
-    : FunctionObject(scope)
+    : FunctionObject(scope, name)
     , code(code)
 {
     vtbl = &static_vtbl;
-    this->name = name;
     isBuiltinFunction = true;
 }
 
@@ -460,7 +466,7 @@ Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const V
 DEFINE_MANAGED_VTABLE(BoundFunction);
 
 BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)
-    : FunctionObject(scope)
+    : FunctionObject(scope, 0)
     , target(target)
     , boundThis(boundThis)
     , boundArgs(boundArgs)

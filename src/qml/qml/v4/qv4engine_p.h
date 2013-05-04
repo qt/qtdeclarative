@@ -192,6 +192,7 @@ struct Q_QML_EXPORT ExecutionEngine
     String *id_set;
     String *id_eval;
     String *id_uintMax;
+    String *id_name;
 
     QVector<Function *> functions;
 
