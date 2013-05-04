@@ -133,7 +133,8 @@ void QQmlApplicationEnginePrivate::_q_finishLoad(QObject *o)
     case QQmlComponent::Null:
         return; //These cases just wait for the next status update
     }
-    delete c;
+
+    c->deleteLater();
 }
 
 /*!
