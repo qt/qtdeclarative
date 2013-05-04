@@ -660,6 +660,7 @@ static double getLocalTZA()
 DateObject::DateObject(ExecutionEngine *engine, const QDateTime &date)
     : Object(engine)
 {
+    type = Type_DateObject;
     value = Value::fromDouble(FromDateTime(date));
 }
 
