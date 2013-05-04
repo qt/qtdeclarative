@@ -2349,27 +2349,16 @@ void tst_QJSEngine::jsFutureReservedWords()
         QCOMPARE(!ret.isError(), allowed);
     }
     {
-        // this should probably be allowed (see task 162567)
         QJSEngine eng;
         QJSValue ret = eng.evaluate("o = {}; o." + word + " = 123");
 
-        QEXPECT_FAIL("class", "QTBUG-27193", Abort);
-        QEXPECT_FAIL("const", "QTBUG-27193", Abort);
-        QEXPECT_FAIL("debugger", "QTBUG-27193", Abort);
-        QEXPECT_FAIL("enum", "QTBUG-27193", Abort);
-        QEXPECT_FAIL("export", "QTBUG-27193", Abort);
-        QEXPECT_FAIL("extends", "QTBUG-27193", Abort);
-        QEXPECT_FAIL("import", "QTBUG-27193", Abort);
-        QEXPECT_FAIL("super", "QTBUG-27193", Abort);
-
-        QCOMPARE(ret.isNumber(), allowed);
-        QCOMPARE(!ret.isError(), allowed);
+        QCOMPARE(ret.isNumber(), true);
+        QCOMPARE(!ret.isError(), true);
     }
     {
-        // this should probably be allowed (see task 162567)
         QJSEngine eng;
         QJSValue ret = eng.evaluate("o = { " + word + ": 123 }");
-        QCOMPARE(!ret.isError(), allowed);
+        QCOMPARE(!ret.isError(), true);
     }
 }
 
