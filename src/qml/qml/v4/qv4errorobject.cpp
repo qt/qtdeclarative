@@ -88,6 +88,7 @@ DEFINE_MANAGED_VTABLE(SyntaxErrorObject);
 
 SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const Value &msg)
     : ErrorObject(engine, msg, SyntaxError)
+    , msg(0)
 {
     vtbl = &static_vtbl;
     prototype = engine->syntaxErrorPrototype;
@@ -95,6 +96,7 @@ SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const Value &msg)
 
 SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const QString &msg)
     : ErrorObject(engine, Value::fromString(engine, msg), SyntaxError)
+    , msg(0)
 {
     vtbl = &static_vtbl;
     prototype = engine->syntaxErrorPrototype;
