@@ -2185,7 +2185,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     each section.
 
 
-    \snippet quick/views/listview/sections.qml 0
+    \snippet views/listview/sections.qml 0
 
     \image qml-listview-sections-example.png
 

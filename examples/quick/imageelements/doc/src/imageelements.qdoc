@@ -40,20 +40,20 @@
 
     'Shadows' shows how to create a drop shadow effect for a rectangular item
     using a BorderImage:
-    \snippet quick/imageelements/content/ShadowRectangle.qml shadow
+    \snippet imageelements/content/ShadowRectangle.qml shadow
 
     'AnimatedSprite' shows how to display a simple animation using an
     AnimatedSprite object:
-    \snippet quick/imageelements/animatedsprite.qml sprite
+    \snippet imageelements/animatedsprite.qml sprite
     The sprite animation will loop 3 times.
 
     'SpriteSequence' demonstrates using a sprite sequence to draw an animated
     and interactive bear.
     The SpriteSequence defines 5 different sprites. The bear is initially in
     a 'still' state:
-    \snippet quick/imageelements/spritesequence.qml still
+    \snippet imageelements/spritesequence.qml still
     When the scene is clicked, an animation sets the sprite sequence to the
     'falling' states and animates the bear's y property.
-    \snippet quick/imageelements/spritesequence.qml animation
+    \snippet imageelements/spritesequence.qml animation
     At the end of the animation the bear is set back to its initial state.
 */

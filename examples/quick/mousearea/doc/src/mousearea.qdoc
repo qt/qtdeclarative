@@ -37,10 +37,10 @@
     of that click which are available to QML.
 
     Signals are emitted by the MouseArea when clicks or other discrete operations occur within it
-    \snippet quick/mousearea/mousearea.qml clicks
+    \snippet mousearea/mousearea.qml clicks
 
     The MouseArea can also be used to drag items around. By setting the parameters of the drag property,
     the target item will be dragged around if the user starts to drag within the MouseArea.
-    \snippet quick/mousearea/mousearea.qml drag
+    \snippet mousearea/mousearea.qml drag
 
 */
