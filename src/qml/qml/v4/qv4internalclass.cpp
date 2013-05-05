@@ -92,7 +92,8 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
     engine->identifierCache->toIdentifier(string);
     uint id = string->identifier | (data.flags() << 27);
 
-    assert(propertyTable.constFind(id) == propertyTable.constEnd());
+    if (propertyTable.constFind(string->identifier) != propertyTable.constEnd())
+        return changeMember(string, data, index);
 
     QHash<int, InternalClass *>::const_iterator tit = transitions.constFind(id);
 
