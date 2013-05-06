@@ -148,7 +148,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     objectCtor = Value::fromObject(new (memoryManager) ObjectCtor(rootContext));
     stringCtor = Value::fromObject(StringPrototype::newConstructor(rootContext));
     numberCtor = Value::fromObject(new (memoryManager) NumberCtor(rootContext));
-    booleanCtor = Value::fromObject(new (memoryManager) BooleanCtor(rootContext));
+    booleanCtor = Value::fromObject(BooleanPrototype::newConstructor(rootContext));
     arrayCtor = Value::fromObject(new (memoryManager) ArrayCtor(rootContext));
     functionCtor = Value::fromObject(new (memoryManager) FunctionCtor(rootContext));
     dateCtor = Value::fromObject(DatePrototype::newConstructor(rootContext));
@@ -180,7 +180,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     objectPrototype->init(rootContext, objectCtor);
     stringPrototype->initClass(this, stringCtor);
     numberPrototype->init(rootContext, numberCtor);
-    booleanPrototype->init(rootContext, booleanCtor);
+    booleanPrototype->initClass(this, booleanCtor);
     arrayPrototype->init(rootContext, arrayCtor);
     datePrototype->init(rootContext, dateCtor);
     functionPrototype->init(rootContext, functionCtor);
