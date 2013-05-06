@@ -161,6 +161,7 @@ struct Q_QML_EXPORT ExecutionEngine
     TypeErrorPrototype *typeErrorPrototype;
     URIErrorPrototype *uRIErrorPrototype;
 
+    QQmlJS::MemoryPool classPool;
     InternalClass *emptyClass;
     InternalClass *arrayClass;
 
@@ -256,6 +257,8 @@ struct Q_QML_EXPORT ExecutionEngine
     Value run(Function *function, ExecutionContext *ctx = 0);
 
     void initRootContext();
+
+    InternalClass *newClass(const InternalClass &other);
 };
 
 inline void ExecutionEngine::pushContext(SimpleCallContext *context)

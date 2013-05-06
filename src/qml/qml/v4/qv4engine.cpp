@@ -110,7 +110,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     id_uintMax = newIdentifier(QStringLiteral("4294967295"));
     id_name = newIdentifier(QStringLiteral("name"));
 
-    emptyClass = new InternalClass(this);
+    emptyClass =  new (classPool.allocate(sizeof(InternalClass))) InternalClass(this);
     arrayClass = emptyClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
     initRootContext();
 
@@ -239,6 +239,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
 ExecutionEngine::~ExecutionEngine()
 {
+    emptyClass->destroy();
     delete identifierCache;
     delete bumperPointerAllocator;
     delete regExpCache;
@@ -254,6 +255,11 @@ void ExecutionEngine::initRootContext()
     current = rootContext;
     current->parent = 0;
     rootContext->init(this);
+}
+
+InternalClass *ExecutionEngine::newClass(const InternalClass &other)
+{
+    return new (classPool.allocate(sizeof(InternalClass))) InternalClass(other);
 }
 
 WithContext *ExecutionEngine::newWithContext(Object *with)

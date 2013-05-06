@@ -67,8 +67,6 @@ struct InternalClass {
 
     uint size;
 
-    InternalClass(ExecutionEngine *engine) : engine(engine), m_sealed(0), m_frozen(0), size(0) {}
-
     InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
     InternalClass *changeMember(String *string, PropertyAttributes data, uint *index = 0);
     void removeMember(Object *object, uint id);
@@ -77,7 +75,11 @@ struct InternalClass {
     InternalClass *sealed();
     InternalClass *frozen();
 
+    void destroy();
+
 private:
+    friend class ExecutionEngine;
+    InternalClass(ExecutionEngine *engine) : engine(engine), m_sealed(0), m_frozen(0), size(0) {}
     InternalClass(const InternalClass &other);
 };
 

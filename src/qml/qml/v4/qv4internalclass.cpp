@@ -79,7 +79,7 @@ InternalClass *InternalClass::changeMember(String *string, PropertyAttributes da
         return tit.value();
 
     // create a new class and add it to the tree
-    InternalClass *newClass = new InternalClass(*this);
+    InternalClass *newClass = engine->newClass(*this);
     newClass->propertyData[idx] = data;
     return newClass;
 
@@ -103,7 +103,7 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
         return tit.value();
 
     // create a new class and add it to the tree
-    InternalClass *newClass = new InternalClass(*this);
+    InternalClass *newClass = engine->newClass(*this);
     newClass->propertyTable.insert(string->identifier, size);
     newClass->nameMap.append(string);
     newClass->propertyData.append(data);
@@ -180,4 +180,30 @@ InternalClass *InternalClass::frozen()
 
     m_frozen->m_frozen = m_frozen;
     return m_frozen;
+}
+
+void InternalClass::destroy()
+{
+    if (!engine)
+        return;
+    engine = 0;
+
+    // Free the memory of the hashes/vectors by calling clear(), which
+    // re-assigns them to the shared null instance. Therefore Internalclass
+    // doesn't need a destructor to be called.
+    propertyTable.clear();
+    nameMap.clear();
+    propertyData.clear();
+
+    if (m_sealed)
+        m_sealed->destroy();
+
+    if (m_frozen)
+        m_frozen->destroy();
+
+    for (QHash<int, InternalClass *>::ConstIterator it = transitions.begin(), end = transitions.end();
+         it != end; ++it)
+        it.value()->destroy();
+
+    transitions.clear();
 }
