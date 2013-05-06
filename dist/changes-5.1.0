@@ -39,6 +39,10 @@ Third party components
    of QObject. It no longer returns all QObject children, or explicitly
    sets QObject parent. The resources property now behaves as documented.
 
+ - As part of a fix for QTBUG-30555, ListView and GridView properties, such
+   as count, which are based off of the data model will no longer update
+   immediately if queried. Updates are batched to happen once per frame (or
+   when properties are being set).
 ****************************************************************************
 *                          Library                                         *
 ****************************************************************************
