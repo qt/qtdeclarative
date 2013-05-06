@@ -112,7 +112,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
     QString code = rewriteBinding(str);
 
     m_expression = str.toUtf8();
-    v8function = evalFunction(context(), obj, code, QString(), 0);
+    v4function = evalFunction(context(), obj, code, QString(), 0)->v4Value();
 }
 
 QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
@@ -159,7 +159,7 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
     m_lineNumber = scriptPrivate->lineNumber;
     m_columnNumber = scriptPrivate->columnNumber;
 
-    v8function = evalFunction(context(), scopeObject(), code, QString(), m_lineNumber);
+    v4function = evalFunction(context(), scopeObject(), code, QString(), m_lineNumber)->v4Value();
 }
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)
@@ -174,7 +174,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt
     QString code = rewriteBinding(str);
 
     m_expression = str.toUtf8();
-    v8function = evalFunction(ctxt, obj, code, QString(), 0);
+    v4function = evalFunction(ctxt, obj, code, QString(), 0)->v4Value();
 }
 
 QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
@@ -197,7 +197,7 @@ QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
 
     m_expression = str.toUtf8();
 
-    v8function = evalFunction(ctxt, obj, code, url, m_lineNumber);
+    v4function = evalFunction(ctxt, obj, code, url, m_lineNumber)->v4Value();
 }
 
 /*!
@@ -217,12 +217,11 @@ QQmlBinding::QQmlBinding(void *functionPtr, QObject *obj, QQmlContextData *ctxt,
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(obj);
 
-    v8function = qPersistentNew<v8::Function>(*(v8::Handle<v8::Function> *)functionPtr);
+    v4function = (*(v8::Handle<v8::Function> *)functionPtr)->v4Value();
 }
 
 QQmlBinding::~QQmlBinding()
 {
-    qPersistentDispose(v8function);
 }
 
 void QQmlBinding::setEvaluateFlags(EvaluateFlags flags)
@@ -280,7 +279,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
             bool isUndefined = false;
 
             v8::Local<v8::Value> result =
-                QQmlJavaScriptExpression::evaluate(context(), v8function, &isUndefined);
+                QQmlJavaScriptExpression::evaluate(context(), **v4function, &isUndefined);
 
             trace.event("writing binding result");
 
@@ -321,7 +320,7 @@ QVariant QQmlBinding::evaluate()
     bool isUndefined = false;
 
     v8::Local<v8::Value> result =
-        QQmlJavaScriptExpression::evaluate(context(), v8function, &isUndefined);
+        QQmlJavaScriptExpression::evaluate(context(), **v4function, &isUndefined);
 
     ep->dereferenceScarceResources();
 

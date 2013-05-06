@@ -134,8 +134,6 @@ QQmlCompiledData::~QQmlCompiledData()
 
 void QQmlCompiledData::clear()
 {
-    for (int ii = 0; ii < programs.count(); ++ii)
-        qPersistentDispose(programs[ii].bindings);
 }
 
 /*!

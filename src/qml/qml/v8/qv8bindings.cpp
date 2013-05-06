@@ -50,6 +50,8 @@
 #include <private/qqmltrace_p.h>
 #include <private/qqmlprofilerservice_p.h>
 
+#include <private/qv4object_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QQmlAbstractBinding::VTable QV8Bindings_Binding_vtable = {
@@ -86,7 +88,8 @@ void QV8Bindings::Binding::setEnabled(QQmlAbstractBinding *_This, bool e,
 
 void QV8Bindings::refresh()
 {
-    int count = functions()->Length();
+    QV4::ArrayObject *f = functions();
+    int count = f ? f->arrayLength() : 0;
     for (int ii = 0; ii < count; ++ii)
         bindings[ii].refresh();
 }
@@ -170,10 +173,12 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
         DeleteWatcher watcher(this);
         ep->referenceScarceResources();
 
-        v8::Local<v8::Value> result =
+        QV4::ArrayObject *f = parent->functions();
+        v8::Local<v8::Value> result = f ?
             evaluate(context,
-                     v8::Handle<v8::Function>::Cast(parent->functions()->Get(instruction->value)),
-                     &isUndefined);
+                     f->getIndexed(f->internalClass->engine->current, instruction->value),
+                     &isUndefined)
+                : v8::Local<v8::Value>::New(QV4::Value::undefinedValue());
 
         trace.event("writing V8 result");
         bool needsErrorLocationData = false;
@@ -240,7 +245,7 @@ QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
 {
     QV8Engine *engine = QQmlEnginePrivate::getV8Engine(context->engine);
 
-    if (program->bindings.IsEmpty()) {
+    if (program->bindings->isDeleted()) {
         v8::Local<v8::Script> script;
         bool compileFailed = false;
         {
@@ -260,20 +265,21 @@ QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
                 if (!message.IsEmpty())
                     QQmlExpressionPrivate::exceptionToError(message, error);
                 QQmlEnginePrivate::get(engine->engine())->warning(error);
-                program->bindings = qPersistentNew(v8::Array::New());
+                program->bindings = QV4::Value::nullValue();
             }
         }
 
         if (!compileFailed) {
             v8::Local<v8::Value> result = script->Run(engine->contextWrapper()->sharedContext());
             if (result->IsArray()) {
-                program->bindings = qPersistentNew(v8::Local<v8::Array>::Cast(result));
+                program->bindings = result->v4Value();
                 program->program.clear(); // We don't need the source anymore
             }
         }
     }
 
-    int bindingsCount = functions()->Length();
+    QV4::ArrayObject *f = functions();
+    int bindingsCount = f ? f->arrayLength() : 0;
     if (bindingsCount) bindings = new QV8Bindings::Binding[bindingsCount];
 
     setContext(context);
@@ -319,9 +325,9 @@ const QString &QV8Bindings::urlString() const
     return program->cdata->name;
 }
 
-v8::Persistent<v8::Array> &QV8Bindings::functions() const
+QV4::ArrayObject *QV8Bindings::functions() const
 {
-    return program->bindings;
+    return program->bindings->asArrayObject();
 }
 
 

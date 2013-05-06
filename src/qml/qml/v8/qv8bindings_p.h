@@ -136,7 +136,7 @@ private:
 
     const QUrl &url() const;
     const QString &urlString() const;
-    v8::Persistent<v8::Array> &functions() const;
+    QV4::ArrayObject *functions() const;
 
     QQmlCompiledData::V8Program *program;
     Binding *bindings;

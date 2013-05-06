@@ -131,7 +131,7 @@ protected:
     ~QQmlBinding();
 
 private:
-    v8::Persistent<v8::Function> v8function;
+    QV4::PersistentValue v4function;
 
     inline bool updatingFlag() const;
     inline void setUpdatingFlag(bool);

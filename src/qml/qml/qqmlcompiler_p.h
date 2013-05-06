@@ -111,7 +111,7 @@ public:
         : program(p), cdata(c) {}
 
         QByteArray program;
-        v8::Persistent<v8::Array> bindings;
+        QV4::PersistentValue bindings;
         QQmlCompiledData *cdata;
     };
 
