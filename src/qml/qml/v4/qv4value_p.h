@@ -554,11 +554,13 @@ struct PersistentValuePrivate
     PersistentValuePrivate()
         : value(Value::deletedValue())
         , refcount(1)
+        , prev(0)
         , next(0)
     {}
     PersistentValuePrivate(const Value &v);
     Value value;
     int refcount;
+    PersistentValuePrivate **prev;
     PersistentValuePrivate *next;
 
     void ref() { ++refcount; }

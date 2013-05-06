@@ -399,8 +399,9 @@ MemoryManager::~MemoryManager()
 {
     PersistentValuePrivate *persistent = m_persistentValues;
     while (persistent) {
-        persistent->value = Value::deletedValue();
         PersistentValuePrivate *n = persistent->next;
+        persistent->value = Value::deletedValue();
+        persistent->prev = 0;
         persistent->next = 0;
         persistent = n;
     }

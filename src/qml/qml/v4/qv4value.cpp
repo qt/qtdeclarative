@@ -247,6 +247,16 @@ PersistentValue &PersistentValue::operator=(const PersistentValue &other)
 PersistentValue &PersistentValue::operator =(const Value &other)
 {
     d->value = other;
+    if (!d->prev) {
+        if (Managed *m = d->value.asManaged()) {
+            ExecutionEngine *engine = m->engine();
+            if (engine) {
+                d->prev = &engine->memoryManager->m_persistentValues;
+                d->next = engine->memoryManager->m_persistentValues;
+                *d->prev = d;
+            }
+        }
+    }
 }
 
 PersistentValue::~PersistentValue()
@@ -257,13 +267,16 @@ PersistentValue::~PersistentValue()
 PersistentValuePrivate::PersistentValuePrivate(const Value &v)
     : value(v)
     , refcount(1)
+    , prev(0)
     , next(0)
 {
     if (Managed *m = v.asManaged()) {
         ExecutionEngine *engine = m->engine();
         if (engine) {
+            prev = &engine->memoryManager->m_persistentValues;
             next = engine->memoryManager->m_persistentValues;
-            engine->memoryManager->m_persistentValues = this;
+            if (next)
+                next->prev = &this->next;
         }
     }
 }
@@ -272,11 +285,11 @@ void PersistentValuePrivate::deref()
 {
     // if engine is not 0, they are registered with the memory manager
     // and will get cleaned up in the next gc run
-    if (!--refcount && !next) {
-        ExecutionEngine *e = 0;
-        if (Managed *m = value.asManaged())
-            e = m->engine();
-        if (!e)
-            delete this;
+    if (!--refcount) {
+        if (prev) {
+            next->prev = prev;
+            *prev = next;
+        }
+        delete this;
     }
 }
