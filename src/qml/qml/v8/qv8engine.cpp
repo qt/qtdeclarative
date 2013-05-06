@@ -143,7 +143,8 @@ QV8Engine::QV8Engine(QJSEngine* qq)
 
     ensurePerThreadIsolate();
 
-    m_v4Engine = v8::Isolate::GetEngine();
+    m_v4Engine = new QV4::ExecutionEngine;
+    v8::Isolate::SetEngine(m_v4Engine);
     m_v4Engine->publicEngine = q;
 
     v8::V8::SetUserObjectComparisonCallbackFunction(ObjectComparisonCallback);
@@ -184,6 +185,9 @@ QV8Engine::~QV8Engine()
     m_typeWrapper.destroy();
     m_qobjectWrapper.destroy();
     m_contextWrapper.destroy();
+
+    v8::Isolate::SetEngine(0);
+    delete m_v4Engine;
 }
 
 QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)

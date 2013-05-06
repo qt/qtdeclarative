@@ -2150,6 +2150,7 @@ class V8EXPORT Isolate {
   void setException(const QV4::Value &ex);
 
   static QV4::ExecutionEngine *GetEngine();
+  static void SetEngine(QV4::ExecutionEngine *e);
 
   private:
       friend class Context;

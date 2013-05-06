@@ -1911,11 +1911,17 @@ ExecutionEngine *Isolate::GetEngine()
     return Isolate::GetCurrent()->m_engine;
 }
 
+void Isolate::SetEngine(ExecutionEngine *e)
+{
+    Isolate *i = GetCurrent();
+    i->m_engine = e;
+}
+
 Isolate *Isolate::GetCurrent()
 {
     if (!currentIsolate.hasLocalData()) {
         Isolate *i = new Isolate;
-        i->m_engine = new QV4::ExecutionEngine;
+        i->m_engine = 0;
         currentIsolate.setLocalData(i);
     }
     return currentIsolate.localData();
