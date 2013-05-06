@@ -311,6 +311,8 @@ public:
 
     static QFont fontFromObject(QQmlV4Handle object, QV8Engine *e, bool *ok)
     {
+        Q_UNUSED(e);
+
         if (ok) *ok = false;
         QFont retn;
         v8::Handle<v8::Object> obj = object.toV8Handle()->ToObject();

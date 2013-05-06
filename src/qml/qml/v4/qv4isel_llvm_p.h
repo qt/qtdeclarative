@@ -98,6 +98,7 @@ public: // methods from InstructionSelection:
     virtual void callBuiltinDefineGetterSetter(V4IR::Temp *object, const QString &name, V4IR::Temp *getter, V4IR::Temp *setter);
     virtual void callBuiltinDefineProperty(V4IR::Temp *object, const QString &name, V4IR::Temp *value);
     virtual void callBuiltinDefineArray(V4IR::Temp *result, V4IR::ExprList *args);
+    virtual void callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4IR::ExprList *args);
     virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::ExprList *args, V4IR::Temp *result);

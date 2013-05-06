@@ -498,6 +498,13 @@ void InstructionSelection::callBuiltinDefineArray(V4IR::Temp *result, V4IR::Expr
     Q_UNREACHABLE();
 }
 
+void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4IR::ExprList *args)
+{
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+}
+
 void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
 {
     // TODO
