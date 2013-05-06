@@ -223,12 +223,32 @@ void removeDeadAssignments(V4IR::Function *function)
     foreach (V4IR::BasicBlock *bb, function->basicBlocks) {
         QVector<V4IR::Stmt *> &statements = bb->statements;
         for (int i = 0; i < statements.size(); ) {
-//            qout<<"removeDeadAssignments: considering ";statements.at(i)->dump(qout);qout<<"\n";qout.flush();
+            qout<<"removeDeadAssignments: considering ";statements.at(i)->dump(qout);qout<<"\n";qout.flush();
             if (isDeadAssignment(statements.at(i), localCount)) {
                 statements.at(i)->destroyData();
                 statements.remove(i);
             } else
                 ++i;
+        }
+    }
+}
+
+void removeUnreachableBlocks(V4IR::Function *function)
+{
+    // TODO: change this to use a worklist.
+    // FIXME: actually, use SSA and then re-implement it.
+
+    for (int i = 1, ei = function->basicBlocks.size(); i != ei; ++i) {
+        V4IR::BasicBlock *bb = function->basicBlocks[i];
+        if (bb->in.isEmpty()) {
+            function->basicBlocks.remove(i);
+            foreach (V4IR::BasicBlock *outBB, bb->out) {
+                int idx = outBB->in.indexOf(bb);
+                if (idx != -1)
+                    outBB->in.remove(idx);
+            }
+            removeUnreachableBlocks(function);
+            return;
         }
     }
 }
@@ -460,7 +480,7 @@ private:
     int thisTemp;
 };
 
-#undef DEBUG_TEMP_COMPRESSION
+#define DEBUG_TEMP_COMPRESSION
 #ifdef DEBUG_TEMP_COMPRESSION
 #  define DBTC(x) x
 #else // !DEBUG_TEMP_COMPRESSION
@@ -484,6 +504,7 @@ public:
                 for (int i = _localCount, ei = liveOut.size(); i < ei; ++i) {
                     if (liveOut.at(i) && !pinned.contains(i)) {
                         pinned.append(i);
+                        DBTC(qDebug() << "Pinning:";)
                         add(i - _localCount, _nextFree);
                     }
                 }
@@ -2428,8 +2449,10 @@ void Codegen::linearize(V4IR::Function *function)
     liveness(function);
 #endif
 
-    if (qgetenv("NO_OPT").isEmpty())
+    if (qgetenv("NO_OPT").isEmpty()) {
         removeDeadAssignments(function);
+        removeUnreachableBlocks(function);
+    }
 
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
