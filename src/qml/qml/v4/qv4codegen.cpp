@@ -223,7 +223,7 @@ void removeDeadAssignments(V4IR::Function *function)
     foreach (V4IR::BasicBlock *bb, function->basicBlocks) {
         QVector<V4IR::Stmt *> &statements = bb->statements;
         for (int i = 0; i < statements.size(); ) {
-            qout<<"removeDeadAssignments: considering ";statements.at(i)->dump(qout);qout<<"\n";qout.flush();
+            //qout<<"removeDeadAssignments: considering ";statements.at(i)->dump(qout);qout<<"\n";qout.flush();
             if (isDeadAssignment(statements.at(i), localCount)) {
                 statements.at(i)->destroyData();
                 statements.remove(i);
@@ -480,7 +480,7 @@ private:
     int thisTemp;
 };
 
-#define DEBUG_TEMP_COMPRESSION
+//#define DEBUG_TEMP_COMPRESSION
 #ifdef DEBUG_TEMP_COMPRESSION
 #  define DBTC(x) x
 #else // !DEBUG_TEMP_COMPRESSION
