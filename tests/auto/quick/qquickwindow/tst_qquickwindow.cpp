@@ -326,6 +326,8 @@ private slots:
 
     void requestActivate();
 
+    void blockClosing();
+
 #ifndef QT_NO_CURSOR
     void cursor();
 #endif
@@ -1464,6 +1466,25 @@ void tst_qquickwindow::requestActivate()
 
     QTRY_VERIFY(QGuiApplication::focusWindow() == windows.at(0));
     QVERIFY(windows.at(0)->isActive());
+}
+
+void tst_qquickwindow::blockClosing()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("ucantclosethis.qml"));
+    QQuickWindow* window = qobject_cast<QQuickWindow *>(component.create());
+    QVERIFY(window);
+    window->show();
+    QTest::qWaitForWindowExposed(window);
+    QVERIFY(window->isVisible());
+    QWindowSystemInterface::handleCloseEvent(window);
+    QVERIFY(window->isVisible());
+    QWindowSystemInterface::handleCloseEvent(window);
+    QVERIFY(window->isVisible());
+    window->setProperty("canCloseThis", true);
+    QWindowSystemInterface::handleCloseEvent(window);
+    QTRY_VERIFY(!window->isVisible());
 }
 
 QTEST_MAIN(tst_qquickwindow)

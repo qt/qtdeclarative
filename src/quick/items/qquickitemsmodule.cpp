@@ -167,6 +167,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickKeyEvent>();
     qmlRegisterType<QQuickMouseEvent>();
     qmlRegisterType<QQuickWheelEvent>();
+    qmlRegisterType<QQuickCloseEvent>();
     qmlRegisterType<QQuickTransform>();
     qmlRegisterType<QQuickPathElement>();
     qmlRegisterType<QQuickCurve>();
