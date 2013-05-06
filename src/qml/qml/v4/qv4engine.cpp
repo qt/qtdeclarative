@@ -152,7 +152,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     arrayCtor = Value::fromObject(new (memoryManager) ArrayCtor(rootContext));
     functionCtor = Value::fromObject(new (memoryManager) FunctionCtor(rootContext));
     dateCtor = Value::fromObject(DatePrototype::newConstructor(rootContext));
-    regExpCtor = Value::fromObject(new (memoryManager) RegExpCtor(rootContext));
+    regExpCtor = Value::fromObject(RegExpPrototype::newConstructor(rootContext));
     errorCtor = Value::fromObject(new (memoryManager) ErrorCtor(rootContext));
     evalErrorCtor = Value::fromObject(new (memoryManager) EvalErrorCtor(rootContext));
     rangeErrorCtor = Value::fromObject(new (memoryManager) RangeErrorCtor(rootContext));
@@ -184,7 +184,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     arrayPrototype->init(rootContext, arrayCtor);
     datePrototype->init(rootContext, dateCtor);
     functionPrototype->init(rootContext, functionCtor);
-    regExpPrototype->init(rootContext, regExpCtor);
+    regExpPrototype->initClass(this, regExpCtor);
     errorPrototype->init(this, errorCtor);
     evalErrorPrototype->init(this, evalErrorCtor);
     rangeErrorPrototype->init(this, rangeErrorCtor);

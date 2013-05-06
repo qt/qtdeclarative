@@ -96,7 +96,8 @@ HEADERS += \
 
 JS_CLASS_SOURCES = $$PWD/qv4dateobject_p.h \
                    $$PWD/qv4stringobject_p.h \
-                   $$PWD/qv4booleanobject_p.h
+                   $$PWD/qv4booleanobject_p.h \
+                   $$PWD/qv4regexpobject_p.h
 
 js_class_bindings.output = ${QMAKE_FILE_BASE}_jsclass.cpp
 js_class_bindings.input = JS_CLASS_SOURCES

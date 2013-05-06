@@ -175,16 +175,7 @@ QRegExp RegExpObject::toQRegExp() const
     return QRegExp(value->pattern(), caseSensitivity, QRegExp::RegExp2);
 }
 
-
-DEFINE_MANAGED_VTABLE(RegExpCtor);
-
-RegExpCtor::RegExpCtor(ExecutionContext *scope)
-    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("RegExp")))
-{
-    vtbl = &static_vtbl;
-}
-
-Value RegExpCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int argc)
+Value RegExpPrototype::ctor_method_construct(Managed *, ExecutionContext *ctx, Value *argv, int argc)
 {
     Value r = argc > 0 ? argv[0] : Value::undefinedValue();
     Value f = argc > 1 ? argv[1] : Value::undefinedValue();
@@ -227,25 +218,14 @@ Value RegExpCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int a
     return Value::fromObject(o);
 }
 
-Value RegExpCtor::call(Managed *that, ExecutionContext *ctx, const Value &thisObject, Value *argv, int argc)
+Value RegExpPrototype::ctor_method_call(Managed *that, ExecutionContext *ctx, const Value &thisObject, Value *argv, int argc)
 {
     if (argc > 0 && argv[0].asRegExpObject()) {
         if (argc == 1 || argv[1].isUndefined())
             return argv[0];
     }
 
-    return construct(that, ctx, argv, argc);
-}
-
-void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
-{
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(2));
-    defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(ctx, QStringLiteral("exec"), method_exec, 1);
-    defineDefaultProperty(ctx, QStringLiteral("test"), method_test, 1);
-    defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("compile"), method_compile, 2);
+    return ctor_method_construct(that, ctx, argv, argc);
 }
 
 Value RegExpPrototype::method_exec(SimpleCallContext *ctx)
@@ -327,3 +307,4 @@ Value RegExpPrototype::method_compile(SimpleCallContext *ctx)
     return Value::undefinedValue();
 }
 
+#include "qv4regexpobject_p_jsclass.cpp"
