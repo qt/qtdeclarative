@@ -1086,17 +1086,17 @@ V8_RESOURCE_TYPE(IncubatorType)
 public:
     QV8IncubatorResource(QV8Engine *engine, IncubationMode = Asynchronous);
 
-    static v8::Handle<v8::Value> StatusChangedGetter(v8::Local<v8::String>, 
+    static v8::Handle<v8::Value> StatusChangedGetter(v8::Handle<v8::String>,
                                                      const v8::AccessorInfo& info);
-    static v8::Handle<v8::Value> StatusGetter(v8::Local<v8::String>, 
+    static v8::Handle<v8::Value> StatusGetter(v8::Handle<v8::String>,
                                               const v8::AccessorInfo& info);
-    static v8::Handle<v8::Value> ObjectGetter(v8::Local<v8::String>, 
+    static v8::Handle<v8::Value> ObjectGetter(v8::Handle<v8::String>,
                                               const v8::AccessorInfo& info);
-    static v8::Handle<v8::Value> ForceCompletionGetter(v8::Local<v8::String>, 
+    static v8::Handle<v8::Value> ForceCompletionGetter(v8::Handle<v8::String>,
                                                        const v8::AccessorInfo& info);
     static v8::Handle<v8::Value> ForceCompletion(const v8::Arguments &args);
 
-    static void StatusChangedSetter(v8::Local<v8::String>, v8::Local<v8::Value> value, 
+    static void StatusChangedSetter(v8::Handle<v8::String>, v8::Handle<v8::Value> value,
                                     const v8::AccessorInfo& info);
 
     void dispose();
@@ -1184,19 +1184,19 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     Q_ASSERT(args);
 
     QObject *parent = 0;
-    v8::Local<v8::Object> valuemap;
+    v8::Handle<v8::Object> valuemap;
 
     if (args->Length() >= 1) 
         parent = args->engine()->toQObject((*args)[0]->v4Value());
 
     if (args->Length() >= 2) {
-        v8::Local<v8::Value> v = (*args)[1];
+        v8::Handle<v8::Value> v = (*args)[1];
         if (!v->IsObject() || v->IsArray()) {
             qmlInfo(this) << tr("createObject: value is not an object");
             args->returnValue(v8::Null());
             return;
         }
-        valuemap = v8::Local<v8::Object>::Cast(v);
+        valuemap = v8::Handle<v8::Object>::Cast(v);
     }
 
     QV8Engine *v8engine = args->engine();
@@ -1304,21 +1304,21 @@ void QQmlComponent::incubateObject(QQmlV8Function *args)
     Q_ASSERT(args);
 
     QObject *parent = 0;
-    v8::Local<v8::Object> valuemap;
+    v8::Handle<v8::Object> valuemap;
     QQmlIncubator::IncubationMode mode = QQmlIncubator::Asynchronous;
 
     if (args->Length() >= 1) 
         parent = args->engine()->toQObject((*args)[0]->v4Value());
 
     if (args->Length() >= 2) {
-        v8::Local<v8::Value> v = (*args)[1];
+        v8::Handle<v8::Value> v = (*args)[1];
         if (v->IsNull()) {
         } else if (!v->IsObject() || v->IsArray()) {
             qmlInfo(this) << tr("createObject: value is not an object");
             args->returnValue(v8::Null());
             return;
         } else {
-            valuemap = v8::Local<v8::Object>::Cast(v);
+            valuemap = v8::Handle<v8::Object>::Cast(v);
         }
     }
 
@@ -1333,7 +1333,7 @@ void QQmlComponent::incubateObject(QQmlV8Function *args)
     QQmlComponentExtension *e = componentExtension(args->engine());
     
     QV8IncubatorResource *r = new QV8IncubatorResource(args->engine(), mode);
-    v8::Local<v8::Object> o = e->incubationConstructor->NewInstance();
+    v8::Handle<v8::Object> o = e->incubationConstructor->NewInstance();
     o->SetExternalResource(r);
 
     if (!valuemap.IsEmpty()) {
@@ -1378,7 +1378,7 @@ QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
     forceCompletion = qPersistentNew(V8FUNCTION(QV8IncubatorResource::ForceCompletion, engine));
 
     {
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->SetInternalFieldCount(1);
     ft->InstanceTemplate()->SetAccessor(v8::String::New("onStatusChanged"), 
@@ -1394,14 +1394,14 @@ QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
     }
 }
 
-v8::Handle<v8::Value> QV8IncubatorResource::ObjectGetter(v8::Local<v8::String>, 
+v8::Handle<v8::Value> QV8IncubatorResource::ObjectGetter(v8::Handle<v8::String>,
                                                           const v8::AccessorInfo& info)
 {
     QV8IncubatorResource *r = v8_resource_check<QV8IncubatorResource>(info.This());
     return r->engine->newQObject(r->object());
 }
 
-v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletionGetter(v8::Local<v8::String>, 
+v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletionGetter(v8::Handle<v8::String>,
                                                                   const v8::AccessorInfo& info)
 {
     QV8IncubatorResource *r = v8_resource_check<QV8IncubatorResource>(info.This());
@@ -1419,20 +1419,20 @@ v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletion(const v8::Arguments 
     return v8::Undefined();
 }
 
-v8::Handle<v8::Value> QV8IncubatorResource::StatusGetter(v8::Local<v8::String>, 
+v8::Handle<v8::Value> QV8IncubatorResource::StatusGetter(v8::Handle<v8::String>,
                                                          const v8::AccessorInfo& info)
 {
     QV8IncubatorResource *r = v8_resource_check<QV8IncubatorResource>(info.This());
     return v8::Integer::NewFromUnsigned(r->status());
 }
 
-v8::Handle<v8::Value> QV8IncubatorResource::StatusChangedGetter(v8::Local<v8::String>, 
+v8::Handle<v8::Value> QV8IncubatorResource::StatusChangedGetter(v8::Handle<v8::String>,
                                                                  const v8::AccessorInfo& info)
 {
     return info.This()->GetInternalField(0);
 }
 
-void QV8IncubatorResource::StatusChangedSetter(v8::Local<v8::String>, v8::Local<v8::Value> value, 
+void QV8IncubatorResource::StatusChangedSetter(v8::Handle<v8::String>, v8::Handle<v8::Value> value,
                                                 const v8::AccessorInfo& info)
 {
     info.This()->SetInternalField(0, value);
@@ -1481,12 +1481,12 @@ void QV8IncubatorResource::statusChanged(Status s)
     }
 
     if (!me.IsEmpty()) { // Will be false in synchronous mode
-        v8::Local<v8::Value> callback = me->GetInternalField(0);
+        v8::Handle<v8::Value> callback = me->GetInternalField(0);
 
         if (!callback.IsEmpty() && !callback->IsUndefined()) {
 
             if (callback->IsFunction()) {
-                v8::Local<v8::Function> f = v8::Local<v8::Function>::Cast(callback);
+                v8::Handle<v8::Function> f = v8::Handle<v8::Function>::Cast(callback);
                 v8::Handle<v8::Value> args[] = { v8::Integer::NewFromUnsigned(s) };
                 v8::TryCatch tc;
                 f->Call(me, 1, args);

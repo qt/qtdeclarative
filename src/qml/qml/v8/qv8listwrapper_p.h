@@ -76,14 +76,14 @@ public:
     QVariant toVariant(QV8ObjectResource *);
 
 private:
-    static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
+    static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property,
                                         const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, 
-                                        v8::Local<v8::Value> value,
+    static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property,
+                                        v8::Handle<v8::Value> value,
                                         const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> IndexedGetter(uint32_t index, 
                                                const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> LengthGetter(v8::Local<v8::String> property, 
+    static v8::Handle<v8::Value> LengthGetter(v8::Handle<v8::String> property,
                                               const v8::AccessorInfo &info);
     static v8::Handle<v8::Array> Enumerator(const v8::AccessorInfo &info);
 

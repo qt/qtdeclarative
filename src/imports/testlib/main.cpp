@@ -106,20 +106,20 @@ public Q_SLOTS:
 
     QQmlV4Handle callerFile(int frameIndex = 0) const
     {
-        v8::Local<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
+        v8::Handle<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
         int count = stacks->GetFrameCount();
         if (count >= frameIndex + 1) {
-            v8::Local<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 1);
+            v8::Handle<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 1);
             return QQmlV4Handle::fromV8Handle(frame->GetScriptNameOrSourceURL());
         }
         return QQmlV4Handle();
     }
     int callerLine(int frameIndex = 0) const
     {
-        v8::Local<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
+        v8::Handle<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
         int count = stacks->GetFrameCount();
         if (count >= frameIndex + 1) {
-            v8::Local<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 1);
+            v8::Handle<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 1);
             return frame->GetLineNumber();
         }
         return -1;

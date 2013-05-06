@@ -477,7 +477,7 @@ void QuickTestResult::stringify(QQmlV8Function *args)
     if (args->Length() < 1)
         args->returnValue(v8::Null());
 
-    v8::Local<v8::Value> value = (*args)[0];
+    v8::Handle<v8::Value> value = (*args)[0];
 
     QString result;
     QV8Engine *engine = args->engine();
@@ -505,7 +505,7 @@ void QuickTestResult::stringify(QQmlV8Function *args)
             result = QLatin1String("Object");
         }
     } else {
-        v8::Local<v8::String> jsstr = value->ToString();
+        v8::Handle<v8::String> jsstr = value->ToString();
         QString tmp = jsstr->v4Value().toQString();
         if (value->IsArray())
             result.append(QString::fromLatin1("[%1]").arg(tmp));

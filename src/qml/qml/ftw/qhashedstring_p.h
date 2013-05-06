@@ -263,7 +263,7 @@ public:
     inline uint16_t *utf16Data() const { return (uint16_t *)strData->data(); }
 
     inline bool equals(v8::Handle<v8::String> string) const {
-        v8::Local<v8::String> data = isQString() ? v8::String::New(utf16Data(), length)
+        v8::Handle<v8::String> data = isQString() ? v8::String::New(utf16Data(), length)
                                                  : v8::String::New(cStrData(), length);
         return string->Equals(data);
     }

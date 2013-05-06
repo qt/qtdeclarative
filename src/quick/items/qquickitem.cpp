@@ -3754,7 +3754,7 @@ void QQuickItem::polish()
 void QQuickItem::mapFromItem(QQmlV8Function *args) const
 {
     if (args->Length() != 0) {
-        v8::Local<v8::Value> item = (*args)[0];
+        v8::Handle<v8::Value> item = (*args)[0];
         QV8Engine *engine = args->engine();
 
         QQuickItem *itemObj = 0;
@@ -3767,7 +3767,7 @@ void QQuickItem::mapFromItem(QQmlV8Function *args) const
             return;
         }
 
-        v8::Local<v8::Object> rv = v8::Object::New();
+        v8::Handle<v8::Object> rv = v8::Object::New();
         args->returnValue(rv);
 
         qreal x = (args->Length() > 1)?(*args)[1]->NumberValue():0;
@@ -3826,7 +3826,7 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
 void QQuickItem::mapToItem(QQmlV8Function *args) const
 {
     if (args->Length() != 0) {
-        v8::Local<v8::Value> item = (*args)[0];
+        v8::Handle<v8::Value> item = (*args)[0];
         QV8Engine *engine = args->engine();
 
         QQuickItem *itemObj = 0;
@@ -3839,7 +3839,7 @@ void QQuickItem::mapToItem(QQmlV8Function *args) const
             return;
         }
 
-        v8::Local<v8::Object> rv = v8::Object::New();
+        v8::Handle<v8::Object> rv = v8::Object::New();
         args->returnValue(rv);
 
         qreal x = (args->Length() > 1)?(*args)[1]->NumberValue():0;

@@ -120,7 +120,7 @@ static const double Q_PI   = 3.14159265358979323846;   // pi
                                        V8THROW_ERROR_SETTER("Not a Context2D object");
 #define qClamp(val, min, max) qMin(qMax(val, min), max)
 #define CHECK_RGBA(c) (c == '-' || c == '.' || (c >=0 && c <= 9))
-QColor qt_color_from_string(v8::Local<v8::Value> name)
+QColor qt_color_from_string(v8::Handle<v8::Value> name)
 {
     v8::String::AsciiValue str(name);
 
@@ -422,10 +422,10 @@ static QString qt_composite_mode_to_string(QPainter::CompositionMode op)
 }
 
 
-static v8::Local<v8::Object> qt_create_image_data(qreal w, qreal h, QV8Engine* engine, const QImage& image)
+static v8::Handle<v8::Object> qt_create_image_data(qreal w, qreal h, QV8Engine* engine, const QImage& image)
 {
     QQuickContext2DEngineData *ed = engineData(engine);
-    v8::Local<v8::Object> imageData = ed->constructorImageData->NewInstance();
+    v8::Handle<v8::Object> imageData = ed->constructorImageData->NewInstance();
     QV8Context2DPixelArrayResource *r = new QV8Context2DPixelArrayResource(engine);
     if (image.isNull()) {
         r->image = QImage(w, h, QImage::Format_ARGB32);
@@ -434,7 +434,7 @@ static v8::Local<v8::Object> qt_create_image_data(qreal w, qreal h, QV8Engine* e
         Q_ASSERT(image.width() == w && image.height() == h);
         r->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
-    v8::Local<v8::Object> pixelData = ed->constructorPixelArray->NewInstance();
+    v8::Handle<v8::Object> pixelData = ed->constructorPixelArray->NewInstance();
     pixelData->SetExternalResource(r);
 
     imageData->SetInternalField(0, pixelData);
@@ -449,7 +449,7 @@ static v8::Local<v8::Object> qt_create_image_data(qreal w, qreal h, QV8Engine* e
 
      This property is read only.
 */
-static v8::Handle<v8::Value> ctx2d_canvas(v8::Local<v8::String>, const v8::AccessorInfo &info)
+static v8::Handle<v8::Value> ctx2d_canvas(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -717,7 +717,7 @@ static v8::Handle<v8::Value> ctx2d_shear(const v8::Arguments &args)
      The value must be in the range from 0.0 (fully transparent) to 1.0 (fully opque).
      The default value is 1.0.
 */
-static v8::Handle<v8::Value> ctx2d_globalAlpha(v8::Local<v8::String>, const v8::AccessorInfo &info)
+static v8::Handle<v8::Value> ctx2d_globalAlpha(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -725,7 +725,7 @@ static v8::Handle<v8::Value> ctx2d_globalAlpha(v8::Local<v8::String>, const v8::
     return v8::Number::New(r->context->state.globalAlpha);
 }
 
-static void ctx2d_globalAlpha_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_globalAlpha_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -767,7 +767,7 @@ static void ctx2d_globalAlpha_set(v8::Local<v8::String>, v8::Local<v8::Value> va
      extension composition modes are provided as "vendorName-operationName" syntax, for example: QPainter::CompositionMode_Exclusion is provided as
      "qt-exclusion".
 */
-static v8::Handle<v8::Value> ctx2d_globalCompositeOperation(v8::Local<v8::String>, const v8::AccessorInfo &info)
+static v8::Handle<v8::Value> ctx2d_globalCompositeOperation(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -778,7 +778,7 @@ static v8::Handle<v8::Value> ctx2d_globalCompositeOperation(v8::Local<v8::String
     return engine->toString(qt_composite_mode_to_string(r->context->state.globalCompositeOperation));
 }
 
-static void ctx2d_globalCompositeOperation_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_globalCompositeOperation_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -817,7 +817,7 @@ static void ctx2d_globalCompositeOperation_set(v8::Local<v8::String>, v8::Local<
      \sa createPattern()
      \sa strokeStyle
  */
-static v8::Handle<v8::Value> ctx2d_fillStyle(v8::Local<v8::String>, const v8::AccessorInfo &info)
+static v8::Handle<v8::Value> ctx2d_fillStyle(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -838,7 +838,7 @@ static v8::Handle<v8::Value> ctx2d_fillStyle(v8::Local<v8::String>, const v8::Ac
     return r->context->m_fillStyle;
 }
 
-static void ctx2d_fillStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_fillStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -882,7 +882,7 @@ static void ctx2d_fillStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> valu
 
      \sa fillStyle
  */
-static v8::Handle<v8::Value> ctx2d_fillRule(v8::Local<v8::String>, const v8::AccessorInfo &info)
+static v8::Handle<v8::Value> ctx2d_fillRule(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -891,7 +891,7 @@ static v8::Handle<v8::Value> ctx2d_fillRule(v8::Local<v8::String>, const v8::Acc
     return engine->fromVariant(r->context->state.fillRule);
 }
 
-static void ctx2d_fillRule_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_fillRule_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -920,7 +920,7 @@ static void ctx2d_fillRule_set(v8::Local<v8::String>, v8::Local<v8::Value> value
      \sa createPattern()
      \sa fillStyle
  */
-v8::Handle<v8::Value> ctx2d_strokeStyle(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> ctx2d_strokeStyle(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -941,7 +941,7 @@ v8::Handle<v8::Value> ctx2d_strokeStyle(v8::Local<v8::String>, const v8::Accesso
     return r->context->m_strokeStyle;
 }
 
-static void ctx2d_strokeStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_strokeStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -1002,7 +1002,7 @@ static v8::Handle<v8::Value> ctx2d_createLinearGradient(const v8::Arguments &arg
 
     if (args.Length() == 4) {
         QQuickContext2DEngineData *ed = engineData(engine);
-        v8::Local<v8::Object> gradient = ed->constructorGradient->NewInstance();
+        v8::Handle<v8::Object> gradient = ed->constructorGradient->NewInstance();
         QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
         qreal x0 = args[0]->NumberValue();
         qreal y0 = args[1]->NumberValue();
@@ -1048,7 +1048,7 @@ static v8::Handle<v8::Value> ctx2d_createRadialGradient(const v8::Arguments &arg
 
     if (args.Length() == 6) {
         QQuickContext2DEngineData *ed = engineData(engine);
-        v8::Local<v8::Object> gradient = ed->constructorGradient->NewInstance();
+        v8::Handle<v8::Object> gradient = ed->constructorGradient->NewInstance();
         QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
 
         qreal x0 = args[0]->NumberValue();
@@ -1103,7 +1103,7 @@ static v8::Handle<v8::Value> ctx2d_createConicalGradient(const v8::Arguments &ar
 
     if (args.Length() == 6) {
         QQuickContext2DEngineData *ed = engineData(engine);
-        v8::Local<v8::Object> gradient = ed->constructorGradient->NewInstance();
+        v8::Handle<v8::Object> gradient = ed->constructorGradient->NewInstance();
         QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
 
         qreal x = args[0]->NumberValue();
@@ -1222,7 +1222,7 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
             }
         }
 
-        v8::Local<v8::Object> pattern = ed->constructorPattern->NewInstance();
+        v8::Handle<v8::Object> pattern = ed->constructorPattern->NewInstance();
         pattern->SetExternalResource(styleResouce);
         return pattern;
 
@@ -1242,7 +1242,7 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
     \endlist
     Other values are ignored.
 */
-v8::Handle<v8::Value> ctx2d_lineCap(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> ctx2d_lineCap(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -1262,7 +1262,7 @@ v8::Handle<v8::Value> ctx2d_lineCap(v8::Local<v8::String>, const v8::AccessorInf
     return engine->toString(QLatin1String("butt"));;
 }
 
-static void ctx2d_lineCap_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_lineCap_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -1298,7 +1298,7 @@ static void ctx2d_lineCap_set(v8::Local<v8::String>, v8::Local<v8::Value> value,
     \endlist
     Other values are ignored.
 */
-v8::Handle<v8::Value> ctx2d_lineJoin(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> ctx2d_lineJoin(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -1318,7 +1318,7 @@ v8::Handle<v8::Value> ctx2d_lineJoin(v8::Local<v8::String>, const v8::AccessorIn
     return engine->toString(QLatin1String("miter"));
 }
 
-static void ctx2d_lineJoin_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_lineJoin_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -1344,7 +1344,7 @@ static void ctx2d_lineJoin_set(v8::Local<v8::String>, v8::Local<v8::Value> value
     \qmlproperty real QtQuick2::Context2D::lineWidth
      Holds the current line width. Values that are not finite values greater than zero are ignored.
  */
-v8::Handle<v8::Value> ctx2d_lineWidth(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> ctx2d_lineWidth(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -1353,7 +1353,7 @@ v8::Handle<v8::Value> ctx2d_lineWidth(v8::Local<v8::String>, const v8::AccessorI
     return v8::Number::New(r->context->state.lineWidth);
 }
 
-static void ctx2d_lineWidth_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_lineWidth_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -1371,7 +1371,7 @@ static void ctx2d_lineWidth_set(v8::Local<v8::String>, v8::Local<v8::Value> valu
      Holds the current miter limit ratio.
      The default miter limit value is 10.0.
  */
-v8::Handle<v8::Value> ctx2d_miterLimit(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> ctx2d_miterLimit(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -1380,7 +1380,7 @@ v8::Handle<v8::Value> ctx2d_miterLimit(v8::Local<v8::String>, const v8::Accessor
     return v8::Number::New(r->context->state.miterLimit);
 }
 
-static void ctx2d_miterLimit_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_miterLimit_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -1398,7 +1398,7 @@ static void ctx2d_miterLimit_set(v8::Local<v8::String>, v8::Local<v8::Value> val
     \qmlproperty real QtQuick2::Context2D::shadowBlur
      Holds the current level of blur applied to shadows
  */
-v8::Handle<v8::Value> ctx2d_shadowBlur(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> ctx2d_shadowBlur(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -1407,7 +1407,7 @@ v8::Handle<v8::Value> ctx2d_shadowBlur(v8::Local<v8::String>, const v8::Accessor
     return v8::Number::New(r->context->state.shadowBlur);
 }
 
-static void ctx2d_shadowBlur_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_shadowBlur_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -1423,7 +1423,7 @@ static void ctx2d_shadowBlur_set(v8::Local<v8::String>, v8::Local<v8::Value> val
     \qmlproperty string QtQuick2::Context2D::shadowColor
      Holds the current shadow color.
  */
-v8::Handle<v8::Value> ctx2d_shadowColor(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> ctx2d_shadowColor(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -1434,7 +1434,7 @@ v8::Handle<v8::Value> ctx2d_shadowColor(v8::Local<v8::String>, const v8::Accesso
     return engine->toString(r->context->state.shadowColor.name());
 }
 
-static void ctx2d_shadowColor_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_shadowColor_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -1454,7 +1454,7 @@ static void ctx2d_shadowColor_set(v8::Local<v8::String>, v8::Local<v8::Value> va
 
      \sa shadowOffsetY
  */
-v8::Handle<v8::Value> ctx2d_shadowOffsetX(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> ctx2d_shadowOffsetX(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -1463,7 +1463,7 @@ v8::Handle<v8::Value> ctx2d_shadowOffsetX(v8::Local<v8::String>, const v8::Acces
     return v8::Number::New(r->context->state.shadowOffsetX);
 }
 
-static void ctx2d_shadowOffsetX_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_shadowOffsetX_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -1480,7 +1480,7 @@ static void ctx2d_shadowOffsetX_set(v8::Local<v8::String>, v8::Local<v8::Value> 
 
      \sa shadowOffsetX
  */
-v8::Handle<v8::Value> ctx2d_shadowOffsetY(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> ctx2d_shadowOffsetY(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -1489,7 +1489,7 @@ v8::Handle<v8::Value> ctx2d_shadowOffsetY(v8::Local<v8::String>, const v8::Acces
     return v8::Number::New(r->context->state.shadowOffsetY);
 }
 
-static void ctx2d_shadowOffsetY_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_shadowOffsetY_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -1501,14 +1501,14 @@ static void ctx2d_shadowOffsetY_set(v8::Local<v8::String>, v8::Local<v8::Value> 
     }
 }
 
-v8::Handle<v8::Value> ctx2d_path(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> ctx2d_path(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
     return r->context->m_v8path;
 }
 
-static void ctx2d_path_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_path_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -1998,7 +1998,7 @@ static v8::Handle<v8::Value> ctx2d_caretBlinkRate(const v8::Arguments &args)
   The default font value is "10px sans-serif".
   See \l {http://www.w3.org/TR/2dcontext/#dom-context-2d-font}{w3C 2d context standard for font}
   */
-v8::Handle<v8::Value> ctx2d_font(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> ctx2d_font(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -2008,7 +2008,7 @@ v8::Handle<v8::Value> ctx2d_font(v8::Local<v8::String>, const v8::AccessorInfo &
     return engine->toString(r->context->state.font.toString());
 }
 
-static void ctx2d_font_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_font_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -2034,7 +2034,7 @@ static void ctx2d_font_set(v8::Local<v8::String>, v8::Local<v8::Value> value, co
   \endlist
   Other values are ignored. The default value is "start".
   */
-v8::Handle<v8::Value> ctx2d_textAlign(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> ctx2d_textAlign(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -2056,7 +2056,7 @@ v8::Handle<v8::Value> ctx2d_textAlign(v8::Local<v8::String>, const v8::AccessorI
     return engine->toString(QLatin1String("start"));
 }
 
-static void ctx2d_textAlign_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_textAlign_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -2097,7 +2097,7 @@ static void ctx2d_textAlign_set(v8::Local<v8::String>, v8::Local<v8::Value> valu
   \endlist
   Other values are ignored. The default value is "alphabetic".
   */
-v8::Handle<v8::Value> ctx2d_textBaseline(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> ctx2d_textBaseline(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
@@ -2120,7 +2120,7 @@ v8::Handle<v8::Value> ctx2d_textBaseline(v8::Local<v8::String>, const v8::Access
     return engine->toString(QLatin1String("alphabetic"));
 }
 
-static void ctx2d_textBaseline_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+static void ctx2d_textBaseline_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
@@ -2218,7 +2218,7 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
     if (args.Length() == 1) {
         QFontMetrics fm(r->context->state.font);
         uint width = fm.width(args[0]->v4Value().toQString());
-        v8::Local<v8::Object> tm = v8::Object::New();
+        v8::Handle<v8::Object> tm = v8::Object::New();
         tm->Set(v8::String::New("width"), v8::Number::New(width));
         return tm;
     }
@@ -2410,7 +2410,7 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
   \qmlproperty int QtQuick2::CanvasImageData::width
   Holds the actual width dimension of the data in the ImageData object, in device pixels.
  */
-v8::Handle<v8::Value> ctx2d_imageData_width(v8::Local<v8::String>, const v8::AccessorInfo &args)
+v8::Handle<v8::Value> ctx2d_imageData_width(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This()->GetInternalField(0)->ToObject());
     if (!r)
@@ -2422,7 +2422,7 @@ v8::Handle<v8::Value> ctx2d_imageData_width(v8::Local<v8::String>, const v8::Acc
   \qmlproperty int QtQuick2::CanvasImageData::height
   Holds the actual height dimension of the data in the ImageData object, in device pixels.
   */
-v8::Handle<v8::Value> ctx2d_imageData_height(v8::Local<v8::String>, const v8::AccessorInfo &args)
+v8::Handle<v8::Value> ctx2d_imageData_height(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This()->GetInternalField(0)->ToObject());
     if (!r)
@@ -2435,7 +2435,7 @@ v8::Handle<v8::Value> ctx2d_imageData_height(v8::Local<v8::String>, const v8::Ac
   \qmlproperty object QtQuick2::CanvasImageData::data
   Holds the one-dimensional array containing the data in RGBA order, as integers in the range 0 to 255.
  */
-v8::Handle<v8::Value> ctx2d_imageData_data(v8::Local<v8::String>, const v8::AccessorInfo &args)
+v8::Handle<v8::Value> ctx2d_imageData_data(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     return args.This()->GetInternalField(0);
 }
@@ -2458,7 +2458,7 @@ v8::Handle<v8::Value> ctx2d_imageData_data(v8::Local<v8::String>, const v8::Acce
   The length attribute of a CanvasPixelArray object must return this h×w×4 number value.
   This property is read only.
 */
-v8::Handle<v8::Value> ctx2d_pixelArray_length(v8::Local<v8::String>, const v8::AccessorInfo &args)
+v8::Handle<v8::Value> ctx2d_pixelArray_length(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This());
     if (!r || r->image.isNull()) return v8::Undefined();
@@ -2490,7 +2490,7 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed(uint32_t index, const v8::Accesso
     return v8::Undefined();
 }
 
-v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Local<v8::Value> value, const v8::AccessorInfo& info)
+v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Handle<v8::Value> value, const v8::AccessorInfo& info)
 {
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(info.This());
 
@@ -2544,7 +2544,7 @@ static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
 
     if (args.Length() == 1) {
         if (args[0]->IsObject()) {
-            v8::Local<v8::Object> imgData = args[0]->ToObject();
+            v8::Handle<v8::Object> imgData = args[0]->ToObject();
             QV8Context2DPixelArrayResource *pa = v8_resource_cast<QV8Context2DPixelArrayResource>(imgData->GetInternalField(0)->ToObject());
             if (pa) {
                 qreal w = imgData->Get(v8::String::New("width"))->NumberValue();
@@ -2592,7 +2592,7 @@ static v8::Handle<v8::Value> ctx2d_getImageData(const v8::Arguments &args)
             V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "getImageData(): Invalid arguments");
 
         QImage image = r->context->canvas()->toImage(QRectF(x, y, w, h));
-        v8::Local<v8::Object> imageData = qt_create_image_data(w, h, engine, image);
+        v8::Handle<v8::Object> imageData = qt_create_image_data(w, h, engine, image);
 
         return imageData;
     }
@@ -2620,7 +2620,7 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
     if (!qIsFinite(dx) || !qIsFinite(dy))
         V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "putImageData() : Invalid arguments");
 
-    v8::Local<v8::Object> imageData = args[0]->ToObject();
+    v8::Handle<v8::Object> imageData = args[0]->ToObject();
     QV8Context2DPixelArrayResource *pixelArray = v8_resource_cast<QV8Context2DPixelArrayResource>(imageData->Get(v8::String::New("data"))->ToObject());
     if (pixelArray) {
         w = imageData->Get(v8::String::New("width"))->NumberValue();
@@ -3457,7 +3457,7 @@ QImage QQuickContext2D::toImage(const QRectF& bounds)
 
 QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
 {
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("canvas"), ctx2d_canvas, 0, v8::External::New(engine));
     ft->PrototypeTemplate()->Set(v8::String::New("restore"), V8FUNCTION(ctx2d_restore, engine));
@@ -3523,22 +3523,22 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
 
     constructorContext = qPersistentNew(ft->GetFunction());
 
-    v8::Local<v8::FunctionTemplate> ftGradient = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ftGradient = v8::FunctionTemplate::New();
     ftGradient->InstanceTemplate()->SetHasExternalResource(true);
     ftGradient->PrototypeTemplate()->Set(v8::String::New("addColorStop"), V8FUNCTION(ctx2d_gradient_addColorStop, engine));
     constructorGradient = qPersistentNew(ftGradient->GetFunction());
 
-    v8::Local<v8::FunctionTemplate> ftPattern = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ftPattern = v8::FunctionTemplate::New();
     ftPattern->InstanceTemplate()->SetHasExternalResource(true);
     constructorPattern = qPersistentNew(ftPattern->GetFunction());
 
-    v8::Local<v8::FunctionTemplate> ftPixelArray = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ftPixelArray = v8::FunctionTemplate::New();
     ftPixelArray->InstanceTemplate()->SetHasExternalResource(true);
     ftPixelArray->InstanceTemplate()->SetAccessor(v8::String::New("length"), ctx2d_pixelArray_length, 0, v8::External::New(engine));
     ftPixelArray->InstanceTemplate()->SetIndexedPropertyHandler(ctx2d_pixelArray_indexed, ctx2d_pixelArray_indexed_set, 0, 0, 0, v8::External::New(engine));
     constructorPixelArray = qPersistentNew(ftPixelArray->GetFunction());
 
-    v8::Local<v8::FunctionTemplate> ftImageData = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ftImageData = v8::FunctionTemplate::New();
     ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("width"), ctx2d_imageData_width, 0, v8::External::New(engine));
     ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("height"), ctx2d_imageData_height, 0, v8::External::New(engine));
     ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("data"), ctx2d_imageData_data, 0, v8::External::New(engine));

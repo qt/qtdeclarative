@@ -940,7 +940,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 v8::TryCatch try_catch;
 
-                v8::Local<v8::Value> result = function->Call(v8::Value::fromV4Value(ep->v8engine()->global()), data->parameterCount, args);
+                v8::Handle<v8::Value> result = function->Call(v8::Value::fromV4Value(ep->v8engine()->global()), data->parameterCount, args);
 
                 QVariant rv;
                 if (try_catch.HasCaught()) {
@@ -1026,7 +1026,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, v8::Handle<v8::Value> value)
 
     // Importantly, if the current value is a scarce resource, we need to ensure that it
     // gets automatically released by the engine if no other references to it exist.
-    v8::Local<v8::Value> oldv = varProperties->Get(id - firstVarPropertyIndex);
+    v8::Handle<v8::Value> oldv = varProperties->Get(id - firstVarPropertyIndex);
     if (oldv->IsObject()) {
         QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(oldv));
         if (r) {
@@ -1071,7 +1071,7 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
 
         // Importantly, if the current value is a scarce resource, we need to ensure that it
         // gets automatically released by the engine if no other references to it exist.
-        v8::Local<v8::Value> oldv = varProperties->Get(id - firstVarPropertyIndex);
+        v8::Handle<v8::Value> oldv = varProperties->Get(id - firstVarPropertyIndex);
         if (oldv->IsObject()) {
             QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(oldv));
             if (r) {

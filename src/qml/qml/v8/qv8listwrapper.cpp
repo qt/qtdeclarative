@@ -68,7 +68,7 @@ QV8ListWrapper::~QV8ListWrapper()
 void QV8ListWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter, 0, 0, Enumerator);
     ft->InstanceTemplate()->SetIndexedPropertyHandler(IndexedGetter);
     ft->InstanceTemplate()->SetAccessor(v8::String::New("length"), LengthGetter, 0, 
@@ -89,7 +89,7 @@ v8::Handle<v8::Value> QV8ListWrapper::newList(QObject *object, int propId, int p
         return v8::Null();
 
     // XXX NewInstance() should be optimized
-    v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
+    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
     QV8ListResource *r = new QV8ListResource(m_engine);
     r->object = object;
     r->propertyType = propType;
@@ -102,7 +102,7 @@ v8::Handle<v8::Value> QV8ListWrapper::newList(QObject *object, int propId, int p
 v8::Handle<v8::Value> QV8ListWrapper::newList(const QQmlListProperty<QObject> &prop, int propType)
 {
     // XXX NewInstance() should be optimized
-    v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
+    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
     QV8ListResource *r = new QV8ListResource(m_engine);
     r->object = prop.object;
     r->property = prop;
@@ -130,7 +130,7 @@ QVariant QV8ListWrapper::toVariant(QV8ObjectResource *r)
                                                                       m_engine->engine()));
 }
 
-v8::Handle<v8::Value> QV8ListWrapper::Getter(v8::Local<v8::String> property, 
+v8::Handle<v8::Value> QV8ListWrapper::Getter(v8::Handle<v8::String> property,
                                              const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
@@ -138,8 +138,8 @@ v8::Handle<v8::Value> QV8ListWrapper::Getter(v8::Local<v8::String> property,
     return v8::Handle<v8::Value>();
 }
 
-v8::Handle<v8::Value> QV8ListWrapper::Setter(v8::Local<v8::String> property, 
-                                             v8::Local<v8::Value> value,
+v8::Handle<v8::Value> QV8ListWrapper::Setter(v8::Handle<v8::String> property,
+                                             v8::Handle<v8::Value> value,
                                              const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
@@ -161,7 +161,7 @@ v8::Handle<v8::Value> QV8ListWrapper::IndexedGetter(uint32_t index, const v8::Ac
     }
 }
 
-v8::Handle<v8::Value> QV8ListWrapper::LengthGetter(v8::Local<v8::String> property, 
+v8::Handle<v8::Value> QV8ListWrapper::LengthGetter(v8::Handle<v8::String> property,
                                                    const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
@@ -183,7 +183,7 @@ v8::Handle<v8::Array> QV8ListWrapper::Enumerator(const v8::AccessorInfo &info)
 
     quint32 count = resource->property.count?resource->property.count(&resource->property):0;
 
-    v8::Local<v8::Array> rv = v8::Array::New(count);
+    v8::Handle<v8::Array> rv = v8::Array::New(count);
 
     for (uint ii = 0; ii < count; ++ii)
         rv->Set(ii, v8::Number::New(ii));

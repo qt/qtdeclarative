@@ -77,8 +77,8 @@ public:
     bool isEqual(QV8ObjectResource *lhs, QV8ObjectResource *rhs);
     quint32 sequenceLength(QV8ObjectResource *);
 
-    v8::Local<v8::Object> newSequence(int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);
-    v8::Local<v8::Object> fromVariant(const QVariant& v, bool *succeeded);
+    v8::Handle<v8::Object> newSequence(int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);
+    v8::Handle<v8::Object> fromVariant(const QVariant& v, bool *succeeded);
     QVariant toVariant(QV8ObjectResource *);
     QVariant toVariant(v8::Handle<v8::Array> array, int typeHint, bool *succeeded);
 
@@ -93,18 +93,18 @@ private:
     v8::Persistent<v8::Function> m_defaultSortComparer;
 
     static v8::Handle<v8::Value> IndexedGetter(quint32 index, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> IndexedSetter(quint32 index, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> IndexedSetter(quint32 index, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);
     static v8::Handle<v8::Boolean> IndexedDeleter(quint32 index, const v8::AccessorInfo &info);
     static v8::Handle<v8::Array> IndexedEnumerator(const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> LengthGetter(v8::Local<v8::String> property, const v8::AccessorInfo &info);
-    static void LengthSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> ToStringGetter(v8::Local<v8::String> property, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> LengthGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
+    static void LengthSetter(v8::Handle<v8::String> property, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> ToStringGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> ToString(const v8::Arguments &args);
-    static v8::Handle<v8::Value> ValueOfGetter(v8::Local<v8::String> property, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> SortGetter(v8::Local<v8::String> property, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> ValueOfGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> SortGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> ValueOf(const v8::Arguments &args);
-    static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> Sort(const v8::Arguments &args);
 };
 

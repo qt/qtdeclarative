@@ -78,10 +78,10 @@ QV8Include::~QV8Include()
     qPersistentDispose(m_resultObject);
 }
 
-v8::Local<v8::Object> QV8Include::resultValue(Status status)
+v8::Handle<v8::Object> QV8Include::resultValue(Status status)
 {
     // XXX It seems inefficient to create this object from scratch each time.
-    v8::Local<v8::Object> result = v8::Object::New();
+    v8::Handle<v8::Object> result = v8::Object::New();
     result->Set(v8::String::New("OK"), v8::Integer::New(Ok));
     result->Set(v8::String::New("LOADING"), v8::Integer::New(Loading));
     result->Set(v8::String::New("NETWORK_ERROR"), v8::Integer::New(NetworkError));
@@ -141,7 +141,7 @@ void QV8Include::finished()
 
         v8::TryCatch try_catch;
 
-        v8::Local<v8::Script> script = m_engine->qmlModeCompile(code, m_url.toString());
+        v8::Handle<v8::Script> script = m_engine->qmlModeCompile(code, m_url.toString());
 
         if (!try_catch.HasCaught()) {
             m_engine->contextWrapper()->addSubContext(m_qmlglobal, script, importContext);
@@ -180,20 +180,20 @@ v8::Handle<v8::Value> QV8Include::include(const v8::Arguments &args)
 
     QUrl url(context->resolvedUrl(QUrl(args[0]->v4Value().toQString())));
     
-    v8::Local<v8::Function> callbackFunction;
+    v8::Handle<v8::Function> callbackFunction;
     if (args.Length() >= 2 && args[1]->IsFunction())
-        callbackFunction = v8::Local<v8::Function>::Cast(args[1]);
+        callbackFunction = v8::Handle<v8::Function>::Cast(args[1]);
 
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
 
-    v8::Local<v8::Object> result;
+    v8::Handle<v8::Object> result;
 
     if (localFile.isEmpty()) {
 
         QV8Include *i = new QV8Include(url, engine, context, 
                                        QV4::Value::fromObject(args.GetIsolate()->GetEngine()->qmlContextObject()),
                                        callbackFunction);
-        result = v8::Local<v8::Object>::New(i->result());
+        result = i->result();
 
     } else { 
 
@@ -212,7 +212,7 @@ v8::Handle<v8::Value> QV8Include::include(const v8::Arguments &args)
 
             v8::TryCatch try_catch;
 
-            v8::Local<v8::Script> script = engine->qmlModeCompile(code, url.toString());
+            v8::Handle<v8::Script> script = engine->qmlModeCompile(code, url.toString());
 
             if (!try_catch.HasCaught()) {
                 v8::Handle<v8::Object> qmlglobal = QV4::Value::fromObject(args.GetIsolate()->GetEngine()->qmlContextObject());

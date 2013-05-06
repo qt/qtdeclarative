@@ -84,7 +84,7 @@ public:
 
     QVariant value(bool *isUndefined = 0);
 
-    v8::Local<v8::Value> v8value(bool *isUndefined = 0);
+    v8::Handle<v8::Value> v8value(bool *isUndefined = 0);
 
     static inline QQmlExpressionPrivate *get(QQmlExpression *expr);
     static inline QQmlExpression *get(QQmlExpressionPrivate *expr);

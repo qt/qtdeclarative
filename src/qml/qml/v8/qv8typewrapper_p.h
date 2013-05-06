@@ -72,16 +72,16 @@ public:
     void destroy();
 
     enum TypeNameMode { IncludeEnums, ExcludeEnums };
-    v8::Local<v8::Object> newObject(QObject *, QQmlType *, TypeNameMode = IncludeEnums);
-    v8::Local<v8::Object> newObject(QObject *, QQmlTypeNameCache *, const void *, 
+    v8::Handle<v8::Object> newObject(QObject *, QQmlType *, TypeNameMode = IncludeEnums);
+    v8::Handle<v8::Object> newObject(QObject *, QQmlTypeNameCache *, const void *,
                                     TypeNameMode = IncludeEnums);
     QVariant toVariant(QV8ObjectResource *);
 
 private:
-    static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
+    static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property,
                                         const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, 
-                                        v8::Local<v8::Value> value,
+    static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property,
+                                        v8::Handle<v8::Value> value,
                                         const v8::AccessorInfo &info);
 
     QV8Engine *m_engine;

@@ -73,8 +73,8 @@ public:
     void init(QV8Engine *);
     void destroy();
 
-    v8::Local<v8::Object> newValueType(QObject *, int, QQmlValueType *);
-    v8::Local<v8::Object> newValueType(const QVariant &, QQmlValueType *);
+    v8::Handle<v8::Object> newValueType(QObject *, int, QQmlValueType *);
+    v8::Handle<v8::Object> newValueType(const QVariant &, QQmlValueType *);
 
     bool isValueType(v8::Handle<v8::Object>) const;
 
@@ -85,13 +85,13 @@ public:
     static bool isEqual(QV8ObjectResource *, const QVariant& value);
 
 private:
-    static v8::Handle<v8::Value> ToStringGetter(v8::Local<v8::String> property,
+    static v8::Handle<v8::Value> ToStringGetter(v8::Handle<v8::String> property,
                                                 const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> ToString(const v8::Arguments &args);
-    static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
+    static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property,
                                         const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, 
-                                        v8::Local<v8::Value> value,
+    static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property,
+                                        v8::Handle<v8::Value> value,
                                         const v8::AccessorInfo &info);
 
     QV8Engine *m_engine;

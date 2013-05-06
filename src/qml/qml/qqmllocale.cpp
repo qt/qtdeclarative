@@ -142,12 +142,12 @@ static const char dateTimeZoneUpdatedFunction[] =
 
 static void registerFunction(QV8Engine *engine, const char *script, v8::InvocationCallback func)
 {
-    v8::Local<v8::Script> registerScript = v8::Script::New(v8::String::New(script), 0, 0, v8::Handle<v8::String>(), v8::Script::NativeMode);
-    v8::Local<v8::Value> result = registerScript->Run();
+    v8::Handle<v8::Script> registerScript = v8::Script::New(v8::String::New(script), 0, 0, v8::Handle<v8::String>(), v8::Script::NativeMode);
+    v8::Handle<v8::Value> result = registerScript->Run();
     Q_ASSERT(result->IsFunction());
-    v8::Local<v8::Function> registerFunc = v8::Local<v8::Function>::Cast(result);
+    v8::Handle<v8::Function> registerFunc = v8::Handle<v8::Function>::Cast(result);
     v8::Handle<v8::Value> args = V8FUNCTION(func, engine);
-    registerFunc->Call(v8::Local<v8::Object>::Cast(registerFunc), 1, &args);
+    registerFunc->Call(v8::Handle<v8::Object>::Cast(registerFunc), 1, &args);
 }
 
 void QQmlDateExtension::registerExtension(QV8Engine *engine)
@@ -469,7 +469,7 @@ v8::Handle<v8::Value> QQmlNumberExtension::toLocaleString(const v8::Arguments& a
     if (args.Length() > 1) {
         if (!args[1]->IsString())
             V8THROW_ERROR("Locale: Number.toLocaleString(): Invalid arguments");
-        v8::Local<v8::String> fs = args[1]->ToString();
+        v8::Handle<v8::String> fs = args[1]->ToString();
         if (!fs.IsEmpty() && fs->Length()) {
             v8::String::Value value(fs);
             Q_ASSERT(*value != NULL);
@@ -532,7 +532,7 @@ v8::Handle<v8::Value> QQmlNumberExtension::fromLocaleString(const v8::Arguments&
         numberIdx = 1;
     }
 
-    v8::Local<v8::String> ns = args[numberIdx]->ToString();
+    v8::Handle<v8::String> ns = args[numberIdx]->ToString();
     if (ns.IsEmpty() || ns->Length() == 0)
         return v8::Number::New(Q_QNAN);
 
@@ -548,7 +548,7 @@ v8::Handle<v8::Value> QQmlNumberExtension::fromLocaleString(const v8::Arguments&
 //--------------
 // Locale object
 
-static v8::Handle<v8::Value> locale_get_firstDayOfWeek(v8::Local<v8::String>, const v8::AccessorInfo &info)
+static v8::Handle<v8::Value> locale_get_firstDayOfWeek(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     GET_LOCALE_DATA_RESOURCE(info.This());
     int fdow = int(r->locale.firstDayOfWeek());
@@ -557,19 +557,19 @@ static v8::Handle<v8::Value> locale_get_firstDayOfWeek(v8::Local<v8::String>, co
     return v8::Integer::New(fdow);
 }
 
-static v8::Handle<v8::Value> locale_get_measurementSystem(v8::Local<v8::String>, const v8::AccessorInfo &info)
+static v8::Handle<v8::Value> locale_get_measurementSystem(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     GET_LOCALE_DATA_RESOURCE(info.This());
     return v8::Integer::New(r->locale.measurementSystem());
 }
 
-static v8::Handle<v8::Value> locale_get_textDirection(v8::Local<v8::String>, const v8::AccessorInfo &info)
+static v8::Handle<v8::Value> locale_get_textDirection(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     GET_LOCALE_DATA_RESOURCE(info.This());
     return v8::Integer::New(r->locale.textDirection());
 }
 
-static v8::Handle<v8::Value> locale_get_weekDays(v8::Local<v8::String>, const v8::AccessorInfo &info)
+static v8::Handle<v8::Value> locale_get_weekDays(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     GET_LOCALE_DATA_RESOURCE(info.This());
 
@@ -586,7 +586,7 @@ static v8::Handle<v8::Value> locale_get_weekDays(v8::Local<v8::String>, const v8
     return result;
 }
 
-static v8::Handle<v8::Value> locale_get_uiLanguages(v8::Local<v8::String>, const v8::AccessorInfo &info)
+static v8::Handle<v8::Value> locale_get_uiLanguages(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     GET_LOCALE_DATA_RESOURCE(info.This());
 
@@ -692,7 +692,7 @@ LOCALE_FORMATTED_MONTHNAME(standaloneMonthName)
 LOCALE_FORMATTED_DAYNAME(dayName)
 LOCALE_FORMATTED_DAYNAME(standaloneDayName)
 
-#define LOCALE_STRING_PROPERTY(VARIABLE) static v8::Handle<v8::Value> locale_get_ ## VARIABLE (v8::Local<v8::String>, const v8::AccessorInfo &info) \
+#define LOCALE_STRING_PROPERTY(VARIABLE) static v8::Handle<v8::Value> locale_get_ ## VARIABLE (v8::Handle<v8::String>, const v8::AccessorInfo &info) \
 { \
     GET_LOCALE_DATA_RESOURCE(info.This()); \
     return r->engine->toString(r->locale. VARIABLE());\
@@ -726,7 +726,7 @@ public:
 
 QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
 {
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
 
     LOCALE_REGISTER_STRING_ACCESSOR(ft, name);
@@ -874,7 +874,7 @@ QQmlLocale::~QQmlLocale()
 v8::Handle<v8::Value> QQmlLocale::locale(QV8Engine *v8engine, const QString &locale)
 {
     QV8LocaleDataDeletable *d = localeV8Data(v8engine);
-    v8::Local<v8::Object> v8Value = d->constructor->NewInstance();
+    v8::Handle<v8::Object> v8Value = d->constructor->NewInstance();
     QV8LocaleDataResource *r = new QV8LocaleDataResource(v8engine);
     if (locale.isEmpty())
         r->locale = QLocale();

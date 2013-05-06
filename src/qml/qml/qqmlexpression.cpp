@@ -340,7 +340,7 @@ void QQmlExpression::setExpression(const QString &expression)
 }
 
 // Must be called with a valid handle scope
-v8::Local<v8::Value> QQmlExpressionPrivate::v8value(bool *isUndefined)
+v8::Handle<v8::Value> QQmlExpressionPrivate::v8value(bool *isUndefined)
 {
     if (!expressionFunctionValid) {
         bool ok = true;
@@ -376,7 +376,7 @@ QVariant QQmlExpressionPrivate::value(bool *isUndefined)
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
     {
-        v8::Local<v8::Value> result = v8value(isUndefined);
+        v8::Handle<v8::Value> result = v8value(isUndefined);
         rv = ep->v8engine()->toVariant(result->v4Value(), -1);
     }
 

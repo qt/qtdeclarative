@@ -76,10 +76,10 @@ void QV8SequenceWrapper::init(QV8Engine *engine)
 
     m_sort = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(Sort)->GetFunction());
     m_arrayPrototype = qPersistentNew<v8::Value>(v8::Array::New(1)->GetPrototype());
-    v8::Local<v8::Script> defaultSortCompareScript = v8::Script::Compile(engine->toString(defaultSortString));
+    v8::Handle<v8::Script> defaultSortCompareScript = v8::Script::Compile(engine->toString(defaultSortString));
     m_defaultSortComparer = qPersistentNew<v8::Function>(v8::Handle<v8::Function>(v8::Function::Cast(defaultSortCompareScript->Run().get())));
 
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetIndexedPropertyHandler(IndexedGetter, IndexedSetter, 0, IndexedDeleter, IndexedEnumerator);
     ft->InstanceTemplate()->SetAccessor(v8::String::New("length"), LengthGetter, LengthSetter,
@@ -142,7 +142,7 @@ quint32 QV8SequenceWrapper::sequenceLength(QV8ObjectResource *r)
         r = new QV8##ElementTypeName##SequenceResource(m_engine, object, propertyIndex); \
     } else
 
-v8::Local<v8::Object> QV8SequenceWrapper::newSequence(int sequenceType, QObject *object, int propertyIndex, bool *succeeded)
+v8::Handle<v8::Object> QV8SequenceWrapper::newSequence(int sequenceType, QObject *object, int propertyIndex, bool *succeeded)
 {
     // This function is called when the property is a QObject Q_PROPERTY of
     // the given sequence type.  Internally we store a typed-sequence
@@ -150,9 +150,9 @@ v8::Local<v8::Object> QV8SequenceWrapper::newSequence(int sequenceType, QObject 
     // and so access/mutate avoids variant conversion.
     *succeeded = true;
     QV8SequenceResource *r = 0;
-    FOREACH_QML_SEQUENCE_TYPE(NEW_REFERENCE_SEQUENCE) { /* else */ *succeeded = false; return v8::Local<v8::Object>(); }
+    FOREACH_QML_SEQUENCE_TYPE(NEW_REFERENCE_SEQUENCE) { /* else */ *succeeded = false; return v8::Handle<v8::Object>(); }
 
-    v8::Local<v8::Object> rv = m_constructor->NewInstance();
+    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
     rv->SetExternalResource(r);
     rv->SetPrototype(m_arrayPrototype);
     return rv;
@@ -164,7 +164,7 @@ v8::Local<v8::Object> QV8SequenceWrapper::newSequence(int sequenceType, QObject 
         r = new QV8##ElementTypeName##SequenceResource(m_engine, v.value<SequenceType>()); \
     } else
 
-v8::Local<v8::Object> QV8SequenceWrapper::fromVariant(const QVariant& v, bool *succeeded)
+v8::Handle<v8::Object> QV8SequenceWrapper::fromVariant(const QVariant& v, bool *succeeded)
 {
     // This function is called when assigning a sequence value to a normal JS var
     // in a JS block.  Internally, we store a sequence of the specified type.
@@ -173,9 +173,9 @@ v8::Local<v8::Object> QV8SequenceWrapper::fromVariant(const QVariant& v, bool *s
     int sequenceType = v.userType();
     *succeeded = true;
     QV8SequenceResource *r = 0;
-    FOREACH_QML_SEQUENCE_TYPE(NEW_COPY_SEQUENCE) { /* else */ *succeeded = false; return v8::Local<v8::Object>(); }
+    FOREACH_QML_SEQUENCE_TYPE(NEW_COPY_SEQUENCE) { /* else */ *succeeded = false; return v8::Handle<v8::Object>(); }
 
-    v8::Local<v8::Object> rv = m_constructor->NewInstance();
+    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
     rv->SetExternalResource(r);
     rv->SetPrototype(m_arrayPrototype);
     return rv;
@@ -202,7 +202,7 @@ QVariant QV8SequenceWrapper::toVariant(v8::Handle<v8::Array> array, int typeHint
 }
 #undef SEQUENCE_TO_VARIANT
 
-v8::Handle<v8::Value> QV8SequenceWrapper::IndexedSetter(quint32 index, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> QV8SequenceWrapper::IndexedSetter(quint32 index, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8SequenceResource *sr = v8_resource_cast<QV8SequenceResource>(info.This());
     Q_ASSERT(sr);
@@ -230,7 +230,7 @@ v8::Handle<v8::Array> QV8SequenceWrapper::IndexedEnumerator(const v8::AccessorIn
     return sr->indexedEnumerator();
 }
 
-v8::Handle<v8::Value> QV8SequenceWrapper::LengthGetter(v8::Local<v8::String> property, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> QV8SequenceWrapper::LengthGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
     QV8SequenceResource *sr = v8_resource_cast<QV8SequenceResource>(info.This());
@@ -238,7 +238,7 @@ v8::Handle<v8::Value> QV8SequenceWrapper::LengthGetter(v8::Local<v8::String> pro
     return v8::Integer::NewFromUnsigned(sr->lengthGetter());
 }
 
-void QV8SequenceWrapper::LengthSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+void QV8SequenceWrapper::LengthSetter(v8::Handle<v8::String> property, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
     QV8SequenceResource *sr = v8_resource_cast<QV8SequenceResource>(info.This());
@@ -246,20 +246,20 @@ void QV8SequenceWrapper::LengthSetter(v8::Local<v8::String> property, v8::Local<
     sr->lengthSetter(value);
 }
 
-v8::Handle<v8::Value> QV8SequenceWrapper::ToStringGetter(v8::Local<v8::String> property, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> QV8SequenceWrapper::ToStringGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
     return info.Data();
 }
 
-v8::Handle<v8::Value> QV8SequenceWrapper::ValueOfGetter(v8::Local<v8::String> property,
+v8::Handle<v8::Value> QV8SequenceWrapper::ValueOfGetter(v8::Handle<v8::String> property,
                                                                const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
     return info.Data();
 }
 
-v8::Handle<v8::Value> QV8SequenceWrapper::SortGetter(v8::Local<v8::String> property, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> QV8SequenceWrapper::SortGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
     return info.Data();
@@ -303,7 +303,7 @@ v8::Handle<v8::Value> QV8SequenceWrapper::ValueOf(const v8::Arguments &args)
     return v8::Integer::NewFromUnsigned(sr->lengthGetter());
 }
 
-v8::Handle<v8::Value> QV8SequenceWrapper::Getter(v8::Local<v8::String> property,
+v8::Handle<v8::Value> QV8SequenceWrapper::Getter(v8::Handle<v8::String> property,
                                                     const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
@@ -311,8 +311,8 @@ v8::Handle<v8::Value> QV8SequenceWrapper::Getter(v8::Local<v8::String> property,
     return v8::Handle<v8::Value>();
 }
 
-v8::Handle<v8::Value> QV8SequenceWrapper::Setter(v8::Local<v8::String> property,
-                                                    v8::Local<v8::Value> value,
+v8::Handle<v8::Value> QV8SequenceWrapper::Setter(v8::Handle<v8::String> property,
+                                                    v8::Handle<v8::Value> value,
                                                     const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);

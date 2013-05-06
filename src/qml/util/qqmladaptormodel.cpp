@@ -62,9 +62,9 @@ public:
     QQmlAdaptorModelEngineData(QV8Engine *engine);
     ~QQmlAdaptorModelEngineData();
 
-    v8::Local<v8::String> index() { return strings->Get(Index)->ToString(); }
-    v8::Local<v8::String> modelData() { return strings->Get(ModelData)->ToString(); }
-    v8::Local<v8::String> hasModelChildren() { return strings->Get(HasModelChildren)->ToString(); }
+    v8::Handle<v8::String> index() { return strings->Get(Index)->ToString(); }
+    v8::Handle<v8::String> modelData() { return strings->Get(ModelData)->ToString(); }
+    v8::Handle<v8::String> hasModelChildren() { return strings->Get(HasModelChildren)->ToString(); }
 
     v8::Persistent<v8::Function> constructorListItem;
     v8::Persistent<v8::Array> strings;
@@ -72,7 +72,7 @@ public:
 
 V8_DEFINE_EXTENSION(QQmlAdaptorModelEngineData, engineData)
 
-static v8::Handle<v8::Value> get_index(v8::Local<v8::String>, const v8::AccessorInfo &info)
+static v8::Handle<v8::Value> get_index(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
     V8ASSERT_TYPE(data, "Not a valid VisualData object");
@@ -115,9 +115,9 @@ public:
     void setValue(const QString &role, const QVariant &value);
     bool resolveIndex(const QQmlAdaptorModel &model, int idx);
 
-    static v8::Handle<v8::Value> get_property(v8::Local<v8::String>, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> get_property(v8::Handle<v8::String>, const v8::AccessorInfo &info);
     static void set_property(
-            v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
+            v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);
 
     VDMModelDelegateDataType *type;
     QVector<QVariant> cachedData;
@@ -331,7 +331,7 @@ bool QQmlDMCachedModelData::resolveIndex(const QQmlAdaptorModel &, int idx)
 }
 
 v8::Handle<v8::Value> QQmlDMCachedModelData::get_property(
-        v8::Local<v8::String>, const v8::AccessorInfo &info)
+        v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
     V8ASSERT_TYPE(data, "Not a valid VisualData object");
@@ -351,7 +351,7 @@ v8::Handle<v8::Value> QQmlDMCachedModelData::get_property(
 }
 
 void QQmlDMCachedModelData::set_property(
-        v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+        v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
     QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
     V8ASSERT_TYPE_SETTER(data, "Not a valid VisualData object");
@@ -417,13 +417,13 @@ public:
             type->initializeConstructor(data);
             type->constructor->SetAccessor(data->hasModelChildren(), get_hasModelChildren);
         }
-        v8::Local<v8::Object> data = type->constructor->NewInstance();
+        v8::Handle<v8::Object> data = type->constructor->NewInstance();
         data->SetExternalResource(this);
         ++scriptRef;
         return data;
     }
 
-    static v8::Handle<v8::Value> get_hasModelChildren(v8::Local<v8::String>, const v8::AccessorInfo &info)
+    static v8::Handle<v8::Value> get_hasModelChildren(v8::Handle<v8::String>, const v8::AccessorInfo &info)
     {
         QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
         V8ASSERT_TYPE(data, "Not a valid VisualData object");
@@ -580,7 +580,7 @@ public:
         }
     }
 
-    static v8::Handle<v8::Value> get_modelData(v8::Local<v8::String>, const v8::AccessorInfo &info)
+    static v8::Handle<v8::Value> get_modelData(v8::Handle<v8::String>, const v8::AccessorInfo &info)
     {
         QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
         V8ASSERT_TYPE(data, "Not a valid VisualData object");
@@ -588,7 +588,7 @@ public:
         return data->engine->fromVariant(static_cast<QQmlDMListAccessorData *>(data)->cachedData);
     }
 
-    static void set_modelData(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+    static void set_modelData(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
     {
         QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
         V8ASSERT_TYPE_SETTER(data, "Not a valid VisualData object");
@@ -599,7 +599,7 @@ public:
 
     v8::Handle<v8::Value> get()
     {
-        v8::Local<v8::Object> data = engineData(engine)->constructorListItem->NewInstance();
+        v8::Handle<v8::Object> data = engineData(engine)->constructorListItem->NewInstance();
         data->SetExternalResource(this);
         ++scriptRef;
         return data;
@@ -954,7 +954,7 @@ QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV8Engine *)
     strings->Set(ModelData, v8::String::New("modelData"));
     strings->Set(HasModelChildren, v8::String::New("hasModelChildren"));
 
-    v8::Local<v8::FunctionTemplate> listItem = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> listItem = v8::FunctionTemplate::New();
     listItem->InstanceTemplate()->SetHasExternalResource(true);
     listItem->InstanceTemplate()->SetAccessor(index(), get_index);
     listItem->InstanceTemplate()->SetAccessor(

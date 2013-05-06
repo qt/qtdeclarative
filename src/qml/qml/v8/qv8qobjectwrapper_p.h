@@ -118,18 +118,18 @@ private:
     friend class QV8QObjectConnectionList;
     friend class QV8QObjectInstance;
 
-    v8::Local<v8::Object> newQObject(QObject *, QQmlData *, QV8Engine *);
+    v8::Handle<v8::Object> newQObject(QObject *, QQmlData *, QV8Engine *);
     bool deleteWeakQObject(QV8QObjectResource *resource, bool calledFromEngineDtor = false);
     static v8::Handle<v8::Value> GetProperty(QV8Engine *, QObject *, v8::Handle<v8::Value> *, 
                                              const QHashedV8String &, QQmlContextData *, QV8QObjectWrapper::RevisionMode);
     static bool SetProperty(QV8Engine *, QObject *, const QHashedV8String &, QQmlContextData *,
                             v8::Handle<v8::Value>, QV8QObjectWrapper::RevisionMode);
-    static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
+    static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property,
                                         const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, 
-                                        v8::Local<v8::Value> value,
+    static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property,
+                                        v8::Handle<v8::Value> value,
                                         const v8::AccessorInfo &info);
-    static v8::Handle<v8::Integer> Query(v8::Local<v8::String> property,
+    static v8::Handle<v8::Integer> Query(v8::Handle<v8::String> property,
                                          const v8::AccessorInfo &info);
     static v8::Handle<v8::Array> Enumerator(const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> Connect(const v8::Arguments &args);

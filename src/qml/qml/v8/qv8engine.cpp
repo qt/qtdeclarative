@@ -80,7 +80,7 @@ Q_DECLARE_METATYPE(QList<int>)
 // QQmlEngine is not available
 QT_BEGIN_NAMESPACE
 
-static bool ObjectComparisonCallback(v8::Local<v8::Object> lhs, v8::Local<v8::Object> rhs)
+static bool ObjectComparisonCallback(v8::Handle<v8::Object> lhs, v8::Handle<v8::Object> rhs)
 {
     if (lhs == rhs)
         return true;
@@ -421,7 +421,7 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
 }
 
 // A handle scope and context must be entered
-v8::Local<v8::Script> QV8Engine::qmlModeCompile(const QString &source,
+v8::Handle<v8::Script> QV8Engine::qmlModeCompile(const QString &source,
                                                 const QString &fileName,
                                                 quint16 lineNumber)
 {
@@ -430,7 +430,7 @@ v8::Local<v8::Script> QV8Engine::qmlModeCompile(const QString &source,
 
     v8::ScriptOrigin origin(v8fileName, v8::Integer::New(lineNumber - 1));
 
-    v8::Local<v8::Script> script = v8::Script::Compile(v8source, &origin, 0, v8::Handle<v8::String>(),
+    v8::Handle<v8::Script> script = v8::Script::Compile(v8source, &origin, 0, v8::Handle<v8::String>(),
                                                        v8::Script::QmlMode);
 
     return script;
@@ -438,7 +438,7 @@ v8::Local<v8::Script> QV8Engine::qmlModeCompile(const QString &source,
 
 // A handle scope and context must be entered.
 // source can be either ascii or utf8.
-v8::Local<v8::Script> QV8Engine::qmlModeCompile(const char *source, int sourceLength,
+v8::Handle<v8::Script> QV8Engine::qmlModeCompile(const char *source, int sourceLength,
                                                 const QString &fileName,
                                                 quint16 lineNumber)
 {
@@ -450,7 +450,7 @@ v8::Local<v8::Script> QV8Engine::qmlModeCompile(const char *source, int sourceLe
 
     v8::ScriptOrigin origin(v8fileName, v8::Integer::New(lineNumber - 1));
 
-    v8::Local<v8::Script> script = v8::Script::Compile(v8source, &origin, 0, v8::Handle<v8::String>(),
+    v8::Handle<v8::Script> script = v8::Script::Compile(v8source, &origin, 0, v8::Handle<v8::String>(),
                                                        v8::Script::QmlMode);
 
     return script;
@@ -541,8 +541,8 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 {
     using namespace QQmlBuiltinFunctions;
 
-    v8::Local<v8::Object> console = v8::Object::New();
-    v8::Local<v8::Function> consoleLogFn = V8FUNCTION(consoleLog, this);
+    v8::Handle<v8::Object> console = v8::Object::New();
+    v8::Handle<v8::Function> consoleLogFn = V8FUNCTION(consoleLog, this);
 
     console->Set(v8::String::New("debug"), consoleLogFn);
     console->Set(v8::String::New("log"), consoleLogFn);
@@ -559,7 +559,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     console->Set(v8::String::New("trace"), V8FUNCTION(consoleTrace, this));
     console->Set(v8::String::New("exception"), V8FUNCTION(consoleException, this));
 
-    v8::Local<v8::Object> qt = v8::Object::New();
+    v8::Handle<v8::Object> qt = v8::Object::New();
 
     // Set all the enums from the "Qt" namespace
     const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
@@ -636,12 +636,12 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
                    "    })"\
                    "})"
 
-        v8::Local<v8::Script> registerArg = v8::Script::New(v8::String::New(STRING_ARG), 0, 0, v8::Handle<v8::String>(), v8::Script::NativeMode);
-        v8::Local<v8::Value> result = registerArg->Run();
+        v8::Handle<v8::Script> registerArg = v8::Script::New(v8::String::New(STRING_ARG), 0, 0, v8::Handle<v8::String>(), v8::Script::NativeMode);
+        v8::Handle<v8::Value> result = registerArg->Run();
         Q_ASSERT(result->IsFunction());
-        v8::Local<v8::Function> registerArgFunc = v8::Local<v8::Function>::Cast(result);
+        v8::Handle<v8::Function> registerArgFunc = v8::Handle<v8::Function>::Cast(result);
         v8::Handle<v8::Value> args = V8FUNCTION(stringArg, this);
-        registerArgFunc->Call(v8::Local<v8::Object>::Cast(registerArgFunc), 1, &args);
+        registerArgFunc->Call(v8::Handle<v8::Object>::Cast(registerArgFunc), 1, &args);
 #undef STRING_ARG
     }
 
@@ -1386,7 +1386,7 @@ int QV8Engine::consoleCountHelper(const QString &file, quint16 line, quint16 col
     return number;
 }
 
-v8::Handle<v8::Value> QV8Engine::getPlatform(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> QV8Engine::getPlatform(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Cast(info.Data().get())->Value());
     if (!engine->m_platform) {
@@ -1396,7 +1396,7 @@ v8::Handle<v8::Value> QV8Engine::getPlatform(v8::Local<v8::String>, const v8::Ac
     return engine->newQObject(engine->m_platform);
 }
 
-v8::Handle<v8::Value> QV8Engine::getApplication(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> QV8Engine::getApplication(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Cast(info.Data().get())->Value());
     if (!engine->m_application) {
@@ -1407,7 +1407,7 @@ v8::Handle<v8::Value> QV8Engine::getApplication(v8::Local<v8::String>, const v8:
 }
 
 #ifndef QT_NO_IM
-v8::Handle<v8::Value> QV8Engine::getInputMethod(v8::Local<v8::String>, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> QV8Engine::getInputMethod(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Cast(info.Data().get())->Value());
     return engine->newQObject(QQml_guiProvider()->inputMethod(), CppOwnership);

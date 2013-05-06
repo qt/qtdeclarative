@@ -348,7 +348,7 @@ private:
                 QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
 
     // Implemented in v8/qv8qobjectwrapper.cpp
-    v8::Local<v8::Object> newQObject(QObject *, QV8Engine *);
+    v8::Handle<v8::Object> newQObject(QObject *, QV8Engine *);
 
     QQmlPropertyCacheMethodArguments *createArgumentsObject(int count,
                                                             const QList<QByteArray> &names = QList<QByteArray>());

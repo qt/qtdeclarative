@@ -87,7 +87,7 @@ void QV8VariantWrapper::init(QV8Engine *engine)
     m_valueOf = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(ValueOf)->GetFunction());
 
     {
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->MarkAsUseUserObjectComparison();
@@ -102,7 +102,7 @@ void QV8VariantWrapper::init(QV8Engine *engine)
     {
     m_preserve = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(Preserve)->GetFunction());
     m_destroy = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(Destroy)->GetFunction());
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->MarkAsUseUserObjectComparison();
@@ -133,13 +133,13 @@ void QV8VariantWrapper::destroy()
     qPersistentDispose(m_constructor);
 }
 
-v8::Local<v8::Object> QV8VariantWrapper::newVariant(const QVariant &value)
+v8::Handle<v8::Object> QV8VariantWrapper::newVariant(const QVariant &value)
 {
     bool scarceResource = value.type() == QVariant::Pixmap ||
                           value.type() == QVariant::Image;
 
     // XXX NewInstance() should be optimized
-    v8::Local<v8::Object> rv;
+    v8::Handle<v8::Object> rv;
     QV8VariantResource *r = new QV8VariantResource(m_engine, value);
 
     if (scarceResource) {
@@ -180,41 +180,41 @@ QVariant &QV8VariantWrapper::variantValue(v8::Handle<v8::Value> value)
     return static_cast<QV8VariantResource *>(r)->data;
 }
 
-v8::Handle<v8::Value> QV8VariantWrapper::Getter(v8::Local<v8::String> /* property */,
+v8::Handle<v8::Value> QV8VariantWrapper::Getter(v8::Handle<v8::String> /* property */,
                                                 const v8::AccessorInfo & /* info */)
 {
     return v8::Handle<v8::Value>();
 }
 
-v8::Handle<v8::Value> QV8VariantWrapper::Setter(v8::Local<v8::String> /* property */,
-                                                v8::Local<v8::Value> value,
+v8::Handle<v8::Value> QV8VariantWrapper::Setter(v8::Handle<v8::String> /* property */,
+                                                v8::Handle<v8::Value> value,
                                                 const v8::AccessorInfo & /* info */)
 {
     return value;
 }
 
-v8::Handle<v8::Value> QV8VariantWrapper::PreserveGetter(v8::Local<v8::String> property, 
+v8::Handle<v8::Value> QV8VariantWrapper::PreserveGetter(v8::Handle<v8::String> property,
                                                         const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
     return info.Data();
 }
 
-v8::Handle<v8::Value> QV8VariantWrapper::DestroyGetter(v8::Local<v8::String> property, 
+v8::Handle<v8::Value> QV8VariantWrapper::DestroyGetter(v8::Handle<v8::String> property,
                                                        const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
     return info.Data();
 }
 
-v8::Handle<v8::Value> QV8VariantWrapper::ToStringGetter(v8::Local<v8::String> property, 
+v8::Handle<v8::Value> QV8VariantWrapper::ToStringGetter(v8::Handle<v8::String> property,
                                                         const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
     return info.Data();
 }
 
-v8::Handle<v8::Value> QV8VariantWrapper::ValueOfGetter(v8::Local<v8::String> property,
+v8::Handle<v8::Value> QV8VariantWrapper::ValueOfGetter(v8::Handle<v8::String> property,
                                                        const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);

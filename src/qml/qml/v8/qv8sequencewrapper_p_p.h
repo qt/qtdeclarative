@@ -107,10 +107,10 @@ static void generateWarning(QV8Engine *engine, const QString& description)
 {
     if (!engine)
         return;
-    v8::Local<v8::StackTrace> currStack = v8::StackTrace::CurrentStackTrace(1);
+    v8::Handle<v8::StackTrace> currStack = v8::StackTrace::CurrentStackTrace(1);
     if (currStack.IsEmpty())
         return;
-    v8::Local<v8::StackFrame> currFrame = currStack->GetFrame(0);
+    v8::Handle<v8::StackFrame> currFrame = currStack->GetFrame(0);
     if (currFrame.IsEmpty())
         return;
 
@@ -437,7 +437,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                     loadReference(); \
                 } \
                 qint32 count = c.count(); \
-                v8::Local<v8::Array> retn = v8::Array::New(count); \
+                v8::Handle<v8::Array> retn = v8::Array::New(count); \
                 for (qint32 i = 0; i < count; ++i) { \
                     retn->Set(static_cast<quint32>(i), v8::Integer::NewFromUnsigned(static_cast<quint32>(i))); \
                 } \

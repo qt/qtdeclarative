@@ -174,11 +174,11 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
         ep->referenceScarceResources();
 
         QV4::ArrayObject *f = parent->functions();
-        v8::Local<v8::Value> result = f ?
+        v8::Handle<v8::Value> result = f ?
             evaluate(context,
                      f->getIndexed(f->internalClass->engine->current, instruction->value),
                      &isUndefined)
-                : v8::Local<v8::Value>::New(QV4::Value::undefinedValue());
+                : v8::Handle<v8::Value>(QV4::Value::undefinedValue());
 
         trace.event("writing V8 result");
         bool needsErrorLocationData = false;
@@ -246,7 +246,7 @@ QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
     QV8Engine *engine = QQmlEnginePrivate::getV8Engine(context->engine);
 
     if (program->bindings->isDeleted()) {
-        v8::Local<v8::Script> script;
+        v8::Handle<v8::Script> script;
         bool compileFailed = false;
         {
             v8::TryCatch try_catch;
@@ -261,7 +261,7 @@ QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
                 compileFailed = true;
                 QQmlError error;
                 error.setDescription(QString(QLatin1String("Exception occurred during compilation of binding at line: %1")).arg(line));
-                v8::Local<v8::Message> message = try_catch.Message();
+                v8::Handle<v8::Message> message = try_catch.Message();
                 if (!message.IsEmpty())
                     QQmlExpressionPrivate::exceptionToError(message, error);
                 QQmlEnginePrivate::get(engine->engine())->warning(error);
@@ -270,7 +270,7 @@ QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
         }
 
         if (!compileFailed) {
-            v8::Local<v8::Value> result = script->Run(engine->contextWrapper()->sharedContext());
+            v8::Handle<v8::Value> result = script->Run(engine->contextWrapper()->sharedContext());
             if (result->IsArray()) {
                 program->bindings = result->v4Value();
                 program->program.clear(); // We don't need the source anymore

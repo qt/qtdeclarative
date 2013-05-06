@@ -73,9 +73,9 @@ enum ConsoleLogTypes {
 };
 
 static void jsContext(v8::Handle<v8::Value> *file, int *line, v8::Handle<v8::Value> *function) {
-    v8::Local<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
+    v8::Handle<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
     if (stackTrace->GetFrameCount()) {
-        v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(0);
+        v8::Handle<v8::StackFrame> frame = stackTrace->GetFrame(0);
         *file = frame->GetScriptName();
         *line = frame->GetLineNumber();
         *function = frame->GetFunctionName();
@@ -91,7 +91,7 @@ static QString jsStack() {
     int stackCount = stackTrace->GetFrameCount();
 
     for (int i = 0; i < stackCount; i++) {
-        v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(i);
+        v8::Handle<v8::StackFrame> frame = stackTrace->GetFrame(i);
         v8::Handle<v8::String> function(frame->GetFunctionName());
         v8::Handle<v8::String> script(frame->GetScriptName());
         int lineNumber = frame->GetLineNumber();
@@ -116,10 +116,10 @@ v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args
         if (i != 0)
             result.append(QLatin1Char(' '));
 
-        v8::Local<v8::Value> value = args[i];
+        v8::Handle<v8::Value> value = args[i];
 
         v8::TryCatch tryCatch;
-        v8::Local<v8::String> toString = value->ToString();
+        v8::Handle<v8::String> toString = value->ToString();
         if (tryCatch.HasCaught()) {
             // toString() threw Exception
             // Is it possible for value to be anything other than Object?
@@ -286,7 +286,7 @@ v8::Handle<v8::Value> consoleCount(const v8::Arguments &args)
         v8::StackTrace::CurrentStackTrace(1, v8::StackTrace::kOverview);
 
     if (stackTrace->GetFrameCount()) {
-        v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(0);
+        v8::Handle<v8::StackFrame> frame = stackTrace->GetFrame(0);
 
         QString scriptName = frame->GetScriptName()->v4Value().toQString();
         QString functionName = frame->GetFunctionName()->v4Value().toQString();
@@ -336,7 +336,7 @@ v8::Handle<v8::Value> consoleAssert(const v8::Arguments &args)
             if (i != 1)
                 message.append(QLatin1Char(' '));
 
-            v8::Local<v8::Value> value = args[i];
+            v8::Handle<v8::Value> value = args[i];
             message.append(value->v4Value().toQString());
         }
 
@@ -1146,14 +1146,14 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
         V8THROW_ERROR("Qt.createQmlObject(): Invalid arguments");
 
     struct Error {
-        static v8::Local<v8::Value> create(QV8Engine *engine, const QList<QQmlError> &errors) {
+        static v8::Handle<v8::Value> create(QV8Engine *engine, const QList<QQmlError> &errors) {
             QString errorstr = QLatin1String("Qt.createQmlObject(): failed to create object: ");
 
-            v8::Local<v8::Array> qmlerrors = v8::Array::New(errors.count());
+            v8::Handle<v8::Array> qmlerrors = v8::Array::New(errors.count());
             for (int ii = 0; ii < errors.count(); ++ii) {
                 const QQmlError &error = errors.at(ii);
                 errorstr += QLatin1String("\n    ") + error.toString();
-                v8::Local<v8::Object> qmlerror = v8::Object::New();
+                v8::Handle<v8::Object> qmlerror = v8::Object::New();
                 qmlerror->Set(v8::String::New("lineNumber"), v8::Integer::New(error.line()));
                 qmlerror->Set(v8::String::New("columnNumber"), v8::Integer::New(error.column()));
                 qmlerror->Set(v8::String::New("fileName"), engine->toString(error.url().toString()));
@@ -1161,8 +1161,8 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
                 qmlerrors->Set(ii, qmlerror);
             }
 
-            v8::Local<v8::Value> error = v8::Exception::Error(engine->toString(errorstr));
-            v8::Local<v8::Object> errorObject = error->ToObject();
+            v8::Handle<v8::Value> error = v8::Exception::Error(engine->toString(errorstr));
+            v8::Handle<v8::Object> errorObject = error->ToObject();
             errorObject->Set(v8::String::New("qmlErrors"), qmlerrors);
             return error;
         }
@@ -1289,7 +1289,7 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
 
     int consumedCount = 1;
     if (args.Length() > 1) {
-        const v8::Local<v8::Value> &lastArg = args[args.Length()-1];
+        const v8::Handle<v8::Value> &lastArg = args[args.Length()-1];
 
         // The second argument could be the mode enum
         if (args[1]->IsInt32()) {

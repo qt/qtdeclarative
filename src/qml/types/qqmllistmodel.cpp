@@ -415,12 +415,12 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QVector<int
 {
     ListElement *e = elements[elementIndex];
 
-    v8::Local<v8::Array> propertyNames = object->GetPropertyNames();
+    v8::Handle<v8::Array> propertyNames = object->GetPropertyNames();
     int propertyCount = propertyNames->Length();
 
     for (int i=0 ; i < propertyCount ; ++i) {
-        v8::Local<v8::String> propertyName = propertyNames->Get(i)->ToString();
-        v8::Local<v8::Value> propertyValue = object->Get(propertyName);
+        v8::Handle<v8::String> propertyName = propertyNames->Get(i)->ToString();
+        v8::Handle<v8::Value> propertyValue = object->Get(propertyName);
 
         // Check if this key exists yet
         int roleIndex = -1;
@@ -486,12 +486,12 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *
 {
     ListElement *e = elements[elementIndex];
 
-    v8::Local<v8::Array> propertyNames = object->GetPropertyNames();
+    v8::Handle<v8::Array> propertyNames = object->GetPropertyNames();
     int propertyCount = propertyNames->Length();
 
     for (int i=0 ; i < propertyCount ; ++i) {
-        v8::Local<v8::String> propertyName = propertyNames->Get(i)->ToString();
-        v8::Local<v8::Value> propertyValue = object->Get(propertyName);
+        v8::Handle<v8::String> propertyName = propertyNames->Get(i)->ToString();
+        v8::Handle<v8::Value> propertyValue = object->Get(propertyName);
 
         // Add the value now
         if (propertyValue->IsString()) {

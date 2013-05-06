@@ -202,7 +202,7 @@ void QV8Worker::serialize(QByteArray &data, v8::Handle<v8::Value> v, QV8Engine *
     } else if (v->IsRegExp()) {
         v8::Handle<v8::RegExp> regexp = v8::Handle<v8::RegExp>::Cast(v);
         quint32 flags = regexp->GetFlags();
-        v8::Local<v8::String> source = regexp->GetSource();
+        v8::Handle<v8::String> source = regexp->GetSource();
 
         int length = source->Length() + 1;
         if (length > 0xFFFFFF) {
@@ -221,7 +221,7 @@ void QV8Worker::serialize(QByteArray &data, v8::Handle<v8::Value> v, QV8Engine *
         source->Write((uint16_t*)buffer);
     } else if (v->IsObject() && !v->ToObject()->GetExternalResource()) {
         v8::Handle<v8::Object> object = v->ToObject();
-        v8::Local<v8::Array> properties = v8::Local<v8::Array>::New(v8::Value::fromV4Value(engine->getOwnPropertyNames(object->v4Value())));
+        v8::Handle<v8::Array> properties = engine->getOwnPropertyNames(object->v4Value());
         quint32 length = properties->Length();
         if (length > 0xFFFFFF) {
             push(data, valueheader(WorkerUndefined));
@@ -230,10 +230,10 @@ void QV8Worker::serialize(QByteArray &data, v8::Handle<v8::Value> v, QV8Engine *
         push(data, valueheader(WorkerObject, length));
         v8::TryCatch tc;
         for (quint32 ii = 0; ii < length; ++ii) {
-            v8::Local<v8::String> str = properties->Get(ii)->ToString();
+            v8::Handle<v8::String> str = properties->Get(ii)->ToString();
             serialize(data, str, engine);
 
-            v8::Local<v8::Value> val = object->Get(str);
+            v8::Handle<v8::Value> val = object->Get(str);
             if (tc.HasCaught()) {
                 serialize(data, v8::Undefined(), engine);
                 tc.Reset();
@@ -303,7 +303,7 @@ v8::Handle<v8::Value> QV8Worker::deserialize(const char *&data, QV8Engine *engin
     case WorkerString:
     {
         quint32 size = headersize(header);
-        v8::Local<v8::String> string = v8::String::New((uint16_t*)data, size - 1);
+        v8::Handle<v8::String> string = v8::String::New((uint16_t*)data, size - 1);
         data += ALIGN(size * sizeof(uint16_t));
         return string;
     }
@@ -313,7 +313,7 @@ v8::Handle<v8::Value> QV8Worker::deserialize(const char *&data, QV8Engine *engin
     case WorkerArray:
     {
         quint32 size = headersize(header);
-        v8::Local<v8::Array> array = v8::Array::New(size);
+        v8::Handle<v8::Array> array = v8::Array::New(size);
         for (quint32 ii = 0; ii < size; ++ii) {
             array->Set(ii, deserialize(data, engine));
         }
@@ -322,7 +322,7 @@ v8::Handle<v8::Value> QV8Worker::deserialize(const char *&data, QV8Engine *engin
     case WorkerObject:
     {
         quint32 size = headersize(header);
-        v8::Local<v8::Object> o = v8::Object::New();
+        v8::Handle<v8::Object> o = v8::Object::New();
         for (quint32 ii = 0; ii < size; ++ii) {
             v8::Handle<v8::Value> name = deserialize(data, engine);
             v8::Handle<v8::Value> value = deserialize(data, engine);
@@ -342,7 +342,7 @@ v8::Handle<v8::Value> QV8Worker::deserialize(const char *&data, QV8Engine *engin
     {
         quint32 flags = headersize(header);
         quint32 length = popUint32(data);
-        v8::Local<v8::String> source = v8::String::New((uint16_t*)data, length - 1);
+        v8::Handle<v8::String> source = v8::String::New((uint16_t*)data, length - 1);
         data += ALIGN(length * sizeof(uint16_t));
         return v8::RegExp::New(source, (v8::RegExp::Flags)flags);
     }
@@ -366,7 +366,7 @@ v8::Handle<v8::Value> QV8Worker::deserialize(const char *&data, QV8Engine *engin
         quint32 length = headersize(header);
         quint32 seqLength = length - 1;
         int sequenceType = deserialize(data, engine)->Int32Value();
-        v8::Local<v8::Array> array = v8::Array::New(seqLength);
+        v8::Handle<v8::Array> array = v8::Array::New(seqLength);
         for (quint32 ii = 0; ii < seqLength; ++ii)
             array->Set(ii, deserialize(data, engine));
         QVariant seqVariant = engine->sequenceWrapper()->toVariant(array, sequenceType, &succeeded);

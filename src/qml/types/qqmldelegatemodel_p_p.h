@@ -78,19 +78,19 @@ public:
     void initializeConstructor();
 
     int parseGroups(const QStringList &groupNames) const;
-    int parseGroups(const v8::Local<v8::Value> &groupNames) const;
+    int parseGroups(const v8::Handle<v8::Value> &groupNames) const;
 
     static void release_index(v8::Persistent<v8::Value> object, void *parameter);
     static void release_model(v8::Persistent<v8::Value> object, void *parameter);
 
-    static v8::Handle<v8::Value> get_model(v8::Local<v8::String>, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> get_groups(v8::Local<v8::String>, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> get_model(v8::Handle<v8::String>, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> get_groups(v8::Handle<v8::String>, const v8::AccessorInfo &info);
     static void set_groups(
-            v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> get_member(v8::Local<v8::String>, const v8::AccessorInfo &info);
+            v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> get_member(v8::Handle<v8::String>, const v8::AccessorInfo &info);
     static void set_member(
-            v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> get_index(v8::Local<v8::String>, const v8::AccessorInfo &info);
+            v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> get_index(v8::Handle<v8::String>, const v8::AccessorInfo &info);
 
     QQmlGuard<QQmlDelegateModel> model;
     const int groupCount;
@@ -216,7 +216,7 @@ public:
     void initPackage(int index, QQuickPackage *package);
     void destroyingPackage(QQuickPackage *package);
 
-    bool parseIndex(const v8::Local<v8::Value> &value, int *index, Compositor::Group *group) const;
+    bool parseIndex(const v8::Handle<v8::Value> &value, int *index, Compositor::Group *group) const;
     bool parseGroupArgs(
             QQmlV8Function *args, Compositor::Group *group, int *index, int *count, int *groups) const;
 
@@ -276,11 +276,11 @@ public:
     void itemsMoved(
             const QVector<Compositor::Remove> &removes, const QVector<Compositor::Insert> &inserts);
     void itemsChanged(const QVector<Compositor::Change> &changes);
-    template <typename T> static v8::Local<v8::Array> buildChangeList(const QVector<T> &changes);
+    template <typename T> static v8::Handle<v8::Array> buildChangeList(const QVector<T> &changes);
     void emitChanges();
     void emitModelUpdated(const QQmlChangeSet &changeSet, bool reset);
 
-    bool insert(Compositor::insert_iterator &before, const v8::Local<v8::Object> &object, int groups);
+    bool insert(Compositor::insert_iterator &before, const v8::Handle<v8::Object> &object, int groups);
 
     static void group_append(QQmlListProperty<QQmlDelegateModelGroup> *property, QQmlDelegateModelGroup *group);
     static int group_count(QQmlListProperty<QQmlDelegateModelGroup> *property);

@@ -1411,7 +1411,7 @@ void QQuickTextInput::positionAt(QQmlV8Function *args) const
         return;
 
     int i = 0;
-    v8::Local<v8::Value> arg = (*args)[i];
+    v8::Handle<v8::Value> arg = (*args)[i];
     x = arg->NumberValue();
 
     if (++i < args->Length()) {

@@ -314,7 +314,7 @@ static v8::Handle<v8::Value> particleData_curSize(const v8::Arguments &args)
 
     return v8::Number::New(r->datum->curSize());
 }
-#define COLOR_GETTER_AND_SETTER(VAR, NAME) static v8::Handle<v8::Value> particleData_get_ ## NAME (v8::Local<v8::String>, const v8::AccessorInfo &info) \
+#define COLOR_GETTER_AND_SETTER(VAR, NAME) static v8::Handle<v8::Value> particleData_get_ ## NAME (v8::Handle<v8::String>, const v8::AccessorInfo &info) \
 { \
     QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This()); \
     if (!r || !r->datum) \
@@ -323,7 +323,7 @@ static v8::Handle<v8::Value> particleData_curSize(const v8::Arguments &args)
     return v8::Number::New((r->datum->color. VAR )/255.0);\
 }\
 \
-static void particleData_set_ ## NAME (v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)\
+static void particleData_set_ ## NAME (v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)\
 {\
     QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This());\
     if (!r || !r->datum)\
@@ -333,7 +333,7 @@ static void particleData_set_ ## NAME (v8::Local<v8::String>, v8::Local<v8::Valu
 }
 
 
-#define SEMIBOOL_GETTER_AND_SETTER(VARIABLE) static v8::Handle<v8::Value> particleData_get_ ## VARIABLE (v8::Local<v8::String>, const v8::AccessorInfo &info) \
+#define SEMIBOOL_GETTER_AND_SETTER(VARIABLE) static v8::Handle<v8::Value> particleData_get_ ## VARIABLE (v8::Handle<v8::String>, const v8::AccessorInfo &info) \
 { \
     QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This()); \
     if (!r || !r->datum) \
@@ -342,7 +342,7 @@ static void particleData_set_ ## NAME (v8::Local<v8::String>, v8::Local<v8::Valu
     return v8::Boolean::New(r->datum-> VARIABLE);\
 }\
 \
-static void particleData_set_ ## VARIABLE (v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)\
+static void particleData_set_ ## VARIABLE (v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)\
 {\
     QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This());\
     if (!r || !r->datum)\
@@ -351,7 +351,7 @@ static void particleData_set_ ## VARIABLE (v8::Local<v8::String>, v8::Local<v8::
     r->datum-> VARIABLE = value->BooleanValue() ? 1.0 : 0.0;\
 }
 
-#define FLOAT_GETTER_AND_SETTER(VARIABLE) static v8::Handle<v8::Value> particleData_get_ ## VARIABLE (v8::Local<v8::String>, const v8::AccessorInfo &info) \
+#define FLOAT_GETTER_AND_SETTER(VARIABLE) static v8::Handle<v8::Value> particleData_get_ ## VARIABLE (v8::Handle<v8::String>, const v8::AccessorInfo &info) \
 { \
     QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This()); \
     if (!r || !r->datum) \
@@ -360,7 +360,7 @@ static void particleData_set_ ## VARIABLE (v8::Local<v8::String>, v8::Local<v8::
     return v8::Number::New(r->datum-> VARIABLE);\
 }\
 \
-static void particleData_set_ ## VARIABLE (v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)\
+static void particleData_set_ ## VARIABLE (v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)\
 {\
     QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This());\
     if (!r || !r->datum)\
@@ -369,7 +369,7 @@ static void particleData_set_ ## VARIABLE (v8::Local<v8::String>, v8::Local<v8::
     r->datum-> VARIABLE = value->NumberValue();\
 }
 
-#define FAKE_FLOAT_GETTER_AND_SETTER(VARIABLE, GETTER, SETTER) static v8::Handle<v8::Value> particleData_get_ ## VARIABLE (v8::Local<v8::String>, const v8::AccessorInfo &info) \
+#define FAKE_FLOAT_GETTER_AND_SETTER(VARIABLE, GETTER, SETTER) static v8::Handle<v8::Value> particleData_get_ ## VARIABLE (v8::Handle<v8::String>, const v8::AccessorInfo &info) \
 { \
     QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This()); \
     if (!r || !r->datum) \
@@ -378,7 +378,7 @@ static void particleData_set_ ## VARIABLE (v8::Local<v8::String>, v8::Local<v8::
     return v8::Number::New(r->datum-> GETTER ());\
 }\
 \
-static void particleData_set_ ## VARIABLE (v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)\
+static void particleData_set_ ## VARIABLE (v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)\
 {\
     QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This());\
     if (!r || !r->datum)\
@@ -426,7 +426,7 @@ FAKE_FLOAT_GETTER_AND_SETTER(curAY, curAY, setInstantaneousAY)
 
 QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
 {
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->PrototypeTemplate()->Set(v8::String::New("discard"), V8FUNCTION(particleData_discard, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("lifeLeft"), V8FUNCTION(particleData_lifeLeft, engine));

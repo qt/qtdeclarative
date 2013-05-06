@@ -233,8 +233,8 @@ public:
     QQuickCanvasItem* m_canvas;
     QQuickContext2DCommandBuffer* m_buffer;
     QPainterPath m_path;
-    v8::Local<v8::Value> m_fillStyle;
-    v8::Local<v8::Value> m_strokeStyle;
+    v8::Handle<v8::Value> m_fillStyle;
+    v8::Handle<v8::Value> m_strokeStyle;
     v8::Handle<v8::Value> m_v8path;
     QV8Engine *m_v8engine;
     QSurface *m_surface;

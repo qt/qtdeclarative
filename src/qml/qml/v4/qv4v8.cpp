@@ -121,7 +121,7 @@ struct V8AccessorGetter: FunctionObject {
         AccessorInfo info(thisObject, getter->data);
         QV4::Value result = QV4::Value::undefinedValue();
         try {
-            result = getter->getter(Local<String>::New(getter->name), info)->v4Value();
+            result = getter->getter(getter->name, info)->v4Value();
         } catch (QV4::Exception &e) {
             Isolate::GetCurrent()->setException(e.value());
             e.accept(context);
@@ -158,7 +158,7 @@ struct V8AccessorSetter: FunctionObject {
         V8AccessorSetter *setter = static_cast<V8AccessorSetter*>(that);
         AccessorInfo info(thisObject, setter->data);
         try {
-            setter->setter(Local<String>::New(setter->name), Local<Value>::New(Value::fromV4Value(args[0])), info);
+            setter->setter(setter->name, args[0], info);
         } catch (QV4::Exception &e) {
             Isolate::GetCurrent()->setException(e.value());
             e.accept(context);
@@ -195,7 +195,7 @@ Handle<Integer> ScriptOrigin::ResourceColumnOffset() const
 }
 
 
-Local<Script> Script::New(Handle<String> source,
+Handle<Script> Script::New(Handle<String> source,
                          ScriptOrigin* origin,
                          ScriptData* pre_data,
                          Handle<String> script_data,
@@ -206,11 +206,11 @@ Local<Script> Script::New(Handle<String> source,
     if (origin)
         s->m_origin = *origin;
     s->m_flags = flags;
-    return Local<Script>::New(Handle<Script>(s));
+    return Handle<Script>(s);
 }
 
 
-Local<Script> Script::New(Handle<String> source,
+Handle<Script> Script::New(Handle<String> source,
                          Handle<Value> file_name,
                          CompileFlags flags)
 {
@@ -218,17 +218,17 @@ Local<Script> Script::New(Handle<String> source,
     return New(source, &origin, 0, Handle<String>(), flags);
 }
 
-Local<Script> Script::Compile(Handle<String> source, ScriptOrigin *origin, ScriptData *pre_data, Handle<String> script_data, Script::CompileFlags flags)
+Handle<Script> Script::Compile(Handle<String> source, ScriptOrigin *origin, ScriptData *pre_data, Handle<String> script_data, Script::CompileFlags flags)
 {
     Script *s = new Script;
     s->m_script = source->ToString()->asQString();
     if (origin)
         s->m_origin = *origin;
     s->m_flags = flags;
-    return Local<Script>::New(Handle<Script>(s));
+    return Handle<Script>(s);
 }
 
-Local<Script> Script::Compile(Handle<String> source,
+Handle<Script> Script::Compile(Handle<String> source,
                              Handle<Value> file_name,
                              Handle<String> script_data,
                              CompileFlags flags)
@@ -237,7 +237,7 @@ Local<Script> Script::Compile(Handle<String> source,
     return Compile(source, &origin, 0, script_data, flags);
 }
 
-Local<Value> Script::Run()
+Handle<Value> Script::Run()
 {
     QV4::ExecutionEngine *engine = Isolate::GetCurrent()->GetEngine();
     QV4::ExecutionContext *ctx = engine->current;
@@ -253,13 +253,13 @@ Local<Value> Script::Run()
     } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
-        return Local<Value>();
+        return Handle<Value>();
     }
 
-    return Local<Value>::New(Value::fromV4Value(result));
+    return result;
 }
 
-Local<Value> Script::Run(Handle<Object> qml)
+Handle<Value> Script::Run(Handle<Object> qml)
 {
     QV4::ExecutionEngine *engine = Isolate::GetCurrent()->GetEngine();
     QV4::ExecutionContext *ctx = engine->current;
@@ -276,12 +276,12 @@ Local<Value> Script::Run(Handle<Object> qml)
     } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
-        return Local<Value>();
+        return Handle<Value>();
     }
-    return Local<Value>::New(Value::fromV4Value(result));
+    return result;
 }
 
-Local<Value> Script::Id()
+Handle<Value> Script::Id()
 {
     Q_UNIMPLEMENTED();
     Q_UNREACHABLE();
@@ -293,9 +293,9 @@ void Script::SetData(Handle<String> data)
 }
 
 
-Local<String> Message::Get() const
+Handle<String> Message::Get() const
 {
-    return Local<String>::New(Value::fromV4Value(QV4::Value::fromString(currentEngine()->current, m_message)));
+    return QV4::Value::fromString(currentEngine()->current, m_message);
 }
 
 Handle<Value> Message::GetScriptResourceName() const
@@ -309,10 +309,10 @@ int Message::GetLineNumber() const
 }
 
 
-Local<StackFrame> StackTrace::GetFrame(uint32_t index) const
+Handle<StackFrame> StackTrace::GetFrame(uint32_t index) const
 {
     if (index >= (uint)frames.size())
-        return Local<StackFrame>();
+        return Handle<StackFrame>();
     return frames.at(index);
 }
 
@@ -321,13 +321,13 @@ int StackTrace::GetFrameCount() const
     return frames.size();
 }
 
-Local<Array> StackTrace::AsArray()
+Handle<Array> StackTrace::AsArray()
 {
     Q_UNIMPLEMENTED();
-    return Local<Array>();
+    return Handle<Array>();
 }
 
-Local<StackTrace> StackTrace::CurrentStackTrace(int frame_limit, StackTrace::StackTraceOptions options)
+Handle<StackTrace> StackTrace::CurrentStackTrace(int frame_limit, StackTrace::StackTraceOptions options)
 {
     StackTrace *trace = new StackTrace;
     QV4::ExecutionEngine *engine = currentEngine();
@@ -337,13 +337,13 @@ Local<StackTrace> StackTrace::CurrentStackTrace(int frame_limit, StackTrace::Sta
             StackFrame *frame = new StackFrame(Value::fromV4Value(QV4::Value::fromString(engine->id_null)),
                                                Value::fromV4Value(QV4::Value::fromString(c->function->name)),
                                                0, 0);
-            trace->frames.append(frame);
+            trace->frames.append(v8::Handle<v8::StackFrame>(frame));
             --frame_limit;
         }
         current = current->parent;
     }
 
-    return Local<StackTrace>::New(Handle<StackTrace>(trace));
+    return Handle<StackTrace>(trace);
 }
 
 
@@ -357,19 +357,19 @@ int StackFrame::GetColumn() const
     return m_columnNumber;
 }
 
-Local<String> StackFrame::GetScriptName() const
+Handle<String> StackFrame::GetScriptName() const
 {
-    return Local<String>::New(m_scriptName);
+    return m_scriptName;
 }
 
-Local<String> StackFrame::GetScriptNameOrSourceURL() const
+Handle<String> StackFrame::GetScriptNameOrSourceURL() const
 {
-    return Local<String>::New(m_scriptName);
+    return m_scriptName;
 }
 
-Local<String> StackFrame::GetFunctionName() const
+Handle<String> StackFrame::GetFunctionName() const
 {
-    return Local<String>::New(m_functionName);
+    return m_functionName;
 }
 
 StackFrame::StackFrame(Handle<String> script, Handle<String> function, int line, int column)
@@ -477,44 +477,44 @@ bool Value::IsError() const
     return ConstValuePtr(this)->asErrorObject();
 }
 
-Local<Boolean> Value::ToBoolean() const
+Handle<Boolean> Value::ToBoolean() const
 {
-    return Local<Boolean>::New(Value::fromV4Value(QV4::Value::fromBoolean(ConstValuePtr(this)->toBoolean())));
+    return QV4::Value::fromBoolean(ConstValuePtr(this)->toBoolean());
 }
 
-Local<Number> Value::ToNumber() const
+Handle<Number> Value::ToNumber() const
 {
-    return Local<Number>::New(Value::fromV4Value(QV4::Value::fromDouble(ConstValuePtr(this)->toNumber())));
+    return QV4::Value::fromDouble(ConstValuePtr(this)->toNumber());
 }
 
-Local<String> Value::ToString() const
+Handle<String> Value::ToString() const
 {
-    return Local<String>::New(Value::fromV4Value(QV4::Value::fromString(ConstValuePtr(this)->toString(currentEngine()->current))));
+    return QV4::Value::fromString(ConstValuePtr(this)->toString(currentEngine()->current));
 }
 
-Local<Object> Value::ToObject() const
+Handle<Object> Value::ToObject() const
 {
-    return Local<Object>::New(Value::fromV4Value(QV4::Value::fromObject(ConstValuePtr(this)->toObject(currentEngine()->current))));
+    return QV4::Value::fromObject(ConstValuePtr(this)->toObject(currentEngine()->current));
 }
 
-Local<Integer> Value::ToInteger() const
+Handle<Integer> Value::ToInteger() const
 {
-    return Local<Integer>::New(Value::fromV4Value(QV4::Value::fromDouble(ConstValuePtr(this)->toInteger())));
+    return QV4::Value::fromDouble(ConstValuePtr(this)->toInteger());
 }
 
-Local<Uint32> Value::ToUint32() const
+Handle<Uint32> Value::ToUint32() const
 {
-    return Local<Uint32>::New(Value::fromV4Value(QV4::Value::fromUInt32(ConstValuePtr(this)->toUInt32())));
+    return QV4::Value::fromUInt32(ConstValuePtr(this)->toUInt32());
 }
 
-Local<Int32> Value::ToInt32() const
+Handle<Int32> Value::ToInt32() const
 {
-    return Local<Int32>::New(Value::fromV4Value(QV4::Value::fromInt32(ConstValuePtr(this)->toInt32())));
+    return QV4::Value::fromInt32(ConstValuePtr(this)->toInt32());
 }
 
-Local<Uint32> Value::ToArrayIndex() const
+Handle<Uint32> Value::ToArrayIndex() const
 {
-    return Local<Uint32>::New(Value::fromV4Value(QV4::Value::fromUInt32(ConstValuePtr(this)->asArrayIndex())));
+    return QV4::Value::fromUInt32(ConstValuePtr(this)->asArrayIndex());
 }
 
 bool Value::BooleanValue() const
@@ -640,31 +640,31 @@ String *String::Cast(v8::Value *obj)
 }
 
 
-Local<String> String::New(const char *data, int length)
+Handle<String> String::New(const char *data, int length)
 {
     QV4::Value v = QV4::Value::fromString(currentEngine()->current, QString::fromLatin1(data, length));
-    return Local<String>::New(v8::Value::fromV4Value(v));
+    return v;
 }
 
-Local<String> String::New(const uint16_t *data, int length)
+Handle<String> String::New(const uint16_t *data, int length)
 {
     QV4::Value v = QV4::Value::fromString(currentEngine()->current, QString((const QChar *)data, length));
-    return Local<String>::New(v8::Value::fromV4Value(v));
+    return v;
 }
 
-Local<String> String::NewSymbol(const char *data, int length)
+Handle<String> String::NewSymbol(const char *data, int length)
 {
     QString str = QString::fromLatin1(data, length);
     QV4::String *vmString = currentEngine()->newIdentifier(str);
     return New(vmString);
 }
 
-Local<String> String::New(QV4::String *s)
+Handle<String> String::New(QV4::String *s)
 {
-    return Local<String>::New(v8::Value::fromV4Value(QV4::Value::fromString(s)));
+    return QV4::Value::fromString(s);
 }
 
-Local<String> String::NewExternal(String::ExternalStringResource *resource)
+Handle<String> String::NewExternal(String::ExternalStringResource *resource)
 {
     Q_UNIMPLEMENTED();
     Q_UNREACHABLE();
@@ -700,9 +700,9 @@ double Number::Value() const
     return v->asDouble();
 }
 
-Local<Number> Number::New(double value)
+Handle<Number> Number::New(double value)
 {
-    return Local<Number>::New(Value::fromV4Value(QV4::Value::fromDouble(value)));
+    return QV4::Value::fromDouble(value);
 }
 
 Number *Number::Cast(v8::Value *obj)
@@ -710,14 +710,14 @@ Number *Number::Cast(v8::Value *obj)
     return static_cast<Number *>(obj);
 }
 
-Local<Integer> Integer::New(int32_t value)
+Handle<Integer> Integer::New(int32_t value)
 {
-    return Local<Integer>::New(Value::fromV4Value(QV4::Value::fromInt32(value)));
+    return QV4::Value::fromInt32(value);
 }
 
-Local<Integer> Integer::NewFromUnsigned(uint32_t value)
+Handle<Integer> Integer::NewFromUnsigned(uint32_t value)
 {
-    return Local<Integer>::New(Value::fromV4Value(QV4::Value::fromUInt32(value)));
+    return QV4::Value::fromUInt32(value);
 }
 
 int64_t Integer::Value() const
@@ -797,7 +797,7 @@ bool Object::Set(uint32_t index, Handle<Value> value)
     return result;
 }
 
-Local<Value> Object::Get(Handle<Value> key)
+Handle<Value> Object::Get(Handle<Value> key)
 {
     QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
@@ -808,12 +808,12 @@ Local<Value> Object::Get(Handle<Value> key)
     } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
-        return Local<Value>();
+        return Handle<Value>();
     }
-    return Local<Value>::New(Value::fromV4Value(prop));
+    return prop;
 }
 
-Local<Value> Object::Get(uint32_t key)
+Handle<Value> Object::Get(uint32_t key)
 {
     QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
@@ -824,9 +824,9 @@ Local<Value> Object::Get(uint32_t key)
     } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
-        return Local<Value>();
+        return Handle<Value>();
     }
-    return Local<Value>::New(Value::fromV4Value(prop));
+    return prop;
 }
 
 bool Object::Has(Handle<String> key)
@@ -898,7 +898,7 @@ bool Object::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSet
     return true;
 }
 
-Local<Array> Object::GetPropertyNames()
+Handle<Array> Object::GetPropertyNames()
 {
     QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
@@ -911,10 +911,10 @@ Local<Array> Object::GetPropertyNames()
             break;
         array->push_back(v);
     }
-    return Local<Array>::New(Value::fromV4Value(QV4::Value::fromObject(array)));
+    return QV4::Value::fromObject(array);
 }
 
-Local<Array> Object::GetOwnPropertyNames()
+Handle<Array> Object::GetOwnPropertyNames()
 {
     QV4::Object *o = ConstValuePtr(this)->asObject();
     assert(o);
@@ -927,16 +927,16 @@ Local<Array> Object::GetOwnPropertyNames()
             break;
         array->push_back(v);
     }
-    return Local<Array>::New(Value::fromV4Value(QV4::Value::fromObject(array)));
+    return QV4::Value::fromObject(array);
 }
 
-Local<Value> Object::GetPrototype()
+Handle<Value> Object::GetPrototype()
 {
-    Local<Value> result;
+    Handle<Value> result;
     QV4::Object *o = ConstValuePtr(this)->asObject();
     if (!o)
-        return Local<Value>();
-    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o->prototype)));
+        return Handle<Value>();
+    return QV4::Value::fromObject(o->prototype);
 }
 
 bool Object::SetPrototype(Handle<Value> prototype)
@@ -952,7 +952,7 @@ bool Object::SetPrototype(Handle<Value> prototype)
     return true;
 }
 
-Local<Value> Object::GetInternalField(int index)
+Handle<Value> Object::GetInternalField(int index)
 {
     Q_UNIMPLEMENTED();
     Q_UNREACHABLE();
@@ -998,13 +998,13 @@ bool Object::SetHiddenValue(Handle<String> key, Handle<Value> value)
     Q_UNREACHABLE();
 }
 
-Local<Value> Object::GetHiddenValue(Handle<String> key)
+Handle<Value> Object::GetHiddenValue(Handle<String> key)
 {
     Q_UNIMPLEMENTED();
     Q_UNREACHABLE();
 }
 
-Local<Object> Object::Clone()
+Handle<Object> Object::Clone()
 {
     Q_UNIMPLEMENTED();
     Q_UNREACHABLE();
@@ -1015,46 +1015,46 @@ bool Object::IsCallable()
     return ConstValuePtr(this)->asFunctionObject();
 }
 
-Local<Value> Object::CallAsFunction(Handle<Object> recv, int argc, Handle<Value> argv[])
+Handle<Value> Object::CallAsFunction(Handle<Object> recv, int argc, Handle<Value> argv[])
 {
     QV4::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     if (!f)
-        return Local<Value>();
+        return Handle<Value>();
     ExecutionContext *context = currentEngine()->current;
     try {
         QV4::Value retval = f->call(context, recv->v4Value(),
                                    reinterpret_cast<QV4::Value*>(argv),
                                    argc);
-        return Local<Value>::New(Value::fromV4Value(retval));
+        return retval;
     } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
     }
-    return Local<Object>();
+    return Handle<Object>();
 }
 
-Local<Value> Object::CallAsConstructor(int argc, Handle<Value> argv[])
+Handle<Value> Object::CallAsConstructor(int argc, Handle<Value> argv[])
 {
     QV4::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     if (!f)
-        return Local<Value>();
+        return Handle<Value>();
     ExecutionContext *context = currentEngine()->current;
     try {
         QV4::Value retval = f->construct(context,
                                         reinterpret_cast<QV4::Value*>(argv),
                                         argc);
-        return Local<Value>::New(Value::fromV4Value(retval));
+        return retval;
     } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
     }
-    return Local<Object>();
+    return Handle<Object>();
 }
 
-Local<Object> Object::New()
+Handle<Object> Object::New()
 {
     QV4::Object *o = currentEngine()->newObject();
-    return Local<Object>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
+    return QV4::Value::fromObject(o);
 }
 
 Object *Object::Cast(Value *obj)
@@ -1071,7 +1071,7 @@ uint32_t Array::Length() const
     return a->arrayLength();
 }
 
-Local<Array> Array::New(int length)
+Handle<Array> Array::New(int length)
 {
     if (length < 0)
         length = 0;
@@ -1079,7 +1079,7 @@ Local<Array> Array::New(int length)
     if (length < 0x1000)
         a->arrayReserve(length);
 
-    return Local<Array>::New(Value::fromV4Value(QV4::Value::fromObject(a)));
+    return QV4::Value::fromObject(a);
 }
 
 Array *Array::Cast(Value *obj)
@@ -1088,7 +1088,7 @@ Array *Array::Cast(Value *obj)
 }
 
 
-Local<Object> Function::NewInstance() const
+Handle<Object> Function::NewInstance() const
 {
     QV4::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     assert(f);
@@ -1099,12 +1099,12 @@ Local<Object> Function::NewInstance() const
     } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
-        return Local<Object>();
+        return Handle<Object>();
     }
-    return Local<Object>::New(Value::fromV4Value(result));
+    return result;
 }
 
-Local<Object> Function::NewInstance(int argc, Handle<Value> argv[]) const
+Handle<Object> Function::NewInstance(int argc, Handle<Value> argv[]) const
 {
     QV4::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     assert(f);
@@ -1115,16 +1115,16 @@ Local<Object> Function::NewInstance(int argc, Handle<Value> argv[]) const
     } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
-        return Local<Object>();
+        return Handle<Object>();
     }
-    return Local<Object>::New(Value::fromV4Value(result));
+    return result;
 }
 
-Local<Value> Function::Call(Handle<Object> thisObj, int argc, Handle<Value> argv[])
+Handle<Value> Function::Call(Handle<Object> thisObj, int argc, Handle<Value> argv[])
 {
     QV4::FunctionObject *f = ConstValuePtr(this)->asFunctionObject();
     if (!f)
-        return Local<Value>();
+        return Handle<Value>();
     QV4::ExecutionContext *context = currentEngine()->current;
     QV4::Value result = QV4::Value::undefinedValue();
     try {
@@ -1133,9 +1133,9 @@ Local<Value> Function::Call(Handle<Object> thisObj, int argc, Handle<Value> argv
     } catch (QV4::Exception &e) {
         Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
-        return Local<Value>();
+        return Handle<Value>();
     }
-    return Local<Value>::New(Value::fromV4Value(result));
+    return result;
 }
 
 Handle<Value> Function::GetName() const
@@ -1158,10 +1158,10 @@ Function *Function::Cast(Value *obj)
 }
 
 
-Local<Value> Date::New(double time)
+Handle<Value> Date::New(double time)
 {
     QV4::Object *o = currentEngine()->newDateObject(QV4::Value::fromDouble(time));
-    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
+    return QV4::Value::fromObject(o);
 }
 
 double Date::NumberValue() const
@@ -1182,10 +1182,10 @@ void Date::DateTimeConfigurationChangeNotification()
 }
 
 
-Local<Value> NumberObject::New(double value)
+Handle<Value> NumberObject::New(double value)
 {
     QV4::Object *o = currentEngine()->newNumberObject(QV4::Value::fromDouble(value));
-    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
+    return QV4::Value::fromObject(o);
 }
 
 double NumberObject::NumberValue() const
@@ -1200,10 +1200,10 @@ NumberObject *NumberObject::Cast(Value *obj)
     return static_cast<NumberObject *>(obj);
 }
 
-Local<Value> BooleanObject::New(bool value)
+Handle<Value> BooleanObject::New(bool value)
 {
     QV4::Object *o = currentEngine()->newBooleanObject(QV4::Value::fromBoolean(value));
-    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
+    return QV4::Value::fromObject(o);
 }
 
 bool BooleanObject::BooleanValue() const
@@ -1218,17 +1218,17 @@ BooleanObject *BooleanObject::Cast(Value *obj)
     return static_cast<BooleanObject *>(obj);
 }
 
-Local<Value> StringObject::New(Handle<String> value)
+Handle<Value> StringObject::New(Handle<String> value)
 {
     QV4::Object *o = currentEngine()->newStringObject(QV4::Value::fromString(value->v4Value().asString()));
-    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
+    return QV4::Value::fromObject(o);
 }
 
-Local<String> StringObject::StringValue() const
+Handle<String> StringObject::StringValue() const
 {
     QV4::StringObject *s = ConstValuePtr(this)->asStringObject();
     assert(s);
-    return Local<String>::New(Value::fromV4Value(s->value));
+    return s->value;
 }
 
 StringObject *StringObject::Cast(Value *obj)
@@ -1236,7 +1236,7 @@ StringObject *StringObject::Cast(Value *obj)
     return static_cast<StringObject *>(obj);
 }
 
-Local<RegExp> RegExp::New(Handle<String> pattern, RegExp::Flags flags)
+Handle<RegExp> RegExp::New(Handle<String> pattern, RegExp::Flags flags)
 {
     int f = 0;
     if (flags & kGlobal)
@@ -1246,14 +1246,14 @@ Local<RegExp> RegExp::New(Handle<String> pattern, RegExp::Flags flags)
     if (flags & kMultiline)
         f |= V4IR::RegExp::RegExp_Multiline;
     QV4::Object *o = currentEngine()->newRegExpObject(pattern->asQString(), f);
-    return Local<RegExp>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
+    return QV4::Value::fromObject(o);
 }
 
-Local<String> RegExp::GetSource() const
+Handle<String> RegExp::GetSource() const
 {
     RegExpObject *re = ConstValuePtr(this)->asRegExpObject();
     assert(re);
-    return Local<String>::New(Value::fromV4Value(QV4::Value::fromString(currentEngine()->current, re->value->pattern())));
+    return QV4::Value::fromString(currentEngine()->current, re->value->pattern());
 }
 
 RegExp::Flags RegExp::GetFlags() const
@@ -1282,7 +1282,7 @@ struct VoidStarWrapper : public QV4::Object::ExternalResource
     void *data;
 };
 
-Local<Value> External::Wrap(void *data)
+Handle<Value> External::Wrap(void *data)
 {
     return New(data);
 }
@@ -1292,13 +1292,13 @@ void *External::Unwrap(Handle<v8::Value> obj)
     return obj.As<External>()->Value();
 }
 
-Local<External> External::New(void *value)
+Handle<External> External::New(void *value)
 {
     QV4::Object *o = currentEngine()->newObject();
     VoidStarWrapper *wrapper = new VoidStarWrapper;
     wrapper->data = value;
     o->externalResource = wrapper;
-    return Local<v8::External>::New(v8::Value::fromV4Value(QV4::Value::fromObject(o)));
+    return QV4::Value::fromObject(o);
 }
 
 External *External::Cast(v8::Value *obj)
@@ -1344,20 +1344,20 @@ int Arguments::Length() const
     return m_args.size();
 }
 
-Local<Value> Arguments::operator [](int i) const
+Handle<Value> Arguments::operator [](int i) const
 {
-    return Local<Value>::New(m_args.at(i));
+    return m_args.at(i);
 }
 
-Local<Object> Arguments::This() const
+Handle<Object> Arguments::This() const
 {
-    return Local<Object>::New(m_thisObject);
+    return m_thisObject;
 }
 
-Local<Object> Arguments::Holder() const
+Handle<Object> Arguments::Holder() const
 {
     // ### FIXME.
-    return Local<Object>::New(m_thisObject);
+    return m_thisObject;
 }
 
 bool Arguments::IsConstructCall() const
@@ -1365,9 +1365,9 @@ bool Arguments::IsConstructCall() const
     return m_isConstructor;
 }
 
-Local<Value> Arguments::Data() const
+Handle<Value> Arguments::Data() const
 {
-    return Local<Value>::New(m_data);
+    return m_data;
 }
 
 Isolate *Arguments::GetIsolate() const
@@ -1387,20 +1387,20 @@ Isolate *AccessorInfo::GetIsolate() const
     return Isolate::GetCurrent();
 }
 
-Local<Value> AccessorInfo::Data() const
+Handle<Value> AccessorInfo::Data() const
 {
-    return Local<Value>::New(m_data);
+    return m_data;
 }
 
-Local<Object> AccessorInfo::This() const
+Handle<Object> AccessorInfo::This() const
 {
-    return Local<Object>::New(m_this);
+    return m_this;
 }
 
-Local<Object> AccessorInfo::Holder() const
+Handle<Object> AccessorInfo::Holder() const
 {
     // ### FIXME
-    return Local<Object>::New(m_this);
+    return m_this;
 }
 
 template <typename BaseClass>
@@ -1505,7 +1505,7 @@ protected:
 
     static void put(QV4::Managed *m, ExecutionContext *ctx, QV4::String *name, const QV4::Value &value)
     {
-        Local<Value> v8Value = Local<Value>::New(Value::fromV4Value(value));
+        Handle<Value> v8Value = value;
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_namedPropertySetter) {
             Handle<Value> result = that->m_template->m_namedPropertySetter(String::New(name), v8Value, that->namedAccessorInfo());
@@ -1526,7 +1526,7 @@ protected:
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_indexedPropertySetter) {
-            Handle<Value> result = that->m_template->m_indexedPropertySetter(index, Local<Value>::New(Value::fromV4Value(value)), that->indexedAccessorInfo());
+            Handle<Value> result = that->m_template->m_indexedPropertySetter(index, value, that->indexedAccessorInfo());
             if (!result.IsEmpty())
                 return;
         }
@@ -1672,34 +1672,34 @@ DEFINE_MANAGED_VTABLE(V4V8Function);
 FunctionTemplate::FunctionTemplate(InvocationCallback callback, Handle<Value> data)
     : m_callback(callback)
 {
-    m_instanceTemplate = Local<ObjectTemplate>();
-    m_prototypeTemplate = Local<ObjectTemplate>();
+    m_instanceTemplate = Handle<ObjectTemplate>();
+    m_prototypeTemplate = Handle<ObjectTemplate>();
     m_data = Persistent<Value>::New(data);
 }
 
-Local<FunctionTemplate> FunctionTemplate::New(InvocationCallback callback, Handle<Value> data)
+Handle<FunctionTemplate> FunctionTemplate::New(InvocationCallback callback, Handle<Value> data)
 {
     FunctionTemplate *ft = new FunctionTemplate(callback, data);
-    return Local<FunctionTemplate>::New(Handle<FunctionTemplate>(ft));
+    return Handle<FunctionTemplate>(ft);
 }
 
-Local<Function> FunctionTemplate::GetFunction()
+Handle<Function> FunctionTemplate::GetFunction()
 {
     QV4::ExecutionEngine *engine = currentEngine();
     QV4::Object *o = new (engine->memoryManager) V4V8Function(engine, this);
     QV4::Object *proto = new (engine->memoryManager) V4V8Object<QV4::FunctionPrototype>(engine, m_prototypeTemplate.get());
     o->put(engine->current, engine->id_prototype, QV4::Value::fromObject(proto));
-    return Local<Function>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
+    return QV4::Value::fromObject(o);
 }
 
-Local<ObjectTemplate> FunctionTemplate::InstanceTemplate()
+Handle<ObjectTemplate> FunctionTemplate::InstanceTemplate()
 {
     if (m_instanceTemplate.IsEmpty())
         m_instanceTemplate = ObjectTemplate::New();
     return m_instanceTemplate;
 }
 
-Local<ObjectTemplate> FunctionTemplate::PrototypeTemplate()
+Handle<ObjectTemplate> FunctionTemplate::PrototypeTemplate()
 {
     if (m_prototypeTemplate.IsEmpty())
         m_prototypeTemplate = ObjectTemplate::New();
@@ -1707,20 +1707,20 @@ Local<ObjectTemplate> FunctionTemplate::PrototypeTemplate()
 }
 
 
-Local<ObjectTemplate> ObjectTemplate::New()
+Handle<ObjectTemplate> ObjectTemplate::New()
 {
     ObjectTemplate *ot = new ObjectTemplate;
-    return Local<ObjectTemplate>::New(Handle<ObjectTemplate>(ot));
+    return Handle<ObjectTemplate>(ot);
 }
 
-Local<Object> ObjectTemplate::NewInstance()
+Handle<Object> ObjectTemplate::NewInstance()
 {
     QV4::ExecutionEngine *engine = currentEngine();
     QV4::Object *o = new (engine->memoryManager) V4V8Object<QV4::Object>(engine, this);
     o->prototype = engine->objectPrototype;
     o->externalComparison = m_useUserComparison;
 
-    return Local<Object>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
+    return QV4::Value::fromObject(o);
 }
 
 void ObjectTemplate::SetAccessor(Handle<String> name, AccessorGetter getter, AccessorSetter setter, Handle<Value> data, AccessControl settings, PropertyAttribute attribute)
@@ -1858,32 +1858,32 @@ Handle<Value> ThrowException(Handle<Value> exception)
 }
 
 
-Local<Value> Exception::ReferenceError(Handle<String> message)
+Handle<Value> Exception::ReferenceError(Handle<String> message)
 {
     Q_UNUSED(message);
     QV4::Object *o = currentEngine()->newReferenceErrorObject(message->ToString()->asQString());
-    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
+    return QV4::Value::fromObject(o);
 }
 
-Local<Value> Exception::SyntaxError(Handle<String> message)
+Handle<Value> Exception::SyntaxError(Handle<String> message)
 {
     Q_UNUSED(message);
     QV4::Object *o = currentEngine()->newSyntaxErrorObject(currentEngine()->current, 0);
-    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
+    return QV4::Value::fromObject(o);
 }
 
-Local<Value> Exception::TypeError(Handle<String> message)
+Handle<Value> Exception::TypeError(Handle<String> message)
 {
     Q_UNUSED(message);
     QV4::Object *o = currentEngine()->newTypeErrorObject(message->ToString()->asQString());
-    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
+    return QV4::Value::fromObject(o);
 }
 
-Local<Value> Exception::Error(Handle<String> message)
+Handle<Value> Exception::Error(Handle<String> message)
 {
     Q_UNUSED(message);
     QV4::Object *o = currentEngine()->newErrorObject(QV4::Value::fromString(currentEngine()->current, message->ToString()->asQString()));
-    return Local<Value>::New(Value::fromV4Value(QV4::Value::fromObject(o)));
+    return QV4::Value::fromObject(o);
 }
 
 
@@ -1902,7 +1902,7 @@ void Isolate::setException(const QV4::Value &ex)
 {
     if (tryCatch) {
         tryCatch->hasCaughtException = true;
-        tryCatch->exception = Local<Value>::New(Value::fromV4Value(ex));
+        tryCatch->exception = ex;
     }
 }
 
@@ -1934,8 +1934,8 @@ static bool v8ExternalResourceComparison(const QV4::Value &a, const QV4::Value &
 {
     if (!userObjectComparisonCallback)
         return false;
-    Local<Object> la = Local<Object>::New(Value::fromV4Value(a));
-    Local<Object> lb = Local<Object>::New(Value::fromV4Value(b));
+    Handle<Object> la = a;
+    Handle<Object> lb = b;
     return userObjectComparisonCallback(la, lb);
 }
 
@@ -1990,15 +1990,15 @@ Handle<Value> TryCatch::ReThrow()
     Q_UNREACHABLE();
 }
 
-Local<Value> TryCatch::Exception() const
+Handle<Value> TryCatch::Exception() const
 {
     return exception;
 }
 
-Local<Message> TryCatch::Message() const
+Handle<Message> TryCatch::Message() const
 {
     Q_UNIMPLEMENTED();
-    return Local<v8::Message>::New(Handle<v8::Message>(new v8::Message(QString(), QString(), 0)));
+    return Handle<v8::Message>(new v8::Message(QString(), QString(), 0));
 }
 
 void TryCatch::Reset()
@@ -2007,7 +2007,7 @@ void TryCatch::Reset()
 }
 
 
-Local<Value> Context::GetCallingScriptData()
+Handle<Value> Context::GetCallingScriptData()
 {
     Q_UNIMPLEMENTED();
     Q_UNREACHABLE();

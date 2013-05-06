@@ -939,15 +939,15 @@ QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV8Function *args)
 
 v8::Handle<v8::Object> QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV8Function *args, QObject *loader, bool *error)
 {
-    v8::Local<v8::Object> valuemap;
+    v8::Handle<v8::Object> valuemap;
     if (args->Length() >= 2) {
-        v8::Local<v8::Value> v = (*args)[1];
+        v8::Handle<v8::Value> v = (*args)[1];
         if (!v->IsObject() || v->IsArray()) {
             *error = true;
             qmlInfo(loader) << QQuickLoader::tr("setSource: value is not an object");
         } else {
             *error = false;
-            valuemap = v8::Local<v8::Object>::Cast(v);
+            valuemap = v8::Handle<v8::Object>::Cast(v);
         }
     }
 

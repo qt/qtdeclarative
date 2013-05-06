@@ -184,7 +184,7 @@ class QQmlV8Function
 {
 public:
     int Length() const { return _ac; }
-    v8::Local<v8::Value> operator[](int idx) { return (*_a)->Get(idx); }
+    v8::Handle<v8::Value> operator[](int idx) { return (*_a)->Get(idx); }
     QQmlContextData *context() { return _c; }
     v8::Handle<v8::Object> qmlGlobal() { return *_g; }
     void returnValue(v8::Handle<v8::Value> rv) { *_r = rv; }
@@ -306,15 +306,15 @@ public:
     inline bool isVariant(const QV4::Value &);
 
     // Compile \a source (from \a fileName at \a lineNumber) in QML mode
-    v8::Local<v8::Script> qmlModeCompile(const QString &source, 
+    v8::Handle<v8::Script> qmlModeCompile(const QString &source,
                                          const QString &fileName = QString(), 
                                          quint16 lineNumber = 1);
-    v8::Local<v8::Script> qmlModeCompile(const char *source, int sourceLength = -1,
+    v8::Handle<v8::Script> qmlModeCompile(const char *source, int sourceLength = -1,
                                          const QString &fileName = QString(),
                                          quint16 lineNumber = 1);
 
     // Return the QML global "scope" object for the \a ctxt context and \a scope object.
-    inline v8::Local<v8::Object> qmlScope(QQmlContextData *ctxt, QObject *scope);
+    inline v8::Handle<v8::Object> qmlScope(QQmlContextData *ctxt, QObject *scope);
 
     // Return a JS wrapper for the given QObject \a object
     inline QV4::Value newQObject(QObject *object);
@@ -406,10 +406,10 @@ public:
     void addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> handle);
     void addRelationshipForGC(QObject *object, QObject *other);
 
-    static v8::Handle<v8::Value> getPlatform(v8::Local<v8::String> property, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> getApplication(v8::Local<v8::String> property, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> getPlatform(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> getApplication(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
 #ifndef QT_NO_IM
-    static v8::Handle<v8::Value> getInputMethod(v8::Local<v8::String> property, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> getInputMethod(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
 #endif
 
     struct ThreadData {
@@ -514,7 +514,7 @@ bool QV8Engine::isVariant(const QV4::Value &value)
     return m_variantWrapper.isVariant(value);
 }
 
-v8::Local<v8::Object> QV8Engine::qmlScope(QQmlContextData *ctxt, QObject *scope)
+v8::Handle<v8::Object> QV8Engine::qmlScope(QQmlContextData *ctxt, QObject *scope)
 {
     return m_contextWrapper.qmlScope(ctxt, scope);
 }

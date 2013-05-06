@@ -120,11 +120,11 @@ QQmlContextData *QV8ContextResource::getContext() const
     if (!hasSubContexts)
         return context;
 
-    v8::Local<v8::Value> callingdata = v8::Context::GetCallingScriptData();
+    v8::Handle<v8::Value> callingdata = v8::Context::GetCallingScriptData();
     if (callingdata.IsEmpty() || !callingdata->IsString())
         return context;
 
-    v8::Local<v8::String> callingstring = callingdata->ToString();
+    v8::Handle<v8::String> callingstring = callingdata->ToString();
     Q_ASSERT(callingstring->IsExternal());
     Q_ASSERT(callingstring->GetExternalStringResource());
 
@@ -152,19 +152,19 @@ void QV8ContextWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
     {
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
     m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
     {
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->SetFallbackPropertyHandler(NullGetter, NullSetter);
     m_urlConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
     {
-    v8::Local<v8::Object> sharedContext = m_constructor->NewInstance();
+    v8::Handle<v8::Object> sharedContext = m_constructor->NewInstance();
     QV8ContextResource *r = new QV8ContextResource(engine, 0, 0);
     r->isSharedContext = true;
     sharedContext->SetExternalResource(r);
@@ -172,16 +172,16 @@ void QV8ContextWrapper::init(QV8Engine *engine)
     }
 }
 
-v8::Local<v8::Object> QV8ContextWrapper::qmlScope(QQmlContextData *ctxt, QObject *scope)
+v8::Handle<v8::Object> QV8ContextWrapper::qmlScope(QQmlContextData *ctxt, QObject *scope)
 {
     // XXX NewInstance() should be optimized
-    v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
+    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
     QV8ContextResource *r = new QV8ContextResource(m_engine, ctxt, scope);
     rv->SetExternalResource(r);
     return rv;
 }
 
-v8::Local<v8::Object> QV8ContextWrapper::urlScope(const QUrl &url)
+v8::Handle<v8::Object> QV8ContextWrapper::urlScope(const QUrl &url)
 {
     QQmlContextData *context = new QQmlContextData;
     context->url = url;
@@ -189,7 +189,7 @@ v8::Local<v8::Object> QV8ContextWrapper::urlScope(const QUrl &url)
     context->isJSContext = true;
 
     // XXX NewInstance() should be optimized
-    v8::Local<v8::Object> rv = m_urlConstructor->NewInstance(); 
+    v8::Handle<v8::Object> rv = m_urlConstructor->NewInstance();
     QV8ContextResource *r = new QV8ContextResource(m_engine, context, 0, true);
     rv->SetExternalResource(r);
     return rv;
@@ -237,14 +237,14 @@ void QV8ContextWrapper::takeContextOwnership(v8::Handle<v8::Object> qmlglobal)
     r->ownsContext = true;
 }
 
-v8::Handle<v8::Value> QV8ContextWrapper::NullGetter(v8::Local<v8::String>,
+v8::Handle<v8::Value> QV8ContextWrapper::NullGetter(v8::Handle<v8::String>,
                                                     const v8::AccessorInfo &)
 {
     // V8 will throw a ReferenceError if appropriate ("typeof" should not throw)
     return v8::Handle<v8::Value>();
 }
 
-v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property, 
+v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
                                                 const v8::AccessorInfo &info)
 {
     QV8ContextResource *resource = v8_resource_check<QV8ContextResource>(info.This());
@@ -355,8 +355,8 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
     return v8::Handle<v8::Value>();
 }
 
-v8::Handle<v8::Value> QV8ContextWrapper::NullSetter(v8::Local<v8::String> property, 
-                                                    v8::Local<v8::Value>,
+v8::Handle<v8::Value> QV8ContextWrapper::NullSetter(v8::Handle<v8::String> property,
+                                                    v8::Handle<v8::Value>,
                                                     const v8::AccessorInfo &info)
 {
     QV8ContextResource *resource = v8_resource_check<QV8ContextResource>(info.This());
@@ -373,8 +373,8 @@ v8::Handle<v8::Value> QV8ContextWrapper::NullSetter(v8::Local<v8::String> proper
     }
 }
 
-v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Local<v8::String> property, 
-                                                v8::Local<v8::Value> value,
+v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Handle<v8::String> property,
+                                                v8::Handle<v8::Value> value,
                                                 const v8::AccessorInfo &info)
 {
     QV8ContextResource *resource = v8_resource_check<QV8ContextResource>(info.This());

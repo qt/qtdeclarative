@@ -123,7 +123,7 @@ class ImplementationUtilities;
 class Signature;
 class AccessorSignature;
 template <class T> struct Handle;
-template <class T> class Local;
+template <class T> class Handle;
 template <class T> class Persistent;
 class FunctionTemplate;
 class ObjectTemplate;
@@ -414,52 +414,6 @@ struct Handle {
 
 
 /**
- * A light-weight stack-allocated object handle.  All operations
- * that return objects from within v8 return them in local handles.  They
- * are created within HandleScopes, and all local handles allocated within a
- * handle scope are destroyed when the handle scope is destroyed.  Hence it
- * is not necessary to explicitly deallocate local handles.
- */
-template <class T> class Local : public Handle<T> {
- public:
-  Local() {}
-  template <class S> Local(Local<S> that)
-      : Handle<T>(Handle<T>::Cast(that)) {
-    /**
-     * This check fails when trying to convert between incompatible
-     * handles. For example, converting from a Handle<String> to a
-     * Handle<Number>.
-     */
-    TYPE_CHECK(T, S);
-  }
-  template <class S> Local(S* that) : Handle<T>(that) { }
-  template <class S> static Local<T> Cast(Local<S> that) {
-#ifdef V8_ENABLE_CHECKS
-    // If we're going to perform the type check then we have to check
-    // that the handle isn't empty before doing the checked cast.
-    if (that.IsEmpty()) return Local<T>();
-#endif
-    return Local<T>::New(Handle<T>::Cast(that));
-  }
-
-  template <class S> Local<S> As() {
-    return Local<S>::Cast(*this);
-  }
-
-  /** Create a local handle for the content of another handle.
-   *  The referee is kept alive by the local handle even when
-   *  the original handle is destroyed/disposed.
-   */
-  static Local<T> New(Handle<T> that)
-  {
-      Local<T> result;
-      result.Handle<T>::operator =(that);
-      return result;
-  }
-};
-
-
-/**
  * An object reference that is independent of any handle scope.  Where
  * a Local handle only lives as long as the HandleScope in which it was
  * allocated, a Persistent handle remains valid until it is explicitly
@@ -641,7 +595,7 @@ class V8EXPORT Script : public QSharedData {
    * \return Compiled script object (context independent; when run it
    *   will use the currently entered context).
    */
-  static Local<Script> New(Handle<String> source,
+  static Handle<Script> New(Handle<String> source,
                            ScriptOrigin* origin = NULL,
                            ScriptData* pre_data = NULL,
                            Handle<String> script_data = Handle<String>(),
@@ -657,7 +611,7 @@ class V8EXPORT Script : public QSharedData {
    * \return Compiled script object (context independent; when run it
    *   will use the currently entered context).
    */
-  static Local<Script> New(Handle<String> source,
+  static Handle<Script> New(Handle<String> source,
                            Handle<Value> file_name,
                            CompileFlags = Default);
 
@@ -677,7 +631,7 @@ class V8EXPORT Script : public QSharedData {
    *   when this function was called.  When run it will always use this
    *   context.
    */
-  static Local<Script> Compile(Handle<String> source,
+  static Handle<Script> Compile(Handle<String> source,
                                ScriptOrigin* origin = NULL,
                                ScriptData* pre_data = NULL,
                                Handle<String> script_data = Handle<String>(),
@@ -696,7 +650,7 @@ class V8EXPORT Script : public QSharedData {
    *   when this function was called.  When run it will always use this
    *   context.
    */
-  static Local<Script> Compile(Handle<String> source,
+  static Handle<Script> Compile(Handle<String> source,
                                Handle<Value> file_name,
                                Handle<String> script_data = Handle<String>(),
                                CompileFlags = Default);
@@ -708,13 +662,13 @@ class V8EXPORT Script : public QSharedData {
    * using ::Compile) it will be run in the context in which it was
    * compiled.
    */
-  Local<Value> Run();
-  Local<Value> Run(Handle<Object> qml);
+  Handle<Value> Run();
+  Handle<Value> Run(Handle<Object> qml);
 
   /**
    * Returns the script id value.
    */
-  Local<Value> Id();
+  Handle<Value> Id();
 
   /**
    * Associate an additional data object with the script. This is mainly used
@@ -739,7 +693,7 @@ class V8EXPORT Message : public QSharedData {
     Message(const QString &message, const QString &resourceName, int lineNumber)
         : m_message(message), m_resourceName(resourceName), m_lineNumber(lineNumber) {}
 
-  Local<String> Get() const;
+  Handle<String> Get() const;
   /**
    * Returns the resource name for the script from where the function causing
    * the error originates.
@@ -786,7 +740,7 @@ class V8EXPORT StackTrace : public QSharedData
   /**
    * Returns a StackFrame at a particular index.
    */
-  Local<StackFrame> GetFrame(uint32_t index) const;
+  Handle<StackFrame> GetFrame(uint32_t index) const;
 
   /**
    * Returns the number of StackFrames.
@@ -796,7 +750,7 @@ class V8EXPORT StackTrace : public QSharedData
   /**
    * Returns StackTrace as a v8::Array that contains StackFrame objects.
    */
-  Local<Array> AsArray();
+  Handle<Array> AsArray();
 
   /**
    * Grab a snapshot of the current JavaScript execution stack.
@@ -805,12 +759,12 @@ class V8EXPORT StackTrace : public QSharedData
    * \param options Enumerates the set of things we will capture for each
    *   StackFrame.
    */
-  static Local<StackTrace> CurrentStackTrace(
+  static Handle<StackTrace> CurrentStackTrace(
       int frame_limit,
       StackTraceOptions options = kOverview);
 
   private:
-  QVector<Local<StackFrame> > frames;
+  QVector<Handle<StackFrame> > frames;
 };
 
 DEFINE_REFCOUNTED_HANDLE_OPERATIONS(StackTrace)
@@ -842,19 +796,19 @@ class V8EXPORT StackFrame : public QSharedData {
    * Returns the name of the resource that contains the script for the
    * function for this StackFrame.
    */
-  Local<String> GetScriptName() const;
+  Handle<String> GetScriptName() const;
 
   /**
    * Returns the name of the resource that contains the script for the
    * function for this StackFrame or sourceURL value if the script name
    * is undefined and its source ends with //@ sourceURL=... string.
    */
-  Local<String> GetScriptNameOrSourceURL() const;
+  Handle<String> GetScriptNameOrSourceURL() const;
 
   /**
    * Returns the name of the function associated with this stack frame.
    */
-  Local<String> GetFunctionName() const;
+  Handle<String> GetFunctionName() const;
 
 private:
   friend class StackTrace;
@@ -973,19 +927,19 @@ class V8EXPORT Value {
    */
   bool IsError() const;
 
-  Local<Boolean> ToBoolean() const;
-  Local<Number> ToNumber() const;
-  Local<String> ToString() const;
-  Local<Object> ToObject() const;
-  Local<Integer> ToInteger() const;
-  Local<Uint32> ToUint32() const;
-  Local<Int32> ToInt32() const;
+  Handle<Boolean> ToBoolean() const;
+  Handle<Number> ToNumber() const;
+  Handle<String> ToString() const;
+  Handle<Object> ToObject() const;
+  Handle<Integer> ToInteger() const;
+  Handle<Uint32> ToUint32() const;
+  Handle<Int32> ToInt32() const;
 
   /**
    * Attempts to convert a string to an array index.
    * Returns an empty handle if the conversion fails.
    */
-  Local<Uint32> ToArrayIndex() const;
+  Handle<Uint32> ToArrayIndex() const;
 
   bool BooleanValue() const;
   double NumberValue() const;
@@ -1155,15 +1109,15 @@ class V8EXPORT String : public Primitive {
    * 'strlen' to determine the buffer length, it might be
    * wrong if 'data' contains a null character.
    */
-  static Local<String> New(const char* data, int length = -1);
+  static Handle<String> New(const char* data, int length = -1);
 
   /** Allocates a new string from 16-bit character codes.*/
-  static Local<String> New(const uint16_t* data, int length = -1);
+  static Handle<String> New(const uint16_t* data, int length = -1);
 
   /** Creates a symbol. Returns one if it exists already.*/
-  static Local<String> NewSymbol(const char* data, int length = -1);
+  static Handle<String> NewSymbol(const char* data, int length = -1);
 
-  static Local<String> New(QV4::String *s);
+  static Handle<String> New(QV4::String *s);
 
   /**
    * Creates a new external string using the data defined in the given
@@ -1173,7 +1127,7 @@ class V8EXPORT String : public Primitive {
    * should the underlying buffer be deallocated or modified except through the
    * destructor of the external string resource.
    */
-  static Local<String> NewExternal(ExternalStringResource* resource);
+  static Handle<String> NewExternal(ExternalStringResource* resource);
 
   /**
    * Converts an object to an ASCII string.
@@ -1229,7 +1183,7 @@ class V8EXPORT String : public Primitive {
 class V8EXPORT Number : public Primitive {
  public:
   double Value() const;
-  static Local<Number> New(double value);
+  static Handle<Number> New(double value);
   static Number* Cast(v8::Value* obj);
 };
 
@@ -1239,8 +1193,8 @@ class V8EXPORT Number : public Primitive {
  */
 class V8EXPORT Integer : public Number {
  public:
-  static Local<Integer> New(int32_t value);
-  static Local<Integer> NewFromUnsigned(uint32_t value);
+  static Handle<Integer> New(int32_t value);
+  static Handle<Integer> NewFromUnsigned(uint32_t value);
   int64_t Value() const;
   static Integer* Cast(v8::Value* obj);
 };
@@ -1280,12 +1234,12 @@ enum PropertyAttribute {
  * setting|getting a particular property. See Object and ObjectTemplate's
  * method SetAccessor.
  */
-typedef Handle<Value> (*AccessorGetter)(Local<String> property,
+typedef Handle<Value> (*AccessorGetter)(Handle<String> property,
                                         const AccessorInfo& info);
 
 
-typedef void (*AccessorSetter)(Local<String> property,
-                               Local<Value> value,
+typedef void (*AccessorSetter)(Handle<String> property,
+                               Handle<Value> value,
                                const AccessorInfo& info);
 
 
@@ -1322,9 +1276,9 @@ class V8EXPORT Object : public Value {
   bool Set(uint32_t index,
                     Handle<Value> value);
 
-  Local<Value> Get(Handle<Value> key);
+  Handle<Value> Get(Handle<Value> key);
 
-  Local<Value> Get(uint32_t index);
+  Handle<Value> Get(uint32_t index);
 
   // TODO(1245389): Replace the type-specific versions of these
   // functions with generic ones that accept a Handle<Value> key.
@@ -1349,21 +1303,21 @@ class V8EXPORT Object : public Value {
    * array returned by this method contains the same values as would
    * be enumerated by a for-in statement over this object.
    */
-  Local<Array> GetPropertyNames();
+  Handle<Array> GetPropertyNames();
 
   /**
    * This function has the same functionality as GetPropertyNames but
    * the returned array doesn't contain the names of properties from
    * prototype objects.
    */
-  Local<Array> GetOwnPropertyNames();
+  Handle<Array> GetOwnPropertyNames();
 
   /**
    * Get the prototype object.  This does not skip objects marked to
    * be skipped by __proto__ and it does not consult the security
    * handler.
    */
-  Local<Value> GetPrototype();
+  Handle<Value> GetPrototype();
 
   /**
    * Set the prototype object.  This does not skip objects marked to
@@ -1373,7 +1327,7 @@ class V8EXPORT Object : public Value {
   bool SetPrototype(Handle<Value> prototype);
 
   /** Gets the value in an internal field. */
-  Local<Value> GetInternalField(int index);
+  Handle<Value> GetInternalField(int index);
   /** Sets the value in an internal field. */
   void SetInternalField(int index, Handle<Value> value);
 
@@ -1412,13 +1366,13 @@ class V8EXPORT Object : public Value {
    * identity hash) are prefixed with "v8::".
    */
   bool SetHiddenValue(Handle<String> key, Handle<Value> value);
-  Local<Value> GetHiddenValue(Handle<String> key);
+  Handle<Value> GetHiddenValue(Handle<String> key);
 
   /**
    * Clone this object with a fast but shallow copy.  Values will point
    * to the same values as the original object.
    */
-  Local<Object> Clone();
+  Handle<Object> Clone();
 
 
   /**
@@ -1432,7 +1386,7 @@ class V8EXPORT Object : public Value {
    * Call an Object as a function if a callback is set by the
    * ObjectTemplate::SetCallAsFunctionHandler method.
    */
-  Local<Value> CallAsFunction(Handle<Object> recv,
+  Handle<Value> CallAsFunction(Handle<Object> recv,
                               int argc,
                               Handle<Value> argv[]);
 
@@ -1441,10 +1395,10 @@ class V8EXPORT Object : public Value {
    * ObjectTemplate::SetCallAsFunctionHandler method.
    * Note: This method behaves like the Function::NewInstance method.
    */
-  Local<Value> CallAsConstructor(int argc,
+  Handle<Value> CallAsConstructor(int argc,
                                  Handle<Value> argv[]);
 
-  static Local<Object> New();
+  static Handle<Object> New();
   static Object* Cast(Value* obj);
 };
 
@@ -1460,7 +1414,7 @@ class V8EXPORT Array : public Object {
    * Creates a JavaScript array with the given length. If the length
    * is negative the returned array will have length 0.
    */
-  static Local<Array> New(int length = 0);
+  static Handle<Array> New(int length = 0);
 
   static Array* Cast(Value* obj);
 };
@@ -1471,9 +1425,9 @@ class V8EXPORT Array : public Object {
  */
 class V8EXPORT Function : public Object {
  public:
-  Local<Object> NewInstance() const;
-  Local<Object> NewInstance(int argc, Handle<Value> argv[]) const;
-  Local<Value> Call(Handle<Object> recv,
+  Handle<Object> NewInstance() const;
+  Handle<Object> NewInstance(int argc, Handle<Value> argv[]) const;
+  Handle<Value> Call(Handle<Object> recv,
                     int argc,
                     Handle<Value> argv[]);
   Handle<Value> GetName() const;
@@ -1488,7 +1442,7 @@ class V8EXPORT Function : public Object {
  */
 class V8EXPORT Date : public Object {
  public:
-  static Local<Value> New(double time);
+  static Handle<Value> New(double time);
 
   /**
    * A specialization of Value::NumberValue that is more efficient
@@ -1520,7 +1474,7 @@ class V8EXPORT Date : public Object {
  */
 class V8EXPORT NumberObject : public Object {
  public:
-  static Local<Value> New(double value);
+  static Handle<Value> New(double value);
 
   /**
    * Returns the Number held by the object.
@@ -1537,7 +1491,7 @@ class V8EXPORT NumberObject : public Object {
  */
 class V8EXPORT BooleanObject : public Object {
  public:
-  static Local<Value> New(bool value);
+  static Handle<Value> New(bool value);
 
   /**
    * Returns the Boolean held by the object.
@@ -1554,12 +1508,12 @@ class V8EXPORT BooleanObject : public Object {
  */
 class V8EXPORT StringObject : public Object {
  public:
-  static Local<Value> New(Handle<String> value);
+  static Handle<Value> New(Handle<String> value);
 
   /**
    * Returns the String held by the object.
    */
-  Local<String> StringValue() const;
+  Handle<String> StringValue() const;
 
   static StringObject* Cast(v8::Value* obj);
 
@@ -1592,14 +1546,14 @@ class V8EXPORT RegExp : public Object {
    *               static_cast<RegExp::Flags>(kGlobal | kMultiline))
    * is equivalent to evaluating "/foo/gm".
    */
-  static Local<RegExp> New(Handle<String> pattern,
+  static Handle<RegExp> New(Handle<String> pattern,
                            Flags flags);
 
   /**
    * Returns the value of the source property: a string representing
    * the regular expression.
    */
-  Local<String> GetSource() const;
+  Handle<String> GetSource() const;
 
   /**
    * Returns the flags bit field.
@@ -1624,10 +1578,10 @@ class V8EXPORT RegExp : public Object {
  */
 class V8EXPORT External : public Value {
  public:
-  static Local<Value> Wrap(void* data);
+  static Handle<Value> Wrap(void* data);
   static void* Unwrap(Handle<Value> obj);
 
-  static Local<External> New(void* value);
+  static Handle<External> New(void* value);
   static External* Cast(Value* obj);
   void* Value() const;
 };
@@ -1667,11 +1621,11 @@ class V8EXPORT Arguments {
     Arguments(const QV4::Value *args, int argc, const QV4::Value &thisObject, bool isConstructor,
               const Persistent<Value> &data);
   int Length() const;
-  Local<Value> operator[](int i) const;
-  Local<Object> This() const;
-  Local<Object> Holder() const;
+  Handle<Value> operator[](int i) const;
+  Handle<Object> This() const;
+  Handle<Object> Holder() const;
   bool IsConstructCall() const;
-  Local<Value> Data() const;
+  Handle<Value> Data() const;
   Isolate* GetIsolate() const;
 
 private:
@@ -1690,9 +1644,9 @@ class V8EXPORT AccessorInfo {
  public:
   AccessorInfo(const QV4::Value &thisObject, const Persistent<Value> &data);
   Isolate* GetIsolate() const;
-  Local<Value> Data() const;
-  Local<Object> This() const;
-  Local<Object> Holder() const;
+  Handle<Value> Data() const;
+  Handle<Object> This() const;
+  Handle<Object> Holder() const;
 private:
   Persistent<Value> m_this;
   Persistent<Value> m_data;
@@ -1705,7 +1659,7 @@ typedef Handle<Value> (*InvocationCallback)(const Arguments& args);
  * NamedProperty[Getter|Setter] are used as interceptors on object.
  * See ObjectTemplate::SetNamedPropertyHandler.
  */
-typedef Handle<Value> (*NamedPropertyGetter)(Local<String> property,
+typedef Handle<Value> (*NamedPropertyGetter)(Handle<String> property,
                                              const AccessorInfo& info);
 
 
@@ -1713,8 +1667,8 @@ typedef Handle<Value> (*NamedPropertyGetter)(Local<String> property,
  * Returns the value if the setter intercepts the request.
  * Otherwise, returns an empty handle.
  */
-typedef Handle<Value> (*NamedPropertySetter)(Local<String> property,
-                                             Local<Value> value,
+typedef Handle<Value> (*NamedPropertySetter)(Handle<String> property,
+                                             Handle<Value> value,
                                              const AccessorInfo& info);
 
 /**
@@ -1722,7 +1676,7 @@ typedef Handle<Value> (*NamedPropertySetter)(Local<String> property,
  * The result is an integer encoding property attributes (like v8::None,
  * v8::DontEnum, etc.)
  */
-typedef Handle<Integer> (*NamedPropertyQuery)(Local<String> property,
+typedef Handle<Integer> (*NamedPropertyQuery)(Handle<String> property,
                                               const AccessorInfo& info);
 
 
@@ -1731,7 +1685,7 @@ typedef Handle<Integer> (*NamedPropertyQuery)(Local<String> property,
  * The return value is true if the property could be deleted and false
  * otherwise.
  */
-typedef Handle<Boolean> (*NamedPropertyDeleter)(Local<String> property,
+typedef Handle<Boolean> (*NamedPropertyDeleter)(Handle<String> property,
                                                 const AccessorInfo& info);
 
 /**
@@ -1754,7 +1708,7 @@ typedef Handle<Value> (*IndexedPropertyGetter)(uint32_t index,
  * Otherwise, returns an empty handle.
  */
 typedef Handle<Value> (*IndexedPropertySetter)(uint32_t index,
-                                               Local<Value> value,
+                                               Handle<Value> value,
                                                const AccessorInfo& info);
 
 
@@ -1875,28 +1829,28 @@ typedef Handle<Array> (*IndexedPropertyEnumerator)(const AccessorInfo& info);
 class V8EXPORT FunctionTemplate : public Template {
  public:
   /** Creates a function template.*/
-  static Local<FunctionTemplate> New(
+  static Handle<FunctionTemplate> New(
       InvocationCallback callback = 0,
       Handle<Value> data = Handle<Value>());
   /** Returns the unique function instance in the current execution context.*/
-  Local<Function> GetFunction();
+  Handle<Function> GetFunction();
 
   /** Get the InstanceTemplate. */
-  Local<ObjectTemplate> InstanceTemplate();
+  Handle<ObjectTemplate> InstanceTemplate();
 
   /**
    * A PrototypeTemplate is the template used to create the prototype object
    * of the function created by this template.
    */
-  Local<ObjectTemplate> PrototypeTemplate();
+  Handle<ObjectTemplate> PrototypeTemplate();
 
 private:
   FunctionTemplate(InvocationCallback callback, Handle<Value> data);
   friend class V4V8Function;
   InvocationCallback m_callback;
   Persistent<Value> m_data;
-  Local<ObjectTemplate> m_instanceTemplate;
-  Local<ObjectTemplate> m_prototypeTemplate;
+  Handle<ObjectTemplate> m_instanceTemplate;
+  Handle<ObjectTemplate> m_prototypeTemplate;
 };
 
 DEFINE_REFCOUNTED_HANDLE_OPERATIONS(FunctionTemplate)
@@ -1911,10 +1865,10 @@ DEFINE_REFCOUNTED_HANDLE_OPERATIONS(FunctionTemplate)
 class V8EXPORT ObjectTemplate : public Template {
  public:
   /** Creates an ObjectTemplate. */
-  static Local<ObjectTemplate> New();
+  static Handle<ObjectTemplate> New();
 
   /** Creates a new instance of this template.*/
-  Local<Object> NewInstance();
+  Handle<Object> NewInstance();
 
   /**
    * Sets an accessor on the object template.
@@ -2091,16 +2045,16 @@ Handle<Value> V8EXPORT ThrowException(Handle<Value> exception);
  */
 class V8EXPORT Exception {
  public:
-  static Local<Value> ReferenceError(Handle<String> message);
-  static Local<Value> SyntaxError(Handle<String> message);
-  static Local<Value> TypeError(Handle<String> message);
-  static Local<Value> Error(Handle<String> message);
+  static Handle<Value> ReferenceError(Handle<String> message);
+  static Handle<Value> SyntaxError(Handle<String> message);
+  static Handle<Value> TypeError(Handle<String> message);
+  static Handle<Value> Error(Handle<String> message);
 };
 
 
 // --- User Object Comparison Callback ---
-typedef bool (*UserObjectComparisonCallback)(Local<Object> lhs,
-                                             Local<Object> rhs);
+typedef bool (*UserObjectComparisonCallback)(Handle<Object> lhs,
+                                             Handle<Object> rhs);
 
 // --- Garbage Collection Callbacks ---
 
@@ -2236,7 +2190,7 @@ class V8EXPORT TryCatch {
    *
    * The returned handle is valid until this TryCatch block has been destroyed.
    */
-  Local<Value> Exception() const;
+  Handle<Value> Exception() const;
 
   /**
    * Returns the message associated with this exception.  If there is
@@ -2245,7 +2199,7 @@ class V8EXPORT TryCatch {
    * The returned handle is valid until this TryCatch block has been
    * destroyed.
    */
-  Local<v8::Message> Message() const;
+  Handle<v8::Message> Message() const;
 
   /**
    * Clears any exceptions that may have been caught by this try/catch block.
@@ -2262,7 +2216,7 @@ private:
     friend class Isolate;
     TryCatch *parent;
     bool hasCaughtException;
-    Local<Value> exception;
+    Handle<Value> exception;
 };
 
 
@@ -2277,7 +2231,7 @@ public:
    * context of the top-most JavaScript frame.  If there are no
    * JavaScript frames an empty handle is returned.
    */
-  static Local<Value> GetCallingScriptData();
+  static Handle<Value> GetCallingScriptData();
 
 private:
   Context() {}

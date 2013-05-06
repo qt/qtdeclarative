@@ -93,18 +93,18 @@ void QV8TypeWrapper::destroy()
 void QV8TypeWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetNamedPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
     m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
 }
 
 // Returns a type wrapper for type t on o.  This allows access of enums, and attached properties.
-v8::Local<v8::Object> QV8TypeWrapper::newObject(QObject *o, QQmlType *t, TypeNameMode mode)
+v8::Handle<v8::Object> QV8TypeWrapper::newObject(QObject *o, QQmlType *t, TypeNameMode mode)
 {
     Q_ASSERT(t);
     // XXX NewInstance() should be optimized
-    v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
+    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
     QV8TypeResource *r = new QV8TypeResource(m_engine);
     r->mode = mode; r->object = o; r->type = t;
     rv->SetExternalResource(r);
@@ -113,13 +113,13 @@ v8::Local<v8::Object> QV8TypeWrapper::newObject(QObject *o, QQmlType *t, TypeNam
 
 // Returns a type wrapper for importNamespace (of t) on o.  This allows nested resolution of a type in a 
 // namespace.
-v8::Local<v8::Object> QV8TypeWrapper::newObject(QObject *o, QQmlTypeNameCache *t, 
+v8::Handle<v8::Object> QV8TypeWrapper::newObject(QObject *o, QQmlTypeNameCache *t,
                                                 const void *importNamespace, TypeNameMode mode)
 {
     Q_ASSERT(t);
     Q_ASSERT(importNamespace);
     // XXX NewInstance() should be optimized
-    v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
+    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
     QV8TypeResource *r = new QV8TypeResource(m_engine);
     t->addref();
     r->mode = mode; r->object = o; r->typeNamespace = t; r->importNamespace = importNamespace;
@@ -147,7 +147,7 @@ QVariant QV8TypeWrapper::toVariant(QV8ObjectResource *r)
     return QVariant();
 }
 
-v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property, 
+v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Handle<v8::String> property,
                                              const v8::AccessorInfo &info)
 {
     QV8TypeResource *resource = v8_resource_cast<QV8TypeResource>(info.This());
@@ -259,8 +259,8 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
     return v8::Handle<v8::Value>();
 }
 
-v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property, 
-                                             v8::Local<v8::Value> value,
+v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Handle<v8::String> property,
+                                             v8::Handle<v8::Value> value,
                                              const v8::AccessorInfo &info)
 {
     QV8TypeResource *resource = v8_resource_cast<QV8TypeResource>(info.This());

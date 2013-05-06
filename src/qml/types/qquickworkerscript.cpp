@@ -141,7 +141,7 @@ public:
 
         QQuickWorkerScriptEnginePrivate *p;
 
-        v8::Local<v8::Function> sendFunction(int id);
+        v8::Handle<v8::Function> sendFunction(int id);
         void callOnMessage(v8::Handle<v8::Object> object, v8::Handle<v8::Value> arg);
     private:
         v8::Persistent<v8::Function> onmessage;
@@ -224,27 +224,27 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     "})"
 
     {
-    v8::Local<v8::Script> onmessagescript = v8::Script::New(v8::String::New(CALL_ONMESSAGE_SCRIPT));
+    v8::Handle<v8::Script> onmessagescript = v8::Script::New(v8::String::New(CALL_ONMESSAGE_SCRIPT));
     onmessage = qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(onmessagescript->Run()));
     }
     {
-    v8::Local<v8::Script> createsendscript = v8::Script::New(v8::String::New(SEND_MESSAGE_CREATE_SCRIPT));
-    v8::Local<v8::Function> createsendconstructor = v8::Local<v8::Function>::Cast(createsendscript->Run());
+    v8::Handle<v8::Script> createsendscript = v8::Script::New(v8::String::New(SEND_MESSAGE_CREATE_SCRIPT));
+    v8::Handle<v8::Function> createsendconstructor = v8::Handle<v8::Function>::Cast(createsendscript->Run());
 
     v8::Handle<v8::Value> args[] = { 
         V8FUNCTION(QQuickWorkerScriptEnginePrivate::sendMessage, this)
     };
-    v8::Local<v8::Value> createsendvalue = createsendconstructor->Call(v8::Value::fromV4Value(global()), 1, args);
+    v8::Handle<v8::Value> createsendvalue = createsendconstructor->Call(v8::Value::fromV4Value(global()), 1, args);
     
     createsend = qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(createsendvalue));
     }
 }
 
 // Requires handle and context scope
-v8::Local<v8::Function> QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
+v8::Handle<v8::Function> QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
 {
     v8::Handle<v8::Value> args[] = { v8::Integer::New(id) };
-    return v8::Local<v8::Function>::Cast(createsend->Call(v8::Value::fromV4Value(global()), 1, args));
+    return v8::Handle<v8::Function>::Cast(createsend->Call(v8::Value::fromV4Value(global()), 1, args));
 }
 
 // Requires handle and context scope
@@ -301,7 +301,7 @@ v8::Handle<v8::Object> QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *
 
         workerEngine->contextWrapper()->setReadOnly(script->object, false);
 
-        v8::Local<v8::Object> api = v8::Object::New();
+        v8::Handle<v8::Object> api = v8::Object::New();
         api->Set(v8::String::New("sendMessage"), workerEngine->sendFunction(script->id));
 
         script->object->Set(v8::String::New("WorkerScript"), api);
@@ -377,7 +377,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         // workerEngine->baseUrl = url;
 
         v8::TryCatch tc;
-        v8::Local<v8::Script> program = workerEngine->qmlModeCompile(sourceCode, url.toString());
+        v8::Handle<v8::Script> program = workerEngine->qmlModeCompile(sourceCode, url.toString());
 
         if (!tc.HasCaught()) 
             program->Run(activation);

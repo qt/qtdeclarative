@@ -115,7 +115,7 @@ void QV8ValueTypeWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
     m_toString = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(ToString)->GetFunction());
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetNamedPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->MarkAsUseUserObjectComparison();
@@ -129,20 +129,20 @@ void QV8ValueTypeWrapper::init(QV8Engine *engine)
     toStringHash = m_toStringString.hash();
 }
 
-v8::Local<v8::Object> QV8ValueTypeWrapper::newValueType(QObject *object, int property, QQmlValueType *type)
+v8::Handle<v8::Object> QV8ValueTypeWrapper::newValueType(QObject *object, int property, QQmlValueType *type)
 {
     // XXX NewInstance() should be optimized
-    v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
+    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
     QV8ValueTypeReferenceResource *r = new QV8ValueTypeReferenceResource(m_engine);
     r->type = type; r->object = object; r->property = property;
     rv->SetExternalResource(r);
     return rv;
 }
 
-v8::Local<v8::Object> QV8ValueTypeWrapper::newValueType(const QVariant &value, QQmlValueType *type)
+v8::Handle<v8::Object> QV8ValueTypeWrapper::newValueType(const QVariant &value, QQmlValueType *type)
 {
     // XXX NewInstance() should be optimized
-    v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
+    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
     QV8ValueTypeCopyResource *r = new QV8ValueTypeCopyResource(m_engine);
     r->type = type; r->value = value;
     rv->SetExternalResource(r);
@@ -247,7 +247,7 @@ bool QV8ValueTypeWrapper::isEqual(QV8ObjectResource *r, const QVariant& value)
     }
 }
 
-v8::Handle<v8::Value> QV8ValueTypeWrapper::ToStringGetter(v8::Local<v8::String> property,
+v8::Handle<v8::Value> QV8ValueTypeWrapper::ToStringGetter(v8::Handle<v8::String> property,
                                                         const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
@@ -276,7 +276,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::ToString(const v8::Arguments &args)
     }
 }
 
-v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property, 
+v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Handle<v8::String> property,
                                                   const v8::AccessorInfo &info)
 {
     QV8ValueTypeResource *r =  v8_resource_cast<QV8ValueTypeResource>(info.This());
@@ -349,8 +349,8 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property
 #undef VALUE_TYPE_ACCESSOR
 }
 
-v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property, 
-                                                  v8::Local<v8::Value> value,
+v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Handle<v8::String> property,
+                                                  v8::Handle<v8::Value> value,
                                                   const v8::AccessorInfo &info)
 {
     QV8ValueTypeResource *r =  v8_resource_cast<QV8ValueTypeResource>(info.This());
@@ -392,11 +392,11 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
             cacheData.valueTypeCoreIndex = index;
             cacheData.valueTypePropType = p.userType();
 
-            v8::Local<v8::StackTrace> trace = 
+            v8::Handle<v8::StackTrace> trace =
                 v8::StackTrace::CurrentStackTrace(1, 
                         (v8::StackTrace::StackTraceOptions)(v8::StackTrace::kLineNumber | 
                                                             v8::StackTrace::kScriptName));
-            v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
+            v8::Handle<v8::StackFrame> frame = trace->GetFrame(0);
             int lineNumber = frame->GetLineNumber();
             int columnNumber = frame->GetColumn();
             QString url = frame->GetScriptName()->v4Value().toQString();

@@ -292,7 +292,7 @@ void QV8ProfilerServicePrivate::takeSnapshot(v8::HeapSnapshot::Type snapshotType
     Q_Q(QV8ProfilerService);
 
     v8::HandleScope scope;
-    v8::Local<v8::String> title = v8::String::New("");
+    v8::Handle<v8::String> title = v8::String::New("");
 
     DebugServiceOutputStream outputStream;
     const v8::HeapSnapshot *snapshot = v8::HeapProfiler::TakeSnapshot(title, snapshotType);

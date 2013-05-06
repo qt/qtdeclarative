@@ -90,7 +90,7 @@ private:
 
     v8::Handle<v8::Object> result();
 
-    static v8::Local<v8::Object> resultValue(Status status = Loading);
+    static v8::Handle<v8::Object> resultValue(Status status = Loading);
     static void callback(QV8Engine *engine, v8::Handle<v8::Function> callback, v8::Handle<v8::Object> status);
 
     QV8Engine *m_engine;

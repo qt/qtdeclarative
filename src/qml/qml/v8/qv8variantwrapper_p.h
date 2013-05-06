@@ -70,25 +70,25 @@ public:
     void init(QV8Engine *);
     void destroy();
 
-    v8::Local<v8::Object> newVariant(const QVariant &);
+    v8::Handle<v8::Object> newVariant(const QVariant &);
     bool isVariant(v8::Handle<v8::Value>);
     static QVariant toVariant(v8::Handle<v8::Object>);
     static QVariant toVariant(QV8ObjectResource *);
     QVariant &variantValue(v8::Handle<v8::Value>);
 
 private:
-    static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
+    static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property,
                                         const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, 
-                                        v8::Local<v8::Value> value,
+    static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property,
+                                        v8::Handle<v8::Value> value,
                                         const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> PreserveGetter(v8::Local<v8::String> property, 
+    static v8::Handle<v8::Value> PreserveGetter(v8::Handle<v8::String> property,
                                                 const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> DestroyGetter(v8::Local<v8::String> property, 
+    static v8::Handle<v8::Value> DestroyGetter(v8::Handle<v8::String> property,
                                                const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> ToStringGetter(v8::Local<v8::String> property, 
+    static v8::Handle<v8::Value> ToStringGetter(v8::Handle<v8::String> property,
                                                 const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> ValueOfGetter(v8::Local<v8::String> property,
+    static v8::Handle<v8::Value> ValueOfGetter(v8::Handle<v8::String> property,
                                                const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> Preserve(const v8::Arguments &args);
     static v8::Handle<v8::Value> Destroy(const v8::Arguments &args);

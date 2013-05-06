@@ -1168,7 +1168,7 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
     QV8Engine *v8engine = ep->v8engine();
 
     // If compilation throws an error, a surrounding v8::TryCatch will record it.
-    v8::Local<v8::Script> program = v8engine->qmlModeCompile(m_programSource.constData(),
+    v8::Handle<v8::Script> program = v8engine->qmlModeCompile(m_programSource.constData(),
                                                              m_programSource.length(), urlString, 1);
     if (program.IsEmpty())
         return;
@@ -1243,7 +1243,7 @@ v8::Persistent<v8::Object> QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptD
     if (!script->isInitialized())
         script->initialize(parentCtxt->engine);
 
-    v8::Local<v8::Object> qmlglobal = v8engine->qmlScope(ctxt, 0);
+    v8::Handle<v8::Object> qmlglobal = v8engine->qmlScope(ctxt, 0);
     v8engine->contextWrapper()->takeContextOwnership(qmlglobal);
 
     if (!script->m_program.IsEmpty()) {
@@ -1254,7 +1254,7 @@ v8::Persistent<v8::Object> QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptD
     }
 
     if (try_catch.HasCaught()) {
-        v8::Local<v8::Message> message = try_catch.Message();
+        v8::Handle<v8::Message> message = try_catch.Message();
         if (!message.IsEmpty()) {
             QQmlError error;
             QQmlExpressionPrivate::exceptionToError(message, error);

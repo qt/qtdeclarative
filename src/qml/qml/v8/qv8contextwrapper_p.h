@@ -72,8 +72,8 @@ public:
     void init(QV8Engine *);
     void destroy();
 
-    v8::Local<v8::Object> qmlScope(QQmlContextData *ctxt, QObject *scope);
-    v8::Local<v8::Object> urlScope(const QUrl &);
+    v8::Handle<v8::Object> qmlScope(QQmlContextData *ctxt, QObject *scope);
+    v8::Handle<v8::Object> urlScope(const QUrl &);
 
     void setReadOnly(v8::Handle<v8::Object>, bool);
 
@@ -88,15 +88,15 @@ public:
     void takeContextOwnership(v8::Handle<v8::Object> qmlglobal);
 
 private:
-    static v8::Handle<v8::Value> NullGetter(v8::Local<v8::String> property, 
+    static v8::Handle<v8::Value> NullGetter(v8::Handle<v8::String> property,
                                             const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> NullSetter(v8::Local<v8::String> property, 
-                                            v8::Local<v8::Value> value,
+    static v8::Handle<v8::Value> NullSetter(v8::Handle<v8::String> property,
+                                            v8::Handle<v8::Value> value,
                                             const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
+    static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property,
                                         const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, 
-                                        v8::Local<v8::Value> value,
+    static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property,
+                                        v8::Handle<v8::Value> value,
                                         const v8::AccessorInfo &info);
 
     QV8Engine *m_engine;
