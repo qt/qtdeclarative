@@ -111,6 +111,11 @@ FunctionObject::FunctionObject(ExecutionContext *scope, String *name)
          defineReadonlyProperty(scope->engine->id_name, Value::fromString(name));
 }
 
+Value FunctionObject::newInstance()
+{
+    return construct(internalClass->engine->current, 0, 0);
+}
+
 bool FunctionObject::hasInstance(Managed *that, ExecutionContext *ctx, const Value &value)
 {
     FunctionObject *f = static_cast<FunctionObject *>(that);

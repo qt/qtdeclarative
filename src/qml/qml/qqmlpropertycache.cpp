@@ -290,8 +290,8 @@ QQmlPropertyCache::~QQmlPropertyCache()
 
 void QQmlPropertyCache::destroy()
 {
-    Q_ASSERT(engine || constructor.IsEmpty());
-    if (constructor.IsEmpty())
+    Q_ASSERT(engine || constructor->isDeleted());
+    if (constructor->isDeleted())
         delete this;
     else
         QQmlEnginePrivate::deleteInEngineThread(engine, this);
@@ -301,7 +301,6 @@ void QQmlPropertyCache::destroy()
 // that are tied to the specific QQmlEngine.
 void QQmlPropertyCache::clear()
 {
-    qPersistentDispose(constructor);
     engine = 0;
 }
 
@@ -599,7 +598,7 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
                                        QQmlPropertyData::Flag signalFlags)
 {
     Q_UNUSED(revision);
-    Q_ASSERT(constructor.IsEmpty()); // We should not be appending to an in-use property cache
+    Q_ASSERT(constructor->isDeleted()); // We should not be appending to an in-use property cache
 
     _metaObject = metaObject;
 

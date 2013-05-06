@@ -62,6 +62,8 @@
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qvector.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QV8Engine;
@@ -390,7 +392,7 @@ private:
     IndexCache signalHandlerIndexCache;
     StringCache stringCache;
     AllowedRevisionCache allowedRevisionCache;
-    v8::Persistent<v8::Function> constructor;
+    QV4::PersistentValue constructor;
 
     bool _hasPropertyOverrides : 1;
     bool _ownMetaObject : 1;

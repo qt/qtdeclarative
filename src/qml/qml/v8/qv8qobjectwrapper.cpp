@@ -53,6 +53,8 @@
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlglobal_p.h>
 
+#include <private/qv4functionobject_p.h>
+
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsonobject.h>
@@ -959,7 +961,7 @@ v8::Local<v8::Object> QQmlPropertyCache::newQObject(QObject *object, QV8Engine *
     Q_ASSERT(QQmlData::get(object, false)->propertyCache == this);
 
     // Setup constructor
-    if (constructor.IsEmpty()) {
+    if (constructor->isDeleted()) {
         v8::Local<v8::FunctionTemplate> ft;
 
         const QHashedString toString(QStringLiteral("toString"));
@@ -1034,7 +1036,7 @@ v8::Local<v8::Object> QQmlPropertyCache::newQObject(QObject *object, QV8Engine *
         }
 
         if (ft.IsEmpty()) {
-            constructor = qPersistentNew<v8::Function>(engine->qobjectWrapper()->m_constructor);
+            constructor = engine->qobjectWrapper()->m_constructor->v4Value();
         } else {
             ft->InstanceTemplate()->SetFallbackPropertyHandler(QV8QObjectWrapper::Getter, 
                                                                QV8QObjectWrapper::Setter,
@@ -1042,13 +1044,13 @@ v8::Local<v8::Object> QQmlPropertyCache::newQObject(QObject *object, QV8Engine *
                                                                0,
                                                                QV8QObjectWrapper::Enumerator);
             ft->InstanceTemplate()->SetHasExternalResource(true);
-            constructor = qPersistentNew<v8::Function>(ft->GetFunction());
+            constructor = ft->GetFunction()->v4Value();
         }
 
         QQmlCleanup::addToEngine(this->engine);
     }
 
-    v8::Local<v8::Object> result = constructor->NewInstance();
+    v8::Local<v8::Object> result = v8::Local<v8::Object>::New(constructor->asFunctionObject()->newInstance());
     QV8QObjectResource *r = new QV8QObjectResource(engine, object);
     result->SetExternalResource(r);
     return result;

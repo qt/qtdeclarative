@@ -157,6 +157,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     FunctionObject(ExecutionContext *scope, String *name = 0);
 
+    Value newInstance();
+
     static Value construct(Managed *that, ExecutionContext *context, Value *args, int argc);
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
     inline Value construct(ExecutionContext *context, Value *args, int argc) {

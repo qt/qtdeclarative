@@ -552,7 +552,7 @@ inline Value Managed::call(ExecutionContext *context, const Value &thisObject, V
 struct PersistentValuePrivate
 {
     PersistentValuePrivate()
-        : value(Value::undefinedValue())
+        : value(Value::deletedValue())
         , refcount(1)
         , next(0)
     {}
