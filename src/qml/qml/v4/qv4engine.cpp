@@ -374,7 +374,7 @@ Object *ExecutionEngine::newObject(InternalClass *internalClass)
 
 String *ExecutionEngine::newString(const QString &s)
 {
-    return new (memoryManager) String(s);
+    return new (memoryManager) String(this, s);
 }
 
 String *ExecutionEngine::newIdentifier(const QString &text)

@@ -274,6 +274,11 @@ struct Q_QML_EXPORT Value
 
     Value property(ExecutionContext *ctx, String *name) const;
 
+    ExecutionEngine *engine() const {
+        Managed *m = asManaged();
+        return m ? m->engine() : 0;
+    }
+
     // Section 9.12
     bool sameValue(Value other) const;
 
@@ -549,14 +554,11 @@ struct PersistentValuePrivate
     PersistentValuePrivate()
         : value(Value::undefinedValue())
         , refcount(1)
-        , engine(0)
         , next(0)
     {}
-    PersistentValuePrivate(ExecutionEngine *e, const Value &v);
     PersistentValuePrivate(const Value &v);
     Value value;
     int refcount;
-    ExecutionEngine *engine;
     PersistentValuePrivate *next;
 
     void ref() { ++refcount; }
@@ -567,13 +569,19 @@ class PersistentValue
 {
 public:
     PersistentValue();
-    PersistentValue(ExecutionEngine *e, const Value &val);
+    PersistentValue(const Value &val);
     PersistentValue(const PersistentValue &other);
     PersistentValue &operator=(const PersistentValue &other);
+    PersistentValue &operator=(const Value &other);
     ~PersistentValue();
 
     Value *operator->() { return &d->value; }
     Value *operator*() { return &d->value; }
+
+    ExecutionEngine *engine() {
+        Managed *m = d->value.asManaged();
+        return m ? m->engine() : 0;
+    }
 
     operator Value() const { return d->value; }
 

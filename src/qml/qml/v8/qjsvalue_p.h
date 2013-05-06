@@ -67,38 +67,33 @@ QT_BEGIN_NAMESPACE
 class QJSValuePrivate : public QV4::PersistentValuePrivate
 {
 public:
-    QJSValuePrivate(QV4::ExecutionEngine *e, const QV4::Value &v)
-        : PersistentValuePrivate(e, v)
-        , string(QString())
+    QJSValuePrivate(const QV4::Value &v)
+        : PersistentValuePrivate(v)
     {
         if (value.isDeleted())
             value = QV4::Value::undefinedValue();
     }
-    QJSValuePrivate(QV4::ExecutionEngine *e, QV4::Object *o)
-        : PersistentValuePrivate(e, QV4::Value::fromObject(o))
-        , string(QString())
+    QJSValuePrivate(QV4::Object *o)
+        : PersistentValuePrivate(QV4::Value::fromObject(o))
     {}
-    QJSValuePrivate(QV4::ExecutionEngine *e, QV4::String *s)
-        : PersistentValuePrivate(e, QV4::Value::fromString(s))
-        , string(QString())
-    {}
-    QJSValuePrivate(const QV4::Value &v)
-        : PersistentValuePrivate(v)
-        , string(QString())
+    QJSValuePrivate(QV4::String *s)
+        : PersistentValuePrivate(QV4::Value::fromString(s))
     {}
     QJSValuePrivate(const QString &s)
         : PersistentValuePrivate()
-        , string(s)
+        , string(0, s)
     {
         value = QV4::Value::fromString(&string);
     }
 
     QV4::Value getValue(QV4::ExecutionEngine *e) {
-        if (value.asString() == &string) {
-            engine = e;
+        if (value.asString() == &string)
             value = QV4::Value::fromString(e->newString(string.toQString()));
-        }
         return value;
+    }
+
+    QV4::ExecutionEngine *engine() const {
+        return value.engine();
     }
 
     static QJSValuePrivate *get(const QJSValue &v) { return v.d; }

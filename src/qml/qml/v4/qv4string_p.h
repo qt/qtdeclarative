@@ -58,9 +58,9 @@ struct String : public Managed {
         StringType_ArrayIndex
     };
 
-    String(const QString &text)
-        : _text(text), stringHash(UINT_MAX), identifier(UINT_MAX)
+    String() : Managed(0), stringHash(UINT_MAX), identifier(UINT_MAX)
     { vtbl = &static_vtbl; type = Type_String; subtype = StringType_Unknown; }
+    String(ExecutionEngine *engine, const QString &text);
     ~String() { _data = 0; }
 
     inline bool isEqualTo(const String *other) const {

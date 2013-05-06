@@ -68,8 +68,8 @@ using namespace QV4;
 DEFINE_MANAGED_VTABLE(Object);
 
 Object::Object(ExecutionEngine *engine)
-    : prototype(0)
-    , internalClass(engine->emptyClass)
+    : Managed(engine->emptyClass)
+    , prototype(0)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
     , externalResource(0)
@@ -79,8 +79,8 @@ Object::Object(ExecutionEngine *engine)
 }
 
 Object::Object(ExecutionContext *context)
-    : prototype(0)
-    , internalClass(context->engine->emptyClass)
+    : Managed(context->engine->emptyClass)
+    , prototype(0)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
     , externalResource(0)
@@ -90,8 +90,8 @@ Object::Object(ExecutionContext *context)
 }
 
 Object::Object(ExecutionEngine *engine, InternalClass *internalClass)
-    : prototype(0)
-    , internalClass(internalClass)
+    : Managed(internalClass)
+    , prototype(0)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
     , externalResource(0)

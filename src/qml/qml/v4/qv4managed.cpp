@@ -91,6 +91,11 @@ void Managed::operator delete(void *ptr, MemoryManager *mm)
     operator delete(ptr);
 }
 
+ExecutionEngine *Managed::engine() const
+{
+    return internalClass ? internalClass->engine : 0;
+}
+
 QString Managed::className() const
 {
     const char *s = 0;

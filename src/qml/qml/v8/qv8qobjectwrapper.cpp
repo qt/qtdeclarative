@@ -2141,7 +2141,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
     if (type != 0) { cleanup(); type = 0; }
 
     if (callType == qMetaTypeId<QJSValue>()) {
-        qjsValuePtr = new (&allocData) QJSValue(new QJSValuePrivate(QV8Engine::getV4(engine), value.get()->v4Value()));
+        qjsValuePtr = new (&allocData) QJSValue(new QJSValuePrivate(value.get()->v4Value()));
         type = qMetaTypeId<QJSValue>();
     } else if (callType == QMetaType::Int) {
         intValue = quint32(value->Int32Value());

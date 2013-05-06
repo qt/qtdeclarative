@@ -176,10 +176,12 @@ QJSValue QJSValueIterator::value() const
         return QJSValue();
 
     QV4::Object *o = d_ptr->iterator.object;
+    QV4::ExecutionContext *ctx = o->internalClass->engine->current;
     try {
-        QV4::Value v = o->getValue(o->internalClass->engine->current, d_ptr->currentValue, d_ptr->currentAttributes);
-        return new QJSValuePrivate(o->internalClass->engine, v);
+        QV4::Value v = o->getValue(ctx, d_ptr->currentValue, d_ptr->currentAttributes);
+        return new QJSValuePrivate(v);
     } catch (QV4::Exception &e) {
+        e.accept(ctx);
         return QJSValue();
     }
 }

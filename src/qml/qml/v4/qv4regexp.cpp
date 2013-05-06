@@ -92,7 +92,8 @@ RegExp* RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ign
 }
 
 RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)
-    : m_pattern(pattern)
+    : Managed(engine->emptyClass)
+    , m_pattern(pattern)
     , m_cache(0)
     , m_subPatternCount(0)
     , m_ignoreCase(ignoreCase)

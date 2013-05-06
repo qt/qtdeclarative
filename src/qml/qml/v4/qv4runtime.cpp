@@ -69,7 +69,7 @@ using namespace QV4;
 
 
 Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue)
-    : exception(PersistentValue(throwingContext->engine, exceptionValue))
+    : exception(exceptionValue)
 {
     this->throwingContext = throwingContext->engine->current;
     accepted = false;

@@ -150,7 +150,7 @@ QV8Engine::QV8Engine(QJSEngine* qq)
     QV8GCCallback::registerGcPrologueCallback();
     m_strongReferencer = qPersistentNew(v8::Object::New());
 
-    m_bindingFlagKey = QV4::PersistentValue(m_v4Engine, QV4::Value::fromString(m_v4Engine->current, QStringLiteral("qml::binding")));
+    m_bindingFlagKey = QV4::Value::fromString(m_v4Engine->current, QStringLiteral("qml::binding"));
 
     m_contextWrapper.init(this);
     m_qobjectWrapper.init(this);
@@ -383,8 +383,7 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
         } else if (type == qMetaTypeId<QJSValue>()) {
             const QJSValue *value = reinterpret_cast<const QJSValue *>(ptr);
             QJSValuePrivate *valuep = QJSValuePrivate::get(*value);
-            valuep->engine = m_v4Engine;
-            return valuep->getValue(valuep->engine);
+            return valuep->getValue(m_v4Engine);
         } else if (type == qMetaTypeId<QList<QObject *> >()) {
             // XXX Can this be made more by using Array as a prototype and implementing
             // directly against QList<QObject*>?
@@ -677,7 +676,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 
         QV4::Value result = evaluateScript(QStringLiteral(FREEZE_SOURCE), 0);
         Q_ASSERT(result.asFunctionObject());
-        m_freezeObject = QV4::PersistentValue(m_v4Engine, result);
+        m_freezeObject = result;
 #undef FREEZE_SOURCE
     }
 }
@@ -1226,7 +1225,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
         *reinterpret_cast<void* *>(data) = 0;
         return true;
     } else if (type == qMetaTypeId<QJSValue>()) {
-        *reinterpret_cast<QJSValue*>(data) = QJSValuePrivate::get(new QJSValuePrivate(m_v4Engine, value));
+        *reinterpret_cast<QJSValue*>(data) = QJSValuePrivate::get(new QJSValuePrivate(value));
         return true;
     }
 
@@ -1348,12 +1347,12 @@ QObject *QV8Engine::qtObjectFromJS(const QV4::Value &value)
 
 QJSValue QV8Engine::scriptValueFromInternal(const QV4::Value &value) const
 {
-    return new QJSValuePrivate(m_v4Engine, value);
+    return new QJSValuePrivate(value);
 }
 
 QJSValue QV8Engine::newArray(uint length)
 {
-    return new QJSValuePrivate(m_v4Engine, v8::Array::New(length).get()->v4Value());
+    return new QJSValuePrivate(v8::Array::New(length).get()->v4Value());
 }
 
 void QV8Engine::startTimer(const QString &timerName)

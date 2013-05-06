@@ -400,8 +400,7 @@ MemoryManager::~MemoryManager()
     PersistentValuePrivate *persistent = m_persistentValues;
     while (persistent) {
         if (Managed *m = persistent->value.asManaged())
-            persistent->value = Value::undefinedValue();
-        persistent->engine = 0;
+            persistent->value = Value::deletedValue();
         PersistentValuePrivate *n = persistent->next;
         persistent->next = 0;
         persistent = n;

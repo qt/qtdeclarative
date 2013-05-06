@@ -174,6 +174,14 @@ bool String::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index
     return false;
 }
 
+String::String(ExecutionEngine *engine, const QString &text)
+    : Managed(engine ? engine->emptyClass : 0), _text(text), stringHash(UINT_MAX), identifier(UINT_MAX)
+{
+    vtbl = &static_vtbl;
+    type = Type_String;
+    subtype = StringType_Unknown;
+}
+
 uint String::toUInt(bool *ok) const
 {
     *ok = true;

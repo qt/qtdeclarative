@@ -254,17 +254,18 @@ void QJSEngine::collectGarbage()
 */
 QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber)
 {
+    QV4::ExecutionContext *ctx = d->m_v4Engine->current;
     try {
-        QV4::Function *f = QV4::EvalFunction::parseSource(d->m_v4Engine->current, fileName, program, QQmlJS::Codegen::EvalCode,
-                                                                        d->m_v4Engine->current->strictMode, true);
+        QV4::Function *f = QV4::EvalFunction::parseSource(ctx, fileName, program, QQmlJS::Codegen::EvalCode,
+                                                          d->m_v4Engine->current->strictMode, true);
         if (!f)
             return QJSValue();
 
         QV4::Value result = d->m_v4Engine->run(f);
-        return new QJSValuePrivate(d->m_v4Engine, result);
+        return new QJSValuePrivate(result);
     } catch (QV4::Exception& ex) {
-        ex.accept(d->m_v4Engine->current);
-        return new QJSValuePrivate(d->m_v4Engine, ex.value());
+        ex.accept(ctx);
+        return new QJSValuePrivate(ex.value());
     }
 }
 
@@ -278,7 +279,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
 */
 QJSValue QJSEngine::newObject()
 {
-    return new QJSValuePrivate(d->m_v4Engine, d->m_v4Engine->newObject());
+    return new QJSValuePrivate(d->m_v4Engine->newObject());
 }
 
 /*!
@@ -292,7 +293,7 @@ QJSValue QJSEngine::newArray(uint length)
     if (length < 0x1000)
         array->arrayReserve(length);
     array->setArrayLengthUnchecked(length);
-    return new QJSValuePrivate(d->m_v4Engine, array);
+    return new QJSValuePrivate(array);
 }
 
 /*!
@@ -334,7 +335,7 @@ QJSValue QJSEngine::newQObject(QObject *object)
 */
 QJSValue QJSEngine::globalObject() const
 {
-    return new QJSValuePrivate(d->m_v4Engine, d->m_v4Engine->globalObject);
+    return new QJSValuePrivate(d->m_v4Engine->globalObject);
 }
 
 /*!
@@ -344,7 +345,7 @@ QJSValue QJSEngine::globalObject() const
 QJSValue QJSEngine::create(int type, const void *ptr)
 {
     Q_D(QJSEngine);
-    return new QJSValuePrivate(QV8Engine::getV4(d), d->metaTypeToJS(type, ptr));
+    return new QJSValuePrivate(d->metaTypeToJS(type, ptr));
 }
 
 /*!
@@ -354,7 +355,7 @@ QJSValue QJSEngine::create(int type, const void *ptr)
 bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 {
     QJSValuePrivate *vp = QJSValuePrivate::get(value);
-    QV4::ExecutionEngine *e = vp->engine;
+    QV4::ExecutionEngine *e = vp->engine();
     QV8Engine *engine = e ? QV8Engine::get(e->publicEngine) : 0;
     if (engine) {
         return engine->metaTypeFromJS(vp->getValue(engine->m_v4Engine), type, ptr);

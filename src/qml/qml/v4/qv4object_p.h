@@ -108,7 +108,6 @@ struct Q_QML_EXPORT Object: Managed {
     };
 
     Object *prototype;
-    InternalClass *internalClass;
     uint memberDataAlloc;
     Property *memberData;
 

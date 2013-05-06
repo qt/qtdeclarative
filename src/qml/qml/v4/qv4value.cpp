@@ -222,8 +222,8 @@ PersistentValue::PersistentValue()
 {
 }
 
-PersistentValue::PersistentValue(ExecutionEngine *e, const Value &val)
-    : d(new PersistentValuePrivate(e, val))
+PersistentValue::PersistentValue(const Value &val)
+    : d(new PersistentValuePrivate(val))
 {
 }
 
@@ -244,6 +244,11 @@ PersistentValue &PersistentValue::operator=(const PersistentValue &other)
     d->ref();
 }
 
+PersistentValue &PersistentValue::operator =(const Value &other)
+{
+    d->value = other;
+}
+
 PersistentValue::~PersistentValue()
 {
     d->deref();
@@ -252,26 +257,26 @@ PersistentValue::~PersistentValue()
 PersistentValuePrivate::PersistentValuePrivate(const Value &v)
     : value(v)
     , refcount(1)
-    , engine(0)
     , next(0)
 {
-    assert(!v.asManaged());
-}
-
-
-PersistentValuePrivate::PersistentValuePrivate(ExecutionEngine *e, const Value &v)
-    : value(v)
-    , refcount(1)
-    , engine(e)
-    , next(engine->memoryManager->m_persistentValues)
-{
-    engine->memoryManager->m_persistentValues = this;
+    if (Managed *m = v.asManaged()) {
+        ExecutionEngine *engine = m->engine();
+        if (engine) {
+            next = engine->memoryManager->m_persistentValues;
+            engine->memoryManager->m_persistentValues = this;
+        }
+    }
 }
 
 void PersistentValuePrivate::deref()
 {
     // if engine is not 0, they are registered with the memory manager
     // and will get cleaned up in the next gc run
-    if (!--refcount && !engine)
-        delete this;
+    if (!--refcount && !next) {
+        ExecutionEngine *e = 0;
+        if (Managed *m = value.asManaged())
+            e = m->engine();
+        if (!e)
+            delete this;
+    }
 }

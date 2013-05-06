@@ -56,6 +56,7 @@ struct Object;
 struct ObjectPrototype;
 struct ExecutionContext;
 struct ScriptFunction;
+struct InternalClass;
 
 struct BooleanObject;
 struct NumberObject;
@@ -72,6 +73,7 @@ struct Managed;
 struct Value;
 class RegExp;
 struct Lookup;
+struct ExecutionEngine;
 
 struct ManagedVTable
 {
@@ -123,8 +125,8 @@ private:
     void operator = (const Managed &other);
 
 protected:
-    Managed()
-        : _data(0), vtbl(&static_vtbl)
+    Managed(InternalClass *internal)
+        : _data(0), vtbl(&static_vtbl), internalClass(internal)
     { inUse = 1; extensible = 1; }
 
 public:
@@ -158,6 +160,8 @@ public:
         Type_ForeachIteratorObject,
         Type_RegExp
     };
+
+    ExecutionEngine *engine() const;
 
     String *asString() { return reinterpret_cast<String *>(this); }
     Object *asObject() { return reinterpret_cast<Object *>(this); }
@@ -243,6 +247,8 @@ protected:
     static const ManagedVTable static_vtbl;
 
     const ManagedVTable *vtbl;
+public:
+    InternalClass *internalClass;
 
 private:
     friend class MemoryManager;
