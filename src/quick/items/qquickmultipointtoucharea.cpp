@@ -565,6 +565,8 @@ void QQuickMultiPointTouchArea::setTouchEventsEnabledForWindow(QWindow *window)
     // Save the current window, setTouchEventsEnabledForWindow will be called
     // with a null window on disable.
     _currentWindow = window;
+#else // Q_OS_MAC
+    Q_UNUSED(window)
 #endif
 }
 
