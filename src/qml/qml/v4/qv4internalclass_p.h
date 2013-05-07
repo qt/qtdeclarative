@@ -78,7 +78,7 @@ struct InternalClass {
     void destroy();
 
 private:
-    friend class ExecutionEngine;
+    friend struct ExecutionEngine;
     InternalClass(ExecutionEngine *engine) : engine(engine), m_sealed(0), m_frozen(0), size(0) {}
     InternalClass(const InternalClass &other);
 };

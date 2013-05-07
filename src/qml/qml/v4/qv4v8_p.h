@@ -123,7 +123,6 @@ class ImplementationUtilities;
 class Signature;
 class AccessorSignature;
 template <class T> struct Handle;
-template <class T> class Handle;
 template <class T> class Persistent;
 class FunctionTemplate;
 class ObjectTemplate;
