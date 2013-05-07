@@ -206,7 +206,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                                             m_fileName, m_line, &m_v8qmlscope);
             }
 
-            if (m_v8function->isDeleted() || m_v8function->isNull()) {
+            if (m_v8function->isEmpty() || m_v8function->isNull()) {
                 ep->dereferenceScarceResources();
                 return; // could not evaluate function.  Not valid.
             }

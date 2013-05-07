@@ -197,7 +197,7 @@ struct Q_QML_EXPORT Object: Managed {
     }
     void freeArrayValue(int idx) {
         Property &pd = arrayData[idx];
-        pd.value.tag = Value::_Deleted_Type;
+        pd.value.tag = Value::_Empty_Type;
         pd.value.int_32 = arrayFreeList;
         arrayFreeList = idx;
         if (arrayAttributes)

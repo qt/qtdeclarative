@@ -245,7 +245,7 @@ QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
 {
     QV8Engine *engine = QQmlEnginePrivate::getV8Engine(context->engine);
 
-    if (program->bindings->isDeleted()) {
+    if (program->bindings->isEmpty()) {
         v8::Handle<v8::Script> script;
         bool compileFailed = false;
         {

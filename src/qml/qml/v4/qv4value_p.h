@@ -121,7 +121,7 @@ struct Q_QML_EXPORT Value
 
     enum ValueTypeInternal {
         _Undefined_Type = Undefined_Type,
-        _Deleted_Type = Deleted_Type,
+        _Empty_Type = Deleted_Type,
         _Null_Type = Null_Type | ConvertibleToInt,
         _Boolean_Type = Boolean_Type | ConvertibleToInt,
         _Integer_Type = Integer_Type | ConvertibleToInt,
@@ -135,7 +135,7 @@ struct Q_QML_EXPORT Value
     }
 
     // used internally in property
-    inline bool isDeleted() const { return tag == _Deleted_Type; }
+    inline bool isEmpty() const { return tag == _Empty_Type; }
 
     inline bool isUndefined() const { return tag == _Undefined_Type; }
     inline bool isNull() const { return tag == _Null_Type; }
@@ -196,7 +196,7 @@ struct Q_QML_EXPORT Value
         return val;
     }
 
-    static Value deletedValue();
+    static Value emptyValue();
     static Value undefinedValue();
     static Value nullValue();
     static Value fromBoolean(Bool b);
@@ -313,10 +313,10 @@ inline Value Value::nullValue()
     return v;
 }
 
-inline Value Value::deletedValue()
+inline Value Value::emptyValue()
 {
     Value v;
-    v.tag = Value::_Deleted_Type;
+    v.tag = Value::_Empty_Type;
     v.uint_32 = 0;
     return v;
 }
@@ -552,7 +552,7 @@ inline Value Managed::call(ExecutionContext *context, const Value &thisObject, V
 struct PersistentValuePrivate
 {
     PersistentValuePrivate()
-        : value(Value::deletedValue())
+        : value(Value::emptyValue())
         , refcount(1)
         , prev(0)
         , next(0)

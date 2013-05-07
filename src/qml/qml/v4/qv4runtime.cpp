@@ -1238,7 +1238,7 @@ void __qmljs_builtin_define_array(ExecutionContext *ctx, Value *array, Value *va
         a->arrayDataLen = length;
         Property *pd = a->arrayData;
         for (uint i = 0; i < length; ++i) {
-            if (values[i].isDeleted()) {
+            if (values[i].isEmpty()) {
                 a->ensureArrayAttributes();
                 pd->value = Value::undefinedValue();
                 a->arrayAttributes[i].clear();

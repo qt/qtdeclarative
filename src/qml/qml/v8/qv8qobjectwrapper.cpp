@@ -961,7 +961,7 @@ v8::Handle<v8::Object> QQmlPropertyCache::newQObject(QObject *object, QV8Engine 
     Q_ASSERT(QQmlData::get(object, false)->propertyCache == this);
 
     // Setup constructor
-    if (constructor->isDeleted()) {
+    if (constructor->isEmpty()) {
         v8::Handle<v8::FunctionTemplate> ft;
 
         const QHashedString toString(QStringLiteral("toString"));

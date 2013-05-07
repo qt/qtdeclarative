@@ -1136,7 +1136,7 @@ void Object::arrayReserve(uint n)
         arrayData = newArrayData;
         if (sparseArray) {
             for (uint i = arrayFreeList; i < arrayAlloc; ++i) {
-                arrayData[i].value = Value::deletedValue();
+                arrayData[i].value = Value::emptyValue();
                 arrayData[i].value = Value::fromInt32(i + 1);
             }
         } else {
@@ -1193,7 +1193,7 @@ bool Object::setArrayLength(uint newLen) {
                             arrayAttributes[it->value].clear();
                         }
                     }
-                    pd.value.tag = Value::_Deleted_Type;
+                    pd.value.tag = Value::_Empty_Type;
                     pd.value.int_32 = arrayFreeList;
                     arrayFreeList = it->value;
                     bool brk = (it == begin);
@@ -1216,7 +1216,7 @@ bool Object::setArrayLength(uint newLen) {
                     } else {
                         arrayAttributes[it - arrayData].clear();
                     }
-                    it->value = Value::deletedValue();
+                    it->value = Value::emptyValue();
                 }
             }
             arrayDataLen = newLen;

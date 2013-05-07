@@ -192,7 +192,7 @@ QV8Engine::~QV8Engine()
 
 QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
 {
-    if (value.isDeleted())
+    if (value.isEmpty())
         return QVariant();
 
     if (typeHint == QVariant::Bool)
@@ -1255,7 +1255,7 @@ QV4::Value QV8Engine::variantToJS(const QVariant &value)
 QVariant QV8Engine::variantFromJS(const QV4::Value &value,
                                   V8ObjectSet &visitedObjects)
 {
-    Q_ASSERT(!value.isDeleted());
+    Q_ASSERT(!value.isEmpty());
     if (value.isUndefined())
         return QVariant();
     if (value.isNull())

@@ -89,7 +89,7 @@ struct Property {
 
     static Property genericDescriptor() {
         Property pd;
-        pd.value = Value::deletedValue();
+        pd.value = Value::emptyValue();
         return pd;
     }
 

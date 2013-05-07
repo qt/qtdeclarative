@@ -51,7 +51,7 @@ inline QV4::Value convertToValue(V4IR::Const *c)
 {
     switch (c->type) {
     case V4IR::MissingType:
-        return QV4::Value::deletedValue();
+        return QV4::Value::emptyValue();
     case V4IR::NullType:
         return QV4::Value::nullValue();
     case V4IR::UndefinedType:

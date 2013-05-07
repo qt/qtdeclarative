@@ -70,7 +70,7 @@ public:
     QJSValuePrivate(const QV4::Value &v)
         : PersistentValuePrivate(v)
     {
-        if (value.isDeleted())
+        if (value.isEmpty())
             value = QV4::Value::undefinedValue();
     }
     QJSValuePrivate(QV4::Object *o)

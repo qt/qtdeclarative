@@ -531,7 +531,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     }
 
     if (attrs->isGeneric())
-        desc->value = Value::deletedValue();
+        desc->value = Value::emptyValue();
 }
 
 

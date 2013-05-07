@@ -400,7 +400,7 @@ MemoryManager::~MemoryManager()
     PersistentValuePrivate *persistent = m_persistentValues;
     while (persistent) {
         PersistentValuePrivate *n = persistent->next;
-        persistent->value = Value::deletedValue();
+        persistent->value = Value::emptyValue();
         persistent->prev = 0;
         persistent->next = 0;
         persistent = n;
