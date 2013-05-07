@@ -58,6 +58,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qnumeric.h>
+#include <QtGui/qpa/qplatformtheme.h>
 
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlengine_p.h>
@@ -2034,6 +2035,35 @@ QQuickItem::~QQuickItem()
 
 /*!
     \internal
+*/
+bool QQuickItemPrivate::qt_tab_all_widgets()
+{
+    if (const QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
+        return theme->themeHint(QPlatformTheme::TabAllWidgets).toBool();
+    return true;
+}
+
+/*!
+    \internal
+*/
+bool QQuickItemPrivate::canAcceptTabFocus(QQuickItem *item)
+{
+    bool result = true;
+
+#ifndef QT_NO_ACCESSIBILITY
+    result = false;
+    if (QObject *acc = qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false)) {
+        int role = acc->property("role").toInt();
+        if (role == QAccessible::EditableText || role == QAccessible::Table || role == QAccessible::List)
+            result = true;
+    }
+#endif
+
+    return result;
+}
+
+/*!
+    \internal
     \brief QQuickItemPrivate::focusNextPrev focuses the next/prev item in the tab-focus-chain
     \param item The item that currently has the focus
     \param forward The direction
@@ -2058,6 +2088,8 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
 {
     Q_ASSERT(item);
     Q_ASSERT(item->activeFocusOnTab());
+
+    bool all = QQuickItemPrivate::qt_tab_all_widgets();
 
     QQuickItem *from = 0;
     if (forward) {
@@ -2121,7 +2153,8 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
         }
 
         from = last;
-    } while (skip || !current->activeFocusOnTab() || !current->isEnabled() || !current->isVisible());
+    } while (skip || !current->activeFocusOnTab() || !current->isEnabled() || !current->isVisible()
+                  || !(all || QQuickItemPrivate::canAcceptTabFocus(current)));
 
     return current;
 }
