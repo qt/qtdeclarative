@@ -55,16 +55,16 @@ QT_BEGIN_NAMESPACE
 class QQmlDateExtension
 {
 public:
-    static void registerExtension(QV8Engine *engine);
+    static void registerExtension(QV4::ExecutionEngine *engine);
 
 private:
-    static QV4::Value toLocaleString(const v8::Arguments& args);
-    static QV4::Value toLocaleTimeString(const v8::Arguments& args);
-    static QV4::Value toLocaleDateString(const v8::Arguments& args);
-    static QV4::Value fromLocaleString(const v8::Arguments& args);
-    static QV4::Value fromLocaleTimeString(const v8::Arguments& args);
-    static QV4::Value fromLocaleDateString(const v8::Arguments& args);
-    static QV4::Value timeZoneUpdated(const v8::Arguments& args);
+    static QV4::Value toLocaleString(QV4::SimpleCallContext *ctx);
+    static QV4::Value toLocaleTimeString(QV4::SimpleCallContext *ctx);
+    static QV4::Value toLocaleDateString(QV4::SimpleCallContext *ctx);
+    static QV4::Value fromLocaleString(QV4::SimpleCallContext *ctx);
+    static QV4::Value fromLocaleTimeString(QV4::SimpleCallContext *ctx);
+    static QV4::Value fromLocaleDateString(QV4::SimpleCallContext *ctx);
+    static QV4::Value timeZoneUpdated(QV4::SimpleCallContext *ctx);
 };
 
 
@@ -120,12 +120,12 @@ public:
 
     static QV4::Value locale(QV8Engine *v8engine, const QString &lang);
 
-    static void registerStringLocaleCompare(QV8Engine *engine);
+    static void registerStringLocaleCompare(QV4::ExecutionEngine *engine);
 
 private:
     QQmlLocale();
 
-    static QV4::Value localeCompare(const v8::Arguments &args);
+    static QV4::Value localeCompare(QV4::SimpleCallContext *ctx);
 };
 
 
