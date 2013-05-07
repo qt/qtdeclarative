@@ -1647,6 +1647,24 @@ protected:
         QV4::Value result = QV4::Value::undefinedValue();
         if (that->m_functionTemplate->m_callback)
             result = that->m_functionTemplate->m_callback(arguments);
+        else if (that->m_functionTemplate->m_newCallback) {
+            QV4::SimpleCallContext ctx;
+            ctx.type = ExecutionContext::Type_SimpleCallContext;
+            ctx.strictMode = true;
+            ctx.marked = false;
+            ctx.thisObject = thisObject;
+            ctx.engine = context->engine;
+            ctx.arguments = args;
+            ctx.argumentCount = argc;
+            context->engine->pushContext(&ctx);
+            try {
+                result = that->m_functionTemplate->m_newCallback(&ctx);
+            } catch (QV4::Exception &ex) {
+                ex.partiallyUnwindContext(context);
+                throw;
+            }
+            context->engine->popContext();
+        }
         return result;
     }
 
@@ -1663,6 +1681,24 @@ protected:
         QV4::Value result = QV4::Value::undefinedValue();
         if (that->m_functionTemplate->m_callback)
             result = that->m_functionTemplate->m_callback(arguments);
+        else if (that->m_functionTemplate->m_newCallback) {
+            QV4::SimpleCallContext ctx;
+            ctx.type = ExecutionContext::Type_SimpleCallContext;
+            ctx.strictMode = true;
+            ctx.marked = false;
+            ctx.thisObject = QV4::Value::undefinedValue();
+            ctx.engine = context->engine;
+            ctx.arguments = args;
+            ctx.argumentCount = argc;
+            context->engine->pushContext(&ctx);
+            try {
+                result = that->m_functionTemplate->m_newCallback(&ctx);
+            } catch (QV4::Exception &ex) {
+                ex.partiallyUnwindContext(context);
+                throw;
+            }
+            context->engine->popContext();
+        }
         if (result.isObject())
             return result;
         return QV4::Value::fromObject(obj);
@@ -1676,6 +1712,16 @@ DEFINE_MANAGED_VTABLE(V4V8Function);
 
 FunctionTemplate::FunctionTemplate(InvocationCallback callback, Handle<Value> data)
     : m_callback(callback)
+    , m_newCallback(0)
+{
+    m_instanceTemplate = Handle<ObjectTemplate>();
+    m_prototypeTemplate = Handle<ObjectTemplate>();
+    m_data = Persistent<Value>::New(data);
+}
+
+FunctionTemplate::FunctionTemplate(NewInvocationCallback callback, Handle<Value> data)
+    : m_callback(0)
+    , m_newCallback(callback)
 {
     m_instanceTemplate = Handle<ObjectTemplate>();
     m_prototypeTemplate = Handle<ObjectTemplate>();
@@ -1683,6 +1729,12 @@ FunctionTemplate::FunctionTemplate(InvocationCallback callback, Handle<Value> da
 }
 
 Handle<FunctionTemplate> FunctionTemplate::New(InvocationCallback callback, Handle<Value> data)
+{
+    FunctionTemplate *ft = new FunctionTemplate(callback, data);
+    return Handle<FunctionTemplate>(ft);
+}
+
+Handle<FunctionTemplate> FunctionTemplate::New(NewInvocationCallback callback, Handle<Value> data)
 {
     FunctionTemplate *ft = new FunctionTemplate(callback, data);
     return Handle<FunctionTemplate>(ft);

@@ -89,6 +89,7 @@ struct String;
 struct ExecutionEngine;
 struct Object;
 class MemoryManager;
+struct SimpleCallContext;
 }
 
 
@@ -1654,6 +1655,7 @@ private:
 
 
 typedef QV4::Value (*InvocationCallback)(const Arguments& args);
+typedef QV4::Value (*NewInvocationCallback)(QV4::SimpleCallContext *);
 
 /**
  * NamedProperty[Getter|Setter] are used as interceptors on object.
@@ -1832,6 +1834,9 @@ class V8EXPORT FunctionTemplate : public Template {
   static Handle<FunctionTemplate> New(
       InvocationCallback callback = 0,
       Handle<Value> data = Handle<Value>());
+  static Handle<FunctionTemplate> New(
+      NewInvocationCallback callback,
+      Handle<Value> data = Handle<Value>());
   /** Returns the unique function instance in the current execution context.*/
   Handle<Function> GetFunction();
 
@@ -1846,8 +1851,10 @@ class V8EXPORT FunctionTemplate : public Template {
 
 private:
   FunctionTemplate(InvocationCallback callback, Handle<Value> data);
+  FunctionTemplate(NewInvocationCallback callback, Handle<Value> data);
   friend class V4V8Function;
   InvocationCallback m_callback;
+  NewInvocationCallback m_newCallback;
   Persistent<Value> m_data;
   Handle<ObjectTemplate> m_instanceTemplate;
   Handle<ObjectTemplate> m_prototypeTemplate;
