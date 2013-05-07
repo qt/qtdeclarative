@@ -138,7 +138,7 @@ QString QQmlBoundSignalExpression::expression() const
 {
     if (m_expressionFunctionValid) {
         Q_ASSERT (context() && engine());
-        return m_v8function->toQString();
+        return m_v8function.value().toQString();
     } else if (!m_expressionUtf8.isEmpty()) {
         return QString::fromUtf8(m_expressionUtf8);
     } else {
@@ -206,7 +206,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                                             m_fileName, m_line, &m_v8qmlscope);
             }
 
-            if (m_v8function->isEmpty() || m_v8function->isNull()) {
+            if (m_v8function.isEmpty() || m_v8function.value().isNull()) {
                 ep->dereferenceScarceResources();
                 return; // could not evaluate function.  Not valid.
             }
@@ -216,7 +216,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         }
 
         if (!hasParameterInfo()) {
-            QQmlJavaScriptExpression::evaluate(context(), **m_v8function, 0);
+            QQmlJavaScriptExpression::evaluate(context(), m_v8function.value(), 0);
         } else {
             QV8Engine *engine = ep->v8engine();
             QVarLengthArray<int, 9> dummy;
@@ -249,7 +249,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                 }
             }
 
-            QQmlJavaScriptExpression::evaluate(context(), **m_v8function, argCount, args.data(), 0);
+            QQmlJavaScriptExpression::evaluate(context(), m_v8function.value(), argCount, args.data(), 0);
         }
     }
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.

@@ -217,11 +217,6 @@ Value Value::property(ExecutionContext *ctx, String *name) const
 }
 
 
-PersistentValue::PersistentValue()
-    : d(new PersistentValuePrivate)
-{
-}
-
 PersistentValue::PersistentValue(const Value &val)
     : d(new PersistentValuePrivate(val))
 {
@@ -230,7 +225,8 @@ PersistentValue::PersistentValue(const Value &val)
 PersistentValue::PersistentValue(const PersistentValue &other)
     : d(other.d)
 {
-    d->ref();
+    if (d)
+        d->ref();
 }
 
 PersistentValue &PersistentValue::operator=(const PersistentValue &other)
@@ -239,13 +235,20 @@ PersistentValue &PersistentValue::operator=(const PersistentValue &other)
         return *this;
 
     // the memory manager cleans up those with a refcount of 0
-    d->deref();
+
+    if (d)
+        d->deref();
     d = other.d;
-    d->ref();
+    if (d)
+        d->ref();
 }
 
 PersistentValue &PersistentValue::operator =(const Value &other)
 {
+    if (!d) {
+        d = new PersistentValuePrivate(other);
+        return *this;
+    }
     d->value = other;
     if (!d->prev) {
         if (Managed *m = d->value.asManaged()) {
@@ -261,7 +264,8 @@ PersistentValue &PersistentValue::operator =(const Value &other)
 
 PersistentValue::~PersistentValue()
 {
-    d->deref();
+    if (d)
+        d->deref();
 }
 
 PersistentValuePrivate::PersistentValuePrivate(const Value &v)
@@ -287,7 +291,8 @@ void PersistentValuePrivate::deref()
     // and will get cleaned up in the next gc run
     if (!--refcount) {
         if (prev) {
-            next->prev = prev;
+            if (next)
+                next->prev = prev;
             *prev = next;
         }
         delete this;

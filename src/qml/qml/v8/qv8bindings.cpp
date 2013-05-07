@@ -245,7 +245,7 @@ QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
 {
     QV8Engine *engine = QQmlEnginePrivate::getV8Engine(context->engine);
 
-    if (program->bindings->isEmpty()) {
+    if (program->bindings.isEmpty()) {
         v8::Handle<v8::Script> script;
         bool compileFailed = false;
         {
@@ -327,7 +327,7 @@ const QString &QV8Bindings::urlString() const
 
 QV4::ArrayObject *QV8Bindings::functions() const
 {
-    return program->bindings->asArrayObject();
+    return program->bindings.value().asArrayObject();
 }
 
 

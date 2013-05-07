@@ -972,7 +972,7 @@ v8::Handle<v8::Function> QQmlVMEMetaObject::method(int index)
     if (!v8methods) 
         v8methods = new QV4::PersistentValue[metaData->methodCount];
 
-    if (v8methods[index]->isEmpty()) {
+    if (v8methods[index].isEmpty()) {
         QQmlVMEMetaData::MethodData *data = metaData->methodData() + index;
 
         const char *body = ((const char*)metaData) + data->bodyOffset;

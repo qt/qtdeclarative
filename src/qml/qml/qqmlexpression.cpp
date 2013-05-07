@@ -354,7 +354,7 @@ v8::Handle<v8::Value> QQmlExpressionPrivate::v8value(bool *isUndefined)
         expressionFunctionValid = true;
     }
 
-    return evaluate(context(), **v8function, isUndefined);
+    return evaluate(context(), v8function.value(), isUndefined);
 }
 
 QVariant QQmlExpressionPrivate::value(bool *isUndefined)

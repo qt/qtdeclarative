@@ -688,7 +688,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 void QV8Engine::freezeObject(const QV4::Value &value)
 {
     QV4::Value args = value;
-    m_freezeObject->asFunctionObject()->call(m_v4Engine->rootContext, QV4::Value::fromObject(m_v4Engine->globalObject), &args, 1);
+    m_freezeObject.value().asFunctionObject()->call(m_v4Engine->rootContext, QV4::Value::fromObject(m_v4Engine->globalObject), &args, 1);
 }
 
 void QV8Engine::gc()

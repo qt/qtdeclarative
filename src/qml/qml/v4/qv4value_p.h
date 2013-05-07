@@ -551,12 +551,6 @@ inline Value Managed::call(ExecutionContext *context, const Value &thisObject, V
 
 struct PersistentValuePrivate
 {
-    PersistentValuePrivate()
-        : value(Value::emptyValue())
-        , refcount(1)
-        , prev(0)
-        , next(0)
-    {}
     PersistentValuePrivate(const Value &v);
     Value value;
     int refcount;
@@ -570,24 +564,27 @@ struct PersistentValuePrivate
 class PersistentValue
 {
 public:
-    PersistentValue();
+    PersistentValue() : d(0) {}
     PersistentValue(const Value &val);
     PersistentValue(const PersistentValue &other);
     PersistentValue &operator=(const PersistentValue &other);
     PersistentValue &operator=(const Value &other);
     ~PersistentValue();
 
-    Value *operator->() { return &d->value; }
-    Value *operator*() { return &d->value; }
-    const Value *operator->() const { return &d->value; }
-    const Value *operator*() const { return &d->value; }
+    Value value() const {
+        return d ? d->value : Value::emptyValue();
+    }
 
     ExecutionEngine *engine() {
+        if (!d)
+            return 0;
         Managed *m = d->value.asManaged();
         return m ? m->engine() : 0;
     }
 
-    operator Value() const { return d->value; }
+    operator Value() const { return value(); }
+
+    bool isEmpty() const { return !d; }
 
 private:
     PersistentValuePrivate *d;

@@ -80,7 +80,7 @@ public:
         : PersistentValuePrivate(QV4::Value::fromString(s))
     {}
     QJSValuePrivate(const QString &s)
-        : PersistentValuePrivate()
+        : PersistentValuePrivate(QV4::Value::undefinedValue())
         , string(0, s)
     {
         value = QV4::Value::fromString(&string);

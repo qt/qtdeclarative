@@ -961,7 +961,7 @@ v8::Handle<v8::Object> QQmlPropertyCache::newQObject(QObject *object, QV8Engine 
     Q_ASSERT(QQmlData::get(object, false)->propertyCache == this);
 
     // Setup constructor
-    if (constructor->isEmpty()) {
+    if (constructor.isEmpty()) {
         v8::Handle<v8::FunctionTemplate> ft;
 
         const QHashedString toString(QStringLiteral("toString"));
@@ -1050,7 +1050,7 @@ v8::Handle<v8::Object> QQmlPropertyCache::newQObject(QObject *object, QV8Engine 
         QQmlCleanup::addToEngine(this->engine);
     }
 
-    v8::Handle<v8::Object> result = constructor->asFunctionObject()->newInstance();
+    v8::Handle<v8::Object> result = constructor.value().asFunctionObject()->newInstance();
     QV8QObjectResource *r = new QV8QObjectResource(engine, object);
     result->SetExternalResource(r);
     return result;

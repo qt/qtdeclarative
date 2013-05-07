@@ -279,7 +279,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
             bool isUndefined = false;
 
             v8::Handle<v8::Value> result =
-                QQmlJavaScriptExpression::evaluate(context(), **v4function, &isUndefined);
+                    QQmlJavaScriptExpression::evaluate(context(), v4function.value(), &isUndefined);
 
             trace.event("writing binding result");
 
@@ -320,7 +320,7 @@ QVariant QQmlBinding::evaluate()
     bool isUndefined = false;
 
     v8::Handle<v8::Value> result =
-        QQmlJavaScriptExpression::evaluate(context(), **v4function, &isUndefined);
+            QQmlJavaScriptExpression::evaluate(context(), v4function.value(), &isUndefined);
 
     ep->dereferenceScarceResources();
 
