@@ -74,9 +74,9 @@ public:
     static void registerExtension(QV8Engine *engine);
 
 private:
-    static QV4::Value toLocaleString(const v8::Arguments& args);
-    static QV4::Value fromLocaleString(const v8::Arguments& args);
-    static QV4::Value toLocaleCurrencyString(const v8::Arguments&  args);
+    static QV4::Value toLocaleString(QV4::SimpleCallContext *ctx);
+    static QV4::Value fromLocaleString(QV4::SimpleCallContext *ctx);
+    static QV4::Value toLocaleCurrencyString(QV4::SimpleCallContext *ctx);
 };
 
 

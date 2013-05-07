@@ -79,6 +79,7 @@ struct String : public Managed {
         return toQString() < other->toQString();
     }
 
+    inline bool isEmpty() const { return _text.isEmpty(); }
     inline const QString &toQString() const {
         return _text;
     }

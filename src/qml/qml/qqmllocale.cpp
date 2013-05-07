@@ -65,6 +65,11 @@ QV8LocaleDataResource *r = v8_resource_cast<QV8LocaleDataResource>(OBJECT); \
 if (!r) \
     V4THROW_ERROR("Not a valid Locale object")
 
+#define V4_GET_LOCALE_DATA_RESOURCE(OBJECT) \
+QV8LocaleDataResource *r = v8_resource_cast<QV8LocaleDataResource>(v8::Object::fromV4Value(OBJECT)); \
+if (!r) \
+    V4THROW_ERROR("Not a valid Locale object")
+
 static bool isLocaleObject(v8::Handle<v8::Value> val)
 {
     if (!val->IsObject())
@@ -140,7 +145,8 @@ static const char dateTimeZoneUpdatedFunction[] =
         "})";
 
 
-static void registerFunction(QV8Engine *engine, const char *script, v8::InvocationCallback func)
+template <typename CallbackType>
+void registerFunction(QV8Engine *engine, const char *script, CallbackType func)
 {
     v8::Handle<v8::Script> registerScript = v8::Script::New(v8::String::New(script), 0, 0, v8::Handle<v8::String>(), v8::Script::NativeMode);
     v8::Handle<v8::Value> result = registerScript->Run();
@@ -447,97 +453,94 @@ void QQmlNumberExtension::registerExtension(QV8Engine *engine)
     registerFunction(engine, numberFromLocaleStringFunction, fromLocaleString);
 }
 
-QV4::Value QQmlNumberExtension::toLocaleString(const v8::Arguments& args)
+QV4::Value QQmlNumberExtension::toLocaleString(QV4::SimpleCallContext *ctx)
 {
-    if (args.Length() > 3)
+    if (ctx->argumentCount > 3)
         V4THROW_ERROR("Locale: Number.toLocaleString(): Invalid arguments");
 
-    double number = args.This()->ToNumber()->Value();
+    double number = ctx->thisObject.toNumber();
 
-    if (args.Length() == 0) {
+    if (ctx->argumentCount == 0) {
         // Use QLocale for standard toLocaleString() function
         QLocale locale;
-        return QV4::Value::fromString(args.GetIsolate()->GetEngine()->newString(locale.toString(number)));
+        return QV4::Value::fromString(ctx, locale.toString(number));
     }
 
-    if (!isLocaleObject(args[0]))
+    if (!isLocaleObject(ctx->arguments[0]))
         return QV4::Value::undefinedValue(); // Use the default Number toLocaleString()
 
-    GET_LOCALE_DATA_RESOURCE(args[0]->ToObject());
+    V4_GET_LOCALE_DATA_RESOURCE(ctx->arguments[0]);
 
     uint16_t format = 'f';
-    if (args.Length() > 1) {
-        if (!args[1]->IsString())
+    if (ctx->argumentCount > 1) {
+        if (!ctx->arguments[1].isString())
             V4THROW_ERROR("Locale: Number.toLocaleString(): Invalid arguments");
-        v8::Handle<v8::String> fs = args[1]->ToString();
-        if (!fs.IsEmpty() && fs->Length()) {
-            v8::String::Value value(fs);
-            Q_ASSERT(*value != NULL);
-            format = **value;
-        }
+        QV4::String *fs = ctx->arguments[1].toString(ctx);
+        if (!fs->isEmpty())
+            format = fs->toQString().at(0).unicode();
     }
     int prec = 2;
-    if (args.Length() > 2) {
-        if (!args[2]->IsNumber())
+    if (ctx->argumentCount > 2) {
+        if (!ctx->arguments[2].isNumber())
             V4THROW_ERROR("Locale: Number.toLocaleString(): Invalid arguments");
-         prec = args[2]->IntegerValue();
+         prec = ctx->arguments[2].toInt32();
     }
 
-    return r->engine->toString(r->locale.toString(number, (char)format, prec));
+    return QV4::Value::fromString(ctx, r->locale.toString(number, (char)format, prec));
 }
 
-QV4::Value QQmlNumberExtension::toLocaleCurrencyString(const v8::Arguments& args)
+QV4::Value QQmlNumberExtension::toLocaleCurrencyString(QV4::SimpleCallContext *ctx)
 {
-    if (args.Length() > 2)
+    if (ctx->argumentCount > 2)
         V4THROW_ERROR("Locale: Number.toLocaleCurrencyString(): Invalid arguments");
 
-    double number = args.This()->ToNumber()->Value();
+    double number = ctx->thisObject.toNumber();
 
-    if (args.Length() == 0) {
+    if (ctx->argumentCount == 0) {
         // Use QLocale for standard toLocaleString() function
         QLocale locale;
-        return QV4::Value::fromString(args.GetIsolate()->GetEngine()->newString(locale.toString(number)));
+        return QV4::Value::fromString(ctx, locale.toString(number));
     }
 
-    if (!isLocaleObject(args[0]))
+    if (!isLocaleObject(ctx->arguments[0]))
         V4THROW_ERROR("Locale: Number.toLocaleCurrencyString(): Invalid arguments");
 
-    GET_LOCALE_DATA_RESOURCE(args[0]->ToObject());
+    V4_GET_LOCALE_DATA_RESOURCE(ctx->arguments[0]);
 
     QString symbol;
-    if (args.Length() > 1) {
-        if (!args[1]->IsString())
+    if (ctx->argumentCount > 1) {
+        if (!ctx->arguments[1].isString())
             V4THROW_ERROR("Locale: Number.toLocaleString(): Invalid arguments");
-        symbol = args[1]->v4Value().toQString();
+        symbol = ctx->arguments[1].toQString();
     }
 
-    return r->engine->toString(r->locale.toCurrencyString(number, symbol));
+    return QV4::Value::fromString(ctx, r->locale.toCurrencyString(number, symbol));
 }
 
-QV4::Value QQmlNumberExtension::fromLocaleString(const v8::Arguments& args)
+QV4::Value QQmlNumberExtension::fromLocaleString(QV4::SimpleCallContext *ctx)
 {
-    if (args.Length() < 1 || args.Length() > 2)
+    if (ctx->argumentCount < 1 || ctx->argumentCount > 2)
         V4THROW_ERROR("Locale: Number.fromLocaleString(): Invalid arguments");
 
     int numberIdx = 0;
     QLocale locale;
 
-    if (args.Length() == 2) {
-        if (!isLocaleObject(args[0]))
+    if (ctx->argumentCount == 2) {
+        if (!isLocaleObject(ctx->arguments[0]))
             V4THROW_ERROR("Locale: Number.fromLocaleString(): Invalid arguments");
 
-        GET_LOCALE_DATA_RESOURCE(args[0]->ToObject());
+        V4_GET_LOCALE_DATA_RESOURCE(ctx->arguments[0]);
         locale = r->locale;
 
         numberIdx = 1;
     }
 
-    v8::Handle<v8::String> ns = args[numberIdx]->ToString();
-    if (ns.IsEmpty() || ns->Length() == 0)
+    QV4::String *ns = ctx->arguments[numberIdx].toString(ctx);
+    if (ns->isEmpty())
         return QV4::Value::fromDouble(Q_QNAN);
 
     bool ok = false;
-    double val = locale.toDouble(ns->v4Value().asString()->toQString(), &ok);
+    double val = locale.toDouble(ns->toQString(), &ok);
 
     if (!ok)
         V4THROW_ERROR("Locale: Number.fromLocaleString(): Invalid format")
