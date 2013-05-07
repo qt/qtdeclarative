@@ -60,6 +60,7 @@
 
 #include <qqmlengine.h>
 #include <private/qv4domerrors_p.h>
+#include <private/qv4engine_p.h>
 #include <QtCore/qnumeric.h>
 #include <private/qquickwindow_p.h>
 
@@ -114,7 +115,7 @@ static const double Q_PI   = 3.14159265358979323846;   // pi
 #define DEGREES(t) ((t) * 180.0 / Q_PI)
 
 #define CHECK_CONTEXT(r)     if (!r || !r->context || !r->context->bufferValid()) \
-                                V8THROW_ERROR("Not a Context2D object");
+                                V4THROW_ERROR("Not a Context2D object");
 
 #define CHECK_CONTEXT_SETTER(r)     if (!r || !r->context || !r->context->bufferValid()) \
                                        V8THROW_ERROR_SETTER("Not a Context2D object");
@@ -422,7 +423,7 @@ static QString qt_composite_mode_to_string(QPainter::CompositionMode op)
 }
 
 
-static v8::Handle<v8::Object> qt_create_image_data(qreal w, qreal h, QV8Engine* engine, const QImage& image)
+static QV4::Value qt_create_image_data(qreal w, qreal h, QV8Engine* engine, const QImage& image)
 {
     QQuickContext2DEngineData *ed = engineData(engine);
     v8::Handle<v8::Object> imageData = ed->constructorImageData->NewInstance();
@@ -438,7 +439,7 @@ static v8::Handle<v8::Object> qt_create_image_data(qreal w, qreal h, QV8Engine* 
     pixelData->SetExternalResource(r);
 
     imageData->SetInternalField(0, pixelData);
-    return imageData;
+    return imageData->v4Value();
 }
 
 //static script functions
@@ -466,27 +467,27 @@ static v8::Handle<v8::Value> ctx2d_canvas(v8::Handle<v8::String>, const v8::Acce
 
     \sa save()
 */
-static v8::Handle<v8::Value> ctx2d_restore(const v8::Arguments &args)
+static QV4::Value ctx2d_restore(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
     r->context->popState();
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
     \qmlmethod object QtQuick2::Context2D::reset()
     Resets the context state and properties to the default values.
 */
-static v8::Handle<v8::Value> ctx2d_reset(const v8::Arguments &args)
+static QV4::Value ctx2d_reset(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
     r->context->reset();
 
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -519,14 +520,14 @@ static v8::Handle<v8::Value> ctx2d_reset(const v8::Arguments &args)
     The current path is NOT part of the drawing state. The path can be reset by
     invoking the beginPath() method.
 */
-static v8::Handle<v8::Value> ctx2d_save(const v8::Arguments &args)
+static QV4::Value ctx2d_save(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
     r->context->pushState();
 
-    return args.This();
+    return args.ThisV4();
 }
 
 // transformations
@@ -545,14 +546,14 @@ static v8::Handle<v8::Value> ctx2d_save(const v8::Arguments &args)
     where the \c angle of rotation is in radians.
 
 */
-static v8::Handle<v8::Value> ctx2d_rotate(const v8::Arguments &args)
+static QV4::Value ctx2d_rotate(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
     if (args.Length() == 1)
         r->context->rotate(args[0]->NumberValue());
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -569,7 +570,7 @@ static v8::Handle<v8::Value> ctx2d_rotate(const v8::Arguments &args)
     \image qml-item-canvas-scale.png
 
 */
-static v8::Handle<v8::Value> ctx2d_scale(const v8::Arguments &args)
+static QV4::Value ctx2d_scale(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -577,7 +578,7 @@ static v8::Handle<v8::Value> ctx2d_scale(const v8::Arguments &args)
 
     if (args.Length() == 2)
         r->context->scale(args[0]->NumberValue(), args[1]->NumberValue());
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -613,7 +614,7 @@ static v8::Handle<v8::Value> ctx2d_scale(const v8::Arguments &args)
 
     \sa transform()
 */
-static v8::Handle<v8::Value> ctx2d_setTransform(const v8::Arguments &args)
+static QV4::Value ctx2d_setTransform(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -627,7 +628,7 @@ static v8::Handle<v8::Value> ctx2d_setTransform(const v8::Arguments &args)
                                                         , args[4]->NumberValue()
                                                         , args[5]->NumberValue());
 
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -640,7 +641,7 @@ static v8::Handle<v8::Value> ctx2d_setTransform(const v8::Arguments &args)
 
     \sa setTransform()
 */
-static v8::Handle<v8::Value> ctx2d_transform(const v8::Arguments &args)
+static QV4::Value ctx2d_transform(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -654,7 +655,7 @@ static v8::Handle<v8::Value> ctx2d_transform(const v8::Arguments &args)
                                                   , args[4]->NumberValue()
                                                   , args[5]->NumberValue());
 
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -666,7 +667,7 @@ static v8::Handle<v8::Value> ctx2d_transform(const v8::Arguments &args)
     Translating the origin enables you to draw patterns of different objects on the canvas
     without having to measure the coordinates manually for each shape.
 */
-static v8::Handle<v8::Value> ctx2d_translate(const v8::Arguments &args)
+static QV4::Value ctx2d_translate(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -674,7 +675,7 @@ static v8::Handle<v8::Value> ctx2d_translate(const v8::Arguments &args)
 
     if (args.Length() == 2)
             r->context->translate(args[0]->NumberValue(), args[1]->NumberValue());
-    return args.This();
+    return args.ThisV4();
 }
 
 
@@ -684,14 +685,14 @@ static v8::Handle<v8::Value> ctx2d_translate(const v8::Arguments &args)
 
     \sa transform(), setTransform(), reset()
 */
-static v8::Handle<v8::Value> ctx2d_resetTransform(const v8::Arguments &args)
+static QV4::Value ctx2d_resetTransform(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
     r->context->setTransform(1, 0, 0, 1, 0, 0);
 
-    return args.This();
+    return args.ThisV4();
 }
 
 
@@ -699,7 +700,7 @@ static v8::Handle<v8::Value> ctx2d_resetTransform(const v8::Arguments &args)
     \qmlmethod object QtQuick2::Context2D::shear(real sh, real sv )
     Shear the transformation matrix with \a sh in horizontal direction and \a sv in vertical direction.
 */
-static v8::Handle<v8::Value> ctx2d_shear(const v8::Arguments &args)
+static QV4::Value ctx2d_shear(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -707,7 +708,7 @@ static v8::Handle<v8::Value> ctx2d_shear(const v8::Arguments &args)
     if (args.Length() == 2)
             r->context->shear(args[0]->NumberValue(), args[1]->NumberValue());
 
-    return args.This();
+    return args.ThisV4();
 }
 // compositing
 
@@ -992,7 +993,7 @@ static void ctx2d_strokeStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> 
     \sa strokeStyle
   */
 
-static v8::Handle<v8::Value> ctx2d_createLinearGradient(const v8::Arguments &args)
+static QV4::Value ctx2d_createLinearGradient(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1014,15 +1015,15 @@ static v8::Handle<v8::Value> ctx2d_createLinearGradient(const v8::Arguments &arg
          || !qIsFinite(x1)
          || !qIsFinite(y1)) {
             delete r;
-            V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createLinearGradient(): Incorrect arguments")
+            V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createLinearGradient(): Incorrect arguments")
         }
 
         r->brush = QLinearGradient(x0, y0, x1, y1);
         gradient->SetExternalResource(r);
-        return gradient;
+        return gradient->v4Value();
     }
 
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1038,7 +1039,7 @@ static v8::Handle<v8::Value> ctx2d_createLinearGradient(const v8::Arguments &arg
     \sa strokeStyle
   */
 
-static v8::Handle<v8::Value> ctx2d_createRadialGradient(const v8::Arguments &args)
+static QV4::Value ctx2d_createRadialGradient(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1065,19 +1066,19 @@ static v8::Handle<v8::Value> ctx2d_createRadialGradient(const v8::Arguments &arg
          || !qIsFinite(r1)
          || !qIsFinite(y1)) {
             delete r;
-            V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createRadialGradient(): Incorrect arguments")
+            V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createRadialGradient(): Incorrect arguments")
         }
 
         if (r0 < 0 || r1 < 0)
-            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createRadialGradient(): Incorrect arguments")
+            V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createRadialGradient(): Incorrect arguments")
 
 
         r->brush = QRadialGradient(QPointF(x1, y1), r0+r1, QPointF(x0, y0));
         gradient->SetExternalResource(r);
-        return gradient;
+        return gradient->v4Value();
     }
 
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1093,7 +1094,7 @@ static v8::Handle<v8::Value> ctx2d_createRadialGradient(const v8::Arguments &arg
     \sa strokeStyle
   */
 
-static v8::Handle<v8::Value> ctx2d_createConicalGradient(const v8::Arguments &args)
+static QV4::Value ctx2d_createConicalGradient(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1111,20 +1112,20 @@ static v8::Handle<v8::Value> ctx2d_createConicalGradient(const v8::Arguments &ar
         qreal angle = DEGREES(args[2]->NumberValue());
         if (!qIsFinite(x) || !qIsFinite(y)) {
             delete r;
-            V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createConicalGradient(): Incorrect arguments");
+            V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createConicalGradient(): Incorrect arguments");
         }
 
         if (!qIsFinite(angle)) {
             delete r;
-            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createConicalGradient(): Incorrect arguments");
+            V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createConicalGradient(): Incorrect arguments");
         }
 
         r->brush = QConicalGradient(x, y, angle);
         gradient->SetExternalResource(r);
-        return gradient;
+        return gradient->v4Value();
     }
 
-    return args.This();
+    return args.ThisV4();
 }
 /*!
   \qmlmethod variant QtQuick2::Context2D::createPattern(color color, enumeration patternMode)
@@ -1169,7 +1170,7 @@ static v8::Handle<v8::Value> ctx2d_createConicalGradient(const v8::Arguments &ar
   \sa strokeStyle
   \sa fillStyle
   */
-static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
+static QV4::Value ctx2d_createPattern(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1224,7 +1225,7 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
 
         v8::Handle<v8::Object> pattern = ed->constructorPattern->NewInstance();
         pattern->SetExternalResource(styleResouce);
-        return pattern;
+        return pattern->v4Value();
 
     }
     return QV4::Value::undefinedValue();
@@ -1531,7 +1532,7 @@ static void ctx2d_path_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, 
   \qmlmethod object QtQuick2::Context2D::clearRect(real x, real y, real w, real h)
   Clears all pixels on the canvas in the given rectangle to transparent black.
   */
-static v8::Handle<v8::Value> ctx2d_clearRect(const v8::Arguments &args)
+static QV4::Value ctx2d_clearRect(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1543,7 +1544,7 @@ static v8::Handle<v8::Value> ctx2d_clearRect(const v8::Arguments &args)
                               args[2]->NumberValue(),
                               args[3]->NumberValue());
 
-    return args.This();
+    return args.ThisV4();
 }
 /*!
   \qmlmethod object QtQuick2::Context2D::fillRect(real x, real y, real w, real h)
@@ -1551,14 +1552,14 @@ static v8::Handle<v8::Value> ctx2d_clearRect(const v8::Arguments &args)
 
    \sa fillStyle
   */
-static v8::Handle<v8::Value> ctx2d_fillRect(const v8::Arguments &args)
+static QV4::Value ctx2d_fillRect(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
     if (args.Length() == 4)
         r->context->fillRect(args[0]->NumberValue(), args[1]->NumberValue(), args[2]->NumberValue(), args[3]->NumberValue());
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1571,7 +1572,7 @@ static v8::Handle<v8::Value> ctx2d_fillRect(const v8::Arguments &args)
    \sa lineJoin
    \sa miterLimit
   */
-static v8::Handle<v8::Value> ctx2d_strokeRect(const v8::Arguments &args)
+static QV4::Value ctx2d_strokeRect(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1579,7 +1580,7 @@ static v8::Handle<v8::Value> ctx2d_strokeRect(const v8::Arguments &args)
     if (args.Length() == 4)
         r->context->strokeRect(args[0]->NumberValue(), args[1]->NumberValue(), args[2]->NumberValue(), args[3]->NumberValue());
 
-    return args.This();
+    return args.ThisV4();
 }
 
 // Complex shapes (paths) API
@@ -1590,7 +1591,7 @@ static v8::Handle<v8::Value> ctx2d_strokeRect(const v8::Arguments &args)
   \sa arcTo,
       {http://www.w3.org/TR/2dcontext/#dom-context-2d-arc}{W3C 2d context standard for arc}
   */
-static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
+static QV4::Value ctx2d_arc(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1604,7 +1605,7 @@ static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
         qreal radius = args[2]->NumberValue();
 
         if (qIsFinite(radius) && radius < 0)
-           V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "Incorrect argument radius");
+           V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "Incorrect argument radius");
 
         r->context->arc(args[0]->NumberValue(),
                         args[1]->NumberValue(),
@@ -1614,7 +1615,7 @@ static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
                         antiClockwise);
     }
 
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1637,7 +1638,7 @@ static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
   \sa arc, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arcto}{W3C 2d
       context standard for arcTo}
   */
-static v8::Handle<v8::Value> ctx2d_arcTo(const v8::Arguments &args)
+static QV4::Value ctx2d_arcTo(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1646,7 +1647,7 @@ static v8::Handle<v8::Value> ctx2d_arcTo(const v8::Arguments &args)
         qreal radius = args[4]->NumberValue();
 
         if (qIsFinite(radius) && radius < 0)
-           V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "Incorrect argument radius");
+           V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "Incorrect argument radius");
 
         r->context->arcTo(args[0]->NumberValue(),
                           args[1]->NumberValue(),
@@ -1655,7 +1656,7 @@ static v8::Handle<v8::Value> ctx2d_arcTo(const v8::Arguments &args)
                           radius);
     }
 
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1663,7 +1664,7 @@ static v8::Handle<v8::Value> ctx2d_arcTo(const v8::Arguments &args)
 
    Resets the current path to a new path.
   */
-static v8::Handle<v8::Value> ctx2d_beginPath(const v8::Arguments &args)
+static QV4::Value ctx2d_beginPath(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1671,7 +1672,7 @@ static v8::Handle<v8::Value> ctx2d_beginPath(const v8::Arguments &args)
 
     r->context->beginPath();
 
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1693,7 +1694,7 @@ static v8::Handle<v8::Value> ctx2d_beginPath(const v8::Arguments &args)
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-beziercurveto}{W3C 2d context standard for bezierCurveTo}
   \sa {http://www.openrise.com/lab/FlowerPower/}{The beautiful flower demo by using bezierCurveTo}
   */
-static v8::Handle<v8::Value> ctx2d_bezierCurveTo(const v8::Arguments &args)
+static QV4::Value ctx2d_bezierCurveTo(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1708,12 +1709,12 @@ static v8::Handle<v8::Value> ctx2d_bezierCurveTo(const v8::Arguments &args)
         qreal y = args[5]->NumberValue();
 
         if (!qIsFinite(cp1x) || !qIsFinite(cp1y) || !qIsFinite(cp2x) || !qIsFinite(cp2y) || !qIsFinite(x) || !qIsFinite(y))
-            return args.This();
+            return args.ThisV4();
 
         r->context->bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
     }
 
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1740,13 +1741,13 @@ static v8::Handle<v8::Value> ctx2d_bezierCurveTo(const v8::Arguments &args)
     \sa fill()
    \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-clip}{W3C 2d context standard for clip}
   */
-static v8::Handle<v8::Value> ctx2d_clip(const v8::Arguments &args)
+static QV4::Value ctx2d_clip(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
     r->context->clip();
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1756,7 +1757,7 @@ static v8::Handle<v8::Value> ctx2d_clip(const v8::Arguments &args)
 
    \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-closepath}{W3C 2d context standard for closePath}
   */
-static v8::Handle<v8::Value> ctx2d_closePath(const v8::Arguments &args)
+static QV4::Value ctx2d_closePath(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1764,7 +1765,7 @@ static v8::Handle<v8::Value> ctx2d_closePath(const v8::Arguments &args)
 
     r->context->closePath();
 
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1776,12 +1777,12 @@ static v8::Handle<v8::Value> ctx2d_closePath(const v8::Arguments &args)
 
    \sa fillStyle
   */
-static v8::Handle<v8::Value> ctx2d_fill(const v8::Arguments &args)
+static QV4::Value ctx2d_fill(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r);
     r->context->fill();
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1789,7 +1790,7 @@ static v8::Handle<v8::Value> ctx2d_fill(const v8::Arguments &args)
 
    Draws a line from the current position to the point (x, y).
  */
-static v8::Handle<v8::Value> ctx2d_lineTo(const v8::Arguments &args)
+static QV4::Value ctx2d_lineTo(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1800,12 +1801,12 @@ static v8::Handle<v8::Value> ctx2d_lineTo(const v8::Arguments &args)
         qreal y = args[1]->NumberValue();
 
         if (!qIsFinite(x) || !qIsFinite(y))
-            return args.This();
+            return args.ThisV4();
 
         r->context->lineTo(x, y);
     }
 
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1813,7 +1814,7 @@ static v8::Handle<v8::Value> ctx2d_lineTo(const v8::Arguments &args)
 
    Creates a new subpath with the given point.
  */
-static v8::Handle<v8::Value> ctx2d_moveTo(const v8::Arguments &args)
+static QV4::Value ctx2d_moveTo(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1823,10 +1824,10 @@ static v8::Handle<v8::Value> ctx2d_moveTo(const v8::Arguments &args)
         qreal y = args[1]->NumberValue();
 
         if (!qIsFinite(x) || !qIsFinite(y))
-            return args.This();
+            return args.ThisV4();
         r->context->moveTo(x, y);
     }
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1836,7 +1837,7 @@ static v8::Handle<v8::Value> ctx2d_moveTo(const v8::Arguments &args)
 
    See \l{http://www.w3.org/TR/2dcontext/#dom-context-2d-quadraticcurveto}{W3C 2d context standard for  for quadraticCurveTo}
  */
-static v8::Handle<v8::Value> ctx2d_quadraticCurveTo(const v8::Arguments &args)
+static QV4::Value ctx2d_quadraticCurveTo(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1848,12 +1849,12 @@ static v8::Handle<v8::Value> ctx2d_quadraticCurveTo(const v8::Arguments &args)
         qreal y = args[3]->NumberValue();
 
         if (!qIsFinite(cpx) || !qIsFinite(cpy) || !qIsFinite(x) || !qIsFinite(y))
-            return args.This();
+            return args.ThisV4();
 
         r->context->quadraticCurveTo(cpx, cpy, x, y);
     }
 
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1861,14 +1862,14 @@ static v8::Handle<v8::Value> ctx2d_quadraticCurveTo(const v8::Arguments &args)
 
    Adds a rectangle at position (\c x, \c y), with the given width \c w and height \c h, as a closed subpath.
  */
-static v8::Handle<v8::Value> ctx2d_rect(const v8::Arguments &args)
+static QV4::Value ctx2d_rect(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
     if (args.Length() == 4)
         r->context->rect(args[0]->NumberValue(), args[1]->NumberValue(), args[2]->NumberValue(), args[3]->NumberValue());
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1877,7 +1878,7 @@ static v8::Handle<v8::Value> ctx2d_rect(const v8::Arguments &args)
    Adds the given rectangle rect with rounded corners to the path. The \c xRadius and \c yRadius arguments specify the radius of the
    ellipses defining the corners of the rounded rectangle.
  */
-static v8::Handle<v8::Value> ctx2d_roundedRect(const v8::Arguments &args)
+static QV4::Value ctx2d_roundedRect(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1889,7 +1890,7 @@ static v8::Handle<v8::Value> ctx2d_roundedRect(const v8::Arguments &args)
                               , args[3]->NumberValue()
                               , args[4]->NumberValue()
                               , args[5]->NumberValue());
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1900,7 +1901,7 @@ static v8::Handle<v8::Value> ctx2d_roundedRect(const v8::Arguments &args)
 
   The ellipse is composed of a clockwise curve, starting and finishing at zero degrees (the 3 o'clock position).
  */
-static v8::Handle<v8::Value> ctx2d_ellipse(const v8::Arguments &args)
+static QV4::Value ctx2d_ellipse(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1909,7 +1910,7 @@ static v8::Handle<v8::Value> ctx2d_ellipse(const v8::Arguments &args)
     if (args.Length() == 4)
         r->context->ellipse(args[0]->NumberValue(), args[1]->NumberValue(), args[2]->NumberValue(), args[3]->NumberValue());
 
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1918,7 +1919,7 @@ static v8::Handle<v8::Value> ctx2d_ellipse(const v8::Arguments &args)
   Adds the given \c text to the path as a set of closed subpaths created from the current context font supplied.
   The subpaths are positioned so that the left end of the text's baseline lies at the point specified by (\c x, \c y).
  */
-static v8::Handle<v8::Value> ctx2d_text(const v8::Arguments &args)
+static QV4::Value ctx2d_text(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1928,10 +1929,10 @@ static v8::Handle<v8::Value> ctx2d_text(const v8::Arguments &args)
         qreal y = args[2]->NumberValue();
 
         if (!qIsFinite(x) || !qIsFinite(y))
-            return args.This();
+            return args.ThisV4();
         r->context->text(args[0]->v4Value().toQString(), x, y);
     }
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1943,13 +1944,13 @@ static v8::Handle<v8::Value> ctx2d_text(const v8::Arguments &args)
 
    \sa strokeStyle
   */
-static v8::Handle<v8::Value> ctx2d_stroke(const v8::Arguments &args)
+static QV4::Value ctx2d_stroke(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
     r->context->stroke();
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -1959,7 +1960,7 @@ static v8::Handle<v8::Value> ctx2d_stroke(const v8::Arguments &args)
 
    \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-ispointinpath}{W3C 2d context standard for isPointInPath}
   */
-static v8::Handle<v8::Value> ctx2d_isPointInPath(const v8::Arguments &args)
+static QV4::Value ctx2d_isPointInPath(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -1967,28 +1968,28 @@ static v8::Handle<v8::Value> ctx2d_isPointInPath(const v8::Arguments &args)
     bool pointInPath = false;
     if (args.Length() == 2)
         pointInPath = r->context->isPointInPath(args[0]->NumberValue(), args[1]->NumberValue());
-    return v8::Boolean::New(pointInPath);
+    return QV4::Value::fromBoolean(pointInPath);
 }
 
-static v8::Handle<v8::Value> ctx2d_drawFocusRing(const v8::Arguments &args)
+static QV4::Value ctx2d_drawFocusRing(const v8::Arguments &args)
 {
     Q_UNUSED(args);
 
-    V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::drawFocusRing is not supported");
+    V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::drawFocusRing is not supported");
 }
 
-static v8::Handle<v8::Value> ctx2d_setCaretSelectionRect(const v8::Arguments &args)
+static QV4::Value ctx2d_setCaretSelectionRect(const v8::Arguments &args)
 {
     Q_UNUSED(args);
 
-    V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::setCaretSelectionRect is not supported");
+    V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::setCaretSelectionRect is not supported");
 }
 
-static v8::Handle<v8::Value> ctx2d_caretBlinkRate(const v8::Arguments &args)
+static QV4::Value ctx2d_caretBlinkRate(const v8::Arguments &args)
 {
     Q_UNUSED(args);
 
-    V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::caretBlinkRate is not supported");
+    V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::caretBlinkRate is not supported");
 }
 // text
 /*!
@@ -2153,7 +2154,7 @@ static void ctx2d_textBaseline_set(v8::Handle<v8::String>, v8::Handle<v8::Value>
   \sa textBaseline
   \sa strokeText
   */
-static v8::Handle<v8::Value> ctx2d_fillText(const v8::Arguments &args)
+static QV4::Value ctx2d_fillText(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -2162,11 +2163,11 @@ static v8::Handle<v8::Value> ctx2d_fillText(const v8::Arguments &args)
         qreal x = args[1]->NumberValue();
         qreal y = args[2]->NumberValue();
         if (!qIsFinite(x) || !qIsFinite(y))
-            return args.This();
+            return args.ThisV4();
         QPainterPath textPath = r->context->createTextGlyphs(x, y, args[0]->v4Value().toQString());
         r->context->buffer()->fill(textPath);
     }
-    return args.This();
+    return args.ThisV4();
 }
 /*!
   \qmlmethod object QtQuick2::Context2D::strokeText(text, x, y)
@@ -2176,14 +2177,14 @@ static v8::Handle<v8::Value> ctx2d_fillText(const v8::Arguments &args)
   \sa textBaseline
   \sa fillText
   */
-static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
+static QV4::Value ctx2d_strokeText(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
     if (args.Length() == 3)
         r->context->drawText(args[0]->v4Value().toQString(), args[1]->NumberValue(), args[2]->NumberValue(), false);
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -2210,7 +2211,7 @@ static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
   \qmlmethod variant QtQuick2::Context2D::measureText(text)
   Returns a TextMetrics object with the metrics of the given text in the current font.
   */
-static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
+static QV4::Value ctx2d_measureText(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -2218,9 +2219,9 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
     if (args.Length() == 1) {
         QFontMetrics fm(r->context->state.font);
         uint width = fm.width(args[0]->v4Value().toQString());
-        v8::Handle<v8::Object> tm = v8::Object::New();
-        tm->Set(v8::String::New("width"), v8::Number::New(width));
-        return tm;
+        QV4::Object *tm = v8::Isolate::GetEngine()->newObject();
+        tm->put(v8::Isolate::GetEngine()->current, v8::Isolate::GetEngine()->newIdentifier(QStringLiteral("width")), QV4::Value::fromDouble(width));
+        return QV4::Value::fromObject(tm);
     }
     return QV4::Value::undefinedValue();
 }
@@ -2284,7 +2285,7 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
 */
-static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
+static QV4::Value ctx2d_drawImage(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -2293,18 +2294,18 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
     qreal sx, sy, sw, sh, dx, dy, dw, dh;
 
     if (!args.Length())
-        return args.This();
+        return args.ThisV4();
 
     //FIXME:This function should be moved to QQuickContext2D::drawImage(...)
     if (!r->context->state.invertibleCTM)
-        return args.This();
+        return args.ThisV4();
 
     QQmlRefPointer<QQuickCanvasPixmap> pixmap;
 
     if (args[0]->IsString()) {
         QUrl url(args[0]->v4Value().toQString());
         if (!url.isValid())
-            V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
+            V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
 
         pixmap = r->context->createPixmap(url);
     } else if (args[0]->IsObject()) {
@@ -2321,14 +2322,14 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
             if (!img.isNull())
                 pixmap.take(new QQuickCanvasPixmap(img, canvas->window()));
         } else {
-            V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
+            V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
         }
     } else {
-        V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
+        V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
     }
 
     if (pixmap.isNull() || !pixmap->isValid())
-        return args.This();
+        return args.ThisV4();
 
     if (args.Length() == 3) {
         dx = args[1]->NumberValue();
@@ -2358,7 +2359,7 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
         dw = args[7]->NumberValue();
         dh = args[8]->NumberValue();
     } else {
-        return args.This();
+        return args.ThisV4();
     }
 
     if (!qIsFinite(sx)
@@ -2369,7 +2370,7 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
      || !qIsFinite(dy)
      || !qIsFinite(dw)
      || !qIsFinite(dh))
-        return args.This();
+        return args.ThisV4();
 
     if (sx < 0
     || sy < 0
@@ -2378,12 +2379,12 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
     || sx + sw > pixmap->width()
     || sy + sh > pixmap->height()
     || sx + sw < 0 || sy + sh < 0) {
-            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "drawImage(), index size error");
+            V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "drawImage(), index size error");
     }
 
     r->context->buffer()->drawPixmap(pixmap, QRectF(sx, sy, sw, sh), QRectF(dx, dy, dw, dh));
 
-    return args.This();
+    return args.ThisV4();
 }
 
 // pixel manipulation
@@ -2535,7 +2536,7 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Handle<v8
 
    \sa Canvas::loadImage(), QtQuick2::Canvas::unloadImage(), QtQuick2::Canvas::isImageLoaded
   */
-static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
+static QV4::Value ctx2d_createImageData(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -2560,12 +2561,12 @@ static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
         qreal h = args[1]->NumberValue();
 
         if (!qIsFinite(w) || !qIsFinite(h))
-            V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createImageData(): invalid arguments");
+            V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createImageData(): invalid arguments");
 
         if (w > 0 && h > 0)
             return qt_create_image_data(w, h, engine, QImage());
         else
-            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createImageData(): invalid arguments");
+            V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createImageData(): invalid arguments");
     }
     return QV4::Value::undefinedValue();
 }
@@ -2574,7 +2575,7 @@ static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
   \qmlmethod CanvasImageData QtQuick2::Canvas::getImageData(real sx, real sy, real sw, real sh)
   Returns an CanvasImageData object containing the image data for the given rectangle of the canvas.
   */
-static v8::Handle<v8::Value> ctx2d_getImageData(const v8::Arguments &args)
+static QV4::Value ctx2d_getImageData(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -2586,13 +2587,13 @@ static v8::Handle<v8::Value> ctx2d_getImageData(const v8::Arguments &args)
         qreal w = args[2]->NumberValue();
         qreal h = args[3]->NumberValue();
         if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(w))
-            V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "getImageData(): Invalid arguments");
+            V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "getImageData(): Invalid arguments");
 
         if (w <= 0 || h <= 0)
-            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "getImageData(): Invalid arguments");
+            V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "getImageData(): Invalid arguments");
 
         QImage image = r->context->canvas()->toImage(QRectF(x, y, w, h));
-        v8::Handle<v8::Object> imageData = qt_create_image_data(w, h, engine, image);
+        QV4::Value imageData = qt_create_image_data(w, h, engine, image);
 
         return imageData;
     }
@@ -2603,7 +2604,7 @@ static v8::Handle<v8::Value> ctx2d_getImageData(const v8::Arguments &args)
   \qmlmethod object QtQuick2::Context2D::putImageData(CanvasImageData imageData, real dx, real dy, real dirtyX, real dirtyY, real dirtyWidth, real dirtyHeight)
   Paints the data from the given ImageData object onto the canvas. If a dirty rectangle (\a dirtyX, \a dirtyY, \a dirtyWidth, \a dirtyHeight) is provided, only the pixels from that rectangle are painted.
   */
-static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
+static QV4::Value ctx2d_putImageData(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
@@ -2611,14 +2612,14 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
         return QV4::Value::undefinedValue();
 
     if (args[0]->IsNull() || !args[0]->IsObject()) {
-        V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "Context2D::putImageData, the image data type mismatch");
+        V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "Context2D::putImageData, the image data type mismatch");
     }
     qreal dx = args[1]->NumberValue();
     qreal dy = args[2]->NumberValue();
     qreal w, h, dirtyX, dirtyY, dirtyWidth, dirtyHeight;
 
     if (!qIsFinite(dx) || !qIsFinite(dy))
-        V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "putImageData() : Invalid arguments");
+        V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "putImageData() : Invalid arguments");
 
     v8::Handle<v8::Object> imageData = args[0]->ToObject();
     QV8Context2DPixelArrayResource *pixelArray = v8_resource_cast<QV8Context2DPixelArrayResource>(imageData->Get(v8::String::New("data"))->ToObject());
@@ -2633,7 +2634,7 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
             dirtyHeight = args[6]->NumberValue();
 
             if (!qIsFinite(dirtyX) || !qIsFinite(dirtyY) || !qIsFinite(dirtyWidth) || !qIsFinite(dirtyHeight))
-                V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "putImageData() : Invalid arguments");
+                V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "putImageData() : Invalid arguments");
 
 
             if (dirtyWidth < 0) {
@@ -2665,7 +2666,7 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
             }
 
             if (dirtyWidth <=0 || dirtyHeight <= 0)
-                return args.This();
+                return args.ThisV4();
         } else {
             dirtyX = 0;
             dirtyY = 0;
@@ -2676,7 +2677,7 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
         QImage image = pixelArray->image.copy(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
         r->context->buffer()->drawImage(image, QRectF(dirtyX, dirtyY, dirtyWidth, dirtyHeight), QRectF(dx, dy, dirtyWidth, dirtyHeight));
     }
-    return args.This();
+    return args.ThisV4();
 }
 
 /*!
@@ -2699,18 +2700,18 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
   gradient.addColorStop(0.7, 'rgba(0, 255, 255, 1');
   \endcode
   */
-static v8::Handle<v8::Value> ctx2d_gradient_addColorStop(const v8::Arguments &args)
+static QV4::Value ctx2d_gradient_addColorStop(const v8::Arguments &args)
 {
     QV8Context2DStyleResource *style = v8_resource_cast<QV8Context2DStyleResource>(args.This());
     if (!style)
-        V8THROW_ERROR("Not a CanvasGradient object");
+        V4THROW_ERROR("Not a CanvasGradient object");
 
     QV8Engine *engine = V8ENGINE();
 
     if (args.Length() == 2) {
 
         if (!style->brush.gradient())
-            V8THROW_ERROR("Not a valid CanvasGradient object, can't get the gradient information");
+            V4THROW_ERROR("Not a valid CanvasGradient object, can't get the gradient information");
         QGradient gradient = *(style->brush.gradient());
         qreal pos = args[0]->NumberValue();
         QColor color;
@@ -2721,18 +2722,18 @@ static v8::Handle<v8::Value> ctx2d_gradient_addColorStop(const v8::Arguments &ar
             color = qt_color_from_string(args[1]);
         }
         if (pos < 0.0 || pos > 1.0 || !qIsFinite(pos)) {
-            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "CanvasGradient: parameter offset out of range");
+            V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "CanvasGradient: parameter offset out of range");
         }
 
         if (color.isValid()) {
             gradient.setColorAt(pos, color);
         } else {
-            V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "CanvasGradient: parameter color is not a valid color string");
+            V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "CanvasGradient: parameter color is not a valid color string");
         }
         style->brush = gradient;
     }
 
-    return args.This();
+    return args.ThisV4();
 }
 
 void QQuickContext2D::scale(qreal x,  qreal y)

@@ -265,7 +265,7 @@ v8::Handle<v8::Value> QV8SequenceWrapper::SortGetter(v8::Handle<v8::String> prop
     return info.Data();
 }
 
-v8::Handle<v8::Value> QV8SequenceWrapper::Sort(const v8::Arguments &args)
+QV4::Value QV8SequenceWrapper::Sort(const v8::Arguments &args)
 {
     int argCount = args.Length();
 
@@ -283,24 +283,24 @@ v8::Handle<v8::Value> QV8SequenceWrapper::Sort(const v8::Arguments &args)
         }
     }
 
-    return args.This();
+    return args.This()->v4Value();
 }
 
-v8::Handle<v8::Value> QV8SequenceWrapper::ToString(const v8::Arguments &args)
+QV4::Value QV8SequenceWrapper::ToString(const v8::Arguments &args)
 {
     QV8SequenceResource *sr = v8_resource_cast<QV8SequenceResource>(args.This());
     Q_ASSERT(sr);
     return sr->toString();
 }
 
-v8::Handle<v8::Value> QV8SequenceWrapper::ValueOf(const v8::Arguments &args)
+QV4::Value QV8SequenceWrapper::ValueOf(const v8::Arguments &args)
 {
     QV8SequenceResource *sr = v8_resource_cast<QV8SequenceResource>(args.This());
     Q_ASSERT(sr);
-    v8::Handle<v8::Value> tostringValue = sr->toString();
-    if (!tostringValue.IsEmpty())
+    QV4::Value tostringValue = sr->toString();
+    if (!tostringValue.isUndefined())
         return tostringValue;
-    return v8::Integer::NewFromUnsigned(sr->lengthGetter());
+    return QV4::Value::fromUInt32(sr->lengthGetter());
 }
 
 v8::Handle<v8::Value> QV8SequenceWrapper::Getter(v8::Handle<v8::String> property,

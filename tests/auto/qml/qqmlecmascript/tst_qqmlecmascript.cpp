@@ -50,7 +50,6 @@
 #include <QtCore/qnumeric.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlvmemetaobject_p.h>
-#include <private/qv4compiler_p.h>
 #include "testtypes.h"
 #include "testhttpserver.h"
 #include "../../shared/util.h"
@@ -2170,7 +2169,7 @@ static inline bool evaluate_error(QV8Engine *engine, v8::Handle<v8::Object> o, c
     QString functionSource = QLatin1String("(function(object) { return ") + 
                              QLatin1String(source) + QLatin1String(" })");
     v8::TryCatch tc;
-    v8::Local<v8::Script> program = v8::Script::Compile(engine->toString(functionSource));
+    v8::Handle<v8::Script> program = v8::Script::Compile(engine->toString(functionSource));
     if (tc.HasCaught())
         return false;
     v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(program->Run());
@@ -2187,7 +2186,7 @@ static inline bool evaluate_value(QV8Engine *engine, v8::Handle<v8::Object> o,
     QString functionSource = QLatin1String("(function(object) { return ") + 
                              QLatin1String(source) + QLatin1String(" })");
     v8::TryCatch tc;
-    v8::Local<v8::Script> program = v8::Script::Compile(engine->toString(functionSource));
+    v8::Handle<v8::Script> program = v8::Script::Compile(engine->toString(functionSource));
     if (tc.HasCaught())
         return false;
     v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(program->Run());
@@ -2209,7 +2208,7 @@ static inline v8::Handle<v8::Value> evaluate(QV8Engine *engine, v8::Handle<v8::O
     QString functionSource = QLatin1String("(function(object) { return ") + 
                              QLatin1String(source) + QLatin1String(" })");
     v8::TryCatch tc;
-    v8::Local<v8::Script> program = v8::Script::Compile(engine->toString(functionSource));
+    v8::Handle<v8::Script> program = v8::Script::Compile(engine->toString(functionSource));
     if (tc.HasCaught())
         return v8::Handle<v8::Value>();
     v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(program->Run());
@@ -2239,10 +2238,7 @@ void tst_qqmlecmascript::callQtInvokables()
     
     QV8Engine *engine = ep->v8engine();
 
-    v8::HandleScope handle_scope;
-    v8::Context::Scope scope(engine->context());
-
-    v8::Local<v8::Object> object = engine->newQObject(o)->ToObject();
+    v8::Handle<v8::Object> object = engine->newQObject(o);
 
     // Non-existent methods
     o->reset();
@@ -2309,7 +2305,7 @@ void tst_qqmlecmascript::callQtInvokables()
     {
     v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QPointF()");
     QVERIFY(!ret.IsEmpty());
-    QCOMPARE(engine->toVariant(ret, -1), QVariant(QPointF(123, 4.5)));
+    QCOMPARE(engine->toVariant(ret->v4Value(), -1), QVariant(QPointF(123, 4.5)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 3);
     QCOMPARE(o->actuals().count(), 0);
@@ -2318,7 +2314,7 @@ void tst_qqmlecmascript::callQtInvokables()
     o->reset();
     {
     v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QObject()");
-    QCOMPARE(engine->toQObject(ret), (QObject *)o);
+    QCOMPARE(engine->toQObject(ret->v4Value()), (QObject *)o);
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 4);
     QCOMPARE(o->actuals().count(), 0);
@@ -2334,7 +2330,7 @@ void tst_qqmlecmascript::callQtInvokables()
     {
     v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QScriptValue()");
     QVERIFY(ret->IsString());
-    QCOMPARE(engine->toString(ret), QString("Hello world"));
+    QCOMPARE(ret->v4Value().toQString(), QString("Hello world"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 6);
     QCOMPARE(o->actuals().count(), 0);
@@ -3785,16 +3781,11 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
             scriptContext = engine->contextWrapper()->context(qmlglobal);
 
             {
-                v8::HandleScope handle_scope;
-                v8::Persistent<v8::Context> context = v8::Context::New();
-                v8::Context::Scope context_scope(context);
-                v8::Local<v8::Object> temporaryScope = engine->qmlScope(scriptContext, NULL);
+                v8::Handle<v8::Object> temporaryScope = engine->qmlScope(scriptContext, NULL);
                 Q_UNUSED(temporaryScope)
-
-                context.Dispose();
             }
 
-            QV8Engine::gc();
+            engine->gc();
             newContext = engine->contextWrapper()->context(qmlglobal);
             QVERIFY(scriptContext == newContext);
         }
@@ -4875,7 +4866,6 @@ void tst_qqmlecmascript::propertyVarInheritance()
     v8::Persistent<v8::Value> icoCanaryHandle;
     v8::Persistent<v8::Value> ccoCanaryHandle;
     {
-        v8::HandleScope hs;
         // XXX NOTE: this is very implementation dependent.  QDVMEMO->vmeProperty() is the only
         // public function which can return us a handle to something in the varProperties array.
         icoCanaryHandle = qPersistentNew(icovmemo->vmeProperty(ico5->metaObject()->indexOfProperty("circ")));
@@ -4919,7 +4909,6 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
     v8::Persistent<v8::Value> childObjectVarArrayValueHandle;
     {
-        v8::HandleScope hs;
         propertyVarWeakRefCallbackCount = 0;                           // reset callback count.
         childObjectVarArrayValueHandle = qPersistentNew(QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp")));
         childObjectVarArrayValueHandle.MakeWeak(&propertyVarWeakRefCallbackCount, propertyVarWeakRefCallback);
@@ -6672,9 +6661,7 @@ void tst_qqmlecmascript::doubleEvaluate()
 
 void tst_qqmlecmascript::nonNotifyable()
 {
-    QV4Compiler::enableV4(false);
     QQmlComponent component(&engine, testFileUrl("nonNotifyable.qml"));
-    QV4Compiler::enableV4(true);
 
     QQmlTestMessageHandler messageHandler;
 

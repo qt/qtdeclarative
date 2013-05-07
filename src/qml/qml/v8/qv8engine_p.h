@@ -116,10 +116,17 @@ namespace QV4 {
     v8::ThrowException(v8::Exception::Error(v8::String::New(string))); \
     return v8::Handle<v8::Value>(); \
 }
+
+#define V4THROW_ERROR(string) \
+    v8::Isolate::GetEngine()->current->throwError(QStringLiteral(string));
+
 #define V8THROW_TYPE(string) { \
     v8::ThrowException(v8::Exception::TypeError(v8::String::New(string))); \
     return v8::Handle<v8::Value>(); \
 }
+#define V4THROW_TYPE(string) \
+    v8::Isolate::GetEngine()->current->throwError(QStringLiteral(string));
+
 #define V8ENGINE_ACCESSOR() ((QV8Engine *)v8::External::Cast(info.Data().get())->Value());
 #define V8THROW_ERROR_SETTER(string) { \
     v8::ThrowException(v8::Exception::Error(v8::String::New(string))); \

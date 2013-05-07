@@ -1354,6 +1354,11 @@ Handle<Object> Arguments::This() const
     return m_thisObject;
 }
 
+QV4::Value Arguments::ThisV4() const
+{
+    return m_thisObject->v4Value();
+}
+
 Handle<Object> Arguments::Holder() const
 {
     // ### FIXME.
@@ -1641,7 +1646,7 @@ protected:
         Arguments arguments(args, argc, thisObject, false, that->m_functionTemplate->m_data);
         QV4::Value result = QV4::Value::undefinedValue();
         if (that->m_functionTemplate->m_callback)
-            result = that->m_functionTemplate->m_callback(arguments)->v4Value();
+            result = that->m_functionTemplate->m_callback(arguments);
         return result;
     }
 
@@ -1657,7 +1662,7 @@ protected:
 
         QV4::Value result = QV4::Value::undefinedValue();
         if (that->m_functionTemplate->m_callback)
-            result = that->m_functionTemplate->m_callback(arguments)->v4Value();
+            result = that->m_functionTemplate->m_callback(arguments);
         if (result.isObject())
             return result;
         return QV4::Value::fromObject(obj);

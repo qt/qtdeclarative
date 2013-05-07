@@ -78,7 +78,7 @@ public:
         Exception = 3
     };
 
-    static v8::Handle<v8::Value> include(const v8::Arguments &args);
+    static QV4::Value include(const v8::Arguments &args);
 
 private slots:
     void finished();

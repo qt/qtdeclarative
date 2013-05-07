@@ -1094,7 +1094,7 @@ public:
                                               const v8::AccessorInfo& info);
     static v8::Handle<v8::Value> ForceCompletionGetter(v8::Handle<v8::String>,
                                                        const v8::AccessorInfo& info);
-    static v8::Handle<v8::Value> ForceCompletion(const v8::Arguments &args);
+    static QV4::Value ForceCompletion(const v8::Arguments &args);
 
     static void StatusChangedSetter(v8::Handle<v8::String>, v8::Handle<v8::Value> value,
                                     const v8::AccessorInfo& info);
@@ -1408,11 +1408,11 @@ v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletionGetter(v8::Handle<v8:
     return componentExtension(r->engine)->forceCompletion;
 }
 
-v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletion(const v8::Arguments &args) 
+QV4::Value QV8IncubatorResource::ForceCompletion(const v8::Arguments &args)
 {
     QV8IncubatorResource *r = v8_resource_cast<QV8IncubatorResource>(args.This());
     if (!r)
-        V8THROW_TYPE("Not an incubator object");
+        V4THROW_TYPE("Not an incubator object");
 
     r->forceCompletion();
 

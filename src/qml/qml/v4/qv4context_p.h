@@ -74,7 +74,7 @@ struct Q_QML_EXPORT DiagnosticMessage
 
 struct CallContext;
 
-struct ExecutionContext
+struct Q_QML_EXPORT ExecutionContext
 {
     enum Type {
         Type_GlobalContext = 0x1,

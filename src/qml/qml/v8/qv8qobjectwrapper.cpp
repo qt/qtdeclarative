@@ -133,7 +133,7 @@ struct CallArgument {
 
     inline void initAsType(int type);
     inline void fromValue(int type, QV8Engine *, v8::Handle<v8::Value>);
-    inline v8::Handle<v8::Value> toValue(QV8Engine *);
+    inline QV4::Value toValue(QV8Engine *);
 
 private:
     CallArgument(const CallArgument &);
@@ -1366,10 +1366,10 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
     return -1;
 }
 
-v8::Handle<v8::Value> QV8QObjectWrapper::Connect(const v8::Arguments &args)
+QV4::Value QV8QObjectWrapper::Connect(const v8::Arguments &args)
 {
     if (args.Length() == 0)
-        V8THROW_ERROR("Function.prototype.connect: no arguments given");
+        V4THROW_ERROR("Function.prototype.connect: no arguments given");
 
     QV8Engine *engine = V8ENGINE();
 
@@ -1378,13 +1378,13 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Connect(const v8::Arguments &args)
     int signalIndex = signalInfo.second;
 
     if (signalIndex < 0)
-        V8THROW_ERROR("Function.prototype.connect: this object is not a signal");
+        V4THROW_ERROR("Function.prototype.connect: this object is not a signal");
 
     if (!signalObject)
-        V8THROW_ERROR("Function.prototype.connect: cannot connect to deleted QObject");
+        V4THROW_ERROR("Function.prototype.connect: cannot connect to deleted QObject");
 
     if (signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
-        V8THROW_ERROR("Function.prototype.connect: this object is not a signal");
+        V4THROW_ERROR("Function.prototype.connect: this object is not a signal");
 
     v8::Handle<v8::Value> functionValue;
     v8::Handle<v8::Value> functionThisValue;
@@ -1397,10 +1397,10 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Connect(const v8::Arguments &args)
     }
 
     if (!functionValue->IsFunction())
-        V8THROW_ERROR("Function.prototype.connect: target is not a function");
+        V4THROW_ERROR("Function.prototype.connect: target is not a function");
 
     if (!functionThisValue.IsEmpty() && !functionThisValue->IsObject())
-        V8THROW_ERROR("Function.prototype.connect: target this is not an object");
+        V4THROW_ERROR("Function.prototype.connect: target this is not an object");
 
     QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
     QHash<QObject *, QV8QObjectConnectionList *> &connections = qobjectWrapper->m_connections;
@@ -1425,10 +1425,10 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Connect(const v8::Arguments &args)
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
+QV4::Value QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
 {
     if (args.Length() == 0)
-        V8THROW_ERROR("Function.prototype.disconnect: no arguments given");
+        V4THROW_ERROR("Function.prototype.disconnect: no arguments given");
 
     QV8Engine *engine = V8ENGINE();
 
@@ -1437,13 +1437,13 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
     int signalIndex = signalInfo.second;
 
     if (signalIndex == -1)
-        V8THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
+        V4THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
 
     if (!signalObject)
-        V8THROW_ERROR("Function.prototype.disconnect: cannot disconnect from deleted QObject");
+        V4THROW_ERROR("Function.prototype.disconnect: cannot disconnect from deleted QObject");
 
     if (signalIndex < 0 || signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
-        V8THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
+        V4THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
 
     v8::Handle<v8::Value> functionValue;
     v8::Handle<v8::Value> functionThisValue;
@@ -1456,10 +1456,10 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
     }
 
     if (!functionValue->IsFunction())
-        V8THROW_ERROR("Function.prototype.disconnect: target is not a function");
+        V4THROW_ERROR("Function.prototype.disconnect: target is not a function");
 
     if (!functionThisValue.IsEmpty() && !functionThisValue->IsObject())
-        V8THROW_ERROR("Function.prototype.disconnect: target this is not an object");
+        V4THROW_ERROR("Function.prototype.disconnect: target this is not an object");
 
     QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
     QHash<QObject *, QV8QObjectConnectionList *> &connectionsList = qobjectWrapper->m_connections;
@@ -1555,7 +1555,7 @@ private:
 };
 }
 
-static v8::Handle<v8::Value> CallMethod(QObject *object, int index, int returnType, int argCount, 
+static QV4::Value CallMethod(QObject *object, int index, int returnType, int argCount,
                                         int *argTypes, QV8Engine *engine, CallArgs &callArgs)
 {
     if (argCount > 0) {
@@ -1795,7 +1795,7 @@ static const QQmlPropertyData * RelatedMethod(QObject *object,
     }
 }
 
-static v8::Handle<v8::Value> CallPrecise(QObject *object, const QQmlPropertyData &data,
+static QV4::Value CallPrecise(QObject *object, const QQmlPropertyData &data,
                                          QV8Engine *engine, CallArgs &callArgs)
 {
     QByteArray unknownTypeError;
@@ -1805,8 +1805,7 @@ static v8::Handle<v8::Value> CallPrecise(QObject *object, const QQmlPropertyData
     if (returnType == QMetaType::UnknownType) {
         QString typeName = QString::fromLatin1(unknownTypeError);
         QString error = QString::fromLatin1("Unknown method return type: %1").arg(typeName);
-        v8::ThrowException(v8::Exception::Error(engine->toString(error)));
-        return v8::Handle<v8::Value>();
+        QV8Engine::getV4(engine)->current->throwError(error);
     }
 
     if (data.hasArguments()) {
@@ -1820,14 +1819,12 @@ static v8::Handle<v8::Value> CallPrecise(QObject *object, const QQmlPropertyData
         if (!args) {
             QString typeName = QString::fromLatin1(unknownTypeError);
             QString error = QString::fromLatin1("Unknown method parameter type: %1").arg(typeName);
-            v8::ThrowException(v8::Exception::Error(engine->toString(error)));
-            return v8::Handle<v8::Value>();
+            QV8Engine::getV4(engine)->current->throwError(error);
         }
 
         if (args[0] > callArgs.Length()) {
             QString error = QLatin1String("Insufficient arguments");
-            v8::ThrowException(v8::Exception::Error(engine->toString(error)));
-            return v8::Handle<v8::Value>();
+            QV8Engine::getV4(engine)->current->throwError(error);
         }
 
         return CallMethod(object, data.coreIndex, returnType, args[0], args + 1, engine, callArgs);
@@ -1852,7 +1849,7 @@ Resolve the overloaded method to call.  The algorithm works conceptually like th
         If two or more overloads have the same match score, call the last one.  The match
         score is constructed by adding the matchScore() result for each of the parameters.
 */
-static v8::Handle<v8::Value> CallOverloaded(QObject *object, const QQmlPropertyData &data,
+static QV4::Value CallOverloaded(QObject *object, const QQmlPropertyData &data,
                                             QV8Engine *engine, CallArgs &callArgs)
 {
     int argumentCount = callArgs.Length();
@@ -1923,12 +1920,11 @@ static v8::Handle<v8::Value> CallOverloaded(QObject *object, const QQmlPropertyD
             candidate = RelatedMethod(object, candidate, dummy);
         }
 
-        v8::ThrowException(v8::Exception::Error(engine->toString(error)));
-        return v8::Handle<v8::Value>();
+        QV8Engine::getV4(engine)->current->throwError(error);
     }
 }
 
-static v8::Handle<v8::Value> ToString(QV8Engine *engine, QObject *object, int, v8::Handle<v8::Object>)
+static QV4::Value ToString(QV8Engine *engine, QObject *object, int, v8::Handle<v8::Object>)
 {
     QString result;
     if (object) {
@@ -1952,7 +1948,7 @@ static v8::Handle<v8::Value> ToString(QV8Engine *engine, QObject *object, int, v
     return engine->toString(result);
 }
 
-static v8::Handle<v8::Value> Destroy(QV8Engine *, QObject *object, int argCount, v8::Handle<v8::Object> args)
+static QV4::Value Destroy(QV8Engine *, QObject *object, int argCount, v8::Handle<v8::Object> args)
 {
     QQmlData *ddata = QQmlData::get(object, false);
     if (!ddata || ddata->indestructible || ddata->rootObjectInCreation) {
@@ -1973,7 +1969,7 @@ static v8::Handle<v8::Value> Destroy(QV8Engine *, QObject *object, int argCount,
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
+QV4::Value QV8QObjectWrapper::Invoke(const v8::Arguments &args)
 {
     // object, index, qmlglobal, argCount, args
     Q_ASSERT(args.Length() == 5);
@@ -1992,7 +1988,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
         v8::Handle<v8::Array> data = v8::Array::New(2);
         data->Set(0, args[0]);
         data->Set(1, args[1]);
-        return data;
+        return data->v4Value();
     }
 
     QObject *object = resource->object;
@@ -2043,7 +2039,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
         QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, method.coreIndex, args);
 
         if (rv.IsEmpty()) return QV4::Value::undefinedValue();
-        return rv;
+        return rv->v4Value();
     }
 
     CallArgs callArgs(argCount, &arguments);
@@ -2229,20 +2225,20 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
     }
 }
 
-v8::Handle<v8::Value> CallArgument::toValue(QV8Engine *engine)
+QV4::Value CallArgument::toValue(QV8Engine *engine)
 {
     if (type == qMetaTypeId<QJSValue>()) {
-        return v8::Value::fromV4Value(QJSValuePrivate::get(*qjsValuePtr)->getValue(QV8Engine::getV4(engine)));
+        return QJSValuePrivate::get(*qjsValuePtr)->getValue(QV8Engine::getV4(engine));
     } else if (type == QMetaType::Int) {
-        return v8::Integer::New(int(intValue));
+        return QV4::Value::fromInt32(int(intValue));
     } else if (type == QMetaType::UInt) {
-        return v8::Integer::NewFromUnsigned(intValue);
+        return QV4::Value::fromUInt32(intValue);
     } else if (type == QMetaType::Bool) {
-        return v8::Boolean::New(boolValue);
+        return QV4::Value::fromBoolean(boolValue);
     } else if (type == QMetaType::Double) {
-        return v8::Number::New(doubleValue);
+        return QV4::Value::fromDouble(doubleValue);
     } else if (type == QMetaType::Float) {
-        return v8::Number::New(floatValue);
+        return QV4::Value::fromDouble(floatValue);
     } else if (type == QMetaType::QString) {
         return engine->toString(*qstringPtr);
     } else if (type == QMetaType::QObjectStar) {
@@ -2254,22 +2250,23 @@ v8::Handle<v8::Value> CallArgument::toValue(QV8Engine *engine)
         // XXX Can this be made more by using Array as a prototype and implementing
         // directly against QList<QObject*>?
         QList<QObject *> &list = *qlistPtr;
-        v8::Handle<v8::Array> array = v8::Array::New(list.count());
+        QV4::ArrayObject *array = QV8Engine::getV4(engine)->newArrayObject();
+        array->setArrayLength(list.count());
         for (int ii = 0; ii < list.count(); ++ii) 
-            array->Set(ii, engine->newQObject(list.at(ii)));
-        return array;
+            array->arrayData[ii].value = engine->newQObject(list.at(ii));
+        return QV4::Value::fromObject(array);
     } else if (type == qMetaTypeId<QQmlV4Handle>()) {
-        return handlePtr->toV8Handle();
+        return handlePtr->toValue();
     } else if (type == QMetaType::QJsonArray) {
-        return v8::Value::fromV4Value(engine->jsonArrayToJS(*jsonArrayPtr));
+        return engine->jsonArrayToJS(*jsonArrayPtr);
     } else if (type == QMetaType::QJsonObject) {
-        return v8::Value::fromV4Value(engine->jsonObjectToJS(*jsonObjectPtr));
+        return engine->jsonObjectToJS(*jsonObjectPtr);
     } else if (type == QMetaType::QJsonValue) {
-        return v8::Value::fromV4Value(engine->jsonValueToJS(*jsonValuePtr));
+        return engine->jsonValueToJS(*jsonValuePtr);
     } else if (type == -1 || type == qMetaTypeId<QVariant>()) {
         QVariant value = *qvariantPtr;
-        v8::Handle<v8::Value> rv = engine->fromVariant(value);
-        if (QObject *object = engine->toQObject(rv->v4Value()))
+        QV4::Value rv = engine->fromVariant(value);
+        if (QObject *object = engine->toQObject(rv))
             QQmlData::get(object, true)->setImplicitDestructible();
         return rv;
     } else {

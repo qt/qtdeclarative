@@ -175,7 +175,7 @@ public:
 
     int m_nextId;
 
-    static v8::Handle<v8::Value> sendMessage(const v8::Arguments &args);
+    static QV4::Value sendMessage(const v8::Arguments &args);
 
 signals:
     void stopThread();
@@ -272,7 +272,7 @@ QQuickWorkerScriptEnginePrivate::QQuickWorkerScriptEnginePrivate(QQmlEngine *eng
 {
 }
 
-v8::Handle<v8::Value> QQuickWorkerScriptEnginePrivate::sendMessage(const v8::Arguments &args)
+QV4::Value QQuickWorkerScriptEnginePrivate::sendMessage(const v8::Arguments &args)
 {
     WorkerEngine *engine = (WorkerEngine*)V8ENGINE();
 

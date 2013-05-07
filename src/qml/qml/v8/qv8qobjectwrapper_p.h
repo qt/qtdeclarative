@@ -132,9 +132,9 @@ private:
     static v8::Handle<v8::Integer> Query(v8::Handle<v8::String> property,
                                          const v8::AccessorInfo &info);
     static v8::Handle<v8::Array> Enumerator(const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Connect(const v8::Arguments &args);
-    static v8::Handle<v8::Value> Disconnect(const v8::Arguments &args);
-    static v8::Handle<v8::Value> Invoke(const v8::Arguments &args);
+    static QV4::Value Connect(const v8::Arguments &args);
+    static QV4::Value Disconnect(const v8::Arguments &args);
+    static QV4::Value Invoke(const v8::Arguments &args);
     static QPair<QObject *, int> ExtractQtMethod(QV8Engine *, v8::Handle<v8::Function>);
     static QPair<QObject *, int> ExtractQtSignal(QV8Engine *, v8::Handle<v8::Object>);
     static void WeakQObjectReferenceCallback(v8::Persistent<v8::Value> handle, void *wrapper);

@@ -55,6 +55,7 @@
 #include <QDebug>
 #include <QDir>
 #include <math.h>
+#include <qmath.h>
 
 #ifdef Q_OS_MAC
 #include <Carbon/Carbon.h>

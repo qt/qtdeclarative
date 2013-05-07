@@ -50,6 +50,7 @@
 #include "qqmlexpression_p.h"
 #include "qqmlglobal_p.h"
 #include <private/qv4domerrors_p.h>
+#include <private/qv4engine_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtQml/qjsvalue.h>
@@ -66,6 +67,9 @@
     v8::ThrowException(v8::Exception::ReferenceError(v8::String::New(string))); \
     return v8::Handle<v8::Value>(); \
 }
+
+#define V4THROW_REFERENCE(string) \
+    v8::Isolate::GetEngine()->current->throwError(QV4::Value::fromObject(v8::Isolate::GetEngine()->newReferenceErrorObject(QStringLiteral(string))))
 
 #define D(arg) (arg)->release()
 #define A(arg) (arg)->addref()
@@ -977,9 +981,9 @@ public:
     int replyStatus() const;
     QString replyStatusText() const;
 
-    v8::Handle<v8::Value> open(v8::Handle<v8::Object> me, const QString &, const QUrl &);
-    v8::Handle<v8::Value> send(v8::Handle<v8::Object> me, const QByteArray &);
-    v8::Handle<v8::Value> abort(v8::Handle<v8::Object> me);
+    QV4::Value open(v8::Handle<v8::Object> me, const QString &, const QUrl &);
+    QV4::Value send(v8::Handle<v8::Object> me, const QByteArray &);
+    QV4::Value abort(v8::Handle<v8::Object> me);
 
     void addHeader(const QString &, const QString &);
     QString header(const QString &name);
@@ -1073,7 +1077,7 @@ QString QQmlXMLHttpRequest::replyStatusText() const
     return m_statusText;
 }
 
-v8::Handle<v8::Value> QQmlXMLHttpRequest::open(v8::Handle<v8::Object> me, const QString &method, 
+QV4::Value QQmlXMLHttpRequest::open(v8::Handle<v8::Object> me, const QString &method,
                                                        const QUrl &url)
 {
     destroyNetwork();
@@ -1199,7 +1203,7 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
                      this, SLOT(finished()));
 }
 
-v8::Handle<v8::Value> QQmlXMLHttpRequest::send(v8::Handle<v8::Object> me, const QByteArray &data)
+QV4::Value QQmlXMLHttpRequest::send(v8::Handle<v8::Object> me, const QByteArray &data)
 {
     m_errorFlag = false;
     m_sendFlag = true;
@@ -1213,7 +1217,7 @@ v8::Handle<v8::Value> QQmlXMLHttpRequest::send(v8::Handle<v8::Object> me, const 
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> QQmlXMLHttpRequest::abort(v8::Handle<v8::Object> me)
+QV4::Value QQmlXMLHttpRequest::abort(v8::Handle<v8::Object> me)
 {
     destroyNetwork();
     m_responseEntityBody = QByteArray();
@@ -1511,14 +1515,14 @@ void QQmlXMLHttpRequest::destroyNetwork()
 }
 
 // XMLHttpRequest methods
-static v8::Handle<v8::Value> qmlxmlhttprequest_open(const v8::Arguments &args)
+static QV4::Value qmlxmlhttprequest_open(const v8::Arguments &args)
 {
     QQmlXMLHttpRequest *r = v8_resource_cast<QQmlXMLHttpRequest>(args.This());
     if (!r)
-        V8THROW_REFERENCE("Not an XMLHttpRequest object");
+        V4THROW_REFERENCE("Not an XMLHttpRequest object");
 
     if (args.Length() < 2 || args.Length() > 5)
-        V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
+        V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     QV8Engine *engine = r->engine;
 
@@ -1529,7 +1533,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_open(const v8::Arguments &args)
         method != QLatin1String("HEAD") &&
         method != QLatin1String("POST") &&
         method != QLatin1String("DELETE"))
-        V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Unsupported HTTP method type");
+        V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Unsupported HTTP method type");
 
     // Argument 1 - URL
     QUrl url = QUrl(args[1]->v4Value().toQString());
@@ -1539,7 +1543,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_open(const v8::Arguments &args)
 
     // Argument 2 - async (optional)
     if (args.Length() > 2 && !args[2]->BooleanValue())
-        V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Synchronous XMLHttpRequest calls are not supported");
+        V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Synchronous XMLHttpRequest calls are not supported");
 
     // Argument 3/4 - user/pass (optional)
     QString username, password;
@@ -1558,17 +1562,17 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_open(const v8::Arguments &args)
     return r->open(constructMeObject(args.This(), engine), method, url);
 }
 
-static v8::Handle<v8::Value> qmlxmlhttprequest_setRequestHeader(const v8::Arguments &args)
+static QV4::Value qmlxmlhttprequest_setRequestHeader(const v8::Arguments &args)
 {
     QQmlXMLHttpRequest *r = v8_resource_cast<QQmlXMLHttpRequest>(args.This());
     if (!r)
-        V8THROW_REFERENCE("Not an XMLHttpRequest object");
+        V4THROW_REFERENCE("Not an XMLHttpRequest object");
 
     if (args.Length() != 2)
-        V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
+        V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     if (r->readyState() != QQmlXMLHttpRequest::Opened || r->sendFlag())
-        V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
+        V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     QV8Engine *engine = r->engine;
 
@@ -1605,17 +1609,17 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_setRequestHeader(const v8::Argume
     return QV4::Value::undefinedValue();
 }
 
-static v8::Handle<v8::Value> qmlxmlhttprequest_send(const v8::Arguments &args)
+static QV4::Value qmlxmlhttprequest_send(const v8::Arguments &args)
 {
     QQmlXMLHttpRequest *r = v8_resource_cast<QQmlXMLHttpRequest>(args.This());
     if (!r)
-        V8THROW_REFERENCE("Not an XMLHttpRequest object");
+        V4THROW_REFERENCE("Not an XMLHttpRequest object");
 
     QV8Engine *engine = r->engine;
 
     if (r->readyState() != QQmlXMLHttpRequest::Opened ||
         r->sendFlag())
-        V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
+        V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     QByteArray data;
     if (args.Length() > 0)
@@ -1624,49 +1628,49 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_send(const v8::Arguments &args)
     return r->send(constructMeObject(args.This(), engine), data);
 }
 
-static v8::Handle<v8::Value> qmlxmlhttprequest_abort(const v8::Arguments &args)
+static QV4::Value qmlxmlhttprequest_abort(const v8::Arguments &args)
 {
     QQmlXMLHttpRequest *r = v8_resource_cast<QQmlXMLHttpRequest>(args.This());
     if (!r)
-        V8THROW_REFERENCE("Not an XMLHttpRequest object");
+        V4THROW_REFERENCE("Not an XMLHttpRequest object");
 
     return r->abort(constructMeObject(args.This(), r->engine));
 }
 
-static v8::Handle<v8::Value> qmlxmlhttprequest_getResponseHeader(const v8::Arguments &args)
+static QV4::Value qmlxmlhttprequest_getResponseHeader(const v8::Arguments &args)
 {
     QQmlXMLHttpRequest *r = v8_resource_cast<QQmlXMLHttpRequest>(args.This());
     if (!r)
-        V8THROW_REFERENCE("Not an XMLHttpRequest object");
+        V4THROW_REFERENCE("Not an XMLHttpRequest object");
 
     QV8Engine *engine = r->engine;
 
     if (args.Length() != 1)
-        V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
+        V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     if (r->readyState() != QQmlXMLHttpRequest::Loading &&
         r->readyState() != QQmlXMLHttpRequest::Done &&
         r->readyState() != QQmlXMLHttpRequest::HeadersReceived)
-        V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
+        V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     return engine->toString(r->header(args[0]->v4Value().toQString()));
 }
 
-static v8::Handle<v8::Value> qmlxmlhttprequest_getAllResponseHeaders(const v8::Arguments &args)
+static QV4::Value qmlxmlhttprequest_getAllResponseHeaders(const v8::Arguments &args)
 {
     QQmlXMLHttpRequest *r = v8_resource_cast<QQmlXMLHttpRequest>(args.This());
     if (!r)
-        V8THROW_REFERENCE("Not an XMLHttpRequest object");
+        V4THROW_REFERENCE("Not an XMLHttpRequest object");
 
     QV8Engine *engine = r->engine;
 
     if (args.Length() != 0) 
-        V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
+        V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     if (r->readyState() != QQmlXMLHttpRequest::Loading &&
         r->readyState() != QQmlXMLHttpRequest::Done &&
         r->readyState() != QQmlXMLHttpRequest::HeadersReceived)
-        V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
+        V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     return engine->toString(r->headers());
 }
@@ -1750,7 +1754,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_responseXML(v8::Handle<v8::String
     }
 }
 
-static v8::Handle<v8::Value> qmlxmlhttprequest_new(const v8::Arguments &args)
+static QV4::Value qmlxmlhttprequest_new(const v8::Arguments &args)
 {
     if (args.IsConstructCall()) {
         QV8Engine *engine = V8ENGINE();
@@ -1759,7 +1763,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_new(const v8::Arguments &args)
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(engine, engine->networkAccessManager());
         args.This()->SetExternalResource(r);
 
-        return args.This();
+        return args.This()->v4Value();
     } else {
         return QV4::Value::undefinedValue();
     }

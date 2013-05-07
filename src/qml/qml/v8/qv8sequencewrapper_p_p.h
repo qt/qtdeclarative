@@ -87,7 +87,7 @@ public:
     virtual v8::Handle<v8::Value> indexedGetter(quint32 index) = 0;
     virtual v8::Handle<v8::Boolean> indexedDeleter(quint32 index) = 0;
     virtual v8::Handle<v8::Array> indexedEnumerator() = 0;
-    virtual v8::Handle<v8::Value> toString() = 0;
+    virtual QV4::Value toString() = 0;
     virtual void sort(v8::Handle<v8::Function> comparer) = 0;
 
     ObjectType objectType;
@@ -443,7 +443,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 } \
                 return retn; \
             } \
-            v8::Handle<v8::Value> toString() \
+            QV4::Value toString() \
             { \
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \

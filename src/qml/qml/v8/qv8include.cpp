@@ -167,7 +167,7 @@ void QV8Include::finished()
 /*
     Documented in qv8engine.cpp
 */
-v8::Handle<v8::Value> QV8Include::include(const v8::Arguments &args)
+QV4::Value QV8Include::include(const v8::Arguments &args)
 {
     if (args.Length() == 0)
         return QV4::Value::undefinedValue();
@@ -176,7 +176,7 @@ v8::Handle<v8::Value> QV8Include::include(const v8::Arguments &args)
     QQmlContextData *context = engine->callingContext();
 
     if (!context || !context->isJSContext) 
-        V8THROW_ERROR("Qt.include(): Can only be called from JavaScript files");
+        V4THROW_ERROR("Qt.include(): Can only be called from JavaScript files");
 
     QUrl url(context->resolvedUrl(QUrl(args[0]->v4Value().toQString())));
     
@@ -237,7 +237,7 @@ v8::Handle<v8::Value> QV8Include::include(const v8::Arguments &args)
     if (result.IsEmpty())
         return QV4::Value::undefinedValue();
     else 
-        return result;
+        return result->v4Value();
 }
 
 QT_END_NAMESPACE

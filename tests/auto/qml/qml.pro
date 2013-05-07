@@ -52,7 +52,6 @@ PRIVATETESTS += \
     qquickworkerscript \
     qqmlbundle \
     qrcqml \
-    v4 \
     qqmltimer \
     qqmlinstantiator
 

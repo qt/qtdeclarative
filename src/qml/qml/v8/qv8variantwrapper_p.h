@@ -90,10 +90,10 @@ private:
                                                 const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> ValueOfGetter(v8::Handle<v8::String> property,
                                                const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Preserve(const v8::Arguments &args);
-    static v8::Handle<v8::Value> Destroy(const v8::Arguments &args);
-    static v8::Handle<v8::Value> ToString(const v8::Arguments &args);
-    static v8::Handle<v8::Value> ValueOf(const v8::Arguments &args);
+    static QV4::Value Preserve(const v8::Arguments &args);
+    static QV4::Value Destroy(const v8::Arguments &args);
+    static QV4::Value ToString(const v8::Arguments &args);
+    static QV4::Value ValueOf(const v8::Arguments &args);
 
     QV8Engine *m_engine;
     v8::Persistent<v8::Function> m_constructor;

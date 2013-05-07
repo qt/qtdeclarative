@@ -254,7 +254,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::ToStringGetter(v8::Handle<v8::String>
     return info.Data();
 }
 
-v8::Handle<v8::Value> QV8ValueTypeWrapper::ToString(const v8::Arguments &args)
+QV4::Value QV8ValueTypeWrapper::ToString(const v8::Arguments &args)
 {
     QV8ValueTypeResource *resource = v8_resource_cast<QV8ValueTypeResource>(args.This());
     if (resource) {

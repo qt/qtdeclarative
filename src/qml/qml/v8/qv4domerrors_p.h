@@ -83,6 +83,14 @@ QT_BEGIN_NAMESPACE
     return v8::Handle<v8::Value>(); \
 }
 
+#define V4THROW_DOM(error, string) { \
+    QV4::ExecutionContext *ctx = v8::Isolate::GetEngine()->current; \
+    QV4::Value v = QV4::Value::fromString(ctx, QStringLiteral(string)); \
+    QV4::Object *ex = ctx->engine->newErrorObject(v); \
+    ex->put(ctx, ctx->engine->newIdentifier(QStringLiteral("code")), QV4::Value::fromInt32(error)); \
+    ctx->throwError(QV4::Value::fromObject(ex)); \
+}
+
 namespace QV4 {
 struct ExecutionEngine;
 }

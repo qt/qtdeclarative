@@ -1622,6 +1622,7 @@ class V8EXPORT Arguments {
   int Length() const;
   Handle<Value> operator[](int i) const;
   Handle<Object> This() const;
+  QV4::Value ThisV4() const;
   Handle<Object> Holder() const;
   bool IsConstructCall() const;
   Handle<Value> Data() const;
@@ -1652,7 +1653,7 @@ private:
 };
 
 
-typedef Handle<Value> (*InvocationCallback)(const Arguments& args);
+typedef QV4::Value (*InvocationCallback)(const Arguments& args);
 
 /**
  * NamedProperty[Getter|Setter] are used as interceptors on object.

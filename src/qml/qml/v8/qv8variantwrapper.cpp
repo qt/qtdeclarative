@@ -221,7 +221,7 @@ v8::Handle<v8::Value> QV8VariantWrapper::ValueOfGetter(v8::Handle<v8::String> pr
     return info.Data();
 }
 
-v8::Handle<v8::Value> QV8VariantWrapper::Preserve(const v8::Arguments &args)
+QV4::Value QV8VariantWrapper::Preserve(const v8::Arguments &args)
 {
     QV8VariantResource *resource = v8_resource_cast<QV8VariantResource>(args.This());
     if (resource) {
@@ -230,7 +230,7 @@ v8::Handle<v8::Value> QV8VariantWrapper::Preserve(const v8::Arguments &args)
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> QV8VariantWrapper::Destroy(const v8::Arguments &args)
+QV4::Value QV8VariantWrapper::Destroy(const v8::Arguments &args)
 {
     QV8VariantResource *resource = v8_resource_cast<QV8VariantResource>(args.This());
     if (resource) {
@@ -240,7 +240,7 @@ v8::Handle<v8::Value> QV8VariantWrapper::Destroy(const v8::Arguments &args)
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> QV8VariantWrapper::ToString(const v8::Arguments &args)
+QV4::Value QV8VariantWrapper::ToString(const v8::Arguments &args)
 {
     QV8VariantResource *resource = v8_resource_cast<QV8VariantResource>(args.This());
     if (resource) {
@@ -253,7 +253,7 @@ v8::Handle<v8::Value> QV8VariantWrapper::ToString(const v8::Arguments &args)
     }
 }
 
-v8::Handle<v8::Value> QV8VariantWrapper::ValueOf(const v8::Arguments &args)
+QV4::Value QV8VariantWrapper::ValueOf(const v8::Arguments &args)
 {
     QV8VariantResource *resource = v8_resource_cast<QV8VariantResource>(args.This());
     if (resource) {
@@ -266,14 +266,14 @@ v8::Handle<v8::Value> QV8VariantWrapper::ValueOf(const v8::Arguments &args)
         case QVariant::Int:
         case QVariant::Double:
         case QVariant::UInt:
-            return v8::Number::New(v.toDouble());
+            return QV4::Value::fromDouble(v.toDouble());
         case QVariant::Bool:
-            return v8::Boolean::New(v.toBool());
+            return QV4::Value::fromBoolean(v.toBool());
         default:
             break;
         }
     }
-    return args.This();
+    return args.This()->v4Value();
 }
 
 QT_END_NAMESPACE

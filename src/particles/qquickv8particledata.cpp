@@ -43,6 +43,7 @@
 #include "qquickv8particledata_p.h"
 #include "qquickparticlesystem_p.h"//for QQuickParticleData
 #include <QDebug>
+#include <private/qv4engine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -286,33 +287,33 @@ public:
     v8::Persistent<v8::Function> constructor;
 };
 
-static v8::Handle<v8::Value> particleData_discard(const v8::Arguments &args)
+static QV4::Value particleData_discard(const v8::Arguments &args)
 {
     QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(args.This());
 
     if (!r || !r->datum)
-        V8THROW_ERROR("Not a valid ParticleData object");
+        V4THROW_ERROR("Not a valid ParticleData object");
 
     r->datum->lifeSpan = 0; //Don't kill(), because it could still be in the middle of being created
     return QV4::Value::undefinedValue();
 }
 
-static v8::Handle<v8::Value> particleData_lifeLeft(const v8::Arguments &args)
+static QV4::Value particleData_lifeLeft(const v8::Arguments &args)
 {
     QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(args.This());
     if (!r || !r->datum)
-        V8THROW_ERROR("Not a valid ParticleData object");
+        V4THROW_ERROR("Not a valid ParticleData object");
 
-    return v8::Number::New(r->datum->lifeLeft());
+    return QV4::Value::fromDouble(r->datum->lifeLeft());
 }
 
-static v8::Handle<v8::Value> particleData_curSize(const v8::Arguments &args)
+static QV4::Value particleData_curSize(const v8::Arguments &args)
 {
     QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(args.This());
     if (!r || !r->datum)
-        V8THROW_ERROR("Not a valid ParticleData object");
+        V4THROW_ERROR("Not a valid ParticleData object");
 
-    return v8::Number::New(r->datum->curSize());
+    return QV4::Value::fromDouble(r->datum->curSize());
 }
 #define COLOR_GETTER_AND_SETTER(VAR, NAME) static v8::Handle<v8::Value> particleData_get_ ## NAME (v8::Handle<v8::String>, const v8::AccessorInfo &info) \
 { \

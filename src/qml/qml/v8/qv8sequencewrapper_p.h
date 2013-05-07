@@ -99,13 +99,13 @@ private:
     static v8::Handle<v8::Value> LengthGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
     static void LengthSetter(v8::Handle<v8::String> property, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> ToStringGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> ToString(const v8::Arguments &args);
+    static QV4::Value ToString(const v8::Arguments &args);
     static v8::Handle<v8::Value> ValueOfGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> SortGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> ValueOf(const v8::Arguments &args);
+    static QV4::Value ValueOf(const v8::Arguments &args);
     static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Sort(const v8::Arguments &args);
+    static QV4::Value Sort(const v8::Arguments &args);
 };
 
 

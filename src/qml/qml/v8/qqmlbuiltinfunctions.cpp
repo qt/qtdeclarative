@@ -52,6 +52,8 @@
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlglobal_p.h>
 
+#include <private/qv4engine_p.h>
+
 #include <QtCore/qstring.h>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qcryptographichash.h>
@@ -107,7 +109,7 @@ static QString jsStack() {
     return stackFrames.join(QLatin1String("\n"));
 }
 
-v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args,
+QV4::Value console(ConsoleLogTypes logType, const v8::Arguments &args,
                               bool printStack = false)
 {
     QString result;
@@ -173,7 +175,7 @@ v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> gc(const v8::Arguments &args)
+QV4::Value gc(const v8::Arguments &args)
 {
     Q_UNUSED(args);
     // ###
@@ -181,12 +183,12 @@ v8::Handle<v8::Value> gc(const v8::Arguments &args)
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> consoleError(const v8::Arguments &args)
+QV4::Value consoleError(const v8::Arguments &args)
 {
     return console(Error, args);
 }
 
-v8::Handle<v8::Value> consoleLog(const v8::Arguments &args)
+QV4::Value consoleLog(const v8::Arguments &args)
 {
     //console.log
     //console.debug
@@ -195,7 +197,7 @@ v8::Handle<v8::Value> consoleLog(const v8::Arguments &args)
     return console(Log, args);
 }
 
-v8::Handle<v8::Value> consoleProfile(const v8::Arguments &args)
+QV4::Value consoleProfile(const v8::Arguments &args)
 {
     //DeclarativeDebugTrace cannot handle nested profiling
     //although v8 can handle several profiling at once,
@@ -224,7 +226,7 @@ v8::Handle<v8::Value> consoleProfile(const v8::Arguments &args)
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> consoleProfileEnd(const v8::Arguments &args)
+QV4::Value consoleProfileEnd(const v8::Arguments &args)
 {
     //DeclarativeDebugTrace cannot handle nested profiling
     //although v8 can handle several profiling at once,
@@ -253,19 +255,19 @@ v8::Handle<v8::Value> consoleProfileEnd(const v8::Arguments &args)
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> consoleTime(const v8::Arguments &args)
+QV4::Value consoleTime(const v8::Arguments &args)
 {
     if (args.Length() != 1)
-        V8THROW_ERROR("console.time(): Invalid arguments");
+        V4THROW_ERROR("console.time(): Invalid arguments");
     QString name = args[0]->v4Value().toQString();
     V8ENGINE()->startTimer(name);
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args)
+QV4::Value consoleTimeEnd(const v8::Arguments &args)
 {
     if (args.Length() != 1)
-        V8THROW_ERROR("console.time(): Invalid arguments");
+        V4THROW_ERROR("console.time(): Invalid arguments");
     QString name = args[0]->v4Value().toQString();
     bool wasRunning;
     qint64 elapsed = V8ENGINE()->stopTimer(name, &wasRunning);
@@ -275,7 +277,7 @@ v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args)
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> consoleCount(const v8::Arguments &args)
+QV4::Value consoleCount(const v8::Arguments &args)
 {
     // first argument: name to print. Ignore any additional arguments
     QString name;
@@ -303,10 +305,10 @@ v8::Handle<v8::Value> consoleCount(const v8::Arguments &args)
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> consoleTrace(const v8::Arguments &args)
+QV4::Value consoleTrace(const v8::Arguments &args)
 {
     if (args.Length() != 0)
-        V8THROW_ERROR("console.trace(): Invalid arguments");
+        V4THROW_ERROR("console.trace(): Invalid arguments");
 
     QString stack = jsStack();
 
@@ -320,15 +322,15 @@ v8::Handle<v8::Value> consoleTrace(const v8::Arguments &args)
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> consoleWarn(const v8::Arguments &args)
+QV4::Value consoleWarn(const v8::Arguments &args)
 {
     return console(Warn, args);
 }
 
-v8::Handle<v8::Value> consoleAssert(const v8::Arguments &args)
+QV4::Value consoleAssert(const v8::Arguments &args)
 {
     if (args.Length() == 0)
-        V8THROW_ERROR("console.assert(): Missing argument");
+        V4THROW_ERROR("console.assert(): Missing argument");
 
     if (!args[0]->ToBoolean()->Value()) {
         QString message;
@@ -354,21 +356,21 @@ v8::Handle<v8::Value> consoleAssert(const v8::Arguments &args)
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> consoleException(const v8::Arguments &args)
+QV4::Value consoleException(const v8::Arguments &args)
 {
     if (args.Length() == 0)
-        V8THROW_ERROR("console.exception(): Missing argument");
+        V4THROW_ERROR("console.exception(): Missing argument");
 
     console(Error, args, true);
 
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> stringArg(const v8::Arguments &args)
+QV4::Value stringArg(const v8::Arguments &args)
 {
     QString value = args.This()->v4Value().toQString();
     if (args.Length() != 1)
-        V8THROW_ERROR("String.arg(): Invalid arguments");
+        V4THROW_ERROR("String.arg(): Invalid arguments");
 
     v8::Handle<v8::Value> arg = args[0];
     if (arg->IsUint32())
@@ -387,12 +389,12 @@ v8::Handle<v8::Value> stringArg(const v8::Arguments &args)
 \qmlmethod bool Qt::isQtObject(object)
 Returns true if \c object is a valid reference to a Qt or QML object, otherwise false.
 */
-v8::Handle<v8::Value> isQtObject(const v8::Arguments &args)
+QV4::Value isQtObject(const v8::Arguments &args)
 {
     if (args.Length() == 0)
-        return v8::Boolean::New(false);
+        return QV4::Value::fromBoolean(false);
 
-    return v8::Boolean::New(0 != V8ENGINE()->toQObject(args[0]->v4Value()));
+    return QV4::Value::fromBoolean(0 != V8ENGINE()->toQObject(args[0]->v4Value()));
 }
 
 /*!
@@ -401,11 +403,11 @@ v8::Handle<v8::Value> isQtObject(const v8::Arguments &args)
 Returns a color with the specified \c red, \c green, \c blue and \c alpha components.
 All components should be in the range 0-1 inclusive.
 */
-v8::Handle<v8::Value> rgba(const v8::Arguments &args)
+QV4::Value rgba(const v8::Arguments &args)
 {
     int argCount = args.Length();
     if (argCount < 3 || argCount > 4)
-        V8THROW_ERROR("Qt.rgba(): Invalid arguments");
+        V4THROW_ERROR("Qt.rgba(): Invalid arguments");
 
     double r = args[0]->NumberValue();
     double g = args[1]->NumberValue();
@@ -430,11 +432,11 @@ v8::Handle<v8::Value> rgba(const v8::Arguments &args)
 Returns a color with the specified \c hue, \c saturation, \c lightness and \c alpha components.
 All components should be in the range 0-1 inclusive.
 */
-v8::Handle<v8::Value> hsla(const v8::Arguments &args)
+QV4::Value hsla(const v8::Arguments &args)
 {
     int argCount = args.Length();
     if (argCount < 3 || argCount > 4)
-        V8THROW_ERROR("Qt.hsla(): Invalid arguments");
+        V4THROW_ERROR("Qt.hsla(): Invalid arguments");
 
     double h = args[0]->NumberValue();
     double s = args[1]->NumberValue();
@@ -461,10 +463,10 @@ may be either color values or string values.  If a string value is supplied it
 must be convertible to a color, as described for the \l{colorbasictypedocs}{color}
 basic type.
 */
-v8::Handle<v8::Value> colorEqual(const v8::Arguments &args)
+QV4::Value colorEqual(const v8::Arguments &args)
 {
     if (args.Length() != 2)
-        V8THROW_ERROR("Qt.colorEqual(): Invalid arguments");
+        V4THROW_ERROR("Qt.colorEqual(): Invalid arguments");
 
     bool ok = false;
 
@@ -472,20 +474,20 @@ v8::Handle<v8::Value> colorEqual(const v8::Arguments &args)
     if (lhs.userType() == QVariant::String) {
         lhs = QQmlStringConverters::colorFromString(lhs.toString(), &ok);
         if (!ok) {
-            V8THROW_ERROR("Qt.colorEqual(): Invalid color name");
+            V4THROW_ERROR("Qt.colorEqual(): Invalid color name");
         }
     } else if (lhs.userType() != QVariant::Color) {
-        V8THROW_ERROR("Qt.colorEqual(): Invalid arguments");
+        V4THROW_ERROR("Qt.colorEqual(): Invalid arguments");
     }
 
     QVariant rhs = V8ENGINE()->toVariant(args[1]->v4Value(), -1);
     if (rhs.userType() == QVariant::String) {
         rhs = QQmlStringConverters::colorFromString(rhs.toString(), &ok);
         if (!ok) {
-            V8THROW_ERROR("Qt.colorEqual(): Invalid color name");
+            V4THROW_ERROR("Qt.colorEqual(): Invalid color name");
         }
     } else if (rhs.userType() != QVariant::Color) {
-        V8THROW_ERROR("Qt.colorEqual(): Invalid arguments");
+        V4THROW_ERROR("Qt.colorEqual(): Invalid arguments");
     }
 
     bool equal = (lhs == rhs);
@@ -499,10 +501,10 @@ Returns a \c rect with the top-left corner at \c x, \c y and the specified \c wi
 
 The returned object has \c x, \c y, \c width and \c height attributes with the given values.
 */
-v8::Handle<v8::Value> rect(const v8::Arguments &args)
+QV4::Value rect(const v8::Arguments &args)
 {
     if (args.Length() != 4)
-        V8THROW_ERROR("Qt.rect(): Invalid arguments");
+        V4THROW_ERROR("Qt.rect(): Invalid arguments");
 
     double x = args[0]->NumberValue();
     double y = args[1]->NumberValue();
@@ -516,10 +518,10 @@ v8::Handle<v8::Value> rect(const v8::Arguments &args)
 \qmlmethod point Qt::point(int x, int y)
 Returns a Point with the specified \c x and \c y coordinates.
 */
-v8::Handle<v8::Value> point(const v8::Arguments &args)
+QV4::Value point(const v8::Arguments &args)
 {
     if (args.Length() != 2)
-        V8THROW_ERROR("Qt.point(): Invalid arguments");
+        V4THROW_ERROR("Qt.point(): Invalid arguments");
 
     double x = args[0]->ToNumber()->Value();
     double y = args[1]->ToNumber()->Value();
@@ -531,10 +533,10 @@ v8::Handle<v8::Value> point(const v8::Arguments &args)
 \qmlmethod Qt::size(int width, int height)
 Returns a Size with the specified \c width and \c height.
 */
-v8::Handle<v8::Value> size(const v8::Arguments &args)
+QV4::Value size(const v8::Arguments &args)
 {
     if (args.Length() != 2)
-        V8THROW_ERROR("Qt.size(): Invalid arguments");
+        V4THROW_ERROR("Qt.size(): Invalid arguments");
 
     double w = args[0]->ToNumber()->Value();
     double h = args[1]->ToNumber()->Value();
@@ -546,10 +548,10 @@ v8::Handle<v8::Value> size(const v8::Arguments &args)
 \qmlmethod Qt::vector2d(real x, real y)
 Returns a Vector2D with the specified \c x and \c y.
 */
-v8::Handle<v8::Value> vector2d(const v8::Arguments &args)
+QV4::Value vector2d(const v8::Arguments &args)
 {
     if (args.Length() != 2)
-        V8THROW_ERROR("Qt.vector2d(): Invalid arguments");
+        V4THROW_ERROR("Qt.vector2d(): Invalid arguments");
 
     float xy[3]; // qvector2d uses float internally
     xy[0] = args[0]->ToNumber()->Value();
@@ -563,10 +565,10 @@ v8::Handle<v8::Value> vector2d(const v8::Arguments &args)
 \qmlmethod Qt::vector3d(real x, real y, real z)
 Returns a Vector3D with the specified \c x, \c y and \c z.
 */
-v8::Handle<v8::Value> vector3d(const v8::Arguments &args)
+QV4::Value vector3d(const v8::Arguments &args)
 {
     if (args.Length() != 3)
-        V8THROW_ERROR("Qt.vector3d(): Invalid arguments");
+        V4THROW_ERROR("Qt.vector3d(): Invalid arguments");
 
     float xyz[3]; // qvector3d uses float internally
     xyz[0] = args[0]->ToNumber()->Value();
@@ -581,10 +583,10 @@ v8::Handle<v8::Value> vector3d(const v8::Arguments &args)
 \qmlmethod Qt::vector4d(real x, real y, real z, real w)
 Returns a Vector4D with the specified \c x, \c y, \c z and \c w.
 */
-v8::Handle<v8::Value> vector4d(const v8::Arguments &args)
+QV4::Value vector4d(const v8::Arguments &args)
 {
     if (args.Length() != 4)
-        V8THROW_ERROR("Qt.vector4d(): Invalid arguments");
+        V4THROW_ERROR("Qt.vector4d(): Invalid arguments");
 
     float xyzw[4]; // qvector4d uses float internally
     xyzw[0] = args[0]->ToNumber()->Value();
@@ -600,10 +602,10 @@ v8::Handle<v8::Value> vector4d(const v8::Arguments &args)
 \qmlmethod Qt::quaternion(real scalar, real x, real y, real z)
 Returns a Quaternion with the specified \c scalar, \c x, \c y, and \c z.
 */
-v8::Handle<v8::Value> quaternion(const v8::Arguments &args)
+QV4::Value quaternion(const v8::Arguments &args)
 {
     if (args.Length() != 4)
-        V8THROW_ERROR("Qt.quaternion(): Invalid arguments");
+        V4THROW_ERROR("Qt.quaternion(): Invalid arguments");
 
     qreal sxyz[4]; // qquaternion uses qreal internally
     sxyz[0] = args[0]->ToNumber()->Value();
@@ -623,16 +625,16 @@ key-value pairs where valid keys are the \l{fontbasictypedocs}{font} type's
 subproperty names, and the values are valid values for each subproperty.
 Invalid keys will be ignored.
 */
-v8::Handle<v8::Value> font(const v8::Arguments &args)
+QV4::Value font(const v8::Arguments &args)
 {
     if (args.Length() != 1 || !args[0]->IsObject())
-        V8THROW_ERROR("Qt.font(): Invalid arguments");
+        V4THROW_ERROR("Qt.font(): Invalid arguments");
 
     v8::Handle<v8::Object> obj = args[0]->ToObject();
     bool ok = false;
     QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QFont, QQmlV4Handle::fromV8Handle(obj), V8ENGINE(), &ok);
     if (!ok)
-        V8THROW_ERROR("Qt.font(): Invalid argument: no valid font subproperties specified");
+        V4THROW_ERROR("Qt.font(): Invalid argument: no valid font subproperties specified");
     return V8ENGINE()->fromVariant(v);
 }
 
@@ -643,19 +645,19 @@ Alternatively, the function may be called with a single argument
 where that argument is a JavaScript array which contains the sixteen
 matrix values.
 */
-v8::Handle<v8::Value> matrix4x4(const v8::Arguments &args)
+QV4::Value matrix4x4(const v8::Arguments &args)
 {
     if (args.Length() == 1 && args[0]->IsObject()) {
         v8::Handle<v8::Object> obj = args[0]->ToObject();
         bool ok = false;
         QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QMatrix4x4, QQmlV4Handle::fromV8Handle(obj), V8ENGINE(), &ok);
         if (!ok)
-            V8THROW_ERROR("Qt.matrix4x4(): Invalid argument: not a valid matrix4x4 values array");
+            V4THROW_ERROR("Qt.matrix4x4(): Invalid argument: not a valid matrix4x4 values array");
         return V8ENGINE()->fromVariant(v);
     }
 
     if (args.Length() != 16)
-        V8THROW_ERROR("Qt.matrix4x4(): Invalid arguments");
+        V4THROW_ERROR("Qt.matrix4x4(): Invalid arguments");
 
     qreal vals[16]; // qmatrix4x4 uses qreal internally
     vals[0] = args[0]->ToNumber()->Value();
@@ -693,10 +695,10 @@ by factor and converts the color back to RGB.
 
 If \c factor is not supplied, returns a color 50% lighter than \c baseColor (factor 1.5).
 */
-v8::Handle<v8::Value> lighter(const v8::Arguments &args)
+QV4::Value lighter(const v8::Arguments &args)
 {
     if (args.Length() != 1 && args.Length() != 2)
-        V8THROW_ERROR("Qt.lighter(): Invalid arguments");
+        V4THROW_ERROR("Qt.lighter(): Invalid arguments");
 
     QVariant v = V8ENGINE()->toVariant(args[0]->v4Value(), -1);
     if (v.userType() == QVariant::String) {
@@ -731,10 +733,10 @@ by factor and converts the color back to RGB.
 
 If \c factor is not supplied, returns a color 50% darker than \c baseColor (factor 2.0).
 */
-v8::Handle<v8::Value> darker(const v8::Arguments &args)
+QV4::Value darker(const v8::Arguments &args)
 {
     if (args.Length() != 1 && args.Length() != 2)
-        V8THROW_ERROR("Qt.darker(): Invalid arguments");
+        V4THROW_ERROR("Qt.darker(): Invalid arguments");
 
     QVariant v = V8ENGINE()->toVariant(args[0]->v4Value(), -1);
     if (v.userType() == QVariant::String) {
@@ -778,10 +780,10 @@ v8::Handle<v8::Value> darker(const v8::Arguments &args)
 
     Tint is most useful when a subtle change is intended to be conveyed due to some event; you can then use tinting to more effectively tune the visible color.
 */
-v8::Handle<v8::Value> tint(const v8::Arguments &args)
+QV4::Value tint(const v8::Arguments &args)
 {
     if (args.Length() != 2)
-        V8THROW_ERROR("Qt.tint(): Invalid arguments");
+        V4THROW_ERROR("Qt.tint(): Invalid arguments");
 
     // base color
     QVariant v1 = V8ENGINE()->toVariant(args[0]->v4Value(), -1);
@@ -826,10 +828,10 @@ If \a format is not specified, \a date is formatted using
 
 \sa Locale
 */
-v8::Handle<v8::Value> formatDate(const v8::Arguments &args)
+QV4::Value formatDate(const v8::Arguments &args)
 {
     if (args.Length() < 1 || args.Length() > 2)
-        V8THROW_ERROR("Qt.formatDate(): Invalid arguments");
+        V4THROW_ERROR("Qt.formatDate(): Invalid arguments");
 
     Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
     QDate date = V8ENGINE()->toVariant(args[0]->v4Value(), -1).toDateTime().date();
@@ -843,7 +845,7 @@ v8::Handle<v8::Value> formatDate(const v8::Arguments &args)
             Qt::DateFormat format = Qt::DateFormat(intFormat);
             formattedDate = date.toString(format);
         } else {
-            V8THROW_ERROR("Qt.formatDate(): Invalid date format");
+            V4THROW_ERROR("Qt.formatDate(): Invalid date format");
         }
     } else {
          formattedDate = date.toString(enumFormat);
@@ -867,10 +869,10 @@ If \a format is not specified, \a time is formatted using
 
 \sa Locale
 */
-v8::Handle<v8::Value> formatTime(const v8::Arguments &args)
+QV4::Value formatTime(const v8::Arguments &args)
 {
     if (args.Length() < 1 || args.Length() > 2)
-        V8THROW_ERROR("Qt.formatTime(): Invalid arguments");
+        V4THROW_ERROR("Qt.formatTime(): Invalid arguments");
 
     QVariant argVariant = V8ENGINE()->toVariant(args[0]->v4Value(), -1);
     QTime time;
@@ -890,7 +892,7 @@ v8::Handle<v8::Value> formatTime(const v8::Arguments &args)
             Qt::DateFormat format = Qt::DateFormat(intFormat);
             formattedTime = time.toString(format);
         } else {
-            V8THROW_ERROR("Qt.formatTime(): Invalid time format");
+            V4THROW_ERROR("Qt.formatTime(): Invalid time format");
         }
     } else {
          formattedTime = time.toString(enumFormat);
@@ -989,10 +991,10 @@ with the \a format values below to produce the following results:
 
     \sa Locale
 */
-v8::Handle<v8::Value> formatDateTime(const v8::Arguments &args)
+QV4::Value formatDateTime(const v8::Arguments &args)
 {
     if (args.Length() < 1 || args.Length() > 2)
-        V8THROW_ERROR("Qt.formatDateTime(): Invalid arguments");
+        V4THROW_ERROR("Qt.formatDateTime(): Invalid arguments");
 
     Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
     QDateTime dt = V8ENGINE()->toVariant(args[0]->v4Value(), -1).toDateTime();
@@ -1006,7 +1008,7 @@ v8::Handle<v8::Value> formatDateTime(const v8::Arguments &args)
             Qt::DateFormat format = Qt::DateFormat(intFormat);
             formattedDt = dt.toString(format);
         } else {
-            V8THROW_ERROR("Qt.formatDateTime(): Invalid datetime format");
+            V4THROW_ERROR("Qt.formatDateTime(): Invalid datetime format");
         }
     } else {
          formattedDt = dt.toString(enumFormat);
@@ -1019,12 +1021,12 @@ v8::Handle<v8::Value> formatDateTime(const v8::Arguments &args)
 \qmlmethod bool Qt::openUrlExternally(url target)
 Attempts to open the specified \c target url in an external application, based on the user's desktop preferences. Returns true if it succeeds, and false otherwise.
 */
-v8::Handle<v8::Value> openUrlExternally(const v8::Arguments &args)
+QV4::Value openUrlExternally(const v8::Arguments &args)
 {
     if (args.Length() != 1)
         return V8ENGINE()->fromVariant(false);
 
-    QUrl url(V8ENGINE()->toVariant(resolvedUrl(args)->v4Value(), -1).toUrl());
+    QUrl url(V8ENGINE()->toVariant(resolvedUrl(args), -1).toUrl());
     return V8ENGINE()->fromVariant(QQml_guiProvider()->openUrlExternally(url));
 }
 
@@ -1032,7 +1034,7 @@ v8::Handle<v8::Value> openUrlExternally(const v8::Arguments &args)
   \qmlmethod url Qt::resolvedUrl(url url)
   Returns \a url resolved relative to the URL of the caller.
 */
-v8::Handle<v8::Value> resolvedUrl(const v8::Arguments &args)
+QV4::Value resolvedUrl(const v8::Arguments &args)
 {
     QUrl url = V8ENGINE()->toVariant(args[0]->v4Value(), -1).toUrl();
     QQmlEngine *e = V8ENGINE()->engine();
@@ -1053,10 +1055,10 @@ v8::Handle<v8::Value> resolvedUrl(const v8::Arguments &args)
 \qmlmethod list<string> Qt::fontFamilies()
 Returns a list of the font families available to the application.
 */
-v8::Handle<v8::Value> fontFamilies(const v8::Arguments &args)
+QV4::Value fontFamilies(const v8::Arguments &args)
 {
     if (args.Length() != 0)
-        V8THROW_ERROR("Qt.fontFamilies(): Invalid arguments");
+        V4THROW_ERROR("Qt.fontFamilies(): Invalid arguments");
 
     return V8ENGINE()->fromVariant(QVariant(QQml_guiProvider()->fontFamilies()));
 }
@@ -1065,10 +1067,10 @@ v8::Handle<v8::Value> fontFamilies(const v8::Arguments &args)
 \qmlmethod string Qt::md5(data)
 Returns a hex string of the md5 hash of \c data.
 */
-v8::Handle<v8::Value> md5(const v8::Arguments &args)
+QV4::Value md5(const v8::Arguments &args)
 {
     if (args.Length() != 1)
-        V8THROW_ERROR("Qt.md5(): Invalid arguments");
+        V4THROW_ERROR("Qt.md5(): Invalid arguments");
 
     QByteArray data = args[0]->v4Value().toQString().toUtf8();
     QByteArray result = QCryptographicHash::hash(data, QCryptographicHash::Md5);
@@ -1079,10 +1081,10 @@ v8::Handle<v8::Value> md5(const v8::Arguments &args)
 \qmlmethod string Qt::btoa(data)
 Binary to ASCII - this function returns a base64 encoding of \c data.
 */
-v8::Handle<v8::Value> btoa(const v8::Arguments &args)
+QV4::Value btoa(const v8::Arguments &args)
 {
     if (args.Length() != 1)
-        V8THROW_ERROR("Qt.btoa(): Invalid arguments");
+        V4THROW_ERROR("Qt.btoa(): Invalid arguments");
 
     QByteArray data = args[0]->v4Value().toQString().toUtf8();
 
@@ -1093,10 +1095,10 @@ v8::Handle<v8::Value> btoa(const v8::Arguments &args)
 \qmlmethod string Qt::atob(data)
 ASCII to binary - this function returns a base64 decoding of \c data.
 */
-v8::Handle<v8::Value> atob(const v8::Arguments &args)
+QV4::Value atob(const v8::Arguments &args)
 {
     if (args.Length() != 1)
-        V8THROW_ERROR("Qt.atob(): Invalid arguments");
+        V4THROW_ERROR("Qt.atob(): Invalid arguments");
 
     QByteArray data = args[0]->v4Value().toQString().toUtf8();
 
@@ -1110,7 +1112,7 @@ Within the \l {Prototyping with qmlscene}, this causes the launcher application 
 to quit a C++ application when this method is called, connect the
 QQmlEngine::quit() signal to the QCoreApplication::quit() slot.
 */
-v8::Handle<v8::Value> quit(const v8::Arguments &args)
+QV4::Value quit(const v8::Arguments &args)
 {
     QQmlEnginePrivate::get(V8ENGINE()->engine())->sendQuit();
     return QV4::Value::undefinedValue();
@@ -1140,10 +1142,10 @@ If this is the case, consider using \l{QML:Qt::createComponent()}{Qt.createCompo
 
 See \l {Dynamic QML Object Creation from JavaScript} for more information on using this function.
 */
-v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
+QV4::Value createQmlObject(const v8::Arguments &args)
 {
     if (args.Length() < 2 || args.Length() > 3)
-        V8THROW_ERROR("Qt.createQmlObject(): Invalid arguments");
+        V4THROW_ERROR("Qt.createQmlObject(): Invalid arguments");
 
     struct Error {
         static v8::Handle<v8::Value> create(QV8Engine *engine, const QList<QQmlError> &errors) {
@@ -1194,7 +1196,7 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
 
     QObject *parentArg = v8engine->toQObject(args[1]->v4Value());
     if (!parentArg)
-        V8THROW_ERROR("Qt.createQmlObject(): Missing parent object");
+        V4THROW_ERROR("Qt.createQmlObject(): Missing parent object");
 
     QQmlComponent component(engine);
     component.setData(qml.toUtf8(), url);
@@ -1205,7 +1207,7 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
     }
 
     if (!component.isReady())
-        V8THROW_ERROR("Qt.createQmlObject(): Component is not ready");
+        V4THROW_ERROR("Qt.createQmlObject(): Component is not ready");
 
     QObject *obj = component.beginCreate(effectiveContext);
     if (obj) {
@@ -1264,12 +1266,12 @@ See \l {Dynamic QML Object Creation from JavaScript} for more information on usi
 To create a QML object from an arbitrary string of QML (instead of a file),
 use \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()}.
 */
-v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
+QV4::Value createComponent(const v8::Arguments &args)
 {
-    const char *invalidArgs = "Qt.createComponent(): Invalid arguments";
-    const char *invalidParent = "Qt.createComponent(): Invalid parent object";
+    const QString invalidArgs = QStringLiteral("Qt.createComponent(): Invalid arguments");
+    const QString invalidParent = QStringLiteral("Qt.createComponent(): Invalid parent object");
     if (args.Length() < 1 || args.Length() > 3)
-        V8THROW_ERROR(invalidArgs);
+        v8::Isolate::GetEngine()->current->throwError(invalidArgs);
 
     QV8Engine *v8engine = V8ENGINE();
     QQmlEngine *engine = v8engine->engine();
@@ -1295,24 +1297,24 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
         if (args[1]->IsInt32()) {
             int mode = args[1]->Int32Value();
             if (mode != int(QQmlComponent::PreferSynchronous) && mode != int(QQmlComponent::Asynchronous))
-                V8THROW_ERROR(invalidArgs);
+                v8::Isolate::GetEngine()->current->throwError(invalidArgs);
             compileMode = QQmlComponent::CompilationMode(mode);
             consumedCount += 1;
         } else {
             // The second argument could be the parent only if there are exactly two args
             if ((args.Length() != 2) || !(lastArg->IsObject() || lastArg->IsNull()))
-                V8THROW_ERROR(invalidArgs);
+                v8::Isolate::GetEngine()->current->throwError(invalidArgs);
         }
 
         if (consumedCount < args.Length()) {
             if (lastArg->IsObject()) {
                 parentArg = v8engine->toQObject(lastArg->v4Value());
                 if (!parentArg)
-                    V8THROW_ERROR(invalidParent);
+                    v8::Isolate::GetEngine()->current->throwError(invalidParent);
             } else if (lastArg->IsNull()) {
                 parentArg = 0;
             } else {
-                V8THROW_ERROR(invalidParent);
+                v8::Isolate::GetEngine()->current->throwError(invalidParent);
             }
         }
     }
@@ -1344,16 +1346,16 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
 
     \sa {Localization And Internationalization Support In Qt Quick}
 */
-v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args)
+QV4::Value qsTranslate(const v8::Arguments &args)
 {
     if (args.Length() < 2)
-        V8THROW_ERROR("qsTranslate() requires at least two arguments");
+        V4THROW_ERROR("qsTranslate() requires at least two arguments");
     if (!args[0]->IsString())
-        V8THROW_ERROR("qsTranslate(): first argument (context) must be a string");
+        V4THROW_ERROR("qsTranslate(): first argument (context) must be a string");
     if (!args[1]->IsString())
-        V8THROW_ERROR("qsTranslate(): second argument (sourceText) must be a string");
+        V4THROW_ERROR("qsTranslate(): second argument (sourceText) must be a string");
     if ((args.Length() > 2) && !args[2]->IsString())
-        V8THROW_ERROR("qsTranslate(): third argument (disambiguation) must be a string");
+        V4THROW_ERROR("qsTranslate(): third argument (disambiguation) must be a string");
 
     QV8Engine *v8engine = V8ENGINE();
     QString context = args[0]->v4Value().toQString();
@@ -1401,11 +1403,11 @@ v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args)
 
     \sa {Localization And Internationalization Support In Qt Quick}
 */
-v8::Handle<v8::Value> qsTranslateNoOp(const v8::Arguments &args)
+QV4::Value qsTranslateNoOp(const v8::Arguments &args)
 {
     if (args.Length() < 2)
         return QV4::Value::undefinedValue();
-    return args[1];
+    return args[1]->v4Value();
 }
 
 /*!
@@ -1425,16 +1427,16 @@ v8::Handle<v8::Value> qsTranslateNoOp(const v8::Arguments &args)
 
     \sa {Localization And Internationalization Support In Qt Quick}
 */
-v8::Handle<v8::Value> qsTr(const v8::Arguments &args)
+QV4::Value qsTr(const v8::Arguments &args)
 {
     if (args.Length() < 1)
-        V8THROW_ERROR("qsTr() requires at least one argument");
+        V4THROW_ERROR("qsTr() requires at least one argument");
     if (!args[0]->IsString())
-        V8THROW_ERROR("qsTr(): first argument (sourceText) must be a string");
+        V4THROW_ERROR("qsTr(): first argument (sourceText) must be a string");
     if ((args.Length() > 1) && !args[1]->IsString())
-        V8THROW_ERROR("qsTr(): second argument (disambiguation) must be a string");
+        V4THROW_ERROR("qsTr(): second argument (disambiguation) must be a string");
     if ((args.Length() > 2) && !args[2]->IsNumber())
-        V8THROW_ERROR("qsTr(): third argument (n) must be a number");
+        V4THROW_ERROR("qsTr(): third argument (n) must be a number");
 
     QV8Engine *v8engine = V8ENGINE();
     QQmlContextData *ctxt = v8engine->callingContext();
@@ -1479,11 +1481,11 @@ v8::Handle<v8::Value> qsTr(const v8::Arguments &args)
 
     \sa {Localization And Internationalization Support In Qt Quick}
 */
-v8::Handle<v8::Value> qsTrNoOp(const v8::Arguments &args)
+QV4::Value qsTrNoOp(const v8::Arguments &args)
 {
     if (args.Length() < 1)
         return QV4::Value::undefinedValue();
-    return args[0];
+    return args[0]->v4Value();
 }
 
 /*!
@@ -1516,14 +1518,14 @@ v8::Handle<v8::Value> qsTrNoOp(const v8::Arguments &args)
 
     \sa QT_TRID_NOOP, {Localization And Internationalization Support In Qt Quick}
 */
-v8::Handle<v8::Value> qsTrId(const v8::Arguments &args)
+QV4::Value qsTrId(const v8::Arguments &args)
 {
     if (args.Length() < 1)
-        V8THROW_ERROR("qsTrId() requires at least one argument");
+        V4THROW_ERROR("qsTrId() requires at least one argument");
     if (!args[0]->IsString())
-        V8THROW_TYPE("qsTrId(): first argument (id) must be a string");
+        V4THROW_TYPE("qsTrId(): first argument (id) must be a string");
     if (args.Length() > 1 && !args[1]->IsNumber())
-        V8THROW_TYPE("qsTrId(): second argument (n) must be a number");
+        V4THROW_TYPE("qsTrId(): second argument (n) must be a number");
 
     int n = -1;
     if (args.Length() > 1)
@@ -1549,11 +1551,11 @@ v8::Handle<v8::Value> qsTrId(const v8::Arguments &args)
 
     \sa qsTrId(), {Localization And Internationalization Support In Qt Quick}
 */
-v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args)
+QV4::Value qsTrIdNoOp(const v8::Arguments &args)
 {
     if (args.Length() < 1)
         return QV4::Value::undefinedValue();
-    return args[0];
+    return args[0]->v4Value();
 }
 #endif // QT_NO_TRANSLATION
 
@@ -1577,13 +1579,13 @@ v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args)
 
     \sa QtQuick2::Locale
 */
-v8::Handle<v8::Value> locale(const v8::Arguments &args)
+QV4::Value locale(const v8::Arguments &args)
 {
     QString code;
     if (args.Length() > 1)
-        V8THROW_ERROR("locale() requires 0 or 1 argument");
+        V4THROW_ERROR("locale() requires 0 or 1 argument");
     if (args.Length() == 1 && !args[0]->IsString())
-        V8THROW_TYPE("locale(): argument (locale code) must be a string");
+        V4THROW_TYPE("locale(): argument (locale code) must be a string");
 
     QV8Engine *v8engine = V8ENGINE();
     if (args.Length() == 1)
@@ -1638,17 +1640,17 @@ v8::Handle<v8::Value> locale(const v8::Arguments &args)
 
     \since QtQuick 2.0
 */
-v8::Handle<v8::Value> binding(const v8::Arguments &args)
+QV4::Value binding(const v8::Arguments &args)
 {
     QString code;
     if (args.Length() != 1)
-        V8THROW_ERROR("binding() requires 1 argument");
+        V4THROW_ERROR("binding() requires 1 argument");
     if (!args[0]->IsFunction())
-        V8THROW_TYPE("binding(): argument (binding expression) must be a function");
+        V4THROW_TYPE("binding(): argument (binding expression) must be a function");
 
     v8::Handle<v8::Object> rv = args[0]->ToObject()->Clone();
     rv->SetHiddenValue(v8::Value::fromV4Value(V8ENGINE()->bindingFlagKey()), v8::Boolean::New(true));
-    return rv;
+    return rv->v4Value();
 }
 
 } // namespace QQmlBuiltinFunctions
