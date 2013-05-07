@@ -105,8 +105,8 @@ public:
     QString expression;
     QByteArray expressionUtf8;
 
-    v8::Persistent<v8::Object> v8qmlscope;
-    v8::Persistent<v8::Function> v8function;
+    QV4::PersistentValue v8qmlscope;
+    QV4::PersistentValue v8function;
 
     QString url; // This is a QString for a reason.  QUrls are slooooooow...
     quint16 line;

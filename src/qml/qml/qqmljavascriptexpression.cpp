@@ -326,11 +326,11 @@ void QQmlJavaScriptExpression::exceptionToError(v8::Handle<v8::Message> message,
 }
 
 // Callee owns the persistent handle
-v8::Persistent<v8::Function>
+QV4::PersistentValue
 QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
                                        const char *code, int codeLength,
                                        const QString &filename, quint16 line,
-                                       v8::Persistent<v8::Object> *qmlscope)
+                                       QV4::PersistentValue *qmlscope)
 {
     QQmlEngine *engine = ctxt->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
@@ -347,7 +347,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
         if (!message.IsEmpty())
             QQmlExpressionPrivate::exceptionToError(message, error);
         ep->warning(error);
-        return v8::Persistent<v8::Function>();
+        return QV4::PersistentValue();
     }
     v8::Handle<v8::Value> result = script->Run(scopeobject);
     if (tc.HasCaught()) {
@@ -359,17 +359,18 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
         if (!message.IsEmpty())
             QQmlExpressionPrivate::exceptionToError(message, error);
         ep->warning(error);
-        return v8::Persistent<v8::Function>();
+        return QV4::PersistentValue();
     }
-    if (qmlscope) *qmlscope = qPersistentNew<v8::Object>(scopeobject);
-    return qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(result));
+    if (qmlscope)
+        *qmlscope = scopeobject->v4Value();
+    return result->v4Value();
 }
 
 // Callee owns the persistent handle
-v8::Persistent<v8::Function>
+QV4::PersistentValue
 QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
                                        const QString &code, const QString &filename, quint16 line,
-                                       v8::Persistent<v8::Object> *qmlscope)
+                                       QV4::PersistentValue *qmlscope)
 {
     QQmlEngine *engine = ctxt->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
@@ -386,7 +387,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
         if (!message.IsEmpty())
             QQmlExpressionPrivate::exceptionToError(message, error);
         ep->warning(error);
-        return v8::Persistent<v8::Function>();
+        return QV4::PersistentValue();
     }
     v8::Handle<v8::Value> result = script->Run(scopeobject);
     if (tc.HasCaught()) {
@@ -398,10 +399,11 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
         if (!message.IsEmpty())
             QQmlExpressionPrivate::exceptionToError(message, error);
         ep->warning(error);
-        return v8::Persistent<v8::Function>();
+        return QV4::PersistentValue();
     }
-    if (qmlscope) *qmlscope = qPersistentNew<v8::Object>(scopeobject);
-    return qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(result));
+    if (qmlscope)
+        *qmlscope = scopeobject->v4Value();
+    return result->v4Value();
 }
 
 void QQmlJavaScriptExpression::clearGuards()

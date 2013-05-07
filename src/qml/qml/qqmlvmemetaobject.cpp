@@ -602,10 +602,6 @@ QQmlVMEMetaObject::~QQmlVMEMetaObject()
     if (parent.isT1()) parent.asT1()->objectDestroyed(object);
     delete [] data;
     delete [] aliasEndpoints;
-
-    for (int ii = 0; v8methods && ii < metaData->methodCount; ++ii) {
-        qPersistentDispose(v8methods[ii]);
-    }
     delete [] v8methods;
 
     if (metaData->varPropertyCount)
@@ -974,9 +970,9 @@ v8::Handle<v8::Function> QQmlVMEMetaObject::method(int index)
     }
 
     if (!v8methods) 
-        v8methods = new v8::Persistent<v8::Function>[metaData->methodCount];
+        v8methods = new QV4::PersistentValue[metaData->methodCount];
 
-    if (v8methods[index].IsEmpty()) {
+    if (v8methods[index]->isDeleted()) {
         QQmlVMEMetaData::MethodData *data = metaData->methodData() + index;
 
         const char *body = ((const char*)metaData) + data->bodyOffset;
@@ -991,7 +987,7 @@ v8::Handle<v8::Function> QQmlVMEMetaObject::method(int index)
                                                                        data->lineNumber);
     }
 
-    return v8methods[index];
+    return v8::Handle<v8::Function>(v8methods[index]);
 }
 
 v8::Handle<v8::Value> QQmlVMEMetaObject::readVarProperty(int id)
@@ -1177,22 +1173,20 @@ v8::Handle<v8::Function> QQmlVMEMetaObject::vmeMethod(int index)
 }
 
 // Used by debugger
-void QQmlVMEMetaObject::setVmeMethod(int index, v8::Persistent<v8::Function> value)
+void QQmlVMEMetaObject::setVmeMethod(int index, QV4::PersistentValue function)
 {
     if (index < methodOffset()) {
         Q_ASSERT(parentVMEMetaObject());
-        return parentVMEMetaObject()->setVmeMethod(index, value);
+        return parentVMEMetaObject()->setVmeMethod(index, function);
     }
     int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
     Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + metaData->methodCount));
 
     if (!v8methods) 
-        v8methods = new v8::Persistent<v8::Function>[metaData->methodCount];
+        v8methods = new QV4::PersistentValue[metaData->methodCount];
 
     int methodIndex = index - methodOffset() - plainSignals;
-    if (!v8methods[methodIndex].IsEmpty()) 
-        qPersistentDispose(v8methods[methodIndex]);
-    v8methods[methodIndex] = value;
+    v8methods[methodIndex] = function;
 }
 
 v8::Handle<v8::Value> QQmlVMEMetaObject::vmeProperty(int index)

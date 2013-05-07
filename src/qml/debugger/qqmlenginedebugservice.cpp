@@ -742,7 +742,8 @@ bool QQmlEngineDebugService::setMethodBody(int objectId, const QString &method, 
     Q_ASSERT(vmeMetaObject); // the fact we found the property above should guarentee this
 
     int lineNumber = vmeMetaObject->vmeMethodLineNumber(prop->coreIndex);
-    vmeMetaObject->setVmeMethod(prop->coreIndex, QQmlExpressionPrivate::evalFunction(contextData, object, jsfunction, contextData->url.toString(), lineNumber));
+    vmeMetaObject->setVmeMethod(prop->coreIndex,
+                                QQmlExpressionPrivate::evalFunction(contextData, object, jsfunction, contextData->url.toString(), lineNumber));
     return true;
 }
 

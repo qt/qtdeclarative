@@ -112,7 +112,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
     QString code = rewriteBinding(str);
 
     m_expression = str.toUtf8();
-    v4function = evalFunction(context(), obj, code, QString(), 0)->v4Value();
+    v4function = evalFunction(context(), obj, code, QString(), 0);
 }
 
 QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
@@ -159,7 +159,7 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
     m_lineNumber = scriptPrivate->lineNumber;
     m_columnNumber = scriptPrivate->columnNumber;
 
-    v4function = evalFunction(context(), scopeObject(), code, QString(), m_lineNumber)->v4Value();
+    v4function = evalFunction(context(), scopeObject(), code, QString(), m_lineNumber);
 }
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)
@@ -174,7 +174,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt
     QString code = rewriteBinding(str);
 
     m_expression = str.toUtf8();
-    v4function = evalFunction(ctxt, obj, code, QString(), 0)->v4Value();
+    v4function = evalFunction(ctxt, obj, code, QString(), 0);
 }
 
 QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
@@ -197,7 +197,7 @@ QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
 
     m_expression = str.toUtf8();
 
-    v4function = evalFunction(ctxt, obj, code, url, m_lineNumber)->v4Value();
+    v4function = evalFunction(ctxt, obj, code, url, m_lineNumber);
 }
 
 /*!

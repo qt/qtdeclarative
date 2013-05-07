@@ -99,8 +99,8 @@ private:
     void init(QQmlContextData *ctxt, QObject *scope);
     bool hasParameterInfo() const { return m_parameterCountForJS > 0; }
 
-    v8::Persistent<v8::Object> m_v8qmlscope;
-    v8::Persistent<v8::Function> m_v8function;
+    QV4::PersistentValue m_v8qmlscope;
+    QV4::PersistentValue m_v8function;
 
     //either expressionUtf8 or expression will be used (but not both).
     //once m_v8function is valid, we clear both expressions, and

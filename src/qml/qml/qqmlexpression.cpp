@@ -67,8 +67,6 @@ QQmlExpressionPrivate::QQmlExpressionPrivate()
 
 QQmlExpressionPrivate::~QQmlExpressionPrivate()
 {
-    qPersistentDispose(v8qmlscope);
-    qPersistentDispose(v8function);
 }
 
 void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QObject *me)
@@ -335,8 +333,6 @@ void QQmlExpression::setExpression(const QString &expression)
     d->expressionUtf8.clear();
     d->expressionFunctionValid = false;
     d->expressionFunctionRewritten = false;
-    qPersistentDispose(d->v8function);
-    qPersistentDispose(d->v8qmlscope);
 }
 
 // Must be called with a valid handle scope
@@ -358,7 +354,7 @@ v8::Handle<v8::Value> QQmlExpressionPrivate::v8value(bool *isUndefined)
         expressionFunctionValid = true;
     }
 
-    return evaluate(context(), v8function, isUndefined);
+    return evaluate(context(), **v8function, isUndefined);
 }
 
 QVariant QQmlExpressionPrivate::value(bool *isUndefined)

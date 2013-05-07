@@ -168,7 +168,7 @@ public:
     void registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor);
     v8::Handle<v8::Function> vmeMethod(int index);
     quint16 vmeMethodLineNumber(int index);
-    void setVmeMethod(int index, v8::Persistent<v8::Function>);
+    void setVmeMethod(int index, QV4::PersistentValue function);
     v8::Handle<v8::Value> vmeProperty(int index);
     void setVMEProperty(int index, v8::Handle<v8::Value> v);
 
@@ -216,7 +216,7 @@ public:
 
     QQmlPropertyValueInterceptor *interceptors;
 
-    v8::Persistent<v8::Function> *v8methods;
+    QV4::PersistentValue *v8methods;
     v8::Handle<v8::Function> method(int);
 
     v8::Handle<v8::Value> readVarProperty(int);

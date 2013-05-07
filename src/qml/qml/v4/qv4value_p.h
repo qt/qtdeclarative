@@ -579,6 +579,8 @@ public:
 
     Value *operator->() { return &d->value; }
     Value *operator*() { return &d->value; }
+    const Value *operator->() const { return &d->value; }
+    const Value *operator*() const { return &d->value; }
 
     ExecutionEngine *engine() {
         Managed *m = d->value.asManaged();
