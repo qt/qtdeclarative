@@ -2019,12 +2019,6 @@ class V8EXPORT ObjectTemplate : public Template {
 
 DEFINE_REFCOUNTED_HANDLE_OPERATIONS(ObjectTemplate)
 
-// --- Statics ---
-
-
-Handle<Boolean> V8EXPORT True();
-Handle<Boolean> V8EXPORT False();
-
 // --- Exceptions ---
 
 

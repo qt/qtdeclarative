@@ -297,9 +297,9 @@ v8::Handle<v8::Value> QV8Worker::deserialize(const char *&data, QV8Engine *engin
     case WorkerNull:
         return QV4::Value::nullValue();
     case WorkerTrue:
-        return v8::True();
+        return QV4::Value::fromBoolean(true);
     case WorkerFalse:
-        return v8::False();
+        return QV4::Value::fromBoolean(false);
     case WorkerString:
     {
         quint32 size = headersize(header);

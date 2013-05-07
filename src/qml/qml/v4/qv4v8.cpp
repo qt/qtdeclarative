@@ -1822,21 +1822,6 @@ ObjectTemplate::ObjectTemplate()
     m_useUserComparison = false;
 }
 
-Handle<Boolean> True()
-{
-    Handle<Primitive> val;
-    val.val = QV4::Value::fromBoolean(true).val;
-    return val;
-}
-
-Handle<Boolean> False()
-{
-    Handle<Primitive> val;
-    val.val = QV4::Value::fromBoolean(false).val;
-    return val;
-}
-
-
 Handle<Value> ThrowException(Handle<Value> exception)
 {
     __qmljs_throw(currentEngine()->current, exception->v4Value());
