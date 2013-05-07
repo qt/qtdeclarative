@@ -703,10 +703,10 @@ v8::Handle<v8::Value> lighter(const v8::Arguments &args)
         bool ok = false;
         v = QQmlStringConverters::colorFromString(v.toString(), &ok);
         if (!ok) {
-            return v8::Null();
+            return QV4::Value::nullValue();
         }
     } else if (v.userType() != QVariant::Color) {
-        return v8::Null();
+        return QV4::Value::nullValue();
     }
 
     qreal factor = 1.5;
@@ -741,10 +741,10 @@ v8::Handle<v8::Value> darker(const v8::Arguments &args)
         bool ok = false;
         v = QQmlStringConverters::colorFromString(v.toString(), &ok);
         if (!ok) {
-            return v8::Null();
+            return QV4::Value::nullValue();
         }
     } else if (v.userType() != QVariant::Color) {
-        return v8::Null();
+        return QV4::Value::nullValue();
     }
 
     qreal factor = 2.0;
@@ -789,10 +789,10 @@ v8::Handle<v8::Value> tint(const v8::Arguments &args)
         bool ok = false;
         v1 = QQmlStringConverters::colorFromString(v1.toString(), &ok);
         if (!ok) {
-            return v8::Null();
+            return QV4::Value::nullValue();
         }
     } else if (v1.userType() != QVariant::Color) {
-        return v8::Null();
+        return QV4::Value::nullValue();
     }
 
     // tint color
@@ -801,10 +801,10 @@ v8::Handle<v8::Value> tint(const v8::Arguments &args)
         bool ok = false;
         v2 = QQmlStringConverters::colorFromString(v2.toString(), &ok);
         if (!ok) {
-            return v8::Null();
+            return QV4::Value::nullValue();
         }
     } else if (v2.userType() != QVariant::Color) {
-        return v8::Null();
+        return QV4::Value::nullValue();
     }
 
     return V8ENGINE()->fromVariant(QQml_colorProvider()->tint(v1, v2));
@@ -1181,7 +1181,7 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
 
     QString qml = args[0]->v4Value().toQString();
     if (qml.isEmpty())
-        return v8::Null();
+        return QV4::Value::nullValue();
 
     QUrl url;
     if (args.Length() > 2)
@@ -1282,7 +1282,7 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
 
     QString arg = args[0]->v4Value().toQString();
     if (arg.isEmpty())
-        return v8::Null();
+        return QV4::Value::nullValue();
 
     QQmlComponent::CompilationMode compileMode = QQmlComponent::PreferSynchronous;
     QObject *parentArg = 0;

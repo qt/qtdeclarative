@@ -243,7 +243,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                     args[ii] = reinterpret_cast<QQmlV4Handle *>(a[ii + 1])->toV8Handle();
                 } else if (ep->isQObject(type)) {
                     if (!*reinterpret_cast<void* const *>(a[ii + 1]))
-                        args[ii] = v8::Null();
+                        args[ii] = QV4::Value::nullValue();
                     else
                         args[ii] = engine->newQObject(*reinterpret_cast<QObject* const *>(a[ii + 1]));
                 } else {

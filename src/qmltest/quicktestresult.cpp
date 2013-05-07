@@ -475,7 +475,7 @@ bool QuickTestResult::fuzzyCompare(const QVariant &actual, const QVariant &expec
 void QuickTestResult::stringify(QQmlV8Function *args)
 {
     if (args->Length() < 1)
-        args->returnValue(v8::Null());
+        args->returnValue(QV4::Value::nullValue());
 
     v8::Handle<v8::Value> value = (*args)[0];
 

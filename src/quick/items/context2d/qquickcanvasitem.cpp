@@ -368,7 +368,7 @@ QQmlV4Handle QQuickCanvasItem::context() const
     if (d->contextInitialized)
         return QQmlV4Handle::fromV8Handle(d->context->v8value());
 
-    return QQmlV4Handle::fromV8Handle(v8::Null());
+    return QQmlV4Handle::fromV8Handle(QV4::Value::nullValue());
 }
 
 /*!
@@ -728,13 +728,13 @@ void QQuickCanvasItem::getContext(QQmlV8Function *args)
 
     if (args->Length() < 1 || !(*args)[0]->IsString()) {
         qmlInfo(this) << "getContext should be called with a string naming the required context type";
-        args->returnValue(v8::Null());
+        args->returnValue(QV4::Value::nullValue());
         return;
     }
 
     if (!d->available) {
         qmlInfo(this) << "Unable to use getContext() at this time, please wait for available: true";
-        args->returnValue(v8::Null());
+        args->returnValue(QV4::Value::nullValue());
         return;
     }
 
@@ -747,14 +747,14 @@ void QQuickCanvasItem::getContext(QQmlV8Function *args)
         }
 
         qmlInfo(this) << "Canvas already initialized with a different context type";
-        args->returnValue(v8::Null());
+        args->returnValue(QV4::Value::nullValue());
         return;
     }
 
     if (createContext(contextId))
         args->returnValue(d->context->v8value());
     else
-        args->returnValue(v8::Null());
+        args->returnValue(QV4::Value::nullValue());
 }
 
 /*!
@@ -768,7 +768,7 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV8Function *args)
 {
     if (args->Length() < 1 || !(*args)[0]->IsFunction()) {
         qmlInfo(this) << "requestAnimationFrame should be called with an animation callback function";
-        args->returnValue(v8::Null());
+        args->returnValue(QV4::Value::nullValue());
         return;
     }
 
@@ -794,7 +794,7 @@ void QQuickCanvasItem::cancelRequestAnimationFrame(QQmlV8Function *args)
 {
     if (args->Length() < 1 || !(*args)[0]->IsInt32()) {
         qmlInfo(this) << "cancelRequestAnimationFrame should be called with an animation callback id";
-        args->returnValue(v8::Null());
+        args->returnValue(QV4::Value::nullValue());
         return;
     }
 

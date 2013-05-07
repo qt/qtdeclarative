@@ -2596,7 +2596,7 @@ static v8::Handle<v8::Value> ctx2d_getImageData(const v8::Arguments &args)
 
         return imageData;
     }
-    return v8::Null();
+    return QV4::Value::nullValue();
 }
 
 /*!

@@ -1193,7 +1193,7 @@ void QQmlComponent::createObject(QQmlV8Function *args)
         v8::Handle<v8::Value> v = (*args)[1];
         if (!v->IsObject() || v->IsArray()) {
             qmlInfo(this) << tr("createObject: value is not an object");
-            args->returnValue(v8::Null());
+            args->returnValue(QV4::Value::nullValue());
             return;
         }
         valuemap = v8::Handle<v8::Object>::Cast(v);
@@ -1208,7 +1208,7 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     QObject *rv = beginCreate(ctxt);
 
     if (!rv) {
-        args->returnValue(v8::Null());
+        args->returnValue(QV4::Value::nullValue());
         return;
     }
 
@@ -1232,7 +1232,7 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     QQmlData::get(rv)->indestructible = false;
 
     if (!rv)
-        args->returnValue(v8::Null());
+        args->returnValue(QV4::Value::nullValue());
     else
         args->returnValue(object);
 }
@@ -1315,7 +1315,7 @@ void QQmlComponent::incubateObject(QQmlV8Function *args)
         if (v->IsNull()) {
         } else if (!v->IsObject() || v->IsArray()) {
             qmlInfo(this) << tr("createObject: value is not an object");
-            args->returnValue(v8::Null());
+            args->returnValue(QV4::Value::nullValue());
             return;
         } else {
             valuemap = v8::Handle<v8::Object>::Cast(v);
@@ -1347,7 +1347,7 @@ void QQmlComponent::incubateObject(QQmlV8Function *args)
 
     if (r->status() == QQmlIncubator::Null) {
         r->dispose();
-        args->returnValue(v8::Null());
+        args->returnValue(QV4::Value::nullValue());
     } else {
         args->returnValue(o);
     }

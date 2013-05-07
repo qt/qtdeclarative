@@ -1095,7 +1095,7 @@ released the handle.
 v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
 {
     if (QQmlData::wasDeleted(object))
-        return v8::Null();
+        return QV4::Value::nullValue();
 
     QQmlData *ddata = QQmlData::get(object, true);
     if (!ddata) 

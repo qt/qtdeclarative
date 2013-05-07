@@ -2022,7 +2022,6 @@ DEFINE_REFCOUNTED_HANDLE_OPERATIONS(ObjectTemplate)
 // --- Statics ---
 
 
-Handle<Primitive> V8EXPORT Null();
 Handle<Boolean> V8EXPORT True();
 Handle<Boolean> V8EXPORT False();
 

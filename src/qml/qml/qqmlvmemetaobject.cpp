@@ -69,7 +69,7 @@ void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
     if (m_target && m_index >= 0) {
         if (m_isVar && m_target->varPropertiesInitialized && !m_target->varProperties.IsEmpty()) {
             // Set the var property to NULL
-            m_target->varProperties->Set(m_index - m_target->firstVarPropertyIndex, v8::Null());
+            m_target->varProperties->Set(m_index - m_target->firstVarPropertyIndex, QV4::Value::nullValue());
         }
 
         m_target->activate(m_target->object, m_target->methodOffset() + m_index, 0);

@@ -86,7 +86,7 @@ void QV8ListWrapper::destroy()
 v8::Handle<v8::Value> QV8ListWrapper::newList(QObject *object, int propId, int propType)
 {
     if (!object || propId == -1)
-        return v8::Null();
+        return QV4::Value::nullValue();
 
     // XXX NewInstance() should be optimized
     v8::Handle<v8::Object> rv = m_constructor->NewInstance();

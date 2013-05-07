@@ -391,7 +391,7 @@ v8::Handle<v8::Value> Node::nodeValue(v8::Handle<v8::String>, const v8::Accessor
         r->d->type == NodeImpl::Entity ||
         r->d->type == NodeImpl::EntityReference ||
         r->d->type == NodeImpl::Notation)
-        return v8::Null();
+        return QV4::Value::nullValue();
 
     return engine->toString(r->d->data);
 }
@@ -410,7 +410,7 @@ v8::Handle<v8::Value> Node::parentNode(v8::Handle<v8::String>, const v8::Accesso
     QV8Engine *engine = V8ENGINE();
 
     if (r->d->parent) return Node::create(engine, r->d->parent);
-    else return v8::Null();
+    else return QV4::Value::nullValue();
 }
 
 v8::Handle<v8::Value> Node::childNodes(v8::Handle<v8::String>, const v8::AccessorInfo &args)
@@ -428,7 +428,7 @@ v8::Handle<v8::Value> Node::firstChild(v8::Handle<v8::String>, const v8::Accesso
     if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
-    if (r->d->children.isEmpty()) return v8::Null();
+    if (r->d->children.isEmpty()) return QV4::Value::nullValue();
     else return Node::create(engine, r->d->children.first());
 }
 
@@ -438,7 +438,7 @@ v8::Handle<v8::Value> Node::lastChild(v8::Handle<v8::String>, const v8::Accessor
     if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
-    if (r->d->children.isEmpty()) return v8::Null();
+    if (r->d->children.isEmpty()) return QV4::Value::nullValue();
     else return Node::create(engine, r->d->children.last());
 }
 
@@ -448,16 +448,16 @@ v8::Handle<v8::Value> Node::previousSibling(v8::Handle<v8::String>, const v8::Ac
     if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
-    if (!r->d->parent) return v8::Null();
+    if (!r->d->parent) return QV4::Value::nullValue();
 
     for (int ii = 0; ii < r->d->parent->children.count(); ++ii) {
         if (r->d->parent->children.at(ii) == r->d) {
-            if (ii == 0) return v8::Null();
+            if (ii == 0) return QV4::Value::nullValue();
             else return Node::create(engine, r->d->parent->children.at(ii - 1));
         }
     }
 
-    return v8::Null();
+    return QV4::Value::nullValue();
 }
 
 v8::Handle<v8::Value> Node::nextSibling(v8::Handle<v8::String>, const v8::AccessorInfo &args)
@@ -466,16 +466,16 @@ v8::Handle<v8::Value> Node::nextSibling(v8::Handle<v8::String>, const v8::Access
     if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
-    if (!r->d->parent) return v8::Null();
+    if (!r->d->parent) return QV4::Value::nullValue();
 
     for (int ii = 0; ii < r->d->parent->children.count(); ++ii) {
         if (r->d->parent->children.at(ii) == r->d) {
-            if ((ii + 1) == r->d->parent->children.count()) return v8::Null();
+            if ((ii + 1) == r->d->parent->children.count()) return QV4::Value::nullValue();
             else return Node::create(engine, r->d->parent->children.at(ii + 1)); 
         }
     }
 
-    return v8::Null();
+    return QV4::Value::nullValue();
 }
 
 v8::Handle<v8::Value> Node::attributes(v8::Handle<v8::String>, const v8::AccessorInfo &args)
@@ -485,7 +485,7 @@ v8::Handle<v8::Value> Node::attributes(v8::Handle<v8::String>, const v8::Accesso
     QV8Engine *engine = V8ENGINE();
 
     if (r->d->type != NodeImpl::Element)
-        return v8::Null();
+        return QV4::Value::nullValue();
     else
         return NamedNodeMap::create(engine, r->d, &r->d->attributes);
 }
@@ -779,7 +779,7 @@ v8::Handle<v8::Value> Document::load(QV8Engine *engine, const QByteArray &data)
 
     if (!document || reader.hasError()) {
         if (document) D(document);
-        return v8::Null();
+        return QV4::Value::nullValue();
     }
 
     v8::Handle<v8::Object> instance = xhrdata(engine)->newNode();
@@ -1744,7 +1744,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_responseXML(v8::Handle<v8::String
     if (!r->receivedXml() ||
         (r->readyState() != QQmlXMLHttpRequest::Loading &&
          r->readyState() != QQmlXMLHttpRequest::Done)) {
-        return v8::Null();
+        return QV4::Value::nullValue();
     } else {
         return Document::load(r->engine, r->rawResponseBody());
     }

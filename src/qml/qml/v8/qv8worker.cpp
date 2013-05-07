@@ -295,7 +295,7 @@ v8::Handle<v8::Value> QV8Worker::deserialize(const char *&data, QV8Engine *engin
     case WorkerUndefined:
         return QV4::Value::undefinedValue();
     case WorkerNull:
-        return v8::Null();
+        return QV4::Value::nullValue();
     case WorkerTrue:
         return v8::True();
     case WorkerFalse:

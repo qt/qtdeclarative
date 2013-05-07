@@ -200,7 +200,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_rows_index(QV8SqlDatabaseResource *r
         for (int ii = 0; ii < record.count(); ++ii) {
             QVariant v = record.value(ii);
             if (v.isNull()) {
-                row->Set(r->engine->toString(record.fieldName(ii)), v8::Null());
+                row->Set(r->engine->toString(record.fieldName(ii)), QV4::Value::nullValue());
             } else {
                 row->Set(r->engine->toString(record.fieldName(ii)),
                          r->engine->fromVariant(v));

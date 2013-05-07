@@ -1822,13 +1822,6 @@ ObjectTemplate::ObjectTemplate()
     m_useUserComparison = false;
 }
 
-Handle<Primitive> Null()
-{
-    Handle<Primitive> val;
-    val.val = QV4::Value::nullValue().val;
-    return val;
-}
-
 Handle<Boolean> True()
 {
     Handle<Primitive> val;
