@@ -235,7 +235,7 @@ void QV8Worker::serialize(QByteArray &data, v8::Handle<v8::Value> v, QV8Engine *
 
             v8::Handle<v8::Value> val = object->Get(str);
             if (tc.HasCaught()) {
-                serialize(data, v8::Undefined(), engine);
+                serialize(data, QV4::Value::undefinedValue(), engine);
                 tc.Reset();
             } else {
                 serialize(data, val, engine);
@@ -293,7 +293,7 @@ v8::Handle<v8::Value> QV8Worker::deserialize(const char *&data, QV8Engine *engin
 
     switch (type) {
     case WorkerUndefined:
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     case WorkerNull:
         return v8::Null();
     case WorkerTrue:
@@ -374,7 +374,7 @@ v8::Handle<v8::Value> QV8Worker::deserialize(const char *&data, QV8Engine *engin
     }
     }
     Q_ASSERT(!"Unreachable");
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 QByteArray QV8Worker::serialize(v8::Handle<v8::Value> value, QV8Engine *engine)

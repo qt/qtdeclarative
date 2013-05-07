@@ -208,7 +208,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_rows_index(QV8SqlDatabaseResource *r
         }
         return row;
     } else {
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     }
 }
 
@@ -252,7 +252,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_executeSql(const v8::Arguments& args
     QSqlQuery query(db);
     bool err = false;
 
-    v8::Handle<v8::Value> result = v8::Undefined();
+    v8::Handle<v8::Value> result = QV4::Value::undefinedValue();
 
     if (query.prepare(sql)) {
         if (args.Length() > 1) {
@@ -302,7 +302,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_executeSql(const v8::Arguments& args
 static v8::Handle<v8::Value> qmlsqldatabase_changeVersion(const v8::Arguments& args)
 {
     if (args.Length() < 2)
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
 
     QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(args.This());
     if (!r || r->type != QV8SqlDatabaseResource::Database)
@@ -357,7 +357,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_changeVersion(const v8::Arguments& a
 #endif
     }
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 static v8::Handle<v8::Value> qmlsqldatabase_transaction_shared(const v8::Arguments& args, bool readOnly)
@@ -397,7 +397,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_transaction_shared(const v8::Argumen
         db.rollback();
     }
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 static v8::Handle<v8::Value> qmlsqldatabase_transaction(const v8::Arguments& args)

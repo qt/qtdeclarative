@@ -263,7 +263,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::ToString(const v8::Arguments &args)
             if (reference->object && readReferenceValue(reference)) {
                 return resource->engine->toString(resource->type->toString());
             } else {
-                return v8::Undefined();
+                return QV4::Value::undefinedValue();
             }
         } else {
             Q_ASSERT(resource->objectType == QV8ValueTypeResource::Copy);
@@ -272,7 +272,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::ToString(const v8::Arguments &args)
             return resource->engine->toString(resource->type->toString());
         }
     } else {
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     }
 }
 

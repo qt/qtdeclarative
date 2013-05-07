@@ -1227,7 +1227,7 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
         return pattern;
 
     }
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 // line styles
@@ -2222,7 +2222,7 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
         tm->Set(v8::String::New("width"), v8::Number::New(width));
         return tm;
     }
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 // drawing images
@@ -2461,7 +2461,7 @@ v8::Handle<v8::Value> ctx2d_imageData_data(v8::Handle<v8::String>, const v8::Acc
 v8::Handle<v8::Value> ctx2d_pixelArray_length(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This());
-    if (!r || r->image.isNull()) return v8::Undefined();
+    if (!r || r->image.isNull()) return QV4::Value::undefinedValue();
 
     return v8::Integer::New(r->image.width() * r->image.height() * 4);
 }
@@ -2487,7 +2487,7 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed(uint32_t index, const v8::Accesso
             return v8::Integer::New(qAlpha(*pixel));
         }
     }
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Handle<v8::Value> value, const v8::AccessorInfo& info)
@@ -2517,7 +2517,7 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Handle<v8
             break;
         }
     }
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 /*!
   \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(real sw, real sh)
@@ -2567,7 +2567,7 @@ static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
         else
             V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createImageData(): invalid arguments");
     }
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 /*!
@@ -2608,7 +2608,7 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
     if (args.Length() != 3 && args.Length() != 7)
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
 
     if (args[0]->IsNull() || !args[0]->IsObject()) {
         V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "Context2D::putImageData, the image data type mismatch");

@@ -1416,7 +1416,7 @@ v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletion(const v8::Arguments 
 
     r->forceCompletion();
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> QV8IncubatorResource::StatusGetter(v8::Handle<v8::String>,

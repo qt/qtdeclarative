@@ -255,7 +255,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
     QQmlContextData *expressionContext = context;
 
     if (!context)
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
 
     if (info.GetIsolate()->GetEngine()->qmlContextObject() != info.This()->v4Value().asObject())
         return v8::Handle<v8::Value>();
@@ -284,7 +284,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
                 if (index < context->importedScripts.count())
                     return context->importedScripts.at(index);
                 else
-                    return v8::Undefined();
+                    return QV4::Value::undefinedValue();
             } else if (r.type) {
                 return engine->typeWrapper()->newObject(scopeObject, r.type);
             } else if (r.importNamespace) {
@@ -385,7 +385,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Handle<v8::String> property,
     QQmlContextData *expressionContext = context;
 
     if (!context)
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
 
     if (info.GetIsolate()->GetEngine()->qmlContextObject() != info.This()->v4Value().asObject())
         return v8::Handle<v8::Value>();
@@ -427,7 +427,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Handle<v8::String> property,
         QString error = QLatin1String("Invalid write to global property \"") + property->v4Value().toQString() +
                         QLatin1Char('"');
         v8::ThrowException(v8::Exception::Error(engine->toString(error)));
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     }
 }
 

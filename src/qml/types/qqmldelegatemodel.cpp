@@ -1370,7 +1370,7 @@ QQmlDelegateModelPrivate::buildChangeList(const QVector<T> &changes)
         v8::Handle<v8::Object> object = v8::Object::New();
         object->Set(indexKey, v8::Integer::New(changes.at(i).index));
         object->Set(countKey, v8::Integer::New(changes.at(i).count));
-        object->Set(moveIdKey, changes.at(i).moveId != -1 ? v8::Integer::New(changes.at(i).count) : v8::Undefined());
+        object->Set(moveIdKey, changes.at(i).moveId != -1 ? v8::Integer::New(changes.at(i).count) : QV4::Value::undefinedValue());
         indexes->Set(i, object);
     }
     return indexes;
@@ -1654,7 +1654,7 @@ v8::Handle<v8::Value> QQmlDelegateModelItemMetaType::get_model(
     QQmlDelegateModelItem *cacheItem = v8_resource_cast<QQmlDelegateModelItem>(info.This());
     V8ASSERT_TYPE(cacheItem, "Not a valid VisualData object");
     if (!cacheItem->metaType->model)
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
 
     return cacheItem->get();
 }
@@ -2295,14 +2295,14 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
 {
     Q_D(QQmlDelegateModelGroup);
     if (!d->model)
-        return QQmlV4Handle::fromV8Handle(v8::Undefined());;
+        return QQmlV4Handle::fromV8Handle(QV4::Value::undefinedValue());;
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
     if (!model->m_context->isValid()) {
-        return QQmlV4Handle::fromV8Handle(v8::Undefined());
+        return QQmlV4Handle::fromV8Handle(QV4::Value::undefinedValue());
     } else if (index < 0 || index >= model->m_compositor.count(d->group)) {
         qmlInfo(this) << tr("get: index out of range");
-        return QQmlV4Handle::fromV8Handle(v8::Undefined());
+        return QQmlV4Handle::fromV8Handle(QV4::Value::undefinedValue());
     }
 
     Compositor::iterator it = model->m_compositor.find(d->group, index);
@@ -2314,7 +2314,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
         cacheItem = model->m_adaptorModel.createItem(
                 model->m_cacheMetaType, model->m_context->engine(), it.modelIndex());
         if (!cacheItem)
-            return QQmlV4Handle::fromV8Handle(v8::Undefined());
+            return QQmlV4Handle::fromV8Handle(QV4::Value::undefinedValue());
         cacheItem->groups = it->flags;
 
         model->m_cache.insert(it.cacheIndex, cacheItem);
@@ -3074,7 +3074,7 @@ public:
         V8ASSERT_TYPE(array, "Not a valid change array");
 
         if (index >= array->count())
-            return v8::Undefined();
+            return QV4::Value::undefinedValue();
 
         const QQmlChangeSet::Change &change = array->at(index);
 

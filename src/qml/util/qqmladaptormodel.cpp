@@ -347,7 +347,7 @@ v8::Handle<v8::Value> QQmlDMCachedModelData::get_property(
         return data->engine->fromVariant(
                 modelData->value(modelData->type->propertyRoles.at(propertyId)));
     }
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 void QQmlDMCachedModelData::set_property(

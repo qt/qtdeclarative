@@ -170,7 +170,7 @@ v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args
         break;
     }
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> gc(const v8::Arguments &args)
@@ -178,7 +178,7 @@ v8::Handle<v8::Value> gc(const v8::Arguments &args)
     Q_UNUSED(args);
     // ###
 //    QV8Engine::gc();
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> consoleError(const v8::Arguments &args)
@@ -221,7 +221,7 @@ v8::Handle<v8::Value> consoleProfile(const v8::Arguments &args)
                     "Profiling is already in progress. First, end current profiling session.");
     }
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> consoleProfileEnd(const v8::Arguments &args)
@@ -250,7 +250,7 @@ v8::Handle<v8::Value> consoleProfileEnd(const v8::Arguments &args)
                        *v8::String::AsciiValue(function)).warning("Profiling was not started.");
     }
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> consoleTime(const v8::Arguments &args)
@@ -259,7 +259,7 @@ v8::Handle<v8::Value> consoleTime(const v8::Arguments &args)
         V8THROW_ERROR("console.time(): Invalid arguments");
     QString name = args[0]->v4Value().toQString();
     V8ENGINE()->startTimer(name);
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args)
@@ -272,7 +272,7 @@ v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args)
     if (wasRunning) {
         qDebug("%s: %llims", qPrintable(name), elapsed);
     }
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> consoleCount(const v8::Arguments &args)
@@ -300,7 +300,7 @@ v8::Handle<v8::Value> consoleCount(const v8::Arguments &args)
                        qPrintable(functionName)).debug("%s", qPrintable(message));
     }
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> consoleTrace(const v8::Arguments &args)
@@ -317,7 +317,7 @@ v8::Handle<v8::Value> consoleTrace(const v8::Arguments &args)
 
     QMessageLogger(*v8::String::AsciiValue(file), line, *v8::String::AsciiValue(function)).debug(
                 "%s", qPrintable(stack));
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> consoleWarn(const v8::Arguments &args)
@@ -351,7 +351,7 @@ v8::Handle<v8::Value> consoleAssert(const v8::Arguments &args)
                     "%s\n%s", qPrintable(message), qPrintable(stack));
 
     }
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> consoleException(const v8::Arguments &args)
@@ -361,7 +361,7 @@ v8::Handle<v8::Value> consoleException(const v8::Arguments &args)
 
     console(Error, args, true);
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> stringArg(const v8::Arguments &args)
@@ -1113,7 +1113,7 @@ QQmlEngine::quit() signal to the QCoreApplication::quit() slot.
 v8::Handle<v8::Value> quit(const v8::Arguments &args)
 {
     QQmlEnginePrivate::get(V8ENGINE()->engine())->sendQuit();
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 /*!
@@ -1201,7 +1201,7 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
 
     if (component.isError()) {
         v8::ThrowException(Error::create(v8engine, component.errors()));
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     }
 
     if (!component.isReady())
@@ -1225,7 +1225,7 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
 
     if (component.isError()) {
         v8::ThrowException(Error::create(v8engine, component.errors()));
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     }
 
     Q_ASSERT(obj);
@@ -1404,7 +1404,7 @@ v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args)
 v8::Handle<v8::Value> qsTranslateNoOp(const v8::Arguments &args)
 {
     if (args.Length() < 2)
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     return args[1];
 }
 
@@ -1482,7 +1482,7 @@ v8::Handle<v8::Value> qsTr(const v8::Arguments &args)
 v8::Handle<v8::Value> qsTrNoOp(const v8::Arguments &args)
 {
     if (args.Length() < 1)
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     return args[0];
 }
 
@@ -1552,7 +1552,7 @@ v8::Handle<v8::Value> qsTrId(const v8::Arguments &args)
 v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args)
 {
     if (args.Length() < 1)
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     return args[0];
 }
 #endif // QT_NO_TRANSLATION

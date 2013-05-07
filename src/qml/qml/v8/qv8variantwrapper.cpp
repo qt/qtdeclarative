@@ -227,7 +227,7 @@ v8::Handle<v8::Value> QV8VariantWrapper::Preserve(const v8::Arguments &args)
     if (resource) {
         resource->node.remove();
     }
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> QV8VariantWrapper::Destroy(const v8::Arguments &args)
@@ -237,7 +237,7 @@ v8::Handle<v8::Value> QV8VariantWrapper::Destroy(const v8::Arguments &args)
         resource->data = QVariant();
         resource->node.remove();
     }
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> QV8VariantWrapper::ToString(const v8::Arguments &args)
@@ -249,7 +249,7 @@ v8::Handle<v8::Value> QV8VariantWrapper::ToString(const v8::Arguments &args)
             result = QString::fromLatin1("QVariant(%0)").arg(QString::fromLatin1(resource->data.typeName()));
         return resource->engine->toString(result);
     } else {
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     }
 }
 
@@ -260,7 +260,7 @@ v8::Handle<v8::Value> QV8VariantWrapper::ValueOf(const v8::Arguments &args)
         QVariant v = resource->data;
         switch (v.type()) {
         case QVariant::Invalid:
-            return v8::Undefined();
+            return QV4::Value::undefinedValue();
         case QVariant::String:
             return resource->engine->toString(v.toString());
         case QVariant::Int:

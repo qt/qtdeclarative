@@ -1822,13 +1822,6 @@ ObjectTemplate::ObjectTemplate()
     m_useUserComparison = false;
 }
 
-Handle<Primitive> Undefined()
-{
-    Handle<Primitive> val;
-    val.val = QV4::Value::undefinedValue().val;
-    return val;
-}
-
 Handle<Primitive> Null()
 {
     Handle<Primitive> val;

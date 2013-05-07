@@ -153,7 +153,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Handle<v8::String> property,
     QV8TypeResource *resource = v8_resource_cast<QV8TypeResource>(info.This());
 
     if (!resource) 
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
 
     QV8Engine *v8engine = resource->engine;
     QQmlContextData *context = v8engine->callingContext();
@@ -246,7 +246,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Handle<v8::String> property,
                 return v8engine->typeWrapper()->newObject(object, context->imports, r.importNamespace);
             }
 
-            return v8::Undefined();
+            return QV4::Value::undefinedValue();
 
         }
 

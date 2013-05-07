@@ -2121,7 +2121,7 @@ void QQmlListModel::append(QQmlV8Function *args)
 */
 QQmlV4Handle QQmlListModel::get(int index) const
 {
-    v8::Handle<v8::Value> result = v8::Undefined();
+    v8::Handle<v8::Value> result = QV4::Value::undefinedValue();
 
     if (index >= 0 && index < count()) {
         QV8Engine *v8engine = engine();

@@ -275,7 +275,7 @@ static v8::Handle<v8::Value> GenericValueGetter(v8::Handle<v8::String>, const v8
     QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(This);
 
     QObject *object = resource->object;
-    if (QQmlData::wasDeleted(object)) return v8::Undefined();
+    if (QQmlData::wasDeleted(object)) return QV4::Value::undefinedValue();
 
     QQmlPropertyData *property =
             (QQmlPropertyData *)v8::External::Cast(info.Data().get())->Value();
@@ -467,7 +467,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
         QMetaProperty p = object->metaObject()->property(property.coreIndex);
         qWarning("QMetaProperty::read: Unable to handle unregistered datatype '%s' for property "
                  "'%s::%s'", p.typeName(), object->metaObject()->className(), p.name());
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     } else {
         QVariant v(property.propType, (void *)0);
         ReadFunction(object, property, v.data(), notifier);
@@ -773,7 +773,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Getter(v8::Handle<v8::String> property,
 
             if (r.isValid()) {
                 if (r.scriptIndex != -1) {
-                    return v8::Undefined();
+                    return QV4::Value::undefinedValue();
                 } else if (r.type) {
                     return v8engine->typeWrapper()->newObject(object, r.type, QV8TypeWrapper::ExcludeEnums);
                 } else if (r.importNamespace) {
@@ -1099,7 +1099,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
 
     QQmlData *ddata = QQmlData::get(object, true);
     if (!ddata) 
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
 
     if (ddata->v8objectid == m_id && !ddata->v8object.IsEmpty()) {
         // We own the v8object 
@@ -1422,7 +1422,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Connect(const v8::Arguments &args)
 
     slotIter->append(connection);
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
@@ -1465,12 +1465,12 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
     QHash<QObject *, QV8QObjectConnectionList *> &connectionsList = qobjectWrapper->m_connections;
     QHash<QObject *, QV8QObjectConnectionList *>::Iterator iter = connectionsList.find(signalObject);
     if (iter == connectionsList.end()) 
-        return v8::Undefined(); // Nothing to disconnect from
+        return QV4::Value::undefinedValue(); // Nothing to disconnect from
 
     QV8QObjectConnectionList *connectionList = *iter;
     QV8QObjectConnectionList::SlotHash::Iterator slotIter = connectionList->slotHash.find(signalIndex);
     if (slotIter == connectionList->slotHash.end()) 
-        return v8::Undefined(); // Nothing to disconnect from
+        return QV4::Value::undefinedValue(); // Nothing to disconnect from
 
     QV8QObjectConnectionList::ConnectionList &connections = *slotIter;
 
@@ -1495,7 +1495,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
                         connection.dispose();
                         connections.removeAt(ii);
                     }
-                    return v8::Undefined();
+                    return QV4::Value::undefinedValue();
                 }
             }
         }
@@ -1515,12 +1515,12 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
                     connection.dispose();
                     connections.removeAt(ii);
                 }
-                return v8::Undefined();
+                return QV4::Value::undefinedValue();
             }
         }
     }
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 /*!
@@ -1602,7 +1602,7 @@ static v8::Handle<v8::Value> CallMethod(QObject *object, int index, int returnTy
 
         void *args[] = { 0 };
         QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, index, args);
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
 
     }
 }
@@ -1958,7 +1958,7 @@ static v8::Handle<v8::Value> Destroy(QV8Engine *, QObject *object, int argCount,
     if (!ddata || ddata->indestructible || ddata->rootObjectInCreation) {
         const char *error = "Invalid attempt to destroy() an indestructible object";
         v8::ThrowException(v8::Exception::Error(v8::String::New(error)));
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     }
 
     int delay = 0;
@@ -1970,7 +1970,7 @@ static v8::Handle<v8::Value> Destroy(QV8Engine *, QObject *object, int argCount,
     else
         object->deleteLater();
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
@@ -1982,7 +1982,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
     QV8QObjectResource *resource = v8_resource_cast<QV8QObjectResource>(args[0]->ToObject());
 
     if (!resource)
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
 
     int argCount = args[3]->Int32Value();
     v8::Handle<v8::Object> arguments = v8::Handle<v8::Object>::Cast(args[4]);
@@ -1999,7 +1999,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
     int index = args[1]->Int32Value();
 
     if (!object)
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
 
     if (index < 0) {
         // Builtin functions
@@ -2008,7 +2008,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
         } else if (index == QOBJECT_DESTROY_INDEX) {
             return Destroy(resource->engine, object, argCount, arguments);
         } else {
-            return v8::Undefined();
+            return QV4::Value::undefinedValue();
         }
     }
 
@@ -2018,7 +2018,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
         if (ddata->propertyCache) {
             QQmlPropertyData *d = ddata->propertyCache->method(index);
             if (!d) 
-                return v8::Undefined();
+                return QV4::Value::undefinedValue();
             method = *d;
         } 
     }
@@ -2027,7 +2027,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
         method.load(object->metaObject()->method(index));
 
         if (method.coreIndex == -1)
-            return v8::Undefined();
+            return QV4::Value::undefinedValue();
     }
 
     if (method.isV8Function()) {
@@ -2042,7 +2042,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
         void *args[] = { 0, &funcptr };
         QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, method.coreIndex, args);
 
-        if (rv.IsEmpty()) return v8::Undefined();
+        if (rv.IsEmpty()) return QV4::Value::undefinedValue();
         return rv;
     }
 
@@ -2273,7 +2273,7 @@ v8::Handle<v8::Value> CallArgument::toValue(QV8Engine *engine)
             QQmlData::get(object, true)->setImplicitDestructible();
         return rv;
     } else {
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     }
 }
 

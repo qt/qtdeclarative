@@ -570,7 +570,7 @@ void QQuickLoader::setSource(QQmlV8Function *args)
     Q_D(QQuickLoader);
 
     bool ipvError = false;
-    args->returnValue(v8::Undefined());
+    args->returnValue(QV4::Value::undefinedValue());
     v8::Handle<v8::Object> ipv = d->extractInitialPropertyValues(args, this, &ipvError);
     if (ipvError)
         return;

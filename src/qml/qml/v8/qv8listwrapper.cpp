@@ -151,13 +151,13 @@ v8::Handle<v8::Value> QV8ListWrapper::IndexedGetter(uint32_t index, const v8::Ac
 {
     QV8ListResource *resource = v8_resource_cast<QV8ListResource>(info.This());
 
-    if (!resource || resource->object.isNull()) return v8::Undefined();
+    if (!resource || resource->object.isNull()) return QV4::Value::undefinedValue();
 
     quint32 count = resource->property.count?resource->property.count(&resource->property):0;
     if (index < count && resource->property.at) {
         return resource->engine->newQObject(resource->property.at(&resource->property, index));
     } else {
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     }
 }
 
@@ -168,7 +168,7 @@ v8::Handle<v8::Value> QV8ListWrapper::LengthGetter(v8::Handle<v8::String> proper
 
     QV8ListResource *resource = v8_resource_cast<QV8ListResource>(info.This());
 
-    if (!resource || resource->object.isNull()) return v8::Undefined();
+    if (!resource || resource->object.isNull()) return QV4::Value::undefinedValue();
 
     quint32 count = resource->property.count?resource->property.count(&resource->property):0;
 

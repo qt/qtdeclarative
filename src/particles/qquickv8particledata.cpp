@@ -294,7 +294,7 @@ static v8::Handle<v8::Value> particleData_discard(const v8::Arguments &args)
         V8THROW_ERROR("Not a valid ParticleData object");
 
     r->datum->lifeSpan = 0; //Don't kill(), because it could still be in the middle of being created
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 static v8::Handle<v8::Value> particleData_lifeLeft(const v8::Arguments &args)

@@ -283,12 +283,12 @@ v8::Handle<v8::Value> QQuickWorkerScriptEnginePrivate::sendMessage(const v8::Arg
     QMutexLocker locker(&engine->p->m_lock);
     WorkerScript *script = engine->p->workers.value(id);
     if (!script)
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
 
     if (script->owner)
         QCoreApplication::postEvent(script->owner, new WorkerDataEvent(0, data));
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 // Requires handle scope and context scope
@@ -657,7 +657,7 @@ void QQuickWorkerScript::sendMessage(QQmlV8Function *args)
         return;
     }
 
-    v8::Handle<v8::Value> argument = v8::Undefined();
+    v8::Handle<v8::Value> argument = QV4::Value::undefinedValue();
     if (args->Length() != 0) 
         argument = (*args)[0];
 

@@ -170,7 +170,7 @@ void QV8Include::finished()
 v8::Handle<v8::Value> QV8Include::include(const v8::Arguments &args)
 {
     if (args.Length() == 0)
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
 
     QV8Engine *engine = V8ENGINE();
     QQmlContextData *context = engine->callingContext();
@@ -235,7 +235,7 @@ v8::Handle<v8::Value> QV8Include::include(const v8::Arguments &args)
     }
 
     if (result.IsEmpty())
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     else 
         return result;
 }

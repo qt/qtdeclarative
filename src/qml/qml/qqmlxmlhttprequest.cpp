@@ -363,7 +363,7 @@ void NodeImpl::release()
 v8::Handle<v8::Value> Node::nodeName(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     switch (r->d->type) {
@@ -381,7 +381,7 @@ v8::Handle<v8::Value> Node::nodeName(v8::Handle<v8::String>, const v8::AccessorI
 v8::Handle<v8::Value> Node::nodeValue(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     if (r->d->type == NodeImpl::Document ||
@@ -399,14 +399,14 @@ v8::Handle<v8::Value> Node::nodeValue(v8::Handle<v8::String>, const v8::Accessor
 v8::Handle<v8::Value> Node::nodeType(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     return v8::Integer::New(r->d->type);
 }
 
 v8::Handle<v8::Value> Node::parentNode(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     if (r->d->parent) return Node::create(engine, r->d->parent);
@@ -416,7 +416,7 @@ v8::Handle<v8::Value> Node::parentNode(v8::Handle<v8::String>, const v8::Accesso
 v8::Handle<v8::Value> Node::childNodes(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     return NodeList::create(engine, r->d);
@@ -425,7 +425,7 @@ v8::Handle<v8::Value> Node::childNodes(v8::Handle<v8::String>, const v8::Accesso
 v8::Handle<v8::Value> Node::firstChild(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     if (r->d->children.isEmpty()) return v8::Null();
@@ -435,7 +435,7 @@ v8::Handle<v8::Value> Node::firstChild(v8::Handle<v8::String>, const v8::Accesso
 v8::Handle<v8::Value> Node::lastChild(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     if (r->d->children.isEmpty()) return v8::Null();
@@ -445,7 +445,7 @@ v8::Handle<v8::Value> Node::lastChild(v8::Handle<v8::String>, const v8::Accessor
 v8::Handle<v8::Value> Node::previousSibling(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     if (!r->d->parent) return v8::Null();
@@ -463,7 +463,7 @@ v8::Handle<v8::Value> Node::previousSibling(v8::Handle<v8::String>, const v8::Ac
 v8::Handle<v8::Value> Node::nextSibling(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     if (!r->d->parent) return v8::Null();
@@ -481,7 +481,7 @@ v8::Handle<v8::Value> Node::nextSibling(v8::Handle<v8::String>, const v8::Access
 v8::Handle<v8::Value> Node::attributes(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     if (r->d->type != NodeImpl::Element)
@@ -537,7 +537,7 @@ v8::Handle<v8::Value> Node::create(QV8Engine *engine, NodeImpl *data)
     case NodeImpl::EntityReference:
     case NodeImpl::Notation:
     case NodeImpl::ProcessingInstruction:
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     case NodeImpl::CDATA:
         instance->SetPrototype(CDATA::prototype(engine));
         break;
@@ -590,7 +590,7 @@ v8::Handle<v8::Object> Attr::prototype(QV8Engine *engine)
 v8::Handle<v8::Value> Attr::name(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     return engine->toString(r->d->name);
@@ -599,7 +599,7 @@ v8::Handle<v8::Value> Attr::name(v8::Handle<v8::String>, const v8::AccessorInfo 
 v8::Handle<v8::Value> Attr::value(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     return engine->toString(r->d->data);
@@ -608,7 +608,7 @@ v8::Handle<v8::Value> Attr::value(v8::Handle<v8::String>, const v8::AccessorInfo
 v8::Handle<v8::Value> Attr::ownerElement(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     return Node::create(engine, r->d->parent);
@@ -617,7 +617,7 @@ v8::Handle<v8::Value> Attr::ownerElement(v8::Handle<v8::String>, const v8::Acces
 v8::Handle<v8::Value> CharacterData::length(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
     Q_UNUSED(engine)
     return v8::Integer::New(r->d->data.length());
@@ -641,7 +641,7 @@ v8::Handle<v8::Object> CharacterData::prototype(QV8Engine *engine)
 v8::Handle<v8::Value> Text::isElementContentWhitespace(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
     Q_UNUSED(engine)
     return v8::Boolean::New(r->d->data.trimmed().isEmpty());
@@ -650,7 +650,7 @@ v8::Handle<v8::Value> Text::isElementContentWhitespace(v8::Handle<v8::String>, c
 v8::Handle<v8::Value> Text::wholeText(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     return engine->toString(r->d->data);
@@ -814,7 +814,7 @@ bool Node::isNull() const
 v8::Handle<v8::Value> NamedNodeMap::length(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
     Q_UNUSED(engine)
     return v8::Integer::New(r->list->count());
@@ -823,20 +823,20 @@ v8::Handle<v8::Value> NamedNodeMap::length(v8::Handle<v8::String>, const v8::Acc
 v8::Handle<v8::Value> NamedNodeMap::indexed(uint32_t index, const v8::AccessorInfo& args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r || !r->list) return v8::Undefined();
+    if (!r || !r->list) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     if ((int)index < r->list->count()) {
         return Node::create(engine, r->list->at(index));
     } else {
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     }
 }
 
 v8::Handle<v8::Value> NamedNodeMap::named(v8::Handle<v8::String> property, const v8::AccessorInfo& args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r || !r->list) return v8::Undefined();
+    if (!r || !r->list) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     QString str = property->v4Value().toQString();
@@ -846,7 +846,7 @@ v8::Handle<v8::Value> NamedNodeMap::named(v8::Handle<v8::String> property, const
         }
     }
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Object> NamedNodeMap::prototype(QV8Engine *engine)
@@ -879,20 +879,20 @@ v8::Handle<v8::Value> NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, QL
 v8::Handle<v8::Value> NodeList::indexed(uint32_t index, const v8::AccessorInfo& args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     if ((int)index < r->d->children.count()) {
         return Node::create(engine, r->d->children.at(index));
     } else {
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     }
 }
 
 v8::Handle<v8::Value> NodeList::length(v8::Handle<v8::String>, const v8::AccessorInfo& args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return v8::Undefined();
+    if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
     Q_UNUSED(engine)
     return v8::Integer::New(r->d->children.count());
@@ -926,7 +926,7 @@ v8::Handle<v8::Value> NodeList::create(QV8Engine *engine, NodeImpl *data)
 v8::Handle<v8::Value> Document::documentElement(v8::Handle<v8::String>, const v8::AccessorInfo& args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r || r->d->type != NodeImpl::Document) return v8::Undefined();
+    if (!r || r->d->type != NodeImpl::Document) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     return Node::create(engine, static_cast<DocumentImpl *>(r->d)->root);
@@ -935,7 +935,7 @@ v8::Handle<v8::Value> Document::documentElement(v8::Handle<v8::String>, const v8
 v8::Handle<v8::Value> Document::xmlStandalone(v8::Handle<v8::String>, const v8::AccessorInfo& args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r || r->d->type != NodeImpl::Document) return v8::Undefined();
+    if (!r || r->d->type != NodeImpl::Document) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
     Q_UNUSED(engine)
     return v8::Boolean::New(static_cast<DocumentImpl *>(r->d)->isStandalone);
@@ -944,7 +944,7 @@ v8::Handle<v8::Value> Document::xmlStandalone(v8::Handle<v8::String>, const v8::
 v8::Handle<v8::Value> Document::xmlVersion(v8::Handle<v8::String>, const v8::AccessorInfo& args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r || r->d->type != NodeImpl::Document) return v8::Undefined();
+    if (!r || r->d->type != NodeImpl::Document) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     return engine->toString(static_cast<DocumentImpl *>(r->d)->version);
@@ -953,7 +953,7 @@ v8::Handle<v8::Value> Document::xmlVersion(v8::Handle<v8::String>, const v8::Acc
 v8::Handle<v8::Value> Document::xmlEncoding(v8::Handle<v8::String>, const v8::AccessorInfo& args)
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r || r->d->type != NodeImpl::Document) return v8::Undefined();
+    if (!r || r->d->type != NodeImpl::Document) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
 
     return engine->toString(static_cast<DocumentImpl *>(r->d)->encoding);
@@ -1086,7 +1086,7 @@ v8::Handle<v8::Value> QQmlXMLHttpRequest::open(v8::Handle<v8::Object> me, const 
     v8::TryCatch tc;
     dispatchCallback(me);
     if (tc.HasCaught()) printError(tc.Message());
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 void QQmlXMLHttpRequest::addHeader(const QString &name, const QString &value)
@@ -1210,7 +1210,7 @@ v8::Handle<v8::Value> QQmlXMLHttpRequest::send(v8::Handle<v8::Object> me, const 
 
     requestFromUrl(m_url);
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> QQmlXMLHttpRequest::abort(v8::Handle<v8::Object> me)
@@ -1233,7 +1233,7 @@ v8::Handle<v8::Value> QQmlXMLHttpRequest::abort(v8::Handle<v8::Object> me)
 
     m_state = Unsent;
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Object> QQmlXMLHttpRequest::getMe() const
@@ -1598,11 +1598,11 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_setRequestHeader(const v8::Argume
         nameUpper == QLatin1String("VIA") ||
         nameUpper.startsWith(QLatin1String("PROXY-")) ||
         nameUpper.startsWith(QLatin1String("SEC-"))) 
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
 
     r->addHeader(name, value);
 
-    return v8::Undefined();
+    return QV4::Value::undefinedValue();
 }
 
 static v8::Handle<v8::Value> qmlxmlhttprequest_send(const v8::Arguments &args)
@@ -1761,7 +1761,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_new(const v8::Arguments &args)
 
         return args.This();
     } else {
-        return v8::Undefined();
+        return QV4::Value::undefinedValue();
     }
 }
 

@@ -358,11 +358,11 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 /* Qt containers have int (rather than uint) allowable indexes. */ \
                 if (index > INT_MAX) { \
                     generateWarning(engine, QLatin1String("Index out of range during indexed set")); \
-                    return v8::Undefined(); \
+                    return QV4::Value::undefinedValue(); \
                 } \
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
-                        return v8::Undefined(); \
+                        return QV4::Value::undefinedValue(); \
                     loadReference(); \
                 } \
                 /* modify the sequence */ \
@@ -392,18 +392,18 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 /* Qt containers have int (rather than uint) allowable indexes. */ \
                 if (index > INT_MAX) { \
                     generateWarning(engine, QLatin1String("Index out of range during indexed get")); \
-                    return v8::Undefined(); \
+                    return QV4::Value::undefinedValue(); \
                 } \
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
-                        return v8::Undefined(); \
+                        return QV4::Value::undefinedValue(); \
                     loadReference(); \
                 } \
                 qint32 count = c.count(); \
                 qint32 signedIdx = static_cast<qint32>(index); \
                 if (signedIdx < count) \
                     return ConversionToV8fn(engine, c.at(signedIdx)); \
-                return v8::Undefined(); \
+                return QV4::Value::undefinedValue(); \
             } \
             v8::Handle<v8::Boolean> indexedDeleter(quint32 index) \
             { \
@@ -447,7 +447,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
             { \
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
-                        return v8::Undefined(); \
+                        return QV4::Value::undefinedValue(); \
                     loadReference(); \
                 } \
                 QString str; \
