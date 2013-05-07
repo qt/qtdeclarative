@@ -51,6 +51,7 @@
 #include <private/qqmlengine_p.h>
 
 #include <private/qv4object_p.h>
+#include <private/qv4dateobject_p.h>
 
 #include <qqmlcontext.h>
 #include <qqmlinfo.h>
@@ -453,7 +454,7 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QVector<int
             roleIndex = e->setBoolProperty(r, propertyValue->BooleanValue());
         } else if (propertyValue->IsDate()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::DateTime);
-            QDateTime dt = QV8Engine::qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(propertyValue)->NumberValue());
+            QDateTime dt = propertyValue->v4Value().asDateObject()->toQDateTime();
             roleIndex = e->setDateTimeProperty(r, dt);
         } else if (propertyValue->IsObject()) {
             QV8ObjectResource *r = (QV8ObjectResource *) propertyValue->ToObject()->GetExternalResource();
@@ -530,7 +531,7 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *
         } else if (propertyValue->IsDate()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::DateTime);
             if (r.type == ListLayout::Role::DateTime) {
-                QDateTime dt = QV8Engine::qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(propertyValue)->NumberValue());
+                QDateTime dt = propertyValue->v4Value().asDateObject()->toQDateTime();;
                 e->setDateTimePropertyFast(r, dt);
             }
         } else if (propertyValue->IsObject()) {
@@ -1194,7 +1195,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, v8::Handle<v8::Valu
     } else if (d->IsBoolean()) {
         roleIndex = setBoolProperty(role, d->BooleanValue());
     } else if (d->IsDate()) {
-        QDateTime dt = QV8Engine::qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(d)->NumberValue());
+        QDateTime dt = d->v4Value().asDateObject()->toQDateTime();;
         roleIndex = setDateTimeProperty(role, dt);
     } else if (d->IsObject()) {
         QV8ObjectResource *r = (QV8ObjectResource *) d->ToObject()->GetExternalResource();

@@ -508,7 +508,7 @@ QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
     if (value.isString())
         return value.stringValue()->toQString();
     if (QV4::DateObject *d = value.asDateObject())
-        return qtDateTimeFromJsDate(d->value.doubleValue());
+        return d->toQDateTime();
     // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!
 
     Q_ASSERT(value.isObject());
@@ -761,14 +761,6 @@ void QV8Engine::setExtensionData(int index, Deletable *data)
         delete m_extensionData.at(index);
 
     m_extensionData[index] = data;
-}
-
-QDateTime QV8Engine::qtDateTimeFromJsDate(double jsDate)
-{
-    if (qIsNaN(jsDate))
-        return QDateTime();
-
-    return QDateTime::fromMSecsSinceEpoch(jsDate);
 }
 
 v8::Persistent<v8::Object> *QV8Engine::findOwnerAndStrength(QObject *object, bool *shouldBeStrong)

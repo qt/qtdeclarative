@@ -176,7 +176,7 @@ QV4::Value QQmlDateExtension::toLocaleString(const v8::Arguments& args)
     if (!args.This()->IsDate())
         return QV4::Value::undefinedValue();
 
-    QDateTime dt = QV8Engine::qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(args.This())->NumberValue());
+    QDateTime dt = args.This()->v4Value().asDateObject()->toQDateTime();
 
     if (args.Length() == 0) {
         // Use QLocale for standard toLocaleString() function
@@ -217,7 +217,7 @@ QV4::Value QQmlDateExtension::toLocaleTimeString(const v8::Arguments& args)
     if (!args.This()->IsDate())
         return QV4::Value::undefinedValue();
 
-    QDateTime dt = QV8Engine::qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(args.This())->NumberValue());
+    QDateTime dt = args.This()->v4Value().asDateObject()->toQDateTime();;
     QTime time = dt.time();
 
     if (args.Length() == 0) {
@@ -259,7 +259,7 @@ QV4::Value QQmlDateExtension::toLocaleDateString(const v8::Arguments& args)
     if (!args.This()->IsDate())
         return QV4::Value::undefinedValue();
 
-    QDateTime dt = QV8Engine::qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(args.This())->NumberValue());
+    QDateTime dt = args.This()->v4Value().asDateObject()->toQDateTime();;
     QDate date = dt.date();
 
     if (args.Length() == 0) {

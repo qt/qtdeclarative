@@ -408,8 +408,6 @@ public:
 
     QObject *qtObjectFromJS(const QV4::Value &value);
 
-    static QDateTime qtDateTimeFromJsDate(double jsDate);
-
     void addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> handle);
     void addRelationshipForGC(QObject *object, QObject *other);
 
