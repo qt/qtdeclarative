@@ -49,6 +49,7 @@
 #include <private/qlocale_data_p.h>
 
 #include <private/qv4dateobject_p.h>
+#include <private/qv4numberobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -420,37 +421,11 @@ QV4::Value QQmlDateExtension::timeZoneUpdated(const v8::Arguments& args)
 //-----------------
 // Number extension
 
-static const char numberToLocaleStringFunction[] =
-        "(function(toLocaleStringFunc) { "
-        "  var orig_toLocaleString;"
-        "  orig_toLocaleString = Number.prototype.toLocaleString;"
-        "  Number.prototype.toLocaleString = (function() {"
-        "    var val = toLocaleStringFunc.apply(this, arguments);"
-        "    if (val == undefined) val = orig_toLocaleString.call(this);"
-        "    return val;"
-        "  })"
-        "})";
-
-static const char numberToLocaleCurrencyStringFunction[] =
-        "(function(toLocaleCurrencyStringFunc) { "
-        "  Number.prototype.toLocaleCurrencyString = (function() {"
-        "    return toLocaleCurrencyStringFunc.apply(this, arguments);"
-        "  })"
-        "})";
-
-static const char numberFromLocaleStringFunction[] =
-        "(function(fromLocaleStringFunc) { "
-        "  Number.fromLocaleString = (function() {"
-        "    return fromLocaleStringFunc.apply(null, arguments);"
-        "  })"
-        "})";
-
-
-void QQmlNumberExtension::registerExtension(QV8Engine *engine)
+void QQmlNumberExtension::registerExtension(QV4::ExecutionEngine *engine)
 {
-    registerFunction(engine, numberToLocaleStringFunction, toLocaleString);
-    registerFunction(engine, numberToLocaleCurrencyStringFunction, toLocaleCurrencyString);
-    registerFunction(engine, numberFromLocaleStringFunction, fromLocaleString);
+    engine->numberPrototype->defineDefaultProperty(engine, QStringLiteral("toLocaleString"), toLocaleString);
+    engine->numberPrototype->defineDefaultProperty(engine, QStringLiteral("toLocaleCurrencyString"), toLocaleCurrencyString);
+    engine->numberCtor.objectValue()->defineDefaultProperty(engine, QStringLiteral("fromLocaleString"), fromLocaleString);
 }
 
 QV4::Value QQmlNumberExtension::toLocaleString(QV4::SimpleCallContext *ctx)
@@ -467,7 +442,7 @@ QV4::Value QQmlNumberExtension::toLocaleString(QV4::SimpleCallContext *ctx)
     }
 
     if (!isLocaleObject(ctx->arguments[0]))
-        return QV4::Value::undefinedValue(); // Use the default Number toLocaleString()
+        return QV4::NumberPrototype::method_toLocaleString(ctx); // Use the default Number toLocaleString()
 
     V4_GET_LOCALE_DATA_RESOURCE(ctx->arguments[0]);
 

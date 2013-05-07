@@ -647,7 +647,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 
     QQmlLocale::registerStringLocaleCompare(this);
     QQmlDateExtension::registerExtension(this);
-    QQmlNumberExtension::registerExtension(this);
+    QQmlNumberExtension::registerExtension(m_v4Engine);
 
     qt_add_domexceptions(m_v4Engine);
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);

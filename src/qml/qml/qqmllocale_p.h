@@ -71,7 +71,7 @@ private:
 class QQmlNumberExtension
 {
 public:
-    static void registerExtension(QV8Engine *engine);
+    static void registerExtension(QV4::ExecutionEngine *engine);
 
 private:
     static QV4::Value toLocaleString(QV4::SimpleCallContext *ctx);
