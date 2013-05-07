@@ -1673,7 +1673,7 @@ protected:
         V4V8Function *that = static_cast<V4V8Function*>(m);
         Arguments arguments(args, argc, QV4::Value::undefinedValue(), true, that->m_functionTemplate->m_data);
 
-        QV4::Object *obj = that->m_functionTemplate->m_instanceTemplate->NewInstance()->v4Value().asObject();
+        QV4::Object *obj = that->m_functionTemplate->InstanceTemplate()->NewInstance()->v4Value().asObject();
         QV4::Value proto = that->Managed::get(context, context->engine->id_prototype);
         if (proto.isObject())
             obj->prototype = proto.objectValue();
