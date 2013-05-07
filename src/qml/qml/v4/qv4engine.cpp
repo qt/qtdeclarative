@@ -58,9 +58,14 @@
 #include <qv4stringobject_p.h>
 #include <qv4identifier_p.h>
 #include <qv4unwindhelper_p.h>
-#include "qv4isel_masm_p.h"
 #include "qv4debugging_p.h"
 #include "qv4executableallocator_p.h"
+
+#ifdef V4_ENABLE_JIT
+#  include "qv4isel_masm_p.h"
+#else // !V4_ENABLE_JIT
+#  include "qv4isel_moth_p.h"
+#endif // V4_ENABLE_JIT
 
 using namespace QV4;
 
@@ -76,8 +81,13 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
-    if (!factory)
+    if (!factory) {
+#ifdef V4_ENABLE_JIT
         factory = new QQmlJS::MASM::ISelFactory;
+#else // !V4_ENABLE_JIT
+        factory = new QQmlJS::Moth::ISelFactory;
+#endif // V4_ENABLE_JIT
+    }
     iselFactory.reset(factory);
 
     memoryManager->setExecutionEngine(this);

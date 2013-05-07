@@ -3,6 +3,7 @@
 
 #include <private/qv4global_p.h>
 #include <private/qv4isel_p.h>
+#include <private/qv4isel_util_p.h>
 #include <private/qv4jsir_p.h>
 #include <private/qv4object_p.h>
 #include "qv4instr_moth_p.h"
@@ -154,6 +155,8 @@ public:
     virtual ~ISelFactory() {}
     virtual EvalInstructionSelection *create(QV4::ExecutionEngine *engine, V4IR::Module *module)
     { return new InstructionSelection(engine, module); }
+    virtual bool jitCompileRegexps() const
+    { return false; }
 };
 
 template<int InstrT>

@@ -50,7 +50,6 @@
 #include "private/qv4errorobject_p.h"
 #include "private/qv4globalobject_p.h"
 #include "private/qv4codegen_p.h"
-#include "private/qv4isel_masm_p.h"
 #include "private/qv4isel_moth_p.h"
 #include "private/qv4vme_moth_p.h"
 #include "private/qv4syntaxchecker_p.h"
@@ -58,6 +57,10 @@
 #include "private/qv4isel_p.h"
 #include "private/qv4mm_p.h"
 #include "private/qv4context_p.h"
+
+#ifdef V4_ENABLE_JIT
+#  include "private/qv4isel_masm_p.h"
+#endif // V4_ENABLE_JIT
 
 #include <QtCore>
 #include <private/qqmljsengine_p.h>
@@ -345,8 +348,10 @@ int main(int argc, char *argv[])
         QQmlJS::EvalISelFactory* iSelFactory = 0;
         if (mode == use_moth) {
             iSelFactory = new QQmlJS::Moth::ISelFactory;
+#ifdef V4_ENABLE_JIT
         } else {
             iSelFactory = new QQmlJS::MASM::ISelFactory;
+#endif // V4_ENABLE_JIT
         }
 
         QV4::ExecutionEngine vm(iSelFactory);

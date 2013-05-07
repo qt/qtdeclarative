@@ -891,6 +891,8 @@ public:
     virtual ~ISelFactory() {}
     virtual EvalInstructionSelection *create(QV4::ExecutionEngine *engine, V4IR::Module *module)
     { return new InstructionSelection(engine, module); }
+    virtual bool jitCompileRegexps() const
+    { return true; }
 };
 
 } // end of namespace MASM

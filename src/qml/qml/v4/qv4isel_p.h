@@ -82,6 +82,7 @@ class Q_QML_EXPORT EvalISelFactory
 public:
     virtual ~EvalISelFactory() = 0;
     virtual EvalInstructionSelection *create(QV4::ExecutionEngine *engine, V4IR::Module *module) = 0;
+    virtual bool jitCompileRegexps() const = 0;
 };
 
 namespace V4IR {
