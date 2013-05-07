@@ -35,6 +35,9 @@ Third party components
  - A Window declared nested inside another Item or Window automatically
    becomes transient for (centered upon) its parent's window, if x and y
    were not explicitly specified
+ - The resources property of Item is now its own property independent
+   of QObject. It no longer returns all QObject children, or explicitly
+   sets QObject parent. The resources property now behaves as documented.
 
 ****************************************************************************
 *                          Library                                         *
