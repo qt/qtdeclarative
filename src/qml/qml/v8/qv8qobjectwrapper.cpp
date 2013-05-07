@@ -1101,17 +1101,18 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
     if (!ddata) 
         return QV4::Value::undefinedValue();
 
-    if (ddata->v8objectid == m_id && !ddata->v8object.IsEmpty()) {
+    if (ddata->v8objectid == m_id && !ddata->v8object.isEmpty()) {
         // We own the v8object 
-        return ddata->v8object;
-    } else if (ddata->v8object.IsEmpty() && 
+        return ddata->v8object.value();
+    } else if (ddata->v8object.isEmpty() &&
                (ddata->v8objectid == m_id || // We own the QObject
                 ddata->v8objectid == 0 ||    // No one owns the QObject
                 !ddata->hasTaintedV8Object)) { // Someone else has used the QObject, but it isn't tainted
 
         v8::Handle<v8::Object> rv = newQObject(object, ddata, m_engine);
-        ddata->v8object = qPersistentNew<v8::Object>(rv);
-        ddata->v8object.MakeWeak(this, WeakQObjectReferenceCallback);
+        ddata->v8object = rv->v4Value();
+        // ### FIXME
+        //ddata->v8object.MakeWeak(this, WeakQObjectReferenceCallback);
         ddata->v8objectid = m_id;
         QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(rv);
         registerWeakQObjectReference(resource);
@@ -1126,10 +1127,11 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
 
         // If our tainted handle doesn't exist or has been collected, and there isn't
         // a handle in the ddata, we can assume ownership of the ddata->v8object
-        if ((!found || (*iter)->v8object.IsEmpty()) && ddata->v8object.IsEmpty()) {
+        if ((!found || (*iter)->v8object.IsEmpty()) && ddata->v8object.isEmpty()) {
             v8::Handle<v8::Object> rv = newQObject(object, ddata, m_engine);
-            ddata->v8object = qPersistentNew<v8::Object>(rv);
-            ddata->v8object.MakeWeak(this, WeakQObjectReferenceCallback);
+            ddata->v8object = rv->v4Value();
+            // ### FIXME
+            //ddata->v8object.MakeWeak(this, WeakQObjectReferenceCallback);
             ddata->v8objectid = m_id;
             QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(rv);
             registerWeakQObjectReference(resource);
@@ -1171,7 +1173,7 @@ bool QV8QObjectWrapper::deleteWeakQObject(QV8QObjectResource *resource, bool cal
                 return false;
             }
 
-            ddata->v8object.Clear();
+            ddata->v8object = QV4::PersistentValue();
             if (!object->parent() && !ddata->indestructible) {
                 // This object is notionally destroyed now
                 if (ddata->ownContext && ddata->context)

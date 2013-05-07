@@ -241,7 +241,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Handle<v8::String> property,
             } else if (r.scriptIndex != -1) {
                 int index = r.scriptIndex;
                 if (index < context->importedScripts.count())
-                    return context->importedScripts.at(index);
+                    return context->importedScripts.at(index).value();
             } else if (r.importNamespace) {
                 return v8engine->typeWrapper()->newObject(object, context->imports, r.importNamespace);
             }

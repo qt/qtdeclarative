@@ -57,6 +57,8 @@
 #include <private/qobject_p.h>
 #include <private/qv8_p.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 template <class Key, class T> class QHash;
@@ -177,7 +179,7 @@ public:
     unsigned int deferredIdx;
 
     quint32 v8objectid;
-    v8::Persistent<v8::Object> v8object;
+    QV4::PersistentValue v8object;
 
     QQmlPropertyCache *propertyCache;
 

@@ -561,7 +561,7 @@ struct PersistentValuePrivate
     void deref();
 };
 
-class PersistentValue
+class Q_QML_EXPORT PersistentValue
 {
 public:
     PersistentValue() : d(0) {}

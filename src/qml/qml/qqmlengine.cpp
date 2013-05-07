@@ -1531,11 +1531,7 @@ void QQmlData::destroyed(QObject *object)
         delete extendedData;
 
     // Dispose the handle.
-    // We don't simply clear it (and wait for next gc cycle to dispose
-    // via the weak qobject reference callback) as this affects the
-    // outcomes of v8's gc statistical analysis heuristics, which can
-    // cause unnecessary growth of the old pointer space js heap area.
-    qPersistentDispose(v8object);
+    v8object = QV4::Value::undefinedValue();
 
     if (ownMemory)
         delete this;

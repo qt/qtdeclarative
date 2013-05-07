@@ -763,7 +763,8 @@ void QV8Engine::setExtensionData(int index, Deletable *data)
     m_extensionData[index] = data;
 }
 
-v8::Persistent<v8::Object> *QV8Engine::findOwnerAndStrength(QObject *object, bool *shouldBeStrong)
+
+QV4::PersistentValue *QV8Engine::findOwnerAndStrength(QObject *object, bool *shouldBeStrong)
 {
     QQmlData *data = QQmlData::get(object);
     if (data && data->rootObjectInCreation) { // When the object is still being created it may not show up to the GC.
@@ -806,11 +807,13 @@ void QV8Engine::addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> 
         return;
 
     bool handleShouldBeStrong = false;
-    v8::Persistent<v8::Object> *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
+    QV4::PersistentValue *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
     if (handleShouldBeStrong) {
         v8::V8::AddImplicitReferences(m_strongReferencer, &handle, 1);
-    } else if (!implicitOwner->IsEmpty()) {
-        v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
+    } else if (!implicitOwner->isEmpty()) {
+        // ### FIXME
+        qWarning() << "Fix object ownership";
+//        v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
     }
 }
 
@@ -820,14 +823,16 @@ void QV8Engine::addRelationshipForGC(QObject *object, QObject *other)
         return;
 
     bool handleShouldBeStrong = false;
-    v8::Persistent<v8::Object> *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
-    v8::Persistent<v8::Value> handle = QQmlData::get(other, true)->v8object;
-    if (handle.IsEmpty()) // no JS data to keep alive.
+    QV4::PersistentValue *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
+    QV4::PersistentValue handle = QQmlData::get(other, true)->v8object;
+    if (handle.isEmpty()) // no JS data to keep alive.
         return;
-    else if (handleShouldBeStrong)
-        v8::V8::AddImplicitReferences(m_strongReferencer, &handle, 1);
-    else if (!implicitOwner->IsEmpty())
-        v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
+    // ### FIXME
+    qWarning() << "Fix object ownership";
+//    else if (handleShouldBeStrong)
+//        v8::V8::AddImplicitReferences(m_strongReferencer, &handle, 1);
+//    else if (!implicitOwner->IsEmpty())
+//        v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
 }
 
 static QThreadStorage<QV8Engine::ThreadData*> perThreadEngineData;

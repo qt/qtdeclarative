@@ -654,10 +654,6 @@ void QQmlContextData::destroy()
     if (v8bindings)
         v8bindings->release();
 
-    for (int ii = 0; ii < importedScripts.count(); ++ii) {
-        qPersistentDispose(importedScripts[ii]);
-    }
-
     delete [] idValues;
 
     if (isInternal)

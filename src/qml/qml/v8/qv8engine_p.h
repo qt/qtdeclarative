@@ -473,7 +473,7 @@ private:
     QVariantMap variantMapFromJS(QV4::Object *object, V8ObjectSet &visitedObjects);
     QVariant variantFromJS(const QV4::Value &value, V8ObjectSet &visitedObjects);
 
-    static v8::Persistent<v8::Object> *findOwnerAndStrength(QObject *object, bool *shouldBeStrong);
+    static QV4::PersistentValue *findOwnerAndStrength(QObject *object, bool *shouldBeStrong);
 
     Q_DISABLE_COPY(QV8Engine)
 };

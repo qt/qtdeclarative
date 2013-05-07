@@ -282,7 +282,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
             if (r.scriptIndex != -1) {
                 int index = r.scriptIndex;
                 if (index < context->importedScripts.count())
-                    return context->importedScripts.at(index);
+                    return context->importedScripts.at(index).value();
                 else
                     return QV4::Value::undefinedValue();
             } else if (r.type) {

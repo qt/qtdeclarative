@@ -473,8 +473,6 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 // double dispose.  It is possible we could do this more efficiently using some form of
                 // referencing instead.
                 CTXT->importedScripts = creationContext->importedScripts;
-                for (int ii = 0; ii < CTXT->importedScripts.count(); ++ii)
-                    CTXT->importedScripts[ii] = qPersistentNew<v8::Object>(CTXT->importedScripts[ii]);
             }
         QML_END_INSTR(Init)
 
@@ -1181,12 +1179,12 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
     addref();
 }
 
-v8::Persistent<v8::Object> QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *script)
+QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *script)
 {
     if (script->m_loaded)
-        return qPersistentNew<v8::Object>(script->m_value);
+        return script->m_value->v4Value();
 
-    v8::Persistent<v8::Object> rv;
+    QV4::PersistentValue rv;
 
     Q_ASSERT(parentCtxt && parentCtxt->engine);
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(parentCtxt->engine);
@@ -1221,8 +1219,6 @@ v8::Persistent<v8::Object> QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptD
     } else if (effectiveCtxt) {
         ctxt->imports = effectiveCtxt->imports;
         ctxt->importedScripts = effectiveCtxt->importedScripts;
-        for (int ii = 0; ii < ctxt->importedScripts.count(); ++ii)
-            ctxt->importedScripts[ii] = qPersistentNew<v8::Object>(ctxt->importedScripts[ii]);
     }
 
     if (ctxt->imports) {
@@ -1262,7 +1258,7 @@ v8::Persistent<v8::Object> QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptD
         }
     } 
 
-    rv = qPersistentNew<v8::Object>(qmlglobal);
+    rv = qmlglobal->v4Value();
     if (shared) {
         script->m_value = qPersistentNew<v8::Object>(qmlglobal);
         script->m_loaded = true;

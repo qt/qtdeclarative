@@ -99,8 +99,8 @@ public:
     QQmlComponentExtension(QV8Engine *);
     virtual ~QQmlComponentExtension();
 
-    v8::Persistent<v8::Function> incubationConstructor;
-    v8::Persistent<v8::Function> forceCompletion;
+    QV4::PersistentValue incubationConstructor;
+    QV4::PersistentValue forceCompletion;
 };
 V8_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
 
@@ -1101,10 +1101,10 @@ public:
 
     void dispose();
 
-    v8::Persistent<v8::Object> me;
+    QV4::PersistentValue me;
     QQmlGuard<QObject> parent;
-    v8::Persistent<v8::Value> valuemap;
-    v8::Persistent<v8::Object> qmlGlobal;
+    QV4::PersistentValue valuemap;
+    QV4::PersistentValue qmlGlobal;
 protected:
     virtual void statusChanged(Status);
     virtual void setInitialState(QObject *);
@@ -1333,15 +1333,15 @@ void QQmlComponent::incubateObject(QQmlV8Function *args)
     QQmlComponentExtension *e = componentExtension(args->engine());
     
     QV8IncubatorResource *r = new QV8IncubatorResource(args->engine(), mode);
-    v8::Handle<v8::Object> o = e->incubationConstructor->NewInstance();
+    v8::Handle<v8::Object> o = e->incubationConstructor.value().asFunctionObject()->newInstance();
     o->SetExternalResource(r);
 
     if (!valuemap.IsEmpty()) {
-        r->valuemap = qPersistentNew(valuemap);
-        r->qmlGlobal = qPersistentNew(args->qmlGlobal());
+        r->valuemap = valuemap->v4Value();
+        r->qmlGlobal = args->qmlGlobal()->v4Value();
     }
     r->parent = parent;
-    r->me = qPersistentNew(o);
+    r->me = o->v4Value();
 
     create(*r, creationContext());
 
@@ -1375,7 +1375,7 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(v8::Handle<v8::
 
 QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
 {
-    forceCompletion = qPersistentNew(V8FUNCTION(QV8IncubatorResource::ForceCompletion, engine));
+    forceCompletion = (V8FUNCTION(QV8IncubatorResource::ForceCompletion, engine))->v4Value();
 
     {
     v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
@@ -1390,7 +1390,7 @@ QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
                                         QV8IncubatorResource::ObjectGetter); 
     ft->InstanceTemplate()->SetAccessor(v8::String::New("forceCompletion"), 
                                         QV8IncubatorResource::ForceCompletionGetter); 
-    incubationConstructor = qPersistentNew(ft->GetFunction());
+    incubationConstructor = ft->GetFunction()->v4Value();
     }
 }
 
@@ -1405,7 +1405,7 @@ v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletionGetter(v8::Handle<v8:
                                                                   const v8::AccessorInfo& info)
 {
     QV8IncubatorResource *r = v8_resource_check<QV8IncubatorResource>(info.This());
-    return componentExtension(r->engine)->forceCompletion;
+    return componentExtension(r->engine)->forceCompletion.value();
 }
 
 QV4::Value QV8IncubatorResource::ForceCompletion(const v8::Arguments &args)
@@ -1440,8 +1440,6 @@ void QV8IncubatorResource::StatusChangedSetter(v8::Handle<v8::String>, v8::Handl
 
 QQmlComponentExtension::~QQmlComponentExtension()
 {
-    qPersistentDispose(incubationConstructor);
-    qPersistentDispose(forceCompletion);
 }
 
 QV8IncubatorResource::QV8IncubatorResource(QV8Engine *engine, IncubationMode m)
@@ -1453,23 +1451,19 @@ void QV8IncubatorResource::setInitialState(QObject *o)
 {
     QQmlComponent_setQmlParent(o, parent);
 
-    if (!valuemap.IsEmpty()) {
+    if (!valuemap.isEmpty()) {
         QQmlComponentExtension *e = componentExtension(engine);
 
         QV4::ExecutionEngine *v4engine = QV8Engine::getV4(engine);
 
-        QV4::Value f = engine->evaluateScript(QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal->v4Value().asObject());
-        QV4::Value args[] = { engine->newQObject(o), valuemap->v4Value() };
+        QV4::Value f = engine->evaluateScript(QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.value().asObject());
+        QV4::Value args[] = { engine->newQObject(o), valuemap };
         f.asFunctionObject()->call(v4engine->current, QV4::Value::fromObject(v4engine->globalObject), args, 2);
     }
 }
     
 void QV8IncubatorResource::dispose()
 {
-    qPersistentDispose(valuemap);
-    qPersistentDispose(qmlGlobal);
-    // No further status changes are forthcoming, so we no long need a self reference
-    qPersistentDispose(me);
 }
 
 void QV8IncubatorResource::statusChanged(Status s)
@@ -1480,8 +1474,8 @@ void QV8IncubatorResource::statusChanged(Status s)
         QQmlData::get(object())->indestructible = false;
     }
 
-    if (!me.IsEmpty()) { // Will be false in synchronous mode
-        v8::Handle<v8::Value> callback = me->GetInternalField(0);
+    if (!me.isEmpty()) { // Will be false in synchronous mode
+        v8::Handle<v8::Value> callback = v8::Handle<v8::Object>(me)->GetInternalField(0);
 
         if (!callback.IsEmpty() && !callback->IsUndefined()) {
 
@@ -1489,7 +1483,7 @@ void QV8IncubatorResource::statusChanged(Status s)
                 v8::Handle<v8::Function> f = v8::Handle<v8::Function>::Cast(callback);
                 v8::Handle<v8::Value> args[] = { v8::Integer::NewFromUnsigned(s) };
                 v8::TryCatch tc;
-                f->Call(me, 1, args);
+                f->Call(me.value(), 1, args);
                 if (tc.HasCaught()) {
                     QQmlError error;
                     QQmlJavaScriptExpression::exceptionToError(tc.Message(), error);

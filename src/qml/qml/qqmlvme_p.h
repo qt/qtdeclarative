@@ -148,7 +148,7 @@ private:
                  , void *const**storeJumpTable = 0
 #endif
                 );
-    v8::Persistent<v8::Object> run(QQmlContextData *, QQmlScriptData *);
+    QV4::PersistentValue run(QQmlContextData *, QQmlScriptData *);
 
 #ifdef QML_THREADED_VME_INTERPRETER
     static void *const*instructionJumpTable();
