@@ -43,6 +43,7 @@
 #include <QtTest/QSignalSpy>
 #include <private/qquickmultipointtoucharea_p.h>
 #include <private/qquickflickable_p.h>
+#include <private/qquickmousearea_p.h>
 #include <qpa/qwindowsysteminterface.h>
 #include <QtQuick/qquickview.h>
 #include <QtGui/QScreen>
@@ -72,9 +73,13 @@ private slots:
     void nested();
     void inFlickable();
     void inFlickable2();
+    void inMouseArea();
+    void mouseAsTouchpoint();
     void invisible();
     void transformedTouchArea_data();
     void transformedTouchArea();
+    void mouseInteraction();
+    void mouseInteraction_data();
 
 private:
     QQuickView *createAndShowView(const QString &file);
@@ -550,6 +555,9 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(window->rootObject());
     QVERIFY(flickable != 0);
 
+    QQuickMultiPointTouchArea *mpta = window->rootObject()->findChild<QQuickMultiPointTouchArea*>();
+    QVERIFY(mpta != 0);
+
     QQuickTouchPoint *point11 = window->rootObject()->findChild<QQuickTouchPoint*>("point1");
     QQuickTouchPoint *point12 = window->rootObject()->findChild<QQuickTouchPoint*>("point2");
 
@@ -625,6 +633,8 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
     p1 = QPoint(20,100);
     p2 = QPoint(40,100);
     QTest::touchEvent(window.data(), device).press(0, p1).press(1, p2);
+    // ensure that mouse events do not fall through to the Flickable
+    mpta->setMaximumTouchPoints(3);
     QTest::mousePress(window.data(), Qt::LeftButton, 0, p1);
 
     QCOMPARE(point11->pressed(), true);
@@ -744,6 +754,239 @@ void tst_QQuickMultiPointTouchArea::inFlickable2()
     QTRY_VERIFY(!flickable->isMoving());
 }
 
+// QTBUG-31047
+void tst_QQuickMultiPointTouchArea::inMouseArea()
+{
+    QScopedPointer<QQuickView> window(createAndShowView("inMouseArea.qml"));
+    QVERIFY(window->rootObject() != 0);
+
+    QQuickMouseArea *mouseArea = qobject_cast<QQuickMouseArea *>(window->rootObject());
+    QVERIFY(mouseArea != 0);
+
+    QQuickMultiPointTouchArea *mpta = window->rootObject()->findChild<QQuickMultiPointTouchArea*>("mpta");
+    QVERIFY(mpta != 0);
+
+    QPoint innerPoint(40,100);
+    QPoint outerPoint(10,100);
+
+    QTest::touchEvent(window.data(), device).press(0, innerPoint);
+    QVERIFY(mpta->property("pressed").toBool());
+    QTest::touchEvent(window.data(), device).release(0, innerPoint);
+    QVERIFY(!mpta->property("pressed").toBool());
+
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, outerPoint);
+    QVERIFY(mouseArea->property("pressed").toBool());
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, outerPoint);
+    QVERIFY(!mouseArea->property("pressed").toBool());
+
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, innerPoint);
+    QVERIFY(mpta->property("pressed").toBool());
+    QVERIFY(!mouseArea->property("pressed").toBool());
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, innerPoint);
+    QVERIFY(!mpta->property("pressed").toBool());
+    QVERIFY(!mouseArea->property("pressed").toBool());
+
+    QTest::touchEvent(window.data(), device).press(0, innerPoint);
+    QVERIFY(mpta->property("pressed").toBool());
+    QTest::touchEvent(window.data(), device).release(0, innerPoint);
+    QVERIFY(!mpta->property("pressed").toBool());
+
+    QTest::touchEvent(window.data(), device).press(0, outerPoint);
+    QVERIFY(mouseArea->property("pressed").toBool());
+    QVERIFY(!mpta->property("pressed").toBool());
+    QTest::touchEvent(window.data(), device).release(0, outerPoint);
+    QVERIFY(!mouseArea->property("pressed").toBool());
+    QVERIFY(!mpta->property("pressed").toBool());
+
+    // Right click should pass through
+    QTest::mousePress(window.data(), Qt::RightButton, 0, innerPoint);
+    QVERIFY(mouseArea->property("pressed").toBool());
+    QVERIFY(!mpta->property("pressed").toBool());
+    QTest::mouseRelease(window.data(), Qt::RightButton, 0, innerPoint);
+
+    mpta->setProperty("mouseEnabled", false);
+
+    QTest::touchEvent(window.data(), device).press(0, innerPoint);
+    QVERIFY(mpta->property("pressed").toBool());
+    QVERIFY(!mouseArea->property("pressed").toBool());
+    QTest::touchEvent(window.data(), device).release(0, innerPoint);
+    QVERIFY(!mpta->property("pressed").toBool());
+    QVERIFY(!mouseArea->property("pressed").toBool());
+
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, outerPoint);
+    QVERIFY(mouseArea->property("pressed").toBool());
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, outerPoint);
+    QVERIFY(!mouseArea->property("pressed").toBool());
+
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, innerPoint);
+    QVERIFY(!mpta->property("pressed").toBool());
+    QVERIFY(mouseArea->property("pressed").toBool());
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, innerPoint);
+    QVERIFY(!mpta->property("pressed").toBool());
+    QVERIFY(!mouseArea->property("pressed").toBool());
+
+    QTest::touchEvent(window.data(), device).press(0, innerPoint);
+    QVERIFY(mpta->property("pressed").toBool());
+    QTest::touchEvent(window.data(), device).release(0, innerPoint);
+    QVERIFY(!mpta->property("pressed").toBool());
+
+    QTest::touchEvent(window.data(), device).press(0, outerPoint);
+    QVERIFY(mouseArea->property("pressed").toBool());
+    QVERIFY(!mpta->property("pressed").toBool());
+    QTest::touchEvent(window.data(), device).release(0, outerPoint);
+    QVERIFY(!mouseArea->property("pressed").toBool());
+    QVERIFY(!mpta->property("pressed").toBool());
+}
+
+void tst_QQuickMultiPointTouchArea::mouseAsTouchpoint()
+{
+    QScopedPointer<QQuickView> window(createAndShowView("dualGestures.qml"));
+    QVERIFY(window->rootObject() != 0);
+
+    QQuickMultiPointTouchArea *dualmpta = window->rootObject()->findChild<QQuickMultiPointTouchArea*>("dualTouchArea");
+    QVERIFY(dualmpta != 0);
+
+    QQuickItem *touch1rect = window->rootObject()->findChild<QQuickItem*>("touch1rect");
+    QQuickItem *touch2rect = window->rootObject()->findChild<QQuickItem*>("touch2rect");
+    QQuickItem *touch3rect = window->rootObject()->findChild<QQuickItem*>("touch3rect");
+    QQuickItem *touch4rect = window->rootObject()->findChild<QQuickItem*>("touch4rect");
+    QQuickItem *touch5rect = window->rootObject()->findChild<QQuickItem*>("touch5rect");
+
+    {
+        QPoint touch1(40,10);
+        QPoint touch2(40,100);
+        QPoint touch3(10,10);
+
+        // Touch both, release one, manipulate other touchpoint with mouse
+        QTest::touchEvent(window.data(), device).press(1, touch1);
+        QTest::touchEvent(window.data(), device).press(2, touch2);
+        QCOMPARE(touch1rect->property("x").toInt(), touch1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), touch1.y());
+        QCOMPARE(touch2rect->property("x").toInt(), touch2.x());
+        QCOMPARE(touch2rect->property("y").toInt(), touch2.y());
+        QTest::touchEvent(window.data(), device).release(1, touch1);
+        touch1.setY(20);
+        QTest::mousePress(window.data(), Qt::LeftButton, 0, touch1);
+        QCOMPARE(touch1rect->property("x").toInt(), touch1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), touch1.y());
+        QCOMPARE(touch2rect->property("x").toInt(), touch2.x());
+        QCOMPARE(touch2rect->property("y").toInt(), touch2.y());
+        QTest::touchEvent(window.data(), device).release(2, touch2);
+        QTest::mouseRelease(window.data(), Qt::LeftButton, 0, touch1);
+
+        // Start with mouse, move it, touch second point, move it
+        QTest::mousePress(window.data(), Qt::LeftButton, 0, touch1);
+        touch1.setX(60);
+        QTest::mouseMove(window.data(), touch1);
+        QCOMPARE(touch1rect->property("x").toInt(), touch1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), touch1.y());
+        touch2.setX(60);
+        QTest::touchEvent(window.data(), device).press(3, touch2);
+        QCOMPARE(touch1rect->property("x").toInt(), touch1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), touch1.y());
+        QCOMPARE(touch2rect->property("x").toInt(), touch2.x());
+        QCOMPARE(touch2rect->property("y").toInt(), touch2.y());
+        touch2.setY(150);
+        QTest::touchEvent(window.data(), device).move(3, touch2);
+        QCOMPARE(touch1rect->property("x").toInt(), touch1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), touch1.y());
+        QCOMPARE(touch2rect->property("x").toInt(), touch2.x());
+        QCOMPARE(touch2rect->property("y").toInt(), touch2.y());
+
+        // Touch third point - nothing happens
+        QTest::touchEvent(window.data(), device).press(4, touch3);
+        QCOMPARE(touch1rect->property("x").toInt(), touch1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), touch1.y());
+        QCOMPARE(touch2rect->property("x").toInt(), touch2.x());
+        QCOMPARE(touch2rect->property("y").toInt(), touch2.y());
+
+        // Release all
+        QTest::mouseRelease(window.data(), Qt::LeftButton, 0, touch1);
+        QTest::touchEvent(window.data(), device).release(3, touch2);
+        QTest::touchEvent(window.data(), device).release(4, touch3);
+        QCOMPARE(touch1rect->property("x").toInt(), touch1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), touch1.y());
+        QCOMPARE(touch2rect->property("x").toInt(), touch2.x());
+        QCOMPARE(touch2rect->property("y").toInt(), touch2.y());
+    }
+
+    // Mouse and touch on left, touch 3 points on right
+    {
+        QPoint mouse1(40,10);
+        QPoint touch1(10,10);
+        QPoint touch2(340,10);
+        QPoint touch3(340,100);
+        QPoint touch4(540,10);
+
+        QTest::mousePress(window.data(), Qt::LeftButton, 0, mouse1);
+        QCOMPARE(touch1rect->property("x").toInt(), mouse1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), mouse1.y());
+        QTest::touchEvent(window.data(), device).press(1, touch1);
+        QCOMPARE(touch1rect->property("x").toInt(), mouse1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), mouse1.y());
+        QCOMPARE(touch2rect->property("x").toInt(), touch1.x());
+        QCOMPARE(touch2rect->property("y").toInt(), touch1.y());
+
+        QTest::touchEvent(window.data(), device).press(2, touch2).press(3, touch3).press(4, touch4);
+        QCOMPARE(touch1rect->property("x").toInt(), mouse1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), mouse1.y());
+        QCOMPARE(touch2rect->property("x").toInt(), touch1.x());
+        QCOMPARE(touch2rect->property("y").toInt(), touch1.y());
+        QCOMPARE(touch3rect->property("x").toInt(), touch2.x() - 320);
+        QCOMPARE(touch3rect->property("y").toInt(), touch2.y());
+        QCOMPARE(touch4rect->property("x").toInt(), touch3.x() - 320);
+        QCOMPARE(touch4rect->property("y").toInt(), touch3.y());
+        QCOMPARE(touch5rect->property("x").toInt(), touch4.x() - 320);
+        QCOMPARE(touch5rect->property("y").toInt(), touch4.y());
+
+        // Release all
+        QTest::mouseRelease(window.data(), Qt::LeftButton, 0, mouse1);
+        QTest::touchEvent(window.data(), device).release(1, touch1).release(2, touch2).release(3, touch3).release(4, touch4);
+    }
+
+    dualmpta->setProperty("mouseEnabled", false);
+    {
+        QPoint mouse1(40,10);
+        QPoint touch1(10,10);
+        QPoint touch2(100,10);
+
+        touch1rect->setX(10);
+        touch1rect->setY(10);
+        touch2rect->setX(20);
+        touch2rect->setY(10);
+
+        // Start with mouse, move it, touch a point, move it, touch another.
+        // Mouse is ignored, both touch points are heeded.
+        QTest::mousePress(window.data(), Qt::LeftButton, 0, mouse1);
+        mouse1.setX(60);
+        QTest::mouseMove(window.data(), mouse1);
+        QCOMPARE(touch1rect->property("x").toInt(), 10);
+        QCOMPARE(touch1rect->property("y").toInt(), 10);
+
+        QTest::touchEvent(window.data(), device).press(1, touch1);
+        QCOMPARE(touch1rect->property("x").toInt(), touch1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), touch1.y());
+        touch1.setY(150);
+        QTest::touchEvent(window.data(), device).move(1, touch1);
+        QCOMPARE(touch1rect->property("x").toInt(), touch1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), touch1.y());
+        QTest::touchEvent(window.data(), device).press(2, touch2);
+        QCOMPARE(touch1rect->property("x").toInt(), touch1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), touch1.y());
+        QCOMPARE(touch2rect->property("x").toInt(), touch2.x());
+        QCOMPARE(touch2rect->property("y").toInt(), touch2.y());
+
+        // Release all
+        QTest::mouseRelease(window.data(), Qt::LeftButton, 0, mouse1);
+        QTest::touchEvent(window.data(), device).release(1, touch1);
+        QTest::touchEvent(window.data(), device).release(2, touch2);
+        QCOMPARE(touch1rect->property("x").toInt(), touch1.x());
+        QCOMPARE(touch1rect->property("y").toInt(), touch1.y());
+        QCOMPARE(touch2rect->property("x").toInt(), touch2.x());
+        QCOMPARE(touch2rect->property("y").toInt(), touch2.y());
+    }
+}
+
 // QTBUG-23327
 void tst_QQuickMultiPointTouchArea::invisible()
 {
@@ -840,6 +1083,48 @@ QQuickView *tst_QQuickMultiPointTouchArea::createAndShowView(const QString &file
 
     return window;
 }
+
+void tst_QQuickMultiPointTouchArea::mouseInteraction_data()
+{
+    QTest::addColumn<int>("buttons");
+    QTest::addColumn<int>("accept");
+
+    QTest::newRow("left") << (int) Qt::LeftButton << 1;
+    QTest::newRow("right") << (int) Qt::RightButton << 0;
+    QTest::newRow("middle") << (int) Qt::MiddleButton << 0;
+}
+
+void tst_QQuickMultiPointTouchArea::mouseInteraction()
+{
+    QFETCH(int, buttons);
+    QFETCH(int, accept);
+
+    QScopedPointer<QQuickView> view(createAndShowView("mouse.qml"));
+    QVERIFY(view->rootObject() != 0);
+
+    QQuickMultiPointTouchArea *area = qobject_cast<QQuickMultiPointTouchArea *>(view->rootObject());
+    QVERIFY(area != 0);
+    QQuickTouchPoint *point1 = view->rootObject()->findChild<QQuickTouchPoint*>("point1");
+    QCOMPARE(point1->pressed(), false);
+
+    QCOMPARE(area->property("touchCount").toInt(), 0);
+    QPoint p1 = QPoint(100, 100);
+    QTest::mousePress(view.data(), (Qt::MouseButton) buttons, 0, p1);
+    QCOMPARE(area->property("touchCount").toInt(), accept);
+    QCOMPARE(point1->pressed(), accept);
+    p1 += QPoint(10, 10);
+    QTest::mouseMove(view.data(), p1);
+    QCOMPARE(point1->pressed(), accept);
+    QCOMPARE(area->property("touchCount").toInt(), accept);
+    p1 += QPoint(10, 10);
+    QTest::mouseMove(view.data(), p1);
+    QCOMPARE(point1->pressed(), accept);
+    QCOMPARE(area->property("touchCount").toInt(), accept);
+    QTest::mouseRelease(view.data(), (Qt::MouseButton) buttons);
+    QCOMPARE(point1->pressed(), false);
+    QCOMPARE(area->property("touchCount").toInt(), 0);
+}
+
 
 QTEST_MAIN(tst_QQuickMultiPointTouchArea)
 

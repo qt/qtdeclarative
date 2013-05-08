@@ -236,7 +236,14 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
     A MultiPointTouchArea is an invisible item that is used to track multiple touch points.
 
     The \l Item::enabled property is used to enable and disable touch handling. When disabled,
-    the touch area becomes transparent to mouse/touch events.
+    the touch area becomes transparent to mouse and touch events.
+
+    By default, the mouse will be handled the same way as a single touch point,
+    and items under the touch area will not receive mouse events because the
+    touch area is handling them. But if the \l mouseEnabled property is set to
+    false, it becomes transparent to mouse events so that another
+    mouse-sensitive Item (such as a MouseArea) can be used to handle mouse
+    interaction separately.
 
     MultiPointTouchArea can be used in two ways:
 
@@ -313,6 +320,10 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 
     This property holds a set of user-defined touch point objects that can be bound to.
 
+    If mouseEnabled is true (the default) and the left mouse button is pressed
+    while the mouse is over the touch area, the current mouse position will be
+    one of these touch points.
+
     In the following example, we have two small rectangles that follow our touch points.
 
     \snippet qml/multipointtoucharea/multipointtoucharea.qml 0
@@ -326,7 +337,9 @@ QQuickMultiPointTouchArea::QQuickMultiPointTouchArea(QQuickItem *parent)
     : QQuickItem(parent),
       _minimumTouchPoints(0),
       _maximumTouchPoints(INT_MAX),
-      _stealMouse(false)
+      _mouseTouchPoint(Q_NULLPTR),
+      _stealMouse(false),
+      _mouseEnabled(true)
 {
     setAcceptedMouseButtons(Qt::LeftButton);
     setFiltersChildMouseEvents(true);
@@ -358,6 +371,11 @@ QQuickMultiPointTouchArea::~QQuickMultiPointTouchArea()
     one handling two finger touches, and another handling three finger touches.
 
     By default, all touch points within the touch area are handled.
+
+    If mouseEnabled is true, the mouse acts as a touch point, so it is also
+    subject to these constraints: for example if maximumTouchPoints is two, you
+    can use the mouse as one touch point and a finger as another touch point
+    for a total of two.
 */
 
 int QQuickMultiPointTouchArea::minimumTouchPoints() const
@@ -384,6 +402,25 @@ void QQuickMultiPointTouchArea::setMaximumTouchPoints(int num)
         return;
     _maximumTouchPoints = num;
     emit maximumTouchPointsChanged();
+}
+
+/*!
+    \qmlproperty bool QtQuick::MultiPointTouchArea::mouseEnabled
+
+    This property controls whether the MultiPointTouchArea will handle mouse
+    events too. If it is true (the default), the touch area will treat the
+    mouse the same as a single touch point; if it is false, the touch area will
+    ignore mouse events and allow them to "pass through" so that they can be
+    handled by other items underneath.
+*/
+void QQuickMultiPointTouchArea::setMouseEnabled(bool arg)
+{
+    if (_mouseEnabled != arg) {
+        _mouseEnabled = arg;
+        if (_mouseTouchPoint && !arg)
+            _mouseTouchPoint = Q_NULLPTR;
+        emit mouseEnabledChanged();
+    }
 }
 
 void QQuickMultiPointTouchArea::touchEvent(QTouchEvent *event)
@@ -434,10 +471,46 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
     bool ended = false;
     bool moved = false;
     bool started = false;
+    bool isMouseEvent = false;
 
     clearTouchLists();
-    QTouchEvent *e = static_cast<QTouchEvent*>(event);
-    QList<QTouchEvent::TouchPoint> touchPoints = e->touchPoints();
+    QList<QTouchEvent::TouchPoint> touchPoints;
+
+    switch (event->type()) {
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+        touchPoints = static_cast<QTouchEvent*>(event)->touchPoints();
+        break;
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseMove:
+    case QEvent::MouseButtonRelease: {
+        QMouseEvent *me = static_cast<QMouseEvent*>(event);
+        _mouseQpaTouchPoint.setPos(me->localPos());
+        _mouseQpaTouchPoint.setScenePos(me->windowPos());
+        _mouseQpaTouchPoint.setScreenPos(me->screenPos());
+        if (event->type() == QEvent::MouseMove)
+            _mouseQpaTouchPoint.setState(Qt::TouchPointMoved);
+        else if (event->type() == QEvent::MouseButtonRelease)
+            _mouseQpaTouchPoint.setState(Qt::TouchPointReleased);
+        else { // QEvent::MouseButtonPress
+            _mouseQpaTouchPoint.setState(Qt::TouchPointPressed);
+            _pressedTouchPoints.append(_mouseTouchPoint);
+        }
+        touchPoints << _mouseQpaTouchPoint;
+        isMouseEvent = true;
+        break;
+    }
+    default:
+        qWarning("updateTouchData: unhandled event type %d", event->type());
+        break;
+    }
+
+    if (!isMouseEvent && _mouseTouchPoint) {
+        QQuickWindow *c = window();
+        if (c && c->mouseGrabberItem() == this)
+            touchPoints << _mouseQpaTouchPoint;
+    }
     int numTouchPoints = touchPoints.count();
     //always remove released touches, and make sure we handle all releases before adds.
     foreach (const QTouchEvent::TouchPoint &p, touchPoints) {
@@ -517,10 +590,12 @@ void QQuickMultiPointTouchArea::clearTouchLists()
 {
     foreach (QObject *obj, _releasedTouchPoints) {
         QQuickTouchPoint *dtp = static_cast<QQuickTouchPoint*>(obj);
-        if (!dtp->isQmlDefined())
+        if (!dtp->isQmlDefined()) {
+            _touchPoints.remove(dtp->pointId());
             delete dtp;
-        else
+        } else {
             dtp->setInUse(false);
+        }
     }
     _releasedTouchPoints.clear();
     _pressedTouchPoints.clear();
@@ -545,6 +620,25 @@ void QQuickMultiPointTouchArea::addTouchPoint(const QTouchEvent::TouchPoint *p)
     dtp->setPressed(true);
     _touchPoints.insert(p->id(),dtp);
     _pressedTouchPoints.append(dtp);
+}
+
+void QQuickMultiPointTouchArea::addTouchPoint(const QMouseEvent *e)
+{
+    QQuickTouchPoint *dtp = 0;
+    foreach (QQuickTouchPoint *tp, _touchPrototypes)
+        if (!tp->inUse()) {
+            tp->setInUse(true);
+            dtp = tp;
+            break;
+        }
+
+    if (dtp == 0)
+        dtp = new QQuickTouchPoint(false);
+    updateTouchPoint(dtp, e);
+    dtp->setPressed(true);
+    _touchPoints.insert(-1, dtp);
+    _pressedTouchPoints.append(dtp);
+    _mouseTouchPoint = dtp;
 }
 
 #ifdef Q_OS_OSX
@@ -597,9 +691,23 @@ void QQuickMultiPointTouchArea::updateTouchPoint(QQuickTouchPoint *dtp, const QT
     dtp->setSceneY(p->scenePos().y());
 }
 
+void QQuickMultiPointTouchArea::updateTouchPoint(QQuickTouchPoint *dtp, const QMouseEvent *e)
+{
+    dtp->setPreviousX(dtp->x());
+    dtp->setPreviousY(dtp->y());
+    dtp->setX(e->localPos().x());
+    dtp->setY(e->localPos().y());
+    if (e->type() == QEvent::MouseButtonPress) {
+        dtp->setStartX(e->localPos().x());
+        dtp->setStartY(e->localPos().y());
+    }
+    dtp->setSceneX(e->windowPos().x());
+    dtp->setSceneY(e->windowPos().y());
+}
+
 void QQuickMultiPointTouchArea::mousePressEvent(QMouseEvent *event)
 {
-    if (!isEnabled()) {
+    if (!isEnabled() || !_mouseEnabled || event->button() != Qt::LeftButton) {
         QQuickItem::mousePressEvent(event);
         return;
     }
@@ -607,25 +715,53 @@ void QQuickMultiPointTouchArea::mousePressEvent(QMouseEvent *event)
     _stealMouse = false;
     setKeepMouseGrab(false);
     event->setAccepted(true);
+    _mousePos = event->localPos();
+
+    if (event->source() != Qt::MouseEventNotSynthesized)
+        return;
+
+    if (_touchPoints.count() >= _minimumTouchPoints - 1 && _touchPoints.count() < _maximumTouchPoints) {
+        addTouchPoint(event);
+        updateTouchData(event);
+        emit pressed(_pressedTouchPoints);
+    }
 }
 
 void QQuickMultiPointTouchArea::mouseMoveEvent(QMouseEvent *event)
 {
-    if (!isEnabled()) {
+    if (!isEnabled() || !_mouseEnabled) {
         QQuickItem::mouseMoveEvent(event);
         return;
     }
 
-    //do nothing
+    if (event->source() != Qt::MouseEventNotSynthesized)
+        return;
+
+    _movedTouchPoints.clear();
+    updateTouchData(event);
 }
 
 void QQuickMultiPointTouchArea::mouseReleaseEvent(QMouseEvent *event)
 {
     _stealMouse = false;
-    if (!isEnabled()) {
+    if (!isEnabled() || !_mouseEnabled) {
         QQuickItem::mouseReleaseEvent(event);
         return;
     }
+
+    if (event->source() != Qt::MouseEventNotSynthesized)
+        return;
+
+    if (_mouseTouchPoint) {
+        updateTouchData(event);
+        _mouseTouchPoint->setPressed(false);
+        _mouseTouchPoint->setInUse(false);
+        _releasedTouchPoints.append(_mouseTouchPoint);
+        emit released(_releasedTouchPoints);
+        _releasedTouchPoints.removeAll(_mouseTouchPoint);
+        _mouseTouchPoint = Q_NULLPTR;
+    }
+
     QQuickWindow *c = window();
     if (c && c->mouseGrabberItem() == this)
         ungrabMouse();
