@@ -54,6 +54,7 @@
 #include <private/qqmlglobal_p.h>
 
 #include <private/qv4functionobject_p.h>
+#include <private/qv4runtime_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -89,7 +90,6 @@ public:
 
     ~QV8QObjectInstance()
     {
-        qPersistentDispose(v8object);
     }
 
     virtual void objectDestroyed(QObject *o)
@@ -99,7 +99,7 @@ public:
         delete this;
     }
 
-    v8::Persistent<v8::Object> v8object;
+    QV4::PersistentValue v8object;
     QV8QObjectWrapper *wrapper;
 };
 
@@ -206,13 +206,6 @@ void QV8QObjectWrapper::destroy()
     qDeleteAll(m_connections);
     m_connections.clear();
 
-    qPersistentDispose(m_hiddenObject);
-    qPersistentDispose(m_destroySymbol);
-    qPersistentDispose(m_toStringSymbol);
-    qPersistentDispose(m_signalHandlerConstructor);
-    qPersistentDispose(m_methodConstructor);
-    qPersistentDispose(m_constructor);
-
     QIntrusiveList<QV8QObjectResource, &QV8QObjectResource::weakResource>::iterator i = m_javaScriptOwnedWeakQObjects.begin();
     for (; i != m_javaScriptOwnedWeakQObjects.end(); ++i) {
         QV8QObjectResource *resource = *i;
@@ -313,12 +306,13 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
 
-    m_toStringSymbol = qPersistentNew<v8::String>(v8::String::NewSymbol("toString"));
-    m_destroySymbol = qPersistentNew<v8::String>(v8::String::NewSymbol("destroy"));
-    m_hiddenObject = qPersistentNew<v8::Object>(v8::Object::New());
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    m_toStringSymbol = QV4::Value::fromString(v4->newIdentifier("toString"));
+    m_destroySymbol = QV4::Value::fromString(v4->newIdentifier("destroy"));
+    m_hiddenObject = QV4::Value::fromObject(v4->newObject());
 
-    m_toStringString = QHashedV8String(m_toStringSymbol);
-    m_destroyString = QHashedV8String(m_destroySymbol);
+    m_toStringString = QHashedV8String(m_toStringSymbol.value());
+    m_destroyString = QHashedV8String(m_destroySymbol.value());
 
     toStringHash = m_toStringString.hash();
     destroyHash = m_destroyString.hash();
@@ -327,10 +321,10 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter, Query, 0, Enumerator);
     ft->InstanceTemplate()->SetHasExternalResource(true);
-    m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    m_constructor = ft->GetFunction()->v4Value();
     }
     {
-    v8::ScriptOrigin origin(m_hiddenObject); // Hack to allow us to identify these functions
+    v8::ScriptOrigin origin(m_hiddenObject.value()); // Hack to allow us to identify these functions
 #define CREATE_FUNCTION_SOURCE \
     "(function(method) { "\
         "return (function(object, data, qmlglobal) { "\
@@ -346,7 +340,7 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     v8::Handle<v8::Value> invokeFn = v8::FunctionTemplate::New(Invoke)->GetFunction();
     v8::Handle<v8::Value> args[] = { invokeFn };
     v8::Handle<v8::Function> createFn = v8::Handle<v8::Function>::Cast(fn->Call(v8::Value::fromV4Value(engine->global()), 1, args));
-    m_methodConstructor = qPersistentNew<v8::Function>(createFn);
+    m_methodConstructor = createFn->v4Value();
     }
 
     v8::Handle<v8::Function> connect = V8FUNCTION(Connect, engine);
@@ -357,7 +351,7 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->PrototypeTemplate()->Set(v8::String::New("connect"), connect, v8::DontEnum);
     ft->PrototypeTemplate()->Set(v8::String::New("disconnect"), disconnect, v8::DontEnum);
-    m_signalHandlerConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    m_signalHandlerConstructor = ft->GetFunction()->v4Value();
     }
 
     {
@@ -487,23 +481,27 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
        static v8::Handle<v8::Value> create(QV8Engine *engine, QObject *object, 
                                            v8::Handle<v8::Value> *objectHandle, 
                                            int index) { 
-           v8::Handle<v8::Value> argv[] = { 
-               objectHandle?*objectHandle:engine->newQObject(object),
-               v8::Integer::New(index)
+           QV4::Value argv[] = {
+               objectHandle ? (*objectHandle)->v4Value() : engine->newQObject(object),
+               QV4::Value::fromInt32(index)
            };
-           Q_ASSERT(argv[0]->IsObject());
-           return engine->qobjectWrapper()->m_methodConstructor->Call(v8::Value::fromV4Value(engine->global()), 2, argv);
+           Q_ASSERT(argv[0].isObject());
+           QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+           QV4::FunctionObject *f = engine->qobjectWrapper()->m_methodConstructor.value().asFunctionObject();
+           return f->call(v4->current, engine->global(), argv, 2);
        }
        static v8::Handle<v8::Value> createWithGlobal(QV8Engine *engine, QObject *object, 
                                                      v8::Handle<v8::Value> *objectHandle, 
                                                      int index) { 
-           v8::Handle<v8::Value> argv[] = { 
-               objectHandle?*objectHandle:engine->newQObject(object),
-               v8::Integer::New(index),
+           QV4::Value argv[] = {
+               objectHandle ? (*objectHandle)->v4Value() : engine->newQObject(object),
+               QV4::Value::fromInt32(index),
                QV4::Value::fromObject(QV8Engine::getV4(engine)->qmlContextObject())
            };
-           Q_ASSERT(argv[0]->IsObject());
-           return engine->qobjectWrapper()->m_methodConstructor->Call(v8::Value::fromV4Value(engine->global()), 3, argv);
+           Q_ASSERT(argv[0].isObject());
+           QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+           QV4::FunctionObject *f = engine->qobjectWrapper()->m_methodConstructor.value().asFunctionObject();
+           return f->call(v4->current, engine->global(), argv, 3);
        }
     };
 
@@ -549,7 +547,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
         } else if (result->isV8Function()) {
             return MethodClosure::createWithGlobal(engine, object, objectHandle, result->coreIndex);
         } else if (result->isSignalHandler()) {
-            v8::Handle<v8::Object> handler = engine->qobjectWrapper()->m_signalHandlerConstructor->NewInstance();
+            v8::Handle<v8::Object> handler = engine->qobjectWrapper()->m_signalHandlerConstructor.value().asFunctionObject()->newInstance();
             QV8SignalHandlerResource *r = new QV8SignalHandlerResource(engine, object, result->coreIndex);
             handler->SetExternalResource(r);
             return handler;
@@ -948,7 +946,7 @@ void QV8QObjectWrapper::WeakQObjectReferenceCallback(v8::Persistent<v8::Value> h
 static void WeakQObjectInstanceCallback(v8::Persistent<v8::Value> handle, void *data)
 {
     QV8QObjectInstance *instance = (QV8QObjectInstance *)data;
-    instance->v8object.Clear();
+    instance->v8object = QV4::PersistentValue();
     qPersistentDispose(handle);
 }
 
@@ -1036,7 +1034,7 @@ v8::Handle<v8::Object> QQmlPropertyCache::newQObject(QObject *object, QV8Engine 
         }
 
         if (ft.IsEmpty()) {
-            constructor = engine->qobjectWrapper()->m_constructor->v4Value();
+            constructor = engine->qobjectWrapper()->m_constructor;
         } else {
             ft->InstanceTemplate()->SetFallbackPropertyHandler(QV8QObjectWrapper::Getter, 
                                                                QV8QObjectWrapper::Setter,
@@ -1069,7 +1067,7 @@ v8::Handle<v8::Object> QV8QObjectWrapper::newQObject(QObject *object, QQmlData *
         rv = ddata->propertyCache->newQObject(object, engine);
     } else {
         // XXX NewInstance() should be optimized
-        rv = m_constructor->NewInstance(); 
+        rv = m_constructor.value().asFunctionObject()->newInstance();
         QV8QObjectResource *r = new QV8QObjectResource(engine, object);
         rv->SetExternalResource(r);
     }
@@ -1127,7 +1125,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
 
         // If our tainted handle doesn't exist or has been collected, and there isn't
         // a handle in the ddata, we can assume ownership of the ddata->v8object
-        if ((!found || (*iter)->v8object.IsEmpty()) && ddata->v8object.isEmpty()) {
+        if ((!found || (*iter)->v8object.isEmpty()) && ddata->v8object.isEmpty()) {
             v8::Handle<v8::Object> rv = newQObject(object, ddata, m_engine);
             ddata->v8object = rv->v4Value();
             // ### FIXME
@@ -1148,13 +1146,14 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
             ddata->hasTaintedV8Object = true;
         }
 
-        if ((*iter)->v8object.IsEmpty()) {
+        if ((*iter)->v8object.isEmpty()) {
             v8::Handle<v8::Object> rv = newQObject(object, ddata, m_engine);
-            (*iter)->v8object = qPersistentNew<v8::Object>(rv);
-            (*iter)->v8object.MakeWeak((*iter), WeakQObjectInstanceCallback);
+            (*iter)->v8object = rv->v4Value();
+            // ### FIXME
+//            (*iter)->v8object.MakeWeak((*iter), WeakQObjectInstanceCallback);
         }
 
-        return (*iter)->v8object;
+        return (*iter)->v8object.value();
     }
 }
 
@@ -1204,10 +1203,10 @@ QPair<QObject *, int> QV8QObjectWrapper::ExtractQtSignal(QV8Engine *engine, v8::
 QPair<QObject *, int> QV8QObjectWrapper::ExtractQtMethod(QV8Engine *engine, v8::Handle<v8::Function> function)
 {
     v8::ScriptOrigin origin = function->GetScriptOrigin();
-    if (origin.ResourceName()->StrictEquals(engine->qobjectWrapper()->m_hiddenObject)) {
+    if (origin.ResourceName()->StrictEquals(engine->qobjectWrapper()->m_hiddenObject.value())) {
 
         // This is one of our special QObject method wrappers
-        v8::Handle<v8::Value> args[] = { engine->qobjectWrapper()->m_hiddenObject };
+        v8::Handle<v8::Value> args[] = { engine->qobjectWrapper()->m_hiddenObject.value() };
         v8::Handle<v8::Value> data = function->Call(v8::Value::fromV4Value(engine->global()), 1, args);
 
         if (data->IsArray()) {
@@ -1239,12 +1238,10 @@ public:
             return *this;
         }
 
-        v8::Persistent<v8::Object> thisObject;
-        v8::Persistent<v8::Function> function;
+        QV4::PersistentValue thisObject;
+        QV4::PersistentValue function;
 
         void dispose() {
-            qPersistentDispose(thisObject);
-            qPersistentDispose(function);
         }
 
         bool needsDestroy;
@@ -1276,10 +1273,6 @@ QV8QObjectConnectionList::~QV8QObjectConnectionList()
 {
     for (SlotHash::Iterator iter = slotHash.begin(); iter != slotHash.end(); ++iter) {
         QList<Connection> &connections = *iter;
-        for (int ii = 0; ii < connections.count(); ++ii) {
-            qPersistentDispose(connections[ii].thisObject);
-            qPersistentDispose(connections[ii].function);
-        }
     }
     slotHash.clear();
 }
@@ -1314,7 +1307,7 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
         int *argsTypes = QQmlPropertyCache::methodParameterTypes(data(), index, dummy, 0);
 
         int argCount = argsTypes?argsTypes[0]:0;
-        QVarLengthArray<v8::Handle<v8::Value>, 9> args(argCount);
+        QVarLengthArray<QV4::Value, 9> args(argCount);
 
         for (int ii = 0; ii < argCount; ++ii) {
             int type = argsTypes[ii + 1];
@@ -1331,15 +1324,17 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
                 continue;
 
             v8::TryCatch try_catch;
-            if (connection.thisObject.IsEmpty()) {
-                connection.function->Call(v8::Value::fromV4Value(engine->global()), argCount, args.data());
+            QV4::FunctionObject *f = connection.function.value().asFunctionObject();
+            QV4::ExecutionEngine *v4 = f->internalClass->engine;
+            if (connection.thisObject.isEmpty()) {
+                f->call(v4->current, engine->global(), args.data(), argCount);
             } else {
-                connection.function->Call(connection.thisObject, argCount, args.data());
+                f->call(v4->current, connection.thisObject, args.data(), argCount);
             }
 
             if (try_catch.HasCaught()) {
                 QQmlError error;
-                error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(connection.function->GetName()->v4Value().toQString()));
+                error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
                 v8::Handle<v8::Message> message = try_catch.Message();
                 if (!message.IsEmpty())
                     QQmlExpressionPrivate::exceptionToError(message, error);
@@ -1419,8 +1414,8 @@ QV4::Value QV8QObjectWrapper::Connect(const v8::Arguments &args)
 
     QV8QObjectConnectionList::Connection connection;
     if (!functionThisValue.IsEmpty()) 
-        connection.thisObject = qPersistentNew<v8::Object>(functionThisValue->ToObject());
-    connection.function = qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(functionValue));
+        connection.thisObject = functionThisValue->ToObject()->v4Value();
+    connection.function = functionValue->v4Value();
 
     slotIter->append(connection);
 
@@ -1484,10 +1479,10 @@ QV4::Value QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
         for (int ii = 0; ii < connections.count(); ++ii) {
             QV8QObjectConnectionList::Connection &connection = connections[ii];
 
-            if (connection.thisObject.IsEmpty() == functionThisValue.IsEmpty() &&
-                (connection.thisObject.IsEmpty() || connection.thisObject->StrictEquals(functionThisValue))) {
+            if (connection.thisObject.isEmpty() == functionThisValue.IsEmpty() &&
+                (connection.thisObject.isEmpty() || __qmljs_strict_equal(connection.thisObject, functionThisValue->v4Value()))) {
 
-                QPair<QObject *, int> connectedFunctionData = ExtractQtMethod(engine, connection.function);
+                QPair<QObject *, int> connectedFunctionData = ExtractQtMethod(engine, connection.function.value());
                 if (connectedFunctionData == functionData) {
                     // Match!
                     if (connections.connectionsInUse) {
@@ -1506,9 +1501,9 @@ QV4::Value QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
         // This is a normal JS function
         for (int ii = 0; ii < connections.count(); ++ii) {
             QV8QObjectConnectionList::Connection &connection = connections[ii];
-            if (connection.function->StrictEquals(function) &&
-                connection.thisObject.IsEmpty() == functionThisValue.IsEmpty() &&
-                (connection.thisObject.IsEmpty() || connection.thisObject->StrictEquals(functionThisValue))) {
+            if (__qmljs_strict_equal(connection.function, function->v4Value()) &&
+                connection.thisObject.isEmpty() == functionThisValue.IsEmpty() &&
+                (connection.thisObject.isEmpty() || __qmljs_strict_equal(connection.thisObject, functionThisValue->v4Value()))) {
                 // Match!
                 if (connections.connectionsInUse) {
                     connection.needsDestroy = true;
@@ -1986,7 +1981,7 @@ QV4::Value QV8QObjectWrapper::Invoke(const v8::Arguments &args)
     v8::Handle<v8::Object> arguments = v8::Handle<v8::Object>::Cast(args[4]);
 
     // Special hack to return info about this closure.
-    if (argCount == 1 && arguments->Get(0)->StrictEquals(resource->engine->qobjectWrapper()->m_hiddenObject)) {
+    if (argCount == 1 && arguments->Get(0)->StrictEquals(resource->engine->qobjectWrapper()->m_hiddenObject.value())) {
         v8::Handle<v8::Array> data = v8::Array::New(2);
         data->Set(0, args[0]);
         data->Set(1, args[1]);

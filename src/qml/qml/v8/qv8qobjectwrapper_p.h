@@ -64,6 +64,8 @@
 #include <private/qintrusivelist_p.h>
 #include "qv8objectresource_p.h"
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QObject;
@@ -141,14 +143,14 @@ private:
 
     QV8Engine *m_engine;
     quint32 m_id;
-    v8::Persistent<v8::Function> m_constructor;
-    v8::Persistent<v8::Function> m_methodConstructor;
-    v8::Persistent<v8::Function> m_signalHandlerConstructor;
-    v8::Persistent<v8::String> m_toStringSymbol;
-    v8::Persistent<v8::String> m_destroySymbol;
+    QV4::PersistentValue m_constructor;
+    QV4::PersistentValue m_methodConstructor;
+    QV4::PersistentValue m_signalHandlerConstructor;
+    QV4::PersistentValue m_toStringSymbol;
+    QV4::PersistentValue m_destroySymbol;
     QHashedV8String m_toStringString;
     QHashedV8String m_destroyString;
-    v8::Persistent<v8::Object> m_hiddenObject;
+    QV4::PersistentValue m_hiddenObject;
     QHash<QObject *, QV8QObjectConnectionList *> m_connections;
     typedef QHash<QObject *, QV8QObjectInstance *> TaintedHash;
     TaintedHash m_taintedObjects;
