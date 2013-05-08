@@ -250,15 +250,24 @@ PersistentValue &PersistentValue::operator =(const Value &other)
         return *this;
     }
     d->value = other;
+    Managed *m = d->value.asManaged();
     if (!d->prev) {
-        if (Managed *m = d->value.asManaged()) {
+        if (m) {
             ExecutionEngine *engine = m->engine();
             if (engine) {
                 d->prev = &engine->memoryManager->m_persistentValues;
                 d->next = engine->memoryManager->m_persistentValues;
                 *d->prev = d;
+                if (d->next)
+                    d->next->prev = &d->next;
             }
         }
+    } else if (!m) {
+        if (d->next)
+            d->next->prev = d->prev;
+        *d->prev = d->next;
+        d->prev = 0;
+        d->next = 0;
     }
 }
 
@@ -274,14 +283,17 @@ PersistentValuePrivate::PersistentValuePrivate(const Value &v)
     , prev(0)
     , next(0)
 {
-    if (Managed *m = v.asManaged()) {
-        ExecutionEngine *engine = m->engine();
-        if (engine) {
-            prev = &engine->memoryManager->m_persistentValues;
-            next = engine->memoryManager->m_persistentValues;
-            if (next)
-                next->prev = &this->next;
-        }
+    Managed *m = v.asManaged();
+    if (!m)
+        return;
+
+    ExecutionEngine *engine = m->engine();
+    if (engine) {
+        prev = &engine->memoryManager->m_persistentValues;
+        next = engine->memoryManager->m_persistentValues;
+        *prev = this;
+        if (next)
+            next->prev = &this->next;
     }
 }
 
