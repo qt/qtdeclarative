@@ -1281,7 +1281,7 @@ void QQmlEnginePrivate::doDeleteInEngineThread()
 
 namespace QtQml {
 
-Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
+void qmlExecuteDeferred(QObject *object)
 {
     QQmlData *data = QQmlData::get(object);
 
