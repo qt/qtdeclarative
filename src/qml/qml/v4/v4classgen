@@ -32,7 +32,10 @@ class ParsedMethod():
         out.write("    QV4::Object *thatObject = ctx->thisObject.asObject();\n")
         out.write("    if (!thatObject)\n")
         out.write("        ctx->throwTypeError();\n")
-        out.write("    return thatObject->as%s()->%s_%s(ctx);\n" % (parsedClass.managedTypeName(), self.methodPrefix, self.name))
+        out.write("    %s *o = thatObject->as%s();\n" % (parsedClass.name, parsedClass.managedTypeName()))
+        out.write("    if (!o)\n")
+        out.write("        ctx->throwTypeError();\n")
+        out.write("    return o->%s_%s(ctx);\n" % (self.methodPrefix, self.name))
         out.write("}\n")
         out.write("\n")
 
