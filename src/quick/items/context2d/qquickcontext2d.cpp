@@ -467,7 +467,7 @@ static v8::Local<v8::Object> qt_create_image_data(qreal w, qreal h, QV8Engine* e
         r->image = QImage(w, h, QImage::Format_ARGB32);
         r->image.fill(0x00000000);
     } else {
-        Q_ASSERT(image.width() == w && image.height() == h);
+        Q_ASSERT(image.width() == int(w) && image.height() == int(h));
         r->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
     v8::Local<v8::Object> pixelData = ed->constructorPixelArray->NewInstance();
