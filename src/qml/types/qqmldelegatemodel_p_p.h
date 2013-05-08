@@ -215,7 +215,7 @@ public:
 
     bool parseIndex(const v8::Handle<v8::Value> &value, int *index, Compositor::Group *group) const;
     bool parseGroupArgs(
-            QQmlV8Function *args, Compositor::Group *group, int *index, int *count, int *groups) const;
+            QQmlV4Function *args, Compositor::Group *group, int *index, int *count, int *groups) const;
 
     Compositor::Group group;
     QQmlGuard<QQmlDelegateModel> model;

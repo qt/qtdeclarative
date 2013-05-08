@@ -84,7 +84,7 @@ private:
     QQuickWorkerScriptEnginePrivate *d;
 };
 
-class QQmlV8Function;
+class QQmlV4Function;
 class QQmlV4Handle;
 class Q_AUTOTEST_EXPORT QQuickWorkerScript : public QObject, public QQmlParserStatus
 {
@@ -100,7 +100,7 @@ public:
     void setSource(const QUrl &);
 
 public slots:
-    void sendMessage(QQmlV8Function*);
+    void sendMessage(QQmlV4Function*);
 
 signals:
     void sourceChanged();

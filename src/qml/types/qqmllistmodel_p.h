@@ -81,9 +81,9 @@ public:
     int count() const;
 
     Q_INVOKABLE void clear();
-    Q_INVOKABLE void remove(QQmlV8Function *args);
-    Q_INVOKABLE void append(QQmlV8Function *args);
-    Q_INVOKABLE void insert(QQmlV8Function *args);
+    Q_INVOKABLE void remove(QQmlV4Function *args);
+    Q_INVOKABLE void append(QQmlV4Function *args);
+    Q_INVOKABLE void insert(QQmlV4Function *args);
     Q_INVOKABLE QQmlV4Handle get(int index) const;
     Q_INVOKABLE void set(int index, const QQmlV4Handle &);
     Q_INVOKABLE void setProperty(int index, const QString& property, const QVariant& value);

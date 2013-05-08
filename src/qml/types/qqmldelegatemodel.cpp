@@ -2397,7 +2397,7 @@ bool QQmlDelegateModelGroupPrivate::parseIndex(
     items that are later replaced by actual data.
 */
 
-void QQmlDelegateModelGroup::insert(QQmlV8Function *args)
+void QQmlDelegateModelGroup::insert(QQmlV4Function *args)
 {
     Q_D(QQmlDelegateModelGroup);
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
@@ -2405,7 +2405,7 @@ void QQmlDelegateModelGroup::insert(QQmlV8Function *args)
     int index = model->m_compositor.count(d->group);
     Compositor::Group group = d->group;
 
-    if (args->Length() == 0)
+    if (args->length() == 0)
         return;
 
     int  i = 0;
@@ -2415,7 +2415,7 @@ void QQmlDelegateModelGroup::insert(QQmlV8Function *args)
             qmlInfo(this) << tr("insert: index out of range");
             return;
         }
-        if (++i == args->Length())
+        if (++i == args->length())
             return;
         v = (*args)[i];
     }
@@ -2425,7 +2425,7 @@ void QQmlDelegateModelGroup::insert(QQmlV8Function *args)
             : model->m_compositor.end();
 
     int groups = 1 << d->group;
-    if (++i < args->Length())
+    if (++i < args->length())
         groups |= model->m_cacheMetaType->parseGroups((*args)[i]);
 
     if (v->IsArray()) {
@@ -2453,13 +2453,13 @@ void QQmlDelegateModelGroup::insert(QQmlV8Function *args)
     group remain instantiated when not referenced by any view.
 */
 
-void QQmlDelegateModelGroup::create(QQmlV8Function *args)
+void QQmlDelegateModelGroup::create(QQmlV4Function *args)
 {
     Q_D(QQmlDelegateModelGroup);
     if (!d->model)
         return;
 
-    if (args->Length() == 0)
+    if (args->length() == 0)
         return;
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
@@ -2472,11 +2472,11 @@ void QQmlDelegateModelGroup::create(QQmlV8Function *args)
     if (d->parseIndex(v, &index, &group))
         ++i;
 
-    if (i < args->Length() && index >= 0 && index <= model->m_compositor.count(group)) {
+    if (i < args->length() && index >= 0 && index <= model->m_compositor.count(group)) {
         v = (*args)[i];
         if (v->IsObject()) {
             int groups = 1 << d->group;
-            if (++i < args->Length())
+            if (++i < args->length())
                 groups |= model->m_cacheMetaType->parseGroups((*args)[i]);
 
             Compositor::insert_iterator before = index < model->m_compositor.count(group)
@@ -2505,7 +2505,7 @@ void QQmlDelegateModelGroup::create(QQmlV8Function *args)
         model->m_cache.at(it.cacheIndex)->releaseObject();
     }
 
-    args->returnValue(args->engine()->newQObject(object));
+    args->setReturnValue(args->engine()->newQObject(object));
     model->emitChanges();
 }
 
@@ -2525,7 +2525,7 @@ void QQmlDelegateModelGroup::create(QQmlV8Function *args)
     that the previously unresolved item has simply moved.
 
 */
-void QQmlDelegateModelGroup::resolve(QQmlV8Function *args)
+void QQmlDelegateModelGroup::resolve(QQmlV4Function *args)
 {
     Q_D(QQmlDelegateModelGroup);
     if (!d->model)
@@ -2533,7 +2533,7 @@ void QQmlDelegateModelGroup::resolve(QQmlV8Function *args)
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
 
-    if (args->Length() < 2)
+    if (args->length() < 2)
         return;
 
     int from = -1;
@@ -2625,7 +2625,7 @@ void QQmlDelegateModelGroup::resolve(QQmlV8Function *args)
     Removes \a count items starting at \a index from the group.
 */
 
-void QQmlDelegateModelGroup::remove(QQmlV8Function *args)
+void QQmlDelegateModelGroup::remove(QQmlV4Function *args)
 {
     Q_D(QQmlDelegateModelGroup);
     if (!d->model)
@@ -2634,7 +2634,7 @@ void QQmlDelegateModelGroup::remove(QQmlV8Function *args)
     int index = -1;
     int count = 1;
 
-    if (args->Length() == 0)
+    if (args->length() == 0)
         return;
 
     int i = 0;
@@ -2644,7 +2644,7 @@ void QQmlDelegateModelGroup::remove(QQmlV8Function *args)
         return;
     }
 
-    if (++i < args->Length()) {
+    if (++i < args->length()) {
         v = (*args)[i];
         if (v->IsInt32())
             count = v->Int32Value();
@@ -2664,12 +2664,12 @@ void QQmlDelegateModelGroup::remove(QQmlV8Function *args)
 }
 
 bool QQmlDelegateModelGroupPrivate::parseGroupArgs(
-        QQmlV8Function *args, Compositor::Group *group, int *index, int *count, int *groups) const
+        QQmlV4Function *args, Compositor::Group *group, int *index, int *count, int *groups) const
 {
     if (!model || !QQmlDelegateModelPrivate::get(model)->m_cacheMetaType)
         return false;
 
-    if (args->Length() < 2)
+    if (args->length() < 2)
         return false;
 
     int i = 0;
@@ -2681,7 +2681,7 @@ bool QQmlDelegateModelGroupPrivate::parseGroupArgs(
     if (v->IsInt32()) {
         *count = v->Int32Value();
 
-        if (++i == args->Length())
+        if (++i == args->length())
             return false;
         v = (*args)[i];
     }
@@ -2697,7 +2697,7 @@ bool QQmlDelegateModelGroupPrivate::parseGroupArgs(
     Adds \a count items starting at \a index to \a groups.
 */
 
-void QQmlDelegateModelGroup::addGroups(QQmlV8Function *args)
+void QQmlDelegateModelGroup::addGroups(QQmlV4Function *args)
 {
     Q_D(QQmlDelegateModelGroup);
     Compositor::Group group = d->group;
@@ -2727,7 +2727,7 @@ void QQmlDelegateModelGroup::addGroups(QQmlV8Function *args)
     Removes \a count items starting at \a index from \a groups.
 */
 
-void QQmlDelegateModelGroup::removeGroups(QQmlV8Function *args)
+void QQmlDelegateModelGroup::removeGroups(QQmlV4Function *args)
 {
     Q_D(QQmlDelegateModelGroup);
     Compositor::Group group = d->group;
@@ -2757,7 +2757,7 @@ void QQmlDelegateModelGroup::removeGroups(QQmlV8Function *args)
     Sets the \a groups \a count items starting at \a index belong to.
 */
 
-void QQmlDelegateModelGroup::setGroups(QQmlV8Function *args)
+void QQmlDelegateModelGroup::setGroups(QQmlV4Function *args)
 {
     Q_D(QQmlDelegateModelGroup);
     Compositor::Group group = d->group;
@@ -2793,11 +2793,11 @@ void QQmlDelegateModelGroup::setGroups(QQmlV8Function *args)
     Moves \a count at \a from in a group \a to a new position.
 */
 
-void QQmlDelegateModelGroup::move(QQmlV8Function *args)
+void QQmlDelegateModelGroup::move(QQmlV4Function *args)
 {
     Q_D(QQmlDelegateModelGroup);
 
-    if (args->Length() < 2)
+    if (args->length() < 2)
         return;
 
     Compositor::Group fromGroup = d->group;
@@ -2816,7 +2816,7 @@ void QQmlDelegateModelGroup::move(QQmlV8Function *args)
         return;
     }
 
-    if (args->Length() > 2) {
+    if (args->length() > 2) {
         v8::Handle<v8::Value> v = (*args)[2];
         if (v->IsInt32())
             count = v->Int32Value();

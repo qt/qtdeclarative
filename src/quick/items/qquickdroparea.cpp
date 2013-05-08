@@ -416,11 +416,11 @@ QStringList QQuickDropEvent::keys() const
     If an \a action is specified it will overwrite the value of the \l action property.
 */
 
-void QQuickDropEvent::accept(QQmlV8Function *args)
+void QQuickDropEvent::accept(QQmlV4Function *args)
 {
     Qt::DropAction action = event->dropAction();
 
-    if (args->Length() >= 1) {
+    if (args->length() >= 1) {
         v8::Handle<v8::Value> v = (*args)[0];
         if (v->IsInt32())
             action = Qt::DropAction(v->Int32Value());

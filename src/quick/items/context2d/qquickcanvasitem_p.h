@@ -133,10 +133,10 @@ public:
 
     QImage toImage(const QRectF& rect = QRectF()) const;
 
-    Q_INVOKABLE void getContext(QQmlV8Function *args);
+    Q_INVOKABLE void getContext(QQmlV4Function *args);
 
-    Q_INVOKABLE void requestAnimationFrame(QQmlV8Function *args);
-    Q_INVOKABLE void cancelRequestAnimationFrame(QQmlV8Function *args);
+    Q_INVOKABLE void requestAnimationFrame(QQmlV4Function *args);
+    Q_INVOKABLE void cancelRequestAnimationFrame(QQmlV4Function *args);
 
     Q_INVOKABLE void requestPaint();
     Q_INVOKABLE void markDirty(const QRectF& dirtyRect = QRectF());

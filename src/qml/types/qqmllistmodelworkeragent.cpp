@@ -132,17 +132,17 @@ void QQmlListModelWorkerAgent::clear()
     m_copy->clear();
 }
 
-void QQmlListModelWorkerAgent::remove(QQmlV8Function *args)
+void QQmlListModelWorkerAgent::remove(QQmlV4Function *args)
 {
     m_copy->remove(args);
 }
 
-void QQmlListModelWorkerAgent::append(QQmlV8Function *args)
+void QQmlListModelWorkerAgent::append(QQmlV4Function *args)
 {
     m_copy->append(args);
 }
 
-void QQmlListModelWorkerAgent::insert(QQmlV8Function *args)
+void QQmlListModelWorkerAgent::insert(QQmlV4Function *args)
 {
     m_copy->insert(args);
 }

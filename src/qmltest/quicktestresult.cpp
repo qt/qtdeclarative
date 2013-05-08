@@ -472,10 +472,10 @@ bool QuickTestResult::fuzzyCompare(const QVariant &actual, const QVariant &expec
     return false;
 }
 
-void QuickTestResult::stringify(QQmlV8Function *args)
+void QuickTestResult::stringify(QQmlV4Function *args)
 {
-    if (args->Length() < 1)
-        args->returnValue(QV4::Value::nullValue());
+    if (args->length() < 1)
+        args->setReturnValue(QV4::Value::nullValue());
 
     v8::Handle<v8::Value> value = (*args)[0];
 
@@ -513,7 +513,7 @@ void QuickTestResult::stringify(QQmlV8Function *args)
             result.append(tmp);
     }
 
-    args->returnValue(args->engine()->toString(result));
+    args->setReturnValue(args->engine()->toString(result));
 }
 
 bool QuickTestResult::compare

@@ -98,8 +98,8 @@ public:
     void incubatorStateChanged(QQmlIncubator::Status status);
     void setInitialState(QObject *o);
     void disposeInitialPropertyValues();
-    QUrl resolveSourceUrl(QQmlV8Function *args);
-    v8::Handle<v8::Object> extractInitialPropertyValues(QQmlV8Function *args, QObject *loader, bool *error);
+    QUrl resolveSourceUrl(QQmlV4Function *args);
+    v8::Handle<v8::Object> extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error);
 
     virtual qreal getImplicitWidth() const;
     virtual qreal getImplicitHeight() const;

@@ -1177,7 +1177,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
 /*!
     \internal
 */
-void QQmlComponent::createObject(QQmlV8Function *args)
+void QQmlComponent::createObject(QQmlV4Function *args)
 {
     Q_D(QQmlComponent);
     Q_ASSERT(d->engine);
@@ -1186,14 +1186,14 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     QObject *parent = 0;
     v8::Handle<v8::Object> valuemap;
 
-    if (args->Length() >= 1) 
-        parent = args->engine()->toQObject((*args)[0]->v4Value());
+    if (args->length() >= 1)
+        parent = args->engine()->toQObject((*args)[0]);
 
-    if (args->Length() >= 2) {
+    if (args->length() >= 2) {
         v8::Handle<v8::Value> v = (*args)[1];
         if (!v->IsObject() || v->IsArray()) {
             qmlInfo(this) << tr("createObject: value is not an object");
-            args->returnValue(QV4::Value::nullValue());
+            args->setReturnValue(QV4::Value::nullValue());
             return;
         }
         valuemap = v8::Handle<v8::Object>::Cast(v);
@@ -1208,7 +1208,7 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     QObject *rv = beginCreate(ctxt);
 
     if (!rv) {
-        args->returnValue(QV4::Value::nullValue());
+        args->setReturnValue(QV4::Value::nullValue());
         return;
     }
 
@@ -1220,7 +1220,7 @@ void QQmlComponent::createObject(QQmlV8Function *args)
 
     if (!valuemap.IsEmpty()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
-        QV4::Value f = v8engine->evaluateScript(QString::fromLatin1(INITIALPROPERTIES_SOURCE), args->qmlGlobal()->v4Value().asObject());
+        QV4::Value f = v8engine->evaluateScript(QString::fromLatin1(INITIALPROPERTIES_SOURCE), args->qmlGlobal().asObject());
         QV4::Value args[] = { object->v4Value(), valuemap->v4Value() };
         f.asFunctionObject()->call(v4engine->current, QV4::Value::fromObject(v4engine->globalObject), args, 2);
     }
@@ -1232,9 +1232,9 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     QQmlData::get(rv)->indestructible = false;
 
     if (!rv)
-        args->returnValue(QV4::Value::nullValue());
+        args->setReturnValue(QV4::Value::nullValue());
     else
-        args->returnValue(object);
+        args->setReturnValue(object->v4Value());
 }
 
 /*!
@@ -1296,7 +1296,7 @@ void QQmlComponent::createObject(QQmlV8Function *args)
 /*!
     \internal
 */
-void QQmlComponent::incubateObject(QQmlV8Function *args)
+void QQmlComponent::incubateObject(QQmlV4Function *args)
 {
     Q_D(QQmlComponent);
     Q_ASSERT(d->engine);
@@ -1307,23 +1307,23 @@ void QQmlComponent::incubateObject(QQmlV8Function *args)
     v8::Handle<v8::Object> valuemap;
     QQmlIncubator::IncubationMode mode = QQmlIncubator::Asynchronous;
 
-    if (args->Length() >= 1) 
-        parent = args->engine()->toQObject((*args)[0]->v4Value());
+    if (args->length() >= 1)
+        parent = args->engine()->toQObject((*args)[0]);
 
-    if (args->Length() >= 2) {
+    if (args->length() >= 2) {
         v8::Handle<v8::Value> v = (*args)[1];
         if (v->IsNull()) {
         } else if (!v->IsObject() || v->IsArray()) {
             qmlInfo(this) << tr("createObject: value is not an object");
-            args->returnValue(QV4::Value::nullValue());
+            args->setReturnValue(QV4::Value::nullValue());
             return;
         } else {
             valuemap = v8::Handle<v8::Object>::Cast(v);
         }
     }
 
-    if (args->Length() >= 3) {
-        quint32 v = (*args)[2]->Uint32Value();
+    if (args->length() >= 3) {
+        quint32 v = (*args)[2].toUInt32();
         if (v == 0)
             mode = QQmlIncubator::Asynchronous;
         else if (v == 1)
@@ -1338,7 +1338,7 @@ void QQmlComponent::incubateObject(QQmlV8Function *args)
 
     if (!valuemap.IsEmpty()) {
         r->valuemap = valuemap->v4Value();
-        r->qmlGlobal = args->qmlGlobal()->v4Value();
+        r->qmlGlobal = args->qmlGlobal();
     }
     r->parent = parent;
     r->me = o->v4Value();
@@ -1347,9 +1347,9 @@ void QQmlComponent::incubateObject(QQmlV8Function *args)
 
     if (r->status() == QQmlIncubator::Null) {
         r->dispose();
-        args->returnValue(QV4::Value::nullValue());
+        args->setReturnValue(QV4::Value::nullValue());
     } else {
-        args->returnValue(o);
+        args->setReturnValue(o->v4Value());
     }
 }
 

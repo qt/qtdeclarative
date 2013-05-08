@@ -564,13 +564,13 @@ void QQuickLoader::loadFromSourceComponent()
 
     \sa source, active
 */
-void QQuickLoader::setSource(QQmlV8Function *args)
+void QQuickLoader::setSource(QQmlV4Function *args)
 {
     Q_ASSERT(args);
     Q_D(QQuickLoader);
 
     bool ipvError = false;
-    args->returnValue(QV4::Value::undefinedValue());
+    args->setReturnValue(QV4::Value::undefinedValue());
     v8::Handle<v8::Object> ipv = d->extractInitialPropertyValues(args, this, &ipvError);
     if (ipvError)
         return;
@@ -580,7 +580,7 @@ void QQuickLoader::setSource(QQmlV8Function *args)
     if (!ipv.IsEmpty()) {
         d->disposeInitialPropertyValues();
         d->initialPropertyValues = ipv->v4Value();
-        d->qmlGlobalForIpv = args->qmlGlobal()->v4Value();
+        d->qmlGlobalForIpv = args->qmlGlobal();
     }
 
     setSource(sourceUrl, false); // already cleared and set ipv above.
@@ -922,9 +922,9 @@ void QQuickLoader::geometryChanged(const QRectF &newGeometry, const QRectF &oldG
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
 }
 
-QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV8Function *args)
+QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
 {
-    QString arg = (*args)[0]->v4Value().toQString();
+    QString arg = (*args)[0].toQString();
     if (arg.isEmpty())
         return QUrl();
 
@@ -933,10 +933,10 @@ QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV8Function *args)
     return context->resolvedUrl(QUrl(arg));
 }
 
-v8::Handle<v8::Object> QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV8Function *args, QObject *loader, bool *error)
+v8::Handle<v8::Object> QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error)
 {
     v8::Handle<v8::Object> valuemap;
-    if (args->Length() >= 2) {
+    if (args->length() >= 2) {
         v8::Handle<v8::Value> v = (*args)[1];
         if (!v->IsObject() || v->IsArray()) {
             *error = true;

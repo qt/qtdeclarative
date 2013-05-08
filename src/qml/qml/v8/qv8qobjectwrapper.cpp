@@ -2018,19 +2018,18 @@ QV4::Value QV8QObjectWrapper::Invoke(const v8::Arguments &args)
     }
 
     if (method.isV8Function()) {
-        v8::Handle<v8::Value> rv;
-        v8::Handle<v8::Object> qmlglobal = args[2]->ToObject();
+        QV4::Value rv = QV4::Value::undefinedValue();
+        v8::Handle<v8::Value> qmlglobal = args[2];
 
-        QQmlV8Function func(argCount, arguments, rv, qmlglobal, 
+        QQmlV4Function func(argCount, arguments->v4Value(), &rv, qmlglobal->v4Value(),
                                     resource->engine->contextWrapper()->context(qmlglobal),
                                     resource->engine);
-        QQmlV8Function *funcptr = &func;
+        QQmlV4Function *funcptr = &func;
 
         void *args[] = { 0, &funcptr };
         QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, method.coreIndex, args);
 
-        if (rv.IsEmpty()) return QV4::Value::undefinedValue();
-        return rv->v4Value();
+        return rv;
     }
 
     CallArgs callArgs(argCount, &arguments);

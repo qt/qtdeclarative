@@ -80,6 +80,7 @@
 #include "qv8sequencewrapper_p.h"
 #include "qv4jsonwrapper_p.h"
 #include <private/qv4value_p.h>
+#include <private/qv4object_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -174,32 +175,32 @@ inline T *v8_resource_check(v8::Handle<v8::Object> object) {
 // valid during the call.  If the return value isn't set within myMethod(), the will return
 // undefined.
 class QV8Engine;
-class QQmlV8Function
+class QQmlV4Function
 {
 public:
-    int Length() const { return _ac; }
-    v8::Handle<v8::Value> operator[](int idx) { return (*_a)->Get(idx); }
-    QQmlContextData *context() { return _c; }
-    v8::Handle<v8::Object> qmlGlobal() { return *_g; }
-    void returnValue(v8::Handle<v8::Value> rv) { *_r = rv; }
-    QV8Engine *engine() const { return _e; }
+    int length() const { return argc; }
+    QV4::Value operator[](int idx) { return args.asObject()->getIndexed(idx); }
+    QQmlContextData *context() { return ctx; }
+    QV4::Value qmlGlobal() { return global; }
+    void setReturnValue(const QV4::Value &rv) { *retVal = rv; }
+    QV8Engine *engine() const { return e; }
 private:
     friend class QV8QObjectWrapper;
-    QQmlV8Function();
-    QQmlV8Function(const QQmlV8Function &);
-    QQmlV8Function &operator=(const QQmlV8Function &);
+    QQmlV4Function();
+    QQmlV4Function(const QQmlV4Function &);
+    QQmlV4Function &operator=(const QQmlV4Function &);
 
-    QQmlV8Function(int length, v8::Handle<v8::Object> &args, 
-                           v8::Handle<v8::Value> &rv, v8::Handle<v8::Object> &global,
+    QQmlV4Function(int length, const QV4::Value &args,
+                           QV4::Value *rv, const QV4::Value &global,
                            QQmlContextData *c, QV8Engine *e)
-    : _ac(length), _a(&args), _r(&rv), _g(&global), _c(c), _e(e) {}
+    : argc(length), args(args), retVal(rv), global(global), ctx(c), e(e) {}
 
-    int _ac;
-    v8::Handle<v8::Object> *_a;
-    v8::Handle<v8::Value> *_r;
-    v8::Handle<v8::Object> *_g;
-    QQmlContextData *_c;
-    QV8Engine *_e;
+    int argc;
+    QV4::Value args;
+    QV4::Value *retVal;
+    QV4::Value global;
+    QQmlContextData *ctx;
+    QV8Engine *e;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlV4Handle

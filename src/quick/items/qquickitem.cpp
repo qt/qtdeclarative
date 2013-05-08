@@ -3751,9 +3751,9 @@ void QQuickItem::polish()
 /*!
     \internal
   */
-void QQuickItem::mapFromItem(QQmlV8Function *args) const
+void QQuickItem::mapFromItem(QQmlV4Function *args) const
 {
-    if (args->Length() != 0) {
+    if (args->length() != 0) {
         v8::Handle<v8::Value> item = (*args)[0];
         QV8Engine *engine = args->engine();
 
@@ -3768,14 +3768,14 @@ void QQuickItem::mapFromItem(QQmlV8Function *args) const
         }
 
         v8::Handle<v8::Object> rv = v8::Object::New();
-        args->returnValue(rv);
+        args->setReturnValue(rv->v4Value());
 
-        qreal x = (args->Length() > 1)?(*args)[1]->NumberValue():0;
-        qreal y = (args->Length() > 2)?(*args)[2]->NumberValue():0;
+        qreal x = (args->length() > 1) ? (*args)[1].asDouble() : 0;
+        qreal y = (args->length() > 2) ? (*args)[2].asDouble() : 0;
 
-        if (args->Length() > 3) {
-            qreal w = (*args)[3]->NumberValue();
-            qreal h = (args->Length() > 4)?(*args)[4]->NumberValue():0;
+        if (args->length() > 3) {
+            qreal w = (*args)[3].asDouble();
+            qreal h = (args->length() > 4) ? (*args)[4].asDouble() : 0;
 
             QRectF r = mapRectFromItem(itemObj, QRectF(x, y, w, h));
 
@@ -3823,9 +3823,9 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
 /*!
     \internal
   */
-void QQuickItem::mapToItem(QQmlV8Function *args) const
+void QQuickItem::mapToItem(QQmlV4Function *args) const
 {
-    if (args->Length() != 0) {
+    if (args->length() != 0) {
         v8::Handle<v8::Value> item = (*args)[0];
         QV8Engine *engine = args->engine();
 
@@ -3840,14 +3840,14 @@ void QQuickItem::mapToItem(QQmlV8Function *args) const
         }
 
         v8::Handle<v8::Object> rv = v8::Object::New();
-        args->returnValue(rv);
+        args->setReturnValue(rv->v4Value());
 
-        qreal x = (args->Length() > 1)?(*args)[1]->NumberValue():0;
-        qreal y = (args->Length() > 2)?(*args)[2]->NumberValue():0;
+        qreal x = (args->length() > 1) ? (*args)[1].asDouble() : 0;
+        qreal y = (args->length() > 2) ? (*args)[2].asDouble() : 0;
 
-        if (args->Length() > 3) {
-            qreal w = (*args)[3]->NumberValue();
-            qreal h = (args->Length() > 4)?(*args)[4]->NumberValue():0;
+        if (args->length() > 3) {
+            qreal w = (*args)[3].asDouble();
+            qreal h = (args->length() > 4) ? (*args)[4].asDouble() : 0;
 
             QRectF r = mapRectToItem(itemObj, QRectF(x, y, w, h));
 

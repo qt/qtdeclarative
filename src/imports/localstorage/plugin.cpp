@@ -607,10 +607,10 @@ public:
     ~QQuickLocalStorage() {
     }
 
-   Q_INVOKABLE void openDatabaseSync(QQmlV8Function* args);
+   Q_INVOKABLE void openDatabaseSync(QQmlV4Function* args);
 };
 
-void QQuickLocalStorage::openDatabaseSync(QQmlV8Function *args)
+void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
 {
 #ifndef QT_NO_SETTINGS
     QV8Engine *engine = args->engine();
@@ -621,10 +621,10 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV8Function *args)
 
     QSqlDatabase database;
 
-    QString dbname = (*args)[0]->v4Value().toQString();
-    QString dbversion = (*args)[1]->v4Value().toQString();
-    QString dbdescription = (*args)[2]->v4Value().toQString();
-    int dbestimatedsize = (*args)[3]->Int32Value();
+    QString dbname = (*args)[0].toQString();
+    QString dbversion = (*args)[1].toQString();
+    QString dbdescription = (*args)[2].toQString();
+    int dbestimatedsize = (*args)[3].toInt32();
     v8::Handle<v8::Value> dbcreationCallback = (*args)[4];
 
     QCryptographicHash md5(QCryptographicHash::Md5);
@@ -685,7 +685,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV8Function *args)
         }
     }
 
-    args->returnValue(instance);
+    args->setReturnValue(instance->v4Value());
 #endif // QT_NO_SETTINGS
 }
 

@@ -1894,13 +1894,13 @@ void QQmlListModel::clear()
 
     \sa clear()
 */
-void QQmlListModel::remove(QQmlV8Function *args)
+void QQmlListModel::remove(QQmlV4Function *args)
 {
-    int argLength = args->Length();
+    int argLength = args->length();
 
     if (argLength == 1 || argLength == 2) {
-        int index = (*args)[0]->Int32Value();
-        int removeCount = (argLength == 2 ? ((*args)[1]->Int32Value()) : 1);
+        int index = (*args)[0].toInt32();
+        int removeCount = (argLength == 2 ? (*args)[1].toInt32() : 1);
 
         if (index < 0 || index+removeCount > count() || removeCount <= 0) {
             qmlInfo(this) << tr("remove: indices [%1 - %2] out of range [0 - %3]").arg(index).arg(index+removeCount).arg(count());
@@ -1937,9 +1937,9 @@ void QQmlListModel::remove(QQmlV8Function *args)
     \sa set(), append()
 */
 
-void QQmlListModel::insert(QQmlV8Function *args)
+void QQmlListModel::insert(QQmlV4Function *args)
 {
-    if (args->Length() == 2) {
+    if (args->length() == 2) {
 
         v8::Handle<v8::Value> arg0 = (*args)[0];
         int index = arg0->Int32Value();
@@ -2047,9 +2047,9 @@ void QQmlListModel::move(int from, int to, int n)
 
     \sa set(), remove()
 */
-void QQmlListModel::append(QQmlV8Function *args)
+void QQmlListModel::append(QQmlV4Function *args)
 {
-    if (args->Length() == 1) {
+    if (args->length() == 1) {
         v8::Handle<v8::Value> arg = (*args)[0];
 
         if (arg->IsArray()) {

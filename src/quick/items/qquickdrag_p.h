@@ -141,7 +141,7 @@ private:
     friend class QQuickDragAttachedPrivate;
 };
 
-class QQmlV8Function;
+class QQmlV4Function;
 
 class QQuickDragAttachedPrivate;
 class QQuickDragAttached : public QObject
@@ -184,7 +184,7 @@ public:
     bool event(QEvent *event);
 
 public Q_SLOTS:
-    void start(QQmlV8Function *);
+    void start(QQmlV4Function *);
     void cancel();
 
 Q_SIGNALS:

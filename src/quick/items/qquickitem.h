@@ -80,7 +80,7 @@ private:
 
 class QCursor;
 class QQuickItemLayer;
-class QQmlV8Function;
+class QQmlV4Function;
 class QQuickState;
 class QQuickAnchorLine;
 class QQuickTransition;
@@ -320,8 +320,8 @@ public:
 
     void polish();
 
-    Q_INVOKABLE void mapFromItem(QQmlV8Function*) const;
-    Q_INVOKABLE void mapToItem(QQmlV8Function*) const;
+    Q_INVOKABLE void mapFromItem(QQmlV4Function*) const;
+    Q_INVOKABLE void mapToItem(QQmlV4Function*) const;
     Q_INVOKABLE void forceActiveFocus();
     Q_INVOKABLE void forceActiveFocus(Qt::FocusReason reason);
     Q_INVOKABLE QQuickItem *childAt(qreal x, qreal y) const;

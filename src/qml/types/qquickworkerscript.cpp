@@ -652,7 +652,7 @@ void QQuickWorkerScript::setSource(const QUrl &source)
     of ListModel objects, any modifications by the other thread to an object
     passed in \c message will not be reflected in the original object.
 */
-void QQuickWorkerScript::sendMessage(QQmlV8Function *args)
+void QQuickWorkerScript::sendMessage(QQmlV4Function *args)
 {
     if (!engine()) {
         qWarning("QQuickWorkerScript: Attempt to send message before WorkerScript establishment");
@@ -660,7 +660,7 @@ void QQuickWorkerScript::sendMessage(QQmlV8Function *args)
     }
 
     v8::Handle<v8::Value> argument = QV4::Value::undefinedValue();
-    if (args->Length() != 0) 
+    if (args->length() != 0)
         argument = (*args)[0];
 
     m_engine->sendMessage(m_scriptId, QV8Worker::serialize(argument, args->engine()));

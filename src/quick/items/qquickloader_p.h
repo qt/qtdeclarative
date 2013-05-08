@@ -67,7 +67,7 @@ public:
     bool active() const;
     void setActive(bool newVal);
 
-    Q_INVOKABLE void setSource(QQmlV8Function *);
+    Q_INVOKABLE void setSource(QQmlV4Function *);
 
     QUrl source() const;
     void setSource(const QUrl &);
