@@ -46,6 +46,9 @@
 #include <private/qqmlproperty_p.h>
 #include <private/qv8engine_p.h>
 
+#include <private/qv4value_p.h>
+#include <private/qv4functionobject_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlAdaptorModelEngineData : public QV8Engine::Deletable
@@ -62,12 +65,24 @@ public:
     QQmlAdaptorModelEngineData(QV8Engine *engine);
     ~QQmlAdaptorModelEngineData();
 
-    v8::Handle<v8::String> index() { return strings->Get(Index)->ToString(); }
-    v8::Handle<v8::String> modelData() { return strings->Get(ModelData)->ToString(); }
-    v8::Handle<v8::String> hasModelChildren() { return strings->Get(HasModelChildren)->ToString(); }
+    v8::Handle<v8::String> index() {
+        QV4::Object *o = strings.value().asObject();
+        QV4::ExecutionContext *ctx = o->engine()->current;
+        return QV4::Value::fromString(o->getIndexed(Index).toString(ctx));
+    }
+    v8::Handle<v8::String> modelData() {
+        QV4::Object *o = strings.value().asObject();
+        QV4::ExecutionContext *ctx = o->engine()->current;
+        return QV4::Value::fromString(o->getIndexed(ModelData).toString(ctx));
+    }
+    v8::Handle<v8::String> hasModelChildren() {
+        QV4::Object *o = strings.value().asObject();
+        QV4::ExecutionContext *ctx = o->engine()->current;
+        return QV4::Value::fromString(o->getIndexed(HasModelChildren).toString(ctx));
+    }
 
-    v8::Persistent<v8::Function> constructorListItem;
-    v8::Persistent<v8::Array> strings;
+    QV4::PersistentValue constructorListItem;
+    QV4::PersistentValue strings;
 };
 
 V8_DEFINE_EXTENSION(QQmlAdaptorModelEngineData, engineData)
@@ -144,8 +159,6 @@ public:
         if (propertyCache)
             propertyCache->release();
         free(metaObject);
-
-        qPersistentDispose(constructor);
     }
 
     bool notify(
@@ -207,7 +220,7 @@ public:
 
     void initializeConstructor(QQmlAdaptorModelEngineData *const data)
     {
-        constructor = qPersistentNew(v8::ObjectTemplate::New());
+        constructor = v8::ObjectTemplate::New().get();
         constructor->SetHasExternalResource(true);
         constructor->SetAccessor(data->index(), get_index);
 
@@ -236,7 +249,7 @@ public:
         return static_cast<QQmlDMCachedModelData *>(object)->metaCall(call, id, arguments);
     }
 
-    v8::Persistent<v8::ObjectTemplate> constructor;
+    QExplicitlySharedDataPointer<v8::ObjectTemplate> constructor;
     QList<int> propertyRoles;
     QList<int> watchedRoleIds;
     QList<QByteArray> watchedRoles;
@@ -412,7 +425,7 @@ public:
 
     v8::Handle<v8::Value> get()
     {
-        if (type->constructor.IsEmpty()) {
+        if (!type->constructor) {
             QQmlAdaptorModelEngineData * const data = engineData(engine);
             type->initializeConstructor(data);
             type->constructor->SetAccessor(data->hasModelChildren(), get_hasModelChildren);
@@ -599,7 +612,7 @@ public:
 
     v8::Handle<v8::Value> get()
     {
-        v8::Handle<v8::Object> data = engineData(engine)->constructorListItem->NewInstance();
+        v8::Handle<v8::Object> data = engineData(engine)->constructorListItem.value().asFunctionObject()->newInstance();
         data->SetExternalResource(this);
         ++scriptRef;
         return data;
@@ -947,12 +960,14 @@ void QQmlAdaptorModel::objectDestroyed(QObject *)
     setModel(QVariant(), 0, 0);
 }
 
-QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV8Engine *)
+QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV8Engine *e)
 {
-    strings = qPersistentNew(v8::Array::New(StringCount));
-    strings->Set(Index, v8::String::New("index"));
-    strings->Set(ModelData, v8::String::New("modelData"));
-    strings->Set(HasModelChildren, v8::String::New("hasModelChildren"));
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(e);
+    QV4::ArrayObject *a = v4->newArrayObject();
+    strings = QV4::Value::fromObject(a);
+    a->putIndexed(Index, QV4::Value::fromString(v4->newString(QStringLiteral("index"))));
+    a->putIndexed(ModelData, QV4::Value::fromString(v4->newString(QStringLiteral("modelData"))));
+    a->putIndexed(HasModelChildren, QV4::Value::fromString(v4->newString(QStringLiteral("hasModelChildren"))));
 
     v8::Handle<v8::FunctionTemplate> listItem = v8::FunctionTemplate::New();
     listItem->InstanceTemplate()->SetHasExternalResource(true);
@@ -961,13 +976,11 @@ QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV8Engine *)
             modelData(),
             QQmlDMListAccessorData::get_modelData,
             QQmlDMListAccessorData::set_modelData);
-    constructorListItem = qPersistentNew(listItem->GetFunction());
+    constructorListItem = listItem->GetFunction()->v4Value();
 }
 
 QQmlAdaptorModelEngineData::~QQmlAdaptorModelEngineData()
 {
-    qPersistentDispose(constructorListItem);
-    qPersistentDispose(strings);
 }
 
 QT_END_NAMESPACE
