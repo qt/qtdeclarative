@@ -579,8 +579,8 @@ void QQuickLoader::setSource(QQmlV8Function *args)
     QUrl sourceUrl = d->resolveSourceUrl(args);
     if (!ipv.IsEmpty()) {
         d->disposeInitialPropertyValues();
-        d->initialPropertyValues = qPersistentNew(ipv);
-        d->qmlGlobalForIpv = qPersistentNew(args->qmlGlobal());
+        d->initialPropertyValues = ipv->v4Value();
+        d->qmlGlobalForIpv = args->qmlGlobal()->v4Value();
     }
 
     setSource(sourceUrl, false); // already cleared and set ipv above.
@@ -588,10 +588,6 @@ void QQuickLoader::setSource(QQmlV8Function *args)
 
 void QQuickLoaderPrivate::disposeInitialPropertyValues()
 {
-    if (!initialPropertyValues.IsEmpty())
-        qPersistentDispose(initialPropertyValues);
-    if (!qmlGlobalForIpv.IsEmpty())
-        qPersistentDispose(qmlGlobalForIpv);
 }
 
 void QQuickLoaderPrivate::load()
@@ -645,12 +641,12 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
         itemContext = 0;
     }
 
-    if (initialPropertyValues.IsEmpty())
+    if (initialPropertyValues.isEmpty())
         return;
 
     QQmlComponentPrivate *d = QQmlComponentPrivate::get(component);
     Q_ASSERT(d && d->engine);
-    d->initializeObjectWithInitialProperties(qmlGlobalForIpv, initialPropertyValues, obj);
+    d->initializeObjectWithInitialProperties(qmlGlobalForIpv.value(), initialPropertyValues.value(), obj);
 }
 
 void QQuickLoaderIncubator::statusChanged(Status status)

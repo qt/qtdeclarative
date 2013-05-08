@@ -60,6 +60,8 @@
 
 #include <private/qv8_p.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 
@@ -108,8 +110,8 @@ public:
     QQmlComponent *component;
     QQmlContext *itemContext;
     QQuickLoaderIncubator *incubator;
-    v8::Persistent<v8::Object> initialPropertyValues;
-    v8::Persistent<v8::Object> qmlGlobalForIpv;
+    QV4::PersistentValue initialPropertyValues;
+    QV4::PersistentValue qmlGlobalForIpv;
     bool updatingSize: 1;
     bool active : 1;
     bool loadingFromSource : 1;
