@@ -584,7 +584,7 @@ public:
 
     operator Value() const { return value(); }
 
-    bool isEmpty() const { return !d; }
+    bool isEmpty() const { return !d || d->value.isEmpty(); }
     void clear() {
         *this = PersistentValue();
     }
