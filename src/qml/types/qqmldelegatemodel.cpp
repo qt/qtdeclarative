@@ -52,6 +52,9 @@
 #include <private/qqmlincubator_p.h>
 #include <private/qqmlcompiler_p.h>
 
+#include <private/qv4value_p.h>
+#include <private/qv4functionobject_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlDelegateModelEngineData : public QV8Engine::Deletable
@@ -80,17 +83,45 @@ public:
             QV8Engine *engine, const QVector<QQmlChangeSet::Change> &changes);
 
 
-    inline v8::Handle<v8::String> model() { return strings->Get(Model)->ToString(); }
-    inline v8::Handle<v8::String> groups() { return strings->Get(Groups)->ToString(); }
-    inline v8::Handle<v8::String> isUnresolved() { return strings->Get(IsUnresolved)->ToString(); }
-    inline v8::Handle<v8::String> itemsIndex() { return strings->Get(ItemsIndex)->ToString(); }
-    inline v8::Handle<v8::String> persistedItemsIndex() { return strings->Get(PersistedItemsIndex)->ToString(); }
-    inline v8::Handle<v8::String> inItems() { return strings->Get(InItems)->ToString(); }
-    inline v8::Handle<v8::String> inPersistedItems() { return strings->Get(InPersistedItems)->ToString(); }
+    inline v8::Handle<v8::String> model() {
+        QV4::Object *o = strings.value().asObject();
+        QV4::ExecutionContext *ctx = o->engine()->current;
+        return QV4::Value::fromString(o->getIndexed(Model).toString(ctx));
+    }
+    inline v8::Handle<v8::String> groups() {
+        QV4::Object *o = strings.value().asObject();
+        QV4::ExecutionContext *ctx = o->engine()->current;
+        return QV4::Value::fromString(o->getIndexed(Groups).toString(ctx));
+    }
+    inline v8::Handle<v8::String> isUnresolved() {
+        QV4::Object *o = strings.value().asObject();
+        QV4::ExecutionContext *ctx = o->engine()->current;
+        return QV4::Value::fromString(o->getIndexed(IsUnresolved).toString(ctx));
+    }
+    inline v8::Handle<v8::String> itemsIndex() {
+        QV4::Object *o = strings.value().asObject();
+        QV4::ExecutionContext *ctx = o->engine()->current;
+        return QV4::Value::fromString(o->getIndexed(ItemsIndex).toString(ctx));
+    }
+    inline v8::Handle<v8::String> persistedItemsIndex() {
+        QV4::Object *o = strings.value().asObject();
+        QV4::ExecutionContext *ctx = o->engine()->current;
+        return QV4::Value::fromString(o->getIndexed(PersistedItemsIndex).toString(ctx));
+    }
+    inline v8::Handle<v8::String> inItems() {
+        QV4::Object *o = strings.value().asObject();
+        QV4::ExecutionContext *ctx = o->engine()->current;
+        return QV4::Value::fromString(o->getIndexed(InItems).toString(ctx));
+    }
+    inline v8::Handle<v8::String> inPersistedItems() {
+        QV4::Object *o = strings.value().asObject();
+        QV4::ExecutionContext *ctx = o->engine()->current;
+        return QV4::Value::fromString(o->getIndexed(InPersistedItems).toString(ctx));\
+    }
 
-    v8::Persistent<v8::Array> strings;
-    v8::Persistent<v8::Function> constructorChange;
-    v8::Persistent<v8::Function> constructorChangeArray;
+    QV4::PersistentValue strings;
+    QV4::PersistentValue constructorChange;
+    QV4::PersistentValue constructorChangeArray;
 };
 
 V8_DEFINE_EXTENSION(QQmlDelegateModelEngineData, engineData)
@@ -1559,7 +1590,6 @@ QQmlDelegateModelItemMetaType::~QQmlDelegateModelItemMetaType()
 {
     if (metaObject)
         metaObject->release();
-    qPersistentDispose(constructor);
 }
 
 void QQmlDelegateModelItemMetaType::initializeMetaObject()
@@ -1593,7 +1623,7 @@ void QQmlDelegateModelItemMetaType::initializeConstructor()
 {
     QQmlDelegateModelEngineData *data = engineData(v8Engine);
 
-    constructor = qPersistentNew(v8::ObjectTemplate::New());
+    constructor = v8::ObjectTemplate::New().get();
 
     constructor->SetHasExternalResource(true);
     constructor->SetAccessor(data->model(), get_model);
@@ -2321,7 +2351,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
         model->m_compositor.setFlags(it, 1, Compositor::CacheFlag);
     }
 
-    if (model->m_cacheMetaType->constructor.IsEmpty())
+    if (!model->m_cacheMetaType->constructor)
         model->m_cacheMetaType->initializeConstructor();
     v8::Handle<v8::Object> handle = model->m_cacheMetaType->constructor->NewInstance();
     handle->SetExternalResource(cacheItem);
@@ -3078,7 +3108,7 @@ public:
 
         const QQmlChangeSet::Change &change = array->at(index);
 
-        v8::Handle<v8::Object> object = engineData(array->engine)->constructorChange->NewInstance();
+        v8::Handle<v8::Object> object = engineData(array->engine)->constructorChange.value().asFunctionObject()->newInstance();
         object->SetInternalField(0, v8::Int32::New(change.index));
         object->SetInternalField(1, v8::Int32::New(change.count));
         if (change.isMove())
@@ -3137,37 +3167,36 @@ private:
     QVector<QQmlChangeSet::Insert> changes;
 };
 
-QQmlDelegateModelEngineData::QQmlDelegateModelEngineData(QV8Engine *)
+QQmlDelegateModelEngineData::QQmlDelegateModelEngineData(QV8Engine *e)
 {
-    strings = qPersistentNew(v8::Array::New(StringCount));
-    strings->Set(Model, v8::String::New("model"));
-    strings->Set(Groups, v8::String::New("groups"));
-    strings->Set(IsUnresolved, v8::String::New("isUnresolved"));
-    strings->Set(ItemsIndex, v8::String::New("itemsIndex"));
-    strings->Set(PersistedItemsIndex, v8::String::New("persistedItemsIndex"));
-    strings->Set(InItems, v8::String::New("inItems"));
-    strings->Set(InPersistedItems, v8::String::New("inPersistedItems"));
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(e);
+    QV4::ArrayObject *a = v4->newArrayObject();
+    a->putIndexed(Model, QV4::Value::fromString(v4->newString("model")));
+    a->putIndexed(Groups, QV4::Value::fromString(v4->newString("groups")));
+    a->putIndexed(IsUnresolved, QV4::Value::fromString(v4->newString("isUnresolved")));
+    a->putIndexed(ItemsIndex, QV4::Value::fromString(v4->newString("itemsIndex")));
+    a->putIndexed(PersistedItemsIndex, QV4::Value::fromString(v4->newString("persistedItemsIndex")));
+    a->putIndexed(InItems, QV4::Value::fromString(v4->newString("inItems")));
+    a->putIndexed(InPersistedItems, QV4::Value::fromString(v4->newString("inPersistedItems")));
+    strings = QV4::Value::fromObject(a);
 
     v8::Handle<v8::FunctionTemplate> change = v8::FunctionTemplate::New();
     change->InstanceTemplate()->SetAccessor(v8::String::New("index"), get_change_index);
     change->InstanceTemplate()->SetAccessor(v8::String::New("count"), get_change_count);
     change->InstanceTemplate()->SetAccessor(v8::String::New("moveId"), get_change_moveId);
     change->InstanceTemplate()->SetInternalFieldCount(3);
-    constructorChange = qPersistentNew(change->GetFunction());
-    constructorChangeArray = qPersistentNew(QQmlDelegateModelGroupChangeArray::constructor());
+    constructorChange = change->GetFunction()->v4Value();
+    constructorChangeArray = QQmlDelegateModelGroupChangeArray::constructor()->v4Value();
 }
 
 QQmlDelegateModelEngineData::~QQmlDelegateModelEngineData()
 {
-    qPersistentDispose(strings);
-    qPersistentDispose(constructorChange);
-    qPersistentDispose(constructorChangeArray);
 }
 
 v8::Handle<v8::Object> QQmlDelegateModelEngineData::array(
         QV8Engine *engine, const QVector<QQmlChangeSet::Remove> &changes)
 {
-    v8::Handle<v8::Object> array = constructorChangeArray->NewInstance();
+    v8::Handle<v8::Object> array = constructorChangeArray.value().asFunctionObject()->newInstance();
     array->SetExternalResource(new QQmlDelegateModelGroupRemoveArray(engine, changes));
     return array;
 }
@@ -3175,7 +3204,7 @@ v8::Handle<v8::Object> QQmlDelegateModelEngineData::array(
 v8::Handle<v8::Object> QQmlDelegateModelEngineData::array(
         QV8Engine *engine, const QVector<QQmlChangeSet::Insert> &changes)
 {
-    v8::Handle<v8::Object> array = constructorChangeArray->NewInstance();
+    v8::Handle<v8::Object> array = constructorChangeArray.value().asFunctionObject()->newInstance();
     array->SetExternalResource(new QQmlDelegateModelGroupInsertArray(engine, changes));
     return array;
 }

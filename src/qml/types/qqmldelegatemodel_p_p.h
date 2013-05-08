@@ -80,9 +80,6 @@ public:
     int parseGroups(const QStringList &groupNames) const;
     int parseGroups(const v8::Handle<v8::Value> &groupNames) const;
 
-    static void release_index(v8::Persistent<v8::Value> object, void *parameter);
-    static void release_model(v8::Persistent<v8::Value> object, void *parameter);
-
     static v8::Handle<v8::Value> get_model(v8::Handle<v8::String>, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> get_groups(v8::Handle<v8::String>, const v8::AccessorInfo &info);
     static void set_groups(
@@ -97,7 +94,7 @@ public:
     QV8Engine * const v8Engine;
     QQmlDelegateModelAttachedMetaObject *metaObject;
     const QStringList groupNames;
-    v8::Persistent<v8::ObjectTemplate> constructor;
+    QExplicitlySharedDataPointer<v8::ObjectTemplate> constructor;
 };
 
 class QQmlAdaptorModel;
