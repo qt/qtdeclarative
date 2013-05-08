@@ -531,7 +531,7 @@ QQmlV4Handle QQuickParticleData::v8Value()
 {
     if (!v8Datum)
         v8Datum = new QQuickV8ParticleData(QQmlEnginePrivate::getV8Engine(qmlEngine(system)), this);
-    return v8Datum->v8Value();
+    return v8Datum->v4Value();
 }
 //sets the x accleration without affecting the instantaneous x velocity or position
 void QQuickParticleData::setInstantaneousAX(qreal ax)

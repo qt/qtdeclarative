@@ -44,6 +44,7 @@
 #include "qquickparticlesystem_p.h"//for QQuickParticleData
 #include <QDebug>
 #include <private/qv4engine_p.h>
+#include <private/qv4functionobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -284,7 +285,7 @@ public:
     QV8ParticleDataDeletable(QV8Engine *engine);
     ~QV8ParticleDataDeletable();
 
-    v8::Persistent<v8::Function> constructor;
+    QV4::PersistentValue constructor;
 };
 
 static QV4::Value particleData_discard(const v8::Arguments &args)
@@ -467,12 +468,11 @@ QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
     REGISTER_ACCESSOR(ft, engine, blue, blue);
     REGISTER_ACCESSOR(ft, engine, alpha, alpha);
 
-    constructor = qPersistentNew(ft->GetFunction());
+    constructor = ft->GetFunction()->v4Value();
 }
 
 QV8ParticleDataDeletable::~QV8ParticleDataDeletable()
 {
-    qPersistentDispose(constructor);
 }
 
 V8_DEFINE_EXTENSION(QV8ParticleDataDeletable, particleV8Data);
@@ -484,20 +484,19 @@ QQuickV8ParticleData::QQuickV8ParticleData(QV8Engine* engine, QQuickParticleData
         return;
 
     QV8ParticleDataDeletable *d = particleV8Data(engine);
-    m_v8Value = qPersistentNew(d->constructor->NewInstance());
+    m_v4Value = d->constructor.value().asFunctionObject()->newInstance();
     QV8ParticleDataResource *r = new QV8ParticleDataResource(engine);
     r->datum = datum;
-    m_v8Value->SetExternalResource(r);
+    v8::Handle<v8::Object>(m_v4Value)->SetExternalResource(r);
 }
 
 QQuickV8ParticleData::~QQuickV8ParticleData()
 {
-    qPersistentDispose(m_v8Value);
 }
 
-QQmlV4Handle QQuickV8ParticleData::v8Value()
+QQmlV4Handle QQuickV8ParticleData::v4Value()
 {
-    return QQmlV4Handle::fromV8Handle(m_v8Value);
+    return QQmlV4Handle::fromValue(m_v4Value);
 }
 
 QT_END_NAMESPACE

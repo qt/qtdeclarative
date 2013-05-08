@@ -44,6 +44,8 @@
 
 #include <private/qv8engine_p.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickParticleData;
@@ -51,9 +53,9 @@ class QQuickV8ParticleData {
 public:
     QQuickV8ParticleData(QV8Engine*,QQuickParticleData*);
     ~QQuickV8ParticleData();
-    QQmlV4Handle v8Value();
+    QQmlV4Handle v4Value();
 private:
-    v8::Persistent<v8::Object> m_v8Value;
+    QV4::PersistentValue m_v4Value;
 };
 
 
