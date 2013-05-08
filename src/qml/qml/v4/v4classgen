@@ -4,18 +4,37 @@ import re, sys, os
 import argparse
 
 class ParsedMethod():
-    def __init__(self, name, methodPrefix):
+    def __init__(self, name, methodPrefix, static):
         self.name = name
         self.methodPrefix = methodPrefix
         self.options = {}
+        self.static = static
+
+    def isClassMethod(self):
+        return self.static
 
     def generateBinding(self, out, objectPrefix = ""):
         length = 0
+
+        methodName = self.methodPrefix + "_" + self.name
+        if not self.isClassMethod():
+            methodName = "wrap_" + methodName
+
         if "argc" in self.options:
             length = self.options["argc"]
-        out.write("    %sdefineDefaultProperty(engine, QStringLiteral(\"%s\"), %s_%s, %s);\n" % (objectPrefix, self.name, self.methodPrefix, self.name, length))
+        out.write("    %sdefineDefaultProperty(engine, QStringLiteral(\"%s\"), %s, %s);\n" % (objectPrefix, self.name, methodName, length))
         if "alias" in self.options:
-            out.write("    %sdefineDefaultProperty(engine, QStringLiteral(\"%s\"), %s_%s, %s);\n" % (objectPrefix, self.options["alias"], self.methodPrefix, self.name, length))
+            out.write("    %sdefineDefaultProperty(engine, QStringLiteral(\"%s\"), %s, %s);\n" % (objectPrefix, self.options["alias"], methodName, length))
+
+    def generateMemberFunctionWrapper(self, out, parsedClass):
+        out.write("static QV4::Value wrap_%s_%s(QV4::SimpleCallContext *ctx)\n" % (self.methodPrefix, self.name))
+        out.write("{\n")
+        out.write("    QV4::Object *thatObject = ctx->thisObject.asObject();\n")
+        out.write("    if (!thatObject)\n")
+        out.write("        ctx->throwTypeError();\n")
+        out.write("    return thatObject->as%s()->%s_%s(ctx);\n" % (parsedClass.managedTypeName(), self.methodPrefix, self.name))
+        out.write("}\n")
+        out.write("\n")
 
 class ParsedClass():
     def __init__(self, name):
@@ -26,6 +45,16 @@ class ParsedClass():
 
     def needsConstructor(self):
         return len(self.ctor_methods) > 0
+
+    def managedTypeName(self):
+        if "managedTypeName" in self.options:
+            return self.options["managedTypeName"]
+        return self.name
+
+    def option(self, name):
+        if name in self.options:
+            return self.options[name]
+        return None
 
 def parseOptions(options):
     options = options.split(" ")
@@ -38,7 +67,7 @@ def parseMethod(line, match, methodPrefix):
     annotatePattern = re.compile(r".*QV4_ANNOTATE\((?P<Options>.+)\).*")
     argcPattern = re.compile(r".*QV4_ARGC\((?P<count>\d+)\).*")
 
-    method = ParsedMethod(match.group("MethodName"), methodPrefix)
+    method = ParsedMethod(match.group("MethodName"), methodPrefix, line.find("static") == 0)
 
     annotateMatch = annotatePattern.match(line)
     if annotateMatch:
@@ -124,11 +153,25 @@ def generateBinding(out, parsedClass, vtableEntries):
         out.write("    return new (scope->engine->memoryManager) %s(scope);\n" % ctorClass)
         out.write("}\n\n")
 
+    for method in parsedClass.methods:
+        if not method.isClassMethod():
+            method.generateMemberFunctionWrapper(out, parsedClass)
+
+    for method in parsedClass.ctor_methods:
+        if not method.isClassMethod():
+            method.generateMemberFunctionWrapper(out, parsedClass)
+
     ctorSignature = ""
     if parsedClass.needsConstructor():
-        ctorSignature = ", const Value &ctor"
+        ctorSignature = ", const QV4::Value &ctor"
 
-    out.write("void %s::initClass(QV4::ExecutionEngine *engine%s)\n" % (parsedClass.name, ctorSignature))
+    obj = ""
+    objSignature = ""
+    if parsedClass.option("staticInitClass") == "true":
+        objSignature = ", const QV4::Value &obj"
+        obj = "obj.objectValue()->"
+
+    out.write("void %s::initClass(QV4::ExecutionEngine *engine%s%s)\n" % (parsedClass.name, objSignature, ctorSignature))
     out.write("{\n")
 
     if parsedClass.needsConstructor():
@@ -152,7 +195,7 @@ def generateBinding(out, parsedClass, vtableEntries):
         out.write("\n")
 
     for method in parsedClass.methods:
-        method.generateBinding(out)
+        method.generateBinding(out, obj)
 
     out.write("}\n")
 
@@ -200,7 +243,7 @@ parser.add_argument("input")
 parser.add_argument("--output")
 options = parser.parse_args()
 
-vtableEntries = extractManagedVTableLayout(os.path.dirname(os.path.abspath(options.input)))
+vtableEntries = extractManagedVTableLayout(os.path.dirname(__file__))
 if len(vtableEntries) ==  0:
     print("Could not parse vtable layout from qv4managed_p.h")
     sys.exit(1)
@@ -216,7 +259,6 @@ classes = parse(lines)
 f.close()
 
 out.write("/* Generated file, do not edit */\n")
-out.write("#include \"%s\"\n" % options.input)
 
 for parsedClass in classes:
     out.write("\n")

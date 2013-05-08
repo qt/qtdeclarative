@@ -126,6 +126,8 @@ HEADERS += \
     $$PWD/qqmlapplicationengine_p.h \
     $$PWD/qqmlapplicationengine.h
 
+JS_CLASS_SOURCES += \
+    $$PWD/qqmllocale.cpp
 
 include(parser/parser.pri)
 include(rewriter/rewriter.pri)

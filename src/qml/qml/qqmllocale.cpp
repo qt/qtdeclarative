@@ -54,8 +54,9 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlLocaleData : public QV4::Object
+class QV4_JS_CLASS(QQmlLocaleData) : public QV4::Object
 {
+    QV4_ANNOTATE(managedTypeName QmlLocale staticInitClass true)
 public:
     QQmlLocaleData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
@@ -67,6 +68,10 @@ public:
 
     QLocale locale;
     QV8Engine *engine; // ### compat, remove once unused
+
+    static void initClass(QV4::ExecutionEngine *engine, const QV4::Value &obj);
+
+    QV4::Value method_currencySymbol(QV4::SimpleCallContext *ctx);
 
 private:
     static void destroy(Managed *that)
@@ -522,10 +527,8 @@ static v8::Handle<v8::Value> locale_get_uiLanguages(v8::Handle<v8::String>, cons
     return result;
 }
 
-static QV4::Value locale_currencySymbol(QV4::SimpleCallContext *ctx)
+QV4::Value QQmlLocaleData::method_currencySymbol(QV4::SimpleCallContext *ctx)
 {
-    GET_LOCALE_DATA_RESOURCE(ctx->thisObject);
-
     if (ctx->argumentCount > 1)
         V4THROW_ERROR("Locale: currencySymbol(): Invalid arguments");
 
@@ -535,7 +538,7 @@ static QV4::Value locale_currencySymbol(QV4::SimpleCallContext *ctx)
         format = QLocale::CurrencySymbolFormat(intFormat);
     }
 
-    return QV4::Value::fromString(ctx, r->locale.currencySymbol(format));
+    return QV4::Value::fromString(ctx, locale.currencySymbol(format));
 }
 
 #define LOCALE_FORMAT(FUNC) \
@@ -645,6 +648,7 @@ public:
     ~QV8LocaleDataDeletable();
 
     QV4::PersistentValue prototype;
+    QV4::PersistentValue v4Prototype;
 };
 
 QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
@@ -665,8 +669,6 @@ QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
     LOCALE_REGISTER_STRING_ACCESSOR(ft, amText);
     LOCALE_REGISTER_STRING_ACCESSOR(ft, pmText);
 
-    ft->PrototypeTemplate()->Set(v8::String::New("currencySymbol"), V8FUNCTION(locale_currencySymbol, engine));
-
     ft->PrototypeTemplate()->Set(v8::String::New("dateTimeFormat"), V8FUNCTION(locale_dateTimeFormat, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("dateFormat"), V8FUNCTION(locale_dateFormat, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("timeFormat"), V8FUNCTION(locale_timeFormat, engine));
@@ -683,6 +685,11 @@ QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("uiLanguages"), locale_get_uiLanguages);
 
     prototype = QV4::Value::fromObject(ft->GetFunction()->NewInstance()->v4Value().asObject()->prototype);
+
+    QV4::ExecutionEngine *eng = QV8Engine::getV4(engine);
+    v4Prototype = QV4::Value::fromObject(eng->newObject());
+    QQmlLocaleData::initClass(eng, v4Prototype.value());
+    prototype.value().asObject()->prototype->prototype = v4Prototype.value().asObject();
 }
 
 QV8LocaleDataDeletable::~QV8LocaleDataDeletable()
@@ -1057,5 +1064,7 @@ QV4::Value QQmlLocale::localeCompare(QV4::SimpleCallContext *ctx)
         value stands for the official United States imperial units.
     \endlist
 */
+
+#include "qqmllocale_jsclass.cpp"
 
 QT_END_NAMESPACE
