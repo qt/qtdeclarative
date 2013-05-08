@@ -73,6 +73,8 @@
 
 #include <private/qv8_p.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 #define QML_ALIAS_FLAG_PTR 0x00000001
@@ -203,7 +205,7 @@ public:
     QQmlVMEVariant *data;
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
-    v8::Persistent<v8::Array> varProperties;
+    QV4::PersistentValue varProperties;
     int firstVarPropertyIndex;
     bool varPropertiesInitialized;
     static void VarPropertiesWeakReferenceCallback(v8::Persistent<v8::Value> object, void* parameter);
