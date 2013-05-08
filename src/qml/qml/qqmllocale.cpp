@@ -54,18 +54,38 @@
 
 QT_BEGIN_NAMESPACE
 
-class QV8LocaleDataResource : public QV8ObjectResource
+class QQmlLocaleData : public QV4::Object
 {
-    V8_RESOURCE_TYPE(LocaleDataType)
 public:
-    QV8LocaleDataResource(QV8Engine *e) : QV8ObjectResource(e) {}
+    QQmlLocaleData(QV4::ExecutionEngine *engine)
+        : QV4::Object(engine)
+    {
+        vtbl = &static_vtbl;
+        type = Type_QmlLocale;
+        this->engine = QV8Engine::get(engine->publicEngine);
+    }
+
     QLocale locale;
+    QV8Engine *engine; // ### compat, remove once unused
+
+private:
+    static void destroy(Managed *that)
+    {
+        static_cast<QQmlLocaleData *>(that)->~QQmlLocaleData();
+    }
+
+    static const QV4::ManagedVTable static_vtbl;
 };
 
+DEFINE_MANAGED_VTABLE(QQmlLocaleData);
+
 #define GET_LOCALE_DATA_RESOURCE(OBJECT) \
-QV8LocaleDataResource *r = v8_resource_cast<QV8LocaleDataResource>(OBJECT); \
-if (!r) \
-    V4THROW_ERROR("Not a valid Locale object")
+    QQmlLocaleData *r = OBJECT.isObject() ? (OBJECT.asManaged()->asQmlLocale()) : 0; \
+    if (!r) \
+        V4THROW_ERROR("Not a valid Locale object")
+
+#define V8_GET_LOCALE_DATA_RESOURCE(OBJECT) \
+    GET_LOCALE_DATA_RESOURCE((OBJECT).As<v8::Value>()->v4Value())
 
 static bool isLocaleObject(v8::Handle<v8::Value> val)
 {
@@ -453,7 +473,7 @@ QV4::Value QQmlNumberExtension::fromLocaleString(QV4::SimpleCallContext *ctx)
 
 static v8::Handle<v8::Value> locale_get_firstDayOfWeek(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    GET_LOCALE_DATA_RESOURCE(info.This());
+    V8_GET_LOCALE_DATA_RESOURCE(info.This());
     int fdow = int(r->locale.firstDayOfWeek());
     if (fdow == 7)
         fdow = 0; // Qt::Sunday = 7, but Sunday is 0 in JS Date
@@ -462,19 +482,19 @@ static v8::Handle<v8::Value> locale_get_firstDayOfWeek(v8::Handle<v8::String>, c
 
 static v8::Handle<v8::Value> locale_get_measurementSystem(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    GET_LOCALE_DATA_RESOURCE(info.This());
+    V8_GET_LOCALE_DATA_RESOURCE(info.This());
     return v8::Integer::New(r->locale.measurementSystem());
 }
 
 static v8::Handle<v8::Value> locale_get_textDirection(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    GET_LOCALE_DATA_RESOURCE(info.This());
+    V8_GET_LOCALE_DATA_RESOURCE(info.This());
     return v8::Integer::New(r->locale.textDirection());
 }
 
 static v8::Handle<v8::Value> locale_get_weekDays(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    GET_LOCALE_DATA_RESOURCE(info.This());
+    V8_GET_LOCALE_DATA_RESOURCE(info.This());
 
     QList<Qt::DayOfWeek> days = r->locale.weekdays();
 
@@ -491,7 +511,7 @@ static v8::Handle<v8::Value> locale_get_weekDays(v8::Handle<v8::String>, const v
 
 static v8::Handle<v8::Value> locale_get_uiLanguages(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    GET_LOCALE_DATA_RESOURCE(info.This());
+    V8_GET_LOCALE_DATA_RESOURCE(info.This());
 
     QStringList langs = r->locale.uiLanguages();
     v8::Handle<v8::Array> result = v8::Array::New(langs.size());
@@ -597,7 +617,7 @@ LOCALE_FORMATTED_DAYNAME(standaloneDayName)
 
 #define LOCALE_STRING_PROPERTY(VARIABLE) static v8::Handle<v8::Value> locale_get_ ## VARIABLE (v8::Handle<v8::String>, const v8::AccessorInfo &info) \
 { \
-    GET_LOCALE_DATA_RESOURCE(info.This()); \
+    V8_GET_LOCALE_DATA_RESOURCE(info.This()); \
     return r->engine->toString(r->locale. VARIABLE());\
 }
 
@@ -624,7 +644,7 @@ public:
     QV8LocaleDataDeletable(QV8Engine *engine);
     ~QV8LocaleDataDeletable();
 
-    QV4::PersistentValue constructor;
+    QV4::PersistentValue prototype;
 };
 
 QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
@@ -662,7 +682,7 @@ QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("textDirection"), locale_get_textDirection);
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("uiLanguages"), locale_get_uiLanguages);
 
-    constructor = ft->GetFunction()->v4Value();
+    prototype = QV4::Value::fromObject(ft->GetFunction()->NewInstance()->v4Value().asObject()->prototype);
 }
 
 QV8LocaleDataDeletable::~QV8LocaleDataDeletable()
@@ -776,15 +796,12 @@ QQmlLocale::~QQmlLocale()
 QV4::Value QQmlLocale::locale(QV8Engine *v8engine, const QString &locale)
 {
     QV8LocaleDataDeletable *d = localeV8Data(v8engine);
-    v8::Handle<v8::Object> v8Value = d->constructor.value().asFunctionObject()->newInstance();
-    QV8LocaleDataResource *r = new QV8LocaleDataResource(v8engine);
-    if (locale.isEmpty())
-        r->locale = QLocale();
-    else
-        r->locale = QLocale(locale);
-    v8Value->SetExternalResource(r);
-
-    return v8Value->v4Value();
+    QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine);
+    QQmlLocaleData *wrapper = new (engine->memoryManager) QQmlLocaleData(engine);
+    if (!locale.isEmpty())
+        wrapper->locale = QLocale(locale);
+    wrapper->prototype = d->prototype.value().asObject();
+    return QV4::Value::fromObject(wrapper);
 }
 
 void QQmlLocale::registerStringLocaleCompare(QV4::ExecutionEngine *engine)

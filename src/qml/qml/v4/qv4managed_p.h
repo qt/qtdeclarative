@@ -48,6 +48,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlLocaleData;
+
 namespace QV4 {
 
 class MemoryManager;
@@ -96,7 +98,7 @@ struct ManagedVTable
 };
 
 #define DEFINE_MANAGED_VTABLE(classname) \
-const ManagedVTable classname::static_vtbl =    \
+const QV4::ManagedVTable classname::static_vtbl =    \
 {                                               \
     call,                                       \
     construct,                                  \
@@ -158,7 +160,10 @@ public:
         Type_JSONObject,
         Type_MathObject,
         Type_ForeachIteratorObject,
-        Type_RegExp
+        Type_RegExp,
+
+        // QML bindings
+        Type_QmlLocale
     };
 
     ExecutionEngine *engine() const;
@@ -177,6 +182,7 @@ public:
     JSONObject *asJSONObject() { return type == Type_JSONObject ? reinterpret_cast<JSONObject *>(this) : 0; }
     ForeachIteratorObject *asForeachIteratorObject() { return type == Type_ForeachIteratorObject ? reinterpret_cast<ForeachIteratorObject *>(this) : 0; }
     RegExp *asRegExp() { return type == Type_RegExp ? reinterpret_cast<RegExp *>(this) : 0; }
+    QQmlLocaleData *asQmlLocale() { return type == Type_QmlLocale ? reinterpret_cast<QQmlLocaleData *>(this) : 0; }
 
     bool isArrayObject() const { return type == Type_ArrayObject; }
     bool isStringObject() const { return type == Type_StringObject; }

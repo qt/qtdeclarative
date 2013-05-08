@@ -166,7 +166,7 @@ def extractManagedVTableLayout(basePath):
         if i >= len(lines):
             return
         i = i + 1
-        if not lines[i].strip().startswith("const ManagedVTable classname::static_vtbl ="):
+        if not lines[i].strip().startswith("const QV4::ManagedVTable classname::static_vtbl ="):
             print("Expected static_vtbl definition at line %s" % i)
             return
         i = i + 1
