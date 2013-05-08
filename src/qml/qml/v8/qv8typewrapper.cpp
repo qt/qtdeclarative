@@ -46,6 +46,7 @@
 #include <private/qqmlcontext_p.h>
 
 #include <private/qjsvalue_p.h>
+#include <private/qv4functionobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -87,7 +88,6 @@ QV8TypeWrapper::~QV8TypeWrapper()
 
 void QV8TypeWrapper::destroy()
 {
-    qPersistentDispose(m_constructor);
 }
 
 void QV8TypeWrapper::init(QV8Engine *engine)
@@ -96,7 +96,7 @@ void QV8TypeWrapper::init(QV8Engine *engine)
     v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetNamedPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
-    m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    m_constructor = ft->GetFunction()->v4Value();
 }
 
 // Returns a type wrapper for type t on o.  This allows access of enums, and attached properties.
@@ -104,7 +104,7 @@ v8::Handle<v8::Object> QV8TypeWrapper::newObject(QObject *o, QQmlType *t, TypeNa
 {
     Q_ASSERT(t);
     // XXX NewInstance() should be optimized
-    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
+    v8::Handle<v8::Object> rv = m_constructor.value().asFunctionObject()->newInstance();
     QV8TypeResource *r = new QV8TypeResource(m_engine);
     r->mode = mode; r->object = o; r->type = t;
     rv->SetExternalResource(r);
@@ -119,7 +119,7 @@ v8::Handle<v8::Object> QV8TypeWrapper::newObject(QObject *o, QQmlTypeNameCache *
     Q_ASSERT(t);
     Q_ASSERT(importNamespace);
     // XXX NewInstance() should be optimized
-    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
+    v8::Handle<v8::Object> rv = m_constructor.value().asFunctionObject()->newInstance();
     QV8TypeResource *r = new QV8TypeResource(m_engine);
     t->addref();
     r->mode = mode; r->object = o; r->typeNamespace = t; r->importNamespace = importNamespace;
