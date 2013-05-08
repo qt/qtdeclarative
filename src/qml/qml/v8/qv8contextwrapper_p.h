@@ -57,6 +57,8 @@
 #include <private/qtqmlglobal_p.h>
 #include <private/qv8_p.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QUrl;
@@ -83,7 +85,7 @@ public:
     QQmlContextData *callingContext();
     QQmlContextData *context(v8::Handle<v8::Value>);
 
-    inline v8::Handle<v8::Object> sharedContext() const;
+    inline QV4::Value sharedContext() const;
 
     void takeContextOwnership(v8::Handle<v8::Object> qmlglobal);
 
@@ -100,12 +102,12 @@ private:
                                         const v8::AccessorInfo &info);
 
     QV8Engine *m_engine;
-    v8::Persistent<v8::Function> m_constructor;
-    v8::Persistent<v8::Function> m_urlConstructor;
-    v8::Persistent<v8::Object> m_sharedContext;
+    QV4::PersistentValue m_constructor;
+    QV4::PersistentValue m_urlConstructor;
+    QV4::PersistentValue m_sharedContext;
 };
 
-v8::Handle<v8::Object> QV8ContextWrapper::sharedContext() const
+QV4::Value QV8ContextWrapper::sharedContext() const
 {
     return m_sharedContext;
 }

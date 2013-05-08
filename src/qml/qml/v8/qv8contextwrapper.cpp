@@ -47,6 +47,7 @@
 
 #include <private/qv4engine_p.h>
 #include <private/qv4value_p.h>
+#include <private/qv4functionobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -143,9 +144,6 @@ QV8ContextWrapper::~QV8ContextWrapper()
 
 void QV8ContextWrapper::destroy()
 {
-    qPersistentDispose(m_sharedContext);
-    qPersistentDispose(m_urlConstructor);
-    qPersistentDispose(m_constructor);
 }
 
 void QV8ContextWrapper::init(QV8Engine *engine)
@@ -155,27 +153,27 @@ void QV8ContextWrapper::init(QV8Engine *engine)
     v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
-    m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    m_constructor = ft->GetFunction()->v4Value();
     }
     {
     v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->SetFallbackPropertyHandler(NullGetter, NullSetter);
-    m_urlConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    m_urlConstructor = ft->GetFunction()->v4Value();
     }
     {
-    v8::Handle<v8::Object> sharedContext = m_constructor->NewInstance();
+    v8::Handle<v8::Object> sharedContext = m_constructor.value().asFunctionObject()->newInstance();
     QV8ContextResource *r = new QV8ContextResource(engine, 0, 0);
     r->isSharedContext = true;
     sharedContext->SetExternalResource(r);
-    m_sharedContext = qPersistentNew<v8::Object>(sharedContext);
+    m_sharedContext = sharedContext->v4Value();
     }
 }
 
 v8::Handle<v8::Object> QV8ContextWrapper::qmlScope(QQmlContextData *ctxt, QObject *scope)
 {
     // XXX NewInstance() should be optimized
-    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
+    v8::Handle<v8::Object> rv = m_constructor.value().asFunctionObject()->newInstance();
     QV8ContextResource *r = new QV8ContextResource(m_engine, ctxt, scope);
     rv->SetExternalResource(r);
     return rv;
@@ -189,7 +187,7 @@ v8::Handle<v8::Object> QV8ContextWrapper::urlScope(const QUrl &url)
     context->isJSContext = true;
 
     // XXX NewInstance() should be optimized
-    v8::Handle<v8::Object> rv = m_urlConstructor->NewInstance();
+    v8::Handle<v8::Object> rv = m_urlConstructor.value().asFunctionObject()->newInstance();
     QV8ContextResource *r = new QV8ContextResource(m_engine, context, 0, true);
     rv->SetExternalResource(r);
     return rv;
