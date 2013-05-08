@@ -46,6 +46,9 @@
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlglobal_p.h>
 
+#include <private/qv4engine_p.h>
+#include <private/qv4functionobject_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QV8ValueTypeResource : public QV8ObjectResource
@@ -104,9 +107,6 @@ QV8ValueTypeWrapper::~QV8ValueTypeWrapper()
 
 void QV8ValueTypeWrapper::destroy()
 {
-    qPersistentDispose(m_toString);
-    qPersistentDispose(m_constructor);
-    qPersistentDispose(m_toStringSymbol);
 }
 
 static quint32 toStringHash = -1;
@@ -114,25 +114,25 @@ static quint32 toStringHash = -1;
 void QV8ValueTypeWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
-    m_toString = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(ToString)->GetFunction());
+    m_toString = v8::FunctionTemplate::New(ToString)->GetFunction()->v4Value();
     v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetNamedPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->MarkAsUseUserObjectComparison();
     ft->InstanceTemplate()->SetAccessor(v8::String::New("toString"), ToStringGetter, 0,
-                                        m_toString, v8::DEFAULT,
+                                        m_toString.value(), v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
-    m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    m_constructor = ft->GetFunction()->v4Value();
 
-    m_toStringSymbol = qPersistentNew<v8::String>(v8::String::NewSymbol("toString"));
-    m_toStringString = QHashedV8String(m_toStringSymbol);
+    m_toStringSymbol = QV4::Value::fromString(QV8Engine::getV4(engine)->newIdentifier(QStringLiteral("toString")));
+    m_toStringString = QHashedV8String(m_toStringSymbol.value());
     toStringHash = m_toStringString.hash();
 }
 
 v8::Handle<v8::Object> QV8ValueTypeWrapper::newValueType(QObject *object, int property, QQmlValueType *type)
 {
     // XXX NewInstance() should be optimized
-    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
+    v8::Handle<v8::Object> rv = m_constructor.value().asFunctionObject()->newInstance();
     QV8ValueTypeReferenceResource *r = new QV8ValueTypeReferenceResource(m_engine);
     r->type = type; r->object = object; r->property = property;
     rv->SetExternalResource(r);
@@ -142,7 +142,7 @@ v8::Handle<v8::Object> QV8ValueTypeWrapper::newValueType(QObject *object, int pr
 v8::Handle<v8::Object> QV8ValueTypeWrapper::newValueType(const QVariant &value, QQmlValueType *type)
 {
     // XXX NewInstance() should be optimized
-    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
+    v8::Handle<v8::Object> rv = m_constructor.value().asFunctionObject()->newInstance();
     QV8ValueTypeCopyResource *r = new QV8ValueTypeCopyResource(m_engine);
     r->type = type; r->value = value;
     rv->SetExternalResource(r);
@@ -289,7 +289,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Handle<v8::String> propert
         quint32 hash = propertystring.hash();
         if (hash == toStringHash &&
             r->engine->valueTypeWrapper()->m_toStringString == propertystring) {
-            return r->engine->valueTypeWrapper()->m_toString;
+            return r->engine->valueTypeWrapper()->m_toString.value();
         }
     }
 

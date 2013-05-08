@@ -59,6 +59,8 @@
 #include <private/qv8_p.h>
 #include <private/qhashedstring_p.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QV8Engine;
@@ -95,9 +97,9 @@ private:
                                         const v8::AccessorInfo &info);
 
     QV8Engine *m_engine;
-    v8::Persistent<v8::Function> m_constructor;
-    v8::Persistent<v8::Function> m_toString;
-    v8::Persistent<v8::String> m_toStringSymbol;
+    QV4::PersistentValue m_constructor;
+    QV4::PersistentValue m_toString;
+    QV4::PersistentValue m_toStringSymbol;
     QHashedV8String m_toStringString;
 };
 
