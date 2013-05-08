@@ -502,33 +502,33 @@ static v8::Handle<v8::Value> locale_get_uiLanguages(v8::Handle<v8::String>, cons
     return result;
 }
 
-static QV4::Value locale_currencySymbol(const v8::Arguments &args)
+static QV4::Value locale_currencySymbol(QV4::SimpleCallContext *ctx)
 {
-    GET_LOCALE_DATA_RESOURCE(args.This());
+    GET_LOCALE_DATA_RESOURCE(ctx->thisObject);
 
-    if (args.Length() > 1)
+    if (ctx->argumentCount > 1)
         V4THROW_ERROR("Locale: currencySymbol(): Invalid arguments");
 
     QLocale::CurrencySymbolFormat format = QLocale::CurrencySymbol;
-    if (args.Length() == 1) {
-        quint32 intFormat = args[0]->ToNumber()->Value();
+    if (ctx->argumentCount == 1) {
+        quint32 intFormat = ctx->arguments[0].toNumber();
         format = QLocale::CurrencySymbolFormat(intFormat);
     }
 
-    return r->engine->toString(r->locale.currencySymbol(format));
+    return QV4::Value::fromString(ctx, r->locale.currencySymbol(format));
 }
 
 #define LOCALE_FORMAT(FUNC) \
-static QV4::Value locale_ ##FUNC (const v8::Arguments &args) { \
-    GET_LOCALE_DATA_RESOURCE(args.This());\
-    if (args.Length() > 1) \
+static QV4::Value locale_ ##FUNC (QV4::SimpleCallContext *ctx) { \
+    GET_LOCALE_DATA_RESOURCE(ctx->thisObject);\
+    if (ctx->argumentCount > 1) \
         V4THROW_ERROR("Locale: " #FUNC "(): Invalid arguments"); \
     QLocale::FormatType format = QLocale::LongFormat;\
-    if (args.Length() == 1) { \
-        quint32 intFormat = args[0]->Uint32Value(); \
+    if (ctx->argumentCount == 1) { \
+        quint32 intFormat = ctx->arguments[0].toUInt32(); \
         format = QLocale::FormatType(intFormat); \
     } \
-    return r->engine->toString(r->locale. FUNC (format)); \
+    return QV4::Value::fromString(ctx, r->locale. FUNC (format)); \
 }
 
 LOCALE_FORMAT(dateTimeFormat)
@@ -537,18 +537,18 @@ LOCALE_FORMAT(dateFormat)
 
 // +1 added to idx because JS is 0-based, whereas QLocale months begin at 1.
 #define LOCALE_FORMATTED_MONTHNAME(VARIABLE) \
-static QV4::Value locale_ ## VARIABLE (const v8::Arguments &args) {\
-    GET_LOCALE_DATA_RESOURCE(args.This()); \
-    if (args.Length() < 1 || args.Length() > 2) \
+static QV4::Value locale_ ## VARIABLE (QV4::SimpleCallContext *ctx) {\
+    GET_LOCALE_DATA_RESOURCE(ctx->thisObject); \
+    if (ctx->argumentCount < 1 || ctx->argumentCount > 2) \
         V4THROW_ERROR("Locale: " #VARIABLE "(): Invalid arguments"); \
     QLocale::FormatType enumFormat = QLocale::LongFormat; \
-    int idx = args[0]->IntegerValue() + 1; \
+    int idx = ctx->arguments[0].toInt32() + 1; \
     if (idx < 1 || idx > 12) \
         V4THROW_ERROR("Locale: Invalid month"); \
     QString name; \
-    if (args.Length() == 2) { \
-        if (args[1]->IsNumber()) { \
-            quint32 intFormat = args[1]->IntegerValue(); \
+    if (ctx->argumentCount == 2) { \
+        if (ctx->arguments[1].isNumber()) { \
+            quint32 intFormat = ctx->arguments[1].toUInt32(); \
             QLocale::FormatType format = QLocale::FormatType(intFormat); \
             name = r->locale. VARIABLE(idx, format); \
         } else { \
@@ -557,24 +557,24 @@ static QV4::Value locale_ ## VARIABLE (const v8::Arguments &args) {\
     } else { \
         name = r->locale. VARIABLE(idx, enumFormat); \
     } \
-    return r->engine->toString(name); \
+    return QV4::Value::fromString(ctx, name); \
 }
 
 // 0 -> 7 as Qt::Sunday is 7, but Sunday is 0 in JS Date
 #define LOCALE_FORMATTED_DAYNAME(VARIABLE) \
-static QV4::Value locale_ ## VARIABLE (const v8::Arguments &args) {\
-    GET_LOCALE_DATA_RESOURCE(args.This()); \
-    if (args.Length() < 1 || args.Length() > 2) \
+static QV4::Value locale_ ## VARIABLE (QV4::SimpleCallContext *ctx) {\
+    GET_LOCALE_DATA_RESOURCE(ctx->thisObject); \
+    if (ctx->argumentCount < 1 || ctx->argumentCount > 2) \
         V4THROW_ERROR("Locale: " #VARIABLE "(): Invalid arguments"); \
     QLocale::FormatType enumFormat = QLocale::LongFormat; \
-    int idx = args[0]->IntegerValue(); \
+    int idx = ctx->arguments[0].toInt32(); \
     if (idx < 0 || idx > 7) \
         V4THROW_ERROR("Locale: Invalid day"); \
     if (idx == 0) idx = 7; \
     QString name; \
-    if (args.Length() == 2) { \
-        if (args[1]->IsNumber()) { \
-            quint32 intFormat = args[1]->ToNumber()->Value(); \
+    if (ctx->argumentCount == 2) { \
+        if (ctx->arguments[1].isNumber()) { \
+            quint32 intFormat = ctx->arguments[1].toUInt32(); \
             QLocale::FormatType format = QLocale::FormatType(intFormat); \
             name = r->locale. VARIABLE(idx, format); \
         } else { \
@@ -583,7 +583,7 @@ static QV4::Value locale_ ## VARIABLE (const v8::Arguments &args) {\
     } else { \
         name = r->locale. VARIABLE(idx, enumFormat); \
     } \
-    return r->engine->toString(name); \
+    return QV4::Value::fromString(ctx, name); \
 }
 
 
