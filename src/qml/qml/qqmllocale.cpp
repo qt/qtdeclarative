@@ -624,7 +624,7 @@ public:
     QV8LocaleDataDeletable(QV8Engine *engine);
     ~QV8LocaleDataDeletable();
 
-    v8::Persistent<v8::Function> constructor;
+    QV4::PersistentValue constructor;
 };
 
 QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
@@ -662,12 +662,11 @@ QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("textDirection"), locale_get_textDirection);
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("uiLanguages"), locale_get_uiLanguages);
 
-    constructor = qPersistentNew(ft->GetFunction());
+    constructor = ft->GetFunction()->v4Value();
 }
 
 QV8LocaleDataDeletable::~QV8LocaleDataDeletable()
 {
-    qPersistentDispose(constructor);
 }
 
 V8_DEFINE_EXTENSION(QV8LocaleDataDeletable, localeV8Data);
@@ -777,7 +776,7 @@ QQmlLocale::~QQmlLocale()
 QV4::Value QQmlLocale::locale(QV8Engine *v8engine, const QString &locale)
 {
     QV8LocaleDataDeletable *d = localeV8Data(v8engine);
-    v8::Handle<v8::Object> v8Value = d->constructor->NewInstance();
+    v8::Handle<v8::Object> v8Value = d->constructor.value().asFunctionObject()->newInstance();
     QV8LocaleDataResource *r = new QV8LocaleDataResource(v8engine);
     if (locale.isEmpty())
         r->locale = QLocale();
