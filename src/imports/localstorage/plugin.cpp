@@ -57,6 +57,7 @@
 #include <private/qv4sqlerrors_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4object_p.h>
+#include <private/qv4functionobject_p.h>
 
 #define V8THROW_SQL(error, desc) \
 { \
@@ -101,9 +102,9 @@ public:
     QQmlSqlDatabaseData(QV8Engine *engine);
     ~QQmlSqlDatabaseData();
 
-    v8::Persistent<v8::Function> constructor;
-    v8::Persistent<v8::Function> queryConstructor;
-    v8::Persistent<v8::Function> rowsConstructor;
+    QV4::PersistentValue constructor;
+    QV4::PersistentValue queryConstructor;
+    QV4::PersistentValue rowsConstructor;
 };
 
 V8_DEFINE_EXTENSION(QQmlSqlDatabaseData, databaseData)
@@ -181,9 +182,6 @@ static void qmlsqldatabase_rows_setForwardOnly(v8::Handle<v8::String> /* propert
 
 QQmlSqlDatabaseData::~QQmlSqlDatabaseData()
 {
-    qPersistentDispose(constructor);
-    qPersistentDispose(queryConstructor);
-    qPersistentDispose(rowsConstructor);
 }
 
 static QString qmlsqldatabase_databasesPath(QV8Engine *engine)
@@ -286,7 +284,7 @@ static QV4::Value qmlsqldatabase_executeSql(const v8::Arguments& args)
             }
         }
         if (query.exec()) {
-            v8::Handle<v8::Object> rows = databaseData(engine)->rowsConstructor->NewInstance();
+            v8::Handle<v8::Object> rows = databaseData(engine)->rowsConstructor.value().asFunctionObject()->newInstance();
             QV8SqlDatabaseResource *r = new QV8SqlDatabaseResource(engine);
             r->type = QV8SqlDatabaseResource::Rows;
             r->database = db;
@@ -330,7 +328,7 @@ static QV4::Value qmlsqldatabase_changeVersion(const v8::Arguments& args)
     if (from_version != r->version)
         V4THROW_SQL(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(r->version));
 
-    v8::Handle<v8::Object> instance = databaseData(engine)->queryConstructor->NewInstance();
+    v8::Handle<v8::Object> instance = databaseData(engine)->queryConstructor.value().asFunctionObject()->newInstance();
     QV8SqlDatabaseResource *r2 = new QV8SqlDatabaseResource(engine);
     r2->type = QV8SqlDatabaseResource::Query;
     r2->database = db;
@@ -386,7 +384,7 @@ static QV4::Value qmlsqldatabase_transaction_shared(const v8::Arguments& args, b
     QSqlDatabase db = r->database;
     v8::Handle<v8::Function> callback = v8::Handle<v8::Function>::Cast(args[0]);
 
-    v8::Handle<v8::Object> instance = databaseData(engine)->queryConstructor->NewInstance();
+    v8::Handle<v8::Object> instance = databaseData(engine)->queryConstructor.value().asFunctionObject()->newInstance();
     QV8SqlDatabaseResource *q = new QV8SqlDatabaseResource(engine);
     q->type = QV8SqlDatabaseResource::Query;
     q->database = db;
@@ -434,7 +432,7 @@ QQmlSqlDatabaseData::QQmlSqlDatabaseData(QV8Engine *engine)
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("version"), qmlsqldatabase_version);
     ft->PrototypeTemplate()->Set(v8::String::New("changeVersion"),
                                  V8FUNCTION(qmlsqldatabase_changeVersion, engine));
-    constructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    constructor = ft->GetFunction()->v4Value();
     }
 
     {
@@ -442,7 +440,7 @@ QQmlSqlDatabaseData::QQmlSqlDatabaseData(QV8Engine *engine)
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->PrototypeTemplate()->Set(v8::String::New("executeSql"),
                                  V8FUNCTION(qmlsqldatabase_executeSql, engine));
-    queryConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    queryConstructor = ft->GetFunction()->v4Value();
     }
     {
     v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
@@ -452,7 +450,7 @@ QQmlSqlDatabaseData::QQmlSqlDatabaseData(QV8Engine *engine)
     ft->InstanceTemplate()->SetAccessor(v8::String::New("forwardOnly"), qmlsqldatabase_rows_forwardOnly,
                                         qmlsqldatabase_rows_setForwardOnly);
     ft->InstanceTemplate()->SetIndexedPropertyHandler(qmlsqldatabase_rows_index);
-    rowsConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    rowsConstructor = ft->GetFunction()->v4Value();
     }
 }
 
@@ -669,7 +667,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV8Function *args)
             database.open();
     }
 
-    v8::Handle<v8::Object> instance = databaseData(engine)->constructor->NewInstance();
+    v8::Handle<v8::Object> instance = databaseData(engine)->constructor.value().asFunctionObject()->newInstance();
 
     QV8SqlDatabaseResource *r = new QV8SqlDatabaseResource(engine);
     r->database = database;
