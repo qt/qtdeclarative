@@ -57,6 +57,8 @@
 #include <QtCore/qvariant.h>
 #include <private/qv8_p.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QV8Engine;
@@ -85,12 +87,12 @@ public:
 private:
     QV8Engine *m_engine;
 
-    v8::Persistent<v8::Function> m_constructor;
-    v8::Persistent<v8::Function> m_toString;
-    v8::Persistent<v8::Function> m_valueOf;
-    v8::Persistent<v8::Function> m_sort;
-    v8::Persistent<v8::Value> m_arrayPrototype;
-    v8::Persistent<v8::Function> m_defaultSortComparer;
+    QV4::PersistentValue m_constructor;
+    QV4::PersistentValue m_toString;
+    QV4::PersistentValue m_valueOf;
+    QV4::PersistentValue m_sort;
+    QV4::PersistentValue m_arrayPrototype;
+    QV4::PersistentValue m_defaultSortComparer;
 
     static v8::Handle<v8::Value> IndexedGetter(quint32 index, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> IndexedSetter(quint32 index, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);

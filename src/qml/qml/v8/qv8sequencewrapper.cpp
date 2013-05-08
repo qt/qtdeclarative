@@ -45,6 +45,8 @@
 #include "qv8sequencewrapper_p_p.h"
 #include "qv8engine_p.h"
 
+#include <private/qv4functionobject_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QV8SequenceWrapper::QV8SequenceWrapper()
@@ -62,8 +64,8 @@ void QV8SequenceWrapper::init(QV8Engine *engine)
     FOREACH_QML_SEQUENCE_TYPE(REGISTER_QML_SEQUENCE_METATYPE)
 
     m_engine = engine;
-    m_toString = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(ToString)->GetFunction());
-    m_valueOf = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(ValueOf)->GetFunction());
+    m_toString = v8::FunctionTemplate::New(ToString)->GetFunction()->v4Value();
+    m_valueOf = v8::FunctionTemplate::New(ValueOf)->GetFunction()->v4Value();
 
     QString defaultSortString = QLatin1String(
         "(function compare(x,y) {"
@@ -74,10 +76,10 @@ void QV8SequenceWrapper::init(QV8Engine *engine)
         "       else return x < y ? -1 : 1;"
         "})");
 
-    m_sort = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(Sort)->GetFunction());
-    m_arrayPrototype = qPersistentNew<v8::Value>(v8::Array::New(1)->GetPrototype());
+    m_sort = v8::FunctionTemplate::New(Sort)->GetFunction()->v4Value();
+    m_arrayPrototype = v8::Array::New(1)->GetPrototype()->v4Value();
     v8::Handle<v8::Script> defaultSortCompareScript = v8::Script::Compile(engine->toString(defaultSortString));
-    m_defaultSortComparer = qPersistentNew<v8::Function>(v8::Handle<v8::Function>(v8::Function::Cast(defaultSortCompareScript->Run().get())));
+    m_defaultSortComparer = defaultSortCompareScript->Run()->v4Value();
 
     v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
@@ -86,28 +88,22 @@ void QV8SequenceWrapper::init(QV8Engine *engine)
                                         v8::Handle<v8::Value>(), v8::DEFAULT,
                                         v8::PropertyAttribute(v8::DontDelete | v8::DontEnum));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("toString"), ToStringGetter, 0,
-                                        m_toString, v8::DEFAULT,
+                                        m_toString.value(), v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete | v8::DontEnum));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("valueOf"), ValueOfGetter, 0,
-                                        m_valueOf, v8::DEFAULT,
+                                        m_valueOf.value(), v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete | v8::DontEnum));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("sort"), SortGetter, 0,
-                                        m_sort, v8::DEFAULT,
+                                        m_sort.value(), v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete | v8::DontEnum));
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->MarkAsUseUserObjectComparison();
-    m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    m_constructor = ft->GetFunction()->v4Value();
 }
 #undef REGISTER_QML_SEQUENCE_METATYPE
 
 void QV8SequenceWrapper::destroy()
 {
-    qPersistentDispose(m_defaultSortComparer);
-    qPersistentDispose(m_sort);
-    qPersistentDispose(m_arrayPrototype);
-    qPersistentDispose(m_toString);
-    qPersistentDispose(m_valueOf);
-    qPersistentDispose(m_constructor);
 }
 
 #define IS_SEQUENCE(unused1, unused2, SequenceType, unused3) \
@@ -152,9 +148,9 @@ v8::Handle<v8::Object> QV8SequenceWrapper::newSequence(int sequenceType, QObject
     QV8SequenceResource *r = 0;
     FOREACH_QML_SEQUENCE_TYPE(NEW_REFERENCE_SEQUENCE) { /* else */ *succeeded = false; return v8::Handle<v8::Object>(); }
 
-    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
+    v8::Handle<v8::Object> rv = m_constructor.value().asFunctionObject()->newInstance();
     rv->SetExternalResource(r);
-    rv->SetPrototype(m_arrayPrototype);
+    rv->SetPrototype(m_arrayPrototype.value());
     return rv;
 }
 #undef NEW_REFERENCE_SEQUENCE
@@ -175,9 +171,9 @@ v8::Handle<v8::Object> QV8SequenceWrapper::fromVariant(const QVariant& v, bool *
     QV8SequenceResource *r = 0;
     FOREACH_QML_SEQUENCE_TYPE(NEW_COPY_SEQUENCE) { /* else */ *succeeded = false; return v8::Handle<v8::Object>(); }
 
-    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
+    v8::Handle<v8::Object> rv = m_constructor.value().asFunctionObject()->newInstance();
     rv->SetExternalResource(r);
-    rv->SetPrototype(m_arrayPrototype);
+    rv->SetPrototype(m_arrayPrototype.value());
     return rv;
 }
 #undef NEW_COPY_SEQUENCE
@@ -275,7 +271,7 @@ QV4::Value QV8SequenceWrapper::Sort(const v8::Arguments &args)
 
         qint32 length = sr->lengthGetter();
         if (length > 1) {
-            v8::Handle<v8::Function> jsCompareFn = sr->engine->sequenceWrapper()->m_defaultSortComparer;
+            v8::Handle<v8::Function> jsCompareFn = sr->engine->sequenceWrapper()->m_defaultSortComparer.value();
             if (argCount == 1 && args[0]->IsFunction())
                 jsCompareFn = v8::Handle<v8::Function>(v8::Function::Cast(args[0].get()));
 
