@@ -52,6 +52,9 @@
 #include <QtCore/QBuffer>
 #include <QtCore/qdatetime.h>
 
+#include <private/qv4value_p.h>
+#include <private/qv4functionobject_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QQuickCanvasPixmap::QQuickCanvasPixmap(const QImage& image, QQuickWindow *window)
@@ -178,7 +181,7 @@ public:
     QString contextType;
     QHash<QUrl, QQmlRefPointer<QQuickCanvasPixmap> > pixmaps;
     QUrl baseUrl;
-    QMap<int, v8::Persistent<v8::Function> > animationCallbacks;
+    QMap<int, QV4::PersistentValue> animationCallbacks;
 };
 
 QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
@@ -652,15 +655,14 @@ void QQuickCanvasItem::updatePolish()
         d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth, d->antialiasing);
 
     if (d->animationCallbacks.size() > 0 && isVisible()) {
-        QMap<int, v8::Persistent<v8::Function> > animationCallbacks = d->animationCallbacks;
+        QMap<int, QV4::PersistentValue> animationCallbacks = d->animationCallbacks;
         d->animationCallbacks.clear();
 
         foreach (int key, animationCallbacks.keys()) {
-            v8::Handle<v8::Object> self = QQmlEnginePrivate::getV8Engine(qmlEngine(this))->newQObject(this);
-            v8::Handle<v8::Value> args[] = { v8::Uint32::New(QDateTime::currentDateTimeUtc().toTime_t()) };
-            v8::Persistent<v8::Function> f = animationCallbacks.value(key);
-            f->Call(self, 1, args);
-            f.Dispose();
+            QV4::Value self = QQmlEnginePrivate::getV8Engine(qmlEngine(this))->newQObject(this);
+            QV4::Value args[] = { QV4::Value::fromUInt32(QDateTime::currentDateTimeUtc().toTime_t()) };
+            QV4::FunctionObject *f = animationCallbacks.value(key).value().asFunctionObject();
+            f->call(self, args, 1);
         }
     }
     else {
@@ -776,7 +778,7 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV8Function *args)
 
     static int id = 0;
 
-    d->animationCallbacks.insert(++id, v8::Persistent<v8::Function>::New(((*args)[0]).As<v8::Function>()));
+    d->animationCallbacks.insert(++id, QV4::PersistentValue(((*args)[0])->v4Value()));
 
     if (isVisible())
         polish();

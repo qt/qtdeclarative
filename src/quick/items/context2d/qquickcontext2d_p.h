@@ -239,7 +239,7 @@ public:
     QV8Engine *m_v8engine;
     QSurface *m_surface;
     QOpenGLContext *m_glContext;
-    v8::Persistent<v8::Object> m_v8value;
+    QV4::PersistentValue m_v8value;
     QQuickContext2DTexture *m_texture;
     QQuickCanvasItem::RenderTarget m_renderTarget;
     QQuickCanvasItem::RenderStrategy m_renderStrategy;

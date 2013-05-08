@@ -65,6 +65,9 @@
 #include <QtCore/qnumeric.h>
 #include <private/qquickwindow_p.h>
 
+#include <private/qv4value_p.h>
+#include <private/qv4functionobject_p.h>
+
 #if defined(Q_OS_QNX) || defined(Q_OS_ANDROID)
 #include <ctype.h>
 #endif
@@ -224,11 +227,11 @@ public:
     QQuickContext2DEngineData(QV8Engine *engine);
     ~QQuickContext2DEngineData();
 
-    v8::Persistent<v8::Function> constructorContext;
-    v8::Persistent<v8::Function> constructorGradient;
-    v8::Persistent<v8::Function> constructorPattern;
-    v8::Persistent<v8::Function> constructorPixelArray;
-    v8::Persistent<v8::Function> constructorImageData;
+    QV4::PersistentValue constructorContext;
+    QV4::PersistentValue constructorGradient;
+    QV4::PersistentValue constructorPattern;
+    QV4::PersistentValue constructorPixelArray;
+    QV4::PersistentValue constructorImageData;
 };
 
 V8_DEFINE_EXTENSION(QQuickContext2DEngineData, engineData)
@@ -427,7 +430,7 @@ static QString qt_composite_mode_to_string(QPainter::CompositionMode op)
 static QV4::Value qt_create_image_data(qreal w, qreal h, QV8Engine* engine, const QImage& image)
 {
     QQuickContext2DEngineData *ed = engineData(engine);
-    v8::Handle<v8::Object> imageData = ed->constructorImageData->NewInstance();
+    v8::Handle<v8::Object> imageData = ed->constructorImageData.value().asFunctionObject()->newInstance();
     QV8Context2DPixelArrayResource *r = new QV8Context2DPixelArrayResource(engine);
     if (image.isNull()) {
         r->image = QImage(w, h, QImage::Format_ARGB32);
@@ -436,7 +439,7 @@ static QV4::Value qt_create_image_data(qreal w, qreal h, QV8Engine* engine, cons
         Q_ASSERT(image.width() == w && image.height() == h);
         r->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
-    v8::Handle<v8::Object> pixelData = ed->constructorPixelArray->NewInstance();
+    v8::Handle<v8::Object> pixelData = ed->constructorPixelArray.value().asFunctionObject()->newInstance();
     pixelData->SetExternalResource(r);
 
     imageData->SetInternalField(0, pixelData);
@@ -1004,7 +1007,7 @@ static QV4::Value ctx2d_createLinearGradient(const v8::Arguments &args)
 
     if (args.Length() == 4) {
         QQuickContext2DEngineData *ed = engineData(engine);
-        v8::Handle<v8::Object> gradient = ed->constructorGradient->NewInstance();
+        v8::Handle<v8::Object> gradient = ed->constructorGradient.value().asFunctionObject()->newInstance();
         QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
         qreal x0 = args[0]->NumberValue();
         qreal y0 = args[1]->NumberValue();
@@ -1050,7 +1053,7 @@ static QV4::Value ctx2d_createRadialGradient(const v8::Arguments &args)
 
     if (args.Length() == 6) {
         QQuickContext2DEngineData *ed = engineData(engine);
-        v8::Handle<v8::Object> gradient = ed->constructorGradient->NewInstance();
+        v8::Handle<v8::Object> gradient = ed->constructorGradient.value().asFunctionObject()->newInstance();
         QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
 
         qreal x0 = args[0]->NumberValue();
@@ -1105,7 +1108,7 @@ static QV4::Value ctx2d_createConicalGradient(const v8::Arguments &args)
 
     if (args.Length() == 6) {
         QQuickContext2DEngineData *ed = engineData(engine);
-        v8::Handle<v8::Object> gradient = ed->constructorGradient->NewInstance();
+        v8::Handle<v8::Object> gradient = ed->constructorGradient.value().asFunctionObject()->newInstance();
         QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
 
         qreal x = args[0]->NumberValue();
@@ -1224,7 +1227,7 @@ static QV4::Value ctx2d_createPattern(const v8::Arguments &args)
             }
         }
 
-        v8::Handle<v8::Object> pattern = ed->constructorPattern->NewInstance();
+        v8::Handle<v8::Object> pattern = ed->constructorPattern.value().asFunctionObject()->newInstance();
         pattern->SetExternalResource(styleResouce);
         return pattern->v4Value();
 
@@ -3347,7 +3350,7 @@ QQuickContext2D::~QQuickContext2D()
 
 v8::Handle<v8::Object> QQuickContext2D::v8value() const
 {
-    return m_v8value;
+    return m_v8value.value();
 }
 
 QStringList QQuickContext2D::contextNames() const
@@ -3523,38 +3526,33 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
     ft->PrototypeTemplate()->Set(v8::String::New("getImageData"), V8FUNCTION(ctx2d_getImageData, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("putImageData"), V8FUNCTION(ctx2d_putImageData, engine));
 
-    constructorContext = qPersistentNew(ft->GetFunction());
+    constructorContext = ft->GetFunction()->v4Value();
 
     v8::Handle<v8::FunctionTemplate> ftGradient = v8::FunctionTemplate::New();
     ftGradient->InstanceTemplate()->SetHasExternalResource(true);
     ftGradient->PrototypeTemplate()->Set(v8::String::New("addColorStop"), V8FUNCTION(ctx2d_gradient_addColorStop, engine));
-    constructorGradient = qPersistentNew(ftGradient->GetFunction());
+    constructorGradient = ftGradient->GetFunction()->v4Value();
 
     v8::Handle<v8::FunctionTemplate> ftPattern = v8::FunctionTemplate::New();
     ftPattern->InstanceTemplate()->SetHasExternalResource(true);
-    constructorPattern = qPersistentNew(ftPattern->GetFunction());
+    constructorPattern = ftPattern->GetFunction()->v4Value();
 
     v8::Handle<v8::FunctionTemplate> ftPixelArray = v8::FunctionTemplate::New();
     ftPixelArray->InstanceTemplate()->SetHasExternalResource(true);
     ftPixelArray->InstanceTemplate()->SetAccessor(v8::String::New("length"), ctx2d_pixelArray_length, 0, v8::External::New(engine));
     ftPixelArray->InstanceTemplate()->SetIndexedPropertyHandler(ctx2d_pixelArray_indexed, ctx2d_pixelArray_indexed_set, 0, 0, 0, v8::External::New(engine));
-    constructorPixelArray = qPersistentNew(ftPixelArray->GetFunction());
+    constructorPixelArray = ftPixelArray->GetFunction()->v4Value();
 
     v8::Handle<v8::FunctionTemplate> ftImageData = v8::FunctionTemplate::New();
     ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("width"), ctx2d_imageData_width, 0, v8::External::New(engine));
     ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("height"), ctx2d_imageData_height, 0, v8::External::New(engine));
     ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("data"), ctx2d_imageData_data, 0, v8::External::New(engine));
     ftImageData->InstanceTemplate()->SetInternalFieldCount(1);
-    constructorImageData = qPersistentNew(ftImageData->GetFunction());
+    constructorImageData = ftImageData->GetFunction()->v4Value();
 }
 
 QQuickContext2DEngineData::~QQuickContext2DEngineData()
 {
-    qPersistentDispose(constructorContext);
-    qPersistentDispose(constructorGradient);
-    qPersistentDispose(constructorPattern);
-    qPersistentDispose(constructorImageData);
-    qPersistentDispose(constructorPixelArray);
 }
 
 void QQuickContext2D::popState()
@@ -3663,16 +3661,14 @@ void QQuickContext2D::setV8Engine(QV8Engine *engine)
     if (m_v8engine != engine) {
         m_v8engine = engine;
 
-        qPersistentDispose(m_v8value);
-
         if (m_v8engine == 0)
             return;
 
         QQuickContext2DEngineData *ed = engineData(engine);
-        m_v8value = qPersistentNew(ed->constructorContext->NewInstance());
+        m_v8value = ed->constructorContext.value().asFunctionObject()->newInstance();
         QV8Context2DResource *r = new QV8Context2DResource(engine);
         r->context = this;
-        m_v8value->SetExternalResource(r);
+        v8::Handle<v8::Object>(m_v8value)->SetExternalResource(r);
     }
 }
 
