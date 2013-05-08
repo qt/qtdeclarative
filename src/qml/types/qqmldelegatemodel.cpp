@@ -2131,7 +2131,7 @@ void QQmlDelegateModelGroupPrivate::emitChanges(QV8Engine *engine)
     if (isChangedConnected() && !changeSet.isEmpty()) {
         v8::Handle<v8::Object> removed  = engineData(engine)->array(engine, changeSet.removes());
         v8::Handle<v8::Object> inserted = engineData(engine)->array(engine, changeSet.inserts());
-        emit q->changed(QQmlV4Handle::fromV8Handle(removed), QQmlV4Handle::fromV8Handle(inserted));
+        emit q->changed(QQmlV4Handle(removed->v4Value()), QQmlV4Handle(inserted->v4Value()));
     }
     if (changeSet.difference() != 0)
         emit q->countChanged();
@@ -2325,14 +2325,14 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
 {
     Q_D(QQmlDelegateModelGroup);
     if (!d->model)
-        return QQmlV4Handle::fromV8Handle(QV4::Value::undefinedValue());;
+        return QQmlV4Handle(QV4::Value::undefinedValue());;
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
     if (!model->m_context->isValid()) {
-        return QQmlV4Handle::fromV8Handle(QV4::Value::undefinedValue());
+        return QQmlV4Handle(QV4::Value::undefinedValue());
     } else if (index < 0 || index >= model->m_compositor.count(d->group)) {
         qmlInfo(this) << tr("get: index out of range");
-        return QQmlV4Handle::fromV8Handle(QV4::Value::undefinedValue());
+        return QQmlV4Handle(QV4::Value::undefinedValue());
     }
 
     Compositor::iterator it = model->m_compositor.find(d->group, index);
@@ -2344,7 +2344,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
         cacheItem = model->m_adaptorModel.createItem(
                 model->m_cacheMetaType, model->m_context->engine(), it.modelIndex());
         if (!cacheItem)
-            return QQmlV4Handle::fromV8Handle(QV4::Value::undefinedValue());
+            return QQmlV4Handle(QV4::Value::undefinedValue());
         cacheItem->groups = it->flags;
 
         model->m_cache.insert(it.cacheIndex, cacheItem);
@@ -2357,7 +2357,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
     handle->SetExternalResource(cacheItem);
     ++cacheItem->scriptRef;
 
-    return QQmlV4Handle::fromV8Handle(handle);
+    return QQmlV4Handle(handle->v4Value());
 }
 
 bool QQmlDelegateModelGroupPrivate::parseIndex(

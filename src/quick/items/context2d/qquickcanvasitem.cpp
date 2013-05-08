@@ -369,9 +369,9 @@ QQmlV4Handle QQuickCanvasItem::context() const
 {
     Q_D(const QQuickCanvasItem);
     if (d->contextInitialized)
-        return QQmlV4Handle::fromV8Handle(d->context->v8value());
+        return QQmlV4Handle(d->context->v8value()->v4Value());
 
-    return QQmlV4Handle::fromV8Handle(QV4::Value::nullValue());
+    return QQmlV4Handle(QV4::Value::nullValue());
 }
 
 /*!

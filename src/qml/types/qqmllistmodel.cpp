@@ -2136,7 +2136,7 @@ QQmlV4Handle QQmlListModel::get(int index) const
         }
     }
 
-    return QQmlV4Handle::fromV8Handle(result);
+    return QQmlV4Handle(result->v4Value());
 }
 
 /*!
@@ -2157,7 +2157,7 @@ QQmlV4Handle QQmlListModel::get(int index) const
 */
 void QQmlListModel::set(int index, const QQmlV4Handle &handle)
 {
-    v8::Handle<v8::Value> valuemap = handle.toV8Handle();
+    v8::Handle<v8::Value> valuemap = handle.toValue();
 
     if (!valuemap->IsObject() || valuemap->IsArray()) {
         qmlInfo(this) << tr("set: value is not an object");

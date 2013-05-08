@@ -315,7 +315,7 @@ public:
 
         if (ok) *ok = false;
         QFont retn;
-        v8::Handle<v8::Object> obj = object.toV8Handle()->ToObject();
+        v8::Handle<v8::Object> obj = object.toValue();
 
         v8::Handle<v8::Value> vbold = obj->Get(v8::String::New("bold"));
         v8::Handle<v8::Value> vcap = obj->Get(v8::String::New("capitalization"));
@@ -381,7 +381,7 @@ public:
     static QMatrix4x4 matrix4x4FromObject(QQmlV4Handle object, bool *ok)
     {
         if (ok) *ok = false;
-        v8::Handle<v8::Object> obj = object.toV8Handle()->ToObject();
+        v8::Handle<v8::Object> obj = object.toValue();
         if (!obj->IsArray())
             return QMatrix4x4();
 
@@ -751,7 +751,7 @@ public:
     bool variantFromJsObject(int type, QQmlV4Handle object, QV8Engine *e, QVariant *v)
     {
         // must be called with a valid v8 context.
-        Q_ASSERT(object.toV8Handle()->IsObject());
+        Q_ASSERT(object.toValue().isObject());
         bool ok = false;
         switch (type) {
         case QMetaType::QFont:

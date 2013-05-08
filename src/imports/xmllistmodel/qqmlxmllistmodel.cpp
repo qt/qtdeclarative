@@ -919,7 +919,7 @@ QQmlV4Handle QQuickXmlListModel::get(int index) const
     Q_D(const QQuickXmlListModel);
 
     if (index < 0 || index >= count())
-        return QQmlV4Handle::fromValue(Value::undefinedValue());
+        return QQmlV4Handle(Value::undefinedValue());
 
     QQmlEngine *engine = qmlContext(this)->engine();
     QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
@@ -930,7 +930,7 @@ QQmlV4Handle QQuickXmlListModel::get(int index) const
         p->value = v8engine->fromVariant(d->data.value(ii).value(index));
     }
 
-    return QQmlV4Handle::fromValue(Value::fromObject(o));
+    return QQmlV4Handle(Value::fromObject(o));
 }
 
 /*!

@@ -192,7 +192,7 @@ QVariant QV8ValueTypeWrapper::toVariant(v8::Handle<v8::Object> obj, int typeHint
     // NOTE: obj must not be an external resource object (ie, wrapper object)
     // instead, it is a normal js object which one of the value-type providers
     // may know how to convert to the given type.
-    return QQml_valueTypeProvider()->createVariantFromJsObject(typeHint, QQmlV4Handle::fromV8Handle(obj), m_engine, succeeded);
+    return QQml_valueTypeProvider()->createVariantFromJsObject(typeHint, QQmlV4Handle(obj->v4Value()), m_engine, succeeded);
 }
 
 QVariant QV8ValueTypeWrapper::toVariant(v8::Handle<v8::Object> obj)

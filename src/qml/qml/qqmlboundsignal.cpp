@@ -238,7 +238,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                     //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
                     args[ii] = v8::Integer::New(*reinterpret_cast<const int*>(a[ii + 1]));
                 } else if (type == qMetaTypeId<QQmlV4Handle>()) {
-                    args[ii] = reinterpret_cast<QQmlV4Handle *>(a[ii + 1])->toV8Handle();
+                    args[ii] = reinterpret_cast<QQmlV4Handle *>(a[ii + 1])->toValue();
                 } else if (ep->isQObject(type)) {
                     if (!*reinterpret_cast<void* const *>(a[ii + 1]))
                         args[ii] = QV4::Value::nullValue();

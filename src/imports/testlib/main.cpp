@@ -97,7 +97,7 @@ public Q_SLOTS:
             }
         }
 
-        return QQmlV4Handle::fromV8Handle(v8::String::New(name.toUtf8()));
+        return QQmlV4Handle(v8::String::New(name.toUtf8())->v4Value());
     }
 
     bool compare(const QVariant& act, const QVariant& exp) const {
@@ -110,7 +110,7 @@ public Q_SLOTS:
         int count = stacks->GetFrameCount();
         if (count >= frameIndex + 1) {
             v8::Handle<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 1);
-            return QQmlV4Handle::fromV8Handle(frame->GetScriptNameOrSourceURL());
+            return QQmlV4Handle(frame->GetScriptNameOrSourceURL()->v4Value());
         }
         return QQmlV4Handle();
     }

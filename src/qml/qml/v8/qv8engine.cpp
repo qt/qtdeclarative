@@ -1480,20 +1480,6 @@ QV4::Value QV8Engine::toString(const QString &string)
 }
 
 
-QV4::Value QQmlV4Handle::toValue() const
-{
-    QV4::Value val;
-    val.val = d;
-    return val;
-}
-
-QQmlV4Handle QQmlV4Handle::fromValue(const QV4::Value &v)
-{
-    QQmlV4Handle handle;
-    handle.d = v.val;
-    return handle;
-}
-
 QV4::Value QV8Engine::evaluateScript(const QString &script, QV4::Object *scopeObject)
 {
     QV4::ExecutionContext *ctx = m_v4Engine->current;

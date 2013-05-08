@@ -713,7 +713,7 @@ bool QQuickWorkerScript::event(QEvent *event)
             WorkerDataEvent *workerEvent = static_cast<WorkerDataEvent *>(event);
             QV8Engine *v8engine = QQmlEnginePrivate::get(engine)->v8engine();
             v8::Handle<v8::Value> value = QV8Worker::deserialize(workerEvent->data(), v8engine);
-            emit message(QQmlV4Handle::fromV8Handle(value));
+            emit message(QQmlV4Handle(value->v4Value()));
         }
         return true;
     } else if (event->type() == (QEvent::Type)WorkerErrorEvent::WorkerError) {

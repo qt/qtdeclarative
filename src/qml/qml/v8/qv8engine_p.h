@@ -81,23 +81,10 @@
 #include "qv4jsonwrapper_p.h"
 #include <private/qv4value_p.h>
 
-namespace QV4 {
-struct ArrayObject;
-}
-
-namespace v8 {
-
-// Needed for V8ObjectSet
-inline uint qHash(const v8::Handle<v8::Object> &object, uint seed = 0)
-{
-    return (object->GetIdentityHash() ^ seed);
-}
-
-}
-
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
+    struct ArrayObject;
     struct ExecutionEngine;
     struct Value;
 }
@@ -221,18 +208,16 @@ public:
     QQmlV4Handle() : d(0) {}
     QQmlV4Handle(const QQmlV4Handle &other) : d(other.d) {}
     QQmlV4Handle &operator=(const QQmlV4Handle &other) { d = other.d; return *this; }
+    explicit QQmlV4Handle(const QV4::Value &v) : d(v.val) {}
 
-    static QQmlV4Handle fromV8Handle(v8::Handle<v8::Value> h) {
-        return QQmlV4Handle(h);
-    }
-    v8::Handle<v8::Value> toV8Handle() const {
-        return v8::Value::NewFromInternalValue(d);
+    QV4::Value toValue() const {
+        QV4::Value v;
+        v.val = d;
+        return v;
     }
 
-    QV4::Value toValue() const;
-    static QQmlV4Handle fromValue(const QV4::Value &v);
 private:
-    QQmlV4Handle(v8::Handle<v8::Value> h) : d(h.val) {}
+    QQmlV4Handle(quint64 h) : d(h) {}
     quint64 d;
 };
 

@@ -481,9 +481,9 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
         //We then don't need to request another reload, because the first reload isn't scheduled until we get back to the render thread
         v8::Handle<v8::Array> array = v8::Array::New(toEmit.size());
         for (int i=0; i<toEmit.size(); i++)
-            array->Set(i, toEmit[i]->v8Value().toV8Handle());
+            array->Set(i, toEmit[i]->v4Value().toValue());
 
-        emitParticles(QQmlV4Handle::fromV8Handle(array));//A chance for arbitrary JS changes
+        emitParticles(QQmlV4Handle(array->v4Value()));//A chance for arbitrary JS changes
     }
 
     m_last_emission = pt;

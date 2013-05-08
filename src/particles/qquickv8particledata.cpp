@@ -496,7 +496,7 @@ QQuickV8ParticleData::~QQuickV8ParticleData()
 
 QQmlV4Handle QQuickV8ParticleData::v4Value()
 {
-    return QQmlV4Handle::fromValue(m_v4Value);
+    return QQmlV4Handle(m_v4Value);
 }
 
 QT_END_NAMESPACE

@@ -426,7 +426,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
     } else if (property.isV4Handle()) {
         QQmlV4Handle handle;
         ReadFunction(object, property, &handle, notifier);
-        return handle.toV8Handle();
+        return handle.toValue();
     } else if (property.propType == qMetaTypeId<QJSValue>()) {
         QJSValue v;
         ReadFunction(object, property, &v, notifier);
@@ -2171,7 +2171,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
         }
         type = callType;
     } else if (callType == qMetaTypeId<QQmlV4Handle>()) {
-        handlePtr = new (&allocData) QQmlV4Handle(QQmlV4Handle::fromV8Handle(value));
+        handlePtr = new (&allocData) QQmlV4Handle(QQmlV4Handle(value->v4Value()));
         type = callType;
     } else if (callType == QMetaType::QJsonArray) {
         jsonArrayPtr = new (&allocData) QJsonArray(engine->jsonArrayFromJS(value->v4Value()));

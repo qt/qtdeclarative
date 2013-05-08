@@ -228,7 +228,7 @@ public:
     float lifeLeft();
     float curSize();
     void clone(const QQuickParticleData& other);//Not =, leaves meta-data like index
-    QQmlV4Handle v8Value();
+    QQmlV4Handle v4Value();
     void extendLife(float time);
 private:
     QQuickV8ParticleData* v8Datum;
