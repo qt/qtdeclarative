@@ -61,6 +61,8 @@
 
 #include <private/qv8_p.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
@@ -100,11 +102,11 @@ private:
     QUrl m_url;
     int m_redirectCount;
 
-    v8::Persistent<v8::Function> m_callbackFunction;
-    v8::Persistent<v8::Object> m_resultObject;
+    QV4::PersistentValue m_callbackFunction;
+    QV4::PersistentValue m_resultObject;
 
     QQmlGuardedContextData m_context;
-    v8::Persistent<v8::Object> m_qmlglobal;
+    QV4::PersistentValue m_qmlglobal;
 };
 
 QT_END_NAMESPACE

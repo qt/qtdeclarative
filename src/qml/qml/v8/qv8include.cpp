@@ -56,11 +56,11 @@ QV8Include::QV8Include(const QUrl &url, QV8Engine *engine, QQmlContextData *cont
                        v8::Handle<v8::Object> qmlglobal, v8::Handle<v8::Function> callback)
 : m_engine(engine), m_network(0), m_reply(0), m_url(url), m_redirectCount(0), m_context(context)
 {
-    m_qmlglobal = qPersistentNew<v8::Object>(qmlglobal);
+    m_qmlglobal = qmlglobal->v4Value();
     if (!callback.IsEmpty())
-        m_callbackFunction = qPersistentNew<v8::Function>(callback);
+        m_callbackFunction = callback->v4Value();
 
-    m_resultObject = qPersistentNew<v8::Object>(resultValue());
+    m_resultObject = resultValue()->v4Value();
 
     m_network = engine->networkAccessManager();
 
@@ -74,8 +74,6 @@ QV8Include::QV8Include(const QUrl &url, QV8Engine *engine, QQmlContextData *cont
 QV8Include::~QV8Include()
 {
     delete m_reply; m_reply = 0;
-    qPersistentDispose(m_callbackFunction);
-    qPersistentDispose(m_resultObject);
 }
 
 v8::Handle<v8::Object> QV8Include::resultValue(Status status)
@@ -103,7 +101,7 @@ void QV8Include::callback(QV8Engine *engine, v8::Handle<v8::Function> callback, 
 
 v8::Handle<v8::Object> QV8Include::result()
 {
-    return m_resultObject;
+    return m_resultObject.value();
 }
 
 #define INCLUDE_MAXIMUM_REDIRECT_RECURSION 15
@@ -144,21 +142,21 @@ void QV8Include::finished()
         v8::Handle<v8::Script> script = m_engine->qmlModeCompile(code, m_url.toString());
 
         if (!try_catch.HasCaught()) {
-            m_engine->contextWrapper()->addSubContext(m_qmlglobal, script, importContext);
-            script->Run(m_qmlglobal);
+            m_engine->contextWrapper()->addSubContext(m_qmlglobal.value(), script, importContext);
+            script->Run(m_qmlglobal.value());
         }
 
         if (try_catch.HasCaught()) {
-            m_resultObject->Set(v8::String::New("status"), v8::Integer::New(Exception));
-            m_resultObject->Set(v8::String::New("exception"), try_catch.Exception());
+            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), v8::Integer::New(Exception));
+            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("exception"), try_catch.Exception());
         } else {
-            m_resultObject->Set(v8::String::New("status"), v8::Integer::New(Ok));
+            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), v8::Integer::New(Ok));
         }
     } else {
-        m_resultObject->Set(v8::String::New("status"), v8::Integer::New(NetworkError));
+        v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), v8::Integer::New(NetworkError));
     }
 
-    callback(m_engine, m_callbackFunction, m_resultObject);
+    callback(m_engine, m_callbackFunction.value(), m_resultObject.value());
 
     disconnect();
     deleteLater();
