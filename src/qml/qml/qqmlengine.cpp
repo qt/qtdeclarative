@@ -1279,6 +1279,8 @@ void QQmlEnginePrivate::doDeleteInEngineThread()
         delete d;
 }
 
+namespace QtQml {
+
 Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
 {
     QQmlData *data = QQmlData::get(object);
@@ -1351,6 +1353,41 @@ QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
 
     return qmlAttachedPropertiesObjectById(*idCache, object, create);
 }
+
+} // namespace QtQml
+
+#if QT_DEPRECATED_SINCE(5, 1)
+
+// Also define symbols outside namespace to keep binary compatibility with Qt 5.0
+
+Q_QML_EXPORT void qmlExecuteDeferred(QObject *obj)
+{
+    QtQml::qmlExecuteDeferred(obj);
+}
+
+Q_QML_EXPORT QQmlContext *qmlContext(const QObject *obj)
+{
+    return QtQml::qmlContext(obj);
+}
+
+Q_QML_EXPORT QQmlEngine *qmlEngine(const QObject *obj)
+{
+    return QtQml::qmlEngine(obj);
+}
+
+Q_QML_EXPORT QObject *qmlAttachedPropertiesObjectById(int id, const QObject *obj, bool create)
+{
+    return QtQml::qmlAttachedPropertiesObjectById(id, obj, create);
+}
+
+Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
+                                                  const QMetaObject *attachedMetaObject,
+                                                  bool create)
+{
+    return QtQml::qmlAttachedPropertiesObject(idCache, object, attachedMetaObject, create);
+}
+
+#endif // QT_DEPRECATED_SINCE(5, 1)
 
 QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
 {

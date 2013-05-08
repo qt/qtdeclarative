@@ -419,11 +419,17 @@ class QQmlContext;
 class QQmlEngine;
 class QJSValue;
 class QJSEngine;
-Q_QML_EXPORT void qmlExecuteDeferred(QObject *);
-Q_QML_EXPORT QQmlContext *qmlContext(const QObject *);
-Q_QML_EXPORT QQmlEngine *qmlEngine(const QObject *);
-Q_QML_EXPORT QObject *qmlAttachedPropertiesObjectById(int, const QObject *, bool create = true);
-Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(int *, const QObject *, const QMetaObject *, bool create);
+
+namespace QtQml {
+    // declared in namespace to avoid symbol conflicts with QtDeclarative
+    Q_QML_EXPORT void qmlExecuteDeferred(QObject *);
+    Q_QML_EXPORT QQmlContext *qmlContext(const QObject *);
+    Q_QML_EXPORT QQmlEngine *qmlEngine(const QObject *);
+    Q_QML_EXPORT QObject *qmlAttachedPropertiesObjectById(int, const QObject *, bool create = true);
+    Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(int *, const QObject *,
+                                                      const QMetaObject *, bool create);
+}
+using namespace QtQml;
 
 template<typename T>
 QObject *qmlAttachedPropertiesObject(const QObject *obj, bool create = true)
