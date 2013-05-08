@@ -1,5 +1,12 @@
 QT += qml qml-private quick-private core-private
 
+#
+# qmlplugindump is an applicaton bundle on the mac
+# so that we can include an Info.plist, which is needed
+# to surpress qmlplugindump popping up in the dock
+# when launched.
+#
+
 CONFIG += qpa_minimal_plugin
 
 SOURCES += \
