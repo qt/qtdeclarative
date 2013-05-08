@@ -4,6 +4,7 @@
 #include "qv4isel_p.h"
 #include "qv4isel_util_p.h"
 #include "qv4functionobject_p.h"
+#include "qv4function_p.h"
 
 #include <QString>
 

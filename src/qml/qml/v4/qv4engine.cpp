@@ -47,6 +47,7 @@
 #include <qv4globalobject_p.h>
 #include <qv4errorobject_p.h>
 #include <qv4functionobject_p.h>
+#include "qv4function_p.h"
 #include <qv4mathobject_p.h>
 #include <qv4numberobject_p.h>
 #include <qv4regexpobject_p.h>

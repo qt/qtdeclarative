@@ -48,6 +48,7 @@
 #include "qv4globalobject_p.h"
 #include "qv4stringobject_p.h"
 #include "qv4lookup_p.h"
+#include "qv4function_p.h"
 #include "private/qlocale_tools_p.h"
 
 #include <QtCore/qmath.h>

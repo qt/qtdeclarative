@@ -46,6 +46,7 @@
 #include <qv4objectproto_p.h>
 #include "qv4mm_p.h"
 #include <qv4argumentsobject_p.h>
+#include "qv4function_p.h"
 
 using namespace QV4;
 

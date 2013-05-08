@@ -38,67 +38,30 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4REGEXPOBJECT_H
-#define QV4REGEXPOBJECT_H
 
-#include "qv4runtime_p.h"
-#include "qv4engine_p.h"
-#include "qv4context_p.h"
-#include "qv4functionobject_p.h"
-#include "qv4string_p.h"
-#include "qv4codegen_p.h"
-#include "qv4isel_p.h"
+#include "qv4function_p.h"
 #include "qv4managed_p.h"
-#include "qv4property_p.h"
-#include "qv4objectiterator_p.h"
-#include "qv4regexp_p.h"
+#include "qv4string_p.h"
+#include "qv4value_p.h"
 
-#include <QtCore/QString>
-#include <QtCore/QHash>
-#include <QtCore/QScopedPointer>
-#include <cstdio>
-#include <cassert>
+using namespace QV4;
 
-QT_BEGIN_NAMESPACE
-
-namespace QV4 {
-
-struct RegExp;
-
-struct RegExpObject: Object {
-    RegExp* value;
-    Property *lastIndexProperty(ExecutionContext *ctx);
-    bool global;
-    RegExpObject(ExecutionEngine *engine, RegExp* value, bool global);
-    RegExpObject(ExecutionEngine *engine, const QRegExp &re);
-    ~RegExpObject() {}
-
-    QRegExp toQRegExp() const;
-
-protected:
-    static const ManagedVTable static_vtbl;
-    static void destroy(Managed *that);
-    static void markObjects(Managed *that);
-};
-
-struct QV4_JS_CLASS(RegExpPrototype): RegExpObject
+Function::~Function()
 {
-    QV4_ANNOTATE(argc 2)
-    RegExpPrototype(ExecutionEngine* engine): RegExpObject(engine, RegExp::create(engine, QString()), false) {}
-    void initClass(ExecutionEngine *engine, const Value &ctor);
-    static Object *newConstructor(ExecutionContext *scope);
-
-    static Value ctor_method_construct(Managed *that, ExecutionContext *context, Value *args, int argc);
-    static Value ctor_method_call(Managed *that, ExecutionContext *, const Value &, Value *, int);
-
-    static Value method_exec(SimpleCallContext *ctx) QV4_ARGC(1);
-    static Value method_test(SimpleCallContext *ctx) QV4_ARGC(1);
-    static Value method_toString(SimpleCallContext *ctx);
-    static Value method_compile(SimpleCallContext *ctx) QV4_ARGC(2);
-};
-
+    delete[] codeData;
 }
 
-QT_END_NAMESPACE
-
-#endif // QMLJS_OBJECTS_H
+void Function::mark()
+{
+    if (name)
+        name->mark();
+    for (int i = 0; i < formals.size(); ++i)
+        formals.at(i)->mark();
+    for (int i = 0; i < locals.size(); ++i)
+        locals.at(i)->mark();
+    for (int i = 0; i < generatedValues.size(); ++i)
+        if (Managed *m = generatedValues.at(i).asManaged())
+            m->mark();
+    for (int i = 0; i < identifiers.size(); ++i)
+        identifiers.at(i)->mark();
+}

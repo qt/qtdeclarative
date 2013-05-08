@@ -46,6 +46,7 @@
 #include "qv4regexpobject_p.h"
 #include "qv4unwindhelper_p.h"
 #include "qv4lookup_p.h"
+#include "qv4function_p.h"
 
 #include <assembler/LinkBuffer.h>
 #include <WTFStubs.h>

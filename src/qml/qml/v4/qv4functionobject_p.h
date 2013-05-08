@@ -52,16 +52,12 @@
 #include "qv4managed_p.h"
 #include "qv4property_p.h"
 #include "qv4objectiterator_p.h"
-#include "qv4regexp_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
 #include <QtCore/QScopedPointer>
 #include <cstdio>
 #include <cassert>
-
-#include <config.h>
-#include <assembler/MacroAssemblerCodeRef.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,7 +73,6 @@ struct StringObject;
 struct ArrayObject;
 struct DateObject;
 struct FunctionObject;
-struct RegExpObject;
 struct ErrorObject;
 struct ArgumentsObject;
 struct ExecutionContext;
@@ -91,7 +86,6 @@ struct BooleanPrototype;
 struct ArrayPrototype;
 struct FunctionPrototype;
 struct DatePrototype;
-struct RegExpPrototype;
 struct ErrorPrototype;
 struct EvalErrorPrototype;
 struct RangeErrorPrototype;
@@ -101,50 +95,6 @@ struct TypeErrorPrototype;
 struct URIErrorPrototype;
 struct InternalClass;
 struct Lookup;
-
-struct Function {
-    String *name;
-
-    Value (*code)(ExecutionContext *, const uchar *);
-    const uchar *codeData;
-    JSC::MacroAssemblerCodeRef codeRef;
-    quint32 codeSize;
-    QByteArray unwindInfo; // CIE+FDE on x86/x86-64. Stored directly in code on ARM.
-
-    QVector<String *> formals;
-    QVector<String *> locals;
-    QVector<Value> generatedValues;
-    QVector<String *> identifiers;
-    QVector<Function *> nestedFunctions;
-    Function *outer;
-
-    Lookup *lookups;
-
-    bool hasNestedFunctions;
-    bool hasDirectEval;
-    bool usesArgumentsObject;
-    bool isStrict;
-    bool isNamedExpression;
-
-    Function(String *name)
-        : name(name)
-        , code(0)
-        , codeData(0)
-        , codeSize(0)
-        , outer(0)
-        , lookups(0)
-        , hasNestedFunctions(0)
-        , hasDirectEval(false)
-        , usesArgumentsObject(false)
-        , isStrict(false)
-        , isNamedExpression(false)
-    {}
-    ~Function();
-
-    inline bool needsActivation() const { return hasNestedFunctions || hasDirectEval || usesArgumentsObject; }
-
-    void mark();
-};
 
 struct Q_QML_EXPORT FunctionObject: Object {
     ExecutionContext *scope;
@@ -164,8 +114,14 @@ struct Q_QML_EXPORT FunctionObject: Object {
     inline Value construct(ExecutionContext *context, Value *args, int argc) {
         return vtbl->construct(this, context, args, argc);
     }
+    inline Value construct(Value *args, int argc) {
+        return vtbl->construct(this, engine()->current, args, argc);
+    }
     inline Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc) {
         return vtbl->call(this, context, thisObject, args, argc);
+    }
+    inline Value call(const Value &thisObject, Value *args, int argc) {
+        return vtbl->call(this, engine()->current, thisObject, args, argc);
     }
 
 protected:

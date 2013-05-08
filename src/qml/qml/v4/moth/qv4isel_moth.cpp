@@ -4,6 +4,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4debugging_p.h>
+#include <private/qv4function_p.h>
 
 using namespace QQmlJS;
 using namespace QQmlJS::Moth;

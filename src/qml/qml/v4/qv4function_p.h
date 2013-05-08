@@ -38,67 +38,93 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4REGEXPOBJECT_H
-#define QV4REGEXPOBJECT_H
+#ifndef QV4FUNCTION_H
+#define QV4FUNCTION_H
 
-#include "qv4runtime_p.h"
-#include "qv4engine_p.h"
-#include "qv4context_p.h"
-#include "qv4functionobject_p.h"
-#include "qv4string_p.h"
-#include "qv4codegen_p.h"
-#include "qv4isel_p.h"
-#include "qv4managed_p.h"
-#include "qv4property_p.h"
-#include "qv4objectiterator_p.h"
-#include "qv4regexp_p.h"
+#include "qv4global_p.h"
 
-#include <QtCore/QString>
-#include <QtCore/QHash>
-#include <QtCore/QScopedPointer>
-#include <cstdio>
-#include <cassert>
+#include <QtCore/QVector>
+#include <QtCore/QByteArray>
+
+#include <config.h>
+#include <assembler/MacroAssemblerCodeRef.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct RegExp;
+struct Value;
+struct String;
+struct Function;
+struct Object;
+struct FunctionObject;
+struct ExecutionContext;
+struct ExecutionEngine;
+class MemoryManager;
 
-struct RegExpObject: Object {
-    RegExp* value;
-    Property *lastIndexProperty(ExecutionContext *ctx);
-    bool global;
-    RegExpObject(ExecutionEngine *engine, RegExp* value, bool global);
-    RegExpObject(ExecutionEngine *engine, const QRegExp &re);
-    ~RegExpObject() {}
+struct ObjectPrototype;
+struct StringPrototype;
+struct NumberPrototype;
+struct BooleanPrototype;
+struct ArrayPrototype;
+struct FunctionPrototype;
+struct DatePrototype;
+struct ErrorPrototype;
+struct EvalErrorPrototype;
+struct RangeErrorPrototype;
+struct ReferenceErrorPrototype;
+struct SyntaxErrorPrototype;
+struct TypeErrorPrototype;
+struct URIErrorPrototype;
+struct InternalClass;
+struct Lookup;
 
-    QRegExp toQRegExp() const;
+struct Function {
+    String *name;
 
-protected:
-    static const ManagedVTable static_vtbl;
-    static void destroy(Managed *that);
-    static void markObjects(Managed *that);
-};
+    Value (*code)(ExecutionContext *, const uchar *);
+    const uchar *codeData;
+    JSC::MacroAssemblerCodeRef codeRef;
+    quint32 codeSize;
+    QByteArray unwindInfo; // CIE+FDE on x86/x86-64. Stored directly in code on ARM.
 
-struct QV4_JS_CLASS(RegExpPrototype): RegExpObject
-{
-    QV4_ANNOTATE(argc 2)
-    RegExpPrototype(ExecutionEngine* engine): RegExpObject(engine, RegExp::create(engine, QString()), false) {}
-    void initClass(ExecutionEngine *engine, const Value &ctor);
-    static Object *newConstructor(ExecutionContext *scope);
+    QVector<String *> formals;
+    QVector<String *> locals;
+    QVector<Value> generatedValues;
+    QVector<String *> identifiers;
+    QVector<Function *> nestedFunctions;
+    Function *outer;
 
-    static Value ctor_method_construct(Managed *that, ExecutionContext *context, Value *args, int argc);
-    static Value ctor_method_call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+    Lookup *lookups;
 
-    static Value method_exec(SimpleCallContext *ctx) QV4_ARGC(1);
-    static Value method_test(SimpleCallContext *ctx) QV4_ARGC(1);
-    static Value method_toString(SimpleCallContext *ctx);
-    static Value method_compile(SimpleCallContext *ctx) QV4_ARGC(2);
+    bool hasNestedFunctions;
+    bool hasDirectEval;
+    bool usesArgumentsObject;
+    bool isStrict;
+    bool isNamedExpression;
+
+    Function(String *name)
+        : name(name)
+        , code(0)
+        , codeData(0)
+        , codeSize(0)
+        , outer(0)
+        , lookups(0)
+        , hasNestedFunctions(0)
+        , hasDirectEval(false)
+        , usesArgumentsObject(false)
+        , isStrict(false)
+        , isNamedExpression(false)
+    {}
+    ~Function();
+
+    inline bool needsActivation() const { return hasNestedFunctions || hasDirectEval || usesArgumentsObject; }
+
+    void mark();
 };
 
 }
 
 QT_END_NAMESPACE
 
-#endif // QMLJS_OBJECTS_H
+#endif

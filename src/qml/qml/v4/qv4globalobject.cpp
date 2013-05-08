@@ -43,6 +43,7 @@
 #include "qv4mm_p.h"
 #include "qv4value_p.h"
 #include "qv4context_p.h"
+#include "qv4function_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>

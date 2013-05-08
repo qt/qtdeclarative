@@ -32,6 +32,7 @@ SOURCES += \
     $$PWD/qv4booleanobject.cpp \
     $$PWD/qv4dateobject.cpp \
     $$PWD/qv4errorobject.cpp \
+    $$PWD/qv4function.cpp \
     $$PWD/qv4functionobject.cpp \
     $$PWD/qv4globalobject.cpp \
     $$PWD/qv4jsonobject.cpp \
@@ -73,6 +74,7 @@ HEADERS += \
     $$PWD/qv4booleanobject_p.h \
     $$PWD/qv4dateobject_p.h \
     $$PWD/qv4errorobject_p.h \
+    $$PWD/qv4function_p.h \
     $$PWD/qv4functionobject_p.h \
     $$PWD/qv4globalobject_p.h \
     $$PWD/qv4jsonobject_p.h \

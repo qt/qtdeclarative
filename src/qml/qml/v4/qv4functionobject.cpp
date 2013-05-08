@@ -44,6 +44,7 @@
 #include "qv4isel_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4stringobject_p.h"
+#include "qv4function_p.h"
 #include "qv4mm_p.h"
 
 #include <private/qqmljsengine_p.h>
@@ -65,26 +66,6 @@ using namespace QV4;
 
 
 DEFINE_MANAGED_VTABLE(FunctionObject);
-
-Function::~Function()
-{
-    delete[] codeData;
-}
-
-void Function::mark()
-{
-    if (name)
-        name->mark();
-    for (int i = 0; i < formals.size(); ++i)
-        formals.at(i)->mark();
-    for (int i = 0; i < locals.size(); ++i)
-        locals.at(i)->mark();
-    for (int i = 0; i < generatedValues.size(); ++i)
-        if (Managed *m = generatedValues.at(i).asManaged())
-            m->mark();
-    for (int i = 0; i < identifiers.size(); ++i)
-        identifiers.at(i)->mark();
-}
 
 FunctionObject::FunctionObject(ExecutionContext *scope, String *name)
     : Object(scope->engine)
