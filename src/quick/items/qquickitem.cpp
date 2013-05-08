@@ -2744,10 +2744,10 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
                     QObject::connect(item, SIGNAL(windowChanged(QQuickWindow*)),
                                      thisWindow, SLOT(setTransientParent_helper(QQuickWindow*)));
             }
+            o->setParent(that);
         }
 
-        // XXX todo - do we really want this behavior?
-        o->setParent(that);
+        resources_append(prop, o);
     }
 }
 
@@ -2825,30 +2825,38 @@ void QQuickItemPrivate::data_clear(QQmlListProperty<QObject> *property)
 
 QObject *QQuickItemPrivate::resources_at(QQmlListProperty<QObject> *prop, int index)
 {
-    const QObjectList children = prop->object->children();
-    if (index < children.count())
-        return children.at(index);
-    else
-        return 0;
+    QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
+    return quickItemPrivate->extra.isAllocated() ? quickItemPrivate->extra->resourcesList.value(index) : 0;
 }
 
-void QQuickItemPrivate::resources_append(QQmlListProperty<QObject> *prop, QObject *o)
+void QQuickItemPrivate::resources_append(QQmlListProperty<QObject> *prop, QObject *object)
 {
-    // XXX todo - do we really want this behavior?
-    o->setParent(prop->object);
+    QQuickItem *quickItem = static_cast<QQuickItem *>(prop->object);
+    QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(quickItem);
+    if (!quickItemPrivate->extra.value().resourcesList.contains(object)) {
+        quickItemPrivate->extra.value().resourcesList.append(object);
+        qmlobject_connect(object, QObject, SIGNAL(destroyed(QObject*)),
+                          quickItem, QQuickItem, SLOT(_q_resourceObjectDeleted(QObject*)));
+    }
 }
 
 int QQuickItemPrivate::resources_count(QQmlListProperty<QObject> *prop)
 {
-    return prop->object->children().count();
+    QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
+    return  quickItemPrivate->extra.isAllocated() ? quickItemPrivate->extra->resourcesList.count() : 0;
 }
 
 void QQuickItemPrivate::resources_clear(QQmlListProperty<QObject> *prop)
 {
-    // XXX todo - do we really want this behavior?
-    const QObjectList children = prop->object->children();
-    for (int index = 0; index < children.count(); index++)
-        children.at(index)->setParent(0);
+    QQuickItem *quickItem = static_cast<QQuickItem *>(prop->object);
+    QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(quickItem);
+    if (quickItemPrivate->extra.isAllocated()) {//If extra is not allocated resources is empty.
+        foreach (QObject *object, quickItemPrivate->extra->resourcesList) {
+            qmlobject_disconnect(object, QObject, SIGNAL(destroyed(QObject*)),
+                                 quickItem, QQuickItem, SLOT(_q_resourceObjectDeleted(QObject*)));
+        }
+        quickItemPrivate->extra->resourcesList.clear();
+    }
 }
 
 QQuickItem *QQuickItemPrivate::children_at(QQmlListProperty<QQuickItem> *prop, int index)
@@ -2993,6 +3001,12 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
     p->transforms.clear();
 
     p->dirty(QQuickItemPrivate::Transform);
+}
+
+void QQuickItemPrivate::_q_resourceObjectDeleted(QObject *object)
+{
+    if (extra.isAllocated() && extra->resourcesList.contains(object))
+        extra->resourcesList.removeAll(object);
 }
 
 /*!

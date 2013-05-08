@@ -1840,15 +1840,35 @@ void tst_QQuickItem::resourcesProperty()
 {
     QQmlComponent component(&engine, testFileUrl("resourcesProperty.qml"));
 
-    QObject *o = component.create();
-    QVERIFY(o != 0);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
 
-    QCOMPARE(o->property("test1").toBool(), true);
-    QCOMPARE(o->property("test2").toBool(), true);
-    QCOMPARE(o->property("test3").toBool(), true);
-    QCOMPARE(o->property("test4").toBool(), true);
-    QCOMPARE(o->property("test5").toBool(), true);
-    delete o;
+    QQmlProperty property(object, "resources", component.creationContext());
+
+    QVERIFY(property.isValid());
+    QQmlListReference list = qvariant_cast<QQmlListReference>(property.read());
+    QVERIFY(list.isValid());
+
+    QCOMPARE(list.count(), 4);
+
+    QCOMPARE(object->property("test1").toBool(), true);
+    QCOMPARE(object->property("test2").toBool(), true);
+    QCOMPARE(object->property("test3").toBool(), true);
+    QCOMPARE(object->property("test4").toBool(), true);
+    QCOMPARE(object->property("test5").toBool(), true);
+    QCOMPARE(object->property("test6").toBool(), true);
+
+    QObject *subObject = object->findChild<QObject *>("subObject");
+
+    QVERIFY(subObject);
+
+    QCOMPARE(object, subObject->parent());
+
+    delete subObject;
+
+    QCOMPARE(list.count(), 3);
+
+    delete object;
 }
 
 void tst_QQuickItem::propertyChanges()

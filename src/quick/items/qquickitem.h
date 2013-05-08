@@ -432,6 +432,8 @@ protected:
     QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent = 0);
 
 private:
+    Q_PRIVATE_SLOT(d_func(), void _q_resourceObjectDeleted(QObject *))
+
     friend class QQuickWindow;
     friend class QQuickWindowPrivate;
     friend class QSGRenderer;

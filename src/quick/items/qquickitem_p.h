@@ -293,6 +293,8 @@ public:
     static QQuickTransform *transform_at(QQmlListProperty<QQuickTransform> *list, int);
     static void transform_clear(QQmlListProperty<QQuickTransform> *list);
 
+    void _q_resourceObjectDeleted(QObject *);
+
     enum ChangeType {
         Geometry = 0x01,
         SiblingOrder = 0x02,
@@ -363,6 +365,8 @@ public:
         Qt::MouseButtons acceptedMouseButtons;
 
         QQuickItem::TransformOrigin origin:5;
+
+        QObjectList resourcesList;
     };
     QLazilyAllocated<ExtraData> extra;
 
