@@ -57,6 +57,8 @@
 #include <QtQml/qqmllist.h>
 #include <private/qv8_p.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QV8Engine;
@@ -88,7 +90,7 @@ private:
     static v8::Handle<v8::Array> Enumerator(const v8::AccessorInfo &info);
 
     QV8Engine *m_engine;
-    v8::Persistent<v8::Function> m_constructor;
+    QV4::PersistentValue m_constructor;
 };
 
 QT_END_NAMESPACE

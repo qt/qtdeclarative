@@ -43,6 +43,8 @@
 #include "qv8engine_p.h"
 #include <private/qqmllist_p.h>
 
+#include <private/qv4functionobject_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QV8ListResource : public QV8ObjectResource
@@ -75,12 +77,11 @@ void QV8ListWrapper::init(QV8Engine *engine)
                                         v8::Handle<v8::Value>(), v8::DEFAULT, 
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete | v8::DontEnum));
     ft->InstanceTemplate()->SetHasExternalResource(true);
-    m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    m_constructor = ft->GetFunction()->v4Value();
 }
 
 void QV8ListWrapper::destroy()
 {
-    qPersistentDispose(m_constructor);
 }
 
 v8::Handle<v8::Value> QV8ListWrapper::newList(QObject *object, int propId, int propType)
@@ -89,7 +90,7 @@ v8::Handle<v8::Value> QV8ListWrapper::newList(QObject *object, int propId, int p
         return QV4::Value::nullValue();
 
     // XXX NewInstance() should be optimized
-    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
+    v8::Handle<v8::Object> rv = m_constructor.value().asFunctionObject()->newInstance();
     QV8ListResource *r = new QV8ListResource(m_engine);
     r->object = object;
     r->propertyType = propType;
@@ -102,7 +103,7 @@ v8::Handle<v8::Value> QV8ListWrapper::newList(QObject *object, int propId, int p
 v8::Handle<v8::Value> QV8ListWrapper::newList(const QQmlListProperty<QObject> &prop, int propType)
 {
     // XXX NewInstance() should be optimized
-    v8::Handle<v8::Object> rv = m_constructor->NewInstance();
+    v8::Handle<v8::Object> rv = m_constructor.value().asFunctionObject()->newInstance();
     QV8ListResource *r = new QV8ListResource(m_engine);
     r->object = prop.object;
     r->property = prop;
