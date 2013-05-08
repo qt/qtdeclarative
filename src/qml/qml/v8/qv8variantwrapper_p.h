@@ -57,6 +57,8 @@
 #include <QtQml/qqmllist.h>
 #include <private/qv8_p.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QV8Engine;
@@ -96,12 +98,12 @@ private:
     static QV4::Value ValueOf(const v8::Arguments &args);
 
     QV8Engine *m_engine;
-    v8::Persistent<v8::Function> m_constructor;
-    v8::Persistent<v8::Function> m_scarceConstructor;
-    v8::Persistent<v8::Function> m_preserve;
-    v8::Persistent<v8::Function> m_destroy;
-    v8::Persistent<v8::Function> m_toString;
-    v8::Persistent<v8::Function> m_valueOf;
+    QV4::PersistentValue m_constructor;
+    QV4::PersistentValue m_scarceConstructor;
+    QV4::PersistentValue m_preserve;
+    QV4::PersistentValue m_destroy;
+    QV4::PersistentValue m_toString;
+    QV4::PersistentValue m_valueOf;
 };
 
 QT_END_NAMESPACE

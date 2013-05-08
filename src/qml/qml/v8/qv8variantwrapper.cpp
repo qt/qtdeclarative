@@ -44,6 +44,8 @@
 #include "qv8engine_p.h"
 #include <private/qqmlengine_p.h>
 
+#include <private/qv4functionobject_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QV8VariantResource::QV8VariantResource(QV8Engine *engine, const QVariant &data)
@@ -83,8 +85,8 @@ QV8VariantWrapper::~QV8VariantWrapper()
 void QV8VariantWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
-    m_toString = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(ToString)->GetFunction());
-    m_valueOf = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(ValueOf)->GetFunction());
+    m_toString = v8::FunctionTemplate::New(ToString)->GetFunction()->v4Value();
+    m_valueOf = v8::FunctionTemplate::New(ValueOf)->GetFunction()->v4Value();
 
     {
     v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
@@ -92,45 +94,39 @@ void QV8VariantWrapper::init(QV8Engine *engine)
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->MarkAsUseUserObjectComparison();
     ft->InstanceTemplate()->SetAccessor(v8::String::New("toString"), ToStringGetter, 0, 
-                                        m_toString, v8::DEFAULT, 
+                                        m_toString.value(), v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("valueOf"), ValueOfGetter, 0,
-                                        m_valueOf, v8::DEFAULT,
+                                        m_valueOf.value(), v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
-    m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    m_constructor = ft->GetFunction()->v4Value();
     }
     {
-    m_preserve = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(Preserve)->GetFunction());
-    m_destroy = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(Destroy)->GetFunction());
+    m_preserve = v8::FunctionTemplate::New(Preserve)->GetFunction()->v4Value();
+    m_destroy = v8::FunctionTemplate::New(Destroy)->GetFunction()->v4Value();
     v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->MarkAsUseUserObjectComparison();
     ft->InstanceTemplate()->SetAccessor(v8::String::New("preserve"), PreserveGetter, 0, 
-                                        m_preserve, v8::DEFAULT, 
+                                        m_preserve.value(), v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("destroy"), DestroyGetter, 0, 
-                                        m_destroy, v8::DEFAULT, 
+                                        m_destroy.value(), v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("toString"), ToStringGetter, 0, 
-                                        m_toString, v8::DEFAULT, 
+                                        m_toString.value(), v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("valueOf"), ValueOfGetter, 0,
-                                        m_valueOf, v8::DEFAULT,
+                                        m_valueOf.value(), v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
-    m_scarceConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    m_scarceConstructor = ft->GetFunction()->v4Value();
     }
 
 }
 
 void QV8VariantWrapper::destroy()
 {
-    qPersistentDispose(m_valueOf);
-    qPersistentDispose(m_toString);
-    qPersistentDispose(m_destroy);
-    qPersistentDispose(m_preserve);
-    qPersistentDispose(m_scarceConstructor);
-    qPersistentDispose(m_constructor);
 }
 
 v8::Handle<v8::Object> QV8VariantWrapper::newVariant(const QVariant &value)
@@ -145,11 +141,11 @@ v8::Handle<v8::Object> QV8VariantWrapper::newVariant(const QVariant &value)
     if (scarceResource) {
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(m_engine->engine());
         Q_ASSERT(ep->scarceResourcesRefCount);
-        rv = m_scarceConstructor->NewInstance();
+        rv = m_scarceConstructor.value().asFunctionObject()->newInstance();
         r->m_isScarceResource = true;
         ep->scarceResources.insert(r);
     } else {
-        rv = m_constructor->NewInstance();
+        rv = m_constructor.value().asFunctionObject()->newInstance();
     }
 
     rv->SetExternalResource(r);
