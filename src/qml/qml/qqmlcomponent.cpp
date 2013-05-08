@@ -1226,9 +1226,8 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     instances to be instantiated asynchronously and not cause freezes in the UI.
 
     The \a parent argument specifies the parent the created instance will have.  Omitting the
-    parameter or passing null will create anobject with no parent.  In this case, a reference
-    to the created object must be maintained by the application of the object will eventually
-    be garbage collected.
+    parameter or passing null will create an object with no parent.  In this case, a reference
+    to the created object must be held so that it is not destroyed by the garbage collector.
 
     The \a properties argument is specified as a map of property-value items which will be
     set on the created object during its construction.  \a mode may be Qt.Synchronous or

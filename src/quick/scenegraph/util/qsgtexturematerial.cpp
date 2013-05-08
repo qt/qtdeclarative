@@ -145,7 +145,7 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
     tuple. The QSGGeometry::defaultAttributes_TexturedPoint2D returns an
     attribute set compatible with this material.
 
-    The texture to be rendered is can be set using setTexture(). How the
+    The texture to be rendered can be set using setTexture(). How the
     texture should be rendered can be specified using setMipmapFiltering(),
     setFiltering(), setHorizontalWrapMode() and setVerticalWrapMode().
     The rendering state is set on the texture instance just before it
@@ -208,7 +208,7 @@ QSGMaterialShader *QSGOpaqueTextureMaterial::createShader() const
 /*!
     Sets the texture of this material to \a texture.
 
-    The material does not take ownership over the texture.
+    The material does not take ownership of the texture.
  */
 
 void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)
@@ -337,7 +337,7 @@ int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
     tuple. The QSGGeometry::defaultAttributes_TexturedPoint2D returns an
     attribute set compatible with this material.
 
-    The texture to be rendered is set using setTexture(). How the
+    The texture to be rendered can be set using setTexture(). How the
     texture should be rendered can be specified using setMipmapFiltering(),
     setFiltering(), setHorizontalWrapMode() and setVerticalWrapMode().
     The rendering state is set on the texture instance just before it
