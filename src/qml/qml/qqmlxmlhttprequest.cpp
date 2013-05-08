@@ -1024,9 +1024,9 @@ private:
 
     v8::Handle<v8::Object> getMe() const;
     void setMe(v8::Handle<v8::Object> me);
-    v8::Persistent<v8::Object> m_me;
+    QV4::PersistentValue m_me;
 
-    void dispatchCallback(v8::Handle<v8::Object> me);
+    void dispatchCallback(const QV4::Value &me);
     void printError(v8::Handle<v8::Message>);
 
     int m_status;
@@ -1086,7 +1086,7 @@ QV4::Value QQmlXMLHttpRequest::open(v8::Handle<v8::Object> me, const QString &me
     m_url = url;
     m_state = Opened;
     v8::TryCatch tc;
-    dispatchCallback(me);
+    dispatchCallback(me->v4Value());
     if (tc.HasCaught()) printError(tc.Message());
     return QV4::Value::undefinedValue();
 }
@@ -1229,7 +1229,7 @@ QV4::Value QQmlXMLHttpRequest::abort(v8::Handle<v8::Object> me)
         m_state = Done;
         m_sendFlag = false;
         v8::TryCatch tc;
-        dispatchCallback(me);
+        dispatchCallback(me->v4Value());
         if (tc.HasCaught()) printError(tc.Message());
     }
 
@@ -1240,15 +1240,12 @@ QV4::Value QQmlXMLHttpRequest::abort(v8::Handle<v8::Object> me)
 
 v8::Handle<v8::Object> QQmlXMLHttpRequest::getMe() const
 {
-    return m_me;
+    return m_me.value();
 }
 
 void QQmlXMLHttpRequest::setMe(v8::Handle<v8::Object> me)
 {
-    qPersistentDispose(m_me);
-
-    if (!me.IsEmpty()) 
-        m_me = qPersistentNew<v8::Object>(me);
+    m_me = me->v4Value();
 }
 
 void QQmlXMLHttpRequest::readyRead()
@@ -1263,7 +1260,7 @@ void QQmlXMLHttpRequest::readyRead()
         m_state = HeadersReceived;
         fillHeadersList ();
         v8::TryCatch tc;
-        dispatchCallback(m_me);
+        dispatchCallback(m_me.value());
         if (tc.HasCaught()) printError(tc.Message());
     }
 
@@ -1272,7 +1269,7 @@ void QQmlXMLHttpRequest::readyRead()
     if (wasEmpty && !m_responseEntityBody.isEmpty())
         m_state = Loading;
     v8::TryCatch tc;
-    dispatchCallback(m_me);
+    dispatchCallback(m_me.value());
     if (tc.HasCaught()) printError(tc.Message());
 }
 
@@ -1312,7 +1309,7 @@ void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
         error == QNetworkReply::UnknownContentError) {
         m_state = Loading;
         v8::TryCatch tc;
-        dispatchCallback(m_me);
+        dispatchCallback(m_me.value());
         if (tc.HasCaught()) printError(tc.Message());
     } else {
         m_errorFlag = true;
@@ -1322,7 +1319,7 @@ void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
     m_state = Done;
 
     v8::TryCatch tc;
-    dispatchCallback(m_me);
+    dispatchCallback(m_me.value());
     if (tc.HasCaught()) printError(tc.Message());
 }
 
@@ -1458,36 +1455,39 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
 }
 
 // Requires a TryCatch scope
-void QQmlXMLHttpRequest::dispatchCallback(v8::Handle<v8::Object> me)
+void QQmlXMLHttpRequest::dispatchCallback(const QV4::Value &me)
 {
-    if (me.IsEmpty() || me->IsNull()) {
+    if (me.isEmpty() || me.isUndefined() || me.isNull()) {
         v8::ThrowException(v8::Exception::Error(v8::String::New("Unable to dispatch QQmlXmlHttpRequest callback: invalid object")));
         return;
     }
 
-    if (me->Get(v8::String::New("ThisObject")).IsEmpty()) {
+    QV4::Object *o = me.asObject();
+    if (!o)
+        v8::ThrowException(v8::Exception::Error(v8::String::New("QQmlXMLHttpRequest: internal error: empty ThisObject")));
+
+    QV4::ExecutionEngine *v4 = o->engine();
+    QV4::Object *thisObj = o->get(v4->newString(QStringLiteral("ThisObject"))).asObject();
+    if (!thisObj) {
         v8::ThrowException(v8::Exception::Error(v8::String::New("QQmlXMLHttpRequest: internal error: empty ThisObject")));
         return;
     }
 
-    v8::Handle<v8::Object> thisObj = me->Get(v8::String::New("ThisObject"))->ToObject();
-    v8::Handle<v8::Value> callback = thisObj->Get(v8::String::New("onreadystatechange"));
-    if (!callback->IsFunction()) {
+    QV4::FunctionObject *callback = thisObj->get(v4->newString(QStringLiteral("onreadystatechange"))).asFunctionObject();
+    if (!callback) {
         // not an error, but no onreadystatechange function to call.
         return;
     }
 
-    if (me->Get(v8::String::New("ActivationObject")).IsEmpty()) {
+    QV4::Value activationObject = o->get(v4->newString(QStringLiteral("ActivationObject")));
+    if (!activationObject.asObject()) {
         v8::ThrowException(v8::Exception::Error(v8::String::New("QQmlXMLHttpRequest: internal error: empty ActivationObject")));
         return;
     }
 
-    v8::Handle<v8::Object> activationObject = me->Get(v8::String::New("ActivationObject"))->ToObject();
     QQmlContextData *callingContext = engine->contextWrapper()->context(activationObject);
-    if (callingContext) {
-        v8::Handle<v8::Function> f = v8::Handle<v8::Function>::Cast(callback);
-        f->Call(activationObject, 0, 0); // valid activation object.
-    }
+    if (callingContext)
+        callback->call(v4->current, activationObject, 0, 0);
 
     // if the callingContext object is no longer valid, then it has been
     // deleted explicitly (e.g., by a Loader deleting the itemContext when
