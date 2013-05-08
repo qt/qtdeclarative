@@ -1158,7 +1158,7 @@ void QQmlVME::reset()
 // Must be called with a handle scope and context
 void QQmlScriptData::initialize(QQmlEngine *engine)
 {
-    Q_ASSERT(m_program.IsEmpty());
+    Q_ASSERT(!m_program);
     Q_ASSERT(engine);
     Q_ASSERT(!hasEngine());
 
@@ -1171,7 +1171,7 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
     if (program.IsEmpty())
         return;
 
-    m_program = qPersistentNew<v8::Script>(program);
+    m_program = program.get();
     m_programSource.clear(); // We don't need this anymore
 
     addToEngine(engine);
@@ -1182,7 +1182,7 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
 QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *script)
 {
     if (script->m_loaded)
-        return script->m_value->v4Value();
+        return script->m_value;
 
     QV4::PersistentValue rv;
 
@@ -1242,7 +1242,7 @@ QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *s
     v8::Handle<v8::Object> qmlglobal = v8engine->qmlScope(ctxt, 0);
     v8engine->contextWrapper()->takeContextOwnership(qmlglobal);
 
-    if (!script->m_program.IsEmpty()) {
+    if (!!script->m_program) {
         script->m_program->Run(qmlglobal);
     } else {
         // Compilation failed.
@@ -1260,7 +1260,7 @@ QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *s
 
     rv = qmlglobal->v4Value();
     if (shared) {
-        script->m_value = qPersistentNew<v8::Object>(qmlglobal);
+        script->m_value = rv;
         script->m_loaded = true;
     }
 

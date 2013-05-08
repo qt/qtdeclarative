@@ -69,6 +69,8 @@
 #include <private/qqmlbundle_p.h>
 #include <private/qflagpointer_p.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlScriptData;
@@ -508,8 +510,8 @@ private:
 
     bool m_loaded;
     QByteArray m_programSource;
-    v8::Persistent<v8::Script> m_program;
-    v8::Persistent<v8::Object> m_value;
+    QExplicitlySharedDataPointer<v8::Script> m_program;
+    QV4::PersistentValue m_value;
     QQmlError m_error;
 };
 

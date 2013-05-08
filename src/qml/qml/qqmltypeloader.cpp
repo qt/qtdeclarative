@@ -2270,9 +2270,6 @@ void QQmlScriptData::clear()
         scripts.at(ii)->release();
     scripts.clear();
 
-    qPersistentDispose(m_program);
-    qPersistentDispose(m_value);
-
     // An addref() was made when the QQmlCleanup was added to the engine.
     release();
 }
