@@ -491,9 +491,6 @@ public:
     static bool focusNextPrev(QQuickItem *item, bool forward);
     static QQuickItem *nextPrevItemInTabFocusChain(QQuickItem *item, bool forward);
 
-    static bool qt_tab_all_widgets(); //todo: move to QGuiApplication?
-    static bool canAcceptTabFocus(QQuickItem *item);
-
     qreal x;
     qreal y;
     qreal width;
