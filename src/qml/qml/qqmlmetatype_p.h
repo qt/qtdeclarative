@@ -231,7 +231,7 @@ private:
     friend int registerSingletonType(const QQmlPrivate::RegisterSingletonType &);
     friend int registerInterface(const QQmlPrivate::RegisterInterface &);
     friend int registerCompositeType(const QQmlPrivate::RegisterCompositeType &);
-    friend void qmlClearTypeRegistrations();
+    friend Q_QML_EXPORT void qmlClearTypeRegistrations();
     QQmlType(int, const QQmlPrivate::RegisterInterface &);
     QQmlType(int, const QString &, const QQmlPrivate::RegisterSingletonType &);
     QQmlType(int, const QString &, const QQmlPrivate::RegisterType &);
@@ -260,7 +260,7 @@ private:
     //Used by register functions and creates the QQmlTypeModule for them
     friend void addTypeToData(QQmlType* type, QQmlMetaTypeData *data);
     friend struct QQmlMetaTypeData;
-    friend void qmlClearTypeRegistrations();
+    friend Q_QML_EXPORT void qmlClearTypeRegistrations();
 
     QQmlTypeModule();
     ~QQmlTypeModule();
