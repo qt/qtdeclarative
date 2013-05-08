@@ -72,6 +72,13 @@ public:
     static void initClass(QV4::ExecutionEngine *engine, const QV4::Value &obj);
 
     QV4::Value method_currencySymbol(QV4::SimpleCallContext *ctx);
+    QV4::Value method_dateTimeFormat(QV4::SimpleCallContext *ctx);
+    QV4::Value method_timeFormat(QV4::SimpleCallContext *ctx);
+    QV4::Value method_dateFormat(QV4::SimpleCallContext *ctx);
+    QV4::Value method_monthName(QV4::SimpleCallContext *ctx);
+    QV4::Value method_standaloneMonthName(QV4::SimpleCallContext *ctx);
+    QV4::Value method_dayName(QV4::SimpleCallContext *ctx);
+    QV4::Value method_standaloneDayName(QV4::SimpleCallContext *ctx);
 
 private:
     static void destroy(Managed *that)
@@ -542,8 +549,7 @@ QV4::Value QQmlLocaleData::method_currencySymbol(QV4::SimpleCallContext *ctx)
 }
 
 #define LOCALE_FORMAT(FUNC) \
-static QV4::Value locale_ ##FUNC (QV4::SimpleCallContext *ctx) { \
-    GET_LOCALE_DATA_RESOURCE(ctx->thisObject);\
+QV4::Value QQmlLocaleData::method_ ##FUNC (QV4::SimpleCallContext *ctx) { \
     if (ctx->argumentCount > 1) \
         V4THROW_ERROR("Locale: " #FUNC "(): Invalid arguments"); \
     QLocale::FormatType format = QLocale::LongFormat;\
@@ -551,7 +557,7 @@ static QV4::Value locale_ ##FUNC (QV4::SimpleCallContext *ctx) { \
         quint32 intFormat = ctx->arguments[0].toUInt32(); \
         format = QLocale::FormatType(intFormat); \
     } \
-    return QV4::Value::fromString(ctx, r->locale. FUNC (format)); \
+    return QV4::Value::fromString(ctx, locale. FUNC (format)); \
 }
 
 LOCALE_FORMAT(dateTimeFormat)
@@ -560,8 +566,7 @@ LOCALE_FORMAT(dateFormat)
 
 // +1 added to idx because JS is 0-based, whereas QLocale months begin at 1.
 #define LOCALE_FORMATTED_MONTHNAME(VARIABLE) \
-static QV4::Value locale_ ## VARIABLE (QV4::SimpleCallContext *ctx) {\
-    GET_LOCALE_DATA_RESOURCE(ctx->thisObject); \
+QV4::Value QQmlLocaleData::method_ ## VARIABLE (QV4::SimpleCallContext *ctx) {\
     if (ctx->argumentCount < 1 || ctx->argumentCount > 2) \
         V4THROW_ERROR("Locale: " #VARIABLE "(): Invalid arguments"); \
     QLocale::FormatType enumFormat = QLocale::LongFormat; \
@@ -573,20 +578,19 @@ static QV4::Value locale_ ## VARIABLE (QV4::SimpleCallContext *ctx) {\
         if (ctx->arguments[1].isNumber()) { \
             quint32 intFormat = ctx->arguments[1].toUInt32(); \
             QLocale::FormatType format = QLocale::FormatType(intFormat); \
-            name = r->locale. VARIABLE(idx, format); \
+            name = locale. VARIABLE(idx, format); \
         } else { \
             V4THROW_ERROR("Locale: Invalid datetime format"); \
         } \
     } else { \
-        name = r->locale. VARIABLE(idx, enumFormat); \
+        name = locale. VARIABLE(idx, enumFormat); \
     } \
     return QV4::Value::fromString(ctx, name); \
 }
 
 // 0 -> 7 as Qt::Sunday is 7, but Sunday is 0 in JS Date
 #define LOCALE_FORMATTED_DAYNAME(VARIABLE) \
-static QV4::Value locale_ ## VARIABLE (QV4::SimpleCallContext *ctx) {\
-    GET_LOCALE_DATA_RESOURCE(ctx->thisObject); \
+QV4::Value QQmlLocaleData::method_ ## VARIABLE (QV4::SimpleCallContext *ctx) {\
     if (ctx->argumentCount < 1 || ctx->argumentCount > 2) \
         V4THROW_ERROR("Locale: " #VARIABLE "(): Invalid arguments"); \
     QLocale::FormatType enumFormat = QLocale::LongFormat; \
@@ -599,19 +603,15 @@ static QV4::Value locale_ ## VARIABLE (QV4::SimpleCallContext *ctx) {\
         if (ctx->arguments[1].isNumber()) { \
             quint32 intFormat = ctx->arguments[1].toUInt32(); \
             QLocale::FormatType format = QLocale::FormatType(intFormat); \
-            name = r->locale. VARIABLE(idx, format); \
+            name = locale. VARIABLE(idx, format); \
         } else { \
             V4THROW_ERROR("Locale: Invalid datetime format"); \
         } \
     } else { \
-        name = r->locale. VARIABLE(idx, enumFormat); \
+        name = locale. VARIABLE(idx, enumFormat); \
     } \
     return QV4::Value::fromString(ctx, name); \
 }
-
-
-#define LOCALE_REGISTER_FORMATTED_NAME_FUNCTION(FT, VARIABLE, ENGINE) \
-    FT->PrototypeTemplate()->Set(v8::String::New( #VARIABLE ), V8FUNCTION(locale_ ## VARIABLE, ENGINE));
 
 LOCALE_FORMATTED_MONTHNAME(monthName)
 LOCALE_FORMATTED_MONTHNAME(standaloneMonthName)
@@ -668,15 +668,6 @@ QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
     LOCALE_REGISTER_STRING_ACCESSOR(ft, exponential);
     LOCALE_REGISTER_STRING_ACCESSOR(ft, amText);
     LOCALE_REGISTER_STRING_ACCESSOR(ft, pmText);
-
-    ft->PrototypeTemplate()->Set(v8::String::New("dateTimeFormat"), V8FUNCTION(locale_dateTimeFormat, engine));
-    ft->PrototypeTemplate()->Set(v8::String::New("dateFormat"), V8FUNCTION(locale_dateFormat, engine));
-    ft->PrototypeTemplate()->Set(v8::String::New("timeFormat"), V8FUNCTION(locale_timeFormat, engine));
-
-    LOCALE_REGISTER_FORMATTED_NAME_FUNCTION(ft, monthName, engine);
-    LOCALE_REGISTER_FORMATTED_NAME_FUNCTION(ft, standaloneMonthName, engine);
-    LOCALE_REGISTER_FORMATTED_NAME_FUNCTION(ft, dayName, engine);
-    LOCALE_REGISTER_FORMATTED_NAME_FUNCTION(ft, standaloneDayName, engine);
 
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("firstDayOfWeek"), locale_get_firstDayOfWeek);
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("weekDays"), locale_get_weekDays);
