@@ -41,6 +41,7 @@
 
 #include "qv4sqlerrors_p.h"
 #include "private/qv4engine_p.h"
+#include "private/qv4object_p.h"
 
 QT_BEGIN_NAMESPACE
 

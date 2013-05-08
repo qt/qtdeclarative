@@ -177,6 +177,8 @@ struct Q_QML_EXPORT Object: Managed {
 
     Property *insertMember(String *s, PropertyAttributes attributes);
 
+    inline ExecutionEngine *engine() const { return internalClass->engine; }
+
     // Array handling
 
     uint allocArrayValue() {
@@ -323,6 +325,14 @@ public:
     void arrayReserve(uint n);
     void ensureArrayAttributes();
 
+    inline Value get(String *name)
+    { return vtbl->get(this, engine()->current, name, 0); }
+    inline Value getIndexed(uint idx)
+    { return vtbl->getIndexed(this, engine()->current, idx, 0); }
+    inline void put(String *name, const Value &v)
+    { vtbl->put(this, engine()->current, name, v); }
+    inline void putIndexed(uint idx, const Value &v)
+    { vtbl->putIndexed(this, engine()->current, idx, v); }
     using Managed::get;
     using Managed::getIndexed;
     using Managed::put;

@@ -61,6 +61,7 @@
 #include <qqmlengine.h>
 #include <private/qv4domerrors_p.h>
 #include <private/qv4engine_p.h>
+#include <private/qv4object_p.h>
 #include <QtCore/qnumeric.h>
 #include <private/qquickwindow_p.h>
 

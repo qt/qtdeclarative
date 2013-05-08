@@ -56,6 +56,7 @@
 #include <QtCore/qdir.h>
 #include <private/qv4sqlerrors_p.h>
 #include <private/qv4engine_p.h>
+#include <private/qv4object_p.h>
 
 #define V8THROW_SQL(error, desc) \
 { \

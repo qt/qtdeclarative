@@ -43,6 +43,7 @@
 #include "qjsvalueiterator_p.h"
 #include "qjsvalue_p.h"
 #include "private/qv4string_p.h"
+#include "private/qv4object_p.h"
 
 QT_BEGIN_NAMESPACE
 

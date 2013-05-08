@@ -43,7 +43,6 @@
 
 #include "qv4global_p.h"
 #include "qv4isel_p.h"
-#include "qv4object_p.h"
 #include "qv4util_p.h"
 #include "qv4context_p.h"
 #include "qv4property_p.h"

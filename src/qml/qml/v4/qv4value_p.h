@@ -585,6 +585,9 @@ public:
     operator Value() const { return value(); }
 
     bool isEmpty() const { return !d; }
+    void clear() {
+        *this = PersistentValue();
+    }
 
 private:
     PersistentValuePrivate *d;
