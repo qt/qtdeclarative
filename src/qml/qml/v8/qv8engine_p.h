@@ -408,7 +408,7 @@ public:
 
     QObject *qtObjectFromJS(const QV4::Value &value);
 
-    void addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> handle);
+    void addRelationshipForGC(QObject *object, const QV4::PersistentValue &handle);
     void addRelationshipForGC(QObject *object, QObject *other);
 
     static v8::Handle<v8::Value> getPlatform(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
@@ -428,7 +428,7 @@ public:
     static ThreadData* threadData();
     static void ensurePerThreadIsolate();
 
-    v8::Persistent<v8::Object> m_strongReferencer;
+    QV4::PersistentValue m_strongReferencer;
 
 protected:
     QJSEngine* q;
@@ -477,42 +477,6 @@ private:
 
     Q_DISABLE_COPY(QV8Engine)
 };
-
-// Allocate a new Persistent handle.  *ALL* persistent handles in QML must be allocated
-// using this method.
-template<class T>
-v8::Persistent<T> qPersistentNew(v8::Handle<T> that)
-{
-    v8::Persistent<T> rv = v8::Persistent<T>::New(that);
-#ifdef QML_GLOBAL_HANDLE_DEBUGGING
-    QV8Engine::registerHandle(*rv);
-#endif
-    return rv;
-}
-
-// Register a Persistent handle that was returned to you by V8 (such as by
-// v8::Context::New). This allows us to do handle tracking on these handles too.
-template<class T>
-void qPersistentRegister(v8::Persistent<T> handle)
-{
-#ifdef QML_GLOBAL_HANDLE_DEBUGGING
-    QV8Engine::registerHandle(*handle);
-#else
-    Q_UNUSED(handle);
-#endif
-}
-
-// Dispose and clear a persistent handle.  *ALL* persistent handles in QML must be
-// disposed using this method.
-template<class T>
-void qPersistentDispose(v8::Persistent<T> &that)
-{
-#ifdef QML_GLOBAL_HANDLE_DEBUGGING
-    QV8Engine::releaseHandle(*that);
-#endif
-    that.Dispose();
-    that.Clear();
-}
 
 bool QV8Engine::isVariant(const QV4::Value &value)
 {

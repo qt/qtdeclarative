@@ -80,6 +80,7 @@
 
 #include "qv4global_p.h"
 #include "qv4string_p.h"
+#include "qv4value_p.h"
 #include <QStack>
 #include <QSharedData>
 
@@ -124,7 +125,6 @@ class ImplementationUtilities;
 class Signature;
 class AccessorSignature;
 template <class T> struct Handle;
-template <class T> class Persistent;
 class FunctionTemplate;
 class ObjectTemplate;
 class Data;
@@ -149,8 +149,8 @@ V8EXPORT void gcUnprotect(void *memoryManager, void *handle);
  * \param object the weak global object to be reclaimed by the garbage collector
  * \param parameter the value passed in when making the weak global object
  */
-typedef void (*WeakReferenceCallback)(Persistent<Value> object,
-                                      void* parameter);
+//typedef void (*WeakReferenceCallback)(Persistent<Value> object,
+//                                      void* parameter);
 
 
 // --- Handles ---
@@ -411,130 +411,6 @@ struct Handle {
         };
     };
 };
-
-
-/**
- * An object reference that is independent of any handle scope.  Where
- * a Local handle only lives as long as the HandleScope in which it was
- * allocated, a Persistent handle remains valid until it is explicitly
- * disposed.
- *
- * A persistent handle contains a reference to a storage cell within
- * the v8 engine which holds an object value and which is updated by
- * the garbage collector whenever the object is moved.  A new storage
- * cell can be created using Persistent::New and existing handles can
- * be disposed using Persistent::Dispose.  Since persistent handles
- * are passed by value you may have many persistent handle objects
- * that point to the same storage cell.  For instance, if you pass a
- * persistent handle as an argument to a function you will not get two
- * different storage cells but rather two references to the same
- * storage cell.
- */
-template <class T> class Persistent : public Handle<T> {
- public:
-  /**
-   * Creates an empty persistent handle that doesn't point to any
-   * storage cell.
-   */
-  Persistent() {}
-  ~Persistent() {
-      HandleOperations<T>::unProtect(m_memoryManager, this);
-  }
-
-  Persistent(const Persistent &other)
-      : Handle<T>(other)
-      , m_memoryManager(other.m_memoryManager)
-  {
-      HandleOperations<T>::protect(m_memoryManager, this);
-  }
-
-  Persistent &operator =(const Persistent &other)
-  {
-      if (&other == this)
-          return *this;
-      HandleOperations<T>::unProtect(m_memoryManager, this);
-      Handle<T>::operator =(other);
-      m_memoryManager = other.m_memoryManager;
-      HandleOperations<T>::protect(m_memoryManager, this);
-      return *this;
-  }
-
-  /**
-   * Creates a persistent handle for the same storage cell as the
-   * specified handle.  This constructor allows you to pass persistent
-   * handles as arguments by value and to assign between persistent
-   * handles.  However, attempting to assign between incompatible
-   * persistent handles, for instance from a Persistent<String> to a
-   * Persistent<Number> will cause a compile-time error.  Assigning
-   * between compatible persistent handles, for instance assigning a
-   * Persistent<String> to a variable declared as Persistent<Value>,
-   * is allowed as String is a subclass of Value.
-   */
-  template <class S> Persistent(Persistent<S> that)
-      : Handle<T>(Handle<T>::Cast(that)) {
-      m_memoryManager = that.m_memoryManager;
-      HandleOperations<T>::protect(m_memoryManager, this);
-  }
-
-  template <class S> Persistent(S* that) : Handle<T>(that)
-  {
-      m_memoryManager = HandleOperations<T>::protect(this);
-  }
-
-  /**
-   * "Casts" a plain handle which is known to be a persistent handle
-   * to a persistent handle.
-   */
-  template <class S> explicit Persistent(Handle<S> that)
-      : Handle<T>(*that)
-  {
-      m_memoryManager = HandleOperations<T>::protect(this);
-  }
-
-  template <class S> static Persistent<T> Cast(Persistent<S> that) {
-    return Persistent<T>(T::Cast(*that));
-  }
-
-  template <class S> Persistent<S> As() {
-    return Persistent<S>::Cast(*this);
-  }
-
-  /**
-   * Creates a new persistent handle for an existing local or
-   * persistent handle.
-   */
-  static Persistent<T> New(Handle<T> that)
-  {
-      Persistent<T> result;
-      result.Handle<T>::operator =(that);
-      result.m_memoryManager = HandleOperations<T>::protect(&result);
-      return result;
-  }
-
-  /**
-   * Releases the storage cell referenced by this persistent handle.
-   * Does not remove the reference to the cell from any handles.
-   * This handle's reference, and any other references to the storage
-   * cell remain and IsEmpty will still return false.
-   */
-  void Dispose() {
-       HandleOperations<T>::unProtect(m_memoryManager, this);
-       m_memoryManager = 0;
-       HandleOperations<T>::deref(this);
-       HandleOperations<T>::init(this);
-  }
-
-  /**
-   * Make the reference to this object weak.  When only weak handles
-   * refer to the object, the garbage collector will perform a
-   * callback to the given V8::WeakReferenceCallback function, passing
-   * it the object reference and the given parameters.
-   */
-  void MakeWeak(void* parameters, WeakReferenceCallback callback);
-public:
-  void *m_memoryManager;
-};
-
 
 // --- Special objects ---
 
@@ -815,8 +691,8 @@ private:
   StackFrame(Handle<String> script, Handle<String> function, int line, int column);
   int m_lineNumber;
   int m_columnNumber;
-  Persistent<String> m_scriptName;
-  Persistent<String> m_functionName;
+  QV4::PersistentValue m_scriptName;
+  QV4::PersistentValue m_functionName;
 };
 
 DEFINE_REFCOUNTED_HANDLE_OPERATIONS(StackFrame)
@@ -1601,8 +1477,8 @@ class V8EXPORT Template : public Data {
   void Set(const char* name, Handle<Value> value);
 
   struct Property {
-      Persistent<String> name;
-      Persistent<Value> value;
+      QV4::PersistentValue name;
+      QV4::PersistentValue value;
       PropertyAttribute attributes;
   };
   QVector<Property> m_properties;
@@ -1619,7 +1495,7 @@ DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Template)
 class V8EXPORT Arguments {
  public:
     Arguments(const QV4::Value *args, int argc, const QV4::Value &thisObject, bool isConstructor,
-              const Persistent<Value> &data);
+              const Handle<Value> &data);
   int Length() const;
   Handle<Value> operator[](int i) const;
   Handle<Object> This() const;
@@ -1630,10 +1506,10 @@ class V8EXPORT Arguments {
   Isolate* GetIsolate() const;
 
 private:
-  QVector<Persistent<Value> > m_args;
-  Persistent<Object> m_thisObject;
+  QVector<QV4::PersistentValue> m_args;
+  QV4::PersistentValue m_thisObject;
   bool m_isConstructor;
-  Persistent<Value> m_data;
+  QV4::PersistentValue m_data;
 };
 
 
@@ -1643,14 +1519,14 @@ private:
  */
 class V8EXPORT AccessorInfo {
  public:
-  AccessorInfo(const QV4::Value &thisObject, const Persistent<Value> &data);
+  AccessorInfo(const QV4::Value &thisObject, const Handle<Value> &data);
   Isolate* GetIsolate() const;
   Handle<Value> Data() const;
   Handle<Object> This() const;
   Handle<Object> Holder() const;
 private:
-  Persistent<Value> m_this;
-  Persistent<Value> m_data;
+  QV4::PersistentValue m_this;
+  QV4::PersistentValue m_data;
 };
 
 
@@ -1855,7 +1731,7 @@ private:
   friend class V4V8Function;
   InvocationCallback m_callback;
   NewInvocationCallback m_newCallback;
-  Persistent<Value> m_data;
+  QV4::PersistentValue m_data;
   Handle<ObjectTemplate> m_instanceTemplate;
   Handle<ObjectTemplate> m_prototypeTemplate;
 };
@@ -1991,9 +1867,9 @@ class V8EXPORT ObjectTemplate : public Template {
   void MarkAsUseUserObjectComparison();
 
   struct Accessor {
-      Persistent<Value> getter;
-      Persistent<Value> setter;
-      Persistent<String> name;
+      QV4::PersistentValue getter;
+      QV4::PersistentValue setter;
+      QV4::PersistentValue name;
       PropertyAttribute attribute;
   };
 
@@ -2004,21 +1880,21 @@ class V8EXPORT ObjectTemplate : public Template {
   NamedPropertyQuery m_namedPropertyQuery;
   NamedPropertyDeleter m_namedPropertyDeleter;
   NamedPropertyEnumerator m_namedPropertyEnumerator;
-  Persistent<Value> m_namedPropertyData;
+  QV4::PersistentValue m_namedPropertyData;
 
   NamedPropertyGetter m_fallbackPropertyGetter;
   NamedPropertySetter m_fallbackPropertySetter;
   NamedPropertyQuery m_fallbackPropertyQuery;
   NamedPropertyDeleter m_fallbackPropertyDeleter;
   NamedPropertyEnumerator m_fallbackPropertyEnumerator;
-  Persistent<Value> m_fallbackPropertyData;
+  QV4::PersistentValue m_fallbackPropertyData;
 
   IndexedPropertyGetter m_indexedPropertyGetter;
   IndexedPropertySetter m_indexedPropertySetter;
   IndexedPropertyQuery m_indexedPropertyQuery;
   IndexedPropertyDeleter m_indexedPropertyDeleter;
   IndexedPropertyEnumerator m_indexedPropertyEnumerator;
-  Persistent<Value> m_indexedPropertyData;
+  QV4::PersistentValue m_indexedPropertyData;
 
   bool m_useUserComparison;
   private:
@@ -2148,9 +2024,9 @@ class V8EXPORT V8 {
    * are removed.  It is intended to be used in the before-garbage-collection
    * callback function.
    */
-  static void AddImplicitReferences(Persistent<Object> parent,
-                                    Persistent<Value>* children,
-                                    size_t length);
+//  static void AddImplicitReferences(Persistent<Object> parent,
+//                                    Persistent<Value>* children,
+//                                    size_t length);
 
 };
 
@@ -2236,16 +2112,6 @@ private:
   Context() {}
   ~Context() {}
 };
-
-template<typename T>
-void Persistent<T>::MakeWeak(void* parameters, WeakReferenceCallback callback)
-{
-    Q_UNUSED(parameters);
-    Q_UNUSED(callback);
-
-    Q_UNIMPLEMENTED();
-}
-
 
 
 }  // namespace v8

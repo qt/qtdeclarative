@@ -1238,11 +1238,12 @@ void QQmlVMEMetaObject::allocateVarPropertiesArray()
    is cleared as a result of all other handles to that v8object being released.
    See QV8GCCallback::garbageCollectorPrologueCallback() for more information.
  */
-void QQmlVMEMetaObject::VarPropertiesWeakReferenceCallback(v8::Persistent<v8::Value> object, void* parameter)
+void QQmlVMEMetaObject::VarPropertiesWeakReferenceCallback(QV4::PersistentValue &object, void* parameter)
 {
+    // ### FIXME
     QQmlVMEMetaObject *vmemo = static_cast<QQmlVMEMetaObject*>(parameter);
     Q_ASSERT(vmemo);
-    qPersistentDispose(object);
+    object.clear();
     vmemo->varProperties.clear();
 }
 

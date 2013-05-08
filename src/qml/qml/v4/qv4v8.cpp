@@ -101,16 +101,16 @@ quint64 qv8_get_value(const QV4::Value &v)
 
 struct V8AccessorGetter: FunctionObject {
     AccessorGetter getter;
-    Persistent<Value> data;
-    Persistent<String> name;
+    QV4::PersistentValue data;
+    QV4::PersistentValue name;
 
     V8AccessorGetter(ExecutionContext *scope, const Handle<String> &name, const AccessorGetter &getter, Handle<Value> data)
         : FunctionObject(scope)
     {
         vtbl = &static_vtbl;
         this->getter = getter;
-        this->data = Persistent<Value>::New(data);
-        this->name = Persistent<String>::New(name);
+        this->data = data->v4Value();
+        this->name = name->v4Value();
     }
 
     using Object::construct;
@@ -118,10 +118,10 @@ struct V8AccessorGetter: FunctionObject {
     static QV4::Value call(Managed *that, ExecutionContext *context, const QV4::Value &thisObject, QV4::Value *args, int argc)
     {
         V8AccessorGetter *getter = static_cast<V8AccessorGetter*>(that);
-        AccessorInfo info(thisObject, getter->data);
+        AccessorInfo info(thisObject, getter->data.value());
         QV4::Value result = QV4::Value::undefinedValue();
         try {
-            result = getter->getter(getter->name, info)->v4Value();
+            result = getter->getter(getter->name.value(), info)->v4Value();
         } catch (QV4::Exception &e) {
             Isolate::GetCurrent()->setException(e.value());
             e.accept(context);
@@ -137,16 +137,16 @@ DEFINE_MANAGED_VTABLE(V8AccessorGetter);
 
 struct V8AccessorSetter: FunctionObject {
     AccessorSetter setter;
-    Persistent<Value> data;
-    Persistent<String> name;
+    QV4::PersistentValue data;
+    QV4::PersistentValue name;
 
     V8AccessorSetter(ExecutionContext *scope, const Handle<String> &name, const AccessorSetter &setter, Handle<Value> data)
         : FunctionObject(scope)
     {
         vtbl = &static_vtbl;
         this->setter = setter;
-        this->data = Persistent<Value>::New(data);
-        this->name = Persistent<String>::New(name);
+        this->data = data->v4Value();
+        this->name = name->v4Value();
     }
 
     using Object::construct;
@@ -156,9 +156,9 @@ struct V8AccessorSetter: FunctionObject {
         if (!argc)
             return QV4::Value::undefinedValue();
         V8AccessorSetter *setter = static_cast<V8AccessorSetter*>(that);
-        AccessorInfo info(thisObject, setter->data);
+        AccessorInfo info(thisObject, setter->data.value());
         try {
-            setter->setter(setter->name, args[0], info);
+            setter->setter(setter->name.value(), args[0], info);
         } catch (QV4::Exception &e) {
             Isolate::GetCurrent()->setException(e.value());
             e.accept(context);
@@ -359,25 +359,25 @@ int StackFrame::GetColumn() const
 
 Handle<String> StackFrame::GetScriptName() const
 {
-    return m_scriptName;
+    return m_scriptName.value();
 }
 
 Handle<String> StackFrame::GetScriptNameOrSourceURL() const
 {
-    return m_scriptName;
+    return m_scriptName.value();
 }
 
 Handle<String> StackFrame::GetFunctionName() const
 {
-    return m_functionName;
+    return m_functionName.value();
 }
 
 StackFrame::StackFrame(Handle<String> script, Handle<String> function, int line, int column)
     : m_lineNumber(line)
     , m_columnNumber(column)
 {
-    m_scriptName = Persistent<String>::New(script);
-    m_functionName = Persistent<String>::New(function);
+    m_scriptName = script->v4Value();
+    m_functionName = function->v4Value();
 }
 
 
@@ -1318,8 +1318,8 @@ void *External::Value() const
 void Template::Set(Handle<String> name, Handle<Value> value, PropertyAttribute attributes)
 {
     Property p;
-    p.name = Persistent<String>::New(name);
-    p.value = Persistent<Value>::New(value);
+    p.name = name->v4Value();
+    p.value = value->v4Value();
     p.attributes = attributes;
     m_properties << p;
 }
@@ -1330,13 +1330,13 @@ void Template::Set(const char *name, Handle<Value> value)
 }
 
 
-Arguments::Arguments(const QV4::Value *args, int argc, const QV4::Value &thisObject, bool isConstructor, const Persistent<Value> &data)
+Arguments::Arguments(const QV4::Value *args, int argc, const QV4::Value &thisObject, bool isConstructor, const Handle<Value> &data)
 {
     for (int i = 0; i < argc; ++i)
-        m_args << Persistent<Value>::New(Value::fromV4Value(args[i]));
-    m_thisObject = Persistent<Object>::New(Value::fromV4Value(thisObject));
+        m_args << args[i];
+    m_thisObject = thisObject;
     m_isConstructor = isConstructor;
-    m_data = Persistent<Value>::New(data);
+    m_data = data->v4Value();
 }
 
 int Arguments::Length() const
@@ -1346,23 +1346,23 @@ int Arguments::Length() const
 
 Handle<Value> Arguments::operator [](int i) const
 {
-    return m_args.at(i);
+    return m_args.at(i).value();
 }
 
 Handle<Object> Arguments::This() const
 {
-    return m_thisObject;
+    return m_thisObject.value();
 }
 
 QV4::Value Arguments::ThisV4() const
 {
-    return m_thisObject->v4Value();
+    return m_thisObject;
 }
 
 Handle<Object> Arguments::Holder() const
 {
     // ### FIXME.
-    return m_thisObject;
+    return m_thisObject.value();
 }
 
 bool Arguments::IsConstructCall() const
@@ -1372,7 +1372,7 @@ bool Arguments::IsConstructCall() const
 
 Handle<Value> Arguments::Data() const
 {
-    return m_data;
+    return m_data.value();
 }
 
 Isolate *Arguments::GetIsolate() const
@@ -1381,10 +1381,10 @@ Isolate *Arguments::GetIsolate() const
 }
 
 
-AccessorInfo::AccessorInfo(const QV4::Value &thisObject, const Persistent<Value> &data)
+AccessorInfo::AccessorInfo(const QV4::Value &thisObject, const Handle<Value> &data)
 {
-    m_this = Persistent<Object>::New(Value::fromV4Value(thisObject));
-    m_data = data;
+    m_this = thisObject;
+    m_data = data->v4Value();
 }
 
 Isolate *AccessorInfo::GetIsolate() const
@@ -1394,18 +1394,18 @@ Isolate *AccessorInfo::GetIsolate() const
 
 Handle<Value> AccessorInfo::Data() const
 {
-    return m_data;
+    return m_data.value();
 }
 
 Handle<Object> AccessorInfo::This() const
 {
-    return m_this;
+    return m_this.value();
 }
 
 Handle<Object> AccessorInfo::Holder() const
 {
     // ### FIXME
-    return m_this;
+    return m_this.value();
 }
 
 template <typename BaseClass>
@@ -1416,20 +1416,20 @@ public:
         : BaseClass(engine->rootContext)
     {
         this->vtbl = &static_vtbl;
-        m_template = Persistent<ObjectTemplate>(tmpl);
-        if (m_template.IsEmpty())
-            m_template = Persistent<ObjectTemplate>::New(ObjectTemplate::New());
+        m_template = tmpl;
+        if (!m_template)
+            m_template = ObjectTemplate::New().get();
 
         foreach (const ObjectTemplate::Accessor &acc, m_template->m_accessors) {
             PropertyAttributes attrs = Attr_Accessor;
             attrs.setConfigurable(!(acc.attribute & DontDelete));
             attrs.setEnumerable(!(acc.attribute & DontEnum));
-            QV4::Property *pd = this->insertMember(acc.name->asV4String(), attrs);
-            *pd = QV4::Property::fromAccessor(acc.getter->v4Value().asFunctionObject(),
-                                             acc.setter->v4Value().asFunctionObject());
+            QV4::Property *pd = this->insertMember(acc.name.value().asString(), attrs);
+            *pd = QV4::Property::fromAccessor(acc.getter.value().asFunctionObject(),
+                                             acc.setter.value().asFunctionObject());
         }
 
-        initProperties(m_template.get());
+        initProperties(m_template.data());
     }
 
     void initProperties(Template *tmpl)
@@ -1439,28 +1439,28 @@ public:
             attrs.setConfigurable(!(p.attributes & DontDelete));
             attrs.setEnumerable(!(p.attributes & DontEnum));
             attrs.setWritable(!(p.attributes & ReadOnly));
-            QV4::Property *pd = this->insertMember(p.name->asV4String(), attrs);
-            *pd = QV4::Property::fromValue(p.value->v4Value());
+            QV4::Property *pd = this->insertMember(p.name.value().asString(), attrs);
+            *pd = QV4::Property::fromValue(p.value);
         }
     }
 
-    Persistent<ObjectTemplate> m_template;
+    QExplicitlySharedDataPointer<ObjectTemplate> m_template;
 
 protected:
     AccessorInfo namedAccessorInfo()
     {
         // ### thisObject?
-        return AccessorInfo(QV4::Value::fromObject(this), m_template->m_namedPropertyData);
+        return AccessorInfo(QV4::Value::fromObject(this), m_template->m_namedPropertyData.value());
     }
     AccessorInfo fallbackAccessorInfo()
     {
         // ### thisObject?
-        return AccessorInfo(QV4::Value::fromObject(this), m_template->m_fallbackPropertyData);
+        return AccessorInfo(QV4::Value::fromObject(this), m_template->m_fallbackPropertyData.value());
     }
     AccessorInfo indexedAccessorInfo()
     {
         // ### thisObject?
-        return AccessorInfo(QV4::Value::fromObject(this), m_template->m_namedPropertyData);
+        return AccessorInfo(QV4::Value::fromObject(this), m_template->m_namedPropertyData.value());
     }
 
     static const ManagedVTable static_vtbl;
@@ -1633,8 +1633,8 @@ struct V4V8Function : public V4V8Object<QV4::FunctionObject>
         : V4V8Object<QV4::FunctionObject>(engine, 0)
     {
         vtbl = &static_vtbl;
-        m_functionTemplate = Persistent<FunctionTemplate>(functionTemplate);
-        initProperties(m_functionTemplate.get());
+        m_functionTemplate = functionTemplate;
+        initProperties(m_functionTemplate.data());
     }
 
 protected:
@@ -1643,7 +1643,7 @@ protected:
     static QV4::Value call(QV4::Managed *m, ExecutionContext *context, const QV4::Value &thisObject, QV4::Value *args, int argc)
     {
         V4V8Function *that = static_cast<V4V8Function*>(m);
-        Arguments arguments(args, argc, thisObject, false, that->m_functionTemplate->m_data);
+        Arguments arguments(args, argc, thisObject, false, that->m_functionTemplate->m_data.value());
         QV4::Value result = QV4::Value::undefinedValue();
         if (that->m_functionTemplate->m_callback)
             result = that->m_functionTemplate->m_callback(arguments);
@@ -1671,7 +1671,7 @@ protected:
     static QV4::Value construct(QV4::Managed *m, ExecutionContext *context, QV4::Value *args, int argc)
     {
         V4V8Function *that = static_cast<V4V8Function*>(m);
-        Arguments arguments(args, argc, QV4::Value::undefinedValue(), true, that->m_functionTemplate->m_data);
+        Arguments arguments(args, argc, QV4::Value::undefinedValue(), true, that->m_functionTemplate->m_data.value());
 
         QV4::Object *obj = that->m_functionTemplate->InstanceTemplate()->NewInstance()->v4Value().asObject();
         QV4::Value proto = that->Managed::get(context, context->engine->id_prototype);
@@ -1705,7 +1705,7 @@ protected:
 
     }
 
-    Persistent<FunctionTemplate> m_functionTemplate;
+    QExplicitlySharedDataPointer<FunctionTemplate> m_functionTemplate;
 };
 
 DEFINE_MANAGED_VTABLE(V4V8Function);
@@ -1716,7 +1716,7 @@ FunctionTemplate::FunctionTemplate(InvocationCallback callback, Handle<Value> da
 {
     m_instanceTemplate = Handle<ObjectTemplate>();
     m_prototypeTemplate = Handle<ObjectTemplate>();
-    m_data = Persistent<Value>::New(data);
+    m_data = data->v4Value();
 }
 
 FunctionTemplate::FunctionTemplate(NewInvocationCallback callback, Handle<Value> data)
@@ -1725,7 +1725,7 @@ FunctionTemplate::FunctionTemplate(NewInvocationCallback callback, Handle<Value>
 {
     m_instanceTemplate = Handle<ObjectTemplate>();
     m_prototypeTemplate = Handle<ObjectTemplate>();
-    m_data = Persistent<Value>::New(data);
+    m_data = data->v4Value();
 }
 
 Handle<FunctionTemplate> FunctionTemplate::New(InvocationCallback callback, Handle<Value> data)
@@ -1787,14 +1787,14 @@ void ObjectTemplate::SetAccessor(Handle<String> name, AccessorGetter getter, Acc
     Accessor a;
     if (getter) {
         QV4::FunctionObject *wrappedGetter = new (engine->memoryManager) V8AccessorGetter(engine->rootContext, name, getter, data);
-        a.getter = Persistent<Value>::New(Value::fromV4Value(QV4::Value::fromObject(wrappedGetter)));
+        a.getter = QV4::Value::fromObject(wrappedGetter);
     }
     if (setter) {
         QV4::FunctionObject *wrappedSetter = new (engine->memoryManager) V8AccessorSetter(engine->rootContext, name, setter, data);
-        a.setter = Persistent<Value>::New(Value::fromV4Value(QV4::Value::fromObject(wrappedSetter)));
+        a.setter = QV4::Value::fromObject(wrappedSetter);
     }
     a.attribute = attribute;
-    a.name = Persistent<String>::New(name);
+    a.name = name->v4Value();
     m_accessors << a;
 }
 
@@ -1805,7 +1805,7 @@ void ObjectTemplate::SetNamedPropertyHandler(NamedPropertyGetter getter, NamedPr
     m_namedPropertyQuery = query;
     m_namedPropertyDeleter = deleter;
     m_namedPropertyEnumerator = enumerator;
-    m_namedPropertyData = Persistent<Value>::New(data);
+    m_namedPropertyData = data->v4Value();
 }
 
 void ObjectTemplate::SetFallbackPropertyHandler(NamedPropertyGetter getter, NamedPropertySetter setter, NamedPropertyQuery query, NamedPropertyDeleter deleter, NamedPropertyEnumerator enumerator, Handle<Value> data)
@@ -1815,7 +1815,7 @@ void ObjectTemplate::SetFallbackPropertyHandler(NamedPropertyGetter getter, Name
     m_fallbackPropertyQuery = query;
     m_fallbackPropertyDeleter = deleter;
     m_fallbackPropertyEnumerator = enumerator;
-    m_fallbackPropertyData = Persistent<Value>::New(data);
+    m_fallbackPropertyData = data->v4Value();
 }
 
 void ObjectTemplate::SetIndexedPropertyHandler(IndexedPropertyGetter getter, IndexedPropertySetter setter, IndexedPropertyQuery query, IndexedPropertyDeleter deleter, IndexedPropertyEnumerator enumerator, Handle<Value> data)
@@ -1825,7 +1825,7 @@ void ObjectTemplate::SetIndexedPropertyHandler(IndexedPropertyGetter getter, Ind
     m_indexedPropertyQuery = query;
     m_indexedPropertyDeleter = deleter;
     m_indexedPropertyEnumerator = enumerator;
-    m_indexedPropertyData = Persistent<Value>::New(data);
+    m_indexedPropertyData = data->v4Value();
 }
 
 int ObjectTemplate::InternalFieldCount()
@@ -1984,12 +1984,12 @@ void V8::RemoveGCPrologueCallback(GCPrologueCallback)
     assert(!"RemoveGCPrologueCallback();");
 }
 
-void V8::AddImplicitReferences(Persistent<Object> parent, Persistent<Value> *children, size_t length)
-{
-    // not required currently as we don't have weak Persistent references.
-    // not having them will lead to some leaks in QQmlVMEMetaObejct, but shouldn't matter otherwise
-    assert(!"AddImplicitReferences();");
-}
+//void V8::AddImplicitReferences(Persistent<Object> parent, QV4::PersistentValue *children, size_t length)
+//{
+//    // not required currently as we don't have weak Persistent references.
+//    // not having them will lead to some leaks in QQmlVMEMetaObejct, but shouldn't matter otherwise
+//    assert(!"AddImplicitReferences();");
+//}
 
 
 TryCatch::TryCatch()

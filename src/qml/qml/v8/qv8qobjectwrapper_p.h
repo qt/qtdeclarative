@@ -139,7 +139,7 @@ private:
     static QV4::Value Invoke(const v8::Arguments &args);
     static QPair<QObject *, int> ExtractQtMethod(QV8Engine *, v8::Handle<v8::Function>);
     static QPair<QObject *, int> ExtractQtSignal(QV8Engine *, v8::Handle<v8::Object>);
-    static void WeakQObjectReferenceCallback(v8::Persistent<v8::Value> handle, void *wrapper);
+    static void WeakQObjectReferenceCallback(QV4::PersistentValue &handle, void *wrapper);
 
     QV8Engine *m_engine;
     quint32 m_id;

@@ -208,7 +208,7 @@ public:
     QV4::PersistentValue varProperties;
     int firstVarPropertyIndex;
     bool varPropertiesInitialized;
-    static void VarPropertiesWeakReferenceCallback(v8::Persistent<v8::Value> object, void* parameter);
+    static void VarPropertiesWeakReferenceCallback(QV4::PersistentValue &object, void* parameter);
     static void GcPrologueCallback(QV8GCCallback::Node *node);
     inline void allocateVarPropertiesArray();
     inline bool ensureVarPropertiesAllocated();

@@ -925,10 +925,10 @@ static void FastValueSetterReadOnly(v8::Handle<v8::String> property, v8::Handle<
     v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
 }
 
-void QV8QObjectWrapper::WeakQObjectReferenceCallback(v8::Persistent<v8::Value> handle, void *wrapper)
+void QV8QObjectWrapper::WeakQObjectReferenceCallback(QV4::PersistentValue &handle, void *wrapper)
 {
-    Q_ASSERT(handle->IsObject());
-    v8::Handle<v8::Object> v8object = handle->ToObject();
+    Q_ASSERT(handle.value().isObject());
+    v8::Handle<v8::Object> v8object = handle.value();
     QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(v8object);
     Q_ASSERT(resource);
 
@@ -937,17 +937,11 @@ void QV8QObjectWrapper::WeakQObjectReferenceCallback(v8::Persistent<v8::Value> h
         // dispose
         v8object->SetExternalResource(0);
         delete resource;
-        qPersistentDispose(handle);
+        handle.clear();
     } else {
-        handle.MakeWeak(0, WeakQObjectReferenceCallback); // revive.
+        // ### FIXME
+        // handle.MakeWeak(0, WeakQObjectReferenceCallback); // revive.
     }
-}
-
-static void WeakQObjectInstanceCallback(v8::Persistent<v8::Value> handle, void *data)
-{
-    QV8QObjectInstance *instance = (QV8QObjectInstance *)data;
-    instance->v8object = QV4::PersistentValue();
-    qPersistentDispose(handle);
 }
 
 v8::Handle<v8::Object> QQmlPropertyCache::newQObject(QObject *object, QV8Engine *engine)

@@ -149,7 +149,7 @@ QV8Engine::QV8Engine(QJSEngine* qq)
 
     v8::V8::SetUserObjectComparisonCallbackFunction(ObjectComparisonCallback);
     QV8GCCallback::registerGcPrologueCallback();
-    m_strongReferencer = qPersistentNew(v8::Object::New());
+    m_strongReferencer = QV4::Value::fromObject(m_v4Engine->newObject());
 
     m_bindingFlagKey = QV4::Value::fromString(m_v4Engine->current, QStringLiteral("qml::binding"));
 
@@ -174,8 +174,6 @@ QV8Engine::~QV8Engine()
     m_xmlHttpRequestData = 0;
     delete m_listModelData;
     m_listModelData = 0;
-
-    qPersistentDispose(m_strongReferencer);
 
     m_jsonWrapper.destroy();
     m_sequenceWrapper.destroy();
@@ -801,15 +799,16 @@ QV4::PersistentValue *QV8Engine::findOwnerAndStrength(QObject *object, bool *sho
     }
 }
 
-void QV8Engine::addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> handle)
+void QV8Engine::addRelationshipForGC(QObject *object, const QV4::PersistentValue &handle)
 {
-    if (!object || handle.IsEmpty())
+    if (!object || handle.isEmpty())
         return;
 
     bool handleShouldBeStrong = false;
     QV4::PersistentValue *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
     if (handleShouldBeStrong) {
-        v8::V8::AddImplicitReferences(m_strongReferencer, &handle, 1);
+        // ### FIXME
+//        v8::V8::AddImplicitReferences(m_strongReferencer, &handle, 1);
     } else if (!implicitOwner->isEmpty()) {
         // ### FIXME
         qWarning() << "Fix object ownership";
