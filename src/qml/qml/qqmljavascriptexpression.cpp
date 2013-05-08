@@ -64,8 +64,7 @@ bool QQmlDelayedError::addError(QQmlEnginePrivate *e)
 
 void QQmlDelayedError::setMessage(v8::Handle<v8::Message> message)
 {
-    qPersistentDispose(m_message);
-    m_message = qPersistentNew<v8::Message>(message);
+    m_message = message.get();
 }
 
 void QQmlDelayedError::setErrorLocation(const QUrl &url, quint16 line, quint16 column)
@@ -90,9 +89,9 @@ void QQmlDelayedError::setErrorDescription(const QString &description)
 */
 void QQmlDelayedError::convertMessageToError(QQmlEngine *engine) const
 {
-    if (!m_message.IsEmpty() && engine) {
-        QQmlExpressionPrivate::exceptionToError(m_message, m_error);
-        qPersistentDispose(m_message);
+    if (!!m_message && engine) {
+        QQmlExpressionPrivate::exceptionToError(v8::Handle<v8::Message>(m_message.data()), m_error);
+        m_message.reset();
     }
 }
 
