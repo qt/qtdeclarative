@@ -192,6 +192,54 @@ struct BoundFunction: FunctionObject {
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
 };
 
+template <typename T, int ManagedType>
+class MemberAccessorGetter : public FunctionObject
+{
+public:
+    typedef Value (T::*GetterFunction)(QV4::SimpleCallContext *ctx);
+
+    MemberAccessorGetter(ExecutionContext *scope, GetterFunction getter)
+        : FunctionObject(scope)
+    {
+        this->vtbl = &static_vtbl;
+        this->getter = getter;
+    }
+
+    static QV4::Value call(Managed *that, ExecutionContext *context, const QV4::Value &thisObject, QV4::Value *args, int argc)
+    {
+        MemberAccessorGetter<T, ManagedType> *getter = static_cast<MemberAccessorGetter<T, ManagedType> *>(that);
+
+        Object *thisO = thisObject.asObject();
+        if (!thisO || thisO->internalType() != ManagedType)
+            context->throwTypeError();
+
+        T *o = reinterpret_cast<T *>(thisO);
+
+        QV4::SimpleCallContext ctx;
+        ctx.type = ExecutionContext::Type_SimpleCallContext;
+        ctx.strictMode = true;
+        ctx.marked = false;
+        ctx.thisObject = thisObject;
+        ctx.engine = context->engine;
+        ctx.arguments = args;
+        ctx.argumentCount = argc;
+        context->engine->pushContext(&ctx);
+
+        QV4::Value result = QV4::Value::undefinedValue();
+        try {
+            result = (o->* getter->getter)(&ctx);
+        } catch (QV4::Exception &ex) {
+            ex.partiallyUnwindContext(context);
+            throw;
+        }
+        context->engine->popContext();
+        return result;
+    }
+protected:
+    GetterFunction getter;
+    static const ManagedVTable static_vtbl;
+};
+
 }
 
 QT_END_NAMESPACE

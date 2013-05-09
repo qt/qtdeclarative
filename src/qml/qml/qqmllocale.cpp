@@ -80,6 +80,25 @@ public:
     QV4::Value method_dayName(QV4::SimpleCallContext *ctx);
     QV4::Value method_standaloneDayName(QV4::SimpleCallContext *ctx);
 
+    QV4::Value method_get_firstDayOfWeek(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_measurementSystem(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_textDirection(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_weekDays(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_uiLanguages(QV4::SimpleCallContext *ctx);
+
+    QV4::Value method_get_name(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_nativeLanguageName(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_nativeCountryName(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_decimalPoint(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_groupSeparator(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_percent(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_zeroDigit(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_negativeSign(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_positiveSign(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_exponential(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_amText(QV4::SimpleCallContext *ctx);
+    QV4::Value method_get_pmText(QV4::SimpleCallContext *ctx);
+
 private:
     static void destroy(Managed *that)
     {
@@ -96,16 +115,13 @@ DEFINE_MANAGED_VTABLE(QQmlLocaleData);
     if (!r) \
         V4THROW_ERROR("Not a valid Locale object")
 
-#define V8_GET_LOCALE_DATA_RESOURCE(OBJECT) \
-    GET_LOCALE_DATA_RESOURCE((OBJECT).As<v8::Value>()->v4Value())
-
-static bool isLocaleObject(v8::Handle<v8::Value> val)
+static bool isLocaleObject(const QV4::Value &val)
 {
-    if (!val->IsObject())
+    QV4::Object *obj = val.asObject();
+    if (!obj)
         return false;
 
-    v8::Handle<v8::Object> localeObj = val->ToObject();
-    return localeObj->Has(v8::String::New("nativeLanguageName")); //XXX detect locale object properly
+    return obj->asQmlLocale();
 }
 
 //--------------
@@ -483,55 +499,51 @@ QV4::Value QQmlNumberExtension::fromLocaleString(QV4::SimpleCallContext *ctx)
 //--------------
 // Locale object
 
-static v8::Handle<v8::Value> locale_get_firstDayOfWeek(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQmlLocaleData::method_get_firstDayOfWeek(QV4::SimpleCallContext*)
 {
-    V8_GET_LOCALE_DATA_RESOURCE(info.This());
-    int fdow = int(r->locale.firstDayOfWeek());
+    int fdow = int(locale.firstDayOfWeek());
     if (fdow == 7)
         fdow = 0; // Qt::Sunday = 7, but Sunday is 0 in JS Date
-    return v8::Integer::New(fdow);
+    return QV4::Value::fromInt32(fdow);
 }
 
-static v8::Handle<v8::Value> locale_get_measurementSystem(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQmlLocaleData::method_get_measurementSystem(QV4::SimpleCallContext*)
 {
-    V8_GET_LOCALE_DATA_RESOURCE(info.This());
-    return v8::Integer::New(r->locale.measurementSystem());
+    return QV4::Value::fromInt32(locale.measurementSystem());
 }
 
-static v8::Handle<v8::Value> locale_get_textDirection(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQmlLocaleData::method_get_textDirection(QV4::SimpleCallContext*)
 {
-    V8_GET_LOCALE_DATA_RESOURCE(info.This());
-    return v8::Integer::New(r->locale.textDirection());
+    return QV4::Value::fromInt32(locale.textDirection());
 }
 
-static v8::Handle<v8::Value> locale_get_weekDays(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQmlLocaleData::method_get_weekDays(QV4::SimpleCallContext* ctx)
 {
-    V8_GET_LOCALE_DATA_RESOURCE(info.This());
+    QList<Qt::DayOfWeek> days = locale.weekdays();
 
-    QList<Qt::DayOfWeek> days = r->locale.weekdays();
-
-    v8::Handle<v8::Array> result = v8::Array::New(days.size());
+    QV4::ArrayObject *result = ctx->engine->newArrayObject();
+    result->arrayReserve(days.size());
     for (int i = 0; i < days.size(); ++i) {
         int day = days.at(i);
         if (day == 7) // JS Date days in range 0(Sunday) to 6(Saturday)
             day = 0;
-        result->Set(i, v8::Integer::New(day));
+        result->arrayData[i].value = QV4::Value::fromInt32(day);
     }
+    result->setArrayLengthUnchecked(days.size());
 
-    return result;
+    return QV4::Value::fromObject(result);
 }
 
-static v8::Handle<v8::Value> locale_get_uiLanguages(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQmlLocaleData::method_get_uiLanguages(QV4::SimpleCallContext *ctx)
 {
-    V8_GET_LOCALE_DATA_RESOURCE(info.This());
+    QStringList langs = locale.uiLanguages();
+    QV4::ArrayObject *result = ctx->engine->newArrayObject();
+    result->arrayReserve(langs.size());
+    for (int i = 0; i < langs.size(); ++i)
+        result->arrayData[i].value = QV4::Value::fromString(ctx, langs.at(i));
+    result->setArrayLengthUnchecked(langs.size());
 
-    QStringList langs = r->locale.uiLanguages();
-    v8::Handle<v8::Array> result = v8::Array::New(langs.size());
-    for (int i = 0; i < langs.size(); ++i) {
-        result->Set(i, r->engine->toString(langs.at(i)));
-    }
-
-    return result;
+    return QV4::Value::fromObject(result);
 }
 
 QV4::Value QQmlLocaleData::method_currencySymbol(QV4::SimpleCallContext *ctx)
@@ -618,15 +630,10 @@ LOCALE_FORMATTED_MONTHNAME(standaloneMonthName)
 LOCALE_FORMATTED_DAYNAME(dayName)
 LOCALE_FORMATTED_DAYNAME(standaloneDayName)
 
-#define LOCALE_STRING_PROPERTY(VARIABLE) static v8::Handle<v8::Value> locale_get_ ## VARIABLE (v8::Handle<v8::String>, const v8::AccessorInfo &info) \
+#define LOCALE_STRING_PROPERTY(VARIABLE) QV4::Value QQmlLocaleData::method_get_ ## VARIABLE (QV4::SimpleCallContext* ctx) \
 { \
-    V8_GET_LOCALE_DATA_RESOURCE(info.This()); \
-    return r->engine->toString(r->locale. VARIABLE());\
+    return QV4::Value::fromString(ctx, locale. VARIABLE());\
 }
-
-#define LOCALE_REGISTER_STRING_ACCESSOR(FT, VARIABLE) \
-    FT ->PrototypeTemplate()->SetAccessor( v8::String::New( #VARIABLE ), locale_get_ ## VARIABLE )
-
 
 LOCALE_STRING_PROPERTY(name)
 LOCALE_STRING_PROPERTY(nativeLanguageName)
@@ -648,39 +655,13 @@ public:
     ~QV8LocaleDataDeletable();
 
     QV4::PersistentValue prototype;
-    QV4::PersistentValue v4Prototype;
 };
 
 QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
 {
-    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
-    ft->InstanceTemplate()->SetHasExternalResource(true);
-
-    LOCALE_REGISTER_STRING_ACCESSOR(ft, name);
-    LOCALE_REGISTER_STRING_ACCESSOR(ft, nativeLanguageName);
-    LOCALE_REGISTER_STRING_ACCESSOR(ft, nativeCountryName);
-    LOCALE_REGISTER_STRING_ACCESSOR(ft, decimalPoint);
-    LOCALE_REGISTER_STRING_ACCESSOR(ft, groupSeparator);
-    LOCALE_REGISTER_STRING_ACCESSOR(ft, percent);
-    LOCALE_REGISTER_STRING_ACCESSOR(ft, zeroDigit);
-    LOCALE_REGISTER_STRING_ACCESSOR(ft, negativeSign);
-    LOCALE_REGISTER_STRING_ACCESSOR(ft, positiveSign);
-    LOCALE_REGISTER_STRING_ACCESSOR(ft, exponential);
-    LOCALE_REGISTER_STRING_ACCESSOR(ft, amText);
-    LOCALE_REGISTER_STRING_ACCESSOR(ft, pmText);
-
-    ft->PrototypeTemplate()->SetAccessor(v8::String::New("firstDayOfWeek"), locale_get_firstDayOfWeek);
-    ft->PrototypeTemplate()->SetAccessor(v8::String::New("weekDays"), locale_get_weekDays);
-    ft->PrototypeTemplate()->SetAccessor(v8::String::New("measurementSystem"), locale_get_measurementSystem);
-    ft->PrototypeTemplate()->SetAccessor(v8::String::New("textDirection"), locale_get_textDirection);
-    ft->PrototypeTemplate()->SetAccessor(v8::String::New("uiLanguages"), locale_get_uiLanguages);
-
-    prototype = QV4::Value::fromObject(ft->GetFunction()->NewInstance()->v4Value().asObject()->prototype);
-
     QV4::ExecutionEngine *eng = QV8Engine::getV4(engine);
-    v4Prototype = QV4::Value::fromObject(eng->newObject());
-    QQmlLocaleData::initClass(eng, v4Prototype.value());
-    prototype.value().asObject()->prototype->prototype = v4Prototype.value().asObject();
+    prototype = QV4::Value::fromObject(eng->newObject());
+    QQmlLocaleData::initClass(eng, prototype.value());
 }
 
 QV8LocaleDataDeletable::~QV8LocaleDataDeletable()

@@ -13,6 +13,21 @@ class ParsedMethod():
     def isClassMethod(self):
         return self.static
 
+    def isGetter(self):
+        return self.name.startswith("get_")
+
+    def isSetter(self):
+        return self.name.startswith("set_")
+
+    def isAccessor(self):
+        return self.isGetter() or self.isSetter()
+
+    def nameWithoutGetterSetterPrefix(self):
+        return self.name[4:]
+
+    def fullMethodName(self):
+        return self.methodPrefix + "_" + self.name
+
     def generateBinding(self, out, objectPrefix = ""):
         length = 0
 
@@ -43,8 +58,9 @@ class ParsedClass():
     def __init__(self, name):
         self.name = name
         self.options = {}
-        self.methods = []
-        self.ctor_methods = []
+        self.methods = {}
+        self.ctor_methods = {}
+        self.accessors = {}
 
     def needsConstructor(self):
         return len(self.ctor_methods) > 0
@@ -58,6 +74,27 @@ class ParsedClass():
         if name in self.options:
             return self.options[name]
         return None
+
+class Accessor():
+    def __init__(self, name):
+        self.name = name
+        self.getter = None
+        self.setter = None
+
+    def generateBinding(self, out, parsedClass, obj):
+        out.write("    {\n")
+        out.write("        QV4::FunctionObject *wrappedGetter = 0;\n")
+        out.write("        QV4::FunctionObject *wrappedSetter = 0;\n")
+        out.write("\n")
+        if self.getter:
+            out.write("        wrappedGetter = new (engine->memoryManager) %s_AccessorGetter(engine->rootContext, &%s::%s);\n" % (parsedClass.name, parsedClass.name, self.getter.fullMethodName()))
+        if self.setter:
+            out.write("        wrappedSetter = new (engine->memoryManager) %s_AccessorSetter(engine->rootContext, &%s::%s);\n" % (parsedClass.name, parsedClass.name, self.setter.fullMethodName()))
+        out.write("        QV4::PropertyAttributes attrs = QV4::Attr_Accessor;\n")
+        out.write("        QV4::Property *pd = %sinsertMember(engine->newIdentifier(QStringLiteral(\"%s\")), attrs);\n" % (obj, self.name));
+        out.write("        pd->setGetter(wrappedGetter);\n");
+        out.write("        pd->setSetter(wrappedSetter);\n");
+        out.write("    }\n");
 
 def parseOptions(options):
     options = options.split(" ")
@@ -106,13 +143,21 @@ def parse(lines):
         methodMatch = methodPattern.match(line)
         if methodMatch:
             method = parseMethod(line, methodMatch, "method")
-            currentClass.methods.append(method)
+            if method.isAccessor():
+                name = method.nameWithoutGetterSetterPrefix()
+                acc = currentClass.accessors.setdefault(name, Accessor(name))
+                if method.isSetter():
+                    acc.setter = method
+                else:
+                    acc.getter = method
+            else:
+                currentClass.methods[method.name] = method
             continue
 
         ctorMethodMatch = ctorMethodPattern.match(line)
         if ctorMethodMatch:
             method = parseMethod(line, ctorMethodMatch, "ctor_method")
-            currentClass.ctor_methods.append(method)
+            currentClass.ctor_methods[method.name] = method
             continue
 
         annotateMatch = annotatePattern.match(line)
@@ -139,9 +184,7 @@ def generateBinding(out, parsedClass, vtableEntries):
         out.write("};\n\n");
         out.write("const QV4::ManagedVTable %s::static_vtbl = {\n" % ctorClass);
 
-        ctorOverrides = set()
-        for method in parsedClass.ctor_methods:
-            ctorOverrides.add(method.name)
+        ctorOverrides = set(parsedClass.ctor_methods.keys())
 
         for method in vtableEntries:
             entry = "FunctionObject::" + method
@@ -156,11 +199,18 @@ def generateBinding(out, parsedClass, vtableEntries):
         out.write("    return new (scope->engine->memoryManager) %s(scope);\n" % ctorClass)
         out.write("}\n\n")
 
-    for method in parsedClass.methods:
+    if len(parsedClass.accessors) > 0:
+        typename = "%s_AccessorGetter" % parsedClass.name
+        out.write("typedef QV4::MemberAccessorGetter<%s, QV4::Managed::Type_%s> %s;\n" % (parsedClass.name, parsedClass.managedTypeName(), typename))
+        out.write("template<>\n")
+        out.write("DEFINE_MANAGED_VTABLE(%s);" % typename)
+        out.write("\n\n")
+
+    for method in parsedClass.methods.values():
         if not method.isClassMethod():
             method.generateMemberFunctionWrapper(out, parsedClass)
 
-    for method in parsedClass.ctor_methods:
+    for method in parsedClass.ctor_methods.values():
         if not method.isClassMethod():
             method.generateMemberFunctionWrapper(out, parsedClass)
 
@@ -187,7 +237,7 @@ def generateBinding(out, parsedClass, vtableEntries):
         out.write("    %sdefineReadonlyProperty(engine->id_length, QV4::Value::fromInt32(%s));\n" % (ctor, ctorLength))
         out.write("\n")
 
-        for method in parsedClass.ctor_methods:
+        for method in parsedClass.ctor_methods.values():
             if method.name == "construct" or method.name == "call":
                 continue
             method.generateBinding(out, ctor);
@@ -197,8 +247,11 @@ def generateBinding(out, parsedClass, vtableEntries):
 
         out.write("\n")
 
-    for method in parsedClass.methods:
+    for method in parsedClass.methods.values():
         method.generateBinding(out, obj)
+
+    for accessor in parsedClass.accessors.values():
+        accessor.generateBinding(out, parsedClass, obj)
 
     out.write("}\n")
 
