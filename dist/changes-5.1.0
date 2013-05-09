@@ -46,6 +46,8 @@ Third party components
 ****************************************************************************
 *                          Library                                         *
 ****************************************************************************
+ - QTBUG-30837: The Flickable type no longer fixes up the content area on
+   startup to move it inside the viewport.
 
 
 ****************************************************************************
