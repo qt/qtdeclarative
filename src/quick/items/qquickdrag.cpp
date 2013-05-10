@@ -114,13 +114,13 @@ public:
     \ingroup qtquick-input
     \brief For specifying drag and drop events for moved Items
 
-    Using the Drag attached property any Item can made a source of drag and drop
+    Using the Drag attached property any Item can be made a source of drag and drop
     events within a scene.
 
-    When a drag is \l active on an item any change in that items position will
-    generate a drag events that will be sent to any DropArea that intersects
-    the with new  position of the item.  Other items which implement drag and
-     drop event handlers can also receive these events.
+    When a drag is \l active on an item any change in that item's position will
+    generate a drag event that will be sent to any DropArea that intersects
+    with the new position of the item.  Other items which implement drag and
+    drop event handlers can also receive these events.
 
     The following snippet shows how an item can be dragged with a MouseArea.
     However, dragging is not limited to mouse drags, anything that can move an item
