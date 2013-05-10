@@ -46,6 +46,7 @@ There are very few changes in the QML language that affect the porting of existi
 \li Individual file imports no longer work (for example, import "MyType.qml"). Import the containing directory instead.
 \li Relative file paths in JavaScript files are now resolved relative to the location of the JavaScript file instead of the QML file that imported it.
 \endlist
+\li It's no longer possible to override signals from the base component.
 
 \section1 QtQuick Module
 
