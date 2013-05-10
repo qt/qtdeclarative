@@ -2026,7 +2026,7 @@ Handle<Value> TryCatch::Exception() const
 Handle<Message> TryCatch::Message() const
 {
     Q_UNIMPLEMENTED();
-    return Handle<v8::Message>(new v8::Message(QString(), QString(), 0));
+    return Handle<v8::Message>(new v8::Message(exception->v4Value().toQString(), QString(), 0));
 }
 
 void TryCatch::Reset()
