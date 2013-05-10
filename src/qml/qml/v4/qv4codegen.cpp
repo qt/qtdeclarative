@@ -977,7 +977,9 @@ private:
         bool wasStrict = false;
         if (_env) {
             _env->hasNestedFunctions = true;
-            _env->enter(name, Environment::FunctionDefinition, expr);
+            // The identifier of a function expression cannot be referenced from the enclosing environment.
+            if (expr)
+                _env->enter(name, Environment::FunctionDefinition, expr);
             if (name == QLatin1String("arguments"))
                 _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
             wasStrict = _env->isStrict;
