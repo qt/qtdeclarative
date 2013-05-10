@@ -49,6 +49,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlLocaleData;
+class QQuickJSContext2D;
 
 namespace QV4 {
 
@@ -163,7 +164,8 @@ public:
         Type_RegExp,
 
         // QML bindings
-        Type_QmlLocale
+        Type_QmlLocale,
+        Type_QQuickJSContext2D
     };
 
     ExecutionEngine *engine() const;
@@ -183,6 +185,7 @@ public:
     ForeachIteratorObject *asForeachIteratorObject() { return type == Type_ForeachIteratorObject ? reinterpret_cast<ForeachIteratorObject *>(this) : 0; }
     RegExp *asRegExp() { return type == Type_RegExp ? reinterpret_cast<RegExp *>(this) : 0; }
     QQmlLocaleData *asQmlLocale() { return type == Type_QmlLocale ? reinterpret_cast<QQmlLocaleData *>(this) : 0; }
+    QQuickJSContext2D *asQQuickJSContext2D() { return type == Type_QQuickJSContext2D ? reinterpret_cast<QQuickJSContext2D *>(this) : 0; }
 
     bool isArrayObject() const { return type == Type_ArrayObject; }
     bool isStringObject() const { return type == Type_StringObject; }

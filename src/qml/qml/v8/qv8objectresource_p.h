@@ -71,9 +71,9 @@ public:
     QV8ObjectResource(QV8Engine *engine) : engine(engine) { Q_ASSERT(engine); }
     enum ResourceType { ContextType, QObjectType, TypeType, ListType, VariantType,
                         ValueTypeType, XMLHttpRequestType, DOMNodeType, SQLDatabaseType,
-                        ListModelType, Context2DType, Context2DStyleType, Context2DPixelArrayType,
+                        ListModelType, Context2DStyleType, Context2DPixelArrayType,
                         ParticleDataType, SignalHandlerType, IncubatorType, VisualDataItemType,
-                        SequenceType, LocaleDataType, ChangeSetArrayType };
+                        SequenceType, ChangeSetArrayType };
     virtual ResourceType resourceType() const = 0;
 
     QV8Engine *engine;

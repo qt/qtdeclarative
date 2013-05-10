@@ -14,3 +14,5 @@ HEADERS += \
     $$PWD/qquickcontext2dtexture_p.h \
     $$PWD/qquickcontext2dcommandbuffer_p.h \
 
+JS_CLASS_SOURCES += \
+    $$PWD/qquickcontext2d.cpp

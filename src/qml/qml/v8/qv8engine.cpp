@@ -216,9 +216,7 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             case QV8ObjectResource::DOMNodeType:
             case QV8ObjectResource::SQLDatabaseType:
             case QV8ObjectResource::ListModelType:
-            case QV8ObjectResource::Context2DType:
             case QV8ObjectResource::ParticleDataType:
-            case QV8ObjectResource::LocaleDataType:
             case QV8ObjectResource::ChangeSetArrayType:
                 return QVariant();
             case QV8ObjectResource::TypeType:

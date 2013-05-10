@@ -69,7 +69,7 @@ public:
     virtual void flush();
 
     virtual void setV8Engine(QV8Engine *engine) = 0;
-    virtual v8::Handle<v8::Object> v8value() const = 0;
+    virtual QV4::Value v4value() const = 0;
 
     virtual QSGDynamicTexture *texture() const = 0;
 
