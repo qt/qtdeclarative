@@ -52,6 +52,7 @@
 
 #include <cmath>
 #include <cassert>
+#include <limits>
 
 //#include <wtf/MathExtras.h>
 
