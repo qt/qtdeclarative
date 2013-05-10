@@ -102,7 +102,7 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
                 p = current->arrayData + pidx;
                 arrayNode = arrayNode->nextNode();
                 PropertyAttributes a = current->arrayAttributes ? current->arrayAttributes[pidx] : PropertyAttributes(Attr_Data);
-                if (!(flags & EnumberableOnly) || a.isEnumerable()) {
+                if (!(flags & EnumerableOnly) || a.isEnumerable()) {
                     arrayIndex = k + 1;
                     *index = k;
                     if (attrs)
@@ -120,7 +120,7 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
             PropertyAttributes a = current->arrayAttributes ? current->arrayAttributes[pidx] : PropertyAttributes(Attr_Data);
             ++arrayIndex;
             if ((!current->arrayAttributes || !current->arrayAttributes[pidx].isGeneric())
-                 && (!(flags & EnumberableOnly) || a.isEnumerable())) {
+                 && (!(flags & EnumerableOnly) || a.isEnumerable())) {
                 *index = arrayIndex - 1;
                 if (attrs)
                     *attrs = a;
@@ -139,7 +139,7 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
                 PropertyAttributes a;
                 if (current->dynamicPropertyQuery)
                     a = current->dynamicPropertyQuery(current, n);
-                if (!(flags & EnumberableOnly) || a.isEnumerable()) {
+                if (!(flags & EnumerableOnly) || a.isEnumerable()) {
                     *name = n;
                     if (attrs)
                         *attrs = a;
@@ -177,7 +177,7 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
         p = current->memberData + memberIndex;
         PropertyAttributes a = internalClass->propertyData[memberIndex];
         ++memberIndex;
-        if (!(flags & EnumberableOnly) || a.isEnumerable()) {
+        if (!(flags & EnumerableOnly) || a.isEnumerable()) {
             *name = n;
             if (attrs)
                 *attrs = a;

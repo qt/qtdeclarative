@@ -212,7 +212,7 @@ Value ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
 
     Object *o = ctx->argument(1).toObject(ctx);
 
-    ObjectIterator it(o, ObjectIterator::EnumberableOnly);
+    ObjectIterator it(o, ObjectIterator::EnumerableOnly);
     while (1) {
         uint index;
         String *name;
@@ -356,7 +356,7 @@ Value ObjectPrototype::method_keys(SimpleCallContext *ctx)
 
     ArrayObject *a = ctx->engine->newArrayObject();
 
-    ObjectIterator it(o, ObjectIterator::EnumberableOnly);
+    ObjectIterator it(o, ObjectIterator::EnumerableOnly);
     while (1) {
         uint index;
         String *name;

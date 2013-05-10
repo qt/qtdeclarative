@@ -126,7 +126,7 @@ QJsonObject QV4JsonWrapper::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObj
 
     visitedObjects.insert(o);
 
-    ObjectIterator it(o, ObjectIterator::EnumberableOnly);
+    ObjectIterator it(o, ObjectIterator::EnumerableOnly);
     while (1) {
         PropertyAttributes attributes;
         String *name;

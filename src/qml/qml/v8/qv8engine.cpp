@@ -948,7 +948,7 @@ QVariantMap QV8Engine::variantMapFromJS(QV4::Object *o,
 
     visitedObjects.insert(o);
 
-    QV4::ObjectIterator it(o, QV4::ObjectIterator::EnumberableOnly);
+    QV4::ObjectIterator it(o, QV4::ObjectIterator::EnumerableOnly);
     while (1) {
         QV4::PropertyAttributes attributes;
         QV4::String *name;

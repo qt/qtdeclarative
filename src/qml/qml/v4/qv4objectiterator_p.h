@@ -62,7 +62,7 @@ struct ObjectIterator
 {
     enum Flags {
         NoFlags = 0,
-        EnumberableOnly = 0x1,
+        EnumerableOnly = 0x1,
         WithProtoChain = 0x2,
         CurrentIsString = 0x4
     };

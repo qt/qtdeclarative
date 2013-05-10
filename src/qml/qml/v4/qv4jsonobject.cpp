@@ -775,7 +775,7 @@ QString Stringify::JO(Object *o)
 
     QStringList partial;
     if (propertyList.isEmpty()) {
-        ObjectIterator it(o, ObjectIterator::EnumberableOnly);
+        ObjectIterator it(o, ObjectIterator::EnumerableOnly);
 
         while (1) {
             String *name;

@@ -904,7 +904,7 @@ Handle<Array> Object::GetPropertyNames()
     assert(o);
 
     QV4::ArrayObject *array = currentEngine()->newArrayObject();
-    ObjectIterator it(o, ObjectIterator::WithProtoChain|ObjectIterator::EnumberableOnly);
+    ObjectIterator it(o, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
     while (1) {
         QV4::Value v = it.nextPropertyNameAsString();
         if (v.isNull())
@@ -920,7 +920,7 @@ Handle<Array> Object::GetOwnPropertyNames()
     assert(o);
     QV4::Value arg = QV4::Value::fromObject(o);
     ArrayObject *array = currentEngine()->newArrayObject();
-    ObjectIterator it(o, ObjectIterator::EnumberableOnly);
+    ObjectIterator it(o, ObjectIterator::EnumerableOnly);
     while (1) {
         QV4::Value v = it.nextPropertyNameAsString();
         if (v.isNull())
