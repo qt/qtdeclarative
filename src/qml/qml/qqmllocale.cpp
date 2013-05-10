@@ -63,11 +63,9 @@ public:
     {
         vtbl = &static_vtbl;
         type = Type_QmlLocale;
-        this->engine = QV8Engine::get(engine->publicEngine);
     }
 
     QLocale locale;
-    QV8Engine *engine; // ### compat, remove once unused
 
     static void initClass(QV4::ExecutionEngine *engine, const QV4::Value &obj);
 
