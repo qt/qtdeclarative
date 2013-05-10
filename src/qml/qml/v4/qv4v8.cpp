@@ -954,13 +954,22 @@ bool Object::SetPrototype(Handle<Value> prototype)
 
 Handle<Value> Object::GetInternalField(int index)
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
+    if (!o)
+        return Handle<Value>();
+    QString internalFieldName = QStringLiteral("_internalfield_");
+    internalFieldName += QString::number(index);
+    return o->get(o->engine()->newString(internalFieldName));
 }
 
 void Object::SetInternalField(int index, Handle<Value> value)
 {
-    Q_UNIMPLEMENTED();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
+    if (!o)
+        return;
+    QString internalFieldName = QStringLiteral("_internalfield_");
+    internalFieldName += QString::number(index);
+    o->put(o->engine()->newString(internalFieldName), value->v4Value());
 }
 
 void Object::SetExternalResource(Object::ExternalResource *resource)
