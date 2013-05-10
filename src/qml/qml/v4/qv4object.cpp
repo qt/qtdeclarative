@@ -73,6 +73,8 @@ Object::Object(ExecutionEngine *engine)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
     , externalResource(0)
+    , dynamicPropertyEnumerator(0)
+    , dynamicPropertyQuery(0)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
@@ -84,6 +86,8 @@ Object::Object(ExecutionContext *context)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
     , externalResource(0)
+    , dynamicPropertyEnumerator(0)
+    , dynamicPropertyQuery(0)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
@@ -95,6 +99,8 @@ Object::Object(ExecutionEngine *engine, InternalClass *internalClass)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
     , externalResource(0)
+    , dynamicPropertyEnumerator(0)
+    , dynamicPropertyQuery(0)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
@@ -1289,4 +1295,6 @@ void ForEachIteratorObject::markObjects(Managed *that)
     Object::markObjects(that);
     if (o->it.object)
         o->it.object->mark();
+    if (o->it.dynamicProperties)
+        o->it.dynamicProperties->mark();
 }

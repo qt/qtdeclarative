@@ -99,6 +99,8 @@ struct SyntaxErrorPrototype;
 struct TypeErrorPrototype;
 struct URIErrorPrototype;
 
+typedef Value (*PropertyEnumeratorFunction)(Object *object);
+typedef PropertyAttributes (*PropertyQueryFunction)(Object *object, String *name);
 
 struct Q_QML_EXPORT Object: Managed {
 
@@ -121,6 +123,8 @@ struct Q_QML_EXPORT Object: Managed {
     Property *arrayData;
     SparseArray *sparseArray;
     ExternalResource *externalResource;
+    PropertyEnumeratorFunction dynamicPropertyEnumerator;
+    PropertyQueryFunction dynamicPropertyQuery;
 
     enum {
         InlinePropertySize = 4

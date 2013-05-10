@@ -1419,6 +1419,13 @@ public:
         m_template = tmpl;
         if (!m_template)
             m_template = ObjectTemplate::New().get();
+        else {
+            if (m_template->m_fallbackPropertyEnumerator)
+                this->dynamicPropertyEnumerator = enumerateDynamicProperties;
+            if (m_template->m_fallbackPropertyQuery)
+                this->dynamicPropertyQuery = queryDynamicProperty;
+
+        }
 
         foreach (const ObjectTemplate::Accessor &acc, m_template->m_accessors) {
             PropertyAttributes attrs = Attr_Accessor;
@@ -1442,6 +1449,18 @@ public:
             QV4::Property *pd = this->insertMember(p.name.value().asString(), attrs);
             *pd = QV4::Property::fromValue(p.value);
         }
+    }
+
+    static QV4::Value enumerateDynamicProperties(QV4::Object *object)
+    {
+        V4V8Object<BaseClass> *that = static_cast<V4V8Object<BaseClass> *>(object);
+        return that->m_template->m_fallbackPropertyEnumerator(that->namedAccessorInfo())->v4Value();
+    }
+
+    static QV4::PropertyAttributes queryDynamicProperty(QV4::Object *object, QV4::String *string)
+    {
+        V4V8Object<BaseClass> *that = static_cast<V4V8Object<BaseClass> *>(object);
+        return propertyAttributesToFlags(that->m_template->m_fallbackPropertyQuery(String::New(string), that->namedAccessorInfo()));
     }
 
     QExplicitlySharedDataPointer<ObjectTemplate> m_template;
