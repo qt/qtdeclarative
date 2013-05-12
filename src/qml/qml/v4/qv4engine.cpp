@@ -95,6 +95,8 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
     identifierCache = new Identifiers(this);
 
+    emptyClass =  new (classPool.allocate(sizeof(InternalClass))) InternalClass(this);
+
     id_undefined = newIdentifier(QStringLiteral("undefined"));
     id_null = newIdentifier(QStringLiteral("null"));
     id_true = newIdentifier(QStringLiteral("true"));
@@ -121,7 +123,6 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     id_uintMax = newIdentifier(QStringLiteral("4294967295"));
     id_name = newIdentifier(QStringLiteral("name"));
 
-    emptyClass =  new (classPool.allocate(sizeof(InternalClass))) InternalClass(this);
     arrayClass = emptyClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
     initRootContext();
 
