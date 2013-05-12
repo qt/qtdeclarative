@@ -308,7 +308,9 @@ void QQmlDebugConnection::flush()
 void QQmlDebugConnection::connectToHost(const QString &hostName, quint16 port)
 {
     QTcpSocket *socket = new QTcpSocket(d);
+#ifndef QT_NO_NETWORKPROXY
     socket->setProxy(QNetworkProxy::NoProxy);
+#endif
     d->device = socket;
     d->connectDeviceSignals();
     d->gotHello = false;
