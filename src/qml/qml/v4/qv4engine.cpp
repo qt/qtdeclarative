@@ -599,7 +599,7 @@ Value ExecutionEngine::run(Function *function, ExecutionContext *ctx)
     if (!ctx)
         ctx = rootContext;
 
-    TemporaryAssignment<Function*>(globalCode, function);
+    TemporaryAssignment<Function*> savedGlobalCode(globalCode, function);
 
     // ### Would be better to have a SavedExecutionState object that
     // saves this and restores it in the destructor (to survive an exception).
