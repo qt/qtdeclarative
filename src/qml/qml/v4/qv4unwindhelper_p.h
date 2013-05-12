@@ -10,6 +10,7 @@ struct Function;
 class UnwindHelper
 {
 public:
+    static void ensureUnwindInfo(Function *function);
     static void registerFunction(Function *function);
     static void registerFunctions(QVector<Function *> functions);
     static void deregisterFunction(Function *function);

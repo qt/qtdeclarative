@@ -81,8 +81,13 @@ void writeIntPtrValue(unsigned char *addr, intptr_t val)
 }
 } // anonymous namespace
 
-static void ensureUnwindInfo(Function *f)
+extern "C" void __register_frame(void *fde);
+extern "C" void __deregister_frame(void *fde);
+
+void UnwindHelper::ensureUnwindInfo(Function *f)
 {
+    if (!f->codeRef)
+        return; // Not a JIT generated function
     if (!f->unwindInfo.isEmpty())
         return;
     QByteArray info;
@@ -97,29 +102,22 @@ static void ensureUnwindInfo(Function *f)
     writeIntPtrValue(cie_and_fde + address_range_offset, f->codeSize);
 
     f->unwindInfo = info;
+    __register_frame(f->unwindInfo.data() + fde_offset);
 }
-
-#if defined(Q_OS_DARWIN)
-extern "C" void __register_frame(void *fde);
-extern "C" void __deregister_frame(void *fde);
-#endif
 
 static void registerFunctionUnlocked(Function *f)
 {
-    allFunctions.insert(reinterpret_cast<quintptr>(f->code), f);
-#if defined(Q_OS_DARWIN)
-    ensureUnwindInfo(f);
-    __register_frame(f->unwindInfo.data() + fde_offset);
-#endif
+    quintptr addr = reinterpret_cast<quintptr>(f->code);
+    if (allFunctions.contains(addr))
+        return;
+    allFunctions.insert(addr, f);
 }
 
 static void deregisterFunctionUnlocked(Function *f)
 {
     allFunctions.remove(reinterpret_cast<quintptr>(f->code));
-#if defined(Q_OS_DARWIN)
     if (!f->unwindInfo.isEmpty())
         __deregister_frame(f->unwindInfo.data() + fde_offset);
-#endif
 }
 
 void UnwindHelper::registerFunction(Function *function)
@@ -149,40 +147,5 @@ void UnwindHelper::deregisterFunctions(QVector<Function *> functions)
 }
 
 }
-
-#if defined(Q_OS_LINUX)
-extern "C" {
-
-struct bases
-{
-    void *tbase;
-    void *dbase;
-    void *func;
-};
-
-Q_QML_EXPORT void *_Unwind_Find_FDE(void *pc, struct bases *bases)
-{
-    typedef void *(*Old_Unwind_Find_FDE)(void *pc, struct bases *bases);
-    static Old_Unwind_Find_FDE oldFunction = 0;
-    if (!oldFunction)
-        oldFunction = (Old_Unwind_Find_FDE)dlsym(RTLD_NEXT, "_Unwind_Find_FDE");
-
-    {
-        QMutexLocker locker(&QV4::functionProtector);
-        QV4::Function *function = QV4::lookupFunction(pc);
-        if (function) {
-            bases->tbase = 0;
-            bases->dbase = 0;
-            bases->func = reinterpret_cast<void*>(function->code);
-            QV4::ensureUnwindInfo(function);
-            return function->unwindInfo.data() + QV4::fde_offset;
-        }
-    }
-
-    return oldFunction(pc, bases);
-}
-
-}
-#endif
 
 #endif // QV4UNWINDHELPER_PDW2_H

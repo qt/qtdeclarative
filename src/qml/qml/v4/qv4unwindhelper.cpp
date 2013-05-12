@@ -29,6 +29,7 @@
 
 #ifdef USE_NULL_HELPER
 using namespace QV4;
+void UnwindHelper::ensureUnwindInfo(Function *function) {Q_UNUSED(function);}
 void UnwindHelper::registerFunction(Function *function) {Q_UNUSED(function);}
 void UnwindHelper::registerFunctions(QVector<Function *> functions) {Q_UNUSED(functions);}
 void UnwindHelper::deregisterFunction(Function *function) {Q_UNUSED(function);}

@@ -49,6 +49,7 @@
 #include "qv4stringobject_p.h"
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
+#include "qv4unwindhelper_p.h"
 #include "private/qlocale_tools_p.h"
 
 #include <QtCore/qmath.h>
@@ -950,6 +951,19 @@ void __qmljs_throw(ExecutionContext *context, const Value &value)
 {
     if (context->engine->debugger)
         context->engine->debugger->aboutToThrow(value);
+
+    for (ExecutionContext *ctx = context; ctx; ctx = ctx->parent) {
+        if (CallContext *callCtx = ctx->asCallContext())
+            if (FunctionObject *fobj = callCtx->function)
+                if (Function *fun = fobj->function)
+                    UnwindHelper::ensureUnwindInfo(fun);
+        for (ExecutionContext::EvalCode *code = ctx->currentEvalCode;
+             code; code = code->next)
+            UnwindHelper::ensureUnwindInfo(code->function);
+    }
+
+    if (context->engine->globalCode)
+        UnwindHelper::ensureUnwindInfo(context->engine->globalCode);
 
 #if USE(LIBUNWIND_DEBUG)
     printf("about to throw exception. walking stack first with libunwind:\n");
