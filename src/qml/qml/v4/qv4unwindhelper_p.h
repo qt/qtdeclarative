@@ -12,9 +12,9 @@ class UnwindHelper
 public:
     static void ensureUnwindInfo(Function *function);
     static void registerFunction(Function *function);
-    static void registerFunctions(QVector<Function *> functions);
+    static void registerFunctions(const QVector<Function *> &functions);
     static void deregisterFunction(Function *function);
-    static void deregisterFunctions(QVector<Function *> functions);
+    static void deregisterFunctions(const QVector<Function *> &functions);
 #ifdef Q_PROCESSOR_ARM
     static int unwindInfoSize();
     static void writeARMUnwindInfo(void *codeAddr, int codeSize);

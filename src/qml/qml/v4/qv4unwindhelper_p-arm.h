@@ -96,7 +96,7 @@ void UnwindHelper::deregisterFunction(Function *function)
     allFunctions.remove(reinterpret_cast<quintptr>(function->code));
 }
 
-void UnwindHelper::deregisterFunctions(QVector<Function *> functions)
+void UnwindHelper::deregisterFunctions(const QVector<Function *> &functions)
 {
     QMutexLocker locker(&functionProtector);
     foreach (Function *f, functions)
@@ -109,7 +109,7 @@ void UnwindHelper::registerFunction(Function *function)
     allFunctions.insert(reinterpret_cast<quintptr>(function->code), function);
 }
 
-void UnwindHelper::registerFunctions(QVector<Function *> functions)
+void UnwindHelper::registerFunctions(const QVector<Function *> &functions)
 {
     QMutexLocker locker(&functionProtector);
     foreach (Function *f, functions)

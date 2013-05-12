@@ -47,6 +47,7 @@
 #include <QMultiMap>
 #include <QHash>
 #include <QVector>
+#include <QByteArray>
 
 namespace WTF {
 class PageAllocation;
@@ -58,8 +59,8 @@ namespace QV4 {
 
 class Q_AUTOTEST_EXPORT ExecutableAllocator
 {
-    struct ChunkOfPages;
 public:
+    struct ChunkOfPages;
     struct Allocation;
 
     ~ExecutableAllocator();
@@ -97,17 +98,31 @@ public:
     int freeAllocationCount() const { return freeAllocations.count(); }
     int chunkCount() const { return chunks.count(); }
 
-private:
+    // Used to store CIE+FDE on x86/x86-64.
+    struct PlatformUnwindInfo
+    {
+        virtual ~PlatformUnwindInfo() {}
+    };
+
     struct ChunkOfPages
     {
+        ChunkOfPages()
+            : pages(0)
+            , firstAllocation(0)
+            , unwindInfo(0)
+        {}
         ~ChunkOfPages();
 
         WTF::PageAllocation *pages;
         Allocation *firstAllocation;
+        PlatformUnwindInfo *unwindInfo;
 
         bool contains(Allocation *alloc) const;
     };
 
+    ChunkOfPages *chunkForAllocation(Allocation *allocation) const;
+
+private:
     QMultiMap<size_t, Allocation*> freeAllocations;
     QMap<quintptr, ChunkOfPages*> chunks;
 };

@@ -79,6 +79,9 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
     void* start() { return m_allocation->start(); }
     int sizeInBytes() { return m_size; }
 
+    QV4::ExecutableAllocator::ChunkOfPages *chunk() const
+    { return m_allocator->chunkForAllocation(m_allocation); }
+
     QV4::ExecutableAllocator *m_allocator;
     QV4::ExecutableAllocator::Allocation *m_allocation;
     int m_size;

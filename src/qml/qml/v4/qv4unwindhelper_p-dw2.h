@@ -5,6 +5,8 @@
 #include "qv4functionobject_p.h"
 #include "qv4function_p.h"
 #include <wtf/Platform.h>
+#include <wtf/PageAllocation.h>
+#include <ExecutableAllocator.h>
 
 #include <QMap>
 #include <QMutex>
@@ -45,27 +47,7 @@ static const int fde_offset = 20;
 static const int initial_location_offset = 28;
 static const int address_range_offset = 32;
 #endif
-} // anonymous namespace
 
-static QMutex functionProtector;
-static QMap<quintptr, Function*> allFunctions;
-
-static Function *lookupFunction(void *pc)
-{
-    quintptr key = reinterpret_cast<quintptr>(pc);
-    QMap<quintptr, Function*>::ConstIterator it = allFunctions.lowerBound(key);
-    if (it != allFunctions.begin() && allFunctions.count() > 0)
-        --it;
-    if (it == allFunctions.end())
-        return 0;
-
-    quintptr codeStart = reinterpret_cast<quintptr>((*it)->code);
-    if (key < codeStart || key >= codeStart + (*it)->codeSize)
-        return 0;
-    return *it;
-}
-
-namespace {
 void writeIntPtrValue(unsigned char *addr, intptr_t val)
 {
     addr[0] = (val >>  0) & 0xff;
@@ -84,66 +66,66 @@ void writeIntPtrValue(unsigned char *addr, intptr_t val)
 extern "C" void __register_frame(void *fde);
 extern "C" void __deregister_frame(void *fde);
 
+struct UnwindInfo : public ExecutableAllocator::PlatformUnwindInfo
+{
+    UnwindInfo(const QByteArray &cieFde);
+    virtual ~UnwindInfo();
+    QByteArray data;
+};
+
+UnwindInfo::UnwindInfo(const QByteArray &cieFde)
+    : data(cieFde)
+{
+    __register_frame(data.data() + fde_offset);
+}
+
+UnwindInfo::~UnwindInfo()
+{
+    __deregister_frame(data.data() + fde_offset);
+}
+
 void UnwindHelper::ensureUnwindInfo(Function *f)
 {
     if (!f->codeRef)
         return; // Not a JIT generated function
-    if (!f->unwindInfo.isEmpty())
+
+    JSC::ExecutableMemoryHandle *handle = f->codeRef.executableMemory();
+    if (!handle)
         return;
+    ExecutableAllocator::ChunkOfPages *chunk = handle->chunk();
+
+    // Already registered?
+    if (chunk->unwindInfo)
+        return;
+
     QByteArray info;
     info.resize(sizeof(cie_fde_data));
 
     unsigned char *cie_and_fde = reinterpret_cast<unsigned char *>(info.data());
     memcpy(cie_and_fde, cie_fde_data, sizeof(cie_fde_data));
 
-    intptr_t ptr = static_cast<char *>(f->codeRef.code().executableAddress()) - static_cast<char *>(0);
+    intptr_t ptr = static_cast<char *>(chunk->pages->base()) - static_cast<char *>(0);
     writeIntPtrValue(cie_and_fde + initial_location_offset, ptr);
 
-    writeIntPtrValue(cie_and_fde + address_range_offset, f->codeSize);
+    writeIntPtrValue(cie_and_fde + address_range_offset, chunk->pages->size());
 
-    f->unwindInfo = info;
-    __register_frame(f->unwindInfo.data() + fde_offset);
+    chunk->unwindInfo = new UnwindInfo(info);
 }
 
-static void registerFunctionUnlocked(Function *f)
+void UnwindHelper::registerFunction(Function *)
 {
-    quintptr addr = reinterpret_cast<quintptr>(f->code);
-    if (allFunctions.contains(addr))
-        return;
-    allFunctions.insert(addr, f);
 }
 
-static void deregisterFunctionUnlocked(Function *f)
+void UnwindHelper::registerFunctions(const QVector<Function *>&)
 {
-    allFunctions.remove(reinterpret_cast<quintptr>(f->code));
-    if (!f->unwindInfo.isEmpty())
-        __deregister_frame(f->unwindInfo.data() + fde_offset);
 }
 
-void UnwindHelper::registerFunction(Function *function)
+void UnwindHelper::deregisterFunction(Function *)
 {
-    QMutexLocker locker(&functionProtector);
-    registerFunctionUnlocked(function);
 }
 
-void UnwindHelper::registerFunctions(QVector<Function *> functions)
+void UnwindHelper::deregisterFunctions(const QVector<Function *> &)
 {
-    QMutexLocker locker(&functionProtector);
-    foreach (Function *f, functions)
-        registerFunctionUnlocked(f);
-}
-
-void UnwindHelper::deregisterFunction(Function *function)
-{
-    QMutexLocker locker(&functionProtector);
-    deregisterFunctionUnlocked(function);
-}
-
-void UnwindHelper::deregisterFunctions(QVector<Function *> functions)
-{
-    QMutexLocker locker(&functionProtector);
-    foreach (Function *f, functions)
-        deregisterFunctionUnlocked(f);
 }
 
 }

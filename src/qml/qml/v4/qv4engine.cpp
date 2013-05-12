@@ -73,6 +73,7 @@ using namespace QV4;
 ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     : memoryManager(new QV4::MemoryManager)
     , executableAllocator(new QV4::ExecutableAllocator)
+    , regExpAllocator(new QV4::ExecutableAllocator)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , debugger(0)
     , globalObject(0)
@@ -258,6 +259,7 @@ ExecutionEngine::~ExecutionEngine()
     UnwindHelper::deregisterFunctions(functions);
     qDeleteAll(functions);
     delete memoryManager;
+    delete regExpAllocator;
     delete executableAllocator;
 }
 

@@ -113,6 +113,7 @@ bool ExecutableAllocator::Allocation::mergePrevious(ExecutableAllocator *allocat
 
 ExecutableAllocator::ChunkOfPages::~ChunkOfPages()
 {
+    delete unwindInfo;
     Allocation *alloc = firstAllocation;
     while (alloc) {
         Allocation *next = alloc->next;
@@ -206,3 +207,14 @@ void ExecutableAllocator::free(Allocation *allocation)
         return;
     }
 }
+
+ExecutableAllocator::ChunkOfPages *ExecutableAllocator::chunkForAllocation(Allocation *allocation) const
+{
+    QMap<quintptr, ChunkOfPages*>::ConstIterator it = chunks.lowerBound(allocation->addr);
+    if (it != chunks.begin())
+        --it;
+    if (it == chunks.end())
+        return 0;
+    return *it;
+}
+

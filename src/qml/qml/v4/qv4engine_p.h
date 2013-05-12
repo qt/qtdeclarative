@@ -111,6 +111,7 @@ struct Q_QML_EXPORT ExecutionEngine
 {
     MemoryManager *memoryManager;
     ExecutableAllocator *executableAllocator;
+    ExecutableAllocator *regExpAllocator;
     QScopedPointer<QQmlJS::EvalISelFactory> iselFactory;
 
     ExecutionContext *current;
