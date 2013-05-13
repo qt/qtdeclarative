@@ -178,8 +178,6 @@ void CallContext::initCallContext(ExecutionEngine *engine, FunctionObject *funct
     uint argc = argumentCount;
 
     locals = (Value *)(this + 1);
-    if (function->varCount)
-        std::fill(locals, locals + function->varCount, Value::undefinedValue());
 
     if (needsOwnArguments()) {
         Value *args = arguments;
