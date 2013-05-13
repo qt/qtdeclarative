@@ -108,6 +108,13 @@ QString Value::toQString() const
                 return prim.toQString();
         } catch (Exception &e) {
             e.accept(ctx);
+            try {
+                Value prim = __qmljs_to_primitive(e.value(), STRING_HINT);
+                if (prim.isPrimitive())
+                    return prim.toQString();
+            } catch(Exception &e) {
+                e.accept(ctx);
+            }
         }
         return QString();
     }
