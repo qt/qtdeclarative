@@ -72,9 +72,9 @@ public:
     void init(QV8Engine *);
     void destroy();
 
-    v8::Handle<v8::Object> newVariant(const QVariant &);
-    static bool isVariant(v8::Handle<v8::Value>);
-    static QVariant toVariant(v8::Handle<v8::Object>);
+    QV4::Value newVariant(const QVariant &);
+    static bool isVariant(const QV4::Value &v);
+    static QVariant toVariant(const QV4::Value &v);
     static QVariant toVariant(QV8ObjectResource *);
     QVariant &variantValue(v8::Handle<v8::Value>);
 

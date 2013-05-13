@@ -414,7 +414,7 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
     //    + QObjectList
     //    + QList<int>
 
-    return m_variantWrapper.newVariant(variant)->v4Value();
+    return m_variantWrapper.newVariant(variant);
 }
 
 // A handle scope and context must be entered
@@ -1053,7 +1053,7 @@ QV4::Value QV8Engine::metaTypeToJS(int type, const void *data)
                 return QV4::Value::nullValue();
             } else {
                 // Fall back to wrapping in a QVariant.
-                result = variantWrapper()->newVariant(QVariant(type, data))->v4Value();
+                result = variantWrapper()->newVariant(QVariant(type, data));
             }
         }
     }

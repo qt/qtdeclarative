@@ -129,7 +129,7 @@ void QV8VariantWrapper::destroy()
 {
 }
 
-v8::Handle<v8::Object> QV8VariantWrapper::newVariant(const QVariant &value)
+QV4::Value QV8VariantWrapper::newVariant(const QVariant &value)
 {
     bool scarceResource = value.type() == QVariant::Pixmap ||
                           value.type() == QVariant::Image;
@@ -149,18 +149,21 @@ v8::Handle<v8::Object> QV8VariantWrapper::newVariant(const QVariant &value)
     }
 
     rv->SetExternalResource(r);
-    return rv;
+    return rv->v4Value();
 }
 
-bool QV8VariantWrapper::isVariant(v8::Handle<v8::Value> value)
+bool QV8VariantWrapper::isVariant(const QV4::Value &v)
 {
-    return value->IsObject() && v8_resource_cast<QV8VariantResource>(value->ToObject());
+    if (!v.isObject())
+        return false;
+    v8::Handle<v8::Object> vv(v);
+    return v8_resource_cast<QV8VariantResource>(vv);
 }
 
-QVariant QV8VariantWrapper::toVariant(v8::Handle<v8::Object> obj)
+QVariant QV8VariantWrapper::toVariant(const QV4::Value &v)
 {
-    QV8VariantResource *r =  v8_resource_cast<QV8VariantResource>(obj);
-    return r?r->data:QVariant();
+    QV8VariantResource *r =  v8_resource_cast<QV8VariantResource>(v);
+    return r ? r->data : QVariant();
 }
 
 QVariant QV8VariantWrapper::toVariant(QV8ObjectResource *r)
@@ -171,7 +174,7 @@ QVariant QV8VariantWrapper::toVariant(QV8ObjectResource *r)
 
 QVariant &QV8VariantWrapper::variantValue(v8::Handle<v8::Value> value)
 {
-    Q_ASSERT(isVariant(value));
+    Q_ASSERT(isVariant(value->v4Value()));
     QV8VariantResource *r =  v8_resource_cast<QV8VariantResource>(value->ToObject());
     return static_cast<QV8VariantResource *>(r)->data;
 }
