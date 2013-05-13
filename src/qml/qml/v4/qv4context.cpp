@@ -125,38 +125,28 @@ unsigned int ExecutionContext::variableCount() const
 }
 
 
-void GlobalContext::init(ExecutionEngine *eng)
+void GlobalContext::initGlobalContext(ExecutionEngine *eng)
 {
-    type = Type_GlobalContext;
-    strictMode = false;
-    marked = false;
+    initBaseContext(Type_GlobalContext, eng);
     thisObject = Value::fromObject(eng->globalObject);
-    engine = eng;
-    outer = 0;
-    lookups = 0;
     global = 0;
 }
 
-void WithContext::init(ExecutionContext *p, Object *with)
+void WithContext::initWithContext(ExecutionContext *p, Object *with)
 {
-    type = Type_WithContext;
-    strictMode = false;
-    marked = false;
+    initBaseContext(Type_WithContext, p->engine);
     thisObject = p->thisObject;
-    engine = p->engine;
     outer = p;
     lookups = p->lookups;
 
     withObject = with;
 }
 
-void CatchContext::init(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
+void CatchContext::initCatchContext(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
 {
-    type = Type_CatchContext;
+    initBaseContext(Type_CatchContext, p->engine);
     strictMode = p->strictMode;
-    marked = false;
     thisObject = p->thisObject;
-    engine = p->engine;
     outer = p;
     lookups = p->lookups;
 
@@ -164,12 +154,17 @@ void CatchContext::init(ExecutionContext *p, String *exceptionVarName, const Val
     this->exceptionValue = exceptionValue;
 }
 
-void CallContext::initCallContext(ExecutionEngine *engine)
+void CallContext::initCallContext(ExecutionEngine *engine, FunctionObject *function, Value *_arguments, int _argumentCount, const Value &_thisObject)
 {
-    type = Type_CallContext;
+    initBaseContext(Type_CallContext, engine);
+
+    this->function = function;
+    this->arguments = _arguments;
+    this->argumentCount = _argumentCount;
+    this->thisObject = _thisObject;
+
     strictMode = function->strictMode;
     marked = false;
-    this->engine = engine;
     outer = function->scope;
 #ifndef QT_NO_DEBUG
     assert(outer->next != (ExecutionContext *)0x1);

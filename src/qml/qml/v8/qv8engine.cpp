@@ -468,11 +468,10 @@ QV4::Value QV8Engine::getOwnPropertyNames(const QV4::Value &o)
     if (!o.asObject())
         return QV4::Value::fromObject(m_v4Engine->newArrayObject());
     QV4::SimpleCallContext ctx;
-    ctx.type = QV4::ExecutionContext::Type_SimpleCallContext;
+    ctx.initSimpleCallContext(m_v4Engine);
     QV4::Value args = o;
     ctx.arguments = &args;
     ctx.argumentCount = 1;
-    ctx.engine = m_v4Engine;
     m_v4Engine->pushContext(&ctx);
     QV4::Value result = QV4::ObjectPrototype::method_getOwnPropertyNames(&ctx);
     m_v4Engine->popContext();

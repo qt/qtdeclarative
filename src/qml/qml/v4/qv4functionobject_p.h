@@ -216,11 +216,9 @@ public:
         T *o = reinterpret_cast<T *>(thisO);
 
         QV4::SimpleCallContext ctx;
-        ctx.type = ExecutionContext::Type_SimpleCallContext;
+        ctx.initSimpleCallContext(context->engine);
         ctx.strictMode = true;
-        ctx.marked = false;
         ctx.thisObject = thisObject;
-        ctx.engine = context->engine;
         ctx.arguments = args;
         ctx.argumentCount = argc;
         context->engine->pushContext(&ctx);

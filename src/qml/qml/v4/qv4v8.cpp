@@ -1677,11 +1677,9 @@ protected:
             result = that->m_functionTemplate->m_callback(arguments);
         else if (that->m_functionTemplate->m_newCallback) {
             QV4::SimpleCallContext ctx;
-            ctx.type = ExecutionContext::Type_SimpleCallContext;
+            ctx.initSimpleCallContext(context->engine);
             ctx.strictMode = true;
-            ctx.marked = false;
             ctx.thisObject = thisObject;
-            ctx.engine = context->engine;
             ctx.arguments = args;
             ctx.argumentCount = argc;
             context->engine->pushContext(&ctx);
@@ -1711,11 +1709,8 @@ protected:
             result = that->m_functionTemplate->m_callback(arguments);
         else if (that->m_functionTemplate->m_newCallback) {
             QV4::SimpleCallContext ctx;
-            ctx.type = ExecutionContext::Type_SimpleCallContext;
+            ctx.initSimpleCallContext(context->engine);
             ctx.strictMode = true;
-            ctx.marked = false;
-            ctx.thisObject = QV4::Value::undefinedValue();
-            ctx.engine = context->engine;
             ctx.arguments = args;
             ctx.argumentCount = argc;
             context->engine->pushContext(&ctx);

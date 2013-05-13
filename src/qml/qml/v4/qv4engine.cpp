@@ -266,7 +266,7 @@ void ExecutionEngine::initRootContext()
     rootContext = static_cast<GlobalContext *>(memoryManager->allocContext(sizeof(GlobalContext)));
     current = rootContext;
     current->parent = 0;
-    rootContext->init(this);
+    rootContext->initGlobalContext(this);
 }
 
 InternalClass *ExecutionEngine::newClass(const InternalClass &other)
@@ -278,10 +278,9 @@ WithContext *ExecutionEngine::newWithContext(Object *with)
 {
     ExecutionContext *p = current;
     WithContext *w = static_cast<WithContext *>(memoryManager->allocContext(sizeof(WithContext)));
+    w->initWithContext(p, with);
     w->parent = current;
     current = w;
-
-    w->init(p, with);
     return w;
 }
 
@@ -289,24 +288,19 @@ CatchContext *ExecutionEngine::newCatchContext(String *exceptionVarName, const V
 {
     ExecutionContext *p = current;
     CatchContext *c = static_cast<CatchContext *>(memoryManager->allocContext(sizeof(CatchContext)));
+    c->initCatchContext(p, exceptionVarName, exceptionValue);
     c->parent = current;
     current = c;
-
-    c->init(p, exceptionVarName, exceptionValue);
     return c;
 }
 
 CallContext *ExecutionEngine::newCallContext(FunctionObject *f, const Value &thisObject, Value *args, int argc)
 {
     CallContext *c = static_cast<CallContext *>(memoryManager->allocContext(requiredMemoryForExecutionContect(f, argc)));
+
+    c->initCallContext(this, f, args, argc, thisObject);
     c->parent = current;
     current = c;
-
-    c->function = f;
-    c->thisObject = thisObject;
-    c->arguments = args;
-    c->argumentCount = argc;
-    c->initCallContext(this);
 
     return c;
 }
@@ -323,14 +317,10 @@ CallContext *ExecutionEngine::newCallContext(void *stackSpace, FunctionObject *f
         c->next = (CallContext *)0x1;
 #endif
     }
+
+    c->initCallContext(this, f, args, argc, thisObject);
     c->parent = current;
     current = c;
-
-    c->function = f;
-    c->thisObject = thisObject;
-    c->arguments = args;
-    c->argumentCount = argc;
-    c->initCallContext(this);
 
     return c;
 }

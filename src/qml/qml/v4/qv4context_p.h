@@ -97,6 +97,18 @@ struct Q_QML_EXPORT ExecutionContext
     Lookup *lookups;
     ExecutionContext *next; // used in the GC
 
+    void initBaseContext(Type type, ExecutionEngine *engine)
+    {
+        this->type = type;
+        strictMode = false;
+        marked = false;
+        thisObject = Value::undefinedValue();
+        this->engine = engine;
+        parent = 0;
+        outer = 0;
+        lookups = 0;
+    }
+
     String * const *formals() const;
     unsigned int formalCount() const;
     String * const *variables() const;
@@ -129,6 +141,13 @@ struct Q_QML_EXPORT ExecutionContext
 
 struct SimpleCallContext : public ExecutionContext
 {
+    void initSimpleCallContext(ExecutionEngine *engine)
+    {
+        initBaseContext(Type_SimpleCallContext, engine);
+        function = 0;
+        arguments = 0;
+        argumentCount = 0;
+    }
     FunctionObject *function;
     Value *arguments;
     unsigned int argumentCount;
@@ -136,7 +155,8 @@ struct SimpleCallContext : public ExecutionContext
 
 struct CallContext : public SimpleCallContext
 {
-    void initCallContext(QV4::ExecutionEngine *engine);
+    void initCallContext(QV4::ExecutionEngine *engine, FunctionObject *function, Value *args, int argc,
+                         const Value &thisObject);
     bool needsOwnArguments() const;
 
     Value *locals;
@@ -145,14 +165,14 @@ struct CallContext : public SimpleCallContext
 
 struct GlobalContext : public ExecutionContext
 {
-    void init(ExecutionEngine *e);
+    void initGlobalContext(ExecutionEngine *e);
 
     Object *global;
 };
 
 struct CatchContext : public ExecutionContext
 {
-    void init(ExecutionContext *p, String *exceptionVarName, const QV4::Value &exceptionValue);
+    void initCatchContext(ExecutionContext *p, String *exceptionVarName, const QV4::Value &exceptionValue);
 
     String *exceptionVarName;
     Value exceptionValue;
@@ -162,7 +182,7 @@ struct WithContext : public ExecutionContext
 {
     Object *withObject;
 
-    void init(ExecutionContext *p, Object *with);
+    void initWithContext(ExecutionContext *p, Object *with);
 };
 
 inline Value ExecutionContext::argument(unsigned int index)

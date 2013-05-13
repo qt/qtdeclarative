@@ -419,11 +419,9 @@ Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const V
 {
     BuiltinFunctionOld *f = static_cast<BuiltinFunctionOld *>(that);
     SimpleCallContext ctx;
-    ctx.type = ExecutionContext::Type_SimpleCallContext;
+    ctx.initSimpleCallContext(f->scope->engine);
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
-    ctx.marked = false;
     ctx.thisObject = thisObject;
-    ctx.engine = f->scope->engine;
     ctx.arguments = args;
     ctx.argumentCount = argc;
     context->engine->pushContext(&ctx);
