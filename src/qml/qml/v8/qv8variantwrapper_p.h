@@ -73,7 +73,7 @@ public:
     void destroy();
 
     v8::Handle<v8::Object> newVariant(const QVariant &);
-    bool isVariant(v8::Handle<v8::Value>);
+    static bool isVariant(v8::Handle<v8::Value>);
     static QVariant toVariant(v8::Handle<v8::Object>);
     static QVariant toVariant(QV8ObjectResource *);
     QVariant &variantValue(v8::Handle<v8::Value>);
