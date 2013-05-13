@@ -298,6 +298,8 @@ void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &
     bool previousUndoRedoState = doc->isUndoRedoEnabled();
     doc->setUndoRedoEnabled(false);
 
+    const int oldCursorPos = cursor.position();
+
     // avoid multiple textChanged() signals being emitted
     qmlobject_disconnect(doc, QTextDocument, SIGNAL(contentsChanged()), q, QQuickTextControl, SIGNAL(textChanged()));
 
@@ -341,7 +343,8 @@ void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &
     doc->setModified(false);
 
     q->updateCursorRectangle(true);
-    emit q->cursorPositionChanged();
+    if (cursor.position() != oldCursorPos)
+        emit q->cursorPositionChanged();
 }
 
 void QQuickTextControlPrivate::setCursorPosition(const QPointF &pos)
