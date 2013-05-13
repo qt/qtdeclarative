@@ -473,8 +473,9 @@ QV4::Value QV8Engine::getOwnPropertyNames(const QV4::Value &o)
     ctx.arguments = &args;
     ctx.argumentCount = 1;
     ctx.engine = m_v4Engine;
-    ctx.parent = m_v4Engine->current;
+    m_v4Engine->pushContext(&ctx);
     QV4::Value result = QV4::ObjectPrototype::method_getOwnPropertyNames(&ctx);
+    m_v4Engine->popContext();
     return result;
 }
 
