@@ -97,6 +97,13 @@ struct Q_QML_EXPORT ExecutionContext
     Lookup *lookups;
     ExecutionContext *next; // used in the GC
 
+    struct EvalCode
+    {
+        Function *function;
+        EvalCode *next;
+    };
+    EvalCode *currentEvalCode;
+
     void initBaseContext(Type type, ExecutionEngine *engine)
     {
         this->type = type;
@@ -107,6 +114,7 @@ struct Q_QML_EXPORT ExecutionContext
         parent = 0;
         outer = 0;
         lookups = 0;
+        currentEvalCode = 0;
     }
 
     String * const *formals() const;

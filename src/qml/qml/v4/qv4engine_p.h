@@ -264,6 +264,7 @@ inline void ExecutionEngine::pushContext(SimpleCallContext *context)
 {
     context->parent = current;
     current = context;
+    current->currentEvalCode = 0;
 }
 
 inline ExecutionContext *ExecutionEngine::popContext()

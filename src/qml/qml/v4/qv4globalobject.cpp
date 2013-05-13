@@ -401,6 +401,11 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
         ctx = k;
     }
 
+    ExecutionContext::EvalCode evalCode;
+    evalCode.function = f;
+    evalCode.next = ctx->currentEvalCode;
+    ctx->currentEvalCode = &evalCode;
+
     // set the correct strict mode flag on the context
     bool cstrict = ctx->strictMode;
     ctx->strictMode = strictMode;
@@ -410,12 +415,14 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
         result = f->code(ctx, f->codeData);
     } catch (Exception &ex) {
         ctx->strictMode = cstrict;
+        ctx->currentEvalCode = evalCode.next;
         if (strictMode)
             ex.partiallyUnwindContext(parentContext);
         throw;
     }
 
     ctx->strictMode = cstrict;
+    ctx->currentEvalCode = evalCode.next;
 
     while (engine->current != parentContext)
         engine->popContext();
