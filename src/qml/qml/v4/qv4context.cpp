@@ -195,7 +195,6 @@ void CallContext::initCallContext(ExecutionEngine *engine, FunctionObject *funct
     if (function->usesArgumentsObject) {
         ArgumentsObject *args = new (engine->memoryManager) ArgumentsObject(this, function->formalParameterCount, argc);
         args->prototype = engine->objectPrototype;
-        Value arguments = Value::fromObject(args);
         activation = engine->newObject();
         Property desc = Property::fromValue(Value::fromObject(args));
         activation->__defineOwnProperty__(this, engine->id_arguments, desc, Attr_NotConfigurable);
