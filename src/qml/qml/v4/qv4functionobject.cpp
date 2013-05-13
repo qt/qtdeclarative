@@ -215,7 +215,7 @@ Value FunctionCtor::call(Managed *that, ExecutionContext *context, const Value &
 }
 
 FunctionPrototype::FunctionPrototype(ExecutionContext *ctx)
-    : FunctionObject(ctx, ctx->engine->newIdentifier("Function"))
+    : FunctionObject(ctx)
 {
 }
 
