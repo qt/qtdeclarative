@@ -371,6 +371,17 @@ Property *Object::__getPropertyDescriptor__(uint index, PropertyAttributes *attr
     return 0;
 }
 
+bool Object::__hasProperty__(String *name) const
+{
+    if (__getPropertyDescriptor__(name))
+        return true;
+
+    if (dynamicPropertyQuery && !dynamicPropertyQuery(this, name).isEmpty())
+        return true;
+
+    return false;
+}
+
 Value Object::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     return static_cast<Object *>(m)->internalGet(ctx, name, hasProperty);

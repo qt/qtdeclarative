@@ -100,7 +100,7 @@ struct TypeErrorPrototype;
 struct URIErrorPrototype;
 
 typedef Value (*PropertyEnumeratorFunction)(Object *object);
-typedef PropertyAttributes (*PropertyQueryFunction)(Object *object, String *name);
+typedef PropertyAttributes (*PropertyQueryFunction)(const Object *object, String *name);
 
 struct Q_QML_EXPORT Object: Managed {
 
@@ -142,9 +142,7 @@ struct Q_QML_EXPORT Object: Managed {
     Property *__getPropertyDescriptor__(String *name, PropertyAttributes *attrs = 0) const;
     Property *__getPropertyDescriptor__(uint index, PropertyAttributes *attrs = 0) const;
 
-    bool __hasProperty__(String *name) const {
-        return __getPropertyDescriptor__(name);
-    }
+    bool __hasProperty__(String *name) const;
     bool __hasProperty__(uint index) const {
         return __getPropertyDescriptor__(index);
     }

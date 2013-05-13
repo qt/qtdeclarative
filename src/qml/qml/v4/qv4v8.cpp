@@ -1466,29 +1466,32 @@ public:
         return that->m_template->m_fallbackPropertyEnumerator(that->namedAccessorInfo())->v4Value();
     }
 
-    static QV4::PropertyAttributes queryDynamicProperty(QV4::Object *object, QV4::String *string)
+    static QV4::PropertyAttributes queryDynamicProperty(const QV4::Object *object, QV4::String *string)
     {
-        V4V8Object<BaseClass> *that = static_cast<V4V8Object<BaseClass> *>(object);
-        return propertyAttributesToFlags(that->m_template->m_fallbackPropertyQuery(String::New(string), that->namedAccessorInfo()));
+        const V4V8Object<BaseClass> *that = static_cast<const V4V8Object<BaseClass> *>(object);
+        Handle<Integer> result = that->m_template->m_fallbackPropertyQuery(String::New(string), that->namedAccessorInfo());
+        if (result.IsEmpty())
+            return QV4::PropertyAttributes();
+        return propertyAttributesToFlags(result);
     }
 
     QExplicitlySharedDataPointer<ObjectTemplate> m_template;
 
 protected:
-    AccessorInfo namedAccessorInfo()
+    AccessorInfo namedAccessorInfo() const
     {
         // ### thisObject?
-        return AccessorInfo(QV4::Value::fromObject(this), m_template->m_namedPropertyData.value());
+        return AccessorInfo(QV4::Value::fromObject(static_cast<QV4::Object*>(const_cast<V4V8Object<BaseClass>*>(this))), m_template->m_namedPropertyData.value());
     }
-    AccessorInfo fallbackAccessorInfo()
+    AccessorInfo fallbackAccessorInfo() const
     {
         // ### thisObject?
-        return AccessorInfo(QV4::Value::fromObject(this), m_template->m_fallbackPropertyData.value());
+        return AccessorInfo(QV4::Value::fromObject(static_cast<QV4::Object*>(const_cast<V4V8Object<BaseClass>*>(this))), m_template->m_fallbackPropertyData.value());
     }
-    AccessorInfo indexedAccessorInfo()
+    AccessorInfo indexedAccessorInfo() const
     {
         // ### thisObject?
-        return AccessorInfo(QV4::Value::fromObject(this), m_template->m_namedPropertyData.value());
+        return AccessorInfo(QV4::Value::fromObject(static_cast<QV4::Object*>(const_cast<V4V8Object<BaseClass>*>(this))), m_template->m_namedPropertyData.value());
     }
 
     static const ManagedVTable static_vtbl;
