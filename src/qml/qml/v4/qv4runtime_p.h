@@ -158,12 +158,12 @@ QV4::Function *__qmljs_register_function(QV4::ExecutionContext *ctx, QV4::String
                                          QV4::String **locals, unsigned localCount);
 
 // strings
-double __qmljs_string_to_number(const QString &s);
+Q_QML_EXPORT double __qmljs_string_to_number(const QString &s);
 QV4::Value __qmljs_string_from_number(QV4::ExecutionContext *ctx, double number);
 QV4::String *__qmljs_string_concat(QV4::ExecutionContext *ctx, QV4::String *first, QV4::String *second);
 
 // objects
-QV4::Value __qmljs_object_default_value(QV4::Object *object, int typeHint);
+Q_QML_EXPORT QV4::Value __qmljs_object_default_value(QV4::Object *object, int typeHint);
 void __qmljs_set_activation_property(QV4::ExecutionContext *ctx, QV4::String *name, const QV4::Value& value);
 void __qmljs_set_property(QV4::ExecutionContext *ctx, const QV4::Value &object, QV4::String *name, const QV4::Value &value);
 void __qmljs_get_property(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &object, QV4::String *name);
