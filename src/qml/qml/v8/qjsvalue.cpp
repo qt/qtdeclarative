@@ -124,7 +124,7 @@ using namespace QV4;
   Constructs a new QJSValue with a boolean \a value.
 */
 QJSValue::QJSValue(bool value)
-    : d(new QJSValuePrivate(Value::fromBoolean(value)))
+    : d(new QJSValuePrivate(0, Value::fromBoolean(value)))
 {
 }
 
@@ -137,7 +137,7 @@ QJSValue::QJSValue(QJSValuePrivate *dd)
   Constructs a new QJSValue with a number \a value.
 */
 QJSValue::QJSValue(int value)
-    : d(new QJSValuePrivate(Value::fromInt32(value)))
+    : d(new QJSValuePrivate(0, Value::fromInt32(value)))
 {
 }
 
@@ -145,7 +145,7 @@ QJSValue::QJSValue(int value)
   Constructs a new QJSValue with a number \a value.
 */
 QJSValue::QJSValue(uint value)
-    : d(new QJSValuePrivate(Value::fromUInt32(value)))
+    : d(new QJSValuePrivate(0, Value::fromUInt32(value)))
 {
 }
 
@@ -153,7 +153,7 @@ QJSValue::QJSValue(uint value)
   Constructs a new QJSValue with a number \a value.
 */
 QJSValue::QJSValue(double value)
-    : d(new QJSValuePrivate(Value::fromDouble(value)))
+    : d(new QJSValuePrivate(0, Value::fromDouble(value)))
 {
 }
 
@@ -169,7 +169,7 @@ QJSValue::QJSValue(const QString& value)
   Constructs a new QJSValue with a special \a value.
 */
 QJSValue::QJSValue(SpecialValue value)
-    : d(new QJSValuePrivate(value == UndefinedValue ? Value::undefinedValue() : Value::nullValue()))
+    : d(new QJSValuePrivate(0, value == UndefinedValue ? Value::undefinedValue() : Value::nullValue()))
 {
 }
 
@@ -499,7 +499,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
         result = e.value();
     }
 
-    return new QJSValuePrivate(result);
+    return new QJSValuePrivate(engine, result);
 }
 
 /*!
@@ -544,7 +544,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
         result = e.value();
     }
 
-    return new QJSValuePrivate(result);
+    return new QJSValuePrivate(engine, result);
 }
 
 /*!
@@ -587,7 +587,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
         result = e.value();
     }
 
-    return new QJSValuePrivate(result);
+    return new QJSValuePrivate(engine, result);
 }
 
 #ifdef QT_DEPRECATED
@@ -620,7 +620,7 @@ QJSValue QJSValue::prototype() const
     Object *o = d->value.asObject();
     if (!o)
         return QJSValue();
-    return new QJSValuePrivate(Value::fromObject(o->prototype));
+    return new QJSValuePrivate(o->internalClass->engine, Value::fromObject(o->prototype));
 }
 
 /*!
@@ -746,7 +746,7 @@ QJSValue QJSValue::property(const QString& name) const
     QV4::ExecutionContext *ctx = engine->current;
     try {
         QV4::Value v = o->get(ctx, s);
-        return new QJSValuePrivate(v);
+        return new QJSValuePrivate(engine, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
         return QJSValue();
@@ -775,7 +775,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
     QV4::ExecutionContext *ctx = engine->current;
     try {
         QV4::Value v = arrayIndex == UINT_MAX ? o->get(ctx, engine->id_uintMax) : o->getIndexed(ctx, arrayIndex);
-        return new QJSValuePrivate(v);
+        return new QJSValuePrivate(engine, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
         return QJSValue();

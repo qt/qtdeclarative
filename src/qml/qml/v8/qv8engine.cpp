@@ -1225,7 +1225,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
         *reinterpret_cast<void* *>(data) = 0;
         return true;
     } else if (type == qMetaTypeId<QJSValue>()) {
-        *reinterpret_cast<QJSValue*>(data) = QJSValuePrivate::get(new QJSValuePrivate(value));
+        *reinterpret_cast<QJSValue*>(data) = QJSValuePrivate::get(new QJSValuePrivate(m_v4Engine, value));
         return true;
     }
 
@@ -1347,12 +1347,12 @@ QObject *QV8Engine::qtObjectFromJS(const QV4::Value &value)
 
 QJSValue QV8Engine::scriptValueFromInternal(const QV4::Value &value) const
 {
-    return new QJSValuePrivate(value);
+    return new QJSValuePrivate(m_v4Engine, value);
 }
 
 QJSValue QV8Engine::newArray(uint length)
 {
-    return new QJSValuePrivate(v8::Array::New(length).get()->v4Value());
+    return new QJSValuePrivate(m_v4Engine, v8::Array::New(length).get()->v4Value());
 }
 
 void QV8Engine::startTimer(const QString &timerName)

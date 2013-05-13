@@ -262,10 +262,10 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
             return QJSValue();
 
         QV4::Value result = d->m_v4Engine->run(f);
-        return new QJSValuePrivate(result);
+        return new QJSValuePrivate(d->m_v4Engine, result);
     } catch (QV4::Exception& ex) {
         ex.accept(ctx);
-        return new QJSValuePrivate(ex.value());
+        return new QJSValuePrivate(d->m_v4Engine, ex.value());
     }
 }
 
@@ -345,7 +345,7 @@ QJSValue QJSEngine::globalObject() const
 QJSValue QJSEngine::create(int type, const void *ptr)
 {
     Q_D(QJSEngine);
-    return new QJSValuePrivate(d->metaTypeToJS(type, ptr));
+    return new QJSValuePrivate(d->m_v4Engine, d->metaTypeToJS(type, ptr));
 }
 
 /*!

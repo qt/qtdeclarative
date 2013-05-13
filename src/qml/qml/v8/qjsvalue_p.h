@@ -57,6 +57,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4engine_p.h>
+#include <private/qv4object_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,38 +68,45 @@ QT_BEGIN_NAMESPACE
 class QJSValuePrivate : public QV4::PersistentValuePrivate
 {
 public:
-    QJSValuePrivate(const QV4::Value &v)
+    QJSValuePrivate(QV4::ExecutionEngine *engine, const QV4::Value &v)
         : PersistentValuePrivate(v)
+        , e(engine)
     {
         if (value.isEmpty())
             value = QV4::Value::undefinedValue();
     }
     QJSValuePrivate(QV4::Object *o)
         : PersistentValuePrivate(QV4::Value::fromObject(o))
-    {}
+    { e = o->engine(); }
     QJSValuePrivate(QV4::String *s)
         : PersistentValuePrivate(QV4::Value::fromString(s))
-    {}
+    { e = s->engine(); }
     QJSValuePrivate(const QString &s)
         : PersistentValuePrivate(QV4::Value::undefinedValue())
         , string(0, s)
+        , e(0)
     {
         value = QV4::Value::fromString(&string);
     }
 
     QV4::Value getValue(QV4::ExecutionEngine *e) {
+        if (!this->e)
+            this->e = e;
         if (value.asString() == &string)
             value = QV4::Value::fromString(e->newString(string.toQString()));
         return value;
     }
 
     QV4::ExecutionEngine *engine() const {
-        return value.engine();
+        if (!e)
+            e = value.engine();
+        return e;
     }
 
     static QJSValuePrivate *get(const QJSValue &v) { return v.d; }
 
     QV4::String string;
+    mutable QV4::ExecutionEngine *e;
 };
 
 QT_END_NAMESPACE
