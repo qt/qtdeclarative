@@ -400,7 +400,7 @@ QStringList QQuickDropEvent::keys() const
 */
 
 /*!
-    \qmlproperty real QtQuick2::DragEvent::accepted
+    \qmlproperty bool QtQuick2::DragEvent::accepted
 
     This property holds whether the drag event was accepted by a handler.
 
