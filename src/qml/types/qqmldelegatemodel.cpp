@@ -157,7 +157,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 
     The example below illustrates using a DelegateModel with a ListView.
 
-    \snippet qml/visualdatamodel.qml 0
+    \snippet delegatemodel/visualdatamodel.qml 0
 */
 
 QQmlDelegateModelPrivate::QQmlDelegateModelPrivate(QQmlContext *ctxt)
@@ -397,10 +397,10 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
     the new directory's contents.
 
     \c main.cpp:
-    \snippet qml/visualdatamodel_rootindex/main.cpp 0
+    \snippet delegatemodel/visualdatamodel_rootindex/main.cpp 0
 
     \c view.qml:
-    \snippet qml/visualdatamodel_rootindex/view.qml 0
+    \snippet delegatemodel/visualdatamodel_rootindex/view.qml 0
 
     If the \l model is a QAbstractItemModel subclass, the delegate can also
     reference a \c hasModelChildren property (optionally qualified by a
@@ -604,7 +604,7 @@ QQmlDelegateModelGroup *QQmlDelegateModelPrivate::group_at(
 
     The following example illustrates using groups to select items in a model.
 
-    \snippet qml/visualdatagroup.qml 0
+    \snippet delegatemodel/visualdatagroup.qml 0
 */
 
 QQmlListProperty<QQmlDelegateModelGroup> QQmlDelegateModel::groups()

@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
     These extensions allow custom QML types to be made available to the QML engine.
 
     To write a QML extension plugin:
-    
+
     \list
     \li Subclass QQmlExtensionPlugin, implement registerTypes() method to register types
     using qmlRegisterType(), and export the class using the Q_PLUGIN_METADATA() macro
@@ -77,7 +77,7 @@ QT_BEGIN_NAMESPACE
     as a new QML element. It provides the current time through \c hour and \c minute
     properties, like this:
 
-    \snippet qml/plugins/plugin.cpp 0
+    \snippet plugins/plugin.cpp 0
     \dots
 
     To make this class available as a QML type, create a plugin that registers
@@ -85,7 +85,7 @@ QT_BEGIN_NAMESPACE
     module will be named \c TimeExample (as defined in the project
     file further below).
 
-    \snippet qml/plugins/plugin.cpp plugin
+    \snippet plugins/plugin.cpp plugin
 
     This registers the \c TimeModel class with the 1.0 version of this
     plugin library, as a QML type called \c Time. The Q_ASSERT statement
@@ -109,12 +109,12 @@ QT_BEGIN_NAMESPACE
     should be bundled with the plugin, so it needs to be specified in the \c qmldir
     file:
 
-    \quotefile qml/plugins/imports/TimeExample/qmldir
+    \quotefile plugins/imports/TimeExample/qmldir
 
     Once the project is built and installed, the new \c Time element can be
     used by any QML component that imports the \c TimeExample module:
 
-    \snippet qml/plugins/plugins.qml 0
+    \snippet plugins/plugins.qml 0
 
     The full source code is available in the \l {qml/plugins}{plugins example}.
 
