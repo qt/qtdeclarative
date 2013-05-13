@@ -265,7 +265,7 @@ public slots:
     void myinvokable(MyQmlObject *o) { myinvokableObject = o; }
     void variantMethod(const QVariant &v) { m_variant = v; }
     void qjsvalueMethod(const QJSValue &v) { m_qjsvalue = v; }
-    void v8function(QQmlV8Function*);
+    void v8function(QQmlV4Function*);
     void registeredFlagMethod(Qt::MouseButtons v) { m_buttons = v; }
 
 private:
@@ -1172,6 +1172,7 @@ private:
     int m_value;
 };
 
+#if 0
 class CircularReferenceObject : public QObject,
                                 public QV8GCCallback::Node
 {
@@ -1285,6 +1286,7 @@ private:
     QV8Engine* m_engine;
 };
 Q_DECLARE_METATYPE(CircularReferenceHandle*)
+#endif
 
 class MyDynamicCreationDestructionObject : public QObject
 {

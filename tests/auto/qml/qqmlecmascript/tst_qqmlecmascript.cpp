@@ -156,8 +156,10 @@ private slots:
     void singletonTypeCaching();
     void singletonTypeImportOrder();
     void singletonTypeResolution();
+#if 0
     void importScripts_data();
     void importScripts();
+#endif
     void scarceResources();
     void scarceResources_data();
     void scarceResources_other();
@@ -173,13 +175,13 @@ private slots:
     void propertyVarReparentNullContext();
     void propertyVarCircular();
     void propertyVarCircular2();
-    void propertyVarInheritance();
-    void propertyVarInheritance2();
+//    void propertyVarInheritance();
+//    void propertyVarInheritance2();
     void elementAssign();
     void objectPassThroughSignals();
     void objectConversion();
     void booleanConversion();
-    void handleReferenceManagement();
+//    void handleReferenceManagement();
     void stringArg();
     void readonlyDeclaration();
     void sequenceConversionRead();
@@ -291,8 +293,8 @@ private slots:
     void stringParsing();
 
 private:
-    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
-    static void verifyContextLifetime(QQmlContextData *ctxt);
+//    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
+//    static void verifyContextLifetime(QQmlContextData *ctxt);
     QQmlEngine engine;
 };
 
@@ -3767,6 +3769,7 @@ void tst_qqmlecmascript::singletonTypeResolution()
     delete object;
 }
 
+#if 0
 void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
     QQmlContextData *childCtxt = ctxt->childContexts;
 
@@ -3797,7 +3800,9 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
         childCtxt = childCtxt->nextChild;
     }
 }
+#endif
 
+#if 0
 void tst_qqmlecmascript::importScripts_data()
 {
     QTest::addColumn<QUrl>("testfile");
@@ -4040,6 +4045,7 @@ void tst_qqmlecmascript::importScripts()
 
     engine.setImportPathList(importPathList);
 }
+#endif
 
 void tst_qqmlecmascript::scarceResources_other()
 {
@@ -4840,6 +4846,7 @@ void tst_qqmlecmascript::propertyVarCircular2()
     delete object;
 }
 
+#if 0
 void tst_qqmlecmascript::propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter)
 {
     *(int*)(parameter) += 1;
@@ -4923,6 +4930,7 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QVERIFY(propertyVarWeakRefCallbackCount == 1);                 // should have been collected now.
     delete object;
 }
+#endif
 
 // Ensure that QObject type conversion works on binding assignment
 void tst_qqmlecmascript::elementAssign()
@@ -4986,6 +4994,7 @@ void tst_qqmlecmascript::booleanConversion()
     delete object;
 }
 
+#if 0
 void tst_qqmlecmascript::handleReferenceManagement()
 {
 
@@ -5304,6 +5313,7 @@ void tst_qqmlecmascript::handleReferenceManagement()
         delete object;
     }
 }
+#endif
 
 void tst_qqmlecmascript::stringArg()
 {

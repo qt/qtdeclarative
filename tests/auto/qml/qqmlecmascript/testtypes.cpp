@@ -104,7 +104,7 @@ public:
     void setWidth(int) { }
 };
 
-void MyQmlObject::v8function(QQmlV8Function *)
+void MyQmlObject::v8function(QQmlV4Function *)
 {
     const char *error = "Exception thrown from within QObject slot";
     v8::ThrowException(v8::Exception::Error(v8::String::New(error)));
@@ -299,8 +299,10 @@ void registerTypes()
     qRegisterMetaType<MyQmlObject::MyEnum2>("MyEnum2");
     qRegisterMetaType<Qt::MouseButtons>("Qt::MouseButtons");
 
+#if 0
     qmlRegisterType<CircularReferenceObject>("Qt.test", 1, 0, "CircularReferenceObject");
     qmlRegisterType<CircularReferenceHandle>("Qt.test", 1, 0, "CircularReferenceHandle");
+#endif
 
     qmlRegisterType<MyDynamicCreationDestructionObject>("Qt.test", 1, 0, "MyDynamicCreationDestructionObject");
     qmlRegisterType<WriteCounter>("Qt.test", 1, 0, "WriteCounter");
