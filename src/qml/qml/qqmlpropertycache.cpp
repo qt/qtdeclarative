@@ -196,7 +196,7 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 
     if (m.parameterCount()) {
         flags |= HasArguments;
-        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV8Function*")) {
+        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
             flags |= IsV8Function;
         }
     }
@@ -227,7 +227,7 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
 
     if (m.parameterCount()) {
         flags |= HasArguments;
-        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV8Function*")) {
+        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
             flags |= IsV8Function;
         }
     }
