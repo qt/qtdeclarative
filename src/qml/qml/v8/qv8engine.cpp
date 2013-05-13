@@ -468,6 +468,7 @@ QV4::Value QV8Engine::getOwnPropertyNames(const QV4::Value &o)
     if (!o.asObject())
         return QV4::Value::fromObject(m_v4Engine->newArrayObject());
     QV4::SimpleCallContext ctx;
+    ctx.type = QV4::ExecutionContext::Type_SimpleCallContext;
     QV4::Value args = o;
     ctx.arguments = &args;
     ctx.argumentCount = 1;
