@@ -203,7 +203,7 @@ QT_BEGIN_NAMESPACE
     Emits count particles from this emitter immediately.
 */
 
-/*! \qmlmethod QtQuick.Particles2::Emitter::burst(int x, int y, int count)
+/*! \qmlmethod QtQuick.Particles2::Emitter::burst(int count, int x, int y)
 
     Emits count particles from this emitter immediately. The particles are emitted
     as if the Emitter was positioned at x,y but all other properties are the same.
