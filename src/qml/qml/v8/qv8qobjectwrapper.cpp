@@ -325,7 +325,6 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     m_constructor = ft->GetFunction()->v4Value();
     }
     {
-    v8::ScriptOrigin origin(m_hiddenObject.value()); // Hack to allow us to identify these functions
 #define CREATE_FUNCTION_SOURCE \
     "(function(method) { "\
         "return (function(object, data, qmlglobal) { "\
@@ -334,7 +333,7 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
             "});"\
         "});"\
     "})"
-    v8::Handle<v8::Script> script = v8::Script::New(v8::String::New(CREATE_FUNCTION_SOURCE), &origin, 0,
+    v8::Handle<v8::Script> script = v8::Script::New(v8::String::New(CREATE_FUNCTION_SOURCE), 0, 0,
                                                    v8::Handle<v8::String>(), v8::Script::NativeMode);
 #undef CREATE_FUNCTION_SOURCE
     v8::Handle<v8::Function> fn = v8::Handle<v8::Function>::Cast(script->Run());
@@ -489,7 +488,10 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
            Q_ASSERT(argv[0].isObject());
            QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
            QV4::FunctionObject *f = engine->qobjectWrapper()->m_methodConstructor.value().asFunctionObject();
-           return f->call(v4->current, engine->global(), argv, 2);
+           QV4::Value result = f->call(v4->current, engine->global(), argv, 2);
+           // Hack to allow us to identify these functions
+           result.asObject()->defineReadonlyProperty(v4->newString("__creator__"), engine->qobjectWrapper()->m_hiddenObject);
+           return result;
        }
        static v8::Handle<v8::Value> createWithGlobal(QV8Engine *engine, QObject *object, 
                                                      v8::Handle<v8::Value> *objectHandle, 
@@ -502,7 +504,10 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
            Q_ASSERT(argv[0].isObject());
            QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
            QV4::FunctionObject *f = engine->qobjectWrapper()->m_methodConstructor.value().asFunctionObject();
-           return f->call(v4->current, engine->global(), argv, 3);
+           QV4::Value result = f->call(v4->current, engine->global(), argv, 3);
+           // Hack to allow us to identify these functions
+           result.asObject()->defineReadonlyProperty(v4->newString("__creator__"), engine->qobjectWrapper()->m_hiddenObject);
+           return result;
        }
     };
 
@@ -1197,9 +1202,9 @@ QPair<QObject *, int> QV8QObjectWrapper::ExtractQtSignal(QV8Engine *engine, v8::
 
 QPair<QObject *, int> QV8QObjectWrapper::ExtractQtMethod(QV8Engine *engine, v8::Handle<v8::Function> function)
 {
-    v8::ScriptOrigin origin = function->GetScriptOrigin();
-    if (origin.ResourceName()->StrictEquals(engine->qobjectWrapper()->m_hiddenObject.value())) {
-
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    if (__qmljs_strict_equal(function->v4Value().asObject()->get(v4->newString("__creator__")),
+                             engine->qobjectWrapper()->m_hiddenObject)) {
         // This is one of our special QObject method wrappers
         v8::Handle<v8::Value> args[] = { engine->qobjectWrapper()->m_hiddenObject.value() };
         v8::Handle<v8::Value> data = function->Call(v8::Value::fromV4Value(engine->global()), 1, args);
