@@ -14,12 +14,15 @@ exists("qqml_enable_gcov") {
 
 QMAKE_DOCS = $$PWD/doc/qtquick.qdocconf
 
+ANDROID_LIB_DEPENDENCIES = \
+    lib/libQt5QuickParticles.so
 ANDROID_LIB_DEPENDENCY_REPLACEMENTS = \
     "plugins/platforms/android/libqtforandroid.so:plugins/platforms/android/libqtforandroidGL.so"
 MODULE_PLUGIN_TYPES = \
     accessible
 ANDROID_BUNDLED_FILES += \
-    qml
+    qml \
+    lib/libQt5QuickParticles.so
 
 load(qt_module)
 
