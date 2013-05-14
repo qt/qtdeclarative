@@ -594,6 +594,40 @@ void ExecutionEngine::markObjects()
     id_eval->mark();
     id_uintMax->mark();
     id_name->mark();
+
+    objectCtor.mark();
+    stringCtor.mark();
+    numberCtor.mark();
+    booleanCtor.mark();
+    arrayCtor.mark();
+    functionCtor.mark();
+    dateCtor.mark();
+    regExpCtor.mark();
+    errorCtor.mark();
+    evalErrorCtor.mark();
+    rangeErrorCtor.mark();
+    referenceErrorCtor.mark();
+    syntaxErrorCtor.mark();
+    typeErrorCtor.mark();
+    uRIErrorCtor.mark();
+
+    objectPrototype->mark();
+    stringPrototype->mark();
+    numberPrototype->mark();
+    booleanPrototype->mark();
+    arrayPrototype->mark();
+    functionPrototype->mark();
+    datePrototype->mark();
+    regExpPrototype->mark();
+    errorPrototype->mark();
+    evalErrorPrototype->mark();
+    rangeErrorPrototype->mark();
+    referenceErrorPrototype->mark();
+    syntaxErrorPrototype->mark();
+    typeErrorPrototype->mark();
+    uRIErrorPrototype->mark();
+
+    variantPrototype->mark();
 }
 
 Value ExecutionEngine::run(Function *function, ExecutionContext *ctx)
