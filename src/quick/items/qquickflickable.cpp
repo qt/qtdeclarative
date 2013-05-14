@@ -916,6 +916,18 @@ void QQuickFlickable::setFlickableDirection(FlickableDirection direction)
     }
 }
 
+/*!
+    \qmlproperty bool QtQuick2::Flickable::pixelAligned
+
+    This property sets the alignment of \l contentX and \l contentY to
+    pixels (\c true) or subpixels (\c false).
+
+    Enable pixelAligned to optimize for still content or moving content with
+    high constrast edges, such as one-pixel-wide lines, text or vector graphics.
+    Disable pixelAligned when optimizing for animation quality.
+
+    The default is \c false.
+*/
 bool QQuickFlickable::pixelAligned() const
 {
     Q_D(const QQuickFlickable);
