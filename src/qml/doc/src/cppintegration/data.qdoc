@@ -124,7 +124,7 @@ QQuaternion and QMatrix4x4, are only available from QML when the \l {Qt Quick}
 module is included.
 
 As a convenience, many of these types can be specified in QML by string values,
-or by a related method provided by the \l {QML:Qt} object. For example, the \l
+or by a related method provided by the \l {QtQml2::Qt} object. For example, the \l
 {Image::sourceSize} property is of type \l size (which automatically translates
 to the QSize type) and can be specified by a string value formatted as
 "width\c{x}height", or by the Qt.size() function:

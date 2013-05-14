@@ -165,7 +165,7 @@ and moves the new block to its position on the game canvas. This involves severa
 
 \list
 
-\li \l {QML:Qt::createComponent()}{Qt.createComponent()} is called to
+\li \l {QtQml2::Qt::createComponent()}{Qt.createComponent()} is called to
    generate a type from \c Block.qml.  If the component is ready,
    we can call \c createObject() to create an instance of the \c Block
    item.

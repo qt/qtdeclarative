@@ -94,7 +94,7 @@ has now been replaced by the new \l {Qt QML} and \l {Qt Quick} modules. See the
 
 \list
 \li QQmlExpression can now be constructed directly (and more efficiently) from a QQmlScriptString.
-\li The \l {QML:Qt} object now provides a \l{QML:Qt::inputMethod} property to access the active
+\li The \l {QtQml2::Qt}{Qt} global object now provides an \l{QtQml2::Qt::inputMethod}{inputMethod} property to access the active
     text input method for an application.
 \endlist
 

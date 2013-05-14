@@ -229,7 +229,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     to specify how each list item is to be displayed.
 
     \c Component objects can also be created dynamically using
-    \l{QML:Qt::createComponent()}{Qt.createComponent()}.
+    \l{QtQml2::Qt::createComponent()}{Qt.createComponent()}.
 
     \section2 Creation Context
 

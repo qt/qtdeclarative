@@ -275,8 +275,9 @@ QQmlImageProviderBase::~QQmlImageProviderBase()
 
 /*!
 \qmltype Qt
-    \instantiates QQmlEnginePrivate
-  \ingroup qml-utility-elements
+\inqmlmodule QtQml 2
+\instantiates QQmlEnginePrivate
+\ingroup qml-utility-elements
 \brief The QML global Qt object provides useful enums and functions from Qt.
 
 \keyword QmlGlobalQtObject

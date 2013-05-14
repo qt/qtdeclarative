@@ -74,7 +74,7 @@ QML code invokes a method on the object instance:
 \endtable
 
 (Note that date/time values returned from C++ to QML can be formatted through
-\l{QML:Qt::formatDateTime}{Qt.formatDateTime()} and associated functions.)
+\l{QtQml2::Qt::formatDateTime}{Qt.formatDateTime()} and associated functions.)
 
 If the QML item needs to receive signals from the context property, it can connect to them using the
 \l Connections type. For example, if \c ApplicationData has a signal named \c
