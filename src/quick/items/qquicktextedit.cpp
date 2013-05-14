@@ -2164,8 +2164,10 @@ void QQuickTextEdit::updateSize()
             if (d->inLayout)    // probably the result of a binding loop, but by letting it
                 return;         // get this far we'll get a warning to that effect.
         }
-        if (d->document->textWidth() != width())
+        if (d->document->textWidth() != width()) {
             d->document->setTextWidth(width());
+            newWidth = d->document->idealWidth();
+        }
         //### need to confirm cost of always setting these
     } else if (d->wrapMode == NoWrap && d->document->textWidth() != newWidth) {
         d->document->setTextWidth(newWidth); // ### Text does not align if width is not set or the idealWidth exceeds the textWidth (QTextDoc bug)
