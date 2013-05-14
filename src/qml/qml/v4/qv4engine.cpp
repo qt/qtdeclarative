@@ -51,6 +51,7 @@
 #include <qv4mathobject_p.h>
 #include <qv4numberobject_p.h>
 #include <qv4regexpobject_p.h>
+#include <qv4variantobject_p.h>
 #include <qv4runtime_p.h>
 #include "qv4mm_p.h"
 #include <qv4argumentsobject_p.h>
@@ -143,6 +144,8 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     typeErrorPrototype = new (memoryManager) TypeErrorPrototype(this);
     uRIErrorPrototype = new (memoryManager) URIErrorPrototype(this);
 
+    variantPrototype = new (memoryManager) VariantPrototype(this);
+
     stringPrototype->prototype = objectPrototype;
     numberPrototype->prototype = objectPrototype;
     booleanPrototype->prototype = objectPrototype;
@@ -205,6 +208,8 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     syntaxErrorPrototype->init(this, syntaxErrorCtor);
     typeErrorPrototype->init(this, typeErrorCtor);
     uRIErrorPrototype->init(this, uRIErrorCtor);
+
+    variantPrototype->initClass(this);
 
     //
     // set up the global object
@@ -504,6 +509,11 @@ Object *ExecutionEngine::newRangeErrorObject(const QString &message)
 Object *ExecutionEngine::newURIErrorObject(Value message)
 {
     return new (memoryManager) URIErrorObject(this, message);
+}
+
+Object *ExecutionEngine::newVariantObject(const QVariant &v)
+{
+    return new (memoryManager) VariantObject(this, v);
 }
 
 Object *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object *o)

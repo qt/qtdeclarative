@@ -55,6 +55,7 @@
 
 #include <private/qv4functionobject_p.h>
 #include <private/qv4runtime_p.h>
+#include <private/qv4variantobject_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -1701,6 +1702,16 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
     } else if (actual->IsObject()) {
         v8::Handle<v8::Object> obj = v8::Handle<v8::Object>::Cast(actual);
 
+        if (QV4::VariantObject *v = obj->v4Value().asVariantObject()) {
+            if (conversionType == qMetaTypeId<QVariant>())
+                return 0;
+            QV8Engine *engine = v->engine()->publicEngine->handle();
+            if (engine->toVariant(actual->v4Value(), -1).userType() == conversionType)
+                return 0;
+            else
+                return 10;
+        }
+
         QV8ObjectResource *r = static_cast<QV8ObjectResource *>(obj->GetExternalResource());
         if (r && r->resourceType() == QV8ObjectResource::QObjectType) {
             switch (conversionType) {
@@ -1709,13 +1720,6 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
             default:
                 return 10;
             }
-        } else if (r && r->resourceType() == QV8ObjectResource::VariantType) {
-            if (conversionType == qMetaTypeId<QVariant>())
-                return 0;
-            else if (r->engine->toVariant(actual->v4Value(), -1).userType() == conversionType)
-                return 0;
-            else
-                return 10;
         } else if (r && r->resourceType() == QV8ObjectResource::ValueTypeType) {
             if (r->engine->toVariant(actual->v4Value(), -1).userType() == conversionType)
                 return 0;

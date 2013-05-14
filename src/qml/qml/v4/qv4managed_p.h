@@ -82,6 +82,7 @@ struct Value;
 class RegExp;
 struct Lookup;
 struct ExecutionEngine;
+struct VariantObject;
 
 struct ManagedVTable
 {
@@ -177,7 +178,10 @@ public:
         Type_QmlRealList,
         Type_QmlBoolList,
         Type_QmlStringList,
-        Type_QmlUrlList
+        Type_QmlUrlList,
+
+        // Wrapped QVariant
+        Type_QVariant
     };
 
     ExecutionEngine *engine() const;
@@ -200,6 +204,7 @@ public:
 
     QQmlLocaleData *asQmlLocale() { return type == Type_QmlLocale ? reinterpret_cast<QQmlLocaleData *>(this) : 0; }
     QQuickJSContext2D *asQQuickJSContext2D() { return type == Type_QQuickJSContext2D ? reinterpret_cast<QQuickJSContext2D *>(this) : 0; }
+    VariantObject *asVariantObject() { return type == Type_QVariant ? reinterpret_cast<VariantObject *>(this) : 0; }
 
     QQmlIntList *asQmlIntList() { return type == Type_QmlIntList ? reinterpret_cast<QQmlIntList *>(this): 0; }
     QQmlRealList *asQmlRealList() { return type == Type_QmlRealList ? reinterpret_cast<QQmlRealList *>(this): 0; }

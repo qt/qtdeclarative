@@ -75,7 +75,6 @@
 #include "qv8qobjectwrapper_p.h"
 #include "qv8typewrapper_p.h"
 #include "qv8listwrapper_p.h"
-#include "qv8variantwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
 #include "qv8sequencewrapper_p.h"
 #include "qv4jsonwrapper_p.h"
@@ -278,7 +277,6 @@ public:
     QV8QObjectWrapper *qobjectWrapper() { return &m_qobjectWrapper; }
     QV8TypeWrapper *typeWrapper() { return &m_typeWrapper; }
     QV8ListWrapper *listWrapper() { return &m_listWrapper; }
-    QV8VariantWrapper *variantWrapper() { return &m_variantWrapper; }
     QV8ValueTypeWrapper *valueTypeWrapper() { return &m_valueTypeWrapper; }
     QV8SequenceWrapper *sequenceWrapper() { return &m_sequenceWrapper; }
 
@@ -428,7 +426,6 @@ protected:
     QV8QObjectWrapper m_qobjectWrapper;
     QV8TypeWrapper m_typeWrapper;
     QV8ListWrapper m_listWrapper;
-    QV8VariantWrapper m_variantWrapper;
     QV8ValueTypeWrapper m_valueTypeWrapper;
     QV8SequenceWrapper m_sequenceWrapper;
     QV4JsonWrapper m_jsonWrapper;
@@ -466,7 +463,8 @@ private:
 
 bool QV8Engine::isVariant(const QV4::Value &value)
 {
-    return m_variantWrapper.isVariant(value);
+    QV4::Managed *m = value.asManaged();
+    return m ? m->asVariantObject() : 0;
 }
 
 v8::Handle<v8::Object> QV8Engine::qmlScope(QQmlContextData *ctxt, QObject *scope)

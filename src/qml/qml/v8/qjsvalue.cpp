@@ -51,7 +51,7 @@
 #include "qv4dateobject_p.h"
 #include "qv4runtime_p.h"
 #include "qv4v8_p.h"
-#include "qv8variantwrapper_p.h"
+#include "qv4variantobject_p.h"
 
 /*!
   \since 5.0
@@ -318,11 +318,8 @@ bool QJSValue::isCallable() const
 */
 bool QJSValue::isVariant() const
 {
-    QV4::ExecutionEngine *e = d->engine();
-    if (!e)
-        return false;
-
-    return QV8VariantWrapper::isVariant(d->value);
+    Managed *m = d->value.asManaged();
+    return m ? m->asVariantObject() : 0;
 }
 
 /*!
@@ -462,7 +459,7 @@ quint32 QJSValue::toUInt() const
 */
 QVariant QJSValue::toVariant() const
 {
-    return QV8VariantWrapper::toVariant(d->value);
+    return QV4::VariantObject::toVariant(d->value);
 }
 
 /*!

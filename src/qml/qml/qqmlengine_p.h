@@ -173,19 +173,6 @@ public:
 
     QHash<QString,QSharedPointer<QQmlImageProviderBase> > imageProviders;
 
-    // Scarce resources are "exceptionally high cost" QVariant types where allowing the
-    // normal JavaScript GC to clean them up is likely to lead to out-of-memory or other
-    // out-of-resource situations.  When such a resource is passed into JavaScript we
-    // add it to the scarceResources list and it is destroyed when we return from the
-    // JavaScript execution that created it.  The user can prevent this behavior by
-    // calling preserve() on the object which removes it from this scarceResource list.
-    class ScarceResourceData {
-    public:
-        ScarceResourceData(const QVariant &data) : data(data) {}
-        QVariant data;
-        QIntrusiveListNode node;
-    };
-    QIntrusiveList<ScarceResourceData, &ScarceResourceData::node> scarceResources;
     int scarceResourcesRefCount;
     void referenceScarceResources();
     void dereferenceScarceResources();

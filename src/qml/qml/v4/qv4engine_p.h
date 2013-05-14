@@ -46,7 +46,7 @@
 #include "qv4util_p.h"
 #include "qv4context_p.h"
 #include "qv4property_p.h"
-#include <setjmp.h>
+#include <private/qintrusivelist_p.h>
 
 namespace WTF {
 class BumpPointerAllocator;
@@ -98,6 +98,7 @@ struct ReferenceErrorPrototype;
 struct SyntaxErrorPrototype;
 struct TypeErrorPrototype;
 struct URIErrorPrototype;
+struct VariantPrototype;
 struct EvalFunction;
 struct Identifiers;
 struct InternalClass;
@@ -161,6 +162,8 @@ struct Q_QML_EXPORT ExecutionEngine
     TypeErrorPrototype *typeErrorPrototype;
     URIErrorPrototype *uRIErrorPrototype;
 
+    VariantPrototype *variantPrototype;
+
     QQmlJS::MemoryPool classPool;
     InternalClass *emptyClass;
     InternalClass *arrayClass;
@@ -200,6 +203,20 @@ struct Q_QML_EXPORT ExecutionEngine
     ExternalResourceComparison externalResourceComparison;
 
     RegExpCache *regExpCache;
+
+    // Scarce resources are "exceptionally high cost" QVariant types where allowing the
+    // normal JavaScript GC to clean them up is likely to lead to out-of-memory or other
+    // out-of-resource situations.  When such a resource is passed into JavaScript we
+    // add it to the scarceResources list and it is destroyed when we return from the
+    // JavaScript execution that created it.  The user can prevent this behavior by
+    // calling preserve() on the object which removes it from this scarceResource list.
+    class ScarceResourceData {
+    public:
+        ScarceResourceData(const QVariant &data) : data(data) {}
+        QVariant data;
+        QIntrusiveListNode node;
+    };
+    QIntrusiveList<ScarceResourceData, &ScarceResourceData::node> scarceResources;
 
     ExecutionEngine(QQmlJS::EvalISelFactory *iselFactory = 0);
     ~ExecutionEngine();
@@ -245,6 +262,8 @@ struct Q_QML_EXPORT ExecutionEngine
     Object *newTypeErrorObject(const QString &message);
     Object *newRangeErrorObject(const QString &message);
     Object *newURIErrorObject(Value message);
+
+    Object *newVariantObject(const QVariant &v);
 
     Object *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
 

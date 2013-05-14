@@ -50,10 +50,10 @@
 #include "qqmlbinding_p.h"
 #include "qqmlpropertyvalueinterceptor_p.h"
 
-#include <private/qv8variantresource_p.h>
 #include <private/qqmlglobal_p.h>
 
 #include <private/qv4object_p.h>
+#include <private/qv4variantobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -1024,12 +1024,8 @@ void QQmlVMEMetaObject::writeVarProperty(int id, v8::Handle<v8::Value> value)
     // Importantly, if the current value is a scarce resource, we need to ensure that it
     // gets automatically released by the engine if no other references to it exist.
     v8::Handle<v8::Value> oldv = varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex);
-    if (oldv->IsObject()) {
-        QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(oldv));
-        if (r) {
-            r->removeVmePropertyReference();
-        }
-    }
+    if (QV4::VariantObject *v = oldv->v4Value().asVariantObject())
+        v->removeVmePropertyReference();
 
     QObject *valueObject = 0;
     QQmlVMEVariantQObjectPtr *guard = getQObjectGuardForProperty(id);
@@ -1037,8 +1033,8 @@ void QQmlVMEMetaObject::writeVarProperty(int id, v8::Handle<v8::Value> value)
     if (value->IsObject()) {
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
-        if (QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(value))) {
-            r->addVmePropertyReference();
+        if (QV4::VariantObject *v = value->v4Value().asVariantObject()) {
+            v->addVmePropertyReference();
         } else if (QV8QObjectResource *r = v8_resource_cast<QV8QObjectResource>(v8::Handle<v8::Object>::Cast(value))) {
             // We need to track this QObject to signal its deletion
             valueObject = r->object;
@@ -1069,22 +1065,14 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
         // Importantly, if the current value is a scarce resource, we need to ensure that it
         // gets automatically released by the engine if no other references to it exist.
         v8::Handle<v8::Value> oldv = varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex);
-        if (oldv->IsObject()) {
-            QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(oldv));
-            if (r) {
-                r->removeVmePropertyReference();
-            }
-        }
+        if (QV4::VariantObject *v = oldv->v4Value().asVariantObject())
+            v->removeVmePropertyReference();
 
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
         v8::Handle<v8::Value> newv = QQmlEnginePrivate::get(ctxt->engine)->v8engine()->fromVariant(value);
-        if (newv->IsObject()) {
-            QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(newv));
-            if (r) {
-                r->addVmePropertyReference();
-            }
-        }
+        if (QV4::VariantObject *v = newv->v4Value().asVariantObject())
+            v->addVmePropertyReference();
 
         // Write the value and emit change signal as appropriate.
         QVariant currentValue = readPropertyAsVariant(id);

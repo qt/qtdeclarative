@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV8VARIANTRESOURCE_P_H
-#define QV8VARIANTRESOURCE_P_H
+#ifndef QV4VARIANTOBJECT_P_H
+#define QV4VARIANTOBJECT_P_H
 
 //
 //  W A R N I N G
@@ -54,28 +54,54 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <private/qv8_p.h>
-#include <private/qv8engine_p.h>
-#include <private/qqmlengine_p.h>
+#include <QtQml/qqmllist.h>
+#include <QtCore/qvariant.h>
+
+#include <private/qv4value_p.h>
+#include <private/qv4object_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QV8VariantResource : public QV8ObjectResource,
-                           public QQmlEnginePrivate::ScarceResourceData
-{
-    V8_RESOURCE_TYPE(VariantType)
+namespace QV4 {
 
+struct VariantObject : Object, public ExecutionEngine::ScarceResourceData
+{
 public:
-    QV8VariantResource(QV8Engine *engine, const QVariant &data);
+    VariantObject(ExecutionEngine *engine, const QVariant &value);
+    ~VariantObject();
+
+    static QVariant toVariant(const QV4::Value &v);
 
     void addVmePropertyReference();
     void removeVmePropertyReference();
-
-    bool m_isScarceResource;
+    bool isScarce() const;
     int m_vmePropertyReferenceCount;
+
+    static void destroy(Managed *that);
+
+private:
+    static const ManagedVTable static_vtbl;
 };
+
+struct QV4_JS_CLASS(VariantPrototype) : VariantObject
+{
+public:
+    VariantPrototype(ExecutionEngine *engine);
+
+    void initClass(ExecutionEngine *engine);
+
+    static Value method_preserve(SimpleCallContext *ctx);
+    static Value method_destroy(SimpleCallContext *ctx);
+    static Value method_toString(SimpleCallContext *ctx);
+    static Value method_valueOf(SimpleCallContext *ctx);
+
+private:
+    static const QV4::ManagedVTable static_vtbl;
+};
+
+}
 
 QT_END_NAMESPACE
 
-#endif // QV8VARIANTRESOURCE_P_H
+#endif
 

@@ -259,7 +259,6 @@ void tst_QJSEngine::newVariant()
         QVERIFY(!opaque.isCallable());
         QCOMPARE(opaque.isObject(), true);
         QVERIFY(!opaque.prototype().isUndefined());
-        QEXPECT_FAIL("", "FIXME: newly created QObject's prototype is an JS Object", Continue);
         QCOMPARE(opaque.prototype().isVariant(), true);
         QVERIFY(opaque.property("valueOf").callWithInstance(opaque).equals(opaque));
     }

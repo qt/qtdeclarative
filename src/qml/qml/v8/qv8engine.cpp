@@ -72,6 +72,7 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4globalobject_p.h>
 #include <private/qv4regexpobject_p.h>
+#include <private/qv4variantobject_p.h>
 
 Q_DECLARE_METATYPE(QList<int>)
 
@@ -88,6 +89,19 @@ static bool ObjectComparisonCallback(v8::Handle<v8::Object> lhs, v8::Handle<v8::
     if (lhs.IsEmpty() || rhs.IsEmpty())
         return false;
 
+    QV4::VariantObject *lv = lhs->v4Value().asVariantObject();
+    if (lv) {
+        QV4::VariantObject *rv = rhs->v4Value().asVariantObject();
+        if (rv)
+            return lv->data == rv->data;
+
+        QV8ObjectResource *rhsr = static_cast<QV8ObjectResource*>(rhs->GetExternalResource());
+        if (rhsr->resourceType() == QV8ObjectResource::ValueTypeType)
+            return rhsr->engine->valueTypeWrapper()->isEqual(rhsr, lv->data);
+
+        return false;
+    }
+
     QV8ObjectResource *lhsr = static_cast<QV8ObjectResource*>(lhs->GetExternalResource());
     QV8ObjectResource *rhsr = static_cast<QV8ObjectResource*>(rhs->GetExternalResource());
 
@@ -101,17 +115,8 @@ static bool ObjectComparisonCallback(v8::Handle<v8::Object> lhs, v8::Handle<v8::
             // a value type might be equal to a variant or another value type
             if (rhst == QV8ObjectResource::ValueTypeType) {
                 return lhsr->engine->valueTypeWrapper()->isEqual(lhsr, lhsr->engine->valueTypeWrapper()->toVariant(rhsr));
-            } else if (rhst == QV8ObjectResource::VariantType) {
-                return lhsr->engine->valueTypeWrapper()->isEqual(lhsr, lhsr->engine->variantWrapper()->toVariant(rhsr));
-            }
-            break;
-        case QV8ObjectResource::VariantType:
-            // a variant might be equal to a value type or other variant.
-            if (rhst == QV8ObjectResource::VariantType) {
-                return lhsr->engine->variantWrapper()->toVariant(lhsr) ==
-                       lhsr->engine->variantWrapper()->toVariant(rhsr);
-            } else if (rhst == QV8ObjectResource::ValueTypeType) {
-                return rhsr->engine->valueTypeWrapper()->isEqual(rhsr, rhsr->engine->variantWrapper()->toVariant(lhsr));
+            } else if (QV4::VariantObject *rv = rhs->v4Value().asVariantObject()) {
+                return lhsr->engine->valueTypeWrapper()->isEqual(lhsr, rv->data);
             }
             break;
         case QV8ObjectResource::SequenceType:
@@ -157,7 +162,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
     m_qobjectWrapper.init(this);
     m_typeWrapper.init(this);
     m_listWrapper.init(this);
-    m_variantWrapper.init(this);
     m_valueTypeWrapper.init(this);
     m_sequenceWrapper.init(this);
     m_jsonWrapper.init(m_v4Engine);
@@ -178,7 +182,6 @@ QV8Engine::~QV8Engine()
     m_jsonWrapper.destroy();
     m_sequenceWrapper.destroy();
     m_valueTypeWrapper.destroy();
-    m_variantWrapper.destroy();
     m_listWrapper.destroy();
     m_typeWrapper.destroy();
     m_qobjectWrapper.destroy();
@@ -192,6 +195,9 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
 {
     if (value.isEmpty())
         return QVariant();
+
+    if (QV4::VariantObject *v = value.asVariantObject())
+        return v->data;
 
     if (typeHint == QVariant::Bool)
         return QVariant(value.toBoolean());
@@ -225,8 +231,6 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
                 return qVariantFromValue<QObject *>(m_qobjectWrapper.toQObject(r));
             case QV8ObjectResource::ListType:
                 return m_listWrapper.toVariant(r);
-            case QV8ObjectResource::VariantType:
-                return m_variantWrapper.toVariant(r);
             case QV8ObjectResource::ValueTypeType:
                 return m_valueTypeWrapper.toVariant(r);
             case QV8ObjectResource::SequenceType:
@@ -414,7 +418,7 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
     //    + QObjectList
     //    + QList<int>
 
-    return m_variantWrapper.newVariant(variant);
+    return QV4::Value::fromObject(m_v4Engine->newVariantObject(variant));
 }
 
 // A handle scope and context must be entered
@@ -1053,7 +1057,7 @@ QV4::Value QV8Engine::metaTypeToJS(int type, const void *data)
                 return QV4::Value::nullValue();
             } else {
                 // Fall back to wrapping in a QVariant.
-                result = variantWrapper()->newVariant(QVariant(type, data));
+                result = QV4::Value::fromObject(m_v4Engine->newVariantObject(QVariant(type, data)));
             }
         }
     }
@@ -1191,7 +1195,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
         return true;
     if (isVariant(value) && name.endsWith('*')) {
         int valueType = QMetaType::type(name.left(name.size()-1));
-        QVariant &var = variantWrapper()->variantValue(v8::Value::fromV4Value(value));
+        QVariant &var = value.asVariantObject()->data;
         if (valueType == var.userType()) {
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
@@ -1202,8 +1206,8 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
             while (proto->IsObject()) {
                 bool canCast = false;
                 if (isVariant(proto->v4Value())) {
-                    canCast = (type == variantWrapper()->variantValue(proto).userType())
-                              || (valueType && (valueType == variantWrapper()->variantValue(proto).userType()));
+                    const QVariant &v = proto->v4Value().asVariantObject()->data;
+                    canCast = (type == v.userType()) || (valueType && (valueType == v.userType()));
                 }
                 else if (isQObject(proto->v4Value())) {
                     QByteArray className = name.left(name.size()-1);
@@ -1272,7 +1276,7 @@ QVariant QV8Engine::variantFromJS(const QV4::Value &value,
     if (QV4::RegExpObject *re = value.asRegExpObject())
         return re->toQRegExp();
     if (isVariant(value))
-        return variantWrapper()->variantValue(v8::Value::fromV4Value(value));
+        return value.asVariantObject()->data;
     if (isQObject(value))
         return qVariantFromValue(qtObjectFromJS(value));
     if (isValueType(value))
@@ -1330,18 +1334,19 @@ QObject *QV8Engine::qtObjectFromJS(const QV4::Value &value)
     if (!value.isObject())
         return 0;
 
+    QV4::VariantObject *v = value.asVariantObject();
+    if (v) {
+        QVariant variant = v->data;
+        int type = variant.userType();
+        if (type == QMetaType::QObjectStar)
+            return *reinterpret_cast<QObject* const *>(variant.constData());
+    }
     QV8ObjectResource *r = (QV8ObjectResource *)v8::Value::fromV4Value(value)->ToObject()->GetExternalResource();
     if (!r)
         return 0;
     QV8ObjectResource::ResourceType type = r->resourceType();
     if (type == QV8ObjectResource::QObjectType)
         return qobjectWrapper()->toQObject(r);
-    else if (type == QV8ObjectResource::VariantType) {
-        QVariant variant = variantWrapper()->toVariant(r);
-        int type = variant.userType();
-        if (type == QMetaType::QObjectStar)
-            return *reinterpret_cast<QObject* const *>(variant.constData());
-    }
     return 0;
 }
 

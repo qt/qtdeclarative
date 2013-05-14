@@ -42,6 +42,7 @@ SOURCES += \
     $$PWD/qv4objectproto.cpp \
     $$PWD/qv4regexpobject.cpp \
     $$PWD/qv4stringobject.cpp \
+    $$PWD/qv4variantobject.cpp \
     $$PWD/qv4string.cpp \
     $$PWD/qv4objectiterator.cpp \
     $$PWD/qv4regexp.cpp \
@@ -84,6 +85,7 @@ HEADERS += \
     $$PWD/qv4objectproto_p.h \
     $$PWD/qv4regexpobject_p.h \
     $$PWD/qv4stringobject_p.h \
+    $$PWD/qv4variantobject_p.h \
     $$PWD/qv4string_p.h \
     $$PWD/qv4property_p.h \
     $$PWD/qv4objectiterator_p.h \
@@ -99,7 +101,8 @@ HEADERS += \
 JS_CLASS_SOURCES += $$PWD/qv4dateobject_p.h \
                     $$PWD/qv4stringobject_p.h \
                     $$PWD/qv4booleanobject_p.h \
-                    $$PWD/qv4regexpobject_p.h
+                    $$PWD/qv4regexpobject_p.h \
+                    $$PWD/qv4variantobject_p.h
 
 js_class_bindings.output = ${QMAKE_FILE_BASE}_jsclass.cpp
 js_class_bindings.input = JS_CLASS_SOURCES

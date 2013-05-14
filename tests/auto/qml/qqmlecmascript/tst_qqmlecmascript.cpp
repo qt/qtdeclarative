@@ -4056,6 +4056,7 @@ void tst_qqmlecmascript::scarceResources_other()
     origPixmap.fill(Qt::blue);
     QString srp_name, expectedWarning;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(&engine);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     ScarceResourceObject *eo = 0;
     QObject *srsc = 0;
     QObject *object = 0;
@@ -4081,7 +4082,7 @@ void tst_qqmlecmascript::scarceResources_other()
     QCOMPARE(srsc->property("scarceResourceCopy").value<QPixmap>(), origPixmap);
     eo = qobject_cast<ScarceResourceObject*>(QQmlProperty::read(object, "a").value<QObject*>());
     QVERIFY(!(eo->scarceResourceIsDetached())); // should be another copy of the resource now.
-    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
+    QVERIFY(v4->scarceResources.isEmpty()); // should have been released by this point.
     delete object;
 
     // test that scarce resources are handled properly from js functions in qml files
@@ -4100,7 +4101,7 @@ void tst_qqmlecmascript::scarceResources_other()
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // just released, so should not be valid
     eo = qobject_cast<ScarceResourceObject*>(QQmlProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
-    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
+    QVERIFY(v4->scarceResources.isEmpty()); // should have been released by this point.
     delete object;
 
     // test that if an exception occurs while invoking js function from cpp, that the resources are released.
@@ -4116,7 +4117,7 @@ void tst_qqmlecmascript::scarceResources_other()
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // due to exception, assignment will NOT have occurred.
     eo = qobject_cast<ScarceResourceObject*>(QQmlProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
-    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
+    QVERIFY(v4->scarceResources.isEmpty()); // should have been released by this point.
     delete object;
 
     // test that if an Item which has JS ownership but has a scarce resource property is garbage collected,
@@ -4126,9 +4127,9 @@ void tst_qqmlecmascript::scarceResources_other()
     QVERIFY(object != 0);
     QVERIFY(!object->property("varProperty").isValid()); // not assigned yet
     QMetaObject::invokeMethod(object, "assignVarProperty");
-    QVERIFY(ep->scarceResources.isEmpty());             // the scarce resource is a VME property.
+    QVERIFY(v4->scarceResources.isEmpty());             // the scarce resource is a VME property.
     QMetaObject::invokeMethod(object, "deassignVarProperty");
-    QVERIFY(ep->scarceResources.isEmpty());             // should still be empty; the resource should have been released on gc.
+    QVERIFY(v4->scarceResources.isEmpty());             // should still be empty; the resource should have been released on gc.
     delete object;
 
     /* property variant semantics */
@@ -4153,7 +4154,7 @@ void tst_qqmlecmascript::scarceResources_other()
     QCOMPARE(srsc->property("scarceResourceCopy").value<QPixmap>(), origPixmap);
     eo = qobject_cast<ScarceResourceObject*>(QQmlProperty::read(object, "a").value<QObject*>());
     QVERIFY(!(eo->scarceResourceIsDetached())); // should be another copy of the resource now.
-    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
+    QVERIFY(v4->scarceResources.isEmpty()); // should have been released by this point.
     delete object;
 
     // test that scarce resources are handled properly from js functions in qml files
@@ -4172,7 +4173,7 @@ void tst_qqmlecmascript::scarceResources_other()
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // just released, so should not be valid
     eo = qobject_cast<ScarceResourceObject*>(QQmlProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
-    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
+    QVERIFY(v4->scarceResources.isEmpty()); // should have been released by this point.
     delete object;
 
     // test that if an exception occurs while invoking js function from cpp, that the resources are released.
@@ -4188,7 +4189,7 @@ void tst_qqmlecmascript::scarceResources_other()
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // due to exception, assignment will NOT have occurred.
     eo = qobject_cast<ScarceResourceObject*>(QQmlProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
-    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
+    QVERIFY(v4->scarceResources.isEmpty()); // should have been released by this point.
     delete object;
 }
 
@@ -4424,6 +4425,7 @@ void tst_qqmlecmascript::scarceResources()
     QFETCH(QStringList, expectedErrors);
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(&engine);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     ScarceResourceObject *eo = 0;
     QObject *object = 0;
 
@@ -4448,7 +4450,7 @@ void tst_qqmlecmascript::scarceResources()
         QCOMPARE(eo->scarceResourceIsDetached(), expectedDetachStatus);
     }
 
-    QVERIFY(ep->scarceResources.isEmpty());
+    QVERIFY(v4->scarceResources.isEmpty());
     delete object;
 }
 
