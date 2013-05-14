@@ -50,11 +50,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlLocaleData;
 class QQuickJSContext2D;
-class QQmlIntList;
-class QQmlRealList;
-class QQmlBoolList;
-class QQmlStringList;
-class QQmlUrlList;
+template <typename, int> class QQmlSequence;
 
 namespace QV4 {
 
@@ -178,6 +174,7 @@ public:
         Type_QmlRealList,
         Type_QmlBoolList,
         Type_QmlStringList,
+        Type_QmlQStringList,
         Type_QmlUrlList,
 
         // Wrapped QVariant
@@ -206,11 +203,12 @@ public:
     QQuickJSContext2D *asQQuickJSContext2D() { return type == Type_QQuickJSContext2D ? reinterpret_cast<QQuickJSContext2D *>(this) : 0; }
     VariantObject *asVariantObject() { return type == Type_QVariant ? reinterpret_cast<VariantObject *>(this) : 0; }
 
-    QQmlIntList *asQmlIntList() { return type == Type_QmlIntList ? reinterpret_cast<QQmlIntList *>(this): 0; }
-    QQmlRealList *asQmlRealList() { return type == Type_QmlRealList ? reinterpret_cast<QQmlRealList *>(this): 0; }
-    QQmlBoolList *asQmlBoolList() { return type == Type_QmlBoolList ? reinterpret_cast<QQmlBoolList *>(this): 0; }
-    QQmlStringList *asQmlStringList() { return type == Type_QmlStringList ? reinterpret_cast<QQmlStringList *>(this): 0; }
-    QQmlUrlList *asQmlUrlList() { return type == Type_QmlUrlList ? reinterpret_cast<QQmlUrlList *>(this): 0; }
+    QQmlSequence<QList<int>, Type_QmlIntList> *asQmlIntList() { return type == Type_QmlIntList ? reinterpret_cast<QQmlSequence<QList<int>, Type_QmlIntList> *>(this): 0; }
+    QQmlSequence<QList<qreal>, Type_QmlRealList> *asQmlRealList() { return type == Type_QmlRealList ?  reinterpret_cast<QQmlSequence<QList<qreal>, Type_QmlRealList> *>(this): 0; }
+    QQmlSequence<QList<bool>, Type_QmlBoolList> *asQmlBoolList() { return type == Type_QmlBoolList ?  reinterpret_cast<QQmlSequence<QList<bool>, Type_QmlBoolList> *>(this): 0; }
+    QQmlSequence<QList<QString>, Type_QmlStringList> *asQmlStringList() { return type == Type_QmlStringList ? reinterpret_cast<QQmlSequence<QList<QString>, Type_QmlStringList> *>(this): 0; }
+    QQmlSequence<QStringList, Type_QmlQStringList> *asQmlQStringList() { return type == Type_QmlQStringList ? reinterpret_cast<QQmlSequence<QStringList, Type_QmlQStringList> *>(this): 0; }
+    QQmlSequence<QList<QUrl>, Type_QmlUrlList> *asQmlUrlList() { return type == Type_QmlUrlList ?  reinterpret_cast<QQmlSequence<QList<QUrl>, Type_QmlUrlList> *>(this): 0; }
 
     bool isListType() const { return type >= Type_QmlIntList && type <= Type_QmlUrlList; }
 

@@ -147,6 +147,7 @@ static inline void *popPtr(const char *&data)
 #define ALIGN(size) (((size) + 3) & ~3)
 void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engine)
 {
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     if (v.isEmpty()) {
     } else if (v.isUndefined()) {
         push(data, valueheader(WorkerUndefined));
@@ -234,31 +235,27 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
         // No other QObject's are allowed to be sent
         push(data, valueheader(WorkerUndefined));
     } else if (QV4::Object *o = v.asObject()) {
+
+        if (o->isListType()) {
+            // valid sequence.  we generate a length (sequence length + 1 for the sequence type)
+            uint32_t seqLength = o->get(v4->id_length).toUInt32();
+            uint32_t length = seqLength + 1;
+            if (length > 0xFFFFFF) {
+                push(data, valueheader(WorkerUndefined));
+                return;
+            }
+            reserve(data, sizeof(quint32) + length * sizeof(quint32));
+            push(data, valueheader(WorkerSequence, length));
+            serialize(data, QV4::Value::fromInt32(engine->sequenceWrapper()->metaTypeForSequence(o)), engine); // sequence type
+            for (uint32_t ii = 0; ii < seqLength; ++ii)
+                serialize(data, o->getIndexed(ii), engine); // sequence elements
+
+            return;
+        }
+
         v8::Handle<v8::Object> v8object(v);
         QV8ObjectResource *r = static_cast<QV8ObjectResource *>(v8object->GetExternalResource());
         if (r) {
-            if (r->resourceType() == QV8ObjectResource::SequenceType) {
-                // we can convert sequences, but not other types with external data.
-                QVariant sequenceVariant = engine->sequenceWrapper()->toVariant(r);
-                if (!sequenceVariant.isNull()) {
-                    // valid sequence.  we generate a length (sequence length + 1 for the sequence type)
-                    uint32_t seqLength = engine->sequenceWrapper()->sequenceLength(r);
-                    uint32_t length = seqLength + 1;
-                    if (length > 0xFFFFFF) {
-                        push(data, valueheader(WorkerUndefined));
-                        return;
-                    }
-                    reserve(data, sizeof(quint32) + length * sizeof(quint32));
-                    push(data, valueheader(WorkerSequence, length));
-                    serialize(data, QV4::Value::fromInt32(sequenceVariant.userType()), engine); // sequence type
-                    for (uint32_t ii = 0; ii < seqLength; ++ii) {
-                        serialize(data, v8object->Get(ii)->v4Value(), engine); // sequence elements
-                    }
-
-                    return;
-                }
-            }
-
             // not a sequence.
             push(data, valueheader(WorkerUndefined));
             return;
@@ -377,11 +374,14 @@ QV4::Value Serialize::deserialize(const char *&data, QV8Engine *engine)
         quint32 length = headersize(header);
         quint32 seqLength = length - 1;
         int sequenceType = deserialize(data, engine).integerValue();
-        v8::Handle<v8::Array> array = v8::Array::New(seqLength);
+        QV4::ArrayObject *array = v4->newArrayObject();
+        array->arrayReserve(seqLength);
         for (quint32 ii = 0; ii < seqLength; ++ii)
-            array->Set(ii, deserialize(data, engine));
-        QVariant seqVariant = engine->sequenceWrapper()->toVariant(array, sequenceType, &succeeded);
-        return engine->sequenceWrapper()->fromVariant(seqVariant, &succeeded)->v4Value();
+            array->arrayData[ii].value = deserialize(data, engine);
+        array->arrayDataLen = seqLength;
+        array->setArrayLengthUnchecked(seqLength);
+        QVariant seqVariant = engine->sequenceWrapper()->toVariant(QV4::Value::fromObject(array), sequenceType, &succeeded);
+        return engine->sequenceWrapper()->fromVariant(seqVariant, &succeeded);
     }
     }
     Q_ASSERT(!"Unreachable");

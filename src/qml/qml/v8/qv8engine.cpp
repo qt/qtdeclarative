@@ -119,12 +119,6 @@ static bool ObjectComparisonCallback(v8::Handle<v8::Object> lhs, v8::Handle<v8::
                 return lhsr->engine->valueTypeWrapper()->isEqual(lhsr, rv->data);
             }
             break;
-        case QV8ObjectResource::SequenceType:
-            // a sequence might be equal to itself.
-            if (rhst == QV8ObjectResource::SequenceType) {
-                return lhsr->engine->sequenceWrapper()->isEqual(lhsr, rhsr);
-            }
-            break;
         default:
             break;
         }
@@ -233,8 +227,6 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
                 return m_listWrapper.toVariant(r);
             case QV8ObjectResource::ValueTypeType:
                 return m_valueTypeWrapper.toVariant(r);
-            case QV8ObjectResource::SequenceType:
-                return m_sequenceWrapper.toVariant(r);
             }
         } else if (typeHint == QMetaType::QJsonObject
                    && !value.asArrayObject() && !value.asFunctionObject()) {

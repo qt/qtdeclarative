@@ -60,50 +60,6 @@
 
 QT_BEGIN_NAMESPACE
 
-/*!
-  \internal
-  \class QV8SequenceResource
-  \brief The abstract base class of the external resource used in sequence type objects
-
-  Every sequence type object returned by QV8SequenceWrapper::fromVariant() or
-  QV8SequenceWrapper::newSequence() has a type-specific QV8SequenceResource which
-  contains the type name, the meta type ids of the sequence and sequence element
-  types, as well as either the sequence data (copy) or object pointer and property
-  index (reference) data associated with the sequence.
- */
-class QV8SequenceResource : public QV8ObjectResource
-{
-    V8_RESOURCE_TYPE(SequenceType);
-
-public:
-    virtual ~QV8SequenceResource() {}
-
-    enum ObjectType { Reference, Copy };
-
-    virtual QVariant toVariant() = 0;
-    virtual bool isEqual(const QV8SequenceResource *v) = 0;
-
-    virtual quint32 lengthGetter() = 0;
-    virtual void lengthSetter(v8::Handle<v8::Value> value) = 0;
-    virtual v8::Handle<v8::Value> indexedSetter(quint32 index, v8::Handle<v8::Value> value) = 0;
-    virtual v8::Handle<v8::Value> indexedGetter(quint32 index) = 0;
-    virtual v8::Handle<v8::Value> indexedDeleter(quint32 index) = 0;
-    virtual v8::Handle<v8::Array> indexedEnumerator() = 0;
-    virtual QV4::Value toString() = 0;
-    virtual void sort(v8::Handle<v8::Function> comparer) = 0;
-
-    ObjectType objectType;
-    QByteArray typeName;
-    int sequenceMetaTypeId;
-    int elementMetaTypeId;
-
-protected:
-    QV8SequenceResource(QV8Engine *engine, ObjectType type, const QByteArray &name, int sequenceId, int elementId)
-        : QV8ObjectResource(engine), objectType(type), typeName(name), sequenceMetaTypeId(sequenceId), elementMetaTypeId(elementId)
-    {
-    }
-};
-
 // helper function to generate valid warnings if errors occur during sequence operations.
 static void generateWarning(QV8Engine *engine, const QString& description)
 {
@@ -123,415 +79,153 @@ static void generateWarning(QV8Engine *engine, const QString& description)
     QQmlEnginePrivate::warning(engine->engine(), retn);
 }
 
-
-static int convertV8ValueToInt(QV8Engine *, v8::Handle<v8::Value> v)
-{
-    return v->Int32Value();
-}
-
-static v8::Handle<v8::Value> convertIntToV8Value(QV8Engine *, int v)
-{
-    return QV4::Value::fromInt32(v);
-}
-
-static QString convertIntToString(QV8Engine *, int v)
-{
-    return QString::number(v);
-}
-
-static qreal convertV8ValueToReal(QV8Engine *, v8::Handle<v8::Value> v)
-{
-    return v->NumberValue();
-}
-
-static v8::Handle<v8::Value> convertRealToV8Value(QV8Engine *, qreal v)
-{
-    return QV4::Value::fromDouble(v);
-}
-
-static QString convertRealToString(QV8Engine *, qreal v)
-{
-    return QString::number(v);
-}
-
-static bool convertV8ValueToBool(QV8Engine *, v8::Handle<v8::Value> v)
-{
-    return v->BooleanValue();
-}
-
-static v8::Handle<v8::Value> convertBoolToV8Value(QV8Engine *, bool v)
-{
-    return QV4::Value::fromBoolean(v);
-}
-
-static QString convertBoolToString(QV8Engine *, bool v)
-{
-    if (v)
-        return QLatin1String("true");
-    return QLatin1String("false");
-}
-
-static QString convertV8ValueToString(QV8Engine *e, v8::Handle<v8::Value> v)
-{
-    return v->v4Value().toQString();
-}
-
-static v8::Handle<v8::Value> convertStringToV8Value(QV8Engine *e, const QString &v)
-{
-    return e->toString(v);
-}
-
-static QString convertStringToString(QV8Engine *, const QString &v)
-{
-    return v;
-}
-
-static QString convertV8ValueToQString(QV8Engine *e, v8::Handle<v8::Value> v)
-{
-    return v->v4Value().toQString();
-}
-
-static v8::Handle<v8::Value> convertQStringToV8Value(QV8Engine *e, const QString &v)
-{
-    return e->toString(v);
-}
-
-static QString convertQStringToString(QV8Engine *, const QString &v)
-{
-    return v;
-}
-
-static QUrl convertV8ValueToUrl(QV8Engine *e, v8::Handle<v8::Value> v)
-{
-    return QUrl(v->v4Value().toQString());
-}
-
-static v8::Handle<v8::Value> convertUrlToV8Value(QV8Engine *e, const QUrl &v)
-{
-    return e->toString(QLatin1String(v.toEncoded().data()));
-}
-
-static QString convertUrlToString(QV8Engine *, const QUrl &v)
-{
-    return v.toString();
-}
-
-
-/*
-  \internal
-  \class QV8<Type>SequenceResource
-  \brief The external resource used in sequence type objects
-
-  Every sequence type object returned by QV8SequenceWrapper::newSequence() has
-  a QV8<Type>SequenceResource which contains a property index and a pointer
-  to the object which contains the property.
-
-  Every sequence type object returned by QV8SequenceWrapper::fromVariant() has
-  a QV8<Type>SequenceResource which contains a copy of the sequence value.
-  Operations on the sequence are implemented directly in terms of that sequence data.
-
-  There exists one QV8<Type>SequenceResource instance for every JavaScript Object
-  (sequence) instance returned from QV8SequenceWrapper::newSequence() or
-  QV8SequenceWrapper::fromVariant().
- */
-
 //  F(elementType, elementTypeName, sequenceType, defaultValue)
 #define FOREACH_QML_SEQUENCE_TYPE(F) \
     F(int, Int, QList<int>, 0) \
     F(qreal, Real, QList<qreal>, 0.0) \
     F(bool, Bool, QList<bool>, false) \
     F(QString, String, QList<QString>, QString()) \
+    F(QString, QString, QStringList, QString()) \
     F(QUrl, Url, QList<QUrl>, QUrl())
 
-#define QML_SEQUENCE_TYPE_RESOURCE(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue, ConversionToV8fn, ConversionFromV8fn, ToStringfn) \
-    QT_END_NAMESPACE \
-    Q_DECLARE_METATYPE(SequenceType) \
-    QT_BEGIN_NAMESPACE \
-    class QV8##SequenceElementTypeName##SequenceResource : public QV8SequenceResource { \
-        public:\
-            QV8##SequenceElementTypeName##SequenceResource(QV8Engine *engine, QObject *obj, int propIdx) \
-                : QV8SequenceResource(engine, QV8SequenceResource::Reference, #SequenceType, qMetaTypeId<SequenceType>(), qMetaTypeId<SequenceElementType>()) \
-                , object(obj), propertyIndex(propIdx) \
-            { \
-            } \
-            QV8##SequenceElementTypeName##SequenceResource(QV8Engine *engine, const SequenceType &value) \
-                : QV8SequenceResource(engine, QV8SequenceResource::Copy, #SequenceType, qMetaTypeId<SequenceType>(), qMetaTypeId<SequenceElementType>()) \
-                , object(0), propertyIndex(-1), c(value) \
-            { \
-            } \
-            ~QV8##SequenceElementTypeName##SequenceResource() \
-            { \
-            } \
-            static QVariant toVariant(QV8Engine *e, v8::Handle<v8::Array> array, uint32_t length, bool *succeeded) \
-            { \
-                SequenceType list; \
-                list.reserve(length); \
-                for (uint32_t ii = 0; ii < length; ++ii) { \
-                    list.append(ConversionFromV8fn(e, array->Get(ii))); \
-                } \
-                *succeeded = true; \
-                return QVariant::fromValue<SequenceType>(list); \
-            } \
-            QVariant toVariant() \
-            { \
-                if (objectType == QV8SequenceResource::Reference) { \
-                    if (!object) \
-                        return QVariant(); \
-                    loadReference(); \
-                } \
-                return QVariant::fromValue<SequenceType>(c); \
-            } \
-            bool isEqual(const QV8SequenceResource *v) \
-            { \
-                /* Note: two different sequences can never be equal (even if they  */ \
-                /* contain the same elements in the same order) in order to        */ \
-                /* maintain JavaScript semantics.  However, if they both reference */ \
-                /* the same QObject+propertyIndex, they are equal.                 */ \
-                if (objectType == QV8SequenceResource::Reference && v->objectType == QV8SequenceResource::Reference) { \
-                    if (sequenceMetaTypeId == v->sequenceMetaTypeId) { \
-                        const QV8##SequenceElementTypeName##SequenceResource *rhs = static_cast<const QV8##SequenceElementTypeName##SequenceResource *>(v); \
-                        return (object != 0 && object == rhs->object && propertyIndex == rhs->propertyIndex); \
-                    } \
-                } else if (objectType == QV8SequenceResource::Copy && v->objectType == QV8SequenceResource::Copy) { \
-                    if (sequenceMetaTypeId == v->sequenceMetaTypeId) { \
-                        const QV8##SequenceElementTypeName##SequenceResource *rhs = static_cast<const QV8##SequenceElementTypeName##SequenceResource *>(v); \
-                        return (this == rhs); \
-                    } \
-                } \
-                return false; \
-            } \
-            quint32 lengthGetter() \
-            { \
-                if (objectType == QV8SequenceResource::Reference) { \
-                    if (!object) \
-                        return 0; \
-                    loadReference(); \
-                } \
-                return static_cast<quint32>(c.count()); \
-            } \
-            void lengthSetter(v8::Handle<v8::Value> value) \
-            { \
-                /* Get the new required length */ \
-                if (value.IsEmpty() || !value->IsUint32()) \
-                    return; \
-                quint32 newLength = value->Uint32Value(); \
-                /* Qt containers have int (rather than uint) allowable indexes. */ \
-                if (newLength > INT_MAX) { \
-                    generateWarning(engine, QLatin1String("Index out of range during length set")); \
-                    return; \
-                } \
-                /* Read the sequence from the QObject property if we're a reference */ \
-                if (objectType == QV8SequenceResource::Reference) { \
-                    if (!object) \
-                        return; \
-                    loadReference(); \
-                } \
-                /* Determine whether we need to modify the sequence */ \
-                qint32 newCount = static_cast<qint32>(newLength); \
-                qint32 count = c.count(); \
-                if (newCount == count) { \
-                    return; \
-                } else if (newCount > count) { \
-                    /* according to ECMA262r3 we need to insert */ \
-                    /* undefined values increasing length to newLength. */ \
-                    /* We cannot, so we insert default-values instead. */ \
-                    c.reserve(newCount); \
-                    while (newCount > count++) { \
-                        c.append(DefaultValue); \
-                    } \
-                } else { \
-                    /* according to ECMA262r3 we need to remove */ \
-                    /* elements until the sequence is the required length. */ \
-                    while (newCount < count) { \
-                        count--; \
-                        c.removeAt(count); \
-                    } \
-                } \
-                /* write back if required. */ \
-                if (objectType == QV8SequenceResource::Reference) { \
-                    /* write back.  already checked that object is non-null, so skip that check here. */ \
-                    storeReference(); \
-                } \
-                return; \
-            } \
-            v8::Handle<v8::Value> indexedSetter(quint32 index, v8::Handle<v8::Value> value) \
-            { \
-                /* Qt containers have int (rather than uint) allowable indexes. */ \
-                if (index > INT_MAX) { \
-                    generateWarning(engine, QLatin1String("Index out of range during indexed set")); \
-                    return QV4::Value::undefinedValue(); \
-                } \
-                if (objectType == QV8SequenceResource::Reference) { \
-                    if (!object) \
-                        return QV4::Value::undefinedValue(); \
-                    loadReference(); \
-                } \
-                /* modify the sequence */ \
-                SequenceElementType elementValue = ConversionFromV8fn(engine, value); \
-                qint32 count = c.count(); \
-                qint32 signedIdx = static_cast<qint32>(index); \
-                if (signedIdx == count) { \
-                    c.append(elementValue); \
-                } else if (signedIdx < count) { \
-                    c[index] = elementValue; \
-                } else { \
-                    /* according to ECMA262r3 we need to insert */ \
-                    /* the value at the given index, increasing length to index+1. */ \
-                    c.reserve(signedIdx + 1); \
-                    while (signedIdx > count++) { \
-                        c.append(DefaultValue); \
-                    } \
-                    c.append(elementValue); \
-                } \
-                /* write back.  already checked that object is non-null, so skip that check here. */ \
-                if (objectType == QV8SequenceResource::Reference) \
-                    storeReference(); \
-                return value; \
-            } \
-            v8::Handle<v8::Value> indexedGetter(quint32 index) \
-            { \
-                /* Qt containers have int (rather than uint) allowable indexes. */ \
-                if (index > INT_MAX) { \
-                    generateWarning(engine, QLatin1String("Index out of range during indexed get")); \
-                    return QV4::Value::undefinedValue(); \
-                } \
-                if (objectType == QV8SequenceResource::Reference) { \
-                    if (!object) \
-                        return QV4::Value::undefinedValue(); \
-                    loadReference(); \
-                } \
-                qint32 count = c.count(); \
-                qint32 signedIdx = static_cast<qint32>(index); \
-                if (signedIdx < count) \
-                    return ConversionToV8fn(engine, c.at(signedIdx)); \
-                return QV4::Value::undefinedValue(); \
-            } \
-            v8::Handle<v8::Value> indexedDeleter(quint32 index) \
-            { \
-                /* Qt containers have int (rather than uint) allowable indexes. */ \
-                if (index > INT_MAX) \
-                    return QV4::Value::fromBoolean(false); \
-                /* Read in the sequence from the QObject */ \
-                if (objectType == QV8SequenceResource::Reference) { \
-                    if (!object) \
-                        return QV4::Value::fromBoolean(false); \
-                    loadReference(); \
-                } \
-                qint32 signedIdx = static_cast<qint32>(index); \
-                if (signedIdx < c.count()) { \
-                    /* according to ECMA262r3 it should be Undefined, */ \
-                    /* but we cannot, so we insert a default-value instead. */ \
-                    c.replace(signedIdx, DefaultValue); \
-                    if (objectType == QV8SequenceResource::Reference) { \
-                        /* write back.  already checked that object is non-null, so skip that check here. */ \
-                        storeReference(); \
-                    } \
-                    return QV4::Value::fromBoolean(true); \
-                } \
-                return QV4::Value::fromBoolean(false); \
-            } \
-            v8::Handle<v8::Array> indexedEnumerator() \
-            { \
-                if (objectType == QV8SequenceResource::Reference) { \
-                    if (!object) \
-                        return v8::Handle<v8::Array>(); \
-                    loadReference(); \
-                } \
-                qint32 count = c.count(); \
-                v8::Handle<v8::Array> retn = v8::Array::New(count); \
-                for (qint32 i = 0; i < count; ++i) { \
-                    retn->Set(static_cast<quint32>(i), QV4::Value::fromUInt32(static_cast<quint32>(i))); \
-                } \
-                return retn; \
-            } \
-            QV4::Value toString() \
-            { \
-                if (objectType == QV8SequenceResource::Reference) { \
-                    if (!object) \
-                        return QV4::Value::undefinedValue(); \
-                    loadReference(); \
-                } \
-                QString str; \
-                qint32 count = c.count(); \
-                for (qint32 i = 0; i < count; ++i) { \
-                    str += QString(QLatin1String("%1,")).arg(ToStringfn(engine, c[i])); \
-                } \
-                str.chop(1); \
-                return engine->toString(str); \
-            } \
-            void loadReference() \
-            { \
-                Q_ASSERT(object); \
-                Q_ASSERT(objectType == QV8SequenceResource::Reference); \
-                void *a[] = { &c, 0 }; \
-                QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
-            } \
-            void storeReference() \
-            { \
-                Q_ASSERT(object); \
-                Q_ASSERT(objectType == QV8SequenceResource::Reference); \
-                int status = -1; \
-                QQmlPropertyPrivate::WriteFlags flags = \
-                    QQmlPropertyPrivate::DontRemoveBinding; \
-                void *a[] = { &c, 0, &status, &flags }; \
-                QMetaObject::metacall(object, QMetaObject::WriteProperty, propertyIndex, a); \
-            } \
-            class CompareFunctor \
-            { \
-            public: \
-                CompareFunctor(QV8Engine *engine, v8::Handle<v8::Function> f) : jsFn(f), eng(engine) {} \
-                bool operator()(SequenceElementType e0, SequenceElementType e1) \
-                { \
-                    v8::Handle<v8::Value> argv[2] = { eng->fromVariant(e0), eng->fromVariant(e1) }; \
-                    v8::Handle<v8::Value> compareValue = jsFn->Call(v8::Value::fromV4Value(eng->global()), 2, argv); \
-                    return compareValue->NumberValue() < 0; \
-                } \
-            private: \
-                v8::Handle<v8::Function> jsFn; \
-                QV8Engine *eng; \
-            }; \
-            void sort(v8::Handle<v8::Function> jsCompareFunction) \
-            { \
-                CompareFunctor cf(engine, jsCompareFunction); \
-                qSort(c.begin(), c.end(), cf); \
-            } \
-        private: \
-            QQmlGuard<QObject> object; \
-            int propertyIndex; \
-            SequenceType c; \
-    };
-
-#define GENERATE_QML_SEQUENCE_TYPE_RESOURCE(ElementType, ElementTypeName, SequenceType, DefaultValue) \
-    QML_SEQUENCE_TYPE_RESOURCE(ElementType, ElementTypeName, SequenceType, DefaultValue, convert##ElementTypeName##ToV8Value, convertV8ValueTo##ElementTypeName, convert##ElementTypeName##ToString)
-
-FOREACH_QML_SEQUENCE_TYPE(GENERATE_QML_SEQUENCE_TYPE_RESOURCE)
-#undef GENERATE_QML_SEQUENCE_TYPE_RESOURCE
-#undef QML_SEQUENCE_TYPE_RESOURCE
-
-class QQmlStringList : public QV4::Object
+class QV4_JS_CLASS(QQmlSequenceBase) : public QV4::Object
 {
 public:
-    QQmlStringList(QV4::ExecutionEngine *engine, const QStringList &container)
+    QQmlSequenceBase(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
-        , m_container(container)
+    {}
+
+    void initClass(QV4::ExecutionEngine *engine);
+
+    QV4::Value method_get_length(QV4::SimpleCallContext* ctx) QV4_ANNOTATE(attributes QV4::Attr_ReadOnly);
+
+    QV4::Value method_set_length(QV4::SimpleCallContext* ctx);
+};
+
+class QV4_JS_CLASS(QQmlSequencePrototype) : public QV4::Object
+{
+    QV4_ANNOTATE(staticInitClass true)
+public:
+    static void initClass(QV4::ExecutionEngine *engine, const QV4::Value &value);
+
+    static QV4::Value method_valueOf(QV4::SimpleCallContext *ctx)
     {
-        type = Type_QmlStringList;
-        vtbl = &static_vtbl;
-        m_lengthProperty = insertMember(engine->id_length, QV4::Attr_ReadOnly);
-        prototype = engine->arrayPrototype;
-        updateLength();
+        return QV4::Value::fromString(ctx->thisObject.toString(ctx));
     }
 
-    QQmlStringList(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
-        : QV4::Object(engine)
+    static QV4::Value method_sort(QV4::SimpleCallContext *ctx) QV4_ARGC(1);
+};
+
+static QV4::Value convertElementToValue(QV4::ExecutionContext *ctx, const QString &element)
+{
+    return QV4::Value::fromString(ctx, element);
+}
+
+static QV4::Value convertElementToValue(QV4::ExecutionContext *ctx, int element)
+{
+    return QV4::Value::fromInt32(element);
+}
+
+static QV4::Value convertElementToValue(QV4::ExecutionContext *ctx, const QUrl &element)
+{
+    return QV4::Value::fromString(ctx, element.toString());
+}
+
+static QV4::Value convertElementToValue(QV4::ExecutionContext *ctx, qreal element)
+{
+    return QV4::Value::fromDouble(element);
+}
+
+static QV4::Value convertElementToValue(QV4::ExecutionContext *ctx, bool element)
+{
+    return QV4::Value::fromBoolean(element);
+}
+
+static QString convertElementToString(const QString &element)
+{
+    return element;
+}
+
+static QString convertElementToString(int element)
+{
+    return QString::number(element);
+}
+
+static QString convertElementToString(const QUrl &element)
+{
+    return element.toString();
+}
+
+static QString convertElementToString(qreal element)
+{
+    QString qstr;
+    __qmljs_numberToString(&qstr, element, 10);
+    return qstr;
+}
+
+static QString convertElementToString(bool element)
+{
+    if (element)
+        return QStringLiteral("true");
+    else
+        return QStringLiteral("false");
+}
+
+template <typename ElementType> ElementType convertValueToElement(const QV4::Value &value);
+
+template <> QString convertValueToElement(const QV4::Value &value)
+{
+    return value.toQString();
+}
+
+template <> int convertValueToElement(const QV4::Value &value)
+{
+    return value.toInt32();
+}
+
+template <> QUrl convertValueToElement(const QV4::Value &value)
+{
+    return QUrl(value.toQString());
+}
+
+template <> qreal convertValueToElement(const QV4::Value &value)
+{
+    return value.toNumber();
+}
+
+template <> bool convertValueToElement(const QV4::Value &value)
+{
+    return value.toBoolean();
+}
+
+template <typename Container, int ManagedType>
+class QQmlSequence : public QQmlSequenceBase
+{
+public:
+    QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
+        : QQmlSequenceBase(engine)
+        , m_container(container)
+        , m_object(0)
+        , m_propertyIndex(-1)
+        , m_isReference(false)
     {
-        type = Type_QmlStringList;
+        type = ManagedType;
         vtbl = &static_vtbl;
-        m_lengthProperty = insertMember(engine->id_length, QV4::Attr_ReadOnly);
         prototype = engine->arrayPrototype;
-        void *a[] = { &m_container, 0 };
-        QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a);
-        updateLength();
+        initClass(engine);
+    }
+
+    QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
+        : QQmlSequenceBase(engine)
+        , m_object(object)
+        , m_propertyIndex(propertyIndex)
+        , m_isReference(true)
+    {
+        type = ManagedType;
+        vtbl = &static_vtbl;
+        prototype = engine->arrayPrototype;
+        loadReference();
+        initClass(engine);
     }
 
     QV4::Value containerGetIndexed(QV4::ExecutionContext *ctx, uint index, bool *hasProperty)
@@ -543,11 +237,19 @@ public:
                 *hasProperty = false;
             return QV4::Value::undefinedValue();
         }
+        if (m_isReference) {
+            if (!m_object) {
+                if (hasProperty)
+                    *hasProperty = false;
+                return QV4::Value::undefinedValue();
+            }
+            loadReference();
+        }
         qint32 signedIdx = static_cast<qint32>(index);
         if (signedIdx < m_container.count()) {
             if (hasProperty)
                 *hasProperty = true;
-            return QV4::Value::fromString(ctx, m_container.at(signedIdx));
+            return convertElementToValue(ctx, m_container.at(signedIdx));
         }
         if (hasProperty)
             *hasProperty = false;
@@ -561,15 +263,21 @@ public:
             generateWarning(QV8Engine::get(ctx->engine->publicEngine), QLatin1String("Index out of range during indexed put"));
             return;
         }
+
+        if (m_isReference) {
+            if (!m_object)
+                return;
+            loadReference();
+        }
+
         qint32 signedIdx = static_cast<qint32>(index);
 
         int count = m_container.count();
 
-        QString element = value.toQString();
+        typename Container::value_type element = convertValueToElement<typename Container::value_type>(value);
 
         if (signedIdx == count) {
             m_container.append(element);
-            updateLength();
         } else if (signedIdx < count) {
             m_container[signedIdx] = element;
         } else {
@@ -577,11 +285,13 @@ public:
             /* the value at the given index, increasing length to index+1. */
             m_container.reserve(signedIdx + 1);
             while (signedIdx > count++) {
-                m_container.append(QString());
+                m_container.append(typename Container::value_type());
             }
             m_container.append(element);
-            updateLength();
         }
+
+        if (m_isReference)
+            storeReference();
     }
 
     QV4::PropertyAttributes containerQueryIndexed(QV4::ExecutionContext *ctx, uint index)
@@ -590,6 +300,11 @@ public:
         if (index > INT_MAX) {
             generateWarning(QV8Engine::get(ctx->engine->publicEngine), QLatin1String("Index out of range during indexed query"));
             return QV4::Attr_Invalid;
+        }
+        if (m_isReference) {
+            if (!m_object)
+                return QV4::Attr_Invalid;
+            loadReference();
         }
         qint32 signedIdx = static_cast<qint32>(index);
         return (index < m_container.count()) ? QV4::Attr_Data : QV4::Attr_Invalid;
@@ -600,6 +315,11 @@ public:
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX)
             return false;
+        if (m_isReference) {
+            if (!m_object)
+                return false;
+            loadReference();
+        }
         qint32 signedIdx = static_cast<qint32>(index);
 
         if (signedIdx >= m_container.count())
@@ -607,40 +327,235 @@ public:
 
         /* according to ECMA262r3 it should be Undefined, */
         /* but we cannot, so we insert a default-value instead. */
-        m_container.replace(signedIdx, QString());
+        m_container.replace(signedIdx, typename Container::value_type());
+
+        if (m_isReference)
+            storeReference();
+
         return true;
     }
 
-    QVariant toVariant() const
-    { return QVariant::fromValue<QStringList>(m_container); }
-
-private:
-    void updateLength()
+    void sort(QV4::SimpleCallContext *ctx)
     {
-        m_lengthProperty->value = QV4::Value::fromInt32(m_container.length());
+        if (m_isReference) {
+            if (!m_object)
+                return;
+            loadReference();
+        }
+
+        struct DefaultCompareFunctor
+        {
+            bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
+            {
+                return convertElementToString(lhs) < convertElementToString(rhs);
+            }
+        };
+
+        struct CompareFunctor
+        {
+            CompareFunctor(QV4::ExecutionContext *ctx, const QV4::Value &compareFn)
+                : m_ctx(ctx), m_compareFn(compareFn)
+            {}
+
+            bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
+            {
+                QV4::Managed *fun = m_compareFn.asManaged();
+                QV4::Value argv[2] = {
+                    convertElementToValue(m_ctx, lhs),
+                    convertElementToValue(m_ctx, rhs)
+                };
+                QV4::Value result = fun->call(m_ctx, QV4::Value::fromObject(m_ctx->engine->globalObject), argv, 2);
+                return result.toNumber() < 0;
+            }
+
+        private:
+            QV4::ExecutionContext *m_ctx;
+            QV4::Value m_compareFn;
+        };
+
+        if (ctx->argumentCount == 1 && ctx->arguments[0].asFunctionObject()) {
+            QV4::Value compareFn = ctx->arguments[0];
+            CompareFunctor cf(ctx, compareFn);
+            qSort(m_container.begin(), m_container.end(), cf);
+        } else {
+            DefaultCompareFunctor cf;
+            qSort(m_container.begin(), m_container.end(), cf);
+        }
+
+        if (m_isReference)
+            storeReference();
     }
 
-    QStringList m_container;
-    QV4::Property *m_lengthProperty;
+    QV4::Value lengthGetter(QV4::SimpleCallContext*)
+    {
+        if (m_isReference) {
+            if (!m_object)
+                return QV4::Value::fromInt32(0);
+            loadReference();
+        }
+        return QV4::Value::fromInt32(m_container.count());
+    }
+
+    void lengthSetter(QV4::SimpleCallContext* ctx)
+    {
+        quint32 newLength = ctx->arguments[0].toUInt32();
+        /* Qt containers have int (rather than uint) allowable indexes. */
+        if (newLength > INT_MAX) {
+            generateWarning(QV8Engine::get(ctx->engine->publicEngine), QLatin1String("Index out of range during length set"));
+            return;
+        }
+        /* Read the sequence from the QObject property if we're a reference */
+        if (m_isReference) {
+            if (!m_object)
+                return;
+            loadReference();
+        }
+        /* Determine whether we need to modify the sequence */
+        qint32 newCount = static_cast<qint32>(newLength);
+        qint32 count = m_container.count();
+        if (newCount == count) {
+            return;
+        } else if (newCount > count) {
+            /* according to ECMA262r3 we need to insert */
+            /* undefined values increasing length to newLength. */
+            /* We cannot, so we insert default-values instead. */
+            m_container.reserve(newCount);
+            while (newCount > count++) {
+                m_container.append(typename Container::value_type());
+            }
+        } else {
+            /* according to ECMA262r3 we need to remove */
+            /* elements until the sequence is the required length. */
+            while (newCount < count) {
+                count--;
+                m_container.removeAt(count);
+            }
+        }
+        /* write back if required. */
+        if (m_isReference) {
+            /* write back.  already checked that object is non-null, so skip that check here. */
+            storeReference();
+        }
+    }
+
+    QVariant toVariant() const
+    { return QVariant::fromValue<Container>(m_container); }
+
+    static QVariant toVariant(QV4::ArrayObject *array)
+    {
+        Container result;
+        uint32_t length = array->arrayLength();
+        for (uint32_t i = 0; i < length; ++i)
+            result << convertValueToElement<typename Container::value_type>(array->getIndexed(i));
+        return QVariant::fromValue(result);
+    }
+
+private:
+    void loadReference()
+    {
+        Q_ASSERT(m_object);
+        Q_ASSERT(m_isReference);
+        void *a[] = { &m_container, 0 };
+        QMetaObject::metacall(m_object, QMetaObject::ReadProperty, m_propertyIndex, a);
+    }
+
+    void storeReference()
+    {
+        Q_ASSERT(m_object);
+        Q_ASSERT(m_isReference);
+        int status = -1;
+        QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding;
+        void *a[] = { &m_container, 0, &status, &flags };
+        QMetaObject::metacall(m_object, QMetaObject::WriteProperty, m_propertyIndex, a);
+    }
+
+    Container m_container;
+    QQmlGuard<QObject> m_object;
+    int m_propertyIndex;
+    bool m_isReference;
 
     static QV4::Value getIndexed(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index, bool *hasProperty)
-    { return static_cast<QQmlStringList *>(that)->containerGetIndexed(ctx, index, hasProperty); }
+    { return static_cast<QQmlSequence<Container, ManagedType> *>(that)->containerGetIndexed(ctx, index, hasProperty); }
     static void putIndexed(Managed *that, QV4::ExecutionContext *ctx, uint index, const QV4::Value &value)
-    { static_cast<QQmlStringList *>(that)->containerPutIndexed(ctx, index, value); }
+    { static_cast<QQmlSequence<Container, ManagedType> *>(that)->containerPutIndexed(ctx, index, value); }
     static QV4::PropertyAttributes queryIndexed(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index)
-    { return static_cast<QQmlStringList *>(that)->containerQueryIndexed(ctx, index); }
+    { return static_cast<QQmlSequence<Container, ManagedType> *>(that)->containerQueryIndexed(ctx, index); }
     static bool deleteIndexedProperty(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index)
-    { return static_cast<QQmlStringList *>(that)->containerDeleteIndexedProperty(ctx, index); }
+    { return static_cast<QQmlSequence<Container, ManagedType> *>(that)->containerDeleteIndexedProperty(ctx, index); }
 
     static void destroy(Managed *that)
     {
-        static_cast<QQmlStringList *>(that)->~QQmlStringList();
+        static_cast<QQmlSequence<Container, ManagedType> *>(that)->~QQmlSequence<Container, ManagedType>();
     }
 
     static const QV4::ManagedVTable static_vtbl;
 };
 
+typedef QQmlSequence<QStringList, QV4::Managed::Type_QmlQStringList> QQmlQStringList;
+template<>
+DEFINE_MANAGED_VTABLE(QQmlQStringList);
+typedef QQmlSequence<QList<QString>, QV4::Managed::Type_QmlStringList> QQmlStringList;
+template<>
 DEFINE_MANAGED_VTABLE(QQmlStringList);
+typedef QQmlSequence<QList<int>, QV4::Managed::Type_QmlIntList> QQmlIntList;
+template<>
+DEFINE_MANAGED_VTABLE(QQmlIntList);
+typedef QQmlSequence<QList<QUrl>, QV4::Managed::Type_QmlUrlList> QQmlUrlList;
+template<>
+DEFINE_MANAGED_VTABLE(QQmlUrlList);
+typedef QQmlSequence<QList<bool>, QV4::Managed::Type_QmlBoolList> QQmlBoolList;
+template<>
+DEFINE_MANAGED_VTABLE(QQmlBoolList);
+typedef QQmlSequence<QList<qreal>, QV4::Managed::Type_QmlRealList> QQmlRealList;
+template<>
+DEFINE_MANAGED_VTABLE(QQmlRealList);
+
+QV4::Value QQmlSequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
+{
+    QV4::Object *o = ctx->thisObject.asObject();
+    if (!o || !o->isListType())
+        ctx->throwTypeError();
+
+    if (ctx->argumentCount < 2) {
+#define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
+        case QV4::Managed::Type_Qml##SequenceElementTypeName##List: o->asQml##SequenceElementTypeName##List()->sort(ctx); break;
+
+        switch (o->internalType()) {
+            FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
+            default: break;
+        }
+
+#undef CALL_SORT
+    }
+    return ctx->thisObject;
+}
+
+QV4::Value QQmlSequenceBase::method_get_length(QV4::SimpleCallContext* ctx) QV4_ANNOTATE(attributes QV4::Attr_ReadOnly)
+{
+#define CALL_LENGTH_GETTER(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
+    case QV4::Managed::Type_Qml##SequenceElementTypeName##List: return asQml##SequenceElementTypeName##List()->lengthGetter(ctx);
+
+    switch (internalType()) {
+        FOREACH_QML_SEQUENCE_TYPE(CALL_LENGTH_GETTER)
+        default: QV4::Value::undefinedValue();
+    }
+
+#undef CALL_LENGTH_GETTER
+}
+
+QV4::Value QQmlSequenceBase::method_set_length(QV4::SimpleCallContext* ctx)
+{
+#define CALL_LENGTH_SETTER(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
+    case QV4::Managed::Type_Qml##SequenceElementTypeName##List: asQml##SequenceElementTypeName##List()->lengthSetter(ctx); break;
+
+    switch (internalType()) {
+        FOREACH_QML_SEQUENCE_TYPE(CALL_LENGTH_SETTER)
+        default: break;
+    }
+#undef CALL_LENGTH_SETTER
+
+    return QV4::Value::undefinedValue();
+}
 
 QT_END_NAMESPACE
 

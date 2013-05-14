@@ -82,15 +82,27 @@ class Accessor():
         self.setter = None
 
     def generateBinding(self, out, parsedClass, obj):
+        managedType = "type"
+        if len(obj) > 0:
+            managedType = obj + "internalType()"
         out.write("    {\n")
         out.write("        QV4::FunctionObject *wrappedGetter = 0;\n")
         out.write("        QV4::FunctionObject *wrappedSetter = 0;\n")
         out.write("\n")
         if self.getter:
-            out.write("        wrappedGetter = new (engine->memoryManager) %s_AccessorGetter(engine->rootContext, &%s::%s);\n" % (parsedClass.name, parsedClass.name, self.getter.fullMethodName()))
+            out.write("        wrappedGetter = new (engine->memoryManager) %s_AccessorGetterSetter(engine->rootContext, &%s::%s, %s);\n" % (parsedClass.name, parsedClass.name, self.getter.fullMethodName(), managedType))
         if self.setter:
-            out.write("        wrappedSetter = new (engine->memoryManager) %s_AccessorSetter(engine->rootContext, &%s::%s);\n" % (parsedClass.name, parsedClass.name, self.setter.fullMethodName()))
-        out.write("        QV4::PropertyAttributes attrs = QV4::Attr_Accessor;\n")
+            out.write("        wrappedSetter = new (engine->memoryManager) %s_AccessorGetterSetter(engine->rootContext, &%s::%s, %s);\n" % (parsedClass.name, parsedClass.name, self.setter.fullMethodName(), managedType))
+
+        attributes = ["QV4::Attr_Accessor"];
+
+        if self.getter and "attributes" in self.getter.options:
+            attributes = attributes + [self.getter.options["attributes"]]
+        if self.setter and "attributes" in self.setter.options:
+            attributes = attributes + [self.setter.options["attributes"]]
+
+        out.write("        QV4::PropertyAttributes attrs = %s;\n" % "|".join(attributes))
+
         out.write("        QV4::Property *pd = %sinsertMember(engine->newIdentifier(QStringLiteral(\"%s\")), attrs);\n" % (obj, self.name));
         out.write("        pd->setGetter(wrappedGetter);\n");
         out.write("        pd->setSetter(wrappedSetter);\n");
@@ -124,10 +136,14 @@ def parse(lines):
     currentClass = None
     classPattern = re.compile(r".*QV4_JS_CLASS\((?P<ClassName>\w+)\).*")
     annotatePattern = re.compile(r".*QV4_ANNOTATE\((?P<Options>.+)\).*")
-    methodPattern = re.compile(r".*\smethod_(?P<MethodName>\w+)\(.*\).*;")
+    methodPattern = re.compile(r".*\smethod_(?P<MethodName>\w+)\(.*\).*;?")
     ctorMethodPattern = re.compile(r".*\sctor_method_(?P<MethodName>\w+)\(.*\).*;")
 
     for line in lines:
+        if line == "};" and currentClass != None:
+            classes.append(currentClass)
+            currentClass = None
+            continue
         line = line.strip()
         classMatch = classPattern.match(line)
         if classMatch:
@@ -165,8 +181,6 @@ def parse(lines):
             currentClass.options = parseOptions(annotateMatch.group("Options"))
             continue
 
-    if currentClass != None:
-        classes.append(currentClass)
     return classes
 
 def generateBinding(out, parsedClass, vtableEntries):
@@ -200,8 +214,8 @@ def generateBinding(out, parsedClass, vtableEntries):
         out.write("}\n\n")
 
     if len(parsedClass.accessors) > 0:
-        typename = "%s_AccessorGetter" % parsedClass.name
-        out.write("typedef QV4::MemberAccessorGetter<%s, QV4::Managed::Type_%s> %s;\n" % (parsedClass.name, parsedClass.managedTypeName(), typename))
+        typename = "%s_AccessorGetterSetter" % parsedClass.name
+        out.write("typedef QV4::MemberAccessorGetterSetter<%s> %s;\n" % (parsedClass.name, typename))
         out.write("template<>\n")
         out.write("DEFINE_MANAGED_VTABLE(%s);" % typename)
         out.write("\n\n")

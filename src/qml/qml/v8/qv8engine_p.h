@@ -516,7 +516,7 @@ QVariant QV8Engine::toValueType(const QV4::Value &obj)
 
 QV4::Value QV8Engine::newSequence(int sequenceType, QObject *object, int property, bool *succeeded)
 {
-    return m_sequenceWrapper.newSequence(sequenceType, object, property, succeeded)->v4Value();
+    return m_sequenceWrapper.newSequence(sequenceType, object, property, succeeded);
 }
 
 QV4::Value QV8Engine::bindingFlagKey() const

@@ -34,3 +34,7 @@ SOURCES += \
     $$PWD/qv4domerrors.cpp \
     $$PWD/qv4sqlerrors.cpp \
     $$PWD/qqmlbuiltinfunctions.cpp
+
+JS_CLASS_SOURCES += \
+    $$PWD/qv8sequencewrapper_p_p.h
+

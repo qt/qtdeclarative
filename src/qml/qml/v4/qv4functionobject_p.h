@@ -192,28 +192,29 @@ struct BoundFunction: FunctionObject {
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
 };
 
-template <typename T, int ManagedType>
-class MemberAccessorGetter : public FunctionObject
+template <typename T>
+class MemberAccessorGetterSetter : public FunctionObject
 {
 public:
-    typedef Value (T::*GetterFunction)(QV4::SimpleCallContext *ctx);
+    typedef Value (T::*GetterSetterFunction)(QV4::SimpleCallContext *ctx);
 
-    MemberAccessorGetter(ExecutionContext *scope, GetterFunction getter)
+    MemberAccessorGetterSetter(ExecutionContext *scope, GetterSetterFunction getterSetter, int managedType)
         : FunctionObject(scope)
+        , managedType(managedType)
     {
         this->vtbl = &static_vtbl;
-        this->getter = getter;
+        this->getterSetter = getterSetter;
     }
 
     static QV4::Value call(Managed *that, ExecutionContext *context, const QV4::Value &thisObject, QV4::Value *args, int argc)
     {
-        MemberAccessorGetter<T, ManagedType> *getter = static_cast<MemberAccessorGetter<T, ManagedType> *>(that);
+        MemberAccessorGetterSetter<T> *getterSetter = static_cast<MemberAccessorGetterSetter<T> *>(that);
 
         Object *thisO = thisObject.asObject();
-        if (!thisO || thisO->internalType() != ManagedType)
+        if (!thisO || thisO->internalType() != getterSetter->managedType)
             context->throwTypeError();
 
-        T *o = reinterpret_cast<T *>(thisO);
+        T *o = static_cast<T *>(thisO);
 
         QV4::SimpleCallContext ctx;
         ctx.initSimpleCallContext(context->engine);
@@ -225,7 +226,7 @@ public:
 
         QV4::Value result = QV4::Value::undefinedValue();
         try {
-            result = (o->* getter->getter)(&ctx);
+            result = (o->* getterSetter->getterSetter)(&ctx);
         } catch (QV4::Exception &ex) {
             ex.partiallyUnwindContext(context);
             throw;
@@ -234,7 +235,8 @@ public:
         return result;
     }
 protected:
-    GetterFunction getter;
+    GetterSetterFunction getterSetter;
+    const int managedType;
     static const ManagedVTable static_vtbl;
 };
 

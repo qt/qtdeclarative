@@ -55,7 +55,6 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qvariant.h>
-#include <private/qv8_p.h>
 
 #include <private/qv4value_p.h>
 
@@ -75,40 +74,16 @@ public:
 
     bool isSequenceType(int sequenceTypeId) const;
 
-    bool isEqual(QV8ObjectResource *lhs, const QVariant &rhs);
-    bool isEqual(QV8ObjectResource *lhs, QV8ObjectResource *rhs);
-    quint32 sequenceLength(QV8ObjectResource *);
-
-    v8::Handle<v8::Object> newSequence(int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);
-    v8::Handle<v8::Object> fromVariant(const QVariant& v, bool *succeeded);
-    QVariant toVariant(QV8ObjectResource *);
+    QV4::Value newSequence(int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);
+    QV4::Value fromVariant(const QVariant& v, bool *succeeded);
     QVariant toVariant(QV4::Object *object);
-    QVariant toVariant(v8::Handle<v8::Array> array, int typeHint, bool *succeeded);
+    QVariant toVariant(const QV4::Value &array, int typeHint, bool *succeeded);
+    int metaTypeForSequence(QV4::Object *object);
 
 private:
-    QV8Engine *m_engine;
+    QV4::ExecutionEngine *m_engine;
 
-    QV4::PersistentValue m_constructor;
-    QV4::PersistentValue m_toString;
-    QV4::PersistentValue m_valueOf;
-    QV4::PersistentValue m_sort;
-    QV4::PersistentValue m_arrayPrototype;
-    QV4::PersistentValue m_defaultSortComparer;
-
-    static v8::Handle<v8::Value> IndexedGetter(quint32 index, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> IndexedSetter(quint32 index, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> IndexedDeleter(quint32 index, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Array> IndexedEnumerator(const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> LengthGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
-    static void LengthSetter(v8::Handle<v8::String> property, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> ToStringGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
-    static QV4::Value ToString(const v8::Arguments &args);
-    static v8::Handle<v8::Value> ValueOfGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> SortGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
-    static QV4::Value ValueOf(const v8::Arguments &args);
-    static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);
-    static QV4::Value Sort(const v8::Arguments &args);
+    QV4::PersistentValue m_prototype;
 };
 
 

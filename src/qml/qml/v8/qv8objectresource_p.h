@@ -73,7 +73,7 @@ public:
                         ValueTypeType, XMLHttpRequestType, DOMNodeType, SQLDatabaseType,
                         ListModelType, Context2DStyleType, Context2DPixelArrayType,
                         ParticleDataType, SignalHandlerType, IncubatorType, VisualDataItemType,
-                        SequenceType, ChangeSetArrayType };
+                        ChangeSetArrayType };
     virtual ResourceType resourceType() const = 0;
 
     QV8Engine *engine;
