@@ -50,6 +50,11 @@ QT_BEGIN_NAMESPACE
 
 class QQmlLocaleData;
 class QQuickJSContext2D;
+class QQmlIntList;
+class QQmlRealList;
+class QQmlBoolList;
+class QQmlStringList;
+class QQmlUrlList;
 
 namespace QV4 {
 
@@ -165,7 +170,14 @@ public:
 
         // QML bindings
         Type_QmlLocale,
-        Type_QQuickJSContext2D
+        Type_QQuickJSContext2D,
+
+        // QML sequence types
+        Type_QmlIntList,
+        Type_QmlRealList,
+        Type_QmlBoolList,
+        Type_QmlStringList,
+        Type_QmlUrlList
     };
 
     ExecutionEngine *engine() const;
@@ -184,8 +196,18 @@ public:
     JSONObject *asJSONObject() { return type == Type_JSONObject ? reinterpret_cast<JSONObject *>(this) : 0; }
     ForeachIteratorObject *asForeachIteratorObject() { return type == Type_ForeachIteratorObject ? reinterpret_cast<ForeachIteratorObject *>(this) : 0; }
     RegExp *asRegExp() { return type == Type_RegExp ? reinterpret_cast<RegExp *>(this) : 0; }
+
+
     QQmlLocaleData *asQmlLocale() { return type == Type_QmlLocale ? reinterpret_cast<QQmlLocaleData *>(this) : 0; }
     QQuickJSContext2D *asQQuickJSContext2D() { return type == Type_QQuickJSContext2D ? reinterpret_cast<QQuickJSContext2D *>(this) : 0; }
+
+    QQmlIntList *asQmlIntList() { return type == Type_QmlIntList ? reinterpret_cast<QQmlIntList *>(this): 0; }
+    QQmlRealList *asQmlRealList() { return type == Type_QmlRealList ? reinterpret_cast<QQmlRealList *>(this): 0; }
+    QQmlBoolList *asQmlBoolList() { return type == Type_QmlBoolList ? reinterpret_cast<QQmlBoolList *>(this): 0; }
+    QQmlStringList *asQmlStringList() { return type == Type_QmlStringList ? reinterpret_cast<QQmlStringList *>(this): 0; }
+    QQmlUrlList *asQmlUrlList() { return type == Type_QmlUrlList ? reinterpret_cast<QQmlUrlList *>(this): 0; }
+
+    bool isListType() const { return type >= Type_QmlIntList && type <= Type_QmlUrlList; }
 
     bool isArrayObject() const { return type == Type_ArrayObject; }
     bool isStringObject() const { return type == Type_StringObject; }

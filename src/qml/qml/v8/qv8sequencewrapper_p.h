@@ -82,6 +82,7 @@ public:
     v8::Handle<v8::Object> newSequence(int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);
     v8::Handle<v8::Object> fromVariant(const QVariant& v, bool *succeeded);
     QVariant toVariant(QV8ObjectResource *);
+    QVariant toVariant(QV4::Object *object);
     QVariant toVariant(v8::Handle<v8::Array> array, int typeHint, bool *succeeded);
 
 private:

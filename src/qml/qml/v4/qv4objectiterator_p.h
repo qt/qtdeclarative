@@ -78,6 +78,7 @@ struct ObjectIterator
     ArrayObject *dynamicProperties;
     uint dynamicPropertyIndex;
     Property tmpDynamicProperty;
+    uint wrappedListLength;
 
     ObjectIterator(Object *o, uint flags);
     Property *next(String **name, uint *index, PropertyAttributes *attributes = 0);

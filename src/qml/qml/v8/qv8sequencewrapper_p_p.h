@@ -56,6 +56,8 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlmetatype_p.h>
 
+#include <private/qv4arrayobject_p.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -239,7 +241,6 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
     F(qreal, Real, QList<qreal>, 0.0) \
     F(bool, Bool, QList<bool>, false) \
     F(QString, String, QList<QString>, QString()) \
-    F(QString, QString, QStringList, QString()) \
     F(QUrl, Url, QList<QUrl>, QUrl())
 
 #define QML_SEQUENCE_TYPE_RESOURCE(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue, ConversionToV8fn, ConversionFromV8fn, ToStringfn) \
@@ -506,6 +507,140 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
 FOREACH_QML_SEQUENCE_TYPE(GENERATE_QML_SEQUENCE_TYPE_RESOURCE)
 #undef GENERATE_QML_SEQUENCE_TYPE_RESOURCE
 #undef QML_SEQUENCE_TYPE_RESOURCE
+
+class QQmlStringList : public QV4::Object
+{
+public:
+    QQmlStringList(QV4::ExecutionEngine *engine, const QStringList &container)
+        : QV4::Object(engine)
+        , m_container(container)
+    {
+        type = Type_QmlStringList;
+        vtbl = &static_vtbl;
+        m_lengthProperty = insertMember(engine->id_length, QV4::Attr_ReadOnly);
+        prototype = engine->arrayPrototype;
+        updateLength();
+    }
+
+    QQmlStringList(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
+        : QV4::Object(engine)
+    {
+        type = Type_QmlStringList;
+        vtbl = &static_vtbl;
+        m_lengthProperty = insertMember(engine->id_length, QV4::Attr_ReadOnly);
+        prototype = engine->arrayPrototype;
+        void *a[] = { &m_container, 0 };
+        QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a);
+        updateLength();
+    }
+
+    QV4::Value containerGetIndexed(QV4::ExecutionContext *ctx, uint index, bool *hasProperty)
+    {
+        /* Qt containers have int (rather than uint) allowable indexes. */
+        if (index > INT_MAX) {
+            generateWarning(QV8Engine::get(ctx->engine->publicEngine), QLatin1String("Index out of range during indexed get"));
+            if (hasProperty)
+                *hasProperty = false;
+            return QV4::Value::undefinedValue();
+        }
+        qint32 signedIdx = static_cast<qint32>(index);
+        if (signedIdx < m_container.count()) {
+            if (hasProperty)
+                *hasProperty = true;
+            return QV4::Value::fromString(ctx, m_container.at(signedIdx));
+        }
+        if (hasProperty)
+            *hasProperty = false;
+        return QV4::Value::undefinedValue();
+    }
+
+    void containerPutIndexed(QV4::ExecutionContext *ctx, uint index, const QV4::Value &value)
+    {
+        /* Qt containers have int (rather than uint) allowable indexes. */
+        if (index > INT_MAX) {
+            generateWarning(QV8Engine::get(ctx->engine->publicEngine), QLatin1String("Index out of range during indexed put"));
+            return;
+        }
+        qint32 signedIdx = static_cast<qint32>(index);
+
+        int count = m_container.count();
+
+        QString element = value.toQString();
+
+        if (signedIdx == count) {
+            m_container.append(element);
+            updateLength();
+        } else if (signedIdx < count) {
+            m_container[signedIdx] = element;
+        } else {
+            /* according to ECMA262r3 we need to insert */
+            /* the value at the given index, increasing length to index+1. */
+            m_container.reserve(signedIdx + 1);
+            while (signedIdx > count++) {
+                m_container.append(QString());
+            }
+            m_container.append(element);
+            updateLength();
+        }
+    }
+
+    QV4::PropertyAttributes containerQueryIndexed(QV4::ExecutionContext *ctx, uint index)
+    {
+        /* Qt containers have int (rather than uint) allowable indexes. */
+        if (index > INT_MAX) {
+            generateWarning(QV8Engine::get(ctx->engine->publicEngine), QLatin1String("Index out of range during indexed query"));
+            return QV4::Attr_Invalid;
+        }
+        qint32 signedIdx = static_cast<qint32>(index);
+        return (index < m_container.count()) ? QV4::Attr_Data : QV4::Attr_Invalid;
+    }
+
+    bool containerDeleteIndexedProperty(QV4::ExecutionContext *ctx, uint index)
+    {
+        /* Qt containers have int (rather than uint) allowable indexes. */
+        if (index > INT_MAX)
+            return false;
+        qint32 signedIdx = static_cast<qint32>(index);
+
+        if (signedIdx >= m_container.count())
+            return false;
+
+        /* according to ECMA262r3 it should be Undefined, */
+        /* but we cannot, so we insert a default-value instead. */
+        m_container.replace(signedIdx, QString());
+        return true;
+    }
+
+    QVariant toVariant() const
+    { return QVariant::fromValue<QStringList>(m_container); }
+
+private:
+    void updateLength()
+    {
+        m_lengthProperty->value = QV4::Value::fromInt32(m_container.length());
+    }
+
+    QStringList m_container;
+    QV4::Property *m_lengthProperty;
+
+    static QV4::Value getIndexed(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index, bool *hasProperty)
+    { return static_cast<QQmlStringList *>(that)->containerGetIndexed(ctx, index, hasProperty); }
+    static void putIndexed(Managed *that, QV4::ExecutionContext *ctx, uint index, const QV4::Value &value)
+    { static_cast<QQmlStringList *>(that)->containerPutIndexed(ctx, index, value); }
+    static QV4::PropertyAttributes queryIndexed(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index)
+    { return static_cast<QQmlStringList *>(that)->containerQueryIndexed(ctx, index); }
+    static bool deleteIndexedProperty(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index)
+    { return static_cast<QQmlStringList *>(that)->containerDeleteIndexedProperty(ctx, index); }
+
+    static void destroy(Managed *that)
+    {
+        static_cast<QQmlStringList *>(that)->~QQmlStringList();
+    }
+
+    static const QV4::ManagedVTable static_vtbl;
+};
+
+DEFINE_MANAGED_VTABLE(QQmlStringList);
 
 QT_END_NAMESPACE
 

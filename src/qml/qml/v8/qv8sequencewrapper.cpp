@@ -113,7 +113,11 @@ void QV8SequenceWrapper::destroy()
 
 bool QV8SequenceWrapper::isSequenceType(int sequenceTypeId) const
 {
-    FOREACH_QML_SEQUENCE_TYPE(IS_SEQUENCE) { /* else */ return false; }
+    FOREACH_QML_SEQUENCE_TYPE(IS_SEQUENCE)
+    if (sequenceTypeId == qMetaTypeId<QStringList>()) {
+        return true;
+    } else
+    { /* else */ return false; }
 }
 #undef IS_SEQUENCE
 
@@ -140,13 +144,18 @@ quint32 QV8SequenceWrapper::sequenceLength(QV8ObjectResource *r)
 
 v8::Handle<v8::Object> QV8SequenceWrapper::newSequence(int sequenceType, QObject *object, int propertyIndex, bool *succeeded)
 {
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_engine);
+
     // This function is called when the property is a QObject Q_PROPERTY of
     // the given sequence type.  Internally we store a typed-sequence
     // (as well as object ptr + property index for updated-read and write-back)
     // and so access/mutate avoids variant conversion.
     *succeeded = true;
     QV8SequenceResource *r = 0;
-    FOREACH_QML_SEQUENCE_TYPE(NEW_REFERENCE_SEQUENCE) { /* else */ *succeeded = false; return v8::Handle<v8::Object>(); }
+    FOREACH_QML_SEQUENCE_TYPE(NEW_REFERENCE_SEQUENCE)
+    if (sequenceType == qMetaTypeId<QStringList>()) {
+        return QV4::Value::fromObject(new (v4->memoryManager) QQmlStringList(v4, object, propertyIndex));
+    } else { /* else */ *succeeded = false; return v8::Handle<v8::Object>(); }
 
     v8::Handle<v8::Object> rv = m_constructor.value().asFunctionObject()->newInstance();
     rv->SetExternalResource(r);
@@ -162,6 +171,8 @@ v8::Handle<v8::Object> QV8SequenceWrapper::newSequence(int sequenceType, QObject
 
 v8::Handle<v8::Object> QV8SequenceWrapper::fromVariant(const QVariant& v, bool *succeeded)
 {
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_engine);
+
     // This function is called when assigning a sequence value to a normal JS var
     // in a JS block.  Internally, we store a sequence of the specified type.
     // Access and mutation is extremely fast since it will not need to modify any
@@ -169,7 +180,10 @@ v8::Handle<v8::Object> QV8SequenceWrapper::fromVariant(const QVariant& v, bool *
     int sequenceType = v.userType();
     *succeeded = true;
     QV8SequenceResource *r = 0;
-    FOREACH_QML_SEQUENCE_TYPE(NEW_COPY_SEQUENCE) { /* else */ *succeeded = false; return v8::Handle<v8::Object>(); }
+    FOREACH_QML_SEQUENCE_TYPE(NEW_COPY_SEQUENCE)
+    if (sequenceType == qMetaTypeId<QStringList>()) { \
+        return QV4::Value::fromObject(new (v4->memoryManager) QQmlStringList(v4, v.value<QStringList>()));
+    } else { /* else */ *succeeded = false; return v8::Handle<v8::Object>(); }
 
     v8::Handle<v8::Object> rv = m_constructor.value().asFunctionObject()->newInstance();
     rv->SetExternalResource(r);
@@ -185,6 +199,14 @@ QVariant QV8SequenceWrapper::toVariant(QV8ObjectResource *r)
     return resource->toVariant();
 }
 
+QVariant QV8SequenceWrapper::toVariant(QV4::Object *object)
+{
+    Q_ASSERT(object->isListType());
+    if (QQmlStringList *list = object->asQmlStringList())
+        return list->toVariant();
+    return QVariant();
+}
+
 #define SEQUENCE_TO_VARIANT(ElementType, ElementTypeName, SequenceType, unused) \
     if (typeHint == qMetaTypeId<SequenceType>()) { \
         return QV8##ElementTypeName##SequenceResource::toVariant(m_engine, array, length, succeeded); \
@@ -194,7 +216,15 @@ QVariant QV8SequenceWrapper::toVariant(v8::Handle<v8::Array> array, int typeHint
 {
     *succeeded = true;
     uint32_t length = array->Length();
-    FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ *succeeded = false; return QVariant(); }
+    FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT)
+    if (typeHint == qMetaTypeId<QStringList>()) { \
+        QV4::ArrayObject *a = array->v4Value().asArrayObject();
+        if (!a) {
+            *succeeded = false;
+            return QVariant();
+        }
+        return QVariant::fromValue(a->toQStringList());
+    } else { /* else */ *succeeded = false; return QVariant(); }
 }
 #undef SEQUENCE_TO_VARIANT
 

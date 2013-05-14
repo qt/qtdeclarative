@@ -202,7 +202,7 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
     if (typeHint == qMetaTypeId<QJSValue>())
         return QVariant::fromValue(scriptValueFromInternal(value));
 
-    if (value.isObject()) {
+    if (QV4::Object *object = value.asObject()) {
         QV8ObjectResource *r = (QV8ObjectResource *)v8::Handle<v8::Value>(value)->ToObject()->GetExternalResource();
         if (r) {
             switch (r->resourceType()) {
@@ -235,7 +235,8 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
         } else if (typeHint == QMetaType::QJsonObject
                    && !value.asArrayObject() && !value.asFunctionObject()) {
             return QVariant::fromValue(jsonObjectFromJS(value));
-        }
+        } else if (object->isListType())
+            return m_sequenceWrapper.toVariant(object);
     }
 
     if (QV4::ArrayObject *a = value.asArrayObject()) {
