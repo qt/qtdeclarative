@@ -368,7 +368,7 @@ Module {
 
         // The name of the type containing attached properties
         // and methods.
-        attachedType: "QDeclarativeAnimationAttached"
+        attachedType: "QQuickAnimationAttached"
 
         // The list of exports determines how a type can be imported.
         // Each string has the format "URI/Name version" and matches the
