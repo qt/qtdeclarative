@@ -586,6 +586,7 @@ QQuickCanvasItem::RenderTarget QQuickContext2DImageTexture::renderTarget() const
 void QQuickContext2DImageTexture::bind()
 {
     imageTexture()->bind();
+    updateBindOptions();
 }
 
 bool QQuickContext2DImageTexture::updateTexture()
