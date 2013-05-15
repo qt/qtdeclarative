@@ -5591,7 +5591,7 @@ void QQuickItem::setActiveFocusOnTab(bool activeFocusOnTab)
         return;
 
     if (window()) {
-        if ((this == window()->activeFocusItem()) && !activeFocusOnTab) {
+        if ((this == window()->activeFocusItem()) && this != window()->contentItem() && !activeFocusOnTab) {
             qWarning("QQuickItem: Cannot set activeFocusOnTab to false once item is the active focus item.");
             return;
         }
