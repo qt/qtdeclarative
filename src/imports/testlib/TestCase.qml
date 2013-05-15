@@ -291,6 +291,11 @@ Item {
     }
 
     function tryCompare(obj, prop, value, timeout) {
+        if (arguments.length == 2) {
+            qtest_results.fail("A value is required for tryCompare",
+                        util.callerFile(), util.callerLine())
+            throw new Error("QtQuickTest::fail")
+        }
         if (!timeout)
             timeout = 5000
         if (!qtest_compareInternal(obj[prop], value))
