@@ -42,7 +42,7 @@ import QtQuick 2.0
 
 Rectangle {
     width: 160; height: 250
-    
+
     Image {
         width: 160; height: 200
         source: "pics/checker.svg"
