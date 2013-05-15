@@ -1285,7 +1285,7 @@ void qmlExecuteDeferred(QObject *object)
 {
     QQmlData *data = QQmlData::get(object);
 
-    if (data && data->compiledData && data->deferredIdx) {
+    if (data && data->deferredData) {
         QQmlObjectCreatingProfiler prof;
         if (prof.enabled) {
             QQmlType *type = QQmlMetaType::qmlType(object->metaObject());
@@ -1300,8 +1300,9 @@ void qmlExecuteDeferred(QObject *object)
         QQmlComponentPrivate::beginDeferred(ep, object, &state);
 
         // Release the reference for the deferral action (we still have one from construction)
-        data->compiledData->release();
-        data->compiledData = 0;
+        data->deferredData->compiledData->release();
+        delete data->deferredData;
+        data->deferredData = 0;
 
         QQmlComponentPrivate::complete(ep, &state);
     }
@@ -1540,6 +1541,12 @@ void QQmlData::destroyed(QObject *object)
     if (compiledData) {
         compiledData->release();
         compiledData = 0;
+    }
+
+    if (deferredData) {
+        deferredData->compiledData->release();
+        delete deferredData;
+        deferredData = 0;
     }
 
     QQmlAbstractBoundSignal *signalHandler = signalHandlers;

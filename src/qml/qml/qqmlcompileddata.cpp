@@ -223,7 +223,6 @@ QQmlInstruction::Type QQmlCompiledData::instructionType(const QQmlInstruction *i
         return QQmlInstruction::I;
 
     FOR_EACH_QML_INSTR(QML_CHECK_INSTR_CODE)
-    Q_UNREACHABLE();
     Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid instruction address");
     return static_cast<QQmlInstruction::Type>(0);
 #  undef QML_CHECK_INSTR_CODE

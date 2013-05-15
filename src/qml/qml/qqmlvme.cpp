@@ -47,6 +47,7 @@
 #include <private/qmetaobjectbuilder_p.h>
 #include "qqmldata_p.h"
 #include "qqml.h"
+#include "qqmlinfo.h"
 #include "qqmlcustomparser_p.h"
 #include "qqmlengine.h"
 #include "qqmlcontext.h"
@@ -134,12 +135,12 @@ bool QQmlVME::initDeferred(QObject *object)
 {
     QQmlData *data = QQmlData::get(object);
 
-    if (!data || !data->context || !data->compiledData)
+    if (!data || !data->deferredData)
         return false;
 
-    QQmlContextData *ctxt = data->context;
-    QQmlCompiledData *comp = data->compiledData;
-    int start = data->deferredIdx;
+    QQmlContextData *ctxt = data->deferredData->context;
+    QQmlCompiledData *comp = data->deferredData->compiledData;
+    int start = data->deferredData->deferredIdx;
 
     State initState;
     initState.flags = State::Deferred;
@@ -1045,10 +1046,19 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             if (instr.deferCount) {
                 QObject *target = objects.top();
                 QQmlData *data = QQmlData::get(target, true);
-                data->compiledData = COMP;
-                data->compiledData->addref(); // Keep this data referenced until we're initialized
-                data->deferredIdx = INSTRUCTIONSTREAM - COMP->bytecode.constData();
-                Q_ASSERT(data->deferredIdx != 0);
+                if (data->deferredData) {
+                    //This rare case still won't always work right
+                    qmlInfo(target) << "Setting deferred property across multiple components may not work";
+                    delete data->deferredData;
+                }
+                data->deferredData = new QQmlData::DeferredData;
+                //If we're in a CreateQML here, data->compiledData could be reset later
+                data->deferredData->compiledData = COMP;
+                data->deferredData->context = CTXT;
+                // Keep this data referenced until we're initialized
+                data->deferredData->compiledData->addref();
+                data->deferredData->deferredIdx = INSTRUCTIONSTREAM - COMP->bytecode.constData();
+                Q_ASSERT(data->deferredData->deferredIdx != 0);
                 INSTRUCTIONSTREAM += instr.deferCount;
             }
         QML_END_INSTR(Defer)
