@@ -261,7 +261,7 @@ struct String: Expr {
 };
 
 struct RegExp: Expr {
-    // needs to be compatible with the flags in the lexer
+    // needs to be compatible with the flags in the lexer, and in RegExpObject
     enum Flags {
         RegExp_Global     = 0x01,
         RegExp_IgnoreCase = 0x02,

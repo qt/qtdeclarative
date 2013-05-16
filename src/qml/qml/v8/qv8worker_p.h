@@ -59,15 +59,13 @@ QT_BEGIN_NAMESPACE
 
 class QV8Worker {
 public:
-    struct SavedData {
-    };
 
-    static QByteArray serialize(v8::Handle<v8::Value>, QV8Engine *);
-    static v8::Handle<v8::Value> deserialize(const QByteArray &, QV8Engine *);
+    static QByteArray serialize(const QV4::Value &, QV8Engine *);
+    static QV4::Value deserialize(const QByteArray &, QV8Engine *);
 
 private:
-    static void serialize(QByteArray &, v8::Handle<v8::Value>, QV8Engine *);
-    static v8::Handle<v8::Value> deserialize(const char *&, QV8Engine *);
+    static void serialize(QByteArray &, const QV4::Value &, QV8Engine *);
+    static QV4::Value deserialize(const char *&, QV8Engine *);
 };
 
 QT_END_NAMESPACE

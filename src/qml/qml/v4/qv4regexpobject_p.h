@@ -66,6 +66,13 @@ namespace QV4 {
 struct RegExp;
 
 struct RegExpObject: Object {
+    // needs to be compatible with the flags in qv4jsir_p.h
+    enum Flags {
+        RegExp_Global     = 0x01,
+        RegExp_IgnoreCase = 0x02,
+        RegExp_Multiline  = 0x04
+    };
+
     RegExp* value;
     Property *lastIndexProperty(ExecutionContext *ctx);
     bool global;
@@ -74,6 +81,9 @@ struct RegExpObject: Object {
     ~RegExpObject() {}
 
     QRegExp toQRegExp() const;
+    QString toString() const;
+    QString source() const;
+    uint flags() const;
 
 protected:
     static const ManagedVTable static_vtbl;

@@ -281,7 +281,7 @@ QV4::Value QQuickWorkerScriptEnginePrivate::sendMessage(const v8::Arguments &arg
 
     int id = args[1]->Int32Value();
 
-    QByteArray data = QV8Worker::serialize(args[2], engine);
+    QByteArray data = QV8Worker::serialize(args[2]->v4Value(), engine);
 
     QMutexLocker locker(&engine->p->m_lock);
     WorkerScript *script = engine->p->workers.value(id);
@@ -663,7 +663,7 @@ void QQuickWorkerScript::sendMessage(QQmlV4Function *args)
     if (args->length() != 0)
         argument = (*args)[0];
 
-    m_engine->sendMessage(m_scriptId, QV8Worker::serialize(argument, args->engine()));
+    m_engine->sendMessage(m_scriptId, QV8Worker::serialize(argument->v4Value(), args->engine()));
 }
 
 void QQuickWorkerScript::classBegin()

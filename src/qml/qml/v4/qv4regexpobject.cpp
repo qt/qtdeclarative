@@ -175,6 +175,36 @@ QRegExp RegExpObject::toQRegExp() const
     return QRegExp(value->pattern(), caseSensitivity, QRegExp::RegExp2);
 }
 
+QString RegExpObject::toString() const
+{
+    QString result = QChar('/') + source();
+    result += QChar('/');
+    if (global)
+        result += QChar('g');
+    if (value->ignoreCase())
+        result += QChar('i');
+    if (value->multiLine())
+        result += QChar('m');
+    return result;
+}
+
+QString RegExpObject::source() const
+{
+    return const_cast<RegExpObject *>(this)->get(internalClass->engine->newIdentifier(QStringLiteral("source"))).stringValue()->toQString();
+}
+
+uint RegExpObject::flags() const
+{
+    uint f = 0;
+    if (global)
+        f |= QV4::RegExpObject::RegExp_Global;
+    if (value->ignoreCase())
+        f |= QV4::RegExpObject::RegExp_IgnoreCase;
+    if (value->multiLine())
+        f |= QV4::RegExpObject::RegExp_Multiline;
+    return f;
+}
+
 Value RegExpPrototype::ctor_method_construct(Managed *, ExecutionContext *ctx, Value *argv, int argc)
 {
     Value r = argc > 0 ? argv[0] : Value::undefinedValue();
@@ -283,15 +313,7 @@ Value RegExpPrototype::method_toString(SimpleCallContext *ctx)
     if (!r)
         ctx->throwTypeError();
 
-    QString result = QChar('/') + r->get(ctx, ctx->engine->newIdentifier(QStringLiteral("source"))).stringValue()->toQString();
-    result += QChar('/');
-    if (r->global)
-        result += QChar('g');
-    if (r->value->ignoreCase())
-        result += QChar('i');
-    if (r->value->multiLine())
-        result += QChar('m');
-    return Value::fromString(ctx, result);
+    return Value::fromString(ctx, r->toString());
 }
 
 Value RegExpPrototype::method_compile(SimpleCallContext *ctx)
