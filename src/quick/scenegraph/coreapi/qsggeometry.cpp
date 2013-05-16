@@ -705,7 +705,8 @@ void QSGGeometry::updateTexturedRectGeometry(QSGGeometry *g, const QRectF &rect,
 
     The default is AlwaysUploadPattern. When set to anything other than
     the default, the user must call markIndexDataDirty() after changing
-    the index data.
+    the index data, in addition to calling QSGNode::markDirty() with
+    QSGNode::DirtyGeometry.
  */
 
 void QSGGeometry::setIndexDataPattern(DataPattern p)
@@ -728,7 +729,8 @@ void QSGGeometry::setIndexDataPattern(DataPattern p)
 
     The default is AlwaysUploadPattern. When set to anything other than
     the default, the user must call markVertexDataDirty() after changing
-    the vertex data.
+    the vertex data, in addition to calling QSGNode::markDirty() with
+    QSGNode::DirtyGeometry.
  */
 
 void QSGGeometry::setVertexDataPattern(DataPattern p)
