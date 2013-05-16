@@ -31,7 +31,7 @@
 \brief The Qt QML module defines and implements the QML language
 
 The Qt QML module provides a framework for developing applications and libraries
-with the \l{The QML Language}{QML language}. It defines and implements the
+with the \l{QML Application Developer Resources}{QML language}. It defines and implements the
 language and engine infrastructure, and provides an API to enable application
 developers to extend the QML language with custom types and integrate QML code
 with JavaScript and C++. The Qt QML module provides both a \l{Qt QML QML Types}

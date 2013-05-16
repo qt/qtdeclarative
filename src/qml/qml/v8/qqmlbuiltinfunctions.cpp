@@ -1344,7 +1344,7 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
     Example:
     \snippet qml/qsTranslate.qml 0
 
-    \sa {Localization And Internationalization Support In Qt Quick}
+    \sa {Internationalization and Localization with Qt Quick}
 */
 v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args)
 {
@@ -1401,7 +1401,7 @@ v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args)
     Example:
     \snippet qml/qtTranslateNoOp.qml 0
 
-    \sa {Localization And Internationalization Support In Qt Quick}
+    \sa {Internationalization and Localization with Qt Quick}
 */
 v8::Handle<v8::Value> qsTranslateNoOp(const v8::Arguments &args)
 {
@@ -1425,7 +1425,7 @@ v8::Handle<v8::Value> qsTranslateNoOp(const v8::Arguments &args)
     Example:
     \snippet qml/qsTr.qml 0
 
-    \sa {Localization And Internationalization Support In Qt Quick}
+    \sa {Internationalization and Localization with Qt Quick}
 */
 v8::Handle<v8::Value> qsTr(const v8::Arguments &args)
 {
@@ -1479,7 +1479,7 @@ v8::Handle<v8::Value> qsTr(const v8::Arguments &args)
     Example:
     \snippet qml/qtTrNoOp.qml 0
 
-    \sa {Localization And Internationalization Support In Qt Quick}
+    \sa {Internationalization and Localization with Qt Quick}
 */
 v8::Handle<v8::Value> qsTrNoOp(const v8::Arguments &args)
 {
@@ -1516,7 +1516,7 @@ v8::Handle<v8::Value> qsTrNoOp(const v8::Arguments &args)
     Creating binary translation (QM) files suitable for use with this function requires passing
     the \c -idbased option to the \c lrelease tool.
 
-    \sa QT_TRID_NOOP, {Localization And Internationalization Support In Qt Quick}
+    \sa QT_TRID_NOOP, {Internationalization and Localization with Qt Quick}
 */
 v8::Handle<v8::Value> qsTrId(const v8::Arguments &args)
 {
@@ -1549,7 +1549,7 @@ v8::Handle<v8::Value> qsTrId(const v8::Arguments &args)
     Example:
     \snippet qml/qtTrIdNoOp.qml 0
 
-    \sa qsTrId(), {Localization And Internationalization Support In Qt Quick}
+    \sa qsTrId(), {Internationalization and Localization with Qt Quick}
 */
 v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args)
 {
