@@ -53,6 +53,7 @@ Item {
     ListView {
         id: viewmanyitems
         model: manyitems
+        delegate: Text { text: model.name }
     }
 
     ListView {
@@ -159,15 +160,16 @@ Item {
                 manyitems.append({"name":"Item"+i})
             }
             compare(manyitems.count, row.numitems)
-            tryCompare(viewmanyitems.count, row.numitems)
+            tryCompare(viewmanyitems, 'count', row.numitems)
+
         }
 
         function test_modelchange() {
-            tryCompare(modelchange.count, 1)
+            tryCompare(modelchange, 'count', 1)
             modelchange.currentIndex = 0;
             compare(modelchange.currentItem.text, "FirstModelElement0")
             modelchange.model = secondmodel;
-            tryCompare(modelchange.count, 2)
+            tryCompare(modelchange, 'count', 2)
             modelchange.currentIndex = 0;
             compare(modelchange.currentItem.text, "SecondModelElement0")
             modelchange.currentIndex = 1;
@@ -175,13 +177,13 @@ Item {
         }
 
         function test_modelaltered() {
-            tryCompare(modelalter.count, 2)
+            tryCompare(modelalter, 'count', 2)
             modelalter.currentIndex = 0;
             compare(modelalter.currentItem.text, "AlterModelElement0")
             modelalter.currentIndex = 1;
             compare(modelalter.currentItem.text, "AlterModelElement1")
             altermodel.append({"name":"AlterModelElement2"})
-            tryCompare(modelalter.count, 3)
+            tryCompare(modelalter, 'count', 3)
             modelalter.currentIndex = 0;
             compare(modelalter.currentItem.text, "AlterModelElement0")
             modelalter.currentIndex = 1;
@@ -189,7 +191,7 @@ Item {
             modelalter.currentIndex = 2;
             compare(modelalter.currentItem.text, "AlterModelElement2")
             altermodel.insert(2,{"name":"AlterModelElement1.5"})
-            tryCompare(modelalter.count, 4)
+            tryCompare(modelalter, 'count', 4)
             modelalter.currentIndex = 0;
             compare(modelalter.currentItem.text, "AlterModelElement0")
             modelalter.currentIndex = 1;
@@ -199,7 +201,7 @@ Item {
             modelalter.currentIndex = 3;
             compare(modelalter.currentItem.text, "AlterModelElement2")
             altermodel.move(2,1,1);
-            tryCompare(modelalter.count, 4)
+            tryCompare(modelalter, 'count', 4)
             modelalter.currentIndex = 0;
             compare(modelalter.currentItem.text, "AlterModelElement0")
             modelalter.currentIndex = 1;
@@ -209,7 +211,7 @@ Item {
             modelalter.currentIndex = 3;
             compare(modelalter.currentItem.text, "AlterModelElement2")
             altermodel.remove(1,2)
-            tryCompare(modelalter.count, 2)
+            tryCompare(modelalter, 'count', 2)
             modelalter.currentIndex = 0;
             compare(modelalter.currentItem.text, "AlterModelElement0")
             modelalter.currentIndex = 1;
@@ -221,7 +223,7 @@ Item {
             compare(modelalter.currentItem.text, "AlterModelElement1")
             altermodel.clear()
             modelalter.forceLayout()
-            tryCompare(modelalter.count, 0)
+            tryCompare(modelalter, 'count', 0)
             compare(modelalter.currentItem, null)
         }
 

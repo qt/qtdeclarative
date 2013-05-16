@@ -66,31 +66,28 @@ Item {
             compare(fontloader.status, FontLoader.Null)
             compare(testinput.font.family, "")
             fontloader.source = "tarzeau_ocr_a.ttf";
-            tryCompare(fontloader.status, FontLoader.Loading)
-            tryCompare(fontloader.status, FontLoader.Ready)
+            tryCompare(fontloader, 'status', FontLoader.Ready)
             compare(testinput.font.family, "OCRA")
             fontloader.source = "dummy.ttf";
-            tryCompare(fontloader.status, FontLoader.Error)
+            tryCompare(fontloader, 'status', FontLoader.Error)
             compare(testinput.font.family, "")
             fontloader.source = "";
             fontloader.name = "Courier";
-            tryCompare(fontloader.status, FontLoader.Ready)
+            tryCompare(fontloader, 'status', FontLoader.Ready)
             compare(testinput.font.family, "Courier")
         }
 
         function test_fontswitching() {
             compare(fontswitch.status, FontLoader.Null)
             fontswitch.source = "tarzeau_ocr_a.ttf";
-            tryCompare(fontswitch.status, FontLoader.Loading)
-            tryCompare(fontswitch.status, FontLoader.Ready)
-            tryCompare(fontswitch.name, "OCRA")
+            tryCompare(fontswitch, 'status', FontLoader.Ready)
+            compare(fontswitch.name, "OCRA")
             fontswitch.source = "";
             fontswitch.name = "Courier";
-            tryCompare(fontswitch.status, FontLoader.Ready)
-            tryCompare(fontswitch.name, "Courier")
+            tryCompare(fontswitch, 'status', FontLoader.Ready)
+            compare(fontswitch.name, "Courier")
             fontswitch.source = "tarzeau_ocr_a.ttf";
-            tryCompare(fontswitch.status, FontLoader.Loading)
-            tryCompare(fontswitch.status, FontLoader.Ready)
+            tryCompare(fontswitch, 'status', FontLoader.Ready)
             compare(fontswitch.name, "OCRA")
         }
     }
