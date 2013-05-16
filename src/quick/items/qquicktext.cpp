@@ -1989,6 +1989,7 @@ void QQuickText::setTextFormat(TextFormat format)
             d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
+            d->textHasChanged = true;
         }
         d->determineHorizontalAlignment();
     }
