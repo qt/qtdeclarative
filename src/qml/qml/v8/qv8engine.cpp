@@ -1193,25 +1193,25 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
     QByteArray name = QMetaType::typeName(type);
     if (convertToNativeQObject(value, name, reinterpret_cast<void* *>(data)))
         return true;
-    if (isVariant(value) && name.endsWith('*')) {
+    if (value.asVariantObject() && name.endsWith('*')) {
         int valueType = QMetaType::type(name.left(name.size()-1));
         QVariant &var = value.asVariantObject()->data;
         if (valueType == var.userType()) {
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
             return true;
-        } else {
+        } else if (QV4::Object *o = value.asObject()) {
             // Look in the prototype chain.
-            v8::Handle<v8::Value> proto = v8::Value::fromV4Value(value)->ToObject()->GetPrototype();
-            while (proto->IsObject()) {
+            QV4::Object *proto = o->prototype;
+            while (proto) {
                 bool canCast = false;
-                if (isVariant(proto->v4Value())) {
-                    const QVariant &v = proto->v4Value().asVariantObject()->data;
+                if (QV4::VariantObject *vo = proto->asVariantObject()) {
+                    const QVariant &v = vo->data;
                     canCast = (type == v.userType()) || (valueType && (valueType == v.userType()));
                 }
-                else if (isQObject(proto->v4Value())) {
+                else if (isQObject(QV4::Value::fromObject(proto))) {
                     QByteArray className = name.left(name.size()-1);
-                    if (QObject *qobject = qtObjectFromJS(proto->v4Value()))
+                    if (QObject *qobject = qtObjectFromJS(QV4::Value::fromObject(proto)))
                         canCast = qobject->qt_metacast(className) != 0;
                 }
                 if (canCast) {
@@ -1222,7 +1222,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
                         *reinterpret_cast<void* *>(data) = var.data();
                     return true;
                 }
-                proto = proto->ToObject()->GetPrototype();
+                proto = proto->prototype;
             }
         }
     } else if (value.isNull() && name.endsWith('*')) {
@@ -1275,8 +1275,8 @@ QVariant QV8Engine::variantFromJS(const QV4::Value &value,
         return d->toQDateTime();
     if (QV4::RegExpObject *re = value.asRegExpObject())
         return re->toQRegExp();
-    if (isVariant(value))
-        return value.asVariantObject()->data;
+    if (QV4::VariantObject *v = value.asVariantObject())
+        return v->data;
     if (isQObject(value))
         return qVariantFromValue(qtObjectFromJS(value));
     if (isValueType(value))

@@ -294,7 +294,6 @@ public:
 
     QVariant toVariant(const QV4::Value &value, int typeHint);
     QV4::Value fromVariant(const QVariant &);
-    inline bool isVariant(const QV4::Value &);
 
     // Compile \a source (from \a fileName at \a lineNumber) in QML mode
     v8::Handle<v8::Script> qmlModeCompile(const QString &source,
@@ -460,12 +459,6 @@ private:
 
     Q_DISABLE_COPY(QV8Engine)
 };
-
-bool QV8Engine::isVariant(const QV4::Value &value)
-{
-    QV4::Managed *m = value.asManaged();
-    return m ? m->asVariantObject() : 0;
-}
 
 v8::Handle<v8::Object> QV8Engine::qmlScope(QQmlContextData *ctxt, QObject *scope)
 {
