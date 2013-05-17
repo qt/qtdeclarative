@@ -417,10 +417,13 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                 if (s_dataStreamVersion > QDataStream().version())
                     s_dataStreamVersion = QDataStream().version();
             }
+
             // Send the hello answer immediately, since it needs to arrive before
             // the plugins below start sending messages.
+
             QByteArray helloAnswer;
             {
+                QReadLocker readPluginsLock(&d->pluginsLock);
                 QQmlDebugStream out(&helloAnswer, QIODevice::WriteOnly);
                 QStringList pluginNames;
                 QList<float> pluginVersions;
