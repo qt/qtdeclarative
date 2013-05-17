@@ -638,11 +638,14 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     QByteArray utf8Name = name.toUtf8();
                     const char *enumName = utf8Name.constData();
 
-                    //Happens in some cases where they make properties with uppercase names
-                    Q_ASSERT_X(baseName->meta.propertyCache(m_engine), "QML compiler",
-                            QString("Error resolving enum \"%1\"").arg(name).toLatin1().constData());
+                    const QQmlPropertyCache *cache = baseName->meta.propertyCache(m_engine);
+                    if (!cache) {
+                        //Happens in some cases where they make properties with uppercase names
+                        qFatal("QV4: Unable to resolve enum: '%s'",
+                               QString(*baseName->id + QLatin1Char('.') + ast->name.toString()).toLatin1().constData());
+                    }
 
-                    const QMetaObject *meta = baseName->meta.propertyCache(m_engine)->firstCppMetaObject();
+                    const QMetaObject *meta = cache->firstCppMetaObject();
                     bool found = false;
                     for (int ii = 0; !found && ii < meta->enumeratorCount(); ++ii) {
                         QMetaEnum e = meta->enumerator(ii);
