@@ -1252,7 +1252,13 @@ bool QQmlTypeLoader::Blob::addImport(const QQmlScript::Import &import, QList<QQm
         QString qmldirFilePath;
         QString qmldirUrl;
 
-        if (m_imports.locateQmldir(importDatabase, import.uri, import.majorVersion, import.minorVersion,
+        if (QQmlMetaType::isLockedModule(import.uri, import.majorVersion)) {
+            //Locked modules are checked first, to save on filesystem checks
+            if (!m_imports.addLibraryImport(importDatabase, import.uri, import.qualifier, import.majorVersion,
+                                          import.minorVersion, QString(), QString(), false, errors))
+                return false;
+
+        } else if (m_imports.locateQmldir(importDatabase, import.uri, import.majorVersion, import.minorVersion,
                                  &qmldirFilePath, &qmldirUrl)) {
             // This is a local library import
             if (!m_imports.addLibraryImport(importDatabase, import.uri, import.qualifier, import.majorVersion,

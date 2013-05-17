@@ -15,7 +15,8 @@ SUBDIRS =\
     preemptiveModule\
     preemptedStrictModule\
     invalidNamespaceModule\
-    invalidFirstCommandModule
+    invalidFirstCommandModule\
+    protectedModule
 
 tst_qqmlmoduleplugin_pro.depends += plugin
 SUBDIRS += tst_qqmlmoduleplugin.pro

@@ -80,6 +80,7 @@ private slots:
     void importLocalModule_data();
     void importStrictModule();
     void importStrictModule_data();
+    void importProtectedModule();
 
 private:
     QString m_importsDirectory;
@@ -540,6 +541,26 @@ void tst_qqmlmoduleplugin::importStrictModule_data()
            "MyPluginType {}"
         << QString()
         << ":1:1: module identifier directive must be the first directive in a qmldir file";
+}
+
+void tst_qqmlmoduleplugin::importProtectedModule()
+{
+    //TODO: More than basic test (test errors,test inverse works...)
+    qmlRegisterType<QObject>("org.qtproject.ProtectedModule", 1, 0, "TestType");
+    qmlProtectModule("org.qtproject.ProtectedModule", 1);
+
+    QQmlEngine engine;
+    engine.addImportPath(m_importsDirectory);
+
+    QUrl url(testFileUrl("empty.qml"));
+
+    QString qml = "import org.qtproject.ProtectedModule 1.0\n TestType {}\n";
+    QQmlComponent component(&engine);
+    component.setData(qml.toUtf8(), url);
+    //If plugin is loaded due to import, should assert
+    QScopedPointer<QObject> object(component.create());
+    //qDebug() << component.errorString();
+    QVERIFY(object != 0);
 }
 
 QTEST_MAIN(tst_qqmlmoduleplugin)
