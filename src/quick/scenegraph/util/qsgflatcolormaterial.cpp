@@ -74,11 +74,11 @@ void FlatColorMaterialShader::updateState(const RenderState &state, QSGMaterial 
     const QColor &c = newMaterial->color();
 
     if (oldMaterial == 0 || c != oldMaterial->color() || state.isOpacityDirty()) {
-        float opacity = state.opacity();
-        QVector4D v(c.redF() * c.alphaF() * opacity,
-                    c.greenF() * c.alphaF() * opacity,
-                    c.blueF() * c.alphaF() * opacity,
-                    c.alphaF() * opacity);
+        float opacity = state.opacity() * c.alphaF();
+        QVector4D v(c.redF() * opacity,
+                    c.greenF() *  opacity,
+                    c.blueF() * opacity,
+                    opacity);
         program()->setUniformValue(m_color_id, v);
     }
 
