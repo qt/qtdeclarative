@@ -1030,6 +1030,7 @@ private:
     int m_status;
     QString m_statusText;
     QNetworkRequest m_request;
+    QStringList m_addedHeaders;
     QQmlGuard<QNetworkReply> m_network;
     void destroyNetwork();
 
@@ -1083,6 +1084,7 @@ v8::Handle<v8::Value> QQmlXMLHttpRequest::open(v8::Handle<v8::Object> me, const 
     m_method = method;
     m_url = url;
     m_state = Opened;
+    m_addedHeaders.clear();
     v8::TryCatch tc;
     dispatchCallback(me);
     if (tc.HasCaught()) printError(tc.Message());
@@ -1093,10 +1095,11 @@ void QQmlXMLHttpRequest::addHeader(const QString &name, const QString &value)
 {
     QByteArray utfname = name.toUtf8();
 
-    if (m_request.hasRawHeader(utfname)) {
+    if (m_addedHeaders.contains(name, Qt::CaseInsensitive)) {
         m_request.setRawHeader(utfname, m_request.rawHeader(utfname) + ',' + value.toUtf8());
     } else {
         m_request.setRawHeader(utfname, value.toUtf8());
+        m_addedHeaders.append(name);
     }
 }
 
