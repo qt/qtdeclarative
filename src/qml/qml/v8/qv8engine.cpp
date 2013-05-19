@@ -278,6 +278,7 @@ static QV4::Value arrayFromStringList(QV8Engine *engine, const QStringList &list
     a->arrayReserve(len);
     for (int ii = 0; ii < len; ++ii)
         a->arrayData[ii].value = QV4::Value::fromString(e->newString(list.at(ii)));
+    a->arrayDataLen = len;
     a->setArrayLengthUnchecked(len);
     return QV4::Value::fromObject(a);
 }
@@ -290,6 +291,7 @@ static QV4::Value arrayFromVariantList(QV8Engine *engine, const QVariantList &li
     a->arrayReserve(len);
     for (int ii = 0; ii < len; ++ii)
         a->arrayData[ii].value = engine->fromVariant(list.at(ii));
+    a->arrayDataLen = len;
     a->setArrayLengthUnchecked(len);
     return QV4::Value::fromObject(a);
 }
