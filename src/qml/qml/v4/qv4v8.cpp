@@ -1550,12 +1550,17 @@ protected:
         }
         PropertyAttributes attrs;
         Property *pd  = that->__getOwnProperty__(name, &attrs);
-        if (pd)
+        if (pd) {
             that->putValue(ctx, pd, attrs, value);
-        else if (that->m_template->m_fallbackPropertySetter)
-            that->m_template->m_fallbackPropertySetter(String::New(name), v8Value, that->fallbackAccessorInfo());
-        else
-            BaseClass::put(m, ctx, name, value);
+            return;
+        }
+        if (that->m_template->m_fallbackPropertySetter) {
+            Handle<Value> v = that->m_template->m_fallbackPropertySetter(String::New(name), v8Value, that->fallbackAccessorInfo());
+            if (!v.IsEmpty())
+                return;
+        }
+
+        BaseClass::put(m, ctx, name, value);
     }
 
     static void putIndexed(QV4::Managed *m, ExecutionContext *ctx, uint index, const QV4::Value &value)
