@@ -73,27 +73,7 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, RegExp* value, bool global)
     , value(value)
     , global(global)
 {
-    vtbl = &static_vtbl;
-    type = Type_RegExpObject;
-
-    Property *lastIndexProperty = insertMember(engine->newIdentifier(QStringLiteral("lastIndex")),
-                                                         Attr_NotEnumerable|Attr_NotConfigurable);
-    lastIndexProperty->value = Value::fromInt32(0);
-    if (!this->value)
-        return;
-
-    QString p = this->value->pattern();
-    if (p.isEmpty()) {
-        p = QStringLiteral("(?:)");
-    } else {
-        // escape certain parts, see ch. 15.10.4
-        p.replace('/', QLatin1String("\\/"));
-    }
-
-    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("source")), Value::fromString(engine->newString(p)));
-    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("global")), Value::fromBoolean(global));
-    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("ignoreCase")), Value::fromBoolean(this->value->ignoreCase()));
-    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("multiline")), Value::fromBoolean(this->value->multiLine()));
+    init(engine);
 }
 
 // Converts a QRegExp to a JS RegExp.
@@ -104,9 +84,6 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
     , value(0)
     , global(false)
 {
-    vtbl = &static_vtbl;
-    type = Type_RegExpObject;
-
     // Convert the pattern to a ECMAScript pattern.
     QString pattern = qt_regexp_toCanonical(re.pattern(), re.patternSyntax());
     if (re.isMinimal()) {
@@ -145,7 +122,35 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
     }
 
     value = RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false);
+
+    init(engine);
 }
+
+void RegExpObject::init(ExecutionEngine *engine)
+{
+    vtbl = &static_vtbl;
+    type = Type_RegExpObject;
+
+    Property *lastIndexProperty = insertMember(engine->newIdentifier(QStringLiteral("lastIndex")),
+                                                         Attr_NotEnumerable|Attr_NotConfigurable);
+    lastIndexProperty->value = Value::fromInt32(0);
+    if (!this->value)
+        return;
+
+    QString p = this->value->pattern();
+    if (p.isEmpty()) {
+        p = QStringLiteral("(?:)");
+    } else {
+        // escape certain parts, see ch. 15.10.4
+        p.replace('/', QLatin1String("\\/"));
+    }
+
+    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("source")), Value::fromString(engine->newString(p)));
+    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("global")), Value::fromBoolean(global));
+    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("ignoreCase")), Value::fromBoolean(this->value->ignoreCase()));
+    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("multiline")), Value::fromBoolean(this->value->multiLine()));
+}
+
 
 void RegExpObject::destroy(Managed *that)
 {

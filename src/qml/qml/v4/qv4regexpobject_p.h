@@ -80,6 +80,8 @@ struct RegExpObject: Object {
     RegExpObject(ExecutionEngine *engine, const QRegExp &re);
     ~RegExpObject() {}
 
+    void init(ExecutionEngine *engine);
+
     QRegExp toQRegExp() const;
     QString toString() const;
     QString source() const;
