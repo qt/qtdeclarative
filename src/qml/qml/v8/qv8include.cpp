@@ -142,7 +142,8 @@ void QV8Include::finished()
         v8::Handle<v8::Script> script = m_engine->qmlModeCompile(code, m_url.toString());
 
         if (!try_catch.HasCaught()) {
-            m_engine->contextWrapper()->addSubContext(m_qmlglobal.value(), script, importContext);
+            // ### Only used for debugging info
+            //m_engine->contextWrapper()->addSubContext(m_qmlglobal.value(), script, importContext);
             script->Run(m_qmlglobal.value());
         }
 
@@ -214,7 +215,8 @@ QV4::Value QV8Include::include(const v8::Arguments &args)
 
             if (!try_catch.HasCaught()) {
                 v8::Handle<v8::Object> qmlglobal = QV4::Value::fromObject(args.GetIsolate()->GetEngine()->qmlContextObject());
-                engine->contextWrapper()->addSubContext(qmlglobal, script, importContext);
+                // ### Only used for debugging info
+                // engine->contextWrapper()->addSubContext(qmlglobal, script, importContext);
                 script->Run(qmlglobal);
             }
 
