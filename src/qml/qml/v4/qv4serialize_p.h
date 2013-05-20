@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV8WORKER_P_H
-#define QV8WORKER_P_H
+#ifndef QV4SERIALIZE_P_H
+#define QV4SERIALIZE_P_H
 
 //
 //  W A R N I N G
@@ -53,20 +53,27 @@
 // We mean it.
 //
 
-#include "qv8engine_p.h"
+#include <QtCore/qbytearray.h>
 
 QT_BEGIN_NAMESPACE
 
-class QV8Worker {
+class QV8Engine;
+
+namespace QV4 {
+struct Value;
+
+class Serialize {
 public:
 
-    static QByteArray serialize(const QV4::Value &, QV8Engine *);
-    static QV4::Value deserialize(const QByteArray &, QV8Engine *);
+    static QByteArray serialize(const Value &, QV8Engine *);
+    static Value deserialize(const QByteArray &, QV8Engine *);
 
 private:
-    static void serialize(QByteArray &, const QV4::Value &, QV8Engine *);
-    static QV4::Value deserialize(const char *&, QV8Engine *);
+    static void serialize(QByteArray &, const Value &, QV8Engine *);
+    static Value deserialize(const char *&, QV8Engine *);
 };
+
+}
 
 QT_END_NAMESPACE
 

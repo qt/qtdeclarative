@@ -47,6 +47,7 @@ SOURCES += \
     $$PWD/qv4objectiterator.cpp \
     $$PWD/qv4regexp.cpp \
     $$PWD/qv4unwindhelper.cpp \
+    $$PWD/qv4serialize.cpp \
     $$PWD/qv4v8.cpp \
     $$PWD/qv4executableallocator.cpp
 
@@ -93,6 +94,7 @@ HEADERS += \
     $$PWD/qv4unwindhelper_p.h \
     $$PWD/qv4unwindhelper_p-dw2.h \
     $$PWD/qv4unwindhelper_p-arm.h \
+    $$PWD/qv4serialize_p.h \
     $$PWD/qv4v8_p.h \
     $$PWD/qcalculatehash_p.h \
     $$PWD/qv4util_p.h \

@@ -39,8 +39,9 @@
 **
 ****************************************************************************/
 
-#include "qv8worker_p.h"
+#include "qv4serialize_p.h"
 
+#include <private/qv8engine_p.h>
 #include <private/qqmllistmodel_p.h>
 #include <private/qqmllistmodelworkeragent_p.h>
 
@@ -49,6 +50,8 @@
 #include <private/qv4regexpobject_p.h>
 
 QT_BEGIN_NAMESPACE
+
+using namespace QV4;
 
 // We allow the following JavaScript types to be passed between the main and 
 // the secondary thread:
@@ -142,7 +145,7 @@ static inline void *popPtr(const char *&data)
 // serialization/deserialization failures
 
 #define ALIGN(size) (((size) + 3) & ~3)
-void QV8Worker::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engine)
+void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engine)
 {
     if (v.isEmpty()) {
     } else if (v.isUndefined()) {
@@ -292,7 +295,7 @@ void QV8Worker::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
     }
 }
 
-QV4::Value QV8Worker::deserialize(const char *&data, QV8Engine *engine)
+QV4::Value Serialize::deserialize(const char *&data, QV8Engine *engine)
 {
     quint32 header = popUint32(data);
     Type type = headertype(header);
@@ -385,14 +388,14 @@ QV4::Value QV8Worker::deserialize(const char *&data, QV8Engine *engine)
     return QV4::Value::undefinedValue();
 }
 
-QByteArray QV8Worker::serialize(const QV4::Value &value, QV8Engine *engine)
+QByteArray Serialize::serialize(const QV4::Value &value, QV8Engine *engine)
 {
     QByteArray rv;
     serialize(rv, value, engine);
     return rv;
 }
 
-QV4::Value QV8Worker::deserialize(const QByteArray &data, QV8Engine *engine)
+QV4::Value Serialize::deserialize(const QByteArray &data, QV8Engine *engine)
 {
     const char *stream = data.constData();
     return deserialize(stream, engine);

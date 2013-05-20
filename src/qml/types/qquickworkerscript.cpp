@@ -59,7 +59,7 @@
 #include "qqmlnetworkaccessmanagerfactory.h"
 
 #include <private/qv8engine_p.h>
-#include <private/qv8worker_p.h>
+#include <private/qv4serialize_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
@@ -281,7 +281,7 @@ QV4::Value QQuickWorkerScriptEnginePrivate::sendMessage(const v8::Arguments &arg
 
     int id = args[1]->Int32Value();
 
-    QByteArray data = QV8Worker::serialize(args[2]->v4Value(), engine);
+    QByteArray data = QV4::Serialize::serialize(args[2]->v4Value(), engine);
 
     QMutexLocker locker(&engine->p->m_lock);
     WorkerScript *script = engine->p->workers.value(id);
@@ -343,7 +343,7 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     if (!script)
         return;
 
-    v8::Handle<v8::Value> value = QV8Worker::deserialize(data, workerEngine);
+    v8::Handle<v8::Value> value = QV4::Serialize::deserialize(data, workerEngine);
 
     v8::TryCatch tc;
     workerEngine->callOnMessage(script->object.value(), value);
@@ -663,7 +663,7 @@ void QQuickWorkerScript::sendMessage(QQmlV4Function *args)
     if (args->length() != 0)
         argument = (*args)[0];
 
-    m_engine->sendMessage(m_scriptId, QV8Worker::serialize(argument->v4Value(), args->engine()));
+    m_engine->sendMessage(m_scriptId, QV4::Serialize::serialize(argument->v4Value(), args->engine()));
 }
 
 void QQuickWorkerScript::classBegin()
@@ -712,7 +712,7 @@ bool QQuickWorkerScript::event(QEvent *event)
         if (engine) {
             WorkerDataEvent *workerEvent = static_cast<WorkerDataEvent *>(event);
             QV8Engine *v8engine = QQmlEnginePrivate::get(engine)->v8engine();
-            v8::Handle<v8::Value> value = QV8Worker::deserialize(workerEvent->data(), v8engine);
+            v8::Handle<v8::Value> value = QV4::Serialize::deserialize(workerEvent->data(), v8engine);
             emit message(QQmlV4Handle(value->v4Value()));
         }
         return true;

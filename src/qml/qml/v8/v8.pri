@@ -14,7 +14,6 @@ HEADERS += \
     $$PWD/qv8valuetypewrapper_p.h \
     $$PWD/qv4jsonwrapper_p.h \
     $$PWD/qv8include_p.h \
-    $$PWD/qv8worker_p.h \
     $$PWD/qv8bindings_p.h \
     $$PWD/qv4domerrors_p.h \
     $$PWD/qv4sqlerrors_p.h \
@@ -31,7 +30,6 @@ SOURCES += \
     $$PWD/qv8valuetypewrapper.cpp \
     $$PWD/qv4jsonwrapper.cpp \
     $$PWD/qv8include.cpp \
-    $$PWD/qv8worker.cpp \
     $$PWD/qv8bindings.cpp \
     $$PWD/qv4domerrors.cpp \
     $$PWD/qv4sqlerrors.cpp \
