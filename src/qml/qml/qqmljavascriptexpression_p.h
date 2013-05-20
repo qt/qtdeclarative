@@ -77,19 +77,18 @@ public:
         prevError = 0;
     }
 
-    inline bool isValid() const { return !!m_message || m_error.isValid(); }
-    inline const QQmlError &error(QQmlEngine *engine) const { convertMessageToError(engine); return m_error; }
-    inline void clearError() { m_message.reset(); m_error = QQmlError(); }
+    inline bool isValid() const { return m_error.isValid(); }
+    inline const QQmlError &error() const { return m_error; }
+    inline void clearError() { m_error = QQmlError(); }
 
-    void setMessage(v8::Handle<v8::Message> message);
     void setErrorLocation(const QUrl &url, quint16 line, quint16 column);
     void setErrorDescription(const QString &description);
 
+    void setError(const QV4::Exception &e);
+
 private:
-    void convertMessageToError(QQmlEngine *engine) const;
 
     mutable QQmlError m_error;
-    mutable QExplicitlySharedDataPointer<v8::Message> m_message;
 
     QQmlDelayedError  *nextError;
     QQmlDelayedError **prevError;
@@ -147,6 +146,7 @@ public:
     void clearGuards();
     QQmlDelayedError *delayedError();
 
+    static void exceptionToError(const QV4::Exception &e, QQmlError &);
     static void exceptionToError(v8::Handle<v8::Message>, QQmlError &);
     static QV4::PersistentValue evalFunction(QQmlContextData *ctxt, QObject *scope,
                                                      const QString &code, const QString &filename,

@@ -1645,7 +1645,7 @@ void QQmlEnginePrivate::warning(const QList<QQmlError> &errors)
 void QQmlEnginePrivate::warning(QQmlDelayedError *error)
 {
     Q_Q(QQmlEngine);
-    warning(error->error(q));
+    warning(error->error());
 }
 
 void QQmlEnginePrivate::warning(QQmlEngine *engine, const QQmlError &error)
@@ -1669,7 +1669,7 @@ void QQmlEnginePrivate::warning(QQmlEngine *engine, QQmlDelayedError *error)
     if (engine)
         QQmlEnginePrivate::get(engine)->warning(error);
     else
-        dumpwarning(error->error(0));
+        dumpwarning(error->error());
 }
 
 void QQmlEnginePrivate::warning(QQmlEnginePrivate *engine, const QQmlError &error)

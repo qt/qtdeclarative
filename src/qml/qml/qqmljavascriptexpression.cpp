@@ -63,11 +63,6 @@ bool QQmlDelayedError::addError(QQmlEnginePrivate *e)
     return true;
 }
 
-void QQmlDelayedError::setMessage(v8::Handle<v8::Message> message)
-{
-    m_message = message.get();
-}
-
 void QQmlDelayedError::setErrorLocation(const QUrl &url, quint16 line, quint16 column)
 {
     m_error.setUrl(url);
@@ -80,21 +75,14 @@ void QQmlDelayedError::setErrorDescription(const QString &description)
     m_error.setDescription(description);
 }
 
-/*
-    Converting from a message to an error is relatively expensive.
-
-    We don't want to do this work for transient exceptions (exceptions
-    that occur during startup because of the order of binding
-    execution, but have gone away by the time startup has finished), so we
-    delay conversion until it is required for displaying the error.
-*/
-void QQmlDelayedError::convertMessageToError(QQmlEngine *engine) const
+void QQmlDelayedError::setError(const QV4::Exception &e)
 {
-    if (!!m_message && engine) {
-        QQmlExpressionPrivate::exceptionToError(v8::Handle<v8::Message>(m_message.data()), m_error);
-        m_message.reset();
-    }
+    m_error.setDescription(e.value().toQString());
+    m_error.setUrl(e.file());
+    m_error.setLine(e.lineNumber());
+    m_error.setColumn(-1);
 }
+
 
 QQmlJavaScriptExpression::QQmlJavaScriptExpression(VTable *v)
 : m_vtable(v)
@@ -298,13 +286,23 @@ void QQmlJavaScriptExpression::clearError()
 
 QQmlError QQmlJavaScriptExpression::error(QQmlEngine *engine) const
 {
-    if (m_vtable.hasValue()) return m_vtable.constValue()->error(engine);
-    else return QQmlError();
+    if (m_vtable.hasValue())
+        return m_vtable.constValue()->error();
+    else
+        return QQmlError();
 }
 
 QQmlDelayedError *QQmlJavaScriptExpression::delayedError()
 {
     return &m_vtable.value();
+}
+
+void QQmlJavaScriptExpression::exceptionToError(const QV4::Exception &e, QQmlError &error)
+{
+    error.setUrl(e.file());
+    error.setLine(e.lineNumber());
+    error.setColumn(-1);
+    error.setDescription(e.value().toQString());
 }
 
 void QQmlJavaScriptExpression::exceptionToError(v8::Handle<v8::Message> message, QQmlError &error)
