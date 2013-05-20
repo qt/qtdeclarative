@@ -45,6 +45,7 @@
 
 #include <QtCore/QVector>
 #include <QtCore/QByteArray>
+#include <QtCore/qurl.h>
 
 #include <config.h>
 #include <assembler/MacroAssemblerCodeRef.h>
@@ -101,6 +102,8 @@ struct Function {
     bool usesArgumentsObject;
     bool isStrict;
     bool isNamedExpression;
+
+    QUrl sourceFile;
 
     Function(String *name)
         : name(name)

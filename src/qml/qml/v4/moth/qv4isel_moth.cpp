@@ -674,10 +674,11 @@ void InstructionSelection::callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinThrow(V4IR::Temp *arg)
+void InstructionSelection::callBuiltinThrow(V4IR::Temp *arg, int line)
 {
     Instruction::CallBuiltinThrow call;
     call.arg = getParam(arg);
+    call.line = line;
     addInstruction(call);
 }
 

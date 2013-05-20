@@ -87,7 +87,7 @@ public: // methods from InstructionSelection:
     virtual void callBuiltinPostIncrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
     virtual void callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result);
     virtual void callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR::Temp *result);
-    virtual void callBuiltinThrow(V4IR::Temp *arg);
+    virtual void callBuiltinThrow(V4IR::Temp *arg, int line);
     virtual void callBuiltinCreateExceptionHandler(V4IR::Temp *result);
     virtual void callBuiltinFinishTry();
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result);

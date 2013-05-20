@@ -472,7 +472,7 @@ void __qmljs_llvm_typeof(ExecutionContext *ctx, Value *result, const Value *valu
 
 void __qmljs_llvm_throw(ExecutionContext *context, Value *value)
 {
-    __qmljs_throw(context, *value);
+    __qmljs_throw(context, *value, -1);
 }
 
 void __qmljs_llvm_delete_exception_handler(ExecutionContext *context)

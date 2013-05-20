@@ -420,7 +420,7 @@ void InstructionSelection::callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR
     Q_UNREACHABLE();
 }
 
-void InstructionSelection::callBuiltinThrow(V4IR::Temp *arg)
+void InstructionSelection::callBuiltinThrow(V4IR::Temp *arg, int line)
 {
     // TODO
     assert(!"TODO!");

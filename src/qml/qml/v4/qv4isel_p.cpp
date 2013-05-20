@@ -47,6 +47,7 @@ QV4::Function *EvalInstructionSelection::createFunctionMapping(QV4::Function *ou
     vmFunction->isStrict = irFunction->isStrict;
     vmFunction->outer = outer;
     vmFunction->isNamedExpression = irFunction->isNamedExpression;
+    vmFunction->sourceFile = irFunction->sourceFile;
 
     if (outer)
         outer->nestedFunctions.append(vmFunction);
@@ -309,7 +310,7 @@ void InstructionSelection::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
     case V4IR::Name::builtin_throw: {
         V4IR::Temp *arg = call->args->expr->asTemp();
         assert(arg != 0);
-        callBuiltinThrow(arg);
+        callBuiltinThrow(arg, baseName->line);
     } return;
 
     case V4IR::Name::builtin_finish_try:

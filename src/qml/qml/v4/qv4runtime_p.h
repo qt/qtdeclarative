@@ -49,6 +49,7 @@
 #include <QtCore/QString>
 #include <QtCore/qnumeric.h>
 #include <QtCore/QDebug>
+#include <QtCore/qurl.h>
 
 #include <cmath>
 #include <cassert>
@@ -90,7 +91,7 @@ struct ExecutionEngine;
 struct InternalClass;
 
 struct Q_QML_EXPORT Exception {
-    explicit Exception(ExecutionContext *throwingContext, const Value &exceptionValue);
+    explicit Exception(ExecutionContext *throwingContext, const Value &exceptionValue, int line);
     ~Exception();
 
     void accept(ExecutionContext *catchingContext);
@@ -98,11 +99,15 @@ struct Q_QML_EXPORT Exception {
     void partiallyUnwindContext(ExecutionContext *catchingContext);
 
     Value value() const { return exception; }
+    QUrl file() const { return m_file; }
+    int lineNumber() const { return m_line; }
 
 private:
     ExecutionContext *throwingContext;
     bool accepted;
     PersistentValue exception;
+    QUrl m_file;
+    int m_line;
 };
 
 }
@@ -137,7 +142,6 @@ void __qmljs_builtin_post_decrement_name(QV4::ExecutionContext *context, QV4::Va
 void __qmljs_builtin_post_decrement_member(QV4::ExecutionContext *context, QV4::Value *result, const QV4::Value &base, QV4::String *name);
 void __qmljs_builtin_post_decrement_element(QV4::ExecutionContext *context, QV4::Value *result, const QV4::Value &base, const QV4::Value &index);
 
-void Q_NORETURN __qmljs_builtin_throw(QV4::ExecutionContext *context, const QV4::Value &val);
 void Q_NORETURN __qmljs_builtin_rethrow(QV4::ExecutionContext *context);
 QV4::ExecutionContext *__qmljs_builtin_push_with_scope(const QV4::Value &o, QV4::ExecutionContext *ctx);
 QV4::ExecutionContext *__qmljs_builtin_push_catch_scope(QV4::String *exceptionVarName, const QV4::Value &exceptionValue, QV4::ExecutionContext *ctx);
@@ -206,7 +210,7 @@ void __qmljs_delete_subscript(QV4::ExecutionContext *ctx, QV4::Value *result, co
 void __qmljs_delete_member(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &base, QV4::String *name);
 void __qmljs_delete_name(QV4::ExecutionContext *ctx, QV4::Value *result, QV4::String *name);
 
-void Q_NORETURN __qmljs_throw(QV4::ExecutionContext*, const QV4::Value &value);
+void Q_NORETURN __qmljs_throw(QV4::ExecutionContext*, const QV4::Value &value, int line);
 
 // binary operators
 typedef void (*BinOp)(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);

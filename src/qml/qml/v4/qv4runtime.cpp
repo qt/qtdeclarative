@@ -70,9 +70,21 @@
 using namespace QV4;
 
 
-Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue)
+Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue, int line)
     : exception(exceptionValue)
+    , m_line(line)
 {
+    ExecutionContext *c = throwingContext;
+    while (c) {
+        if (c->type == ExecutionContext::Type_CallContext ||
+            c->type == ExecutionContext::Type_SimpleCallContext) {
+            FunctionObject *f = static_cast<SimpleCallContext *>(c)->function;
+            if (f && f->function)
+                m_file = f->function->sourceFile;
+            break;
+        }
+        c = c->outer;
+    }
     this->throwingContext = throwingContext->engine->current;
     accepted = false;
 }
@@ -947,7 +959,7 @@ void __qmljs_construct_property(ExecutionContext *context, Value *result, const 
     context->throwTypeError();
 }
 
-void __qmljs_throw(ExecutionContext *context, const Value &value)
+void __qmljs_throw(ExecutionContext *context, const Value &value, int line)
 {
     if (context->engine->debugger)
         context->engine->debugger->aboutToThrow(value);
@@ -985,7 +997,7 @@ void __qmljs_throw(ExecutionContext *context, const Value &value)
     printf("stack walked. throwing exception now...\n");
 #endif
 
-    throw Exception(context, value);
+    throw Exception(context, value, line);
 }
 
 void __qmljs_builtin_typeof(ExecutionContext *ctx, Value *result, const Value &value)
@@ -1204,11 +1216,6 @@ void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *re
     }
 
     o->putIndexed(context, idx, v);
-}
-
-void __qmljs_builtin_throw(ExecutionContext *context, const Value &val)
-{
-    __qmljs_throw(context, val);
 }
 
 ExecutionContext *__qmljs_builtin_push_with_scope(const Value &o, ExecutionContext *ctx)

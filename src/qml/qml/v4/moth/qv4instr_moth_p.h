@@ -249,6 +249,7 @@ union Instr
     struct instr_callBuiltinThrow {
         MOTH_INSTR_HEADER
         Param arg;
+        int line;
     };
     struct instr_callBuiltinFinishTry {
         MOTH_INSTR_HEADER

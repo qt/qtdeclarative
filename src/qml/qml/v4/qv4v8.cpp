@@ -247,7 +247,8 @@ Handle<Value> Script::Run()
         QV4::Function *f = QV4::EvalFunction::parseSource(engine->rootContext, m_origin.m_fileName, m_script, QQmlJS::Codegen::EvalCode,
                                                                         /*strictMode =*/ false, /*inheritContext =*/ false);
         if (!f)
-            __qmljs_throw(engine->current, QV4::Value::fromObject(engine->newSyntaxErrorObject(engine->current, 0)));
+            // ### FIX file/line number
+            __qmljs_throw(engine->current, QV4::Value::fromObject(engine->newSyntaxErrorObject(engine->current, 0)), -1);
 
         result = engine->run(f);
     } catch (QV4::Exception &e) {
@@ -1912,7 +1913,7 @@ ObjectTemplate::ObjectTemplate()
 
 Handle<Value> ThrowException(Handle<Value> exception)
 {
-    __qmljs_throw(currentEngine()->current, exception->v4Value());
+    __qmljs_throw(currentEngine()->current, exception->v4Value(), -1);
     return Handle<Value>();
 }
 

@@ -522,7 +522,8 @@ void ExecutionContext::inplaceBitOp(String *name, const Value &value, BinOp op)
 
 void ExecutionContext::throwError(const Value &value)
 {
-    __qmljs_builtin_throw(this, value);
+    // ### line number???
+    __qmljs_throw(this, value, -1);
 }
 
 void ExecutionContext::throwError(const QString &message)

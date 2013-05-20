@@ -58,6 +58,7 @@
 #include <QtCore/QVector>
 #include <QtCore/QString>
 #include <QtCore/QBitArray>
+#include <QtCore/qurl.h>
 
 #ifdef CONST
 #undef CONST
@@ -651,6 +652,8 @@ struct Function {
     QList<const QString *> locals;
     QVector<Function *> nestedFunctions;
     Function *outer;
+
+    QUrl sourceFile;
 
     int insideWithOrCatch;
 
