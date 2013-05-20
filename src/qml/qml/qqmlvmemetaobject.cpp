@@ -54,6 +54,7 @@
 
 #include <private/qv4object_p.h>
 #include <private/qv4variantobject_p.h>
+#include <private/qv4functionobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -911,8 +912,8 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 QQmlEnginePrivate *ep = QQmlEnginePrivate::get(ctxt->engine);
                 ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
-                v8::Handle<v8::Function> function = method(id);
-                if (function.IsEmpty()) {
+                QV4::FunctionObject *function = method(id)->v4Value().asFunctionObject();
+                if (!function) {
                     // The function was not compiled.  There are some exceptional cases which the
                     // expression rewriter does not rewrite properly (e.g., \r-terminated lines
                     // are not rewritten correctly but this bug is deemed out-of-scope to fix for
@@ -926,27 +927,23 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 QQmlVMEMetaData::MethodData *data = metaData->methodData() + id;
 
-                v8::Handle<v8::Value> *args = 0;
+                QVarLengthArray<QV4::Value, 9> args;
 
-                if (data->parameterCount) {
-                    args = new v8::Handle<v8::Value>[data->parameterCount];
-                    for (int ii = 0; ii < data->parameterCount; ++ii) 
-                        args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
-                }
+                for (int ii = 0; ii < data->parameterCount; ++ii)
+                    args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
 
-                v8::TryCatch try_catch;
-
-                v8::Handle<v8::Value> result = function->Call(v8::Value::fromV4Value(ep->v8engine()->global()), data->parameterCount, args);
-
-                QVariant rv;
-                if (try_catch.HasCaught()) {
+                QV4::Value result = QV4::Value::undefinedValue();
+                QV4::ExecutionContext *ctx = function->engine()->current;
+                try {
+                    result = function->call(ep->v8engine()->global(), args.data(), data->parameterCount);
+                    if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
+                } catch (QV4::Exception &e) {
+                    e.accept(ctx);
                     QQmlError error;
-                    QQmlExpressionPrivate::exceptionToError(try_catch.Message(), error);
+                    QQmlExpressionPrivate::exceptionToError(e, error);
                     if (error.isValid())
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();
-                } else {
-                    if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result->v4Value(), 0);
                 }
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.

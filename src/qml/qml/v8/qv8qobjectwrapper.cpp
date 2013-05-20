@@ -1323,21 +1323,16 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
             if (connection.needsDestroy)
                 continue;
 
-            v8::TryCatch try_catch;
             QV4::FunctionObject *f = connection.function.value().asFunctionObject();
             QV4::ExecutionEngine *v4 = f->internalClass->engine;
-            if (connection.thisObject.isEmpty()) {
-                f->call(v4->current, engine->global(), args.data(), argCount);
-            } else {
-                f->call(v4->current, connection.thisObject, args.data(), argCount);
-            }
-
-            if (try_catch.HasCaught()) {
+            QV4::ExecutionContext *ctx = v4->current;
+            try {
+                f->call(v4->current, connection.thisObject.isEmpty() ? engine->global() : connection.thisObject.value(), args.data(), argCount);
+            } catch (QV4::Exception &e) {
                 QQmlError error;
-                error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
-                v8::Handle<v8::Message> message = try_catch.Message();
-                if (!message.IsEmpty())
-                    QQmlExpressionPrivate::exceptionToError(message, error);
+                QQmlExpressionPrivate::exceptionToError(e, error);
+                if (error.description().isEmpty())
+                    error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
                 QQmlEnginePrivate::get(engine->engine())->warning(error);
             }
         }

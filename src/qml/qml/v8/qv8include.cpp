@@ -49,6 +49,7 @@
 
 #include <private/qqmlengine_p.h>
 #include <private/qv4engine_p.h>
+#include <private/qv4functionobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -92,10 +93,16 @@ v8::Handle<v8::Object> QV8Include::resultValue(Status status)
 
 void QV8Include::callback(QV8Engine *engine, v8::Handle<v8::Function> callback, v8::Handle<v8::Object> status)
 {
-    if (!callback.IsEmpty()) {
-        v8::Handle<v8::Value> args[] = { status };
-        v8::TryCatch tc;
-        callback->Call(v8::Value::fromV4Value(engine->global()), 1, args);
+    QV4::FunctionObject *f = callback->v4Value().asFunctionObject();
+    if (!f)
+        return;
+
+    QV4::Value args[] = { status->v4Value() };
+    QV4::ExecutionContext *ctx = f->engine()->current;
+    try {
+        f->call(engine->global(), args, 1);
+    } catch (QV4::Exception &e) {
+        e.accept(ctx);
     }
 }
 

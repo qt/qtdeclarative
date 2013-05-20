@@ -1475,20 +1475,18 @@ void QV8IncubatorResource::statusChanged(Status s)
     }
 
     if (!me.isEmpty()) { // Will be false in synchronous mode
-        v8::Handle<v8::Value> callback = v8::Handle<v8::Object>(me)->GetInternalField(0);
+        QV4::Value callback = v8::Handle<v8::Object>(me)->GetInternalField(0)->v4Value();
 
-        if (!callback.IsEmpty() && !callback->IsUndefined()) {
-
-            if (callback->IsFunction()) {
-                v8::Handle<v8::Function> f = v8::Handle<v8::Function>::Cast(callback);
-                v8::Handle<v8::Value> args[] = { v8::Integer::NewFromUnsigned(s) };
-                v8::TryCatch tc;
-                f->Call(me.value(), 1, args);
-                if (tc.HasCaught()) {
-                    QQmlError error;
-                    QQmlJavaScriptExpression::exceptionToError(tc.Message(), error);
-                    QQmlEnginePrivate::warning(QQmlEnginePrivate::get(engine->engine()), error);
-                }
+        if (QV4::FunctionObject *f = callback.asFunctionObject()) {
+            QV4::ExecutionContext *ctx = f->engine()->current;
+            QV4::Value args[] = { QV4::Value::fromUInt32(s) };
+            try {
+                f->call(me.value(), args, 1);
+            } catch (QV4::Exception &e) {
+                e.accept(ctx);
+                QQmlError error;
+                QQmlJavaScriptExpression::exceptionToError(e, error);
+                QQmlEnginePrivate::warning(QQmlEnginePrivate::get(engine->engine()), error);
             }
         }
     }

@@ -341,15 +341,17 @@ static QV4::Value qmlsqldatabase_changeVersion(const v8::Arguments& args)
         ok = false;
         db.transaction();
 
-        v8::TryCatch tc;
-        v8::Handle<v8::Value> callbackArgs[] = { instance };
-        v8::Handle<v8::Function>::Cast(callback)->Call(v8::Value::fromV4Value(engine->global()), 1, callbackArgs);
-
-        if (tc.HasCaught()) {
+        QV4::Value callbackArgs[] = { instance->v4Value() };
+        QV4::FunctionObject *f = callback->v4Value().asFunctionObject();
+        QV4::ExecutionContext *ctx = f->engine()->current;
+        try {
+            f->call(engine->global(), callbackArgs, 1);
+        } catch (QV4::Exception &e) {
+            e.accept(ctx);
             db.rollback();
-            tc.ReThrow();
-            return QV4::Value::undefinedValue();
-        } else if (!db.commit()) {
+            throw;
+        }
+        if (!db.commit()) {
             db.rollback();
             V4THROW_SQL(SQLEXCEPTION_UNKNOWN_ERR,QQmlEngine::tr("SQL transaction failed"));
         } else {
@@ -393,18 +395,23 @@ static QV4::Value qmlsqldatabase_transaction_shared(const v8::Arguments& args, b
     instance->SetExternalResource(q);
 
     db.transaction();
-    v8::TryCatch tc;
-    v8::Handle<v8::Value> callbackArgs[] = { instance };
-    callback->Call(v8::Value::fromV4Value(engine->global()), 1, callbackArgs);
+    QV4::FunctionObject *f = callback->v4Value().asFunctionObject();
+    if (f) {
+        QV4::ExecutionContext *ctx = f->engine()->current;
+        QV4::Value callbackArgs[] = { instance->v4Value() };
+        try {
+            f->call(engine->global(), callbackArgs, 1);
+        } catch (QV4::Exception &e) {
+            e.accept(ctx);
+            q->inTransaction = false;
+            db.rollback();
+            throw;
+        }
 
-    q->inTransaction = false;
+        q->inTransaction = false;
 
-    if (tc.HasCaught()) {
-        db.rollback();
-        tc.ReThrow();
-        return QV4::Value::undefinedValue();
-    } else if (!db.commit()) {
-        db.rollback();
+        if (!db.commit())
+            db.rollback();
     }
 
     return QV4::Value::undefinedValue();
@@ -674,14 +681,17 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     r->version = version;
     instance->SetExternalResource(r);
 
-    if (created && dbcreationCallback->IsFunction()) {
-        v8::TryCatch tc;
-        v8::Handle<v8::Function> callback = v8::Handle<v8::Function>::Cast(dbcreationCallback);
-        v8::Handle<v8::Value> args[] = { instance };
-        callback->Call(v8::Value::fromV4Value(engine->global()), 1, args);
-        if (tc.HasCaught()) {
-            tc.ReThrow();
-            return;
+    if (created) {
+        QV4::FunctionObject *f = dbcreationCallback->v4Value().asFunctionObject();
+        if (f) {
+            QV4::ExecutionContext *ctx = f->engine()->current;
+            QV4::Value args[] = { instance->v4Value() };
+            try {
+                f->call(engine->global(), args, 1);
+            } catch (QV4::Exception &e) {
+                e.accept(ctx);
+                throw;
+            }
         }
     }
 
