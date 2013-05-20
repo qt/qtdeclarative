@@ -339,29 +339,24 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
     QQmlEngine *engine = ctxt->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
 
-    v8::TryCatch tc;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionContext *ctx = v4->current;
+
     v8::Handle<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);
     v8::Handle<v8::Script> script = ep->v8engine()->qmlModeCompile(code, codeLength, filename, line);
-    if (tc.HasCaught()) {
+    v8::Handle<v8::Value> result;
+    try {
+        result = script->Run(scopeobject);
+    } catch (QV4::Exception &e) {
+        e.accept(ctx);
         QQmlError error;
-        error.setDescription(QLatin1String("Exception occurred during function compilation"));
-        error.setLine(line);
-        error.setUrl(QUrl::fromLocalFile(filename));
-        v8::Handle<v8::Message> message = tc.Message();
-        if (!message.IsEmpty())
-            QQmlExpressionPrivate::exceptionToError(message, error);
-        ep->warning(error);
-        return QV4::PersistentValue();
-    }
-    v8::Handle<v8::Value> result = script->Run(scopeobject);
-    if (tc.HasCaught()) {
-        QQmlError error;
-        error.setDescription(QLatin1String("Exception occurred during function evaluation"));
-        error.setLine(line);
-        error.setUrl(QUrl::fromLocalFile(filename));
-        v8::Handle<v8::Message> message = tc.Message();
-        if (!message.IsEmpty())
-            QQmlExpressionPrivate::exceptionToError(message, error);
+        QQmlExpressionPrivate::exceptionToError(e, error);
+        if (error.description().isEmpty())
+            error.setDescription(QLatin1String("Exception occurred during function evaluation"));
+        if (error.line() == -1)
+            error.setLine(line);
+        if (error.url().isEmpty())
+            error.setUrl(QUrl::fromLocalFile(filename));
         ep->warning(error);
         return QV4::PersistentValue();
     }
@@ -379,35 +374,29 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
     QQmlEngine *engine = ctxt->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
 
-    v8::TryCatch tc;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionContext *ctx = v4->current;
+
     v8::Handle<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);
     v8::Handle<v8::Script> script = ep->v8engine()->qmlModeCompile(code, filename, line);
-    if (tc.HasCaught()) {
+    try {
+        v8::Handle<v8::Value> result = script->Run(scopeobject);
+        if (qmlscope)
+            *qmlscope = scopeobject->v4Value();
+        return result->v4Value();
+    } catch (QV4::Exception &e) {
+        e.accept(ctx);
         QQmlError error;
-        error.setDescription(QLatin1String("Exception occurred during function compilation"));
-        error.setLine(line);
-        error.setUrl(QUrl::fromLocalFile(filename));
-        v8::Handle<v8::Message> message = tc.Message();
-        if (!message.IsEmpty())
-            QQmlExpressionPrivate::exceptionToError(message, error);
+        QQmlExpressionPrivate::exceptionToError(e, error);
+        if (error.description().isEmpty())
+            error.setDescription(QLatin1String("Exception occurred during function evaluation"));
+        if (error.line() == -1)
+            error.setLine(line);
+        if (error.url().isEmpty())
+            error.setUrl(QUrl::fromLocalFile(filename));
         ep->warning(error);
-        return QV4::PersistentValue();
     }
-    v8::Handle<v8::Value> result = script->Run(scopeobject);
-    if (tc.HasCaught()) {
-        QQmlError error;
-        error.setDescription(QLatin1String("Exception occurred during function evaluation"));
-        error.setLine(line);
-        error.setUrl(QUrl::fromLocalFile(filename));
-        v8::Handle<v8::Message> message = tc.Message();
-        if (!message.IsEmpty())
-            QQmlExpressionPrivate::exceptionToError(message, error);
-        ep->warning(error);
-        return QV4::PersistentValue();
-    }
-    if (qmlscope)
-        *qmlscope = scopeobject->v4Value();
-    return result->v4Value();
+    return QV4::PersistentValue();
 }
 
 void QQmlJavaScriptExpression::clearGuards()

@@ -242,22 +242,13 @@ Handle<Value> Script::Run()
     QV4::ExecutionEngine *engine = Isolate::GetCurrent()->GetEngine();
     QV4::ExecutionContext *ctx = engine->current;
 
-    QV4::Value result = QV4::Value::undefinedValue();
-    try {
-        QV4::Function *f = QV4::EvalFunction::parseSource(engine->rootContext, m_origin.m_fileName, m_script, QQmlJS::Codegen::EvalCode,
-                                                                        /*strictMode =*/ false, /*inheritContext =*/ false);
-        if (!f)
-            // ### FIX file/line number
-            __qmljs_throw(engine->current, QV4::Value::fromObject(engine->newSyntaxErrorObject(engine->current, 0)), -1);
+    QV4::Function *f = QV4::EvalFunction::parseSource(engine->rootContext, m_origin.m_fileName, m_script, QQmlJS::Codegen::EvalCode,
+                                                                    /*strictMode =*/ false, /*inheritContext =*/ false);
+    if (!f)
+        // ### FIX file/line number
+        __qmljs_throw(engine->current, QV4::Value::fromObject(engine->newSyntaxErrorObject(engine->current, 0)), -1);
 
-        result = engine->run(f);
-    } catch (QV4::Exception &e) {
-        Isolate::GetCurrent()->setException(e.value());
-        e.accept(ctx);
-        return Handle<Value>();
-    }
-
-    return result;
+    return engine->run(f);
 }
 
 Handle<Value> Script::Run(Handle<Object> qml)

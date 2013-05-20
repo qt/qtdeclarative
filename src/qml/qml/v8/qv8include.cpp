@@ -144,21 +144,18 @@ void QV8Include::finished()
         importContext->isPragmaLibraryContext = m_context->isPragmaLibraryContext;
         importContext->setParent(m_context, true);
 
-        v8::TryCatch try_catch;
-
         v8::Handle<v8::Script> script = m_engine->qmlModeCompile(code, m_url.toString());
 
-        if (!try_catch.HasCaught()) {
-            // ### Only used for debugging info
-            //m_engine->contextWrapper()->addSubContext(m_qmlglobal.value(), script, importContext);
+        QV4::ExecutionContext *ctx = QV8Engine::getV4(m_engine)->current;
+        // ### Only used for debugging info
+        //m_engine->contextWrapper()->addSubContext(m_qmlglobal.value(), script, importContext);
+        try {
             script->Run(m_qmlglobal.value());
-        }
-
-        if (try_catch.HasCaught()) {
-            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), v8::Integer::New(Exception));
-            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("exception"), try_catch.Exception());
-        } else {
             v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), v8::Integer::New(Ok));
+        } catch (QV4::Exception &e) {
+            e.accept(ctx);
+            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), v8::Integer::New(Exception));
+            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("exception"), e.value());
         }
     } else {
         v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), v8::Integer::New(NetworkError));
@@ -216,24 +213,20 @@ QV4::Value QV8Include::include(const v8::Arguments &args)
             importContext->url = url;
             importContext->setParent(context, true);
 
-            v8::TryCatch try_catch;
-
             v8::Handle<v8::Script> script = engine->qmlModeCompile(code, url.toString());
 
-            if (!try_catch.HasCaught()) {
-                v8::Handle<v8::Object> qmlglobal = QV4::Value::fromObject(args.GetIsolate()->GetEngine()->qmlContextObject());
-                // ### Only used for debugging info
-                // engine->contextWrapper()->addSubContext(qmlglobal, script, importContext);
+            v8::Handle<v8::Object> qmlglobal = QV4::Value::fromObject(args.GetIsolate()->GetEngine()->qmlContextObject());
+            // ### Only used for debugging info
+            // engine->contextWrapper()->addSubContext(qmlglobal, script, importContext);
+            QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
+            try {
                 script->Run(qmlglobal);
-            }
-
-            if (try_catch.HasCaught()) {
-                result = resultValue(Exception);
-                result->Set(v8::String::New("exception"), try_catch.Exception());
-            } else {
                 result = resultValue(Ok);
+            } catch (QV4::Exception &e) {
+                e.accept(ctx);
+                result = resultValue(Exception);
+                result->Set(v8::String::New("exception"), e.value());
             }
-
         } else {
             result = resultValue(NetworkError);
         }

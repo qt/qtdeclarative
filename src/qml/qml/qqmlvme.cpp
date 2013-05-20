@@ -1165,7 +1165,7 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     QV8Engine *v8engine = ep->v8engine();
 
-    // If compilation throws an error, a surrounding v8::TryCatch will record it.
+    // If compilation throws an error, a surrounding catch will record it.
     v8::Handle<v8::Script> program = v8engine->qmlModeCompile(m_programSource.constData(),
                                                              m_programSource.length(), urlString, 1);
     if (program.IsEmpty())
@@ -1235,27 +1235,20 @@ QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *s
         ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());
     }
 
-    v8::TryCatch try_catch;
     if (!script->isInitialized())
         script->initialize(parentCtxt->engine);
 
     v8::Handle<v8::Object> qmlglobal = v8engine->qmlScope(ctxt, 0);
     v8engine->contextWrapper()->takeContextOwnership(qmlglobal);
 
-    if (!!script->m_program) {
+    QV4::ExecutionContext *ctx = QV8Engine::getV4(v8engine)->current;
+    try {
         script->m_program->Run(qmlglobal);
-    } else {
-        // Compilation failed.
-        Q_ASSERT(try_catch.HasCaught());
-    }
-
-    if (try_catch.HasCaught()) {
-        v8::Handle<v8::Message> message = try_catch.Message();
-        if (!message.IsEmpty()) {
-            QQmlError error;
-            QQmlExpressionPrivate::exceptionToError(message, error);
+    } catch (QV4::Exception &e) {
+        QQmlError error;
+        QQmlExpressionPrivate::exceptionToError(e, error);
+        if (error.isValid())
             ep->warning(error);
-        }
     } 
 
     rv = qmlglobal->v4Value();

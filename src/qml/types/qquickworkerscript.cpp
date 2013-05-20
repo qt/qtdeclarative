@@ -384,15 +384,15 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         // XXX ???
         // workerEngine->baseUrl = url;
 
-        v8::TryCatch tc;
         v8::Handle<v8::Script> program = workerEngine->qmlModeCompile(sourceCode, url.toString());
 
-        if (!tc.HasCaught()) 
+        QV4::ExecutionContext *ctx = QV8Engine::getV4(workerEngine)->current;
+        try {
             program->Run(activation);
-        
-        if (tc.HasCaught()) {
+        } catch (QV4::Exception &e) {
+            e.accept(ctx);
             QQmlError error;
-            QQmlExpressionPrivate::exceptionToError(tc.Message(), error);
+            QQmlExpressionPrivate::exceptionToError(e, error);
             reportScriptException(script, error);
         }
     } else {

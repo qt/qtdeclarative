@@ -249,24 +249,9 @@ QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
         v8::Handle<v8::Script> script;
         bool compileFailed = false;
         {
-            v8::TryCatch try_catch;
             const QByteArray &source = program->program;
             script = engine->qmlModeCompile(source.constData(), source.length(),
                                             program->cdata->name, line);
-            if (try_catch.HasCaught()) {
-                // The binding was not compiled.  There are some exceptional cases which the
-                // expression rewriter does not rewrite properly (e.g., \r-terminated lines
-                // are not rewritten correctly but this bug is demed out-of-scope to fix for
-                // performance reasons; see QTBUG-24064).
-                compileFailed = true;
-                QQmlError error;
-                error.setDescription(QString(QLatin1String("Exception occurred during compilation of binding at line: %1")).arg(line));
-                v8::Handle<v8::Message> message = try_catch.Message();
-                if (!message.IsEmpty())
-                    QQmlExpressionPrivate::exceptionToError(message, error);
-                QQmlEnginePrivate::get(engine->engine())->warning(error);
-                program->bindings = QV4::Value::nullValue();
-            }
         }
 
         if (!compileFailed) {
