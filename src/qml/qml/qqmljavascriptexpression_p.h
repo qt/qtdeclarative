@@ -109,9 +109,9 @@ public:
 
     QQmlJavaScriptExpression(VTable *vtable);
 
-    v8::Handle<v8::Value> evaluate(QQmlContextData *, const QV4::Value &function,
+    QV4::Value evaluate(QQmlContextData *, const QV4::Value &function,
                                   bool *isUndefined);
-    v8::Handle<v8::Value> evaluate(QQmlContextData *, const QV4::Value &function,
+    QV4::Value evaluate(QQmlContextData *, const QV4::Value &function,
                                   int argc, QV4::Value *args,
                                   bool *isUndefined);
 

@@ -107,14 +107,14 @@ void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
     clearGuards();
 }
 
-v8::Handle<v8::Value>
+QV4::Value
 QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
                                    const QV4::Value &function, bool *isUndefined)
 {
     return evaluate(context, function, 0, 0, isUndefined);
 }
 
-v8::Handle<v8::Value>
+QV4::Value
 QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
                                    const QV4::Value &function,
                                    int argc, QV4::Value *args,
