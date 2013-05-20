@@ -562,34 +562,6 @@ private:
 DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Script)
 
 /**
- * An error message.
- */
-class V8EXPORT Message : public QSharedData {
- public:
-    Message(const QString &message, const QString &resourceName, int lineNumber)
-        : m_message(message), m_resourceName(resourceName), m_lineNumber(lineNumber) {}
-
-  Handle<String> Get() const;
-  /**
-   * Returns the resource name for the script from where the function causing
-   * the error originates.
-   */
-  Handle<Value> GetScriptResourceName() const;
-
-  /**
-   * Returns the number, 1-based, of the line where the error occurred.
-   */
-  int GetLineNumber() const;
-
-private:
-  QString m_message;
-  QString m_resourceName;
-  int m_lineNumber;
-};
-
-DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Message)
-
-/**
  * Representation of a JavaScript stack trace. The information collected is a
  * snapshot of the execution stack and the information remains valid after
  * execution continues.
@@ -1976,15 +1948,11 @@ class V8EXPORT Isolate {
    */
   static Isolate* GetCurrent();
 
-  void setException(const QV4::Value &ex);
-
   static QV4::ExecutionEngine *GetEngine();
   static void SetEngine(QV4::ExecutionEngine *e);
 
   private:
       friend class Context;
-      friend class TryCatch;
-      TryCatch *tryCatch;
       QV4::ExecutionEngine *m_engine;
 };
 
@@ -2028,70 +1996,6 @@ class V8EXPORT V8 {
 //                                    Persistent<Value>* children,
 //                                    size_t length);
 
-};
-
-/**
- * An external exception handler.
- */
-class V8EXPORT TryCatch {
- public:
-  /**
-   * Creates a new try/catch block and registers it with v8.
-   */
-  TryCatch();
-
-  /**
-   * Unregisters and deletes this try/catch block.
-   */
-  ~TryCatch();
-
-  /**
-   * Returns true if an exception has been caught by this try/catch block.
-   */
-  bool HasCaught() const;
-
-  /**
-   * Throws the exception caught by this TryCatch in a way that avoids
-   * it being caught again by this same TryCatch.  As with ThrowException
-   * it is illegal to execute any JavaScript operations after calling
-   * ReThrow; the caller must return immediately to where the exception
-   * is caught.
-   */
-  Handle<Value> ReThrow();
-
-  /**
-   * Returns the exception caught by this try/catch block.  If no exception has
-   * been caught an empty handle is returned.
-   *
-   * The returned handle is valid until this TryCatch block has been destroyed.
-   */
-  Handle<Value> Exception() const;
-
-  /**
-   * Returns the message associated with this exception.  If there is
-   * no message associated an empty handle is returned.
-   *
-   * The returned handle is valid until this TryCatch block has been
-   * destroyed.
-   */
-  Handle<v8::Message> Message() const;
-
-  /**
-   * Clears any exceptions that may have been caught by this try/catch block.
-   * After this method has been called, HasCaught() will return false.
-   *
-   * It is not necessary to clear a try/catch block before using it again; if
-   * another exception is thrown the previously caught exception will just be
-   * overwritten.  However, it is often a good idea since it makes it easier
-   * to determine which operation threw a given exception.
-   */
-  void Reset();
-
-private:
-    friend class Isolate;
-    TryCatch *parent;
-    bool hasCaughtException;
-    Handle<Value> exception;
 };
 
 

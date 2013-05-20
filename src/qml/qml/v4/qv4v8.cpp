@@ -123,7 +123,6 @@ struct V8AccessorGetter: FunctionObject {
         try {
             result = getter->getter(getter->name.value(), info)->v4Value();
         } catch (QV4::Exception &e) {
-            Isolate::GetCurrent()->setException(e.value());
             e.accept(context);
         }
         return result;
@@ -160,7 +159,6 @@ struct V8AccessorSetter: FunctionObject {
         try {
             setter->setter(setter->name.value(), args[0], info);
         } catch (QV4::Exception &e) {
-            Isolate::GetCurrent()->setException(e.value());
             e.accept(context);
         }
         return QV4::Value::undefinedValue();
@@ -266,7 +264,6 @@ Handle<Value> Script::Run(Handle<Object> qml)
 
         result = eval->evalCall(engine->current, QV4::Value::undefinedValue(), &arg, 1, /*directCall*/ false);
     } catch (QV4::Exception &e) {
-        Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
         return Handle<Value>();
     }
@@ -282,22 +279,6 @@ Handle<Value> Script::Id()
 void Script::SetData(Handle<String> data)
 {
     Q_UNIMPLEMENTED();
-}
-
-
-Handle<String> Message::Get() const
-{
-    return QV4::Value::fromString(currentEngine()->current, m_message);
-}
-
-Handle<Value> Message::GetScriptResourceName() const
-{
-    return Value::fromV4Value(QV4::Value::fromString(currentEngine()->current, m_resourceName));
-}
-
-int Message::GetLineNumber() const
-{
-    return m_lineNumber;
 }
 
 
@@ -765,7 +746,6 @@ bool Object::Set(Handle<Value> key, Handle<Value> value, PropertyAttribute attri
         o->put(ctx, ValuePtr(&key)->toString(ctx), *ValuePtr(&value));
         // ### attribs
     } catch (QV4::Exception &e) {
-        Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
         result = false;
     }
@@ -782,7 +762,6 @@ bool Object::Set(uint32_t index, Handle<Value> value)
         o->putIndexed(ctx, index, *ValuePtr(&value));
         // ### attribs
     } catch (QV4::Exception &e) {
-        Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
         result = false;
     }
@@ -798,7 +777,6 @@ Handle<Value> Object::Get(Handle<Value> key)
     try {
         prop = o->get(ctx, ValuePtr(&key)->toString(ctx));
     } catch (QV4::Exception &e) {
-        Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
         return Handle<Value>();
     }
@@ -814,7 +792,6 @@ Handle<Value> Object::Get(uint32_t key)
     try {
         prop = o->getIndexed(ctx, key);
     } catch (QV4::Exception &e) {
-        Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
         return Handle<Value>();
     }
@@ -837,7 +814,6 @@ bool Object::Delete(Handle<String> key)
     try {
         result = o->deleteProperty(ctx, ValuePtr(&key)->asString());
     } catch (QV4::Exception &e) {
-        Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
     }
     return result;
@@ -860,7 +836,6 @@ bool Object::Delete(uint32_t index)
     try {
         result = o->deleteIndexedProperty(ctx, index);
     } catch (QV4::Exception &e) {
-        Isolate::GetCurrent()->setException(e.value());
         e.accept(ctx);
     }
     return result;
@@ -1028,7 +1003,6 @@ Handle<Value> Object::CallAsFunction(Handle<Object> recv, int argc, Handle<Value
                                    argc);
         return retval;
     } catch (QV4::Exception &e) {
-        Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
     }
     return Handle<Object>();
@@ -1046,7 +1020,6 @@ Handle<Value> Object::CallAsConstructor(int argc, Handle<Value> argv[])
                                         argc);
         return retval;
     } catch (QV4::Exception &e) {
-        Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
     }
     return Handle<Object>();
@@ -1098,7 +1071,6 @@ Handle<Object> Function::NewInstance() const
     try {
         result = f->construct(context, 0, 0);
     } catch (QV4::Exception &e) {
-        Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
         return Handle<Object>();
     }
@@ -1114,7 +1086,6 @@ Handle<Object> Function::NewInstance(int argc, Handle<Value> argv[]) const
     try {
         result = f->construct(context, reinterpret_cast<QV4::Value*>(argv), argc);
     } catch (QV4::Exception &e) {
-        Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
         return Handle<Object>();
     }
@@ -1132,7 +1103,6 @@ Handle<Value> Function::Call(Handle<Object> thisObj, int argc, Handle<Value> arg
         result = f->call(context, *ConstValuePtr(&thisObj),
                          reinterpret_cast<QV4::Value*>(argv), argc);
     } catch (QV4::Exception &e) {
-        Isolate::GetCurrent()->setException(e.value());
         e.accept(context);
         return Handle<Value>();
     }
@@ -1941,20 +1911,11 @@ Handle<Value> Exception::Error(Handle<String> message)
 static QThreadStorage<Isolate*> currentIsolate;
 
 Isolate::Isolate()
-    : tryCatch(0)
 {
 }
 
 Isolate::~Isolate()
 {
-}
-
-void Isolate::setException(const QV4::Value &ex)
-{
-    if (tryCatch) {
-        tryCatch->hasCaughtException = true;
-        tryCatch->exception = ex;
-    }
 }
 
 ExecutionEngine *Isolate::GetEngine()
@@ -2006,57 +1967,6 @@ void V8::RemoveGCPrologueCallback(GCPrologueCallback)
 {
     assert(!"RemoveGCPrologueCallback();");
 }
-
-//void V8::AddImplicitReferences(Persistent<Object> parent, QV4::PersistentValue *children, size_t length)
-//{
-//    // not required currently as we don't have weak Persistent references.
-//    // not having them will lead to some leaks in QQmlVMEMetaObejct, but shouldn't matter otherwise
-//    assert(!"AddImplicitReferences();");
-//}
-
-
-TryCatch::TryCatch()
-{
-    Isolate *i = Isolate::GetCurrent();
-
-    hasCaughtException = false;
-    parent = i->tryCatch;
-    i->tryCatch = this;
-}
-
-TryCatch::~TryCatch()
-{
-    Isolate *i = Isolate::GetCurrent();
-    i->tryCatch = parent;
-}
-
-bool TryCatch::HasCaught() const
-{
-    return hasCaughtException;
-}
-
-Handle<Value> TryCatch::ReThrow()
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
-}
-
-Handle<Value> TryCatch::Exception() const
-{
-    return exception;
-}
-
-Handle<Message> TryCatch::Message() const
-{
-    Q_UNIMPLEMENTED();
-    return Handle<v8::Message>(new v8::Message(exception->v4Value().toQString(), QString(), 0));
-}
-
-void TryCatch::Reset()
-{
-    hasCaughtException = false;
-}
-
 
 Handle<Value> Context::GetCallingScriptData()
 {

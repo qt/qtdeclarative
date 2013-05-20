@@ -305,30 +305,6 @@ void QQmlJavaScriptExpression::exceptionToError(const QV4::Exception &e, QQmlErr
     error.setDescription(e.value().toQString());
 }
 
-void QQmlJavaScriptExpression::exceptionToError(v8::Handle<v8::Message> message, QQmlError &error)
-{
-    Q_ASSERT(!message.IsEmpty());
-
-    v8::Handle<v8::Value> name = message->GetScriptResourceName();
-    v8::Handle<v8::String> description = message->Get();
-    int lineNumber = message->GetLineNumber();
-
-    v8::Handle<v8::String> file = name->IsString()?name->ToString():v8::Handle<v8::String>();
-    if (file.IsEmpty() || file->Length() == 0)
-        error.setUrl(QUrl());
-    else
-        error.setUrl(QUrl(file->v4Value().toQString()));
-
-    error.setLine(lineNumber);
-    error.setColumn(-1);
-
-    QString qDescription = description->v4Value().toQString();
-    if (qDescription.startsWith(QLatin1String("Uncaught ")))
-        qDescription = qDescription.mid(9 /* strlen("Uncaught ") */);
-
-    error.setDescription(qDescription);
-}
-
 // Callee owns the persistent handle
 QV4::PersistentValue
 QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,

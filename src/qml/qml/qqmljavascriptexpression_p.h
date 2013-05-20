@@ -147,7 +147,6 @@ public:
     QQmlDelayedError *delayedError();
 
     static void exceptionToError(const QV4::Exception &e, QQmlError &);
-    static void exceptionToError(v8::Handle<v8::Message>, QQmlError &);
     static QV4::PersistentValue evalFunction(QQmlContextData *ctxt, QObject *scope,
                                                      const QString &code, const QString &filename,
                                                      quint16 line,
