@@ -43,6 +43,7 @@
 
 #include <private/qqmlexpression_p.h>
 #include <private/qv4value_p.h>
+#include <private/qv4functionobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -120,22 +121,23 @@ void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
 
 v8::Handle<v8::Value>
 QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
-                                   v8::Handle<v8::Function> function, bool *isUndefined)
+                                   const QV4::Value &function, bool *isUndefined)
 {
     return evaluate(context, function, 0, 0, isUndefined);
 }
 
 v8::Handle<v8::Value>
 QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
-                                   v8::Handle<v8::Function> function,
-                                   int argc, v8::Handle<v8::Value> args[],
+                                   const QV4::Value &function,
+                                   int argc, QV4::Value *args,
                                    bool *isUndefined)
 {
     Q_ASSERT(context && context->engine);
 
-    if (function.IsEmpty() || function->IsUndefined()) {
-        if (isUndefined) *isUndefined = true;
-        return v8::Handle<v8::Value>();
+    if (function.isEmpty() || function.isUndefined()) {
+        if (isUndefined)
+            *isUndefined = true;
+        return QV4::Value::emptyValue();
     }
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
@@ -166,30 +168,35 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
         ep->sharedScope = scopeObject();
     }
 
-    v8::Handle<v8::Value> result;
-    {
-        v8::TryCatch try_catch;
-        v8::Handle<v8::Object> This = v8::Value::fromV4Value(ep->v8engine()->global());
+    QV4::Value result;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionContext *ctx = v4->current;
+    try {
+        QV4::Value This = ep->v8engine()->global();
         if (scopeObject() && requiresThisObject()) {
-            v8::Handle<v8::Value> value = ep->v8engine()->newQObject(scopeObject());
-            if (value->IsObject()) This = v8::Handle<v8::Object>::Cast(value);
+            QV4::Value value = ep->v8engine()->newQObject(scopeObject());
+            if (value.isObject())
+                This = value;
         }
 
-        result = function->Call(This, argc, args);
+        result = function.asFunctionObject()->call(ctx, This, args, argc);
 
         if (isUndefined)
-            *isUndefined = try_catch.HasCaught() || result->IsUndefined();
+            *isUndefined = result.isUndefined();
 
-        if (watcher.wasDeleted()) {
-        } else if (try_catch.HasCaught()) {
-            v8::Handle<v8::Message> message = try_catch.Message();
-            if (!message.IsEmpty()) {
-                delayedError()->setMessage(message);
+        if (!watcher.wasDeleted() && hasDelayedError())
+            delayedError()->clearError();
+    } catch (QV4::Exception &e) {
+        e.accept(ctx);
+        if (isUndefined)
+            *isUndefined = true;
+        if (!watcher.wasDeleted()) {
+            if (!e.value().isEmpty()) {
+                // ### line number
+                delayedError()->setErrorDescription(e.value().toQString());
             } else {
                 if (hasDelayedError()) delayedError()->clearError();
             }
-        } else {
-            if (hasDelayedError()) delayedError()->clearError();
         }
     }
 

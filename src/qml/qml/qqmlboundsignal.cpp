@@ -225,7 +225,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             int *argsTypes = QQmlPropertyCache::methodParameterTypes(m_target, methodIndex, dummy, 0);
             int argCount = argsTypes ? m_parameterCountForJS : 0;
 
-            QVarLengthArray<v8::Handle<v8::Value>, 9> args(argCount);
+            QVarLengthArray<QV4::Value, 9> args(argCount);
 
             for (int ii = 0; ii < argCount; ++ii) {
                 int type = argsTypes[ii + 1];
@@ -236,7 +236,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                     args[ii] = engine->fromVariant(*((QVariant *)a[ii + 1]));
                 } else if (type == QMetaType::Int) {
                     //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
-                    args[ii] = v8::Integer::New(*reinterpret_cast<const int*>(a[ii + 1]));
+                    args[ii] = QV4::Value::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
                 } else if (type == qMetaTypeId<QQmlV4Handle>()) {
                     args[ii] = reinterpret_cast<QQmlV4Handle *>(a[ii + 1])->toValue();
                 } else if (ep->isQObject(type)) {

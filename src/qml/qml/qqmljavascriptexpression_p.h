@@ -110,10 +110,10 @@ public:
 
     QQmlJavaScriptExpression(VTable *vtable);
 
-    v8::Handle<v8::Value> evaluate(QQmlContextData *, v8::Handle<v8::Function>,
+    v8::Handle<v8::Value> evaluate(QQmlContextData *, const QV4::Value &function,
                                   bool *isUndefined);
-    v8::Handle<v8::Value> evaluate(QQmlContextData *, v8::Handle<v8::Function>,
-                                  int argc, v8::Handle<v8::Value> args[],
+    v8::Handle<v8::Value> evaluate(QQmlContextData *, const QV4::Value &function,
+                                  int argc, QV4::Value *args,
                                   bool *isUndefined);
 
     inline bool requiresThisObject() const;
