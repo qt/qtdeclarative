@@ -927,7 +927,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 QQmlVMEMetaData::MethodData *data = metaData->methodData() + id;
 
-                QVarLengthArray<QV4::Value, 9> args;
+                QVarLengthArray<QV4::Value, 9> args(data->parameterCount);
 
                 for (int ii = 0; ii < data->parameterCount; ++ii)
                     args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
