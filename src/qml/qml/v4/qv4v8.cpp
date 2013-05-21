@@ -307,9 +307,9 @@ Handle<StackTrace> StackTrace::CurrentStackTrace(int frame_limit, StackTrace::St
     QV4::ExecutionContext *current = engine->current;
     while (current && frame_limit) {
         if (CallContext *c = current->asCallContext()) {
-            StackFrame *frame = new StackFrame(Value::fromV4Value(QV4::Value::fromString(engine->id_null)),
-                                               Value::fromV4Value(QV4::Value::fromString(c->function->name)),
-                                               0, 0);
+            StackFrame *frame = new StackFrame(QV4::Value::fromString(current, c->currentFileName().url()),
+                                               QV4::Value::fromString(c->function->name),
+                                               c->currentLineNumber(), 0);
             trace->frames.append(v8::Handle<v8::StackFrame>(frame));
             --frame_limit;
         }
