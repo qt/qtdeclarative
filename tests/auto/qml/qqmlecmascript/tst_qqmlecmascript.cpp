@@ -2299,13 +2299,13 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->actuals().count(), 0);
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_int()", v8::Integer::New(6)));
+    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_int()", QV4::Value::fromInt32(6)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 1);
     QCOMPARE(o->actuals().count(), 0);
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_real()", v8::Number::New(19.75)));
+    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_real()", QV4::Value::fromDouble(19.75)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 2);
     QCOMPARE(o->actuals().count(), 0);
@@ -2655,7 +2655,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->actuals().at(0), QVariant(9));
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_default(10)", v8::Integer::New(19)));
+    QVERIFY(EVALUATE_VALUE("object.method_default(10)", QV4::Value::fromInt32(19)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 20);
     QCOMPARE(o->actuals().count(), 2);
@@ -2663,7 +2663,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->actuals().at(1), QVariant(19));
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_default(10, 13)", v8::Integer::New(13)));
+    QVERIFY(EVALUATE_VALUE("object.method_default(10, 13)", QV4::Value::fromInt32(13)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 20);
     QCOMPARE(o->actuals().count(), 2);
