@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.1
 import QtTest 1.0
 
 Item {
@@ -63,6 +63,9 @@ Item {
         name: "FontLoader"
 
         function test_fontloading() {
+            if (Qt.platform.os === "mac")
+                skip("Skipped for QTBUG-25306")
+
             compare(fontloader.status, FontLoader.Null)
             compare(testinput.font.family, "")
             fontloader.source = "tarzeau_ocr_a.ttf";
@@ -78,6 +81,9 @@ Item {
         }
 
         function test_fontswitching() {
+            if (Qt.platform.os === "mac")
+                skip("Skipped for QTBUG-25306")
+
             compare(fontswitch.status, FontLoader.Null)
             fontswitch.source = "tarzeau_ocr_a.ttf";
             tryCompare(fontswitch, 'status', FontLoader.Ready)
