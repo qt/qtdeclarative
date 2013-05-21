@@ -966,7 +966,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
 /*
   If asynchronous is true or the component is being loaded asynchronously due
   to an ancestor being loaded asynchronously, item() may return 0.  In this
-  case itemCreated() will be emitted when the item is available.  The item
+  case createdItem() will be emitted when the item is available.  The item
   at this stage does not have any references, so item() must be called again
   to ensure a reference is held.  Any call to item() which returns a valid item
   must be matched by a call to release() in order to destroy the item.
