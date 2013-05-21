@@ -780,11 +780,16 @@ void QQmlDelegateModelPrivate::emitDestroyingPackage(QQuickPackage *package)
         QQmlDelegateModelGroupPrivate::get(m_groups[i])->destroyingPackage(package);
 }
 
+static bool isDoneIncubating(QQmlIncubator::Status status)
+{
+     return status == QQmlIncubator::Ready || status == QQmlIncubator::Error;
+}
+
 void QQDMIncubationTask::statusChanged(Status status)
 {
     if (vdm) {
         vdm->incubatorStatusChanged(this, status);
-    } else if (status == QQmlIncubator::Ready || status == QQmlIncubator::Error) {
+    } else if (isDoneIncubating(status)) {
         Q_ASSERT(incubating);
         // The model was deleted from under our feet, cleanup ourselves
         if (incubating->object) {
@@ -824,7 +829,7 @@ void QQmlDelegateModelPrivate::removeCacheItem(QQmlDelegateModelItem *cacheItem)
 void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incubationTask, QQmlIncubator::Status status)
 {
     Q_Q(QQmlDelegateModel);
-    if (status != QQmlIncubator::Ready && status != QQmlIncubator::Error)
+    if (!isDoneIncubating(status))
         return;
 
     QQmlDelegateModelItem *cacheItem = incubationTask->incubating;
@@ -951,7 +956,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
 
     // Remove the temporary reference count.
     cacheItem->scriptRef -= 1;
-    if (cacheItem->object)
+    if (cacheItem->object && (!cacheItem->incubationTask || isDoneIncubating(cacheItem->incubationTask->status())))
         return cacheItem->object;
 
     cacheItem->releaseObject();
