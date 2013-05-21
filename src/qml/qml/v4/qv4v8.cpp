@@ -614,16 +614,6 @@ QV4::String *String::asV4String() const
     return v->stringValue();
 }
 
-String::AsciiValue::AsciiValue(Handle<v8::Value> obj)
-{
-    str = obj->ToString()->asQString().toLatin1();
-}
-
-String::Value::Value(Handle<v8::Value> obj)
-{
-    str = obj->ToString()->asQString();
-}
-
 
 struct ExternalResourceWrapper : public QV4::Object::ExternalResource
 {

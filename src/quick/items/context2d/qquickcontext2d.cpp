@@ -127,9 +127,9 @@ static const double Q_PI   = 3.14159265358979323846;   // pi
 #define CHECK_RGBA(c) (c == '-' || c == '.' || (c >=0 && c <= 9))
 QColor qt_color_from_string(v8::Handle<v8::Value> name)
 {
-    v8::String::AsciiValue str(name);
+    QByteArray str = name->v4Value().toQString().toUtf8();
 
-    char *p = *str;
+    char *p = str.data();
     int len = str.length();
     //rgb/hsl color string has at least 7 characters
     if (!p || len > 255 || len <= 7)

@@ -1182,16 +1182,7 @@ v8::Handle<v8::String> QHashedV8String::string() const
 
 QString QHashedV8String::toString() const
 {
-    QString result;
-    result.reserve(m_hash.length);
-
-    v8::String::Value value(m_string);
-    Q_ASSERT(*value != NULL);
-    uint16_t* string = *value;
-    for (int i = 0; i < m_hash.length; ++i)
-        result.append(string[i]);
-
-    return result;
+    return m_string->v4Value().toQString();
 }
 
 QHashedStringRef::QHashedStringRef() 

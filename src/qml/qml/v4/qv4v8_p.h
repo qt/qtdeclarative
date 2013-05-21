@@ -942,48 +942,6 @@ class V8EXPORT String : public Value {
    */
   static Handle<String> NewExternal(ExternalStringResource* resource);
 
-  /**
-   * Converts an object to an ASCII string.
-   * Useful if you want to print the object.
-   * If conversion to a string fails (eg. due to an exception in the toString()
-   * method of the object) then the length() method returns 0 and the * operator
-   * returns NULL.
-   */
-  class V8EXPORT AsciiValue {
-   public:
-    explicit AsciiValue(Handle<v8::Value> obj);
-    ~AsciiValue() {}
-    char* operator*() { return str.data(); }
-    const char* operator*() const { return str.constData(); }
-    int length() const { return str.length(); }
-   private:
-    QByteArray str;
-
-    // Disallow copying and assigning.
-    AsciiValue(const AsciiValue&);
-    void operator=(const AsciiValue&);
-  };
-
-  /**
-   * Converts an object to a two-byte string.
-   * If conversion to a string fails (eg. due to an exception in the toString()
-   * method of the object) then the length() method returns 0 and the * operator
-   * returns NULL.
-   */
-  class V8EXPORT Value {
-   public:
-    explicit Value(Handle<v8::Value> obj);
-    ~Value() {}
-    uint16_t* operator*() { return (uint16_t *)str.data(); }
-    const uint16_t* operator*() const { return str.utf16(); }
-    int length() const { return str.length(); }
-   private:
-    QString str;
-
-    // Disallow copying and assigning.
-    Value(const Value&);
-    void operator=(const Value&);
-  };
 
       QString asQString() const;
       QV4::String *asV4String() const;

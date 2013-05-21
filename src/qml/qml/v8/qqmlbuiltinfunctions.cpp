@@ -74,13 +74,13 @@ enum ConsoleLogTypes {
     Error
 };
 
-static void jsContext(v8::Handle<v8::Value> *file, int *line, v8::Handle<v8::Value> *function) {
+static void jsContext(QString &file, int *line, QString &function) {
     v8::Handle<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
     if (stackTrace->GetFrameCount()) {
         v8::Handle<v8::StackFrame> frame = stackTrace->GetFrame(0);
-        *file = frame->GetScriptName();
+        file = frame->GetScriptName()->v4Value().toQString();
         *line = frame->GetLineNumber();
-        *function = frame->GetFunctionName();
+        function = frame->GetFunctionName()->v4Value().toQString();
     }
 }
 
@@ -127,24 +127,22 @@ QV4::Value console(ConsoleLogTypes logType, const v8::Arguments &args,
         result.append(jsStack());
     }
 
-    v8::Handle<v8::Value> fileHandle;
-    v8::Handle<v8::Value> functionHandle;
+    QString file;
+    QString function;
     int line;
 
-    jsContext(&fileHandle, &line, &functionHandle);
+    jsContext(file, &line, function);
 
+    QMessageLogger logger(file.toUtf8().constData(), line, function.toUtf8().constData());
     switch (logType) {
     case Log:
-        QMessageLogger(*v8::String::AsciiValue(fileHandle), line,
-                       *v8::String::AsciiValue(functionHandle)).debug("%s", qPrintable(result));
+        logger.debug("%s", qPrintable(result));
         break;
     case Warn:
-        QMessageLogger(*v8::String::AsciiValue(fileHandle), line,
-                       *v8::String::AsciiValue(functionHandle)).warning("%s", qPrintable(result));
+        logger.warning("%s", qPrintable(result));
         break;
     case Error:
-        QMessageLogger(*v8::String::AsciiValue(fileHandle), line,
-                       *v8::String::AsciiValue(functionHandle)).critical("%s", qPrintable(result));
+        logger.critical("%s", qPrintable(result));
         break;
     default:
         break;
@@ -185,20 +183,18 @@ QV4::Value consoleProfile(const v8::Arguments &args)
 
 
 
-    v8::Handle<v8::Value> file;
-    v8::Handle<v8::Value> function;
+    QString file;
+    QString function;
     int line;
-    jsContext(&file, &line, &function);
+    jsContext(file, &line, function);
 
+    QMessageLogger logger(file.toUtf8().constData(), line, function.toUtf8().constData());
     if (QQmlProfilerService::startProfiling()) {
         QV8ProfilerService::instance()->startProfiling(title);
 
-        QMessageLogger(*v8::String::AsciiValue(file), line,
-                       *v8::String::AsciiValue(function)).debug("Profiling started.");
+        logger.debug("Profiling started.");
     } else {
-        QMessageLogger(*v8::String::AsciiValue(file), line,
-                       *v8::String::AsciiValue(function)).warning(
-                    "Profiling is already in progress. First, end current profiling session.");
+        logger.warning("Profiling is already in progress. First, end current profiling session.");
     }
 
     return QV4::Value::undefinedValue();
@@ -212,10 +208,12 @@ QV4::Value consoleProfileEnd(const v8::Arguments &args)
     Q_UNUSED(args);
     QString title;
 
-    v8::Handle<v8::Value> file;
-    v8::Handle<v8::Value> function;
+    QString file;
+    QString function;
     int line;
-    jsContext(&file, &line, &function);
+    jsContext(file, &line, function);
+
+    QMessageLogger logger(file.toUtf8().constData(), line, function.toUtf8().constData());
 
     if (QQmlProfilerService::stopProfiling()) {
         QV8ProfilerService *profiler = QV8ProfilerService::instance();
@@ -223,11 +221,9 @@ QV4::Value consoleProfileEnd(const v8::Arguments &args)
         QQmlProfilerService::sendProfilingData();
         profiler->sendProfilingData();
 
-        QMessageLogger(*v8::String::AsciiValue(file), line,
-                       *v8::String::AsciiValue(function)).debug("Profiling ended.");
+        logger.debug("Profiling ended.");
     } else {
-        QMessageLogger(*v8::String::AsciiValue(file), line,
-                       *v8::String::AsciiValue(function)).warning("Profiling was not started.");
+        logger.warning("Profiling was not started.");
     }
 
     return QV4::Value::undefinedValue();
@@ -290,13 +286,14 @@ QV4::Value consoleTrace(const v8::Arguments &args)
 
     QString stack = jsStack();
 
-    v8::Handle<v8::Value> file;
-    v8::Handle<v8::Value> function;
+    QString file;
+    QString function;
     int line;
-    jsContext(&file, &line, &function);
+    jsContext(file, &line, function);
 
-    QMessageLogger(*v8::String::AsciiValue(file), line, *v8::String::AsciiValue(function)).debug(
-                "%s", qPrintable(stack));
+    QMessageLogger logger(file.toUtf8().constData(), line, function.toUtf8().constData());
+
+    logger.debug("%s", qPrintable(stack));
     return QV4::Value::undefinedValue();
 }
 
@@ -322,13 +319,13 @@ QV4::Value consoleAssert(const v8::Arguments &args)
 
         QString stack = jsStack();
 
-        v8::Handle<v8::Value> file;
-        v8::Handle<v8::Value> function;
+        QString file;
+        QString function;
         int line;
-        jsContext(&file, &line, &function);
+        jsContext(file, &line, function);
 
-        QMessageLogger(*v8::String::AsciiValue(file), line, *v8::String::AsciiValue(function)).critical(
-                    "%s\n%s", qPrintable(message), qPrintable(stack));
+        QMessageLogger logger(file.toUtf8().constData(), line, function.toUtf8().constData());
+        logger.critical("%s\n%s", qPrintable(message), qPrintable(stack));
 
     }
     return QV4::Value::undefinedValue();

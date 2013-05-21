@@ -740,7 +740,7 @@ void QQuickCanvasItem::getContext(QQmlV4Function *args)
         return;
     }
 
-    QString contextId = QString::fromUtf16(*v8::String::Value((*args)[0]));
+    QString contextId = (*args)[0].toQString();
 
     if (d->context != 0) {
         if (d->context->contextNames().contains(contextId, Qt::CaseInsensitive)) {
