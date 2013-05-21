@@ -1245,6 +1245,7 @@ QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *s
     try {
         script->m_program->Run(qmlglobal);
     } catch (QV4::Exception &e) {
+        e.accept(ctx);
         QQmlError error;
         QQmlExpressionPrivate::exceptionToError(e, error);
         if (error.isValid())

@@ -343,11 +343,9 @@ static QV4::Value qmlsqldatabase_changeVersion(const v8::Arguments& args)
 
         QV4::Value callbackArgs[] = { instance->v4Value() };
         QV4::FunctionObject *f = callback->v4Value().asFunctionObject();
-        QV4::ExecutionContext *ctx = f->engine()->current;
         try {
             f->call(engine->global(), callbackArgs, 1);
-        } catch (QV4::Exception &e) {
-            e.accept(ctx);
+        } catch (QV4::Exception &) {
             db.rollback();
             throw;
         }
@@ -397,12 +395,10 @@ static QV4::Value qmlsqldatabase_transaction_shared(const v8::Arguments& args, b
     db.transaction();
     QV4::FunctionObject *f = callback->v4Value().asFunctionObject();
     if (f) {
-        QV4::ExecutionContext *ctx = f->engine()->current;
         QV4::Value callbackArgs[] = { instance->v4Value() };
         try {
             f->call(engine->global(), callbackArgs, 1);
-        } catch (QV4::Exception &e) {
-            e.accept(ctx);
+        } catch (QV4::Exception &) {
             q->inTransaction = false;
             db.rollback();
             throw;
@@ -684,14 +680,8 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     if (created) {
         QV4::FunctionObject *f = dbcreationCallback->v4Value().asFunctionObject();
         if (f) {
-            QV4::ExecutionContext *ctx = f->engine()->current;
             QV4::Value args[] = { instance->v4Value() };
-            try {
-                f->call(engine->global(), args, 1);
-            } catch (QV4::Exception &e) {
-                e.accept(ctx);
-                throw;
-            }
+            f->call(engine->global(), args, 1);
         }
     }
 
