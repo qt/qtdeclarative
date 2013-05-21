@@ -431,7 +431,7 @@ v8::Handle<v8::Script> QV8Engine::qmlModeCompile(const QString &source,
     v8::Handle<v8::String> v8source = QV4::Value::fromString(m_v4Engine->newString(source));
     v8::Handle<v8::String> v8fileName = QV4::Value::fromString(m_v4Engine->newString(fileName));
 
-    v8::ScriptOrigin origin(v8fileName, v8::Integer::New(lineNumber - 1));
+    v8::ScriptOrigin origin(v8fileName, lineNumber - 1);
 
     v8::Handle<v8::Script> script = v8::Script::Compile(v8source, &origin, 0, v8::Handle<v8::String>(),
                                                        v8::Script::QmlMode);
@@ -451,7 +451,7 @@ v8::Handle<v8::Script> QV8Engine::qmlModeCompile(const char *source, int sourceL
     v8::Handle<v8::String> v8source = QV4::Value::fromString(m_v4Engine->newString(QString::fromUtf8(source, sourceLength)));
     v8::Handle<v8::String> v8fileName = QV4::Value::fromString(m_v4Engine->newString(fileName));
 
-    v8::ScriptOrigin origin(v8fileName, v8::Integer::New(lineNumber - 1));
+    v8::ScriptOrigin origin(v8fileName, lineNumber - 1);
 
     v8::Handle<v8::Script> script = v8::Script::Compile(v8source, &origin, 0, v8::Handle<v8::String>(),
                                                        v8::Script::QmlMode);
@@ -570,11 +570,11 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
         QMetaEnum enumerator = qtMetaObject->enumerator(ii);
         for (int jj = 0; jj < enumerator.keyCount(); ++jj) {
-            qt->Set(v8::String::New(enumerator.key(jj)), v8::Integer::New(enumerator.value(jj)));
+            qt->Set(v8::String::New(enumerator.key(jj)), QV4::Value::fromInt32(enumerator.value(jj)));
         }
     }
-    qt->Set(v8::String::New("Asynchronous"), v8::Integer::New(0));
-    qt->Set(v8::String::New("Synchronous"), v8::Integer::New(1));
+    qt->Set(v8::String::New("Asynchronous"), QV4::Value::fromInt32(0));
+    qt->Set(v8::String::New("Synchronous"), QV4::Value::fromInt32(1));
 
     qt->Set(v8::String::New("include"), V8FUNCTION(QV8Include::include, this));
     qt->Set(v8::String::New("isQtObject"), V8FUNCTION(isQtObject, this));

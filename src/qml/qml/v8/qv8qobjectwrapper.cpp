@@ -247,9 +247,9 @@ struct ReadAccessor {
 };
 
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, int v)
-{ return v8::Integer::New(v); }
+{ return QV4::Value::fromInt32(v); }
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, uint v)
-{ return v8::Integer::NewFromUnsigned(v); }
+{ return QV4::Value::fromUInt32(v); }
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, bool v)
 { return v8::Boolean::New(v); }
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *e, const QString &v)
@@ -819,13 +819,13 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Setter(v8::Handle<v8::String> property,
     return value;
 }
 
-v8::Handle<v8::Integer> QV8QObjectWrapper::Query(v8::Handle<v8::String> property,
+v8::Handle<v8::Value> QV8QObjectWrapper::Query(v8::Handle<v8::String> property,
                                                  const v8::AccessorInfo &info)
 {
     QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
 
     if (resource->object.isNull()) 
-        return v8::Handle<v8::Integer>();
+        return v8::Handle<v8::Value>();
 
     QV8Engine *engine = resource->engine;
     QObject *object = resource->object;
@@ -838,11 +838,11 @@ v8::Handle<v8::Integer> QV8QObjectWrapper::Query(v8::Handle<v8::String> property
     result = QQmlPropertyCache::property(engine->engine(), object, propertystring, context, local);
 
     if (!result)
-        return v8::Handle<v8::Integer>();
+        return v8::Handle<v8::Value>();
     else if (!result->isWritable() && !result->isQList())
-        return v8::Integer::New(v8::ReadOnly | v8::DontDelete);
+        return QV4::Value::fromInt32(v8::ReadOnly | v8::DontDelete);
     else
-        return v8::Integer::New(v8::DontDelete);
+        return QV4::Value::fromInt32(v8::DontDelete);
 }
 
 v8::Handle<v8::Array> QV8QObjectWrapper::Enumerator(const v8::AccessorInfo &info)

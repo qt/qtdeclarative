@@ -2436,8 +2436,8 @@ v8::Handle<v8::Value> ctx2d_imageData_width(v8::Handle<v8::String>, const v8::Ac
 {
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This()->GetInternalField(0)->ToObject());
     if (!r)
-        return v8::Integer::New(0);
-    return v8::Integer::New(r->image.width());
+        return QV4::Value::fromInt32(0);
+    return QV4::Value::fromInt32(r->image.width());
 }
 
 /*!
@@ -2448,9 +2448,9 @@ v8::Handle<v8::Value> ctx2d_imageData_height(v8::Handle<v8::String>, const v8::A
 {
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This()->GetInternalField(0)->ToObject());
     if (!r)
-        return v8::Integer::New(0);
+        return QV4::Value::fromInt32(0);
 
-    return v8::Integer::New(r->image.height());
+    return QV4::Value::fromInt32(r->image.height());
 }
 
 /*!
@@ -2485,7 +2485,7 @@ v8::Handle<v8::Value> ctx2d_pixelArray_length(v8::Handle<v8::String>, const v8::
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This());
     if (!r || r->image.isNull()) return QV4::Value::undefinedValue();
 
-    return v8::Integer::New(r->image.width() * r->image.height() * 4);
+    return QV4::Value::fromInt32(r->image.width() * r->image.height() * 4);
 }
 
 v8::Handle<v8::Value> ctx2d_pixelArray_indexed(uint32_t index, const v8::AccessorInfo& args)
@@ -2500,13 +2500,13 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed(uint32_t index, const v8::Accesso
         pixel += col;
         switch (index % 4) {
         case 0:
-            return v8::Integer::New(qRed(*pixel));
+            return QV4::Value::fromInt32(qRed(*pixel));
         case 1:
-            return v8::Integer::New(qGreen(*pixel));
+            return QV4::Value::fromInt32(qGreen(*pixel));
         case 2:
-            return v8::Integer::New(qBlue(*pixel));
+            return QV4::Value::fromInt32(qBlue(*pixel));
         case 3:
-            return v8::Integer::New(qAlpha(*pixel));
+            return QV4::Value::fromInt32(qAlpha(*pixel));
         }
     }
     return QV4::Value::undefinedValue();

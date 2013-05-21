@@ -173,7 +173,7 @@ v8::Handle<v8::Value> QV8ListWrapper::LengthGetter(v8::Handle<v8::String> proper
 
     quint32 count = resource->property.count?resource->property.count(&resource->property):0;
 
-    return v8::Integer::NewFromUnsigned(count);
+    return QV4::Value::fromUInt32(count);
 }
 
 v8::Handle<v8::Array> QV8ListWrapper::Enumerator(const v8::AccessorInfo &info)

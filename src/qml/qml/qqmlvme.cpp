@@ -420,7 +420,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         // Store a literal value in a var property.
         // We deliberately do not use string converters here
         QML_STORE_VAR(StoreVar, ep->v8engine()->fromVariant(PRIMITIVES.at(instr.value)));
-        QML_STORE_VAR(StoreVarInteger, v8::Integer::New(instr.value));
+        QML_STORE_VAR(StoreVarInteger, QV4::Value::fromInt32(instr.value));
         QML_STORE_VAR(StoreVarDouble, v8::Number::New(instr.value));
         QML_STORE_VAR(StoreVarBool, v8::Boolean::New(instr.value));
 

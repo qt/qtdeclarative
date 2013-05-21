@@ -92,7 +92,7 @@ static v8::Handle<v8::Value> get_index(v8::Handle<v8::String>, const v8::Accesso
     QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
     V8ASSERT_TYPE(data, "Not a valid VisualData object");
 
-    return v8::Int32::New(data->index);
+    return QV4::Value::fromInt32(data->index);
 }
 
 template <typename T, typename M> static void setModelDataType(QMetaObjectBuilder *builder, M *metaType)
@@ -233,7 +233,7 @@ public:
                     v8::String::New(propertyName.constData(), propertyName.length()),
                     QQmlDMCachedModelData::get_property,
                     QQmlDMCachedModelData::set_property,
-                    v8::Int32::New(propertyId));
+                    QV4::Value::fromInt32(propertyId));
         }
     }
 

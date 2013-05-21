@@ -261,7 +261,7 @@ v8::Handle<v8::Value> QV8SequenceWrapper::LengthGetter(v8::Handle<v8::String> pr
     Q_UNUSED(property);
     QV8SequenceResource *sr = v8_resource_cast<QV8SequenceResource>(info.This());
     Q_ASSERT(sr);
-    return v8::Integer::NewFromUnsigned(sr->lengthGetter());
+    return QV4::Value::fromUInt32(sr->lengthGetter());
 }
 
 void QV8SequenceWrapper::LengthSetter(v8::Handle<v8::String> property, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)

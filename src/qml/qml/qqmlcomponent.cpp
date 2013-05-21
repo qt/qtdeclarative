@@ -1423,7 +1423,7 @@ v8::Handle<v8::Value> QV8IncubatorResource::StatusGetter(v8::Handle<v8::String>,
                                                          const v8::AccessorInfo& info)
 {
     QV8IncubatorResource *r = v8_resource_check<QV8IncubatorResource>(info.This());
-    return v8::Integer::NewFromUnsigned(r->status());
+    return QV4::Value::fromUInt32(r->status());
 }
 
 v8::Handle<v8::Value> QV8IncubatorResource::StatusChangedGetter(v8::Handle<v8::String>,

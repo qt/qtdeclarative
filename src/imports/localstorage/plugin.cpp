@@ -62,7 +62,7 @@
 #define V8THROW_SQL(error, desc) \
 { \
     v8::Handle<v8::Value> v = v8::Exception::Error(engine->toString(desc)); \
-    v->ToObject()->Set(v8::String::New("code"), v8::Integer::New(error)); \
+    v->ToObject()->Set(v8::String::New("code"), QV4::Value::fromInt32(error)); \
     v8::ThrowException(v); \
     return v8::Handle<v8::Value>(); \
 }
@@ -78,7 +78,7 @@
 #define V8THROW_SQL_VOID(error, desc) \
 { \
     v8::Handle<v8::Value> v = v8::Exception::Error(engine->toString(desc)); \
-    v->ToObject()->Set(v8::String::New("code"), v8::Integer::New(error)); \
+    v->ToObject()->Set(v8::String::New("code"), QV4::Value::fromInt32(error)); \
     v8::ThrowException(v); \
     return; \
 }
@@ -157,7 +157,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_rows_length(v8::Handle<v8::String> /
             s = 0;
         }
     }
-    return v8::Integer::New(s);
+    return QV4::Value::fromInt32(s);
 }
 
 static v8::Handle<v8::Value> qmlsqldatabase_rows_forwardOnly(v8::Handle<v8::String> /* property */,

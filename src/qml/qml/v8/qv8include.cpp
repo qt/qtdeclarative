@@ -81,12 +81,12 @@ v8::Handle<v8::Object> QV8Include::resultValue(Status status)
 {
     // XXX It seems inefficient to create this object from scratch each time.
     v8::Handle<v8::Object> result = v8::Object::New();
-    result->Set(v8::String::New("OK"), v8::Integer::New(Ok));
-    result->Set(v8::String::New("LOADING"), v8::Integer::New(Loading));
-    result->Set(v8::String::New("NETWORK_ERROR"), v8::Integer::New(NetworkError));
-    result->Set(v8::String::New("EXCEPTION"), v8::Integer::New(Exception));
+    result->Set(v8::String::New("OK"), QV4::Value::fromInt32(Ok));
+    result->Set(v8::String::New("LOADING"), QV4::Value::fromInt32(Loading));
+    result->Set(v8::String::New("NETWORK_ERROR"), QV4::Value::fromInt32(NetworkError));
+    result->Set(v8::String::New("EXCEPTION"), QV4::Value::fromInt32(Exception));
 
-    result->Set(v8::String::New("status"), v8::Integer::New(status));
+    result->Set(v8::String::New("status"), QV4::Value::fromInt32(status));
 
     return result;
 }
@@ -151,14 +151,14 @@ void QV8Include::finished()
         //m_engine->contextWrapper()->addSubContext(m_qmlglobal.value(), script, importContext);
         try {
             script->Run(m_qmlglobal.value());
-            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), v8::Integer::New(Ok));
+            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), QV4::Value::fromInt32(Ok));
         } catch (QV4::Exception &e) {
             e.accept(ctx);
-            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), v8::Integer::New(Exception));
+            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), QV4::Value::fromInt32(Exception));
             v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("exception"), e.value());
         }
     } else {
-        v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), v8::Integer::New(NetworkError));
+        v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), QV4::Value::fromInt32(NetworkError));
     }
 
     callback(m_engine, m_callbackFunction.value(), m_resultObject.value());

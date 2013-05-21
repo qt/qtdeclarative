@@ -112,13 +112,9 @@ class Number;
 class NumberObject;
 class Object;
 class Array;
-class Int32;
-class Uint32;
 class External;
 class Primitive;
 class Boolean;
-class BooleanObject;
-class Integer;
 class Function;
 class Date;
 class ImplementationUtilities;
@@ -432,11 +428,11 @@ public:
 
   ScriptOrigin(
       Handle<Value> resource_name,
-      Handle<Integer> resource_line_offset = Handle<Integer>(),
-      Handle<Integer> resource_column_offset = Handle<Integer>());
+      int resource_line_offset = -1,
+      int resource_column_offset = -1);
   Handle<Value> ResourceName() const;
-  Handle<Integer> ResourceLineOffset() const;
-  Handle<Integer> ResourceColumnOffset() const;
+  int ResourceLineOffset() const;
+  int ResourceColumnOffset() const;
 private:
   QString m_fileName;
   int m_lineNumber, m_columnNumber;
@@ -779,8 +775,6 @@ class V8EXPORT Value {
   Handle<Number> ToNumber() const;
   Handle<String> ToString() const;
   Handle<Object> ToObject() const;
-  Handle<Integer> ToInteger() const;
-  Handle<Int32> ToInt32() const;
 
   bool BooleanValue() const;
   double NumberValue() const;
@@ -1026,29 +1020,6 @@ class V8EXPORT Number : public Primitive {
   double Value() const;
   static Handle<Number> New(double value);
   static Number* Cast(v8::Value* obj);
-};
-
-
-/**
- * A JavaScript value representing a signed integer.
- */
-class V8EXPORT Integer : public Number {
- public:
-  static Handle<Integer> New(int32_t value);
-  static Handle<Integer> NewFromUnsigned(uint32_t value);
-  int64_t Value() const;
-  static Integer* Cast(v8::Value* obj);
-};
-
-
-/**
- * A JavaScript value representing a 32-bit signed integer.
- */
-class V8EXPORT Int32 : public Integer {
- public:
-  int32_t Value() const;
- private:
-  Int32();
 };
 
 
@@ -1381,7 +1352,7 @@ typedef Handle<Value> (*NamedPropertySetter)(Handle<String> property,
  * The result is an integer encoding property attributes (like v8::None,
  * v8::DontEnum, etc.)
  */
-typedef Handle<Integer> (*NamedPropertyQuery)(Handle<String> property,
+typedef Handle<Value> (*NamedPropertyQuery)(Handle<String> property,
                                               const AccessorInfo& info);
 
 
@@ -1421,7 +1392,7 @@ typedef Handle<Value> (*IndexedPropertySetter)(uint32_t index,
  * Returns a non-empty handle if the interceptor intercepts the request.
  * The result is an integer encoding property attributes.
  */
-typedef Handle<Integer> (*IndexedPropertyQuery)(uint32_t index,
+typedef Handle<Value> (*IndexedPropertyQuery)(uint32_t index,
                                                 const AccessorInfo& info);
 
 /**

@@ -186,7 +186,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Handle<v8::String> property,
                             bool ok;
                             int value = e.keyToValue(enumName.constData(), &ok);
                             if (ok)
-                                return v8::Integer::New(value);
+                                return QV4::Value::fromInt32(value);
                         }
                     }
                 }
@@ -211,7 +211,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Handle<v8::String> property,
                 bool ok = false;
                 int value = type->enumValue(propertystring, &ok);
                 if (ok)
-                    return v8::Integer::New(value);
+                    return QV4::Value::fromInt32(value);
 
                 // Fall through to return empty handle
 

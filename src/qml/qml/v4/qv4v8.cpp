@@ -170,11 +170,11 @@ protected:
 
 DEFINE_MANAGED_VTABLE(V8AccessorSetter);
 
-ScriptOrigin::ScriptOrigin(Handle<Value> resource_name, Handle<Integer> resource_line_offset, Handle<Integer> resource_column_offset)
+ScriptOrigin::ScriptOrigin(Handle<Value> resource_name, int resource_line_offset, int resource_column_offset)
 {
     m_fileName = resource_name->ToString()->asQString();
-    m_lineNumber = resource_line_offset->ToInt32()->Value();
-    m_columnNumber = resource_column_offset->ToInt32()->Value();
+    m_lineNumber = resource_line_offset;
+    m_columnNumber = resource_column_offset;
 }
 
 Handle<Value> ScriptOrigin::ResourceName() const
@@ -182,14 +182,14 @@ Handle<Value> ScriptOrigin::ResourceName() const
     return Value::fromV4Value(QV4::Value::fromString(currentEngine()->current, m_fileName));
 }
 
-Handle<Integer> ScriptOrigin::ResourceLineOffset() const
+int ScriptOrigin::ResourceLineOffset() const
 {
-    return Integer::New(m_lineNumber);
+    return m_lineNumber;
 }
 
-Handle<Integer> ScriptOrigin::ResourceColumnOffset() const
+int ScriptOrigin::ResourceColumnOffset() const
 {
-    return Integer::New(m_columnNumber);
+    return m_columnNumber;
 }
 
 
@@ -470,16 +470,6 @@ Handle<Object> Value::ToObject() const
     return QV4::Value::fromObject(ConstValuePtr(this)->toObject(currentEngine()->current));
 }
 
-Handle<Integer> Value::ToInteger() const
-{
-    return QV4::Value::fromDouble(ConstValuePtr(this)->toInteger());
-}
-
-Handle<Int32> Value::ToInt32() const
-{
-    return QV4::Value::fromInt32(ConstValuePtr(this)->toInt32());
-}
-
 bool Value::BooleanValue() const
 {
     return ConstValuePtr(this)->toBoolean();
@@ -671,35 +661,6 @@ Handle<Number> Number::New(double value)
 Number *Number::Cast(v8::Value *obj)
 {
     return static_cast<Number *>(obj);
-}
-
-Handle<Integer> Integer::New(int32_t value)
-{
-    return QV4::Value::fromInt32(value);
-}
-
-Handle<Integer> Integer::NewFromUnsigned(uint32_t value)
-{
-    return QV4::Value::fromUInt32(value);
-}
-
-int64_t Integer::Value() const
-{
-    const QV4::Value *v = ConstValuePtr(this);
-    assert(v->isNumber());
-    return (int64_t)v->asDouble();
-}
-
-Integer *Integer::Cast(v8::Value *obj)
-{
-    return static_cast<Integer *>(obj);
-}
-
-int32_t Int32::Value() const
-{
-    const QV4::Value *v = ConstValuePtr(this);
-    assert(v->isInteger());
-    return v->int_32;
 }
 
 struct ExternalResourceWrapper : public QV4::Object::ExternalResource
@@ -1294,7 +1255,7 @@ public:
     static QV4::PropertyAttributes queryDynamicProperty(const QV4::Object *object, QV4::String *string)
     {
         const V4V8Object<BaseClass> *that = static_cast<const V4V8Object<BaseClass> *>(object);
-        Handle<Integer> result = that->m_template->m_fallbackPropertyQuery(String::New(string), that->namedAccessorInfo());
+        Handle<Value> result = that->m_template->m_fallbackPropertyQuery(String::New(string), that->namedAccessorInfo());
         if (result.IsEmpty())
             return QV4::PropertyAttributes();
         return propertyAttributesToFlags(result);
@@ -1412,7 +1373,7 @@ protected:
     static PropertyAttributes propertyAttributesToFlags(const Handle<Value> &attr)
     {
         PropertyAttributes flags;
-        int intAttr = attr->ToInt32()->Value();
+        int intAttr = attr->v4Value().toInt32();
         flags.setWritable(!(intAttr & ReadOnly));
         flags.setEnumerable(!(intAttr & DontEnum));
         flags.setConfigurable(!(intAttr & DontDelete));

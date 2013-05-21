@@ -395,7 +395,7 @@ v8::Handle<v8::Value> Node::nodeType(v8::Handle<v8::String>, const v8::AccessorI
 {
     QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
     if (!r) return QV4::Value::undefinedValue();
-    return v8::Integer::New(r->d->type);
+    return QV4::Value::fromInt32(r->d->type);
 }
 
 v8::Handle<v8::Value> Node::parentNode(v8::Handle<v8::String>, const v8::AccessorInfo &args)
@@ -618,7 +618,7 @@ v8::Handle<v8::Value> CharacterData::length(v8::Handle<v8::String>, const v8::Ac
     if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
     Q_UNUSED(engine)
-    return v8::Integer::New(r->d->data.length());
+    return QV4::Value::fromInt32(r->d->data.length());
 }
 
 v8::Handle<v8::Object> CharacterData::prototype(QV8Engine *engine)
@@ -819,7 +819,7 @@ v8::Handle<v8::Value> NamedNodeMap::length(v8::Handle<v8::String>, const v8::Acc
     if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
     Q_UNUSED(engine)
-    return v8::Integer::New(r->list->count());
+    return QV4::Value::fromInt32(r->list->count());
 }
 
 v8::Handle<v8::Value> NamedNodeMap::indexed(uint32_t index, const v8::AccessorInfo& args)
@@ -897,7 +897,7 @@ v8::Handle<v8::Value> NodeList::length(v8::Handle<v8::String>, const v8::Accesso
     if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
     Q_UNUSED(engine)
-    return v8::Integer::New(r->d->children.count());
+    return QV4::Value::fromInt32(r->d->children.count());
 }
 
 v8::Handle<v8::Object> NodeList::prototype(QV8Engine *engine)
@@ -1664,7 +1664,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_readyState(v8::Handle<v8::String>
     if (!r)
         V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    return v8::Integer::NewFromUnsigned(r->readyState());
+    return QV4::Value::fromUInt32(r->readyState());
 }
 
 static v8::Handle<v8::Value> qmlxmlhttprequest_status(v8::Handle<v8::String> /* property */,
@@ -1679,9 +1679,9 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_status(v8::Handle<v8::String> /* 
         V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     if (r->errorFlag())
-        return v8::Integer::New(0);
+        return QV4::Value::fromInt32(0);
     else
-        return v8::Integer::New(r->replyStatus());
+        return QV4::Value::fromInt32(r->replyStatus());
 }
 
 static v8::Handle<v8::Value> qmlxmlhttprequest_statusText(v8::Handle<v8::String> /* property */,
@@ -1783,18 +1783,18 @@ void *qt_add_qmlxmlhttprequest(QV8Engine *engine)
     xmlhttprequest->PrototypeTemplate()->SetAccessor(v8::String::New("responseXML"),qmlxmlhttprequest_responseXML, 0, v8::Handle<v8::Value>(), v8::DEFAULT, attributes);
 
     // State values
-    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("UNSENT"), v8::Integer::New(0), attributes);
-    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("OPENED"), v8::Integer::New(1), attributes);
-    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("HEADERS_RECEIVED"), v8::Integer::New(2), attributes);
-    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("LOADING"), v8::Integer::New(3), attributes);
-    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("DONE"), v8::Integer::New(4), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("UNSENT"), QV4::Value::fromInt32(0), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("OPENED"), QV4::Value::fromInt32(1), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("HEADERS_RECEIVED"), QV4::Value::fromInt32(2), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("LOADING"), QV4::Value::fromInt32(3), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("DONE"), QV4::Value::fromInt32(4), attributes);
 
     // Constructor
-    xmlhttprequest->Set(v8::String::New("UNSENT"), v8::Integer::New(0), attributes);
-    xmlhttprequest->Set(v8::String::New("OPENED"), v8::Integer::New(1), attributes);
-    xmlhttprequest->Set(v8::String::New("HEADERS_RECEIVED"), v8::Integer::New(2), attributes);
-    xmlhttprequest->Set(v8::String::New("LOADING"), v8::Integer::New(3), attributes);
-    xmlhttprequest->Set(v8::String::New("DONE"), v8::Integer::New(4), attributes);
+    xmlhttprequest->Set(v8::String::New("UNSENT"), QV4::Value::fromInt32(0), attributes);
+    xmlhttprequest->Set(v8::String::New("OPENED"), QV4::Value::fromInt32(1), attributes);
+    xmlhttprequest->Set(v8::String::New("HEADERS_RECEIVED"), QV4::Value::fromInt32(2), attributes);
+    xmlhttprequest->Set(v8::String::New("LOADING"), QV4::Value::fromInt32(3), attributes);
+    xmlhttprequest->Set(v8::String::New("DONE"), QV4::Value::fromInt32(4), attributes);
     v8::Handle<v8::Object>(engine->global())->Set(v8::String::New("XMLHttpRequest"), xmlhttprequest->GetFunction());
 
     QQmlXMLHttpRequestData *data = new QQmlXMLHttpRequestData;

@@ -1399,9 +1399,9 @@ QQmlDelegateModelPrivate::buildChangeList(const QVector<T> &changes)
 
     for (int i = 0; i < changes.count(); ++i) {
         v8::Handle<v8::Object> object = v8::Object::New();
-        object->Set(indexKey, v8::Integer::New(changes.at(i).index));
-        object->Set(countKey, v8::Integer::New(changes.at(i).count));
-        object->Set(moveIdKey, changes.at(i).moveId != -1 ? v8::Integer::New(changes.at(i).count) : QV4::Value::undefinedValue());
+        object->Set(indexKey, QV4::Value::fromInt32(changes.at(i).index));
+        object->Set(countKey, QV4::Value::fromInt32(changes.at(i).count));
+        object->Set(moveIdKey, changes.at(i).moveId != -1 ? QV4::Value::fromInt32(changes.at(i).count) : QV4::Value::undefinedValue());
         indexes->Set(i, object);
     }
     return indexes;
@@ -1628,22 +1628,22 @@ void QQmlDelegateModelItemMetaType::initializeConstructor()
     constructor->SetHasExternalResource(true);
     constructor->SetAccessor(data->model(), get_model);
     constructor->SetAccessor(data->groups(), get_groups, set_groups);
-    constructor->SetAccessor(data->isUnresolved(), get_member, 0, v8::Int32::New(30));
-    constructor->SetAccessor(data->inItems(), get_member, set_member, v8::Int32::New(1));
-    constructor->SetAccessor(data->inPersistedItems(), get_member, set_member, v8::Int32::New(2));
-    constructor->SetAccessor(data->itemsIndex(), get_index, 0, v8::Int32::New(1));
-    constructor->SetAccessor(data->persistedItemsIndex(), get_index, 0, v8::Int32::New(2));
+    constructor->SetAccessor(data->isUnresolved(), get_member, 0, QV4::Value::fromInt32(30));
+    constructor->SetAccessor(data->inItems(), get_member, set_member, QV4::Value::fromInt32(1));
+    constructor->SetAccessor(data->inPersistedItems(), get_member, set_member, QV4::Value::fromInt32(2));
+    constructor->SetAccessor(data->itemsIndex(), get_index, 0, QV4::Value::fromInt32(1));
+    constructor->SetAccessor(data->persistedItemsIndex(), get_index, 0, QV4::Value::fromInt32(2));
 
     for (int i = 2; i < groupNames.count(); ++i) {
         QString propertyName = QStringLiteral("in") + groupNames.at(i);
         propertyName.replace(2, 1, propertyName.at(2).toUpper());
         constructor->SetAccessor(
-                v8Engine->toString(propertyName), get_member, set_member, v8::Int32::New(i + 1));
+                v8Engine->toString(propertyName), get_member, set_member, QV4::Value::fromInt32(i + 1));
     }
     for (int i = 2; i < groupNames.count(); ++i) {
         const QString propertyName = groupNames.at(i) + QStringLiteral("Index");
         constructor->SetAccessor(
-                v8Engine->toString(propertyName), get_index, 0, v8::Int32::New(i + 1));
+                v8Engine->toString(propertyName), get_index, 0, QV4::Value::fromInt32(i + 1));
     }
 }
 
@@ -1759,7 +1759,7 @@ v8::Handle<v8::Value> QQmlDelegateModelItemMetaType::get_index(
     QQmlDelegateModelItem *cacheItem = v8_resource_cast<QQmlDelegateModelItem>(info.This());
     V8ASSERT_TYPE(cacheItem, "Not a valid VisualData object");
 
-    return v8::Integer::New(cacheItem->groupIndex(Compositor::Group(info.Data()->Int32Value())));
+    return QV4::Value::fromInt32(cacheItem->groupIndex(Compositor::Group(info.Data()->Int32Value())));
 }
 
 
@@ -3109,10 +3109,10 @@ public:
         const QQmlChangeSet::Change &change = array->at(index);
 
         v8::Handle<v8::Object> object = engineData(array->engine)->constructorChange.value().asFunctionObject()->newInstance();
-        object->SetInternalField(0, v8::Int32::New(change.index));
-        object->SetInternalField(1, v8::Int32::New(change.count));
+        object->SetInternalField(0, QV4::Value::fromInt32(change.index));
+        object->SetInternalField(1, QV4::Value::fromInt32(change.count));
         if (change.isMove())
-            object->SetInternalField(2, v8::Int32::New(change.moveId));
+            object->SetInternalField(2, QV4::Value::fromInt32(change.moveId));
 
         return object;
     }
@@ -3122,7 +3122,7 @@ public:
         QQmlDelegateModelGroupChangeArray *array = v8_resource_cast<QQmlDelegateModelGroupChangeArray>(info.This());
         V8ASSERT_TYPE(array, "Not a valid change array");
 
-        return v8::Integer::New(array->count());
+        return QV4::Value::fromInt32(array->count());
     }
 
     static v8::Handle<v8::Function> constructor()

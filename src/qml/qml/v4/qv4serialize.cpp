@@ -250,7 +250,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
                     }
                     reserve(data, sizeof(quint32) + length * sizeof(quint32));
                     push(data, valueheader(WorkerSequence, length));
-                    serialize(data, v8::Integer::New(sequenceVariant.userType())->v4Value(), engine); // sequence type
+                    serialize(data, QV4::Value::fromInt32(sequenceVariant.userType()), engine); // sequence type
                     for (uint32_t ii = 0; ii < seqLength; ++ii) {
                         serialize(data, v8object->Get(ii)->v4Value(), engine); // sequence elements
                     }

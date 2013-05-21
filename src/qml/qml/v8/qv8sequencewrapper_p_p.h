@@ -131,7 +131,7 @@ static int convertV8ValueToInt(QV8Engine *, v8::Handle<v8::Value> v)
 
 static v8::Handle<v8::Value> convertIntToV8Value(QV8Engine *, int v)
 {
-    return v8::Integer::New(v);
+    return QV4::Value::fromInt32(v);
 }
 
 static QString convertIntToString(QV8Engine *, int v)
@@ -440,7 +440,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 qint32 count = c.count(); \
                 v8::Handle<v8::Array> retn = v8::Array::New(count); \
                 for (qint32 i = 0; i < count; ++i) { \
-                    retn->Set(static_cast<quint32>(i), v8::Integer::NewFromUnsigned(static_cast<quint32>(i))); \
+                    retn->Set(static_cast<quint32>(i), QV4::Value::fromUInt32(static_cast<quint32>(i))); \
                 } \
                 return retn; \
             } \

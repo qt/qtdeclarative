@@ -131,7 +131,7 @@ private:
     static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property,
                                         v8::Handle<v8::Value> value,
                                         const v8::AccessorInfo &info);
-    static v8::Handle<v8::Integer> Query(v8::Handle<v8::String> property,
+    static v8::Handle<v8::Value> Query(v8::Handle<v8::String> property,
                                          const v8::AccessorInfo &info);
     static v8::Handle<v8::Array> Enumerator(const v8::AccessorInfo &info);
     static QV4::Value Connect(const v8::Arguments &args);

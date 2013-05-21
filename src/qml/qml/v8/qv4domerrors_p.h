@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
 
 #define V8THROW_DOM(error, string) { \
     v8::Handle<v8::Value> v = v8::Exception::Error(v8::String::New(string)); \
-    v->ToObject()->Set(v8::String::New("code"), v8::Integer::New(error)); \
+    v->ToObject()->Set(v8::String::New("code"), QV4::Value::fromInt32(error)); \
     v8::ThrowException(v); \
     return v8::Handle<v8::Value>(); \
 }
