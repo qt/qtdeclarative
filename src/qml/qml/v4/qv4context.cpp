@@ -281,6 +281,27 @@ void ExecutionContext::mark()
     }
 }
 
+QUrl ExecutionContext::currentFileName() const
+{
+    const ExecutionContext *c = this;
+    while (c) {
+        if (const SimpleCallContext *callCtx = c->asCallContext()) {
+            FunctionObject *f = callCtx->function;
+            if (f && f->function)
+                return f->function->sourceFile;
+        }
+        c = c->outer;
+    }
+    return QUrl();
+}
+
+int ExecutionContext::currentLineNumber() const
+{
+    // ### FIXME: we may need to record the return address upon entering from
+    // JIT code and then look up in a map from instruction pointer to line number.
+    return -1;
+}
+
 void ExecutionContext::setProperty(String *name, const Value& value)
 {
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {

@@ -74,17 +74,7 @@ Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionVa
     : exception(exceptionValue)
     , m_line(line)
 {
-    ExecutionContext *c = throwingContext;
-    while (c) {
-        if (c->type == ExecutionContext::Type_CallContext ||
-            c->type == ExecutionContext::Type_SimpleCallContext) {
-            FunctionObject *f = static_cast<SimpleCallContext *>(c)->function;
-            if (f && f->function)
-                m_file = f->function->sourceFile;
-            break;
-        }
-        c = c->outer;
-    }
+    m_file = throwingContext->currentFileName();
     this->throwingContext = throwingContext->engine->current;
     accepted = false;
 }

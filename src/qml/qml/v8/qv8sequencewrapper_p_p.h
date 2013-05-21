@@ -61,22 +61,16 @@
 QT_BEGIN_NAMESPACE
 
 // helper function to generate valid warnings if errors occur during sequence operations.
-static void generateWarning(QV8Engine *engine, const QString& description)
+static void generateWarning(QV4::ExecutionContext *ctx, const QString& description)
 {
+    QQmlEngine *engine = qobject_cast<QQmlEngine*>(ctx->engine->publicEngine);
     if (!engine)
         return;
-    v8::Handle<v8::StackTrace> currStack = v8::StackTrace::CurrentStackTrace(1);
-    if (currStack.IsEmpty())
-        return;
-    v8::Handle<v8::StackFrame> currFrame = currStack->GetFrame(0);
-    if (currFrame.IsEmpty())
-        return;
-
     QQmlError retn;
     retn.setDescription(description);
-    retn.setLine(currFrame->GetLineNumber());
-    retn.setUrl(QUrl(currFrame->GetScriptName()->v4Value().toQString()));
-    QQmlEnginePrivate::warning(engine->engine(), retn);
+    retn.setLine(ctx->currentLineNumber());
+    retn.setUrl(ctx->currentFileName());
+    QQmlEnginePrivate::warning(engine, retn);
 }
 
 //  F(elementType, elementTypeName, sequenceType, defaultValue)
@@ -232,7 +226,7 @@ public:
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(QV8Engine::get(ctx->engine->publicEngine), QLatin1String("Index out of range during indexed get"));
+            generateWarning(ctx, QLatin1String("Index out of range during indexed get"));
             if (hasProperty)
                 *hasProperty = false;
             return QV4::Value::undefinedValue();
@@ -260,7 +254,7 @@ public:
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(QV8Engine::get(ctx->engine->publicEngine), QLatin1String("Index out of range during indexed put"));
+            generateWarning(ctx, QLatin1String("Index out of range during indexed put"));
             return;
         }
 
@@ -298,7 +292,7 @@ public:
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(QV8Engine::get(ctx->engine->publicEngine), QLatin1String("Index out of range during indexed query"));
+            generateWarning(ctx, QLatin1String("Index out of range during indexed query"));
             return QV4::Attr_Invalid;
         }
         if (m_isReference) {
@@ -401,7 +395,7 @@ public:
         quint32 newLength = ctx->arguments[0].toUInt32();
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (newLength > INT_MAX) {
-            generateWarning(QV8Engine::get(ctx->engine->publicEngine), QLatin1String("Index out of range during length set"));
+            generateWarning(ctx, QLatin1String("Index out of range during length set"));
             return;
         }
         /* Read the sequence from the QObject property if we're a reference */

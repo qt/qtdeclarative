@@ -144,7 +144,11 @@ struct Q_QML_EXPORT ExecutionContext
 
     void mark();
 
+    QUrl currentFileName() const;
+    int currentLineNumber() const;
+
     inline CallContext *asCallContext();
+    inline const CallContext *asCallContext() const;
 };
 
 struct SimpleCallContext : public ExecutionContext
@@ -206,6 +210,11 @@ inline Value ExecutionContext::argument(unsigned int index)
 inline CallContext *ExecutionContext::asCallContext()
 {
     return type >= Type_CallContext ? static_cast<CallContext *>(this) : 0;
+}
+
+inline const CallContext *ExecutionContext::asCallContext() const
+{
+    return type >= Type_CallContext ? static_cast<const CallContext *>(this) : 0;
 }
 
 /* Function *f, int argc */
