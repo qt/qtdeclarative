@@ -112,7 +112,6 @@ class NumberObject;
 class Object;
 class Array;
 class External;
-class Primitive;
 class Function;
 class Date;
 class ImplementationUtilities;
@@ -796,15 +795,9 @@ class V8EXPORT Value {
 
 
 /**
- * The superclass of primitive values.  See ECMA-262 4.3.2.
- */
-class V8EXPORT Primitive : public Value { };
-
-
-/**
  * A JavaScript string value (ECMA-262, 4.3.17).
  */
-class V8EXPORT String : public Primitive {
+class V8EXPORT String : public Value {
  public:
   /**
    * Returns the number of characters in this string.
