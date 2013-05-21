@@ -2199,7 +2199,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
         } else if (v.canConvert(callType)) {
             *qvariantPtr = v;
             qvariantPtr->convert(callType);
-        } else if (engine->sequenceWrapper()->isSequenceType(callType) && v.userType() == qMetaTypeId<QVariantList>()) {
+        } else if (QV4::SequencePrototype::isSequenceType(callType) && v.userType() == qMetaTypeId<QVariantList>()) {
             // convert the JS array to a sequence of the correct type.
             QVariant seqV = engine->toVariant(value->v4Value(), callType);
             *qvariantPtr = seqV;

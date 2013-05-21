@@ -246,7 +246,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
             }
             reserve(data, sizeof(quint32) + length * sizeof(quint32));
             push(data, valueheader(WorkerSequence, length));
-            serialize(data, QV4::Value::fromInt32(engine->sequenceWrapper()->metaTypeForSequence(o)), engine); // sequence type
+            serialize(data, QV4::Value::fromInt32(QV4::SequencePrototype::metaTypeForSequence(o)), engine); // sequence type
             for (uint32_t ii = 0; ii < seqLength; ++ii)
                 serialize(data, o->getIndexed(ii), engine); // sequence elements
 
@@ -380,8 +380,8 @@ QV4::Value Serialize::deserialize(const char *&data, QV8Engine *engine)
             array->arrayData[ii].value = deserialize(data, engine);
         array->arrayDataLen = seqLength;
         array->setArrayLengthUnchecked(seqLength);
-        QVariant seqVariant = engine->sequenceWrapper()->toVariant(QV4::Value::fromObject(array), sequenceType, &succeeded);
-        return engine->sequenceWrapper()->fromVariant(seqVariant, &succeeded);
+        QVariant seqVariant = QV4::SequencePrototype::toVariant(QV4::Value::fromObject(array), sequenceType, &succeeded);
+        return QV4::SequencePrototype::fromVariant(v4, seqVariant, &succeeded);
     }
     }
     Q_ASSERT(!"Unreachable");

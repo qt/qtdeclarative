@@ -5,7 +5,6 @@ HEADERS += \
     $$PWD/qv8debug_p.h \
     $$PWD/qv8profiler_p.h \
     $$PWD/qv8engine_p.h \
-    $$PWD/qv8sequencewrapper_p.h \
     $$PWD/qv8contextwrapper_p.h \
     $$PWD/qv8qobjectwrapper_p.h \
     $$PWD/qv8typewrapper_p.h \
@@ -21,7 +20,6 @@ HEADERS += \
 
 SOURCES += \
     $$PWD/qv8engine.cpp \
-    $$PWD/qv8sequencewrapper.cpp \
     $$PWD/qv8contextwrapper.cpp \
     $$PWD/qv8qobjectwrapper.cpp \
     $$PWD/qv8typewrapper.cpp \
@@ -33,7 +31,4 @@ SOURCES += \
     $$PWD/qv4domerrors.cpp \
     $$PWD/qv4sqlerrors.cpp \
     $$PWD/qqmlbuiltinfunctions.cpp
-
-JS_CLASS_SOURCES += \
-    $$PWD/qv8sequencewrapper.cpp
 

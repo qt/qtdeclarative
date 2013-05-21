@@ -62,6 +62,7 @@
 #include <qv4unwindhelper_p.h>
 #include "qv4debugging_p.h"
 #include "qv4executableallocator_p.h"
+#include "qv4sequenceobject_p.h"
 
 #ifdef V4_ENABLE_JIT
 #  include "qv4isel_masm_p.h"
@@ -145,6 +146,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     uRIErrorPrototype = new (memoryManager) URIErrorPrototype(this);
 
     variantPrototype = new (memoryManager) VariantPrototype(this);
+    sequencePrototype = new (memoryManager) SequencePrototype(this);
 
     stringPrototype->prototype = objectPrototype;
     numberPrototype->prototype = objectPrototype;
@@ -210,6 +212,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     uRIErrorPrototype->init(this, uRIErrorCtor);
 
     variantPrototype->initClass(this);
+    sequencePrototype->initClass(this);
 
     //
     // set up the global object
@@ -628,6 +631,7 @@ void ExecutionEngine::markObjects()
     uRIErrorPrototype->mark();
 
     variantPrototype->mark();
+    sequencePrototype->mark();
 }
 
 Value ExecutionEngine::run(Function *function, ExecutionContext *ctx)

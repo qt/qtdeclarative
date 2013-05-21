@@ -41,14 +41,15 @@
 
 #include <QtQml/qqml.h>
 
-#include "qv8sequencewrapper_p.h"
-#include "qv8engine_p.h"
+#include "qv4sequenceobject_p.h"
 
 #include <private/qv4functionobject_p.h>
 #include <private/qv4arrayobject_p.h>
 #include <private/qqmlengine_p.h>
 
 QT_BEGIN_NAMESPACE
+
+using namespace QV4;
 
 // helper function to generate valid warnings if errors occur during sequence operations.
 static void generateWarning(QV4::ExecutionContext *ctx, const QString& description)
@@ -71,34 +72,6 @@ static void generateWarning(QV4::ExecutionContext *ctx, const QString& descripti
     F(QString, String, QList<QString>, QString()) \
     F(QString, QString, QStringList, QString()) \
     F(QUrl, Url, QList<QUrl>, QUrl())
-
-class QV4_JS_CLASS(QQmlSequenceBase) : public QV4::Object
-{
-public:
-    QQmlSequenceBase(QV4::ExecutionEngine *engine)
-        : QV4::Object(engine)
-    {}
-
-    void initClass(QV4::ExecutionEngine *engine);
-
-    QV4::Value method_get_length(QV4::SimpleCallContext* ctx) QV4_ANNOTATE(attributes QV4::Attr_ReadOnly);
-
-    QV4::Value method_set_length(QV4::SimpleCallContext* ctx);
-};
-
-class QV4_JS_CLASS(QQmlSequencePrototype) : public QV4::Object
-{
-    QV4_ANNOTATE(staticInitClass true)
-public:
-    static void initClass(QV4::ExecutionEngine *engine, const QV4::Value &value);
-
-    static QV4::Value method_valueOf(QV4::SimpleCallContext *ctx)
-    {
-        return QV4::Value::fromString(ctx->thisObject.toString(ctx));
-    }
-
-    static QV4::Value method_sort(QV4::SimpleCallContext *ctx) QV4_ARGC(1);
-};
 
 static QV4::Value convertElementToValue(QV4::ExecutionContext *ctx, const QString &element)
 {
@@ -195,7 +168,7 @@ public:
     {
         type = ManagedType;
         vtbl = &static_vtbl;
-        prototype = engine->arrayPrototype;
+        prototype = engine->sequencePrototype;
         initClass(engine);
     }
 
@@ -207,7 +180,7 @@ public:
     {
         type = ManagedType;
         vtbl = &static_vtbl;
-        prototype = engine->arrayPrototype;
+        prototype = engine->sequencePrototype;
         loadReference();
         initClass(engine);
     }
@@ -494,7 +467,16 @@ typedef QQmlSequence<QList<qreal>, QV4::Managed::Type_QmlRealList> QQmlRealList;
 template<>
 DEFINE_MANAGED_VTABLE(QQmlRealList);
 
-QV4::Value QQmlSequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
+#define REGISTER_QML_SEQUENCE_METATYPE(unused, unused2, SequenceType, unused3) qRegisterMetaType<SequenceType>();
+SequencePrototype::SequencePrototype(ExecutionEngine *engine)
+    : QV4::Object(engine)
+{
+    prototype = engine->arrayPrototype;
+    FOREACH_QML_SEQUENCE_TYPE(REGISTER_QML_SEQUENCE_METATYPE)
+}
+#undef REGISTER_QML_SEQUENCE_METATYPE
+
+QV4::Value SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
 {
     QV4::Object *o = ctx->thisObject.asObject();
     if (!o || !o->isListType())
@@ -541,38 +523,12 @@ QV4::Value QQmlSequenceBase::method_set_length(QV4::SimpleCallContext* ctx)
     return QV4::Value::undefinedValue();
 }
 
-QV8SequenceWrapper::QV8SequenceWrapper()
-    : m_engine(0)
-{
-}
-
-QV8SequenceWrapper::~QV8SequenceWrapper()
-{
-}
-
-#define REGISTER_QML_SEQUENCE_METATYPE(unused, unused2, SequenceType, unused3) qRegisterMetaType<SequenceType>();
-void QV8SequenceWrapper::init(QV8Engine *engine)
-{
-    FOREACH_QML_SEQUENCE_TYPE(REGISTER_QML_SEQUENCE_METATYPE)
-
-    m_engine = QV8Engine::getV4(engine);
-
-    m_prototype = QV4::Value::fromObject(m_engine->newObject());
-    m_prototype.value().asObject()->prototype = m_engine->arrayPrototype;
-    QQmlSequencePrototype::initClass(m_engine, m_prototype.value());
-}
-#undef REGISTER_QML_SEQUENCE_METATYPE
-
-void QV8SequenceWrapper::destroy()
-{
-}
-
 #define IS_SEQUENCE(unused1, unused2, SequenceType, unused3) \
     if (sequenceTypeId == qMetaTypeId<SequenceType>()) { \
         return true; \
     } else
 
-bool QV8SequenceWrapper::isSequenceType(int sequenceTypeId) const
+bool SequencePrototype::isSequenceType(int sequenceTypeId)
 {
     FOREACH_QML_SEQUENCE_TYPE(IS_SEQUENCE) { /* else */ return false; }
 }
@@ -580,12 +536,11 @@ bool QV8SequenceWrapper::isSequenceType(int sequenceTypeId) const
 
 #define NEW_REFERENCE_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::Object *obj = new (m_engine->memoryManager) QQml##ElementTypeName##List(m_engine, object, propertyIndex); \
-        obj->prototype = m_prototype.value().asObject(); \
+        QV4::Object *obj = new (engine->memoryManager) QQml##ElementTypeName##List(engine, object, propertyIndex); \
         return QV4::Value::fromObject(obj); \
     } else
 
-QV4::Value QV8SequenceWrapper::newSequence(int sequenceType, QObject *object, int propertyIndex, bool *succeeded)
+QV4::Value SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int sequenceType, QObject *object, int propertyIndex, bool *succeeded)
 {
     // This function is called when the property is a QObject Q_PROPERTY of
     // the given sequence type.  Internally we store a typed-sequence
@@ -598,12 +553,11 @@ QV4::Value QV8SequenceWrapper::newSequence(int sequenceType, QObject *object, in
 
 #define NEW_COPY_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::Object *obj = new (m_engine->memoryManager) QQml##ElementTypeName##List(m_engine, v.value<SequenceType >()); \
-        obj->prototype = m_prototype.value().asObject(); \
+        QV4::Object *obj = new (engine->memoryManager) QQml##ElementTypeName##List(engine, v.value<SequenceType >()); \
         return QV4::Value::fromObject(obj); \
     } else
 
-QV4::Value QV8SequenceWrapper::fromVariant(const QVariant& v, bool *succeeded)
+QV4::Value SequencePrototype::fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded)
 {
     // This function is called when assigning a sequence value to a normal JS var
     // in a JS block.  Internally, we store a sequence of the specified type.
@@ -620,7 +574,7 @@ QV4::Value QV8SequenceWrapper::fromVariant(const QVariant& v, bool *succeeded)
         return list->toVariant(); \
     else
 
-QVariant QV8SequenceWrapper::toVariant(QV4::Object *object)
+QVariant SequencePrototype::toVariant(QV4::Object *object)
 {
     Q_ASSERT(object->isListType());
     FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ return QVariant(); }
@@ -631,7 +585,7 @@ QVariant QV8SequenceWrapper::toVariant(QV4::Object *object)
         return QQml##ElementTypeName##List::toVariant(a); \
     } else
 
-QVariant QV8SequenceWrapper::toVariant(const QV4::Value &array, int typeHint, bool *succeeded)
+QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, bool *succeeded)
 {
     *succeeded = true;
 
@@ -648,7 +602,7 @@ QVariant QV8SequenceWrapper::toVariant(const QV4::Value &array, int typeHint, bo
 #define MAP_META_TYPE(ElementType, ElementTypeName, SequenceType, unused) \
     case QV4::Managed::Type_Qml##ElementTypeName##List: return qMetaTypeId<SequenceType>();
 
-int QV8SequenceWrapper::metaTypeForSequence(QV4::Object *object)
+int SequencePrototype::metaTypeForSequence(QV4::Object *object)
 {
     switch (object->internalType()) {
     FOREACH_QML_SEQUENCE_TYPE(MAP_META_TYPE)
@@ -659,6 +613,6 @@ int QV8SequenceWrapper::metaTypeForSequence(QV4::Object *object)
 
 #undef MAP_META_TYPE
 
-#include "qv8sequencewrapper_jsclass.cpp"
+#include "qv4sequenceobject_p_jsclass.cpp"
 
 QT_END_NAMESPACE

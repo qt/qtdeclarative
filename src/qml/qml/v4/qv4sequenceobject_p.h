@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV8SEQUENCEWRAPPER_P_H
-#define QV8SEQUENCEWRAPPER_P_H
+#ifndef QV4SEQUENCEWRAPPER_P_H
+#define QV4SEQUENCEWRAPPER_P_H
 
 //
 //  W A R N I N G
@@ -56,37 +56,51 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qvariant.h>
 
-#include <private/qv4value_p.h>
+#include "qv4value_p.h"
+#include "qv4object_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QV8Engine;
-class QV8ObjectResource;
+namespace QV4 {
 
-class QV8SequenceWrapper
+class QV4_JS_CLASS(QQmlSequenceBase) : public QV4::Object
 {
 public:
-    QV8SequenceWrapper();
-    ~QV8SequenceWrapper();
+    QQmlSequenceBase(QV4::ExecutionEngine *engine)
+        : QV4::Object(engine)
+    {}
 
-    void init(QV8Engine *);
-    void destroy();
+    void initClass(QV4::ExecutionEngine *engine);
 
-    bool isSequenceType(int sequenceTypeId) const;
+    QV4::Value method_get_length(QV4::SimpleCallContext* ctx) QV4_ANNOTATE(attributes QV4::Attr_ReadOnly);
 
-    QV4::Value newSequence(int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);
-    QV4::Value fromVariant(const QVariant& v, bool *succeeded);
-    QVariant toVariant(QV4::Object *object);
-    QVariant toVariant(const QV4::Value &array, int typeHint, bool *succeeded);
-    int metaTypeForSequence(QV4::Object *object);
-
-private:
-    QV4::ExecutionEngine *m_engine;
-
-    QV4::PersistentValue m_prototype;
+    QV4::Value method_set_length(QV4::SimpleCallContext* ctx);
 };
 
+class QV4_JS_CLASS(SequencePrototype) : public QV4::Object
+{
+public:
+    SequencePrototype(QV4::ExecutionEngine *engine);
+
+    void initClass(QV4::ExecutionEngine *engine);
+
+    static QV4::Value method_valueOf(QV4::SimpleCallContext *ctx)
+    {
+        return QV4::Value::fromString(ctx->thisObject.toString(ctx));
+    }
+
+    static QV4::Value method_sort(QV4::SimpleCallContext *ctx) QV4_ARGC(1);
+
+    static bool isSequenceType(int sequenceTypeId);
+    static QV4::Value newSequence(QV4::ExecutionEngine *engine, int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);
+    static QV4::Value fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded);
+    static int metaTypeForSequence(QV4::Object *object);
+    static QVariant toVariant(QV4::Object *object);
+    static QVariant toVariant(const QV4::Value &array, int typeHint, bool *succeeded);
+};
+
+}
 
 QT_END_NAMESPACE
 
-#endif // QV8SEQUENCEWRAPPER_P_H
+#endif // QV4SEQUENCEWRAPPER_P_H

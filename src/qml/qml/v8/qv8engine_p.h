@@ -76,7 +76,7 @@
 #include "qv8typewrapper_p.h"
 #include "qv8listwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
-#include "qv8sequencewrapper_p.h"
+#include <private/qv4sequenceobject_p.h>
 #include "qv4jsonwrapper_p.h"
 #include <private/qv4value_p.h>
 #include <private/qv4object_p.h>
@@ -278,7 +278,6 @@ public:
     QV8TypeWrapper *typeWrapper() { return &m_typeWrapper; }
     QV8ListWrapper *listWrapper() { return &m_listWrapper; }
     QV8ValueTypeWrapper *valueTypeWrapper() { return &m_valueTypeWrapper; }
-    QV8SequenceWrapper *sequenceWrapper() { return &m_sequenceWrapper; }
 
     void *xmlHttpRequestData() { return m_xmlHttpRequestData; }
 
@@ -426,7 +425,6 @@ protected:
     QV8TypeWrapper m_typeWrapper;
     QV8ListWrapper m_listWrapper;
     QV8ValueTypeWrapper m_valueTypeWrapper;
-    QV8SequenceWrapper m_sequenceWrapper;
     QV4JsonWrapper m_jsonWrapper;
 
     QV4::PersistentValue m_freezeObject;
@@ -516,7 +514,7 @@ QVariant QV8Engine::toValueType(const QV4::Value &obj)
 
 QV4::Value QV8Engine::newSequence(int sequenceType, QObject *object, int property, bool *succeeded)
 {
-    return m_sequenceWrapper.newSequence(sequenceType, object, property, succeeded);
+    return QV4::SequencePrototype::newSequence(m_v4Engine, sequenceType, object, property, succeeded);
 }
 
 QV4::Value QV8Engine::bindingFlagKey() const

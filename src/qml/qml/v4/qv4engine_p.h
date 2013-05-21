@@ -99,6 +99,7 @@ struct SyntaxErrorPrototype;
 struct TypeErrorPrototype;
 struct URIErrorPrototype;
 struct VariantPrototype;
+struct SequencePrototype;
 struct EvalFunction;
 struct Identifiers;
 struct InternalClass;
@@ -163,6 +164,7 @@ struct Q_QML_EXPORT ExecutionEngine
     URIErrorPrototype *uRIErrorPrototype;
 
     VariantPrototype *variantPrototype;
+    SequencePrototype *sequencePrototype;
 
     QQmlJS::MemoryPool classPool;
     InternalClass *emptyClass;

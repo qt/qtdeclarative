@@ -43,7 +43,7 @@
 
 #include "qv8contextwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
-#include "qv8sequencewrapper_p.h"
+#include "qv4sequenceobject_p.h"
 #include "qv8include_p.h"
 #include "qjsengine_p.h"
 
@@ -157,7 +157,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
     m_typeWrapper.init(this);
     m_listWrapper.init(this);
     m_valueTypeWrapper.init(this);
-    m_sequenceWrapper.init(this);
     m_jsonWrapper.init(m_v4Engine);
 
 }
@@ -174,7 +173,6 @@ QV8Engine::~QV8Engine()
     m_listModelData = 0;
 
     m_jsonWrapper.destroy();
-    m_sequenceWrapper.destroy();
     m_valueTypeWrapper.destroy();
     m_listWrapper.destroy();
     m_typeWrapper.destroy();
@@ -232,7 +230,7 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
                    && !value.asArrayObject() && !value.asFunctionObject()) {
             return QVariant::fromValue(jsonObjectFromJS(value));
         } else if (object->isListType())
-            return m_sequenceWrapper.toVariant(object);
+            return QV4::SequencePrototype::toVariant(object);
     }
 
     if (QV4::ArrayObject *a = value.asArrayObject()) {
@@ -254,7 +252,7 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
         }
 
         bool succeeded = false;
-        QVariant retn = m_sequenceWrapper.toVariant(value, typeHint, &succeeded);
+        QVariant retn = QV4::SequencePrototype::toVariant(value, typeHint, &succeeded);
         if (succeeded)
             return retn;
     }
@@ -348,7 +346,7 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::QStringList:
                 {
                 bool succeeded = false;
-                v8::Handle<v8::Value> retn = m_sequenceWrapper.fromVariant(variant, &succeeded);
+                v8::Handle<v8::Value> retn = QV4::SequencePrototype::fromVariant(m_v4Engine, variant, &succeeded);
                 if (succeeded)
                     return retn->v4Value();
                 return arrayFromStringList(this, *reinterpret_cast<const QStringList *>(ptr));
@@ -400,7 +398,7 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             return newQObject(obj);
 
         bool succeeded = false;
-        v8::Handle<v8::Value> retn = m_sequenceWrapper.fromVariant(variant, &succeeded);
+        v8::Handle<v8::Value> retn = QV4::SequencePrototype::fromVariant(m_v4Engine, variant, &succeeded);
         if (succeeded)
             return retn->v4Value();
 
