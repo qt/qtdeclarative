@@ -875,14 +875,24 @@ int Object::GetIdentityHash()
 
 bool Object::SetHiddenValue(Handle<String> key, Handle<Value> value)
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
+    assert(o);
+    QString newKey = QStringLiteral("__hidden:");
+    newKey += key->asQString();
+    QV4::String* str = o->engine()->newString(newKey);
+    if (o->__hasProperty__(str))
+        return false;
+    o->put(str, value->v4Value());
+    return true;
 }
 
 Handle<Value> Object::GetHiddenValue(Handle<String> key)
 {
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
+    QV4::Object *o = ConstValuePtr(this)->asObject();
+    assert(o);
+    QString newKey = QStringLiteral("__hidden:");
+    newKey += key->asQString();
+    return o->get(o->engine()->newString(newKey));
 }
 
 Handle<Object> Object::Clone()
@@ -1706,20 +1716,22 @@ Isolate::~Isolate()
 
 ExecutionEngine *Isolate::GetEngine()
 {
-    return Isolate::GetCurrent()->m_engine;
+    return Isolate::GetCurrent()->m_engines.top();
 }
 
 void Isolate::SetEngine(ExecutionEngine *e)
 {
     Isolate *i = GetCurrent();
-    i->m_engine = e;
+    if (e)
+        i->m_engines.push(e);
+    else
+        i->m_engines.pop();
 }
 
 Isolate *Isolate::GetCurrent()
 {
     if (!currentIsolate.hasLocalData()) {
         Isolate *i = new Isolate;
-        i->m_engine = 0;
         currentIsolate.setLocalData(i);
     }
     return currentIsolate.localData();

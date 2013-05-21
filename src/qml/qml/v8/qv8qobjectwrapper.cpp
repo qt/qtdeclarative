@@ -2245,9 +2245,11 @@ QV4::Value CallArgument::toValue(QV8Engine *engine)
         // directly against QList<QObject*>?
         QList<QObject *> &list = *qlistPtr;
         QV4::ArrayObject *array = QV8Engine::getV4(engine)->newArrayObject();
-        array->setArrayLength(list.count());
+        array->arrayReserve(list.count());
         for (int ii = 0; ii < list.count(); ++ii) 
             array->arrayData[ii].value = engine->newQObject(list.at(ii));
+        array->arrayDataLen = list.count();
+        array->setArrayLengthUnchecked(list.count());
         return QV4::Value::fromObject(array);
     } else if (type == qMetaTypeId<QQmlV4Handle>()) {
         return handlePtr->toValue();

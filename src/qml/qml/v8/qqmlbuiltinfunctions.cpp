@@ -1626,8 +1626,9 @@ QV4::Value binding(const v8::Arguments &args)
     if (!args[0]->IsFunction())
         V4THROW_TYPE("binding(): argument (binding expression) must be a function");
 
-    v8::Handle<v8::Object> rv = args[0]->ToObject()->Clone();
-    rv->SetHiddenValue(v8::Value::fromV4Value(V8ENGINE()->bindingFlagKey()), QV4::Value::fromBoolean(true));
+    v8::Handle<v8::Object> rv = args[0]->ToObject();
+    if (!rv->SetHiddenValue(v8::Value::fromV4Value(V8ENGINE()->bindingFlagKey()), QV4::Value::fromBoolean(true)))
+        V4THROW_ERROR("function passed to binding() can only be bound once"); // FIXME: With v8 we cloned the binding argument
     return rv->v4Value();
 }
 

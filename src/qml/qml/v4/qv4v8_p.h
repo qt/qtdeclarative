@@ -1746,7 +1746,7 @@ class V8EXPORT Isolate {
 
   private:
       friend class Context;
-      QV4::ExecutionEngine *m_engine;
+      QStack<QV4::ExecutionEngine*> m_engines;
 };
 
 
