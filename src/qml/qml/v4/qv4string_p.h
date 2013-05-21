@@ -110,6 +110,10 @@ struct String : public Managed {
     void createHashValue() const;
     static uint createHashValue(const QChar *ch, int length);
 
+    bool startsWithUpper() const {
+        return _text.length() && _text.at(0).isUpper();
+    }
+
     QString _text;
     mutable uint stringHash;
     mutable uint identifier;

@@ -102,8 +102,8 @@ public:
     static QObject *toQObject(QV8ObjectResource *);
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
-    inline v8::Handle<v8::Value> getProperty(QObject *, const QHashedV8String &, QQmlContextData *, RevisionMode);
-    inline bool setProperty(QObject *, const QHashedV8String &, QQmlContextData *, v8::Handle<v8::Value>, RevisionMode);
+    inline v8::Handle<v8::Value> getProperty(QObject *, const QHashedV4String &, QQmlContextData *, RevisionMode);
+    inline bool setProperty(QObject *, const QHashedV4String &, QQmlContextData *, v8::Handle<v8::Value>, RevisionMode);
 
     void registerWeakQObjectReference(QV8QObjectResource *resource)
     {
@@ -123,8 +123,8 @@ private:
     v8::Handle<v8::Object> newQObject(QObject *, QQmlData *, QV8Engine *);
     bool deleteWeakQObject(QV8QObjectResource *resource, bool calledFromEngineDtor = false);
     static v8::Handle<v8::Value> GetProperty(QV8Engine *, QObject *, v8::Handle<v8::Value> *, 
-                                             const QHashedV8String &, QQmlContextData *, QV8QObjectWrapper::RevisionMode);
-    static bool SetProperty(QV8Engine *, QObject *, const QHashedV8String &, QQmlContextData *,
+                                             const QHashedV4String &, QQmlContextData *, QV8QObjectWrapper::RevisionMode);
+    static bool SetProperty(QV8Engine *, QObject *, const QHashedV4String &, QQmlContextData *,
                             v8::Handle<v8::Value>, QV8QObjectWrapper::RevisionMode);
     static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property,
                                         const v8::AccessorInfo &info);
@@ -148,8 +148,8 @@ private:
     QV4::PersistentValue m_signalHandlerConstructor;
     QV4::PersistentValue m_toStringSymbol;
     QV4::PersistentValue m_destroySymbol;
-    QHashedV8String m_toStringString;
-    QHashedV8String m_destroyString;
+    QHashedV4String m_toStringString;
+    QHashedV4String m_destroyString;
     QV4::PersistentValue m_hiddenObject;
     QHash<QObject *, QV8QObjectConnectionList *> m_connections;
     typedef QHash<QObject *, QV8QObjectInstance *> TaintedHash;
@@ -157,7 +157,7 @@ private:
     QIntrusiveList<QV8QObjectResource, &QV8QObjectResource::weakResource> m_javaScriptOwnedWeakQObjects;
 };
 
-v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHashedV8String &string,  
+v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHashedV4String &string,
                                                      QQmlContextData *context, RevisionMode mode)
 {
     QQmlData *dd = QQmlData::get(object, false);
@@ -169,7 +169,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHas
     }
 }
 
-bool QV8QObjectWrapper::setProperty(QObject *object, const QHashedV8String &string, 
+bool QV8QObjectWrapper::setProperty(QObject *object, const QHashedV4String &string,
                                     QQmlContextData *context, v8::Handle<v8::Value> value, RevisionMode mode)
 {
     QQmlData *dd = QQmlData::get(object, false);

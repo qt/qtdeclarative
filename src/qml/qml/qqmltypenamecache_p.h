@@ -90,8 +90,8 @@ public:
     };
     Result query(const QHashedStringRef &);
     Result query(const QHashedStringRef &, const void *importNamespace);
-    Result query(const QHashedV8String &);
-    Result query(const QHashedV8String &, const void *importNamespace);
+    Result query(const QHashedV4String &);
+    Result query(const QHashedV4String &, const void *importNamespace);
 
 private:
     friend class QQmlImports;

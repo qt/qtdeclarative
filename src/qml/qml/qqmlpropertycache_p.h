@@ -304,7 +304,7 @@ public:
     inline QQmlEngine *qmlEngine() const;
     static QQmlPropertyData *property(QQmlEngine *, QObject *, const QString &,
                                               QQmlContextData *, QQmlPropertyData &);
-    static QQmlPropertyData *property(QQmlEngine *, QObject *, const QHashedV8String &,
+    static QQmlPropertyData *property(QQmlEngine *, QObject *, const QHashedV4String &,
                                               QQmlContextData *, QQmlPropertyData &);
     static int *methodParameterTypes(QObject *, int index, QVarLengthArray<int, 9> &dummy,
                                      QByteArray *unknownTypeError);

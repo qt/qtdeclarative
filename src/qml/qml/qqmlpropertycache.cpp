@@ -1366,9 +1366,9 @@ inline const QString &qQmlPropertyCacheToString(const QString &string)
     return string;
 }
 
-inline QString qQmlPropertyCacheToString(const QHashedV8String &string)
+inline QString qQmlPropertyCacheToString(const QHashedV4String &string)
 {
-    return string.string()->v4Value().toQString();
+    return string.toString();
 }
 
 template<typename T>
@@ -1406,10 +1406,10 @@ qQmlPropertyCacheProperty(QQmlEngine *engine, QObject *obj, const T &name,
 }
 
 QQmlPropertyData *
-QQmlPropertyCache::property(QQmlEngine *engine, QObject *obj, const QHashedV8String &name,
+QQmlPropertyCache::property(QQmlEngine *engine, QObject *obj, const QHashedV4String &name,
                             QQmlContextData *context, QQmlPropertyData &local)
 {
-    return qQmlPropertyCacheProperty<QHashedV8String>(engine, obj, name, context, local);
+    return qQmlPropertyCacheProperty<QHashedV4String>(engine, obj, name, context, local);
 }
 
 QQmlPropertyData *

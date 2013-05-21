@@ -125,7 +125,7 @@ void QV8ValueTypeWrapper::init(QV8Engine *engine)
     m_constructor = ft->GetFunction()->v4Value();
 
     m_toStringSymbol = QV4::Value::fromString(QV8Engine::getV4(engine)->newIdentifier(QStringLiteral("toString")));
-    m_toStringString = QHashedV8String(m_toStringSymbol.value());
+    m_toStringString = QHashedV4String(m_toStringSymbol.value());
     toStringHash = m_toStringString.hash();
 }
 
@@ -282,7 +282,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Handle<v8::String> propert
     QV8ValueTypeResource *r =  v8_resource_cast<QV8ValueTypeResource>(info.This());
     if (!r) return v8::Handle<v8::Value>();
 
-    QHashedV8String propertystring(property);
+    QHashedV4String propertystring(property->v4Value());
 
     {
         // Comparing the hash first actually makes a measurable difference here, at least on x86

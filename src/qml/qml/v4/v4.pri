@@ -97,7 +97,6 @@ HEADERS += \
     $$PWD/qv4unwindhelper_p-arm.h \
     $$PWD/qv4serialize_p.h \
     $$PWD/qv4v8_p.h \
-    $$PWD/qcalculatehash_p.h \
     $$PWD/qv4util_p.h \
     $$PWD/qv4executableallocator_p.h \
     $$PWD/qv4sequenceobject_p.h

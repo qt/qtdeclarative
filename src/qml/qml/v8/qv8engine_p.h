@@ -289,8 +289,6 @@ public:
     QV4::Value getOwnPropertyNames(const QV4::Value &o);
     void freezeObject(const QV4::Value &value);
 
-    static inline bool startsWithUpper(QV4::String *);
-
     QVariant toVariant(const QV4::Value &value, int typeHint);
     QV4::Value fromVariant(const QVariant &);
 
@@ -520,15 +518,6 @@ QV4::Value QV8Engine::newSequence(int sequenceType, QObject *object, int propert
 QV4::Value QV8Engine::bindingFlagKey() const
 {
     return m_bindingFlagKey;
-}
-
-// XXX Can this be made more optimal?  It is called prior to resolving each and every 
-// unqualified name in QV8ContextWrapper.
-bool QV8Engine::startsWithUpper(QV4::String *string)
-{
-    uint16_t c = string->toQString().at(0).unicode();
-    return (c >= 'A' && c <= 'Z') ||
-           (c > 127 && QChar::category(c) == QChar::Letter_Uppercase);
 }
 
 QV8Engine::Deletable *QV8Engine::extensionData(int index) const

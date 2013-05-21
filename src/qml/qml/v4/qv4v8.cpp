@@ -508,58 +508,6 @@ Handle<Value> Value::fromV4Value(const QV4::Value &v4Value)
 }
 
 
-int String::Length() const
-{
-    return asV4String()->toQString().length();
-}
-
-uint32_t String::Hash() const
-{
-    return asV4String()->hashValue();
-}
-
-
-String::CompleteHashData String::CompleteHash() const
-{
-    QV4::String *s = asV4String();
-    CompleteHashData data;
-    data.hash = s->hashValue();
-    data.length = s->toQString().length();
-    data.symbol_id = s->identifier;
-    return data;
-}
-
-uint32_t String::ComputeHash(uint16_t *string, int length)
-{
-    return QV4::String::createHashValue(reinterpret_cast<const QChar *>(string), length);
-}
-
-uint32_t String::ComputeHash(char *string, int length)
-{
-    // ### unefficient
-    QString s = QString::fromLatin1((char *)string, length);
-    return QV4::String::createHashValue(s.constData(), s.length());
-}
-
-bool String::Equals(uint16_t *str, int length)
-{
-    return asQString() == QString(reinterpret_cast<QChar*>(str), length);
-}
-
-bool String::Equals(char *str, int length)
-{
-    return asQString() == QString::fromLatin1(str, length);
-}
-
-int String::Write(uint16_t *buffer) const
-{
-    uint length = asQString().length();
-    if (length == 0)
-        return 0;
-    memcpy(buffer, asQString().constData(), length*sizeof(QChar));
-    return length;
-}
-
 String::ExternalStringResource *String::GetExternalStringResource() const
 {
     Q_UNIMPLEMENTED();
@@ -582,13 +530,6 @@ Handle<String> String::New(const uint16_t *data, int length)
 {
     QV4::Value v = QV4::Value::fromString(currentEngine()->current, QString((const QChar *)data, length));
     return v;
-}
-
-Handle<String> String::NewSymbol(const char *data, int length)
-{
-    QString str = QString::fromLatin1(data, length);
-    QV4::String *vmString = currentEngine()->newIdentifier(str);
-    return New(vmString);
 }
 
 Handle<String> String::New(QV4::String *s)

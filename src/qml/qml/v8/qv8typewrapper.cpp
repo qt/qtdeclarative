@@ -160,7 +160,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Handle<v8::String> property,
 
     QObject *object = resource->object;
 
-    QHashedV8String propertystring(property);
+    QHashedV4String propertystring(property->v4Value());
 
     if (resource->type) {
         QQmlType *type = resource->type;
@@ -174,7 +174,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Handle<v8::String> property,
             QObject *qobjectSingleton = siinfo->qobjectApi(e);
             if (qobjectSingleton) {
                 // check for enum value
-                if (QV8Engine::startsWithUpper(property->v4Value().asString())) {
+                if (property->v4Value().asString()->startsWithUpper()) {
                     if (resource->mode == IncludeEnums) {
                         QString name = property->v4Value().toQString();
 
@@ -207,7 +207,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Handle<v8::String> property,
 
         } else {
 
-            if (QV8Engine::startsWithUpper(property->v4Value().asString())) {
+            if (property->v4Value().asString()->startsWithUpper()) {
                 bool ok = false;
                 int value = type->enumValue(propertystring, &ok);
                 if (ok)
@@ -271,7 +271,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Handle<v8::String> property,
     QV8Engine *v8engine = resource->engine;
     QQmlContextData *context = v8engine->callingContext();
 
-    QHashedV8String propertystring(property);
+    QHashedV4String propertystring(property->v4Value());
 
     QQmlType *type = resource->type;
     if (type && !type->isSingleton() && resource->object) {

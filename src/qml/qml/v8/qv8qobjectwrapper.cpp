@@ -312,8 +312,8 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     m_destroySymbol = QV4::Value::fromString(v4->newIdentifier("destroy"));
     m_hiddenObject = QV4::Value::fromObject(v4->newObject());
 
-    m_toStringString = QHashedV8String(m_toStringSymbol.value());
-    m_destroyString = QHashedV8String(m_destroySymbol.value());
+    m_toStringString = QHashedV4String(m_toStringSymbol.value());
+    m_destroyString = QHashedV4String(m_destroySymbol.value());
 
     toStringHash = m_toStringString.hash();
     destroyHash = m_destroyString.hash();
@@ -471,7 +471,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
 
 v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject *object, 
                                                      v8::Handle<v8::Value> *objectHandle, 
-                                                     const QHashedV8String &property,
+                                                     const QHashedV4String &property,
                                                      QQmlContextData *context,
                                                      QV8QObjectWrapper::RevisionMode revisionMode)
 {
@@ -714,7 +714,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     }
 }
 
-bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QHashedV8String &property, QQmlContextData *context,
+bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QHashedV4String &property, QQmlContextData *context,
                                     v8::Handle<v8::Value> value, QV8QObjectWrapper::RevisionMode revisionMode)
 {
     if (engine->qobjectWrapper()->m_toStringString == property ||
@@ -739,7 +739,7 @@ bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QH
 
     if (!result->isWritable() && !result->isQList()) {
         QString error = QLatin1String("Cannot assign to read-only property \"") +
-                        property.string()->v4Value().toQString() + QLatin1Char('\"');
+                        property.toString() + QLatin1Char('\"');
         v8::ThrowException(v8::Exception::Error(engine->toString(error)));
         return true;
     }
@@ -759,7 +759,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Getter(v8::Handle<v8::String> property,
 
     QObject *object = resource->object;
 
-    QHashedV8String propertystring(property);
+    QHashedV4String propertystring(property->v4Value());
 
     QV8Engine *v8engine = resource->engine;
     QQmlContextData *context = v8engine->callingContext();
@@ -770,7 +770,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Getter(v8::Handle<v8::String> property,
     if (!result.IsEmpty())
         return result;
 
-    if (QV8Engine::startsWithUpper(property->v4Value().asString())) {
+    if (property->v4Value().asString()->startsWithUpper()) {
         // Check for attached properties
         if (context && context->imports) {
             QQmlTypeNameCache::Result r = context->imports->query(propertystring);
@@ -803,7 +803,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Setter(v8::Handle<v8::String> property,
 
     QObject *object = resource->object;
 
-    QHashedV8String propertystring(property);
+    QHashedV4String propertystring(property->v4Value());
 
     QV8Engine *v8engine = resource->engine;
     QQmlContextData *context = v8engine->callingContext();
@@ -831,7 +831,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Query(v8::Handle<v8::String> property,
     QObject *object = resource->object;
     QQmlContextData *context = engine->callingContext();
 
-    QHashedV8String propertystring(property);
+    QHashedV4String propertystring(property->v4Value());
 
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;

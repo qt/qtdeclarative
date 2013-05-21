@@ -100,7 +100,7 @@ private:
     QV4::PersistentValue m_constructor;
     QV4::PersistentValue m_toString;
     QV4::PersistentValue m_toStringSymbol;
-    QHashedV8String m_toStringString;
+    QHashedV4String m_toStringString;
 };
 
 QT_END_NAMESPACE

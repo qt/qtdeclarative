@@ -105,7 +105,7 @@ const ListLayout::Role &ListLayout::getRoleOrCreate(const QString &key, Role::Da
 
 const ListLayout::Role &ListLayout::getRoleOrCreate(v8::Handle<v8::String> key, Role::DataType type)
 {
-    QHashedV8String hashedKey(key);
+    QHashedV4String hashedKey(key->v4Value());
     QStringHash<Role *>::Node *node = roleHash.findNode(hashedKey);
     if (node) {
         const Role &r = *node->value;
@@ -114,9 +114,7 @@ const ListLayout::Role &ListLayout::getRoleOrCreate(v8::Handle<v8::String> key, 
         return r;
     }
 
-    QString qkey;
-    qkey.resize(key->Length());
-    key->Write(reinterpret_cast<uint16_t*>(qkey.data()));
+    QString qkey = key->asQString();
 
     return createRole(qkey, type);
 }
@@ -244,7 +242,7 @@ const ListLayout::Role *ListLayout::getExistingRole(const QString &key)
 const ListLayout::Role *ListLayout::getExistingRole(v8::Handle<v8::String> key)
 {
     Role *r = 0;
-    QHashedV8String hashedKey(key);
+    QHashedV4String hashedKey(key->v4Value());
     QStringHash<Role *>::Node *node = roleHash.findNode(hashedKey);
     if (node)
         r = node->value;
@@ -430,9 +428,7 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QVector<int
         if (propertyValue->IsString()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::String);
             v8::Handle<v8::String> jsString = propertyValue->ToString();
-            QString qstr;
-            qstr.resize(jsString->Length());
-            jsString->Write(reinterpret_cast<uint16_t*>(qstr.data()));
+            QString qstr = jsString->asQString();
             roleIndex = e->setStringProperty(r, qstr);
         } else if (propertyValue->IsNumber()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Number);
@@ -499,9 +495,7 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::String);
             if (r.type == ListLayout::Role::String) {
                 v8::Handle<v8::String> jsString = propertyValue->ToString();
-                QString qstr;
-                qstr.resize(jsString->Length());
-                jsString->Write(reinterpret_cast<uint16_t*>(qstr.data()));
+                QString qstr = jsString->asQString();
                 e->setStringPropertyFast(r, qstr);
             }
         } else if (propertyValue->IsNumber()) {
@@ -1173,9 +1167,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, v8::Handle<v8::Valu
     // Add the value now
     if (d->IsString()) {
         v8::Handle<v8::String> jsString = d->ToString();
-        QString qstr;
-        qstr.resize(jsString->Length());
-        jsString->Write(reinterpret_cast<uint16_t*>(qstr.data()));
+        QString qstr = jsString->asQString();
         roleIndex = setStringProperty(role, qstr);
     } else if (d->IsNumber()) {
         roleIndex = setDoubleProperty(role, d->NumberValue());

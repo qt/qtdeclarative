@@ -270,9 +270,9 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
 
     QObject *scopeObject = resource->getScopeObject();
 
-    QHashedV8String propertystring(property);
+    QHashedV4String propertystring(property->v4Value());
 
-    if (context->imports && QV8Engine::startsWithUpper(property->v4Value().asString())) {
+    if (context->imports && property->v4Value().asString()->startsWithUpper()) {
         // Search for attached properties, enums and imported scripts
         QQmlTypeNameCache::Result r = context->imports->query(propertystring);
         
@@ -393,7 +393,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Handle<v8::String> property,
     QV8Engine *engine = resource->engine;
     QObject *scopeObject = resource->getScopeObject();
 
-    QHashedV8String propertystring(property);
+    QHashedV4String propertystring(property->v4Value());
 
     QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
 

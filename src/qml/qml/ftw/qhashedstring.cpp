@@ -40,20 +40,16 @@
 ****************************************************************************/
 
 #include "qhashedstring_p.h"
-#include <private/qcalculatehash_p.h>
 
 inline quint32 stringHash(const QChar* data, int length)
 {
-    quint32 rv = calculateHash((quint16*)data, length);
-    Q_ASSERT(rv == v8::String::ComputeHash((uint16_t*)data, length));
-    return rv;
+    return QV4::String::createHashValue(data, length);
 }
 
 inline quint32 stringHash(const char *data, int length)
 {
-    quint32 rv = calculateHash((quint8*)data, length);
-    Q_ASSERT(rv == v8::String::ComputeHash((char *)data, length));
-    return rv;
+    QString s = QString::fromLatin1(data, length);
+    return QV4::String::createHashValue(s.constData(), s.length());
 }
 
 void QHashedString::computeHash() const

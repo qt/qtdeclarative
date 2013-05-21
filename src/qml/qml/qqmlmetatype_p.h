@@ -136,7 +136,7 @@ private:
 
 struct QQmlMetaTypeData;
 class QHashedCStringRef;
-class QHashedV8String;
+class QHashedV4String;
 class Q_QML_PRIVATE_EXPORT QQmlType
 {
 public:
@@ -213,7 +213,7 @@ public:
 
     int enumValue(const QHashedStringRef &, bool *ok) const;
     int enumValue(const QHashedCStringRef &, bool *ok) const;
-    int enumValue(const QHashedV8String &, bool *ok) const;
+    int enumValue(const QHashedV4String &, bool *ok) const;
 private:
     QQmlType *superType() const;
     friend class QQmlTypePrivate;
@@ -251,7 +251,7 @@ public:
     int maximumMinorVersion() const;
 
     QQmlType *type(const QHashedStringRef &, int);
-    QQmlType *type(const QHashedV8String &, int);
+    QQmlType *type(const QHashedV4String &, int);
 
     QList<QQmlType*> singletonTypes(int) const;
 
@@ -277,7 +277,7 @@ public:
     int minorVersion() const;
 
     QQmlType *type(const QHashedStringRef &) const;
-    QQmlType *type(const QHashedV8String &) const;
+    QQmlType *type(const QHashedV4String &) const;
 
 private:
     QQmlTypeModule *m_module;

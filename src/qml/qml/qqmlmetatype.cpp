@@ -917,7 +917,7 @@ int QQmlType::enumValue(const QHashedCStringRef &name, bool *ok) const
     return -1;
 }
 
-int QQmlType::enumValue(const QHashedV8String &name, bool *ok) const
+int QQmlType::enumValue(const QHashedV4String &name, bool *ok) const
 {
     Q_ASSERT(ok);
     *ok = true;
@@ -991,7 +991,7 @@ QQmlType *QQmlTypeModule::type(const QHashedStringRef &name, int minor)
     return 0;
 }
 
-QQmlType *QQmlTypeModule::type(const QHashedV8String &name, int minor)
+QQmlType *QQmlTypeModule::type(const QHashedV4String &name, int minor)
 {
     QReadLocker lock(metaTypeDataLock());
 
@@ -1060,7 +1060,7 @@ QQmlType *QQmlTypeModuleVersion::type(const QHashedStringRef &name) const
     else return 0;
 }
 
-QQmlType *QQmlTypeModuleVersion::type(const QHashedV8String &name) const
+QQmlType *QQmlTypeModuleVersion::type(const QHashedV4String &name) const
 {
     if (m_module) return m_module->type(name, m_minor);
     else return 0;
