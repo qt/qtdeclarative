@@ -251,7 +251,7 @@ static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, int v)
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, uint v)
 { return QV4::Value::fromUInt32(v); }
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, bool v)
-{ return v8::Boolean::New(v); }
+{ return QV4::Value::fromBoolean(v); }
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *e, const QString &v)
 { return e->toString(v); }
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, float v)

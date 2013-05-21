@@ -87,7 +87,7 @@ public:
     virtual void lengthSetter(v8::Handle<v8::Value> value) = 0;
     virtual v8::Handle<v8::Value> indexedSetter(quint32 index, v8::Handle<v8::Value> value) = 0;
     virtual v8::Handle<v8::Value> indexedGetter(quint32 index) = 0;
-    virtual v8::Handle<v8::Boolean> indexedDeleter(quint32 index) = 0;
+    virtual v8::Handle<v8::Value> indexedDeleter(quint32 index) = 0;
     virtual v8::Handle<v8::Array> indexedEnumerator() = 0;
     virtual QV4::Value toString() = 0;
     virtual void sort(v8::Handle<v8::Function> comparer) = 0;
@@ -161,7 +161,7 @@ static bool convertV8ValueToBool(QV8Engine *, v8::Handle<v8::Value> v)
 
 static v8::Handle<v8::Value> convertBoolToV8Value(QV8Engine *, bool v)
 {
-    return v8::Boolean::New(v);
+    return QV4::Value::fromBoolean(v);
 }
 
 static QString convertBoolToString(QV8Engine *, bool v)
@@ -406,15 +406,15 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                     return ConversionToV8fn(engine, c.at(signedIdx)); \
                 return QV4::Value::undefinedValue(); \
             } \
-            v8::Handle<v8::Boolean> indexedDeleter(quint32 index) \
+            v8::Handle<v8::Value> indexedDeleter(quint32 index) \
             { \
                 /* Qt containers have int (rather than uint) allowable indexes. */ \
                 if (index > INT_MAX) \
-                    return v8::Boolean::New(false); \
+                    return QV4::Value::fromBoolean(false); \
                 /* Read in the sequence from the QObject */ \
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
-                        return v8::Boolean::New(false); \
+                        return QV4::Value::fromBoolean(false); \
                     loadReference(); \
                 } \
                 qint32 signedIdx = static_cast<qint32>(index); \
@@ -426,9 +426,9 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                         /* write back.  already checked that object is non-null, so skip that check here. */ \
                         storeReference(); \
                     } \
-                    return v8::Boolean::New(true); \
+                    return QV4::Value::fromBoolean(true); \
                 } \
-                return v8::Boolean::New(false); \
+                return QV4::Value::fromBoolean(false); \
             } \
             v8::Handle<v8::Array> indexedEnumerator() \
             { \

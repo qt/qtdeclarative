@@ -1726,7 +1726,7 @@ v8::Handle<v8::Value> QQmlDelegateModelItemMetaType::get_member(
     QQmlDelegateModelItem *cacheItem = v8_resource_cast<QQmlDelegateModelItem>(info.This());
     V8ASSERT_TYPE(cacheItem, "Not a valid VisualData object");
 
-    return v8::Boolean::New(cacheItem->groups & (1 << info.Data()->Int32Value()));
+    return QV4::Value::fromBoolean(cacheItem->groups & (1 << info.Data()->Int32Value()));
 }
 
 void QQmlDelegateModelItemMetaType::set_member(

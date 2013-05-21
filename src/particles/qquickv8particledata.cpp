@@ -341,7 +341,7 @@ static void particleData_set_ ## NAME (v8::Handle<v8::String>, v8::Handle<v8::Va
     if (!r || !r->datum) \
         V8THROW_ERROR("Not a valid ParticleData object"); \
 \
-    return v8::Boolean::New(r->datum-> VARIABLE);\
+    return QV4::Value::fromBoolean(r->datum-> VARIABLE);\
 }\
 \
 static void particleData_set_ ## VARIABLE (v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)\

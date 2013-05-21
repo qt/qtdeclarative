@@ -113,7 +113,6 @@ class Object;
 class Array;
 class External;
 class Primitive;
-class Boolean;
 class Function;
 class Date;
 class ImplementationUtilities;
@@ -770,7 +769,6 @@ class V8EXPORT Value {
    */
   bool IsError() const;
 
-  Handle<Boolean> ToBoolean() const;
   Handle<String> ToString() const;
   Handle<Object> ToObject() const;
 
@@ -801,17 +799,6 @@ class V8EXPORT Value {
  * The superclass of primitive values.  See ECMA-262 4.3.2.
  */
 class V8EXPORT Primitive : public Value { };
-
-
-/**
- * A primitive boolean value (ECMA-262, 4.3.14).  Either the true
- * or false value.
- */
-class V8EXPORT Boolean : public Primitive {
- public:
-  bool Value() const;
-  static Handle<Boolean> New(bool value);
-};
 
 
 /**
@@ -1348,7 +1335,7 @@ typedef Handle<Value> (*NamedPropertyQuery)(Handle<String> property,
  * The return value is true if the property could be deleted and false
  * otherwise.
  */
-typedef Handle<Boolean> (*NamedPropertyDeleter)(Handle<String> property,
+typedef Handle<Value> (*NamedPropertyDeleter)(Handle<String> property,
                                                 const AccessorInfo& info);
 
 /**
@@ -1387,7 +1374,7 @@ typedef Handle<Value> (*IndexedPropertyQuery)(uint32_t index,
  * The return value is true if the property could be deleted and false
  * otherwise.
  */
-typedef Handle<Boolean> (*IndexedPropertyDeleter)(uint32_t index,
+typedef Handle<Value> (*IndexedPropertyDeleter)(uint32_t index,
                                                   const AccessorInfo& info);
 
 /**

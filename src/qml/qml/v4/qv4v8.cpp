@@ -450,11 +450,6 @@ bool Value::IsError() const
     return ConstValuePtr(this)->asErrorObject();
 }
 
-Handle<Boolean> Value::ToBoolean() const
-{
-    return QV4::Value::fromBoolean(ConstValuePtr(this)->toBoolean());
-}
-
 Handle<String> Value::ToString() const
 {
     return QV4::Value::fromString(ConstValuePtr(this)->toString(currentEngine()->current));
@@ -510,17 +505,6 @@ Handle<Value> Value::fromV4Value(const QV4::Value &v4Value)
     Handle<Value> res;
     res.val = v4Value.val;
     return res;
-}
-
-
-bool Boolean::Value() const
-{
-    return BooleanValue();
-}
-
-Handle<Boolean> Boolean::New(bool value)
-{
-    return Value::fromV4Value(QV4::Value::fromBoolean(value));
 }
 
 
@@ -1392,17 +1376,17 @@ protected:
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_namedPropertyDeleter) {
-            Handle<Boolean> result = that->m_template->m_namedPropertyDeleter(String::New(name), that->namedAccessorInfo());
+            Handle<Value> result = that->m_template->m_namedPropertyDeleter(String::New(name), that->namedAccessorInfo());
             if (!result.IsEmpty())
-                return result->Value();
+                return result->BooleanValue();
         }
 
         bool result = BaseClass::deleteProperty(m, ctx, name);
 
         if (that->m_template->m_fallbackPropertyDeleter) {
-            Handle<Boolean> interceptResult = that->m_template->m_fallbackPropertyDeleter(String::New(name), that->fallbackAccessorInfo());
+            Handle<Value> interceptResult = that->m_template->m_fallbackPropertyDeleter(String::New(name), that->fallbackAccessorInfo());
             if (!interceptResult.IsEmpty())
-                result = interceptResult->Value();
+                result = interceptResult->BooleanValue();
         }
 
         return result;
@@ -1412,9 +1396,9 @@ protected:
     {
         V4V8Object *that = static_cast<V4V8Object*>(m);
         if (that->m_template->m_indexedPropertyDeleter) {
-            Handle<Boolean> result = that->m_template->m_indexedPropertyDeleter(index, that->indexedAccessorInfo());
+            Handle<Value> result = that->m_template->m_indexedPropertyDeleter(index, that->indexedAccessorInfo());
             if (!result.IsEmpty())
-                return result->Value();
+                return result->BooleanValue();
         }
         return BaseClass::deleteIndexedProperty(m, ctx, index);
     }

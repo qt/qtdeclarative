@@ -97,7 +97,7 @@ private:
 
     static v8::Handle<v8::Value> IndexedGetter(quint32 index, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> IndexedSetter(quint32 index, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);
-    static v8::Handle<v8::Boolean> IndexedDeleter(quint32 index, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> IndexedDeleter(quint32 index, const v8::AccessorInfo &info);
     static v8::Handle<v8::Array> IndexedEnumerator(const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> LengthGetter(v8::Handle<v8::String> property, const v8::AccessorInfo &info);
     static void LengthSetter(v8::Handle<v8::String> property, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);

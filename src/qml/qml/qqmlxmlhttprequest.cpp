@@ -643,7 +643,7 @@ v8::Handle<v8::Value> Text::isElementContentWhitespace(v8::Handle<v8::String>, c
     if (!r) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
     Q_UNUSED(engine)
-    return v8::Boolean::New(r->d->data.trimmed().isEmpty());
+    return QV4::Value::fromBoolean(r->d->data.trimmed().isEmpty());
 }
 
 v8::Handle<v8::Value> Text::wholeText(v8::Handle<v8::String>, const v8::AccessorInfo &args)
@@ -940,7 +940,7 @@ v8::Handle<v8::Value> Document::xmlStandalone(v8::Handle<v8::String>, const v8::
     if (!r || r->d->type != NodeImpl::Document) return QV4::Value::undefinedValue();
     QV8Engine *engine = V8ENGINE();
     Q_UNUSED(engine)
-    return v8::Boolean::New(static_cast<DocumentImpl *>(r->d)->isStandalone);
+    return QV4::Value::fromBoolean(static_cast<DocumentImpl *>(r->d)->isStandalone);
 }
 
 v8::Handle<v8::Value> Document::xmlVersion(v8::Handle<v8::String>, const v8::AccessorInfo& args)

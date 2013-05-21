@@ -242,7 +242,7 @@ v8::Handle<v8::Value> QV8SequenceWrapper::IndexedGetter(quint32 index, const v8:
     return sr->indexedGetter(index);
 }
 
-v8::Handle<v8::Boolean> QV8SequenceWrapper::IndexedDeleter(quint32 index, const v8::AccessorInfo &info)
+v8::Handle<v8::Value> QV8SequenceWrapper::IndexedDeleter(quint32 index, const v8::AccessorInfo &info)
 {
     QV8SequenceResource *sr = v8_resource_cast<QV8SequenceResource>(info.This());
     Q_ASSERT(sr);

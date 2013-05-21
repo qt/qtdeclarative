@@ -310,7 +310,7 @@ QV4::Value consoleAssert(const v8::Arguments &args)
     if (args.Length() == 0)
         V4THROW_ERROR("console.assert(): Missing argument");
 
-    if (!args[0]->ToBoolean()->Value()) {
+    if (!args[0]->v4Value().booleanValue()) {
         QString message;
         for (int i = 1; i < args.Length(); ++i) {
             if (i != 1)
@@ -1627,7 +1627,7 @@ QV4::Value binding(const v8::Arguments &args)
         V4THROW_TYPE("binding(): argument (binding expression) must be a function");
 
     v8::Handle<v8::Object> rv = args[0]->ToObject()->Clone();
-    rv->SetHiddenValue(v8::Value::fromV4Value(V8ENGINE()->bindingFlagKey()), v8::Boolean::New(true));
+    rv->SetHiddenValue(v8::Value::fromV4Value(V8ENGINE()->bindingFlagKey()), QV4::Value::fromBoolean(true));
     return rv->v4Value();
 }
 

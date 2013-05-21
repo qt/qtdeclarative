@@ -444,9 +444,9 @@ public:
         const QQmlAdaptorModel *const model = static_cast<QQmlDMCachedModelData *>(data)->type->model;
         if (data->index >= 0 && *model) {
             const QAbstractItemModel * const aim = model->aim();
-            return v8::Boolean::New(aim->hasChildren(aim->index(data->index, 0, model->rootIndex)));
+            return QV4::Value::fromBoolean(aim->hasChildren(aim->index(data->index, 0, model->rootIndex)));
         } else {
-            return v8::Boolean::New(false);
+            return QV4::Value::fromBoolean(false);
         }
     }
 };

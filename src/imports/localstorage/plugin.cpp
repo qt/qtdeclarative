@@ -166,7 +166,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_rows_forwardOnly(v8::Handle<v8::Stri
     QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(info.This());
     if (!r || r->type != QV8SqlDatabaseResource::Rows)
         V8THROW_REFERENCE("Not a SQLDatabase::Rows object");
-    return v8::Boolean::New(r->query.isForwardOnly());
+    return QV4::Value::fromBoolean(r->query.isForwardOnly());
 }
 
 static void qmlsqldatabase_rows_setForwardOnly(v8::Handle<v8::String> /* property */,

@@ -340,7 +340,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Handle<v8::String> propert
     VALUE_TYPE_LOAD(QMetaType::QReal, qreal, QV4::Value::fromDouble);
     VALUE_TYPE_LOAD(QMetaType::Int, int, QV4::Value::fromInt32);
     VALUE_TYPE_LOAD(QMetaType::QString, QString, r->engine->toString);
-    VALUE_TYPE_LOAD(QMetaType::Bool, bool, v8::Boolean::New);
+    VALUE_TYPE_LOAD(QMetaType::Bool, bool, QV4::Value::fromBoolean);
 
     QVariant v(result->propType, (void *)0);
     void *args[] = { v.data(), 0 };
