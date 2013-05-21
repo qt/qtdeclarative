@@ -255,9 +255,9 @@ static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, bool v)
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *e, const QString &v)
 { return e->toString(v); }
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, float v)
-{ return v8::Number::New(v); }
+{ return QV4::Value::fromDouble(v); }
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, double v)
-{ return v8::Number::New(v); }
+{ return QV4::Value::fromDouble(v); }
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *e, QObject *v)
 { return e->newQObject(v); }
 
@@ -675,13 +675,13 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     } else if (value->IsFunction()) {
         // this is handled by the binding creation above
     } else if (property->propType == QMetaType::Int && value->IsNumber()) {
-        PROPERTY_STORE(int, qRound(value->ToNumber()->Value()));
+        PROPERTY_STORE(int, qRound(value->v4Value().asDouble()));
     } else if (property->propType == QMetaType::QReal && value->IsNumber()) {
-        PROPERTY_STORE(qreal, qreal(value->ToNumber()->Value()));
+        PROPERTY_STORE(qreal, qreal(value->v4Value().asDouble()));
     } else if (property->propType == QMetaType::Float && value->IsNumber()) {
-        PROPERTY_STORE(float, float(value->ToNumber()->Value()));
+        PROPERTY_STORE(float, float(value->v4Value().asDouble()));
     } else if (property->propType == QMetaType::Double && value->IsNumber()) {
-        PROPERTY_STORE(double, double(value->ToNumber()->Value()));
+        PROPERTY_STORE(double, double(value->v4Value().asDouble()));
     } else if (property->propType == QMetaType::QString && value->IsString()) {
         PROPERTY_STORE(QString, value->v4Value().toQString());
     } else if (property->isVarProperty()) {

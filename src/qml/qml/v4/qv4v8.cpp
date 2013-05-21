@@ -455,11 +455,6 @@ Handle<Boolean> Value::ToBoolean() const
     return QV4::Value::fromBoolean(ConstValuePtr(this)->toBoolean());
 }
 
-Handle<Number> Value::ToNumber() const
-{
-    return QV4::Value::fromDouble(ConstValuePtr(this)->toNumber());
-}
-
 Handle<String> Value::ToString() const
 {
     return QV4::Value::fromString(ConstValuePtr(this)->toString(currentEngine()->current));
@@ -645,23 +640,6 @@ String::Value::Value(Handle<v8::Value> obj)
     str = obj->ToString()->asQString();
 }
 
-
-double Number::Value() const
-{
-    const QV4::Value *v = ConstValuePtr(this);
-    assert(v->isNumber());
-    return v->asDouble();
-}
-
-Handle<Number> Number::New(double value)
-{
-    return QV4::Value::fromDouble(value);
-}
-
-Number *Number::Cast(v8::Value *obj)
-{
-    return static_cast<Number *>(obj);
-}
 
 struct ExternalResourceWrapper : public QV4::Object::ExternalResource
 {

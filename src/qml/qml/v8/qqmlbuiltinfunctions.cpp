@@ -501,8 +501,8 @@ QV4::Value point(const v8::Arguments &args)
     if (args.Length() != 2)
         V4THROW_ERROR("Qt.point(): Invalid arguments");
 
-    double x = args[0]->ToNumber()->Value();
-    double y = args[1]->ToNumber()->Value();
+    double x = args[0]->v4Value().asDouble();
+    double y = args[1]->v4Value().asDouble();
 
     return V8ENGINE()->fromVariant(QVariant::fromValue(QPointF(x, y)));
 }
@@ -516,8 +516,8 @@ QV4::Value size(const v8::Arguments &args)
     if (args.Length() != 2)
         V4THROW_ERROR("Qt.size(): Invalid arguments");
 
-    double w = args[0]->ToNumber()->Value();
-    double h = args[1]->ToNumber()->Value();
+    double w = args[0]->v4Value().asDouble();
+    double h = args[1]->v4Value().asDouble();
 
     return V8ENGINE()->fromVariant(QVariant::fromValue(QSizeF(w, h)));
 }
@@ -532,8 +532,8 @@ QV4::Value vector2d(const v8::Arguments &args)
         V4THROW_ERROR("Qt.vector2d(): Invalid arguments");
 
     float xy[3]; // qvector2d uses float internally
-    xy[0] = args[0]->ToNumber()->Value();
-    xy[1] = args[1]->ToNumber()->Value();
+    xy[0] = args[0]->v4Value().asDouble();
+    xy[1] = args[1]->v4Value().asDouble();
 
     const void *params[] = { xy };
     return V8ENGINE()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector2D, 1, params));
@@ -549,9 +549,9 @@ QV4::Value vector3d(const v8::Arguments &args)
         V4THROW_ERROR("Qt.vector3d(): Invalid arguments");
 
     float xyz[3]; // qvector3d uses float internally
-    xyz[0] = args[0]->ToNumber()->Value();
-    xyz[1] = args[1]->ToNumber()->Value();
-    xyz[2] = args[2]->ToNumber()->Value();
+    xyz[0] = args[0]->v4Value().asDouble();
+    xyz[1] = args[1]->v4Value().asDouble();
+    xyz[2] = args[2]->v4Value().asDouble();
 
     const void *params[] = { xyz };
     return V8ENGINE()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector3D, 1, params));
@@ -567,10 +567,10 @@ QV4::Value vector4d(const v8::Arguments &args)
         V4THROW_ERROR("Qt.vector4d(): Invalid arguments");
 
     float xyzw[4]; // qvector4d uses float internally
-    xyzw[0] = args[0]->ToNumber()->Value();
-    xyzw[1] = args[1]->ToNumber()->Value();
-    xyzw[2] = args[2]->ToNumber()->Value();
-    xyzw[3] = args[3]->ToNumber()->Value();
+    xyzw[0] = args[0]->v4Value().asDouble();
+    xyzw[1] = args[1]->v4Value().asDouble();
+    xyzw[2] = args[2]->v4Value().asDouble();
+    xyzw[3] = args[3]->v4Value().asDouble();
 
     const void *params[] = { xyzw };
     return V8ENGINE()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector4D, 1, params));
@@ -586,10 +586,10 @@ QV4::Value quaternion(const v8::Arguments &args)
         V4THROW_ERROR("Qt.quaternion(): Invalid arguments");
 
     qreal sxyz[4]; // qquaternion uses qreal internally
-    sxyz[0] = args[0]->ToNumber()->Value();
-    sxyz[1] = args[1]->ToNumber()->Value();
-    sxyz[2] = args[2]->ToNumber()->Value();
-    sxyz[3] = args[3]->ToNumber()->Value();
+    sxyz[0] = args[0]->v4Value().asDouble();
+    sxyz[1] = args[1]->v4Value().asDouble();
+    sxyz[2] = args[2]->v4Value().asDouble();
+    sxyz[3] = args[3]->v4Value().asDouble();
 
     const void *params[] = { sxyz };
     return V8ENGINE()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QQuaternion, 1, params));
@@ -638,22 +638,22 @@ QV4::Value matrix4x4(const v8::Arguments &args)
         V4THROW_ERROR("Qt.matrix4x4(): Invalid arguments");
 
     qreal vals[16]; // qmatrix4x4 uses qreal internally
-    vals[0] = args[0]->ToNumber()->Value();
-    vals[1] = args[1]->ToNumber()->Value();
-    vals[2] = args[2]->ToNumber()->Value();
-    vals[3] = args[3]->ToNumber()->Value();
-    vals[4] = args[4]->ToNumber()->Value();
-    vals[5] = args[5]->ToNumber()->Value();
-    vals[6] = args[6]->ToNumber()->Value();
-    vals[7] = args[7]->ToNumber()->Value();
-    vals[8] = args[8]->ToNumber()->Value();
-    vals[9] = args[9]->ToNumber()->Value();
-    vals[10] = args[10]->ToNumber()->Value();
-    vals[11] = args[11]->ToNumber()->Value();
-    vals[12] = args[12]->ToNumber()->Value();
-    vals[13] = args[13]->ToNumber()->Value();
-    vals[14] = args[14]->ToNumber()->Value();
-    vals[15] = args[15]->ToNumber()->Value();
+    vals[0] = args[0]->v4Value().asDouble();
+    vals[1] = args[1]->v4Value().asDouble();
+    vals[2] = args[2]->v4Value().asDouble();
+    vals[3] = args[3]->v4Value().asDouble();
+    vals[4] = args[4]->v4Value().asDouble();
+    vals[5] = args[5]->v4Value().asDouble();
+    vals[6] = args[6]->v4Value().asDouble();
+    vals[7] = args[7]->v4Value().asDouble();
+    vals[8] = args[8]->v4Value().asDouble();
+    vals[9] = args[9]->v4Value().asDouble();
+    vals[10] = args[10]->v4Value().asDouble();
+    vals[11] = args[11]->v4Value().asDouble();
+    vals[12] = args[12]->v4Value().asDouble();
+    vals[13] = args[13]->v4Value().asDouble();
+    vals[14] = args[14]->v4Value().asDouble();
+    vals[15] = args[15]->v4Value().asDouble();
 
     const void *params[] = { vals };
     return V8ENGINE()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 1, params));
@@ -691,7 +691,7 @@ QV4::Value lighter(const v8::Arguments &args)
 
     qreal factor = 1.5;
     if (args.Length() == 2)
-        factor = args[1]->ToNumber()->Value();
+        factor = args[1]->v4Value().asDouble();
 
     return V8ENGINE()->fromVariant(QQml_colorProvider()->lighter(v, factor));
 }
@@ -729,7 +729,7 @@ QV4::Value darker(const v8::Arguments &args)
 
     qreal factor = 2.0;
     if (args.Length() == 2)
-        factor = args[1]->ToNumber()->Value();
+        factor = args[1]->v4Value().asDouble();
 
     return V8ENGINE()->fromVariant(QQml_colorProvider()->darker(v, factor));
 }
@@ -819,7 +819,7 @@ QV4::Value formatDate(const v8::Arguments &args)
             QString format = V8ENGINE()->toVariant(args[1]->v4Value(), -1).toString();
             formattedDate = date.toString(format);
         } else if (args[1]->IsNumber()) {
-            quint32 intFormat = args[1]->ToNumber()->Value();
+            quint32 intFormat = args[1]->v4Value().asDouble();
             Qt::DateFormat format = Qt::DateFormat(intFormat);
             formattedDate = date.toString(format);
         } else {
@@ -866,7 +866,7 @@ QV4::Value formatTime(const v8::Arguments &args)
             QString format = V8ENGINE()->toVariant(args[1]->v4Value(), -1).toString();
             formattedTime = time.toString(format);
         } else if (args[1]->IsNumber()) {
-            quint32 intFormat = args[1]->ToNumber()->Value();
+            quint32 intFormat = args[1]->v4Value().asDouble();
             Qt::DateFormat format = Qt::DateFormat(intFormat);
             formattedTime = time.toString(format);
         } else {
@@ -982,7 +982,7 @@ QV4::Value formatDateTime(const v8::Arguments &args)
             QString format = V8ENGINE()->toVariant(args[1]->v4Value(), -1).toString();
             formattedDt = dt.toString(format);
         } else if (args[1]->IsNumber()) {
-            quint32 intFormat = args[1]->ToNumber()->Value();
+            quint32 intFormat = args[1]->v4Value().asDouble();
             Qt::DateFormat format = Qt::DateFormat(intFormat);
             formattedDt = dt.toString(format);
         } else {

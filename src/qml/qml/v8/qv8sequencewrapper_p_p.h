@@ -146,7 +146,7 @@ static qreal convertV8ValueToReal(QV8Engine *, v8::Handle<v8::Value> v)
 
 static v8::Handle<v8::Value> convertRealToV8Value(QV8Engine *, qreal v)
 {
-    return v8::Number::New(v);
+    return QV4::Value::fromDouble(v);
 }
 
 static QString convertRealToString(QV8Engine *, qreal v)

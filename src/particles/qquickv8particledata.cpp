@@ -322,7 +322,7 @@ static QV4::Value particleData_curSize(const v8::Arguments &args)
     if (!r || !r->datum) \
         V8THROW_ERROR("Not a valid ParticleData object"); \
 \
-    return v8::Number::New((r->datum->color. VAR )/255.0);\
+    return QV4::Value::fromDouble((r->datum->color. VAR )/255.0);\
 }\
 \
 static void particleData_set_ ## NAME (v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)\
@@ -359,7 +359,7 @@ static void particleData_set_ ## VARIABLE (v8::Handle<v8::String>, v8::Handle<v8
     if (!r || !r->datum) \
         V8THROW_ERROR("Not a valid ParticleData object"); \
 \
-    return v8::Number::New(r->datum-> VARIABLE);\
+    return QV4::Value::fromDouble(r->datum-> VARIABLE);\
 }\
 \
 static void particleData_set_ ## VARIABLE (v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)\
@@ -377,7 +377,7 @@ static void particleData_set_ ## VARIABLE (v8::Handle<v8::String>, v8::Handle<v8
     if (!r || !r->datum) \
         V8THROW_ERROR("Not a valid ParticleData object"); \
 \
-    return v8::Number::New(r->datum-> GETTER ());\
+    return QV4::Value::fromDouble(r->datum-> GETTER ());\
 }\
 \
 static void particleData_set_ ## VARIABLE (v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)\

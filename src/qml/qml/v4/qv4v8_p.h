@@ -108,7 +108,6 @@ class String;
 class StringObject;
 class Value;
 class Utils;
-class Number;
 class NumberObject;
 class Object;
 class Array;
@@ -772,7 +771,6 @@ class V8EXPORT Value {
   bool IsError() const;
 
   Handle<Boolean> ToBoolean() const;
-  Handle<Number> ToNumber() const;
   Handle<String> ToString() const;
   Handle<Object> ToObject() const;
 
@@ -1009,17 +1007,6 @@ class V8EXPORT String : public Primitive {
 
       QString asQString() const;
       QV4::String *asV4String() const;
-};
-
-
-/**
- * A JavaScript number value (ECMA-262, 4.3.20)
- */
-class V8EXPORT Number : public Primitive {
- public:
-  double Value() const;
-  static Handle<Number> New(double value);
-  static Number* Cast(v8::Value* obj);
 };
 
 
@@ -1433,11 +1420,11 @@ typedef Handle<Array> (*IndexedPropertyEnumerator)(const AccessorInfo& info);
  *
  * \code
  *    v8::Local<v8::FunctionTemplate> t = v8::FunctionTemplate::New();
- *    t->Set("func_property", v8::Number::New(1));
+ *    t->Set("func_property", QV4::Value::fromDouble(1));
  *
  *    v8::Local<v8::Template> proto_t = t->PrototypeTemplate();
  *    proto_t->Set("proto_method", v8::FunctionTemplate::New(InvokeCallback));
- *    proto_t->Set("proto_const", v8::Number::New(2));
+ *    proto_t->Set("proto_const", QV4::Value::fromDouble(2));
  *
  *    v8::Local<v8::ObjectTemplate> instance_t = t->InstanceTemplate();
  *    instance_t->SetAccessor("instance_accessor", InstanceAccessorCallback);

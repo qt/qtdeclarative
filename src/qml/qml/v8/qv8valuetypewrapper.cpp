@@ -337,7 +337,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Handle<v8::String> propert
     }
 
     // These four types are the most common used by the value type wrappers
-    VALUE_TYPE_LOAD(QMetaType::QReal, qreal, v8::Number::New);
+    VALUE_TYPE_LOAD(QMetaType::QReal, qreal, QV4::Value::fromDouble);
     VALUE_TYPE_LOAD(QMetaType::Int, int, QV4::Value::fromInt32);
     VALUE_TYPE_LOAD(QMetaType::QString, QString, r->engine->toString);
     VALUE_TYPE_LOAD(QMetaType::Bool, bool, v8::Boolean::New);

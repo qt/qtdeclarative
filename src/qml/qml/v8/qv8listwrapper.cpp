@@ -187,7 +187,7 @@ v8::Handle<v8::Array> QV8ListWrapper::Enumerator(const v8::AccessorInfo &info)
     v8::Handle<v8::Array> rv = v8::Array::New(count);
 
     for (uint ii = 0; ii < count; ++ii)
-        rv->Set(ii, v8::Number::New(ii));
+        rv->Set(ii, QV4::Value::fromDouble(ii));
 
     return rv;
 }

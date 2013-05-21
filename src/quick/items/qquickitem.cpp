@@ -3779,15 +3779,15 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
 
             QRectF r = mapRectFromItem(itemObj, QRectF(x, y, w, h));
 
-            rv->Set(v8::String::New("x"), v8::Number::New(r.x()));
-            rv->Set(v8::String::New("y"), v8::Number::New(r.y()));
-            rv->Set(v8::String::New("width"), v8::Number::New(r.width()));
-            rv->Set(v8::String::New("height"), v8::Number::New(r.height()));
+            rv->Set(v8::String::New("x"), QV4::Value::fromDouble(r.x()));
+            rv->Set(v8::String::New("y"), QV4::Value::fromDouble(r.y()));
+            rv->Set(v8::String::New("width"), QV4::Value::fromDouble(r.width()));
+            rv->Set(v8::String::New("height"), QV4::Value::fromDouble(r.height()));
         } else {
             QPointF p = mapFromItem(itemObj, QPointF(x, y));
 
-            rv->Set(v8::String::New("x"), v8::Number::New(p.x()));
-            rv->Set(v8::String::New("y"), v8::Number::New(p.y()));
+            rv->Set(v8::String::New("x"), QV4::Value::fromDouble(p.x()));
+            rv->Set(v8::String::New("y"), QV4::Value::fromDouble(p.y()));
         }
     }
 }
@@ -3851,15 +3851,15 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
 
             QRectF r = mapRectToItem(itemObj, QRectF(x, y, w, h));
 
-            rv->Set(v8::String::New("x"), v8::Number::New(r.x()));
-            rv->Set(v8::String::New("y"), v8::Number::New(r.y()));
-            rv->Set(v8::String::New("width"), v8::Number::New(r.width()));
-            rv->Set(v8::String::New("height"), v8::Number::New(r.height()));
+            rv->Set(v8::String::New("x"), QV4::Value::fromDouble(r.x()));
+            rv->Set(v8::String::New("y"), QV4::Value::fromDouble(r.y()));
+            rv->Set(v8::String::New("width"), QV4::Value::fromDouble(r.width()));
+            rv->Set(v8::String::New("height"), QV4::Value::fromDouble(r.height()));
         } else {
             QPointF p = mapToItem(itemObj, QPointF(x, y));
 
-            rv->Set(v8::String::New("x"), v8::Number::New(p.x()));
-            rv->Set(v8::String::New("y"), v8::Number::New(p.y()));
+            rv->Set(v8::String::New("x"), QV4::Value::fromDouble(p.x()));
+            rv->Set(v8::String::New("y"), QV4::Value::fromDouble(p.y()));
         }
     }
 }

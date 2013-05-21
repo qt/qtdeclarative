@@ -744,7 +744,7 @@ static v8::Handle<v8::Value> ctx2d_globalAlpha(v8::Handle<v8::String>, const v8:
     QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
     CHECK_CONTEXT(r)
 
-    return v8::Number::New(r->context->state.globalAlpha);
+    return QV4::Value::fromDouble(r->context->state.globalAlpha);
 }
 
 static void ctx2d_globalAlpha_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
@@ -1372,7 +1372,7 @@ v8::Handle<v8::Value> ctx2d_lineWidth(v8::Handle<v8::String>, const v8::Accessor
     CHECK_CONTEXT(r)
 
 
-    return v8::Number::New(r->context->state.lineWidth);
+    return QV4::Value::fromDouble(r->context->state.lineWidth);
 }
 
 static void ctx2d_lineWidth_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
@@ -1399,7 +1399,7 @@ v8::Handle<v8::Value> ctx2d_miterLimit(v8::Handle<v8::String>, const v8::Accesso
     CHECK_CONTEXT(r)
 
 
-    return v8::Number::New(r->context->state.miterLimit);
+    return QV4::Value::fromDouble(r->context->state.miterLimit);
 }
 
 static void ctx2d_miterLimit_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
@@ -1426,7 +1426,7 @@ v8::Handle<v8::Value> ctx2d_shadowBlur(v8::Handle<v8::String>, const v8::Accesso
     CHECK_CONTEXT(r)
 
 
-    return v8::Number::New(r->context->state.shadowBlur);
+    return QV4::Value::fromDouble(r->context->state.shadowBlur);
 }
 
 static void ctx2d_shadowBlur_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
@@ -1482,7 +1482,7 @@ v8::Handle<v8::Value> ctx2d_shadowOffsetX(v8::Handle<v8::String>, const v8::Acce
     CHECK_CONTEXT(r)
 
 
-    return v8::Number::New(r->context->state.shadowOffsetX);
+    return QV4::Value::fromDouble(r->context->state.shadowOffsetX);
 }
 
 static void ctx2d_shadowOffsetX_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
@@ -1508,7 +1508,7 @@ v8::Handle<v8::Value> ctx2d_shadowOffsetY(v8::Handle<v8::String>, const v8::Acce
     CHECK_CONTEXT(r)
 
 
-    return v8::Number::New(r->context->state.shadowOffsetY);
+    return QV4::Value::fromDouble(r->context->state.shadowOffsetY);
 }
 
 static void ctx2d_shadowOffsetY_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
