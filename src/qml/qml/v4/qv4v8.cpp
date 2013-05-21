@@ -475,19 +475,9 @@ Handle<Integer> Value::ToInteger() const
     return QV4::Value::fromDouble(ConstValuePtr(this)->toInteger());
 }
 
-Handle<Uint32> Value::ToUint32() const
-{
-    return QV4::Value::fromUInt32(ConstValuePtr(this)->toUInt32());
-}
-
 Handle<Int32> Value::ToInt32() const
 {
     return QV4::Value::fromInt32(ConstValuePtr(this)->toInt32());
-}
-
-Handle<Uint32> Value::ToArrayIndex() const
-{
-    return QV4::Value::fromUInt32(ConstValuePtr(this)->asArrayIndex());
 }
 
 bool Value::BooleanValue() const
@@ -711,14 +701,6 @@ int32_t Int32::Value() const
     assert(v->isInteger());
     return v->int_32;
 }
-
-uint32_t Uint32::Value() const
-{
-    const QV4::Value *v = ConstValuePtr(this);
-    assert(v->isNumber());
-    return v->toUInt32();
-}
-
 
 struct ExternalResourceWrapper : public QV4::Object::ExternalResource
 {
@@ -1128,125 +1110,6 @@ Function *Function::Cast(Value *obj)
     return static_cast<Function *>(obj);
 }
 
-
-Handle<Value> Date::New(double time)
-{
-    QV4::Object *o = currentEngine()->newDateObject(QV4::Value::fromDouble(time));
-    return QV4::Value::fromObject(o);
-}
-
-double Date::NumberValue() const
-{
-    DateObject *d = ConstValuePtr(this)->asDateObject();
-    assert(d);
-    return d->value.doubleValue();
-}
-
-Date *Date::Cast(Value *obj)
-{
-    return static_cast<Date *>(obj);
-}
-
-void Date::DateTimeConfigurationChangeNotification()
-{
-    Q_UNIMPLEMENTED();
-}
-
-
-Handle<Value> NumberObject::New(double value)
-{
-    QV4::Object *o = currentEngine()->newNumberObject(QV4::Value::fromDouble(value));
-    return QV4::Value::fromObject(o);
-}
-
-double NumberObject::NumberValue() const
-{
-    QV4::NumberObject *n = ConstValuePtr(this)->asNumberObject();
-    assert(n);
-    return n->value.doubleValue();
-}
-
-NumberObject *NumberObject::Cast(Value *obj)
-{
-    return static_cast<NumberObject *>(obj);
-}
-
-Handle<Value> BooleanObject::New(bool value)
-{
-    QV4::Object *o = currentEngine()->newBooleanObject(QV4::Value::fromBoolean(value));
-    return QV4::Value::fromObject(o);
-}
-
-bool BooleanObject::BooleanValue() const
-{
-    QV4::BooleanObject *b = ConstValuePtr(this)->asBooleanObject();
-    assert(b);
-    return b->value.booleanValue();
-}
-
-BooleanObject *BooleanObject::Cast(Value *obj)
-{
-    return static_cast<BooleanObject *>(obj);
-}
-
-Handle<Value> StringObject::New(Handle<String> value)
-{
-    QV4::Object *o = currentEngine()->newStringObject(QV4::Value::fromString(value->v4Value().asString()));
-    return QV4::Value::fromObject(o);
-}
-
-Handle<String> StringObject::StringValue() const
-{
-    QV4::StringObject *s = ConstValuePtr(this)->asStringObject();
-    assert(s);
-    return s->value;
-}
-
-StringObject *StringObject::Cast(Value *obj)
-{
-    return static_cast<StringObject *>(obj);
-}
-
-Handle<RegExp> RegExp::New(Handle<String> pattern, RegExp::Flags flags)
-{
-    int f = 0;
-    if (flags & kGlobal)
-        f |= V4IR::RegExp::RegExp_Global;
-    if (flags & kIgnoreCase)
-        f |= V4IR::RegExp::RegExp_IgnoreCase;
-    if (flags & kMultiline)
-        f |= V4IR::RegExp::RegExp_Multiline;
-    QV4::Object *o = currentEngine()->newRegExpObject(pattern->asQString(), f);
-    return QV4::Value::fromObject(o);
-}
-
-Handle<String> RegExp::GetSource() const
-{
-    RegExpObject *re = ConstValuePtr(this)->asRegExpObject();
-    assert(re);
-    return QV4::Value::fromString(currentEngine()->current, re->value->pattern());
-}
-
-RegExp::Flags RegExp::GetFlags() const
-{
-    RegExpObject *re = ConstValuePtr(this)->asRegExpObject();
-    assert(re);
-
-    int f = 0;
-    if (re->global)
-        f |= kGlobal;
-    if (re->value->ignoreCase())
-        f |= kIgnoreCase;
-    if (re->value->multiLine())
-        f |= kMultiline;
-
-    return (RegExp::Flags)f;
-}
-
-RegExp *RegExp::Cast(Value *obj)
-{
-    return static_cast<RegExp *>(obj);
-}
 
 struct VoidStarWrapper : public QV4::Object::ExternalResource
 {

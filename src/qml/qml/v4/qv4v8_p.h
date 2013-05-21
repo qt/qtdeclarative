@@ -780,14 +780,7 @@ class V8EXPORT Value {
   Handle<String> ToString() const;
   Handle<Object> ToObject() const;
   Handle<Integer> ToInteger() const;
-  Handle<Uint32> ToUint32() const;
   Handle<Int32> ToInt32() const;
-
-  /**
-   * Attempts to convert a string to an array index.
-   * Returns an empty handle if the conversion fails.
-   */
-  Handle<Uint32> ToArrayIndex() const;
 
   bool BooleanValue() const;
   double NumberValue() const;
@@ -1059,17 +1052,6 @@ class V8EXPORT Int32 : public Integer {
 };
 
 
-/**
- * A JavaScript value representing a 32-bit unsigned integer.
- */
-class V8EXPORT Uint32 : public Integer {
- public:
-  uint32_t Value() const;
- private:
-  Uint32();
-};
-
-
 enum PropertyAttribute {
   None       = 0,
   ReadOnly   = 1 << 0,
@@ -1284,133 +1266,6 @@ class V8EXPORT Function : public Object {
   static Function* Cast(Value* obj);
 };
 
-
-/**
- * An instance of the built-in Date constructor (ECMA-262, 15.9).
- */
-class V8EXPORT Date : public Object {
- public:
-  static Handle<Value> New(double time);
-
-  /**
-   * A specialization of Value::NumberValue that is more efficient
-   * because we know the structure of this object.
-   */
-  double NumberValue() const;
-
-  static Date* Cast(v8::Value* obj);
-
-  /**
-   * Notification that the embedder has changed the time zone,
-   * daylight savings time, or other date / time configuration
-   * parameters.  V8 keeps a cache of various values used for
-   * date / time computation.  This notification will reset
-   * those cached values for the current context so that date /
-   * time configuration changes would be reflected in the Date
-   * object.
-   *
-   * This API should not be called more than needed as it will
-   * negatively impact the performance of date operations.
-   */
-  static void DateTimeConfigurationChangeNotification();
-
-};
-
-
-/**
- * A Number object (ECMA-262, 4.3.21).
- */
-class V8EXPORT NumberObject : public Object {
- public:
-  static Handle<Value> New(double value);
-
-  /**
-   * Returns the Number held by the object.
-   */
-  double NumberValue() const;
-
-  static NumberObject* Cast(v8::Value* obj);
-
-};
-
-
-/**
- * A Boolean object (ECMA-262, 4.3.15).
- */
-class V8EXPORT BooleanObject : public Object {
- public:
-  static Handle<Value> New(bool value);
-
-  /**
-   * Returns the Boolean held by the object.
-   */
-  bool BooleanValue() const;
-
-  static BooleanObject* Cast(v8::Value* obj);
-
-};
-
-
-/**
- * A String object (ECMA-262, 4.3.18).
- */
-class V8EXPORT StringObject : public Object {
- public:
-  static Handle<Value> New(Handle<String> value);
-
-  /**
-   * Returns the String held by the object.
-   */
-  Handle<String> StringValue() const;
-
-  static StringObject* Cast(v8::Value* obj);
-
-};
-
-
-/**
- * An instance of the built-in RegExp constructor (ECMA-262, 15.10).
- */
-class V8EXPORT RegExp : public Object {
- public:
-  /**
-   * Regular expression flag bits. They can be or'ed to enable a set
-   * of flags.
-   */
-  enum Flags {
-    kNone = 0,
-    kGlobal = 1,
-    kIgnoreCase = 2,
-    kMultiline = 4
-  };
-
-  /**
-   * Creates a regular expression from the given pattern string and
-   * the flags bit field. May throw a JavaScript exception as
-   * described in ECMA-262, 15.10.4.1.
-   *
-   * For example,
-   *   RegExp::New(v8::String::New("foo"),
-   *               static_cast<RegExp::Flags>(kGlobal | kMultiline))
-   * is equivalent to evaluating "/foo/gm".
-   */
-  static Handle<RegExp> New(Handle<String> pattern,
-                           Flags flags);
-
-  /**
-   * Returns the value of the source property: a string representing
-   * the regular expression.
-   */
-  Handle<String> GetSource() const;
-
-  /**
-   * Returns the flags bit field.
-   */
-  Flags GetFlags() const;
-
-  static RegExp* Cast(v8::Value* obj);
-
-};
 
 
 /**

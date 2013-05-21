@@ -384,7 +384,8 @@ QV4::Value QQmlDateExtension::timeZoneUpdated(QV4::SimpleCallContext *ctx)
     if (ctx->argumentCount != 0)
         V4THROW_ERROR("Locale: Date.timeZoneUpdated(): Invalid arguments");
 
-    v8::Date::DateTimeConfigurationChangeNotification();
+    // ### Anything we need to do here?
+    //v8::Date::DateTimeConfigurationChangeNotification();
 
     return QV4::Value::undefinedValue();
 }
