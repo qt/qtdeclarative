@@ -659,7 +659,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     } else if (value->IsUndefined() && property->propType == QMetaType::QJsonValue) {
         PROPERTY_STORE(QJsonValue, QJsonValue(QJsonValue::Undefined));
     } else if (!newBinding && property->propType == qMetaTypeId<QJSValue>()) {
-        PROPERTY_STORE(QJSValue, engine->scriptValueFromInternal(value->v4Value()));
+        PROPERTY_STORE(QJSValue, new QJSValuePrivate(QV8Engine::getV4(engine), value->v4Value()));
     } else if (value->IsUndefined()) {
         QString error = QLatin1String("Cannot assign [undefined] to ");
         if (!QMetaType::typeName(property->propType))

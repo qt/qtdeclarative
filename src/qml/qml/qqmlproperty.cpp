@@ -56,6 +56,7 @@
 #include "qqmlvmemetaobject_p.h"
 #include "qqmlexpression_p.h"
 #include "qqmlvaluetypeproxybinding_p.h"
+#include <private/qjsvalue_p.h>
 #include <private/qv8bindings_p.h>
 
 #include <QStringList>
@@ -1572,7 +1573,9 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
             expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
             return false;
         }
-        writeValueProperty(object, core, QVariant::fromValue(v8engine->scriptValueFromInternal(result->v4Value())), context, flags);
+        writeValueProperty(object, core, QVariant::fromValue(
+                               QJSValue(new QJSValuePrivate(QV8Engine::getV4(v8engine), result->v4Value()))),
+                           context, flags);
     } else if (isUndefined) {
         QString errorStr = QLatin1String("Unable to assign [undefined] to ");
         if (!QMetaType::typeName(type))

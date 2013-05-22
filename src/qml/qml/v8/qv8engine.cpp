@@ -199,7 +199,7 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
         return QVariant::fromValue(jsonValueFromJS(value));
 
     if (typeHint == qMetaTypeId<QJSValue>())
-        return QVariant::fromValue(scriptValueFromInternal(value));
+        return QVariant::fromValue(QJSValue(new QJSValuePrivate(m_v4Engine, value)));
 
     if (QV4::Object *object = value.asObject()) {
         QV8ObjectResource *r = (QV8ObjectResource *)v8::Handle<v8::Value>(value)->ToObject()->GetExternalResource();
@@ -1304,11 +1304,6 @@ QObject *QV8Engine::qtObjectFromJS(const QV4::Value &value)
     if (type == QV8ObjectResource::QObjectType)
         return qobjectWrapper()->toQObject(r);
     return 0;
-}
-
-QJSValue QV8Engine::scriptValueFromInternal(const QV4::Value &value) const
-{
-    return new QJSValuePrivate(m_v4Engine, value);
 }
 
 void QV8Engine::startTimer(const QString &timerName)

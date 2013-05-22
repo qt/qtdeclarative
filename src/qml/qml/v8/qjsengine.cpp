@@ -320,7 +320,7 @@ QJSValue QJSEngine::newQObject(QObject *object)
 {
     // ###
     Q_D(QJSEngine);
-    return d->scriptValueFromInternal(d->newQObject(object, QV8Engine::JavaScriptOwnership));
+    return new QJSValuePrivate(QV8Engine::getV4(d), d->newQObject(object, QV8Engine::JavaScriptOwnership));
 }
 
 /*!

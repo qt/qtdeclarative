@@ -365,8 +365,6 @@ public:
                                 const QByteArray &targetType,
                                 void **result);
 
-    QJSValue scriptValueFromInternal(const QV4::Value &) const;
-
     // used for console.time(), console.timeEnd()
     void startTimer(const QString &timerName);
     qint64 stopTimer(const QString &timerName, bool *wasRunning);
