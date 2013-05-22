@@ -516,7 +516,7 @@ int main(int argc, char ** argv)
                     window->showFullScreen();
                 else if (options.maximized)
                     window->showMaximized();
-                else
+                else if (!window->isVisible())
                     window->show();
             }
 
