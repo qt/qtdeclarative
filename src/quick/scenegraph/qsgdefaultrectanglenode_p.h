@@ -63,7 +63,7 @@ protected:
     virtual QSGMaterialShader *createShader() const;
 };
 
-class QSGDefaultRectangleNode : public QSGRectangleNode
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultRectangleNode : public QSGRectangleNode
 {
 public:
     QSGDefaultRectangleNode();
