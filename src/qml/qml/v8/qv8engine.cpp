@@ -414,42 +414,6 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
     return QV4::Value::fromObject(m_v4Engine->newVariantObject(variant));
 }
 
-// A handle scope and context must be entered
-v8::Handle<v8::Script> QV8Engine::qmlModeCompile(const QString &source,
-                                                const QString &fileName,
-                                                quint16 lineNumber)
-{
-    v8::Handle<v8::String> v8source = QV4::Value::fromString(m_v4Engine->newString(source));
-    v8::Handle<v8::String> v8fileName = QV4::Value::fromString(m_v4Engine->newString(fileName));
-
-    v8::ScriptOrigin origin(v8fileName, lineNumber - 1);
-
-    v8::Handle<v8::Script> script = v8::Script::Compile(v8source, &origin, 0, v8::Handle<v8::String>(),
-                                                       v8::Script::QmlMode);
-
-    return script;
-}
-
-// A handle scope and context must be entered.
-// source can be either ascii or utf8.
-v8::Handle<v8::Script> QV8Engine::qmlModeCompile(const char *source, int sourceLength,
-                                                const QString &fileName,
-                                                quint16 lineNumber)
-{
-    if (sourceLength == -1)
-        sourceLength = int(strlen(source));
-
-    v8::Handle<v8::String> v8source = QV4::Value::fromString(m_v4Engine->newString(QString::fromUtf8(source, sourceLength)));
-    v8::Handle<v8::String> v8fileName = QV4::Value::fromString(m_v4Engine->newString(fileName));
-
-    v8::ScriptOrigin origin(v8fileName, lineNumber - 1);
-
-    v8::Handle<v8::Script> script = v8::Script::Compile(v8source, &origin, 0, v8::Handle<v8::String>(),
-                                                       v8::Script::QmlMode);
-
-    return script;
-}
-
 QNetworkAccessManager *QV8Engine::networkAccessManager()
 {
     return QQmlEnginePrivate::get(m_engine)->getNetworkAccessManager();

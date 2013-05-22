@@ -292,14 +292,6 @@ public:
     QVariant toVariant(const QV4::Value &value, int typeHint);
     QV4::Value fromVariant(const QVariant &);
 
-    // Compile \a source (from \a fileName at \a lineNumber) in QML mode
-    v8::Handle<v8::Script> qmlModeCompile(const QString &source,
-                                         const QString &fileName = QString(), 
-                                         quint16 lineNumber = 1);
-    v8::Handle<v8::Script> qmlModeCompile(const char *source, int sourceLength = -1,
-                                         const QString &fileName = QString(),
-                                         quint16 lineNumber = 1);
-
     // Return the QML global "scope" object for the \a ctxt context and \a scope object.
     inline v8::Handle<v8::Object> qmlScope(QQmlContextData *ctxt, QObject *scope);
 
