@@ -64,6 +64,8 @@
 #include <stdlib.h>
 #endif
 
+#include <stdint.h>
+
 QT_BEGIN_NAMESPACE
 
 // Enable this to debug hash linking assumptions.
