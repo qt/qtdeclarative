@@ -266,6 +266,7 @@ public:
         if (isQString()) {
             QStringDataPtr dd;
             dd.ptr = strData;
+            strData->ref.ref();
             return QString(dd) == s;
         } else {
             return QLatin1String(cStrData(), length) == s;
