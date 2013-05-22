@@ -173,3 +173,17 @@ Function *Script::function()
     return functionWrapper.value().asFunctionObject()->function;
 }
 
+QV4::Value Script::evaluate(ExecutionEngine *engine,  const QString &script, Object *scopeObject)
+{
+    QV4::Script qmlScript(engine, scopeObject, script, QString());
+
+    QV4::ExecutionContext *ctx = engine->current;
+    QV4::Value result = QV4::Value::undefinedValue();
+    try {
+        qmlScript.parse();
+        result = qmlScript.run();
+    } catch (QV4::Exception &e) {
+        e.accept(ctx);
+    }
+    return result;
+}

@@ -70,6 +70,8 @@ struct Script {
     void parse();
     Value run();
     Function *function();
+
+    static Value evaluate(ExecutionEngine *engine, const QString &script, Object *scopeObject);
 };
 
 }

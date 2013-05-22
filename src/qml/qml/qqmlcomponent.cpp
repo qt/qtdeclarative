@@ -62,6 +62,7 @@
 #include <private/qv8include_p.h>
 
 #include <private/qv4functionobject_p.h>
+#include <private/qv4script_p.h>
 
 #include <QStack>
 #include <QStringList>
@@ -1220,7 +1221,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 
     if (!valuemap.IsEmpty()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
-        QV4::Value f = v8engine->evaluateScript(QString::fromLatin1(INITIALPROPERTIES_SOURCE), args->qmlGlobal().asObject());
+        QV4::Value f = QV4::Script::evaluate(QV8Engine::getV4(v8engine), QString::fromLatin1(INITIALPROPERTIES_SOURCE), args->qmlGlobal().asObject());
         QV4::Value args[] = { object->v4Value(), valuemap->v4Value() };
         f.asFunctionObject()->call(v4engine->current, QV4::Value::fromObject(v4engine->globalObject), args, 2);
     }
@@ -1366,7 +1367,7 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(v8::Handle<v8::
 
     if (!valuemap.IsEmpty()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
-        QV4::Value f = v8engine->evaluateScript(QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal->v4Value().asObject());
+        QV4::Value f = QV4::Script::evaluate(QV8Engine::getV4(v8engine), QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal->v4Value().asObject());
         QV4::Value args[] = { object->v4Value(), valuemap->v4Value() };
         f.asFunctionObject()->call(v4engine->current, QV4::Value::fromObject(v4engine->globalObject), args, 2);
     }
@@ -1454,11 +1455,11 @@ void QV8IncubatorResource::setInitialState(QObject *o)
     if (!valuemap.isEmpty()) {
         QQmlComponentExtension *e = componentExtension(engine);
 
-        QV4::ExecutionEngine *v4engine = QV8Engine::getV4(engine);
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
-        QV4::Value f = engine->evaluateScript(QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.value().asObject());
+        QV4::Value f = QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.value().asObject());
         QV4::Value args[] = { engine->newQObject(o), valuemap };
-        f.asFunctionObject()->call(v4engine->current, QV4::Value::fromObject(v4engine->globalObject), args, 2);
+        f.asFunctionObject()->call(v4->current, QV4::Value::fromObject(v4->globalObject), args, 2);
     }
 }
     

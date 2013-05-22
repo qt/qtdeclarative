@@ -636,7 +636,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
                       "    }"\
                       "})"
 
-        QV4::Value result = evaluateScript(QString::fromUtf8(FREEZE_SOURCE), 0);
+        QV4::Value result = QV4::Script::evaluate(m_v4Engine, QString::fromUtf8(FREEZE_SOURCE), 0);
         Q_ASSERT(result.asFunctionObject());
         m_freezeObject = result;
 #undef FREEZE_SOURCE
@@ -1311,11 +1311,6 @@ QJSValue QV8Engine::scriptValueFromInternal(const QV4::Value &value) const
     return new QJSValuePrivate(m_v4Engine, value);
 }
 
-QJSValue QV8Engine::newArray(uint length)
-{
-    return new QJSValuePrivate(m_v4Engine, v8::Array::New(length).get()->v4Value());
-}
-
 void QV8Engine::startTimer(const QString &timerName)
 {
     if (!m_time.isValid())
@@ -1438,22 +1433,6 @@ QV8Engine::ThreadData::~ThreadData()
 QV4::Value QV8Engine::toString(const QString &string)
 {
     return QV4::Value::fromString(m_v4Engine->newString(string));
-}
-
-
-QV4::Value QV8Engine::evaluateScript(const QString &script, QV4::Object *scopeObject)
-{
-    QV4::Script qmlScript(m_v4Engine, scopeObject, script, QString());
-
-    QV4::ExecutionContext *ctx = m_v4Engine->current;
-    QV4::Value result = QV4::Value::undefinedValue();
-    try {
-        qmlScript.parse();
-        result = qmlScript.run();
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
-    }
-    return result;
 }
 
 

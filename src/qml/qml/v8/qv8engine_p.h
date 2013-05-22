@@ -339,10 +339,6 @@ public:
     inline Deletable *extensionData(int) const;
     void setExtensionData(int, Deletable *);
 
-    QV4::Value evaluateScript(const QString &script, QV4::Object *scopeObject = 0);
-
-    QJSValue newArray(uint length);
-
     QV4::Value variantListToJS(const QVariantList &lst);
     inline QVariantList variantListFromJS(QV4::ArrayObject *array)
     { V8ObjectSet visitedObjects; return variantListFromJS(array, visitedObjects); }
