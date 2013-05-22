@@ -50,7 +50,7 @@ namespace QV4 {
 
 struct ExecutionContext;
 
-struct Script {
+struct Q_QML_EXPORT Script {
     Script(ExecutionContext *scope, const QString &sourceCode, const QString &source = QString(), int line = 0, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , scope(scope), strictMode(false), inheritContext(false), qml(0) {}

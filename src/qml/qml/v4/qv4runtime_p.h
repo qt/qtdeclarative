@@ -195,7 +195,7 @@ QV4::Value __qmljs_to_object(QV4::ExecutionContext *ctx, const QV4::Value &value
 QV4::Object *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const QV4::Value &value);
 
 QV4::Bool __qmljs_equal(const QV4::Value &x, const QV4::Value &y);
-QV4::Bool __qmljs_strict_equal(const QV4::Value &x, const QV4::Value &y);
+Q_QML_EXPORT QV4::Bool __qmljs_strict_equal(const QV4::Value &x, const QV4::Value &y);
 
 // unary operators
 typedef void (*UnaryOpName)(QV4::Value *, const QV4::Value &);

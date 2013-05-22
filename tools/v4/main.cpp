@@ -57,6 +57,7 @@
 #include "private/qv4isel_p.h"
 #include "private/qv4mm_p.h"
 #include "private/qv4context_p.h"
+#include "private/qv4script_p.h"
 
 #ifdef V4_ENABLE_JIT
 #  include "private/qv4isel_masm_p.h"
@@ -380,11 +381,9 @@ int main(int argc, char *argv[])
                 file.close();
 
                 try {
-                    QV4::Function *f = QV4::EvalFunction::parseSource(ctx, fn, code, QQmlJS::Codegen::GlobalCode,
-                                                                                    /*strictMode =*/ false, /*inheritContext =*/ false);
-                    if (!f)
-                        continue;
-                    QV4::Value result = vm.run(f);
+                    QV4::Script script(ctx, code, fn);
+                    script.parse();
+                    QV4::Value result = script.run();
                     if (!result.isUndefined()) {
                         if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
                             std::cout << "exit value: " << qPrintable(result.toString(ctx)->toQString()) << std::endl;

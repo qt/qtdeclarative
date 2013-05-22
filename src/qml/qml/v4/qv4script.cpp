@@ -155,17 +155,41 @@ Value Script::run()
     if (engine->debugger)
         engine->debugger->aboutToCall(0, scope);
 
-    quintptr stackSpace[stackContextSize/sizeof(quintptr)];
-    ExecutionContext *ctx = qml ? engine->newQmlContext(f, qml) : engine->newCallContext(stackSpace, f, Value::undefinedValue(), 0, 0);
+    if (!qml) {
+        QV4::Function *function = this->function();
+        TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, function);
 
-    Value result = f->function->code(ctx, f->function->codeData);
+        bool strict = scope->strictMode;
+        Lookup *lookups = scope->lookups;
 
-    engine->popContext();
+        scope->strictMode = function->isStrict;
+        scope->lookups = function->lookups;
 
-    if (engine->debugger)
-        engine->debugger->justLeft(scope);
+        if (engine->debugger)
+            engine->debugger->aboutToCall(0, scope);
 
-    return result;
+        QV4::Value result;
+        try {
+            result = function->code(scope, function->codeData);
+        } catch (Exception &e) {
+            scope->strictMode = strict;
+            scope->lookups = lookups;
+            throw;
+        }
+
+        if (engine->debugger)
+            engine->debugger->justLeft(scope);
+        return result;
+
+    } else {
+        ExecutionContext *ctx = engine->newQmlContext(f, qml);
+
+        Value result = f->function->code(ctx, f->function->codeData);
+
+        engine->popContext();
+
+        return result;
+    }
 }
 
 Function *Script::function()

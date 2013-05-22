@@ -53,6 +53,7 @@
 #include "testtypes.h"
 #include "testhttpserver.h"
 #include "../../shared/util.h"
+#include <private/qv4functionobject_p.h>
 
 /*
 This test covers evaluation of ECMAScript expressions and bindings from within
@@ -2171,16 +2172,16 @@ static inline bool evaluate_error(QV8Engine *engine, v8::Handle<v8::Object> o, c
     QString functionSource = QLatin1String("(function(object) { return ") + 
                              QLatin1String(source) + QLatin1String(" })");
 
-    v8::Handle<v8::Script> program = v8::Script::Compile(engine->toString(functionSource));
+    QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
 
     try {
-        v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(program->Run());
-        if (!function->v4Value().asFunctionObject())
+        QV4::FunctionObject *function = program.run().asFunctionObject();
+        if (!function)
             return false;
-        v8::Handle<v8::Value> args[] = { o };
-        function->Call(engine->global(), 1, args);
+        QV4::Value args[] = { o->v4Value() };
+        function->call(engine->global(), args, 1);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
         return false;
@@ -2194,16 +2195,16 @@ static inline bool evaluate_value(QV8Engine *engine, v8::Handle<v8::Object> o,
     QString functionSource = QLatin1String("(function(object) { return ") + 
                              QLatin1String(source) + QLatin1String(" })");
 
-    QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
-    v8::Handle<v8::Script> program = v8::Script::Compile(engine->toString(functionSource));
-    try {
-        v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(program->Run());
-        if (!function->v4Value().asFunctionObject())
-            return false;
-        v8::Handle<v8::Value> args[] = { o };
+    QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
 
-        v8::Handle<v8::Value> value = function->Call(engine->global(), 1, args);
-        return value->StrictEquals(result);
+    QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
+    try {
+        QV4::FunctionObject *function = program.run().asFunctionObject();
+        if (!function)
+            return false;
+        QV4::Value args[] = { o->v4Value() };
+        QV4::Value value = function->call(engine->global(), args, 1);
+        return __qmljs_strict_equal(value, result->v4Value());
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
@@ -2217,14 +2218,13 @@ static inline v8::Handle<v8::Value> evaluate(QV8Engine *engine, v8::Handle<v8::O
                              QLatin1String(source) + QLatin1String(" })");
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
-    v8::Handle<v8::Script> program = v8::Script::Compile(engine->toString(functionSource));
+    QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
     try {
-        v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(program->Run());
-        if (!function->v4Value().asFunctionObject())
+        QV4::FunctionObject *function = program.run().asFunctionObject();
+        if (!function)
             return v8::Handle<v8::Value>();
-        v8::Handle<v8::Value> args[] = { o };
-
-        v8::Handle<v8::Value> value = function->Call(engine->global(), 1, args);
+        QV4::Value args[] = { o->v4Value() };
+        QV4::Value value = function->call(engine->global(), args, 1);
         return value;
     } catch (QV4::Exception &e) {
         e.accept(ctx);
