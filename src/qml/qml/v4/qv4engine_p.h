@@ -271,6 +271,15 @@ struct Q_QML_EXPORT ExecutionEngine
 
     Object *qmlContextObject() const;
 
+    struct StackFrame {
+        QUrl source;
+        QString function;
+        int line;
+        int column;
+    };
+    QVector<StackFrame> stackTrace(int frameLimit = -1) const;
+    StackFrame currentStackFrame() const;
+
     void requireArgumentsAccessors(int n);
 
     void markObjects();

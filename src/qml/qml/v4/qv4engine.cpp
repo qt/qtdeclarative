@@ -540,6 +540,44 @@ Object *ExecutionEngine::qmlContextObject() const
     return static_cast<CallContext *>(ctx)->activation;
 }
 
+QVector<ExecutionEngine::StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
+{
+    QVector<StackFrame> stack;
+
+    QV4::ExecutionContext *c = current;
+    while (c && frameLimit) {
+        if (CallContext *c = c->asCallContext()) {
+            StackFrame frame;
+            frame.source = c->function->function->sourceFile;
+            frame.function = c->function->name->toQString();
+            frame.line = -1;
+            frame.column = -1;
+            stack.append(frame);
+            --frameLimit;
+        }
+        c = c->parent;
+    }
+    return stack;
+}
+
+ExecutionEngine::StackFrame ExecutionEngine::currentStackFrame() const
+{
+    StackFrame frame;
+    frame.line = -1;
+    frame.column = -1;
+
+    QV4::ExecutionContext *c = current;
+    while (c) {
+        if (CallContext *c = c->asCallContext()) {
+            frame.source = c->function->function->sourceFile;
+            frame.function = c->function->name->toQString();
+            return frame;
+        }
+        c = c->parent;
+    }
+    return frame;
+}
+
 void ExecutionEngine::requireArgumentsAccessors(int n)
 {
     if (n <= argumentsAccessors.size())

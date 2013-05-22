@@ -392,17 +392,11 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Handle<v8::String> propert
             cacheData.valueTypeCoreIndex = index;
             cacheData.valueTypePropType = p.userType();
 
-            v8::Handle<v8::StackTrace> trace =
-                v8::StackTrace::CurrentStackTrace(1, 
-                        (v8::StackTrace::StackTraceOptions)(v8::StackTrace::kLineNumber | 
-                                                            v8::StackTrace::kScriptName));
-            v8::Handle<v8::StackFrame> frame = trace->GetFrame(0);
-            int lineNumber = frame->GetLineNumber();
-            int columnNumber = frame->GetColumn();
-            QString url = frame->GetScriptName()->v4Value().toQString();
+            QV4::ExecutionEngine *v4 = QV8Engine::getV4(r->engine);
+            QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
 
             newBinding = new QQmlBinding(&function, reference->object, context,
-                                         url, qmlSourceCoordinate(lineNumber), qmlSourceCoordinate(columnNumber));
+                                         frame.source.url(), qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
             newBinding->setTarget(reference->object, cacheData, context);
             newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
                                          QQmlBinding::RequiresThisObject);

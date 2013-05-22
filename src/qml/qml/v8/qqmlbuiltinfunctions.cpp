@@ -74,39 +74,22 @@ enum ConsoleLogTypes {
     Error
 };
 
-static void jsContext(QString &file, int *line, QString &function) {
-    v8::Handle<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
-    if (stackTrace->GetFrameCount()) {
-        v8::Handle<v8::StackFrame> frame = stackTrace->GetFrame(0);
-        file = frame->GetScriptName()->v4Value().toQString();
-        *line = frame->GetLineNumber();
-        function = frame->GetFunctionName()->v4Value().toQString();
-    }
-}
+static QString jsStack(QV4::ExecutionEngine *engine) {
+    QString stack;
 
-static QString jsStack() {
-    QStringList stackFrames;
+    QVector<QV4::ExecutionEngine::StackFrame> stackTrace = engine->stackTrace(10);
 
-    //The v8 default is currently 10 stack frames.
-    v8::Handle<v8::StackTrace> stackTrace =
-        v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kOverview);
-    int stackCount = stackTrace->GetFrameCount();
-
-    for (int i = 0; i < stackCount; i++) {
-        v8::Handle<v8::StackFrame> frame = stackTrace->GetFrame(i);
-        v8::Handle<v8::String> function(frame->GetFunctionName());
-        v8::Handle<v8::String> script(frame->GetScriptName());
-        int lineNumber = frame->GetLineNumber();
-        int columnNumber = frame->GetColumn();
+    for (int i = 0; i < stackTrace.count(); i++) {
+        const QV4::ExecutionEngine::StackFrame &frame = stackTrace.at(i);
 
         QString stackFrame =
-                QString::fromLatin1("%1 (%2:%3:%4)").arg(function->v4Value().asString()->toQString(),
-                                                         script->v4Value().asString()->toQString(),
-                                                         QString::number(lineNumber),
-                                                         QString::number(columnNumber));
-        stackFrames.append(stackFrame);
+                QString::fromLatin1("%1 (%2:%3:%4)\n").arg(frame.function,
+                                                         frame.source.url(),
+                                                         QString::number(frame.line),
+                                                         QString::number(frame.column));
+        stack += stackFrame;
     }
-    return stackFrames.join(QLatin1String("\n"));
+    return stack;
 }
 
 QV4::Value console(ConsoleLogTypes logType, const v8::Arguments &args,
@@ -114,6 +97,8 @@ QV4::Value console(ConsoleLogTypes logType, const v8::Arguments &args,
 {
     QString result;
     QV8Engine *engine = V8ENGINE();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+
     for (int i = 0; i < args.Length(); ++i) {
         if (i != 0)
             result.append(QLatin1Char(' '));
@@ -124,16 +109,11 @@ QV4::Value console(ConsoleLogTypes logType, const v8::Arguments &args,
 
     if (printStack) {
         result.append(QLatin1String("\n"));
-        result.append(jsStack());
+        result.append(jsStack(v4));
     }
 
-    QString file;
-    QString function;
-    int line;
-
-    jsContext(file, &line, function);
-
-    QMessageLogger logger(file.toUtf8().constData(), line, function.toUtf8().constData());
+    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
+    QMessageLogger logger(frame.source.url().toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
     switch (logType) {
     case Log:
         logger.debug("%s", qPrintable(result));
@@ -180,15 +160,11 @@ QV4::Value consoleProfile(const v8::Arguments &args)
     //we do not allow that. Hence, we pass an empty(default) title
     Q_UNUSED(args);
     QString title;
+    QV8Engine *engine = V8ENGINE();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
-
-
-    QString file;
-    QString function;
-    int line;
-    jsContext(file, &line, function);
-
-    QMessageLogger logger(file.toUtf8().constData(), line, function.toUtf8().constData());
+    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
+    QMessageLogger logger(frame.source.url().toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
     if (QQmlProfilerService::startProfiling()) {
         QV8ProfilerService::instance()->startProfiling(title);
 
@@ -208,12 +184,11 @@ QV4::Value consoleProfileEnd(const v8::Arguments &args)
     Q_UNUSED(args);
     QString title;
 
-    QString file;
-    QString function;
-    int line;
-    jsContext(file, &line, function);
+    QV8Engine *engine = V8ENGINE();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
-    QMessageLogger logger(file.toUtf8().constData(), line, function.toUtf8().constData());
+    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
+    QMessageLogger logger(frame.source.url().toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
 
     if (QQmlProfilerService::stopProfiling()) {
         QV8ProfilerService *profiler = QV8ProfilerService::instance();
@@ -258,23 +233,16 @@ QV4::Value consoleCount(const v8::Arguments &args)
     if (args.Length() > 0)
         name = args[0]->v4Value().toQString();
 
-    v8::Handle<v8::StackTrace> stackTrace =
-        v8::StackTrace::CurrentStackTrace(1, v8::StackTrace::kOverview);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(V8ENGINE());
+    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
 
-    if (stackTrace->GetFrameCount()) {
-        v8::Handle<v8::StackFrame> frame = stackTrace->GetFrame(0);
+    QString scriptName = frame.source.url();
 
-        QString scriptName = frame->GetScriptName()->v4Value().toQString();
-        QString functionName = frame->GetFunctionName()->v4Value().toQString();
-        int line = frame->GetLineNumber();
-        int column = frame->GetColumn();
+    int value = V8ENGINE()->consoleCountHelper(scriptName, frame.line, frame.column);
+    QString message = name + QLatin1String(": ") + QString::number(value);
 
-        int value = V8ENGINE()->consoleCountHelper(scriptName, line, column);
-        QString message = name + QLatin1String(": ") + QString::number(value);
-
-        QMessageLogger(qPrintable(scriptName), line,
-                       qPrintable(functionName)).debug("%s", qPrintable(message));
-    }
+    QMessageLogger(qPrintable(scriptName), frame.line,
+                   qPrintable(frame.function)).debug("%s", qPrintable(message));
 
     return QV4::Value::undefinedValue();
 }
@@ -284,14 +252,13 @@ QV4::Value consoleTrace(const v8::Arguments &args)
     if (args.Length() != 0)
         V4THROW_ERROR("console.trace(): Invalid arguments");
 
-    QString stack = jsStack();
+    QV8Engine *engine = V8ENGINE();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
-    QString file;
-    QString function;
-    int line;
-    jsContext(file, &line, function);
+    QString stack = jsStack(v4);
 
-    QMessageLogger logger(file.toUtf8().constData(), line, function.toUtf8().constData());
+    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
+    QMessageLogger logger(frame.source.url().toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
 
     logger.debug("%s", qPrintable(stack));
     return QV4::Value::undefinedValue();
@@ -307,6 +274,9 @@ QV4::Value consoleAssert(const v8::Arguments &args)
     if (args.Length() == 0)
         V4THROW_ERROR("console.assert(): Missing argument");
 
+    QV8Engine *engine = V8ENGINE();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+
     if (!args[0]->v4Value().booleanValue()) {
         QString message;
         for (int i = 1; i < args.Length(); ++i) {
@@ -317,14 +287,10 @@ QV4::Value consoleAssert(const v8::Arguments &args)
             message.append(value->v4Value().toQString());
         }
 
-        QString stack = jsStack();
+        QString stack = jsStack(v4);
 
-        QString file;
-        QString function;
-        int line;
-        jsContext(file, &line, function);
-
-        QMessageLogger logger(file.toUtf8().constData(), line, function.toUtf8().constData());
+        QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
+        QMessageLogger logger(frame.source.url().toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
         logger.critical("%s\n%s", qPrintable(message), qPrintable(stack));
 
     }
