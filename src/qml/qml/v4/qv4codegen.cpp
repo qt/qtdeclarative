@@ -2875,7 +2875,10 @@ bool Codegen::visit(ForStatement *ast)
     _block->JUMP(forcond);
 
     _block = forcond;
-    condition(ast->condition, forbody, forend);
+    if (ast->condition)
+        condition(ast->condition, forbody, forend);
+    else
+        _block->JUMP(forbody);
 
     _block = forbody;
     statement(ast->statement);
@@ -2988,7 +2991,10 @@ bool Codegen::visit(LocalForStatement *ast)
     _block->JUMP(forcond);
 
     _block = forcond;
-    condition(ast->condition, forbody, forend);
+    if (ast->condition)
+        condition(ast->condition, forbody, forend);
+    else
+        _block->JUMP(forbody);
 
     _block = forbody;
     statement(ast->statement);
