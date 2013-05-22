@@ -1165,15 +1165,17 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     QV8Engine *v8engine = ep->v8engine();
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8engine);
+    QV4::ExecutionContext *ctx = v4->current;
 
     // If compilation throws an error, a surrounding catch will record it.
     // pass 0 as the QML object, we set it later before calling run()
     QV4::Script *program = new QV4::Script(v4, 0, m_programSource, urlString, 1);
     try {
         program->parse();
-    } catch (QV4::Exception &) {
+    } catch (QV4::Exception &e) {
+        e.accept(ctx);
         delete program;
-        throw;
+        return;
     }
 
     m_program = program;
