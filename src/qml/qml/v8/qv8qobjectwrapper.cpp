@@ -550,7 +550,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
             QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
             Q_ASSERT(vmemo);
             return vmemo->vmeMethod(result->coreIndex);
-        } else if (result->isV8Function()) {
+        } else if (result->isV4Function()) {
             return MethodClosure::createWithGlobal(engine, object, objectHandle, result->coreIndex);
         } else if (result->isSignalHandler()) {
             v8::Handle<v8::Object> handler = engine->qobjectWrapper()->m_signalHandlerConstructor.value().asFunctionObject()->newInstance();
@@ -2017,7 +2017,7 @@ QV4::Value QV8QObjectWrapper::Invoke(const v8::Arguments &args)
             return QV4::Value::undefinedValue();
     }
 
-    if (method.isV8Function()) {
+    if (method.isV4Function()) {
         QV4::Value rv = QV4::Value::undefinedValue();
         v8::Handle<v8::Value> qmlglobal = args[2];
 

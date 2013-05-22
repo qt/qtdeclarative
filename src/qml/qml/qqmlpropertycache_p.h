@@ -113,7 +113,7 @@ public:
         HasArguments       = 0x00080000, // Function takes arguments
         IsSignal           = 0x00100000, // Function is a signal
         IsVMESignal        = 0x00200000, // Signal was added by QML
-        IsV8Function       = 0x00400000, // Function takes QQmlV8Function* args
+        IsV4Function       = 0x00400000, // Function takes QQmlV4Function* args
         IsSignalHandler    = 0x00800000, // Function is a signal handler
         IsOverload         = 0x01000000, // Function is an overload of another function
         IsCloned           = 0x02000000, // The function was marked as cloned
@@ -154,7 +154,7 @@ public:
     bool hasArguments() const { return flags & HasArguments; }
     bool isSignal() const { return flags & IsSignal; }
     bool isVMESignal() const { return flags & IsVMESignal; }
-    bool isV8Function() const { return flags & IsV8Function; }
+    bool isV4Function() const { return flags & IsV4Function; }
     bool isSignalHandler() const { return flags & IsSignalHandler; }
     bool isOverload() const { return flags & IsOverload; }
     bool isCloned() const { return flags & IsCloned; }
