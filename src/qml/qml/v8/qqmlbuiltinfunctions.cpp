@@ -313,17 +313,15 @@ QV4::Value stringArg(const v8::Arguments &args)
     if (args.Length() != 1)
         V4THROW_ERROR("String.arg(): Invalid arguments");
 
-    v8::Handle<v8::Value> arg = args[0];
-    if (arg->IsUint32())
-        return V8ENGINE()->toString(value.arg(arg->Uint32Value()));
-    else if (arg->IsInt32())
-        return V8ENGINE()->toString(value.arg(arg->Int32Value()));
-    else if (arg->IsNumber())
-        return V8ENGINE()->toString(value.arg(arg->NumberValue()));
-    else if (arg->IsBoolean())
-        return V8ENGINE()->toString(value.arg(arg->BooleanValue()));
+    QV4::Value arg = args[0]->v4Value();
+    if (arg.isInteger())
+        return V8ENGINE()->toString(value.arg(arg.integerValue()));
+    else if (arg.isDouble())
+        return V8ENGINE()->toString(value.arg(arg.doubleValue()));
+    else if (arg.isBoolean())
+        return V8ENGINE()->toString(value.arg(arg.booleanValue()));
 
-    return V8ENGINE()->toString(value.arg(arg->v4Value().toQString()));
+    return V8ENGINE()->toString(value.arg(arg.toQString()));
 }
 
 /*!
