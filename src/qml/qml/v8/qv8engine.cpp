@@ -595,12 +595,11 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
                    "    })"\
                    "})"
 
-        v8::Handle<v8::Script> registerArg = v8::Script::New(v8::String::New(STRING_ARG), 0, 0, v8::Handle<v8::String>(), v8::Script::NativeMode);
-        v8::Handle<v8::Value> result = registerArg->Run();
-        Q_ASSERT(result->IsFunction());
-        v8::Handle<v8::Function> registerArgFunc = v8::Handle<v8::Function>::Cast(result);
-        v8::Handle<v8::Value> args = V8FUNCTION(stringArg, this);
-        registerArgFunc->Call(v8::Handle<v8::Object>::Cast(registerArgFunc), 1, &args);
+        QV4::Script registerArg(m_v4Engine->rootContext, STRING_ARG);
+        QV4::FunctionObject *registerArgFunc = registerArg.run().asFunctionObject();
+        Q_ASSERT(registerArgFunc);
+        QV4::Value args = V8FUNCTION(stringArg, this)->v4Value();
+        registerArgFunc->call(QV4::Value::fromObject(registerArgFunc), &args, 1);
 #undef STRING_ARG
     }
 

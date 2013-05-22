@@ -120,7 +120,6 @@ class AccessorSignature;
 template <class T> struct Handle;
 class FunctionTemplate;
 class ObjectTemplate;
-class Data;
 class AccessorInfo;
 class Isolate;
 class TryCatch;
@@ -406,151 +405,6 @@ struct Handle {
 // --- Special objects ---
 
 
-/**
- * The superclass of values and API object templates.
- */
-class V8EXPORT Data  : public QSharedData {
-};
-
-DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Data)
-
-/**
- * The origin, within a file, of a script.
- */
-class V8EXPORT ScriptOrigin {
-public:
-  ScriptOrigin() : m_lineNumber(0), m_columnNumber(0) {}
-
-  ScriptOrigin(
-      Handle<Value> resource_name,
-      int resource_line_offset = -1,
-      int resource_column_offset = -1);
-  Handle<Value> ResourceName() const;
-  int ResourceLineOffset() const;
-  int ResourceColumnOffset() const;
-private:
-  QString m_fileName;
-  int m_lineNumber, m_columnNumber;
-  friend class Script;
-};
-
-class ScriptData;
-
-/**
- * A compiled JavaScript script.
- */
-class V8EXPORT Script : public QSharedData {
- public:
-  enum CompileFlags {
-      Default    = 0x00,
-      QmlMode    = 0x01,
-      NativeMode = 0x02
-  };
-
-  /**
-   * Compiles the specified script (context-independent).
-   *
-   * \param source Script source code.
-   * \param origin Script origin, owned by caller, no references are kept
-   *   when New() returns
-   * \param pre_data Pre-parsing data, as obtained by ScriptData::PreCompile()
-   *   using pre_data speeds compilation if it's done multiple times.
-   *   Owned by caller, no references are kept when New() returns.
-   * \param script_data Arbitrary data associated with script. Using
-   *   this has same effect as calling SetData(), but allows data to be
-   *   available to compile event handlers.
-   * \return Compiled script object (context independent; when run it
-   *   will use the currently entered context).
-   */
-  static Handle<Script> New(Handle<String> source,
-                           ScriptOrigin* origin = NULL,
-                           ScriptData* pre_data = NULL,
-                           Handle<String> script_data = Handle<String>(),
-                           CompileFlags = Default);
-
-  /**
-   * Compiles the specified script using the specified file name
-   * object (typically a string) as the script's origin.
-   *
-   * \param source Script source code.
-   * \param file_name file name object (typically a string) to be used
-   *   as the script's origin.
-   * \return Compiled script object (context independent; when run it
-   *   will use the currently entered context).
-   */
-  static Handle<Script> New(Handle<String> source,
-                           Handle<Value> file_name,
-                           CompileFlags = Default);
-
-  /**
-   * Compiles the specified script (bound to current context).
-   *
-   * \param source Script source code.
-   * \param origin Script origin, owned by caller, no references are kept
-   *   when Compile() returns
-   * \param pre_data Pre-parsing data, as obtained by ScriptData::PreCompile()
-   *   using pre_data speeds compilation if it's done multiple times.
-   *   Owned by caller, no references are kept when Compile() returns.
-   * \param script_data Arbitrary data associated with script. Using
-   *   this has same effect as calling SetData(), but makes data available
-   *   earlier (i.e. to compile event handlers).
-   * \return Compiled script object, bound to the context that was active
-   *   when this function was called.  When run it will always use this
-   *   context.
-   */
-  static Handle<Script> Compile(Handle<String> source,
-                               ScriptOrigin* origin = NULL,
-                               ScriptData* pre_data = NULL,
-                               Handle<String> script_data = Handle<String>(),
-                               CompileFlags = Default);
-
-  /**
-   * Compiles the specified script using the specified file name
-   * object (typically a string) as the script's origin.
-   *
-   * \param source Script source code.
-   * \param file_name File name to use as script's origin
-   * \param script_data Arbitrary data associated with script. Using
-   *   this has same effect as calling SetData(), but makes data available
-   *   earlier (i.e. to compile event handlers).
-   * \return Compiled script object, bound to the context that was active
-   *   when this function was called.  When run it will always use this
-   *   context.
-   */
-  static Handle<Script> Compile(Handle<String> source,
-                               Handle<Value> file_name,
-                               Handle<String> script_data = Handle<String>(),
-                               CompileFlags = Default);
-
-  /**
-   * Runs the script returning the resulting value.  If the script is
-   * context independent (created using ::New) it will be run in the
-   * currently entered context.  If it is context specific (created
-   * using ::Compile) it will be run in the context in which it was
-   * compiled.
-   */
-  Handle<Value> Run();
-  Handle<Value> Run(Handle<Object> qml);
-
-  /**
-   * Returns the script id value.
-   */
-  Handle<Value> Id();
-
-  /**
-   * Associate an additional data object with the script. This is mainly used
-   * with the debugger as this data object is only available through the
-   * debugger API.
-   */
-  void SetData(Handle<String> data);
-
-private:
-  QString m_script;
-  ScriptOrigin m_origin;
-  CompileFlags m_flags;
-};
-
-DEFINE_REFCOUNTED_HANDLE_OPERATIONS(Script)
 
 // --- Value ---
 
@@ -970,7 +824,6 @@ class V8EXPORT Function : public Object {
                     Handle<Value> argv[]);
   Handle<Value> GetName() const;
 
-  ScriptOrigin GetScriptOrigin() const;
   static Function* Cast(Value* obj);
 };
 
@@ -1004,7 +857,7 @@ class V8EXPORT External : public Value {
 /**
  * The superclass of object and function templates.
  */
-class V8EXPORT Template : public Data {
+class V8EXPORT Template : public QSharedData {
  public:
   /** Adds a property to each instance created by this template.*/
   void Set(Handle<String> name, Handle<Value> value,

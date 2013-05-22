@@ -333,10 +333,9 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
             "});"\
         "});"\
     "})"
-    v8::Handle<v8::Script> script = v8::Script::New(v8::String::New(CREATE_FUNCTION_SOURCE), 0, 0,
-                                                   v8::Handle<v8::String>(), v8::Script::NativeMode);
+    QV4::Script script(QV8Engine::getV4(engine)->rootContext, CREATE_FUNCTION_SOURCE);
 #undef CREATE_FUNCTION_SOURCE
-    v8::Handle<v8::Function> fn = v8::Handle<v8::Function>::Cast(script->Run());
+    v8::Handle<v8::Function> fn(script.run());
     v8::Handle<v8::Value> invokeFn = v8::FunctionTemplate::New(Invoke)->GetFunction();
     v8::Handle<v8::Value> args[] = { invokeFn };
     v8::Handle<v8::Function> createFn = v8::Handle<v8::Function>::Cast(fn->Call(v8::Value::fromV4Value(engine->global()), 1, args));

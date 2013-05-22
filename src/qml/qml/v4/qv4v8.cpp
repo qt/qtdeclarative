@@ -171,99 +171,6 @@ protected:
 
 DEFINE_MANAGED_VTABLE(V8AccessorSetter);
 
-ScriptOrigin::ScriptOrigin(Handle<Value> resource_name, int resource_line_offset, int resource_column_offset)
-{
-    m_fileName = resource_name->ToString()->asQString();
-    m_lineNumber = resource_line_offset;
-    m_columnNumber = resource_column_offset;
-}
-
-Handle<Value> ScriptOrigin::ResourceName() const
-{
-    return Value::fromV4Value(QV4::Value::fromString(currentEngine()->current, m_fileName));
-}
-
-int ScriptOrigin::ResourceLineOffset() const
-{
-    return m_lineNumber;
-}
-
-int ScriptOrigin::ResourceColumnOffset() const
-{
-    return m_columnNumber;
-}
-
-
-Handle<Script> Script::New(Handle<String> source,
-                         ScriptOrigin* origin,
-                         ScriptData* pre_data,
-                         Handle<String> script_data,
-                         CompileFlags flags)
-{
-    Script *s = new Script;
-    s->m_script = source->ToString()->asQString();
-    if (origin)
-        s->m_origin = *origin;
-    s->m_flags = flags;
-    return Handle<Script>(s);
-}
-
-
-Handle<Script> Script::New(Handle<String> source,
-                         Handle<Value> file_name,
-                         CompileFlags flags)
-{
-    ScriptOrigin origin(file_name);
-    return New(source, &origin, 0, Handle<String>(), flags);
-}
-
-Handle<Script> Script::Compile(Handle<String> source, ScriptOrigin *origin, ScriptData *pre_data, Handle<String> script_data, Script::CompileFlags flags)
-{
-    Script *s = new Script;
-    s->m_script = source->ToString()->asQString();
-    if (origin)
-        s->m_origin = *origin;
-    s->m_flags = flags;
-    return Handle<Script>(s);
-}
-
-Handle<Script> Script::Compile(Handle<String> source,
-                             Handle<Value> file_name,
-                             Handle<String> script_data,
-                             CompileFlags flags)
-{
-    ScriptOrigin origin(file_name);
-    return Compile(source, &origin, 0, script_data, flags);
-}
-
-Handle<Value> Script::Run()
-{
-    QV4::ExecutionEngine *engine = Isolate::GetCurrent()->GetEngine();
-    QV4::ExecutionContext *ctx = engine->current;
-
-    QV4::Script script(ctx, m_script, m_origin.m_fileName, m_origin.m_lineNumber, m_origin.m_columnNumber);
-    script.parse();
-    return script.run();
-}
-
-Handle<Value> Script::Run(Handle<Object> qml)
-{
-    QV4::ExecutionEngine *engine = Isolate::GetCurrent()->GetEngine();
-    QV4::Script script(engine, qml->v4Value().asObject(), m_script, m_origin.m_fileName, m_origin.m_lineNumber, m_origin.m_columnNumber);
-    script.parse();
-    return script.run();
-}
-
-Handle<Value> Script::Id()
-{
-    Q_UNIMPLEMENTED();
-    Q_UNREACHABLE();
-}
-
-void Script::SetData(Handle<String> data)
-{
-    Q_UNIMPLEMENTED();
-}
 
 
 bool Value::IsUndefined() const
@@ -873,12 +780,6 @@ Handle<Value> Function::GetName() const
     if (!f)
         return Handle<Value>();
     return Value::fromV4Value(QV4::Value::fromString(f->name));
-}
-
-ScriptOrigin Function::GetScriptOrigin() const
-{
-    Q_UNIMPLEMENTED();
-    return ScriptOrigin();
 }
 
 Function *Function::Cast(Value *obj)
