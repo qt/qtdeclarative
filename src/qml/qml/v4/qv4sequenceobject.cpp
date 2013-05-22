@@ -316,12 +316,12 @@ public:
 
             bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
             {
-                QV4::Managed *fun = m_compareFn.asManaged();
+                QV4::Managed *fun = this->m_compareFn.asManaged();
                 QV4::Value argv[2] = {
-                    convertElementToValue(m_ctx, lhs),
-                    convertElementToValue(m_ctx, rhs)
+                    convertElementToValue(this->m_ctx, lhs),
+                    convertElementToValue(this->m_ctx, rhs)
                 };
-                QV4::Value result = fun->call(m_ctx, QV4::Value::fromObject(m_ctx->engine->globalObject), argv, 2);
+                QV4::Value result = fun->call(this->m_ctx, QV4::Value::fromObject(this->m_ctx->engine->globalObject), argv, 2);
                 return result.toNumber() < 0;
             }
 
