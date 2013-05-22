@@ -69,7 +69,7 @@ class QV8ObjectResource : public v8::Object::ExternalResource
 {
 public:
     QV8ObjectResource(QV8Engine *engine) : engine(engine) { Q_ASSERT(engine); }
-    enum ResourceType { ContextType, QObjectType, TypeType, ListType,
+    enum ResourceType { ContextType, TypeType, ListType,
                         ValueTypeType, XMLHttpRequestType, DOMNodeType, SQLDatabaseType,
                         ListModelType, Context2DStyleType, Context2DPixelArrayType,
                         ParticleDataType, SignalHandlerType, IncubatorType, VisualDataItemType,

@@ -75,6 +75,176 @@ QT_BEGIN_NAMESPACE
 # endif
 #endif
 
+
+using namespace QV4;
+
+QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
+    : Object(engine)
+    , object(object)
+{
+    this->v8Engine = QV8Engine::get(engine->publicEngine);
+    type = Type_QObject;
+    vtbl = &static_vtbl;
+    initClass(engine);
+}
+
+QObjectWrapper::~QObjectWrapper()
+{
+}
+
+QV4::Value QObjectWrapper::method_toString(QV4::SimpleCallContext *ctx)
+{
+    QString result;
+    if (object) {
+        QString objectName = object->objectName();
+
+        result += QString::fromUtf8(object->metaObject()->className());
+        result += QLatin1String("(0x");
+        result += QString::number((quintptr)object.object(),16);
+
+        if (!objectName.isEmpty()) {
+            result += QLatin1String(", \"");
+            result += objectName;
+            result += QLatin1Char('\"');
+        }
+
+        result += QLatin1Char(')');
+    } else {
+        result = QLatin1String("null");
+    }
+
+    return QV4::Value::fromString(ctx, result);
+}
+
+QV4::Value QObjectWrapper::method_destroy(QV4::SimpleCallContext *ctx)
+{
+    if (!object)
+        return QV4::Value::undefinedValue();
+    QQmlData *ddata = QQmlData::get(object, false);
+    if (!ddata || ddata->indestructible || ddata->rootObjectInCreation)
+        ctx->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
+
+    int delay = 0;
+    if (ctx->argumentCount > 0)
+        delay = ctx->arguments[0].toUInt32();
+
+    if (delay > 0)
+        QTimer::singleShot(delay, object, SLOT(deleteLater()));
+    else
+        object->deleteLater();
+
+    return QV4::Value::undefinedValue();
+}
+
+QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+{
+    QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
+
+    if (QQmlData::wasDeleted(that->object)) {
+        if (hasProperty)
+            *hasProperty = false;
+        return QV4::Value::undefinedValue();
+    }
+
+    QObject *object = that->object;
+
+    QHashedV4String propertystring(QV4::Value::fromString(name));
+
+    QV8Engine *v8engine = that->v8Engine;
+    QQmlContextData *context = v8engine->callingContext();
+
+    v8::Handle<v8::Value> This = QV4::Value::fromObject(that);
+    v8::Handle<v8::Value> result = QV8QObjectWrapper::GetProperty(v8engine, object, &This, propertystring,
+                                                                  context, QV8QObjectWrapper::IgnoreRevision);
+    if (!result.IsEmpty()) {
+        if (hasProperty)
+            *hasProperty = true;
+        return result->v4Value();
+    }
+
+    if (name->startsWithUpper()) {
+        // Check for attached properties
+        if (context && context->imports) {
+            QQmlTypeNameCache::Result r = context->imports->query(propertystring);
+
+            if (r.isValid()) {
+                if (r.scriptIndex != -1) {
+                    return QV4::Value::undefinedValue();
+                } else if (r.type) {
+                    return v8engine->typeWrapper()->newObject(object, r.type, QV8TypeWrapper::ExcludeEnums)->v4Value();
+                } else if (r.importNamespace) {
+                    return v8engine->typeWrapper()->newObject(object, context->imports, r.importNamespace,
+                                                              QV8TypeWrapper::ExcludeEnums)->v4Value();
+                }
+                Q_ASSERT(!"Unreachable");
+            }
+        }
+    }
+
+    return QV4::Object::get(m, ctx, name, hasProperty);
+}
+
+void QObjectWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
+{
+    QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
+
+    if (QQmlData::wasDeleted(that->object))
+        return;
+
+    QObject *object = that->object;
+
+    QHashedV4String propertystring(QV4::Value::fromString(name));
+
+    QV8Engine *v8engine = that->v8Engine;
+    QQmlContextData *context = v8engine->callingContext();
+    bool result = QV8QObjectWrapper::SetProperty(v8engine, object, propertystring, context, value, QV8QObjectWrapper::IgnoreRevision);
+
+    if (!result) {
+        QString error = QLatin1String("Cannot assign to non-existent property \"") +
+                        name->toQString() + QLatin1Char('\"');
+        ctx->throwError(error);
+    }
+}
+
+QV4::Value QObjectWrapper::enumerateProperties(Object *object)
+{
+    QObjectWrapper *that = static_cast<QObjectWrapper*>(object);
+
+    if (that->object.isNull())
+        return QV4::Value::undefinedValue();
+
+    QStringList result;
+
+    QQmlEnginePrivate *ep = that->v8Engine->engine()
+            ? QQmlEnginePrivate::get(that->v8Engine->engine())
+            : 0;
+
+    QQmlPropertyCache *cache = 0;
+    QQmlData *ddata = QQmlData::get(that->object);
+    if (ddata)
+        cache = ddata->propertyCache;
+
+    if (!cache) {
+        cache = ep ? ep->cache(that->object) : 0;
+        if (cache) {
+            if (ddata) { cache->addref(); ddata->propertyCache = cache; }
+        } else {
+            // Not cachable - fall back to QMetaObject (eg. dynamic meta object)
+            const QMetaObject *mo = that->object->metaObject();
+            int pc = mo->propertyCount();
+            int po = mo->propertyOffset();
+            for (int i=po; i<pc; ++i)
+                result << QString::fromUtf8(mo->property(i).name());
+        }
+    } else {
+        result = cache->propertyNames();
+    }
+
+    return QV4::Value::fromObject(that->engine()->newArrayObject(result));
+}
+
+DEFINE_MANAGED_VTABLE(QObjectWrapper);
+
 #define QOBJECT_TOSTRING_INDEX -2
 #define QOBJECT_DESTROY_INDEX -3
 
@@ -175,11 +345,6 @@ private:
 };
 }
 
-QV8QObjectResource::QV8QObjectResource(QV8Engine *engine, QObject *object) 
-: QV8ObjectResource(engine), object(object) 
-{
-}
-
 QV8SignalHandlerResource::QV8SignalHandlerResource(QV8Engine *engine, QObject *object, int index)
 : QV8ObjectResource(engine), object(object), index(index)
 {
@@ -207,11 +372,11 @@ void QV8QObjectWrapper::destroy()
     qDeleteAll(m_connections);
     m_connections.clear();
 
-    QIntrusiveList<QV8QObjectResource, &QV8QObjectResource::weakResource>::iterator i = m_javaScriptOwnedWeakQObjects.begin();
+    QIntrusiveList<QV4::QObjectWrapper, &QV4::QObjectWrapper::weakResource>::iterator i = m_javaScriptOwnedWeakQObjects.begin();
     for (; i != m_javaScriptOwnedWeakQObjects.end(); ++i) {
-        QV8QObjectResource *resource = *i;
-        Q_ASSERT(resource);
-        deleteWeakQObject(resource, true);
+        QV4::QObjectWrapper *wrapper = *i;
+        Q_ASSERT(wrapper);
+        deleteWeakQObject(wrapper, true);
     }
 }
 
@@ -261,45 +426,6 @@ static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, double v)
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *e, QObject *v)
 { return e->newQObject(v); }
 
-template<typename T, void (*ReadFunction)(QObject *, const QQmlPropertyData &,
-                                          void *, QQmlNotifier **)>
-static v8::Handle<v8::Value> GenericValueGetter(v8::Handle<v8::String>, const v8::AccessorInfo &info)
-{
-    v8::Handle<v8::Object> This = info.This();
-    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(This);
-
-    QObject *object = resource->object;
-    if (QQmlData::wasDeleted(object)) return QV4::Value::undefinedValue();
-
-    QQmlPropertyData *property =
-            (QQmlPropertyData *)v8::External::Cast(info.Data().get())->Value();
-
-    QQmlEngine *engine = resource->engine->engine();
-    QQmlEnginePrivate *ep = engine?QQmlEnginePrivate::get(engine):0;
-
-    T value = T();
-
-    if (ep && ep->propertyCapture) {
-        if (ReadFunction == ReadAccessor::Accessor && property->accessors->notifier) {
-            QQmlNotifier *notifier = 0;
-            ReadFunction(object, *property, &value, &notifier);
-            if (notifier) ep->captureProperty(notifier);
-        } else if (!property->isConstant()) {
-            ep->captureProperty(object, property->coreIndex, property->notifyIndex);
-            ReadFunction(object, *property, &value, 0);
-        } else {
-            ReadFunction(object, *property, &value, 0);
-        }
-    } else {
-        ReadFunction(object, *property, &value, 0);
-    }
-
-    return valueToHandle(resource->engine, value);
-}
-
-#define FAST_GETTER_FUNCTION(property, cpptype) \
-    (property->hasAccessors()?((v8::AccessorGetter)GenericValueGetter<cpptype, &ReadAccessor::Accessor>):(property->isDirect()?((v8::AccessorGetter)GenericValueGetter<cpptype, &ReadAccessor::Direct>):((v8::AccessorGetter)GenericValueGetter<cpptype, &ReadAccessor::Indirect>)))
-
 static quint32 toStringHash = quint32(-1);
 static quint32 destroyHash = quint32(-1);
 
@@ -318,12 +444,6 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     toStringHash = m_toStringString.hash();
     destroyHash = m_destroyString.hash();
 
-    {
-    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
-    ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter, Query, 0, Enumerator);
-    ft->InstanceTemplate()->SetHasExternalResource(true);
-    m_constructor = ft->GetFunction()->v4Value();
-    }
     {
 #define CREATE_FUNCTION_SOURCE \
     "(function(method) { "\
@@ -363,20 +483,13 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
 
 bool QV8QObjectWrapper::isQObject(v8::Handle<v8::Object> obj)
 {
-    return v8_resource_cast<QV8QObjectResource>(obj) != 0;
+    return obj->v4Value().asQObjectWrapper() != 0;
 }
 
 QObject *QV8QObjectWrapper::toQObject(v8::Handle<v8::Object> obj)
 {
-    QV8QObjectResource *r =  v8_resource_cast<QV8QObjectResource>(obj);
-    return r?r->object:0;
-}
-
-// r *MUST* be a QV8ObjectResource (r->type() == QV8ObjectResource::QObjectType)
-QObject *QV8QObjectWrapper::toQObject(QV8ObjectResource *r)
-{
-    Q_ASSERT(r->resourceType() == QV8ObjectResource::QObjectType);
-    return static_cast<QV8QObjectResource *>(r)->object;
+    QV4::QObjectWrapper *wrapper =  obj->v4Value().asQObjectWrapper();
+    return wrapper?wrapper->object:0;
 }
 
 // Load value properties
@@ -744,155 +857,15 @@ bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QH
     return true;
 }
 
-v8::Handle<v8::Value> QV8QObjectWrapper::Getter(v8::Handle<v8::String> property,
-                                                const v8::AccessorInfo &info)
-{
-    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
-
-    if (QQmlData::wasDeleted(resource->object))
-        return v8::Handle<v8::Value>();
-
-    QObject *object = resource->object;
-
-    QHashedV4String propertystring(property->v4Value());
-
-    QV8Engine *v8engine = resource->engine;
-    QQmlContextData *context = v8engine->callingContext();
-
-    v8::Handle<v8::Value> This = info.This();
-    v8::Handle<v8::Value> result = GetProperty(v8engine, object, &This, propertystring, 
-                                               context, QV8QObjectWrapper::IgnoreRevision);
-    if (!result.IsEmpty())
-        return result;
-
-    if (property->v4Value().asString()->startsWithUpper()) {
-        // Check for attached properties
-        if (context && context->imports) {
-            QQmlTypeNameCache::Result r = context->imports->query(propertystring);
-
-            if (r.isValid()) {
-                if (r.scriptIndex != -1) {
-                    return QV4::Value::undefinedValue();
-                } else if (r.type) {
-                    return v8engine->typeWrapper()->newObject(object, r.type, QV8TypeWrapper::ExcludeEnums);
-                } else if (r.importNamespace) {
-                    return v8engine->typeWrapper()->newObject(object, context->imports, r.importNamespace, 
-                                                              QV8TypeWrapper::ExcludeEnums);
-                }
-                Q_ASSERT(!"Unreachable");
-            }
-        }
-    } 
-
-    return v8::Handle<v8::Value>();
-}
-
-v8::Handle<v8::Value> QV8QObjectWrapper::Setter(v8::Handle<v8::String> property,
-                                                v8::Handle<v8::Value> value,
-                                                const v8::AccessorInfo &info)
-{
-    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
-
-    if (QQmlData::wasDeleted(resource->object))
-        return value;
-
-    QObject *object = resource->object;
-
-    QHashedV4String propertystring(property->v4Value());
-
-    QV8Engine *v8engine = resource->engine;
-    QQmlContextData *context = v8engine->callingContext();
-    bool result = SetProperty(v8engine, object, propertystring, context, value, QV8QObjectWrapper::IgnoreRevision);
-
-    if (!result) {
-        QString error = QLatin1String("Cannot assign to non-existent property \"") +
-                        property->v4Value().toQString() + QLatin1Char('\"');
-        v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
-        return value;
-    }
-
-    return value;
-}
-
-v8::Handle<v8::Value> QV8QObjectWrapper::Query(v8::Handle<v8::String> property,
-                                                 const v8::AccessorInfo &info)
-{
-    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
-
-    if (resource->object.isNull()) 
-        return v8::Handle<v8::Value>();
-
-    QV8Engine *engine = resource->engine;
-    QObject *object = resource->object;
-    QQmlContextData *context = engine->callingContext();
-
-    QHashedV4String propertystring(property->v4Value());
-
-    QQmlPropertyData local;
-    QQmlPropertyData *result = 0;
-    result = QQmlPropertyCache::property(engine->engine(), object, propertystring, context, local);
-
-    if (!result)
-        return v8::Handle<v8::Value>();
-    else if (!result->isWritable() && !result->isQList())
-        return QV4::Value::fromInt32(v8::ReadOnly | v8::DontDelete);
-    else
-        return QV4::Value::fromInt32(v8::DontDelete);
-}
-
-v8::Handle<v8::Array> QV8QObjectWrapper::Enumerator(const v8::AccessorInfo &info)
-{
-    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
-
-    if (resource->object.isNull()) 
-        return v8::Array::New();
-
-    QObject *object = resource->object;
-
-    QStringList result;
-
-    QQmlEnginePrivate *ep = resource->engine->engine()
-            ? QQmlEnginePrivate::get(resource->engine->engine())
-            : 0;
-
-    QQmlPropertyCache *cache = 0;
-    QQmlData *ddata = QQmlData::get(object);
-    if (ddata)
-        cache = ddata->propertyCache;
-
-    if (!cache) {
-        cache = ep ? ep->cache(object) : 0;
-        if (cache) {
-            if (ddata) { cache->addref(); ddata->propertyCache = cache; }
-        } else {
-            // Not cachable - fall back to QMetaObject (eg. dynamic meta object)
-            const QMetaObject *mo = object->metaObject();
-            int pc = mo->propertyCount();
-            int po = mo->propertyOffset();
-            for (int i=po; i<pc; ++i)
-                result << QString::fromUtf8(mo->property(i).name());
-        }
-    } else {
-        result = cache->propertyNames();
-    }
-
-    v8::Handle<v8::Array> rv = v8::Array::New(result.count());
-
-    for (int ii = 0; ii < result.count(); ++ii) 
-        rv->Set(ii, resource->engine->toString(result.at(ii)));
-
-    return rv;
-}
-
 static void FastValueSetter(v8::Handle<v8::String>, v8::Handle<v8::Value> value,
                             const v8::AccessorInfo& info)
 {
-    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
+    QV4::QObjectWrapper *wrapper = info.This()->v4Value().asQObjectWrapper();
 
-    if (QQmlData::wasDeleted(resource->object))
+    if (QQmlData::wasDeleted(wrapper->object))
         return; 
 
-    QObject *object = resource->object;
+    QObject *object = wrapper->object;
 
     QQmlPropertyData *property =
             (QQmlPropertyData *)v8::External::Cast(info.Data().get())->Value();
@@ -908,18 +881,18 @@ static void FastValueSetter(v8::Handle<v8::String>, v8::Handle<v8::Value> value,
 
     Q_ASSERT(pdata->isWritable() || pdata->isQList());
 
-    StoreProperty(resource->engine, object, pdata, value);
+    StoreProperty(wrapper->v8Engine, object, pdata, value);
 }
 
 static void FastValueSetterReadOnly(v8::Handle<v8::String> property, v8::Handle<v8::Value>,
                                     const v8::AccessorInfo& info)
 {
-    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
+    QV4::QObjectWrapper *wrapper = info.This()->v4Value().asQObjectWrapper();
 
-    if (QQmlData::wasDeleted(resource->object))
+    if (QQmlData::wasDeleted(wrapper->object))
         return; 
 
-    QV8Engine *v8engine = resource->engine;
+    QV8Engine *v8engine = wrapper->v8Engine;
 
     QString error = QLatin1String("Cannot assign to read-only property \"") +
                     property->v4Value().toQString() + QLatin1Char('\"');
@@ -929,15 +902,14 @@ static void FastValueSetterReadOnly(v8::Handle<v8::String> property, v8::Handle<
 void QV8QObjectWrapper::WeakQObjectReferenceCallback(QV4::PersistentValue &handle, void *wrapper)
 {
     Q_ASSERT(handle.value().isObject());
-    v8::Handle<v8::Object> v8object = handle.value();
-    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(v8object);
-    Q_ASSERT(resource);
+    QV4::QObjectWrapper *wrappedObject = handle.value().asQObjectWrapper();
+    Q_ASSERT(wrappedObject);
+    Q_ASSERT(wrapper);
 
-    static_cast<QV8QObjectWrapper*>(wrapper)->unregisterWeakQObjectReference(resource);
-    if (static_cast<QV8QObjectWrapper*>(wrapper)->deleteWeakQObject(resource, false)) {
+    static_cast<QV8QObjectWrapper*>(wrapper)->unregisterWeakQObjectReference(wrappedObject);
+    if (static_cast<QV8QObjectWrapper*>(wrapper)->deleteWeakQObject(wrappedObject, false)) {
         // dispose
-        v8object->SetExternalResource(0);
-        delete resource;
+        delete wrappedObject;
         handle.clear();
     } else {
         // ### FIXME
@@ -945,129 +917,16 @@ void QV8QObjectWrapper::WeakQObjectReferenceCallback(QV4::PersistentValue &handl
     }
 }
 
-v8::Handle<v8::Object> QQmlPropertyCache::newQObject(QObject *object, QV8Engine *engine)
-{
-    Q_ASSERT(object);
-    Q_ASSERT(this->engine);
-
-    Q_ASSERT(QQmlData::get(object, false));
-    Q_ASSERT(QQmlData::get(object, false)->propertyCache == this);
-
-    // Setup constructor
-    if (constructor.isEmpty()) {
-        v8::Handle<v8::FunctionTemplate> ft;
-
-        const QHashedString toString(QStringLiteral("toString"));
-        const QHashedString destroy(QStringLiteral("destroy"));
-
-        // As we use hash linking, or with property overrides, it is possible that iterating
-        // over the values can yield duplicates.  To combat this, we must unique'ify our properties.
-        const bool checkForDuplicates = stringCache.isLinked() || _hasPropertyOverrides;
-
-        StringCache uniqueHash;
-        if (checkForDuplicates)
-            uniqueHash.reserve(stringCache.count());
-
-        // XXX TODO: Enables fast property accessors.  These more than double the property access 
-        // performance, but the  cost of setting up this structure hasn't been measured so 
-        // its not guaranteed that this is a win overall.  We need to try and measure the cost.
-        for (StringCache::ConstIterator iter = stringCache.begin(); iter != stringCache.end(); ++iter) {
-            if (iter.equals(toString) || iter.equals(destroy))
-                continue;
-
-            if (checkForDuplicates) {
-                if (uniqueHash.contains(iter))
-                    continue;
-                uniqueHash.insert(iter);
-            }
-
-            QQmlPropertyData *property = (*iter).second;
-            if (property->notFullyResolved()) resolve(property);
-
-            if (property->isFunction())
-                continue;
-
-            v8::AccessorGetter fastgetter = 0;
-
-            if (property->isQObject()) 
-                fastgetter = FAST_GETTER_FUNCTION(property, QObject*);
-            else if (property->propType == QMetaType::Int || property->isEnum()) 
-                fastgetter = FAST_GETTER_FUNCTION(property, int);
-            else if (property->propType == QMetaType::Bool)
-                fastgetter = FAST_GETTER_FUNCTION(property, bool);
-            else if (property->propType == QMetaType::QString)
-                fastgetter = FAST_GETTER_FUNCTION(property, QString);
-            else if (property->propType == QMetaType::UInt)
-                fastgetter = FAST_GETTER_FUNCTION(property, uint);
-            else if (property->propType == QMetaType::Float) 
-                fastgetter = FAST_GETTER_FUNCTION(property, float);
-            else if (property->propType == QMetaType::Double) 
-                fastgetter = FAST_GETTER_FUNCTION(property, double);
-
-            if (fastgetter) {
-                if (ft.IsEmpty()) {
-                    ft = v8::FunctionTemplate::New();
-                    ft->InstanceTemplate()->SetFallbackPropertyHandler(QV8QObjectWrapper::Getter, 
-                                                                       QV8QObjectWrapper::Setter,
-                                                                       QV8QObjectWrapper::Query, 
-                                                                       0,
-                                                                       QV8QObjectWrapper::Enumerator);
-                    ft->InstanceTemplate()->SetHasExternalResource(true);
-                }
-
-                v8::AccessorSetter fastsetter = FastValueSetter;
-                if (!property->isWritable())
-                    fastsetter = FastValueSetterReadOnly;
-
-                // We wrap the raw QQmlPropertyData pointer here.  This is safe as the
-                // pointer will remain valid at least as long as the lifetime of any QObject's of
-                // this type and the property accessor checks if the object is 0 (deleted) before
-                // dereferencing the pointer.
-                ft->InstanceTemplate()->SetAccessor(engine->toString(iter.key()), fastgetter, fastsetter,
-                                                    v8::External::New(property));
-            }
-        }
-
-        if (ft.IsEmpty()) {
-            constructor = engine->qobjectWrapper()->m_constructor;
-        } else {
-            ft->InstanceTemplate()->SetFallbackPropertyHandler(QV8QObjectWrapper::Getter, 
-                                                               QV8QObjectWrapper::Setter,
-                                                               QV8QObjectWrapper::Query, 
-                                                               0,
-                                                               QV8QObjectWrapper::Enumerator);
-            ft->InstanceTemplate()->SetHasExternalResource(true);
-            constructor = ft->GetFunction()->v4Value();
-        }
-
-        QQmlCleanup::addToEngine(this->engine);
-    }
-
-    v8::Handle<v8::Object> result = constructor.value().asFunctionObject()->newInstance();
-    QV8QObjectResource *r = new QV8QObjectResource(engine, object);
-    result->SetExternalResource(r);
-    return result;
-}
-
 v8::Handle<v8::Object> QV8QObjectWrapper::newQObject(QObject *object, QQmlData *ddata, QV8Engine *engine)
 {
-    v8::Handle<v8::Object> rv;
-
     if (!ddata->propertyCache && engine->engine()) {
         ddata->propertyCache = QQmlEnginePrivate::get(engine->engine())->cache(object);
         if (ddata->propertyCache) ddata->propertyCache->addref();
     }
 
-    if (ddata->propertyCache && ddata->propertyCache->qmlEngine() == engine->engine()) {
-        rv = ddata->propertyCache->newQObject(object, engine);
-    } else {
-        // XXX NewInstance() should be optimized
-        rv = m_constructor.value().asFunctionObject()->newInstance();
-        QV8QObjectResource *r = new QV8QObjectResource(engine, object);
-        rv->SetExternalResource(r);
-    }
-
-    return rv;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::QObjectWrapper *wrapper = new (v4->memoryManager) QV4::QObjectWrapper(v4, object);
+    return QV4::Value::fromObject(wrapper);
 }
 
 /*
@@ -1107,8 +966,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
         // ### FIXME
         //ddata->v8object.MakeWeak(this, WeakQObjectReferenceCallback);
         ddata->v8objectid = m_id;
-        QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(rv);
-        registerWeakQObjectReference(resource);
+        QV4::QObjectWrapper *wrapper = rv->v4Value().asQObjectWrapper();
+        // ### FIXME: registerWeakQObjectReference(wrapper);
         return rv;
 
     } else {
@@ -1126,8 +985,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
             // ### FIXME
             //ddata->v8object.MakeWeak(this, WeakQObjectReferenceCallback);
             ddata->v8objectid = m_id;
-            QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(rv);
-            registerWeakQObjectReference(resource);
+            QV4::QObjectWrapper *wrapper = rv->v4Value().asQObjectWrapper();
+            // ### FIXME registerWeakQObjectReference(wrapper);
 
             if (found) {
                 delete (*iter);
@@ -1155,9 +1014,9 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
 // returns true if the object's qqmldata v8object handle should
 // be disposed by the caller, false if it should not be (due to
 // creation status, etc).
-bool QV8QObjectWrapper::deleteWeakQObject(QV8QObjectResource *resource, bool calledFromEngineDtor)
+bool QV8QObjectWrapper::deleteWeakQObject(QObjectWrapper *wrapper, bool calledFromEngineDtor)
 {
-    QObject *object = resource->object;
+    QObject *object = wrapper->object;
     if (object) {
         QQmlData *ddata = QQmlData::get(object, false);
         if (ddata) {
@@ -1708,15 +1567,17 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
                 return 10;
         }
 
-        QV8ObjectResource *r = static_cast<QV8ObjectResource *>(obj->GetExternalResource());
-        if (r && r->resourceType() == QV8ObjectResource::QObjectType) {
+        if (obj->v4Value().asQObjectWrapper()) {
             switch (conversionType) {
             case QMetaType::QObjectStar:
                 return 0;
             default:
                 return 10;
             }
-        } else if (r && r->resourceType() == QV8ObjectResource::ValueTypeType) {
+        }
+
+        QV8ObjectResource *r = static_cast<QV8ObjectResource *>(obj->GetExternalResource());
+        if (r && r->resourceType() == QV8ObjectResource::ValueTypeType) {
             if (r->engine->toVariant(actual->v4Value(), -1).userType() == conversionType)
                 return 0;
             return 10;
@@ -1966,23 +1827,23 @@ QV4::Value QV8QObjectWrapper::Invoke(const v8::Arguments &args)
     Q_ASSERT(args.Length() == 5);
     Q_ASSERT(args[0]->IsObject());
 
-    QV8QObjectResource *resource = v8_resource_cast<QV8QObjectResource>(args[0]->ToObject());
+    QV4::QObjectWrapper *wrapper = args[0]->v4Value().asQObjectWrapper();
 
-    if (!resource)
+    if (!wrapper)
         return QV4::Value::undefinedValue();
 
     int argCount = args[3]->Int32Value();
     v8::Handle<v8::Object> arguments = v8::Handle<v8::Object>::Cast(args[4]);
 
     // Special hack to return info about this closure.
-    if (argCount == 1 && arguments->Get(0)->StrictEquals(resource->engine->qobjectWrapper()->m_hiddenObject.value())) {
+    if (argCount == 1 && arguments->Get(0)->StrictEquals(wrapper->v8Engine->qobjectWrapper()->m_hiddenObject.value())) {
         v8::Handle<v8::Array> data = v8::Array::New(2);
         data->Set(0, args[0]);
         data->Set(1, args[1]);
         return data->v4Value();
     }
 
-    QObject *object = resource->object;
+    QObject *object = wrapper->object;
     int index = args[1]->Int32Value();
 
     if (!object)
@@ -1991,9 +1852,9 @@ QV4::Value QV8QObjectWrapper::Invoke(const v8::Arguments &args)
     if (index < 0) {
         // Builtin functions
         if (index == QOBJECT_TOSTRING_INDEX) {
-            return ToString(resource->engine, object, argCount, arguments);
+            return ToString(wrapper->v8Engine, object, argCount, arguments);
         } else if (index == QOBJECT_DESTROY_INDEX) {
-            return Destroy(resource->engine, object, argCount, arguments);
+            return Destroy(wrapper->v8Engine, object, argCount, arguments);
         } else {
             return QV4::Value::undefinedValue();
         }
@@ -2022,8 +1883,8 @@ QV4::Value QV8QObjectWrapper::Invoke(const v8::Arguments &args)
         v8::Handle<v8::Value> qmlglobal = args[2];
 
         QQmlV4Function func(argCount, arguments->v4Value(), &rv, qmlglobal->v4Value(),
-                                    resource->engine->contextWrapper()->context(qmlglobal),
-                                    resource->engine);
+                                    wrapper->v8Engine->contextWrapper()->context(qmlglobal),
+                                    wrapper->v8Engine);
         QQmlV4Function *funcptr = &func;
 
         void *args[] = { 0, &funcptr };
@@ -2034,9 +1895,9 @@ QV4::Value QV8QObjectWrapper::Invoke(const v8::Arguments &args)
 
     CallArgs callArgs(argCount, &arguments);
     if (!method.isOverload()) {
-        return CallPrecise(object, method, resource->engine, callArgs);
+        return CallPrecise(object, method, wrapper->v8Engine, callArgs);
     } else {
-        return CallOverloaded(object, method, resource->engine, callArgs);
+        return CallOverloaded(object, method, wrapper->v8Engine, callArgs);
     }
 }
 
@@ -2265,6 +2126,8 @@ QV4::Value CallArgument::toValue(QV8Engine *engine)
         return QV4::Value::undefinedValue();
     }
 }
+
+#include "qv8qobjectwrapper_p_jsclass.cpp"
 
 QT_END_NAMESPACE
 

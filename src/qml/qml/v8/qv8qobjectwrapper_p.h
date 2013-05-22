@@ -65,6 +65,7 @@
 #include "qv8objectresource_p.h"
 
 #include <private/qv4value_p.h>
+#include <private/qv4object_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -76,16 +77,37 @@ class QV8QObjectInstance;
 class QV8QObjectConnectionList;
 class QQmlPropertyCache;
 
-class QV8QObjectResource : public QV8ObjectResource
+namespace QV4 {
+
+struct QV4_JS_CLASS(QObjectWrapper) : public QV4::Object
 {
-    V8_RESOURCE_TYPE(QObjectType);
+    QObjectWrapper(ExecutionEngine *v8Engine, QObject *object);
+    ~QObjectWrapper();
 
-public:
-    QV8QObjectResource(QV8Engine *engine, QObject *object);
-
+    QV8Engine *v8Engine; // ### Remove again.
     QQmlGuard<QObject> object;
     QIntrusiveListNode weakResource;
+
+    QV4::Value method_toString(QV4::SimpleCallContext *ctx);
+    QV4::Value method_destroy(QV4::SimpleCallContext *ctx);
+
+private:
+    void initClass(QV4::ExecutionEngine *engine);
+
+    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+
+    static Value enumerateProperties(Object *object);
+
+    static void destroy(Managed *that)
+    {
+        static_cast<QObjectWrapper *>(that)->~QObjectWrapper();
+    }
+
+    static const QV4::ManagedVTable static_vtbl;
 };
+
+}
 
 class Q_QML_PRIVATE_EXPORT QV8QObjectWrapper
 {
@@ -99,41 +121,33 @@ public:
     v8::Handle<v8::Value> newQObject(QObject *object);
     bool isQObject(v8::Handle<v8::Object>);
     QObject *toQObject(v8::Handle<v8::Object>);
-    static QObject *toQObject(QV8ObjectResource *);
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
     inline v8::Handle<v8::Value> getProperty(QObject *, const QHashedV4String &, QQmlContextData *, RevisionMode);
     inline bool setProperty(QObject *, const QHashedV4String &, QQmlContextData *, v8::Handle<v8::Value>, RevisionMode);
 
-    void registerWeakQObjectReference(QV8QObjectResource *resource)
+    void registerWeakQObjectReference(QV4::QObjectWrapper *wrapper)
     {
-        m_javaScriptOwnedWeakQObjects.insert(resource);
+        m_javaScriptOwnedWeakQObjects.insert(wrapper);
     }
 
-    void unregisterWeakQObjectReference(QV8QObjectResource *resource)
+    void unregisterWeakQObjectReference(QV4::QObjectWrapper *wrapper)
     {
-        m_javaScriptOwnedWeakQObjects.remove(resource);
+        m_javaScriptOwnedWeakQObjects.remove(wrapper);
     }
 
 private:
     friend class QQmlPropertyCache;
     friend class QV8QObjectConnectionList;
     friend class QV8QObjectInstance;
+    friend class QV4::QObjectWrapper;
 
     v8::Handle<v8::Object> newQObject(QObject *, QQmlData *, QV8Engine *);
-    bool deleteWeakQObject(QV8QObjectResource *resource, bool calledFromEngineDtor = false);
+    bool deleteWeakQObject(QV4::QObjectWrapper *wrapper, bool calledFromEngineDtor = false);
     static v8::Handle<v8::Value> GetProperty(QV8Engine *, QObject *, v8::Handle<v8::Value> *, 
                                              const QHashedV4String &, QQmlContextData *, QV8QObjectWrapper::RevisionMode);
     static bool SetProperty(QV8Engine *, QObject *, const QHashedV4String &, QQmlContextData *,
                             v8::Handle<v8::Value>, QV8QObjectWrapper::RevisionMode);
-    static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property,
-                                        const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property,
-                                        v8::Handle<v8::Value> value,
-                                        const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Query(v8::Handle<v8::String> property,
-                                         const v8::AccessorInfo &info);
-    static v8::Handle<v8::Array> Enumerator(const v8::AccessorInfo &info);
     static QV4::Value Connect(const v8::Arguments &args);
     static QV4::Value Disconnect(const v8::Arguments &args);
     static QV4::Value Invoke(const v8::Arguments &args);
@@ -143,7 +157,6 @@ private:
 
     QV8Engine *m_engine;
     quint32 m_id;
-    QV4::PersistentValue m_constructor;
     QV4::PersistentValue m_methodConstructor;
     QV4::PersistentValue m_signalHandlerConstructor;
     QV4::PersistentValue m_toStringSymbol;
@@ -154,7 +167,7 @@ private:
     QHash<QObject *, QV8QObjectConnectionList *> m_connections;
     typedef QHash<QObject *, QV8QObjectInstance *> TaintedHash;
     TaintedHash m_taintedObjects;
-    QIntrusiveList<QV8QObjectResource, &QV8QObjectResource::weakResource> m_javaScriptOwnedWeakQObjects;
+    QIntrusiveList<QV4::QObjectWrapper, &QV4::QObjectWrapper::weakResource> m_javaScriptOwnedWeakQObjects;
 };
 
 v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHashedV4String &string,

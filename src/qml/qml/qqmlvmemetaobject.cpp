@@ -1032,9 +1032,9 @@ void QQmlVMEMetaObject::writeVarProperty(int id, v8::Handle<v8::Value> value)
         // automatically released by the engine until no other references to it exist.
         if (QV4::VariantObject *v = value->v4Value().asVariantObject()) {
             v->addVmePropertyReference();
-        } else if (QV8QObjectResource *r = v8_resource_cast<QV8QObjectResource>(v8::Handle<v8::Object>::Cast(value))) {
+        } else if (QV4::QObjectWrapper *wrapper = value->v4Value().asQObjectWrapper()) {
             // We need to track this QObject to signal its deletion
-            valueObject = r->object;
+            valueObject = wrapper->object;
 
             // Do we already have a QObject guard for this property?
             if (valueObject && !guard) {

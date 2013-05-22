@@ -270,6 +270,7 @@ struct Q_QML_EXPORT Value
     ArrayObject *asArrayObject() const;
     ErrorObject *asErrorObject() const;
     VariantObject *asVariantObject() const;
+    QObjectWrapper *asQObjectWrapper() const;
     uint asArrayIndex() const;
     uint asArrayLength(bool *ok) const;
 
@@ -545,6 +546,11 @@ inline ErrorObject *Value::asErrorObject() const
 inline VariantObject *Value::asVariantObject() const
 {
     return isObject() ? managed()->asVariantObject() : 0;
+}
+
+inline QObjectWrapper *Value::asQObjectWrapper() const
+{
+    return isObject() ? managed()->asQObjectWrapper() : 0;
 }
 
 // ###

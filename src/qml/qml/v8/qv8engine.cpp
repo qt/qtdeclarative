@@ -220,8 +220,6 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
                 return QVariant();
             case QV8ObjectResource::TypeType:
                 return m_typeWrapper.toVariant(r);
-            case QV8ObjectResource::QObjectType:
-                return qVariantFromValue<QObject *>(m_qobjectWrapper.toQObject(r));
             case QV8ObjectResource::ListType:
                 return m_listWrapper.toVariant(r);
             case QV8ObjectResource::ValueTypeType:
@@ -230,6 +228,8 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
         } else if (typeHint == QMetaType::QJsonObject
                    && !value.asArrayObject() && !value.asFunctionObject()) {
             return QVariant::fromValue(jsonObjectFromJS(value));
+        } else if (QV4::QObjectWrapper *wrapper = object->asQObjectWrapper()) {
+            return qVariantFromValue<QObject *>(wrapper->object);
         } else if (object->isListType())
             return QV4::SequencePrototype::toVariant(object);
     }
@@ -1290,20 +1290,17 @@ QObject *QV8Engine::qtObjectFromJS(const QV4::Value &value)
     if (!value.isObject())
         return 0;
 
-    QV4::VariantObject *v = value.asVariantObject();
-    if (v) {
+
+    if (QV4::VariantObject *v = value.asVariantObject()) {
         QVariant variant = v->data;
         int type = variant.userType();
         if (type == QMetaType::QObjectStar)
             return *reinterpret_cast<QObject* const *>(variant.constData());
     }
-    QV8ObjectResource *r = (QV8ObjectResource *)v8::Value::fromV4Value(value)->ToObject()->GetExternalResource();
-    if (!r)
+    QV4::QObjectWrapper *wrapper = value.asQObjectWrapper();
+    if (!wrapper)
         return 0;
-    QV8ObjectResource::ResourceType type = r->resourceType();
-    if (type == QV8ObjectResource::QObjectType)
-        return qobjectWrapper()->toQObject(r);
-    return 0;
+    return wrapper->object;
 }
 
 void QV8Engine::startTimer(const QString &timerName)

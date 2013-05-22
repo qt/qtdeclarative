@@ -453,9 +453,8 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QVector<int
             QDateTime dt = propertyValue->v4Value().asDateObject()->toQDateTime();
             roleIndex = e->setDateTimeProperty(r, dt);
         } else if (propertyValue->IsObject()) {
-            QV8ObjectResource *r = (QV8ObjectResource *) propertyValue->ToObject()->GetExternalResource();
-            if (r && r->resourceType() == QV8ObjectResource::QObjectType) {
-                QObject *o = QV8QObjectWrapper::toQObject(r);
+            if (QV4::QObjectWrapper *wrapper = propertyValue->v4Value().asQObjectWrapper()) {
+                QObject *o = wrapper->object;
                 const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::QObject);
                 if (role.type == ListLayout::Role::QObject)
                     roleIndex = e->setQObjectProperty(role, o);
@@ -529,9 +528,8 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *
                 e->setDateTimePropertyFast(r, dt);
             }
         } else if (propertyValue->IsObject()) {
-            QV8ObjectResource *r = (QV8ObjectResource *) propertyValue->ToObject()->GetExternalResource();
-            if (r && r->resourceType() == QV8ObjectResource::QObjectType) {
-                QObject *o = QV8QObjectWrapper::toQObject(r);
+            if (QV4::QObjectWrapper *wrapper = propertyValue->v4Value().asQObjectWrapper()) {
+                QObject *o = wrapper->object;
                 const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::QObject);
                 if (r.type == ListLayout::Role::QObject)
                     e->setQObjectPropertyFast(r, o);
@@ -1190,9 +1188,9 @@ int ListElement::setJsProperty(const ListLayout::Role &role, v8::Handle<v8::Valu
         QDateTime dt = d->v4Value().asDateObject()->toQDateTime();;
         roleIndex = setDateTimeProperty(role, dt);
     } else if (d->IsObject()) {
-        QV8ObjectResource *r = (QV8ObjectResource *) d->ToObject()->GetExternalResource();
-        if (role.type == ListLayout::Role::QObject && r && r->resourceType() == QV8ObjectResource::QObjectType) {
-            QObject *o = QV8QObjectWrapper::toQObject(r);
+        QV4::QObjectWrapper *wrapper = d->v4Value().asQObjectWrapper();
+        if (role.type == ListLayout::Role::QObject && wrapper) {
+            QObject *o = wrapper->object;
             roleIndex = setQObjectProperty(role, o);
         } else if (role.type == ListLayout::Role::VariantMap) {
             roleIndex = setVariantMapProperty(role, d->ToObject(), eng);
