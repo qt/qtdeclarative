@@ -1324,6 +1324,7 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
             try {
                 f->call(v4->current, connection.thisObject.isEmpty() ? engine->global() : connection.thisObject.value(), args.data(), argCount);
             } catch (QV4::Exception &e) {
+                e.accept(ctx);
                 QQmlError error;
                 QQmlExpressionPrivate::exceptionToError(e, error);
                 if (error.description().isEmpty())
