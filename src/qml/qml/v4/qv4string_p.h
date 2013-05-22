@@ -50,7 +50,7 @@ namespace QV4 {
 
 struct ExecutionEngine;
 
-struct String : public Managed {
+struct Q_QML_EXPORT String : public Managed {
     enum StringType {
         StringType_Unknown,
         StringType_Regular,

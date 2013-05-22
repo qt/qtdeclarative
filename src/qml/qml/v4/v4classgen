@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import re, sys, os
-import argparse
 
 class ParsedMethod():
     def __init__(self, name, methodPrefix, static):
@@ -308,21 +307,20 @@ def extractManagedVTableLayout(basePath):
         sys.exit(1)
     return fields
 
-parser = argparse.ArgumentParser(description="Generate V4 JS class bindings")
-parser.add_argument("input")
-parser.add_argument("--output")
-options = parser.parse_args()
+if len(sys.argv) != 3 and len(sys.argv) != 2:
+    print("Usage: v4classgen input-file [output-file]\n")
+    sys.exit(1)
 
 vtableEntries = extractManagedVTableLayout(os.path.dirname(__file__))
 if len(vtableEntries) ==  0:
     print("Could not parse vtable layout from qv4managed_p.h")
     sys.exit(1)
 
-f = open(options.input)
+f = open(sys.argv[1])
 
 out = sys.stdout
-if options.output != None:
-    out = open(options.output, 'w')
+if len(sys.argv) == 3:
+    out = open(sys.argv[2], 'w')
 
 lines = f.read().splitlines()
 classes = parse(lines)

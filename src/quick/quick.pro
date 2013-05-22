@@ -31,6 +31,9 @@ HEADERS += \
 
 SOURCES += qtquick2.cpp
 
+# To make #include "qquickcontext2d_jsclass.cpp" work
+INCLUDEPATH += $$PWD
+
 mac {
     # FIXME: this is a workaround for broken qmake logic in qtAddModule()
     # This function refuses to use frameworks unless the framework exists on

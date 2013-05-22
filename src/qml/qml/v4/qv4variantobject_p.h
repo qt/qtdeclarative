@@ -68,7 +68,6 @@ struct VariantObject : Object, public ExecutionEngine::ScarceResourceData
 {
 public:
     VariantObject(ExecutionEngine *engine, const QVariant &value);
-    ~VariantObject();
 
     static QVariant toVariant(const QV4::Value &v);
 

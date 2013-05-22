@@ -672,7 +672,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
                       "    }"\
                       "})"
 
-        QV4::Value result = evaluateScript(QStringLiteral(FREEZE_SOURCE), 0);
+        QV4::Value result = evaluateScript(QString::fromUtf8(FREEZE_SOURCE), 0);
         Q_ASSERT(result.asFunctionObject());
         m_freezeObject = result;
 #undef FREEZE_SOURCE

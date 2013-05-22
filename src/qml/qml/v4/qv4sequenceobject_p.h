@@ -77,9 +77,8 @@ public:
     QV4::Value method_set_length(QV4::SimpleCallContext* ctx);
 };
 
-class QV4_JS_CLASS(SequencePrototype) : public QV4::Object
+struct QV4_JS_CLASS(SequencePrototype) : public QV4::Object
 {
-public:
     SequencePrototype(QV4::ExecutionEngine *engine);
 
     void initClass(QV4::ExecutionEngine *engine);

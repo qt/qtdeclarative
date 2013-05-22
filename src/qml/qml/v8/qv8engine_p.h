@@ -105,7 +105,7 @@ namespace QV4 {
 }
 
 #define V4THROW_ERROR(string) \
-    v8::Isolate::GetEngine()->current->throwError(QStringLiteral(string));
+    v8::Isolate::GetEngine()->current->throwError(QString::fromUtf8(string));
 
 #define V8THROW_TYPE(string) { \
     v8::ThrowException(v8::Exception::TypeError(v8::String::New(string))); \

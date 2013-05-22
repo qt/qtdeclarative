@@ -61,6 +61,7 @@
 #include <cassert>
 #include <typeinfo>
 #include <iostream>
+#include <stdint.h>
 #include "qv4alloca_p.h"
 
 using namespace QV4;
