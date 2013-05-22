@@ -51,12 +51,12 @@ namespace QV4 {
 struct ExecutionContext;
 
 struct Script {
-    Script(ExecutionContext *scope, const QString &sourceCode, const QString &source, int line = 0, int column = 0)
+    Script(ExecutionContext *scope, const QString &sourceCode, const QString &source = QString(), int line = 0, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , scope(scope), strictMode(false), inheritContext(false), qml(0), function(0) {}
-    Script(ExecutionEngine *engine, Object *qml, const QString &sourceCode, const QString &source, int line = 0, int column = 0)
+        , scope(scope), strictMode(false), inheritContext(false), qml(0) {}
+    Script(ExecutionEngine *engine, Object *qml, const QString &sourceCode, const QString &source = QString(), int line = 0, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , scope(engine->rootContext), strictMode(true), inheritContext(true), qml(qml), function(0) {}
+        , scope(engine->rootContext), strictMode(true), inheritContext(true), qml(qml) {}
     QString sourceFile;
     int line;
     int column;
@@ -65,10 +65,11 @@ struct Script {
     bool strictMode;
     bool inheritContext;
     Object *qml;
-    Function *function;
+    PersistentValue functionWrapper;
 
     void parse();
     Value run();
+    Function *function();
 };
 
 }

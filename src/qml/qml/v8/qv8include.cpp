@@ -50,6 +50,7 @@
 #include <private/qqmlengine_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
+#include <private/qv4script_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -144,13 +145,14 @@ void QV8Include::finished()
         importContext->isPragmaLibraryContext = m_context->isPragmaLibraryContext;
         importContext->setParent(m_context, true);
 
-        v8::Handle<v8::Script> script = m_engine->qmlModeCompile(code, m_url.toString());
+        QV4::Script script(QV8Engine::getV4(m_engine), m_qmlglobal.value().asObject(), code, m_url.toString());
 
         QV4::ExecutionContext *ctx = QV8Engine::getV4(m_engine)->current;
         // ### Only used for debugging info
         //m_engine->contextWrapper()->addSubContext(m_qmlglobal.value(), script, importContext);
         try {
-            script->Run(m_qmlglobal.value());
+            script.parse();
+            script.run();
             v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), QV4::Value::fromInt32(Ok));
         } catch (QV4::Exception &e) {
             e.accept(ctx);
@@ -213,14 +215,15 @@ QV4::Value QV8Include::include(const v8::Arguments &args)
             importContext->url = url;
             importContext->setParent(context, true);
 
-            v8::Handle<v8::Script> script = engine->qmlModeCompile(code, url.toString());
+            QV4::Object *qmlglobal = args.GetIsolate()->GetEngine()->qmlContextObject();
+            QV4::Script script(QV8Engine::getV4(engine), qmlglobal, code, url.toString());
 
-            v8::Handle<v8::Object> qmlglobal = QV4::Value::fromObject(args.GetIsolate()->GetEngine()->qmlContextObject());
             // ### Only used for debugging info
             // engine->contextWrapper()->addSubContext(qmlglobal, script, importContext);
             QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
             try {
-                script->Run(qmlglobal);
+                script.parse();
+                script.run();
                 result = resultValue(Ok);
             } catch (QV4::Exception &e) {
                 e.accept(ctx);

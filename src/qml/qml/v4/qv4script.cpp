@@ -58,14 +58,27 @@
 
 using namespace QV4;
 
+struct FunctionWrapper : FunctionObject
+{
+    FunctionWrapper(ExecutionContext *scope, Function *f)
+        : FunctionObject(scope, scope->engine->id_eval)
+    {
+        function = f;
+        usesArgumentsObject = function->usesArgumentsObject;
+        needsActivation = function->needsActivation();
+        defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
+    }
+};
+
 
 void Script::parse()
 {
     using namespace QQmlJS;
 
-    MemoryManager::GCBlocker gcBlocker(scope->engine->memoryManager);
+    ExecutionEngine *v4 = scope->engine;
 
-    ExecutionEngine *vm = scope->engine;
+    MemoryManager::GCBlocker gcBlocker(v4->memoryManager);
+
     V4IR::Module module;
     Function *globalCode = 0;
 
@@ -113,7 +126,7 @@ void Script::parse()
 
             Codegen cg(scope, strictMode);
             V4IR::Function *globalIRCode = cg(sourceFile, sourceCode, program, &module, QQmlJS::Codegen::EvalCode, inheritedLocals);
-            QScopedPointer<EvalInstructionSelection> isel(scope->engine->iselFactory->create(vm, &module));
+            QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4, &module));
             if (inheritContext)
                 isel->setUseFastLookups(false);
             if (globalIRCode)
@@ -124,64 +137,39 @@ void Script::parse()
             // ### should be a syntax error
             scope->throwTypeError();
     }
+    if (!globalCode)
+        // ### FIX file/line number
+        __qmljs_throw(v4->current, QV4::Value::fromObject(v4->newSyntaxErrorObject(v4->current, 0)), -1);
 
-    function = globalCode;
+    functionWrapper = Value::fromObject(new (v4->memoryManager) FunctionWrapper(scope, globalCode));
 }
-
-struct QmlFunction : FunctionObject
-{
-    QmlFunction(ExecutionContext *scope)
-        : FunctionObject(scope, scope->engine->id_eval)
-    {
-        defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
-    }
-};
 
 Value Script::run()
 {
+    if (functionWrapper.isEmpty())
+        parse();
+
     QV4::ExecutionEngine *engine = scope->engine;
+    QV4::FunctionObject *f = functionWrapper.value().asFunctionObject();
 
-    if (!function)
-        // ### FIX file/line number
-        __qmljs_throw(engine->current, QV4::Value::fromObject(engine->newSyntaxErrorObject(engine->current, 0)), -1);
+    if (engine->debugger)
+        engine->debugger->aboutToCall(0, scope);
 
-    if (!qml) {
-        TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, function);
+    quintptr stackSpace[stackContextSize/sizeof(quintptr)];
+    ExecutionContext *ctx = qml ? engine->newQmlContext(f, qml) : engine->newCallContext(stackSpace, f, Value::undefinedValue(), 0, 0);
 
-        bool strict = scope->strictMode;
-        Lookup *lookups = scope->lookups;
+    Value result = f->function->code(ctx, f->function->codeData);
 
-        scope->strictMode = function->isStrict;
-        scope->lookups = function->lookups;
+    engine->popContext();
 
-        if (engine->debugger)
-            engine->debugger->aboutToCall(0, scope);
+    if (engine->debugger)
+        engine->debugger->justLeft(scope);
 
-        QV4::Value result;
-        try {
-            result = function->code(scope, function->codeData);
-        } catch (Exception &e) {
-            scope->strictMode = strict;
-            scope->lookups = lookups;
-            throw;
-        }
+    return result;
+}
 
-        if (engine->debugger)
-            engine->debugger->justLeft(scope);
-        return result;
-    } else {
-        QmlFunction *f = new (engine->memoryManager) QmlFunction(scope);
-        f->function = function;
-        f->usesArgumentsObject = function->usesArgumentsObject;
-        f->needsActivation = function->needsActivation();
-
-        CallContext *ctx = engine->newQmlContext(f, qml);
-
-        Value result = function->code(ctx, function->codeData);
-
-        engine->popContext();
-
-        return result;
-    }
+Function *Script::function()
+{
+    return functionWrapper.value().asFunctionObject()->function;
 }
 

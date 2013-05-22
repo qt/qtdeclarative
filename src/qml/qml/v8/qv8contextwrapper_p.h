@@ -79,8 +79,8 @@ public:
 
     void setReadOnly(v8::Handle<v8::Object>, bool);
 
-    void addSubContext(v8::Handle<v8::Object> qmlglobal, v8::Handle<v8::Script>, 
-                       QQmlContextData *ctxt);
+//    void addSubContext(v8::Handle<v8::Object> qmlglobal, v8::Handle<v8::Script>,
+//                       QQmlContextData *ctxt);
 
     QQmlContextData *callingContext();
     QQmlContextData *context(v8::Handle<v8::Value>);

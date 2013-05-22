@@ -200,14 +200,14 @@ void QV8ContextWrapper::setReadOnly(v8::Handle<v8::Object> qmlglobal, bool readO
     resource->readOnly = readOnly;
 }
 
-void QV8ContextWrapper::addSubContext(v8::Handle<v8::Object> qmlglobal, v8::Handle<v8::Script> script, 
-                                      QQmlContextData *ctxt)
-{
-    QV8ContextResource *resource = v8_resource_cast<QV8ContextResource>(qmlglobal);
-    Q_ASSERT(resource);
-    resource->hasSubContexts = true;
-    script->SetData(v8::String::NewExternal(new QV8ContextResource::SubContext(ctxt)));
-}
+//void QV8ContextWrapper::addSubContext(v8::Handle<v8::Object> qmlglobal, v8::Handle<v8::Script> script,
+//                                      QQmlContextData *ctxt)
+//{
+//    QV8ContextResource *resource = v8_resource_cast<QV8ContextResource>(qmlglobal);
+//    Q_ASSERT(resource);
+//    resource->hasSubContexts = true;
+//    script->SetData(v8::String::NewExternal(new QV8ContextResource::SubContext(ctxt)));
+//}
 
 QQmlContextData *QV8ContextWrapper::callingContext()
 {

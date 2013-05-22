@@ -1164,14 +1164,19 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     QV8Engine *v8engine = ep->v8engine();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8engine);
 
     // If compilation throws an error, a surrounding catch will record it.
-    v8::Handle<v8::Script> program = v8engine->qmlModeCompile(m_programSource.constData(),
-                                                             m_programSource.length(), urlString, 1);
-    if (program.IsEmpty())
-        return;
+    // pass 0 as the QML object, we set it later before calling run()
+    QV4::Script *program = new QV4::Script(v4, 0, m_programSource, urlString, 1);
+    try {
+        program->parse();
+    } catch (QV4::Exception &) {
+        delete program;
+        throw;
+    }
 
-    m_program = program.get();
+    m_program = program;
     m_programSource.clear(); // We don't need this anymore
 
     addToEngine(engine);
@@ -1238,12 +1243,16 @@ QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *s
     if (!script->isInitialized())
         script->initialize(parentCtxt->engine);
 
+    if (!script->m_program)
+        return QV4::PersistentValue();
+
     v8::Handle<v8::Object> qmlglobal = v8engine->qmlScope(ctxt, 0);
     v8engine->contextWrapper()->takeContextOwnership(qmlglobal);
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(v8engine)->current;
     try {
-        script->m_program->Run(qmlglobal);
+        script->m_program->qml = qmlglobal->v4Value().asObject();
+        script->m_program->run();
     } catch (QV4::Exception &e) {
         e.accept(ctx);
         QQmlError error;

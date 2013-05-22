@@ -377,13 +377,11 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
     script.inheritContext = inheritContext;
     script.parse();
 
-    if (!script.function)
-        return Value::undefinedValue();
+    Function *function = script.function();
+    strictMode = function->isStrict || (ctx->strictMode);
 
-    strictMode = script.function->isStrict || (ctx->strictMode);
-
-    usesArgumentsObject = script.function->usesArgumentsObject;
-    needsActivation = script.function->needsActivation();
+    usesArgumentsObject = function->usesArgumentsObject;
+    needsActivation = function->needsActivation();
 
     if (strictMode) {
         CallContext *k = ctx->engine->newCallContext(this, ctx->thisObject, 0, 0);
@@ -391,7 +389,7 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
     }
 
     ExecutionContext::EvalCode evalCode;
-    evalCode.function = script.function;
+    evalCode.function = function;
     evalCode.next = ctx->currentEvalCode;
     ctx->currentEvalCode = &evalCode;
 
@@ -401,7 +399,7 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
 
     Value result = Value::undefinedValue();
     try {
-        result = script.function->code(ctx, script.function->codeData);
+        result = function->code(ctx, function->codeData);
     } catch (Exception &ex) {
         ctx->strictMode = cstrict;
         ctx->currentEvalCode = evalCode.next;

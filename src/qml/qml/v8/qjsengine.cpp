@@ -261,9 +261,6 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
         script.strictMode = ctx->strictMode;
         script.inheritContext = true;
         script.parse();
-        if (!script.function)
-            return QJSValue();
-
         QV4::Value result = script.run();
         return new QJSValuePrivate(d->m_v4Engine, result);
     } catch (QV4::Exception& ex) {

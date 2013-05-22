@@ -2251,12 +2251,13 @@ void QQmlTypeData::scriptImported(QQmlScriptBlob *blob, const QQmlScript::Locati
 }
 
 QQmlScriptData::QQmlScriptData()
-: importCache(0), pragmas(QQmlScript::Object::ScriptBlock::None), m_loaded(false) 
+: importCache(0), pragmas(QQmlScript::Object::ScriptBlock::None), m_loaded(false), m_program(0)
 {
 }
 
 QQmlScriptData::~QQmlScriptData()
 {
+    delete m_program;
 }
 
 void QQmlScriptData::clear()

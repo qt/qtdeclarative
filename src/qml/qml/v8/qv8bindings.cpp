@@ -51,6 +51,7 @@
 #include <private/qqmlprofilerservice_p.h>
 
 #include <private/qv4object_p.h>
+#include <private/qv4script_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -246,20 +247,19 @@ QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
     QV8Engine *engine = QQmlEnginePrivate::getV8Engine(context->engine);
 
     if (program->bindings.isEmpty()) {
-        v8::Handle<v8::Script> script;
-        bool compileFailed = false;
-        {
-            const QByteArray &source = program->program;
-            script = engine->qmlModeCompile(source.constData(), source.length(),
-                                            program->cdata->name, line);
-        }
-
-        if (!compileFailed) {
-            v8::Handle<v8::Value> result = script->Run(engine->contextWrapper()->sharedContext());
-            if (result->IsArray()) {
-                program->bindings = result->v4Value();
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+        QString sourceCode = program->program;
+        QV4::Script script(v4, engine->contextWrapper()->sharedContext().asObject(), sourceCode, program->cdata->name, line);
+        QV4::ExecutionContext *ctx = v4->current;
+        try {
+            script.parse();
+            QV4::Value result = script.run();
+            if (result.asArrayObject()) {
+                program->bindings = result;
                 program->program.clear(); // We don't need the source anymore
             }
+        } catch (QV4::Exception &e) {
+            e.accept(ctx);
         }
     }
 

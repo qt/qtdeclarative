@@ -44,6 +44,7 @@
 #include <private/qqmlexpression_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
+#include <private/qv4script_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -312,33 +313,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
                                        const QString &filename, quint16 line,
                                        QV4::PersistentValue *qmlscope)
 {
-    QQmlEngine *engine = ctxt->engine;
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
-    QV4::ExecutionContext *ctx = v4->current;
-
-    v8::Handle<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);
-    v8::Handle<v8::Script> script = ep->v8engine()->qmlModeCompile(code, codeLength, filename, line);
-    v8::Handle<v8::Value> result;
-    try {
-        result = script->Run(scopeobject);
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
-        QQmlError error;
-        QQmlExpressionPrivate::exceptionToError(e, error);
-        if (error.description().isEmpty())
-            error.setDescription(QLatin1String("Exception occurred during function evaluation"));
-        if (error.line() == -1)
-            error.setLine(line);
-        if (error.url().isEmpty())
-            error.setUrl(QUrl::fromLocalFile(filename));
-        ep->warning(error);
-        return QV4::PersistentValue();
-    }
-    if (qmlscope)
-        *qmlscope = scopeobject->v4Value();
-    return result->v4Value();
+    return evalFunction(ctxt, scope, QString::fromUtf8(code, codeLength), filename, line, qmlscope);
 }
 
 // Callee owns the persistent handle
@@ -353,13 +328,12 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::ExecutionContext *ctx = v4->current;
 
-    v8::Handle<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);
-    v8::Handle<v8::Script> script = ep->v8engine()->qmlModeCompile(code, filename, line);
+    QV4::Value scopeObject = ep->v8engine()->qmlScope(ctxt, scope)->v4Value();
+    QV4::Script script(v4, scopeObject.asObject(), code, filename, line);
+    QV4::Value result;
     try {
-        v8::Handle<v8::Value> result = script->Run(scopeobject);
-        if (qmlscope)
-            *qmlscope = scopeobject->v4Value();
-        return result->v4Value();
+        script.parse();
+        result = script.run();
     } catch (QV4::Exception &e) {
         e.accept(ctx);
         QQmlError error;
@@ -371,8 +345,11 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
         if (error.url().isEmpty())
             error.setUrl(QUrl::fromLocalFile(filename));
         ep->warning(error);
+        return QV4::PersistentValue();
     }
-    return QV4::PersistentValue();
+    if (qmlscope)
+        *qmlscope = scopeObject;
+    return result;
 }
 
 void QQmlJavaScriptExpression::clearGuards()

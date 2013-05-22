@@ -70,6 +70,7 @@
 #include <private/qflagpointer_p.h>
 
 #include <private/qv4value_p.h>
+#include <private/qv4script_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -510,7 +511,7 @@ private:
 
     bool m_loaded;
     QByteArray m_programSource;
-    QExplicitlySharedDataPointer<v8::Script> m_program;
+    QV4::Script *m_program;
     QV4::PersistentValue m_value;
     QQmlError m_error;
 };

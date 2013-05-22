@@ -63,6 +63,7 @@
 
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
+#include <private/qv4script_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -224,21 +225,14 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
         "}); "\
     "})"
 
-    {
-    v8::Handle<v8::Script> onmessagescript = v8::Script::New(v8::String::New(CALL_ONMESSAGE_SCRIPT));
-    onmessage = onmessagescript->Run()->v4Value();
-    }
-    {
-    v8::Handle<v8::Script> createsendscript = v8::Script::New(v8::String::New(SEND_MESSAGE_CREATE_SCRIPT));
-    v8::Handle<v8::Function> createsendconstructor = v8::Handle<v8::Function>::Cast(createsendscript->Run());
+    onmessage = QV4::Script(m_v4Engine->rootContext, CALL_ONMESSAGE_SCRIPT).run();
+    QV4::Script createsendscript(m_v4Engine->rootContext, SEND_MESSAGE_CREATE_SCRIPT);
+    QV4::FunctionObject *createsendconstructor = createsendscript.run().asFunctionObject();
 
-    v8::Handle<v8::Value> args[] = { 
-        V8FUNCTION(QQuickWorkerScriptEnginePrivate::sendMessage, this)
+    QV4::Value args[] = {
+        V8FUNCTION(QQuickWorkerScriptEnginePrivate::sendMessage, this)->v4Value()
     };
-    v8::Handle<v8::Value> createsendvalue = createsendconstructor->Call(global(), 1, args);
-    
-    createsend = createsendvalue->v4Value();
-    }
+    createsend = createsendconstructor->call(global(), args, 1);
 }
 
 // Requires handle and context scope
@@ -384,11 +378,14 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         // XXX ???
         // workerEngine->baseUrl = url;
 
-        v8::Handle<v8::Script> program = workerEngine->qmlModeCompile(sourceCode, url.toString());
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
 
-        QV4::ExecutionContext *ctx = QV8Engine::getV4(workerEngine)->current;
+        QV4::Script program(v4, activation.asObject(), sourceCode, url.toString());
+
+        QV4::ExecutionContext *ctx = v4->current;
         try {
-            program->Run(activation);
+            program.parse();
+            program.run();
         } catch (QV4::Exception &e) {
             e.accept(ctx);
             QQmlError error;
