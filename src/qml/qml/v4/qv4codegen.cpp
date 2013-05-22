@@ -3025,6 +3025,7 @@ bool Codegen::visit(SwitchStatement *ast)
     if (ast->block) {
         Result lhs = expression(ast->expression);
         V4IR::BasicBlock *switchcond = _block;
+        V4IR::BasicBlock *previousBlock = 0;
 
         QHash<Node *, V4IR::BasicBlock *> blockMap;
 
@@ -3036,16 +3037,26 @@ bool Codegen::visit(SwitchStatement *ast)
             _block = _function->newBasicBlock();
             blockMap[clause] = _block;
 
+            if (previousBlock && !previousBlock->isTerminated())
+                previousBlock->JUMP(_block);
+
             for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
                 statement(it2->statement);
+
+            previousBlock = _block;
         }
 
         if (ast->block->defaultClause) {
             _block = _function->newBasicBlock();
             blockMap[ast->block->defaultClause] = _block;
 
+            if (previousBlock && !previousBlock->isTerminated())
+                previousBlock->JUMP(_block);
+
             for (StatementList *it2 = ast->block->defaultClause->statements; it2; it2 = it2->next)
                 statement(it2->statement);
+
+            previousBlock = _block;
         }
 
         for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
@@ -3054,8 +3065,13 @@ bool Codegen::visit(SwitchStatement *ast)
             _block = _function->newBasicBlock();
             blockMap[clause] = _block;
 
+            if (previousBlock && !previousBlock->isTerminated())
+                previousBlock->JUMP(_block);
+
             for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
                 statement(it2->statement);
+
+            previousBlock = _block;
         }
 
         leaveLoop();
