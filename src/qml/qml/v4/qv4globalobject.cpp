@@ -44,6 +44,8 @@
 #include "qv4value_p.h"
 #include "qv4context_p.h"
 #include "qv4function_p.h"
+#include "qv4debugging_p.h"
+#include "qv4script_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -61,6 +63,7 @@
 #include <wtf/MathExtras.h>
 
 using namespace QV4;
+
 
 static inline char toHex(char c)
 {
@@ -344,18 +347,9 @@ DEFINE_MANAGED_VTABLE(EvalFunction);
 
 EvalFunction::EvalFunction(ExecutionContext *scope)
     : FunctionObject(scope, scope->engine->id_eval)
-    , qmlActivation(0)
 {
     vtbl = &static_vtbl;
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
-}
-
-EvalFunction::EvalFunction(ExecutionContext *scope, Object *qmlActivation)
-    : FunctionObject(scope, scope->engine->id_eval)
-{
-    vtbl = &static_vtbl;
-    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
-    this->qmlActivation = qmlActivation;
 }
 
 Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject*/, Value *args, int argc, bool directCall)
@@ -378,31 +372,26 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
     const QString code = args[0].stringValue()->toQString();
     bool inheritContext = !ctx->strictMode;
 
-    QV4::Function *f = parseSource(ctx, QStringLiteral("eval code"),
-                                          code, QQmlJS::Codegen::EvalCode,
-                                          (directCall && parentContext->strictMode), inheritContext);
+    Script script(ctx, code, QString("eval code"));
+    script.strictMode = (directCall && parentContext->strictMode);
+    script.inheritContext = inheritContext;
+    script.parse();
 
-    if (!f)
+    if (!script.function)
         return Value::undefinedValue();
 
-    strictMode = f->isStrict || (ctx->strictMode);
-    if (qmlActivation)
-        strictMode = true;
+    strictMode = script.function->isStrict || (ctx->strictMode);
 
-    usesArgumentsObject = f->usesArgumentsObject;
-    needsActivation = f->needsActivation();
+    usesArgumentsObject = script.function->usesArgumentsObject;
+    needsActivation = script.function->needsActivation();
 
     if (strictMode) {
         CallContext *k = ctx->engine->newCallContext(this, ctx->thisObject, 0, 0);
-        if (qmlActivation) {
-            k->activation = qmlActivation;
-            k->type = ExecutionContext::Type_QmlContext;
-        }
         ctx = k;
     }
 
     ExecutionContext::EvalCode evalCode;
-    evalCode.function = f;
+    evalCode.function = script.function;
     evalCode.next = ctx->currentEvalCode;
     ctx->currentEvalCode = &evalCode;
 
@@ -412,7 +401,7 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
 
     Value result = Value::undefinedValue();
     try {
-        result = f->code(ctx, f->codeData);
+        result = script.function->code(ctx, script.function->codeData);
     } catch (Exception &ex) {
         ctx->strictMode = cstrict;
         ctx->currentEvalCode = evalCode.next;
@@ -437,83 +426,6 @@ Value EvalFunction::call(Managed *that, ExecutionContext *context, const Value &
     return static_cast<EvalFunction *>(that)->evalCall(context, thisObject, args, argc, false);
 }
 
-//Value EvalFunction::construct(ExecutionContext *ctx, Value *, int)
-//{
-//    ctx->throwTypeError();
-//    return Value::undefinedValue();
-//}
-
-QV4::Function *EvalFunction::parseSource(QV4::ExecutionContext *ctx,
-                                                const QString &fileName, const QString &source,
-                                                QQmlJS::Codegen::Mode mode,
-                                                bool strictMode, bool inheritContext)
-{
-    using namespace QQmlJS;
-
-    MemoryManager::GCBlocker gcBlocker(ctx->engine->memoryManager);
-
-    ExecutionEngine *vm = ctx->engine;
-    V4IR::Module module;
-    Function *globalCode = 0;
-
-    {
-        QQmlJS::Engine ee, *engine = &ee;
-        Lexer lexer(engine);
-        lexer.setCode(source, 1, false);
-        Parser parser(engine);
-
-        const bool parsed = parser.parseProgram();
-
-        DiagnosticMessage *error = 0, **errIt = &error;
-        foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
-            if (m.isError()) {
-                *errIt = new DiagnosticMessage;
-                (*errIt)->fileName = fileName;
-                (*errIt)->offset = m.loc.offset;
-                (*errIt)->length = m.loc.length;
-                (*errIt)->startLine = m.loc.startLine;
-                (*errIt)->startColumn = m.loc.startColumn;
-                (*errIt)->type = DiagnosticMessage::Error;
-                (*errIt)->message = m.message;
-                errIt = &(*errIt)->next;
-            } else {
-                std::cerr << qPrintable(fileName) << ':' << m.loc.startLine << ':' << m.loc.startColumn
-                          << ": warning: " << qPrintable(m.message) << std::endl;
-            }
-        }
-        if (error)
-            ctx->throwSyntaxError(error);
-
-        if (parsed) {
-            using namespace AST;
-            Program *program = AST::cast<Program *>(parser.rootNode());
-            if (!program) {
-                // if parsing was successful, and we have no program, then
-                // we're done...:
-                return 0;
-            }
-
-            QStringList inheritedLocals;
-            if (inheritContext)
-                for (String * const *i = ctx->variables(), * const *ei = i + ctx->variableCount(); i < ei; ++i)
-                    inheritedLocals.append(*i ? (*i)->toQString() : QString());
-
-            Codegen cg(ctx, strictMode);
-            V4IR::Function *globalIRCode = cg(fileName, source, program, &module, mode, inheritedLocals);
-            QScopedPointer<EvalInstructionSelection> isel(ctx->engine->iselFactory->create(vm, &module));
-            if (inheritContext)
-                isel->setUseFastLookups(false);
-            if (globalIRCode)
-                globalCode = isel->vmFunction(globalIRCode);
-        }
-
-        if (! globalCode)
-            // ### should be a syntax error
-            ctx->throwTypeError();
-    }
-
-    return globalCode;
-}
 
 static inline int toInt(const QChar &qc, int R)
 {

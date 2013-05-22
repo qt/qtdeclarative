@@ -315,6 +315,17 @@ CallContext *ExecutionEngine::newCallContext(FunctionObject *f, const Value &thi
     return c;
 }
 
+CallContext *ExecutionEngine::newQmlContext(FunctionObject *f, Object *qml)
+{
+    CallContext *c = static_cast<CallContext *>(memoryManager->allocContext(requiredMemoryForExecutionContect(f, 0)));
+
+    c->initQmlContext(this, qml, f);
+    c->parent = current;
+    current = c;
+
+    return c;
+}
+
 CallContext *ExecutionEngine::newCallContext(void *stackSpace, FunctionObject *f, const Value &thisObject, Value *args, int argc)
 {
     CallContext *c;
@@ -670,24 +681,4 @@ void ExecutionEngine::markObjects()
 
     variantPrototype->mark();
     sequencePrototype->mark();
-}
-
-Value ExecutionEngine::run(Function *function, ExecutionContext *ctx)
-{
-    if (!ctx)
-        ctx = rootContext;
-
-    TemporaryAssignment<Function*> savedGlobalCode(globalCode, function);
-
-    // ### Would be better to have a SavedExecutionState object that
-    // saves this and restores it in the destructor (to survive an exception).
-    ctx->strictMode = function->isStrict;
-    ctx->lookups = function->lookups;
-
-    if (debugger)
-        debugger->aboutToCall(0, ctx);
-    QV4::Value result = function->code(ctx, function->codeData);
-    if (debugger)
-        debugger->justLeft(ctx);
-    return result;
 }

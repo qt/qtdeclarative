@@ -48,6 +48,7 @@
 #include "private/qv4engine_p.h"
 #include "private/qv4mm_p.h"
 #include "private/qv4globalobject_p.h"
+#include "private/qv4script_p.h"
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmetaobject.h>
@@ -256,12 +257,14 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
 {
     QV4::ExecutionContext *ctx = d->m_v4Engine->current;
     try {
-        QV4::Function *f = QV4::EvalFunction::parseSource(ctx, fileName, program, QQmlJS::Codegen::EvalCode,
-                                                          d->m_v4Engine->current->strictMode, true);
-        if (!f)
+        QV4::Script script(ctx, program, fileName, lineNumber);
+        script.strictMode = ctx->strictMode;
+        script.inheritContext = true;
+        script.parse();
+        if (!script.function)
             return QJSValue();
 
-        QV4::Value result = d->m_v4Engine->run(f);
+        QV4::Value result = script.run();
         return new QJSValuePrivate(d->m_v4Engine, result);
     } catch (QV4::Exception& ex) {
         ex.accept(ctx);

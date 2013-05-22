@@ -227,6 +227,7 @@ struct Q_QML_EXPORT ExecutionEngine
     CatchContext *newCatchContext(String* exceptionVarName, const QV4::Value &exceptionValue);
     CallContext *newCallContext(FunctionObject *f, const QV4::Value &thisObject, QV4::Value *args, int argc);
     CallContext *newCallContext(void *stackSpace, FunctionObject *f, const QV4::Value &thisObject, QV4::Value *args, int argc);
+    CallContext *newQmlContext(FunctionObject *f, Object *qml);
     ExecutionContext *pushGlobalContext();
     void pushContext(SimpleCallContext *context);
     ExecutionContext *popContext();
@@ -283,8 +284,6 @@ struct Q_QML_EXPORT ExecutionEngine
     void requireArgumentsAccessors(int n);
 
     void markObjects();
-
-    Value run(Function *function, ExecutionContext *ctx = 0);
 
     void initRootContext();
 

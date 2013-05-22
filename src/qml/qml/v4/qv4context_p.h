@@ -169,6 +169,7 @@ struct CallContext : public SimpleCallContext
 {
     void initCallContext(QV4::ExecutionEngine *engine, FunctionObject *function, Value *args, int argc,
                          const Value &thisObject);
+    void initQmlContext(QV4::ExecutionEngine *engine, Object *qml, QV4::FunctionObject *function);
     bool needsOwnArguments() const;
 
     Value *locals;
@@ -220,6 +221,8 @@ inline const CallContext *ExecutionContext::asCallContext() const
 /* Function *f, int argc */
 #define requiredMemoryForExecutionContect(f, argc) \
     sizeof(CallContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount))
+#define requiredMemoryForQmlExecutionContect(f) \
+    sizeof(CallContext) + sizeof(Value) * (f->locals.size())
 #define stackContextSize (sizeof(CallContext) + 32*sizeof(Value))
 
 } // namespace QV4

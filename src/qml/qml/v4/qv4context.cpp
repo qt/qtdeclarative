@@ -201,6 +201,31 @@ void CallContext::initCallContext(ExecutionEngine *engine, FunctionObject *funct
     }
 }
 
+void CallContext::initQmlContext(ExecutionEngine *engine, Object *qml, FunctionObject *function)
+{
+    initBaseContext(Type_QmlContext, engine);
+
+    this->function = function;
+    this->arguments = 0;
+    this->argumentCount = 0;
+    this->thisObject = Value::undefinedValue();
+
+    strictMode = true;
+    marked = false;
+    this->outer = function->scope;
+#ifndef QT_NO_DEBUG
+    assert(outer->next != (ExecutionContext *)0x1);
+#endif
+
+    activation = qml;
+
+    lookups = function->function->lookups;
+
+    locals = (Value *)(this + 1);
+    if (function->varCount)
+        std::fill(locals, locals + function->varCount, Value::undefinedValue());
+}
+
 
 bool ExecutionContext::deleteProperty(String *name)
 {

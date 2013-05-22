@@ -38,45 +38,41 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4GLOBALOBJECT_H
-#define QV4GLOBALOBJECT_H
+#ifndef QV4SCRIPT_H
+#define QV4SCRIPT_H
 
 #include "qv4global_p.h"
-#include "qv4functionobject_p.h"
+#include "qv4engine_p.h"
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Q_QML_EXPORT EvalFunction : FunctionObject
-{
-    EvalFunction(ExecutionContext *scope);
+struct ExecutionContext;
 
-    Value evalCall(ExecutionContext *context, Value thisObject, Value *args, int argc, bool directCall);
+struct Script {
+    Script(ExecutionContext *scope, const QString &sourceCode, const QString &source, int line = 0, int column = 0)
+        : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
+        , scope(scope), strictMode(false), inheritContext(false), qml(0), function(0) {}
+    Script(ExecutionEngine *engine, Object *qml, const QString &sourceCode, const QString &source, int line = 0, int column = 0)
+        : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
+        , scope(engine->rootContext), strictMode(true), inheritContext(true), qml(qml), function(0) {}
+    QString sourceFile;
+    int line;
+    int column;
+    QString sourceCode;
+    ExecutionContext *scope;
+    bool strictMode;
+    bool inheritContext;
+    Object *qml;
+    Function *function;
 
-    using Managed::construct;
-    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
-
-protected:
-    static const ManagedVTable static_vtbl;
-};
-
-struct GlobalFunctions
-{
-    static Value method_parseInt(SimpleCallContext *context);
-    static Value method_parseFloat(SimpleCallContext *context);
-    static Value method_isNaN(SimpleCallContext *context);
-    static Value method_isFinite(SimpleCallContext *context);
-    static Value method_decodeURI(SimpleCallContext *context);
-    static Value method_decodeURIComponent(SimpleCallContext *context);
-    static Value method_encodeURI(SimpleCallContext *context);
-    static Value method_encodeURIComponent(SimpleCallContext *context);
-    static Value method_escape(SimpleCallContext *context);
-    static Value method_unescape(SimpleCallContext *context);
+    void parse();
+    Value run();
 };
 
 }
 
 QT_END_NAMESPACE
 
-#endif // QMLJS_OBJECTS_H
+#endif

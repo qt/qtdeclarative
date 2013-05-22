@@ -73,6 +73,7 @@
 #include <private/qv4globalobject_p.h>
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4variantobject_p.h>
+#include <private/qv4script_p.h>
 
 Q_DECLARE_METATYPE(QList<int>)
 
@@ -1479,14 +1480,13 @@ QV4::Value QV8Engine::toString(const QString &string)
 
 QV4::Value QV8Engine::evaluateScript(const QString &script, QV4::Object *scopeObject)
 {
+    QV4::Script qmlScript(m_v4Engine, scopeObject, script, QString());
+
     QV4::ExecutionContext *ctx = m_v4Engine->current;
-
     QV4::Value result = QV4::Value::undefinedValue();
-
     try {
-        QV4::EvalFunction *eval = new (m_v4Engine->memoryManager) QV4::EvalFunction(m_v4Engine->rootContext, scopeObject);
-        QV4::Value arg = QV4::Value::fromString(m_v4Engine->current, script);
-        result = eval->evalCall(m_v4Engine->current, QV4::Value::undefinedValue(), &arg, 1, /*directCall*/ false);
+        qmlScript.parse();
+        result = qmlScript.run();
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }

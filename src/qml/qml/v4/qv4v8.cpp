@@ -55,6 +55,7 @@
 #include "qv4booleanobject_p.h"
 #include "qv4stringobject_p.h"
 #include "qv4objectproto_p.h"
+#include "qv4script_p.h"
 #include <QThreadStorage>
 
 using namespace QQmlJS;
@@ -240,34 +241,17 @@ Handle<Value> Script::Run()
     QV4::ExecutionEngine *engine = Isolate::GetCurrent()->GetEngine();
     QV4::ExecutionContext *ctx = engine->current;
 
-    QV4::Function *f = QV4::EvalFunction::parseSource(engine->rootContext, m_origin.m_fileName, m_script, QQmlJS::Codegen::EvalCode,
-                                                                    /*strictMode =*/ false, /*inheritContext =*/ false);
-    if (!f)
-        // ### FIX file/line number
-        __qmljs_throw(engine->current, QV4::Value::fromObject(engine->newSyntaxErrorObject(engine->current, 0)), -1);
-
-    return engine->run(f);
+    QV4::Script script(ctx, m_script, m_origin.m_fileName, m_origin.m_lineNumber, m_origin.m_columnNumber);
+    script.parse();
+    return script.run();
 }
 
 Handle<Value> Script::Run(Handle<Object> qml)
 {
     QV4::ExecutionEngine *engine = Isolate::GetCurrent()->GetEngine();
-    QV4::ExecutionContext *ctx = engine->current;
-
-    QV4::Value result = QV4::Value::undefinedValue();
-
-    try {
-
-        QV4::EvalFunction *eval = new (engine->memoryManager) QV4::EvalFunction(engine->rootContext, qml->v4Value().asObject());
-
-        QV4::Value arg = QV4::Value::fromString(engine->current, m_script);
-
-        result = eval->evalCall(engine->current, QV4::Value::undefinedValue(), &arg, 1, /*directCall*/ false);
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
-        return Handle<Value>();
-    }
-    return result;
+    QV4::Script script(engine, qml->v4Value().asObject(), m_script, m_origin.m_fileName, m_origin.m_lineNumber, m_origin.m_columnNumber);
+    script.parse();
+    return script.run();
 }
 
 Handle<Value> Script::Id()
