@@ -579,9 +579,9 @@ ExecutionEngine::StackFrame ExecutionEngine::currentStackFrame() const
 
     QV4::ExecutionContext *c = current;
     while (c) {
-        if (CallContext *c = c->asCallContext()) {
-            frame.source = c->function->function->sourceFile;
-            frame.function = c->function->name->toQString();
+        if (CallContext *callCtx = c->asCallContext()) {
+            frame.source = callCtx->function->function->sourceFile;
+            frame.function = callCtx->function->name->toQString();
             return frame;
         }
         c = c->parent;
