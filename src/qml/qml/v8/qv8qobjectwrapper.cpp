@@ -90,6 +90,18 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
 
 QObjectWrapper::~QObjectWrapper()
 {
+    if (!object)
+        return;
+    QQmlData *ddata = QQmlData::get(object, false);
+    if (!ddata)
+        return;
+    if (!object->parent() && !ddata->indestructible) {
+        // This object is notionally destroyed now
+        if (ddata->ownContext && ddata->context)
+            ddata->context->emitDestruction();
+        ddata->isQueuedForDeletion = true;
+        object->deleteLater();
+    }
 }
 
 QV4::Value QObjectWrapper::method_toString(QV4::SimpleCallContext *ctx)
@@ -270,7 +282,7 @@ public:
         delete this;
     }
 
-    QV4::PersistentValue v8object;
+    QV4::WeakValue v8object;
     QV8QObjectWrapper *wrapper;
 };
 

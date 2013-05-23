@@ -284,7 +284,69 @@ PersistentValue::~PersistentValue()
         d->deref();
 }
 
-PersistentValuePrivate::PersistentValuePrivate(const Value &v)
+WeakValue::WeakValue(const Value &val)
+    : d(new PersistentValuePrivate(val, /*weak*/true))
+{
+}
+
+WeakValue::WeakValue(const WeakValue &other)
+    : d(other.d)
+{
+    if (d)
+        d->ref();
+}
+
+WeakValue &WeakValue::operator=(const WeakValue &other)
+{
+    if (d == other.d)
+        return *this;
+
+    // the memory manager cleans up those with a refcount of 0
+
+    if (d)
+        d->deref();
+    d = other.d;
+    if (d)
+        d->ref();
+}
+
+WeakValue &WeakValue::operator =(const Value &other)
+{
+    if (!d) {
+        d = new PersistentValuePrivate(other, /*weak*/true);
+        return *this;
+    }
+    d->value = other;
+    Managed *m = d->value.asManaged();
+    if (!d->prev) {
+        if (m) {
+            ExecutionEngine *engine = m->engine();
+            if (engine) {
+                d->prev = &engine->memoryManager->m_weakValues;
+                d->next = engine->memoryManager->m_weakValues;
+                *d->prev = d;
+                if (d->next)
+                    d->next->prev = &d->next;
+            }
+        }
+    } else if (!m) {
+        if (d->next)
+            d->next->prev = d->prev;
+        *d->prev = d->next;
+        d->prev = 0;
+        d->next = 0;
+    }
+}
+
+
+WeakValue::~WeakValue()
+{
+    if (d)
+        d->deref();
+}
+
+
+PersistentValuePrivate::PersistentValuePrivate(const Value &v, bool weak)
     : value(v)
     , refcount(1)
     , prev(0)
@@ -296,11 +358,23 @@ PersistentValuePrivate::PersistentValuePrivate(const Value &v)
 
     ExecutionEngine *engine = m->engine();
     if (engine) {
-        prev = &engine->memoryManager->m_persistentValues;
-        next = engine->memoryManager->m_persistentValues;
+        PersistentValuePrivate **listRoot = weak ? &engine->memoryManager->m_weakValues : &engine->memoryManager->m_persistentValues;
+
+        prev = listRoot;
+        next = *listRoot;
         *prev = this;
         if (next)
             next->prev = &this->next;
+    }
+}
+
+void PersistentValuePrivate::removeFromList()
+{
+    if (prev) {
+        if (next)
+            next->prev = prev;
+        *prev = next;
+        prev = 0;
     }
 }
 
@@ -309,11 +383,8 @@ void PersistentValuePrivate::deref()
     // if engine is not 0, they are registered with the memory manager
     // and will get cleaned up in the next gc run
     if (!--refcount) {
-        if (prev) {
-            if (next)
-                next->prev = prev;
-            *prev = next;
-        }
+        removeFromList();
         delete this;
     }
 }
+

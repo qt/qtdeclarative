@@ -179,7 +179,7 @@ public:
     unsigned int deferredIdx;
 
     quint32 v8objectid;
-    QV4::PersistentValue v8object;
+    QV4::WeakValue v8object;
 
     QQmlPropertyCache *propertyCache;
 

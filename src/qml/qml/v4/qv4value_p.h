@@ -563,12 +563,13 @@ inline Value Managed::call(ExecutionContext *context, const Value &thisObject, V
 
 struct PersistentValuePrivate
 {
-    PersistentValuePrivate(const Value &v);
+    PersistentValuePrivate(const Value &v, bool weak = false);
     Value value;
-    int refcount;
+    uint refcount;
     PersistentValuePrivate **prev;
     PersistentValuePrivate *next;
 
+    void removeFromList();
     void ref() { ++refcount; }
     void deref();
 };
@@ -599,6 +600,38 @@ public:
     bool isEmpty() const { return !d || d->value.isEmpty(); }
     void clear() {
         *this = PersistentValue();
+    }
+
+private:
+    PersistentValuePrivate *d;
+};
+
+class Q_QML_EXPORT WeakValue
+{
+public:
+    WeakValue() : d(0) {}
+    WeakValue(const Value &val);
+    WeakValue(const WeakValue &other);
+    WeakValue &operator=(const WeakValue &other);
+    WeakValue &operator=(const Value &other);
+    ~WeakValue();
+
+    Value value() const {
+        return d ? d->value : Value::emptyValue();
+    }
+
+    ExecutionEngine *engine() {
+        if (!d)
+            return 0;
+        Managed *m = d->value.asManaged();
+        return m ? m->engine() : 0;
+    }
+
+    operator Value() const { return value(); }
+
+    bool isEmpty() const { return !d || d->value.isEmpty(); }
+    void clear() {
+        *this = WeakValue();
     }
 
 private:

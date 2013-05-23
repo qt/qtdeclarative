@@ -131,6 +131,7 @@ MemoryManager::MemoryManager()
     : m_d(new Data(true))
     , m_contextList(0)
     , m_persistentValues(0)
+    , m_weakValues(0)
 {
     setEnableGC(true);
 #ifdef V4_USE_VALGRIND
@@ -242,18 +243,16 @@ void MemoryManager::mark()
         it.key()->mark();
 
     PersistentValuePrivate *persistent = m_persistentValues;
-    PersistentValuePrivate **last = &m_persistentValues;
     while (persistent) {
         if (!persistent->refcount) {
-            *last = persistent->next;
             PersistentValuePrivate *n = persistent->next;
+            persistent->removeFromList();
             delete persistent;
             persistent = n;
             continue;
         }
         if (Managed *m = persistent->value.asManaged())
             m->mark();
-        last = &persistent->next;
         persistent = persistent->next;
     }
 
@@ -289,6 +288,25 @@ void MemoryManager::mark()
 
 std::size_t MemoryManager::sweep()
 {
+    PersistentValuePrivate *weak = m_weakValues;
+    while (weak) {
+        if (!weak->refcount) {
+            PersistentValuePrivate *n = weak->next;
+            weak->removeFromList();
+            delete weak;
+            weak = n;
+            continue;
+        }
+        if (Managed *m = weak->value.asManaged()) {
+            if (!m->markBit) {
+                weak->value = Value::emptyValue();
+                weak->removeFromList();
+                continue;
+            }
+        }
+        weak = weak->next;
+    }
+
     std::size_t freedCount = 0;
 
     for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)

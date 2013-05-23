@@ -137,6 +137,7 @@ protected:
     ExecutionContext *m_contextList;
 public:
     PersistentValuePrivate *m_persistentValues;
+    PersistentValuePrivate *m_weakValues;
 };
 
 inline ExecutionContext *MemoryManager::allocContext(uint size)

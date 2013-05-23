@@ -722,7 +722,7 @@ void QV8Engine::setExtensionData(int index, Deletable *data)
 }
 
 
-QV4::PersistentValue *QV8Engine::findOwnerAndStrength(QObject *object, bool *shouldBeStrong)
+QV4::WeakValue *QV8Engine::findOwnerAndStrength(QObject *object, bool *shouldBeStrong)
 {
     QQmlData *data = QQmlData::get(object);
     if (data && data->rootObjectInCreation) { // When the object is still being created it may not show up to the GC.
@@ -765,7 +765,7 @@ void QV8Engine::addRelationshipForGC(QObject *object, const QV4::PersistentValue
         return;
 
     bool handleShouldBeStrong = false;
-    QV4::PersistentValue *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
+    QV4::WeakValue *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
     if (handleShouldBeStrong) {
         // ### FIXME
 //        v8::V8::AddImplicitReferences(m_strongReferencer, &handle, 1);
@@ -782,8 +782,8 @@ void QV8Engine::addRelationshipForGC(QObject *object, QObject *other)
         return;
 
     bool handleShouldBeStrong = false;
-    QV4::PersistentValue *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
-    QV4::PersistentValue handle = QQmlData::get(other, true)->v8object;
+    QV4::WeakValue *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
+    QV4::WeakValue handle = QQmlData::get(other, true)->v8object;
     if (handle.isEmpty()) // no JS data to keep alive.
         return;
     // ### FIXME
