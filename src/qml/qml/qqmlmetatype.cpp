@@ -237,11 +237,14 @@ static QHashedString moduleFromUtf8(const char *module)
 
 void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
 {
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(e->handle());
+    v4->pushGlobalContext();
     if (scriptCallback && scriptApi(e).isUndefined()) {
         setScriptApi(e, scriptCallback(e, e));
     } else if (qobjectCallback && !qobjectApi(e)) {
         setQObjectApi(e, qobjectCallback(e, e));
     }
+    v4->popContext();
 }
 
 void QQmlType::SingletonInstanceInfo::destroy(QQmlEngine *e)
