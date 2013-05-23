@@ -116,6 +116,7 @@ void Script::parse()
             if (!program) {
                 // if parsing was successful, and we have no program, then
                 // we're done...:
+                functionWrapper = Value::nullValue();
                 return;
             }
 
@@ -132,10 +133,6 @@ void Script::parse()
             if (globalIRCode)
                 globalCode = isel->vmFunction(globalIRCode);
         }
-
-        if (! globalCode)
-            // ### should be a syntax error
-            scope->throwTypeError();
     }
     if (!globalCode)
         // ### FIX file/line number
@@ -146,6 +143,9 @@ void Script::parse()
 
 Value Script::run()
 {
+    if (functionWrapper.value().isNull())
+        return Value::undefinedValue();
+
     if (functionWrapper.isEmpty())
         parse();
 
@@ -194,7 +194,8 @@ Value Script::run()
 
 Function *Script::function()
 {
-    return functionWrapper.value().asFunctionObject()->function;
+    FunctionObject *f = functionWrapper.value().asFunctionObject();
+    return f ? f->function : 0;
 }
 
 QV4::Value Script::evaluate(ExecutionEngine *engine,  const QString &script, Object *scopeObject)

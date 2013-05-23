@@ -378,6 +378,9 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
     script.parse();
 
     Function *function = script.function();
+    if (!function)
+        return Value::undefinedValue();
+
     strictMode = function->isStrict || (ctx->strictMode);
 
     usesArgumentsObject = function->usesArgumentsObject;
