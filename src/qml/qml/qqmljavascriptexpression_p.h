@@ -155,6 +155,11 @@ public:
                                                      const char *code, int codeLength,
                                                      const QString &filename, quint16 line,
                                                      QV4::PersistentValue *qmlscope = 0);
+    // doesn't require rewriting the expression
+    static QV4::PersistentValue qmlBinding(QQmlContextData *ctxt, QObject *scope,
+                                        const QString &code,
+                                        const QString &filename, quint16 line,
+                                        QV4::PersistentValue *qmlscope = 0);
 protected:
     ~QQmlJavaScriptExpression();
 

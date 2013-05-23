@@ -80,7 +80,6 @@ public:
 
     void init(QQmlContextData *, const QString &, QObject *);
     void init(QQmlContextData *, const QString &, bool, QObject *, const QString &, quint16, quint16);
-    void init(QQmlContextData *, const QByteArray &, bool, QObject *, const QString &, quint16, quint16);
 
     QVariant value(bool *isUndefined = 0);
 
@@ -91,9 +90,6 @@ public:
 
     void _q_notify();
 
-    static QQmlExpression *create(QQmlContextData *, QObject *, const QString &, bool,
-                                  const QString &, quint16, quint16);
-
     bool expressionFunctionValid:1;
     bool expressionFunctionRewritten:1;
 
@@ -103,7 +99,6 @@ public:
     virtual void expressionChanged();
 
     QString expression;
-    QByteArray expressionUtf8;
 
     QV4::PersistentValue v8qmlscope;
     QV4::PersistentValue v8function;

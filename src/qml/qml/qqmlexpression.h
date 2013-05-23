@@ -91,14 +91,6 @@ public:
 Q_SIGNALS:
     void valueChanged();
 
-protected:
-    QQmlExpression(QQmlContextData *, QObject *, const QString &,
-                           QQmlExpressionPrivate &dd);
-    QQmlExpression(QQmlContextData *, QObject *, const QString &, bool,
-                           const QString &, int, int, QQmlExpressionPrivate &dd);
-    QQmlExpression(QQmlContextData *, QObject *, const QByteArray &, bool,
-                           const QString &, int, int, QQmlExpressionPrivate &dd);
-
 private:
     QQmlExpression(QQmlContextData *, QObject *, const QString &);
 

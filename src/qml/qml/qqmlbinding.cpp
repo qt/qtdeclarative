@@ -108,11 +108,8 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
     QQmlAbstractExpression::setContext(QQmlContextData::get(ctxt));
     setScopeObject(obj);
 
-    QQmlRewrite::RewriteBinding rewriteBinding;
-    QString code = rewriteBinding(str);
-
     m_expression = str.toUtf8();
-    v4function = evalFunction(context(), obj, code, QString(), 0);
+    v4function = qmlBinding(context(), obj, str, QString(), 0);
 }
 
 QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
@@ -146,11 +143,6 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
         }
     }
 
-    if (needRewrite) {
-        QQmlRewrite::RewriteBinding rewriteBinding;
-        code = rewriteBinding(scriptPrivate->script);
-    }
-
     setNotifyOnValueChanged(true);
     QQmlAbstractExpression::setContext(QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context));
     setScopeObject(obj ? obj : scriptPrivate->scope);
@@ -159,7 +151,10 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
     m_lineNumber = scriptPrivate->lineNumber;
     m_columnNumber = scriptPrivate->columnNumber;
 
-    v4function = evalFunction(context(), scopeObject(), code, QString(), m_lineNumber);
+    if (needRewrite)
+        v4function = qmlBinding(context(), scopeObject(), code, QString(), m_lineNumber);
+    else
+        v4function = evalFunction(context(), scopeObject(), code, QString(), m_lineNumber);
 }
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)
@@ -170,11 +165,8 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(obj);
 
-    QQmlRewrite::RewriteBinding rewriteBinding;
-    QString code = rewriteBinding(str);
-
     m_expression = str.toUtf8();
-    v4function = evalFunction(ctxt, obj, code, QString(), 0);
+    v4function = qmlBinding(ctxt, obj, str, QString(), 0);
 }
 
 QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
@@ -187,17 +179,12 @@ QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(obj);
 
-    QString code;
-    if (isRewritten) {
-        code = str;
-    } else {
-        QQmlRewrite::RewriteBinding rewriteBinding;
-        code = rewriteBinding(str);
-    }
-
     m_expression = str.toUtf8();
 
-    v4function = evalFunction(ctxt, obj, code, url, m_lineNumber);
+    if (isRewritten)
+        v4function = evalFunction(ctxt, obj, str, url, m_lineNumber);
+    else
+        v4function = qmlBinding(ctxt, obj, str, url, m_lineNumber);
 }
 
 /*!

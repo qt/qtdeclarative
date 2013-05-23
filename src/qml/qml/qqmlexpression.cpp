@@ -96,42 +96,6 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr,
     setScopeObject(me);
 }
 
-void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QByteArray &expr,
-                                 bool isRewritten, QObject *me, const QString &srcUrl,
-                                 quint16 lineNumber, quint16 columnNumber)
-{
-    url = srcUrl;
-    line = lineNumber;
-    column = columnNumber;
-
-    if (isRewritten) {
-        expressionFunctionValid = true;
-        expressionFunctionRewritten = true;
-        v8function = evalFunction(ctxt, me, expr.constData(), expr.length(),
-                                  srcUrl, lineNumber, &v8qmlscope);
-        setUseSharedContext(false);
-
-        expressionUtf8 = expr;
-    } else {
-        expression = QString::fromUtf8(expr);
-
-        expressionFunctionValid = false;
-        expressionFunctionRewritten = isRewritten;
-    }
-
-    QQmlAbstractExpression::setContext(ctxt);
-    setScopeObject(me);
-}
-
-QQmlExpression *
-QQmlExpressionPrivate::create(QQmlContextData *ctxt, QObject *object,
-                              const QString &expr, bool isRewritten,
-                              const QString &url, quint16 lineNumber, quint16 columnNumber)
-{
-    return new QQmlExpression(ctxt, object, expr, isRewritten, url, lineNumber, columnNumber,
-                              *new QQmlExpressionPrivate);
-}
-
 /*!
     \class QQmlExpression
     \since 5.0
@@ -172,29 +136,6 @@ QQmlExpressionPrivate::create(QQmlContextData *ctxt, QObject *object,
 QQmlExpression::QQmlExpression()
 : QObject(*new QQmlExpressionPrivate, 0)
 {
-}
-
-/*!  \internal */
-QQmlExpression::QQmlExpression(QQmlContextData *ctxt,
-                                               QObject *object, const QString &expr, bool isRewritten,
-                                               const QString &url, int lineNumber, int columnNumber,
-                                               QQmlExpressionPrivate &dd)
-: QObject(dd, 0)
-{
-    Q_D(QQmlExpression);
-    d->init(ctxt, expr, isRewritten, object, url, qmlSourceCoordinate(lineNumber), qmlSourceCoordinate(columnNumber));
-}
-
-/*!  \internal */
-QQmlExpression::QQmlExpression(QQmlContextData *ctxt,
-                                               QObject *object, const QByteArray &expr,
-                                               bool isRewritten,
-                                               const QString &url, int lineNumber, int columnNumber,
-                                               QQmlExpressionPrivate &dd)
-: QObject(dd, 0)
-{
-    Q_D(QQmlExpression);
-    d->init(ctxt, expr, isRewritten, object, url, qmlSourceCoordinate(lineNumber), qmlSourceCoordinate(columnNumber));
 }
 
 /*!
@@ -271,15 +212,6 @@ QQmlExpression::QQmlExpression(QQmlContextData *ctxt, QObject *scope,
     d->init(ctxt, expression, scope);
 }
 
-/*!  \internal */
-QQmlExpression::QQmlExpression(QQmlContextData *ctxt, QObject *scope,
-                                               const QString &expression, QQmlExpressionPrivate &dd)
-: QObject(dd, 0)
-{
-    Q_D(QQmlExpression);
-    d->init(ctxt, expression, scope);
-}
-
 /*!
     Destroy the QQmlExpression instance.
 */
@@ -314,11 +246,7 @@ QQmlContext *QQmlExpression::context() const
 QString QQmlExpression::expression() const
 {
     Q_D(const QQmlExpression);
-    if (!d->expressionUtf8.isEmpty()) {
-        return QString::fromUtf8(d->expressionUtf8);
-    } else {
-        return d->expression;
-    }
+    return d->expression;
 }
 
 /*!
@@ -330,7 +258,6 @@ void QQmlExpression::setExpression(const QString &expression)
 
     d->resetNotifyOnValueChanged();
     d->expression = expression;
-    d->expressionUtf8.clear();
     d->expressionFunctionValid = false;
     d->expressionFunctionRewritten = false;
 }
@@ -339,17 +266,10 @@ void QQmlExpression::setExpression(const QString &expression)
 v8::Handle<v8::Value> QQmlExpressionPrivate::v8value(bool *isUndefined)
 {
     if (!expressionFunctionValid) {
-        bool ok = true;
-
-        QQmlRewrite::RewriteBinding rewriteBinding;
-        rewriteBinding.setName(name);
-        QString code;
         if (expressionFunctionRewritten)
-            code = expression;
+            v8function = evalFunction(context(), scopeObject(), expression, url, line, &v8qmlscope);
         else
-            code = rewriteBinding(expression, &ok);
-
-        if (ok) v8function = evalFunction(context(), scopeObject(), code, url, line, &v8qmlscope);
+            v8function = qmlBinding(context(), scopeObject(), expression, url, line, &v8qmlscope);
         setUseSharedContext(false);
         expressionFunctionValid = true;
     }

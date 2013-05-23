@@ -306,7 +306,6 @@ void QQmlJavaScriptExpression::exceptionToError(const QV4::Exception &e, QQmlErr
     error.setDescription(e.value().toQString());
 }
 
-// Callee owns the persistent handle
 QV4::PersistentValue
 QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
                                        const char *code, int codeLength,
@@ -316,7 +315,6 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
     return evalFunction(ctxt, scope, QString::fromUtf8(code, codeLength), filename, line, qmlscope);
 }
 
-// Callee owns the persistent handle
 QV4::PersistentValue
 QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
                                        const QString &code, const QString &filename, quint16 line,
@@ -351,6 +349,41 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
         *qmlscope = scopeObject;
     return result;
 }
+
+QV4::PersistentValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, QObject *scope,
+                                                       const QString &code, const QString &filename, quint16 line,
+                                                       QV4::PersistentValue *qmlscope)
+{
+    QQmlEngine *engine = ctxt->engine;
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionContext *ctx = v4->current;
+
+    QV4::Value scopeObject = ep->v8engine()->qmlScope(ctxt, scope)->v4Value();
+    QV4::Script script(v4, scopeObject.asObject(), code, filename, line);
+    QV4::Value result;
+    try {
+        script.parse();
+        result = script.qmlBinding();
+    } catch (QV4::Exception &e) {
+        e.accept(ctx);
+        QQmlError error;
+        QQmlExpressionPrivate::exceptionToError(e, error);
+        if (error.description().isEmpty())
+            error.setDescription(QLatin1String("Exception occurred during function evaluation"));
+        if (error.line() == -1)
+            error.setLine(line);
+        if (error.url().isEmpty())
+            error.setUrl(QUrl::fromLocalFile(filename));
+        ep->warning(error);
+        return QV4::PersistentValue();
+    }
+    if (qmlscope)
+        *qmlscope = scopeObject;
+    return result;
+}
+
 
 void QQmlJavaScriptExpression::clearGuards()
 {

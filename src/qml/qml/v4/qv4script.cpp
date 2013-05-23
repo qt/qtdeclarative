@@ -58,119 +58,140 @@
 
 using namespace QV4;
 
-struct FunctionWrapper : FunctionObject
+struct QmlBindingWrapper : FunctionObject
 {
-    FunctionWrapper(ExecutionContext *scope, Function *f)
+    QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml)
         : FunctionObject(scope, scope->engine->id_eval)
+        , qml(qml)
     {
+        vtbl = &static_vtbl;
         function = f;
         usesArgumentsObject = function->usesArgumentsObject;
         needsActivation = function->needsActivation();
         defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
     }
+
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
+
+private:
+    Object *qml;
 };
+
+DEFINE_MANAGED_VTABLE(QmlBindingWrapper);
+
+Value QmlBindingWrapper::call(Managed *that, ExecutionContext *ctx, const Value &, Value *, int)
+{
+    ExecutionEngine *engine = ctx->engine;
+    QmlBindingWrapper *This = static_cast<QmlBindingWrapper *>(that);
+
+    ExecutionContext *qmlScope = engine->newQmlContext(This, This->qml);
+
+    Value result = This->function->code(qmlScope, This->function->codeData);
+
+    engine->popContext();
+
+    return result;
+
+}
 
 
 void Script::parse()
 {
     using namespace QQmlJS;
 
+    parsed = true;
+
     ExecutionEngine *v4 = scope->engine;
 
     MemoryManager::GCBlocker gcBlocker(v4->memoryManager);
 
     V4IR::Module module;
-    Function *globalCode = 0;
 
-    {
-        QQmlJS::Engine ee, *engine = &ee;
-        Lexer lexer(engine);
-        lexer.setCode(sourceCode, 1, false);
-        Parser parser(engine);
+    QQmlJS::Engine ee, *engine = &ee;
+    Lexer lexer(engine);
+    lexer.setCode(sourceCode, line, false);
+    Parser parser(engine);
 
-        const bool parsed = parser.parseProgram();
+    const bool parsed = parser.parseProgram();
 
-        DiagnosticMessage *error = 0, **errIt = &error;
-        foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
-            if (m.isError()) {
-                *errIt = new DiagnosticMessage;
-                (*errIt)->fileName = sourceFile;
-                (*errIt)->offset = m.loc.offset;
-                (*errIt)->length = m.loc.length;
-                (*errIt)->startLine = m.loc.startLine;
-                (*errIt)->startColumn = m.loc.startColumn;
-                (*errIt)->type = DiagnosticMessage::Error;
-                (*errIt)->message = m.message;
-                errIt = &(*errIt)->next;
-            } else {
-                qWarning() << sourceFile << ':' << m.loc.startLine << ':' << m.loc.startColumn
-                          << ": warning: " << m.message;
-            }
-        }
-        if (error)
-            scope->throwSyntaxError(error);
-
-        if (parsed) {
-            using namespace AST;
-            Program *program = AST::cast<Program *>(parser.rootNode());
-            if (!program) {
-                // if parsing was successful, and we have no program, then
-                // we're done...:
-                functionWrapper = Value::nullValue();
-                return;
-            }
-
-            QStringList inheritedLocals;
-            if (inheritContext)
-                for (String * const *i = scope->variables(), * const *ei = i + scope->variableCount(); i < ei; ++i)
-                    inheritedLocals.append(*i ? (*i)->toQString() : QString());
-
-            Codegen cg(scope, strictMode);
-            V4IR::Function *globalIRCode = cg(sourceFile, sourceCode, program, &module, QQmlJS::Codegen::EvalCode, inheritedLocals);
-            QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4, &module));
-            if (inheritContext)
-                isel->setUseFastLookups(false);
-            if (globalIRCode)
-                globalCode = isel->vmFunction(globalIRCode);
+    DiagnosticMessage *error = 0, **errIt = &error;
+    foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
+        if (m.isError()) {
+            *errIt = new DiagnosticMessage;
+            (*errIt)->fileName = sourceFile;
+            (*errIt)->offset = m.loc.offset;
+            (*errIt)->length = m.loc.length;
+            (*errIt)->startLine = m.loc.startLine;
+            (*errIt)->startColumn = m.loc.startColumn;
+            (*errIt)->type = DiagnosticMessage::Error;
+            (*errIt)->message = m.message;
+            errIt = &(*errIt)->next;
+        } else {
+            qWarning() << sourceFile << ':' << m.loc.startLine << ':' << m.loc.startColumn
+                      << ": warning: " << m.message;
         }
     }
-    if (!globalCode)
+    if (error)
+        scope->throwSyntaxError(error);
+
+    if (parsed) {
+        using namespace AST;
+        Program *program = AST::cast<Program *>(parser.rootNode());
+        if (!program) {
+            // if parsing was successful, and we have no program, then
+            // we're done...:
+            return;
+        }
+
+        QStringList inheritedLocals;
+        if (inheritContext)
+            for (String * const *i = scope->variables(), * const *ei = i + scope->variableCount(); i < ei; ++i)
+                inheritedLocals.append(*i ? (*i)->toQString() : QString());
+
+        Codegen cg(scope, strictMode);
+        V4IR::Function *globalIRCode = cg(sourceFile, sourceCode, program, &module, QQmlJS::Codegen::EvalCode, inheritedLocals);
+        QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4, &module));
+        if (inheritContext)
+            isel->setUseFastLookups(false);
+        if (globalIRCode)
+            vmFunction = isel->vmFunction(globalIRCode);
+    }
+
+    if (!vmFunction)
         // ### FIX file/line number
         __qmljs_throw(v4->current, QV4::Value::fromObject(v4->newSyntaxErrorObject(v4->current, 0)), -1);
-
-    functionWrapper = Value::fromObject(new (v4->memoryManager) FunctionWrapper(scope, globalCode));
 }
 
 Value Script::run()
 {
-    if (functionWrapper.value().isNull())
+    if (!parsed)
+        parse();
+    if (!vmFunction)
         return Value::undefinedValue();
 
-    if (functionWrapper.isEmpty())
-        parse();
-
     QV4::ExecutionEngine *engine = scope->engine;
-    QV4::FunctionObject *f = functionWrapper.value().asFunctionObject();
 
     if (engine->debugger)
         engine->debugger->aboutToCall(0, scope);
 
     if (!qml) {
-        QV4::Function *function = this->function();
-        TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, function);
+        TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
         bool strict = scope->strictMode;
         Lookup *lookups = scope->lookups;
 
-        scope->strictMode = function->isStrict;
-        scope->lookups = function->lookups;
+        scope->strictMode = vmFunction->isStrict;
+        scope->lookups = vmFunction->lookups;
 
         if (engine->debugger)
             engine->debugger->aboutToCall(0, scope);
 
         QV4::Value result;
         try {
-            result = function->code(scope, function->codeData);
+            result = vmFunction->code(scope, vmFunction->codeData);
         } catch (Exception &e) {
             scope->strictMode = strict;
             scope->lookups = lookups;
@@ -182,20 +203,24 @@ Value Script::run()
         return result;
 
     } else {
-        ExecutionContext *ctx = engine->newQmlContext(f, qml);
-
-        Value result = f->function->code(ctx, f->function->codeData);
-
-        engine->popContext();
-
-        return result;
+        FunctionObject *f = new (engine->memoryManager) QmlBindingWrapper(scope, vmFunction, qml);
+        return f->call(Value::undefinedValue(), 0, 0);
     }
 }
 
 Function *Script::function()
 {
-    FunctionObject *f = functionWrapper.value().asFunctionObject();
-    return f ? f->function : 0;
+    if (!parsed)
+        parse();
+    return vmFunction;
+}
+
+Value Script::qmlBinding()
+{
+    if (!parsed)
+        parse();
+    QV4::ExecutionEngine *v4 = scope->engine;
+    return Value::fromObject(new (v4->memoryManager) QmlBindingWrapper(scope, vmFunction, qml));
 }
 
 QV4::Value Script::evaluate(ExecutionEngine *engine,  const QString &script, Object *scopeObject)
