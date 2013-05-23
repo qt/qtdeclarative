@@ -241,19 +241,6 @@ union QQmlInstruction
         ushort programIndex;
         ushort line;
     };
-    struct instr_assignV4Binding {
-        QML_INSTR_HEADER
-        int property;   // ((value type sub-property index << 16) | property index)
-        int propType;
-        int value;
-        int fallbackValue;
-        short context;
-        short owner;
-        bool isRoot:1;
-        bool isAlias:1;
-        ushort line;
-        ushort column;
-    };
     struct instr_assignBinding {
         QML_INSTR_HEADER
         QQmlPropertyRawData property;
@@ -510,7 +497,6 @@ union QQmlInstruction
     instr_assignValueSource assignValueSource;
     instr_assignValueInterceptor assignValueInterceptor;
     instr_initV8Bindings initV8Bindings;
-    instr_assignV4Binding assignV4Binding;
     instr_assignBinding assignBinding;
     instr_fetch fetch;
     instr_fetchValue fetchValue;
