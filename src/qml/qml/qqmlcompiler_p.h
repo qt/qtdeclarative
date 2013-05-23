@@ -187,7 +187,7 @@ namespace QQmlCompilerTypes {
 
     struct BindingReference
     {
-        enum DataType { QtScript, V4, V8,
+        enum DataType { QtScript, V8,
                         Tr, TrId };
         DataType dataType;
     };

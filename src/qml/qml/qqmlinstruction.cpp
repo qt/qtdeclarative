@@ -227,11 +227,6 @@ void QQmlCompiledData::dump(QQmlInstruction *instr, int idx)
     case QQmlInstruction::StoreBinding:
         qWarning().nospace() << idx << "\t\t" << "STORE_BINDING\t" << instr->assignBinding.property.coreIndex << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
         break;
-#ifdef QT_USE_OLD_V4
-    case QQmlInstruction::StoreV4Binding:
-        qWarning().nospace() << idx << "\t\t" << "STORE_COMPILED_BINDING\t" << instr->assignV4Binding.property << "\t" << instr->assignV4Binding.value << "\t" << instr->assignV4Binding.context;
-        break;
-#endif
     case QQmlInstruction::StoreV8Binding:
         qWarning().nospace() << idx << "\t\t" << "STORE_V8_BINDING\t" << instr->assignBinding.property.coreIndex << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
         break;

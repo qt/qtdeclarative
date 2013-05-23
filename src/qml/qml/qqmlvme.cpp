@@ -57,9 +57,6 @@
 #include "qqmlcomponent_p.h"
 #include "qqmlvmemetaobject_p.h"
 #include "qqmlcontext_p.h"
-#ifdef QT_USE_OLD_V4
-#include <private/qv4bindings_p.h>
-#endif
 #include <private/qv8bindings_p.h>
 #include "qqmlglobal_p.h"
 #include <private/qfinitestack_p.h>
@@ -444,12 +441,6 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             CTXT->setParent(parentCtxt);
             if (instr.contextCache != -1) 
                 CTXT->setIdPropertyData(COMP->contextCaches.at(instr.contextCache));
-#ifdef QT_USE_OLD_V4
-            if (instr.compiledBinding != -1) {
-                const char *v4data = DATAS.at(instr.compiledBinding).constData();
-                CTXT->v4bindings = new QV4Bindings(v4data, CTXT);
-            }
-#endif
             if (states.count() == 1) {
                 rootContext = CTXT;
                 rootContext->activeVMEData = data;
@@ -838,47 +829,6 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 bind->addToObject();
             }
         QML_END_INSTR(StoreBinding)
-
-#ifdef QT_USE_OLD_V4
-        QML_BEGIN_INSTR(StoreV4Binding)
-            QObject *target =
-                objects.at(objects.count() - 1 - instr.owner);
-            QObject *scope =
-                objects.at(objects.count() - 1 - instr.context);
-
-            int propertyIdx = (instr.property & 0x0000FFFF);
-
-            if (instr.isRoot && BINDINGSKIPLIST.testBit(propertyIdx))
-                QML_NEXT_INSTR(StoreV4Binding);
-
-            QQmlAbstractBinding *binding = CTXT->v4bindings->configBinding(target, scope, &instr);
-            bindValues.push(binding);
-            binding->m_mePtr = &bindValues.top();
-
-            if (instr.isAlias) {
-                QQmlAbstractBinding *old =
-                    QQmlPropertyPrivate::setBindingNoEnable(target,
-                                                            propertyIdx,
-                                                            instr.propType ? (instr.property >> 16) : -1,
-                                                            binding);
-                if (old) { old->destroy(); }
-            } else {
-                Q_ASSERT(binding->propertyIndex() == instr.property);
-                Q_ASSERT(binding->object() == target);
-
-                CLEAN_PROPERTY(target, instr.property);
-
-                binding->addToObject();
-
-                if (instr.propType == 0) {
-                    // All non-valuetype V4 bindings are safe bindings
-                    QQmlData *data = QQmlData::get(target);
-                    Q_ASSERT(data);
-                    data->setPendingBindingBit(target, propertyIdx);
-                }
-            }
-        QML_END_INSTR(StoreV4Binding)
-#endif
 
         QML_BEGIN_INSTR(StoreV8Binding)
             QObject *target = 

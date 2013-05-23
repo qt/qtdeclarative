@@ -60,9 +60,6 @@
 #include "qqmlscriptstring.h"
 #include "qqmlglobal_p.h"
 #include "qqmlbinding_p.h"
-#ifdef QT_USE_OLD_V4
-#include <private/qv4compiler_p.h>
-#endif
 
 #include <QDebug>
 #include <QPointF>
@@ -3547,37 +3544,6 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
         output->addInstruction(store);
     } else
 #endif
-#ifdef QT_USE_OLD_V4
-    if (ref.dataType == BindingReference::V4) {
-        const JSBindingReference &js = static_cast<const JSBindingReference &>(ref);
-
-        Instruction::StoreV4Binding store;
-        store.value = js.compiledIndex;
-        store.fallbackValue = js.sharedIndex;
-        store.context = js.bindingContext.stack;
-        store.owner = js.bindingContext.owner;
-        store.isAlias = prop->isAlias;
-        if (valueTypeProperty) {
-            store.property = ((prop->index << 16) | valueTypeProperty->index);
-            store.propType = valueTypeProperty->type;
-            store.isRoot = (compileState->root == valueTypeProperty->parent);
-        } else {
-            store.property = prop->index;
-            store.propType = 0;
-            store.isRoot = (compileState->root == obj);
-        }
-        store.line = binding->location.start.line;
-        store.column = binding->location.start.column;
-        output->addInstruction(store);
-
-        if (store.fallbackValue > -1) {
-            //also create v8 instruction (needed to properly configure the fallback v8 binding)
-            JSBindingReference &js = static_cast<JSBindingReference &>(*binding->bindingReference);
-            js.dataType = BindingReference::V8;
-            genBindingAssignment(binding, prop, obj, valueTypeProperty);
-        }
-    } else
-#endif
     if (ref.dataType == BindingReference::V8) {
         const JSBindingReference &js = static_cast<const JSBindingReference &>(ref);
 
@@ -3669,44 +3635,11 @@ bool QQmlCompiler::completeComponentBuild()
          aliasObject = compileState->aliasingObjects.next(aliasObject)) 
         COMPILE_CHECK(buildDynamicMetaAliases(aliasObject));
 
-#ifdef QT_USE_OLD_V4
-    QV4Compiler::Expression expr(unit->imports());
-    expr.component = compileState->root;
-    expr.ids = &compileState->ids;
-    expr.importCache = output->importCache;
-
-    QV4Compiler bindingCompiler;
-#endif
-
     QList<JSBindingReference*> sharedBindings;
 
     for (JSBindingReference *b = compileState->bindings.first(); b; b = b->nextReference) {
 
         JSBindingReference &binding = *b;
-
-        // First try v4
-#ifdef QT_USE_OLD_V4
-        expr.context = binding.bindingContext.object;
-        expr.property = binding.property;
-        expr.expression = binding.expression;
-
-        bool needsFallback = false;
-        int index = bindingCompiler.compile(expr, enginePrivate, &needsFallback);
-        if (index != -1) {
-            binding.dataType = BindingReference::V4;
-            binding.compiledIndex = index;
-            binding.sharedIndex = -1;
-            if (componentStats)
-                componentStats->componentStat.optimizedBindings.append(b->value->location);
-
-            if (!needsFallback)
-                continue;
-
-            // Drop through. We need to create a V8 binding in case the V4 binding is invalidated
-        }
-#else
-        bool needsFallback = false;
-#endif
 
         // Pre-rewrite the expression
         QString expression = binding.expression.asScript();
@@ -3721,15 +3654,12 @@ bool QQmlCompiler::completeComponentBuild()
         if (isSharable && binding.property->type != qMetaTypeId<QQmlBinding*>()) {
             sharedBindings.append(b);
 
-            if (!needsFallback) {
-                binding.dataType = BindingReference::V8;
-                binding.compiledIndex = -1;
+            binding.dataType = BindingReference::V8;
+            binding.compiledIndex = -1;
 
-                if (componentStats)
-                    componentStats->componentStat.sharedBindings.append(b->value->location);
-            }
+            if (componentStats)
+                componentStats->componentStat.sharedBindings.append(b->value->location);
         } else {
-            Q_ASSERT(!needsFallback);
             binding.dataType = BindingReference::QtScript;
 
             if (componentStats)
@@ -3775,10 +3705,6 @@ bool QQmlCompiler::completeComponentBuild()
         compileState->v8BindingProgramLine = startLineNumber;
     }
 
-#ifdef QT_USE_OLD_V4
-    if (bindingCompiler.isValid())
-        compileState->compiledBindingData = bindingCompiler.program();
-#endif
 
     // Check pop()'s matched push()'s
     Q_ASSERT(compileState->objectDepth.depth() == 0);

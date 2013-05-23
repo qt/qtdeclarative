@@ -49,18 +49,10 @@ QT_BEGIN_NAMESPACE
 
 extern QQmlAbstractBinding::VTable QQmlBinding_vtable;
 extern QQmlAbstractBinding::VTable QQmlValueTypeProxyBinding_vtable;
-#ifdef QT_USE_OLD_V4
-extern QQmlAbstractBinding::VTable QV4Bindings_Binding_vtable;
-#endif
 extern QQmlAbstractBinding::VTable QV8Bindings_Binding_vtable;
 
 QQmlAbstractBinding::VTable *QQmlAbstractBinding::vTables[] = {
     &QQmlBinding_vtable,
-#ifdef QT_USE_OLD_V4
-    &QV4Bindings_Binding_vtable,
-#else
-    0,
-#endif
     &QV8Bindings_Binding_vtable,
     &QQmlValueTypeProxyBinding_vtable
 };
