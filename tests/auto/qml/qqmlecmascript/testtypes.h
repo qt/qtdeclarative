@@ -63,6 +63,7 @@
 
 #include <private/qqmlengine_p.h>
 #include <private/qv8engine_p.h>
+#include <private/qv8qobjectwrapper_p.h>
 
 class MyQmlAttachedObject : public QObject
 {
@@ -1172,17 +1173,20 @@ private:
     int m_value;
 };
 
-#if 0
-class CircularReferenceObject : public QObject,
-                                public QV8GCCallback::Node
+struct VTableAccessor : public QV4::QObjectWrapper
+{
+    const QV4::ManagedVTable *getVTable() { return vtbl; }
+    void setVTable(const QV4::ManagedVTable *newVtbl) { vtbl = newVtbl; }
+};
+
+class CircularReferenceObject : public QObject
 {
     Q_OBJECT
 
 public:
     CircularReferenceObject(QObject *parent = 0)
-        : QObject(parent), QV8GCCallback::Node(callback), m_referenced(0), m_dtorCount(0)
+        : QObject(parent), vtableInitialized(false), m_referenced(0), m_dtorCount(0)
     {
-        QV8GCCallback::addGcCallbackNode(this);
     }
 
     ~CircularReferenceObject()
@@ -1205,15 +1209,19 @@ public:
 
     Q_INVOKABLE void addReference(QObject *other)
     {
-        m_referenced = other;
-    }
-
-    static void callback(QV8GCCallback::Node *n)
-    {
-        CircularReferenceObject *cro = static_cast<CircularReferenceObject*>(n);
-        if (cro->m_referenced) {
-            cro->m_engine->addRelationshipForGC(cro, cro->m_referenced);
+        if (!vtableInitialized) {
+            vtableInitialized = true;
+            QQmlData *ddata = QQmlData::get(this);
+            assert(ddata);
+            VTableAccessor *thisObject = static_cast<VTableAccessor*>(ddata->v8object.value().asQObjectWrapper());
+            assert(thisObject);
+            customVtable = *thisObject->getVTable();
+            oldMarkObjectsImplementation = customVtable.markObjects;
+            customVtable.markObjects = &customMarkObjects;
+            thisObject->setVTable(&customVtable);
         }
+
+        m_referenced = other;
     }
 
     void setEngine(QQmlEngine* declarativeEngine)
@@ -1221,72 +1229,33 @@ public:
         m_engine = QQmlEnginePrivate::get(declarativeEngine)->v8engine();
     }
 
+    static void customMarkObjects(QV4::Managed *that)
+    {
+        QV4::QObjectWrapper *wrapper = that->asQObjectWrapper();
+        assert(wrapper);
+        CircularReferenceObject *thisObject = qobject_cast<CircularReferenceObject*>(wrapper->object);
+        assert(thisObject);
+
+        if (thisObject->m_referenced) {
+            QQmlData *ddata = QQmlData::get(thisObject->m_referenced);
+            assert(ddata);
+            QV4::Managed *other = ddata->v8object.value().asManaged();
+            if (other)
+                other->mark();
+        }
+
+        thisObject->oldMarkObjectsImplementation(that);
+    }
+
 private:
+    QV4::ManagedVTable customVtable;
+    void (*oldMarkObjectsImplementation)(QV4::Managed*);
+    bool vtableInitialized;
     QObject *m_referenced;
     int *m_dtorCount;
     QV8Engine* m_engine;
 };
 Q_DECLARE_METATYPE(CircularReferenceObject*)
-
-class CircularReferenceHandle : public QObject,
-                                public QV8GCCallback::Node
-{
-    Q_OBJECT
-
-public:
-    CircularReferenceHandle(QObject *parent = 0)
-        : QObject(parent), QV8GCCallback::Node(gccallback), m_dtorCount(0), m_engine(0)
-    {
-        QV8GCCallback::addGcCallbackNode(this);
-    }
-
-    ~CircularReferenceHandle()
-    {
-        if (m_dtorCount) *m_dtorCount = *m_dtorCount + 1;
-    }
-
-    Q_INVOKABLE void setDtorCount(int *dtorCount)
-    {
-        m_dtorCount = dtorCount;
-    }
-
-    Q_INVOKABLE CircularReferenceHandle *generate(QObject *parent = 0)
-    {
-        CircularReferenceHandle *retn = new CircularReferenceHandle(parent);
-        retn->m_dtorCount = m_dtorCount;
-        retn->m_engine = m_engine;
-        return retn;
-    }
-
-    Q_INVOKABLE void addReference(v8::Persistent<v8::Value> handle)
-    {
-        m_referenced = qPersistentNew(handle);
-        m_referenced.MakeWeak(static_cast<void*>(this), wrcallback);
-    }
-
-    static void wrcallback(v8::Persistent<v8::Value> handle, void *)
-    {
-        qPersistentDispose(handle);
-    }
-
-    static void gccallback(QV8GCCallback::Node *n)
-    {
-        CircularReferenceHandle *crh = static_cast<CircularReferenceHandle*>(n);
-        crh->m_engine->addRelationshipForGC(crh, crh->m_referenced);
-    }
-
-    void setEngine(QQmlEngine* declarativeEngine)
-    {
-        m_engine = QQmlEnginePrivate::get(declarativeEngine)->v8engine();
-    }
-
-private:
-    v8::Persistent<v8::Value> m_referenced;
-    int *m_dtorCount;
-    QV8Engine* m_engine;
-};
-Q_DECLARE_METATYPE(CircularReferenceHandle*)
-#endif
 
 class MyDynamicCreationDestructionObject : public QObject
 {

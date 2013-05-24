@@ -182,7 +182,7 @@ private slots:
     void objectPassThroughSignals();
     void objectConversion();
     void booleanConversion();
-//    void handleReferenceManagement();
+    void handleReferenceManagement();
     void stringArg();
     void readonlyDeclaration();
     void sequenceConversionRead();
@@ -5003,10 +5003,8 @@ void tst_qqmlecmascript::booleanConversion()
     delete object;
 }
 
-#if 0
 void tst_qqmlecmascript::handleReferenceManagement()
 {
-
     int dtorCount = 0;
     {
         // Linear QObject reference
@@ -5018,7 +5016,7 @@ void tst_qqmlecmascript::handleReferenceManagement()
         cro->setEngine(&hrmEngine);
         cro->setDtorCount(&dtorCount);
         QMetaObject::invokeMethod(object, "createReference");
-        gc(engine);
+        gc(hrmEngine);
         QCOMPARE(dtorCount, 0); // second has JS ownership, kept alive by first's reference
         delete object;
         hrmEngine.collectGarbage();
@@ -5038,237 +5036,13 @@ void tst_qqmlecmascript::handleReferenceManagement()
         cro->setEngine(&hrmEngine);
         cro->setDtorCount(&dtorCount);
         QMetaObject::invokeMethod(object, "circularReference");
-        gc(engine);
+        gc(hrmEngine);
         QCOMPARE(dtorCount, 2); // both should be cleaned up, since circular references shouldn't keep alive.
         delete object;
         hrmEngine.collectGarbage();
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         QCoreApplication::processEvents();
         QCOMPARE(dtorCount, 3);
-    }
-
-    dtorCount = 0;
-    {
-        // Linear handle reference
-        QQmlEngine hrmEngine;
-        QQmlComponent component(&hrmEngine, testFileUrl("handleReferenceManagement.handle.1.qml"));
-        QObject *object = component.create();
-        QVERIFY(object != 0);
-        CircularReferenceHandle *crh = object->findChild<CircularReferenceHandle*>("crh");
-        QVERIFY(crh != 0);
-        crh->setEngine(&hrmEngine);
-        crh->setDtorCount(&dtorCount);
-        QMetaObject::invokeMethod(object, "createReference");
-        CircularReferenceHandle *first = object->property("first").value<CircularReferenceHandle*>();
-        CircularReferenceHandle *second = object->property("second").value<CircularReferenceHandle*>();
-        QVERIFY(first != 0);
-        QVERIFY(second != 0);
-        first->addReference(QQmlData::get(second)->v8object); // create reference
-        // now we have to reparent second and make second owned by JS.
-        second->setParent(0);
-        QQmlEngine::setObjectOwnership(second, QQmlEngine::JavaScriptOwnership);
-        gc(engine);
-        QCOMPARE(dtorCount, 0); // due to reference from first to second, second shouldn't be collected.
-        delete object;
-        hrmEngine.collectGarbage();
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-        QCoreApplication::processEvents();
-        QCOMPARE(dtorCount, 3);
-    }
-
-    dtorCount = 0;
-    {
-        // Circular handle reference
-        QQmlEngine hrmEngine;
-        QQmlComponent component(&hrmEngine, testFileUrl("handleReferenceManagement.handle.2.qml"));
-        QObject *object = component.create();
-        QVERIFY(object != 0);
-        CircularReferenceHandle *crh = object->findChild<CircularReferenceHandle*>("crh");
-        QVERIFY(crh != 0);
-        crh->setEngine(&hrmEngine);
-        crh->setDtorCount(&dtorCount);
-        QMetaObject::invokeMethod(object, "circularReference");
-        CircularReferenceHandle *first = object->property("first").value<CircularReferenceHandle*>();
-        CircularReferenceHandle *second = object->property("second").value<CircularReferenceHandle*>();
-        QVERIFY(first != 0);
-        QVERIFY(second != 0);
-        first->addReference(QQmlData::get(second)->v8object); // create circular reference
-        second->addReference(QQmlData::get(first)->v8object); // note: must be weak.
-        // now we have to reparent and change ownership, and unset the property references.
-        first->setParent(0);
-        second->setParent(0);
-        QQmlEngine::setObjectOwnership(first, QQmlEngine::JavaScriptOwnership);
-        QQmlEngine::setObjectOwnership(second, QQmlEngine::JavaScriptOwnership);
-        object->setProperty("first", QVariant::fromValue<QObject*>(0));
-        object->setProperty("second", QVariant::fromValue<QObject*>(0));
-        gc(engine);
-        QCOMPARE(dtorCount, 2); // despite circular references, both will be collected.
-        delete object;
-        hrmEngine.collectGarbage();
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-        QCoreApplication::processEvents();
-        QCOMPARE(dtorCount, 3);
-    }
-
-    dtorCount = 0;
-    {
-        // multiple engine interaction - linear reference
-        QQmlEngine hrmEngine1;
-        QQmlEngine hrmEngine2;
-        QQmlComponent component1(&hrmEngine1, testFileUrl("handleReferenceManagement.handle.1.qml"));
-        QQmlComponent component2(&hrmEngine2, testFileUrl("handleReferenceManagement.handle.1.qml"));
-        QObject *object1 = component1.create();
-        QObject *object2 = component2.create();
-        QVERIFY(object1 != 0);
-        QVERIFY(object2 != 0);
-        CircularReferenceHandle *crh1 = object1->findChild<CircularReferenceHandle*>("crh");
-        CircularReferenceHandle *crh2 = object2->findChild<CircularReferenceHandle*>("crh");
-        QVERIFY(crh1 != 0);
-        QVERIFY(crh2 != 0);
-        crh1->setEngine(&hrmEngine1);
-        crh2->setEngine(&hrmEngine2);
-        crh1->setDtorCount(&dtorCount);
-        crh2->setDtorCount(&dtorCount);
-        QMetaObject::invokeMethod(object1, "createReference");
-        QMetaObject::invokeMethod(object2, "createReference");
-        CircularReferenceHandle *first1 = object1->property("first").value<CircularReferenceHandle*>();
-        CircularReferenceHandle *second1 = object1->property("second").value<CircularReferenceHandle*>();
-        CircularReferenceHandle *first2 = object2->property("first").value<CircularReferenceHandle*>();
-        CircularReferenceHandle *second2 = object2->property("second").value<CircularReferenceHandle*>();
-        QVERIFY(first1 != 0);
-        QVERIFY(second1 != 0);
-        QVERIFY(first2 != 0);
-        QVERIFY(second2 != 0);
-        first1->addReference(QQmlData::get(second2)->v8object); // create reference across engines
-        // now we have to reparent second2 and make second2 owned by JS.
-        second2->setParent(0);
-        QQmlEngine::setObjectOwnership(second2, QQmlEngine::JavaScriptOwnership);
-        gc(engine);
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-        QCoreApplication::processEvents();
-        QCOMPARE(dtorCount, 0); // due to reference from first1 to second2, second2 shouldn't be collected.
-        delete object1;
-        delete object2;
-        hrmEngine1.collectGarbage();
-        hrmEngine2.collectGarbage();
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-        QCoreApplication::processEvents();
-        QCOMPARE(dtorCount, 6);
-    }
-
-    dtorCount = 0;
-    {
-        // multiple engine interaction - circular reference
-        QQmlEngine hrmEngine1;
-        QQmlEngine hrmEngine2;
-        QQmlComponent component1(&hrmEngine1, testFileUrl("handleReferenceManagement.handle.1.qml"));
-        QQmlComponent component2(&hrmEngine2, testFileUrl("handleReferenceManagement.handle.1.qml"));
-        QObject *object1 = component1.create();
-        QObject *object2 = component2.create();
-        QVERIFY(object1 != 0);
-        QVERIFY(object2 != 0);
-        CircularReferenceHandle *crh1 = object1->findChild<CircularReferenceHandle*>("crh");
-        CircularReferenceHandle *crh2 = object2->findChild<CircularReferenceHandle*>("crh");
-        QVERIFY(crh1 != 0);
-        QVERIFY(crh2 != 0);
-        crh1->setEngine(&hrmEngine1);
-        crh2->setEngine(&hrmEngine2);
-        crh1->setDtorCount(&dtorCount);
-        crh2->setDtorCount(&dtorCount);
-        QMetaObject::invokeMethod(object1, "createReference");
-        QMetaObject::invokeMethod(object2, "createReference");
-        CircularReferenceHandle *first1 = object1->property("first").value<CircularReferenceHandle*>();
-        CircularReferenceHandle *second1 = object1->property("second").value<CircularReferenceHandle*>();
-        CircularReferenceHandle *first2 = object2->property("first").value<CircularReferenceHandle*>();
-        CircularReferenceHandle *second2 = object2->property("second").value<CircularReferenceHandle*>();
-        QVERIFY(first1 != 0);
-        QVERIFY(second1 != 0);
-        QVERIFY(first2 != 0);
-        QVERIFY(second2 != 0);
-        first1->addReference(QQmlData::get(second1)->v8object);  // create linear reference within engine1
-        second1->addReference(QQmlData::get(second2)->v8object); // create linear reference across engines
-        second2->addReference(QQmlData::get(first2)->v8object);  // create linear reference within engine2
-        first2->addReference(QQmlData::get(first1)->v8object);   // close the loop - circular ref across engines
-        // now we have to reparent and change ownership to JS, and remove property references.
-        first1->setParent(0);
-        second1->setParent(0);
-        first2->setParent(0);
-        second2->setParent(0);
-        QQmlEngine::setObjectOwnership(first1, QQmlEngine::JavaScriptOwnership);
-        QQmlEngine::setObjectOwnership(second1, QQmlEngine::JavaScriptOwnership);
-        QQmlEngine::setObjectOwnership(first2, QQmlEngine::JavaScriptOwnership);
-        QQmlEngine::setObjectOwnership(second2, QQmlEngine::JavaScriptOwnership);
-        object1->setProperty("first", QVariant::fromValue<QObject*>(0));
-        object1->setProperty("second", QVariant::fromValue<QObject*>(0));
-        object2->setProperty("first", QVariant::fromValue<QObject*>(0));
-        object2->setProperty("second", QVariant::fromValue<QObject*>(0));
-        gc(engine);
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-        QCoreApplication::processEvents();
-        QCOMPARE(dtorCount, 4); // circular references shouldn't keep them alive.
-        delete object1;
-        delete object2;
-        hrmEngine1.collectGarbage();
-        hrmEngine2.collectGarbage();
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-        QCoreApplication::processEvents();
-        QCOMPARE(dtorCount, 6);
-    }
-
-    dtorCount = 0;
-    {
-        // multiple engine interaction - linear reference with engine deletion
-        QQmlEngine *hrmEngine1 = new QQmlEngine;
-        QQmlEngine *hrmEngine2 = new QQmlEngine;
-        QQmlComponent component1(hrmEngine1, testFileUrl("handleReferenceManagement.handle.1.qml"));
-        QQmlComponent component2(hrmEngine2, testFileUrl("handleReferenceManagement.handle.1.qml"));
-        QObject *object1 = component1.create();
-        QObject *object2 = component2.create();
-        QVERIFY(object1 != 0);
-        QVERIFY(object2 != 0);
-        CircularReferenceHandle *crh1 = object1->findChild<CircularReferenceHandle*>("crh");
-        CircularReferenceHandle *crh2 = object2->findChild<CircularReferenceHandle*>("crh");
-        QVERIFY(crh1 != 0);
-        QVERIFY(crh2 != 0);
-        crh1->setEngine(hrmEngine1);
-        crh2->setEngine(hrmEngine2);
-        crh1->setDtorCount(&dtorCount);
-        crh2->setDtorCount(&dtorCount);
-        QMetaObject::invokeMethod(object1, "createReference");
-        QMetaObject::invokeMethod(object2, "createReference");
-        CircularReferenceHandle *first1 = object1->property("first").value<CircularReferenceHandle*>();
-        CircularReferenceHandle *second1 = object1->property("second").value<CircularReferenceHandle*>();
-        CircularReferenceHandle *first2 = object2->property("first").value<CircularReferenceHandle*>();
-        CircularReferenceHandle *second2 = object2->property("second").value<CircularReferenceHandle*>();
-        QVERIFY(first1 != 0);
-        QVERIFY(second1 != 0);
-        QVERIFY(first2 != 0);
-        QVERIFY(second2 != 0);
-        first1->addReference(QQmlData::get(second1)->v8object);  // create linear reference within engine1
-        second1->addReference(QQmlData::get(second2)->v8object); // create linear reference across engines
-        second2->addReference(QQmlData::get(first2)->v8object);  // create linear reference within engine2
-        // now we have to reparent and change ownership to JS.
-        first1->setParent(crh1);
-        second1->setParent(0);
-        first2->setParent(0);
-        second2->setParent(0);
-        QQmlEngine::setObjectOwnership(second1, QQmlEngine::JavaScriptOwnership);
-        QQmlEngine::setObjectOwnership(first2, QQmlEngine::JavaScriptOwnership);
-        QQmlEngine::setObjectOwnership(second2, QQmlEngine::JavaScriptOwnership);
-        gc(*hrmEngine1);
-        gc(*hrmEngine2);
-        QCOMPARE(dtorCount, 0);
-        delete hrmEngine2; // should trigger deletion of objects with JS ownership tracked by this engine
-        gc(*hrmEngine1);
-        QCOMPARE(dtorCount, 2); // first2 and second2 should have been deleted.
-        delete object1;
-        delete object2;
-        gc(*hrmEngine1);
-        QCOMPARE(dtorCount, 6); // deleting object1 and object2 should trigger deletion of first1 and first2.
-        delete hrmEngine1;
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-        QCoreApplication::processEvents();
-        QCOMPARE(dtorCount, 6); // all objects should have been cleaned up prior to deleting hrmEngine1.
     }
 
     {
@@ -5322,7 +5096,6 @@ void tst_qqmlecmascript::handleReferenceManagement()
         delete object;
     }
 }
-#endif
 
 void tst_qqmlecmascript::stringArg()
 {

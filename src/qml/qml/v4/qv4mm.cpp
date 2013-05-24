@@ -43,6 +43,9 @@
 #include "qv4object_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4mm_p.h"
+// ### FIXME: remove when qv8qobjectwrapper port is done.
+#include <private/qv8qobjectwrapper_p.h>
+#include <qqmlengine.h>
 #include "PageAllocation.h"
 #include "StdLibExtras.h"
 
@@ -284,6 +287,36 @@ void MemoryManager::mark()
 #endif // COMPILER
 
     collectFromStack();
+
+    // Preserve QObject ownership rules within JavaScript: A parent with c++ ownership
+    // keeps all of its children alive in JavaScript.
+
+    // Do this _after_ collectFromStack to ensure that processing the weak
+    // managed objects in the loop down there doesn't make then end up as leftovers
+    // on the stack and thus always get collected.
+    for (PersistentValuePrivate *weak = m_weakValues; weak; weak = weak->next) {
+        if (!weak->refcount)
+            continue;
+        QObjectWrapper *qobjectWrapper = weak->value.asQObjectWrapper();
+        if (!qobjectWrapper)
+            continue;
+        QObject *qobject = qobjectWrapper->object;
+        if (!qobject)
+            continue;
+        bool keepAlive = QQmlEngine::objectOwnership(qobject) == QQmlEngine::CppOwnership;
+
+        if (!keepAlive) {
+            if (QObject *parent = qobject->parent()) {
+                while (parent->parent())
+                    parent = parent->parent();
+
+                keepAlive = QQmlEngine::objectOwnership(parent) == QQmlEngine::CppOwnership;
+            }
+        }
+
+        if (keepAlive)
+            qobjectWrapper->mark();
+    }
 }
 
 std::size_t MemoryManager::sweep()

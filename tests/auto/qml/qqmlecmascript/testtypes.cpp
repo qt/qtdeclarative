@@ -299,10 +299,7 @@ void registerTypes()
     qRegisterMetaType<MyQmlObject::MyEnum2>("MyEnum2");
     qRegisterMetaType<Qt::MouseButtons>("Qt::MouseButtons");
 
-#if 0
     qmlRegisterType<CircularReferenceObject>("Qt.test", 1, 0, "CircularReferenceObject");
-    qmlRegisterType<CircularReferenceHandle>("Qt.test", 1, 0, "CircularReferenceHandle");
-#endif
 
     qmlRegisterType<MyDynamicCreationDestructionObject>("Qt.test", 1, 0, "MyDynamicCreationDestructionObject");
     qmlRegisterType<WriteCounter>("Qt.test", 1, 0, "WriteCounter");

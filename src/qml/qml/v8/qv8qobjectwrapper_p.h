@@ -79,7 +79,7 @@ class QQmlPropertyCache;
 
 namespace QV4 {
 
-struct QV4_JS_CLASS(QObjectWrapper) : public QV4::Object
+struct Q_QML_EXPORT QV4_JS_CLASS(QObjectWrapper) : public QV4::Object
 {
     QObjectWrapper(ExecutionEngine *v8Engine, QObject *object);
     ~QObjectWrapper();
