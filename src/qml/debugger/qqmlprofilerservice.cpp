@@ -105,7 +105,7 @@ QByteArray QQmlProfilerData::toByteArray() const
         case QQmlProfilerService::SceneGraphWindowsRenderShow: ds << subtime_1 << subtime_2 << subtime_3; break;
         // WindowsAnimations: update time
         case QQmlProfilerService::SceneGraphWindowsAnimations: ds << subtime_1; break;
-        // WindowsRenderWindow: polish time, sync time, render time, swap time
+        // WindowsRenderWindow: polish time
         case QQmlProfilerService::SceneGraphWindowsPolishFrame: ds << subtime_1; break;
         default:break;
         }

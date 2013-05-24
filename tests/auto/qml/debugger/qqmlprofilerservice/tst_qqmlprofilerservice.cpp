@@ -283,7 +283,7 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
         case QQmlProfilerClient::SceneGraphWindowsRenderShow: stream >> subtime_1 >> subtime_2 >> subtime_3; break;
             // WindowsAnimations: update time
         case QQmlProfilerClient::SceneGraphWindowsAnimations: stream >> subtime_1; break;
-            // WindowsRenderWindow: polish time, sync time, render time, swap time
+            // WindowsRenderWindow: polish time
         case QQmlProfilerClient::SceneGraphWindowsPolishFrame: stream >> subtime_1; break;
         }
         break;

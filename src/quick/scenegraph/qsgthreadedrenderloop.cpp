@@ -1032,7 +1032,7 @@ void QSGThreadedRenderLoop::polishAndSync()
                     polishTime,
                     waitTime - polishTime,
                     syncTime - waitTime,
-                    timer.elapsed() - syncTime);
+                    timer.nsecsElapsed() - syncTime);
     }
 #endif
 }
