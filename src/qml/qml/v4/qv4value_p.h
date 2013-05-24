@@ -634,6 +634,8 @@ public:
         *this = WeakValue();
     }
 
+    void markOnce();
+
 private:
     PersistentValuePrivate *d;
 };

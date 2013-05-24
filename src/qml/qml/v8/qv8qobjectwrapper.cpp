@@ -255,6 +255,17 @@ QV4::Value QObjectWrapper::enumerateProperties(Object *object)
     return QV4::Value::fromObject(that->engine()->newArrayObject(result));
 }
 
+void QObjectWrapper::markObjects(Managed *that)
+{
+    QObjectWrapper *This = static_cast<QObjectWrapper*>(that);
+
+    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(This->object);
+    if (vme)
+        vme->mark();
+
+    QV4::Object::markObjects(that);
+}
+
 DEFINE_MANAGED_VTABLE(QObjectWrapper);
 
 // XXX TODO: Need to review all calls to QQmlEngine *engine() to confirm QObjects work

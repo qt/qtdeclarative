@@ -96,6 +96,7 @@ private:
 
     static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
     static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+    static void markObjects(Managed *that);
 
     static Value enumerateProperties(Object *object);
 

@@ -554,7 +554,7 @@ QAbstractDynamicMetaObject *QQmlVMEMetaObject::toDynamicMetaObject(QObject *o)
 QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
                                      QQmlPropertyCache *cache,
                                      const QQmlVMEMetaData *meta)
-: QV8GCCallback::Node(GcPrologueCallback), object(obj),
+: object(obj),
   ctxt(QQmlData::get(obj, true)->outerContext), cache(cache), metaData(meta),
   hasAssignedMetaObjectData(false), data(0), aliasEndpoints(0), firstVarPropertyIndex(-1),
   varPropertiesInitialized(false), interceptors(0), v8methods(0)
@@ -577,7 +577,10 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
     int list_type = qMetaTypeId<QQmlListProperty<QObject> >();
     int qobject_type = qMetaTypeId<QObject*>();
     int variant_type = qMetaTypeId<QVariant>();
-    bool needsGcCallback = (metaData->varPropertyCount > 0);
+    // Need JS wrapper to ensure variant and var properties are marked.
+    // ### FIXME: I hope that this can be removed once we have the proper scope chain
+    // set up and the JS wrappers always exist.
+    bool needsJSWrapper = (metaData->varPropertyCount > 0);
 
     // ### Optimize
     for (int ii = 0; ii < metaData->propertyCount - metaData->varPropertyCount; ++ii) {
@@ -585,20 +588,15 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
         if (t == list_type) {
             listProperties.append(List(methodOffset() + ii, this));
             data[ii].setValue(listProperties.count() - 1);
-        } else if (!needsGcCallback && (t == qobject_type || t == variant_type)) {
-            needsGcCallback = true;
+        } else if (!needsJSWrapper && (t == qobject_type || t == variant_type)) {
+            needsJSWrapper = true;
         }
     }
 
     firstVarPropertyIndex = metaData->propertyCount - metaData->varPropertyCount;
 
-    // both var properties and variant properties can keep references to
-    // other QObjects, and var properties can also keep references to
-    // JavaScript objects.  If we have any properties, we need to hook
-    // the gc() to ensure that references keep objects alive as needed.
-    if (needsGcCallback) {
-        QV8GCCallback::addGcCallbackNode(this);
-    }
+    if (needsJSWrapper)
+        ensureQObjectWrapper();
 }
 
 QQmlVMEMetaObject::~QQmlVMEMetaObject()
@@ -1207,6 +1205,32 @@ bool QQmlVMEMetaObject::ensureVarPropertiesAllocated()
     return !varProperties.isEmpty();
 }
 
+void QQmlVMEMetaObject::ensureQObjectWrapper()
+{
+    QQmlEnginePrivate *ep = (ctxt == 0 || ctxt->engine == 0) ? 0 : QQmlEnginePrivate::get(ctxt->engine);
+    QV8Engine *v8e = (ep == 0) ? 0 : ep->v8engine();
+    v8e->newQObject(object);
+}
+
+void QQmlVMEMetaObject::mark()
+{
+    varProperties.markOnce();
+
+    // add references created by VMEVariant properties
+    int maxDataIdx = metaData->propertyCount - metaData->varPropertyCount;
+    for (int ii = 0; ii < maxDataIdx; ++ii) { // XXX TODO: optimize?
+        if (data[ii].dataType() == QMetaType::QObjectStar) {
+            // possible QObject reference.
+            QObject *ref = data[ii].asQObject();
+            if (ref) {
+                QQmlData *ddata = QQmlData::get(ref);
+                if (ddata)
+                    ddata->v8object.markOnce();
+            }
+        }
+    }
+}
+
 // see also: QV8GCCallback::garbageCollectorPrologueCallback()
 void QQmlVMEMetaObject::allocateVarPropertiesArray()
 {
@@ -1214,50 +1238,6 @@ void QQmlVMEMetaObject::allocateVarPropertiesArray()
     // ### FIXME
 //    varProperties.MakeWeak(static_cast<void*>(this), VarPropertiesWeakReferenceCallback);
     varPropertiesInitialized = true;
-}
-
-/*
-   The "var" properties are stored in a v8::Array which will be strong persistent if the object has cpp-ownership
-   and the root QObject in the parent chain does not have JS-ownership.  In the weak persistent handle case,
-   this callback will dispose the handle when the v8object which owns the lifetime of the var properties array
-   is cleared as a result of all other handles to that v8object being released.
-   See QV8GCCallback::garbageCollectorPrologueCallback() for more information.
- */
-void QQmlVMEMetaObject::VarPropertiesWeakReferenceCallback(QV4::PersistentValue &object, void* parameter)
-{
-    // ### FIXME
-    QQmlVMEMetaObject *vmemo = static_cast<QQmlVMEMetaObject*>(parameter);
-    Q_ASSERT(vmemo);
-    object.clear();
-    vmemo->varProperties.clear();
-}
-
-void QQmlVMEMetaObject::GcPrologueCallback(QV8GCCallback::Node *node)
-{
-    QQmlVMEMetaObject *vmemo = static_cast<QQmlVMEMetaObject*>(node);
-    Q_ASSERT(vmemo);
-
-    if (!vmemo->ctxt || !vmemo->ctxt->engine)
-        return;
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(vmemo->ctxt->engine);
-
-    // add references created by VMEVariant properties
-    int maxDataIdx = vmemo->metaData->propertyCount - vmemo->metaData->varPropertyCount;
-    for (int ii = 0; ii < maxDataIdx; ++ii) { // XXX TODO: optimize?
-        if (vmemo->data[ii].dataType() == QMetaType::QObjectStar) {
-            // possible QObject reference.
-            QObject *ref = vmemo->data[ii].asQObject();
-            if (ref) {
-                ep->v8engine()->addRelationshipForGC(vmemo->object, ref);
-            }
-        }
-    }
-
-    // add references created by var properties
-    if (!vmemo->varPropertiesInitialized || vmemo->varProperties.isEmpty())
-        return;
-    // ### FIXME
-    // ep->v8engine()->addRelationshipForGC(vmemo->object, vmemo->varProperties);
 }
 
 bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const

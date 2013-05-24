@@ -345,6 +345,15 @@ WeakValue::~WeakValue()
         d->deref();
 }
 
+void WeakValue::markOnce()
+{
+    if (!d)
+        return;
+    Managed *m = d->value.asManaged();
+    if (!m)
+        return;
+    m->mark();
+}
 
 PersistentValuePrivate::PersistentValuePrivate(const Value &v, bool weak)
     : value(v)

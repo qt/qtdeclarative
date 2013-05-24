@@ -159,8 +159,7 @@ class QV8QObjectWrapper;
 class QQmlVMEVariant;
 class QQmlRefCount;
 class QQmlVMEMetaObjectEndpoint;
-class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QAbstractDynamicMetaObject,
-                                                    public QV8GCCallback::Node
+class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QAbstractDynamicMetaObject
 {
 public:
     QQmlVMEMetaObject(QObject *obj, QQmlPropertyCache *cache, const QQmlVMEMetaData *data);
@@ -205,13 +204,15 @@ public:
     QQmlVMEVariant *data;
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
-    QV4::PersistentValue varProperties;
+    QV4::WeakValue varProperties;
     int firstVarPropertyIndex;
     bool varPropertiesInitialized;
-    static void VarPropertiesWeakReferenceCallback(QV4::PersistentValue &object, void* parameter);
-    static void GcPrologueCallback(QV8GCCallback::Node *node);
     inline void allocateVarPropertiesArray();
     inline bool ensureVarPropertiesAllocated();
+
+    void ensureQObjectWrapper();
+
+    void mark();
 
     void connectAlias(int aliasId);
     QBitArray aConnected;
