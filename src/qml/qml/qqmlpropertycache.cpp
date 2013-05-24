@@ -1328,8 +1328,14 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
                     rv.load(p);
                     return rv;
                 } else {
-                    while (cmo && cmo->propertyOffset() >= idx)
+                    bool changed = false;
+                    while (cmo && cmo->propertyOffset() >= idx) {
                         cmo = cmo->superClass();
+                        changed = true;
+                    }
+                    /* If the "cmo" variable didn't change, set it to 0 to
+                     * avoid running into an infinite loop */
+                    if (!changed) cmo = 0;
                 }
             } else {
                 cmo = 0;
@@ -1395,7 +1401,8 @@ qQmlPropertyCacheProperty(QQmlEngine *engine, QObject *obj, const T &name,
 
     if (cache) {
         rv = cache->property(name, obj, context);
-    } else {
+    }
+    if (!rv) {
         local = qQmlPropertyCacheCreate(obj->metaObject(), qQmlPropertyCacheToString(name));
         if (local.isValid())
             rv = &local;

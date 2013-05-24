@@ -66,6 +66,7 @@ private slots:
     void crashBug();
     void QTBUG_17868();
     void metaObjectAccessibility();
+    void QTBUG_31226();
 };
 
 void tst_QQmlPropertyMap::insert()
@@ -310,6 +311,34 @@ void tst_QQmlPropertyMap::metaObjectAccessibility()
     QCOMPARE(map.metaObject()->className(), "MyEnhancedPropertyMap");
 
     QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
+}
+
+void tst_QQmlPropertyMap::QTBUG_31226()
+{
+    /* Instantiate a property map from QML, and verify that property changes
+     * made from C++ are visible from QML */
+    QQmlEngine engine;
+    QQmlContext context(&engine);
+    qmlRegisterType<QQmlPropertyMap>("QTBUG_31226", 1, 0, "PropertyMap");
+    QQmlComponent c(&engine);
+    c.setData("import QtQuick 2.0\nimport QTBUG_31226 1.0\n"
+              "Item {\n"
+              "  property string myProp\n"
+              "  PropertyMap { id: qmlPropertyMap; objectName: \"qmlPropertyMap\" }\n"
+              "  Timer { interval: 5; running: true; onTriggered: { myProp = qmlPropertyMap.greeting; } }\n"
+              "}",
+              QUrl());
+    QObject *obj = c.create(&context);
+    QVERIFY(obj);
+
+    QQmlPropertyMap *qmlPropertyMap = obj->findChild<QQmlPropertyMap*>(QString("qmlPropertyMap"));
+    QVERIFY(qmlPropertyMap);
+
+    qmlPropertyMap->insert("greeting", QString("Hello world!"));
+    QTRY_COMPARE(obj->property("myProp").toString(), QString("Hello world!"));
+
+    delete obj;
+
 }
 
 QTEST_MAIN(tst_QQmlPropertyMap)
