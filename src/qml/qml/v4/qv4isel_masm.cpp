@@ -408,7 +408,7 @@ void Assembler::generateBinOp(V4IR::AluOp operation, V4IR::Temp* target, V4IR::T
     if (binOpFinished.isSet())
         binOpFinished.link(this);
 }
-#if OS(LINUX)
+#if OS(LINUX) || OS(MAC_OS_X)
 static void printDisassembledOutputWithCalls(const char* output, const QHash<void*, const char*>& functions,
                                              const QVector<String*> &identifiers)
 {
@@ -487,6 +487,19 @@ void Assembler::link(QV4::Function *vmFunc)
         size_t disasmLength = 0;
         FILE* disasmStream = open_memstream(&disasmOutput, &disasmLength);
         WTF::setDataFile(disasmStream);
+#elif OS(MAC_OS_X)
+        struct MemStream {
+            QByteArray buf;
+            static int write(void *cookie, const char *buf, int len) {
+                MemStream *stream = reinterpret_cast<MemStream *>(cookie);
+                stream->buf.append(buf, len);
+                return len;
+            }
+        };
+        MemStream memStream;
+
+        FILE* disasmStream = fwopen(&memStream, MemStream::write);
+        WTF::setDataFile(disasmStream);
 #endif
 
         QByteArray name = _function->name->toUtf8();
@@ -498,13 +511,18 @@ void Assembler::link(QV4::Function *vmFunc)
         vmFunc->codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
 
         WTF::setDataFile(stderr);
-#if OS(LINUX)
+#if OS(LINUX) || OS(MAC_OS_X)
+#  if OS(MAC_OS_X)
+        char *disasmOutput = memStream.buf.data();
+#  endif
         fclose(disasmStream);
-#if CPU(X86) || CPU(X86_64)
+#  if CPU(X86) || CPU(X86_64)
         QHash<void*, String*> idents;
         printDisassembledOutputWithCalls(disasmOutput, functions, _vmFunction->identifiers);
-#endif
+#  endif
+#  if OS(LINUX)
         free(disasmOutput);
+#  endif
 #endif
     } else {
         vmFunc->codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
