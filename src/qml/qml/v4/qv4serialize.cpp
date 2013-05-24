@@ -359,6 +359,11 @@ QV4::Value Serialize::deserialize(const char *&data, QV8Engine *engine)
         void *ptr = popPtr(data);
         QQmlListModelWorkerAgent *agent = (QQmlListModelWorkerAgent *)ptr;
         QV4::Value rv = engine->newQObject(agent);
+        // ### Find a better solution then the ugly property
+        QQmlListModelWorkerAgent::VariantRef ref(agent);
+        QVariant var = qVariantFromValue(ref);
+        rv.asObject()->defineReadonlyProperty(v4->newString("__qml:hidden:ref"), engine->fromVariant(var));
+
         agent->release();
         agent->setV8Engine(engine);
         return rv;
