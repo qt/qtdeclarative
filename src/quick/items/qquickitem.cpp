@@ -1363,7 +1363,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
     \brief Property used to mirror layout behavior
 
     The LayoutMirroring attached property is used to horizontally mirror \l {anchor-layout}{Item anchors},
-    \l{Item Layouts}{positioner} types (such as \l Row and \l Grid)
+    \l{Item Positioners}{positioner} types (such as \l Row and \l Grid)
     and views (such as \l GridView and horizontal \l ListView). Mirroring is a visual change: left
     anchors become right anchors, and positioner types like \l Grid and \l Row reverse the
     horizontal layout of child items.
@@ -1403,7 +1403,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 
     This property holds whether the item's layout is mirrored horizontally. Setting this to true
     horizontally reverses \l {anchor-layout}{anchor} settings such that left anchors become right,
-    and right anchors become left. For \l{Item Layouts}{positioner} types
+    and right anchors become left. For \l{Item Positioners}{positioner} types
     (such as \l Row and \l Grid) and view types (such as \l {GridView}{GridView} and \l {ListView}{ListView})
     this also mirrors the horizontal layout direction of the item.
 
