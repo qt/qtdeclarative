@@ -178,24 +178,25 @@ class QQmlV4Function
 {
 public:
     int length() const { return argc; }
-    QV4::Value operator[](int idx) { return args.asObject()->getIndexed(idx); }
+    QV4::Value operator[](int idx) { return args[idx]; }
     QQmlContextData *context() { return ctx; }
     QV4::Value qmlGlobal() { return global; }
     void setReturnValue(const QV4::Value &rv) { *retVal = rv; }
     QV8Engine *engine() const { return e; }
 private:
     friend class QV8QObjectWrapper;
+    friend class QV4::QObjectMethod;
     QQmlV4Function();
     QQmlV4Function(const QQmlV4Function &);
     QQmlV4Function &operator=(const QQmlV4Function &);
 
-    QQmlV4Function(int length, const QV4::Value &args,
+    QQmlV4Function(int length, QV4::Value *args,
                            QV4::Value *rv, const QV4::Value &global,
                            QQmlContextData *c, QV8Engine *e)
     : argc(length), args(args), retVal(rv), global(global), ctx(c), e(e) {}
 
     int argc;
-    QV4::Value args;
+    QV4::Value *args;
     QV4::Value *retVal;
     QV4::Value global;
     QQmlContextData *ctx;

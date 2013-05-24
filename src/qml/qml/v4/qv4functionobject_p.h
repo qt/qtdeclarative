@@ -97,6 +97,12 @@ struct InternalClass;
 struct Lookup;
 
 struct Q_QML_EXPORT FunctionObject: Object {
+    // Used with Managed::subType
+    enum FunctionType {
+        RegularFunction = 0,
+        WrappedQtMethod = 1
+    };
+
     ExecutionContext *scope;
     String *name;
     String * const *formalParameterList;

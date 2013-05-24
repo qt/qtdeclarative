@@ -440,25 +440,6 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     m_engine = engine;
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    m_hiddenObject = QV4::Value::fromObject(v4->newObject());
-
-    {
-#define CREATE_FUNCTION_SOURCE \
-    "(function(method) { "\
-        "return (function(object, data, qmlglobal) { "\
-            "return (function() { "\
-                "return method(object, data, qmlglobal, arguments.length, arguments); "\
-            "});"\
-        "});"\
-    "})"
-    QV4::Script script(QV8Engine::getV4(engine)->rootContext, CREATE_FUNCTION_SOURCE);
-#undef CREATE_FUNCTION_SOURCE
-    v8::Handle<v8::Function> fn(script.run());
-    v8::Handle<v8::Value> invokeFn = v8::FunctionTemplate::New(Invoke)->GetFunction();
-    v8::Handle<v8::Value> args[] = { invokeFn };
-    v8::Handle<v8::Function> createFn = v8::Handle<v8::Function>::Cast(fn->Call(v8::Value::fromV4Value(engine->global()), 1, args));
-    m_methodConstructor = createFn->v4Value();
-    }
 
     v8::Handle<v8::Function> connect = V8FUNCTION(Connect, engine);
     v8::Handle<v8::Function> disconnect = V8FUNCTION(Disconnect, engine);
@@ -591,33 +572,14 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
        static v8::Handle<v8::Value> create(QV8Engine *engine, QObject *object, 
                                            v8::Handle<v8::Value> *objectHandle, 
                                            int index) { 
-           QV4::Value argv[] = {
-               objectHandle ? (*objectHandle)->v4Value() : engine->newQObject(object),
-               QV4::Value::fromInt32(index)
-           };
-           Q_ASSERT(argv[0].isObject());
            QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-           QV4::FunctionObject *f = engine->qobjectWrapper()->m_methodConstructor.value().asFunctionObject();
-           QV4::Value result = f->call(v4->current, engine->global(), argv, 2);
-           // Hack to allow us to identify these functions
-           result.asObject()->defineReadonlyProperty(v4->newString("__creator__"), engine->qobjectWrapper()->m_hiddenObject);
-           return result;
+           return QV4::Value::fromObject(new (v4->memoryManager) QV4::QObjectMethod(v4->rootContext, object, index, QV4::Value::undefinedValue()));
        }
        static v8::Handle<v8::Value> createWithGlobal(QV8Engine *engine, QObject *object, 
                                                      v8::Handle<v8::Value> *objectHandle, 
                                                      int index) { 
-           QV4::Value argv[] = {
-               objectHandle ? (*objectHandle)->v4Value() : engine->newQObject(object),
-               QV4::Value::fromInt32(index),
-               QV4::Value::fromObject(QV8Engine::getV4(engine)->qmlContextObject())
-           };
-           Q_ASSERT(argv[0].isObject());
            QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-           QV4::FunctionObject *f = engine->qobjectWrapper()->m_methodConstructor.value().asFunctionObject();
-           QV4::Value result = f->call(v4->current, engine->global(), argv, 3);
-           // Hack to allow us to identify these functions
-           result.asObject()->defineReadonlyProperty(v4->newString("__creator__"), engine->qobjectWrapper()->m_hiddenObject);
-           return result;
+           return QV4::Value::fromObject(new (v4->memoryManager) QV4::QObjectMethod(v4->rootContext, object, index, QV4::Value::fromObject(QV8Engine::getV4(engine)->qmlContextObject())));
        }
     };
 
@@ -1042,18 +1004,10 @@ QPair<QObject *, int> QV8QObjectWrapper::ExtractQtSignal(QV8Engine *engine, v8::
 QPair<QObject *, int> QV8QObjectWrapper::ExtractQtMethod(QV8Engine *engine, v8::Handle<v8::Function> function)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    if (__qmljs_strict_equal(function->v4Value().asObject()->get(v4->newString("__creator__")),
-                             engine->qobjectWrapper()->m_hiddenObject)) {
-        // This is one of our special QObject method wrappers
-        v8::Handle<v8::Value> args[] = { engine->qobjectWrapper()->m_hiddenObject.value() };
-        v8::Handle<v8::Value> data = function->Call(v8::Value::fromV4Value(engine->global()), 1, args);
-
-        if (data->IsArray()) {
-            v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast(data);
-            return qMakePair(engine->toQObject(array->Get(0)->v4Value()), array->Get(1)->Int32Value());
-        } 
-
-        // In theory this can't fall through, but I suppose V8 might run out of memory or something
+    QV4::FunctionObject *v4Function = function->v4Value().asFunctionObject();
+    if (v4Function->subtype == QV4::FunctionObject::WrappedQtMethod) {
+        QObjectMethod *method = static_cast<QObjectMethod*>(v4Function);
+        return qMakePair(method->object(), method->methodIndex());
     }
 
     return qMakePair((QObject *)0, -1);
@@ -1377,13 +1331,13 @@ QV4::Value QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
 namespace {
 struct CallArgs
 {
-    CallArgs(int length, v8::Handle<v8::Object> *args) : _length(length), _args(args) {}
+    CallArgs(int length, QV4::Value *args) : _length(length), _args(args) {}
     int Length() const { return _length; }
-    v8::Handle<v8::Value> operator[](int idx) { return (*_args)->Get(idx); }
+    v8::Handle<v8::Value> operator[](int idx) { return _args[idx]; }
 
 private:
     int _length;
-    v8::Handle<v8::Object> *_args;
+    QV4::Value *_args;
 };
 }
 
@@ -1761,75 +1715,6 @@ static QV4::Value CallOverloaded(QObject *object, const QQmlPropertyData &data,
     }
 }
 
-QV4::Value QV8QObjectWrapper::Invoke(const v8::Arguments &args)
-{
-    // object, index, qmlglobal, argCount, args
-    Q_ASSERT(args.Length() == 5);
-    Q_ASSERT(args[0]->IsObject());
-
-    QV4::QObjectWrapper *wrapper = args[0]->v4Value().asQObjectWrapper();
-
-    if (!wrapper)
-        return QV4::Value::undefinedValue();
-
-    int argCount = args[3]->Int32Value();
-    v8::Handle<v8::Object> arguments = v8::Handle<v8::Object>::Cast(args[4]);
-
-    // Special hack to return info about this closure.
-    if (argCount == 1 && arguments->Get(0)->StrictEquals(wrapper->v8Engine->qobjectWrapper()->m_hiddenObject.value())) {
-        v8::Handle<v8::Array> data = v8::Array::New(2);
-        data->Set(0, args[0]);
-        data->Set(1, args[1]);
-        return data->v4Value();
-    }
-
-    QObject *object = wrapper->object;
-    int index = args[1]->Int32Value();
-
-    if (!object)
-        return QV4::Value::undefinedValue();
-
-    QQmlPropertyData method;
-
-    if (QQmlData *ddata = static_cast<QQmlData *>(QObjectPrivate::get(object)->declarativeData)) {
-        if (ddata->propertyCache) {
-            QQmlPropertyData *d = ddata->propertyCache->method(index);
-            if (!d) 
-                return QV4::Value::undefinedValue();
-            method = *d;
-        } 
-    }
-
-    if (method.coreIndex == -1) {
-        method.load(object->metaObject()->method(index));
-
-        if (method.coreIndex == -1)
-            return QV4::Value::undefinedValue();
-    }
-
-    if (method.isV4Function()) {
-        QV4::Value rv = QV4::Value::undefinedValue();
-        v8::Handle<v8::Value> qmlglobal = args[2];
-
-        QQmlV4Function func(argCount, arguments->v4Value(), &rv, qmlglobal->v4Value(),
-                                    wrapper->v8Engine->contextWrapper()->context(qmlglobal),
-                                    wrapper->v8Engine);
-        QQmlV4Function *funcptr = &func;
-
-        void *args[] = { 0, &funcptr };
-        QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, method.coreIndex, args);
-
-        return rv;
-    }
-
-    CallArgs callArgs(argCount, &arguments);
-    if (!method.isOverload()) {
-        return CallPrecise(object, method, wrapper->v8Engine, callArgs);
-    } else {
-        return CallOverloaded(object, method, wrapper->v8Engine, callArgs);
-    }
-}
-
 CallArgument::CallArgument()
 : type(QVariant::Invalid)
 {
@@ -2055,6 +1940,77 @@ QV4::Value CallArgument::toValue(QV8Engine *engine)
         return QV4::Value::undefinedValue();
     }
 }
+
+QObjectMethod::QObjectMethod(ExecutionContext *scope, QObject *object, int index, const Value &qmlGlobal)
+    : FunctionObject(scope)
+    , m_object(object)
+    , m_index(index)
+    , m_qmlGlobal(qmlGlobal)
+{
+    vtbl = &static_vtbl;
+    subtype = WrappedQtMethod;
+}
+
+Value QObjectMethod::call(Managed *m, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
+{
+    QObjectMethod *This = static_cast<QObjectMethod*>(m);
+    return This->callInternal(context, thisObject, args, argc);
+}
+
+Value QObjectMethod::callInternal(ExecutionContext *context, const Value &thisObject, Value *args, int argc)
+{
+    // object, index, qmlglobal, argCount, args
+    QObject *object = m_object.data();
+    if (!object)
+        return QV4::Value::undefinedValue();
+
+    QQmlData *ddata = QQmlData::get(object);
+    if (!ddata)
+        return QV4::Value::undefinedValue();
+
+    QV8Engine *v8Engine = QV8Engine::get(context->engine->publicEngine);
+
+    QQmlPropertyData method;
+
+    if (QQmlData *ddata = static_cast<QQmlData *>(QObjectPrivate::get(object)->declarativeData)) {
+        if (ddata->propertyCache) {
+            QQmlPropertyData *d = ddata->propertyCache->method(m_index);
+            if (!d)
+                return QV4::Value::undefinedValue();
+            method = *d;
+        }
+    }
+
+    if (method.coreIndex == -1) {
+        method.load(object->metaObject()->method(m_index));
+
+        if (method.coreIndex == -1)
+            return QV4::Value::undefinedValue();
+    }
+
+    if (method.isV4Function()) {
+        QV4::Value rv = QV4::Value::undefinedValue();
+
+        QQmlV4Function func(argc, args, &rv, m_qmlGlobal.value(),
+                            v8Engine->contextWrapper()->context(m_qmlGlobal.value()),
+                            v8Engine);
+        QQmlV4Function *funcptr = &func;
+
+        void *args[] = { 0, &funcptr };
+        QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, method.coreIndex, args);
+
+        return rv;
+    }
+
+    CallArgs callArgs(argc, args);
+    if (!method.isOverload()) {
+        return CallPrecise(object, method, v8Engine, callArgs);
+    } else {
+        return CallOverloaded(object, method, v8Engine, callArgs);
+    }
+}
+
+DEFINE_MANAGED_VTABLE(QObjectMethod);
 
 #include "qv8qobjectwrapper_p_jsclass.cpp"
 

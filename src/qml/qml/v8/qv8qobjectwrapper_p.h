@@ -65,7 +65,7 @@
 #include "qv8objectresource_p.h"
 
 #include <private/qv4value_p.h>
-#include <private/qv4object_p.h>
+#include <private/qv4functionobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -102,6 +102,30 @@ private:
     static void destroy(Managed *that)
     {
         static_cast<QObjectWrapper *>(that)->~QObjectWrapper();
+    }
+
+    static const QV4::ManagedVTable static_vtbl;
+};
+
+struct QObjectMethod : public QV4::FunctionObject
+{
+    QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const QV4::Value &qmlGlobal);
+
+    int methodIndex() const { return m_index; }
+    QObject *object() const { return m_object.data(); }
+
+private:
+    QQmlGuard<QObject> m_object;
+    int m_index;
+    QV4::PersistentValue m_qmlGlobal;
+
+    static Value call(Managed *, ExecutionContext *context, const Value &thisObject, Value *args, int argc);
+
+    Value callInternal(ExecutionContext *context, const Value &thisObject, Value *args, int argc);
+
+    static void destroy(Managed *that)
+    {
+        static_cast<QObjectMethod *>(that)->~QObjectMethod();
     }
 
     static const QV4::ManagedVTable static_vtbl;
@@ -150,16 +174,13 @@ private:
                             v8::Handle<v8::Value>, QV8QObjectWrapper::RevisionMode);
     static QV4::Value Connect(const v8::Arguments &args);
     static QV4::Value Disconnect(const v8::Arguments &args);
-    static QV4::Value Invoke(const v8::Arguments &args);
     static QPair<QObject *, int> ExtractQtMethod(QV8Engine *, v8::Handle<v8::Function>);
     static QPair<QObject *, int> ExtractQtSignal(QV8Engine *, v8::Handle<v8::Object>);
     static void WeakQObjectReferenceCallback(QV4::PersistentValue &handle, void *wrapper);
 
     QV8Engine *m_engine;
     quint32 m_id;
-    QV4::PersistentValue m_methodConstructor;
     QV4::PersistentValue m_signalHandlerConstructor;
-    QV4::PersistentValue m_hiddenObject;
     QHash<QObject *, QV8QObjectConnectionList *> m_connections;
     typedef QHash<QObject *, QV8QObjectInstance *> TaintedHash;
     TaintedHash m_taintedObjects;
