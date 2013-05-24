@@ -47,6 +47,7 @@
 #include "qqmlcontext_p.h"
 #include "qqmlscriptstring_p.h"
 #include "qqmlcompiler_p.h"
+#include <private/qv8engine_p.h>
 
 #include <QtCore/qdebug.h>
 
@@ -259,15 +260,15 @@ void QQmlExpression::setExpression(const QString &expression)
 }
 
 // Must be called with a valid handle scope
-v8::Handle<v8::Value> QQmlExpressionPrivate::v8value(bool *isUndefined)
+QV4::Value QQmlExpressionPrivate::v4value(bool *isUndefined)
 {
     if (!expressionFunctionValid) {
-        v8function = qmlBinding(context(), scopeObject(), expression, url, line, &v8qmlscope);
+        function = qmlBinding(context(), scopeObject(), expression, url, line, &qmlscope);
         setUseSharedContext(false);
         expressionFunctionValid = true;
     }
 
-    return evaluate(context(), v8function.value(), isUndefined);
+    return evaluate(context(), function.value(), isUndefined);
 }
 
 QVariant QQmlExpressionPrivate::value(bool *isUndefined)
@@ -285,8 +286,8 @@ QVariant QQmlExpressionPrivate::value(bool *isUndefined)
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
     {
-        v8::Handle<v8::Value> result = v8value(isUndefined);
-        rv = ep->v8engine()->toVariant(result->v4Value(), -1);
+        QV4::Value result = v4value(isUndefined);
+        rv = ep->v8engine()->toVariant(result, -1);
     }
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.

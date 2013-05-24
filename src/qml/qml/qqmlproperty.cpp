@@ -1535,7 +1535,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
 
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(core.coreIndex, result);
+        vmemo->setVMEProperty(core.coreIndex, result->v4Value());
     } else if (isUndefined && core.isResettable()) {
         void *args[] = { 0 };
         QMetaObject::metacall(object, QMetaObject::ResetProperty, core.coreIndex, args);

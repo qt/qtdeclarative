@@ -55,7 +55,6 @@
 
 #include "qqmlexpression.h"
 
-#include <private/qv8engine_p.h>
 #include <private/qqmlguard_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qfieldlist_p.h>
@@ -83,7 +82,7 @@ public:
 
     QVariant value(bool *isUndefined = 0);
 
-    v8::Handle<v8::Value> v8value(bool *isUndefined = 0);
+    QV4::Value v4value(bool *isUndefined = 0);
 
     static inline QQmlExpressionPrivate *get(QQmlExpression *expr);
     static inline QQmlExpression *get(QQmlExpressionPrivate *expr);
@@ -99,8 +98,8 @@ public:
 
     QString expression;
 
-    QV4::PersistentValue v8qmlscope;
-    QV4::PersistentValue v8function;
+    QV4::PersistentValue qmlscope;
+    QV4::PersistentValue function;
 
     QString url; // This is a QString for a reason.  QUrls are slooooooow...
     quint16 line;

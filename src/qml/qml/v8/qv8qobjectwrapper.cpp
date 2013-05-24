@@ -763,7 +763,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
         // allow assignment of "special" values (null, undefined, function) to var properties
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(property->coreIndex, value);
+        vmemo->setVMEProperty(property->coreIndex, value->v4Value());
         return;
     }
 
@@ -807,7 +807,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     } else if (property->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(property->coreIndex, value);
+        vmemo->setVMEProperty(property->coreIndex, value->v4Value());
     } else {
         QVariant v;
         if (property->isQList()) 

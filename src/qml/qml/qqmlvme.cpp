@@ -292,12 +292,12 @@ static QVariant variantFromString(const QString &string)
 
 #define QML_STORE_VAR(name, value) \
     QML_BEGIN_INSTR(name) \
-        v8::Handle<v8::Value> v8value = value; \
+        QV4::Value v4value = value; \
         QObject *target = objects.top(); \
         CLEAN_PROPERTY(target, instr.propertyIndex); \
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(target); \
         Q_ASSERT(vmemo); \
-        vmemo->setVMEProperty(instr.propertyIndex, v8value); \
+        vmemo->setVMEProperty(instr.propertyIndex, v4value); \
     QML_END_INSTR(name)
 
 #define QML_STORE_POINTER(name, value) \
