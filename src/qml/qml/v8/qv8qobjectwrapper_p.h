@@ -159,10 +159,6 @@ private:
     quint32 m_id;
     QV4::PersistentValue m_methodConstructor;
     QV4::PersistentValue m_signalHandlerConstructor;
-    QV4::PersistentValue m_toStringSymbol;
-    QV4::PersistentValue m_destroySymbol;
-    QHashedV4String m_toStringString;
-    QHashedV4String m_destroyString;
     QV4::PersistentValue m_hiddenObject;
     QHash<QObject *, QV8QObjectConnectionList *> m_connections;
     typedef QHash<QObject *, QV8QObjectInstance *> TaintedHash;
@@ -174,7 +170,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHas
                                                      QQmlContextData *context, RevisionMode mode)
 {
     QQmlData *dd = QQmlData::get(object, false);
-    if (!dd || !dd->propertyCache || m_toStringString == string || m_destroyString == string ||
+    if (!dd || !dd->propertyCache ||
         dd->propertyCache->property(string, object, context)) {
         return GetProperty(m_engine, object, 0, string, context, mode);
     } else {
@@ -186,7 +182,7 @@ bool QV8QObjectWrapper::setProperty(QObject *object, const QHashedV4String &stri
                                     QQmlContextData *context, v8::Handle<v8::Value> value, RevisionMode mode)
 {
     QQmlData *dd = QQmlData::get(object, false);
-    if (!dd || !dd->propertyCache || m_toStringString == string || m_destroyString == string ||
+    if (!dd || !dd->propertyCache ||
         dd->propertyCache->property(string, object, context)) {
         return SetProperty(m_engine, object, string, context, value, mode);
     } else {

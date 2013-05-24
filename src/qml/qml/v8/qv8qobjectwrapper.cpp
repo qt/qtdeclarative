@@ -257,9 +257,6 @@ QV4::Value QObjectWrapper::enumerateProperties(Object *object)
 
 DEFINE_MANAGED_VTABLE(QObjectWrapper);
 
-#define QOBJECT_TOSTRING_INDEX -2
-#define QOBJECT_DESTROY_INDEX -3
-
 // XXX TODO: Need to review all calls to QQmlEngine *engine() to confirm QObjects work
 // correctly in a worker thread
 
@@ -438,23 +435,12 @@ static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, double v)
 static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *e, QObject *v)
 { return e->newQObject(v); }
 
-static quint32 toStringHash = quint32(-1);
-static quint32 destroyHash = quint32(-1);
-
 void QV8QObjectWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    m_toStringSymbol = QV4::Value::fromString(v4->newIdentifier("toString"));
-    m_destroySymbol = QV4::Value::fromString(v4->newIdentifier("destroy"));
     m_hiddenObject = QV4::Value::fromObject(v4->newObject());
-
-    m_toStringString = QHashedV4String(m_toStringSymbol.value());
-    m_destroyString = QHashedV4String(m_destroySymbol.value());
-
-    toStringHash = m_toStringString.hash();
-    destroyHash = m_destroyString.hash();
 
     {
 #define CREATE_FUNCTION_SOURCE \
@@ -637,16 +623,6 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
 
     if (QQmlData::wasDeleted(object))
         return v8::Handle<v8::Value>();
-
-    {
-        // Comparing the hash first actually makes a measurable difference here, at least on x86
-        quint32 hash = property.hash();
-        if (hash == toStringHash && engine->qobjectWrapper()->m_toStringString == property) {
-            return MethodClosure::create(engine, object, objectHandle, QOBJECT_TOSTRING_INDEX);
-        } else if (hash == destroyHash && engine->qobjectWrapper()->m_destroyString == property) {
-            return MethodClosure::create(engine, object, objectHandle, QOBJECT_DESTROY_INDEX);
-        }
-    }
 
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
@@ -838,10 +814,6 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
 bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QHashedV4String &property, QQmlContextData *context,
                                     v8::Handle<v8::Value> value, QV8QObjectWrapper::RevisionMode revisionMode)
 {
-    if (engine->qobjectWrapper()->m_toStringString == property ||
-        engine->qobjectWrapper()->m_destroyString == property)
-        return true;
-
     if (QQmlData::wasDeleted(object))
         return false;
 
@@ -1789,51 +1761,6 @@ static QV4::Value CallOverloaded(QObject *object, const QQmlPropertyData &data,
     }
 }
 
-static QV4::Value ToString(QV8Engine *engine, QObject *object, int, v8::Handle<v8::Object>)
-{
-    QString result;
-    if (object) {
-        QString objectName = object->objectName();
-
-        result += QString::fromUtf8(object->metaObject()->className());
-        result += QLatin1String("(0x");
-        result += QString::number((quintptr)object,16);
-
-        if (!objectName.isEmpty()) {
-            result += QLatin1String(", \"");
-            result += objectName;
-            result += QLatin1Char('\"');
-        }
-
-        result += QLatin1Char(')');
-    } else {
-        result = QLatin1String("null");
-    }
-
-    return engine->toString(result);
-}
-
-static QV4::Value Destroy(QV8Engine *, QObject *object, int argCount, v8::Handle<v8::Object> args)
-{
-    QQmlData *ddata = QQmlData::get(object, false);
-    if (!ddata || ddata->indestructible || ddata->rootObjectInCreation) {
-        const char *error = "Invalid attempt to destroy() an indestructible object";
-        v8::ThrowException(v8::Exception::Error(v8::String::New(error)));
-        return QV4::Value::undefinedValue();
-    }
-
-    int delay = 0;
-    if (argCount > 0)
-        delay = args->Get(0)->Uint32Value();
-
-    if (delay > 0)
-        QTimer::singleShot(delay, object, SLOT(deleteLater()));
-    else
-        object->deleteLater();
-
-    return QV4::Value::undefinedValue();
-}
-
 QV4::Value QV8QObjectWrapper::Invoke(const v8::Arguments &args)
 {
     // object, index, qmlglobal, argCount, args
@@ -1861,17 +1788,6 @@ QV4::Value QV8QObjectWrapper::Invoke(const v8::Arguments &args)
 
     if (!object)
         return QV4::Value::undefinedValue();
-
-    if (index < 0) {
-        // Builtin functions
-        if (index == QOBJECT_TOSTRING_INDEX) {
-            return ToString(wrapper->v8Engine, object, argCount, arguments);
-        } else if (index == QOBJECT_DESTROY_INDEX) {
-            return Destroy(wrapper->v8Engine, object, argCount, arguments);
-        } else {
-            return QV4::Value::undefinedValue();
-        }
-    }
 
     QQmlPropertyData method;
 
