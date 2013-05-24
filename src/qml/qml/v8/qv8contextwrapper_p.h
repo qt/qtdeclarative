@@ -85,8 +85,6 @@ public:
     QQmlContextData *callingContext();
     QQmlContextData *context(v8::Handle<v8::Value>);
 
-    inline QV4::Value sharedContext() const;
-
     void takeContextOwnership(v8::Handle<v8::Object> qmlglobal);
 
 private:
@@ -104,13 +102,8 @@ private:
     QV8Engine *m_engine;
     QV4::PersistentValue m_constructor;
     QV4::PersistentValue m_urlConstructor;
-    QV4::PersistentValue m_sharedContext;
 };
 
-QV4::Value QV8ContextWrapper::sharedContext() const
-{
-    return m_sharedContext;
-}
 
 QT_END_NAMESPACE
 

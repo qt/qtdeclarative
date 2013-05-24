@@ -161,13 +161,6 @@ void QV8ContextWrapper::init(QV8Engine *engine)
     ft->InstanceTemplate()->SetFallbackPropertyHandler(NullGetter, NullSetter);
     m_urlConstructor = ft->GetFunction()->v4Value();
     }
-    {
-    v8::Handle<v8::Object> sharedContext = m_constructor.value().asFunctionObject()->newInstance();
-    QV8ContextResource *r = new QV8ContextResource(engine, 0, 0);
-    r->isSharedContext = true;
-    sharedContext->SetExternalResource(r);
-    m_sharedContext = sharedContext->v4Value();
-    }
 }
 
 QV4::Value QV8ContextWrapper::qmlScope(QQmlContextData *ctxt, QObject *scope)
