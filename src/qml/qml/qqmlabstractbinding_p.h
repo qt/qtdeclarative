@@ -91,7 +91,7 @@ public:
 
     typedef QWeakPointer<QQmlAbstractBinding> Pointer;
 
-    enum BindingType { Binding = 0, V8 = 1, ValueTypeProxy = 2 };
+    enum BindingType { Binding = 0, ValueTypeProxy = 1 };
     inline BindingType bindingType() const;
 
     // Destroy the binding.  Use this instead of calling delete.

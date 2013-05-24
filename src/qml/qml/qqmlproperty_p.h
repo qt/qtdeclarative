@@ -119,8 +119,6 @@ public:
     static QQmlAbstractBinding *setBindingNoEnable(QObject *, int coreIndex,
                                                            int valueTypeIndex /* -1 */,
                                                            QQmlAbstractBinding *);
-    static QQmlAbstractBinding *activateSharedBinding(QQmlContextData *context,
-                                                      int sharedIdx, WriteFlags flags);
     static QQmlAbstractBinding *binding(QObject *, int coreIndex,
                                                 int valueTypeIndex /* -1 */);
 

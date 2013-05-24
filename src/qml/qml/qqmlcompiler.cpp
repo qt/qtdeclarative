@@ -921,18 +921,6 @@ void QQmlCompiler::compileTree(QQmlScript::Object *tree)
         output->addInstruction(import);
     }
 
-    if (!compileState->v8BindingProgram.isEmpty()) {
-        Instruction::InitV8Bindings bindings;
-        int index = output->programs.count();
-
-        typedef QQmlCompiledData::V8Program V8Program;
-        output->programs.append(V8Program(compileState->v8BindingProgram, output));
-
-        bindings.programIndex = index;
-        bindings.line = compileState->v8BindingProgramLine;
-        output->addInstruction(bindings);
-    }
-
     genObject(tree);
 
     Instruction::SetDefault def;
@@ -1454,18 +1442,6 @@ void QQmlCompiler::genComponent(QQmlScript::Object *obj)
     else
         init.compiledBinding = output->indexForByteArray(compileState->compiledBindingData);
     output->addInstruction(init);
-
-    if (!compileState->v8BindingProgram.isEmpty()) {
-        Instruction::InitV8Bindings bindings;
-        int index = output->programs.count();
-
-        typedef QQmlCompiledData::V8Program V8Program;
-        output->programs.append(V8Program(compileState->v8BindingProgram, output));
-
-        bindings.programIndex = index;
-        bindings.line = compileState->v8BindingProgramLine;
-        output->addInstruction(bindings);
-    }
 
     genObject(root);
 
@@ -3544,34 +3520,7 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
         output->addInstruction(store);
     } else
 #endif
-    if (ref.dataType == BindingReference::V8) {
-        const JSBindingReference &js = static_cast<const JSBindingReference &>(ref);
-
-        Instruction::StoreV8Binding store;
-        store.value = js.sharedIndex;
-        store.context = js.bindingContext.stack;
-        store.owner = js.bindingContext.owner;
-        store.isAlias = prop->isAlias;
-        store.isSafe = js.isSafe;
-        if (valueTypeProperty) {
-            store.isRoot = (compileState->root == valueTypeProperty->parent);
-        } else {
-            store.isRoot = (compileState->root == obj);
-        }
-        store.isFallback = js.compiledIndex > -1;
-        store.line = binding->location.start.line;
-        store.column = binding->location.start.column;
-
-        Q_ASSERT(js.bindingContext.owner == 0 ||
-                 (js.bindingContext.owner != 0 && valueTypeProperty));
-        if (js.bindingContext.owner) {
-            store.property = genValueTypeData(prop, valueTypeProperty);
-        } else {
-            store.property = prop->core;
-        }
-
-        output->addInstruction(store);
-    } else if (ref.dataType == BindingReference::QtScript) {
+    if (ref.dataType == BindingReference::QtScript) {
         const JSBindingReference &js = static_cast<const JSBindingReference &>(ref);
 
         Instruction::StoreBinding store;
@@ -3635,8 +3584,6 @@ bool QQmlCompiler::completeComponentBuild()
          aliasObject = compileState->aliasingObjects.next(aliasObject)) 
         COMPILE_CHECK(buildDynamicMetaAliases(aliasObject));
 
-    QList<JSBindingReference*> sharedBindings;
-
     for (JSBindingReference *b = compileState->bindings.first(); b; b = b->nextReference) {
 
         JSBindingReference &binding = *b;
@@ -3651,60 +3598,11 @@ bool QQmlCompiler::completeComponentBuild()
         binding.rewrittenExpression = rewriteBinding(binding.expression.asAST(), expression, &isSharable, &isSafe);
         binding.isSafe = isSafe;
 
-        if (isSharable && binding.property->type != qMetaTypeId<QQmlBinding*>()) {
-            sharedBindings.append(b);
+        binding.dataType = BindingReference::QtScript;
 
-            binding.dataType = BindingReference::V8;
-            binding.compiledIndex = -1;
-
-            if (componentStats)
-                componentStats->componentStat.sharedBindings.append(b->value->location);
-        } else {
-            binding.dataType = BindingReference::QtScript;
-
-            if (componentStats)
-                componentStats->componentStat.scriptBindings.append(b->value->location);
-        }
+        if (componentStats)
+            componentStats->componentStat.scriptBindings.append(b->value->location);
     }
-
-    if (!sharedBindings.isEmpty()) {
-        struct Sort {
-            static bool lt(const JSBindingReference *lhs, const JSBindingReference *rhs)
-            {
-                return lhs->value->location.start.line < rhs->value->location.start.line;
-            }
-        };
-
-        qSort(sharedBindings.begin(), sharedBindings.end(), Sort::lt);
-
-        int startLineNumber = sharedBindings.at(0)->value->location.start.line;
-        int lineNumber = startLineNumber;
-
-        QByteArray functionArray("[", 1);
-        for (int ii = 0; ii < sharedBindings.count(); ++ii) {
-
-            JSBindingReference *reference = sharedBindings.at(ii);
-            QQmlScript::Value *value = reference->value;
-            const QString &expression = reference->rewrittenExpression;
-
-            if (ii != 0) functionArray.append(",", 1);
-
-            while (lineNumber < value->location.start.line) {
-                lineNumber++;
-                functionArray.append("\n", 1);
-            }
-
-            functionArray += expression.toUtf8();
-            lineNumber += expression.count(QLatin1Char('\n'));
-
-            reference->sharedIndex = ii;
-        }
-        functionArray.append("]", 1);
-
-        compileState->v8BindingProgram = functionArray;
-        compileState->v8BindingProgramLine = startLineNumber;
-    }
-
 
     // Check pop()'s matched push()'s
     Q_ASSERT(compileState->objectDepth.depth() == 0);
@@ -3724,44 +3622,6 @@ void QQmlCompiler::dumpStats()
         qWarning().nospace() << "    Component Line " << stat.lineNumber;
         qWarning().nospace() << "        Total Objects:      " << stat.objects;
         qWarning().nospace() << "        IDs Used:           " << stat.ids;
-        qWarning().nospace() << "        Optimized Bindings: " << stat.optimizedBindings.count();
-
-        {
-        QByteArray output;
-        for (int ii = 0; ii < stat.optimizedBindings.count(); ++ii) {
-            if (0 == (ii % 10)) {
-                if (ii) output.append("\n");
-                output.append("            ");
-            }
-
-            output.append('(');
-            output.append(QByteArray::number(stat.optimizedBindings.at(ii).start.line));
-            output.append(':');
-            output.append(QByteArray::number(stat.optimizedBindings.at(ii).start.column));
-            output.append(") ");
-        }
-        if (!output.isEmpty())
-            qWarning().nospace() << output.constData();
-        }
-
-        qWarning().nospace() << "        Shared Bindings:    " << stat.sharedBindings.count();
-        {
-        QByteArray output;
-        for (int ii = 0; ii < stat.sharedBindings.count(); ++ii) {
-            if (0 == (ii % 10)) {
-                if (ii) output.append('\n');
-                output.append("            ");
-            }
-
-            output.append('(');
-            output.append(QByteArray::number(stat.sharedBindings.at(ii).start.line));
-            output.append(':');
-            output.append(QByteArray::number(stat.sharedBindings.at(ii).start.column));
-            output.append(") ");
-        }
-        if (!output.isEmpty())
-            qWarning().nospace() << output.constData();
-        }
 
         qWarning().nospace() << "        QScript Bindings:   " << stat.scriptBindings.count();
         {

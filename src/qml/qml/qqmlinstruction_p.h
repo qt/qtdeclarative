@@ -116,9 +116,7 @@ QT_BEGIN_NAMESPACE
     F(StoreImportedScript, storeScript) \
     F(StoreScriptString, storeScriptString) \
     F(BeginObject, begin) \
-    F(InitV8Bindings, initV8Bindings) \
     F(StoreBinding, assignBinding) \
-    F(StoreV8Binding, assignBinding) \
     F(StoreValueSource, assignValueSource) \
     F(StoreValueInterceptor, assignValueInterceptor) \
     F(StoreObjectQList, common) \
@@ -235,11 +233,6 @@ union QQmlInstruction
         QML_INSTR_HEADER
         QQmlPropertyRawData property;
         int castValue;
-    };
-    struct instr_initV8Bindings {
-        QML_INSTR_HEADER
-        ushort programIndex;
-        ushort line;
     };
     struct instr_assignBinding {
         QML_INSTR_HEADER
@@ -496,7 +489,6 @@ union QQmlInstruction
     instr_setId setId;
     instr_assignValueSource assignValueSource;
     instr_assignValueInterceptor assignValueInterceptor;
-    instr_initV8Bindings initV8Bindings;
     instr_assignBinding assignBinding;
     instr_fetch fetch;
     instr_fetchValue fetchValue;

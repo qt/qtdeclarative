@@ -57,13 +57,13 @@
 #include "qqmlcomponent_p.h"
 #include "qqmlvmemetaobject_p.h"
 #include "qqmlcontext_p.h"
-#include <private/qv8bindings_p.h>
 #include "qqmlglobal_p.h"
 #include <private/qfinitestack_p.h>
 #include "qqmlscriptstring.h"
 #include "qqmlscriptstring_p.h"
 #include "qqmlpropertyvalueinterceptor_p.h"
 #include "qqmlvaluetypeproxybinding_p.h"
+#include "qqmlexpression_p.h"
 
 #include <QStack>
 #include <QPointF>
@@ -792,10 +792,6 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             status->classBegin();
         QML_END_INSTR(BeginObject)
 
-        QML_BEGIN_INSTR(InitV8Bindings)
-            CTXT->v8bindings = new QV8Bindings(&PROGRAMS[instr.programIndex], instr.line, CTXT);
-        QML_END_INSTR(InitV8Bindings)
-
         QML_BEGIN_INSTR(StoreBinding)
             QObject *target = 
                 objects.at(objects.count() - 1 - instr.owner);
@@ -829,47 +825,6 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 bind->addToObject();
             }
         QML_END_INSTR(StoreBinding)
-
-        QML_BEGIN_INSTR(StoreV8Binding)
-            QObject *target = 
-                objects.at(objects.count() - 1 - instr.owner);
-            QObject *scope = 
-                objects.at(objects.count() - 1 - instr.context);
-
-            int coreIndex = instr.property.coreIndex;
-
-            if (instr.isRoot && BINDINGSKIPLIST.testBit(coreIndex))
-                QML_NEXT_INSTR(StoreV8Binding);
-
-            QQmlAbstractBinding *binding = CTXT->v8bindings->configBinding(target, scope,
-                                                                                   &instr);
-            if (binding && !instr.isFallback) {
-                bindValues.push(binding);
-                binding->m_mePtr = &bindValues.top();
-
-                if (instr.isAlias) {
-                    QQmlAbstractBinding *old =
-                        QQmlPropertyPrivate::setBindingNoEnable(target, coreIndex,
-                                                                instr.property.getValueTypeCoreIndex(),
-                                                                binding);
-                    if (old) { old->destroy(); }
-                } else {
-                    typedef QQmlPropertyPrivate QDPP;
-                    Q_ASSERT(binding->propertyIndex() == QDPP::bindingIndex(instr.property));
-                    Q_ASSERT(binding->object() == target);
-
-                    CLEAN_PROPERTY(target, QDPP::bindingIndex(instr.property));
-
-                    binding->addToObject();
-
-                    if (instr.isSafe && !instr.property.isValueTypeVirtual()) {
-                        QQmlData *data = QQmlData::get(target);
-                        Q_ASSERT(data);
-                        data->setPendingBindingBit(target, coreIndex);
-                    }
-                }
-            }
-        QML_END_INSTR(StoreV8Binding)
 
         QML_BEGIN_INSTR(StoreValueSource)
             QObject *obj = objects.pop();

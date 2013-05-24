@@ -57,7 +57,6 @@
 #include "qqmlexpression_p.h"
 #include "qqmlvaluetypeproxybinding_p.h"
 #include <private/qjsvalue_p.h>
-#include <private/qv8bindings_p.h>
 
 #include <QStringList>
 #include <private/qmetaobject_p.h>
@@ -939,31 +938,6 @@ QQmlPropertyPrivate::setBindingNoEnable(QObject *object, int coreIndex, int valu
     }
 
     return binding;
-}
-
-/*!
-    Activates a shared binding which was previously created but not added to the
-    object.  This is needed when an optimized binding is invalidated.
-*/
-QQmlAbstractBinding *QQmlPropertyPrivate::activateSharedBinding(QQmlContextData *context,
-                                                                int sharedIdx, WriteFlags flags)
-{
-    QQmlAbstractBinding *newBinding = 0;
-    newBinding = context->v8bindings->binding(sharedIdx);
-
-    if (!newBinding)
-        return newBinding;
-
-    // This binding now references the bindings object
-    context->v8bindings->addref();
-
-    QObject *object = newBinding->object();
-    int pi = newBinding->propertyIndex();
-
-    int core = pi & 0x0000FFFF;
-    int vt = (pi & 0xFFFF0000)?(pi >> 16):-1;
-
-    return setBinding(object, core, vt, newBinding, flags);
 }
 
 /*!

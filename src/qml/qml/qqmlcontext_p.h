@@ -75,7 +75,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QV8Bindings;
 class QQmlContext;
 class QQmlExpression;
 class QQmlEngine;
@@ -209,8 +208,6 @@ public:
     // Linked list of uses of the Component attached property in this
     // context
     QQmlComponentAttached *componentAttached;
-
-    QV8Bindings *v8bindings;
 
     // Return the outermost id for obj, if any.
     QString findObjectId(const QObject *obj) const;

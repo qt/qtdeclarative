@@ -187,7 +187,7 @@ namespace QQmlCompilerTypes {
 
     struct BindingReference
     {
-        enum DataType { QtScript, V8,
+        enum DataType { QtScript,
                         Tr, TrId };
         DataType dataType;
     };
@@ -255,7 +255,7 @@ namespace QQmlCompilerTypes {
     {
         ComponentCompileState() 
         : parserStatusCount(0), totalBindingsCount(0), pushedProperties(0), nested(false), 
-          v8BindingProgramLine(-1), root(0) {}
+          root(0) {}
 
         IdList ids;
         int parserStatusCount;
@@ -264,8 +264,6 @@ namespace QQmlCompilerTypes {
         bool nested;
 
         QByteArray compiledBindingData;
-        QByteArray v8BindingProgram;
-        int v8BindingProgramLine;
 
         DepthStack objectDepth;
         DepthStack listDepth;
@@ -446,8 +444,6 @@ private:
 
         int ids;
         QList<QQmlScript::LocationSpan> scriptBindings;
-        QList<QQmlScript::LocationSpan> sharedBindings;
-        QList<QQmlScript::LocationSpan> optimizedBindings;
         int objects;
     };
     struct ComponentStats : public QQmlPool::Class

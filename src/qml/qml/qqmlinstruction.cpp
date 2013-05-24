@@ -221,14 +221,8 @@ void QQmlCompiledData::dump(QQmlInstruction *instr, int idx)
     case QQmlInstruction::AssignCustomType:
         qWarning().nospace() << idx << "\t\t" << "ASSIGN_CUSTOMTYPE\t" << instr->assignCustomType.propertyIndex << "\t" << instr->assignCustomType.primitive << "\t" << instr->assignCustomType.type;
         break;
-    case QQmlInstruction::InitV8Bindings:
-        qWarning().nospace() << idx << "\t\t" << "INIT_V8_BINDING\t" << instr->initV8Bindings.programIndex << "\t" << instr->initV8Bindings.line;
-        break;
     case QQmlInstruction::StoreBinding:
         qWarning().nospace() << idx << "\t\t" << "STORE_BINDING\t" << instr->assignBinding.property.coreIndex << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
-        break;
-    case QQmlInstruction::StoreV8Binding:
-        qWarning().nospace() << idx << "\t\t" << "STORE_V8_BINDING\t" << instr->assignBinding.property.coreIndex << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
         break;
     case QQmlInstruction::StoreValueSource:
         qWarning().nospace() << idx << "\t\t" << "STORE_VALUE_SOURCE\t" << instr->assignValueSource.property.coreIndex << "\t" << instr->assignValueSource.castValue;
