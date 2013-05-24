@@ -976,10 +976,8 @@ QV4::Value QQmlVMEMetaObject::method(int index)
         // XXX We should evaluate all methods in a single big script block to 
         // improve the call time between dynamic methods defined on the same
         // object
-        v8methods[index] = QQmlExpressionPrivate::evalFunction(ctxt, object, body,
-                                                                       bodyLength,
-                                                                       ctxt->urlString,
-                                                                       data->lineNumber);
+        v8methods[index] = QQmlExpressionPrivate::evalFunction(ctxt, object, QString::fromUtf8(body, bodyLength),
+                                                               ctxt->urlString, data->lineNumber);
     }
 
     return v8methods[index];

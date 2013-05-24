@@ -121,7 +121,6 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
     if (!ctxt && (!scriptPrivate->context || !scriptPrivate->context->isValid()))
         return;
 
-    bool needRewrite = true;
     QString code;
 
     int id = scriptPrivate->bindingId;
@@ -133,7 +132,6 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
             Q_ASSERT(typeData);
 
             if (QQmlCompiledData *cdata = typeData->compiledData()) {
-                needRewrite = true;
                 code = cdata->primitives.at(id);
                 m_url = cdata->name;
             }
@@ -150,10 +148,7 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
     m_lineNumber = scriptPrivate->lineNumber;
     m_columnNumber = scriptPrivate->columnNumber;
 
-    if (needRewrite)
-        v4function = qmlBinding(context(), scopeObject(), code, QString(), m_lineNumber);
-    else
-        v4function = evalFunction(context(), scopeObject(), code, QString(), m_lineNumber);
+    v4function = qmlBinding(context(), scopeObject(), code, QString(), m_lineNumber);
 }
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)

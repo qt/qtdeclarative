@@ -308,15 +308,6 @@ void QQmlJavaScriptExpression::exceptionToError(const QV4::Exception &e, QQmlErr
 
 QV4::PersistentValue
 QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
-                                       const char *code, int codeLength,
-                                       const QString &filename, quint16 line,
-                                       QV4::PersistentValue *qmlscope)
-{
-    return evalFunction(ctxt, scope, QString::fromUtf8(code, codeLength), filename, line, qmlscope);
-}
-
-QV4::PersistentValue
-QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
                                        const QString &code, const QString &filename, quint16 line,
                                        QV4::PersistentValue *qmlscope)
 {
