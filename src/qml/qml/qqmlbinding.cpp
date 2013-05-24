@@ -183,15 +183,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
     v4function = qmlBinding(ctxt, obj, str, url, m_lineNumber);
 }
 
-/*!
-    \internal
-
-    To avoid exposing v8 in the public API, functionPtr must be a pointer to a v8::Handle<v8::Function>.
-    For example:
-        v8::Handle<v8::Function> function;
-        new QQmlBinding(&function, scope, ctxt);
- */
-QQmlBinding::QQmlBinding(void *functionPtr, QObject *obj, QQmlContextData *ctxt,
+QQmlBinding::QQmlBinding(const QV4::Value &functionPtr, QObject *obj, QQmlContextData *ctxt,
                          const QString &url, quint16 lineNumber, quint16 columnNumber)
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
   m_url(url), m_lineNumber(lineNumber), m_columnNumber(columnNumber)
@@ -200,7 +192,7 @@ QQmlBinding::QQmlBinding(void *functionPtr, QObject *obj, QQmlContextData *ctxt,
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(obj);
 
-    v4function = (*(v8::Handle<v8::Function> *)functionPtr)->v4Value();
+    v4function = functionPtr;
 }
 
 QQmlBinding::~QQmlBinding()
@@ -261,7 +253,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
             bool isUndefined = false;
 
-            v8::Handle<v8::Value> result =
+            QV4::Value result =
                     QQmlJavaScriptExpression::evaluate(context(), v4function.value(), &isUndefined);
 
             trace.event("writing binding result");
@@ -302,12 +294,12 @@ QVariant QQmlBinding::evaluate()
 
     bool isUndefined = false;
 
-    v8::Handle<v8::Value> result =
+    QV4::Value result =
             QQmlJavaScriptExpression::evaluate(context(), v4function.value(), &isUndefined);
 
     ep->dereferenceScarceResources();
 
-    return ep->v8engine()->toVariant(result->v4Value(), qMetaTypeId<QList<QObject*> >());
+    return ep->v8engine()->toVariant(result, qMetaTypeId<QList<QObject*> >());
 }
 
 QString QQmlBinding::expressionIdentifier(QQmlJavaScriptExpression *e)

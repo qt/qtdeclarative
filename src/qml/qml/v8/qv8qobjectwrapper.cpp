@@ -727,7 +727,8 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
 {
     QQmlBinding *newBinding = 0;
     if (value->IsFunction()) {
-        if (value->ToObject()->GetHiddenValue(v8::Value::fromV4Value(engine->bindingFlagKey())).IsEmpty()) {
+        QV4::FunctionObject *f = value->v4Value().asFunctionObject();
+        if (!f->bindingKeyFlag) {
             if (!property->isVarProperty() && property->propType != qMetaTypeId<QJSValue>()) {
                 // assigning a JS function to a non var or QJSValue property or is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to ");
@@ -746,7 +747,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
             QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
             QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
 
-            newBinding = new QQmlBinding(&function, object, context, frame.source.url(),
+            newBinding = new QQmlBinding(function->v4Value(), object, context, frame.source.url(),
                                          qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
             newBinding->setTarget(object, *property, context);
             newBinding->setEvaluateFlags(newBinding->evaluateFlags() |

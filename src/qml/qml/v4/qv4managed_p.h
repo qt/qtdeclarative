@@ -275,7 +275,8 @@ public:
             uint type : 5;
             mutable uint subtype : 3;
             uint externalComparison : 1;
-            uint unused : 15;
+            uint bindingKeyFlag : 1;
+            uint unused : 14;
         };
     };
 

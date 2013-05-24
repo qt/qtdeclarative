@@ -358,15 +358,10 @@ QV4::Value Serialize::deserialize(const char *&data, QV8Engine *engine)
     {
         void *ptr = popPtr(data);
         QQmlListModelWorkerAgent *agent = (QQmlListModelWorkerAgent *)ptr;
-        v8::Handle<v8::Value> rv = engine->newQObject(agent);
-        if (rv->IsObject()) {
-            QQmlListModelWorkerAgent::VariantRef ref(agent);
-            QVariant var = qVariantFromValue(ref);
-            rv->ToObject()->SetHiddenValue(v8::String::New("qml::ref"), engine->fromVariant(var));
-        }
+        QV4::Value rv = engine->newQObject(agent);
         agent->release();
         agent->setV8Engine(engine);
-        return rv->v4Value();
+        return rv;
     }
     case WorkerSequence:
     {

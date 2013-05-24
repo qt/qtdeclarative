@@ -373,7 +373,8 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Handle<v8::String> propert
         QQmlBinding *newBinding = 0;
 
         if (value->IsFunction()) {
-            if (value->ToObject()->GetHiddenValue(v8::Value::fromV4Value(r->engine->bindingFlagKey())).IsEmpty()) {
+            QV4::FunctionObject *f = value->v4Value().asFunctionObject();
+            if (f->bindingKeyFlag) {
                 // assigning a JS function to a non-var-property is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to value-type property");
                 v8::ThrowException(v8::Exception::Error(r->engine->toString(error)));
@@ -395,7 +396,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Handle<v8::String> propert
             QV4::ExecutionEngine *v4 = QV8Engine::getV4(r->engine);
             QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
 
-            newBinding = new QQmlBinding(&function, reference->object, context,
+            newBinding = new QQmlBinding(function->v4Value(), reference->object, context,
                                          frame.source.url(), qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
             newBinding->setTarget(reference->object, cacheData, context);
             newBinding->setEvaluateFlags(newBinding->evaluateFlags() |

@@ -170,16 +170,16 @@ void QV8ContextWrapper::init(QV8Engine *engine)
     }
 }
 
-v8::Handle<v8::Object> QV8ContextWrapper::qmlScope(QQmlContextData *ctxt, QObject *scope)
+QV4::Value QV8ContextWrapper::qmlScope(QQmlContextData *ctxt, QObject *scope)
 {
     // XXX NewInstance() should be optimized
     v8::Handle<v8::Object> rv = m_constructor.value().asFunctionObject()->newInstance();
     QV8ContextResource *r = new QV8ContextResource(m_engine, ctxt, scope);
     rv->SetExternalResource(r);
-    return rv;
+    return rv->v4Value();
 }
 
-v8::Handle<v8::Object> QV8ContextWrapper::urlScope(const QUrl &url)
+QV4::Value QV8ContextWrapper::urlScope(const QUrl &url)
 {
     QQmlContextData *context = new QQmlContextData;
     context->url = url;
@@ -190,7 +190,7 @@ v8::Handle<v8::Object> QV8ContextWrapper::urlScope(const QUrl &url)
     v8::Handle<v8::Object> rv = m_urlConstructor.value().asFunctionObject()->newInstance();
     QV8ContextResource *r = new QV8ContextResource(m_engine, context, 0, true);
     rv->SetExternalResource(r);
-    return rv;
+    return rv->v4Value();
 }
 
 void QV8ContextWrapper::setReadOnly(v8::Handle<v8::Object> qmlglobal, bool readOnly)

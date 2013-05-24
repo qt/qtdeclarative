@@ -148,8 +148,8 @@ public:
     static bool write(const QQmlProperty &that, const QVariant &, WriteFlags);
     static bool writeBinding(QObject *, const QQmlPropertyData &,
                              QQmlContextData *context,
-                             QQmlJavaScriptExpression *expression, 
-                             v8::Handle<v8::Value> result, bool isUndefined,
+                             QQmlJavaScriptExpression *expression,
+                             const QV4::Value &result, bool isUndefined,
                              WriteFlags flags);
     static int valueTypeCoreIndex(const QQmlProperty &that);
     static int bindingIndex(const QQmlProperty &that);

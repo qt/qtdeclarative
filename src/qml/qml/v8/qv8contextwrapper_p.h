@@ -74,8 +74,8 @@ public:
     void init(QV8Engine *);
     void destroy();
 
-    v8::Handle<v8::Object> qmlScope(QQmlContextData *ctxt, QObject *scope);
-    v8::Handle<v8::Object> urlScope(const QUrl &);
+    QV4::Value qmlScope(QQmlContextData *ctxt, QObject *scope);
+    QV4::Value urlScope(const QUrl &);
 
     void setReadOnly(v8::Handle<v8::Object>, bool);
 

@@ -752,15 +752,6 @@ class V8EXPORT Object : public Value {
   int GetIdentityHash();
 
   /**
-   * Access hidden properties on JavaScript objects. These properties are
-   * hidden from the executing JavaScript and only accessible through the V8
-   * C++ API. Hidden properties introduced by V8 internally (for example the
-   * identity hash) are prefixed with "v8::".
-   */
-  bool SetHiddenValue(Handle<String> key, Handle<Value> value);
-  Handle<Value> GetHiddenValue(Handle<String> key);
-
-  /**
    * Clone this object with a fast but shallow copy.  Values will point
    * to the same values as the original object.
    */

@@ -90,21 +90,6 @@ public:
     Q_INVOKABLE void move(int from, int to, int count);
     Q_INVOKABLE void sync();
 
-    struct VariantRef
-    {
-        VariantRef() : a(0) {}
-        VariantRef(const VariantRef &r) : a(r.a) { if (a) a->addref(); }
-        VariantRef(QQmlListModelWorkerAgent *_a) : a(_a) { if (a) a->addref(); }
-        ~VariantRef() { if (a) a->release(); }
-
-        VariantRef &operator=(const VariantRef &o) { 
-            if (o.a) o.a->addref(); 
-            if (a) a->release(); a = o.a; 
-            return *this; 
-        }
-
-        QQmlListModelWorkerAgent *a;
-    };
     void modelDestroyed();
 protected:
     virtual bool event(QEvent *);
@@ -149,8 +134,6 @@ private:
 };
 
 QT_END_NAMESPACE
-
-Q_DECLARE_METATYPE(QQmlListModelWorkerAgent::VariantRef)
 
 #endif // QQUICKLISTMODELWORKERAGENT_P_H
 

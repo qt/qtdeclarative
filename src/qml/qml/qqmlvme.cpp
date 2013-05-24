@@ -1153,12 +1153,12 @@ QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *s
     if (!script->m_program)
         return QV4::PersistentValue();
 
-    v8::Handle<v8::Object> qmlglobal = v8engine->qmlScope(ctxt, 0);
+    QV4::Value qmlglobal = v8engine->qmlScope(ctxt, 0);
     v8engine->contextWrapper()->takeContextOwnership(qmlglobal);
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(v8engine)->current;
     try {
-        script->m_program->qml = qmlglobal->v4Value().asObject();
+        script->m_program->qml = qmlglobal.asObject();
         script->m_program->run();
     } catch (QV4::Exception &e) {
         e.accept(ctx);
@@ -1168,7 +1168,7 @@ QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *s
             ep->warning(error);
     } 
 
-    rv = qmlglobal->v4Value();
+    rv = qmlglobal;
     if (shared) {
         script->m_value = rv;
         script->m_loaded = true;

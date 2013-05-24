@@ -295,7 +295,7 @@ QV4::Value QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *script)
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
 
-        script->object = workerEngine->contextWrapper()->urlScope(script->source)->v4Value();
+        script->object = workerEngine->contextWrapper()->urlScope(script->source);
 
         workerEngine->contextWrapper()->setReadOnly(script->object.value(), false);
 

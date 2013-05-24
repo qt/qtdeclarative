@@ -326,7 +326,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::ExecutionContext *ctx = v4->current;
 
-    QV4::Value scopeObject = ep->v8engine()->qmlScope(ctxt, scope)->v4Value();
+    QV4::Value scopeObject = ep->v8engine()->qmlScope(ctxt, scope);
     QV4::Script script(v4, scopeObject.asObject(), code, filename, line);
     QV4::Value result;
     try {
@@ -360,7 +360,7 @@ QV4::PersistentValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt,
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::ExecutionContext *ctx = v4->current;
 
-    QV4::Value scopeObject = ep->v8engine()->qmlScope(ctxt, scope)->v4Value();
+    QV4::Value scopeObject = ep->v8engine()->qmlScope(ctxt, scope);
     QV4::Script script(v4, scopeObject.asObject(), code, filename, line);
     QV4::Value result;
     try {

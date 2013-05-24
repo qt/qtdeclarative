@@ -623,28 +623,6 @@ int Object::GetIdentityHash()
     return (quintptr)ConstValuePtr(this)->asObject() >> 2;
 }
 
-bool Object::SetHiddenValue(Handle<String> key, Handle<Value> value)
-{
-    QV4::Object *o = ConstValuePtr(this)->asObject();
-    assert(o);
-    QString newKey = QStringLiteral("__hidden:");
-    newKey += key->asQString();
-    QV4::String* str = o->engine()->newString(newKey);
-    if (o->__hasProperty__(str))
-        return false;
-    o->put(str, value->v4Value());
-    return true;
-}
-
-Handle<Value> Object::GetHiddenValue(Handle<String> key)
-{
-    QV4::Object *o = ConstValuePtr(this)->asObject();
-    assert(o);
-    QString newKey = QStringLiteral("__hidden:");
-    newKey += key->asQString();
-    return o->get(o->engine()->newString(newKey));
-}
-
 Handle<Object> Object::Clone()
 {
     Q_UNIMPLEMENTED();

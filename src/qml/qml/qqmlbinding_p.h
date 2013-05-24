@@ -70,6 +70,10 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QV4 {
+struct Value;
+}
+
 class QQmlContext;
 class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
                                          public QQmlAbstractExpression,
@@ -84,7 +88,7 @@ public:
     QQmlBinding(const QString &, QObject *, QQmlContextData *);
     QQmlBinding(const QString &, QObject *, QQmlContextData *,
                 const QString &url, quint16 lineNumber, quint16 columnNumber);
-    QQmlBinding(void *, QObject *, QQmlContextData *,
+    QQmlBinding(const QV4::Value &, QObject *, QQmlContextData *,
                 const QString &url, quint16 lineNumber, quint16 columnNumber);
 
     void setTarget(const QQmlProperty &);

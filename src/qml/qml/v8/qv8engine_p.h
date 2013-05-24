@@ -293,7 +293,7 @@ public:
     QV4::Value fromVariant(const QVariant &);
 
     // Return the QML global "scope" object for the \a ctxt context and \a scope object.
-    inline v8::Handle<v8::Object> qmlScope(QQmlContextData *ctxt, QObject *scope);
+    inline QV4::Value qmlScope(QQmlContextData *ctxt, QObject *scope);
 
     // Return a JS wrapper for the given QObject \a object
     inline QV4::Value newQObject(QObject *object);
@@ -312,9 +312,6 @@ public:
 
     // Create a new sequence type object
     inline QV4::Value newSequence(int sequenceType, QObject *, int coreIndex, bool *succeeded);
-
-    // Return the JS string key for the "function is a binding" flag
-    inline QV4::Value bindingFlagKey() const;
 
     // Return the network access manager for this engine.  By default this returns the network
     // access manager of the QQmlEngine.  It is overridden in the case of a threaded v8
@@ -442,7 +439,7 @@ private:
     Q_DISABLE_COPY(QV8Engine)
 };
 
-v8::Handle<v8::Object> QV8Engine::qmlScope(QQmlContextData *ctxt, QObject *scope)
+QV4::Value QV8Engine::qmlScope(QQmlContextData *ctxt, QObject *scope)
 {
     return m_contextWrapper.qmlScope(ctxt, scope);
 }
@@ -499,11 +496,6 @@ QVariant QV8Engine::toValueType(const QV4::Value &obj)
 QV4::Value QV8Engine::newSequence(int sequenceType, QObject *object, int property, bool *succeeded)
 {
     return QV4::SequencePrototype::newSequence(m_v4Engine, sequenceType, object, property, succeeded);
-}
-
-QV4::Value QV8Engine::bindingFlagKey() const
-{
-    return m_bindingFlagKey;
 }
 
 QV8Engine::Deletable *QV8Engine::extensionData(int index) const

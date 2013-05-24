@@ -53,6 +53,7 @@
 #include <private/qqmlglobal_p.h>
 
 #include <private/qv4engine_p.h>
+#include <private/qv4functionobject_p.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qdatetime.h>
@@ -1584,13 +1585,14 @@ QV4::Value binding(const v8::Arguments &args)
     QString code;
     if (args.Length() != 1)
         V4THROW_ERROR("binding() requires 1 argument");
-    if (!args[0]->IsFunction())
+    QV4::FunctionObject *f = args[0]->v4Value().asFunctionObject();
+    if (!f)
         V4THROW_TYPE("binding(): argument (binding expression) must be a function");
 
-    v8::Handle<v8::Object> rv = args[0]->ToObject();
-    if (!rv->SetHiddenValue(v8::Value::fromV4Value(V8ENGINE()->bindingFlagKey()), QV4::Value::fromBoolean(true)))
+    if (f->bindingKeyFlag)
         V4THROW_ERROR("function passed to binding() can only be bound once"); // FIXME: With v8 we cloned the binding argument
-    return rv->v4Value();
+    f->bindingKeyFlag = true;
+    return QV4::Value::fromObject(f);
 }
 
 } // namespace QQmlBuiltinFunctions
