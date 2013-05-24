@@ -59,7 +59,6 @@
 #include <private/qqmljavascriptexpression_p.h>
 
 #include <private/qv8engine_p.h>
-#include <private/qv8include_p.h>
 
 #include <private/qv4functionobject_p.h>
 #include <private/qv4script_p.h>

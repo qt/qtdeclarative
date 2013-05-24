@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV8INCLUDE_P_H
-#define QV8INCLUDE_P_H
+#ifndef QV4INCLUDE_P_H
+#define QV4INCLUDE_P_H
 
 //
 //  W A R N I N G
@@ -69,7 +69,7 @@ class QQmlEngine;
 class QNetworkAccessManager;
 class QNetworkReply;
 class QV8Engine;
-class QV8Include : public QObject
+class QV4Include : public QObject
 {
     Q_OBJECT
 public:
@@ -80,22 +80,22 @@ public:
         Exception = 3
     };
 
-    static QV4::Value include(const v8::Arguments &args);
+    static QV4::Value include(QV4::SimpleCallContext *ctx);
 
 private slots:
     void finished();
 
 private:
-    QV8Include(const QUrl &, QV8Engine *, QQmlContextData *,
-               v8::Handle<v8::Object>, v8::Handle<v8::Function>);
-    ~QV8Include();
+    QV4Include(const QUrl &url, QV8Engine *engine, QQmlContextData *context,
+               const QV4::Value &qmlglobal, const QV4::Value &callback);
+    ~QV4Include();
 
-    v8::Handle<v8::Object> result();
+    QV4::Value result();
 
-    static v8::Handle<v8::Object> resultValue(Status status = Loading);
-    static void callback(QV8Engine *engine, v8::Handle<v8::Function> callback, v8::Handle<v8::Object> status);
+    static QV4::Value resultValue(QV4::ExecutionEngine *v4, Status status = Loading);
+    static void callback(const QV4::Value &callback, const QV4::Value &status);
 
-    QV8Engine *m_engine;
+    QV4::ExecutionEngine *v4;
     QNetworkAccessManager *m_network;
     QQmlGuard<QNetworkReply> m_reply;
 
@@ -111,5 +111,5 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QV8INCLUDE_P_H
+#endif
 

@@ -44,7 +44,6 @@
 #include "qv8contextwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
 #include "qv4sequenceobject_p.h"
-#include "qv8include_p.h"
 #include "qjsengine_p.h"
 
 #include <private/qqmlbuiltinfunctions_p.h>
@@ -74,6 +73,7 @@
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4variantobject_p.h>
 #include <private/qv4script_p.h>
+#include <private/qv4include_p.h>
 
 Q_DECLARE_METATYPE(QList<int>)
 
@@ -531,7 +531,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt->Set(v8::String::New("Asynchronous"), QV4::Value::fromInt32(0));
     qt->Set(v8::String::New("Synchronous"), QV4::Value::fromInt32(1));
 
-    qt->Set(v8::String::New("include"), V8FUNCTION(QV8Include::include, this));
+    qt->v4Value().asObject()->defineDefaultProperty(m_v4Engine, QStringLiteral("include"), QV4Include::include);
     qt->Set(v8::String::New("isQtObject"), V8FUNCTION(isQtObject, this));
     qt->Set(v8::String::New("rgba"), V8FUNCTION(rgba, this));
     qt->Set(v8::String::New("hsla"), V8FUNCTION(hsla, this));

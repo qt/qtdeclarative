@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qv8include_p.h"
+#include "qv4include_p.h"
 
 #include <QtQml/qjsengine.h>
 #include <QtNetwork/qnetworkrequest.h>
@@ -51,18 +51,19 @@
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4script_p.h>
+#include <private/qv4context_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QV8Include::QV8Include(const QUrl &url, QV8Engine *engine, QQmlContextData *context,
-                       v8::Handle<v8::Object> qmlglobal, v8::Handle<v8::Function> callback)
-: m_engine(engine), m_network(0), m_reply(0), m_url(url), m_redirectCount(0), m_context(context)
+QV4Include::QV4Include(const QUrl &url, QV8Engine *engine, QQmlContextData *context,
+                       const QV4::Value &qmlglobal, const QV4::Value &callback)
+    : v4(QV8Engine::getV4(engine)), m_network(0), m_reply(0), m_url(url), m_redirectCount(0), m_context(context)
 {
-    m_qmlglobal = qmlglobal->v4Value();
-    if (!callback.IsEmpty())
-        m_callbackFunction = callback->v4Value();
+    m_qmlglobal = qmlglobal;
+    if (callback.asFunctionObject())
+        m_callbackFunction = callback;
 
-    m_resultObject = resultValue()->v4Value();
+    m_resultObject = resultValue(v4);
 
     m_network = engine->networkAccessManager();
 
@@ -73,47 +74,48 @@ QV8Include::QV8Include(const QUrl &url, QV8Engine *engine, QQmlContextData *cont
     QObject::connect(m_reply, SIGNAL(finished()), this, SLOT(finished()));
 }
 
-QV8Include::~QV8Include()
+QV4Include::~QV4Include()
 {
     delete m_reply; m_reply = 0;
 }
 
-v8::Handle<v8::Object> QV8Include::resultValue(Status status)
+QV4::Value QV4Include::resultValue(QV4::ExecutionEngine *v4, Status status)
 {
+
     // XXX It seems inefficient to create this object from scratch each time.
-    v8::Handle<v8::Object> result = v8::Object::New();
-    result->Set(v8::String::New("OK"), QV4::Value::fromInt32(Ok));
-    result->Set(v8::String::New("LOADING"), QV4::Value::fromInt32(Loading));
-    result->Set(v8::String::New("NETWORK_ERROR"), QV4::Value::fromInt32(NetworkError));
-    result->Set(v8::String::New("EXCEPTION"), QV4::Value::fromInt32(Exception));
+    QV4::Object *o = v4->newObject();
+    o->put(v4->newString("OK"), QV4::Value::fromInt32(Ok));
+    o->put(v4->newString("LOADING"), QV4::Value::fromInt32(Loading));
+    o->put(v4->newString("NETWORK_ERROR"), QV4::Value::fromInt32(NetworkError));
+    o->put(v4->newString("EXCEPTION"), QV4::Value::fromInt32(Exception));
 
-    result->Set(v8::String::New("status"), QV4::Value::fromInt32(status));
+    o->put(v4->newString("status"), QV4::Value::fromInt32(status));
 
-    return result;
+    return QV4::Value::fromObject(o);
 }
 
-void QV8Include::callback(QV8Engine *engine, v8::Handle<v8::Function> callback, v8::Handle<v8::Object> status)
+void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
 {
-    QV4::FunctionObject *f = callback->v4Value().asFunctionObject();
+    QV4::FunctionObject *f = callback.asFunctionObject();
     if (!f)
         return;
 
-    QV4::Value args[] = { status->v4Value() };
+    QV4::Value args[] = { status };
     QV4::ExecutionContext *ctx = f->engine()->current;
     try {
-        f->call(engine->global(), args, 1);
+        f->call(QV4::Value::fromObject(f->engine()->globalObject), args, 1);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
 }
 
-v8::Handle<v8::Object> QV8Include::result()
+QV4::Value QV4Include::result()
 {
     return m_resultObject.value();
 }
 
 #define INCLUDE_MAXIMUM_REDIRECT_RECURSION 15
-void QV8Include::finished()
+void QV4Include::finished()
 {
     m_redirectCount++;
 
@@ -145,25 +147,26 @@ void QV8Include::finished()
         importContext->isPragmaLibraryContext = m_context->isPragmaLibraryContext;
         importContext->setParent(m_context, true);
 
-        QV4::Script script(QV8Engine::getV4(m_engine), m_qmlglobal.value().asObject(), code, m_url.toString());
+        QV4::Script script(v4, m_qmlglobal.value().asObject(), code, m_url.toString());
 
-        QV4::ExecutionContext *ctx = QV8Engine::getV4(m_engine)->current;
+        QV4::ExecutionContext *ctx = v4->current;
         // ### Only used for debugging info
         //m_engine->contextWrapper()->addSubContext(m_qmlglobal.value(), script, importContext);
+        QV4::Object *o = m_resultObject.value().asObject();
         try {
             script.parse();
             script.run();
-            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), QV4::Value::fromInt32(Ok));
+            o->put(v4->newString("status"), QV4::Value::fromInt32(Ok));
         } catch (QV4::Exception &e) {
             e.accept(ctx);
-            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), QV4::Value::fromInt32(Exception));
-            v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("exception"), e.value());
+            o->put(v4->newString("status"), QV4::Value::fromInt32(Exception));
+            o->put(v4->newString("exception"), e.value());
         }
     } else {
-        v8::Handle<v8::Object>(m_resultObject)->Set(v8::String::New("status"), QV4::Value::fromInt32(NetworkError));
+        m_resultObject.value().asObject()->put(v4->newString("status"), QV4::Value::fromInt32(NetworkError));
     }
 
-    callback(m_engine, m_callbackFunction.value(), m_resultObject.value());
+    callback(m_callbackFunction.value(), m_resultObject.value());
 
     disconnect();
     deleteLater();
@@ -172,31 +175,32 @@ void QV8Include::finished()
 /*
     Documented in qv8engine.cpp
 */
-QV4::Value QV8Include::include(const v8::Arguments &args)
+QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
 {
-    if (args.Length() == 0)
+    if (!ctx->argumentCount)
         return QV4::Value::undefinedValue();
 
-    QV8Engine *engine = V8ENGINE();
+    QV4::ExecutionEngine *v4 = ctx->engine;
+    QV8Engine *engine = v4->publicEngine->handle();
     QQmlContextData *context = engine->callingContext();
 
-    if (!context || !context->isJSContext) 
+    if (!context || !context->isJSContext)
         V4THROW_ERROR("Qt.include(): Can only be called from JavaScript files");
 
-    QUrl url(context->resolvedUrl(QUrl(args[0]->v4Value().toQString())));
-    
-    v8::Handle<v8::Function> callbackFunction;
-    if (args.Length() >= 2 && args[1]->IsFunction())
-        callbackFunction = v8::Handle<v8::Function>::Cast(args[1]);
+    QUrl url(context->resolvedUrl(QUrl(ctx->arguments[0].toQString())));
+
+    QV4::Value callbackFunction;
+    if (ctx->argumentCount >= 2 && ctx->arguments[1].asFunctionObject())
+        callbackFunction = ctx->arguments[1];
 
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
 
-    v8::Handle<v8::Object> result;
+    QV4::Value result = QV4::Value::undefinedValue();
 
     if (localFile.isEmpty()) {
 
-        QV8Include *i = new QV8Include(url, engine, context, 
-                                       QV4::Value::fromObject(args.GetIsolate()->GetEngine()->qmlContextObject()),
+        QV4Include *i = new QV4Include(url, engine, context,
+                                       QV4::Value::fromObject(v4->qmlContextObject()),
                                        callbackFunction);
         result = i->result();
 
@@ -215,32 +219,29 @@ QV4::Value QV8Include::include(const v8::Arguments &args)
             importContext->url = url;
             importContext->setParent(context, true);
 
-            QV4::Object *qmlglobal = args.GetIsolate()->GetEngine()->qmlContextObject();
-            QV4::Script script(QV8Engine::getV4(engine), qmlglobal, code, url.toString());
+            QV4::Object *qmlglobal = v4->qmlContextObject();
+            QV4::Script script(v4, qmlglobal, code, url.toString());
 
             // ### Only used for debugging info
             // engine->contextWrapper()->addSubContext(qmlglobal, script, importContext);
-            QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
+            QV4::ExecutionContext *ctx = v4->current;
             try {
                 script.parse();
                 script.run();
-                result = resultValue(Ok);
+                result = resultValue(v4, Ok);
             } catch (QV4::Exception &e) {
                 e.accept(ctx);
-                result = resultValue(Exception);
-                result->Set(v8::String::New("exception"), e.value());
+                result = resultValue(v4, Exception);
+                result.asObject()->put(v4->newString("exception"), e.value());
             }
         } else {
-            result = resultValue(NetworkError);
+            result = resultValue(v4, NetworkError);
         }
 
-        callback(engine, callbackFunction, result);
+        callback(callbackFunction, result);
     }
 
-    if (result.IsEmpty())
-        return QV4::Value::undefinedValue();
-    else 
-        return result->v4Value();
+    return result;
 }
 
 QT_END_NAMESPACE

@@ -51,7 +51,8 @@ SOURCES += \
     $$PWD/qv4script.cpp \
     $$PWD/qv4v8.cpp \
     $$PWD/qv4executableallocator.cpp \
-    $$PWD/qv4sequenceobject.cpp
+    $$PWD/qv4sequenceobject.cpp \
+    $$PWD/qv4include.cpp
 
 HEADERS += \
     $$PWD/qv4global_p.h \
@@ -101,7 +102,8 @@ HEADERS += \
     $$PWD/qv4v8_p.h \
     $$PWD/qv4util_p.h \
     $$PWD/qv4executableallocator_p.h \
-    $$PWD/qv4sequenceobject_p.h
+    $$PWD/qv4sequenceobject_p.h \
+    $$PWD/qv4include_p.h
 
 OTHER_FILES += \
     $$PWD/v4classgen
