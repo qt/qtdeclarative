@@ -140,7 +140,7 @@ private:
     friend class QQmlPropertyCache;
     friend class QV8QObjectConnectionList;
     friend class QV8QObjectInstance;
-    friend class QV4::QObjectWrapper;
+    friend struct QV4::QObjectWrapper;
 
     v8::Handle<v8::Object> newQObject(QObject *, QQmlData *, QV8Engine *);
     bool deleteWeakQObject(QV4::QObjectWrapper *wrapper, bool calledFromEngineDtor = false);
