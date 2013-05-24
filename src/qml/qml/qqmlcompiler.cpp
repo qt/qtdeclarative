@@ -1247,8 +1247,7 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
         ss.propertyIndex = prop->index;
         ss.value = output->indexForString(script);
         ss.scope = prop->scriptStringScope;
-//        ss.bindingId = rewriteBinding(script, prop->name());
-        ss.bindingId = rewriteBinding(prop->values.first()->value, QString()); // XXX
+        ss.bindingId = output->indexForString(prop->values.first()->value.asScript());
         ss.line = prop->location.start.line;
         ss.column = prop->location.start.column;
         ss.isStringLiteral = prop->values.first()->value.isString();
@@ -2280,7 +2279,6 @@ bool QQmlCompiler::buildListProperty(QQmlScript::Property *prop,
 
             assignedBinding = true;
             COMPILE_CHECK(buildBinding(v, prop, ctxt));
-            v->type = Value::PropertyBinding;
         } else {
             COMPILE_EXCEPTION(v, tr("Cannot assign primitives to lists"));
         }
@@ -2487,8 +2485,6 @@ bool QQmlCompiler::buildPropertyLiteralAssignment(QQmlScript::Property *prop,
         if (!buildLiteralBinding(v, prop, ctxt))
             COMPILE_CHECK(buildBinding(v, prop, ctxt));
 
-        v->type = Value::PropertyBinding;
-
     } else {
 
         COMPILE_CHECK(testLiteralAssignment(prop, v));
@@ -2620,16 +2616,9 @@ const QMetaObject *QQmlCompiler::resolveType(const QString& name) const
     return qmltype->metaObject();
 }
 
-// similar to logic of completeComponentBuild, but also sticks data
-// into primitives at the end
-int QQmlCompiler::rewriteBinding(const QQmlScript::Variant& value, const QString& name)
+int QQmlCompiler::bindingIdentifier(const Variant &value)
 {
-    QQmlRewrite::RewriteBinding rewriteBinding;
-    rewriteBinding.setName(QLatin1Char('$') + name.mid(name.lastIndexOf(QLatin1Char('.')) + 1));
-
-    QString rewrite = rewriteBinding(value.asAST(), value.asScript(), 0);
-
-    return output->indexForString(rewrite);
+    return output->indexForString(value.asScript());
 }
 
 QString QQmlCompiler::rewriteSignalHandler(const QQmlScript::Variant& value, const QString &name)
@@ -3413,6 +3402,7 @@ bool QQmlCompiler::buildBinding(QQmlScript::Value *value,
     reference->value = value;
     reference->bindingContext = ctxt;
     addBindingReference(reference);
+    value->type = Value::PropertyBinding;
 
     return true;
 }
@@ -3450,6 +3440,7 @@ bool QQmlCompiler::buildLiteralBinding(QQmlScript::Value *v,
                         reference->text = text;
                         reference->n = n;
                         v->bindingReference = reference;
+                        v->type = Value::PropertyBinding;
                         return true;
                     }
 
@@ -3478,6 +3469,7 @@ bool QQmlCompiler::buildLiteralBinding(QQmlScript::Value *v,
                         reference->comment = comment;
                         reference->n = n;
                         v->bindingReference = reference;
+                        v->type = Value::PropertyBinding;
                         return true;
                     }
 
@@ -3524,7 +3516,7 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
         const JSBindingReference &js = static_cast<const JSBindingReference &>(ref);
 
         Instruction::StoreBinding store;
-        store.value = output->indexForString(js.rewrittenExpression);
+        store.value = output->indexForString(js.expression.asScript());
         store.context = js.bindingContext.stack;
         store.owner = js.bindingContext.owner;
         store.line = binding->location.start.line;
@@ -3587,17 +3579,6 @@ bool QQmlCompiler::completeComponentBuild()
     for (JSBindingReference *b = compileState->bindings.first(); b; b = b->nextReference) {
 
         JSBindingReference &binding = *b;
-
-        // Pre-rewrite the expression
-        QString expression = binding.expression.asScript();
-
-        QQmlRewrite::RewriteBinding rewriteBinding;
-        rewriteBinding.setName(QLatin1Char('$')+binding.property->name().toString());
-        bool isSharable = false;
-        bool isSafe = false;
-        binding.rewrittenExpression = rewriteBinding(binding.expression.asAST(), expression, &isSharable, &isSafe);
-        binding.isSafe = isSafe;
-
         binding.dataType = BindingReference::QtScript;
 
         if (componentStats)

@@ -626,7 +626,7 @@ bool QQmlEngineDebugService::setBinding(int objectId,
                                                                                              false, filename, line, column);
                     QQmlPropertyPrivate::takeSignalExpression(property, qmlExpression);
                 } else if (property.isProperty()) {
-                    QQmlBinding *binding = new QQmlBinding(expression.toString(), false, object, QQmlContextData::get(context), filename, line, column);;
+                    QQmlBinding *binding = new QQmlBinding(expression.toString(), object, QQmlContextData::get(context), filename, line, column);;
                     binding->setTarget(property);
                     QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::setBinding(property, binding);
                     if (oldBinding)

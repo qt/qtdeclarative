@@ -49,7 +49,6 @@
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmltrace_p.h>
 #include <private/qqmlexpression_p.h>
-#include <private/qqmlrewrite_p.h>
 #include <private/qqmlscriptstring_p.h>
 
 #include <QVariant>
@@ -86,7 +85,7 @@ QQmlBinding::createBinding(Identifier id, QObject *obj, QQmlContext *ctxt,
         Q_ASSERT(typeData);
 
         if (QQmlCompiledData *cdata = typeData->compiledData()) {
-            rv = new QQmlBinding(cdata->primitives.at(id), true, obj, ctxtdata, url, lineNumber, 0);
+            rv = new QQmlBinding(cdata->primitives.at(id), obj, ctxtdata, url, lineNumber, 0);
         }
 
         typeData->release();
@@ -134,7 +133,7 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
             Q_ASSERT(typeData);
 
             if (QQmlCompiledData *cdata = typeData->compiledData()) {
-                needRewrite = false;
+                needRewrite = true;
                 code = cdata->primitives.at(id);
                 m_url = cdata->name;
             }
@@ -169,7 +168,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt
     v4function = qmlBinding(ctxt, obj, str, QString(), 0);
 }
 
-QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
+QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
                          QQmlContextData *ctxt,
                          const QString &url, quint16 lineNumber, quint16 columnNumber)
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
@@ -181,10 +180,7 @@ QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
 
     m_expression = str.toUtf8();
 
-    if (isRewritten)
-        v4function = evalFunction(ctxt, obj, str, url, m_lineNumber);
-    else
-        v4function = qmlBinding(ctxt, obj, str, url, m_lineNumber);
+    v4function = qmlBinding(ctxt, obj, str, url, m_lineNumber);
 }
 
 /*!

@@ -88,58 +88,6 @@ public:
     virtual bool visit(AST::BinaryExpression *);
 };
 
-class RewriteBinding: protected AST::Visitor
-{
-    unsigned _position;
-    TextWriter *_writer;
-    QString _name;
-    const QString *_code;
-
-public:
-    QString operator()(const QString &code, bool *ok = 0, bool *sharable = 0, bool *safe = 0);
-    QString operator()(QQmlJS::AST::Node *node, const QString &code, bool *sharable = 0, bool *safe = 0);
-
-    //name of the function:  used for the debugger
-    void setName(const QString &name) { _name = name; }
-
-protected:
-    using AST::Visitor::visit;
-
-    void accept(AST::Node *node);
-    QString rewrite(QString code, unsigned position, AST::Statement *node);
-    void rewriteCaseStatements(AST::StatementList *statements, bool rewriteTheLastStatement);
-
-    virtual bool visit(AST::StringLiteral *ast);
-    virtual bool visit(AST::Block *ast);
-    virtual bool visit(AST::ExpressionStatement *ast);
-
-    virtual bool visit(AST::DoWhileStatement *ast);
-    virtual void endVisit(AST::DoWhileStatement *ast);
-
-    virtual bool visit(AST::WhileStatement *ast);
-    virtual void endVisit(AST::WhileStatement *ast);
-
-    virtual bool visit(AST::ForStatement *ast);
-    virtual void endVisit(AST::ForStatement *ast);
-
-    virtual bool visit(AST::LocalForStatement *ast);
-    virtual void endVisit(AST::LocalForStatement *ast);
-
-    virtual bool visit(AST::ForEachStatement *ast);
-    virtual void endVisit(AST::ForEachStatement *ast);
-
-    virtual bool visit(AST::LocalForEachStatement *ast);
-    virtual void endVisit(AST::LocalForEachStatement *ast);
-
-    virtual bool visit(AST::CaseBlock *ast);
-
-    virtual bool visit(AST::FunctionExpression *ast);
-    virtual bool visit(AST::FunctionDeclaration *ast);
-
-private:
-    int _inLoop;
-};
-
 class RewriteSignalHandler: protected AST::Visitor
 {
 public:

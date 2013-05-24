@@ -79,7 +79,7 @@ public:
     ~QQmlExpressionPrivate();
 
     void init(QQmlContextData *, const QString &, QObject *);
-    void init(QQmlContextData *, const QString &, bool, QObject *, const QString &, quint16, quint16);
+    void init(QQmlContextData *, const QString &, QObject *, const QString &, quint16, quint16);
 
     QVariant value(bool *isUndefined = 0);
 
@@ -91,7 +91,6 @@ public:
     void _q_notify();
 
     bool expressionFunctionValid:1;
-    bool expressionFunctionRewritten:1;
 
     // "Inherited" from QQmlJavaScriptExpression
     static QString expressionIdentifier(QQmlJavaScriptExpression *);

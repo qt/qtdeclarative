@@ -801,7 +801,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             if (instr.isRoot && BINDINGSKIPLIST.testBit(instr.property.coreIndex))
                 QML_NEXT_INSTR(StoreBinding);
 
-            QQmlBinding *bind = new QQmlBinding(PRIMITIVES.at(instr.value), true, 
+            QQmlBinding *bind = new QQmlBinding(PRIMITIVES.at(instr.value),
                                                 context, CTXT, COMP->name, instr.line,
                                                 instr.column);
             bindValues.push(bind);

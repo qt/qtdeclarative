@@ -195,17 +195,15 @@ namespace QQmlCompilerTypes {
     struct JSBindingReference : public QQmlPool::Class,
                                 public BindingReference
     {
-        JSBindingReference() : isSafe(false), nextReference(0) {}
+        JSBindingReference() : nextReference(0) {}
 
         QQmlScript::Variant expression;
         QQmlScript::Property *property;
         QQmlScript::Value *value;
 
-        int compiledIndex:15;
-        int sharedIndex:15;
-        bool isSafe:1;
+        int compiledIndex : 16;
+        int sharedIndex : 16;
 
-        QString rewrittenExpression;
         BindingContext bindingContext;
 
         JSBindingReference *nextReference;
@@ -297,7 +295,7 @@ public:
 
     int evaluateEnum(const QHashedStringRef &scope, const QByteArray& enumValue, bool *ok) const; // for QQmlCustomParser::evaluateEnum
     const QMetaObject *resolveType(const QString& name) const; // for QQmlCustomParser::resolveType
-    int rewriteBinding(const QQmlScript::Variant& value, const QString& name); // for QQmlCustomParser::rewriteBinding
+    int bindingIdentifier(const QQmlScript::Variant& value); // for QQmlCustomParser::bindingIndex
     QString rewriteSignalHandler(const QQmlScript::Variant& value, const QString &name);  // for QQmlCustomParser::rewriteSignalHandler
 
 private:

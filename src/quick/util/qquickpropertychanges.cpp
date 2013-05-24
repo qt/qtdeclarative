@@ -42,7 +42,6 @@
 #include "qquickpropertychanges_p.h"
 
 #include <private/qqmlopenmetaobject_p.h>
-#include <private/qqmlrewrite_p.h>
 #include <private/qqmlengine_p.h>
 
 #include <qqmlinfo.h>
@@ -292,7 +291,7 @@ QQuickPropertyChangesParser::compile(const QList<QQmlCustomParserProperty> &prop
             var = QVariant(v.asScript());
             {
                 // Pre-rewrite the expression
-                id = rewriteBinding(v, data.at(ii).first);
+                id = bindingIdentifier(v, data.at(ii).first);
             }
             break;
         }
@@ -483,7 +482,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
 
             QQmlBinding *newBinding = e.id != QQmlBinding::Invalid ? QQmlBinding::createBinding(e.id, object(), qmlContext(this), e.url.toString(), e.column) : 0;
             if (!newBinding)
-                newBinding = new QQmlBinding(e.expression, false, object(), QQmlContextData::get(qmlContext(this)), e.url.toString(), e.line, e.column);
+                newBinding = new QQmlBinding(e.expression, object(), QQmlContextData::get(qmlContext(this)), e.url.toString(), e.line, e.column);
 
             if (d->isExplicit) {
                 // in this case, we don't want to assign a binding, per se,
