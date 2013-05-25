@@ -134,8 +134,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
     , m_engine(0)
     , m_xmlHttpRequestData(0)
     , m_listModelData(0)
-    , m_platform(0)
-    , m_application(0)
 {
     QML_MEMORY_SCOPE_STRING("QV8Engine::QV8Engine");
     qMetaTypeId<QJSValue>();
@@ -490,118 +488,9 @@ QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
 
 
 
-struct StaticQtMetaObject : public QObject
-{
-    static const QMetaObject *get()
-        { return &staticQtMetaObject; }
-};
-
 void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 {
-    using namespace QQmlBuiltinFunctions;
-
-    v8::Handle<v8::Object> console = v8::Object::New();
-    v8::Handle<v8::Function> consoleLogFn = V8FUNCTION(consoleLog, this);
-
-    console->Set(v8::String::New("debug"), consoleLogFn);
-    console->Set(v8::String::New("log"), consoleLogFn);
-    console->Set(v8::String::New("info"), consoleLogFn);
-    console->Set(v8::String::New("warn"), V8FUNCTION(consoleWarn, this));
-    console->Set(v8::String::New("error"), V8FUNCTION(consoleError, this));
-    console->Set(v8::String::New("assert"), V8FUNCTION(consoleAssert, this));
-
-    console->Set(v8::String::New("count"), V8FUNCTION(consoleCount, this));
-    console->Set(v8::String::New("profile"), V8FUNCTION(consoleProfile, this));
-    console->Set(v8::String::New("profileEnd"), V8FUNCTION(consoleProfileEnd, this));
-    console->Set(v8::String::New("time"), V8FUNCTION(consoleTime, this));
-    console->Set(v8::String::New("timeEnd"), V8FUNCTION(consoleTimeEnd, this));
-    console->Set(v8::String::New("trace"), V8FUNCTION(consoleTrace, this));
-    console->Set(v8::String::New("exception"), V8FUNCTION(consoleException, this));
-
-    v8::Handle<v8::Object> qt = v8::Object::New();
-
-    // Set all the enums from the "Qt" namespace
-    const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
-    for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
-        QMetaEnum enumerator = qtMetaObject->enumerator(ii);
-        for (int jj = 0; jj < enumerator.keyCount(); ++jj) {
-            qt->Set(v8::String::New(enumerator.key(jj)), QV4::Value::fromInt32(enumerator.value(jj)));
-        }
-    }
-    qt->Set(v8::String::New("Asynchronous"), QV4::Value::fromInt32(0));
-    qt->Set(v8::String::New("Synchronous"), QV4::Value::fromInt32(1));
-
-    qt->v4Value().asObject()->defineDefaultProperty(m_v4Engine, QStringLiteral("include"), QV4Include::include);
-    qt->Set(v8::String::New("isQtObject"), V8FUNCTION(isQtObject, this));
-    qt->Set(v8::String::New("rgba"), V8FUNCTION(rgba, this));
-    qt->Set(v8::String::New("hsla"), V8FUNCTION(hsla, this));
-    qt->Set(v8::String::New("colorEqual"), V8FUNCTION(colorEqual, this));
-    qt->Set(v8::String::New("font"), V8FUNCTION(font, this));
-    qt->Set(v8::String::New("rect"), V8FUNCTION(rect, this));
-    qt->Set(v8::String::New("point"), V8FUNCTION(point, this));
-    qt->Set(v8::String::New("size"), V8FUNCTION(size, this));
-
-    qt->Set(v8::String::New("vector2d"), V8FUNCTION(vector2d, this));
-    qt->Set(v8::String::New("vector3d"), V8FUNCTION(vector3d, this));
-    qt->Set(v8::String::New("vector4d"), V8FUNCTION(vector4d, this));
-    qt->Set(v8::String::New("quaternion"), V8FUNCTION(quaternion, this));
-    qt->Set(v8::String::New("matrix4x4"), V8FUNCTION(matrix4x4, this));
-
-    qt->Set(v8::String::New("formatDate"), V8FUNCTION(formatDate, this));
-    qt->Set(v8::String::New("formatTime"), V8FUNCTION(formatTime, this));
-    qt->Set(v8::String::New("formatDateTime"), V8FUNCTION(formatDateTime, this));
-
-    qt->Set(v8::String::New("openUrlExternally"), V8FUNCTION(openUrlExternally, this));
-    qt->Set(v8::String::New("fontFamilies"), V8FUNCTION(fontFamilies, this));
-    qt->Set(v8::String::New("md5"), V8FUNCTION(md5, this));
-    qt->Set(v8::String::New("btoa"), V8FUNCTION(btoa, this));
-    qt->Set(v8::String::New("atob"), V8FUNCTION(atob, this));
-    qt->Set(v8::String::New("resolvedUrl"), V8FUNCTION(resolvedUrl, this));
-    qt->Set(v8::String::New("locale"), V8FUNCTION(locale, this));
-    qt->Set(v8::String::New("binding"), V8FUNCTION(binding, this));
-
-    if (m_engine) {
-        qt->SetAccessor(v8::String::New("platform"), getPlatform, 0, v8::External::New(this));
-        qt->SetAccessor(v8::String::New("application"), getApplication, 0, v8::External::New(this));
-#ifndef QT_NO_IM
-        qt->SetAccessor(v8::String::New("inputMethod"), getInputMethod, 0, v8::External::New(this));
-#endif
-        qt->Set(v8::String::New("lighter"), V8FUNCTION(lighter, this));
-        qt->Set(v8::String::New("darker"), V8FUNCTION(darker, this));
-        qt->Set(v8::String::New("tint"), V8FUNCTION(tint, this));
-        qt->Set(v8::String::New("quit"), V8FUNCTION(quit, this));
-        qt->Set(v8::String::New("createQmlObject"), V8FUNCTION(createQmlObject, this));
-        qt->Set(v8::String::New("createComponent"), V8FUNCTION(createComponent, this));
-    }
-
-#ifndef QT_NO_TRANSLATION
-    global->Set(v8::String::New("qsTranslate"), V8FUNCTION(qsTranslate, this));
-    global->Set(v8::String::New("QT_TRANSLATE_NOOP"), V8FUNCTION(qsTranslateNoOp, this));
-    global->Set(v8::String::New("qsTr"), V8FUNCTION(qsTr, this));
-    global->Set(v8::String::New("QT_TR_NOOP"), V8FUNCTION(qsTrNoOp, this));
-    global->Set(v8::String::New("qsTrId"), V8FUNCTION(qsTrId, this));
-    global->Set(v8::String::New("QT_TRID_NOOP"), V8FUNCTION(qsTrIdNoOp, this));
-#endif
-
-    global->Set(v8::String::New("print"), consoleLogFn);
-    global->Set(v8::String::New("console"), console);
-    global->Set(v8::String::New("Qt"), qt);
-    global->Set(v8::String::New("gc"), V8FUNCTION(QQmlBuiltinFunctions::gc, this));
-
-    {
-#define STRING_ARG "(function(stringArg) { "\
-                   "    String.prototype.arg = (function() {"\
-                   "        return stringArg.apply(this, arguments);"\
-                   "    })"\
-                   "})"
-
-        QV4::Script registerArg(m_v4Engine->rootContext, STRING_ARG);
-        QV4::FunctionObject *registerArgFunc = registerArg.run().asFunctionObject();
-        Q_ASSERT(registerArgFunc);
-        QV4::Value args = V8FUNCTION(stringArg, this)->v4Value();
-        registerArgFunc->call(QV4::Value::fromObject(registerArgFunc), &args, 1);
-#undef STRING_ARG
-    }
+    QV4::GlobalExtensions::init(m_v4Engine->globalObject);
 
     QQmlLocale::registerStringLocaleCompare(m_v4Engine);
     QQmlDateExtension::registerExtension(m_v4Engine);
@@ -1329,34 +1218,6 @@ int QV8Engine::consoleCountHelper(const QString &file, quint16 line, quint16 col
     m_consoleCount.insert(key, number);
     return number;
 }
-
-v8::Handle<v8::Value> QV8Engine::getPlatform(v8::Handle<v8::String>, const v8::AccessorInfo &info)
-{
-    QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Cast(info.Data().get())->Value());
-    if (!engine->m_platform) {
-        // Only allocate a platform object once
-        engine->m_platform = new QQmlPlatform(engine->m_engine);
-    }
-    return engine->newQObject(engine->m_platform);
-}
-
-v8::Handle<v8::Value> QV8Engine::getApplication(v8::Handle<v8::String>, const v8::AccessorInfo &info)
-{
-    QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Cast(info.Data().get())->Value());
-    if (!engine->m_application) {
-        // Only allocate an application object once
-        engine->m_application = QQml_guiProvider()->application(engine->m_engine);
-    }
-    return engine->newQObject(engine->m_application);
-}
-
-#ifndef QT_NO_IM
-v8::Handle<v8::Value> QV8Engine::getInputMethod(v8::Handle<v8::String>, const v8::AccessorInfo &info)
-{
-    QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Cast(info.Data().get())->Value());
-    return engine->newQObject(QQml_guiProvider()->inputMethod(), CppOwnership);
-}
-#endif
 
 void QV8GCCallback::registerGcPrologueCallback()
 {
