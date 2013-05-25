@@ -80,6 +80,12 @@ struct URIErrorPrototype;
 struct InternalClass;
 struct Lookup;
 
+struct LineNumberMapping
+{
+    quint32 codeOffset;
+    int lineNumber;
+};
+
 struct Function {
     String *name;
 
@@ -104,6 +110,7 @@ struct Function {
     bool isNamedExpression;
 
     QUrl sourceFile;
+    QVector<LineNumberMapping> lineNumberMappings;
 
     Function(String *name)
         : name(name)
@@ -123,9 +130,12 @@ struct Function {
     inline bool needsActivation() const { return hasNestedFunctions || hasDirectEval || usesArgumentsObject; }
 
     void mark();
+
+    int lineNumberForProgramCounter(quintptr pc) const;
 };
 
 }
+Q_DECLARE_TYPEINFO(QV4::LineNumberMapping, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
 

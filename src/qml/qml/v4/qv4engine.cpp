@@ -64,6 +64,10 @@
 #include "qv4executableallocator_p.h"
 #include "qv4sequenceobject_p.h"
 
+#if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
+#include <execinfo.h>
+#endif
+
 #ifdef V4_ENABLE_JIT
 #  include "qv4isel_masm_p.h"
 #else // !V4_ENABLE_JIT
@@ -81,6 +85,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     , globalObject(0)
     , globalCode(0)
     , externalResourceComparison(0)
+    , functionsNeedSort(false)
     , regExpCache(0)
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
@@ -361,6 +366,7 @@ Function *ExecutionEngine::newFunction(const QString &name)
 {
     Function *f = new Function(newIdentifier(name));
     functions.append(f);
+    functionsNeedSort = true;
     return f;
 }
 
@@ -551,22 +557,99 @@ Object *ExecutionEngine::qmlContextObject() const
     return static_cast<CallContext *>(ctx)->activation;
 }
 
+namespace {
+    struct NativeFrame {
+        Function *function;
+        int line;
+    };
+
+    struct NativeStackTrace
+    {
+        void *trace[100];
+        int nativeFrameCount;
+        int currentNativeFrame;
+        ExecutionEngine *engine;
+
+        NativeStackTrace(ExecutionContext *context)
+        {
+            engine = context->engine;
+            currentNativeFrame = 0;
+
+#if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
+            UnwindHelper::prepareForUnwind(context);
+
+            nativeFrameCount = backtrace(&trace[0], sizeof(trace) / sizeof(trace[0]));
+#else
+            nativeFrameCount = 0;
+#endif
+        }
+
+        NativeFrame nextFrame() {
+            NativeFrame frame;
+            frame.function = 0;
+            frame.line = -1;
+
+            for (; currentNativeFrame < nativeFrameCount && !frame.function; ++currentNativeFrame) {
+                quintptr pc = reinterpret_cast<quintptr>(trace[currentNativeFrame]);
+                // The pointers from the back trace point to the return address, but we are interested in
+                // the caller site.
+                pc = pc - 1;
+
+                Function *f = engine->functionForProgramCounter(pc);
+                if (!f)
+                    continue;
+
+                frame.function = f;
+                frame.line = f->lineNumberForProgramCounter(pc);
+            }
+
+            return frame;
+        }
+    };
+}
+
 QVector<ExecutionEngine::StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
 {
+    NativeStackTrace nativeTrace(current);
+
     QVector<StackFrame> stack;
 
     QV4::ExecutionContext *c = current;
     while (c && frameLimit) {
-        if (CallContext *c = c->asCallContext()) {
+        if (CallContext *callCtx = c->asCallContext()) {
             StackFrame frame;
-            frame.source = c->function->function->sourceFile;
-            frame.function = c->function->name->toQString();
+            if (callCtx->function->function)
+                frame.source = callCtx->function->function->sourceFile;
+            frame.function = callCtx->function->name->toQString();
             frame.line = -1;
             frame.column = -1;
+
+            if (callCtx->function->function) {
+                // Try to complete the line number information
+                NativeFrame nativeFrame = nativeTrace.nextFrame();
+                if (nativeFrame.function == callCtx->function->function)
+                    frame.line = nativeFrame.line;
+            }
+
             stack.append(frame);
             --frameLimit;
         }
         c = c->parent;
+    }
+
+    if (frameLimit && globalCode) {
+        StackFrame frame;
+        frame.source = globalCode->sourceFile;
+        frame.function = globalCode->name->toQString();
+        frame.line = -1;
+        frame.column = -1;
+
+        // Try to complete the line number information
+        NativeFrame nativeFrame = nativeTrace.nextFrame();
+        if (nativeFrame.function == globalCode)
+            frame.line = nativeFrame.line;
+
+        stack.append(frame);
     }
     return stack;
 }
@@ -577,15 +660,10 @@ ExecutionEngine::StackFrame ExecutionEngine::currentStackFrame() const
     frame.line = -1;
     frame.column = -1;
 
-    QV4::ExecutionContext *c = current;
-    while (c) {
-        if (CallContext *callCtx = c->asCallContext()) {
-            frame.source = callCtx->function->function->sourceFile;
-            frame.function = callCtx->function->name->toQString();
-            return frame;
-        }
-        c = c->parent;
-    }
+    QVector<StackFrame> trace = stackTrace(/*limit*/ 1);
+    if (!trace.isEmpty())
+        frame = trace.first();
+
     return frame;
 }
 
@@ -681,4 +759,71 @@ void ExecutionEngine::markObjects()
 
     variantPrototype->mark();
     sequencePrototype->mark();
+}
+
+namespace {
+    bool functionSortHelper(Function *lhs, Function *rhs)
+    {
+        return reinterpret_cast<quintptr>(lhs->code) < reinterpret_cast<quintptr>(rhs->code);
+    }
+
+    struct FindHelper
+    {
+        bool operator()(Function *function, quintptr pc)
+        {
+            return reinterpret_cast<quintptr>(function->code) < pc
+                   && (reinterpret_cast<quintptr>(function->code) + function->codeSize) < pc;
+        }
+
+        bool operator()(quintptr pc, Function *function)
+        {
+            return pc < reinterpret_cast<quintptr>(function->code);
+        }
+    };
+}
+
+Function *ExecutionEngine::functionForProgramCounter(quintptr pc) const
+{
+    if (functionsNeedSort) {
+        qSort(functions.begin(), functions.end(), functionSortHelper);
+        functionsNeedSort = false;
+    }
+
+    QVector<Function*>::ConstIterator it = qBinaryFind(functions.constBegin(), functions.constEnd(),
+            pc, FindHelper());
+    if (it != functions.constEnd())
+        return *it;
+    return 0;
+}
+
+Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue, int line)
+    : exception(exceptionValue)
+    , m_line(line)
+{
+    m_file = throwingContext->currentFileName();
+    this->throwingContext = throwingContext->engine->current;
+    accepted = false;
+    m_stackTrace = throwingContext->engine->stackTrace();
+}
+
+Exception::~Exception()
+{
+    assert(accepted);
+}
+
+void Exception::accept(ExecutionContext *catchingContext)
+{
+    assert(!accepted);
+    accepted = true;
+    partiallyUnwindContext(catchingContext);
+}
+
+void Exception::partiallyUnwindContext(ExecutionContext *catchingContext)
+{
+    if (!throwingContext)
+        return;
+    ExecutionContext *context = throwingContext;
+    while (context != catchingContext)
+        context = context->engine->popContext();
+    throwingContext = context;
 }

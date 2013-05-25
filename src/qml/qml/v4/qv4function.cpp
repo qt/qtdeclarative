@@ -65,3 +65,24 @@ void Function::mark()
     for (int i = 0; i < identifiers.size(); ++i)
         identifiers.at(i)->mark();
 }
+
+namespace {
+
+bool operator<(const LineNumberMapping &mapping, quintptr pc)
+{
+    return mapping.codeOffset < pc;
+}
+
+}
+
+int Function::lineNumberForProgramCounter(quintptr pc) const
+{
+    quint32 offset = pc - reinterpret_cast<quintptr>(code);
+    QVector<LineNumberMapping>::ConstIterator it = qLowerBound(lineNumberMappings.begin(), lineNumberMappings.end(), offset);
+    if (it != lineNumberMappings.constBegin() && lineNumberMappings.count() > 0)
+        --it;
+    if (it == lineNumberMappings.constEnd())
+        return -1;
+    return it->lineNumber;
+}
+

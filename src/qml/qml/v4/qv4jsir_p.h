@@ -54,6 +54,7 @@
 
 #include "qv4global_p.h"
 #include <private/qqmljsmemorypool_p.h>
+#include <private/qqmljsastfwd_p.h>
 
 #include <QtCore/QVector>
 #include <QtCore/QString>
@@ -118,6 +119,7 @@ struct Jump;
 struct CJump;
 struct Ret;
 struct Try;
+struct DebugAnnotation;
 
 enum AluOp {
     OpInvalid = 0,
@@ -198,6 +200,7 @@ struct StmtVisitor {
     virtual void visitCJump(CJump *) = 0;
     virtual void visitRet(Ret *) = 0;
     virtual void visitTry(Try *) = 0;
+    virtual void visitDebugAnnotation(DebugAnnotation *) = 0;
 };
 
 struct Expr {
@@ -492,6 +495,7 @@ struct Stmt {
     virtual CJump *asCJump() { return 0; }
     virtual Ret *asRet() { return 0; }
     virtual Try *asTry() { return 0; }
+    virtual DebugAnnotation *asDebugAnnotation() { return 0; }
     virtual void dump(QTextStream &out, Mode mode = HIR) = 0;
 
     void destroyData() {
@@ -625,6 +629,20 @@ struct Try: Stmt {
 
     virtual void accept(StmtVisitor *v) { v->visitTry(this); }
     virtual Try *asTry() { return this; }
+
+    virtual void dump(QTextStream &out, Mode mode);
+};
+
+struct DebugAnnotation: Stmt {
+    AST::SourceLocation location;
+
+    void init(const AST::SourceLocation &location)
+    {
+        this->location = location;
+    }
+
+    virtual void accept(StmtVisitor *v) { v->visitDebugAnnotation(this); }
+    virtual DebugAnnotation *asDebugAnnotation() { return this; }
 
     virtual void dump(QTextStream &out, Mode mode);
 };
@@ -768,6 +786,7 @@ struct BasicBlock {
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
     Stmt *RET(Temp *expr);
     Stmt *TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString &exceptionVarName, Temp *exceptionVar);
+    Stmt *DEBUGANNOTATION(const AST::SourceLocation &location);
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 };

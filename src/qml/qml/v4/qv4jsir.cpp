@@ -221,6 +221,8 @@ struct RemoveSharedExpressions: V4IR::StmtVisitor, V4IR::ExprVisitor
         // nothing to do for Try statements
     }
 
+    virtual void visitDebugAnnotation(DebugAnnotation *) {}
+
     // expressions
     virtual void visitConst(Const *) {}
     virtual void visitString(String *) {}
@@ -543,6 +545,11 @@ void Try::dump(QTextStream &out, Stmt::Mode mode)
     out << " with the name " << exceptionVarName << " and go to L" << catchBlock->index << ';';
 }
 
+void DebugAnnotation::dump(QTextStream &out, Mode mode)
+{
+    out << "// line: " << location.startLine << " ; column: " << location.startColumn;
+}
+
 Function *Module::newFunction(const QString &name, Function *outer)
 {
     Function *f = new Function(this, outer, name);
@@ -849,6 +856,16 @@ Stmt *BasicBlock::TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QStrin
     catchBlock->in.append(this);
 
     return t;
+}
+
+Stmt *BasicBlock::DEBUGANNOTATION(const AST::SourceLocation &location)
+{
+    if (isTerminated())
+        return 0;
+
+    DebugAnnotation *t = function->New<DebugAnnotation>();
+    t->init(location);
+    statements.append(t);
 }
 
 void BasicBlock::dump(QTextStream &out, Stmt::Mode mode)

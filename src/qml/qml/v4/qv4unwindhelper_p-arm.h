@@ -116,9 +116,8 @@ void UnwindHelper::registerFunctions(const QVector<Function *> &functions)
         allFunctions.insert(reinterpret_cast<quintptr>(f->code), f);
 }
 
-void UnwindHelper::ensureUnwindInfo(Function *function)
+void UnwindHelper::prepareForUnwind(ExecutionContext *)
 {
-    Q_UNUSED(function);
 }
 
 int UnwindHelper::unwindInfoSize()

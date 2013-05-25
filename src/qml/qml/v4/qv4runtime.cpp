@@ -69,38 +69,6 @@
 
 using namespace QV4;
 
-
-Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue, int line)
-    : exception(exceptionValue)
-    , m_line(line)
-{
-    m_file = throwingContext->currentFileName();
-    this->throwingContext = throwingContext->engine->current;
-    accepted = false;
-}
-
-Exception::~Exception()
-{
-    assert(accepted);
-}
-
-void Exception::accept(ExecutionContext *catchingContext)
-{
-    assert(!accepted);
-    accepted = true;
-    partiallyUnwindContext(catchingContext);
-}
-
-void Exception::partiallyUnwindContext(ExecutionContext *catchingContext)
-{
-    if (!throwingContext)
-        return;
-    ExecutionContext *context = throwingContext;
-    while (context != catchingContext)
-        context = context->engine->popContext();
-    throwingContext = context;
-}
-
 extern "C" {
 
 void __qmljs_numberToString(QString *result, double num, int radix)
@@ -954,18 +922,7 @@ void __qmljs_throw(ExecutionContext *context, const Value &value, int line)
     if (context->engine->debugger)
         context->engine->debugger->aboutToThrow(value);
 
-    for (ExecutionContext *ctx = context; ctx; ctx = ctx->parent) {
-        if (CallContext *callCtx = ctx->asCallContext())
-            if (FunctionObject *fobj = callCtx->function)
-                if (Function *fun = fobj->function)
-                    UnwindHelper::ensureUnwindInfo(fun);
-        for (ExecutionContext::EvalCode *code = ctx->currentEvalCode;
-             code; code = code->next)
-            UnwindHelper::ensureUnwindInfo(code->function);
-    }
-
-    if (context->engine->globalCode)
-        UnwindHelper::ensureUnwindInfo(context->engine->globalCode);
+    UnwindHelper::prepareForUnwind(context);
 
 #if USE(LIBUNWIND_DEBUG)
     printf("about to throw exception. walking stack first with libunwind:\n");

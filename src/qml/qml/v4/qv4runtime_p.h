@@ -89,27 +89,6 @@ struct ArrayObject;
 struct ErrorObject;
 struct ExecutionEngine;
 struct InternalClass;
-
-struct Q_QML_EXPORT Exception {
-    explicit Exception(ExecutionContext *throwingContext, const Value &exceptionValue, int line);
-    ~Exception();
-
-    void accept(ExecutionContext *catchingContext);
-
-    void partiallyUnwindContext(ExecutionContext *catchingContext);
-
-    Value value() const { return exception; }
-    QUrl file() const { return m_file; }
-    int lineNumber() const { return m_line; }
-
-private:
-    ExecutionContext *throwingContext;
-    bool accepted;
-    PersistentValue exception;
-    QUrl m_file;
-    int m_line;
-};
-
 }
 
 QT_END_NAMESPACE

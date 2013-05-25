@@ -120,26 +120,32 @@ DEFINE_MANAGED_VTABLE(GC);
 
 } // builtins
 
-static void showException(QV4::ExecutionContext *ctx, const QV4::Value &exception)
+static void showException(QV4::ExecutionContext *ctx, const QV4::Exception &exception)
 {
-    QV4::ErrorObject *e = exception.asErrorObject();
+    QV4::ErrorObject *e = exception.value().asErrorObject();
     if (!e) {
-        std::cerr << "Uncaught exception: " << qPrintable(exception.toString(ctx)->toQString()) << std::endl;
-        return;
+        std::cerr << "Uncaught exception: " << qPrintable(exception.value().toString(ctx)->toQString()) << std::endl;
+    } else {
+        if (QV4::SyntaxErrorObject *err = e->asSyntaxError()) {
+            QV4::DiagnosticMessage *msg = err->message();
+            if (!msg) {
+                std::cerr << "Uncaught exception: Syntax error" << std::endl;
+                return;
+            }
+
+            for (; msg; msg = msg->next) {
+                std::cerr << qPrintable(msg->buildFullMessage(ctx)->toQString()) << std::endl;
+            }
+        } else {
+            std::cerr << "Uncaught exception: " << qPrintable(e->get(ctx, ctx->engine->newString(QStringLiteral("message")), 0).toString(ctx)->toQString()) << std::endl;
+        }
     }
 
-    if (QV4::SyntaxErrorObject *err = e->asSyntaxError()) {
-        QV4::DiagnosticMessage *msg = err->message();
-        if (!msg) {
-            std::cerr << "Uncaught exception: Syntax error" << std::endl;
-            return;
-        }
-
-        for (; msg; msg = msg->next) {
-            std::cerr << qPrintable(msg->buildFullMessage(ctx)->toQString()) << std::endl;
-        }
-    } else {
-        std::cerr << "Uncaught exception: " << qPrintable(e->get(ctx, ctx->engine->newString(QStringLiteral("message")), 0).toString(ctx)->toQString()) << std::endl;
+    foreach (const QV4::ExecutionEngine::StackFrame &frame, exception.stackTrace()) {
+        std::cerr << "    at " << qPrintable(frame.function) << " (" << qPrintable(frame.source.toLocalFile());
+        if (frame.line >= 0)
+            std::cerr << ":" << frame.line;
+        std::cerr << ")" << std::endl;
     }
 }
 
@@ -390,7 +396,7 @@ int main(int argc, char *argv[])
                     }
                 } catch (QV4::Exception& ex) {
                     ex.accept(ctx);
-                    showException(ctx, ex.value());
+                    showException(ctx, ex);
                     return EXIT_FAILURE;
                 }
 

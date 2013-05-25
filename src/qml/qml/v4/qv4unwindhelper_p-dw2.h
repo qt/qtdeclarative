@@ -84,7 +84,7 @@ UnwindInfo::~UnwindInfo()
     __deregister_frame(data.data() + fde_offset);
 }
 
-void UnwindHelper::ensureUnwindInfo(Function *f)
+static void ensureUnwindInfo(Function *f)
 {
     if (!f->codeRef)
         return; // Not a JIT generated function
@@ -110,6 +110,22 @@ void UnwindHelper::ensureUnwindInfo(Function *f)
     writeIntPtrValue(cie_and_fde + address_range_offset, chunk->pages->size());
 
     chunk->unwindInfo = new UnwindInfo(info);
+}
+
+void UnwindHelper::prepareForUnwind(ExecutionContext *context)
+{
+    for (ExecutionContext *ctx = context; ctx; ctx = ctx->parent) {
+        if (CallContext *callCtx = ctx->asCallContext())
+            if (FunctionObject *fobj = callCtx->function)
+                if (Function *fun = fobj->function)
+                    ensureUnwindInfo(fun);
+        for (ExecutionContext::EvalCode *code = ctx->currentEvalCode;
+             code; code = code->next)
+            ensureUnwindInfo(code->function);
+    }
+
+    if (context->engine->globalCode)
+        ensureUnwindInfo(context->engine->globalCode);
 }
 
 void UnwindHelper::registerFunction(Function *)

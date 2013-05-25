@@ -430,6 +430,15 @@ static void printDisassembledOutputWithCalls(const char* output, const QHash<voi
 }
 #endif
 
+void Assembler::recordLineNumber(int lineNumber)
+{
+    CodeLineNumerMapping mapping;
+    mapping.location = label();
+    mapping.lineNumber = lineNumber;
+    codeLineNumberMappings << mapping;
+}
+
+
 void Assembler::link(QV4::Function *vmFunc)
 {
     Label endOfCode = label();
@@ -454,6 +463,14 @@ void Assembler::link(QV4::Function *vmFunc)
     JSC::JSGlobalData dummy(_engine->executableAllocator);
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
     vmFunc->codeSize = linkBuffer.offsetOf(endOfCode);
+
+    vmFunc->lineNumberMappings.resize(codeLineNumberMappings.count());
+    for (int i = 0; i < codeLineNumberMappings.count(); ++i) {
+        QV4::LineNumberMapping mapping;
+        mapping.codeOffset = linkBuffer.offsetOf(codeLineNumberMappings.at(i).location);
+        mapping.lineNumber = codeLineNumberMappings.at(i).lineNumber;
+        vmFunc->lineNumberMappings[i] = mapping;
+    }
 
     QHash<void*, const char*> functions;
     foreach (CallToLink ctl, _callsToLink) {
@@ -780,6 +797,11 @@ void InstructionSelection::visitTry(V4IR::Try *t)
                          Assembler::ReentryBlock(t->tryBlock), Assembler::ReentryBlock(t->catchBlock),
                          identifier(t->exceptionVarName), Assembler::PointerToValue(t->exceptionVar));
     _as->jump(Assembler::ReturnValueRegister);
+}
+
+void InstructionSelection::visitDebugAnnotation(V4IR::DebugAnnotation *annotation)
+{
+    _as->recordLineNumber(annotation->location.startLine);
 }
 
 void InstructionSelection::callBuiltinFinishTry()

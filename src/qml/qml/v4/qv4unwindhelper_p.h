@@ -6,11 +6,12 @@
 namespace QV4 {
 
 struct Function;
+struct ExecutionContext;
 
 class UnwindHelper
 {
 public:
-    static void ensureUnwindInfo(Function *function);
+    static void prepareForUnwind(ExecutionContext *ctx);
     static void registerFunction(Function *function);
     static void registerFunctions(const QVector<Function *> &functions);
     static void deregisterFunction(Function *function);

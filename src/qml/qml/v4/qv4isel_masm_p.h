@@ -725,6 +725,8 @@ public:
 
     void link(QV4::Function *vmFunc);
 
+    void recordLineNumber(int lineNumber);
+
 private:
     V4IR::Function *_function;
     QV4::Function *_vmFunction;
@@ -741,6 +743,13 @@ private:
     QHash<V4IR::BasicBlock *, QVector<DataLabelPtr> > _labelPatches;
 
     QV4::ExecutionEngine *_engine;
+
+    struct CodeLineNumerMapping
+    {
+        Assembler::Label location;
+        int lineNumber;
+    };
+    QVector<CodeLineNumerMapping> codeLineNumberMappings;
 };
 
 class Q_QML_EXPORT InstructionSelection:
@@ -838,6 +847,7 @@ protected:
     virtual void visitCJump(V4IR::CJump *);
     virtual void visitRet(V4IR::Ret *);
     virtual void visitTry(V4IR::Try *);
+    virtual void visitDebugAnnotation(V4IR::DebugAnnotation *);
 
 private:
     #define isel_stringIfyx(s) #s

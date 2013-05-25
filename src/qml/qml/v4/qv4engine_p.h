@@ -200,7 +200,8 @@ struct Q_QML_EXPORT ExecutionEngine
     String *id_uintMax;
     String *id_name;
 
-    QVector<Function *> functions;
+    mutable QVector<Function *> functions;
+    mutable bool functionsNeedSort;
 
     ExternalResourceComparison externalResourceComparison;
 
@@ -278,7 +279,8 @@ struct Q_QML_EXPORT ExecutionEngine
         int line;
         int column;
     };
-    QVector<StackFrame> stackTrace(int frameLimit = -1) const;
+    typedef QVector<StackFrame> StackTrace;
+    StackTrace stackTrace(int frameLimit = -1) const;
     StackFrame currentStackFrame() const;
 
     void requireArgumentsAccessors(int n);
@@ -288,6 +290,8 @@ struct Q_QML_EXPORT ExecutionEngine
     void initRootContext();
 
     InternalClass *newClass(const InternalClass &other);
+
+    Function *functionForProgramCounter(quintptr pc) const;
 };
 
 inline void ExecutionEngine::pushContext(SimpleCallContext *context)
@@ -309,6 +313,28 @@ inline ExecutionContext *ExecutionEngine::popContext()
     return current;
 }
 
+struct Q_QML_EXPORT Exception {
+    explicit Exception(ExecutionContext *throwingContext, const Value &exceptionValue, int line);
+    ~Exception();
+
+    void accept(ExecutionContext *catchingContext);
+
+    void partiallyUnwindContext(ExecutionContext *catchingContext);
+
+    Value value() const { return exception; }
+    QUrl file() const { return m_file; }
+    int lineNumber() const { return m_line; }
+
+    ExecutionEngine::StackTrace stackTrace() const { return m_stackTrace; }
+
+private:
+    ExecutionContext *throwingContext;
+    bool accepted;
+    PersistentValue exception;
+    QUrl m_file;
+    int m_line;
+    ExecutionEngine::StackTrace m_stackTrace;
+};
 
 } // namespace QV4
 
