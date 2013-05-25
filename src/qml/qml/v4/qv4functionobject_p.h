@@ -198,11 +198,10 @@ struct BoundFunction: FunctionObject {
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
 };
 
-template <typename T>
 class MemberAccessorGetterSetter : public FunctionObject
 {
 public:
-    typedef Value (T::*GetterSetterFunction)(QV4::SimpleCallContext *ctx);
+    typedef Value (* GetterSetterFunction)(QV4::SimpleCallContext *ctx);
 
     MemberAccessorGetterSetter(ExecutionContext *scope, GetterSetterFunction getterSetter, int managedType)
         : FunctionObject(scope)
@@ -212,34 +211,7 @@ public:
         this->getterSetter = getterSetter;
     }
 
-    static QV4::Value call(Managed *that, ExecutionContext *context, const QV4::Value &thisObject, QV4::Value *args, int argc)
-    {
-        MemberAccessorGetterSetter<T> *getterSetter = static_cast<MemberAccessorGetterSetter<T> *>(that);
-
-        Object *thisO = thisObject.asObject();
-        if (!thisO || thisO->internalType() != getterSetter->managedType)
-            context->throwTypeError();
-
-        T *o = static_cast<T *>(thisO);
-
-        QV4::SimpleCallContext ctx;
-        ctx.initSimpleCallContext(context->engine);
-        ctx.strictMode = true;
-        ctx.thisObject = thisObject;
-        ctx.arguments = args;
-        ctx.argumentCount = argc;
-        context->engine->pushContext(&ctx);
-
-        QV4::Value result = QV4::Value::undefinedValue();
-        try {
-            result = (o->* getterSetter->getterSetter)(&ctx);
-        } catch (QV4::Exception &ex) {
-            ex.partiallyUnwindContext(context);
-            throw;
-        }
-        context->engine->popContext();
-        return result;
-    }
+    static QV4::Value call(Managed *that, ExecutionContext *context, const QV4::Value &thisObject, QV4::Value *args, int argc);
 protected:
     GetterSetterFunction getterSetter;
     const int managedType;

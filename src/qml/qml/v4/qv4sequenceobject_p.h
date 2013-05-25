@@ -72,9 +72,9 @@ public:
 
     void initClass(QV4::ExecutionEngine *engine);
 
-    QV4::Value method_get_length(QV4::SimpleCallContext* ctx) QV4_ANNOTATE(attributes QV4::Attr_ReadOnly);
+    static QV4::Value method_get_length(QV4::SimpleCallContext* ctx) QV4_ANNOTATE(attributes QV4::Attr_ReadOnly);
 
-    QV4::Value method_set_length(QV4::SimpleCallContext* ctx);
+    static QV4::Value method_set_length(QV4::SimpleCallContext* ctx);
 };
 
 struct QV4_JS_CLASS(SequencePrototype) : public QV4::Object

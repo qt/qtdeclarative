@@ -67,35 +67,42 @@ public:
 
     QLocale locale;
 
+    static QLocale &getThisLocale(QV4::SimpleCallContext *ctx) {
+        QQmlLocaleData *thisObject = ctx->thisObject.asObject()->asQmlLocale();
+        if (!thisObject)
+            ctx->throwTypeError();
+        return thisObject->locale;
+    }
+
     static void initClass(QV4::ExecutionEngine *engine, const QV4::Value &obj);
 
-    QV4::Value method_currencySymbol(QV4::SimpleCallContext *ctx);
-    QV4::Value method_dateTimeFormat(QV4::SimpleCallContext *ctx);
-    QV4::Value method_timeFormat(QV4::SimpleCallContext *ctx);
-    QV4::Value method_dateFormat(QV4::SimpleCallContext *ctx);
-    QV4::Value method_monthName(QV4::SimpleCallContext *ctx);
-    QV4::Value method_standaloneMonthName(QV4::SimpleCallContext *ctx);
-    QV4::Value method_dayName(QV4::SimpleCallContext *ctx);
-    QV4::Value method_standaloneDayName(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_currencySymbol(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_dateTimeFormat(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_timeFormat(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_dateFormat(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_monthName(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_standaloneMonthName(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_dayName(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_standaloneDayName(QV4::SimpleCallContext *ctx);
 
-    QV4::Value method_get_firstDayOfWeek(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_measurementSystem(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_textDirection(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_weekDays(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_uiLanguages(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_firstDayOfWeek(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_measurementSystem(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_textDirection(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_weekDays(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_uiLanguages(QV4::SimpleCallContext *ctx);
 
-    QV4::Value method_get_name(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_nativeLanguageName(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_nativeCountryName(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_decimalPoint(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_groupSeparator(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_percent(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_zeroDigit(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_negativeSign(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_positiveSign(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_exponential(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_amText(QV4::SimpleCallContext *ctx);
-    QV4::Value method_get_pmText(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_name(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_nativeLanguageName(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_nativeCountryName(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_decimalPoint(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_groupSeparator(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_percent(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_zeroDigit(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_negativeSign(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_positiveSign(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_exponential(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_amText(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_pmText(QV4::SimpleCallContext *ctx);
 
 private:
     static void destroy(Managed *that)
@@ -498,26 +505,30 @@ QV4::Value QQmlNumberExtension::fromLocaleString(QV4::SimpleCallContext *ctx)
 //--------------
 // Locale object
 
-QV4::Value QQmlLocaleData::method_get_firstDayOfWeek(QV4::SimpleCallContext*)
+QV4::Value QQmlLocaleData::method_get_firstDayOfWeek(QV4::SimpleCallContext *ctx)
 {
+    QLocale locale = getThisLocale(ctx);
     int fdow = int(locale.firstDayOfWeek());
     if (fdow == 7)
         fdow = 0; // Qt::Sunday = 7, but Sunday is 0 in JS Date
     return QV4::Value::fromInt32(fdow);
 }
 
-QV4::Value QQmlLocaleData::method_get_measurementSystem(QV4::SimpleCallContext*)
+QV4::Value QQmlLocaleData::method_get_measurementSystem(QV4::SimpleCallContext *ctx)
 {
+    QLocale locale = getThisLocale(ctx);
     return QV4::Value::fromInt32(locale.measurementSystem());
 }
 
-QV4::Value QQmlLocaleData::method_get_textDirection(QV4::SimpleCallContext*)
+QV4::Value QQmlLocaleData::method_get_textDirection(QV4::SimpleCallContext *ctx)
 {
+    QLocale locale = getThisLocale(ctx);
     return QV4::Value::fromInt32(locale.textDirection());
 }
 
-QV4::Value QQmlLocaleData::method_get_weekDays(QV4::SimpleCallContext* ctx)
+QV4::Value QQmlLocaleData::method_get_weekDays(QV4::SimpleCallContext *ctx)
 {
+    QLocale locale = getThisLocale(ctx);
     QList<Qt::DayOfWeek> days = locale.weekdays();
 
     QV4::ArrayObject *result = ctx->engine->newArrayObject();
@@ -535,6 +546,7 @@ QV4::Value QQmlLocaleData::method_get_weekDays(QV4::SimpleCallContext* ctx)
 
 QV4::Value QQmlLocaleData::method_get_uiLanguages(QV4::SimpleCallContext *ctx)
 {
+    QLocale locale = getThisLocale(ctx);
     QStringList langs = locale.uiLanguages();
     QV4::ArrayObject *result = ctx->engine->newArrayObject();
     result->arrayReserve(langs.size());
@@ -547,6 +559,7 @@ QV4::Value QQmlLocaleData::method_get_uiLanguages(QV4::SimpleCallContext *ctx)
 
 QV4::Value QQmlLocaleData::method_currencySymbol(QV4::SimpleCallContext *ctx)
 {
+    QLocale locale = getThisLocale(ctx);
     if (ctx->argumentCount > 1)
         V4THROW_ERROR("Locale: currencySymbol(): Invalid arguments");
 
@@ -561,6 +574,7 @@ QV4::Value QQmlLocaleData::method_currencySymbol(QV4::SimpleCallContext *ctx)
 
 #define LOCALE_FORMAT(FUNC) \
 QV4::Value QQmlLocaleData::method_ ##FUNC (QV4::SimpleCallContext *ctx) { \
+    QLocale locale = getThisLocale(ctx); \
     if (ctx->argumentCount > 1) \
         V4THROW_ERROR("Locale: " #FUNC "(): Invalid arguments"); \
     QLocale::FormatType format = QLocale::LongFormat;\
@@ -578,6 +592,7 @@ LOCALE_FORMAT(dateFormat)
 // +1 added to idx because JS is 0-based, whereas QLocale months begin at 1.
 #define LOCALE_FORMATTED_MONTHNAME(VARIABLE) \
 QV4::Value QQmlLocaleData::method_ ## VARIABLE (QV4::SimpleCallContext *ctx) {\
+    QLocale locale = getThisLocale(ctx); \
     if (ctx->argumentCount < 1 || ctx->argumentCount > 2) \
         V4THROW_ERROR("Locale: " #VARIABLE "(): Invalid arguments"); \
     QLocale::FormatType enumFormat = QLocale::LongFormat; \
@@ -602,6 +617,7 @@ QV4::Value QQmlLocaleData::method_ ## VARIABLE (QV4::SimpleCallContext *ctx) {\
 // 0 -> 7 as Qt::Sunday is 7, but Sunday is 0 in JS Date
 #define LOCALE_FORMATTED_DAYNAME(VARIABLE) \
 QV4::Value QQmlLocaleData::method_ ## VARIABLE (QV4::SimpleCallContext *ctx) {\
+    QLocale locale = getThisLocale(ctx); \
     if (ctx->argumentCount < 1 || ctx->argumentCount > 2) \
         V4THROW_ERROR("Locale: " #VARIABLE "(): Invalid arguments"); \
     QLocale::FormatType enumFormat = QLocale::LongFormat; \
@@ -631,6 +647,7 @@ LOCALE_FORMATTED_DAYNAME(standaloneDayName)
 
 #define LOCALE_STRING_PROPERTY(VARIABLE) QV4::Value QQmlLocaleData::method_get_ ## VARIABLE (QV4::SimpleCallContext* ctx) \
 { \
+    QLocale locale = getThisLocale(ctx); \
     return QV4::Value::fromString(ctx, locale. VARIABLE());\
 }
 

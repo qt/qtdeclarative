@@ -498,10 +498,13 @@ QV4::Value SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
 
 QV4::Value QQmlSequenceBase::method_get_length(QV4::SimpleCallContext* ctx) QV4_ANNOTATE(attributes QV4::Attr_ReadOnly)
 {
+    QV4::Object *o = ctx->thisObject.asObject();
+    if (!o)
+        ctx->throwTypeError();
 #define CALL_LENGTH_GETTER(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
-    case QV4::Managed::Type_Qml##SequenceElementTypeName##List: return asQml##SequenceElementTypeName##List()->lengthGetter(ctx);
+    case QV4::Managed::Type_Qml##SequenceElementTypeName##List: return o->asQml##SequenceElementTypeName##List()->lengthGetter(ctx);
 
-    switch (internalType()) {
+    switch (o->internalType()) {
         FOREACH_QML_SEQUENCE_TYPE(CALL_LENGTH_GETTER)
         default: QV4::Value::undefinedValue();
     }
@@ -511,10 +514,13 @@ QV4::Value QQmlSequenceBase::method_get_length(QV4::SimpleCallContext* ctx) QV4_
 
 QV4::Value QQmlSequenceBase::method_set_length(QV4::SimpleCallContext* ctx)
 {
+    QV4::Object *o = ctx->thisObject.asObject();
+    if (!o)
+        ctx->throwTypeError();
 #define CALL_LENGTH_SETTER(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
-    case QV4::Managed::Type_Qml##SequenceElementTypeName##List: asQml##SequenceElementTypeName##List()->lengthSetter(ctx); break;
+    case QV4::Managed::Type_Qml##SequenceElementTypeName##List: o->asQml##SequenceElementTypeName##List()->lengthSetter(ctx); break;
 
-    switch (internalType()) {
+    switch (o->internalType()) {
         FOREACH_QML_SEQUENCE_TYPE(CALL_LENGTH_SETTER)
         default: break;
     }

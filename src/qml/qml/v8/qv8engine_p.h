@@ -185,7 +185,7 @@ public:
     QV8Engine *engine() const { return e; }
 private:
     friend class QV8QObjectWrapper;
-    friend class QV4::QObjectMethod;
+    friend struct QV4::QObjectMethod;
     QQmlV4Function();
     QQmlV4Function(const QQmlV4Function &);
     QQmlV4Function &operator=(const QQmlV4Function &);
