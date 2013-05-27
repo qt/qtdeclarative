@@ -310,7 +310,7 @@ void InstructionSelection::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
     case V4IR::Name::builtin_throw: {
         V4IR::Temp *arg = call->args->expr->asTemp();
         assert(arg != 0);
-        callBuiltinThrow(arg, baseName->line);
+        callBuiltinThrow(arg);
     } return;
 
     case V4IR::Name::builtin_finish_try:

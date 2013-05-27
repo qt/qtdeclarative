@@ -2588,7 +2588,7 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     enterEnvironment(ast);
     V4IR::Function *function = _module->newFunction(name, _function);
-    function->sourceFile = QUrl::fromLocalFile(_fileName);
+    function->sourceFile = _fileName;
 
     if (_debugger)
         _debugger->addFunction(function);

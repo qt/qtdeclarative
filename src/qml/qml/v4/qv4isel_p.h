@@ -115,7 +115,7 @@ public: // to implement by subclasses:
     virtual void callBuiltinPostIncrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result) = 0;
     virtual void callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result) = 0;
     virtual void callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR::Temp *result) = 0;
-    virtual void callBuiltinThrow(V4IR::Temp *arg, int line) = 0;
+    virtual void callBuiltinThrow(V4IR::Temp *arg) = 0;
     virtual void callBuiltinFinishTry() = 0;
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result) = 0;
     virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result) = 0;

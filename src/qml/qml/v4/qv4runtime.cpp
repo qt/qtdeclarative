@@ -917,7 +917,7 @@ void __qmljs_construct_property(ExecutionContext *context, Value *result, const 
     context->throwTypeError();
 }
 
-void __qmljs_throw(ExecutionContext *context, const Value &value, int line)
+void __qmljs_throw(ExecutionContext *context, const Value &value)
 {
     if (context->engine->debugger)
         context->engine->debugger->aboutToThrow(value);
@@ -944,7 +944,7 @@ void __qmljs_throw(ExecutionContext *context, const Value &value, int line)
     printf("stack walked. throwing exception now...\n");
 #endif
 
-    throw Exception(context, value, line);
+    throw Exception(context, value);
 }
 
 void __qmljs_builtin_typeof(ExecutionContext *ctx, Value *result, const Value &value)

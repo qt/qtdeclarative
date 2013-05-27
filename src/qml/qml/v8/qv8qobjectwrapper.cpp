@@ -696,7 +696,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
             QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
             QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
 
-            newBinding = new QQmlBinding(function->v4Value(), object, context, frame.source.url(),
+            newBinding = new QQmlBinding(function->v4Value(), object, context, frame.source,
                                          qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
             newBinding->setTarget(object, *property, context);
             newBinding->setEvaluateFlags(newBinding->evaluateFlags() |

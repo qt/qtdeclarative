@@ -60,7 +60,7 @@ static void generateWarning(QV4::ExecutionContext *ctx, const QString& descripti
     QQmlError retn;
     retn.setDescription(description);
     retn.setLine(ctx->currentLineNumber());
-    retn.setUrl(ctx->currentFileName());
+    retn.setUrl(QUrl(ctx->currentFileName()));
     QQmlEnginePrivate::warning(engine, retn);
 }
 

@@ -397,7 +397,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Handle<v8::String> propert
             QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
 
             newBinding = new QQmlBinding(function->v4Value(), reference->object, context,
-                                         frame.source.url(), qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
+                                         frame.source, qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
             newBinding->setTarget(reference->object, cacheData, context);
             newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
                                          QQmlBinding::RequiresThisObject);

@@ -796,11 +796,9 @@ Function *ExecutionEngine::functionForProgramCounter(quintptr pc) const
     return 0;
 }
 
-Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue, int line)
+Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue)
     : exception(exceptionValue)
-    , m_line(line)
 {
-    m_file = throwingContext->currentFileName();
     this->throwingContext = throwingContext->engine->current;
     accepted = false;
     m_stackTrace = throwingContext->engine->stackTrace();

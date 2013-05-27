@@ -111,7 +111,7 @@ public Q_SLOTS:
 
         QVector<QV4::ExecutionEngine::StackFrame> stack = v4->stackTrace(frameIndex + 1);
         if (stack.size() > frameIndex)
-            return QQmlV4Handle(QV4::Value::fromString(v4->newString(stack.at(frameIndex).source.url())));
+            return QQmlV4Handle(QV4::Value::fromString(v4->newString(stack.at(frameIndex).source)));
         return QQmlV4Handle();
     }
     int callerLine(int frameIndex = 0) const

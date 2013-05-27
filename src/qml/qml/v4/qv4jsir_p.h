@@ -671,7 +671,7 @@ struct Function {
     QVector<Function *> nestedFunctions;
     Function *outer;
 
-    QUrl sourceFile;
+    QString sourceFile;
 
     int insideWithOrCatch;
 

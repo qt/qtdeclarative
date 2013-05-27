@@ -274,7 +274,7 @@ struct Q_QML_EXPORT ExecutionEngine
     Object *qmlContextObject() const;
 
     struct StackFrame {
-        QUrl source;
+        QString source;
         QString function;
         int line;
         int column;
@@ -314,7 +314,7 @@ inline ExecutionContext *ExecutionEngine::popContext()
 }
 
 struct Q_QML_EXPORT Exception {
-    explicit Exception(ExecutionContext *throwingContext, const Value &exceptionValue, int line);
+    explicit Exception(ExecutionContext *throwingContext, const Value &exceptionValue);
     ~Exception();
 
     void accept(ExecutionContext *catchingContext);
@@ -322,8 +322,6 @@ struct Q_QML_EXPORT Exception {
     void partiallyUnwindContext(ExecutionContext *catchingContext);
 
     Value value() const { return exception; }
-    QUrl file() const { return m_file; }
-    int lineNumber() const { return m_line; }
 
     ExecutionEngine::StackTrace stackTrace() const { return m_stackTrace; }
 
@@ -331,8 +329,6 @@ private:
     ExecutionContext *throwingContext;
     bool accepted;
     PersistentValue exception;
-    QUrl m_file;
-    int m_line;
     ExecutionEngine::StackTrace m_stackTrace;
 };
 

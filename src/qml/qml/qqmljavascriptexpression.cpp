@@ -79,8 +79,13 @@ void QQmlDelayedError::setErrorDescription(const QString &description)
 void QQmlDelayedError::setError(const QV4::Exception &e)
 {
     m_error.setDescription(e.value().toQString());
-    m_error.setUrl(e.file());
-    m_error.setLine(e.lineNumber());
+    QV4::ExecutionEngine::StackTrace trace = e.stackTrace();
+    if (!trace.isEmpty()) {
+        QV4::ExecutionEngine::StackFrame frame = trace.first();
+        m_error.setUrl(QUrl(frame.source));
+        m_error.setLine(frame.line);
+    }
+
     m_error.setColumn(-1);
 }
 
@@ -181,8 +186,7 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
             *isUndefined = true;
         if (!watcher.wasDeleted()) {
             if (!e.value().isEmpty()) {
-                // ### line number
-                delayedError()->setErrorDescription(e.value().toQString());
+                delayedError()->setError(e);
             } else {
                 if (hasDelayedError()) delayedError()->clearError();
             }
@@ -300,9 +304,13 @@ QQmlDelayedError *QQmlJavaScriptExpression::delayedError()
 
 void QQmlJavaScriptExpression::exceptionToError(const QV4::Exception &e, QQmlError &error)
 {
-    error.setUrl(e.file());
-    error.setLine(e.lineNumber());
-    error.setColumn(-1);
+    QV4::ExecutionEngine::StackTrace trace = e.stackTrace();
+    if (!trace.isEmpty()) {
+        QV4::ExecutionEngine::StackFrame frame = trace.first();
+        error.setUrl(QUrl(frame.source));
+        error.setLine(frame.line);
+        error.setColumn(-1);
+    }
     error.setDescription(e.value().toQString());
 }
 

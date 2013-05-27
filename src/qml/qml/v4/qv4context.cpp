@@ -302,7 +302,7 @@ void ExecutionContext::mark()
     }
 }
 
-QUrl ExecutionContext::currentFileName() const
+QString ExecutionContext::currentFileName() const
 {
     const ExecutionContext *c = this;
     while (c) {
@@ -313,7 +313,7 @@ QUrl ExecutionContext::currentFileName() const
         }
         c = c->outer;
     }
-    return QUrl();
+    return QString();
 }
 
 int ExecutionContext::currentLineNumber() const
@@ -564,8 +564,7 @@ void ExecutionContext::inplaceBitOp(String *name, const Value &value, BinOp op)
 
 void ExecutionContext::throwError(const Value &value)
 {
-    // ### line number???
-    __qmljs_throw(this, value, -1);
+    __qmljs_throw(this, value);
 }
 
 void ExecutionContext::throwError(const QString &message)

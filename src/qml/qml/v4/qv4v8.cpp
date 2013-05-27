@@ -1392,7 +1392,7 @@ ObjectTemplate::ObjectTemplate()
 
 Handle<Value> ThrowException(Handle<Value> exception)
 {
-    __qmljs_throw(currentEngine()->current, exception->v4Value(), -1);
+    __qmljs_throw(currentEngine()->current, exception->v4Value());
     return Handle<Value>();
 }
 

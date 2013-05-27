@@ -308,7 +308,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallActivationProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltinThrow)
-        __qmljs_throw(context, VALUE(instr.arg), instr.line);
+        __qmljs_throw(context, VALUE(instr.arg));
     MOTH_END_INSTR(CallBuiltinThrow)
 
     MOTH_BEGIN_INSTR(EnterTry)

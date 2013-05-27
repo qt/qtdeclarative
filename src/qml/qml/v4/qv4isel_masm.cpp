@@ -755,9 +755,9 @@ void InstructionSelection::callBuiltinPostDecrementValue(V4IR::Temp *value, V4IR
                          Assembler::PointerToValue(result), Assembler::PointerToValue(value));
 }
 
-void InstructionSelection::callBuiltinThrow(V4IR::Temp *arg, int line)
+void InstructionSelection::callBuiltinThrow(V4IR::Temp *arg)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_throw, Assembler::ContextRegister, Assembler::Reference(arg), Assembler::TrustedImm32(line));
+    generateFunctionCall(Assembler::Void, __qmljs_throw, Assembler::ContextRegister, Assembler::Reference(arg));
 }
 
 typedef void *(*MiddleOfFunctionEntryPoint(ExecutionContext *, void *localsPtr));

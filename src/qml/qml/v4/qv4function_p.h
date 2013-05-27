@@ -109,7 +109,7 @@ struct Function {
     bool isStrict;
     bool isNamedExpression;
 
-    QUrl sourceFile;
+    QString sourceFile;
     QVector<LineNumberMapping> lineNumberMappings;
 
     Function(String *name)

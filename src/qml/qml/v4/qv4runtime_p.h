@@ -189,7 +189,7 @@ void __qmljs_delete_subscript(QV4::ExecutionContext *ctx, QV4::Value *result, co
 void __qmljs_delete_member(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &base, QV4::String *name);
 void __qmljs_delete_name(QV4::ExecutionContext *ctx, QV4::Value *result, QV4::String *name);
 
-void Q_NORETURN __qmljs_throw(QV4::ExecutionContext*, const QV4::Value &value, int line);
+void Q_NORETURN __qmljs_throw(QV4::ExecutionContext*, const QV4::Value &value);
 
 // binary operators
 typedef void (*BinOp)(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
