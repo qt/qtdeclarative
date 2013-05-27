@@ -29,7 +29,28 @@
 \title Qt QML Release Notes
 \page qtqml-releasenotes.html
 
-\section1 Qt QML in Qt 5
+\section1 Qt QML in Qt 5.1
+
+Qt 5.1 introduces several bug fixes and new functionalities to Qt QML. This is
+a summary of the new changes:
+\list
+\li New QQmlApplicationEngine convenience class for QML applications.
+\li New Instantiatior type for generic, dynamic object creation.
+\li New properties for \l Qt.application: arguments, name, and version.
+\endlist
+
+\section2 New Submodules
+
+The Qt QML Models is a new submodule in Qt 5.1 and provides several QML types
+for handling data with models and lists.
+
+\list
+\li \l{QtQml.Models}{Models}
+\endlist
+
+The \l{What's New in Qt 5.1} has more information about the Qt 5.1 release.
+
+\section1 Qt QML in Qt 5.0
 
 The \l{Qt QML} module is new in Qt 5.0. It provides the QML engine and
 implements the QML language supporting infrastructure.
