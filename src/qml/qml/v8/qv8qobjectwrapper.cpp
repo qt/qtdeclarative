@@ -85,7 +85,9 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     this->v8Engine = QV8Engine::get(engine->publicEngine);
     type = Type_QObject;
     vtbl = &static_vtbl;
-    initClass(engine);
+
+    m_destroy = engine->newIdentifier(QStringLiteral("destroy"));
+    m_toString = engine->newIdentifier(QStringLiteral("toString"));
 }
 
 QObjectWrapper::~QObjectWrapper()
@@ -104,50 +106,6 @@ QObjectWrapper::~QObjectWrapper()
     }
 }
 
-QV4::Value QObjectWrapper::method_toString(QV4::SimpleCallContext *ctx)
-{
-    QString result;
-    if (object) {
-        QString objectName = object->objectName();
-
-        result += QString::fromUtf8(object->metaObject()->className());
-        result += QLatin1String("(0x");
-        result += QString::number((quintptr)object.object(),16);
-
-        if (!objectName.isEmpty()) {
-            result += QLatin1String(", \"");
-            result += objectName;
-            result += QLatin1Char('\"');
-        }
-
-        result += QLatin1Char(')');
-    } else {
-        result = QLatin1String("null");
-    }
-
-    return QV4::Value::fromString(ctx, result);
-}
-
-QV4::Value QObjectWrapper::method_destroy(QV4::SimpleCallContext *ctx)
-{
-    if (!object)
-        return QV4::Value::undefinedValue();
-    QQmlData *ddata = QQmlData::get(object, false);
-    if (!ddata || ddata->indestructible || ddata->rootObjectInCreation)
-        ctx->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
-
-    int delay = 0;
-    if (ctx->argumentCount > 0)
-        delay = ctx->arguments[0].toUInt32();
-
-    if (delay > 0)
-        QTimer::singleShot(delay, object, SLOT(deleteLater()));
-    else
-        object->deleteLater();
-
-    return QV4::Value::undefinedValue();
-}
-
 QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
@@ -159,6 +117,22 @@ QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, 
     }
 
     QObject *object = that->object;
+
+    if (name->isEqualTo(that->m_destroy) || name->isEqualTo(that->m_toString)) {
+        bool hasProp = false;
+        QV4::Value method = QV4::Object::get(m, ctx, name, &hasProp);
+
+        if (!hasProp) {
+            int index = name->isEqualTo(that->m_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
+            method = QV4::Value::fromObject(new (ctx->engine->memoryManager) QV4::QObjectMethod(ctx->engine->rootContext, object, index, QV4::Value::undefinedValue()));
+            QV4::Object::put(m, ctx, name, method);
+        }
+
+        if (hasProperty)
+            *hasProperty = true;
+
+        return method;
+    }
 
     QHashedV4String propertystring(QV4::Value::fromString(name));
 
@@ -1962,6 +1936,50 @@ QObjectMethod::QObjectMethod(ExecutionContext *scope, QObject *object, int index
     subtype = WrappedQtMethod;
 }
 
+QV4::Value QObjectMethod::method_toString(QV4::ExecutionContext *ctx)
+{
+    QString result;
+    if (m_object) {
+        QString objectName = m_object->objectName();
+
+        result += QString::fromUtf8(m_object->metaObject()->className());
+        result += QLatin1String("(0x");
+        result += QString::number((quintptr)m_object.object(),16);
+
+        if (!objectName.isEmpty()) {
+            result += QLatin1String(", \"");
+            result += objectName;
+            result += QLatin1Char('\"');
+        }
+
+        result += QLatin1Char(')');
+    } else {
+        result = QLatin1String("null");
+    }
+
+    return QV4::Value::fromString(ctx, result);
+}
+
+QV4::Value QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, Value *args, int argc)
+{
+    if (!m_object)
+        return QV4::Value::undefinedValue();
+    QQmlData *ddata = QQmlData::get(m_object, false);
+    if (!ddata || ddata->indestructible || ddata->rootObjectInCreation)
+        ctx->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
+
+    int delay = 0;
+    if (argc > 0)
+        delay = args[0].toUInt32();
+
+    if (delay > 0)
+        QTimer::singleShot(delay, m_object, SLOT(deleteLater()));
+    else
+        m_object->deleteLater();
+
+    return QV4::Value::undefinedValue();
+}
+
 Value QObjectMethod::call(Managed *m, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
 {
     QObjectMethod *This = static_cast<QObjectMethod*>(m);
@@ -1970,7 +1988,11 @@ Value QObjectMethod::call(Managed *m, ExecutionContext *context, const Value &th
 
 Value QObjectMethod::callInternal(ExecutionContext *context, const Value &thisObject, Value *args, int argc)
 {
-    // object, index, qmlglobal, argCount, args
+    if (m_index == DestroyMethod)
+        return method_destroy(context, args, argc);
+    else if (m_index == ToStringMethod)
+        return method_toString(context);
+
     QObject *object = m_object.data();
     if (!object)
         return QV4::Value::undefinedValue();
@@ -2022,8 +2044,6 @@ Value QObjectMethod::callInternal(ExecutionContext *context, const Value &thisOb
 }
 
 DEFINE_MANAGED_VTABLE(QObjectMethod);
-
-#include "qv8qobjectwrapper_p_jsclass.cpp"
 
 QT_END_NAMESPACE
 

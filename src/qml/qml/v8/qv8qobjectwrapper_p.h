@@ -79,7 +79,7 @@ class QQmlPropertyCache;
 
 namespace QV4 {
 
-struct Q_QML_EXPORT QV4_JS_CLASS(QObjectWrapper) : public QV4::Object
+struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 {
     QObjectWrapper(ExecutionEngine *v8Engine, QObject *object);
     ~QObjectWrapper();
@@ -88,11 +88,9 @@ struct Q_QML_EXPORT QV4_JS_CLASS(QObjectWrapper) : public QV4::Object
     QQmlGuard<QObject> object;
     QIntrusiveListNode weakResource;
 
-    QV4::Value method_toString(QV4::SimpleCallContext *ctx);
-    QV4::Value method_destroy(QV4::SimpleCallContext *ctx);
-
 private:
-    void initClass(QV4::ExecutionEngine *engine);
+    String *m_destroy;
+    String *m_toString;
 
     static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
     static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
@@ -110,12 +108,17 @@ private:
 
 struct QObjectMethod : public QV4::FunctionObject
 {
+    enum { DestroyMethod = -1, ToStringMethod = -2 };
+
     QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const QV4::Value &qmlGlobal);
 
     int methodIndex() const { return m_index; }
     QObject *object() const { return m_object.data(); }
 
 private:
+    QV4::Value method_toString(QV4::ExecutionContext *ctx);
+    QV4::Value method_destroy(QV4::ExecutionContext *ctx, Value *args, int argc);
+
     QQmlGuard<QObject> m_object;
     int m_index;
     QV4::PersistentValue m_qmlGlobal;

@@ -28,5 +28,3 @@ SOURCES += \
     $$PWD/qv4sqlerrors.cpp \
     $$PWD/qqmlbuiltinfunctions.cpp
 
-JS_CLASS_SOURCES += \
-    $$PWD/qv8qobjectwrapper_p.h

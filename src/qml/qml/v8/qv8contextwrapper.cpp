@@ -323,9 +323,13 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
 
         // Search scope object
         if (scopeObject) {
-            v8::Handle<v8::Value> result = qobjectWrapper->getProperty(scopeObject, propertystring,
-                                                                       context, QV8QObjectWrapper::CheckRevision);
-            if (!result.IsEmpty()) return result;
+            QV4::Value wrapper = qobjectWrapper->newQObject(scopeObject)->v4Value();
+            if (QV4::Object *o = wrapper.asObject()) {
+                bool hasProperty = false;
+                QV4::Value result = o->get(o->engine()->current, propertystring.string().asString(), &hasProperty);
+                if (hasProperty)
+                    return result;
+            }
         }
         scopeObject = 0;
 
