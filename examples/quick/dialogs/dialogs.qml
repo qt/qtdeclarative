@@ -37,22 +37,23 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QDir>
-#include <QGuiApplication>
-#include <QQmlEngine>
-#include <QQuickView>
-#define DECLARATIVE_EXAMPLE_MAIN(NAME) int main(int argc, char* argv[]) \
-{\
-    QGuiApplication app(argc,argv);\
-    QQuickView view;\
-    view.connect(view.engine(), SIGNAL(quit()), &app, SLOT(quit()));\
-    view.setSource(QUrl("qrc:///" #NAME ".qml")); \
-    view.setResizeMode(QQuickView::SizeRootObjectToView);\
-    if (QGuiApplication::platformName() == QLatin1String("qnx") || \
-          QGuiApplication::platformName() == QLatin1String("eglfs")) {\
-        view.showFullScreen();\
-    } else {\
-        view.show();\
-    }\
-    return app.exec();\
+
+import QtQuick 2.0
+import "../shared"
+
+TabSet {
+    width: 580
+    height: 440
+
+    FileDialogs {
+        property string title: "File Dialog"
+        anchors.fill: parent
+        color: "#e3e3e3" // to match tab.png
+    }
+
+    ColorDialogs {
+        property string title: "Color Dialog"
+        anchors.fill: parent
+        color: "#e3e3e3" // to match tab.png
+    }
 }

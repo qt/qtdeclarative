@@ -37,22 +37,5 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QDir>
-#include <QGuiApplication>
-#include <QQmlEngine>
-#include <QQuickView>
-#define DECLARATIVE_EXAMPLE_MAIN(NAME) int main(int argc, char* argv[]) \
-{\
-    QGuiApplication app(argc,argv);\
-    QQuickView view;\
-    view.connect(view.engine(), SIGNAL(quit()), &app, SLOT(quit()));\
-    view.setSource(QUrl("qrc:///" #NAME ".qml")); \
-    view.setResizeMode(QQuickView::SizeRootObjectToView);\
-    if (QGuiApplication::platformName() == QLatin1String("qnx") || \
-          QGuiApplication::platformName() == QLatin1String("eglfs")) {\
-        view.showFullScreen();\
-    } else {\
-        view.show();\
-    }\
-    return app.exec();\
-}
+#include "../shared/shared.h"
+DECLARATIVE_EXAMPLE_MAIN(dialogs/dialogs)
