@@ -2050,7 +2050,10 @@ bool QQuickItemPrivate::canAcceptTabFocus(QQuickItem *item)
 {
     bool result = true;
 
-    if (item->window() && item == item->window()->contentItem())
+    if (!item->window())
+        return false;
+
+    if (item == item->window()->contentItem())
         return true;
 
 #ifndef QT_NO_ACCESSIBILITY
@@ -2093,7 +2096,6 @@ bool QQuickItemPrivate::focusNextPrev(QQuickItem *item, bool forward)
 QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, bool forward)
 {
     Q_ASSERT(item);
-    Q_ASSERT(item->activeFocusOnTab());
 
     bool all = QQuickItemPrivate::qt_tab_all_widgets();
 
@@ -2107,6 +2109,10 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
             from = item->parentItem();
     }
     bool skip = false;
+    const QQuickItem * const contentItem = item->window()->contentItem();
+    const QQuickItem * const originalItem = item;
+    QQuickItem * startItem = item;
+    QQuickItem * firstFromItem = from;
     QQuickItem *current = item;
     do {
         skip = false;
@@ -2157,8 +2163,25 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
                     skip = true;
             }
         }
-
         from = last;
+        if (current == startItem && from == firstFromItem) {
+            // wrapped around, avoid endless loops
+            if (originalItem == contentItem) {
+#ifdef FOCUS_DEBUG
+                qDebug() << "QQuickItemPrivate::nextPrevItemInTabFocusChain: looped, return contentItem";
+#endif
+                return item->window()->contentItem();
+            } else {
+#ifdef FOCUS_DEBUG
+                qDebug() << "QQuickItemPrivate::nextPrevItemInTabFocusChain: looped, return " << startItem;
+#endif
+                return startItem;
+            }
+        }
+        if (!firstFromItem) { //start from root
+            startItem = current;
+            firstFromItem = from;
+        }
     } while (skip || !current->activeFocusOnTab() || !current->isEnabled() || !current->isVisible()
                   || !(all || QQuickItemPrivate::canAcceptTabFocus(current)));
 
@@ -4375,7 +4398,8 @@ void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
         return;
 
     //only care about KeyPress now
-    if (q->activeFocusOnTab() && e->type() == QEvent::KeyPress) {
+    if ((q == q->window()->contentItem() || q->activeFocusOnTab())
+            && e->type() == QEvent::KeyPress) {
         bool res = false;
         if (!(e->modifiers() & (Qt::ControlModifier | Qt::AltModifier))) {  //### Add MetaModifier?
             if (e->key() == Qt::Key_Backtab
