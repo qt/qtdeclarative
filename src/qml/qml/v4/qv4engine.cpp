@@ -544,6 +544,10 @@ Object *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object 
 Object *ExecutionEngine::qmlContextObject() const
 {
     ExecutionContext *ctx = current;
+
+    if (ctx->type == QV4::ExecutionContext::Type_SimpleCallContext)
+        ctx = ctx->parent;
+
     if (!ctx->outer)
         return 0;
 
