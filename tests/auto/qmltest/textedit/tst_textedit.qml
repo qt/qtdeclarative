@@ -91,7 +91,7 @@ Item {
         id: txtlines
         property string styledtextvalue: "Line 1<br>Line 2<br>Line 3"
         text: "Line 1\nLine 2\nLine 3"
-        textFormat: Text.PlainText
+        textFormat: TextEdit.PlainText
     }
 
     TestCase {
@@ -180,10 +180,7 @@ Item {
             txtlines.text = txtlines.styledtextvalue;
             compare(txtlines.text, "Line 1<br>Line 2<br>Line 3")
             tryCompare(txtlines, 'lineCount', 1)
-            txtlines.textFormat = Text.StyledText;
-            expectFail("", "QTBUG-31191")
-            tryCompare(txtlines, 'lineCount', 3)
-            txtlines.textFormat = Text.RichText;
+            txtlines.textFormat = TextEdit.RichText;
             tryCompare(txtlines, 'lineCount', 3)
         }
     }
