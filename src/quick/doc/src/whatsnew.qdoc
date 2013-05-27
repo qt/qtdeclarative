@@ -29,7 +29,35 @@
 \title Qt Quick Release Notes
 \page qtquick-releasenotes.html
 
-\section1 Qt Quick in Qt 5
+\section1 Qt Quick in Qt 5.1
+
+\l{Qt Quick} 2.1 is new in Qt 5.1. This is a summary of improvements and new
+features introduced by the new import and new classes in Qt 5.1:
+\list
+\li New threaded render loop for Mac, Linux, and Embedded.
+\li New render loop for windows for smoother animations.
+\li New \l Window properties: activeFocusItem, minimumWidth, minimumHeight,
+    maximumWidth, maximumHeight, visibility, contentOrientation, and opacity.
+\li New \l Item property: activeFocusOnTab.
+\li New \l Grid properties: horizontalAlignment, verticalAlignment, and
+    effectiveHorizontalAlignment.
+\li New \l TextEdit properties: selectByKeyboard and textDocument
+\li A \l Window declared inside another Window or \l Item will automatically be
+    transient for (centered upon) the outer window.
+\endlist
+
+\section2 New Submodules
+
+In Qt 5.1, there are several new modules which extend Qt Quick functionalities.
+\list
+\li \l{Qt Quick Dialogs} - contains types for creating and interacting with system dialogs
+\li \l{Qt Quick Controls} - provides a set of reusable UI components
+\li \l{Qt Quick Layouts} - contains types that are used to arrange items in the user interface
+\endlist
+
+The \l{What's New in Qt 5.1} has more information about the Qt 5.1 release.
+
+\section1 Qt Quick in Qt 5.0
 
 The \l {Qt Quick} module is new in Qt 5. It provides the visual canvas and scenegraph back-end
 as well as the \c QtQuick QML module for QML application development.
