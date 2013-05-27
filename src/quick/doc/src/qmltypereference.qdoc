@@ -64,6 +64,12 @@ information about the concepts which are central to \c QtQuick.
     system for QML applications
     \li \l{QtQuick.Window 2}{Window} - contains types for creating
     top-level windows and accessing screen information
+    \li \l{QtQuick.Dialogs 1}{Dialogs} - contains types for creating and
+    interacting with system dialogs
+    \li \l{QtQuick.Controls 1.0}{Controls} - provides a set of reusable
+    UI components
+    \li \l{QtQuick.Layouts 1.0}{Layouts} - contains types that are used
+    to arrange items in the user interface
     \endlist
 
 \section1 Basic Types
