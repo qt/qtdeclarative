@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ColorDialog
     \instantiates QQuickPlatformColorDialog
     \inqmlmodule QtQuick.Dialogs 1
-    \ingroup qtquick-visual
+    \ingroup dialogs
     \brief Dialog component for choosing a color.
     \since Qt 5.1
 

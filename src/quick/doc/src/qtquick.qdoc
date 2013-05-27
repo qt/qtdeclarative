@@ -125,6 +125,8 @@ Additional Qt Quick information:
     system for Qt Quick
     \li \l{QtQuick.Window 2}{Window} - contains types for creating
     top-level windows and accessing screen information
+    \li \l{QtQuick.Dialogs 1}{Dialogs} - contains types for creating and
+    interacting with system dialogs
     \endlist
 \li \l{Qt Quick Release Notes} - list of changes and additions in the Qt Quick
 \li \l{Qt Quick Code Samples} - list of all Qt Quick examples
