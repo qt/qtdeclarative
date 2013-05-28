@@ -1173,19 +1173,13 @@ private:
     int m_value;
 };
 
-struct VTableAccessor : public QV4::QObjectWrapper
-{
-    const QV4::ManagedVTable *getVTable() { return vtbl; }
-    void setVTable(const QV4::ManagedVTable *newVtbl) { vtbl = newVtbl; }
-};
-
 class CircularReferenceObject : public QObject
 {
     Q_OBJECT
 
 public:
     CircularReferenceObject(QObject *parent = 0)
-        : QObject(parent), vtableInitialized(false), m_referenced(0), m_dtorCount(0)
+        : QObject(parent), m_dtorCount(0)
     {
     }
 
@@ -1209,19 +1203,15 @@ public:
 
     Q_INVOKABLE void addReference(QObject *other)
     {
-        if (!vtableInitialized) {
-            vtableInitialized = true;
-            QQmlData *ddata = QQmlData::get(this);
-            assert(ddata);
-            VTableAccessor *thisObject = static_cast<VTableAccessor*>(ddata->v8object.value().asQObjectWrapper());
-            assert(thisObject);
-            customVtable = *thisObject->getVTable();
-            oldMarkObjectsImplementation = customVtable.markObjects;
-            customVtable.markObjects = &customMarkObjects;
-            thisObject->setVTable(&customVtable);
-        }
+        QQmlData *ddata = QQmlData::get(this);
+        assert(ddata);
+        QV4::QObjectWrapper *thisObject = ddata->v8object.value().asQObjectWrapper();
+        assert(thisObject);
 
-        m_referenced = other;
+        QQmlData *otherDData = QQmlData::get(other);
+        assert(otherDData);
+
+        thisObject->defineDefaultProperty(thisObject->engine(), QStringLiteral("autoTestStrongRef"), otherDData->v8object.value());
     }
 
     void setEngine(QQmlEngine* declarativeEngine)
@@ -1229,29 +1219,7 @@ public:
         m_engine = QQmlEnginePrivate::get(declarativeEngine)->v8engine();
     }
 
-    static void customMarkObjects(QV4::Managed *that)
-    {
-        QV4::QObjectWrapper *wrapper = that->asQObjectWrapper();
-        assert(wrapper);
-        CircularReferenceObject *thisObject = qobject_cast<CircularReferenceObject*>(wrapper->object);
-        assert(thisObject);
-
-        if (thisObject->m_referenced) {
-            QQmlData *ddata = QQmlData::get(thisObject->m_referenced);
-            assert(ddata);
-            QV4::Managed *other = ddata->v8object.value().asManaged();
-            if (other)
-                other->mark();
-        }
-
-        thisObject->oldMarkObjectsImplementation(that);
-    }
-
 private:
-    QV4::ManagedVTable customVtable;
-    void (*oldMarkObjectsImplementation)(QV4::Managed*);
-    bool vtableInitialized;
-    QObject *m_referenced;
     int *m_dtorCount;
     QV8Engine* m_engine;
 };
