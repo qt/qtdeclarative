@@ -143,12 +143,14 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
         Property *p = insertMember(s, Attr_Accessor);
         FunctionObject* f = v4->newBuiltinFunction(v4->rootContext, s, method_get_platform);
         p->setGetter(f);
+        p->setSetter(0);
     }
     {
         String *s = v4->newString(QStringLiteral("application"));
         Property *p = insertMember(s, Attr_Accessor);
         FunctionObject* f = v4->newBuiltinFunction(v4->rootContext, s, method_get_application);
         p->setGetter(f);
+        p->setSetter(0);
     }
 #ifndef QT_NO_IM
     {
@@ -156,6 +158,7 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
         Property *p = insertMember(s, Attr_Accessor);
         FunctionObject* f = v4->newBuiltinFunction(v4->rootContext, s, method_get_inputMethod);
         p->setGetter(f);
+        p->setSetter(0);
     }
 #endif
 }
