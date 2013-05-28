@@ -149,18 +149,9 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     QQmlContextData *lastSharedContext = 0;
     QObject *lastSharedScope = 0;
 
-    bool sharedContext = useSharedContext();
-
     // All code that follows must check with watcher before it accesses data members
     // incase we have been deleted.
     DeleteWatcher watcher(this);
-
-    if (sharedContext) {
-        lastSharedContext = ep->sharedContext;
-        lastSharedScope = ep->sharedScope;
-        ep->sharedContext = context;
-        ep->sharedScope = scopeObject();
-    }
 
     QV4::Value result;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
@@ -191,11 +182,6 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
                 if (hasDelayedError()) delayedError()->clearError();
             }
         }
-    }
-
-    if (sharedContext) {
-        ep->sharedContext = lastSharedContext;
-        ep->sharedScope = lastSharedScope;
     }
 
     if (capture.errorString) {

@@ -264,7 +264,6 @@ QV4::Value QQmlExpressionPrivate::v4value(bool *isUndefined)
 {
     if (!expressionFunctionValid) {
         function = qmlBinding(context(), scopeObject(), expression, url, line, &qmlscope);
-        setUseSharedContext(false);
         expressionFunctionValid = true;
     }
 

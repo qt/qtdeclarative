@@ -144,9 +144,6 @@ public:
 
     bool outputWarningsToStdErr;
 
-    QQmlContextData *sharedContext;
-    QObject *sharedScope;
-
     // Registered cleanup handlers
     QQmlCleanup *cleanup;
 

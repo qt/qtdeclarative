@@ -65,11 +65,10 @@ public:
     inline QQmlContextData *getContext() const;
     inline QObject *getScopeObject() const;
 
-    quint32 isSharedContext:1;
     quint32 hasSubContexts:1;
     quint32 readOnly:1;
     quint32 ownsContext:1;
-    quint32 dummy:28;
+    quint32 dummy:29;
 
     // This is a pretty horrible hack, and an abuse of external strings.  When we create a 
     // sub-context (a context created by a Qt.include() in an external javascript file),
@@ -92,8 +91,8 @@ private:
 };
 
 QV8ContextResource::QV8ContextResource(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
-: QV8ObjectResource(engine), isSharedContext(false), hasSubContexts(false), readOnly(true),
-  ownsContext(ownsContext), context(context), scopeObject(scopeObject)
+: QV8ObjectResource(engine), hasSubContexts(false), readOnly(true),
+  ownsContext(ownsContext), dummy(0), context(context), scopeObject(scopeObject)
 {
 }
 
@@ -106,18 +105,12 @@ QV8ContextResource::~QV8ContextResource()
 // Returns the scope object
 QObject *QV8ContextResource::getScopeObject() const
 {
-    if (isSharedContext)
-        return QQmlEnginePrivate::get(engine->engine())->sharedScope;
-    else
-        return scopeObject;
+    return scopeObject;
 }
 
 // Returns the context, including resolving a subcontext
 QQmlContextData *QV8ContextResource::getContext() const
 {
-    if (isSharedContext)
-        return QQmlEnginePrivate::get(engine->engine())->sharedContext;
-    
     if (!hasSubContexts)
         return context;
 

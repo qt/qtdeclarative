@@ -506,7 +506,7 @@ the same object as is returned from the Qt.include() call.
 
 QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 : propertyCapture(0), rootContext(0), isDebugging(false),
-  outputWarningsToStdErr(true), sharedContext(0), sharedScope(0),
+  outputWarningsToStdErr(true),
   cleanup(0), erroredBindings(0), inProgressCreations(0),
   workerScriptEngine(0), activeVME(0),
   networkAccessManager(0), networkAccessManagerFactory(0),

@@ -117,8 +117,6 @@ public:
 
     inline bool requiresThisObject() const;
     inline void setRequiresThisObject(bool v);
-    inline bool useSharedContext() const;
-    inline void setUseSharedContext(bool v);
     inline bool notifyOnValueChanged() const;
 
     void setNotifyOnValueChanged(bool v);
@@ -224,16 +222,6 @@ bool QQmlJavaScriptExpression::requiresThisObject() const
 void QQmlJavaScriptExpression::setRequiresThisObject(bool v)
 {
     m_scopeObject.setFlagValue(v);
-}
-
-bool QQmlJavaScriptExpression::useSharedContext() const
-{
-    return activeGuards.flag2();
-}
-
-void QQmlJavaScriptExpression::setUseSharedContext(bool v)
-{
-    activeGuards.setFlag2Value(v);
 }
 
 bool QQmlJavaScriptExpression::notifyOnValueChanged() const

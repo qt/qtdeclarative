@@ -211,7 +211,6 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                 return; // could not evaluate function.  Not valid.
             }
 
-            setUseSharedContext(false);
             m_expressionFunctionValid = true;
         }
 
