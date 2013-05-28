@@ -226,14 +226,14 @@ void QSequentialAnimationGroupJob::updateCurrentTime(int currentTime)
         if (atEnd()) {
             //we make sure that we don't exceed the duration here
             m_currentTime += m_currentAnimation->currentTime() - newCurrentTime;
-            stop();
+            RETURN_IF_DELETED(stop());
         }
     } else {
         //the only case where currentAnimation could be null
         //is when all animations have been removed
         Q_ASSERT(!firstChild());
         m_currentTime = 0;
-        stop();
+        RETURN_IF_DELETED(stop());
     }
 
     m_previousLoop = m_currentLoop;
