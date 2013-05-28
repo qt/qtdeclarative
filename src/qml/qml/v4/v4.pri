@@ -185,6 +185,8 @@ valgrind {
 
 ios: DEFINES += ENABLE_ASSEMBLER_WX_EXCLUSIVE=1
 
+LIBS_PRIVATE += -lDbgHelp
+
 include(moth/moth.pri)
 include(../../../3rdparty/masm/masm.pri)
 include(../../../3rdparty/double-conversion/double-conversion.pri)
