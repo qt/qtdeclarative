@@ -942,7 +942,7 @@ void QQuickShaderEffectSource::releaseResources()
 
 QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
-    if (!m_sourceItem || m_sourceItem->width() == 0 || m_sourceItem->height() == 0) {
+    if (!m_sourceItem || m_sourceItem->width() <= 0 || m_sourceItem->height() <= 0) {
         if (m_texture)
             m_texture->setItem(0);
         delete oldNode;
