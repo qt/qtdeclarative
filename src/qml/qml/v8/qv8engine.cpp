@@ -490,7 +490,7 @@ QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
 
 void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 {
-    QV4::GlobalExtensions::init(m_v4Engine->globalObject);
+    QV4::GlobalExtensions::init(m_engine, m_v4Engine->globalObject);
 
     QQmlLocale::registerStringLocaleCompare(m_v4Engine);
     QQmlDateExtension::registerExtension(m_v4Engine);

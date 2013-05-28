@@ -58,6 +58,7 @@
 #include <qv4v8_p.h>
 
 class QQmlEngine;
+class QV8Engine;
 
 QT_BEGIN_NAMESPACE
 
@@ -127,7 +128,7 @@ struct ConsoleObject : Object
 };
 
 struct GlobalExtensions {
-    static void init(Object *globalObject);
+    static void init(QQmlEngine *qmlEngine, Object *globalObject);
 
 #ifndef QT_NO_TRANSLATION
     static Value method_qsTranslate(SimpleCallContext *ctx);

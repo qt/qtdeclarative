@@ -87,7 +87,6 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     , m_application(0)
 {
     v8::Handle<v8::Object> qt = Value::fromObject(this);
-    QV8Engine *engine = v4->publicEngine->handle();
 
     // Set all the enums from the "Qt" namespace
     const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
@@ -1526,9 +1525,8 @@ QV4::Value ConsoleObject::method_exception(SimpleCallContext *ctx)
 
 
 
-void QV4::GlobalExtensions::init(Object *globalObject)
+void QV4::GlobalExtensions::init(QQmlEngine *qmlEngine, Object *globalObject)
 {
-    QV8Engine *engine = globalObject->engine()->publicEngine->handle();
     QV4::ExecutionEngine *v4 = globalObject->engine();
 
 #ifndef QT_NO_TRANSLATION
@@ -1546,7 +1544,7 @@ void QV4::GlobalExtensions::init(Object *globalObject)
     Value console = QV4::Value::fromObject(new (v4->memoryManager) QV4::ConsoleObject(v4));
     globalObject->defineDefaultProperty(v4, QStringLiteral("console"), console);
 
-    Value qt = QV4::Value::fromObject(new (v4->memoryManager) QV4::QtObject(v4, engine->engine()));
+    Value qt = QV4::Value::fromObject(new (v4->memoryManager) QV4::QtObject(v4, qmlEngine));
     globalObject->defineDefaultProperty(v4, QStringLiteral("Qt"), qt);
 
     // string prototype extension
