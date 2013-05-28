@@ -209,6 +209,7 @@ private slots:
     void defaultHighlightMoveDuration();
     void accessEmptyCurrentItem_QTBUG_30227();
     void delayedChanges_QTBUG_30555();
+    void outsideViewportChangeNotAffectingView();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -6876,6 +6877,43 @@ void tst_QQuickListView::delayedChanges_QTBUG_30555()
 
     QMetaObject::invokeMethod(window->rootObject(), "takeTwo_sync");
     QCOMPARE(listview->count(), 6);
+
+    delete window;
+}
+
+void tst_QQuickListView::outsideViewportChangeNotAffectingView()
+{
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("outsideViewportChangeNotAffectingView.qml"));
+
+    QQuickListView *listview = window->rootObject()->findChild<QQuickListView*>();
+    QTRY_VERIFY(listview != 0);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    flick(window, QPoint(20, 200), QPoint(20, 20), 10);
+
+    QTRY_COMPARE(listview->isFlicking(), false);
+
+    QTRY_COMPARE(listview->indexAt(0, listview->contentY()), 4);
+    QTRY_COMPARE(listview->itemAt(0, listview->contentY())->y(), 1200.);
+
+    QMetaObject::invokeMethod(window->rootObject(), "resizeThirdItem", Q_ARG(QVariant, 290));
+    QTRY_COMPARE(listview->indexAt(0, listview->contentY()), 4);
+    QTRY_COMPARE(listview->itemAt(0, listview->contentY())->y(), 1200.);
+
+    QMetaObject::invokeMethod(window->rootObject(), "resizeThirdItem", Q_ARG(QVariant, 300));
+    QTRY_COMPARE(listview->indexAt(0, listview->contentY()), 4);
+    QTRY_COMPARE(listview->itemAt(0, listview->contentY())->y(), 1200.);
+
+    QMetaObject::invokeMethod(window->rootObject(), "resizeThirdItem", Q_ARG(QVariant, 310));
+    QTRY_COMPARE(listview->indexAt(0, listview->contentY()), 4);
+    QTRY_COMPARE(listview->itemAt(0, listview->contentY())->y(), 1200.);
+
+    QMetaObject::invokeMethod(window->rootObject(), "resizeThirdItem", Q_ARG(QVariant, 400));
+    QTRY_COMPARE(listview->indexAt(0, listview->contentY()), 4);
+    QTRY_COMPARE(listview->itemAt(0, listview->contentY())->y(), 1200.);
 
     delete window;
 }

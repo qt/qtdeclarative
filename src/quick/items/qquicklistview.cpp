@@ -1360,16 +1360,18 @@ void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &
             if (visibleItems.count() && item == visibleItems.first()->item) {
                 FxListItemSG *listItem = static_cast<FxListItemSG*>(visibleItems.first());
                 if (orient == QQuickListView::Vertical) {
+                    const qreal oldItemEndPosition = verticalLayoutDirection == QQuickItemView::BottomToTop ? -oldGeometry.y() : oldGeometry.y() + oldGeometry.height();
                     qreal diff = newGeometry.height() - oldGeometry.height();
-                    if (verticalLayoutDirection == QQuickListView::TopToBottom && listItem->endPosition() < q->contentY())
+                    if (verticalLayoutDirection == QQuickListView::TopToBottom && oldItemEndPosition < q->contentY())
                         listItem->setPosition(listItem->position() - diff, true);
-                    else if (verticalLayoutDirection == QQuickListView::BottomToTop && listItem->endPosition() > q->contentY())
+                    else if (verticalLayoutDirection == QQuickListView::BottomToTop && oldItemEndPosition > q->contentY())
                         listItem->setPosition(listItem->position() + diff, true);
                 } else {
+                    const qreal oldItemEndPosition = q->effectiveLayoutDirection() == Qt::RightToLeft ? -oldGeometry.x() : oldGeometry.x() + oldGeometry.width();
                     qreal diff = newGeometry.width() - oldGeometry.width();
-                    if (q->effectiveLayoutDirection() == Qt::LeftToRight && listItem->endPosition() < q->contentX())
+                    if (q->effectiveLayoutDirection() == Qt::LeftToRight && oldItemEndPosition < q->contentX())
                         listItem->setPosition(listItem->position() - diff, true);
-                    else if (q->effectiveLayoutDirection() == Qt::RightToLeft && listItem->endPosition() > q->contentX())
+                    else if (q->effectiveLayoutDirection() == Qt::RightToLeft && oldItemEndPosition > q->contentX())
                         listItem->setPosition(listItem->position() + diff, true);
                 }
             }
