@@ -266,7 +266,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     requires the pixel data to be exchanged between the system memory and the
     graphic card, which is significantly more expensive.  Rendering may also be
     synchronized with the V-sync signal (to avoid
-    \l{en.wikipedia.org/wiki/Screen_tearing}{screen tearing}) which will further
+    \l{http://en.wikipedia.org/wiki/Screen_tearing}{screen tearing}) which will further
     impact pixel operations with \c Canvas.FrambufferObject render target.
 
     \section1 Tips for Porting Existing HTML5 Canvas applications

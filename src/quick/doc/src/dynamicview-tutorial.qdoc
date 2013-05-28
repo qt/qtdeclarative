@@ -62,12 +62,12 @@ delegate which provides a template for constructing items in the view.
 
 The code for the ListView and delegate looks like this:
 
-\snippet quick/tutorials/dynamicview/dynamicview1/dynamicview.qml 0
+\snippet tutorials/dynamicview/dynamicview1/dynamicview.qml 0
 
 The model is defined in a separate QML file which looks like this:
 
-\snippet quick/tutorials/dynamicview/dynamicview1/PetsModel.qml 0
-\snippet quick/tutorials/dynamicview/dynamicview1/PetsModel.qml 1
+\snippet tutorials/dynamicview/dynamicview1/PetsModel.qml 0
+\snippet tutorials/dynamicview/dynamicview1/PetsModel.qml 1
 
 \section2 Walkthrough
 
@@ -77,11 +77,11 @@ is the template from which each item in the ListView is constructed.
 The \c name, \c age, \c type, and \c size variables referenced in the delegate are sourced from
 the model data.  The names correspond to roles defined in the model.
 
-\snippet quick/tutorials/dynamicview/dynamicview1/dynamicview.qml 1
+\snippet tutorials/dynamicview/dynamicview1/dynamicview.qml 1
 
 The second part of the application is the ListView itself to which we bind the model and delegate.
 
-\snippet quick/tutorials/dynamicview/dynamicview1/dynamicview.qml 2
+\snippet tutorials/dynamicview/dynamicview1/dynamicview.qml 2
 */
 
 /*!
@@ -97,7 +97,7 @@ Now that we have a visible list of items we want to be able to interact with the
 by extending the delegate so the visible content can be dragged up and down the screen.  The
 updated delegate looks like this:
 
-\snippet quick/tutorials/dynamicview/dynamicview2/dynamicview.qml 0
+\snippet tutorials/dynamicview/dynamicview2/dynamicview.qml 0
 
 \section2 Walkthrough
 
@@ -106,8 +106,8 @@ for mouse events and will allow us to drag the delegate's content item.  It also
 a container for the content item which is important as a delegate's root item is positioned by
 the view and cannot be moved by other means.
 
-\snippet quick/tutorials/dynamicview/dynamicview2/dynamicview.qml 1
-\snippet quick/tutorials/dynamicview/dynamicview2/dynamicview.qml 2
+\snippet tutorials/dynamicview/dynamicview2/dynamicview.qml 1
+\snippet tutorials/dynamicview/dynamicview2/dynamicview.qml 2
 
 Dragging the content item is enabled by binding it to the MouseArea's
 \l {QtQuick2::MouseArea::drag.target}{drag.target} property.  Because we still want the view to be
@@ -117,14 +117,14 @@ timeout has expired it is interpreted as moving the list and if it moves after i
 dragging an item.  To make it more obvious to the user when an item can be dragged we'll change the
 background color of the content item when the timeout has expired.
 
-\snippet quick/tutorials/dynamicview/dynamicview2/dynamicview.qml 3
+\snippet tutorials/dynamicview/dynamicview2/dynamicview.qml 3
 
 The other thing we'll need to do before an item can be dragged is to unset any anchors on the
 content item so it can be freely moved around.  We do this in a state change that is triggered
 when the delegate item is held, at the same time we can reparent the content item to the root item
 so that is above other items in the stacking order and isn't obscured as it is dragged around.
 
-\snippet quick/tutorials/dynamicview/dynamicview2/dynamicview.qml 4
+\snippet tutorials/dynamicview/dynamicview2/dynamicview.qml 4
 
 */
 
@@ -141,10 +141,10 @@ The next step in our application to move items within the list as they're dragge
 can re-order the list.  To achieve this we introduce three new types to our application;
 VisualDataModel, \l Drag and DropArea.
 
-\snippet quick/tutorials/dynamicview/dynamicview3/dynamicview.qml 0
-\snippet quick/tutorials/dynamicview/dynamicview3/dynamicview.qml 1
-\snippet quick/tutorials/dynamicview/dynamicview3/dynamicview.qml 2
-\snippet quick/tutorials/dynamicview/dynamicview3/dynamicview.qml 5
+\snippet tutorials/dynamicview/dynamicview3/dynamicview.qml 0
+\snippet tutorials/dynamicview/dynamicview3/dynamicview.qml 1
+\snippet tutorials/dynamicview/dynamicview3/dynamicview.qml 2
+\snippet tutorials/dynamicview/dynamicview3/dynamicview.qml 5
 
 \section2 Walkthrough
 
@@ -152,7 +152,7 @@ In order to re-order the view we need to determine when one item has been dragge
 the Drag attached property we can generate events that are sent to the scene graph whenever the item
 it is attached to moves.
 
-\snippet quick/tutorials/dynamicview/dynamicview3/dynamicview.qml 1
+\snippet tutorials/dynamicview/dynamicview3/dynamicview.qml 1
 
 Drag events are only sent while the active property is true, so in this example the first event
 would be sent when the delegate was held with additional event sents when dragging.  The
@@ -163,7 +163,7 @@ Then we use a DropArea in each view item to determine when the hot spot of the d
 intersects another item, when a drag enters one of these DropAreas we can move the dragged item
 to the index of the item it was dragged over.
 
-\snippet quick/tutorials/dynamicview/dynamicview3/dynamicview.qml 3
+\snippet tutorials/dynamicview/dynamicview3/dynamicview.qml 3
 
 To move the items within the view we use a VisualDataModel.  The VisualDataModel type is used by
 the view types to instantiate delegate items from model data and when constructed explicitly can
@@ -177,7 +177,7 @@ To utilize a VisualDataModel with a ListView we bind it to the \l {QtQuick2::Lis
 property of the view and bind the \l {QtQuick2::VisualDataModel::model}{model} and
 \l {QtQuick2::VisualDataModel::delegate}{delegate} to the VisualDataModel.
 
-\snippet quick/tutorials/dynamicview/dynamicview3/dynamicview.qml 4
+\snippet tutorials/dynamicview/dynamicview3/dynamicview.qml 4
 
 */
 
@@ -193,7 +193,7 @@ Drag and drop isn't the only way items in a view can be re-ordered, using a Visu
 also possible to sort items based on model data.  To do that we extend our VisualDataModel instance
 like this:
 
-\snippet quick/tutorials/dynamicview/dynamicview4/dynamicview.qml 0
+\snippet tutorials/dynamicview/dynamicview4/dynamicview.qml 0
 
 \section2 Walkthrough
 
@@ -204,8 +204,8 @@ we want items to first be added to an unsorted group from where we can transfer 
 position in the items group.  To do that we clear includeByDefault on the items group and set it on
 a new group name 'unsorted'.
 
-\snippet quick/tutorials/dynamicview/dynamicview4/dynamicview.qml 1
-\snippet quick/tutorials/dynamicview/dynamicview4/dynamicview.qml 2
+\snippet tutorials/dynamicview/dynamicview4/dynamicview.qml 1
+\snippet tutorials/dynamicview/dynamicview4/dynamicview.qml 2
 
 We sort the items by first finding the position in the items group to insert the first unsorted
 item and then transfer the item to the items group before moving it to the pre-determined index and
@@ -216,19 +216,19 @@ with the \l {QtQuick2::VisualDataModel::get} {get} function.  Through the model 
 handle we can access the same model data that is available in a delegate instance of that item and
 compare against other items to determine relative position.
 
-\snippet quick/tutorials/dynamicview/dynamicview4/dynamicview.qml 3
+\snippet tutorials/dynamicview/dynamicview4/dynamicview.qml 3
 
 The lessThan argument to the sort function is a comparsion function which will determine the order
 of the list.  In this example it can be one of the following:
 
-\snippet quick/tutorials/dynamicview/dynamicview4/dynamicview.qml 4
+\snippet tutorials/dynamicview/dynamicview4/dynamicview.qml 4
 
 A sort is triggered whenever new items are added to the unsorted VisualDataGroup which we are
 notified of by the \l {QtQuick2::VisualDataGroup::onChanged}{onChanged} handler.  If no sort
 function is currently selected we simply transfer all items from the unsorted group to the items
 group, otherwise we call sort with the selected sort function.
 
-\snippet quick/tutorials/dynamicview/dynamicview4/dynamicview.qml 5
+\snippet tutorials/dynamicview/dynamicview4/dynamicview.qml 5
 
 Finally when the selected sort order changes we can trigger a full re-sort of the list by moving
 all items from the items group to the unsorted group, which will trigger the
@@ -236,6 +236,6 @@ all items from the items group to the unsorted group, which will trigger the
 items group in correct order.  Note that the \l {QtQuick2::VisualDataGroup::onChanged}{onChanged}
 handler will not be invoked recursively so there's no issue with it being invoked during a sort.
 
-\snippet quick/tutorials/dynamicview/dynamicview4/dynamicview.qml 6
+\snippet tutorials/dynamicview/dynamicview4/dynamicview.qml 6
 
 */

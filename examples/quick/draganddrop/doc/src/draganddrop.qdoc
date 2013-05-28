@@ -37,12 +37,12 @@
 
     It has a DragTile component which uses a MouseArea to move an item when dragged:
 
-    \snippet quick/draganddrop/tiles/DragTile.qml 0
-    \snippet quick/draganddrop/tiles/DragTile.qml 1
+    \snippet draganddrop/tiles/DragTile.qml 0
+    \snippet draganddrop/tiles/DragTile.qml 1
 
     And a DropTile component which the dragged tiles can be dropped onto:
 
-    \snippet quick/draganddrop/tiles/DropTile.qml 0
+    \snippet draganddrop/tiles/DropTile.qml 0
 
     The keys property of the DropArea will only allow an item with matching key in
     it's Drag.keys property to be dropped on it.
@@ -52,7 +52,7 @@
     It uses a DelegateModel to move a delegate item to the position of another item
     it is dragged over.
 
-    \snippet quick/draganddrop/views/gridview.qml 0
-    \snippet quick/draganddrop/views/gridview.qml 1
+    \snippet draganddrop/views/gridview.qml 0
+    \snippet draganddrop/views/gridview.qml 1
 */
 

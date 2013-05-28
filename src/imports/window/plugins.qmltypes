@@ -3,7 +3,7 @@ import QtQuick.tooling 1.1
 // This file describes the plugin-supplied types contained in the library.
 // It is used for QML tooling purposes only.
 //
-// This file was auto-generated with the command '../../../bin/qmlplugindump.app/Contents/MacOS/qmlplugindump QtQuick.Window 2.1 -notrelocatable'.
+// This file was auto-generated with the command 'qmlplugindump QtQuick.Window 2.1 -notrelocatable'.
 
 Module {
     Component {
@@ -23,15 +23,23 @@ Module {
         name: "QQuickScreen"
         prototype: "QObject"
         exports: ["QtQuick.Window/Screen 2.0"]
+        exportMetaObjectRevisions: [0]
         attachedType: "QQuickScreenAttached"
     }
     Component {
         name: "QQuickScreenAttached"
         prototype: "QObject"
+        Property { name: "name"; revision: 1; type: "string"; isReadonly: true }
         Property { name: "width"; type: "int"; isReadonly: true }
         Property { name: "height"; type: "int"; isReadonly: true }
+        Property { name: "desktopAvailableWidth"; revision: 1; type: "int"; isReadonly: true }
+        Property { name: "desktopAvailableHeight"; revision: 1; type: "int"; isReadonly: true }
+        Property { name: "logicalPixelDensity"; revision: 1; type: "double"; isReadonly: true }
         Property { name: "primaryOrientation"; type: "Qt::ScreenOrientation"; isReadonly: true }
         Property { name: "orientation"; type: "Qt::ScreenOrientation"; isReadonly: true }
+        Signal { name: "nameChanged"; revision: 1 }
+        Signal { name: "desktopGeometryChanged"; revision: 1 }
+        Signal { name: "logicalPixelDensityChanged"; revision: 1 }
         Method {
             name: "angleBetween"
             type: "int"
@@ -61,6 +69,11 @@ Module {
         Signal { name: "beforeSynchronizing" }
         Signal { name: "beforeRendering" }
         Signal { name: "afterRendering" }
+        Signal {
+            name: "closing"
+            revision: 1
+            Parameter { name: "close"; type: "QQuickCloseEvent"; isPointer: true }
+        }
         Signal {
             name: "colorChanged"
             Parameter { type: "QColor" }
@@ -95,6 +108,7 @@ Module {
         Property { name: "maximumWidth"; revision: 1; type: "int" }
         Property { name: "maximumHeight"; revision: 1; type: "int" }
         Property { name: "visible"; type: "bool" }
+        Property { name: "active"; revision: 1; type: "bool"; isReadonly: true }
         Property { name: "visibility"; revision: 1; type: "Visibility" }
         Property { name: "contentOrientation"; revision: 1; type: "Qt::ScreenOrientation" }
         Property { name: "opacity"; revision: 1; type: "double" }
@@ -155,6 +169,7 @@ Module {
             revision: 1
             Parameter { name: "visibility"; type: "QWindow::Visibility" }
         }
+        Signal { name: "activeChanged"; revision: 1 }
         Signal {
             name: "contentOrientationChanged"
             revision: 1
@@ -169,6 +184,7 @@ Module {
             revision: 1
             Parameter { name: "opacity"; type: "double" }
         }
+        Method { name: "requestActivate"; revision: 1 }
         Method {
             name: "setVisible"
             Parameter { name: "visible"; type: "bool" }
@@ -221,6 +237,10 @@ Module {
             name: "setMaximumHeight"
             revision: 1
             Parameter { name: "h"; type: "int" }
+        }
+        Method {
+            name: "alert"
+            Parameter { name: "msec"; type: "int" }
         }
     }
 }

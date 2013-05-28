@@ -125,14 +125,14 @@ When a JavaScript file is imported, it must be imported with a qualifier.  The
 functions in that file are then accessible from the importing script via the
 qualifier (that is, as \tt{Qualifier.functionName(params)}).  Sometimes it is
 desirable to have the functions made available in the importing context without
-needing to qualify them, and in this circumstance the \l{QML:Qt::include()}
+needing to qualify them, and in this circumstance the \l{QtQml2::Qt::include()}
 {Qt.include()} function may be used to include one JavaScript file from another.
 This copies all functions from the other file into the current file's
 namespace, but ignores all pragmas and imports defined in that file.
 
 For example, the QML code below left calls \c showCalculations() in \c script.js,
 which in turn can call \c factorial() in \c factorial.js, as it has included
-\c factorial.js using \l {QML:Qt::include()}{Qt.include()}.
+\c factorial.js using \l {QtQml2::Qt::include()}{Qt.include()}.
 
 \table
 \row
@@ -142,7 +142,7 @@ which in turn can call \c factorial() in \c factorial.js, as it has included
 \li \snippet qml/integrating-javascript/includejs/factorial.js 0
 \endtable
 
-Notice that calling \l {QML:Qt::include()}{Qt.include()} copies all functions
+Notice that calling \l {QtQml2::Qt::include()}{Qt.include()} copies all functions
 from \c factorial.js into the \c MyScript namespace, which means the QML
 component can also access \c factorial() directly as \c MyScript.factorial().
 

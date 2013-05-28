@@ -27,7 +27,6 @@
 
 /*!
 \page qtqml-syntax-signals.html
-\ingroup qml-features
 
 \title Signal and Handler Event System
 \brief the event sytem in QML
@@ -294,4 +293,3 @@ output:
 
 
 */
-

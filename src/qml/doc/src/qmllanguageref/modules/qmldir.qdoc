@@ -223,6 +223,11 @@ cannot be used if an earlier version is imported. If the client had imported
 version 1.0 of the module, they can use the \c MyButton type but \b not the
 \c MyWindow type.
 
+A version cannot be imported if no types have been explicitly exported for that
+version. If a module provides a \c MyButton type in version 1.0 and a
+\c MyWindow type in version 1.1, you cannot import version 1.2 or version 2.0 of
+that module.
+
 A type can be defined by different files in different versions. In this case,
 the most closely matching version will be used when imported by clients.
 For example, if a module had specified the following types via its \c qmldir
@@ -363,7 +368,7 @@ Module {
 
         // The name of the type containing attached properties
         // and methods.
-        attachedType: "QDeclarativeAnimationAttached"
+        attachedType: "QQuickAnimationAttached"
 
         // The list of exports determines how a type can be imported.
         // Each string has the format "URI/Name version" and matches the

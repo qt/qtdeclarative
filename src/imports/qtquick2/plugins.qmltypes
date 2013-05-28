@@ -3,12 +3,20 @@ import QtQuick.tooling 1.1
 // This file describes the plugin-supplied types contained in the library.
 // It is used for QML tooling purposes only.
 //
-// This file was auto-generated with the command 'qmlplugindump -builtins'.
+// This file was auto-generated with the command 'qmlplugindump -notrelocatable -builtins'.
 
 Module {
     Component {
         name: "QAbstractItemModel"
         prototype: "QObject"
+        Enum {
+            name: "LayoutChangeHint"
+            values: {
+                "NoLayoutChangeHint": 0,
+                "VerticalSortHint": 1,
+                "HorizontalSortHint": 2
+            }
+        }
         Signal {
             name: "dataChanged"
             Parameter { name: "topLeft"; type: "QModelIndex" }
@@ -167,6 +175,7 @@ Module {
         name: "QInputMethod"
         prototype: "QObject"
         exports: ["QtQuick/InputMethod 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Action"
             values: {
@@ -215,6 +224,7 @@ Module {
     Component {
         name: "QObject"
         exports: ["QtQml/QtObject 2.0", "QtQuick/QtObject 2.0"]
+        exportMetaObjectRevisions: [0, 0]
         Property { name: "objectName"; type: "string" }
         Signal {
             name: "objectNameChanged"
@@ -228,9 +238,26 @@ Module {
         }
     }
     Component {
+        name: "QQmlApplication"
+        prototype: "QObject"
+        Property { name: "arguments"; type: "QStringList"; isReadonly: true }
+        Property { name: "name"; type: "string" }
+        Property { name: "version"; type: "string" }
+        Signal { name: "aboutToQuit" }
+        Method {
+            name: "setName"
+            Parameter { name: "arg"; type: "string" }
+        }
+        Method {
+            name: "setVersion"
+            Parameter { name: "arg"; type: "string" }
+        }
+    }
+    Component {
         name: "QQmlBind"
         prototype: "QObject"
         exports: ["QtQml/Binding 2.0", "QtQuick/Binding 2.0"]
+        exportMetaObjectRevisions: [0, 0]
         Property { name: "target"; type: "QObject"; isPointer: true }
         Property { name: "property"; type: "string" }
         Property { name: "value"; type: "QVariant" }
@@ -244,6 +271,7 @@ Module {
             "QtQml/Component 2.0",
             "QtQuick/Component 2.0"
         ]
+        exportMetaObjectRevisions: [0, 0, 0]
         attachedType: "QQmlComponentAttached"
         Enum {
             name: "CompilationMode"
@@ -298,13 +326,105 @@ Module {
         name: "QQmlConnections"
         prototype: "QObject"
         exports: ["QtQml/Connections 2.0", "QtQuick/Connections 2.0"]
+        exportMetaObjectRevisions: [0, 0]
         Property { name: "target"; type: "QObject"; isPointer: true }
         Property { name: "ignoreUnknownSignals"; type: "bool" }
     }
     Component {
+        name: "QQmlDelegateModel"
+        defaultProperty: "delegate"
+        prototype: "QQmlInstanceModel"
+        exports: ["QtQuick/VisualDataModel 2.0"]
+        exportMetaObjectRevisions: [0]
+        attachedType: "QQmlDelegateModelAttached"
+        Property { name: "model"; type: "QVariant" }
+        Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
+        Property { name: "filterOnGroup"; type: "string" }
+        Property { name: "items"; type: "QQmlDelegateModelGroup"; isReadonly: true; isPointer: true }
+        Property {
+            name: "persistedItems"
+            type: "QQmlDelegateModelGroup"
+            isReadonly: true
+            isPointer: true
+        }
+        Property { name: "groups"; type: "QQmlDelegateModelGroup"; isList: true; isReadonly: true }
+        Property { name: "parts"; type: "QObject"; isReadonly: true; isPointer: true }
+        Property { name: "rootIndex"; type: "QVariant" }
+        Signal { name: "filterGroupChanged" }
+        Signal { name: "defaultGroupsChanged" }
+        Method {
+            name: "modelIndex"
+            type: "QVariant"
+            Parameter { name: "idx"; type: "int" }
+        }
+        Method { name: "parentModelIndex"; type: "QVariant" }
+    }
+    Component {
+        name: "QQmlDelegateModelAttached"
+        prototype: "QObject"
+        Property { name: "model"; type: "QQmlDelegateModel"; isReadonly: true; isPointer: true }
+        Property { name: "groups"; type: "QStringList" }
+        Property { name: "isUnresolved"; type: "bool"; isReadonly: true }
+        Signal { name: "unresolvedChanged" }
+    }
+    Component {
+        name: "QQmlDelegateModelGroup"
+        prototype: "QObject"
+        exports: ["QtQuick/VisualDataGroup 2.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "count"; type: "int"; isReadonly: true }
+        Property { name: "name"; type: "string" }
+        Property { name: "includeByDefault"; type: "bool" }
+        Signal { name: "defaultIncludeChanged" }
+        Signal {
+            name: "changed"
+            Parameter { name: "removed"; type: "QQmlV8Handle" }
+            Parameter { name: "inserted"; type: "QQmlV8Handle" }
+        }
+        Method {
+            name: "insert"
+            Parameter { type: "QQmlV8Function"; isPointer: true }
+        }
+        Method {
+            name: "create"
+            Parameter { type: "QQmlV8Function"; isPointer: true }
+        }
+        Method {
+            name: "resolve"
+            Parameter { type: "QQmlV8Function"; isPointer: true }
+        }
+        Method {
+            name: "remove"
+            Parameter { type: "QQmlV8Function"; isPointer: true }
+        }
+        Method {
+            name: "addGroups"
+            Parameter { type: "QQmlV8Function"; isPointer: true }
+        }
+        Method {
+            name: "removeGroups"
+            Parameter { type: "QQmlV8Function"; isPointer: true }
+        }
+        Method {
+            name: "setGroups"
+            Parameter { type: "QQmlV8Function"; isPointer: true }
+        }
+        Method {
+            name: "move"
+            Parameter { type: "QQmlV8Function"; isPointer: true }
+        }
+        Method {
+            name: "get"
+            type: "QQmlV8Handle"
+            Parameter { name: "index"; type: "int" }
+        }
+    }
+    Component { name: "QQmlDelegateModelParts"; prototype: "QObject" }
+    Component {
         name: "QQmlEasingValueType"
         prototype: "QQmlValueType"
         exports: ["QtQuick/Easing 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Type"
             values: {
@@ -363,8 +483,111 @@ Module {
         Property { name: "bezierCurve"; type: "QVariantList" }
     }
     Component {
+        name: "QQmlInstanceModel"
+        prototype: "QObject"
+        Property { name: "count"; type: "int"; isReadonly: true }
+        Signal {
+            name: "modelUpdated"
+            Parameter { name: "changeSet"; type: "QQmlChangeSet" }
+            Parameter { name: "reset"; type: "bool" }
+        }
+        Signal {
+            name: "createdItem"
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "object"; type: "QObject"; isPointer: true }
+        }
+        Signal {
+            name: "initItem"
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "object"; type: "QObject"; isPointer: true }
+        }
+        Signal {
+            name: "destroyingItem"
+            Parameter { name: "object"; type: "QObject"; isPointer: true }
+        }
+    }
+    Component {
+        name: "QQmlInstantiator"
+        defaultProperty: "delegate"
+        prototype: "QObject"
+        exports: ["QtQml/Instantiator 2.1", "QtQuick/Instantiator 2.1"]
+        exportMetaObjectRevisions: [0, 0]
+        Property { name: "active"; type: "bool" }
+        Property { name: "asynchronous"; type: "bool" }
+        Property { name: "model"; type: "QVariant" }
+        Property { name: "count"; type: "int"; isReadonly: true }
+        Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
+        Property { name: "object"; type: "QObject"; isReadonly: true; isPointer: true }
+        Signal {
+            name: "objectAdded"
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "object"; type: "QObject"; isPointer: true }
+        }
+        Signal {
+            name: "objectRemoved"
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "object"; type: "QObject"; isPointer: true }
+        }
+        Method {
+            name: "objectAt"
+            type: "QObject*"
+            Parameter { name: "index"; type: "int" }
+        }
+    }
+    Component {
+        name: "QQmlListElement"
+        prototype: "QObject"
+        exports: ["QtQuick/ListElement 2.0"]
+        exportMetaObjectRevisions: [0]
+    }
+    Component {
+        name: "QQmlListModel"
+        prototype: "QAbstractListModel"
+        exports: ["QtQuick/ListModel 2.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "count"; type: "int"; isReadonly: true }
+        Property { name: "dynamicRoles"; type: "bool" }
+        Method { name: "clear" }
+        Method {
+            name: "remove"
+            Parameter { name: "args"; type: "QQmlV8Function"; isPointer: true }
+        }
+        Method {
+            name: "append"
+            Parameter { name: "args"; type: "QQmlV8Function"; isPointer: true }
+        }
+        Method {
+            name: "insert"
+            Parameter { name: "args"; type: "QQmlV8Function"; isPointer: true }
+        }
+        Method {
+            name: "get"
+            type: "QQmlV8Handle"
+            Parameter { name: "index"; type: "int" }
+        }
+        Method {
+            name: "set"
+            Parameter { name: "index"; type: "int" }
+            Parameter { type: "QQmlV8Handle" }
+        }
+        Method {
+            name: "setProperty"
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "property"; type: "string" }
+            Parameter { name: "value"; type: "QVariant" }
+        }
+        Method {
+            name: "move"
+            Parameter { name: "from"; type: "int" }
+            Parameter { name: "to"; type: "int" }
+            Parameter { name: "count"; type: "int" }
+        }
+        Method { name: "sync" }
+    }
+    Component {
         name: "QQmlLocale"
         exports: ["QtQuick/Locale 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "MeasurementSystem"
             values: {
@@ -404,9 +627,24 @@ Module {
         }
     }
     Component {
+        name: "QQmlObjectModel"
+        defaultProperty: "children"
+        prototype: "QQmlInstanceModel"
+        exports: ["QtQuick/VisualItemModel 2.0"]
+        exportMetaObjectRevisions: [0]
+        attachedType: "QQmlObjectModelAttached"
+        Property { name: "children"; type: "QObject"; isList: true; isReadonly: true }
+    }
+    Component {
+        name: "QQmlObjectModelAttached"
+        prototype: "QObject"
+        Property { name: "index"; type: "int"; isReadonly: true }
+    }
+    Component {
         name: "QQmlTimer"
         prototype: "QObject"
         exports: ["QtQml/Timer 2.0", "QtQuick/Timer 2.0"]
+        exportMetaObjectRevisions: [0, 0]
         Property { name: "interval"; type: "int" }
         Property { name: "running"; type: "bool" }
         Property { name: "repeat"; type: "bool" }
@@ -422,6 +660,7 @@ Module {
         name: "QQuickAbstractAnimation"
         prototype: "QObject"
         exports: ["QtQuick/Animation 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Loops"
             values: {
@@ -461,14 +700,18 @@ Module {
         name: "QQuickAccessibleAttached"
         prototype: "QObject"
         exports: ["QtQuick/Accessible 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "role"; type: "QAccessible::Role" }
         Property { name: "name"; type: "string" }
         Property { name: "description"; type: "string" }
+        Method { name: "valueChanged" }
+        Method { name: "cursorPositionChanged" }
     }
     Component {
         name: "QQuickAnchorAnimation"
         prototype: "QQuickAbstractAnimation"
         exports: ["QtQuick/AnchorAnimation 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "targets"; type: "QQuickItem"; isList: true; isReadonly: true }
         Property { name: "duration"; type: "int" }
         Property { name: "easing"; type: "QEasingCurve" }
@@ -485,6 +728,7 @@ Module {
         name: "QQuickAnchorChanges"
         prototype: "QQuickStateOperation"
         exports: ["QtQuick/AnchorChanges 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "target"; type: "QQuickItem"; isPointer: true }
         Property { name: "anchors"; type: "QQuickAnchorSet"; isReadonly: true; isPointer: true }
     }
@@ -527,6 +771,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickImage"
         exports: ["QtQuick/AnimatedImage 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "playing"; type: "bool" }
         Property { name: "paused"; type: "bool" }
         Property { name: "currentFrame"; type: "int" }
@@ -539,6 +784,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/AnimatedSprite 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "LoopParameters"
             values: {
@@ -698,6 +944,7 @@ Module {
         defaultProperty: "animation"
         prototype: "QObject"
         exports: ["QtQuick/AnimationController 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "progress"; type: "double" }
         Property { name: "animation"; type: "QQuickAbstractAnimation"; isPointer: true }
         Method { name: "reload" }
@@ -712,8 +959,9 @@ Module {
     }
     Component {
         name: "QQuickApplication"
-        prototype: "QObject"
+        prototype: "QQmlApplication"
         exports: ["QtQuick/Application 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "active"; type: "bool"; isReadonly: true }
         Property { name: "layoutDirection"; type: "Qt::LayoutDirection"; isReadonly: true }
         Property { name: "supportsMultipleWindows"; type: "bool"; isReadonly: true }
@@ -723,6 +971,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickImplicitSizeItem"
         exports: ["QtQuick/Positioner 2.0"]
+        exportMetaObjectRevisions: [0]
         attachedType: "QQuickPositionerAttached"
         Property { name: "spacing"; type: "double" }
         Property { name: "populate"; type: "QQuickTransition"; isPointer: true }
@@ -734,6 +983,7 @@ Module {
         defaultProperty: "animation"
         prototype: "QObject"
         exports: ["QtQuick/Behavior 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "animation"; type: "QQuickAbstractAnimation"; isPointer: true }
         Property { name: "enabled"; type: "bool" }
     }
@@ -742,6 +992,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickImageBase"
         exports: ["QtQuick/BorderImage 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "TileMode"
             values: {
@@ -760,6 +1011,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/Canvas 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "RenderTarget"
             values: {
@@ -846,6 +1098,7 @@ Module {
         name: "QQuickColorAnimation"
         prototype: "QQuickPropertyAnimation"
         exports: ["QtQuick/ColorAnimation 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "from"; type: "QColor" }
         Property { name: "to"; type: "QColor" }
     }
@@ -854,6 +1107,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickBasePositioner"
         exports: ["QtQuick/Column 2.0"]
+        exportMetaObjectRevisions: [0]
     }
     Component {
         name: "QQuickCurve"
@@ -867,6 +1121,7 @@ Module {
         name: "QQuickDoubleValidator"
         prototype: "QDoubleValidator"
         exports: ["QtQuick/DoubleValidator 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "locale"; type: "string" }
         Signal { name: "localeNameChanged" }
     }
@@ -874,13 +1129,15 @@ Module {
         name: "QQuickDrag"
         prototype: "QObject"
         exports: ["QtQuick/Drag 2.0"]
+        exportMetaObjectRevisions: [0]
         attachedType: "QQuickDragAttached"
         Enum {
             name: "Axis"
             values: {
                 "XAxis": 1,
                 "YAxis": 2,
-                "XAndYAxis": 3
+                "XAndYAxis": 3,
+                "XandYAxis": 3
             }
         }
         Property { name: "target"; type: "QQuickItem"; isPointer: true }
@@ -914,6 +1171,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/DropArea 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "containsDrag"; type: "bool"; isReadonly: true }
         Property { name: "keys"; type: "QStringList" }
         Property { name: "drag"; type: "QQuickDropAreaDrag"; isReadonly: true; isPointer: true }
@@ -945,6 +1203,7 @@ Module {
         defaultProperty: "flickableData"
         prototype: "QQuickItem"
         exports: ["QtQuick/Flickable 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "BoundsBehavior"
             values: {
@@ -1054,6 +1313,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/Flipable 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Side"
             values: {
@@ -1070,6 +1330,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickBasePositioner"
         exports: ["QtQuick/Flow 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Flow"
             values: {
@@ -1086,11 +1347,13 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/FocusScope 2.0"]
+        exportMetaObjectRevisions: [0]
     }
     Component {
         name: "QQuickFontLoader"
         prototype: "QObject"
         exports: ["QtQuick/FontLoader 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Status"
             values: {
@@ -1108,6 +1371,7 @@ Module {
         name: "QQuickFontValueType"
         prototype: "QQmlValueType"
         exports: ["QtQuick/Font 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "FontWeight"
             values: {
@@ -1146,6 +1410,7 @@ Module {
         defaultProperty: "stops"
         prototype: "QObject"
         exports: ["QtQuick/Gradient 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "stops"; type: "QQuickGradientStop"; isList: true; isReadonly: true }
         Signal { name: "updated" }
     }
@@ -1153,6 +1418,7 @@ Module {
         name: "QQuickGradientStop"
         prototype: "QObject"
         exports: ["QtQuick/GradientStop 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "position"; type: "double" }
         Property { name: "color"; type: "QColor" }
     }
@@ -1160,12 +1426,29 @@ Module {
         name: "QQuickGrid"
         defaultProperty: "data"
         prototype: "QQuickBasePositioner"
-        exports: ["QtQuick/Grid 2.0"]
+        exports: ["QtQuick/Grid 2.0", "QtQuick/Grid 2.1"]
+        exportMetaObjectRevisions: [0, 1]
         Enum {
             name: "Flow"
             values: {
                 "LeftToRight": 0,
                 "TopToBottom": 1
+            }
+        }
+        Enum {
+            name: "HAlignment"
+            values: {
+                "AlignLeft": 1,
+                "AlignRight": 2,
+                "AlignHCenter": 4
+            }
+        }
+        Enum {
+            name: "VAlignment"
+            values: {
+                "AlignTop": 32,
+                "AlignBottom": 64,
+                "AlignVCenter": 128
             }
         }
         Property { name: "rows"; type: "int" }
@@ -1175,18 +1458,43 @@ Module {
         Property { name: "flow"; type: "Flow" }
         Property { name: "layoutDirection"; type: "Qt::LayoutDirection" }
         Property { name: "effectiveLayoutDirection"; type: "Qt::LayoutDirection"; isReadonly: true }
+        Property { name: "horizontalItemAlignment"; revision: 1; type: "HAlignment" }
+        Property {
+            name: "effectiveHorizontalItemAlignment"
+            revision: 1
+            type: "HAlignment"
+            isReadonly: true
+        }
+        Property { name: "verticalItemAlignment"; revision: 1; type: "VAlignment" }
+        Signal {
+            name: "horizontalAlignmentChanged"
+            revision: 1
+            Parameter { name: "alignment"; type: "HAlignment" }
+        }
+        Signal {
+            name: "effectiveHorizontalAlignmentChanged"
+            revision: 1
+            Parameter { name: "alignment"; type: "HAlignment" }
+        }
+        Signal {
+            name: "verticalAlignmentChanged"
+            revision: 1
+            Parameter { name: "alignment"; type: "VAlignment" }
+        }
     }
     Component {
         name: "QQuickGridMesh"
         prototype: "QQuickShaderEffectMesh"
         exports: ["QtQuick/GridMesh 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "resolution"; type: "QSize" }
     }
     Component {
         name: "QQuickGridView"
         defaultProperty: "data"
         prototype: "QQuickItemView"
-        exports: ["QtQuick/GridView 2.0"]
+        exports: ["QtQuick/GridView 2.0", "QtQuick/GridView 2.1"]
+        exportMetaObjectRevisions: [0, 1]
         attachedType: "QQuickGridViewAttached"
         Enum {
             name: "Flow"
@@ -1223,6 +1531,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickImageBase"
         exports: ["QtQuick/Image 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "HAlignment"
             values: {
@@ -1305,11 +1614,14 @@ Module {
         prototype: "QQuickItem"
         Property { name: "implicitWidth"; type: "double"; isReadonly: true }
         Property { name: "implicitHeight"; type: "double"; isReadonly: true }
+        Signal { name: "implicitWidthChanged2"; revision: 1 }
+        Signal { name: "implicitHeightChanged2"; revision: 1 }
     }
     Component {
         name: "QQuickIntValidator"
         prototype: "QIntValidator"
         exports: ["QtQuick/IntValidator 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "locale"; type: "string" }
         Signal { name: "localeNameChanged" }
     }
@@ -1317,7 +1629,8 @@ Module {
         name: "QQuickItem"
         defaultProperty: "data"
         prototype: "QObject"
-        exports: ["QtQuick/Item 2.0"]
+        exports: ["QtQuick/Item 2.0", "QtQuick/Item 2.1"]
+        exportMetaObjectRevisions: [0, 1]
         Enum {
             name: "TransformOrigin"
             values: {
@@ -1361,6 +1674,7 @@ Module {
         Property { name: "clip"; type: "bool" }
         Property { name: "focus"; type: "bool" }
         Property { name: "activeFocus"; type: "bool"; isReadonly: true }
+        Property { name: "activeFocusOnTab"; revision: 1; type: "bool" }
         Property { name: "rotation"; type: "double" }
         Property { name: "scale"; type: "double" }
         Property { name: "transformOrigin"; type: "TransformOrigin" }
@@ -1392,6 +1706,11 @@ Module {
             Parameter { type: "bool" }
         }
         Signal {
+            name: "activeFocusOnTabChanged"
+            revision: 1
+            Parameter { type: "bool" }
+        }
+        Signal {
             name: "parentChanged"
             Parameter { type: "QQuickItem"; isPointer: true }
         }
@@ -1411,6 +1730,11 @@ Module {
             name: "clipChanged"
             Parameter { type: "bool" }
         }
+        Signal {
+            name: "windowChanged"
+            revision: 1
+            Parameter { name: "window"; type: "QQuickWindow"; isPointer: true }
+        }
         Method { name: "update" }
         Method {
             name: "contains"
@@ -1426,6 +1750,16 @@ Module {
             Parameter { type: "QQmlV8Function"; isPointer: true }
         }
         Method { name: "forceActiveFocus" }
+        Method {
+            name: "forceActiveFocus"
+            Parameter { name: "reason"; type: "Qt::FocusReason" }
+        }
+        Method {
+            name: "nextItemInFocusChain"
+            type: "QQuickItem*"
+            Parameter { name: "forward"; type: "bool" }
+        }
+        Method { name: "nextItemInFocusChain"; type: "QQuickItem*" }
         Method {
             name: "childAt"
             type: "QQuickItem*"
@@ -1486,6 +1820,8 @@ Module {
         name: "QQuickItemView"
         defaultProperty: "flickableData"
         prototype: "QQuickFlickable"
+        exports: ["QtQuick/ItemView 2.1"]
+        exportMetaObjectRevisions: [1]
         Enum {
             name: "LayoutDirection"
             values: {
@@ -1577,6 +1913,7 @@ Module {
         }
         Method { name: "positionViewAtBeginning" }
         Method { name: "positionViewAtEnd" }
+        Method { name: "forceLayout"; revision: 1 }
     }
     Component {
         name: "QQuickItemViewAttached"
@@ -1595,6 +1932,7 @@ Module {
         name: "QQuickKeyNavigationAttached"
         prototype: "QObject"
         exports: ["QtQuick/KeyNavigation 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Priority"
             values: {
@@ -1614,6 +1952,7 @@ Module {
         name: "QQuickKeysAttached"
         prototype: "QObject"
         exports: ["QtQuick/Keys 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Priority"
             values: {
@@ -1789,62 +2128,16 @@ Module {
         name: "QQuickLayoutMirroringAttached"
         prototype: "QObject"
         exports: ["QtQuick/LayoutMirroring 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "enabled"; type: "bool" }
         Property { name: "childrenInherit"; type: "bool" }
-    }
-    Component {
-        name: "QQuickListElement"
-        prototype: "QObject"
-        exports: ["QtQuick/ListElement 2.0"]
-    }
-    Component {
-        name: "QQuickListModel"
-        prototype: "QAbstractListModel"
-        exports: ["QtQuick/ListModel 2.0"]
-        Property { name: "count"; type: "int"; isReadonly: true }
-        Property { name: "dynamicRoles"; type: "bool" }
-        Method { name: "clear" }
-        Method {
-            name: "remove"
-            Parameter { name: "args"; type: "QQmlV8Function"; isPointer: true }
-        }
-        Method {
-            name: "append"
-            Parameter { name: "args"; type: "QQmlV8Function"; isPointer: true }
-        }
-        Method {
-            name: "insert"
-            Parameter { name: "args"; type: "QQmlV8Function"; isPointer: true }
-        }
-        Method {
-            name: "get"
-            type: "QQmlV8Handle"
-            Parameter { name: "index"; type: "int" }
-        }
-        Method {
-            name: "set"
-            Parameter { name: "index"; type: "int" }
-            Parameter { type: "QQmlV8Handle" }
-        }
-        Method {
-            name: "setProperty"
-            Parameter { name: "index"; type: "int" }
-            Parameter { name: "property"; type: "string" }
-            Parameter { name: "value"; type: "QVariant" }
-        }
-        Method {
-            name: "move"
-            Parameter { name: "from"; type: "int" }
-            Parameter { name: "to"; type: "int" }
-            Parameter { name: "count"; type: "int" }
-        }
-        Method { name: "sync" }
     }
     Component {
         name: "QQuickListView"
         defaultProperty: "data"
         prototype: "QQuickItemView"
-        exports: ["QtQuick/ListView 2.0"]
+        exports: ["QtQuick/ListView 2.0", "QtQuick/ListView 2.1"]
+        exportMetaObjectRevisions: [0, 1]
         attachedType: "QQuickListViewAttached"
         Enum {
             name: "Orientation"
@@ -1882,6 +2175,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickImplicitSizeItem"
         exports: ["QtQuick/Loader 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Status"
             values: {
@@ -1909,6 +2203,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/MouseArea 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "mouseX"; type: "double"; isReadonly: true }
         Property { name: "mouseY"; type: "double"; isReadonly: true }
         Property { name: "containsMouse"; type: "bool"; isReadonly: true }
@@ -1979,6 +2274,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/MultiPointTouchArea 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "touchPoints"; type: "QQuickTouchPoint"; isList: true; isReadonly: true }
         Property { name: "minimumTouchPoints"; type: "int" }
         Property { name: "maximumTouchPoints"; type: "int" }
@@ -2011,6 +2307,7 @@ Module {
         name: "QQuickNumberAnimation"
         prototype: "QQuickPropertyAnimation"
         exports: ["QtQuick/NumberAnimation 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "from"; type: "double" }
         Property { name: "to"; type: "double" }
     }
@@ -2019,6 +2316,7 @@ Module {
         defaultProperty: "data"
         prototype: "QObject"
         exports: ["QtQuick/Package 2.0"]
+        exportMetaObjectRevisions: [0]
         attachedType: "QQuickPackageAttached"
         Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
     }
@@ -2032,6 +2330,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/PaintedItem 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "RenderTarget"
             values: {
@@ -2050,12 +2349,14 @@ Module {
         defaultProperty: "animations"
         prototype: "QQuickAnimationGroup"
         exports: ["QtQuick/ParallelAnimation 2.0"]
+        exportMetaObjectRevisions: [0]
     }
     Component {
         name: "QQuickParentAnimation"
         defaultProperty: "animations"
         prototype: "QQuickAnimationGroup"
         exports: ["QtQuick/ParentAnimation 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "target"; type: "QQuickItem"; isPointer: true }
         Property { name: "newParent"; type: "QQuickItem"; isPointer: true }
         Property { name: "via"; type: "QQuickItem"; isPointer: true }
@@ -2064,6 +2365,7 @@ Module {
         name: "QQuickParentChange"
         prototype: "QQuickStateOperation"
         exports: ["QtQuick/ParentChange 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "target"; type: "QQuickItem"; isPointer: true }
         Property { name: "parent"; type: "QQuickItem"; isPointer: true }
         Property { name: "x"; type: "QQmlScriptString" }
@@ -2078,6 +2380,7 @@ Module {
         defaultProperty: "pathElements"
         prototype: "QObject"
         exports: ["QtQuick/Path 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "pathElements"; type: "QQuickPathElement"; isList: true; isReadonly: true }
         Property { name: "startX"; type: "double" }
         Property { name: "startY"; type: "double" }
@@ -2088,6 +2391,7 @@ Module {
         name: "QQuickPathAnimation"
         prototype: "QQuickAbstractAnimation"
         exports: ["QtQuick/PathAnimation 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Orientation"
             values: {
@@ -2140,6 +2444,7 @@ Module {
         name: "QQuickPathArc"
         prototype: "QQuickCurve"
         exports: ["QtQuick/PathArc 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "ArcDirection"
             values: {
@@ -2156,6 +2461,7 @@ Module {
         name: "QQuickPathAttribute"
         prototype: "QQuickPathElement"
         exports: ["QtQuick/PathAttribute 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "name"; type: "string" }
         Property { name: "value"; type: "double" }
     }
@@ -2163,11 +2469,13 @@ Module {
         name: "QQuickPathCatmullRomCurve"
         prototype: "QQuickCurve"
         exports: ["QtQuick/PathCurve 2.0"]
+        exportMetaObjectRevisions: [0]
     }
     Component {
         name: "QQuickPathCubic"
         prototype: "QQuickCurve"
         exports: ["QtQuick/PathCubic 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "control1X"; type: "double" }
         Property { name: "control1Y"; type: "double" }
         Property { name: "control2X"; type: "double" }
@@ -2186,6 +2494,7 @@ Module {
         name: "QQuickPathInterpolator"
         prototype: "QObject"
         exports: ["QtQuick/PathInterpolator 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "path"; type: "QQuickPath"; isPointer: true }
         Property { name: "progress"; type: "double" }
         Property { name: "x"; type: "double"; isReadonly: true }
@@ -2196,17 +2505,20 @@ Module {
         name: "QQuickPathLine"
         prototype: "QQuickCurve"
         exports: ["QtQuick/PathLine 2.0"]
+        exportMetaObjectRevisions: [0]
     }
     Component {
         name: "QQuickPathPercent"
         prototype: "QQuickPathElement"
         exports: ["QtQuick/PathPercent 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "value"; type: "double" }
     }
     Component {
         name: "QQuickPathQuad"
         prototype: "QQuickCurve"
         exports: ["QtQuick/PathQuad 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "controlX"; type: "double" }
         Property { name: "controlY"; type: "double" }
         Property { name: "relativeControlX"; type: "double" }
@@ -2216,6 +2528,7 @@ Module {
         name: "QQuickPathSvg"
         prototype: "QQuickCurve"
         exports: ["QtQuick/PathSvg 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "path"; type: "string" }
     }
     Component {
@@ -2223,6 +2536,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/PathView 2.0"]
+        exportMetaObjectRevisions: [0]
         attachedType: "QQuickPathViewAttached"
         Enum {
             name: "HighlightRangeMode"
@@ -2313,6 +2627,7 @@ Module {
         name: "QQuickPauseAnimation"
         prototype: "QQuickAbstractAnimation"
         exports: ["QtQuick/PauseAnimation 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "duration"; type: "int" }
         Signal {
             name: "durationChanged"
@@ -2331,13 +2646,15 @@ Module {
         name: "QQuickPinch"
         prototype: "QObject"
         exports: ["QtQuick/Pinch 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Axis"
             values: {
                 "NoDrag": 0,
                 "XAxis": 1,
                 "YAxis": 2,
-                "XAndYAxis": 3
+                "XAndYAxis": 3,
+                "XandYAxis": 3
             }
         }
         Property { name: "target"; type: "QQuickItem"; isPointer: true }
@@ -2357,6 +2674,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/PinchArea 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "enabled"; type: "bool" }
         Property { name: "pinch"; type: "QQuickPinch"; isReadonly: true; isPointer: true }
         Signal {
@@ -2383,6 +2701,7 @@ Module {
         name: "QQuickPropertyAction"
         prototype: "QQuickAbstractAnimation"
         exports: ["QtQuick/PropertyAction 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "target"; type: "QObject"; isPointer: true }
         Property { name: "property"; type: "string" }
         Property { name: "properties"; type: "string" }
@@ -2402,6 +2721,7 @@ Module {
         name: "QQuickPropertyAnimation"
         prototype: "QQuickAbstractAnimation"
         exports: ["QtQuick/PropertyAnimation 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "duration"; type: "int" }
         Property { name: "from"; type: "QVariant" }
         Property { name: "to"; type: "QVariant" }
@@ -2436,6 +2756,7 @@ Module {
         name: "QQuickPropertyChanges"
         prototype: "QQuickStateOperation"
         exports: ["QtQuick/PropertyChanges 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "target"; type: "QObject"; isPointer: true }
         Property { name: "restoreEntryValues"; type: "bool" }
         Property { name: "explicit"; type: "bool" }
@@ -2445,6 +2766,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/Rectangle 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "color"; type: "QColor" }
         Property { name: "gradient"; type: "QQuickGradient"; isPointer: true }
         Property { name: "border"; type: "QQuickPen"; isReadonly: true; isPointer: true }
@@ -2455,6 +2777,7 @@ Module {
         defaultProperty: "delegate"
         prototype: "QQuickItem"
         exports: ["QtQuick/Repeater 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "model"; type: "QVariant" }
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
         Property { name: "count"; type: "int"; isReadonly: true }
@@ -2478,6 +2801,7 @@ Module {
         name: "QQuickRotation"
         prototype: "QQuickTransform"
         exports: ["QtQuick/Rotation 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "origin"; type: "QVector3D" }
         Property { name: "angle"; type: "double" }
         Property { name: "axis"; type: "QVector3D" }
@@ -2486,6 +2810,7 @@ Module {
         name: "QQuickRotationAnimation"
         prototype: "QQuickPropertyAnimation"
         exports: ["QtQuick/RotationAnimation 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "RotationDirection"
             values: {
@@ -2504,6 +2829,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickBasePositioner"
         exports: ["QtQuick/Row 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "layoutDirection"; type: "Qt::LayoutDirection" }
         Property { name: "effectiveLayoutDirection"; type: "Qt::LayoutDirection"; isReadonly: true }
     }
@@ -2511,6 +2837,7 @@ Module {
         name: "QQuickScale"
         prototype: "QQuickTransform"
         exports: ["QtQuick/Scale 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "origin"; type: "QVector3D" }
         Property { name: "xScale"; type: "double" }
         Property { name: "yScale"; type: "double" }
@@ -2530,6 +2857,7 @@ Module {
         name: "QQuickScriptAction"
         prototype: "QQuickAbstractAnimation"
         exports: ["QtQuick/ScriptAction 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "script"; type: "QQmlScriptString" }
         Property { name: "scriptName"; type: "string" }
     }
@@ -2538,12 +2866,14 @@ Module {
         defaultProperty: "animations"
         prototype: "QQuickAnimationGroup"
         exports: ["QtQuick/SequentialAnimation 2.0"]
+        exportMetaObjectRevisions: [0]
     }
     Component {
         name: "QQuickShaderEffect"
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/ShaderEffect 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "CullMode"
             values: {
@@ -2572,6 +2902,7 @@ Module {
         name: "QQuickShaderEffectMesh"
         prototype: "QObject"
         exports: ["QtQuick/ShaderEffectMesh 2.0"]
+        exportMetaObjectRevisions: [0]
         Signal { name: "geometryChanged" }
     }
     Component {
@@ -2579,6 +2910,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/ShaderEffectSource 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "WrapMode"
             values: {
@@ -2612,6 +2944,7 @@ Module {
         name: "QQuickSmoothedAnimation"
         prototype: "QQuickNumberAnimation"
         exports: ["QtQuick/SmoothedAnimation 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "ReversingMode"
             values: {
@@ -2628,6 +2961,7 @@ Module {
         name: "QQuickSpringAnimation"
         prototype: "QQuickNumberAnimation"
         exports: ["QtQuick/SpringAnimation 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "velocity"; type: "double" }
         Property { name: "spring"; type: "double" }
         Property { name: "damping"; type: "double" }
@@ -2640,6 +2974,7 @@ Module {
         name: "QQuickSprite"
         prototype: "QQuickStochasticState"
         exports: ["QtQuick/Sprite 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "source"; type: "QUrl" }
         Property { name: "reverse"; type: "bool" }
         Property { name: "frameSync"; type: "bool" }
@@ -2759,6 +3094,7 @@ Module {
         defaultProperty: "sprites"
         prototype: "QQuickItem"
         exports: ["QtQuick/SpriteSequence 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "running"; type: "bool" }
         Property { name: "interpolate"; type: "bool" }
         Property { name: "goalSprite"; type: "string" }
@@ -2802,6 +3138,7 @@ Module {
         defaultProperty: "changes"
         prototype: "QObject"
         exports: ["QtQuick/State 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "name"; type: "string" }
         Property { name: "when"; type: "QQmlBinding"; isPointer: true }
         Property { name: "extend"; type: "string" }
@@ -2812,6 +3149,7 @@ Module {
         name: "QQuickStateChangeScript"
         prototype: "QQuickStateOperation"
         exports: ["QtQuick/StateChangeScript 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "script"; type: "QQmlScriptString" }
         Property { name: "name"; type: "string" }
     }
@@ -2819,6 +3157,7 @@ Module {
         name: "QQuickStateGroup"
         prototype: "QObject"
         exports: ["QtQuick/StateGroup 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "state"; type: "string" }
         Property { name: "states"; type: "QQuickState"; isList: true; isReadonly: true }
         Property { name: "transitions"; type: "QQuickTransition"; isList: true; isReadonly: true }
@@ -2882,6 +3221,7 @@ Module {
         name: "QQuickSystemPalette"
         prototype: "QObject"
         exports: ["QtQuick/SystemPalette 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "ColorGroup"
             values: {
@@ -2912,6 +3252,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickImplicitSizeItem"
         exports: ["QtQuick/Text 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "HAlignment"
             values: {
@@ -3062,11 +3403,13 @@ Module {
         }
         Method { name: "doLayout" }
     }
+    Component { name: "QQuickTextDocument"; prototype: "QObject" }
     Component {
         name: "QQuickTextEdit"
         defaultProperty: "data"
         prototype: "QQuickImplicitSizeItem"
-        exports: ["QtQuick/TextEdit 2.0"]
+        exports: ["QtQuick/TextEdit 2.0", "QtQuick/TextEdit 2.1"]
+        exportMetaObjectRevisions: [0, 1]
         Enum {
             name: "HAlignment"
             values: {
@@ -3144,6 +3487,7 @@ Module {
         Property { name: "persistentSelection"; type: "bool" }
         Property { name: "textMargin"; type: "double" }
         Property { name: "inputMethodHints"; type: "Qt::InputMethodHints" }
+        Property { name: "selectByKeyboard"; revision: 1; type: "bool" }
         Property { name: "selectByMouse"; type: "bool" }
         Property { name: "mouseSelectionMode"; type: "SelectionMode" }
         Property { name: "canPaste"; type: "bool"; isReadonly: true }
@@ -3152,6 +3496,13 @@ Module {
         Property { name: "inputMethodComposing"; type: "bool"; isReadonly: true }
         Property { name: "baseUrl"; type: "QUrl" }
         Property { name: "renderType"; type: "RenderType" }
+        Property {
+            name: "textDocument"
+            revision: 1
+            type: "QQuickTextDocument"
+            isReadonly: true
+            isPointer: true
+        }
         Signal { name: "contentSizeChanged" }
         Signal {
             name: "colorChanged"
@@ -3200,6 +3551,11 @@ Module {
         Signal {
             name: "textMarginChanged"
             Parameter { name: "textMargin"; type: "double" }
+        }
+        Signal {
+            name: "selectByKeyboardChanged"
+            revision: 1
+            Parameter { name: "selectByKeyboard"; type: "bool" }
         }
         Signal {
             name: "selectByMouseChanged"
@@ -3280,6 +3636,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickImplicitSizeItem"
         exports: ["QtQuick/TextInput 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "EchoMode"
             values: {
@@ -3482,6 +3839,7 @@ Module {
         name: "QQuickTouchPoint"
         prototype: "QObject"
         exports: ["QtQuick/TouchPoint 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "pointId"; type: "int"; isReadonly: true }
         Property { name: "pressed"; type: "bool"; isReadonly: true }
         Property { name: "x"; type: "double"; isReadonly: true }
@@ -3502,6 +3860,7 @@ Module {
         defaultProperty: "animations"
         prototype: "QObject"
         exports: ["QtQuick/Transition 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "from"; type: "string" }
         Property { name: "to"; type: "string" }
         Property { name: "reversible"; type: "bool" }
@@ -3513,6 +3872,7 @@ Module {
         name: "QQuickTranslate"
         prototype: "QQuickTransform"
         exports: ["QtQuick/Translate 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "x"; type: "double" }
         Property { name: "y"; type: "double" }
     }
@@ -3520,6 +3880,7 @@ Module {
         name: "QQuickVector3dAnimation"
         prototype: "QQuickPropertyAnimation"
         exports: ["QtQuick/Vector3dAnimation 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "from"; type: "QVector3D" }
         Property { name: "to"; type: "QVector3D" }
     }
@@ -3527,6 +3888,7 @@ Module {
         name: "QQuickViewSection"
         prototype: "QObject"
         exports: ["QtQuick/ViewSection 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "SectionCriteria"
             values: {
@@ -3552,6 +3914,7 @@ Module {
         name: "QQuickViewTransitionAttached"
         prototype: "QObject"
         exports: ["QtQuick/ViewTransition 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "index"; type: "int"; isReadonly: true }
         Property { name: "item"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "destination"; type: "QPointF"; isReadonly: true }
@@ -3559,134 +3922,10 @@ Module {
         Property { name: "targetItems"; type: "QObject"; isList: true; isReadonly: true }
     }
     Component {
-        name: "QQuickVisualDataGroup"
-        prototype: "QObject"
-        exports: ["QtQuick/VisualDataGroup 2.0"]
-        Property { name: "count"; type: "int"; isReadonly: true }
-        Property { name: "name"; type: "string" }
-        Property { name: "includeByDefault"; type: "bool" }
-        Signal { name: "defaultIncludeChanged" }
-        Signal {
-            name: "changed"
-            Parameter { name: "removed"; type: "QQmlV8Handle" }
-            Parameter { name: "inserted"; type: "QQmlV8Handle" }
-        }
-        Method {
-            name: "insert"
-            Parameter { type: "QQmlV8Function"; isPointer: true }
-        }
-        Method {
-            name: "create"
-            Parameter { type: "QQmlV8Function"; isPointer: true }
-        }
-        Method {
-            name: "resolve"
-            Parameter { type: "QQmlV8Function"; isPointer: true }
-        }
-        Method {
-            name: "remove"
-            Parameter { type: "QQmlV8Function"; isPointer: true }
-        }
-        Method {
-            name: "addGroups"
-            Parameter { type: "QQmlV8Function"; isPointer: true }
-        }
-        Method {
-            name: "removeGroups"
-            Parameter { type: "QQmlV8Function"; isPointer: true }
-        }
-        Method {
-            name: "setGroups"
-            Parameter { type: "QQmlV8Function"; isPointer: true }
-        }
-        Method {
-            name: "move"
-            Parameter { type: "QQmlV8Function"; isPointer: true }
-        }
-        Method {
-            name: "get"
-            type: "QQmlV8Handle"
-            Parameter { name: "index"; type: "int" }
-        }
-    }
-    Component {
-        name: "QQuickVisualDataModel"
-        defaultProperty: "delegate"
-        prototype: "QQuickVisualModel"
-        exports: ["QtQuick/VisualDataModel 2.0"]
-        attachedType: "QQuickVisualDataModelAttached"
-        Property { name: "model"; type: "QVariant" }
-        Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
-        Property { name: "filterOnGroup"; type: "string" }
-        Property { name: "items"; type: "QQuickVisualDataGroup"; isReadonly: true; isPointer: true }
-        Property {
-            name: "persistedItems"
-            type: "QQuickVisualDataGroup"
-            isReadonly: true
-            isPointer: true
-        }
-        Property { name: "groups"; type: "QQuickVisualDataGroup"; isList: true; isReadonly: true }
-        Property { name: "parts"; type: "QObject"; isReadonly: true; isPointer: true }
-        Property { name: "rootIndex"; type: "QVariant" }
-        Signal { name: "filterGroupChanged" }
-        Signal { name: "defaultGroupsChanged" }
-        Method {
-            name: "modelIndex"
-            type: "QVariant"
-            Parameter { name: "idx"; type: "int" }
-        }
-        Method { name: "parentModelIndex"; type: "QVariant" }
-    }
-    Component {
-        name: "QQuickVisualDataModelAttached"
-        prototype: "QObject"
-        Property { name: "model"; type: "QQuickVisualDataModel"; isReadonly: true; isPointer: true }
-        Property { name: "groups"; type: "QStringList" }
-        Property { name: "isUnresolved"; type: "bool"; isReadonly: true }
-        Signal { name: "unresolvedChanged" }
-    }
-    Component { name: "QQuickVisualDataModelParts"; prototype: "QObject" }
-    Component {
-        name: "QQuickVisualItemModel"
-        defaultProperty: "children"
-        prototype: "QQuickVisualModel"
-        exports: ["QtQuick/VisualItemModel 2.0"]
-        attachedType: "QQuickVisualItemModelAttached"
-        Property { name: "children"; type: "QQuickItem"; isList: true; isReadonly: true }
-    }
-    Component {
-        name: "QQuickVisualItemModelAttached"
-        prototype: "QObject"
-        Property { name: "index"; type: "int"; isReadonly: true }
-    }
-    Component {
-        name: "QQuickVisualModel"
-        prototype: "QObject"
-        Property { name: "count"; type: "int"; isReadonly: true }
-        Signal {
-            name: "modelUpdated"
-            Parameter { name: "changeSet"; type: "QQuickChangeSet" }
-            Parameter { name: "reset"; type: "bool" }
-        }
-        Signal {
-            name: "createdItem"
-            Parameter { name: "index"; type: "int" }
-            Parameter { name: "item"; type: "QQuickItem"; isPointer: true }
-        }
-        Signal {
-            name: "initItem"
-            Parameter { name: "index"; type: "int" }
-            Parameter { name: "item"; type: "QQuickItem"; isPointer: true }
-        }
-        Signal {
-            name: "destroyingItem"
-            Parameter { name: "item"; type: "QQuickItem"; isPointer: true }
-        }
-    }
-    Component {
         name: "QQuickWorkerScript"
         prototype: "QObject"
         exports: ["QtQuick/WorkerScript 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "source"; type: "QUrl" }
         Signal {
             name: "message"
@@ -3701,6 +3940,7 @@ Module {
         name: "QRegExpValidator"
         prototype: "QValidator"
         exports: ["QtQuick/RegExpValidator 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "regExp"; type: "QRegExp" }
         Signal {
             name: "regExpChanged"
@@ -3866,9 +4106,11 @@ Module {
                 "SplashScreen": 15,
                 "Desktop": 17,
                 "SubWindow": 18,
+                "ForeignWindow": 33,
                 "WindowType_Mask": 255,
                 "MSWindowsFixedSizeDialogHint": 256,
                 "MSWindowsOwnDC": 512,
+                "BypassWindowManagerHint": 1024,
                 "X11BypassWindowManagerHint": 1024,
                 "FramelessWindowHint": 2048,
                 "WindowTitleHint": 4096,
@@ -3907,9 +4149,11 @@ Module {
                 "SplashScreen": 15,
                 "Desktop": 17,
                 "SubWindow": 18,
+                "ForeignWindow": 33,
                 "WindowType_Mask": 255,
                 "MSWindowsFixedSizeDialogHint": 256,
                 "MSWindowsOwnDC": 512,
+                "BypassWindowManagerHint": 1024,
                 "X11BypassWindowManagerHint": 1024,
                 "FramelessWindowHint": 2048,
                 "WindowTitleHint": 4096,
@@ -4105,7 +4349,8 @@ Module {
                 "AA_X11InitThreads": 10,
                 "AA_SynthesizeTouchForUnhandledMouseEvents": 11,
                 "AA_SynthesizeMouseForUnhandledTouchEvents": 12,
-                "AA_AttributeCount": 13
+                "AA_UseHighDpiPixmaps": 13,
+                "AA_AttributeCount": 14
             }
         }
         Enum {
@@ -4790,6 +5035,15 @@ Module {
             }
         }
         Enum {
+            name: "Edge"
+            values: {
+                "TopEdge": 1,
+                "LeftEdge": 2,
+                "RightEdge": 4,
+                "BottomEdge": 8
+            }
+        }
+        Enum {
             name: "ConnectionType"
             values: {
                 "AutoConnection": 0,
@@ -4916,6 +5170,7 @@ Module {
                 "ImhDate": 128,
                 "ImhTime": 256,
                 "ImhPreferLatin": 512,
+                "ImhMultiLine": 1024,
                 "ImhDigitsOnly": 65536,
                 "ImhFormattedNumbersOnly": 131072,
                 "ImhUppercaseOnly": 262144,
@@ -4941,6 +5196,7 @@ Module {
                 "ImhDate": 128,
                 "ImhTime": 256,
                 "ImhPreferLatin": 512,
+                "ImhMultiLine": 1024,
                 "ImhDigitsOnly": 65536,
                 "ImhFormattedNumbersOnly": 131072,
                 "ImhUppercaseOnly": 262144,
@@ -5010,7 +5266,8 @@ Module {
                 "ItemIsDropEnabled": 8,
                 "ItemIsUserCheckable": 16,
                 "ItemIsEnabled": 32,
-                "ItemIsTristate": 64
+                "ItemIsTristate": 64,
+                "ItemNeverHasChildren": 128
             }
         }
         Enum {

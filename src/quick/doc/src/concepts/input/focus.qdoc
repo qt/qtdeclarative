@@ -27,7 +27,6 @@
 
 /*!
 \page qtquick-input-focus.html
-\ingroup qml-features
 \title Keyboard Focus in Qt Quick
 \brief handling keyboard focus
 

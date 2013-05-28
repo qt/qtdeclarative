@@ -157,7 +157,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 
     The example below illustrates using a DelegateModel with a ListView.
 
-    \snippet qml/visualdatamodel.qml 0
+    \snippet delegatemodel/visualdatamodel.qml 0
 */
 
 QQmlDelegateModelPrivate::QQmlDelegateModelPrivate(QQmlContext *ctxt)
@@ -230,6 +230,8 @@ QQmlDelegateModel::~QQmlDelegateModel()
         cacheItem->objectRef = 0;
         if (!cacheItem->isReferenced())
             delete cacheItem;
+        else if (cacheItem->incubationTask)
+            cacheItem->incubationTask->vdm = 0;
     }
 }
 
@@ -395,10 +397,10 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
     the new directory's contents.
 
     \c main.cpp:
-    \snippet qml/visualdatamodel_rootindex/main.cpp 0
+    \snippet delegatemodel/visualdatamodel_rootindex/main.cpp 0
 
     \c view.qml:
-    \snippet qml/visualdatamodel_rootindex/view.qml 0
+    \snippet delegatemodel/visualdatamodel_rootindex/view.qml 0
 
     If the \l model is a QAbstractItemModel subclass, the delegate can also
     reference a \c hasModelChildren property (optionally qualified by a
@@ -602,7 +604,7 @@ QQmlDelegateModelGroup *QQmlDelegateModelPrivate::group_at(
 
     The following example illustrates using groups to select items in a model.
 
-    \snippet qml/visualdatagroup.qml 0
+    \snippet delegatemodel/visualdatagroup.qml 0
 */
 
 QQmlListProperty<QQmlDelegateModelGroup> QQmlDelegateModel::groups()
@@ -778,9 +780,28 @@ void QQmlDelegateModelPrivate::emitDestroyingPackage(QQuickPackage *package)
         QQmlDelegateModelGroupPrivate::get(m_groups[i])->destroyingPackage(package);
 }
 
+static bool isDoneIncubating(QQmlIncubator::Status status)
+{
+     return status == QQmlIncubator::Ready || status == QQmlIncubator::Error;
+}
+
 void QQDMIncubationTask::statusChanged(Status status)
 {
-    vdm->incubatorStatusChanged(this, status);
+    if (vdm) {
+        vdm->incubatorStatusChanged(this, status);
+    } else if (isDoneIncubating(status)) {
+        Q_ASSERT(incubating);
+        // The model was deleted from under our feet, cleanup ourselves
+        if (incubating->object) {
+            delete incubating->object;
+
+            incubating->object = 0;
+            incubating->contextData->destroy();
+            incubating->contextData = 0;
+        }
+        incubating->scriptRef = 0;
+        incubating->deleteLater();
+    }
 }
 
 void QQmlDelegateModelPrivate::releaseIncubator(QQDMIncubationTask *incubationTask)
@@ -808,7 +829,7 @@ void QQmlDelegateModelPrivate::removeCacheItem(QQmlDelegateModelItem *cacheItem)
 void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incubationTask, QQmlIncubator::Status status)
 {
     Q_Q(QQmlDelegateModel);
-    if (status != QQmlIncubator::Ready && status != QQmlIncubator::Error)
+    if (!isDoneIncubating(status))
         return;
 
     QQmlDelegateModelItem *cacheItem = incubationTask->incubating;
@@ -935,7 +956,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
 
     // Remove the temporary reference count.
     cacheItem->scriptRef -= 1;
-    if (cacheItem->object)
+    if (cacheItem->object && (!cacheItem->incubationTask || isDoneIncubating(cacheItem->incubationTask->status())))
         return cacheItem->object;
 
     cacheItem->releaseObject();
@@ -950,7 +971,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
 /*
   If asynchronous is true or the component is being loaded asynchronously due
   to an ancestor being loaded asynchronously, item() may return 0.  In this
-  case itemCreated() will be emitted when the item is available.  The item
+  case createdItem() will be emitted when the item is available.  The item
   at this stage does not have any references, so item() must be called again
   to ensure a reference is held.  Any call to item() which returns a valid item
   must be matched by a call to release() in order to destroy the item.
@@ -1766,8 +1787,12 @@ QQmlDelegateModelItem::~QQmlDelegateModelItem()
     Q_ASSERT(objectRef == 0);
     Q_ASSERT(!object);
 
-    if (incubationTask && metaType->model)
-        QQmlDelegateModelPrivate::get(metaType->model)->releaseIncubator(incubationTask);
+    if (incubationTask) {
+        if (metaType->model)
+            QQmlDelegateModelPrivate::get(metaType->model)->releaseIncubator(incubationTask);
+        else
+            delete incubationTask;
+    }
 
     metaType->release();
 

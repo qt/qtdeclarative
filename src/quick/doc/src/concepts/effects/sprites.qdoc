@@ -27,7 +27,6 @@
 
 /*!
 \ingroup qtquick-images-sprites
-\ingroup qml-features
 \page qtquick-effects-sprites.html
 \title Sprite Animations
 \brief Sprite-based animations with flexible transitioning

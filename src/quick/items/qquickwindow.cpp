@@ -411,7 +411,7 @@ static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QTouchEvent::Touc
 {
     // The touch point local position and velocity are not yet transformed.
     QMouseEvent *me = new QMouseEvent(type, transformNeeded ? item->mapFromScene(p.scenePos()) : p.pos(), p.scenePos(), p.screenPos(),
-                                      Qt::LeftButton, Qt::LeftButton, event->modifiers());
+                                      Qt::LeftButton, (type == QEvent::MouseButtonRelease ? Qt::NoButton : Qt::LeftButton), event->modifiers());
     me->setAccepted(true);
     me->setTimestamp(event->timestamp());
     QVector2D transformedVelocity = p.velocity();
@@ -840,6 +840,11 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
 
     Alternatively you can set or bind \l x and \l y to position the Window
     explicitly on the screen.
+
+    When the user attempts to close a window, the \a closing signal will be
+    emitted. You can force the window to stay open (for example to prompt the
+    user to save changes) by writing an onClosing handler and setting
+    close.accepted = false.
 */
 /*!
     \class QQuickWindow
@@ -1174,6 +1179,14 @@ bool QQuickWindow::event(QEvent *e)
     case QEvent::WindowDeactivate:
         contentItem()->windowDeactivateEvent();
         break;
+    case QEvent::Close: {
+        // TOOD Qt 6 (binary incompatible)
+        // closeEvent(static_cast<QCloseEvent *>(e));
+        QQuickCloseEvent qev;
+        qev.setAccepted(e->isAccepted());
+        emit closing(&qev);
+        e->setAccepted(qev.isAccepted());
+        } break;
     case QEvent::FocusAboutToChange:
 #ifndef QT_NO_IM
         if (d->activeFocusItem)
@@ -2558,6 +2571,57 @@ QOpenGLContext *QQuickWindow::openglContext() const
     This signal will be emitted from the scene graph rendering thread.
  */
 
+/*!
+    \class QQuickCloseEvent
+    \internal
+    \since QtQuick 2.1
+
+    \inmodule QtQuick.Window
+
+    \brief Notification that a \l QQuickWindow is about to be closed
+*/
+/*!
+    \qmltype CloseEvent
+    \instantiates QQuickCloseEvent
+    \inqmlmodule QtQuick.Window 2
+    \ingroup qtquick-visual
+    \brief Notification that a \l Window is about to be closed
+    \since Qt 5.1
+
+    Notification that a window is about to be closed by the windowing system
+    (e.g. the user clicked the titlebar close button). The CloseEvent contains
+    an accepted property which can be set to false to abort closing the window.
+
+    \sa Window.closing()
+*/
+
+/*!
+    \qmlproperty bool QtQuick.Window2::CloseEvent::accepted
+
+    This property indicates whether the application will allow the user to
+    close the window.  It is true by default.
+*/
+
+/*!
+    \fn void QQuickWindow::closing()
+    \since QtQuick 2.1
+
+    This signal is emitted when the window receives a QCloseEvent from the
+    windowing system.
+*/
+
+/*!
+    \qmlsignal QtQuick.Window2::closing(CloseEvent close)
+    \since Qt 5.1
+
+    This signal is emitted when the user tries to close the window.
+
+    This signal includes a closeEvent parameter. The \a close \l accepted
+    property is true by default so that the window is allowed to close; but you
+    can implement an onClosing() handler and set close.accepted = false if
+    you need to do something else before the window can be closed.
+ */
+
 
 /*!
     Sets the render target for this window to be \a fbo.
@@ -3080,6 +3144,22 @@ QColor QQuickWindow::color() const
 
     The item which currently has active focus or \c null if there is
     no item with active focus.
+ */
+
+/*!
+    \qmlproperty QtQuick.Window2::Window::active
+    \since Qt 5.1
+
+    The active status of the window.
+
+    \sa requestActivate()
+ */
+
+/*!
+    \qmlmethod QtQuick2::Window::requestActivate()
+    \since QtQuick 2.1
+
+    Requests the window to be activated, i.e. receive keyboard focus.
  */
 
 #include "moc_qquickwindow.cpp"

@@ -1975,7 +1975,7 @@ void QQuickPropertyAnimation::setDuration(int duration)
 }
 
 /*!
-    \qmlproperty real QtQuick2::PropertyAnimation::from
+    \qmlproperty variant QtQuick2::PropertyAnimation::from
     This property holds the starting value for the animation.
 
     If the PropertyAnimation is defined within a \l Transition or \l Behavior,
@@ -2002,7 +2002,7 @@ void QQuickPropertyAnimation::setFrom(const QVariant &f)
 }
 
 /*!
-    \qmlproperty real QtQuick2::PropertyAnimation::to
+    \qmlproperty variant QtQuick2::PropertyAnimation::to
     This property holds the end value for the animation.
 
     If the PropertyAnimation is defined within a \l Transition or \l Behavior,

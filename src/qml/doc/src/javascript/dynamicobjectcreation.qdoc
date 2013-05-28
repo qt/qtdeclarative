@@ -35,15 +35,15 @@ useful to delay instantiation of objects until necessary, thereby improving
 application startup time.  It also allows visual objects to be dynamically
 created and added to the scene in reaction to user input or other events.
 
-See the \l {declarative/toys/dynamicscene}{Dynamic Scene example} for a
+See the \l {QML Example - Dynamic Scene}{Dynamic Scene example} for a
 demonstration of the concepts discussed on this page.
 
 
 \section1 Creating Objects Dynamically
 
 There are two ways to create objects dynamically from JavaScript. You can
-either call \l {QML:Qt::createComponent()}{Qt.createComponent()} to
-dynamically create a \l Component object, or use \l{QML:Qt::createQmlObject()}
+either call \l {QtQml2::Qt::createComponent()}{Qt.createComponent()} to
+dynamically create a \l Component object, or use \l{QtQml2::Qt::createQmlObject()}
 {Qt.createQmlObject()} to create an object from a string of QML.  Creating a
 component is better if you have an existing component defined in a QML document
 and you want to dynamically create instances of that component.  Otherwise,
@@ -54,7 +54,7 @@ generated at runtime.
 \section2 Creating a Component Dynamically
 
 To dynamically load a component defined in a QML file, call the
-\l {QML:Qt::createComponent()}{Qt.createComponent()} function in the
+\l {QtQml2::Qt::createComponent()}{Qt.createComponent()} function in the
 \l {QmlGlobalQtObject}{Qt object}.
 This function takes the URL of the QML file as its only argument and creates
 a \l Component object from this URL.
@@ -113,7 +113,7 @@ created object is a visual (Qt Quick) object.  The created object will become a
 child of the \c appWindow object in \c main.qml, and appear in the scene.
 
 When using files with relative paths, the path should
-be relative to the file where \l {QML:Qt::createComponent()}
+be relative to the file where \l {QtQml2::Qt::createComponent()}
 {Qt.createComponent()} is executed.
 
 To connect signals to (or receive signals from) dynamically created objects,
@@ -127,7 +127,7 @@ It is also possible to instantiate components without blocking via the
 \section2 Creating an Object from a String of QML
 
 If the QML is not defined until runtime, you can create a QML object from
-a string of QML using the \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()}
+a string of QML using the \l{QtQml2::Qt::createQmlObject()}{Qt.createQmlObject()}
 function, as in the following example:
 
 \snippet qml/createQmlObject.qml 0
@@ -153,9 +153,9 @@ first, the bindings in the dynamic object will no longer work.
 The actual creation context depends on how an object is created:
 
 \list
-\li If \l {QML:Qt::createComponent()}{Qt.createComponent()} is used, the
+\li If \l {QtQml2::Qt::createComponent()}{Qt.createComponent()} is used, the
     creation context is the QQmlContext in which this method is called
-\li If \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()} is called, the
+\li If \l{QtQml2::Qt::createQmlObject()}{Qt.createQmlObject()} is called, the
     creation context is the context of the parent object passed to this method
 \li If a \c {Component{}} object is defined and \l {Component::createObject()}
     {createObject()} or \l {Component::incubateObject()}{incubateObject()} is
@@ -221,7 +221,7 @@ Item {
 This would result in an error, since objects can only be dynamically
 destroyed if they were dynamically created.
 
-Objects created with \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()}
+Objects created with \l{QtQml2::Qt::createQmlObject()}{Qt.createQmlObject()}
 can similarly be destroyed using \c destroy():
 
 \snippet qml/createQmlObject.qml 0

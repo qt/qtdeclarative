@@ -74,11 +74,17 @@ struct Q_AUTOTEST_EXPORT QQmlProfilerData
 
     //###
     QString detailData; //used by RangeData and RangeLocation
-    int line;           //used by RangeLocation
-    int column;         //used by RangeLocation
+    int line;           //used by RangeLocation, also as "width" for pixmaps
+    int column;         //used by RangeLocation, also as "height" for pixmaps
     int framerate;      //used by animation events
-    int animationcount; //used by animation events
+    int animationcount; //used by animation events, also as "cache/reference count" for pixmaps
     int bindingType;
+
+    qint64 subtime_1;
+    qint64 subtime_2;
+    qint64 subtime_3;
+    qint64 subtime_4;
+    qint64 subtime_5;
 
     QByteArray toByteArray() const;
 };
@@ -99,6 +105,8 @@ public:
         RangeLocation,
         RangeEnd,
         Complete, // end of transmission
+        PixmapCacheEvent,
+        SceneGraphFrame,
 
         MaximumMessage
     };
@@ -132,14 +140,43 @@ public:
         MaximumBindingType
     };
 
+    enum PixmapEventType {
+        PixmapSizeKnown,
+        PixmapReferenceCountChanged,
+        PixmapCacheCountChanged,
+        PixmapLoadingStarted,
+        PixmapLoadingFinished,
+        PixmapLoadingError,
+
+        MaximumPixmapEventType
+    };
+
+    enum SceneGraphFrameType {
+        SceneGraphRendererFrame,
+        SceneGraphAdaptationLayerFrame,
+        SceneGraphContextFrame,
+        SceneGraphRenderLoopFrame,
+        SceneGraphTexturePrepare,
+        SceneGraphTextureDeletion,
+        SceneGraphPolishAndSync,
+        SceneGraphWindowsRenderShow,
+        SceneGraphWindowsAnimations,
+        SceneGraphWindowsPolishFrame,
+
+        MaximumSceneGraphFrameType
+    };
+
     static void initialize();
 
     static bool startProfiling();
     static bool stopProfiling();
     static void sendStartedProfilingMessage();
+    static bool profilingEnabled();
+
     static void addEvent(EventType);
     static void animationFrame(qint64);
 
+    static void sceneGraphFrame(SceneGraphFrameType frameType, qint64 value1, qint64 value2 = -1, qint64 value3 = -1, qint64 value4 = -1, qint64 value5 = -1);
     static void sendProfilingData();
 
     QQmlProfilerService();
@@ -163,15 +200,22 @@ private:
     void rangeLocation(RangeType, const QUrl &, int, int);
     void endRange(RangeType);
 
+    // overloading depending on parameters
+    void pixmapEventImpl(PixmapEventType eventType, const QUrl &url);
+    void pixmapEventImpl(PixmapEventType eventType, const QUrl &url, int width, int height);
+    void pixmapEventImpl(PixmapEventType eventType, const QUrl &url, int count);
 
-    bool profilingEnabled();
+    void sceneGraphFrameImpl(SceneGraphFrameType frameType, qint64 value1, qint64 value2, qint64 value3, qint64 value4, qint64 value5);
+
+
     void setProfilingEnabled(bool enable);
     void sendMessages();
     void processMessage(const QQmlProfilerData &);
 
+public:
+    static bool enabled;
 private:
     QElapsedTimer m_timer;
-    bool m_enabled;
     QVector<QQmlProfilerData> m_data;
     QMutex m_dataMutex;
     QMutex m_initializeMutex;
@@ -183,6 +227,7 @@ private:
     friend struct QQmlHandlingSignalProfiler;
     friend struct QQmlObjectCreatingProfiler;
     friend struct QQmlCompilingProfiler;
+    friend struct QQmlPixmapProfiler;
 };
 
 //
@@ -283,6 +328,49 @@ struct QQmlCompilingProfiler {
     {
         if (enabled)
             QQmlProfilerService::instance->endRange(QQmlProfilerService::Compiling);
+    }
+
+    bool enabled;
+};
+
+struct QQmlPixmapProfiler {
+    QQmlPixmapProfiler() {
+        QQmlProfilerService *instance = QQmlProfilerService::instance;
+        enabled = instance ?
+                    instance->profilingEnabled() : false;
+    }
+
+    ~QQmlPixmapProfiler() {}
+
+    void startLoading(const QUrl &pixmapUrl) {
+        if (enabled) {
+            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapLoadingStarted, pixmapUrl);
+        }
+    }
+    void finishLoading(const QUrl &pixmapUrl) {
+        if (enabled) {
+            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapLoadingFinished, pixmapUrl);
+        }
+    }
+    void errorLoading(const QUrl &pixmapUrl) {
+        if (enabled) {
+            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapLoadingError, pixmapUrl);
+        }
+    }
+    void cacheCountChanged(const QUrl &pixmapUrl, int cacheCount) {
+        if (enabled) {
+            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapCacheCountChanged, pixmapUrl, cacheCount);
+        }
+    }
+    void referenceCountChanged(const QUrl &pixmapUrl, int referenceCount) {
+        if (enabled) {
+            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapReferenceCountChanged, pixmapUrl, referenceCount);
+        }
+    }
+    void setSize(const QUrl &pixmapUrl, int width, int height) {
+        if (enabled) {
+            QQmlProfilerService::instance->pixmapEventImpl(QQmlProfilerService::PixmapSizeKnown, pixmapUrl, width, height);
+        }
     }
 
     bool enabled;

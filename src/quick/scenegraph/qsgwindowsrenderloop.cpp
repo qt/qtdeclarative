@@ -51,6 +51,8 @@
 
 #include <QtQuick/QQuickWindow>
 
+#include <private/qqmlprofilerservice_p.h>
+
 QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
@@ -67,7 +69,7 @@ static QElapsedTimer qsg_debug_timer;
 #ifndef QSG_NO_RENDER_TIMING
 static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
 static QElapsedTimer qsg_render_timer;
-#define QSG_RENDER_TIMING_SAMPLE(sampleName) int sampleName = 0; if (qsg_render_timing) sampleName = qsg_render_timer.elapsed()
+#define QSG_RENDER_TIMING_SAMPLE(sampleName) qint64 sampleName = 0; if (qsg_render_timing || QQmlProfilerService::enabled) sampleName = qsg_render_timer.nsecsElapsed()
 #else
 #define QSG_RENDER_TIMING_SAMPLE(sampleName)
 #endif
@@ -174,9 +176,16 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
 #ifndef QSG_NO_RENDER_TIMING
         if (qsg_render_timing) {
             qDebug("WindowsRenderLoop: GL=%d ms, makeCurrent=%d ms, SG=%d ms",
-                   int(time_created - time_start),
-                   int(time_current - time_created),
-                   int(qsg_render_timer.elapsed() - time_current));
+                   int((time_created - time_start)/1000000),
+                   int((time_current - time_created)/1000000),
+                   int((qsg_render_timer.nsecsElapsed() - time_current)/1000000));
+        }
+        if (QQmlProfilerService::enabled) {
+            QQmlProfilerService::sceneGraphFrame(
+                        QQmlProfilerService::SceneGraphWindowsRenderShow,
+                        time_created - time_start,
+                        time_current - time_created,
+                        qsg_render_timer.nsecsElapsed() - time_current);
         }
 #endif
 
@@ -368,7 +377,12 @@ void QSGWindowsRenderLoop::render()
 #ifndef QSG_NO_RENDER_TIMING
         if (qsg_render_timing) {
             qDebug("WindowsRenderLoop: animations=%d ms",
-                   int(qsg_render_timer.elapsed() - time_start));
+                   int((qsg_render_timer.nsecsElapsed() - time_start)/1000000));
+        }
+        if (QQmlProfilerService::Enabled) {
+            QQmlProfilerService::sceneGraphFrame(
+                        QQmlProfilerService::SceneGraphWindowsAnimations,
+                        qsg_render_timer.nsecsElapsed() - time_start);
         }
 #endif
 
@@ -424,10 +438,23 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
             qDebug("WindowsRenderLoop(t=%d): window=%p, polish=%d ms, sync=%d ms, render=%d ms, swap=%d ms",
                    int(qsg_render_timer.elapsed()),
                    window,
-                   int(time_polished - time_start),
-                   int(time_synced - time_polished),
-                   int(time_rendered - time_synced),
-                   int(time_swapped - time_rendered));
+                   int((time_polished - time_start)/1000000),
+                   int((time_synced - time_polished)/1000000),
+                   int((time_rendered - time_synced)/1000000),
+                   int((time_swapped - time_rendered)/1000000));
+        }
+        if (QQmlProfilerService::enabled) {
+            QQmlProfilerService::sceneGraphFrame(
+                        QQmlProfilerService::SceneGraphWindowsPolishFrame,
+                        time_polished - time_start
+                        );
+
+            QQmlProfilerService::sceneGraphFrame(
+                        QQmlProfilerService::SceneGraphRenderLoopFrame,
+                        time_synced - time_polished,
+                        time_rendered - time_synced,
+                        time_swapped - time_rendered
+                        );
         }
 #endif
 }

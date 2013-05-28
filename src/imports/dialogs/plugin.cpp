@@ -55,9 +55,36 @@
 
 QT_BEGIN_NAMESPACE
 
+
+/*!
+    \group dialogs
+    \title Dialogs
+*/
+
+/*!
+    \page qtquickdialogs-index.html
+    \title Qt Quick Dialogs
+
+    \brief Qt Quick Dialogs submodule
+
+    The submodule is new in Qt 5.1.
+
+    \section1 Dialogs
+
+    \annotatedlist dialogs
+
+    \section1 Related information
+
+    \section2 Reference
+     \list
+      \li \l{Qt Quick Dialogs QML Types}{Qt Quick Dialogs QML Types}
+     \endlist
+
+*/
+
 /*!
     \qmlmodule QtQuick.Dialogs 1
-    \title Qt Quick Dialog QML Types
+    \title Qt Quick Dialogs QML Types
     \ingroup qmlmodules
     \brief Provides QML types for standard file, color picker and message dialogs
 

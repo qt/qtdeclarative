@@ -66,6 +66,7 @@
 #include <private/qv8debugservice_p.h>
 #include <private/qdebugmessageservice_p.h>
 #include "qqmlincubator.h"
+#include "qqmlabstracturlinterceptor_p.h"
 #include <private/qv8profilerservice_p.h>
 #include <private/qqmlboundsignal_p.h>
 
@@ -274,8 +275,9 @@ QQmlImageProviderBase::~QQmlImageProviderBase()
 
 /*!
 \qmltype Qt
-    \instantiates QQmlEnginePrivate
-  \ingroup qml-utility-elements
+\inqmlmodule QtQml 2
+\instantiates QQmlEnginePrivate
+\ingroup qml-utility-elements
 \brief The QML global Qt object provides useful enums and functions from Qt.
 
 \keyword QmlGlobalQtObject
@@ -509,7 +511,7 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
   outputWarningsToStdErr(true), sharedContext(0), sharedScope(0),
   cleanup(0), erroredBindings(0), inProgressCreations(0),
   workerScriptEngine(0), activeVME(0),
-  networkAccessManager(0), networkAccessManagerFactory(0),
+  networkAccessManager(0), networkAccessManagerFactory(0), urlInterceptor(0),
   scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
   incubatorCount(0), incubationController(0), mutex(QMutex::Recursive)
 {
@@ -721,17 +723,17 @@ void QQmlData::flushPendingBindingImpl(int coreIndex)
     }
 }
 
+bool QQmlEnginePrivate::baseModulesUninitialized = true;
 void QQmlEnginePrivate::init()
 {
     Q_Q(QQmlEngine);
 
-    static bool firstTime = true;
-    if (firstTime) {
+    if (baseModulesUninitialized) {
         qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component"); // required for the Compiler.
         registerBaseTypes("QtQml", 2, 0); // import which provides language building blocks.
 
         QQmlData::init();
-        firstTime = false;
+        baseModulesUninitialized = false;
     }
 
     qRegisterMetaType<QVariant>();
@@ -831,6 +833,8 @@ QQmlEngine::QQmlEngine(QQmlEnginePrivate &dd, QObject *parent)
   Any QQmlContext's created on this engine will be
   invalidated, but not destroyed (unless they are parented to the
   QQmlEngine object).
+
+  See QJSEngine docs for details on cleaning up the JS engine.
 */
 QQmlEngine::~QQmlEngine()
 {
@@ -921,6 +925,35 @@ QQmlContext *QQmlEngine::rootContext() const
     Q_D(const QQmlEngine);
     return d->rootContext;
 }
+
+/*!
+  \internal
+  This API is private for 5.1
+
+  Sets the \a urlInterceptor to be used when resolving URLs in QML.
+  This also applies to URLs used for loading script files and QML types.
+  This should not be modifed while the engine is loading files, or URL
+  selection may be inconsistent.
+*/
+void QQmlEngine::setUrlInterceptor(QQmlAbstractUrlInterceptor *urlInterceptor)
+{
+    Q_D(QQmlEngine);
+    d->urlInterceptor = urlInterceptor;
+}
+
+/*!
+  \internal
+  This API is private for 5.1
+
+  Returns the current QQmlAbstractUrlInterceptor. It must not be modified outside
+  the GUI thread.
+*/
+QQmlAbstractUrlInterceptor *QQmlEngine::urlInterceptor() const
+{
+    Q_D(const QQmlEngine);
+    return d->urlInterceptor;
+}
+
 
 /*!
   Sets the \a factory to use for creating QNetworkAccessManager(s).
@@ -1246,11 +1279,13 @@ void QQmlEnginePrivate::doDeleteInEngineThread()
         delete d;
 }
 
-Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
+namespace QtQml {
+
+void qmlExecuteDeferred(QObject *object)
 {
     QQmlData *data = QQmlData::get(object);
 
-    if (data && data->compiledData && data->deferredIdx) {
+    if (data && data->deferredData) {
         QQmlObjectCreatingProfiler prof;
         if (prof.enabled) {
             QQmlType *type = QQmlMetaType::qmlType(object->metaObject());
@@ -1265,8 +1300,9 @@ Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
         QQmlComponentPrivate::beginDeferred(ep, object, &state);
 
         // Release the reference for the deferral action (we still have one from construction)
-        data->compiledData->release();
-        data->compiledData = 0;
+        data->deferredData->compiledData->release();
+        delete data->deferredData;
+        data->deferredData = 0;
 
         QQmlComponentPrivate::complete(ep, &state);
     }
@@ -1318,6 +1354,41 @@ QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
 
     return qmlAttachedPropertiesObjectById(*idCache, object, create);
 }
+
+} // namespace QtQml
+
+#if QT_DEPRECATED_SINCE(5, 1)
+
+// Also define symbols outside namespace to keep binary compatibility with Qt 5.0
+
+Q_QML_EXPORT void qmlExecuteDeferred(QObject *obj)
+{
+    QtQml::qmlExecuteDeferred(obj);
+}
+
+Q_QML_EXPORT QQmlContext *qmlContext(const QObject *obj)
+{
+    return QtQml::qmlContext(obj);
+}
+
+Q_QML_EXPORT QQmlEngine *qmlEngine(const QObject *obj)
+{
+    return QtQml::qmlEngine(obj);
+}
+
+Q_QML_EXPORT QObject *qmlAttachedPropertiesObjectById(int id, const QObject *obj, bool create)
+{
+    return QtQml::qmlAttachedPropertiesObjectById(id, obj, create);
+}
+
+Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
+                                                  const QMetaObject *attachedMetaObject,
+                                                  bool create)
+{
+    return QtQml::qmlAttachedPropertiesObject(idCache, object, attachedMetaObject, create);
+}
+
+#endif // QT_DEPRECATED_SINCE(5, 1)
 
 QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
 {
@@ -1470,6 +1541,12 @@ void QQmlData::destroyed(QObject *object)
     if (compiledData) {
         compiledData->release();
         compiledData = 0;
+    }
+
+    if (deferredData) {
+        deferredData->compiledData->release();
+        delete deferredData;
+        deferredData = 0;
     }
 
     QQmlAbstractBoundSignal *signalHandler = signalHandlers;

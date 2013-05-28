@@ -52,15 +52,6 @@ modules.
         \li \l{qtqml-syntax-basics.html#comments}{Comments}
         \endlist
 
-    \li \l{qtqml-javascript-topic.html}{Integrating QML and JavaScript}
-        \list
-        \li \l{qtqml-javascript-expressions.html}{Using JavaScript Expressions with QML}
-        \li \l{qtqml-javascript-dynamicobjectcreation.html}{Dynamic QML Object Creation from JavaScript}
-        \li \l{qtqml-javascript-resources.html}{Defining JavaScript Resources In QML}
-        \li \l{qtqml-javascript-imports.html}{Importing JavaScript Resources In QML}
-        \li \l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment}
-        \endlist
-
     \li \l{qtqml-syntax-objectattributes.html}{QML Object Attributes}
         \list
         \li \l{qtqml-syntax-objectattributes.html#the-id-attribute}{The \e id Attribute}
@@ -71,7 +62,17 @@ modules.
         \endlist
 
     \li \l{qtqml-syntax-propertybinding.html}{Property Binding}
+
     \li \l{qtqml-syntax-signals.html}{Signal and Handler Event System}
+
+    \li \l{qtqml-javascript-topic.html}{Integrating QML and JavaScript}
+        \list
+        \li \l{qtqml-javascript-expressions.html}{Using JavaScript Expressions with QML}
+        \li \l{qtqml-javascript-dynamicobjectcreation.html}{Dynamic QML Object Creation from JavaScript}
+        \li \l{qtqml-javascript-resources.html}{Defining JavaScript Resources In QML}
+        \li \l{qtqml-javascript-imports.html}{Importing JavaScript Resources In QML}
+        \li \l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment}
+        \endlist
 
     \li \l{qtqml-typesystem-topic.html}{The QML Type System}
         \list

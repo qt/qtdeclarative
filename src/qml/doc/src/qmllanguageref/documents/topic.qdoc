@@ -91,13 +91,13 @@ separation between UI definition and logic implementation.
 In the following example, the client developer defines a \c Button type with
 a document in a file:
 
-\snippet ../src/quick/doc/snippets/qml/qml-extending-types/components/Button.qml 0
+\snippet ../quick/doc/snippets/qml/qml-extending-types/components/Button.qml 0
 
 The \c Button type can then be used in an application:
 
 \table
 \row
-\li \snippet ../src/quick/doc/snippets/qml/qml-extending-types/components/application.qml 0
+\li \snippet ../quick/doc/snippets/qml/qml-extending-types/components/application.qml 0
 \li \image button-types.png
 \endtable
 

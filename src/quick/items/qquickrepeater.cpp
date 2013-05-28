@@ -351,11 +351,12 @@ void QQuickRepeater::clear()
 
     if (d->model) {
         for (int i = 0; i < d->deletables.count(); ++i) {
-            QQuickItem *item = d->deletables.at(i);
-            if (complete)
-                emit itemRemoved(i, item);
-            item->setParentItem(0);
-            d->model->release(item);
+            if (QQuickItem *item = d->deletables.at(i)) {
+                if (complete)
+                    emit itemRemoved(i, item);
+                item->setParentItem(0);
+                d->model->release(item);
+            }
         }
     }
     d->deletables.clear();

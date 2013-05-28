@@ -1659,7 +1659,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
 
     A ListView displays data from models created from built-in QML types like ListModel
     and XmlListModel, or custom model classes defined in C++ that inherit from
-    QAbstractListModel.
+    QAbstractItemModel or QAbstractListModel.
 
     A ListView has a \l model, which defines the data to be displayed, and
     a \l delegate, which defines how the data should be displayed. Items in a
@@ -2185,7 +2185,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     each section.
 
 
-    \snippet quick/views/listview/sections.qml 0
+    \snippet views/listview/sections.qml 0
 
     \image qml-listview-sections-example.png
 

@@ -521,7 +521,7 @@ int QSGTextMaskMaterial::compare(const QSGMaterial *o) const
     Q_ASSERT(o && type() == o->type());
     const QSGTextMaskMaterial *other = static_cast<const QSGTextMaskMaterial *>(o);
     if (m_glyphCache != other->m_glyphCache)
-        return m_glyphCache - other->m_glyphCache;
+        return m_glyphCache.data() < other->m_glyphCache.data() ? -1 : 1;
     QRgb c1 = m_color.rgba();
     QRgb c2 = other->m_color.rgba();
     return int(c2 < c1) - int(c1 < c2);

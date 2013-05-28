@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \qmltype FileDialog
     \instantiates QQuickPlatformFileDialog
     \inqmlmodule QtQuick.Dialogs 1
-    \ingroup qtquick-visual
+    \ingroup dialogs
     \brief Dialog component for choosing files from a local filesystem.
     \since Qt 5.1
 

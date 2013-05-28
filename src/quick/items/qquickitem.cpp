@@ -58,6 +58,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qnumeric.h>
+#include <QtGui/qpa/qplatformtheme.h>
 
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlengine_p.h>
@@ -2034,6 +2035,44 @@ QQuickItem::~QQuickItem()
 
 /*!
     \internal
+*/
+bool QQuickItemPrivate::qt_tab_all_widgets()
+{
+    if (const QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
+        return theme->themeHint(QPlatformTheme::TabAllWidgets).toBool();
+    return true;
+}
+
+/*!
+    \internal
+*/
+bool QQuickItemPrivate::canAcceptTabFocus(QQuickItem *item)
+{
+    bool result = true;
+
+    if (!item->window())
+        return false;
+
+    if (item == item->window()->contentItem())
+        return true;
+
+#ifndef QT_NO_ACCESSIBILITY
+    result = false;
+    if (QObject *acc = qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false)) {
+        int role = acc->property("role").toInt();
+        if (role == QAccessible::EditableText
+                || role == QAccessible::Table
+                || role == QAccessible::List
+                || role == QAccessible::SpinBox)
+            result = true;
+    }
+#endif
+
+    return result;
+}
+
+/*!
+    \internal
     \brief QQuickItemPrivate::focusNextPrev focuses the next/prev item in the tab-focus-chain
     \param item The item that currently has the focus
     \param forward The direction
@@ -2057,7 +2096,8 @@ bool QQuickItemPrivate::focusNextPrev(QQuickItem *item, bool forward)
 QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, bool forward)
 {
     Q_ASSERT(item);
-    Q_ASSERT(item->activeFocusOnTab());
+
+    bool all = QQuickItemPrivate::qt_tab_all_widgets();
 
     QQuickItem *from = 0;
     if (forward) {
@@ -2069,6 +2109,10 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
             from = item->parentItem();
     }
     bool skip = false;
+    const QQuickItem * const contentItem = item->window()->contentItem();
+    const QQuickItem * const originalItem = item;
+    QQuickItem * startItem = item;
+    QQuickItem * firstFromItem = from;
     QQuickItem *current = item;
     do {
         skip = false;
@@ -2119,9 +2163,27 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
                     skip = true;
             }
         }
-
         from = last;
-    } while (skip || !current->activeFocusOnTab() || !current->isEnabled() || !current->isVisible());
+        if (current == startItem && from == firstFromItem) {
+            // wrapped around, avoid endless loops
+            if (originalItem == contentItem) {
+#ifdef FOCUS_DEBUG
+                qDebug() << "QQuickItemPrivate::nextPrevItemInTabFocusChain: looped, return contentItem";
+#endif
+                return item->window()->contentItem();
+            } else {
+#ifdef FOCUS_DEBUG
+                qDebug() << "QQuickItemPrivate::nextPrevItemInTabFocusChain: looped, return " << startItem;
+#endif
+                return startItem;
+            }
+        }
+        if (!firstFromItem) { //start from root
+            startItem = current;
+            firstFromItem = from;
+        }
+    } while (skip || !current->activeFocusOnTab() || !current->isEnabled() || !current->isVisible()
+                  || !(all || QQuickItemPrivate::canAcceptTabFocus(current)));
 
     return current;
 }
@@ -2506,8 +2568,7 @@ void QQuickItemPrivate::derefWindow()
     if (c->cursorItem == q)
         c->cursorItem = 0;
 #endif
-    if ( hoverEnabled )
-        c->hoverItems.removeAll(q);
+    c->hoverItems.removeAll(q);
     if (itemNodeInstance)
         c->cleanup(itemNodeInstance);
     if (!parentItem)
@@ -2712,10 +2773,10 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
                     QObject::connect(item, SIGNAL(windowChanged(QQuickWindow*)),
                                      thisWindow, SLOT(setTransientParent_helper(QQuickWindow*)));
             }
+            o->setParent(that);
         }
 
-        // XXX todo - do we really want this behavior?
-        o->setParent(that);
+        resources_append(prop, o);
     }
 }
 
@@ -2793,30 +2854,38 @@ void QQuickItemPrivate::data_clear(QQmlListProperty<QObject> *property)
 
 QObject *QQuickItemPrivate::resources_at(QQmlListProperty<QObject> *prop, int index)
 {
-    const QObjectList children = prop->object->children();
-    if (index < children.count())
-        return children.at(index);
-    else
-        return 0;
+    QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
+    return quickItemPrivate->extra.isAllocated() ? quickItemPrivate->extra->resourcesList.value(index) : 0;
 }
 
-void QQuickItemPrivate::resources_append(QQmlListProperty<QObject> *prop, QObject *o)
+void QQuickItemPrivate::resources_append(QQmlListProperty<QObject> *prop, QObject *object)
 {
-    // XXX todo - do we really want this behavior?
-    o->setParent(prop->object);
+    QQuickItem *quickItem = static_cast<QQuickItem *>(prop->object);
+    QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(quickItem);
+    if (!quickItemPrivate->extra.value().resourcesList.contains(object)) {
+        quickItemPrivate->extra.value().resourcesList.append(object);
+        qmlobject_connect(object, QObject, SIGNAL(destroyed(QObject*)),
+                          quickItem, QQuickItem, SLOT(_q_resourceObjectDeleted(QObject*)));
+    }
 }
 
 int QQuickItemPrivate::resources_count(QQmlListProperty<QObject> *prop)
 {
-    return prop->object->children().count();
+    QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
+    return  quickItemPrivate->extra.isAllocated() ? quickItemPrivate->extra->resourcesList.count() : 0;
 }
 
 void QQuickItemPrivate::resources_clear(QQmlListProperty<QObject> *prop)
 {
-    // XXX todo - do we really want this behavior?
-    const QObjectList children = prop->object->children();
-    for (int index = 0; index < children.count(); index++)
-        children.at(index)->setParent(0);
+    QQuickItem *quickItem = static_cast<QQuickItem *>(prop->object);
+    QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(quickItem);
+    if (quickItemPrivate->extra.isAllocated()) {//If extra is not allocated resources is empty.
+        foreach (QObject *object, quickItemPrivate->extra->resourcesList) {
+            qmlobject_disconnect(object, QObject, SIGNAL(destroyed(QObject*)),
+                                 quickItem, QQuickItem, SLOT(_q_resourceObjectDeleted(QObject*)));
+        }
+        quickItemPrivate->extra->resourcesList.clear();
+    }
 }
 
 QQuickItem *QQuickItemPrivate::children_at(QQmlListProperty<QQuickItem> *prop, int index)
@@ -2961,6 +3030,12 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
     p->transforms.clear();
 
     p->dirty(QQuickItemPrivate::Transform);
+}
+
+void QQuickItemPrivate::_q_resourceObjectDeleted(QObject *object)
+{
+    if (extra.isAllocated() && extra->resourcesList.contains(object))
+        extra->resourcesList.removeAll(object);
 }
 
 /*!
@@ -4323,7 +4398,8 @@ void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
         return;
 
     //only care about KeyPress now
-    if (q->activeFocusOnTab() && e->type() == QEvent::KeyPress) {
+    if ((q == q->window()->contentItem() || q->activeFocusOnTab())
+            && e->type() == QEvent::KeyPress) {
         bool res = false;
         if (!(e->modifiers() & (Qt::ControlModifier | Qt::AltModifier))) {  //### Add MetaModifier?
             if (e->key() == Qt::Key_Backtab
@@ -5539,7 +5615,7 @@ void QQuickItem::setActiveFocusOnTab(bool activeFocusOnTab)
         return;
 
     if (window()) {
-        if ((this == window()->activeFocusItem()) && !activeFocusOnTab) {
+        if ((this == window()->activeFocusItem()) && this != window()->contentItem() && !activeFocusOnTab) {
             qWarning("QQuickItem: Cannot set activeFocusOnTab to false once item is the active focus item.");
             return;
         }

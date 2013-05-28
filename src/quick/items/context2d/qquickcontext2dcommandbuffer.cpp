@@ -54,86 +54,136 @@ QT_BEGIN_NAMESPACE
 
 void qt_image_boxblur(QImage& image, int radius, bool quality);
 
-static QImage makeShadowImage(const QImage& image, qreal offsetX, qreal offsetY, qreal blur, const QColor& color)
-{
-    QImage shadowImg(image.width() + blur + qAbs(offsetX),
-                     image.height() + blur + qAbs(offsetY),
-                     QImage::Format_ARGB32_Premultiplied);
-    shadowImg.fill(0);
-    QPainter tmpPainter(&shadowImg);
-    tmpPainter.setCompositionMode(QPainter::CompositionMode_Source);
-    qreal shadowX = offsetX > 0? offsetX : 0;
-    qreal shadowY = offsetY > 0? offsetY : 0;
+namespace {
+    class ShadowImageMaker
+    {
+    public:
+        virtual ~ShadowImageMaker() {}
 
-    tmpPainter.drawImage(shadowX, shadowY, image);
-    tmpPainter.end();
+        void paintShapeAndShadow(QPainter *p, qreal offsetX, qreal offsetY, qreal blur, const QColor &color)
+        {
+            QRectF bounds = boundingRect().translated(offsetX, offsetY).adjusted(-2*blur, -2*blur, 2*blur, 2*blur);
+            QRect boundsAligned = bounds.toAlignedRect();
 
-    if (blur > 0)
-        qt_image_boxblur(shadowImg, blur/2, true);
+            QImage shadowImage(boundsAligned.size(), QImage::Format_ARGB32_Premultiplied);
+            shadowImage.fill(0);
 
-    // blacken the image with shadow color...
-    tmpPainter.begin(&shadowImg);
-    tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
-    tmpPainter.fillRect(shadowImg.rect(), color);
-    tmpPainter.end();
-    return shadowImg;
+            QPainter shadowPainter(&shadowImage);
+            shadowPainter.setRenderHints(p->renderHints());
+            shadowPainter.translate(offsetX - boundsAligned.left(), offsetY - boundsAligned.top());
+            paint(&shadowPainter);
+            shadowPainter.end();
+
+            if (blur > 0)
+                qt_image_boxblur(shadowImage, qMax(1, qRound(blur / 2)), true);
+
+            // blacken the image with shadow color...
+            shadowPainter.begin(&shadowImage);
+            shadowPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+            shadowPainter.fillRect(shadowImage.rect(), color);
+            shadowPainter.end();
+
+            p->drawImage(boundsAligned.topLeft(), shadowImage);
+            paint(p);
+        }
+
+        virtual void paint(QPainter *p) const = 0;
+        virtual QRectF boundingRect() const = 0;
+    };
+
+    class FillRectShadow : public ShadowImageMaker
+    {
+    public:
+        FillRectShadow(const QRectF &rect, const QBrush &brush)
+            : m_rect(rect.normalized())
+            , m_brush(brush)
+        {
+        }
+
+        void paint(QPainter *p) const { p->fillRect(m_rect, m_brush); }
+        QRectF boundingRect() const { return m_rect; }
+
+    private:
+        QRectF m_rect;
+        QBrush m_brush;
+    };
+
+    class FillPathShadow : public ShadowImageMaker
+    {
+    public:
+        FillPathShadow(const QPainterPath &path, const QBrush &brush)
+            : m_path(path)
+            , m_brush(brush)
+        {
+        }
+
+        void paint(QPainter *p) const { p->fillPath(m_path, m_brush); }
+        QRectF boundingRect() const { return m_path.boundingRect(); }
+
+    private:
+        QPainterPath m_path;
+        QBrush m_brush;
+    };
+
+    class StrokePathShadow : public ShadowImageMaker
+    {
+    public:
+        StrokePathShadow(const QPainterPath &path, const QPen &pen)
+            : m_path(path)
+            , m_pen(pen)
+        {
+        }
+
+        void paint(QPainter *p) const { p->strokePath(m_path, m_pen); }
+
+        QRectF boundingRect() const
+        {
+            qreal d = qMax(qreal(1), m_pen.widthF());
+            return m_path.boundingRect().adjusted(-d, -d, d, d);
+        }
+
+    private:
+        QPainterPath m_path;
+        QPen m_pen;
+    };
+
+    class DrawImageShadow : public ShadowImageMaker
+    {
+    public:
+        DrawImageShadow(const QImage &image, const QPointF &offset)
+            : m_image(image)
+            , m_offset(offset)
+        {
+        }
+
+        void paint(QPainter *p) const { p->drawImage(m_offset, m_image); }
+
+        QRectF boundingRect() const { return QRectF(m_image.rect()).translated(m_offset); }
+
+    private:
+        QImage m_image;
+        QPointF m_offset;
+    };
 }
 
 static void fillRectShadow(QPainter* p, QRectF shadowRect, qreal offsetX, qreal offsetY, qreal blur, const QColor& color)
 {
-    QRectF r = shadowRect;
-    r.moveTo(0, 0);
-
-    QImage shadowImage(r.size().width() + 1, r.size().height() + 1, QImage::Format_ARGB32_Premultiplied);
-    QPainter tp;
-    tp.begin(&shadowImage);
-    tp.fillRect(r, p->brush());
-    tp.end();
-    shadowImage = makeShadowImage(shadowImage, offsetX, offsetY, blur, color);
-
-    qreal dx = shadowRect.left() + (offsetX < 0? offsetX:0);
-    qreal dy = shadowRect.top() + (offsetY < 0? offsetY:0);
-
-    p->drawImage(dx, dy, shadowImage);
-    p->fillRect(shadowRect, p->brush());
+    FillRectShadow shadowMaker(shadowRect, p->brush());
+    shadowMaker.paintShapeAndShadow(p, offsetX, offsetY, blur, color);
 }
 
 static void fillShadowPath(QPainter* p, const QPainterPath& path, qreal offsetX, qreal offsetY, qreal blur, const QColor& color)
 {
-    QRectF r = path.boundingRect();
-    QImage img(r.size().width() + r.left() + 1,
-               r.size().height() + r.top() + 1,
-               QImage::Format_ARGB32_Premultiplied);
-    img.fill(0);
-    QPainter tp(&img);
-    tp.fillPath(path.translated(0, 0), p->brush());
-    tp.end();
-
-    QImage shadowImage = makeShadowImage(img, offsetX, offsetY, blur, color);
-    qreal dx = r.left() + (offsetX < 0? offsetX:0);
-    qreal dy = r.top() + (offsetY < 0? offsetY:0);
-
-    p->drawImage(dx, dy, shadowImage);
-    p->fillPath(path, p->brush());
+    FillPathShadow shadowMaker(path, p->brush());
+    shadowMaker.paintShapeAndShadow(p, offsetX, offsetY, blur, color);
 }
 
 static void strokeShadowPath(QPainter* p, const QPainterPath& path, qreal offsetX, qreal offsetY, qreal blur, const QColor& color)
 {
-    QRectF r = path.boundingRect();
-    QImage img(r.size().width() + r.left() + 1,
-               r.size().height() + r.top() + 1,
-               QImage::Format_ARGB32_Premultiplied);
-    img.fill(0);
-    QPainter tp(&img);
-    tp.strokePath(path, p->pen());
-    tp.end();
-
-    QImage shadowImage = makeShadowImage(img, offsetX, offsetY, blur, color);
-    qreal dx = r.left() + (offsetX < 0? offsetX:0);
-    qreal dy = r.top() + (offsetY < 0? offsetY:0);
-    p->drawImage(dx, dy, shadowImage);
-    p->strokePath(path, p->pen());
+    StrokePathShadow shadowMaker(path, p->pen());
+    shadowMaker.paintShapeAndShadow(p, offsetX, offsetY, blur, color);
 }
+
 static inline void drawRepeatPattern(QPainter* p, const QImage& image, const QRectF& rect, const bool repeatX, const bool repeatY)
 {
     // Patterns must be painted so that the top left of the first image is anchored at
@@ -259,15 +309,16 @@ static void qt_drawImage(QPainter *p, QQuickContext2D::State& state, QImage imag
     if (sw != dw || sh != dh)
         image = image.scaled(dw, dh);
 
-    if (shadow) {
-        QImage shadow = makeShadowImage(image, state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor);
-        qreal shadow_dx = dx + (state.shadowOffsetX < 0? state.shadowOffsetY:0);
-        qreal shadow_dy = dy + (state.shadowOffsetX < 0? state.shadowOffsetY:0);
-        p->drawImage(shadow_dx, shadow_dy, shadow);
-    }
     //Strange OpenGL painting behavior here, without beginNativePainting/endNativePainting, only the first image is painted.
     p->beginNativePainting();
-    p->drawImage(dx, dy, image);
+
+    if (shadow) {
+        DrawImageShadow shadowMaker(image, QPointF(dx, dy));
+        shadowMaker.paintShapeAndShadow(p, state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor);
+    } else {
+        p->drawImage(dx, dy, image);
+    }
+
     p->endNativePainting();
 }
 

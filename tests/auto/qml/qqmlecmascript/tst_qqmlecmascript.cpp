@@ -88,6 +88,7 @@ private slots:
     void objectPropertiesTriggerReeval();
     void deferredProperties();
     void deferredPropertiesErrors();
+    void deferredPropertiesInComponents();
     void extensionObjects();
     void overrideExtensionProperties();
     void attachedProperties();
@@ -861,6 +862,37 @@ void tst_qqmlecmascript::deferredPropertiesErrors()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     qmlExecuteDeferred(object);
+
+    delete object;
+}
+
+void tst_qqmlecmascript::deferredPropertiesInComponents()
+{
+    // Test that it works when the property is set inside and outside component
+    QQmlComponent component(&engine, testFileUrl("deferredPropertiesInComponents.qml"));
+    QObject *object = component.create();
+    if (!object)
+        qDebug() << component.errorString();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("value").value<int>(), 10);
+
+    MyDeferredObject *defObjectA =
+        qobject_cast<MyDeferredObject *>(object->property("deferredInside").value<QObject*>());
+    QVERIFY(defObjectA != 0);
+    QVERIFY(defObjectA->objectProperty() == 0);
+
+    qmlExecuteDeferred(defObjectA);
+    QVERIFY(defObjectA->objectProperty() != 0);
+    QCOMPARE(defObjectA->objectProperty()->property("value").value<int>(), 10);
+
+    MyDeferredObject *defObjectB =
+        qobject_cast<MyDeferredObject *>(object->property("deferredOutside").value<QObject*>());
+    QVERIFY(defObjectB != 0);
+    QVERIFY(defObjectB->objectProperty() == 0);
+
+    qmlExecuteDeferred(defObjectB);
+    QVERIFY(defObjectB->objectProperty() != 0);
+    QCOMPARE(defObjectB->objectProperty()->property("value").value<int>(), 10);
 
     delete object;
 }

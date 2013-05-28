@@ -42,6 +42,9 @@
 
 #include <QGuiApplication>
 
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
+
 #include <QtQuick/QQuickView>
 
 #include "threadrenderer.h"
@@ -49,6 +52,13 @@
 int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
+
+    if (!QGuiApplicationPrivate::platform_integration->hasCapability(QPlatformIntegration::ThreadedOpenGL)) {
+        QQuickView view;
+        view.setSource(QUrl("qrc:///scenegraph/textureinthread/error.qml"));
+        view.show();
+        return app.exec();
+    }
 
     qmlRegisterType<ThreadRenderer>("SceneGraphRendering", 1, 0, "Renderer");
     int execReturn = 0;
@@ -63,7 +73,7 @@ int main(int argc, char **argv)
         view.setPersistentSceneGraph(true);
 
         view.setResizeMode(QQuickView::SizeRootObjectToView);
-        view.setSource(QUrl("qrc:///scenegraph/textureinsgnode/main.qml"));
+        view.setSource(QUrl("qrc:///scenegraph/textureinthread/main.qml"));
         view.show();
 
         execReturn = app.exec();

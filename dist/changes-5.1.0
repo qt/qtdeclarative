@@ -35,10 +35,19 @@ Third party components
  - A Window declared nested inside another Item or Window automatically
    becomes transient for (centered upon) its parent's window, if x and y
    were not explicitly specified
+ - The resources property of Item is now its own property independent
+   of QObject. It no longer returns all QObject children, or explicitly
+   sets QObject parent. The resources property now behaves as documented.
 
+ - As part of a fix for QTBUG-30555, ListView and GridView properties, such
+   as count, which are based off of the data model will no longer update
+   immediately if queried. Updates are batched to happen once per frame (or
+   when properties are being set).
 ****************************************************************************
 *                          Library                                         *
 ****************************************************************************
+ - QTBUG-30837: The Flickable type no longer fixes up the content area on
+   startup to move it inside the viewport.
 
 
 ****************************************************************************

@@ -58,7 +58,7 @@ class Q_AUTOTEST_EXPORT QQuickScreenAttached : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString name READ name CONSTANT REVISION 1);
+    Q_PROPERTY(QString name READ name NOTIFY nameChanged REVISION 1);
     Q_PROPERTY(int width READ width NOTIFY widthChanged)
     Q_PROPERTY(int height READ height NOTIFY heightChanged)
     Q_PROPERTY(int desktopAvailableWidth READ desktopAvailableWidth NOTIFY desktopGeometryChanged REVISION 1)
@@ -85,6 +85,7 @@ public:
     void windowChanged(QQuickWindow*);
 
 Q_SIGNALS:
+    Q_REVISION(1) void nameChanged();
     void widthChanged();
     void heightChanged();
     Q_REVISION(1) void desktopGeometryChanged();

@@ -108,6 +108,7 @@ public:
     QRectF rectForPosition(int position) const;
 
     void keyPressEvent(QKeyEvent *e);
+    void keyReleaseEvent(QKeyEvent *e);
     void mousePressEvent(QMouseEvent *event, const QPointF &pos);
     void mouseMoveEvent(QMouseEvent *event, const QPointF &pos);
     void mouseReleaseEvent(QMouseEvent *event, const QPointF &pos);

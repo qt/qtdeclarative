@@ -87,6 +87,7 @@ public:
         QQuickTextNode* m_node;
         bool m_dirty;
     };
+    typedef QList<Node*>::iterator TextNodeIterator;
 
 
     QQuickTextEditPrivate()
@@ -126,6 +127,8 @@ public:
 
     void setNativeCursorEnabled(bool enabled) { control->setCursorWidth(enabled ? 1 : 0); }
     void handleFocusEvent(QFocusEvent *event);
+    void addCurrentTextNodeToRoot(QSGTransformNode *, QQuickTextNode*, TextNodeIterator&, int startPos);
+    QQuickTextNode* createTextNode();
 
 #ifndef QT_NO_IM
     Qt::InputMethodHints effectiveInputMethodHints() const;

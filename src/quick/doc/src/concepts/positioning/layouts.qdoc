@@ -28,7 +28,6 @@
 /*!
 \ingroup qtquick-positioners
 \page qtquick-positioning-layouts.html
-\ingroup qml-features
 \title Item Layouts
 
 Positioner items are container items that manage the positions and sizes of

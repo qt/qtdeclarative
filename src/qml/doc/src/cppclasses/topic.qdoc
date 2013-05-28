@@ -88,7 +88,7 @@ properties of a QQmlContext, and how to access the context for an object.
 Dynamic object instantiation and dynamic expression evaluation are both core
 concepts in QML.  QML documents define object types which can be instantiated
 at run-time using a QQmlComponent.  An instance of the QQmlComponent class can
-be created in C++ directly, or via the \l{QML:Qt::createComponent()}
+be created in C++ directly, or via the \l{QtQml2::Qt::createComponent()}
 {Qt.createComponent()} function in imperative QML code.  Arbitrary expressions
 can be calculated in C++ via the QQmlExpression class, and such expressions
 can interact directly the QML context.

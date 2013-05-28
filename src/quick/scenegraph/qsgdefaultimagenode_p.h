@@ -60,7 +60,7 @@ protected:
     virtual QSGMaterialShader *createShader() const;
 };
 
-class QSGDefaultImageNode : public QSGImageNode
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultImageNode : public QSGImageNode
 {
 public:
     QSGDefaultImageNode();

@@ -302,7 +302,7 @@ int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
     \clearfloat
     \section1 Performance
 
-    Using the \l antialiasing property improves the appearance of a rounded rectangle at
+    Using the \l Item::antialiasing property improves the appearance of a rounded rectangle at
     the cost of rendering performance. You should consider unsetting this property
     for rectangles in motion, and only set it when they are stationary.
 

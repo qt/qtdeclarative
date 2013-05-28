@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qqmltypeloader_p.h"
+#include "qqmlabstracturlinterceptor_p.h"
 
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
@@ -247,6 +248,23 @@ QQmlDataBlob::~QQmlDataBlob()
     Q_ASSERT(m_waitingOnMe.isEmpty());
 
     cancelAllWaitingFor();
+}
+
+/*!
+  Sets the manager, and does stuff like selection which needs access to the manager.
+  Must be called before loading can occur.
+*/
+void QQmlDataBlob::startLoading(QQmlDataLoader *manager)
+{
+    Q_ASSERT(status() == QQmlDataBlob::Null);
+    Q_ASSERT(m_manager == 0);
+    m_data.setStatus(QQmlDataBlob::Loading);
+    m_manager = manager;
+
+    //Set here because we need to get the engine from the manager
+    if (manager && manager->engine() && manager->engine()->urlInterceptor())
+        m_url = manager->engine()->urlInterceptor()->intercept(m_url,
+                    (QQmlAbstractUrlInterceptor::DataType)m_type);
 }
 
 /*!
@@ -892,12 +910,7 @@ void QQmlDataLoader::load(QQmlDataBlob *blob, Mode mode)
     qWarning("QQmlDataLoader::load(%s): %s thread", qPrintable(blob->m_url.toString()), 
              m_thread->isThisThread()?"Compile":"Engine");
 #endif
-
-    Q_ASSERT(blob->status() == QQmlDataBlob::Null);
-    Q_ASSERT(blob->m_manager == 0);
-
-    blob->m_data.setStatus(QQmlDataBlob::Loading);
-    blob->m_manager = this;
+    blob->startLoading(this);
 
     if (m_thread->isThisThread()) {
         unlock();
@@ -930,11 +943,7 @@ void QQmlDataLoader::loadWithStaticData(QQmlDataBlob *blob, const QByteArray &da
              m_thread->isThisThread()?"Compile":"Engine");
 #endif
 
-    Q_ASSERT(blob->status() == QQmlDataBlob::Null);
-    Q_ASSERT(blob->m_manager == 0);
-    
-    blob->m_data.setStatus(QQmlDataBlob::Loading);
-    blob->m_manager = this;
+    blob->startLoading(this);
 
     if (m_thread->isThisThread()) {
         unlock();

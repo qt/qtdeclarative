@@ -1546,7 +1546,7 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
         nextData.curves = data.curves;
         next = positionForCurve(nextData, point);
     } else {
-        if (point == QPointF(path.elementAt(0)) && qobject_cast<QQuickPathCatmullRomCurve*>(data.curves.at(0))) {
+        if (point == QPointF(path.elementAt(0)) && qobject_cast<QQuickPathCatmullRomCurve*>(data.curves.at(0)) && path.elementCount() >= 3) {
             //this is a closed path starting and ending with catmull-rom segments.
             //we try to smooth the join point
             next = QPointF(path.elementAt(3));  //the first catmull-rom point

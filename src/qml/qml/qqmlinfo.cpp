@@ -165,6 +165,8 @@ QQmlInfo::~QQmlInfo()
     }
 }
 
+namespace QtQml {
+
 QQmlInfo qmlInfo(const QObject *me)
 {
     QQmlInfoPrivate *d = new QQmlInfoPrivate;
@@ -188,5 +190,27 @@ QQmlInfo qmlInfo(const QObject *me, const QList<QQmlError> &errors)
     return QQmlInfo(d);
 }
 
+} // namespace QtQml
+
+#if QT_DEPRECATED_SINCE(5, 1)
+
+// Also define symbols outside namespace to keep binary compatibility with Qt 5.0
+
+QQmlInfo qmlInfo(const QObject *me)
+{
+    return QtQml::qmlInfo(me);
+}
+
+QQmlInfo qmlInfo(const QObject *me, const QQmlError &error)
+{
+    return QtQml::qmlInfo(me, error);
+}
+
+QQmlInfo qmlInfo(const QObject *me, const QList<QQmlError> &errors)
+{
+    return QtQml::qmlInfo(me, errors);
+}
+
+#endif // QT_DEPRECATED_SINCE(5, 1)
 
 QT_END_NAMESPACE
