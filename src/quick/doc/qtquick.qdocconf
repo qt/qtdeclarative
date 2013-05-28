@@ -58,3 +58,6 @@ sourcedirs += ../../imports
 #add plugins directory because of dependencies
 headerdirs += ../../plugins
 sourcedirs += ../../plugins
+
+#exclude certain directories
+excludedirs = ../../imports/dialogs
