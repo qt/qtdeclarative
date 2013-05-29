@@ -36,9 +36,9 @@
 
     A \l FileDialog is used to choose a single file, multiple files or a
     single directory, depending on how it is configured.
-    \snippet dialogs/colorandfiledialogs/FileDialogs.qml filedialog
+    \snippet colorandfiledialogs/FileDialogs.qml filedialog
 
     A \l ColorDialog is used to choose a color, with or without alpha (transparency)
     depending on how it is configured.
-    \snippet dialogs/colorandfiledialogs/ColorDialogs.qml colordialog
+    \snippet colorandfiledialogs/ColorDialogs.qml colordialog
 */
