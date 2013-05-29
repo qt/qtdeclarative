@@ -1515,6 +1515,10 @@ case 311: {
   node->lparenToken = loc(2);
   node->rparenToken = loc(4);
   sym(1).Node = node;
+  if (lexer->qmlMode()) {
+      const QString msg = qApp->translate("QQmlParser", "Deprecated JavaScript `with' statement detected in QML expression. Support for this will be removed in Qt 5.2!");
+      diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Warning, node->withToken, msg));
+  }
 } break;
 
 case 312: {
