@@ -65,24 +65,9 @@ public:
     inline QQmlContextData *getContext() const;
     inline QObject *getScopeObject() const;
 
-    quint32 hasSubContexts:1;
     quint32 readOnly:1;
     quint32 ownsContext:1;
     quint32 dummy:29;
-
-    // This is a pretty horrible hack, and an abuse of external strings.  When we create a 
-    // sub-context (a context created by a Qt.include() in an external javascript file),
-    // we pass a specially crafted SubContext external string as the v8::Script::Data() to
-    // the script, which contains a pointer to the context.  We can then access the 
-    // v8::Script::Data() later on to resolve names and URLs against the sub-context instead
-    // of the main outer context.
-    struct SubContext : public v8::String::ExternalStringResource {
-        SubContext(QQmlContextData *context) : context(context) {}
-        QQmlGuardedContextData context;
-
-        virtual const uint16_t* data() const { return (const uint16_t *)internal.constData(); }
-        virtual size_t length() const { return internal.length(); }
-    };
 
 private:
     QQmlGuardedContextData context;
@@ -91,7 +76,7 @@ private:
 };
 
 QV8ContextResource::QV8ContextResource(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
-: QV8ObjectResource(engine), hasSubContexts(false), readOnly(true),
+: QV8ObjectResource(engine), readOnly(true),
   ownsContext(ownsContext), dummy(0), context(context), scopeObject(scopeObject)
 {
 }
@@ -111,19 +96,7 @@ QObject *QV8ContextResource::getScopeObject() const
 // Returns the context, including resolving a subcontext
 QQmlContextData *QV8ContextResource::getContext() const
 {
-    if (!hasSubContexts)
-        return context;
-
-    v8::Handle<v8::Value> callingdata = v8::Context::GetCallingScriptData();
-    if (callingdata.IsEmpty() || !callingdata->IsString())
-        return context;
-
-    v8::Handle<v8::String> callingstring = callingdata->ToString();
-    Q_ASSERT(callingstring->IsExternal());
-    Q_ASSERT(callingstring->GetExternalStringResource());
-
-    SubContext *sc = static_cast<SubContext *>(callingstring->GetExternalStringResource());
-    return sc->context;
+    return context;
 }
 
 QV8ContextWrapper::QV8ContextWrapper()
@@ -185,15 +158,6 @@ void QV8ContextWrapper::setReadOnly(v8::Handle<v8::Object> qmlglobal, bool readO
     Q_ASSERT(resource);
     resource->readOnly = readOnly;
 }
-
-//void QV8ContextWrapper::addSubContext(v8::Handle<v8::Object> qmlglobal, v8::Handle<v8::Script> script,
-//                                      QQmlContextData *ctxt)
-//{
-//    QV8ContextResource *resource = v8_resource_cast<QV8ContextResource>(qmlglobal);
-//    Q_ASSERT(resource);
-//    resource->hasSubContexts = true;
-//    script->SetData(v8::String::NewExternal(new QV8ContextResource::SubContext(ctxt)));
-//}
 
 QQmlContextData *QV8ContextWrapper::callingContext()
 {
