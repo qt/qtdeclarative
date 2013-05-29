@@ -577,6 +577,7 @@ struct PersistentValuePrivate
     void removeFromList();
     void ref() { ++refcount; }
     void deref();
+    PersistentValuePrivate *detach(const QV4::Value &value, bool weak = false);
 };
 
 class Q_QML_EXPORT PersistentValue

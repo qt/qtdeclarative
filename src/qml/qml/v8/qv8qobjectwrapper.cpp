@@ -94,6 +94,11 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
 
 QObjectWrapper::~QObjectWrapper()
 {
+    deleteQObject();
+}
+
+void QObjectWrapper::deleteQObject(bool deleteInstantly)
+{
     if (!object)
         return;
     QQmlData *ddata = QQmlData::get(object, false);
@@ -104,7 +109,10 @@ QObjectWrapper::~QObjectWrapper()
         if (ddata->ownContext && ddata->context)
             ddata->context->emitDestruction();
         ddata->isQueuedForDeletion = true;
-        object->deleteLater();
+        if (deleteInstantly)
+            delete object;
+        else
+            object->deleteLater();
     }
 }
 

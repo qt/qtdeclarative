@@ -248,6 +248,8 @@ PersistentValue &PersistentValue::operator=(const PersistentValue &other)
     d = other.d;
     if (d)
         d->ref();
+
+    return *this;
 }
 
 PersistentValue &PersistentValue::operator =(const Value &other)
@@ -256,26 +258,8 @@ PersistentValue &PersistentValue::operator =(const Value &other)
         d = new PersistentValuePrivate(other);
         return *this;
     }
-    d->value = other;
-    Managed *m = d->value.asManaged();
-    if (!d->prev) {
-        if (m) {
-            ExecutionEngine *engine = m->engine();
-            if (engine) {
-                d->prev = &engine->memoryManager->m_persistentValues;
-                d->next = engine->memoryManager->m_persistentValues;
-                *d->prev = d;
-                if (d->next)
-                    d->next->prev = &d->next;
-            }
-        }
-    } else if (!m) {
-        if (d->next)
-            d->next->prev = d->prev;
-        *d->prev = d->next;
-        d->prev = 0;
-        d->next = 0;
-    }
+    d = d->detach(other);
+    return *this;
 }
 
 PersistentValue::~PersistentValue()
@@ -308,6 +292,8 @@ WeakValue &WeakValue::operator=(const WeakValue &other)
     d = other.d;
     if (d)
         d->ref();
+
+    return *this;
 }
 
 WeakValue &WeakValue::operator =(const Value &other)
@@ -316,26 +302,8 @@ WeakValue &WeakValue::operator =(const Value &other)
         d = new PersistentValuePrivate(other, /*weak*/true);
         return *this;
     }
-    d->value = other;
-    Managed *m = d->value.asManaged();
-    if (!d->prev) {
-        if (m) {
-            ExecutionEngine *engine = m->engine();
-            if (engine) {
-                d->prev = &engine->memoryManager->m_weakValues;
-                d->next = engine->memoryManager->m_weakValues;
-                *d->prev = d;
-                if (d->next)
-                    d->next->prev = &d->next;
-            }
-        }
-    } else if (!m) {
-        if (d->next)
-            d->next->prev = d->prev;
-        *d->prev = d->next;
-        d->prev = 0;
-        d->next = 0;
-    }
+    d = d->detach(other, /*weak*/true);
+    return *this;
 }
 
 
@@ -383,6 +351,7 @@ void PersistentValuePrivate::removeFromList()
         if (next)
             next->prev = prev;
         *prev = next;
+        next = 0;
         prev = 0;
     }
 }
@@ -395,5 +364,32 @@ void PersistentValuePrivate::deref()
         removeFromList();
         delete this;
     }
+}
+
+PersistentValuePrivate *PersistentValuePrivate::detach(const QV4::Value &value, bool weak)
+{
+    if (refcount == 1) {
+        this->value = value;
+
+        Managed *m = value.asManaged();
+        if (!prev) {
+            if (m) {
+                ExecutionEngine *engine = m->engine();
+                if (engine) {
+                    PersistentValuePrivate **listRoot = weak ? &engine->memoryManager->m_weakValues : &engine->memoryManager->m_persistentValues;
+                    prev = listRoot;
+                    next = *listRoot;
+                    *prev = this;
+                    if (next)
+                        next->prev = &this->next;
+                }
+            }
+        } else if (!m)
+            removeFromList();
+
+        return this;
+    }
+    --refcount;
+    return new PersistentValuePrivate(value, weak);
 }
 

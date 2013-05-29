@@ -269,13 +269,13 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
 ExecutionEngine::~ExecutionEngine()
 {
+    delete memoryManager;
     emptyClass->destroy();
     delete identifierCache;
     delete bumperPointerAllocator;
     delete regExpCache;
     UnwindHelper::deregisterFunctions(functions);
     qDeleteAll(functions);
-    delete memoryManager;
     delete regExpAllocator;
     delete executableAllocator;
 }

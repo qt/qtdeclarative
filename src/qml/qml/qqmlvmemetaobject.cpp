@@ -73,7 +73,8 @@ void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
         if (m_isVar && m_target->varPropertiesInitialized && !m_target->varProperties.isEmpty()) {
             // Set the var property to NULL
             QV4::ArrayObject *a = m_target->varProperties.value().asArrayObject();
-            a->putIndexed(m_index - m_target->firstVarPropertyIndex, QV4::Value::nullValue());
+            if (a)
+                a->putIndexed(m_index - m_target->firstVarPropertyIndex, QV4::Value::nullValue());
         }
 
         m_target->activate(m_target->object, m_target->methodOffset() + m_index, 0);

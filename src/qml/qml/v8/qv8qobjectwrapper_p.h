@@ -87,6 +87,8 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
     QV8Engine *v8Engine; // ### Remove again.
     QQmlGuard<QObject> object;
 
+    void deleteQObject(bool deleteInstantly = false);
+
 private:
     String *m_destroy;
     String *m_toString;

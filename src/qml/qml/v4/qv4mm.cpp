@@ -333,7 +333,9 @@ std::size_t MemoryManager::sweep()
         if (Managed *m = weak->value.asManaged()) {
             if (!m->markBit) {
                 weak->value = Value::emptyValue();
+                PersistentValuePrivate *n = weak->next;
                 weak->removeFromList();
+                weak = n;
                 continue;
             }
         }
@@ -448,6 +450,18 @@ void MemoryManager::setEnableGC(bool enableGC)
 
 MemoryManager::~MemoryManager()
 {
+    PersistentValuePrivate *weak = m_weakValues;
+    while (weak) {
+        if (QObjectWrapper *qobjectWrapper = weak->value.asQObjectWrapper()) {
+            weak->ref();
+            qobjectWrapper->deleteQObject(/*deleteInstantly*/ true);
+            PersistentValuePrivate *n = weak->next;
+            weak->deref();
+            weak = n;
+        } else
+            weak = weak->next;
+    }
+
     PersistentValuePrivate *persistent = m_persistentValues;
     while (persistent) {
         PersistentValuePrivate *n = persistent->next;
