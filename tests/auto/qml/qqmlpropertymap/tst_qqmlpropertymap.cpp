@@ -67,6 +67,7 @@ private slots:
     void QTBUG_17868();
     void metaObjectAccessibility();
     void QTBUG_31226();
+    void QTBUG_29836();
 };
 
 void tst_QQmlPropertyMap::insert()
@@ -287,13 +288,17 @@ class MyEnhancedPropertyMap : public QQmlPropertyMap
 {
     Q_OBJECT
 public:
-    MyEnhancedPropertyMap() : QQmlPropertyMap(this, 0) {}
+    MyEnhancedPropertyMap() : QQmlPropertyMap(this, 0), m_testSlotCalled(false) {}
+    bool testSlotCalled() const { return m_testSlotCalled; }
 
 signals:
     void testSignal();
 
 public slots:
-    void testSlot() {}
+    void testSlot() { m_testSlotCalled = true; }
+
+private:
+    bool m_testSlotCalled;
 };
 
 void tst_QQmlPropertyMap::metaObjectAccessibility()
@@ -336,6 +341,29 @@ void tst_QQmlPropertyMap::QTBUG_31226()
 
     qmlPropertyMap->insert("greeting", QString("Hello world!"));
     QTRY_COMPARE(obj->property("myProp").toString(), QString("Hello world!"));
+
+    delete obj;
+
+}
+
+void tst_QQmlPropertyMap::QTBUG_29836()
+{
+    MyEnhancedPropertyMap map;
+    QCOMPARE(map.testSlotCalled(), false);
+
+    QQmlEngine engine;
+    QQmlContext context(&engine);
+    context.setContextProperty("enhancedMap", &map);
+    QQmlComponent c(&engine);
+    c.setData("import QtQuick 2.0\n"
+              "Item {\n"
+              "  Timer { interval: 5; running: true; onTriggered: enhancedMap.testSlot() }\n"
+              "}",
+              QUrl());
+    QObject *obj = c.create(&context);
+    QVERIFY(obj);
+
+    QTRY_COMPARE(map.testSlotCalled(), true);
 
     delete obj;
 

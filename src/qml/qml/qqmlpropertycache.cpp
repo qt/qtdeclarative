@@ -1317,6 +1317,31 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
     Q_ASSERT(metaObject);
 
     QQmlPropertyData rv;
+
+    /* It's important to check the method list before checking for properties;
+     * otherwise, if the meta object is dynamic, a property will be created even
+     * if not found and it might obscure a method having the same name. */
+
+    //Used to block access to QObject::destroyed() and QObject::deleteLater() from QML
+    static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");
+    static const int destroyedIdx2 = QObject::staticMetaObject.indexOfSignal("destroyed()");
+    static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
+
+    int methodCount = metaObject->methodCount();
+    for (int ii = methodCount - 1; ii >= 0; --ii) {
+        if (ii == destroyedIdx1 || ii == destroyedIdx2 || ii == deleteLaterIdx)
+            continue;
+        QMetaMethod m = metaObject->method(ii);
+        if (m.access() == QMetaMethod::Private)
+            continue;
+        QString methodName = QString::fromUtf8(m.name().constData());
+
+        if (methodName == property) {
+            rv.load(m);
+            return rv;
+        }
+    }
+
     {
         const QMetaObject *cmo = metaObject;
         const QByteArray propertyName = property.toUtf8();
@@ -1342,27 +1367,6 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
             }
         }
     }
-
-    //Used to block access to QObject::destroyed() and QObject::deleteLater() from QML
-    static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");
-    static const int destroyedIdx2 = QObject::staticMetaObject.indexOfSignal("destroyed()");
-    static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
-
-    int methodCount = metaObject->methodCount();
-    for (int ii = methodCount - 1; ii >= 0; --ii) {
-        if (ii == destroyedIdx1 || ii == destroyedIdx2 || ii == deleteLaterIdx)
-            continue;
-        QMetaMethod m = metaObject->method(ii);
-        if (m.access() == QMetaMethod::Private)
-            continue;
-        QString methodName = QString::fromUtf8(m.name().constData());
-
-        if (methodName == property) {
-            rv.load(m);
-            return rv;
-        }
-    }
-
     return rv;
 }
 
